@@ -1,0 +1,5 @@
+jupedsim
+pedpy
+plotly
+nbformat>=4.2.0
+git+https://github.com/chraibi/fdsvismap.git@package#egg=fdsvismap
