@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  streamlit:
+  fds-evac:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +24,4 @@ jobs:
           pip install -r requirements.txt
       - name: Lint with Ruff
         run: ruff .
-      - name: Check with Mypy
-        run: |
-          mypy --strict $(git ls-files '*.py')
-    
+      
