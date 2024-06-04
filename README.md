@@ -2,3 +2,7 @@
 
 
 # visibility-evac
+
+This is still work in progress! 
+The model is still under construction, and code is in flow!
+
