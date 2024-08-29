@@ -29,12 +29,12 @@ class DebugPlots:
     def log_waypoint_visibility(self, x, y, t):
         """Logs visibility and distance information for each waypoint at a given time."""
         for wp_id, _ in enumerate(self.config.waypoints):
-            self.logger.debug(f"Time: {t}, Waypoint ID: {wp_id}")
+            logger.debug(f"Time: {t}, Waypoint ID: {wp_id}")
             visibility = self.vis.wp_is_visible(time=t, x=x, y=y, waypoint_id=wp_id)
-            self.logger.debug(f"Visibility: {visibility}")
+            logger.debug(f"Visibility: {visibility}")
             dis = self.vis.get_distance_to_wp(x=x, y=y, waypoint_id=wp_id)
             logger.debug(f"Distance: {dis:.2f} [m]")
-            print("----")
+            logger.debug("----")
 
     def plot_local_visibility(self, x, y, c):
         """Plots local visibility over time for a given location and visibility factor."""
