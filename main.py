@@ -11,7 +11,13 @@ from shapely import Polygon, from_wkt
 import logging
 from src.jpstooling import calculate_desired_speed, run_simulation
 from src.fdstooling import load_or_compute_vis
-from src.ploting import plot_simulation_configuration, plot_visibility_path
+from src.ploting import (
+    plot_simulation_configuration,
+    plot_visibility_path,
+    plot_desired_speed_visibility,
+    plot_local_visibility,
+    log_waypoint_visibility,
+)
 from typing import List
 from src.config import SimulationConfig
 
@@ -21,51 +27,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class DebugPlots:
-    def __init__(self, config, vis):
-        self.config = config
-        self.vis = vis
-
-    def log_waypoint_visibility(self, x, y, t):
-        """Logs visibility and distance information for each waypoint at a given time."""
-        for wp_id, _ in enumerate(self.config.waypoints):
-            logger.debug(f"Time: {t}, Waypoint ID: {wp_id}")
-            visibility = self.vis.wp_is_visible(time=t, x=x, y=y, waypoint_id=wp_id)
-            logger.debug(f"Visibility: {visibility}")
-            dis = self.vis.get_distance_to_wp(x=x, y=y, waypoint_id=wp_id)
-            logger.debug(f"Distance: {dis:.2f} [m]")
-            logger.debug("----")
-
-    def plot_local_visibility(self, x, y, c):
-        """Plots local visibility over time for a given location and visibility factor."""
-        local_visibility = []
-        logger.info("Plotting local_visibility")
-        for t in self.config.times:
-            visibility = self.vis.get_local_visibility(time=t, x=x, y=y, c=c)
-            local_visibility.append(visibility)
-
-        plt.plot(self.config.times, local_visibility)
-        plt.xlabel("Time [s]")
-        plt.ylabel("Local Visibility")
-        figname = f"{config.figs_path}/local_visibility.png"
-        plt.savefig(figname, dpi=300, bbox_inches="tight")
-        logger.info(f"Local visibility plot saved successfully: {figname}.")
-        return local_visibility
-
-    def plot_desired_speed_visibility(local_visibility: List[float], c=3):
-        """Plots the desired speed over time for a given location and visibility factor."""
-
-        desired_speeds = [
-            calculate_desired_speed(visibility, c, max_speed=1.0, range=5)
-            for visibility in local_visibility
-        ]
-        plt.plot(self.config.times, desired_speeds)
-        plt.xlabel("Time [s]")
-        plt.ylabel("Desired Speed [m/s]")
-        plt.savefig("desired_speed.png", dpi=300, bbox_inches="tight")
-        logger.info("Desired speed plot saved successfully.")
-
-
 config = SimulationConfig()
 
 ## Vismap config
@@ -73,12 +34,11 @@ vis = load_or_compute_vis(
     config.sim_dir, config.waypoints, config.times, config.pickle_path, config.c0
 )
 
-debug_plots = DebugPlots(config, vis)
 # Log waypoint visibility for a specific location and time
-debug_plots.log_waypoint_visibility(x=18.51, y=6.79, t=16)
+log_waypoint_visibility(vis, config, x=18.51, y=6.79, t=16)
 # Plot local visibility for a given location and c factor
-local_visibility_values = debug_plots.plot_local_visibility(x=5, y=6, c=3)
-debug_plots.plot_desired_speed_visibility(local_visibility_values)
+local_visibility_values = plot_local_visibility(vis, config, x=5, y=6, c=3)
+plot_desired_speed_visibility(config=config, lv=local_visibility_values, c=3)
 
 fig, ax = vis.create_aset_map_plot(plot_obstructions=True)
 fig.savefig("aset_map.png", dpi=300, bbox_inches="tight")

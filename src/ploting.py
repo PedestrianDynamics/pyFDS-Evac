@@ -1,8 +1,56 @@
 import pedpy
 from matplotlib.patches import Circle
 import matplotlib.pyplot as plt
+import logging
+from .jpstooling import compute_waypoints_and_visibility, calculate_desired_speed
 
-from .jpstooling import compute_waypoints_and_visibility
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
+def log_waypoint_visibility(vis, config, x, y, t):
+    """Logs visibility and distance information for each waypoint at a given time."""
+    for wp_id, _ in enumerate(config.waypoints):
+        logger.debug(f"Time: {t}, Waypoint ID: {wp_id}")
+        visibility = vis.wp_is_visible(time=t, x=x, y=y, waypoint_id=wp_id)
+        logger.debug(f"Visibility: {visibility}")
+        dis = vis.get_distance_to_wp(x=x, y=y, waypoint_id=wp_id)
+        logger.debug(f"Distance: {dis:.2f} [m]")
+        logger.debug("----")
+
+
+def plot_local_visibility(vis, config, x, y, c):
+    """Plots local visibility over time for a given location and visibility factor."""
+    local_visibility = []
+    logger.info("Plotting local_visibility")
+    for t in config.times:
+        visibility = vis.get_local_visibility(time=t, x=x, y=y, c=c)
+        local_visibility.append(visibility)
+
+    plt.plot(config.times, local_visibility)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Local Visibility")
+    figname = f"{config.figs_path}/local_visibility.png"
+    plt.savefig(figname, dpi=300, bbox_inches="tight")
+    logger.info(f"Local visibility plot saved successfully: {figname}.")
+    return local_visibility
+
+
+def plot_desired_speed_visibility(config, lv, c=3):
+    """Plots the desired speed over time for a given location and visibility factor."""
+    logger.info("Plotting desired speed visibility")
+    desired_speeds = [
+        calculate_desired_speed(visibility, c, max_speed=1.0, range=5)
+        for visibility in lv
+    ]
+    print("OK")
+    plt.plot(config.times, desired_speeds)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Desired Speed [m/s]")
+    plt.savefig("desired_speed.png", dpi=300, bbox_inches="tight")
+    logger.info("Desired speed plot saved successfully.")
 
 
 def plot_simulation_configuration(
