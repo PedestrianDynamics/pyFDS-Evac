@@ -1,11 +1,18 @@
 import pedpy
 from matplotlib.patches import Circle
 import matplotlib.pyplot as plt
-from jpstooling import compute_waypoints_and_visibility
+
+from .jpstooling import compute_waypoints_and_visibility
 
 
 def plot_simulation_configuration(
-    waypoints, distance_to_waypoints, walkable_area, starting_positions, exits, path1=None, path2=None
+    waypoints,
+    distance_to_waypoints,
+    walkable_area,
+    starting_positions,
+    exits,
+    path1=None,
+    path2=None,
 ):
     axes = pedpy.plot_walkable_area(walkable_area=walkable_area)
     for exit_area in exits:
@@ -41,12 +48,12 @@ def plot_simulation_configuration(
         y_coords = [point[1] for point in path1]
         for idx, point in enumerate(path1):
             if idx == 0:
-                color="black"
-                facecolor="black"
-            #else:
-            #    color = "blue"
-            #    facecolor="none"    
-            
+                color = "black"
+                facecolor = "black"
+                # else:
+                #    color = "blue"
+                #    facecolor="none"
+
                 axes.plot(
                     point[0],
                     point[1],
@@ -63,8 +70,8 @@ def plot_simulation_configuration(
         y_coords = [point[1] for point in path2]
         for idx, point in enumerate(path2):
             if idx == 0:
-                color="black"
-                facecolor="black"
+                color = "black"
+                facecolor = "black"
                 axes.plot(
                     point[0],
                     point[1],
@@ -79,7 +86,6 @@ def plot_simulation_configuration(
     print("Simulation configuration saved as simulation_configuration.png")
 
 
-
 def plot_visibility_path(logger, config, vis, routing, starting_point):
     vis1 = []
     vis2 = []
@@ -88,9 +94,9 @@ def plot_visibility_path(logger, config, vis, routing, starting_point):
     for time in times:
         print("time", time)
         waypoints_info = compute_waypoints_and_visibility(
-        routing, starting_point, config.primary_exit, config.waypoints, time
-    )
-    # print(waypoints_info[0:])
+            routing, starting_point, config.primary_exit, config.waypoints, time
+        )
+        # print(waypoints_info[0:])
         print("------ FIRST PATH -------")
         print(waypoints_info)
         vis_point = 0
@@ -107,8 +113,8 @@ def plot_visibility_path(logger, config, vis, routing, starting_point):
         print("------ SECOND PATH -------")
         vis1.append(vis_point)
         waypoints_info2 = compute_waypoints_and_visibility(
-        routing,starting_point, config.secondary_exit, config.waypoints, time
-    )
+            routing, starting_point, config.secondary_exit, config.waypoints, time
+        )
         print(waypoints_info2)
         vis_point2 = 0
         seen2 = set()

@@ -1,3 +1,5 @@
+"""Main entry script."""
+
 import os
 from pathlib import Path
 
@@ -7,61 +9,17 @@ import pedpy
 import shapely
 from shapely import Polygon, from_wkt
 import logging
-from fdstooling import load_or_compute_vis
-from jpstooling import calculate_desired_speed, run_simulation
-from ploting import plot_simulation_configuration, plot_visibility_path  
+from src.jpstooling import calculate_desired_speed, run_simulation
+from src.fdstooling import load_or_compute_vis
+from src.ploting import plot_simulation_configuration, plot_visibility_path
 from typing import List
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from src.config import SimulationConfig
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
-
-class SimulationConfig:
-    def __init__(self, num_agents=40, premovement_time=300, v0=1.0, seed=1, c0=3.0,
-                 update_time=1, max_vis_simulation_time=1000, distance_to_waypoints=0.5):
-        self.num_agents = num_agents
-        self.premovement_time = premovement_time
-        self.v0 = v0
-        self.seed = seed
-        self.c0 = c0
-        self.seed = 1023
-        self.premovement_time = 400  # seconds
-        self.update_time = update_time
-        self.max_vis_simulation_time = max_vis_simulation_time
-        self.times = range(premovement_time, max_vis_simulation_time, update_time)
-        self.trajectory_file = f"output_N{num_agents}.sqlite"
-        # Path configurations
-        self.project_root = Path(os.path.abspath("")).parent
-        self.sim_dir = self.project_root / "fds_data"
-        self.pickle_path = self.project_root / "processed_data" / "vismap.pkl"
-        
-        # Exit polygons and waypoints
-        self.exits = [
-            # left
-            Polygon([(1, 16), (4, 16), (4, 17.0), (1, 17.0), (1, 16)]),
-            # right
-            Polygon([(24, 16.0), (27, 16.0), (27, 17.0), (24, 17.0), (24, 16.0)]),
-        ]
-        self.primary_exit = (
-            self.exits[1].centroid.xy[0][0],
-            self.exits[1].centroid.xy[1][0]
-        )
-        self.secondary_exit = (
-            self.exits[0].centroid.xy[0][0],
-            self.exits[0].centroid.xy[1][0]
-        )
-        
-        self.distance_to_waypoints = distance_to_waypoints
-        
-        self.waypoints = [
-            (0, 13.5, 8.5, 0),
-            (1, 10.5, 4.5, 180),
-            (2, 18.5, 6.5, 270),
-            (3, 25, 14.5, 180),
-            (4, 4, 6.5, 90),
-            (5, 2.5, 14.5, 180),
-            (6, self.primary_exit[0], self.primary_exit[1], 180),
-            (7, self.secondary_exit[0], self.secondary_exit[1], 180),
-        ]
 
 class DebugPlots:
     def __init__(self, config, vis):
@@ -106,11 +64,12 @@ class DebugPlots:
         logger.info("Desired speed plot saved successfully.")
 
 
-
 config = SimulationConfig()
 
 ## Vismap config
-vis = load_or_compute_vis(config.sim_dir, config.waypoints, config.times, config.pickle_path)
+vis = load_or_compute_vis(
+    config.sim_dir, config.waypoints, config.times, config.pickle_path, config.c0
+)
 
 debug_plots = DebugPlots(config, vis)
 # Log waypoint visibility for a specific location and time
@@ -132,7 +91,6 @@ logger.info("Vismap saved successfully.")
 # plt.plot(CO2, HV)
 
 
-
 with open("geometry.wkt", "r") as file:
     data = file.readlines()
 
@@ -146,40 +104,49 @@ spawning_area1 = Polygon([(1, 0), (1, 3), (15, 3), (15, 0)])
 spawning_area2 = Polygon([(5, 10), (19, 10), (19, 14.5), (5, 14.5)])
 
 # DEBUG
-starting_point =config.waypoints[0][0:2]
+starting_point = config.waypoints[0][0:2]
 starting_point = (10.6, 6.89)
 path1 = routing.compute_waypoints(starting_point, config.primary_exit)
 path2 = routing.compute_waypoints(starting_point, config.secondary_exit)
 print("path1:", path1[1:-1])
 print("path2:", path2[1:-1])
 pos_in_spawning_areas = [
-        jps.distributions.distribute_by_number(
-            polygon=spawning_area2,
-            number_of_agents=config.num_agents,
-            distance_to_agents=0.4,
-            distance_to_polygon=0.3,
-            seed=config.seed,
-        ),
-        jps.distributions.distribute_by_number(
-            polygon=spawning_area1,
-            number_of_agents=config.num_agents,
-            distance_to_agents=0.4,
-            distance_to_polygon=0.3,
-            seed=config.seed,
-        ),
-    ]
-plot_simulation_configuration(config.waypoints, config.distance_to_waypoints, walkable_area, pos_in_spawning_areas, config.exits, path1, path2)
+    jps.distributions.distribute_by_number(
+        polygon=spawning_area2,
+        number_of_agents=config.num_agents,
+        distance_to_agents=0.4,
+        distance_to_polygon=0.3,
+        seed=config.seed,
+    ),
+    jps.distributions.distribute_by_number(
+        polygon=spawning_area1,
+        number_of_agents=config.num_agents,
+        distance_to_agents=0.4,
+        distance_to_polygon=0.3,
+        seed=config.seed,
+    ),
+]
+plot_simulation_configuration(
+    config.waypoints,
+    config.distance_to_waypoints,
+    walkable_area,
+    pos_in_spawning_areas,
+    config.exits,
+    path1,
+    path2,
+)
 fig, ax = plt.subplots()
 fig.savefig("simulation_configuration.png")
-logger.info("Simulation configuration saved successfully.") 
-#DEBUG
+logger.info("Simulation configuration saved successfully.")
+# DEBUG
 
 plot_visibility_path(logger, config, vis, routing, starting_point)
 
 run_simulation(
-    walkable_area=walkable_area, exits=config.exits, 
-    spawning_area1=spawning_area1, 
-    spawning_area2=spawning_area2, 
-    trajectory_file=config.trajectory_file, 
-    vis=vis
+    walkable_area=walkable_area,
+    exits=config.exits,
+    spawning_area1=spawning_area1,
+    spawning_area2=spawning_area2,
+    trajectory_file=config.trajectory_file,
+    vis=vis,
 )

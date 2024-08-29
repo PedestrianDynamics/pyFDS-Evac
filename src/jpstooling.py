@@ -1,13 +1,17 @@
 """jupedsim related functions."""
 
 import numpy as np
-from utilities import distance
+from .utilities import distance
 from typing import List, Tuple, Any
 import jupedsim as jps
 from pathlib import Path
 
-from main import SimulationConfig
-def calculate_desired_speed(visibility: float, c: float, max_speed: float, range: float = 2.0):
+from .config import SimulationConfig
+
+
+def calculate_desired_speed(
+    visibility: float, c: float, max_speed: float, range: float = 2.0
+):
     """
     Calculate the desired speed based on the proximity of v to c.
 
@@ -24,7 +28,6 @@ def calculate_desired_speed(visibility: float, c: float, max_speed: float, range
         return 0
     else:
         return max_speed * (1 - np.exp(-(visibility - c) / range))
-
 
 
 def get_next_waypoint(point, waypoints):
@@ -44,8 +47,14 @@ def get_next_waypoint(point, waypoints):
     return next_waypoint_id, next_waypoint
 
 
-
-def compute_waypoints_and_visibility(vis, routing, agent_position: Tuple[float, float], primary_exit: Tuple[float, float], waypoints: List[Tuple[float, float, float]], time: float):
+def compute_waypoints_and_visibility(
+    vis,
+    routing,
+    agent_position: Tuple[float, float],
+    primary_exit: Tuple[float, float],
+    waypoints: List[Tuple[float, float, float]],
+    time: float,
+):
     path = routing.compute_waypoints(agent_position, primary_exit)
     """Compute the waypoints and their visibility.
     
@@ -57,7 +66,7 @@ def compute_waypoints_and_visibility(vis, routing, agent_position: Tuple[float, 
     wps_on_path = []
     wps_on_path_id = []
     wps_on_path_visibility = []
-     
+
     for point in path[1:]:
         wp_id, wp = get_next_waypoint(point=point, waypoints=waypoints)
         wps_on_path.append(wp)
@@ -90,21 +99,24 @@ def log_path_info(time, path, agent, waypoints_info, speed):
         )
     print("RESULT: ", any(waypoints_info[2]))
     print("===========")
-    
-def process_waypoints(waypoints_info: List, waypoints: List, vis: Any, time: float)->Tuple[float, float]:
+
+
+def process_waypoints(
+    waypoints_info: List, waypoints: List, vis: Any, time: float
+) -> Tuple[float, float]:
     vis_point = 0
     seen = set()
     for wp_id, is_visible in zip(waypoints_info[1], waypoints_info[2]):
         if wp_id not in seen and is_visible:
             seen.add(wp_id)
             x = waypoints[wp_id][1]
-            y = waypoints[wp_id][2] 
+            y = waypoints[wp_id][2]
             vis_point += vis.get_local_visibility(time=time, x=x, y=y, c=3)
     return vis_point
 
 
 def check_and_update_journeys(
-    routing,    
+    routing,
     simulation: jps.Simulation,
     time: float,
     primary_exit: Tuple[float, float],
@@ -140,12 +152,12 @@ def check_and_update_journeys(
     for agent in simulation.agents():
         agent_position = agent.position
         waypoints_info = compute_waypoints_and_visibility(
-            routing,agent_position, primary_exit, waypoints, time
+            routing, agent_position, primary_exit, waypoints, time
         )
         waypoints_info_s = compute_waypoints_and_visibility(
-            routing,agent_position, secondary_exit, waypoints, time
+            routing, agent_position, secondary_exit, waypoints, time
         )
-        
+
         # Set the speed
         local_visibility = vis.get_local_visibility(
             time=time, x=agent_position[0], y=agent_position[1], c=config.c0
@@ -155,7 +167,7 @@ def check_and_update_journeys(
         )
         vis_point = process_waypoints(waypoints_info, waypoints, vis, time)
         vis_point_s = process_waypoints(waypoints_info_s, waypoints, vis, time)
-        
+
         if vis_point_s > vis_point:
             simulation.switch_agent_journey(
                 agent.id, secondary_journey_id, secondary_exit_id
@@ -164,6 +176,7 @@ def check_and_update_journeys(
             simulation.switch_agent_journey(
                 agent.id, primary_journey_id, primary_exit_id
             )
+
 
 def add_agents_to_simulation(
     simulation: jps.Simulation, pos_in_spawning_areas, journey_primary_id, exit_ids
@@ -201,9 +214,15 @@ def add_agents_to_simulation(
     return ids_up, ids_down
 
 
-
-
-def run_simulation(trajectory_file, walkable_area, exits, spawning_area1, spawning_area2, vis, config: SimulationConfig):
+def run_simulation(
+    trajectory_file,
+    walkable_area,
+    exits,
+    spawning_area1,
+    spawning_area2,
+    vis,
+    config: SimulationConfig,
+):
     simulation = jps.Simulation(
         model=jps.SocialForceModel(),
         geometry=walkable_area.polygon,
@@ -246,7 +265,9 @@ def run_simulation(trajectory_file, walkable_area, exits, spawning_area1, spawni
     premovement_iterations = config.premovement_time * int(1 / simulation.delta_time())
     simulation.iterate(premovement_iterations)
     # Start movement. The simulation will stop if no agents are left or the max_vis_simulation_time is reached
-    while simulation.elapsed_time() <  config.premovement_time + 200:#max_vis_simulation_time:
+    while (
+        simulation.elapsed_time() < config.premovement_time + 200
+    ):  # max_vis_simulation_time:
         t = simulation.elapsed_time()  # seconds
         # Generate new agents every 10 seconds
         if (
