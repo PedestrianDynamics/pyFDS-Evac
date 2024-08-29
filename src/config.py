@@ -26,8 +26,8 @@ class SimulationConfig:
         self.times = range(premovement_time, max_vis_simulation_time, update_time)
         self.trajectory_file = f"output_N{num_agents}.sqlite"
         # Path configurations
-        self.project_root = Path(os.path.abspath("")).parent
-        print(self.project_root)
+        self.project_root = Path(__file__).resolve().parents[1]
+        print("Project root: ", self.project_root)
         self.sim_dir = self.project_root / "fds_data"
         self.pickle_path = self.project_root / "processed_data" / "vismap.pkl"
 
