@@ -39,6 +39,7 @@ class DebugPlots:
     def plot_local_visibility(self, x, y, c):
         """Plots local visibility over time for a given location and visibility factor."""
         local_visibility = []
+        logger.info("Plotting local_visibility")
         for t in self.config.times:
             visibility = self.vis.get_local_visibility(time=t, x=x, y=y, c=c)
             local_visibility.append(visibility)
@@ -46,18 +47,19 @@ class DebugPlots:
         plt.plot(self.config.times, local_visibility)
         plt.xlabel("Time [s]")
         plt.ylabel("Local Visibility")
-        plt.savefig("local_visibility.png", dpi=300, bbox_inches="tight")
-        logger.info("Local visibility plot saved successfully.")
+        figname = f"{config.figs_path}/local_visibility.png"
+        plt.savefig(figname, dpi=300, bbox_inches="tight")
+        logger.info(f"Local visibility plot saved successfully: {figname}.")
         return local_visibility
 
-    def plot_desired_speed_visibility(local_visibility: List[float], c):
+    def plot_desired_speed_visibility(local_visibility: List[float], c=3):
         """Plots the desired speed over time for a given location and visibility factor."""
 
         desired_speeds = [
             calculate_desired_speed(visibility, c, max_speed=1.0, range=5)
             for visibility in local_visibility
         ]
-        plt.plot(config.times, desired_speeds)
+        plt.plot(self.config.times, desired_speeds)
         plt.xlabel("Time [s]")
         plt.ylabel("Desired Speed [m/s]")
         plt.savefig("desired_speed.png", dpi=300, bbox_inches="tight")
@@ -75,8 +77,8 @@ debug_plots = DebugPlots(config, vis)
 # Log waypoint visibility for a specific location and time
 debug_plots.log_waypoint_visibility(x=18.51, y=6.79, t=16)
 # Plot local visibility for a given location and c factor
-local_visibility = debug_plots.plot_local_visibility(x=5, y=6, c=3)
-debug_plots.plot_desired_speed_visibility(local_visibility, c=3)
+local_visibility_values = debug_plots.plot_local_visibility(x=5, y=6, c=3)
+debug_plots.plot_desired_speed_visibility(local_visibility_values)
 
 fig, ax = vis.create_aset_map_plot(plot_obstructions=True)
 fig.savefig("aset_map.png", dpi=300, bbox_inches="tight")

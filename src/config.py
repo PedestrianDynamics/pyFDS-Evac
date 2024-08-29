@@ -27,10 +27,10 @@ class SimulationConfig:
         self.trajectory_file = f"output_N{num_agents}.sqlite"
         # Path configurations
         self.project_root = Path(__file__).resolve().parents[1]
-        print("Project root: ", self.project_root)
         self.sim_dir = self.project_root / "fds_data"
         self.pickle_path = self.project_root / "processed_data" / "vismap.pkl"
-
+        self.figs_path = self.project_root / "figs"
+        self.figs_path.mkdir(parents=True, exist_ok=True)
         # Exit polygons and waypoints
         self.exits = [
             # left
