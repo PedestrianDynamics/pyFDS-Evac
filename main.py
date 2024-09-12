@@ -88,7 +88,7 @@ pos_in_spawning_areas = [
         seed=config.seed,
     ),
 ]
-plot_simulation_configuration(
+fig = plot_simulation_configuration(
     config.waypoints,
     config.distance_to_waypoints,
     walkable_area,
@@ -97,7 +97,6 @@ plot_simulation_configuration(
     path1,
     path2,
 )
-fig, ax = plt.subplots()
 fig.savefig(config.figs_path / "simulation_configuration.png")
 logger.info(f"{config.figs_path}/Simulation configuration saved successfully.")
 # DEBUG

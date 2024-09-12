@@ -49,8 +49,10 @@ def plot_desired_speed_visibility(config, lv, c=3):
     plt.plot(config.times, desired_speeds)
     plt.xlabel("Time [s]")
     plt.ylabel("Desired Speed [m/s]")
-    plt.savefig("desired_speed.png", dpi=300, bbox_inches="tight")
-    logger.info("Desired speed plot saved successfully.")
+    plt.savefig(config.figs_path / "desired_speed.png", dpi=300, bbox_inches="tight")
+    logger.info(
+        f"Desired speed plot saved successfully. {config.figs_path}/desired_speed.png"
+    )
 
 
 def plot_simulation_configuration(
@@ -62,7 +64,8 @@ def plot_simulation_configuration(
     path1=None,
     path2=None,
 ):
-    axes = pedpy.plot_walkable_area(walkable_area=walkable_area)
+    fig, axes = plt.subplots()
+    pedpy.plot_walkable_area(walkable_area=walkable_area, axes=axes)
     for exit_area in exits:
         axes.fill(*exit_area.exterior.xy, color="indianred", alpha=0.2)
 
@@ -129,9 +132,7 @@ def plot_simulation_configuration(
                     markeredgecolor=color,
                 )
         axes.plot(x_coords, y_coords, "r--")
-
-    plt.savefig("simulation_configuration.png")
-    print("Simulation configuration saved as simulation_configuration.png")
+    return fig
 
 
 def plot_visibility_path(logger, config, vis, routing, starting_point):
@@ -189,5 +190,5 @@ def plot_visibility_path(logger, config, vis, routing, starting_point):
     ax.set_ylabel("Local Visibility Along Path")
     ax.grid(alpha=0.3)
     plt.legend()
-    fig.savefig("local_visibility_along_path.png")
-    logger.info("> local_visibility_along_path.png")
+    fig.savefig(config.figs_path / "local_visibility_along_path.png")
+    logger.info(f"> {config.figs_path}/local_visibility_along_path.png")
