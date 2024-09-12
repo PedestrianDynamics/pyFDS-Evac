@@ -7,6 +7,12 @@ import jupedsim as jps
 from pathlib import Path
 
 from .config import SimulationConfig
+import logging
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 def calculate_desired_speed(
@@ -48,21 +54,21 @@ def get_next_waypoint(point, waypoints):
 
 
 def compute_waypoints_and_visibility(
-    vis,
-    routing,
+    vis: Any,
+    routing: Any,
     agent_position: Tuple[float, float],
     primary_exit: Tuple[float, float],
     waypoints: List[Tuple[float, float, float]],
     time: float,
 ):
-    path = routing.compute_waypoints(agent_position, primary_exit)
     """Compute the waypoints and their visibility.
-    
+
     returns:
     wps_on_path: List of waypoints on the path.
     wps_on_path_id: List of waypoint IDs on the path.
     wps_on_path_visibility: List of visibility values for the waypoints on the path.
     """
+    path = routing.compute_waypoints(agent_position, primary_exit)
     wps_on_path = []
     wps_on_path_id = []
     wps_on_path_visibility = []
@@ -85,7 +91,14 @@ def compute_waypoints_and_visibility(
     return wps_on_path, wps_on_path_id, wps_on_path_visibility
 
 
-def log_path_info(time, path, agent, waypoints_info, speed):
+def log_path_info(
+    time: float,
+    path: List[Any],
+    agent: jps.Agent,
+    waypoints_info: List[Any],
+    speed: float,
+):
+    """Print logging messages."""
     print("path: ", path[1:-1])
     wp_ids = waypoints_info[1]
     wp_visibility = waypoints_info[2]
@@ -152,10 +165,10 @@ def check_and_update_journeys(
     for agent in simulation.agents():
         agent_position = agent.position
         waypoints_info = compute_waypoints_and_visibility(
-            routing, agent_position, primary_exit, waypoints, time
+            vis, routing, agent_position, primary_exit, waypoints, time
         )
         waypoints_info_s = compute_waypoints_and_visibility(
-            routing, agent_position, secondary_exit, waypoints, time
+            vis, routing, agent_position, secondary_exit, waypoints, time
         )
 
         # Set the speed
@@ -292,8 +305,9 @@ def run_simulation(
                 secondary_journey_id=journey_secondary_id,
                 waypoints=config.waypoints,
                 vis=vis,
+                config=config,
             )
 
         simulation.iterate()
 
-    print(f"Simulation finished after {simulation.elapsed_time():.2f} seconds.")
+    logger.info(f"Simulation finished after {simulation.elapsed_time():.2f} seconds.")

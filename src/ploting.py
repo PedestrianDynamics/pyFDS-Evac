@@ -140,41 +140,46 @@ def plot_visibility_path(logger, config, vis, routing, starting_point):
     times = range(0, 2000, 10)
 
     for time in times:
-        print("time", time)
+        # print("time", time)
         waypoints_info = compute_waypoints_and_visibility(
-            routing, starting_point, config.primary_exit, config.waypoints, time
+            vis,
+            routing,
+            starting_point,
+            config.primary_exit,
+            config.waypoints,
+            time=time,
         )
         # print(waypoints_info[0:])
-        print("------ FIRST PATH -------")
-        print(waypoints_info)
+        # print("------ FIRST PATH -------")
+        # print(waypoints_info)
         vis_point = 0
         seen = set()
         for wp_id, is_visible in zip(waypoints_info[1], waypoints_info[2]):
             if wp_id not in seen and is_visible:
                 seen.add(wp_id)
-                print(f"{wp_id = }, {is_visible = }")
+                # print(f"{wp_id = }, {is_visible = }")
                 x = config.waypoints[wp_id][1]
                 y = config.waypoints[wp_id][2]
                 vis_point += vis.get_local_visibility(time=time, x=x, y=y, c=3)
 
-        print("==>> local visibility:", vis_point)
-        print("------ SECOND PATH -------")
+        # print("==>> local visibility:", vis_point)
+        # print("------ SECOND PATH -------")
         vis1.append(vis_point)
         waypoints_info2 = compute_waypoints_and_visibility(
-            routing, starting_point, config.secondary_exit, config.waypoints, time
+            vis, routing, starting_point, config.secondary_exit, config.waypoints, time
         )
-        print(waypoints_info2)
+        # print(waypoints_info2)
         vis_point2 = 0
         seen2 = set()
         for wp_id, is_visible in zip(waypoints_info2[1], waypoints_info2[2]):
             if wp_id not in seen2 and is_visible:
-                print(f"{wp_id = }, {is_visible = }")
+                # print(f"{wp_id = }, {is_visible = }")
                 seen2.add(wp_id)
                 x = config.waypoints[wp_id][1]
                 y = config.waypoints[wp_id][2]
                 vis_point2 += vis.get_local_visibility(time=time, x=x, y=y, c=3)
 
-        print("local visibility:", vis_point2)
+        # print("local visibility:", vis_point2)
         vis2.append(vis_point2)
 
     fig, ax = plt.subplots()

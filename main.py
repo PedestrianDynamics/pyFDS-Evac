@@ -41,11 +41,11 @@ local_visibility_values = plot_local_visibility(vis, config, x=5, y=6, c=3)
 plot_desired_speed_visibility(config=config, lv=local_visibility_values, c=3)
 
 fig, ax = vis.create_aset_map_plot(plot_obstructions=True)
-fig.savefig("aset_map.png", dpi=300, bbox_inches="tight")
-logger.info("ASET map saved successfully.")
+fig.savefig(config.figs_path / "aset_map.png", dpi=300, bbox_inches="tight")
+logger.info(f"{config.figs_path}/ASET map saved successfully.")
 fig, ax = vis.create_time_agg_wp_agg_vismap_plot(plot_obstructions=True)
-fig.savefig("vismap.png", dpi=300, bbox_inches="tight")
-logger.info("Vismap saved successfully.")
+fig.savefig(config.figs_path / "vismap.png", dpi=300, bbox_inches="tight")
+logger.info(f"{config.figs_path}/Vismap saved successfully.")
 
 
 # CO2 = np.arange(0, 10, 0.001)
@@ -53,7 +53,7 @@ logger.info("Vismap saved successfully.")
 # plt.plot(CO2, HV)
 
 
-with open("geometry.wkt", "r") as file:
+with open("assets/geometry.wkt", "r") as file:
     data = file.readlines()
 
 wkt_data = from_wkt(data)
@@ -98,8 +98,8 @@ plot_simulation_configuration(
     path2,
 )
 fig, ax = plt.subplots()
-fig.savefig("simulation_configuration.png")
-logger.info("Simulation configuration saved successfully.")
+fig.savefig(config.figs_path / "simulation_configuration.png")
+logger.info(f"{config.figs_path}/Simulation configuration saved successfully.")
 # DEBUG
 
 plot_visibility_path(logger, config, vis, routing, starting_point)
@@ -111,4 +111,5 @@ run_simulation(
     spawning_area2=spawning_area2,
     trajectory_file=config.trajectory_file,
     vis=vis,
+    config=config,
 )
