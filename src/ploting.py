@@ -189,5 +189,5 @@ def plot_visibility_path(logger, config, vis, routing, starting_point):
     ax.set_ylabel("Local Visibility Along Path")
     ax.grid(alpha=0.3)
     plt.legend()
-    fig.savefig("local_visibilioty_along_path.png")
-    logger.info("> local_visibilioty_along_path.png")
+    fig.savefig("local_visibility_along_path.png")
+    logger.info("> local_visibility_along_path.png")
