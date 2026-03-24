@@ -64,16 +64,20 @@ _MODEL_BUILDERS = {
         strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
         range_neighbor_repulsion=p.get("range_neighbor_repulsion", 0.1),
     ),
-      "AnticipationVelocityModel": lambda p: jps.AnticipationVelocityModel(
-        #strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
-        #range_neighbor_repulsion=p.get("range_neighbor_repulsion", 0.1),
-        #anticipation_time=p.get("anticipation_time", 1.0)
+    "AnticipationVelocityModel": lambda p: jps.AnticipationVelocityModel(
+        # strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
+        # range_neighbor_repulsion=p.get("range_neighbor_repulsion", 0.1),
+        # anticipation_time=p.get("anticipation_time", 1.0)
     ),
     "GeneralizedCentrifugalForceModel": lambda p: jps.GeneralizedCentrifugalForceModel(
         strength_neighbor_repulsion=p.get("gcfm_strength_neighbor_repulsion", 0.3),
         strength_geometry_repulsion=p.get("gcfm_strength_geometry_repulsion", 0.2),
-        max_neighbor_interaction_distance=p.get("gcfm_max_neighbor_interaction_distance", 2.0),
-        max_geometry_interaction_distance=p.get("gcfm_max_geometry_interaction_distance", 2.0),
+        max_neighbor_interaction_distance=p.get(
+            "gcfm_max_neighbor_interaction_distance", 2.0
+        ),
+        max_geometry_interaction_distance=p.get(
+            "gcfm_max_geometry_interaction_distance", 2.0
+        ),
         max_neighbor_repulsion_force=p.get("gcfm_max_neighbor_repulsion_force", 9.0),
         max_geometry_repulsion_force=p.get("gcfm_max_geometry_repulsion_force", 3.0),
     ),
@@ -81,19 +85,29 @@ _MODEL_BUILDERS = {
         bodyForce=p.get("agent_strength", 2000),
         friction=p.get("agent_range", 0.08),
     ),
-
 }
 
 _AGENT_PARAM_BUILDERS = {
-    "CollisionFreeSpeedModel": lambda **kw: jps.CollisionFreeSpeedModelAgentParameters(**kw),
-    "CollisionFreeSpeedModelV2": lambda **kw: jps.CollisionFreeSpeedModelV2AgentParameters(**kw),
+    "CollisionFreeSpeedModel": lambda **kw: jps.CollisionFreeSpeedModelAgentParameters(
+        **kw
+    ),
+    "CollisionFreeSpeedModelV2": lambda **kw: jps.CollisionFreeSpeedModelV2AgentParameters(
+        **kw
+    ),
     "GeneralizedCentrifugalForceModel": lambda **kw: jps.GeneralizedCentrifugalForceModelAgentParameters(
         desired_speed=kw["desired_speed"],
-        a_v=1.0, a_min=kw["radius"], b_min=kw["radius"], b_max=kw["radius"] * 2,
-        position=kw["position"], journey_id=kw["journey_id"], stage_id=kw["stage_id"],
+        a_v=1.0,
+        a_min=kw["radius"],
+        b_min=kw["radius"],
+        b_max=kw["radius"] * 2,
+        position=kw["position"],
+        journey_id=kw["journey_id"],
+        stage_id=kw["stage_id"],
     ),
     "SocialForceModel": lambda **kw: jps.SocialForceModelAgentParameters(**kw),
-    "AnticipationVelocityModel": lambda **kw: jps.AnticipationVelocityModelAgentParameters(**kw),
+    "AnticipationVelocityModel": lambda **kw: jps.AnticipationVelocityModelAgentParameters(
+        **kw
+    ),
 }
 
 
@@ -101,7 +115,9 @@ def _build_model(model_type: str, sim_params: dict):
     _require_jupedsim()
     builder = _MODEL_BUILDERS.get(model_type)
     if builder is None:
-        raise ValueError(f"Unknown model type: {model_type}. Available: {list(_MODEL_BUILDERS)}")
+        raise ValueError(
+            f"Unknown model type: {model_type}. Available: {list(_MODEL_BUILDERS)}"
+        )
     return builder(sim_params)
 
 
@@ -118,8 +134,11 @@ def _build_agent_params(
     if builder is None:
         raise ValueError(f"No agent params builder for model type: {model_type}")
     return builder(
-        desired_speed=v0, radius=radius,
-        position=position, journey_id=journey_id, stage_id=stage_id,
+        desired_speed=v0,
+        radius=radius,
+        position=position,
+        journey_id=journey_id,
+        stage_id=stage_id,
     )
 
 
@@ -133,6 +152,7 @@ def _require_jupedsim():
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
     effective_radius = max(max_radius, 0.1)
@@ -182,7 +202,9 @@ def _normalize_flow_schedule_entry(entry: dict) -> dict:
             f"Invalid flow window [{start_time}, {end_time}] - end_time must be greater than start_time."
         )
     if number <= 0:
-        raise ValueError(f"Flow schedule numbers must be positive integers, got {number!r}")
+        raise ValueError(
+            f"Flow schedule numbers must be positive integers, got {number!r}"
+        )
 
     return {
         "flow_start_time": start_time,
@@ -196,7 +218,9 @@ def _normalized_flow_schedule(params: dict) -> list[dict]:
     if not raw_schedule:
         return []
     normalized = [_normalize_flow_schedule_entry(entry) for entry in raw_schedule]
-    normalized.sort(key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"]))
+    normalized.sort(
+        key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
+    )
     return normalized
 
 
@@ -276,8 +300,7 @@ class Scenario:
 
     def summary(self) -> str:
         total_agents = sum(
-            _distribution_agent_budget(d)
-            for d in self.distributions.values()
+            _distribution_agent_budget(d) for d in self.distributions.values()
         )
         journey_sequence = []
         journeys = self.raw.get("journeys", [])
@@ -299,7 +322,9 @@ class Scenario:
             checkpoint_count = sum(
                 stage.startswith("jps-checkpoints_") for stage in journey_sequence
             )
-            exit_count = sum(stage.startswith("jps-exits_") for stage in journey_sequence)
+            exit_count = sum(
+                stage.startswith("jps-exits_") for stage in journey_sequence
+            )
             distribution_count = sum(
                 stage.startswith("jps-distributions_") for stage in journey_sequence
             )
@@ -315,7 +340,11 @@ class Scenario:
             params = dist.get("parameters", {})
             flow = params.get("use_flow_spawning", False)
             n = params.get("number", "?")
-            tag = f" (flow: {params.get('flow_start_time', 0)}-{params.get('flow_end_time', 10)}s)" if flow else ""
+            tag = (
+                f" (flow: {params.get('flow_start_time', 0)}-{params.get('flow_end_time', 10)}s)"
+                if flow
+                else ""
+            )
             lines.append(f"    {dist_id}: {n} agents{tag}")
         return "\n".join(lines)
 
@@ -335,17 +364,31 @@ class Scenario:
         from matplotlib.patches import PathPatch
 
         exterior_coords = list(self.walkable_polygon.exterior.coords)
-        codes = [MplPath.MOVETO] + [MplPath.LINETO] * (len(exterior_coords) - 2) + [MplPath.CLOSEPOLY]
+        codes = (
+            [MplPath.MOVETO]
+            + [MplPath.LINETO] * (len(exterior_coords) - 2)
+            + [MplPath.CLOSEPOLY]
+        )
         verts = list(exterior_coords)
 
         for interior in self.walkable_polygon.interiors:
             hole_coords = list(interior.coords)
-            codes += [MplPath.MOVETO] + [MplPath.LINETO] * (len(hole_coords) - 2) + [MplPath.CLOSEPOLY]
+            codes += (
+                [MplPath.MOVETO]
+                + [MplPath.LINETO] * (len(hole_coords) - 2)
+                + [MplPath.CLOSEPOLY]
+            )
             verts += list(hole_coords)
 
         path = MplPath(verts, codes)
-        patch = PathPatch(path, facecolor="#f0f0ec", edgecolor="#3a3a3a",
-                          linewidth=1.5, alpha=0.5, zorder=0)
+        patch = PathPatch(
+            path,
+            facecolor="#f0f0ec",
+            edgecolor="#3a3a3a",
+            linewidth=1.5,
+            alpha=0.5,
+            zorder=0,
+        )
         ax.add_patch(patch)
 
         # Draw wall outlines explicitly
@@ -363,43 +406,67 @@ class Scenario:
         }
 
         def _plot_element(coords, color, label, alpha=0.35):
-            poly = MplPolygon(coords[:-1], closed=True, facecolor=color,
-                              edgecolor=color, alpha=alpha, linewidth=1.5, zorder=2)
+            poly = MplPolygon(
+                coords[:-1],
+                closed=True,
+                facecolor=color,
+                edgecolor=color,
+                alpha=alpha,
+                linewidth=1.5,
+                zorder=2,
+            )
             ax.add_patch(poly)
             cx = sum(c[0] for c in coords[:-1]) / max(len(coords) - 1, 1)
             cy = sum(c[1] for c in coords[:-1]) / max(len(coords) - 1, 1)
-            ax.text(cx, cy, label, ha="center", va="center",
-                    fontsize=8, fontweight="bold", color=color, zorder=3)
+            ax.text(
+                cx,
+                cy,
+                label,
+                ha="center",
+                va="center",
+                fontsize=8,
+                fontweight="bold",
+                color=color,
+                zorder=3,
+            )
 
         for i, (did, d) in enumerate(self.distributions.items()):
             n = _distribution_agent_budget(d)
-            _plot_element(d["coordinates"], palette["distribution"],
-                          f"D{i}\n({n} ag)")
+            _plot_element(d["coordinates"], palette["distribution"], f"D{i}\n({n} ag)")
 
         for i, (eid, e) in enumerate(self.exits.items()):
             _plot_element(e["coordinates"], palette["exit"], f"E{i}", alpha=0.5)
 
         for i, (zid, z) in enumerate(self.zones.items()):
             sf = z.get("speed_factor", 1.0)
-            _plot_element(z["coordinates"], palette["zone"],
-                          f"Z{i}\n(sf={sf})", alpha=0.25)
+            _plot_element(
+                z["coordinates"], palette["zone"], f"Z{i}\n(sf={sf})", alpha=0.25
+            )
 
         for i, (sid, s) in enumerate(self.stages.items()):
             wt = s.get("waiting_time", 0.0)
-            _plot_element(s["coordinates"], palette["checkpoint"],
-                          f"C{i}\n(w={wt}s)", alpha=0.3)
+            _plot_element(
+                s["coordinates"], palette["checkpoint"], f"C{i}\n(w={wt}s)", alpha=0.3
+            )
 
         # Legend
         from matplotlib.patches import Patch
+
         handles = []
         if self.distributions:
-            handles.append(Patch(facecolor=palette["distribution"], alpha=0.35, label="Distribution"))
+            handles.append(
+                Patch(
+                    facecolor=palette["distribution"], alpha=0.35, label="Distribution"
+                )
+            )
         if self.exits:
             handles.append(Patch(facecolor=palette["exit"], alpha=0.5, label="Exit"))
         if self.zones:
             handles.append(Patch(facecolor=palette["zone"], alpha=0.25, label="Zone"))
         if self.stages:
-            handles.append(Patch(facecolor=palette["checkpoint"], alpha=0.3, label="Checkpoint"))
+            handles.append(
+                Patch(facecolor=palette["checkpoint"], alpha=0.3, label="Checkpoint")
+            )
         if handles:
             ax.legend(handles=handles, loc="best", frameon=False, fontsize=9)
 
@@ -443,8 +510,7 @@ class Scenario:
             return keys[id]
         if id not in self.zones:
             raise KeyError(
-                f"Zone '{id}' not found. "
-                f"Available: {list(self.zones.keys())}"
+                f"Zone '{id}' not found. Available: {list(self.zones.keys())}"
             )
         return id
 
@@ -460,8 +526,7 @@ class Scenario:
             return keys[id]
         if id not in self.stages:
             raise KeyError(
-                f"Stage '{id}' not found. "
-                f"Available: {list(self.stages.keys())}"
+                f"Stage '{id}' not found. Available: {list(self.stages.keys())}"
             )
         return id
 
@@ -472,34 +537,41 @@ class Scenario:
         result = []
         for i, (did, d) in enumerate(self.distributions.items()):
             params = d.get("parameters", {})
-            result.append({
-                "index": i,
-                "id": did,
-                "agents": _distribution_agent_budget(d),
-                "flow": params.get("use_flow_spawning", False) or bool(params.get("flow_schedule")),
-            })
+            result.append(
+                {
+                    "index": i,
+                    "id": did,
+                    "agents": _distribution_agent_budget(d),
+                    "flow": params.get("use_flow_spawning", False)
+                    or bool(params.get("flow_schedule")),
+                }
+            )
         return result
 
     def list_zones(self) -> list[dict]:
         """Return a list of ``{"index", "id", "speed_factor"}`` dicts."""
         result = []
         for i, (zid, z) in enumerate(self.zones.items()):
-            result.append({
-                "index": i,
-                "id": zid,
-                "speed_factor": z.get("speed_factor", 1.0),
-            })
+            result.append(
+                {
+                    "index": i,
+                    "id": zid,
+                    "speed_factor": z.get("speed_factor", 1.0),
+                }
+            )
         return result
 
     def list_stages(self) -> list[dict]:
         """Return a list of ``{"index", "id", "waiting_time"}`` dicts."""
         result = []
         for i, (sid, s) in enumerate(self.stages.items()):
-            result.append({
-                "index": i,
-                "id": sid,
-                "waiting_time": s.get("waiting_time", 0.0),
-            })
+            result.append(
+                {
+                    "index": i,
+                    "id": sid,
+                    "waiting_time": s.get("waiting_time", 0.0),
+                }
+            )
         return result
 
     # -- copy ----------------------------------------------------------------
@@ -542,7 +614,9 @@ class Scenario:
 
     def set_model_type(self, model_type: str):
         if model_type not in _MODEL_BUILDERS:
-            raise ValueError(f"Unknown model: {model_type}. Available: {list(_MODEL_BUILDERS)}")
+            raise ValueError(
+                f"Unknown model: {model_type}. Available: {list(_MODEL_BUILDERS)}"
+            )
         self.model_type = model_type
         self.sim_params["model_type"] = model_type
         self._simulation_params()["model_type"] = model_type
@@ -551,7 +625,9 @@ class Scenario:
         """Set model-specific parameters (e.g. strength_neighbor_repulsion, range_neighbor_repulsion)."""
         for key, value in kwargs.items():
             if isinstance(value, (int, float)) and value < 0:
-                raise ValueError(f"Numeric parameter '{key}' must be non-negative, got {value}")
+                raise ValueError(
+                    f"Numeric parameter '{key}' must be non-negative, got {value}"
+                )
         self.sim_params.update(kwargs)
         self._simulation_params().update(kwargs)
 
@@ -575,11 +651,19 @@ class Scenario:
             if not isinstance(r, (int, float)) or r <= 0 or r > 1.0:
                 raise ValueError(f"radius must be in (0, 1.0], got {r!r}")
         if speed_value is not None:
-            if not isinstance(speed_value, (int, float)) or speed_value <= 0 or speed_value > 5.0:
-                raise ValueError(f"desired_speed/v0 must be in (0, 5.0], got {speed_value!r}")
+            if (
+                not isinstance(speed_value, (int, float))
+                or speed_value <= 0
+                or speed_value > 5.0
+            ):
+                raise ValueError(
+                    f"desired_speed/v0 must be in (0, 5.0], got {speed_value!r}"
+                )
         if speed_std_value is not None:
             if not isinstance(speed_std_value, (int, float)) or speed_std_value < 0:
-                raise ValueError(f"desired_speed_std/v0_std must be non-negative, got {speed_std_value!r}")
+                raise ValueError(
+                    f"desired_speed_std/v0_std must be non-negative, got {speed_std_value!r}"
+                )
         if speed_dist_value is not None:
             if speed_dist_value not in {"constant", "gaussian"}:
                 raise ValueError(
@@ -612,10 +696,16 @@ class Scenario:
         """Attach a time-windowed inflow schedule to one source distribution."""
         distribution_id = self._resolve_distribution_id(distribution_id)
         if not isinstance(schedule, list) or not schedule:
-            raise ValueError("schedule must be a non-empty list of flow schedule entries")
+            raise ValueError(
+                "schedule must be a non-empty list of flow schedule entries"
+            )
 
-        normalized_schedule = [_normalize_flow_schedule_entry(entry) for entry in schedule]
-        normalized_schedule.sort(key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"]))
+        normalized_schedule = [
+            _normalize_flow_schedule_entry(entry) for entry in schedule
+        ]
+        normalized_schedule.sort(
+            key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
+        )
 
         dist = self.distributions[distribution_id]
         params = dist.setdefault("parameters", {})
@@ -639,7 +729,9 @@ class Scenario:
             raise ValueError(f"factor must be non-negative, got {factor!r}")
         self.zones[zone_id]["speed_factor"] = factor
 
-    def set_checkpoint_waiting_time(self, checkpoint_id: int | str, waiting_time: float):
+    def set_checkpoint_waiting_time(
+        self, checkpoint_id: int | str, waiting_time: float
+    ):
         """Set the waiting time for a checkpoint/stage."""
         checkpoint_id = self._resolve_stage_id(checkpoint_id)
         if not isinstance(waiting_time, (int, float)) or waiting_time < 0:
@@ -736,10 +828,14 @@ def load_scenario(path: str) -> Scenario:
         preferred_json = resolved / "config.json"
         preferred_wkt = resolved / "geometry.wkt"
         json_files = (
-            [preferred_json] if preferred_json.exists() else sorted(resolved.glob("*.json"))
+            [preferred_json]
+            if preferred_json.exists()
+            else sorted(resolved.glob("*.json"))
         )
         wkt_files = (
-            [preferred_wkt] if preferred_wkt.exists() else sorted(resolved.glob("*.wkt"))
+            [preferred_wkt]
+            if preferred_wkt.exists()
+            else sorted(resolved.glob("*.wkt"))
         )
         if not json_files or not wkt_files:
             raise ValueError(
@@ -750,9 +846,8 @@ def load_scenario(path: str) -> Scenario:
         source_path = str(resolved)
     elif resolved.suffix.lower() == ".json":
         data = json.loads(resolved.read_text(encoding="utf-8"))
-        walkable_wkt = (
-            data.get("walkable_area_wkt")
-            or data.get("geometry", {}).get("walkable_area_wkt")
+        walkable_wkt = data.get("walkable_area_wkt") or data.get("geometry", {}).get(
+            "walkable_area_wkt"
         )
         if not walkable_wkt:
             sibling_wkts = sorted(resolved.parent.glob("*.wkt"))
@@ -875,9 +970,15 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                         agent_counter_per_source[source_id] * spawn_frequency
                     )
 
-                    if agent_counter_per_source[source_id] >= num_agents_per_source[source_id]:
+                    if (
+                        agent_counter_per_source[source_id]
+                        >= num_agents_per_source[source_id]
+                    ):
                         continue
-                    if current_time < flow_dist["start_time"] or current_time > flow_dist["end_time"]:
+                    if (
+                        current_time < flow_dist["start_time"]
+                        or current_time > flow_dist["end_time"]
+                    ):
                         continue
                     if current_time < next_spawn_time:
                         continue
@@ -889,9 +990,9 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                         fallback_exit_id = None
 
                         for j in range(len(starting_pos_per_source[source_id])):
-                            pos_index = (
-                                agent_counter_per_source[source_id] + j
-                            ) % len(starting_pos_per_source[source_id])
+                            pos_index = (agent_counter_per_source[source_id] + j) % len(
+                                starting_pos_per_source[source_id]
+                            )
                             position = starting_pos_per_source[source_id][pos_index]
                             flow_params = flow_dist["params"]
 
@@ -914,23 +1015,31 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                     rand_val = flow_variant_rng.random() * total_weight
                                     cumulative_weight = 0.0
                                     for variant_info in distribution_journeys:
-                                        cumulative_weight += variant_info["variant_data"]["percentage"]
+                                        cumulative_weight += variant_info[
+                                            "variant_data"
+                                        ]["percentage"]
                                         if rand_val <= cumulative_weight:
                                             selected_variant_info = variant_info
                                             break
                                     if selected_variant_info is None:
                                         selected_variant_info = distribution_journeys[0]
 
-                                    selected_variant = selected_variant_info["variant_data"]
+                                    selected_variant = selected_variant_info[
+                                        "variant_data"
+                                    ]
                                     agent_parameters.journey_id = selected_variant["id"]
 
                                     selected_stage_id = None
-                                    for stage in selected_variant.get("entry_stages", []):
+                                    for stage in selected_variant.get(
+                                        "entry_stages", []
+                                    ):
                                         if (
                                             stage in spawning_info["stage_map"]
                                             and spawning_info["stage_map"][stage] != -1
                                         ):
-                                            selected_stage_id = spawning_info["stage_map"][stage]
+                                            selected_stage_id = spawning_info[
+                                                "stage_map"
+                                            ][stage]
                                             break
                                     if selected_stage_id is None:
                                         raise ValueError(
@@ -939,23 +1048,33 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                     agent_parameters.stage_id = selected_stage_id
                                     uses_direct_steering = any(
                                         stage in direct_steering_info
-                                        for stage in selected_variant.get("actual_stages", [])
+                                        for stage in selected_variant.get(
+                                            "actual_stages", []
+                                        )
                                     )
-                                    global_ds_journey_id = spawning_info.get("global_ds_journey_id")
-                                    global_ds_stage_id = spawning_info.get("global_ds_stage_id")
+                                    global_ds_journey_id = spawning_info.get(
+                                        "global_ds_journey_id"
+                                    )
+                                    global_ds_stage_id = spawning_info.get(
+                                        "global_ds_stage_id"
+                                    )
                                     if (
                                         uses_direct_steering
                                         and global_ds_journey_id is not None
                                         and global_ds_stage_id is not None
                                     ):
-                                        agent_parameters.journey_id = global_ds_journey_id
+                                        agent_parameters.journey_id = (
+                                            global_ds_journey_id
+                                        )
                                         agent_parameters.stage_id = global_ds_stage_id
                                 else:
                                     nearest_exit_stage_id = _find_nearest_exit(
                                         position,
                                         stage_map=spawning_info.get("stage_map"),
                                         exits=spawning_info.get("exits"),
-                                        exit_geometries=spawning_info.get("exit_geometries"),
+                                        exit_geometries=spawning_info.get(
+                                            "exit_geometries"
+                                        ),
                                     )
                                     # _find_nearest_exit returns the exit key
                                     # (e.g. "jps-exits_0") when exit_geometries
@@ -974,12 +1093,14 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                         fallback_exit_id = stage_id_to_exit.get(
                                             nearest_exit_stage_id
                                         )
-                                    nearest_journey_id = spawning_info.get("exit_to_journey", {}).get(
-                                        nearest_exit_stage_id
-                                    )
+                                    nearest_journey_id = spawning_info.get(
+                                        "exit_to_journey", {}
+                                    ).get(nearest_exit_stage_id)
                                     if nearest_journey_id is not None:
                                         agent_parameters.journey_id = nearest_journey_id
-                                        agent_parameters.stage_id = nearest_exit_stage_id
+                                        agent_parameters.stage_id = (
+                                            nearest_exit_stage_id
+                                        )
                                     else:
                                         global_ds_journey_id = spawning_info.get(
                                             "global_ds_journey_id"
@@ -994,7 +1115,9 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                             raise ValueError(
                                                 "Missing exit journey mapping and no fallback direct-steering journey is available"
                                             )
-                                        agent_parameters.journey_id = global_ds_journey_id
+                                        agent_parameters.journey_id = (
+                                            global_ds_journey_id
+                                        )
                                         agent_parameters.stage_id = global_ds_stage_id
 
                                 agent_id = simulation.add_agent(agent_parameters)
@@ -1005,23 +1128,37 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                 #     f"pos=({float(position[0]):.3f}, {float(position[1]):.3f}) "
                                 #     f"journey={getattr(agent_parameters, 'journey_id', None)} "
                                 #     f"stage={getattr(agent_parameters, 'stage_id', None)}"
-                                )
 
-                                if selected_variant and agent_wait_info is not None and direct_steering_info:
+                                if (
+                                    selected_variant
+                                    and agent_wait_info is not None
+                                    and direct_steering_info
+                                ):
                                     path_state = build_agent_path_state(
                                         variant_data=selected_variant,
                                         journey_key=(
-                                            selected_variant_info.get("original_journey_id")
+                                            selected_variant_info.get(
+                                                "original_journey_id"
+                                            )
                                             if selected_variant_info
                                             else None
                                         ),
-                                        transitions=spawning_info.get("transitions", []),
+                                        transitions=spawning_info.get(
+                                            "transitions", []
+                                        ),
                                         direct_steering_info=direct_steering_info,
-                                        waypoint_routing=spawning_info.get("waypoint_routing", {}),
+                                        waypoint_routing=spawning_info.get(
+                                            "waypoint_routing", {}
+                                        ),
                                         seed=seed,
                                         agent_id=agent_id,
-                                        initial_position=(float(position[0]), float(position[1])),
-                                        agent_radius=float(flow_params.get("radius", 0.2)),
+                                        initial_position=(
+                                            float(position[0]),
+                                            float(position[1]),
+                                        ),
+                                        agent_radius=float(
+                                            flow_params.get("radius", 0.2)
+                                        ),
                                     )
                                     if path_state:
                                         agent_wait_info[agent_id] = path_state
@@ -1043,18 +1180,31 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                         for sk, info in direct_steering_info.items():
                                             stage_configs[sk] = {
                                                 "polygon": info.get("polygon"),
-                                                "stage_type": info.get("stage_type", "exit"),
-                                                "waiting_time": float(info.get("waiting_time", 0.0)),
+                                                "stage_type": info.get(
+                                                    "stage_type", "exit"
+                                                ),
+                                                "waiting_time": float(
+                                                    info.get("waiting_time", 0.0)
+                                                ),
                                                 "waiting_time_distribution": info.get(
                                                     "waiting_time_distribution",
                                                     "constant",
                                                 ),
-                                                "waiting_time_std": float(info.get("waiting_time_std", 1.0)),
-                                                "enable_throughput_throttling": bool(
-                                                    info.get("enable_throughput_throttling", False)
+                                                "waiting_time_std": float(
+                                                    info.get("waiting_time_std", 1.0)
                                                 ),
-                                                "max_throughput": float(info.get("max_throughput", 1.0)),
-                                                "speed_factor": float(info.get("speed_factor", 1.0)),
+                                                "enable_throughput_throttling": bool(
+                                                    info.get(
+                                                        "enable_throughput_throttling",
+                                                        False,
+                                                    )
+                                                ),
+                                                "max_throughput": float(
+                                                    info.get("max_throughput", 1.0)
+                                                ),
+                                                "speed_factor": float(
+                                                    info.get("speed_factor", 1.0)
+                                                ),
                                             }
                                         agent_wait_info[agent_id] = {
                                             "mode": "path",
@@ -1091,8 +1241,14 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                 current_time = simulation.elapsed_time()
                 for agent in simulation.agents():
                     agent_id = agent.id
-                    if agent_id in premovement_times and not premovement_times[agent_id]["activated"]:
-                        if current_time >= premovement_times[agent_id]["premovement_time"]:
+                    if (
+                        agent_id in premovement_times
+                        and not premovement_times[agent_id]["activated"]
+                    ):
+                        if (
+                            current_time
+                            >= premovement_times[agent_id]["premovement_time"]
+                        ):
                             desired_speed = premovement_times[agent_id]["desired_speed"]
                             set_agent_desired_speed(agent, desired_speed)
                             speed_state = ensure_agent_speed_state(
@@ -1156,7 +1312,9 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                         continue
 
                     current_target_stage = wait_info.get("current_target_stage")
-                    stage_cfg = wait_info.get("stage_configs", {}).get(current_target_stage, {})
+                    stage_cfg = wait_info.get("stage_configs", {}).get(
+                        current_target_stage, {}
+                    )
                     target = wait_info.get("target")
 
                     if state == "to_target":
@@ -1176,9 +1334,7 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
 
                         stage_type = stage_cfg.get("stage_type")
                         reached_target = False
-                        reach_dist = float(
-                            wait_info.get("agent_radius", 0.2)
-                        ) + 0.5
+                        reach_dist = float(wait_info.get("agent_radius", 0.2)) + 0.5
                         if target is not None:
                             reached_target = (
                                 math.hypot(x - float(target[0]), y - float(target[1]))
@@ -1186,7 +1342,9 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                             )
 
                         if reached_target:
-                            enable_throttling = stage_cfg.get("enable_throughput_throttling", False)
+                            enable_throttling = stage_cfg.get(
+                                "enable_throughput_throttling", False
+                            )
                             max_throughput = float(stage_cfg.get("max_throughput", 1.0))
                             wp_key = current_target_stage
                             if enable_throttling and wp_key and max_throughput > 0:
@@ -1195,7 +1353,10 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                     wp_key,
                                     {"last_exit_time": -9999},
                                 )
-                                if current_time - tracker.get("last_exit_time", -9999) < min_interval:
+                                if (
+                                    current_time - tracker.get("last_exit_time", -9999)
+                                    < min_interval
+                                ):
                                     continue
                                 checkpoint_throughput_tracker[wp_key] = {
                                     "last_exit_time": current_time
@@ -1232,7 +1393,9 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                             x,
                             y,
                         )
-                        if current_time >= float(wait_info.get("wait_until", current_time)):
+                        if current_time >= float(
+                            wait_info.get("wait_until", current_time)
+                        ):
                             advance_path_target(wait_info)
                         continue
 
@@ -1245,7 +1408,8 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
             total_agents += sum(agent_counter_per_source)
 
         metrics = {
-            "success": remaining == 0 or evacuation_time >= scenario.max_simulation_time,
+            "success": remaining == 0
+            or evacuation_time >= scenario.max_simulation_time,
             "evacuation_time": round(evacuation_time, 2),
             "total_agents": total_agents,
             "agents_evacuated": total_agents - remaining,
