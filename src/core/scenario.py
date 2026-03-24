@@ -733,8 +733,14 @@ def load_scenario(path: str) -> Scenario:
     resolved = pathlib.Path(path).resolve()
 
     if resolved.is_dir():
-        json_files = sorted(resolved.glob("*.json"))
-        wkt_files = sorted(resolved.glob("*.wkt"))
+        preferred_json = resolved / "config.json"
+        preferred_wkt = resolved / "geometry.wkt"
+        json_files = (
+            [preferred_json] if preferred_json.exists() else sorted(resolved.glob("*.json"))
+        )
+        wkt_files = (
+            [preferred_wkt] if preferred_wkt.exists() else sorted(resolved.glob("*.wkt"))
+        )
         if not json_files or not wkt_files:
             raise ValueError(
                 f"Scenario directory must contain one JSON and one WKT file: {resolved}"
@@ -880,6 +886,7 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                         spawned_this_attempt = False
                         selected_variant = None
                         selected_variant_info = None
+                        fallback_exit_id = None
 
                         for j in range(len(starting_pos_per_source[source_id])):
                             pos_index = (
@@ -950,6 +957,23 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                         exits=spawning_info.get("exits"),
                                         exit_geometries=spawning_info.get("exit_geometries"),
                                     )
+                                    # _find_nearest_exit returns the exit key
+                                    # (e.g. "jps-exits_0") when exit_geometries
+                                    # is provided, or an integer stage id
+                                    # otherwise.  Resolve to the exit key for
+                                    # direct_steering_info lookup.
+                                    stage_map = spawning_info.get("stage_map", {})
+                                    if nearest_exit_stage_id in stage_map:
+                                        # Already an exit key string
+                                        fallback_exit_id = nearest_exit_stage_id
+                                    else:
+                                        # Integer stage id – reverse-lookup
+                                        stage_id_to_exit = {
+                                            v: k for k, v in stage_map.items()
+                                        }
+                                        fallback_exit_id = stage_id_to_exit.get(
+                                            nearest_exit_stage_id
+                                        )
                                     nearest_journey_id = spawning_info.get("exit_to_journey", {}).get(
                                         nearest_exit_stage_id
                                     )
@@ -975,6 +999,13 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
 
                                 agent_id = simulation.add_agent(agent_parameters)
                                 agent_radii[agent_id] = flow_params.get("radius", 0.2)
+                                # print(
+                                #     "Spawned flow agent "
+                                #     f"{agent_id} from source {source_id} at t={current_time:.2f}s "
+                                #     f"pos=({float(position[0]):.3f}, {float(position[1]):.3f}) "
+                                #     f"journey={getattr(agent_parameters, 'journey_id', None)} "
+                                #     f"stage={getattr(agent_parameters, 'stage_id', None)}"
+                                )
 
                                 if selected_variant and agent_wait_info is not None and direct_steering_info:
                                     path_state = build_agent_path_state(
@@ -999,10 +1030,7 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                     and agent_wait_info is not None
                                     and direct_steering_info
                                 ):
-                                    stage_id_to_exit = {
-                                        v: k for k, v in spawning_info.get("stage_map", {}).items()
-                                    }
-                                    exit_id = stage_id_to_exit.get(agent_parameters.stage_id)
+                                    exit_id = fallback_exit_id
                                     if exit_id and exit_id in direct_steering_info:
                                         exit_info = direct_steering_info[exit_id]
                                         base_seed = seed + agent_id * 9973
@@ -1051,6 +1079,11 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                 continue
 
                         if not spawned_this_attempt:
+                            print(
+                                "Flow spawn attempt failed "
+                                f"for source {source_id} at t={current_time:.2f}s "
+                                f"after trying {len(starting_pos_per_source[source_id])} candidate positions"
+                            )
                             break
                         agent_counter_per_source[source_id] += 1
 

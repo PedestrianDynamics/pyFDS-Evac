@@ -53,6 +53,20 @@ def create_agent_parameters(
 ):
     """Create appropriate agent parameters based on the model type"""
 
+    def _construct_with_fallbacks(factory, primary_kwargs, *fallback_kwargs_sets):
+        try:
+            return factory(**primary_kwargs)
+        except TypeError as error:
+            if "unexpected keyword argument" not in str(error):
+                raise
+        for fallback_kwargs in fallback_kwargs_sets:
+            try:
+                return factory(**fallback_kwargs)
+            except TypeError as error:
+                if "unexpected keyword argument" not in str(error):
+                    raise
+        return factory(**primary_kwargs)
+
     base_params = {
         "position": position,
         "radius": params.get("radius", 0.2),
@@ -65,12 +79,17 @@ def create_agent_parameters(
         base_params["stage_id"] = stage_id
 
     if model_type == "CollisionFreeSpeedModel":
-        base_params["desired_speed"] = params.get("v0", 1.2)
-        return jps.CollisionFreeSpeedModelAgentParameters(**base_params)
+        desired_speed = params.get("v0", 1.2)
+        return _construct_with_fallbacks(
+            jps.CollisionFreeSpeedModelAgentParameters,
+            {**base_params, "desired_speed": desired_speed},
+            {**base_params, "v0": desired_speed},
+        )
 
     elif model_type == "CollisionFreeSpeedModelV2":
+        desired_speed = params.get("v0", 1.2)
         v2_params = base_params.copy()
-        v2_params["desired_speed"] = params.get("v0", 1.2)
+        v2_params["desired_speed"] = desired_speed
         v2_params["time_gap"] = 1.0
         if global_params:
             v2_params["strength_neighbor_repulsion"] = (
@@ -79,7 +98,14 @@ def create_agent_parameters(
             v2_params["range_neighbor_repulsion"] = (
                 global_params.range_neighbor_repulsion
             )
-        return jps.CollisionFreeSpeedModelV2AgentParameters(**v2_params)
+        v2_fallback = dict(v2_params)
+        v2_fallback.pop("desired_speed", None)
+        v2_fallback["v0"] = desired_speed
+        return _construct_with_fallbacks(
+            jps.CollisionFreeSpeedModelV2AgentParameters,
+            v2_params,
+            v2_fallback,
+        )
 
     elif model_type == "GeneralizedCentrifugalForceModel":
         gcfm_params = {
@@ -107,17 +133,33 @@ def create_agent_parameters(
 
     elif model_type == "SocialForceModel":
         sfm_params = base_params.copy()
-        sfm_params["desired_speed"] = params.get("v0", 0.8)
-        sfm_params["reaction_time"] = (
+        desired_speed = params.get("v0", 0.8)
+        reaction_time = (
             global_params.relaxation_time if global_params else 0.5
         )
-        sfm_params["agent_scale"] = (
+        agent_scale = (
             global_params.agent_strength if global_params else 2000
         )
-        sfm_params["force_distance"] = (
+        force_distance = (
             global_params.agent_range if global_params else 0.08
         )
-        return jps.SocialForceModelAgentParameters(**sfm_params)
+        return _construct_with_fallbacks(
+            jps.SocialForceModelAgentParameters,
+            {
+                **sfm_params,
+                "desired_speed": desired_speed,
+                "reaction_time": reaction_time,
+                "agent_scale": agent_scale,
+                "force_distance": force_distance,
+            },
+            {
+                **sfm_params,
+                "desiredSpeed": desired_speed,
+                "reactionTime": reaction_time,
+                "agentScale": agent_scale,
+                "forceDistance": force_distance,
+            },
+        )
 
     elif model_type == "AnticipationVelocityModel":
         avm_params = base_params.copy()
