@@ -298,7 +298,7 @@ def run_simulation(
             )
 
         if simulation.iteration_count() % 2000 == 0:
-            print(f"Simulation time: {t:2.2f} s", end="\r")
+            logging.info("Check and Update.. Simulation time: {t:2.2f} s", end="\r")
             check_and_update_journeys(
                 routing=routing,
                 simulation=simulation,

@@ -1,12 +1,11 @@
 from pathlib import Path
-import os
 from shapely import Polygon
 
 
 class SimulationConfig:
     def __init__(
         self,
-        num_agents=40,
+        num_agents=20,
         premovement_time=300,
         v0=1.0,
         seed=1,
