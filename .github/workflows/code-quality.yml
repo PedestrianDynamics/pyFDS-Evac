@@ -21,6 +21,8 @@ jobs:
         run: pip install --upgrade uv
       - name: Install dependencies
         run: uv sync --all-groups
-      - name: Lint with Ruff        
-        run: uv run ruff -- .
+      - name: Lint with Ruff
+        run: uv run ruff check .
+      - name: Check formatting
+        run: uv run ruff format --check .
       
