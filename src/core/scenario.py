@@ -23,7 +23,6 @@ import os
 import pathlib
 import random
 import sqlite3
-import sys
 import tempfile
 from dataclasses import dataclass, field
 from types import SimpleNamespace
@@ -36,11 +35,6 @@ except ModuleNotFoundError:
 import numpy as np
 from shapely import wkt
 from shapely.geometry import Polygon
-
-SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
-REPO_ROOT = SCRIPT_DIR.parent.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
 from .direct_steering_runtime import (
     advance_path_target,
@@ -91,22 +85,24 @@ _AGENT_PARAM_BUILDERS = {
     "CollisionFreeSpeedModel": lambda **kw: jps.CollisionFreeSpeedModelAgentParameters(
         **kw
     ),
-    "CollisionFreeSpeedModelV2": lambda **kw: jps.CollisionFreeSpeedModelV2AgentParameters(
-        **kw
+    "CollisionFreeSpeedModelV2": lambda **kw: (
+        jps.CollisionFreeSpeedModelV2AgentParameters(**kw)
     ),
-    "GeneralizedCentrifugalForceModel": lambda **kw: jps.GeneralizedCentrifugalForceModelAgentParameters(
-        desired_speed=kw["desired_speed"],
-        a_v=1.0,
-        a_min=kw["radius"],
-        b_min=kw["radius"],
-        b_max=kw["radius"] * 2,
-        position=kw["position"],
-        journey_id=kw["journey_id"],
-        stage_id=kw["stage_id"],
+    "GeneralizedCentrifugalForceModel": lambda **kw: (
+        jps.GeneralizedCentrifugalForceModelAgentParameters(
+            desired_speed=kw["desired_speed"],
+            a_v=1.0,
+            a_min=kw["radius"],
+            b_min=kw["radius"],
+            b_max=kw["radius"] * 2,
+            position=kw["position"],
+            journey_id=kw["journey_id"],
+            stage_id=kw["stage_id"],
+        )
     ),
     "SocialForceModel": lambda **kw: jps.SocialForceModelAgentParameters(**kw),
-    "AnticipationVelocityModel": lambda **kw: jps.AnticipationVelocityModelAgentParameters(
-        **kw
+    "AnticipationVelocityModel": lambda **kw: (
+        jps.AnticipationVelocityModelAgentParameters(**kw)
     ),
 }
 

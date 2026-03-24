@@ -92,7 +92,6 @@ def is_inside_polygon(x, y, polygon):
         return False
 
 
-
 def sample_wait_time(stage_cfg, base_seed, step_index):
     mean_wait = float(stage_cfg.get("waiting_time", 0.0))
     if stage_cfg.get("waiting_time_distribution") == "gaussian":
@@ -127,7 +126,9 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
     return False
 
 
-def ensure_agent_speed_state(agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent):
+def ensure_agent_speed_state(
+    agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
+):
     state = agent_speed_state.setdefault(
         int(agent_id),
         {"original_speed": None, "active_checkpoint": None},
@@ -140,7 +141,9 @@ def ensure_agent_speed_state(agent_speed_state: Dict[int, Dict[str, Any]], agent
     return state
 
 
-def restore_agent_speed(agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent) -> None:
+def restore_agent_speed(
+    agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
+) -> None:
     state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
     if state.get("active_checkpoint") is None:
         return
@@ -176,14 +179,16 @@ def update_checkpoint_speed(
 
     if active_zone_key is None:
         for zone_key, zone_cfg in (direct_steering_info or {}).items():
-            zone_speed_factor = normalize_speed_factor(zone_cfg.get("speed_factor", 1.0))
+            zone_speed_factor = normalize_speed_factor(
+                zone_cfg.get("speed_factor", 1.0)
+            )
             if math.fabs(zone_speed_factor - 1.0) <= 1e-9:
                 continue
             if not is_inside_polygon(x, y, zone_cfg.get("polygon")):
                 continue
-            if active_zone_key is None or math.fabs(zone_speed_factor - 1.0) > math.fabs(
-                active_speed_factor - 1.0
-            ):
+            if active_zone_key is None or math.fabs(
+                zone_speed_factor - 1.0
+            ) > math.fabs(active_speed_factor - 1.0):
                 active_zone_key = zone_key
                 active_speed_factor = zone_speed_factor
 

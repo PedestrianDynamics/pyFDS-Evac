@@ -12,7 +12,9 @@ from src.core import load_scenario, run_scenario
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--scenario", required=True, help="Scenario JSON, ZIP, or directory")
+    parser.add_argument(
+        "--scenario", required=True, help="Scenario JSON, ZIP, or directory"
+    )
     parser.add_argument("--seed", type=int, default=None, help="Override scenario seed")
     parser.add_argument(
         "--print-summary",

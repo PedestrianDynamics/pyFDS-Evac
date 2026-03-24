@@ -134,15 +134,9 @@ def create_agent_parameters(
     elif model_type == "SocialForceModel":
         sfm_params = base_params.copy()
         desired_speed = params.get("v0", 0.8)
-        reaction_time = (
-            global_params.relaxation_time if global_params else 0.5
-        )
-        agent_scale = (
-            global_params.agent_strength if global_params else 2000
-        )
-        force_distance = (
-            global_params.agent_range if global_params else 0.08
-        )
+        reaction_time = global_params.relaxation_time if global_params else 0.5
+        agent_scale = global_params.agent_strength if global_params else 2000
+        force_distance = global_params.agent_range if global_params else 0.08
         return _construct_with_fallbacks(
             jps.SocialForceModelAgentParameters,
             {
@@ -253,9 +247,7 @@ def _normalize_flow_schedule_entries(params):
         end_time = float(end_time)
         number = int(number)
         if end_time <= start_time:
-            raise ValueError(
-                f"Invalid flow_schedule window [{start_time}, {end_time}]"
-            )
+            raise ValueError(f"Invalid flow_schedule window [{start_time}, {end_time}]")
         if number <= 0:
             continue
         normalized.append(
@@ -266,7 +258,9 @@ def _normalize_flow_schedule_entries(params):
             }
         )
 
-    normalized.sort(key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"]))
+    normalized.sort(
+        key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
+    )
     return normalized
 
 
@@ -946,7 +940,12 @@ def _initialize_with_fallback(
             or 0
         )
 
-        if dist_mode == "by_number" and requested_n_agents <= 0 and initial_n_agents <= 0 and not flow_schedule:
+        if (
+            dist_mode == "by_number"
+            and requested_n_agents <= 0
+            and initial_n_agents <= 0
+            and not flow_schedule
+        ):
             continue
 
         # Remove obstacles from distribution area
@@ -2050,7 +2049,12 @@ def _add_agents(
             or 0
         )
 
-        if dist_mode == "by_number" and requested_n_agents <= 0 and initial_n_agents <= 0 and not flow_schedule:
+        if (
+            dist_mode == "by_number"
+            and requested_n_agents <= 0
+            and initial_n_agents <= 0
+            and not flow_schedule
+        ):
             continue
 
         try:
