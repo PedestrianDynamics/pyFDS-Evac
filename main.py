@@ -1,6 +1,5 @@
 """Main entry script."""
 
-
 import jupedsim as jps
 import pedpy
 import shapely
