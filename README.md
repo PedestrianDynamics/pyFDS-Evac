@@ -107,6 +107,8 @@ Generate a stable ISO Table 21 sweep artifact under `artifacts/`:
 uv run python scripts/generate_iso_table21_sweep.py
 ```
 
+Figure: ![ISO Table 21 sweep](artifacts/iso-table21-sweep.png)
+
 Generate the FDS+Evac smoke-density vs speed verification plot:
 
 ```bash
@@ -126,6 +128,22 @@ What is implemented now:
 - `O2` hypoxia
 
 This default pathway is read from FDS slice outputs through `fdsreader`.
+
+Verification status on this branch:
+
+- equation-level constant-exposure checks for `CO`, `CO2`, and `O2` are covered in [tests/test_fed.py](tests/test_fed.py)
+- an ISO Table 22 style stationary benchmark is covered with `assets/ISO-table22`, using one fixed occupant in a room and comparing the runtime `FED=1` crossing time against the analytical reference for the implemented default pathway
+- this verification currently covers only the implemented default FED pathway (`CO`, `CO2`, `O2`), not the broader set of toxic/thermal terms mentioned in ISO Table 22
+
+A plot is not required for the Table 22 pass/fail check. The verification criterion is agreement in time to reach `FED = 1`. We still generate a stable artifact because it improves inspection and reporting.
+
+Generate the ISO Table 22 stationary FED verification figure:
+
+```bash
+uv run python scripts/generate_iso_table22_stationary_plot.py
+```
+
+Figure: ![ISO Table 22 stationary FED verification](artifacts/iso-table22-stationary-fed.png)
 
 What is **not** implemented yet from the full Section 3.4 formulation:
 

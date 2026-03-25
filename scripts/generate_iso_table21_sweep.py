@@ -70,19 +70,38 @@ def main() -> int:
             smoke.cleanup()
             baseline.cleanup()
 
+    x_values = [item["extinction_per_m"] for item in results]
+    observed_times = [item["observed_time_s"] for item in results]
+    expected_times = [item["expected_time_s"] for item in results]
+
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.plot(
-        [item["extinction_per_m"] for item in results],
-        [item["observed_time_s"] for item in results],
-        marker="o",
-        label="Observed evacuation time",
+        x_values,
+        expected_times,
+        color="tab:blue",
+        linestyle="--",
+        linewidth=3,
+        label="Expected evacuation time",
+        zorder=3,
     )
     ax.plot(
-        [item["extinction_per_m"] for item in results],
-        [item["expected_time_s"] for item in results],
-        marker="s",
-        linestyle="--",
-        label="Expected evacuation time",
+        x_values,
+        observed_times,
+        color="tab:orange",
+        linewidth=2,
+        alpha=0.9,
+        label="Observed evacuation time",
+        zorder=2,
+    )
+    ax.scatter(
+        x_values,
+        observed_times,
+        color="tab:orange",
+        edgecolors="white",
+        linewidths=0.8,
+        s=50,
+        label="Observed samples",
+        zorder=4,
     )
     ax.set_xlabel("Extinction K [1/m]")
     ax.set_ylabel("Evacuation time [s]")
