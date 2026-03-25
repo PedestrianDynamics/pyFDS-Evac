@@ -60,9 +60,7 @@ def inspect_fds_quantities(sim_dir: str) -> FdsQuantityInventory:
     """
 
     if Simulation is None:
-        raise ModuleNotFoundError(
-            "fdsreader is required to inspect FDS quantities."
-        )
+        raise ModuleNotFoundError("fdsreader is required to inspect FDS quantities.")
     sim = Simulation(str(sim_dir))
     return FdsQuantityInventory(
         slices=_quantity_names(sim.slices),

@@ -1503,7 +1503,6 @@ def _process_distributions(
             "percentage": params.get("percentage", None),
         }
 
-
     return dist_geom, dist_params
 
 
@@ -1594,17 +1593,14 @@ def _create_journeys_with_percentages(
         jid = journey["id"]
         base_stages = journey["stages"]
 
-
         # Generate all possible journey variants for this journey
         variants = _generate_journey_variants(
             jid, base_stages, waypoint_routing, stage_map
         )
         journey_variants[jid] = []
 
-
         for variant_idx, (variant_stages, percentage) in enumerate(variants):
             variant_id = f"{jid}_variant_{variant_idx}"
-
 
             # Filter out distributions first.
             actual_stages = [
@@ -1736,7 +1732,6 @@ def _generate_journey_variants(
     if not distributions:
         return [(base_stages, 100.0)]
 
-
     # Routing split nodes may be waypoints or waiting polygons.
     all_routing_nodes = [
         stage for stage in base_stages if _is_routing_split_node(stage)
@@ -1762,7 +1757,6 @@ def _generate_journey_variants(
             and node not in target_routing_nodes
         ):
             initial_routing_nodes.append(node)
-
 
     if not initial_routing_nodes:
         # Cyclic routing graphs can make every routing node a target. In that case,
@@ -1988,7 +1982,6 @@ def _add_agents(
     journeys_per_distribution = journey_data["journeys_per_distribution"]
 
     for dist_key, polygon in dist_geom.items():
-
         params = dist_params[dist_key]
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(params)
         use_flow_spawning = params.get("use_flow_spawning", False)

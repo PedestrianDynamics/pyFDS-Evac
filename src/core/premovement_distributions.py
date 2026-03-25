@@ -19,7 +19,9 @@ class PreMovementDistribution:
 class GammaDistribution(PreMovementDistribution):
     """Gamma distribution for pre-evacuation times."""
 
-    def __init__(self, a: float = 1.291, b: float = 103.901, seed: Optional[int] = None):
+    def __init__(
+        self, a: float = 1.291, b: float = 103.901, seed: Optional[int] = None
+    ):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -43,7 +45,9 @@ class LognormalDistribution(PreMovementDistribution):
 class WeibullDistribution(PreMovementDistribution):
     """Weibull distribution for pre-evacuation times."""
 
-    def __init__(self, a: float = 139.285, b: float = 1.195, seed: Optional[int] = None):
+    def __init__(
+        self, a: float = 139.285, b: float = 1.195, seed: Optional[int] = None
+    ):
         super().__init__(seed)
         self.a = a
         self.b = b

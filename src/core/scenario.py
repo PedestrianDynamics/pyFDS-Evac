@@ -34,6 +34,7 @@ import numpy as np
 from rich.console import Console
 from shapely import wkt
 from shapely.geometry import Polygon
+
 try:
     from rich.progress import Progress
 except ModuleNotFoundError:
@@ -972,12 +973,14 @@ def run_scenario(
         last_fed_update_time = None
         # Precompute whether any zone/checkpoint has a non-trivial speed factor.
         # When none do, skip the expensive per-agent update_checkpoint_speed loop.
-        _has_speed_zones = any(
-            math.fabs(
-                float(info.get("speed_factor", 1.0)) - 1.0
-            ) > 1e-9
-            for info in direct_steering_info.values()
-        ) if direct_steering_info else False
+        _has_speed_zones = (
+            any(
+                math.fabs(float(info.get("speed_factor", 1.0)) - 1.0) > 1e-9
+                for info in direct_steering_info.values()
+            )
+            if direct_steering_info
+            else False
+        )
         flow_variant_rng = random.Random(seed)
         total_progress_agents = initial_agent_count + sum(num_agents_per_source)
         progress = (
@@ -1472,7 +1475,6 @@ def run_scenario(
                             agent_speed_state.pop(tracked_agent_id, None)
 
             if direct_steering_info and agent_wait_info:
-
                 for agent_id, wait_info in list(agent_wait_info.items()):
                     if wait_info.get("mode") != "path":
                         continue
