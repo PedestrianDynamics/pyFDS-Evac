@@ -5,7 +5,16 @@ import math
 import pytest
 from shapely.geometry import Polygon
 
-from src.core.route_graph import StageGraph, StageNode, StageEdge
+from src.core.route_graph import (
+    StageGraph,
+    StageNode,
+    StageEdge,
+    RouteCostConfig,
+    evaluate_route,
+    evaluate_segment,
+    rank_routes,
+)
+from src.core.smoke_speed import ConstantExtinctionField
 
 
 def _box(cx: float, cy: float, half: float = 1.0) -> Polygon:
@@ -272,3 +281,271 @@ class TestEdgeCases:
         assert "D0" in graph.nodes
         result = graph.shortest_exit("D0")
         assert result is not None
+
+
+# ── Phase 3: Route cost evaluation ───────────────────────────────────
+
+
+class ConstantFedRateSampler:
+    """Return a constant FED rate everywhere (for testing)."""
+
+    def __init__(self, rate_per_min: float):
+        self.rate_per_min = rate_per_min
+
+    def sample_fed_rate(self, time_s: float, x: float, y: float) -> float:
+        del time_s, x, y
+        return self.rate_per_min
+
+
+@pytest.fixture()
+def simple_route_graph():
+    """D0 (0,0) ──10──> E0 (10,0)."""
+    direct_steering_info = {
+        "E0": {"polygon": _box(10, 0), "stage_type": "exit"},
+    }
+    distributions = {
+        "D0": {"coordinates": list(_box(0, 0).exterior.coords)},
+    }
+    transitions = [{"from": "D0", "to": "E0"}]
+    return StageGraph.from_scenario(direct_steering_info, transitions, distributions)
+
+
+@pytest.fixture()
+def two_exit_graph():
+    """D0 with short path to E0 and long path to E1.
+
+    D0 (0,0) ──10──> E0 (10,0)
+    D0 (0,0) ──30──> C0 (0,30) ──20──> E1 (20,30)
+    """
+    direct_steering_info = {
+        "E0": {"polygon": _box(10, 0), "stage_type": "exit"},
+        "C0": {"polygon": _box(0, 30), "stage_type": "checkpoint"},
+        "E1": {"polygon": _box(20, 30), "stage_type": "exit"},
+    }
+    distributions = {
+        "D0": {"coordinates": list(_box(0, 0).exterior.coords)},
+    }
+    transitions = [
+        {"from": "D0", "to": "E0"},
+        {"from": "D0", "to": "C0"},
+        {"from": "C0", "to": "E1"},
+    ]
+    return StageGraph.from_scenario(direct_steering_info, transitions, distributions)
+
+
+class TestSegmentCost:
+    def test_clear_air_segment(self, simple_route_graph):
+        """Zero extinction → speed_factor=1, travel_time = length/v0."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        seg = evaluate_segment(
+            simple_route_graph, "D0", "E0", 0.0, field, None, config
+        )
+        assert abs(seg.length_m - 10.0) < 0.1
+        assert abs(seg.speed_factor - 1.0) < 0.01
+        assert abs(seg.travel_time_s - 10.0) < 0.1
+        assert seg.fed_growth == 0.0
+        assert seg.visible is True
+
+    def test_heavy_smoke_segment(self, simple_route_graph):
+        """High extinction → low speed factor, longer travel time."""
+        field = ConstantExtinctionField(5.0)
+        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        seg = evaluate_segment(
+            simple_route_graph, "D0", "E0", 0.0, field, None, config
+        )
+        assert seg.speed_factor < 1.0
+        assert seg.travel_time_s > 10.0
+        assert seg.visible is False  # K=5 > threshold 0.5
+
+    def test_fed_growth_computed(self, simple_route_graph):
+        """With a FED rate sampler, fed_growth is non-zero."""
+        field = ConstantExtinctionField(0.0)
+        fed = ConstantFedRateSampler(rate_per_min=0.1)
+        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        seg = evaluate_segment(
+            simple_route_graph, "D0", "E0", 0.0, field, fed, config
+        )
+        # travel_time ≈ 10s, rate = 0.1/min → growth ≈ 10/60 * 0.1 ≈ 0.0167
+        assert seg.fed_growth > 0.0
+        assert abs(seg.fed_growth - 0.1 * 10.0 / 60.0) < 0.01
+
+
+class TestRouteCost:
+    def test_clear_air_route_cost(self, simple_route_graph):
+        """Clear-air route: cost = path_length * 1 + w_fed * 0 = path_length."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        rc = evaluate_route(
+            simple_route_graph, ["D0", "E0"], 0.0, 0.0, field, None, config
+        )
+        assert abs(rc.path_length_m - 10.0) < 0.1
+        assert abs(rc.k_ave_route) < 0.01
+        assert abs(rc.composite_cost - 10.0) < 0.1
+        assert rc.rejected is False
+
+    def test_smoke_increases_cost(self, simple_route_graph):
+        """Smoke raises composite cost via w_smoke * K_ave term."""
+        field_clear = ConstantExtinctionField(0.0)
+        field_smoke = ConstantExtinctionField(1.0)
+        config = RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=1.0)
+        rc_clear = evaluate_route(
+            simple_route_graph, ["D0", "E0"], 0.0, 0.0,
+            field_clear, None, config,
+        )
+        rc_smoke = evaluate_route(
+            simple_route_graph, ["D0", "E0"], 0.0, 0.0,
+            field_smoke, None, config,
+        )
+        assert rc_smoke.composite_cost > rc_clear.composite_cost
+
+    def test_fed_rejection(self, simple_route_graph):
+        """Route rejected when projected FED exceeds threshold."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0, fed_rejection_threshold=0.5
+        )
+        # Start with current_fed=0.9, even small FED growth pushes over 0.5
+        # Actually, current_fed alone exceeds threshold
+        rc = evaluate_route(
+            simple_route_graph, ["D0", "E0"], 0.0, 0.9, field, None, config
+        )
+        assert rc.rejected is True
+        assert "FED_max" in rc.rejection_reason
+
+    def test_multi_segment_route(self, two_exit_graph):
+        """Route through checkpoint sums segment costs."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        rc = evaluate_route(
+            two_exit_graph, ["D0", "C0", "E1"], 0.0, 0.0,
+            field, None, config,
+        )
+        assert len(rc.segments) == 2
+        assert abs(rc.path_length_m - 50.0) < 0.1  # 30 + 20
+
+    def test_cache_reuse(self, two_exit_graph):
+        """Cached segments are reused across calls."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        cache: dict = {}
+        evaluate_route(
+            two_exit_graph, ["D0", "C0", "E1"], 0.0, 0.0,
+            field, None, config, cached_segments=cache,
+        )
+        assert ("D0", "C0") in cache
+        assert ("C0", "E1") in cache
+        # Second call reuses cache.
+        rc2 = evaluate_route(
+            two_exit_graph, ["D0", "C0", "E1"], 0.0, 0.0,
+            field, None, config, cached_segments=cache,
+        )
+        assert abs(rc2.path_length_m - 50.0) < 0.1
+
+
+class TestRankRoutes:
+    def test_clear_air_picks_shortest(self, two_exit_graph):
+        """With no smoke, shortest route wins."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        ranked = rank_routes(
+            two_exit_graph, "D0", 0.0, 0.0, field, None, config
+        )
+        assert len(ranked) == 2
+        assert ranked[0].exit_id == "E0"  # shorter
+        assert ranked[0].rejected is False
+
+    def test_smoke_can_reorder(self, two_exit_graph):
+        """Heavy smoke on E0 path makes E1 cheaper despite longer distance."""
+
+        class SmokeNearE0:
+            """High K near E0, clear near E1."""
+
+            def sample_extinction(self, time_s, x, y):
+                # E0 is at (10, 0); smoke if y < 15
+                return 8.0 if y < 15 else 0.0
+
+        field = SmokeNearE0()
+        config = RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=2.0)
+        ranked = rank_routes(
+            two_exit_graph, "D0", 0.0, 0.0, field, None, config
+        )
+        assert ranked[0].exit_id == "E1"
+
+    def test_fed_rejection_with_fallback(self, two_exit_graph):
+        """All routes rejected → least-bad is un-rejected as fallback."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0, fed_rejection_threshold=0.01
+        )
+        # current_fed = 0.5 will exceed threshold 0.01
+        ranked = rank_routes(
+            two_exit_graph, "D0", 0.0, 0.5, field, None, config
+        )
+        assert len(ranked) == 2
+        # First should be un-rejected (fallback)
+        assert ranked[0].rejected is False
+        assert "fallback" in ranked[0].rejection_reason
+        # Second stays rejected
+        assert ranked[1].rejected is True
+
+    def test_visibility_rejection(self):
+        """Non-visible route rejected when a visible route exists."""
+        direct_steering_info = {
+            "E0": {"polygon": _box(10, 0), "stage_type": "exit"},
+            "E1": {"polygon": _box(0, 20), "stage_type": "exit"},
+        }
+        distributions = {
+            "D0": {"coordinates": list(_box(0, 0).exterior.coords)},
+        }
+        transitions = [
+            {"from": "D0", "to": "E0"},
+            {"from": "D0", "to": "E1"},
+        ]
+        graph = StageGraph.from_scenario(
+            direct_steering_info, transitions, distributions
+        )
+
+        class SmokeOnE0Path:
+            def sample_extinction(self, time_s, x, y):
+                return 2.0 if y < 10 and x > 2 else 0.0
+
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0,
+            visibility_extinction_threshold=0.5,
+        )
+        ranked = rank_routes(
+            graph, "D0", 0.0, 0.0, SmokeOnE0Path(), None, config
+        )
+        # E1 path (y=0 to y=20) is clear; E0 path has smoke
+        e0_route = next(r for r in ranked if r.exit_id == "E0")
+        e1_route = next(r for r in ranked if r.exit_id == "E1")
+        assert e1_route.rejected is False
+        # E0 should be rejected due to non-visibility
+        assert e0_route.rejected is True
+
+    def test_tie_broken_by_fewer_stages(self, two_exit_graph):
+        """Equal cost → fewer intermediate stages wins."""
+        # This is a structural test: with zero smoke, E0 (direct) ranks
+        # above E1 (via C0) because E0 path has fewer stages.
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        ranked = rank_routes(
+            two_exit_graph, "D0", 0.0, 0.0, field, None, config
+        )
+        # E0 wins on cost anyway, but verify sort key includes path length
+        assert ranked[0].exit_id == "E0"
+        assert len(ranked[0].path) < len(ranked[1].path)
+
+    def test_no_exits_returns_empty(self):
+        """Graph with no exits → empty ranking."""
+        graph = StageGraph.from_scenario(
+            {"C0": {"polygon": _box(10, 0), "stage_type": "checkpoint"}},
+            [{"from": "D0", "to": "C0"}],
+            {"D0": {"coordinates": list(_box(0, 0).exterior.coords)}},
+        )
+        ranked = rank_routes(
+            graph, "D0", 0.0, 0.0, ConstantExtinctionField(0.0), None,
+            RouteCostConfig(),
+        )
+        assert ranked == []

@@ -5,8 +5,11 @@ from __future__ import annotations
 import heapq
 import math
 from dataclasses import dataclass, field
+from typing import Protocol
 
 from shapely.geometry import Polygon
+
+from src.core.smoke_speed import speed_factor_from_extinction
 
 
 @dataclass(frozen=True)
@@ -195,3 +198,278 @@ class StageGraph:
 def _euclidean(x1: float, y1: float, x2: float, y2: float) -> float:
     """Euclidean distance between two 2D points."""
     return math.hypot(x2 - x1, y2 - y1)
+
+
+# ── Route cost evaluation (Phase 3) ──────────────────────────────────
+
+
+class ExtinctionSampler(Protocol):
+    """Anything that can sample extinction K at a point and time."""
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float: ...
+
+
+class FedRateSampler(Protocol):
+    """Anything that can return a FED rate in 1/min at a point and time."""
+
+    def sample_fed_rate(self, time_s: float, x: float, y: float) -> float: ...
+
+
+@dataclass(frozen=True)
+class RouteCostConfig:
+    """Weights and thresholds for route cost evaluation."""
+
+    w_smoke: float = 1.0
+    w_fed: float = 10.0
+    fed_rejection_threshold: float = 1.0
+    visibility_extinction_threshold: float = 0.5
+    sampling_step_m: float = 2.0
+    base_speed_m_per_s: float = 1.3
+    alpha: float = 0.706
+    beta: float = -0.057
+    min_speed_factor: float = 0.1
+
+
+@dataclass(frozen=True)
+class SegmentCost:
+    """Cost breakdown for one edge (segment) of a route."""
+
+    source: str
+    target: str
+    length_m: float
+    k_avg: float
+    speed_factor: float
+    travel_time_s: float
+    fed_growth: float
+    visible: bool
+
+
+@dataclass(frozen=True)
+class RouteCost:
+    """Full cost evaluation for one candidate route."""
+
+    exit_id: str
+    path: list[str]
+    path_length_m: float
+    k_ave_route: float
+    travel_time_s: float
+    fed_max_route: float
+    composite_cost: float
+    segments: list[SegmentCost]
+    rejected: bool
+    rejection_reason: str | None
+
+
+def _sample_segment_extinction(
+    src_node: StageNode,
+    tgt_node: StageNode,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+) -> tuple[float, list[float]]:
+    """Sample extinction along the centroid-to-centroid line.
+
+    Returns (segment_length, list_of_K_samples).
+    """
+    length = _euclidean(
+        src_node.centroid_x, src_node.centroid_y,
+        tgt_node.centroid_x, tgt_node.centroid_y,
+    )
+    if length < 1e-9:
+        k = extinction_sampler.sample_extinction(
+            time_s, src_node.centroid_x, src_node.centroid_y
+        )
+        return 0.0, [k]
+
+    n_samples = max(2, int(math.ceil(length / step_m)) + 1)
+    samples: list[float] = []
+    for i in range(n_samples):
+        t = i / (n_samples - 1)
+        x = src_node.centroid_x + t * (tgt_node.centroid_x - src_node.centroid_x)
+        y = src_node.centroid_y + t * (tgt_node.centroid_y - src_node.centroid_y)
+        samples.append(extinction_sampler.sample_extinction(time_s, x, y))
+    return length, samples
+
+
+def evaluate_segment(
+    graph: StageGraph,
+    source: str,
+    target: str,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
+) -> SegmentCost:
+    """Evaluate cost for one edge of a route."""
+    src_node = graph.nodes[source]
+    tgt_node = graph.nodes[target]
+
+    length, k_samples = _sample_segment_extinction(
+        src_node, tgt_node, time_s, extinction_sampler, config.sampling_step_m
+    )
+    k_avg = sum(k_samples) / len(k_samples) if k_samples else 0.0
+    sf = speed_factor_from_extinction(
+        k_avg,
+        alpha=config.alpha,
+        beta=config.beta,
+        min_speed_factor=config.min_speed_factor,
+    )
+    effective_speed = config.base_speed_m_per_s * sf
+    travel_time = length / effective_speed if effective_speed > 1e-9 else math.inf
+
+    fed_growth = 0.0
+    if fed_rate_sampler is not None:
+        mid_x = (src_node.centroid_x + tgt_node.centroid_x) / 2
+        mid_y = (src_node.centroid_y + tgt_node.centroid_y) / 2
+        fed_rate = fed_rate_sampler.sample_fed_rate(time_s, mid_x, mid_y)
+        fed_growth = fed_rate * travel_time / 60.0  # rate is per minute
+
+    visible = k_avg < config.visibility_extinction_threshold
+
+    return SegmentCost(
+        source=source,
+        target=target,
+        length_m=length,
+        k_avg=k_avg,
+        speed_factor=sf,
+        travel_time_s=travel_time,
+        fed_growth=fed_growth,
+        visible=visible,
+    )
+
+
+def evaluate_route(
+    graph: StageGraph,
+    path: list[str],
+    time_s: float,
+    current_fed: float,
+    extinction_sampler: ExtinctionSampler,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
+    *,
+    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+) -> RouteCost:
+    """Evaluate the composite cost for a full route (list of stage IDs)."""
+    segments: list[SegmentCost] = []
+    for i in range(len(path) - 1):
+        cache_key = (path[i], path[i + 1])
+        if cached_segments is not None and cache_key in cached_segments:
+            seg = cached_segments[cache_key]
+        else:
+            seg = evaluate_segment(
+                graph, path[i], path[i + 1],
+                time_s, extinction_sampler, fed_rate_sampler, config,
+            )
+            if cached_segments is not None:
+                cached_segments[cache_key] = seg
+        segments.append(seg)
+
+    path_length = sum(s.length_m for s in segments)
+    total_k_samples = sum(s.k_avg * s.length_m for s in segments)
+    k_ave = total_k_samples / path_length if path_length > 1e-9 else 0.0
+    travel_time = sum(s.travel_time_s for s in segments)
+    fed_growth = sum(s.fed_growth for s in segments)
+    fed_max = current_fed + fed_growth
+
+    # Composite cost: path_length * (1 + w_smoke * K_ave) + w_fed * FED_max
+    composite = path_length * (1.0 + config.w_smoke * k_ave) + config.w_fed * fed_max
+
+    rejected = False
+    reason = None
+    if fed_max > config.fed_rejection_threshold:
+        rejected = True
+        reason = f"FED_max {fed_max:.3f} > {config.fed_rejection_threshold}"
+
+    return RouteCost(
+        exit_id=path[-1] if path else "",
+        path=path,
+        path_length_m=path_length,
+        k_ave_route=k_ave,
+        travel_time_s=travel_time,
+        fed_max_route=fed_max,
+        composite_cost=composite,
+        segments=segments,
+        rejected=rejected,
+        rejection_reason=reason,
+    )
+
+
+def rank_routes(
+    graph: StageGraph,
+    source: str,
+    time_s: float,
+    current_fed: float,
+    extinction_sampler: ExtinctionSampler,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
+    *,
+    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+) -> list[RouteCost]:
+    """Evaluate and rank all routes from *source* to reachable exits.
+
+    Returns routes sorted by composite cost (lowest first).
+    Rejected routes are sorted to the end.
+    If all routes are rejected, the least-bad route is un-rejected
+    as a fallback.
+    """
+    all_paths = graph.shortest_paths_to_exits(source)
+    if not all_paths:
+        return []
+
+    costs: list[RouteCost] = []
+    for exit_id, (_dist, path) in all_paths.items():
+        rc = evaluate_route(
+            graph, path, time_s, current_fed,
+            extinction_sampler, fed_rate_sampler, config,
+            cached_segments=cached_segments,
+        )
+        costs.append(rc)
+
+    # Check visibility rejection: reject routes where all segments
+    # are non-visible, but only if at least one other route has visibility.
+    any_visible = any(
+        any(s.visible for s in rc.segments) for rc in costs if not rc.rejected
+    )
+    if any_visible:
+        updated: list[RouteCost] = []
+        for rc in costs:
+            if not rc.rejected and not any(s.visible for s in rc.segments):
+                rc = RouteCost(
+                    exit_id=rc.exit_id,
+                    path=rc.path,
+                    path_length_m=rc.path_length_m,
+                    k_ave_route=rc.k_ave_route,
+                    travel_time_s=rc.travel_time_s,
+                    fed_max_route=rc.fed_max_route,
+                    composite_cost=rc.composite_cost,
+                    segments=rc.segments,
+                    rejected=True,
+                    rejection_reason="all segments non-visible",
+                )
+            updated.append(rc)
+        costs = updated
+
+    # Sort: non-rejected first by cost, then rejected by cost.
+    # Break ties by fewer intermediate stages.
+    def sort_key(rc: RouteCost) -> tuple[int, float, int]:
+        return (1 if rc.rejected else 0, rc.composite_cost, len(rc.path))
+
+    costs.sort(key=sort_key)
+
+    # Fallback: if all rejected, un-reject the least-bad.
+    if costs and all(rc.rejected for rc in costs):
+        best = costs[0]
+        costs[0] = RouteCost(
+            exit_id=best.exit_id,
+            path=best.path,
+            path_length_m=best.path_length_m,
+            k_ave_route=best.k_ave_route,
+            travel_time_s=best.travel_time_s,
+            fed_max_route=best.fed_max_route,
+            composite_cost=best.composite_cost,
+            segments=best.segments,
+            rejected=False,
+            rejection_reason=f"fallback: {best.rejection_reason}",
+        )
+
+    return costs
