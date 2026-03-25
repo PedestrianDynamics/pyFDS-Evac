@@ -162,14 +162,16 @@ def ensure_agent_speed_state(
     agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
 ):
     """Create or refresh cached per-agent speed state."""
-    state = agent_speed_state.setdefault(
-        int(agent_id),
-        {"original_speed": None, "active_checkpoint": None, "smoke_factor": 1.0},
-    )
+    state = agent_speed_state.get(agent_id)
+    if state is not None:
+        return state
     current_speed = get_agent_desired_speed(agent)
-    if current_speed is not None and state.get("original_speed") is None:
-        state["original_speed"] = current_speed
-    state.setdefault("smoke_factor", 1.0)
+    state = {
+        "original_speed": current_speed,
+        "active_checkpoint": None,
+        "smoke_factor": 1.0,
+    }
+    agent_speed_state[agent_id] = state
     return state
 
 
@@ -181,7 +183,11 @@ def restore_agent_speed(
     original_speed = state.get("original_speed")
     if original_speed is None:
         return
-    smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
+    smoke_factor = state.get("smoke_factor", 1.0)
+    # Skip redundant write when already at restored speed and no smoke modification
+    if state.get("active_checkpoint") is None and smoke_factor == 1.0:
+        return
+    smoke_factor = normalize_speed_factor(smoke_factor)
     if set_agent_desired_speed(agent, float(original_speed) * smoke_factor):
         state["active_checkpoint"] = None
 

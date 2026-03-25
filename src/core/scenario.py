@@ -970,7 +970,16 @@ def run_scenario(
         fed_history: list[dict[str, Any]] = []
         last_smoke_update_time = None
         last_fed_update_time = None
+        # Precompute whether any zone/checkpoint has a non-trivial speed factor.
+        # When none do, skip the expensive per-agent update_checkpoint_speed loop.
+        _has_speed_zones = any(
+            math.fabs(
+                float(info.get("speed_factor", 1.0)) - 1.0
+            ) > 1e-9
+            for info in direct_steering_info.values()
+        ) if direct_steering_info else False
         flow_variant_rng = random.Random(seed)
+        total_progress_agents = initial_agent_count + sum(num_agents_per_source)
         progress = (
             Progress(
                 console=Console(stderr=True, force_terminal=True),
@@ -985,8 +994,8 @@ def run_scenario(
         if progress is not None:
             progress.start()
             progress_task = progress.add_task(
-                "Simulating",
-                total=max(float(scenario.max_simulation_time), 1e-9),
+                f"Evacuated 0/{total_progress_agents} agents",
+                total=max(float(total_progress_agents), 1.0),
             )
 
         while simulation.elapsed_time() < scenario.max_simulation_time and (
@@ -998,6 +1007,8 @@ def run_scenario(
         ):
             current_time = simulation.elapsed_time()
             current_agents = simulation.agent_count()
+            spawned_agents = initial_agent_count + sum(agent_counter_per_source)
+            evacuated_agents = max(0, spawned_agents - current_agents)
             if (
                 progress is not None
                 and progress_task is not None
@@ -1008,8 +1019,10 @@ def run_scenario(
             ):
                 progress.update(
                     progress_task,
-                    completed=min(current_time, scenario.max_simulation_time),
-                    description=f"Simulating ({current_agents} agents)",
+                    completed=min(evacuated_agents, total_progress_agents),
+                    description=(
+                        f"Evacuated {evacuated_agents}/{total_progress_agents} agents"
+                    ),
                 )
                 progress.refresh()
                 last_progress_time = current_time
@@ -1430,31 +1443,35 @@ def run_scenario(
                     last_fed_update_time = current_time
 
             if direct_steering_info:
+                current_time = simulation.elapsed_time()
+                agents_by_id = {}
                 live_agent_ids = set()
+                _need_speed_update = _has_speed_zones or smoke_speed_model is not None
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
                     live_agent_ids.add(agent_id)
-                    x, y = extract_agent_xy(agent)
-                    if x is None or y is None:
-                        continue
-                    update_checkpoint_speed(
-                        agent_speed_state,
-                        direct_steering_info,
-                        agent_id,
-                        agent,
-                        None,
-                        None,
-                        x,
-                        y,
-                    )
-
-                for tracked_agent_id in list(agent_speed_state.keys()):
-                    if tracked_agent_id not in live_agent_ids:
-                        agent_speed_state.pop(tracked_agent_id, None)
+                    if agent_wait_info:
+                        agents_by_id[agent_id] = agent
+                    if _need_speed_update:
+                        x, y = extract_agent_xy(agent)
+                        if x is None or y is None:
+                            continue
+                        update_checkpoint_speed(
+                            agent_speed_state,
+                            direct_steering_info,
+                            agent_id,
+                            agent,
+                            None,
+                            None,
+                            x,
+                            y,
+                        )
+                if agent_speed_state:
+                    for tracked_agent_id in list(agent_speed_state.keys()):
+                        if tracked_agent_id not in live_agent_ids:
+                            agent_speed_state.pop(tracked_agent_id, None)
 
             if direct_steering_info and agent_wait_info:
-                current_time = simulation.elapsed_time()
-                agents_by_id = {agent.id: agent for agent in simulation.agents()}
 
                 for agent_id, wait_info in list(agent_wait_info.items()):
                     if wait_info.get("mode") != "path":
@@ -1573,10 +1590,20 @@ def run_scenario(
             simulation.iterate()
 
         if progress is not None and progress_task is not None:
+            final_total_agents = initial_agent_count
+            if has_flow_spawning:
+                final_total_agents += sum(agent_counter_per_source)
             progress.update(
                 progress_task,
-                completed=min(simulation.elapsed_time(), scenario.max_simulation_time),
-                description=f"Simulating ({simulation.agent_count()} agents)",
+                completed=min(
+                    max(0, final_total_agents - simulation.agent_count()),
+                    total_progress_agents,
+                ),
+                description=(
+                    "Evacuated "
+                    f"{max(0, final_total_agents - simulation.agent_count())}/"
+                    f"{total_progress_agents} agents"
+                ),
             )
             progress.refresh()
             progress.stop()

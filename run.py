@@ -209,7 +209,17 @@ def main() -> int:
         smoke_speed_model=smoke_speed_model,
         fed_model=fed_model,
     )
-    print(json.dumps(result.metrics, indent=2, sort_keys=True, default=str))
+    if result.agents_remaining == 0:
+        print(
+            f"Simulation finished in {result.evacuation_time:.2f} s "
+            f"({result.agents_evacuated}/{result.total_agents} evacuated)."
+        )
+    else:
+        print(
+            f"Simulation stopped after {result.evacuation_time:.2f} s "
+            f"({result.agents_evacuated}/{result.total_agents} evacuated, "
+            f"{result.agents_remaining} remaining)."
+        )
 
     if args.output_smoke_history and result.smoke_history is not None:
         _write_smoke_history_csv(result.smoke_history, args.output_smoke_history)
