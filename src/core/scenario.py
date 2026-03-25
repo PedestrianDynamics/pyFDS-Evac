@@ -1291,7 +1291,10 @@ def run_scenario(
                             base_speed = float(current_speed)
                             smoke_speed_state[agent_id] = base_speed
                         if base_speed is None:
-                            continue
+                            raise RuntimeError(
+                                "Smoke-speed updates require agent.model.desired_speed; "
+                                f"could not read it for agent {agent_id} in model {type(getattr(agent, 'model', None)).__name__}."
+                            )
                         x, y = extract_agent_xy(agent)
                         if x is None or y is None:
                             continue

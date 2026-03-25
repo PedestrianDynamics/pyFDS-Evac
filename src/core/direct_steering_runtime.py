@@ -109,32 +109,26 @@ def sample_wait_time(stage_cfg, base_seed, step_index):
 
 
 def get_agent_desired_speed(agent) -> float | None:
-    """Read the agent's desired speed across JuPedSim API variants."""
+    """Read the agent's desired speed from the documented JuPedSim runtime API."""
     model_obj = getattr(agent, "model", None)
-    if model_obj is None:
+    if model_obj is None or not hasattr(model_obj, "desired_speed"):
         return None
-    for attr_name in ("desired_speed", "desiredSpeed"):
-        if hasattr(model_obj, attr_name):
-            try:
-                return float(getattr(model_obj, attr_name))
-            except Exception:
-                return None
-    return None
+    try:
+        return float(getattr(model_obj, "desired_speed"))
+    except Exception:
+        return None
 
 
 def set_agent_desired_speed(agent, speed: float) -> bool:
-    """Write the agent's desired speed across JuPedSim API variants."""
+    """Write the agent's desired speed through the documented JuPedSim runtime API."""
     model_obj = getattr(agent, "model", None)
-    if model_obj is None:
+    if model_obj is None or not hasattr(model_obj, "desired_speed"):
         return False
-    for attr_name in ("desired_speed", "desiredSpeed"):
-        if hasattr(model_obj, attr_name):
-            try:
-                setattr(model_obj, attr_name, float(speed))
-                return True
-            except Exception:
-                return False
-    return False
+    try:
+        setattr(model_obj, "desired_speed", float(speed))
+        return True
+    except Exception:
+        return False
 
 
 def set_agent_smoke_factor(
