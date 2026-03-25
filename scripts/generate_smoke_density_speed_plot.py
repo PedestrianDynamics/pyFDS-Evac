@@ -50,7 +50,7 @@ def main() -> int:
         zorder=3,
     )
     ax.set_xlabel("Soot density (mg/m$^3$)")
-    ax.set_ylabel("Velocity (m/s)")
+    ax.set_ylabel("Speed (m/s)")
     ax.set_ylim(0.0, 1.6)
     ax.grid(True, alpha=0.3)
     top = ax.twiny()
