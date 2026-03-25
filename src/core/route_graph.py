@@ -473,3 +473,204 @@ def rank_routes(
         )
 
     return costs
+
+
+# ── Dynamic rerouting (Phase 4) ──────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class RerouteConfig:
+    """Settings for periodic route reevaluation."""
+
+    reevaluation_interval_s: float = 10.0
+    cost_config: RouteCostConfig = field(default_factory=RouteCostConfig)
+
+
+@dataclass
+class AgentRouteState:
+    """Per-agent routing state for reevaluation scheduling."""
+
+    current_exit: str | None = None
+    current_path: list[str] = field(default_factory=list)
+    last_eval_time_s: float = -math.inf
+    eval_offset_s: float = 0.0  # staggering offset
+
+
+@dataclass(frozen=True)
+class RouteSwitch:
+    """Record of a route switch for diagnostics."""
+
+    time_s: float
+    agent_id: int
+    old_exit: str | None
+    new_exit: str
+    old_cost: float | None
+    new_cost: float
+    reason: str
+
+
+def compute_eval_offset(
+    agent_id: int,
+    interval_s: float,
+    dt_s: float = 0.01,
+) -> float:
+    """Stagger reevaluation across agents to spread cost."""
+    if interval_s <= 0 or dt_s <= 0:
+        return 0.0
+    steps_per_interval = max(1, int(interval_s / dt_s))
+    return (agent_id % steps_per_interval) * dt_s
+
+
+def should_reevaluate(
+    current_time_s: float,
+    state: AgentRouteState,
+    interval_s: float,
+) -> bool:
+    """Return whether this agent should reevaluate its route now.
+
+    Agent evaluates at times: offset, offset + interval, offset + 2*interval, ...
+    """
+    if interval_s <= 0:
+        return False
+    if state.last_eval_time_s < state.eval_offset_s:
+        # Never evaluated yet; evaluate once we reach our offset.
+        return current_time_s >= state.eval_offset_s
+    return current_time_s - state.last_eval_time_s >= interval_s
+
+
+def reroute_agent(
+    wait_info: dict,
+    new_path: list[str],
+    stage_configs: dict,
+) -> bool:
+    """Update an agent's wait_info to follow a new route.
+
+    Modifies path_choices so that each stage in the new path leads
+    deterministically to the next stage.  Retargets the agent to the
+    first remaining stage in the new path that it hasn't passed yet.
+
+    Returns True if the route was actually changed.
+    """
+    if not new_path or len(new_path) < 2:
+        return False
+
+    current_stage = wait_info.get("current_target_stage")
+    current_origin = wait_info.get("current_origin")
+
+    # Find where the agent is in the new path.
+    # Try current_target_stage first, then current_origin.
+    insert_idx = None
+    for ref_stage in (current_stage, current_origin):
+        if ref_stage and ref_stage in new_path:
+            insert_idx = new_path.index(ref_stage)
+            break
+
+    if insert_idx is None:
+        # Agent is not on the new path yet; retarget from first stage.
+        insert_idx = 0
+
+    # Build deterministic path_choices: each stage → next stage at 100%.
+    remaining = new_path[insert_idx:]
+    new_choices: dict[str, list[tuple[str, float]]] = {}
+    for i in range(len(remaining) - 1):
+        new_choices[remaining[i]] = [(remaining[i + 1], 100.0)]
+
+    # Merge new choices into existing path_choices (don't remove
+    # choices for stages not on this path).
+    old_choices = wait_info.get("path_choices", {})
+    old_choices.update(new_choices)
+    wait_info["path_choices"] = old_choices
+
+    # If the agent's current target is not on the remaining path,
+    # retarget to the next stage after insert_idx.
+    if current_stage not in remaining and len(remaining) >= 2:
+        next_stage = remaining[1] if insert_idx == 0 else remaining[0]
+        if next_stage in stage_configs:
+            from src.core.direct_steering_runtime import pick_stage_target
+
+            wait_info["current_origin"] = wait_info.get(
+                "current_target_stage", remaining[0]
+            )
+            wait_info["current_target_stage"] = next_stage
+            wait_info["target"] = pick_stage_target(wait_info, stage_configs[next_stage])
+            wait_info["target_assigned"] = False
+            wait_info["state"] = "to_target"
+            wait_info["wait_until"] = None
+            wait_info["inside_since"] = None
+
+    return True
+
+
+def evaluate_and_reroute(
+    agent_id: int,
+    wait_info: dict,
+    route_state: AgentRouteState,
+    graph: StageGraph,
+    current_time_s: float,
+    current_fed: float,
+    extinction_sampler: ExtinctionSampler,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RerouteConfig,
+    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+) -> RouteSwitch | None:
+    """Evaluate routes and reroute the agent if a better exit is found.
+
+    Returns a RouteSwitch record if the agent switched, else None.
+    """
+    # Determine the source node for ranking.  Prefer current_origin
+    # (where the agent is coming from) because current_target_stage may
+    # be an exit with no outgoing edges.
+    source = wait_info.get("current_origin") or wait_info.get("current_target_stage")
+    if source is None or source not in graph.nodes:
+        return None
+
+    ranked = rank_routes(
+        graph, source, current_time_s, current_fed,
+        extinction_sampler, fed_rate_sampler, config.cost_config,
+        cached_segments=cached_segments,
+    )
+    if not ranked:
+        return None
+
+    best = ranked[0]
+    if best.rejected and best.rejection_reason and not best.rejection_reason.startswith("fallback"):
+        return None
+
+    old_exit = route_state.current_exit
+    old_cost = None
+    if old_exit and old_exit != best.exit_id:
+        # Find the old exit's cost for diagnostics.
+        for rc in ranked:
+            if rc.exit_id == old_exit:
+                old_cost = rc.composite_cost
+                break
+
+    route_state.last_eval_time_s = current_time_s
+
+    if old_exit == best.exit_id:
+        # Same exit, update path but no switch.
+        route_state.current_path = best.path
+        return None
+
+    # Reroute.
+    stage_configs = wait_info.get("stage_configs", {})
+    changed = reroute_agent(wait_info, best.path, stage_configs)
+    if not changed:
+        return None
+
+    reason = "initial" if old_exit is None else "smoke_reroute"
+    if best.rejection_reason and best.rejection_reason.startswith("fallback"):
+        reason = "fallback"
+
+    route_state.current_exit = best.exit_id
+    route_state.current_path = best.path
+
+    return RouteSwitch(
+        time_s=current_time_s,
+        agent_id=agent_id,
+        old_exit=old_exit,
+        new_exit=best.exit_id,
+        old_cost=old_cost,
+        new_cost=best.composite_cost,
+        reason=reason,
+    )

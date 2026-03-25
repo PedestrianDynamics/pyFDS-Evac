@@ -10,9 +10,16 @@ from src.core.route_graph import (
     StageNode,
     StageEdge,
     RouteCostConfig,
+    RerouteConfig,
+    AgentRouteState,
+    RouteSwitch,
     evaluate_route,
     evaluate_segment,
     rank_routes,
+    compute_eval_offset,
+    should_reevaluate,
+    reroute_agent,
+    evaluate_and_reroute,
 )
 from src.core.smoke_speed import ConstantExtinctionField
 
@@ -549,3 +556,214 @@ class TestRankRoutes:
             RouteCostConfig(),
         )
         assert ranked == []
+
+
+# ── Phase 4: Dynamic rerouting ───────────────────────────────────────
+
+
+def _make_stage_configs(graph: StageGraph) -> dict:
+    """Build a stage_configs dict from a StageGraph (for wait_info)."""
+    configs = {}
+    for sid, node in graph.nodes.items():
+        configs[sid] = {
+            "polygon": _box(node.centroid_x, node.centroid_y),
+            "stage_type": node.stage_type,
+            "waiting_time": 0.0,
+            "waiting_time_distribution": "constant",
+            "waiting_time_std": 0.0,
+            "speed_factor": 1.0,
+        }
+    return configs
+
+
+def _make_wait_info(
+    graph: StageGraph,
+    origin: str,
+    target: str,
+    path_choices: dict | None = None,
+) -> dict:
+    """Build a minimal agent wait_info dict for testing."""
+    stage_configs = _make_stage_configs(graph)
+    if path_choices is None:
+        path_choices = {}
+    node = graph.nodes[target]
+    return {
+        "mode": "path",
+        "path_choices": path_choices,
+        "stage_configs": stage_configs,
+        "current_origin": origin,
+        "current_target_stage": target,
+        "target": (node.centroid_x, node.centroid_y),
+        "target_assigned": False,
+        "state": "to_target",
+        "wait_until": None,
+        "inside_since": None,
+        "reach_penetration": 0.25,
+        "reach_dwell_seconds": 0.2,
+        "step_index": 0,
+        "base_seed": 42,
+        "agent_radius": 0.2,
+    }
+
+
+class TestStaggeredScheduling:
+    def test_offset_spreads_agents(self):
+        """Different agent IDs get different offsets."""
+        offsets = [compute_eval_offset(i, 10.0, 0.01) for i in range(5)]
+        assert len(set(offsets)) == 5  # all unique
+
+    def test_offset_zero_for_zero_interval(self):
+        assert compute_eval_offset(5, 0.0) == 0.0
+
+    def test_should_reevaluate_first_time(self):
+        state = AgentRouteState()
+        assert should_reevaluate(0.0, state, 10.0) is True
+
+    def test_should_not_reevaluate_too_soon(self):
+        state = AgentRouteState(last_eval_time_s=0.0)
+        assert should_reevaluate(5.0, state, 10.0) is False
+
+    def test_should_reevaluate_after_interval(self):
+        state = AgentRouteState(last_eval_time_s=0.0)
+        assert should_reevaluate(10.0, state, 10.0) is True
+
+    def test_staggered_offset_delays_first_evaluation(self):
+        """Agent with offset=3 doesn't evaluate until t=3."""
+        state = AgentRouteState(eval_offset_s=3.0)
+        assert should_reevaluate(2.0, state, 10.0) is False
+        assert should_reevaluate(3.0, state, 10.0) is True
+
+    def test_staggered_subsequent_uses_interval(self):
+        """After first eval at t=3, next eval at t=3+10=13."""
+        state = AgentRouteState(last_eval_time_s=3.0, eval_offset_s=3.0)
+        assert should_reevaluate(12.0, state, 10.0) is False
+        assert should_reevaluate(13.0, state, 10.0) is True
+
+
+class TestRerouteAgent:
+    def test_reroute_changes_path_choices(self, two_exit_graph):
+        """Rerouting updates path_choices to follow new path."""
+        wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
+        new_path = ["D0", "C0", "E1"]
+        changed = reroute_agent(wait_info, new_path, wait_info["stage_configs"])
+        assert changed is True
+        assert wait_info["path_choices"]["D0"] == [("C0", 100.0)]
+        assert wait_info["path_choices"]["C0"] == [("E1", 100.0)]
+
+    def test_reroute_empty_path_returns_false(self, two_exit_graph):
+        wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
+        assert reroute_agent(wait_info, [], wait_info["stage_configs"]) is False
+
+    def test_reroute_single_stage_returns_false(self, two_exit_graph):
+        wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
+        assert reroute_agent(wait_info, ["E0"], wait_info["stage_configs"]) is False
+
+    def test_reroute_preserves_existing_choices(self, two_exit_graph):
+        """Existing path_choices for other stages are not removed."""
+        wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
+        wait_info["path_choices"]["OTHER"] = [("STAGE", 50.0)]
+        reroute_agent(
+            wait_info, ["D0", "C0", "E1"], wait_info["stage_configs"]
+        )
+        assert "OTHER" in wait_info["path_choices"]
+
+
+class TestEvaluateAndReroute:
+    def test_initial_assignment(self, two_exit_graph):
+        """First evaluation assigns the nearest exit."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(
+            cost_config=RouteCostConfig(base_speed_m_per_s=1.0)
+        )
+        wait_info = _make_wait_info(two_exit_graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=two_exit_graph,
+            current_time_s=0.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is not None
+        assert switch.reason == "initial"
+        assert switch.new_exit == "E0"  # shortest
+        assert route_state.current_exit == "E0"
+
+    def test_no_switch_when_same_exit_wins(self, two_exit_graph):
+        """No switch returned when best exit hasn't changed."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(
+            cost_config=RouteCostConfig(base_speed_m_per_s=1.0)
+        )
+        wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
+        route_state = AgentRouteState(current_exit="E0")
+
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=two_exit_graph,
+            current_time_s=5.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is None
+
+    def test_smoke_triggers_reroute(self, two_exit_graph):
+        """Heavy smoke on short path triggers reroute to longer path."""
+
+        class SmokeOnE0:
+            def sample_extinction(self, time_s, x, y):
+                return 8.0 if y < 15 else 0.0
+
+        config = RerouteConfig(
+            cost_config=RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=2.0)
+        )
+        wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
+        route_state = AgentRouteState(current_exit="E0")
+
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=two_exit_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=SmokeOnE0(),
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is not None
+        assert switch.new_exit == "E1"
+        assert switch.old_exit == "E0"
+        assert switch.reason == "smoke_reroute"
+        assert route_state.current_exit == "E1"
+
+    def test_eval_time_updated(self, two_exit_graph):
+        """last_eval_time_s is updated after evaluation."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(
+            cost_config=RouteCostConfig(base_speed_m_per_s=1.0)
+        )
+        wait_info = _make_wait_info(two_exit_graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=two_exit_graph,
+            current_time_s=42.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert route_state.last_eval_time_s == 42.0
