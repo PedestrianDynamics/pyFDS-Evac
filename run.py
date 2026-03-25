@@ -1,16 +1,27 @@
 """Run JSON-first JuPedSim scenarios from the fds-evac repository."""
 
-from __future__ import annotations
-
 import argparse
+import csv
 import json
 import pathlib
 import shutil
 
-from src.core import load_scenario, run_scenario
+from src.core import (
+    ConstantExtinctionField,
+    DefaultFedConfig,
+    DefaultFedModel,
+    ExtinctionField,
+    FdsFedField,
+    SmokeSpeedConfig,
+    SmokeSpeedModel,
+    inspect_fds_quantities,
+    load_scenario,
+    run_scenario,
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build the command-line interface for scenario runs and exports."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--scenario", required=True, help="Scenario JSON, ZIP, or directory"
@@ -39,10 +50,45 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Export the scenario bundle without running the simulation",
     )
+    parser.add_argument(
+        "--fds-dir",
+        help="FDS result directory for smoke-speed updates based on extinction",
+    )
+    parser.add_argument(
+        "--constant-extinction",
+        type=float,
+        help="Use a constant extinction coefficient K [1/m] instead of FDS input",
+    )
+    parser.add_argument(
+        "--smoke-update-interval",
+        type=float,
+        default=1.0,
+        help="Seconds between smoke-speed updates",
+    )
+    parser.add_argument(
+        "--smoke-slice-height",
+        type=float,
+        default=2.0,
+        help="FDS slice height in meters for extinction sampling",
+    )
+    parser.add_argument(
+        "--output-smoke-history",
+        help="Write smoke speed/extinction history to CSV",
+    )
+    parser.add_argument(
+        "--output-fed-history",
+        help="Write FED history to CSV",
+    )
+    parser.add_argument(
+        "--inspect-fds",
+        action="store_true",
+        help="Inspect available FDS quantities with fdsreader and exit",
+    )
     return parser
 
 
 def _export_app_bundle(scenario, output_dir: str) -> None:
+    """Write the loaded scenario as `config.json` plus raw `geometry.wkt`."""
     destination = pathlib.Path(output_dir).resolve()
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "config.json").write_text(
@@ -55,10 +101,55 @@ def _export_app_bundle(scenario, output_dir: str) -> None:
     )
 
 
+def _write_smoke_history_csv(rows, output_path: str) -> None:
+    """Write sampled smoke-speed history rows to a CSV file."""
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "time_s",
+        "agent_id",
+        "x",
+        "y",
+        "base_speed",
+        "desired_speed",
+        "speed_factor",
+        "extinction_per_m",
+    ]
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def _write_fed_history_csv(rows, output_path: str) -> None:
+    """Write sampled FED history rows to a CSV file."""
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "time_s",
+        "agent_id",
+        "x",
+        "y",
+        "co_percent",
+        "co2_percent",
+        "o2_percent",
+        "fed_rate_per_min",
+        "fed_cumulative",
+    ]
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
 def main() -> int:
+    """Parse arguments, run the scenario, and export requested outputs."""
     args = _build_parser().parse_args()
 
     scenario = load_scenario(args.scenario)
+    print("Initialization started.")
 
     if args.print_summary:
         print(scenario.summary())
@@ -69,8 +160,71 @@ def main() -> int:
     if args.export_only:
         return 0
 
-    result = run_scenario(scenario, seed=args.seed)
-    print(json.dumps(result.metrics, indent=2, sort_keys=True, default=str))
+    if args.inspect_fds:
+        if not args.fds_dir:
+            raise ValueError("--inspect-fds requires --fds-dir")
+        inventory = inspect_fds_quantities(args.fds_dir)
+        print(json.dumps(inventory.__dict__, indent=2, sort_keys=True))
+        return 0
+
+    smoke_speed_model = None
+    fed_model = None
+    if args.fds_dir or args.constant_extinction is not None:
+        print("Configuring smoke calculation.")
+        smoke_config = SmokeSpeedConfig(
+            fds_dir=args.fds_dir or ".",
+            update_interval_s=args.smoke_update_interval,
+            slice_height_m=args.smoke_slice_height,
+        )
+        if args.constant_extinction is not None:
+            field = ConstantExtinctionField(args.constant_extinction)
+        elif args.fds_dir:
+            field = ExtinctionField.from_fds(
+                smoke_config.fds_dir,
+                slice_height_m=smoke_config.slice_height_m,
+            )
+        else:
+            field = None
+        if field is not None:
+            smoke_speed_model = SmokeSpeedModel(
+                field,
+                smoke_config,
+            )
+    if args.fds_dir:
+        inventory = inspect_fds_quantities(args.fds_dir)
+        if inventory.supports_default_fed():
+            print("Configuring FED calculation.")
+            fed_config = DefaultFedConfig(
+                fds_dir=args.fds_dir,
+                update_interval_s=args.smoke_update_interval,
+                slice_height_m=args.smoke_slice_height,
+            )
+            fed_model = DefaultFedModel(FdsFedField.from_fds(args.fds_dir), fed_config)
+    print("Initialization finished.")
+    print("Simulation started.")
+
+    result = run_scenario(
+        scenario,
+        seed=args.seed,
+        smoke_speed_model=smoke_speed_model,
+        fed_model=fed_model,
+    )
+    if result.agents_remaining == 0:
+        print(
+            f"Simulation finished in {result.evacuation_time:.2f} s "
+            f"({result.agents_evacuated}/{result.total_agents} evacuated)."
+        )
+    else:
+        print(
+            f"Simulation stopped after {result.evacuation_time:.2f} s "
+            f"({result.agents_evacuated}/{result.total_agents} evacuated, "
+            f"{result.agents_remaining} remaining)."
+        )
+
+    if args.output_smoke_history and result.smoke_history is not None:
+        _write_smoke_history_csv(result.smoke_history, args.output_smoke_history)
+    if args.output_fed_history and result.fed_history is not None:
+        _write_fed_history_csv(result.fed_history, args.output_fed_history)
 
     if args.output_sqlite and result.sqlite_file:
         output_path = pathlib.Path(args.output_sqlite).resolve()

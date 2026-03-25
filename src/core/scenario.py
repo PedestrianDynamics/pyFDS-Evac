@@ -15,8 +15,6 @@ Usage::
     df = result.trajectory_dataframe()
 """
 
-from __future__ import annotations
-
 import json
 import math
 import os
@@ -33,16 +31,24 @@ try:
 except ModuleNotFoundError:
     jps = None
 import numpy as np
+from rich.console import Console
 from shapely import wkt
 from shapely.geometry import Polygon
+
+try:
+    from rich.progress import Progress
+except ModuleNotFoundError:
+    Progress = None
 
 from .direct_steering_runtime import (
     advance_path_target,
     assign_agent_target,
     ensure_agent_speed_state,
     extract_agent_xy,
+    get_agent_desired_speed,
     sample_wait_time,
     set_agent_desired_speed,
+    set_agent_smoke_factor,
     update_checkpoint_speed,
 )
 # ---------------------------------------------------------------------------
@@ -108,6 +114,7 @@ _AGENT_PARAM_BUILDERS = {
 
 
 def _build_model(model_type: str, sim_params: dict):
+    """Construct the configured JuPedSim operational model."""
     _require_jupedsim()
     builder = _MODEL_BUILDERS.get(model_type)
     if builder is None:
@@ -125,6 +132,7 @@ def _build_agent_params(
     journey_id: int,
     stage_id: int,
 ):
+    """Construct JuPedSim agent parameters for the chosen model type."""
     _require_jupedsim()
     builder = _AGENT_PARAM_BUILDERS.get(model_type)
     if builder is None:
@@ -139,6 +147,7 @@ def _build_agent_params(
 
 
 def _require_jupedsim():
+    """Fail with a clear error when JuPedSim is not installed."""
     if jps is None:
         raise ModuleNotFoundError(
             "jupedsim is required to run scenarios. Install project dependencies first."
@@ -151,6 +160,7 @@ def _require_jupedsim():
 
 
 def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
+    """Estimate a conservative packing limit for one spawn polygon."""
     effective_radius = max(max_radius, 0.1)
     theoretical = polygon.area / (math.pi * effective_radius * effective_radius)
     return max(1, math.floor(theoretical * 0.5))
@@ -179,6 +189,7 @@ def _sample_agent_values(
 
 
 def _normalize_flow_schedule_entry(entry: dict) -> dict:
+    """Normalize one configured flow schedule entry to canonical keys."""
     start_time = entry.get("flow_start_time", entry.get("start_time_s"))
     end_time = entry.get("flow_end_time", entry.get("end_time_s"))
     number = entry.get("number", entry.get("sim_count"))
@@ -210,6 +221,7 @@ def _normalize_flow_schedule_entry(entry: dict) -> dict:
 
 
 def _normalized_flow_schedule(params: dict) -> list[dict]:
+    """Return the sorted flow schedule for one distribution."""
     raw_schedule = params.get("flow_schedule", [])
     if not raw_schedule:
         return []
@@ -221,6 +233,7 @@ def _normalized_flow_schedule(params: dict) -> list[dict]:
 
 
 def _distribution_agent_budget(dist: dict) -> int:
+    """Return the total number of agents implied by one distribution."""
     params = dist.get("parameters", {})
     schedule = _normalized_flow_schedule(params)
     if schedule:
@@ -741,6 +754,8 @@ class ScenarioResult:
 
     metrics: Dict[str, Any]
     sqlite_file: Optional[str] = None
+    smoke_history: Optional[list[dict[str, Any]]] = None
+    fed_history: Optional[list[dict[str, Any]]] = None
 
     @property
     def success(self) -> bool:
@@ -815,7 +830,7 @@ class ScenarioResult:
 
 
 def load_scenario(path: str) -> Scenario:
-    """Load a scenario JSON file, ZIP, or directory exported from the JuPedSim web UI."""
+    """Load a scenario from a directory, ZIP bundle, or JSON file."""
     import zipfile
 
     resolved = pathlib.Path(path).resolve()
@@ -886,7 +901,13 @@ def load_scenario(path: str) -> Scenario:
     )
 
 
-def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioResult:
+def run_scenario(
+    scenario: Scenario,
+    *,
+    seed: Optional[int] = None,
+    smoke_speed_model=None,
+    fed_model=None,
+) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app."""
     _require_jupedsim()
     from .simulation_init import (
@@ -944,7 +965,41 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
         agent_wait_info = spawning_info.get("agent_wait_info", {})
         checkpoint_throughput_tracker = {}
         agent_speed_state: Dict[int, Dict[str, Any]] = {}
+        smoke_speed_state: Dict[int, float] = {}
+        smoke_history: list[dict[str, Any]] = []
+        fed_state: Dict[int, Dict[str, float]] = {}
+        fed_history: list[dict[str, Any]] = []
+        last_smoke_update_time = None
+        last_fed_update_time = None
+        # Precompute whether any zone/checkpoint has a non-trivial speed factor.
+        # When none do, skip the expensive per-agent update_checkpoint_speed loop.
+        _has_speed_zones = (
+            any(
+                math.fabs(float(info.get("speed_factor", 1.0)) - 1.0) > 1e-9
+                for info in direct_steering_info.values()
+            )
+            if direct_steering_info
+            else False
+        )
         flow_variant_rng = random.Random(seed)
+        total_progress_agents = initial_agent_count + sum(num_agents_per_source)
+        progress = (
+            Progress(
+                console=Console(stderr=True, force_terminal=True),
+                transient=False,
+            )
+            if Progress is not None
+            else None
+        )
+        progress_task = None
+        last_progress_time = -1.0
+        last_progress_agents = simulation.agent_count()
+        if progress is not None:
+            progress.start()
+            progress_task = progress.add_task(
+                f"Evacuated 0/{total_progress_agents} agents",
+                total=max(float(total_progress_agents), 1.0),
+            )
 
         while simulation.elapsed_time() < scenario.max_simulation_time and (
             simulation.agent_count() > 0
@@ -953,6 +1008,28 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                 and sum(agent_counter_per_source) < sum(num_agents_per_source)
             )
         ):
+            current_time = simulation.elapsed_time()
+            current_agents = simulation.agent_count()
+            spawned_agents = initial_agent_count + sum(agent_counter_per_source)
+            evacuated_agents = max(0, spawned_agents - current_agents)
+            if (
+                progress is not None
+                and progress_task is not None
+                and (
+                    current_time - last_progress_time >= 0.5
+                    or current_agents != last_progress_agents
+                )
+            ):
+                progress.update(
+                    progress_task,
+                    completed=min(evacuated_agents, total_progress_agents),
+                    description=(
+                        f"Evacuated {evacuated_agents}/{total_progress_agents} agents"
+                    ),
+                )
+                progress.refresh()
+                last_progress_time = current_time
+                last_progress_agents = current_agents
             if has_flow_spawning:
                 current_time = simulation.elapsed_time()
 
@@ -1251,33 +1328,153 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                             speed_state["active_checkpoint"] = None
                             premovement_times[agent_id]["activated"] = True
 
+            if smoke_speed_model is not None:
+                current_time = simulation.elapsed_time()
+                if (
+                    last_smoke_update_time is None
+                    or current_time - last_smoke_update_time
+                    >= smoke_speed_model.config.update_interval_s
+                ):
+                    for agent in simulation.agents():
+                        agent_id = int(agent.id)
+                        premovement_active = (
+                            agent_id in premovement_times
+                            and not premovement_times[agent_id]["activated"]
+                        )
+                        base_speed = smoke_speed_state.get(agent_id)
+                        current_speed = get_agent_desired_speed(agent)
+                        if base_speed is None and current_speed is not None:
+                            if current_speed > 0:
+                                base_speed = float(current_speed)
+                            elif agent_id in premovement_times:
+                                base_speed = float(
+                                    premovement_times[agent_id]["desired_speed"]
+                                )
+                            else:
+                                base_speed = float(current_speed)
+                        if base_speed is not None:
+                            smoke_speed_state[agent_id] = base_speed
+                        if base_speed is None:
+                            raise RuntimeError(
+                                "Smoke-speed updates require a documented JuPedSim runtime "
+                                "speed attribute; could not read one for agent "
+                                f"{agent_id} in model {type(getattr(agent, 'model', None)).__name__}."
+                            )
+                        x, y = extract_agent_xy(agent)
+                        if x is None or y is None:
+                            continue
+                        extinction, speed_factor = smoke_speed_model.sample(
+                            current_time, x, y
+                        )
+                        desired_speed = base_speed * speed_factor
+                        if direct_steering_info:
+                            set_agent_smoke_factor(
+                                agent_speed_state,
+                                agent_id,
+                                agent,
+                                speed_factor,
+                            )
+                        elif not premovement_active:
+                            set_agent_desired_speed(agent, desired_speed)
+                        smoke_history.append(
+                            {
+                                "time_s": round(float(current_time), 6),
+                                "agent_id": agent_id,
+                                "x": float(x),
+                                "y": float(y),
+                                "base_speed": float(base_speed),
+                                "desired_speed": float(desired_speed),
+                                "speed_factor": float(speed_factor),
+                                "extinction_per_m": float(extinction),
+                            }
+                        )
+                    last_smoke_update_time = current_time
+
+            if fed_model is not None:
+                current_time = simulation.elapsed_time()
+                fed_update_interval_s = max(
+                    0.0,
+                    float(
+                        getattr(
+                            getattr(fed_model, "config", None),
+                            "update_interval_s",
+                            0.0,
+                        )
+                    ),
+                )
+                if (
+                    last_fed_update_time is None
+                    or current_time - last_fed_update_time >= fed_update_interval_s
+                ):
+                    for agent in simulation.agents():
+                        agent_id = int(agent.id)
+                        x, y = extract_agent_xy(agent)
+                        if x is None or y is None:
+                            continue
+                        state = fed_state.setdefault(
+                            agent_id,
+                            {"cumulative": 0.0, "last_update_s": float(current_time)},
+                        )
+                        dt_s = max(
+                            0.0,
+                            float(current_time) - float(state["last_update_s"]),
+                        )
+                        inputs, rate_per_min, cumulative = fed_model.advance(
+                            current_time,
+                            x,
+                            y,
+                            dt_s=dt_s,
+                            current_fed=state["cumulative"],
+                        )
+                        state["cumulative"] = float(cumulative)
+                        state["last_update_s"] = float(current_time)
+                        fed_history.append(
+                            {
+                                "time_s": round(float(current_time), 6),
+                                "agent_id": agent_id,
+                                "x": float(x),
+                                "y": float(y),
+                                "co_percent": float(inputs.co_volume_fraction_percent),
+                                "co2_percent": float(
+                                    inputs.co2_volume_fraction_percent
+                                ),
+                                "o2_percent": float(inputs.o2_volume_fraction_percent),
+                                "fed_rate_per_min": float(rate_per_min),
+                                "fed_cumulative": float(cumulative),
+                            }
+                        )
+                    last_fed_update_time = current_time
+
             if direct_steering_info:
+                current_time = simulation.elapsed_time()
+                agents_by_id = {}
                 live_agent_ids = set()
+                _need_speed_update = _has_speed_zones or smoke_speed_model is not None
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
                     live_agent_ids.add(agent_id)
-                    x, y = extract_agent_xy(agent)
-                    if x is None or y is None:
-                        continue
-                    update_checkpoint_speed(
-                        agent_speed_state,
-                        direct_steering_info,
-                        agent_id,
-                        agent,
-                        None,
-                        None,
-                        x,
-                        y,
-                    )
-
-                for tracked_agent_id in list(agent_speed_state.keys()):
-                    if tracked_agent_id not in live_agent_ids:
-                        agent_speed_state.pop(tracked_agent_id, None)
+                    if agent_wait_info:
+                        agents_by_id[agent_id] = agent
+                    if _need_speed_update:
+                        x, y = extract_agent_xy(agent)
+                        if x is None or y is None:
+                            continue
+                        update_checkpoint_speed(
+                            agent_speed_state,
+                            direct_steering_info,
+                            agent_id,
+                            agent,
+                            None,
+                            None,
+                            x,
+                            y,
+                        )
+                if agent_speed_state:
+                    for tracked_agent_id in list(agent_speed_state.keys()):
+                        if tracked_agent_id not in live_agent_ids:
+                            agent_speed_state.pop(tracked_agent_id, None)
 
             if direct_steering_info and agent_wait_info:
-                current_time = simulation.elapsed_time()
-                agents_by_id = {agent.id: agent for agent in simulation.agents()}
-
                 for agent_id, wait_info in list(agent_wait_info.items()):
                     if wait_info.get("mode") != "path":
                         continue
@@ -1394,6 +1591,25 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
 
             simulation.iterate()
 
+        if progress is not None and progress_task is not None:
+            final_total_agents = initial_agent_count
+            if has_flow_spawning:
+                final_total_agents += sum(agent_counter_per_source)
+            progress.update(
+                progress_task,
+                completed=min(
+                    max(0, final_total_agents - simulation.agent_count()),
+                    total_progress_agents,
+                ),
+                description=(
+                    "Evacuated "
+                    f"{max(0, final_total_agents - simulation.agent_count())}/"
+                    f"{total_progress_agents} agents"
+                ),
+            )
+            progress.refresh()
+            progress.stop()
+
         evacuation_time = simulation.elapsed_time()
         remaining = simulation.agent_count()
         total_agents = initial_agent_count
@@ -1413,8 +1629,21 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
+        if smoke_speed_model is not None:
+            metrics["smoke_history_samples"] = len(smoke_history)
+        if fed_model is not None:
+            metrics["fed_history_samples"] = len(fed_history)
+            metrics["fed_max"] = max(
+                (row["fed_cumulative"] for row in fed_history),
+                default=0.0,
+            )
 
-        return ScenarioResult(metrics=metrics, sqlite_file=output_file)
+        return ScenarioResult(
+            metrics=metrics,
+            sqlite_file=output_file,
+            smoke_history=smoke_history if smoke_speed_model is not None else None,
+            fed_history=fed_history if fed_model is not None else None,
+        )
     finally:
         try:
             writer.close()

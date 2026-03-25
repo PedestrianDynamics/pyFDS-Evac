@@ -11,8 +11,12 @@ dependencies = [
     "plotly",
     "nbformat>=4.2.0",
     "matplotlib",
+    "rich",
     "shapely",
 ]
+
+[project.optional-dependencies]
+fed = ["fdsreader"]
 
 [project.scripts]
 fds-evac = "main:main"

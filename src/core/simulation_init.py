@@ -14,6 +14,11 @@ import importlib.util
 import subprocess
 import sys
 
+from .premovement_distributions import (
+    PREMOVEMENT_PRESETS,
+    create_premovement_distribution,
+)
+
 required_packages = [
     ("jupedsim", "jupedsim"),
     ("shapely", "shapely"),
@@ -614,8 +619,6 @@ def initialize_simulation_from_json(
         data["transitions"] = []
 
     if needs_fallback:
-        print(f"Using fallback logic: {', '.join(fallback_reasons)}")
-
         result_data, positions, agent_radii, spawning_info = _initialize_with_fallback(
             simulation, data, walkable_area, seed, model_type, global_parameters
         )
@@ -708,7 +711,6 @@ def _initialize_with_fallback(
         for dist_id, dist_data in data["distributions"].items():
             if "parameters" in dist_data:
                 params = dist_data["parameters"]
-                print(f"Processing with parameters: {params}")
                 if isinstance(params, str):
                     try:
                         params = json.loads(params)
@@ -734,11 +736,6 @@ def _initialize_with_fallback(
         )
         default_n_agents = getattr(global_parameters, "number", default_n_agents)
 
-    print(
-        f"Using default parameters: v0={default_v0}, radius={default_agent_radius}, n_agents={default_n_agents}"
-    )
-
-    print()
     # Step 1: Add exits to simulation
     stage_map = {}
     exits = []
@@ -874,8 +871,6 @@ def _initialize_with_fallback(
 
                     distribution_params.append(dist_params)
                     total_agents += int(dist_params["number"])
-
-                    print(f"Distribution {dist_id}: {dist_params}")
 
     # Fallback: use walkable area if no valid distributions
     if not distributions:
@@ -1140,11 +1135,6 @@ def _initialize_with_fallback(
         agent_premovement_times = None
         if use_premovement:
             has_premovement = True
-            from utils.premovement_distributions import (
-                create_premovement_distribution,
-                PREMOVEMENT_PRESETS,
-            )
-
             dist_type = spawn_data["params"].get("premovement_distribution", "gamma")
             param_a = spawn_data["params"].get("premovement_param_a")
             param_b = spawn_data["params"].get("premovement_param_b")
@@ -1162,20 +1152,10 @@ def _initialize_with_fallback(
             if premovement_seed is None:
                 premovement_seed = seed + spawn_data["index"] + 1000
 
-            print(
-                f"Generating premovement times: {dist_type} with params {dist_params}, seed={premovement_seed}"
-            )
-
             distribution = create_premovement_distribution(
                 dist_type, dist_params, premovement_seed
             )
             agent_premovement_times = distribution.sample(len(positions))
-
-            print(
-                f"Premovement times stats - Min: {agent_premovement_times.min():.2f}s, "
-                f"Max: {agent_premovement_times.max():.2f}s, "
-                f"Mean: {agent_premovement_times.mean():.2f}s"
-            )
 
         # Sample per-agent radius and v0
         rng = np.random.RandomState(seed + spawn_data["index"])
@@ -1285,10 +1265,6 @@ def _initialize_with_fallback(
         "global_ds_journey_id": global_ds_journey_id,
         "global_ds_stage_id": global_ds_stage_id,
     }
-
-    print(
-        f"Added {len(all_positions)} agents using fallback logic (immediate), prepared {len(flow_distributions)} flow sources"
-    )
 
     return (
         {
@@ -1527,9 +1503,6 @@ def _process_distributions(
             "percentage": params.get("percentage", None),
         }
 
-        print(f"DEBUG: Distribution {dist_id} RAW params from JSON: {params}")
-        print(f"DEBUG: Distribution {dist_id} processed params: {dist_params[dist_id]}")
-
     return dist_geom, dist_params
 
 
@@ -1565,7 +1538,6 @@ def _create_journeys_with_percentages(
     waypoint_routing = data.get("waypoint_routing", {})
     journey_endpoints = {}
 
-    print(f"Creating journeys with routing: {waypoint_routing}")
     direct_steering_keys = direct_steering_keys or set()
 
     # Index transitions by journey id for robust stage ordering decisions.
@@ -1621,20 +1593,14 @@ def _create_journeys_with_percentages(
         jid = journey["id"]
         base_stages = journey["stages"]
 
-        print(f"Processing journey {jid} with stages: {base_stages}")
-
         # Generate all possible journey variants for this journey
         variants = _generate_journey_variants(
             jid, base_stages, waypoint_routing, stage_map
         )
         journey_variants[jid] = []
 
-        print(f"Generated {len(variants)} variants for journey {jid}")
-
         for variant_idx, (variant_stages, percentage) in enumerate(variants):
             variant_id = f"{jid}_variant_{variant_idx}"
-
-            print(f"Creating variant {variant_id}: {variant_stages} ({percentage}%)")
 
             # Filter out distributions first.
             actual_stages = [
@@ -1736,15 +1702,6 @@ def _create_journeys_with_percentages(
                 journeys_per_distribution[dist_key].append(
                     {"original_journey_id": jid, "variant_data": variant}
                 )
-                print(
-                    f"DEBUG: Added variant {variant.get('variant_name')} to distribution {dist_key}"
-                )
-
-    print(f"DEBUG: journey_variants = {journey_variants}")
-    print(
-        f"DEBUG: journeys_per_distribution keys = {list(journeys_per_distribution.keys())}"
-    )
-    print(f"DEBUG: journeys_per_distribution = {dict(journeys_per_distribution)}")
     return {
         "journey_ids": journey_ids,  # Keep for compatibility
         "journey_variants": journey_variants,
@@ -1775,8 +1732,6 @@ def _generate_journey_variants(
     if not distributions:
         return [(base_stages, 100.0)]
 
-    print(f"DEBUG: Found distributions for journey {journey_id}: {distributions}")
-
     # Routing split nodes may be waypoints or waiting polygons.
     all_routing_nodes = [
         stage for stage in base_stages if _is_routing_split_node(stage)
@@ -1802,10 +1757,6 @@ def _generate_journey_variants(
             and node not in target_routing_nodes
         ):
             initial_routing_nodes.append(node)
-
-    print(f"DEBUG: All routing nodes: {all_routing_nodes}")
-    print(f"DEBUG: Target routing nodes: {target_routing_nodes}")
-    print(f"DEBUG: Initial routing nodes: {initial_routing_nodes}")
 
     if not initial_routing_nodes:
         # Cyclic routing graphs can make every routing node a target. In that case,
@@ -1993,7 +1944,6 @@ def _add_agents(
                 journey_desc = jps.JourneyDescription([stage_id])
                 new_journey_id = simulation.add_journey(journey_desc)
                 exit_to_journey[stage_id] = new_journey_id
-                print(f"Created new journey {new_journey_id} for exit {exit_id}")
 
     def find_nearest_exit_journey(agent_position):
         """Find the nearest exit and return its journey_id and stage_id."""
@@ -2032,11 +1982,6 @@ def _add_agents(
     journeys_per_distribution = journey_data["journeys_per_distribution"]
 
     for dist_key, polygon in dist_geom.items():
-        print(f"DEBUG: Processing distribution with dist_key = '{dist_key}'")
-        print(
-            f"DEBUG: Available journeys_per_distribution keys = {list(journeys_per_distribution.keys())}"
-        )
-
         params = dist_params[dist_key]
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(params)
         use_flow_spawning = params.get("use_flow_spawning", False)
@@ -2067,9 +2012,6 @@ def _add_agents(
 
             # dist_key already matches journey mapping keys (e.g. jps-distributions_0).
             distribution_journeys = journeys_per_distribution.get(dist_key, [])
-            print(
-                f"DEBUG: dist_key = '{dist_key}', found {len(distribution_journeys)} distribution_journeys"
-            )
 
             if flow_schedule:
                 has_flow_spawning = True
@@ -2259,11 +2201,6 @@ def _add_agents(
             agent_premovement_times = None
             if use_premovement:
                 has_premovement = True
-                from utils.premovement_distributions import (
-                    create_premovement_distribution,
-                    PREMOVEMENT_PRESETS,
-                )
-
                 dist_type = spawn_params.get("premovement_distribution", "gamma")
                 param_a = spawn_params.get("premovement_param_a")
                 param_b = spawn_params.get("premovement_param_b")
@@ -2281,20 +2218,10 @@ def _add_agents(
                 if premovement_seed is None:
                     premovement_seed = seed + 1000
 
-                print(
-                    f"Generating premovement times for {dist_key}: {dist_type} with params {dist_params}, seed={premovement_seed}"
-                )
-
                 distribution = create_premovement_distribution(
                     dist_type, dist_params, premovement_seed
                 )
                 agent_premovement_times = distribution.sample(len(positions))
-
-                print(
-                    f"Premovement times stats - Min: {agent_premovement_times.min():.2f}s, "
-                    f"Max: {agent_premovement_times.max():.2f}s, "
-                    f"Mean: {agent_premovement_times.mean():.2f}s"
-                )
 
             # Sample per-agent radius and v0
             rng = np.random.RandomState(seed + zlib.crc32(dist_key.encode()) % (2**31))
@@ -2303,10 +2230,6 @@ def _add_agents(
             )
 
             if distribution_journeys:
-                print(
-                    f"Distribution {dist_key} has {len(distribution_journeys)} journey variants"
-                )
-
                 variant_weights, total_weight = _normalize_variant_weights(
                     distribution_journeys
                 )
@@ -2335,15 +2258,6 @@ def _add_agents(
                     if variant_agents > 0:
                         agent_assignments.append((variant_info, variant_agents))
                         remaining_agents -= variant_agents
-
-                    print(
-                        f"Variant {variant_data['variant_name']}: {variant_agents} agents "
-                        f"(weight={variant_weight}, total={total_weight})"
-                    )
-
-                # Verify we're using all agents
-                total_assigned = sum(assignment[1] for assignment in agent_assignments)
-                print(f"Total agents assigned: {total_assigned}/{len(positions)}")
 
                 agent_index = 0
                 for variant_info, variant_agents in agent_assignments:
@@ -2436,10 +2350,6 @@ def _add_agents(
                                 agent_index += 1
                                 current_agent_id += 1
             else:
-                print(
-                    f"Distribution {dist_key} has no journey variants - using nearest exit assignment"
-                )
-
                 for idx, pos in enumerate(positions):
                     nearest_journey_id, nearest_stage_id = find_nearest_exit_journey(
                         pos
