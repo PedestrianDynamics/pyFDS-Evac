@@ -5,10 +5,15 @@ import logging
 from typing import List, Any
 
 # TODO: setuplogger in main script?
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
-def load_or_compute_vis(sim_dir: str, waypoints: List[Any], times: List[float], pickle_path: str, c0: str):
+
+def load_or_compute_vis(
+    sim_dir: str, waypoints: List[Any], times: List[float], pickle_path: str, c0: str
+):
     """
     Load or compute the visualization object.
 
@@ -33,7 +38,9 @@ def load_or_compute_vis(sim_dir: str, waypoints: List[Any], times: List[float], 
                 vis = pickle.load(file)
             logger.info("Vis object loaded successfully.")
         except FileNotFoundError:
-            logger.critical(f"No file found at {pickle_path}, please check the file path.")
+            logger.critical(
+                f"No file found at {pickle_path}, please check the file path."
+            )
             sys.exit()
 
         except Exception as e:

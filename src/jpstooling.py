@@ -277,10 +277,16 @@ def run_simulation(
     # Simulate premovement time in seconds
     premovement_iterations = config.premovement_time * int(1 / simulation.delta_time())
     simulation.iterate(premovement_iterations)
+
     # Start movement. The simulation will stop if no agents are left or the max_vis_simulation_time is reached
+    max_iterations = int(config.max_vis_simulation_time / simulation.delta_time())
+    iteration = 0
+
     while (
-        simulation.elapsed_time() < config.premovement_time + 200
-    ):  # max_vis_simulation_time:
+        simulation.elapsed_time() < config.max_vis_simulation_time
+        and len(list(simulation.agents())) > 0
+        and iteration < max_iterations
+    ):
         t = simulation.elapsed_time()  # seconds
         # Generate new agents every 10 seconds
         if (
@@ -292,7 +298,7 @@ def run_simulation(
             )
 
         if simulation.iteration_count() % 2000 == 0:
-            print(f"Simulation time: {t:2.2f} s", end="\r")
+            logging.info("Check and Update.. Simulation time: {t:2.2f} s", end="\r")
             check_and_update_journeys(
                 routing=routing,
                 simulation=simulation,
@@ -309,5 +315,9 @@ def run_simulation(
             )
 
         simulation.iterate()
+        iteration += 1
+
+    if iteration >= max_iterations:
+        logger.warning(f"Simulation reached maximum iteration limit ({max_iterations})")
 
     logger.info(f"Simulation finished after {simulation.elapsed_time():.2f} seconds.")

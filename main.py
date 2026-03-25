@@ -1,15 +1,11 @@
 """Main entry script."""
 
-import os
-from pathlib import Path
-
 import jupedsim as jps
-import matplotlib.pyplot as plt
 import pedpy
 import shapely
 from shapely import Polygon, from_wkt
 import logging
-from src.jpstooling import calculate_desired_speed, run_simulation
+from src.jpstooling import run_simulation
 from src.fdstooling import load_or_compute_vis
 from src.ploting import (
     plot_simulation_configuration,
@@ -18,7 +14,6 @@ from src.ploting import (
     plot_local_visibility,
     log_waypoint_visibility,
 )
-from typing import List
 from src.config import SimulationConfig
 
 logging.basicConfig(
@@ -103,6 +98,7 @@ logger.info(f"{config.figs_path}/Simulation configuration saved successfully.")
 
 plot_visibility_path(logger, config, vis, routing, starting_point)
 
+logging.info("Starting simulation...")
 run_simulation(
     walkable_area=walkable_area,
     exits=config.exits,
