@@ -1281,19 +1281,28 @@ def run_scenario(
                 ):
                     for agent in simulation.agents():
                         agent_id = int(agent.id)
+                        premovement_active = (
+                            agent_id in premovement_times
+                            and not premovement_times[agent_id]["activated"]
+                        )
                         base_speed = smoke_speed_state.get(agent_id)
                         current_speed = get_agent_desired_speed(agent)
-                        if (
-                            base_speed is None
-                            and current_speed is not None
-                            and current_speed > 0
-                        ):
-                            base_speed = float(current_speed)
+                        if base_speed is None and current_speed is not None:
+                            if current_speed > 0:
+                                base_speed = float(current_speed)
+                            elif agent_id in premovement_times:
+                                base_speed = float(
+                                    premovement_times[agent_id]["desired_speed"]
+                                )
+                            else:
+                                base_speed = float(current_speed)
+                        if base_speed is not None:
                             smoke_speed_state[agent_id] = base_speed
                         if base_speed is None:
                             raise RuntimeError(
-                                "Smoke-speed updates require agent.model.desired_speed; "
-                                f"could not read it for agent {agent_id} in model {type(getattr(agent, 'model', None)).__name__}."
+                                "Smoke-speed updates require a documented JuPedSim runtime "
+                                "speed attribute; could not read one for agent "
+                                f"{agent_id} in model {type(getattr(agent, 'model', None)).__name__}."
                             )
                         x, y = extract_agent_xy(agent)
                         if x is None or y is None:
@@ -1309,7 +1318,7 @@ def run_scenario(
                                 agent,
                                 speed_factor,
                             )
-                        else:
+                        elif not premovement_active:
                             set_agent_desired_speed(agent, desired_speed)
                         smoke_history.append(
                             {

@@ -122,6 +122,40 @@ def test_iso_table21_extinction_sweep_produces_plot(tmp_path: Path):
     assert output.stat().st_size > 0
 
 
+def test_smoke_updates_do_not_release_agents_during_premovement():
+    scenario = load_scenario("assets/ISO-table21")
+    for distribution in scenario.raw["distributions"].values():
+        params = distribution["parameters"]
+        params["use_premovement"] = True
+        params["premovement_distribution"] = "uniform"
+        params["premovement_param_a"] = 30.0
+        params["premovement_param_b"] = 30.0
+    scenario.set_max_time(2.0)
+
+    smoke_model = SmokeSpeedModel(
+        ConstantExtinctionField(1.0),
+        SmokeSpeedConfig(
+            fds_dir=".",
+            update_interval_s=0.1,
+        ),
+    )
+    result = run_scenario(scenario, seed=420, smoke_speed_model=smoke_model)
+
+    try:
+        assert result.smoke_history
+        positions_by_agent = {}
+        for row in result.smoke_history:
+            positions_by_agent.setdefault(int(row["agent_id"]), set()).add(
+                (round(float(row["x"]), 6), round(float(row["y"]), 6))
+            )
+            assert float(row["base_speed"]) > 0.0
+
+        assert positions_by_agent
+        assert all(len(positions) == 1 for positions in positions_by_agent.values())
+    finally:
+        result.cleanup()
+
+
 def test_fds_evac_guide_smoke_density_points_match_theory():
     base_speed = 1.5
     soot_densities = [0.0, 500.0, 1000.0, 1500.0]

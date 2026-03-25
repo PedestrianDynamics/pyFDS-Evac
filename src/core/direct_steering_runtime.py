@@ -111,10 +111,18 @@ def sample_wait_time(stage_cfg, base_seed, step_index):
 def get_agent_desired_speed(agent) -> float | None:
     """Read the agent's desired speed from the documented JuPedSim runtime API."""
     model_obj = getattr(agent, "model", None)
-    if model_obj is None or not hasattr(model_obj, "desired_speed"):
+    if model_obj is None:
+        return None
+    model_type = type(model_obj).__name__
+    speed_attr = {
+        "CollisionFreeSpeedModelState": "v0",
+        "CollisionFreeSpeedModelV2State": "v0",
+        "SocialForceModelState": "desiredSpeed",
+    }.get(model_type)
+    if speed_attr is None or not hasattr(model_obj, speed_attr):
         return None
     try:
-        return float(getattr(model_obj, "desired_speed"))
+        return float(getattr(model_obj, speed_attr))
     except Exception:
         return None
 
@@ -122,10 +130,18 @@ def get_agent_desired_speed(agent) -> float | None:
 def set_agent_desired_speed(agent, speed: float) -> bool:
     """Write the agent's desired speed through the documented JuPedSim runtime API."""
     model_obj = getattr(agent, "model", None)
-    if model_obj is None or not hasattr(model_obj, "desired_speed"):
+    if model_obj is None:
+        return False
+    model_type = type(model_obj).__name__
+    speed_attr = {
+        "CollisionFreeSpeedModelState": "v0",
+        "CollisionFreeSpeedModelV2State": "v0",
+        "SocialForceModelState": "desiredSpeed",
+    }.get(model_type)
+    if speed_attr is None or not hasattr(model_obj, speed_attr):
         return False
     try:
-        setattr(model_obj, "desired_speed", float(speed))
+        setattr(model_obj, speed_attr, float(speed))
         return True
     except Exception:
         return False

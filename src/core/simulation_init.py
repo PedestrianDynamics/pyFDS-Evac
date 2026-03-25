@@ -14,6 +14,11 @@ import importlib.util
 import subprocess
 import sys
 
+from .premovement_distributions import (
+    PREMOVEMENT_PRESETS,
+    create_premovement_distribution,
+)
+
 required_packages = [
     ("jupedsim", "jupedsim"),
     ("shapely", "shapely"),
@@ -1140,11 +1145,6 @@ def _initialize_with_fallback(
         agent_premovement_times = None
         if use_premovement:
             has_premovement = True
-            from utils.premovement_distributions import (
-                create_premovement_distribution,
-                PREMOVEMENT_PRESETS,
-            )
-
             dist_type = spawn_data["params"].get("premovement_distribution", "gamma")
             param_a = spawn_data["params"].get("premovement_param_a")
             param_b = spawn_data["params"].get("premovement_param_b")
@@ -2259,11 +2259,6 @@ def _add_agents(
             agent_premovement_times = None
             if use_premovement:
                 has_premovement = True
-                from utils.premovement_distributions import (
-                    create_premovement_distribution,
-                    PREMOVEMENT_PRESETS,
-                )
-
                 dist_type = spawn_params.get("premovement_distribution", "gamma")
                 param_a = spawn_params.get("premovement_param_a")
                 param_b = spawn_params.get("premovement_param_b")
