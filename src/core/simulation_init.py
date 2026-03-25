@@ -2083,7 +2083,7 @@ def _add_agents(
                     distance_to_polygon=max_radius,
                     seed=seed + len(starting_pos_per_source),
                 )
-                shuffle_rng = random.Random(seed + hash(dist_key))
+                shuffle_rng = random.Random(seed + zlib.crc32(dist_key.encode()))
                 shuffle_rng.shuffle(positions)
 
                 for schedule_entry in flow_schedule:
@@ -2230,8 +2230,9 @@ def _add_agents(
     # Handle immediate spawning distributions (existing logic)
     for dist_key, spawn_data in immediate_spawn_distributions.items():
         try:
-            max_radius = _get_max_agent_radius(spawn_data["params"])
-            requested_count = int(spawn_data["params"].get("number", 0))
+            spawn_params = spawn_data["params"]
+            max_radius = _get_max_agent_radius(spawn_params)
+            requested_count = int(spawn_params.get("number", 0))
             max_capacity = _estimate_max_capacity(spawn_data["area"], max_radius)
             if requested_count > max_capacity:
                 raise ValueError(
@@ -2252,7 +2253,7 @@ def _add_agents(
             distribution_journeys = spawn_data["distribution_journeys"]
 
             # Check if this distribution uses premovement
-            use_premovement = params.get("use_premovement", False)
+            use_premovement = spawn_params.get("use_premovement", False)
 
             # Generate premovement times if enabled
             agent_premovement_times = None
@@ -2263,10 +2264,10 @@ def _add_agents(
                     PREMOVEMENT_PRESETS,
                 )
 
-                dist_type = params.get("premovement_distribution", "gamma")
-                param_a = params.get("premovement_param_a")
-                param_b = params.get("premovement_param_b")
-                premovement_seed = params.get("premovement_seed")
+                dist_type = spawn_params.get("premovement_distribution", "gamma")
+                param_a = spawn_params.get("premovement_param_a")
+                param_b = spawn_params.get("premovement_param_b")
+                premovement_seed = spawn_params.get("premovement_seed")
 
                 # Use custom parameters if provided, otherwise use presets
                 if param_a is not None and param_b is not None:
@@ -2298,7 +2299,7 @@ def _add_agents(
             # Sample per-agent radius and v0
             rng = np.random.RandomState(seed + zlib.crc32(dist_key.encode()) % (2**31))
             sampled_radii, sampled_v0s = _sample_agent_values(
-                params, len(positions), rng
+                spawn_params, len(positions), rng
             )
 
             if distribution_journeys:

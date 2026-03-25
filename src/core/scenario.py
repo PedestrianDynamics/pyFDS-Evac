@@ -993,14 +993,8 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                             flow_params = flow_dist["params"]
 
                             try:
-                                agent_parameters = create_agent_parameters(
-                                    model_type=spawning_info["model_type"],
-                                    position=position,
-                                    params=flow_params,
-                                    global_params=spawning_info["global_parameters"],
-                                    journey_id=None,
-                                    stage_id=None,
-                                )
+                                assigned_journey_id = None
+                                assigned_stage_id = None
 
                                 if flow_dist.get("journey_info"):
                                     distribution_journeys = flow_dist["journey_info"]
@@ -1023,7 +1017,7 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                     selected_variant = selected_variant_info[
                                         "variant_data"
                                     ]
-                                    agent_parameters.journey_id = selected_variant["id"]
+                                    assigned_journey_id = selected_variant["id"]
 
                                     selected_stage_id = None
                                     for stage in selected_variant.get(
@@ -1041,7 +1035,7 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                         raise ValueError(
                                             f"No valid entry stage for variant {selected_variant.get('variant_name', selected_variant.get('id'))}"
                                         )
-                                    agent_parameters.stage_id = selected_stage_id
+                                    assigned_stage_id = selected_stage_id
                                     uses_direct_steering = any(
                                         stage in direct_steering_info
                                         for stage in selected_variant.get(
@@ -1059,10 +1053,8 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                         and global_ds_journey_id is not None
                                         and global_ds_stage_id is not None
                                     ):
-                                        agent_parameters.journey_id = (
-                                            global_ds_journey_id
-                                        )
-                                        agent_parameters.stage_id = global_ds_stage_id
+                                        assigned_journey_id = global_ds_journey_id
+                                        assigned_stage_id = global_ds_stage_id
                                 else:
                                     nearest_exit_stage_id = _find_nearest_exit(
                                         position,
@@ -1093,10 +1085,8 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                         "exit_to_journey", {}
                                     ).get(nearest_exit_stage_id)
                                     if nearest_journey_id is not None:
-                                        agent_parameters.journey_id = nearest_journey_id
-                                        agent_parameters.stage_id = (
-                                            nearest_exit_stage_id
-                                        )
+                                        assigned_journey_id = nearest_journey_id
+                                        assigned_stage_id = nearest_exit_stage_id
                                     else:
                                         global_ds_journey_id = spawning_info.get(
                                             "global_ds_journey_id"
@@ -1111,10 +1101,17 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                                             raise ValueError(
                                                 "Missing exit journey mapping and no fallback direct-steering journey is available"
                                             )
-                                        agent_parameters.journey_id = (
-                                            global_ds_journey_id
-                                        )
-                                        agent_parameters.stage_id = global_ds_stage_id
+                                        assigned_journey_id = global_ds_journey_id
+                                        assigned_stage_id = global_ds_stage_id
+
+                                agent_parameters = create_agent_parameters(
+                                    model_type=spawning_info["model_type"],
+                                    position=position,
+                                    params=flow_params,
+                                    global_params=spawning_info["global_parameters"],
+                                    journey_id=assigned_journey_id,
+                                    stage_id=assigned_stage_id,
+                                )
 
                                 agent_id = simulation.add_agent(agent_parameters)
                                 agent_radii[agent_id] = flow_params.get("radius", 0.2)

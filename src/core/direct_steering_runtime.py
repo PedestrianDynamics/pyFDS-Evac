@@ -1,14 +1,12 @@
 import math
 import random
-from importlib import import_module
 from typing import Any, Dict
+
+from . import simulation_init
 
 
 def simulation_init_module():
-    try:
-        return import_module("utils.simulation_init")
-    except ModuleNotFoundError:
-        return import_module("shared.simulation_init")
+    return simulation_init
 
 
 def normalize_speed_factor(value: Any) -> float:
