@@ -1,0 +1,112 @@
+{
+  "project_version": "2.0",
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 300,
+        "model_type": "SocialForceModel",
+        "strength_neighbor_repulsion": 2.6,
+        "range_neighbor_repulsion": 0.1,
+        "gcfm_strength_neighbor_repulsion": 0.3,
+        "gcfm_strength_geometry_repulsion": 0.2,
+        "gcfm_max_neighbor_interaction_distance": 2,
+        "gcfm_max_geometry_interaction_distance": 2,
+        "gcfm_max_neighbor_repulsion_force": 9,
+        "gcfm_max_geometry_repulsion_force": 3,
+        "mass": 80,
+        "tau": 0.5,
+        "a_v": 1,
+        "a_min": 0.2,
+        "b_min": 0.2,
+        "b_max": 0.4,
+        "relaxation_time": 0.5,
+        "agent_strength": 2000,
+        "agent_range": 0.08,
+        "T": 1,
+        "s0": 0.5
+      },
+      "numberOfSimulations": 1,
+      "baseSeed": 420
+    },
+    "ui_state": {
+      "useShortestPaths": false
+    }
+  },
+  "exits": {
+    "jps-exits_0": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          3.953579294375241,
+          4.764404828467451
+        ],
+        [
+          4.790341982989782,
+          4.764404828467451
+        ],
+        [
+          4.790341982989782,
+          4.490056405970881
+        ],
+        [
+          3.953579294375241,
+          4.490056405970881
+        ],
+        [
+          3.953579294375241,
+          4.764404828467451
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0
+    }
+  },
+  "distributions": {
+    "jps-distributions_0": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -0.5034577426617972,
+          0.5310029080284948
+        ],
+        [
+          0.5465422573382035,
+          0.5310029080284948
+        ],
+        [
+          0.5465422573382035,
+          -0.4789970919715053
+        ],
+        [
+          -0.5034577426617972,
+          -0.4789970919715053
+        ],
+        [
+          -0.5034577426617972,
+          0.5310029080284948
+        ]
+      ],
+      "parameters": {
+        "number": 1,
+        "radius": 0.2,
+        "v0": 1.3,
+        "use_premovement": true,
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 0,
+        "premovement_param_b": 20000000,
+        "premovement_seed": null,
+        "distribution_mode": "by_number",
+        "percentage": null,
+        "use_flow_spawning": false,
+        "flow_start_time": 0,
+        "flow_end_time": 10,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    }
+  },
+  "checkpoints": {},
+  "zones": {},
+  "journeys": [],
+  "transitions": []
+}
