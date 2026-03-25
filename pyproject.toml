@@ -11,6 +11,7 @@ dependencies = [
     "plotly",
     "nbformat>=4.2.0",
     "matplotlib",
+    "rich",
     "shapely",
 ]
 

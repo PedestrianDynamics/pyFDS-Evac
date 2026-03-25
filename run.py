@@ -149,6 +149,7 @@ def main() -> int:
     args = _build_parser().parse_args()
 
     scenario = load_scenario(args.scenario)
+    print("Initialization started.")
 
     if args.print_summary:
         print(scenario.summary())
@@ -169,6 +170,7 @@ def main() -> int:
     smoke_speed_model = None
     fed_model = None
     if args.fds_dir or args.constant_extinction is not None:
+        print("Configuring smoke calculation.")
         smoke_config = SmokeSpeedConfig(
             fds_dir=args.fds_dir or ".",
             update_interval_s=args.smoke_update_interval,
@@ -191,12 +193,15 @@ def main() -> int:
     if args.fds_dir:
         inventory = inspect_fds_quantities(args.fds_dir)
         if inventory.supports_default_fed():
+            print("Configuring FED calculation.")
             fed_config = DefaultFedConfig(
                 fds_dir=args.fds_dir,
                 update_interval_s=args.smoke_update_interval,
                 slice_height_m=args.smoke_slice_height,
             )
             fed_model = DefaultFedModel(FdsFedField.from_fds(args.fds_dir), fed_config)
+    print("Initialization finished.")
+    print("Simulation started.")
 
     result = run_scenario(
         scenario,

@@ -31,8 +31,13 @@ try:
 except ModuleNotFoundError:
     jps = None
 import numpy as np
+from rich.console import Console
 from shapely import wkt
 from shapely.geometry import Polygon
+try:
+    from rich.progress import Progress
+except ModuleNotFoundError:
+    Progress = None
 
 from .direct_steering_runtime import (
     advance_path_target,
@@ -966,6 +971,23 @@ def run_scenario(
         last_smoke_update_time = None
         last_fed_update_time = None
         flow_variant_rng = random.Random(seed)
+        progress = (
+            Progress(
+                console=Console(stderr=True, force_terminal=True),
+                transient=False,
+            )
+            if Progress is not None
+            else None
+        )
+        progress_task = None
+        last_progress_time = -1.0
+        last_progress_agents = simulation.agent_count()
+        if progress is not None:
+            progress.start()
+            progress_task = progress.add_task(
+                "Simulating",
+                total=max(float(scenario.max_simulation_time), 1e-9),
+            )
 
         while simulation.elapsed_time() < scenario.max_simulation_time and (
             simulation.agent_count() > 0
@@ -974,6 +996,24 @@ def run_scenario(
                 and sum(agent_counter_per_source) < sum(num_agents_per_source)
             )
         ):
+            current_time = simulation.elapsed_time()
+            current_agents = simulation.agent_count()
+            if (
+                progress is not None
+                and progress_task is not None
+                and (
+                    current_time - last_progress_time >= 0.5
+                    or current_agents != last_progress_agents
+                )
+            ):
+                progress.update(
+                    progress_task,
+                    completed=min(current_time, scenario.max_simulation_time),
+                    description=f"Simulating ({current_agents} agents)",
+                )
+                progress.refresh()
+                last_progress_time = current_time
+                last_progress_agents = current_agents
             if has_flow_spawning:
                 current_time = simulation.elapsed_time()
 
@@ -1531,6 +1571,15 @@ def run_scenario(
                         continue
 
             simulation.iterate()
+
+        if progress is not None and progress_task is not None:
+            progress.update(
+                progress_task,
+                completed=min(simulation.elapsed_time(), scenario.max_simulation_time),
+                description=f"Simulating ({simulation.agent_count()} agents)",
+            )
+            progress.refresh()
+            progress.stop()
 
         evacuation_time = simulation.elapsed_time()
         remaining = simulation.agent_count()
