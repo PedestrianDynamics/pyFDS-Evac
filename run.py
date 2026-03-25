@@ -92,13 +92,11 @@ def _export_app_bundle(scenario, output_dir: str) -> None:
     destination = pathlib.Path(output_dir).resolve()
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "config.json").write_text(
-        json.dumps(scenario.raw, indent=2) + "
-",
+        json.dumps(scenario.raw, indent=2) + "\n",
         encoding="utf-8",
     )
     (destination / "geometry.wkt").write_text(
-        scenario.walkable_area_wkt.strip() + "
-",
+        scenario.walkable_area_wkt.strip() + "\n",
         encoding="utf-8",
     )
 
