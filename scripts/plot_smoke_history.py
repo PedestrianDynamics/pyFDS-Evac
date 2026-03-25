@@ -38,10 +38,12 @@ def _plot_aggregate(rows: list[dict[str, str]], output: str) -> None:
 
     times = sorted(grouped)
     mean_desired_speed = [
-        sum(item["desired_speed"] for item in grouped[t]) / len(grouped[t]) for t in times
+        sum(item["desired_speed"] for item in grouped[t]) / len(grouped[t])
+        for t in times
     ]
     mean_speed = [
-        sum(item["speed_factor"] for item in grouped[t]) / len(grouped[t]) for t in times
+        sum(item["speed_factor"] for item in grouped[t]) / len(grouped[t])
+        for t in times
     ]
     mean_extinction = [
         sum(item["extinction_per_m"] for item in grouped[t]) / len(grouped[t])
