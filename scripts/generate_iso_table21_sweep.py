@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Generate the ISO Table 21 extinction sweep verification plot."""
 
 import argparse
 from pathlib import Path
@@ -16,6 +16,7 @@ from src.core.smoke_speed import speed_factor_from_extinction
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build the command-line interface for the sweep plot generator."""
     parser = argparse.ArgumentParser(
         description="Generate the ISO Table 21 sweep plot."
     )
@@ -28,6 +29,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _run_iso_constant_extinction(extinction_per_m: float):
+    """Run the baseline and constant-extinction ISO Table 21 scenarios."""
     scenario = load_scenario("assets/ISO-table21")
     baseline = run_scenario(scenario, seed=420)
     smoke_scenario = scenario.copy()
@@ -45,6 +47,7 @@ def _run_iso_constant_extinction(extinction_per_m: float):
 
 
 def main() -> int:
+    """Generate and save the ISO Table 21 extinction sweep figure."""
     args = _build_parser().parse_args()
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)

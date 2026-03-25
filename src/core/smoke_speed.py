@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Smoke-speed models driven by local smoke extinction from FDS outputs."""
 
 from dataclasses import dataclass
 
@@ -12,7 +12,7 @@ except ModuleNotFoundError:
 
 @dataclass
 class SmokeSpeedConfig:
-    """Configuration for the extinction-based smoke-speed model.
+    """Store coefficients and sampling settings for the smoke-speed model.
 
     The default coefficients follow the linear extinction correlation used by
     FDS+Evac / Lund-style smoke-speed reduction:
@@ -32,7 +32,7 @@ class SmokeSpeedConfig:
     slice_height_m: float = 2.0
     alpha: float = 0.706
     beta: float = -0.057
-    min_speed_factor: float = 0.2
+    min_speed_factor: float = 0.1
 
 
 class ExtinctionField:
@@ -44,6 +44,7 @@ class ExtinctionField:
     """
 
     def __init__(self, vis_map):
+        """Wrap a loaded `fdsvismap.VisMap` instance."""
         self._vis = vis_map
 
     @classmethod
@@ -53,6 +54,7 @@ class ExtinctionField:
         *,
         slice_height_m: float = 2.0,
     ) -> "ExtinctionField":
+        """Load extinction slices from an FDS case directory."""
         if fv is None:
             raise ModuleNotFoundError(
                 "fdsvismap is required to load extinction fields from FDS data."
@@ -83,9 +85,11 @@ class ConstantExtinctionField:
     """
 
     def __init__(self, extinction_per_m: float):
+        """Store a constant extinction coefficient in 1/m."""
         self.extinction_per_m = float(extinction_per_m)
 
     def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        """Return the configured constant value for any point and time."""
         del time_s, x, y
         return self.extinction_per_m
 
@@ -137,7 +141,7 @@ def speed_factor_from_extinction(
     *,
     alpha: float = 0.706,
     beta: float = -0.057,
-    min_speed_factor: float = 0.2,
+    min_speed_factor: float = 0.1,
 ) -> float:
     """Convert extinction coefficient K [1/m] to a normalized speed factor.
 
@@ -174,6 +178,7 @@ class SmokeSpeedModel:
     """
 
     def __init__(self, field: ExtinctionField, config: SmokeSpeedConfig):
+        """Store the field sampler and model coefficients."""
         self.field = field
         self.config = config
 

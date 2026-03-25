@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Default FDS+Evac FED equations and FDS-backed gas samplers."""
 
 from dataclasses import dataclass
 import math
@@ -8,7 +8,7 @@ from fdsreader import Simulation
 
 @dataclass(frozen=True)
 class DefaultFedInputs:
-    """Default FDS+Evac FED inputs for the first Table 22 slice."""
+    """Store the default gas concentrations used by the v1 FED model."""
 
     co_volume_fraction_percent: float = 0.0
     co2_volume_fraction_percent: float = 0.0
@@ -17,7 +17,7 @@ class DefaultFedInputs:
 
 @dataclass(frozen=True)
 class DefaultFedConfig:
-    """Configuration for the default FDS+Evac FED model."""
+    """Store FDS path and sampling settings for FED evaluation."""
 
     fds_dir: str
     update_interval_s: float = 1.0
@@ -25,11 +25,12 @@ class DefaultFedConfig:
 
 
 def _co_percent_to_ppm(co_volume_fraction_percent: float) -> float:
+    """Convert CO from volume percent to ppm for the FED equation."""
     return max(0.0, float(co_volume_fraction_percent)) * 10000.0
 
 
 def _co_fed_rate_per_minute(co_ppm: float) -> float:
-    """FDS+Evac guide Eq. 13, with CO in ppm and time in minutes."""
+    """Return the CO FED contribution in 1/min from guide Eq. 13."""
 
     if not math.isfinite(co_ppm) or co_ppm <= 0.0:
         return 0.0
@@ -37,7 +38,7 @@ def _co_fed_rate_per_minute(co_ppm: float) -> float:
 
 
 def _hyperventilation_factor(co2_percent: float) -> float:
-    """FDS+Evac guide Eq. 19, with CO2 in volume percent."""
+    """Return the CO2 hyperventilation factor from guide Eq. 19."""
 
     if not math.isfinite(co2_percent):
         co2_percent = 0.0
@@ -46,7 +47,7 @@ def _hyperventilation_factor(co2_percent: float) -> float:
 
 
 def _o2_hypoxia_rate_per_minute(o2_percent: float) -> float:
-    """FDS+Evac guide Eq. 18, with O2 in volume percent."""
+    """Return the O2 hypoxia FED contribution in 1/min from guide Eq. 18."""
 
     if not math.isfinite(o2_percent):
         o2_percent = 20.9
@@ -89,7 +90,7 @@ def time_to_fed_threshold_s(
     threshold: float = 1.0,
     initial_fed: float = 0.0,
 ) -> float:
-    """Return time in seconds to reach a FED threshold under constant exposure."""
+    """Return the seconds needed to reach a FED threshold under constant exposure."""
 
     remaining = float(threshold) - float(initial_fed)
     if remaining <= 0.0:
@@ -101,13 +102,15 @@ def time_to_fed_threshold_s(
 
 
 class _SliceFieldSampler:
-    """Nearest-neighbor sampler for one fdsreader slice quantity."""
+    """Sample one `fdsreader` slice quantity with nearest-neighbor lookup."""
 
     def __init__(self, slice_obj):
+        """Cache the slice object and its subslices for repeated sampling."""
         self._slice = slice_obj
         self._subslices = list(slice_obj.subslices)
 
     def _find_subslice(self, x: float, y: float):
+        """Return the subslice covering the requested x/y point."""
         for subslice in self._subslices:
             extent = subslice.extent
             if (
@@ -119,6 +122,7 @@ class _SliceFieldSampler:
 
     @staticmethod
     def _nearest_index(start: float, end: float, count: int, value: float) -> int:
+        """Return the nearest cell index along one slice axis."""
         if count <= 1 or end <= start:
             return 0
         dx = (end - start) / count
@@ -127,6 +131,7 @@ class _SliceFieldSampler:
         return max(0, min(count - 1, int(index)))
 
     def sample(self, time_s: float, x: float, y: float) -> float:
+        """Return the sampled scalar value at one time and x/y point."""
         subslice = self._find_subslice(float(x), float(y))
         if subslice is None:
             raise ValueError(
@@ -156,12 +161,14 @@ class FdsFedField:
         co2_sampler: _SliceFieldSampler,
         o2_sampler: _SliceFieldSampler,
     ):
+        """Store one sampler per gas quantity used by the default FED model."""
         self._co = co_sampler
         self._co2 = co2_sampler
         self._o2 = o2_sampler
 
     @classmethod
     def from_fds(cls, fds_dir: str) -> "FdsFedField":
+        """Build gas samplers from an FDS case directory."""
         sim = Simulation(str(fds_dir))
         co_slice = sim.slices.filter_by_quantity("CARBON MONOXIDE VOLUME FRACTION")[0]
         co2_slice = sim.slices.filter_by_quantity("CARBON DIOXIDE VOLUME FRACTION")[0]
@@ -173,6 +180,7 @@ class FdsFedField:
         )
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> DefaultFedInputs:
+        """Return default FED gas inputs at one time and x/y point."""
         try:
             return DefaultFedInputs(
                 co_volume_fraction_percent=100.0 * self._co.sample(time_s, x, y),
@@ -184,18 +192,21 @@ class FdsFedField:
 
 
 class DefaultFedModel:
-    """Couple a sampled FDS field with the default FDS+Evac FED equations."""
+    """Combine sampled gas fields with the default FDS+Evac FED equations."""
 
     def __init__(self, field: FdsFedField, config: DefaultFedConfig):
+        """Store the gas field sampler and FED runtime settings."""
         self.field = field
         self.config = config
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> DefaultFedInputs:
+        """Return the FED gas inputs at one time and x/y point."""
         return self.field.sample_inputs(time_s, x, y)
 
     def sample_rate(
         self, time_s: float, x: float, y: float
     ) -> tuple[DefaultFedInputs, float]:
+        """Return both the sampled inputs and their FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
         return inputs, default_fed_rate_per_minute(inputs)
 
@@ -208,6 +219,7 @@ class DefaultFedModel:
         dt_s: float,
         current_fed: float,
     ) -> tuple[DefaultFedInputs, float, float]:
+        """Advance cumulative FED by one simulation interval."""
         inputs, rate_per_min = self.sample_rate(time_s, x, y)
         updated = float(current_fed) + rate_per_min * max(0.0, float(dt_s)) / 60.0
         return inputs, rate_per_min, updated

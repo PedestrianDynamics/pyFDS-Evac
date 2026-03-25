@@ -1,7 +1,5 @@
 """Run JSON-first JuPedSim scenarios from the fds-evac repository."""
 
-from __future__ import annotations
-
 import argparse
 import csv
 import json
@@ -14,15 +12,16 @@ from src.core import (
     DefaultFedModel,
     ExtinctionField,
     FdsFedField,
-    inspect_fds_quantities,
     SmokeSpeedConfig,
     SmokeSpeedModel,
+    inspect_fds_quantities,
     load_scenario,
     run_scenario,
 )
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build the command-line interface for scenario runs and exports."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--scenario", required=True, help="Scenario JSON, ZIP, or directory"
@@ -89,19 +88,23 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _export_app_bundle(scenario, output_dir: str) -> None:
+    """Write the loaded scenario as `config.json` plus raw `geometry.wkt`."""
     destination = pathlib.Path(output_dir).resolve()
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "config.json").write_text(
-        json.dumps(scenario.raw, indent=2) + "\n",
+        json.dumps(scenario.raw, indent=2) + "
+",
         encoding="utf-8",
     )
     (destination / "geometry.wkt").write_text(
-        scenario.walkable_area_wkt.strip() + "\n",
+        scenario.walkable_area_wkt.strip() + "
+",
         encoding="utf-8",
     )
 
 
 def _write_smoke_history_csv(rows, output_path: str) -> None:
+    """Write sampled smoke-speed history rows to a CSV file."""
     destination = pathlib.Path(output_path).resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
@@ -122,6 +125,7 @@ def _write_smoke_history_csv(rows, output_path: str) -> None:
 
 
 def _write_fed_history_csv(rows, output_path: str) -> None:
+    """Write sampled FED history rows to a CSV file."""
     destination = pathlib.Path(output_path).resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
@@ -143,6 +147,7 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
 
 
 def main() -> int:
+    """Parse arguments, run the scenario, and export requested outputs."""
     args = _build_parser().parse_args()
 
     scenario = load_scenario(args.scenario)

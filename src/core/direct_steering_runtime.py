@@ -1,3 +1,5 @@
+"""Helper functions for direct-steering target and speed management."""
+
 import math
 import random
 from typing import Any, Dict
@@ -6,10 +8,12 @@ from . import simulation_init
 
 
 def simulation_init_module():
+    """Return the shared simulation initialization module."""
     return simulation_init
 
 
 def normalize_speed_factor(value: Any) -> float:
+    """Clamp a configured speed factor to a safe runtime range."""
     try:
         speed_factor = float(value)
     except (TypeError, ValueError):
@@ -20,6 +24,7 @@ def normalize_speed_factor(value: Any) -> float:
 
 
 def random_point_in_polygon(polygon, rng, min_clearance: float = 0.2):
+    """Sample a random point inside a polygon with a clearance margin."""
     return simulation_init_module()._random_point_in_polygon(
         polygon,
         rng,
@@ -28,7 +33,7 @@ def random_point_in_polygon(polygon, rng, min_clearance: float = 0.2):
 
 
 def pick_stage_target(wait_state, next_stage_cfg):
-    """Pick a uniformly random point in the stage polygon.
+    """Pick a random target point inside the next stage polygon.
 
     Stage completion is handled separately by probabilistic completion
     logic, so no heading-based targeting is needed here.
@@ -52,6 +57,7 @@ def pick_stage_target(wait_state, next_stage_cfg):
 
 
 def extract_agent_xy(agent):
+    """Return the current agent position as an `(x, y)` tuple."""
     pos = getattr(agent, "position", None)
     if pos is not None:
         if isinstance(pos, (tuple, list)) and len(pos) >= 2:
@@ -64,6 +70,7 @@ def extract_agent_xy(agent):
 
 
 def assign_agent_target(agent, target):
+    """Assign a new point target to an agent if the runtime supports it."""
     if not target:
         return
     tx, ty = float(target[0]), float(target[1])
@@ -79,6 +86,7 @@ def assign_agent_target(agent, target):
 
 
 def is_inside_polygon(x, y, polygon):
+    """Return whether a point lies inside or on the boundary of a polygon."""
     if polygon is None:
         return False
     try:
@@ -91,6 +99,7 @@ def is_inside_polygon(x, y, polygon):
 
 
 def sample_wait_time(stage_cfg, base_seed, step_index):
+    """Sample a waiting time from the stage configuration."""
     mean_wait = float(stage_cfg.get("waiting_time", 0.0))
     if stage_cfg.get("waiting_time_distribution") == "gaussian":
         std_wait = float(stage_cfg.get("waiting_time_std", 1.0))
@@ -100,6 +109,7 @@ def sample_wait_time(stage_cfg, base_seed, step_index):
 
 
 def get_agent_desired_speed(agent) -> float | None:
+    """Read the agent's desired speed across JuPedSim API variants."""
     model_obj = getattr(agent, "model", None)
     if model_obj is None:
         return None
@@ -113,6 +123,7 @@ def get_agent_desired_speed(agent) -> float | None:
 
 
 def set_agent_desired_speed(agent, speed: float) -> bool:
+    """Write the agent's desired speed across JuPedSim API variants."""
     model_obj = getattr(agent, "model", None)
     if model_obj is None:
         return False
@@ -129,6 +140,7 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
 def ensure_agent_speed_state(
     agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
 ):
+    """Create or refresh cached per-agent speed state."""
     state = agent_speed_state.setdefault(
         int(agent_id),
         {"original_speed": None, "active_checkpoint": None},
@@ -144,6 +156,7 @@ def ensure_agent_speed_state(
 def restore_agent_speed(
     agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
 ) -> None:
+    """Restore the original desired speed after a temporary speed zone."""
     state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
     if state.get("active_checkpoint") is None:
         return
@@ -164,6 +177,7 @@ def update_checkpoint_speed(
     x: float,
     y: float,
 ) -> None:
+    """Apply or clear speed modifiers from checkpoint and steering zones."""
     state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
     active_zone_key = None
     active_speed_factor = 1.0
@@ -205,6 +219,7 @@ def update_checkpoint_speed(
 
 
 def advance_path_target(wait_info):
+    """Advance direct-steering state to the next stage target if available."""
     path_choices = wait_info.get("path_choices", {})
     stage_configs = wait_info.get("stage_configs", {})
     current_stage = wait_info.get("current_target_stage")

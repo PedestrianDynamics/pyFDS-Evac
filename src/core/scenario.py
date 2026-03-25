@@ -15,8 +15,6 @@ Usage::
     df = result.trajectory_dataframe()
 """
 
-from __future__ import annotations
-
 import json
 import math
 import os
@@ -109,6 +107,7 @@ _AGENT_PARAM_BUILDERS = {
 
 
 def _build_model(model_type: str, sim_params: dict):
+    """Construct the configured JuPedSim operational model."""
     _require_jupedsim()
     builder = _MODEL_BUILDERS.get(model_type)
     if builder is None:
@@ -126,6 +125,7 @@ def _build_agent_params(
     journey_id: int,
     stage_id: int,
 ):
+    """Construct JuPedSim agent parameters for the chosen model type."""
     _require_jupedsim()
     builder = _AGENT_PARAM_BUILDERS.get(model_type)
     if builder is None:
@@ -140,6 +140,7 @@ def _build_agent_params(
 
 
 def _require_jupedsim():
+    """Fail with a clear error when JuPedSim is not installed."""
     if jps is None:
         raise ModuleNotFoundError(
             "jupedsim is required to run scenarios. Install project dependencies first."
@@ -152,6 +153,7 @@ def _require_jupedsim():
 
 
 def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
+    """Estimate a conservative packing limit for one spawn polygon."""
     effective_radius = max(max_radius, 0.1)
     theoretical = polygon.area / (math.pi * effective_radius * effective_radius)
     return max(1, math.floor(theoretical * 0.5))
@@ -180,6 +182,7 @@ def _sample_agent_values(
 
 
 def _normalize_flow_schedule_entry(entry: dict) -> dict:
+    """Normalize one configured flow schedule entry to canonical keys."""
     start_time = entry.get("flow_start_time", entry.get("start_time_s"))
     end_time = entry.get("flow_end_time", entry.get("end_time_s"))
     number = entry.get("number", entry.get("sim_count"))
@@ -211,6 +214,7 @@ def _normalize_flow_schedule_entry(entry: dict) -> dict:
 
 
 def _normalized_flow_schedule(params: dict) -> list[dict]:
+    """Return the sorted flow schedule for one distribution."""
     raw_schedule = params.get("flow_schedule", [])
     if not raw_schedule:
         return []
@@ -222,6 +226,7 @@ def _normalized_flow_schedule(params: dict) -> list[dict]:
 
 
 def _distribution_agent_budget(dist: dict) -> int:
+    """Return the total number of agents implied by one distribution."""
     params = dist.get("parameters", {})
     schedule = _normalized_flow_schedule(params)
     if schedule:
@@ -818,6 +823,7 @@ class ScenarioResult:
 
 
 def load_scenario(path: str) -> Scenario:
+    """Load a scenario from a directory, ZIP bundle, or JSON file."""
     """Load a scenario JSON file, ZIP, or directory exported from the JuPedSim web UI."""
     import zipfile
 

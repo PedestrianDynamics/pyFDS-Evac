@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Inspect which FDS quantities are available for smoke and FED models."""
 
 from dataclasses import dataclass
 import pathlib
@@ -8,7 +8,7 @@ from fdsreader import Simulation
 
 @dataclass
 class FdsQuantityInventory:
-    """Inventory of FDS quantities available for future fire-behavior models."""
+    """Describe the FDS quantity families available in one case directory."""
 
     slices: list[str]
     smoke_3d: list[str]
@@ -16,6 +16,7 @@ class FdsQuantityInventory:
     devices: list[str]
 
     def canonical_slice_names(self) -> dict[str, str]:
+        """Map known slice quantities to the names used by this project."""
         canonical = {}
         for quantity in self.slices:
             upper = quantity.upper()
@@ -32,10 +33,12 @@ class FdsQuantityInventory:
         return canonical
 
     def supports_default_fed(self) -> bool:
+        """Return whether the default CO/CO2/O2 FED path can run."""
         return {"co", "co2", "o2"}.issubset(self.canonical_slice_names())
 
 
 def _quantity_names(collection) -> list[str]:
+    """Extract unique quantity names from one `fdsreader` collection."""
     quantities = getattr(collection, "quantities", [])
     names: list[str] = []
     for quantity in quantities:

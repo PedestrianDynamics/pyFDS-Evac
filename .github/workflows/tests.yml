@@ -1,0 +1,25 @@
+name: tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install uv
+        run: pip install --upgrade uv
+      - name: Install dependencies
+        run: uv sync --all-groups
+      - name: Run smoke and FED tests
+        run: uv run pytest tests/test_smoke_speed.py tests/test_fed.py -q

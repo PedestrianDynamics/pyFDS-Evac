@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Generate the guide-style smoke-density versus walking-speed plot."""
 
 import argparse
 from pathlib import Path
@@ -9,6 +9,7 @@ from src.core import extinction_from_soot_density, speed_from_soot_density
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build the command-line interface for the smoke-density plot generator."""
     parser = argparse.ArgumentParser(
         description="Generate the FDS+Evac smoke density vs speed verification plot."
     )
@@ -21,6 +22,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    """Generate and save the guide-style smoke-density versus speed figure."""
     args = _build_parser().parse_args()
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)

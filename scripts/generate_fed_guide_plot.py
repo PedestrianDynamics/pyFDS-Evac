@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Generate the stationary FED guide verification plot."""
 
 import argparse
 from pathlib import Path
@@ -10,6 +10,7 @@ from src.core.fed import DefaultFedInputs, accumulate_default_fed
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build the command-line interface for the FED plot generator."""
     parser = argparse.ArgumentParser(
         description="Generate the FDS+Evac stationary FED verification plot."
     )
@@ -22,6 +23,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _guide_stationary_cases():
+    """Return the guide's stationary gas cases keyed by plot label."""
     return {
         "Combined (2, 0.1, 15)%": DefaultFedInputs(0.1, 2.0, 15.0),
         "O2 Only (0, 0, 12)%": DefaultFedInputs(0.0, 0.0, 12.0),
@@ -31,6 +33,7 @@ def _guide_stationary_cases():
 
 
 def main() -> int:
+    """Generate and save the guide-style stationary FED figure."""
     args = _build_parser().parse_args()
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
