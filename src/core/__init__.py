@@ -16,6 +16,8 @@ from .smoke_speed import (
     ExtinctionField,
     SmokeSpeedConfig,
     SmokeSpeedModel,
+    extinction_from_soot_density,
+    speed_from_soot_density,
 )
 
 __all__ = [
@@ -30,8 +32,10 @@ __all__ = [
     "ScenarioResult",
     "SmokeSpeedConfig",
     "SmokeSpeedModel",
+    "extinction_from_soot_density",
     "accumulate_default_fed",
     "default_fed_rate_per_minute",
+    "speed_from_soot_density",
     "inspect_fds_quantities",
     "list_simulations",
     "load_scenario",

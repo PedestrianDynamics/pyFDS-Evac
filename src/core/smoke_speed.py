@@ -90,6 +90,48 @@ class ConstantExtinctionField:
         return self.extinction_per_m
 
 
+def extinction_from_soot_density(
+    soot_density_mg_per_m3: float,
+    *,
+    mass_extinction_coefficient_m2_per_kg: float = 8700.0,
+) -> float:
+    """Convert soot density in mg/m^3 to extinction coefficient K in 1/m.
+
+    FDS+Evac uses:
+        K = MASS_EXTINCTION_COEFFICIENT * SOOT_DENS * 1e-6
+
+    where:
+    - `MASS_EXTINCTION_COEFFICIENT` is in m^2/kg
+    - `SOOT_DENS` is in mg/m^3
+    """
+
+    soot_density = max(0.0, float(soot_density_mg_per_m3))
+    return float(mass_extinction_coefficient_m2_per_kg) * soot_density * 1.0e-6
+
+
+def speed_from_soot_density(
+    base_speed_m_per_s: float,
+    soot_density_mg_per_m3: float,
+    *,
+    alpha: float = 0.706,
+    beta: float = -0.057,
+    mass_extinction_coefficient_m2_per_kg: float = 8700.0,
+    min_speed_factor: float = 0.1,
+) -> float:
+    """Compute walking speed directly from soot density using the FDS+Evac path."""
+
+    extinction = extinction_from_soot_density(
+        soot_density_mg_per_m3,
+        mass_extinction_coefficient_m2_per_kg=mass_extinction_coefficient_m2_per_kg,
+    )
+    return float(base_speed_m_per_s) * speed_factor_from_extinction(
+        extinction,
+        alpha=alpha,
+        beta=beta,
+        min_speed_factor=min_speed_factor,
+    )
+
+
 def speed_factor_from_extinction(
     extinction_per_m: float,
     *,

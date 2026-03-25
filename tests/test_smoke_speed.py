@@ -7,8 +7,10 @@ from src.core import (
     ConstantExtinctionField,
     SmokeSpeedConfig,
     SmokeSpeedModel,
+    extinction_from_soot_density,
     load_scenario,
     run_scenario,
+    speed_from_soot_density,
 )
 from src.core.smoke_speed import speed_factor_from_extinction
 
@@ -41,6 +43,12 @@ def test_speed_factor_reduces_with_extinction():
 
 def test_speed_factor_clamps_to_minimum():
     assert speed_factor_from_extinction(100.0, min_speed_factor=0.2) == 0.2
+
+
+def test_soot_density_conversion_matches_fds_evac_default():
+    assert extinction_from_soot_density(500.0) == pytest.approx(4.35)
+    assert extinction_from_soot_density(1000.0) == pytest.approx(8.7)
+    assert extinction_from_soot_density(1500.0) == pytest.approx(13.05)
 
 
 @pytest.mark.parametrize("extinction_per_m", [0.5, 1.0, 3.0, 7.5, 10.0])
@@ -103,6 +111,68 @@ def test_iso_table21_extinction_sweep_produces_plot(tmp_path: Path):
     ax.set_xlabel("Extinction K [1/m]")
     ax.set_ylabel("Evacuation time [s]")
     ax.set_title("ISO Table 21 extinction sweep")
+    ax.legend(loc="best")
+    fig.tight_layout()
+    fig.savefig(output, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+    assert output.exists()
+    assert output.stat().st_size > 0
+
+
+def test_fds_evac_guide_smoke_density_points_match_theory():
+    base_speed = 1.5
+    soot_densities = [0.0, 500.0, 1000.0, 1500.0]
+    expected_speeds = [
+        1.5,
+        1.5 * (1.0 + (-0.057 / 0.706) * 4.35),
+        1.5 * (1.0 + (-0.057 / 0.706) * 8.7),
+        0.15,
+    ]
+
+    observed = [
+        speed_from_soot_density(base_speed, soot_density, min_speed_factor=0.1)
+        for soot_density in soot_densities
+    ]
+
+    assert observed == pytest.approx(expected_speeds, rel=1e-9)
+
+
+def test_fds_evac_guide_smoke_density_plot_is_generated(tmp_path: Path):
+    base_speed = 1.5
+    soot_points = [0.0, 500.0, 1000.0, 1500.0]
+    theory_x = list(range(0, 2201, 25))
+    theory_y = [
+        speed_from_soot_density(base_speed, soot_density, min_speed_factor=0.1)
+        for soot_density in theory_x
+    ]
+    model_y = [
+        speed_from_soot_density(base_speed, soot_density, min_speed_factor=0.1)
+        for soot_density in soot_points
+    ]
+    extinction_points = [extinction_from_soot_density(value) for value in soot_points]
+
+    output = tmp_path / "smoke-density-vs-speed.png"
+    fig, ax = plt.subplots(figsize=(9, 6))
+    ax.plot(theory_x, theory_y, color="black", linewidth=2, label="Theory")
+    ax.scatter(
+        soot_points,
+        model_y,
+        color="red",
+        edgecolors="black",
+        s=70,
+        label="pyFDS-Evac",
+        zorder=3,
+    )
+    ax.set_xlabel("Soot density (mg/m$^3$)")
+    ax.set_ylabel("Velocity (m/s)")
+    ax.set_ylim(0.0, 1.6)
+    ax.grid(True, alpha=0.3)
+    top = ax.twiny()
+    top.set_xlim(ax.get_xlim())
+    top.set_xticks(soot_points)
+    top.set_xticklabels([f"{value:.2f}".rstrip("0").rstrip(".") for value in extinction_points])
+    top.set_xlabel("Extinction coefficient (1/m)")
     ax.legend(loc="best")
     fig.tight_layout()
     fig.savefig(output, dpi=150, bbox_inches="tight")

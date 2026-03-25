@@ -107,6 +107,12 @@ Generate a stable ISO Table 21 sweep artifact under `artifacts/`:
 uv run python scripts/generate_iso_table21_sweep.py
 ```
 
+Generate the FDS+Evac smoke-density vs speed verification plot:
+
+```bash
+uv run python scripts/generate_smoke_density_speed_plot.py
+```
+
 ## Table 22 / FED
 
 The current Table 22 implementation is a **partial implementation** of
