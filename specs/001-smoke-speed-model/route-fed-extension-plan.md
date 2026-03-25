@@ -1,158 +1,292 @@
 # Route And FED Extension Plan
 
-**Branch**: `001-smoke-speed-model`  
+**Branch**: `001-smoke-speed-model`
 **Date**: 2026-03-25
+**Updated**: 2026-03-25
 
 ## Goal
 
-Extend the existing smoke-speed and FED runtime on this branch with dynamic route reevaluation, door-level smoke/FED summaries, and route-switch events.
+Extend the existing smoke-speed and FED runtime with dynamic route reevaluation so agents prefer the shortest viable path to an exit, rerouting when smoke or toxic conditions degrade a route.
 
 This plan treats `004-fed-tracking` and `003-route-decision` as requirement sources only. Implementation stays in the current `src/core` runtime.
 
+## Design Principle
+
+**Shortest path first, smoke-adjusted.**
+
+Agents always target the shortest-path exit by default. When smoke or FED conditions degrade a route, the agent switches to the next-best viable route. This mirrors the real-world behavior observed in evacuations: people take the familiar/shortest route unless conditions force a change.
+
 ## Scope
 
-- Add periodic route reevaluation with a configurable interval.
-- Compute candidate route summaries for exits and intermediate stages.
-- Reject unsafe candidates using projected smoke/FED thresholds.
-- Switch route targets dynamically during the run.
+- Build a stage graph from the existing journey/transition definitions.
+- Default route selection: shortest path from agent position to an exit through the stage graph.
+- Periodic reevaluation: score routes by smoke/FED conditions and switch when the current route becomes unviable.
 - Record diagnostics for candidate evaluation and route switches.
 
 ## Definitions
 
-`K_ave_Door`
-: Average extinction coefficient `K` sampled along the planned path from the agent's current position to a door candidate. Lower values mean better visibility and lower smoke burden.
+`Stage Graph`
+: A directed weighted graph where nodes are stages (distributions, checkpoints, exits) and edges are transitions. Edge weights represent Euclidean distance between stage centroids. Built once at simulation start from the journey/transition definitions already in `direct_steering_info` and `path_choices`.
 
-`FED_max_Door`
-: Projected cumulative FED when the agent reaches a door candidate. This is the agent's current cumulative FED plus the additional FED expected along the candidate path. Candidates with `FED_max_Door > 1.0` are rejected by default.
+`K_ave_Route`
+: Average extinction coefficient `K` sampled along the planned path from the agent's current position through intermediate stages to an exit. Lower values mean better visibility.
+
+`FED_max_Route`
+: Projected cumulative FED when the agent reaches the exit via a candidate route. This is the agent's current cumulative FED plus the additional FED expected along the route. Candidates with `FED_max_Route > 1.0` are rejected by default.
+
+`Route Cost`
+: Composite score for ranking candidate routes: `cost = path_length * (1 + w_smoke * K_ave_Route) + w_fed * FED_max_Route`. Weights `w_smoke` and `w_fed` are configurable. The shortest clear-air route has the lowest cost.
 
 ## Runtime Inputs
 
 Add route reevaluation settings alongside the existing smoke/FED runtime options:
 
 - `route_reevaluation_interval_s`
-  Default `10.0`.
+  Default `10.0`. How often each agent reevaluates its route.
 - `fed_rejection_threshold`
-  Default `1.0`.
+  Default `1.0`. Routes with projected `FED_max_Route` above this are rejected.
 - `visibility_extinction_threshold`
-  Default `0.5`.
+  Default `0.5`. Per-segment K threshold for the "visible" flag.
 - `route_sampling_step_m`
-  Distance between smoke/FED samples along a candidate path.
+  Default `2.0`. Distance between smoke/FED samples along a candidate path.
+- `w_smoke`
+  Default `1.0`. Weight of smoke penalty in route cost.
+- `w_fed`
+  Default `10.0`. Weight of FED penalty in route cost.
 
 These should be exposed first in `run.py`, then threaded into `run_scenario(...)`.
 
 ## Data Sources
 
-- Use `fdsvismap` via the existing `ExtinctionField` in `src/core/smoke_speed.py` for extinction sampling and `K_ave_Door`.
-- Use `fdsreader` via the existing `DefaultFedModel` in `src/core/fed.py` for FED-rate sampling and projected cumulative FED.
+### fdsvismap (primary for route visibility)
+
+`fdsvismap.VisMap` provides the core visibility primitives used in the proof-of-concept notebook (`notebooks/fds-evac.ipynb`):
+
+- **`vis.wp_is_visible(time, x, y, waypoint_id)`** — returns whether an agent at (x, y) can see waypoint `wp_id` through smoke at a given time. This is a line-of-sight check through the extinction field, not a simple distance threshold. This is the key primitive for route scoring.
+- **`vis.get_local_visibility(time, x, y, c)`** — returns local visibility at a position. Used to compute cumulative visibility scores along a route.
+- **`vis.get_distance_to_wp(x, y, waypoint_id)`** — Euclidean distance from agent to waypoint.
+- **`vis.set_waypoint(x, y, c, alpha)`** — registers waypoints (stage centroids, exit points) for visibility queries. Must be called at setup time before `compute_all()`.
+- **`vis.compute_all()`** — precomputes visibility for all registered waypoints at all configured time points. This is expensive but runs once.
+
+The existing `ExtinctionField` in `src/core/smoke_speed.py` wraps `fdsvismap.VisMap` for per-agent extinction sampling (smoke-speed). For route evaluation, we additionally need the waypoint visibility API above.
+
+### fdsreader (FED gas sampling)
+
+- Use `fdsreader` via the existing `DefaultFedModel` in `src/core/fed.py` for FED-rate sampling and projected cumulative FED along routes.
+
+### Existing runtime state
+
 - Reuse the existing per-agent FED state already maintained in `src/core/scenario.py`.
 
-## JuPedSim Strategy
+### Setup requirement
 
-Use the same core idea as the notebook proof of concept in `notebooks/fds-evac.ipynb`:
+At simulation start, register stage centroids and exit centroids as `fdsvismap` waypoints so that `wp_is_visible()` queries are available during route reevaluation. This matches the notebook pattern where waypoints are registered via `vis.set_waypoint()` before `vis.compute_all()`.
 
-- ask the routing layer for the currently planned route to each candidate,
-- compare route quality across candidates,
-- switch the agent when a better route appears.
+## JuPedSim Integration
 
-For the production path, prefer direct steering for execution:
+The notebook proof-of-concept (`notebooks/fds-evac.ipynb`) demonstrates two key JuPedSim APIs for dynamic routing:
 
-- treat exits and intermediate stages as route candidates,
-- reevaluate at a fixed interval and at stage boundaries,
-- update the next target stage instead of relying only on static journey definitions.
+- **`jps.RoutingEngine(walkable_polygon)`** — computes geometric waypoint paths through the walkable area. Call `routing.compute_waypoints(agent_position, exit_centroid)` to get the path to each candidate exit.
+- **`simulation.switch_agent_journey(agent_id, journey_id, stage_id)`** — switches an agent to a different journey/exit at runtime. This is how the notebook implements rerouting.
 
-Journey switching remains useful as a fallback for simple multi-exit cases, but direct steering should be the main integration point for multi-stage smoke-aware routing.
+For the production path with direct steering, the equivalent is updating `agent_wait_info` to retarget the agent's stage sequence. Both mechanisms should be supported: `switch_agent_journey` for simple multi-exit cases and direct-steering retargeting for multi-stage routes through checkpoints.
+
+The `RoutingEngine` should be created once at simulation start alongside the stage graph.
+
+## Stage Graph Construction
+
+Build the graph once at simulation start from existing data:
+
+1. **Nodes**: every key in `direct_steering_info` (exits, checkpoints, zones, distributions).
+2. **Edges**: from `path_choices` (already built by `build_agent_path_state`) and from the `transitions` list in the scenario JSON.
+3. **Edge weight**: Euclidean distance between polygon centroids of the two stages.
+4. **Exit nodes**: stages whose `stage_type == "exit"`.
+
+The graph is static (topology does not change). Only the smoke/FED cost overlay changes over time.
+
+### Shortest Path Baseline
+
+At agent spawn, compute the shortest path (by Euclidean edge weight) from the agent's current stage to each reachable exit using Dijkstra. Assign the agent to the shortest-path exit. This replaces the current uniform-random or single-journey-based assignment for agents that have multiple reachable exits.
+
+### Smoke-Adjusted Rerouting
+
+At each reevaluation interval:
+
+1. For each reachable exit, compute the route cost through the stage graph.
+2. Route cost is the sum of edge costs, where each edge cost = `segment_length * (1 + w_smoke * K_avg_segment)`.
+3. Add `w_fed * FED_max_Route` to the total.
+4. Reject routes where `FED_max_Route > fed_rejection_threshold`.
+5. Pick the lowest-cost surviving route.
+6. If the winner differs from the current route, switch.
 
 ## Candidate Evaluation
 
-For each agent at reevaluation time:
+Two complementary approaches, used together:
 
-1. Enumerate reachable candidate routes.
-2. Build the planned waypoint path to each candidate.
-3. Sample extinction `K` along the path.
-4. Sample FED inputs along the same path and estimate FED growth over travel time.
-5. Compute:
-   - `K_ave_Door`
-   - `FED_max_Door`
-   - `visible` flag based on `K < 0.5`
-   - rejection reasons
-6. Reject candidates that fail thresholds unless all candidates fail.
-7. Rank remaining candidates and switch if the winner changed.
+### Waypoint Visibility Scoring (from notebook proof-of-concept)
+
+For each candidate route (agent → stages → exit):
+
+1. Use `jps.RoutingEngine.compute_waypoints(agent_position, exit_centroid)` to get the geometric path.
+2. Map path waypoints to the nearest registered `fdsvismap` waypoints (stage centroids).
+3. For each waypoint on the path, call `vis.wp_is_visible(time, agent_x, agent_y, wp_id)` to check line-of-sight through smoke.
+4. For visible waypoints, accumulate `vis.get_local_visibility(time, wp_x, wp_y, c)`.
+5. The route's **visibility score** is the sum of local visibility at visible waypoints. Higher is better.
+
+This is the same approach validated in `notebooks/fds-evac.ipynb`.
+
+### Extinction and FED Sampling (for quantitative cost)
+
+For each edge (stage A → stage B) in a candidate route:
+
+1. Sample extinction `K` at `route_sampling_step_m` intervals along the centroid-to-centroid line.
+2. Compute `K_avg_segment` as the mean of samples.
+3. Estimate travel time as `segment_length / (v0 * speed_factor_from_extinction(K_avg_segment))`.
+4. Estimate FED growth as `fed_rate_at_midpoint * travel_time_s`.
+
+Sum across all edges to get `K_ave_Route`, total travel time, and `FED_max_Route`.
+
+### Combined Scoring
+
+The visibility score from `fdsvismap` and the extinction/FED cost are combined:
+- `wp_is_visible` determines whether a route segment is passable (binary).
+- `K_ave_Route` and `FED_max_Route` provide quantitative ranking among passable routes.
+- A route where key waypoints are not visible through smoke is penalized even if average K is moderate (smoke may be concentrated at critical chokepoints).
 
 ## Ranking Rules
 
-Initial ranking policy:
-
-1. reject `FED_max_Door > fed_rejection_threshold`
-2. reject candidates with sustained non-visible path conditions when an acceptable visible path exists
-3. among survivors, prefer lower `FED_max_Door`
-4. break ties with lower `K_ave_Door`
-5. break remaining ties with shorter path length / travel time
+1. Reject routes where `FED_max_Route > fed_rejection_threshold`.
+2. Reject routes where all segments are non-visible (`K > visibility_extinction_threshold`) when a visible route exists.
+3. Among survivors, rank by `Route Cost` (lowest wins).
+4. Break ties with fewer intermediate stages (simpler path preferred).
 
 Fallback:
+- If all routes are rejected, select the least-bad physically reachable route and log the fallback reason.
 
-- If all candidates are poor, select the least bad physically reachable candidate and log the fallback reason.
+## Performance Strategy
+
+Route reevaluation is the most expensive new operation. Budget: must not more than double the per-iteration overhead.
+
+### First iteration: centroid-to-centroid sampling
+
+- Sample smoke/FED only along straight lines between stage centroids, not along actual walked paths.
+- Use `route_sampling_step_m = 2.0` (coarse) to limit sample count.
+- Reevaluate every `route_reevaluation_interval_s` (default 10s = every 1000 iterations at dt=0.01), not every step.
+- Stagger reevaluation across agents: agent reevaluates at `t = offset + n * interval` where `offset = (agent_id % interval_steps) * dt`. This spreads the cost across iterations.
+- Cache route costs per edge per reevaluation epoch. Since smoke changes slowly relative to agent movement, edge costs computed for one agent can be reused for other agents evaluating the same edge in the same epoch.
+
+### Performance limits (first iteration)
+
+For N agents, M exits, P edges per route, S samples per edge:
+- Per reevaluation: `M * P * S` extinction samples per agent.
+- With caching: `total_edges * S` samples per epoch (shared across agents).
+- Example: 30 agents, 3 exits, 5 edges/route, 10 samples/edge = 150 samples/epoch (cached), not 4500.
 
 ## Implementation Slices
 
-### Phase 1: Stabilize Smoke/FED Runtime
+### Phase 1: Stabilize Smoke/FED Runtime ✅ (done)
 
-- Fix smoke-speed interaction with direct steering so smoke remains a multiplicative factor on top of checkpoint/stage speed changes.
-- Add FED update throttling using `DefaultFedConfig.update_interval_s`.
-- Keep these changes separate from route-switch logic so the baseline runtime is trustworthy.
+- Smoke-speed interaction with direct steering fixed: smoke is a multiplicative factor on top of checkpoint/stage speed changes.
+- FED update throttling using `DefaultFedConfig.update_interval_s` is wired.
+- Performance optimized: skip `update_checkpoint_speed` when no speed zones exist.
 
-This phase is directly informed by the PR review comments in review `#3994051570` and follow-up review `#4006348208`, especially the notes about smoke-speed being overwritten by `update_checkpoint_speed()` and FED sampling running every simulation iteration.
+### Phase 2: Stage Graph, Routing Engine, and Shortest-Path Baseline
 
-### Phase 2: Route Evaluation Primitives
+- Build the stage graph from `direct_steering_info` and transitions at simulation start.
+- Create `jps.RoutingEngine(walkable_polygon)` at simulation start.
+- Register stage centroids and exit centroids as `fdsvismap` waypoints via `vis.set_waypoint()`. Call `vis.compute_all()` after registration so `wp_is_visible()` is available at runtime.
+- Implement Dijkstra shortest path from each distribution to each reachable exit.
+- Assign agents to shortest-path exit at spawn (replace uniform-random fallback).
+- Add `src/core/route_graph.py` with `StageGraph` class.
+- Unit tests with known geometries verifying shortest path selection.
 
-- Add a route summary helper that accepts agent position, candidate path, current time, and current cumulative FED.
-- Compute path length, travel-time estimate, `K_ave_Door`, and projected `FED_max_Door`.
-- Add deterministic unit tests using constant extinction / constant FED fixtures.
+### Phase 3: Route Evaluation Primitives
 
-### Phase 3: Dynamic Routing
+- Add a route cost function that accepts agent position, candidate route (list of stages), current time, and current cumulative FED.
+- Sample extinction along centroid-to-centroid segments.
+- Compute `K_ave_Route`, estimated travel time, `FED_max_Route`, and composite `Route Cost`.
+- Add edge cost caching with epoch invalidation.
+- Deterministic unit tests using `ConstantExtinctionField`.
 
-- Add reevaluation scheduling via `route_reevaluation_interval_s`.
-- Integrate candidate ranking into direct-steering target updates.
-- Support route switching at stage boundaries and periodic checks.
-- Record route-switch events with old candidate, new candidate, and metrics.
+### Phase 4: Dynamic Rerouting
 
-### Phase 4: Diagnostics
+- Add reevaluation scheduling with agent-staggered offsets.
+- At each reevaluation: score all reachable exits, apply ranking/rejection, switch if winner changed.
+- Update `agent_wait_info` to retarget to the new exit's stage sequence.
+- Record route-switch events: `(time, agent_id, old_exit, new_exit, old_cost, new_cost, reason)`.
 
-- Add per-candidate evaluation records.
-- Add route-switch history output.
-- Add summary metrics such as candidate rejection counts, switch counts, and fallback count.
+### Phase 5: Diagnostics and Output
+
+- Add per-candidate evaluation records (all scored routes, not just winner).
+- Add route-switch history CSV output (`--output-route-history`).
+- Add summary metrics: switch count, rejection count, fallback count per agent.
 
 ## Suggested Code Locations
 
+- `src/core/route_graph.py` *(new)*
+  Stage graph construction, Dijkstra, route cost evaluation, edge cost caching.
 - `src/core/scenario.py`
-  Main simulation loop, agent FED state, reevaluation timing, diagnostics.
+  Main simulation loop: reevaluation scheduling, route-switch execution, diagnostics.
 - `src/core/direct_steering_runtime.py`
-  Direct-steering target updates and route-switch integration.
+  Target update when route switches: retarget `agent_wait_info` to new stage sequence.
 - `src/core/smoke_speed.py`
-  Extinction sampling reused for path summaries.
+  Extinction sampling reused for route edge costs.
 - `src/core/fed.py`
-  FED projection reused for path summaries.
+  FED projection reused for route FED estimates.
 - `run.py`
-  CLI parameters and export wiring.
+  CLI parameters and CSV export wiring.
 
 ## Testing Plan
 
-- Unit tests for candidate summary math with constant extinction and constant FED models.
+- Unit tests for `StageGraph` construction and Dijkstra correctness.
+- Unit tests for route cost computation with constant extinction and constant FED.
 - Integration tests for:
-  - smoke-free preferred route,
-  - reroute under smoke,
-  - candidate rejection when `FED_max_Door > 1.0`,
-  - fallback when all candidates are poor.
-- Regression test that smoke-speed and direct-steering speed modifiers combine correctly.
-- Regression test that FED history sampling obeys configured update interval.
+  - smoke-free scenario: agents pick shortest-path exit,
+  - reroute under smoke: agent switches to longer but clearer exit,
+  - FED rejection: route with `FED_max_Route > 1.0` is rejected,
+  - fallback: all routes bad, agent picks least-bad.
+- Regression tests:
+  - smoke-speed and direct-steering speed modifiers combine correctly,
+  - FED history sampling obeys configured update interval,
+  - HC scenario (30 agents, 3 exits) completes without performance regression.
 
-## Non-Goals For First Iteration
+## Limitations (First Iteration)
 
-- Perfect continuous replanning on every simulation step.
-- Complex interpolation upgrades beyond the current field samplers.
-- Full replacement of journey-based routing everywhere in the runtime.
+These are known simplifications. Each is a candidate for improvement in a second stage.
+
+1. **Centroid-to-centroid paths only.** Route cost is computed along straight lines between stage centroids, not along the actual walked path through the geometry. This underestimates path length in complex geometries with corridors and corners.
+
+2. **No geometric path planning.** The stage graph uses Euclidean distance, not navigable distance. Two stages separated by a wall will have a low Euclidean edge weight despite being far apart via walkable paths. This requires the scenario to define stages that are geometrically reachable from their neighbors.
+
+3. **Line-of-sight via fdsvismap waypoints only.** `fdsvismap`'s `wp_is_visible()` provides line-of-sight checks, but only for pre-registered waypoints (stage centroids). Visibility to arbitrary points (e.g., other agents, arbitrary doors) requires additional waypoint registration at setup time. FDS+Evac performs continuous visibility checks; our model checks only at registered waypoints during reevaluation intervals.
+
+4. **No agent-type differentiation.** FDS+Evac has conservative, active, herding, and follower agent types with different exit-selection strategies. Our model treats all agents identically.
+
+5. **Static graph topology.** The stage graph is built once. If doors are dynamically blocked, the graph does not update. (Edge costs do update via smoke, but topological changes like a door closing are not modeled.)
+
+6. **No crowd density in route cost.** Congestion at exits is not factored into route selection. A shorter route to a crowded exit may be worse than a longer route to an empty one.
+
+7. **Coarse FED projection.** FED growth is estimated using the midpoint FED rate for each segment, assuming constant exposure. In reality, FED rate changes as the agent moves through varying gas concentrations.
+
+8. **No hysteresis / switching penalty.** Agents may oscillate between two similarly-scored routes. A switching cooldown or hysteresis band should be added if oscillation is observed.
+
+## Second Stage Improvements
+
+Items to address after the first iteration is validated:
+
+- **Navigable distance via JuPedSim routing mesh.** Replace Euclidean edge weights with actual walkable distances computed from the simulation geometry. This is the most impactful improvement for complex floor plans.
+- **Continuous line-of-sight visibility.** Extend beyond waypoint-based `wp_is_visible()` to support visibility checks to arbitrary points (other agents, dynamic obstacles), closer to FDS+Evac's continuous visibility model.
+- **Crowd-aware routing.** Factor exit congestion (queue length, flow rate) into route cost. Requires sampling agent density near exits.
+- **Agent types.** Implement conservative/active/herding/follower differentiation per FDS+Evac section 3.5.
+- **Switching hysteresis.** Add a cooldown period or cost margin before allowing a route switch, to prevent oscillation.
+- **Adaptive reevaluation interval.** Shorten the interval when smoke conditions are changing rapidly (high dK/dt), lengthen when stable.
+- **Multi-floor routing.** Extend the stage graph to support vertical connections (stairs, elevators) for multi-story buildings.
+- **Smoke blocking.** Mark graph edges as blocked when extinction exceeds a high threshold for a sustained period, effectively removing the route.
 
 ## Assumptions
 
-- A 10 second default reevaluation interval is acceptable for the first implementation.
-- `FED_max_Door` is interpreted as projected cumulative FED along the path to a candidate, not only at the final door coordinate.
+- A 10-second default reevaluation interval is acceptable for the first implementation.
+- Centroid-to-centroid sampling is a reasonable approximation when stages are placed at navigable waypoints.
+- The existing `direct_steering_info` and `path_choices` structures contain enough information to build the stage graph without additional user input.
 - Direct steering is the preferred execution layer for multi-stage dynamic routing.
+- Smoke fields change slowly enough that edge cost caching per reevaluation epoch is valid.
