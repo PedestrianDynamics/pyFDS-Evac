@@ -1367,7 +1367,9 @@ def run_scenario(
                                 "x": float(x),
                                 "y": float(y),
                                 "co_percent": float(inputs.co_volume_fraction_percent),
-                                "co2_percent": float(inputs.co2_volume_fraction_percent),
+                                "co2_percent": float(
+                                    inputs.co2_volume_fraction_percent
+                                ),
                                 "o2_percent": float(inputs.o2_volume_fraction_percent),
                                 "fed_rate_per_min": float(rate_per_min),
                                 "fed_cumulative": float(cumulative),

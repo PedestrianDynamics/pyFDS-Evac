@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+
 try:
     from fdsreader import Simulation
 except ModuleNotFoundError:
@@ -160,7 +161,9 @@ def test_co2_accelerates_co_fed_under_constant_exposure():
     co_only = CONSTANT_EXPOSURE_CASES["co_only"]
     co_with_co2 = CONSTANT_EXPOSURE_CASES["co_with_co2"]
 
-    assert default_fed_rate_per_minute(co_with_co2) > default_fed_rate_per_minute(co_only)
+    assert default_fed_rate_per_minute(co_with_co2) > default_fed_rate_per_minute(
+        co_only
+    )
     assert time_to_fed_threshold_s(co_with_co2) < time_to_fed_threshold_s(co_only)
 
 
@@ -328,10 +331,7 @@ def test_run_scenario_throttles_fed_history_to_update_interval():
         assert result.fed_history
         times = [row["time_s"] for row in result.fed_history]
         assert times[0] == pytest.approx(0.0)
-        assert all(
-            (curr - prev) >= 0.5 - 1e-9
-            for prev, curr in zip(times, times[1:])
-        )
+        assert all((curr - prev) >= 0.5 - 1e-9 for prev, curr in zip(times, times[1:]))
         assert len(times) <= 6
     finally:
         result.cleanup()
@@ -368,7 +368,6 @@ def test_fds_evac_guide_stationary_cases_produce_plot(tmp_path):
     assert output.stat().st_size > 0
 
 
-
 def test_iso_table22_stationary_runtime_produces_plot(tmp_path: Path):
     inputs = CONSTANT_EXPOSURE_CASES["combined"]
     analytic_time_s = time_to_fed_threshold_s(inputs, threshold=1.0)
@@ -396,7 +395,9 @@ def test_iso_table22_stationary_runtime_produces_plot(tmp_path: Path):
         output = tmp_path / "iso-table22-stationary-fed.png"
         fig, ax = plt.subplots(figsize=(8, 5))
         ax.plot(theory_times, theory_fed, linewidth=2, label="Analytical FED")
-        ax.step(runtime_times, runtime_fed, where="post", linewidth=2, label="Runtime FED")
+        ax.step(
+            runtime_times, runtime_fed, where="post", linewidth=2, label="Runtime FED"
+        )
         ax.axhline(1.0, color="black", linestyle=":", linewidth=1.5, label="FED = 1")
         ax.set_xlabel("Time [s]")
         ax.set_ylabel("FED Index [-]")
