@@ -26,7 +26,8 @@ tests/
 
 ## Commands
 
-pytest [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] ruff check .
+uv run pytest
+uv run ruff check .
 
 ## Code Style
 

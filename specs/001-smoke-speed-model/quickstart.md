@@ -27,36 +27,17 @@ export PYTHONPATH=$(pwd):$PYTHONPATH
 ```python
 from pathlib import Path
 import jupedsim as jps
-from pyfdsevac.interfaces.api import run_smoke_simulation, load_visibility_map
-from pyfdsevac.data_models import SmokeSpeedConfig, InterpolationMethod
+from src.core import ConstantExtinctionField, SmokeSpeedConfig, SmokeSpeedModel, load_scenario, run_scenario
 
-# 1. Load visibility map from FDS data
-visibility_map = load_visibility_map(
-    sim_dir="fds_data",
-    waypoints=[(0, 13.5, 8.5), (1, 25.0, 14.5)],
-    times=list(range(400, 1000, 1)),
+scenario = load_scenario("assets/ISO-table21")
+smoke_model = SmokeSpeedModel(
+    ConstantExtinctionField(1.0),
+    SmokeSpeedConfig(fds_dir=".", update_interval_s=0.1),
 )
+result = run_scenario(scenario, seed=420, smoke_speed_model=smoke_model)
 
-# 2. Create smoke-speed configuration
-config = SmokeSpeedConfig(
-    visibility_threshold=50.0,  # 50% clarity threshold
-    max_speed=1.0,              # 1.0 m/s maximum
-    interpolation_method=InterpolationMethod.NEAREST,  # Fast default
-    simulation_id="demo_001",
-)
-
-# 3. Run simulation with smoke effects
-result = run_smoke_simulation(
-    sim_dir="fds_data",
-    config=config,
-    walkable_area=walkable_area,  # JuPedSim WalkableArea
-    exits=[exit_polygon_1, exit_polygon_2],
-    spawning_areas=[spawning_area_1, spawning_area_2],
-    trajectory_file="output_smoke.sqlite",
-)
-
-print(f"Simulation complete: {result.duration_seconds:.1f}s")
-print(f"Telemetry: {result.telemetry}")
+print(f"Evacuation time: {result.evacuation_time:.1f}s")
+print(f"Smoke samples: {len(result.smoke_history or [])}")
 ```
 
 ### CLI

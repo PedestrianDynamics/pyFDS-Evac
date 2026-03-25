@@ -137,33 +137,42 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
     return False
 
 
+def set_agent_smoke_factor(
+    agent_speed_state: Dict[int, Dict[str, Any]],
+    agent_id: int,
+    agent,
+    smoke_factor: float,
+) -> None:
+    """Cache the smoke multiplier used alongside checkpoint speed modifiers."""
+    state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
+    state["smoke_factor"] = normalize_speed_factor(smoke_factor)
+
+
 def ensure_agent_speed_state(
     agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
 ):
     """Create or refresh cached per-agent speed state."""
     state = agent_speed_state.setdefault(
         int(agent_id),
-        {"original_speed": None, "active_checkpoint": None},
+        {"original_speed": None, "active_checkpoint": None, "smoke_factor": 1.0},
     )
     current_speed = get_agent_desired_speed(agent)
-    if current_speed is not None and state.get("active_checkpoint") is None:
+    if current_speed is not None and state.get("original_speed") is None:
         state["original_speed"] = current_speed
-    elif current_speed is not None and state.get("original_speed") is None:
-        state["original_speed"] = current_speed
+    state.setdefault("smoke_factor", 1.0)
     return state
 
 
 def restore_agent_speed(
     agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
 ) -> None:
-    """Restore the original desired speed after a temporary speed zone."""
+    """Restore the effective desired speed outside checkpoint and zone slowdowns."""
     state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
-    if state.get("active_checkpoint") is None:
-        return
     original_speed = state.get("original_speed")
     if original_speed is None:
         return
-    if set_agent_desired_speed(agent, float(original_speed)):
+    smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
+    if set_agent_desired_speed(agent, float(original_speed) * smoke_factor):
         state["active_checkpoint"] = None
 
 
@@ -206,11 +215,16 @@ def update_checkpoint_speed(
                 active_zone_key = zone_key
                 active_speed_factor = zone_speed_factor
 
+    smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
+
     if active_zone_key is not None and math.fabs(active_speed_factor - 1.0) > 1e-9:
         original_speed = state.get("original_speed")
         if original_speed is None:
             return
-        slowed_speed = max(0.0, float(original_speed) * active_speed_factor)
+        slowed_speed = max(
+            0.0,
+            float(original_speed) * active_speed_factor * smoke_factor,
+        )
         if set_agent_desired_speed(agent, slowed_speed):
             state["active_checkpoint"] = active_zone_key
         return

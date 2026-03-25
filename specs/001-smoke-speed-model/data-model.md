@@ -84,7 +84,6 @@ class SpeedFactor:
     visibility_at_position: float  # percentage clarity (0-100) at agent position
     raw_visibility: float  # raw FDS visibility before conversion
     
-    @property
     def speed(self, max_speed: float) -> float:
         """Compute actual speed given maximum speed."""
         return self.factor * max_speed

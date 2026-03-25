@@ -1,5 +1,6 @@
 import math
 from pathlib import Path
+from types import SimpleNamespace
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -279,8 +280,9 @@ def test_iso_table22_stationary_runtime_matches_analytic_threshold_time():
 
 
 class _ConstantFedModel:
-    def __init__(self, rate_per_min=0.25):
+    def __init__(self, rate_per_min=0.25, update_interval_s=0.0):
         self.rate_per_min = float(rate_per_min)
+        self.config = SimpleNamespace(update_interval_s=float(update_interval_s))
 
     def advance(self, time_s, x, y, *, dt_s, current_fed):
         inputs = DefaultFedInputs(0.1, 2.0, 15.0)
@@ -305,6 +307,32 @@ def test_run_scenario_records_cumulative_fed_history():
         cumulative_values = [row["fed_cumulative"] for row in result.fed_history]
         assert cumulative_values[-1] > cumulative_values[0]
         assert cumulative_values == sorted(cumulative_values)
+    finally:
+        result.cleanup()
+
+
+def test_run_scenario_throttles_fed_history_to_update_interval():
+    scenario = load_scenario("assets/ISO-table22")
+    dist_params = scenario.raw["distributions"]["jps-distributions_0"]["parameters"]
+    dist_params["use_premovement"] = False
+    dist_params["v0"] = 0.0
+    scenario.set_max_time(2.1)
+
+    result = run_scenario(
+        scenario,
+        seed=420,
+        fed_model=_ConstantFedModel(rate_per_min=0.5, update_interval_s=0.5),
+    )
+
+    try:
+        assert result.fed_history
+        times = [row["time_s"] for row in result.fed_history]
+        assert times[0] == pytest.approx(0.0)
+        assert all(
+            (curr - prev) >= 0.5 - 1e-9
+            for prev, curr in zip(times, times[1:])
+        )
+        assert len(times) <= 6
     finally:
         result.cleanup()
 
