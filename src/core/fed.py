@@ -110,7 +110,10 @@ class _SliceFieldSampler:
     def _find_subslice(self, x: float, y: float):
         for subslice in self._subslices:
             extent = subslice.extent
-            if extent.x_start <= x <= extent.x_end and extent.y_start <= y <= extent.y_end:
+            if (
+                extent.x_start <= x <= extent.x_end
+                and extent.y_start <= y <= extent.y_end
+            ):
                 return subslice
         return None
 
@@ -126,7 +129,9 @@ class _SliceFieldSampler:
     def sample(self, time_s: float, x: float, y: float) -> float:
         subslice = self._find_subslice(float(x), float(y))
         if subslice is None:
-            raise ValueError(f"Point ({x}, {y}) is outside the sampled FDS slice domain")
+            raise ValueError(
+                f"Point ({x}, {y}) is outside the sampled FDS slice domain"
+            )
 
         t_index = int(self._slice.get_nearest_timestep(float(time_s)))
         i_index = self._nearest_index(
@@ -188,7 +193,9 @@ class DefaultFedModel:
     def sample_inputs(self, time_s: float, x: float, y: float) -> DefaultFedInputs:
         return self.field.sample_inputs(time_s, x, y)
 
-    def sample_rate(self, time_s: float, x: float, y: float) -> tuple[DefaultFedInputs, float]:
+    def sample_rate(
+        self, time_s: float, x: float, y: float
+    ) -> tuple[DefaultFedInputs, float]:
         inputs = self.sample_inputs(time_s, x, y)
         return inputs, default_fed_rate_per_minute(inputs)
 

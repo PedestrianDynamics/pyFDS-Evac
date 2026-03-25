@@ -1,6 +1,10 @@
 """JSON-first scenario loading and runtime helpers."""
 
-from .fds_inventory import FdsQuantityInventory, inspect_fds_quantities, list_simulations
+from .fds_inventory import (
+    FdsQuantityInventory,
+    inspect_fds_quantities,
+    list_simulations,
+)
 from .fed import (
     DefaultFedInputs,
     DefaultFedConfig,

@@ -66,7 +66,9 @@ def test_iso_table21_constant_extinction_matches_expected_time_ratio(extinction_
         expected_ratio = 1.0 / expected_factor
 
         assert observed_ratio == pytest.approx(expected_ratio, rel=0.08)
-        observed_factors = {round(row["speed_factor"], 6) for row in smoke.smoke_history}
+        observed_factors = {
+            round(row["speed_factor"], 6) for row in smoke.smoke_history
+        }
         assert observed_factors == {round(expected_factor, 6)}
     finally:
         baseline.cleanup()
@@ -171,7 +173,9 @@ def test_fds_evac_guide_smoke_density_plot_is_generated(tmp_path: Path):
     top = ax.twiny()
     top.set_xlim(ax.get_xlim())
     top.set_xticks(soot_points)
-    top.set_xticklabels([f"{value:.2f}".rstrip("0").rstrip(".") for value in extinction_points])
+    top.set_xticklabels(
+        [f"{value:.2f}".rstrip("0").rstrip(".") for value in extinction_points]
+    )
     top.set_xlabel("Extinction coefficient (1/m)")
     ax.legend(loc="best")
     fig.tight_layout()

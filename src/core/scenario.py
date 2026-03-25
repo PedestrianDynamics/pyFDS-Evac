@@ -1276,7 +1276,11 @@ def run_scenario(
                         agent_id = int(agent.id)
                         base_speed = smoke_speed_state.get(agent_id)
                         current_speed = get_agent_desired_speed(agent)
-                        if base_speed is None and current_speed is not None and current_speed > 0:
+                        if (
+                            base_speed is None
+                            and current_speed is not None
+                            and current_speed > 0
+                        ):
                             base_speed = float(current_speed)
                             smoke_speed_state[agent_id] = base_speed
                         if base_speed is None:

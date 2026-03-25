@@ -16,7 +16,9 @@ from src.core.smoke_speed import speed_factor_from_extinction
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Generate the ISO Table 21 sweep plot.")
+    parser = argparse.ArgumentParser(
+        description="Generate the ISO Table 21 sweep plot."
+    )
     parser.add_argument(
         "--output",
         default="artifacts/iso-table21-sweep.png",

@@ -49,14 +49,18 @@ def test_fds_evac_guide_stationary_fed_cases_reach_fed_one_consistently(
     assert fed_before_threshold < 1.0
 
     if expected_dominant_term == "combined":
-        assert analytic_time_s < time_to_fed_threshold_s(DefaultFedInputs(0.1, 0.0, 15.0))
+        assert analytic_time_s < time_to_fed_threshold_s(
+            DefaultFedInputs(0.1, 0.0, 15.0)
+        )
     elif expected_dominant_term == "o2":
         assert analytic_time_s < time_to_fed_threshold_s(DefaultFedInputs())
         assert analytic_time_s > 10000.0
     elif expected_dominant_term == "co":
         assert analytic_time_s > 1000.0
     elif expected_dominant_term == "co2_hv":
-        assert analytic_time_s < time_to_fed_threshold_s(DefaultFedInputs(0.1, 0.0, 21.0))
+        assert analytic_time_s < time_to_fed_threshold_s(
+            DefaultFedInputs(0.1, 0.0, 21.0)
+        )
 
 
 def _find_haspel_peak_co_location():
@@ -68,7 +72,9 @@ def _find_haspel_peak_co_location():
         peak = float(subslice.data.reshape(-1)[flat_index])
         if best is not None and peak <= best["value"]:
             continue
-        t_idx, i_idx, j_idx = map(int, np.unravel_index(flat_index, subslice.data.shape))
+        t_idx, i_idx, j_idx = map(
+            int, np.unravel_index(flat_index, subslice.data.shape)
+        )
         dx = (subslice.extent.x_end - subslice.extent.x_start) / subslice.shape[0]
         dy = (subslice.extent.y_end - subslice.extent.y_start) / subslice.shape[1]
         best = {
