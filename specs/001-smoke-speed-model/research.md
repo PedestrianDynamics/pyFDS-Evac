@@ -1,29 +1,27 @@
 # Research: Smoke-Speed Model Implementation
 
-## 1. Visibility Data Format (FDS fdsvismap)
+## 1. Extinction Data Format (FDS fdsvismap)
 
-### Decision: Use fdsvismap VisMap class directly
+### Decision: Use fdsvismap VisMap class directly for extinction K
 
-**Decision**: Continue using `fdsvismap.VisMap` class for loading FDS visibility data. The existing `fdstooling.py` correctly instantiates and configures `VisMap` with `read_fds_data()`, `set_start_point()`, `set_waypoint()`, `set_time_points()`, and `compute_all()`.
+**Decision**: Continue using `fdsvismap.VisMap` class for loading FDS extinction data. For smoke-speed we use `read_fds_data()` and the internal extinction slice access rather than waypoint-visibility products.
 
 **Rationale**: 
 - `fdsvismap` is listed as required dependency in `requirements.txt`
 - Current prototype uses this library successfully
 - library handles FDS-specific output format (`*.fdsvismap` files)
-- Provides `get_local_visibility(time, x, y, c)` and `wp_is_visible(time, x, y, waypoint_id)` methods
+- Provides internal extinction arrays through `_get_extco_array_at_time(time)`
+- Provides derived local visibility via `get_local_visibility(time, x, y, c)` when needed for diagnostics
 
 **Alternatives considered**:
 - Parse raw FDS CSV/JSON outputs directly → Rejected: fdsvismap handles parsing complexity
 - Custom FDS reader → Rejected: Duplication of fdsvismap functionality
 
-### Unknown Resolved: Visibility Unit Conversion
+### Unknown Resolved: Primary Unit
 
-**From spec clarification**: Visibility values represent percentage clarity (0-100%) where 0% = complete occlusion, 100% = clear air.
+**From spec clarification**: Extinction coefficient `K [1/m]` is the primary normative input for smoke-speed.
 
-**Research finding**: `fdsvismap.VisMap.get_local_visibility()` returns raw visibility values that must be normalized to 0-100% range. The normalization formula depends on FDS simulation parameters (smoke optical depth, extinction coefficient, brightness thresholds). Since exact conversion formula not documented in fdsvismap, we implement a configurable normalization step that:
-- Reads raw visibility values from `VisMap`
-- Applies min-max normalization or calibrated scale factor
-- Stores result as `VisibilityMap` with explicit percentage clarity values
+**Research finding**: `fdsvismap` reads `SOOT EXTINCTION COEFFICIENT` directly and exposes the extinction slice internally. For the smoke-speed model we should sample `K` directly and avoid converting to percentage clarity. Derived visibility can still be reported using `get_local_visibility()`.
 
 ## 2. Interpolation Methods
 
@@ -66,9 +64,9 @@ class VisibilitySampler:
 
 ## 3. Speed Calculation Model
 
-### Decision: Implement configurable visibility-to-speed curve
+### Decision: Implement extinction-to-speed correlation with FDS+Evac defaults
 
-**Decision**: Replace existing step-function `calculate_desired_speed()` with configurable visibility-to-speed mapping. Default curve: exponential decay from max_speed to 0 as visibility decreases below threshold c0.
+**Decision**: Replace existing step-function `calculate_desired_speed()` with an extinction-based correlation. Default curve: FDS+Evac/Lund linear formulation using extinction coefficient `K [1/m]`.
 
 **Current implementation gap**:
 ```python
@@ -81,47 +79,34 @@ def calculate_desired_speed(visibility: float, c: float, max_speed: float, range
 ```
 
 **Problems with current implementation**:
-1. Step function (visibility ≤ c → 0) is not continuous per spec FR-002
-2. `c` parameter used as visibility threshold, not smoke concentration
-3. No visibility unit conversion (assumes raw values)
-4. Hardcoded `range=5` parameter
-5. No clamping to [0, max_speed] bounds
-6. No telemetry metrics
+1. Step function is not aligned with the FDS+Evac extinction-based reference
+2. It uses local visibility rather than extinction K as the primary input
+3. No structured configuration around the chosen correlation
+4. No clamping to physical bounds
+5. No telemetry metrics
 
 **New implementation**:
 ```python
 # pyfdsevac/behavior/speed_model.py
 @dataclass
 class SmokeSpeedConfig:
-    visibility_threshold: float  # c0: percentage clarity threshold (default 50.0)
+    alpha: float  # FDS+Evac/Lund alpha parameter
+    beta: float   # FDS+Evac/Lund beta parameter
     max_speed: float  # v0: maximum agent speed (default 1.0)
-    visibility_range: float  # range parameter for exponential decay (default 2.0)
+    min_speed_factor: float
     interpolation_method: InterpolationMethod  # nearest/bilinear/bicubic
     # ... other config
 
-def visibility_to_speed(visibility_pct: float, config: SmokeSpeedConfig) -> float:
-    """Convert percentage clarity (0-100%) to speed factor (0-1), then to actual speed."""
-    # Clamp visibility to valid range
-    visibility_pct = np.clip(visibility_pct, 0.0, 100.0)
-    
-    # Exponential decay curve: speed increases with visibility above threshold
-    if visibility_pct <= config.visibility_threshold:
-        # Below threshold: gradual reduction to zero
-        factor = (visibility_pct / config.visibility_threshold) ** 2  # Quadratic decay
-    else:
-        # Above threshold: exponential approach to max_speed
-        factor = 1.0 - np.exp(-(visibility_pct - config.visibility_threshold) / config.visibility_range)
-    
-    # Clamp to [0, 1] then scale to max_speed
-    speed = np.clip(factor, 0.0, 1.0) * config.max_speed
-    return float(np.clip(speed, 0.0, config.max_speed))
+def extinction_to_speed_factor(k: float, config: SmokeSpeedConfig) -> float:
+    factor = 1.0 + (config.beta * k) / config.alpha
+    return float(np.clip(factor, config.min_speed_factor, 1.0))
 ```
 
 **Rationale**:
-- Continuous function (no step discontinuities) per spec FR-002
-- Configurable parameters per spec FR-003
-- Explicit clamping to physical bounds per spec FR-005
-- Default parameters aligned with spec assumptions (v0=1.0 m/s, c0=50% clarity)
+- Matches the FDS+Evac reference baseline
+- Uses extinction K as the normative input for the ISO walk-speed test
+- Explicit clamping to physical bounds
+- Derived visibility remains optional rather than normative
 
 **Alternatives considered**:
 - Linear visibility-to-speed mapping → Rejected: Less realistic than exponential

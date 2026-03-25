@@ -103,11 +103,12 @@ def get_agent_desired_speed(agent) -> float | None:
     model_obj = getattr(agent, "model", None)
     if model_obj is None:
         return None
-    if hasattr(model_obj, "desired_speed"):
-        try:
-            return float(model_obj.desired_speed)
-        except Exception:
-            return None
+    for attr_name in ("desired_speed", "desiredSpeed"):
+        if hasattr(model_obj, attr_name):
+            try:
+                return float(getattr(model_obj, attr_name))
+            except Exception:
+                return None
     return None
 
 
@@ -115,12 +116,13 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
     model_obj = getattr(agent, "model", None)
     if model_obj is None:
         return False
-    if hasattr(model_obj, "desired_speed"):
-        try:
-            model_obj.desired_speed = float(speed)
-            return True
-        except Exception:
-            return False
+    for attr_name in ("desired_speed", "desiredSpeed"):
+        if hasattr(model_obj, attr_name):
+            try:
+                setattr(model_obj, attr_name, float(speed))
+                return True
+            except Exception:
+                return False
     return False
 
 

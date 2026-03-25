@@ -41,6 +41,7 @@ from .direct_steering_runtime import (
     assign_agent_target,
     ensure_agent_speed_state,
     extract_agent_xy,
+    get_agent_desired_speed,
     sample_wait_time,
     set_agent_desired_speed,
     update_checkpoint_speed,
@@ -741,6 +742,7 @@ class ScenarioResult:
 
     metrics: Dict[str, Any]
     sqlite_file: Optional[str] = None
+    smoke_history: Optional[list[dict[str, Any]]] = None
 
     @property
     def success(self) -> bool:
@@ -886,7 +888,12 @@ def load_scenario(path: str) -> Scenario:
     )
 
 
-def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioResult:
+def run_scenario(
+    scenario: Scenario,
+    *,
+    seed: Optional[int] = None,
+    smoke_speed_model=None,
+) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app."""
     _require_jupedsim()
     from .simulation_init import (
@@ -944,6 +951,9 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
         agent_wait_info = spawning_info.get("agent_wait_info", {})
         checkpoint_throughput_tracker = {}
         agent_speed_state: Dict[int, Dict[str, Any]] = {}
+        smoke_speed_state: Dict[int, float] = {}
+        smoke_history: list[dict[str, Any]] = []
+        last_smoke_update_time = None
         flow_variant_rng = random.Random(seed)
 
         while simulation.elapsed_time() < scenario.max_simulation_time and (
@@ -1251,6 +1261,44 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
                             speed_state["active_checkpoint"] = None
                             premovement_times[agent_id]["activated"] = True
 
+            if smoke_speed_model is not None:
+                current_time = simulation.elapsed_time()
+                if (
+                    last_smoke_update_time is None
+                    or current_time - last_smoke_update_time
+                    >= smoke_speed_model.config.update_interval_s
+                ):
+                    for agent in simulation.agents():
+                        agent_id = int(agent.id)
+                        base_speed = smoke_speed_state.get(agent_id)
+                        current_speed = get_agent_desired_speed(agent)
+                        if base_speed is None and current_speed is not None and current_speed > 0:
+                            base_speed = float(current_speed)
+                            smoke_speed_state[agent_id] = base_speed
+                        if base_speed is None:
+                            continue
+                        x, y = extract_agent_xy(agent)
+                        if x is None or y is None:
+                            continue
+                        extinction, speed_factor = smoke_speed_model.sample(
+                            current_time, x, y
+                        )
+                        desired_speed = base_speed * speed_factor
+                        set_agent_desired_speed(agent, desired_speed)
+                        smoke_history.append(
+                            {
+                                "time_s": round(float(current_time), 6),
+                                "agent_id": agent_id,
+                                "x": float(x),
+                                "y": float(y),
+                                "base_speed": float(base_speed),
+                                "desired_speed": float(desired_speed),
+                                "speed_factor": float(speed_factor),
+                                "extinction_per_m": float(extinction),
+                            }
+                        )
+                    last_smoke_update_time = current_time
+
             if direct_steering_info:
                 live_agent_ids = set()
                 for agent in simulation.agents():
@@ -1413,8 +1461,14 @@ def run_scenario(scenario: Scenario, *, seed: Optional[int] = None) -> ScenarioR
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
+        if smoke_speed_model is not None:
+            metrics["smoke_history_samples"] = len(smoke_history)
 
-        return ScenarioResult(metrics=metrics, sqlite_file=output_file)
+        return ScenarioResult(
+            metrics=metrics,
+            sqlite_file=output_file,
+            smoke_history=smoke_history if smoke_speed_model is not None else None,
+        )
     finally:
         try:
             writer.close()
