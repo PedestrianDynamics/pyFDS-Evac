@@ -57,7 +57,12 @@ class ExtinctionField:
             raise ModuleNotFoundError(
                 "fdsvismap is required to load extinction fields from FDS data."
             )
-        vis = fv.VisMap(quantity="SOOT EXTINCTION COEFFICIENT")
+        try:
+            vis = fv.VisMap(quantity="SOOT EXTINCTION COEFFICIENT")
+        except TypeError:
+            vis = fv.VisMap()
+            if hasattr(vis, "quantity"):
+                vis.quantity = "SOOT EXTINCTION COEFFICIENT"
         vis.read_fds_data(str(fds_dir), fds_slc_height=slice_height_m)
         return cls(vis)
 

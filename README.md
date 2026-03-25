@@ -91,6 +91,102 @@ Generate a stable ISO Table 21 sweep artifact under `artifacts/`:
 uv run python scripts/generate_iso_table21_sweep.py
 ```
 
+## Table 22 / FED
+
+The current Table 22 implementation is a **partial implementation** of
+Section `3.4 Fire and Human Interaction` from the FDS+Evac guide and the
+corresponding FDS+Evac code path.
+
+What is implemented now:
+
+- `CO`
+- `CO2` hyperventilation factor
+- `O2` hypoxia
+
+This default pathway is read from FDS slice outputs through `fdsreader`.
+
+What is **not** implemented yet from the full Section 3.4 formulation:
+
+- `HCN`
+- `NOx`
+- irritants / `FLD_irr`
+- other Purser terms such as `HCl`, `HBr`, `HF`, `SO2`, `NO2`, `C3H4O`, `CH2O`
+- incapacitation effects on agent motion
+- broader fire-human interaction effects such as routing by FED risk, temperature, or radiation
+
+The implemented default FED equation is:
+
+$$
+\mathrm{FED}_{\mathrm{total}} = \mathrm{FED}_{\mathrm{CO}} \cdot \mathrm{HV}_{\mathrm{CO_2}} + \mathrm{FED}_{\mathrm{O_2}}
+$$
+
+with:
+
+$$
+\mathrm{FED}_{\mathrm{CO}} = \int 2.764 \times 10^{-5} \, C_{\mathrm{CO}}(t)^{1.036} \, dt
+$$
+
+$$
+\mathrm{HV}_{\mathrm{CO_2}} = \frac{\exp(0.1903 \, C_{\mathrm{CO_2}}(t) + 2.0004)}{7.1}
+$$
+
+$$
+\mathrm{FED}_{\mathrm{O_2}} = \int \frac{dt}{60 \, \exp\left(8.13 - 0.54 \, (20.9 - C_{\mathrm{O_2}}(t))\right)}
+$$
+
+Units used by the implementation:
+
+- $C_{\mathrm{CO}}$: ppm
+- $C_{\mathrm{CO_2}}$: volume %
+- $C_{\mathrm{O_2}}$: volume %
+- $t$: minutes
+
+FDS slice outputs are read as volume fractions and converted to volume percent before applying the equations.
+
+Inspect which local FDS cases support the default FED path:
+
+```bash
+uv run python - <<'PY'
+from src.core import inspect_fds_quantities, list_simulations
+for path in list_simulations("fds_data"):
+    inv = inspect_fds_quantities(path)
+    print(path, inv.canonical_slice_names(), inv.supports_default_fed())
+PY
+```
+
+In the bundled sample data:
+
+- `fds_data/basic` supports smoke-speed inputs, but not default FED
+- `fds_data/haspel` supports default FED (`CO`, `CO2`, `O2`)
+
+Run a scenario with FED accumulation enabled from FDS data and export the FED history:
+
+```bash
+uv run run.py \
+  --scenario assets/ISO-table21 \
+  --fds-dir fds_data/haspel \
+  --smoke-slice-height 2.1 \
+  --smoke-update-interval 1.0 \
+  --output-fed-history /tmp/iso-fed-history.csv \
+  --cleanup
+```
+
+The FED history CSV contains:
+
+- `time_s`
+- `agent_id`
+- `x`, `y`
+- `co_percent`
+- `co2_percent`
+- `o2_percent`
+- `fed_rate_per_min`
+- `fed_cumulative`
+
+Note:
+
+- If the scenario lies outside the FDS domain, the current implementation falls back to ambient conditions instead of failing.
+- `HCN`, `NOx`, irritants, and other Purser terms are not yet included in this first Table 22 slice.
+
 ## Dependencies
 
 - jupedsim

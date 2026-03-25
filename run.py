@@ -10,7 +10,10 @@ import shutil
 
 from src.core import (
     ConstantExtinctionField,
+    DefaultFedConfig,
+    DefaultFedModel,
     ExtinctionField,
+    FdsFedField,
     inspect_fds_quantities,
     SmokeSpeedConfig,
     SmokeSpeedModel,
@@ -74,6 +77,10 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Write smoke speed/extinction history to CSV",
     )
     parser.add_argument(
+        "--output-fed-history",
+        help="Write FED history to CSV",
+    )
+    parser.add_argument(
         "--inspect-fds",
         action="store_true",
         help="Inspect available FDS quantities with fdsreader and exit",
@@ -114,6 +121,27 @@ def _write_smoke_history_csv(rows, output_path: str) -> None:
             writer.writerow(row)
 
 
+def _write_fed_history_csv(rows, output_path: str) -> None:
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "time_s",
+        "agent_id",
+        "x",
+        "y",
+        "co_percent",
+        "co2_percent",
+        "o2_percent",
+        "fed_rate_per_min",
+        "fed_cumulative",
+    ]
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
 def main() -> int:
     args = _build_parser().parse_args()
 
@@ -136,6 +164,7 @@ def main() -> int:
         return 0
 
     smoke_speed_model = None
+    fed_model = None
     if args.fds_dir or args.constant_extinction is not None:
         smoke_config = SmokeSpeedConfig(
             fds_dir=args.fds_dir or ".",
@@ -144,25 +173,40 @@ def main() -> int:
         )
         if args.constant_extinction is not None:
             field = ConstantExtinctionField(args.constant_extinction)
-        else:
+        elif args.fds_dir:
             field = ExtinctionField.from_fds(
                 smoke_config.fds_dir,
                 slice_height_m=smoke_config.slice_height_m,
             )
-        smoke_speed_model = SmokeSpeedModel(
-            field,
-            smoke_config,
-        )
+        else:
+            field = None
+        if field is not None:
+            smoke_speed_model = SmokeSpeedModel(
+                field,
+                smoke_config,
+            )
+    if args.fds_dir:
+        inventory = inspect_fds_quantities(args.fds_dir)
+        if inventory.supports_default_fed():
+            fed_config = DefaultFedConfig(
+                fds_dir=args.fds_dir,
+                update_interval_s=args.smoke_update_interval,
+                slice_height_m=args.smoke_slice_height,
+            )
+            fed_model = DefaultFedModel(FdsFedField.from_fds(args.fds_dir), fed_config)
 
     result = run_scenario(
         scenario,
         seed=args.seed,
         smoke_speed_model=smoke_speed_model,
+        fed_model=fed_model,
     )
     print(json.dumps(result.metrics, indent=2, sort_keys=True, default=str))
 
     if args.output_smoke_history and result.smoke_history is not None:
         _write_smoke_history_csv(result.smoke_history, args.output_smoke_history)
+    if args.output_fed_history and result.fed_history is not None:
+        _write_fed_history_csv(result.fed_history, args.output_fed_history)
 
     if args.output_sqlite and result.sqlite_file:
         output_path = pathlib.Path(args.output_sqlite).resolve()

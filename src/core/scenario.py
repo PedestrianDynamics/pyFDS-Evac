@@ -743,6 +743,7 @@ class ScenarioResult:
     metrics: Dict[str, Any]
     sqlite_file: Optional[str] = None
     smoke_history: Optional[list[dict[str, Any]]] = None
+    fed_history: Optional[list[dict[str, Any]]] = None
 
     @property
     def success(self) -> bool:
@@ -893,6 +894,7 @@ def run_scenario(
     *,
     seed: Optional[int] = None,
     smoke_speed_model=None,
+    fed_model=None,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app."""
     _require_jupedsim()
@@ -953,6 +955,8 @@ def run_scenario(
         agent_speed_state: Dict[int, Dict[str, Any]] = {}
         smoke_speed_state: Dict[int, float] = {}
         smoke_history: list[dict[str, Any]] = []
+        fed_state: Dict[int, Dict[str, float]] = {}
+        fed_history: list[dict[str, Any]] = []
         last_smoke_update_time = None
         flow_variant_rng = random.Random(seed)
 
@@ -1299,6 +1303,41 @@ def run_scenario(
                         )
                     last_smoke_update_time = current_time
 
+            if fed_model is not None:
+                current_time = simulation.elapsed_time()
+                for agent in simulation.agents():
+                    agent_id = int(agent.id)
+                    x, y = extract_agent_xy(agent)
+                    if x is None or y is None:
+                        continue
+                    state = fed_state.setdefault(
+                        agent_id,
+                        {"cumulative": 0.0, "last_update_s": float(current_time)},
+                    )
+                    dt_s = max(0.0, float(current_time) - float(state["last_update_s"]))
+                    inputs, rate_per_min, cumulative = fed_model.advance(
+                        current_time,
+                        x,
+                        y,
+                        dt_s=dt_s,
+                        current_fed=state["cumulative"],
+                    )
+                    state["cumulative"] = float(cumulative)
+                    state["last_update_s"] = float(current_time)
+                    fed_history.append(
+                        {
+                            "time_s": round(float(current_time), 6),
+                            "agent_id": agent_id,
+                            "x": float(x),
+                            "y": float(y),
+                            "co_percent": float(inputs.co_volume_fraction_percent),
+                            "co2_percent": float(inputs.co2_volume_fraction_percent),
+                            "o2_percent": float(inputs.o2_volume_fraction_percent),
+                            "fed_rate_per_min": float(rate_per_min),
+                            "fed_cumulative": float(cumulative),
+                        }
+                    )
+
             if direct_steering_info:
                 live_agent_ids = set()
                 for agent in simulation.agents():
@@ -1463,11 +1502,18 @@ def run_scenario(
         }
         if smoke_speed_model is not None:
             metrics["smoke_history_samples"] = len(smoke_history)
+        if fed_model is not None:
+            metrics["fed_history_samples"] = len(fed_history)
+            metrics["fed_max"] = max(
+                (row["fed_cumulative"] for row in fed_history),
+                default=0.0,
+            )
 
         return ScenarioResult(
             metrics=metrics,
             sqlite_file=output_file,
             smoke_history=smoke_history if smoke_speed_model is not None else None,
+            fed_history=fed_history if fed_model is not None else None,
         )
     finally:
         try:
