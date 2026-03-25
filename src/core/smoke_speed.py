@@ -69,7 +69,12 @@ class ExtinctionField:
         return cls(vis)
 
     def sample_extinction(self, time_s: float, x: float, y: float) -> float:
-        """Return the nearest-grid extinction coefficient K [1/m]."""
+        """Return the nearest-grid extinction coefficient K [1/m].
+
+        Note: uses fdsvismap internal ``_get_extco_array_at_time`` because
+        the public API only exposes derived visibility (c/K), not raw K.
+        Tested against fdsvismap 0.1.x.
+        """
         extco_array = self._vis._get_extco_array_at_time(time_s)
         x_id = np.abs(self._vis.all_x_coords - x).argmin()
         y_id = np.abs(self._vis.all_y_coords - y).argmin()

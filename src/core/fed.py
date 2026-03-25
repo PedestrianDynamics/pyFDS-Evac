@@ -3,7 +3,10 @@
 from dataclasses import dataclass
 import math
 
-from fdsreader import Simulation
+try:
+    from fdsreader import Simulation
+except ModuleNotFoundError:
+    Simulation = None
 
 
 @dataclass(frozen=True)
@@ -169,6 +172,10 @@ class FdsFedField:
     @classmethod
     def from_fds(cls, fds_dir: str) -> "FdsFedField":
         """Build gas samplers from an FDS case directory."""
+        if Simulation is None:
+            raise ModuleNotFoundError(
+                "fdsreader is required to load FED fields from FDS data."
+            )
         sim = Simulation(str(fds_dir))
         co_slice = sim.slices.filter_by_quantity("CARBON MONOXIDE VOLUME FRACTION")[0]
         co2_slice = sim.slices.filter_by_quantity("CARBON DIOXIDE VOLUME FRACTION")[0]

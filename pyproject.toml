@@ -15,6 +15,9 @@ dependencies = [
     "shapely",
 ]
 
+[project.optional-dependencies]
+fed = ["fdsreader"]
+
 [project.scripts]
 fds-evac = "main:main"
 
