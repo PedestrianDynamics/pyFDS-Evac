@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,6 +16,9 @@ from src.core.fed import (
     time_to_fed_threshold_s,
 )
 from src.core import load_scenario, run_scenario
+
+
+HASPEL_DIR = Path("fds_data/haspel")
 
 
 def test_default_fed_rate_is_zero_in_clear_air():
@@ -64,7 +68,7 @@ def test_fds_evac_guide_stationary_fed_cases_reach_fed_one_consistently(
 
 
 def _find_haspel_peak_co_location():
-    sim = Simulation("fds_data/haspel")
+    sim = Simulation(str(HASPEL_DIR))
     co_slice = sim.slices.filter_by_quantity("CARBON MONOXIDE VOLUME FRACTION")[0]
     best = None
     for subslice in co_slice.subslices:
@@ -87,9 +91,12 @@ def _find_haspel_peak_co_location():
 
 
 def test_fdsreader_stationary_haspel_sampling_drives_positive_fed():
+    if not HASPEL_DIR.exists():
+        pytest.skip("Local haspel FDS fixture is not available in this checkout.")
+
     peak = _find_haspel_peak_co_location()
-    field = FdsFedField.from_fds("fds_data/haspel")
-    model = DefaultFedModel(field, DefaultFedConfig(fds_dir="fds_data/haspel"))
+    field = FdsFedField.from_fds(str(HASPEL_DIR))
+    model = DefaultFedModel(field, DefaultFedConfig(fds_dir=str(HASPEL_DIR)))
 
     inputs, rate_per_min = model.sample_rate(peak["time_s"], peak["x"], peak["y"])
     _, _, cumulative = model.advance(
