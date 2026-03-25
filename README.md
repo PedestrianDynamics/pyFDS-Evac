@@ -40,6 +40,22 @@ input. For real FDS output, `fdsvismap` provides the local extinction field.
 For verification cases such as ISO 20414 Table 21, the runner can also apply a
 constant extinction coefficient directly.
 
+### FDS Data Access Layers
+
+The project uses two different FDS readers on purpose:
+
+- `fdsvismap`
+  - used for extinction / visibility-centric workflows
+  - current use: smoke-speed (`K [1/m]`) and visibility-related logic
+- `fdsreader`
+  - used for generic raw FDS quantities
+  - current use: Table 22 / FED inputs such as `CO`, `CO2`, and `O2`
+
+Rule of thumb:
+
+- use `fdsvismap` for smoke/visibility
+- use `fdsreader` for gases and other hazard quantities
+
 Run the ISO Table 21 corridor with a constant extinction coefficient:
 
 ```bash

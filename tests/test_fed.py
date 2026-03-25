@@ -1,5 +1,6 @@
 import math
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from fdsreader import Simulation
@@ -129,3 +130,34 @@ def test_run_scenario_records_cumulative_fed_history():
         assert cumulative_values == sorted(cumulative_values)
     finally:
         result.cleanup()
+
+
+def _guide_stationary_cases():
+    return {
+        "Combined (2, 0.1, 15)%": DefaultFedInputs(0.1, 2.0, 15.0),
+        "O2 Only (0, 0, 12)%": DefaultFedInputs(0.0, 0.0, 12.0),
+        "CO Only (0, 0.1, 21)%": DefaultFedInputs(0.1, 0.0, 21.0),
+        "CO2-Enhanced (3.43, 0.1, 21)%": DefaultFedInputs(0.1, 3.43, 21.0),
+    }
+
+
+def test_fds_evac_guide_stationary_cases_produce_plot(tmp_path):
+    times_s = np.linspace(0.0, 100.0, 101)
+    output = tmp_path / "fed-guide-stationary-cases.png"
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+    for label, inputs in _guide_stationary_cases().items():
+        fed_curve = [accumulate_default_fed(inputs, duration_s=t) for t in times_s]
+        ax.plot(times_s, fed_curve, linewidth=2, label=label)
+
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel("FED Index [-]")
+    ax.set_title("FDS+Evac stationary FED verification cases")
+    ax.legend(loc="best")
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(output, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+    assert output.exists()
+    assert output.stat().st_size > 0
