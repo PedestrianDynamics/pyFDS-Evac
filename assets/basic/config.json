@@ -3,7 +3,7 @@
   "config": {
     "simulation_settings": {
       "simulationParams": {
-        "max_simulation_time": 300,
+        "max_simulation_time": 1000,
         "model_type": "CollisionFreeSpeedModel",
         "strength_neighbor_repulsion": 2.6,
         "range_neighbor_repulsion": 0.1,
@@ -36,26 +36,11 @@
     "jps-exits_0": {
       "type": "polygon",
       "coordinates": [
-        [
-          9.058484504913077,
-          6.023242630385488
-        ],
-        [
-          10.924508692365833,
-          6.023242630385488
-        ],
-        [
-          10.924508692365833,
-          4.322562358276644
-        ],
-        [
-          9.058484504913077,
-          4.322562358276644
-        ],
-        [
-          9.058484504913077,
-          6.023242630385488
-        ]
+        [24, 16],
+        [27, 16],
+        [27, 17],
+        [24, 17],
+        [24, 16]
       ],
       "enable_throughput_throttling": false,
       "max_throughput": 0
@@ -63,26 +48,11 @@
     "jps-exits_1": {
       "type": "polygon",
       "coordinates": [
-        [
-          -12.932256235827666,
-          6.991685563114134
-        ],
-        [
-          -12.034674981103553,
-          6.991685563114134
-        ],
-        [
-          -12.034674981103553,
-          3.590325018896448
-        ],
-        [
-          -12.932256235827666,
-          3.590325018896448
-        ],
-        [
-          -12.932256235827666,
-          6.991685563114134
-        ]
+        [1, 16],
+        [4, 16],
+        [4, 17],
+        [1, 17],
+        [1, 16]
       ],
       "enable_throughput_throttling": false,
       "max_throughput": 0
@@ -92,40 +62,25 @@
     "jps-distributions_0": {
       "type": "polygon",
       "coordinates": [
-        [
-          -14.82190098261527,
-          -5.409108087679516
-        ],
-        [
-          -0.3661186696900984,
-          -5.432728647014361
-        ],
-        [
-          -0.3661186696900984,
-          -9.495464852607709
-        ],
-        [
-          -14.82190098261527,
-          -9.68442932728647
-        ],
-        [
-          -14.82190098261527,
-          -5.409108087679516
-        ]
+        [1, 0],
+        [15, 0],
+        [15, 3],
+        [1, 3],
+        [1, 0]
       ],
       "parameters": {
-        "number": 20,
+        "number": 400,
         "radius": 0.2,
-        "v0": 1.3,
+        "v0": 1.0,
         "use_flow_spawning": true,
-        "flow_start_time": 0,
-        "flow_end_time": 10,
+        "flow_start_time": 400,
+        "flow_end_time": 1000,
         "distribution_mode": "by_number",
         "percentage": null,
         "use_premovement": false,
-        "premovement_distribution": "gamma",
-        "premovement_param_a": null,
-        "premovement_param_b": null,
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 400,
+        "premovement_param_b": 1000,
         "premovement_seed": null,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
@@ -134,40 +89,25 @@
     "jps-distributions_1": {
       "type": "polygon",
       "coordinates": [
-        [
-          -10.57020030234316,
-          4.700491307634164
-        ],
-        [
-          3.696617535903249,
-          4.700491307634164
-        ],
-        [
-          3.696617535903249,
-          1.558956916099774
-        ],
-        [
-          -10.57020030234316,
-          1.558956916099774
-        ],
-        [
-          -10.57020030234316,
-          4.700491307634164
-        ]
+        [5, 10],
+        [18.8, 10],
+        [18.8, 14.5],
+        [5, 14.5],
+        [5, 10]
       ],
       "parameters": {
-        "number": 20,
+        "number": 400,
         "radius": 0.2,
-        "v0": 1.3,
+        "v0": 1.0,
         "use_flow_spawning": true,
-        "flow_start_time": 0,
-        "flow_end_time": 10,
+        "flow_start_time": 500,
+        "flow_end_time": 1000,
         "distribution_mode": "by_number",
         "percentage": null,
         "use_premovement": false,
-        "premovement_distribution": "gamma",
-        "premovement_param_a": null,
-        "premovement_param_b": null,
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 200,
+        "premovement_param_b": 400,
         "premovement_seed": null,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
