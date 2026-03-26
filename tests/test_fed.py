@@ -16,6 +16,13 @@ from src.core.fed import (
     DefaultFedInputs,
     DefaultFedModel,
     FdsFedField,
+    _cn_fed_rate_per_minute,
+    _co_fed_rate_per_minute,
+    _co_percent_to_ppm,
+    _hyperventilation_factor,
+    _irritant_fld_rate_per_minute,
+    _nox_fed_rate_per_minute,
+    _o2_hypoxia_rate_per_minute,
     accumulate_default_fed,
     default_fed_rate_per_minute,
     time_to_fed_threshold_s,
@@ -115,6 +122,225 @@ def test_default_fed_rate_is_zero_in_clear_air():
     rate = default_fed_rate_per_minute(DefaultFedInputs())
     assert rate < 1e-5
     assert time_to_fed_threshold_s(DefaultFedInputs()) > 1.0e7
+
+
+# ---------------------------------------------------------------------------
+# Closed-form rate validation for each ISO 13571 term
+# ---------------------------------------------------------------------------
+
+
+class TestCoFedRate:
+    """Verify CO FED rate against guide Eq. 13: 2.764e-5 * C_CO^1.036 [1/min]."""
+
+    def test_known_value(self):
+        co_ppm = _co_percent_to_ppm(0.10)  # 1000 ppm
+        rate = _co_fed_rate_per_minute(co_ppm)
+        expected = 2.764e-5 * (1000.0**1.036)
+        assert rate == pytest.approx(expected, rel=1e-10)
+
+    def test_zero(self):
+        assert _co_fed_rate_per_minute(0.0) == 0.0
+
+    def test_negative(self):
+        assert _co_fed_rate_per_minute(-10.0) == 0.0
+
+
+class TestCnFedRate:
+    """Verify CN FED rate against guide Eq. 14-15.
+
+    C_CN = max(0, C_HCN - C_NO2).
+    Rate = exp(C_CN / 43) / 220 - 0.0045.
+    """
+
+    def test_known_value(self):
+        hcn, no2 = 150.0, 20.0
+        c_cn = hcn - no2  # 130 ppm
+        expected = math.exp(c_cn / 43.0) / 220.0 - 0.0045
+        rate = _cn_fed_rate_per_minute(hcn, no2)
+        assert rate == pytest.approx(expected, rel=1e-10)
+
+    def test_no2_exceeds_hcn(self):
+        """NO2 protective effect zeroes the CN term when NO2 >= HCN."""
+        assert _cn_fed_rate_per_minute(50.0, 100.0) == 0.0
+
+    def test_zero_hcn(self):
+        assert _cn_fed_rate_per_minute(0.0, 0.0) == 0.0
+
+    def test_small_cn_yields_nonnegative(self):
+        """When C_CN is small, exp(C_CN/43)/220 < 0.0045 → rate clamped to 0."""
+        assert _cn_fed_rate_per_minute(1.0, 0.0) >= 0.0
+
+
+class TestNoxFedRate:
+    """Verify NOx FED rate against guide Eq. 16: C_NOx / 1500 [1/min]."""
+
+    def test_known_value(self):
+        no, no2 = 50.0, 20.0
+        expected = (no + no2) / 1500.0
+        rate = _nox_fed_rate_per_minute(no, no2)
+        assert rate == pytest.approx(expected, rel=1e-10)
+
+    def test_zero(self):
+        assert _nox_fed_rate_per_minute(0.0, 0.0) == 0.0
+
+    def test_no_only(self):
+        assert _nox_fed_rate_per_minute(75.0, 0.0) == pytest.approx(75.0 / 1500.0)
+
+    def test_no2_only(self):
+        assert _nox_fed_rate_per_minute(0.0, 30.0) == pytest.approx(30.0 / 1500.0)
+
+
+class TestIrritantFldRate:
+    """Verify irritant FLD rate against guide Eq. 17 with Table 2 Ct values."""
+
+    def test_single_species_hcl(self):
+        inputs = DefaultFedInputs(hcl_ppm=1140.0)  # 1140 / 114000 = 0.01
+        assert _irritant_fld_rate_per_minute(inputs) == pytest.approx(0.01, rel=1e-10)
+
+    def test_single_species_no2(self):
+        inputs = DefaultFedInputs(no2_ppm=19.0)  # 19 / 1900 = 0.01
+        assert _irritant_fld_rate_per_minute(inputs) == pytest.approx(0.01, rel=1e-10)
+
+    def test_single_species_acrolein(self):
+        inputs = DefaultFedInputs(acrolein_ppm=45.0)  # 45 / 4500 = 0.01
+        assert _irritant_fld_rate_per_minute(inputs) == pytest.approx(0.01, rel=1e-10)
+
+    def test_all_irritants(self):
+        inputs = DefaultFedInputs(
+            hcl_ppm=114.0,
+            hbr_ppm=114.0,
+            hf_ppm=87.0,
+            so2_ppm=12.0,
+            no2_ppm=19.0,
+            acrolein_ppm=45.0,
+            formaldehyde_ppm=225.0,
+        )
+        expected = (
+            114.0 / 114000.0
+            + 114.0 / 114000.0
+            + 87.0 / 87000.0
+            + 12.0 / 12000.0
+            + 19.0 / 1900.0
+            + 45.0 / 4500.0
+            + 225.0 / 22500.0
+        )
+        assert _irritant_fld_rate_per_minute(inputs) == pytest.approx(
+            expected, rel=1e-10
+        )
+
+    def test_zero(self):
+        assert _irritant_fld_rate_per_minute(DefaultFedInputs()) == 0.0
+
+
+class TestHyperventilationFactor:
+    """Verify HV_CO2 against guide Eq. 19: exp(0.1903*CO2 + 2.0004) / 7.1."""
+
+    def test_zero_co2(self):
+        expected = math.exp(2.0004) / 7.1
+        assert _hyperventilation_factor(0.0) == pytest.approx(expected, rel=1e-10)
+
+    def test_five_percent(self):
+        expected = math.exp(0.1903 * 5.0 + 2.0004) / 7.1
+        assert _hyperventilation_factor(5.0) == pytest.approx(expected, rel=1e-10)
+
+
+class TestO2HypoxiaRate:
+    """Verify O2 FED rate against guide Eq. 18."""
+
+    def test_normal_air(self):
+        rate = _o2_hypoxia_rate_per_minute(20.9)
+        expected = 1.0 / (60.0 * math.exp(8.13 - 0.54 * 0.0))
+        assert rate == pytest.approx(expected, rel=1e-10)
+
+    def test_low_o2(self):
+        rate = _o2_hypoxia_rate_per_minute(12.0)
+        expected = 1.0 / (60.0 * math.exp(8.13 - 0.54 * (20.9 - 12.0)))
+        assert rate == pytest.approx(expected, rel=1e-10)
+
+
+class TestFullFormulaClosedForm:
+    """Verify the full ISO 13571 formula matches hand-calculated composition."""
+
+    def test_all_terms_active(self):
+        inputs = DefaultFedInputs(
+            co_volume_fraction_percent=0.05,
+            co2_volume_fraction_percent=3.0,
+            o2_volume_fraction_percent=15.0,
+            hcn_ppm=80.0,
+            no_ppm=30.0,
+            no2_ppm=10.0,
+            hcl_ppm=200.0,
+            so2_ppm=50.0,
+        )
+        co_ppm = _co_percent_to_ppm(0.05)  # 500
+        co_rate = 2.764e-5 * (co_ppm**1.036)
+        c_cn = 80.0 - 10.0  # 70
+        cn_rate = math.exp(c_cn / 43.0) / 220.0 - 0.0045
+        nox_rate = (30.0 + 10.0) / 1500.0
+        fld_irr = 200.0 / 114000.0 + 50.0 / 12000.0 + 10.0 / 1900.0
+        hv = math.exp(0.1903 * 3.0 + 2.0004) / 7.1
+        o2_rate = 1.0 / (60.0 * math.exp(8.13 - 0.54 * (20.9 - 15.0)))
+        expected = (co_rate + cn_rate + nox_rate + fld_irr) * hv + o2_rate
+
+        assert default_fed_rate_per_minute(inputs) == pytest.approx(expected, rel=1e-10)
+
+    def test_only_required_species_reduces_to_three_term(self):
+        """With no optional species, formula reduces to FED_CO * HV_CO2 + FED_O2."""
+        inputs = DefaultFedInputs(
+            co_volume_fraction_percent=0.10,
+            co2_volume_fraction_percent=2.0,
+            o2_volume_fraction_percent=18.0,
+        )
+        co_ppm = _co_percent_to_ppm(0.10)
+        co_rate = 2.764e-5 * (co_ppm**1.036)
+        hv = math.exp(0.1903 * 2.0 + 2.0004) / 7.1
+        o2_rate = 1.0 / (60.0 * math.exp(8.13 - 0.54 * (20.9 - 18.0)))
+        expected = co_rate * hv + o2_rate
+
+        assert default_fed_rate_per_minute(inputs) == pytest.approx(expected, rel=1e-10)
+
+
+# ---------------------------------------------------------------------------
+# Constant-exposure threshold tests for new terms
+# ---------------------------------------------------------------------------
+
+NEW_TERM_CASES = {
+    "cn_only": DefaultFedInputs(hcn_ppm=150.0),
+    "nox_only": DefaultFedInputs(no_ppm=100.0, no2_ppm=50.0),
+    "irritants_only": DefaultFedInputs(hcl_ppm=500.0, so2_ppm=200.0),
+    "cn_nox_irritants": DefaultFedInputs(
+        hcn_ppm=100.0,
+        no_ppm=50.0,
+        no2_ppm=20.0,
+        hcl_ppm=200.0,
+        acrolein_ppm=30.0,
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    ("case_name", "inputs"),
+    list(NEW_TERM_CASES.items()),
+)
+def test_new_term_threshold_time_matches_step_integration(case_name, inputs):
+    del case_name
+    analytic_time_s = time_to_fed_threshold_s(inputs, threshold=1.0)
+    assert analytic_time_s > 0.0
+    assert math.isfinite(analytic_time_s)
+
+    history = _integrate_constant_exposure(
+        inputs,
+        dt_s=1.0,
+        threshold=1.0,
+        max_time_s=max(7200.0, analytic_time_s + 1.0),
+    )
+    times_s = [t for t, _ in history]
+    fed_values = [f for _, f in history]
+
+    assert fed_values == sorted(fed_values)
+    assert times_s[-1] >= analytic_time_s
+    assert times_s[-1] - analytic_time_s <= 1.0
+    assert fed_values[-2] < 1.0 <= fed_values[-1]
 
 
 def test_hcn_contributes_to_fed_rate():
