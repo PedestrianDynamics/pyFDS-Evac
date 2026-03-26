@@ -3,7 +3,7 @@
   "config": {
     "simulation_settings": {
       "simulationParams": {
-        "max_simulation_time": 300,
+        "max_simulation_time": 700,
         "model_type": "CollisionFreeSpeedModel",
         "strength_neighbor_repulsion": 2.6,
         "range_neighbor_repulsion": 0.1,

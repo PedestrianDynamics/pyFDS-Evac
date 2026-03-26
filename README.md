@@ -115,27 +115,45 @@ Generate the FDS+Evac smoke-density vs speed verification plot:
 uv run python scripts/generate_smoke_density_speed_plot.py
 ```
 
-## Table 22 / FED
+## FED Model (Fractional Effective Dose)
 
-The current Table 22 implementation is a **partial implementation** of
-Section `3.4 Fire and Human Interaction` from the FDS+Evac guide and the
-corresponding FDS+Evac code path.
+The FED model implements the full ISO 13571 / Purser formulation as
+described in Section 3.4 of the
+[FDS+Evac Technical Reference and User's Guide](materials/FDS+EVAC_Guide.pdf)
+(Korhonen, 2021).
 
-What is implemented now:
+### Implemented equation (guide Eq. 12)
 
-- `CO`
-- `CO2` hyperventilation factor
-- `O2` hypoxia
+$$
+\mathrm{FED}_{\mathrm{tot}} = \bigl(\mathrm{FED}_{\mathrm{CO}} + \mathrm{FED}_{\mathrm{CN}} + \mathrm{FED}_{\mathrm{NO_x}} + \mathrm{FLD}_{\mathrm{irr}}\bigr) \times \mathrm{HV}_{\mathrm{CO_2}} + \mathrm{FED}_{\mathrm{O_2}}
+$$
 
-This default pathway is read from FDS slice outputs through `fdsreader`.
+| Term | Guide Eq. | Formula | Input |
+|------|-----------|---------|-------|
+| FED_CO | (13) | $\int 2.764 \times 10^{-5}\, C_{\mathrm{CO}}^{1.036}\, dt$ | CO (ppm) |
+| FED_CN | (14-15) | $\int \bigl(\exp(C_{\mathrm{CN}}/43)/220 - 0.0045\bigr)\, dt$, where $C_{\mathrm{CN}} = C_{\mathrm{HCN}} - C_{\mathrm{NO_2}}$ | HCN, NO2 (ppm) |
+| FED_NOx | (16) | $\int C_{\mathrm{NO_x}}/1500\, dt$, where $C_{\mathrm{NO_x}} = C_{\mathrm{NO}} + C_{\mathrm{NO_2}}$ | NO, NO2 (ppm) |
+| FLD_irr | (17) | $\int \sum_i C_i / F_{\mathrm{FLD},i}\, dt$ | HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde (ppm) |
+| HV_CO2 | (19) | $\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1$ | CO2 (vol %) |
+| FED_O2 | (18) | $\int 1/\bigl(60\, \exp(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}}))\bigr)\, dt$ | O2 (vol %) |
 
-Verification status on this branch:
+Irritant Ct values (ppm·min) from guide Table 2:
 
-- equation-level constant-exposure checks for `CO`, `CO2`, and `O2` are covered in [tests/test_fed.py](tests/test_fed.py)
-- an ISO Table 22 style stationary benchmark is covered with `assets/ISO-table22`, using one fixed occupant in a room and comparing the runtime `FED=1` crossing time against the analytical reference for the implemented default pathway
-- this verification currently covers only the implemented default FED pathway (`CO`, `CO2`, `O2`), not the broader set of toxic/thermal terms mentioned in ISO Table 22
+| Species | HCl | HBr | HF | SO2 | NO2 | acrolein | formaldehyde |
+|---------|------|------|------|------|------|----------|--------------|
+| F_FLD | 114000 | 114000 | 87000 | 12000 | 1900 | 4500 | 22500 |
 
-A plot is not required for the Table 22 pass/fail check. The verification criterion is agreement in time to reach `FED = 1`. We still generate a stable artifact because it improves inspection and reporting.
+Gas species are read from FDS slice outputs via `fdsreader`. Required
+species: CO, CO2, O2. Optional species (HCN, NO, NO2, HCl, HBr, HF,
+SO2, acrolein, formaldehyde) are loaded when available; missing species
+default to 0 and contribute nothing to the FED sum. With only the three
+required species, the model reduces to the original FDS+Evac default
+pathway: $\mathrm{FED}_{\mathrm{CO}} \cdot \mathrm{HV}_{\mathrm{CO_2}} + \mathrm{FED}_{\mathrm{O_2}}$.
+
+### Verification
+
+- Equation-level constant-exposure checks for all terms are covered in [tests/test_fed.py](tests/test_fed.py)
+- An ISO Table 22 style stationary benchmark is covered with `assets/ISO-table22`, comparing the runtime `FED=1` crossing time against the analytical reference
 
 Generate the ISO Table 22 stationary FED verification figure:
 
@@ -145,45 +163,14 @@ uv run python scripts/generate_iso_table22_stationary_plot.py
 
 Figure: ![ISO Table 22 stationary FED verification](artifacts/iso-table22-stationary-fed.png)
 
-What is **not** implemented yet from the full Section 3.4 formulation:
+### What is not implemented yet
 
-- `HCN`
-- `NOx`
-- irritants / `FLD_irr`
-- other Purser terms such as `HCl`, `HBr`, `HF`, `SO2`, `NO2`, `C3H4O`, `CH2O`
-- incapacitation effects on agent motion
-- broader fire-human interaction effects such as routing by FED risk, temperature, or radiation
+- Incapacitation effects on agent motion (FED >= 1 → speed = 0)
+- Thermal FED terms (radiant heat, convective heat)
 
-The implemented default FED equation is:
+### Usage
 
-$$
-\mathrm{FED}_{\mathrm{total}} = \mathrm{FED}_{\mathrm{CO}} \cdot \mathrm{HV}_{\mathrm{CO_2}} + \mathrm{FED}_{\mathrm{O_2}}
-$$
-
-with:
-
-$$
-\mathrm{FED}_{\mathrm{CO}} = \int 2.764 \times 10^{-5} \, C_{\mathrm{CO}}(t)^{1.036} \, dt
-$$
-
-$$
-\mathrm{HV}_{\mathrm{CO_2}} = \frac{\exp(0.1903 \, C_{\mathrm{CO_2}}(t) + 2.0004)}{7.1}
-$$
-
-$$
-\mathrm{FED}_{\mathrm{O_2}} = \int \frac{dt}{60 \, \exp\left(8.13 - 0.54 \, (20.9 - C_{\mathrm{O_2}}(t))\right)}
-$$
-
-Units used by the implementation:
-
-- $C_{\mathrm{CO}}$: ppm
-- $C_{\mathrm{CO_2}}$: volume %
-- $C_{\mathrm{O_2}}$: volume %
-- $t$: minutes
-
-FDS slice outputs are read as volume fractions and converted to volume percent before applying the equations.
-
-Inspect which local FDS cases support the default FED path:
+Inspect which local FDS cases support FED:
 
 ```bash
 uv run python - <<'PY'
@@ -194,12 +181,7 @@ for path in list_simulations("fds_data"):
 PY
 ```
 
-In the bundled sample data:
-
-- `fds_data/basic` supports smoke-speed inputs, but not default FED
-- `fds_data/haspel` supports default FED (`CO`, `CO2`, `O2`)
-
-Run a scenario with FED accumulation enabled from FDS data and export the FED history:
+Run a scenario with FED accumulation from FDS data:
 
 ```bash
 uv run run.py \
@@ -211,21 +193,16 @@ uv run run.py \
   --cleanup
 ```
 
-The FED history CSV contains:
+Note: if a point lies outside the FDS domain, the implementation falls back to ambient conditions.
 
-- `time_s`
-- `agent_id`
-- `x`, `y`
-- `co_percent`
-- `co2_percent`
-- `o2_percent`
-- `fed_rate_per_min`
-- `fed_cumulative`
+## References
 
-Note:
+Reference materials are stored in [`materials/`](materials/):
 
-- If the scenario lies outside the FDS domain, the current implementation falls back to ambient conditions instead of failing.
-- `HCN`, `NOx`, irritants, and other Purser terms are not yet included in this first Table 22 slice.
+- [FDS+Evac Technical Reference and User's Guide](materials/FDS+EVAC_Guide.pdf) — Korhonen (2021). Primary reference for the FED equations (Section 3.4) and smoke-speed model (Section 3.4, Eq. 11).
+- [Schroder et al. (2020)](materials/Schroder2020.pdf) — Waypoint-based visibility and evacuation modeling.
+- [Ronchi et al. (2013)](materials/Ronchi2013.pdf) — FDS+Evac evacuation model validation and verification.
+- [evac.f90](materials/evac.f90) — Original FDS+Evac Fortran source for cross-referencing implementation details.
 
 ## Dependencies
 
