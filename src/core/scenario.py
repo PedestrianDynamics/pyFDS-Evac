@@ -1478,19 +1478,10 @@ def run_scenario(
                 )
             ):
                 current_time = simulation.elapsed_time()
-                # Invalidate segment cache on each new reevaluation epoch.
-                interval_s = reroute_config.reevaluation_interval_s
-                if interval_s > 0.0:
-                    current_epoch = math.floor(current_time / interval_s)
-                    previous_epoch = (
-                        math.floor(last_reroute_check_time / interval_s)
-                        if last_reroute_check_time is not None
-                        else -1
-                    )
-                    if current_epoch != previous_epoch:
-                        route_segment_cache = {}
-                else:
-                    route_segment_cache = {}
+                # Scope the route segment cache to a single reroute-check pass.
+                # Segment costs depend on current_time and the time-varying smoke field,
+                # so we clear any previously cached values computed at different times.
+                route_segment_cache = {}
                 last_reroute_check_time = current_time
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
