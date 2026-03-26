@@ -50,7 +50,7 @@ All FDS slice data is read through a single library:
 
 - **`fdsreader`** — reads raw FDS slice quantities with nearest-neighbor
   spatial and temporal lookup via `SliceFieldSampler`
-  (`src/core/fds_sampling.py`)
+  (`pyfds_evac/core/fds_sampling.py`)
 - Used by both the smoke-speed model (extinction `K [1/m]`) and the FED
   model (CO, CO2, O2, and optional irritant gases)
 - When a scenario needs both extinction and FED fields from the same FDS

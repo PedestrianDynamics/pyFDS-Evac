@@ -3,7 +3,7 @@
 import pytest
 from shapely.geometry import Polygon
 
-from src.core.route_graph import (
+from pyfds_evac.core.route_graph import (
     StageGraph,
     RouteCostConfig,
     RerouteConfig,
@@ -16,7 +16,7 @@ from src.core.route_graph import (
     reroute_agent,
     evaluate_and_reroute,
 )
-from src.core.smoke_speed import ConstantExtinctionField
+from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
 
 def _box(cx: float, cy: float, half: float = 1.0) -> Polygon:
@@ -776,45 +776,64 @@ class TestIntegratedExtinctionAlongLos:
 
     def test_constant_field_returns_constant(self):
         """With uniform extinction, the path-integrated mean equals the constant."""
-        from src.core.route_graph import integrated_extinction_along_los
+        from pyfds_evac.core.route_graph import integrated_extinction_along_los
 
         field = ConstantExtinctionField(extinction_per_m=2.5)
         result = integrated_extinction_along_los(
-            0.0, 0.0, 10.0, 0.0, time_s=0.0,
-            extinction_sampler=field, step_m=2.0,
+            0.0,
+            0.0,
+            10.0,
+            0.0,
+            time_s=0.0,
+            extinction_sampler=field,
+            step_m=2.0,
         )
         assert result == pytest.approx(2.5)
 
     def test_zero_length_los(self):
         """Zero-length LOS returns the extinction at the single point."""
-        from src.core.route_graph import integrated_extinction_along_los
+        from pyfds_evac.core.route_graph import integrated_extinction_along_los
 
         field = ConstantExtinctionField(extinction_per_m=3.0)
         result = integrated_extinction_along_los(
-            5.0, 5.0, 5.0, 5.0, time_s=0.0,
+            5.0,
+            5.0,
+            5.0,
+            5.0,
+            time_s=0.0,
             extinction_sampler=field,
         )
         assert result == pytest.approx(3.0)
 
     def test_step_m_validation(self):
         """step_m <= 0 raises ValueError."""
-        from src.core.route_graph import integrated_extinction_along_los
+        from pyfds_evac.core.route_graph import integrated_extinction_along_los
 
         field = ConstantExtinctionField(extinction_per_m=1.0)
         with pytest.raises(ValueError, match="step_m must be positive"):
             integrated_extinction_along_los(
-                0.0, 0.0, 10.0, 0.0, time_s=0.0,
-                extinction_sampler=field, step_m=0.0,
+                0.0,
+                0.0,
+                10.0,
+                0.0,
+                time_s=0.0,
+                extinction_sampler=field,
+                step_m=0.0,
             )
         with pytest.raises(ValueError, match="step_m must be positive"):
             integrated_extinction_along_los(
-                0.0, 0.0, 10.0, 0.0, time_s=0.0,
-                extinction_sampler=field, step_m=-1.0,
+                0.0,
+                0.0,
+                10.0,
+                0.0,
+                time_s=0.0,
+                extinction_sampler=field,
+                step_m=-1.0,
             )
 
     def test_nontrivial_sampler(self):
         """A spatially varying field produces the expected arithmetic mean."""
-        from src.core.route_graph import integrated_extinction_along_los
+        from pyfds_evac.core.route_graph import integrated_extinction_along_los
 
         class LinearExtinction:
             """K increases linearly with x: K(x) = x."""
@@ -826,18 +845,28 @@ class TestIntegratedExtinctionAlongLos:
         # LOS from x=0 to x=10, step_m=5 -> samples at x=0, 5, 10
         # mean = (0 + 5 + 10) / 3 = 5.0
         result = integrated_extinction_along_los(
-            0.0, 0.0, 10.0, 0.0, time_s=0.0,
-            extinction_sampler=field, step_m=5.0,
+            0.0,
+            0.0,
+            10.0,
+            0.0,
+            time_s=0.0,
+            extinction_sampler=field,
+            step_m=5.0,
         )
         assert result == pytest.approx(5.0)
 
     def test_diagonal_los(self):
         """Diagonal LOS samples correctly along both axes."""
-        from src.core.route_graph import integrated_extinction_along_los
+        from pyfds_evac.core.route_graph import integrated_extinction_along_los
 
         field = ConstantExtinctionField(extinction_per_m=1.5)
         result = integrated_extinction_along_los(
-            0.0, 0.0, 3.0, 4.0, time_s=10.0,
-            extinction_sampler=field, step_m=1.0,
+            0.0,
+            0.0,
+            3.0,
+            4.0,
+            time_s=10.0,
+            extinction_sampler=field,
+            step_m=1.0,
         )
         assert result == pytest.approx(1.5)

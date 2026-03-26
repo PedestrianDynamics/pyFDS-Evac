@@ -2,7 +2,7 @@
 
 > Part of [pyFDS-Evac](../README.md).
 
-The `SliceFieldSampler` class in `src/core/fds_sampling.py` provides
+The `SliceFieldSampler` class in `pyfds_evac/core/fds_sampling.py` provides
 nearest-neighbor spatial and temporal lookup on horizontal FDS slice
 files. It's the shared pyFDS-Evac data-access layer used by both the
 smoke-speed model (extinction coefficient) and the FED model (gas
@@ -122,7 +122,7 @@ inputs = model.sample_inputs(time_s=30.0, x=5.0, y=3.0)
 ### Line-of-sight extinction
 
 The `integrated_extinction_along_los()` function in
-`src/core/route_graph.py` computes the Beer-Lambert path-integrated
+`pyfds_evac/core/route_graph.py` computes the Beer-Lambert path-integrated
 mean extinction coefficient between two points. It samples at uniform
 intervals along the ray and returns the arithmetic mean:
 

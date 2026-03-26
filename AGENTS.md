@@ -20,7 +20,7 @@ pyfdsevac/          # NEW: Main package (smoke-speed model)
 ├── interfaces/
 └── cli/
 
-src/                # EXISTING: Keep for backward compatibility
+pyfds_evac/         # Main package
 tests/
 ```
 

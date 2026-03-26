@@ -1,9 +1,21 @@
 [project]
-name = "fds-evac"
+name = "pyfds-evac"
 version = "0.1.0"
 description = "Fire Dynamics Simulator (FDS) evacuation modeling with visibility analysis"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10,<3.13"
+authors = [{ name = "Mohcine Chraibi", email = "m.chraibi@fz-juelich.de" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
 dependencies = [
     "jupedsim",
     "pedpy",
@@ -11,16 +23,19 @@ dependencies = [
     "plotly",
     "nbformat>=4.2.0",
     "matplotlib",
-    "rich",
     "shapely",
 ]
+
+[project.urls]
+Homepage = "https://github.com/PedestrianDynamics/pyFDS-Evac"
+Repository = "https://github.com/PedestrianDynamics/pyFDS-Evac"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["pyfds_evac"]
 
 [dependency-groups]
 dev = [

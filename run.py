@@ -6,7 +6,7 @@ import json
 import pathlib
 import shutil
 
-from src.core import (
+from pyfds_evac.core import (
     ConstantExtinctionField,
     DefaultFedConfig,
     DefaultFedModel,

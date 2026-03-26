@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 
-from src.core import (
+from pyfds_evac.core import (
     ConstantExtinctionField,
     SmokeSpeedConfig,
     SmokeSpeedModel,
@@ -12,7 +12,7 @@ from src.core import (
     run_scenario,
     speed_from_soot_density,
 )
-from src.core.smoke_speed import speed_factor_from_extinction
+from pyfds_evac.core.smoke_speed import speed_factor_from_extinction
 
 
 def _run_iso_constant_extinction(extinction_per_m: float):

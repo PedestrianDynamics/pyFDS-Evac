@@ -1,6 +1,6 @@
 from shapely.geometry import Polygon
 
-from src.core.direct_steering_runtime import (
+from pyfds_evac.core.direct_steering_runtime import (
     set_agent_smoke_factor,
     update_checkpoint_speed,
 )
