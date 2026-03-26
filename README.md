@@ -154,7 +154,7 @@ pathway: $\mathrm{FED}_{\mathrm{CO}} \cdot \mathrm{HV}_{\mathrm{CO_2}} + \mathrm
 
 ### Verification
 
-- Equation-level constant-exposure checks for all terms are covered in [tests/test_fed.py](tests/test_fed.py)
+- Equation-level constant-exposure checks for the CO/CO2/O2 pathway are covered in [tests/test_fed.py](tests/test_fed.py); additional terms are not yet covered by dedicated constant-exposure tests
 - An ISO Table 22 style stationary benchmark is covered with `assets/ISO-table22`, comparing the runtime `FED=1` crossing time against the analytical reference
 
 Generate the ISO Table 22 stationary FED verification figure:
