@@ -40,7 +40,7 @@ typically the same subslice):
 Use `load_slice_sampler()` to load a single FDS quantity:
 
 ```python
-from src.core.fds_sampling import load_slice_sampler
+from pyfds_evac.core.fds_sampling import load_slice_sampler
 
 sampler = load_slice_sampler(
     "path/to/fds_case",
