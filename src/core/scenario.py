@@ -1474,14 +1474,24 @@ def run_scenario(
                 and agent_wait_info
                 and (
                     last_reroute_check_time is None
-                    or simulation.elapsed_time() - last_reroute_check_time
-                    >= reroute_config.reevaluation_interval_s
+                    or simulation.elapsed_time() - last_reroute_check_time >= 1.0
                 )
             ):
                 current_time = simulation.elapsed_time()
+                # Invalidate segment cache on each new reevaluation epoch.
+                interval_s = reroute_config.reevaluation_interval_s
+                if interval_s > 0.0:
+                    current_epoch = math.floor(current_time / interval_s)
+                    previous_epoch = (
+                        math.floor(last_reroute_check_time / interval_s)
+                        if last_reroute_check_time is not None
+                        else -1
+                    )
+                    if current_epoch != previous_epoch:
+                        route_segment_cache = {}
+                else:
+                    route_segment_cache = {}
                 last_reroute_check_time = current_time
-                # Invalidate segment cache each reevaluation epoch.
-                route_segment_cache = {}
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
                     wait_info = agent_wait_info.get(agent_id)
@@ -1558,6 +1568,10 @@ def run_scenario(
                     for tracked_agent_id in list(agent_speed_state.keys()):
                         if tracked_agent_id not in live_agent_ids:
                             agent_speed_state.pop(tracked_agent_id, None)
+                if agent_route_state:
+                    for tracked_agent_id in list(agent_route_state.keys()):
+                        if tracked_agent_id not in live_agent_ids:
+                            agent_route_state.pop(tracked_agent_id, None)
 
             if direct_steering_info and agent_wait_info:
                 for agent_id, wait_info in list(agent_wait_info.items()):

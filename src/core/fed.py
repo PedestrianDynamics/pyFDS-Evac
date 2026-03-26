@@ -225,19 +225,19 @@ class FdsFedField:
     Missing optional species contribute 0 to the FED sum.
     """
 
-    # Map from attribute name to (FDS quantity name, unit-to-ppm factor).
-    # Volume-fraction slices are stored as fractions [0,1] in FDS; multiply
-    # by 1e6 to get ppm.
-    _OPTIONAL_SPECIES: list[tuple[str, str, float]] = [
-        ("_hcn", "HYDROGEN CYANIDE VOLUME FRACTION", 1e6),
-        ("_no", "NITRIC OXIDE VOLUME FRACTION", 1e6),
-        ("_no2", "NITROGEN DIOXIDE VOLUME FRACTION", 1e6),
-        ("_hcl", "HYDROGEN CHLORIDE VOLUME FRACTION", 1e6),
-        ("_hbr", "HYDROGEN BROMIDE VOLUME FRACTION", 1e6),
-        ("_hf", "HYDROGEN FLUORIDE VOLUME FRACTION", 1e6),
-        ("_so2", "SULFUR DIOXIDE VOLUME FRACTION", 1e6),
-        ("_acrolein", "ACROLEIN VOLUME FRACTION", 1e6),
-        ("_formaldehyde", "FORMALDEHYDE VOLUME FRACTION", 1e6),
+    # Map from attribute name to FDS quantity name.
+    # Volume-fraction slices are stored as fractions [0,1] in FDS;
+    # _sample_optional_ppm() multiplies by 1e6 to convert to ppm.
+    _OPTIONAL_SPECIES: list[tuple[str, str]] = [
+        ("_hcn", "HYDROGEN CYANIDE VOLUME FRACTION"),
+        ("_no", "NITRIC OXIDE VOLUME FRACTION"),
+        ("_no2", "NITROGEN DIOXIDE VOLUME FRACTION"),
+        ("_hcl", "HYDROGEN CHLORIDE VOLUME FRACTION"),
+        ("_hbr", "HYDROGEN BROMIDE VOLUME FRACTION"),
+        ("_hf", "HYDROGEN FLUORIDE VOLUME FRACTION"),
+        ("_so2", "SULFUR DIOXIDE VOLUME FRACTION"),
+        ("_acrolein", "ACROLEIN VOLUME FRACTION"),
+        ("_formaldehyde", "FORMALDEHYDE VOLUME FRACTION"),
     ]
 
     def __init__(
@@ -278,7 +278,7 @@ class FdsFedField:
         o2_slice = sim.slices.filter_by_quantity("OXYGEN VOLUME FRACTION")[0]
 
         optional = {}
-        for attr, quantity, _ in cls._OPTIONAL_SPECIES:
+        for attr, quantity in cls._OPTIONAL_SPECIES:
             key = attr.lstrip("_")
             matches = sim.slices.filter_by_quantity(quantity)
             if matches:

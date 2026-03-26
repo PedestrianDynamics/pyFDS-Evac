@@ -9,7 +9,7 @@ from typing import Protocol
 
 from shapely.geometry import Polygon
 
-from src.core.smoke_speed import speed_factor_from_extinction
+from .smoke_speed import speed_factor_from_extinction
 
 
 @dataclass(frozen=True)
@@ -157,6 +157,8 @@ class StageGraph:
 
     def _dijkstra(self, source: str) -> tuple[dict[str, float], dict[str, str | None]]:
         """Run Dijkstra from *source*.  Returns (dist, prev) dicts."""
+        if source not in self.nodes:
+            return {}, {}
         dist: dict[str, float] = {sid: math.inf for sid in self.nodes}
         prev: dict[str, str | None] = {sid: None for sid in self.nodes}
         dist[source] = 0.0
@@ -590,15 +592,15 @@ def reroute_agent(
     wait_info["path_choices"] = old_choices
 
     # If the agent's current target is not on the remaining path,
-    # retarget to the next stage after insert_idx.
+    # retarget to the next stage after the agent's current position.
+    # remaining[0] is the agent's current position; remaining[1] is
+    # the next stage it should move toward.
     if current_stage not in remaining and len(remaining) >= 2:
-        next_stage = remaining[1] if insert_idx == 0 else remaining[0]
+        next_stage = remaining[1]
         if next_stage in stage_configs:
-            from src.core.direct_steering_runtime import pick_stage_target
+            from .direct_steering_runtime import pick_stage_target
 
-            wait_info["current_origin"] = wait_info.get(
-                "current_target_stage", remaining[0]
-            )
+            wait_info["current_origin"] = remaining[0]
             wait_info["current_target_stage"] = next_stage
             wait_info["target"] = pick_stage_target(
                 wait_info, stage_configs[next_stage]
