@@ -15,9 +15,6 @@ dependencies = [
     "shapely",
 ]
 
-[project.scripts]
-fds-evac = "main:main"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

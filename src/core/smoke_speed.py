@@ -12,14 +12,18 @@ where alpha = 0.706 and beta = -0.057 by default.  The factor is clamped
 to [min_speed_factor, 1.0].
 
 When evaluating route costs, the extinction along a line of sight between
-two points is computed as the Beer-Lambert path-integrated mean
-(Boerger et al. 2024, Eq. 9):
+two points is computed as the arithmetic mean of K sampled at uniform
+intervals along the ray (Boerger et al. 2024, Eq. 8-9):
 
-    sigma_bar = (K_m / |P|) * sum(rho_s(l))
+    K_bar = (1 / |P|) * sum_p K_p
 
-where rho_s is the soot density sampled at each cell along the ray and
-K_m = 8700 m^2/kg is the mass-specific extinction coefficient for red
-light at 633 nm (well-ventilated flaming combustion).
+where K_p is the extinction coefficient ``SOOT EXTINCTION COEFFICIENT``
+sampled from FDS at each point along the path and |P| is the number of
+sample points.
+
+The conversion from soot density to extinction (K = K_m * rho_s) is
+handled upstream by FDS itself; pyFDS-Evac reads the pre-computed K
+field directly.
 
 FDS slice data is read via ``fdsreader`` and sampled with nearest-neighbor
 lookup.

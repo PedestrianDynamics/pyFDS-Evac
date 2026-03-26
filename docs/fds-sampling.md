@@ -138,5 +138,14 @@ k_mean = integrated_extinction_along_los(
 )
 ```
 
-This is the discrete form of Boerger et al. (2024), Eq. 8-9, and is
-used internally by the route-cost evaluator for smoke-aware rerouting.
+This is the discrete form of
+[Boerger et al. (2024)](../materials/waypoint_based_visibility.pdf),
+Eq. 8-9, and is used internally by the route-cost evaluator for
+smoke-aware [routing](routing.md).
+
+## Next steps
+
+- [Smoke-speed model](smoke-speed-model.md) -- how extinction drives
+  agent speed reduction.
+- [Smoke-aware routing](routing.md) -- how extinction and FED drive
+  dynamic route selection.

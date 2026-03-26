@@ -248,6 +248,8 @@ def integrated_extinction_along_los(
     float
         Path-integrated mean extinction coefficient in 1/m.
     """
+    if step_m <= 0:
+        raise ValueError(f"step_m must be positive, got {step_m}")
     length = _euclidean(x_from, y_from, x_to, y_to)
     if length < 1e-9:
         return extinction_sampler.sample_extinction(time_s, x_from, y_from)

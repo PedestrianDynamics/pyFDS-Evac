@@ -2,10 +2,12 @@
 
 > Part of [pyFDS-Evac](../README.md).
 
-The pyFDS-Evac smoke-speed model reduces walking speed based on local
-smoke conditions. It uses the extinction coefficient K [1/m] as its
-primary input and applies a linear speed-reduction law derived from
-the original FDS+Evac / Frantzich-Nilsson (Lund) correlation.
+The pyFDS-Evac smoke-speed model reduces agent walking speed based on
+local smoke conditions. It takes the extinction coefficient K [1/m] as
+its primary input and applies a linear speed-reduction law derived from
+the original
+[FDS+Evac](../materials/FDS+EVAC_Guide.pdf) / Frantzich-Nilsson (Lund)
+correlation (Section 3.4, Eq. 11).
 
 ## Speed-reduction law
 
@@ -17,14 +19,14 @@ speed_factor(K) = 1 + beta * K / alpha
 ```
 
 The factor is clamped to `[min_speed_factor, 1.0]`, so agents always
-retain a minimum fraction of their clear-air speed. With the default
-coefficients:
+retain a minimum fraction of their clear-air speed. The default
+coefficients are:
 
-| Parameter          | Default | Description                         |
-|--------------------|---------|-------------------------------------|
-| `alpha`            | 0.706   | Normalization constant              |
-| `beta`             | -0.057  | Slope (negative = speed decreases)  |
-| `min_speed_factor` | 0.1     | Floor for the speed multiplier      |
+| Parameter          | Default | Description                        |
+|--------------------|---------|------------------------------------|
+| `alpha`            | 0.706   | Normalization constant             |
+| `beta`             | -0.057  | Slope (negative = speed decreases) |
+| `min_speed_factor` | 0.1     | Floor for the speed multiplier     |
 
 The actual walking speed is:
 
@@ -38,7 +40,7 @@ where `v0` is the agent's clear-air speed.
 
 The model accepts any object that implements the `ExtinctionSampler`
 protocol (a `sample_extinction(time_s, x, y) -> float` method). Two
-built-in implementations are provided:
+built-in implementations are available:
 
 - **`ExtinctionField`** -- reads the `SOOT EXTINCTION COEFFICIENT`
   quantity from FDS slice data via `fdsreader`. Use this for real FDS
@@ -49,8 +51,10 @@ built-in implementations are provided:
 
 ### Loading from FDS data
 
+To load extinction data from an FDS case directory:
+
 ```python
-from src.core.smoke_speed import ExtinctionField, SmokeSpeedConfig
+from src.core.smoke_speed import ExtinctionField
 
 field = ExtinctionField.from_fds(
     "path/to/fds_case",
@@ -62,6 +66,8 @@ If a queried point falls outside the FDS domain, `sample_extinction`
 returns `0.0` (clear air) and logs a warning on the first occurrence.
 
 ### Using a constant field
+
+To use a uniform extinction value for verification:
 
 ```python
 from src.core.smoke_speed import ConstantExtinctionField
@@ -87,11 +93,13 @@ config = SmokeSpeedConfig(
 )
 ```
 
-The `update_interval_s` controls how frequently each agent queries the
-extinction field during the simulation loop. A value of `1.0` means
-one sample per agent per second of simulated time.
+The `update_interval_s` field controls how frequently each agent
+queries the extinction field during the simulation loop. A value of
+`1.0` means one sample per agent per second of simulated time.
 
 ## Putting it together
+
+To create a full smoke-speed model and query it:
 
 ```python
 from src.core.smoke_speed import (
@@ -112,23 +120,29 @@ factor = model.speed_factor(time_s=30.0, x=5.0, y=3.0)
 
 ## Conversion utilities
 
-Two helper functions support the soot-density-based workflow used in
-FDS+Evac:
+Two helper functions support the soot-density-based workflow from the
+original [FDS+Evac guide](../materials/FDS+EVAC_Guide.pdf):
 
 - `extinction_from_soot_density(soot_density_mg_per_m3)` -- converts
-  soot density to extinction using
-  `K = K_m * rho_s * 1e-6`, where `K_m = 8700 m^2/kg` is the
-  mass-specific extinction coefficient for red light at 633 nm.
+  soot density to extinction using `K = K_m * rho_s * 1e-6`, where
+  `K_m = 8700 m^2/kg` is the mass-specific extinction coefficient
+  for red light at 633 nm.
 - `speed_from_soot_density(base_speed, soot_density_mg_per_m3)` --
   computes the reduced walking speed directly from soot density.
 
 ## References
 
-- Jin (1970-1978): empirical visibility-extinction correlation
-  `V = C / sigma`
-- Frantzich & Nilsson (Lund): linear speed-extinction relation used
-  by FDS+Evac
-- Ronchi et al. (2013): interpretation A3 comparison across
-  evacuation tools
-- Boerger et al. (2024), Fire Safety Journal 150:104269:
-  Beer-Lambert integrated extinction along line of sight (Eq. 8-9)
+- [FDS+Evac Technical Reference and User's Guide](../materials/FDS+EVAC_Guide.pdf)
+  -- Korhonen (2021). Speed-reduction law (Section 3.4, Eq. 11),
+  soot-density-to-extinction conversion.
+- [Ronchi et al. (2013)](../materials/Ronchi2013.pdf) --
+  Interpretation A3 comparison of speed-extinction models across
+  evacuation tools.
+- [evac.f90](../materials/evac.f90) -- Original FDS+Evac Fortran
+  source for cross-referencing implementation details.
+- Jin (1970-1978) -- empirical visibility-extinction correlation
+  `V = C / sigma`.
+- Frantzich & Nilsson (Lund) -- linear speed-extinction relation
+  used by FDS+Evac.
+- Boerger et al. (2024), Fire Safety Journal 150:104269 --
+  Beer-Lambert integrated extinction along line of sight (Eq. 8-9).
