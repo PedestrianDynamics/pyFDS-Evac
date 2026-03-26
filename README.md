@@ -1,4 +1,4 @@
-[![fds-evac](https://github.com/PedestrianDynamics/fds-evac/actions/workflows/code-quality.yml/badge.svg)](https://github.com/PedestrianDynamics/fds-evac/actions/workflows/code-quality.yml)
+[![code quality](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/code-quality.yml/badge.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/code-quality.yml)
 [![tests](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml/badge.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml)
 
 # pyFDS-Evac
@@ -34,28 +34,28 @@ Run a JSON-first scenario with the CLI runner:
 uv run run.py --scenario assets/ISO-table21 --cleanup
 ```
 
-## Smoke-Speed Model
+## Smoke-speed model
+
+See [docs/smoke-speed-model.md](docs/smoke-speed-model.md) for the full
+model description, configuration, and API reference.
 
 The smoke-speed model uses extinction coefficient `K [1/m]` as the primary
-input. For real FDS output, `fdsvismap` provides the local extinction field.
-For verification cases such as ISO 20414 Table 21, the runner can also apply a
-constant extinction coefficient directly.
+input. For real FDS output, `fdsreader` provides the local extinction field
+via `SliceFieldSampler`. For verification cases such as ISO 20414 Table 21,
+the runner can also apply a constant extinction coefficient directly.
 
-### FDS Data Access Layers
+### FDS data access
 
-The project uses two different FDS readers on purpose:
+All FDS slice data is read through a single library:
 
-- `fdsvismap`
-  - used for extinction / visibility-centric workflows
-  - current use: smoke-speed (`K [1/m]`) and visibility-related logic
-- `fdsreader`
-  - used for generic raw FDS quantities
-  - current use: Table 22 / FED inputs such as `CO`, `CO2`, and `O2`
-
-Rule of thumb:
-
-- use `fdsvismap` for smoke/visibility
-- use `fdsreader` for gases and other hazard quantities
+- **`fdsreader`** — reads raw FDS slice quantities with nearest-neighbor
+  spatial and temporal lookup via `SliceFieldSampler`
+  (`pyfds_evac/core/fds_sampling.py`)
+- Used by both the smoke-speed model (extinction `K [1/m]`) and the FED
+  model (CO, CO2, O2, and optional irritant gases)
+- When a scenario needs both extinction and FED fields from the same FDS
+  case, pass a shared `fdsreader.Simulation` instance to avoid parsing
+  the directory twice (see [FDS sampling API](docs/fds-sampling.md))
 
 Run the ISO Table 21 corridor with a constant extinction coefficient:
 
@@ -68,7 +68,7 @@ uv run run.py \
   --cleanup
 ```
 
-Run the smoke-speed model against FDS results read through `fdsvismap`:
+Run the smoke-speed model against FDS results read through `fdsreader`:
 
 ```bash
 uv run run.py \
@@ -190,7 +190,7 @@ Inspect which local FDS cases support FED:
 
 ```bash
 uv run python - <<'PY'
-from src.core import inspect_fds_quantities, list_simulations
+from pyfds_evac.core import inspect_fds_quantities, list_simulations
 for path in list_simulations("fds_data"):
     inv = inspect_fds_quantities(path)
     print(path, inv.canonical_slice_names(), inv.supports_default_fed())
@@ -211,7 +211,10 @@ uv run run.py \
 
 Note: if a point lies outside the FDS domain, the implementation falls back to ambient conditions.
 
-## Dynamic Route Rerouting
+## Dynamic route rerouting
+
+See [docs/routing.md](docs/routing.md) for the full routing model,
+cost formulas, and API reference.
 
 The routing system implements smoke-aware path planning with dynamic rerouting:
 
@@ -262,6 +265,6 @@ Scenario definitions are stored in [`assets/`](assets/):
 
 - jupedsim
 - pedpy
-- fdsvismap
+- fdsreader
 - plotly
 - nbformat

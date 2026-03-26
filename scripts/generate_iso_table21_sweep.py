@@ -5,14 +5,14 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from src.core import (
+from pyfds_evac.core import (
     ConstantExtinctionField,
     SmokeSpeedConfig,
     SmokeSpeedModel,
     load_scenario,
     run_scenario,
 )
-from src.core.smoke_speed import speed_factor_from_extinction
+from pyfds_evac.core.smoke_speed import speed_factor_from_extinction
 
 
 def _build_parser() -> argparse.ArgumentParser:

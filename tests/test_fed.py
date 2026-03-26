@@ -11,7 +11,7 @@ try:
 except ModuleNotFoundError:
     Simulation = None
 
-from src.core.fed import (
+from pyfds_evac.core.fed import (
     DefaultFedConfig,
     DefaultFedInputs,
     DefaultFedModel,
@@ -27,7 +27,7 @@ from src.core.fed import (
     default_fed_rate_per_minute,
     time_to_fed_threshold_s,
 )
-from src.core import load_scenario, run_scenario
+from pyfds_evac.core import load_scenario, run_scenario
 
 
 HASPEL_DIR = Path("fds_data/haspel")

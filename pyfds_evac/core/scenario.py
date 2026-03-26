@@ -31,14 +31,8 @@ try:
 except ModuleNotFoundError:
     jps = None
 import numpy as np
-from rich.console import Console
 from shapely import wkt
 from shapely.geometry import Polygon
-
-try:
-    from rich.progress import Progress
-except ModuleNotFoundError:
-    Progress = None
 
 from .direct_steering_runtime import (
     advance_path_target,
@@ -1005,51 +999,41 @@ def run_scenario(
         )
         flow_variant_rng = random.Random(seed)
         total_progress_agents = initial_agent_count + sum(num_agents_per_source)
-        progress = (
-            Progress(
-                console=Console(stderr=True, force_terminal=True),
-                transient=False,
-            )
-            if Progress is not None
-            else None
-        )
-        progress_task = None
+        import time as _time
+
+        _wall_start = _time.monotonic()
         last_progress_time = -1.0
         last_progress_agents = simulation.agent_count()
-        if progress is not None:
-            progress.start()
-            progress_task = progress.add_task(
-                f"Evacuated 0/{total_progress_agents} agents",
-                total=max(float(total_progress_agents), 1.0),
-            )
 
-        while simulation.elapsed_time() < scenario.max_simulation_time and (
-            simulation.agent_count() > 0
-            or (
-                has_flow_spawning
-                and sum(agent_counter_per_source) < sum(num_agents_per_source)
-            )
-        ):
+        while simulation.elapsed_time() < scenario.max_simulation_time:
             current_time = simulation.elapsed_time()
             current_agents = simulation.agent_count()
+            all_spawned = not has_flow_spawning or sum(agent_counter_per_source) >= sum(
+                num_agents_per_source
+            )
+            if current_agents == 0 and all_spawned:
+                break
             spawned_agents = initial_agent_count + sum(agent_counter_per_source)
             evacuated_agents = max(0, spawned_agents - current_agents)
             if (
-                progress is not None
-                and progress_task is not None
-                and (
-                    current_time - last_progress_time >= 0.5
-                    or current_agents != last_progress_agents
-                )
+                current_time - last_progress_time >= 0.5
+                or current_agents != last_progress_agents
             ):
-                progress.update(
-                    progress_task,
-                    completed=min(evacuated_agents, total_progress_agents),
-                    description=(
-                        f"Evacuated {evacuated_agents}/{total_progress_agents} agents"
-                    ),
+                wall_elapsed = _time.monotonic() - _wall_start
+                wall_m, wall_s = divmod(int(wall_elapsed), 60)
+                pct = (
+                    int(100 * evacuated_agents / total_progress_agents)
+                    if total_progress_agents
+                    else 0
                 )
-                progress.refresh()
+                print(
+                    f"\rEvacuated {evacuated_agents}/{total_progress_agents}"
+                    f"  sim={current_time:.1f}s"
+                    f"  wall={wall_m}m{wall_s:02d}s"
+                    f"  {pct}%   ",
+                    end="",
+                    flush=True,
+                )
                 last_progress_time = current_time
                 last_progress_agents = current_agents
             if has_flow_spawning:
@@ -1681,24 +1665,18 @@ def run_scenario(
 
             simulation.iterate()
 
-        if progress is not None and progress_task is not None:
-            final_total_agents = initial_agent_count
-            if has_flow_spawning:
-                final_total_agents += sum(agent_counter_per_source)
-            progress.update(
-                progress_task,
-                completed=min(
-                    max(0, final_total_agents - simulation.agent_count()),
-                    total_progress_agents,
-                ),
-                description=(
-                    "Evacuated "
-                    f"{max(0, final_total_agents - simulation.agent_count())}/"
-                    f"{total_progress_agents} agents"
-                ),
-            )
-            progress.refresh()
-            progress.stop()
+        final_total_agents = initial_agent_count
+        if has_flow_spawning:
+            final_total_agents += sum(agent_counter_per_source)
+        final_evacuated = max(0, final_total_agents - simulation.agent_count())
+        wall_elapsed = _time.monotonic() - _wall_start
+        wall_m, wall_s = divmod(int(wall_elapsed), 60)
+        print(
+            f"\rEvacuated {final_evacuated}/{total_progress_agents}"
+            f"  sim={simulation.elapsed_time():.1f}s"
+            f"  wall={wall_m}m{wall_s:02d}s"
+            f"  done   "
+        )
 
         evacuation_time = simulation.elapsed_time()
         remaining = simulation.agent_count()

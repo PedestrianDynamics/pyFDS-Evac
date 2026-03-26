@@ -1,4 +1,4 @@
-# fds-evac Development Guidelines
+# pyFDS-Evac Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2026-03-23
 
@@ -20,7 +20,7 @@ pyfdsevac/          # NEW: Main package (smoke-speed model)
 ├── interfaces/
 └── cli/
 
-src/                # EXISTING: Keep for backward compatibility
+pyfds_evac/         # Main package
 tests/
 ```
 

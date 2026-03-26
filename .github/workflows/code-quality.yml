@@ -1,4 +1,4 @@
-name: fds-evac
+name: code quality
 
 on:
   push:
