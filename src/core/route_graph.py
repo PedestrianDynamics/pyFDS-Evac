@@ -11,6 +11,8 @@ from shapely.geometry import Polygon
 
 from .smoke_speed import speed_factor_from_extinction
 
+_SECONDS_PER_MINUTE = 60.0
+
 
 @dataclass(frozen=True)
 class StageNode:
@@ -322,7 +324,7 @@ def evaluate_segment(
         mid_x = (src_node.centroid_x + tgt_node.centroid_x) / 2
         mid_y = (src_node.centroid_y + tgt_node.centroid_y) / 2
         fed_rate = fed_rate_sampler.sample_fed_rate(time_s, mid_x, mid_y)
-        fed_growth = fed_rate * travel_time / 60.0  # rate is per minute
+        fed_growth = fed_rate * travel_time / _SECONDS_PER_MINUTE
 
     visible = k_avg < config.visibility_extinction_threshold
 

@@ -1,7 +1,9 @@
 """Default FDS+Evac FED equations and FDS-backed gas samplers."""
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
+
+_SECONDS_PER_MINUTE = 60.0
 
 try:
     from fdsreader import Simulation
@@ -149,7 +151,7 @@ def accumulate_default_fed(
 ) -> float:
     """Accumulate FED over a constant-exposure interval in seconds."""
 
-    duration_min = max(0.0, float(duration_s)) / 60.0
+    duration_min = max(0.0, float(duration_s)) / _SECONDS_PER_MINUTE
     return float(initial_fed) + default_fed_rate_per_minute(inputs) * duration_min
 
 
@@ -167,7 +169,7 @@ def time_to_fed_threshold_s(
     rate_per_min = default_fed_rate_per_minute(inputs)
     if rate_per_min <= 0.0:
         return math.inf
-    return (remaining / rate_per_min) * 60.0
+    return (remaining / rate_per_min) * _SECONDS_PER_MINUTE
 
 
 class _SliceFieldSampler:
@@ -357,5 +359,8 @@ class DefaultFedModel:
     ) -> tuple[DefaultFedInputs, float, float]:
         """Advance cumulative FED by one simulation interval."""
         inputs, rate_per_min = self.sample_rate(time_s, x, y)
-        updated = float(current_fed) + rate_per_min * max(0.0, float(dt_s)) / 60.0
+        updated = (
+            float(current_fed)
+            + rate_per_min * max(0.0, float(dt_s)) / _SECONDS_PER_MINUTE
+        )
         return inputs, rate_per_min, updated
