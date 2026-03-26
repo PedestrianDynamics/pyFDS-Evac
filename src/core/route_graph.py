@@ -319,19 +319,13 @@ def _sample_segment_extinction(
     time_s: float,
     extinction_sampler: ExtinctionSampler,
     step_m: float,
-) -> tuple[float, list[float]]:
+) -> tuple[float, float]:
     """Sample extinction along the centroid-to-centroid line of sight.
 
-    Implements the discrete form of the Beer-Lambert path-integrated mean
-    extinction coefficient (Boerger et al. 2024, Eq. 8-9):
+    Delegates to ``integrated_extinction_along_los`` for the Beer-Lambert
+    path-integrated mean (Boerger et al. 2024, Eq. 8-9).
 
-        sigma_bar = (1 / |P|) * sum_p K_p
-
-    where K_p is the extinction coefficient at each sample point along
-    the ray and |P| is the number of samples.  This accounts for
-    inhomogeneous smoke distributions along the line of sight.
-
-    Returns (segment_length, list_of_K_samples).
+    Returns (segment_length, mean_extinction).
     """
     length = _euclidean(
         src_node.centroid_x,
@@ -339,20 +333,16 @@ def _sample_segment_extinction(
         tgt_node.centroid_x,
         tgt_node.centroid_y,
     )
-    if length < 1e-9:
-        k = extinction_sampler.sample_extinction(
-            time_s, src_node.centroid_x, src_node.centroid_y
-        )
-        return 0.0, [k]
-
-    n_samples = max(2, int(math.ceil(length / step_m)) + 1)
-    samples: list[float] = []
-    for i in range(n_samples):
-        t = i / (n_samples - 1)
-        x = src_node.centroid_x + t * (tgt_node.centroid_x - src_node.centroid_x)
-        y = src_node.centroid_y + t * (tgt_node.centroid_y - src_node.centroid_y)
-        samples.append(extinction_sampler.sample_extinction(time_s, x, y))
-    return length, samples
+    k_avg = integrated_extinction_along_los(
+        src_node.centroid_x,
+        src_node.centroid_y,
+        tgt_node.centroid_x,
+        tgt_node.centroid_y,
+        time_s,
+        extinction_sampler,
+        step_m,
+    )
+    return length, k_avg
 
 
 def evaluate_segment(
@@ -368,10 +358,9 @@ def evaluate_segment(
     src_node = graph.nodes[source]
     tgt_node = graph.nodes[target]
 
-    length, k_samples = _sample_segment_extinction(
+    length, k_avg = _sample_segment_extinction(
         src_node, tgt_node, time_s, extinction_sampler, config.sampling_step_m
     )
-    k_avg = sum(k_samples) / len(k_samples) if k_samples else 0.0
     sf = speed_factor_from_extinction(
         k_avg,
         alpha=config.alpha,

@@ -34,11 +34,14 @@ References
   view-angle correction (Eq. 7), waypoint-based visibility maps
 """
 
+import logging
 from dataclasses import dataclass
 
 import numpy as np
 
 from .fds_sampling import SliceFieldSampler, load_slice_sampler
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -77,6 +80,7 @@ class ExtinctionField:
     def __init__(self, sampler: SliceFieldSampler):
         """Wrap a ``SliceFieldSampler`` for the extinction slice."""
         self._sampler = sampler
+        self._warned_ood = False
 
     @classmethod
     def from_fds(
@@ -84,10 +88,15 @@ class ExtinctionField:
         fds_dir: str,
         *,
         slice_height_m: float = 2.0,
+        simulation=None,
     ) -> "ExtinctionField":
         """Load extinction slices from an FDS case directory via fdsreader."""
-        _ = slice_height_m  # reserved for future multi-height support
-        sampler = load_slice_sampler(fds_dir, "SOOT EXTINCTION COEFFICIENT")
+        sampler = load_slice_sampler(
+            fds_dir,
+            "SOOT EXTINCTION COEFFICIENT",
+            simulation=simulation,
+            slice_height_m=slice_height_m,
+        )
         return cls(sampler)
 
     def sample_extinction(self, time_s: float, x: float, y: float) -> float:
@@ -95,6 +104,15 @@ class ExtinctionField:
         try:
             return self._sampler.sample(time_s, x, y)
         except ValueError:
+            if not self._warned_ood:
+                _logger.warning(
+                    "Extinction sample at (%.2f, %.2f, t=%.1f) is outside "
+                    "the FDS slice domain; returning 0.0 for out-of-domain points",
+                    x,
+                    y,
+                    time_s,
+                )
+                self._warned_ood = True
             return 0.0
 
 

@@ -214,19 +214,28 @@ class FdsFedField:
         self._formaldehyde = optional_samplers.get("formaldehyde")
 
     @classmethod
-    def from_fds(cls, fds_dir: str) -> "FdsFedField":
+    def from_fds(cls, fds_dir: str, *, simulation=None) -> "FdsFedField":
         """Build gas samplers from an FDS case directory.
 
         Required: CO, CO2, O2 slices.
         Optional: HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde.
-        """
-        from .fds_sampling import Simulation as _Sim
 
-        if _Sim is None:
-            raise ModuleNotFoundError(
-                "fdsreader is required to load FED fields from FDS data."
-            )
-        sim = _Sim(str(fds_dir))
+        Parameters
+        ----------
+        simulation : optional
+            A pre-loaded ``fdsreader.Simulation`` instance.  When provided
+            the expensive directory parse is skipped.
+        """
+        if simulation is not None:
+            sim = simulation
+        else:
+            from .fds_sampling import Simulation as _Sim
+
+            if _Sim is None:
+                raise ModuleNotFoundError(
+                    "fdsreader is required to load FED fields from FDS data."
+                )
+            sim = _Sim(str(fds_dir))
         co_slice = sim.slices.filter_by_quantity("CARBON MONOXIDE VOLUME FRACTION")[0]
         co2_slice = sim.slices.filter_by_quantity("CARBON DIOXIDE VOLUME FRACTION")[0]
         o2_slice = sim.slices.filter_by_quantity("OXYGEN VOLUME FRACTION")[0]
