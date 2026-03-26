@@ -54,7 +54,7 @@ built-in implementations are available:
 To load extinction data from an FDS case directory:
 
 ```python
-from src.core.smoke_speed import ExtinctionField
+from pyfds_evac.core.smoke_speed import ExtinctionField
 
 field = ExtinctionField.from_fds(
     "path/to/fds_case",
@@ -70,7 +70,7 @@ returns `0.0` (clear air) and logs a warning on the first occurrence.
 To use a uniform extinction value for verification:
 
 ```python
-from src.core.smoke_speed import ConstantExtinctionField
+from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
 field = ConstantExtinctionField(extinction_per_m=1.0)
 ```
@@ -81,7 +81,7 @@ field = ConstantExtinctionField(extinction_per_m=1.0)
 settings:
 
 ```python
-from src.core.smoke_speed import SmokeSpeedConfig
+from pyfds_evac.core.smoke_speed import SmokeSpeedConfig
 
 config = SmokeSpeedConfig(
     fds_dir="path/to/fds_case",
@@ -102,7 +102,7 @@ queries the extinction field during the simulation loop. A value of
 To create a full smoke-speed model and query it:
 
 ```python
-from src.core.smoke_speed import (
+from pyfds_evac.core.smoke_speed import (
     ExtinctionField,
     SmokeSpeedConfig,
     SmokeSpeedModel,

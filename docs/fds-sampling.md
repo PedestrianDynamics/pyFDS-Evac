@@ -73,8 +73,8 @@ once and pass it to both factory methods:
 
 ```python
 from fdsreader import Simulation
-from src.core.smoke_speed import ExtinctionField
-from src.core.fed import FdsFedField
+from pyfds_evac.core.smoke_speed import ExtinctionField
+from pyfds_evac.core.fed import FdsFedField
 
 sim = Simulation("path/to/fds_case")
 extinction = ExtinctionField.from_fds("path/to/fds_case", simulation=sim)
@@ -95,7 +95,7 @@ All three factory functions (`load_slice_sampler`,
 `sample_extinction(time_s, x, y)`:
 
 ```python
-from src.core.smoke_speed import ExtinctionField, SmokeSpeedModel
+from pyfds_evac.core.smoke_speed import ExtinctionField, SmokeSpeedModel
 
 field = ExtinctionField.from_fds("path/to/fds_case", slice_height_m=2.0)
 model = SmokeSpeedModel(field, config)
@@ -112,7 +112,7 @@ CO2, O2, and optionally HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,
 formaldehyde):
 
 ```python
-from src.core.fed import FdsFedField, DefaultFedModel
+from pyfds_evac.core.fed import FdsFedField, DefaultFedModel
 
 fed_field = FdsFedField.from_fds("path/to/fds_case")
 model = DefaultFedModel(fed_field)
@@ -127,7 +127,7 @@ mean extinction coefficient between two points. It samples at uniform
 intervals along the ray and returns the arithmetic mean:
 
 ```python
-from src.core.route_graph import integrated_extinction_along_los
+from pyfds_evac.core.route_graph import integrated_extinction_along_los
 
 k_mean = integrated_extinction_along_los(
     x_from=1.0, y_from=2.0,

@@ -1,4 +1,4 @@
-[![fds-evac](https://github.com/PedestrianDynamics/fds-evac/actions/workflows/code-quality.yml/badge.svg)](https://github.com/PedestrianDynamics/fds-evac/actions/workflows/code-quality.yml)
+[![code quality](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/code-quality.yml/badge.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/code-quality.yml)
 [![tests](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml/badge.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml)
 
 # pyFDS-Evac
@@ -190,7 +190,7 @@ Inspect which local FDS cases support FED:
 
 ```bash
 uv run python - <<'PY'
-from src.core import inspect_fds_quantities, list_simulations
+from pyfds_evac.core import inspect_fds_quantities, list_simulations
 for path in list_simulations("fds_data"):
     inv = inspect_fds_quantities(path)
     print(path, inv.canonical_slice_names(), inv.supports_default_fed())

@@ -15,7 +15,7 @@ edge weights are Euclidean distances between stage centroids. The graph
 is built once at simulation start from the scenario configuration.
 
 ```python
-from src.core.route_graph import StageGraph
+from pyfds_evac.core.route_graph import StageGraph
 
 graph = StageGraph.from_scenario(
     direct_steering_info=stage_info,   # stage_id -> {polygon, stage_type}
@@ -108,7 +108,7 @@ fallback so the agent always has a path.
 `RouteCostConfig` controls all cost evaluation parameters:
 
 ```python
-from src.core.route_graph import RouteCostConfig
+from pyfds_evac.core.route_graph import RouteCostConfig
 
 config = RouteCostConfig(
     w_smoke=1.0,                          # smoke cost weight
@@ -134,7 +134,7 @@ Reevaluation is staggered across agents to spread computational cost.
 Each agent receives a time offset computed from its ID:
 
 ```python
-from src.core.route_graph import compute_eval_offset
+from pyfds_evac.core.route_graph import compute_eval_offset
 
 offset = compute_eval_offset(agent_id=42, interval_s=10.0, dt_s=0.01)
 ```
@@ -156,7 +156,7 @@ for one agent:
    switch occurred.
 
 ```python
-from src.core.route_graph import (
+from pyfds_evac.core.route_graph import (
     evaluate_and_reroute,
     RerouteConfig,
     AgentRouteState,
