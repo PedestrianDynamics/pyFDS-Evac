@@ -51,6 +51,14 @@ from .direct_steering_runtime import (
     set_agent_smoke_factor,
     update_checkpoint_speed,
 )
+from .route_graph import (
+    AgentRouteState,
+    RerouteConfig,
+    StageGraph,
+    compute_eval_offset,
+    evaluate_and_reroute,
+    should_reevaluate,
+)
 # ---------------------------------------------------------------------------
 # Model factory
 # ---------------------------------------------------------------------------
@@ -756,6 +764,7 @@ class ScenarioResult:
     sqlite_file: Optional[str] = None
     smoke_history: Optional[list[dict[str, Any]]] = None
     fed_history: Optional[list[dict[str, Any]]] = None
+    route_history: Optional[list[dict[str, Any]]] = None
 
     @property
     def success(self) -> bool:
@@ -907,6 +916,7 @@ def run_scenario(
     seed: Optional[int] = None,
     smoke_speed_model=None,
     fed_model=None,
+    reroute_config: Optional[RerouteConfig] = None,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app."""
     _require_jupedsim()
@@ -971,6 +981,17 @@ def run_scenario(
         fed_history: list[dict[str, Any]] = []
         last_smoke_update_time = None
         last_fed_update_time = None
+        route_history: list[dict[str, Any]] = []
+        agent_route_state: Dict[int, AgentRouteState] = {}
+        route_segment_cache: dict[tuple[str, str], Any] | None = None
+        stage_graph: StageGraph | None = None
+        if reroute_config is not None and direct_steering_info:
+            stage_graph = StageGraph.from_scenario(
+                direct_steering_info,
+                scenario.raw.get("transitions", []),
+                distributions=scenario.raw.get("distributions"),
+            )
+            route_segment_cache = {}
         # Precompute whether any zone/checkpoint has a non-trivial speed factor.
         # When none do, skip the expensive per-agent update_checkpoint_speed loop.
         _has_speed_zones = (
@@ -1445,6 +1466,63 @@ def run_scenario(
                         )
                     last_fed_update_time = current_time
 
+            if (
+                reroute_config is not None
+                and stage_graph is not None
+                and smoke_speed_model is not None
+                and agent_wait_info
+            ):
+                current_time = simulation.elapsed_time()
+                # Invalidate segment cache each reevaluation epoch.
+                route_segment_cache = {}
+                for agent in simulation.agents():
+                    agent_id = int(agent.id)
+                    wait_info = agent_wait_info.get(agent_id)
+                    if wait_info is None or wait_info.get("mode") != "path":
+                        continue
+                    if wait_info.get("state") == "done":
+                        continue
+                    # Initialize route state on first encounter.
+                    if agent_id not in agent_route_state:
+                        agent_route_state[agent_id] = AgentRouteState(
+                            eval_offset_s=compute_eval_offset(
+                                agent_id,
+                                reroute_config.reevaluation_interval_s,
+                            ),
+                        )
+                    rs = agent_route_state[agent_id]
+                    if not should_reevaluate(
+                        current_time, rs, reroute_config.reevaluation_interval_s
+                    ):
+                        continue
+                    current_fed = fed_state.get(agent_id, {}).get("cumulative", 0.0)
+                    switch = evaluate_and_reroute(
+                        agent_id=agent_id,
+                        wait_info=wait_info,
+                        route_state=rs,
+                        graph=stage_graph,
+                        current_time_s=current_time,
+                        current_fed=current_fed,
+                        extinction_sampler=smoke_speed_model.field,
+                        fed_rate_sampler=None,
+                        config=reroute_config,
+                        cached_segments=route_segment_cache,
+                    )
+                    if switch is not None:
+                        route_history.append(
+                            {
+                                "time_s": round(float(switch.time_s), 6),
+                                "agent_id": switch.agent_id,
+                                "old_exit": switch.old_exit or "",
+                                "new_exit": switch.new_exit,
+                                "old_cost": round(float(switch.old_cost), 4)
+                                if switch.old_cost is not None
+                                else "",
+                                "new_cost": round(float(switch.new_cost), 4),
+                                "reason": switch.reason,
+                            }
+                        )
+
             if direct_steering_info:
                 current_time = simulation.elapsed_time()
                 agents_by_id = {}
@@ -1638,11 +1716,15 @@ def run_scenario(
                 default=0.0,
             )
 
+        if reroute_config is not None and route_history:
+            metrics["route_switches"] = len(route_history)
+
         return ScenarioResult(
             metrics=metrics,
             sqlite_file=output_file,
             smoke_history=smoke_history if smoke_speed_model is not None else None,
             fed_history=fed_history if fed_model is not None else None,
+            route_history=route_history if reroute_config is not None else None,
         )
     finally:
         try:

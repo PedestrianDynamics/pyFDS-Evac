@@ -12,6 +12,8 @@ from src.core import (
     DefaultFedModel,
     ExtinctionField,
     FdsFedField,
+    RerouteConfig,
+    RouteCostConfig,
     SmokeSpeedConfig,
     SmokeSpeedModel,
     inspect_fds_quantities,
@@ -84,6 +86,21 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Inspect available FDS quantities with fdsreader and exit",
     )
+    parser.add_argument(
+        "--enable-rerouting",
+        action="store_true",
+        help="Enable dynamic smoke-based route reevaluation",
+    )
+    parser.add_argument(
+        "--reroute-interval",
+        type=float,
+        default=10.0,
+        help="Seconds between route reevaluations per agent (default: 10)",
+    )
+    parser.add_argument(
+        "--output-route-history",
+        help="Write route switch history to CSV",
+    )
     return parser
 
 
@@ -136,6 +153,26 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "o2_percent",
         "fed_rate_per_min",
         "fed_cumulative",
+    ]
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def _write_route_history_csv(rows, output_path: str) -> None:
+    """Write route switch history rows to a CSV file."""
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "time_s",
+        "agent_id",
+        "old_exit",
+        "new_exit",
+        "old_cost",
+        "new_cost",
+        "reason",
     ]
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -200,6 +237,16 @@ def main() -> int:
                 slice_height_m=args.smoke_slice_height,
             )
             fed_model = DefaultFedModel(FdsFedField.from_fds(args.fds_dir), fed_config)
+    reroute_config = None
+    if args.enable_rerouting and smoke_speed_model is not None:
+        print("Configuring smoke-based rerouting.")
+        reroute_config = RerouteConfig(
+            reevaluation_interval_s=args.reroute_interval,
+            cost_config=RouteCostConfig(
+                base_speed_m_per_s=1.3,
+            ),
+        )
+
     print("Initialization finished.")
     print("Simulation started.")
 
@@ -208,6 +255,7 @@ def main() -> int:
         seed=args.seed,
         smoke_speed_model=smoke_speed_model,
         fed_model=fed_model,
+        reroute_config=reroute_config,
     )
     if result.agents_remaining == 0:
         print(
@@ -225,6 +273,9 @@ def main() -> int:
         _write_smoke_history_csv(result.smoke_history, args.output_smoke_history)
     if args.output_fed_history and result.fed_history is not None:
         _write_fed_history_csv(result.fed_history, args.output_fed_history)
+    if args.output_route_history and result.route_history is not None:
+        _write_route_history_csv(result.route_history, args.output_route_history)
+        print(f"Route switches: {len(result.route_history)}")
 
     if args.output_sqlite and result.sqlite_file:
         output_path = pathlib.Path(args.output_sqlite).resolve()
