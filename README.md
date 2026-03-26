@@ -1,9 +1,17 @@
 [![fds-evac](https://github.com/PedestrianDynamics/fds-evac/actions/workflows/code-quality.yml/badge.svg)](https://github.com/PedestrianDynamics/fds-evac/actions/workflows/code-quality.yml)
-
+[![tests](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml/badge.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml)
 
 # pyFDS-Evac
 
-Fire Dynamics Simulator (FDS) evacuation modeling with visibility analysis.
+Fire Dynamics Simulator (FDS) coupled evacuation modeling with smoke-speed reduction, toxic gas dose (FED), and dynamic route rerouting.
+
+The project includes:
+
+- Smoke-speed model (visibility/extinction-based speed reduction)
+- Full ISO 13571 FED model (toxic gas dose accumulation)
+- Dynamic smoke-based route rerouting
+- JuPedSim scenario loading and simulation
+
 
 ## Installation
 
@@ -19,12 +27,6 @@ Activate the virtual environment:
 
 ```bash
 uv shell
-```
-
-Run the main script:
-
-```bash
-python main.py
 ```
 
 Run a JSON-first scenario with the CLI runner:
