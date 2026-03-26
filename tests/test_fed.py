@@ -117,6 +117,124 @@ def test_default_fed_rate_is_zero_in_clear_air():
     assert time_to_fed_threshold_s(DefaultFedInputs()) > 1.0e7
 
 
+def test_hcn_contributes_to_fed_rate():
+    """Test that HCN (cyanide) contributes to FED rate via CN term."""
+    base = DefaultFedInputs()
+    with_hcn = DefaultFedInputs(hcn_ppm=100.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_hcn = default_fed_rate_per_minute(with_hcn)
+    assert rate_hcn > rate_base
+    assert rate_hcn > 0.0
+
+
+def test_no_ppm_contributes_to_fed_rate():
+    """Test that NO contributes to FED rate via NOx term."""
+    base = DefaultFedInputs()
+    with_no = DefaultFedInputs(no_ppm=50.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_no = default_fed_rate_per_minute(with_no)
+    assert rate_no > rate_base
+    assert rate_no > 0.0
+
+
+def test_no2_ppm_contributes_to_fed_rate():
+    """Test that NO2 contributes to FED rate via both CN and NOx terms."""
+    base = DefaultFedInputs()
+    with_no2 = DefaultFedInputs(no2_ppm=20.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_no2 = default_fed_rate_per_minute(with_no2)
+    assert rate_no2 > rate_base
+    assert rate_no2 > 0.0
+
+
+def test_hcl_ppm_contributes_to_fed_rate():
+    """Test that HCl contributes to FED rate via irritant term."""
+    base = DefaultFedInputs()
+    with_hcl = DefaultFedInputs(hcl_ppm=100.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_hcl = default_fed_rate_per_minute(with_hcl)
+    assert rate_hcl > rate_base
+    assert rate_hcl > 0.0
+
+
+def test_hbr_ppm_contributes_to_fed_rate():
+    """Test that HBr contributes to FED rate via irritant term."""
+    base = DefaultFedInputs()
+    with_hbr = DefaultFedInputs(hbr_ppm=100.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_hbr = default_fed_rate_per_minute(with_hbr)
+    assert rate_hbr > rate_base
+    assert rate_hbr > 0.0
+
+
+def test_hf_ppm_contributes_to_fed_rate():
+    """Test that HF contributes to FED rate via irritant term."""
+    base = DefaultFedInputs()
+    with_hf = DefaultFedInputs(hf_ppm=50.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_hf = default_fed_rate_per_minute(with_hf)
+    assert rate_hf > rate_base
+    assert rate_hf > 0.0
+
+
+def test_so2_ppm_contributes_to_fed_rate():
+    """Test that SO2 contributes to FED rate via irritant term."""
+    base = DefaultFedInputs()
+    with_so2 = DefaultFedInputs(so2_ppm=50.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_so2 = default_fed_rate_per_minute(with_so2)
+    assert rate_so2 > rate_base
+    assert rate_so2 > 0.0
+
+
+def test_acrolein_ppm_contributes_to_fed_rate():
+    """Test that acrolein contributes to FED rate via irritant term."""
+    base = DefaultFedInputs()
+    with_acrolein = DefaultFedInputs(acrolein_ppm=50.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_acrolein = default_fed_rate_per_minute(with_acrolein)
+    assert rate_acrolein > rate_base
+    assert rate_acrolein > 0.0
+
+
+def test_formaldehyde_ppm_contributes_to_fed_rate():
+    """Test that formaldehyde contributes to FED rate via irritant term."""
+    base = DefaultFedInputs()
+    with_formaldehyde = DefaultFedInputs(formaldehyde_ppm=100.0)
+    rate_base = default_fed_rate_per_minute(base)
+    rate_formaldehyde = default_fed_rate_per_minute(with_formaldehyde)
+    assert rate_formaldehyde > rate_base
+    assert rate_formaldehyde > 0.0
+
+
+def test_combined_all_isolates_contribute():
+    """Test combined exposure with all new ISO 13571 species."""
+    inputs = DefaultFedInputs(
+        co_volume_fraction_percent=0.1,
+        co2_volume_fraction_percent=5.0,
+        o2_volume_fraction_percent=20.9,
+        hcn_ppm=100.0,
+        no_ppm=50.0,
+        no2_ppm=20.0,
+        hcl_ppm=100.0,
+        hbr_ppm=100.0,
+        hf_ppm=50.0,
+        so2_ppm=50.0,
+        acrolein_ppm=50.0,
+        formaldehyde_ppm=100.0,
+    )
+    rate = default_fed_rate_per_minute(inputs)
+    assert rate > 0.0
+    analytic_time = time_to_fed_threshold_s(inputs, threshold=1.0)
+    assert analytic_time > 0.0
+    assert analytic_time < 1000.0
+
+    accumulated = accumulate_default_fed(inputs, duration_s=60.0)
+    assert accumulated > 0.0
+    expected = rate * 1.0
+    assert accumulated == pytest.approx(expected, rel=1e-10)
+
+
 @pytest.mark.parametrize(
     ("inputs", "expected_dominant_term"),
     [
