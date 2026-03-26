@@ -1,18 +1,14 @@
 """Tests for StageGraph construction and Dijkstra shortest-path routing."""
 
-import math
 
 import pytest
 from shapely.geometry import Polygon
 
 from src.core.route_graph import (
     StageGraph,
-    StageNode,
-    StageEdge,
     RouteCostConfig,
     RerouteConfig,
     AgentRouteState,
-    RouteSwitch,
     evaluate_route,
     evaluate_segment,
     rank_routes,
