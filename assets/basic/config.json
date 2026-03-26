@@ -3,7 +3,7 @@
   "config": {
     "simulation_settings": {
       "simulationParams": {
-        "max_simulation_time": 1000,
+        "max_simulation_time": 800,
         "model_type": "CollisionFreeSpeedModel",
         "strength_neighbor_repulsion": 2.6,
         "range_neighbor_repulsion": 0.1,
@@ -69,11 +69,11 @@
         [1, 0]
       ],
       "parameters": {
-        "number": 400,
-        "radius": 0.2,
+        "number": 500,
+        "radius": 0.1,
         "v0": 1.0,
         "use_flow_spawning": true,
-        "flow_start_time": 400,
+        "flow_start_time": 500,
         "flow_end_time": 1000,
         "distribution_mode": "by_number",
         "percentage": null,
@@ -96,7 +96,7 @@
         [5, 10]
       ],
       "parameters": {
-        "number": 400,
+        "number": 500,
         "radius": 0.2,
         "v0": 1.0,
         "use_flow_spawning": true,

@@ -149,7 +149,7 @@ species: CO, CO2, O2. Optional species (HCN, NO, NO2, HCl, HBr, HF,
 SO2, acrolein, formaldehyde) are loaded when available; missing species
 default to 0 and contribute nothing to the FED sum. With only the three
 required species, the model reduces to the original FDS+Evac default
-pathway: $\mathrm{FED}_{\mathrm{CO}} \cdot \mathrm{HV}_{\mathrm{CO_2}} + \mathrm{FED}_{\mathrm{O_2}}$.
+pathway: `FED_CO * HV_CO2 + FED_O2`.
 
 ### Recent additions
 
