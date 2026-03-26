@@ -14,7 +14,13 @@ from .fed import (
     default_fed_rate_per_minute,
     time_to_fed_threshold_s,
 )
-from .route_graph import RerouteConfig, RouteCostConfig, StageGraph
+from .fds_sampling import SliceFieldSampler, load_slice_sampler
+from .route_graph import (
+    RerouteConfig,
+    RouteCostConfig,
+    StageGraph,
+    integrated_extinction_along_los,
+)
 from .scenario import Scenario, ScenarioResult, load_scenario, run_scenario
 from .smoke_speed import (
     ConstantExtinctionField,
@@ -29,6 +35,7 @@ __all__ = [
     "ConstantExtinctionField",
     "RerouteConfig",
     "RouteCostConfig",
+    "SliceFieldSampler",
     "StageGraph",
     "DefaultFedConfig",
     "DefaultFedInputs",
@@ -43,6 +50,8 @@ __all__ = [
     "extinction_from_soot_density",
     "accumulate_default_fed",
     "default_fed_rate_per_minute",
+    "integrated_extinction_along_los",
+    "load_slice_sampler",
     "speed_from_soot_density",
     "inspect_fds_quantities",
     "list_simulations",

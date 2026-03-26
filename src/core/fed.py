@@ -3,12 +3,9 @@
 import math
 from dataclasses import dataclass
 
-_SECONDS_PER_MINUTE = 60.0
+from .fds_sampling import SliceFieldSampler
 
-try:
-    from fdsreader import Simulation
-except ModuleNotFoundError:
-    Simulation = None
+_SECONDS_PER_MINUTE = 60.0
 
 
 @dataclass(frozen=True)
@@ -172,53 +169,6 @@ def time_to_fed_threshold_s(
     return (remaining / rate_per_min) * _SECONDS_PER_MINUTE
 
 
-class _SliceFieldSampler:
-    """Sample one `fdsreader` slice quantity with nearest-neighbor lookup."""
-
-    def __init__(self, slice_obj):
-        """Cache the slice object and its subslices for repeated sampling."""
-        self._slice = slice_obj
-        self._subslices = list(slice_obj.subslices)
-
-    def _find_subslice(self, x: float, y: float):
-        """Return the subslice covering the requested x/y point."""
-        for subslice in self._subslices:
-            extent = subslice.extent
-            if (
-                extent.x_start <= x <= extent.x_end
-                and extent.y_start <= y <= extent.y_end
-            ):
-                return subslice
-        return None
-
-    @staticmethod
-    def _nearest_index(start: float, end: float, count: int, value: float) -> int:
-        """Return the nearest cell index along one slice axis."""
-        if count <= 1 or end <= start:
-            return 0
-        dx = (end - start) / count
-        center = start + 0.5 * dx
-        index = round((value - center) / dx)
-        return max(0, min(count - 1, int(index)))
-
-    def sample(self, time_s: float, x: float, y: float) -> float:
-        """Return the sampled scalar value at one time and x/y point."""
-        subslice = self._find_subslice(float(x), float(y))
-        if subslice is None:
-            raise ValueError(
-                f"Point ({x}, {y}) is outside the sampled FDS slice domain"
-            )
-
-        t_index = int(self._slice.get_nearest_timestep(float(time_s)))
-        i_index = self._nearest_index(
-            subslice.extent.x_start, subslice.extent.x_end, subslice.shape[0], float(x)
-        )
-        j_index = self._nearest_index(
-            subslice.extent.y_start, subslice.extent.y_end, subslice.shape[1], float(y)
-        )
-        return float(subslice.data[t_index, i_index, j_index])
-
-
 class FdsFedField:
     """Sample FED input quantities from FDS slice outputs via fdsreader.
 
@@ -244,10 +194,10 @@ class FdsFedField:
 
     def __init__(
         self,
-        co_sampler: _SliceFieldSampler,
-        co2_sampler: _SliceFieldSampler,
-        o2_sampler: _SliceFieldSampler,
-        **optional_samplers: _SliceFieldSampler,
+        co_sampler: SliceFieldSampler,
+        co2_sampler: SliceFieldSampler,
+        o2_sampler: SliceFieldSampler,
+        **optional_samplers: SliceFieldSampler,
     ):
         """Store one sampler per gas quantity used by the FED model."""
         self._co = co_sampler
@@ -270,11 +220,13 @@ class FdsFedField:
         Required: CO, CO2, O2 slices.
         Optional: HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde.
         """
-        if Simulation is None:
+        from .fds_sampling import Simulation as _Sim
+
+        if _Sim is None:
             raise ModuleNotFoundError(
                 "fdsreader is required to load FED fields from FDS data."
             )
-        sim = Simulation(str(fds_dir))
+        sim = _Sim(str(fds_dir))
         co_slice = sim.slices.filter_by_quantity("CARBON MONOXIDE VOLUME FRACTION")[0]
         co2_slice = sim.slices.filter_by_quantity("CARBON DIOXIDE VOLUME FRACTION")[0]
         o2_slice = sim.slices.filter_by_quantity("OXYGEN VOLUME FRACTION")[0]
@@ -284,16 +236,16 @@ class FdsFedField:
             key = attr.lstrip("_")
             matches = sim.slices.filter_by_quantity(quantity)
             if matches:
-                optional[key] = _SliceFieldSampler(matches[0])
+                optional[key] = SliceFieldSampler(matches[0])
         return cls(
-            _SliceFieldSampler(co_slice),
-            _SliceFieldSampler(co2_slice),
-            _SliceFieldSampler(o2_slice),
+            SliceFieldSampler(co_slice),
+            SliceFieldSampler(co2_slice),
+            SliceFieldSampler(o2_slice),
             **optional,
         )
 
     def _sample_optional_ppm(
-        self, sampler: _SliceFieldSampler | None, time_s: float, x: float, y: float
+        self, sampler: SliceFieldSampler | None, time_s: float, x: float, y: float
     ) -> float:
         """Sample an optional species; return 0 if sampler is absent or point is outside."""
         if sampler is None:

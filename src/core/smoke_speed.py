@@ -1,13 +1,44 @@
-"""Smoke-speed models driven by local smoke extinction from FDS outputs."""
+"""Smoke-speed models driven by local smoke extinction from FDS outputs.
+
+Model overview
+--------------
+Walking speed through smoke is reduced based on the local extinction
+coefficient K [1/m] using the linear FDS+Evac / Frantzich-Nilsson (Lund)
+correlation:
+
+    speed_factor(K) = 1 + beta * K / alpha
+
+where alpha = 0.706 and beta = -0.057 by default.  The factor is clamped
+to [min_speed_factor, 1.0].
+
+When evaluating route costs, the extinction along a line of sight between
+two points is computed as the Beer-Lambert path-integrated mean
+(Boerger et al. 2024, Eq. 9):
+
+    sigma_bar = (K_m / |P|) * sum(rho_s(l))
+
+where rho_s is the soot density sampled at each cell along the ray and
+K_m = 8700 m^2/kg is the mass-specific extinction coefficient for red
+light at 633 nm (well-ventilated flaming combustion).
+
+FDS slice data is read via ``fdsreader`` and sampled with nearest-neighbor
+lookup.
+
+References
+----------
+- Jin (1970-1978): empirical visibility-extinction correlation V = C / sigma
+- Frantzich & Nilsson (Lund): linear speed-extinction relation used by FDS+Evac
+- Ronchi et al. (2013): interpretation A3 comparison across evacuation tools
+- Boerger et al. (2024), Fire Safety Journal 150:104269:
+  Beer-Lambert integrated extinction along line of sight (Eq. 8-9),
+  view-angle correction (Eq. 7), waypoint-based visibility maps
+"""
 
 from dataclasses import dataclass
 
 import numpy as np
 
-try:
-    import fdsvismap as fv
-except ModuleNotFoundError:
-    fv = None
+from .fds_sampling import SliceFieldSampler, load_slice_sampler
 
 
 @dataclass
@@ -36,16 +67,16 @@ class SmokeSpeedConfig:
 
 
 class ExtinctionField:
-    """Sample local smoke extinction K [1/m] from FDS slices via fdsvismap.
+    """Sample local smoke extinction K [1/m] from FDS slices via fdsreader.
 
-    This class intentionally treats extinction coefficient as the primary
-    normative quantity for smoke-speed modelling. Derived visibility can still
+    This class treats the extinction coefficient as the primary normative
+    quantity for smoke-speed modelling.  Derived visibility (V = C/K) can
     be computed elsewhere, but speed reduction is based directly on K.
     """
 
-    def __init__(self, vis_map):
-        """Wrap a loaded `fdsvismap.VisMap` instance."""
-        self._vis = vis_map
+    def __init__(self, sampler: SliceFieldSampler):
+        """Wrap a ``SliceFieldSampler`` for the extinction slice."""
+        self._sampler = sampler
 
     @classmethod
     def from_fds(
@@ -54,31 +85,17 @@ class ExtinctionField:
         *,
         slice_height_m: float = 2.0,
     ) -> "ExtinctionField":
-        """Load extinction slices from an FDS case directory."""
-        if fv is None:
-            raise ModuleNotFoundError(
-                "fdsvismap is required to load extinction fields from FDS data."
-            )
-        try:
-            vis = fv.VisMap(quantity="SOOT EXTINCTION COEFFICIENT")
-        except TypeError:
-            vis = fv.VisMap()
-            if hasattr(vis, "quantity"):
-                vis.quantity = "SOOT EXTINCTION COEFFICIENT"
-        vis.read_fds_data(str(fds_dir), fds_slc_height=slice_height_m)
-        return cls(vis)
+        """Load extinction slices from an FDS case directory via fdsreader."""
+        _ = slice_height_m  # reserved for future multi-height support
+        sampler = load_slice_sampler(fds_dir, "SOOT EXTINCTION COEFFICIENT")
+        return cls(sampler)
 
     def sample_extinction(self, time_s: float, x: float, y: float) -> float:
-        """Return the nearest-grid extinction coefficient K [1/m].
-
-        Note: uses fdsvismap internal ``_get_extco_array_at_time`` because
-        the public API only exposes derived visibility (c/K), not raw K.
-        Tested against fdsvismap 0.1.x.
-        """
-        extco_array = self._vis._get_extco_array_at_time(time_s)
-        x_id = np.abs(self._vis.all_x_coords - x).argmin()
-        y_id = np.abs(self._vis.all_y_coords - y).argmin()
-        return float(extco_array[x_id, y_id])
+        """Return the nearest-grid extinction coefficient K [1/m]."""
+        try:
+            return self._sampler.sample(time_s, x, y)
+        except ValueError:
+            return 0.0
 
 
 class ConstantExtinctionField:
@@ -178,8 +195,8 @@ def speed_factor_from_extinction(
 class SmokeSpeedModel:
     """Couple a sampled extinction field with the configured speed law.
 
-    The field can come from `fdsvismap` for real FDS output or from a constant
-    field for deterministic verification tests.
+    The field can come from ``fdsreader`` for real FDS output or from a
+    constant field for deterministic verification tests.
     """
 
     def __init__(self, field: ExtinctionField, config: SmokeSpeedConfig):

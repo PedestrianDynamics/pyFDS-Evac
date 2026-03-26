@@ -209,6 +209,59 @@ class ExtinctionSampler(Protocol):
     def sample_extinction(self, time_s: float, x: float, y: float) -> float: ...
 
 
+def integrated_extinction_along_los(
+    x_from: float,
+    y_from: float,
+    x_to: float,
+    y_to: float,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float = 2.0,
+) -> float:
+    """Return the Beer-Lambert path-integrated mean extinction coefficient.
+
+    Computes the arithmetic mean of K sampled at uniform intervals along
+    the line of sight from (x_from, y_from) to (x_to, y_to), which is
+    the discrete form of Boerger et al. (2024) Eq. 8-9:
+
+        sigma_bar = (1 / |P|) * sum_p K_p
+
+    This gives the effective extinction that an observer at the source
+    would experience looking toward the target through an inhomogeneous
+    smoke field.
+
+    Parameters
+    ----------
+    x_from, y_from : float
+        Observer position.
+    x_to, y_to : float
+        Target position (e.g. exit sign / waypoint).
+    time_s : float
+        Simulation time for the extinction snapshot.
+    extinction_sampler : ExtinctionSampler
+        Provides ``sample_extinction(time_s, x, y) -> float``.
+    step_m : float
+        Maximum spacing between sample points along the ray.
+
+    Returns
+    -------
+    float
+        Path-integrated mean extinction coefficient in 1/m.
+    """
+    length = _euclidean(x_from, y_from, x_to, y_to)
+    if length < 1e-9:
+        return extinction_sampler.sample_extinction(time_s, x_from, y_from)
+
+    n_samples = max(2, int(math.ceil(length / step_m)) + 1)
+    total = 0.0
+    for i in range(n_samples):
+        t = i / (n_samples - 1)
+        x = x_from + t * (x_to - x_from)
+        y = y_from + t * (y_to - y_from)
+        total += extinction_sampler.sample_extinction(time_s, x, y)
+    return total / n_samples
+
+
 class FedRateSampler(Protocol):
     """Anything that can return a FED rate in 1/min at a point and time."""
 
@@ -267,7 +320,16 @@ def _sample_segment_extinction(
     extinction_sampler: ExtinctionSampler,
     step_m: float,
 ) -> tuple[float, list[float]]:
-    """Sample extinction along the centroid-to-centroid line.
+    """Sample extinction along the centroid-to-centroid line of sight.
+
+    Implements the discrete form of the Beer-Lambert path-integrated mean
+    extinction coefficient (Boerger et al. 2024, Eq. 8-9):
+
+        sigma_bar = (1 / |P|) * sum_p K_p
+
+    where K_p is the extinction coefficient at each sample point along
+    the ray and |P| is the number of samples.  This accounts for
+    inhomogeneous smoke distributions along the line of sight.
 
     Returns (segment_length, list_of_K_samples).
     """
