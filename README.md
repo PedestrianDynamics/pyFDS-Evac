@@ -12,7 +12,6 @@ The project includes:
 - Dynamic smoke-based route rerouting
 - JuPedSim scenario loading and simulation
 
-
 ## Installation
 
 This project uses [uv](https://github.com/astral-sh/uv) for dependency management.
@@ -152,10 +151,25 @@ default to 0 and contribute nothing to the FED sum. With only the three
 required species, the model reduces to the original FDS+Evac default
 pathway: $\mathrm{FED}_{\mathrm{CO}} \cdot \mathrm{HV}_{\mathrm{CO_2}} + \mathrm{FED}_{\mathrm{O_2}}$.
 
+### Recent additions
+
+The FED model was extended in March 2026 to include all ISO 13571 terms:
+
+- **HCN (hydrogen cyanide) and NO2 (nitrogen dioxide)**: CN-term for narcosis,
+  where NO2 has a protective effect (C_CN = C_HCN - C_NO2)
+- **NO (nitric oxide)**: Added to NOx-term alongside NO2
+- **Multiple irritant gases**: HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde
+  with species-specific Ct thresholds from guide Table 2
+
+All new terms are fully tested with constant-exposure unit tests in
+`tests/test_fed.py`.
+
 ### Verification
 
-- Equation-level constant-exposure checks for the CO/CO2/O2 pathway are covered in [tests/test_fed.py](tests/test_fed.py); additional terms are not yet covered by dedicated constant-exposure tests
-- An ISO Table 22 style stationary benchmark is covered with `assets/ISO-table22`, comparing the runtime `FED=1` crossing time against the analytical reference
+- Equation-level constant-exposure checks for all ISO 13571 terms are covered in
+  [tests/test_fed.py](tests/test_fed.py)
+- An ISO Table 22 style stationary benchmark is covered with `assets/ISO-table22`,
+  comparing the runtime `FED=1` crossing time against the analytical reference
 
 Generate the ISO Table 22 stationary FED verification figure:
 
@@ -197,6 +211,33 @@ uv run run.py \
 
 Note: if a point lies outside the FDS domain, the implementation falls back to ambient conditions.
 
+## Dynamic Route Rerouting
+
+The routing system implements smoke-aware path planning with dynamic rerouting:
+
+- **StageGraph**: Dijkstra-based shortest-path routing on a graph of
+  stages (distributions, exits)
+- **Route cost evaluation**: Samples extinction (K) and FED quantities along
+  candidate paths to compute smoke exposure
+- **Dynamic rerouting**: Agents recompute routes at configurable intervals,
+  selecting lower-exposure paths when available
+- **Throughput throttling**: Optional exit flux limiting via
+  `enable_throughput_throttling` and `max_throughput` in scenario config
+
+### Usage
+
+Run the haspel scenario with smoke-aware rerouting:
+
+```bash
+uv run run.py \
+  --scenario assets/haspel \
+  --fds-dir fds_data/haspel \
+  --smoke-update-interval 1.0 \
+  --reroute-interval 30.0 \
+  --output-fed-history /tmp/haspel-fed-history.csv \
+  --cleanup
+```
+
 ## References
 
 Reference materials are stored in [`materials/`](materials/):
@@ -205,6 +246,17 @@ Reference materials are stored in [`materials/`](materials/):
 - [Schroder et al. (2020)](materials/Schroder2020.pdf) — Waypoint-based visibility and evacuation modeling.
 - [Ronchi et al. (2013)](materials/Ronchi2013.pdf) — FDS+Evac evacuation model validation and verification.
 - [evac.f90](materials/evac.f90) — Original FDS+Evac Fortran source for cross-referencing implementation details.
+
+## Assets
+
+Scenario definitions are stored in [`assets/`](assets/):
+
+- **ISO-table21**: ISO 20414 corridor verification case (single exit)
+- **ISO-table22**: ISO 20414 stationary benchmark (single agent, analytical FED=1 time)
+- **haspel**: Multi-exit scenario with three zones and dynamic rerouting
+- **basic**: Minimal scenarios for smoke-speed verification
+- **HC**: Hazard composition cases
+- **social_force**: Social force model test cases
 
 ## Dependencies
 
