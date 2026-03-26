@@ -981,6 +981,7 @@ def run_scenario(
         fed_history: list[dict[str, Any]] = []
         last_smoke_update_time = None
         last_fed_update_time = None
+        last_reroute_check_time: float | None = None
         route_history: list[dict[str, Any]] = []
         agent_route_state: Dict[int, AgentRouteState] = {}
         route_segment_cache: dict[tuple[str, str], Any] | None = None
@@ -1471,8 +1472,14 @@ def run_scenario(
                 and stage_graph is not None
                 and smoke_speed_model is not None
                 and agent_wait_info
+                and (
+                    last_reroute_check_time is None
+                    or simulation.elapsed_time() - last_reroute_check_time
+                    >= reroute_config.reevaluation_interval_s
+                )
             ):
                 current_time = simulation.elapsed_time()
+                last_reroute_check_time = current_time
                 # Invalidate segment cache each reevaluation epoch.
                 route_segment_cache = {}
                 for agent in simulation.agents():
