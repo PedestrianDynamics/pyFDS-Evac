@@ -321,7 +321,9 @@ class FdsFedField:
             hf_ppm=self._sample_optional_ppm(self._hf, time_s, x, y),
             so2_ppm=self._sample_optional_ppm(self._so2, time_s, x, y),
             acrolein_ppm=self._sample_optional_ppm(self._acrolein, time_s, x, y),
-            formaldehyde_ppm=self._sample_optional_ppm(self._formaldehyde, time_s, x, y),
+            formaldehyde_ppm=self._sample_optional_ppm(
+                self._formaldehyde, time_s, x, y
+            ),
         )
 
 

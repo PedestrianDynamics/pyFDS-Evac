@@ -1,6 +1,5 @@
 """Tests for StageGraph construction and Dijkstra shortest-path routing."""
 
-
 import pytest
 from shapely.geometry import Polygon
 
@@ -341,9 +340,7 @@ class TestSegmentCost:
         """Zero extinction → speed_factor=1, travel_time = length/v0."""
         field = ConstantExtinctionField(0.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
-        seg = evaluate_segment(
-            simple_route_graph, "D0", "E0", 0.0, field, None, config
-        )
+        seg = evaluate_segment(simple_route_graph, "D0", "E0", 0.0, field, None, config)
         assert abs(seg.length_m - 10.0) < 0.1
         assert abs(seg.speed_factor - 1.0) < 0.01
         assert abs(seg.travel_time_s - 10.0) < 0.1
@@ -354,9 +351,7 @@ class TestSegmentCost:
         """High extinction → low speed factor, longer travel time."""
         field = ConstantExtinctionField(5.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
-        seg = evaluate_segment(
-            simple_route_graph, "D0", "E0", 0.0, field, None, config
-        )
+        seg = evaluate_segment(simple_route_graph, "D0", "E0", 0.0, field, None, config)
         assert seg.speed_factor < 1.0
         assert seg.travel_time_s > 10.0
         assert seg.visible is False  # K=5 > threshold 0.5
@@ -366,9 +361,7 @@ class TestSegmentCost:
         field = ConstantExtinctionField(0.0)
         fed = ConstantFedRateSampler(rate_per_min=0.1)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
-        seg = evaluate_segment(
-            simple_route_graph, "D0", "E0", 0.0, field, fed, config
-        )
+        seg = evaluate_segment(simple_route_graph, "D0", "E0", 0.0, field, fed, config)
         # travel_time ≈ 10s, rate = 0.1/min → growth ≈ 10/60 * 0.1 ≈ 0.0167
         assert seg.fed_growth > 0.0
         assert abs(seg.fed_growth - 0.1 * 10.0 / 60.0) < 0.01
@@ -393,21 +386,29 @@ class TestRouteCost:
         field_smoke = ConstantExtinctionField(1.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=1.0)
         rc_clear = evaluate_route(
-            simple_route_graph, ["D0", "E0"], 0.0, 0.0,
-            field_clear, None, config,
+            simple_route_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field_clear,
+            None,
+            config,
         )
         rc_smoke = evaluate_route(
-            simple_route_graph, ["D0", "E0"], 0.0, 0.0,
-            field_smoke, None, config,
+            simple_route_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field_smoke,
+            None,
+            config,
         )
         assert rc_smoke.composite_cost > rc_clear.composite_cost
 
     def test_fed_rejection(self, simple_route_graph):
         """Route rejected when projected FED exceeds threshold."""
         field = ConstantExtinctionField(0.0)
-        config = RouteCostConfig(
-            base_speed_m_per_s=1.0, fed_rejection_threshold=0.5
-        )
+        config = RouteCostConfig(base_speed_m_per_s=1.0, fed_rejection_threshold=0.5)
         # Start with current_fed=0.9, even small FED growth pushes over 0.5
         # Actually, current_fed alone exceeds threshold
         rc = evaluate_route(
@@ -421,8 +422,13 @@ class TestRouteCost:
         field = ConstantExtinctionField(0.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
         rc = evaluate_route(
-            two_exit_graph, ["D0", "C0", "E1"], 0.0, 0.0,
-            field, None, config,
+            two_exit_graph,
+            ["D0", "C0", "E1"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
         )
         assert len(rc.segments) == 2
         assert abs(rc.path_length_m - 50.0) < 0.1  # 30 + 20
@@ -433,15 +439,27 @@ class TestRouteCost:
         config = RouteCostConfig(base_speed_m_per_s=1.0)
         cache: dict = {}
         evaluate_route(
-            two_exit_graph, ["D0", "C0", "E1"], 0.0, 0.0,
-            field, None, config, cached_segments=cache,
+            two_exit_graph,
+            ["D0", "C0", "E1"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            cached_segments=cache,
         )
         assert ("D0", "C0") in cache
         assert ("C0", "E1") in cache
         # Second call reuses cache.
         rc2 = evaluate_route(
-            two_exit_graph, ["D0", "C0", "E1"], 0.0, 0.0,
-            field, None, config, cached_segments=cache,
+            two_exit_graph,
+            ["D0", "C0", "E1"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            cached_segments=cache,
         )
         assert abs(rc2.path_length_m - 50.0) < 0.1
 
@@ -451,9 +469,7 @@ class TestRankRoutes:
         """With no smoke, shortest route wins."""
         field = ConstantExtinctionField(0.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
-        ranked = rank_routes(
-            two_exit_graph, "D0", 0.0, 0.0, field, None, config
-        )
+        ranked = rank_routes(two_exit_graph, "D0", 0.0, 0.0, field, None, config)
         assert len(ranked) == 2
         assert ranked[0].exit_id == "E0"  # shorter
         assert ranked[0].rejected is False
@@ -470,21 +486,15 @@ class TestRankRoutes:
 
         field = SmokeNearE0()
         config = RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=2.0)
-        ranked = rank_routes(
-            two_exit_graph, "D0", 0.0, 0.0, field, None, config
-        )
+        ranked = rank_routes(two_exit_graph, "D0", 0.0, 0.0, field, None, config)
         assert ranked[0].exit_id == "E1"
 
     def test_fed_rejection_with_fallback(self, two_exit_graph):
         """All routes rejected → least-bad is un-rejected as fallback."""
         field = ConstantExtinctionField(0.0)
-        config = RouteCostConfig(
-            base_speed_m_per_s=1.0, fed_rejection_threshold=0.01
-        )
+        config = RouteCostConfig(base_speed_m_per_s=1.0, fed_rejection_threshold=0.01)
         # current_fed = 0.5 will exceed threshold 0.01
-        ranked = rank_routes(
-            two_exit_graph, "D0", 0.0, 0.5, field, None, config
-        )
+        ranked = rank_routes(two_exit_graph, "D0", 0.0, 0.5, field, None, config)
         assert len(ranked) == 2
         # First should be un-rejected (fallback)
         assert ranked[0].rejected is False
@@ -517,9 +527,7 @@ class TestRankRoutes:
             base_speed_m_per_s=1.0,
             visibility_extinction_threshold=0.5,
         )
-        ranked = rank_routes(
-            graph, "D0", 0.0, 0.0, SmokeOnE0Path(), None, config
-        )
+        ranked = rank_routes(graph, "D0", 0.0, 0.0, SmokeOnE0Path(), None, config)
         # E1 path (y=0 to y=20) is clear; E0 path has smoke
         e0_route = next(r for r in ranked if r.exit_id == "E0")
         e1_route = next(r for r in ranked if r.exit_id == "E1")
@@ -533,9 +541,7 @@ class TestRankRoutes:
         # above E1 (via C0) because E0 path has fewer stages.
         field = ConstantExtinctionField(0.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
-        ranked = rank_routes(
-            two_exit_graph, "D0", 0.0, 0.0, field, None, config
-        )
+        ranked = rank_routes(two_exit_graph, "D0", 0.0, 0.0, field, None, config)
         # E0 wins on cost anyway, but verify sort key includes path length
         assert ranked[0].exit_id == "E0"
         assert len(ranked[0].path) < len(ranked[1].path)
@@ -548,7 +554,12 @@ class TestRankRoutes:
             {"D0": {"coordinates": list(_box(0, 0).exterior.coords)}},
         )
         ranked = rank_routes(
-            graph, "D0", 0.0, 0.0, ConstantExtinctionField(0.0), None,
+            graph,
+            "D0",
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            None,
             RouteCostConfig(),
         )
         assert ranked == []
@@ -658,9 +669,7 @@ class TestRerouteAgent:
         """Existing path_choices for other stages are not removed."""
         wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
         wait_info["path_choices"]["OTHER"] = [("STAGE", 50.0)]
-        reroute_agent(
-            wait_info, ["D0", "C0", "E1"], wait_info["stage_configs"]
-        )
+        reroute_agent(wait_info, ["D0", "C0", "E1"], wait_info["stage_configs"])
         assert "OTHER" in wait_info["path_choices"]
 
 
@@ -668,9 +677,7 @@ class TestEvaluateAndReroute:
     def test_initial_assignment(self, two_exit_graph):
         """First evaluation assigns the nearest exit."""
         field = ConstantExtinctionField(0.0)
-        config = RerouteConfig(
-            cost_config=RouteCostConfig(base_speed_m_per_s=1.0)
-        )
+        config = RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0))
         wait_info = _make_wait_info(two_exit_graph, "D0", "D0")
         route_state = AgentRouteState()
 
@@ -693,9 +700,7 @@ class TestEvaluateAndReroute:
     def test_no_switch_when_same_exit_wins(self, two_exit_graph):
         """No switch returned when best exit hasn't changed."""
         field = ConstantExtinctionField(0.0)
-        config = RerouteConfig(
-            cost_config=RouteCostConfig(base_speed_m_per_s=1.0)
-        )
+        config = RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0))
         wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
         route_state = AgentRouteState(current_exit="E0")
 
@@ -745,9 +750,7 @@ class TestEvaluateAndReroute:
     def test_eval_time_updated(self, two_exit_graph):
         """last_eval_time_s is updated after evaluation."""
         field = ConstantExtinctionField(0.0)
-        config = RerouteConfig(
-            cost_config=RouteCostConfig(base_speed_m_per_s=1.0)
-        )
+        config = RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0))
         wait_info = _make_wait_info(two_exit_graph, "D0", "D0")
         route_state = AgentRouteState()
 

@@ -119,16 +119,12 @@ class StageGraph:
 
     def exit_nodes(self) -> list[str]:
         """Return IDs of all exit stages."""
-        return [
-            sid for sid, node in self.nodes.items() if node.stage_type == "exit"
-        ]
+        return [sid for sid, node in self.nodes.items() if node.stage_type == "exit"]
 
     def distribution_nodes(self) -> list[str]:
         """Return IDs of all distribution stages."""
         return [
-            sid
-            for sid, node in self.nodes.items()
-            if node.stage_type == "distribution"
+            sid for sid, node in self.nodes.items() if node.stage_type == "distribution"
         ]
 
     def shortest_paths_to_exits(
@@ -272,8 +268,10 @@ def _sample_segment_extinction(
     Returns (segment_length, list_of_K_samples).
     """
     length = _euclidean(
-        src_node.centroid_x, src_node.centroid_y,
-        tgt_node.centroid_x, tgt_node.centroid_y,
+        src_node.centroid_x,
+        src_node.centroid_y,
+        tgt_node.centroid_x,
+        tgt_node.centroid_y,
     )
     if length < 1e-9:
         k = extinction_sampler.sample_extinction(
@@ -357,8 +355,13 @@ def evaluate_route(
             seg = cached_segments[cache_key]
         else:
             seg = evaluate_segment(
-                graph, path[i], path[i + 1],
-                time_s, extinction_sampler, fed_rate_sampler, config,
+                graph,
+                path[i],
+                path[i + 1],
+                time_s,
+                extinction_sampler,
+                fed_rate_sampler,
+                config,
             )
             if cached_segments is not None:
                 cached_segments[cache_key] = seg
@@ -419,8 +422,13 @@ def rank_routes(
     costs: list[RouteCost] = []
     for exit_id, (_dist, path) in all_paths.items():
         rc = evaluate_route(
-            graph, path, time_s, current_fed,
-            extinction_sampler, fed_rate_sampler, config,
+            graph,
+            path,
+            time_s,
+            current_fed,
+            extinction_sampler,
+            fed_rate_sampler,
+            config,
             cached_segments=cached_segments,
         )
         costs.append(rc)
@@ -592,7 +600,9 @@ def reroute_agent(
                 "current_target_stage", remaining[0]
             )
             wait_info["current_target_stage"] = next_stage
-            wait_info["target"] = pick_stage_target(wait_info, stage_configs[next_stage])
+            wait_info["target"] = pick_stage_target(
+                wait_info, stage_configs[next_stage]
+            )
             wait_info["target_assigned"] = False
             wait_info["state"] = "to_target"
             wait_info["wait_until"] = None
@@ -625,15 +635,24 @@ def evaluate_and_reroute(
         return None
 
     ranked = rank_routes(
-        graph, source, current_time_s, current_fed,
-        extinction_sampler, fed_rate_sampler, config.cost_config,
+        graph,
+        source,
+        current_time_s,
+        current_fed,
+        extinction_sampler,
+        fed_rate_sampler,
+        config.cost_config,
         cached_segments=cached_segments,
     )
     if not ranked:
         return None
 
     best = ranked[0]
-    if best.rejected and best.rejection_reason and not best.rejection_reason.startswith("fallback"):
+    if (
+        best.rejected
+        and best.rejection_reason
+        and not best.rejection_reason.startswith("fallback")
+    ):
         return None
 
     old_exit = route_state.current_exit
