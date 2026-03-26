@@ -221,7 +221,7 @@ class FdsFedField:
     """Sample FED input quantities from FDS slice outputs via fdsreader.
 
     Required slices: CO, CO2, O2 (volume fractions in [0, 1]).
-    Optional slices: HCN, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde.
+    Optional slices: HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde.
     Missing optional species contribute 0 to the FED sum.
     """
 
@@ -266,7 +266,7 @@ class FdsFedField:
         """Build gas samplers from an FDS case directory.
 
         Required: CO, CO2, O2 slices.
-        Optional: HCN, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde.
+        Optional: HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde.
         """
         if Simulation is None:
             raise ModuleNotFoundError(
