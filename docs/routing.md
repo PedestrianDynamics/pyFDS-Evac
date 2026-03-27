@@ -4,20 +4,17 @@
 
 The pyFDS-Evac routing system implements dynamic, smoke-aware path
 planning. Agents evaluate candidate routes based on smoke exposure
-and periodically reroute to lower-cost paths as conditions change.
-
-> **Note:** The cost model also supports a FED (toxic gas dose)
-> component, but the simulation loop currently passes
-> `fed_rate_sampler=None`, so FED does not influence route ranking
-> at runtime. The descriptions below note where FED terms exist in
-> the cost model but are inactive.
+and toxic gas dose, and periodically reroute to lower-cost paths as
+conditions change. Route costs are recomputed from current hazard
+fields at each reevaluation tick, so the chosen path adapts as
+conditions evolve.
 
 ## Stage graph
 
 Routes are evaluated on a `StageGraph` -- a directed weighted graph
-where nodes represent stages (distributions, checkpoints, exits) and
-edge weights are Euclidean distances between stage centroids. The graph
-is built once at simulation start from the scenario configuration.
+where nodes represent stages (distributions, checkpoints, exits).
+The graph is built once at simulation start from the scenario
+configuration.
 
 ```python
 from pyfds_evac.core.route_graph import StageGraph
@@ -26,13 +23,25 @@ graph = StageGraph.from_scenario(
     direct_steering_info=stage_info,   # stage_id -> {polygon, stage_type}
     transitions=transitions,           # [{from, to}, ...]
     distributions=distributions,       # optional spawn areas
+    walkable_polygon=walkable_polygon, # optional Shapely Polygon
 )
 ```
+
+### Edge geometry
+
+Edges carry a polyline that follows the corridor geometry computed
+by JuPedSim's `RoutingEngine` at graph construction time. Smoke
+and FED are sampled along this polyline, not along a straight
+centroid-to-centroid ray. Edge weight is the polyline arc length.
+
+When no walkable polygon is provided (e.g. in unit tests), edges
+fall back to a straight centroid-to-centroid ray.
 
 ### Shortest-path queries
 
 The graph provides Dijkstra-based shortest-path queries to find
-reachable exits:
+reachable exits. When dynamic weights are provided, Dijkstra uses
+smoke/FED-adjusted costs instead of static arc lengths:
 
 ```python
 # All reachable exits with costs and paths
@@ -47,32 +56,30 @@ if result:
 ## Route cost evaluation
 
 Each candidate route is scored by evaluating its segments (edges)
-against current smoke conditions. The cost model combines path length
-and smoke exposure (plus an inactive FED term — see note above).
+against current smoke and FED conditions. The cost model combines
+path length, smoke exposure, and toxic gas dose.
 
 ### Segment evaluation
 
 For each segment (edge between two stages), the system performs
 the following steps:
 
-1. Sample the extinction coefficient K along the line of sight
-   between stage centroids using the Beer-Lambert path-integrated
-   mean
+1. Sample the extinction coefficient K along the edge polyline
+   using the Beer-Lambert path-integrated mean
    ([Boerger et al. 2024](../materials/waypoint_based_visibility.pdf),
    Eq. 8-9).
 2. Compute the smoke-adjusted speed factor from the mean K using
    the [smoke-speed model](smoke-speed-model.md).
 3. Estimate the travel time from the segment length and reduced
    speed.
-4. Optionally, estimate the FED growth along the segment from the
-   FED rate at the midpoint and the estimated travel time.
-   *(Currently inactive: `fed_rate_sampler` is `None` at runtime,
-   so `fed_growth` is always 0.)*
+4. Estimate the FED growth along the segment from the FED rate
+   at the polyline midpoint (by arc length) and the estimated
+   travel time.
 
 ### Line-of-sight extinction
 
 The mean extinction along a segment is computed by sampling K at
-uniform intervals along the centroid-to-centroid ray:
+uniform intervals along the edge polyline:
 
 ```
 sigma_bar = (1 / |P|) * sum(K_p)
@@ -166,10 +173,9 @@ the interval.
    → if source not in graph → skip (return None)
 
 2. rank_routes(source, t, FED, K_field)
-   ├─ Dijkstra → one shortest path per reachable exit
+   ├─ evaluate all edges → dynamic costs from current smoke/FED
+   ├─ Dijkstra with dynamic weights → one cheapest path per reachable exit
    ├─ evaluate_route on each path (composite cost + rejection flags)
-   │   (only the geometrically shortest path to each exit is scored;
-   │    alternative paths to the same exit are not enumerated)
    ├─ visibility rejection pass
    │   └─ if ≥1 route has any visible segment:
    │       mark routes where ALL segments are non-visible as rejected
@@ -241,7 +247,7 @@ Cost breakdown for one edge of a route:
 |-----------------|---------|-----------------------------------------|
 | `source`        | `str`   | Source stage ID                         |
 | `target`        | `str`   | Target stage ID                         |
-| `length_m`      | `float` | Euclidean segment length                |
+| `length_m`      | `float` | Segment length (polyline arc length)     |
 | `k_avg`         | `float` | Mean extinction along the segment       |
 | `speed_factor`  | `float` | Speed multiplier from smoke law         |
 | `travel_time_s` | `float` | Estimated travel time                   |
