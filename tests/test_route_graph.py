@@ -883,3 +883,83 @@ class TestEdgeWaypoints:
     def test_edge_waypoints_defaults_to_empty(self):
         edge = StageEdge(source="A", target="B", weight=10.0)
         assert edge.waypoints == []
+
+
+class TestPolylineEdges:
+    def test_from_scenario_with_walkable_polygon_sets_waypoints(self):
+        """When a walkable polygon is provided, edges get polyline waypoints."""
+        direct_steering_info = {
+            "C0": {"polygon": _box(10, 0), "stage_type": "checkpoint"},
+            "E0": {"polygon": _box(20, 0), "stage_type": "exit"},
+        }
+        distributions = {
+            "D0": {"coordinates": list(_box(0, 0).exterior.coords)},
+        }
+        transitions = [
+            {"from": "D0", "to": "C0"},
+            {"from": "C0", "to": "E0"},
+        ]
+        # A simple rectangular walkable area covering all stages.
+        walkable = Polygon([(-5, -5), (25, -5), (25, 5), (-5, 5)])
+        graph = StageGraph.from_scenario(
+            direct_steering_info,
+            transitions,
+            distributions,
+            walkable_polygon=walkable,
+        )
+        # Each edge should have non-empty waypoints.
+        for edges in graph.edges.values():
+            for edge in edges:
+                assert len(edge.waypoints) >= 2, (
+                    f"Edge {edge.source}->{edge.target} has no waypoints"
+                )
+
+    def test_from_scenario_without_polygon_uses_centroid_ray(self):
+        """Without walkable polygon, edges get 2-point centroid-to-centroid waypoints."""
+        direct_steering_info = {
+            "C0": {"polygon": _box(10, 0), "stage_type": "checkpoint"},
+            "E0": {"polygon": _box(20, 0), "stage_type": "exit"},
+        }
+        distributions = {
+            "D0": {"coordinates": list(_box(0, 0).exterior.coords)},
+        }
+        transitions = [
+            {"from": "D0", "to": "C0"},
+            {"from": "C0", "to": "E0"},
+        ]
+        graph = StageGraph.from_scenario(
+            direct_steering_info,
+            transitions,
+            distributions,
+        )
+        for edges in graph.edges.values():
+            for edge in edges:
+                assert len(edge.waypoints) == 2
+                src_node = graph.nodes[edge.source]
+                tgt_node = graph.nodes[edge.target]
+                assert edge.waypoints[0] == pytest.approx(
+                    (src_node.centroid_x, src_node.centroid_y)
+                )
+                assert edge.waypoints[1] == pytest.approx(
+                    (tgt_node.centroid_x, tgt_node.centroid_y)
+                )
+
+    def test_edge_weight_is_polyline_length(self):
+        """Edge weight equals the polyline length, not Euclidean distance."""
+        direct_steering_info = {
+            "E0": {"polygon": _box(20, 0), "stage_type": "exit"},
+        }
+        distributions = {
+            "D0": {"coordinates": list(_box(0, 0).exterior.coords)},
+        }
+        transitions = [{"from": "D0", "to": "E0"}]
+        # Without walkable polygon, weight = Euclidean = polyline length
+        # (2-point straight ray).
+        graph = StageGraph.from_scenario(
+            direct_steering_info,
+            transitions,
+            distributions,
+        )
+        edge = graph.edges["D0"][0]
+        expected = 20.0  # Euclidean (0,0)->(20,0)
+        assert edge.weight == pytest.approx(expected, abs=0.01)

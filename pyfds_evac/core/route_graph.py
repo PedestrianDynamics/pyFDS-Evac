@@ -52,6 +52,7 @@ class StageGraph:
         direct_steering_info: dict,
         transitions: list[dict],
         distributions: dict | None = None,
+        walkable_polygon=None,
     ) -> StageGraph:
         """Build the stage graph from scenario data.
 
@@ -66,8 +67,18 @@ class StageGraph:
             Optional dict of distribution_id -> dict with "coordinates".
             Distributions are spawn areas and are added as nodes with type
             "distribution" so that shortest-path queries can start from them.
+        walkable_polygon:
+            Optional Shapely Polygon of the walkable area.  When provided,
+            a JuPedSim RoutingEngine computes polyline waypoints for each
+            edge; otherwise a straight centroid-to-centroid ray is used.
         """
         graph = cls()
+
+        routing_engine = None
+        if walkable_polygon is not None:
+            import jupedsim as jps  # lazy import; jupedsim not always required
+
+            routing_engine = jps.RoutingEngine(walkable_polygon)
 
         # Add distribution nodes (not in direct_steering_info).
         if distributions:
@@ -109,13 +120,21 @@ class StageGraph:
                 continue
             src_node = graph.nodes[src]
             tgt_node = graph.nodes[tgt]
-            weight = _euclidean(
-                src_node.centroid_x,
-                src_node.centroid_y,
-                tgt_node.centroid_x,
-                tgt_node.centroid_y,
-            )
-            edge = StageEdge(source=src, target=tgt, weight=weight)
+            if routing_engine is not None:
+                waypoints = list(
+                    routing_engine.compute_waypoints(
+                        (src_node.centroid_x, src_node.centroid_y),
+                        (tgt_node.centroid_x, tgt_node.centroid_y),
+                    )
+                )
+                weight = _polyline_length(waypoints)
+            else:
+                waypoints = [
+                    (src_node.centroid_x, src_node.centroid_y),
+                    (tgt_node.centroid_x, tgt_node.centroid_y),
+                ]
+                weight = _polyline_length(waypoints)
+            edge = StageEdge(source=src, target=tgt, weight=weight, waypoints=waypoints)
             graph.edges.setdefault(src, []).append(edge)
 
         return graph
@@ -199,6 +218,19 @@ class StageGraph:
 def _euclidean(x1: float, y1: float, x2: float, y2: float) -> float:
     """Euclidean distance between two 2D points."""
     return math.hypot(x2 - x1, y2 - y1)
+
+
+def _polyline_length(waypoints: list[tuple[float, float]]) -> float:
+    """Sum of Euclidean segment lengths along a polyline."""
+    total = 0.0
+    for i in range(len(waypoints) - 1):
+        total += _euclidean(
+            waypoints[i][0],
+            waypoints[i][1],
+            waypoints[i + 1][0],
+            waypoints[i + 1][1],
+        )
+    return total
 
 
 # ── Route cost evaluation (Phase 3) ──────────────────────────────────
