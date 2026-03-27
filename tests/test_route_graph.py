@@ -963,3 +963,146 @@ class TestPolylineEdges:
         edge = graph.edges["D0"][0]
         expected = 20.0  # Euclidean (0,0)->(20,0)
         assert edge.weight == pytest.approx(expected, abs=0.01)
+
+
+class TestPolylineSampling:
+    def test_extinction_along_polyline_samples_waypoints(self):
+        """Extinction sampling should follow polyline, not straight ray."""
+        from pyfds_evac.core.route_graph import integrated_extinction_along_polyline
+
+        class SpatialField:
+            """Returns K=0 below y=5, K=10 above y=5."""
+
+            def sample_extinction(self, time_s, x, y):
+                return 0.0 if y < 5.0 else 10.0
+
+        # Polyline that goes up through the smoky region and back down.
+        # (0,0) -> (0,10) -> (10,10) -> (10,0), total arc = 30 m.
+        # 20 m is in the smoky region (y>=5): full middle segment + halves of the
+        # two vertical segments. The straight centroid ray stays at y=0, giving K=0.
+        waypoints = [(0, 0), (0, 10), (10, 10), (10, 0)]
+        k_avg = integrated_extinction_along_polyline(
+            waypoints=waypoints,
+            time_s=0.0,
+            extinction_sampler=SpatialField(),
+            step_m=1.0,
+        )
+        # ~2/3 of the path is in smoke (K=10): expected ~6.7.
+        assert k_avg == pytest.approx(6.7, abs=1.0)
+        # Centroid ray (0,0)->(10,0) stays at y=0 → K=0; polyline is much higher.
+        assert k_avg > 4.0
+
+    def test_extinction_along_polyline_two_points_matches_los(self):
+        """Two-point polyline should match the straight-line LOS function."""
+        from pyfds_evac.core.route_graph import (
+            integrated_extinction_along_los,
+            integrated_extinction_along_polyline,
+        )
+
+        field = ConstantExtinctionField(extinction_per_m=3.0)
+        waypoints = [(0, 0), (10, 0)]
+        k_poly = integrated_extinction_along_polyline(
+            waypoints=waypoints,
+            time_s=0.0,
+            extinction_sampler=field,
+            step_m=2.0,
+        )
+        k_los = integrated_extinction_along_los(
+            0,
+            0,
+            10,
+            0,
+            time_s=0.0,
+            extinction_sampler=field,
+            step_m=2.0,
+        )
+        assert k_poly == pytest.approx(k_los, abs=0.01)
+
+    def test_evaluate_segment_uses_polyline_waypoints(self):
+        """evaluate_segment uses edge waypoints for extinction, not centroid ray."""
+        from pyfds_evac.core.route_graph import (
+            RouteCostConfig,
+            StageEdge,
+            StageGraph,
+            StageNode,
+            evaluate_segment,
+        )
+
+        class SmokyAboveY5:
+            """K=0 below y=5, K=10 above."""
+
+            def sample_extinction(self, time_s, x, y):
+                return 0.0 if y < 5.0 else 10.0
+
+        # Two nodes at (0,0) and (10,0) — centroid ray stays below y=5 (clear).
+        src = StageNode(
+            stage_id="A", centroid_x=0.0, centroid_y=0.0, stage_type="distribution"
+        )
+        tgt = StageNode(
+            stage_id="B", centroid_x=10.0, centroid_y=0.0, stage_type="exit"
+        )
+        # Polyline detours through smoky zone: (0,0)->(0,10)->(10,10)->(10,0)
+        waypoints = [(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)]
+        edge = StageEdge(source="A", target="B", weight=30.0, waypoints=waypoints)
+        graph = StageGraph(
+            nodes={"A": src, "B": tgt},
+            edges={"A": [edge]},
+        )
+
+        cost = evaluate_segment(
+            graph=graph,
+            source="A",
+            target="B",
+            time_s=0.0,
+            extinction_sampler=SmokyAboveY5(),
+            fed_rate_sampler=None,
+            config=RouteCostConfig(sampling_step_m=1.0),
+        )
+        # Polyline is ~2/3 smoky → k_avg ~6.7; centroid ray at y=0 gives 0.
+        assert cost.k_avg == pytest.approx(6.7, abs=1.0)
+        assert cost.k_avg > 4.0  # definitely not zero (centroid-ray result)
+
+    def test_polyline_midpoint_used_for_fed(self):
+        """FED rate is sampled at polyline midpoint, not centroid midpoint."""
+        from pyfds_evac.core.route_graph import (
+            RouteCostConfig,
+            StageEdge,
+            StageGraph,
+            StageNode,
+            evaluate_segment,
+        )
+
+        class FedAtY10:
+            """FED rate = 1.0/min only at y >= 9, else 0."""
+
+            def sample_fed_rate(self, time_s, x, y):
+                return 1.0 if y >= 9.0 else 0.0
+
+        # Centroid midpoint: (5, 0) → FED rate = 0
+        # Polyline midpoint of (0,0)->(0,10)->(10,10)->(10,0) is at arc-half
+        # Total arc = 10+10+10 = 30, half = 15.
+        # Arc 0→10 along first segment: at arc=10 we're at (0,10).
+        # Remaining 5 → midpoint is (5, 10), y=10 ≥ 9 → FED rate = 1.
+        src = StageNode(
+            stage_id="A", centroid_x=0.0, centroid_y=0.0, stage_type="distribution"
+        )
+        tgt = StageNode(
+            stage_id="B", centroid_x=10.0, centroid_y=0.0, stage_type="exit"
+        )
+        waypoints = [(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)]
+        edge = StageEdge(source="A", target="B", weight=30.0, waypoints=waypoints)
+        graph = StageGraph(
+            nodes={"A": src, "B": tgt},
+            edges={"A": [edge]},
+        )
+
+        cost = evaluate_segment(
+            graph=graph,
+            source="A",
+            target="B",
+            time_s=0.0,
+            extinction_sampler=ConstantExtinctionField(extinction_per_m=0.0),
+            fed_rate_sampler=FedAtY10(),
+            config=RouteCostConfig(sampling_step_m=1.0),
+        )
+        assert cost.fed_growth > 0.0  # polyline midpoint is in high-FED zone

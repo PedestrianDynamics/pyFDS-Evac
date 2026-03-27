@@ -297,6 +297,73 @@ def integrated_extinction_along_los(
     return total / n_samples
 
 
+def integrated_extinction_along_polyline(
+    waypoints: list[tuple[float, float]],
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float = 2.0,
+) -> float:
+    """Return the Beer-Lambert path-integrated mean extinction along a polyline.
+
+    Samples K at uniform intervals along each segment of the polyline and
+    returns the overall arithmetic mean, weighted by segment length.
+    """
+    if step_m <= 0:
+        raise ValueError(f"step_m must be positive, got {step_m}")
+    if len(waypoints) < 2:
+        if waypoints:
+            return extinction_sampler.sample_extinction(
+                time_s, waypoints[0][0], waypoints[0][1]
+            )
+        return 0.0
+
+    total_k = 0.0
+    total_samples = 0
+    for i in range(len(waypoints) - 1):
+        x0, y0 = waypoints[i]
+        x1, y1 = waypoints[i + 1]
+        seg_len = _euclidean(x0, y0, x1, y1)
+        if seg_len < 1e-9:
+            total_k += extinction_sampler.sample_extinction(time_s, x0, y0)
+            total_samples += 1
+            continue
+        n_samples = max(2, int(math.ceil(seg_len / step_m)) + 1)
+        for j in range(n_samples):
+            t = j / (n_samples - 1)
+            x = x0 + t * (x1 - x0)
+            y = y0 + t * (y1 - y0)
+            total_k += extinction_sampler.sample_extinction(time_s, x, y)
+            total_samples += 1
+
+    return total_k / total_samples if total_samples > 0 else 0.0
+
+
+def _polyline_midpoint(
+    waypoints: list[tuple[float, float]],
+) -> tuple[float, float]:
+    """Return the point at half the arc length along a polyline."""
+    if not waypoints:
+        return (0.0, 0.0)
+    if len(waypoints) == 1:
+        return waypoints[0]
+
+    total = _polyline_length(waypoints)
+    if total < 1e-9:
+        return waypoints[0]
+
+    half = total / 2.0
+    acc = 0.0
+    for i in range(len(waypoints) - 1):
+        x0, y0 = waypoints[i]
+        x1, y1 = waypoints[i + 1]
+        seg = _euclidean(x0, y0, x1, y1)
+        if acc + seg >= half:
+            t = (half - acc) / seg if seg > 1e-9 else 0.0
+            return (x0 + t * (x1 - x0), y0 + t * (y1 - y0))
+        acc += seg
+    return waypoints[-1]
+
+
 class FedRateSampler(Protocol):
     """Anything that can return a FED rate in 1/min at a point and time."""
 
@@ -354,29 +421,39 @@ def _sample_segment_extinction(
     time_s: float,
     extinction_sampler: ExtinctionSampler,
     step_m: float,
+    waypoints: list[tuple[float, float]] | None = None,
 ) -> tuple[float, float]:
-    """Sample extinction along the centroid-to-centroid line of sight.
+    """Sample extinction along edge geometry.
 
-    Delegates to ``integrated_extinction_along_los`` for the Beer-Lambert
-    path-integrated mean (Boerger et al. 2024, Eq. 8-9).
+    Uses the polyline waypoints if provided, otherwise falls back to the
+    centroid-to-centroid line of sight.
 
     Returns (segment_length, mean_extinction).
     """
-    length = _euclidean(
-        src_node.centroid_x,
-        src_node.centroid_y,
-        tgt_node.centroid_x,
-        tgt_node.centroid_y,
-    )
-    k_avg = integrated_extinction_along_los(
-        src_node.centroid_x,
-        src_node.centroid_y,
-        tgt_node.centroid_x,
-        tgt_node.centroid_y,
-        time_s,
-        extinction_sampler,
-        step_m,
-    )
+    if waypoints and len(waypoints) >= 2:
+        length = _polyline_length(waypoints)
+        k_avg = integrated_extinction_along_polyline(
+            waypoints,
+            time_s,
+            extinction_sampler,
+            step_m,
+        )
+    else:
+        length = _euclidean(
+            src_node.centroid_x,
+            src_node.centroid_y,
+            tgt_node.centroid_x,
+            tgt_node.centroid_y,
+        )
+        k_avg = integrated_extinction_along_los(
+            src_node.centroid_x,
+            src_node.centroid_y,
+            tgt_node.centroid_x,
+            tgt_node.centroid_y,
+            time_s,
+            extinction_sampler,
+            step_m,
+        )
     return length, k_avg
 
 
@@ -393,8 +470,20 @@ def evaluate_segment(
     src_node = graph.nodes[source]
     tgt_node = graph.nodes[target]
 
+    # Look up edge waypoints.
+    waypoints = None
+    for edge in graph.edges.get(source, []):
+        if edge.target == target:
+            waypoints = edge.waypoints
+            break
+
     length, k_avg = _sample_segment_extinction(
-        src_node, tgt_node, time_s, extinction_sampler, config.sampling_step_m
+        src_node,
+        tgt_node,
+        time_s,
+        extinction_sampler,
+        config.sampling_step_m,
+        waypoints=waypoints,
     )
     sf = speed_factor_from_extinction(
         k_avg,
@@ -407,8 +496,11 @@ def evaluate_segment(
 
     fed_growth = 0.0
     if fed_rate_sampler is not None:
-        mid_x = (src_node.centroid_x + tgt_node.centroid_x) / 2
-        mid_y = (src_node.centroid_y + tgt_node.centroid_y) / 2
+        if waypoints and len(waypoints) >= 2:
+            mid_x, mid_y = _polyline_midpoint(waypoints)
+        else:
+            mid_x = (src_node.centroid_x + tgt_node.centroid_x) / 2
+            mid_y = (src_node.centroid_y + tgt_node.centroid_y) / 2
         fed_rate = fed_rate_sampler.sample_fed_rate(time_s, mid_x, mid_y)
         fed_growth = fed_rate * travel_time / _SECONDS_PER_MINUTE
 
