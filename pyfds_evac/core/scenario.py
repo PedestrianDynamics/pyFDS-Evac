@@ -54,6 +54,19 @@ from .route_graph import (
     rank_routes,
     should_reevaluate,
 )
+
+
+class _FedRateAdapter:
+    """Adapt DefaultFedModel to the FedRateSampler protocol."""
+
+    def __init__(self, model):
+        self._model = model
+
+    def sample_fed_rate(self, time_s: float, x: float, y: float) -> float:
+        _, rate = self._model.sample_rate(time_s, x, y)
+        return rate
+
+
 # ---------------------------------------------------------------------------
 # Model factory
 # ---------------------------------------------------------------------------
@@ -986,13 +999,16 @@ def run_scenario(
         stage_graph: StageGraph | None = None
         reroute_debug_printed = False
         reroute_debug_samples = 0
+        _fed_rate_adapter = None
         if reroute_config is not None and direct_steering_info:
             stage_graph = StageGraph.from_scenario(
                 direct_steering_info,
                 scenario.raw.get("transitions", []),
                 distributions=scenario.raw.get("distributions"),
+                walkable_polygon=scenario.walkable_polygon,
             )
             route_segment_cache = {}
+            _fed_rate_adapter = _FedRateAdapter(fed_model) if fed_model else None
             print(
                 "Reroute debug: "
                 f"nodes={len(stage_graph.nodes)} "
@@ -1529,7 +1545,7 @@ def run_scenario(
                                 current_time,
                                 current_fed,
                                 smoke_speed_model.field,
-                                None,
+                                _fed_rate_adapter,
                                 reroute_config.cost_config,
                                 cached_segments=route_segment_cache,
                             )
@@ -1561,7 +1577,7 @@ def run_scenario(
                         current_time_s=current_time,
                         current_fed=current_fed,
                         extinction_sampler=smoke_speed_model.field,
-                        fed_rate_sampler=None,
+                        fed_rate_sampler=_fed_rate_adapter,
                         config=reroute_config,
                         cached_segments=route_segment_cache,
                     )

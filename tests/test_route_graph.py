@@ -1167,3 +1167,26 @@ class TestDynamicRanking:
         # With heavy smoke on the C0 path, the C1 path should win
         # even though it is geometrically longer.
         assert "C1" in best.path, f"Expected C1 path due to smoke, got {best.path}"
+
+
+class TestFedRateAdapter:
+    def test_evaluate_segment_with_fed_sampler(self, linear_graph):
+        """evaluate_segment should compute non-zero fed_growth when sampler is provided."""
+
+        class ConstantFedRate:
+            def sample_fed_rate(self, time_s, x, y):
+                return 0.1  # 0.1 /min everywhere
+
+        seg = evaluate_segment(
+            linear_graph,
+            "D0",
+            "C0",
+            time_s=0.0,
+            extinction_sampler=ConstantExtinctionField(extinction_per_m=0.0),
+            fed_rate_sampler=ConstantFedRate(),
+            config=RouteCostConfig(),
+        )
+        assert seg.fed_growth > 0.0
+        # travel_time = 10m / 1.3 m/s ≈ 7.69s; fed_growth = 0.1 * 7.69 / 60
+        expected_growth = 0.1 * seg.travel_time_s / 60.0
+        assert seg.fed_growth == pytest.approx(expected_growth, rel=0.01)
