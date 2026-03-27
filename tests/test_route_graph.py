@@ -1106,3 +1106,36 @@ class TestPolylineSampling:
             config=RouteCostConfig(sampling_step_m=1.0),
         )
         assert cost.fed_growth > 0.0  # polyline midpoint is in high-FED zone
+
+
+# ── Phase 4: Dynamic Dijkstra with smoke-adjusted weights ────────────────
+
+
+class TestDynamicDijkstra:
+    def test_dynamic_weights_override_static(self, diamond_graph):
+        """Dijkstra with dynamic weights picks a different path than static."""
+        # Static: D0->C0->E0 is shorter than D0->C1->E0.
+        static_paths = diamond_graph.shortest_paths_to_exits("D0")
+        static_path = static_paths["E0"][1]
+        assert "C0" in static_path  # shorter geometric path
+
+        # Dynamic: make D0->C0 very expensive, D0->C1 cheap.
+        dynamic_weights = {
+            ("D0", "C0"): 1000.0,
+            ("D0", "C1"): 1.0,
+            ("C0", "E0"): 1.0,
+            ("C1", "E0"): 1.0,
+        }
+        dynamic_paths = diamond_graph.shortest_paths_to_exits(
+            "D0", dynamic_weights=dynamic_weights
+        )
+        dynamic_path = dynamic_paths["E0"][1]
+        assert "C1" in dynamic_path  # longer geometric but cheaper dynamic
+
+    def test_dynamic_weights_none_uses_static(self, diamond_graph):
+        """When dynamic_weights=None, behavior is unchanged."""
+        paths_default = diamond_graph.shortest_paths_to_exits("D0")
+        paths_explicit = diamond_graph.shortest_paths_to_exits(
+            "D0", dynamic_weights=None
+        )
+        assert paths_default == paths_explicit

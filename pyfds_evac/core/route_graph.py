@@ -150,14 +150,19 @@ class StageGraph:
         ]
 
     def shortest_paths_to_exits(
-        self, source: str
+        self,
+        source: str,
+        dynamic_weights: dict[tuple[str, str], float] | None = None,
     ) -> dict[str, tuple[float, list[str]]]:
         """Dijkstra from *source* to every reachable exit.
 
         Returns a dict mapping exit_id -> (cost, path) where path is the
         list of stage IDs from source to exit inclusive.
+
+        When *dynamic_weights* is provided, edge costs are looked up from
+        the dict instead of using static Euclidean weights.
         """
-        dist, prev = self._dijkstra(source)
+        dist, prev = self._dijkstra(source, dynamic_weights=dynamic_weights)
         results: dict[str, tuple[float, list[str]]] = {}
         for exit_id in self.exit_nodes():
             if exit_id in dist and math.isfinite(dist[exit_id]):
@@ -177,8 +182,17 @@ class StageGraph:
         cost, path = candidates[best_exit]
         return best_exit, cost, path
 
-    def _dijkstra(self, source: str) -> tuple[dict[str, float], dict[str, str | None]]:
-        """Run Dijkstra from *source*.  Returns (dist, prev) dicts."""
+    def _dijkstra(
+        self,
+        source: str,
+        dynamic_weights: dict[tuple[str, str], float] | None = None,
+    ) -> tuple[dict[str, float], dict[str, str | None]]:
+        """Run Dijkstra from *source*.  Returns (dist, prev) dicts.
+
+        When *dynamic_weights* is provided, edge cost is looked up from
+        the dict instead of using the static edge weight.  Keys are
+        ``(source_id, target_id)`` tuples.
+        """
         if source not in self.nodes:
             return {}, {}
         dist: dict[str, float] = {sid: math.inf for sid in self.nodes}
@@ -191,7 +205,11 @@ class StageGraph:
             if d > dist[u]:
                 continue
             for edge in self.edges.get(u, []):
-                alt = d + edge.weight
+                if dynamic_weights is not None:
+                    w = dynamic_weights.get((edge.source, edge.target), edge.weight)
+                else:
+                    w = edge.weight
+                alt = d + w
                 if alt < dist[edge.target]:
                     dist[edge.target] = alt
                     prev[edge.target] = u
