@@ -5,7 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from src.core import extinction_from_soot_density, speed_from_soot_density
+from pyfds_evac.core import extinction_from_soot_density, speed_from_soot_density
 
 
 def _build_parser() -> argparse.ArgumentParser:

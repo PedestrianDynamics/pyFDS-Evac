@@ -116,6 +116,9 @@ Generate the FDS+Evac smoke-density vs speed verification plot:
 uv run python scripts/generate_smoke_density_speed_plot.py
 ```
 
+Figure: ![soot_density vs speed](artifacts/smoke-density-vs-speed.png)
+
+
 ## FED Model (Fractional Effective Dose)
 
 The FED model implements the full ISO 13571 / Purser formulation as
