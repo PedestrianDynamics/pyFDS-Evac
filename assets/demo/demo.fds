@@ -1,0 +1,72 @@
+&HEAD CHID='demo', TITLE='T-corridor fire for pyFDS-Evac demo' /
+
+! --- Computational domain ---
+! T-shape: corridor x=[0,30] y=[10,13], branch x=[17,23] y=[0,10]
+! Ceiling at 3 m
+&MESH IJK=120,52,12, XB=0,30,0,13,0,3 /
+
+&TIME T_END=300 /
+
+&DUMP DT_SLCF=1.0 /
+
+! --- Combustion: PVC-like fuel for strong soot + toxic gas production ---
+! High soot yield drives extinction/visibility reduction.
+! HCN and HCl yields produce irritant and narcotic gases for FED.
+&REAC FUEL='PVC_CABLE',
+      FORMULA='C2H3Cl',
+      SOOT_YIELD=0.172,
+      CO_YIELD=0.063,
+      HCN_YIELD=0.006,
+      HCL_YIELD=0.48,
+      HEAT_OF_COMBUSTION=16400 /
+
+! --- Geometry: solid blocks forming the T-shape ---
+! Floor, ceiling, and outer walls are default (solid).
+! Fill the two corners below the corridor that are outside the walkable T.
+&OBST XB= 0,17, 0,10, 0,3, COLOR='GRAY 80' /   ! left of branch
+&OBST XB=23,30, 0,10, 0,3, COLOR='GRAY 80' /   ! right of branch
+
+! --- Fire source at the junction ---
+! 2 m x 1 m burner on the floor, right where the branch meets the corridor.
+! 500 kW/m^2 x 2 m^2 = 1 MW peak after 60 s ramp-up.
+&SURF ID='FIRE',
+      HRRPUA=500,
+      COLOR='RED',
+      RAMP_Q='fire_ramp' /
+
+&RAMP ID='fire_ramp', T=  0, F=0.0 /
+&RAMP ID='fire_ramp', T= 30, F=0.5 /
+&RAMP ID='fire_ramp', T= 60, F=1.0 /
+&RAMP ID='fire_ramp', T=300, F=1.0 /
+
+&VENT XB=19,21, 10.5,11.5, 0,0, SURF_ID='FIRE' /
+
+! --- Open boundaries at corridor exits ---
+&VENT XB= 0, 0, 10,13, 0,3, SURF_ID='OPEN' /   ! Exit A (left)
+&VENT XB=30,30, 10,13, 0,3, SURF_ID='OPEN' /   ! Exit B (right)
+
+! --- Slice outputs at head height (z = 2 m) ---
+! Extinction (smoke-speed model)
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT' /
+
+! Required species for FED model (CO, CO2, O2)
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+
+! Optional species for full FED model
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='HYDROGEN CYANIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='HYDROGEN CHLORIDE' /
+
+! Visibility slice for Smokeview visualization
+&SLCF PBZ=2.0, QUANTITY='VISIBILITY' /
+
+! --- Point devices for diagnostics ---
+&DEVC XB=20,20,11.5,11.5,2,2, QUANTITY='TEMPERATURE', ID='T_junction' /
+&DEVC XB=20,20,11.5,11.5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_junction' /
+&DEVC XB=20,20,11.5,11.5,2,2, QUANTITY='VISIBILITY', ID='V_junction' /
+&DEVC XB=10,10,11.5,11.5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_left' /
+&DEVC XB=25,25,11.5,11.5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_right' /
+&DEVC XB=20,20,5,5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_branch' /
+
+&TAIL /
