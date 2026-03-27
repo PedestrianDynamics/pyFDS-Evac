@@ -3,9 +3,14 @@
 > Part of [pyFDS-Evac](../README.md).
 
 The pyFDS-Evac routing system implements dynamic, smoke-aware path
-planning. Agents evaluate candidate routes based on smoke exposure and
-toxic gas dose, and periodically reroute to lower-cost paths as
-conditions change.
+planning. Agents evaluate candidate routes based on smoke exposure
+and periodically reroute to lower-cost paths as conditions change.
+
+> **Note:** The cost model also supports a FED (toxic gas dose)
+> component, but the simulation loop currently passes
+> `fed_rate_sampler=None`, so FED does not influence route ranking
+> at runtime. The descriptions below note where FED terms exist in
+> the cost model but are inactive.
 
 ## Stage graph
 
@@ -42,8 +47,8 @@ if result:
 ## Route cost evaluation
 
 Each candidate route is scored by evaluating its segments (edges)
-against current smoke conditions. The cost model combines three
-factors: path length, smoke exposure, and toxic gas dose.
+against current smoke conditions. The cost model combines path length
+and smoke exposure (plus an inactive FED term — see note above).
 
 ### Segment evaluation
 
@@ -61,6 +66,8 @@ the following steps:
    speed.
 4. Optionally, estimate the FED growth along the segment from the
    FED rate at the midpoint and the estimated travel time.
+   *(Currently inactive: `fed_rate_sampler` is `None` at runtime,
+   so `fed_growth` is always 0.)*
 
 ### Line-of-sight extinction
 
@@ -95,13 +102,19 @@ where:
 
 A route is rejected under either of these conditions:
 
-- `FED_max` exceeds `fed_rejection_threshold` (default 1.0)
-- All segments are non-visible (K above
-  `visibility_extinction_threshold`) while another route has
-  visibility
+- `FED_max` exceeds `fed_rejection_threshold` (default 1.0) —
+  evaluated per route inside `evaluate_route`
+- **All** of its segments have K ≥ `visibility_extinction_threshold`
+  **and** at least one other route has at least one visible segment —
+  evaluated as a second pass in `rank_routes` after all routes are scored
 
-If all routes are rejected, the least-bad route is un-rejected as a
-fallback so the agent always has a path.
+The second condition means a smoky-but-short route is only rejected
+when a cleaner alternative exists. If every route is fully obscured,
+none are visibility-rejected.
+
+If all routes end up rejected (by either condition), the lowest-cost
+rejected route is un-rejected as a fallback so the agent always has
+a path.
 
 ### Configuration
 
@@ -130,65 +143,74 @@ switch to lower-cost exits when conditions change.
 
 ### Reevaluation scheduling
 
-Reevaluation is staggered across agents to spread computational cost.
-Each agent receives a time offset computed from its ID:
+Each agent has a personal time offset derived from its ID so that
+not all agents reevaluate on the same timestep:
 
-```python
-from pyfds_evac.core.route_graph import compute_eval_offset
-
-offset = compute_eval_offset(agent_id=42, interval_s=10.0, dt_s=0.01)
+```
+offset = (agent_id % steps_per_interval) * dt_s
 ```
 
-An agent reevaluates when `current_time - last_eval_time >= interval`.
-With a 10-second interval and 100 agents, roughly 10 agents
-reevaluate per second.
+An agent fires its **first** evaluation once `current_time >= offset`,
+then fires again every `reevaluation_interval_s` thereafter. With a
+10-second interval and 100 agents the load is spread uniformly across
+the interval.
 
-### Rerouting flow
+### Rerouting decision flow
 
-The `evaluate_and_reroute` function handles the full rerouting cycle
-for one agent:
+`evaluate_and_reroute` runs once per agent per reevaluation tick:
 
-1. Determine the agent's current position in the stage graph.
-2. Rank all routes from that position using `rank_routes`.
-3. If the best route leads to a different exit, reroute the agent
-   by updating its path choices and target stage.
-4. Return a `RouteSwitch` record for diagnostics, or `None` if no
-   switch occurred.
-
-```python
-from pyfds_evac.core.route_graph import (
-    evaluate_and_reroute,
-    RerouteConfig,
-    AgentRouteState,
-)
-
-reroute_config = RerouteConfig(
-    reevaluation_interval_s=10.0,
-    cost_config=cost_config,
-)
-
-switch = evaluate_and_reroute(
-    agent_id=42,
-    wait_info=agent_wait_info,
-    route_state=agent_route_state,
-    graph=graph,
-    current_time_s=30.0,
-    current_fed=0.3,
-    extinction_sampler=extinction_field,
-    fed_rate_sampler=fed_model,
-    config=reroute_config,
-)
 ```
+1. Resolve source node
+   ├─ use current_origin  (stage the agent is coming from)
+   └─ fall back to current_target_stage
+   → if source not in graph → skip (return None)
+
+2. rank_routes(source, t, FED, K_field)
+   ├─ Dijkstra → one shortest path per reachable exit
+   ├─ evaluate_route on each path (composite cost + rejection flags)
+   │   (only the geometrically shortest path to each exit is scored;
+   │    alternative paths to the same exit are not enumerated)
+   ├─ visibility rejection pass
+   │   └─ if ≥1 route has any visible segment:
+   │       mark routes where ALL segments are non-visible as rejected
+   ├─ sort: non-rejected first (by composite cost), rejected last
+   └─ if all rejected → un-reject least-cost route as fallback
+
+3. Pick best = ranked[0]
+   └─ if best is hard-rejected (not a fallback) → skip (return None)
+
+4. Compare best.exit_id to agent's current exit
+   ├─ same exit → update cached path silently, return None
+   └─ different exit → reroute_agent(wait_info, best.path)
+       ├─ rewrite path_choices deterministically along new path
+       ├─ retarget agent to first unvisited stage in new path
+       └─ return RouteSwitch record
+```
+
+### When a switch is triggered
+
+A switch is recorded when **all three** conditions hold:
+
+1. The agent's reevaluation tick fires (staggered offset + interval).
+2. `rank_routes` finds a best route that is not hard-rejected.
+3. That best route leads to a **different exit** than the current one.
+
+No switch is recorded when:
+
+- The agent has not yet reached its offset time.
+- The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).
+- All routes are hard-rejected (FED ≥ threshold and no visible fallback).
+- The best route leads to the same exit (path may still be updated).
 
 ### Route switch reasons
 
 Each `RouteSwitch` record includes a `reason` field:
 
-| Reason           | Description                                |
-|------------------|--------------------------------------------|
-| `initial`        | First route assignment (no previous exit)  |
-| `smoke_reroute`  | Switched to a lower-cost exit due to smoke |
-| `fallback`       | All routes rejected; using least-bad option|
+| Reason          | Condition                                                        |
+|-----------------|------------------------------------------------------------------|
+| `initial`       | Agent had no previous exit assignment                            |
+| `smoke_reroute` | Best route is a different exit (lower composite cost)            |
+| `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
 
 ### Segment caching
 
