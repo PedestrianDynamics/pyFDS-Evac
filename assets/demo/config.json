@@ -1,0 +1,82 @@
+{
+  "project_version": "2.0",
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 300,
+        "model_type": "CollisionFreeSpeedModel",
+        "strength_neighbor_repulsion": 2.6,
+        "range_neighbor_repulsion": 0.1,
+        "a_v": 1,
+        "a_min": 0.2,
+        "b_min": 0.2,
+        "b_max": 0.4,
+        "T": 1
+      },
+      "numberOfSimulations": 1,
+      "baseSeed": 42
+    },
+    "ui_state": {
+      "useShortestPaths": false
+    }
+  },
+  "exits": {
+    "exit_A_left": {
+      "type": "polygon",
+      "coordinates": [
+        [0, 10],
+        [1, 10],
+        [1, 13],
+        [0, 13],
+        [0, 10]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0
+    },
+    "exit_B_right": {
+      "type": "polygon",
+      "coordinates": [
+        [29, 10],
+        [30, 10],
+        [30, 13],
+        [29, 13],
+        [29, 10]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0
+    }
+  },
+  "distributions": {
+    "agents_dead_end": {
+      "type": "polygon",
+      "coordinates": [
+        [18, 1],
+        [22, 1],
+        [22, 8],
+        [18, 8],
+        [18, 1]
+      ],
+      "parameters": {
+        "number": 50,
+        "radius": 0.15,
+        "v0": 1.2,
+        "use_flow_spawning": false,
+        "flow_start_time": 0,
+        "flow_end_time": 0,
+        "distribution_mode": "by_number",
+        "percentage": null,
+        "use_premovement": false,
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 0,
+        "premovement_param_b": 0,
+        "premovement_seed": null,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    }
+  },
+  "checkpoints": {},
+  "zones": {},
+  "journeys": [],
+  "transitions": []
+}
