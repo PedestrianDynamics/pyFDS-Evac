@@ -57,7 +57,7 @@
         [18, 1]
       ],
       "parameters": {
-        "number": 50,
+        "number": 180,
         "radius": 0.15,
         "v0": 1.2,
         "use_flow_spawning": false,
@@ -65,10 +65,10 @@
         "flow_end_time": 0,
         "distribution_mode": "by_number",
         "percentage": null,
-        "use_premovement": false,
+        "use_premovement": true,
         "premovement_distribution": "uniform",
-        "premovement_param_a": 0,
-        "premovement_param_b": 0,
+        "premovement_param_a": 60,
+        "premovement_param_b": 120,
         "premovement_seed": null,
         "radius_distribution": "constant",
         "v0_distribution": "constant"

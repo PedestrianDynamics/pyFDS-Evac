@@ -42,9 +42,9 @@
 
 &VENT XB=19,21, 10.5,11.5, 0,0, SURF_ID='FIRE' /
 
-! --- Open boundaries at corridor exits ---
-&VENT XB= 0, 0, 10,13, 0,3, SURF_ID='OPEN' /   ! Exit A (left)
-&VENT XB=30,30, 10,13, 0,3, SURF_ID='OPEN' /   ! Exit B (right)
+! --- Closed boundaries at corridor exits (gases accumulate) ---
+&VENT XB= 0, 0, 10,13, 0,3, SURF_ID='INERT' /   ! Exit A (left)
+&VENT XB=30,30, 10,13, 0,3, SURF_ID='INERT' /   ! Exit B (right)
 
 ! --- Slice outputs at head height (z = 2 m) ---
 ! Extinction (smoke-speed model)
