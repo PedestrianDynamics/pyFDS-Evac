@@ -47,7 +47,7 @@
     }
   },
   "distributions": {
-    "agents_dead_end": {
+    "jps-distributions_0": {
       "type": "polygon",
       "coordinates": [
         [18, 1],
@@ -75,8 +75,84 @@
       }
     }
   },
-  "checkpoints": {},
+    "checkpoints": {
+    "jps-checkpoints_0": {
+      "type": "polygon",
+      "coordinates": [
+        [17, 10],
+        [20, 10],
+        [20, 13],
+        [17, 13],
+        [17, 10]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 0,
+      "speed_factor": 1
+    }
+  },
   "zones": {},
-  "journeys": [],
-  "transitions": []
+  "journeys": [
+    {
+      "id": "journey_0",
+      "stages": [
+        "jps-distributions_0",
+        "jps-checkpoints_0",
+        "exit_A_left",
+        "exit_B_right"
+      ],
+      "transitions": [
+        {
+          "from": "jps-distributions_0",
+          "to": "jps-checkpoints_0",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-checkpoints_0",
+          "to": "exit_A_left",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-checkpoints_0",
+          "to": "exit_B_right",
+          "journey_id": "journey_0"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "from": "jps-distributions_0",
+      "to": "jps-checkpoints_0",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-checkpoints_0",
+      "to": "exit_A_left",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-checkpoints_0",
+      "to": "exit_B_right",
+      "journey_id": "journey_0"
+    }
+  ],
+  "waypoint_routing": {
+    "jps-checkpoints_0": {
+      "journey_0": {
+        "destinations": [
+          {
+            "target": "exit_A_left",
+            "percentage": 50
+          },
+          {
+            "target": "exit_B_right",
+            "percentage": 50
+          }
+        ]
+      }
+    }
+  }
 }

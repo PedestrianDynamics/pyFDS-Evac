@@ -51,6 +51,7 @@ from .route_graph import (
     StageGraph,
     compute_eval_offset,
     evaluate_and_reroute,
+    rank_routes,
     should_reevaluate,
 )
 # ---------------------------------------------------------------------------
@@ -759,6 +760,7 @@ class ScenarioResult:
     smoke_history: Optional[list[dict[str, Any]]] = None
     fed_history: Optional[list[dict[str, Any]]] = None
     route_history: Optional[list[dict[str, Any]]] = None
+    route_cost_history: Optional[list[dict[str, Any]]] = None
 
     @property
     def success(self) -> bool:
@@ -911,6 +913,7 @@ def run_scenario(
     smoke_speed_model=None,
     fed_model=None,
     reroute_config: Optional[RerouteConfig] = None,
+    collect_route_cost_history: bool = False,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app."""
     _require_jupedsim()
@@ -977,9 +980,12 @@ def run_scenario(
         last_fed_update_time = None
         last_reroute_check_time: float | None = None
         route_history: list[dict[str, Any]] = []
+        route_cost_history: list[dict[str, Any]] = []
         agent_route_state: Dict[int, AgentRouteState] = {}
         route_segment_cache: dict[tuple[str, str], Any] | None = None
         stage_graph: StageGraph | None = None
+        reroute_debug_printed = False
+        reroute_debug_samples = 0
         if reroute_config is not None and direct_steering_info:
             stage_graph = StageGraph.from_scenario(
                 direct_steering_info,
@@ -987,6 +993,13 @@ def run_scenario(
                 distributions=scenario.raw.get("distributions"),
             )
             route_segment_cache = {}
+            print(
+                "Reroute debug: "
+                f"nodes={len(stage_graph.nodes)} "
+                f"edges={sum(len(edges) for edges in stage_graph.edges.values())} "
+                f"direct_steering={len(direct_steering_info)} "
+                f"wait_info={len(agent_wait_info)}"
+            )
         # Precompute whether any zone/checkpoint has a non-trivial speed factor.
         # When none do, skip the expensive per-agent update_checkpoint_speed loop.
         _has_speed_zones = (
@@ -1467,11 +1480,13 @@ def run_scenario(
                 # so we clear any previously cached values computed at different times.
                 route_segment_cache = {}
                 last_reroute_check_time = current_time
+                reroute_loop_agents = 0
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
                     wait_info = agent_wait_info.get(agent_id)
                     if wait_info is None or wait_info.get("mode") != "path":
                         continue
+                    reroute_loop_agents += 1
                     if wait_info.get("state") == "done":
                         continue
                     # Initialize route state on first encounter.
@@ -1488,6 +1503,56 @@ def run_scenario(
                     ):
                         continue
                     current_fed = fed_state.get(agent_id, {}).get("cumulative", 0.0)
+                    if reroute_debug_samples < 5:
+                        source = wait_info.get("current_origin") or wait_info.get(
+                            "current_target_stage"
+                        )
+                        print(
+                            "Reroute debug agent: "
+                            f"time={current_time:.2f} "
+                            f"agent={agent_id} "
+                            f"origin={wait_info.get('current_origin')} "
+                            f"target={wait_info.get('current_target_stage')} "
+                            f"source={source} "
+                            f"state={wait_info.get('state')} "
+                            f"in_graph={source in stage_graph.nodes if source is not None else False}"
+                        )
+                        reroute_debug_samples += 1
+                    if collect_route_cost_history:
+                        source = wait_info.get("current_origin") or wait_info.get(
+                            "current_target_stage"
+                        )
+                        if source is not None and source in stage_graph.nodes:
+                            ranked = rank_routes(
+                                stage_graph,
+                                source,
+                                current_time,
+                                current_fed,
+                                smoke_speed_model.field,
+                                None,
+                                reroute_config.cost_config,
+                                cached_segments=route_segment_cache,
+                            )
+                            for route_rank, rc in enumerate(ranked, start=1):
+                                route_cost_history.append(
+                                    {
+                                        "time_s": round(float(current_time), 6),
+                                        "agent_id": agent_id,
+                                        "source": source,
+                                        "current_exit": rs.current_exit or "",
+                                        "current_fed": float(current_fed),
+                                        "route_rank": route_rank,
+                                        "exit_id": rc.exit_id,
+                                        "path": " > ".join(rc.path),
+                                        "path_length_m": float(rc.path_length_m),
+                                        "k_ave_route": float(rc.k_ave_route),
+                                        "travel_time_s": float(rc.travel_time_s),
+                                        "fed_max_route": float(rc.fed_max_route),
+                                        "composite_cost": float(rc.composite_cost),
+                                        "rejected": bool(rc.rejected),
+                                        "rejection_reason": rc.rejection_reason or "",
+                                    }
+                                )
                     switch = evaluate_and_reroute(
                         agent_id=agent_id,
                         wait_info=wait_info,
@@ -1514,6 +1579,15 @@ def run_scenario(
                                 "reason": switch.reason,
                             }
                         )
+                if not reroute_debug_printed:
+                    print(
+                        "Reroute debug pass: "
+                        f"time={current_time:.2f} "
+                        f"path_agents={reroute_loop_agents} "
+                        f"route_cost_rows={len(route_cost_history)} "
+                        f"switches={len(route_history)}"
+                    )
+                    reroute_debug_printed = True
 
             if direct_steering_info:
                 current_time = simulation.elapsed_time()
@@ -1708,6 +1782,8 @@ def run_scenario(
 
         if reroute_config is not None and route_history:
             metrics["route_switches"] = len(route_history)
+        if reroute_config is not None and collect_route_cost_history:
+            metrics["route_cost_samples"] = len(route_cost_history)
 
         return ScenarioResult(
             metrics=metrics,
@@ -1715,6 +1791,11 @@ def run_scenario(
             smoke_history=smoke_history if smoke_speed_model is not None else None,
             fed_history=fed_history if fed_model is not None else None,
             route_history=route_history if reroute_config is not None else None,
+            route_cost_history=(
+                route_cost_history
+                if reroute_config is not None and collect_route_cost_history
+                else None
+            ),
         )
     finally:
         try:

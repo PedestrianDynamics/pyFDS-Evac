@@ -101,6 +101,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "--output-route-history",
         help="Write route switch history to CSV",
     )
+    parser.add_argument(
+        "--output-route-cost-history",
+        help="Write ranked route cost snapshots to CSV",
+    )
     return parser
 
 
@@ -173,6 +177,34 @@ def _write_route_history_csv(rows, output_path: str) -> None:
         "old_cost",
         "new_cost",
         "reason",
+    ]
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def _write_route_cost_history_csv(rows, output_path: str) -> None:
+    """Write ranked route cost snapshots to a CSV file."""
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "time_s",
+        "agent_id",
+        "source",
+        "current_exit",
+        "current_fed",
+        "route_rank",
+        "exit_id",
+        "path",
+        "path_length_m",
+        "k_ave_route",
+        "travel_time_s",
+        "fed_max_route",
+        "composite_cost",
+        "rejected",
+        "rejection_reason",
     ]
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -256,6 +288,7 @@ def main() -> int:
         smoke_speed_model=smoke_speed_model,
         fed_model=fed_model,
         reroute_config=reroute_config,
+        collect_route_cost_history=bool(args.output_route_cost_history),
     )
     if result.agents_remaining == 0:
         print(
@@ -276,6 +309,12 @@ def main() -> int:
     if args.output_route_history and result.route_history is not None:
         _write_route_history_csv(result.route_history, args.output_route_history)
         print(f"Route switches: {len(result.route_history)}")
+    if args.output_route_cost_history and result.route_cost_history is not None:
+        _write_route_cost_history_csv(
+            result.route_cost_history,
+            args.output_route_cost_history,
+        )
+        print(f"Route cost samples: {len(result.route_cost_history)}")
 
     if args.output_sqlite and result.sqlite_file:
         output_path = pathlib.Path(args.output_sqlite).resolve()
