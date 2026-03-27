@@ -610,15 +610,49 @@ def rank_routes(
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
+    Computes dynamic edge weights from current smoke/FED conditions,
+    then runs Dijkstra with those weights so pathfinding picks the
+    cheapest path under current conditions (not just the geometrically
+    shortest).
+
     Returns routes sorted by composite cost (lowest first).
     Rejected routes are sorted to the end.
     If all routes are rejected, the least-bad route is un-rejected
     as a fallback.
     """
-    all_paths = graph.shortest_paths_to_exits(source)
+    # Phase 1: evaluate all edges to get dynamic costs.
+    dynamic_weights: dict[tuple[str, str], float] = {}
+    for src_id, edges in graph.edges.items():
+        for edge in edges:
+            cache_key = (edge.source, edge.target)
+            if cached_segments is not None and cache_key in cached_segments:
+                seg = cached_segments[cache_key]
+            else:
+                seg = evaluate_segment(
+                    graph,
+                    edge.source,
+                    edge.target,
+                    time_s,
+                    extinction_sampler,
+                    fed_rate_sampler,
+                    config,
+                )
+                if cached_segments is not None:
+                    cached_segments[cache_key] = seg
+            # Per-edge cost: additive decomposition of the composite formula.
+            # current_fed is constant across routes for one agent, so omitting
+            # it from edge costs does not affect ranking.
+            dynamic_weights[cache_key] = (
+                seg.length_m * (1.0 + config.w_smoke * seg.k_avg)
+                + config.w_fed * seg.fed_growth
+            )
+
+    # Phase 2: Dijkstra with dynamic weights.
+    all_paths = graph.shortest_paths_to_exits(source, dynamic_weights=dynamic_weights)
     if not all_paths:
         return []
 
+    # Phase 3: evaluate full routes (reusing cached segments).
     costs: list[RouteCost] = []
     for exit_id, (_dist, path) in all_paths.items():
         rc = evaluate_route(

@@ -1139,3 +1139,31 @@ class TestDynamicDijkstra:
             "D0", dynamic_weights=None
         )
         assert paths_default == paths_explicit
+
+
+class TestDynamicRanking:
+    def test_rank_routes_uses_dynamic_dijkstra(self, diamond_graph):
+        """rank_routes should pick the dynamically cheaper path, not geometric shortest."""
+
+        class SpatialSmoke:
+            """Heavy smoke near C0 (0,10), clear near C1 (0,30)."""
+
+            def sample_extinction(self, time_s, x, y):
+                if abs(y - 10.0) < 5.0:
+                    return 5.0  # heavy smoke near C0
+                return 0.0
+
+        ranked = rank_routes(
+            diamond_graph,
+            source="D0",
+            time_s=0.0,
+            current_fed=0.0,
+            extinction_sampler=SpatialSmoke(),
+            fed_rate_sampler=None,
+            config=RouteCostConfig(),
+        )
+        assert len(ranked) >= 1
+        best = ranked[0]
+        # With heavy smoke on the C0 path, the C1 path should win
+        # even though it is geometrically longer.
+        assert "C1" in best.path, f"Expected C1 path due to smoke, got {best.path}"
