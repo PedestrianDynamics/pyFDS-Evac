@@ -4,6 +4,7 @@ import pytest
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.route_graph import (
+    StageEdge,
     StageGraph,
     RouteCostConfig,
     RerouteConfig,
@@ -870,3 +871,15 @@ class TestIntegratedExtinctionAlongLos:
             step_m=1.0,
         )
         assert result == pytest.approx(1.5)
+
+
+class TestEdgeWaypoints:
+    def test_edge_has_waypoints_field(self):
+        edge = StageEdge(
+            source="A", target="B", weight=10.0, waypoints=[(0, 0), (5, 5), (10, 0)]
+        )
+        assert edge.waypoints == [(0, 0), (5, 5), (10, 0)]
+
+    def test_edge_waypoints_defaults_to_empty(self):
+        edge = StageEdge(source="A", target="B", weight=10.0)
+        assert edge.waypoints == []

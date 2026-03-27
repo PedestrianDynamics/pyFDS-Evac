@@ -30,7 +30,8 @@ class StageEdge:
 
     source: str
     target: str
-    weight: float  # Euclidean distance between centroids
+    weight: float  # edge length in metres (polyline or Euclidean)
+    waypoints: list[tuple[float, float]] = field(default_factory=list)
 
 
 @dataclass
