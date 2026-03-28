@@ -1253,3 +1253,173 @@ class TestQueueConfigAndFields:
         )
         assert hasattr(rc, "queue_time_s")
         assert rc.queue_time_s == 0.0
+
+
+class TestQueueCostTerm:
+    def test_evaluate_route_adds_queue_cost(self, multi_exit_graph):
+        """Queue term increases composite cost for a congested exit."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(w_smoke=0.0, w_fed=0.0, w_queue=1.0)
+        rc_no_queue = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+        )
+        rc_with_queue = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            exit_counts={"E0": 20, "E1": 0},
+        )
+        assert rc_with_queue.composite_cost > rc_no_queue.composite_cost
+        assert rc_with_queue.queue_time_s > 0.0
+        assert rc_no_queue.queue_time_s == 0.0
+
+    def test_queue_cost_uses_distance_equivalent(self, multi_exit_graph):
+        """Queue cost = w_queue * base_speed * N / capacity."""
+        field = ConstantExtinctionField(0.0)
+        base_speed = 1.3
+        capacity = 1.3
+        n_agents = 10
+        config = RouteCostConfig(
+            w_smoke=0.0,
+            w_fed=0.0,
+            w_queue=1.0,
+            base_speed_m_per_s=base_speed,
+            default_exit_capacity=capacity,
+        )
+        rc = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            exit_counts={"E0": n_agents},
+        )
+        expected_queue_time = n_agents / capacity
+        expected_queue_distance = base_speed * expected_queue_time
+        assert abs(rc.queue_time_s - expected_queue_time) < 1e-6
+        assert (
+            abs(rc.composite_cost - (rc.path_length_m + expected_queue_distance)) < 0.1
+        )
+
+    def test_w_queue_zero_disables_queue(self, multi_exit_graph):
+        """w_queue=0 means exit_counts have no effect."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(w_smoke=0.0, w_fed=0.0, w_queue=0.0)
+        rc_no_counts = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+        )
+        rc_with_counts = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            exit_counts={"E0": 100},
+        )
+        assert abs(rc_no_counts.composite_cost - rc_with_counts.composite_cost) < 1e-9
+
+    def test_custom_capacity_reduces_penalty(self, multi_exit_graph):
+        """Higher capacity -> lower queue penalty for same agent count."""
+        field = ConstantExtinctionField(0.0)
+        config_low = RouteCostConfig(
+            w_smoke=0.0, w_fed=0.0, w_queue=1.0, default_exit_capacity=1.0
+        )
+        config_high = RouteCostConfig(
+            w_smoke=0.0, w_fed=0.0, w_queue=1.0, default_exit_capacity=5.0
+        )
+        counts = {"E0": 20}
+        rc_low = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config_low,
+            exit_counts=counts,
+        )
+        rc_high = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config_high,
+            exit_counts=counts,
+        )
+        assert rc_low.composite_cost > rc_high.composite_cost
+
+    def test_node_capacity_overrides_default(self):
+        """StageNode.capacity_agents_per_s overrides config default."""
+        from pyfds_evac.core.route_graph import StageGraph
+
+        direct_steering_info = {
+            "E0": {
+                "polygon": _box(10, 0),
+                "stage_type": "exit",
+                "capacity_agents_per_s": 10.0,
+            },
+        }
+        distributions = {"D0": {"coordinates": list(_box(0, 0).exterior.coords)}}
+        transitions = [{"from": "D0", "to": "E0"}]
+        graph = StageGraph.from_scenario(
+            direct_steering_info, transitions, distributions
+        )
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(
+            w_smoke=0.0, w_fed=0.0, w_queue=1.0, default_exit_capacity=1.0
+        )
+        rc = evaluate_route(
+            graph, ["D0", "E0"], 0.0, 0.0, field, None, config, exit_counts={"E0": 10}
+        )
+        # capacity=10 -> queue_time = 10/10 = 1.0s
+        assert abs(rc.queue_time_s - 1.0) < 1e-6
+
+
+class TestRankRoutesWithCongestion:
+    def test_congestion_shifts_best_exit(self, multi_exit_graph):
+        """With enough agents at E0, E1 becomes cheaper despite being farther."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(w_smoke=0.0, w_fed=0.0, w_queue=1.0)
+        ranked_no_q = rank_routes(multi_exit_graph, "D0", 0.0, 0.0, field, None, config)
+        assert ranked_no_q[0].exit_id == "E0"
+        ranked_q = rank_routes(
+            multi_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            exit_counts={"E0": 50, "E1": 0},
+        )
+        assert ranked_q[0].exit_id == "E1"
+
+    def test_rank_routes_without_exit_counts_unchanged(self, multi_exit_graph):
+        """Omitting exit_counts gives identical results to current behaviour."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig()
+        ranked = rank_routes(multi_exit_graph, "D0", 0.0, 0.0, field, None, config)
+        assert ranked[0].exit_id == "E0"
+        assert ranked[0].queue_time_s == 0.0
