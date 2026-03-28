@@ -63,8 +63,13 @@ combines queueing with **continuous hazard terms**:
 ```
 composite = path_length * (1 + w_smoke * K_ave)
           + w_fed * FED_max
-          + w_queue * t_queue
+          + w_queue * base_speed * t_queue
 ```
+
+The `base_speed * t_queue` term converts queueing delay (seconds)
+into distance-equivalent cost (metres) so all terms share the same
+unit space.  `base_speed` is `RouteCostConfig.base_speed_m_per_s`
+(default 1.3 m/s).
 
 This means agents balance three concerns simultaneously:
 1. How long is the path and how much smoke is on it?
@@ -114,17 +119,31 @@ that exit.  It is therefore applied only at the route-level ranking
 step (Phase 3), where it influences which *exit* is cheapest:
 
 ```
+queue_distance = base_speed_m_per_s * N_exit / capacity
 composite = path_length * (1 + w_smoke * K_ave)
           + w_fed * FED_max
-          + w_queue * N_exit / capacity
+          + w_queue * queue_distance
 ```
+
+All terms are in distance-equivalent units (metres), so `w_queue`
+has a stable physical meaning: how many metres of clear-air walking
+one second of queueing is "worth".
 
 ### Exit counts
 
 A `dict[str, int]` mapping exit stage IDs to the number of agents
-currently targeting each exit.  Maintained by the scenario loop:
+currently targeting each exit.
 
-- **Increment** when an agent is first assigned an exit (initial) or
+**Seeding**: agents leave `simulation_init` with an already-selected
+target path (determined by `direct_steering_info` and the initial
+`path_choices`).  `exit_counts` must be **seeded at startup** by
+scanning the initial assignments of all agents, so that the very
+first reevaluation tick sees accurate counts.  Flow-spawned agents
+must also be counted at spawn time (before their first reevaluation).
+
+**Maintenance** (scenario loop):
+
+- **Increment** when a flow-spawned agent appears or an agent
   reroutes to a new exit.
 - **Decrement** when an agent reroutes away from an exit or is
   removed (reaches exit / incapacitated).
@@ -180,10 +199,30 @@ queue_time_s: float  # estimated queueing time at the exit
 
 | File | Changes |
 |------|---------|
-| `pyfds_evac/core/route_graph.py` | `RouteCostConfig` gains `w_queue`, `default_exit_capacity`; `StageNode` gains optional `capacity_agents_per_s`; `rank_routes` accepts optional `exit_counts` dict; `evaluate_route` adds queue term to composite cost (Phase 3 only — not in Dijkstra edge weights); `RouteCost` gains `queue_time_s` field; `evaluate_and_reroute` accepts and passes `exit_counts` |
-| `pyfds_evac/core/scenario.py` | Maintain `exit_counts: dict[str, int]`; update on initial assignment, reroute, agent removal; read `capacity_agents_per_s` from exit entries under `Scenario.exits` and propagate into `direct_steering_info` / `StageNode` during graph construction; pass `exit_counts` to routing calls |
+| `pyfds_evac/core/route_graph.py` | `RouteCostConfig` gains `w_queue`, `default_exit_capacity`; `StageNode` gains optional `capacity_agents_per_s`; `rank_routes` accepts optional `exit_counts` dict; `evaluate_route` adds queue term to composite cost (Phase 3 only — not in Dijkstra edge weights) using `base_speed_m_per_s * N / capacity` for distance-equivalent conversion; `RouteCost` gains `queue_time_s` field; `evaluate_and_reroute` accepts and passes `exit_counts` |
+| `pyfds_evac/core/scenario.py` | Remove `smoke_speed_model is not None` guard from reroute loop; supply zero-extinction sampler when no smoke field configured; seed `exit_counts` from initial agent assignments at startup and on flow spawn; maintain counts on reroute and removal; read `capacity_agents_per_s` from exit entries under `Scenario.exits` and propagate into `direct_steering_info` / `StageNode` during graph construction; add `queue_time_s`, `exit_count`, `exit_capacity` to `route_cost_history` output; pass `exit_counts` to routing calls |
 | `tests/test_route_graph.py` | Tests for queueing term effect, `w_queue=0` backward compat, capacity parameter, exit count updates |
 | `docs/routing.md` | Document queueing cost, config parameters, congestion behaviour |
+
+### Decouple rerouting from smoke activation
+
+The current reroute loop in `scenario.py` (line 1486) is gated on
+`smoke_speed_model is not None`.  This means congestion-aware
+routing would silently not run in clear-air scenarios, making
+`w_queue > 0` a no-op.
+
+**Fix**: remove the `smoke_speed_model is not None` guard from
+the reroute-loop condition.  When no smoke field is configured,
+pass a **zero-extinction sampler** (a callable returning K = 0
+everywhere) to `rank_routes` / `evaluate_and_reroute`.  This lets
+the routing machinery run with neutral smoke cost while the queue
+term remains active.
+
+### Route cost history additions
+
+Add `queue_time_s`, `exit_count`, and `exit_capacity` columns to
+`route_cost_history.csv` so the integration verification (§ 4) can
+be confirmed from CSV output.
 
 ## What stays the same
 
