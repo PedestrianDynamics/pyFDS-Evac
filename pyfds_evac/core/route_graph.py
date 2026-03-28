@@ -22,6 +22,7 @@ class StageNode:
     centroid_x: float
     centroid_y: float
     stage_type: str  # "exit", "checkpoint", "distribution", "zone"
+    capacity_agents_per_s: float | None = None
 
 
 @dataclass
@@ -110,6 +111,7 @@ class StageGraph:
                 centroid_x=cx,
                 centroid_y=cy,
                 stage_type=stage_type,
+                capacity_agents_per_s=info.get("capacity_agents_per_s"),
             )
 
         # Add edges from transitions.

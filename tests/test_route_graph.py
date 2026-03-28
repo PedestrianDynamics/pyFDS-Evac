@@ -1190,3 +1190,46 @@ class TestFedRateAdapter:
         # travel_time = 10m / 1.3 m/s ≈ 7.69s; fed_growth = 0.1 * 7.69 / 60
         expected_growth = 0.1 * seg.travel_time_s / 60.0
         assert seg.fed_growth == pytest.approx(expected_growth, rel=0.01)
+
+
+class TestStageNodeCapacity:
+    def test_default_capacity_is_none(self):
+        from pyfds_evac.core.route_graph import StageNode
+
+        node = StageNode(
+            stage_id="E0",
+            centroid_x=0.0,
+            centroid_y=0.0,
+            stage_type="exit",
+        )
+        assert node.capacity_agents_per_s is None
+
+    def test_capacity_set_from_constructor(self):
+        from pyfds_evac.core.route_graph import StageNode
+
+        node = StageNode(
+            stage_id="E0",
+            centroid_x=0.0,
+            centroid_y=0.0,
+            stage_type="exit",
+            capacity_agents_per_s=2.5,
+        )
+        assert node.capacity_agents_per_s == 2.5
+
+    def test_capacity_propagated_from_scenario(self):
+        direct_steering_info = {
+            "E0": {
+                "polygon": _box(10, 0),
+                "stage_type": "exit",
+                "capacity_agents_per_s": 2.0,
+            },
+        }
+        distributions = {
+            "D0": {"coordinates": list(_box(0, 0).exterior.coords)},
+        }
+        transitions = [{"from": "D0", "to": "E0"}]
+        graph = StageGraph.from_scenario(
+            direct_steering_info, transitions, distributions
+        )
+        assert graph.nodes["E0"].capacity_agents_per_s == 2.0
+        assert graph.nodes["D0"].capacity_agents_per_s is None
