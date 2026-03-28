@@ -4,10 +4,15 @@
 
 The pyFDS-Evac routing system implements dynamic, smoke-aware path
 planning. Agents evaluate candidate routes based on smoke exposure
-and toxic gas dose, and periodically reroute to lower-cost paths as
-conditions change. Route costs are recomputed from current hazard
-fields at each reevaluation tick, so the chosen path adapts as
-conditions evolve.
+and periodically reroute to lower-cost paths as conditions change.
+Route costs are recomputed from current hazard fields at each
+reevaluation tick, so the chosen path adapts as conditions evolve.
+
+> **Note:** The cost model supports both smoke and FED (toxic gas)
+> terms, but the simulation loop currently passes
+> `fed_rate_sampler=None`, so only smoke influences route ranking at
+> runtime. FED-based cost can be activated by wiring a sampler into
+> the scenario loop.
 
 ## Stage graph
 
@@ -56,8 +61,9 @@ if result:
 ## Route cost evaluation
 
 Each candidate route is scored by evaluating its segments (edges)
-against current smoke and FED conditions. The cost model combines
-path length, smoke exposure, and toxic gas dose.
+against current smoke conditions. The cost model combines path
+length and smoke exposure (FED terms are supported but not currently
+active — see note above).
 
 ### Segment evaluation
 
@@ -72,9 +78,10 @@ the following steps:
    the [smoke-speed model](smoke-speed-model.md).
 3. Estimate the travel time from the segment length and reduced
    speed.
-4. Estimate the FED growth along the segment from the FED rate
-   at the polyline midpoint (by arc length) and the estimated
-   travel time.
+4. Optionally, estimate the FED growth along the segment from the
+   FED rate at the polyline midpoint (by arc length) and the
+   estimated travel time. (Currently inactive — `fed_rate_sampler`
+   is `None` in the simulation loop.)
 
 ### Line-of-sight extinction
 
@@ -174,7 +181,9 @@ the interval.
 
 2. rank_routes(source, t, FED, K_field)
    ├─ evaluate all edges → dynamic costs from current smoke/FED
-   ├─ Dijkstra with dynamic weights → one cheapest path per reachable exit
+   ├─ Dijkstra with dynamic weights → one shortest path per reachable exit
+   │   (only the geometrically shortest path to each exit is smoke-scored;
+   │    alternative paths to the same exit are not enumerated)
    ├─ evaluate_route on each path (composite cost + rejection flags)
    ├─ visibility rejection pass
    │   └─ if ≥1 route has any visible segment:
