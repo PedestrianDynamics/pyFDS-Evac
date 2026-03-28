@@ -54,6 +54,9 @@ from .route_graph import (
     rank_routes,
     should_reevaluate,
 )
+from .smoke_speed import ConstantExtinctionField
+
+_ZERO_EXTINCTION = ConstantExtinctionField(0.0)
 
 
 class _FedRateAdapter:
@@ -1483,7 +1486,6 @@ def run_scenario(
             if (
                 reroute_config is not None
                 and stage_graph is not None
-                and smoke_speed_model is not None
                 and agent_wait_info
                 and (
                     last_reroute_check_time is None
@@ -1491,6 +1493,11 @@ def run_scenario(
                 )
             ):
                 current_time = simulation.elapsed_time()
+                extinction_sampler = (
+                    smoke_speed_model.field
+                    if smoke_speed_model is not None
+                    else _ZERO_EXTINCTION
+                )
                 # Scope the route segment cache to a single reroute-check pass.
                 # Segment costs depend on current_time and the time-varying smoke field,
                 # so we clear any previously cached values computed at different times.
@@ -1544,7 +1551,7 @@ def run_scenario(
                                 source,
                                 current_time,
                                 current_fed,
-                                smoke_speed_model.field,
+                                extinction_sampler,
                                 _fed_rate_adapter,
                                 reroute_config.cost_config,
                                 cached_segments=route_segment_cache,
@@ -1576,7 +1583,7 @@ def run_scenario(
                         graph=stage_graph,
                         current_time_s=current_time,
                         current_fed=current_fed,
-                        extinction_sampler=smoke_speed_model.field,
+                        extinction_sampler=extinction_sampler,
                         fed_rate_sampler=_fed_rate_adapter,
                         config=reroute_config,
                         cached_segments=route_segment_cache,
