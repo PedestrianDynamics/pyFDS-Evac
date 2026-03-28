@@ -225,7 +225,6 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
 
     # FED readiness summary
     print("\nFED readiness:")
-    has = {q["label"]: any(r[0]["label"] == q["label"] for r in results) for q in QUANTITIES}
     co_ok  = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "CO")
     co2_ok = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "CO₂")
     o2_ok  = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "O₂")
@@ -233,7 +232,7 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
     if co_ok and co2_ok and o2_ok:
         print("  ✓ CO / CO2 / O2 all present and non-zero → default FED model will run")
     else:
-        missing = [l for l, ok in [("CO", co_ok), ("CO2", co2_ok), ("O2", o2_ok)] if not ok]
+        missing = [name for name, ok in [("CO", co_ok), ("CO2", co2_ok), ("O2", o2_ok)] if not ok]
         print(f"  ✗ Missing or zero: {', '.join(missing)} → FED will be negligible")
 
     smoke_ok = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "Extinction K")
