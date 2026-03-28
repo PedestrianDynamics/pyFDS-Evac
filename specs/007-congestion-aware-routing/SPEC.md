@@ -101,17 +101,17 @@ simulation.
 
 ### Cost function
 
-Per-edge Dijkstra weight (Phase 1 of `rank_routes`):
+Per-edge Dijkstra weight (Phase 1 of `rank_routes`) is unchanged —
+only segment-local terms:
 
 ```
 edge_cost = length_m * (1 + w_smoke * k_avg) + w_fed * fed_growth
-          + (w_queue * N_exit / capacity  if target is exit else 0)
 ```
 
-The queueing term is added only on edges whose target is an exit
-node, so it appears once per route (at the terminal edge).
-
-Route-level composite cost (Phase 3):
+The queueing term is a per-exit constant (same for all paths to a
+given exit), so it cannot change which *path* Dijkstra picks for
+that exit.  It is therefore applied only at the route-level ranking
+step (Phase 3), where it influences which *exit* is cheapest:
 
 ```
 composite = path_length * (1 + w_smoke * K_ave)
@@ -135,16 +135,20 @@ Passed as an optional parameter to `rank_routes` and
 
 ### Exit capacity
 
-A new optional field `capacity_agents_per_s: float` on exit stage
-nodes in the scenario config:
+A new optional field `capacity_agents_per_s: float` on each exit
+entry in the scenario config (`config["exits"][exit_id]`):
 
 ```json
 {
-  "id": "exit_1",
-  "stage_type": "exit",
-  "capacity_agents_per_s": 1.3
+  "exits": {
+    "exit_1": {
+      "capacity_agents_per_s": 1.3
+    }
+  }
 }
 ```
+
+Read during graph construction and propagated into `StageNode`.
 
 Default: 1.3 agents/s (consistent with FDS+Evac's default specific
 flow of 1.3 p/m/s for a 1 m wide door, [1] §6 p130).
@@ -176,8 +180,8 @@ queue_time_s: float  # estimated queueing time at the exit
 
 | File | Changes |
 |------|---------|
-| `pyfds_evac/core/route_graph.py` | `RouteCostConfig` gains `w_queue`, `default_exit_capacity`; `StageNode` gains optional `capacity_agents_per_s`; `rank_routes` accepts optional `exit_counts` dict; edge cost adds queue term on exit edges; `evaluate_route` adds queue term to composite; `RouteCost` gains `queue_time_s` field; `evaluate_and_reroute` accepts and passes `exit_counts` |
-| `pyfds_evac/core/scenario.py` | Maintain `exit_counts: dict[str, int]`; update on initial assignment, reroute, agent removal; read `capacity_agents_per_s` from stage config JSON; pass `exit_counts` to routing calls |
+| `pyfds_evac/core/route_graph.py` | `RouteCostConfig` gains `w_queue`, `default_exit_capacity`; `StageNode` gains optional `capacity_agents_per_s`; `rank_routes` accepts optional `exit_counts` dict; `evaluate_route` adds queue term to composite cost (Phase 3 only — not in Dijkstra edge weights); `RouteCost` gains `queue_time_s` field; `evaluate_and_reroute` accepts and passes `exit_counts` |
+| `pyfds_evac/core/scenario.py` | Maintain `exit_counts: dict[str, int]`; update on initial assignment, reroute, agent removal; read `capacity_agents_per_s` from exit entries under `Scenario.exits` and propagate into `direct_steering_info` / `StageNode` during graph construction; pass `exit_counts` to routing calls |
 | `tests/test_route_graph.py` | Tests for queueing term effect, `w_queue=0` backward compat, capacity parameter, exit count updates |
 | `docs/routing.md` | Document queueing cost, config parameters, congestion behaviour |
 
