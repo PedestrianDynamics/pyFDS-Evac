@@ -1423,3 +1423,83 @@ class TestRankRoutesWithCongestion:
         ranked = rank_routes(multi_exit_graph, "D0", 0.0, 0.0, field, None, config)
         assert ranked[0].exit_id == "E0"
         assert ranked[0].queue_time_s == 0.0
+
+
+class TestEvaluateAndRerouteWithCongestion:
+    def test_congestion_triggers_reroute(self, multi_exit_graph):
+        """Agent switches from congested E0 to uncongested E1."""
+        field = ConstantExtinctionField(0.0)
+        cost_config = RouteCostConfig(w_smoke=0.0, w_fed=0.0, w_queue=1.0)
+        config = RerouteConfig(reevaluation_interval_s=1.0, cost_config=cost_config)
+        wait_info = {
+            "mode": "path",
+            "current_origin": "D0",
+            "current_target_stage": "E0",
+            "path_choices": {"D0": [("E0", 100.0)]},
+            "stage_configs": {
+                "E0": {
+                    "polygon": _box(10, 0),
+                    "stage_type": "exit",
+                    "waiting_time": 0.0,
+                    "waiting_time_distribution": "constant",
+                    "waiting_time_std": 1.0,
+                    "enable_throughput_throttling": False,
+                    "max_throughput": 1.0,
+                    "speed_factor": 1.0,
+                },
+                "E1": {
+                    "polygon": _box(20, 0),
+                    "stage_type": "exit",
+                    "waiting_time": 0.0,
+                    "waiting_time_distribution": "constant",
+                    "waiting_time_std": 1.0,
+                    "enable_throughput_throttling": False,
+                    "max_throughput": 1.0,
+                    "speed_factor": 1.0,
+                },
+            },
+            "state": "to_target",
+        }
+        route_state = AgentRouteState(current_exit="E0", eval_offset_s=0.0)
+        switch = evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=multi_exit_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+            exit_counts={"E0": 50, "E1": 0},
+        )
+        assert switch is not None
+        assert switch.new_exit == "E1"
+        assert switch.old_exit == "E0"
+
+    def test_no_exit_counts_backward_compatible(self, multi_exit_graph):
+        """Without exit_counts, behaviour is identical to current."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(reevaluation_interval_s=1.0)
+        wait_info = {
+            "mode": "path",
+            "current_origin": "D0",
+            "current_target_stage": "E0",
+            "path_choices": {"D0": [("E0", 100.0)]},
+            "stage_configs": {},
+            "state": "to_target",
+        }
+        route_state = AgentRouteState(eval_offset_s=0.0)
+        switch = evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=multi_exit_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is not None
+        assert switch.new_exit == "E0"

@@ -883,6 +883,8 @@ def evaluate_and_reroute(
     fed_rate_sampler: FedRateSampler | None,
     config: RerouteConfig,
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    *,
+    exit_counts: dict[str, int] | None = None,
 ) -> RouteSwitch | None:
     """Evaluate routes and reroute the agent if a better exit is found.
 
@@ -904,6 +906,7 @@ def evaluate_and_reroute(
         fed_rate_sampler,
         config.cost_config,
         cached_segments=cached_segments,
+        exit_counts=exit_counts,
     )
     if not ranked:
         return None
