@@ -17,9 +17,7 @@ def main(cost_csv: str, routes_csv: str | None = None) -> None:
     df = pd.read_csv(cost_csv)
 
     # Mean composite cost per (time, exit) across all agents
-    mean_cost = (
-        df.groupby(["time_s", "exit_id"])["composite_cost"].mean().reset_index()
-    )
+    mean_cost = df.groupby(["time_s", "exit_id"])["composite_cost"].mean().reset_index()
 
     exits = sorted(mean_cost["exit_id"].unique())
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
@@ -29,7 +27,13 @@ def main(cost_csv: str, routes_csv: str | None = None) -> None:
     for i, exit_id in enumerate(exits):
         sub = mean_cost[mean_cost["exit_id"] == exit_id].sort_values("time_s")
         label = exit_id.replace("_", " ")
-        ax.plot(sub["time_s"], sub["composite_cost"], label=label, color=colors[i % len(colors)], lw=2)
+        ax.plot(
+            sub["time_s"],
+            sub["composite_cost"],
+            label=label,
+            color=colors[i % len(colors)],
+            lw=2,
+        )
 
     # Overlay route switches if provided
     if routes_csv and Path(routes_csv).exists():

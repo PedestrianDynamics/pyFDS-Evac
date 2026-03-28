@@ -99,8 +99,8 @@ class QuantityStats:
     label: str
     unit: str
     times: np.ndarray
-    peak: np.ndarray       # max over spatial domain at each time step
-    mean: np.ndarray       # mean over spatial domain at each time step
+    peak: np.ndarray  # max over spatial domain at each time step
+    mean: np.ndarray  # mean over spatial domain at each time step
     global_max: float
     global_mean_at_peak: float
     scale: float = 1.0
@@ -157,10 +157,9 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
 
     # Show all available slice quantities
     try:
-        all_quantities = sorted({
-            str(getattr(q, "name", q))
-            for q in getattr(sim.slices, "quantities", [])
-        })
+        all_quantities = sorted(
+            {str(getattr(q, "name", q)) for q in getattr(sim.slices, "quantities", [])}
+        )
     except Exception:
         all_quantities = []
 
@@ -169,7 +168,9 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
         print(f"  - {q}")
 
     print(f"\nAnalysing key quantities at z ≈ {height} m:")
-    print(f"{'Quantity':<12} {'Unit':<8} {'Global max':>12} {'Mean@peak':>12} {'Status'}")
+    print(
+        f"{'Quantity':<12} {'Unit':<8} {'Global max':>12} {'Mean@peak':>12} {'Status'}"
+    )
     print("-" * 60)
 
     results: list[tuple[dict, QuantityStats]] = []
@@ -225,18 +226,26 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
 
     # FED readiness summary
     print("\nFED readiness:")
-    co_ok  = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "CO")
+    co_ok = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "CO")
     co2_ok = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "CO₂")
-    o2_ok  = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "O₂")
+    o2_ok = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "O₂")
 
     if co_ok and co2_ok and o2_ok:
         print("  ✓ CO / CO2 / O2 all present and non-zero → default FED model will run")
     else:
-        missing = [name for name, ok in [("CO", co_ok), ("CO2", co2_ok), ("O2", o2_ok)] if not ok]
+        missing = [
+            name
+            for name, ok in [("CO", co_ok), ("CO2", co2_ok), ("O2", o2_ok)]
+            if not ok
+        ]
         print(f"  ✗ Missing or zero: {', '.join(missing)} → FED will be negligible")
 
-    smoke_ok = any(r[1].global_max > 1e-9 for r in results if r[0]["label"] == "Extinction K")
-    print(f"  {'✓' if smoke_ok else '✗'} Extinction coefficient → smoke-speed model {'will' if smoke_ok else 'will NOT'} run")
+    smoke_ok = any(
+        r[1].global_max > 1e-9 for r in results if r[0]["label"] == "Extinction K"
+    )
+    print(
+        f"  {'✓' if smoke_ok else '✗'} Extinction coefficient → smoke-speed model {'will' if smoke_ok else 'will NOT'} run"
+    )
 
     if not plot:
         return
@@ -257,11 +266,19 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
         color = qinfo.get("color", "tab:blue")
         ax.plot(stats.times, stats.peak, color=color, lw=2, label="spatial max")
         ax.fill_between(stats.times, stats.mean, stats.peak, alpha=0.2, color=color)
-        ax.plot(stats.times, stats.mean, color=color, lw=1, ls="--", label="spatial mean")
+        ax.plot(
+            stats.times, stats.mean, color=color, lw=1, ls="--", label="spatial mean"
+        )
 
         threshold = qinfo.get("threshold")
         if threshold is not None:
-            ax.axhline(threshold, color="red", lw=1, ls=":", label=qinfo.get("threshold_label", f"threshold={threshold}"))
+            ax.axhline(
+                threshold,
+                color="red",
+                lw=1,
+                ls=":",
+                label=qinfo.get("threshold_label", f"threshold={threshold}"),
+            )
 
         ax.set_title(f"{stats.label} [{stats.unit}]")
         ax.set_xlabel("Time (s)")
@@ -276,6 +293,7 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
     fig.tight_layout()
 
     import pathlib
+
     out_path = pathlib.Path(fds_dir) / "fds_inspection.png"
     fig.savefig(out_path, dpi=150)
     print(f"\nPlot saved: {out_path}")
@@ -283,9 +301,16 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("fds_dir", help="Path to FDS simulation directory")
-    parser.add_argument("--height", type=float, default=2.0, help="Slice height in metres (default: 2.0)")
+    parser.add_argument(
+        "--height",
+        type=float,
+        default=2.0,
+        help="Slice height in metres (default: 2.0)",
+    )
     parser.add_argument("--plot", action="store_true", help="Generate and save plots")
     args = parser.parse_args()
 
