@@ -396,6 +396,7 @@ class RouteCostConfig:
 
     w_smoke: float = 1.0
     w_fed: float = 10.0
+    w_queue: float = 1.0
     fed_rejection_threshold: float = 1.0
     visibility_extinction_threshold: float = 0.5
     sampling_step_m: float = 2.0
@@ -403,6 +404,7 @@ class RouteCostConfig:
     alpha: float = 0.706
     beta: float = -0.057
     min_speed_factor: float = 0.1
+    default_exit_capacity: float = 1.3
 
 
 @dataclass(frozen=True)
@@ -433,6 +435,7 @@ class RouteCost:
     segments: list[SegmentCost]
     rejected: bool
     rejection_reason: str | None
+    queue_time_s: float = 0.0
 
 
 def _sample_segment_extinction(
@@ -596,6 +599,7 @@ def evaluate_route(
         segments=segments,
         rejected=rejected,
         rejection_reason=reason,
+        queue_time_s=0.0,
     )
 
 
@@ -689,6 +693,7 @@ def rank_routes(
                     segments=rc.segments,
                     rejected=True,
                     rejection_reason="all segments non-visible",
+                    queue_time_s=rc.queue_time_s,
                 )
             updated.append(rc)
         costs = updated
@@ -714,6 +719,7 @@ def rank_routes(
             segments=best.segments,
             rejected=False,
             rejection_reason=f"fallback: {best.rejection_reason}",
+            queue_time_s=best.queue_time_s,
         )
 
     return costs

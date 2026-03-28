@@ -1233,3 +1233,23 @@ class TestStageNodeCapacity:
         )
         assert graph.nodes["E0"].capacity_agents_per_s == 2.0
         assert graph.nodes["D0"].capacity_agents_per_s is None
+
+
+class TestQueueConfigAndFields:
+    def test_route_cost_config_defaults(self):
+        config = RouteCostConfig()
+        assert config.w_queue == 1.0
+        assert config.default_exit_capacity == 1.3
+
+    def test_route_cost_config_queue_disabled(self):
+        config = RouteCostConfig(w_queue=0.0)
+        assert config.w_queue == 0.0
+
+    def test_route_cost_has_queue_time_field(self, linear_graph):
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig()
+        rc = evaluate_route(
+            linear_graph, ["D0", "C0", "E0"], 0.0, 0.0, field, None, config
+        )
+        assert hasattr(rc, "queue_time_s")
+        assert rc.queue_time_s == 0.0
