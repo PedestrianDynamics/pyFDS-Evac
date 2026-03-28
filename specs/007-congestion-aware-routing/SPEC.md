@@ -134,6 +134,20 @@ one second of queueing is "worth".
 A `dict[str, int]` mapping exit stage IDs to the number of agents
 currently targeting each exit.
 
+**Source of truth**: `AgentRouteState.current_exit` is the single
+authoritative record of which exit an agent targets.  `exit_counts`
+is a derived aggregate — every mutation of `current_exit` must be
+accompanied by the corresponding increment/decrement of
+`exit_counts`.  CSV diagnostics (`route_cost_history`) read from
+the same `exit_counts` dict, so all three cannot drift.
+
+**Self-counting**: when an agent evaluates its *current* exit, the
+count `N_exit` **includes the agent itself**.  This is the simpler
+invariant (count always equals the number of agents with
+`current_exit == exit_id`) and avoids temporary decrement/re-increment
+around each evaluation.  The practical effect is that the first agent
+to target an empty exit sees `N = 1`, not `N = 0`.
+
 **Seeding**: agents leave `simulation_init` with an already-selected
 target path (determined by `direct_steering_info` and the initial
 `path_choices`).  `exit_counts` must be **seeded at startup** by
@@ -242,8 +256,12 @@ be confirmed from CSV output.
    current implementation.
 3. **Capacity effect**: higher capacity → less queueing penalty →
    exit attracts more agents.
-4. **Integration**: demo scenario with `w_queue > 0` — confirm
-   agents distribute across exits in `route_cost_history.csv`.
+4. **Integration (smoke)**: demo scenario with `w_queue > 0` —
+   confirm agents distribute across exits in `route_cost_history.csv`.
+5. **Integration (clear-air)**: scenario with no smoke field and
+   `w_queue > 0` — confirm rerouting still runs and agents
+   distribute across exits based on congestion alone.  This
+   validates the smoke-gate decoupling.
 
 ## References
 
