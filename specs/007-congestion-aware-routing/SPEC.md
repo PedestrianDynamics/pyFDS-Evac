@@ -142,18 +142,26 @@ accompanied by the corresponding increment/decrement of
 the same `exit_counts` dict, so all three cannot drift.
 
 **Self-counting**: when an agent evaluates its *current* exit, the
-count `N_exit` **includes the agent itself**.  This is the simpler
-invariant (count always equals the number of agents with
-`current_exit == exit_id`) and avoids temporary decrement/re-increment
-around each evaluation.  The practical effect is that the first agent
-to target an empty exit sees `N = 1`, not `N = 0`.
+count `N_exit` **includes the agent itself**.  This is intentional:
+it keeps the invariant simple (count always equals the number of
+agents with `current_exit == exit_id`) and avoids temporary
+decrement/re-increment around each evaluation.  The practical effect
+is that the first agent to target an empty exit sees `N = 1`, not
+`N = 0` — a slight over-penalty for pioneers, accepted in favour of
+correctness and simplicity.
 
-**Seeding**: agents leave `simulation_init` with an already-selected
-target path (determined by `direct_steering_info` and the initial
-`path_choices`).  `exit_counts` must be **seeded at startup** by
-scanning the initial assignments of all agents, so that the very
-first reevaluation tick sees accurate counts.  Flow-spawned agents
-must also be counted at spawn time (before their first reevaluation).
+**Seeding at startup** (scenario.py, after `StageGraph.from_scenario`
+at line ~1004): scan `agent_wait_info` for all pre-existing agents.
+For each entry whose `mode == "path"`, extract the terminal stage
+from `path_choices` (or `current_target_stage` as fallback).  If
+that stage is an exit node in the graph, increment `exit_counts`.
+Also initialise an `AgentRouteState` with `current_exit` set to that
+exit so the source-of-truth invariant holds from the start.
+
+**Flow-spawn counting** (scenario.py, lines ~1268 and ~1314): when
+a flow-spawned agent is added to `agent_wait_info`, immediately
+resolve its terminal exit from the assigned path and increment
+`exit_counts` — before the agent's first reevaluation tick fires.
 
 **Maintenance** (scenario loop):
 
@@ -162,9 +170,10 @@ must also be counted at spawn time (before their first reevaluation).
 - **Decrement** when an agent reroutes away from an exit or is
   removed (reaches exit / incapacitated).
 
-Passed as an optional parameter to `rank_routes` and
-`evaluate_and_reroute`.  When `None`, no queueing term is applied
-(backward compatible).
+Passed as a **keyword-only** optional parameter to `rank_routes`
+and `evaluate_and_reroute` (avoids positional-arg confusion with
+the existing parameter list).  When `None`, no queueing term is
+applied (backward compatible).
 
 ### Exit capacity
 
@@ -181,13 +190,38 @@ entry in the scenario config (`config["exits"][exit_id]`):
 }
 ```
 
-Read during graph construction and propagated into `StageNode`.
+**`StageNode` change**: `StageNode` (route_graph.py:18) currently
+has four fields (`stage_id`, `centroid_x`, `centroid_y`,
+`stage_type`).  Add a new optional field:
+
+```python
+capacity_agents_per_s: float | None = None
+```
+
+**Construction**: in `StageGraph.from_scenario` (route_graph.py:102),
+where exit nodes are created from `direct_steering_info`, read
+`capacity_agents_per_s` from the info dict and pass it to the
+`StageNode` constructor:
+
+```python
+graph.nodes[stage_id] = StageNode(
+    stage_id=stage_id,
+    centroid_x=cx,
+    centroid_y=cy,
+    stage_type=stage_type,
+    capacity_agents_per_s=info.get("capacity_agents_per_s"),
+)
+```
+
+The scenario layer reads `capacity_agents_per_s` from
+`config["exits"][exit_id]` and injects it into
+`direct_steering_info[exit_id]` before graph construction.
 
 Default: 1.3 agents/s (consistent with FDS+Evac's default specific
 flow of 1.3 p/m/s for a 1 m wide door, [1] §6 p130).
 
-Stored on `StageNode` as `Optional[float]`.  When `None`, falls
-back to the default from config.
+When `StageNode.capacity_agents_per_s` is `None`, falls back to
+`RouteCostConfig.default_exit_capacity`.
 
 ### Config additions
 
@@ -227,16 +261,35 @@ routing would silently not run in clear-air scenarios, making
 
 **Fix**: remove the `smoke_speed_model is not None` guard from
 the reroute-loop condition.  When no smoke field is configured,
-pass a **zero-extinction sampler** (a callable returning K = 0
-everywhere) to `rank_routes` / `evaluate_and_reroute`.  This lets
-the routing machinery run with neutral smoke cost while the queue
-term remains active.
+pass a **zero-extinction sampler** to `rank_routes` /
+`evaluate_and_reroute`.  Concrete approach — a module-level
+constant lambda:
+
+```python
+_ZERO_EXTINCTION: Callable = lambda x, y: 0.0
+```
+
+In the reroute loop, replace `smoke_speed_model.field` with:
+
+```python
+extinction_sampler = (
+    smoke_speed_model.field if smoke_speed_model is not None
+    else _ZERO_EXTINCTION
+)
+```
+
+This lets the routing machinery run with neutral smoke cost while
+the queue term remains active.  All existing smoke-dependent code
+paths remain unchanged.
 
 ### Route cost history additions
 
 Add `queue_time_s`, `exit_count`, and `exit_capacity` columns to
 `route_cost_history.csv` so the integration verification (§ 4) can
-be confirmed from CSV output.
+be confirmed from CSV output.  New columns are appended at the end
+of the row; existing column order is preserved so downstream CSV
+consumers that read by position are unaffected for the original
+columns.
 
 ## What stays the same
 
