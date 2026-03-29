@@ -1629,6 +1629,13 @@ def run_scenario(
                                 exit_counts=exit_counts,
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
+                                _exit_node = stage_graph.nodes.get(rc.exit_id)
+                                _exit_cap = (
+                                    _exit_node.capacity_agents_per_s
+                                    if _exit_node is not None
+                                    and _exit_node.capacity_agents_per_s is not None
+                                    else reroute_config.cost_config.default_exit_capacity
+                                )
                                 route_cost_history.append(
                                     {
                                         "time_s": round(float(current_time), 6),
@@ -1646,6 +1653,9 @@ def run_scenario(
                                         "composite_cost": float(rc.composite_cost),
                                         "rejected": bool(rc.rejected),
                                         "rejection_reason": rc.rejection_reason or "",
+                                        "queue_time_s": float(rc.queue_time_s),
+                                        "exit_count": exit_counts.get(rc.exit_id, 0),
+                                        "exit_capacity": float(_exit_cap),
                                     }
                                 )
                     switch = evaluate_and_reroute(
