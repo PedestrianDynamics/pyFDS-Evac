@@ -9,10 +9,9 @@ Route costs are recomputed from current hazard fields at each
 reevaluation tick, so the chosen path adapts as conditions evolve.
 
 > **Note:** The cost model supports both smoke and FED (toxic gas)
-> terms, but the simulation loop currently passes
-> `fed_rate_sampler=None`, so only smoke influences route ranking at
-> runtime. FED-based cost can be activated by wiring a sampler into
-> the scenario loop.
+> terms. FED-based route cost is active when a `fed_model` is
+> provided to `run_scenario`; otherwise `fed_rate_sampler` is `None`
+> and only smoke influences route ranking.
 
 ## Stage graph
 
@@ -80,8 +79,8 @@ the following steps:
    speed.
 4. Optionally, estimate the FED growth along the segment from the
    FED rate at the polyline midpoint (by arc length) and the
-   estimated travel time. (Currently inactive — `fed_rate_sampler`
-   is `None` in the simulation loop.)
+   estimated travel time. (Active only when a `fed_model` is
+   provided; otherwise `fed_rate_sampler` is `None`.)
 
 ### Line-of-sight extinction
 
@@ -231,9 +230,9 @@ the interval.
 
 2. rank_routes(source, t, FED, K_field)
    ├─ evaluate all edges → dynamic costs from current smoke/FED
-   ├─ Dijkstra with dynamic weights → one shortest path per reachable exit
-   │   (only the geometrically shortest path to each exit is smoke-scored;
-   │    alternative paths to the same exit are not enumerated)
+   ├─ Dijkstra with dynamic weights → one minimum-cost path per reachable exit
+   │   (only the single lowest-cost path to each exit under these weights
+   │    is evaluated; alternative paths to the same exit are not enumerated)
    ├─ evaluate_route on each path (composite cost + rejection flags)
    ├─ visibility rejection pass
    │   └─ if ≥1 route has any visible segment:

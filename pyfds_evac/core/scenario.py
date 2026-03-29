@@ -1332,6 +1332,16 @@ def run_scenario(
                                                 exit_counts[_spawn_exit] = (
                                                     exit_counts.get(_spawn_exit, 0) + 1
                                                 )
+                                                if reroute_config is not None:
+                                                    agent_route_state[agent_id] = (
+                                                        AgentRouteState(
+                                                            eval_offset_s=compute_eval_offset(
+                                                                agent_id,
+                                                                reroute_config.reevaluation_interval_s,
+                                                            ),
+                                                            current_exit=_spawn_exit,
+                                                        )
+                                                    )
                                 elif (
                                     not selected_variant
                                     and agent_wait_info is not None
@@ -1401,6 +1411,16 @@ def run_scenario(
                                                 exit_counts[_spawn_exit] = (
                                                     exit_counts.get(_spawn_exit, 0) + 1
                                                 )
+                                                if reroute_config is not None:
+                                                    agent_route_state[agent_id] = (
+                                                        AgentRouteState(
+                                                            eval_offset_s=compute_eval_offset(
+                                                                agent_id,
+                                                                reroute_config.reevaluation_interval_s,
+                                                            ),
+                                                            current_exit=_spawn_exit,
+                                                        )
+                                                    )
 
                                 spawned_this_attempt = True
                                 break
