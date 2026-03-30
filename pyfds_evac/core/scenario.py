@@ -963,6 +963,7 @@ def run_scenario(
     fed_model=None,
     reroute_config: Optional[RerouteConfig] = None,
     collect_route_cost_history: bool = False,
+    vis_model=None,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app."""
     _require_jupedsim()
@@ -1647,6 +1648,7 @@ def run_scenario(
                                 reroute_config.cost_config,
                                 cached_segments=route_segment_cache,
                                 exit_counts=exit_counts,
+                                vis_model=vis_model,
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
                                 _exit_node = stage_graph.nodes.get(rc.exit_id)
@@ -1690,6 +1692,7 @@ def run_scenario(
                         config=reroute_config,
                         cached_segments=route_segment_cache,
                         exit_counts=exit_counts,
+                        vis_model=vis_model,
                     )
                     if switch is not None:
                         # Update exit_counts: decrement old, increment new.
