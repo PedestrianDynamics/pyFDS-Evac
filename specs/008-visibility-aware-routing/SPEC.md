@@ -210,7 +210,64 @@ Default when `"familiarity"` is absent: `"full"` (current behaviour).
   + Schröder's difference maps and consequence scalar $C$ as a
   postprocessing pipeline on pyFDS-Evac output.  Tracked separately.
 
+## Visualisations and verification plots
+
+Two vismap plot methods are directly useful for verifying progress at
+each phase.
+
+### `vis.create_time_agg_wp_agg_vismap_plot(plot_obstructions=True)`
+
+Aggregates visibility across all waypoints and all timesteps into a
+single spatial map.  Each floor cell is coloured by how often (or
+whether) it can see any sign.
+
+**Use before Phase 1:**
+- Run immediately after placing sign descriptors in `config.json`.
+- Confirm no large dead zones exist where agents could never see the
+  next node.  If a corridor appears persistently blind, either the sign
+  needs repositioning or an intermediate junction waypoint is missing.
+- With `plot_obstructions=True`: walls are overlaid explicitly,
+  distinguishing architectural occlusion from smoke-driven invisibility.
+
+### `vis.create_aset_map_plot(plot_obstructions=True)`
+
+Shows when each floor cell first loses visibility to any exit sign —
+pure fire + geometry output, no evacuation model needed.
+
+**Use to validate the fire scenario:**
+- Confirms that the region near exit_B loses sign visibility first and
+  earliest, consistent with `fds_inspection.png`.
+- Natural input for the ASET/RSET postprocessing pipeline
+  (Schröder difference maps + consequence scalar $C$).
+
+**Use to verify Phase 1 rejection logic:**
+- After Phase 1 implementation, overlay route rejection events from
+  `route_costs.csv` (column `rejected=True`, `rejection_reason=
+  "next_node_not_visible"`) onto the ASET map.
+- Rejection events should cluster in the same floor cells and start at
+  the same times where the ASET map shows visibility loss.
+- Mismatch → bug in the rejection logic or the sign placement.
+
+**Use to compare Phase 2 knowledge tiers:**
+- `familiarity=full` agents: rejection events should track ASET closely
+  (they know all routes but reject the invisible ones).
+- `familiarity=discovery` agents: rejection events may appear earlier
+  and in more cells because their cognitive map is incomplete —
+  they cannot route around a smoked junction they have not yet seen.
+
 ## Implementation phases
+
+### Phase 0 — Plots only, no code change
+
+Before touching any routing logic:
+
+1. Place sign descriptors for all nodes in `assets/demo/config.json`.
+2. Run `load_or_compute_vis(fds_dir, waypoints, times, cache_path)`.
+3. Produce `create_time_agg_wp_agg_vismap_plot` → check sign coverage.
+4. Produce `create_aset_map_plot` → validate fire scenario geometry.
+5. Commit plots to `assets/demo/figs/` as baseline.
+
+No code changes; pure configuration and visualisation.
 
 ### Phase 1 — Visibility-gated route rejection (drop-in)
 
@@ -220,6 +277,8 @@ Default when `"familiarity"` is absent: `"full"` (current behaviour).
   `node_is_visible` when `vis_model` is not None.
 - Add `--vis-cache` CLI flag to `run.py`.
 - All agents still have `familiarity=full`.
+- **Verification**: overlay rejection events on ASET map; confirm
+  spatial and temporal alignment.
 - Tests: mock `VisibilityModel`, verify rejection fires correctly.
 
 ### Phase 2 — Cognitive map and discovery mode
@@ -231,6 +290,11 @@ Default when `"familiarity"` is absent: `"full"` (current behaviour).
 - On arrival at node: expand cognitive map with adjacent nodes.
 - Discovery mode: if no exit reachable, navigate to best visible
   adjacent node.
+- **Verification plots**:
+  - Animate cognitive map growth per agent over time (known nodes
+    highlighted on floor plan).
+  - Egress time distributions: `full` vs `discovery` agents.
+  - Exit choice split per familiarity tier over time.
 - Tests: two-corridor scenario, verify discovery agents take longer
   but find correct exit; staff agents unaffected.
 
