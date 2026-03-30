@@ -632,6 +632,7 @@ def rank_routes(
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
     vis_model=None,
+    cognitive_map=None,
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
@@ -645,6 +646,11 @@ def rank_routes(
     If all routes are rejected, the least-bad route is un-rejected
     as a fallback.
     """
+    # Restrict graph to agent's known subgraph (discovery mode).
+    if cognitive_map is not None:
+        from .cognitive_map import cognitive_subgraph
+        graph = cognitive_subgraph(cognitive_map, graph)
+
     # Phase 1: evaluate all edges to get dynamic costs.
     dynamic_weights: dict[tuple[str, str], float] = {}
     for src_id, edges in graph.edges.items():
@@ -924,6 +930,7 @@ def evaluate_and_reroute(
     *,
     exit_counts: dict[str, int] | None = None,
     vis_model=None,
+    cognitive_map=None,
 ) -> RouteSwitch | None:
     """Evaluate routes and reroute the agent if a better exit is found.
 
@@ -947,6 +954,7 @@ def evaluate_and_reroute(
         cached_segments=cached_segments,
         exit_counts=exit_counts,
         vis_model=vis_model,
+        cognitive_map=cognitive_map,
     )
     if not ranked:
         return None

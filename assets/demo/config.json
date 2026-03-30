@@ -83,7 +83,8 @@
         "premovement_param_b": 120,
         "premovement_seed": null,
         "radius_distribution": "constant",
-        "v0_distribution": "constant"
+        "v0_distribution": "constant",
+        "familiarity": "discovery"
       }
     }
   },
