@@ -11,10 +11,14 @@ then produces two diagnostic plots:
      → shows when each floor cell first loses visibility to any sign
      → validates that smoke near exit_B causes earliest visibility loss
 
-Waypoints (exit signs and junction sign):
-  - exit_A_left  : sign at (0.5, 11.5), facing east  (alpha=0)
-  - exit_B_right : sign at (29.5, 11.5), facing west (alpha=180)
-  - junction     : sign at (18.5, 10.5), facing south (alpha=270)
+Waypoints are read from "sign" fields in assets/demo/config.json.
+Each exit and checkpoint with a "sign" key contributes one vismap waypoint:
+  {"x": <float>, "y": <float>, "alpha": <deg>, "c": <contrast>}
+
+  alpha convention (degrees from east, CCW):
+    0   = facing east  (sign on left wall, visible from right)
+    180 = facing west  (sign on right wall, visible from left)
+    270 = facing south (sign on upper wall, visible from below)
 
 Usage:
     uv run python scripts/demo_vismap_phase0.py [--no-cache]
@@ -23,6 +27,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import pickle
 from pathlib import Path
 
@@ -32,20 +37,30 @@ from fdsvismap import VisMap
 
 FDS_DIR = Path("fds_data/demo")
 CACHE_PATH = Path("fds_data/demo/vismap_cache.pkl")
+CONFIG_PATH = Path("assets/demo/config.json")
 OUT_DIR = Path("assets/demo")
 
-# (waypoint_id, x, y, c, alpha_deg)
-# alpha: orientation of sign face in FDS coordinates (degrees from east, CCW)
-#   0   = facing east  (sign on left wall, visible from right)
-#   180 = facing west  (sign on right wall, visible from left)
-#   270 = facing south (sign on upper wall, visible from below)
-WAYPOINTS = [
-    (0, 0.5, 11.5, 3, 0),    # exit_A_left
-    (1, 29.5, 11.5, 3, 180),  # exit_B_right
-    (2, 18.5, 10.5, 3, 270),  # checkpoint junction, facing spawn area
-]
-
 TIME_STEP_S = 10  # match reevaluation interval
+
+
+def _load_waypoints(config_path: Path) -> list[tuple[int, float, float, float, float]]:
+    """Read (wp_id, x, y, c, alpha) from all nodes with a 'sign' field in config."""
+    cfg = json.loads(config_path.read_text())
+    waypoints = []
+    wp_id = 0
+    for section in ("exits", "checkpoints", "waypoints"):
+        for node_id, data in cfg.get(section, {}).items():
+            sign = data.get("sign")
+            if sign:
+                waypoints.append((
+                    wp_id,
+                    float(sign["x"]),
+                    float(sign["y"]),
+                    float(sign.get("c", 3)),
+                    float(sign["alpha"]),
+                ))
+                wp_id += 1
+    return waypoints
 
 
 def build_vis(fds_dir: Path, time_step: float) -> VisMap:
@@ -59,7 +74,7 @@ def build_vis(fds_dir: Path, time_step: float) -> VisMap:
     # Start point: centroid of spawn area (x=18-22, y=1-8)
     vis.set_start_point(20.0, 4.5)
 
-    for wp_id, x, y, c, alpha in WAYPOINTS:
+    for wp_id, x, y, c, alpha in _load_waypoints(CONFIG_PATH):
         vis.set_waypoint(wp_id, x, y, c=c, alpha=alpha)
 
     vis.compute_all(view_angle=True, obstructions=True, aa=True)
