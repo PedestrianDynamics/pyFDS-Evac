@@ -15,10 +15,10 @@ Waypoints are read from "sign" fields in assets/demo/config.json.
 Each exit and checkpoint with a "sign" key contributes one vismap waypoint:
   {"x": <float>, "y": <float>, "alpha": <deg>, "c": <contrast>}
 
-  alpha convention (degrees from east, CCW):
-    0   = facing east  (sign on left wall, visible from right)
-    180 = facing west  (sign on right wall, visible from left)
-    270 = facing south (sign on upper wall, visible from below)
+  alpha convention (compass bearing, degrees from north CW):
+    90  = visible from east  (sign on left/west wall, seen by agents to its right)
+    270 = visible from west  (sign on right/east wall, seen by agents to its left)
+    180 = visible from south (sign at junction top, seen by agents in branch below)
 
 Usage:
     uv run python scripts/demo_vismap_phase0.py [--no-cache]

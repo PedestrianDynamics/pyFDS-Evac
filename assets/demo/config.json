@@ -42,7 +42,7 @@
       ],
       "enable_throughput_throttling": false,
       "max_throughput": 0,
-      "sign": {"x": 0.5, "y": 11.5, "alpha": 0, "c": 3}
+      "sign": {"x": 0.5, "y": 11.5, "alpha": 90, "c": 3}
     },
     "exit_B_right": {
       "type": "polygon",
@@ -55,7 +55,7 @@
       ],
       "enable_throughput_throttling": false,
       "max_throughput": 0,
-      "sign": {"x": 29.5, "y": 11.5, "alpha": 180, "c": 3}
+      "sign": {"x": 29.5, "y": 11.5, "alpha": 270, "c": 3}
     }
   },
   "distributions": {
@@ -97,7 +97,7 @@
         [17, 13],
         [17, 10]
       ],
-      "sign": {"x": 18.5, "y": 10.5, "alpha": 270, "c": 3},
+      "sign": {"x": 18.5, "y": 10.5, "alpha": 180, "c": 3},
       "waiting_time": 0,
       "waiting_time_distribution": "constant",
       "waiting_time_std": 1,
