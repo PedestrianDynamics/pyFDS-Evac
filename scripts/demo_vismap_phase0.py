@@ -52,13 +52,15 @@ def _load_waypoints(config_path: Path) -> list[tuple[int, float, float, float, f
         for node_id, data in cfg.get(section, {}).items():
             sign = data.get("sign")
             if sign:
-                waypoints.append((
-                    wp_id,
-                    float(sign["x"]),
-                    float(sign["y"]),
-                    float(sign.get("c", 3)),
-                    float(sign["alpha"]),
-                ))
+                waypoints.append(
+                    (
+                        wp_id,
+                        float(sign["x"]),
+                        float(sign["y"]),
+                        float(sign.get("c", 3)),
+                        float(sign["alpha"]),
+                    )
+                )
                 wp_id += 1
     return waypoints
 
@@ -122,9 +124,7 @@ def main() -> None:
     plt.close(fig1)
 
     # ── Plot 2: ASET map ───────────────────────────────────────────────
-    fig2, ax2 = vis.create_aset_map_plot(
-        plot_obstructions=True, flip_y_axis=True
-    )
+    fig2, ax2 = vis.create_aset_map_plot(plot_obstructions=True, flip_y_axis=True)
     ax2.set_title(
         "ASET map — first time any sign becomes invisible [s]\n"
         "(earlier = visibility lost sooner; fire source near exit_B)"

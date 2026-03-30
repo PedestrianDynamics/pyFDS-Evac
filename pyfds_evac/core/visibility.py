@@ -84,9 +84,7 @@ class VisibilityModel:
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
 
-    def node_is_visible(
-        self, time: float, x: float, y: float, node_id: str
-    ) -> bool:
+    def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
         """Return True if the sign at *node_id* is visible from (x, y) at *time*.
 
         Nodes without a sign descriptor always return True.

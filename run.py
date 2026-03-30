@@ -109,8 +109,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--vis-cache",
         help="Path to vismap pickle cache for visibility-gated route rejection. "
-             "Requires --fds-dir and --enable-rerouting. "
-             "Cache is created if missing, loaded if present.",
+        "Requires --fds-dir and --enable-rerouting. "
+        "Cache is created if missing, loaded if present.",
     )
     return parser
 

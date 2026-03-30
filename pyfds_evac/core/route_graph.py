@@ -649,6 +649,7 @@ def rank_routes(
     # Restrict graph to agent's known subgraph (discovery mode).
     if cognitive_map is not None:
         from .cognitive_map import cognitive_subgraph
+
         graph = cognitive_subgraph(cognitive_map, graph)
 
     # Phase 1: evaluate all edges to get dynamic costs.
