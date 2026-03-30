@@ -1,0 +1,124 @@
+"""Phase 0 of spec 008: vismap baseline plots for the demo scenario.
+
+Computes (or loads from cache) visibility maps for the demo FDS data,
+then produces two diagnostic plots:
+
+  1. Time-aggregated, waypoint-aggregated visibility map
+     → shows which floor cells can ever see any sign (green/red)
+     → validates sign placement before any code changes
+
+  2. ASET map
+     → shows when each floor cell first loses visibility to any sign
+     → validates that smoke near exit_B causes earliest visibility loss
+
+Waypoints (exit signs and junction sign):
+  - exit_A_left  : sign at (0.5, 11.5), facing east  (alpha=0)
+  - exit_B_right : sign at (29.5, 11.5), facing west (alpha=180)
+  - junction     : sign at (18.5, 10.5), facing south (alpha=270)
+
+Usage:
+    uv run python scripts/demo_vismap_phase0.py [--no-cache]
+"""
+
+from __future__ import annotations
+
+import argparse
+import pickle
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from fdsvismap import VisMap
+
+FDS_DIR = Path("fds_data/demo")
+CACHE_PATH = Path("fds_data/demo/vismap_cache.pkl")
+OUT_DIR = Path("assets/demo")
+
+# (waypoint_id, x, y, c, alpha_deg)
+# alpha: orientation of sign face in FDS coordinates (degrees from east, CCW)
+#   0   = facing east  (sign on left wall, visible from right)
+#   180 = facing west  (sign on right wall, visible from left)
+#   270 = facing south (sign on upper wall, visible from below)
+WAYPOINTS = [
+    (0, 0.5, 11.5, 3, 0),    # exit_A_left
+    (1, 29.5, 11.5, 3, 180),  # exit_B_right
+    (2, 18.5, 10.5, 3, 270),  # checkpoint junction, facing spawn area
+]
+
+TIME_STEP_S = 10  # match reevaluation interval
+
+
+def build_vis(fds_dir: Path, time_step: float) -> VisMap:
+    vis = VisMap()
+    vis.read_fds_data(str(fds_dir), fds_slc_height=2.0)
+
+    t_max = vis.fds_time_points.max()
+    times = list(np.arange(0, t_max + time_step, time_step))
+    vis.set_time_points(times)
+
+    # Start point: centroid of spawn area (x=18-22, y=1-8)
+    vis.set_start_point(20.0, 4.5)
+
+    for wp_id, x, y, c, alpha in WAYPOINTS:
+        vis.set_waypoint(wp_id, x, y, c=c, alpha=alpha)
+
+    vis.compute_all(view_angle=True, obstructions=True, aa=True)
+    return vis
+
+
+def load_or_compute(fds_dir: Path, cache_path: Path, force: bool = False) -> VisMap:
+    if cache_path.exists() and not force:
+        print(f"Loading cached vismap from {cache_path}")
+        with cache_path.open("rb") as f:
+            return pickle.load(f)
+
+    print("Computing vismap (this may take a while)…")
+    vis = build_vis(fds_dir, TIME_STEP_S)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    with cache_path.open("wb") as f:
+        pickle.dump(vis, f)
+    print(f"Cached to {cache_path}")
+    return vis
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--no-cache", action="store_true", help="Recompute even if cache exists"
+    )
+    args = parser.parse_args()
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    vis = load_or_compute(FDS_DIR, CACHE_PATH, force=args.no_cache)
+    vis.set_start_point(20.0, 4.5)  # centroid of spawn area
+
+    # ── Plot 1: time-aggregated, waypoint-aggregated visibility map ────
+    fig1, ax1 = vis.create_time_agg_wp_agg_vismap_plot(
+        plot_obstructions=True, flip_y_axis=True
+    )
+    ax1.set_title(
+        "Sign coverage map (green = visible from any time, red = never visible)\n"
+        "Waypoints: exit_A (0), exit_B (1), junction (2)"
+    )
+    out1 = OUT_DIR / "vismap_coverage.png"
+    fig1.savefig(out1, dpi=150, bbox_inches="tight")
+    print(f"Saved: {out1}")
+    plt.close(fig1)
+
+    # ── Plot 2: ASET map ───────────────────────────────────────────────
+    fig2, ax2 = vis.create_aset_map_plot(
+        plot_obstructions=True, flip_y_axis=True
+    )
+    ax2.set_title(
+        "ASET map — first time any sign becomes invisible [s]\n"
+        "(earlier = visibility lost sooner; fire source near exit_B)"
+    )
+    out2 = OUT_DIR / "vismap_aset.png"
+    fig2.savefig(out2, dpi=150, bbox_inches="tight")
+    print(f"Saved: {out2}")
+    plt.close(fig2)
+
+
+if __name__ == "__main__":
+    main()
