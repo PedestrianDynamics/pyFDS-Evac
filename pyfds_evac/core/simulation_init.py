@@ -766,6 +766,7 @@ def _initialize_with_fallback(
                     "enable_throughput_throttling": enable_throttling,
                     "max_throughput": float(exit_data.get("max_throughput", 0.0)),
                     "stage_type": "exit",
+                    "capacity_agents_per_s": exit_data.get("capacity_agents_per_s"),
                 }
 
     if not exits:

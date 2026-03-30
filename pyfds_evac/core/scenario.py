@@ -54,6 +54,9 @@ from .route_graph import (
     rank_routes,
     should_reevaluate,
 )
+from .smoke_speed import ConstantExtinctionField
+
+_ZERO_EXTINCTION = ConstantExtinctionField(0.0)
 
 
 class _FedRateAdapter:
@@ -842,6 +845,39 @@ class ScenarioResult:
             self.sqlite_file = None
 
 
+def _extract_terminal_exit(
+    wait_info: dict,
+    graph_nodes: dict,
+) -> str | None:
+    """Return the exit stage ID from an agent's wait_info, or None."""
+    if wait_info.get("mode") != "path":
+        return None
+    path_choices = wait_info.get("path_choices", {})
+    stage = wait_info.get("current_target_stage")
+    visited = set()
+    while stage and stage in path_choices and stage not in visited:
+        visited.add(stage)
+        choices = path_choices[stage]
+        if choices:
+            stage = (
+                choices[0][0] if isinstance(choices[0], (list, tuple)) else choices[0]
+            )
+        else:
+            break
+    if stage and stage in graph_nodes:
+        node = graph_nodes[stage]
+        if node.stage_type == "exit":
+            return stage
+    fallback = wait_info.get("current_target_stage")
+    if (
+        fallback
+        and fallback in graph_nodes
+        and graph_nodes[fallback].stage_type == "exit"
+    ):
+        return fallback
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -1016,6 +1052,27 @@ def run_scenario(
                 f"direct_steering={len(direct_steering_info)} "
                 f"wait_info={len(agent_wait_info)}"
             )
+        exit_counts: dict[str, int] = {}
+        if reroute_config is not None and stage_graph is not None:
+            # Initialise all exits to zero.
+            for node_id, node in stage_graph.nodes.items():
+                if node.stage_type == "exit":
+                    exit_counts[node_id] = 0
+            # Seed from initial agent assignments.
+            for agent_id_init, wi in agent_wait_info.items():
+                exit_id = _extract_terminal_exit(wi, stage_graph.nodes)
+                if exit_id is not None:
+                    exit_counts[exit_id] = exit_counts.get(exit_id, 0) + 1
+                    if agent_id_init not in agent_route_state:
+                        agent_route_state[agent_id_init] = AgentRouteState(
+                            current_exit=exit_id,
+                            eval_offset_s=compute_eval_offset(
+                                agent_id_init,
+                                reroute_config.reevaluation_interval_s,
+                            ),
+                        )
+                    else:
+                        agent_route_state[agent_id_init].current_exit = exit_id
         # Precompute whether any zone/checkpoint has a non-trivial speed factor.
         # When none do, skip the expensive per-agent update_checkpoint_speed loop.
         _has_speed_zones = (
@@ -1267,6 +1324,24 @@ def run_scenario(
                                     )
                                     if path_state:
                                         agent_wait_info[agent_id] = path_state
+                                        if path_state and stage_graph is not None:
+                                            _spawn_exit = _extract_terminal_exit(
+                                                path_state, stage_graph.nodes
+                                            )
+                                            if _spawn_exit is not None:
+                                                exit_counts[_spawn_exit] = (
+                                                    exit_counts.get(_spawn_exit, 0) + 1
+                                                )
+                                                if reroute_config is not None:
+                                                    agent_route_state[agent_id] = (
+                                                        AgentRouteState(
+                                                            eval_offset_s=compute_eval_offset(
+                                                                agent_id,
+                                                                reroute_config.reevaluation_interval_s,
+                                                            ),
+                                                            current_exit=_spawn_exit,
+                                                        )
+                                                    )
                                 elif (
                                     not selected_variant
                                     and agent_wait_info is not None
@@ -1327,6 +1402,25 @@ def run_scenario(
                                             "step_index": 0,
                                             "base_seed": base_seed,
                                         }
+                                        if stage_graph is not None:
+                                            _spawn_exit = _extract_terminal_exit(
+                                                agent_wait_info[agent_id],
+                                                stage_graph.nodes,
+                                            )
+                                            if _spawn_exit is not None:
+                                                exit_counts[_spawn_exit] = (
+                                                    exit_counts.get(_spawn_exit, 0) + 1
+                                                )
+                                                if reroute_config is not None:
+                                                    agent_route_state[agent_id] = (
+                                                        AgentRouteState(
+                                                            eval_offset_s=compute_eval_offset(
+                                                                agent_id,
+                                                                reroute_config.reevaluation_interval_s,
+                                                            ),
+                                                            current_exit=_spawn_exit,
+                                                        )
+                                                    )
 
                                 spawned_this_attempt = True
                                 break
@@ -1483,7 +1577,6 @@ def run_scenario(
             if (
                 reroute_config is not None
                 and stage_graph is not None
-                and smoke_speed_model is not None
                 and agent_wait_info
                 and (
                     last_reroute_check_time is None
@@ -1491,6 +1584,11 @@ def run_scenario(
                 )
             ):
                 current_time = simulation.elapsed_time()
+                extinction_sampler = (
+                    smoke_speed_model.field
+                    if smoke_speed_model is not None
+                    else _ZERO_EXTINCTION
+                )
                 # Scope the route segment cache to a single reroute-check pass.
                 # Segment costs depend on current_time and the time-varying smoke field,
                 # so we clear any previously cached values computed at different times.
@@ -1544,12 +1642,20 @@ def run_scenario(
                                 source,
                                 current_time,
                                 current_fed,
-                                smoke_speed_model.field,
+                                extinction_sampler,
                                 _fed_rate_adapter,
                                 reroute_config.cost_config,
                                 cached_segments=route_segment_cache,
+                                exit_counts=exit_counts,
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
+                                _exit_node = stage_graph.nodes.get(rc.exit_id)
+                                _exit_cap = (
+                                    _exit_node.capacity_agents_per_s
+                                    if _exit_node is not None
+                                    and _exit_node.capacity_agents_per_s is not None
+                                    else reroute_config.cost_config.default_exit_capacity
+                                )
                                 route_cost_history.append(
                                     {
                                         "time_s": round(float(current_time), 6),
@@ -1567,6 +1673,9 @@ def run_scenario(
                                         "composite_cost": float(rc.composite_cost),
                                         "rejected": bool(rc.rejected),
                                         "rejection_reason": rc.rejection_reason or "",
+                                        "queue_time_s": float(rc.queue_time_s),
+                                        "exit_count": exit_counts.get(rc.exit_id, 0),
+                                        "exit_capacity": float(_exit_cap),
                                     }
                                 )
                     switch = evaluate_and_reroute(
@@ -1576,12 +1685,22 @@ def run_scenario(
                         graph=stage_graph,
                         current_time_s=current_time,
                         current_fed=current_fed,
-                        extinction_sampler=smoke_speed_model.field,
+                        extinction_sampler=extinction_sampler,
                         fed_rate_sampler=_fed_rate_adapter,
                         config=reroute_config,
                         cached_segments=route_segment_cache,
+                        exit_counts=exit_counts,
                     )
                     if switch is not None:
+                        # Update exit_counts: decrement old, increment new.
+                        if switch.old_exit and switch.old_exit in exit_counts:
+                            exit_counts[switch.old_exit] = max(
+                                0, exit_counts[switch.old_exit] - 1
+                            )
+                        if switch.new_exit in exit_counts:
+                            exit_counts[switch.new_exit] = (
+                                exit_counts.get(switch.new_exit, 0) + 1
+                            )
                         route_history.append(
                             {
                                 "time_s": round(float(switch.time_s), 6),
@@ -1636,7 +1755,18 @@ def run_scenario(
                 if agent_route_state:
                     for tracked_agent_id in list(agent_route_state.keys()):
                         if tracked_agent_id not in live_agent_ids:
-                            agent_route_state.pop(tracked_agent_id, None)
+                            removed_state = agent_route_state.pop(
+                                tracked_agent_id, None
+                            )
+                            if (
+                                removed_state is not None
+                                and removed_state.current_exit
+                                and removed_state.current_exit in exit_counts
+                            ):
+                                exit_counts[removed_state.current_exit] = max(
+                                    0,
+                                    exit_counts[removed_state.current_exit] - 1,
+                                )
 
             if direct_steering_info and agent_wait_info:
                 for agent_id, wait_info in list(agent_wait_info.items()):

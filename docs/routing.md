@@ -4,10 +4,14 @@
 
 The pyFDS-Evac routing system implements dynamic, smoke-aware path
 planning. Agents evaluate candidate routes based on smoke exposure
-and toxic gas dose, and periodically reroute to lower-cost paths as
-conditions change. Route costs are recomputed from current hazard
-fields at each reevaluation tick, so the chosen path adapts as
-conditions evolve.
+and periodically reroute to lower-cost paths as conditions change.
+Route costs are recomputed from current hazard fields at each
+reevaluation tick, so the chosen path adapts as conditions evolve.
+
+> **Note:** The cost model supports both smoke and FED (toxic gas)
+> terms. FED-based route cost is active when a `fed_model` is
+> provided to `run_scenario`; otherwise `fed_rate_sampler` is `None`
+> and only smoke influences route ranking.
 
 ## Stage graph
 
@@ -56,8 +60,9 @@ if result:
 ## Route cost evaluation
 
 Each candidate route is scored by evaluating its segments (edges)
-against current smoke and FED conditions. The cost model combines
-path length, smoke exposure, and toxic gas dose.
+against current smoke conditions. The cost model combines path
+length and smoke exposure (FED terms are supported but not currently
+active — see note above).
 
 ### Segment evaluation
 
@@ -72,9 +77,10 @@ the following steps:
    the [smoke-speed model](smoke-speed-model.md).
 3. Estimate the travel time from the segment length and reduced
    speed.
-4. Estimate the FED growth along the segment from the FED rate
-   at the polyline midpoint (by arc length) and the estimated
-   travel time.
+4. Optionally, estimate the FED growth along the segment from the
+   FED rate at the polyline midpoint (by arc length) and the
+   estimated travel time. (Active only when a `fed_model` is
+   provided; otherwise `fed_rate_sampler` is `None`.)
 
 ### Line-of-sight extinction
 
@@ -133,6 +139,7 @@ from pyfds_evac.core.route_graph import RouteCostConfig
 config = RouteCostConfig(
     w_smoke=1.0,                          # smoke cost weight
     w_fed=10.0,                           # FED cost weight
+    w_queue=1.0,                          # queueing cost weight (0 disables)
     fed_rejection_threshold=1.0,          # reject if FED_max exceeds
     visibility_extinction_threshold=0.5,  # K threshold for visibility
     sampling_step_m=2.0,                  # ray sample spacing
@@ -140,8 +147,57 @@ config = RouteCostConfig(
     alpha=0.706,                          # speed-law coefficient
     beta=-0.057,                          # speed-law coefficient
     min_speed_factor=0.1,                 # speed factor floor
+    default_exit_capacity=1.3,            # fallback capacity (agents/s)
 )
 ```
+
+### Congestion-aware routing
+
+When `w_queue > 0`, an exit-congestion term is added to the
+composite cost:
+
+```
+queue_distance = base_speed_m_per_s * N_exit / capacity
+composite = path_length * (1 + w_smoke * K_ave)
+          + w_fed * FED_max
+          + w_queue * queue_distance
+```
+
+where:
+
+- `N_exit` is the number of agents currently targeting that exit
+- `capacity` is the exit's `capacity_agents_per_s` (default 1.3)
+- `base_speed_m_per_s` converts queueing delay (seconds) into
+  distance-equivalent cost (metres) so all terms share the same
+  unit space
+
+The queue term is applied at route-level ranking (Phase 3) only,
+not in Dijkstra edge weights, because it is a per-exit constant
+that cannot change which path is selected to a given exit.
+
+Setting `w_queue = 0` disables congestion-aware routing entirely
+(backward compatible with existing behaviour).
+
+Exit capacity can be configured per exit in the scenario config:
+
+```json
+{
+  "exits": {
+    "exit_1": {
+      "capacity_agents_per_s": 2.5
+    }
+  }
+}
+```
+
+When not specified, the default from
+`RouteCostConfig.default_exit_capacity` (1.3 agents/s) is used.
+
+This approach is inspired by the game-theoretic exit selection
+model of Ehtamo et al. (2010), where each agent minimises
+estimated evacuation time (queueing + walking). The staggered
+reevaluation schedule provides natural convergence to Nash
+equilibrium without explicit iteration.
 
 ## Dynamic rerouting
 
@@ -174,7 +230,9 @@ the interval.
 
 2. rank_routes(source, t, FED, K_field)
    ├─ evaluate all edges → dynamic costs from current smoke/FED
-   ├─ Dijkstra with dynamic weights → one cheapest path per reachable exit
+   ├─ Dijkstra with dynamic weights → one minimum-cost path per reachable exit
+   │   (only the single lowest-cost path to each exit under these weights
+   │    is evaluated; alternative paths to the same exit are not enumerated)
    ├─ evaluate_route on each path (composite cost + rejection flags)
    ├─ visibility rejection pass
    │   └─ if ≥1 route has any visible segment:
@@ -268,6 +326,7 @@ Full cost evaluation for one candidate route:
 | `fed_max_route`    | `float`             | Projected cumulative FED          |
 | `composite_cost`   | `float`             | Final cost used for ranking       |
 | `segments`         | `list[SegmentCost]` | Per-segment breakdowns            |
+| `queue_time_s`     | `float`             | Estimated queueing time at exit   |
 | `rejected`         | `bool`              | Whether route was rejected        |
 | `rejection_reason` | `str \| None`       | Reason for rejection              |
 
@@ -283,3 +342,6 @@ Full cost evaluation for one candidate route:
   Waypoint-based visibility and evacuation modeling.
 - [Ronchi et al. (2013)](../materials/Ronchi2013.pdf) -- FDS+Evac
   evacuation model validation and verification.
+- Ehtamo, H., Heliövaara, S., Korhonen, T. & Hostikka, S. (2010).
+  Game theoretic best-response dynamics for evacuees' exit selection.
+  *Advances in Complex Systems*, 13(1), 113–134.

@@ -1190,3 +1190,316 @@ class TestFedRateAdapter:
         # travel_time = 10m / 1.3 m/s ≈ 7.69s; fed_growth = 0.1 * 7.69 / 60
         expected_growth = 0.1 * seg.travel_time_s / 60.0
         assert seg.fed_growth == pytest.approx(expected_growth, rel=0.01)
+
+
+class TestStageNodeCapacity:
+    def test_default_capacity_is_none(self):
+        from pyfds_evac.core.route_graph import StageNode
+
+        node = StageNode(
+            stage_id="E0",
+            centroid_x=0.0,
+            centroid_y=0.0,
+            stage_type="exit",
+        )
+        assert node.capacity_agents_per_s is None
+
+    def test_capacity_set_from_constructor(self):
+        from pyfds_evac.core.route_graph import StageNode
+
+        node = StageNode(
+            stage_id="E0",
+            centroid_x=0.0,
+            centroid_y=0.0,
+            stage_type="exit",
+            capacity_agents_per_s=2.5,
+        )
+        assert node.capacity_agents_per_s == 2.5
+
+    def test_capacity_propagated_from_scenario(self):
+        direct_steering_info = {
+            "E0": {
+                "polygon": _box(10, 0),
+                "stage_type": "exit",
+                "capacity_agents_per_s": 2.0,
+            },
+        }
+        distributions = {
+            "D0": {"coordinates": list(_box(0, 0).exterior.coords)},
+        }
+        transitions = [{"from": "D0", "to": "E0"}]
+        graph = StageGraph.from_scenario(
+            direct_steering_info, transitions, distributions
+        )
+        assert graph.nodes["E0"].capacity_agents_per_s == 2.0
+        assert graph.nodes["D0"].capacity_agents_per_s is None
+
+
+class TestQueueConfigAndFields:
+    def test_route_cost_config_defaults(self):
+        config = RouteCostConfig()
+        assert config.w_queue == 1.0
+        assert config.default_exit_capacity == 1.3
+
+    def test_route_cost_config_queue_disabled(self):
+        config = RouteCostConfig(w_queue=0.0)
+        assert config.w_queue == 0.0
+
+    def test_route_cost_has_queue_time_field(self, linear_graph):
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig()
+        rc = evaluate_route(
+            linear_graph, ["D0", "C0", "E0"], 0.0, 0.0, field, None, config
+        )
+        assert hasattr(rc, "queue_time_s")
+        assert rc.queue_time_s == 0.0
+
+
+class TestQueueCostTerm:
+    def test_evaluate_route_adds_queue_cost(self, multi_exit_graph):
+        """Queue term increases composite cost for a congested exit."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(w_smoke=0.0, w_fed=0.0, w_queue=1.0)
+        rc_no_queue = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+        )
+        rc_with_queue = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            exit_counts={"E0": 20, "E1": 0},
+        )
+        assert rc_with_queue.composite_cost > rc_no_queue.composite_cost
+        assert rc_with_queue.queue_time_s > 0.0
+        assert rc_no_queue.queue_time_s == 0.0
+
+    def test_queue_cost_uses_distance_equivalent(self, multi_exit_graph):
+        """Queue cost = w_queue * base_speed * N / capacity."""
+        field = ConstantExtinctionField(0.0)
+        base_speed = 1.3
+        capacity = 1.3
+        n_agents = 10
+        config = RouteCostConfig(
+            w_smoke=0.0,
+            w_fed=0.0,
+            w_queue=1.0,
+            base_speed_m_per_s=base_speed,
+            default_exit_capacity=capacity,
+        )
+        rc = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            exit_counts={"E0": n_agents},
+        )
+        expected_queue_time = n_agents / capacity
+        expected_queue_distance = base_speed * expected_queue_time
+        assert abs(rc.queue_time_s - expected_queue_time) < 1e-6
+        assert (
+            abs(rc.composite_cost - (rc.path_length_m + expected_queue_distance)) < 0.1
+        )
+
+    def test_w_queue_zero_disables_queue(self, multi_exit_graph):
+        """w_queue=0 means exit_counts have no effect."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(w_smoke=0.0, w_fed=0.0, w_queue=0.0)
+        rc_no_counts = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+        )
+        rc_with_counts = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            exit_counts={"E0": 100},
+        )
+        assert abs(rc_no_counts.composite_cost - rc_with_counts.composite_cost) < 1e-9
+
+    def test_custom_capacity_reduces_penalty(self, multi_exit_graph):
+        """Higher capacity -> lower queue penalty for same agent count."""
+        field = ConstantExtinctionField(0.0)
+        config_low = RouteCostConfig(
+            w_smoke=0.0, w_fed=0.0, w_queue=1.0, default_exit_capacity=1.0
+        )
+        config_high = RouteCostConfig(
+            w_smoke=0.0, w_fed=0.0, w_queue=1.0, default_exit_capacity=5.0
+        )
+        counts = {"E0": 20}
+        rc_low = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config_low,
+            exit_counts=counts,
+        )
+        rc_high = evaluate_route(
+            multi_exit_graph,
+            ["D0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            config_high,
+            exit_counts=counts,
+        )
+        assert rc_low.composite_cost > rc_high.composite_cost
+
+    def test_node_capacity_overrides_default(self):
+        """StageNode.capacity_agents_per_s overrides config default."""
+        from pyfds_evac.core.route_graph import StageGraph
+
+        direct_steering_info = {
+            "E0": {
+                "polygon": _box(10, 0),
+                "stage_type": "exit",
+                "capacity_agents_per_s": 10.0,
+            },
+        }
+        distributions = {"D0": {"coordinates": list(_box(0, 0).exterior.coords)}}
+        transitions = [{"from": "D0", "to": "E0"}]
+        graph = StageGraph.from_scenario(
+            direct_steering_info, transitions, distributions
+        )
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(
+            w_smoke=0.0, w_fed=0.0, w_queue=1.0, default_exit_capacity=1.0
+        )
+        rc = evaluate_route(
+            graph, ["D0", "E0"], 0.0, 0.0, field, None, config, exit_counts={"E0": 10}
+        )
+        # capacity=10 -> queue_time = 10/10 = 1.0s
+        assert abs(rc.queue_time_s - 1.0) < 1e-6
+
+
+class TestRankRoutesWithCongestion:
+    def test_congestion_shifts_best_exit(self, multi_exit_graph):
+        """With enough agents at E0, E1 becomes cheaper despite being farther."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(w_smoke=0.0, w_fed=0.0, w_queue=1.0)
+        ranked_no_q = rank_routes(multi_exit_graph, "D0", 0.0, 0.0, field, None, config)
+        assert ranked_no_q[0].exit_id == "E0"
+        ranked_q = rank_routes(
+            multi_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            field,
+            None,
+            config,
+            exit_counts={"E0": 50, "E1": 0},
+        )
+        assert ranked_q[0].exit_id == "E1"
+
+    def test_rank_routes_without_exit_counts_unchanged(self, multi_exit_graph):
+        """Omitting exit_counts gives identical results to current behaviour."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig()
+        ranked = rank_routes(multi_exit_graph, "D0", 0.0, 0.0, field, None, config)
+        assert ranked[0].exit_id == "E0"
+        assert ranked[0].queue_time_s == 0.0
+
+
+class TestEvaluateAndRerouteWithCongestion:
+    def test_congestion_triggers_reroute(self, multi_exit_graph):
+        """Agent switches from congested E0 to uncongested E1."""
+        field = ConstantExtinctionField(0.0)
+        cost_config = RouteCostConfig(w_smoke=0.0, w_fed=0.0, w_queue=1.0)
+        config = RerouteConfig(reevaluation_interval_s=1.0, cost_config=cost_config)
+        wait_info = {
+            "mode": "path",
+            "current_origin": "D0",
+            "current_target_stage": "E0",
+            "path_choices": {"D0": [("E0", 100.0)]},
+            "stage_configs": {
+                "E0": {
+                    "polygon": _box(10, 0),
+                    "stage_type": "exit",
+                    "waiting_time": 0.0,
+                    "waiting_time_distribution": "constant",
+                    "waiting_time_std": 1.0,
+                    "enable_throughput_throttling": False,
+                    "max_throughput": 1.0,
+                    "speed_factor": 1.0,
+                },
+                "E1": {
+                    "polygon": _box(20, 0),
+                    "stage_type": "exit",
+                    "waiting_time": 0.0,
+                    "waiting_time_distribution": "constant",
+                    "waiting_time_std": 1.0,
+                    "enable_throughput_throttling": False,
+                    "max_throughput": 1.0,
+                    "speed_factor": 1.0,
+                },
+            },
+            "state": "to_target",
+        }
+        route_state = AgentRouteState(current_exit="E0", eval_offset_s=0.0)
+        switch = evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=multi_exit_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+            exit_counts={"E0": 50, "E1": 0},
+        )
+        assert switch is not None
+        assert switch.new_exit == "E1"
+        assert switch.old_exit == "E0"
+
+    def test_no_exit_counts_backward_compatible(self, multi_exit_graph):
+        """Without exit_counts, behaviour is identical to current."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(reevaluation_interval_s=1.0)
+        wait_info = {
+            "mode": "path",
+            "current_origin": "D0",
+            "current_target_stage": "E0",
+            "path_choices": {"D0": [("E0", 100.0)]},
+            "stage_configs": {},
+            "state": "to_target",
+        }
+        route_state = AgentRouteState(eval_offset_s=0.0)
+        switch = evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=multi_exit_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is not None
+        assert switch.new_exit == "E0"

@@ -22,6 +22,7 @@ class StageNode:
     centroid_x: float
     centroid_y: float
     stage_type: str  # "exit", "checkpoint", "distribution", "zone"
+    capacity_agents_per_s: float | None = None
 
 
 @dataclass
@@ -110,6 +111,7 @@ class StageGraph:
                 centroid_x=cx,
                 centroid_y=cy,
                 stage_type=stage_type,
+                capacity_agents_per_s=info.get("capacity_agents_per_s"),
             )
 
         # Add edges from transitions.
@@ -394,6 +396,7 @@ class RouteCostConfig:
 
     w_smoke: float = 1.0
     w_fed: float = 10.0
+    w_queue: float = 1.0
     fed_rejection_threshold: float = 1.0
     visibility_extinction_threshold: float = 0.5
     sampling_step_m: float = 2.0
@@ -401,6 +404,7 @@ class RouteCostConfig:
     alpha: float = 0.706
     beta: float = -0.057
     min_speed_factor: float = 0.1
+    default_exit_capacity: float = 1.3
 
 
 @dataclass(frozen=True)
@@ -431,6 +435,7 @@ class RouteCost:
     segments: list[SegmentCost]
     rejected: bool
     rejection_reason: str | None
+    queue_time_s: float = 0.0
 
 
 def _sample_segment_extinction(
@@ -546,6 +551,7 @@ def evaluate_route(
     config: RouteCostConfig,
     *,
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    exit_counts: dict[str, int] | None = None,
 ) -> RouteCost:
     """Evaluate the composite cost for a full route (list of stage IDs)."""
     segments: list[SegmentCost] = []
@@ -577,6 +583,22 @@ def evaluate_route(
     # Composite cost: path_length * (1 + w_smoke * K_ave) + w_fed * FED_max
     composite = path_length * (1.0 + config.w_smoke * k_ave) + config.w_fed * fed_max
 
+    # Queue cost: convert queue delay to distance-equivalent units.
+    queue_time = 0.0
+    if exit_counts is not None and config.w_queue > 0 and path:
+        _exit_id = path[-1]
+        n_exit = exit_counts.get(_exit_id, 0)
+        exit_node = graph.nodes.get(_exit_id)
+        capacity = (
+            exit_node.capacity_agents_per_s
+            if exit_node is not None and exit_node.capacity_agents_per_s is not None
+            else config.default_exit_capacity
+        )
+        if capacity > 0:
+            queue_time = n_exit / capacity
+            queue_distance = config.base_speed_m_per_s * queue_time
+            composite += config.w_queue * queue_distance
+
     rejected = False
     reason = None
     if fed_max > config.fed_rejection_threshold:
@@ -594,6 +616,7 @@ def evaluate_route(
         segments=segments,
         rejected=rejected,
         rejection_reason=reason,
+        queue_time_s=queue_time,
     )
 
 
@@ -607,6 +630,7 @@ def rank_routes(
     config: RouteCostConfig,
     *,
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    exit_counts: dict[str, int] | None = None,
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
@@ -664,6 +688,7 @@ def rank_routes(
             fed_rate_sampler,
             config,
             cached_segments=cached_segments,
+            exit_counts=exit_counts,
         )
         costs.append(rc)
 
@@ -687,6 +712,7 @@ def rank_routes(
                     segments=rc.segments,
                     rejected=True,
                     rejection_reason="all segments non-visible",
+                    queue_time_s=rc.queue_time_s,
                 )
             updated.append(rc)
         costs = updated
@@ -712,6 +738,7 @@ def rank_routes(
             segments=best.segments,
             rejected=False,
             rejection_reason=f"fallback: {best.rejection_reason}",
+            queue_time_s=best.queue_time_s,
         )
 
     return costs
@@ -856,6 +883,8 @@ def evaluate_and_reroute(
     fed_rate_sampler: FedRateSampler | None,
     config: RerouteConfig,
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    *,
+    exit_counts: dict[str, int] | None = None,
 ) -> RouteSwitch | None:
     """Evaluate routes and reroute the agent if a better exit is found.
 
@@ -877,6 +906,7 @@ def evaluate_and_reroute(
         fed_rate_sampler,
         config.cost_config,
         cached_segments=cached_segments,
+        exit_counts=exit_counts,
     )
     if not ranked:
         return None

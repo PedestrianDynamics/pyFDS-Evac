@@ -20,6 +20,16 @@
       "useShortestPaths": false
     }
   },
+  "routing": {
+    "w_smoke": 1.0,
+    "w_fed": 10.0,
+    "w_queue": 1.0,
+    "fed_rejection_threshold": 1.0,
+    "visibility_extinction_threshold": 0.5,
+    "sampling_step_m": 2.0,
+    "base_speed_m_per_s": 1.3,
+    "default_exit_capacity": 1.3
+  },
   "exits": {
     "exit_A_left": {
       "type": "polygon",
@@ -145,11 +155,11 @@
         "destinations": [
           {
             "target": "exit_A_left",
-            "percentage": 50
+            "percentage": 1
           },
           {
             "target": "exit_B_right",
-            "percentage": 50
+            "percentage": 99
           }
         ]
       }

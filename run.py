@@ -205,6 +205,9 @@ def _write_route_cost_history_csv(rows, output_path: str) -> None:
         "composite_cost",
         "rejected",
         "rejection_reason",
+        "queue_time_s",
+        "exit_count",
+        "exit_capacity",
     ]
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -270,13 +273,27 @@ def main() -> int:
             )
             fed_model = DefaultFedModel(FdsFedField.from_fds(args.fds_dir), fed_config)
     reroute_config = None
-    if args.enable_rerouting and smoke_speed_model is not None:
-        print("Configuring smoke-based rerouting.")
+    if args.enable_rerouting:
+        routing_params = scenario.raw.get("routing", {})
+        cost_config = RouteCostConfig(
+            w_smoke=routing_params.get("w_smoke", 1.0),
+            w_fed=routing_params.get("w_fed", 10.0),
+            w_queue=routing_params.get("w_queue", 1.0),
+            fed_rejection_threshold=routing_params.get("fed_rejection_threshold", 1.0),
+            visibility_extinction_threshold=routing_params.get(
+                "visibility_extinction_threshold", 0.5
+            ),
+            sampling_step_m=routing_params.get("sampling_step_m", 2.0),
+            base_speed_m_per_s=routing_params.get("base_speed_m_per_s", 1.3),
+            alpha=routing_params.get("alpha", 0.706),
+            beta=routing_params.get("beta", -0.057),
+            min_speed_factor=routing_params.get("min_speed_factor", 0.1),
+            default_exit_capacity=routing_params.get("default_exit_capacity", 1.3),
+        )
+        print("Configuring rerouting.")
         reroute_config = RerouteConfig(
             reevaluation_interval_s=args.reroute_interval,
-            cost_config=RouteCostConfig(
-                base_speed_m_per_s=1.3,
-            ),
+            cost_config=cost_config,
         )
 
     print("Initialization finished.")
