@@ -236,7 +236,17 @@ def draw_smoke(ax_plot, nodes: dict, blocked_id: str):
 
 
 def draw_agent(ax_plot, x: float, y: float):
-    ax_plot.scatter(x, y, s=100, marker="*", color=C_AGENT, zorder=8)
+    ax_plot.scatter(x, y, s=200, marker="*", color=C_AGENT, zorder=8)
+    ax_plot.text(
+        x + 0.8,
+        y,
+        "agent",
+        fontsize=7,
+        color=C_AGENT,
+        va="center",
+        fontweight="bold",
+        zorder=9,
+    )
 
 
 def setup_ax(ax_plot, title: str, walkable: Polygon):
