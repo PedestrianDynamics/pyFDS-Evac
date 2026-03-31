@@ -633,6 +633,7 @@ def rank_routes(
     exit_counts: dict[str, int] | None = None,
     vis_model=None,
     cognitive_map=None,
+    agent_position: tuple[float, float] | None = None,
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
@@ -702,40 +703,36 @@ def rank_routes(
 
     # Check visibility rejection.
     if vis_model is not None:
-        # Vismap-based: reject a route if its first hop node is not visible
-        # from the source node centroid.  Falls back to always-visible for
-        # nodes without a sign descriptor.
-        src_node = graph.nodes.get(source)
-        ax = src_node.centroid_x if src_node is not None else 0.0
-        ay = src_node.centroid_y if src_node is not None else 0.0
-        any_visible_route = any(
-            not rc.rejected
-            and vis_model.node_is_visible(
-                time_s, ax, ay, rc.path[1] if len(rc.path) > 1 else rc.exit_id
-            )
-            for rc in costs
-        )
-        if any_visible_route:
-            updated: list[RouteCost] = []
-            for rc in costs:
-                if not rc.rejected:
-                    next_node = rc.path[1] if len(rc.path) > 1 else rc.exit_id
-                    if not vis_model.node_is_visible(time_s, ax, ay, next_node):
-                        rc = RouteCost(
-                            exit_id=rc.exit_id,
-                            path=rc.path,
-                            path_length_m=rc.path_length_m,
-                            k_ave_route=rc.k_ave_route,
-                            travel_time_s=rc.travel_time_s,
-                            fed_max_route=rc.fed_max_route,
-                            composite_cost=rc.composite_cost,
-                            segments=rc.segments,
-                            rejected=True,
-                            rejection_reason="next_node_not_visible",
-                            queue_time_s=rc.queue_time_s,
-                        )
-                updated.append(rc)
-            costs = updated
+        # Reject any route whose first hop node sign is not visible from the
+        # agent's current position.  Prefer the actual agent position over the
+        # source node centroid so that large polygons don't introduce bias.
+        # Falls back to always-visible for nodes without a sign descriptor.
+        if agent_position is not None:
+            ax, ay = agent_position
+        else:
+            src_node = graph.nodes.get(source)
+            ax = src_node.centroid_x if src_node is not None else 0.0
+            ay = src_node.centroid_y if src_node is not None else 0.0
+        updated: list[RouteCost] = []
+        for rc in costs:
+            if not rc.rejected:
+                next_node = rc.path[1] if len(rc.path) > 1 else rc.exit_id
+                if not vis_model.node_is_visible(time_s, ax, ay, next_node):
+                    rc = RouteCost(
+                        exit_id=rc.exit_id,
+                        path=rc.path,
+                        path_length_m=rc.path_length_m,
+                        k_ave_route=rc.k_ave_route,
+                        travel_time_s=rc.travel_time_s,
+                        fed_max_route=rc.fed_max_route,
+                        composite_cost=rc.composite_cost,
+                        segments=rc.segments,
+                        rejected=True,
+                        rejection_reason="next_node_not_visible",
+                        queue_time_s=rc.queue_time_s,
+                    )
+            updated.append(rc)
+        costs = updated
     else:
         # K_vis fallback: reject routes where all segments are non-visible,
         # but only if at least one other route has visibility.
@@ -932,6 +929,7 @@ def evaluate_and_reroute(
     exit_counts: dict[str, int] | None = None,
     vis_model=None,
     cognitive_map=None,
+    agent_position: tuple[float, float] | None = None,
 ) -> RouteSwitch | None:
     """Evaluate routes and reroute the agent if a better exit is found.
 
@@ -956,6 +954,7 @@ def evaluate_and_reroute(
         exit_counts=exit_counts,
         vis_model=vis_model,
         cognitive_map=cognitive_map,
+        agent_position=agent_position,
     )
     if not ranked:
         return None

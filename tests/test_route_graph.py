@@ -1503,3 +1503,134 @@ class TestEvaluateAndRerouteWithCongestion:
         )
         assert switch is not None
         assert switch.new_exit == "E0"
+
+
+# ── cognitive map and visibility rejection tests ──────────────────────
+
+
+class TestCognitiveMapRouting:
+    """rank_routes respects the discovery agent's known subgraph."""
+
+    def test_discovery_agent_cannot_reach_unknown_exit(self, multi_exit_graph):
+        """Discovery agent with only E0 in cognitive map cannot rank E1."""
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "E0"},
+            known_edges={("D0", "E0")},
+        )
+        field = ConstantExtinctionField(0.0)
+        ranked = rank_routes(
+            multi_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            field,
+            None,
+            RouteCostConfig(),
+            cognitive_map=cmap,
+        )
+        exit_ids = [rc.exit_id for rc in ranked]
+        assert "E1" not in exit_ids
+        assert "E0" in exit_ids
+
+    def test_full_agent_sees_all_exits(self, multi_exit_graph):
+        """Full-familiarity cognitive map does not restrict Dijkstra."""
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        cmap = AgentCognitiveMap(
+            familiarity="full",
+            known_nodes={"D0", "E0", "E1"},
+            known_edges={("D0", "E0"), ("D0", "E1")},
+        )
+        field = ConstantExtinctionField(0.0)
+        ranked = rank_routes(
+            multi_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            field,
+            None,
+            RouteCostConfig(),
+            cognitive_map=cmap,
+        )
+        exit_ids = [rc.exit_id for rc in ranked]
+        assert "E0" in exit_ids
+        assert "E1" in exit_ids
+
+
+class TestVisibilityRejection:
+    """rank_routes applies next_node_not_visible rejection unconditionally."""
+
+    def _make_vis_model(self, visible_nodes: set[str]):
+        """Return a mock vis_model where only *visible_nodes* are visible."""
+
+        class _MockVis:
+            def node_is_visible(self, time, x, y, node_id):
+                return node_id in visible_nodes
+
+        return _MockVis()
+
+    def test_invisible_route_rejected(self, multi_exit_graph):
+        """E0 route rejected when E0 sign is not visible."""
+        field = ConstantExtinctionField(0.0)
+        vis = self._make_vis_model(visible_nodes={"E1"})  # E0 not visible
+        ranked = rank_routes(
+            multi_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            field,
+            None,
+            RouteCostConfig(),
+            vis_model=vis,
+        )
+        e0 = next(rc for rc in ranked if rc.exit_id == "E0")
+        e1 = next(rc for rc in ranked if rc.exit_id == "E1")
+        assert e0.rejected
+        assert e0.rejection_reason == "next_node_not_visible"
+        assert not e1.rejected
+
+    def test_all_invisible_fallback_unrejects_least_bad(self, multi_exit_graph):
+        """When all routes are rejected, the fallback un-rejects the cheapest."""
+        field = ConstantExtinctionField(0.0)
+        vis = self._make_vis_model(visible_nodes=set())  # nothing visible
+        ranked = rank_routes(
+            multi_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            field,
+            None,
+            RouteCostConfig(),
+            vis_model=vis,
+        )
+        assert ranked, "should still return routes via fallback"
+        assert not ranked[0].rejected, "fallback must un-reject the best route"
+        assert ranked[0].rejection_reason is not None
+        assert ranked[0].rejection_reason.startswith("fallback")
+
+    def test_agent_position_used_over_centroid(self, multi_exit_graph):
+        """agent_position is forwarded to vis_model instead of node centroid."""
+        received: list[tuple] = []
+
+        class _RecordingVis:
+            def node_is_visible(self, time, x, y, node_id):
+                received.append((x, y))
+                return True
+
+        field = ConstantExtinctionField(0.0)
+        rank_routes(
+            multi_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            field,
+            None,
+            RouteCostConfig(),
+            vis_model=_RecordingVis(),
+            agent_position=(7.5, 3.0),
+        )
+        assert received, "vis_model.node_is_visible should have been called"
+        assert all(x == 7.5 and y == 3.0 for x, y in received)

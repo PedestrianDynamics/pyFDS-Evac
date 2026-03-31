@@ -20,7 +20,7 @@ from pyfds_evac.core import (
     load_scenario,
     run_scenario,
 )
-from pyfds_evac.core.visibility import VisibilityModel, _extract_sign_descriptors
+from pyfds_evac.core.visibility import VisibilityModel, extract_sign_descriptors
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -309,7 +309,7 @@ def main() -> int:
             raise ValueError("--vis-cache requires --fds-dir")
         if not args.enable_rerouting:
             raise ValueError("--vis-cache requires --enable-rerouting")
-        sign_descriptors = _extract_sign_descriptors(scenario.raw)
+        sign_descriptors = extract_sign_descriptors(scenario.raw)
         if sign_descriptors:
             print(f"Configuring visibility model ({len(sign_descriptors)} sign(s)).")
             vis_model = VisibilityModel(

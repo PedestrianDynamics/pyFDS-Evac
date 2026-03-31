@@ -38,7 +38,7 @@ from pyfds_evac.core import (
     load_scenario,
     run_scenario,
 )
-from pyfds_evac.core.visibility import VisibilityModel, _extract_sign_descriptors
+from pyfds_evac.core.visibility import VisibilityModel, extract_sign_descriptors
 
 CONFIGS = {
     "full": Path("assets/demo/config_full.json"),
@@ -96,7 +96,7 @@ def run_tier(
 
     vis_model = None
     if vis_cache is not None:
-        signs = _extract_sign_descriptors(scenario.raw)
+        signs = extract_sign_descriptors(scenario.raw)
         if signs:
             vis_model = VisibilityModel(
                 fds_dir=str(fds_dir),

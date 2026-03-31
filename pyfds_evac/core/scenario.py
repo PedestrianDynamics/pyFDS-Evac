@@ -1670,11 +1670,11 @@ def run_scenario(
                         reroute_debug_samples += 1
                     # Expand cognitive map from current position before reevaluation.
                     _cmap = cognitive_maps.get(agent_id)
+                    _pos = wait_info.get("current_position")
                     if _cmap is not None and stage_graph is not None:
                         _cur_node = wait_info.get("current_origin") or wait_info.get(
                             "current_target_stage"
                         )
-                        _pos = wait_info.get("current_position")
                         if _cur_node is not None and _pos is not None:
                             expand_from_visibility(
                                 _cmap,
@@ -1702,6 +1702,9 @@ def run_scenario(
                                 exit_counts=exit_counts,
                                 vis_model=vis_model,
                                 cognitive_map=_cmap,
+                                agent_position=tuple(_pos)
+                                if _pos is not None
+                                else None,
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
                                 _exit_node = stage_graph.nodes.get(rc.exit_id)
@@ -1747,6 +1750,7 @@ def run_scenario(
                         exit_counts=exit_counts,
                         vis_model=vis_model,
                         cognitive_map=_cmap,
+                        agent_position=tuple(_pos) if _pos is not None else None,
                     )
                     if switch is not None:
                         # Update exit_counts: decrement old, increment new.

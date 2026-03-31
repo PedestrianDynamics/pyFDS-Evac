@@ -29,7 +29,7 @@
 
 ! --- Fire source at the junction ---
 ! 2 m x 1 m burner on the floor, right where the branch meets the corridor.
-! 500 kW/m^2 x 2 m^2 = 1 MW peak after 60 s ramp-up.
+! HRRPUA=50 kW/m^2 x 2 m^2 = 100 kW peak; ramp reaches full intensity at 120 s.
 &SURF ID='FIRE',
       HRRPUA=50,
       COLOR='RED',
@@ -67,6 +67,6 @@
 &DEVC XB=25,25,11.5,11.5,2,2, QUANTITY='VISIBILITY', ID='V_fire' /
 &DEVC XB=10,10,11.5,11.5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_left' /
 &DEVC XB=25,25,11.5,11.5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_right' /
-&DEVC XB=20,20,5,5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_branch' />
+&DEVC XB=20,20,5,5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_branch' /
 
 &TAIL /

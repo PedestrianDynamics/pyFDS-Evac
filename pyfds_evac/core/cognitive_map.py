@@ -77,8 +77,12 @@ def expand_from_visibility(
     ax: float,
     ay: float,
 ) -> None:
-    """Expand map with adjacent nodes visible from (ax, ay) at *time_s*."""
-    if cmap.familiarity == "full" or vis_model is None:
+    """Expand map with adjacent nodes visible from (ax, ay) at *time_s*.
+
+    When *vis_model* is None, all adjacent nodes are added unconditionally
+    (no visibility data available → assume all neighbours are reachable).
+    """
+    if cmap.familiarity == "full":
         return
     _expand_visible(cmap, current_node, graph, vis_model, time_s, ax, ay)
 

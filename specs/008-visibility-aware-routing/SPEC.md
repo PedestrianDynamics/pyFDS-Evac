@@ -51,12 +51,15 @@ JuPedSim waypoints (intermediate stages in a journey) and exits are
 both graph nodes.  A T-junction should be a waypoint node in two senses:
 
 - A **JuPedSim stage** (polygon the agent steers toward).
-- A **vismap landmark** — a sign at `(x, y, angle_deg)` facing the
+- A **vismap landmark** — a sign at `(x, y, alpha)` facing the
   corridor it points toward.
 
-Example: a junction with a sign pointing right has `angle_deg=0`;
-the same junction viewed from the left corridor sees it face-on;
-from the right corridor it is seen from behind (invisible).
+`alpha` is a compass bearing (degrees from north, clockwise): 90 = sign
+visible from the east, 270 = from the west, 180 = from the south.
+
+Example: a junction sign with `alpha=90` faces east; agents approaching
+from the east see it face-on; agents to the west see it from behind
+(invisible).
 
 ### Sign descriptor in config.json
 
@@ -67,19 +70,19 @@ Each stage node gains an optional `"sign"` field:
   "junction_T": {
     "type": "polygon",
     "coordinates": [[14,9],[16,9],[16,14],[14,14],[14,9]],
-    "sign": {"x": 15.0, "y": 10.0, "angle_deg": 90}
+    "sign": {"x": 15.0, "y": 10.0, "alpha": 90}
   }
 },
 "exits": {
   "exit_A_left": {
     "type": "polygon",
     "coordinates": [[0,10],[1,10],[1,13],[0,13],[0,10]],
-    "sign": {"x": 0.5, "y": 11.5, "angle_deg": 0}
+    "sign": {"x": 0.5, "y": 11.5, "alpha": 90}
   },
   "exit_B_right": {
     "type": "polygon",
     "coordinates": [[29,10],[30,10],[30,13],[29,13],[29,10]],
-    "sign": {"x": 29.5, "y": 11.5, "angle_deg": 180}
+    "sign": {"x": 29.5, "y": 11.5, "alpha": 270}
   }
 }
 ```
@@ -91,7 +94,7 @@ If `"sign"` is absent for a node, that node is assumed always visible
 
 ```python
 waypoints_for_vismap = [
-    (node_id, sign["x"], sign["y"], sign["angle_deg"])
+    (node_id, sign["x"], sign["y"], sign["alpha"])
     for node_id, sign in all_sign_descriptors.items()
 ]
 vis = load_or_compute_vis(
