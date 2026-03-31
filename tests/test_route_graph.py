@@ -1634,3 +1634,6 @@ class TestVisibilityRejection:
         )
         assert received, "vis_model.node_is_visible should have been called"
         assert all(x == 7.5 and y == 3.0 for x, y in received)
+
+
+# ── VisibilityModel cache tests are in test_visibility.py ─────────────

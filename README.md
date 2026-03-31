@@ -338,8 +338,9 @@ Default when the key is absent: `"full"` (backward compatible).
    agent's current position are added.
 
 Routing (Dijkstra) runs over the agent's known sub-graph only. If no exit
-is reachable in the cognitive map, the agent navigates toward the nearest
-visible node.
+is reachable in the cognitive map, no rerouting occurs and the agent
+continues on its last assigned route until the cognitive map expands via
+an arrival or reevaluation event.
 
 #### Visualising cognitive map evolution
 

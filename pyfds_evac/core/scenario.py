@@ -1337,9 +1337,12 @@ def run_scenario(
                                     )
                                     if path_state:
                                         agent_wait_info[agent_id] = path_state
+                                        _dist_idx = flow_dist.get(
+                                            "dist_index", source_id
+                                        )
                                         _fam = (
-                                            dist_familiarity[source_id]
-                                            if source_id < len(dist_familiarity)
+                                            dist_familiarity[_dist_idx]
+                                            if _dist_idx < len(dist_familiarity)
                                             else "full"
                                         )
                                         path_state["familiarity"] = _fam
@@ -1420,8 +1423,11 @@ def run_scenario(
                                             "reach_dwell_seconds": 0.2,
                                             "step_index": 0,
                                             "base_seed": base_seed,
-                                            "familiarity": dist_familiarity[source_id]
-                                            if source_id < len(dist_familiarity)
+                                            "familiarity": dist_familiarity[
+                                                flow_dist.get("dist_index", source_id)
+                                            ]
+                                            if flow_dist.get("dist_index", source_id)
+                                            < len(dist_familiarity)
                                             else "full",
                                         }
                                         if stage_graph is not None:
@@ -1928,11 +1934,13 @@ def run_scenario(
                                 advance_path_target(wait_info)
                                 _acmap = cognitive_maps.get(agent_id)
                                 if _acmap is not None and stage_graph is not None:
-                                    expand_on_arrival(
-                                        _acmap,
-                                        wait_info.get("current_origin", ""),
-                                        stage_graph,
-                                    )
+                                    _arrived = wait_info.get("current_origin")
+                                    if _arrived and _arrived in stage_graph.nodes:
+                                        expand_on_arrival(
+                                            _acmap,
+                                            _arrived,
+                                            stage_graph,
+                                        )
                         continue
 
                     if state == "waiting":

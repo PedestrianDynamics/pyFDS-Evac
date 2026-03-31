@@ -111,7 +111,7 @@ invalidated when `fds_dir` or the waypoint list changes.
 ```python
 class VisibilityModel:
     def __init__(self, fds_dir, sign_descriptors, times, cache_path):
-        waypoints = [(nid, s["x"], s["y"], s["angle_deg"])
+        waypoints = [(nid, s["x"], s["y"], s["alpha"])
                      for nid, s in sign_descriptors.items()]
         self.vis = load_or_compute_vis(fds_dir, waypoints, times, cache_path)
         self.wp_ids = {nid: i for i, (nid, *_) in enumerate(waypoints)}

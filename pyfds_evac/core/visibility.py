@@ -48,16 +48,22 @@ def _build_vismap(
 
 
 def _make_meta(
+    fds_dir: str,
     sign_descriptors: dict[str, dict],
     time_step_s: float,
     slice_height_m: float,
 ) -> dict:
-    """Build a metadata dict that uniquely identifies a vismap cache."""
+    """Build a metadata dict that uniquely identifies a vismap cache.
+
+    Includes the resolved FDS directory so that caches built from different
+    FDS datasets are never silently reused even if the waypoint list matches.
+    """
     waypoints = [
         (node_id, sign.get("x"), sign.get("y"), sign.get("alpha"), sign.get("c", 3))
         for node_id, sign in sign_descriptors.items()
     ]
     return {
+        "fds_dir": str(Path(fds_dir).resolve()),
         "waypoints": waypoints,
         "time_step_s": time_step_s,
         "slice_height_m": slice_height_m,
@@ -92,7 +98,9 @@ class VisibilityModel:
         force_recompute: bool = False,
     ) -> None:
         cache = Path(cache_path) if cache_path else None
-        expected_meta = _make_meta(sign_descriptors, time_step_s, slice_height_m)
+        expected_meta = _make_meta(
+            str(fds_dir), sign_descriptors, time_step_s, slice_height_m
+        )
 
         loaded = False
         if cache and cache.exists() and not force_recompute:
