@@ -188,6 +188,14 @@ Figure: ![ISO Table 22 stationary FED verification](artifacts/iso-table22-statio
 
 - Incapacitation effects on agent motion (FED >= 1 → speed = 0)
 - Thermal FED terms (radiant heat, convective heat)
+- **Height-relative FED and smoke sampling**: gas concentrations and extinction
+  are sampled from a single horizontal FDS slice at a fixed height
+  (`slice_height_m`, default 2.0 m), shared by all agents regardless of their
+  individual heights.  Pathfinder samples at 90 % of each occupant's height,
+  which is more accurate for scenarios with mixed-height populations (children,
+  wheelchair users).  A per-agent sampling height would require either multiple
+  slice outputs at different elevations or 3-D slice data, and is a known
+  approximation of the current model.
 
 ### Usage
 

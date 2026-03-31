@@ -12,7 +12,10 @@ from pyfds_evac.core import (
     run_scenario,
     speed_from_soot_density,
 )
-from pyfds_evac.core.smoke_speed import speed_factor_from_extinction
+from pyfds_evac.core.smoke_speed import (
+    speed_factor_from_extinction,
+    speed_factor_from_extinction_fridolf,
+)
 
 
 def _run_iso_constant_extinction(extinction_per_m: float):
@@ -34,6 +37,53 @@ def _run_iso_constant_extinction(extinction_per_m: float):
 
 def test_speed_factor_clear_air_is_one():
     assert speed_factor_from_extinction(0.0) == 1.0
+
+
+class TestFridolfSpeedFactor:
+    """Fridolf et al. (2019) individualized speed-visibility model."""
+
+    def test_clear_air_is_one(self):
+        assert speed_factor_from_extinction_fridolf(0.0) == 1.0
+
+    def test_half_speed_at_v_equals_2(self):
+        # V = C/K = 2 m  →  K = C/2 = 1.5 with default C=3
+        factor = speed_factor_from_extinction_fridolf(1.5, visibility_factor_c=3.0)
+        assert factor == pytest.approx(0.5, rel=1e-6)
+
+    def test_decreases_with_extinction(self):
+        f_low = speed_factor_from_extinction_fridolf(0.5)
+        f_high = speed_factor_from_extinction_fridolf(2.0)
+        assert f_high < f_low
+
+    def test_approaches_zero_at_high_extinction(self):
+        factor = speed_factor_from_extinction_fridolf(1e6)
+        assert factor < 1e-4
+
+    def test_larger_c_gives_higher_factor(self):
+        # Higher C means better visibility at the same K
+        f_c3 = speed_factor_from_extinction_fridolf(1.0, visibility_factor_c=3.0)
+        f_c8 = speed_factor_from_extinction_fridolf(1.0, visibility_factor_c=8.0)
+        assert f_c8 > f_c3
+
+
+class TestSmokeSpeedModelFridolf:
+    """SmokeSpeedModel dispatches to Fridolf when speed_law='fridolf'."""
+
+    def test_fridolf_law_used_when_configured(self):
+        field = ConstantExtinctionField(1.5)
+        cfg = SmokeSpeedConfig(
+            fds_dir=".", speed_law="fridolf", visibility_factor_c=3.0
+        )
+        model = SmokeSpeedModel(field, cfg)
+        _, factor = model.sample(0.0, 0.0, 0.0)
+        assert factor == pytest.approx(0.5, rel=1e-6)
+
+    def test_lund_law_used_by_default(self):
+        field = ConstantExtinctionField(0.0)
+        cfg = SmokeSpeedConfig(fds_dir=".")
+        model = SmokeSpeedModel(field, cfg)
+        _, factor = model.sample(0.0, 0.0, 0.0)
+        assert factor == pytest.approx(1.0)
 
 
 def test_speed_factor_reduces_with_extinction():
