@@ -1412,7 +1412,7 @@ def run_scenario(
                                             "mode": "path",
                                             "path_choices": {},
                                             "stage_configs": stage_configs,
-                                            "current_origin": exit_id,
+                                            "current_origin": flow_dist.get("dist_key", exit_id),
                                             "current_target_stage": exit_id,
                                             "target": target,
                                             "target_assigned": False,
