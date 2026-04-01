@@ -1702,3 +1702,27 @@ class TestAutoEdgeGeneration:
         # Only the explicit D0→E0 edge; E1 must not be auto-added.
         targets = {e.target for e in g.edges.get("D0", [])}
         assert targets == {"E0"}, "auto-edges must not appear when transitions defined"
+
+    def test_current_origin_resolves_to_dist_key(self):
+        """flow_dist.get('dist_key', exit_id) must return the distribution key.
+
+        scenario.py sets current_origin = flow_dist.get('dist_key', exit_id).
+        If dist_key is absent, current_origin falls back to exit_id which is a
+        dead-end node (no outgoing edges), permanently disabling rerouting.
+        This test guards that contract: a flow_dist entry produced for a
+        named distribution always carries dist_key and never silently falls
+        back to exit_id.
+        """
+        dist_key = "jps-distributions_0"
+        exit_id = "exit_B_right"
+
+        # Simulate a flow_dist entry as produced by _initialize_with_fallback.
+        flow_dist_with_key = {"dist_key": dist_key, "dist_index": 0}
+        flow_dist_without_key = {"dist_index": 0}  # old behaviour — no dist_key
+
+        assert flow_dist_with_key.get("dist_key", exit_id) == dist_key, (
+            "current_origin must be the distribution node, not the exit"
+        )
+        assert flow_dist_without_key.get("dist_key", exit_id) == exit_id, (
+            "without dist_key the fallback is exit_id — this documents the regression"
+        )

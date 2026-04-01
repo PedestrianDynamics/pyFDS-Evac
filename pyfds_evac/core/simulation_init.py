@@ -879,6 +879,7 @@ def _initialize_with_fallback(
     if not distributions:
         print("No valid distributions found; using walkable area as fallback")
         distributions = [walkable_area.polygon]
+        distribution_keys = ["__walkable_area__"]
         distribution_params = [
             {
                 "number": default_n_agents,
@@ -927,7 +928,7 @@ def _initialize_with_fallback(
     for i, (dist_area, dist_params) in enumerate(
         zip(distributions, distribution_params)
     ):
-        dist_key_str = distribution_keys[i] if i < len(distribution_keys) else str(i)
+        dist_key_str = distribution_keys[i]
         use_flow_spawning = dist_params.get("use_flow_spawning", False)
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(dist_params)
         flow_schedule = _normalize_flow_schedule_entries(dist_params)
