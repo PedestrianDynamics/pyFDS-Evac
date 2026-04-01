@@ -42,7 +42,20 @@ See [docs/smoke-speed-model.md](docs/smoke-speed-model.md) for the full
 model description, configuration, and API reference.
 
 The smoke-speed model uses extinction coefficient `K [1/m]` as the primary
-input. For real FDS output, `fdsreader` provides the local extinction field
+input. Two speed laws are available, selected via `SmokeSpeedConfig.speed_law`:
+
+| `speed_law` | Model | Reference |
+|-------------|-------|-----------|
+| `"lund"` (default) | Linear: `speed_factor = 1 + β·K/α`, clamped to `[min_speed_factor, 1]` | Frantzich & Nilsson / FDS+Evac |
+| `"fridolf"` | Non-linear: `speed_factor = V / (V + 2)` where `V = C / K` (Jin) | Fridolf et al. (2019) |
+
+The Fridolf law is empirically validated against individual walking-speed
+measurements in smoke-filled tunnels and naturally asymptotes to zero without
+a hard clamp. Select it with `SmokeSpeedConfig(speed_law="fridolf")`;
+`visibility_factor_c` controls the Jin constant (default `3` for reflective
+signs, `8` for light-emitting signs).
+
+For real FDS output, `fdsreader` provides the local extinction field
 via `SliceFieldSampler`. For verification cases such as ISO 20414 Table 21,
 the runner can also apply a constant extinction coefficient directly.
 
@@ -165,6 +178,13 @@ The FED model was extended in March 2026 to include all ISO 13571 terms:
 - **NO (nitric oxide)**: Added to NOx-term alongside NO2
 - **Multiple irritant gases**: HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde
   with species-specific Ct thresholds from guide Table 2
+- **O2 hypoxia guard**: The O2 FED term (guide Eq. 18) is suppressed at or
+  above 19.5 % O2 (OSHA safe-air threshold). At ambient conditions (20.9 %)
+  the denominator of Eq. 18 is non-zero, producing a tiny but finite rate that
+  accumulates spuriously over long simulations or when agents sample outside the
+  FDS domain (where O2 defaults to 20.9 %). The guard sets the rate to zero
+  when O2 ≥ 19.5 %, matching the default behaviour in Pathfinder (Thunderhead
+  Engineering).
 
 All new terms are fully tested with constant-exposure unit tests in
 `tests/test_fed.py`.

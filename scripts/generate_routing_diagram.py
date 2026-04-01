@@ -1,47 +1,33 @@
-"""Generate a routing model flowchart for the pyFDS-Evac paper.
-
-Shows the full rank_routes decision pipeline:
-  inputs → subgraph restriction → Phase 1 edge weights →
-  Phase 2 Dijkstra → Phase 3 composite cost →
-  rejection filters → fallback → selected route.
-
-Usage:
-    uv run python scripts/generate_routing_diagram.py
-"""
-
 from __future__ import annotations
-
 from pathlib import Path
-
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+from matplotlib.patches import FancyBboxPatch, Circle, Polygon
 
-OUT_PATH = Path("../pyFDS-Evac-paper/figs/routing_diagram.png")
+OUT_PATH = Path("routing_diagram_final_result.png")
 
-# ── colours ───────────────────────────────────────────────────────────
-C_INPUT = "#E3F2FD"      # light blue  – inputs
-C_PHASE = "#E8F5E9"      # light green – processing phases
-C_REJECT = "#FFF3E0"     # light orange – rejection filters
-C_FALLBACK = "#FCE4EC"   # light red   – fallback
-C_OUTPUT = "#F3E5F5"     # light purple – output
-C_BORDER = "#455A64"     # dark grey
+# --- Colors ---
+C_INPUT = "#E3F2FD"  # Light Blue
+C_PHASE = "#E8F5E9"  # Light Green
+C_REJECT = "#FFF3E0"  # Light Orange
+C_FALLBACK = "#FCE4EC"  # Light Pink
+C_OUTPUT = "#F3E5F5"  # Light Purple
 C_ARROW = "#37474F"
 C_REJECT_BORDER = "#E65100"
 C_PHASE_BORDER = "#2E7D32"
 C_INPUT_BORDER = "#1565C0"
-C_OUT_BORDER = "#6A1B9A"
+C_OUT_BORDER = "#4A148C"
 
 
-def _box(ax, x, y, w, h, text, facecolor, edgecolor, fontsize=8.5, bold=False):
+def draw_box(ax, x, y, w, h, text, facecolor, edgecolor, fontsize=8, bold=False):
     box = FancyBboxPatch(
         (x - w / 2, y - h / 2),
         w,
         h,
-        boxstyle="round,pad=0.04",
+        boxstyle="round,pad=0.01",
         facecolor=facecolor,
         edgecolor=edgecolor,
-        linewidth=1.4,
+        linewidth=1.2,
         zorder=3,
     )
     ax.add_patch(box)
@@ -55,212 +41,221 @@ def _box(ax, x, y, w, h, text, facecolor, edgecolor, fontsize=8.5, bold=False):
         fontsize=fontsize,
         fontweight=weight,
         zorder=4,
-        wrap=True,
+        linespacing=1.2,
     )
 
 
-def _arrow(ax, x0, y0, x1, y1, label="", color=C_ARROW):
-    ax.annotate(
-        "",
-        xy=(x1, y1),
-        xytext=(x0, y0),
-        arrowprops=dict(
-            arrowstyle="-|>",
-            color=color,
-            lw=1.3,
-            mutation_scale=12,
-        ),
-        zorder=5,
+def draw_circle(ax, x, y, r, text, facecolor, edgecolor, fontsize=8):
+    circle = Circle(
+        (x, y), r, facecolor=facecolor, edgecolor=edgecolor, linewidth=1.2, zorder=3
     )
+    ax.add_patch(circle)
+    ax.text(
+        x,
+        y,
+        text,
+        ha="center",
+        va="center",
+        fontsize=fontsize,
+        zorder=4,
+        linespacing=1.2,
+    )
+
+
+def draw_arrow(
+    ax,
+    x0,
+    y0,
+    x1,
+    y1,
+    label="",
+    color=C_ARROW,
+    label_pos=0.5,
+    shrink=0,
+    connectionstyle=None,
+):
+    arrow_props = dict(
+        arrowstyle="-|>",
+        color=color,
+        lw=1.2,
+        mutation_scale=12,
+        shrinkA=shrink,
+        shrinkB=shrink,
+    )
+    if connectionstyle:
+        arrow_props["connectionstyle"] = connectionstyle
+    ax.annotate("", xy=(x1, y1), xytext=(x0, y0), arrowprops=arrow_props, zorder=5)
     if label:
-        mx, my = (x0 + x1) / 2, (y0 + y1) / 2
-        ax.text(mx + 0.03, my, label, fontsize=7, color=color, va="center", zorder=6)
-
-
-def _hline(ax, x0, x1, y, color=C_ARROW, lw=1.1):
-    ax.plot([x0, x1], [y, y], color=color, lw=lw, zorder=2)
-
-
-def _vline(ax, x, y0, y1, color=C_ARROW, lw=1.1):
-    ax.plot([x, x], [y0, y1], color=color, lw=lw, zorder=2)
+        mx, my = x0 + (x1 - x0) * label_pos, y0 + (y1 - y0) * label_pos
+        ax.text(
+            mx + 0.01,
+            my,
+            label,
+            fontsize=8,
+            color=color,
+            fontweight="bold",
+            va="center",
+            zorder=6,
+        )
 
 
 def main():
-    fig, ax = plt.subplots(figsize=(7.5, 12))
+    fig, ax = plt.subplots(figsize=(10, 11))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
+    CX = 0.5
+    BW_STD, BH_STD = 0.28, 0.08
+    XS_STD = [0.18, 0.5, 0.82]
 
-    # ── column centres ────────────────────────────────────────────────
-    CX = 0.5   # main spine x
-    BW = 0.52  # default box width
-    BH = 0.045 # default box height
+    # --- Y-coordinates ---
+    Y_INPUT, Y_RESTRICT, Y_PHASES = 0.92, 0.82, 0.71
+    Y_REJ_TITLE, Y_REJECTS, Y_DIAMOND = 0.61, 0.52, 0.39
+    Y_SORT, Y_OUTPUT = 0.27, 0.14
 
-    # ── rows (top → bottom) ───────────────────────────────────────────
-    Y_IN1  = 0.965
-    Y_IN2  = 0.900
-    Y_SUB  = 0.830
-    Y_PH1  = 0.758
-    Y_PH2  = 0.678
-    Y_PH3  = 0.598
-    Y_RLAB = 0.530   # "rejection filters" label
-    Y_R1   = 0.490
-    Y_R2   = 0.435
-    Y_R3   = 0.380
-    Y_ALL  = 0.318
-    Y_FB   = 0.268
-    Y_SORT = 0.210
-    Y_OUT  = 0.150
-
-    # ── INPUT ROW ─────────────────────────────────────────────────────
-    # Three input boxes side by side
-    iw, ih = 0.26, 0.042
-    xs = [0.18, 0.50, 0.82]
+    # 1. Inputs (3 Blue Boxes)
     labels_in = [
-        "Agent state\n$(t,\\,\\mathbf{x}_i,\\,D_i,\\,N_k)$",
-        "FDS fields\n$(K(\\mathbf{x},t),\\;\\dot{D}(\\mathbf{x},t))$",
-        "Cognitive map\n$(\\text{full} \\mid \\text{discovery})$",
+        "Agent state\n$(t, \\mathbf{x}_i, D_i, N_k)$",
+        "FDS fields\n$(K, \\dot{D})$",
+        "Cognitive map\n(full | discovery)",
     ]
-    for xi, lab in zip(xs, labels_in):
-        _box(ax, xi, Y_IN1, iw, ih, lab, C_INPUT, C_INPUT_BORDER, fontsize=7.5)
+    for x, txt in zip(XS_STD, labels_in):
+        draw_box(ax, x, Y_INPUT, BW_STD, BH_STD, txt, C_INPUT, C_INPUT_BORDER)
+    draw_arrow(ax, CX, Y_INPUT - BH_STD / 2, CX, Y_RESTRICT + 0.03)
 
-    # arrows from inputs down to a merge line, then to subgraph box
-    merge_y = Y_IN1 - ih / 2 - 0.018
-    for xi in xs:
-        _arrow(ax, xi, Y_IN1 - ih / 2, xi, merge_y + 0.005)
-    _hline(ax, xs[0], xs[-1], merge_y)
-    _vline(ax, CX, merge_y, Y_SUB + BH / 2)
-    ax.annotate(
-        "",
-        xy=(CX, Y_SUB + BH / 2),
-        xytext=(CX, merge_y),
-        arrowprops=dict(arrowstyle="-|>", color=C_ARROW, lw=1.3, mutation_scale=12),
-        zorder=5,
+    # 2. Restrict Graph (Green Box)
+    draw_box(
+        ax,
+        CX,
+        Y_RESTRICT,
+        0.6,
+        0.06,
+        "Restrict graph to cognitive subgraph\n(discovery agents only; full agents: no change)",
+        C_PHASE,
+        C_PHASE_BORDER,
     )
 
-    # ── SUBGRAPH RESTRICTION ──────────────────────────────────────────
-    _box(
-        ax, CX, Y_SUB, BW, BH,
-        "Restrict graph to cognitive subgraph\n"
-        "(discovery agents only; full agents: no change)",
-        C_PHASE, C_PHASE_BORDER, fontsize=8,
-    )
-    _arrow(ax, CX, Y_SUB - BH / 2, CX, Y_PH1 + BH / 2)
+    # 3. Phases (Floating circular nodes)
+    labels_phase = [
+        "Phase 1\nDynamic\nWeights",
+        "Phase 2\nDijkstra\nShortest Path",
+        "Phase 3\nComposite\nCost",
+    ]
+    for x, txt in zip([0.25, 0.5, 0.75], labels_phase):
+        draw_circle(ax, x, Y_PHASES, 0.055, txt, C_PHASE, C_PHASE_BORDER)
 
-    # ── PHASE 1 ───────────────────────────────────────────────────────
-    _box(
-        ax, CX, Y_PH1, BW, BH,
-        "Phase 1 — dynamic edge weights\n"
-        "$w_{uv} = L_{uv}(1+w_\\sigma\\bar{K}_{uv}) + w_F\\,\\Delta D_{uv}$",
-        C_PHASE, C_PHASE_BORDER, fontsize=8,
-    )
-    _arrow(ax, CX, Y_PH1 - BH / 2, CX, Y_PH2 + BH / 2)
-
-    # ── PHASE 2 ───────────────────────────────────────────────────────
-    _box(
-        ax, CX, Y_PH2, BW, BH,
-        "Phase 2 — Dijkstra\n"
-        "one shortest path per reachable exit",
-        C_PHASE, C_PHASE_BORDER, fontsize=8,
-    )
-    _arrow(ax, CX, Y_PH2 - BH / 2, CX, Y_PH3 + BH / 2)
-
-    # ── PHASE 3 ───────────────────────────────────────────────────────
-    _box(
-        ax, CX, Y_PH3, BW, BH,
-        "Phase 3 — route-level composite cost\n"
-        "$\\mathcal{C}_k = L_k(1+w_\\sigma\\bar{K}_k)"
-        "+ w_F D^{\\max}_k + w_q v_0 N_k/c_k$",
-        C_PHASE, C_PHASE_BORDER, fontsize=8,
-    )
-    _arrow(ax, CX, Y_PH3 - BH / 2, CX, Y_RLAB + 0.018)
-
-    # ── REJECTION LABEL ───────────────────────────────────────────────
+    # 4. Rejection Filters (3 Orange Boxes - aligned with inputs)
     ax.text(
-        CX, Y_RLAB + 0.01,
-        "Rejection filters (per route)",
-        ha="center", va="center", fontsize=8.5, fontweight="bold",
-        color=C_REJECT_BORDER, zorder=4,
+        CX,
+        Y_REJ_TITLE,
+        "REJECTION FILTERS (per route)",
+        ha="center",
+        fontweight="bold",
+        color=C_REJECT_BORDER,
+        fontsize=9,
+    )
+    labels_rej = [
+        "$D^{\\max}_k > D_{\\text{thresh}}$\nAgent incapacitated\nbefore exit",
+        "Relative Smoke Filter\n$\\bar{K}_{uv} \\geq K_{\\text{vis}}$",
+        "Visibility Filter\nNext-node sign\nnot visible from $\\mathbf{x}_i$",
+    ]
+    for x, txt in zip(XS_STD, labels_rej):
+        draw_box(ax, x, Y_REJECTS, BW_STD, BH_STD, txt, C_REJECT, C_REJECT_BORDER)
+
+    # Arrow to Decision Diamond from the middle filter
+    draw_arrow(
+        ax,
+        XS_STD[1],
+        Y_REJECTS - BH_STD / 2,
+        CX,
+        Y_DIAMOND + 0.04,
+        color=C_REJECT_BORDER,
     )
 
-    # ── REJECTION BOXES ───────────────────────────────────────────────
-    rw, rh = 0.56, 0.038
-    reject_items = [
-        (Y_R1, "$D^{\\max}_k > D_{\\mathrm{thresh}}$\n"
-               "agent incapacitated before reaching exit"),
-        (Y_R2, "All segments $\\bar{K}_{uv}\\geq K_{\\mathrm{vis}}$"
-               " AND another route is clear\n(relative smoke filter)"),
-        (Y_R3, "Next-node sign not visible from $\\mathbf{x}_i$\n"
-               "(unconditional — per route, independent)"),
-    ]
-    for yr, txt in reject_items:
-        _box(ax, CX, yr, rw, rh, txt, C_REJECT, C_REJECT_BORDER, fontsize=7.5)
-        _arrow(ax, CX, yr - rh / 2, CX, yr - rh / 2 - 0.008,
-               color=C_REJECT_BORDER)
-
-    # connect last reject to "all rejected?" diamond
-    _arrow(ax, CX, Y_R3 - rh / 2, CX, Y_ALL + 0.022, color=C_REJECT_BORDER)
-
-    # ── ALL REJECTED? ─────────────────────────────────────────────────
-    # draw diamond manually
-    dx, dy = 0.11, 0.025
-    diamond = plt.Polygon(
-        [[CX, Y_ALL + dy], [CX + dx, Y_ALL],
-         [CX, Y_ALL - dy], [CX - dx, Y_ALL]],
-        closed=True, facecolor=C_FALLBACK, edgecolor=C_REJECT_BORDER,
-        linewidth=1.4, zorder=3,
+    # 5. Decision Diamond & Fallback
+    diamond = Polygon(
+        [
+            [CX, Y_DIAMOND + 0.04],
+            [CX + 0.09, Y_DIAMOND],
+            [CX, Y_DIAMOND - 0.04],
+            [CX - 0.09, Y_DIAMOND],
+        ],
+        facecolor=C_FALLBACK,
+        edgecolor=C_REJECT_BORDER,
+        lw=1.5,
+        zorder=3,
     )
     ax.add_patch(diamond)
-    ax.text(CX, Y_ALL, "All routes\nrejected?", ha="center", va="center",
-            fontsize=7.5, zorder=4)
-
-    # "Yes" branch → fallback box to the right
-    _arrow(ax, CX + dx, Y_ALL, 0.82, Y_ALL, color=C_REJECT_BORDER)
-    ax.text(0.72, Y_ALL + 0.012, "Yes", fontsize=7.5, color=C_REJECT_BORDER)
-    _box(ax, 0.82, Y_ALL, 0.22, 0.038,
-         "Fallback: un-reject\nleast-cost route",
-         C_FALLBACK, C_REJECT_BORDER, fontsize=7.5)
-    # fallback reconnects back to main spine
-    _vline(ax, 0.82, Y_ALL - 0.019, Y_SORT + 0.005, color=C_REJECT_BORDER)
-    _hline(ax, CX, 0.82, Y_SORT + 0.005, color=C_REJECT_BORDER)
-
-    # "No" branch → straight down
-    _arrow(ax, CX, Y_ALL - dy, CX, Y_SORT + BH / 2)
-    ax.text(CX + 0.04, (Y_ALL - dy + Y_SORT + BH / 2) / 2, "No",
-            fontsize=7.5, color=C_ARROW)
-
-    # ── SORT ──────────────────────────────────────────────────────────
-    _box(ax, CX, Y_SORT, BW, BH,
-         "Sort non-rejected routes by $\\mathcal{C}_k$ (ascending)",
-         C_PHASE, C_PHASE_BORDER, fontsize=8)
-    _arrow(ax, CX, Y_SORT - BH / 2, CX, Y_OUT + BH / 2)
-
-    # ── OUTPUT ────────────────────────────────────────────────────────
-    _box(ax, CX, Y_OUT, BW, BH,
-         "Selected route: best exit $k^*$ + path\n"
-         "(agent reroutes if $k^* \\neq$ current exit)",
-         C_OUTPUT, C_OUT_BORDER, fontsize=8, bold=True)
-
-    # ── LEGEND ────────────────────────────────────────────────────────
-    legend_patches = [
-        mpatches.Patch(facecolor=C_INPUT,   edgecolor=C_INPUT_BORDER,  label="Inputs"),
-        mpatches.Patch(facecolor=C_PHASE,   edgecolor=C_PHASE_BORDER,  label="Processing"),
-        mpatches.Patch(facecolor=C_REJECT,  edgecolor=C_REJECT_BORDER, label="Rejection / fallback"),
-        mpatches.Patch(facecolor=C_OUTPUT,  edgecolor=C_OUT_BORDER,    label="Output"),
-    ]
-    ax.legend(
-        handles=legend_patches,
-        loc="lower left",
-        fontsize=7.5,
-        frameon=True,
-        framealpha=0.9,
-        bbox_to_anchor=(0.01, 0.01),
+    ax.text(
+        CX,
+        Y_DIAMOND,
+        "All routes\nrejected?",
+        ha="center",
+        va="center",
+        fontsize=8.5,
+        fontweight="bold",
     )
 
-    fig.tight_layout()
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT_PATH, dpi=180, bbox_inches="tight")
-    print(f"Saved → {OUT_PATH}")
+    X_FALL, W_FALL, BW_SORT = 0.12, 0.2, 0.5
+    draw_arrow(
+        ax,
+        CX - 0.09,
+        Y_DIAMOND,
+        X_FALL + W_FALL / 2,
+        Y_DIAMOND,
+        label="Yes",
+        color=C_REJECT_BORDER,
+        label_pos=0.6,
+    )
+    draw_box(
+        ax,
+        X_FALL,
+        Y_DIAMOND,
+        W_FALL,
+        0.08,
+        "Fallback:\nUn-reject\nleast-cost route",
+        C_FALLBACK,
+        C_REJECT_BORDER,
+    )
+
+    # Rerouted Fallback arrow to Side of Sort box
+    draw_arrow(
+        ax,
+        X_FALL,
+        Y_DIAMOND - 0.04,
+        CX - BW_SORT / 2,
+        Y_SORT + 0.01,
+        color=C_REJECT_BORDER,
+        connectionstyle="angle,angleA=-90,angleB=180,rad=5",
+    )
+
+    # 6. Sort & Output
+    draw_arrow(ax, CX, Y_DIAMOND - 0.04, CX, Y_SORT + 0.03, label="No", label_pos=0.4)
+    draw_box(
+        ax,
+        CX,
+        Y_SORT,
+        BW_SORT,
+        0.06,
+        "Sort non-rejected routes by $\\mathcal{C}_k$ (ascending)",
+        C_PHASE,
+        C_PHASE_BORDER,
+    )
+    draw_arrow(ax, CX, Y_SORT - 0.03, CX, Y_OUTPUT + 0.045)
+    draw_box(
+        ax,
+        CX,
+        Y_OUTPUT,
+        0.6,
+        0.09,
+        "SELECTED ROUTE:\nBest exit $k^*$ + path\n(Agent reroutes if $k^* \\neq$ current exit)",
+        C_OUTPUT,
+        C_OUT_BORDER,
+        bold=True,
+        fontsize=9.5,
+    )
+
+    plt.savefig(OUT_PATH, dpi=300, bbox_inches="tight")
     plt.show()
 
 
