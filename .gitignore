@@ -161,4 +161,4 @@ cython_debug/
 
 # Data
 fds_data
-processed_data
+processed_data.worktrees/
