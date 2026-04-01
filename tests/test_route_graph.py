@@ -1637,3 +1637,68 @@ class TestVisibilityRejection:
 
 
 # ── VisibilityModel cache tests are in test_visibility.py ─────────────
+
+
+# ── Auto-edge generation (minimal config: no transitions) ─────────────
+
+
+class TestAutoEdgeGeneration:
+    """StageGraph auto-connects distributions to exits when transitions=[].
+
+    Scenario 009: minimal config with only distributions + exits should
+    support full smoke/FED rerouting without explicit transitions.
+    """
+
+    def _make_minimal_graph(self) -> StageGraph:
+        """D0 → {E0, E1} auto-generated; no explicit transitions."""
+        direct_steering_info = {
+            "E0": {"polygon": _box(0, 0), "stage_type": "exit"},
+            "E1": {"polygon": _box(20, 0), "stage_type": "exit"},
+        }
+        distributions = {
+            "D0": {"coordinates": list(_box(10, 0).exterior.coords)},
+        }
+        return StageGraph.from_scenario(
+            direct_steering_info=direct_steering_info,
+            transitions=[],
+            distributions=distributions,
+        )
+
+    def test_edges_are_generated(self):
+        g = self._make_minimal_graph()
+        assert "D0" in g.edges, "auto-edges from distribution must be created"
+        targets = {e.target for e in g.edges["D0"]}
+        assert targets == {"E0", "E1"}
+
+    def test_edge_weights_are_positive(self):
+        g = self._make_minimal_graph()
+        for edge in g.edges["D0"]:
+            assert edge.weight > 0
+
+    def test_rank_routes_finds_both_exits(self):
+        """rank_routes must return a cost entry for each exit."""
+        g = self._make_minimal_graph()
+        field = ConstantExtinctionField(0.0)
+        ranked = rank_routes(g, "D0", 0.0, 0.0, field, None, RouteCostConfig())
+        exit_ids = {rc.exit_id for rc in ranked}
+        assert "E0" in exit_ids
+        assert "E1" in exit_ids
+
+    def test_no_auto_edges_when_transitions_defined(self):
+        """Explicit transitions must not be augmented by auto-generation."""
+        direct_steering_info = {
+            "E0": {"polygon": _box(0, 0), "stage_type": "exit"},
+            "E1": {"polygon": _box(20, 0), "stage_type": "exit"},
+        }
+        distributions = {
+            "D0": {"coordinates": list(_box(10, 0).exterior.coords)},
+        }
+        transitions = [{"from": "D0", "to": "E0"}]
+        g = StageGraph.from_scenario(
+            direct_steering_info=direct_steering_info,
+            transitions=transitions,
+            distributions=distributions,
+        )
+        # Only the explicit D0→E0 edge; E1 must not be auto-added.
+        targets = {e.target for e in g.edges.get("D0", [])}
+        assert targets == {"E0"}, "auto-edges must not appear when transitions defined"

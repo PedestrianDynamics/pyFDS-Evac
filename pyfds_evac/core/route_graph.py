@@ -139,6 +139,39 @@ class StageGraph:
             edge = StageEdge(source=src, target=tgt, weight=weight, waypoints=waypoints)
             graph.edges.setdefault(src, []).append(edge)
 
+        # When no transitions are defined, auto-connect every distribution to
+        # every exit so that smoke/FED-based rerouting works in minimal configs
+        # (distributions + exits only, no checkpoints or explicit transitions).
+        if not transitions:
+            dist_ids = [
+                nid for nid, n in graph.nodes.items() if n.stage_type == "distribution"
+            ]
+            exit_ids = [
+                nid for nid, n in graph.nodes.items() if n.stage_type == "exit"
+            ]
+            for src_id in dist_ids:
+                for tgt_id in exit_ids:
+                    src_node = graph.nodes[src_id]
+                    tgt_node = graph.nodes[tgt_id]
+                    if routing_engine is not None:
+                        waypoints = list(
+                            routing_engine.compute_waypoints(
+                                (src_node.centroid_x, src_node.centroid_y),
+                                (tgt_node.centroid_x, tgt_node.centroid_y),
+                            )
+                        )
+                        weight = _polyline_length(waypoints)
+                    else:
+                        waypoints = [
+                            (src_node.centroid_x, src_node.centroid_y),
+                            (tgt_node.centroid_x, tgt_node.centroid_y),
+                        ]
+                        weight = _polyline_length(waypoints)
+                    edge = StageEdge(
+                        source=src_id, target=tgt_id, weight=weight, waypoints=waypoints
+                    )
+                    graph.edges.setdefault(src_id, []).append(edge)
+
         return graph
 
     def exit_nodes(self) -> list[str]:
