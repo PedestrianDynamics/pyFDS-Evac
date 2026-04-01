@@ -824,6 +824,7 @@ def _initialize_with_fallback(
     # Step 2: Handle distributions (use walkable area if none provided)
     distributions = []
     distribution_params = []  # Store parameters for each distribution
+    distribution_keys = []  # Parallel list of dist_id strings
     total_agents = 0
 
     if "distributions" in data and data["distributions"]:
@@ -834,6 +835,7 @@ def _initialize_with_fallback(
                 if isinstance(coords, list) and len(coords) >= 3:
                     dist_polygon = Polygon(coords)
                     distributions.append(dist_polygon)
+                    distribution_keys.append(dist_id)
 
                     # Get parameters for this specific distribution
                     params = dist_data.get("parameters", {})
@@ -925,6 +927,7 @@ def _initialize_with_fallback(
     for i, (dist_area, dist_params) in enumerate(
         zip(distributions, distribution_params)
     ):
+        dist_key_str = distribution_keys[i] if i < len(distribution_keys) else str(i)
         use_flow_spawning = dist_params.get("use_flow_spawning", False)
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(dist_params)
         flow_schedule = _normalize_flow_schedule_entries(dist_params)
@@ -1003,6 +1006,7 @@ def _initialize_with_fallback(
                 flow_distributions.append(
                     {
                         "dist_index": i,
+                        "dist_key": dist_key_str,
                         "params": flow_params,
                         "start_time": flow_start_time,
                         "end_time": flow_end_time,
@@ -1080,6 +1084,7 @@ def _initialize_with_fallback(
             flow_distributions.append(
                 {
                     "dist_index": i,
+                    "dist_key": dist_key_str,
                     "params": dist_params,
                     "start_time": flow_start_time,
                     "end_time": flow_end_time,
