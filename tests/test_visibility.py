@@ -7,8 +7,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from pyfds_evac.core.visibility import VisibilityModel, _make_meta
 
 
