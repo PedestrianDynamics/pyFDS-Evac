@@ -45,6 +45,12 @@ from .direct_steering_runtime import (
     set_agent_smoke_factor,
     update_checkpoint_speed,
 )
+from .cognitive_map import (
+    AgentCognitiveMap,
+    expand_from_visibility,
+    expand_on_arrival,
+    init_cognitive_map,
+)
 from .route_graph import (
     AgentRouteState,
     RerouteConfig,
@@ -963,6 +969,7 @@ def run_scenario(
     fed_model=None,
     reroute_config: Optional[RerouteConfig] = None,
     collect_route_cost_history: bool = False,
+    vis_model=None,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app."""
     _require_jupedsim()
@@ -1031,6 +1038,7 @@ def run_scenario(
         route_history: list[dict[str, Any]] = []
         route_cost_history: list[dict[str, Any]] = []
         agent_route_state: Dict[int, AgentRouteState] = {}
+        cognitive_maps: Dict[int, AgentCognitiveMap] = {}
         route_segment_cache: dict[tuple[str, str], Any] | None = None
         stage_graph: StageGraph | None = None
         reroute_debug_printed = False
@@ -1052,6 +1060,11 @@ def run_scenario(
                 f"direct_steering={len(direct_steering_info)} "
                 f"wait_info={len(agent_wait_info)}"
             )
+        # Pre-compute familiarity per distribution index.
+        dist_familiarity: list[str] = [
+            d.get("parameters", {}).get("familiarity", "full")
+            for d in scenario.raw.get("distributions", {}).values()
+        ]
         exit_counts: dict[str, int] = {}
         if reroute_config is not None and stage_graph is not None:
             # Initialise all exits to zero.
@@ -1324,6 +1337,15 @@ def run_scenario(
                                     )
                                     if path_state:
                                         agent_wait_info[agent_id] = path_state
+                                        _dist_idx = flow_dist.get(
+                                            "dist_index", source_id
+                                        )
+                                        _fam = (
+                                            dist_familiarity[_dist_idx]
+                                            if _dist_idx < len(dist_familiarity)
+                                            else "full"
+                                        )
+                                        path_state["familiarity"] = _fam
                                         if path_state and stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
                                                 path_state, stage_graph.nodes
@@ -1401,6 +1423,12 @@ def run_scenario(
                                             "reach_dwell_seconds": 0.2,
                                             "step_index": 0,
                                             "base_seed": base_seed,
+                                            "familiarity": dist_familiarity[
+                                                flow_dist.get("dist_index", source_id)
+                                            ]
+                                            if flow_dist.get("dist_index", source_id)
+                                            < len(dist_familiarity)
+                                            else "full",
                                         }
                                         if stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
@@ -1611,6 +1639,20 @@ def run_scenario(
                                 reroute_config.reevaluation_interval_s,
                             ),
                         )
+                    # Initialize cognitive map on first encounter.
+                    if agent_id not in cognitive_maps and stage_graph is not None:
+                        spawn_node = wait_info.get("current_origin") or wait_info.get(
+                            "current_target_stage"
+                        )
+                        if spawn_node is not None:
+                            familiarity = wait_info.get("familiarity", "full")
+                            cognitive_maps[agent_id] = init_cognitive_map(
+                                spawn_node,
+                                stage_graph,
+                                familiarity,
+                                vis_model,
+                                current_time,
+                            )
                     rs = agent_route_state[agent_id]
                     if not should_reevaluate(
                         current_time, rs, reroute_config.reevaluation_interval_s
@@ -1632,6 +1674,23 @@ def run_scenario(
                             f"in_graph={source in stage_graph.nodes if source is not None else False}"
                         )
                         reroute_debug_samples += 1
+                    # Expand cognitive map from current position before reevaluation.
+                    _cmap = cognitive_maps.get(agent_id)
+                    _pos = wait_info.get("current_position")
+                    if _cmap is not None and stage_graph is not None:
+                        _cur_node = wait_info.get("current_origin") or wait_info.get(
+                            "current_target_stage"
+                        )
+                        if _cur_node is not None and _pos is not None:
+                            expand_from_visibility(
+                                _cmap,
+                                _cur_node,
+                                stage_graph,
+                                vis_model,
+                                current_time,
+                                _pos[0],
+                                _pos[1],
+                            )
                     if collect_route_cost_history:
                         source = wait_info.get("current_origin") or wait_info.get(
                             "current_target_stage"
@@ -1647,6 +1706,11 @@ def run_scenario(
                                 reroute_config.cost_config,
                                 cached_segments=route_segment_cache,
                                 exit_counts=exit_counts,
+                                vis_model=vis_model,
+                                cognitive_map=_cmap,
+                                agent_position=tuple(_pos)
+                                if _pos is not None
+                                else None,
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
                                 _exit_node = stage_graph.nodes.get(rc.exit_id)
@@ -1690,6 +1754,9 @@ def run_scenario(
                         config=reroute_config,
                         cached_segments=route_segment_cache,
                         exit_counts=exit_counts,
+                        vis_model=vis_model,
+                        cognitive_map=_cmap,
+                        agent_position=tuple(_pos) if _pos is not None else None,
                     )
                     if switch is not None:
                         # Update exit_counts: decrement old, increment new.
@@ -1758,6 +1825,7 @@ def run_scenario(
                             removed_state = agent_route_state.pop(
                                 tracked_agent_id, None
                             )
+                            cognitive_maps.pop(tracked_agent_id, None)
                             if (
                                 removed_state is not None
                                 and removed_state.current_exit
@@ -1864,6 +1932,15 @@ def run_scenario(
                                 wait_info["wait_until"] = current_time + wait_time
                             else:
                                 advance_path_target(wait_info)
+                                _acmap = cognitive_maps.get(agent_id)
+                                if _acmap is not None and stage_graph is not None:
+                                    _arrived = wait_info.get("current_origin")
+                                    if _arrived and _arrived in stage_graph.nodes:
+                                        expand_on_arrival(
+                                            _acmap,
+                                            _arrived,
+                                            stage_graph,
+                                        )
                         continue
 
                     if state == "waiting":
@@ -1881,6 +1958,13 @@ def run_scenario(
                             wait_info.get("wait_until", current_time)
                         ):
                             advance_path_target(wait_info)
+                            _acmap = cognitive_maps.get(agent_id)
+                            if _acmap is not None and stage_graph is not None:
+                                expand_on_arrival(
+                                    _acmap,
+                                    wait_info.get("current_origin", ""),
+                                    stage_graph,
+                                )
                         continue
 
             simulation.iterate()

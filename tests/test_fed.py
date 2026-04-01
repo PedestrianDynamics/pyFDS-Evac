@@ -124,6 +124,31 @@ def test_default_fed_rate_is_zero_in_clear_air():
     assert time_to_fed_threshold_s(DefaultFedInputs()) > 1.0e7
 
 
+class TestO2HypoxiaThreshold:
+    """O2 hypoxia term is suppressed at or above the 19.5 % threshold."""
+
+    def test_ambient_o2_returns_zero(self):
+        from pyfds_evac.core.fed import _O2_HYPOXIA_THRESHOLD_PERCENT
+
+        rate = _o2_hypoxia_rate_per_minute(20.9)
+        assert rate == 0.0
+
+    def test_threshold_exact_returns_zero(self):
+        from pyfds_evac.core.fed import _O2_HYPOXIA_THRESHOLD_PERCENT
+
+        rate = _o2_hypoxia_rate_per_minute(_O2_HYPOXIA_THRESHOLD_PERCENT)
+        assert rate == 0.0
+
+    def test_below_threshold_is_positive(self):
+        rate = _o2_hypoxia_rate_per_minute(15.0)
+        assert rate > 0.0
+
+    def test_ambient_conditions_no_fed_accumulation(self):
+        """Full FED rate is zero under ambient conditions (no spurious drift)."""
+        rate = default_fed_rate_per_minute(DefaultFedInputs())
+        assert rate == 0.0
+
+
 # ---------------------------------------------------------------------------
 # Closed-form rate validation for each ISO 13571 term
 # ---------------------------------------------------------------------------
@@ -247,10 +272,9 @@ class TestHyperventilationFactor:
 class TestO2HypoxiaRate:
     """Verify O2 FED rate against guide Eq. 18."""
 
-    def test_normal_air(self):
-        rate = _o2_hypoxia_rate_per_minute(20.9)
-        expected = 1.0 / (60.0 * math.exp(8.13 - 0.54 * 0.0))
-        assert rate == pytest.approx(expected, rel=1e-10)
+    def test_normal_air_is_zero(self):
+        # At ambient O2 (20.9 %) the hypoxia guard suppresses the term.
+        assert _o2_hypoxia_rate_per_minute(20.9) == 0.0
 
     def test_low_o2(self):
         rate = _o2_hypoxia_rate_per_minute(12.0)

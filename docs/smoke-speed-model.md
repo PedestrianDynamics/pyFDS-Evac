@@ -4,15 +4,16 @@
 
 The pyFDS-Evac smoke-speed model reduces agent walking speed based on
 local smoke conditions. It takes the extinction coefficient K [1/m] as
-its primary input and applies a linear speed-reduction law derived from
-the original
-[FDS+Evac](../materials/FDS+EVAC_Guide.pdf) / Frantzich-Nilsson (Lund)
-correlation (Section 3.4, Eq. 11).
+its primary input and applies one of two speed-reduction laws, selected
+via `SmokeSpeedConfig.speed_law`.
 
-## Speed-reduction law
+## Speed-reduction laws
 
-The model computes a multiplicative speed factor from the local
-extinction coefficient:
+### Lund / FDS+Evac (`speed_law="lund"`, default)
+
+Linear speed-reduction derived from the Frantzich-Nilsson (Lund) data,
+as used in the original [FDS+Evac](../materials/FDS+EVAC_Guide.pdf)
+(Section 3.4, Eq. 11):
 
 ```
 speed_factor(K) = 1 + beta * K / alpha
@@ -28,7 +29,28 @@ coefficients are:
 | `beta`             | -0.057  | Slope (negative = speed decreases) |
 | `min_speed_factor` | 0.1     | Floor for the speed multiplier     |
 
-The actual walking speed is:
+### Fridolf et al. (2019) (`speed_law="fridolf"`)
+
+Non-linear model validated against individual walking-speed measurements
+in smoke-filled tunnels (Fridolf et al. 2019, method 3). Visibility is
+derived from extinction via the Jin (1970-1978) relation `V = C / K`,
+then:
+
+```
+speed_factor(V) = V / (V + 2)
+```
+
+| Parameter            | Default | Description                                         |
+|----------------------|---------|-----------------------------------------------------|
+| `visibility_factor_c`| 3.0     | Jin constant C (3 = reflective sign, 8 = lit sign)  |
+
+Properties:
+- At K = 0 (clear air): V → ∞, factor → 1.
+- At K = C/2: V = 2 m, factor = 0.5 (half speed).
+- As K → ∞: factor → 0 — no hard clamp needed.
+- Also used by Pathfinder (Thunderhead Engineering).
+
+### Actual walking speed
 
 ```
 v(K) = v0 * speed_factor(K)

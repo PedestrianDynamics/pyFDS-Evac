@@ -22,6 +22,7 @@ from .route_graph import (
     integrated_extinction_along_los,
 )
 from .scenario import Scenario, ScenarioResult, load_scenario, run_scenario
+from .visibility import VisibilityModel
 from .smoke_speed import (
     ConstantExtinctionField,
     ExtinctionField,
@@ -58,4 +59,5 @@ __all__ = [
     "load_scenario",
     "run_scenario",
     "time_to_fed_threshold_s",
+    "VisibilityModel",
 ]

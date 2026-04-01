@@ -2,14 +2,27 @@
 
 Model overview
 --------------
-Walking speed through smoke is reduced based on the local extinction
-coefficient K [1/m] using the linear FDS+Evac / Frantzich-Nilsson (Lund)
-correlation:
+Two speed-law options are available, selected via ``SmokeSpeedConfig.speed_law``:
 
-    speed_factor(K) = 1 + beta * K / alpha
+``"lund"`` (default)
+    Linear FDS+Evac / Frantzich-Nilsson (Lund) correlation based on extinction K:
 
-where alpha = 0.706 and beta = -0.057 by default.  The factor is clamped
-to [min_speed_factor, 1.0].
+        speed_factor(K) = 1 + beta * K / alpha
+
+    where alpha = 0.706 and beta = -0.057 by default.  The factor is clamped
+    to [min_speed_factor, 1.0].
+
+``"fridolf"``
+    Non-linear model from Fridolf et al. (2019) based on visibility V [m]:
+
+        speed_factor(V) = V / (V + 2)
+
+    Visibility is derived from extinction via V = C / K (Jin 1970-1978),
+    where C is the visibility factor (default C = 3 for reflective signs).
+    At V → ∞ (clear air) the factor approaches 1; at V = 0 (zero visibility)
+    it reaches 0 without a hard clamp.  This model was validated against
+    individual walking-speed measurements in smoke-filled tunnels and
+    is also used by Pathfinder (Thunderhead Engineering).
 
 When evaluating route costs, the extinction along a line of sight between
 two points is computed as the arithmetic mean of K sampled at uniform
@@ -33,6 +46,9 @@ References
 - Jin (1970-1978): empirical visibility-extinction correlation V = C / sigma
 - Frantzich & Nilsson (Lund): linear speed-extinction relation used by FDS+Evac
 - Ronchi et al. (2013): interpretation A3 comparison across evacuation tools
+- Fridolf et al. (2019): "The Representation of Evacuation Movement in
+  Smoke-Filled Underground Transportation Systems", Tunnelling and Underground
+  Space Technology 90, 28-41.  Individualized speed-visibility model (method 3).
 - Boerger et al. (2024), Fire Safety Journal 150:104269:
   Beer-Lambert integrated extinction along line of sight (Eq. 8-9),
   view-angle correction (Eq. 7), waypoint-based visibility maps
@@ -52,25 +68,31 @@ _logger = logging.getLogger(__name__)
 class SmokeSpeedConfig:
     """Store coefficients and sampling settings for the smoke-speed model.
 
-    The default coefficients follow the linear extinction correlation used by
-    FDS+Evac / Lund-style smoke-speed reduction:
+    speed_law
+        ``"lund"`` (default): linear FDS+Evac / Lund correlation
+        ``speed_factor(K) = 1 + beta * K / alpha``, clamped to
+        ``[min_speed_factor, 1.0]``.
 
-        speed_factor(K) = 1 + beta * K / alpha
+        ``"fridolf"``: non-linear Fridolf et al. (2019) model
+        ``speed_factor(V) = V / (V + 2)`` where ``V = C / K``.
+        Naturally asymptotes to 0 as visibility drops; no hard clamp.
 
-    where:
-    - K is the local extinction coefficient in 1/m
-    - alpha = 0.706
-    - beta = -0.057
-
-    The resulting factor is clamped to [min_speed_factor, 1.0].
+    visibility_factor_c
+        Visibility factor C in the Jin (1970-1978) relation V = C / K.
+        Only used when ``speed_law = "fridolf"``.
+        C = 3 corresponds to a reflective sign; C = 8 to a light-emitting sign.
     """
 
     fds_dir: str
     update_interval_s: float = 1.0
     slice_height_m: float = 2.0
+    speed_law: str = "lund"
+    # lund coefficients
     alpha: float = 0.706
     beta: float = -0.057
     min_speed_factor: float = 0.1
+    # fridolf coefficients
+    visibility_factor_c: float = 3.0
 
 
 class ExtinctionField:
@@ -187,24 +209,14 @@ def speed_factor_from_extinction(
     beta: float = -0.057,
     min_speed_factor: float = 0.1,
 ) -> float:
-    """Convert extinction coefficient K [1/m] to a normalized speed factor.
+    """Convert K [1/m] to a speed factor using the Lund (FDS+Evac) linear law.
 
-    Reference model:
-    - FDS+Evac applies the Frantzich/Nilsson data with a fractional speed
-      reduction and variable minimum speed.
-    - Ronchi et al. (2013) describe this as interpretation A3 and show that
-      model results remain comparable when the same dataset and interpretation
-      are used consistently across tools.
-    - The implementation here follows the linear FDS+Evac/Lund relation:
-      v(K) = v0 * (1 + beta * K / alpha)
+    v(K) / v0 = 1 + beta * K / alpha, clamped to [min_speed_factor, 1.0].
 
-    Notes:
-    - This function returns the multiplicative factor v(K) / v0.
-    - beta < 0 means speed decreases as extinction increases.
-    - We clamp to a minimum speed factor instead of zero. That preserves the
-      FDS+Evac-style fractional interpretation with a variable minimum speed:
-      the minimum absolute speed is still proportional to the individual's
-      clear-air speed.
+    - Frantzich & Nilsson (Lund): linear speed-extinction relation used by FDS+Evac.
+    - Ronchi et al. (2013): interpretation A3; results comparable across tools.
+    - beta < 0: speed decreases as extinction increases.
+    - Hard clamp at min_speed_factor preserves the FDS+Evac fractional interpretation.
     """
 
     if not np.isfinite(extinction_per_m):
@@ -212,6 +224,39 @@ def speed_factor_from_extinction(
     extinction_per_m = max(0.0, float(extinction_per_m))
     factor = 1.0 + (beta * extinction_per_m) / alpha
     return float(np.clip(factor, min_speed_factor, 1.0))
+
+
+def speed_factor_from_extinction_fridolf(
+    extinction_per_m: float,
+    *,
+    visibility_factor_c: float = 3.0,
+) -> float:
+    """Convert K [1/m] to a speed factor using the Fridolf et al. (2019) model.
+
+    Visibility is derived via V = C / K (Jin 1970-1978), then:
+
+        speed_factor(V) = V / (V + 2)
+
+    This is the individualized representation (method 3) from:
+    Fridolf et al. (2019), "The Representation of Evacuation Movement in
+    Smoke-Filled Underground Transportation Systems", Tunnelling and
+    Underground Space Technology 90, 28-41.
+
+    Properties:
+    - At K = 0 (clear air): V → ∞, factor → 1.
+    - At K = C/2: V = 2 m, factor = 0.5 (half speed).
+    - As K → ∞: factor → 0 (no hard clamp needed).
+    - Empirically validated against individual walking-speed measurements.
+    - Also used by Pathfinder (Thunderhead Engineering).
+    """
+
+    if not np.isfinite(extinction_per_m):
+        extinction_per_m = 0.0
+    extinction_per_m = max(0.0, float(extinction_per_m))
+    if extinction_per_m == 0.0:
+        return 1.0
+    visibility = visibility_factor_c / extinction_per_m
+    return float(visibility / (visibility + 2.0))
 
 
 class SmokeSpeedModel:
@@ -229,12 +274,19 @@ class SmokeSpeedModel:
     def sample(self, time_s: float, x: float, y: float) -> tuple[float, float]:
         """Return `(extinction_K, speed_factor)` at the requested position/time."""
         extinction = self.field.sample_extinction(time_s, x, y)
-        return extinction, speed_factor_from_extinction(
-            extinction,
-            alpha=self.config.alpha,
-            beta=self.config.beta,
-            min_speed_factor=self.config.min_speed_factor,
-        )
+        if self.config.speed_law == "fridolf":
+            factor = speed_factor_from_extinction_fridolf(
+                extinction,
+                visibility_factor_c=self.config.visibility_factor_c,
+            )
+        else:
+            factor = speed_factor_from_extinction(
+                extinction,
+                alpha=self.config.alpha,
+                beta=self.config.beta,
+                min_speed_factor=self.config.min_speed_factor,
+            )
+        return extinction, factor
 
     def speed_factor(self, time_s: float, x: float, y: float) -> float:
         """Return only the speed factor at the requested position/time."""

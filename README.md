@@ -9,7 +9,9 @@ The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
 - Full ISO 13571 FED model (toxic gas dose accumulation)
-- Dynamic smoke-based route rerouting
+- Dynamic smoke-based route rerouting with congestion awareness
+- Sign-visibility-gated route rejection (fdsvismap integration)
+- Per-agent cognitive maps with `full` and `discovery` familiarity tiers
 - JuPedSim scenario loading and simulation
 
 ## Installation
@@ -40,7 +42,20 @@ See [docs/smoke-speed-model.md](docs/smoke-speed-model.md) for the full
 model description, configuration, and API reference.
 
 The smoke-speed model uses extinction coefficient `K [1/m]` as the primary
-input. For real FDS output, `fdsreader` provides the local extinction field
+input. Two speed laws are available, selected via `SmokeSpeedConfig.speed_law`:
+
+| `speed_law` | Model | Reference |
+|-------------|-------|-----------|
+| `"lund"` (default) | Linear: `speed_factor = 1 + β·K/α`, clamped to `[min_speed_factor, 1]` | Frantzich & Nilsson / FDS+Evac |
+| `"fridolf"` | Non-linear: `speed_factor = V / (V + 2)` where `V = C / K` (Jin) | Fridolf et al. (2019) |
+
+The Fridolf law is empirically validated against individual walking-speed
+measurements in smoke-filled tunnels and naturally asymptotes to zero without
+a hard clamp. Select it with `SmokeSpeedConfig(speed_law="fridolf")`;
+`visibility_factor_c` controls the Jin constant (default `3` for reflective
+signs, `8` for light-emitting signs).
+
+For real FDS output, `fdsreader` provides the local extinction field
 via `SliceFieldSampler`. For verification cases such as ISO 20414 Table 21,
 the runner can also apply a constant extinction coefficient directly.
 
@@ -163,6 +178,13 @@ The FED model was extended in March 2026 to include all ISO 13571 terms:
 - **NO (nitric oxide)**: Added to NOx-term alongside NO2
 - **Multiple irritant gases**: HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde
   with species-specific Ct thresholds from guide Table 2
+- **O2 hypoxia guard**: The O2 FED term (guide Eq. 18) is suppressed at or
+  above 19.5 % O2 (OSHA safe-air threshold). At ambient conditions (20.9 %)
+  the denominator of Eq. 18 is non-zero, producing a tiny but finite rate that
+  accumulates spuriously over long simulations or when agents sample outside the
+  FDS domain (where O2 defaults to 20.9 %). The guard sets the rate to zero
+  when O2 ≥ 19.5 %, matching the default behaviour in Pathfinder (Thunderhead
+  Engineering).
 
 All new terms are fully tested with constant-exposure unit tests in
 `tests/test_fed.py`.
@@ -186,6 +208,14 @@ Figure: ![ISO Table 22 stationary FED verification](artifacts/iso-table22-statio
 
 - Incapacitation effects on agent motion (FED >= 1 → speed = 0)
 - Thermal FED terms (radiant heat, convective heat)
+- **Height-relative FED and smoke sampling**: gas concentrations and extinction
+  are sampled from a single horizontal FDS slice at a fixed height
+  (`slice_height_m`, default 2.0 m), shared by all agents regardless of their
+  individual heights.  Pathfinder samples at 90 % of each occupant's height,
+  which is more accurate for scenarios with mixed-height populations (children,
+  wheelchair users).  A per-agent sampling height would require either multiple
+  slice outputs at different elevations or 3-D slice data, and is a known
+  approximation of the current model.
 
 ### Usage
 
@@ -222,11 +252,14 @@ cost formulas, and API reference.
 The routing system implements smoke-aware path planning with dynamic rerouting:
 
 - **StageGraph**: Dijkstra-based shortest-path routing on a graph of
-  stages (distributions, exits)
-- **Route cost evaluation**: Samples extinction (K) and FED quantities along
-  candidate paths to compute smoke exposure
+  stages (distributions, checkpoints, exits)
+- **Route cost evaluation**: Samples extinction (K) along candidate paths
+  to compute smoke exposure (FED terms are supported when a `fed_model`
+  is provided; otherwise only smoke drives ranking)
 - **Dynamic rerouting**: Agents recompute routes at configurable intervals,
   selecting lower-exposure paths when available
+- **Congestion-aware routing**: Optional exit-congestion term (`w_queue`)
+  balances load across exits based on current agent counts and capacities
 - **Throughput throttling**: Optional exit flux limiting via
   `enable_throughput_throttling` and `max_throughput` in scenario config
 
@@ -244,11 +277,139 @@ uv run run.py \
   --cleanup
 ```
 
+## Visibility-aware routing and cognitive maps
+
+Implements [Spec 008](specs/008-visibility-aware-routing/SPEC.md): sign
+visibility gates route rejection and per-agent cognitive maps control what
+knowledge each agent has about the building layout.
+
+### Sign visibility (Phase 1)
+
+Each exit and checkpoint can carry a `"sign"` descriptor in the scenario
+config:
+
+```json
+{
+  "exits": {
+    "exit_A": {
+      "sign": {"x": 0.5, "y": 11.5, "alpha": 90, "c": 3}
+    }
+  }
+}
+```
+
+`alpha` is a compass bearing (degrees from north, clockwise): 90 = sign
+visible from the east, 270 = from the west, 180 = from the south.
+
+At each reevaluation tick the `VisibilityModel` checks whether an agent
+can see the next node's sign using a cached [fdsvismap](https://github.com/FireDynamics/fdsvismap)
+pickle. If the sign is not visible, the route is rejected with
+`rejection_reason="next_node_not_visible"`.
+
+```bash
+# Build or reuse the vismap cache and enable visibility-gated rejection
+uv run run.py \
+  --scenario assets/demo \
+  --fds-dir fds_data/demo \
+  --enable-rerouting \
+  --vis-cache fds_data/demo/vismap_cache.pkl \
+  --output-route-cost-history route_costs.csv \
+  --cleanup
+```
+
+Rejected routes are recorded in the route-cost CSV with
+`rejected=True, rejection_reason=next_node_not_visible`.
+
+#### Diagnostic scripts
+
+```bash
+# Coverage and ASET maps (sign placement validation)
+uv run python scripts/demo_vismap_phase0.py
+
+# With fresh vismap recompute
+uv run python scripts/demo_vismap_phase0.py --no-cache
+```
+
+### Cognitive maps (Phase 2)
+
+Agents have a familiarity tier that controls how much of the building they
+know at the start of the simulation:
+
+| Tier | `familiarity` | Knowledge at spawn | Expansion |
+|------|---------------|--------------------|-----------|
+| Trained staff | `"full"` | Complete stage graph | — |
+| Visitors | `"discovery"` | Spawn node + visible neighbors | On arrival + at reevaluation |
+
+Set per distribution group in the scenario config:
+
+```json
+{
+  "distributions": {
+    "visitors": {
+      "parameters": {
+        "familiarity": "discovery"
+      }
+    }
+  }
+}
+```
+
+Default when the key is absent: `"full"` (backward compatible).
+
+**Discovery expansion rules:**
+
+1. **At spawn** — agent learns its spawn node plus any adjacent node whose
+   sign is currently visible from the spawn centroid.
+2. **On arrival** — when an agent physically reaches a node, all immediate
+   neighbours are added to the cognitive map unconditionally.
+3. **At reevaluation** — adjacent nodes whose sign is visible from the
+   agent's current position are added.
+
+Routing (Dijkstra) runs over the agent's known sub-graph only. If no exit
+is reachable in the cognitive map, no rerouting occurs and the agent
+continues on its last assigned route until the cognitive map expands via
+an arrival or reevaluation event.
+
+#### Visualising cognitive map evolution
+
+```bash
+# 4-panel figure: spawn → junction → reroute → full baseline
+uv run python scripts/demo_cognitive_map_vis.py
+
+# Without cached vismap (all neighbours assumed visible at spawn)
+uv run python scripts/demo_cognitive_map_vis.py --no-cache
+```
+
+Figure: ![cognitive map evolution](assets/demo/cognitive_map_evolution.png)
+
+### Phase 2 verification: familiarity comparison
+
+Two scenario configs differ only in familiarity tier:
+
+| Config | Tier |
+|--------|------|
+| `assets/demo/config_full.json` | `familiarity=full` |
+| `assets/demo/config_discovery.json` | `familiarity=discovery` |
+
+Run both back-to-back and produce a 3-panel comparison (exit split,
+rejection timeline, evacuation time):
+
+```bash
+uv run python scripts/run_familiarity_comparison.py \
+    --fds-dir fds_data/demo \
+    --vis-cache fds_data/demo/vismap_cache.pkl
+```
+
+Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,
+`results/familiarity_comparison/comparison.png`.
+
 ## References
 
 Reference materials are stored in [`materials/`](materials/):
 
 - [FDS+Evac Technical Reference and User's Guide](materials/FDS+EVAC_Guide.pdf) — Korhonen (2021). Primary reference for the FED equations (Section 3.4) and smoke-speed model (Section 3.4, Eq. 11).
+- [Boerger et al. (2024)](materials/waypoint_based_visibility.pdf) — Beer-Lambert integrated extinction along line of sight (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269.
+- [Haensel (2014)](materials/Haensel2014.pdf) — Knowledge-based routing and cognitive map framework for evacuation modelling.
 - [Schroder et al. (2020)](materials/Schroder2020.pdf) — Waypoint-based visibility and evacuation modeling.
 - [Ronchi et al. (2013)](materials/Ronchi2013.pdf) — FDS+Evac evacuation model validation and verification.
 - [evac.f90](materials/evac.f90) — Original FDS+Evac Fortran source for cross-referencing implementation details.
@@ -260,6 +421,10 @@ Scenario definitions are stored in [`assets/`](assets/):
 - **ISO-table21**: ISO 20414 corridor verification case (single exit)
 - **ISO-table22**: ISO 20414 stationary benchmark (single agent, analytical FED=1 time)
 - **haspel**: Multi-exit scenario with three zones and dynamic rerouting
+- **demo**: T-corridor FDS scenario with cable fire, two exits (A open, B smoke-accumulating),
+  200 visitors spawning in the branch; used for visibility-aware routing and cognitive
+  map verification (Spec 008). Includes `config_full.json` and `config_discovery.json`
+  for familiarity-tier comparison.
 - **basic**: Minimal scenarios for smoke-speed verification
 - **HC**: Hazard composition cases
 - **social_force**: Social force model test cases

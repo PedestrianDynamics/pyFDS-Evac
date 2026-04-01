@@ -63,11 +63,31 @@ def _hyperventilation_factor(co2_percent: float) -> float:
     return math.exp(0.1903 * co2_percent + 2.0004) / 7.1
 
 
+_O2_HYPOXIA_THRESHOLD_PERCENT: float = 19.5
+"""O2 concentration above which hypoxia does not contribute to FED.
+
+At ambient O2 (20.9 %) the SFPE Eq. 18 denominator is non-zero, so the
+rate is tiny but finite — accumulating over a long simulation (or when
+the agent is outside the FDS domain and O2 defaults to 20.9 %) it
+produces spurious FED drift.  OSHA defines the safe lower limit for
+working conditions as 19.5 %; below this value hypoxia is a genuine
+hazard.  Pathfinder uses the same threshold (default 19.5 %) to prevent
+misleading accumulation under safe ambient conditions.
+"""
+
+
 def _o2_hypoxia_rate_per_minute(o2_percent: float) -> float:
-    """Return the O2 hypoxia FED contribution in 1/min from guide Eq. 18."""
+    """Return the O2 hypoxia FED contribution in 1/min from guide Eq. 18.
+
+    Returns 0 when O2 is at or above ``_O2_HYPOXIA_THRESHOLD_PERCENT``
+    (default 19.5 %) to prevent spurious accumulation under safe ambient
+    conditions.
+    """
 
     if not math.isfinite(o2_percent):
         o2_percent = 20.9
+    if float(o2_percent) >= _O2_HYPOXIA_THRESHOLD_PERCENT:
+        return 0.0
     denominator = 60.0 * math.exp(8.13 - 0.54 * (20.9 - float(o2_percent)))
     if denominator <= 0.0:
         return 0.0

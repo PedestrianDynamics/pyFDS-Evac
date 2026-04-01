@@ -20,6 +20,7 @@ from pyfds_evac.core import (
     load_scenario,
     run_scenario,
 )
+from pyfds_evac.core.visibility import VisibilityModel, extract_sign_descriptors
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -104,6 +105,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output-route-cost-history",
         help="Write ranked route cost snapshots to CSV",
+    )
+    parser.add_argument(
+        "--vis-cache",
+        help="Path to vismap pickle cache for visibility-gated route rejection. "
+        "Requires --fds-dir and --enable-rerouting. "
+        "Cache is created if missing, loaded if present.",
     )
     return parser
 
@@ -296,6 +303,25 @@ def main() -> int:
             cost_config=cost_config,
         )
 
+    vis_model = None
+    if args.vis_cache:
+        if not args.fds_dir:
+            raise ValueError("--vis-cache requires --fds-dir")
+        if not args.enable_rerouting:
+            raise ValueError("--vis-cache requires --enable-rerouting")
+        sign_descriptors = extract_sign_descriptors(scenario.raw)
+        if sign_descriptors:
+            print(f"Configuring visibility model ({len(sign_descriptors)} sign(s)).")
+            vis_model = VisibilityModel(
+                fds_dir=args.fds_dir,
+                sign_descriptors=sign_descriptors,
+                cache_path=args.vis_cache,
+                time_step_s=args.reroute_interval,
+                slice_height_m=args.smoke_slice_height,
+            )
+        else:
+            print("Warning: --vis-cache set but no sign descriptors found in config.")
+
     print("Initialization finished.")
     print("Simulation started.")
 
@@ -306,6 +332,7 @@ def main() -> int:
         fed_model=fed_model,
         reroute_config=reroute_config,
         collect_route_cost_history=bool(args.output_route_cost_history),
+        vis_model=vis_model,
     )
     if result.agents_remaining == 0:
         print(
