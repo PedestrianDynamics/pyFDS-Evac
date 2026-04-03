@@ -125,10 +125,12 @@ class StageGraph:
             edge = _make_edge(src_node, tgt_node, routing_engine)
             graph.edges.setdefault(src, []).append(edge)
 
-        # When no transitions are defined, auto-connect every distribution to
-        # every exit so that smoke/FED-based rerouting works in minimal configs
-        # (distributions + exits only, no checkpoints or explicit transitions).
-        if not transitions:
+        # When no transitions are defined and the graph contains only
+        # distributions and exits, auto-connect every distribution to every
+        # exit so that smoke/FED-based rerouting works in minimal configs.
+        if not transitions and all(
+            n.stage_type in ("distribution", "exit") for n in graph.nodes.values()
+        ):
             dist_ids = [
                 nid for nid, n in graph.nodes.items() if n.stage_type == "distribution"
             ]
