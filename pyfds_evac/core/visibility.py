@@ -116,6 +116,13 @@ def _vis_bool_array(vis) -> np.ndarray:
 def _save_vismap_cache(path: Path, vis, arrays: np.ndarray, meta: dict) -> None:
     """Serialise VisMap arrays to an npz file (no pickle, safe to load)."""
     npz_path = path.with_suffix(".npz")
+    if path.suffix and path.suffix != ".npz":
+        _logger.warning(
+            "Cache path %r has suffix %r; writing to %r instead.",
+            str(path),
+            path.suffix,
+            str(npz_path),
+        )
     npz_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
         npz_path,
@@ -171,6 +178,13 @@ def _build_cache_from_fds(
 def _load_vismap_cache(path: Path, expected_meta: dict) -> _VisMapCache | None:
     """Load cached arrays; return None on metadata mismatch or read error."""
     npz_path = path.with_suffix(".npz")
+    if path.suffix and path.suffix != ".npz":
+        _logger.warning(
+            "Cache path %r has suffix %r; looking for %r instead.",
+            str(path),
+            path.suffix,
+            str(npz_path),
+        )
     if not npz_path.exists():
         return None
     try:
