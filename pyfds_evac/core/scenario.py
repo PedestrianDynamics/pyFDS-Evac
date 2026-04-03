@@ -16,6 +16,7 @@ Usage::
 """
 
 import json
+import logging
 import math
 import os
 import pathlib
@@ -25,6 +26,8 @@ import tempfile
 from dataclasses import dataclass, field
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Tuple
+
+_logger = logging.getLogger(__name__)
 
 try:
     import jupedsim as jps
@@ -1917,8 +1920,10 @@ def run_scenario(
                             if stage_type == "exit":
                                 try:
                                     simulation.mark_agent_for_removal(agent_id)
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    _logger.warning(
+                                        "Failed to remove agent %s: %s", agent_id, e
+                                    )
                                 wait_info["state"] = "done"
                                 continue
 

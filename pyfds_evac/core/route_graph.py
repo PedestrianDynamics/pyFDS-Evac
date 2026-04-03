@@ -363,7 +363,7 @@ def _polyline_midpoint(
 ) -> tuple[float, float]:
     """Return the point at half the arc length along a polyline."""
     if not waypoints:
-        return (0.0, 0.0)
+        raise ValueError("waypoints must not be empty")
     if len(waypoints) == 1:
         return waypoints[0]
 
