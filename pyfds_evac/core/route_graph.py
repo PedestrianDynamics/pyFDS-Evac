@@ -134,9 +134,7 @@ class StageGraph:
             dist_ids = [
                 nid for nid, n in graph.nodes.items() if n.stage_type == "distribution"
             ]
-            exit_ids = [
-                nid for nid, n in graph.nodes.items() if n.stage_type == "exit"
-            ]
+            exit_ids = [nid for nid, n in graph.nodes.items() if n.stage_type == "exit"]
             for src_id in dist_ids:
                 for tgt_id in exit_ids:
                     edge = _make_edge(
