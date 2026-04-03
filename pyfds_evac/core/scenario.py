@@ -27,8 +27,6 @@ from dataclasses import dataclass, field
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Tuple
 
-_logger = logging.getLogger(__name__)
-
 try:
     import jupedsim as jps
 except ModuleNotFoundError:
@@ -65,6 +63,7 @@ from .route_graph import (
 )
 from .smoke_speed import ConstantExtinctionField
 
+_logger = logging.getLogger(__name__)
 _ZERO_EXTINCTION = ConstantExtinctionField(0.0)
 
 
