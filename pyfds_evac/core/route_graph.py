@@ -361,7 +361,12 @@ def integrated_extinction_along_polyline(
 def _polyline_midpoint(
     waypoints: list[tuple[float, float]],
 ) -> tuple[float, float]:
-    """Return the point at half the arc length along a polyline."""
+    """Return the point at half the arc length along a polyline.
+
+    Raises:
+        ValueError: If ``waypoints`` is empty. Callers must ensure the list
+            contains at least one point.
+    """
     if not waypoints:
         raise ValueError("waypoints must not be empty")
     if len(waypoints) == 1:

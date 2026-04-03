@@ -87,10 +87,21 @@ class _VisMapCache:
         self._y_coords = y_coords
         self._vis = vis
 
+    @staticmethod
+    def _nearest(coords: np.ndarray, value: float) -> int:
+        idx = int(np.searchsorted(coords, value))
+        if idx <= 0:
+            return 0
+        if idx >= len(coords):
+            return len(coords) - 1
+        return (
+            idx if abs(coords[idx] - value) < abs(value - coords[idx - 1]) else idx - 1
+        )
+
     def wp_is_visible(self, time: float, x: float, y: float, waypoint_id: int) -> bool:
-        t_id = int(np.abs(self._time_points - time).argmin())
-        x_id = int(np.abs(self._x_coords - x).argmin())
-        y_id = int(np.abs(self._y_coords - y).argmin())
+        t_id = self._nearest(self._time_points, time)
+        x_id = self._nearest(self._x_coords, x)
+        y_id = self._nearest(self._y_coords, y)
         return bool(self._vis[t_id, waypoint_id, y_id, x_id])
 
 
@@ -102,9 +113,8 @@ def _vis_bool_array(vis) -> np.ndarray:
     )
 
 
-def _save_vismap_cache(path: Path, vis, meta: dict) -> None:
+def _save_vismap_cache(path: Path, vis, arrays: np.ndarray, meta: dict) -> None:
     """Serialise VisMap arrays to an npz file (no pickle, safe to load)."""
-    arrays = _vis_bool_array(vis)
     npz_path = path.with_suffix(".npz")
     npz_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
@@ -146,14 +156,15 @@ def _build_cache_from_fds(
 ) -> _VisMapCache:
     """Build VisMapCache from FDS data and optionally save to disk."""
     vis_obj = _build_vismap(fds_dir, sign_descriptors, time_step_s, slice_height_m)
+    arrays = _vis_bool_array(vis_obj)
     result = _VisMapCache(
         time_points=vis_obj.vismap_time_points,
         x_coords=vis_obj.all_x_coords,
         y_coords=vis_obj.all_y_coords,
-        vis=_vis_bool_array(vis_obj),
+        vis=arrays,
     )
     if cache:
-        _save_vismap_cache(cache, vis_obj, expected_meta)
+        _save_vismap_cache(cache, vis_obj, arrays, expected_meta)
     return result
 
 
