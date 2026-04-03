@@ -79,6 +79,11 @@ def assign_agent_target(agent, target):
     tx, ty = float(target[0]), float(target[1])
     try:
         agent.target = (tx, ty)
+        return
+    except (AttributeError, TypeError):
+        pass
+    try:
+        agent.target = [tx, ty]
     except (AttributeError, TypeError) as e:
         _logger.warning("Failed to assign target to agent: %s", e)
 

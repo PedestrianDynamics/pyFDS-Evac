@@ -57,7 +57,7 @@ def _make_meta(
     FDS datasets are never silently reused even if the waypoint list matches.
     """
     waypoints = [
-        (node_id, sign.get("x"), sign.get("y"), sign.get("alpha"), sign.get("c", 3))
+        [node_id, sign.get("x"), sign.get("y"), sign.get("alpha"), sign.get("c", 3)]
         for node_id, sign in sign_descriptors.items()
     ]
     return {
@@ -87,9 +87,7 @@ class _VisMapCache:
         self._y_coords = y_coords
         self._vis = vis
 
-    def wp_is_visible(
-        self, time: float, x: float, y: float, waypoint_id: int
-    ) -> bool:
+    def wp_is_visible(self, time: float, x: float, y: float, waypoint_id: int) -> bool:
         t_id = int(np.abs(self._time_points - time).argmin())
         x_id = int(np.abs(self._x_coords - x).argmin())
         y_id = int(np.abs(self._y_coords - y).argmin())
@@ -133,7 +131,9 @@ def _resolve_vis(
         cached = _load_vismap_cache(cache, expected_meta)
         if cached is not None:
             return cached
-    return _build_cache_from_fds(fds_dir, sign_descriptors, time_step_s, slice_height_m, cache, expected_meta)
+    return _build_cache_from_fds(
+        fds_dir, sign_descriptors, time_step_s, slice_height_m, cache, expected_meta
+    )
 
 
 def _build_cache_from_fds(
@@ -163,16 +163,16 @@ def _load_vismap_cache(path: Path, expected_meta: dict) -> _VisMapCache | None:
     if not npz_path.exists():
         return None
     try:
-        data = np.load(npz_path, allow_pickle=False)
-        if json.loads(str(data["meta"])) != expected_meta:
-            _logger.info("Vismap cache metadata mismatch — recomputing.")
-            return None
-        return _VisMapCache(
-            time_points=data["time_points"],
-            x_coords=data["x_coords"],
-            y_coords=data["y_coords"],
-            vis=data["vis"],
-        )
+        with np.load(npz_path, allow_pickle=False) as data:
+            if json.loads(str(data["meta"])) != expected_meta:
+                _logger.info("Vismap cache metadata mismatch — recomputing.")
+                return None
+            return _VisMapCache(
+                time_points=data["time_points"],
+                x_coords=data["x_coords"],
+                y_coords=data["y_coords"],
+                vis=data["vis"],
+            )
     except Exception as e:
         _logger.warning("Failed to load vismap cache: %s", e)
         return None
@@ -210,8 +210,13 @@ class VisibilityModel:
         )
 
         self._vis: _VisMapCache = _resolve_vis(
-            str(fds_dir), sign_descriptors, time_step_s, slice_height_m,
-            cache, force_recompute, expected_meta,
+            str(fds_dir),
+            sign_descriptors,
+            time_step_s,
+            slice_height_m,
+            cache,
+            force_recompute,
+            expected_meta,
         )
         # Map node_id → internal waypoint index (insertion order preserved)
         self._wp_ids: dict[str, int] = {
