@@ -128,7 +128,6 @@ class TestO2HypoxiaThreshold:
     """O2 hypoxia term is suppressed at or above the 19.5 % threshold."""
 
     def test_ambient_o2_returns_zero(self):
-        from pyfds_evac.core.fed import _O2_HYPOXIA_THRESHOLD_PERCENT
 
         rate = _o2_hypoxia_rate_per_minute(20.9)
         assert rate == 0.0
