@@ -122,22 +122,25 @@ class StageGraph:
                 continue
             src_node = graph.nodes[src]
             tgt_node = graph.nodes[tgt]
-            if routing_engine is not None:
-                waypoints = list(
-                    routing_engine.compute_waypoints(
-                        (src_node.centroid_x, src_node.centroid_y),
-                        (tgt_node.centroid_x, tgt_node.centroid_y),
-                    )
-                )
-                weight = _polyline_length(waypoints)
-            else:
-                waypoints = [
-                    (src_node.centroid_x, src_node.centroid_y),
-                    (tgt_node.centroid_x, tgt_node.centroid_y),
-                ]
-                weight = _polyline_length(waypoints)
-            edge = StageEdge(source=src, target=tgt, weight=weight, waypoints=waypoints)
+            edge = _make_edge(src_node, tgt_node, routing_engine)
             graph.edges.setdefault(src, []).append(edge)
+
+        # When no transitions are defined and the graph contains only
+        # distributions and exits, auto-connect every distribution to every
+        # exit so that smoke/FED-based rerouting works in minimal configs.
+        if not transitions and all(
+            n.stage_type in ("distribution", "exit") for n in graph.nodes.values()
+        ):
+            dist_ids = [
+                nid for nid, n in graph.nodes.items() if n.stage_type == "distribution"
+            ]
+            exit_ids = [nid for nid, n in graph.nodes.items() if n.stage_type == "exit"]
+            for src_id in dist_ids:
+                for tgt_id in exit_ids:
+                    edge = _make_edge(
+                        graph.nodes[src_id], graph.nodes[tgt_id], routing_engine
+                    )
+                    graph.edges.setdefault(src_id, []).append(edge)
 
         return graph
 
@@ -233,6 +236,28 @@ class StageGraph:
             cur = prev.get(cur)
         path.reverse()
         return path
+
+
+def _make_edge(src_node: StageNode, tgt_node: StageNode, routing_engine) -> StageEdge:
+    """Build a StageEdge between two nodes using polyline or straight-line geometry."""
+    if routing_engine is not None:
+        waypoints = list(
+            routing_engine.compute_waypoints(
+                (src_node.centroid_x, src_node.centroid_y),
+                (tgt_node.centroid_x, tgt_node.centroid_y),
+            )
+        )
+    else:
+        waypoints = [
+            (src_node.centroid_x, src_node.centroid_y),
+            (tgt_node.centroid_x, tgt_node.centroid_y),
+        ]
+    return StageEdge(
+        source=src_node.stage_id,
+        target=tgt_node.stage_id,
+        weight=_polyline_length(waypoints),
+        waypoints=waypoints,
+    )
 
 
 def _euclidean(x1: float, y1: float, x2: float, y2: float) -> float:
