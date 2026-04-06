@@ -16,6 +16,7 @@ Usage::
 """
 
 import json
+import logging
 import math
 import os
 import pathlib
@@ -62,6 +63,7 @@ from .route_graph import (
 )
 from .smoke_speed import ConstantExtinctionField
 
+_logger = logging.getLogger(__name__)
 _ZERO_EXTINCTION = ConstantExtinctionField(0.0)
 
 
@@ -1919,8 +1921,10 @@ def run_scenario(
                             if stage_type == "exit":
                                 try:
                                     simulation.mark_agent_for_removal(agent_id)
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    _logger.warning(
+                                        "Failed to remove agent %s: %s", agent_id, e
+                                    )
                                 wait_info["state"] = "done"
                                 continue
 

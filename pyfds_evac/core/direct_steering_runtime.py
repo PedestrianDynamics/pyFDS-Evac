@@ -1,10 +1,13 @@
 """Helper functions for direct-steering target and speed management."""
 
+import logging
 import math
 import random
 from typing import Any, Dict
 
 from . import simulation_init
+
+_logger = logging.getLogger(__name__)
 
 
 def simulation_init_module():
@@ -77,24 +80,25 @@ def assign_agent_target(agent, target):
     try:
         agent.target = (tx, ty)
         return
-    except Exception:
+    except (AttributeError, TypeError):
         pass
     try:
         agent.target = [tx, ty]
-    except Exception:
-        pass
+    except Exception as e:
+        _logger.warning("Failed to assign target to agent: %s", e)
 
 
 def is_inside_polygon(x, y, polygon):
     """Return whether a point lies inside or on the boundary of a polygon."""
     if polygon is None:
         return False
-    try:
-        from shapely.geometry import Point
+    from shapely.geometry import Point
 
+    try:
         point = Point(float(x), float(y))
-        return bool(polygon.contains(point) or polygon.touches(point))
-    except Exception:
+        return bool(polygon.covers(point))
+    except Exception as e:
+        _logger.debug("Polygon containment check failed: %s", e)
         return False
 
 
@@ -108,17 +112,19 @@ def sample_wait_time(stage_cfg, base_seed, step_index):
     return max(0.0, mean_wait)
 
 
+_MODEL_SPEED_ATTRS: dict[str, str] = {
+    "CollisionFreeSpeedModelState": "v0",
+    "CollisionFreeSpeedModelV2State": "v0",
+    "SocialForceModelState": "desiredSpeed",
+}
+
+
 def get_agent_desired_speed(agent) -> float | None:
     """Read the agent's desired speed from the documented JuPedSim runtime API."""
     model_obj = getattr(agent, "model", None)
     if model_obj is None:
         return None
-    model_type = type(model_obj).__name__
-    speed_attr = {
-        "CollisionFreeSpeedModelState": "v0",
-        "CollisionFreeSpeedModelV2State": "v0",
-        "SocialForceModelState": "desiredSpeed",
-    }.get(model_type)
+    speed_attr = _MODEL_SPEED_ATTRS.get(type(model_obj).__name__)
     if speed_attr is None or not hasattr(model_obj, speed_attr):
         return None
     try:
@@ -132,12 +138,7 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
     model_obj = getattr(agent, "model", None)
     if model_obj is None:
         return False
-    model_type = type(model_obj).__name__
-    speed_attr = {
-        "CollisionFreeSpeedModelState": "v0",
-        "CollisionFreeSpeedModelV2State": "v0",
-        "SocialForceModelState": "desiredSpeed",
-    }.get(model_type)
+    speed_attr = _MODEL_SPEED_ATTRS.get(type(model_obj).__name__)
     if speed_attr is None or not hasattr(model_obj, speed_attr):
         return False
     try:
@@ -192,6 +193,41 @@ def restore_agent_speed(
         state["active_checkpoint"] = None
 
 
+def _find_checkpoint_zone(
+    checkpoint_key: str,
+    stage_cfg: Dict[str, Any],
+    x: float,
+    y: float,
+) -> tuple[str, float] | None:
+    """Return (zone_key, speed_factor) if the checkpoint has an active speed modifier."""
+    factor = normalize_speed_factor(stage_cfg.get("speed_factor", 1.0))
+    if math.fabs(factor - 1.0) <= 1e-9:
+        return None
+    if not is_inside_polygon(x, y, stage_cfg.get("polygon")):
+        return None
+    return checkpoint_key, factor
+
+
+def _find_steering_zone(
+    direct_steering_info: Dict[str, Dict[str, Any]] | None,
+    x: float,
+    y: float,
+) -> tuple[str, float] | None:
+    """Return (zone_key, speed_factor) for the strongest active steering zone."""
+    best_key: str | None = None
+    best_factor = 1.0
+    for zone_key, zone_cfg in (direct_steering_info or {}).items():
+        factor = normalize_speed_factor(zone_cfg.get("speed_factor", 1.0))
+        if math.fabs(factor - 1.0) <= 1e-9:
+            continue
+        if not is_inside_polygon(x, y, zone_cfg.get("polygon")):
+            continue
+        if best_key is None or math.fabs(factor - 1.0) > math.fabs(best_factor - 1.0):
+            best_key = zone_key
+            best_factor = factor
+    return (best_key, best_factor) if best_key is not None else None
+
+
 def update_checkpoint_speed(
     agent_speed_state: Dict[int, Dict[str, Any]],
     direct_steering_info: Dict[str, Dict[str, Any]] | None,
@@ -204,48 +240,39 @@ def update_checkpoint_speed(
 ) -> None:
     """Apply or clear speed modifiers from checkpoint and steering zones."""
     state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
-    active_zone_key = None
-    active_speed_factor = 1.0
 
+    zone = None
     if checkpoint_key and stage_cfg:
-        stage_polygon = stage_cfg.get("polygon")
-        stage_speed_factor = normalize_speed_factor(stage_cfg.get("speed_factor", 1.0))
-        if math.fabs(stage_speed_factor - 1.0) > 1e-9 and is_inside_polygon(
-            x, y, stage_polygon
-        ):
-            active_zone_key = checkpoint_key
-            active_speed_factor = stage_speed_factor
+        zone = _find_checkpoint_zone(checkpoint_key, stage_cfg, x, y)
+    if zone is None:
+        zone = _find_steering_zone(direct_steering_info, x, y)
 
-    if active_zone_key is None:
-        for zone_key, zone_cfg in (direct_steering_info or {}).items():
-            zone_speed_factor = normalize_speed_factor(
-                zone_cfg.get("speed_factor", 1.0)
-            )
-            if math.fabs(zone_speed_factor - 1.0) <= 1e-9:
-                continue
-            if not is_inside_polygon(x, y, zone_cfg.get("polygon")):
-                continue
-            if active_zone_key is None or math.fabs(
-                zone_speed_factor - 1.0
-            ) > math.fabs(active_speed_factor - 1.0):
-                active_zone_key = zone_key
-                active_speed_factor = zone_speed_factor
-
-    smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
-
-    if active_zone_key is not None and math.fabs(active_speed_factor - 1.0) > 1e-9:
-        original_speed = state.get("original_speed")
-        if original_speed is None:
-            return
-        slowed_speed = max(
-            0.0,
-            float(original_speed) * active_speed_factor * smoke_factor,
-        )
-        if set_agent_desired_speed(agent, slowed_speed):
-            state["active_checkpoint"] = active_zone_key
+    if zone is None:
+        restore_agent_speed(agent_speed_state, agent_id, agent)
         return
 
-    restore_agent_speed(agent_speed_state, agent_id, agent)
+    active_zone_key, active_speed_factor = zone
+    original_speed = state.get("original_speed")
+    if original_speed is None:
+        return
+    smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
+    slowed_speed = max(0.0, float(original_speed) * active_speed_factor * smoke_factor)
+    if set_agent_desired_speed(agent, slowed_speed):
+        state["active_checkpoint"] = active_zone_key
+
+
+def _weighted_choice(candidates: list, rng: random.Random) -> str:
+    """Pick a stage key from (stage_key, weight) candidates by weighted random."""
+    total = sum(max(0.0, float(w)) for _, w in candidates)
+    if total <= 0:
+        return candidates[0][0]
+    pick = rng.random() * total
+    running = 0.0
+    for stage_key, weight in candidates:
+        running += max(0.0, float(weight))
+        if pick <= running:
+            return stage_key
+    return candidates[-1][0]
 
 
 def advance_path_target(wait_info):
@@ -258,23 +285,12 @@ def advance_path_target(wait_info):
         wait_info["state"] = "done"
         return
 
-    total = sum(max(0.0, float(weight)) for _, weight in next_candidates)
-    if total <= 0:
-        next_stage = next_candidates[0][0]
-    else:
-        choose_rng = random.Random(
-            int(wait_info.get("base_seed", 0))
-            + int(wait_info.get("step_index", 0)) * 131
-            + 53
-        )
-        pick = choose_rng.random() * total
-        running = 0.0
-        next_stage = next_candidates[-1][0]
-        for stage_key, weight in next_candidates:
-            running += max(0.0, float(weight))
-            if pick <= running:
-                next_stage = stage_key
-                break
+    choose_rng = random.Random(
+        int(wait_info.get("base_seed", 0))
+        + int(wait_info.get("step_index", 0)) * 131
+        + 53
+    )
+    next_stage = _weighted_choice(next_candidates, choose_rng)
 
     if next_stage not in stage_configs:
         wait_info["state"] = "done"
@@ -287,7 +303,4 @@ def advance_path_target(wait_info):
     wait_info["wait_until"] = None
     wait_info["state"] = "to_target"
     wait_info["inside_since"] = None
-    wait_info["target"] = pick_stage_target(
-        wait_info,
-        stage_configs[next_stage],
-    )
+    wait_info["target"] = pick_stage_target(wait_info, stage_configs[next_stage])

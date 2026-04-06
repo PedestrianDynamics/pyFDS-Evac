@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import heapq
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Protocol
 
 from shapely.geometry import Polygon
@@ -386,9 +386,14 @@ def integrated_extinction_along_polyline(
 def _polyline_midpoint(
     waypoints: list[tuple[float, float]],
 ) -> tuple[float, float]:
-    """Return the point at half the arc length along a polyline."""
+    """Return the point at half the arc length along a polyline.
+
+    Raises:
+        ValueError: If ``waypoints`` is empty. Callers must ensure the list
+            contains at least one point.
+    """
     if not waypoints:
-        return (0.0, 0.0)
+        raise ValueError("waypoints must not be empty")
     if len(waypoints) == 1:
         return waypoints[0]
 
@@ -743,18 +748,10 @@ def rank_routes(
             if not rc.rejected:
                 next_node = rc.path[1] if len(rc.path) > 1 else rc.exit_id
                 if not vis_model.node_is_visible(time_s, ax, ay, next_node):
-                    rc = RouteCost(
-                        exit_id=rc.exit_id,
-                        path=rc.path,
-                        path_length_m=rc.path_length_m,
-                        k_ave_route=rc.k_ave_route,
-                        travel_time_s=rc.travel_time_s,
-                        fed_max_route=rc.fed_max_route,
-                        composite_cost=rc.composite_cost,
-                        segments=rc.segments,
+                    rc = replace(
+                        rc,
                         rejected=True,
                         rejection_reason="next_node_not_visible",
-                        queue_time_s=rc.queue_time_s,
                     )
             updated.append(rc)
         costs = updated
@@ -768,18 +765,10 @@ def rank_routes(
             updated = []
             for rc in costs:
                 if not rc.rejected and not any(s.visible for s in rc.segments):
-                    rc = RouteCost(
-                        exit_id=rc.exit_id,
-                        path=rc.path,
-                        path_length_m=rc.path_length_m,
-                        k_ave_route=rc.k_ave_route,
-                        travel_time_s=rc.travel_time_s,
-                        fed_max_route=rc.fed_max_route,
-                        composite_cost=rc.composite_cost,
-                        segments=rc.segments,
+                    rc = replace(
+                        rc,
                         rejected=True,
                         rejection_reason="all segments non-visible",
-                        queue_time_s=rc.queue_time_s,
                     )
                 updated.append(rc)
             costs = updated
@@ -794,18 +783,10 @@ def rank_routes(
     # Fallback: if all rejected, un-reject the least-bad.
     if costs and all(rc.rejected for rc in costs):
         best = costs[0]
-        costs[0] = RouteCost(
-            exit_id=best.exit_id,
-            path=best.path,
-            path_length_m=best.path_length_m,
-            k_ave_route=best.k_ave_route,
-            travel_time_s=best.travel_time_s,
-            fed_max_route=best.fed_max_route,
-            composite_cost=best.composite_cost,
-            segments=best.segments,
+        costs[0] = replace(
+            best,
             rejected=False,
             rejection_reason=f"fallback: {best.rejection_reason}",
-            queue_time_s=best.queue_time_s,
         )
 
     return costs
