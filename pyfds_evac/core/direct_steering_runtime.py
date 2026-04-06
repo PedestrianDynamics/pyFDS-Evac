@@ -84,7 +84,7 @@ def assign_agent_target(agent, target):
         pass
     try:
         agent.target = [tx, ty]
-    except (AttributeError, TypeError) as e:
+    except Exception as e:
         _logger.warning("Failed to assign target to agent: %s", e)
 
 
@@ -96,8 +96,8 @@ def is_inside_polygon(x, y, polygon):
 
     try:
         point = Point(float(x), float(y))
-        return bool(polygon.contains(point) or polygon.touches(point))
-    except (ValueError, TypeError) as e:
+        return bool(polygon.covers(point))
+    except Exception as e:
         _logger.debug("Polygon containment check failed: %s", e)
         return False
 
@@ -112,17 +112,19 @@ def sample_wait_time(stage_cfg, base_seed, step_index):
     return max(0.0, mean_wait)
 
 
+_MODEL_SPEED_ATTRS: dict[str, str] = {
+    "CollisionFreeSpeedModelState": "v0",
+    "CollisionFreeSpeedModelV2State": "v0",
+    "SocialForceModelState": "desiredSpeed",
+}
+
+
 def get_agent_desired_speed(agent) -> float | None:
     """Read the agent's desired speed from the documented JuPedSim runtime API."""
     model_obj = getattr(agent, "model", None)
     if model_obj is None:
         return None
-    model_type = type(model_obj).__name__
-    speed_attr = {
-        "CollisionFreeSpeedModelState": "v0",
-        "CollisionFreeSpeedModelV2State": "v0",
-        "SocialForceModelState": "desiredSpeed",
-    }.get(model_type)
+    speed_attr = _MODEL_SPEED_ATTRS.get(type(model_obj).__name__)
     if speed_attr is None or not hasattr(model_obj, speed_attr):
         return None
     try:
@@ -136,12 +138,7 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
     model_obj = getattr(agent, "model", None)
     if model_obj is None:
         return False
-    model_type = type(model_obj).__name__
-    speed_attr = {
-        "CollisionFreeSpeedModelState": "v0",
-        "CollisionFreeSpeedModelV2State": "v0",
-        "SocialForceModelState": "desiredSpeed",
-    }.get(model_type)
+    speed_attr = _MODEL_SPEED_ATTRS.get(type(model_obj).__name__)
     if speed_attr is None or not hasattr(model_obj, speed_attr):
         return False
     try:
