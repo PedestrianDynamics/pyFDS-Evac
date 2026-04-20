@@ -22,6 +22,7 @@ from .route_graph import (
     integrated_extinction_along_los,
 )
 from .scenario import Scenario, ScenarioResult, load_scenario, run_scenario
+from .smv_export import export_agents_to_smv
 from .visibility import VisibilityModel
 from .smoke_speed import (
     ConstantExtinctionField,
@@ -48,6 +49,7 @@ __all__ = [
     "ScenarioResult",
     "SmokeSpeedConfig",
     "SmokeSpeedModel",
+    "export_agents_to_smv",
     "extinction_from_soot_density",
     "accumulate_default_fed",
     "default_fed_rate_per_minute",

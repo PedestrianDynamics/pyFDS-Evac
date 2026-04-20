@@ -16,6 +16,7 @@ from pyfds_evac.core import (
     RouteCostConfig,
     SmokeSpeedConfig,
     SmokeSpeedModel,
+    export_agents_to_smv,
     inspect_fds_quantities,
     load_scenario,
     run_scenario,
@@ -105,6 +106,23 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output-route-cost-history",
         help="Write ranked route cost snapshots to CSV",
+    )
+    parser.add_argument(
+        "--smv-export",
+        action="store_true",
+        help="Export agent trajectories as <CHID>_agents.prt5 and patch <CHID>.smv "
+        "so Smokeview renders agents alongside smoke (requires --fds-dir)",
+    )
+    parser.add_argument(
+        "--smv-particle-z",
+        type=float,
+        default=1.0,
+        help="Constant agent height in meters for the .prt5 export (default: 1.0)",
+    )
+    parser.add_argument(
+        "--smv-class-id",
+        default="AGENTS",
+        help="CLASS_OF_PARTICLES label written to the .smv (default: AGENTS)",
     )
     parser.add_argument(
         "--vis-cache",
@@ -225,7 +243,11 @@ def _write_route_cost_history_csv(rows, output_path: str) -> None:
 
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
-    args = _build_parser().parse_args()
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    if args.smv_export and not args.fds_dir:
+        parser.error("--smv-export requires --fds-dir")
 
     scenario = load_scenario(args.scenario)
     print("Initialization started.")
@@ -364,6 +386,15 @@ def main() -> int:
         output_path = pathlib.Path(args.output_sqlite).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(result.sqlite_file, output_path)
+
+    if args.smv_export:
+        prt5_path = export_agents_to_smv(
+            pathlib.Path(args.fds_dir),
+            result,
+            z=args.smv_particle_z,
+            class_id=args.smv_class_id,
+        )
+        print(f"Wrote agent particles to {prt5_path}")
 
     if args.cleanup:
         result.cleanup()

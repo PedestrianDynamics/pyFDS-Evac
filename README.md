@@ -403,6 +403,29 @@ uv run python scripts/run_familiarity_comparison.py \
 Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,
 `results/familiarity_comparison/comparison.png`.
 
+## Visualising agents in Smokeview
+
+After a run, pyFDS-Evac can export agent trajectories as an FDS
+Lagrangian-particle file (`<CHID>_agents.prt5`) and register it in the
+existing `<CHID>.smv`, so Smokeview renders agents alongside the smoke
+slices and 3-D smoke output:
+
+```bash
+uv run run.py --scenario assets/demo \
+              --fds-dir fds_data/demo \
+              --smv-export
+smokeview fds_data/demo/demo.smv
+```
+
+In Smokeview: *Load → Particles → AGENTS* and scrub the timebar. Options:
+
+- `--smv-particle-z` (default `1.0`): constant agent height in meters.
+- `--smv-class-id` (default `AGENTS`): `CLASS_OF_PARTICLES` label in the
+  `.smv`.
+
+The patch to `.smv` is idempotent — re-running the exporter will not
+duplicate the block.
+
 ## References
 
 Reference materials are stored in [`materials/`](materials/):
