@@ -244,6 +244,27 @@ uv run run.py \
 
 Note: if a point lies outside the FDS domain, the implementation falls back to ambient conditions.
 
+### Tenability: irritant slowdown and incapacitation
+
+On top of the Frantzich–Nilsson extinction–speed law, pyFDS-Evac
+applies two Purser/FDS+Evac rules when a FED model is loaded:
+
+- **FIC-driven slowdown.** Purser's Fractional Irritant
+  Concentration (HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde; see
+  `pyfds_evac.core.fed.default_fic`) multiplies the Frantzich speed
+  by `max(fic_min_factor, 1 − fic_alpha·FIC)`. Defaults:
+  `fic_alpha = 0.7`, `fic_min_factor = 0.3`.
+- **Binary incapacitation at FED ≥ 1.** Matches FDS+Evac §3.4
+  (Korhonen 2021): once cumulative FED crosses the threshold, the
+  agent's target speed is driven to zero for the remainder of the
+  run. The agent remains as a static obstacle.
+
+Both rules are enabled by default and can be tuned via CLI flags
+`--fic-alpha`, `--fic-min-factor`, `--fed-threshold`, or turned off
+entirely with `--disable-tenability`. The FED history CSV
+(`--output-fed-history`) gains three extra columns `fic`,
+`fic_speed_factor`, `incapacitated`.
+
 ## Dynamic route rerouting
 
 See [docs/routing.md](docs/routing.md) for the full routing model,

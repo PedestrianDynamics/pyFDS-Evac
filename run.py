@@ -16,6 +16,7 @@ from pyfds_evac.core import (
     RouteCostConfig,
     SmokeSpeedConfig,
     SmokeSpeedModel,
+    TenabilityConfig,
     export_agents_to_smv,
     inspect_fds_quantities,
     load_scenario,
@@ -130,6 +131,31 @@ def _build_parser() -> argparse.ArgumentParser:
         "Requires --fds-dir and --enable-rerouting. "
         "Cache is created if missing, loaded if present.",
     )
+    parser.add_argument(
+        "--disable-tenability",
+        action="store_true",
+        help="Disable both the FIC speed-reduction rule and the FED>=1 "
+        "incapacitation rule (default: both active when a FED model is loaded)",
+    )
+    parser.add_argument(
+        "--fic-alpha",
+        type=float,
+        default=0.7,
+        help="Slope of the Purser FIC speed-reduction rule (default: 0.7)",
+    )
+    parser.add_argument(
+        "--fic-min-factor",
+        type=float,
+        default=0.3,
+        help="Lower bound on the FIC speed factor (default: 0.3)",
+    )
+    parser.add_argument(
+        "--fed-threshold",
+        type=float,
+        default=1.0,
+        help="Cumulative FED at which an agent is declared incapacitated "
+        "(default: 1.0 per FDS+Evac / Korhonen 2021)",
+    )
     return parser
 
 
@@ -180,8 +206,20 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "co_percent",
         "co2_percent",
         "o2_percent",
+        "hcn_ppm",
+        "no_ppm",
+        "no2_ppm",
+        "co_rate_per_min",
+        "cn_rate_per_min",
+        "nox_rate_per_min",
+        "fld_rate_per_min",
+        "hv_co2",
+        "o2_rate_per_min",
         "fed_rate_per_min",
         "fed_cumulative",
+        "fic",
+        "fic_speed_factor",
+        "incapacitated",
     ]
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -344,6 +382,21 @@ def main() -> int:
         else:
             print("Warning: --vis-cache set but no sign descriptors found in config.")
 
+    tenability_config = None
+    if fed_model is not None and not args.disable_tenability:
+        tenability_config = TenabilityConfig(
+            enable_fic_speed=True,
+            fic_alpha=args.fic_alpha,
+            fic_min_factor=args.fic_min_factor,
+            enable_incapacitation=True,
+            fed_threshold=args.fed_threshold,
+        )
+        print(
+            "Configuring tenability "
+            f"(FIC alpha={args.fic_alpha}, min={args.fic_min_factor}, "
+            f"FED threshold={args.fed_threshold})."
+        )
+
     print("Initialization finished.")
     print("Simulation started.")
 
@@ -352,6 +405,7 @@ def main() -> int:
         seed=args.seed,
         smoke_speed_model=smoke_speed_model,
         fed_model=fed_model,
+        tenability_config=tenability_config,
         reroute_config=reroute_config,
         collect_route_cost_history=bool(args.output_route_cost_history),
         vis_model=vis_model,

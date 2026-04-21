@@ -5,7 +5,7 @@
 ! Ceiling at 3 m
 &MESH IJK=120,52,12, XB=0,30,0,13,0,3 /
 
-&TIME T_END=300 /
+&TIME T_END=600 /  ! was 300
 
 &DUMP DT_SLCF=1.0 /
 
@@ -31,12 +31,12 @@
 ! 2 m x 1 m burner on the floor, right where the branch meets the corridor.
 ! HRRPUA=50 kW/m^2 x 2 m^2 = 100 kW peak; ramp reaches full intensity at 120 s.
 &SURF ID='FIRE',
-      HRRPUA=50,
+      HRRPUA=1000,  ! was 50  -> 2 MW peak on a 2 m² burner
       COLOR='RED',
       RAMP_Q='fire_ramp' /
 
 &RAMP ID='fire_ramp', T=  0, F=0.0 /
-&RAMP ID='fire_ramp', T= 60, F=0.5 /
+&RAMP ID='fire_ramp', T= 60, F=1.0 /   ! was 0.5
 &RAMP ID='fire_ramp', T=120, F=1.0 /
 &RAMP ID='fire_ramp', T=300, F=1.0 /
 

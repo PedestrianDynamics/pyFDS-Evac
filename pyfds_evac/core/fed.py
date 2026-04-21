@@ -141,6 +141,107 @@ def _irritant_fld_rate_per_minute(inputs: DefaultFedInputs) -> float:
     return total
 
 
+# Purser's F_FIC values (ppm, incapacitating concentration) from the
+# FDS+Evac Technical Reference (Korhonen 2021), Table 2.  Used to compute
+# the *instantaneous* Fractional Irritant Concentration that drives
+# pre-incapacitation walking-speed degradation (Jin's irritant-smoke
+# experiments).
+_FIC_COEFFS_PPM: tuple[tuple[str, float], ...] = (
+    ("hcl_ppm", 900.0),
+    ("hbr_ppm", 900.0),
+    ("hf_ppm", 900.0),
+    ("so2_ppm", 120.0),
+    ("no2_ppm", 350.0),
+    ("acrolein_ppm", 20.0),
+    ("formaldehyde_ppm", 30.0),
+)
+
+
+def default_fic(inputs: DefaultFedInputs) -> float:
+    """Return Purser's Fractional Irritant Concentration (instantaneous).
+
+    FIC = sum_i C_i / F_FIC,i for irritant species; dimensionless.  Unlike
+    FED (an accumulated dose) this is a point-in-time exposure index and
+    it is not integrated.  At ``FIC >= 1`` roughly half of the exposed
+    population would reach irritant incapacitation under sustained
+    exposure; sub-unity values degrade performance progressively.
+    """
+    total = 0.0
+    for attr, fic_ppm in _FIC_COEFFS_PPM:
+        conc = float(getattr(inputs, attr, 0.0))
+        if math.isfinite(conc) and conc > 0.0 and fic_ppm > 0.0:
+            total += conc / fic_ppm
+    return total
+
+
+@dataclass(frozen=True)
+class TenabilityConfig:
+    """Runtime tenability rules applied on top of Frantzich smoke-speed.
+
+    The Frantzich--Nilsson extinction--speed law is already handled by
+    ``SmokeSpeedModel``.  This config adds two further Purser/FDS+Evac
+    rules on top of it:
+
+    - FIC-driven speed reduction: ``v_final = v_frantzich * max(
+      fic_min_factor, 1 - fic_alpha * FIC)``.  Irritant gases are
+      assumed to slow evacuees beyond what pure visibility loss
+      predicts, bounded so no agent falls below ``fic_min_factor`` of
+      its Frantzich speed.
+    - Binary incapacitation when ``FED_cumulative >= fed_threshold``,
+      matching the FDS+Evac criterion of Korhonen 2021 §3.4: desired
+      speed is driven to zero and the agent remains as a static
+      obstacle.
+    """
+
+    enable_fic_speed: bool = True
+    fic_alpha: float = 0.7
+    fic_min_factor: float = 0.3
+    enable_incapacitation: bool = True
+    fed_threshold: float = 1.0
+
+
+@dataclass(frozen=True)
+class FedComponents:
+    """Per-term breakdown of one FED rate evaluation (all in 1/min).
+
+    Summed per ISO 13571: total = (co + cn + nox + fld) * hv_co2 + o2.
+    Each narcotic/irritant term is reported pre-HV so contributions stack
+    cleanly in plots; ``hv_co2`` carries the multiplier separately.
+    """
+
+    co_rate_per_min: float
+    cn_rate_per_min: float
+    nox_rate_per_min: float
+    fld_rate_per_min: float
+    hv_co2: float
+    o2_rate_per_min: float
+
+    @property
+    def total_rate_per_min(self) -> float:
+        """Return the summed FED rate applying the HV_CO2 multiplier."""
+        narcotic_sum = (
+            self.co_rate_per_min
+            + self.cn_rate_per_min
+            + self.nox_rate_per_min
+            + self.fld_rate_per_min
+        )
+        return narcotic_sum * self.hv_co2 + self.o2_rate_per_min
+
+
+def default_fed_components(inputs: DefaultFedInputs) -> FedComponents:
+    """Return the per-term FED rate breakdown for one gas sample."""
+    return FedComponents(
+        co_rate_per_min=_co_fed_rate_per_minute(
+            _co_percent_to_ppm(inputs.co_volume_fraction_percent)
+        ),
+        cn_rate_per_min=_cn_fed_rate_per_minute(inputs.hcn_ppm, inputs.no2_ppm),
+        nox_rate_per_min=_nox_fed_rate_per_minute(inputs.no_ppm, inputs.no2_ppm),
+        fld_rate_per_min=_irritant_fld_rate_per_minute(inputs),
+        hv_co2=_hyperventilation_factor(inputs.co2_volume_fraction_percent),
+        o2_rate_per_min=_o2_hypoxia_rate_per_minute(inputs.o2_volume_fraction_percent),
+    )
+
+
 def default_fed_rate_per_minute(inputs: DefaultFedInputs) -> float:
     """Return the full ISO 13571 FED accumulation rate in 1/min.
 
@@ -149,15 +250,7 @@ def default_fed_rate_per_minute(inputs: DefaultFedInputs) -> float:
     Missing gas species default to 0, reducing to the original 3-term
     model (FED_CO * HV_CO2 + FED_O2) when only CO/CO2/O2 are available.
     """
-    co_rate = _co_fed_rate_per_minute(
-        _co_percent_to_ppm(inputs.co_volume_fraction_percent)
-    )
-    cn_rate = _cn_fed_rate_per_minute(inputs.hcn_ppm, inputs.no2_ppm)
-    nox_rate = _nox_fed_rate_per_minute(inputs.no_ppm, inputs.no2_ppm)
-    fld_irr = _irritant_fld_rate_per_minute(inputs)
-    hv_co2 = _hyperventilation_factor(inputs.co2_volume_fraction_percent)
-    o2_rate = _o2_hypoxia_rate_per_minute(inputs.o2_volume_fraction_percent)
-    return (co_rate + cn_rate + nox_rate + fld_irr) * hv_co2 + o2_rate
+    return default_fed_components(inputs).total_rate_per_min
 
 
 def accumulate_default_fed(
@@ -329,6 +422,13 @@ class DefaultFedModel:
         inputs = self.sample_inputs(time_s, x, y)
         return inputs, default_fed_rate_per_minute(inputs)
 
+    def sample_components(
+        self, time_s: float, x: float, y: float
+    ) -> tuple[DefaultFedInputs, FedComponents]:
+        """Return the sampled inputs together with the per-term FED breakdown."""
+        inputs = self.sample_inputs(time_s, x, y)
+        return inputs, default_fed_components(inputs)
+
     def advance(
         self,
         time_s: float,
@@ -345,3 +445,22 @@ class DefaultFedModel:
             + rate_per_min * max(0.0, float(dt_s)) / _SECONDS_PER_MINUTE
         )
         return inputs, rate_per_min, updated
+
+    def advance_with_components(
+        self,
+        time_s: float,
+        x: float,
+        y: float,
+        *,
+        dt_s: float,
+        current_fed: float,
+    ) -> tuple[DefaultFedInputs, FedComponents, float]:
+        """Advance cumulative FED and return the per-term rate breakdown."""
+        inputs, components = self.sample_components(time_s, x, y)
+        updated = (
+            float(current_fed)
+            + components.total_rate_per_min
+            * max(0.0, float(dt_s))
+            / _SECONDS_PER_MINUTE
+        )
+        return inputs, components, updated

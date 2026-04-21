@@ -61,6 +61,7 @@ from .route_graph import (
     rank_routes,
     should_reevaluate,
 )
+from .fed import default_fic
 from .smoke_speed import ConstantExtinctionField
 
 _logger = logging.getLogger(__name__)
@@ -969,6 +970,7 @@ def run_scenario(
     seed: Optional[int] = None,
     smoke_speed_model=None,
     fed_model=None,
+    tenability_config=None,
     reroute_config: Optional[RerouteConfig] = None,
     collect_route_cost_history: bool = False,
     vis_model=None,
@@ -1034,6 +1036,7 @@ def run_scenario(
         smoke_history: list[dict[str, Any]] = []
         fed_state: Dict[int, Dict[str, float]] = {}
         fed_history: list[dict[str, Any]] = []
+        incapacitated_agents: set[int] = set()
         last_smoke_update_time = None
         last_fed_update_time = None
         last_reroute_check_time: float | None = None
@@ -1498,6 +1501,8 @@ def run_scenario(
                 ):
                     for agent in simulation.agents():
                         agent_id = int(agent.id)
+                        if agent_id in incapacitated_agents:
+                            continue
                         premovement_active = (
                             agent_id in premovement_times
                             and not premovement_times[agent_id]["activated"]
@@ -1580,15 +1585,45 @@ def run_scenario(
                             0.0,
                             float(current_time) - float(state["last_update_s"]),
                         )
-                        inputs, rate_per_min, cumulative = fed_model.advance(
-                            current_time,
-                            x,
-                            y,
-                            dt_s=dt_s,
-                            current_fed=state["cumulative"],
+                        inputs, components, cumulative = (
+                            fed_model.advance_with_components(
+                                current_time,
+                                x,
+                                y,
+                                dt_s=dt_s,
+                                current_fed=state["cumulative"],
+                            )
                         )
                         state["cumulative"] = float(cumulative)
                         state["last_update_s"] = float(current_time)
+
+                        fic_value = default_fic(inputs)
+                        incapacitated_now = agent_id in incapacitated_agents
+                        fic_speed_factor = 1.0
+                        if tenability_config is not None and not incapacitated_now:
+                            if (
+                                tenability_config.enable_incapacitation
+                                and cumulative >= tenability_config.fed_threshold
+                            ):
+                                incapacitated_agents.add(agent_id)
+                                set_agent_desired_speed(agent, 0.0)
+                                incapacitated_now = True
+                            elif tenability_config.enable_fic_speed and fic_value > 0.0:
+                                fic_speed_factor = max(
+                                    float(tenability_config.fic_min_factor),
+                                    1.0
+                                    - float(tenability_config.fic_alpha) * fic_value,
+                                )
+                                current = get_agent_desired_speed(agent)
+                                if (
+                                    current is not None
+                                    and current > 0.0
+                                    and fic_speed_factor < 1.0
+                                ):
+                                    set_agent_desired_speed(
+                                        agent, float(current) * fic_speed_factor
+                                    )
+
                         fed_history.append(
                             {
                                 "time_s": round(float(current_time), 6),
@@ -1600,8 +1635,22 @@ def run_scenario(
                                     inputs.co2_volume_fraction_percent
                                 ),
                                 "o2_percent": float(inputs.o2_volume_fraction_percent),
-                                "fed_rate_per_min": float(rate_per_min),
+                                "hcn_ppm": float(inputs.hcn_ppm),
+                                "no_ppm": float(inputs.no_ppm),
+                                "no2_ppm": float(inputs.no2_ppm),
+                                "co_rate_per_min": float(components.co_rate_per_min),
+                                "cn_rate_per_min": float(components.cn_rate_per_min),
+                                "nox_rate_per_min": float(components.nox_rate_per_min),
+                                "fld_rate_per_min": float(components.fld_rate_per_min),
+                                "hv_co2": float(components.hv_co2),
+                                "o2_rate_per_min": float(components.o2_rate_per_min),
+                                "fed_rate_per_min": float(
+                                    components.total_rate_per_min
+                                ),
                                 "fed_cumulative": float(cumulative),
+                                "fic": float(fic_value),
+                                "fic_speed_factor": float(fic_speed_factor),
+                                "incapacitated": bool(incapacitated_now),
                             }
                         )
                     last_fed_update_time = current_time

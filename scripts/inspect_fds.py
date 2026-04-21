@@ -49,8 +49,9 @@ QUANTITIES = [
         "label": "CO",
         "unit": "% vol",
         "scale": 100.0,
-        "threshold": 0.014,
-        "threshold_label": "IDLH (0.014%)",
+        # NIOSH IDLH for CO: 1200 ppm = 0.12 % vol.
+        "threshold": 0.12,
+        "threshold_label": "IDLH (1200 ppm = 0.12%)",
         "color": "tab:red",
     },
     {
@@ -58,8 +59,9 @@ QUANTITIES = [
         "label": "CO₂",
         "unit": "% vol",
         "scale": 100.0,
-        "threshold": 5.0,
-        "threshold_label": "IDLH (5%)",
+        # NIOSH IDLH for CO2: 40 000 ppm = 4 % vol.
+        "threshold": 4.0,
+        "threshold_label": "IDLH (40 000 ppm = 4%)",
         "color": "tab:orange",
     },
     {

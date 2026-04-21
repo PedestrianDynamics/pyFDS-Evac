@@ -24,6 +24,8 @@ dependencies = [
     "nbformat>=4.2.0",
     "matplotlib",
     "shapely",
+    "fdsvismap>=0.1.3",
+    "numpy>=1.26.4",
 ]
 
 [project.urls]
