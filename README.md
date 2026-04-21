@@ -210,7 +210,6 @@ Figure: ![ISO Table 22 stationary FED verification](artifacts/iso-table22-statio
 
 ### What is not implemented yet
 
-- Incapacitation effects on agent motion (FED >= 1 → speed = 0)
 - Thermal FED terms (radiant heat, convective heat)
 - **Height-relative FED and smoke sampling**: gas concentrations and extinction
   are sampled from a single horizontal FDS slice at a fixed height
@@ -223,30 +222,11 @@ Figure: ![ISO Table 22 stationary FED verification](artifacts/iso-table22-statio
 
 ### Usage
 
-Inspect which local FDS cases support FED:
-
-```bash
-uv run python - <<'PY'
-from pyfds_evac.core import inspect_fds_quantities, list_simulations
-for path in list_simulations("fds_data"):
-    inv = inspect_fds_quantities(path)
-    print(path, inv.canonical_slice_names(), inv.supports_default_fed())
-PY
-```
-
-Run a scenario with FED accumulation from FDS data:
-
-```bash
-uv run run.py \
-  --scenario assets/ISO-table21 \
-  --fds-dir fds_data/haspel \
-  --smoke-slice-height 2.1 \
-  --smoke-update-interval 1.0 \
-  --output-fed-history /tmp/iso-fed-history.csv \
-  --cleanup
-```
-
-Note: if a point lies outside the FDS domain, the implementation falls back to ambient conditions.
+See [docs/usage.md](docs/usage.md) for the full catalogue of
+`run.py` flags (scenario, FDS coupling, FED, rerouting, tenability,
+Smokeview export) and the post-processing scripts. Note: if an agent
+sample lies outside the FDS domain the implementation falls back to
+ambient conditions.
 
 ### Tenability: irritant slowdown and incapacitation
 
@@ -290,17 +270,10 @@ The routing system implements smoke-aware path planning with dynamic rerouting:
 
 ### Usage
 
-Run the haspel scenario with smoke-aware rerouting:
-
-```bash
-uv run run.py \
-  --scenario assets/haspel \
-  --fds-dir fds_data/haspel \
-  --smoke-update-interval 1.0 \
-  --reroute-interval 30.0 \
-  --output-fed-history /tmp/haspel-fed-history.csv \
-  --cleanup
-```
+See [docs/usage.md](docs/usage.md) for the full rerouting CLI
+(`--enable-rerouting`, `--reroute-interval`, `--output-route-history`,
+`--output-route-cost-history`, `--vis-cache`) and the plotting scripts
+that consume the generated route-cost CSVs.
 
 ## Visibility-aware routing and cognitive maps
 
