@@ -21,17 +21,26 @@ Per frame
     3:  float32[3*N]  xyz       (packed as [all X][all Y][all Z])
     4:  int32[N]      tags
 
-SMV text block (`CLASS_OF_PARTICLES` is global; `PRT5` references it by
-1-based index):
+SMV text block: to get humanoid avatars in Smokeview we bind the particle
+class to an AVATARDEF from `objects.svo` via a `PROP` + a `CLASS_OF_PARTICLES`
+header of the form ``<name> % % <prop_id>`` (see `docs/smv-avatars.md`):
 
+    PROP
+     <prop_id>
+      <n_svo_ids>
+     human_fixed
+     ellipsoid
+      1
+     D=0.2
+
+    CLASS_OF_PARTICLES
+     <class_name> % % <prop_id>
+      <r> <g> <b>
+      <n_quantities>
     PRT5  <mesh_number>
      <relative_prt5_path>
       <n_classes>
       <class_index>
-    CLASS_OF_PARTICLES
-     <class_name>
-      <r> <g> <b>
-      <n_quantities>
 """
 
 from __future__ import annotations
@@ -126,6 +135,9 @@ def _prt5_block_present(smv_text: str, prt5_basename: str) -> bool:
     return False
 
 
+_DEFAULT_AVATARS = ("human_fixed", "ellipsoid")
+
+
 def patch_smv_file(
     smv_path: Path,
     prt5_path: Path,
@@ -134,11 +146,18 @@ def patch_smv_file(
     rgb: tuple[float, float, float],
     mesh_number: int = 1,
     n_quantities: int = 0,
+    prop_id: str | None = None,
+    svo_avatars: tuple[str, ...] = _DEFAULT_AVATARS,
 ) -> bool:
-    """Append PRT5 + CLASS_OF_PARTICLES blocks to `smv_path`.
+    """Append PROP + CLASS_OF_PARTICLES + PRT5 blocks to `smv_path`.
 
-    Idempotent: returns False if a PRT5 entry for this `.prt5` file already
-    exists, True if a new block was appended.
+    The class is bound to an AVATARDEF from `objects.svo` (see
+    `docs/smv-avatars.md`) via a ``<class_id> % % <prop_id>`` header
+    parsed by Smokeview's `GetLabels` helper. The PROP block lists
+    candidate SVO avatar names; Smokeview draws the first one found.
+
+    Idempotent: returns False if a PRT5 entry for this `.prt5` file
+    already exists, True if a new block was appended.
     """
     smv_path = Path(smv_path)
     existing = smv_path.read_text(encoding="utf-8")
@@ -148,9 +167,16 @@ def patch_smv_file(
         return False
 
     r, g, b = rgb
-    block = (
+    effective_prop_id = prop_id or f"{class_id}_props"
+
+    avatar_lines = "".join(f" {name}\n" for name in svo_avatars)
+    prop_block = (
+        f"PROP\n {effective_prop_id}\n  {len(svo_avatars)}\n{avatar_lines}  1\n D=0.2\n"
+    )
+
+    class_block = (
         f"CLASS_OF_PARTICLES\n"
-        f" {class_id}\n"
+        f" {class_id} % % {effective_prop_id}\n"
         f"      {r:.5f}      {g:.5f}      {b:.5f}\n"
         f"  {n_quantities}\n"
         f"PRT5     {mesh_number}\n"
@@ -161,7 +187,7 @@ def patch_smv_file(
 
     suffix = "" if existing.endswith("\n") else "\n"
     with smv_path.open("a", encoding="utf-8") as fh:
-        fh.write(suffix + block)
+        fh.write(suffix + prop_block + class_block)
     return True
 
 
@@ -182,7 +208,7 @@ def export_agents_to_smv(
     result: "ScenarioResult",
     *,
     z: float = 1.0,
-    class_id: str = "AGENTS",
+    class_id: str = "Human",
     rgb: tuple[float, float, float] = (0.1, 0.4, 0.9),
 ) -> Path:
     """Write `<CHID>_agents.prt5` next to the FDS output and patch `<CHID>.smv`.

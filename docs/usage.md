@@ -70,9 +70,9 @@ required species) no FED is computed and these flags have no effect.
 
 | Flag | Purpose |
 |------|---------|
-| `--smv-export` | Write `<CHID>_agents.prt5` + patch `<CHID>.smv`. Requires `--fds-dir`. |
+| `--smv-export` | Write `<CHID>_agents.prt5` + patch `<CHID>.smv`. Requires `--fds-dir`. Agents render as humanoid avatars (see [docs/smv-avatars.md](smv-avatars.md)). |
 | `--smv-particle-z M` | Agent height for the particle export (default 1.0). |
-| `--smv-class-id LABEL` | `CLASS_OF_PARTICLES` label (default `AGENTS`). |
+| `--smv-class-id LABEL` | `CLASS_OF_PARTICLES` label (default `Human`). Bound to an AVATARDEF via a PROP block. |
 
 ### Typical invocations
 

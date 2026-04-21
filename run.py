@@ -122,8 +122,10 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--smv-class-id",
-        default="AGENTS",
-        help="CLASS_OF_PARTICLES label written to the .smv (default: AGENTS)",
+        default="Human",
+        help="CLASS_OF_PARTICLES label written to the .smv. Bound to an "
+        "AVATARDEF in objects.svo via a PROP block so Smokeview draws a "
+        "humanoid figure (default: Human)",
     )
     parser.add_argument(
         "--vis-cache",
