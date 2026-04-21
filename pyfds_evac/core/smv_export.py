@@ -139,15 +139,99 @@ def write_agent_prt5(
         _fortran_record(fh, struct.pack("<i", 0))
 
 
-def _prt5_block_present(smv_text: str, prt5_basename: str) -> bool:
-    """Return True if the smv already references `prt5_basename` under a PRT5 line."""
+_TOP_KEYWORDS = (
+    "PROP",
+    "CLASS_OF_PARTICLES",
+    "CLASS_OF_HUMANS",
+    "PRT5",
+    "DEVICE",
+    "SLCF",
+    "DEVICE_ACT",
+    "GRID",
+    "TRNX",
+    "TRNY",
+    "TRNZ",
+    "MESH",
+    "SMOKF3D",
+    "BNDF",
+    "TITLE",
+    "CHID",
+    "FDSVERSION",
+    "HRRPUVCUT",
+    "ENDF",
+)
+
+
+def _block_end(lines: list[str], start: int) -> int:
+    """Return exclusive end index of the block starting at `lines[start]`."""
+    j = start + 1
+    while j < len(lines):
+        head = lines[j].split()[0] if lines[j].strip() else ""
+        if head in _TOP_KEYWORDS:
+            return j
+        j += 1
+    return j
+
+
+def _strip_existing_agent_blocks(
+    smv_text: str, prt5_basename: str, prop_id: str
+) -> str:
+    """Remove any prior PROP/CLASS_OF_PARTICLES/PRT5 blocks for this prt5.
+
+    A stale CLASS_OF_PARTICLES with the wrong n_quantities would make
+    Smokeview mis-read the .prt5 (treating a quantity record as the
+    next frame's XYZ) and crash. Re-running the exporter after the
+    on-disk schema changed must therefore overwrite the old blocks.
+    Strategy: find each PRT5 line that points at our prt5, then also
+    strip the immediately preceding CLASS_OF_PARTICLES (or
+    CLASS_OF_HUMANS) and PROP blocks if present — the patcher always
+    writes those three together.
+    """
     lines = smv_text.splitlines()
+    targets: set[int] = set()
+
     for i, line in enumerate(lines):
         if not line.startswith("PRT5"):
             continue
-        if i + 1 < len(lines) and lines[i + 1].strip() == prt5_basename:
-            return True
-    return False
+        if i + 1 >= len(lines) or lines[i + 1].strip() != prt5_basename:
+            continue
+        targets.update(range(i, _block_end(lines, i)))
+
+        # Walk back through any immediately preceding CLASS_OF_PARTICLES /
+        # CLASS_OF_HUMANS / PROP blocks that the patcher paired with this PRT5.
+        k = i - 1
+        while k >= 0:
+            # Skip blank lines between pair members.
+            while k >= 0 and not lines[k].strip():
+                k -= 1
+            if k < 0:
+                break
+            # Find the start of the block that contains line k.
+            start = k
+            while start > 0:
+                head = lines[start].split()[0] if lines[start].strip() else ""
+                if head in _TOP_KEYWORDS:
+                    break
+                start -= 1
+            head = lines[start].split()[0] if lines[start].strip() else ""
+            if head not in ("CLASS_OF_PARTICLES", "CLASS_OF_HUMANS", "PROP"):
+                break
+            targets.update(range(start, _block_end(lines, start)))
+            k = start - 1
+
+    # Also strip orphan PROP blocks with matching prop_id.
+    for i, line in enumerate(lines):
+        if line.strip() != "PROP" or i in targets:
+            continue
+        if i + 1 < len(lines) and lines[i + 1].strip() == prop_id:
+            targets.update(range(i, _block_end(lines, i)))
+
+    if not targets:
+        return smv_text
+    kept = [line for i, line in enumerate(lines) if i not in targets]
+    while kept and kept[-1].strip() == "":
+        kept.pop()
+    return "\n".join(kept) + "\n"
 
 
 _DEFAULT_AVATARS = ("human_fixed", "ellipsoid")
@@ -171,18 +255,18 @@ def patch_smv_file(
     parsed by Smokeview's `GetLabels` helper. The PROP block lists
     candidate SVO avatar names; Smokeview draws the first one found.
 
-    Idempotent: returns False if a PRT5 entry for this `.prt5` file
-    already exists, True if a new block was appended.
+    If prior export blocks referencing the same `.prt5` or `prop_id`
+    are present they are stripped first — a stale `CLASS_OF_PARTICLES`
+    with a different `n_quantities` would desynchronise Smokeview's
+    frame reader and segfault. Always returns True.
     """
     smv_path = Path(smv_path)
     existing = smv_path.read_text(encoding="utf-8")
     prt5_rel = Path(prt5_path).name
 
-    if _prt5_block_present(existing, prt5_rel):
-        return False
-
     r, g, b = rgb
     effective_prop_id = prop_id or f"{class_id}_props"
+    existing = _strip_existing_agent_blocks(existing, prt5_rel, effective_prop_id)
 
     avatar_lines = "".join(f" {name}\n" for name in svo_avatars)
     prop_block = (
@@ -208,8 +292,7 @@ def patch_smv_file(
     )
 
     suffix = "" if existing.endswith("\n") else "\n"
-    with smv_path.open("a", encoding="utf-8") as fh:
-        fh.write(suffix + prop_block + class_block)
+    smv_path.write_text(existing + suffix + prop_block + class_block, encoding="utf-8")
     return True
 
 

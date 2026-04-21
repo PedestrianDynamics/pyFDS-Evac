@@ -191,6 +191,17 @@ Both would follow the same pattern as `AZIMUTH`: a shortlabel the
 CLASS_OF_PARTICLES parser recognises, plus one extra float per agent
 in the frame record.
 
+## Re-running `--smv-export` after schema changes
+
+`patch_smv_file` strips any prior `PROP` / `CLASS_OF_PARTICLES` /
+`PRT5` blocks that reference the same `.prt5` basename before writing
+the new ones. A stale `CLASS_OF_PARTICLES` with a different
+`n_quantities` would desynchronise Smokeview's per-frame reader
+(treating a quantity record as the next frame's XYZ) and segfault
+Smokeview immediately on load. This regression was hit when `AZIMUTH`
+was added: the old `.smv` still declared 0 quantities while the new
+`.prt5` carried 1.
+
 ## Primary sources
 
 - **SVO avatar definitions**:

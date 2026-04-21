@@ -172,29 +172,57 @@ def test_prt5_rejects_int32_overflow(tmp_path: Path) -> None:
         write_agent_prt5(tmp_path / "x.prt5", df, frame_rate=10.0, z=1.0)
 
 
-def test_patch_smv_idempotent(tmp_path: Path) -> None:
+def test_patch_smv_basic(tmp_path: Path) -> None:
     smv = tmp_path / "demo.smv"
     smv.write_text("TITLE\n demo case\n\nCHID\n demo\n")
     prt5 = tmp_path / "demo_agents.prt5"
     prt5.write_bytes(b"")
 
-    first = patch_smv_file(smv, prt5, class_id="AGENTS", rgb=(0.1, 0.4, 0.9))
-    assert first is True
+    assert patch_smv_file(smv, prt5, class_id="AGENTS", rgb=(0.1, 0.4, 0.9)) is True
 
     text = smv.read_text()
+    assert "PROP" in text
+    assert " AGENTS_props" in text
+    assert " human_fixed" in text
     assert "PRT5     1" in text
     assert " demo_agents.prt5" in text
     assert "CLASS_OF_PARTICLES" in text
-    assert " AGENTS" in text
+    assert " AGENTS % % AGENTS_props" in text
     assert "      0.10000      0.40000      0.90000" in text
+    assert text.index("PROP") < text.index("CLASS_OF_PARTICLES"), (
+        "PROP must precede CLASS_OF_PARTICLES so GetPropID finds the prop"
+    )
     assert text.index("CLASS_OF_PARTICLES") < text.index("PRT5"), (
-        "CLASS_OF_PARTICLES must appear before PRT5 — Smokeview parses single-pass "
-        "and crashes on PRT5 class lookup if npartclassinfo is still 0"
+        "CLASS_OF_PARTICLES must appear before PRT5 — Smokeview parses single-pass"
     )
 
-    second = patch_smv_file(smv, prt5, class_id="AGENTS", rgb=(0.1, 0.4, 0.9))
-    assert second is False
-    assert text == smv.read_text()
+
+def test_patch_smv_replaces_stale_block(tmp_path: Path) -> None:
+    """A stale block for the same prt5 must be overwritten, not duplicated.
+
+    Regression for: rerunning --smv-export after changing n_quantities
+    left the old CLASS_OF_PARTICLES with the old (lower) count in place,
+    desynchronising Smokeview's frame reader and causing a segfault.
+    """
+    smv = tmp_path / "demo.smv"
+    smv.write_text(
+        "TITLE\n demo case\n\nCHID\n demo\n"
+        "CLASS_OF_PARTICLES\n AGENTS\n      0.1 0.4 0.9\n  0\n"
+        "PRT5     1\n demo_agents.prt5\n      1\n      1\n"
+    )
+    prt5 = tmp_path / "demo_agents.prt5"
+    prt5.write_bytes(b"")
+
+    assert (
+        patch_smv_file(smv, prt5, class_id="Human", rgb=(0.1, 0.4, 0.9), n_quantities=1)
+        is True
+    )
+    text = smv.read_text()
+    assert text.count("PRT5     1") == 1
+    assert text.count("CLASS_OF_PARTICLES") == 1
+    assert "  1\n body angle\n AZIMUTH\n" in text
+    assert " AGENTS\n" not in text  # stale name gone
+    assert " Human % % Human_props" in text
 
 
 class _FakeResult:
