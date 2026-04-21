@@ -36,6 +36,10 @@ Run a JSON-first scenario with the CLI runner:
 uv run run.py --scenario assets/ISO-table21 --cleanup
 ```
 
+See [docs/usage.md](docs/usage.md) for the full catalogue of CLI flags,
+post-processing scripts, and the `scripts/run_and_plot.sh` driver that
+runs a simulation and produces every plot in one go.
+
 ## Smoke-speed model
 
 See [docs/smoke-speed-model.md](docs/smoke-speed-model.md) for the full
