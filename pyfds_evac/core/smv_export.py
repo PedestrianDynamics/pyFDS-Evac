@@ -14,6 +14,9 @@ Header (once)
     2:  int32  version          (= NINT(version*100))
     3:  int32  n_classes        (= 1 here)
     4:  int32  numtypes[2]      (= 0, 0 for a class with no quantities)
+    Per declared quantity (repeated numtypes[0]+numtypes[1] times):
+    5a: char[30] label          (30-char label, space-padded)
+    5b: char[30] unit           (30-char unit, space-padded)
 
 Per frame
     1:  float32 time_s
@@ -112,6 +115,12 @@ def write_agent_prt5(
         _fortran_record(fh, struct.pack("<i", _PRT5_VERSION))
         _fortran_record(fh, struct.pack("<i", 1))
         _fortran_record(fh, struct.pack("<ii", n_quantities, 0))
+        # Per declared quantity, Smokeview's IOpart.c expects a 30-char
+        # label record and a 30-char unit record. Missing them makes the
+        # reader skip into the first frame body and desynchronise.
+        if with_azimuth:
+            _fortran_record(fh, b"body angle".ljust(30, b" "))
+            _fortran_record(fh, b"deg".ljust(30, b" "))
 
         grouped = df.groupby("frame", sort=True)
         for frame, rows in grouped:

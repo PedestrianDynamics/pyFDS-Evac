@@ -40,6 +40,11 @@ def _read_prt5(path: Path) -> dict:
         (nclasses,) = struct.unpack("<i", _read_fortran_record(fh))
         numtypes = struct.unpack("<ii", _read_fortran_record(fh))
         n_quantities = numtypes[0]
+        quantity_labels: list[tuple[bytes, bytes]] = []
+        for _ in range(sum(numtypes)):
+            label = _read_fortran_record(fh)
+            unit = _read_fortran_record(fh)
+            quantity_labels.append((label, unit))
         while True:
             time_rec = _read_fortran_record(fh)
             if not time_rec:
@@ -79,6 +84,7 @@ def _read_prt5(path: Path) -> dict:
         "version": version,
         "nclasses": nclasses,
         "numtypes": numtypes,
+        "quantity_labels": quantity_labels,
         "frames": frames,
     }
 
@@ -145,6 +151,13 @@ def test_prt5_azimuth_round_trip(tmp_path: Path) -> None:
     data = _read_prt5(out)
 
     assert data["numtypes"] == (1, 0)
+    assert len(data["quantity_labels"]) == 1
+    label, unit = data["quantity_labels"][0]
+    assert label.strip() == b"body angle"
+    assert unit.strip() == b"deg"
+    assert (
+        len(label) == 30 and len(unit) == 30
+    )  # Smokeview expects fixed 30-char records
     real_frames = [f for f in data["frames"] if f["n"] > 0]
     assert real_frames[0]["q"] == pytest.approx([0.0, 90.0])
     assert real_frames[1]["q"] == pytest.approx([180.0, 270.0])
