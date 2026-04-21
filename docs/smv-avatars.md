@@ -191,6 +191,26 @@ Both would follow the same pattern as `AZIMUTH`: a shortlabel the
 CLASS_OF_PARTICLES parser recognises, plus one extra float per agent
 in the frame record.
 
+## Enabling avatar rendering via the case `.ini`
+
+Even with a correct `PROP` + `CLASS_OF_PARTICLES` binding, Smokeview
+defaults `partclassi->vis_type` to `PART_POINTS` (enum value `1` in
+`smv/Source/shared/datadefs.h`), so particles render as a point cloud
+until the user toggles the mode. The override lives in the case
+`.ini` under the `partclassdataVIS` keyword:
+
+```text
+partclassdataVIS
+ 1
+ 4
+```
+
+where the second number is the `vis_type` per class and `4` is
+`PART_SMV_DEVICE` — render each particle by executing the bound
+AVATARDEF program. `export_agents_to_smv` writes or patches
+`<CHID>.ini` to set this automatically, so avatars are visible on
+Smokeview's first launch without menu toggling.
+
 ## Re-running `--smv-export` after schema changes
 
 `patch_smv_file` strips any prior `PROP` / `CLASS_OF_PARTICLES` /

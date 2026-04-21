@@ -14,6 +14,7 @@ import pytest
 from pyfds_evac.core import ScenarioResult
 from pyfds_evac.core.smv_export import (
     export_agents_to_smv,
+    patch_ini_for_avatars,
     patch_smv_file,
     write_agent_prt5,
 )
@@ -208,6 +209,28 @@ def test_patch_smv_basic(tmp_path: Path) -> None:
     assert text.index("CLASS_OF_PARTICLES") < text.index("PRT5"), (
         "CLASS_OF_PARTICLES must appear before PRT5 — Smokeview parses single-pass"
     )
+
+
+def test_patch_ini_creates_when_missing(tmp_path: Path) -> None:
+    ini = tmp_path / "demo.ini"
+    patch_ini_for_avatars(ini, nclasses=1)
+    text = ini.read_text()
+    assert "partclassdataVIS" in text
+    assert " 1\n 4\n" in text  # 1 class, vis_type=PART_SMV_DEVICE
+
+
+def test_patch_ini_updates_existing(tmp_path: Path) -> None:
+    """An existing partclassdataVIS block (e.g. from a prior Smokeview
+    session that saved vis_type=1) must be flipped to 4 so avatars
+    render without manual menu toggling."""
+    ini = tmp_path / "demo.ini"
+    ini.write_text("# header\nPART5COLOR\n 0\npartclassdataVIS\n 1\n 1\nPARTSKIP\n 1\n")
+    patch_ini_for_avatars(ini, nclasses=1)
+    text = ini.read_text()
+    assert "partclassdataVIS\n 1\n 4\n" in text
+    assert text.count("partclassdataVIS") == 1  # not duplicated
+    assert "PART5COLOR" in text
+    assert "PARTSKIP" in text
 
 
 def test_patch_smv_replaces_stale_block(tmp_path: Path) -> None:

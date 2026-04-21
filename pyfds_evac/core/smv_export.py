@@ -305,6 +305,48 @@ def patch_smv_file(
     return True
 
 
+_PART_VIS_SMV_DEVICE = 4  # smv/Source/shared/datadefs.h: PART_SMV_DEVICE
+
+
+def patch_ini_for_avatars(ini_path: Path, *, nclasses: int = 1) -> None:
+    """Set `partclassdataVIS=4` so particle classes render as SVO avatars.
+
+    Smokeview's default is `PART_POINTS` (=1). Without this override the
+    particles render as point clouds even when the CLASS_OF_PARTICLES is
+    bound to a PROP with an AVATARDEF. The value lives in the case
+    `.ini` (`<CHID>.ini`) under the `partclassdataVIS` keyword; this
+    helper creates or updates that section.
+    """
+    ini_path = Path(ini_path)
+    block = f"partclassdataVIS\n {nclasses}\n" + f" {_PART_VIS_SMV_DEVICE}\n" * nclasses
+    if not ini_path.exists():
+        ini_path.write_text(block, encoding="utf-8")
+        return
+    text = ini_path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    out: list[str] = []
+    i = 0
+    replaced = False
+    while i < len(lines):
+        if lines[i].strip() == "partclassdataVIS" and i + 1 < len(lines):
+            try:
+                n = int(lines[i + 1].strip())
+            except ValueError:
+                n = 0
+            out.append(lines[i])
+            out.append(lines[i + 1])
+            for _ in range(n):
+                out.append(f" {_PART_VIS_SMV_DEVICE}")
+            i += 2 + n
+            replaced = True
+            continue
+        out.append(lines[i])
+        i += 1
+    if not replaced:
+        out.append(block.rstrip("\n"))
+    ini_path.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
 def _find_smv(fds_dir: Path) -> Path:
     """Return the unique `.smv` file under `fds_dir`."""
     candidates = sorted(fds_dir.glob("*.smv"))
@@ -350,4 +392,5 @@ def export_agents_to_smv(
         rgb=rgb,
         n_quantities=1 if with_azimuth else 0,
     )
+    patch_ini_for_avatars(fds_dir / f"{chid}.ini")
     return prt5_path
