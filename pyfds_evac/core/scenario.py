@@ -61,7 +61,7 @@ from .route_graph import (
     rank_routes,
     should_reevaluate,
 )
-from .fed import default_fic
+from .fed import default_fed_components, default_fic
 from .smoke_speed import ConstantExtinctionField
 
 _logger = logging.getLogger(__name__)
@@ -1585,15 +1585,26 @@ def run_scenario(
                             0.0,
                             float(current_time) - float(state["last_update_s"]),
                         )
-                        inputs, components, cumulative = (
-                            fed_model.advance_with_components(
+                        advance_with_components = getattr(
+                            fed_model, "advance_with_components", None
+                        )
+                        if advance_with_components is not None:
+                            inputs, components, cumulative = advance_with_components(
                                 current_time,
                                 x,
                                 y,
                                 dt_s=dt_s,
                                 current_fed=state["cumulative"],
                             )
-                        )
+                        else:
+                            inputs, _rate_per_min, cumulative = fed_model.advance(
+                                current_time,
+                                x,
+                                y,
+                                dt_s=dt_s,
+                                current_fed=state["cumulative"],
+                            )
+                            components = default_fed_components(inputs)
                         state["cumulative"] = float(cumulative)
                         state["last_update_s"] = float(current_time)
 
