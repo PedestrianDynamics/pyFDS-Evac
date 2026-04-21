@@ -52,8 +52,12 @@ uv run python run.py --scenario <scenario.json|.zip|dir> [options]
 
 ### Tenability (FIC slowdown + FED incapacitation)
 
-When a FED model is attached, the Purser FIC slowdown and the
-`FED ≥ 1` incapacitation gate are on by default.
+A FED model is instantiated automatically when `--fds-dir` points at
+an FDS case that exposes the ISO 13571 species (CO, CO₂, O₂ at
+minimum — HCN, NO/NO₂, and irritants are used if present). When that
+happens, the Purser FIC slowdown and the `FED ≥ 1` incapacitation gate
+are on by default. Without `--fds-dir` (or with a case missing the
+required species) no FED is computed and these flags have no effect.
 
 | Flag | Purpose |
 |------|---------|
