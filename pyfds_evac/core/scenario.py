@@ -1608,6 +1608,17 @@ def run_scenario(
                                 incapacitated_agents.add(agent_id)
                                 set_agent_desired_speed(agent, 0.0)
                                 incapacitated_now = True
+                                # Pin the baseline too so downstream speed
+                                # restorations (checkpoint / direct-steering
+                                # update_checkpoint_speed, Frantzich smoke
+                                # reapplication) can't un-incapacitate the
+                                # agent by resetting to the pre-collapse v0.
+                                speed_state = agent_speed_state.get(agent_id)
+                                if speed_state is not None:
+                                    speed_state["original_speed"] = 0.0
+                                    speed_state["smoke_factor"] = 1.0
+                                    speed_state["active_checkpoint"] = None
+                                smoke_speed_state[agent_id] = 0.0
                             elif tenability_config.enable_fic_speed and fic_value > 0.0:
                                 fic_speed_factor = max(
                                     float(tenability_config.fic_min_factor),
@@ -1624,6 +1635,19 @@ def run_scenario(
                                         agent, float(current) * fic_speed_factor
                                     )
 
+                        desired_speed_now = get_agent_desired_speed(agent)
+                        base_speed_logged = smoke_speed_state.get(agent_id)
+                        if base_speed_logged is None and desired_speed_now is not None:
+                            base_speed_logged = float(desired_speed_now)
+                        effective_factor = 0.0
+                        if (
+                            base_speed_logged is not None
+                            and base_speed_logged > 0.0
+                            and desired_speed_now is not None
+                        ):
+                            effective_factor = float(desired_speed_now) / float(
+                                base_speed_logged
+                            )
                         fed_history.append(
                             {
                                 "time_s": round(float(current_time), 6),
@@ -1651,6 +1675,13 @@ def run_scenario(
                                 "fic": float(fic_value),
                                 "fic_speed_factor": float(fic_speed_factor),
                                 "incapacitated": bool(incapacitated_now),
+                                "base_speed": float(base_speed_logged)
+                                if base_speed_logged is not None
+                                else 0.0,
+                                "desired_speed": float(desired_speed_now)
+                                if desired_speed_now is not None
+                                else 0.0,
+                                "speed_factor": float(effective_factor),
                             }
                         )
                     last_fed_update_time = current_time

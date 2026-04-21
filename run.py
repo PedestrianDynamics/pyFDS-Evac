@@ -220,6 +220,9 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "fic",
         "fic_speed_factor",
         "incapacitated",
+        "base_speed",
+        "desired_speed",
+        "speed_factor",
     ]
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
