@@ -39,6 +39,7 @@ def _read_prt5(path: Path) -> dict:
         (version,) = struct.unpack("<i", _read_fortran_record(fh))
         (nclasses,) = struct.unpack("<i", _read_fortran_record(fh))
         numtypes = struct.unpack("<ii", _read_fortran_record(fh))
+        n_quantities = numtypes[0]
         while True:
             time_rec = _read_fortran_record(fh)
             if not time_rec:
@@ -46,7 +47,9 @@ def _read_prt5(path: Path) -> dict:
             (t,) = struct.unpack("<f", time_rec)
             (n,) = struct.unpack("<i", _read_fortran_record(fh))
             if n == 0:
-                frames.append({"t": t, "n": 0, "x": [], "y": [], "z": [], "tags": []})
+                frames.append(
+                    {"t": t, "n": 0, "x": [], "y": [], "z": [], "tags": [], "q": []}
+                )
                 continue
             xyz_bytes = _read_fortran_record(fh)
             assert len(xyz_bytes) == 3 * n * 4
@@ -55,7 +58,22 @@ def _read_prt5(path: Path) -> dict:
             zs = list(struct.unpack(f"<{n}f", xyz_bytes[8 * n : 12 * n]))
             tag_bytes = _read_fortran_record(fh)
             tags = list(struct.unpack(f"<{n}i", tag_bytes))
-            frames.append({"t": t, "n": n, "x": xs, "y": ys, "z": zs, "tags": tags})
+            quantities: list[float] = []
+            if n_quantities > 0:
+                q_bytes = _read_fortran_record(fh)
+                assert len(q_bytes) == n * n_quantities * 4
+                quantities = list(struct.unpack(f"<{n * n_quantities}f", q_bytes))
+            frames.append(
+                {
+                    "t": t,
+                    "n": n,
+                    "x": xs,
+                    "y": ys,
+                    "z": zs,
+                    "tags": tags,
+                    "q": quantities,
+                }
+            )
     return {
         "one": one,
         "version": version,
@@ -110,6 +128,30 @@ def test_prt5_header_and_frames(tmp_path: Path, tiny_df: pd.DataFrame) -> None:
     terminator = data["frames"][-1]
     assert terminator["n"] == 0
     assert terminator["t"] == pytest.approx(2.0)
+
+
+def test_prt5_azimuth_round_trip(tmp_path: Path) -> None:
+    import math
+
+    rows = [
+        (0, 1, 0.0, 0.0, 1.0, 0.0),  # facing +x → 0°
+        (0, 2, 1.0, 1.0, 0.0, 1.0),  # facing +y → 90°
+        (10, 1, 0.5, 0.0, -1.0, 0.0),  # facing -x → 180°
+        (10, 2, 1.0, 1.5, 0.0, -1.0),  # facing -y → 270°
+    ]
+    df = pd.DataFrame(rows, columns=["frame", "id", "x", "y", "ori_x", "ori_y"])
+    out = tmp_path / "agents.prt5"
+    write_agent_prt5(out, df, frame_rate=10.0, z=1.0, with_azimuth=True)
+    data = _read_prt5(out)
+
+    assert data["numtypes"] == (1, 0)
+    real_frames = [f for f in data["frames"] if f["n"] > 0]
+    assert real_frames[0]["q"] == pytest.approx([0.0, 90.0])
+    assert real_frames[1]["q"] == pytest.approx([180.0, 270.0])
+    # Check Smokeview convention: degrees, range [0, 360)
+    for f in real_frames:
+        for q in f["q"]:
+            assert 0.0 <= q < 360.0 or math.isclose(q, 0.0, abs_tol=1e-4)
 
 
 def test_prt5_empty_trajectory(tmp_path: Path) -> None:

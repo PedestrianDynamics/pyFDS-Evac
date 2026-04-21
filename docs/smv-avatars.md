@@ -122,7 +122,35 @@ This is the minimum Smokeview's `IOpart.c::ReadPart` needs. The Z
 coordinate is constant (`--smv-particle-z`, default 1.0 m) because
 the JuPedSim trajectory is 2-D.
 
-## What we do *not* write (and why the avatar doesn't rotate)
+## Orientation: how avatars follow the walking direction
+
+We emit one quantity column per particle with the shortlabel
+`AZIMUTH`, computed as `atan2(ori_y, ori_x) · 180/π mod 360°` from
+the JuPedSim trajectory SQLite's `ori_x, ori_y` columns. The
+`CLASS_OF_PARTICLES` block declares it:
+
+```text
+CLASS_OF_PARTICLES
+ Human % % Human_props
+      0.10000      0.40000      0.90000
+  1
+ body angle
+ AZIMUTH
+ deg
+...
+```
+
+Smokeview's `CLASS_OF_PARTICLES` parser recognises the `AZIMUTH`
+shortlabel (`readsmvfile.c` L6314) and stores the column index in
+`partclassi->col_azimuth`. When rendering each particle it rotates
+the bound AVATARDEF by the per-particle azimuth so the figure faces
+the walking direction.
+
+The per-frame binary layout becomes XYZ record → tags record →
+one additional Fortran record of `N` float32 azimuths. The PRT5
+header's `numtypes[2]` is `(1, 0)`.
+
+## What we still do not write
 
 The original FDS+Evac writer `DUMP_EVAC` in
 `fds-smv_deprecated/FDS_Source/evac.f90` packs **7 floats per
@@ -148,21 +176,20 @@ SMV block — a distinct keyword handled by a dedicated reader — and
 optional extra-quantity records with `COLOR_INDEX`, `FED_DOSE`,
 `SPEED`, `MOTIVE_ANGLE`, `DENSITY`, etc.
 
-Our exporter currently stops at the 3-float XYZ form. Consequences:
+Our exporter now emits `AZIMUTH` (orientation, above) but still stops
+short of:
 
-- All avatars face the direction set by the AVATARDEF's literal
-  `90.0 rotatez`. They don't turn to follow their walking direction.
-- All avatars have the default body size (`D=0.2` in the `PROP`).
-  They don't reflect per-agent `HR%Radius` etc.
-- Per-agent colour / FED / speed aren't pumped through to Smokeview
-  quantity menus (those are driven by the quantity columns we
-  haven't added).
+- Per-agent body sizes. All avatars use the default `D=0.2` from the
+  `PROP`; per-agent `HR%Radius` / `r_torso` / height are not wired up.
+  Adding them means declaring `DIAMETER`, `LENGTH`, etc. as extra
+  quantity columns.
+- Per-agent FED / speed / colour index, which the FDS+Evac PRT5
+  exposes in a second Fortran record so Smokeview can colour-map
+  particles from the quantity menu.
 
-Adding these would mean extending `write_agent_prt5` to emit per-agent
-columns `AZIMUTH`, `DIAMETER`, `LENGTH`, etc. (declared as quantity
-labels in `CLASS_OF_PARTICLES`), and pulling `ori_x, ori_y` from the
-JuPedSim SQLite into a per-frame angle column. That's a future
-improvement; without it the figures are static but correctly placed.
+Both would follow the same pattern as `AZIMUTH`: a shortlabel the
+CLASS_OF_PARTICLES parser recognises, plus one extra float per agent
+in the frame record.
 
 ## Primary sources
 

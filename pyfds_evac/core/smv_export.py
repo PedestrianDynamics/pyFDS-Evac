@@ -20,6 +20,8 @@ Per frame
     2:  int32   n_points
     3:  float32[3*N]  xyz       (packed as [all X][all Y][all Z])
     4:  int32[N]      tags
+    5:  float32[N]    azimuth   (only when written with with_azimuth=True;
+                                 numtypes must then be (1, 0))
 
 SMV text block: to get humanoid avatars in Smokeview we bind the particle
 class to an AVATARDEF from `objects.svo` via a `PROP` + a `CLASS_OF_PARTICLES`
@@ -72,16 +74,23 @@ def write_agent_prt5(
     *,
     frame_rate: float,
     z: float,
+    with_azimuth: bool = False,
 ) -> None:
     """Serialize `df` to an FDS `.prt5` particle file.
 
-    `df` must have columns `frame`, `id`, `x`, `y`. Frames with zero agents
-    are skipped mid-stream (would falsely terminate `prt5parser`). A single
-    `n_points=0` frame is appended at the end as a clean terminator.
+    `df` must have columns `frame`, `id`, `x`, `y`. When `with_azimuth`
+    is True it must additionally have `ori_x`, `ori_y`; the per-agent
+    body angle `atan2(ori_y, ori_x)` is written as a single `AZIMUTH`
+    quantity per frame so Smokeview can rotate the avatar to face the
+    walking direction. Frames with zero agents are skipped mid-stream
+    (would falsely terminate `prt5parser`). A single `n_points=0`
+    frame is appended at the end as a clean terminator.
     """
     import numpy as np
 
     required = {"frame", "id", "x", "y"}
+    if with_azimuth:
+        required |= {"ori_x", "ori_y"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"trajectory dataframe missing columns: {sorted(missing)}")
@@ -96,12 +105,13 @@ def write_agent_prt5(
 
     frames = sorted(df["frame"].unique().tolist())
     last_frame = frames[-1] if frames else 0
+    n_quantities = 1 if with_azimuth else 0
 
     with prt5_path.open("wb") as fh:
         _fortran_record(fh, struct.pack("<i", 1))
         _fortran_record(fh, struct.pack("<i", _PRT5_VERSION))
         _fortran_record(fh, struct.pack("<i", 1))
-        _fortran_record(fh, struct.pack("<ii", 0, 0))
+        _fortran_record(fh, struct.pack("<ii", n_quantities, 0))
 
         grouped = df.groupby("frame", sort=True)
         for frame, rows in grouped:
@@ -118,6 +128,11 @@ def write_agent_prt5(
             _fortran_record(fh, xyz_bytes)
             tags = rows["id"].to_numpy(dtype=np.int32, copy=False)
             _fortran_record(fh, tags.tobytes())
+            if with_azimuth:
+                ori_x = rows["ori_x"].to_numpy(dtype=np.float64, copy=False)
+                ori_y = rows["ori_y"].to_numpy(dtype=np.float64, copy=False)
+                angles = np.mod(np.degrees(np.arctan2(ori_y, ori_x)), 360.0)
+                _fortran_record(fh, angles.astype(np.float32).tobytes())
 
         t_end = float(last_frame) / float(frame_rate)
         _fortran_record(fh, struct.pack("<f", t_end))
@@ -174,11 +189,18 @@ def patch_smv_file(
         f"PROP\n {effective_prop_id}\n  {len(svo_avatars)}\n{avatar_lines}  1\n D=0.2\n"
     )
 
+    # Smokeview's CLASS_OF_PARTICLES parser recognises the AZIMUTH
+    # shortlabel (readsmvfile.c GetLabels → col_azimuth) and rotates
+    # the bound AVATARDEF by that per-particle value.
+    quantity_lines = ""
+    if n_quantities >= 1:
+        quantity_lines = " body angle\n AZIMUTH\n deg\n"
     class_block = (
         f"CLASS_OF_PARTICLES\n"
         f" {class_id} % % {effective_prop_id}\n"
         f"      {r:.5f}      {g:.5f}      {b:.5f}\n"
         f"  {n_quantities}\n"
+        f"{quantity_lines}"
         f"PRT5     {mesh_number}\n"
         f" {prt5_rel}\n"
         f"      1\n"
@@ -220,17 +242,20 @@ def export_agents_to_smv(
     chid = smv_path.stem
 
     df = result.trajectory_dataframe()
+    with_azimuth = {"ori_x", "ori_y"}.issubset(df.columns)
     prt5_path = fds_dir / f"{chid}_agents.prt5"
     write_agent_prt5(
         prt5_path,
         df,
         frame_rate=result.frame_rate,
         z=z,
+        with_azimuth=with_azimuth,
     )
     patch_smv_file(
         smv_path,
         prt5_path,
         class_id=class_id,
         rgb=rgb,
+        n_quantities=1 if with_azimuth else 0,
     )
     return prt5_path
