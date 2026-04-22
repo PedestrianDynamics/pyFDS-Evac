@@ -385,3 +385,8 @@ was added: the old `.smv` still declared 0 quantities while the new
 - **Smokeview User's Guide**:
   [NIST SP 1017-1](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.1017-1.pdf),
   sections on PROP, CLASS_OF_PARTICLES, and avatar selection.
+- **Upstream issue on per-particle rotation**:
+  [firemodels/smv#2597](https://github.com/firemodels/smv/issues/2597).
+  Verbatim record + source-level trace in
+  [`smv-issue-2597.md`](smv-issue-2597.md); minimal reproducer in
+  [`smv-repro/`](smv-repro/).
