@@ -222,8 +222,10 @@ CVENT
     0
 PROP
  Human_props
-  1
- agent_arrow
+  3
+ human_rotating
+ human_altered_with_data
+ human_fixed
   9
  W=0.5
  D=0.2

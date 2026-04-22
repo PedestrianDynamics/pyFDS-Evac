@@ -73,18 +73,45 @@ def main() -> None:
         "bug (`fread_mv` on file-backed streams) that sticks playback on "
         "frame 0. Turn on if you want to reproduce that bug directly.",
     )
+    parser.add_argument(
+        "--avatar-style",
+        default="arrow",
+        choices=("arrow", "human", "sphere"),
+        help="Which AVATARDEF to emit into repro.svo. `arrow` (default) "
+        "makes the rotation question visually obvious — a blue body with "
+        "a red marker in local +X that should orbit as the agent turns. "
+        "`human` uses the full tan-headed blue-trunked humanoid figure; "
+        "`sphere` is a plain body with no facing direction.",
+    )
+    parser.add_argument(
+        "--case-dir",
+        default=None,
+        help="Output case directory (defaults to docs/smv-repro/case). "
+        "If it does not yet contain repro.smv, the FDS-produced support "
+        "files are copied from docs/smv-repro/case.",
+    )
     args = parser.parse_args()
 
-    smv_path = CASE_DIR / f"{CHID}.smv"
+    case_dir = Path(args.case_dir) if args.case_dir else CASE_DIR
+    if case_dir != CASE_DIR and not (case_dir / f"{CHID}.smv").exists():
+        import shutil
+
+        case_dir.mkdir(parents=True, exist_ok=True)
+        for name in (f"{CHID}.smv", f"{CHID}.fds", f"{CHID}.s3d_dummy"):
+            src = CASE_DIR / name
+            if src.exists():
+                shutil.copy2(src, case_dir / name)
+
+    smv_path = case_dir / f"{CHID}.smv"
     if not smv_path.exists():
         raise SystemExit(
             f"no {smv_path} found — run `cd {CASE_DIR} && fds repro.fds` "
             "first to generate the supporting .smv"
         )
 
-    prt5_path = CASE_DIR / f"{CHID}_agents.prt5"
-    svo_path = CASE_DIR / f"{CHID}.svo"
-    ini_path = CASE_DIR / f"{CHID}.ini"
+    prt5_path = case_dir / f"{CHID}_agents.prt5"
+    svo_path = case_dir / f"{CHID}.svo"
+    ini_path = case_dir / f"{CHID}.ini"
 
     df = build_trajectory()
     # Default `with_azimuth=False` / `n_quantities=0`: the exporter normally
@@ -100,7 +127,7 @@ def main() -> None:
         prt5_path, df, frame_rate=FRAME_RATE, z=0.0, with_azimuth=args.with_azimuth
     )
     n_quantities = 1 if args.with_azimuth else 0
-    svo_avatars = write_case_svo(svo_path, avatar_style="arrow")
+    svo_avatars = write_case_svo(svo_path, avatar_style=args.avatar_style)
     patch_smv_file(
         smv_path,
         prt5_path,
@@ -117,8 +144,10 @@ def main() -> None:
         stale = prt5_path.with_suffix(prt5_path.suffix + ext)
         stale.unlink(missing_ok=True)
 
-    print(f"Ready (numtypes={n_quantities}). Open in Smokeview:")
-    print(f"  cd {CASE_DIR}")
+    print(
+        f"Ready (numtypes={n_quantities}, avatar={args.avatar_style}). Open in Smokeview:"
+    )
+    print(f"  cd {case_dir}")
     print(f"  smokeview {CHID}.smv")
 
 
