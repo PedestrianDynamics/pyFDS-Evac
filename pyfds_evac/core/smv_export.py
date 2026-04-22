@@ -523,18 +523,26 @@ def export_agents_to_smv(
     per-particle AZIMUTH rotation is working); ``sphere`` draws a single
     plain sphere (position-only sanity check when debugging size issues).
 
-    `with_azimuth` defaults to False because of a Smokeview 6.10.x bug
-    in `IOpart.c::CreatePartBoundFile` — `FORTREAD_mv` → `fread_mv` on a
-    file-backed stream (the one `fopen_b(file, NULL, 0, "rb")` creates)
-    always returns 0 when the PRT5 has `numtypes > 0`, which causes the
-    bounds scanner to quit after frame 0. The resulting single-entry
-    `.sz` cache collapses `parti->ntimes` to 1 and playback sticks on
-    frame 0. Until that's fixed in Smokeview (see
-    `docs/smv-forum-post-draft.md`), it is safer to emit PRT5 with
-    `numtypes=(0,0)`. The per-particle AZIMUTH quantity does not drive
-    avatar rotation in current Smokeview anyway (also covered in the
-    forum post), so the only thing the flag gains is a colorbar menu
-    entry — not worth breaking playback. Set to True to opt in.
+    `with_azimuth` defaults to False for two reasons:
+
+    1. Per-particle avatar rotation is not supported by current
+       Smokeview — confirmed upstream on firemodels/smv#2597
+       (https://github.com/firemodels/smv/issues/2597). The evac
+       visualization code was removed when `&EVAC` left FDS, and
+       reviving rotation would require adding AZIMUTH as an FDS
+       particle quantity type first.
+    2. Writing the quantity column also triggers a separate
+       Smokeview bug in `IOpart.c::CreatePartBoundFile` —
+       `FORTREAD_mv` -> `fread_mv` on a file-backed stream (the one
+       `fopen_b(file, NULL, 0, "rb")` creates) always returns 0
+       when the PRT5 has `numtypes > 0`, so the bounds scanner
+       quits after frame 0, the derived `.sz` cache collapses
+       `parti->ntimes` to 1, and playback sticks on frame 0.
+
+    So the quantity gains a colorbar menu entry at the cost of
+    broken playback and no rotation — not a good trade. Set to
+    True if you explicitly want the colorbar entry and accept the
+    stuck-playback symptom.
 
     Returns the path of the written `.prt5` file.
     """

@@ -170,23 +170,19 @@ because the JuPedSim trajectory is 2-D. The AVATARDEF draw program
 puts the avatar's feet near its local origin, so placing the particle
 at z=0 makes the figure stand on the floor; raising z makes it float.
 
-## Orientation: per-particle rotation does not work in Smokeview 6.10.x
+## Orientation: per-particle rotation is not supported in current Smokeview
 
-**Short version.** We can emit a per-particle `AZIMUTH` (deg)
-quantity into the PRT5, and the AVATARDEFs we write declare
-`:AZIMUTH=0` and reference `$AZIMUTH rotatez`. Smokeview's source
-tree contains a substitution pipeline (`UpdatePartClassDepend` →
-`vars_dep_index` → `fvars_dep`) that *should* feed per-particle
-quantity values into those tokens at render time. Empirically in
-`SMV-6.10.1-0-gfe486ab05-release` it doesn't — every avatar keeps
-facing the same direction regardless of the per-particle AZIMUTH
-value. Writing the quantity also triggers a separate
-`CreatePartBoundFile` bug that sticks playback on frame 0. So by
-default we emit the PRT5 with **no quantity column**
-(`--smv-with-azimuth` opts in), which keeps playback working at
-the cost of leaving the `$AZIMUTH rotatez` token at its default
-`0`. Net effect: agents render and move correctly but do not turn
-to face their direction of travel.
+**Short version.** Per-particle avatar rotation via PRT5 + a custom
+AVATARDEF is **not supported** in current Smokeview. Confirmed
+upstream by Glenn Forney on
+[firemodels/smv#2597](https://github.com/firemodels/smv/issues/2597)
+(2026-04-22): "I took out most of the evac visualization code in
+smokeview when evac was taken out of fds. […] particle rotation is
+not presently supported. AZIMUTH would have to be added to fds as
+a particle quantity type." Our exporter therefore defaults to
+writing the PRT5 with **no quantity column**
+(`--smv-with-azimuth` opts in). Agents render and move correctly
+but do not turn to face their direction of travel.
 
 ### What the exporter writes when `--smv-with-azimuth` is set
 
@@ -251,29 +247,29 @@ AVATARDEF
 
 ### What actually happens in Smokeview 6.10.x
 
-The substitution pipeline above does not fire. The `agent_arrow`
-AVATARDEF (which has a red directional marker in +X) makes this
-obvious: the marker stays rigidly in world +X for every agent and
-every frame, regardless of the per-particle AZIMUTH values in the
-PRT5. The AZIMUTH column *is* read — it appears on the particle
-colour menu with the correct 0–360° range — it just never reaches
-`$AZIMUTH rotatez`.
+The substitution pipeline above does not fire in current Smokeview
+— confirmed by Glenn Forney on
+[firemodels/smv#2597](https://github.com/firemodels/smv/issues/2597).
+The `agent_arrow` AVATARDEF (body sphere + red directional marker
+in local +X) makes this obvious: the marker stays rigidly in world
++X for every agent and every frame, regardless of the per-particle
+AZIMUTH values in the PRT5. The AZIMUTH column *is* read — it
+appears on the particle colour menu with the correct 0–360° range
+— it just never reaches `$AZIMUTH rotatez`.
 
-This is most likely the end of a longer migration: the historical
-FDS+Evac stack rotated avatars through a different path. Its
-`DUMP_EVAC` packed seven floats per particle into the XYZ Fortran
-record (`XYZ` + body-angle + three body-size columns), and
+The historical FDS+Evac stack rotated avatars through a different
+path: `DUMP_EVAC` packed seven floats per particle into the XYZ
+Fortran record (`XYZ` + body-angle + three body-size columns), and
 Smokeview parsed it via a dedicated `CLASS_OF_HUMANS` reader. Both
-ends have been removed (`grep -r CLASS_OF_HUMANS smv/Source`
-returns nothing; current FDS `dump.f90::DUMP_PART` writes the
-standard 3-float XYZ layout and `&EVAC` is gone). The
-`UpdatePartClassDepend` chain *looks* like a replacement path but
-doesn't actually drive the rotation in current releases.
+ends were removed when `&EVAC` left FDS (`grep -r CLASS_OF_HUMANS
+smv/Source` returns nothing; current FDS `dump.f90::DUMP_PART`
+writes the standard 3-float XYZ layout only). Getting per-particle
+rotation back would require adding AZIMUTH as an FDS particle
+quantity type — upstream work, not something the post-processor
+can do on its own.
 
-A forum thread with a minimal repro is drafted at
-`docs/smv-forum-post-draft.md` for upstream. Until that's resolved,
-treat per-particle avatar rotation as unsupported and leave
-`--smv-with-azimuth` off.
+Until then, treat per-particle avatar rotation as unsupported and
+leave `--smv-with-azimuth` off.
 
 ### The `fread_mv` playback bug (`--smv-with-azimuth` off by default)
 

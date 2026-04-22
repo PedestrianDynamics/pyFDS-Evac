@@ -426,11 +426,12 @@ In Smokeview: *Load → Particles → AGENTS* and scrub the timebar. Options:
   rotation (if present) visually obvious; `sphere` is a single
   plain sphere for debugging.
 - `--smv-with-azimuth` (off by default): write per-particle AZIMUTH
-  (deg) as a PRT5 quantity column. Currently disabled because of a
-  Smokeview 6.10.x bug that sticks playback on frame 0 whenever
-  the PRT5 has any quantity column; the quantity also does not
-  actually drive avatar rotation in current Smokeview. See
-  [`docs/smv-avatars.md`](docs/smv-avatars.md) for the trace.
+  (deg) as a PRT5 quantity column. Currently disabled because
+  per-particle avatar rotation is not supported by Smokeview
+  ([firemodels/smv#2597](https://github.com/firemodels/smv/issues/2597))
+  and because of a separate Smokeview 6.10.x bug that sticks
+  playback on frame 0 whenever the PRT5 has any quantity column.
+  See [`docs/smv-avatars.md`](docs/smv-avatars.md) for the trace.
 
 The patch to `.smv` is idempotent — re-running the exporter will not
 duplicate the block.

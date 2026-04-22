@@ -142,11 +142,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--smv-with-azimuth",
         action="store_true",
         help="Write per-particle AZIMUTH (deg) as a PRT5 quantity column. "
-        "Off by default — a Smokeview 6.10.x bug in CreatePartBoundFile "
-        "(fread_mv on file-backed streams) causes playback to stick on "
-        "frame 0 whenever numtypes > 0. The quantity is also not actually "
-        "consumed for avatar rotation in current Smokeview. Enable only "
-        "if you want the AZIMUTH colorbar entry and accept broken playback.",
+        "Off by default — per-particle avatar rotation is not supported "
+        "by current Smokeview (firemodels/smv#2597) and writing the "
+        "quantity also triggers a CreatePartBoundFile bug that sticks "
+        "playback on frame 0. Enable only if you want the AZIMUTH "
+        "colorbar entry and accept broken playback.",
     )
     parser.add_argument(
         "--vis-cache",
