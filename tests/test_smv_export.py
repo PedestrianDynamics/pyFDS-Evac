@@ -197,7 +197,12 @@ def test_patch_smv_basic(tmp_path: Path) -> None:
     text = smv.read_text()
     assert "PROP" in text
     assert " AGENTS_props" in text
+    assert " human_rotating" in text
     assert " human_fixed" in text
+    assert text.index(" human_rotating") < text.index(" human_fixed"), (
+        "human_rotating must be listed first so Smokeview picks it when the "
+        "case-local .svo provides it"
+    )
     assert "PRT5     1" in text
     assert " demo_agents.prt5" in text
     assert "CLASS_OF_PARTICLES" in text
@@ -284,6 +289,18 @@ def test_export_agents_to_smv_end_to_end(tmp_path: Path, tiny_df: pd.DataFrame) 
     assert prt5 == fds_dir / "demo_agents.prt5"
     assert prt5.exists()
     assert "PRT5     1" in smv.read_text()
+
+    svo = fds_dir / "demo.svo"
+    assert svo.exists(), (
+        "per-case .svo should be written so human_rotating is resolvable"
+    )
+    svo_text = svo.read_text()
+    assert "AVATARDEF" in svo_text
+    assert "human_rotating" in svo_text
+    assert ":AZIMUTH" in svo_text, "AVATARDEF header must declare :AZIMUTH as indep var"
+    assert "$AZIMUTH rotatez" in svo_text, (
+        "draw program must reference per-particle azimuth"
+    )
 
     data = _read_prt5(prt5)
     assert data["version"] == 600

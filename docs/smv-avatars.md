@@ -53,19 +53,29 @@ leg spheres. No external mesh asset. Other avatars available in the
 shipped `objects.svo` are `human_altered_with_data`, `ellipsoid`,
 `disk`, `fire_fighter`, and `fire_fighter_with_gear`.
 
-## How our SMV block binds the class to `human_fixed`
+## How our SMV block binds the class to an AVATARDEF
 
 `pyfds_evac/core/smv_export.py::patch_smv_file` appends two blocks
-to the `.smv`:
+to the `.smv`, and `write_case_svo` drops a custom AVATARDEF next to
+it in `<CHID>.svo`:
 
 ```text
 PROP
  Human_props
-  2
+  3
+ human_rotating
+ human_altered_with_data
  human_fixed
- ellipsoid
-  1
+  9
+ W=0.5
  D=0.2
+ H1=1.0
+ SX=3.0
+ SY=3.0
+ SZ=3.0
+ R=26
+ G=102
+ B=230
 
 CLASS_OF_PARTICLES
  Human % % Human_props
@@ -77,8 +87,44 @@ PRT5     1
       1
 ```
 
-Why this works, step by step, based on Smokeview's own parser in
-`Source/shared/readsmvfile.c`:
+Smokeview uses the **first** avatar name in the PROP list
+(`readsmvfile.c:6068` sets `propi->smv_object = propi->smv_objects[0]`
+unconditionally — the rest of the list is available from the menu
+but doesn't auto-fallback), so which one renders is determined by
+whichever `<CHID>.svo` / `objects.svo` happens to define it.
+
+`--smv-avatar-style` picks which custom AVATARDEF we emit to
+`<CHID>.svo`:
+
+- `human` (default) — a detailed humanoid modelled on stock
+  `human_fixed`: `90.0 rotatez` for facing direction and a
+  hardcoded `0.3 0.3 0.3 scalexyz` that yields a ~1.89 m figure.
+  The PROP-level `SX/SY/SZ` and `avatar_scale` argument are
+  passed through but **inert** for this style — they only matter
+  if the user switches to the `human_altered_with_data` fallback
+  via the Smokeview menu.
+- `arrow` — a body sphere plus a small red marker offset in the
+  avatar's local +X. Useful as a visual sanity check for the
+  per-particle rotation question (see "Orientation" below).
+- `sphere` — a single solid sphere, no facing direction, smallest
+  surface area for debugging size issues.
+
+All three declare `:AZIMUTH=0` in their header and reference
+`$AZIMUTH rotatez`, so they *would* rotate per particle if
+Smokeview's per-particle substitution pipeline was functional —
+see the "Orientation" section below for why this doesn't
+currently work in Smokeview 6.10.x.
+
+The `W=0.5, H1=1.0` PROP defaults are needed only by the
+`human_altered_with_data` fallback: its trunk sphere scales by
+`$W $D $H1 scalexyz`, and `W`/`H1` have no AVATARDEF-header
+default (only `:D=0.1` does), so without them the trunk
+collapses to zero size. `W`/`H1` mirror the FDS+Evac
+body-diameter and height-scale columns (`evac.f90 DUMP_EVAC`
+`AP(:,2)`, `AP(:,4)`).
+
+Why the PROP binding resolves in the first place, based on
+Smokeview's own parser in `Source/shared/readsmvfile.c`:
 
 1. Smokeview reads `CLASS_OF_PARTICLES`, then the next line, and splits
    it on `%` via `GetLabels(buffer, &device_ptr, &prop_id)`. For
@@ -119,14 +165,34 @@ Terminator
 ```
 
 This is the minimum Smokeview's `IOpart.c::ReadPart` needs. The Z
-coordinate is constant (`--smv-particle-z`, default 1.0 m) because
-the JuPedSim trajectory is 2-D.
+coordinate is constant (`--smv-particle-z`, default 0.0 m — the floor)
+because the JuPedSim trajectory is 2-D. The AVATARDEF draw program
+puts the avatar's feet near its local origin, so placing the particle
+at z=0 makes the figure stand on the floor; raising z makes it float.
 
-## Orientation: how avatars follow the walking direction
+## Orientation: per-particle rotation does not work in Smokeview 6.10.x
 
-We emit one quantity column per particle with the shortlabel
-`AZIMUTH`, computed as `atan2(ori_y, ori_x) · 180/π mod 360°` from
-the JuPedSim trajectory SQLite's `ori_x, ori_y` columns. The
+**Short version.** We can emit a per-particle `AZIMUTH` (deg)
+quantity into the PRT5, and the AVATARDEFs we write declare
+`:AZIMUTH=0` and reference `$AZIMUTH rotatez`. Smokeview's source
+tree contains a substitution pipeline (`UpdatePartClassDepend` →
+`vars_dep_index` → `fvars_dep`) that *should* feed per-particle
+quantity values into those tokens at render time. Empirically in
+`SMV-6.10.1-0-gfe486ab05-release` it doesn't — every avatar keeps
+facing the same direction regardless of the per-particle AZIMUTH
+value. Writing the quantity also triggers a separate
+`CreatePartBoundFile` bug that sticks playback on frame 0. So by
+default we emit the PRT5 with **no quantity column**
+(`--smv-with-azimuth` opts in), which keeps playback working at
+the cost of leaving the `$AZIMUTH rotatez` token at its default
+`0`. Net effect: agents render and move correctly but do not turn
+to face their direction of travel.
+
+### What the exporter writes when `--smv-with-azimuth` is set
+
+One quantity column per particle with shortlabel `AZIMUTH`, computed
+as `atan2(ori_y, ori_x) · 180/π mod 360°` from the JuPedSim
+trajectory SQLite's `ori_x, ori_y` columns. The
 `CLASS_OF_PARTICLES` block declares it:
 
 ```text
@@ -140,15 +206,92 @@ CLASS_OF_PARTICLES
 ...
 ```
 
-Smokeview's `CLASS_OF_PARTICLES` parser recognises the `AZIMUTH`
-shortlabel (`readsmvfile.c` L6314) and stores the column index in
-`partclassi->col_azimuth`. When rendering each particle it rotates
-the bound AVATARDEF by the per-particle azimuth so the figure faces
-the walking direction.
-
 The per-frame binary layout becomes XYZ record → tags record →
-one additional Fortran record of `N` float32 azimuths. The PRT5
+one additional Fortran record of `N` float32 azimuths; the PRT5
 header's `numtypes[2]` is `(1, 0)`.
+
+### What Smokeview should do with it (per the source)
+
+Smokeview binds a per-particle quantity column to an AVATARDEF
+variable by name. The chain lives in three files (trace it via
+`rg UpdatePartClassDepend`):
+
+1. `readsmv.c` (case-specific) / `readsmvfile.c` (shared) call
+   `UpdatePartClassDepend(partclassi)` after the second-pass
+   `CLASS_OF_PARTICLES` read.
+2. `readobject.c::UpdatePartClassDepend` walks the class's
+   quantity shortlabels (`partclassi->vars_dep[i]`) and looks
+   each one up in the bound AVATARDEF's token stream via
+   `GetObjectFrameTokenLoc(shortlabel, obj_frame)`. The result —
+   the token index for the matching `:VARNAME` indep variable —
+   goes into `partclassi->vars_dep_index[i]`.
+3. At render time `IOobjects.c` (around L4169–4173) copies the
+   per-particle float from `prop->fvars_dep[i]` into the token
+   slot at `vars_dep_index[i]`, which substitutes the `$VARNAME`
+   reference in the draw program.
+
+So the stock `human_fixed` / `human_altered_with_data` AVATARDEFs
+in `objects.svo` can't rotate per particle for one obvious reason:
+neither declares `:AZIMUTH` in its header nor references
+`$AZIMUTH rotatez` in its body. That's why we ship a custom
+`human_rotating` (and `agent_arrow`, `agent_sphere`) AVATARDEF in
+`<CHID>.svo` that *does* declare `:AZIMUTH=0` and use
+`$AZIMUTH rotatez`. Smokeview scans `<CHID>.svo` after the global
+`objects.svo` (`readobject.c` L1498, "last definition wins"), so
+no edit to the Smokeview install is needed:
+
+```text
+AVATARDEF
+ human_rotating
+ :DUM1 :DUM2 :DUM3 :W :D=0.1 :H1 :SX :SY :SZ :R=0 :G=0 :B=0 :HX :HY :HZ :AZIMUTH=0
+ $AZIMUTH rotatez
+ 90.0 rotatez
+ ...
+```
+
+### What actually happens in Smokeview 6.10.x
+
+The substitution pipeline above does not fire. The `agent_arrow`
+AVATARDEF (which has a red directional marker in +X) makes this
+obvious: the marker stays rigidly in world +X for every agent and
+every frame, regardless of the per-particle AZIMUTH values in the
+PRT5. The AZIMUTH column *is* read — it appears on the particle
+colour menu with the correct 0–360° range — it just never reaches
+`$AZIMUTH rotatez`.
+
+This is most likely the end of a longer migration: the historical
+FDS+Evac stack rotated avatars through a different path. Its
+`DUMP_EVAC` packed seven floats per particle into the XYZ Fortran
+record (`XYZ` + body-angle + three body-size columns), and
+Smokeview parsed it via a dedicated `CLASS_OF_HUMANS` reader. Both
+ends have been removed (`grep -r CLASS_OF_HUMANS smv/Source`
+returns nothing; current FDS `dump.f90::DUMP_PART` writes the
+standard 3-float XYZ layout and `&EVAC` is gone). The
+`UpdatePartClassDepend` chain *looks* like a replacement path but
+doesn't actually drive the rotation in current releases.
+
+A forum thread with a minimal repro is drafted at
+`docs/smv-forum-post-draft.md` for upstream. Until that's resolved,
+treat per-particle avatar rotation as unsupported and leave
+`--smv-with-azimuth` off.
+
+### The `fread_mv` playback bug (`--smv-with-azimuth` off by default)
+
+There is a second, independent bug in current Smokeview that
+forces us to keep the quantity column off by default:
+`smokeview/IOpart.c::CreatePartBoundFile` (L1019) uses
+`FORTREAD_mv` → `fread_mv` to read the per-particle quantity
+record when building the bounds cache. `fread_mv`
+(`shared/stdio_m.c:186`) immediately returns 0 when
+`stream_m->stream != NULL`, which is always the case for the
+stream `fopen_b(file, NULL, 0, "rb")` creates. So for any PRT5
+with `numtypes > 0` the bounds scanner gives up after the first
+frame, the resulting single-entry `.sz` collapses
+`parti->ntimes` to 1, and Smokeview's time axis never advances.
+The main particle loader (`GetPartData`, opened via
+`fopen_m(..., "rbm")`) doesn't have this problem — only the
+bounds/size cache does. With `numtypes = 0` (our default) the
+scanner skips the broken branch and walks the full file.
 
 ## What we still do not write
 
@@ -176,8 +319,9 @@ SMV block — a distinct keyword handled by a dedicated reader — and
 optional extra-quantity records with `COLOR_INDEX`, `FED_DOSE`,
 `SPEED`, `MOTIVE_ANGLE`, `DENSITY`, etc.
 
-Our exporter now emits `AZIMUTH` (orientation, above) but still stops
-short of:
+Our exporter can emit `AZIMUTH` (orientation, above) behind
+`--smv-with-azimuth`, but by default does not — see the "fread_mv
+playback bug" note above. It also still stops short of:
 
 - Per-agent body sizes. All avatars use the default `D=0.2` from the
   `PROP`; per-agent `HR%Radius` / `r_torso` / height are not wired up.
@@ -189,7 +333,8 @@ short of:
 
 Both would follow the same pattern as `AZIMUTH`: a shortlabel the
 CLASS_OF_PARTICLES parser recognises, plus one extra float per agent
-in the frame record.
+in the frame record — and would hit the same `fread_mv` bug until
+that's fixed upstream.
 
 ## Enabling avatar rendering via the case `.ini`
 

@@ -33,10 +33,17 @@ header of the form ``<name> % % <prop_id>`` (see `docs/smv-avatars.md`):
     PROP
      <prop_id>
       <n_svo_ids>
+     human_altered_with_data
      human_fixed
      ellipsoid
-      1
+      7
      D=0.2
+     SX=3.0
+     SY=3.0
+     SZ=3.0
+     R=26
+     G=102
+     B=230
 
     CLASS_OF_PARTICLES
      <class_name> % % <prop_id>
@@ -243,7 +250,119 @@ def _strip_existing_agent_blocks(
     return "\n".join(kept) + "\n"
 
 
-_DEFAULT_AVATARS = ("human_fixed", "ellipsoid")
+_DEFAULT_AVATARS = ("human_rotating", "human_altered_with_data", "human_fixed")
+_DEFAULT_AVATAR_SCALE = 3.0
+
+# Stock `human_*` AVATARDEFs in objects.svo use a fixed `90.0 rotatez` and
+# declare no :AZIMUTH indep variable, so per-particle AZIMUTH has no token to
+# substitute into (readobject.c::UpdatePartClassDepend → GetObjectFrameTokenLoc
+# returns -1, so IOobjects.c skips the fvars_dep write at L4172). We ship our
+# own AVATARDEF that declares `:AZIMUTH=0` and applies `$AZIMUTH rotatez` so
+# AZIMUTH = atan2(ori_y, ori_x) rotates the figure to face walking direction
+# (at AZIMUTH=0 the avatar faces +X, at 90° faces +Y).
+#
+# The draw program is modelled on `human_fixed` — vertices are in metres at
+# the avatar's local origin (feet on the ground), with a hardcoded `0.3` scale
+# that yields a ~1.89 m tall figure. We deliberately do NOT consume `:W :H1`
+# from PROP defaults, because the stock `human_altered_with_data` trunk
+# collapses to zero when those have no value and relies on `0.579` / `0.3`
+# nested scales that interact with FDS's world-coord normalisation in
+# IOpart.c (SCALE2SMV applied both at the particle translate and again at
+# DrawSmvObject entry) to produce an unintuitive size.
+#
+# Smokeview loads `<CHID>.svo` from the case directory alongside the global
+# `objects.svo` (readobject.c L1498, "last definition wins"), so shipping
+# the file next to the .smv is enough — no global install edit.
+_HUMAN_ROTATING_AVATARDEF = """\
+AVATARDEF
+ human_rotating
+ :DUM1 :DUM2 :DUM3 :W :D=0.1 :H1 :SX :SY :SZ :R=26 :G=102 :B=230 :HX :HY :HZ :AZIMUTH=0
+ $AZIMUTH rotatez
+ 90.0 rotatez
+ "TAN" setcolor
+ 0.3 0.3 0.3 scalexyz
+ push 0.0 0.0 5.2 translate 1.1 drawsphere
+   "BLUE" setcolor
+   push -0.25 -0.4 0.05 translate 0.2 drawsphere pop
+   push  0.25 -0.4 0.05 translate 0.2 drawsphere pop
+ pop
+ $R $G $B setrgb
+ push 0.0 0.0 3.55 translate 0.5 0.3 1.0 scalexyz 2.5 drawsphere pop
+ "TAN" setcolor
+ push -0.9 0.0 3.5 translate  35.0 rotatey 0.2  0.2  1.0 scalexyz 3.0 drawsphere pop
+ push  0.9 0.0 3.5 translate -35.0 rotatey 0.2  0.2  1.0 scalexyz 3.0 drawsphere pop
+ 39 64 139 setrgb
+ push -0.5 0.0 1.3 translate  30.0 rotatey 0.25 0.25 1.0 scalexyz 3.0 drawsphere pop
+ push  0.5 0.0 1.3 translate -30.0 rotatey 0.25 0.25 1.0 scalexyz 3.0 drawsphere pop
+"""
+
+# A minimal AVATARDEF that draws a single solid sphere at the particle
+# position — no rotation required, no compound scales. Useful when the
+# humanoid avatar renders at unexpected size and you want a sanity-check
+# shape. `scaleauto` applies `SCALE2FDS(x) = x * xyzmaxdiff`, which
+# exactly cancels the `SCALE2SMV(1.0)` that Smokeview multiplies in
+# at DrawSmvObject entry (IOpart.c L384), so after `1.0 scaleauto`
+# subsequent `drawsphere R` draws a sphere of radius R metres in world
+# coords, regardless of scene size.
+_SPHERE_AVATARDEF = """\
+AVATARDEF
+ agent_sphere
+ :R=26 :G=102 :B=230
+ $R $G $B setrgb
+ 1.0 scaleauto
+ 0.25 drawsphere
+"""
+
+# A directional "lollipop" — a body sphere plus a small red marker
+# translated toward the avatar's facing direction. AZIMUTH=0 places
+# the red marker at world +X; rotation should visibly swing it around
+# the body. `1.0 scaleauto` at the top brings the draw coord system
+# back to metres so translates and drawsphere radii are in metres.
+_ARROW_AVATARDEF = """\
+AVATARDEF
+ agent_arrow
+ :R=26 :G=102 :B=230 :AZIMUTH=0
+ $AZIMUTH rotatez
+ 1.0 scaleauto
+ $R $G $B setrgb
+ push 0.0 0.0 0.5 translate 0.25 drawsphere pop
+ 255 64 64 setrgb
+ push 0.5 0.0 0.5 translate 0.1 drawsphere pop
+"""
+
+_AVATAR_STYLES: dict[str, tuple[str, tuple[str, ...]]] = {
+    "human": (_HUMAN_ROTATING_AVATARDEF, _DEFAULT_AVATARS),
+    "sphere": (_SPHERE_AVATARDEF, ("agent_sphere",)),
+    "arrow": (_ARROW_AVATARDEF, ("agent_arrow",)),
+}
+
+
+def _resolve_avatar_style(style: str) -> tuple[str, tuple[str, ...]]:
+    if style not in _AVATAR_STYLES:
+        raise ValueError(
+            f"unknown avatar style {style!r}; choose from {sorted(_AVATAR_STYLES)}"
+        )
+    return _AVATAR_STYLES[style]
+
+
+def write_case_svo(svo_path: Path, *, avatar_style: str = "human") -> tuple[str, ...]:
+    """Write a `<CHID>.svo` containing the AVATARDEF for `avatar_style`.
+
+    Smokeview scans the case directory for `<fdsprefix>.svo` after loading
+    the global `objects.svo` and merges in any AVATARDEFs it finds, so this
+    file ships the custom avatar without touching the global install.
+    Overwrites any existing file of the same name. Returns the ordered
+    tuple of SVO avatar names for the PROP block so the caller can pass
+    the matching list to `patch_smv_file`.
+
+    `avatar_style` picks which AVATARDEF to emit:
+      - ``human``  — detailed humanoid (default; rotates with AZIMUTH)
+      - ``arrow``  — sphere + red directional marker (rotation obvious)
+      - ``sphere`` — single sphere (position-only sanity check)
+    """
+    body, svo_avatars = _resolve_avatar_style(avatar_style)
+    Path(svo_path).write_text(body, encoding="utf-8")
+    return svo_avatars
 
 
 def patch_smv_file(
@@ -256,6 +375,7 @@ def patch_smv_file(
     n_quantities: int = 0,
     prop_id: str | None = None,
     svo_avatars: tuple[str, ...] = _DEFAULT_AVATARS,
+    avatar_scale: float = _DEFAULT_AVATAR_SCALE,
 ) -> bool:
     """Append PROP + CLASS_OF_PARTICLES + PRT5 blocks to `smv_path`.
 
@@ -278,8 +398,33 @@ def patch_smv_file(
     existing = _strip_existing_agent_blocks(existing, prt5_rel, effective_prop_id)
 
     avatar_lines = "".join(f" {name}\n" for name in svo_avatars)
+    # `human_fixed` ignores :SX :SY :SZ (its draw program hardcodes a 0.3
+    # scale, rendering at ~1.89 m regardless). `human_altered_with_data`
+    # honours `$SX $SY $SZ scalexyz` — set PROP defaults so avatars render
+    # visibly large without per-particle size data. Its trunk sphere also
+    # scales by `$W $D $H1 scalexyz`; W and H1 have no AVATARDEF default so
+    # without explicit PROP values the trunk collapses to zero size, leaving
+    # only a tiny floating head. W/H1 mirror the FDS+Evac body-diameter and
+    # height-scale columns (evac.f90 DUMP_EVAC AP(:,2), AP(:,4)).
+    # R/G/B map the class colour (0–1) onto the AVATARDEF's 0–255
+    # `$R $G $B setrgb` trunk.
+    s = float(avatar_scale)
+    r255, g255, b255 = (int(round(c * 255)) for c in rgb)
+    indep_vars = (
+        ("W", 0.5),
+        ("D", 0.2),
+        ("H1", 1.0),
+        ("SX", s),
+        ("SY", s),
+        ("SZ", s),
+        ("R", r255),
+        ("G", g255),
+        ("B", b255),
+    )
+    indep_lines = "".join(f" {k}={v}\n" for k, v in indep_vars)
     prop_block = (
-        f"PROP\n {effective_prop_id}\n  {len(svo_avatars)}\n{avatar_lines}  1\n D=0.2\n"
+        f"PROP\n {effective_prop_id}\n  {len(svo_avatars)}\n{avatar_lines}"
+        f"  {len(indep_vars)}\n{indep_lines}"
     )
 
     # Smokeview's CLASS_OF_PARTICLES parser recognises the AZIMUTH
@@ -363,11 +508,33 @@ def export_agents_to_smv(
     fds_dir: str | Path,
     result: "ScenarioResult",
     *,
-    z: float = 1.0,
+    z: float = 0.0,
     class_id: str = "Human",
     rgb: tuple[float, float, float] = (0.1, 0.4, 0.9),
+    avatar_scale: float = _DEFAULT_AVATAR_SCALE,
+    avatar_style: str = "human",
+    with_azimuth: bool = False,
 ) -> Path:
     """Write `<CHID>_agents.prt5` next to the FDS output and patch `<CHID>.smv`.
+
+    `avatar_style` picks the SVO avatar shape written to `<CHID>.svo`:
+    ``human`` (default) draws the detailed humanoid; ``arrow`` draws a
+    body sphere plus a red directional marker (clear visual check that
+    per-particle AZIMUTH rotation is working); ``sphere`` draws a single
+    plain sphere (position-only sanity check when debugging size issues).
+
+    `with_azimuth` defaults to False because of a Smokeview 6.10.x bug
+    in `IOpart.c::CreatePartBoundFile` — `FORTREAD_mv` → `fread_mv` on a
+    file-backed stream (the one `fopen_b(file, NULL, 0, "rb")` creates)
+    always returns 0 when the PRT5 has `numtypes > 0`, which causes the
+    bounds scanner to quit after frame 0. The resulting single-entry
+    `.sz` cache collapses `parti->ntimes` to 1 and playback sticks on
+    frame 0. Until that's fixed in Smokeview (see
+    `docs/smv-forum-post-draft.md`), it is safer to emit PRT5 with
+    `numtypes=(0,0)`. The per-particle AZIMUTH quantity does not drive
+    avatar rotation in current Smokeview anyway (also covered in the
+    forum post), so the only thing the flag gains is a colorbar menu
+    entry — not worth breaking playback. Set to True to opt in.
 
     Returns the path of the written `.prt5` file.
     """
@@ -376,7 +543,10 @@ def export_agents_to_smv(
     chid = smv_path.stem
 
     df = result.trajectory_dataframe()
-    with_azimuth = {"ori_x", "ori_y"}.issubset(df.columns)
+    if with_azimuth and not {"ori_x", "ori_y"}.issubset(df.columns):
+        raise ValueError(
+            "with_azimuth=True requires ori_x/ori_y columns in the trajectory"
+        )
     prt5_path = fds_dir / f"{chid}_agents.prt5"
     write_agent_prt5(
         prt5_path,
@@ -385,12 +555,15 @@ def export_agents_to_smv(
         z=z,
         with_azimuth=with_azimuth,
     )
+    svo_avatars = write_case_svo(fds_dir / f"{chid}.svo", avatar_style=avatar_style)
     patch_smv_file(
         smv_path,
         prt5_path,
         class_id=class_id,
         rgb=rgb,
         n_quantities=1 if with_azimuth else 0,
+        avatar_scale=avatar_scale,
+        svo_avatars=svo_avatars,
     )
     patch_ini_for_avatars(fds_dir / f"{chid}.ini")
     return prt5_path

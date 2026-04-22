@@ -70,9 +70,11 @@ required species) no FED is computed and these flags have no effect.
 
 | Flag | Purpose |
 |------|---------|
-| `--smv-export` | Write `<CHID>_agents.prt5` + patch `<CHID>.smv`. Requires `--fds-dir`. Agents render as humanoid avatars (see [docs/smv-avatars.md](smv-avatars.md)). |
-| `--smv-particle-z M` | Agent height for the particle export (default 1.0). |
-| `--smv-class-id LABEL` | `CLASS_OF_PARTICLES` label (default `Human`). Bound to an AVATARDEF via a PROP block. |
+| `--smv-export` | Write `<CHID>_agents.prt5` + patch `<CHID>.smv` and drop a `<CHID>.svo` with our custom AVATARDEF. Requires `--fds-dir`. See [docs/smv-avatars.md](smv-avatars.md) for the mechanism. |
+| `--smv-particle-z M` | Agent height in metres for the particle export (default 0.0, so avatars stand on the floor). |
+| `--smv-class-id LABEL` | `CLASS_OF_PARTICLES` label (default `Human`). Bound to an AVATARDEF via the PROP block we write. |
+| `--smv-avatar-style {human,arrow,sphere}` | Which AVATARDEF we emit to `<CHID>.svo`. `human` (default) is a detailed humanoid. `arrow` is a body sphere plus a red directional marker — useful to sanity-check whether per-particle rotation is working. `sphere` is a single plain sphere for position-only rendering. |
+| `--smv-with-azimuth` | Write `AZIMUTH = atan2(ori_y, ori_x) mod 360` (deg) as a PRT5 quantity column. **Off by default**: current Smokeview (6.10.x) has a `CreatePartBoundFile` bug that sticks playback on frame 0 whenever `numtypes > 0`, and does not actually consume the quantity for avatar rotation anyway. Enable only if you want the AZIMUTH colorbar entry and accept broken playback. See `docs/smv-avatars.md` for the full trace. |
 
 ### Typical invocations
 

@@ -417,9 +417,20 @@ smokeview fds_data/demo/demo.smv
 
 In Smokeview: *Load → Particles → AGENTS* and scrub the timebar. Options:
 
-- `--smv-particle-z` (default `1.0`): constant agent height in meters.
+- `--smv-particle-z` (default `0.0`): constant agent height in meters (avatars stand on the floor).
 - `--smv-class-id` (default `AGENTS`): `CLASS_OF_PARTICLES` label in the
   `.smv`.
+- `--smv-avatar-style {human,arrow,sphere}` (default `human`):
+  which AVATARDEF to drop into `<CHID>.svo`. `arrow` shows a body
+  sphere with a red directional marker and makes per-particle
+  rotation (if present) visually obvious; `sphere` is a single
+  plain sphere for debugging.
+- `--smv-with-azimuth` (off by default): write per-particle AZIMUTH
+  (deg) as a PRT5 quantity column. Currently disabled because of a
+  Smokeview 6.10.x bug that sticks playback on frame 0 whenever
+  the PRT5 has any quantity column; the quantity also does not
+  actually drive avatar rotation in current Smokeview. See
+  [`docs/smv-avatars.md`](docs/smv-avatars.md) for the trace.
 
 The patch to `.smv` is idempotent — re-running the exporter will not
 duplicate the block.

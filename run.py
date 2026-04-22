@@ -117,8 +117,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--smv-particle-z",
         type=float,
-        default=1.0,
-        help="Constant agent height in meters for the .prt5 export (default: 1.0)",
+        default=0.0,
+        help="Constant agent height in meters for the .prt5 export (default: 0.0)",
     )
     parser.add_argument(
         "--smv-class-id",
@@ -126,6 +126,27 @@ def _build_parser() -> argparse.ArgumentParser:
         help="CLASS_OF_PARTICLES label written to the .smv. Bound to an "
         "AVATARDEF in objects.svo via a PROP block so Smokeview draws a "
         "humanoid figure (default: Human)",
+    )
+    parser.add_argument(
+        "--smv-avatar-style",
+        choices=("human", "arrow", "sphere"),
+        default="human",
+        help="Which AVATARDEF to write to <CHID>.svo. 'human' is the "
+        "detailed humanoid that rotates with the agent's orientation; "
+        "'arrow' is a sphere + red directional marker (makes per-particle "
+        "rotation obvious); 'sphere' is a single plain sphere — no "
+        "rotation, smallest surface area for sanity-checking size. "
+        "(default: human)",
+    )
+    parser.add_argument(
+        "--smv-with-azimuth",
+        action="store_true",
+        help="Write per-particle AZIMUTH (deg) as a PRT5 quantity column. "
+        "Off by default — a Smokeview 6.10.x bug in CreatePartBoundFile "
+        "(fread_mv on file-backed streams) causes playback to stick on "
+        "frame 0 whenever numtypes > 0. The quantity is also not actually "
+        "consumed for avatar rotation in current Smokeview. Enable only "
+        "if you want the AZIMUTH colorbar entry and accept broken playback.",
     )
     parser.add_argument(
         "--vis-cache",
@@ -452,6 +473,8 @@ def main() -> int:
             result,
             z=args.smv_particle_z,
             class_id=args.smv_class_id,
+            avatar_style=args.smv_avatar_style,
+            with_azimuth=args.smv_with_azimuth,
         )
         print(f"Wrote agent particles to {prt5_path}")
 
