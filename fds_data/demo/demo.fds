@@ -5,7 +5,7 @@
 ! Ceiling at 3 m
 &MESH IJK=120,52,12, XB=0,30,0,13,0,3 /
 
-&TIME T_END=600 /  ! was 300
+&TIME T_END=300 /  ! TODO was 600
 
 &DUMP DT_SLCF=1.0 /
 
@@ -31,20 +31,26 @@
 ! 2 m x 1 m burner on the floor, right where the branch meets the corridor.
 ! HRRPUA=50 kW/m^2 x 2 m^2 = 100 kW peak; ramp reaches full intensity at 120 s.
 &SURF ID='FIRE',
-      HRRPUA=1000,  ! was 50  -> 2 MW peak on a 2 m² burner
+      HRRPUA=400,  !TODO 1000 200 kW peak on a 2 m² burner (half of prior 400 kW)
       COLOR='RED',
       RAMP_Q='fire_ramp' /
 
-&RAMP ID='fire_ramp', T=  0, F=0.0 /
-&RAMP ID='fire_ramp', T= 60, F=1.0 /   ! was 0.5
-&RAMP ID='fire_ramp', T=120, F=1.0 /
-&RAMP ID='fire_ramp', T=300, F=1.0 /
+! Slow ramp so the smoke layer needs ~3-4 min to fill the corridor
+! rather than ~75 s; lets the agents entering later in the scenario
+! still have meaningful walking time before visibility collapses.
+&RAMP ID='fire_ramp', T=  0, F=0.00 /
+&RAMP ID='fire_ramp', T=30, F=0.00 /
+&RAMP ID='fire_ramp', T=60, F=0.10 /
+&RAMP ID='fire_ramp', T=90, F=0.30 /
+&RAMP ID='fire_ramp', T=120, F=0.50 /
+&RAMP ID='fire_ramp', T=200, F=1.00 /
+
 
 &VENT XB=24,26, 10.5,11.5, 0,0, SURF_ID='FIRE' /
 
-! --- Exit boundaries: A open, B closed (smoke accumulates on right side) ---
-&VENT XB= 0, 0, 10,13, 0,3, SURF_ID='OPEN' /    ! Exit A (left) - open
-! Exit B wall is default INERT - no VENT needed
+! --- Exit boundaries: A and B both open ---
+&VENT XB= 0, 0, 10,13, 0,3, SURF_ID='OPEN' /    ! Exit A (left)
+&VENT XB=30,30, 10,13, 0,3, SURF_ID='OPEN' /    ! Exit B (right)
 
 ! --- Slice outputs at head height (z = 2 m) ---
 ! Extinction (smoke-speed model)

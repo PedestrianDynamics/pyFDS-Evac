@@ -161,4 +161,20 @@ cython_debug/
 
 # Data
 fds_data
-processed_data.worktrees/
+processed_data
+
+# Local working artifacts
+.worktrees/
+results/
+*.zip
+*.s3d.sz
+*.~undo-tree~
+*vismap_cache.pkl
+*.smoke.json.gz
+
+# Top-level CSV outputs from demo runs
+/fed.csv
+/probe.csv
+/smoke.csv
+/routes.csv
+/route_costs.csv

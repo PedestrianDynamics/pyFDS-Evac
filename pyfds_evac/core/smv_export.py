@@ -556,6 +556,14 @@ def export_agents_to_smv(
             "with_azimuth=True requires ori_x/ori_y columns in the trajectory"
         )
     prt5_path = fds_dir / f"{chid}_agents.prt5"
+    # Drop any cached bounds/size files from a prior export before
+    # writing the new PRT5. Smokeview trusts these caches over the
+    # actual file contents: a stale .bnd from an export with a
+    # different numtypes or agent count makes GetPartData seek to
+    # wrong byte offsets, rendering agents at garbage positions.
+    for ext in (".bnd", ".sz"):
+        stale = prt5_path.with_suffix(prt5_path.suffix + ext)
+        stale.unlink(missing_ok=True)
     write_agent_prt5(
         prt5_path,
         df,
