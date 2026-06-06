@@ -283,11 +283,13 @@ async def post(request: Request):
     except Exception as exc:
         return Alert(f"{type(exc).__name__}: {exc}", cls=AlertT.error)
 
-    # Single live region: progress events update it, done/error replace it.
+    # Single live region: progress events update it, the terminal "done"
+    # event replaces it. sse-close stops HTMX reconnecting once finished.
     return Div(
-        Div(_running_card(None), id="run-status", sse_swap="progress,done,error"),
+        Div(_running_card(None), id="run-status", sse_swap="progress,done"),
         hx_ext="sse",
         sse_connect="/progress",
+        sse_close="done",
     )
 
 
@@ -346,23 +348,29 @@ def _finished_view() -> Div:
 
 @rt("/progress")
 async def progress():
+    # State-based and idempotent: reads manager status/last_event so any
+    # (re)connecting stream delivers the same terminal "done" event exactly
+    # once, then closes (no queue to race, no competing consumers).
     async def gen():
+        last = None
         while True:
-            item = manager.try_get()
-            if item is None:
-                await asyncio.sleep(0.1)
-                continue
-            kind, payload = item
-            if kind == "progress":
-                yield sse_message(_running_card(payload), event="progress")
-            elif kind == "done":
+            status = manager.status
+            if status == "done":
                 yield sse_message(_finished_view(), event="done")
-                break
-            elif kind == "error":
+                return
+            if status == "error":
                 yield sse_message(
-                    Alert(f"Run failed: {payload}", cls=AlertT.error), event="error"
+                    Alert(f"Run failed: {manager.error}", cls=AlertT.error),
+                    event="done",
                 )
-                break
+                return
+            if status == "idle":
+                return
+            ev = manager.last_event
+            if ev is not None and ev != last:
+                last = ev
+                yield sse_message(_running_card(ev), event="progress")
+            await asyncio.sleep(0.1)
 
     return EventStream(gen())
 
