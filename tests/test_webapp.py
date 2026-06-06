@@ -26,8 +26,16 @@ def test_index_renders_form(client):
 def test_browse_dir_lists_subfolders(client):
     r = client.get("/browse-dir")
     assert r.status_code == 200
-    assert "Select FDS directory" in r.text
+    assert "Select a folder" in r.text
     assert "assets" in r.text  # repo-root subfolders are listed
+
+
+def test_browse_dir_file_mode_lists_files(client):
+    # File mode (used by vis_cache) lists files as well as folders.
+    r = client.get("/browse-dir", params={"mode": "file", "field": "vis_cache"})
+    assert r.status_code == 200
+    assert "Select a file" in r.text
+    assert "pyproject.toml" in r.text  # a file at the repo root
 
 
 def test_browse_dir_clamps_outside_home(client):

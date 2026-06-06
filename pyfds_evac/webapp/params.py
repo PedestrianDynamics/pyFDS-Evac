@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import monsterui.all as mu
-from fasthtml.common import Option, P
+from fasthtml.common import Option
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -30,10 +30,8 @@ def _load_parser() -> argparse.ArgumentParser:
     return run._build_parser()
 
 
-# Display grouping keyed by argparse dest. Flags not listed fall into "Other".
-# The Output group holds CLI-oriented flags that the GUI does not apply (it
-# shows results as interactive plots instead of writing files); they are
-# rendered read-only so the full flag surface stays visible.
+# Display grouping keyed by argparse dest. Every rendered flag is applied by
+# the run; the Output group writes files to the given paths.
 FIELD_GROUPS: List[tuple[str, List[str]]] = [
     ("Core", ["scenario", "seed"]),
     (
@@ -61,26 +59,23 @@ FIELD_GROUPS: List[tuple[str, List[str]]] = [
             "smv_with_azimuth",
         ],
     ),
+    (
+        "Output files",
+        [
+            "output_sqlite",
+            "output_smoke_history",
+            "output_fed_history",
+            "output_route_history",
+            "output_route_cost_history",
+            "export_app_bundle",
+        ],
+    ),
 ]
 
-# Flags rendered read-only: the GUI run path does not act on them.
-_CLI_ONLY = {
-    "print_summary",
-    "output_sqlite",
-    "cleanup",
-    "export_app_bundle",
-    "export_only",
-    "inspect_fds",
-    "output_smoke_history",
-    "output_fed_history",
-    "output_route_history",
-    "output_route_cost_history",
-    "smv_export",
-    "smv_particle_z",
-    "smv_class_id",
-    "smv_avatar_style",
-    "smv_with_azimuth",
-}
+# CLI-only flags with no meaning in the GUI (console output or control flow):
+# not rendered. cleanup is excluded because the GUI keeps the trajectory
+# SQLite alive to draw plots.
+_HIDDEN = {"help", "print_summary", "export_only", "inspect_fds", "cleanup"}
 
 
 def _is_bool(action: argparse.Action) -> bool:
@@ -100,11 +95,24 @@ def _scenario_names() -> List[str]:
     return names
 
 
+def _browse_button(target_id: str, mode: str) -> Any:
+    """A Browse button that opens the directory/file picker for a field."""
+    label = "Browse folder…" if mode == "dir" else "Browse file…"
+    return mu.Button(
+        mu.UkIcon("folder" if mode == "dir" else "file"),
+        label,
+        type="button",
+        hx_get=f"/browse-dir?mode={mode}&field={target_id}",
+        hx_target="#dir-modal",
+        hx_swap="innerHTML",
+        cls=(mu.ButtonT.secondary, "btn-sm"),
+    )
+
+
 def _field(action: argparse.Action) -> Any:
     """Render one argparse action as a MonsterUI form control."""
     dest = action.dest
     label = dest.replace("_", " ")
-    disabled = dest in _CLI_ONLY
 
     if dest == "scenario":
         opts = [Option(n, value=n) for n in _scenario_names()]
@@ -112,42 +120,43 @@ def _field(action: argparse.Action) -> Any:
 
     if dest == "fds_dir":
         return mu.DivVStacked(
-            mu.LabelInput(label, id=dest, disabled=disabled),
-            mu.Button(
-                mu.UkIcon("folder"),
-                "Browse…",
-                type="button",
-                hx_get="/browse-dir",
-                hx_target="#dir-modal",
-                hx_swap="innerHTML",
-                cls=(mu.ButtonT.secondary, "btn-sm"),
-            ),
+            mu.LabelInput(label, id=dest),
+            _browse_button("fds_dir", "dir"),
+            cls="space-y-1",
+        )
+
+    if dest == "vis_cache":
+        return mu.DivVStacked(
+            mu.LabelInput(label, id=dest),
+            _browse_button("vis_cache", "file"),
             cls="space-y-1",
         )
 
     if _is_bool(action):
-        return mu.LabelSwitch(label, id=dest, disabled=disabled)
+        return mu.LabelSwitch(label, id=dest)
 
     if action.type in (int, float):
         step = "1" if action.type is int else "any"
         value = "" if action.default is None else str(action.default)
-        return mu.LabelInput(
-            label, id=dest, type="number", step=step, value=value, disabled=disabled
-        )
+        return mu.LabelInput(label, id=dest, type="number", step=step, value=value)
 
     value = "" if action.default is None else str(action.default)
-    return mu.LabelInput(label, id=dest, value=value, disabled=disabled)
+    return mu.LabelInput(label, id=dest, value=value)
 
 
 def build_form(post_url: str) -> Any:
     """Build the sidebar parameter form posting to ``post_url``."""
     parser = _load_parser()
-    by_dest = {a.dest: a for a in parser._actions if a.dest != "help"}
+    by_dest = {
+        a.dest: a for a in parser._actions if a.dest not in _HIDDEN and a.option_strings
+    }
 
     grouped = set()
     sections = []
     for title, dests in FIELD_GROUPS:
         fields = [_field(by_dest[d]) for d in dests if d in by_dest]
+        if not fields:
+            continue
         grouped.update(dests)
         sections.append(
             mu.AccordionItem(
@@ -155,23 +164,10 @@ def build_form(post_url: str) -> Any:
             )
         )
 
-    other = [
-        _field(a) for d, a in by_dest.items() if d not in grouped and a.option_strings
-    ]
+    other = [_field(a) for d, a in by_dest.items() if d not in grouped]
     if other:
         sections.append(
-            mu.AccordionItem(
-                "Output / CLI-only",
-                mu.DivVStacked(
-                    P(
-                        "Shown for completeness; the GUI presents results as plots "
-                        "rather than acting on these flags.",
-                        cls=mu.TextPresets.muted_sm,
-                    ),
-                    *other,
-                    cls="space-y-3 mt-2",
-                ),
-            )
+            mu.AccordionItem("Other", mu.DivVStacked(*other, cls="space-y-3 mt-2"))
         )
 
     return mu.Form(

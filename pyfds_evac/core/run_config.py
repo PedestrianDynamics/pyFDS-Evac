@@ -111,6 +111,8 @@ def _validate_opts(opts: Any) -> None:
         raise ValueError("--vis-cache requires --fds-dir")
     if opts.vis_cache and not opts.enable_rerouting:
         raise ValueError("--vis-cache requires --enable-rerouting")
+    if getattr(opts, "smv_export", False) and not opts.fds_dir:
+        raise ValueError("--smv-export requires --fds-dir")
 
 
 def _build_vis_model(scenario: Any, opts: Any, log: Logger):

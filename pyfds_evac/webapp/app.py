@@ -99,47 +99,75 @@ def _safe_dir(path: str) -> Path:
     return resolved if resolved.is_dir() else _DIR_ROOT
 
 
-def _dir_row(label: str, target: Path):
+_CLOSE_MODAL = "document.getElementById('dir-modal').innerHTML=''"
+
+
+def _nav_row(label: str, target: Path, mode: str, field: str):
+    """A folder row that navigates the picker into ``target``."""
+    href = f"/browse-dir?path={quote(str(target))}&mode={mode}&field={field}"
     return Button(
         UkIcon("folder"),
         label,
         type="button",
-        hx_get=f"/browse-dir?path={quote(str(target))}",
+        hx_get=href,
         hx_target="#dir-modal",
         hx_swap="innerHTML",
         cls=(ButtonT.ghost, "w-full justify-start"),
     )
 
 
+def _file_row(target: Path, field: str):
+    """A file row that selects ``target`` into ``field`` and closes the modal."""
+    pick = f"document.getElementById({json.dumps(field)}).value={json.dumps(str(target))};{_CLOSE_MODAL}"
+    return Button(
+        UkIcon("file"),
+        target.name,
+        type="button",
+        onclick=pick,
+        cls=(ButtonT.ghost, "w-full justify-start"),
+    )
+
+
 @rt("/browse-dir")
-def browse_dir(path: str = ""):
+def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
     current = _safe_dir(path)
     try:
-        subdirs = sorted(
-            (d for d in current.iterdir() if d.is_dir() and not d.name.startswith(".")),
-            key=lambda p: p.name.lower(),
-        )
+        entries = list(current.iterdir())
     except (PermissionError, OSError):
-        subdirs = []
+        entries = []
+    subdirs = sorted(
+        (e for e in entries if e.is_dir() and not e.name.startswith(".")),
+        key=lambda p: p.name.lower(),
+    )
 
     rows = []
     if current != _DIR_ROOT:
-        rows.append(_dir_row("..", current.parent))
-    rows.extend(_dir_row(d.name, d) for d in subdirs)
+        rows.append(_nav_row("..", current.parent, mode, field))
+    rows.extend(_nav_row(d.name, d, mode, field) for d in subdirs)
+    if mode == "file":
+        files = sorted(
+            (e for e in entries if e.is_file() and not e.name.startswith(".")),
+            key=lambda p: p.name.lower(),
+        )
+        rows.extend(_file_row(f, field) for f in files)
     if not rows:
-        rows.append(P("No sub-folders.", cls="text-sm text-muted-foreground p-2"))
+        rows.append(P("Empty folder.", cls="text-sm text-muted-foreground p-2"))
 
-    close = "document.getElementById('dir-modal').innerHTML=''"
-    use = f"document.getElementById('fds_dir').value={json.dumps(str(current))};{close}"
+    title = "Select a folder" if mode == "dir" else "Select a file"
+    footer = [
+        Button("Cancel", type="button", onclick=_CLOSE_MODAL, cls=ButtonT.secondary)
+    ]
+    if mode == "dir":
+        use = f"document.getElementById({json.dumps(field)}).value={json.dumps(str(current))};{_CLOSE_MODAL}"
+        footer.append(
+            Button("Use this folder", type="button", onclick=use, cls=ButtonT.primary)
+        )
+
     dialog = Card(
-        H3("Select FDS directory"),
+        H3(title),
         P(str(current), cls="text-sm text-muted-foreground break-all mb-2"),
         Div(*rows, cls="max-h-72 overflow-auto my-2 divide-y rounded border"),
-        DivFullySpaced(
-            Button("Cancel", type="button", onclick=close, cls=ButtonT.secondary),
-            Button("Use this folder", type="button", onclick=use, cls=ButtonT.primary),
-            cls="mt-3",
-        ),
+        DivFullySpaced(*footer, cls="mt-3"),
         cls="w-[36rem] max-w-[90vw]",
     )
     return Div(
@@ -159,40 +187,39 @@ async def post(request: Request):
         scenario = load_scenario(f"assets/{scenario_name}")
         opts = params.form_to_opts(form)
         run_kwargs = build_run_kwargs(scenario, opts)
-        manager.start(scenario, run_kwargs, scenario_name)
+        import run as cli  # shared CLI helpers (apply_outputs)
+
+        def post_run(result):
+            return cli.apply_outputs(result, scenario, opts, log=lambda _m: None)
+
+        manager.start(scenario, run_kwargs, scenario_name, post_run=post_run)
     except Exception as exc:
         return Alert(f"{type(exc).__name__}: {exc}", cls=AlertT.error)
 
+    # Single live region: progress events update it, done/error replace it.
     return Div(
-        Card(
-            DivVStacked(
-                H3(f"Running: {scenario_name}"),
-                Div(
-                    Loading(cls=LoadingT.dots),
-                    P("Initialising…", cls="inline ml-2"),
-                    id="prog",
-                    sse_swap="progress",
-                ),
-            ),
-        ),
-        Div(id="results", sse_swap="done,error"),
+        Div(_running_card(None), id="run-status", sse_swap="progress,done,error"),
         hx_ext="sse",
         sse_connect="/progress",
     )
 
 
-def _progress_line(ev) -> Div:
-    return Div(
-        Loading(cls=LoadingT.dots),
-        P(
-            f"evacuated {ev.evacuated}/{ev.total} · "
-            f"sim {ev.sim_time:.1f}s · wall {ev.wall_time:.0f}s · {ev.pct}%",
-            cls="inline ml-2",
-        ),
+def _running_card(ev) -> Div:
+    line = (
+        f"evacuated {ev.evacuated}/{ev.total} · sim {ev.sim_time:.1f}s · "
+        f"wall {ev.wall_time:.0f}s · {ev.pct}%"
+        if ev
+        else "Initialising…"
+    )
+    return Card(
+        DivVStacked(
+            H3(f"Running: {manager.scenario_name}"),
+            Div(Loading(cls=LoadingT.dots), P(line, cls="inline ml-2")),
+        )
     )
 
 
-def _results_view() -> Div:
+def _finished_view() -> Div:
     result = manager.result
     scenario = None
     try:
@@ -200,30 +227,33 @@ def _results_view() -> Div:
     except Exception:
         pass
 
-    m = result.metrics
-    metrics = Card(
-        H3("Metrics"),
-        DivVStacked(
-            P(f"Success: {m.get('success')}"),
-            P(f"Evacuation time: {result.evacuation_time:.1f} s"),
-            P(f"Evacuated: {result.agents_evacuated}/{result.total_agents}"),
-            P(f"Remaining: {result.agents_remaining}"),
-            cls="space-y-1",
-        ),
+    status = "finished" if result.agents_remaining == 0 else "stopped"
+    rows = [
+        P(f"Status: {status} ({result.metrics.get('success')})"),
+        P(f"Evacuation time: {result.evacuation_time:.1f} s"),
+        P(f"Evacuated: {result.agents_evacuated}/{result.total_agents}"),
+        P(f"Remaining: {result.agents_remaining}"),
+    ]
+    if manager.artifacts:
+        rows.append(P("Artifacts written:", cls="font-semibold mt-2"))
+        rows.extend(P(a, cls="text-sm break-all") for a in manager.artifacts)
+    summary = Card(
+        H3(f"Finished: {manager.scenario_name}"),
+        DivVStacked(*rows, cls="space-y-1"),
     )
 
     def plot_card(title, fig, div_id):
         return Card(H3(title), plots.figure_html(fig, div_id))
 
     return Div(
-        metrics,
+        summary,
         plot_card(
             "Trajectories", plots.trajectories_figure(result, scenario), "fig-traj"
         ),
         plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
         plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
         plot_card("Route cost", plots.route_cost_figure(result), "fig-route"),
-        cls="space-y-6 mt-4",
+        cls="space-y-6",
     )
 
 
@@ -237,9 +267,9 @@ async def progress():
                 continue
             kind, payload = item
             if kind == "progress":
-                yield sse_message(_progress_line(payload), event="progress")
+                yield sse_message(_running_card(payload), event="progress")
             elif kind == "done":
-                yield sse_message(_results_view(), event="done")
+                yield sse_message(_finished_view(), event="done")
                 break
             elif kind == "error":
                 yield sse_message(

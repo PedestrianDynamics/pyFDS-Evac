@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import queue
 import threading
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from pyfds_evac.core import ScenarioResult, run_scenario
 
@@ -25,15 +25,25 @@ class RunManager:
         self.result: Optional[ScenarioResult] = None
         self.error: Optional[str] = None
         self.scenario_name: Optional[str] = None
+        self.artifacts: List[str] = []
 
     @property
     def running(self) -> bool:
         return self.status == "running"
 
     def start(
-        self, scenario: Any, run_kwargs: Dict[str, Any], scenario_name: str
+        self,
+        scenario: Any,
+        run_kwargs: Dict[str, Any],
+        scenario_name: str,
+        post_run: Optional[Callable[[ScenarioResult], List[str]]] = None,
     ) -> None:
-        """Start a run on a background thread. Raises if one is already active."""
+        """Start a run on a background thread. Raises if one is already active.
+
+        ``post_run`` runs in the worker after the simulation and before the
+        ``done`` event; its returned strings (e.g. written output files) are
+        stored on ``self.artifacts``.
+        """
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("A run is already in progress.")
 
@@ -42,6 +52,7 @@ class RunManager:
         self.result = None
         self.error = None
         self.scenario_name = scenario_name
+        self.artifacts = []
 
         def worker() -> None:
             try:
@@ -51,6 +62,8 @@ class RunManager:
                     **run_kwargs,
                 )
                 self.result = result
+                if post_run is not None:
+                    self.artifacts = post_run(result)
                 self.status = "done"
                 self._queue.put(("done", result))
             except Exception as exc:  # surface any run failure to the UI

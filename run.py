@@ -340,40 +340,62 @@ def main() -> int:
             f"{result.agents_remaining} remaining)."
         )
 
-    if args.output_smoke_history and result.smoke_history is not None:
-        _write_smoke_history_csv(result.smoke_history, args.output_smoke_history)
-    if args.output_fed_history and result.fed_history is not None:
-        _write_fed_history_csv(result.fed_history, args.output_fed_history)
-    if args.output_route_history and result.route_history is not None:
-        _write_route_history_csv(result.route_history, args.output_route_history)
-        print(f"Route switches: {len(result.route_history)}")
-    if args.output_route_cost_history and result.route_cost_history is not None:
-        _write_route_cost_history_csv(
-            result.route_cost_history,
-            args.output_route_cost_history,
-        )
-        print(f"Route cost samples: {len(result.route_cost_history)}")
+    apply_outputs(result, scenario, args, log=print)
+    return 0
 
-    if args.output_sqlite and result.sqlite_file:
-        output_path = pathlib.Path(args.output_sqlite).resolve()
+
+def apply_outputs(result, scenario, opts, log=print) -> list[str]:
+    """Write the output/export artifacts requested by ``opts``.
+
+    Shared by the CLI and the web GUI so both honor the same flags. Returns a
+    list of human-readable descriptions of the artifacts written. ``cleanup``
+    is applied last, after any sqlite copy.
+    """
+    artifacts: list[str] = []
+
+    if getattr(opts, "export_app_bundle", None):
+        _export_app_bundle(scenario, opts.export_app_bundle)
+        artifacts.append(f"App bundle: {opts.export_app_bundle}")
+
+    if opts.output_smoke_history and result.smoke_history is not None:
+        _write_smoke_history_csv(result.smoke_history, opts.output_smoke_history)
+        artifacts.append(f"Smoke history CSV: {opts.output_smoke_history}")
+    if opts.output_fed_history and result.fed_history is not None:
+        _write_fed_history_csv(result.fed_history, opts.output_fed_history)
+        artifacts.append(f"FED history CSV: {opts.output_fed_history}")
+    if opts.output_route_history and result.route_history is not None:
+        _write_route_history_csv(result.route_history, opts.output_route_history)
+        artifacts.append(f"Route history CSV: {opts.output_route_history}")
+        log(f"Route switches: {len(result.route_history)}")
+    if opts.output_route_cost_history and result.route_cost_history is not None:
+        _write_route_cost_history_csv(
+            result.route_cost_history, opts.output_route_cost_history
+        )
+        artifacts.append(f"Route cost CSV: {opts.output_route_cost_history}")
+        log(f"Route cost samples: {len(result.route_cost_history)}")
+
+    if opts.output_sqlite and result.sqlite_file:
+        output_path = pathlib.Path(opts.output_sqlite).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(result.sqlite_file, output_path)
+        artifacts.append(f"Trajectory SQLite: {output_path}")
 
-    if args.smv_export:
+    if opts.smv_export:
         prt5_path = export_agents_to_smv(
-            pathlib.Path(args.fds_dir),
+            pathlib.Path(opts.fds_dir),
             result,
-            z=args.smv_particle_z,
-            class_id=args.smv_class_id,
-            avatar_style=args.smv_avatar_style,
-            with_azimuth=args.smv_with_azimuth,
+            z=opts.smv_particle_z,
+            class_id=opts.smv_class_id,
+            avatar_style=opts.smv_avatar_style,
+            with_azimuth=opts.smv_with_azimuth,
         )
-        print(f"Wrote agent particles to {prt5_path}")
+        artifacts.append(f"SMV particles: {prt5_path}")
+        log(f"Wrote agent particles to {prt5_path}")
 
-    if args.cleanup:
+    if getattr(opts, "cleanup", False):
         result.cleanup()
 
-    return 0
+    return artifacts
 
 
 if __name__ == "__main__":
