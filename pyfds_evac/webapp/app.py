@@ -13,11 +13,13 @@ from pathlib import Path
 from urllib.parse import quote
 
 from fasthtml.common import (
+    B,
     Div,
     EventStream,
+    I,
     P,
     Script,
-    Titled,
+    Title,
     fast_app,
     serve,
     sse_message,
@@ -44,7 +46,7 @@ from starlette.requests import Request
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.run_config import build_run_kwargs
 
-from . import params, plots
+from . import params, plots, theme
 from .runner import RunManager
 
 _PLOTLY_CDN = Script(src="https://cdn.plot.ly/plotly-2.35.2.min.js")
@@ -52,23 +54,64 @@ _PLOTLY_CDN = Script(src="https://cdn.plot.ly/plotly-2.35.2.min.js")
 # (hx-ext="sse") is separate and must be loaded explicitly.
 _HTMX_SSE = Script(src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js")
 
-app, rt = fast_app(hdrs=(*Theme.blue.headers(), _HTMX_SSE, _PLOTLY_CDN))
+# Theme headers load after franken-ui's so the override variables win.
+app, rt = fast_app(
+    hdrs=(*Theme.blue.headers(), *theme.headers(), _HTMX_SSE, _PLOTLY_CDN)
+)
 manager = RunManager()
+
+_TIERS = [
+    ("safe", "Safe"),
+    ("alert", "Alert"),
+    ("critical", "Critical"),
+    ("severe", "Severe"),
+]
+
+
+def _header() -> Div:
+    legend = Div(
+        *[Div(I(cls="sw"), label, cls=f"tier {name}") for name, label in _TIERS],
+        cls="tier-legend",
+    )
+    return Div(
+        Div(
+            Div(
+                Div("pyFDS", B("·EVAC"), cls="brand"),
+                Div(I(cls="dot"), "ready", cls="status"),
+                cls="brand-line",
+            ),
+            Div("fire-coupled evacuation · FDS × JuPedSim × ISO 13571", cls="tagline"),
+        ),
+        legend,
+        cls="app-header rise",
+    )
 
 
 def _sidebar() -> Div:
     return Card(
-        Subtitle("Parameters"),
+        Subtitle("Parameters", cls="uk-card-title"),
         params.build_form("/run"),
-        cls="lg:col-span-1",
+        cls="lg:col-span-1 rise",
+        style="animation-delay:.06s",
     )
 
 
 def _run_panel_idle() -> Div:
     return Div(
-        P("Configure parameters and run a scenario.", cls="text-muted-foreground"),
+        Card(
+            Div(
+                Div(I(cls="dot"), "Standby", cls="standby-label"),
+                P(
+                    "Select a scenario and run to stream live telemetry, "
+                    "then explore trajectories, FED dose, smoke and route cost.",
+                    cls="standby-hint",
+                ),
+                cls="standby",
+            ),
+        ),
         id="run-panel",
-        cls="lg:col-span-2",
+        cls="lg:col-span-2 rise",
+        style="animation-delay:.12s",
     )
 
 
@@ -118,8 +161,9 @@ def index():
         cls="grid grid-cols-1 lg:grid-cols-3 gap-6",
     )
     # Empty overlay container that the directory browser swaps into.
-    return Titled(
-        "pyFDS-Evac",
+    return (
+        Title("pyFDS-Evac · control"),
+        _header(),
         Container(body, cls=ContainerT.xl),
         Div(id="dir-modal"),
         Script(_AUTOFILL_JS),
