@@ -20,6 +20,24 @@ def test_index_renders_form(client):
     assert r.status_code == 200
     assert "/run" in r.text
     assert "ISO-table21" in r.text  # scenario picker populated from assets/
+    assert 'id="dir-modal"' in r.text  # directory-browser overlay container
+
+
+def test_browse_dir_lists_subfolders(client):
+    r = client.get("/browse-dir")
+    assert r.status_code == 200
+    assert "Select FDS directory" in r.text
+    assert "assets" in r.text  # repo-root subfolders are listed
+
+
+def test_browse_dir_clamps_outside_home(client):
+    # A path outside the home tree must clamp back to the home root.
+    from pathlib import Path
+
+    r = client.get("/browse-dir", params={"path": "/etc"})
+    assert r.status_code == 200
+    assert str(Path.home()) in r.text
+    assert ">/etc<" not in r.text
 
 
 def test_run_without_scenario_shows_error(client):

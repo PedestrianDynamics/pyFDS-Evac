@@ -8,6 +8,9 @@ Plotly results. Runs execute in-process on a background thread via RunManager.
 from __future__ import annotations
 
 import asyncio
+import json
+from pathlib import Path
+from urllib.parse import quote
 
 from fasthtml.common import (
     Div,
@@ -22,15 +25,19 @@ from fasthtml.common import (
 from monsterui.all import (
     Alert,
     AlertT,
+    Button,
+    ButtonT,
     Card,
     Container,
     ContainerT,
+    DivFullySpaced,
     DivVStacked,
     H3,
     Loading,
     LoadingT,
     Subtitle,
     Theme,
+    UkIcon,
 )
 from starlette.requests import Request
 
@@ -72,7 +79,73 @@ def index():
         _run_panel_idle(),
         cls="grid grid-cols-1 lg:grid-cols-3 gap-6",
     )
-    return Titled("pyFDS-Evac", Container(body, cls=ContainerT.xl))
+    # Empty overlay container that the directory browser swaps into.
+    return Titled("pyFDS-Evac", Container(body, cls=ContainerT.xl), Div(id="dir-modal"))
+
+
+# Directory browser confined to the user's home tree (a localhost dev tool).
+_DIR_ROOT = Path.home()
+
+
+def _safe_dir(path: str) -> Path:
+    """Resolve a requested path, clamped to the home tree; default = repo root."""
+    candidate = Path(path) if path else params._REPO_ROOT
+    try:
+        resolved = candidate.resolve()
+    except Exception:
+        return _DIR_ROOT
+    if resolved != _DIR_ROOT and _DIR_ROOT not in resolved.parents:
+        return _DIR_ROOT
+    return resolved if resolved.is_dir() else _DIR_ROOT
+
+
+def _dir_row(label: str, target: Path):
+    return Button(
+        UkIcon("folder"),
+        label,
+        type="button",
+        hx_get=f"/browse-dir?path={quote(str(target))}",
+        hx_target="#dir-modal",
+        hx_swap="innerHTML",
+        cls=(ButtonT.ghost, "w-full justify-start"),
+    )
+
+
+@rt("/browse-dir")
+def browse_dir(path: str = ""):
+    current = _safe_dir(path)
+    try:
+        subdirs = sorted(
+            (d for d in current.iterdir() if d.is_dir() and not d.name.startswith(".")),
+            key=lambda p: p.name.lower(),
+        )
+    except (PermissionError, OSError):
+        subdirs = []
+
+    rows = []
+    if current != _DIR_ROOT:
+        rows.append(_dir_row("..", current.parent))
+    rows.extend(_dir_row(d.name, d) for d in subdirs)
+    if not rows:
+        rows.append(P("No sub-folders.", cls="text-sm text-muted-foreground p-2"))
+
+    close = "document.getElementById('dir-modal').innerHTML=''"
+    use = f"document.getElementById('fds_dir').value={json.dumps(str(current))};{close}"
+    dialog = Card(
+        H3("Select FDS directory"),
+        P(str(current), cls="text-sm text-muted-foreground break-all mb-2"),
+        Div(*rows, cls="max-h-72 overflow-auto my-2 divide-y rounded border"),
+        DivFullySpaced(
+            Button("Cancel", type="button", onclick=close, cls=ButtonT.secondary),
+            Button("Use this folder", type="button", onclick=use, cls=ButtonT.primary),
+            cls="mt-3",
+        ),
+        cls="w-[36rem] max-w-[90vw]",
+    )
+    return Div(
+        dialog,
+        cls="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4",
+    )
 
 
 @rt("/run")

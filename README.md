@@ -44,9 +44,10 @@ runs a simulation and produces every plot in one go.
 
 A [FastHTML](https://fastht.ml/) + [MonsterUI](https://monsterui.answer.ai/)
 web GUI exposes the same model behind a form: pick a scenario, set any
-`run.py` flag, run it, watch live progress, and explore the results as
-interactive [Plotly](https://plotly.com/python/) charts (trajectories
-coloured by exit, cumulative FED, smoke, and route cost).
+`run.py` flag (the `fds dir` field has a folder browser), run it, watch
+live progress, and explore the results as interactive
+[Plotly](https://plotly.com/python/) charts (trajectories coloured by
+exit, cumulative FED, smoke, and route cost).
 
 Install the optional GUI dependencies and launch:
 

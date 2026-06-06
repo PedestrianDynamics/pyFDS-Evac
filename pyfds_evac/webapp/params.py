@@ -110,6 +110,21 @@ def _field(action: argparse.Action) -> Any:
         opts = [Option(n, value=n) for n in _scenario_names()]
         return mu.LabelSelect(*opts, label="scenario", id="scenario")
 
+    if dest == "fds_dir":
+        return mu.DivVStacked(
+            mu.LabelInput(label, id=dest, disabled=disabled),
+            mu.Button(
+                mu.UkIcon("folder"),
+                "Browse…",
+                type="button",
+                hx_get="/browse-dir",
+                hx_target="#dir-modal",
+                hx_swap="innerHTML",
+                cls=(mu.ButtonT.secondary, "btn-sm"),
+            ),
+            cls="space-y-1",
+        )
+
     if _is_bool(action):
         return mu.LabelSwitch(label, id=dest, disabled=disabled)
 
