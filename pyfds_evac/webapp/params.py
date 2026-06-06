@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import monsterui.all as mu
-from fasthtml.common import Option
+from fasthtml.common import Option, Span
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -109,16 +109,38 @@ def _browse_button(target_id: str, mode: str) -> Any:
     )
 
 
+def _help_badge(action: argparse.Action) -> Any:
+    """A '?' badge whose hover tooltip shows the flag's help text."""
+    text = (action.help or "").strip()
+    if not text or text == "show this help message and exit":
+        return None
+    # Help text rides in the native `title` attribute (safe for any
+    # characters); uk-tooltip only carries options, so it can't be broken by
+    # colons/semicolons in the help string. title is also the no-JS fallback.
+    return Span(
+        "?",
+        cls="help-badge",
+        title=text,
+        **{"uk-tooltip": "pos: right; delay: 80"},
+    )
+
+
+def _label(text: str, action: argparse.Action) -> Any:
+    """Label text plus an optional help badge, for a MonsterUI Label* control."""
+    badge = _help_badge(action)
+    return Span(text, badge, cls="lbl-help") if badge else text
+
+
 def _field(action: argparse.Action) -> Any:
     """Render one argparse action as a MonsterUI form control."""
     dest = action.dest
-    label = dest.replace("_", " ")
+    label = _label(dest.replace("_", " "), action)
 
     if dest == "scenario":
         names = _scenario_names()
         default = "demo" if "demo" in names else (names[0] if names else None)
         opts = [Option(n, value=n, selected=(n == default)) for n in names]
-        return mu.LabelSelect(*opts, label="scenario", id="scenario")
+        return mu.LabelSelect(*opts, label=label, id="scenario")
 
     if dest == "seed":
         # Default to a fixed seed so runs are reproducible out of the box.

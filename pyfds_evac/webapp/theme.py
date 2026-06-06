@@ -113,6 +113,20 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 }
 .uk-input, .uk-select, input { font-family: var(--font-mono); }
 .uk-input { font-size: .82rem; background: hsl(48 36% 98%); }
+
+/* inline help badge next to a field label */
+.lbl-help { display: inline-flex; align-items: center; }
+.help-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; margin-left: .45rem; border-radius: 99px;
+  border: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground));
+  font-size: .58rem; font-weight: 700; line-height: 1; cursor: help;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.help-badge:hover {
+  color: var(--clay); border-color: hsl(var(--primary) / .6);
+  background: hsl(var(--accent) / .6);
+}
 .uk-input::placeholder { color: hsl(var(--muted-foreground) / .6); }
 ::selection { background: hsl(16 52% 58% / .22); color: hsl(var(--foreground)); }
 
