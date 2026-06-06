@@ -40,6 +40,28 @@ See [docs/usage.md](docs/usage.md) for the full catalogue of CLI flags,
 post-processing scripts, and the `scripts/run_and_plot.sh` driver that
 runs a simulation and produces every plot in one go.
 
+## Web GUI
+
+A [FastHTML](https://fastht.ml/) + [MonsterUI](https://monsterui.answer.ai/)
+web GUI exposes the same model behind a form: pick a scenario, set any
+`run.py` flag, run it, watch live progress, and explore the results as
+interactive [Plotly](https://plotly.com/python/) charts (trajectories
+coloured by exit, cumulative FED, smoke, and route cost).
+
+Install the optional GUI dependencies and launch:
+
+```bash
+uv sync --extra gui
+uv run app.py
+```
+
+Then open <http://localhost:5001>. The GUI calls the same
+`run_scenario()` as the CLI (via the shared
+`pyfds_evac.core.run_config.build_run_kwargs` option builder), so a run
+configured in the browser is identical to the equivalent `run.py`
+invocation. Runs execute on a background thread and stream progress over
+Server-Sent Events; one run is active at a time.
+
 ## Smoke-speed model
 
 See [docs/smoke-speed-model.md](docs/smoke-speed-model.md) for the full

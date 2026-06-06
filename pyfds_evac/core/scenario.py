@@ -25,7 +25,7 @@ import sqlite3
 import tempfile
 from dataclasses import dataclass, field
 from types import SimpleNamespace
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 try:
     import jupedsim as jps
@@ -776,6 +776,26 @@ class Scenario:
         self.stages[checkpoint_id]["waiting_time"] = waiting_time
 
 
+@dataclass(frozen=True)
+class ProgressEvent:
+    """A single progress sample emitted while a scenario runs.
+
+    ``evacuated``/``total`` are agent counts, ``sim_time`` is the simulated
+    clock in seconds, ``wall_time`` is real elapsed seconds since the run
+    started, and ``pct`` is the integer evacuation percentage.
+    """
+
+    evacuated: int
+    total: int
+    sim_time: float
+    wall_time: float
+    pct: int
+
+
+# Called for each progress sample when supplied to ``run_scenario``.
+ProgressCallback = Callable[[ProgressEvent], None]
+
+
 @dataclass
 class ScenarioResult:
     """Results from running a scenario."""
@@ -974,8 +994,14 @@ def run_scenario(
     reroute_config: Optional[RerouteConfig] = None,
     collect_route_cost_history: bool = False,
     vis_model=None,
+    progress_callback: Optional[ProgressCallback] = None,
 ) -> ScenarioResult:
-    """Run a scenario with the same shared setup/runtime semantics as the web app."""
+    """Run a scenario with the same shared setup/runtime semantics as the web app.
+
+    When ``progress_callback`` is supplied it receives a :class:`ProgressEvent`
+    at the same throttled cadence as the stdout progress line. The default
+    ``None`` leaves runtime behavior unchanged.
+    """
     _require_jupedsim()
     from .simulation_init import (
         _find_nearest_exit,
@@ -1138,6 +1164,16 @@ def run_scenario(
                     end="",
                     flush=True,
                 )
+                if progress_callback is not None:
+                    progress_callback(
+                        ProgressEvent(
+                            evacuated=evacuated_agents,
+                            total=total_progress_agents,
+                            sim_time=current_time,
+                            wall_time=wall_elapsed,
+                            pct=pct,
+                        )
+                    )
                 last_progress_time = current_time
                 last_progress_agents = current_agents
             if has_flow_spawning:

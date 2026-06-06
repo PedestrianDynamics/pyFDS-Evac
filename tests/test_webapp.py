@@ -1,0 +1,99 @@
+"""End-to-end tests for the FastHTML web GUI via Starlette's TestClient."""
+
+import pytest
+
+pytest.importorskip("fasthtml")
+pytest.importorskip("monsterui")
+
+from starlette.testclient import TestClient  # noqa: E402
+
+from pyfds_evac.webapp.app import app, manager  # noqa: E402
+
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+
+def test_index_renders_form(client):
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "/run" in r.text
+    assert "ISO-table21" in r.text  # scenario picker populated from assets/
+
+
+def test_run_without_scenario_shows_error(client):
+    r = client.post("/run", data={})
+    assert r.status_code == 200
+    assert "Select a scenario first" in r.text
+
+
+def test_invalid_option_combo_shows_error(client):
+    # --vis-cache requires --enable-rerouting; build_run_kwargs must reject it.
+    r = client.post(
+        "/run",
+        data={"scenario": "ISO-table21", "vis_cache": "x.pkl", "fds_dir": "fds_data"},
+    )
+    assert r.status_code == 200
+    assert "enable-rerouting" in r.text
+
+
+def _stream_until_terminal(client, max_lines=2000):
+    events = []
+    with client.stream("GET", "/progress") as s:
+        for i, line in enumerate(s.iter_lines()):
+            if line.startswith("event:"):
+                events.append(line.split(":", 1)[1].strip())
+                if events[-1] in ("done", "error"):
+                    break
+            if i > max_lines:
+                break
+    return events
+
+
+def test_full_run_streams_progress_and_completes(client):
+    r = client.post("/run", data={"scenario": "ISO-table21", "seed": "420"})
+    assert r.status_code == 200
+    assert 'sse-connect="/progress"' in r.text or "sse_connect" in r.text
+
+    events = _stream_until_terminal(client)
+    assert "progress" in events
+    assert events[-1] == "done"
+    assert manager.status == "done"
+    assert manager.result is not None
+    assert manager.result.total_agents >= 1
+    if manager.result.sqlite_file:
+        manager.result.cleanup()
+
+
+def test_second_run_rejected_while_active(client):
+    # Hold the lock by faking an active run, then ensure start() refuses.
+    from pyfds_evac.core import load_scenario
+    from pyfds_evac.core.run_config import build_run_kwargs
+    from argparse import Namespace
+
+    scenario = load_scenario("assets/ISO-table21")
+    opts = Namespace(
+        seed=420,
+        fds_dir=None,
+        constant_extinction=None,
+        smoke_update_interval=1.0,
+        smoke_slice_height=2.0,
+        enable_rerouting=False,
+        reroute_interval=1.0,
+        vis_cache=None,
+        disable_tenability=False,
+        fic_alpha=1.2,
+        fic_min_factor=0.0,
+        fed_threshold=1.0,
+        output_route_cost_history=None,
+        collect_route_cost_history=True,
+    )
+    kwargs = build_run_kwargs(scenario, opts)
+    manager.start(scenario, kwargs, "ISO-table21")
+    with pytest.raises(RuntimeError):
+        manager.start(scenario, kwargs, "ISO-table21")
+    # Drain to completion so the lock releases for other tests.
+    _stream_until_terminal(client)
+    if manager.result and manager.result.sqlite_file:
+        manager.result.cleanup()

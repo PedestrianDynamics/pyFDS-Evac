@@ -119,6 +119,9 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+# FastHTML session signing key (web GUI)
+.sesskey
+
 # Environments
 .env
 .venv
@@ -178,3 +181,4 @@ results/
 /smoke.csv
 /routes.csv
 /route_costs.csv
+.gstack/

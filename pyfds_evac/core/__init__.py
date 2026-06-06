@@ -25,7 +25,13 @@ from .route_graph import (
     StageGraph,
     integrated_extinction_along_los,
 )
-from .scenario import Scenario, ScenarioResult, load_scenario, run_scenario
+from .scenario import (
+    ProgressEvent,
+    Scenario,
+    ScenarioResult,
+    load_scenario,
+    run_scenario,
+)
 from .smv_export import export_agents_to_smv
 from .visibility import VisibilityModel
 from .smoke_speed import (
@@ -50,6 +56,7 @@ __all__ = [
     "FdsFedField",
     "FdsQuantityInventory",
     "FedComponents",
+    "ProgressEvent",
     "Scenario",
     "ScenarioResult",
     "SmokeSpeedConfig",

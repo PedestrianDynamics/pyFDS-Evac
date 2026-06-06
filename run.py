@@ -7,22 +7,12 @@ import pathlib
 import shutil
 
 from pyfds_evac.core import (
-    ConstantExtinctionField,
-    DefaultFedConfig,
-    DefaultFedModel,
-    ExtinctionField,
-    FdsFedField,
-    RerouteConfig,
-    RouteCostConfig,
-    SmokeSpeedConfig,
-    SmokeSpeedModel,
-    TenabilityConfig,
     export_agents_to_smv,
     inspect_fds_quantities,
     load_scenario,
     run_scenario,
 )
-from pyfds_evac.core.visibility import VisibilityModel, extract_sign_descriptors
+from pyfds_evac.core.run_config import build_run_kwargs
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -332,110 +322,12 @@ def main() -> int:
         print(json.dumps(inventory.__dict__, indent=2, sort_keys=True))
         return 0
 
-    smoke_speed_model = None
-    fed_model = None
-    if args.fds_dir or args.constant_extinction is not None:
-        print("Configuring smoke calculation.")
-        smoke_config = SmokeSpeedConfig(
-            fds_dir=args.fds_dir or ".",
-            update_interval_s=args.smoke_update_interval,
-            slice_height_m=args.smoke_slice_height,
-        )
-        if args.constant_extinction is not None:
-            field = ConstantExtinctionField(args.constant_extinction)
-        elif args.fds_dir:
-            field = ExtinctionField.from_fds(
-                smoke_config.fds_dir,
-                slice_height_m=smoke_config.slice_height_m,
-            )
-        else:
-            field = None
-        if field is not None:
-            smoke_speed_model = SmokeSpeedModel(
-                field,
-                smoke_config,
-            )
-    if args.fds_dir:
-        inventory = inspect_fds_quantities(args.fds_dir)
-        if inventory.supports_default_fed():
-            print("Configuring FED calculation.")
-            fed_config = DefaultFedConfig(
-                fds_dir=args.fds_dir,
-                update_interval_s=args.smoke_update_interval,
-                slice_height_m=args.smoke_slice_height,
-            )
-            fed_model = DefaultFedModel(FdsFedField.from_fds(args.fds_dir), fed_config)
-    reroute_config = None
-    if args.enable_rerouting:
-        routing_params = scenario.raw.get("routing", {})
-        cost_config = RouteCostConfig(
-            w_smoke=routing_params.get("w_smoke", 1.0),
-            w_fed=routing_params.get("w_fed", 10.0),
-            w_queue=routing_params.get("w_queue", 1.0),
-            fed_rejection_threshold=routing_params.get("fed_rejection_threshold", 1.0),
-            visibility_extinction_threshold=routing_params.get(
-                "visibility_extinction_threshold", 0.5
-            ),
-            sampling_step_m=routing_params.get("sampling_step_m", 2.0),
-            base_speed_m_per_s=routing_params.get("base_speed_m_per_s", 1.3),
-            alpha=routing_params.get("alpha", 0.706),
-            beta=routing_params.get("beta", -0.057),
-            min_speed_factor=routing_params.get("min_speed_factor", 0.1),
-            default_exit_capacity=routing_params.get("default_exit_capacity", 1.3),
-        )
-        print("Configuring rerouting.")
-        reroute_config = RerouteConfig(
-            reevaluation_interval_s=args.reroute_interval,
-            cost_config=cost_config,
-        )
-
-    vis_model = None
-    if args.vis_cache:
-        if not args.fds_dir:
-            raise ValueError("--vis-cache requires --fds-dir")
-        if not args.enable_rerouting:
-            raise ValueError("--vis-cache requires --enable-rerouting")
-        sign_descriptors = extract_sign_descriptors(scenario.raw)
-        if sign_descriptors:
-            print(f"Configuring visibility model ({len(sign_descriptors)} sign(s)).")
-            vis_model = VisibilityModel(
-                fds_dir=args.fds_dir,
-                sign_descriptors=sign_descriptors,
-                cache_path=args.vis_cache,
-                time_step_s=args.reroute_interval,
-                slice_height_m=args.smoke_slice_height,
-            )
-        else:
-            print("Warning: --vis-cache set but no sign descriptors found in config.")
-
-    tenability_config = None
-    if fed_model is not None and not args.disable_tenability:
-        tenability_config = TenabilityConfig(
-            enable_fic_speed=True,
-            fic_alpha=args.fic_alpha,
-            fic_min_factor=args.fic_min_factor,
-            enable_incapacitation=True,
-            fed_threshold=args.fed_threshold,
-        )
-        print(
-            "Configuring tenability "
-            f"(FIC alpha={args.fic_alpha}, min={args.fic_min_factor}, "
-            f"FED threshold={args.fed_threshold})."
-        )
+    run_kwargs = build_run_kwargs(scenario, args, log=print)
 
     print("Initialization finished.")
     print("Simulation started.")
 
-    result = run_scenario(
-        scenario,
-        seed=args.seed,
-        smoke_speed_model=smoke_speed_model,
-        fed_model=fed_model,
-        tenability_config=tenability_config,
-        reroute_config=reroute_config,
-        collect_route_cost_history=bool(args.output_route_cost_history),
-        vis_model=vis_model,
-    )
+    result = run_scenario(scenario, **run_kwargs)
     if result.agents_remaining == 0:
         print(
             f"Simulation finished in {result.evacuation_time:.2f} s "

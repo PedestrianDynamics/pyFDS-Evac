@@ -28,6 +28,12 @@ dependencies = [
     "numpy>=1.26.4",
 ]
 
+[project.optional-dependencies]
+gui = [
+    "python-fasthtml",
+    "monsterui",
+]
+
 [project.urls]
 Homepage = "https://github.com/PedestrianDynamics/pyFDS-Evac"
 Repository = "https://github.com/PedestrianDynamics/pyFDS-Evac"
