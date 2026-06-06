@@ -336,18 +336,26 @@ def _finished_view() -> Div:
         pass
 
     status = "finished" if result.agents_remaining == 0 else "stopped"
-    rows = [
-        P(f"Status: {status} ({result.metrics.get('success')})"),
-        P(f"Evacuation time: {result.evacuation_time:.1f} s"),
-        P(f"Evacuated: {result.agents_evacuated}/{result.total_agents}"),
-        P(f"Remaining: {result.agents_remaining}"),
+    metrics = [
+        ("Status", f"{status} ({result.metrics.get('success')})"),
+        ("Evacuation time", f"{result.evacuation_time:.1f} s"),
+        ("Evacuated", f"{result.agents_evacuated}/{result.total_agents}"),
+        ("Remaining", f"{result.agents_remaining}"),
     ]
+    grid = Div(
+        *[
+            Div(Div(k, cls="metric-k"), Div(v, cls="metric-v"), cls="metric-cell")
+            for k, v in metrics
+        ],
+        cls="metrics-grid",
+    )
+    body = [grid]
     if manager.artifacts:
-        rows.append(P("Artifacts written:", cls="font-semibold mt-2"))
-        rows.extend(P(a, cls="text-sm break-all") for a in manager.artifacts)
+        body.append(Div("Artifacts written", cls="metric-k mt-3 mb-1"))
+        body.extend(Div(a, cls="artifact") for a in manager.artifacts)
     summary = Card(
         H3(f"Finished: {manager.scenario_name}"),
-        DivVStacked(*rows, cls="space-y-1"),
+        Div(*body, cls="mt-1"),
     )
 
     def plot_card(title, fig, div_id):

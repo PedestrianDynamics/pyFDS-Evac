@@ -220,6 +220,26 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 .report-line { font-family: var(--font-mono); font-size: .82rem; }
 .report-line b { color: var(--clay); }
 
+/* finished report: left-aligned, two-column metric grid */
+.metrics-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1.6rem; margin-top: .4rem;
+}
+.metric-cell {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; padding: .32rem 0; border-bottom: 1px dashed hsl(var(--border));
+}
+.metric-k {
+  font-family: var(--font-mono); color: hsl(var(--muted-foreground));
+  text-transform: uppercase; font-size: .6rem; letter-spacing: .12em;
+}
+.metric-v { font-family: var(--font-mono); font-size: .85rem; font-weight: 600; }
+.artifact {
+  font-family: var(--font-mono); font-size: .68rem; line-height: 1.75;
+  color: hsl(var(--muted-foreground)); word-break: break-all;
+}
+@media (max-width: 640px) { .metrics-grid { grid-template-columns: 1fr; } }
+
 /* ---- streaming console (warm-dark inset terminal) ---- */
 .console-box {
   max-height: 20rem; overflow: auto;

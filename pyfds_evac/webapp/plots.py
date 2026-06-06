@@ -160,41 +160,57 @@ def trajectories_figure(result: Any, scenario: Any) -> go.Figure:
             )
         )
 
-    # ── Animated playback: agent dots over time (downsampled = cheap) ──
-    agent_color = {
-        aid: color_of.get(agent_exit.get(aid, ""), "#cc785c")
-        for aid in data["id"].unique()
-    }
+    # ── Animated playback: agent dots over time ──
+    # A FIXED agent array (NaN where an agent is not present) keeps marker
+    # indices aligned across frames so Plotly can tween positions smoothly;
+    # ~120 frames keeps motion fine-grained but the payload light (only x/y
+    # change per frame — colour lives on the base trace).
     frames_all = sorted(data["frame"].unique())
     dot_idx = len(fig.data)
     fps = float(getattr(traj, "frame_rate", 0) or 1.0)
 
-    def _dots(frame_no) -> go.Scatter:
-        d = data[data["frame"] == frame_no]
-        return go.Scatter(
-            x=list(d["x"]),
-            y=list(d["y"]),
-            mode="markers",
-            marker=dict(
-                size=7,
-                color=[agent_color[i] for i in d["id"]],
-                line=dict(width=0.5, color="rgba(20,20,19,0.35)"),
-            ),
-            name="agents",
-            hoverinfo="skip",
-        )
-
     if len(frames_all) >= 2:
-        step = max(1, len(frames_all) // 40)
+        agent_ids = sorted(int(a) for a in data["id"].unique())
+        colors = [color_of.get(agent_exit.get(a, ""), "#cc785c") for a in agent_ids]
+        nan = float("nan")
+        by_frame = {f: g for f, g in data.groupby("frame")}
+
+        def _xy(frame_no):
+            sub = by_frame[frame_no]
+            pos = {int(i): (x, y) for i, x, y in zip(sub["id"], sub["x"], sub["y"])}
+            xs = [pos.get(a, (nan, nan))[0] for a in agent_ids]
+            ys = [pos.get(a, (nan, nan))[1] for a in agent_ids]
+            return xs, ys
+
+        step = max(1, len(frames_all) // 120)
         sampled = frames_all[::step]
-        fig.add_trace(_dots(sampled[0]))
+        x0, y0 = _xy(sampled[0])
+        fig.add_trace(
+            go.Scatter(
+                x=x0,
+                y=y0,
+                mode="markers",
+                marker=dict(
+                    size=7,
+                    color=colors,
+                    line=dict(width=0.5, color="rgba(20,20,19,0.35)"),
+                ),
+                name="agents",
+                hoverinfo="skip",
+            )
+        )
         fig.frames = [
-            go.Frame(data=[_dots(f)], name=str(f), traces=[dot_idx]) for f in sampled
+            go.Frame(
+                data=[go.Scatter(x=_xy(f)[0], y=_xy(f)[1])],
+                name=str(f),
+                traces=[dot_idx],
+            )
+            for f in sampled
         ]
         play = dict(
-            frame=dict(duration=120, redraw=True),
+            frame=dict(duration=60, redraw=False),
             fromcurrent=True,
-            transition=dict(duration=0),
+            transition=dict(duration=60, easing="linear"),
         )
         fig.update_layout(
             updatemenus=[
@@ -232,7 +248,11 @@ def trajectories_figure(result: Any, scenario: Any) -> go.Figure:
                             method="animate",
                             args=[
                                 [str(f)],
-                                dict(mode="immediate", frame=dict(duration=0)),
+                                dict(
+                                    mode="immediate",
+                                    frame=dict(duration=0, redraw=False),
+                                    transition=dict(duration=0),
+                                ),
                             ],
                         )
                         for f in sampled
