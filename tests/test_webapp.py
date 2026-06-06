@@ -21,6 +21,8 @@ def test_index_renders_form(client):
     assert "/run" in r.text
     assert "ISO-table21" in r.text  # scenario picker populated from assets/
     assert 'id="dir-modal"' in r.text  # directory-browser overlay container
+    assert "output_route_cost_history" in r.text  # output fields rendered
+    assert "_smoke_history.csv" in r.text  # scenario-name autofill script present
 
 
 def test_browse_dir_lists_subfolders(client):

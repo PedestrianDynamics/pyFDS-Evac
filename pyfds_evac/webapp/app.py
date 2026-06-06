@@ -72,6 +72,44 @@ def _run_panel_idle() -> Div:
     )
 
 
+# Derive Output-file defaults from the selected scenario name. Fields the user
+# has edited (data-user-edited) are left untouched; changing the scenario
+# refills the rest. Runs client-side so paths are visible and editable.
+_AUTOFILL_JS = """
+(function () {
+  var OUT = {
+    output_sqlite: function (n) { return n + '.sqlite'; },
+    output_smoke_history: function (n) { return n + '_smoke_history.csv'; },
+    output_fed_history: function (n) { return n + '_fed_history.csv'; },
+    output_route_history: function (n) { return n + '_route_history.csv'; },
+    output_route_cost_history: function (n) { return n + '_route_cost_history.csv'; }
+  };
+  function scenarioName() {
+    var inp = document.querySelector('input[name="scenario"]');
+    var sel = document.querySelector('#scenario select');
+    return (inp && inp.value) || (sel && sel.value) || '';
+  }
+  function fill(n) {
+    Object.keys(OUT).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && !el.dataset.userEdited) el.value = n ? OUT[id](n) : '';
+    });
+  }
+  // Poll the scenario value: robust regardless of how the select widget
+  // reports changes. Refills only when the scenario actually changes.
+  var last = null;
+  setInterval(function () {
+    var n = scenarioName();
+    if (n !== last) { last = n; fill(n); }
+  }, 250);
+  // Stop auto-filling a field once the user edits it.
+  document.addEventListener('input', function (e) {
+    if (e.target && OUT[e.target.id]) e.target.dataset.userEdited = '1';
+  });
+})();
+"""
+
+
 @rt("/")
 def index():
     body = Div(
@@ -80,7 +118,12 @@ def index():
         cls="grid grid-cols-1 lg:grid-cols-3 gap-6",
     )
     # Empty overlay container that the directory browser swaps into.
-    return Titled("pyFDS-Evac", Container(body, cls=ContainerT.xl), Div(id="dir-modal"))
+    return Titled(
+        "pyFDS-Evac",
+        Container(body, cls=ContainerT.xl),
+        Div(id="dir-modal"),
+        Script(_AUTOFILL_JS),
+    )
 
 
 # Directory browser confined to the user's home tree (a localhost dev tool).
