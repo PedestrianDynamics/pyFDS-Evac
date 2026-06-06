@@ -16,31 +16,33 @@ import pandas as pd
 import plotly.graph_objects as go
 from fasthtml.common import NotStr
 
+# Qualitative exit palette led by clay, tuned to read on the cream ground.
 _PALETTE = [
-    "#2563eb",
-    "#f97316",
-    "#16a34a",
-    "#dc2626",
-    "#9333ea",
-    "#0891b2",
-    "#ca8a04",
-    "#db2777",
+    "#cc785c",
+    "#3f8f57",
+    "#3b6fb0",
+    "#d19a2e",
+    "#7e5b9a",
+    "#2e8b8b",
+    "#c23b2e",
+    "#9a6a3a",
 ]
 
 
-_GRID = "rgba(232,228,218,0.07)"
-_ZERO = "rgba(232,228,218,0.16)"
-_FG = "#cfcabf"
+_GRID = "rgba(20,20,19,0.06)"
+_ZERO = "rgba(20,20,19,0.14)"
+_FG = "#4a473f"
 
 
 def figure_html(fig: go.Figure, div_id: str) -> Any:
     """Embed a Plotly figure as an HTML fragment (no bundled Plotly.js).
 
-    Applies the Thermal Control Room dark template so charts match the GUI.
+    Applies the Warm Paper Lab light template so charts match the GUI's cream
+    ground (transparent background, warm ink, hue-shifted grid).
     """
     fig.update_layout(
         margin=dict(l=52, r=22, t=30, b=46),
-        template="plotly_dark",
+        template="plotly_white",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="IBM Plex Mono, ui-monospace, monospace", color=_FG, size=12),
@@ -98,8 +100,8 @@ def trajectories_figure(result: Any, scenario: Any) -> go.Figure:
                 y=list(wy),
                 fill="toself",
                 mode="lines",
-                line=dict(color="#cbd5e1", width=1),
-                fillcolor="rgba(241,245,249,0.6)",
+                line=dict(color="#c9bfa6", width=1),
+                fillcolor="rgba(20,20,19,0.035)",
                 name="walkable",
                 hoverinfo="skip",
                 showlegend=False,
@@ -150,7 +152,7 @@ def trajectories_figure(result: Any, scenario: Any) -> go.Figure:
                 line=dict(
                     color=color_of.get(exit_id, _PALETTE[i % len(_PALETTE)]), width=2
                 ),
-                fillcolor="rgba(37,99,235,0.15)",
+                fillcolor="rgba(204,120,92,0.16)",
                 name=f"{exit_id.replace('_', ' ')} (exit)",
                 hoverinfo="skip",
             )
@@ -180,11 +182,11 @@ def fed_figure(result: Any) -> go.Figure:
     fig.add_hline(
         y=0.3,
         line_dash="dot",
-        line_color="#f97316",
+        line_color="#d2722b",
         annotation_text="incapacitation (0.3)",
     )
     fig.add_hline(
-        y=1.0, line_dash="dot", line_color="#dc2626", annotation_text="untenable (1.0)"
+        y=1.0, line_dash="dot", line_color="#c23b2e", annotation_text="untenable (1.0)"
     )
     fig.update_layout(xaxis_title="time (s)", yaxis_title="cumulative FED")
     return fig
