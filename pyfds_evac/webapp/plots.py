@@ -125,14 +125,16 @@ def trajectories_figure(result: Any, scenario: Any) -> go.Figure:
 
     for exit_id, g in groups.items():
         # SVG Scatter (not Scattergl) so trajectories render without WebGL.
+        # Faint: the moving dots are the focus, the paths are context.
         fig.add_trace(
             go.Scatter(
                 x=g["x"],
                 y=g["y"],
                 mode="lines",
-                line=dict(color=color_of.get(exit_id, "#94a3b8"), width=1),
+                line=dict(color=color_of.get(exit_id, "#b9b09a"), width=1),
                 name=exit_id.replace("_", " "),
-                opacity=0.6,
+                opacity=0.28,
+                hoverinfo="skip",
             )
         )
 
@@ -156,6 +158,87 @@ def trajectories_figure(result: Any, scenario: Any) -> go.Figure:
                 name=f"{exit_id.replace('_', ' ')} (exit)",
                 hoverinfo="skip",
             )
+        )
+
+    # ── Animated playback: agent dots over time (downsampled = cheap) ──
+    agent_color = {
+        aid: color_of.get(agent_exit.get(aid, ""), "#cc785c")
+        for aid in data["id"].unique()
+    }
+    frames_all = sorted(data["frame"].unique())
+    dot_idx = len(fig.data)
+    fps = float(getattr(traj, "frame_rate", 0) or 1.0)
+
+    def _dots(frame_no) -> go.Scatter:
+        d = data[data["frame"] == frame_no]
+        return go.Scatter(
+            x=list(d["x"]),
+            y=list(d["y"]),
+            mode="markers",
+            marker=dict(
+                size=7,
+                color=[agent_color[i] for i in d["id"]],
+                line=dict(width=0.5, color="rgba(20,20,19,0.35)"),
+            ),
+            name="agents",
+            hoverinfo="skip",
+        )
+
+    if len(frames_all) >= 2:
+        step = max(1, len(frames_all) // 40)
+        sampled = frames_all[::step]
+        fig.add_trace(_dots(sampled[0]))
+        fig.frames = [
+            go.Frame(data=[_dots(f)], name=str(f), traces=[dot_idx]) for f in sampled
+        ]
+        play = dict(
+            frame=dict(duration=120, redraw=True),
+            fromcurrent=True,
+            transition=dict(duration=0),
+        )
+        fig.update_layout(
+            updatemenus=[
+                dict(
+                    type="buttons",
+                    direction="left",
+                    x=0,
+                    y=1.10,
+                    xanchor="left",
+                    showactive=False,
+                    pad=dict(t=0, r=8),
+                    buttons=[
+                        dict(label="▶ play", method="animate", args=[None, play]),
+                        dict(
+                            label="❚❚ pause",
+                            method="animate",
+                            args=[
+                                [None],
+                                dict(mode="immediate", frame=dict(duration=0)),
+                            ],
+                        ),
+                    ],
+                )
+            ],
+            sliders=[
+                dict(
+                    active=0,
+                    x=0.13,
+                    len=0.87,
+                    pad=dict(t=2, b=0),
+                    currentvalue=dict(prefix="t = ", suffix=" s", font=dict(size=11)),
+                    steps=[
+                        dict(
+                            label=f"{f / fps:.0f}",
+                            method="animate",
+                            args=[
+                                [str(f)],
+                                dict(mode="immediate", frame=dict(duration=0)),
+                            ],
+                        )
+                        for f in sampled
+                    ],
+                )
+            ],
         )
 
     fig.update_layout(xaxis_title="x (m)", yaxis_title="y (m)")

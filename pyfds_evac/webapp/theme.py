@@ -223,13 +223,17 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 /* ---- streaming console (warm-dark inset terminal) ---- */
 .console-box {
   max-height: 20rem; overflow: auto;
-  background: #211f1b; border: 1px solid hsl(30 12% 22%);
+  background: #1e1c19 !important; border: 1px solid hsl(30 12% 22%);
   border-radius: .4rem; padding: .7rem .85rem;
   box-shadow: inset 0 2px 14px -8px #000;
 }
+/* franken-ui gives <pre> a light code-block background; override it so the
+   bright text sits on the dark inset, not on light-on-light. */
 .console-box pre {
-  font-family: var(--font-mono); font-size: .7rem; line-height: 1.55;
-  color: #d9d3c5; white-space: pre-wrap; word-break: break-word; margin: 0;
+  font-family: var(--font-mono); font-size: .72rem; line-height: 1.55;
+  color: #eee7d8 !important; background: transparent !important;
+  border: 0 !important; padding: 0 !important; margin: 0;
+  white-space: pre-wrap; word-break: break-word;
 }
 .console-box::-webkit-scrollbar-thumb { background: hsl(30 8% 38%); }
 
