@@ -115,8 +115,14 @@ def _field(action: argparse.Action) -> Any:
     label = dest.replace("_", " ")
 
     if dest == "scenario":
-        opts = [Option(n, value=n) for n in _scenario_names()]
+        names = _scenario_names()
+        default = "demo" if "demo" in names else (names[0] if names else None)
+        opts = [Option(n, value=n, selected=(n == default)) for n in names]
         return mu.LabelSelect(*opts, label="scenario", id="scenario")
+
+    if dest == "seed":
+        # Default to a fixed seed so runs are reproducible out of the box.
+        return mu.LabelInput(label, id=dest, type="number", step="1", value="42")
 
     if dest == "fds_dir":
         return mu.DivVStacked(
@@ -175,7 +181,9 @@ def build_form(post_url: str) -> Any:
         mu.Button("Run scenario", cls=mu.ButtonT.primary, type="submit"),
         hx_post=post_url,
         hx_target="#run-panel",
-        hx_swap="innerHTML",
+        # show:top scrolls the status panel into view so feedback is never
+        # off-screen below a long form.
+        hx_swap="innerHTML show:top",
         cls="space-y-4",
     )
 

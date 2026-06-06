@@ -122,6 +122,9 @@ celerybeat.pid
 # FastHTML session signing key (web GUI)
 .sesskey
 
+# Web GUI default output directory (scenario run artifacts)
+/results/
+
 # Environments
 .env
 .venv

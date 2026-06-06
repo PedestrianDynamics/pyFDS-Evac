@@ -18,6 +18,7 @@ from fasthtml.common import (
     EventStream,
     I,
     P,
+    Pre,
     Script,
     Title,
     fast_app,
@@ -33,6 +34,7 @@ from monsterui.all import (
     Container,
     ContainerT,
     DivFullySpaced,
+    DivLAligned,
     DivVStacked,
     H3,
     Loading,
@@ -121,11 +123,11 @@ def _run_panel_idle() -> Div:
 _AUTOFILL_JS = """
 (function () {
   var OUT = {
-    output_sqlite: function (n) { return n + '.sqlite'; },
-    output_smoke_history: function (n) { return n + '_smoke_history.csv'; },
-    output_fed_history: function (n) { return n + '_fed_history.csv'; },
-    output_route_history: function (n) { return n + '_route_history.csv'; },
-    output_route_cost_history: function (n) { return n + '_route_cost_history.csv'; }
+    output_sqlite: function (n) { return 'results/' + n + '.sqlite'; },
+    output_smoke_history: function (n) { return 'results/' + n + '_smoke_history.csv'; },
+    output_fed_history: function (n) { return 'results/' + n + '_fed_history.csv'; },
+    output_route_history: function (n) { return 'results/' + n + '_route_history.csv'; },
+    output_route_cost_history: function (n) { return 'results/' + n + '_route_cost_history.csv'; }
   };
   function scenarioName() {
     var inp = document.querySelector('input[name="scenario"]');
@@ -283,14 +285,31 @@ async def post(request: Request):
     except Exception as exc:
         return Alert(f"{type(exc).__name__}: {exc}", cls=AlertT.error)
 
-    # Single live region: progress events update it, the terminal "done"
-    # event replaces it. sse-close stops HTMX reconnecting once finished.
+    # Live region (#run-status: progress -> done) plus a streaming console
+    # (#console-log: console). sse-close stops HTMX reconnecting once finished.
     return Div(
         Div(_running_card(None), id="run-status", sse_swap="progress,done"),
+        Card(
+            DivLAligned(UkIcon("terminal"), H3("Console", cls="m-0")),
+            Div(
+                Pre("Waiting for output…"),
+                id="console-log",
+                cls="console-box mt-2",
+                sse_swap="console",
+                # keep the log scrolled to the newest line after each update
+                **{"hx-on:htmx:after-swap": "this.scrollTop = this.scrollHeight"},
+            ),
+            cls="mt-4",
+        ),
         hx_ext="sse",
         sse_connect="/progress",
         sse_close="done",
     )
+
+
+def _console_view() -> Pre:
+    text = "\n".join(manager.log_lines[-300:]) or "Waiting for output…"
+    return Pre(text)
 
 
 def _running_card(ev) -> Div:
@@ -353,7 +372,14 @@ async def progress():
     # once, then closes (no queue to race, no competing consumers).
     async def gen():
         last = None
+        last_log = -1
         while True:
+            # stream captured console output as it grows
+            n = len(manager.log_lines)
+            if n != last_log:
+                last_log = n
+                yield sse_message(_console_view(), event="console")
+
             status = manager.status
             if status == "done":
                 yield sse_message(_finished_view(), event="done")

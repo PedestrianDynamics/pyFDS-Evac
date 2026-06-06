@@ -220,6 +220,19 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 .report-line { font-family: var(--font-mono); font-size: .82rem; }
 .report-line b { color: var(--clay); }
 
+/* ---- streaming console (warm-dark inset terminal) ---- */
+.console-box {
+  max-height: 20rem; overflow: auto;
+  background: #211f1b; border: 1px solid hsl(30 12% 22%);
+  border-radius: .4rem; padding: .7rem .85rem;
+  box-shadow: inset 0 2px 14px -8px #000;
+}
+.console-box pre {
+  font-family: var(--font-mono); font-size: .7rem; line-height: 1.55;
+  color: #d9d3c5; white-space: pre-wrap; word-break: break-word; margin: 0;
+}
+.console-box::-webkit-scrollbar-thumb { background: hsl(30 8% 38%); }
+
 /* standby (idle) screen */
 .standby {
   min-height: 58vh; display: flex; flex-direction: column;
