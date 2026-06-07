@@ -94,6 +94,26 @@ uv run python run.py --scenario assets/demo/config.json \
     --vis-cache fds_data/demo/vismap_cache.pkl
 ```
 
+### Viewing the export in Smokeview
+
+`--smv-export` only writes the files; open the patched `.smv` to view
+the agents. Use our local Smokeview fork (which renders the custom
+AVATARDEF):
+
+```bash
+../smv/build-fork/smokeview fds_data/demo/demo.smv
+```
+
+For convenience, alias the fork in `~/.zshrc`:
+
+```bash
+alias smvfork='/Users/chraibi/workspace/PedestrianDynamics/Fire/fds_visibility/smv/build-fork/smokeview'
+# then: smvfork fds_data/demo/demo.smv
+```
+
+In Smokeview: *Load → Particles → Human* (or your `--smv-class-id`
+label) and scrub the timebar.
+
 ## Inspecting an FDS case
 
 `scripts/inspect_fds.py` summarises what quantities FDS wrote and whether
