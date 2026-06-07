@@ -106,24 +106,14 @@ def test_rewrite_replaces_rows(tmp_path):
     assert count == 1
 
 
-def test_output_sqlite_path_calls_writer(tmp_path, monkeypatch):
-    """run.py writes agent_scalars into the copied sqlite when FED history exists."""
+def test_maybe_write_populates_copied_sqlite(tmp_path):
+    """_maybe_write_agent_scalars writes agent_scalars into the destination sqlite."""
     import run
 
-    src = tmp_path / "src.sqlite"
-    _make_base_sqlite(src, fps=10.0)
     dest = tmp_path / "out.sqlite"
-
-    captured = {}
-
-    def fake_write(path, history):
-        captured["path"] = Path(path)
-        captured["n"] = len(list(history))
-
-    monkeypatch.setattr(run, "write_agent_scalars", fake_write)
+    _make_base_sqlite(dest, fps=10.0)
     run._maybe_write_agent_scalars(
         dest,
-        src,
         [
             {
                 "time_s": 0.0,
@@ -134,5 +124,22 @@ def test_output_sqlite_path_calls_writer(tmp_path, monkeypatch):
             }
         ],
     )
-    assert captured["path"] == dest.resolve()
-    assert captured["n"] == 1
+    con = sqlite3.connect(dest)
+    rows = con.execute("SELECT frame, id, fed, speed FROM agent_scalars").fetchall()
+    con.close()
+    assert rows == [(0, 1, 0.0, 1.2)]
+
+
+def test_maybe_write_noop_without_fed(tmp_path):
+    """No agent_scalars table when fed_history is empty/None."""
+    import run
+
+    dest = tmp_path / "out.sqlite"
+    _make_base_sqlite(dest, fps=10.0)
+    run._maybe_write_agent_scalars(dest, None)
+    con = sqlite3.connect(dest)
+    exists = con.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_scalars'"
+    ).fetchone()
+    con.close()
+    assert exists is None

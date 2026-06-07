@@ -306,7 +306,7 @@ def _write_route_cost_history_csv(rows, output_path: str) -> None:
             writer.writerow(row)
 
 
-def _maybe_write_agent_scalars(output_path, _src, fed_history) -> None:
+def _maybe_write_agent_scalars(output_path, fed_history) -> None:
     """Write the agent_scalars side table into the copied sqlite if FED ran."""
     if not fed_history:
         return
@@ -474,7 +474,7 @@ def main() -> int:
         output_path = pathlib.Path(args.output_sqlite).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(result.sqlite_file, output_path)
-        _maybe_write_agent_scalars(output_path, result.sqlite_file, result.fed_history)
+        _maybe_write_agent_scalars(output_path, result.fed_history)
 
     if args.smv_export:
         prt5_path = export_agents_to_smv(
