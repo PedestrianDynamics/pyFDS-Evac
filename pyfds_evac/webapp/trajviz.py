@@ -8,6 +8,7 @@ small payload. Geometry (walkable area, exits) is drawn once per frame.
 
 from __future__ import annotations
 
+import bisect
 import json
 from pathlib import Path
 from typing import Any
@@ -72,6 +73,40 @@ def _payload(result: Any, scenario: Any) -> dict | None:
         samples.append(flat)
         times.append(round(f / fps, 2))
 
+    # Per-agent cumulative FED at each sample time, aligned with `samples`.
+    # FED is a step function in time; we take the last value at or before the
+    # sample time. None where the agent is absent from that frame.
+    fed_t: dict[int, list[float]] = {}
+    fed_v: dict[int, list[float]] = {}
+    pairs: dict[int, list[tuple[float, float]]] = {}
+    for row in result.fed_history or []:
+        try:
+            pairs.setdefault(int(row["agent_id"]), []).append(
+                (float(row["time_s"]), float(row["fed_cumulative"]))
+            )
+        except (KeyError, TypeError, ValueError):
+            continue
+    for aid, seq in pairs.items():
+        seq.sort()
+        fed_t[aid] = [p[0] for p in seq]
+        fed_v[aid] = [p[1] for p in seq]
+    has_fed = bool(fed_t)
+
+    def _fed_at(aid: int, ts: float) -> float:
+        ts_list = fed_t.get(aid)
+        if not ts_list:
+            return 0.0
+        j = bisect.bisect_right(ts_list, ts) - 1
+        return fed_v[aid][j] if j >= 0 else 0.0
+
+    fed_samples: list[list[Any]] = []
+    for idx, f in enumerate(sampled):
+        present = {int(i) for i in by_frame[f]["id"]}
+        ts = times[idx]
+        fed_samples.append(
+            [_fed_at(a, ts) if a in present else None for a in agent_ids]
+        )
+
     try:
         wx, wy = walkable.polygon.exterior.xy
         walk = [[float(x), float(y)] for x, y in zip(wx, wy)]
@@ -94,6 +129,8 @@ def _payload(result: Any, scenario: Any) -> dict | None:
         "times": times,
         "samples": samples,
         "colors": colors,
+        "fed": fed_samples,
+        "hasFed": has_fed,
         "walk": walk,
         "exits": exits,
         "bounds": _bounds(walkable, data),
@@ -109,11 +146,36 @@ _JS = """
   var slider = document.getElementById('traj-slider');
   var tlabel = document.getElementById('traj-time');
   var ctx = canvas.getContext('2d');
-  var T = D.times, S = D.samples, COL = D.colors, n = COL.length;
+  var T = D.times, S = D.samples, COL = D.colors, FED = D.fed, n = COL.length;
   var t0 = T[0], t1 = T[T.length - 1], span = Math.max(1e-6, t1 - t0);
   var PLAYBACK = 16;            // seconds of wall time to play the whole run
   var simT = t0, playing = false, lastTs = null;
   var bx = D.bounds, pad = 0.06;
+  var mode = D.hasFed ? 'fed' : 'exit';
+
+  // FED dose -> tier colour (green -> amber -> orange -> red).
+  var STOPS = [[0, '#3f8f57'], [0.3, '#d19a2e'], [0.6, '#d2722b'], [1, '#c23b2e']];
+  function lerpHex(a, b, t) {
+    var ar = parseInt(a.slice(1, 3), 16), ag = parseInt(a.slice(3, 5), 16),
+        ab = parseInt(a.slice(5, 7), 16);
+    var br = parseInt(b.slice(1, 3), 16), bg = parseInt(b.slice(3, 5), 16),
+        bb = parseInt(b.slice(5, 7), 16);
+    var r = Math.round(ar + (br - ar) * t), g = Math.round(ag + (bg - ag) * t),
+        bl = Math.round(ab + (bb - ab) * t);
+    return 'rgb(' + r + ',' + g + ',' + bl + ')';
+  }
+  function fedColor(d) {
+    if (d == null) return '#9aa0a6';
+    if (d <= 0) return STOPS[0][1];
+    if (d >= 1) return STOPS[STOPS.length - 1][1];
+    for (var k = 1; k < STOPS.length; k++) {
+      if (d <= STOPS[k][0]) {
+        return lerpHex(STOPS[k - 1][1], STOPS[k][1],
+          (d - STOPS[k - 1][0]) / (STOPS[k][0] - STOPS[k - 1][0]));
+      }
+    }
+    return STOPS[STOPS.length - 1][1];
+  }
 
   function size() {
     var dpr = window.devicePixelRatio || 1;
@@ -164,9 +226,16 @@ _JS = """
       else if (ax == null) { X = cx; Y = cy; }
       else if (cx == null) { X = ax; Y = ay; }
       else { X = ax + (cx - ax) * f; Y = ay + (cy - ay) * f; }
+      var col = COL[i];
+      if (mode === 'fed') {
+        var da = FED[b[0]][i], dc = FED[b[1]][i], dv;
+        if (da == null) dv = dc; else if (dc == null) dv = da;
+        else dv = da + (dc - da) * f;
+        col = fedColor(dv);
+      }
       var q = p(X, Y);
       ctx.beginPath(); ctx.arc(q[0], q[1], 4.5, 0, 6.2832);
-      ctx.fillStyle = COL[i]; ctx.fill();
+      ctx.fillStyle = col; ctx.fill();
       ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(20,20,19,0.35)'; ctx.stroke();
     }
     tlabel.textContent = 't = ' + (simT - t0).toFixed(0) + ' s';
@@ -190,6 +259,16 @@ _JS = """
     playing = false; playBtn.textContent = '▶';
     simT = t0 + (parseFloat(slider.value) / 1000) * span;
   });
+  var bf = document.getElementById('traj-mode-fed');
+  var be = document.getElementById('traj-mode-exit');
+  if (bf && be) {
+    bf.addEventListener('click', function () {
+      mode = 'fed'; bf.classList.add('active'); be.classList.remove('active');
+    });
+    be.addEventListener('click', function () {
+      mode = 'exit'; be.classList.add('active'); bf.classList.remove('active');
+    });
+  }
   window.addEventListener('resize', draw);
   requestAnimationFrame(loop);
 })();
@@ -210,6 +289,15 @@ def trajectory_component(result: Any, scenario: Any) -> Any:
             ),
         )
     data_json = json.dumps(payload)
+    toggle = ""
+    if payload["hasFed"]:
+        toggle = (
+            '<div class="traj-color">'
+            '<span class="traj-color-lbl">colour</span>'
+            '<button id="traj-mode-fed" type="button" class="cmode active">FED</button>'
+            '<button id="traj-mode-exit" type="button" class="cmode">exit</button>'
+            "</div>"
+        )
     markup = (
         '<div class="traj-wrap">'
         '<canvas id="traj-canvas" class="traj-canvas"></canvas>'
@@ -218,7 +306,8 @@ def trajectory_component(result: Any, scenario: Any) -> Any:
         '<input id="traj-slider" type="range" min="0" max="1000" value="0" '
         'class="traj-slider">'
         '<span id="traj-time" class="traj-time">t = 0 s</span>'
-        "</div></div>"
+        + toggle
+        + "</div></div>"
     )
     script = "<script>" + _JS.replace("__DATA__", data_json) + "</script>"
     return Card(

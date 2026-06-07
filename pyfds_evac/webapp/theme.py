@@ -327,6 +327,21 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   font-family: var(--font-mono); font-size: .7rem; min-width: 6ch;
   color: hsl(var(--muted-foreground)); text-align: right;
 }
+.traj-color { display: inline-flex; align-items: center; gap: .35rem; }
+.traj-color-lbl {
+  font-family: var(--font-mono); font-size: .56rem; letter-spacing: .14em;
+  text-transform: uppercase; color: hsl(var(--muted-foreground));
+}
+.cmode {
+  font-family: var(--font-mono); font-size: .58rem; letter-spacing: .1em;
+  text-transform: uppercase; padding: .25rem .5rem; cursor: pointer;
+  border: 1px solid hsl(var(--border)); border-radius: .3rem;
+  background: hsl(48 30% 97%); color: hsl(var(--muted-foreground));
+}
+.cmode.active {
+  border-color: hsl(var(--primary) / .6); color: var(--clay);
+  background: hsl(var(--accent) / .6);
+}
 
 /* ---- streaming console (warm-dark inset terminal) ---- */
 .console-box {
