@@ -185,3 +185,7 @@ results/
 /routes.csv
 /route_costs.csv
 .gstack/
+
+# Reference materials and PDFs (kept locally, not tracked)
+*.pdf
+materials/
