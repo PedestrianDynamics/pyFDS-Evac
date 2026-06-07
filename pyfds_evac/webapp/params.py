@@ -50,16 +50,6 @@ FIELD_GROUPS: List[tuple[str, List[str]]] = [
     ("Rerouting", ["enable_rerouting", "reroute_interval"]),
     ("Visibility", ["vis_cache"]),
     (
-        "SMV export",
-        [
-            "smv_export",
-            "smv_particle_z",
-            "smv_class_id",
-            "smv_avatar_style",
-            "smv_with_azimuth",
-        ],
-    ),
-    (
         "Output files",
         [
             "output_sqlite",

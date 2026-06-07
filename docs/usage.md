@@ -23,7 +23,7 @@ uv run python run.py --scenario <scenario.json|.zip|dir> [options]
 | `--scenario PATH` | Scenario JSON, ZIP, or directory (required). |
 | `--seed N` | Override scenario seed. |
 | `--print-summary` | Print the loaded scenario summary before running. |
-| `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here. |
+| `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here. When FED is computed, also writes an optional `agent_scalars(frame, id, fed, speed)` side table (base JuPedSim schema untouched) so [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) can colour agents by FED or speed. |
 | `--cleanup` | Delete the temp SQLite after the run. |
 | `--export-app-bundle DIR` | Write `config.json` and `geometry.wkt` for the app. |
 | `--export-only` | Export the bundle without running the simulation. |
@@ -66,15 +66,12 @@ required species) no FED is computed and these flags have no effect.
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
 | `--fed-threshold F` | FED at which agents are declared incapacitated (default 1.0). |
 
-### Smokeview export
+### Agent visualisation
 
-| Flag | Purpose |
-|------|---------|
-| `--smv-export` | Write `<CHID>_agents.prt5` + patch `<CHID>.smv` and drop a `<CHID>.svo` with our custom AVATARDEF. Requires `--fds-dir`. See [docs/smv-avatars.md](smv-avatars.md) for the mechanism. |
-| `--smv-particle-z M` | Agent height in metres for the particle export (default 0.0, so avatars stand on the floor). |
-| `--smv-class-id LABEL` | `CLASS_OF_PARTICLES` label (default `Human`). Bound to an AVATARDEF via the PROP block we write. |
-| `--smv-avatar-style {human,arrow,sphere}` | Which AVATARDEF we emit to `<CHID>.svo`. `human` (default) is a detailed humanoid. `arrow` is a body sphere plus a red directional marker — useful to sanity-check whether per-particle rotation is working. `sphere` is a single plain sphere for position-only rendering. |
-| `--smv-with-azimuth` | Write `AZIMUTH = atan2(ori_y, ori_x) mod 360` (deg) as a PRT5 quantity column. **Off by default**: per-particle avatar rotation is not supported by current Smokeview ([firemodels/smv#2597](https://github.com/firemodels/smv/issues/2597)), and writing the quantity also triggers a separate `CreatePartBoundFile` bug that sticks playback on frame 0. Enable only if you want the AZIMUTH colorbar entry and accept broken playback. See `docs/smv-avatars.md` for the full trace. |
+Agent 3-D visualisation is handled by
+[fds-viewer](https://github.com/PedestrianDynamics/fds-viewer), which
+loads the JuPedSim trajectory SQLite written by `--output-sqlite` (and
+its optional `agent_scalars` table for FED/speed colouring).
 
 ### Typical invocations
 
@@ -91,28 +88,8 @@ uv run python run.py --scenario assets/demo/config.json \
     --output-route-history routes.csv \
     --output-route-cost-history route_costs.csv \
     --enable-rerouting \
-    --vis-cache fds_data/demo/vismap_cache.pkl
+    --vis-cache fds_data/demo/vismap_cache.npz
 ```
-
-### Viewing the export in Smokeview
-
-`--smv-export` only writes the files; open the patched `.smv` to view
-the agents. Use our local Smokeview fork (which renders the custom
-AVATARDEF):
-
-```bash
-../smv/build-fork/smokeview fds_data/demo/demo.smv
-```
-
-For convenience, alias the fork in `~/.zshrc`:
-
-```bash
-alias smvfork='/Users/chraibi/workspace/PedestrianDynamics/Fire/fds_visibility/smv/build-fork/smokeview'
-# then: smvfork fds_data/demo/demo.smv
-```
-
-In Smokeview: *Load → Particles → Human* (or your `--smv-class-id`
-label) and scrub the timebar.
 
 ## Inspecting an FDS case
 

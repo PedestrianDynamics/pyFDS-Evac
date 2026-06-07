@@ -53,7 +53,7 @@ Horizontal slices at z = 2 m (head height):
 | Oxygen volume fraction | FED (hypoxia) |
 | Hydrogen cyanide volume fraction | FED (CN narcosis) |
 | Hydrogen chloride volume fraction | FED (irritant) |
-| Visibility | Smokeview visualization only |
+| Visibility | fds-viewer visualization only |
 
 ## Why all three features are exercised
 
