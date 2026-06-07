@@ -104,3 +104,35 @@ def test_rewrite_replaces_rows(tmp_path):
     (count,) = con.execute("SELECT count(*) FROM agent_scalars").fetchone()
     con.close()
     assert count == 1
+
+
+def test_output_sqlite_path_calls_writer(tmp_path, monkeypatch):
+    """run.py writes agent_scalars into the copied sqlite when FED history exists."""
+    import run
+
+    src = tmp_path / "src.sqlite"
+    _make_base_sqlite(src, fps=10.0)
+    dest = tmp_path / "out.sqlite"
+
+    captured = {}
+
+    def fake_write(path, history):
+        captured["path"] = Path(path)
+        captured["n"] = len(list(history))
+
+    monkeypatch.setattr(run, "write_agent_scalars", fake_write)
+    run._maybe_write_agent_scalars(
+        dest,
+        src,
+        [
+            {
+                "time_s": 0.0,
+                "agent_id": 1,
+                "fed_cumulative": 0.0,
+                "base_speed": 1.2,
+                "speed_factor": 1.0,
+            }
+        ],
+    )
+    assert captured["path"] == dest.resolve()
+    assert captured["n"] == 1
