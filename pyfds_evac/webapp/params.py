@@ -82,17 +82,30 @@ def _is_bool(action: argparse.Action) -> bool:
     return action.nargs == 0 and action.const is True
 
 
-def _scenario_names() -> List[str]:
-    """List runnable scenario directories under assets/."""
+def _scenario_options() -> List[tuple[str, str]]:
+    """(label, value) pairs for the scenario picker.
+
+    Each runnable scenario directory (one containing config.json) yields the
+    directory itself (value = dir name, which loads config.json) plus one entry
+    per additional *.json config in that directory (value = "dir/file.json").
+    This mirrors the CLI ``--scenario``, which accepts a JSON file path, so
+    alternate configs like config_full.json are selectable.
+    """
     assets = _REPO_ROOT / "assets"
     if not assets.is_dir():
         return []
-    names = [
-        p.name
-        for p in sorted(assets.iterdir())
-        if p.is_dir() and (p / "config.json").exists()
-    ]
-    return names
+    options: List[tuple[str, str]] = []
+    for p in sorted(assets.iterdir()):
+        if not (p.is_dir() and (p / "config.json").exists()):
+            continue
+        options.append((p.name, p.name))
+        for json_file in sorted(p.glob("*.json")):
+            if json_file.name == "config.json":
+                continue
+            options.append(
+                (f"{p.name} / {json_file.name}", f"{p.name}/{json_file.name}")
+            )
+    return options
 
 
 def _browse_button(target_id: str, mode: str) -> Any:
@@ -137,9 +150,13 @@ def _field(action: argparse.Action) -> Any:
     label = _label(dest.replace("_", " "), action)
 
     if dest == "scenario":
-        names = _scenario_names()
-        default = "demo" if "demo" in names else (names[0] if names else None)
-        opts = [Option(n, value=n, selected=(n == default)) for n in names]
+        options = _scenario_options()
+        values = [v for _, v in options]
+        default = "demo" if "demo" in values else (values[0] if values else None)
+        opts = [
+            Option(opt_label, value=value, selected=(value == default))
+            for opt_label, value in options
+        ]
         return mu.LabelSelect(*opts, label=label, id="scenario")
 
     if dest == "seed":

@@ -147,10 +147,17 @@ _AUTOFILL_JS = """
     var sel = document.querySelector('#scenario select');
     return (inp && inp.value) || (sel && sel.value) || '';
   }
+  // A scenario value may be a directory ("demo") or a JSON path
+  // ("demo/config_full.json"); reduce it to a filesystem-friendly base for
+  // default output filenames.
+  function clean(n) {
+    return n.replace(/\\.json$/i, '').replace(/\\//g, '_');
+  }
   function fill(n) {
+    var base = n ? clean(n) : '';
     Object.keys(OUT).forEach(function (id) {
       var el = document.getElementById(id);
-      if (el && !el.dataset.userEdited) el.value = n ? OUT[id](n) : '';
+      if (el && !el.dataset.userEdited) el.value = base ? OUT[id](base) : '';
     });
   }
   // Poll the scenario value: robust regardless of how the select widget

@@ -27,6 +27,19 @@ def test_index_renders_form(client):
     assert "Fractional Effective Dose" in r.text  # model docs content rendered
 
 
+def test_scenario_picker_lists_alternate_json_configs():
+    # The picker offers the directory (config.json) plus each alternate *.json,
+    # mirroring the CLI --scenario which accepts a JSON file path.
+    from pyfds_evac.webapp.params import _scenario_options
+
+    options = dict((value, label) for label, value in _scenario_options())
+    assert "demo" in options  # directory entry → config.json
+    assert "demo/config_full.json" in options  # alternate config selectable
+    assert "config.json" not in "".join(
+        v for v in options if v.endswith("/config.json")
+    )  # config.json is not duplicated as a file entry
+
+
 def test_browse_dir_lists_subfolders(client):
     r = client.get("/browse-dir")
     assert r.status_code == 200
