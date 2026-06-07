@@ -108,6 +108,14 @@ def model_docs() -> Any:
                 r"plume recovers speed at once. At full dose it stops:"
             ),
             _eq(r"$$ D_i \ge 1 \;\Rightarrow\; v_i = 0. $$"),
+            P(
+                "This split — speed reduced by smoke and irritants, dose acting "
+                "only as a binary stop — follows Purser & McAllister (SFPE "
+                "Handbook): asphyxiants cause physiological collapse, while "
+                "visibility and irritancy cause recoverable functional "
+                "impairment.",
+                cls="doc-foot",
+            ),
         ),
         _section(
             "Route choice",
@@ -147,6 +155,14 @@ def model_docs() -> Any:
                     cls="tier-card severe",
                 ),
                 cls="tier-grid",
+            ),
+            P(
+                "These are population bands (NIST high-rise tenability, TN 1797): "
+                "≈11 % of occupants incapacitated by D = 0.3, ≈50 % by D = 1, "
+                "≈89 % by D = 3. The simulation currently applies D ≥ 1 uniformly "
+                "to every agent — the median endpoint; per-agent susceptibility "
+                "is planned.",
+                cls="doc-foot",
             ),
         ),
         P(
