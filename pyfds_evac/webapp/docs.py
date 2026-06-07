@@ -105,9 +105,14 @@ def model_docs() -> Any:
             P(
                 r"with $\alpha_{\mathrm{FIC}} = 0.7$ and a floor $\mu = 0.3$. "
                 r"Unlike FED, FIC is not integrated, so an agent leaving the "
-                r"plume recovers speed at once. At full dose it stops:"
+                r"plume recovers speed at once. At its incapacitation threshold "
+                r"it stops:"
             ),
-            _eq(r"$$ D_i \ge 1 \;\Rightarrow\; v_i = 0. $$"),
+            _eq(
+                r"$$ D_i \ge D_{\mathrm{incap},i} \Rightarrow v_i = 0, \qquad "
+                r"D_{\mathrm{incap},i} = D_{50}\,e^{\sigma Z_i},\ "
+                r"Z_i \sim \mathcal{N}(0,1). $$"
+            ),
             P(
                 "This split — speed reduced by smoke and irritants, dose acting "
                 "only as a binary stop — follows Purser & McAllister (SFPE "
@@ -157,11 +162,12 @@ def model_docs() -> Any:
                 cls="tier-grid",
             ),
             P(
-                "These are population bands (NIST high-rise tenability, TN 1797): "
-                "≈11 % of occupants incapacitated by D = 0.3, ≈50 % by D = 1, "
-                "≈89 % by D = 3. The simulation currently applies D ≥ 1 uniformly "
-                "to every agent — the median endpoint; per-agent susceptibility "
-                "is planned.",
+                "These are population bands (NIST TN 1797): ≈11 % of occupants "
+                "incapacitated by D = 0.3, ≈50 % by D = 1, ≈89 % by D = 3. Each "
+                "agent draws its own threshold from the log-normal above "
+                "(median D₅₀ = 1, σ = 0.94), so the population reproduces these "
+                "bands instead of all collapsing at the median; a deterministic "
+                "uniform threshold is available as an option.",
                 cls="doc-foot",
             ),
         ),

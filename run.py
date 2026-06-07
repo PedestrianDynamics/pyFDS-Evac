@@ -166,8 +166,23 @@ def _build_parser() -> argparse.ArgumentParser:
         "--fed-threshold",
         type=float,
         default=1.0,
-        help="Cumulative FED at which an agent is declared incapacitated "
-        "(default: 1.0 per FDS+Evac / Korhonen 2021)",
+        help="Median cumulative FED at which an agent is incapacitated "
+        "(default: 1.0 per ISO 13571 / Korhonen 2021)",
+    )
+    parser.add_argument(
+        "--incapacitation-mode",
+        choices=("probabilistic", "deterministic"),
+        default="probabilistic",
+        help="probabilistic: per-agent threshold ~ lognormal(median=fed-threshold, "
+        "susceptibility-sigma), fit to NIST TN 1797 population bands (default); "
+        "deterministic: every agent uses fed-threshold",
+    )
+    parser.add_argument(
+        "--susceptibility-sigma",
+        type=float,
+        default=0.94,
+        help="Log-normal sigma of the per-agent incapacitation threshold in "
+        "probabilistic mode (default: 0.94 -> ~10/50/88%% at FED 0.3/1/3)",
     )
     return parser
 

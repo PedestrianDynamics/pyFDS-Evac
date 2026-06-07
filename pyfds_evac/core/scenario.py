@@ -61,7 +61,11 @@ from .route_graph import (
     rank_routes,
     should_reevaluate,
 )
-from .fed import default_fed_components, default_fic
+from .fed import (
+    default_fed_components,
+    default_fic,
+    sample_incapacitation_threshold,
+)
 from .smoke_speed import ConstantExtinctionField
 
 _logger = logging.getLogger(__name__)
@@ -1063,6 +1067,22 @@ def run_scenario(
         fed_state: Dict[int, Dict[str, float]] = {}
         fed_history: list[dict[str, Any]] = []
         incapacitated_agents: set[int] = set()
+        # Per-agent incapacitation threshold (population variability). Sampled
+        # lazily on first FED evaluation from a dedicated seeded stream so runs
+        # stay reproducible; deterministic mode reuses fed_threshold for all.
+        incap_thresholds: Dict[int, float] = {}
+        incap_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED1)
+
+        def _incap_threshold(aid: int) -> float:
+            t = incap_thresholds.get(aid)
+            if t is None:
+                if tenability_config is None:
+                    t = float("inf")
+                else:
+                    t = sample_incapacitation_threshold(tenability_config, incap_rng)
+                incap_thresholds[aid] = t
+            return t
+
         last_smoke_update_time = None
         last_fed_update_time = None
         last_reroute_check_time: float | None = None
@@ -1650,7 +1670,7 @@ def run_scenario(
                         if tenability_config is not None and not incapacitated_now:
                             if (
                                 tenability_config.enable_incapacitation
-                                and cumulative >= tenability_config.fed_threshold
+                                and cumulative >= _incap_threshold(agent_id)
                             ):
                                 incapacitated_agents.add(agent_id)
                                 set_agent_desired_speed(agent, 0.0)

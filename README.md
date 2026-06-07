@@ -261,13 +261,20 @@ applies two Purser/FDS+Evac rules when a FED model is loaded:
   `pyfds_evac.core.fed.default_fic`) multiplies the Frantzich speed
   by `max(fic_min_factor, 1 − fic_alpha·FIC)`. Defaults:
   `fic_alpha = 0.7`, `fic_min_factor = 0.3`.
-- **Binary incapacitation at FED ≥ 1.** Matches FDS+Evac §3.4
-  (Korhonen 2021): once cumulative FED crosses the threshold, the
-  agent's target speed is driven to zero for the remainder of the
-  run. The agent remains as a static obstacle.
+- **Incapacitation at the FED threshold.** Once cumulative FED crosses
+  an agent's threshold, its target speed is driven to zero for the rest
+  of the run and the agent remains as a static obstacle. Incapacitation
+  is a *population* endpoint (NIST TN 1797 / Purser: ~11 % of occupants
+  by FED 0.3, 50 % by 1, 89 % by 3), so by default each agent draws its
+  own threshold from a log-normal `D_incap = D₅₀·exp(σ·Z)`, `Z ~ N(0,1)`
+  (median `D₅₀ = --fed-threshold = 1`, `σ = --susceptibility-sigma =
+  0.94`), sampled from the run's seed for reproducibility. Pass
+  `--incapacitation-mode deterministic` to make every agent use the same
+  threshold (the legacy uniform rule).
 
 Both rules are enabled by default and can be tuned via CLI flags
-`--fic-alpha`, `--fic-min-factor`, `--fed-threshold`, or turned off
+`--fic-alpha`, `--fic-min-factor`, `--fed-threshold`,
+`--incapacitation-mode`, `--susceptibility-sigma`, or turned off
 entirely with `--disable-tenability`. The FED history CSV
 (`--output-fed-history`) gains three extra columns `fic`,
 `fic_speed_factor`, `incapacitated`.

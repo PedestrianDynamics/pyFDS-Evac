@@ -137,10 +137,12 @@ def _build_tenability_config(opts: Any, fed_model, log: Logger):
     """Build the tenability configuration when a FED model is active."""
     if fed_model is None or opts.disable_tenability:
         return None
+    mode = getattr(opts, "incapacitation_mode", "probabilistic")
+    sigma = getattr(opts, "susceptibility_sigma", 0.94)
     log(
         "Configuring tenability "
         f"(FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
-        f"FED threshold={opts.fed_threshold})."
+        f"FED median={opts.fed_threshold}, incapacitation={mode})."
     )
     return TenabilityConfig(
         enable_fic_speed=True,
@@ -148,6 +150,8 @@ def _build_tenability_config(opts: Any, fed_model, log: Logger):
         fic_min_factor=opts.fic_min_factor,
         enable_incapacitation=True,
         fed_threshold=opts.fed_threshold,
+        incapacitation_mode=mode,
+        susceptibility_sigma=sigma,
     )
 
 

@@ -198,6 +198,30 @@ class TenabilityConfig:
     fic_min_factor: float = 0.3
     enable_incapacitation: bool = True
     fed_threshold: float = 1.0
+    # Incapacitation is a population endpoint, not a per-individual constant.
+    # In "probabilistic" mode (default) each agent draws its own threshold
+    #   D_incap = fed_threshold * exp(susceptibility_sigma * Z), Z ~ N(0, 1),
+    # a log-normal with median fed_threshold. sigma = 0.94 fits the NIST TN
+    # 1797 / Purser bands (~10/50/88 % incapacitated at FED 0.3/1/3). In
+    # "deterministic" mode every agent uses fed_threshold (the legacy rule).
+    incapacitation_mode: str = "probabilistic"
+    susceptibility_sigma: float = 0.94
+
+
+def sample_incapacitation_threshold(config: "TenabilityConfig", rng) -> float:
+    """Draw one agent's cumulative-FED incapacitation threshold.
+
+    Deterministic mode returns ``fed_threshold`` for every agent. Probabilistic
+    mode returns a log-normal draw with median ``fed_threshold`` and log-scale
+    sigma ``susceptibility_sigma`` (``rng`` is a ``random.Random``), so a
+    population of agents reproduces the NIST TN 1797 / Purser incapacitation
+    bands instead of all collapsing at the median.
+    """
+    if config.incapacitation_mode == "deterministic":
+        return float(config.fed_threshold)
+    return float(config.fed_threshold) * math.exp(
+        float(config.susceptibility_sigma) * rng.gauss(0.0, 1.0)
+    )
 
 
 @dataclass(frozen=True)
