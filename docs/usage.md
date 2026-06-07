@@ -23,7 +23,7 @@ uv run python run.py --scenario <scenario.json|.zip|dir> [options]
 | `--scenario PATH` | Scenario JSON, ZIP, or directory (required). |
 | `--seed N` | Override scenario seed. |
 | `--print-summary` | Print the loaded scenario summary before running. |
-| `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here. |
+| `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here. When FED is computed, also writes an optional `agent_scalars(frame, id, fed, speed)` side table (base JuPedSim schema untouched) so [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) can colour agents by FED or speed. |
 | `--cleanup` | Delete the temp SQLite after the run. |
 | `--export-app-bundle DIR` | Write `config.json` and `geometry.wkt` for the app. |
 | `--export-only` | Export the bundle without running the simulation. |

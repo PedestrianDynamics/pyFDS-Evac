@@ -22,6 +22,7 @@ from pyfds_evac.core import (
     load_scenario,
     run_scenario,
 )
+from pyfds_evac.core.agent_scalars import write_agent_scalars
 from pyfds_evac.core.visibility import VisibilityModel, extract_sign_descriptors
 
 
@@ -305,6 +306,13 @@ def _write_route_cost_history_csv(rows, output_path: str) -> None:
             writer.writerow(row)
 
 
+def _maybe_write_agent_scalars(output_path, fed_history) -> None:
+    """Write the agent_scalars side table into the copied sqlite if FED ran."""
+    if not fed_history:
+        return
+    write_agent_scalars(pathlib.Path(output_path).resolve(), fed_history)
+
+
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
     parser = _build_parser()
@@ -466,6 +474,7 @@ def main() -> int:
         output_path = pathlib.Path(args.output_sqlite).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(result.sqlite_file, output_path)
+        _maybe_write_agent_scalars(output_path, result.fed_history)
 
     if args.smv_export:
         prt5_path = export_agents_to_smv(
