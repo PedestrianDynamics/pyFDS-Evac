@@ -177,8 +177,41 @@ def test_frames_align_with_trajectory(tmp_path):
     )
 
     con = sqlite3.connect(db)
-    traj_frames = {r[0] for r in con.execute("SELECT frame FROM trajectory_data")}
-    scalar_frames = {r[0] for r in con.execute("SELECT frame FROM agent_scalars")}
+    traj_pairs = {
+        (r[0], r[1]) for r in con.execute("SELECT frame, id FROM trajectory_data")
+    }
+    scalar_pairs = {
+        (r[0], r[1]) for r in con.execute("SELECT frame, id FROM agent_scalars")
+    }
     con.close()
-    assert scalar_frames.issubset(traj_frames)
-    assert scalar_frames == {0, 20}
+    assert scalar_pairs.issubset(traj_pairs)
+    assert scalar_pairs == {(0, 1), (20, 1)}
+
+
+def test_same_frame_same_agent_keeps_last(tmp_path):
+    """Two samples for one agent rounding to the same frame collapse to one row."""
+    db = tmp_path / "run.sqlite"
+    _make_base_sqlite(db, fps=10.0)
+    write_agent_scalars(
+        db,
+        [
+            {
+                "time_s": 0.00,
+                "agent_id": 1,
+                "fed_cumulative": 0.0,
+                "base_speed": 1.0,
+                "speed_factor": 1.0,
+            },
+            {
+                "time_s": 0.04,
+                "agent_id": 1,
+                "fed_cumulative": 0.5,
+                "base_speed": 1.0,
+                "speed_factor": 0.5,
+            },
+        ],
+    )
+    con = sqlite3.connect(db)
+    rows = con.execute("SELECT frame, id, fed, speed FROM agent_scalars").fetchall()
+    con.close()
+    assert rows == [(0, 1, 0.5, 0.5)]

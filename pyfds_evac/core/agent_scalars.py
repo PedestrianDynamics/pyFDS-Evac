@@ -34,12 +34,14 @@ def write_agent_scalars(
             "frame INTEGER NOT NULL, id INTEGER NOT NULL, fed REAL, speed REAL)"
         )
         con.execute("DELETE FROM agent_scalars")
-        con.executemany(
-            "INSERT INTO agent_scalars(frame, id, fed, speed) VALUES (?, ?, ?, ?)",
-            [_scalar_row(r, fps) for r in rows],
-        )
         con.execute(
-            "CREATE INDEX IF NOT EXISTS agent_scalars_idx ON agent_scalars(frame, id)"
+            "CREATE UNIQUE INDEX IF NOT EXISTS agent_scalars_idx "
+            "ON agent_scalars(frame, id)"
+        )
+        con.executemany(
+            "INSERT OR REPLACE INTO agent_scalars(frame, id, fed, speed) "
+            "VALUES (?, ?, ?, ?)",
+            [_scalar_row(r, fps) for r in rows],
         )
         con.commit()
     finally:
