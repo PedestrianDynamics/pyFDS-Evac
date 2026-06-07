@@ -401,6 +401,15 @@ uv run python scripts/run_familiarity_comparison.py \
 Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,
 `results/familiarity_comparison/comparison.png`.
 
+## Agent scalars for fds-viewer
+
+When `--output-sqlite` is combined with FED computation, the SQLite also carries
+an optional `agent_scalars(frame, id, fed, speed)` table. The base JuPedSim
+schema is unchanged, so `jupedsim` replay and Web-Based-JuPedSim still read the
+file. [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) reads this
+table to colour agents by FED dose or speed in a 3D scene alongside the FDS
+smoke.
+
 ## Visualising agents in Smokeview
 
 After a run, pyFDS-Evac can export agent trajectories as an FDS
