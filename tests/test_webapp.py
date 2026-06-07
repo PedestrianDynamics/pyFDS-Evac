@@ -23,6 +23,8 @@ def test_index_renders_form(client):
     assert 'id="dir-modal"' in r.text  # directory-browser overlay container
     assert "output_route_cost_history" in r.text  # output fields rendered
     assert "_smoke_history.csv" in r.text  # scenario-name autofill script present
+    assert 'data-tab="model"' in r.text  # Model documentation tab present
+    assert "Fractional Effective Dose" in r.text  # model docs content rendered
 
 
 def test_browse_dir_lists_subfolders(client):

@@ -17,6 +17,8 @@ from fasthtml.common import (
     Div,
     EventStream,
     I,
+    Link,
+    NotStr,
     P,
     Pre,
     Script,
@@ -48,17 +50,28 @@ from starlette.requests import Request
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.run_config import build_run_kwargs
 
-from . import params, plots, theme
+from . import docs, params, plots, theme, trajviz
 from .runner import RunManager
 
 _PLOTLY_CDN = Script(src="https://cdn.plot.ly/plotly-2.35.2.min.js")
 # htmx core ships with fast_app(); the SSE extension that powers live progress
 # (hx-ext="sse") is separate and must be loaded explicitly.
 _HTMX_SSE = Script(src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js")
+# KaTeX renders the model equations in the documentation tab.
+_KATEX = (
+    Link(
+        rel="stylesheet",
+        href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
+    ),
+    Script(src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"),
+    Script(
+        src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    ),
+)
 
 # Theme headers load after franken-ui's so the override variables win.
 app, rt = fast_app(
-    hdrs=(*Theme.blue.headers(), *theme.headers(), _HTMX_SSE, _PLOTLY_CDN)
+    hdrs=(*Theme.blue.headers(), *theme.headers(), _HTMX_SSE, _PLOTLY_CDN, *_KATEX)
 )
 manager = RunManager()
 
@@ -155,6 +168,43 @@ _AUTOFILL_JS = """
 """
 
 
+_NAV = NotStr(
+    '<div class="tab-nav">'
+    '<button class="tab-btn active" data-tab="sim" type="button">Simulation</button>'
+    '<button class="tab-btn" data-tab="model" type="button">Model</button>'
+    "</div>"
+)
+
+_TAB_JS = """
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.tab-btn');
+  if (!b) return;
+  var t = b.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(function (x) {
+    x.classList.toggle('active', x === b);
+  });
+  document.getElementById('tab-sim').classList.toggle('hidden', t !== 'sim');
+  document.getElementById('tab-model').classList.toggle('hidden', t !== 'model');
+  if (t === 'model' && window._renderMath) window._renderMath();
+});
+"""
+
+_MATH_JS = """
+window._renderMath = function () {
+  if (!window.renderMathInElement) return;
+  renderMathInElement(document.getElementById('tab-model') || document.body, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '$', right: '$', display: false }
+    ],
+    throwOnError: false
+  });
+};
+window._renderMath();
+document.addEventListener('DOMContentLoaded', window._renderMath);
+"""
+
+
 @rt("/")
 def index():
     body = Div(
@@ -166,9 +216,16 @@ def index():
     return (
         Title("pyFDS-Evac · control"),
         _header(),
-        Container(body, cls=ContainerT.xl),
+        _NAV,
+        Container(
+            Div(body, id="tab-sim"),
+            Div(docs.model_docs(), id="tab-model", cls="hidden"),
+            cls=ContainerT.xl,
+        ),
         Div(id="dir-modal"),
         Script(_AUTOFILL_JS),
+        Script(_TAB_JS),
+        Script(_MATH_JS),
     )
 
 
@@ -363,9 +420,7 @@ def _finished_view() -> Div:
 
     return Div(
         summary,
-        plot_card(
-            "Trajectories", plots.trajectories_figure(result, scenario), "fig-traj"
-        ),
+        trajviz.trajectory_component(result, scenario),
         plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
         plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
         plot_card("Route cost", plots.route_cost_figure(result), "fig-route"),

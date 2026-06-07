@@ -254,6 +254,80 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 }
 @media (max-width: 640px) { .metrics-grid { grid-template-columns: 1fr; } }
 
+/* ---- tabs (Simulation / Model) ---- */
+.tab-nav {
+  max-width: 80rem; margin: 0 auto; padding: .9rem 1.5rem 0;
+  display: flex; gap: .3rem; position: relative; z-index: 1;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.tab-btn {
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .12em;
+  font-size: .66rem; font-weight: 600; padding: .55rem .95rem;
+  background: transparent; border: 0; border-bottom: 2px solid transparent;
+  color: hsl(var(--muted-foreground)); cursor: pointer; margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.tab-btn:hover { color: hsl(var(--foreground)); }
+.tab-btn.active { color: var(--clay); border-bottom-color: var(--clay); }
+
+/* ---- model documentation ---- */
+.doc-intro, .doc-foot {
+  font-family: var(--font-sans); color: hsl(var(--muted-foreground));
+  line-height: 1.75; max-width: 72ch;
+}
+.doc-card p { line-height: 1.75; max-width: 74ch; }
+.eq {
+  margin: .75rem 0; padding: .65rem 1rem; overflow-x: auto;
+  background: hsl(48 30% 97%); border: 1px solid hsl(var(--border));
+  border-left: 2px solid var(--clay); border-radius: .4rem;
+}
+.eq .katex { font-size: 1.05em; }
+.tier-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin-top: .4rem;
+}
+.tier-card {
+  padding: .7rem .85rem; border-radius: .4rem;
+  border: 1px solid hsl(var(--border)); border-top: 3px solid;
+}
+.tier-card h4 {
+  font-family: var(--font-mono); text-transform: uppercase;
+  font-size: .66rem; letter-spacing: .1em;
+}
+.tier-card p {
+  font-family: var(--font-mono); font-size: .74rem;
+  color: hsl(var(--muted-foreground)); margin-top: .2rem;
+}
+.tier-card.safe { border-top-color: var(--tier-safe); }
+.tier-card.alert { border-top-color: var(--tier-alert); }
+.tier-card.critical { border-top-color: var(--tier-critical); }
+.tier-card.severe { border-top-color: var(--tier-severe); }
+@media (max-width: 640px) { .tier-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---- canvas trajectory animation ---- */
+.traj-wrap { margin-top: .6rem; }
+.traj-canvas {
+  width: 100%; height: 440px; display: block;
+  border: 1px solid hsl(var(--border)); border-radius: .4rem;
+  background:
+    radial-gradient(120% 120% at 50% 0%, hsl(48 30% 99%), hsl(48 24% 96%));
+}
+.traj-controls {
+  display: flex; align-items: center; gap: .8rem; margin-top: .6rem;
+}
+.traj-play {
+  width: 2.1rem; height: 2.1rem; flex: none; border-radius: 99px;
+  border: 1px solid hsl(var(--border)); background: hsl(48 30% 97%);
+  color: hsl(var(--foreground)); cursor: pointer; font-size: .8rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color .15s, color .15s;
+}
+.traj-play:hover { border-color: hsl(var(--primary) / .6); color: var(--clay); }
+.traj-slider { flex: 1; accent-color: var(--clay); cursor: pointer; }
+.traj-time {
+  font-family: var(--font-mono); font-size: .7rem; min-width: 6ch;
+  color: hsl(var(--muted-foreground)); text-align: right;
+}
+
 /* ---- streaming console (warm-dark inset terminal) ---- */
 .console-box {
   max-height: 20rem; overflow: auto;
