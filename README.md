@@ -223,8 +223,8 @@ Figure: ![ISO Table 22 stationary FED verification](artifacts/iso-table22-statio
 ### Usage
 
 See [docs/usage.md](docs/usage.md) for the full catalogue of
-`run.py` flags (scenario, FDS coupling, FED, rerouting, tenability,
-Smokeview export) and the post-processing scripts. Note: if an agent
+`run.py` flags (scenario, FDS coupling, FED, rerouting, tenability)
+and the post-processing scripts. Note: if an agent
 sample lies outside the FDS domain the implementation falls back to
 ambient conditions.
 
@@ -410,40 +410,22 @@ file. [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) reads this
 table to colour agents by FED dose or speed in a 3D scene alongside the FDS
 smoke.
 
-## Visualising agents in Smokeview
+## Visualising agents
 
-After a run, pyFDS-Evac can export agent trajectories as an FDS
-Lagrangian-particle file (`<CHID>_agents.prt5`) and register it in the
-existing `<CHID>.smv`, so Smokeview renders agents alongside the smoke
-slices and 3-D smoke output:
+Agent visualisation is handled by
+[fds-viewer](https://github.com/PedestrianDynamics/fds-viewer), which
+renders the JuPedSim trajectory SQLite in a 3-D scene alongside the FDS
+smoke. Run with `--output-sqlite` to produce the file fds-viewer loads:
 
 ```bash
 uv run run.py --scenario assets/demo \
               --fds-dir fds_data/demo \
-              --smv-export
-smokeview fds_data/demo/demo.smv
+              --output-sqlite demo.sqlite
 ```
 
-In Smokeview: *Load → Particles → AGENTS* and scrub the timebar. Options:
-
-- `--smv-particle-z` (default `0.0`): constant agent height in meters (avatars stand on the floor).
-- `--smv-class-id` (default `AGENTS`): `CLASS_OF_PARTICLES` label in the
-  `.smv`.
-- `--smv-avatar-style {human,arrow,sphere}` (default `human`):
-  which AVATARDEF to drop into `<CHID>.svo`. `arrow` shows a body
-  sphere with a red directional marker and makes per-particle
-  rotation (if present) visually obvious; `sphere` is a single
-  plain sphere for debugging.
-- `--smv-with-azimuth` (off by default): write per-particle AZIMUTH
-  (deg) as a PRT5 quantity column. Currently disabled because
-  per-particle avatar rotation is not supported by Smokeview
-  ([firemodels/smv#2597](https://github.com/firemodels/smv/issues/2597))
-  and because of a separate Smokeview 6.10.x bug that sticks
-  playback on frame 0 whenever the PRT5 has any quantity column.
-  See [`docs/smv-avatars.md`](docs/smv-avatars.md) for the trace.
-
-The patch to `.smv` is idempotent — re-running the exporter will not
-duplicate the block.
+When FED is computed, the SQLite also carries the optional
+`agent_scalars(frame, id, fed, speed)` table (see above), which
+fds-viewer uses to colour agents by FED dose or speed.
 
 ## References
 

@@ -66,15 +66,12 @@ required species) no FED is computed and these flags have no effect.
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
 | `--fed-threshold F` | FED at which agents are declared incapacitated (default 1.0). |
 
-### Smokeview export
+### Agent visualisation
 
-| Flag | Purpose |
-|------|---------|
-| `--smv-export` | Write `<CHID>_agents.prt5` + patch `<CHID>.smv` and drop a `<CHID>.svo` with our custom AVATARDEF. Requires `--fds-dir`. See [docs/smv-avatars.md](smv-avatars.md) for the mechanism. |
-| `--smv-particle-z M` | Agent height in metres for the particle export (default 0.0, so avatars stand on the floor). |
-| `--smv-class-id LABEL` | `CLASS_OF_PARTICLES` label (default `Human`). Bound to an AVATARDEF via the PROP block we write. |
-| `--smv-avatar-style {human,arrow,sphere}` | Which AVATARDEF we emit to `<CHID>.svo`. `human` (default) is a detailed humanoid. `arrow` is a body sphere plus a red directional marker — useful to sanity-check whether per-particle rotation is working. `sphere` is a single plain sphere for position-only rendering. |
-| `--smv-with-azimuth` | Write `AZIMUTH = atan2(ori_y, ori_x) mod 360` (deg) as a PRT5 quantity column. **Off by default**: per-particle avatar rotation is not supported by current Smokeview ([firemodels/smv#2597](https://github.com/firemodels/smv/issues/2597)), and writing the quantity also triggers a separate `CreatePartBoundFile` bug that sticks playback on frame 0. Enable only if you want the AZIMUTH colorbar entry and accept broken playback. See `docs/smv-avatars.md` for the full trace. |
+Agent 3-D visualisation is handled by
+[fds-viewer](https://github.com/PedestrianDynamics/fds-viewer), which
+loads the JuPedSim trajectory SQLite written by `--output-sqlite` (and
+its optional `agent_scalars` table for FED/speed colouring).
 
 ### Typical invocations
 

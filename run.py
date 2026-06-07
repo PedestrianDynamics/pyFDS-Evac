@@ -17,7 +17,6 @@ from pyfds_evac.core import (
     SmokeSpeedConfig,
     SmokeSpeedModel,
     TenabilityConfig,
-    export_agents_to_smv,
     inspect_fds_quantities,
     load_scenario,
     run_scenario,
@@ -110,48 +109,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Write ranked route cost snapshots to CSV",
     )
     parser.add_argument(
-        "--smv-export",
-        action="store_true",
-        help="Export agent trajectories as <CHID>_agents.prt5 and patch <CHID>.smv "
-        "so Smokeview renders agents alongside smoke (requires --fds-dir)",
-    )
-    parser.add_argument(
-        "--smv-particle-z",
-        type=float,
-        default=0.0,
-        help="Constant agent height in meters for the .prt5 export (default: 0.0)",
-    )
-    parser.add_argument(
-        "--smv-class-id",
-        default="Human",
-        help="CLASS_OF_PARTICLES label written to the .smv. Bound to an "
-        "AVATARDEF in objects.svo via a PROP block so Smokeview draws a "
-        "humanoid figure (default: Human)",
-    )
-    parser.add_argument(
-        "--smv-avatar-style",
-        choices=("human", "arrow", "sphere"),
-        default="human",
-        help="Which AVATARDEF to write to <CHID>.svo. 'human' is the "
-        "detailed humanoid that rotates with the agent's orientation; "
-        "'arrow' is a sphere + red directional marker (makes per-particle "
-        "rotation obvious); 'sphere' is a single plain sphere — no "
-        "rotation, smallest surface area for sanity-checking size. "
-        "(default: human)",
-    )
-    parser.add_argument(
-        "--smv-with-azimuth",
-        action="store_true",
-        help="Write per-particle AZIMUTH (deg) as a PRT5 quantity column. "
-        "Off by default — per-particle avatar rotation is not supported "
-        "by current Smokeview (firemodels/smv#2597) and writing the "
-        "quantity also triggers a CreatePartBoundFile bug that sticks "
-        "playback on frame 0. Enable only if you want the AZIMUTH "
-        "colorbar entry and accept broken playback.",
-    )
-    parser.add_argument(
         "--vis-cache",
-        help="Path to vismap pickle cache for visibility-gated route rejection. "
+        help="Path to vismap .npz cache for visibility-gated route rejection. "
         "Requires --fds-dir and --enable-rerouting. "
         "Cache is created if missing, loaded if present.",
     )
@@ -318,9 +277,6 @@ def main() -> int:
     parser = _build_parser()
     args = parser.parse_args()
 
-    if args.smv_export and not args.fds_dir:
-        parser.error("--smv-export requires --fds-dir")
-
     scenario = load_scenario(args.scenario)
     print("Initialization started.")
 
@@ -475,17 +431,6 @@ def main() -> int:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(result.sqlite_file, output_path)
         _maybe_write_agent_scalars(output_path, result.fed_history)
-
-    if args.smv_export:
-        prt5_path = export_agents_to_smv(
-            pathlib.Path(args.fds_dir),
-            result,
-            z=args.smv_particle_z,
-            class_id=args.smv_class_id,
-            avatar_style=args.smv_avatar_style,
-            with_azimuth=args.smv_with_azimuth,
-        )
-        print(f"Wrote agent particles to {prt5_path}")
 
     if args.cleanup:
         result.cleanup()
