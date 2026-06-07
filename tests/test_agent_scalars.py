@@ -143,3 +143,42 @@ def test_maybe_write_noop_without_fed(tmp_path):
     ).fetchone()
     con.close()
     assert exists is None
+
+
+def test_frames_align_with_trajectory(tmp_path):
+    db = tmp_path / "run.sqlite"
+    _make_base_sqlite(db, fps=10.0)
+    con = sqlite3.connect(db)
+    con.executemany(
+        "INSERT INTO trajectory_data VALUES (?, ?, 0, 0, 1, 0)",
+        [(f, 1) for f in range(0, 21)],
+    )
+    con.commit()
+    con.close()
+
+    write_agent_scalars(
+        db,
+        [
+            {
+                "time_s": 0.0,
+                "agent_id": 1,
+                "fed_cumulative": 0.0,
+                "base_speed": 1.0,
+                "speed_factor": 1.0,
+            },
+            {
+                "time_s": 2.0,
+                "agent_id": 1,
+                "fed_cumulative": 0.1,
+                "base_speed": 1.0,
+                "speed_factor": 1.0,
+            },
+        ],
+    )
+
+    con = sqlite3.connect(db)
+    traj_frames = {r[0] for r in con.execute("SELECT frame FROM trajectory_data")}
+    scalar_frames = {r[0] for r in con.execute("SELECT frame FROM agent_scalars")}
+    con.close()
+    assert scalar_frames.issubset(traj_frames)
+    assert scalar_frames == {0, 20}
