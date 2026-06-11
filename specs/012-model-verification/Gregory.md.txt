@@ -78,9 +78,24 @@ transpose test is Task E.
 
 ## Task B — S4: T-junction rerouting (avoid the smoky arm)
 
+> **DONE** — built as a third worked example. See
+> `tests/verification/test_s4_tjunction_reroute.py` and the
+> `t_junction_scenario` / `region_x` / `route_switch_count` helpers in
+> `harness.py`. The notes below are kept for context; extend rather than redo.
+
 **Mechanism:** `core/route_graph.py` + dynamic rerouting, via `reroute_config`.
 Logged to `result.route_history` (`time_s, agent_id, old_exit, new_exit,
-old_cost, new_cost, reason`) and `metrics["route_switches"]`.
+old_cost, new_cost, reason`).
+
+> **Gotcha (root-caused):** rerouting is degenerate under **by-number**
+> placement — agents' route-eval source node is their assigned *exit*, not their
+> spawn, so only that exit ranks and smoke is never sampled (0 switches). Use
+> `use_flow_spawning: true` (a short flow window), where source is the spawn node
+> and both exits rank. This is a real engine bug worth filing (see project
+> memory). Also: `metrics["route_switches"]` is absent when zero switches
+> occurred — read `len(result.route_history or [])`. **Keep low density** (few
+> agents, slow flow) or exit congestion makes the control churn bidirectionally
+> and masks the signal.
 
 **Geometry** (new `t_junction` builder): a stem splitting into a **short** arm
 (→ Exit A) and a **long** arm (→ Exit B). Put smoke in the short arm so its

@@ -76,6 +76,15 @@ def ramp_x(slope: float, intercept: float = 0.0) -> FieldFn:
     return lambda t, x, y: intercept + slope * x
 
 
+def region_x(value: float, *, x_min: float = -1e30, x_max: float = 1e30) -> FieldFn:
+    """``value`` inside the x-band ``[x_min, x_max]``, ``0`` elsewhere.
+
+    Localises smoke to one arm of a junction so only that route's cost rises --
+    a spatially-varying field, so it also exercises position sampling.
+    """
+    return lambda t, x, y: value if x_min <= x <= x_max else 0.0
+
+
 def make_smoke_model(
     extinction: FieldFn,
     *,
@@ -288,3 +297,159 @@ def first_incapacitation_times(result) -> dict[int, float]:
         if agent_id not in times or t < times[agent_id]:
             times[agent_id] = t
     return times
+
+
+# Exit IDs emitted by ``t_junction_scenario`` (referenced by S4 assertions).
+EXIT_LEFT = "exit_A_left"
+EXIT_RIGHT = "exit_B_right"
+
+
+@dataclass
+class TJunctionSpec:
+    """A T-junction: a central stem opening into a left and a right arm.
+
+    The stem is offset toward the right wall so the **right** exit is nearer and
+    is the default choice -- smoke placed in the right arm then forces a switch
+    to the left.  Geometry follows the proven ``assets/demo2`` layout.
+    """
+
+    width_m: float = 30.0
+    stem_center_x: float = 20.0  # offset right of centre -> right arm is shorter
+    stem_half_width_m: float = 3.0
+    stem_height_m: float = 10.0
+    corridor_height_m: float = 3.0
+    num_agents: int = 20  # low density: exits stay uncongested, control quiet
+    v0: float = 1.3
+    seed: int = 42
+    max_simulation_time: float = 120.0
+    flow_end_time_s: float = 40.0  # rerouting requires flow spawning (see note)
+
+    @property
+    def right_arm_x_min(self) -> float:
+        """Left edge of the right arm (right of the stem) -- the smoke band."""
+        return self.stem_center_x + self.stem_half_width_m
+
+
+def t_junction_scenario(spec: TJunctionSpec) -> Scenario:
+    """Build a two-exit T-junction ``Scenario`` for rerouting tests.
+
+    Agents spawn in the stem and route to the nearer (right) exit; with no
+    transitions the engine auto-connects the spawn to both exits, so route cost
+    -- not a fixed journey -- decides the exit, which is what rerouting needs.
+    """
+    w = spec.width_m
+    sx0 = spec.stem_center_x - spec.stem_half_width_m
+    sx1 = spec.stem_center_x + spec.stem_half_width_m
+    stem_h = spec.stem_height_m
+    top = stem_h + spec.corridor_height_m
+
+    # T-shape: stem (sx0..sx1, 0..stem_h) opening into a top corridor
+    # (0..w, stem_h..top) with an exit at each end.
+    walkable_wkt = (
+        f"POLYGON (({sx0} 0, {sx1} 0, {sx1} {stem_h}, {w} {stem_h}, "
+        f"{w} {top}, 0 {top}, 0 {stem_h}, {sx0} {stem_h}, {sx0} 0))"
+    )
+
+    raw = {
+        "project_version": "2.0",
+        "config": {
+            "simulation_settings": {
+                "simulationParams": {
+                    "max_simulation_time": spec.max_simulation_time,
+                    "model_type": "CollisionFreeSpeedModel",
+                },
+                "numberOfSimulations": 1,
+                "baseSeed": spec.seed,
+            },
+            "ui_state": {"useShortestPaths": False},
+        },
+        "exits": {
+            EXIT_LEFT: {
+                "type": "polygon",
+                "coordinates": [
+                    [0, stem_h],
+                    [1, stem_h],
+                    [1, top],
+                    [0, top],
+                    [0, stem_h],
+                ],
+                "enable_throughput_throttling": False,
+                "max_throughput": 0,
+            },
+            EXIT_RIGHT: {
+                "type": "polygon",
+                "coordinates": [
+                    [w - 1, stem_h],
+                    [w, stem_h],
+                    [w, top],
+                    [w - 1, top],
+                    [w - 1, stem_h],
+                ],
+                "enable_throughput_throttling": False,
+                "max_throughput": 0,
+            },
+        },
+        "distributions": {
+            "spawn_stem": {
+                "type": "polygon",
+                "coordinates": [
+                    [sx0 + 1, 1],
+                    [sx1 - 1, 1],
+                    [sx1 - 1, stem_h - 2],
+                    [sx0 + 1, stem_h - 2],
+                    [sx0 + 1, 1],
+                ],
+                "parameters": {
+                    "number": spec.num_agents,
+                    "radius": 0.15,
+                    "v0": spec.v0,
+                    # Rerouting engages only on the flow-spawning agent-init path
+                    # (by-number placement leaves agents out of route evaluation
+                    # -- a verified engine limitation, see project memory). A
+                    # short flow window gets the population in quickly.
+                    "use_flow_spawning": True,
+                    "flow_start_time": 0,
+                    "flow_end_time": spec.flow_end_time_s,
+                    "distribution_mode": "by_number",
+                    "use_premovement": False,
+                    "familiarity": "full",
+                    "radius_distribution": "constant",
+                    "v0_distribution": "constant",
+                },
+            }
+        },
+        "checkpoints": {},
+        "zones": {},
+        "journeys": [],
+        "transitions": [],
+    }
+
+    sim_params = raw["config"]["simulation_settings"]["simulationParams"]
+    sim_params.setdefault("max_simulation_time", spec.max_simulation_time)
+    return Scenario(
+        raw=raw,
+        walkable_area_wkt=walkable_wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=spec.seed,
+        sim_params=sim_params,
+        source_path=None,
+    )
+
+
+def route_switch_count(result) -> int:
+    """Number of reroutes. Robust to the metric key being absent when zero.
+
+    ``run_scenario`` only writes ``metrics["route_switches"]`` when at least one
+    switch occurred, so read the history list directly (it is ``[]``, never
+    missing, whenever rerouting is enabled).
+    """
+    return len(result.route_history or [])
+
+
+def route_switch_directions(result) -> dict[tuple[str, str], int]:
+    """Count ``(old_exit, new_exit)`` reroute pairs from ``route_history``."""
+    counts: dict[tuple[str, str], int] = {}
+    for switch in result.route_history or []:
+        key = (switch["old_exit"], switch["new_exit"])
+        counts[key] = counts.get(key, 0) + 1
+    return counts

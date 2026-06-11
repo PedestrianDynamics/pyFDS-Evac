@@ -1,0 +1,156 @@
+"""S4 -- T-junction rerouting: does smoke cost steer agents off the smoky route.
+
+A T-junction with the stem offset so the **right** exit is nearer and is the
+default choice.  Localised smoke in the right arm raises that route's cost above
+the longer-but-clear left route, and dynamic rerouting must switch agents from
+the right exit to the left one.
+
+Arms:
+
+- **control** (no smoke): low density keeps both exits uncongested, so nobody
+  reroutes -- ``route_switches == 0``.
+- **null-field control** (smoke model present, ``K = 0``): exercises the same
+  route-cost-with-extinction wiring with a null field; still no switches.
+- **treatment** (smoke in the right arm): every agent switches from the right
+  (smoky) exit to the left (clear) one, and never the reverse.
+
+Assertions are aggregate (counts, directions, earliest-switch latency), never
+per-agent or trajectory-level -- the coupled run is not bit-reproducible (see
+project memory).
+
+Engine note: rerouting only engages on the **flow-spawning** agent-init path;
+``t_junction_scenario`` uses it (a by-number population leaves agents out of
+route evaluation entirely -- a verified limitation worth its own bug report).
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
+from pyfds_evac.core.scenario import run_scenario
+
+from harness import (
+    EXIT_LEFT,
+    EXIT_RIGHT,
+    TJunctionSpec,
+    make_smoke_model,
+    region_x,
+    route_switch_count,
+    route_switch_directions,
+    t_junction_scenario,
+    uniform,
+)
+
+REEVAL_INTERVAL_S = 5.0
+# Right-arm extinction: enough that the short smoky route costs more than the
+# long clear one (w_smoke = 5 amplifies it in the composite cost).
+SMOKE_K = 6.0
+
+
+def _reroute_config() -> RerouteConfig:
+    return RerouteConfig(
+        reevaluation_interval_s=REEVAL_INTERVAL_S,
+        cost_config=RouteCostConfig(w_smoke=5.0, w_fed=10.0),
+    )
+
+
+def _right_arm_smoke(spec: TJunctionSpec):
+    return make_smoke_model(region_x(SMOKE_K, x_min=spec.right_arm_x_min))
+
+
+def test_control_no_smoke_no_reroute():
+    """Uncongested, no smoke: agents keep the near exit, nobody reroutes."""
+    spec = TJunctionSpec(seed=42)
+    result = run_scenario(
+        t_junction_scenario(spec), seed=spec.seed, reroute_config=_reroute_config()
+    )
+    try:
+        assert route_switch_count(result) == 0
+        assert result.metrics["agents_remaining"] == 0  # both arms open
+    finally:
+        result.cleanup()
+
+
+def test_null_field_control_no_reroute():
+    """Behavioral F0: smoke model present but K = 0 -> no cost change, no switch.
+
+    Drives the route-cost-with-extinction sampling with a null field, so a bug
+    that perturbs route cost in clear air would show up as spurious switches.
+    """
+    spec = TJunctionSpec(seed=42)
+    result = run_scenario(
+        t_junction_scenario(spec),
+        seed=spec.seed,
+        smoke_speed_model=make_smoke_model(uniform(0.0)),
+        reroute_config=_reroute_config(),
+    )
+    try:
+        assert route_switch_count(result) == 0
+    finally:
+        result.cleanup()
+
+
+def test_smoke_forces_switch_to_clear_exit():
+    """Smoke in the near arm reroutes agents to the far clear exit -- only that way."""
+    spec = TJunctionSpec(seed=42)
+    result = run_scenario(
+        t_junction_scenario(spec),
+        seed=spec.seed,
+        smoke_speed_model=_right_arm_smoke(spec),
+        reroute_config=_reroute_config(),
+    )
+    try:
+        directions = route_switch_directions(result)
+        # Every reroute goes smoky-right -> clear-left; none the other way.
+        assert directions == {(EXIT_RIGHT, EXIT_LEFT): route_switch_count(result)}
+        # A clear majority of the population actually reroutes (vs control's 0).
+        assert route_switch_count(result) >= spec.num_agents // 2
+        assert result.metrics["agents_remaining"] == 0
+    finally:
+        result.cleanup()
+
+
+def test_reroute_latency_within_interval():
+    """Every reroute lands within one interval of that agent's spawn (B5.2).
+
+    Smoke is static from t=0, so an agent encounters the smoky cost as soon as it
+    spawns; it must reroute by its next reevaluation.  Agents spawn over
+    ``flow_end_time_s``, so the *last* reroute must occur within one interval of
+    the last spawn -- bounding the maximum, not just the minimum (a check on
+    ``min`` would pass even if latency blew up, since staggered eval offsets
+    guarantee some agent always switches early).
+    """
+    spec = TJunctionSpec(seed=42)
+    result = run_scenario(
+        t_junction_scenario(spec),
+        seed=spec.seed,
+        smoke_speed_model=_right_arm_smoke(spec),
+        reroute_config=_reroute_config(),
+    )
+    try:
+        times = [s["time_s"] for s in result.route_history or []]
+        assert times, "expected at least one reroute"
+        assert max(times) <= spec.flow_end_time_s + REEVAL_INTERVAL_S
+    finally:
+        result.cleanup()
+
+
+@pytest.mark.slow
+def test_switch_count_reproducible_under_fixed_seed():
+    """Aggregate determinism: same seed -> same number of reroutes."""
+    spec = TJunctionSpec(seed=42)
+
+    def _count():
+        result = run_scenario(
+            t_junction_scenario(spec),
+            seed=spec.seed,
+            smoke_speed_model=_right_arm_smoke(spec),
+            reroute_config=_reroute_config(),
+        )
+        try:
+            return route_switch_count(result)
+        finally:
+            result.cleanup()
+
+    assert _count() == _count()
