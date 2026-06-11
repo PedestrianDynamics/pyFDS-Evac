@@ -4,7 +4,7 @@ Verification (*"are the equations solved correctly?"*) for the coupled
 pyFDS-Evac engine, against hand-computable references. This is distinct from
 behavioural **validation** of human decision-making, which is out of scope here.
 See [`specs/012-model-verification/SPEC.md`](../../specs/012-model-verification/SPEC.md)
-for the design and [`specs/012-model-verification/Gregory.md.txt`](../../specs/012-model-verification/Gregory.md)
+for the design and [`specs/012-model-verification/Gregory.md`](../../specs/012-model-verification/Gregory.md)
 for the remaining scenario assignments.
 
 ## Two layers
