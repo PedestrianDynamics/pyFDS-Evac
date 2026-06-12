@@ -1,8 +1,10 @@
 """Tests for generating an FDS geometry deck from a walkable-area WKT.
 
-The core invariant is the round-trip: the generated ``&OBST`` walls must be the
-exact complement of the walkable area, so no wall ever covers walkable space and
-the whole walkable boundary is enclosed.
+The core invariant is the round-trip: a generated ``&OBST`` wall never covers a
+positive-area walkable region (cells are classified by overlap, not centre
+membership, so narrow or off-grid passages are not silently sealed).  Walls may
+thin by up to one cell at the resolution floor -- the safe direction for an
+egress domain.
 """
 
 from __future__ import annotations
@@ -37,6 +39,21 @@ def test_walls_never_cover_walkable_interior():
         assert not _covered(boxes, x, y), (
             f"wall covers walkable point ({x:.2f}, {y:.2f})"
         )
+
+
+def test_offgrid_narrow_walkable_not_sealed():
+    """An off-grid walkable point whose grid-cell centre is in a wall stays open.
+
+    Regression for the centre-sampling bug: classify by overlap so a cell that
+    is partly walkable is not emitted as a solid OBST.
+    """
+    walk = _load_walkable(
+        "POLYGON ((0.13 0.13, 0.6 0.13, 0.6 0.6, 0.13 0.6, 0.13 0.13))"
+    )
+    boxes, _ = _obst_boxes(walk, 0.25, 1)
+    p = (0.18, 0.18)  # inside the polygon, but its cell centre (0.125) is not
+    assert walk.contains(Point(*p))
+    assert not _covered(boxes, *p)
 
 
 def test_obstacle_hole_becomes_solid():

@@ -29,7 +29,7 @@ import math
 
 import numpy as np
 from shapely import wkt as _wkt
-from shapely.geometry import Point
+from shapely.geometry import box
 from shapely.geometry.base import BaseGeometry
 
 # Slices pyFDS-Evac canonicalises (see core/fds_inventory.py).
@@ -60,13 +60,22 @@ def _mesh_grid(walkable: BaseGeometry, dx: float, margin_cells: int):
 
 
 def _solid_mask(walkable, mx0, my0, ni, nj, dx) -> np.ndarray:
-    """Boolean grid: True where a cell centre is outside the walkable area."""
+    """Boolean grid: True where a cell shares no area with the walkable area.
+
+    A cell is walkable if it *overlaps* the walkable polygon (positive
+    intersection area), not merely if its centre is inside.  Centre-sampling
+    would seal a cell whose centre lands in a wall even though part of the cell
+    is walkable, silently deleting narrow or off-grid passages; overlap keeps
+    them open (a wall never covers a positive-area walkable region) at the cost
+    of walls thinning by up to one cell -- the safe direction for an egress
+    domain (never seal a corridor).
+    """
     solid = np.ones((ni, nj), dtype=bool)
     for i in range(ni):
-        cx = mx0 + (i + 0.5) * dx
+        x0 = mx0 + i * dx
         for j in range(nj):
-            cy = my0 + (j + 0.5) * dx
-            if walkable.contains(Point(cx, cy)):
+            y0 = my0 + j * dx
+            if walkable.intersection(box(x0, y0, x0 + dx, y0 + dx)).area > 1e-12:
                 solid[i, j] = False
     return solid
 
