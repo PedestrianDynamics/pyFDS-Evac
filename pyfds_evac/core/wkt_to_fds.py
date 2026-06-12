@@ -25,15 +25,50 @@ are expected to edit.
 
 from __future__ import annotations
 
+import logging
 import math
 
 import numpy as np
 from shapely import wkt as _wkt
 from shapely.geometry import box
 from shapely.geometry.base import BaseGeometry
+from shapely.prepared import prep
+
+_logger = logging.getLogger(__name__)
 
 # Slices pyFDS-Evac canonicalises (see core/fds_inventory.py).
 _FED_SPECIES = ("CARBON MONOXIDE", "CARBON DIOXIDE", "OXYGEN")
+
+# Preferred cell size when auto-sizing; refined finer only to resolve thin walls.
+_DEFAULT_DX = 0.25
+# Floor on the auto-sized cell: stops a stray near-duplicate coordinate (e.g. a
+# 0.01 m modelling artifact) from forcing a runaway-fine mesh.
+_MIN_DX = 0.1
+
+
+def _min_feature_width(walkable: BaseGeometry) -> float:
+    """Smallest axis-aligned gap between vertex coordinates (the thinnest wall).
+
+    For rectilinear floor plans a 0.1 m wall shows up as adjacent coordinates
+    0.1 m apart (e.g. 5.0 and 5.1).  Returns ``inf`` for a plain rectangle with
+    no internal features.  Used to pick a ``dx`` fine enough to resolve walls.
+    """
+    polys = list(getattr(walkable, "geoms", [walkable]))
+    xs: set[float] = set()
+    ys: set[float] = set()
+    for poly in polys:
+        for ring in [poly.exterior, *poly.interiors]:
+            for x, y in ring.coords:
+                xs.add(round(x, 9))
+                ys.add(round(y, 9))
+    return min(_min_gap(xs), _min_gap(ys))
+
+
+def _min_gap(values) -> float:
+    """Smallest positive difference between consecutive sorted values."""
+    ordered = sorted(values)
+    gaps = [b - a for a, b in zip(ordered, ordered[1:]) if b - a > 1e-9]
+    return min(gaps) if gaps else math.inf
 
 
 def _load_walkable(wkt_or_polygon) -> BaseGeometry:
@@ -70,13 +105,19 @@ def _solid_mask(walkable, mx0, my0, ni, nj, dx) -> np.ndarray:
     of walls thinning by up to one cell -- the safe direction for an egress
     domain (never seal a corridor).
     """
+    prepared = prep(walkable)
     solid = np.ones((ni, nj), dtype=bool)
     for i in range(ni):
         x0 = mx0 + i * dx
         for j in range(nj):
             y0 = my0 + j * dx
-            if walkable.intersection(box(x0, y0, x0 + dx, y0 + dx)).area > 1e-12:
-                solid[i, j] = False
+            cell = box(x0, y0, x0 + dx, y0 + dx)
+            if not prepared.intersects(cell):
+                continue  # fully outside walkable -> solid (fast path)
+            if prepared.contains(cell):
+                solid[i, j] = False  # fully inside -> walkable (fast path)
+            elif walkable.intersection(cell).area > 1e-12:
+                solid[i, j] = False  # boundary cell with real overlap (slow path)
     return solid
 
 
@@ -145,10 +186,42 @@ def _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m) -> str:
     return "\n".join(lines)
 
 
+def resolve_dx(walkable: BaseGeometry, dx: float | None) -> float:
+    """Choose a cell size that resolves the thinnest wall.
+
+    ``dx=None`` auto-sizes to ``min(_DEFAULT_DX, thinnest_wall)`` so a coarse fire
+    grid is used unless walls demand finer.  An explicit ``dx`` coarser than the
+    thinnest wall is honoured but warned about: walls thinner than ``dx`` are
+    silently dropped (cells are kept walkable on any overlap).
+    """
+    min_feat = _min_feature_width(walkable)
+    if dx is None:
+        if math.isinf(min_feat):
+            return _DEFAULT_DX
+        if min_feat < _MIN_DX - 1e-9:
+            _logger.warning(
+                "thinnest feature %.3g m is below the %.3g m floor; walls thinner "
+                "than %.3g m may not resolve.",
+                min_feat,
+                _MIN_DX,
+                _MIN_DX,
+            )
+        return max(min(_DEFAULT_DX, min_feat), _MIN_DX)
+    if math.isfinite(min_feat) and dx > min_feat + 1e-9:
+        _logger.warning(
+            "dx=%.3g m is coarser than the thinnest wall (%.3g m); walls thinner "
+            "than dx are dropped. Pass dx<=%.3g (or dx=None to auto-size).",
+            dx,
+            min_feat,
+            min_feat,
+        )
+    return dx
+
+
 def wkt_to_fds(
     wkt_or_polygon,
     *,
-    dx: float = 0.25,
+    dx: float | None = None,
     z_max: float = 3.0,
     chid: str = "from_wkt",
     margin_cells: int = 1,
@@ -160,11 +233,14 @@ def wkt_to_fds(
 ) -> str:
     """Return an FDS input deck whose walkable void matches the given WKT.
 
-    With ``include_fire`` (default) a burner and the pyFDS-Evac analysis slices
+    ``dx=None`` (default) auto-sizes the cell to resolve the thinnest wall; an
+    explicit ``dx`` coarser than that is warned about (thin walls drop).  With
+    ``include_fire`` (default) a burner and the pyFDS-Evac analysis slices
     (extinction + CO/CO2/O2) are appended so the deck runs end-to-end; set it
     False for a geometry-only deck (``&MESH`` + ``&OBST`` walls).
     """
     walkable = _load_walkable(wkt_or_polygon)
+    dx = resolve_dx(walkable, dx)
     boxes, (mx0, my0, mx1, my1, ni, nj) = _obst_boxes(walkable, dx, margin_cells)
     nk = max(1, round(z_max / dx))
 
@@ -195,7 +271,12 @@ if __name__ == "__main__":  # pragma: no cover
         description="Generate an FDS deck from a walkable WKT."
     )
     parser.add_argument("wkt_file", help="File containing a POLYGON/MULTIPOLYGON WKT")
-    parser.add_argument("--dx", type=float, default=0.25)
+    parser.add_argument(
+        "--dx",
+        type=float,
+        default=None,
+        help="cell size (default: auto from thinnest wall)",
+    )
     parser.add_argument("--z-max", type=float, default=3.0)
     parser.add_argument("--chid", default="from_wkt")
     parser.add_argument("--geometry-only", action="store_true")

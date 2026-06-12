@@ -9,10 +9,22 @@ egress domain.
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
+import pytest
 from shapely.geometry import Point
 
-from pyfds_evac.core.wkt_to_fds import _load_walkable, _obst_boxes, wkt_to_fds
+from pyfds_evac.core.wkt_to_fds import (
+    _load_walkable,
+    _min_feature_width,
+    _obst_boxes,
+    resolve_dx,
+    wkt_to_fds,
+)
+
+# A room with a 0.1 m internal wall (coords 5.0 and 5.1 are 0.1 m apart).
+THIN_WALL_WKT = "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (5 1, 5.1 1, 5.1 9, 5 9, 5 1))"
 
 # An L-shaped room with a doorway gap, exterior-only.
 L_ROOM_WKT = "POLYGON ((0 0, 6 0, 6 4, 10 4, 10 10, 0 10, 0 0))"
@@ -89,6 +101,37 @@ def test_deck_has_required_sections_and_slices():
         "OXYGEN",
     ):
         assert quantity in deck
+
+
+def test_min_feature_width_detects_thin_wall():
+    """The thinnest wall (0.1 m) is read off the vertex spacing."""
+    walk = _load_walkable(THIN_WALL_WKT)
+    assert _min_feature_width(walk) == pytest.approx(0.1)
+
+
+def test_auto_dx_resolves_thin_wall():
+    """``dx=None`` auto-sizes fine enough that the thin wall becomes OBSTs."""
+    walk = _load_walkable(THIN_WALL_WKT)
+    dx = resolve_dx(walk, None)
+    assert dx == pytest.approx(0.1)
+    # A point inside the thin wall is non-walkable -> covered when resolved.
+    boxes, _ = _obst_boxes(walk, dx, 1)
+    assert _covered(boxes, 5.05, 5.05)
+
+
+def test_auto_dx_keeps_default_when_no_thin_walls():
+    """A plain room (no internal features) auto-sizes to the default dx."""
+    walk = _load_walkable("POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))")
+    assert resolve_dx(walk, 0.25) == 0.25
+    assert resolve_dx(walk, None) == 0.25
+
+
+def test_coarse_dx_warns(caplog):
+    """An explicit dx coarser than the thinnest wall logs a warning."""
+    walk = _load_walkable(THIN_WALL_WKT)
+    with caplog.at_level(logging.WARNING):
+        resolve_dx(walk, 0.25)
+    assert any("coarser than the thinnest wall" in r.message for r in caplog.records)
 
 
 def test_geometry_only_omits_fire():
