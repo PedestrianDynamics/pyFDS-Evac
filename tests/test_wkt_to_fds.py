@@ -161,14 +161,21 @@ def test_fire_template_rejects_slice_above_mesh():
         wkt_to_fds(L_ROOM_WKT, z_max=1.5, slice_height_m=2.0)
 
 
-def test_burner_fits_in_shallow_mesh():
-    """The burner obstruction never exceeds z_max."""
+def test_fire_source_is_non_obstructing_floor_vent():
+    """The fire is a floor &VENT (z=0), not an &OBST that blocks walkable space.
+
+    An obstructing burner would carve a non-walkable patch out of the void this
+    deck is meant to mirror from the WKT.
+    """
     deck = wkt_to_fds(L_ROOM_WKT, z_max=0.3, slice_height_m=0.2)
     burner = next(
-        line for line in deck.splitlines() if "BURNER" in line and "OBST" in line
+        line for line in deck.splitlines() if "BURNER" in line and "XB=" in line
     )
-    z_top = float(burner.split("XB=")[1].split(",")[5])
-    assert z_top <= 0.3
+    assert burner.lstrip().startswith("&VENT")
+    z0, z1 = burner.split("XB=")[1].split(",")[4:6]
+    assert float(z0) == 0.0 and float(z1.split()[0]) == 0.0
+    # No burner OBST sits inside the walkable area.
+    assert not any("BURNER" in ln and "OBST" in ln for ln in deck.splitlines())
 
 
 def test_geometry_only_omits_fire():

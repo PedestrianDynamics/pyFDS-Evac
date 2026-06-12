@@ -174,16 +174,20 @@ def _obst_boxes(walkable, dx, margin_cells):
     return boxes, (mx0, my0, mx1, my1, ni, nj)
 
 
-def _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m, z_max, nd) -> str:
-    """A burner at the walkable centroid plus the slices pyFDS-Evac reads."""
+def _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m, nd) -> str:
+    """A floor-vent burner at the walkable centroid plus the pyFDS-Evac slices.
+
+    The fire is a floor ``&VENT`` (z=0), not a raised ``&OBST`` -- an obstructing
+    burner would carve a non-walkable patch out of the very void this deck is
+    meant to mirror from the WKT.
+    """
     c = walkable.representative_point()
     half = burner_size_m / 2.0
-    burner_top = min(0.4, z_max)  # keep the burner inside a shallow mesh
     lines = [
         "! --- fire (edit to taste; not derived from geometry) ---",
         "&REAC FUEL='PROPANE', SOOT_YIELD=0.06, CO_YIELD=0.01 /",
-        f"&OBST XB={c.x - half:.{nd}f},{c.x + half:.{nd}f},{c.y - half:.{nd}f},"
-        f"{c.y + half:.{nd}f},0.0,{burner_top}, SURF_IDS='BURNER','INERT','INERT' /",
+        f"&VENT XB={c.x - half:.{nd}f},{c.x + half:.{nd}f},{c.y - half:.{nd}f},"
+        f"{c.y + half:.{nd}f},0.0,0.0, SURF_ID='BURNER' /",
         f"&SURF ID='BURNER', HRRPUA={hrrpua:.1f}, COLOR='RED', RAMP_Q='qramp' /",
         "&RAMP ID='qramp', T=0.0, F=0.0 /",
         "&RAMP ID='qramp', T=10.0, F=1.0 /",
@@ -206,6 +210,13 @@ def resolve_dx(walkable: BaseGeometry, dx: float | None) -> float:
     grid is used unless walls demand finer.  An explicit ``dx`` coarser than the
     thinnest wall is honoured but warned about: walls thinner than ``dx`` are
     silently dropped (cells are kept walkable on any overlap).
+
+    Limitation: the mesh is a uniform grid aligned to multiples of ``dx``.  A
+    wall whose coordinates are *off* that grid by a fraction of a cell (e.g. a
+    0.1 m wall spanning 5.05-5.15 at ``dx=0.1``) can straddle two cells that
+    each also touch walkable space and be dropped.  Designed floor plans are
+    grid-aligned, so this bites synthetic/rotated geometry; pass a finer explicit
+    ``dx`` (<= feature/2) when feeding such input.
     """
     min_feat = _min_feature_width(walkable)
     if dx is None:
@@ -279,9 +290,7 @@ def wkt_to_fds(
     if include_fire:
         lines += [
             "",
-            _fire_and_slices(
-                walkable, slice_height_m, hrrpua, burner_size_m, z_max, nd
-            ),
+            _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m, nd),
         ]
     lines += ["", "&TAIL /", ""]
     return "\n".join(lines)
