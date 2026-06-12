@@ -71,6 +71,18 @@ def _min_gap(values) -> float:
     return min(gaps) if gaps else math.inf
 
 
+def _coord_decimals(dx: float) -> int:
+    """Decimals needed to print dx-aligned coordinates without rounding drift.
+
+    Coordinates are multiples of ``dx``; a fixed ``%.2f`` would corrupt a
+    non-centimetre ``dx`` (e.g. 0.025 or 0.104), shifting walls or collapsing
+    thin ``&OBST`` boxes to zero width.
+    """
+    if dx <= 0 or not math.isfinite(dx):
+        return 2
+    return min(6, max(2, -math.floor(math.log10(dx)) + 2))
+
+
 def _load_walkable(wkt_or_polygon) -> BaseGeometry:
     """Accept a WKT string or a Shapely geometry; return the walkable area."""
     if isinstance(wkt_or_polygon, BaseGeometry):
@@ -162,15 +174,16 @@ def _obst_boxes(walkable, dx, margin_cells):
     return boxes, (mx0, my0, mx1, my1, ni, nj)
 
 
-def _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m) -> str:
+def _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m, z_max, nd) -> str:
     """A burner at the walkable centroid plus the slices pyFDS-Evac reads."""
     c = walkable.representative_point()
     half = burner_size_m / 2.0
+    burner_top = min(0.4, z_max)  # keep the burner inside a shallow mesh
     lines = [
         "! --- fire (edit to taste; not derived from geometry) ---",
         "&REAC FUEL='PROPANE', SOOT_YIELD=0.06, CO_YIELD=0.01 /",
-        f"&OBST XB={c.x - half:.2f},{c.x + half:.2f},{c.y - half:.2f},"
-        f"{c.y + half:.2f},0.0,0.4, SURF_IDS='BURNER','INERT','INERT' /",
+        f"&OBST XB={c.x - half:.{nd}f},{c.x + half:.{nd}f},{c.y - half:.{nd}f},"
+        f"{c.y + half:.{nd}f},0.0,{burner_top}, SURF_IDS='BURNER','INERT','INERT' /",
         f"&SURF ID='BURNER', HRRPUA={hrrpua:.1f}, COLOR='RED', RAMP_Q='qramp' /",
         "&RAMP ID='qramp', T=0.0, F=0.0 /",
         "&RAMP ID='qramp', T=10.0, F=1.0 /",
@@ -239,25 +252,36 @@ def wkt_to_fds(
     (extinction + CO/CO2/O2) are appended so the deck runs end-to-end; set it
     False for a geometry-only deck (``&MESH`` + ``&OBST`` walls).
     """
+    if include_fire and slice_height_m >= z_max:
+        raise ValueError(
+            f"slice_height_m ({slice_height_m} m) must be below z_max ({z_max} m); "
+            "the analysis slice would lie outside the mesh."
+        )
     walkable = _load_walkable(wkt_or_polygon)
     dx = resolve_dx(walkable, dx)
     boxes, (mx0, my0, mx1, my1, ni, nj) = _obst_boxes(walkable, dx, margin_cells)
     nk = max(1, round(z_max / dx))
+    nd = _coord_decimals(dx)
 
     lines = [
         f"&HEAD CHID='{chid}', TITLE='Generated from JuPedSim walkable WKT' /",
-        f"&MESH IJK={ni},{nj},{nk}, XB={mx0:.2f},{mx1:.2f},{my0:.2f},{my1:.2f},0.0,{z_max} /",
+        f"&MESH IJK={ni},{nj},{nk}, XB={mx0:.{nd}f},{mx1:.{nd}f},"
+        f"{my0:.{nd}f},{my1:.{nd}f},0.0,{z_max} /",
         f"&TIME T_END={t_end} /",
         "&MISC TMPA=20.0 /",
         "",
         f"! --- walls: complement of the walkable area ({len(boxes)} OBSTs) ---",
     ]
     for x0, x1, y0, y1 in boxes:
-        lines.append(f"&OBST XB={x0:.2f},{x1:.2f},{y0:.2f},{y1:.2f},0.0,{z_max} /")
+        lines.append(
+            f"&OBST XB={x0:.{nd}f},{x1:.{nd}f},{y0:.{nd}f},{y1:.{nd}f},0.0,{z_max} /"
+        )
     if include_fire:
         lines += [
             "",
-            _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m),
+            _fire_and_slices(
+                walkable, slice_height_m, hrrpua, burner_size_m, z_max, nd
+            ),
         ]
     lines += ["", "&TAIL /", ""]
     return "\n".join(lines)

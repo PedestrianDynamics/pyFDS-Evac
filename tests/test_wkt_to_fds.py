@@ -134,6 +134,43 @@ def test_coarse_dx_warns(caplog):
     assert any("coarser than the thinnest wall" in r.message for r in caplog.records)
 
 
+def _xb_numbers(deck):
+    """All XB coordinate values across the deck's &MESH/&OBST lines."""
+    import re
+
+    out = []
+    for line in deck.splitlines():
+        m = re.search(r"XB=([-\d.,eE]+)", line)
+        if m:
+            out.extend(float(v) for v in m.group(1).split(","))
+    return out
+
+
+def test_coordinates_stay_grid_aligned_for_fine_dx():
+    """A non-centimetre dx must not be corrupted by fixed 2-decimal rounding."""
+    dx = 0.025
+    deck = wkt_to_fds(L_ROOM_WKT, dx=dx, include_fire=False)
+    for v in _xb_numbers(deck):
+        # every coordinate is a multiple of dx (z values 0 are too)
+        assert abs((v / dx) - round(v / dx)) < 1e-6, f"{v} is not a multiple of {dx}"
+
+
+def test_fire_template_rejects_slice_above_mesh():
+    """include_fire with slice_height_m >= z_max is a misconfig that can't run."""
+    with pytest.raises(ValueError, match="outside the mesh"):
+        wkt_to_fds(L_ROOM_WKT, z_max=1.5, slice_height_m=2.0)
+
+
+def test_burner_fits_in_shallow_mesh():
+    """The burner obstruction never exceeds z_max."""
+    deck = wkt_to_fds(L_ROOM_WKT, z_max=0.3, slice_height_m=0.2)
+    burner = next(
+        line for line in deck.splitlines() if "BURNER" in line and "OBST" in line
+    )
+    z_top = float(burner.split("XB=")[1].split(",")[5])
+    assert z_top <= 0.3
+
+
 def test_geometry_only_omits_fire():
     """``include_fire=False`` yields walls without a burner or slices."""
     deck = wkt_to_fds(L_ROOM_WKT, include_fire=False)
