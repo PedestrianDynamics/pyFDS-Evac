@@ -13,7 +13,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fasthtml.common import NotStr
+from fasthtml.common import Div, H3, NotStr
+
+_CARD = ("background:#2A262A;border:1px solid rgba(255,255,255,.07);"
+         "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)")
 
 from .plots import _PALETTE, _agent_exit_map
 
@@ -51,7 +54,7 @@ def _payload(result: Any, scenario: Any) -> dict | None:
     exits_seen = sorted(set(agent_exit.values()))
     color_of = {ex: _PALETTE[i % len(_PALETTE)] for i, ex in enumerate(exits_seen)}
     agent_ids = sorted(int(a) for a in data["id"].unique())
-    colors = [color_of.get(agent_exit.get(a, ""), "#cc785c") for a in agent_ids]
+    colors = [color_of.get(agent_exit.get(a, ""), "#ff6a1a") for a in agent_ids]
 
     frames_all = sorted(data["frame"].unique())
     step = max(1, len(frames_all) // _N_SAMPLES)
@@ -120,7 +123,7 @@ def _payload(result: Any, scenario: Any) -> dict | None:
             exits.append(
                 {
                     "poly": [[float(c[0]), float(c[1])] for c in coords],
-                    "color": color_of.get(exit_id, "#cc785c"),
+                    "color": color_of.get(exit_id, "#ff6a1a"),
                     "label": exit_id.replace("_", " "),
                 }
             )
@@ -154,7 +157,7 @@ _JS = """
   var mode = D.hasFed ? 'fed' : 'exit';
 
   // FED dose -> tier colour (green -> amber -> orange -> red).
-  var STOPS = [[0, '#3f8f57'], [0.3, '#d19a2e'], [0.6, '#d2722b'], [1, '#c23b2e']];
+  var STOPS = [[0, '#f4c430'], [0.3, '#ffb020'], [0.6, '#ff6a1a'], [1, '#e01e37']];
   function lerpHex(a, b, t) {
     var ar = parseInt(a.slice(1, 3), 16), ag = parseInt(a.slice(3, 5), 16),
         ab = parseInt(a.slice(5, 7), 16);
@@ -214,7 +217,7 @@ _JS = """
   function draw() {
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
     ctx.clearRect(0, 0, w, h);
-    poly(D.walk, p, 'rgba(20,20,19,0.035)', 'rgba(20,20,19,0.18)', 1);
+    poly(D.walk, p, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.16)', 1.5);
     D.exits.forEach(function (e) {
       poly(e.poly, p, e.color + '28', e.color, 2);
     });
@@ -236,7 +239,7 @@ _JS = """
       var q = p(X, Y);
       ctx.beginPath(); ctx.arc(q[0], q[1], 4.5, 0, 6.2832);
       ctx.fillStyle = col; ctx.fill();
-      ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(20,20,19,0.35)'; ctx.stroke();
+      ctx.lineWidth = 0.7; ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
     }
     tlabel.textContent = 't = ' + (simT - t0).toFixed(0) + ' s';
     slider.value = String(((simT - t0) / span) * 1000);
@@ -277,16 +280,12 @@ _JS = """
 
 def trajectory_component(result: Any, scenario: Any) -> Any:
     """A Card with a canvas trajectory animation (smooth interpolated playback)."""
-    from monsterui.all import Card, DivLAligned, H3, UkIcon
-
     payload = _payload(result, scenario)
     if payload is None:
-        return Card(
-            DivLAligned(UkIcon("route"), H3("Trajectories", cls="m-0")),
-            NotStr(
-                '<p class="text-sm" style="color:hsl(var(--muted-foreground))">'
-                "Trajectory data unavailable.</p>"
-            ),
+        return Div(
+            H3("Trajectories", style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0 0 10px;color:#F2EDE9"),
+            NotStr('<p style="font-size:.85rem;color:#B2A9A3">Trajectory data unavailable.</p>'),
+            style=_CARD,
         )
     data_json = json.dumps(payload)
     toggle = ""
@@ -310,7 +309,11 @@ def trajectory_component(result: Any, scenario: Any) -> Any:
         + "</div></div>"
     )
     script = "<script>" + _JS.replace("__DATA__", data_json) + "</script>"
-    return Card(
-        DivLAligned(UkIcon("route"), H3("Trajectories", cls="m-0")),
+    return Div(
+        Div(
+            H3("Trajectories", style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0;color:#F2EDE9"),
+            style="display:flex;align-items:center;margin-bottom:14px",
+        ),
         NotStr(markup + script),
+        style=_CARD,
     )

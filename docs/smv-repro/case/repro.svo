@@ -1,0 +1,9 @@
+AVATARDEF
+ agent_arrow
+ :R=26 :G=102 :B=230 :AZIMUTH=0
+ $AZIMUTH rotatez
+ 1.0 scaleauto
+ $R $G $B setrgb
+ push 0.0 0.0 0.5 translate 0.25 drawsphere pop
+ 255 64 64 setrgb
+ push 0.5 0.0 0.5 translate 0.1 drawsphere pop

@@ -17,8 +17,8 @@
 &REAC FUEL='CABLE_FUEL',
       C=3, H=5, O=0, N=1,
       SOOT_YIELD=0.172,
-      CO_YIELD=0.063,
-      HCN_YIELD=0.006,
+      CO_YIELD=0.15,        ! increased from 0.063
+      HCN_YIELD=0.02,       ! increased from 0.006
       HEAT_OF_COMBUSTION=16400 /
 
 ! --- Geometry: solid blocks forming the T-shape ---

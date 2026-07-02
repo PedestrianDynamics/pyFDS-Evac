@@ -1,0 +1,101 @@
+&HEAD CHID='demo_homogeneous_CO', TITLE='30x30 square room, homogeneous constant 4000 ppm CO for FED hand-calc validation' /
+! --- Computational domain ---
+! Plain square room: x=[0,30] y=[0,30], matching the JuPedSim square scenario
+! (spawn area x=[5,25] y=[5,25]).
+! Ceiling at 3 m
+! Mesh kept at 0.5 m cells (same resolution as the prior T-corridor case):
+! there is no fire and no turbulence to resolve here (pure prescribed-
+! concentration diffusion-free field), so a coarser mesh is fine and keeps
+! wall-clock run time low even though the domain area roughly doubled.
+! Split into 4 equal quarters (2x2 grid) so FDS can run each mesh on its
+! own MPI process -- launch with: mpiexec -n 4 fds demo_homogeneous_CO_square.fds
+&MESH ID='M1', IJK=30,30,6, XB=0,15,0,15,0,3 /
+&MESH ID='M2', IJK=30,30,6, XB=15,30,0,15,0,3 /
+&MESH ID='M3', IJK=30,30,6, XB=0,15,15,30,0,3 /
+&MESH ID='M4', IJK=30,30,6, XB=15,30,15,30,0,3 /
+&TIME T_END=420 /
+
+! --- No combustion. CO and SOOT (smoke) are prescribed directly as uniform ---
+! initial conditions -- same beam_detector-style approach: SPEC + INIT, no
+! REAC, no fire ramp. Background species is air; CO and soot fill the entire
+! domain instantly at T=0 at fixed concentrations, so FED grows linearly and
+! can be hand-calculated:
+!   FED_CO(t) = ([CO]_ppm^1.036 * t_min) / 35000
+! For 4000 ppm: FED=0.3 at t=116.8 s, FED=1.0 (death/incapacitation) at t=389.5 s.
+! Soot mass fraction below is set to give an FDS-computed VISIBILITY of about
+! 3 m (light-reflecting sign coefficient, C=3, K_m=8700 m2/kg default), which
+! is a commonly used "untenable" obscuration threshold -- visually obvious
+! smoke in Smokeview, and relevant to your exit-sign visibility work.
+&SPEC ID='CARBON MONOXIDE' /
+&SPEC ID='SOOT' /
+&SPEC ID='CARBON DIOXIDE' /
+&SPEC ID='OXYGEN' /
+&INIT SPEC_ID(1)='CARBON MONOXIDE', SPEC_ID(2)='SOOT', SPEC_ID(3)='CARBON DIOXIDE', SPEC_ID(4)='OXYGEN', MASS_FRACTION(1)=3.8674E-3, MASS_FRACTION(2)=9.5785E-5, MASS_FRACTION(3)=7.596E-4, MASS_FRACTION(4)=2.3086E-1 /
+
+! --- Geometry: plain empty square room. ---
+! Floor, ceiling, and outer walls are default (solid); no internal
+! obstructions are needed since this is no longer a T-corridor.
+
+! --- Domain sealed (no OPEN boundaries) so CO stays homogeneous at a fixed ---
+! concentration for the full run, matching the hand-calc assumption.
+! All four walls default to solid; no VENTs are added, so there is nowhere
+! for the prescribed CO/soot field to escape.
+
+! --- Slice outputs: multiple heights and orientations to verify the field ---
+! is actually homogeneous in all three dimensions, not just at one plane.
+! Horizontal (XY) slices at several heights:
+&SLCF PBZ=0.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=0.5, QUANTITY='VISIBILITY' /
+&SLCF PBZ=1.5, QUANTITY='VISIBILITY' /
+&SLCF PBZ=2.0, QUANTITY='VISIBILITY' /
+&SLCF PBZ=2.5, QUANTITY='VISIBILITY' /
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION' /
+&SLCF PBZ=2.0, QUANTITY='MASS FRACTION', SPEC_ID='SOOT' /
+! Required by pyFDS-Evac's FED model (FdsFedField.from_fds): CO2 and O2
+! slices, even though O2 stays at ambient and CO2 at a small nominal
+! background value here -- the FED sampler needs these slices present
+! regardless of whether they vary.
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+! Vertical (XZ) slice through the room centerline (y=15), to check for any
+! stratification top-to-bottom across the room:
+&SLCF PBY=15.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBY=15.0, QUANTITY='VISIBILITY' /
+&SLCF PBY=15.0, QUANTITY='EXTINCTION' /
+! Vertical (YZ) slice through the room centerline (x=15), as a second
+! cross-check of vertical homogeneity:
+&SLCF PBX=15.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBX=15.0, QUANTITY='VISIBILITY' /
+
+! --- Point devices for diagnostics: CO concentration (should stay ~4000 ppm everywhere) ---
+! Repositioned to sit inside the new spawn area (x=[5,25], y=[5,25]) and
+! near the checkpoint/center of the room (15,15).
+&DEVC XB=8,8,8,8,2,2, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_corner_low' /
+&DEVC XB=22,22,22,22,2,2, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_corner_high' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_center' /
+! Same x,y location (room center), different heights: numeric check that CO
+! is uniform top-to-bottom, not just at the z=2 m plane.
+&DEVC XB=14.9,14.9,14.9,14.9,0.5,0.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_center_low' /
+&DEVC XB=14.9,14.9,14.9,14.9,2.5,2.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_center_high' /
+
+! --- Point devices for FED: compare these against the hand-calc formula above ---
+&DEVC XB=8,8,8,8,2,2, QUANTITY='FED', ID='FED_corner_low' /
+&DEVC XB=22,22,22,22,2,2, QUANTITY='FED', ID='FED_corner_high' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2, QUANTITY='FED', ID='FED_center' /
+
+! --- Point devices for visibility (should stay ~3 m everywhere, constant) ---
+&DEVC XB=8,8,8,8,2,2, QUANTITY='VISIBILITY', ID='VIS_corner_low' /
+&DEVC XB=22,22,22,22,2,2, QUANTITY='VISIBILITY', ID='VIS_corner_high' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2, QUANTITY='VISIBILITY', ID='VIS_center' /
+&DEVC XB=14.9,14.9,14.9,14.9,0.5,0.5, QUANTITY='VISIBILITY', ID='VIS_center_low' /
+&DEVC XB=14.9,14.9,14.9,14.9,2.5,2.5, QUANTITY='VISIBILITY', ID='VIS_center_high' /
+
+! --- Point devices for extinction coefficient (related to visibility via Vis = 3/K) ---
+&DEVC XB=8,8,8,8,2,2, QUANTITY='EXTINCTION', ID='EXT_corner_low' /
+&DEVC XB=22,22,22,22,2,2, QUANTITY='EXTINCTION', ID='EXT_corner_high' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2, QUANTITY='EXTINCTION', ID='EXT_center' /
+
+&TAIL /

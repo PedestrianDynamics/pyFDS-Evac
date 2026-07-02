@@ -1,181 +1,194 @@
-"""Model documentation rendered in the GUI.
+"""Model documentation rendered in the GUI — warm-paper minimal layout.
 
-Prose plus the governing equations (KaTeX), summarising the model described in
-the companion paper: FDS-coupled smoke-speed reduction, ISO 13571 FED dose,
-FIC tenability, and the composite route-choice cost. Equation strings use
-``$$ … $$`` (display) and ``$ … $`` (inline); KaTeX auto-render turns them into
-math at load. Raw strings keep the LaTeX backslashes intact.
+Full-page overlay with its own sticky nav (back button fires the tab JS).
+No MonsterUI/UIKit dependency — plain FastHTML + inline styles only.
+Equation strings use $$ … $$ / $ … $; KaTeX auto-render handles them.
 """
-
 from __future__ import annotations
-
 from typing import Any
+from fasthtml.common import Button, Div, H1, H2, NotStr, P, Span
 
-from fasthtml.common import Div, P
-from monsterui.all import Card, H3, H4
+
+# ── style tokens ──────────────────────────────────────────────────────────────
+_MONO    = "font-family:'JetBrains Mono',monospace"
+_PRESS   = "font-family:'Press Start 2P',monospace"
+_BG      = "#ECE8DF"
+_INK     = "#17150F"
+_INK2    = "#3a362c"
+_MUTED   = "#6b655c"
+_BLUE    = "#1B17FF"
+_BORDER  = "rgba(0,0,0,.13)"
+
+_NAV_STYLE = (
+    f"position:sticky;top:0;z-index:6;display:flex;align-items:center;"
+    f"justify-content:space-between;padding:16px 40px;"
+    f"background:rgba(236,232,223,.88);backdrop-filter:blur(10px);"
+    f"-webkit-backdrop-filter:blur(10px);"
+    f"border-bottom:1px solid {_BORDER}"
+)
+_BACK_JS   = (
+    "document.querySelectorAll('.tab-btn').forEach(function(b){"
+    "b.classList.toggle('active',b.dataset.tab==='sim')});"
+    "document.getElementById('tab-sim').classList.remove('hidden');"
+    "document.getElementById('tab-model').classList.add('hidden');"
+    "var h=document.querySelector('.app-header');if(h)h.style.display='';"
+)
+_P_STYLE   = f"{_MONO};font-size:15px;line-height:1.72;color:{_INK2};margin:0 0 4px"
+_EQ_STYLE  = (f"margin:18px 0;padding:2px 0 2px 20px;border-left:2px solid {_BLUE};"
+              f"overflow-x:auto")
+_SEC_BORDER= f"border-top:1px solid {_BORDER};padding:34px 0"
+_LABEL_STYLE= (f"{_MONO};font-size:12px;font-weight:600;letter-spacing:.22em;"
+               f"text-transform:uppercase;color:{_INK}")
+_NUM_STYLE  = f"{_MONO};font-size:12px;color:{_BLUE}"
 
 
 def _eq(latex: str) -> Any:
-    return Div(latex, cls="eq")
+    return Div(latex, style=_EQ_STYLE)
 
 
-def _section(title: str, *body: Any) -> Any:
-    return Card(H3(title), *body, cls="doc-card")
+def _sec(num: str, title: str, *body: Any) -> Any:
+    return Div(
+        Div(
+            Span(num,   style=_NUM_STYLE),
+            Span(title, style=_LABEL_STYLE),
+            style="display:flex;gap:16px;align-items:baseline;margin-bottom:18px",
+        ),
+        Div(*body, style="max-width:760px"),
+        style=_SEC_BORDER,
+    )
+
+
+def _p(*args, **kw) -> Any:
+    kw.setdefault('style', _P_STYLE)
+    return P(*args, **kw)
+
+
+def _tier(dot: str, name: str, rng: str) -> Any:
+    return Div(
+        Div(
+            NotStr(f'<span style="width:8px;height:8px;border-radius:99px;'
+                   f'background:{dot};display:inline-block"></span>'),
+            Span(name, style=f"{_MONO};font-size:12px;font-weight:600;"
+                             f"letter-spacing:.1em;text-transform:uppercase;color:{_INK}"),
+            style="display:flex;align-items:center;gap:8px",
+        ),
+        Div(rng, style=f"{_MONO};font-size:13px;color:{_MUTED};padding-left:16px"),
+        style="display:flex;flex-direction:column;gap:8px",
+    )
 
 
 def model_docs() -> Any:
-    """Return the Model documentation panel."""
-    return Div(
-        P(
-            "pyFDS-Evac couples a pre-computed Fire Dynamics Simulator (FDS) "
-            "run to a JuPedSim pedestrian model through a routing layer. Each "
-            "step samples the fire fields at every agent's position and updates "
-            "three things: walking speed (smoke), cumulative toxic dose (FED), "
-            "and route choice. The colour tiers above — Safe, Alert, Critical, "
-            "Severe — are FED dose bands.",
-            cls="doc-intro",
+    """Return the full-page Model documentation overlay."""
+    nav = Div(
+        NotStr(
+            f'<div style="{_PRESS};font-size:8px;letter-spacing:.06em;color:{_INK}">'
+            f'pyFDS-EVAC <span style="color:{_BLUE}">&#9656;</span> MODEL.SYS</div>'
         ),
-        _section(
-            "Smoke and walking speed",
-            P(
-                "Smoke slows walking. The default Frantzich–Nilsson (Lund) law "
-                "reduces the clear-air speed $v_0$ by a factor of the local "
-                "extinction coefficient $K$ [m⁻¹]:"
-            ),
-            _eq(
-                r"$$ f(K) = \max\!\left(f_{\min},\; 1 + \tfrac{\beta}{\alpha}\,K\right), "
-                r"\qquad v = v_0\, f(K) $$"
-            ),
-            P(
-                r"with $\alpha = 0.706$, $\beta = -0.057$, $f_{\min} = 0.1$. "
-                r"Extinction comes from FDS soot density $\rho_s$ [mg/m³]:"
-            ),
-            _eq(
-                r"$$ K = \kappa_m\,\rho_s\times 10^{-6}, \qquad "
-                r"\kappa_m = 8700\ \mathrm{m^2/kg}. $$"
-            ),
-            P(
-                r"An optional non-linear law (Fridolf) uses visibility "
-                r"$V = C/K$ (Jin), asymptoting to zero without a hard floor:"
-            ),
-            _eq(r"$$ f(V) = \frac{V}{V + 2}. $$"),
+        Button(
+            "← Back to simulation",
+            type="button",
+            onclick=_BACK_JS,
+            style=(f"background:none;border:0;cursor:pointer;{_MONO};"
+                   f"font-size:12px;letter-spacing:.08em;text-transform:uppercase;"
+                   f"color:{_BLUE};padding:6px 2px"),
         ),
-        _section(
-            "Toxic dose — Fractional Effective Dose (ISO 13571)",
-            P(
-                "Each agent accumulates a Fractional Effective Dose from carbon "
-                "monoxide, cyanides/NOₓ, irritants and oxygen depletion, all "
-                "accelerated by CO₂-driven hyperventilation:"
-            ),
-            _eq(
-                r"$$ \dot{D}_{\mathrm{tot}} = \left(\dot{D}_{\mathrm{CO}} + "
+        style=_NAV_STYLE,
+    )
+
+    hero = Div(
+        Div("Technical reference — v2.4",
+            style=f"{_MONO};font-size:11px;letter-spacing:.3em;text-transform:uppercase;"
+                  f"color:{_MUTED};margin-bottom:22px"),
+        H1("THE MODEL.",
+           style=(f"{_MONO};font-size:clamp(42px,7vw,72px);font-weight:700;"
+                  f"line-height:.96;letter-spacing:-.03em;color:{_INK};margin:0;"
+                  f"background:none")),
+        _p(
+            "pyFDS-Evac couples a precomputed Fire Dynamics Simulator run to a "
+            "JuPedSim pedestrian model through a routing layer. Each step samples "
+            "the fire fields at every agent's position and updates walking speed "
+            "(smoke), cumulative toxic dose (FED), and route choice.",
+            style=f"{_MONO};font-size:16px;line-height:1.7;color:{_INK2};"
+                  f"max-width:680px;margin:30px 0 0",
+        ),
+        style="padding:64px 0 26px",
+    )
+
+    sections = Div(
+        _sec("01", "Smoke & Speed",
+            _p("Smoke slows walking. The Frantzich–Nilsson (Lund) law reduces "
+               "clear-air speed $v_0$ by a factor of the local extinction "
+               "coefficient $K$ [m⁻¹]:"),
+            _eq(r"$$ f(K) = \max\!\left(f_{\min},\; 1 + \tfrac{\beta}{\alpha}\,K\right), "
+                r"\qquad v = v_0\, f(K) $$"),
+            _p(r"with $\alpha = 0.706$, $\beta = -0.057$, $f_{\min} = 0.1$. "
+               r"Extinction comes from FDS soot density $\rho_s$ [mg/m³]:"),
+            _eq(r"$$ K = \kappa_m\,\rho_s\times 10^{-6}, \qquad "
+                r"\kappa_m = 8700\ \mathrm{m^2/kg}. $$"),
+        ),
+        _sec("02", "FED Dose — ISO 13571",
+            _p("Each agent accumulates a Fractional Effective Dose from CO, "
+               "cyanides/NOₓ, irritants and oxygen depletion, accelerated by "
+               "CO₂-driven hyperventilation:"),
+            _eq(r"$$ \dot{D}_{\mathrm{tot}} = \left(\dot{D}_{\mathrm{CO}} + "
                 r"\dot{D}_{\mathrm{CN}} + \dot{D}_{\mathrm{NO_x}} + "
                 r"\dot{D}_{\mathrm{irr}}\right) HV_{\mathrm{CO_2}} + "
-                r"\dot{D}_{\mathrm{O_2}} $$"
-            ),
-            _eq(
-                r"$$ \dot{D}_{\mathrm{CO}} = 2.764\times 10^{-5}\,"
-                r"C_{\mathrm{CO}}^{\,1.036}, \qquad "
-                r"HV_{\mathrm{CO_2}} = \frac{\exp(0.1903\,C_{\mathrm{CO_2}} + "
-                r"2.0004)}{7.1} $$"
-            ),
-            P(r"The rate $\dot{D}$ is in min⁻¹; it is integrated each step:"),
-            _eq(
-                r"$$ D_i(t + \Delta t) = D_i(t) + \dot{D}_{\mathrm{tot}}\,"
-                r"\frac{\Delta t}{60}. $$"
-            ),
-            P(
-                r"$D = 0.3$ marks incapacitation onset for susceptible people "
-                r"(Alert→Critical); $D = 1$ marks ~50 % incapacitation "
-                r"(Severe / untenable)."
-            ),
+                r"\dot{D}_{\mathrm{O_2}} $$"),
+            _p(r"$D = 0.3$ marks incapacitation onset; $D = 1$ marks ~50% "
+               r"incapacitation (untenable)."),
         ),
-        _section(
-            "Tenability",
-            P(
-                "Beyond cumulative dose, an instantaneous Fractional Irritant "
-                "Concentration (FIC) captures sensory irritation and slows the "
-                "agent further:"
-            ),
-            _eq(
-                r"$$ \mathrm{FIC} = \sum_i \frac{C_i}{F_{\mathrm{FIC},i}}, "
+        _sec("03", "Tenability — FIC",
+            _p("An instantaneous Fractional Irritant Concentration captures "
+               "sensory irritation and slows the agent further:"),
+            _eq(r"$$ \mathrm{FIC} = \sum_i \frac{C_i}{F_{\mathrm{FIC},i}}, "
                 r"\qquad v_i = v_0\, f(K)\, "
-                r"\max\!\left(\mu,\; 1 - \alpha_{\mathrm{FIC}}\,\mathrm{FIC}\right) $$"
-            ),
-            P(
-                r"with $\alpha_{\mathrm{FIC}} = 0.7$ and a floor $\mu = 0.3$. "
-                r"Unlike FED, FIC is not integrated, so an agent leaving the "
-                r"plume recovers speed at once. At its incapacitation threshold "
-                r"it stops:"
-            ),
-            _eq(
-                r"$$ D_i \ge D_{\mathrm{incap},i} \Rightarrow v_i = 0, \qquad "
-                r"D_{\mathrm{incap},i} = D_{50}\,e^{\sigma Z_i},\ "
-                r"Z_i \sim \mathcal{N}(0,1). $$"
-            ),
-            P(
-                "This split — speed reduced by smoke and irritants, dose acting "
-                "only as a binary stop — follows Purser & McAllister (SFPE "
-                "Handbook): asphyxiants cause physiological collapse, while "
-                "visibility and irritancy cause recoverable functional "
-                "impairment.",
-                cls="doc-foot",
-            ),
+                r"\max\!\left(\mu,\; 1 - \alpha_{\mathrm{FIC}}\,\mathrm{FIC}\right) $$"),
+            _p(r"At its incapacitation threshold the agent stops: "
+               r"$D_i \ge D_{\mathrm{incap},i} \Rightarrow v_i = 0$, with "
+               r"$D_{\mathrm{incap},i} = D_{50}\,e^{\sigma Z_i}$, "
+               r"$Z_i \sim \mathcal{N}(0,1)$."),
         ),
-        _section(
-            "Route choice",
-            P(
-                "Each candidate exit route is scored by a composite cost that "
-                "trades path length against smoke, projected dose and queueing:"
-            ),
-            _eq(
-                r"$$ \mathcal{C}_k = L_k\!\left(1 + w_\sigma\,\bar{K}_k\right) + "
-                r"w_F\,D_k^{\max} + w_q\,v_0\,\frac{N_k}{c_k}, $$"
-            ),
-            P(
-                r"where $L_k$ is path length, $\bar{K}_k$ the path-mean "
-                r"extinction, $D_k^{\max}$ the dose projected at arrival, and "
-                r"$N_k/c_k$ the queue at exit $k$ (occupancy over capacity). "
-                r"Agents periodically re-evaluate and switch to the cheapest "
-                r"tenable exit; the weights $w_\sigma, w_F, w_q$ are configurable."
-            ),
+        _sec("04", "Route Choice",
+            _p("Each candidate route is scored by a composite cost trading "
+               "path length against smoke, projected dose and queueing:"),
+            _eq(r"$$ \mathcal{C}_k = L_k\!\left(1 + w_\sigma\,\bar{K}_k\right) + "
+                r"w_F\,D_k^{\max} + w_q\,v_0\,\frac{N_k}{c_k} $$"),
+            _p(r"Agents periodically re-evaluate and switch to the cheapest "
+               r"tenable exit; the weights $w_\sigma, w_F, w_q$ are configurable."),
         ),
-        _section(
-            "Tier thresholds",
+        # Tier table
+        Div(
             Div(
-                Div(H4("Safe", cls="m-0"), P("D = 0", cls="m-0"), cls="tier-card safe"),
-                Div(
-                    H4("Alert", cls="m-0"),
-                    P("0 < D < 0.3", cls="m-0"),
-                    cls="tier-card alert",
-                ),
-                Div(
-                    H4("Critical", cls="m-0"),
-                    P("0.3 ≤ D < 1", cls="m-0"),
-                    cls="tier-card critical",
-                ),
-                Div(
-                    H4("Severe", cls="m-0"),
-                    P("D ≥ 1", cls="m-0"),
-                    cls="tier-card severe",
-                ),
-                cls="tier-grid",
+                Span("05", style=_NUM_STYLE),
+                Span("Tenability Tiers", style=_LABEL_STYLE),
+                style="display:flex;gap:16px;align-items:baseline;margin-bottom:22px",
             ),
-            P(
-                "These are population bands (NIST TN 1797): ≈11 % of occupants "
-                "incapacitated by D = 0.3, ≈50 % by D = 1, ≈89 % by D = 3. Each "
-                "agent draws its own threshold from the log-normal above "
-                "(median D₅₀ = 1, σ = 0.94), so the population reproduces these "
-                "bands instead of all collapsing at the median; a deterministic "
-                "uniform threshold is available as an option.",
-                cls="doc-foot",
+            Div(
+                _tier("#3a9d6e", "Safe",     "D = 0"),
+                _tier("#d6a51f", "Alert",    "0 < D < 0.3"),
+                _tier("#e8590c", "Critical", "0.3 ≤ D < 1"),
+                _tier("#cc2030", "Severe",   "D ≥ 1"),
+                style="display:grid;grid-template-columns:repeat(4,1fr);gap:22px;max-width:760px",
             ),
+            _p("Population bands (NIST TN 1797): ≈11% incapacitated by D = 0.3, "
+               "≈50% by D = 1, ≈89% by D = 3. Each agent draws its own threshold "
+               "from the log-normal above (median D₅₀ = 1, σ = 0.94).",
+               style=f"{_MONO};font-size:14px;color:{_INK2};max-width:760px;margin-top:24px"),
+            style=_SEC_BORDER,
         ),
-        P(
-            "Full derivations, the 12-species FED table and validation are in "
-            "the companion paper (pyFDS-Evac). See also the project README and "
-            "docs/ for configuration.",
-            cls="doc-foot",
+        # Footer
+        Div(
+            Div(f"© 2024 pyFDS-EVAC — companion paper + docs/",
+                style=f"{_MONO};font-size:11px;letter-spacing:.06em;color:{_MUTED}"),
+            NotStr(f'<div style="{_PRESS};font-size:7px;letter-spacing:.08em;color:#9a9488">EST. MMXXIV</div>'),
+            style=(f"border-top:1px solid {_BORDER};padding-top:26px;"
+                   f"display:flex;justify-content:space-between;align-items:center;"
+                   f"flex-wrap:wrap;gap:12px"),
         ),
-        cls="space-y-5",
+    )
+
+    return Div(
+        nav,
+        Div(hero, sections,
+            style="max-width:980px;margin:0 auto;padding:0 40px 90px"),
     )

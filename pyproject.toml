@@ -26,6 +26,7 @@ dependencies = [
     "shapely",
     "fdsvismap>=0.1.3",
     "numpy>=1.26.4",
+    "ipykernel>=7.3.0",
 ]
 
 [project.optional-dependencies]
