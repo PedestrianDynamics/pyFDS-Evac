@@ -119,7 +119,7 @@ class ExtinctionField:
         """Load extinction slices from an FDS case directory via fdsreader."""
         sampler = load_slice_sampler(
             fds_dir,
-            "EXTINCTION",
+            ("SOOT EXTINCTION COEFFICIENT", "EXTINCTION"),
             simulation=simulation,
             slice_height_m=slice_height_m,
         )

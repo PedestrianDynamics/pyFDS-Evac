@@ -263,14 +263,30 @@ _JS = """
         var a = 1 - Math.exp(-K * 0.6);      // Beer-Lambert-ish opacity
         if (a > 0.9) a = 0.9;                 // keep agents visible through it
         var pi = ((H - 1 - iy) * W + ix) * 4; // flip y: world +y is screen up
-        d[pi] = 58; d[pi + 1] = 56; d[pi + 2] = 68; d[pi + 3] = Math.round(a * 255);
+        // Light gray smoke: reads clearly against the dark canvas theme.
+        d[pi] = 205; d[pi + 1] = 203; d[pi + 2] = 214; d[pi + 3] = Math.round(a * 255);
       }
     }
     smCtx.putImageData(id, 0, 0);
     var tl = p(SM.ext[0], SM.ext[3]);          // world (xmin, ymax) -> top-left
     var br = p(SM.ext[2], SM.ext[1]);          // world (xmax, ymin) -> bot-right
     ctx.imageSmoothingEnabled = true;
+    // Clip to the walkable area so smoke never bleeds outside the geometry
+    // (the FDS domain is a bounding box larger than the walkable polygon).
+    var clipped = false;
+    if (D.walk.length) {
+      ctx.save();
+      ctx.beginPath();
+      for (var i = 0; i < D.walk.length; i++) {
+        var q = p(D.walk[i][0], D.walk[i][1]);
+        i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]);
+      }
+      ctx.closePath();
+      ctx.clip();
+      clipped = true;
+    }
     ctx.drawImage(smCanvas, tl[0], tl[1], br[0] - tl[0], br[1] - tl[1]);
+    if (clipped) ctx.restore();
   }
 
   // Pre-compute per-sample FED statistics for the panel
@@ -524,6 +540,14 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         '<input id="traj-slider" type="range" min="0" max="1000" value="0" '
         'class="traj-slider">'
         '<span id="traj-time" class="traj-time">t = 0 s</span>'
+        '<div class="traj-color">'
+        '<span class="traj-color-lbl">speed</span>'
+        '<button type="button" class="cmode speed-btn" data-speed="0.25">&frac14;&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="0.5">&frac12;&times;</button>'
+        '<button type="button" class="cmode speed-btn active" data-speed="1">1&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="2">2&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="4">4&times;</button>'
+        "</div>"
         + toggle
         + "</div>"
         + (payload["hasFed"] and (
