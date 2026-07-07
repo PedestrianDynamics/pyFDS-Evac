@@ -51,6 +51,56 @@ _INK    = "color:#F2EDE9"
 _INK2   = "color:#B2A9A3"
 _MUTED  = "color:#837A74"
 
+_FED_LIVE_JS = """
+(function () {
+  var fedLayout = {
+    margin: {l: 46, r: 14, t: 14, b: 34},
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: {family: 'JetBrains Mono, monospace', color: '#B2A9A3', size: 10},
+    height: 180,
+    legend: {bgcolor: 'rgba(0,0,0,0)', font: {size: 9}, orientation: 'h', y: -0.22},
+    xaxis: {title: {text: 'sim time (s)', font: {size: 9}}, gridcolor: 'rgba(255,255,255,.06)', tickfont: {size: 9}},
+    yaxis: {title: {text: 'FED', font: {size: 9}}, gridcolor: 'rgba(255,255,255,.06)', rangemode: 'tozero', tickfont: {size: 9}},
+    shapes: [
+      {type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0.3, y1: 0.3,
+       line: {color: 'rgba(255,176,32,.55)', dash: 'dot', width: 1}},
+      {type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 1.0, y1: 1.0,
+       line: {color: 'rgba(224,30,55,.55)', dash: 'dot', width: 1}}
+    ]
+  };
+  var fedChartReady = false;
+  function fedColor(v) {
+    return v >= 1.0 ? '#E01E37' : v >= 0.6 ? '#FF6A1A' : v >= 0.3 ? '#FFB020' : '#F4C430';
+  }
+  var fedEs = new EventSource('/fed-progress');
+  fedEs.addEventListener('fed', function (e) {
+    try {
+      var d = JSON.parse(e.data);
+      if (!d.t || !d.t.length) return;
+      var section = document.getElementById('fed-live-section');
+      if (section) section.style.display = '';
+      var traces = [
+        {x: d.t, y: d.max, mode: 'lines', name: 'max FED', line: {color: '#F4C430', width: 2}},
+        {x: d.t, y: d.mean, mode: 'lines', name: 'mean FED', line: {color: '#FF8A3D', width: 1.5, dash: 'dot'}}
+      ];
+      if (!fedChartReady) {
+        Plotly.newPlot('fed-live-chart', traces, fedLayout, {displayModeBar: false, responsive: true});
+        fedChartReady = true;
+      } else {
+        Plotly.react('fed-live-chart', traces, fedLayout, {displayModeBar: false, responsive: true});
+      }
+      var last = d.max[d.max.length - 1];
+      var numEl = document.getElementById('fed-live-num');
+      if (numEl) { numEl.textContent = last.toFixed(4); numEl.style.color = fedColor(last); }
+      var barEl = document.getElementById('fed-live-bar');
+      if (barEl) barEl.style.width = Math.min(100, last * 100) + '%';
+    } catch (err) { console.warn('FED chart update failed:', err); }
+  });
+  fedEs.addEventListener('close', function () { fedEs.close(); });
+  fedEs.onerror = function () { fedEs.close(); };
+})();
+"""
+
 # ── logo ─────────────────────────────────────────────────────────────────────
 _LOGO_SVG = NotStr("""
 <svg class="app-logo" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -71,6 +121,36 @@ def _legend() -> Div:
         cls="tier-legend",
     )
 
+
+def _fed_live_section() -> Div:
+    return Div(
+        Div(
+            Div("FED Exposure", style=f"{_MONO};font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;{_MUTED};margin-bottom:8px"),
+            Div(
+                Div("max", style=f"{_MONO};font-size:8px;letter-spacing:.06em;text-transform:uppercase;{_MUTED};margin-bottom:2px"),
+                Div("—", id="fed-live-num", style=f"{_MONO};font-size:22px;font-weight:500;color:#F4C430;transition:color .3s;line-height:1"),
+            ),
+            style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px",
+        ),
+        # Bar with threshold tick at 0.3
+        Div(
+            Div(id="fed-live-bar",
+                style="position:absolute;top:0;left:0;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .4s"),
+            # tick mark at 30%
+            Div(style="position:absolute;top:-2px;left:30%;width:1px;height:calc(100% + 4px);background:rgba(255,176,32,.55)"),
+            style="position:relative;height:7px;border-radius:99px;background:#1F1C1F;border:1px solid rgba(255,255,255,.06);overflow:visible;margin-bottom:5px",
+        ),
+        # Labels pinned to exact bar positions
+        Div(
+            Span("0",    style=f"{_MONO};font-size:8px;{_MUTED};position:absolute;left:0"),
+            Span("0.3",  style=f"{_MONO};font-size:8px;color:#FFB020;position:absolute;left:30%;transform:translateX(-50%)"),
+            Span("1.0",  style=f"{_MONO};font-size:8px;color:#E01E37;position:absolute;right:0"),
+            style="position:relative;height:12px;margin-bottom:8px",
+        ),
+        Div(id="fed-live-chart"),
+        style=_PANEL + ";width:220px;flex:none",
+        id="fed-live-section",
+    )
 
 def _header() -> Div:
     return Div(
@@ -152,6 +232,16 @@ _AUTOFILL_JS = """
   document.addEventListener('input', function (e) {
     if (e.target && OUT[e.target.id]) e.target.dataset.userEdited = '1';
   });
+  // Strip surrounding quotes from path inputs on blur
+  document.addEventListener('blur', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'INPUT' || el.type === 'hidden' || el.type === 'checkbox') return;
+    var v = el.value;
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+      el.value = v.slice(1, -1);
+      el.dispatchEvent(new Event('input'));
+    }
+  }, true);
 })();
 """
 
@@ -174,18 +264,131 @@ document.addEventListener('click', function (e) {
   document.getElementById('tab-model').classList.toggle('hidden', t !== 'model');
   var hdr = document.querySelector('.app-header');
   if (hdr) hdr.style.display = (t === 'model') ? 'none' : '';
+  var nav = document.querySelector('.tab-nav');
+  if (nav) nav.style.display = (t === 'model') ? 'none' : '';
   if (t === 'model' && window._renderMath) window._renderMath();
 });
 """
 
 _TENABILITY_JS = """
+function drawIncapDist() {
+  var canvas = document.getElementById('incap-canvas');
+  var dist   = document.getElementById('incap-dist');
+  if (!canvas || !dist || dist.style.display === 'none') return;
+
+  var sigmaEl = document.getElementById('susceptibility_sigma');
+  var sigma = sigmaEl ? (parseFloat(sigmaEl.value) || 0.94) : 0.94;
+  var mu = Math.log(0.3);  // median incapacitation at FED = 0.3
+
+  var dpr = window.devicePixelRatio || 1;
+  var cw = canvas.clientWidth, ch = canvas.clientHeight;
+  if (!cw || !ch) { setTimeout(drawIncapDist, 80); return; }
+  canvas.width = cw * dpr; canvas.height = ch * dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cw, ch);
+
+  var pL = 28, pR = 10, pT = 18, pB = 18;
+  var pw = cw - pL - pR, ph = ch - pT - pB;
+  var fedMax = 1.8, N = 400;
+
+  // Compute log-normal PDF: f(x) = 1/(x*σ*√2π) * exp(-(ln(x)-μ)²/(2σ²))
+  var pts = [], yMax = 0;
+  for (var i = 1; i <= N; i++) {
+    var fed = (i / N) * fedMax;
+    var z = (Math.log(fed) - mu) / sigma;
+    var pdf = Math.exp(-0.5 * z * z) / (fed * sigma * Math.sqrt(2 * Math.PI));
+    pts.push([fed, pdf]);
+    if (pdf > yMax) yMax = pdf;
+  }
+  yMax *= 1.18;
+
+  function tx(v) { return pL + (v / fedMax) * pw; }
+  function ty(v) { return pT + (1 - v / yMax) * ph; }
+
+  // Background
+  ctx.fillStyle = '#131113'; ctx.fillRect(0, 0, cw, ch);
+
+  // Horizontal grid
+  ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75, 1.0].forEach(function (f) {
+    ctx.beginPath(); ctx.moveTo(pL, pT + (1 - f) * ph); ctx.lineTo(cw - pR, pT + (1 - f) * ph); ctx.stroke();
+  });
+
+  // Shaded fill — horizontal gradient through FED tiers
+  var gFill = ctx.createLinearGradient(tx(0), 0, tx(fedMax), 0);
+  gFill.addColorStop(0,            'rgba(244,196,48,.28)');
+  gFill.addColorStop(0.3  / 1.8,  'rgba(255,176,32,.28)');
+  gFill.addColorStop(0.6  / 1.8,  'rgba(255,106,26,.28)');
+  gFill.addColorStop(1.0  / 1.8,  'rgba(224,30,55,.28)');
+  gFill.addColorStop(1,            'rgba(224,30,55,.10)');
+  ctx.beginPath();
+  ctx.moveTo(tx(pts[0][0]), pT + ph);
+  pts.forEach(function (p) { ctx.lineTo(tx(p[0]), ty(p[1])); });
+  ctx.lineTo(tx(pts[pts.length - 1][0]), pT + ph);
+  ctx.closePath(); ctx.fillStyle = gFill; ctx.fill();
+
+  // Curve line — same gradient
+  var gLine = ctx.createLinearGradient(tx(0), 0, tx(fedMax), 0);
+  gLine.addColorStop(0,           '#F4C430');
+  gLine.addColorStop(0.3  / 1.8, '#FFB020');
+  gLine.addColorStop(0.6  / 1.8, '#FF6A1A');
+  gLine.addColorStop(1.0  / 1.8, '#E01E37');
+  gLine.addColorStop(1,          '#E01E37');
+  ctx.beginPath();
+  pts.forEach(function (p, i) {
+    i === 0 ? ctx.moveTo(tx(p[0]), ty(p[1])) : ctx.lineTo(tx(p[0]), ty(p[1]));
+  });
+  ctx.strokeStyle = gLine; ctx.lineWidth = 1.8; ctx.stroke();
+
+  // Threshold verticals
+  ctx.setLineDash([3, 3]);
+  [[0.3, 'rgba(255,176,32,.6)', '0.3'], [1.0, 'rgba(224,30,55,.6)', '1.0']].forEach(function (th) {
+    ctx.strokeStyle = th[1]; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(tx(th[0]), pT); ctx.lineTo(tx(th[0]), pT + ph); ctx.stroke();
+    ctx.fillStyle = th[1]; ctx.font = '7.5px JetBrains Mono, monospace';
+    ctx.textAlign = 'left'; ctx.fillText(th[2], tx(th[0]) + 2, pT + 8);
+  });
+  ctx.setLineDash([]);
+
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pL, pT); ctx.lineTo(pL, pT + ph); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pL, pT + ph); ctx.lineTo(cw - pR, pT + ph); ctx.stroke();
+
+  // X-axis ticks
+  ctx.fillStyle = '#837A74'; ctx.font = '8px JetBrains Mono, monospace'; ctx.textAlign = 'center';
+  [0, 0.3, 0.6, 0.9, 1.2, 1.5].forEach(function (v) {
+    ctx.fillText(v.toFixed(1), tx(v), pT + ph + 12);
+  });
+
+  // Axis labels
+  ctx.fillStyle = '#837A74'; ctx.font = '7.5px JetBrains Mono, monospace';
+  ctx.textAlign = 'right'; ctx.fillText('density', pL - 2, pT + 4);
+  ctx.textAlign = 'center'; ctx.fillText('FED threshold', pL + pw / 2, pT + ph + 17);
+
+  // Annotation: σ + mode
+  var mode = Math.exp(mu - sigma * sigma);
+  ctx.fillStyle = '#B2A9A3'; ctx.font = '7.5px JetBrains Mono, monospace'; ctx.textAlign = 'left';
+  ctx.fillText('σ=' + sigma.toFixed(2) + '  mode≈' + mode.toFixed(2), pL + 2, pT - 5);
+}
+
 function setTenabilityMode(mode) {
   document.getElementById('incapacitation_mode').value = mode;
   document.getElementById('btn-prob').classList.toggle('active', mode === 'probabilistic');
   document.getElementById('btn-det').classList.toggle('active', mode === 'deterministic');
-  var row = document.getElementById('sigma-row');
-  if (row) row.style.display = mode === 'deterministic' ? 'none' : '';
+  var row  = document.getElementById('sigma-row');
+  var dist = document.getElementById('incap-dist');
+  if (row)  row.style.display  = mode === 'deterministic' ? 'none' : '';
+  if (dist) dist.style.display = mode === 'deterministic' ? 'none' : '';
+  if (mode === 'probabilistic') drawIncapDist();
 }
+
+document.addEventListener('input', function (e) {
+  if (e.target && e.target.id === 'susceptibility_sigma') drawIncapDist();
+});
+document.addEventListener('DOMContentLoaded', function () { drawIncapDist(); });
+setTimeout(drawIncapDist, 150);
 """
 
 _MATH_JS = """
@@ -327,7 +530,10 @@ async def post(request: Request):
         import run as cli
         def post_run(result):
             return cli.apply_outputs(result, scenario, opts, log=lambda _m: None)
-        manager.start(scenario, run_kwargs, scenario_name, post_run=post_run)
+        manager.start(
+            scenario, run_kwargs, scenario_name,
+            post_run=post_run, fds_dir=getattr(opts, "fds_dir", None),
+        )
     except Exception as exc:
         return Div(f"{type(exc).__name__}: {exc}", style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px")
 
@@ -382,7 +588,7 @@ def _running_card(ev) -> Div:
             style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px",
         ),
         Div(
-            Div(style=f"height:100%;width:{max(pct,3)}%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A);transition:width .35s cubic-bezier(.4,0,.2,1);{'animation:shimmer 1.8s linear infinite' if pct == 0 else ''}"),
+            Div(style=f"height:100%;width:{max(pct,3)}%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A);transition:width .35s cubic-bezier(.4,0,.2,1)"),
             style="height:10px;border-radius:99px;background:#1F1C1F;border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:18px",
         ),
         Div(line, style=f"{_MONO};font-size:.82rem;{_INK2}"),
@@ -436,13 +642,34 @@ def _finished_view() -> Div:
 
     return Div(
         kpi_tiles, art,
-        trajviz.trajectory_component(result, scenario),
+        trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
         plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
         plot_card("Smoke",          plots.smoke_figure(result), "fig-smoke"),
         plot_card("Route cost",     plots.route_cost_figure(result), "fig-route"),
         cls="space-y-6",
         style="display:flex;flex-direction:column;gap:18px",
     )
+
+
+@rt("/fed-progress")
+async def fed_progress():
+    async def gen():
+        last_count = 0
+        while True:
+            snaps = manager.fed_snapshots
+            if len(snaps) > last_count:
+                last_count = len(snaps)
+                payload = json.dumps({
+                    "t":    [s[0] for s in snaps],
+                    "max":  [s[1] for s in snaps],
+                    "mean": [s[2] for s in snaps],
+                })
+                yield sse_message(payload, event="fed")
+            if manager.status in ("done", "error", "idle"):
+                yield sse_message("{}", event="close")
+                return
+            await asyncio.sleep(0.5)
+    return EventStream(gen())
 
 
 @rt("/progress")

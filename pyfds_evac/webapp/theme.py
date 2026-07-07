@@ -386,6 +386,10 @@ input[type="number"] { -moz-appearance: textfield; }
 *::-webkit-scrollbar-thumb:hover { background: var(--ember); }
 
 /* ---- load motion ---- */
+/* ---- accordion chevron ---- */
+details summary .chevron { transition: transform .2s ease; display: block; flex: none; }
+details[open] summary .chevron { transform: rotate(180deg); }
+
 @keyframes shimmer {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(400%); }

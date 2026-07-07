@@ -106,25 +106,27 @@ def _lbl(text: str, action: argparse.Action) -> Any:
     return Label(NotStr(content) if badge else text, style=_LABEL)
 
 
-def _switch(dest: str, label: str) -> Any:
+def _switch(dest: str, label: str, checked: bool = False) -> Any:
+    _chk      = 'checked ' if checked else ''
+    _track_bg = '#F4C430' if checked else '#2E2A2E'
+    _knob_pos = '19px'    if checked else '2px'
     return Div(
         Label(label, style=f"{_GROTESK};font-size:12px;font-weight:500;color:#F2EDE9"),
         NotStr(
             f'<label style="position:relative;display:inline-block;width:40px;height:23px;cursor:pointer">'
-            f'<input type="checkbox" id="{dest}" name="{dest}" value="on" '
+            f'<input type="checkbox" id="{dest}" name="{dest}" value="on" {_chk}'
             f'style="opacity:0;width:0;height:0;position:absolute">'
             f'<span onclick="event.preventDefault();var cb=this.previousElementSibling;cb.checked=!cb.checked;'
             f'this.style.background=cb.checked?\'#F4C430\':\'#2E2A2E\';'
             f'this.querySelector(\'span\').style.left=cb.checked?\'19px\':\'2px\';" '
             f'style="position:absolute;inset:0;border-radius:99px;'
-            f'background:#2E2A2E;border:1px solid rgba(255,255,255,.12);transition:background .18s">'
-            f'<span style="position:absolute;top:2px;left:2px;width:17px;height:17px;'
+            f'background:{_track_bg};border:1px solid rgba(255,255,255,.12);transition:background .18s">'
+            f'<span style="position:absolute;top:2px;left:{_knob_pos};width:17px;height:17px;'
             f'border-radius:99px;background:#B2A9A3;transition:left .18s;display:block"></span>'
             f'</span></label>'
         ),
         style="display:flex;align-items:center;justify-content:space-between;gap:10px",
     )
-
 
 def _incap_toggle() -> Any:
     return Div(
@@ -140,6 +142,11 @@ def _incap_toggle() -> Any:
         ),
         Input(type="hidden", id="incapacitation_mode", name="incapacitation_mode",
               value="probabilistic"),
+        NotStr(
+            '<div id="incap-dist" style="margin-top:10px;border-radius:9px;overflow:hidden;background:#131113">'
+            '<canvas id="incap-canvas" style="width:100%;height:108px;display:block"></canvas>'
+            '</div>'
+        ),
         style=_FIELD,
     )
 
@@ -219,7 +226,6 @@ def _field(action: argparse.Action) -> Any:
 
 
 def _details_block(title: str, accent: str, fields: List[Any], open_: bool = False) -> NotStr:
-    count = str(len(fields)).zfill(2)
     body  = to_xml(Div(*fields, style="display:flex;flex-direction:column;gap:13px;padding:14px 4px 4px"))
     return NotStr(
         f'<details {"open" if open_ else ""}>'
@@ -227,7 +233,7 @@ def _details_block(title: str, accent: str, fields: List[Any], open_: bool = Fal
         f'padding:11px 13px;background:#322E32;border:1px solid rgba(255,255,255,.07);'
         f'border-left:2px solid {accent};border-radius:11px;list-style:none;cursor:pointer">'
         f'<span style="{_GROTESK};font-weight:600;font-size:12.5px;letter-spacing:.01em;color:#F2EDE9">{title}</span>'
-        f'<span style="{_MONO};font-size:10px;color:#837A74">{count}</span>'
+        f'<svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="#837A74" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         f'</summary>'
         + body +
         '</details>'
@@ -260,7 +266,7 @@ def _output_files_section() -> NotStr:
             style=("background:#252127;border:1px solid rgba(255,255,255,.06);"
                    "border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:5px"),
         ),
-        _switch("export_app_bundle", "Export app bundle"),
+        _switch("export_app_bundle", "Export app bundle", checked=True),
         style="display:flex;flex-direction:column;gap:11px;padding:14px 4px 4px",
     ))
     return NotStr(
@@ -269,7 +275,7 @@ def _output_files_section() -> NotStr:
         f'padding:11px 13px;background:#322E32;border:1px solid rgba(255,255,255,.07);'
         f'border-left:2px solid #FFB020;border-radius:11px;list-style:none;cursor:pointer">'
         f'<span style="{_GROTESK};font-weight:600;font-size:12.5px;letter-spacing:.01em;color:#F2EDE9">Output files</span>'
-        f'<span style="{_MONO};font-size:10px;color:#837A74">06</span>'
+        f'<svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="#837A74" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         '</summary>'
         + body +
         '</details>'
