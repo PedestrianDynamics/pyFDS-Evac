@@ -3,7 +3,7 @@
   "config": {
     "simulation_settings": {
       "simulationParams": {
-        "max_simulation_time": 1000,
+        "max_simulation_time": 300,
         "model_type": "CollisionFreeSpeedModel",
         "strength_neighbor_repulsion": 2.6,
         "range_neighbor_repulsion": 0.1,
@@ -63,6 +63,39 @@
         "alpha": 90,
         "c": 3
       }
+    },
+    "exit_B_right": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          29,
+          10
+        ],
+        [
+          30,
+          10
+        ],
+        [
+          30,
+          13
+        ],
+        [
+          29,
+          13
+        ],
+        [
+          29,
+          10
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0,
+      "sign": {
+        "x": 29.5,
+        "y": 11.5,
+        "alpha": 270,
+        "c": 3
+      }
     }
   },
   "distributions": {
@@ -70,31 +103,33 @@
       "type": "polygon",
       "coordinates": [
         [
-          5,
-          5
+          18,
+          1
         ],
         [
-          25,
-          5
+          22,
+          1
         ],
         [
-          25,
-          25
+          22,
+          8
         ],
         [
-          5,
-          25
+          18,
+          8
         ],
         [
-          5,
-          5
+          18,
+          1
         ]
       ],
       "parameters": {
-        "number": 100,
-        "radius": 0.1,
+        "number": 200,
+        "radius": 0.15,
         "v0": 1.2,
-        "use_flow_spawning": false,
+        "use_flow_spawning": true,
+        "flow_start_time": 0,
+        "flow_end_time": 400,
         "distribution_mode": "by_number",
         "percentage": null,
         "use_premovement": false,
@@ -109,890 +144,39 @@
     }
   },
   "checkpoints": {
-    "cp_NE_1": {
+    "jps-checkpoints_0": {
       "type": "polygon",
       "coordinates": [
         [
-          23,
-          23
+          17,
+          10
         ],
         [
-          27,
-          23
+          20,
+          10
         ],
         [
-          27,
-          27
+          20,
+          13
         ],
         [
-          23,
-          27
+          17,
+          13
         ],
         [
-          23,
-          23
+          17,
+          10
         ]
       ],
       "sign": {
-        "x": 25,
-        "y": 25,
-        "alpha": 0,
+        "x": 18.5,
+        "y": 10.5,
+        "alpha": 180,
         "c": 3
       },
       "waiting_time": 0,
       "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NW_1": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          23
-        ],
-        [
-          7,
-          23
-        ],
-        [
-          7,
-          27
-        ],
-        [
-          3,
-          27
-        ],
-        [
-          3,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SW_1": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          3
-        ],
-        [
-          7,
-          3
-        ],
-        [
-          7,
-          7
-        ],
-        [
-          3,
-          7
-        ],
-        [
-          3,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SE_1": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          3
-        ],
-        [
-          27,
-          3
-        ],
-        [
-          27,
-          7
-        ],
-        [
-          23,
-          7
-        ],
-        [
-          23,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NE_2": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          23
-        ],
-        [
-          27,
-          23
-        ],
-        [
-          27,
-          27
-        ],
-        [
-          23,
-          27
-        ],
-        [
-          23,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NW_2": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          23
-        ],
-        [
-          7,
-          23
-        ],
-        [
-          7,
-          27
-        ],
-        [
-          3,
-          27
-        ],
-        [
-          3,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SW_2": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          3
-        ],
-        [
-          7,
-          3
-        ],
-        [
-          7,
-          7
-        ],
-        [
-          3,
-          7
-        ],
-        [
-          3,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SE_2": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          3
-        ],
-        [
-          27,
-          3
-        ],
-        [
-          27,
-          7
-        ],
-        [
-          23,
-          7
-        ],
-        [
-          23,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NE_3": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          23
-        ],
-        [
-          27,
-          23
-        ],
-        [
-          27,
-          27
-        ],
-        [
-          23,
-          27
-        ],
-        [
-          23,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NW_3": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          23
-        ],
-        [
-          7,
-          23
-        ],
-        [
-          7,
-          27
-        ],
-        [
-          3,
-          27
-        ],
-        [
-          3,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SW_3": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          3
-        ],
-        [
-          7,
-          3
-        ],
-        [
-          7,
-          7
-        ],
-        [
-          3,
-          7
-        ],
-        [
-          3,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SE_3": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          3
-        ],
-        [
-          27,
-          3
-        ],
-        [
-          27,
-          7
-        ],
-        [
-          23,
-          7
-        ],
-        [
-          23,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NE_4": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          23
-        ],
-        [
-          27,
-          23
-        ],
-        [
-          27,
-          27
-        ],
-        [
-          23,
-          27
-        ],
-        [
-          23,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NW_4": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          23
-        ],
-        [
-          7,
-          23
-        ],
-        [
-          7,
-          27
-        ],
-        [
-          3,
-          27
-        ],
-        [
-          3,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SW_4": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          3
-        ],
-        [
-          7,
-          3
-        ],
-        [
-          7,
-          7
-        ],
-        [
-          3,
-          7
-        ],
-        [
-          3,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SE_4": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          3
-        ],
-        [
-          27,
-          3
-        ],
-        [
-          27,
-          7
-        ],
-        [
-          23,
-          7
-        ],
-        [
-          23,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NE_5": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          23
-        ],
-        [
-          27,
-          23
-        ],
-        [
-          27,
-          27
-        ],
-        [
-          23,
-          27
-        ],
-        [
-          23,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NW_5": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          23
-        ],
-        [
-          7,
-          23
-        ],
-        [
-          7,
-          27
-        ],
-        [
-          3,
-          27
-        ],
-        [
-          3,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SW_5": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          3
-        ],
-        [
-          7,
-          3
-        ],
-        [
-          7,
-          7
-        ],
-        [
-          3,
-          7
-        ],
-        [
-          3,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SE_5": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          3
-        ],
-        [
-          27,
-          3
-        ],
-        [
-          27,
-          7
-        ],
-        [
-          23,
-          7
-        ],
-        [
-          23,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NE_6": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          23
-        ],
-        [
-          27,
-          23
-        ],
-        [
-          27,
-          27
-        ],
-        [
-          23,
-          27
-        ],
-        [
-          23,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_NW_6": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          23
-        ],
-        [
-          7,
-          23
-        ],
-        [
-          7,
-          27
-        ],
-        [
-          3,
-          27
-        ],
-        [
-          3,
-          23
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 25,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SW_6": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3,
-          3
-        ],
-        [
-          7,
-          3
-        ],
-        [
-          7,
-          7
-        ],
-        [
-          3,
-          7
-        ],
-        [
-          3,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 5,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
-      "enable_throughput_throttling": false,
-      "max_throughput": 0,
-      "speed_factor": 1
-    },
-    "cp_SE_6": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          23,
-          3
-        ],
-        [
-          27,
-          3
-        ],
-        [
-          27,
-          7
-        ],
-        [
-          23,
-          7
-        ],
-        [
-          23,
-          3
-        ]
-      ],
-      "sign": {
-        "x": 25,
-        "y": 5,
-        "alpha": 0,
-        "c": 3
-      },
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 0,
+      "waiting_time_std": 1,
       "enable_throughput_throttling": false,
       "max_throughput": 0,
       "speed_factor": 1
@@ -1004,150 +188,24 @@
       "id": "journey_0",
       "stages": [
         "jps-distributions_0",
-        "cp_NE_1",
-        "cp_NW_1",
-        "cp_SW_1",
-        "cp_SE_1",
-        "cp_NE_2",
-        "cp_NW_2",
-        "cp_SW_2",
-        "cp_SE_2",
-        "cp_NE_3",
-        "cp_NW_3",
-        "cp_SW_3",
-        "cp_SE_3",
-        "cp_NE_4",
-        "cp_NW_4",
-        "cp_SW_4",
-        "cp_SE_4",
-        "cp_NE_5",
-        "cp_NW_5",
-        "cp_SW_5",
-        "cp_SE_5",
-        "cp_NE_6",
-        "cp_NW_6",
-        "cp_SW_6",
-        "cp_SE_6"
+        "jps-checkpoints_0",
+        "exit_A_left",
+        "exit_B_right"
       ],
       "transitions": [
         {
           "from": "jps-distributions_0",
-          "to": "cp_NE_1",
+          "to": "jps-checkpoints_0",
           "journey_id": "journey_0"
         },
         {
-          "from": "cp_NE_1",
-          "to": "cp_NW_1",
+          "from": "jps-checkpoints_0",
+          "to": "exit_A_left",
           "journey_id": "journey_0"
         },
         {
-          "from": "cp_NW_1",
-          "to": "cp_SW_1",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SW_1",
-          "to": "cp_SE_1",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SE_1",
-          "to": "cp_NE_2",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NE_2",
-          "to": "cp_NW_2",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NW_2",
-          "to": "cp_SW_2",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SW_2",
-          "to": "cp_SE_2",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SE_2",
-          "to": "cp_NE_3",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NE_3",
-          "to": "cp_NW_3",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NW_3",
-          "to": "cp_SW_3",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SW_3",
-          "to": "cp_SE_3",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SE_3",
-          "to": "cp_NE_4",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NE_4",
-          "to": "cp_NW_4",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NW_4",
-          "to": "cp_SW_4",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SW_4",
-          "to": "cp_SE_4",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SE_4",
-          "to": "cp_NE_5",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NE_5",
-          "to": "cp_NW_5",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NW_5",
-          "to": "cp_SW_5",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SW_5",
-          "to": "cp_SE_5",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SE_5",
-          "to": "cp_NE_6",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NE_6",
-          "to": "cp_NW_6",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_NW_6",
-          "to": "cp_SW_6",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "cp_SW_6",
-          "to": "cp_SE_6",
+          "from": "jps-checkpoints_0",
+          "to": "exit_B_right",
           "journey_id": "journey_0"
         }
       ]
@@ -1156,124 +214,34 @@
   "transitions": [
     {
       "from": "jps-distributions_0",
-      "to": "cp_NE_1",
+      "to": "jps-checkpoints_0",
       "journey_id": "journey_0"
     },
     {
-      "from": "cp_NE_1",
-      "to": "cp_NW_1",
+      "from": "jps-checkpoints_0",
+      "to": "exit_A_left",
       "journey_id": "journey_0"
     },
     {
-      "from": "cp_NW_1",
-      "to": "cp_SW_1",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SW_1",
-      "to": "cp_SE_1",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SE_1",
-      "to": "cp_NE_2",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NE_2",
-      "to": "cp_NW_2",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NW_2",
-      "to": "cp_SW_2",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SW_2",
-      "to": "cp_SE_2",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SE_2",
-      "to": "cp_NE_3",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NE_3",
-      "to": "cp_NW_3",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NW_3",
-      "to": "cp_SW_3",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SW_3",
-      "to": "cp_SE_3",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SE_3",
-      "to": "cp_NE_4",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NE_4",
-      "to": "cp_NW_4",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NW_4",
-      "to": "cp_SW_4",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SW_4",
-      "to": "cp_SE_4",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SE_4",
-      "to": "cp_NE_5",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NE_5",
-      "to": "cp_NW_5",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NW_5",
-      "to": "cp_SW_5",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SW_5",
-      "to": "cp_SE_5",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SE_5",
-      "to": "cp_NE_6",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NE_6",
-      "to": "cp_NW_6",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_NW_6",
-      "to": "cp_SW_6",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "cp_SW_6",
-      "to": "cp_SE_6",
+      "from": "jps-checkpoints_0",
+      "to": "exit_B_right",
       "journey_id": "journey_0"
     }
   ],
-  "waypoint_routing": {}
+  "waypoint_routing": {
+    "jps-checkpoints_0": {
+      "journey_0": {
+        "destinations": [
+          {
+            "target": "exit_A_left",
+            "percentage": 1
+          },
+          {
+            "target": "exit_B_right",
+            "percentage": 99
+          }
+        ]
+      }
+    }
+  }
 }

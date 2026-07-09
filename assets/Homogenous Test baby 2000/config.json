@@ -128,7 +128,8 @@
         {"from": "cp_SE_5", "to": "cp_NE_6", "journey_id": "journey_0"},
         {"from": "cp_NE_6", "to": "cp_NW_6", "journey_id": "journey_0"},
         {"from": "cp_NW_6", "to": "cp_SW_6", "journey_id": "journey_0"},
-        {"from": "cp_SW_6", "to": "cp_SE_6", "journey_id": "journey_0"}
+        {"from": "cp_SW_6", "to": "cp_SE_6", "journey_id": "journey_0"},
+        {"from": "cp_SE_6", "to": "cp_NE_1", "journey_id": "journey_0"}
       ]
     }
   ],
@@ -156,7 +157,8 @@
     {"from": "cp_SE_5", "to": "cp_NE_6", "journey_id": "journey_0"},
     {"from": "cp_NE_6", "to": "cp_NW_6", "journey_id": "journey_0"},
     {"from": "cp_NW_6", "to": "cp_SW_6", "journey_id": "journey_0"},
-    {"from": "cp_SW_6", "to": "cp_SE_6", "journey_id": "journey_0"}
+    {"from": "cp_SW_6", "to": "cp_SE_6", "journey_id": "journey_0"},
+    {"from": "cp_SE_6", "to": "cp_NE_1", "journey_id": "journey_0"}
   ],
   "waypoint_routing": {}
 }

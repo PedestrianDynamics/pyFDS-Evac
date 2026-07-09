@@ -526,6 +526,17 @@ async def post(request: Request):
     try:
         scenario   = load_scenario(f"assets/{scenario_name}")
         opts       = params.form_to_opts(form)
+        # Normalise the FDS dir and fail fast on a bogus value. Without this,
+        # a stale/garbage field (e.g. a pasted error string) is handed to
+        # fdsreader as a path and produces a confusing nested-exception cascade.
+        fds_dir = (getattr(opts, "fds_dir", None) or "").strip()
+        opts.fds_dir = fds_dir or None
+        if fds_dir and not Path(fds_dir).is_dir():
+            shown = fds_dir if len(fds_dir) <= 80 else fds_dir[:80] + "…"
+            return Div(
+                f"FDS dir is not a folder: {shown}",
+                style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+            )
         run_kwargs = build_run_kwargs(scenario, opts)
         import run as cli
         def post_run(result):

@@ -185,6 +185,7 @@ def _field(action: argparse.Action) -> Any:
     if dest == "fds_dir":
         return Div(Label("FDS dir", style=_LABEL),
                    Div(Input(id=dest, name=dest, placeholder="results/demo/fds",
+                             autocomplete="off", spellcheck="false",
                              style=_INPUT + ";flex:1;min-width:0"),
                        _browse_button("fds_dir", "dir"),
                        style="display:flex;gap:7px"),
