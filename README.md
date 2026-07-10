@@ -42,12 +42,22 @@ runs a simulation and produces every plot in one go.
 
 ## Web GUI
 
-A [FastHTML](https://fastht.ml/) + [MonsterUI](https://monsterui.answer.ai/)
-web GUI exposes the same model behind a form: pick a scenario, set any
-`run.py` flag (the `fds dir` field has a folder browser), run it, watch
-live progress, and explore the results as interactive
-[Plotly](https://plotly.com/python/) charts (trajectories coloured by
-exit, cumulative FED, smoke, and route cost).
+A [FastHTML](https://fastht.ml/) web GUI 
+exposes the same model behind a form: pick a scenario, set any `run.py` flag
+(the `fds dir` field has a folder browser), run it, watch live progress, and
+explore the results.
+
+Two ways to view a finished run's trajectories:
+
+- **Interactive [Plotly](https://plotly.com/python/) charts** — cumulative
+  FED, smoke, and route cost over time.
+- **Canvas trajectory replay** (`pyfds_evac/webapp/trajviz.py`) — agents
+  interpolated smoothly between downsampled trajectory samples, coloured by
+  cumulative FED (safe → alert → critical → severe) or by assigned exit, with
+  play/pause, a scrub bar, and ¼×–4× playback speed. When the run has an
+  `fds_dir`, the FDS extinction slice is drawn as a smoke layer underneath
+  the agents (toggleable), sampled via `fdsreader`'s multi-mesh
+  `to_global()` and clipped to the walkable polygon.
 
 Install the optional GUI dependencies and launch:
 
@@ -181,7 +191,7 @@ $$
 | FED_NOx | (16) | $\int C_{\mathrm{NO_x}}/1500\, dt$, where $C_{\mathrm{NO_x}} = C_{\mathrm{NO}} + C_{\mathrm{NO_2}}$ | NO, NO2 (ppm) |
 | FLD_irr | (17) | $\int \sum_i C_i / F_{\mathrm{FLD},i}\, dt$ | HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde (ppm) |
 | HV_CO2 | (19) | $\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1$ | CO2 (vol %) |
-| FED_O2 | (18) | $\int 1/\bigl(60\, \exp(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}}))\bigr)\, dt$ | O2 (vol %) |
+| FED_O2 | (18) | $\int 1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\, dt$ | O2 (vol %) |
 
 Irritant Ct values (ppm·min) from guide Table 2:
 
@@ -215,6 +225,32 @@ The FED model was extended in March 2026 to include all ISO 13571 terms:
 
 All new terms are fully tested with constant-exposure unit tests in
 `tests/test_fed.py`.
+
+### Bug fixes (July 2026)
+
+- **O2 hypoxia rate was 60x too slow.** `_o2_hypoxia_rate_per_minute` divided
+  by an extra factor of 60, turning the per-minute rate from guide Eq. 18 into
+  a per-hour rate before it was accumulated on a per-minute clock. Below the
+  19.5 % suppression threshold (a real hypoxic atmosphere, e.g. 0 % O2), this
+  understated incapacitation risk by 60x — 2.6 s of true incapacitation time
+  was reported as ~155 s. Fixed in `pyfds_evac/core/fed.py`; the equation
+  table above and the formula were both corrected to match. Caught while
+  validating a deliberately oxygen-depleted homogeneous-gas test case.
+- **Conflicting `&INIT` records silently zero out prescribed gas
+  concentrations.** FDS resets the *entire* domain's species composition on
+  each `&INIT` record that has no `XB` bounding box, so a second `&INIT`
+  (e.g. one that only sets soot) overwrites an earlier one (e.g. one that
+  sets CO/CO2/O2), leaving those species at 0 with no warning. All species
+  prescribed via `&INIT` in a test deck must go in a single record. This is
+  an FDS input-authoring pitfall, not a pyFDS-Evac bug, but it produced the
+  same symptom as the rate bug above (near-zero toxic gas readings) and is
+  easy to reintroduce, so it's called out here.
+- **`load_slice_sampler` now accepts multiple candidate quantity names.**
+  Real FDS decks name the soot extinction slice `SOOT EXTINCTION
+  COEFFICIENT`; some older test decks in this repo used the bare alias
+  `EXTINCTION`. The smoke-speed model previously hardcoded the alias and
+  raised `IndexError` on decks using the standard name. It now tries a list
+  of candidates in order (`pyfds_evac/core/fds_sampling.py`).
 
 ### Verification
 
@@ -507,6 +543,34 @@ Scenario definitions are stored in [`assets/`](assets/):
 - **basic**: Minimal scenarios for smoke-speed verification
 - **HC**: Hazard composition cases
 - **social_force**: Social force model test cases
+- **Homogenous Test baby 2000** / **deadly 4000** / **extra deadly 8000ppm**:
+  FED accumulation and probabilistic-incapacitation validation against a
+  hand-calculated reference (`fed_hand_calc.py`), at three constant CO
+  concentrations (2000/4000/8000 ppm) in a sealed, spatially uniform room —
+  removing gas-transport physics as a variable isolates the FED/incapacitation
+  *pipeline* logic. 100 non-evacuating agents circling a rectangular path, FDS
+  domain split across 4 MPI meshes to confirm gas data is consistent at mesh
+  boundaries. All three concentrations currently match the hand-calc's FED=1.0
+  crossing time to <0.5%. `Homogenous_Test`, `Homogenous_Test_bugfixed`, and
+  `Homogenous_Test_smol` are earlier iterations from the same debugging
+  lineage (see the bug fixes above — this suite is what surfaced both the O2
+  rate bug and the conflicting-`&INIT` FDS pitfall). Full writeup:
+  `testing directory/README_homogenoustest.md`.
+- **Familiarity Test Full** / **Familiarity Test Discovery**: `SocialForceModel`
+  scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
+  doors throughout, generated parametrically by each folder's
+  `build_geometry.py`), differing only in the spawn distribution's
+  `familiarity` value. A matching fire deck lives at
+  `testing directory/Familiarity Test/familiarity_test.fds` (real
+  combustion via `&REAC`, not a prescribed `&INIT`; walls mirror the
+  walkable geometry exactly so smoke propagates through the same
+  doorways agents use). **Caveat:** with a single exit and no rerouting
+  pressure, `familiarity` has no observable effect on evacuation — full
+  and discovery agents are both assigned the same nearest exit at spawn,
+  and nothing ever triggers a reroute. Seeing the two tiers actually
+  diverge requires a second exit plus `--enable-rerouting` and either
+  congestion (`w_queue > 0`) or FDS-driven cost (`w_smoke`/`w_fed`) —
+  not yet added to this scenario.
 
 ## Dependencies
 
