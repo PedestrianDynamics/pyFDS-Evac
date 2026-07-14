@@ -248,8 +248,83 @@
     }
   },
   "zones": {},
-  "journeys": [],
-  "transitions": [],
+  "journeys": [
+    {
+      "id": "journey-1783673721633-p9aah1",
+      "stages": [
+        "jps-distributions_0",
+        "jps-checkpoints_0",
+        "jps-checkpoints_1",
+        "jps-checkpoints_2",
+        "jps-checkpoints_3",
+        "jps-exits_0"
+      ],
+      "transitions": [
+        {
+          "from": "jps-distributions_0",
+          "to": "jps-checkpoints_0",
+          "journey_id": "journey-1783673721633-p9aah1"
+        },
+        {
+          "from": "jps-checkpoints_0",
+          "to": "jps-checkpoints_1",
+          "journey_id": "journey-1783673721633-p9aah1"
+        },
+        {
+          "from": "jps-checkpoints_1",
+          "to": "jps-checkpoints_2",
+          "journey_id": "journey-1783673721633-p9aah1"
+        },
+        {
+          "from": "jps-checkpoints_2",
+          "to": "jps-checkpoints_3",
+          "journey_id": "journey-1783673721633-p9aah1"
+        },
+        {
+          "from": "jps-checkpoints_3",
+          "to": "jps-exits_0",
+          "journey_id": "journey-1783673721633-p9aah1"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "from": "jps-distributions_0",
+      "to": "jps-checkpoints_0",
+      "journey_id": "journey-1783673721633-p9aah1"
+    },
+    {
+      "from": "jps-checkpoints_0",
+      "to": "jps-checkpoints_1",
+      "journey_id": "journey-1783673721633-p9aah1"
+    },
+    {
+      "from": "jps-checkpoints_1",
+      "to": "jps-checkpoints_2",
+      "journey_id": "journey-1783673721633-p9aah1"
+    },
+    {
+      "from": "jps-checkpoints_2",
+      "to": "jps-checkpoints_3",
+      "journey_id": "journey-1783673721633-p9aah1"
+    },
+    {
+      "from": "jps-checkpoints_3",
+      "to": "jps-exits_0",
+      "journey_id": "journey-1783673721633-p9aah1"
+    },
+    {
+      "from": "jps-checkpoints_0",
+      "to": "jps-checkpoints_3",
+      "journey_id": "shortcut"
+    },
+    {
+      "from": "jps-distributions_0",
+      "to": "jps-checkpoints_3",
+      "journey_id": "shortcut"
+    }
+  ],
   "obstacles": {
     "jps-obstacles_0": {
       "height": 3

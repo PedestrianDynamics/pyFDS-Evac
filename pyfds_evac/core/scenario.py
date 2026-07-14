@@ -911,6 +911,60 @@ def _extract_terminal_exit(
     return None
 
 
+def _migrate_journeys_v2(data: Dict[str, Any]) -> None:
+    """Backfill legacy ``journeys``/``transitions`` from the editor's ``journeys_v2``.
+
+    The web UI saves routes as ``journeys_v2`` (id/name/color/sequence) with
+    per-distribution ``journey_weights``, but the simulation loader only
+    understands the legacy ``journeys`` (stages/transitions) shape — without
+    this, scenarios saved from the editor have no ``journeys``/``transitions``,
+    ``initialize_simulation_from_json`` decides the config needs fallback
+    auto-routing, and the drawn route is silently never used.
+
+    Only distributions with exactly one ``journey_weights`` entry are
+    migrated: the legacy format has no equivalent for splitting a single
+    distribution across multiple whole journeys, so ambiguous cases are left
+    alone (existing fallback behaviour applies to those).
+    """
+    if data.get("journeys") or not data.get("journeys_v2"):
+        return
+
+    sequences = {
+        j["id"]: j["sequence"]
+        for j in data["journeys_v2"]
+        if j.get("id") and j.get("sequence")
+    }
+    if not sequences:
+        return
+
+    used_ids: set = set()
+    legacy_journeys = []
+    legacy_transitions = []
+    for dist_id, dist in data.get("distributions", {}).items():
+        weights = dist.get("journey_weights") or []
+        if len(weights) != 1:
+            continue
+        jid = weights[0].get("journey_id")
+        sequence = sequences.get(jid)
+        if not sequence:
+            continue
+        legacy_id = jid if jid not in used_ids else f"{jid}::{dist_id}"
+        used_ids.add(legacy_id)
+        stages = [dist_id, *sequence]
+        transitions = [
+            {"from": stages[i], "to": stages[i + 1], "journey_id": legacy_id}
+            for i in range(len(stages) - 1)
+        ]
+        legacy_journeys.append(
+            {"id": legacy_id, "stages": stages, "transitions": transitions}
+        )
+        legacy_transitions.extend(transitions)
+
+    if legacy_journeys:
+        data["journeys"] = legacy_journeys
+        data["transitions"] = legacy_transitions
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -970,6 +1024,8 @@ def load_scenario(path: str) -> Scenario:
             if wkt_name is None:
                 raise ValueError(f"ZIP contains no WKT file. Found: {names}")
             walkable_wkt = zf.read(wkt_name).decode("utf-8").strip()
+
+    _migrate_journeys_v2(data)
 
     sim_settings = data.get("config", {}).get("simulation_settings", {})
     sim_params = sim_settings.get("simulationParams", {})
@@ -1805,7 +1861,14 @@ def run_scenario(
                                 current_time,
                             )
                     rs = agent_route_state[agent_id]
-                    if not should_reevaluate(
+                    # Force the very first evaluation to happen immediately (at
+                    # spawn), regardless of the staggering offset, so agents that
+                    # know a better route than their scripted spawn journey — e.g.
+                    # a 'full' agent that can head straight for the exit — commit
+                    # to it before drifting along the default path. Later
+                    # evaluations keep the staggered cadence.
+                    first_eval = rs.last_eval_time_s == -math.inf
+                    if not first_eval and not should_reevaluate(
                         current_time, rs, reroute_config.reevaluation_interval_s
                     ):
                         continue

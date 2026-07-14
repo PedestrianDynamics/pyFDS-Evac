@@ -430,9 +430,14 @@ Default when the key is absent: `"full"` (backward compatible).
    agent's current position are added.
 
 Routing (Dijkstra) runs over the agent's known sub-graph only. If no exit
-is reachable in the cognitive map, no rerouting occurs and the agent
-continues on its last assigned route until the cognitive map expands via
-an arrival or reevaluation event.
+is reachable in the cognitive map, the agent heads toward the nearest
+known-but-unexplored node instead (a doorway it knows exists but hasn't
+been through) — expanding its knowledge on arrival and re-evaluating from
+there, until an exit becomes known. Reroute events for this show up in
+`route_history` with `reason="explore"`. Once an exit is known, the agent
+also reroutes onto a cheaper *path* to that same exit as its knowledge
+grows, not only when a different exit becomes preferable
+(`reason="better_path"`).
 
 #### Visualising cognitive map evolution
 
@@ -564,13 +569,25 @@ Scenario definitions are stored in [`assets/`](assets/):
   `testing directory/Familiarity Test/familiarity_test.fds` (real
   combustion via `&REAC`, not a prescribed `&INIT`; walls mirror the
   walkable geometry exactly so smoke propagates through the same
-  doorways agents use). **Caveat:** with a single exit and no rerouting
-  pressure, `familiarity` has no observable effect on evacuation — full
-  and discovery agents are both assigned the same nearest exit at spawn,
-  and nothing ever triggers a reroute. Seeing the two tiers actually
-  diverge requires a second exit plus `--enable-rerouting` and either
-  congestion (`w_queue > 0`) or FDS-driven cost (`w_smoke`/`w_fed`) —
-  not yet added to this scenario.
+  doorways agents use). These two configs use the legacy `journeys`/
+  `transitions` shape directly (the web editor's `journeys_v2` format is
+  auto-migrated to this shape by `load_scenario`, but was hand-converted
+  here to add the extra edge below). The maze's start room is one open
+  box that connects directly to the checkpoint outside the exit door
+  (`jps-checkpoints_0 → jps-checkpoints_3`), completely bypassing the
+  scripted checkpoint tour through the rest of the maze — a real ~39%
+  shorter route (32 m vs 52 m) that's declared as an extra graph edge
+  (tagged `journey_id: "shortcut"` in `transitions`, invisible to the
+  static spawn-time journey) for the rerouting/cognitive-map system to
+  find. Run with `--enable-rerouting` (no `--fds-dir`/vis-cache needed —
+  divergence here is pure-distance, not smoke-driven) to see it: `full`
+  agents know the whole graph immediately and reroute onto the shortcut
+  within the first reevaluation tick; `discovery` agents start knowing
+  only the spawn's declared neighbor and explore the nearest
+  known-but-unvisited doorway at each step — which for this maze's
+  geometry happens to coincide with the original scripted tour the whole
+  way, so they end up taking the long route without ever finding the
+  shortcut. Verified: `full` evacuates in ~54 s vs `discovery`'s ~75 s.
 
 ## Dependencies
 

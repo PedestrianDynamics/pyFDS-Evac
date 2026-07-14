@@ -187,6 +187,21 @@ class StageGraph:
         cost, path = candidates[best_exit]
         return best_exit, cost, path
 
+    def shortest_path_to(
+        self,
+        source: str,
+        target: str,
+        dynamic_weights: dict[tuple[str, str], float] | None = None,
+    ) -> tuple[float, list[str]] | None:
+        """Return (cost, path) for the shortest known path from *source* to *target*.
+
+        Returns None if *target* is not reachable from *source*.
+        """
+        dist, prev = self._dijkstra(source, dynamic_weights=dynamic_weights)
+        if target not in dist or not math.isfinite(dist[target]):
+            return None
+        return dist[target], self._reconstruct(prev, source, target)
+
     def _dijkstra(
         self,
         source: str,
@@ -920,6 +935,41 @@ def reroute_agent(
     return True
 
 
+# Same-exit reroute only fires when the newly ranked path is at least this
+# much cheaper than the agent's currently-committed path, so agents don't
+# thrash onto a "better" path that's only cheaper by floating-point noise.
+_PATH_IMPROVEMENT_THRESHOLD = 0.95
+
+
+def _reconstruct_committed_path(wait_info: dict) -> list[str]:
+    """Return the path the agent is *currently* walking, per its own wait_info.
+
+    Walks forward through the deterministic portion of ``path_choices``
+    starting at the agent's current position, stopping at a terminal stage
+    (no further choices) or the first probabilistic branch (more than one
+    choice), where the continuation can't be determined in advance.
+    """
+    origin = wait_info.get("current_origin")
+    target = wait_info.get("current_target_stage")
+    if origin is None or target is None:
+        return []
+    path = [origin, target]
+    seen = {origin, target}
+    choices = wait_info.get("path_choices", {})
+    current = target
+    while True:
+        options = choices.get(current)
+        if not options or len(options) != 1:
+            break
+        next_stage = options[0][0]
+        if next_stage in seen:
+            break
+        path.append(next_stage)
+        seen.add(next_stage)
+        current = next_stage
+    return path
+
+
 def evaluate_and_reroute(
     agent_id: int,
     wait_info: dict,
@@ -963,7 +1013,39 @@ def evaluate_and_reroute(
         agent_position=agent_position,
     )
     if not ranked:
-        return None
+        # No exit reachable in the agent's known subgraph (typically a
+        # discovery agent that hasn't found the way out yet). Rather than
+        # standing still, head toward the nearest known-but-unexplored node
+        # so the cognitive map keeps growing until an exit is found.
+        route_state.last_eval_time_s = current_time_s
+        if cognitive_map is None:
+            return None
+        from .cognitive_map import nearest_frontier_target
+
+        frontier = nearest_frontier_target(cognitive_map, graph, source)
+        if frontier is None:
+            return None
+        target_node, path = frontier
+        if wait_info.get("current_target_stage") == target_node:
+            return None
+        stage_configs = wait_info.get("stage_configs", {})
+        changed = reroute_agent(wait_info, path, stage_configs)
+        if not changed:
+            return None
+        route_state.current_path = path
+        # old_exit is left None on purpose: exploring toward a frontier node
+        # does not abandon any exit commitment, so this switch must not drive
+        # the caller's exit_counts bookkeeping (new_exit is a checkpoint, not
+        # an exit). route_state.current_exit is deliberately unchanged.
+        return RouteSwitch(
+            time_s=current_time_s,
+            agent_id=agent_id,
+            old_exit=None,
+            new_exit=target_node,
+            old_cost=None,
+            new_cost=0.0,
+            reason="explore",
+        )
 
     best = ranked[0]
     if (
@@ -985,7 +1067,40 @@ def evaluate_and_reroute(
     route_state.last_eval_time_s = current_time_s
 
     if old_exit == best.exit_id:
-        # Same exit, update path but no switch.
+        # Same exit — only reroute if the newly ranked path to it is
+        # meaningfully cheaper than the path the agent is actually walking
+        # right now (not just whatever was last recorded as "best").
+        committed_path = _reconstruct_committed_path(wait_info)
+        if (
+            committed_path
+            and committed_path[-1] == best.exit_id
+            and all(n in graph.nodes for n in committed_path)
+        ):
+            committed_cost = evaluate_route(
+                graph,
+                committed_path,
+                current_time_s,
+                current_fed,
+                extinction_sampler,
+                fed_rate_sampler,
+                config.cost_config,
+                cached_segments=cached_segments,
+                exit_counts=exit_counts,
+            ).composite_cost
+            if best.composite_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
+                stage_configs = wait_info.get("stage_configs", {})
+                changed = reroute_agent(wait_info, best.path, stage_configs)
+                if changed:
+                    route_state.current_path = best.path
+                    return RouteSwitch(
+                        time_s=current_time_s,
+                        agent_id=agent_id,
+                        old_exit=old_exit,
+                        new_exit=best.exit_id,
+                        old_cost=committed_cost,
+                        new_cost=best.composite_cost,
+                        reason="better_path",
+                    )
         route_state.current_path = best.path
         return None
 
