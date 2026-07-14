@@ -32,6 +32,9 @@ _BACK_JS   = (
     "document.getElementById('tab-sim').classList.remove('hidden');"
     "document.getElementById('tab-model').classList.add('hidden');"
     "var h=document.querySelector('.app-header');if(h)h.style.display='';"
+    # Entering the model view hid the tab nav (which holds both tab buttons);
+    # restore it on the way back so the Model/Simulation buttons reappear.
+    "var n=document.querySelector('.tab-nav');if(n)n.style.display='';"
 )
 _P_STYLE   = f"{_MONO};font-size:15px;line-height:1.72;color:{_INK2};margin:0 0 4px"
 _EQ_STYLE  = (f"margin:18px 0;padding:2px 0 2px 20px;border-left:2px solid {_BLUE};"

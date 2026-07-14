@@ -121,26 +121,32 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 .uk-input::placeholder { color: hsl(var(--muted-foreground) / .5); }
 ::selection { background: rgba(255,106,26,.32); color: #fff; }
 
-/* inline help badge */
-.lbl-help { display: inline-flex; align-items: center; gap: .35rem; }
+/* inline help badge + in-flow help block */
+/* The tip is a normal-flow block (not absolutely positioned), so it's bounded
+   by the field width and can never overflow or be clipped by the sidebar. */
+.lbl-line { display: inline-flex; align-items: center; gap: .35rem; }
 .help-badge {
   display: inline-flex; align-items: center; justify-content: center;
-  position: relative;
   width: 15px; height: 15px; border-radius: 99px;
   border: 1px solid rgba(255,255,255,.18); color: hsl(var(--muted-foreground));
   font-size: .58rem; font-weight: 700; cursor: pointer;
   transition: color .12s, border-color .12s; user-select: none;
 }
-.help-badge.open { color: var(--gold); border-color: var(--gold); }
-.help-badge .badge-tip {
-  display: none; position: absolute; left: 120%; top: 50%; transform: translateY(-50%);
+.lblwrap { display: flex; flex-direction: column; gap: 6px; }
+.lblwrap.open .help-badge { color: var(--gold); border-color: var(--gold); }
+.badge-tip {
+  display: none;
   background: #0d0c0e; color: #f2ede9;
-  font-size: .7rem; font-weight: 400; line-height: 1.45;
-  padding: .45rem .7rem; border-radius: .5rem; border: 1px solid rgba(255,255,255,.12);
-  white-space: pre-wrap; max-width: 22rem; min-width: 12rem;
-  box-shadow: var(--shadow-md); z-index: 200; pointer-events: none;
+  font-size: .72rem; font-weight: 400; line-height: 1.5;
+  text-transform: none; letter-spacing: normal;
+  padding: .5rem .65rem; border-radius: .5rem; border: 1px solid rgba(255,255,255,.14);
+  white-space: normal; box-shadow: var(--shadow-md);
 }
-.help-badge.open .badge-tip { display: block; }
+.lblwrap.open .badge-tip { display: block; }
+
+/* run button running-state */
+.run-btn:disabled { cursor: progress; filter: saturate(.5) brightness(.92); opacity: .9; }
+.run-btn:disabled .run-btn-icon { animation: pulse 1.3s ease-in-out infinite; }
 
 /* ---- header ---- */
 .app-header {

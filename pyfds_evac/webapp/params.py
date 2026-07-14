@@ -58,6 +58,9 @@ def _load_parser() -> argparse.ArgumentParser:
 
 
 def _is_bool(action: argparse.Action) -> bool:
+    # store_true flags, plus --x/--no-x BooleanOptionalAction toggles.
+    if isinstance(action, getattr(argparse, "BooleanOptionalAction", ())):
+        return True
     return action.nargs == 0 and action.const is True
 
 
@@ -88,30 +91,111 @@ def _browse_button(target_id: str, mode: str) -> Any:
     )
 
 
-def _help_badge(action: argparse.Action) -> Any:
-    text = (action.help or "").strip()
+# Curated, friendly explanations shown in the ? badge next to each field.
+# Preferred over argparse's terse help text; keyed by the field's dest.
+_HELP_TEXT: Dict[str, str] = {
+    "scenario":
+        "Which building + agent setup to run. Each option under assets/ pairs "
+        "a floor plan (geometry) with an exits/agents config.",
+    "seed":
+        "Random seed. The same seed reproduces the exact same run; change it to "
+        "get a different random spawn layout and variation.",
+    "fds_dir":
+        "Folder of precomputed FDS fire results. Supplies the smoke and "
+        "toxic-gas fields agents react to. Leave blank to run with no fire.",
+    "constant_extinction":
+        "Skip FDS and apply one uniform smoke density K (1/m) everywhere — a "
+        "quick way to test smoke slowdown without a full fire run.",
+    "smoke_update_interval":
+        "How often (sim seconds) the smoke each agent feels is refreshed. "
+        "Smaller is smoother but costs more compute.",
+    "smoke_slice_height":
+        "Height (m) of the horizontal FDS slice sampled for smoke — roughly "
+        "head height of a standing person.",
+    "disable_tenability":
+        "Turn off smoke's effect on people: no slowing from irritants and no "
+        "collapse from toxic dose. Agents just walk at normal speed.",
+    "incapacitation_mode":
+        "Probabilistic: each agent draws its own tolerance from a population "
+        "curve (some collapse early, some late). Deterministic: every agent "
+        "shares the same threshold.",
+    "susceptibility_sigma":
+        "Spread of how differently people tolerate toxic smoke. Higher = more "
+        "variation between agents in when they're overcome.",
+    "fic_alpha":
+        "How strongly irritant gases slow an agent. Higher = agents slow down "
+        "more in irritating smoke.",
+    "fic_min_factor":
+        "Floor on irritant slowdown — an agent never drops below this fraction "
+        "of its speed from irritants alone.",
+    "fed_threshold":
+        "Toxic dose (FED) at which a typical person is incapacitated. 1.0 is the "
+        "standard 'untenable' dose (ISO 13571). Lower = agents succumb sooner.",
+    "enable_rerouting":
+        "Let agents rethink their route mid-evacuation as smoke and crowding "
+        "change, instead of blindly following their first assigned route.",
+    "reroute_interval":
+        "How often (sim seconds) each agent rethinks its route. 1 = very "
+        "responsive; larger values make agents commit longer before "
+        "reconsidering.",
+    "vis_cache":
+        "Precomputed sign-visibility map (.npz). Lets agents lose sight of exit "
+        "signs through smoke and walls. Needs an FDS dir + rerouting enabled.",
+}
+
+
+def _help_text(dest: str, action: argparse.Action | None = None) -> str:
+    """Curated (or argparse) help string for *dest*, or '' when there's none."""
+    text = (_HELP_TEXT.get(dest) or (action.help if action else "") or "").strip()
     if not text or text == "show this help message and exit":
-        return None
+        return ""
+    return text
+
+
+def _label_line(text: str, has_badge: bool) -> str:
+    """Inline label-text + optional ? badge. The badge toggles 'open' on the
+    enclosing .lblwrap, which reveals the in-flow help block below."""
     import html as _html
-    safe = _html.escape(text)
-    return NotStr(
-        f'<span class="help-badge" onclick="this.classList.toggle(\'open\')">'
-        f'?<span class="badge-tip">{safe}</span></span>'
+
+    badge = (
+        '<span class="help-badge" '
+        'onclick="this.closest(\'.lblwrap\').classList.toggle(\'open\')">?</span>'
+    ) if has_badge else ""
+    return f'<span class="lbl-line">{_html.escape(text)}{badge}</span>'
+
+
+def _lbl(text: str, dest: str, action: argparse.Action | None = None) -> Any:
+    """A field label with a pressable ? that expands an in-flow help block.
+
+    The help block sits in normal document flow (not absolutely positioned),
+    so it's bounded by the field width and can never overflow / be clipped by
+    the sidebar's scroll box.
+    """
+    import html as _html
+
+    tip = _help_text(dest, action)
+    if not tip:
+        return Label(text, style=_LABEL)
+    return Div(
+        Label(NotStr(_label_line(text, True)), style=_LABEL),
+        NotStr(f'<div class="badge-tip">{_html.escape(tip)}</div>'),
+        cls="lblwrap",
     )
 
 
-def _lbl(text: str, action: argparse.Action) -> Any:
-    badge = _help_badge(action)
-    content = f'{text} <span class="help-badge" onclick="this.classList.toggle(\'open\')">?<span class="badge-tip">{action.help or ""}</span></span>' if badge else text
-    return Label(NotStr(content) if badge else text, style=_LABEL)
-
-
-def _switch(dest: str, label: str, checked: bool = False) -> Any:
+def _switch(dest: str, label: str, checked: bool = False,
+            action: argparse.Action | None = None) -> Any:
     _chk      = 'checked ' if checked else ''
     _track_bg = '#F4C430' if checked else '#2E2A2E'
     _knob_pos = '19px'    if checked else '2px'
-    return Div(
-        Label(label, style=f"{_GROTESK};font-size:12px;font-weight:500;color:#F2EDE9"),
+    import html as _html
+    _tip = _help_text(dest, action)
+    _label_node = Label(
+        NotStr(_label_line(label, bool(_tip))),
+        style=f"{_GROTESK};font-size:12px;font-weight:500;color:#F2EDE9",
+    )
+    _row = Div(
+        _label_node,
         NotStr(
             f'<label style="position:relative;display:inline-block;width:40px;height:23px;cursor:pointer">'
             f'<input type="checkbox" id="{dest}" name="{dest}" value="on" {_chk}'
@@ -127,10 +211,18 @@ def _switch(dest: str, label: str, checked: bool = False) -> Any:
         ),
         style="display:flex;align-items:center;justify-content:space-between;gap:10px",
     )
+    if not _tip:
+        return _row
+    return Div(
+        _row,
+        NotStr(f'<div class="badge-tip">{_html.escape(_tip)}</div>'),
+        cls="lblwrap",
+    )
+
 
 def _incap_toggle() -> Any:
     return Div(
-        Label("Incapacitation Mode", style=_LABEL),
+        _lbl("Incapacitation Mode", "incapacitation_mode"),
         Div(
             NotStr(
                 '<button type="button" class="mode-btn active" id="btn-prob"'
@@ -159,7 +251,7 @@ def _field(action: argparse.Action) -> Any:
         vals = [v for _, v in opts]
         default = "demo" if "demo" in vals else (vals[0] if vals else "")
         return Div(
-            Label("Scenario", style=_LABEL),
+            _lbl("Scenario", "scenario"),
             Select(
                 *[Option(ol, value=ov, selected=(ov == default)) for ol, ov in opts],
                 name="scenario", id="scenario",
@@ -178,12 +270,12 @@ def _field(action: argparse.Action) -> Any:
         )
 
     if dest == "seed":
-        return Div(Label("Seed", style=_LABEL),
+        return Div(_lbl("Seed", "seed", action),
                    Input(id=dest, name=dest, type="number", step="1", value="42", style=_INPUT),
                    style=_FIELD)
 
     if dest == "fds_dir":
-        return Div(Label("FDS dir", style=_LABEL),
+        return Div(_lbl("FDS dir", "fds_dir", action),
                    Div(Input(id=dest, name=dest, placeholder="results/demo/fds",
                              autocomplete="off", spellcheck="false",
                              style=_INPUT + ";flex:1;min-width:0"),
@@ -192,7 +284,7 @@ def _field(action: argparse.Action) -> Any:
                    style=_FIELD)
 
     if dest == "vis_cache":
-        return Div(Label("Vis cache", style=_LABEL),
+        return Div(_lbl("Vis cache", "vis_cache", action),
                    Div(Input(id=dest, name=dest, placeholder="results/demo/vis.npz",
                              style=_INPUT + ";flex:1;min-width:0"),
                        _browse_button("vis_cache", "file"),
@@ -205,23 +297,30 @@ def _field(action: argparse.Action) -> Any:
     if dest == "susceptibility_sigma":
         val = str(action.default if action.default is not None else 0.94)
         return Div(
-            Div(Label("Susceptibility σ", style=_LABEL),
+            Div(_lbl("Susceptibility σ", "susceptibility_sigma", action),
                 Input(id=dest, name=dest, type="number", step="any", value=val, style=_INPUT),
                 style=_FIELD),
             id="sigma-row",
         )
 
     if _is_bool(action):
-        return _switch(dest, dest.replace("_", " ").capitalize())
+        # Initial toggle state follows the flag's own default, so an
+        # on-by-default CLI flag (e.g. rerouting) renders checked.
+        return _switch(
+            dest,
+            dest.replace("_", " ").capitalize(),
+            checked=bool(action.default),
+            action=action,
+        )
 
     step  = "1" if action.type is int else "any"
     value = "" if action.default is None else str(action.default)
     label = dest.replace("_", " ").capitalize()
     if action.type in (int, float):
-        return Div(Label(label, style=_LABEL),
+        return Div(_lbl(label, dest, action),
                    Input(id=dest, name=dest, type="number", step=step, value=value, style=_INPUT),
                    style=_FIELD)
-    return Div(Label(label, style=_LABEL),
+    return Div(_lbl(label, dest, action),
                Input(id=dest, name=dest, value=value, style=_INPUT),
                style=_FIELD)
 
@@ -310,8 +409,11 @@ def build_form(post_url: str) -> Any:
             style="display:flex;flex-direction:column;gap:9px;"
                   "max-height:calc(100vh - 230px);overflow:auto;margin:-4px;padding:4px"),
         Button(
-            "▶  Run scenario",
+            NotStr('<span class="run-btn-icon">▶</span>'
+                   '<span class="run-btn-label">Run scenario</span>'),
+            id="run-btn",
             type="submit",
+            cls="run-btn",
             style=("display:flex;align-items:center;justify-content:center;gap:6px;"
                    "width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;"
                    f"{_GROTESK};font-size:14.5px;font-weight:600;"

@@ -81,14 +81,16 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--enable-rerouting",
-        action="store_true",
-        help="Enable dynamic smoke-based route reevaluation",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Dynamic smoke/congestion-based route reevaluation "
+        "(default: on; use --no-enable-rerouting to disable)",
     )
     parser.add_argument(
         "--reroute-interval",
         type=float,
-        default=10.0,
-        help="Seconds between route reevaluations per agent (default: 10)",
+        default=1.0,
+        help="Seconds between route reevaluations per agent (default: 1)",
     )
     parser.add_argument(
         "--output-route-history",

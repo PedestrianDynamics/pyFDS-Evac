@@ -95,15 +95,50 @@ def _smoke_payload(
             u8 = np.clip(frame / kmax * 255.0, 0, 255).astype(np.uint8)
             buf += u8.tobytes()
 
+        # xs/ys are cell-CENTRE coords, but the drawn image maps its pixel
+        # EDGES to the extent rectangle. Expand by half a (downsampled) cell so
+        # pixel edges line up with the geometry instead of cell centres —
+        # removes the half-cell gaps/overlaps at the map edges.
+        csx = (xs[-1] - xs[0]) / (w - 1) if w > 1 else 1.0
+        csy = (ys[-1] - ys[0]) / (h - 1) if h > 1 else 1.0
         return {
             "W": int(w),
             "H": int(h),
-            "ext": [float(xs[0]), float(ys[0]), float(xs[-1]), float(ys[-1])],
+            "ext": [
+                float(xs[0] - csx / 2.0),
+                float(ys[0] - csy / 2.0),
+                float(xs[-1] + csx / 2.0),
+                float(ys[-1] + csy / 2.0),
+            ],
             "kmax": kmax,
             "b64": base64.b64encode(bytes(buf)).decode("ascii"),
         }
     except Exception:
         return None
+
+
+def _interior_walls(*polys) -> list[list[list[float]]]:
+    """Interior rings (holes = walls/obstacles) of the walkable geometry.
+
+    Tries each candidate polygon in order and returns the rings from the first
+    that has any — the JuPedSim sqlite may drop holes, so the scenario's own
+    walkable polygon is the more reliable source.
+    """
+    for poly in polys:
+        if poly is None:
+            continue
+        rings: list[list[list[float]]] = []
+        try:
+            geoms = list(getattr(poly, "geoms", [])) or [poly]
+            for g in geoms:
+                for ring in getattr(g, "interiors", []):
+                    rx, ry = ring.xy
+                    rings.append([[float(x), float(y)] for x, y in zip(rx, ry)])
+        except Exception:
+            rings = []
+        if rings:
+            return rings
+    return []
 
 
 def _bounds(walkable, data) -> list[float]:
@@ -216,6 +251,10 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
         "fed": fed_samples,
         "hasFed": has_fed,
         "walk": walk,
+        "walls": _interior_walls(
+            getattr(scenario, "walkable_polygon", None) if scenario else None,
+            getattr(walkable, "polygon", None),
+        ),
         "exits": exits,
         "bounds": _bounds(walkable, data),
         "smoke": _smoke_payload(fds_dir, times),
@@ -430,6 +469,13 @@ _JS = """
     poly(D.walk, p, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.16)', 1.5);
     var b = bracket(simT), a = S[b[0]], c = S[b[1]], f = b[2];
     drawSmoke(b[0], p);
+    // Interior walls (holes in the walkable area): drawn over the smoke as
+    // solid voids so they read as obstacles the agents route around.
+    if (D.walls) {
+      for (var wI = 0; wI < D.walls.length; wI++) {
+        poly(D.walls[wI], p, '#14161b', 'rgba(255,255,255,0.34)', 1.4);
+      }
+    }
     D.exits.forEach(function (e) {
       poly(e.poly, p, e.color + '28', e.color, 2);
     });

@@ -270,6 +270,44 @@ document.addEventListener('click', function (e) {
 });
 """
 
+# Reflect run state on the submit button: disable + relabel while a run is in
+# flight, restore when it finishes (or fails), so a second click can't stomp
+# the active run.
+_RUN_BTN_JS = """
+(function () {
+  function runBtn() { return document.getElementById('run-btn'); }
+  function setRunning(on) {
+    var b = runBtn(); if (!b) return;
+    b.disabled = on;
+    var lbl = b.querySelector('.run-btn-label');
+    var ico = b.querySelector('.run-btn-icon');
+    if (lbl) lbl.textContent = on ? 'Scenario in progress…' : 'Run scenario';
+    if (ico) ico.textContent = on ? '⏳' : '▶';
+  }
+  function isRunPath(d) {
+    var p = (d && d.pathInfo && (d.pathInfo.requestPath || d.pathInfo.path)) ||
+            (d && d.requestConfig && d.requestConfig.path) || '';
+    return p === '/run';
+  }
+  document.body.addEventListener('htmx:beforeRequest', function (e) {
+    if (isRunPath(e.detail)) setRunning(true);
+  });
+  // The /run response either starts a run (its HTML contains an SSE stream)
+  // or is an error/guard message — re-enable when no stream was started.
+  document.body.addEventListener('htmx:afterRequest', function (e) {
+    if (!isRunPath(e.detail)) return;
+    var xhr = e.detail && e.detail.xhr;
+    var txt = (xhr && xhr.responseText) || '';
+    if (txt.indexOf('sse-connect') === -1) setRunning(false);
+  });
+  // Run finished: the progress stream closed (sse-close="done").
+  document.body.addEventListener('htmx:sseClose', function () { setRunning(false); });
+  document.body.addEventListener('htmx:responseError', function (e) {
+    if (isRunPath(e.detail)) setRunning(false);
+  });
+})();
+"""
+
 _TENABILITY_JS = """
 function drawIncapDist() {
   var canvas = document.getElementById('incap-canvas');
@@ -427,6 +465,7 @@ def index():
         Script(_TAB_JS),
         Script(_MATH_JS),
         Script(_TENABILITY_JS),
+        Script(_RUN_BTN_JS),
     )
 
 
@@ -523,6 +562,12 @@ async def post(request: Request):
     if not scenario_name:
         return Div("Select a scenario first.", style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px")
 
+    # Guard against launching a second run over a live one. Rather than
+    # crashing the active run (manager.start would raise), reconnect the
+    # caller to the run already in progress so the panel stays intact.
+    if manager.running:
+        return _running_stream_view()
+
     try:
         scenario   = load_scenario(f"assets/{scenario_name}")
         opts       = params.form_to_opts(form)
@@ -548,6 +593,11 @@ async def post(request: Request):
     except Exception as exc:
         return Div(f"{type(exc).__name__}: {exc}", style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px")
 
+    return _running_stream_view()
+
+
+def _running_stream_view() -> Div:
+    """The live run panel: progress card + console, wired to the SSE stream."""
     return Div(
         Div(_running_card(None), id="run-status", sse_swap="progress,done"),
         Div(
