@@ -11,7 +11,7 @@ from argparse import Namespace
 from pathlib import Path
 from typing import Any, Dict, List
 
-from fasthtml.common import Button, Div, Form, Input, Label, NotStr, Option, Select, Span
+from fasthtml.common import Button, Div, Form, Input, Label, NotStr, Option, Select
 
 try:
     from fasthtml.common import to_xml

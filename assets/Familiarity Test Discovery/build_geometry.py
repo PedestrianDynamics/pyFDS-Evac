@@ -27,7 +27,7 @@ assets/social_force (wall thickness 0.1 m there too).
 
 from pathlib import Path
 
-from shapely.geometry import Polygon, box
+from shapely.geometry import box
 from shapely.ops import unary_union
 
 HERE = Path(__file__).parent

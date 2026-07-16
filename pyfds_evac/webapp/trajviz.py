@@ -16,10 +16,10 @@ from typing import Any
 
 from fasthtml.common import Div, H3, NotStr
 
+from .plots import _PALETTE, _agent_exit_map
+
 _CARD = ("background:#2A262A;border:1px solid rgba(255,255,255,.07);"
          "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)")
-
-from .plots import _PALETTE, _agent_exit_map
 
 # Number of position samples sent to the browser; the JS interpolates between
 # them, so this stays small while playback stays smooth.

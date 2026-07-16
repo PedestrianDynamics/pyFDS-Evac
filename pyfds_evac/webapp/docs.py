@@ -6,7 +6,7 @@ Equation strings use $$ … $$ / $ … $; KaTeX auto-render handles them.
 """
 from __future__ import annotations
 from typing import Any
-from fasthtml.common import Button, Div, H1, H2, NotStr, P, Span
+from fasthtml.common import Button, Div, H1, NotStr, P, Span
 
 
 # ── style tokens ──────────────────────────────────────────────────────────────
@@ -181,7 +181,7 @@ def model_docs() -> Any:
         ),
         # Footer
         Div(
-            Div(f"© 2024 pyFDS-EVAC — companion paper + docs/",
+            Div("© 2024 pyFDS-EVAC — companion paper + docs/",
                 style=f"{_MONO};font-size:11px;letter-spacing:.06em;color:{_MUTED}"),
             NotStr(f'<div style="{_PRESS};font-size:7px;letter-spacing:.08em;color:#9a9488">EST. MMXXIV</div>'),
             style=(f"border-top:1px solid {_BORDER};padding-top:26px;"

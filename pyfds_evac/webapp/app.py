@@ -12,8 +12,8 @@ from pathlib import Path
 from urllib.parse import quote
 
 from fasthtml.common import (
-    B, Button, Div, EventStream, Form, H3, I, Input, Link,
-    NotStr, Option, P, Pre, Script, Select, Span, Title,
+    B, Button, Div, EventStream, I, Link,
+    NotStr, P, Pre, Script, Span, Title,
     fast_app, serve, sse_message,
 )
 from starlette.requests import Request
@@ -544,7 +544,7 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
         ),
         Div(*rows, style="max-height:340px;overflow:auto;padding:8px"),
         Div(*footer_btns, style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.07)"),
-        style=f"width:520px;max-width:92vw;background:#14161B;border:1px solid rgba(255,255,255,.10);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden",
+        style="width:520px;max-width:92vw;background:#14161B;border:1px solid rgba(255,255,255,.10);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden",
         onclick="event.stopPropagation()",
     )
     return Div(

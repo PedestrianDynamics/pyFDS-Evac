@@ -98,7 +98,6 @@ def build():
         import matplotlib.pyplot as plt
         from matplotlib.patches import Polygon as MplPoly
         from matplotlib.ticker import MultipleLocator
-        from shapely.geometry import MultiPolygon
 
         fig, ax = plt.subplots(figsize=(10, 10))
         polys = list(walkable.geoms) if walkable.geom_type == "MultiPolygon" else [walkable]
