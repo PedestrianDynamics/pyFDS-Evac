@@ -4,70 +4,98 @@
     "simulation_settings": {
       "simulationParams": {
         "max_simulation_time": 300,
-        "dt": 0.01,
-        "model_type": "SocialForceModel",
+        "model_type": "CollisionFreeSpeedModel",
         "strength_neighbor_repulsion": 2.6,
         "range_neighbor_repulsion": 0.1,
-        "gcfm_strength_neighbor_repulsion": 0.3,
-        "gcfm_strength_geometry_repulsion": 0.2,
-        "gcfm_max_neighbor_interaction_distance": 2,
-        "gcfm_max_geometry_interaction_distance": 2,
-        "gcfm_max_neighbor_repulsion_force": 9,
-        "gcfm_max_geometry_repulsion_force": 3,
-        "mass": 80,
-        "tau": 0.5,
         "a_v": 1,
         "a_min": 0.2,
         "b_min": 0.2,
         "b_max": 0.4,
-        "relaxation_time": 0.5,
-        "agent_strength": 2000,
-        "agent_range": 0.08,
-        "sfm_obstacle_scale": 2000,
-        "sfm_body_force": 120000,
-        "sfm_friction": 240000,
-        "T": 1,
-        "s0": 0.5
+        "T": 1
       },
       "numberOfSimulations": 1,
-      "baseSeed": 420
+      "baseSeed": 42
     },
     "ui_state": {
-      "useShortestPaths": false,
-      "boundaries": [
-        {
-          "mode": "manual"
-        }
-      ]
+      "useShortestPaths": false
     }
   },
+  "routing": {
+    "w_smoke": 5.0,
+    "w_fed": 10.0,
+    "w_queue": 0.0,
+    "fed_rejection_threshold": 1.0,
+    "visibility_extinction_threshold": 0.5,
+    "sampling_step_m": 2.0,
+    "base_speed_m_per_s": 1.3,
+    "default_exit_capacity": 1.3
+  },
   "exits": {
-    "jps-exits_0": {
+    "exit_A_left": {
       "type": "polygon",
       "coordinates": [
         [
-          0.22516214784083388,
-          14.679392076125607
+          0,
+          10
         ],
         [
-          2.025162147840834,
-          14.679392076125607
+          1,
+          10
         ],
         [
-          2.025162147840834,
-          16.279392076125607
+          1,
+          13
         ],
         [
-          0.22516214784083388,
-          16.279392076125607
+          0,
+          13
         ],
         [
-          0.22516214784083388,
-          14.679392076125607
+          0,
+          10
         ]
       ],
       "enable_throughput_throttling": false,
-      "max_throughput": 0
+      "max_throughput": 0,
+      "sign": {
+        "x": 0.5,
+        "y": 11.5,
+        "alpha": 90,
+        "c": 3
+      }
+    },
+    "exit_B_right": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          29,
+          10
+        ],
+        [
+          30,
+          10
+        ],
+        [
+          30,
+          13
+        ],
+        [
+          29,
+          13
+        ],
+        [
+          29,
+          10
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0,
+      "sign": {
+        "x": 29.5,
+        "y": 11.5,
+        "alpha": 270,
+        "c": 3
+      }
     }
   },
   "distributions": {
@@ -75,50 +103,44 @@
       "type": "polygon",
       "coordinates": [
         [
-          14,
-          0.8
+          18,
+          1
         ],
         [
-          18.5,
-          0.8
+          22,
+          1
         ],
         [
-          18.5,
-          2.8000000000000003
+          22,
+          8
         ],
         [
-          14,
-          2.8000000000000003
+          18,
+          8
         ],
         [
-          14,
-          0.8
+          18,
+          1
         ]
       ],
       "parameters": {
-        "number": 20,
-        "radius": 0.2,
-        "v0": 1.3,
-        "use_flow_spawning": false,
+        "number": 200,
+        "radius": 0.15,
+        "v0": 1.2,
+        "use_flow_spawning": true,
         "flow_start_time": 0,
-        "flow_end_time": 10,
+        "flow_end_time": 400,
         "distribution_mode": "by_number",
         "percentage": null,
         "use_premovement": false,
-        "premovement_distribution": "gamma",
-        "premovement_param_a": null,
-        "premovement_param_b": null,
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 60,
+        "premovement_param_b": 120,
         "premovement_seed": null,
         "radius_distribution": "constant",
         "v0_distribution": "constant",
         "familiarity": "discovery"
-      },
-      "journey_weights": [
-        {
-          "journey_id": "journey-1783673721633-p9aah1",
-          "weight": 100
-        }
-      ]
+      }
     }
   },
   "checkpoints": {
@@ -126,150 +148,100 @@
       "type": "polygon",
       "coordinates": [
         [
-          12.700516797295897,
-          2.1316815683060657
+          17,
+          10
         ],
         [
-          13.480516797295895,
-          2.1316815683060657
+          20,
+          10
         ],
         [
-          13.480516797295895,
-          1.0916815683060657
+          20,
+          13
         ],
         [
-          12.700516797295897,
-          1.0916815683060657
+          17,
+          13
         ],
         [
-          12.700516797295897,
-          2.1316815683060657
+          17,
+          10
         ]
       ],
+      "sign": {
+        "x": 18.5,
+        "y": 10.5,
+        "alpha": 180,
+        "c": 3
+      },
       "waiting_time": 0,
       "waiting_time_distribution": "constant",
       "waiting_time_std": 1,
       "enable_throughput_throttling": false,
-      "max_throughput": 1,
-      "speed_factor": 1
-    },
-    "jps-checkpoints_1": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          6.500985591655404,
-          4.37275417706528
-        ],
-        [
-          7.5463613822992475,
-          4.37275417706528
-        ],
-        [
-          7.5463613822992475,
-          3.4203006789231107
-        ],
-        [
-          6.500985591655404,
-          3.4203006789231107
-        ],
-        [
-          6.500985591655404,
-          4.37275417706528
-        ]
-      ],
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 1,
-      "enable_throughput_throttling": false,
-      "max_throughput": 1,
-      "speed_factor": 1
-    },
-    "jps-checkpoints_2": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          3.0126053627081846,
-          2.5009689142113185
-        ],
-        [
-          3.8822320344706025,
-          2.5009689142113185
-        ],
-        [
-          3.8822320344706025,
-          1.5485206546620038
-        ],
-        [
-          3.0126053627081846,
-          1.5485206546620038
-        ],
-        [
-          3.0126053627081846,
-          2.5009689142113185
-        ]
-      ],
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 1,
-      "enable_throughput_throttling": false,
-      "max_throughput": 1,
-      "speed_factor": 1
-    },
-    "jps-checkpoints_3": {
-      "type": "polygon",
-      "coordinates": [
-        [
-          16.942826582678553,
-          13.370917846737596
-        ],
-        [
-          18.16509522235635,
-          13.370917846737596
-        ],
-        [
-          18.16509522235635,
-          12.819698656294669
-        ],
-        [
-          16.942826582678553,
-          12.819698656294669
-        ],
-        [
-          16.942826582678553,
-          13.370917846737596
-        ]
-      ],
-      "waiting_time": 0,
-      "waiting_time_distribution": "constant",
-      "waiting_time_std": 1,
-      "enable_throughput_throttling": false,
-      "max_throughput": 1,
+      "max_throughput": 0,
       "speed_factor": 1
     }
   },
   "zones": {},
-  "journeys": [],
-  "transitions": [],
-  "obstacles": {
-    "jps-obstacles_0": {
-      "height": 3
-    },
-    "jps-obstacles_1": {
-      "height": 3
-    }
-  },
-  "journeys_v2": [
+  "journeys": [
     {
-      "id": "journey-1783673721633-p9aah1",
-      "name": "Route 1",
-      "color": "#4949DF",
-      "sequence": [
+      "id": "journey_0",
+      "stages": [
+        "jps-distributions_0",
         "jps-checkpoints_0",
-        "jps-checkpoints_1",
-        "jps-checkpoints_2",
-        "jps-checkpoints_3",
-        "jps-exits_0"
+        "exit_A_left",
+        "exit_B_right"
+      ],
+      "transitions": [
+        {
+          "from": "jps-distributions_0",
+          "to": "jps-checkpoints_0",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-checkpoints_0",
+          "to": "exit_A_left",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-checkpoints_0",
+          "to": "exit_B_right",
+          "journey_id": "journey_0"
+        }
       ]
     }
-  ]
+  ],
+  "transitions": [
+    {
+      "from": "jps-distributions_0",
+      "to": "jps-checkpoints_0",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-checkpoints_0",
+      "to": "exit_A_left",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-checkpoints_0",
+      "to": "exit_B_right",
+      "journey_id": "journey_0"
+    }
+  ],
+  "waypoint_routing": {
+    "jps-checkpoints_0": {
+      "journey_0": {
+        "destinations": [
+          {
+            "target": "exit_A_left",
+            "percentage": 1
+          },
+          {
+            "target": "exit_B_right",
+            "percentage": 99
+          }
+        ]
+      }
+    }
+  }
 }

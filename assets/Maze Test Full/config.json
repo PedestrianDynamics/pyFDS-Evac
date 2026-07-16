@@ -1,0 +1,844 @@
+{
+  "project_version": "2.0",
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 300,
+        "dt": 0.05,
+        "model_type": "WarpDriverModel",
+        "strength_neighbor_repulsion": 2.6,
+        "range_neighbor_repulsion": 0.1,
+        "gcfm_strength_neighbor_repulsion": 0.3,
+        "gcfm_strength_geometry_repulsion": 0.2,
+        "gcfm_max_neighbor_interaction_distance": 2,
+        "gcfm_max_geometry_interaction_distance": 2,
+        "gcfm_max_neighbor_repulsion_force": 9,
+        "gcfm_max_geometry_repulsion_force": 3,
+        "mass": 80,
+        "tau": 0.5,
+        "a_v": 1,
+        "a_min": 0.2,
+        "b_min": 0.2,
+        "b_max": 0.4,
+        "relaxation_time": 0.5,
+        "agent_strength": 2000,
+        "agent_range": 0.08,
+        "sfm_obstacle_scale": 2000,
+        "sfm_body_force": 120000,
+        "sfm_friction": 240000,
+        "T": 1,
+        "s0": 0.5
+      },
+      "numberOfSimulations": 1,
+      "baseSeed": 420
+    },
+    "ui_state": {
+      "useShortestPaths": false,
+      "boundaries": [
+        {
+          "mode": "manual"
+        }
+      ]
+    }
+  },
+  "exits": {
+    "jps-exits_0": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          8.03608810816127,
+          -4.902300954486312
+        ],
+        [
+          9.598364069727163,
+          -4.902300954486312
+        ],
+        [
+          9.598364069727163,
+          -5.933706443675446
+        ],
+        [
+          8.03608810816127,
+          -5.933706443675446
+        ],
+        [
+          8.03608810816127,
+          -4.902300954486312
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0
+    }
+  },
+  "distributions": {
+    "jps-distributions_0": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -9.478332369313694,
+          5.978152427815533
+        ],
+        [
+          -8.028332369313693,
+          5.978152427815533
+        ],
+        [
+          -8.028332369313693,
+          4.728152427815533
+        ],
+        [
+          -9.478332369313694,
+          4.728152427815533
+        ],
+        [
+          -9.478332369313694,
+          5.978152427815533
+        ]
+      ],
+      "parameters": {
+        "number": 6,
+        "radius": 0.2,
+        "v0": 1.3,
+        "flow_start_time": 0,
+        "flow_end_time": 10,
+        "percentage": null,
+        "distribution_mode": "by_number",
+        "use_flow_spawning": false,
+        "use_premovement": false,
+        "premovement_distribution": "gamma",
+        "premovement_param_a": null,
+        "premovement_param_b": null,
+        "premovement_seed": null,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant",
+        "familiarity": "full"
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey-1784108211717-pb0b30",
+          "weight": 100
+        }
+      ]
+    }
+  },
+  "checkpoints": {
+    "jps-checkpoints_0": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -8.033392244345197,
+          4.3320542072819626
+        ],
+        [
+          -7.519658640653581,
+          4.3320542072819626
+        ],
+        [
+          -7.519658640653581,
+          3.532913045983893
+        ],
+        [
+          -8.033392244345197,
+          3.532913045983893
+        ],
+        [
+          -8.033392244345197,
+          4.3320542072819626
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_1": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -5.436183470126469,
+          3.1618832210955032
+        ],
+        [
+          -4.351634751221944,
+          3.1618832210955032
+        ],
+        [
+          -4.351634751221944,
+          2.533986594361305
+        ],
+        [
+          -5.436183470126469,
+          2.533986594361305
+        ],
+        [
+          -5.436183470126469,
+          3.1618832210955032
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_2": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -9.11794096324972,
+          1.1354895620896819
+        ],
+        [
+          -8.176096023148423,
+          1.1354895620896819
+        ],
+        [
+          -8.176096023148423,
+          0.45051142383419285
+        ],
+        [
+          -9.11794096324972,
+          0.45051142383419285
+        ],
+        [
+          -9.11794096324972,
+          1.1354895620896819
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_3": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -7.14862881576519,
+          -0.691118806591622
+        ],
+        [
+          -6.549272944791638,
+          -0.691118806591622
+        ],
+        [
+          -6.549272944791638,
+          -1.376096944847111
+        ],
+        [
+          -7.14862881576519,
+          -1.376096944847111
+        ],
+        [
+          -7.14862881576519,
+          -0.691118806591622
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_4": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -6.035539341100021,
+          -1.5473414794109832
+        ],
+        [
+          -5.6645095162116315,
+          -1.5473414794109832
+        ],
+        [
+          -5.6645095162116315,
+          -2.403564152230344
+        ],
+        [
+          -6.035539341100021,
+          -2.403564152230344
+        ],
+        [
+          -6.035539341100021,
+          -1.5473414794109832
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_5": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -9.31772625357424,
+          -2.460645663751635
+        ],
+        [
+          -8.061933000105844,
+          -2.460645663751635
+        ],
+        [
+          -8.061933000105844,
+          -3.174164557767769
+        ],
+        [
+          -9.31772625357424,
+          -3.174164557767769
+        ],
+        [
+          -9.31772625357424,
+          -2.460645663751635
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_6": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -5.236398179801951,
+          0.16510386622773918
+        ],
+        [
+          -4.237471728179363,
+          0.16510386622773918
+        ],
+        [
+          -4.237471728179363,
+          -0.4342520047458136
+        ],
+        [
+          -5.236398179801951,
+          -0.4342520047458136
+        ],
+        [
+          -5.236398179801951,
+          0.16510386622773918
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_7": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -3.238545276556775,
+          -2.688971709836798
+        ],
+        [
+          -2.4964856267799953,
+          -2.688971709836798
+        ],
+        [
+          -2.4964856267799953,
+          -3.23124606928906
+        ],
+        [
+          -3.238545276556775,
+          -3.23124606928906
+        ],
+        [
+          -3.238545276556775,
+          -2.688971709836798
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_8": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -1.212151617550954,
+          -2.546267931033571
+        ],
+        [
+          -0.5271734792954649,
+          -2.546267931033571
+        ],
+        [
+          -0.5271734792954649,
+          -3.088542290485833
+        ],
+        [
+          -1.212151617550954,
+          -3.088542290485833
+        ],
+        [
+          -1.212151617550954,
+          -2.546267931033571
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_9": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          0.4432122165664777,
+          -3.6308166499380956
+        ],
+        [
+          0.6429975068909953,
+          -3.6308166499380956
+        ],
+        [
+          0.6429975068909953,
+          -4.372876299714874
+        ],
+        [
+          0.4432122165664777,
+          -4.372876299714874
+        ],
+        [
+          0.4432122165664777,
+          -3.6308166499380956
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_10": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -0.18468441016772041,
+          0.4219706680735475
+        ],
+        [
+          0.386130705045187,
+          0.4219706680735475
+        ],
+        [
+          0.386130705045187,
+          -0.6340372950703312
+        ],
+        [
+          -0.18468441016772041,
+          -0.6340372950703312
+        ],
+        [
+          -0.18468441016772041,
+          0.4219706680735475
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_11": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          1.1281903548219665,
+          -1.7756675254961458
+        ],
+        [
+          1.7275462257955194,
+          -1.7756675254961458
+        ],
+        [
+          1.7275462257955194,
+          -2.1752381061451813
+        ],
+        [
+          1.1281903548219665,
+          -2.1752381061451813
+        ],
+        [
+          1.1281903548219665,
+          -1.7756675254961458
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_12": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -2.011292778849024,
+          2.220038280994206
+        ],
+        [
+          -1.6402629539606342,
+          2.220038280994206
+        ],
+        [
+          -1.6402629539606342,
+          1.5636008984993623
+        ],
+        [
+          -2.011292778849024,
+          1.5636008984993623
+        ],
+        [
+          -2.011292778849024,
+          2.220038280994206
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_13": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          0.5288344838484139,
+          3.2189647326167936
+        ],
+        [
+          1.4135979124284204,
+          3.2189647326167936
+        ],
+        [
+          1.4135979124284204,
+          2.8193941519677583
+        ],
+        [
+          0.5288344838484139,
+          2.8193941519677583
+        ],
+        [
+          0.5288344838484139,
+          3.2189647326167936
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_14": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          1.6704647142742286,
+          2.2771197925154967
+        ],
+        [
+          2.3269020967690723,
+          2.2771197925154967
+        ],
+        [
+          2.3269020967690723,
+          1.5636008984993623
+        ],
+        [
+          1.6704647142742286,
+          1.5636008984993623
+        ],
+        [
+          1.6704647142742286,
+          2.2771197925154967
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_15": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          3.4970730829555325,
+          4.274972695760673
+        ],
+        [
+          3.8681029078439217,
+          4.274972695760673
+        ],
+        [
+          3.8681029078439217,
+          3.30458699989873
+        ],
+        [
+          3.4970730829555325,
+          3.30458699989873
+        ],
+        [
+          3.4970730829555325,
+          4.274972695760673
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_16": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          2.783554188939398,
+          1.1354895620896819
+        ],
+        [
+          3.4399915714342413,
+          1.1354895620896819
+        ],
+        [
+          3.4399915714342413,
+          0.4790521795948382
+        ],
+        [
+          2.783554188939398,
+          0.4790521795948382
+        ],
+        [
+          2.783554188939398,
+          1.1354895620896819
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_17": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          4.553081046099411,
+          0.25072613350967526
+        ],
+        [
+          5.152436917072964,
+          0.25072613350967526
+        ],
+        [
+          5.152436917072964,
+          -0.26300747018194137
+        ],
+        [
+          4.553081046099411,
+          -0.26300747018194137
+        ],
+        [
+          4.553081046099411,
+          0.25072613350967526
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_18": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          8.463164585307828,
+          3.3902092671806656
+        ],
+        [
+          9.06252045628138,
+          3.3902092671806656
+        ],
+        [
+          9.06252045628138,
+          2.6481496174038863
+        ],
+        [
+          8.463164585307828,
+          2.6481496174038863
+        ],
+        [
+          8.463164585307828,
+          3.3902092671806656
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_19": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          6.579474705105233,
+          1.4494378754567807
+        ],
+        [
+          7.292993599121367,
+          1.4494378754567807
+        ],
+        [
+          7.292993599121367,
+          0.7073782256800012
+        ],
+        [
+          6.579474705105233,
+          0.7073782256800012
+        ],
+        [
+          6.579474705105233,
+          1.4494378754567807
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_20": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          7.806727202812984,
+          -1.5188007236503376
+        ],
+        [
+          8.234838539222663,
+          -1.5188007236503376
+        ],
+        [
+          8.234838539222663,
+          -2.3464826407090533
+        ],
+        [
+          7.806727202812984,
+          -2.3464826407090533
+        ],
+        [
+          7.806727202812984,
+          -1.5188007236503376
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_21": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          4.724325580663283,
+          -2.7175124655974434
+        ],
+        [
+          5.295140695876191,
+          -2.7175124655974434
+        ],
+        [
+          5.295140695876191,
+          -3.3454090923316415
+        ],
+        [
+          4.724325580663283,
+          -3.3454090923316415
+        ],
+        [
+          4.724325580663283,
+          -2.7175124655974434
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1
+    }
+  },
+  "zones": {},
+  "journeys": [],
+  "transitions": [],
+  "obstacles": {},
+  "journeys_v2": [
+    {
+      "id": "journey-1784108211717-pb0b30",
+      "name": "Route 1",
+      "color": "#4949DF",
+      "sequence": [
+        "jps-checkpoints_0",
+        "jps-checkpoints_1",
+        "jps-checkpoints_2",
+        "jps-checkpoints_3",
+        "jps-checkpoints_4",
+        "jps-checkpoints_5",
+        "jps-checkpoints_6",
+        "jps-checkpoints_7",
+        "jps-checkpoints_8",
+        "jps-checkpoints_9",
+        "jps-checkpoints_10",
+        "jps-checkpoints_11",
+        "jps-checkpoints_12",
+        "jps-checkpoints_13",
+        "jps-checkpoints_14",
+        "jps-checkpoints_15",
+        "jps-checkpoints_16",
+        "jps-checkpoints_17",
+        "jps-checkpoints_18",
+        "jps-checkpoints_19",
+        "jps-checkpoints_20",
+        "jps-checkpoints_21",
+        "jps-exits_0"
+      ]
+    }
+  ]
+}
