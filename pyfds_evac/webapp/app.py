@@ -4,6 +4,7 @@ All visual components use plain FastHTML primitives with inline styles that
 match the redesigned "Instrument" prototype exactly. All route logic, SSE
 streaming and JS helpers are unchanged from the original.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -12,9 +13,21 @@ from pathlib import Path
 from urllib.parse import quote
 
 from fasthtml.common import (
-    B, Button, Div, EventStream, I, Link,
-    NotStr, P, Pre, Script, Span, Title,
-    fast_app, serve, sse_message,
+    B,
+    Button,
+    Div,
+    EventStream,
+    I,
+    Link,
+    NotStr,
+    P,
+    Pre,
+    Script,
+    Span,
+    Title,
+    fast_app,
+    serve,
+    sse_message,
 )
 from starlette.requests import Request
 
@@ -25,11 +38,16 @@ from . import docs, params, plots, theme, trajviz
 from .runner import RunManager
 
 _PLOTLY_CDN = Script(src="https://cdn.plot.ly/plotly-2.35.2.min.js")
-_HTMX_SSE  = Script(src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js")
+_HTMX_SSE = Script(src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js")
 _KATEX = (
-    Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"),
+    Link(
+        rel="stylesheet",
+        href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
+    ),
     Script(src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"),
-    Script(src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"),
+    Script(
+        src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    ),
 )
 
 # No MonsterUI/UIKit – custom theme only
@@ -39,17 +57,22 @@ app, rt = fast_app(
 )
 manager = RunManager()
 
-_TIERS = [("safe","Safe"),("alert","Alert"),("critical","Critical"),("severe","Severe")]
+_TIERS = [
+    ("safe", "Safe"),
+    ("alert", "Alert"),
+    ("critical", "Critical"),
+    ("severe", "Severe"),
+]
 
 # ── style tokens ─────────────────────────────────────────────────────────────
-_CARD   = "background:#2A262A;border:1px solid rgba(255,255,255,.07);border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
-_PANEL  = "background:#14161B;border:1px solid rgba(255,255,255,.07);border-radius:1.25rem;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.35)"
-_INNER  = "background:#252127;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 16px"
-_MONO   = "font-family:'JetBrains Mono',monospace"
-_GROTESK= "font-family:'Space Grotesk',sans-serif"
-_INK    = "color:#F2EDE9"
-_INK2   = "color:#B2A9A3"
-_MUTED  = "color:#837A74"
+_CARD = "background:#2A262A;border:1px solid rgba(255,255,255,.07);border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
+_PANEL = "background:#14161B;border:1px solid rgba(255,255,255,.07);border-radius:1.25rem;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.35)"
+_INNER = "background:#252127;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 16px"
+_MONO = "font-family:'JetBrains Mono',monospace"
+_GROTESK = "font-family:'Space Grotesk',sans-serif"
+_INK = "color:#F2EDE9"
+_INK2 = "color:#B2A9A3"
+_MUTED = "color:#837A74"
 
 _FED_LIVE_JS = """
 (function () {
@@ -117,7 +140,10 @@ _LOGO_SVG = NotStr("""
 def _legend() -> Div:
     return Div(
         Div("Tenability tiers", cls="legend-label"),
-        Div(*[Div(I(cls="sw"), label, cls=f"tier {name}") for name, label in _TIERS], cls="tier-row"),
+        Div(
+            *[Div(I(cls="sw"), label, cls=f"tier {name}") for name, label in _TIERS],
+            cls="tier-row",
+        ),
         cls="tier-legend",
     )
 
@@ -125,26 +151,46 @@ def _legend() -> Div:
 def _fed_live_section() -> Div:
     return Div(
         Div(
-            Div("FED Exposure", style=f"{_MONO};font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;{_MUTED};margin-bottom:8px"),
             Div(
-                Div("max", style=f"{_MONO};font-size:8px;letter-spacing:.06em;text-transform:uppercase;{_MUTED};margin-bottom:2px"),
-                Div("—", id="fed-live-num", style=f"{_MONO};font-size:22px;font-weight:500;color:#F4C430;transition:color .3s;line-height:1"),
+                "FED Exposure",
+                style=f"{_MONO};font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;{_MUTED};margin-bottom:8px",
+            ),
+            Div(
+                Div(
+                    "max",
+                    style=f"{_MONO};font-size:8px;letter-spacing:.06em;text-transform:uppercase;{_MUTED};margin-bottom:2px",
+                ),
+                Div(
+                    "—",
+                    id="fed-live-num",
+                    style=f"{_MONO};font-size:22px;font-weight:500;color:#F4C430;transition:color .3s;line-height:1",
+                ),
             ),
             style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px",
         ),
         # Bar with threshold tick at 0.3
         Div(
-            Div(id="fed-live-bar",
-                style="position:absolute;top:0;left:0;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .4s"),
+            Div(
+                id="fed-live-bar",
+                style="position:absolute;top:0;left:0;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .4s",
+            ),
             # tick mark at 30%
-            Div(style="position:absolute;top:-2px;left:30%;width:1px;height:calc(100% + 4px);background:rgba(255,176,32,.55)"),
+            Div(
+                style="position:absolute;top:-2px;left:30%;width:1px;height:calc(100% + 4px);background:rgba(255,176,32,.55)"
+            ),
             style="position:relative;height:7px;border-radius:99px;background:#1F1C1F;border:1px solid rgba(255,255,255,.06);overflow:visible;margin-bottom:5px",
         ),
         # Labels pinned to exact bar positions
         Div(
-            Span("0",    style=f"{_MONO};font-size:8px;{_MUTED};position:absolute;left:0"),
-            Span("0.3",  style=f"{_MONO};font-size:8px;color:#FFB020;position:absolute;left:30%;transform:translateX(-50%)"),
-            Span("1.0",  style=f"{_MONO};font-size:8px;color:#E01E37;position:absolute;right:0"),
+            Span("0", style=f"{_MONO};font-size:8px;{_MUTED};position:absolute;left:0"),
+            Span(
+                "0.3",
+                style=f"{_MONO};font-size:8px;color:#FFB020;position:absolute;left:30%;transform:translateX(-50%)",
+            ),
+            Span(
+                "1.0",
+                style=f"{_MONO};font-size:8px;color:#E01E37;position:absolute;right:0",
+            ),
             style="position:relative;height:12px;margin-bottom:8px",
         ),
         Div(id="fed-live-chart"),
@@ -152,13 +198,17 @@ def _fed_live_section() -> Div:
         id="fed-live-section",
     )
 
+
 def _header() -> Div:
     return Div(
         Div(
             _LOGO_SVG,
             Div(
                 Div("pyFDS", B("·EVAC", style="color:#FF6A1A"), cls="brand"),
-                Div("fire-coupled evacuation · FDS × JuPedSim × ISO 13571", cls="tagline"),
+                Div(
+                    "fire-coupled evacuation · FDS × JuPedSim × ISO 13571",
+                    cls="tagline",
+                ),
             ),
             cls="brand-group",
         ),
@@ -170,8 +220,14 @@ def _sidebar() -> Div:
     return Div(
         Div(
             Div(
-                Div("Parameters", style=f"{_GROTESK};font-weight:600;font-size:16px;letter-spacing:-.01em;{_INK}"),
-                Span("run.py", style=f"{_MONO};font-size:10px;{_MUTED};padding:3px 8px;border:1px solid rgba(255,255,255,.08);border-radius:6px"),
+                Div(
+                    "Parameters",
+                    style=f"{_GROTESK};font-weight:600;font-size:16px;letter-spacing:-.01em;{_INK}",
+                ),
+                Span(
+                    "run.py",
+                    style=f"{_MONO};font-size:10px;{_MUTED};padding:3px 8px;border:1px solid rgba(255,255,255,.08);border-radius:6px",
+                ),
                 style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px",
             ),
             params.build_form("/run"),
@@ -188,9 +244,14 @@ def _run_panel_idle() -> Div:
             Div(
                 Div(I(cls="dot"), "Standby", cls="standby-label"),
                 Div(
-                    Div("Configure a scenario, then run.", style=f"{_GROTESK};font-weight:600;font-size:22px;letter-spacing:-.02em;{_INK};margin-bottom:10px"),
-                    P("Live telemetry streams as the coupled fire–pedestrian model steps. When it settles you'll explore agent trajectories, FED dose, smoke and route cost — all interactive.",
-                      style=f"font-size:.85rem;line-height:1.7;{_INK2};margin:0"),
+                    Div(
+                        "Configure a scenario, then run.",
+                        style=f"{_GROTESK};font-weight:600;font-size:22px;letter-spacing:-.02em;{_INK};margin-bottom:10px",
+                    ),
+                    P(
+                        "Live telemetry streams as the coupled fire–pedestrian model steps. When it settles you'll explore agent trajectories, FED dose, smoke and route cost — all interactive.",
+                        style=f"font-size:.85rem;line-height:1.7;{_INK2};margin:0",
+                    ),
                     style="max-width:46ch",
                 ),
                 _legend(),
@@ -208,27 +269,39 @@ def _run_panel_idle() -> Div:
 _AUTOFILL_JS = """
 (function () {
   var OUT = {
-    output_sqlite:             function (n) { return 'results/' + clean(n) + '/' + clean(n) + '.sqlite'; },
-    output_smoke_history:      function (n) { return 'results/' + clean(n) + '/' + clean(n) + '_smoke_history.csv'; },
-    output_fed_history:        function (n) { return 'results/' + clean(n) + '/' + clean(n) + '_fed_history.csv'; },
-    output_route_history:      function (n) { return 'results/' + clean(n) + '/' + clean(n) + '_route_history.csv'; },
-    output_route_cost_history: function (n) { return 'results/' + clean(n) + '/' + clean(n) + '_route_cost_history.csv'; }
+    output_sqlite:             function (n, d) { return d + '/' + n + '.sqlite'; },
+    output_smoke_history:      function (n, d) { return d + '/' + n + '_smoke_history.csv'; },
+    output_fed_history:        function (n, d) { return d + '/' + n + '_fed_history.csv'; },
+    output_route_history:      function (n, d) { return d + '/' + n + '_route_history.csv'; },
+    output_route_cost_history: function (n, d) { return d + '/' + n + '_route_cost_history.csv'; }
   };
   function scenarioName() {
     var inp = document.querySelector('input[name="scenario"]');
     var sel = document.querySelector('#scenario select');
     return (inp && inp.value) || (sel && sel.value) || '';
   }
+  function seedValue() {
+    var el = document.getElementById('seed');
+    return (el && el.value.trim()) || 'default';
+  }
+  function modeValue() {
+    var el = document.querySelector('[name="incapacitation_mode"]');
+    return (el && el.value) || 'probabilistic';
+  }
   function clean(n) { return n.replace(/\\.json$/i, '').replace(/\\//g, '_'); }
   function fill(n) {
     var base = n ? clean(n) : '';
+    var dir = base ? 'results/' + base + '/' + modeValue() + '/seed' + seedValue() : '';
     Object.keys(OUT).forEach(function (id) {
       var el = document.getElementById(id);
-      if (el && !el.dataset.userEdited) el.value = base ? OUT[id](base) : '';
+      if (el && !el.dataset.userEdited) el.value = base ? OUT[id](base, dir) : '';
     });
   }
   var last = null;
-  setInterval(function () { var n = scenarioName(); if (n !== last) { last = n; fill(n); } }, 250);
+  setInterval(function () {
+    var k = scenarioName() + '|' + seedValue() + '|' + modeValue();
+    if (k !== last) { last = k; fill(scenarioName()); }
+  }, 250);
   document.addEventListener('input', function (e) {
     if (e.target && OUT[e.target.id]) e.target.dataset.userEdited = '1';
   });
@@ -249,7 +322,7 @@ _NAV = NotStr(
     '<div class="tab-nav"><div class="tab-pills">'
     '<button class="tab-btn active" data-tab="sim" type="button">Simulation</button>'
     '<button class="tab-btn" data-tab="model" type="button">Model</button>'
-    '</div></div>'
+    "</div></div>"
 )
 
 _TAB_JS = """
@@ -485,15 +558,20 @@ def _safe_dir(path: str) -> Path:
 
 
 _CLOSE_MODAL = "document.getElementById('dir-modal').innerHTML=''"
-_BTN_GHOST   = f"display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px;background:transparent;border:0;border-radius:9px;{_INK};{_MONO};font-size:12.5px;cursor:pointer"
+_BTN_GHOST = f"display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px;background:transparent;border:0;border-radius:9px;{_INK};{_MONO};font-size:12.5px;cursor:pointer"
 
 
 def _nav_row(label: str, target: Path, mode: str, field: str):
     href = f"/browse-dir?path={quote(str(target))}&mode={mode}&field={field}"
     return Button(
-        NotStr('<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 4.5h12v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7zm0 0V3.5a1 1 0 011-1h3l1.5 1.5H12a1 1 0 011 1V4.5" stroke="#F6C544" stroke-width="1.2" stroke-linejoin="round"/></svg>'),
-        label, type="button",
-        hx_get=href, hx_target="#dir-modal", hx_swap="innerHTML",
+        NotStr(
+            '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 4.5h12v7a1 1 0 01-1 1H2a1 1 0 01-1-1v-7zm0 0V3.5a1 1 0 011-1h3l1.5 1.5H12a1 1 0 011 1V4.5" stroke="#F6C544" stroke-width="1.2" stroke-linejoin="round"/></svg>'
+        ),
+        label,
+        type="button",
+        hx_get=href,
+        hx_target="#dir-modal",
+        hx_swap="innerHTML",
         style=_BTN_GHOST,
     )
 
@@ -501,8 +579,13 @@ def _nav_row(label: str, target: Path, mode: str, field: str):
 def _file_row(target: Path, field: str):
     pick = f"document.getElementById({json.dumps(field)}).value={json.dumps(str(target))};{_CLOSE_MODAL}"
     return Button(
-        NotStr('<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 1.5h7l3 3v8a1 1 0 01-1 1H2a1 1 0 01-1-1v-10a1 1 0 011-1zm7 0v3h3" stroke="#3B82F6" stroke-width="1.2" stroke-linejoin="round"/></svg>'),
-        target.name, type="button", onclick=pick, style=_BTN_GHOST,
+        NotStr(
+            '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 1.5h7l3 3v8a1 1 0 01-1 1H2a1 1 0 01-1-1v-10a1 1 0 011-1zm7 0v3h3" stroke="#3B82F6" stroke-width="1.2" stroke-linejoin="round"/></svg>'
+        ),
+        target.name,
+        type="button",
+        onclick=pick,
+        style=_BTN_GHOST,
     )
 
 
@@ -513,37 +596,57 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
         entries = list(current.iterdir())
     except (PermissionError, OSError):
         entries = []
-    subdirs = sorted((e for e in entries if e.is_dir() and not e.name.startswith(".")), key=lambda p: p.name.lower())
+    subdirs = sorted(
+        (e for e in entries if e.is_dir() and not e.name.startswith(".")),
+        key=lambda p: p.name.lower(),
+    )
     rows = []
     if current != _DIR_ROOT:
         rows.append(_nav_row("..", current.parent, mode, field))
     rows.extend(_nav_row(d.name, d, mode, field) for d in subdirs)
     if mode == "file":
-        files = sorted((e for e in entries if e.is_file() and not e.name.startswith(".")), key=lambda p: p.name.lower())
+        files = sorted(
+            (e for e in entries if e.is_file() and not e.name.startswith(".")),
+            key=lambda p: p.name.lower(),
+        )
         rows.extend(_file_row(f, field) for f in files)
     if not rows:
         rows.append(P("Empty folder.", style=f"font-size:.85rem;{_MUTED};padding:8px"))
 
     title_text = "Select a folder" if mode == "dir" else "Select a file"
     footer_btns = [
-        Button("Cancel", type="button", onclick=_CLOSE_MODAL,
-               style=f"background:#3A343A;border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:8px 16px;{_INK2};{_GROTESK};font-size:13px;cursor:pointer"),
+        Button(
+            "Cancel",
+            type="button",
+            onclick=_CLOSE_MODAL,
+            style=f"background:#3A343A;border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:8px 16px;{_INK2};{_GROTESK};font-size:13px;cursor:pointer",
+        ),
     ]
     if mode == "dir":
         use = f"document.getElementById({json.dumps(field)}).value={json.dumps(str(current))};{_CLOSE_MODAL}"
         footer_btns.append(
-            Button("Use this folder", type="button", onclick=use,
-                   style=f"background:linear-gradient(180deg,#FFC24D,#E8590C);border:0;border-radius:9px;padding:8px 16px;color:#2A1606;{_GROTESK};font-size:13px;font-weight:600;cursor:pointer"),
+            Button(
+                "Use this folder",
+                type="button",
+                onclick=use,
+                style=f"background:linear-gradient(180deg,#FFC24D,#E8590C);border:0;border-radius:9px;padding:8px 16px;color:#2A1606;{_GROTESK};font-size:13px;font-weight:600;cursor:pointer",
+            ),
         )
 
     dialog = Div(
         Div(
             Div(title_text, style=f"{_GROTESK};font-weight:600;font-size:16px;{_INK}"),
-            P(str(current), style=f"{_MONO};font-size:11.5px;{_MUTED};margin-top:4px;word-break:break-all"),
+            P(
+                str(current),
+                style=f"{_MONO};font-size:11.5px;{_MUTED};margin-top:4px;word-break:break-all",
+            ),
             style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.07)",
         ),
         Div(*rows, style="max-height:340px;overflow:auto;padding:8px"),
-        Div(*footer_btns, style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.07)"),
+        Div(
+            *footer_btns,
+            style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.07)",
+        ),
         style="width:520px;max-width:92vw;background:#14161B;border:1px solid rgba(255,255,255,.10);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden",
         onclick="event.stopPropagation()",
     )
@@ -560,7 +663,10 @@ async def post(request: Request):
     form = dict(await request.form())
     scenario_name = form.get("scenario")
     if not scenario_name:
-        return Div("Select a scenario first.", style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px")
+        return Div(
+            "Select a scenario first.",
+            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+        )
 
     # Guard against launching a second run over a live one. Rather than
     # crashing the active run (manager.start would raise), reconnect the
@@ -569,8 +675,8 @@ async def post(request: Request):
         return _running_stream_view()
 
     try:
-        scenario   = load_scenario(f"assets/{scenario_name}")
-        opts       = params.form_to_opts(form)
+        scenario = load_scenario(f"assets/{scenario_name}")
+        opts = params.form_to_opts(form)
         # Normalise the FDS dir and fail fast on a bogus value. Without this,
         # a stale/garbage field (e.g. a pasted error string) is handed to
         # fdsreader as a path and produces a confusing nested-exception cascade.
@@ -584,14 +690,22 @@ async def post(request: Request):
             )
         run_kwargs = build_run_kwargs(scenario, opts)
         import run as cli
+
         def post_run(result):
             return cli.apply_outputs(result, scenario, opts, log=lambda _m: None)
+
         manager.start(
-            scenario, run_kwargs, scenario_name,
-            post_run=post_run, fds_dir=getattr(opts, "fds_dir", None),
+            scenario,
+            run_kwargs,
+            scenario_name,
+            post_run=post_run,
+            fds_dir=getattr(opts, "fds_dir", None),
         )
     except Exception as exc:
-        return Div(f"{type(exc).__name__}: {exc}", style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px")
+        return Div(
+            f"{type(exc).__name__}: {exc}",
+            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+        )
 
     return _running_stream_view()
 
@@ -608,18 +722,27 @@ def _running_stream_view() -> Div:
                         '<span style="width:10px;height:10px;border-radius:99px;background:#E01E37"></span>'
                         '<span style="width:10px;height:10px;border-radius:99px;background:#F4C430"></span>'
                         '<span style="width:10px;height:10px;border-radius:99px;background:#FF6A1A"></span>'
-                        '</span>'
+                        "</span>"
                     ),
-                    Span("console", style=f"{_MONO};font-size:11px;{_MUTED};margin-left:6px"),
+                    Span(
+                        "console",
+                        style=f"{_MONO};font-size:11px;{_MUTED};margin-left:6px",
+                    ),
                     style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.06)",
                 ),
-                Pre("Waiting for output…", id="console-log", cls="console-box",
+                Pre(
+                    "Waiting for output…",
+                    id="console-log",
+                    cls="console-box",
                     sse_swap="console",
-                    **{"hx-on:htmx:after-swap": "this.scrollTop = this.scrollHeight"}),
+                    **{"hx-on:htmx:after-swap": "this.scrollTop = this.scrollHeight"},
+                ),
             ),
             style=_PANEL + ";margin-top:18px",
         ),
-        hx_ext="sse", sse_connect="/progress", sse_close="done",
+        hx_ext="sse",
+        sse_connect="/progress",
+        sse_close="done",
     )
 
 
@@ -632,24 +755,38 @@ def _running_card(ev) -> Div:
     line = (
         f"evacuated {ev.evacuated}/{ev.total} · sim {ev.sim_time:.1f}s · "
         f"wall {ev.wall_time:.0f}s · {ev.pct}%"
-        if ev else "Initialising…"
+        if ev
+        else "Initialising…"
     )
     pct = ev.pct if ev else 0
     return Div(
         Div(
             Div(
-                Span(style="width:9px;height:9px;border-radius:99px;background:#FF7A45;animation:pulse 1.6s infinite;display:block"),
+                Span(
+                    style="width:9px;height:9px;border-radius:99px;background:#FF7A45;animation:pulse 1.6s infinite;display:block"
+                ),
                 Div(
-                    Div(f"Running: {manager.scenario_name}", style=f"{_GROTESK};font-weight:600;font-size:17px;{_INK}"),
-                    Div("coupled FDS × JuPedSim step loop", style=f"{_MONO};font-size:11px;{_MUTED};margin-top:2px"),
+                    Div(
+                        f"Running: {manager.scenario_name}",
+                        style=f"{_GROTESK};font-weight:600;font-size:17px;{_INK}",
+                    ),
+                    Div(
+                        "coupled FDS × JuPedSim step loop",
+                        style=f"{_MONO};font-size:11px;{_MUTED};margin-top:2px",
+                    ),
                 ),
                 style="display:flex;align-items:center;gap:12px",
             ),
-            Div(f"{pct}%", style=f"{_GROTESK};font-weight:700;font-size:30px;letter-spacing:-.02em;color:#F4C430"),
+            Div(
+                f"{pct}%",
+                style=f"{_GROTESK};font-weight:700;font-size:30px;letter-spacing:-.02em;color:#F4C430",
+            ),
             style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px",
         ),
         Div(
-            Div(style=f"height:100%;width:{max(pct,3)}%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A);transition:width .35s cubic-bezier(.4,0,.2,1)"),
+            Div(
+                style=f"height:100%;width:{max(pct, 3)}%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A);transition:width .35s cubic-bezier(.4,0,.2,1)"
+            ),
             style="height:10px;border-radius:99px;background:#1F1C1F;border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:18px",
         ),
         Div(line, style=f"{_MONO};font-size:.82rem;{_INK2}"),
@@ -658,27 +795,33 @@ def _running_card(ev) -> Div:
 
 
 def _finished_view() -> Div:
-    result   = manager.result
+    result = manager.result
     scenario = None
     try:
         scenario = load_scenario(f"assets/{manager.scenario_name}")
     except Exception:
         pass
 
-    status  = "finished" if result.agents_remaining == 0 else "stopped"
+    status = "finished" if result.agents_remaining == 0 else "stopped"
     metrics = [
-        ("Status",         f"{status} ({result.metrics.get('success')})"),
+        ("Status", f"{status} ({result.metrics.get('success')})"),
         ("Evacuation time", f"{result.evacuation_time:.1f} s"),
-        ("Evacuated",       f"{result.agents_evacuated}/{result.total_agents}"),
-        ("Remaining",       f"{result.agents_remaining}"),
+        ("Evacuated", f"{result.agents_evacuated}/{result.total_agents}"),
+        ("Remaining", f"{result.agents_remaining}"),
     ]
-    accents = ["#F4C430","#F4C430","#3B82F6","#E01E37"]
+    accents = ["#F4C430", "#F4C430", "#3B82F6", "#E01E37"]
 
     kpi_tiles = Div(
         *[
             Div(
-                Div(k, style=f"{_MONO};font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;{_MUTED}"),
-                Div(v, style=f"{_MONO};font-size:19px;font-weight:500;margin-top:7px;{_INK}"),
+                Div(
+                    k,
+                    style=f"{_MONO};font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;{_MUTED}",
+                ),
+                Div(
+                    v,
+                    style=f"{_MONO};font-size:19px;font-weight:500;margin-top:7px;{_INK}",
+                ),
                 style=f"background:#14161B;border:1px solid rgba(255,255,255,.07);border-top:2px solid {a};border-radius:14px;padding:15px 16px",
             )
             for (k, v), a in zip(metrics, accents)
@@ -687,7 +830,10 @@ def _finished_view() -> Div:
     )
     if manager.artifacts:
         art = Div(
-            Div("Artifacts written", style=f"{_MONO};font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;{_MUTED};margin-bottom:4px"),
+            Div(
+                "Artifacts written",
+                style=f"{_MONO};font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;{_MUTED};margin-bottom:4px",
+            ),
             *[Div(a, cls="artifact") for a in manager.artifacts],
             style="margin-top:12px",
         )
@@ -696,17 +842,21 @@ def _finished_view() -> Div:
 
     def plot_card(title, fig, div_id):
         return Div(
-            Div(title, style=f"{_GROTESK};font-weight:600;font-size:15px;{_INK};margin-bottom:10px"),
+            Div(
+                title,
+                style=f"{_GROTESK};font-weight:600;font-size:15px;{_INK};margin-bottom:10px",
+            ),
             plots.figure_html(fig, div_id),
             style=_CARD,
         )
 
     return Div(
-        kpi_tiles, art,
+        kpi_tiles,
+        art,
         trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
         plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
-        plot_card("Smoke",          plots.smoke_figure(result), "fig-smoke"),
-        plot_card("Route cost",     plots.route_cost_figure(result), "fig-route"),
+        plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
+        plot_card("Route cost", plots.route_cost_figure(result), "fig-route"),
         cls="space-y-6",
         style="display:flex;flex-direction:column;gap:18px",
     )
@@ -720,16 +870,19 @@ async def fed_progress():
             snaps = manager.fed_snapshots
             if len(snaps) > last_count:
                 last_count = len(snaps)
-                payload = json.dumps({
-                    "t":    [s[0] for s in snaps],
-                    "max":  [s[1] for s in snaps],
-                    "mean": [s[2] for s in snaps],
-                })
+                payload = json.dumps(
+                    {
+                        "t": [s[0] for s in snaps],
+                        "max": [s[1] for s in snaps],
+                        "mean": [s[2] for s in snaps],
+                    }
+                )
                 yield sse_message(payload, event="fed")
             if manager.status in ("done", "error", "idle"):
                 yield sse_message("{}", event="close")
                 return
             await asyncio.sleep(0.5)
+
     return EventStream(gen())
 
 
@@ -749,19 +902,27 @@ async def progress():
                     finished = _finished_view()
                 except Exception as exc:
                     import traceback
+
                     err = traceback.format_exc()
                     finished = Div(
-                        Div(f"Results error: {type(exc).__name__}: {exc}",
-                            style="color:#E01E37;font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:8px"),
-                        Pre(err, style="color:#B2A9A3;font-family:'JetBrains Mono',monospace;font-size:.72rem;white-space:pre-wrap;overflow:auto;max-height:300px"),
+                        Div(
+                            f"Results error: {type(exc).__name__}: {exc}",
+                            style="color:#E01E37;font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:8px",
+                        ),
+                        Pre(
+                            err,
+                            style="color:#B2A9A3;font-family:'JetBrains Mono',monospace;font-size:.72rem;white-space:pre-wrap;overflow:auto;max-height:300px",
+                        ),
                         style="background:#14161B;border:1px solid #E01E37;border-radius:12px;padding:16px",
                     )
                 yield sse_message(finished, event="done")
                 return
             if status == "error":
                 yield sse_message(
-                    Div(f"Run failed: {manager.error}",
-                        style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px"),
+                    Div(
+                        f"Run failed: {manager.error}",
+                        style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+                    ),
                     event="done",
                 )
                 return
@@ -772,6 +933,7 @@ async def progress():
                 last = ev
                 yield sse_message(_running_card(ev), event="progress")
             await asyncio.sleep(0.1)
+
     return EventStream(gen())
 
 
