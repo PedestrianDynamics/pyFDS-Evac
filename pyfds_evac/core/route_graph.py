@@ -443,6 +443,14 @@ class RouteCostConfig:
     w_fed: float = 10.0
     w_queue: float = 1.0
     fed_rejection_threshold: float = 1.0
+    # Asymmetric FED hysteresis (Schmitt trigger) to stop agents flip-flopping
+    # when a route's predicted dose wobbles across the rejection threshold. The
+    # agent's *current* exit is rejected only above fed_rejection_threshold (it
+    # still flees the instant dose crosses incapacitation — safety unchanged),
+    # but a *different* exit is only accepted as a switch target if its dose is
+    # below fed_rejection_threshold * fed_return_margin, i.e. clearly safe, not
+    # merely back under threshold. Never makes it harder to LEAVE a bad exit.
+    fed_return_margin: float = 0.9
     visibility_extinction_threshold: float = 0.5
     sampling_step_m: float = 2.0
     base_speed_m_per_s: float = 1.3
@@ -597,6 +605,7 @@ def evaluate_route(
     *,
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
+    current_exit: str | None = None,
 ) -> RouteCost:
     """Evaluate the composite cost for a full route (list of stage IDs)."""
     segments: list[SegmentCost] = []
@@ -644,14 +653,27 @@ def evaluate_route(
             queue_distance = config.base_speed_m_per_s * queue_time
             composite += config.w_queue * queue_distance
 
+    # Asymmetric FED rejection (deadband). The agent's current exit keeps the
+    # full threshold so it always flees the instant dose crosses incapacitation.
+    # A different exit is held to the stricter fed_return_margin fraction, so the
+    # agent only switches onto it once its dose is clearly safe — this stops the
+    # flip-flop when a marginal route's predicted dose wobbles around 1.0.
+    # current_exit=None (e.g. initial choice, or a direct evaluate_route call)
+    # falls back to the plain threshold for every route.
+    exit_id = path[-1] if path else ""
+    is_current = current_exit is not None and exit_id == current_exit
+    fed_threshold = config.fed_rejection_threshold
+    if not is_current and current_exit is not None:
+        fed_threshold *= config.fed_return_margin
+
     rejected = False
     reason = None
-    if fed_max > config.fed_rejection_threshold:
+    if fed_max > fed_threshold:
         rejected = True
-        reason = f"FED_max {fed_max:.3f} > {config.fed_rejection_threshold}"
+        reason = f"FED_max {fed_max:.3f} > {fed_threshold:.3f}"
 
     return RouteCost(
-        exit_id=path[-1] if path else "",
+        exit_id=exit_id,
         path=path,
         path_length_m=path_length,
         k_ave_route=k_ave,
@@ -679,6 +701,7 @@ def rank_routes(
     vis_model=None,
     cognitive_map=None,
     agent_position: tuple[float, float] | None = None,
+    current_exit: str | None = None,
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
@@ -743,6 +766,7 @@ def rank_routes(
             config,
             cached_segments=cached_segments,
             exit_counts=exit_counts,
+            current_exit=current_exit,
         )
         costs.append(rc)
 
@@ -816,6 +840,12 @@ class RerouteConfig:
 
     reevaluation_interval_s: float = 10.0
     cost_config: RouteCostConfig = field(default_factory=RouteCostConfig)
+    # Anchoring / hysteresis for switching to a *different* exit: a rival exit is
+    # only adopted if its cost is below this fraction of the current exit's cost
+    # (i.e. it must be clearly better, not marginally). Mirrors FDS+Evac's
+    # FAC_DOOR_WAIT patience factor (default 0.9 there). Convention from the
+    # reference implementation, NOT calibrated — see docs/rerouting-oscillation-notes.md.
+    exit_switch_anchor: float = 0.9
 
 
 @dataclass
@@ -938,7 +968,9 @@ def reroute_agent(
 # Same-exit reroute only fires when the newly ranked path is at least this
 # much cheaper than the agent's currently-committed path, so agents don't
 # thrash onto a "better" path that's only cheaper by floating-point noise.
-_PATH_IMPROVEMENT_THRESHOLD = 0.95
+# Kept at 0.9 to match RerouteConfig.exit_switch_anchor and FDS+Evac's
+# FAC_DOOR_WAIT patience factor (convention, not calibrated).
+_PATH_IMPROVEMENT_THRESHOLD = 0.9
 
 
 def _reconstruct_committed_path(wait_info: dict) -> list[str]:
@@ -1011,6 +1043,7 @@ def evaluate_and_reroute(
         vis_model=vis_model,
         cognitive_map=cognitive_map,
         agent_position=agent_position,
+        current_exit=route_state.current_exit,
     )
     if not ranked:
         # No exit reachable in the agent's known subgraph (typically a
@@ -1057,11 +1090,14 @@ def evaluate_and_reroute(
 
     old_exit = route_state.current_exit
     old_cost = None
+    old_rejected = False
     if old_exit and old_exit != best.exit_id:
-        # Find the old exit's cost for diagnostics.
+        # Find the old exit's cost (for diagnostics) and whether it is now
+        # rejected (unsafe), which disables anchoring below.
         for rc in ranked:
             if rc.exit_id == old_exit:
                 old_cost = rc.composite_cost
+                old_rejected = rc.rejected
                 break
 
     route_state.last_eval_time_s = current_time_s
@@ -1102,6 +1138,22 @@ def evaluate_and_reroute(
                         reason="better_path",
                     )
         route_state.current_path = best.path
+        return None
+
+    # Anchoring / hysteresis: don't abandon the current exit for a *different* one
+    # unless the new exit is meaningfully cheaper (beats the current exit's cost by
+    # more than the anchor margin). Without this, near-tied exits flip-flop on every
+    # reevaluation — worst at short reroute intervals. Anchoring is skipped when:
+    #   - it is the initial choice (old_exit is None), or
+    #   - the old exit is no longer reachable / priced (old_cost is None), or
+    #   - the old exit is now rejected (smoke-blocked / FED-lethal) — the agent must
+    #     flee an unsafe exit regardless of cost, so hysteresis must not pin it there.
+    if (
+        old_exit is not None
+        and old_cost is not None
+        and not old_rejected
+        and best.composite_cost >= old_cost * config.exit_switch_anchor
+    ):
         return None
 
     # Reroute.

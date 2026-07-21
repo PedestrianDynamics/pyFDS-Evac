@@ -418,6 +418,41 @@ class TestRouteCost:
         assert rc.rejected is True
         assert "FED_max" in rc.rejection_reason
 
+    def test_fed_deadband_asymmetric(self, simple_route_graph):
+        """A route whose dose sits in the (margin, threshold) band is accepted
+        as the current exit but rejected as a switch target — the anti-flicker
+        Schmitt trigger. Threshold 1.0, margin 0.9 → band is 0.9–1.0."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0,
+            fed_rejection_threshold=1.0,
+            fed_return_margin=0.9,
+        )
+        # current_fed = 0.95 → fed_max ≈ 0.95, sits inside the 0.9–1.0 band.
+        as_current = evaluate_route(
+            simple_route_graph, ["D0", "E0"], 0.0, 0.95, field, None, config,
+            current_exit="E0",
+        )
+        as_target = evaluate_route(
+            simple_route_graph, ["D0", "E0"], 0.0, 0.95, field, None, config,
+            current_exit="E1",  # some *other* exit is current → E0 is a target
+        )
+        assert as_current.rejected is False  # keep your current exit
+        assert as_target.rejected is True  # don't switch onto a marginal one
+
+    def test_fed_deadband_still_flees_over_threshold(self, simple_route_graph):
+        """Even the current exit is rejected once dose crosses the full
+        threshold — safety (fleeing) is never weakened."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0, fed_rejection_threshold=1.0, fed_return_margin=0.9
+        )
+        rc = evaluate_route(
+            simple_route_graph, ["D0", "E0"], 0.0, 1.05, field, None, config,
+            current_exit="E0",
+        )
+        assert rc.rejected is True
+
     def test_multi_segment_route(self, two_exit_graph):
         """Route through checkpoint sums segment costs."""
         field = ConstantExtinctionField(0.0)
@@ -672,6 +707,78 @@ class TestRerouteAgent:
         wait_info["path_choices"]["OTHER"] = [("STAGE", 50.0)]
         reroute_agent(wait_info, ["D0", "C0", "E1"], wait_info["stage_configs"])
         assert "OTHER" in wait_info["path_choices"]
+
+
+@pytest.fixture
+def near_tie_graph():
+    """D0 with two direct exits of nearly-equal distance.
+
+    D0 (0,0) ──10.0──> E0 (10,0)
+    D0 (0,0) ── 9.5──> E1 (0,9.5)   (only ~5% closer than E0)
+    """
+    direct_steering_info = {
+        "E0": {"polygon": _box(10, 0), "stage_type": "exit"},
+        "E1": {"polygon": _box(0, 9.5), "stage_type": "exit"},
+    }
+    distributions = {"D0": {"coordinates": list(_box(0, 0).exterior.coords)}}
+    transitions = [
+        {"from": "D0", "to": "E0"},
+        {"from": "D0", "to": "E1"},
+    ]
+    return StageGraph.from_scenario(direct_steering_info, transitions, distributions)
+
+
+class TestExitSwitchAnchor:
+    """Anchoring (hysteresis) that stops agents flip-flopping between near-tied
+    exits — the FDS+Evac FAC_DOOR_WAIT behaviour. See
+    docs/rerouting-oscillation-notes.md."""
+
+    def test_marginal_gain_blocked_by_anchor(self, near_tie_graph):
+        """E1 is only ~5% cheaper than the current exit E0 — within the 0.9
+        anchor — so the agent does NOT switch (no oscillation)."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0))
+        wait_info = _make_wait_info(near_tie_graph, "D0", "E0")
+        route_state = AgentRouteState(current_exit="E0")
+
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=near_tie_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is None
+        assert route_state.current_exit == "E0"
+
+    def test_marginal_gain_allowed_when_anchor_disabled(self, near_tie_graph):
+        """Same near-tie setup, but with the anchor disabled (1.0) the 5% gain
+        now triggers a switch — proving the anchor is what suppresses it."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(
+            cost_config=RouteCostConfig(base_speed_m_per_s=1.0),
+            exit_switch_anchor=1.0,
+        )
+        wait_info = _make_wait_info(near_tie_graph, "D0", "E0")
+        route_state = AgentRouteState(current_exit="E0")
+
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=near_tie_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is not None
+        assert switch.new_exit == "E1"
 
 
 class TestEvaluateAndReroute:
