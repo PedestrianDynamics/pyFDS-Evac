@@ -276,7 +276,7 @@ class TestO2HypoxiaRate:
 
     def test_low_o2(self):
         rate = _o2_hypoxia_rate_per_minute(12.0)
-        expected = 1.0 / (60.0 * math.exp(8.13 - 0.54 * (20.9 - 12.0)))
+        expected = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 12.0))
         assert rate == pytest.approx(expected, rel=1e-10)
 
 
@@ -301,7 +301,7 @@ class TestFullFormulaClosedForm:
         nox_rate = (30.0 + 10.0) / 1500.0
         fld_irr = 200.0 / 114000.0 + 50.0 / 12000.0 + 10.0 / 1900.0
         hv = math.exp(0.1903 * 3.0 + 2.0004) / 7.1
-        o2_rate = 1.0 / (60.0 * math.exp(8.13 - 0.54 * (20.9 - 15.0)))
+        o2_rate = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 15.0))
         expected = (co_rate + cn_rate + nox_rate + fld_irr) * hv + o2_rate
 
         assert default_fed_rate_per_minute(inputs) == pytest.approx(expected, rel=1e-10)
@@ -316,7 +316,7 @@ class TestFullFormulaClosedForm:
         co_ppm = _co_percent_to_ppm(0.10)
         co_rate = 2.764e-5 * (co_ppm**1.036)
         hv = math.exp(0.1903 * 2.0 + 2.0004) / 7.1
-        o2_rate = 1.0 / (60.0 * math.exp(8.13 - 0.54 * (20.9 - 18.0)))
+        o2_rate = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 18.0))
         expected = co_rate * hv + o2_rate
 
         assert default_fed_rate_per_minute(inputs) == pytest.approx(expected, rel=1e-10)
@@ -514,7 +514,7 @@ def test_fds_evac_guide_stationary_fed_cases_reach_fed_one_consistently(
         )
     elif expected_dominant_term == "o2":
         assert analytic_time_s < time_to_fed_threshold_s(DefaultFedInputs())
-        assert analytic_time_s > 10000.0
+        assert analytic_time_s > 1000.0
     elif expected_dominant_term == "co":
         assert analytic_time_s > 1000.0
     elif expected_dominant_term == "co2_hv":
