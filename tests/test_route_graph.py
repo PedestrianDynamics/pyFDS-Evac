@@ -430,11 +430,23 @@ class TestRouteCost:
         )
         # current_fed = 0.95 → fed_max ≈ 0.95, sits inside the 0.9–1.0 band.
         as_current = evaluate_route(
-            simple_route_graph, ["D0", "E0"], 0.0, 0.95, field, None, config,
+            simple_route_graph,
+            ["D0", "E0"],
+            0.0,
+            0.95,
+            field,
+            None,
+            config,
             current_exit="E0",
         )
         as_target = evaluate_route(
-            simple_route_graph, ["D0", "E0"], 0.0, 0.95, field, None, config,
+            simple_route_graph,
+            ["D0", "E0"],
+            0.0,
+            0.95,
+            field,
+            None,
+            config,
             current_exit="E1",  # some *other* exit is current → E0 is a target
         )
         assert as_current.rejected is False  # keep your current exit
@@ -448,7 +460,13 @@ class TestRouteCost:
             base_speed_m_per_s=1.0, fed_rejection_threshold=1.0, fed_return_margin=0.9
         )
         rc = evaluate_route(
-            simple_route_graph, ["D0", "E0"], 0.0, 1.05, field, None, config,
+            simple_route_graph,
+            ["D0", "E0"],
+            0.0,
+            1.05,
+            field,
+            None,
+            config,
             current_exit="E0",
         )
         assert rc.rejected is True

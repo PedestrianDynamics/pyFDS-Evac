@@ -33,13 +33,13 @@ from shapely.ops import unary_union
 HERE = Path(__file__).parent
 
 # ── tunables ─────────────────────────────────────────────────────────────
-WALL_THICKNESS = 0.1     # matches assets/social_force/geometry.wkt — NOT scaled
-DOOR_W = 1.2              # required entrance width — NOT scaled
+WALL_THICKNESS = 0.1  # matches assets/social_force/geometry.wkt — NOT scaled
+DOOR_W = 1.2  # required entrance width — NOT scaled
 
 # Domain shrunk ~30% from the first draft (28x26 -> 20x18) for more
 # realistic room proportions relative to a 1.2 m door. Wall thickness and
 # door width stay fixed above; only room/corridor extents scale down.
-DOMAIN = (0.0, 0.0, 20.0, 18.0)   # xmin, ymin, xmax, ymax (outer wall centreline)
+DOMAIN = (0.0, 0.0, 20.0, 18.0)  # xmin, ymin, xmax, ymax (outer wall centreline)
 
 # Partition 1: horizontal wall separating the top exit alcove from the
 # main room. One door on the right leads up into the alcove.
@@ -68,15 +68,15 @@ DIV_B_DOOR_Y = (1.0, 1.0 + DOOR_W)
 # 1.2 m to divider A on the other (the gap above the riser).
 POCKET_Y = 1.9
 POCKET_WALL_A_X = (0.0, 2.9)
-POCKET_DOOR_X = (2.9, 2.9 + DOOR_W)          # 1.2 m clearance, bottom end
+POCKET_DOOR_X = (2.9, 2.9 + DOOR_W)  # 1.2 m clearance, bottom end
 
-FLOATING_FOOT_X = (POCKET_DOOR_X[1], 7.0)     # horizontal foot, right after the door
-FLOATING_WALL_X = 7.0                         # riser x, aligned under divider A
-FLOATING_RISER_Y = (2.0, DIV_A_Y_RANGE[0] - DOOR_W)   # top end: 1.2 m below divider A
+FLOATING_FOOT_X = (POCKET_DOOR_X[1], 7.0)  # horizontal foot, right after the door
+FLOATING_WALL_X = 7.0  # riser x, aligned under divider A
+FLOATING_RISER_Y = (2.0, DIV_A_Y_RANGE[0] - DOOR_W)  # top end: 1.2 m below divider A
 
 # Start (green) and exit (red) zones.
-START_RECT = (14.0, 0.8, 18.5, 2.8)          # start room, right of divider B
-EXIT_RECT = (17.0, 15.8, 18.8, 17.4)         # top-right alcove
+START_RECT = (14.0, 0.8, 18.5, 2.8)  # start room, right of divider B
+EXIT_RECT = (17.0, 15.8, 18.8, 17.4)  # top-right alcove
 
 
 def _wall_bar(x0, x1, y0, y1, gap=None):
@@ -139,22 +139,37 @@ def build():
 
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         from matplotlib.patches import Polygon as MplPoly
 
         fig, ax = plt.subplots(figsize=(9, 8.4))
         xs, ys = floor.exterior.xy
-        ax.add_patch(MplPoly(list(zip(xs, ys)), facecolor="#dfe3ea", edgecolor="#333", lw=1.2))
+        ax.add_patch(
+            MplPoly(list(zip(xs, ys)), facecolor="#dfe3ea", edgecolor="#333", lw=1.2)
+        )
         for interior_ring in floor.interiors:
             ix, iy = interior_ring.xy
             ax.add_patch(MplPoly(list(zip(ix, iy)), facecolor="#333"))
         sx0, sy0, sx1, sy1 = START_RECT
-        ax.add_patch(MplPoly([(sx0, sy0), (sx1, sy0), (sx1, sy1), (sx0, sy1)],
-                              facecolor="none", edgecolor="#16a34a", lw=2.5))
+        ax.add_patch(
+            MplPoly(
+                [(sx0, sy0), (sx1, sy0), (sx1, sy1), (sx0, sy1)],
+                facecolor="none",
+                edgecolor="#16a34a",
+                lw=2.5,
+            )
+        )
         ex0, ey0, ex1, ey1 = EXIT_RECT
-        ax.add_patch(MplPoly([(ex0, ey0), (ex1, ey0), (ex1, ey1), (ex0, ey1)],
-                              facecolor="none", edgecolor="#dc2626", lw=2.5))
+        ax.add_patch(
+            MplPoly(
+                [(ex0, ey0), (ex1, ey0), (ex1, ey1), (ex0, ey1)],
+                facecolor="none",
+                edgecolor="#dc2626",
+                lw=2.5,
+            )
+        )
         ax.set_aspect("equal")
         ax.set_xlim(xmin - 1, xmax + 1)
         ax.set_ylim(ymin - 1, ymax + 1)

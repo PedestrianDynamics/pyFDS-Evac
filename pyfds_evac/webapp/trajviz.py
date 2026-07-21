@@ -18,8 +18,10 @@ from fasthtml.common import Div, H3, NotStr
 
 from .plots import _PALETTE, _agent_exit_map
 
-_CARD = ("background:#2A262A;border:1px solid rgba(255,255,255,.07);"
-         "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)")
+_CARD = (
+    "background:#2A262A;border:1px solid rgba(255,255,255,.07);"
+    "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
+)
 
 # Number of position samples sent to the browser; the JS interpolates between
 # them, so this stays small while playback stays smooth.
@@ -557,8 +559,13 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
     payload = _payload(result, scenario, fds_dir)
     if payload is None:
         return Div(
-            H3("Trajectories", style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0 0 10px;color:#F2EDE9"),
-            NotStr('<p style="font-size:.85rem;color:#B2A9A3">Trajectory data unavailable.</p>'),
+            H3(
+                "Trajectories",
+                style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0 0 10px;color:#F2EDE9",
+            ),
+            NotStr(
+                '<p style="font-size:.85rem;color:#B2A9A3">Trajectory data unavailable.</p>'
+            ),
             style=_CARD,
         )
     data_json = json.dumps(payload)
@@ -596,40 +603,73 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         "</div>"
         + toggle
         + "</div>"
-        + (payload["hasFed"] and (
-            '<div id="fed-panel" style="margin-top:14px;background:#1A171A;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px">'
-            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#837A74">FED Dose</span>'
-            '<div style="display:flex;gap:12px">'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;color:#F4C430">· safe</span>'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;color:#FFB020">· alert 0.3</span>'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;color:#FF6A1A">· critical 0.6</span>'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;color:#E01E37">· severe 1.0</span>'
-            '</div></div>'
-            '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
-            '<div><div style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#837A74;margin-bottom:2px">max</div>'
-            '<div id="fed-val-max" style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:26px;font-weight:500;color:#F4C430;transition:color .3s">0.0000</div></div>'
-            '<div><div style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#837A74;margin-bottom:2px">mean</div>'
-            '<div id="fed-val-mean" style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:26px;font-weight:500;color:#FF8A3D;transition:color .3s">0.0000</div></div>'
-            '</div>'
-            '<div style="position:relative;height:6px;border-radius:99px;background:#2A262A;border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:4px">'
-            '<div id="fed-bar-fill" style="position:absolute;inset:0;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .15s"></div>'
-            '</div>'
-            '<div style="display:flex;justify-content:space-between;margin-bottom:10px">'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;color:#837A74">0</span>'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;color:#FFB020">0.3</span>'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;color:#FF6A1A">0.6</span>'
-            '<span style="font-family:' + "'JetBrains Mono'" + ',monospace;font-size:9px;color:#E01E37">1.0+</span>'
-            '</div>'
-            '<canvas id="fed-spark" style="width:100%;height:60px;display:block"></canvas>'
-            '</div>'
-        ) or "")
+        + (
+            payload["hasFed"]
+            and (
+                '<div id="fed-panel" style="margin-top:14px;background:#1A171A;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px">'
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#837A74">FED Dose</span>'
+                '<div style="display:flex;gap:12px">'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#F4C430">· safe</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#FFB020">· alert 0.3</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#FF6A1A">· critical 0.6</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#E01E37">· severe 1.0</span>'
+                "</div></div>"
+                '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
+                '<div><div style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#837A74;margin-bottom:2px">max</div>'
+                '<div id="fed-val-max" style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:26px;font-weight:500;color:#F4C430;transition:color .3s">0.0000</div></div>'
+                '<div><div style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#837A74;margin-bottom:2px">mean</div>'
+                '<div id="fed-val-mean" style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:26px;font-weight:500;color:#FF8A3D;transition:color .3s">0.0000</div></div>'
+                "</div>"
+                '<div style="position:relative;height:6px;border-radius:99px;background:#2A262A;border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:4px">'
+                '<div id="fed-bar-fill" style="position:absolute;inset:0;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .15s"></div>'
+                "</div>"
+                '<div style="display:flex;justify-content:space-between;margin-bottom:10px">'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#837A74">0</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#FFB020">0.3</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#FF6A1A">0.6</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#E01E37">1.0+</span>'
+                "</div>"
+                '<canvas id="fed-spark" style="width:100%;height:60px;display:block"></canvas>'
+                "</div>"
+            )
+            or ""
+        )
         + "</div>"
     )
     script = "<script>" + _JS.replace("__DATA__", data_json) + "</script>"
     return Div(
         Div(
-            H3("Trajectories", style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0;color:#F2EDE9"),
+            H3(
+                "Trajectories",
+                style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0;color:#F2EDE9",
+            ),
             style="display:flex;align-items:center;margin-bottom:14px",
         ),
         NotStr(markup + script),

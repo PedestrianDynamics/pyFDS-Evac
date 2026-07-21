@@ -57,7 +57,9 @@ def figure_html(fig: go.Figure, div_id: str) -> Any:
 
 def _empty(message: str) -> go.Figure:
     fig = go.Figure()
-    fig.add_annotation(text=message, showarrow=False, font=dict(size=14, color="#b2a9a3"))
+    fig.add_annotation(
+        text=message, showarrow=False, font=dict(size=14, color="#b2a9a3")
+    )
     fig.update_xaxes(visible=False)
     fig.update_yaxes(visible=False)
     return fig

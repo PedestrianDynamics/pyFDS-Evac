@@ -38,8 +38,9 @@ def _box(cx: float, cy: float, half: float = 1.0) -> Polygon:
     )
 
 
-def _graph(nodes: dict, transitions: list, dist_id: str = "D0",
-           dist_at=(0, 0)) -> StageGraph:
+def _graph(
+    nodes: dict, transitions: list, dist_id: str = "D0", dist_at=(0, 0)
+) -> StageGraph:
     """Build a StageGraph from {id: (cx, cy, type)} nodes + transitions."""
     dsi = {
         nid: {"polygon": _box(cx, cy), "stage_type": st}
@@ -110,7 +111,9 @@ def _wait_info(graph, origin, target, path_choices=None) -> dict:
 
 
 _CLEAR = ConstantExtinctionField(0.0)
-_DIST_ONLY = RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=0.0, w_fed=0.0, w_queue=0.0)
+_DIST_ONLY = RouteCostConfig(
+    base_speed_m_per_s=1.0, w_smoke=0.0, w_fed=0.0, w_queue=0.0
+)
 
 
 # ── shortest_path_to ──────────────────────────────────────────────────
@@ -232,7 +235,9 @@ class TestBetterPathReroute:
     def test_switches_to_cheaper_path_to_same_exit(self):
         g = _diamond_graph()
         wait_info = _wait_info(
-            g, "D0", "C1",
+            g,
+            "D0",
+            "C1",
             path_choices={"D0": [("C1", 100.0)], "C1": [("E0", 100.0)]},
         )
         rs = AgentRouteState(current_exit="E0", current_path=["D0", "C1", "E0"])
@@ -246,7 +251,9 @@ class TestBetterPathReroute:
     def test_no_switch_when_already_on_cheapest_path(self):
         g = _diamond_graph()
         wait_info = _wait_info(
-            g, "D0", "C0",
+            g,
+            "D0",
+            "C0",
             path_choices={"D0": [("C0", 100.0)], "C0": [("E0", 100.0)]},
         )
         rs = AgentRouteState(current_exit="E0", current_path=["D0", "C0", "E0"])
