@@ -75,7 +75,7 @@ class SliceFieldSampler:
 
 def load_slice_sampler(
     fds_dir: str,
-    quantity: str,
+    quantity: str | tuple[str, ...] | list[str],
     *,
     simulation=None,
     slice_height_m: float | None = None,
@@ -84,6 +84,11 @@ def load_slice_sampler(
 
     Parameters
     ----------
+    quantity :
+        The FDS slice quantity name, or a sequence of candidate names tried
+        in order (the first that matches wins).  A sequence lets callers cope
+        with decks that spell the same field differently, e.g.
+        ``("SOOT EXTINCTION COEFFICIENT", "EXTINCTION")``.
     simulation : optional
         A pre-loaded ``fdsreader.Simulation`` instance.  When provided the
         expensive directory parse is skipped.
@@ -92,7 +97,7 @@ def load_slice_sampler(
         whose z-extent is closest to this value is selected.
 
     Raises ModuleNotFoundError if fdsreader is not installed, or
-    IndexError if the requested quantity is not found in the FDS case.
+    IndexError if none of the requested quantities are found in the FDS case.
     """
     if simulation is not None:
         sim = simulation
@@ -100,9 +105,15 @@ def load_slice_sampler(
         if Simulation is None:
             raise ModuleNotFoundError("fdsreader is required to load FDS slice data.")
         sim = Simulation(str(fds_dir))
-    matches = sim.slices.filter_by_quantity(quantity)
+    candidates = (quantity,) if isinstance(quantity, str) else tuple(quantity)
+    matches = []
+    for name in candidates:
+        matches = sim.slices.filter_by_quantity(name)
+        if matches:
+            break
     if not matches:
-        raise IndexError(f"No slice with quantity '{quantity}' found in {fds_dir}")
+        tried = ", ".join(f"'{c}'" for c in candidates)
+        raise IndexError(f"No slice with quantity {tried} found in {fds_dir}")
     if slice_height_m is not None and len(matches) > 1:
         best = min(
             matches,
