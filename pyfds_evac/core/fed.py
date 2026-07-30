@@ -79,6 +79,9 @@ misleading accumulation under safe ambient conditions.
 def _o2_hypoxia_rate_per_minute(o2_percent: float) -> float:
     """Return the O2 hypoxia FED contribution in 1/min from guide Eq. 18.
 
+    t_incap [min] = exp(8.13 - 0.54 * (20.9 - C_O2%))   (Purser / FDS Tech Ref)
+    rate [1/min]  = 1 / t_incap
+
     Returns 0 when O2 is at or above ``_O2_HYPOXIA_THRESHOLD_PERCENT``
     (default 19.5 %) to prevent spurious accumulation under safe ambient
     conditions.
@@ -88,10 +91,10 @@ def _o2_hypoxia_rate_per_minute(o2_percent: float) -> float:
         o2_percent = 20.9
     if float(o2_percent) >= _O2_HYPOXIA_THRESHOLD_PERCENT:
         return 0.0
-    denominator = 60.0 * math.exp(8.13 - 0.54 * (20.9 - float(o2_percent)))
-    if denominator <= 0.0:
+    t_incap_min = math.exp(8.13 - 0.54 * (20.9 - float(o2_percent)))
+    if t_incap_min <= 0.0:
         return 0.0
-    return 1.0 / denominator
+    return 1.0 / t_incap_min
 
 
 def _cn_fed_rate_per_minute(hcn_ppm: float, no2_ppm: float) -> float:
