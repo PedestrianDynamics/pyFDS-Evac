@@ -371,9 +371,12 @@ _JS = """
       return c > 0 ? s / c : 0;
     });
   }
-  // FED dose -> tier colour, matching the agent-dot STOPS palette above.
+  // FED dose -> tier colour: the discrete STOPS tier the dose falls into
+  // (derived from the same palette the agent dots use, no duplicated hex).
   function fc(v) {
-    return v >= 1.0 ? '#c23b2e' : v >= 0.6 ? '#d2722b' : v >= 0.3 ? '#d19a2e' : '#3f8f57';
+    var c = STOPS[0][1];
+    for (var i = 0; i < STOPS.length; i++) { if (v >= STOPS[i][0]) c = STOPS[i][1]; }
+    return c;
   }
   function drawFedPanel() {
     if (!D.hasFed || !fedMaxByTime) return;
@@ -391,7 +394,11 @@ _JS = """
     var dpr = window.devicePixelRatio || 1;
     var sw = sc.clientWidth, sh = sc.clientHeight;
     if (!sw || !sh) return;
-    sc.width = sw * dpr; sc.height = sh * dpr;
+    // Only resize when the CSS size / DPR actually changed: setting width/height
+    // resets the canvas, so doing it every RAF frame is wasteful.
+    if (sc.width !== sw * dpr || sc.height !== sh * dpr) {
+      sc.width = sw * dpr; sc.height = sh * dpr;
+    }
     var sctx = sc.getContext('2d');
     if (!sctx) return;
     sctx.setTransform(dpr, 0, 0, dpr, 0, 0);

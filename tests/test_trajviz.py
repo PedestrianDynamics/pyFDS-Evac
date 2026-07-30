@@ -6,6 +6,7 @@ shipped to the browser. fdsreader is not required here: the tests inject a fake
 """
 
 import base64
+import re
 
 import numpy as np
 import pytest
@@ -138,8 +139,12 @@ def test_component_always_renders_speed_controls(monkeypatch):
         trajviz, "_payload", lambda *a, **k: _base_payload(hasFed=False)
     )
     html = to_xml(trajviz.trajectory_component(object(), object()))
-    assert 'class="cmode speed-btn active" data-speed="1"' in html
     assert 'data-speed="0.25"' in html and 'data-speed="4"' in html
+    # The 1x button is the default-active one. Match on the whole <button> tag
+    # so the check is independent of serialized attribute order.
+    btn_1x = re.search(r"<button[^>]*\bdata-speed=\"1\"[^>]*>", html)
+    assert btn_1x is not None
+    assert "active" in btn_1x.group() and "speed-btn" in btn_1x.group()
 
 
 def test_component_shows_fed_panel_only_when_fed_present(monkeypatch):
