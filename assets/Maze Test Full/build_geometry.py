@@ -4,7 +4,7 @@ Generate geometry.wkt + config.json for a 50 x 50 m corn maze.
 
 Corridor width: 3 m.
 Walkable area = union of rectangular corridor strips; walls are the gaps.
-16 corridors, 5 horizontal + 11 vertical, creating dead ends and winding paths.
+16 corridors, 6 horizontal + 10 vertical, creating dead ends and winding paths.
 """
 
 from pathlib import Path
@@ -57,7 +57,7 @@ def build():
                 "simulationParams": {
                     "max_simulation_time": 300,
                     "dt": 0.01,
-                    "model_type": "SocialForceModel",
+                    "model_type": "CollisionFreeSpeedModel",
                     "strength_neighbor_repulsion": 2.6,
                     "range_neighbor_repulsion": 0.1,
                     "gcfm_strength_neighbor_repulsion": 0.3,
