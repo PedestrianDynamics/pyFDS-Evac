@@ -47,7 +47,10 @@ web GUI exposes the same model behind a form: pick a scenario, set any
 `run.py` flag (the `fds dir` field has a folder browser), run it, watch
 live progress, and explore the results as interactive
 [Plotly](https://plotly.com/python/) charts (trajectories coloured by
-exit, cumulative FED, smoke, and route cost).
+exit, cumulative FED, smoke, and route cost). When a run is given an
+`fds dir`, the canvas trajectory animation overlays the FDS soot
+extinction slice as a smoke layer beneath the agents (clipped to the
+walkable area, with an on/off toggle).
 
 Install the optional GUI dependencies and launch:
 

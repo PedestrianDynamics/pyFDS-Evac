@@ -8,6 +8,7 @@ small payload. Geometry (walkable area, exits) is drawn once per frame.
 
 from __future__ import annotations
 
+import base64
 import bisect
 import json
 from pathlib import Path
@@ -20,6 +21,97 @@ from .plots import _PALETTE, _agent_exit_map
 # Number of position samples sent to the browser; the JS interpolates between
 # them, so this stays small while playback stays smooth.
 _N_SAMPLES = 120
+
+# Extinction-slice quantity names, in preference order. FDS names the soot
+# extinction coefficient differently across cases ("SOOT EXTINCTION
+# COEFFICIENT" in newer decks, bare "EXTINCTION" in older ones). This mirrors
+# load_slice_sampler's multi-name lookup, but _smoke_payload samples the raw
+# grid via to_global() rather than a SliceFieldSampler, so it filters inline.
+_EXTINCTION_QUANTITIES = ("SOOT EXTINCTION COEFFICIENT", "EXTINCTION")
+
+# Largest grid dimension shipped to the browser. The FDS slice is downsampled
+# to at most this many cells on its long axis; canvas image-smoothing blurs the
+# result so a coarse grid still looks like a continuous smoke field.
+_SMOKE_MAX_CELLS = 70
+
+
+def _smoke_payload(
+    fds_dir: str | None,
+    times: list[float],
+    slice_height_m: float = 2.0,
+    simulation: Any = None,
+) -> dict | None:
+    """Sample the FDS extinction slice onto a coarse grid for each render time.
+
+    Returns a dict with the grid dimensions, world extent, per-frame extinction
+    packed as base64 uint8 (scaled to ``kmax``), and ``kmax`` itself — or
+    ``None`` when no FDS directory / extinction slice is available. Any failure
+    is swallowed so the trajectory viewer never breaks on smoke rendering.
+
+    ``simulation`` accepts a pre-loaded ``fdsreader.Simulation`` (used by tests
+    to inject a fake slice); when ``None`` the directory is parsed from disk.
+    """
+    if simulation is None and (not fds_dir or not Path(fds_dir).exists()):
+        return None
+    try:
+        import numpy as np
+
+        if simulation is not None:
+            sim = simulation
+        else:
+            from fdsreader import Simulation
+
+            sim = Simulation(str(fds_dir))
+        matches: list = []
+        for quantity in _EXTINCTION_QUANTITIES:
+            matches = list(sim.slices.filter_by_quantity(quantity))
+            if matches:
+                break
+        if not matches:
+            return None
+
+        # Horizontal slice nearest the sampling height (agents' breathing zone).
+        def _zmid(s: Any) -> float:
+            return (s.extent.z_start + s.extent.z_end) / 2.0
+
+        sl = min(matches, key=lambda s: abs(_zmid(s) - slice_height_m))
+        grid, coords = sl.to_global(masked=True, return_coordinates=True)
+        grid = np.nan_to_num(np.asarray(grid, dtype=float), nan=0.0)  # (T, X, Y)
+        slice_times = np.asarray(sl.times, dtype=float)
+        xs = np.asarray(coords["x"], dtype=float)
+        ys = np.asarray(coords["y"], dtype=float)
+        if grid.ndim != 3 or xs.size < 2 or ys.size < 2:
+            return None
+
+        n_x, n_y = grid.shape[1], grid.shape[2]
+        step = max(1, int(np.ceil(max(n_x, n_y) / _SMOKE_MAX_CELLS)))
+        grid = grid[:, ::step, ::step]
+        xs = xs[::step]
+        ys = ys[::step]
+        w, h = grid.shape[1], grid.shape[2]
+
+        kmax = float(grid.max())
+        if kmax <= 0.0:
+            kmax = 1.0  # uniform-clear field: keep a valid scale, layer is blank
+
+        # One uint8 frame per render time, using the nearest FDS timestep.
+        # Bytes are row-major over (x, y): index = ix * h + iy.
+        buf = bytearray()
+        for t in times:
+            ti = int(np.argmin(np.abs(slice_times - float(t))))
+            frame = grid[ti]
+            u8 = np.clip(frame / kmax * 255.0, 0, 255).astype(np.uint8)
+            buf += u8.tobytes()
+
+        return {
+            "W": int(w),
+            "H": int(h),
+            "ext": [float(xs[0]), float(ys[0]), float(xs[-1]), float(ys[-1])],
+            "kmax": kmax,
+            "b64": base64.b64encode(bytes(buf)).decode("ascii"),
+        }
+    except Exception:
+        return None
 
 
 def _bounds(walkable, data) -> list[float]:
@@ -35,7 +127,7 @@ def _bounds(walkable, data) -> list[float]:
         ]
 
 
-def _payload(result: Any, scenario: Any) -> dict | None:
+def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | None:
     if not result.sqlite_file or not Path(result.sqlite_file).exists():
         return None
 
@@ -134,6 +226,7 @@ def _payload(result: Any, scenario: Any) -> dict | None:
         "walk": walk,
         "exits": exits,
         "bounds": _bounds(walkable, data),
+        "smoke": _smoke_payload(fds_dir, times),
     }
 
 
@@ -152,6 +245,56 @@ _JS = """
   var simT = t0, playing = false, lastTs = null;
   var bx = D.bounds, pad = 0.06;
   var mode = D.hasFed ? 'fed' : 'exit';
+
+  // Smoke field: decode base64 uint8 frames into an offscreen canvas we can
+  // scale onto the main canvas under the agents. Each frame is W*H bytes,
+  // row-major over (x, y): byte at ix*H + iy holds K scaled to 0..255 of kmax.
+  var SM = D.smoke, smBytes = null, smCanvas = null, smCtx = null;
+  var showSmoke = !!SM;
+  if (SM) {
+    var raw = atob(SM.b64);
+    smBytes = new Uint8Array(raw.length);
+    for (var si = 0; si < raw.length; si++) smBytes[si] = raw.charCodeAt(si);
+    smCanvas = document.createElement('canvas');
+    smCanvas.width = SM.W; smCanvas.height = SM.H;
+    smCtx = smCanvas.getContext('2d');
+  }
+  function drawSmoke(fi, p) {
+    if (!SM || !showSmoke || !smBytes) return;
+    var W = SM.W, H = SM.H, off = fi * W * H, kmax = SM.kmax;
+    var id = smCtx.createImageData(W, H);
+    var d = id.data;
+    for (var ix = 0; ix < W; ix++) {
+      for (var iy = 0; iy < H; iy++) {
+        var K = (smBytes[off + ix * H + iy] / 255) * kmax;
+        var a = 1 - Math.exp(-K * 0.6);      // Beer-Lambert-ish opacity
+        if (a > 0.9) a = 0.9;                 // keep agents visible through it
+        var pi = ((H - 1 - iy) * W + ix) * 4; // flip y: world +y is screen up
+        // Neutral gray smoke, dark enough to read on the light canvas theme.
+        d[pi] = 74; d[pi + 1] = 72; d[pi + 2] = 78; d[pi + 3] = Math.round(a * 255);
+      }
+    }
+    smCtx.putImageData(id, 0, 0);
+    var tl = p(SM.ext[0], SM.ext[3]);          // world (xmin, ymax) -> top-left
+    var br = p(SM.ext[2], SM.ext[1]);          // world (xmax, ymin) -> bot-right
+    ctx.imageSmoothingEnabled = true;
+    // Clip to the walkable area so smoke never bleeds outside the geometry
+    // (the FDS domain is a bounding box larger than the walkable polygon).
+    var clipped = false;
+    if (D.walk.length) {
+      ctx.save();
+      ctx.beginPath();
+      for (var i = 0; i < D.walk.length; i++) {
+        var q = p(D.walk[i][0], D.walk[i][1]);
+        i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]);
+      }
+      ctx.closePath();
+      ctx.clip();
+      clipped = true;
+    }
+    ctx.drawImage(smCanvas, tl[0], tl[1], br[0] - tl[0], br[1] - tl[1]);
+    if (clipped) ctx.restore();
+  }
 
   // FED dose -> tier colour (green -> amber -> orange -> red).
   var STOPS = [[0, '#3f8f57'], [0.3, '#d19a2e'], [0.6, '#d2722b'], [1, '#c23b2e']];
@@ -215,10 +358,11 @@ _JS = """
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
     ctx.clearRect(0, 0, w, h);
     poly(D.walk, p, 'rgba(20,20,19,0.035)', 'rgba(20,20,19,0.18)', 1);
+    var b = bracket(simT), a = S[b[0]], c = S[b[1]], f = b[2];
+    drawSmoke(b[0], p);
     D.exits.forEach(function (e) {
       poly(e.poly, p, e.color + '28', e.color, 2);
     });
-    var b = bracket(simT), a = S[b[0]], c = S[b[1]], f = b[2];
     for (var i = 0; i < n; i++) {
       var ax = a[2 * i], ay = a[2 * i + 1], cx = c[2 * i], cy = c[2 * i + 1];
       var X, Y;
@@ -259,6 +403,14 @@ _JS = """
     playing = false; playBtn.textContent = '▶';
     simT = t0 + (parseFloat(slider.value) / 1000) * span;
   });
+  var smBtn = document.getElementById('traj-smoke');
+  if (smBtn) {
+    smBtn.addEventListener('click', function () {
+      showSmoke = !showSmoke;
+      smBtn.classList.toggle('active', showSmoke);
+      draw();
+    });
+  }
   var bf = document.getElementById('traj-mode-fed');
   var be = document.getElementById('traj-mode-exit');
   if (bf && be) {
@@ -275,11 +427,11 @@ _JS = """
 """
 
 
-def trajectory_component(result: Any, scenario: Any) -> Any:
+def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None) -> Any:
     """A Card with a canvas trajectory animation (smooth interpolated playback)."""
     from monsterui.all import Card, DivLAligned, H3, UkIcon
 
-    payload = _payload(result, scenario)
+    payload = _payload(result, scenario, fds_dir)
     if payload is None:
         return Card(
             DivLAligned(UkIcon("route"), H3("Trajectories", cls="m-0")),
@@ -296,6 +448,13 @@ def trajectory_component(result: Any, scenario: Any) -> Any:
             '<span class="traj-color-lbl">colour</span>'
             '<button id="traj-mode-fed" type="button" class="cmode active">FED</button>'
             '<button id="traj-mode-exit" type="button" class="cmode">exit</button>'
+            "</div>"
+        )
+    if payload.get("smoke"):
+        toggle += (
+            '<div class="traj-color">'
+            '<span class="traj-color-lbl">smoke</span>'
+            '<button id="traj-smoke" type="button" class="cmode active">on</button>'
             "</div>"
         )
     markup = (
