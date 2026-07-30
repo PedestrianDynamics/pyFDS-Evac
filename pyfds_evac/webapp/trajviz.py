@@ -260,7 +260,7 @@ _JS = """
     smCtx = smCanvas.getContext('2d');
   }
   function drawSmoke(fi, p) {
-    if (!SM || !showSmoke || !smBytes) return;
+    if (!SM || !showSmoke || !smBytes || !smCtx) return;
     var W = SM.W, H = SM.H, off = fi * W * H, kmax = SM.kmax;
     var id = smCtx.createImageData(W, H);
     var d = id.data;

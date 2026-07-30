@@ -50,9 +50,10 @@ def _sim_with_slice(slice_obj, quantity="SOOT EXTINCTION COEFFICIENT"):
     return _FakeSim({quantity: [slice_obj]})
 
 
-def test_returns_none_without_fds_dir():
+def test_returns_none_without_fds_dir(tmp_path):
     assert _smoke_payload(None, [0.0, 1.0]) is None
-    assert _smoke_payload("/no/such/fds/dir", [0.0, 1.0]) is None
+    missing = tmp_path / "no-such-fds-dir"
+    assert _smoke_payload(str(missing), [0.0, 1.0]) is None
 
 
 def test_returns_none_when_no_extinction_slice():
