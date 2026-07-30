@@ -43,7 +43,8 @@ runs a simulation and produces every plot in one go.
 ## Web GUI
 
 A [FastHTML](https://fastht.ml/) + [MonsterUI](https://monsterui.answer.ai/)
-web GUI exposes the same model behind a form: pick a scenario, set any
+web GUI (warm dark instrument-panel theme) exposes the same model behind a
+form: pick a scenario, set any
 `run.py` flag (the `fds dir` field has a folder browser), run it, watch
 live progress, and explore the results as interactive
 [Plotly](https://plotly.com/python/) charts (trajectories coloured by
