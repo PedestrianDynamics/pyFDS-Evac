@@ -158,16 +158,26 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+# PyCharm / JetBrains IDE settings (per-developer, not project config)
+.idea/
 
 # Data
 fds_data
 processed_data
+
+# FDS solver output under "testing directory/": ~950 MB of slice (.sf) and 3D
+# smoke (.s3d) data, all regenerable by re-running FDS on the .fds decks.
+# Whitelist: keep the input decks and the notes, ignore everything else.
+/testing directory/**
+!/testing directory/**/
+!/testing directory/**/*.fds
+!/testing directory/**/*.md
+
+# demo2 scenario: not tracked. Must follow the whitelist above, which would
+# otherwise re-admit testing directory/demo2/demo2.fds.
+/assets/demo2/
+/artifacts/fds_from_wkt/demo2.wkt
+/testing directory/demo2/
 
 # Local working artifacts
 .worktrees/
