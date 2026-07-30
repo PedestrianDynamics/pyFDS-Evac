@@ -926,13 +926,16 @@ def _migrate_journeys_v2(data: Dict[str, Any]) -> None:
     distribution across multiple whole journeys, so ambiguous cases are left
     alone (existing fallback behaviour applies to those).
     """
-    if data.get("journeys") or not data.get("journeys_v2"):
+    journeys_v2 = data.get("journeys_v2")
+    if data.get("journeys") or not journeys_v2:
+        return
+    if not isinstance(journeys_v2, list):
         return
 
     sequences = {
         j["id"]: j["sequence"]
-        for j in data["journeys_v2"]
-        if j.get("id") and j.get("sequence")
+        for j in journeys_v2
+        if isinstance(j, dict) and j.get("id") and j.get("sequence")
     }
     if not sequences:
         return
@@ -1925,6 +1928,7 @@ def run_scenario(
                                 agent_position=tuple(_pos)
                                 if _pos is not None
                                 else None,
+                                current_exit=rs.current_exit or None,
                                 current_target=wait_info.get("current_target_stage"),
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
