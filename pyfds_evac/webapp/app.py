@@ -345,7 +345,13 @@ async def post(request: Request):
         def post_run(result):
             return cli.apply_outputs(result, scenario, opts, log=lambda _m: None)
 
-        manager.start(scenario, run_kwargs, scenario_name, post_run=post_run)
+        manager.start(
+            scenario,
+            run_kwargs,
+            scenario_name,
+            post_run=post_run,
+            fds_dir=getattr(opts, "fds_dir", None),
+        )
     except Exception as exc:
         return Alert(f"{type(exc).__name__}: {exc}", cls=AlertT.error)
 
@@ -427,7 +433,7 @@ def _finished_view() -> Div:
 
     return Div(
         summary,
-        trajviz.trajectory_component(result, scenario),
+        trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
         plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
         plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
         plot_card("Route cost", plots.route_cost_figure(result), "fig-route"),

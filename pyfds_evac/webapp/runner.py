@@ -62,6 +62,7 @@ class RunManager:
         self.result: Optional[ScenarioResult] = None
         self.error: Optional[str] = None
         self.scenario_name: Optional[str] = None
+        self.fds_dir: Optional[str] = None
         self.artifacts: List[str] = []
         self.last_event: Optional[ProgressEvent] = None
         self.log_lines: List[str] = []
@@ -76,6 +77,7 @@ class RunManager:
         run_kwargs: Dict[str, Any],
         scenario_name: str,
         post_run: Optional[Callable[[ScenarioResult], List[str]]] = None,
+        fds_dir: Optional[str] = None,
     ) -> None:
         """Start a run on a background thread. Raises if one is already active.
 
@@ -90,6 +92,7 @@ class RunManager:
         self.result = None
         self.error = None
         self.scenario_name = scenario_name
+        self.fds_dir = fds_dir
         self.artifacts = []
         self.last_event = None
         self.log_lines = []
