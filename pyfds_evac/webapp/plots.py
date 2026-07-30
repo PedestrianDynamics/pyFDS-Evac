@@ -28,20 +28,20 @@ _PALETTE = [
 ]
 
 
-_GRID = "rgba(20,20,19,0.06)"
-_ZERO = "rgba(20,20,19,0.14)"
-_FG = "#4a473f"
+_GRID = "rgba(235,232,225,0.08)"
+_ZERO = "rgba(235,232,225,0.18)"
+_FG = "#c9c3b8"
 
 
 def figure_html(fig: go.Figure, div_id: str) -> Any:
     """Embed a Plotly figure as an HTML fragment (no bundled Plotly.js).
 
-    Applies the Warm Paper Lab light template so charts match the GUI's cream
-    ground (transparent background, warm ink, hue-shifted grid).
+    Applies the Warm Dark Lab template so charts match the GUI's dark ground
+    (transparent background, warm off-white ink, faint light grid).
     """
     fig.update_layout(
         margin=dict(l=52, r=22, t=30, b=46),
-        template="plotly_white",
+        template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="IBM Plex Mono, ui-monospace, monospace", color=_FG, size=12),

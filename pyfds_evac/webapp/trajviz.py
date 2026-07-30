@@ -271,8 +271,8 @@ _JS = """
         var a = 1 - Math.exp(-K * 0.6);      // Beer-Lambert-ish opacity
         if (a > 0.9) a = 0.9;                 // keep agents visible through it
         var pi = ((H - 1 - iy) * W + ix) * 4; // flip y: world +y is screen up
-        // Neutral gray smoke, dark enough to read on the light canvas theme.
-        d[pi] = 74; d[pi + 1] = 72; d[pi + 2] = 78; d[pi + 3] = Math.round(a * 255);
+        // Light gray smoke, bright enough to read on the dark canvas theme.
+        d[pi] = 205; d[pi + 1] = 203; d[pi + 2] = 214; d[pi + 3] = Math.round(a * 255);
       }
     }
     smCtx.putImageData(id, 0, 0);
@@ -438,14 +438,14 @@ _JS = """
     var curFrac = T.length > 1 ? (simT - T[0]) / (T[T.length - 1] - T[0]) : 0;
     var cx = Math.max(0, Math.min(sw, curFrac * sw));
     sctx.beginPath(); sctx.moveTo(cx, 0); sctx.lineTo(cx, sh);
-    sctx.strokeStyle = 'rgba(20,20,19,.45)'; sctx.lineWidth = 1.5; sctx.stroke();
+    sctx.strokeStyle = 'rgba(255,255,255,.5)'; sctx.lineWidth = 1.5; sctx.stroke();
     sctx.beginPath(); sctx.arc(cx, py(curMax), 3.5, 0, 6.2832);
     sctx.fillStyle = fc(curMax); sctx.fill();
   }
   function draw() {
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
     ctx.clearRect(0, 0, w, h);
-    poly(D.walk, p, 'rgba(20,20,19,0.035)', 'rgba(20,20,19,0.18)', 1);
+    poly(D.walk, p, 'rgba(255,255,255,0.035)', 'rgba(255,255,255,0.16)', 1);
     var b = bracket(simT), a = S[b[0]], c = S[b[1]], f = b[2];
     drawSmoke(b[0], p);
     D.exits.forEach(function (e) {
@@ -468,7 +468,7 @@ _JS = """
       var q = p(X, Y);
       ctx.beginPath(); ctx.arc(q[0], q[1], 4.5, 0, 6.2832);
       ctx.fillStyle = col; ctx.fill();
-      ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(20,20,19,0.35)'; ctx.stroke();
+      ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
     }
     tlabel.textContent = 't = ' + (simT - t0).toFixed(0) + ' s';
     slider.value = String(((simT - t0) / span) * 1000);

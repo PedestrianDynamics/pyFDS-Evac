@@ -1,15 +1,14 @@
-"""Visual theme for the pyFDS-Evac GUI: "Warm Paper Lab".
+"""Visual theme for the pyFDS-Evac GUI: "Warm Dark Lab".
 
-A warm cream instrument panel in the spirit of anthropic.com: ivory paper
-(#FAF9F5) ground, warm near-black ink, and a single clay/terracotta accent
-(#CC785C). The FED tenability tiers (Safe/Alert/Critical/Severe) remain the
-semantic colour system, harmonised to sit on cream and always paired with a
-text label (colour is never the sole cue).
+A warm dark instrument panel: near-black warm ground, warm off-white ink, and
+a single clay/terracotta accent (#CC785C). The FED tenability tiers
+(Safe/Alert/Critical/Severe) remain the semantic colour system and are always
+paired with a text label (colour is never the sole cue).
 
 Retheming is done by overriding franken-ui's shadcn-style CSS variables on
 <html>, so every component inherits the palette; the rest adds typography
-(Archivo display, IBM Plex Mono labels, IBM Plex Sans body), chrome, a soft
-paper texture, warm shadows, and load motion.
+(Archivo display, IBM Plex Mono labels, IBM Plex Sans body), chrome, a faint
+engineering grid, warm shadows, and load motion.
 """
 
 from __future__ import annotations
@@ -28,31 +27,31 @@ _FONTS = Link(
     ),
 )
 
-# Palette (sRGB hex, for reference):
-#   ground   ivory   #FAF9F5   surface  cloud  #F4F2EA   ink   #141413
-#   accent   clay    #CC785C   muted-ink       #75726A   line  #E4DECF
+# Palette (HSL tokens; warm dark):
+#   ground   40 6% 10%   surface/card  40 5% 14%   ink  45 20% 91%
+#   accent   clay #CC785C   muted-ink  43 8% 62%   line  40 5% 26%
 #   tiers  safe #3F8F57  alert #D19A2E  critical #D2722B  severe #C23B2E
 _CSS = """
 :root, html.uk-theme-blue {
-  --background: 48 33% 97%;
-  --foreground: 60 4% 9%;
-  --card: 48 29% 95%;
-  --card-foreground: 60 4% 9%;
-  --popover: 48 33% 98%;
-  --popover-foreground: 60 4% 9%;
-  --primary: 16 52% 58%;
-  --primary-foreground: 30 30% 12%;
-  --secondary: 47 28% 90%;
-  --secondary-foreground: 40 6% 16%;
-  --muted: 47 28% 91%;
-  --muted-foreground: 40 5% 42%;
-  --accent: 22 48% 90%;
-  --accent-foreground: 16 48% 34%;
-  --destructive: 5 58% 49%;
-  --destructive-foreground: 48 33% 97%;
-  --border: 46 24% 84%;
-  --input: 45 22% 80%;
-  --ring: 16 52% 56%;
+  --background: 40 6% 10%;
+  --foreground: 45 20% 91%;
+  --card: 40 5% 14%;
+  --card-foreground: 45 20% 91%;
+  --popover: 40 5% 13%;
+  --popover-foreground: 45 20% 91%;
+  --primary: 16 55% 60%;
+  --primary-foreground: 30 30% 10%;
+  --secondary: 40 4% 20%;
+  --secondary-foreground: 45 15% 85%;
+  --muted: 40 4% 20%;
+  --muted-foreground: 43 8% 62%;
+  --accent: 20 30% 24%;
+  --accent-foreground: 22 55% 72%;
+  --destructive: 5 62% 55%;
+  --destructive-foreground: 45 20% 95%;
+  --border: 40 5% 26%;
+  --input: 40 5% 22%;
+  --ring: 16 55% 58%;
   --radius: .5rem;
 
   --font-display: 'Archivo', system-ui, sans-serif;
@@ -66,9 +65,9 @@ _CSS = """
   --tier-severe: #c23b2e;
 
   /* warm, hue-shifted shadow (not pure black) */
-  --shadow-warm: 30 25% 22%;
+  --shadow-warm: 20 14% 3%;
 }
-html.uk-theme-blue { color-scheme: light; }
+html.uk-theme-blue { color-scheme: dark; }
 
 html, body { background: hsl(var(--background)); }
 body {
@@ -85,8 +84,8 @@ body {
 body::before {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(hsl(60 4% 9% / .035) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(60 4% 9% / .035) 1px, transparent 1px);
+    linear-gradient(hsl(45 20% 90% / .04) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(45 20% 90% / .04) 1px, transparent 1px);
   background-size: 46px 46px;
   mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 100%);
 }
@@ -112,7 +111,7 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   color: hsl(var(--muted-foreground));
 }
 .uk-input, .uk-select, input { font-family: var(--font-mono); }
-.uk-input { font-size: .82rem; background: hsl(48 36% 98%); }
+.uk-input { font-size: .82rem; background: hsl(var(--input)); }
 
 /* inline help badge next to a field label */
 .lbl-help { display: inline-flex; align-items: center; }
@@ -184,7 +183,7 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   border-radius: var(--radius);
   backdrop-filter: blur(6px) saturate(1.05);
   box-shadow:
-    0 1px 0 hsl(0 0% 100% / .6) inset,
+    0 1px 0 hsl(0 0% 100% / .06) inset,
     0 18px 48px -34px hsl(var(--shadow-warm) / .5);
 }
 .uk-card-title, .uk-card h3 {
@@ -223,11 +222,11 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
               0 0 0 1px hsl(16 52% 50% / .4), 0 12px 26px -10px hsl(16 52% 40% / .55);
 }
 .uk-btn-secondary {
-  background: hsl(48 30% 96%); color: hsl(var(--secondary-foreground));
+  background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));
   border: 1px solid hsl(var(--border));
 }
 .uk-btn-secondary:hover { border-color: hsl(var(--primary) / .6); color: var(--clay); }
-.uk-btn-ghost:hover { background: hsl(var(--accent) / .7); color: hsl(16 48% 34%); }
+.uk-btn-ghost:hover { background: hsl(var(--accent) / .7); color: var(--clay); }
 
 /* ---- run panel: telemetry ---- */
 .telemetry { font-family: var(--font-mono); letter-spacing: .02em; }
@@ -278,7 +277,7 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 .doc-card p { line-height: 1.75; max-width: 74ch; }
 .eq {
   margin: .75rem 0; padding: .65rem 1rem; overflow-x: auto;
-  background: hsl(48 30% 97%); border: 1px solid hsl(var(--border));
+  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
   border-left: 2px solid var(--clay); border-radius: .4rem;
 }
 .eq .katex { font-size: 1.05em; }
@@ -309,7 +308,7 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   width: 100%; height: 440px; display: block;
   border: 1px solid hsl(var(--border)); border-radius: .4rem;
   background:
-    radial-gradient(120% 120% at 50% 0%, hsl(48 30% 99%), hsl(48 24% 96%));
+    radial-gradient(120% 120% at 50% 0%, hsl(40 5% 15%), hsl(40 6% 11%));
 }
 .traj-controls {
   display: flex; align-items: center; gap: .8rem; margin-top: .6rem;
