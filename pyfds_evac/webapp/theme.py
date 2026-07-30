@@ -111,7 +111,11 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   color: hsl(var(--muted-foreground));
 }
 .uk-input, .uk-select, input { font-family: var(--font-mono); }
-.uk-input { font-size: .82rem; background: hsl(var(--input)); }
+.uk-input {
+  font-size: .82rem; background: hsl(var(--input));
+  border: 1px solid hsl(var(--border));
+}
+.uk-input:focus { border-color: hsl(var(--primary) / .7); }
 
 /* inline help badge next to a field label */
 .lbl-help { display: inline-flex; align-items: center; }
@@ -201,7 +205,11 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   transition: border-color .2s, background .2s;
 }
 .uk-accordion-title:hover { background: hsl(var(--accent) / .6) !important; }
-.uk-open > .uk-accordion-title { border-left-color: var(--clay); }
+.uk-open > .uk-accordion-title {
+  border-left: 2px solid var(--clay);
+  background: hsl(var(--accent) / .5) !important;
+  box-shadow: inset 2px 0 0 0 var(--clay), 0 0 14px -8px hsl(16 55% 58% / .55);
+}
 
 /* ---- buttons ---- */
 .uk-btn {

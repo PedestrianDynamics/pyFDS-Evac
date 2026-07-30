@@ -445,7 +445,7 @@ _JS = """
   function draw() {
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
     ctx.clearRect(0, 0, w, h);
-    poly(D.walk, p, 'rgba(255,255,255,0.035)', 'rgba(255,255,255,0.16)', 1);
+    poly(D.walk, p, 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0.28)', 1.5);
     var b = bracket(simT), a = S[b[0]], c = S[b[1]], f = b[2];
     drawSmoke(b[0], p);
     D.exits.forEach(function (e) {
