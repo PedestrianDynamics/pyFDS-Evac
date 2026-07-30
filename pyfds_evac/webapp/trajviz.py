@@ -243,6 +243,7 @@ _JS = """
   var t0 = T[0], t1 = T[T.length - 1], span = Math.max(1e-6, t1 - t0);
   var PLAYBACK = 16;            // seconds of wall time to play the whole run
   var simT = t0, playing = false, lastTs = null;
+  var speedMult = 1;           // playback rate multiplier (speed buttons)
   var bx = D.bounds, pad = 0.06;
   var mode = D.hasFed ? 'fed' : 'exit';
 
@@ -354,6 +355,93 @@ _JS = """
     var f = (t - T[lo]) / Math.max(1e-9, T[hi] - T[lo]);
     return [lo, hi, f];
   }
+  // Per-sample FED max/mean across agents, for the live dose panel.
+  var fedMaxByTime = null, fedMeanByTime = null;
+  if (D.hasFed) {
+    fedMaxByTime = T.map(function (_, ti) {
+      var row = FED[ti]; if (!row) return 0;
+      var m = 0;
+      for (var k = 0; k < n; k++) { if (row[k] != null && row[k] > m) m = row[k]; }
+      return m;
+    });
+    fedMeanByTime = T.map(function (_, ti) {
+      var row = FED[ti]; if (!row) return 0;
+      var s = 0, c = 0;
+      for (var k = 0; k < n; k++) { if (row[k] != null) { s += row[k]; c++; } }
+      return c > 0 ? s / c : 0;
+    });
+  }
+  // FED dose -> tier colour: the discrete STOPS tier the dose falls into
+  // (derived from the same palette the agent dots use, no duplicated hex).
+  function fc(v) {
+    var c = STOPS[0][1];
+    for (var i = 0; i < STOPS.length; i++) { if (v >= STOPS[i][0]) c = STOPS[i][1]; }
+    return c;
+  }
+  function drawFedPanel() {
+    if (!D.hasFed || !fedMaxByTime) return;
+    var b = bracket(simT), lo = b[0], hi = b[1], f = b[2];
+    var curMax  = fedMaxByTime[lo]  + (fedMaxByTime[hi]  - fedMaxByTime[lo])  * f;
+    var curMean = fedMeanByTime[lo] + (fedMeanByTime[hi] - fedMeanByTime[lo]) * f;
+    var maxEl = document.getElementById('fed-val-max');
+    if (maxEl) { maxEl.textContent = curMax.toFixed(4); maxEl.style.color = fc(curMax); }
+    var meanEl = document.getElementById('fed-val-mean');
+    if (meanEl) { meanEl.textContent = curMean.toFixed(4); meanEl.style.color = fc(curMean); }
+    var barEl = document.getElementById('fed-bar-fill');
+    if (barEl) barEl.style.width = Math.min(100, curMax * 100) + '%';
+    var sc = document.getElementById('fed-spark');
+    if (!sc) return;
+    var dpr = window.devicePixelRatio || 1;
+    var sw = sc.clientWidth, sh = sc.clientHeight;
+    if (!sw || !sh) return;
+    // Only resize when the CSS size / DPR actually changed: setting width/height
+    // resets the canvas, so doing it every RAF frame is wasteful.
+    if (sc.width !== sw * dpr || sc.height !== sh * dpr) {
+      sc.width = sw * dpr; sc.height = sh * dpr;
+    }
+    var sctx = sc.getContext('2d');
+    if (!sctx) return;
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sctx.clearRect(0, 0, sw, sh);
+    var N = fedMaxByTime.length;
+    var maxV = 0;
+    for (var i = 0; i < N; i++) { if (fedMaxByTime[i] > maxV) maxV = fedMaxByTime[i]; }
+    maxV = Math.max(1.05, maxV * 1.12);
+    function px(i) { return N > 1 ? (i / (N - 1)) * sw : sw / 2; }
+    function py(v) { return sh - (v / maxV) * (sh - 2); }
+    var grad = sctx.createLinearGradient(0, 0, 0, sh);
+    grad.addColorStop(0, 'rgba(204,120,92,.20)');   // clay wash under the max curve
+    grad.addColorStop(1, 'rgba(204,120,92,0)');
+    sctx.beginPath();
+    sctx.moveTo(px(0), sh);
+    for (var i = 0; i < N; i++) sctx.lineTo(px(i), py(fedMaxByTime[i]));
+    sctx.lineTo(px(N - 1), sh); sctx.closePath();
+    sctx.fillStyle = grad; sctx.fill();
+    sctx.beginPath();
+    for (var i = 0; i < N; i++) { i === 0 ? sctx.moveTo(px(i), py(fedMaxByTime[i])) : sctx.lineTo(px(i), py(fedMaxByTime[i])); }
+    sctx.strokeStyle = '#cc785c'; sctx.lineWidth = 1.5; sctx.stroke();   // max: clay
+    sctx.beginPath();
+    for (var i = 0; i < N; i++) { i === 0 ? sctx.moveTo(px(i), py(fedMeanByTime[i])) : sctx.lineTo(px(i), py(fedMeanByTime[i])); }
+    sctx.strokeStyle = 'rgba(204,120,92,.6)'; sctx.lineWidth = 1;        // mean: faded clay
+    sctx.setLineDash([3, 3]); sctx.stroke(); sctx.setLineDash([]);
+    var threshs = [[0.3, 'rgba(209,154,46,.6)', '0.3'], [1.0, 'rgba(194,59,46,.6)', '1.0']];
+    for (var ti2 = 0; ti2 < threshs.length; ti2++) {
+      var ty = py(threshs[ti2][0]);
+      if (ty >= 0 && ty <= sh) {
+        sctx.beginPath(); sctx.moveTo(0, ty); sctx.lineTo(sw, ty);
+        sctx.strokeStyle = threshs[ti2][1]; sctx.lineWidth = 1;
+        sctx.setLineDash([4, 4]); sctx.stroke(); sctx.setLineDash([]);
+        sctx.fillStyle = threshs[ti2][1]; sctx.font = "9px 'IBM Plex Mono', monospace";
+        sctx.textAlign = 'right'; sctx.fillText(threshs[ti2][2], sw - 3, ty - 3); sctx.textAlign = 'left';
+      }
+    }
+    var curFrac = T.length > 1 ? (simT - T[0]) / (T[T.length - 1] - T[0]) : 0;
+    var cx = Math.max(0, Math.min(sw, curFrac * sw));
+    sctx.beginPath(); sctx.moveTo(cx, 0); sctx.lineTo(cx, sh);
+    sctx.strokeStyle = 'rgba(20,20,19,.45)'; sctx.lineWidth = 1.5; sctx.stroke();
+    sctx.beginPath(); sctx.arc(cx, py(curMax), 3.5, 0, 6.2832);
+    sctx.fillStyle = fc(curMax); sctx.fill();
+  }
   function draw() {
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
     ctx.clearRect(0, 0, w, h);
@@ -384,10 +472,11 @@ _JS = """
     }
     tlabel.textContent = 't = ' + (simT - t0).toFixed(0) + ' s';
     slider.value = String(((simT - t0) / span) * 1000);
+    if (D.hasFed) drawFedPanel();
   }
   function loop(ts) {
     if (playing) {
-      if (lastTs != null) simT += ((ts - lastTs) / 1000) * (span / PLAYBACK);
+      if (lastTs != null) simT += ((ts - lastTs) / 1000) * (span / PLAYBACK) * speedMult;
       lastTs = ts;
       if (simT >= t1) { simT = t1; playing = false; playBtn.textContent = '▶'; }
     }
@@ -402,6 +491,14 @@ _JS = """
   slider.addEventListener('input', function () {
     playing = false; playBtn.textContent = '▶';
     simT = t0 + (parseFloat(slider.value) / 1000) * span;
+  });
+  document.querySelectorAll('.speed-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      speedMult = parseFloat(this.dataset.speed);
+      document.querySelectorAll('.speed-btn').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+    });
   });
   var smBtn = document.getElementById('traj-smoke');
   if (smBtn) {
@@ -457,6 +554,41 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
             '<button id="traj-smoke" type="button" class="cmode active">on</button>'
             "</div>"
         )
+    panel = ""
+    if payload["hasFed"]:
+        panel = (
+            '<div class="fed-panel">'
+            '<div class="fed-head">'
+            '<span class="fed-title">FED dose</span>'
+            '<div class="fed-legend">'
+            '<span class="fed-leg safe">safe</span>'
+            '<span class="fed-leg alert">alert 0.3</span>'
+            '<span class="fed-leg critical">critical 0.6</span>'
+            '<span class="fed-leg severe">severe 1.0</span>'
+            "</div></div>"
+            '<div class="fed-stats">'
+            '<div class="fed-stat"><div class="fed-stat-lbl">max</div>'
+            '<div id="fed-val-max" class="fed-val">0.0000</div></div>'
+            '<div class="fed-stat"><div class="fed-stat-lbl">mean</div>'
+            '<div id="fed-val-mean" class="fed-val">0.0000</div></div>'
+            "</div>"
+            '<div class="fed-bar"><div id="fed-bar-fill" class="fed-bar-fill"></div></div>'
+            '<div class="fed-scale">'
+            "<span>0</span><span>0.3</span><span>0.6</span><span>1.0+</span>"
+            "</div>"
+            '<canvas id="fed-spark" class="fed-spark"></canvas>'
+            "</div>"
+        )
+    speed = (
+        '<div class="traj-color">'
+        '<span class="traj-color-lbl">speed</span>'
+        '<button type="button" class="cmode speed-btn" data-speed="0.25">&frac14;&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="0.5">&frac12;&times;</button>'
+        '<button type="button" class="cmode speed-btn active" data-speed="1">1&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="2">2&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="4">4&times;</button>'
+        "</div>"
+    )
     markup = (
         '<div class="traj-wrap">'
         '<canvas id="traj-canvas" class="traj-canvas"></canvas>'
@@ -465,8 +597,11 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         '<input id="traj-slider" type="range" min="0" max="1000" value="0" '
         'class="traj-slider">'
         '<span id="traj-time" class="traj-time">t = 0 s</span>'
+        + speed
         + toggle
-        + "</div></div>"
+        + "</div>"
+        + panel
+        + "</div>"
     )
     script = "<script>" + _JS.replace("__DATA__", data_json) + "</script>"
     return Card(

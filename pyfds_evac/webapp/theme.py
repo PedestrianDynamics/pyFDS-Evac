@@ -343,6 +343,55 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   background: hsl(var(--accent) / .6);
 }
 
+/* ---- FED live dose panel ---- */
+.fed-panel {
+  margin-top: .9rem; padding: .8rem 1rem;
+  border: 1px solid hsl(var(--border)); border-radius: .5rem;
+  background: hsl(var(--card));
+}
+.fed-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .6rem;
+}
+.fed-title {
+  font-family: var(--font-mono); font-size: .56rem; letter-spacing: .14em;
+  text-transform: uppercase; color: hsl(var(--muted-foreground));
+}
+.fed-legend { display: flex; gap: .7rem; }
+.fed-leg { font-family: var(--font-mono); font-size: .55rem; letter-spacing: .04em; }
+.fed-leg::before { content: "\2022  "; }
+.fed-leg.safe { color: var(--tier-safe); }
+.fed-leg.alert { color: var(--tier-alert); }
+.fed-leg.critical { color: var(--tier-critical); }
+.fed-leg.severe { color: var(--tier-severe); }
+.fed-stats {
+  display: flex; gap: 1.5rem; align-items: baseline; margin-bottom: .7rem;
+}
+.fed-stat-lbl {
+  font-family: var(--font-mono); font-size: .55rem; letter-spacing: .06em;
+  text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: .1rem;
+}
+.fed-val {
+  font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500;
+  color: var(--tier-safe); transition: color .3s;
+}
+.fed-bar {
+  position: relative; height: 6px; border-radius: 99px;
+  background: hsl(var(--secondary)); border: 1px solid hsl(var(--border));
+  overflow: hidden; margin-bottom: .3rem;
+}
+.fed-bar-fill {
+  position: absolute; inset: 0; width: 0%; border-radius: 99px;
+  transition: width .15s;
+  background: linear-gradient(90deg,
+    var(--tier-safe), var(--tier-alert), var(--tier-critical), var(--tier-severe));
+}
+.fed-scale {
+  display: flex; justify-content: space-between; margin-bottom: .6rem;
+  font-family: var(--font-mono); font-size: .55rem; color: hsl(var(--muted-foreground));
+}
+.fed-spark { width: 100%; height: 60px; display: block; }
+
 /* ---- streaming console (warm-dark inset terminal) ---- */
 .console-box {
   max-height: 20rem; overflow: auto;
