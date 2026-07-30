@@ -50,7 +50,10 @@ live progress, and explore the results as interactive
 exit, cumulative FED, smoke, and route cost). When a run is given an
 `fds dir`, the canvas trajectory animation overlays the FDS soot
 extinction slice as a smoke layer beneath the agents (clipped to the
-walkable area, with an on/off toggle).
+walkable area, with an on/off toggle). The animation has ¼×–4×
+playback-speed controls, and — for runs with tenability enabled — a live
+FED-dose panel showing the current max/mean dose and a sparkline of the
+crowd's FED over time.
 
 Install the optional GUI dependencies and launch:
 
