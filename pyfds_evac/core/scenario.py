@@ -1925,6 +1925,7 @@ def run_scenario(
                                 agent_position=tuple(_pos)
                                 if _pos is not None
                                 else None,
+                                current_target=wait_info.get("current_target_stage"),
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
                                 _exit_node = stage_graph.nodes.get(rc.exit_id)

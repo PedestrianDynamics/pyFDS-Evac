@@ -452,6 +452,15 @@ class RouteCostConfig:
     # merely back under threshold. Never makes it harder to LEAVE a bad exit.
     fed_return_margin: float = 0.9
     visibility_extinction_threshold: float = 0.5
+    # Above this route-average extinction, a smoke/visibility rejection is
+    # treated as an impassable hazard the agent flees regardless of the anchor
+    # (like an FED-lethal rejection). At or below it, low visibility is a soft
+    # cost only and stays subject to the exit-switch anchor — this is what stops
+    # mild smoke (k_ave just over visibility_extinction_threshold) from flipping
+    # an agent off its committed exit every tick. Physically ~1 m visibility
+    # (S ~ C/K); NOT calibrated, but chosen to sit well above the mild haze that
+    # caused the demo flip-flop (k_ave <= ~0.9) and below genuine walls of smoke.
+    impassable_extinction_threshold: float = 3.0
     sampling_step_m: float = 2.0
     base_speed_m_per_s: float = 1.3
     alpha: float = 0.706
@@ -606,8 +615,19 @@ def evaluate_route(
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
     current_exit: str | None = None,
+    agent_position: tuple[float, float] | None = None,
+    current_target: str | None = None,
 ) -> RouteCost:
-    """Evaluate the composite cost for a full route (list of stage IDs)."""
+    """Evaluate the composite cost for a full route (list of stage IDs).
+
+    When ``agent_position`` is given, the distance is measured from where the
+    agent actually is (Haensel 2014 "path-integrated distance") instead of from
+    the route's first graph node: progress already made toward the agent's
+    ``current_target`` is credited, and a route that diverges from that heading
+    is charged the backtrack from the agent's position to the branch node. This
+    stops an agent 1 m from one exit being priced as if standing at the far
+    upstream junction (which made it walk past exits and reverse mid-corridor).
+    """
     segments: list[SegmentCost] = []
     for i in range(len(path) - 1):
         cache_key = (path[i], path[i + 1])
@@ -634,8 +654,34 @@ def evaluate_route(
     fed_growth = sum(s.fed_growth for s in segments)
     fed_max = current_fed + fed_growth
 
-    # Composite cost: path_length * (1 + w_smoke * K_ave) + w_fed * FED_max
-    composite = path_length * (1.0 + config.w_smoke * k_ave) + config.w_fed * fed_max
+    # Position-aware distance (Haensel path-integrated). Default: the geometric
+    # node-to-node path_length (used everywhere agent_position is absent).
+    effective_length = path_length
+    if agent_position is not None and len(path) >= 2:
+        first_node = graph.nodes.get(path[0])
+        next_node = graph.nodes.get(path[1])
+        if first_node is not None and next_node is not None:
+            px, py = agent_position
+            if path[1] == current_target:
+                # Continuing toward the current target: the agent has already
+                # covered part of the first segment, so charge only the distance
+                # remaining from its position to that node.
+                remaining = math.hypot(
+                    px - next_node.centroid_x, py - next_node.centroid_y
+                )
+                effective_length = path_length - segments[0].length_m + remaining
+            elif current_target is not None:
+                # Diverging from the current heading: the agent must walk back to
+                # the branch (first) node before taking this route.
+                backtrack = math.hypot(
+                    px - first_node.centroid_x, py - first_node.centroid_y
+                )
+                effective_length = path_length + backtrack
+
+    # Composite cost: effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
+    composite = (
+        effective_length * (1.0 + config.w_smoke * k_ave) + config.w_fed * fed_max
+    )
 
     # Queue cost: convert queue delay to distance-equivalent units.
     queue_time = 0.0
@@ -702,6 +748,7 @@ def rank_routes(
     cognitive_map=None,
     agent_position: tuple[float, float] | None = None,
     current_exit: str | None = None,
+    current_target: str | None = None,
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
@@ -767,6 +814,8 @@ def rank_routes(
             cached_segments=cached_segments,
             exit_counts=exit_counts,
             current_exit=current_exit,
+            agent_position=agent_position,
+            current_target=current_target,
         )
         costs.append(rc)
 
@@ -832,6 +881,33 @@ def rank_routes(
 
 
 # ── Dynamic rerouting (Phase 4) ──────────────────────────────────────
+
+
+def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
+    """Whether the agent must abandon its current exit regardless of hysteresis.
+
+    Only genuine hazards bypass the exit-switch anchor:
+
+    * **FED-lethal** — predicted dose incapacitates the agent. Always flee.
+    * **Impassably dense smoke** — the route's average extinction exceeds
+      ``impassable_extinction_threshold`` (visibility of order a metre). Flee.
+
+    A *mild* visibility rejection (``all segments non-visible`` from light haze,
+    or ``next_node_not_visible`` from an unreadable sign) is NOT a hazard: the
+    smoke is already in the route cost via ``w_smoke * k_ave``, so also letting
+    the rejection bypass the anchor double-counts it and flips the agent off its
+    cheaper committed exit onto a costlier one, then back next tick. Those stay
+    subject to the anchor. The demo's flip-flop was exactly this — mild smoke
+    (k_ave ~0.5-0.9) tripping the binary 0.5 visibility threshold every tick.
+    """
+    if not rc.rejected:
+        return False
+    reason = (rc.rejection_reason or "").removeprefix("fallback: ")
+    if reason.startswith("FED"):
+        return True
+    if "visible" in reason:  # smoke-obscured path or unreadable sign
+        return rc.k_ave_route > cost_config.impassable_extinction_threshold
+    return False
 
 
 @dataclass(frozen=True)
@@ -1030,6 +1106,10 @@ def evaluate_and_reroute(
     if source is None or source not in graph.nodes:
         return None
 
+    # The node the agent is currently walking toward, so position-aware costs can
+    # credit progress along that leg and penalize routes that diverge from it.
+    current_target = wait_info.get("current_target_stage")
+
     ranked = rank_routes(
         graph,
         source,
@@ -1044,6 +1124,7 @@ def evaluate_and_reroute(
         cognitive_map=cognitive_map,
         agent_position=agent_position,
         current_exit=route_state.current_exit,
+        current_target=current_target,
     )
     if not ranked:
         # No exit reachable in the agent's known subgraph (typically a
@@ -1090,14 +1171,17 @@ def evaluate_and_reroute(
 
     old_exit = route_state.current_exit
     old_cost = None
-    old_rejected = False
+    old_must_flee = False
     if old_exit and old_exit != best.exit_id:
-        # Find the old exit's cost (for diagnostics) and whether it is now
-        # rejected (unsafe), which disables anchoring below.
+        # Find the old exit's cost (for diagnostics) and whether it is rejected
+        # for a *safety* reason (FED-lethal / impassable smoke), which disables
+        # anchoring below. A mild visibility rejection (light-haze path / an
+        # unreadable sign) is NOT a reason to bypass the anchor — see
+        # _must_flee_rejection.
         for rc in ranked:
             if rc.exit_id == old_exit:
                 old_cost = rc.composite_cost
-                old_rejected = rc.rejected
+                old_must_flee = _must_flee_rejection(rc, config.cost_config)
                 break
 
     route_state.last_eval_time_s = current_time_s
@@ -1122,6 +1206,8 @@ def evaluate_and_reroute(
                 config.cost_config,
                 cached_segments=cached_segments,
                 exit_counts=exit_counts,
+                agent_position=agent_position,
+                current_target=current_target,
             ).composite_cost
             if best.composite_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
                 stage_configs = wait_info.get("stage_configs", {})
@@ -1146,12 +1232,14 @@ def evaluate_and_reroute(
     # reevaluation — worst at short reroute intervals. Anchoring is skipped when:
     #   - it is the initial choice (old_exit is None), or
     #   - the old exit is no longer reachable / priced (old_cost is None), or
-    #   - the old exit is now rejected (smoke-blocked / FED-lethal) — the agent must
-    #     flee an unsafe exit regardless of cost, so hysteresis must not pin it there.
+    #   - the old exit is FED-lethal (old_must_flee) — the agent must flee a deadly
+    #     exit regardless of cost, so hysteresis must not pin it there. A merely
+    #     smoke-obscured/low-visibility exit does NOT flee: smoke is already in the
+    #     cost, and bypassing the anchor on it causes the flip-flop.
     if (
         old_exit is not None
         and old_cost is not None
-        and not old_rejected
+        and not old_must_flee
         and best.composite_cost >= old_cost * config.exit_switch_anchor
     ):
         return None

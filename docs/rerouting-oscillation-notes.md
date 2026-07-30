@@ -119,44 +119,141 @@ Result: agent 119 went 4 switches → 0. But aggregate demo oscillation only dro
 modestly (≈33 → 30 reversals), because the deadband only targets FED-flicker (~half
 the demo's reversals); the rest is congestion overshoot (below).
 
-## Third source — congestion overshoot (NOT fixed; documented follow-up)
+## Third source — visibility rejection bypasses the anchor (the real demo cause)
 
-The remaining oscillation is the **crowd sloshing** feedback loop: many agents
-re-evaluate against the same congestion snapshot, all switch to the momentarily-cheaper
-exit, overshoot its congestion, and swing back next tick. This is Ehtamo's
-parallel-best-response overshoot, made permanent by agents moving (the equilibrium
-target keeps shifting).
+This is what actually flip-flopped the demo, at both 1 s and 5 s. Found by
+instrumenting a real run (`--output-route-history` + route-cost history) rather than
+guessing — the earlier congestion/sign theories below turned out not to be the trigger.
 
-FDS+Evac's answer: at each decision point it iterates the exit choice to a **Nash
-equilibrium** — sweep all agents, update each door's crowd count immediately after each
-picks, repeat until <5% still change (`NASH_CLOSE_ENOUGH = 0.05`) — *before* anyone
-moves. Ours updates `exit_counts` sequentially already, but does only **one pass per
-tick** instead of iterating to convergence, so the crowd takes many ticks to settle
-(and, with movement, may never fully settle).
+### The evidence
 
-**Decision: not building this now.** Rationale:
-- Much of the residual is legitimate (agents genuinely bouncing between two
-  marginal-dose exits in a deadly scenario).
-- All the bad numbers are at an unrealistic **1 s** interval; a realistic 5 s interval
-  lets the crowd spread between re-evaluations and slosh far less — free mitigation.
-- The full Nash-iteration loop is expensive (N sweeps/tick) and fiddly
-  (convergence caps, determinism, movement coupling) — high risk for a partly-cosmetic
-  gain.
+In the demo route-cost log, at t=75 s agent 21's committed exit (B) is the **cheaper**
+one yet gets rejected, and the agent flees to the costlier A:
 
-**Reach for it only if metrics show mis-allocation** (waves of everyone piling on one
-exit inflating egress time), not just a busy-looking viewer. Cheaper mitigations to try
-first: raise the reroute interval to ~5 s; randomise re-evaluation order + 2 sweeps;
-or cap how many agents may switch *to* one exit per tick (anti-herding throttle).
+```
+exit_A_left   rank 1  cost 41.78  rejected=False
+exit_B_right  rank 2  cost 41.36  rejected=True  reason="all segments non-visible"
+```
+
+Across the run, **14 switches move an agent to an equal-or-more-expensive exit**
+(e.g. agent 28: 53.83 → 55.04). Under the anchor a switch needs `new < old × 0.9`, so a
+switch to a costlier exit can only happen when the current exit is **rejected** — which
+**bypasses the anchor** (`route_graph.py`, by design: an agent must be free to flee an
+*unsafe* exit). `fed_max ≈ 0.002` and `queue = 0` on these rows, so it is neither FED nor
+congestion: it is the **K_vis fallback** rejecting a route whose segments are all below
+the `visibility_extinction_threshold` (0.5).
+
+### Why the binary rejection is wrong here
+
+The rejected routes carry only **mild** smoke — k_ave 0.505–0.942, barely over the 0.5
+threshold — while a genuinely impassable route (test fixture) is k_ave 8.0. The binary
+`all segments non-visible` flag can't tell light haze from a wall of smoke, and smoke is
+**already** in the route cost via `w_smoke · k_ave`. So a route in light haze is
+double-counted: costed *and* hard-rejected, and the rejection bypasses the anchor →
+unguarded U-turn every time the haze crosses the threshold.
+
+### The fix — `_must_flee_rejection` (graded rejection)
+
+The anchor is bypassed **only** for a genuine hazard the agent must flee:
+
+- **FED-lethal** (`FED_max > threshold`), or
+- **impassably dense smoke** — route k_ave above `impassable_extinction_threshold`
+  (default 3.0, ~1 m visibility, `S ≈ C/K`).
+
+A *mild* visibility rejection (light haze, or an unreadable sign on an otherwise clear
+route) is left subject to the anchor: the smoke is in the cost, so the agent stays on its
+cheaper committed exit instead of U-turning. Verified against the demo log: **14/14
+mild-smoke flips prevented, all 27 genuine cost-driven switches kept, 0 FED/dense-smoke
+flees affected**. Locked in by `test_mild_smoke_does_not_flee_current_exit` (mild → stay)
+and `test_smoke_triggers_reroute` (dense k_ave 8.0 → still reroutes).
+
+`impassable_extinction_threshold` is not calibrated — it is chosen to sit above the mild
+haze that caused the flip-flop (≤ ~0.9) and below genuine walls of smoke; a sensitivity
+sweep is the path to a real value.
+
+## Fourth source — position-blind routing (the deepest cause)
+
+With the rejection-bypass fixed (above), a residual remained: agents walking **back and
+forth** between near-tied exits, and — more tellingly — an agent standing **1 m from an
+exit walking away from it** to a far one. The route-cost log showed the smoking gun: every
+route was priced with `source = jps-checkpoints_0`, i.e. **distances from the upstream
+junction, not from where the agent actually was.** Agent 35 at t=86 sat 1.1 m from exit B
+yet was charged "B = 11 m, A = 18 m" (both junction-relative) and routed to A, 28 m away;
+at t=102, 11 m into its walk toward A, it was *still* charged "A = 18 m from the junction",
+so B looked cheaper and it reversed. Every agent in the corridor was priced **as if it
+were standing at the junction**, regardless of how far it had walked — which is exactly why
+they walk past exits and reverse mid-corridor.
+
+The `B→A→B→A` churn was a *symptom* of this: fixed-node costs swing with the smoke field
+and nothing credits the distance already covered, so agents chase the momentarily-cheaper
+exit forever.
+
+**Fix — position-aware cost (Haensel 2014 "path-integrated distance").** `evaluate_route`
+now takes `agent_position` and `current_target` and measures distance from the agent's
+actual position:
+- **Continuing toward the current target** → charge only the *remaining* distance from the
+  agent to that node (credit progress), replacing the first node-to-node segment.
+- **A route diverging from that heading** → add the *backtrack* from the agent's position to
+  the branch node before the graph distance.
+
+Verified against agent 35's real trajectory: t=86 becomes B = 11 vs A = 121 → **stays at B**
+(no walking away); t=102 becomes A = 77 vs B = 137 → **stays at A** (no reversal). Without
+`agent_position` it falls back to the geometric node path length (backward compatible).
+Locked in by `tests/test_route_graph.py::TestPositionAwareRouting`.
+
+**Why this replaced anti-backtracking.** A first prototype for the churn added a stricter
+`reversal_anchor` + `previous_exit` "don't undo your last switch" rule. It worked, but
+position-aware cost is the *root* fix: commitment now emerges from geometry itself —
+backtracking is free near the junction (agent hasn't committed) and expensive once it's
+down a corridor — which is more principled than a fixed reversal margin, and it also fixes
+the "walk away from the exit you're next to" case that anti-backtracking never addressed.
+So the anti-backtracking heuristic was **reverted** as redundant; the base
+`exit_switch_anchor` (0.9) still damps genuine near-ties at the junction.
+
+## Analysed but NOT shipped (deferred; no demonstrated need)
+
+Two mechanisms were prototyped while hunting this bug, then reverted once the demo data
+showed neither was the cause. Kept here so they are cheap to resurrect **with a test
+grounded in a scenario that actually exhibits them**:
+
+- **Congestion overshoot / distance-gated queue (Ehtamo Eq. 6).** The queue term counts
+  *all* agents heading to an exit, not just those closer than you; a far-field crowd
+  shift can then swing every agent's cost. Real, but the demo's `queue = 0` — not its
+  problem. Fix would be a per-exit sorted-distance snapshot and `bisect_left(..., my_dist)`.
+  The full FDS+Evac answer is Nash-iterating exit choice to convergence each tick before
+  anyone moves (`NASH_CLOSE_ENOUGH = 0.05`) — expensive; only worth it if metrics show
+  mis-allocation (waves piling on one exit), not a busy-looking viewer.
+- **Sign-visibility proximity override.** With `--vis-cache`, fdsvismap's `view_angle`
+  check can drop a sign at close range (steep angle), rejecting an exit the agent has all
+  but reached. But the standard demo runs **without** `--vis-cache`, so `vis_model` is
+  `None` and this path is inert — and `_must_flee_rejection` above already keeps a
+  sign rejection subject to the anchor. Revisit only for sign-driven (`--vis-cache`) runs.
+
+**A longer reroute interval is not a fix.** The demo flip-flopped at 5 s too — the loop is
+algorithmic (a rejection bypassing hysteresis), not a frequency artefact, and a slower
+timer is *less* behaviourally realistic, not more.
 
 ## Bottom line
 
 - **Bug 1:** exit switches had no inertia → **fix:** `exit_switch_anchor` (0.9),
-  bypassed when the current exit is unsafe.
+  bypassed when the current exit is genuinely unsafe.
 - **Bug 2:** FED-flicker at the dose threshold → **fix:** asymmetric `fed_return_margin`
   (0.9) deadband — flee at 1.0, return only below 0.9; never weakens safety.
-- **Residual:** congestion overshoot — documented, deferred; fix only if it distorts
-  metrics.
-- **Values (0.9):** match FDS+Evac — defensible by precedent, *not* calibrated; a
-  sensitivity sweep is the path to real numbers.
-- **Frequency is not the culprit:** instant re-evaluation is realistic; hysteresis is
-  what makes it stable.
+- **Bug 3 (the demo cause):** *any* visibility rejection of the current exit bypassed the
+  anchor, so mild smoke (k_ave ~0.5–0.9) tripping the binary 0.5 threshold flipped agents
+  onto costlier exits → **fix:** `_must_flee_rejection` — only FED-lethal or impassably
+  dense smoke (`impassable_extinction_threshold`, 3.0) bypasses the anchor; mild haze is a
+  soft cost. Proven on the demo log: 14/14 flips fixed, 27 real switches kept.
+- **Bug 4 (deepest cause):** routes were priced from the upstream junction node, ignoring
+  where the agent actually was — so an agent 1 m from an exit walked away from it and
+  reversed mid-corridor → **fix:** position-aware cost (Haensel path-integrated distance,
+  `agent_position` + `current_target`) — credit progress toward the current target, charge
+  backtracking to reach a divergent route. Commitment now emerges from geometry.
+- **Deferred / reverted:** congestion distance-gating, the sign proximity override, and the
+  anti-backtracking `reversal_anchor` heuristic — all analysed, none the root cause;
+  reverted in favour of the fixes above. Resurrect with a data-grounded test if a scenario
+  ever needs them.
+- **Values (0.9 / 3.0):** *not* calibrated; sensitivity sweeps are the path to real numbers.
+- **Frequency is not the culprit:** instant re-evaluation is realistic; a longer interval
+  hides oscillation without fixing it. Correct rejection semantics + hysteresis are what
+  make it stable — confirmed when 5 s still oscillated but graded rejection did not.
