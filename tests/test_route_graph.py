@@ -418,6 +418,59 @@ class TestRouteCost:
         assert rc.rejected is True
         assert "FED_max" in rc.rejection_reason
 
+    def test_fed_deadband_asymmetric(self, simple_route_graph):
+        """A route whose dose sits in the (margin, threshold) band is accepted
+        as the current exit but rejected as a switch target — the anti-flicker
+        Schmitt trigger. Threshold 1.0, margin 0.9 → band is 0.9–1.0."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0,
+            fed_rejection_threshold=1.0,
+            fed_return_margin=0.9,
+        )
+        # current_fed = 0.95 → fed_max ≈ 0.95, sits inside the 0.9–1.0 band.
+        as_current = evaluate_route(
+            simple_route_graph,
+            ["D0", "E0"],
+            0.0,
+            0.95,
+            field,
+            None,
+            config,
+            current_exit="E0",
+        )
+        as_target = evaluate_route(
+            simple_route_graph,
+            ["D0", "E0"],
+            0.0,
+            0.95,
+            field,
+            None,
+            config,
+            current_exit="E1",  # some *other* exit is current → E0 is a target
+        )
+        assert as_current.rejected is False  # keep your current exit
+        assert as_target.rejected is True  # don't switch onto a marginal one
+
+    def test_fed_deadband_still_flees_over_threshold(self, simple_route_graph):
+        """Even the current exit is rejected once dose crosses the full
+        threshold — safety (fleeing) is never weakened."""
+        field = ConstantExtinctionField(0.0)
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0, fed_rejection_threshold=1.0, fed_return_margin=0.9
+        )
+        rc = evaluate_route(
+            simple_route_graph,
+            ["D0", "E0"],
+            0.0,
+            1.05,
+            field,
+            None,
+            config,
+            current_exit="E0",
+        )
+        assert rc.rejected is True
+
     def test_multi_segment_route(self, two_exit_graph):
         """Route through checkpoint sums segment costs."""
         field = ConstantExtinctionField(0.0)
@@ -674,6 +727,145 @@ class TestRerouteAgent:
         assert "OTHER" in wait_info["path_choices"]
 
 
+@pytest.fixture
+def near_tie_graph():
+    """D0 with two direct exits of nearly-equal distance.
+
+    D0 (0,0) ──10.0──> E0 (10,0)
+    D0 (0,0) ── 9.5──> E1 (0,9.5)   (only ~5% closer than E0)
+    """
+    direct_steering_info = {
+        "E0": {"polygon": _box(10, 0), "stage_type": "exit"},
+        "E1": {"polygon": _box(0, 9.5), "stage_type": "exit"},
+    }
+    distributions = {"D0": {"coordinates": list(_box(0, 0).exterior.coords)}}
+    transitions = [
+        {"from": "D0", "to": "E0"},
+        {"from": "D0", "to": "E1"},
+    ]
+    return StageGraph.from_scenario(direct_steering_info, transitions, distributions)
+
+
+class TestExitSwitchAnchor:
+    """Anchoring (hysteresis) that stops agents flip-flopping between near-tied
+    exits — the FDS+Evac FAC_DOOR_WAIT behaviour. See
+    docs/rerouting-oscillation-notes.md."""
+
+    def test_marginal_gain_blocked_by_anchor(self, near_tie_graph):
+        """E1 is only ~5% cheaper than the current exit E0 — within the 0.9
+        anchor — so the agent does NOT switch (no oscillation)."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0))
+        wait_info = _make_wait_info(near_tie_graph, "D0", "E0")
+        route_state = AgentRouteState(current_exit="E0")
+
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=near_tie_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is None
+        assert route_state.current_exit == "E0"
+
+    def test_marginal_gain_allowed_when_anchor_disabled(self, near_tie_graph):
+        """Same near-tie setup, but with the anchor disabled (1.0) the 5% gain
+        now triggers a switch — proving the anchor is what suppresses it."""
+        field = ConstantExtinctionField(0.0)
+        config = RerouteConfig(
+            cost_config=RouteCostConfig(base_speed_m_per_s=1.0),
+            exit_switch_anchor=1.0,
+        )
+        wait_info = _make_wait_info(near_tie_graph, "D0", "E0")
+        route_state = AgentRouteState(current_exit="E0")
+
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=near_tie_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is not None
+        assert switch.new_exit == "E1"
+
+
+class TestPositionAwareRouting:
+    """Route cost is measured from the agent's actual position (Haensel
+    path-integrated distance): progress toward the current target is credited,
+    and a route diverging from that heading is charged the backtrack to the
+    branch node. See docs/rerouting-oscillation-notes.md."""
+
+    @staticmethod
+    def _graph():
+        # Junction J at (20,0); E0 at (0,0) is 20 m from J, E1 at (30,0) is 10 m.
+        # By node distance alone E1 is cheaper — but an agent standing next to E0
+        # should not be lured to E1.
+        direct = {
+            "J": {"polygon": _box(20, 0), "stage_type": "checkpoint"},
+            "E0": {"polygon": _box(0, 0), "stage_type": "exit"},
+            "E1": {"polygon": _box(30, 0), "stage_type": "exit"},
+        }
+        trans = [{"from": "J", "to": "E0"}, {"from": "J", "to": "E1"}]
+        return StageGraph.from_scenario(direct, trans)
+
+    def _cost(self, graph, path, agent_position, current_target):
+        return evaluate_route(
+            graph,
+            path,
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            None,
+            RouteCostConfig(base_speed_m_per_s=1.0),
+            agent_position=agent_position,
+            current_target=current_target,
+        ).composite_cost
+
+    def test_continue_credits_progress(self):
+        # Agent 2 m from E0, heading to E0: charged the 2 m remaining, not the
+        # 20 m J->E0 node leg.
+        g = self._graph()
+        assert self._cost(g, ["J", "E0"], (2.0, 0.0), "E0") == pytest.approx(2.0)
+
+    def test_diverging_route_charged_backtrack(self):
+        # Same agent near E0; route to E1 diverges -> backtrack to J (18 m) plus
+        # J->E1 (10 m) = 28 m, far worse than E1's 10 m node distance.
+        g = self._graph()
+        assert self._cost(g, ["J", "E1"], (2.0, 0.0), "E0") == pytest.approx(28.0)
+
+    def test_position_flips_ranking_vs_node_graph(self):
+        # Node graph says E1 (10) < E0 (20); position-aware for an agent at E0
+        # says E0 (2) < E1 (28), so the agent near E0 is not lured away.
+        g = self._graph()
+        assert self._cost(g, ["J", "E0"], (2.0, 0.0), "E0") < self._cost(
+            g, ["J", "E1"], (2.0, 0.0), "E0"
+        )
+
+    def test_no_agent_position_uses_node_graph(self):
+        # Backward compatible: without a position, cost == node path length.
+        g = self._graph()
+        rc = evaluate_route(
+            g,
+            ["J", "E0"],
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            None,
+            RouteCostConfig(base_speed_m_per_s=1.0),
+        )
+        assert rc.composite_cost == pytest.approx(20.0)
+
+
 class TestEvaluateAndReroute:
     def test_initial_assignment(self, two_exit_graph):
         """First evaluation assigns the nearest exit."""
@@ -747,6 +939,48 @@ class TestEvaluateAndReroute:
         assert switch.old_exit == "E0"
         assert switch.reason == "smoke_reroute"
         assert route_state.current_exit == "E1"
+
+    def test_mild_smoke_does_not_flee_current_exit(self, two_exit_graph):
+        """Mild smoke on the current exit (below impassable threshold) is a soft
+        cost, not a flee trigger: the agent stays unless a *different* exit is
+        anchor-cheaper. This is the demo flip-flop fix — the current exit is
+        K_vis-rejected ('all segments non-visible') but the smoke is light, so
+        the rejection must not bypass the anchor onto a costlier exit."""
+
+        class MildSmokeOnE0:
+            # extinction 1.0: above visibility threshold (0.5) so E0's segment is
+            # 'non-visible', but well below impassable_extinction_threshold (3.0).
+            def sample_extinction(self, time_s, x, y):
+                return 1.0 if y < 15 else 0.0
+
+        config = RerouteConfig(
+            cost_config=RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=2.0)
+        )
+        wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
+        route_state = AgentRouteState(current_exit="E0")
+
+        # Sanity: E0 is rejected but only mildly smoky; E1 is the longer detour.
+        ranked = rank_routes(
+            two_exit_graph, "D0", 10.0, 0.0, MildSmokeOnE0(), None, config.cost_config
+        )
+        e0 = next(r for r in ranked if r.exit_id == "E0")
+        assert e0.rejected is True
+        assert e0.rejection_reason == "all segments non-visible"
+        assert e0.k_ave_route < config.cost_config.impassable_extinction_threshold
+
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=two_exit_graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=MildSmokeOnE0(),
+            fed_rate_sampler=None,
+            config=config,
+        )
+        assert switch is None  # stays on E0 — no flip onto the costlier detour
+        assert route_state.current_exit == "E0"
 
     def test_eval_time_updated(self, two_exit_graph):
         """last_eval_time_s is updated after evaluation."""

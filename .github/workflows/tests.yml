@@ -21,5 +21,5 @@ jobs:
         run: pip install --upgrade uv
       - name: Install dependencies
         run: uv sync --all-groups
-      - name: Run smoke and FED tests
-        run: uv run pytest tests/test_smoke_speed.py tests/test_fed.py -q
+      - name: Run smoke, FED, and routing tests
+        run: uv run pytest tests/test_smoke_speed.py tests/test_fed.py tests/test_route_graph.py tests/test_familiarity_routing.py -q

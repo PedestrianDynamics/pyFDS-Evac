@@ -300,6 +300,10 @@ The routing system implements smoke-aware path planning with dynamic rerouting:
   is provided; otherwise only smoke drives ranking)
 - **Dynamic rerouting**: Agents recompute routes at configurable intervals,
   selecting lower-exposure paths when available
+- **Familiarity-aware exploration**: `discovery` agents route only within
+  their known cognitive subgraph; when no exit is yet reachable they head to
+  the nearest *frontier* (a seen-but-unexplored doorway), expanding their map
+  on arrival, instead of stalling. `full` agents route on the complete graph.
 - **Congestion-aware routing**: Optional exit-congestion term (`w_queue`)
   balances load across exits based on current agent counts and capacities
 - **Throughput throttling**: Optional exit flux limiting via
