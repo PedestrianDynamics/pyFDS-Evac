@@ -53,6 +53,7 @@ _CSS = """
   --input: 40 5% 22%;
   --ring: 16 55% 58%;
   --radius: .5rem;
+  color-scheme: dark !important;  /* beats franken/daisyui's light default from CDN */
 
   --font-display: 'Archivo', system-ui, sans-serif;
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
@@ -67,8 +68,6 @@ _CSS = """
   /* warm, hue-shifted shadow (not pure black) */
   --shadow-warm: 20 14% 3%;
 }
-html.uk-theme-blue { color-scheme: dark; }
-
 html, body { background: hsl(var(--background)); }
 body {
   font-family: var(--font-sans);
@@ -320,7 +319,7 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   width: 100%; height: 440px; display: block;
   border: 1px solid hsl(var(--border)); border-radius: .4rem;
   background:
-    radial-gradient(120% 120% at 50% 0%, hsl(40 5% 15%), hsl(40 6% 11%));
+    radial-gradient(120% 120% at 50% 0%, hsl(var(--card)), hsl(var(--background)));
 }
 .traj-controls {
   display: flex; align-items: center; gap: .8rem; margin-top: .6rem;
