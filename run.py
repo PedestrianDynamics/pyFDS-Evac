@@ -103,8 +103,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--vis-cache",
         help="Path to vismap .npz cache for visibility-gated route rejection. "
-        "Requires --fds-dir and --enable-rerouting. "
-        "Cache is created if missing, loaded if present.",
+        "Requires --fds-dir and rerouting enabled (on by default; do not pass "
+        "--no-enable-rerouting). Cache is created if missing, loaded if present.",
     )
     parser.add_argument(
         "--disable-tenability",
