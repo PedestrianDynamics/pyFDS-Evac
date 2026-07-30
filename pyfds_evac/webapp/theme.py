@@ -226,6 +226,10 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   border: 1px solid hsl(var(--border));
 }
 .uk-btn-secondary:hover { border-color: hsl(var(--primary) / .6); color: var(--clay); }
+/* base ghost: transparent on the theme surface (overrides pico's blue button) */
+.uk-btn-ghost {
+  background: transparent; color: hsl(var(--foreground)); border-color: transparent;
+}
 .uk-btn-ghost:hover { background: hsl(var(--accent) / .7); color: var(--clay); }
 
 /* ---- run panel: telemetry ---- */
