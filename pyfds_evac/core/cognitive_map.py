@@ -124,3 +124,47 @@ def cognitive_subgraph(cmap: AgentCognitiveMap, graph):
                     sub.edges.setdefault(src, []).append(edge)
                     break
     return sub
+
+
+def nearest_frontier_target(
+    cmap: AgentCognitiveMap, graph, source: str
+) -> tuple[str, list[str]] | None:
+    """Return the nearest known-but-unexplored node to head toward, if any.
+
+    A frontier node is one already in the agent's cognitive map whose real
+    outgoing edges (in the full *graph*) are not all known yet — a doorway
+    the agent has seen but not been through. Used when no exit is reachable
+    in the known subgraph: instead of standing still, the agent heads to the
+    nearest such node, expanding its knowledge on arrival
+    (see :func:`expand_on_arrival`) and re-evaluating from there.
+
+    Returns None once every known node has been fully explored (no frontier
+    left — a genuine dead end).
+    """
+    frontier = {
+        node_id
+        for node_id in cmap.known_nodes
+        if any(
+            (edge.source, edge.target) not in cmap.known_edges
+            for edge in graph.edges.get(node_id, [])
+        )
+    }
+    if not frontier:
+        return None
+
+    sub = cognitive_subgraph(cmap, graph)
+    best: tuple[str, float, list[str]] | None = None
+    for node_id in sorted(frontier):
+        if node_id == source:
+            continue
+        result = sub.shortest_path_to(source, node_id)
+        if result is None:
+            continue
+        cost, path = result
+        if best is None or cost < best[1]:
+            best = (node_id, cost, path)
+
+    if best is None:
+        return None
+    node_id, _cost, path = best
+    return node_id, path

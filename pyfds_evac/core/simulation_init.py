@@ -1508,6 +1508,7 @@ def _process_distributions(
             "v0_std": params.get("v0_std", None),
             "distribution_mode": params.get("distribution_mode", "by_number"),
             "percentage": params.get("percentage", None),
+            "familiarity": params.get("familiarity", "full"),
         }
 
     return dist_geom, dist_params
@@ -2352,6 +2353,9 @@ def _add_agents(
                                         agent_radius=agent_radius,
                                     )
                                     if path_state:
+                                        path_state["familiarity"] = spawn_params.get(
+                                            "familiarity", "full"
+                                        )
                                         agent_wait_info[agent_id] = path_state
 
                                 agent_index += 1
