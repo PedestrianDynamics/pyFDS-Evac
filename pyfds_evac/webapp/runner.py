@@ -65,6 +65,7 @@ class RunManager:
         self.fds_dir: Optional[str] = None
         self.artifacts: List[str] = []
         self.last_event: Optional[ProgressEvent] = None
+        self.fed_snapshots: List[tuple] = []  # (sim_time, max_fed, mean_fed)
         self.log_lines: List[str] = []
 
     @property
@@ -83,7 +84,8 @@ class RunManager:
 
         ``post_run`` runs in the worker after the simulation and before the
         status flips to ``done``; its returned strings (e.g. written output
-        files) are stored on ``self.artifacts``.
+        files) are stored on ``self.artifacts``. ``fds_dir`` is remembered so
+        the results view can render the smoke field from the same FDS case.
         """
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("A run is already in progress.")
@@ -95,10 +97,17 @@ class RunManager:
         self.fds_dir = fds_dir
         self.artifacts = []
         self.last_event = None
+        self.fed_snapshots = []
         self.log_lines = []
 
         def on_progress(ev: ProgressEvent) -> None:
             self.last_event = ev
+            _max = getattr(ev, "max_fed", None)
+            _mean = getattr(ev, "mean_fed", None)
+            if _max is not None:
+                self.fed_snapshots.append(
+                    (float(ev.sim_time), float(_max), float(_mean or 0.0))
+                )
 
         def worker() -> None:
             capture = _ConsoleCapture(self.log_lines, echo=sys.__stdout__)

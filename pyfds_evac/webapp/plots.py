@@ -17,27 +17,27 @@ from fasthtml.common import NotStr
 
 # Qualitative exit palette led by clay, tuned to read on the cream ground.
 _PALETTE = [
-    "#cc785c",
-    "#3f8f57",
-    "#3b6fb0",
-    "#d19a2e",
-    "#7e5b9a",
-    "#2e8b8b",
-    "#c23b2e",
+    "#f4c430",
+    "#ff6a1a",
+    "#e01e37",
+    "#ffb020",
+    "#e8590c",
+    "#c81d4e",
+    "#ff8a3d",
     "#9a6a3a",
 ]
 
 
-_GRID = "rgba(235,232,225,0.08)"
-_ZERO = "rgba(235,232,225,0.18)"
-_FG = "#c9c3b8"
+_GRID = "rgba(255,255,255,0.06)"
+_ZERO = "rgba(255,255,255,0.16)"
+_FG = "#b2a9a3"
 
 
 def figure_html(fig: go.Figure, div_id: str) -> Any:
     """Embed a Plotly figure as an HTML fragment (no bundled Plotly.js).
 
-    Applies the Warm Dark Lab template so charts match the GUI's dark ground
-    (transparent background, warm off-white ink, faint light grid).
+    Applies the Warm Paper Lab light template so charts match the GUI's cream
+    ground (transparent background, warm ink, hue-shifted grid).
     """
     fig.update_layout(
         margin=dict(l=52, r=22, t=30, b=46),
@@ -57,7 +57,9 @@ def figure_html(fig: go.Figure, div_id: str) -> Any:
 
 def _empty(message: str) -> go.Figure:
     fig = go.Figure()
-    fig.add_annotation(text=message, showarrow=False, font=dict(size=14, color="#777"))
+    fig.add_annotation(
+        text=message, showarrow=False, font=dict(size=14, color="#b2a9a3")
+    )
     fig.update_xaxes(visible=False)
     fig.update_yaxes(visible=False)
     return fig
@@ -96,11 +98,11 @@ def fed_figure(result: Any) -> go.Figure:
     fig.add_hline(
         y=0.3,
         line_dash="dot",
-        line_color="#d2722b",
+        line_color="#ffb020",
         annotation_text="incapacitation (0.3)",
     )
     fig.add_hline(
-        y=1.0, line_dash="dot", line_color="#c23b2e", annotation_text="untenable (1.0)"
+        y=1.0, line_dash="dot", line_color="#e01e37", annotation_text="untenable (1.0)"
     )
     fig.update_layout(xaxis_title="time (s)", yaxis_title="cumulative FED")
     return fig

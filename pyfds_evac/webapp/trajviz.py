@@ -14,19 +14,23 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fasthtml.common import NotStr
+from fasthtml.common import Div, H3, NotStr
 
 from .plots import _PALETTE, _agent_exit_map
+
+_CARD = (
+    "background:#2A262A;border:1px solid rgba(255,255,255,.07);"
+    "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
+)
 
 # Number of position samples sent to the browser; the JS interpolates between
 # them, so this stays small while playback stays smooth.
 _N_SAMPLES = 120
 
+
 # Extinction-slice quantity names, in preference order. FDS names the soot
 # extinction coefficient differently across cases ("SOOT EXTINCTION
-# COEFFICIENT" in newer decks, bare "EXTINCTION" in older ones). This mirrors
-# load_slice_sampler's multi-name lookup, but _smoke_payload samples the raw
-# grid via to_global() rather than a SliceFieldSampler, so it filters inline.
+# COEFFICIENT" in newer decks, bare "EXTINCTION" in older ones).
 _EXTINCTION_QUANTITIES = ("SOOT EXTINCTION COEFFICIENT", "EXTINCTION")
 
 # Largest grid dimension shipped to the browser. The FDS slice is downsampled
@@ -36,10 +40,7 @@ _SMOKE_MAX_CELLS = 70
 
 
 def _smoke_payload(
-    fds_dir: str | None,
-    times: list[float],
-    slice_height_m: float = 2.0,
-    simulation: Any = None,
+    fds_dir: str | None, times: list[float], slice_height_m: float = 2.0
 ) -> dict | None:
     """Sample the FDS extinction slice onto a coarse grid for each render time.
 
@@ -47,21 +48,14 @@ def _smoke_payload(
     packed as base64 uint8 (scaled to ``kmax``), and ``kmax`` itself — or
     ``None`` when no FDS directory / extinction slice is available. Any failure
     is swallowed so the trajectory viewer never breaks on smoke rendering.
-
-    ``simulation`` accepts a pre-loaded ``fdsreader.Simulation`` (used by tests
-    to inject a fake slice); when ``None`` the directory is parsed from disk.
     """
-    if simulation is None and (not fds_dir or not Path(fds_dir).exists()):
+    if not fds_dir or not Path(fds_dir).exists():
         return None
     try:
         import numpy as np
+        from fdsreader import Simulation
 
-        if simulation is not None:
-            sim = simulation
-        else:
-            from fdsreader import Simulation
-
-            sim = Simulation(str(fds_dir))
+        sim = Simulation(str(fds_dir))
         matches: list = []
         for quantity in _EXTINCTION_QUANTITIES:
             matches = list(sim.slices.filter_by_quantity(quantity))
@@ -103,15 +97,50 @@ def _smoke_payload(
             u8 = np.clip(frame / kmax * 255.0, 0, 255).astype(np.uint8)
             buf += u8.tobytes()
 
+        # xs/ys are cell-CENTRE coords, but the drawn image maps its pixel
+        # EDGES to the extent rectangle. Expand by half a (downsampled) cell so
+        # pixel edges line up with the geometry instead of cell centres —
+        # removes the half-cell gaps/overlaps at the map edges.
+        csx = (xs[-1] - xs[0]) / (w - 1) if w > 1 else 1.0
+        csy = (ys[-1] - ys[0]) / (h - 1) if h > 1 else 1.0
         return {
             "W": int(w),
             "H": int(h),
-            "ext": [float(xs[0]), float(ys[0]), float(xs[-1]), float(ys[-1])],
+            "ext": [
+                float(xs[0] - csx / 2.0),
+                float(ys[0] - csy / 2.0),
+                float(xs[-1] + csx / 2.0),
+                float(ys[-1] + csy / 2.0),
+            ],
             "kmax": kmax,
             "b64": base64.b64encode(bytes(buf)).decode("ascii"),
         }
     except Exception:
         return None
+
+
+def _interior_walls(*polys) -> list[list[list[float]]]:
+    """Interior rings (holes = walls/obstacles) of the walkable geometry.
+
+    Tries each candidate polygon in order and returns the rings from the first
+    that has any — the JuPedSim sqlite may drop holes, so the scenario's own
+    walkable polygon is the more reliable source.
+    """
+    for poly in polys:
+        if poly is None:
+            continue
+        rings: list[list[list[float]]] = []
+        try:
+            geoms = list(getattr(poly, "geoms", [])) or [poly]
+            for g in geoms:
+                for ring in getattr(g, "interiors", []):
+                    rx, ry = ring.xy
+                    rings.append([[float(x), float(y)] for x, y in zip(rx, ry)])
+        except Exception:
+            rings = []
+        if rings:
+            return rings
+    return []
 
 
 def _bounds(walkable, data) -> list[float]:
@@ -143,7 +172,7 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
     exits_seen = sorted(set(agent_exit.values()))
     color_of = {ex: _PALETTE[i % len(_PALETTE)] for i, ex in enumerate(exits_seen)}
     agent_ids = sorted(int(a) for a in data["id"].unique())
-    colors = [color_of.get(agent_exit.get(a, ""), "#cc785c") for a in agent_ids]
+    colors = [color_of.get(agent_exit.get(a, ""), "#ff6a1a") for a in agent_ids]
 
     frames_all = sorted(data["frame"].unique())
     step = max(1, len(frames_all) // _N_SAMPLES)
@@ -212,7 +241,7 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
             exits.append(
                 {
                     "poly": [[float(c[0]), float(c[1])] for c in coords],
-                    "color": color_of.get(exit_id, "#cc785c"),
+                    "color": color_of.get(exit_id, "#ff6a1a"),
                     "label": exit_id.replace("_", " "),
                 }
             )
@@ -224,6 +253,10 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
         "fed": fed_samples,
         "hasFed": has_fed,
         "walk": walk,
+        "walls": _interior_walls(
+            getattr(scenario, "walkable_polygon", None) if scenario else None,
+            getattr(walkable, "polygon", None),
+        ),
         "exits": exits,
         "bounds": _bounds(walkable, data),
         "smoke": _smoke_payload(fds_dir, times),
@@ -243,7 +276,7 @@ _JS = """
   var t0 = T[0], t1 = T[T.length - 1], span = Math.max(1e-6, t1 - t0);
   var PLAYBACK = 16;            // seconds of wall time to play the whole run
   var simT = t0, playing = false, lastTs = null;
-  var speedMult = 1;           // playback rate multiplier (speed buttons)
+  var speedMult = 1;
   var bx = D.bounds, pad = 0.06;
   var mode = D.hasFed ? 'fed' : 'exit';
 
@@ -261,7 +294,7 @@ _JS = """
     smCtx = smCanvas.getContext('2d');
   }
   function drawSmoke(fi, p) {
-    if (!SM || !showSmoke || !smBytes || !smCtx) return;
+    if (!SM || !showSmoke || !smBytes) return;
     var W = SM.W, H = SM.H, off = fi * W * H, kmax = SM.kmax;
     var id = smCtx.createImageData(W, H);
     var d = id.data;
@@ -271,7 +304,7 @@ _JS = """
         var a = 1 - Math.exp(-K * 0.6);      // Beer-Lambert-ish opacity
         if (a > 0.9) a = 0.9;                 // keep agents visible through it
         var pi = ((H - 1 - iy) * W + ix) * 4; // flip y: world +y is screen up
-        // Light gray smoke, bright enough to read on the dark canvas theme.
+        // Light gray smoke: reads clearly against the dark canvas theme.
         d[pi] = 205; d[pi + 1] = 203; d[pi + 2] = 214; d[pi + 3] = Math.round(a * 255);
       }
     }
@@ -297,8 +330,25 @@ _JS = """
     if (clipped) ctx.restore();
   }
 
+  // Pre-compute per-sample FED statistics for the panel
+  var fedMaxByTime = null, fedMeanByTime = null;
+  if (D.hasFed) {
+    fedMaxByTime = T.map(function (_, ti) {
+      var row = FED[ti]; if (!row) return 0;
+      var m = 0;
+      for (var k = 0; k < n; k++) { if (row[k] != null && row[k] > m) m = row[k]; }
+      return m;
+    });
+    fedMeanByTime = T.map(function (_, ti) {
+      var row = FED[ti]; if (!row) return 0;
+      var s = 0, c = 0;
+      for (var k = 0; k < n; k++) { if (row[k] != null) { s += row[k]; c++; } }
+      return c > 0 ? s / c : 0;
+    });
+  }
+
   // FED dose -> tier colour (green -> amber -> orange -> red).
-  var STOPS = [[0, '#3f8f57'], [0.3, '#d19a2e'], [0.6, '#d2722b'], [1, '#c23b2e']];
+  var STOPS = [[0, '#f4c430'], [0.3, '#ffb020'], [0.6, '#ff6a1a'], [1, '#e01e37']];
   function lerpHex(a, b, t) {
     var ar = parseInt(a.slice(1, 3), 16), ag = parseInt(a.slice(3, 5), 16),
         ab = parseInt(a.slice(5, 7), 16);
@@ -355,34 +405,12 @@ _JS = """
     var f = (t - T[lo]) / Math.max(1e-9, T[hi] - T[lo]);
     return [lo, hi, f];
   }
-  // Per-sample FED max/mean across agents, for the live dose panel.
-  var fedMaxByTime = null, fedMeanByTime = null;
-  if (D.hasFed) {
-    fedMaxByTime = T.map(function (_, ti) {
-      var row = FED[ti]; if (!row) return 0;
-      var m = 0;
-      for (var k = 0; k < n; k++) { if (row[k] != null && row[k] > m) m = row[k]; }
-      return m;
-    });
-    fedMeanByTime = T.map(function (_, ti) {
-      var row = FED[ti]; if (!row) return 0;
-      var s = 0, c = 0;
-      for (var k = 0; k < n; k++) { if (row[k] != null) { s += row[k]; c++; } }
-      return c > 0 ? s / c : 0;
-    });
-  }
-  // FED dose -> tier colour: the discrete STOPS tier the dose falls into
-  // (derived from the same palette the agent dots use, no duplicated hex).
-  function fc(v) {
-    var c = STOPS[0][1];
-    for (var i = 0; i < STOPS.length; i++) { if (v >= STOPS[i][0]) c = STOPS[i][1]; }
-    return c;
-  }
   function drawFedPanel() {
     if (!D.hasFed || !fedMaxByTime) return;
     var b = bracket(simT), lo = b[0], hi = b[1], f = b[2];
     var curMax  = fedMaxByTime[lo]  + (fedMaxByTime[hi]  - fedMaxByTime[lo])  * f;
     var curMean = fedMeanByTime[lo] + (fedMeanByTime[hi] - fedMeanByTime[lo]) * f;
+    function fc(v) { return v >= 1.0 ? '#E01E37' : v >= 0.6 ? '#FF6A1A' : v >= 0.3 ? '#FFB020' : '#F4C430'; }
     var maxEl = document.getElementById('fed-val-max');
     if (maxEl) { maxEl.textContent = curMax.toFixed(4); maxEl.style.color = fc(curMax); }
     var meanEl = document.getElementById('fed-val-mean');
@@ -394,13 +422,8 @@ _JS = """
     var dpr = window.devicePixelRatio || 1;
     var sw = sc.clientWidth, sh = sc.clientHeight;
     if (!sw || !sh) return;
-    // Only resize when the CSS size / DPR actually changed: setting width/height
-    // resets the canvas, so doing it every RAF frame is wasteful.
-    if (sc.width !== sw * dpr || sc.height !== sh * dpr) {
-      sc.width = sw * dpr; sc.height = sh * dpr;
-    }
+    sc.width = sw * dpr; sc.height = sh * dpr;
     var sctx = sc.getContext('2d');
-    if (!sctx) return;
     sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     sctx.clearRect(0, 0, sw, sh);
     var N = fedMaxByTime.length;
@@ -410,8 +433,8 @@ _JS = """
     function px(i) { return N > 1 ? (i / (N - 1)) * sw : sw / 2; }
     function py(v) { return sh - (v / maxV) * (sh - 2); }
     var grad = sctx.createLinearGradient(0, 0, 0, sh);
-    grad.addColorStop(0, 'rgba(204,120,92,.20)');   // clay wash under the max curve
-    grad.addColorStop(1, 'rgba(204,120,92,0)');
+    grad.addColorStop(0, 'rgba(244,196,48,.22)');
+    grad.addColorStop(1, 'rgba(244,196,48,0)');
     sctx.beginPath();
     sctx.moveTo(px(0), sh);
     for (var i = 0; i < N; i++) sctx.lineTo(px(i), py(fedMaxByTime[i]));
@@ -419,35 +442,42 @@ _JS = """
     sctx.fillStyle = grad; sctx.fill();
     sctx.beginPath();
     for (var i = 0; i < N; i++) { i === 0 ? sctx.moveTo(px(i), py(fedMaxByTime[i])) : sctx.lineTo(px(i), py(fedMaxByTime[i])); }
-    sctx.strokeStyle = '#cc785c'; sctx.lineWidth = 1.5; sctx.stroke();   // max: clay
+    sctx.strokeStyle = '#F4C430'; sctx.lineWidth = 1.5; sctx.stroke();
     sctx.beginPath();
     for (var i = 0; i < N; i++) { i === 0 ? sctx.moveTo(px(i), py(fedMeanByTime[i])) : sctx.lineTo(px(i), py(fedMeanByTime[i])); }
-    sctx.strokeStyle = 'rgba(204,120,92,.6)'; sctx.lineWidth = 1;        // mean: faded clay
+    sctx.strokeStyle = 'rgba(255,138,61,.7)'; sctx.lineWidth = 1;
     sctx.setLineDash([3, 3]); sctx.stroke(); sctx.setLineDash([]);
-    var threshs = [[0.3, 'rgba(209,154,46,.6)', '0.3'], [1.0, 'rgba(194,59,46,.6)', '1.0']];
+    var threshs = [[0.3, 'rgba(255,176,32,.55)', '0.3'], [1.0, 'rgba(224,30,55,.55)', '1.0']];
     for (var ti2 = 0; ti2 < threshs.length; ti2++) {
       var ty = py(threshs[ti2][0]);
       if (ty >= 0 && ty <= sh) {
         sctx.beginPath(); sctx.moveTo(0, ty); sctx.lineTo(sw, ty);
         sctx.strokeStyle = threshs[ti2][1]; sctx.lineWidth = 1;
         sctx.setLineDash([4, 4]); sctx.stroke(); sctx.setLineDash([]);
-        sctx.fillStyle = threshs[ti2][1]; sctx.font = "9px 'IBM Plex Mono', monospace";
+        sctx.fillStyle = threshs[ti2][1]; sctx.font = '9px JetBrains Mono, monospace';
         sctx.textAlign = 'right'; sctx.fillText(threshs[ti2][2], sw - 3, ty - 3); sctx.textAlign = 'left';
       }
     }
     var curFrac = T.length > 1 ? (simT - T[0]) / (T[T.length - 1] - T[0]) : 0;
     var cx = Math.max(0, Math.min(sw, curFrac * sw));
     sctx.beginPath(); sctx.moveTo(cx, 0); sctx.lineTo(cx, sh);
-    sctx.strokeStyle = 'rgba(255,255,255,.5)'; sctx.lineWidth = 1.5; sctx.stroke();
+    sctx.strokeStyle = 'rgba(255,255,255,.55)'; sctx.lineWidth = 1.5; sctx.stroke();
     sctx.beginPath(); sctx.arc(cx, py(curMax), 3.5, 0, 6.2832);
     sctx.fillStyle = fc(curMax); sctx.fill();
   }
   function draw() {
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
     ctx.clearRect(0, 0, w, h);
-    poly(D.walk, p, 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0.28)', 1.5);
+    poly(D.walk, p, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.16)', 1.5);
     var b = bracket(simT), a = S[b[0]], c = S[b[1]], f = b[2];
     drawSmoke(b[0], p);
+    // Interior walls (holes in the walkable area): drawn over the smoke as
+    // solid voids so they read as obstacles the agents route around.
+    if (D.walls) {
+      for (var wI = 0; wI < D.walls.length; wI++) {
+        poly(D.walls[wI], p, '#14161b', 'rgba(255,255,255,0.34)', 1.4);
+      }
+    }
     D.exits.forEach(function (e) {
       poly(e.poly, p, e.color + '28', e.color, 2);
     });
@@ -468,7 +498,7 @@ _JS = """
       var q = p(X, Y);
       ctx.beginPath(); ctx.arc(q[0], q[1], 4.5, 0, 6.2832);
       ctx.fillStyle = col; ctx.fill();
-      ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
+      ctx.lineWidth = 0.7; ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
     }
     tlabel.textContent = 't = ' + (simT - t0).toFixed(0) + ' s';
     slider.value = String(((simT - t0) / span) * 1000);
@@ -526,16 +556,17 @@ _JS = """
 
 def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None) -> Any:
     """A Card with a canvas trajectory animation (smooth interpolated playback)."""
-    from monsterui.all import Card, DivLAligned, H3, UkIcon
-
     payload = _payload(result, scenario, fds_dir)
     if payload is None:
-        return Card(
-            DivLAligned(UkIcon("route"), H3("Trajectories", cls="m-0")),
-            NotStr(
-                '<p class="text-sm" style="color:hsl(var(--muted-foreground))">'
-                "Trajectory data unavailable.</p>"
+        return Div(
+            H3(
+                "Trajectories",
+                style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0 0 10px;color:#F2EDE9",
             ),
+            NotStr(
+                '<p style="font-size:.85rem;color:#B2A9A3">Trajectory data unavailable.</p>'
+            ),
+            style=_CARD,
         )
     data_json = json.dumps(payload)
     toggle = ""
@@ -554,41 +585,6 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
             '<button id="traj-smoke" type="button" class="cmode active">on</button>'
             "</div>"
         )
-    panel = ""
-    if payload["hasFed"]:
-        panel = (
-            '<div class="fed-panel">'
-            '<div class="fed-head">'
-            '<span class="fed-title">FED dose</span>'
-            '<div class="fed-legend">'
-            '<span class="fed-leg safe">safe</span>'
-            '<span class="fed-leg alert">alert 0.3</span>'
-            '<span class="fed-leg critical">critical 0.6</span>'
-            '<span class="fed-leg severe">severe 1.0</span>'
-            "</div></div>"
-            '<div class="fed-stats">'
-            '<div class="fed-stat"><div class="fed-stat-lbl">max</div>'
-            '<div id="fed-val-max" class="fed-val">0.0000</div></div>'
-            '<div class="fed-stat"><div class="fed-stat-lbl">mean</div>'
-            '<div id="fed-val-mean" class="fed-val">0.0000</div></div>'
-            "</div>"
-            '<div class="fed-bar"><div id="fed-bar-fill" class="fed-bar-fill"></div></div>'
-            '<div class="fed-scale">'
-            "<span>0</span><span>0.3</span><span>0.6</span><span>1.0+</span>"
-            "</div>"
-            '<canvas id="fed-spark" class="fed-spark"></canvas>'
-            "</div>"
-        )
-    speed = (
-        '<div class="traj-color">'
-        '<span class="traj-color-lbl">speed</span>'
-        '<button type="button" class="cmode speed-btn" data-speed="0.25">&frac14;&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="0.5">&frac12;&times;</button>'
-        '<button type="button" class="cmode speed-btn active" data-speed="1">1&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="2">2&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="4">4&times;</button>'
-        "</div>"
-    )
     markup = (
         '<div class="traj-wrap">'
         '<canvas id="traj-canvas" class="traj-canvas"></canvas>'
@@ -597,14 +593,85 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         '<input id="traj-slider" type="range" min="0" max="1000" value="0" '
         'class="traj-slider">'
         '<span id="traj-time" class="traj-time">t = 0 s</span>'
-        + speed
+        '<div class="traj-color">'
+        '<span class="traj-color-lbl">speed</span>'
+        '<button type="button" class="cmode speed-btn" data-speed="0.25">&frac14;&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="0.5">&frac12;&times;</button>'
+        '<button type="button" class="cmode speed-btn active" data-speed="1">1&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="2">2&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="4">4&times;</button>'
+        "</div>"
         + toggle
         + "</div>"
-        + panel
+        + (
+            payload["hasFed"]
+            and (
+                '<div id="fed-panel" style="margin-top:14px;background:#1A171A;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px">'
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#837A74">FED Dose</span>'
+                '<div style="display:flex;gap:12px">'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#F4C430">· safe</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#FFB020">· alert 0.3</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#FF6A1A">· critical 0.6</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#E01E37">· severe 1.0</span>'
+                "</div></div>"
+                '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
+                '<div><div style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#837A74;margin-bottom:2px">max</div>'
+                '<div id="fed-val-max" style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:26px;font-weight:500;color:#F4C430;transition:color .3s">0.0000</div></div>'
+                '<div><div style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#837A74;margin-bottom:2px">mean</div>'
+                '<div id="fed-val-mean" style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:26px;font-weight:500;color:#FF8A3D;transition:color .3s">0.0000</div></div>'
+                "</div>"
+                '<div style="position:relative;height:6px;border-radius:99px;background:#2A262A;border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:4px">'
+                '<div id="fed-bar-fill" style="position:absolute;inset:0;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .15s"></div>'
+                "</div>"
+                '<div style="display:flex;justify-content:space-between;margin-bottom:10px">'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#837A74">0</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#FFB020">0.3</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#FF6A1A">0.6</span>'
+                '<span style="font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px;color:#E01E37">1.0+</span>'
+                "</div>"
+                '<canvas id="fed-spark" style="width:100%;height:60px;display:block"></canvas>'
+                "</div>"
+            )
+            or ""
+        )
         + "</div>"
     )
     script = "<script>" + _JS.replace("__DATA__", data_json) + "</script>"
-    return Card(
-        DivLAligned(UkIcon("route"), H3("Trajectories", cls="m-0")),
+    return Div(
+        Div(
+            H3(
+                "Trajectories",
+                style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0;color:#F2EDE9",
+            ),
+            style="display:flex;align-items:center;margin-bottom:14px",
+        ),
         NotStr(markup + script),
+        style=_CARD,
     )
