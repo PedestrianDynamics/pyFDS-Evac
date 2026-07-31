@@ -44,8 +44,8 @@ uv run python run.py --scenario <scenario.json|.zip|dir> [options]
 
 | Flag | Purpose |
 |------|---------|
-| `--enable-rerouting` | Let agents re-evaluate exits during the run. |
-| `--reroute-interval S` | Seconds between per-agent reevaluations (default 10). |
+| `--enable-rerouting` / `--no-enable-rerouting` | Let agents re-evaluate exits during the run (on by default). |
+| `--reroute-interval S` | Seconds between per-agent reevaluations (default 1). |
 | `--output-route-history CSV` | Write route switches. |
 | `--output-route-cost-history CSV` | Ranked route cost snapshots. |
 | `--vis-cache PKL` | Vismap pickle cache; gates routes by visibility. Requires `--fds-dir`. |
