@@ -603,6 +603,47 @@ def evaluate_segment(
     )
 
 
+def _position_aware_length(
+    graph: StageGraph,
+    path: list[str],
+    agent_position: tuple[float, float],
+    current_target: str | None,
+    path_length: float,
+    first_length_m: float,
+) -> tuple[float, float]:
+    """Haensel path-integrated distance measured from the agent's position.
+
+    Returns ``(effective_length, first_share)``, where ``first_share`` is the
+    still-untraversed fraction of the first segment. It is 1.0 unless the route
+    continues toward ``current_target``; then the agent has already covered part
+    of that segment, so only the remainder is ahead of it.
+    """
+    first_node = graph.nodes.get(path[0])
+    next_node = graph.nodes.get(path[1])
+    if first_node is None or next_node is None:
+        return path_length, 1.0
+
+    px, py = agent_position
+    if path[1] == current_target:
+        # Continuing toward the current target: charge only the distance
+        # remaining from the agent's position to that node.
+        remaining = math.hypot(px - next_node.centroid_x, py - next_node.centroid_y)
+        if first_length_m <= 1e-9:
+            return path_length - first_length_m + remaining, 1.0
+        # Floored above zero so an impassable first segment (infinite travel
+        # time) stays infinite even for an agent standing on its end node.
+        share = min(1.0, max(1e-9, remaining / first_length_m))
+        return path_length - first_length_m + remaining, share
+
+    if current_target is not None:
+        # Diverging from the current heading: the agent must walk back to the
+        # branch (first) node before taking this route.
+        backtrack = math.hypot(px - first_node.centroid_x, py - first_node.centroid_y)
+        return path_length + backtrack, 1.0
+
+    return path_length, 1.0
+
+
 def evaluate_route(
     graph: StageGraph,
     path: list[str],
@@ -627,6 +668,9 @@ def evaluate_route(
     is charged the backtrack from the agent's position to the branch node. This
     stops an agent 1 m from one exit being priced as if standing at the far
     upstream junction (which made it walk past exits and reverse mid-corridor).
+    The smoke and FED terms are credited over the same stretch as the distance,
+    so exposure already incurred on the traversed part -- and already carried in
+    ``current_fed`` -- is not charged a second time.
     """
     segments: list[SegmentCost] = []
     for i in range(len(path) - 1):
@@ -648,35 +692,33 @@ def evaluate_route(
         segments.append(seg)
 
     path_length = sum(s.length_m for s in segments)
-    total_k_samples = sum(s.k_avg * s.length_m for s in segments)
-    k_ave = total_k_samples / path_length if path_length > 1e-9 else 0.0
-    travel_time = sum(s.travel_time_s for s in segments)
-    fed_growth = sum(s.fed_growth for s in segments)
-    fed_max = current_fed + fed_growth
 
     # Position-aware distance (Haensel path-integrated). Default: the geometric
     # node-to-node path_length (used everywhere agent_position is absent).
     effective_length = path_length
+    first_share = 1.0
     if agent_position is not None and len(path) >= 2:
-        first_node = graph.nodes.get(path[0])
-        next_node = graph.nodes.get(path[1])
-        if first_node is not None and next_node is not None:
-            px, py = agent_position
-            if path[1] == current_target:
-                # Continuing toward the current target: the agent has already
-                # covered part of the first segment, so charge only the distance
-                # remaining from its position to that node.
-                remaining = math.hypot(
-                    px - next_node.centroid_x, py - next_node.centroid_y
-                )
-                effective_length = path_length - segments[0].length_m + remaining
-            elif current_target is not None:
-                # Diverging from the current heading: the agent must walk back to
-                # the branch (first) node before taking this route.
-                backtrack = math.hypot(
-                    px - first_node.centroid_x, py - first_node.centroid_y
-                )
-                effective_length = path_length + backtrack
+        effective_length, first_share = _position_aware_length(
+            graph,
+            path,
+            agent_position,
+            current_target,
+            path_length,
+            segments[0].length_m,
+        )
+
+    # Exposure is accumulated over the same stretch the distance term charges:
+    # the smoke and FED the agent already took on the traversed part of the first
+    # segment are in current_fed, so charging the full segment would count them
+    # twice and inflate the FED and smoke terms of a route it is midway along.
+    shares = [first_share] + [1.0] * (len(segments) - 1)
+    weighted = list(zip(shares, segments))
+    exposure_length = sum(w * s.length_m for w, s in weighted)
+    total_k_samples = sum(w * s.k_avg * s.length_m for w, s in weighted)
+    k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
+    travel_time = sum(w * s.travel_time_s for w, s in weighted)
+    fed_growth = sum(w * s.fed_growth for w, s in weighted)
+    fed_max = current_fed + fed_growth
 
     # Composite cost: effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
     composite = (
