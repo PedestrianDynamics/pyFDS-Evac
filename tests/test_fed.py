@@ -30,7 +30,7 @@ from pyfds_evac.core.fed import (
 from pyfds_evac.core import load_scenario, run_scenario
 
 
-HASPEL_DIR = Path("fds_directory/haspel")
+HASPEL_DIR = Path("assets/haspel")
 
 
 CONSTANT_EXPOSURE_CASES = {
@@ -579,8 +579,10 @@ def _find_haspel_peak_co_location():
 def test_fdsreader_stationary_haspel_sampling_drives_positive_fed():
     if Simulation is None:
         pytest.skip("fdsreader is not installed in this environment.")
-    if not HASPEL_DIR.exists():
-        pytest.skip("Local haspel FDS fixture is not available in this checkout.")
+    # The scenario directory is tracked, but the FDS output that this test
+    # samples is not. Look for a run (.smv) rather than just the directory.
+    if not any(HASPEL_DIR.glob("*.smv")):
+        pytest.skip("Local haspel FDS output is not available in this checkout.")
 
     peak = _find_haspel_peak_co_location()
     field = FdsFedField.from_fds(str(HASPEL_DIR))

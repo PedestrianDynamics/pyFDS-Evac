@@ -1,0 +1,77 @@
+&HEAD CHID='social_force_sketch_fire',
+      TITLE='Fire in the centre of the spawn room, shared by Familiarity Test Full/Discovery' /
+
+! Room height 3 m, 0.25 m cells, single mesh. Reverted from a 4-mesh MPI
+! split -- mpiexec isn't installed on this machine, so 4 meshes without
+! real MPI parallelism just adds pressure-solver overhead with zero
+! speedup (all meshes run serially in one process either way). Use
+! OMP_NUM_THREADS instead for a genuine free speedup on this single mesh
+! (12 logical cores available -- try OMP_NUM_THREADS=8).
+&MESH ID='M1', IJK=80,72,12, XB=0,20, 0,18, 0,3 /
+
+&TIME T_END=300 /
+&DUMP DT_SLCF=1.0, DT_DEVC=1.0 /
+
+! Simple-chemistry combustion: propane stoichiometry with elevated soot/CO
+! yields representative of a flaming upholstered-furniture/foam fire.
+&REAC FUEL='PROPANE', SOOT_YIELD=0.10, CO_YIELD=0.05 /
+
+! Fire source: 1x1 m floor burner at the centre of the spawn room
+! (assets/.../config.json distribution box is x:14-18.5, y:0.8-2.8 -> centre 16.25,1.8).
+! t^2 fast growth (alpha ~ fast), peaking at 1 MW by t=150s.
+&SURF ID='FIRE', HRRPUA=1000, TAU_Q=-150 /
+&VENT XB=15.75,16.75, 1.3,2.3, 0,0, SURF_ID='FIRE' /
+
+! ── Walls (floor to ceiling), mirrored from build_geometry.py ──────────────
+! Outer boundary (0.1 m thick).
+&OBST XB=0,20,   0,0.1,  0,3, ID='wall_south' /
+&OBST XB=0,20,   17.9,18, 0,3, ID='wall_north' /
+&OBST XB=0,0.1,  0,18,  0,3, ID='wall_west' /
+&OBST XB=19.9,20, 0,18,  0,3, ID='wall_east' /
+
+! Partition 1 (y=13-13.1), door gap x=17-18.2 -> top exit alcove.
+&OBST XB=0,17,    13,13.1, 0,3, ID='partition_1a' /
+&OBST XB=18.2,20, 13,13.1, 0,3, ID='partition_1b' /
+
+! Divider A (x=7-7.1, y=4.5-13) -- hangs from the partition, open below.
+&OBST XB=7,7.1, 4.5,13, 0,3, ID='divider_a' /
+
+! Divider B (x=13-13.1, y=0-13), 1.2 m door at y=1.0-2.2 -- west wall of the
+! spawn/start room, so smoke has to funnel through the same doorway agents do.
+&OBST XB=13,13.1, 0,1.0, 0,3, ID='divider_b_lower' /
+&OBST XB=13,13.1, 2.2,13, 0,3, ID='divider_b_upper' /
+
+! Bottom-left pocket wall (y=1.9-2.0, x=0-2.9), 1.2 m door at x=2.9-4.1.
+&OBST XB=0,2.9,  1.9,2.0, 0,3, ID='pocket_wall' /
+
+! Floating L-shaped wall (island, touches nothing): horizontal foot picks
+! up right after the pocket door, vertical riser reaches toward divider A.
+! 1.2 m clear on both ends (to the pocket wall below, to divider A above).
+&OBST XB=4.1,7,   1.9,2.0, 0,3, ID='floating_wall_foot' /
+&OBST XB=7,7.1,   2.0,3.3, 0,3, ID='floating_wall_riser' /
+
+! ── Slices at breathing height (2.0 m), matching pyFDS-Evac's default
+! smoke/FED sampling height (DefaultFedConfig / SmokeSpeedConfig = 2.0 m). ──
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=2.0, QUANTITY='VISIBILITY' /
+
+! Extra slices at 1.0 m (lower/seated eye height) for visual comparison.
+&SLCF PBZ=1.0, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.0, QUANTITY='VISIBILITY' /
+
+! Vertical slices through the fire, to see the plume and how smoke banks
+! up against the partition/dividers.
+&SLCF PBX=16.25, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBY=1.8,   QUANTITY='EXTINCTION COEFFICIENT' /
+
+! ── Devices: near the fire, near the exit-alcove doorway, and FDS's own
+! FED for comparison against pyFDS-Evac's model. ───────────────────────────
+&DEVC XYZ=16.25,1.8,2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_near_fire' /
+&DEVC XYZ=17.6,16.6,2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_near_exit' /
+&DEVC XYZ=17.6,16.6,2.0, QUANTITY='VISIBILITY', ID='VIS_near_exit' /
+&DEVC XYZ=17.6,16.6,2.0, QUANTITY='FED', ID='FED_near_exit' /
+
+&TAIL /

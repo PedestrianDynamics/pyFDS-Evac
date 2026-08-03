@@ -9,10 +9,10 @@ Examples::
 
     # Peak FED and time-to-incapacitation at a single junction point
     uv run python scripts/probe_fed.py \\
-        --fds-dir fds_directory/demo --point 17,12
+        --fds-dir assets/demo --point 17,12
 
     # Multi-point probe with CSV timeseries and PNG plot
-    uv run python scripts/probe_fed.py --fds-dir fds_directory/demo \\
+    uv run python scripts/probe_fed.py --fds-dir assets/demo \\
         --point 17,12 --point 20,12 --point 22,1 \\
         --output probe_fed.csv --plot probe_fed.png
 """

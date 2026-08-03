@@ -125,7 +125,7 @@ Run the smoke-speed model against FDS results read through `fdsreader`:
 ```bash
 uv run run.py \
   --scenario assets/ISO-table21 \
-  --fds-dir fds_directory \
+  --fds-dir assets/ISO-table21 \
   --smoke-update-interval 0.1 \
   --output-smoke-history /tmp/iso-table21-fds-smoke-history.csv \
   --cleanup
@@ -134,7 +134,7 @@ uv run run.py \
 Inspect the FDS quantities available through `fdsreader`:
 
 ```bash
-uv run run.py --inspect-fds --fds-dir fds_directory --scenario assets/ISO-table21
+uv run run.py --inspect-fds --fds-dir assets/ISO-table21 --scenario assets/ISO-table21
 ```
 
 Plot smoke-speed history for a single agent:
@@ -374,9 +374,9 @@ pickle. If the sign is not visible, the route is rejected with
 # Build or reuse the vismap cache and enable visibility-gated rejection
 uv run run.py \
   --scenario assets/demo \
-  --fds-dir fds_directory/demo \
+  --fds-dir assets/demo \
   --enable-rerouting \
-  --vis-cache fds_directory/demo/vismap_cache.pkl \
+  --vis-cache assets/demo/vismap_cache.pkl \
   --output-route-cost-history route_costs.csv \
   --cleanup
 ```
@@ -465,8 +465,8 @@ rejection timeline, evacuation time):
 
 ```bash
 uv run python scripts/run_familiarity_comparison.py \
-    --fds-dir fds_directory/demo \
-    --vis-cache fds_directory/demo/vismap_cache.pkl
+    --fds-dir assets/demo \
+    --vis-cache assets/demo/vismap_cache.pkl
 ```
 
 Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,
@@ -515,7 +515,7 @@ smoke. Run with `--output-sqlite` to produce the file fds-viewer loads:
 
 ```bash
 uv run run.py --scenario assets/demo \
-              --fds-dir fds_directory/demo \
+              --fds-dir assets/demo \
               --output-sqlite demo.sqlite
 ```
 
@@ -548,7 +548,7 @@ Scenario definitions are stored in [`assets/`](assets/):
 - **basic**: Minimal scenarios for smoke-speed verification
 - **HC**: Hazard composition cases
 - **social_force**: Social force model test cases
-- **Homogenous Test baby 2000** / **deadly 4000** / **extra deadly 8000ppm**:
+- **fed_incap_co_2000ppm** / **fed_incap_co_4000ppm** / **fed_incap_co_8000ppm**:
   FED accumulation and probabilistic-incapacitation validation against a
   hand-calculated reference (`fed_hand_calc.py`), at three constant CO
   concentrations (2000/4000/8000 ppm) in a sealed, spatially uniform room —
@@ -556,17 +556,18 @@ Scenario definitions are stored in [`assets/`](assets/):
   *pipeline* logic. 100 non-evacuating agents circling a rectangular path, FDS
   domain split across 4 MPI meshes to confirm gas data is consistent at mesh
   boundaries. All three concentrations currently match the hand-calc's FED=1.0
-  crossing time to <0.5%. `Homogenous_Test`, `Homogenous_Test_bugfixed`, and
-  `Homogenous_Test_smol` are earlier iterations from the same debugging
-  lineage (see the bug fixes above — this suite is what surfaced both the O2
-  rate bug and the conflicting-`&INIT` FDS pitfall). Full writeup:
-  `fds_directory/README_homogenoustest.md`.
+  crossing time to <0.5%. `fed_incap_co_v1` and `fed_incap_co_v2` are earlier
+  iterations from the same debugging lineage, both at 4000 ppm;
+  `fed_incap_co_smol` is a scenario config from the same lineage that has no
+  deck of its own (see the bug fixes above — this suite is what surfaced both
+  the O2 rate bug and the conflicting-`&INIT` FDS pitfall). Full writeup:
+  `docs/testing-homogeneous.md`.
 - **Familiarity Test Full** / **Familiarity Test Discovery**: `SocialForceModel`
   scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
   doors throughout, generated parametrically by each folder's
   `build_geometry.py`), differing only in the spawn distribution's
   `familiarity` value. A matching fire deck lives at
-  `fds_directory/Familiarity Test/familiarity_test.fds` (real
+  `assets/familiarity_test_full/familiarity_test.fds` (real
   combustion via `&REAC`, not a prescribed `&INIT`; walls mirror the
   walkable geometry exactly so smoke propagates through the same
   doorways agents use). These two configs use the legacy `journeys`/

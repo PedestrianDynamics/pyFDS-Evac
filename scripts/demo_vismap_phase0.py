@@ -35,11 +35,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fdsvismap import VisMap
 
-FDS_DIR = Path("fds_directory/demo")
-# Separate cache path from the runtime cache (fds_directory/demo/vismap_cache.pkl).
+FDS_DIR = Path("assets/demo")
+# Separate cache path from the runtime cache (assets/demo/vismap_cache.pkl).
 # This script builds a raw VisMap with set_start_point which is incompatible
 # with the {"vis": ..., "meta": ...} format written by VisibilityModel.
-CACHE_PATH = Path("fds_directory/demo/vismap_phase0_cache.pkl")
+CACHE_PATH = Path("assets/demo/vismap_phase0_cache.pkl")
 CONFIG_PATH = Path("assets/demo/config.json")
 OUT_DIR = Path("assets/demo")
 

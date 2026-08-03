@@ -43,19 +43,16 @@ occurs at a log-normal distribution.
 2. **Probabilistic incapacitation** — agents are incapacitated according to
    the correct FED-derived probability model, not deterministically at a
    fixed FED threshold.
-3. **Pipeline integration** — FDS gas slice output → `fdsreader` → JuPedSim
+3. **Pipeline integration** — FDS gas slice output → fdsvismap → JuPedSim
    correctly carries FED data across the 4-mesh decomposition with no
-   per-mesh discrepancies. (Not `fdsvismap`: that's a separate component
-   used only by the sign-visibility model that gates rerouting/`discovery`
-   familiarity — this test has a single exit, non-evacuating agents, and no
-   `--vis-cache`/`--enable-rerouting`, so it never touches fdsvismap.)
+   per-mesh discrepancies.
 
 ## Method
 
 1. Hand-calculate the expected FED(t) curve for each of the three CO
    concentrations (2000, 4000, 8000 ppm) using the FDS-native Purser
    FED/CO incapacitation model (see `fed_hand_calc.py`).
-2. Run the full FDS → fdsreader → JuPedSim pipeline on each of the three
+2. Run the full FDS → fdsvismap → JuPedSim pipeline on each of the three
    scenarios.
 3. Compare simulated per-agent FED accumulation curves and incapacitation
    timing/probability distribution against the hand-calculated reference,
@@ -143,11 +140,11 @@ homogeneous_co_fed_validation/
 │   └── homogenous_onset_cumulative_8000ppm.png          — Cumulative incapacitation curve over time, 8000ppm
 │
 └── pyFDS-Evac_results/
-    ├── Homogenous_Test_smol.sqlite                  — Agent trajectory database
-    ├── Homogenous_Test_smol_fed_history.csv         — Per-agent FED accumulation over time
-    ├── Homogenous_Test_smol_smoke_history.csv       — Per-agent smoke exposure over time
-    ├── Homogenous_Test_smol_route_history.csv       — Agent route decisions over time
-    └── Homogenous_Test_smol_route_cost_history.csv  — Route cost values over time
+    ├── fed_incap_co_smol.sqlite                  — Agent trajectory database
+    ├── fed_incap_co_smol_fed_history.csv         — Per-agent FED accumulation over time
+    ├── fed_incap_co_smol_smoke_history.csv       — Per-agent smoke exposure over time
+    ├── fed_incap_co_smol_route_history.csv       — Agent route decisions over time
+    └── fed_incap_co_smol_route_cost_history.csv  — Route cost values over time
 ```
 
 ## How to Run

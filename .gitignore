@@ -166,12 +166,38 @@ cython_debug/
 .idea/
 
 # Data
-# FDS decks and their run output live here. Ignored wholesale, as fds_data was
-# before it: a single run drops dozens of generated files (.out, .smv, .s3d,
-# .sf, .bnd, _cpu.csv, ...) next to the deck that produced them. The few decks
-# and writeups we do track were added with `git add -f`.
-fds_directory
 processed_data
+
+# Legacy: local FDS run output from before decks moved into assets/.
+# Nothing here is tracked any more; safe to delete once the runs are archived.
+fds_directory
+
+# FDS run output inside assets/<scenario>/. The deck, config.json, geometry.wkt
+# and preview images stay tracked; everything FDS generates beside them does
+# not. A single run drops well over a hundred of these files.
+assets/**/*.out
+assets/**/*.smv
+assets/**/*.s3d
+assets/**/*.s3d.sz
+assets/**/*.sf
+assets/**/*.sf.bnd
+assets/**/*.sf.gbnd
+assets/**/*.bf
+assets/**/*.bf.bnd
+assets/**/*.q
+assets/**/*.iso
+assets/**/*.prt5
+assets/**/*.prt5.bnd
+assets/**/*.prt5.sz
+assets/**/*.pickle
+assets/**/*.end
+assets/**/*.restart
+assets/**/*_cpu.csv
+assets/**/*_devc.csv
+assets/**/*_hrr.csv
+assets/**/*_steps.csv
+assets/**/*_git.txt
+assets/**/vismap_cache.npz
 
 # Local working artifacts
 .worktrees/

@@ -29,7 +29,7 @@ from matplotlib.lines import Line2D
 from shapely.geometry import Polygon
 
 CONFIG_PATH = Path("assets/demo/config.json")
-CACHE_PATH = Path("fds_directory/demo/vismap_cache.pkl")
+CACHE_PATH = Path("assets/demo/vismap_cache.pkl")
 OUT_PATH = Path("assets/demo/cognitive_map_evolution.png")
 
 # Colours
