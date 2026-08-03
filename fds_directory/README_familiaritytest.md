@@ -32,7 +32,7 @@ were required before familiarity could have *any* observable effect at all
   exit alcove (top-right).
 - **Model:** `SocialForceModel`, seed 420, 20 agents (`by_number` spawn, all
   at once — not flow-spawned).
-- **Fire deck:** `testing directory/Familiarity Test/familiarity_test.fds`.
+- **Fire deck:** `fds_directory/Familiarity Test/familiarity_test.fds`.
   Real combustion via `&REAC` (not a prescribed `&INIT`); the FDS walls
   mirror the walkable geometry exactly so smoke propagates through the same
   doorways agents use. *Not required for the pure-routing result below* —
@@ -122,7 +122,7 @@ assets/Familiarity Test Full/
 assets/Familiarity Test Discovery/
 └── (same four files; config.json differs only in familiarity: "discovery")
 
-testing directory/Familiarity Test/
+fds_directory/Familiarity Test/
 ├── familiarity_test.fds              — FDS input, real &REAC combustion
 ├── social_force_sketch_fire.smv      — Smokeview scene file
 ├── social_force_sketch_fire.out      — FDS console output / run log

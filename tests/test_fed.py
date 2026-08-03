@@ -30,7 +30,7 @@ from pyfds_evac.core.fed import (
 from pyfds_evac.core import load_scenario, run_scenario
 
 
-HASPEL_DIR = Path("fds_data/haspel")
+HASPEL_DIR = Path("fds_directory/haspel")
 
 
 CONSTANT_EXPOSURE_CASES = {

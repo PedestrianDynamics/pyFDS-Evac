@@ -5,7 +5,7 @@
 #   scripts/run_and_plot.sh <scenario.json> <fds-dir> <results-dir>
 #
 # Example:
-#   scripts/run_and_plot.sh assets/demo/config.json fds_data/demo results/demo
+#   scripts/run_and_plot.sh assets/demo/config.json fds_directory/demo results/demo
 #
 # See docs/usage.md for the per-script options.
 
