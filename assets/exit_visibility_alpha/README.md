@@ -141,6 +141,61 @@ The stray near-exit cells at the very bottom of the right panel are correct
 physics — below `y = 0.7` an agent is south of the sign, inside the half-plane
 it faces, so it becomes legible again.
 
+## What the simulation actually does
+
+The map above is drawn from `rank_routes` — it shows what routing *would*
+decide. It is not evidence about what agents *do*. To see that, run the
+scenario and plot the trajectory database it writes:
+
+```bash
+FDS_DIR=/path/to/exit_visibility_alpha/fds/output   # see "Regenerating" below
+
+for v in visible hidden; do
+  .venv/bin/python run.py \
+      --scenario assets/exit_visibility_alpha/config_$v.json \
+      --fds-dir "$FDS_DIR" \
+      --output-sqlite /tmp/run_$v.sqlite
+
+  .venv/bin/python scripts/plot_trajectories.py /tmp/run_$v.sqlite \
+      --config assets/exit_visibility_alpha/config_$v.json \
+      -o assets/exit_visibility_alpha/trajectories_$v.png \
+      --title "exit_visibility_alpha -- config_$v.json"
+done
+```
+
+`scripts/plot_trajectories.py` reads `trajectory_data` from the SQLite and
+attributes each agent to the exit polygon nearest its final position, provided
+it finished within `--reach` metres (default 1.5 m). Agents that ended anywhere
+else are drawn grey and counted separately, so a run where most agents never
+got out cannot pass for a clean result.
+
+### The result, as of writing: the flip does not happen in simulation
+
+| | `E_near` | `E_far` |
+|---|---|---|
+| `config_visible.json` (alpha = 0) | 40 | 0 |
+| `config_hidden.json` (alpha = 180) | 40 | 0 |
+
+![trajectories, visible](trajectories_visible.png)
+![trajectories, hidden](trajectories_hidden.png)
+
+Both runs evacuate 40/40 in 18.20 s. They are not merely similar — they are the
+same run.
+
+This is [issue #61](https://github.com/PedestrianDynamics/fds-evac/issues/61),
+not a defect in the scenario. In no-journey mode every agent is initialised with
+its assigned exit as its own origin (`origin=E_near target=E_near
+source=E_near`), the rerouting pass finds nothing to rank
+(`route_cost_rows=0`), and the cognitive map and the visibility model are never
+consulted. The unit tests in `tests/test_exit_visibility_alpha.py` call
+`rank_routes` directly and therefore still pass; they are testing the routing
+decision, which is correct, not the path from the simulation to that decision,
+which is broken.
+
+Recorded here rather than omitted: a plot drawn from the router would have shown
+the flip and asserted a behaviour the code does not produce. That gap is the
+reason to plot from the database.
+
 ## Deliberate choices
 
 **Agents are `discovery` tier**, which is the only tier where sign legibility
@@ -168,10 +223,22 @@ experiment is about.
 
 This writes `geometry.wkt`, both configs, and `exit_visibility_alpha.fds`. The
 FDS deck is generated from the WKT via `pyfds_evac.core.wkt_to_fds`, with the
-generator's burner stripped and its analysis slices kept — fdsvismap needs a
-`SOOT EXTINCTION COEFFICIENT` slice to answer any legibility query at all, so
+generator's burner stripped and its analysis slices kept — fdsvismap needs an
+`EXTINCTION COEFFICIENT` slice to answer any legibility query at all, so
 `--geometry-only` would not do, since it drops the slices along with the fire.
 The builder asserts both conditions and fails loudly if either is violated.
+
+The deck must then be run once to produce the slice files that `--fds-dir`
+points at:
+
+```bash
+mkdir -p /tmp/eva && cd /tmp/eva
+fds /path/to/assets/exit_visibility_alpha/exit_visibility_alpha.fds
+```
+
+The air is clear, so this is quick and its output is reusable across both
+configs — they differ only in a sign bearing, which lives in the JSON, not in
+the deck.
 
 ## Tests
 
