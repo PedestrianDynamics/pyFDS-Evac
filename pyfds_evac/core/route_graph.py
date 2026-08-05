@@ -830,7 +830,6 @@ def rank_routes(
     *,
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
-    vis_model=None,
     cognitive_map=None,
     agent_position: tuple[float, float] | None = None,
     current_exit: str | None = None,
@@ -905,47 +904,29 @@ def rank_routes(
         )
         costs.append(rc)
 
-    # Check visibility rejection.
-    if vis_model is not None:
-        # Reject any route whose first hop node sign is not visible from the
-        # agent's current position.  Prefer the actual agent position over the
-        # source node centroid so that large polygons don't introduce bias.
-        # Falls back to always-visible for nodes without a sign descriptor.
-        if agent_position is not None:
-            ax, ay = agent_position
-        else:
-            src_node = graph.nodes.get(source)
-            ax = src_node.centroid_x if src_node is not None else 0.0
-            ay = src_node.centroid_y if src_node is not None else 0.0
-        updated: list[RouteCost] = []
+    # Sign legibility is not consulted here.  It decides what enters the
+    # agent's cognitive map (see cognitive_map.expand_from_visibility), and the
+    # map decides what Dijkstra can see -- so an unknown exit is absent from
+    # the graph rather than present-and-vetoed.  Checking it again here
+    # double-gated the same criterion, blocked agents who already knew the
+    # building, and forbade an agent from using an exit it had legitimately
+    # learned once the sign went out of view.
+    # K_vis fallback: reject routes where all segments are non-visible,
+    # but only if at least one other route has visibility.
+    any_visible = any(
+        any(s.visible for s in rc.segments) for rc in costs if not rc.rejected
+    )
+    if any_visible:
+        updated = []
         for rc in costs:
-            if not rc.rejected:
-                next_node = rc.path[1] if len(rc.path) > 1 else rc.exit_id
-                if not vis_model.node_is_visible(time_s, ax, ay, next_node):
-                    rc = replace(
-                        rc,
-                        rejected=True,
-                        rejection_reason="next_node_not_visible",
-                    )
+            if not rc.rejected and not any(s.visible for s in rc.segments):
+                rc = replace(
+                    rc,
+                    rejected=True,
+                    rejection_reason="all segments non-visible",
+                )
             updated.append(rc)
         costs = updated
-    else:
-        # K_vis fallback: reject routes where all segments are non-visible,
-        # but only if at least one other route has visibility.
-        any_visible = any(
-            any(s.visible for s in rc.segments) for rc in costs if not rc.rejected
-        )
-        if any_visible:
-            updated = []
-            for rc in costs:
-                if not rc.rejected and not any(s.visible for s in rc.segments):
-                    rc = replace(
-                        rc,
-                        rejected=True,
-                        rejection_reason="all segments non-visible",
-                    )
-                updated.append(rc)
-            costs = updated
 
     # Sort: non-rejected first by cost, then rejected by cost.
     # Break ties by fewer intermediate stages.
@@ -1177,7 +1158,6 @@ def evaluate_and_reroute(
     cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
     *,
     exit_counts: dict[str, int] | None = None,
-    vis_model=None,
     cognitive_map=None,
     agent_position: tuple[float, float] | None = None,
 ) -> RouteSwitch | None:
@@ -1206,7 +1186,6 @@ def evaluate_and_reroute(
         config.cost_config,
         cached_segments=cached_segments,
         exit_counts=exit_counts,
-        vis_model=vis_model,
         cognitive_map=cognitive_map,
         agent_position=agent_position,
         current_exit=route_state.current_exit,

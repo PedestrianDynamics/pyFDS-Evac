@@ -1924,7 +1924,6 @@ def run_scenario(
                                 reroute_config.cost_config,
                                 cached_segments=route_segment_cache,
                                 exit_counts=exit_counts,
-                                vis_model=vis_model,
                                 cognitive_map=_cmap,
                                 agent_position=tuple(_pos)
                                 if _pos is not None
@@ -1974,7 +1973,6 @@ def run_scenario(
                         config=reroute_config,
                         cached_segments=route_segment_cache,
                         exit_counts=exit_counts,
-                        vis_model=vis_model,
                         cognitive_map=_cmap,
                         agent_position=tuple(_pos) if _pos is not None else None,
                     )
