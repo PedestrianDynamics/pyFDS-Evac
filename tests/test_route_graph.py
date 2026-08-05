@@ -1879,80 +1879,99 @@ class TestCognitiveMapRouting:
         assert "E1" in exit_ids
 
 
-class TestVisibilityRejection:
-    """rank_routes applies next_node_not_visible rejection unconditionally."""
+class TestSignsDoNotGateRouting:
+    """Routing consults the cognitive map, never sign legibility directly.
 
-    def _make_vis_model(self, visible_nodes: set[str]):
-        """Return a mock vis_model where only *visible_nodes* are visible."""
+    Sign visibility used to veto a route whose first hop was illegible, which
+    duplicated the job the cognitive map already does -- legibility decides
+    map *membership*, and membership decides what Dijkstra can see.  Worse, the
+    veto applied regardless of familiarity, so an agent that knew the building
+    was still blocked by an unreadable sign, and an agent that had legitimately
+    learned an exit was forbidden from using it once the sign went out of view.
+    """
 
-        class _MockVis:
-            def node_is_visible(self, time, x, y, node_id):
-                return node_id in visible_nodes
+    def test_routing_takes_no_visibility_model_at_all(self):
+        """The parameter is gone, not merely ignored.
 
-        return _MockVis()
+        Leaving a vis_model argument that callers pass in good faith and the
+        router silently discards is worse than removing it: it reads as though
+        legibility still gates routing.
+        """
+        import inspect
 
-    def test_invisible_route_rejected(self, multi_exit_graph):
-        """E0 route rejected when E0 sign is not visible."""
-        field = ConstantExtinctionField(0.0)
-        vis = self._make_vis_model(visible_nodes={"E1"})  # E0 not visible
-        ranked = rank_routes(
+        assert "vis_model" not in inspect.signature(rank_routes).parameters
+        assert "vis_model" not in inspect.signature(evaluate_and_reroute).parameters
+
+    def test_membership_is_the_only_gate(self, multi_exit_graph):
+        """An exit outside the agent's map is unreachable; one inside is not."""
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        knows_both = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "E0", "E1"},
+            known_edges={("D0", "E0"), ("D0", "E1")},
+        )
+        knows_far_only = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "E1"},
+            known_edges={("D0", "E1")},
+        )
+
+        def exits_for(cmap):
+            ranked = rank_routes(
+                multi_exit_graph,
+                "D0",
+                0.0,
+                0.0,
+                ConstantExtinctionField(0.0),
+                None,
+                RouteCostConfig(),
+                cognitive_map=cmap,
+            )
+            return {rc.exit_id for rc in ranked}
+
+        assert exits_for(knows_both) == {"E0", "E1"}
+        # E0 is not rejected -- it is absent, because Dijkstra never saw it.
+        assert exits_for(knows_far_only) == {"E1"}
+
+    def test_smoke_still_prices_routes_for_a_fully_familiar_agent(
+        self, multi_exit_graph
+    ):
+        """Removing the veto must not remove the cost channel.
+
+        Smoke influences exit choice through w_smoke * K_ave, which is
+        independent of signs and of familiarity.
+        """
+
+        # D0 -> E0 -> E1 are collinear, so E1's path contains E0's.  Put the
+        # smoke beyond E0 to load the far route only.
+        class SmokeBeyondE0:
+            def sample_extinction(self, time_s, x, y):
+                del time_s, y
+                return 5.0 if 12.0 < x < 18.0 else 0.0
+
+        clear = rank_routes(
             multi_exit_graph,
             "D0",
             0.0,
             0.0,
-            field,
+            ConstantExtinctionField(0.0),
             None,
-            RouteCostConfig(),
-            vis_model=vis,
+            RouteCostConfig(w_smoke=1.0),
         )
-        e0 = next(rc for rc in ranked if rc.exit_id == "E0")
-        e1 = next(rc for rc in ranked if rc.exit_id == "E1")
-        assert e0.rejected
-        assert e0.rejection_reason == "next_node_not_visible"
-        assert not e1.rejected
-
-    def test_all_invisible_fallback_unrejects_least_bad(self, multi_exit_graph):
-        """When all routes are rejected, the fallback un-rejects the cheapest."""
-        field = ConstantExtinctionField(0.0)
-        vis = self._make_vis_model(visible_nodes=set())  # nothing visible
-        ranked = rank_routes(
+        smoky = rank_routes(
             multi_exit_graph,
             "D0",
             0.0,
             0.0,
-            field,
+            SmokeBeyondE0(),
             None,
-            RouteCostConfig(),
-            vis_model=vis,
+            RouteCostConfig(w_smoke=1.0),
         )
-        assert ranked, "should still return routes via fallback"
-        assert not ranked[0].rejected, "fallback must un-reject the best route"
-        assert ranked[0].rejection_reason is not None
-        assert ranked[0].rejection_reason.startswith("fallback")
-
-    def test_agent_position_used_over_centroid(self, multi_exit_graph):
-        """agent_position is forwarded to vis_model instead of node centroid."""
-        received: list[tuple] = []
-
-        class _RecordingVis:
-            def node_is_visible(self, time, x, y, node_id):
-                received.append((x, y))
-                return True
-
-        field = ConstantExtinctionField(0.0)
-        rank_routes(
-            multi_exit_graph,
-            "D0",
-            0.0,
-            0.0,
-            field,
-            None,
-            RouteCostConfig(),
-            vis_model=_RecordingVis(),
-            agent_position=(7.5, 3.0),
-        )
-        assert received, "vis_model.node_is_visible should have been called"
-        assert all(x == 7.5 and y == 3.0 for x, y in received)
+        cost = {rc.exit_id: rc.composite_cost for rc in clear}
+        cost_smoky = {rc.exit_id: rc.composite_cost for rc in smoky}
+        assert cost_smoky["E1"] > cost["E1"], "smoke must raise the smoky route"
+        assert cost_smoky["E0"] == pytest.approx(cost["E0"]), "clear route unchanged"
 
 
 # ── VisibilityModel cache tests are in test_visibility.py ─────────────
