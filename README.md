@@ -365,6 +365,11 @@ config:
 `alpha` is a compass bearing (degrees from north, clockwise): 90 = sign
 visible from the east, 270 = from the west, 180 = from the south.
 
+Every exit, checkpoint and waypoint gets a sign: nodes without an authored
+`"sign"` get one synthesised at the node's polygon centroid (`c=3`,
+`alpha=None`, i.e. omni-directional). A node is never exempt from
+visibility gating for lack of an authored sign.
+
 At each reevaluation tick the `VisibilityModel` checks whether an agent
 can see the next node's sign using a cached [fdsvismap](https://github.com/FireDynamics/fdsvismap)
 pickle. If the sign is not visible, the route is rejected with

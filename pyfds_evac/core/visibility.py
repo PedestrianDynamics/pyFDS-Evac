@@ -7,18 +7,46 @@ import logging
 from pathlib import Path
 
 import numpy as np
+from shapely.geometry import Polygon
 
 _logger = logging.getLogger(__name__)
 
 
+def _default_sign(entry: dict) -> dict | None:
+    """A reflective, omni-directional sign at the node's centroid.
+
+    alpha is left None on purpose.  fdsvismap reads alpha as a half-plane of
+    readability, so a guessed bearing silently blanks the sign for every agent
+    on the wrong side however clear the air, whereas None means omni-directional
+    and merely omits the orientation effect.
+    """
+    coords = entry.get("coordinates")
+    if not coords or len(coords) < 3:
+        return None
+    # Configs with unusable polygons simulate fine -- the stage setup skips
+    # them -- so a node that cannot yield a centroid gets no sign rather than
+    # aborting the run the moment visibility is switched on.
+    try:
+        centroid = Polygon(coords).centroid
+    except Exception as exc:
+        _logger.warning("Cannot synthesise a sign from %r: %s", coords, exc)
+        return None
+    return {"x": float(centroid.x), "y": float(centroid.y), "alpha": None, "c": 3}
+
+
 def extract_sign_descriptors(raw_config: dict) -> dict[str, dict]:
-    """Return {node_id: {x, y, alpha, c}} for all nodes with a 'sign' field."""
-    return {
-        node_id: data["sign"]
-        for section in ("exits", "checkpoints", "waypoints")
-        for node_id, data in raw_config.get(section, {}).items()
-        if data.get("sign")
-    }
+    """Return {node_id: {x, y, alpha, c}} for every exit, crossing and waypoint.
+
+    Nodes with an authored 'sign' keep it verbatim; the rest get a default so
+    that no routable stage escapes smoke-dependent legibility.
+    """
+    descriptors: dict[str, dict] = {}
+    for section in ("exits", "checkpoints", "waypoints"):
+        for node_id, data in raw_config.get(section, {}).items():
+            sign = data.get("sign") or _default_sign(data)
+            if sign is not None:
+                descriptors[node_id] = sign
+    return descriptors
 
 
 def _build_vismap(
@@ -34,12 +62,14 @@ def _build_vismap(
     t_max = vis.fds_time_points.max()
     vis.set_time_points(list(np.arange(0, t_max + time_step_s, time_step_s)))
     for wp_id, (node_id, sign) in enumerate(sign_descriptors.items()):
+        alpha = sign.get("alpha")
         vis.set_waypoint(
             wp_id,
             float(sign["x"]),
             float(sign["y"]),
             c=float(sign.get("c", 3)),
-            alpha=float(sign["alpha"]),
+            # None is meaningful: fdsvismap reads it as omni-directional.
+            alpha=None if alpha is None else float(alpha),
         )
     vis.compute_all(view_angle=True, obstructions=True, aa=True)
     return vis
@@ -211,8 +241,9 @@ class VisibilityModel:
       270 = visible from west  (sign on east wall, seen by agents to its left)
       180 = visible from south (sign at junction top, seen by agents below)
 
-    If a node has no 'sign' descriptor it is always considered visible
-    (fallback to current behaviour).
+    Every exit, crossing and waypoint carries a descriptor -- authored or
+    synthesised at the node centroid -- so only nodes outside that set (spawn
+    areas, and nodes whose geometry was unusable) are unconditionally visible.
 
     Cache format: numpy npz containing the visibility arrays and metadata.
     The cache is safe to load (no pickle / no arbitrary code execution).
@@ -251,7 +282,9 @@ class VisibilityModel:
     def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
         """Return True if the sign at *node_id* is visible from (x, y) at *time*.
 
-        Nodes without a sign descriptor always return True.
+        Only nodes outside the descriptor set -- spawn areas, and nodes whose
+        geometry could not be turned into a centroid -- return True regardless
+        of the smoke.
         """
         wp_id = self._wp_ids.get(node_id)
         if wp_id is None:

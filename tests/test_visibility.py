@@ -8,8 +8,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
+import pytest
 
-from pyfds_evac.core.visibility import VisibilityModel, _make_meta
+from pyfds_evac.core.visibility import (
+    VisibilityModel,
+    _make_meta,
+    extract_sign_descriptors,
+)
 
 
 # ── helpers ───────────────────────────────────────────────────────────
@@ -160,3 +165,112 @@ class TestVisibilityModelCache:
             with np.load(cache, allow_pickle=False) as data:
                 saved_meta = json.loads(str(data["meta"]))
             assert saved_meta["fds_dir"] == str(Path(FDS_DIR).resolve())
+
+
+class TestSignSynthesis:
+    """Every routable stage carries a sign, so nothing opts out of smoke gating.
+
+    A node with no sign descriptor reports visible unconditionally, which made
+    it permanently known however dense the smoke.  Synthesising a default sign
+    at the node centroid closes that hole.
+    """
+
+    @staticmethod
+    def _square(x, y):
+        return [[x, y], [x + 2, y], [x + 2, y + 2], [x, y + 2], [x, y]]
+
+    def _config(self):
+        return {
+            "exits": {
+                "e0": {"coordinates": self._square(0, 0)},
+                "e1": {
+                    "coordinates": self._square(10, 0),
+                    "sign": {"x": 11.0, "y": 0.5, "alpha": 90, "c": 8},
+                },
+            },
+            "checkpoints": {"c0": {"coordinates": self._square(5, 0)}},
+            "distributions": {"d0": {"coordinates": self._square(20, 0)}},
+        }
+
+    def test_every_exit_and_crossing_gets_a_descriptor(self):
+        signs = extract_sign_descriptors(self._config())
+        assert set(signs) == {"e0", "e1", "c0"}
+
+    def test_synthesised_sign_sits_at_the_node_centroid(self):
+        signs = extract_sign_descriptors(self._config())
+        assert signs["e0"]["x"] == pytest.approx(1.0)
+        assert signs["e0"]["y"] == pytest.approx(1.0)
+
+    def test_synthesised_sign_is_omnidirectional_and_reflective(self):
+        signs = extract_sign_descriptors(self._config())
+        assert signs["c0"]["alpha"] is None
+        assert signs["c0"]["c"] == 3
+
+    def test_authored_sign_is_left_alone(self):
+        signs = extract_sign_descriptors(self._config())
+        assert signs["e1"] == {"x": 11.0, "y": 0.5, "alpha": 90, "c": 8}
+
+    def test_degenerate_coordinates_are_skipped_not_fatal(self):
+        """simulation_init tolerates unusable polygons, so sign synthesis must too.
+
+        A two-point ring cannot make a Polygon; the node simply gets no
+        synthesised sign instead of aborting the run.
+        """
+        config = {"exits": {"bad": {"coordinates": [[0, 0], [1, 1]]}}}
+
+        signs = extract_sign_descriptors(config)
+
+        assert "bad" not in signs
+
+    def test_distributions_get_no_sign(self):
+        """Spawn areas are sources, never navigation targets."""
+        signs = extract_sign_descriptors(self._config())
+        assert "d0" not in signs
+
+    def test_none_alpha_is_passed_through_not_coerced(self):
+        """fdsvismap reads alpha=None as omni-directional; float(None) raises."""
+        from unittest.mock import MagicMock, patch
+
+        from pyfds_evac.core.visibility import _build_vismap
+
+        fake = MagicMock()
+        fake.fds_time_points.max.return_value = 10.0
+        with patch("fdsvismap.VisMap", return_value=fake):
+            _build_vismap(
+                "unused",
+                {"c0": {"x": 1.0, "y": 2.0, "alpha": None, "c": 3}},
+                time_step_s=5.0,
+                slice_height_m=2.0,
+            )
+        assert fake.set_waypoint.call_args.kwargs["alpha"] is None
+
+    def test_synthesised_sign_is_genuinely_gated_end_to_end(self):
+        """A previously-unsigned node must now be visibility-gated, not just present.
+
+        Exercises VisibilityModel.node_is_visible on a synthesised sign (no
+        authored 'sign' in the config) through the real lookup path, using a
+        fake VisMap in place of FDS data. Asserts both directions: visible
+        where the underlying data says visible, not visible where it says
+        invisible. A descriptor merely existing is not enough -- before this
+        change such a node was hard-coded True regardless of the data.
+        """
+        config = {"exits": {"e0": {"coordinates": self._square(0, 0)}}}
+        signs = extract_sign_descriptors(config)
+        assert signs["e0"]["alpha"] is None  # confirm synthesised, not authored
+
+        class _GatedFakeVis:
+            vismap_time_points = np.array([0.0])
+            all_x_coords = np.array([0.0, 1.0])
+            all_y_coords = np.array([0.0])
+            all_time_all_wp_vismap_array_list = [
+                [np.array([[True, False]])],
+            ]
+
+        with patch(
+            "pyfds_evac.core.visibility._build_vismap",
+            return_value=_GatedFakeVis(),
+        ):
+            model = VisibilityModel("unused", signs)
+
+        assert model.node_is_visible(time=0.0, x=0.0, y=0.0, node_id="e0") is True
+        assert model.node_is_visible(time=0.0, x=1.0, y=0.0, node_id="e0") is False

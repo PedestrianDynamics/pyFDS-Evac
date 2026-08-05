@@ -1454,6 +1454,7 @@ def run_scenario(
                                         agent_radius=float(
                                             flow_params.get("radius", 0.2)
                                         ),
+                                        spawn_origin=flow_dist.get("dist_key"),
                                     )
                                     if path_state:
                                         agent_wait_info[agent_id] = path_state

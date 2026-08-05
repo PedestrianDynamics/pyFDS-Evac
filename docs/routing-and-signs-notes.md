@@ -116,7 +116,7 @@ Symbols used below:
 
 ## Part 2 — How exit signs & visibility work
 
-1. **Signs are opt-in, defined per node in `config.json`.**
+1. **Every routable node has a sign; authoring one is optional.**
    Any exit / checkpoint / waypoint may carry a `sign` block (e.g.
    `on/config.json:60`):
    ```json
@@ -125,8 +125,11 @@ Symbols used below:
    - `x, y` — the sign's world position.
    - `alpha` — compass bearing the sign faces (deg from north, clockwise).
    - `c` — contrast/visibility constant (default 3).
-   `extract_sign_descriptors()` (`visibility.py:14`) collects every node that has
-   one. **A node with no `sign` is always treated as visible** (opt-in system).
+   `extract_sign_descriptors()` collects every exit, checkpoint and waypoint.
+   An authored `sign` is kept verbatim; **a node without one gets a sign
+   synthesised at its centroid** with `c = 3` and `alpha = None`
+   (omni-directional), so no routable stage escapes smoke-dependent legibility.
+   A node whose coordinates cannot form a polygon is skipped and stays ungated.
 
 2. **Signs are directional.**
    A sign is only readable from the side it faces (`visibility.py:209`):
@@ -153,7 +156,8 @@ Symbols used below:
 
 4. **The routing query is a single boolean.**
    `node_is_visible(time, x, y, node_id)` (`visibility.py:251`) → True/False.
-   Nodes without a sign always return True.
+   Nodes with no descriptor at all — spawn areas, and nodes whose geometry was
+   unusable — return True.
 
 5. **Signs gate routes (rejection), they don't (yet) change cost.**
    In `rank_routes` (`route_graph.py:750`): a route is **rejected if the agent
