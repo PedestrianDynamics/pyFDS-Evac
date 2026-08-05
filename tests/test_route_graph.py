@@ -2188,6 +2188,8 @@ class TestUnroutableCentroid:
 
         assert "d0" in caplog.text
         assert "e0" in caplog.text
+
+
 class TestWalkableRemainingDistance:
     """Position-aware distance must follow the walkable area, not cut corners.
 
