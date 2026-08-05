@@ -1,0 +1,89 @@
+&HEAD CHID='demo_homogeneous_CO_2000ppm',
+      TITLE='30x30 m sealed room, homogeneous 2000 ppm CO, FED hand-calc validation' /
+
+! Domain: 30x30m floor, 3m ceiling, 0.5m cells, split into 4 quadrants for MPI
+! Run with: mpiexec -n 4 fds demo_homogeneous_CO_2000ppm.fds
+&MESH ID='M1', IJK=30,30,6, XB= 0,15, 0,15, 0,3 /
+&MESH ID='M2', IJK=30,30,6, XB=15,30, 0,15, 0,3 /
+&MESH ID='M3', IJK=30,30,6, XB= 0,15,15,30, 0,3 /
+&MESH ID='M4', IJK=30,30,6, XB=15,30,15,30, 0,3 /
+
+
+&TIME T_END=1000 /
+
+! Background is nitrogen so O2 doesn't get double-counted
+&SPEC ID='NITROGEN',       BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN'                            /
+&SPEC ID='CARBON MONOXIDE'                   /
+&SPEC ID='CARBON DIOXIDE'                    /
+&SPEC ID='SOOT'                              /
+
+! Initial gas concentrations, same everywhere in the room.
+! Target volume fractions: CO = 2000 ppm, CO2 = 500 ppm, O2 = 20.9%.
+! Converted to mass fraction properly (Y_i = X_i * M_i / M_mix), not
+! just assumed equal to volume fraction -- O2's molar mass is different
+! enough from N2 to matter. These numbers give the exact 2000/500/20.9%
+! target (M_mix recalculated for the new CO fraction, not scaled from
+! the 4000 ppm case).
+!
+! NOTE: all species MUST be in a single &INIT. A second &INIT with no XB
+! resets the whole domain, overwriting the first one and leaving CO/O2 at 0.
+&INIT SPEC_ID(1)='CARBON MONOXIDE',
+      SPEC_ID(2)='CARBON DIOXIDE',
+      SPEC_ID(3)='OXYGEN',
+      SPEC_ID(4)='SOOT',
+      MASS_FRACTION(1)=1.9416E-3,
+      MASS_FRACTION(2)=7.6259E-4,
+      MASS_FRACTION(3)=2.3179E-1,
+      MASS_FRACTION(4)=9.5785E-5 /
+
+! CO at a few heights, to check it's actually uniform
+&SLCF PBZ=0.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+
+! CO2 and O2 at breathing height, needed by pyFDS-Evac
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'         /
+
+! Visibility and smoke slices
+&SLCF PBZ=0.5, QUANTITY='VISIBILITY' /
+&SLCF PBZ=1.5, QUANTITY='VISIBILITY' /
+&SLCF PBZ=2.0, QUANTITY='VISIBILITY' /
+&SLCF PBZ=2.5, QUANTITY='VISIBILITY' /
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION' /
+&SLCF PBZ=2.0, QUANTITY='MASS FRACTION', SPEC_ID='SOOT' /
+
+! Vertical slices, another way to check homogeneity
+&SLCF PBY=15.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBY=15.0, QUANTITY='VISIBILITY'  /
+&SLCF PBY=15.0, QUANTITY='EXTINCTION'  /
+&SLCF PBX=15.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBX=15.0, QUANTITY='VISIBILITY'  /
+
+! CO readings at corners and center, should all read ~2000 ppm
+&DEVC XB= 8, 8, 8, 8,2,2,   QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_corner_SW' /
+&DEVC XB=22,22,22,22,2,2,   QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_corner_NE' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2,   QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_center'      /
+&DEVC XB=14.9,14.9,14.9,14.9,0.5,0.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_center_low'  /
+&DEVC XB=14.9,14.9,14.9,14.9,2.5,2.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE', ID='CO_center_high' /
+
+! FDS's own FED calculation, for comparing against the hand-calc
+&DEVC XB= 8, 8, 8, 8,2,2,   QUANTITY='FED', ID='FED_corner_SW' /
+&DEVC XB=22,22,22,22,2,2,   QUANTITY='FED', ID='FED_corner_NE' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2,   QUANTITY='FED', ID='FED_center'    /
+
+! Visibility readings, should stay ~3m everywhere
+&DEVC XB= 8, 8, 8, 8,2,2,   QUANTITY='VISIBILITY', ID='VIS_corner_SW'  /
+&DEVC XB=22,22,22,22,2,2,   QUANTITY='VISIBILITY', ID='VIS_corner_NE'  /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2,   QUANTITY='VISIBILITY', ID='VIS_center'    /
+&DEVC XB=14.9,14.9,14.9,14.9,0.5,0.5, QUANTITY='VISIBILITY', ID='VIS_center_low'  /
+&DEVC XB=14.9,14.9,14.9,14.9,2.5,2.5, QUANTITY='VISIBILITY', ID='VIS_center_high' /
+
+! Extinction coefficient readings
+&DEVC XB= 8, 8, 8, 8,2,2,   QUANTITY='EXTINCTION', ID='EXT_corner_SW' /
+&DEVC XB=22,22,22,22,2,2,   QUANTITY='EXTINCTION', ID='EXT_corner_NE' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2,   QUANTITY='EXTINCTION', ID='EXT_center'   /
+
+&TAIL /

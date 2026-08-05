@@ -71,11 +71,17 @@ def test_run_without_scenario_shows_error(client):
     assert "Select a scenario first" in r.text
 
 
-def test_invalid_option_combo_shows_error(client):
+def test_invalid_option_combo_shows_error(client, tmp_path):
     # --vis-cache requires --enable-rerouting; build_run_kwargs must reject it.
+    # fds_dir must be a real directory, otherwise the handler rejects it on the
+    # earlier "not a directory" check and never reaches the rule under test.
     r = client.post(
         "/run",
-        data={"scenario": "ISO-table21", "vis_cache": "x.pkl", "fds_dir": "fds_data"},
+        data={
+            "scenario": "ISO-table21",
+            "vis_cache": "x.pkl",
+            "fds_dir": str(tmp_path),
+        },
     )
     assert r.status_code == 200
     assert "enable-rerouting" in r.text

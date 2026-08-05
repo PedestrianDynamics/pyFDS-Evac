@@ -113,42 +113,39 @@ this matters because `HV_CO2` is not 1.0 even at 0% CO2 (it evaluates to
 
 ## Directory Contents
 
+Each case is a self-contained scenario directory. The deck, the JuPedSim
+config and the walkable area live together; FDS run output lands beside them
+and is gitignored.
+
 ```
-homogeneous_co_fed_validation/
-├── FDS_results/
-│   ├── demo_homogeneous_CO_2000ppm.fds       — FDS input, 2000 ppm variant
-│   ├── demo_homogeneous_CO_4000ppm.fds       — FDS input, 4000 ppm variant
-│   ├── demo_homogeneous_CO_v2_8000ppm.fds    — FDS input, 8000 ppm variant
-│   ├── demo_homogeneous_CO.smv        — Smokeview scene file
-│   ├── demo_homogeneous_CO.out        — FDS console output / run log
-│   ├── demo_homogeneous_CO_devc.csv   — Device output (time-series measurements)
-│   ├── demo_homogeneous_CO_hrr.csv    — Heat release rate over time
-│   ├── demo_homogeneous_CO_cpu.csv    — MPI CPU timing info
-│   ├── demo_homogeneous_CO_steps.csv  — Solver timestep log
-│   ├── demo_homogeneous_CO_git.txt    — FDS version / git hash at time of run
-│   ├── demo_homogeneous_CO.pickle     — Cached fdsreader data
-│   ├── demo_homogeneous_CO.sf.gbnd    — Global slice boundary file
-│   └── demo_homogeneous_CO_{1-4}_{1-17}.sf/.sf.bnd — Slice field data (4 meshes × 17 quantities)
+assets/
+├── fed_incap_co_2000ppm/
+│   ├── fed_incap_co_2000ppm.fds   — FDS deck, 2000 ppm CO (CHID demo_homogeneous_CO_2000ppm)
+│   ├── config.json                — JuPedSim scenario (agents, journey, routing)
+│   ├── geometry.wkt               — Walkable area (Shapely WKT)
+│   └── <untracked run output>     — .smv .out .pickle .sf/.sf.bnd (4 meshes x 17 quantities),
+│                                    _devc.csv _hrr.csv _cpu.csv _steps.csv _git.txt
+├── fed_incap_co_4000ppm/          — same layout, 4000 ppm
+├── fed_incap_co_8000ppm/          — same layout, 8000 ppm
 │
-├── geometry&pedestrians/
-│   ├── geometry.wkt                   — Walkable area definition (Shapely WKT)
-│   └── config.json                    — JuPedSim scenario (agents, journey, routing)
-│
-├── graphs/
-│   ├── homogenous_co_incapacitation_onset_2000ppm.png   — Histogram of incapacitation onset times, 2000ppm
-│   ├── homogenous_onset_cumulative_2000ppm.png          — Cumulative incapacitation curve over time, 2000ppm
-│   ├── homogenous_co_incapacitation_onset_4000ppm.png   — Histogram of incapacitation onset times, 4000ppm
-│   ├── homogenous_onset_cumulative_4000ppm.png          — Cumulative incapacitation curve over time, 4000ppm
-│   ├── homogenous_co_incapacitation_onset_8000ppm.png   — Histogram of incapacitation onset times, 8000ppm
-│   └── homogenous_onset_cumulative_8000ppm.png          — Cumulative incapacitation curve over time, 8000ppm
-│
-└── pyFDS-Evac_results/
-    ├── Homogenous_Test_smol.sqlite                  — Agent trajectory database
-    ├── Homogenous_Test_smol_fed_history.csv         — Per-agent FED accumulation over time
-    ├── Homogenous_Test_smol_smoke_history.csv       — Per-agent smoke exposure over time
-    ├── Homogenous_Test_smol_route_history.csv       — Agent route decisions over time
-    └── Homogenous_Test_smol_route_cost_history.csv  — Route cost values over time
+├── fed_incap_co_v1/               — earlier iteration, 4000 ppm
+├── fed_incap_co_v2/               — earlier iteration, 4000 ppm
+└── fed_incap_co_smol/             — config + geometry only, no deck of its own
 ```
+
+pyFDS-Evac run artefacts (written wherever you point the `--output-*` flags):
+
+```
+<scenario>.sqlite                  — Agent trajectory database
+<scenario>_fed_history.csv         — Per-agent FED accumulation over time
+<scenario>_smoke_history.csv       — Per-agent smoke exposure over time
+<scenario>_route_history.csv       — Agent route decisions over time
+<scenario>_route_cost_history.csv  — Route cost values over time
+```
+
+Analysis plots (incapacitation-onset histograms and cumulative onset curves
+per concentration) are produced from the FED history CSV by the plotting
+scripts in `scripts/`; see `docs/usage.md`.
 
 ## How to Run
 

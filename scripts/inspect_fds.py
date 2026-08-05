@@ -7,9 +7,9 @@ Checks availability and time-series statistics for:
   - HCN, HCl                     (optional FED species)
 
 Usage:
-    uv run python scripts/inspect_fds.py fds_data/demo
-    uv run python scripts/inspect_fds.py fds_data/demo --plot
-    uv run python scripts/inspect_fds.py fds_data/demo --height 2.0 --plot
+    uv run python scripts/inspect_fds.py assets/demo
+    uv run python scripts/inspect_fds.py assets/demo --plot
+    uv run python scripts/inspect_fds.py assets/demo --height 2.0 --plot
 """
 
 from __future__ import annotations

@@ -17,8 +17,8 @@ Outputs:
 
 Usage:
     uv run python scripts/run_familiarity_comparison.py \\
-        --fds-dir fds_data/demo \\
-        --vis-cache fds_data/demo/vismap_cache.pkl
+        --fds-dir assets/demo \\
+        --vis-cache assets/demo/vismap_cache.pkl
 """
 
 from __future__ import annotations
@@ -44,8 +44,8 @@ CONFIGS = {
     "full": Path("assets/demo/config_full.json"),
     "discovery": Path("assets/demo/config_discovery.json"),
 }
-FDS_DIR_DEFAULT = Path("fds_data/demo")
-VIS_CACHE_DEFAULT = Path("fds_data/demo/vismap_cache.pkl")
+FDS_DIR_DEFAULT = Path("assets/demo")
+VIS_CACHE_DEFAULT = Path("assets/demo/vismap_cache.pkl")
 OUT_DIR = Path("results/familiarity_comparison")
 SEED = 42
 REROUTE_INTERVAL_S = 10.0
