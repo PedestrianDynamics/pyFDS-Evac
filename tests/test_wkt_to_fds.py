@@ -95,12 +95,20 @@ def test_deck_has_required_sections_and_slices():
     assert "&OBST XB=" in deck
     assert "&TAIL /" in deck
     for quantity in (
-        "SOOT EXTINCTION COEFFICIENT",
+        # FDS rejects 'SOOT EXTINCTION COEFFICIENT' as an input quantity
+        # (ERROR 1042 on 6.10.1) and records this one under that longer name,
+        # which is what fdsvismap filters slices by.  Asking for the recorded
+        # name produces a deck FDS refuses to run.
+        "QUANTITY='EXTINCTION COEFFICIENT'",
         "CARBON MONOXIDE",
         "CARBON DIOXIDE",
         "OXYGEN",
     ):
         assert quantity in deck
+
+    assert "QUANTITY='SOOT EXTINCTION COEFFICIENT'" not in deck, (
+        "FDS rejects that as an input quantity; the deck would not run"
+    )
 
 
 def test_min_feature_width_detects_thin_wall():

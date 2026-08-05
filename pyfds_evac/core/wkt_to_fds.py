@@ -193,7 +193,10 @@ def _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m, nd) -> str
         "&RAMP ID='qramp', T=10.0, F=1.0 /",
         "",
         f"! --- analysis slices at z={slice_height_m} m (pyFDS-Evac quantities) ---",
-        f"&SLCF PBZ={slice_height_m}, QUANTITY='SOOT EXTINCTION COEFFICIENT' /",
+        # FDS rejects 'SOOT EXTINCTION COEFFICIENT' as an input quantity
+        # (ERROR 1042 on 6.10.1) but records this one under exactly that name,
+        # which is what fdsvismap filters slices by.
+        f"&SLCF PBZ={slice_height_m}, QUANTITY='EXTINCTION COEFFICIENT' /",
     ]
     for spec in _FED_SPECIES:
         lines.append(
