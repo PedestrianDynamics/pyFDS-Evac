@@ -1,11 +1,14 @@
 """Tests for StageGraph construction and Dijkstra shortest-path routing."""
 
+import logging
+
 import pytest
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.route_graph import (
     StageEdge,
     StageGraph,
+    StageNode,
     RouteCostConfig,
     RerouteConfig,
     AgentRouteState,
@@ -2070,3 +2073,36 @@ class TestAutoWiringWithCrossings:
             RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=1.0),
         )
         assert ranked[0].path == ["d0", "c0", "e0"]
+
+
+class TestUnroutableCentroid:
+    """A stage centroid outside the navmesh must not abort graph construction.
+
+    ``compute_waypoints`` raises for a point JuPedSim considers unreachable.
+    Auto-wiring queries every source/target pair, so one badly placed crossing
+    would otherwise take the whole simulation down at start-up.
+    """
+
+    class _RefusingEngine:
+        def compute_waypoints(self, source, target):
+            raise RuntimeError(f"Point {source} is outside of accessible area")
+
+    def _edge(self):
+        from pyfds_evac.core.route_graph import _make_edge
+
+        src = StageNode("d0", 0.0, 0.0, "distribution")
+        tgt = StageNode("e0", 3.0, 4.0, "exit")
+        return _make_edge(src, tgt, self._RefusingEngine())
+
+    def test_edge_falls_back_to_the_straight_centroid_ray(self):
+        edge = self._edge()
+
+        assert edge.waypoints == [(0.0, 0.0), (3.0, 4.0)]
+        assert edge.weight == pytest.approx(5.0)
+
+    def test_failure_is_logged_with_both_stage_ids(self, caplog):
+        with caplog.at_level(logging.WARNING, logger="pyfds_evac.core.route_graph"):
+            self._edge()
+
+        assert "d0" in caplog.text
+        assert "e0" in caplog.text

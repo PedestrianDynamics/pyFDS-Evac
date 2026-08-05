@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import heapq
+import logging
 import math
 from dataclasses import dataclass, field, replace
 from typing import Protocol
@@ -10,6 +11,8 @@ from typing import Protocol
 from shapely.geometry import Polygon
 
 from .smoke_speed import speed_factor_from_extinction
+
+_logger = logging.getLogger(__name__)
 
 _SECONDS_PER_MINUTE = 60.0
 
@@ -262,18 +265,25 @@ class StageGraph:
 
 def _make_edge(src_node: StageNode, tgt_node: StageNode, routing_engine) -> StageEdge:
     """Build a StageEdge between two nodes using polyline or straight-line geometry."""
+    straight = [
+        (src_node.centroid_x, src_node.centroid_y),
+        (tgt_node.centroid_x, tgt_node.centroid_y),
+    ]
+    waypoints = straight
     if routing_engine is not None:
-        waypoints = list(
-            routing_engine.compute_waypoints(
-                (src_node.centroid_x, src_node.centroid_y),
-                (tgt_node.centroid_x, tgt_node.centroid_y),
+        # A centroid outside the navmesh makes the routing engine raise.  The
+        # edge is still wanted -- a straight ray is a coarse but usable cost --
+        # so fall back rather than lose the connection or abort the run.
+        try:
+            waypoints = list(routing_engine.compute_waypoints(*straight))
+        except Exception as exc:
+            _logger.warning(
+                "Routing %s -> %s failed (%s); using a straight centroid ray",
+                src_node.stage_id,
+                tgt_node.stage_id,
+                exc,
             )
-        )
-    else:
-        waypoints = [
-            (src_node.centroid_x, src_node.centroid_y),
-            (tgt_node.centroid_x, tgt_node.centroid_y),
-        ]
+            waypoints = straight
     return StageEdge(
         source=src_node.stage_id,
         target=tgt_node.stage_id,
