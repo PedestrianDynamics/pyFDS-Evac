@@ -24,6 +24,7 @@ rest) is untracked. See the ignore rules in [`.gitignore`](../.gitignore).
 | `fed_incap_co_2000ppm`<br>`fed_incap_co_4000ppm`<br>`fed_incap_co_8000ppm` | Sealed uniform room at three constant CO concentrations, 100 non-evacuating agents, 4 MPI meshes. | deck | [testing-homogeneous.md](../docs/testing-homogeneous.md) |
 | `familiarity_test_full`<br>`familiarity_test_discovery` | Hand-drawn 20 x 18 m floor plan, 20 agents. The pair differs only in the spawn distribution's `familiarity` value. | deck | [testing-familiarity.md](../docs/testing-familiarity.md) |
 | `exit_visibility_alpha` | 4 x 30 m corridor, 40 discovery agents, two exits. The pair differs only in one exit sign's viewing bearing. | deck | [test_exit_visibility_alpha.py](../tests/test_exit_visibility_alpha.py) |
+| `cognitive_map_memory` | 4 x 32 m corridor with a side alcove, 20 discovery agents. A side exit's sign is legible only from y in [12.5, 27.5]. | deck | [test_cognitive_map_memory.py](../tests/test_cognitive_map_memory.py) |
 
 What each one proves, and where that proof is checked, is in the
 [Assets section of the main README](../README.md#assets).

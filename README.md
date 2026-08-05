@@ -594,6 +594,20 @@ conventions; what each one proves is below.
   `fed_incap_co_v1`, `fed_incap_co_v2` and `fed_incap_co_smol` iterations from
   the same debugging lineage are no longer tracked.) Full writeup:
   `docs/testing-homogeneous.md`.
+- **Cognitive Map Memory**: 4x32 m corridor with a side alcove, 20 `discovery`
+  agents. The side exit's sign faces west and is legible only from
+  `y ∈ [12.5, 27.5]` on the centreline — a window that falls out of
+  `view_angle * max_vis >= distance` rather than being tuned, and that
+  `build_geometry.py` recomputes and asserts. Proves the cognitive map does the
+  one thing a visibility query cannot: **remember**. The side exit is unknown at
+  spawn, enters the map on crossing `y=12.5`, and is *still* there at `y=30`
+  where the sign is long unreadable. Persistence is the load-bearing claim —
+  delete the expansion rules and acquisition still appears to work for any agent
+  starting inside the window. A third test closes the loop to routing: a
+  remembered-but-illegible exit must still be routable, which it was not before
+  the visibility consolidation. `scripts/generate_cognitive_map_states.py` renders the
+  three states (unknown / legible now / remembered), and the amber band is the
+  memory made visible. Checked by `tests/test_cognitive_map_memory.py`.
 - **Exit Visibility Alpha**: 4x30 m corridor, 40 `discovery` agents, two
   exits. The two configs differ in exactly one value — the viewing bearing
   (`alpha`) of the near exit's sign — so any difference in exit choice is
