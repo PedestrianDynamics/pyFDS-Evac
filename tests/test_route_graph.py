@@ -1960,3 +1960,113 @@ class TestAutoEdgeGeneration:
         assert flow_dist_without_key.get("dist_key", exit_id) == exit_id, (
             "without dist_key the fallback is exit_id — this documents the regression"
         )
+
+
+class TestAutoWiringWithCrossings:
+    """A graph with no transitions must wire itself whatever stages exist.
+
+    Auto-wiring previously bailed out as soon as a non-exit, non-distribution
+    node appeared, leaving a graph with nodes and no edges -- routing silently
+    dead for anyone who drew a crossing but no journey.
+    """
+
+    @staticmethod
+    def _stages():
+        return {
+            "e0": {"polygon": _box(0, 0), "stage_type": "exit"},
+            "e1": {"polygon": _box(30, 0), "stage_type": "exit"},
+            "c0": {"polygon": _box(15, 0), "stage_type": "checkpoint"},
+        }
+
+    def test_crossing_does_not_kill_auto_wiring(self):
+        graph = StageGraph.from_scenario(
+            self._stages(),
+            [],
+            distributions={"d0": {"polygon": _box(5, 0)}},
+        )
+        assert sum(len(e) for e in graph.edges.values()) > 0
+
+    def test_distribution_reaches_every_exit_and_crossing(self):
+        graph = StageGraph.from_scenario(
+            self._stages(),
+            [],
+            distributions={"d0": {"polygon": _box(5, 0)}},
+        )
+        targets = {edge.target for edge in graph.edges.get("d0", [])}
+        assert targets == {"e0", "e1", "c0"}
+
+    def test_crossing_reaches_exits_but_exits_are_terminal(self):
+        graph = StageGraph.from_scenario(
+            self._stages(),
+            [],
+            distributions={"d0": {"polygon": _box(5, 0)}},
+        )
+        assert {edge.target for edge in graph.edges.get("c0", [])} == {"e0", "e1"}
+        assert graph.edges.get("e0", []) == []
+
+    def test_no_edge_points_back_at_a_distribution(self):
+        graph = StageGraph.from_scenario(
+            self._stages(),
+            [],
+            distributions={"d0": {"polygon": _box(5, 0)}},
+        )
+        all_targets = {e.target for edges in graph.edges.values() for e in edges}
+        assert "d0" not in all_targets
+
+    def test_explicit_transitions_still_win(self):
+        """With transitions given, only those edges exist -- unchanged behaviour."""
+        graph = StageGraph.from_scenario(
+            self._stages(),
+            [{"from": "c0", "to": "e0"}],
+            distributions={"d0": {"polygon": _box(5, 0)}},
+        )
+        assert sum(len(e) for e in graph.edges.values()) == 1
+        assert graph.edges["c0"][0].target == "e0"
+
+    def test_crossing_is_inert_in_clear_air(self):
+        """Direct spawn-to-exit is cheapest with no smoke, so no detour."""
+        graph = StageGraph.from_scenario(
+            {
+                "e0": {"polygon": _box(20, 0), "stage_type": "exit"},
+                "c0": {"polygon": _box(10, 10), "stage_type": "checkpoint"},
+            },
+            [],
+            distributions={"d0": {"polygon": _box(0, 0)}},
+        )
+        ranked = rank_routes(
+            graph,
+            "d0",
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            None,
+            RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=1.0),
+        )
+        assert ranked[0].path == ["d0", "e0"]
+
+    def test_smoke_on_the_direct_route_pushes_agents_through_the_crossing(self):
+        class SmokeOnTheDirectLine:
+            """Dense smoke in a band along y = 0, clear everywhere else."""
+
+            def sample_extinction(self, time_s, x, y):
+                del time_s
+                return 5.0 if (4.0 < x < 16.0 and abs(y) < 2.0) else 0.0
+
+        graph = StageGraph.from_scenario(
+            {
+                "e0": {"polygon": _box(20, 0), "stage_type": "exit"},
+                "c0": {"polygon": _box(10, 10), "stage_type": "checkpoint"},
+            },
+            [],
+            distributions={"d0": {"polygon": _box(0, 0)}},
+        )
+        ranked = rank_routes(
+            graph,
+            "d0",
+            0.0,
+            0.0,
+            SmokeOnTheDirectLine(),
+            None,
+            RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=1.0),
+        )
+        assert ranked[0].path == ["d0", "c0", "e0"]
