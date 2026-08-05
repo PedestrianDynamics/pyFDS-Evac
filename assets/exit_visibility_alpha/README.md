@@ -104,8 +104,14 @@ a 33 m sign as perfectly legible.
 
 | config | `E_near` alpha | sign faces | expected outcome |
 |---|---|---|---|
-| `config_visible.json` | 0 | north, toward the agents | all agents take `E_near` |
-| `config_hidden.json` | 180 | south, away from them | `E_near` rejected as `next_node_not_visible`; all agents walk the extra 10 m to `E_far` |
+| `config_visible.json` | 0 | north, toward the agents | both exits enter the map; agents take the nearer, `E_near` |
+| `config_hidden.json` | 180 | south, away from them | `E_near` never enters the map; agents walk the extra 10 m to `E_far` |
+
+The near exit is **not rejected** in the hidden run — it is absent. Routing
+consults the agent's cognitive map, and legibility decides what enters it, so
+Dijkstra never sees an exit the agent has not perceived. Absence is a stronger
+claim than rejection: a rejected route still appears in the ranking, flagged
+and sorted last, and the all-rejected fallback can reinstate it.
 
 `alpha` is a compass bearing in degrees clockwise from north. fdsvismap makes a
 sign legible only within the half-plane it faces, with cosine falloff — head-on
@@ -116,9 +122,12 @@ that ignored sign orientation would send agents there either way.
 
 ## Deliberate choices
 
-**Familiarity stays `full`.** Sign-visibility rejection lives in `rank_routes`
-and does not consult the cognitive map, so this scenario isolates the
-visibility channel without involving discovery.
+**Agents are `discovery` tier**, which is the only tier where sign legibility
+means anything. A `full` agent knows every exit from t=0 and walks to `E_near`
+under either bearing — correctly, since it does not need to read a sign to
+find a door it already knows. Signs are wayfinding information; they bind only
+where knowledge is incomplete. `test_a_fully_familiar_agent_ignores_the_bearing`
+pins that.
 
 **The air is clear.** `exit_visibility_alpha.fds` carries no fire, so the
 extinction field is zero everywhere and legibility is decided by viewing angle
@@ -155,7 +164,7 @@ Alongside the two headline assertions it carries four guards, because the
 experiment is worthless if its premises silently drift:
 
 - the configs differ in nothing but the bearing;
-- `E_near` really is the closer exit;
+- `E_near` really is the closer exit, so distance never explains the flip;
 - both signs sit inside the 30 m visibility cap, so neither is illegible for
   the trivial reason of being too far away;
 - with no visibility model, **both** configs choose `E_near` — so the flip is

@@ -20,15 +20,18 @@ Agents stand north of E_near, so with fdsvismap's bearing convention
 * ``alpha = 0``   -- E_near faces north, toward the agents: legible.
   Every agent takes E_near, the geometrically obvious choice.
 * ``alpha = 180`` -- E_near faces south, away from the agents: illegible.
-  The route is rejected with ``next_node_not_visible`` and every agent walks
-  the extra 10 m to E_far instead.
+  E_near never enters the cognitive map, so Dijkstra never sees it and every
+  agent walks the extra 10 m to E_far.  The near exit is not rejected; as far
+  as the agent is concerned it does not exist.
 
 The flip is the whole point.  Distance still favours E_near in both runs, so a
 model that ignored sign orientation would send agents to E_near either way.
 
-Familiarity stays ``full`` deliberately.  Sign-visibility rejection lives in
-``rank_routes`` and is independent of the cognitive map, so this isolates the
-visibility channel without involving discovery.
+Agents are ``discovery`` tier, which is the only tier where sign legibility
+means anything: routing consults the agent's cognitive map, and legibility
+decides what enters it.  A ``full`` agent knows every exit from t=0 and would
+walk to E_near under either bearing -- correctly, since it does not need to
+read a sign to find a door it already knows.
 
 The air is clear: the FDS deck carries no fire, so legibility is limited by
 viewing angle and distance only, never by smoke.  That keeps alpha the single
@@ -133,7 +136,7 @@ def build_config(alpha_near):
                     "use_premovement": False,
                     "radius_distribution": "constant",
                     "v0_distribution": "constant",
-                    "familiarity": "full",
+                    "familiarity": "discovery",
                 },
             }
         },

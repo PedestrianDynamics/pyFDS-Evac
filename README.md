@@ -594,6 +594,25 @@ conventions; what each one proves is below.
   `fed_incap_co_v1`, `fed_incap_co_v2` and `fed_incap_co_smol` iterations from
   the same debugging lineage are no longer tracked.) Full writeup:
   `docs/testing-homogeneous.md`.
+- **Exit Visibility Alpha**: 4x30 m corridor, 40 `discovery` agents, two
+  exits. The two configs differ in exactly one value — the viewing bearing
+  (`alpha`) of the near exit's sign — so any difference in exit choice is
+  attributable to sign orientation and nothing else. Proves that legibility
+  decides cognitive-map membership, and membership decides the exit: at
+  `alpha=0` both exits enter the map and agents take the nearer one; at
+  `alpha=180` the near exit never enters the map and agents walk 10 m further
+  to the only exit they know about, even though distance favours the near one
+  by more than 2:1. The near exit is *absent*, not rejected — a stronger claim,
+  since a rejected route still appears in the ranking and the all-rejected
+  fallback can reinstate it. Checked by
+  `tests/test_exit_visibility_alpha.py`, which needs no FDS output: it
+  reimplements fdsvismap's clear-air rule (`view_angle * max_vis >= distance`)
+  so the test exercises the routing decision rather than the third-party
+  solver. A companion test pins that a `full`-familiarity agent ignores the
+  bearing entirely — signs are wayfinding information and bind only where
+  knowledge is incomplete. The folder README documents the **30 m visibility
+  ceiling** that makes a sign illegible at any bearing, and how much tighter it
+  becomes once smoke is present (`c / K̄`, so 6 m at `c=3`, `K̄=0.5`).
 - **Familiarity Test Full** / **Familiarity Test Discovery**: `SocialForceModel`
   scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
   doors throughout, generated parametrically by each folder's

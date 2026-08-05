@@ -1,9 +1,15 @@
-"""Exit choice must follow sign legibility, not distance alone.
+"""Sign legibility decides what a discovery agent knows, and so where it goes.
 
 Drives the ``assets/exit_visibility_alpha`` scenario through the real routing
 code.  The two configs differ in exactly one value -- the viewing bearing of
 the near exit's sign -- so any difference in the chosen exit is attributable to
 sign orientation and nothing else.
+
+Routing consults the agent's cognitive map, never sign legibility directly, so
+an illegible exit is *absent from the graph* rather than present-and-rejected.
+That is why the agents are ``discovery`` tier: a ``full`` agent knows every
+exit from t=0 and would walk to the near one under either bearing -- correctly,
+since it does not need to read a sign to find a door it already knows.
 
 No FDS output is needed.  ``VisMapClearAir`` below reimplements the rule
 fdsvismap applies in clear air, so the test exercises our routing decision
@@ -19,6 +25,7 @@ from pathlib import Path
 import pytest
 from shapely.geometry import Polygon
 
+from pyfds_evac.core.cognitive_map import init_cognitive_map
 from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, rank_routes
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
@@ -95,8 +102,21 @@ def _load(config_name: str):
     return graph, (spawn.x, spawn.y), VisMapClearAir(signs)
 
 
-def _best_exit(config_name: str) -> str:
+def _known_exits(config_name: str) -> set[str]:
+    """Exits in a discovery agent's cognitive map at spawn."""
     graph, position, vis_model = _load(config_name)
+    cmap = init_cognitive_map(
+        "jps-distributions_0", graph, "discovery", vis_model=vis_model, time_s=0.0
+    )
+    return {n for n in cmap.known_nodes if n.startswith("E_")}
+
+
+def _reachable_exits(config_name: str, familiarity: str = "discovery") -> set[str]:
+    """Exits rank_routes can actually offer, given what the agent knows."""
+    graph, position, vis_model = _load(config_name)
+    cmap = init_cognitive_map(
+        "jps-distributions_0", graph, familiarity, vis_model=vis_model, time_s=0.0
+    )
     ranked = rank_routes(
         graph,
         "jps-distributions_0",
@@ -105,7 +125,26 @@ def _best_exit(config_name: str) -> str:
         ConstantExtinctionField(0.0),
         None,
         RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0, w_queue=0.0),
-        vis_model=vis_model,
+        cognitive_map=cmap,
+        agent_position=position,
+    )
+    return {rc.exit_id for rc in ranked}
+
+
+def _best_exit(config_name: str, familiarity: str = "discovery") -> str:
+    graph, position, vis_model = _load(config_name)
+    cmap = init_cognitive_map(
+        "jps-distributions_0", graph, familiarity, vis_model=vis_model, time_s=0.0
+    )
+    ranked = rank_routes(
+        graph,
+        "jps-distributions_0",
+        0.0,
+        0.0,
+        ConstantExtinctionField(0.0),
+        None,
+        RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0, w_queue=0.0),
+        cognitive_map=cmap,
         agent_position=position,
     )
     return ranked[0].exit_id
@@ -156,42 +195,29 @@ class TestAssetIsSingleVariable:
 
 
 class TestExitChoiceFollowsLegibility:
-    def test_legible_near_exit_is_chosen(self):
+    def test_legible_near_exit_enters_the_map_and_is_chosen(self):
+        assert _known_exits("config_visible") == {"E_near", "E_far"}
         assert _best_exit("config_visible") == "E_near"
 
-    def test_illegible_near_exit_is_abandoned_for_the_far_one(self):
-        """The agent walks 10 m further because the near sign faces away."""
+    def test_illegible_near_exit_never_enters_the_map(self):
+        """The agent walks 10 m further because it does not know the near exit."""
+        assert _known_exits("config_hidden") == {"E_far"}
         assert _best_exit("config_hidden") == "E_far"
 
-    def test_the_near_route_is_rejected_for_the_stated_reason(self):
-        graph, position, vis_model = _load("config_hidden")
-        ranked = rank_routes(
-            graph,
-            "jps-distributions_0",
-            0.0,
-            0.0,
-            ConstantExtinctionField(0.0),
-            None,
-            RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0),
-            vis_model=vis_model,
-            agent_position=position,
-        )
-        near = next(rc for rc in ranked if rc.exit_id == "E_near")
-        assert near.rejected
-        assert "not_visible" in (near.rejection_reason or "")
+    def test_the_near_exit_is_absent_not_rejected(self):
+        """Membership is the gate: Dijkstra never sees an unknown exit.
 
-    def test_without_a_visibility_model_distance_wins_in_both_configs(self):
-        """Control: with legibility unmodelled, the bearing changes nothing."""
+        A rejected route would still appear in the ranking, flagged and sorted
+        last, and the all-rejected fallback could reinstate it.  Absence is a
+        stronger and different claim.
+        """
+        assert _reachable_exits("config_hidden") == {"E_far"}
+
+    def test_a_fully_familiar_agent_ignores_the_bearing(self):
+        """Signs are wayfinding information; they bind only incomplete knowledge.
+
+        Someone who knows the building does not need to read a sign to use a
+        door, so the bearing must make no difference at the full tier.
+        """
         for config_name in ("config_visible", "config_hidden"):
-            graph, position, _ = _load(config_name)
-            ranked = rank_routes(
-                graph,
-                "jps-distributions_0",
-                0.0,
-                0.0,
-                ConstantExtinctionField(0.0),
-                None,
-                RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0),
-                agent_position=position,
-            )
-            assert ranked[0].exit_id == "E_near", config_name
+            assert _best_exit(config_name, familiarity="full") == "E_near", config_name
