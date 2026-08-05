@@ -120,6 +120,27 @@ gives a factor of 1, 90° to the side gives 0, and behind is clipped to 0.
 The flip is the point. Distance still favours `E_near` in both runs, so a model
 that ignored sign orientation would send agents there either way.
 
+## Visualising it
+
+```bash
+.venv/bin/python scripts/generate_exit_visibility_map.py
+```
+
+![exit choice map](exit_choice_map.png)
+
+Each cell is shaded by the exit a discovery agent standing there would take,
+given what it can perceive from that spot. Exit markers are outlined in red
+where the sign is illegible from the spawn area.
+
+The shading flips **wholesale** rather than at a cost crossover, and that is the
+signature of the mechanism: the near exit is not out-priced in the right-hand
+panel, it is absent from the agent's map, so routing never sees it. A cost
+effect would show a boundary somewhere in the corridor; membership shows none.
+
+The stray near-exit cells at the very bottom of the right panel are correct
+physics — below `y = 0.7` an agent is south of the sign, inside the half-plane
+it faces, so it becomes legible again.
+
 ## Deliberate choices
 
 **Agents are `discovery` tier**, which is the only tier where sign legibility
