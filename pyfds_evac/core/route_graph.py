@@ -49,6 +49,9 @@ class StageGraph:
 
     nodes: dict[str, StageNode] = field(default_factory=dict)
     edges: dict[str, list[StageEdge]] = field(default_factory=dict)
+    # Kept so route evaluation can measure distances from an agent's actual
+    # position along the walkable area, the same way edges are measured.
+    routing_engine: object | None = None
 
     @classmethod
     def from_scenario(
@@ -83,6 +86,7 @@ class StageGraph:
             import jupedsim as jps  # lazy import; jupedsim not always required
 
             routing_engine = jps.RoutingEngine(walkable_polygon)
+        graph.routing_engine = routing_engine
 
         # Add distribution nodes (not in direct_steering_info).
         if distributions:
@@ -308,6 +312,23 @@ def _polyline_length(waypoints: list[tuple[float, float]]) -> float:
             waypoints[i + 1][1],
         )
     return total
+
+
+def _walkable_distance(routing_engine, from_xy, to_xy) -> float:
+    """Path length through the walkable area, or straight-line if unavailable.
+
+    A wrong distance only degrades ranking, so a failed or degenerate query
+    falls back rather than ending the run.
+    """
+    if routing_engine is None:
+        return _euclidean(from_xy[0], from_xy[1], to_xy[0], to_xy[1])
+    try:
+        waypoints = list(routing_engine.compute_waypoints(from_xy, to_xy))
+    except Exception:
+        return _euclidean(from_xy[0], from_xy[1], to_xy[0], to_xy[1])
+    if len(waypoints) < 2:
+        return _euclidean(from_xy[0], from_xy[1], to_xy[0], to_xy[1])
+    return _polyline_length(waypoints)
 
 
 # ── Route cost evaluation (Phase 3) ──────────────────────────────────
@@ -644,7 +665,9 @@ def _position_aware_length(
     if path[1] == current_target:
         # Continuing toward the current target: charge only the distance
         # remaining from the agent's position to that node.
-        remaining = math.hypot(px - next_node.centroid_x, py - next_node.centroid_y)
+        remaining = _walkable_distance(
+            graph.routing_engine, (px, py), (next_node.centroid_x, next_node.centroid_y)
+        )
         if first_length_m <= 1e-9:
             return path_length - first_length_m + remaining, 1.0
         # Floored above zero so an impassable first segment (infinite travel
@@ -655,7 +678,11 @@ def _position_aware_length(
     if current_target is not None:
         # Diverging from the current heading: the agent must walk back to the
         # branch (first) node before taking this route.
-        backtrack = math.hypot(px - first_node.centroid_x, py - first_node.centroid_y)
+        backtrack = _walkable_distance(
+            graph.routing_engine,
+            (px, py),
+            (first_node.centroid_x, first_node.centroid_y),
+        )
         return path_length + backtrack, 1.0
 
     return path_length, 1.0

@@ -19,6 +19,7 @@ from pyfds_evac.core.route_graph import (
     should_reevaluate,
     reroute_agent,
     evaluate_and_reroute,
+    _position_aware_length,
 )
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
@@ -2187,3 +2188,62 @@ class TestUnroutableCentroid:
 
         assert "d0" in caplog.text
         assert "e0" in caplog.text
+class TestWalkableRemainingDistance:
+    """Position-aware distance must follow the walkable area, not cut corners.
+
+    The graph's own edges already route around walls; measuring the agent's
+    remaining distance with a straight line contradicted that and understated
+    it, most severely in the corridor layouts position-aware routing exists to
+    fix.
+    """
+
+    @staticmethod
+    def _l_corridor():
+        """An L: a horizontal leg and a vertical leg meeting at the far end."""
+        from shapely.ops import unary_union
+        from shapely.geometry import box as _shp_box
+
+        return unary_union([_shp_box(0, 0, 20, 3), _shp_box(17, 0, 20, 20)])
+
+    def _graph(self):
+        stages = {
+            "j": {"polygon": _box(18, 2), "stage_type": "checkpoint"},
+            "e0": {"polygon": _box(18, 18), "stage_type": "exit"},
+        }
+        return StageGraph.from_scenario(
+            stages,
+            [{"from": "j", "to": "e0"}],
+            walkable_polygon=self._l_corridor(),
+        )
+
+    def test_routing_engine_is_retained_on_the_graph(self):
+        assert self._graph().routing_engine is not None
+
+    def test_remaining_distance_follows_the_corridor(self):
+        """An agent in the horizontal leg must walk to the corner, not through it."""
+        import math
+
+        graph = self._graph()
+        agent = (5.0, 1.5)
+        effective, share = _position_aware_length(
+            graph, ["j", "e0"], agent, "e0", path_length=16.0, first_length_m=16.0
+        )
+        straight = math.hypot(agent[0] - 18.0, agent[1] - 18.0)
+        assert effective > straight
+
+    def test_euclidean_fallback_without_a_routing_engine(self):
+        import math
+
+        graph = StageGraph.from_scenario(
+            {
+                "j": {"polygon": _box(18, 2), "stage_type": "checkpoint"},
+                "e0": {"polygon": _box(18, 18), "stage_type": "exit"},
+            },
+            [{"from": "j", "to": "e0"}],
+        )
+        agent = (5.0, 1.5)
+        effective, _ = _position_aware_length(
+            graph, ["j", "e0"], agent, "e0", path_length=16.0, first_length_m=16.0
+        )
+        straight = math.hypot(agent[0] - 18.0, agent[1] - 18.0)
+        assert effective == pytest.approx(16.0 - 16.0 + straight)
