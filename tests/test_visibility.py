@@ -210,6 +210,18 @@ class TestSignSynthesis:
         signs = extract_sign_descriptors(self._config())
         assert signs["e1"] == {"x": 11.0, "y": 0.5, "alpha": 90, "c": 8}
 
+    def test_degenerate_coordinates_are_skipped_not_fatal(self):
+        """simulation_init tolerates unusable polygons, so sign synthesis must too.
+
+        A two-point ring cannot make a Polygon; the node simply gets no
+        synthesised sign instead of aborting the run.
+        """
+        config = {"exits": {"bad": {"coordinates": [[0, 0], [1, 1]]}}}
+
+        signs = extract_sign_descriptors(config)
+
+        assert "bad" not in signs
+
     def test_distributions_get_no_sign(self):
         """Spawn areas are sources, never navigation targets."""
         signs = extract_sign_descriptors(self._config())

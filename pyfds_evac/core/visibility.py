@@ -7,6 +7,7 @@ import logging
 from pathlib import Path
 
 import numpy as np
+from shapely.geometry import Polygon
 
 _logger = logging.getLogger(__name__)
 
@@ -20,11 +21,16 @@ def _default_sign(entry: dict) -> dict | None:
     and merely omits the orientation effect.
     """
     coords = entry.get("coordinates")
-    if not coords:
+    if not coords or len(coords) < 3:
         return None
-    from shapely.geometry import Polygon
-
-    centroid = Polygon(coords).centroid
+    # Configs with unusable polygons simulate fine -- the stage setup skips
+    # them -- so a node that cannot yield a centroid gets no sign rather than
+    # aborting the run the moment visibility is switched on.
+    try:
+        centroid = Polygon(coords).centroid
+    except Exception as exc:
+        _logger.warning("Cannot synthesise a sign from %r: %s", coords, exc)
+        return None
     return {"x": float(centroid.x), "y": float(centroid.y), "alpha": None, "c": 3}
 
 
