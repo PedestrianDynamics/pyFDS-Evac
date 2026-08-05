@@ -19,20 +19,86 @@ class AgentCognitiveMap:
     known_edges: set[tuple[str, str]] = field(default_factory=set)
 
 
+def familiarity_probability(value) -> float:
+    """Normalise a familiarity setting to the probability an exit is known.
+
+    Accepts the historical names as well as a number, so existing scenarios and
+    the scalar form can coexist:
+
+        "full"      -> 1.0     the agent knows the whole building
+        "discovery" -> 0.0     it knows only what it can perceive
+        0.0 .. 1.0  -> itself  the probability each exit is in its map at t=0
+
+    A binary cannot express a real crowd. At The Station 29.2 % of patrons were
+    there for the first time and about two dozen were regulars -- a gradient.
+    """
+    if isinstance(value, str):
+        if value == "full":
+            return 1.0
+        if value == "discovery":
+            return 0.0
+        raise ValueError(
+            f"unknown familiarity {value!r}: expected 'full', 'discovery', "
+            "or a probability in [0, 1]"
+        )
+    probability = float(value)
+    if not 0.0 <= probability <= 1.0:
+        raise ValueError(
+            f"familiarity {probability} is outside [0, 1]; it is the probability "
+            "that an exit is already known"
+        )
+    return probability
+
+
+def _learn_route_to(cmap: AgentCognitiveMap, graph, source: str, target: str) -> bool:
+    """Add the shortest path to *target*, nodes and edges, to the map.
+
+    Knowing an exit has to mean knowing how to reach it.  Routing runs on the
+    subgraph of known nodes *and* known edges, so an exit added on its own would
+    sit in the map unreachable -- present, and useless.
+    """
+    paths = graph.shortest_paths_to_exits(source)
+    entry = paths.get(target)
+    if entry is None:
+        return False
+    _cost, path = entry
+    for node_id in path:
+        cmap.known_nodes.add(node_id)
+    for a, b in zip(path, path[1:]):
+        cmap.known_edges.add((a, b))
+    return True
+
+
 def init_cognitive_map(
     spawn_node: str,
     graph,
-    familiarity: str,
+    familiarity,
     vis_model,
     time_s: float,
+    *,
+    rng=None,
+    entrance: str | None = None,
+    no_visibility: bool = False,
 ) -> AgentCognitiveMap:
     """Initialise a cognitive map for an agent spawning at *spawn_node*.
 
-    'full'      → knows everything immediately.
-    'discovery' → knows spawn node + any adjacent nodes whose sign is
-                  visible from the spawn centroid at t=*time_s*.
+    *familiarity* is the probability that each exit is already known (see
+    :func:`familiarity_probability`); 1.0 is the historical ``full`` tier and
+    0.0 the ``discovery`` one.
+
+    *entrance* names the exit the agent walked in through, which it knows
+    whatever its familiarity.  At The Station every patron entered by the front
+    door, and that one fact is the mechanism behind the crush: the exit everyone
+    knew was the one everyone went back to.
+
+    *rng* makes the draw reproducible; without one no probabilistic knowledge is
+    added, so a caller that forgets it gets the conservative result rather than
+    an irreproducible one.  *no_visibility* skips the perception step, for
+    callers testing the initial draw alone.
     """
-    if familiarity == "full":
+    probability = familiarity_probability(familiarity)
+
+    if probability >= 1.0:
         all_edges = {
             (e.source, e.target) for edges in graph.edges.values() for e in edges
         }
@@ -43,8 +109,17 @@ def init_cognitive_map(
         )
 
     cmap = AgentCognitiveMap(familiarity="discovery", known_nodes={spawn_node})
+
+    if entrance is not None and entrance in graph.nodes:
+        _learn_route_to(cmap, graph, spawn_node, entrance)
+
+    if rng is not None and probability > 0.0:
+        for exit_id in graph.exit_nodes():
+            if exit_id not in cmap.known_nodes and rng.random() < probability:
+                _learn_route_to(cmap, graph, spawn_node, exit_id)
+
     node = graph.nodes.get(spawn_node)
-    if node is not None:
+    if node is not None and not no_visibility:
         _expand_visible(
             cmap, spawn_node, graph, vis_model, time_s, node.centroid_x, node.centroid_y
         )
