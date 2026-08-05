@@ -34,7 +34,12 @@ from pyfds_evac.core.cognitive_map import (  # noqa: E402
     expand_from_visibility,
     init_cognitive_map,
 )
-from pyfds_evac.core.route_graph import StageGraph  # noqa: E402
+from pyfds_evac.core.route_graph import (  # noqa: E402
+    RouteCostConfig,
+    StageGraph,
+    rank_routes,
+)
+from pyfds_evac.core.smoke_speed import ConstantExtinctionField  # noqa: E402
 
 ASSET = Path("assets/cognitive_map_memory")
 MAX_VIS_M = 30.0
@@ -142,7 +147,19 @@ def main(out_path: Path) -> None:
                 va="center",
             )
         ax.plot(CENTRELINE_X, y, "o", ms=10, mfc="#1f77b4", mec="k", zorder=5)
-        ax.set_title(f"y = {y:.0f} m", fontsize=10)
+        ranked = rank_routes(
+            graph,
+            "jps-distributions_0",
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            None,
+            RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0),
+            cognitive_map=cmap_agent,
+            agent_position=(CENTRELINE_X, y),
+        )
+        choice = ranked[0].exit_id.replace("E_", "") if ranked else "-"
+        ax.set_title(f"y = {y:.0f} m\nwould take: {choice}", fontsize=9)
         ax.set_xlim(-0.6, 5.6)
         ax.set_ylim(-1, builder.CORRIDOR[3] + 1)
         ax.set_aspect("equal")
@@ -165,8 +182,9 @@ def main(out_path: Path) -> None:
         bbox_to_anchor=(0.5, 0.01),
     )
     fig.suptitle(
-        "Cognitive map of one discovery agent walking north\n"
-        "amber = remembered without being visible; that band is the memory",
+        "Cognitive map of a discovery agent, probed along the corridor\n"
+        "amber = remembered without being visible; that band is the memory. "
+        "The probe is not a walk: the agent would leave by 'side' from y = 14.",
         fontsize=11,
     )
     fig.tight_layout(rect=(0.0, 0.06, 1.0, 0.94))
