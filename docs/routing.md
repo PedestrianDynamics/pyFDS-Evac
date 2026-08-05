@@ -31,6 +31,18 @@ graph = StageGraph.from_scenario(
 )
 ```
 
+### Graph construction without a journey
+
+When a scenario defines no `transitions`, the stage graph wires itself by
+stage type: spawn areas and crossings reach every crossing and every exit,
+exits are terminal, and nothing points back at a spawn area. Crossings
+therefore participate in cost-driven routing without a hand-authored journey.
+In clear air the direct spawn-to-exit edge is cheapest, so agents take the
+nearest exit and crossings sit inert; smoke can make a route through a
+crossing cheaper.
+
+Explicit `transitions` remain authoritative and skip this path entirely.
+
 ### Edge geometry
 
 Edges carry a polyline that follows the corridor geometry computed
