@@ -1170,9 +1170,17 @@ def run_scenario(
                 f"direct_steering={len(direct_steering_info)} "
                 f"wait_info={len(agent_wait_info)}"
             )
-        # Pre-compute familiarity per distribution index.
-        dist_familiarity: list[str] = [
+        # Pre-compute familiarity per distribution index. The value may be
+        # "full", "discovery", or a probability in [0, 1] that each exit is
+        # already known -- a real crowd is a gradient, not two camps.
+        dist_familiarity: list = [
             d.get("parameters", {}).get("familiarity", "full")
+            for d in scenario.raw.get("distributions", {}).values()
+        ]
+        # The exit each spawn area's occupants walked in through, which they
+        # know whatever their familiarity.
+        dist_entrance: list = [
+            d.get("parameters", {}).get("entrance")
             for d in scenario.raw.get("distributions", {}).values()
         ]
         exit_counts: dict[str, int] = {}
@@ -1467,6 +1475,11 @@ def run_scenario(
                                             else "full"
                                         )
                                         path_state["familiarity"] = _fam
+                                        path_state["entrance"] = (
+                                            dist_entrance[_dist_idx]
+                                            if _dist_idx < len(dist_entrance)
+                                            else None
+                                        )
                                         if path_state and stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
                                                 path_state, stage_graph.nodes
@@ -1552,6 +1565,12 @@ def run_scenario(
                                             if flow_dist.get("dist_index", source_id)
                                             < len(dist_familiarity)
                                             else "full",
+                                            "entrance": dist_entrance[
+                                                flow_dist.get("dist_index", source_id)
+                                            ]
+                                            if flow_dist.get("dist_index", source_id)
+                                            < len(dist_entrance)
+                                            else None,
                                         }
                                         if stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
@@ -1863,6 +1882,10 @@ def run_scenario(
                                 familiarity,
                                 vis_model,
                                 current_time,
+                                # Seeded per agent so a probabilistic draw is
+                                # reproducible under a fixed run seed.
+                                rng=random.Random(seed + agent_id * 7919),
+                                entrance=wait_info.get("entrance"),
                             )
                     rs = agent_route_state[agent_id]
                     # Force the very first evaluation to happen immediately (at
