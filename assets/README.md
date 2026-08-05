@@ -20,7 +20,7 @@ rest) is untracked. See the ignore rules in [`.gitignore`](../.gitignore).
 |--------|------------|------|--------|
 | `ISO-table21` | ISO 20414 corridor, single agent, single exit. Also the default small fixture for unrelated tests. | deck | [README](../README.md#assets) |
 | `ISO-table22` | ISO 20414 stationary benchmark, one non-moving agent in a fixed gas concentration. | no | [README](../README.md#assets) |
-| `t_junction` | T-corridor, cable fire at the junction, two exits. The rerouting case. | deck | [t_junction/README.md](t_junction/README.md) |
+| `t_junction` | T-corridor, cable fire at the junction, two exits. The rerouting case. | deck | [t_junction/README.md](t_junction/README.md), [test_rerouting_smoke_sweep.py](../tests/test_rerouting_smoke_sweep.py) |
 | `fed_incap_co_2000ppm`<br>`fed_incap_co_4000ppm`<br>`fed_incap_co_8000ppm` | Sealed uniform room at three constant CO concentrations, 100 non-evacuating agents, 4 MPI meshes. | deck | [testing-homogeneous.md](../docs/testing-homogeneous.md) |
 | `familiarity_test_full`<br>`familiarity_test_discovery` | Hand-drawn 20 x 18 m floor plan, 20 agents. The pair differs only in the spawn distribution's `familiarity` value. | deck | [testing-familiarity.md](../docs/testing-familiarity.md) |
 | `exit_visibility_alpha` | 4 x 30 m corridor, 40 discovery agents, two exits. The pair differs only in one exit sign's viewing bearing. | deck | [test_exit_visibility_alpha.py](../tests/test_exit_visibility_alpha.py) |
