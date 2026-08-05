@@ -42,7 +42,7 @@ cannot silently move it.
 
 | claim | what it asserts | why it matters |
 |---|---|---|
-| **acquisition** | `E_side` enters the map on crossing `y = 12.5` | perception writes to memory |
+| **acquisition** | `E_side` enters the map on crossing `y = 12.5`, and the agent would then take it | perception writes to memory, and it changes behaviour |
 | **persistence** | it is *still* in the map at `y = 30` | memory outlives perception |
 
 Persistence is the one that matters. Delete the expansion rules and acquisition
@@ -61,6 +61,13 @@ an exit and be forbidden to use it.
 ```
 
 ![cognitive map states](cognitive_map_states.png)
+
+Each panel names the exit routing would actually take from that spot. The
+agent's position is a **probe**, not a simulated walk: it is placed at each y to
+sample what it would know and choose there. It switches to `side` at y = 14, the
+moment that exit enters the map, and would leave by it — an earlier version of
+this plot marched the probe past the side exit, implying a behaviour the model
+does not have.
 
 Three states per exit:
 

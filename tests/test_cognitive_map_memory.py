@@ -171,6 +171,40 @@ class TestAcquisitionAndPersistence:
         assert {rc.exit_id for rc in ranked} == {"E_end", "E_side"}
         assert not any(rc.rejected for rc in ranked)
 
+    def test_acquiring_the_side_exit_changes_where_the_agent_would_go(self):
+        """Acquisition has a behavioural consequence, not just a state change.
+
+        The README claimed the agent diverts once it knows the side exit, but
+        nothing asserted it -- and the state plot marched a probe straight past
+        the side exit, implying the opposite.  Routing switches at y = 14, the
+        moment the exit enters the map.
+        """
+        graph, _spawn, vis = _load()
+        cmap = init_cognitive_map(
+            "jps-distributions_0", graph, "discovery", vis_model=vis, time_s=0.0
+        )
+
+        def choice_at(y):
+            expand_from_visibility(
+                cmap, "jps-distributions_0", graph, vis, 0.0, CENTRELINE_X, y
+            )
+            ranked = rank_routes(
+                graph,
+                "jps-distributions_0",
+                0.0,
+                0.0,
+                ConstantExtinctionField(0.0),
+                None,
+                RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0),
+                cognitive_map=cmap,
+                agent_position=(CENTRELINE_X, y),
+            )
+            return ranked[0].exit_id
+
+        assert choice_at(10.0) == "E_end", "below the window only E_end is known"
+        assert choice_at(14.0) == "E_side", "inside it, the nearer exit wins"
+        assert choice_at(30.0) == "E_side", "and it is still preferred from memory"
+
     def test_full_familiarity_knows_both_from_the_start(self):
         """Contrast: nothing to acquire when the map is pre-loaded."""
         graph, spawn, vis = _load()
