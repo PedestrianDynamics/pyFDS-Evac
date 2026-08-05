@@ -2090,14 +2090,21 @@ class TestAutoWiringWithCrossings:
         )
         assert sum(len(e) for e in graph.edges.values()) > 0
 
-    def test_distribution_reaches_every_exit_and_crossing(self):
+    def test_distribution_reaches_what_is_not_behind_something_else(self):
+        """Adjacency is physical, not complete.
+
+        The stages sit on a line: e0 at x=0, d0 at 5, c0 at 15, e1 at 30.  So
+        c0 lies exactly between d0 and e1, and d0 -> e1 is pruned; e1 is still
+        reachable, one hop further on.
+        """
         graph = StageGraph.from_scenario(
             self._stages(),
             [],
             distributions={"d0": {"polygon": _box(5, 0)}},
         )
         targets = {edge.target for edge in graph.edges.get("d0", [])}
-        assert targets == {"e0", "e1", "c0"}
+        assert targets == {"e0", "c0"}
+        assert "e1" in graph.shortest_paths_to_exits("d0")
 
     def test_crossing_reaches_exits_but_exits_are_terminal(self):
         graph = StageGraph.from_scenario(
@@ -2268,3 +2275,80 @@ class TestWalkableRemainingDistance:
         )
         straight = math.hypot(agent[0] - 18.0, agent[1] - 18.0)
         assert effective == pytest.approx(16.0 - 16.0 + straight)
+
+
+class TestAdjacencyIsMeaningful:
+    """Auto-wiring connects a node only to those reachable without passing another.
+
+    A complete graph makes "neighbour" meaningless, and that matters beyond
+    tidiness: ``expand_on_arrival`` reveals every neighbour unconditionally, so
+    in a complete graph one arrival exposes the whole building and the
+    familiarity gradient collapses.  Adjacency has to mean physical adjacency
+    for that rule to say what it is meant to say.
+    """
+
+    @staticmethod
+    def _collinear_stages():
+        """d0 --- c0 --- e0 on a line, so c0 sits between d0 and e0."""
+        return {
+            "c0": {"polygon": _box(10, 0), "stage_type": "checkpoint"},
+            "e0": {"polygon": _box(20, 0), "stage_type": "exit"},
+        }
+
+    def test_a_node_behind_another_is_not_a_neighbour(self):
+        graph = StageGraph.from_scenario(
+            self._collinear_stages(),
+            [],
+            distributions={"d0": {"polygon": _box(0, 0)}},
+        )
+        targets = {edge.target for edge in graph.edges.get("d0", [])}
+        assert targets == {"c0"}, "e0 lies behind c0, so it is not adjacent to d0"
+
+    def test_the_intermediate_still_reaches_the_far_node(self):
+        graph = StageGraph.from_scenario(
+            self._collinear_stages(),
+            [],
+            distributions={"d0": {"polygon": _box(0, 0)}},
+        )
+        assert {edge.target for edge in graph.edges.get("c0", [])} == {"e0"}
+
+    def test_every_exit_stays_reachable(self):
+        """Pruning must not strand an exit: the path is longer, not absent."""
+        graph = StageGraph.from_scenario(
+            self._collinear_stages(),
+            [],
+            distributions={"d0": {"polygon": _box(0, 0)}},
+        )
+        reachable = graph.shortest_paths_to_exits("d0")
+        assert "e0" in reachable
+
+    def test_nodes_off_the_line_stay_adjacent(self):
+        """Only genuine betweenness prunes: a node to the side blocks nothing."""
+        stages = {
+            "c0": {"polygon": _box(10, 0), "stage_type": "checkpoint"},
+            "e0": {"polygon": _box(10, 20), "stage_type": "exit"},
+        }
+        graph = StageGraph.from_scenario(
+            stages, [], distributions={"d0": {"polygon": _box(0, 0)}}
+        )
+        assert {edge.target for edge in graph.edges.get("d0", [])} == {"c0", "e0"}
+
+    def test_a_source_is_never_left_with_no_edges(self):
+        """Guard: whatever the geometry, a spawn area keeps its nearest target."""
+        stages = {
+            "c0": {"polygon": _box(5, 0), "stage_type": "checkpoint"},
+            "c1": {"polygon": _box(10, 0), "stage_type": "checkpoint"},
+            "e0": {"polygon": _box(15, 0), "stage_type": "exit"},
+        }
+        graph = StageGraph.from_scenario(
+            stages, [], distributions={"d0": {"polygon": _box(0, 0)}}
+        )
+        assert graph.edges.get("d0"), "a spawn area must always have somewhere to go"
+
+    def test_explicit_transitions_are_untouched_by_pruning(self):
+        graph = StageGraph.from_scenario(
+            self._collinear_stages(),
+            [{"from": "d0", "to": "e0"}],
+            distributions={"d0": {"polygon": _box(0, 0)}},
+        )
+        assert {edge.target for edge in graph.edges.get("d0", [])} == {"e0"}

@@ -147,14 +147,36 @@ class StageGraph:
                 for nid, n in graph.nodes.items()
                 if n.stage_type in ("distribution", "checkpoint")
             ]
+            # Connect a node only to those reachable without passing another,
+            # so "neighbour" keeps its physical meaning.  A complete graph would
+            # make it meaningless, and expand_on_arrival reveals every neighbour
+            # unconditionally -- so one arrival would expose the whole building
+            # and flatten the familiarity gradient.
+            # Only crossings can block. An exit is terminal -- you cannot pass
+            # through one -- so an exit lying on the way to a farther exit must
+            # not prune it, or that farther exit becomes unreachable outright.
+            blockers = [
+                nid for nid, n in graph.nodes.items() if n.stage_type == "checkpoint"
+            ]
             for src_id in sources:
-                for tgt_id in targets:
-                    if src_id == tgt_id:
-                        continue
-                    edge = _make_edge(
-                        graph.nodes[src_id], graph.nodes[tgt_id], routing_engine
+                candidates = [
+                    _make_edge(graph.nodes[src_id], graph.nodes[tgt_id], routing_engine)
+                    for tgt_id in targets
+                    if tgt_id != src_id
+                ]
+                kept = [
+                    edge
+                    for edge in candidates
+                    if not _passes_through_another_node(
+                        graph, src_id, edge, blockers, routing_engine
                     )
-                    graph.edges.setdefault(src_id, []).append(edge)
+                ]
+                # Pruning must never strand a node: if everything looked
+                # blocked, keep the nearest target so it still has somewhere
+                # to go and every exit stays reachable in some number of hops.
+                if not kept and candidates:
+                    kept = [min(candidates, key=lambda e: e.weight)]
+                graph.edges.setdefault(src_id, []).extend(kept)
 
         return graph
 
@@ -265,6 +287,51 @@ class StageGraph:
             cur = prev.get(cur)
         path.reverse()
         return path
+
+
+def _passes_through_another_node(
+    graph, src_id: str, edge: StageEdge, blockers, routing_engine
+) -> bool:
+    """Whether some third stage lies on the way from ``src_id`` to the target.
+
+    Betweenness by path length: C is on the way from A to B when going A->C->B
+    costs no more than A->B itself, within a small tolerance.  Distances follow
+    the walkable area when a routing engine is available, so a node around a
+    corner does not count as "in between" merely by being near the straight
+    line.
+
+    Only crossings are blockers.  Walking across a spawn area does not make the
+    target behind it unreachable, and an exit cannot be passed through at all --
+    treating either as a blocker strands whatever lies beyond.
+    """
+    src = graph.nodes[src_id]
+    tgt = graph.nodes[edge.target]
+    direct = edge.weight
+    if direct <= 1e-9:
+        return False
+    for mid_id in blockers:
+        if mid_id in (src_id, edge.target):
+            continue
+        mid = graph.nodes[mid_id]
+        via = _walkable_distance(
+            routing_engine,
+            (src.centroid_x, src.centroid_y),
+            (mid.centroid_x, mid.centroid_y),
+        ) + _walkable_distance(
+            routing_engine,
+            (mid.centroid_x, mid.centroid_y),
+            (tgt.centroid_x, tgt.centroid_y),
+        )
+        if via <= direct * (1.0 + _BETWEENNESS_TOLERANCE):
+            return True
+    return False
+
+
+# A third node counts as 'in between' when the detour through it costs no
+# more than this fraction above the direct path.  Small enough that a real
+# alternative route is not mistaken for one, large enough to absorb the
+# navmesh's polyline discretisation.
+_BETWEENNESS_TOLERANCE = 0.05
 
 
 def _make_edge(src_node: StageNode, tgt_node: StageNode, routing_engine) -> StageEdge:
