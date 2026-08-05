@@ -87,7 +87,10 @@ def test_a2_3_o2_gate_zero_at_and_above_threshold():
 
 def test_a2_3_o2_gate_finite_just_below_threshold():
     inputs = DefaultFedInputs(o2_volume_fraction_percent=19.4)
-    ref_o2_rate = 1.0 / (60.0 * math.exp(8.13 - 0.54 * (20.9 - 19.4)))
+    # Purser / FDS Tech Ref Eq. 18 gives t_incap directly in MINUTES, so the
+    # per-minute rate is 1 / t_incap with no further conversion. This reference
+    # previously carried a spurious 60x, matching the engine bug fixed in #35.
+    ref_o2_rate = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.4))
 
     got = default_fed_rate_per_minute(inputs)
 
