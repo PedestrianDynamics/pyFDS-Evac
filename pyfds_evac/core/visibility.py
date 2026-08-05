@@ -11,14 +11,36 @@ import numpy as np
 _logger = logging.getLogger(__name__)
 
 
+def _default_sign(entry: dict) -> dict | None:
+    """A reflective, omni-directional sign at the node's centroid.
+
+    alpha is left None on purpose.  fdsvismap reads alpha as a half-plane of
+    readability, so a guessed bearing silently blanks the sign for every agent
+    on the wrong side however clear the air, whereas None means omni-directional
+    and merely omits the orientation effect.
+    """
+    coords = entry.get("coordinates")
+    if not coords:
+        return None
+    from shapely.geometry import Polygon
+
+    centroid = Polygon(coords).centroid
+    return {"x": float(centroid.x), "y": float(centroid.y), "alpha": None, "c": 3}
+
+
 def extract_sign_descriptors(raw_config: dict) -> dict[str, dict]:
-    """Return {node_id: {x, y, alpha, c}} for all nodes with a 'sign' field."""
-    return {
-        node_id: data["sign"]
-        for section in ("exits", "checkpoints", "waypoints")
-        for node_id, data in raw_config.get(section, {}).items()
-        if data.get("sign")
-    }
+    """Return {node_id: {x, y, alpha, c}} for every exit, crossing and waypoint.
+
+    Nodes with an authored 'sign' keep it verbatim; the rest get a default so
+    that no routable stage escapes smoke-dependent legibility.
+    """
+    descriptors: dict[str, dict] = {}
+    for section in ("exits", "checkpoints", "waypoints"):
+        for node_id, data in raw_config.get(section, {}).items():
+            sign = data.get("sign") or _default_sign(data)
+            if sign is not None:
+                descriptors[node_id] = sign
+    return descriptors
 
 
 def _build_vismap(
@@ -34,12 +56,14 @@ def _build_vismap(
     t_max = vis.fds_time_points.max()
     vis.set_time_points(list(np.arange(0, t_max + time_step_s, time_step_s)))
     for wp_id, (node_id, sign) in enumerate(sign_descriptors.items()):
+        alpha = sign.get("alpha")
         vis.set_waypoint(
             wp_id,
             float(sign["x"]),
             float(sign["y"]),
             c=float(sign.get("c", 3)),
-            alpha=float(sign["alpha"]),
+            # None is meaningful: fdsvismap reads it as omni-directional.
+            alpha=None if alpha is None else float(alpha),
         )
     vis.compute_all(view_angle=True, obstructions=True, aa=True)
     return vis
