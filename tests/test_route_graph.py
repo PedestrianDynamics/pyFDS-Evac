@@ -851,6 +851,87 @@ class TestPositionAwareRouting:
             g, ["J", "E1"], (2.0, 0.0), "E0"
         )
 
+    def test_continue_does_not_double_charge_first_segment_fed(self):
+        # The FED taken on the walked part of the first segment is already in
+        # current_fed, so a route continuing toward the current target is
+        # charged only the remaining share -- 2 m of the 20 m J->E0 leg here.
+        g = self._graph()
+        at_node = self._fed_cost(g, (20.0, 0.0))
+        mid_leg = self._fed_cost(g, (2.0, 0.0))
+        assert mid_leg == pytest.approx(0.1 * at_node)
+
+    def test_diverging_route_charges_full_fed(self):
+        # A route the agent has not started walking keeps its full FED growth.
+        g = self._graph()
+        rc = evaluate_route(
+            g,
+            ["J", "E0"],
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            ConstantFedRateSampler(0.1),
+            RouteCostConfig(base_speed_m_per_s=1.0),
+            agent_position=(2.0, 0.0),
+            current_target="E1",
+        )
+        assert rc.fed_max_route == pytest.approx(0.1 * 20.0 / 60.0)
+
+    def test_continue_reweights_k_ave_by_remaining_share(self):
+        # Two-leg route with smoke on the first leg only: an agent that has
+        # walked 8 m of that 10 m leg carries only the remaining fifth of it
+        # into the path mean, so its route looks less smoky than at the node.
+        class SmokyFirstLeg:
+            """K = 1 upstream of the midpoint M at x = 10, clear beyond it."""
+
+            def sample_extinction(self, time_s, x, y):
+                del time_s, y
+                return 1.0 if x > 10.0 else 0.0
+
+        direct = {
+            "J": {"polygon": _box(20, 0), "stage_type": "checkpoint"},
+            "M": {"polygon": _box(10, 0), "stage_type": "checkpoint"},
+            "E0": {"polygon": _box(0, 0), "stage_type": "exit"},
+        }
+        graph = StageGraph.from_scenario(
+            direct, [{"from": "J", "to": "M"}, {"from": "M", "to": "E0"}]
+        )
+
+        def _cost(agent_position):
+            return evaluate_route(
+                graph,
+                ["J", "M", "E0"],
+                0.0,
+                0.0,
+                SmokyFirstLeg(),
+                None,
+                RouteCostConfig(base_speed_m_per_s=1.0),
+                agent_position=agent_position,
+                current_target="M",
+            )
+
+        at_node = _cost((20.0, 0.0))
+        mid_leg = _cost((12.0, 0.0))
+        s0, s1 = at_node.segments
+        rho = 2.0 / 10.0
+        expected = (rho * s0.k_avg * s0.length_m + s1.k_avg * s1.length_m) / (
+            rho * s0.length_m + s1.length_m
+        )
+        assert mid_leg.k_ave_route == pytest.approx(expected)
+        assert mid_leg.k_ave_route < at_node.k_ave_route
+
+    def _fed_cost(self, graph, agent_position):
+        return evaluate_route(
+            graph,
+            ["J", "E0"],
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            ConstantFedRateSampler(0.1),
+            RouteCostConfig(base_speed_m_per_s=1.0),
+            agent_position=agent_position,
+            current_target="E0",
+        ).fed_max_route
+
     def test_no_agent_position_uses_node_graph(self):
         # Backward compatible: without a position, cost == node path length.
         g = self._graph()

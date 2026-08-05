@@ -196,6 +196,12 @@ actual position:
 - **A route diverging from that heading** → add the *backtrack* from the agent's position to
   the branch node before the graph distance.
 
+Smoke and FED are credited over the same stretch: the first segment contributes only its
+untraversed share `rho = remaining / segment_length` to `K_ave`, `travel_time` and
+`fed_growth`. The dose taken on the part already walked is inside the agent's `current_fed`,
+so charging the full segment would count it twice and inflate `FED_max` for exactly the
+route the agent is committed to.
+
 Verified against agent 35's real trajectory: t=86 becomes B = 11 vs A = 121 → **stays at B**
 (no walking away); t=102 becomes A = 77 vs B = 137 → **stays at A** (no reversal). Without
 `agent_position` it falls back to the geometric node path length (backward compatible).
