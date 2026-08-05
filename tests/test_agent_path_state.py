@@ -87,3 +87,51 @@ class TestSpawnOriginIsPerAgent:
         )
 
         assert state["current_origin"] == "jps-distributions_0"
+
+
+class TestFlatStageListingWithCrossings:
+    """A flat stage listing must not invent edges between unrelated crossings.
+
+    Consecutive entries of a journey's stage listing are only a path when the
+    same pair is also a declared transition.  Two crossings listed side by side
+    are not, and treating them as one used to shadow the real transition out of
+    the first crossing.
+    """
+
+    _STAGES = ["jps-distributions_0", "c0", "c1", "e0"]
+
+    def _state(self):
+        return build_agent_path_state(
+            variant_data={"actual_stages": self._STAGES},
+            journey_key="journey_0",
+            transitions=[
+                {"from": "jps-distributions_0", "to": "c0", "journey_id": "journey_0"},
+                {"from": "c0", "to": "e0", "journey_id": "journey_0"},
+                {"from": "c1", "to": "e0", "journey_id": "journey_0"},
+            ],
+            direct_steering_info={
+                "c0": {"polygon": box(0, 0, 2, 2), "stage_type": "checkpoint"},
+                "c1": {"polygon": box(4, 0, 6, 2), "stage_type": "checkpoint"},
+                "e0": {"polygon": box(8, 0, 10, 2), "stage_type": "exit"},
+            },
+            waypoint_routing={},
+            seed=1,
+            agent_id=1,
+            initial_position=(1.0, 1.0),
+            spawn_origin="jps-distributions_0",
+        )
+
+    def test_real_transition_out_of_first_crossing_survives(self):
+        choices = self._state()["path_choices"]
+
+        assert choices["c0"] == [("e0", 100.0)]
+
+    def test_no_edge_between_the_two_crossings(self):
+        choices = self._state()["path_choices"]
+
+        assert "c1" not in [target for target, _ in choices["c0"]]
+
+    def test_spawn_area_keeps_its_declared_transition(self):
+        choices = self._state()["path_choices"]
+
+        assert choices["jps-distributions_0"] == [("c0", 100.0)]

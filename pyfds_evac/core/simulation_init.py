@@ -438,18 +438,22 @@ def build_agent_path_state(
     full_stages = variant_data.get("stages", []) or variant_data.get(
         "actual_stages", []
     )
+    # A resolved variant lists its stages in path order, but a journey that was
+    # never split lists every stage flat.  Consecutive entries are therefore
+    # only an edge when the journey also declares that transition; otherwise
+    # they invent edges that shadow the real transitions below.
+    declared_pairs = {
+        (transition.get("from"), transition.get("to"))
+        for transition in transitions
+        if not journey_key or transition.get("journey_id") == journey_key
+    }
     variant_edges: set = set()
     for idx in range(len(full_stages) - 1):
         from_stage = full_stages[idx]
         to_stage = full_stages[idx + 1]
         if not (isinstance(from_stage, str) and isinstance(to_stage, str)):
             continue
-        # A journey lists every stage, so consecutive pairs are not a path.
-        # For a spawn area that ordering is actively wrong -- it would make one
-        # distribution lead into the next and shadow the explicit transition
-        # that says where its agents actually go -- so leave those to the
-        # transitions below.
-        if from_stage.startswith("jps-distributions_"):
+        if (from_stage, to_stage) not in declared_pairs:
             continue
         _append_edge(from_stage, to_stage)
         variant_edges.add(from_stage)
