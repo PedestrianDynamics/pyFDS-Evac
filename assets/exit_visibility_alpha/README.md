@@ -20,20 +20,85 @@ A straight north–south corridor, 4 m wide and 30 m long.
 ```
 
 Agents stand roughly 9 m from `E_near` and 19 m from `E_far`, so distance
-favours `E_near` by more than 2:1 in both runs.
+favours `E_near` by more than 2:1 in both runs. The corridor is 30 m rather
+than longer for a reason — see the pitfall below.
 
-### Why the corridor is 30 m and not longer
+## Pitfall: the visibility ceiling
 
-fdsvismap decides legibility as `view_angle * visibility >= distance`, and in
-clear air `visibility` saturates at its `max_vis` default of **30 m**. Because
-`view_angle` is clipped to `[0, 1]`, a sign further than 30 m away can never be
-legible **at any bearing**.
+**Read this before building any scenario that depends on sign legibility.**
 
-An earlier draft used a 44 m corridor, putting `E_far` 33 m from the spawn
-area. In the hidden run *both* exits were then illegible, the fallback
-reinstated the least-cost rejected route, and agents took `E_near` regardless —
-an experiment that proves nothing while appearing to run correctly. The builder
-now asserts both signs sit inside the cap, and a test checks the same thing.
+fdsvismap decides that a sign is legible from a cell when
+
+```
+view_angle x visibility >= distance
+```
+
+with `view_angle` clipped to `[0, 1]` (`FDSVisMap._get_view_angle_array`) and
+
+```
+visibility = c / mean_extinction     capped at max_vis, default 30 m
+                                     equal to max_vis when extinction is 0
+```
+
+(`FDSVisMap._get_visibility_array`, `FDSVisMap.get_vismap`).
+
+Two consequences that are easy to miss:
+
+**In clear air the reach is 30 m, full stop.** Extinction is zero, so
+`visibility` is `max_vis`. Because `view_angle` cannot exceed 1, a sign more
+than 30 m away is illegible **at every bearing**. No choice of `alpha` rescues
+it.
+
+**With smoke the reach is `c / K̄`, which is usually far shorter.** The cap
+stops mattering almost immediately:
+
+| `c` | mean extinction `K̄` | usable radius |
+|---|---|---|
+| 3 (reflective) | 0.0 (clear) | 30 m — the cap |
+| 3 | 0.1 | 30 m — still capped |
+| 3 | 0.2 | 15 m |
+| 3 | 0.5 | 6 m |
+| 8 (illuminated) | 0.5 | 16 m |
+
+So a smoke scenario needs its exits inside the *smoke-reduced* radius, not
+inside 30 m. Sizing a corridor against the clear-air ceiling and then adding
+smoke will silently push every sign out of range.
+
+### Why this bites quietly
+
+An out-of-range sign does not raise. Its route is rejected as
+`next_node_not_visible`, and if *every* route is rejected the fallback
+reinstates the least-cost rejected one — so agents proceed to the nearest exit
+exactly as if visibility were never modelled. The simulation runs, the numbers
+look plausible, and the experiment measures nothing.
+
+This scenario hit precisely that. An earlier draft used a 44 m corridor with
+`E_far` 33 m from the spawn area:
+
+```
+OLD corridor (44 m), hidden config
+  E_near  d= 9.3  view_angle=0.00    0.0 >=  9.3 ? False
+  E_far   d=33.3  view_angle=1.00   30.0 >= 33.3 ? False   <- never legible
+```
+
+Both exits illegible, fallback to `E_near`, and the assertion "agents take the
+near exit when its sign is visible" passed for the wrong reason. The corridor is
+30 m so that `E_far` sits at 19.3 m, comfortably legible head-on, while distance
+still favours `E_near` by more than 2:1.
+
+### Guards
+
+Two, because a silent failure needs catching from both ends:
+
+- `build_geometry.py` refuses to write the asset if either sign is at or beyond
+  `MAX_VIS_M` from the spawn centroid.
+- `test_both_exits_are_inside_the_visibility_cap` asserts the same, and further
+  asserts `view_angle * max_vis >= distance` for both — so a bearing that is
+  merely *poor* rather than reversed is caught too.
+
+The test double models the full rule rather than the half-plane alone. That
+distinction is what makes the guard possible: a half-plane-only double reports
+a 33 m sign as perfectly legible.
 
 ## The two runs
 
