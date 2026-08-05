@@ -77,18 +77,18 @@ its optional `agent_scalars` table for FED/speed colouring).
 
 ```bash
 # Bare JuPedSim run, no smoke coupling
-uv run python run.py --scenario assets/demo/config.json
+uv run python run.py --scenario assets/t_junction/config.json
 
 # Smoke-coupled run with all diagnostic outputs
-uv run python run.py --scenario assets/demo/config.json \
-    --fds-dir assets/demo \
+uv run python run.py --scenario assets/t_junction/config.json \
+    --fds-dir assets/t_junction \
     --output-sqlite demo3.sqlite \
     --output-smoke-history smoke.csv \
     --output-fed-history fed.csv \
     --output-route-history routes.csv \
     --output-route-cost-history route_costs.csv \
     --enable-rerouting \
-    --vis-cache assets/demo/vismap_cache.npz
+    --vis-cache assets/t_junction/vismap_cache.npz
 ```
 
 ## Inspecting an FDS case
@@ -97,7 +97,7 @@ uv run python run.py --scenario assets/demo/config.json \
 they are within tenability-relevant ranges.
 
 ```bash
-uv run python scripts/inspect_fds.py assets/demo --plot --height 2.0
+uv run python scripts/inspect_fds.py assets/t_junction --plot --height 2.0
 ```
 
 ## Probing FED without running a simulation
@@ -107,7 +107,7 @@ from the FDS output. Useful as a sanity check ("if an agent stood still
 here, would it be incapacitated?").
 
 ```bash
-uv run python scripts/probe_fed.py --fds-dir assets/demo \
+uv run python scripts/probe_fed.py --fds-dir assets/t_junction \
     --point 17,12 --point 20,12 \
     --output probe.csv --plot probe.png
 ```
@@ -220,7 +220,7 @@ Runs one simulation and produces the full plot set into a results
 directory.
 
 ```bash
-./scripts/run_and_plot.sh assets/demo/config.json assets/demo results/demo
+./scripts/run_and_plot.sh assets/t_junction/config.json assets/t_junction results/demo
 ```
 
 Arguments: `<scenario> <fds-dir> <results-dir>`. The script calls

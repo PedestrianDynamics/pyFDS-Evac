@@ -11,7 +11,7 @@ then produces two diagnostic plots:
      → shows when each floor cell first loses visibility to any sign
      → validates that smoke near exit_B causes earliest visibility loss
 
-Waypoints are read from "sign" fields in assets/demo/config.json.
+Waypoints are read from "sign" fields in assets/t_junction/config.json.
 Each exit and checkpoint with a "sign" key contributes one vismap waypoint:
   {"x": <float>, "y": <float>, "alpha": <deg>, "c": <contrast>}
 
@@ -35,13 +35,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fdsvismap import VisMap
 
-FDS_DIR = Path("assets/demo")
-# Separate cache path from the runtime cache (assets/demo/vismap_cache.pkl).
+FDS_DIR = Path("assets/t_junction")
+# Separate cache path from the runtime cache (assets/t_junction/vismap_cache.pkl).
 # This script builds a raw VisMap with set_start_point which is incompatible
 # with the {"vis": ..., "meta": ...} format written by VisibilityModel.
-CACHE_PATH = Path("assets/demo/vismap_phase0_cache.pkl")
-CONFIG_PATH = Path("assets/demo/config.json")
-OUT_DIR = Path("assets/demo")
+CACHE_PATH = Path("assets/t_junction/vismap_phase0_cache.pkl")
+CONFIG_PATH = Path("assets/t_junction/config.json")
+OUT_DIR = Path("assets/t_junction")
 
 TIME_STEP_S = 10  # match reevaluation interval
 

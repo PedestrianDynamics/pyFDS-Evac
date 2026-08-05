@@ -12,9 +12,11 @@ construction (issue #26).
 Regenerate:
 
 ```bash
-python -m pyfds_evac.core.wkt_to_fds assets/demo2/geometry.wkt > demo2.fds
+python -m pyfds_evac.core.wkt_to_fds assets/t_junction/geometry.wkt > t_junction.fds
 ```
 
-Note: `basic` and `social_force` have 0.1 m internal walls, so auto-`dx`
-refines to 0.1 m (finer mesh, more OBSTs) to resolve them; the others use the
-0.25 m default.
+Note: scenarios with 0.1 m internal walls make auto-`dx` refine to 0.1 m (finer
+mesh, more OBSTs) to resolve them; the rest use the 0.25 m default.
+
+The `basic`, `social_force` and `haspel` pairs were removed alongside their
+scenarios; `HC` has no scenario folder and is kept only as a generated sample.

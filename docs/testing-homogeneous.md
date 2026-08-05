@@ -126,12 +126,13 @@ assets/
 │   └── <untracked run output>     — .smv .out .pickle .sf/.sf.bnd (4 meshes x 17 quantities),
 │                                    _devc.csv _hrr.csv _cpu.csv _steps.csv _git.txt
 ├── fed_incap_co_4000ppm/          — same layout, 4000 ppm
-├── fed_incap_co_8000ppm/          — same layout, 8000 ppm
-│
-├── fed_incap_co_v1/               — earlier iteration, 4000 ppm
-├── fed_incap_co_v2/               — earlier iteration, 4000 ppm
-└── fed_incap_co_smol/             — config + geometry only, no deck of its own
+└── fed_incap_co_8000ppm/          — same layout, 8000 ppm
 ```
+
+Three earlier iterations from this debugging lineage are no longer tracked:
+`fed_incap_co_v1` and `fed_incap_co_v2` (both 4000 ppm), and
+`fed_incap_co_smol`, which never had a deck of its own. The 2000/4000/8000 ppm
+ladder supersedes all three.
 
 pyFDS-Evac run artefacts (written wherever you point the `--output-*` flags):
 

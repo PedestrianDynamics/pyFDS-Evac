@@ -378,10 +378,10 @@ pickle. If the sign is not visible, the route is rejected with
 ```bash
 # Build or reuse the vismap cache and enable visibility-gated rejection
 uv run run.py \
-  --scenario assets/demo \
-  --fds-dir assets/demo \
+  --scenario assets/t_junction \
+  --fds-dir assets/t_junction \
   --enable-rerouting \
-  --vis-cache assets/demo/vismap_cache.pkl \
+  --vis-cache assets/t_junction/vismap_cache.pkl \
   --output-route-cost-history route_costs.csv \
   --cleanup
 ```
@@ -454,7 +454,7 @@ uv run python scripts/demo_cognitive_map_vis.py
 uv run python scripts/demo_cognitive_map_vis.py --no-cache
 ```
 
-Figure: ![cognitive map evolution](assets/demo/cognitive_map_evolution.png)
+Figure: ![cognitive map evolution](assets/t_junction/cognitive_map_evolution.png)
 
 ### Phase 2 verification: familiarity comparison
 
@@ -462,16 +462,16 @@ Two scenario configs differ only in familiarity tier:
 
 | Config | Tier |
 |--------|------|
-| `assets/demo/config_full.json` | `familiarity=full` |
-| `assets/demo/config_discovery.json` | `familiarity=discovery` |
+| `assets/t_junction/config_full.json` | `familiarity=full` |
+| `assets/t_junction/config_discovery.json` | `familiarity=discovery` |
 
 Run both back-to-back and produce a 3-panel comparison (exit split,
 rejection timeline, evacuation time):
 
 ```bash
 uv run python scripts/run_familiarity_comparison.py \
-    --fds-dir assets/demo \
-    --vis-cache assets/demo/vismap_cache.pkl
+    --fds-dir assets/t_junction \
+    --vis-cache assets/t_junction/vismap_cache.pkl
 ```
 
 Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,
@@ -519,8 +519,8 @@ renders the JuPedSim trajectory SQLite in a 3-D scene alongside the FDS
 smoke. Run with `--output-sqlite` to produce the file fds-viewer loads:
 
 ```bash
-uv run run.py --scenario assets/demo \
-              --fds-dir assets/demo \
+uv run run.py --scenario assets/t_junction \
+              --fds-dir assets/t_junction \
               --output-sqlite demo.sqlite
 ```
 
@@ -541,18 +541,43 @@ Reference materials are stored in [`materials/`](materials/):
 
 ## Assets
 
-Scenario definitions are stored in [`assets/`](assets/):
+Scenario definitions are stored in [`assets/`](assets/).
+[`assets/README.md`](assets/README.md) indexes the folders and the file
+conventions; what each one proves is below.
 
-- **ISO-table21**: ISO 20414 corridor verification case (single exit)
-- **ISO-table22**: ISO 20414 stationary benchmark (single agent, analytical FED=1 time)
-- **haspel**: Multi-exit scenario with three zones and dynamic rerouting
-- **demo**: T-corridor FDS scenario with cable fire, two exits (A open, B smoke-accumulating),
+- **ISO-table21**: ISO 20414 corridor verification case, single agent, single
+  exit. Proves the smoke speed reduction law is applied correctly end to end:
+  `test_iso_table21_constant_extinction_matches_expected_time_ratio` runs the
+  scenario clear and then under a `ConstantExtinctionField` at five extinction
+  coefficients (0.5, 1.0, 3.0, 7.5, 10.0 /m), asserting the ratio of evacuation
+  times matches `1 / speed_factor_from_extinction(k)` within 8% and that every
+  recorded `speed_factor` equals the expected one exactly. Doubles as the
+  standard small fixture in `test_progress_callback.py`, `test_webapp.py` and
+  `test_fed.py`, which use it for its size rather than its ISO provenance.
+- **ISO-table22**: ISO 20414 stationary benchmark, one agent with `v0` forced to
+  0 in a fixed gas concentration; config and geometry only, no deck. Proves the
+  runtime FED accumulator agrees with the closed form:
+  `test_iso_table22_stationary_runtime_matches_analytic_threshold_time` takes
+  the analytic FED=1.0 time from `time_to_fed_threshold_s()` and asserts the
+  observed crossing lands within one timestep of it, that `fed_max >= 1.0`, and
+  that the agent does not evacuate. Holding the gas inputs constant is
+  deliberate; this tests the accumulator, not the gas sampling. Also backs the
+  FED history throttling test.
+- **t_junction**: T-corridor FDS scenario with cable fire, two exits (A open, B smoke-accumulating),
   200 visitors spawning in the branch; used for visibility-aware routing and cognitive
   map verification (Spec 008). Includes `config_full.json` and `config_discovery.json`
-  for familiarity-tier comparison.
-- **basic**: Minimal scenarios for smoke-speed verification
-- **HC**: Hazard composition cases
-- **social_force**: Social force model test cases
+  for familiarity-tier comparison. The rerouting mechanism itself is verified by
+  scenario **S4** in
+  [`tests/verification/test_s4_tjunction_reroute.py`](tests/verification/test_s4_tjunction_reroute.py)
+  (control arm and null-field control both record zero switches; smoke forces
+  every agent B→A and never the reverse; reroute latency stays within the
+  configured interval; switch count is reproducible under a fixed seed). Note
+  that S4 builds its own T-corridor via `harness.t_junction_scenario()` with a
+  synthetic smoke field rather than loading this asset, so the mechanism is
+  covered but the deck and config here are not exercised by the suite. This
+  config uses flow spawning deliberately: under by-number placement an agent's
+  route-eval source node is its assigned exit, which makes rerouting degenerate
+  ([issue #21](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21)).
 - **fed_incap_co_2000ppm** / **fed_incap_co_4000ppm** / **fed_incap_co_8000ppm**:
   FED accumulation and probabilistic-incapacitation validation against a
   hand-calculated reference (`fed_hand_calc.py`), at three constant CO
@@ -561,11 +586,13 @@ Scenario definitions are stored in [`assets/`](assets/):
   *pipeline* logic. 100 non-evacuating agents circling a rectangular path, FDS
   domain split across 4 MPI meshes to confirm gas data is consistent at mesh
   boundaries. All three concentrations currently match the hand-calc's FED=1.0
-  crossing time to <0.5%. `fed_incap_co_v1` and `fed_incap_co_v2` are earlier
-  iterations from the same debugging lineage, both at 4000 ppm;
-  `fed_incap_co_smol` is a scenario config from the same lineage that has no
-  deck of its own (see the bug fixes above — this suite is what surfaced both
-  the O2 rate bug and the conflicting-`&INIT` FDS pitfall). Full writeup:
+  crossing time to <0.5% (2000 ppm: 782.4 s hand-calc vs 786 s simulated;
+  4000 ppm: 382.3 s vs 384 s; 8000 ppm: 186.6 s vs 187 s). Validated by running
+  the cases and comparing, not by a test in `tests/`. (See the bug fixes above:
+  this suite is what surfaced
+  both the O2 rate bug and the conflicting-`&INIT` FDS pitfall. The earlier
+  `fed_incap_co_v1`, `fed_incap_co_v2` and `fed_incap_co_smol` iterations from
+  the same debugging lineage are no longer tracked.) Full writeup:
   `docs/testing-homogeneous.md`.
 - **Familiarity Test Full** / **Familiarity Test Discovery**: `SocialForceModel`
   scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
@@ -593,7 +620,9 @@ Scenario definitions are stored in [`assets/`](assets/):
   known-but-unvisited doorway at each step — which for this maze's
   geometry happens to coincide with the original scripted tour the whole
   way, so they end up taking the long route without ever finding the
-  shortcut. Verified: `full` evacuates in ~54 s vs `discovery`'s ~75 s.
+  shortcut. Verified: `full` evacuates in 35.1 s vs `discovery`'s 75.1 s
+  (both 20/20 evacuated; see the results table in
+  [`docs/testing-familiarity.md`](docs/testing-familiarity.md)).
 
 ## Dependencies
 

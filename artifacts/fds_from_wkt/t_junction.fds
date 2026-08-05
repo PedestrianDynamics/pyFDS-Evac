@@ -1,4 +1,4 @@
-&HEAD CHID='verif_demo2', TITLE='Generated from JuPedSim walkable WKT' /
+&HEAD CHID='verif_t_junction', TITLE='Generated from JuPedSim walkable WKT' /
 &MESH IJK=122,54,12, XB=-0.250,30.250,-0.250,13.250,0.0,3.0 /
 &TIME T_END=120.0 /
 &MISC TMPA=20.0 /

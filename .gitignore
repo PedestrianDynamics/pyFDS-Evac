@@ -219,3 +219,28 @@ results/
 # Reference materials and PDFs (kept locally, not tracked)
 *.pdf
 materials/
+
+# Retired scenarios. Kept on disk for local reference, no longer tracked.
+# assets/demo2 was a near-duplicate of the T-junction case (now assets/t_junction);
+# the beam detectors are bare FDS decks with no scenario config; fed_incap_co_v1/v2
+# and _smol are superseded by the 2000/4000/8000 ppm ladder.
+/assets/demo2/
+/assets/beam_detector_no_mesh/
+/assets/beam_detector_w_mesh/
+/assets/fed_incap_co_v1/
+/assets/fed_incap_co_v2/
+/assets/fed_incap_co_smol/
+
+# Model-level fixtures, retired with the same treatment. These exercised the
+# JuPedSim layer with no fire: basic (flow spawning), social_force (alternate
+# model plus checkpoint journeys) and haspel (config only, never had a geometry
+# or a deck). All three remain in git history.
+/assets/basic/
+/assets/social_force/
+/assets/haspel/
+
+# The 50x50 m corn maze pair. Never had an FDS deck, so it could only ever test
+# pure-distance wayfinding; the familiarity_test_* pair covers the same
+# full-vs-discovery question on a smaller plan that does have a fire.
+/assets/maze_test_full/
+/assets/maze_test_discovery/

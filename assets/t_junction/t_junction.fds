@@ -1,4 +1,4 @@
-&HEAD CHID='demo', TITLE='T-corridor fire for pyFDS-Evac demo' /
+&HEAD CHID='t_junction', TITLE='T-corridor fire for pyFDS-Evac rerouting test' /
 
 ! --- Computational domain ---
 ! T-shape: corridor x=[0,30] y=[10,13], branch x=[17,23] y=[0,10]

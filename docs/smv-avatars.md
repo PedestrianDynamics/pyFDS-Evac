@@ -3,7 +3,7 @@
 When you run
 
 ```bash
-uv run python run.py --scenario ... --fds-dir assets/demo --smv-export
+uv run python run.py --scenario ... --fds-dir assets/t_junction --smv-export
 ```
 
 Smokeview renders the exported agents as tan-headed, blue-trunked
