@@ -92,3 +92,39 @@ uv run python run.py \
   --output-fed-history fed.csv \
   --output-route-history routes.csv
 ```
+
+## Smoke-weight sweep: when does smoke actually change the exit?
+
+`tests/test_rerouting_smoke_sweep.py` drives this asset's geometry through the
+composite cost at a range of `w_smoke`, without needing FDS output.
+
+The T puts exit B 10 m from the junction and exit A 20 m, so **distance alone
+always prefers B**. With heavy extinction on B's arm:
+
+| `w_smoke` | best exit | cost A | cost B |
+|---|---|---|---|
+| 0.0 | `exit_B_right` | 25.16 | 18.16 |
+| 0.5 | `exit_A_left` | 25.16 | 30.73 |
+| 1.0 | `exit_A_left` | 25.16 | 43.30 |
+| 5.0 | `exit_A_left` | 25.16 | 143.87 |
+
+The crossover is at **`w_smoke` ≈ 0.28**. Note that cost A never moves: smoke
+charges only the route that passes through it.
+
+### The control that matters
+
+Under **uniform** smoke the choice never flips, at any weight. Uniform
+extinction scales both routes by the same factor, so the shorter one stays
+cheaper. Without this control, "smoke changed the exit" would be
+indistinguishable from "a large cost term changed the exit" — the flip has to
+require *asymmetric* smoke, and it does.
+
+```bash
+.venv/bin/python scripts/generate_smoke_weight_sweep.py
+```
+
+![smoke weight sweep](smoke_weight_sweep.png)
+
+The tests deliberately pass no cognitive map, so the whole graph is visible and
+knowledge cannot confound the cost question. Familiarity is exercised by
+`familiarity_test_*` and by `assets/exit_visibility_alpha`.
