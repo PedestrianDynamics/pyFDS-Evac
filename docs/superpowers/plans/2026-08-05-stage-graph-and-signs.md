@@ -4,6 +4,8 @@
 
 **Goal:** Let crossings participate in cost-driven routing without a hand-authored journey, make every routable stage smoke-gated by a sign, and measure position-aware distances along the walkable area instead of straight lines.
 
+**Status (2026-08-05):** Tasks 1, 2 and 4 land on `fix/per-agent-spawn-origin`. Task 3 is deferred to a follow-up PR — see the note on that task.
+
 **Architecture:** Three independent changes to `pyfds_evac/core`. `StageGraph.from_scenario` gains a stage-type-agnostic auto-wiring path and retains its `jps.RoutingEngine` on the graph object; `visibility.extract_sign_descriptors` synthesises a default sign for every exit and crossing that lacks one; `route_graph._position_aware_length` asks that retained routing engine for walkable distances, falling back to Euclidean when it is absent.
 
 **Tech Stack:** Python 3.12, shapely, jupedsim (`jps.RoutingEngine`), fdsvismap, pytest, ruff.
@@ -424,6 +426,13 @@ bearing would blank the sign for every agent on the wrong side."
 
 ### Task 3: Measure position-aware distance along the walkable area
 
+> **DEFERRED to a follow-up PR (decided 2026-08-05).** This task edits
+> `_position_aware_length`, which exists only on `fix/route-cost-first-segment-exposure`
+> (PR #44, unmerged). On `main` and on this branch the logic is still inline
+> inside `evaluate_route`, with no `first_share` and no `first_length_m`.
+> Run this task on a branch cut from #44 once it merges. Tasks 1, 2 and 4 are
+> independent of it and land on this branch.
+
 `_position_aware_length` uses `math.hypot` for the agent's remaining distance and its backtrack, so both cut corners. Measured on an L-corridor, the remaining distance is understated by 17 % and the straight segment leaves the walkable area. The base path already respects walls; only the position correction does not.
 
 **Files:**
@@ -619,7 +628,6 @@ degenerate. Measured at roughly 1 us per query, so the cost is negligible."
 
 **Files:**
 - Modify: `docs/routing.md`
-- Modify: `docs/rerouting-oscillation-notes.md`
 - Modify: `README.md`
 
 **Interfaces:**
@@ -630,7 +638,7 @@ degenerate. Measured at roughly 1 us per query, so the cost is negligible."
 
 ```bash
 rg -n "nearest exit|auto-connect|distribution.*exit|no transitions" docs/routing.md README.md
-rg -n "position-aware|remaining distance|backtrack" docs/rerouting-oscillation-notes.md
+rg -n "sign|visible|checkpoint" docs/routing.md README.md
 ```
 
 - [ ] **Step 2: Record the three behaviour changes**
@@ -651,16 +659,8 @@ crossing cheaper.
 Explicit `transitions` remain authoritative and skip this path entirely.
 ```
 
-In `docs/rerouting-oscillation-notes.md`, append to the position-aware fix section:
-
-```markdown
-Distances from the agent's position are measured along the walkable area via
-JuPedSim's routing engine, not as straight lines. An earlier version used
-`math.hypot`, which cut corners -- on an L-corridor it understated the
-remaining distance by 17 % and the segment left the walkable area. The
-figures quoted above were computed under that approximation and are
-correspondingly optimistic in corridor geometry.
-```
+`docs/rerouting-oscillation-notes.md` is **not** edited in this task: the
+walkable-distance change it would describe is Task 3, which is deferred.
 
 - [ ] **Step 3: Verify no stale claims remain**
 
@@ -673,8 +673,8 @@ Fix anything that now contradicts the code. In particular, any statement that a 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add docs/routing.md docs/rerouting-oscillation-notes.md README.md
-git commit -m "docs: record stage-graph auto-wiring, default signs, walkable distances"
+git add docs/routing.md README.md
+git commit -m "docs: record stage-graph auto-wiring and default signs"
 ```
 
 ---
