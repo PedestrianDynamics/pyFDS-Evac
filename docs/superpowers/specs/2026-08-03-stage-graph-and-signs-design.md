@@ -132,6 +132,12 @@ step so it returns a descriptor for every exit and crossing.
 
 ## Change 3 — position-aware distance from the router, not a straight line
 
+> **DEFERRED to a follow-up PR (decided 2026-08-05).** This change edits
+> `_position_aware_length`, which exists only on
+> `fix/route-cost-first-segment-exposure` (PR #44, unmerged). It is **not** part
+> of `fix/per-agent-spawn-origin`; on that branch and on `main` the logic is
+> still inline inside `evaluate_route`. Changes 1 and 2 shipped without it.
+
 `_position_aware_length` measures the agent's remaining distance and its
 backtrack with `math.hypot`:
 

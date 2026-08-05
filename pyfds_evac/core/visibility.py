@@ -241,8 +241,9 @@ class VisibilityModel:
       270 = visible from west  (sign on east wall, seen by agents to its left)
       180 = visible from south (sign at junction top, seen by agents below)
 
-    If a node has no 'sign' descriptor it is always considered visible
-    (fallback to current behaviour).
+    Every exit, crossing and waypoint carries a descriptor -- authored or
+    synthesised at the node centroid -- so only nodes outside that set (spawn
+    areas, and nodes whose geometry was unusable) are unconditionally visible.
 
     Cache format: numpy npz containing the visibility arrays and metadata.
     The cache is safe to load (no pickle / no arbitrary code execution).
@@ -281,7 +282,9 @@ class VisibilityModel:
     def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
         """Return True if the sign at *node_id* is visible from (x, y) at *time*.
 
-        Nodes without a sign descriptor always return True.
+        Only nodes outside the descriptor set -- spawn areas, and nodes whose
+        geometry could not be turned into a centroid -- return True regardless
+        of the smoke.
         """
         wp_id = self._wp_ids.get(node_id)
         if wp_id is None:
