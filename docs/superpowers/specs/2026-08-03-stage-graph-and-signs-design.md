@@ -82,10 +82,22 @@ out:
 - **crossings** → outgoing edges to every other crossing and every exit
 - **exits** → terminal, no outgoing edges
 
-Each edge goes through `_make_edge`, so JuPedSim's routing engine computes a real
-walkable polyline: no edge crosses a wall, and every edge's length and sampled
-extinction are physical. Explicit `transitions`, when present, remain
-authoritative and this path is skipped, so existing scenarios are untouched.
+An edge is a directed pair of nodes and carries no geometry of its own. Its
+realised path comes from `_make_edge`, which asks JuPedSim's routing engine for
+a polyline through the walkable area — so the path turns corners rather than
+cutting through walls, and both the edge weight (`_polyline_length`) and the
+sampled mean extinction (`integrated_extinction_along_polyline`) are measured
+along that real route. A straight centroid-to-centroid ray is used only when no
+walkable polygon is supplied, which in practice means unit tests.
+
+This guarantee does **not** currently extend to the position-aware correction:
+`_position_aware_length` measures the agent's remaining distance and its
+backtrack with `math.hypot`, so both cut corners. Measured on an L-corridor, a
+mid-leg agent's remaining distance is understated by 17 % and the straight
+segment lies outside the walkable area. Tracked separately; see Out of scope.
+
+Explicit `transitions`, when present, remain authoritative and this path is
+skipped, so existing scenarios are untouched.
 
 Consequence: with no smoke the direct distribution→exit edge is cheapest, agents
 take the nearest exit, and crossings sit inert — matching plain JuPedSim. With
@@ -185,3 +197,11 @@ a sensitivity case for free.
   corrected graph first, and is separate work.
 - Directional signs as independent objects pointing at a remote destination.
   Settled: a sign marks its own node.
+- Euclidean corner-cutting in `_position_aware_length`. Real, measured at 17 %
+  understatement on an L-corridor, and unbounded in tighter geometry. It biases
+  mid-leg agents relative to node-aligned ones in exactly the corridor layouts
+  where position-aware routing was introduced. The fix — asking the routing
+  engine for the walkable remaining distance — costs one routing call per
+  candidate route per agent per re-evaluation, which needs a caching strategy
+  before it can be adopted. Negligible for The Station, which is essentially
+  one open hall.
