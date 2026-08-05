@@ -33,8 +33,8 @@ def test_scenario_picker_lists_alternate_json_configs():
     from pyfds_evac.webapp.params import _scenario_options
 
     options = dict((value, label) for label, value in _scenario_options())
-    assert "demo" in options  # directory entry → config.json
-    assert "demo/config_full.json" in options  # alternate config selectable
+    assert "t_junction" in options  # directory entry → config.json
+    assert "t_junction/config_full.json" in options  # alternate config selectable
     assert "config.json" not in "".join(
         v for v in options if v.endswith("/config.json")
     )  # config.json is not duplicated as a file entry

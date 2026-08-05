@@ -1,4 +1,4 @@
-# Demo scenario: smoke-blocked T-corridor
+# T-junction test: smoke-blocked T-corridor
 
 This scenario demonstrates all three pyFDS-Evac model features:
 speed reduction, FED incapacitation, and dynamic rerouting.
@@ -24,10 +24,10 @@ walk through the fire zone to reach either exit.
 - Exit B at x = 30 (10 m from junction)
 - 50 agents spawn in the branch at t = 0
 
-## Fire setup (demo.fds)
+## Fire setup (t_junction.fds)
 
 A 1 MW PVC-cable fire at the junction produces heavy soot and toxic
-gases. The fire ramps up over 60 seconds.test test
+gases. The fire ramps up over 60 seconds.
 
 
 | Property | Value |
@@ -77,15 +77,15 @@ increases and agents switch to Exit A.
 1. Run the FDS simulation:
 
 ```bash
-fds assets/demo/demo.fds
+fds assets/t_junction/t_junction.fds
 ```
 
 2. Run the evacuation:
 
 ```bash
 uv run python run.py \
-  --scenario assets/demo \
-  --fds-dir assets/demo \
+  --scenario assets/t_junction \
+  --fds-dir assets/t_junction \
   --enable-rerouting \
   --reroute-interval 5 \
   --output-smoke-history smoke.csv \

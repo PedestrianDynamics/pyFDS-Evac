@@ -28,9 +28,9 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from shapely.geometry import Polygon
 
-CONFIG_PATH = Path("assets/demo/config.json")
-CACHE_PATH = Path("assets/demo/vismap_cache.pkl")
-OUT_PATH = Path("assets/demo/cognitive_map_evolution.png")
+CONFIG_PATH = Path("assets/t_junction/config.json")
+CACHE_PATH = Path("assets/t_junction/vismap_cache.pkl")
+OUT_PATH = Path("assets/t_junction/cognitive_map_evolution.png")
 
 # Colours
 C_KNOWN_NODE = "#2196F3"

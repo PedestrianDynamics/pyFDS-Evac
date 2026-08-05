@@ -310,7 +310,7 @@ class TJunctionSpec:
 
     The stem is offset toward the right wall so the **right** exit is nearer and
     is the default choice -- smoke placed in the right arm then forces a switch
-    to the left.  Geometry follows the proven ``assets/demo2`` layout.
+    to the left.  Geometry follows the proven ``assets/t_junction`` layout.
     """
 
     width_m: float = 30.0

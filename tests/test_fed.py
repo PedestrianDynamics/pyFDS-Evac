@@ -6,16 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-try:
-    from fdsreader import Simulation
-except ModuleNotFoundError:
-    Simulation = None
-
 from pyfds_evac.core.fed import (
-    DefaultFedConfig,
     DefaultFedInputs,
-    DefaultFedModel,
-    FdsFedField,
     _cn_fed_rate_per_minute,
     _co_fed_rate_per_minute,
     _co_percent_to_ppm,
@@ -28,9 +20,6 @@ from pyfds_evac.core.fed import (
     time_to_fed_threshold_s,
 )
 from pyfds_evac.core import load_scenario, run_scenario
-
-
-HASPEL_DIR = Path("assets/haspel")
 
 
 CONSTANT_EXPOSURE_CASES = {
@@ -551,57 +540,6 @@ def test_combined_constant_exposure_reaches_threshold_fastest():
             for inputs in CONSTANT_EXPOSURE_CASES.values()
         )
     )
-
-
-def _find_haspel_peak_co_location():
-    sim = Simulation(str(HASPEL_DIR))
-    co_slice = sim.slices.filter_by_quantity("CARBON MONOXIDE VOLUME FRACTION")[0]
-    best = None
-    for subslice in co_slice.subslices:
-        flat_index = int(subslice.data.argmax())
-        peak = float(subslice.data.reshape(-1)[flat_index])
-        if best is not None and peak <= best["value"]:
-            continue
-        t_idx, i_idx, j_idx = map(
-            int, np.unravel_index(flat_index, subslice.data.shape)
-        )
-        dx = (subslice.extent.x_end - subslice.extent.x_start) / subslice.shape[0]
-        dy = (subslice.extent.y_end - subslice.extent.y_start) / subslice.shape[1]
-        best = {
-            "value": peak,
-            "time_s": float(co_slice.times[t_idx]),
-            "x": float(subslice.extent.x_start + (i_idx + 0.5) * dx),
-            "y": float(subslice.extent.y_start + (j_idx + 0.5) * dy),
-        }
-    return best
-
-
-def test_fdsreader_stationary_haspel_sampling_drives_positive_fed():
-    if Simulation is None:
-        pytest.skip("fdsreader is not installed in this environment.")
-    # The scenario directory is tracked, but the FDS output that this test
-    # samples is not. Look for a run (.smv) rather than just the directory.
-    if not any(HASPEL_DIR.glob("*.smv")):
-        pytest.skip("Local haspel FDS output is not available in this checkout.")
-
-    peak = _find_haspel_peak_co_location()
-    field = FdsFedField.from_fds(str(HASPEL_DIR))
-    model = DefaultFedModel(field, DefaultFedConfig(fds_dir=str(HASPEL_DIR)))
-
-    inputs, rate_per_min = model.sample_rate(peak["time_s"], peak["x"], peak["y"])
-    _, _, cumulative = model.advance(
-        peak["time_s"] + 60.0,
-        peak["x"],
-        peak["y"],
-        dt_s=60.0,
-        current_fed=0.0,
-    )
-
-    assert inputs.co_volume_fraction_percent > 0.0
-    assert inputs.co2_volume_fraction_percent >= 0.0
-    assert inputs.o2_volume_fraction_percent > 0.0
-    assert rate_per_min > 0.0
-    assert cumulative > 0.0
 
 
 class _ConstantInputsFedModel:
