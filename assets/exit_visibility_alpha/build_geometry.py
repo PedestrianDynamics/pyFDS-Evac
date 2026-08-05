@@ -10,7 +10,7 @@ Layout (a straight north-south corridor, 4 m wide):
 
     y = 30  +--------+   E_far   (always legible, alpha = 180)
             |        |
-    y = 12  |  spawn |   200 agents, ~9 m from E_near, ~19 m from E_far
+    y = 12  |  spawn |   40 agents, ~9 m from E_near, ~19 m from E_far
     y =  8  |        |
     y =  0  +--------+   E_near  (alpha is the experiment's variable)
 
@@ -57,7 +57,11 @@ SPAWN = (0.5, 8.0, 3.5, 12.0)
 E_NEAR = (0.5, 0.2, 3.5, 1.2)  # south end, 8 m from the spawn area
 E_FAR = (0.5, 28.8, 3.5, 29.8)  # north end, ~19 m from the spawn area
 
-N_AGENTS = 200
+AGENT_RADIUS = 0.2
+# JuPedSim packs agents on a grid and refuses the run if the spawn polygon
+# cannot hold them.  Measured capacity for this area is ~47, so stay clear of
+# it: a scenario that aborts at placement teaches nothing.
+N_AGENTS = 40
 
 # fdsvismap reads alpha as a compass bearing (degrees clockwise from north)
 # and makes the sign legible in the half-plane it faces, with cosine falloff.
@@ -122,7 +126,7 @@ def build_config(alpha_near):
                 "coordinates": _coords(SPAWN),
                 "parameters": {
                     "number": N_AGENTS,
-                    "radius": 0.2,
+                    "radius": AGENT_RADIUS,
                     "v0": 1.3,
                     "distribution_mode": "by_number",
                     "use_flow_spawning": False,
@@ -170,8 +174,12 @@ def build():
     (HERE / "exit_visibility_alpha.fds").write_text(deck, encoding="utf-8")
     if "BURNER" in deck:
         raise SystemExit("fire was not stripped from the generated deck")
-    if "SOOT EXTINCTION COEFFICIENT" not in deck:
-        raise SystemExit("deck has no soot slice; fdsvismap would have no data")
+    # Note the two names.  FDS rejects 'SOOT EXTINCTION COEFFICIENT' as an
+    # *input* quantity (ERROR 1042) but records the slice under exactly that
+    # name, which is what fdsvismap filters by.  So the deck must ask for
+    # 'EXTINCTION COEFFICIENT' and the output will carry the longer name.
+    if "QUANTITY='EXTINCTION COEFFICIENT'" not in deck:
+        raise SystemExit("deck has no extinction slice; fdsvismap would have no data")
     print(f"Wrote: {HERE / 'exit_visibility_alpha.fds'}  (clear air, slices kept)")
 
     for name, alpha in (("visible", ALPHA_VISIBLE), ("hidden", ALPHA_HIDDEN)):
@@ -182,6 +190,18 @@ def build():
 
     print(f"Wrote: {HERE / 'geometry.wkt'}")
     print(f"Corridor {walkable.bounds}, area {walkable.area:.1f} m2")
+    spawn_area = box(*SPAWN).area
+    # Roughly one agent per (2r)^2 of floor, which is what the placement grid
+    # achieves in practice; assert with margin rather than at the limit.
+    capacity = spawn_area / (2 * AGENT_RADIUS) ** 2
+    if N_AGENTS > 0.9 * capacity:
+        raise SystemExit(
+            f"{N_AGENTS} agents in {spawn_area:.1f} m2 is at or beyond the "
+            f"~{capacity:.0f} the spawn area can hold; the run would abort "
+            "during placement"
+        )
+    print(f"  {N_AGENTS} agents in {spawn_area:.1f} m2 (capacity ~{capacity:.0f})")
+
     spawn = box(*SPAWN).centroid
     for name, sign_xy in (("E_near", (2.0, 0.7)), ("E_far", (2.0, 29.3))):
         d = spawn.distance(Point(*sign_xy))

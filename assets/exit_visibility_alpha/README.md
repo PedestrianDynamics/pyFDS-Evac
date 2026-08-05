@@ -14,7 +14,7 @@ A straight north–south corridor, 4 m wide and 30 m long.
 ```
  y = 30  +--------+   E_far    alpha = 180, always legible
          |        |
- y = 12  |  spawn |   200 agents
+ y = 12  |  spawn |   40 agents
  y =  8  |        |
  y =  0  +--------+   E_near   alpha is the experiment's variable
 ```
