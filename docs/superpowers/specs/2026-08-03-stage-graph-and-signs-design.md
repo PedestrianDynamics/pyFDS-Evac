@@ -90,12 +90,6 @@ sampled mean extinction (`integrated_extinction_along_polyline`) are measured
 along that real route. A straight centroid-to-centroid ray is used only when no
 walkable polygon is supplied, which in practice means unit tests.
 
-This guarantee does **not** currently extend to the position-aware correction:
-`_position_aware_length` measures the agent's remaining distance and its
-backtrack with `math.hypot`, so both cut corners. Measured on an L-corridor, a
-mid-leg agent's remaining distance is understated by 17 % and the straight
-segment lies outside the walkable area. Tracked separately; see Out of scope.
-
 Explicit `transitions`, when present, remain authoritative and this path is
 skipped, so existing scenarios are untouched.
 
@@ -135,6 +129,45 @@ gated uniformly.
 Two edits follow. `_build_vismap` does `alpha=float(sign["alpha"])` and must
 accept and pass through `None`. `extract_sign_descriptors` gains the synthesis
 step so it returns a descriptor for every exit and crossing.
+
+## Change 3 — position-aware distance from the router, not a straight line
+
+`_position_aware_length` measures the agent's remaining distance and its
+backtrack with `math.hypot`:
+
+```python
+remaining = math.hypot(px - next_node.centroid_x, py - next_node.centroid_y)
+backtrack = math.hypot(px - first_node.centroid_x, py - first_node.centroid_y)
+```
+
+Both cut corners. On an L-corridor a mid-leg agent's remaining distance is
+understated by 17 % and the straight segment lies outside the walkable area
+entirely. Both branches understate, so mid-leg agents are systematically
+under-priced against the node-aligned agents the graph assumes — and the error
+is largest in the corridor layouts where position-aware routing was introduced
+to cure rerouting oscillation.
+
+Replace both with the routing engine's walkable path length, the same source of
+truth `_make_edge` already uses:
+
+```python
+remaining = _polyline_length(routing_engine.compute_waypoints(agent_pos, next_centroid))
+```
+
+The routing engine is therefore threaded from `StageGraph` into route
+evaluation. Where it is absent — unit tests without a walkable polygon — the
+Euclidean form remains as the fallback, matching `_make_edge`'s own behaviour.
+If a query fails or returns fewer than two waypoints, fall back to Euclidean
+rather than raising: a wrong distance degrades ranking, an exception ends the
+run.
+
+**Cost is not a concern.** Measured at ~1 µs per query on a Station-sized mesh:
+420 agents × 2 endpoints is 0.8 ms of a 1 s tick. The expensive part of
+`RoutingEngine` is building the navigation mesh once, which already happens at
+graph construction. Within a single `rank_routes` call an agent has one current
+target and one source node, so all candidate routes share the same two
+endpoints and the natural memo key is `(position, node_id)` — but even the naive
+per-route call is affordable.
 
 ## Scenario instance — The Station nightclub
 
@@ -188,6 +221,10 @@ a sensitivity case for free.
   visibility.
 - With smoke on the direct route and a clear two-hop alternative, the cheaper
   route runs through the crossing; without smoke it does not.
+- On an L-corridor, a mid-leg agent's credited remaining distance equals the
+  walkable path length, not the straight line, and exceeds the Euclidean value.
+- Without a routing engine, the Euclidean fallback still applies and existing
+  position-aware tests are unchanged.
 
 ## Out of scope
 
@@ -197,11 +234,3 @@ a sensitivity case for free.
   corrected graph first, and is separate work.
 - Directional signs as independent objects pointing at a remote destination.
   Settled: a sign marks its own node.
-- Euclidean corner-cutting in `_position_aware_length`. Real, measured at 17 %
-  understatement on an L-corridor, and unbounded in tighter geometry. It biases
-  mid-leg agents relative to node-aligned ones in exactly the corridor layouts
-  where position-aware routing was introduced. The fix — asking the routing
-  engine for the walkable remaining distance — costs one routing call per
-  candidate route per agent per re-evaluation, which needs a caching strategy
-  before it can be adopted. Negligible for The Station, which is essentially
-  one open hall.
