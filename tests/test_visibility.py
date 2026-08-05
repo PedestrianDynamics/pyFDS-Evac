@@ -231,3 +231,34 @@ class TestSignSynthesis:
                 slice_height_m=2.0,
             )
         assert fake.set_waypoint.call_args.kwargs["alpha"] is None
+
+    def test_synthesised_sign_is_genuinely_gated_end_to_end(self):
+        """A previously-unsigned node must now be visibility-gated, not just present.
+
+        Exercises VisibilityModel.node_is_visible on a synthesised sign (no
+        authored 'sign' in the config) through the real lookup path, using a
+        fake VisMap in place of FDS data. Asserts both directions: visible
+        where the underlying data says visible, not visible where it says
+        invisible. A descriptor merely existing is not enough -- before this
+        change such a node was hard-coded True regardless of the data.
+        """
+        config = {"exits": {"e0": {"coordinates": self._square(0, 0)}}}
+        signs = extract_sign_descriptors(config)
+        assert signs["e0"]["alpha"] is None  # confirm synthesised, not authored
+
+        class _GatedFakeVis:
+            vismap_time_points = np.array([0.0])
+            all_x_coords = np.array([0.0, 1.0])
+            all_y_coords = np.array([0.0])
+            all_time_all_wp_vismap_array_list = [
+                [np.array([[True, False]])],
+            ]
+
+        with patch(
+            "pyfds_evac.core.visibility._build_vismap",
+            return_value=_GatedFakeVis(),
+        ):
+            model = VisibilityModel("unused", signs)
+
+        assert model.node_is_visible(time=0.0, x=0.0, y=0.0, node_id="e0") is True
+        assert model.node_is_visible(time=0.0, x=1.0, y=0.0, node_id="e0") is False
