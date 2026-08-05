@@ -21,10 +21,12 @@ NCSTAR keeps a role: it supplies the dimensioned geometry, the door clear
 widths, and a clear-air cross-check. But the primary target moves to observed
 behaviour.
 
-Source note: the paper's Table 2 (exits used by starting location) did not
-render legibly from the scanned PDF. Every per-location number below is taken
-from the prose on pp. 11–12, which restates the same breakdown. Before building,
-the table should be read directly and any discrepancy resolved in its favour.
+Source note: Table 2 is reproduced in full below. It was transcribed from the
+paper after the scanned PDF failed to render it, and independently reconciled:
+every column total matches the aggregate percentages the paper states on p. 12
+(front 35.8 %, bar 20.0 %, stage 6.5 %, kitchen 5.4 %, windows 27.9 %), and
+355 − 8 unknown = 347, the count of survivors whose exit usage the paper says
+could be determined.
 
 ## What the paper gives us
 
@@ -43,34 +45,42 @@ At least another 62 *attempted* the front door and failed — 34 of those went o
 a window, 25 through another door. So **at least 50 % of survivors tried or
 succeeded in using the front door**, out of four available doors.
 
-### Exit choice by starting location (pp. 11–12)
+### Exit choice by starting location (Table 2)
 
-The row that matters most, because it is the one a nearest-exit model gets
-wrong:
+Rows are location at ignition; columns are the exit actually used. N = 355.
 
-| from | n | front | stage | main bar door | windows | kitchen | unspec. |
-|---|---|---|---|---|---|---|---|
-| **near stage / dance floor** | 75 | 16 | 7 | 4 | 40 | 1 | 7 |
-| behind dance floor / soundboard | 74 | 40 | – | 15 | 14 | 1 | 4 |
-| between the two bars | 29 | 15 | – | 9 | 2 | – | 3 |
-| rear bar / dart room | 28 | 4 | – | 10 | 3 | 10 | 1 |
-| near the stage door | 17 | 3 | 10 | 1 | 1 | 1 | 1 |
-| sunroom | 16 | 4 | 2 | 1 | 6 | – | 3 |
-| along the back wall | 15 | 3 | – | 4 | 7 | 1 | – |
-| back hallway / restrooms | 14 | 3 | – | 3 | 3 | 3 | 2 |
-| main bar area (excl. 6 at its door) | 31 | 8 | – | 18 | 2 | – | 3 |
+| area at ignition | sunroom win | bar door | unspec door | front | kitchen | main bar win | w/d R | w/d L | stage | unspec win | unk | total |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| Unclear | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 8 |
+| Stage | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 4 | 0 | 0 | 4 |
+| Near stage door | 1 | 0 | 1 | 3 | 1 | 1 | 0 | 0 | 10 | 0 | 0 | 17 |
+| **Near stage or on dance floor** | 12 | 4 | 1 | **16** | 1 | **28** | 1 | 0 | **7** | 5 | 0 | **75** |
+| Back wall platform | 0 | 4 | 0 | 3 | 1 | 7 | 0 | 0 | 0 | 0 | 0 | 15 |
+| Sunroom | 6 | 1 | 0 | 4 | 0 | 0 | 0 | 0 | 2 | 3 | 0 | 16 |
+| Behind dance floor | 3 | 15 | 1 | **40** | 1 | 11 | 0 | 0 | 0 | 3 | 0 | 74 |
+| Back hallway | 2 | 3 | 0 | 3 | 3 | 1 | 0 | 0 | 0 | 1 | 1 | 14 |
+| Between bars | 0 | 9 | 1 | 15 | 0 | 2 | 0 | 1 | 0 | 0 | 1 | 29 |
+| Rear bar / dart room | 0 | 10 | 0 | 4 | 10 | 3 | 0 | 0 | 0 | 1 | 0 | 28 |
+| Entryway | 0 | 0 | 0 | 17 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 17 |
+| Main bar | 0 | 24 | 2 | 8 | 0 | 2 | 0 | 0 | 0 | 1 | 0 | 37 |
+| Center stage-side | 0 | 1 | 0 | 4 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 7 |
+| Unknown / not reported | 2 | 0 | 0 | 4 | 1 | 1 | 0 | 0 | 0 | 1 | 5 | 14 |
+| **Total** | **26** | **71** | **6** | **127** | **19** | **57** | **1** | **1** | **23** | **16** | **8** | **355** |
 
 Two findings pull in opposite directions and the model must reproduce both:
 
-- **"The people closest to exit doors almost always used those doors."** The 17
-  in the entranceway used the front door; 4 on stage used the stage door; 6 by
-  the main bar door used it.
+- **"The people closest to exit doors almost always used those doors."** All 17
+  in the entryway used the front door; all 4 on stage used the stage door; 10 of
+  the 17 by the stage door used it; 24 of the 37 in the main bar used its door.
 - **Except where the fire intervened.** Of the 75 by the stage, only 16 reached
-  the front door and 7 the stage door — *their two closest exits*. Forty went
-  out windows and 4 crossed the venue to the main bar exit.
+  the front door and 7 the stage door — *their two closest exits*. Forty-five
+  went out windows, 28 of them crossing the venue to the main bar.
 
-And the front door's pull is visible from far away: 40 of the 74 behind the
-dance floor used it, and 31.5 % of all front-door users started there.
+And the front door's pull reaches far: 40 of the 74 behind the dance floor used
+it, and those 40 are 31.5 % of all front-door users.
+
+The `unk` column is the paper's own: 8 survivors whose exit could not be
+determined, which is why usage is reported for 347 of 355.
 
 ### Familiarity, quantified (pp. 6–7)
 
@@ -156,8 +166,9 @@ at zero and full familiarity.
 **Windows are 27.9 % of egress and we do not model them.** This is the largest
 threat to an honest comparison. Two options, and the choice must be stated in
 the results rather than buried: renormalise over door users only (front 52.9 %,
-main bar 29.5 %, stage 9.6 %, kitchen 8.0 %), or add windows as exits and
-compare directly. Silently ignoring them would inflate apparent agreement,
+main bar 29.6 %, stage 9.6 %, kitchen 7.9 % — from counts 127/71/23/19, the
+6 "unspecified door" cases excluded), or add windows as exits and compare
+directly. Silently ignoring them would inflate apparent agreement,
 because the 40 window users by the stage would be redistributed onto doors the
 model does have.
 
