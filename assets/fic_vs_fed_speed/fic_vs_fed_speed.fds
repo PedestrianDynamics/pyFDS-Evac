@@ -1,0 +1,46 @@
+&HEAD CHID='fic_vs_fed_speed',
+      TITLE='4x50 m sealed corridor, homogeneous acrolein + CO' /
+
+! Sealed corridor. No combustion: the gas is prescribed, so concentration is
+! constant in space and time and the only variable across runs is which
+! tenability rules are enabled.
+&MESH IJK=16,200,12, XB=-0.25,4.25,-0.25,50.25,0.0,3.0 /
+&TIME T_END=400 /
+&MISC TMPA=20.0 /
+
+! Nitrogen background so O2 is not double-counted.
+&SPEC ID='NITROGEN',        BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN'                             /
+&SPEC ID='CARBON MONOXIDE'                    /
+&SPEC ID='CARBON DIOXIDE'                     /
+&SPEC ID='ACROLEIN'                           /
+
+! Target volume fractions: CO = 2000 ppm (drives FED),
+! acrolein = 10 ppm (drives FIC), O2 = 20.9 %, CO2 = 500 ppm.
+!
+! NOTE: all species MUST be in a single &INIT. A second &INIT with no XB
+! resets the whole domain, overwriting the first and leaving everything at 0.
+&INIT SPEC_ID(1)='CARBON MONOXIDE',
+      SPEC_ID(2)='CARBON DIOXIDE',
+      SPEC_ID(3)='OXYGEN',
+      SPEC_ID(4)='ACROLEIN',
+      MASS_FRACTION(1)=1.94148E-03,
+      MASS_FRACTION(2)=7.62606E-04,
+      MASS_FRACTION(3)=2.31778E-01,
+      MASS_FRACTION(4)=1.94300E-05 /
+
+! Walls: the corridor is a sealed box.
+&OBST XB=-0.25,4.25,-0.25,0.00,0.0,3.0 /
+&OBST XB=-0.25,4.25,50.00,50.25,0.0,3.0 /
+&OBST XB=-0.25,0.00,0.00,50.00,0.0,3.0 /
+&OBST XB=4.00,4.25,0.00,50.00,0.0,3.0 /
+
+! Slices pyFDS-Evac reads at breathing height.
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='ACROLEIN'        /
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT'                     /
+&DUMP DT_SLCF=5.0 /
+
+&TAIL /

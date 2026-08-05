@@ -608,6 +608,23 @@ conventions; what each one proves is below.
   the visibility consolidation. `scripts/generate_cognitive_map_states.py` renders the
   three states (unknown / legible now / remembered), and the amber band is the
   memory made visible. Checked by `tests/test_cognitive_map_memory.py`.
+- **FIC vs FED Speed**: 4x50 m sealed corridor, 30 agents, one exit. The gas is
+  *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 10 ppm) rather
+  than burned, so concentration is constant in space and time and the only
+  variable across runs is which tenability rules are enabled — set from the
+  command line (`--disable-tenability`, `--fic-alpha 0`, or the default).
+  Separates the two rules by timescale: **FED is a cumulative dose with a
+  threshold and does nothing below it** (0.079 /min here, so 13 minutes to reach
+  FED = 1, against a ~33 s egress), while **FIC responds instantaneously**
+  (`FIC = 0.5`, speed factor 0.65, so ~51 s). The prediction is stated in the
+  asset README before running and is falsifiable: if FED materially slows an
+  agent over a minute of exposure, the model or the reasoning is wrong. A
+  control test records that acrolein is *not* only an irritant — it also sits in
+  FED's Fractional Lethal Dose sum, so removing it takes 100% of the speed
+  penalty but only 3% of the dose rate, and that asymmetry is what makes the two
+  rules separable. Also pins the O2 hypoxia term against the published closed
+  form (Fire Safety Journal, surrogate-gases paper, Eq. 9) rather than against
+  our own docs. Checked by `tests/test_fic_vs_fed_speed.py`.
 - **Exit Visibility Alpha**: 4x30 m corridor, 40 `discovery` agents, two
   exits. The two configs differ in exactly one value — the viewing bearing
   (`alpha`) of the near exit's sign — so any difference in exit choice is
