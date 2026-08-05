@@ -1,0 +1,22 @@
+&HEAD CHID='exit_visibility_alpha', TITLE='Generated from JuPedSim walkable WKT' /
+&MESH IJK=18,178,12, XB=-0.250,4.250,-0.250,44.250,0.0,3.0 /
+&TIME T_END=120.0 /
+&MISC TMPA=20.0 /
+
+! --- walls: complement of the walkable area (4 OBSTs) ---
+&OBST XB=-0.250,4.250,-0.250,0.000,0.0,3.0 /
+&OBST XB=-0.250,0.000,0.000,44.250,0.0,3.0 /
+&OBST XB=0.000,4.250,44.000,44.250,0.0,3.0 /
+&OBST XB=4.000,4.250,0.000,44.000,0.0,3.0 /
+
+! --- fire (edit to taste; not derived from geometry) ---
+&REAC FUEL='PROPANE', SOOT_YIELD=0.06, CO_YIELD=0.01 /
+
+! --- analysis slices at z=2.0 m (pyFDS-Evac quantities) ---
+&SLCF PBZ=2.0, QUANTITY='SOOT EXTINCTION COEFFICIENT' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&DUMP DT_SLCF=2.0 /
+
+&TAIL /
