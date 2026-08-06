@@ -13,6 +13,7 @@ from the GUI. It defaults to a no-op.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable, Dict
 
 from .fed import (
@@ -32,6 +33,8 @@ from .smoke_speed import (
 from .visibility import VisibilityModel, extract_sign_descriptors
 
 Logger = Callable[[str], None]
+
+_logger = logging.getLogger(__name__)
 
 
 def _noop(_message: str) -> None:
@@ -68,6 +71,24 @@ def _build_fed_model(opts: Any, log: Logger):
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_default_fed():
+        # Not an error: plenty of cases legitimately carry no toxic gas data,
+        # and the run continues with smoke-speed only. But the result then has
+        # no FED in it at all, and every FED column reads zero, which looks
+        # exactly like a survivable fire. Say so rather than letting the user
+        # infer tenability from a model that never ran.
+        present = sorted(inventory.canonical_slice_names())
+        missing = sorted({"co", "co2", "o2"}.difference(present))
+        named = ", ".join(m.upper() for m in missing)
+        _logger.warning(
+            "FED is disabled for %s: it has no %s %s, and all three of CO, CO2 "
+            "and O2 are needed. Results will report zero dose and no "
+            "incapacitation. FDS only writes these species when the &REAC line "
+            "asks for them (CO needs CO_YIELD); see "
+            "docs/fds-case-requirements.md.",
+            opts.fds_dir,
+            named,
+            "slice" if len(missing) == 1 else "slices",
+        )
         return None
     log("Configuring FED calculation.")
     fed_config = DefaultFedConfig(
@@ -121,7 +142,8 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     if not sign_descriptors:
         log("Warning: --vis-cache set but no sign descriptors found in config.")
         return None
-    log(f"Configuring visibility model ({len(sign_descriptors)} sign(s)).")
+    n_signs = len(sign_descriptors)
+    log(f"Configuring visibility model ({n_signs} sign{'' if n_signs == 1 else 's'}).")
     return VisibilityModel(
         fds_dir=opts.fds_dir,
         sign_descriptors=sign_descriptors,

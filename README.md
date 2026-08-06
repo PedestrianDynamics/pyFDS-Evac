@@ -40,6 +40,12 @@ See [docs/usage.md](docs/usage.md) for the full catalogue of CLI flags,
 post-processing scripts, and the `scripts/run_and_plot.sh` driver that
 runs a simulation and produces every plot in one go.
 
+**Bringing your own FDS case?** Read
+[docs/fds-case-requirements.md](docs/fds-case-requirements.md) first. pyFDS-Evac
+does not run FDS, it samples the output of a finished run, and your deck has to
+dump specific slices for that to work. That page also covers the `&REAC` yields
+those slices depend on, and two failure modes that stay silent otherwise.
+
 ## Web GUI
 
 A [FastHTML](https://fastht.ml/) web GUI 

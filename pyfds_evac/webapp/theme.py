@@ -171,29 +171,6 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   color: hsl(var(--muted-foreground)); margin-top: .25rem;
 }
 
-/* ---- tier legend (run panel) ---- */
-.tier-legend {
-  margin-top: 1.25rem; padding: .9rem 1.25rem; border-radius: .9rem;
-  background: #252127; border: 1px solid rgba(255,255,255,.08);
-  width: 100%; max-width: 28rem;
-}
-.legend-label {
-  font-family: var(--font-mono);
-  font-size: .62rem; font-weight: 500; text-transform: uppercase;
-  letter-spacing: .12em; color: hsl(var(--muted-foreground));
-  text-align: center; margin-bottom: .7rem;
-}
-.tier-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; }
-.tier {
-  display: flex; flex-direction: column; align-items: center; gap: .4rem;
-  font-family: var(--font-display); font-size: .72rem; font-weight: 600;
-  color: hsl(var(--foreground));
-}
-.tier .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
-.tier.safe .sw     { background: var(--tier-safe); }
-.tier.alert .sw    { background: var(--tier-alert); }
-.tier.critical .sw { background: var(--tier-critical); }
-.tier.severe .sw   { background: var(--tier-severe); }
 @media (max-width: 420px) { .tier-row { grid-template-columns: repeat(2, 1fr); row-gap: .75rem; } }
 @keyframes pulse {
   0%   { box-shadow: 0 0 0 0   rgba(255,90,31,.5); }
@@ -357,15 +334,6 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 
 /* ---- standby ---- */
 .standby { min-height: 58vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem; text-align: center; }
-.standby-label {
-  display: inline-flex; align-items: center; gap: .5rem;
-  font-family: var(--font-mono);
-  font-size: .68rem; letter-spacing: .04em; text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-  padding: .45rem 1rem; border: 1px solid rgba(255,255,255,.1);
-  border-radius: 99px; background: rgba(255,255,255,.02);
-}
-.standby-label .dot { width: 7px; height: 7px; border-radius: 99px; background: var(--ember); animation: pulse 2.4s infinite; }
 .standby-hint { font-size: .85rem; line-height: 1.7; color: hsl(var(--muted-foreground)); max-width: 40ch; }
 
 /* ---- utility ---- */
@@ -402,7 +370,7 @@ details[open] summary .chevron { transform: rotate(180deg); }
 }
 @keyframes riseIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .rise { animation: riseIn .35s cubic-bezier(.2,.8,.2,1) both; }
-@media (prefers-reduced-motion: reduce) { .rise, .standby-label .dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
 
 
 /* =================================================================== */

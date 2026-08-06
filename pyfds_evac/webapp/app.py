@@ -17,7 +17,6 @@ from fasthtml.common import (
     Button,
     Div,
     EventStream,
-    I,
     Link,
     NotStr,
     P,
@@ -56,13 +55,6 @@ app, rt = fast_app(
     pico=False,
 )
 manager = RunManager()
-
-_TIERS = [
-    ("safe", "Safe"),
-    ("alert", "Alert"),
-    ("critical", "Critical"),
-    ("severe", "Severe"),
-]
 
 # ── style tokens ─────────────────────────────────────────────────────────────
 _CARD = "background:#2A262A;border:1px solid rgba(255,255,255,.07);border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
@@ -135,17 +127,6 @@ _LOGO_SVG = NotStr("""
   <circle cx="28.5" cy="11.5" r="2.1" fill="#f4c430"/>
 </svg>
 """)
-
-
-def _legend() -> Div:
-    return Div(
-        Div("Tenability tiers", cls="legend-label"),
-        Div(
-            *[Div(I(cls="sw"), label, cls=f"tier {name}") for name, label in _TIERS],
-            cls="tier-row",
-        ),
-        cls="tier-legend",
-    )
 
 
 def _fed_live_section() -> Div:
@@ -238,23 +219,66 @@ def _sidebar() -> Div:
     )
 
 
+def _warnings_card(messages: list[str]) -> Div:
+    """Show engine warnings above the results, or nothing when the run was clean.
+
+    These describe runs that *succeeded* but sampled something other than what
+    was asked for -- a slice at the wrong height, agents outside the FDS
+    domain. The numbers below look no different either way, so the only signal
+    a GUI user gets is this card.
+    """
+
+    if not messages:
+        return Div()
+    heading = "1 warning" if len(messages) == 1 else f"{len(messages)} warnings"
+    return Div(
+        Div(
+            f"{heading} during this run",
+            style=(
+                f"{_GROTESK};font-weight:600;font-size:15px;color:#F4C430;"
+                "margin-bottom:10px"
+            ),
+        ),
+        *[
+            P(
+                message,
+                style=f"font-size:.82rem;line-height:1.6;{_INK2};margin:0 0 8px",
+            )
+            for message in messages
+        ],
+        P(
+            "The run completed, but these affect what the results describe. "
+            "See docs/fds-case-requirements.md.",
+            style=f"font-size:.78rem;line-height:1.6;{_INK2};margin:10px 0 0;opacity:.8",
+        ),
+        style=(
+            "background:#2A262A;border:1px solid rgba(244,196,48,.35);"
+            "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
+        ),
+    )
+
+
 def _run_panel_idle() -> Div:
     return Div(
         Div(
             Div(
-                Div(I(cls="dot"), "Standby", cls="standby-label"),
+                Div(
+                    _LOGO_SVG,
+                    style=(
+                        "width:64px;height:64px;border-radius:50%;display:flex;"
+                        "align-items:center;justify-content:center;"
+                        "background:rgba(255,106,26,.07);margin:0 auto 20px;"
+                        "animation:pulse 2.6s ease-in-out infinite"
+                    ),
+                ),
                 Div(
                     Div(
-                        "Configure a scenario, then run.",
-                        style=f"{_GROTESK};font-weight:600;font-size:22px;letter-spacing:-.02em;{_INK};margin-bottom:10px",
+                        "Choose a scenario and ",
+                        B("run", style="color:#FF6A1A"),
+                        style=f"{_GROTESK};font-weight:600;font-size:22px;letter-spacing:-.02em;{_INK}",
                     ),
-                    P(
-                        "Live telemetry streams as the coupled fire–pedestrian model steps. When it settles you'll explore agent trajectories, FED dose, smoke and route cost — all interactive.",
-                        style=f"font-size:.85rem;line-height:1.7;{_INK2};margin:0",
-                    ),
-                    style="max-width:46ch",
+                    style="max-width:46ch;text-align:center",
                 ),
-                _legend(),
                 cls="standby",
             ),
             style=_PANEL,
@@ -852,6 +876,7 @@ def _finished_view() -> Div:
 
     return Div(
         kpi_tiles,
+        _warnings_card(manager.warnings),
         art,
         trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
         plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),

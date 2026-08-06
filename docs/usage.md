@@ -30,6 +30,11 @@ uv run python run.py --scenario <scenario.json|.zip|dir> [options]
 
 ### FDS coupling (smoke / FED / visibility)
 
+Your FDS case has to dump specific slices before any of this works. See
+[fds-case-requirements.md](fds-case-requirements.md) for the deck lines to add
+and two failure modes (FED silently disabled, wrong slice height) that stay
+silent unless you check the warning log.
+
 | Flag | Purpose |
 |------|---------|
 | `--fds-dir DIR` | FDS result directory driving smoke-speed and FED. |

@@ -26,7 +26,9 @@ quantity name `load_slice_sampler` looks up
 | Slice | Feeds | If absent |
 |-------|-------|-----------|
 | Extinction coefficient | smoke-speed, visibility gating, GUI smoke layer | `IndexError` when `--fds-dir` is given without `--constant-extinction` |
-| CO, CO2, O2 | FED toxic dose | Skipped for that species |
+| CO **and** CO2 **and** O2 | FED toxic dose | **FED is switched off and the run continues** (see below) |
+
+It is all three gases or none of them; there is no partial FED.
 
 `EXTINCTION` and `EXTINCTION COEFFICIENT` are two unrelated gas-phase output
 quantities (FDS User Guide Table 22.4) — don't confuse them. `EXTINCTION`
@@ -54,9 +56,38 @@ matter what `&SLCF` lines you add. Fix it at the source:
 That is the `t_junction` reaction. Yields are fuel properties: take them from
 your material's data rather than copying these.
 
+## Two silent failure modes
+
+**FED disabled.** If CO, CO2 or O2 is missing, pyFDS-Evac carries on with
+smoke-speed only and every FED column reads zero. A zero-dose result looks
+exactly like a never-computed one. A warning is logged when this happens, and
+it is the only signal you get:
+
+```
+FED is disabled for <dir>: it has no CO slice, and all three of CO, CO2 and
+O2 are needed. ...
+```
+
+**Wrong slice height.** `--smoke-slice-height` (default 2.0 m) is a
+preference, not a filter: a case with one slice of a quantity uses it whatever
+its height, and a mismatch never fails the run. A case you inherit often
+carries a single slice at whatever height its author chose, so you can end up
+sampling floor-level CO for standing agents. A warning fires past 0.5 m:
+
+```
+Requested a 'SOOT EXTINCTION COEFFICIENT' slice at z=0.50 m but the nearest
+available in <dir> is at z=2.00 m ...
+```
+
+Do not ignore either warning. Nothing else will tell you.
+
 ## Failure modes
 
 | Symptom | Cause |
 |---------|-------|
 | `IndexError: No slice with quantity 'SOOT EXTINCTION COEFFICIENT' found in <dir>` | The deck never declared `&SLCF QUANTITY='EXTINCTION COEFFICIENT'`, or the species was never tracked. |
+| `IndexError: No slice with quantity '...' found in <dir>` | The deck never declared that `&SLCF`, or the species was never tracked. |
+| Warning: FED is disabled for `<dir>` | CO, CO2 or O2 is missing. Check `CO_YIELD` on `&REAC`. |
+| FED is zero everywhere and nobody is incapacitated | Either genuinely survivable, or FED never ran. Check for the warning above before concluding the former. |
 | `ValueError: Point (x, y) is outside the sampled FDS slice domain` | Walkable area extends past the slice extent. |
+| Warning: requested slice at z=A, nearest is z=B | Your case has no slice near the height you asked for. |
