@@ -712,47 +712,49 @@ def _position_aware_length(
     graph: StageGraph,
     path: list[str],
     agent_position: tuple[float, float],
-    current_target: str | None,
     path_length: float,
     first_length_m: float,
 ) -> tuple[float, float]:
     """Haensel path-integrated distance measured from the agent's position.
 
     Returns ``(effective_length, first_share)``, where ``first_share`` is the
-    still-untraversed fraction of the first segment. It is 1.0 unless the route
-    continues toward ``current_target``; then the agent has already covered part
-    of that segment, so only the remainder is ahead of it.
+    still-untraversed fraction of the first segment -- the stretch over which
+    the smoke and FED integrals are charged, so exposure already incurred is
+    not billed twice.
+
+    Every route is measured the same way: from where the agent stands to the
+    next node on that route, plus the rest of the route from there. The rule is
+    deliberately geometry-blind. An earlier version charged a route that
+    diverged from the agent's current heading a walk *back to the origin node*
+    first, on the reasoning that you must return to a junction to take its other
+    arm. That is true of a tree and false of everything else: in an open room
+    with two doors it priced a door 3.5 m away at 30 m, and no smoke or dose
+    weight could ever overcome the difference. The walkable distance already
+    answers the question correctly in both topologies -- around the corner at a
+    T-junction, straight across an open floor -- because ``routing_engine``
+    computes it on the navigation mesh.
+
+    Without a routing engine ``_walkable_distance`` degrades to Euclidean, which
+    can cut through a wall and understate a divergent route. That is a property
+    of the fallback, not of this rule, and it applies equally to the route the
+    agent is already walking.
     """
     first_node = graph.nodes.get(path[0])
     next_node = graph.nodes.get(path[1])
     if first_node is None or next_node is None:
         return path_length, 1.0
 
-    px, py = agent_position
-    if path[1] == current_target:
-        # Continuing toward the current target: charge only the distance
-        # remaining from the agent's position to that node.
-        remaining = _walkable_distance(
-            graph.routing_engine, (px, py), (next_node.centroid_x, next_node.centroid_y)
-        )
-        if first_length_m <= 1e-9:
-            return path_length - first_length_m + remaining, 1.0
-        # Floored above zero so an impassable first segment (infinite travel
-        # time) stays infinite even for an agent standing on its end node.
-        share = min(1.0, max(1e-9, remaining / first_length_m))
-        return path_length - first_length_m + remaining, share
-
-    if current_target is not None:
-        # Diverging from the current heading: the agent must walk back to the
-        # branch (first) node before taking this route.
-        backtrack = _walkable_distance(
-            graph.routing_engine,
-            (px, py),
-            (first_node.centroid_x, first_node.centroid_y),
-        )
-        return path_length + backtrack, 1.0
-
-    return path_length, 1.0
+    remaining = _walkable_distance(
+        graph.routing_engine,
+        agent_position,
+        (next_node.centroid_x, next_node.centroid_y),
+    )
+    if first_length_m <= 1e-9:
+        return path_length - first_length_m + remaining, 1.0
+    # Floored above zero so an impassable first segment (infinite travel time)
+    # stays infinite even for an agent standing on its end node.
+    share = min(1.0, max(1e-9, remaining / first_length_m))
+    return path_length - first_length_m + remaining, share
 
 
 def evaluate_route(
@@ -774,14 +776,17 @@ def evaluate_route(
 
     When ``agent_position`` is given, the distance is measured from where the
     agent actually is (Haensel 2014 "path-integrated distance") instead of from
-    the route's first graph node: progress already made toward the agent's
-    ``current_target`` is credited, and a route that diverges from that heading
-    is charged the backtrack from the agent's position to the branch node. This
-    stops an agent 1 m from one exit being priced as if standing at the far
-    upstream junction (which made it walk past exits and reverse mid-corridor).
-    The smoke and FED terms are credited over the same stretch as the distance,
-    so exposure already incurred on the traversed part -- and already carried in
-    ``current_fed`` -- is not charged a second time.
+    the route's first graph node, so an agent 1 m from one exit is not priced as
+    if standing at the far upstream junction. Every route is measured the same
+    way, whatever the agent is currently heading for -- see
+    ``_position_aware_length``. The smoke and FED terms are credited over the
+    same stretch as the distance, so exposure already incurred on the traversed
+    part -- and already carried in ``current_fed`` -- is not charged a second
+    time.
+
+    ``current_target`` is accepted and ignored; it is kept so callers that
+    already thread it through do not have to change, and so the parameter is
+    available if a future rule needs the agent's heading.
     """
     segments: list[SegmentCost] = []
     for i in range(len(path) - 1):
@@ -813,7 +818,6 @@ def evaluate_route(
             graph,
             path,
             agent_position,
-            current_target,
             path_length,
             segments[0].length_m,
         )

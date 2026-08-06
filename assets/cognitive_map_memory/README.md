@@ -69,6 +69,51 @@ moment that exit enters the map, and would leave by it — an earlier version of
 this plot marched the probe past the side exit, implying a behaviour the model
 does not have.
 
+## What the simulation actually does
+
+The panels above are drawn from `rank_routes` with a probe. This is the
+trajectory database of a real run:
+
+```bash
+mkdir -p /tmp/cmm && cd /tmp/cmm \
+  && fds /path/to/assets/cognitive_map_memory/cognitive_map_memory.fds && cd -
+
+.venv/bin/python run.py \
+    --scenario assets/cognitive_map_memory/config.json \
+    --fds-dir /tmp/cmm \
+    --vis-cache /tmp/vis_cmm.npz \
+    --output-sqlite /tmp/cmm.sqlite \
+    --output-route-history /tmp/cmm_routes.csv
+
+.venv/bin/python scripts/plot_trajectories.py /tmp/cmm.sqlite \
+    --config assets/cognitive_map_memory/config.json \
+    -o assets/cognitive_map_memory/trajectories.png \
+    --title "cognitive_map_memory -- 20 discovery agents"
+```
+
+![trajectories](trajectories.png)
+
+**20 of 20 agents divert into `E_side`**, egress 21.9 s. Two switches each:
+`E_side → E_end` at t = 0 (the assigned nearest exit is not yet in the map, so
+routing falls back to the only exit that is), then `E_end → E_side` between
+t = 5 and t = 19 as each agent crosses `y = 12.5` and the sign becomes legible.
+Agent 1 switches at t = 8 s, y = 11.7.
+
+**What this does not show is persistence.** An agent that turns off at y ≈ 13
+never reaches y = 30, so no trajectory exercises "still remembers `E_side`
+after the sign goes illegible". That claim rests on
+`test_side_exit_persists_after_its_sign_goes_illegible` and
+`test_a_remembered_exit_is_routable_though_illegible`, and on nothing in this
+picture. Demonstrating it in a run would need a reason to keep walking north
+past the window — smoke on the side route, or an explicit journey.
+
+Until 2026-08-06 this run sent all 20 agents to `E_end` instead. The cognitive
+map was working — `E_side` entered it at t = 8 s exactly as designed — but the
+route cost charged any exit other than the one the agent was already heading
+for as if the agent first had to walk back to its spawn area, so `E_side` was
+priced at 30.5 m when it was 3.5 m away. See the superseded-rule note in
+[`docs/rerouting-oscillation-notes.md`](../../docs/rerouting-oscillation-notes.md).
+
 Three states per exit:
 
 - **grey** — unknown, never perceived
