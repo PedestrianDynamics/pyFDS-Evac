@@ -381,7 +381,7 @@ uv run run.py \
   --scenario assets/t_junction \
   --fds-dir assets/t_junction \
   --enable-rerouting \
-  --vis-cache assets/t_junction/vismap_cache.pkl \
+  --vis-cache assets/t_junction/vismap_cache.npz \
   --output-route-cost-history route_costs.csv \
   --cleanup
 ```
@@ -483,7 +483,7 @@ rejection timeline, evacuation time):
 ```bash
 uv run python scripts/run_familiarity_comparison.py \
     --fds-dir assets/t_junction \
-    --vis-cache assets/t_junction/vismap_cache.pkl
+    --vis-cache assets/t_junction/vismap_cache.npz
 ```
 
 Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,

@@ -36,7 +36,7 @@ import numpy as np
 from fdsvismap import VisMap
 
 FDS_DIR = Path("assets/t_junction")
-# Separate cache path from the runtime cache (assets/t_junction/vismap_cache.pkl).
+# Separate cache path from the runtime cache (assets/t_junction/vismap_cache.npz).
 # This script builds a raw VisMap with set_start_point which is incompatible
 # with the {"vis": ..., "meta": ...} format written by VisibilityModel.
 CACHE_PATH = Path("assets/t_junction/vismap_phase0_cache.pkl")
