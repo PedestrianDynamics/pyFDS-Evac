@@ -203,7 +203,16 @@ class TestAcquisitionAndPersistence:
 
         assert choice_at(10.0) == "E_end", "below the window only E_end is known"
         assert choice_at(14.0) == "E_side", "inside it, the nearer exit wins"
-        assert choice_at(30.0) == "E_side", "and it is still preferred from memory"
+        # At y=30 the agent is 1.3 m from E_end and 10 m from E_side, so E_end
+        # wins on distance. This assertion used to read E_side, which was an
+        # artefact of two defects cancelling: rank_routes ignored
+        # agent_position entirely unless current_target was set, so it compared
+        # raw node distances (spawn->E_side 16.3 < spawn->E_end 27.3) from a
+        # position 26 m away. Persistence is not "still preferred" -- it is
+        # "still known and still routable", which is what
+        # test_side_exit_persists_after_its_sign_goes_illegible and
+        # test_a_remembered_exit_is_routable_though_illegible assert.
+        assert choice_at(30.0) == "E_end", "past it, E_end is genuinely nearer"
 
     def test_full_familiarity_knows_both_from_the_start(self):
         """Contrast: nothing to acquire when the map is pre-loaded."""

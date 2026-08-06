@@ -805,9 +805,12 @@ class TestExitSwitchAnchor:
 
 class TestPositionAwareRouting:
     """Route cost is measured from the agent's actual position (Haensel
-    path-integrated distance): progress toward the current target is credited,
-    and a route diverging from that heading is charged the backtrack to the
-    branch node. See docs/rerouting-oscillation-notes.md."""
+    path-integrated distance), the same way for every route regardless of which
+    one the agent is currently walking. See docs/rerouting-oscillation-notes.md.
+
+    An earlier rule charged a diverging route the backtrack to the branch node
+    first. That is right for a tree and wrong for anything else -- in an open
+    room it priced a door 3.5 m away at 30 m."""
 
     @staticmethod
     def _graph():
@@ -841,11 +844,28 @@ class TestPositionAwareRouting:
         g = self._graph()
         assert self._cost(g, ["J", "E0"], (2.0, 0.0), "E0") == pytest.approx(2.0)
 
-    def test_diverging_route_charged_backtrack(self):
-        # Same agent near E0; route to E1 diverges -> backtrack to J (18 m) plus
-        # J->E1 (10 m) = 28 m, far worse than E1's 10 m node distance.
+    def test_diverging_route_measured_from_the_agent_too(self):
+        # Same agent near E0; the route to E1 is charged what the agent must
+        # actually walk to reach it -- 28 m from (2,0) to (30,0) -- not E1's
+        # 10 m node distance from J.
         g = self._graph()
         assert self._cost(g, ["J", "E1"], (2.0, 0.0), "E0") == pytest.approx(28.0)
+
+    def test_the_heading_does_not_change_the_price(self):
+        """Geometry-independence: a route costs what it costs from here.
+
+        The three cases are the same agent at the same place asking about the
+        same route, differing only in what it happens to be walking toward.
+        Under the old backtrack rule the middle one was charged 18 m more than
+        the others; a cost that depends on the agent's current intention rather
+        than on the world cannot be compared across agents.
+        """
+        g = self._graph()
+        heading_there = self._cost(g, ["J", "E1"], (2.0, 0.0), "E1")
+        heading_elsewhere = self._cost(g, ["J", "E1"], (2.0, 0.0), "E0")
+        heading_nowhere = self._cost(g, ["J", "E1"], (2.0, 0.0), None)
+        assert heading_there == pytest.approx(heading_elsewhere)
+        assert heading_there == pytest.approx(heading_nowhere)
 
     def test_position_flips_ranking_vs_node_graph(self):
         # Node graph says E1 (10) < E0 (20); position-aware for an agent at E0
@@ -864,8 +884,12 @@ class TestPositionAwareRouting:
         mid_leg = self._fed_cost(g, (2.0, 0.0))
         assert mid_leg == pytest.approx(0.1 * at_node)
 
-    def test_diverging_route_charges_full_fed(self):
-        # A route the agent has not started walking keeps its full FED growth.
+    def test_fed_is_charged_over_the_stretch_ahead_whatever_the_heading(self):
+        # The agent is 2 m from E0 and nominally walking toward E1. The dose it
+        # would take on the way to E0 is the dose over those 2 m -- the other
+        # 18 m are behind it and already in current_fed. Charging the full leg
+        # here would bill the same exposure twice, and would do so only for
+        # agents whose heading happens to differ.
         g = self._graph()
         rc = evaluate_route(
             g,
@@ -878,7 +902,7 @@ class TestPositionAwareRouting:
             agent_position=(2.0, 0.0),
             current_target="E1",
         )
-        assert rc.fed_max_route == pytest.approx(0.1 * 20.0 / 60.0)
+        assert rc.fed_max_route == pytest.approx(0.1 * 2.0 / 60.0)
 
     def test_continue_reweights_k_ave_by_remaining_share(self):
         # Two-leg route with smoke on the first leg only: an agent that has
@@ -2253,11 +2277,30 @@ class TestWalkableRemainingDistance:
 
         graph = self._graph()
         agent = (5.0, 1.5)
-        effective, share = _position_aware_length(
-            graph, ["j", "e0"], agent, "e0", path_length=16.0, first_length_m=16.0
+        effective, _share = _position_aware_length(
+            graph, ["j", "e0"], agent, path_length=16.0, first_length_m=16.0
         )
         straight = math.hypot(agent[0] - 18.0, agent[1] - 18.0)
         assert effective > straight
+
+    def test_a_route_around_the_corner_is_not_priced_as_the_crow_flies(self):
+        """The case the backtrack rule was really protecting against.
+
+        Removing that rule must not make an exit around a corner look close.
+        The routing engine handles it: the walkable distance goes to the corner
+        and turns, so it exceeds the straight line through the wall -- without
+        any special-casing of what the agent is currently heading toward.
+        """
+        import math
+
+        graph = self._graph()
+        agent = (5.0, 1.5)
+        for heading in ("e0", "j", None):
+            effective, _ = _position_aware_length(
+                graph, ["j", "e0"], agent, path_length=16.0, first_length_m=16.0
+            )
+            straight = math.hypot(agent[0] - 18.0, agent[1] - 18.0)
+            assert effective > straight, f"heading={heading}"
 
     def test_euclidean_fallback_without_a_routing_engine(self):
         import math
@@ -2271,7 +2314,7 @@ class TestWalkableRemainingDistance:
         )
         agent = (5.0, 1.5)
         effective, _ = _position_aware_length(
-            graph, ["j", "e0"], agent, "e0", path_length=16.0, first_length_m=16.0
+            graph, ["j", "e0"], agent, path_length=16.0, first_length_m=16.0
         )
         straight = math.hypot(agent[0] - 18.0, agent[1] - 18.0)
         assert effective == pytest.approx(16.0 - 16.0 + straight)

@@ -189,12 +189,25 @@ and nothing credits the distance already covered, so agents chase the momentaril
 exit forever.
 
 **Fix — position-aware cost (Haensel 2014 "path-integrated distance").** `evaluate_route`
-now takes `agent_position` and `current_target` and measures distance from the agent's
-actual position:
-- **Continuing toward the current target** → charge only the *remaining* distance from the
-  agent to that node (credit progress), replacing the first node-to-node segment.
-- **A route diverging from that heading** → add the *backtrack* from the agent's position to
-  the branch node before the graph distance.
+takes `agent_position` and measures distance from where the agent actually is: charge the
+walkable distance from the agent to the route's next node, then the rest of the route from
+there. Every route is measured this way, whatever the agent happens to be walking toward.
+
+> **Superseded 2026-08-06.** Until then the rule branched on the agent's heading: the route
+> toward `current_target` was measured as above, and *any other* route was charged
+> `path_length + backtrack(agent → branch node)`. That is correct for a tree — you must
+> return to a junction to take its other arm — and wrong for everything else. In
+> `assets/cognitive_map_memory` (an open corridor with a side door) it priced a door 3.5 m
+> away at 30.5 m against 13.1 m for one 13.3 m away, so no agent ever took it and no
+> smoke or dose weight could have changed that. The walkable distance already gives the
+> right answer in both topologies, because `routing_engine` computes it on the navigation
+> mesh: around the corner at a T-junction, straight across an open floor.
+>
+> Two further defects went with it. `agent_position` was silently ignored unless
+> `current_target` was also set, so any caller passing position alone got raw node
+> distances. And `first_share` was pinned to 1.0 on diverging routes, charging their smoke
+> and FED integrals over stretches the agent had already walked — the exact double-count
+> the share exists to prevent, applied selectively to the routes the agent was *not* on.
 
 Smoke and FED are credited over the same stretch: the first segment contributes only its
 untraversed share `rho = remaining / segment_length` to `K_ave`, `travel_time` and
