@@ -202,7 +202,10 @@ def cognitive_subgraph(cmap: AgentCognitiveMap, graph):
 
 
 def nearest_frontier_target(
-    cmap: AgentCognitiveMap, graph, source: str
+    cmap: AgentCognitiveMap,
+    graph,
+    source: str,
+    agent_position: tuple[float, float] | None = None,
 ) -> tuple[str, list[str]] | None:
     """Return the nearest known-but-unexplored node to head toward, if any.
 
@@ -212,6 +215,17 @@ def nearest_frontier_target(
     in the known subgraph: instead of standing still, the agent heads to the
     nearest such node, expanding its knowledge on arrival
     (see :func:`expand_on_arrival`) and re-evaluating from there.
+
+    With *agent_position* the first leg is measured from where the agent
+    actually stands rather than from *source*'s centroid, the same substitution
+    :func:`~pyfds_evac.core.route_graph._position_aware_length` makes when
+    ranking exits. Without it, every agent at a node computes identical costs,
+    so a crowd facing two equidistant frontiers sends all of itself through one
+    of them — see issue #68 and ``assets/blind_spawn_discovery``, where 30
+    agents spread across a 20 m hall all used the same door.
+
+    Exact ties still break on ``sorted(frontier)``, so two agents standing in
+    the same place make the same choice.
 
     Returns None once every known node has been fully explored (no frontier
     left — a genuine dead end).
@@ -236,6 +250,7 @@ def nearest_frontier_target(
         if result is None:
             continue
         cost, path = result
+        cost = _cost_from_agent(graph, path, cost, agent_position)
         if best is None or cost < best[1]:
             best = (node_id, cost, path)
 
@@ -243,3 +258,24 @@ def nearest_frontier_target(
         return None
     node_id, _cost, path = best
     return node_id, path
+
+
+def _cost_from_agent(graph, path, cost: float, agent_position) -> float:
+    """Replace the path's first leg with the walk from the agent's position."""
+    if agent_position is None or len(path) < 2:
+        return cost
+
+    from .route_graph import _walkable_distance
+
+    first, second = graph.nodes.get(path[0]), graph.nodes.get(path[1])
+    if first is None or second is None:
+        return cost
+    next_xy = (second.centroid_x, second.centroid_y)
+    first_leg = _walkable_distance(
+        graph.routing_engine, (first.centroid_x, first.centroid_y), next_xy
+    )
+    return (
+        cost
+        - first_leg
+        + _walkable_distance(graph.routing_engine, agent_position, next_xy)
+    )

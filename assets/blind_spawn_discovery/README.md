@@ -58,8 +58,8 @@ the other side.
 | hop | map | routing | why |
 |---|---|---|---|
 | 0 | `{spawn, C1}` | ranking **empty** → explore to `C1` | exits occluded; `C1` visible |
-| 1 | `+ C2, C3` | still empty → explore to `C2` | `expand_on_arrival` reveals neighbours; exits are not neighbours of `C1` |
-| 2 | `+ E_west` | commits to `E_west` | the exit behind the doorway it chose |
+| 1 | `+ C2, C3` | still empty → explore to the **nearer** doorway | `expand_on_arrival` reveals neighbours; exits are not neighbours of `C1` |
+| 2 | `+ E_west` or `+ E_east` | commits to that exit | the exit behind the doorway it chose |
 
 Hop 1 stays exit-free only because **betweenness pruning** keeps the exits
 non-adjacent to `C1`:
@@ -82,10 +82,10 @@ One geometry, four configs, each changing exactly one thing.
 
 | config | familiarity | entrance | egress | what it isolates |
 |---|---|---|---|---|
-| `config_discovery.json` | `discovery` | — | 43.3 s | the sequence above |
+| `config_discovery.json` | `discovery` | — | 38.0 s | the sequence above |
 | `config_full.json` | `full` | — | 36.4 s | lower bound: straight out, 0 switches |
 | `config_entrance.json` | `discovery` | `E_west` | 47.5 s | seeding: knows one door at t=0 |
-| `config_mixed.json` | `0.5` | — | 39.2 s | scalar familiarity in a run |
+| `config_mixed.json` | `0.5` | — | 34.8 s | scalar familiarity in a run |
 
 All four evacuate 30/30.
 
@@ -127,7 +127,7 @@ each path are the two frontier hops.
 
 ## What this asset found
 
-Two engine defects, both of which made frontier exploration impossible in any
+Three engine defects. The first two made frontier exploration impossible in any
 simulation while every unit test passed. The unit tests call
 `evaluate_and_reroute` directly; only a simulation runs the direct-steering loop
 that produces the state.
@@ -151,26 +151,39 @@ discovered `E_west`, and stood at the doorway for 300 s.
 Both are pinned by `TestAnIdleAgentIsNotRetired` in `tests/test_route_graph.py`,
 verified to fail without the fixes.
 
-## Known limitation: the frontier choice is position-blind
+**3. The crowd could not fan out** (issue #68, fixed separately).
+`nearest_frontier_target` measured with `shortest_path_to(source, node)` — from
+the graph *node*, never from the agent. `C2` and `C3` are equidistant from `C1`
+by construction, so `sorted(frontier)` broke the tie identically for everyone
+and **all 30 agents used the west door**; the east room was never entered,
+however the crowd was spread across the hall.
 
-All 30 agents go through `C2`. The east room is never entered.
+The exit ranking had been position-aware since `_position_aware_length`;
+exploration was simply never given the same treatment. It now substitutes the
+walk from the agent's position for the first leg, exactly as exit ranking does.
+Agents to the west of `C1` take `C2`, agents to the east take `C3`, and the
+split falls out of geometry rather than out of `sorted()`:
 
-`nearest_frontier_target` measures with `shortest_path_to(source, node)` — from
-the graph *node*, never from the agent — and `C2` and `C3` are equidistant from
-`C1`, so `sorted(frontier)` breaks the tie the same way for everyone. A crowd
-therefore never fans out in symmetric geometry, however it is spread across the
-hall.
+```
+sequences: {('C1','C3','E_east'): 18, ('C1','C2','E_west'): 11,
+            ('C1','C3','C2','E_west'): 1}
+```
 
-This is recorded rather than fixed: giving the frontier choice the agent's
-position is a modelling change, not a test fix.
-`TestTheFrontierTieBreakIsPositionBlind` documents it so it is not rediscovered.
+Egress drops from 43.3 s to 38.0 s, because both doors are now used.
+
+That one four-hop agent is worth noting: it explored to `C3`, never registered
+arrival there, and re-explored to `C2` as it drifted west. That is issue #69 —
+arrival is proximity to a random point inside the stage box, not containment in
+it — showing up in the wild. It still evacuated.
 
 ## Deliberate choices
 
 **Clear air.** The extinction field is zero, so `visibility = max_vis`
 everywhere and legibility depends on geometry alone.
 
-**Symmetric exits.** Removes distance as an explanation for where agents go.
+**Symmetric exits.** `C2` and `C3` are equidistant from `C1`, so the node
+distance cannot separate them and only the agent's own position can. That is
+what makes the asset a test of issue #68 rather than of arithmetic.
 
 **Checkpoint boxes 2 m deep, not 0.4 m.** Direct steering walks each agent to a
 random point inside the stage polygon and counts arrival within 0.7 m of *that
@@ -194,6 +207,6 @@ refuses if any premise has broken — exits outside the ceiling, exits visible,
 
 ## Tests
 
-`tests/test_blind_spawn_discovery.py`, 23 tests, no FDS output needed:
+`tests/test_blind_spawn_discovery.py`, 26 tests, no FDS output needed:
 `OccludingVisMap` reimplements the line-of-sight term on the walkable polygon,
 the same way `test_cognitive_map_memory.py` reimplements the view-angle term.

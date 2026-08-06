@@ -1279,7 +1279,7 @@ def evaluate_and_reroute(
             return None
         from .cognitive_map import nearest_frontier_target
 
-        frontier = nearest_frontier_target(cognitive_map, graph, source)
+        frontier = nearest_frontier_target(cognitive_map, graph, source, agent_position)
         if frontier is None:
             return None
         target_node, path = frontier
