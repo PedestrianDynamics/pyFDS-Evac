@@ -893,6 +893,11 @@ def _initialize_with_fallback(
                         "radius_std": params.get("radius_std", None),
                         "v0_distribution": params.get("v0_distribution", "constant"),
                         "v0_std": params.get("v0_std", None),
+                        # Knowledge, not kinematics, but it travels with the
+                        # spawn area: the reroute pass seeds each agent's
+                        # cognitive map from these two.
+                        "familiarity": params.get("familiarity", "full"),
+                        "entrance": params.get("entrance"),
                     }
 
                     distribution_params.append(dist_params)
@@ -918,6 +923,8 @@ def _initialize_with_fallback(
                 "premovement_param_a": None,
                 "premovement_param_b": None,
                 "premovement_seed": None,
+                "familiarity": "full",
+                "entrance": None,
             }
         ]
         total_agents = default_n_agents
@@ -1043,7 +1050,12 @@ def _initialize_with_fallback(
                 immediate_params["number"] = initial_n_agents
                 immediate_params["use_flow_spawning"] = False
                 immediate_spawn_distributions.append(
-                    {"area": clean_dist_area, "params": immediate_params, "index": i}
+                    {
+                        "area": clean_dist_area,
+                        "params": immediate_params,
+                        "index": i,
+                        "dist_key": dist_key_str,
+                    }
                 )
 
             print(
@@ -1123,7 +1135,12 @@ def _initialize_with_fallback(
         else:
             # Store for immediate spawning
             immediate_spawn_distributions.append(
-                {"area": clean_dist_area, "params": dist_params, "index": i}
+                {
+                    "area": clean_dist_area,
+                    "params": dist_params,
+                    "index": i,
+                    "dist_key": dist_key_str,
+                }
             )
 
     # Handle immediate spawning (with optional premovement)
@@ -1214,9 +1231,15 @@ def _initialize_with_fallback(
                     ),
                 }
 
+        # The spawn area's own node in the stage graph, keyed as it is in the
+        # scenario JSON. Absent only for callers that build distributions
+        # without keys, where the old exit-as-origin behaviour is kept.
+        spawn_key = spawn_data.get("dist_key")
+
         # Add agents with nearest exit assignment — all on global DS journey
         for idx, pos in enumerate(positions):
             nearest_exit_id = _find_nearest_exit(pos, exit_geometries=exit_geometries)
+            spawn_origin = spawn_key or nearest_exit_id
 
             agent_radius = float(sampled_radii[idx])
             agent_v0 = float(sampled_v0s[idx])
@@ -1249,7 +1272,13 @@ def _initialize_with_fallback(
                 "mode": "path",
                 "path_choices": {},
                 "stage_configs": stage_configs,
-                "current_origin": nearest_exit_id,
+                # Where the agent is coming *from*, which is its spawn area --
+                # not the exit it is heading for. Routing ranks every exit
+                # reachable from this node, so naming the target exit here
+                # collapses the ranking to that one exit at zero cost and the
+                # cognitive map is never consulted. The flow-spawning branch in
+                # scenario.py has always used the spawn key; this one did not.
+                "current_origin": spawn_origin,
                 "current_target_stage": nearest_exit_id,
                 "target": target,
                 "target_assigned": False,
@@ -1260,6 +1289,11 @@ def _initialize_with_fallback(
                 "reach_dwell_seconds": 0.2,
                 "step_index": 0,
                 "base_seed": base_seed,
+                # Carried so the reroute pass can seed a cognitive map from
+                # them; without these every agent is treated as fully familiar
+                # and sign legibility can never bind.
+                "familiarity": spawn_data["params"].get("familiarity", "full"),
+                "entrance": spawn_data["params"].get("entrance"),
             }
 
             # Store premovement time and desired speed for this agent
