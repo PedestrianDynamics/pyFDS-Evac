@@ -381,7 +381,7 @@ uv run run.py \
   --scenario assets/t_junction \
   --fds-dir assets/t_junction \
   --enable-rerouting \
-  --vis-cache assets/t_junction/vismap_cache.pkl \
+  --vis-cache assets/t_junction/vismap_cache.npz \
   --output-route-cost-history route_costs.csv \
   --cleanup
 ```
@@ -422,6 +422,18 @@ Set per distribution group in the scenario config:
   }
 }
 ```
+
+`discovery` only means something when a visibility model is present, which
+requires `--vis-cache` (and therefore `--fds-dir`). Without it every adjacent
+node is added to the map unconditionally and a `discovery` agent behaves like a
+`full` one.
+
+The tier binds whether or not the scenario defines a journey. In the no-journey
+mode — agents auto-assigned to their nearest exit — each agent is rooted at its
+spawn area, and rerouting ranks every exit reachable from there. Rooting it at
+the assigned exit instead would collapse the ranking to that one exit at zero
+cost, which is what issue #61 did until it was fixed;
+`tests/test_no_journey_routing_origin.py` pins the contract.
 
 Default when the key is absent: `"full"` (backward compatible).
 
@@ -471,7 +483,7 @@ rejection timeline, evacuation time):
 ```bash
 uv run python scripts/run_familiarity_comparison.py \
     --fds-dir assets/t_junction \
-    --vis-cache assets/t_junction/vismap_cache.pkl
+    --vis-cache assets/t_junction/vismap_cache.npz
 ```
 
 Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,

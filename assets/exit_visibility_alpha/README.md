@@ -154,6 +154,7 @@ for v in visible hidden; do
   .venv/bin/python run.py \
       --scenario assets/exit_visibility_alpha/config_$v.json \
       --fds-dir "$FDS_DIR" \
+      --vis-cache /tmp/vis_$v.npz \
       --output-sqlite /tmp/run_$v.sqlite
 
   .venv/bin/python scripts/plot_trajectories.py /tmp/run_$v.sqlite \
@@ -163,38 +164,53 @@ for v in visible hidden; do
 done
 ```
 
+**`--vis-cache` is not optional here.** It is what constructs the visibility
+model — without it `vis_model` is `None`, every adjacent node is added to the
+cognitive map unconditionally, and both configs send every agent to `E_near`.
+That is not a bug; it is the documented meaning of running without a visibility
+model. But it makes this scenario measure nothing, so the flag belongs in the
+command, not in a footnote.
+
+**The two runs need two cache files.** `--vis-cache` names a destination, not
+an input: a missing file is computed from the FDS slices and written, and an
+existing one is reused only when its stored metadata — `fds_dir`, the sign
+descriptors, the time step, the slice height — still matches. The sign
+descriptors are exactly what differs between these configs, so a shared path
+would recompute on every alternation. Correct results, no caching, and a
+puzzling wait. Hence `vis_$v.npz` rather than one file.
+
 `scripts/plot_trajectories.py` reads `trajectory_data` from the SQLite and
 attributes each agent to the exit polygon nearest its final position, provided
 it finished within `--reach` metres (default 1.5 m). Agents that ended anywhere
 else are drawn grey and counted separately, so a run where most agents never
 got out cannot pass for a clean result.
 
-### The result, as of writing: the flip does not happen in simulation
+### The result
 
-| | `E_near` | `E_far` |
-|---|---|---|
-| `config_visible.json` (alpha = 0) | 40 | 0 |
-| `config_hidden.json` (alpha = 180) | 40 | 0 |
+| | `E_near` | `E_far` | egress |
+|---|---|---|---|
+| `config_visible.json` (alpha = 0) | 40 | 0 | 18.20 s |
+| `config_hidden.json` (alpha = 180) | 0 | 40 | 26.02 s |
 
 ![trajectories, visible](trajectories_visible.png)
 ![trajectories, hidden](trajectories_hidden.png)
 
-Both runs evacuate 40/40 in 18.20 s. They are not merely similar — they are the
-same run.
+Turning the near sign away costs 7.8 s and sends every agent past it, the
+extra 10 m to `E_far`. All 40 switch at t = 0, on their first evaluation: the
+near exit never enters their map, so there is nothing to reconsider later.
 
-This is [issue #61](https://github.com/PedestrianDynamics/fds-evac/issues/61),
-not a defect in the scenario. In no-journey mode every agent is initialised with
-its assigned exit as its own origin (`origin=E_near target=E_near
-source=E_near`), the rerouting pass finds nothing to rank
-(`route_cost_rows=0`), and the cognitive map and the visibility model are never
-consulted. The unit tests in `tests/test_exit_visibility_alpha.py` call
-`rank_routes` directly and therefore still pass; they are testing the routing
-decision, which is correct, not the path from the simulation to that decision,
-which is broken.
+This is what the asset was built to show, and until
+[#61](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/61) was fixed it did
+not. Both configs produced the same 18.20 s run, because agents were rooted at
+their assigned exit rather than their spawn area and the distribution's
+`familiarity` never reached them. The unit tests in
+`tests/test_exit_visibility_alpha.py` passed throughout — they call
+`rank_routes` directly, so they tested the routing decision, which was correct,
+and not the path from the simulation to that decision, which was not.
 
-Recorded here rather than omitted: a plot drawn from the router would have shown
-the flip and asserted a behaviour the code does not produce. That gap is the
-reason to plot from the database.
+That is the argument for plotting from the trajectory database. A plot drawn
+from the router would have shown this flip a month before the simulation could
+produce it.
 
 ## Deliberate choices
 
