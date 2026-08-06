@@ -1232,9 +1232,13 @@ def _initialize_with_fallback(
                 }
 
         # The spawn area's own node in the stage graph, keyed as it is in the
-        # scenario JSON. Absent only for callers that build distributions
-        # without keys, where the old exit-as-origin behaviour is kept.
+        # scenario JSON. The no-distributions fallback synthesises the key
+        # "__walkable_area__", which the graph has no node for, so it is
+        # rejected here and the old exit-as-origin behaviour is kept on that
+        # branch rather than handing routing a source it cannot resolve.
         spawn_key = spawn_data.get("dist_key")
+        if spawn_key not in (data.get("distributions") or {}):
+            spawn_key = None
 
         # Add agents with nearest exit assignment — all on global DS journey
         for idx, pos in enumerate(positions):
@@ -2413,6 +2417,9 @@ def _add_agents(
                                     if path_state:
                                         path_state["familiarity"] = spawn_params.get(
                                             "familiarity", "full"
+                                        )
+                                        path_state["entrance"] = spawn_params.get(
+                                            "entrance"
                                         )
                                         agent_wait_info[agent_id] = path_state
 

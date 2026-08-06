@@ -27,6 +27,7 @@ from types import SimpleNamespace
 
 import jupedsim as jps
 import pytest
+from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, rank_routes
@@ -54,9 +55,9 @@ def raw() -> dict:
 @pytest.fixture(scope="module")
 def wait_info(tmp_path_factory, raw) -> dict[int, dict]:
     """Run the real no-journey initialisation and return its per-agent state."""
-    walkable = Polygon(
-        [(0.0, 0.0), (4.0, 0.0), (4.0, 30.0), (0.0, 30.0)]
-    )  # matches assets/exit_visibility_alpha/geometry.wkt
+    walkable = shapely_wkt.loads(
+        (ASSET / "geometry.wkt").read_text(encoding="utf-8").strip()
+    )
     out = tmp_path_factory.mktemp("no_journey") / "traj.sqlite"
     simulation = jps.Simulation(
         model=jps.CollisionFreeSpeedModel(),
@@ -116,6 +117,49 @@ class TestKnowledgeCarriedFromTheDistribution:
         for w in wait_info.values():
             assert "entrance" in w
             assert w["entrance"] is None
+
+
+class TestTheSyntheticSpawnAreaIsNotAGraphNode:
+    """A config with no ``distributions`` spawns into the walkable area itself.
+
+    That branch synthesises the key ``__walkable_area__``, which the stage
+    graph has no node for. Routing must not be handed it as a source: the old
+    exit-as-origin behaviour is degenerate but resolvable, and is kept here.
+    """
+
+    @pytest.fixture(scope="class")
+    def wait_info_no_distributions(self, tmp_path_factory, raw) -> dict[int, dict]:
+        stripped = dict(raw)
+        stripped["distributions"] = {}
+        walkable = shapely_wkt.loads(
+            (ASSET / "geometry.wkt").read_text(encoding="utf-8").strip()
+        )
+        out = tmp_path_factory.mktemp("no_dist") / "traj.sqlite"
+        simulation = jps.Simulation(
+            model=jps.CollisionFreeSpeedModel(),
+            geometry=walkable,
+            trajectory_writer=jps.SqliteTrajectoryWriter(output_file=out),
+        )
+        config = tmp_path_factory.mktemp("no_dist_cfg") / "config.json"
+        config.write_text(json.dumps(stripped), encoding="utf-8")
+        _, _, _, spawning_info = initialize_simulation_from_json(
+            str(config),
+            simulation,
+            SimpleNamespace(polygon=walkable),
+            seed=1301,
+            model_type="CollisionFreeSpeedModel",
+            global_parameters=SimpleNamespace(),
+        )
+        info = spawning_info["agent_wait_info"]
+        assert info, "no agents placed; the fixture proves nothing"
+        return info
+
+    def test_the_synthetic_key_never_becomes_a_routing_source(
+        self, wait_info_no_distributions
+    ):
+        for w in wait_info_no_distributions.values():
+            assert w["current_origin"] != "__walkable_area__"
+            assert w["current_origin"] in {NEAR_EXIT, FAR_EXIT}
 
 
 class TestWhyTheOriginMattered:
