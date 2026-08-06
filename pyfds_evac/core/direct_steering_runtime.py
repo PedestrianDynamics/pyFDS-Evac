@@ -282,7 +282,14 @@ def advance_path_target(wait_info):
     current_stage = wait_info.get("current_target_stage")
     next_candidates = path_choices.get(current_stage, [])
     if not next_candidates:
-        wait_info["state"] = "done"
+        # Arrived at a stage with nothing scripted beyond it. For an exploring
+        # agent this is not the end of the road: it is the moment its cognitive
+        # map grows and it must choose a route from here. Record the arrival and
+        # go idle, which keeps the agent in the reroute pass -- "done" retires it
+        # permanently, so a frontier hop could never be followed by a second one.
+        # Exits never reach this branch; the caller retires them on arrival.
+        wait_info["current_origin"] = current_stage
+        wait_info["state"] = "idle"
         return
 
     choose_rng = random.Random(

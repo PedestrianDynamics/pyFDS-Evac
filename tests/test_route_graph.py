@@ -2395,3 +2395,112 @@ class TestAdjacencyIsMeaningful:
             distributions={"d0": {"polygon": _box(0, 0)}},
         )
         assert {edge.target for edge in graph.edges.get("d0", [])} == {"e0"}
+
+
+class TestAnIdleAgentIsNotRetired:
+    """A frontier hop ends with the agent standing on a node and no plan.
+
+    ``advance_path_target`` used to call that ``done``, which retires the agent:
+    the reroute pass skips ``done`` agents, so the second hop could never
+    happen. Frontier exploration therefore worked in every unit test -- they
+    call ``evaluate_and_reroute`` directly -- and in no simulation, because only
+    a simulation runs the direct-steering loop that produces the state.
+
+    See ``assets/blind_spawn_discovery``, the first scenario to reach it.
+    """
+
+    @staticmethod
+    def _graph():
+        # spawn -> C -> E, the shape a two-hop exploration walks.
+        direct = {
+            "C": {"polygon": _box(0, 10), "stage_type": "checkpoint"},
+            "E": {"polygon": _box(0, 20), "stage_type": "exit"},
+        }
+        return StageGraph.from_scenario(
+            direct,
+            [{"from": "C", "to": "E"}],
+            distributions={"S": {"polygon": _box(0, 0)}},
+        )
+
+    @staticmethod
+    def _arrived_at_c():
+        """wait_info as it stands the tick after a frontier hop to C lands."""
+        from pyfds_evac.core.direct_steering_runtime import advance_path_target
+
+        wait_info = {
+            "mode": "path",
+            "path_choices": {"S": [("C", 100.0)]},
+            "stage_configs": {
+                "C": {"polygon": _box(0, 10), "stage_type": "checkpoint"},
+                "E": {"polygon": _box(0, 20), "stage_type": "exit"},
+            },
+            "current_origin": "S",
+            "current_target_stage": "C",
+            "target": (0.0, 10.0),
+            "state": "to_target",
+            "base_seed": 7,
+            "step_index": 0,
+        }
+        advance_path_target(wait_info)
+        return wait_info
+
+    def test_arriving_with_no_plan_leaves_the_agent_idle_not_done(self):
+        assert self._arrived_at_c()["state"] == "idle"
+
+    def test_the_arrived_stage_becomes_the_routing_origin(self):
+        """Otherwise the next evaluation ranks routes from where it started."""
+        assert self._arrived_at_c()["current_origin"] == "C"
+
+    def test_an_idle_agent_is_retargeted_by_a_reroute(self):
+        wait_info = self._arrived_at_c()
+        changed = reroute_agent(wait_info, ["C", "E"], wait_info["stage_configs"])
+        assert changed
+        assert wait_info["current_target_stage"] == "E"
+        assert wait_info["state"] == "to_target"
+
+    def test_an_idle_agent_reroutes_even_to_the_exit_it_was_assigned(self):
+        """The second half of the stall.
+
+        Agents are assigned a nearest exit by straight-line distance before
+        routing runs, and that becomes ``route_state.current_exit``. When an
+        explorer discovers precisely that exit, ``old_exit == best.exit_id``
+        sent it down the same-exit branch, which compares against a committed
+        path an idle agent does not have -- so it was never routed anywhere. In
+        ``blind_spawn_discovery`` that was exactly the half of the crowd whose
+        assigned exit lay behind the doorway they explored.
+        """
+        graph = self._graph()
+        wait_info = self._arrived_at_c()
+        switch = evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=AgentRouteState(current_exit="E"),
+            graph=graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=ConstantExtinctionField(0.0),
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.3)),
+        )
+        assert switch is not None
+        assert switch.new_exit == "E"
+        assert wait_info["current_target_stage"] == "E"
+
+    def test_a_walking_agent_is_still_protected_from_churn(self):
+        """Control: the idle exemption must not disable same-exit hysteresis."""
+        graph = self._graph()
+        wait_info = self._arrived_at_c()
+        wait_info["state"] = "to_target"
+        wait_info["current_target_stage"] = "E"
+        switch = evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=AgentRouteState(current_exit="E"),
+            graph=graph,
+            current_time_s=10.0,
+            current_fed=0.0,
+            extinction_sampler=ConstantExtinctionField(0.0),
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.3)),
+        )
+        assert switch is None

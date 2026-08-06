@@ -1157,11 +1157,18 @@ def reroute_agent(
     old_choices.update(new_choices)
     wait_info["path_choices"] = old_choices
 
-    # If the agent's current target is not on the remaining path,
-    # retarget to the next stage after the agent's current position.
-    # remaining[0] is the agent's current position; remaining[1] is
-    # the next stage it should move toward.
-    if current_stage not in remaining and len(remaining) >= 2:
+    # If the agent's current target is not on the remaining path, retarget to
+    # the next stage after the agent's current position. remaining[0] is the
+    # agent's current position; remaining[1] is the next stage it should move
+    # toward.
+    #
+    # An idle agent is retargeted too. It is standing on a stage with no onward
+    # plan -- the end of a frontier hop -- so remaining[0] is where it already
+    # is and remaining[1] is where it must go next. Without this it would be
+    # given path_choices it never consults, and would stand there for the rest
+    # of the run.
+    idle = wait_info.get("state") == "idle"
+    if (current_stage not in remaining or idle) and len(remaining) >= 2:
         next_stage = remaining[1]
         if next_stage in stage_configs:
             from .direct_steering_runtime import pick_stage_target
@@ -1322,7 +1329,14 @@ def evaluate_and_reroute(
 
     route_state.last_eval_time_s = current_time_s
 
-    if old_exit == best.exit_id:
+    # An idle agent stands on a node with no onward plan, so there is no
+    # committed path to compare against and no churn to protect it from. It must
+    # be routed even when the best exit is the one it was nominally assigned at
+    # spawn -- an assignment made by straight-line distance before routing ran,
+    # over an exit the agent had not yet discovered. Without this, an explorer
+    # whose assigned exit happens to be the one it finds is never routed to it
+    # and stands at the doorway for the rest of the run.
+    if old_exit == best.exit_id and wait_info.get("state") != "idle":
         # Same exit — only reroute if the newly ranked path to it is
         # meaningfully cheaper than the path the agent is actually walking
         # right now (not just whatever was last recorded as "best").
