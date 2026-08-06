@@ -171,6 +171,14 @@ That is not a bug; it is the documented meaning of running without a visibility
 model. But it makes this scenario measure nothing, so the flag belongs in the
 command, not in a footnote.
 
+**The two runs need two cache files.** `--vis-cache` names a destination, not
+an input: a missing file is computed from the FDS slices and written, and an
+existing one is reused only when its stored metadata — `fds_dir`, the sign
+descriptors, the time step, the slice height — still matches. The sign
+descriptors are exactly what differs between these configs, so a shared path
+would recompute on every alternation. Correct results, no caching, and a
+puzzling wait. Hence `vis_$v.npz` rather than one file.
+
 `scripts/plot_trajectories.py` reads `trajectory_data` from the SQLite and
 attributes each agent to the exit polygon nearest its final position, provided
 it finished within `--reach` metres (default 1.5 m). Agents that ended anywhere
@@ -192,7 +200,7 @@ extra 10 m to `E_far`. All 40 switch at t = 0, on their first evaluation: the
 near exit never enters their map, so there is nothing to reconsider later.
 
 This is what the asset was built to show, and until
-[#61](https://github.com/PedestrianDynamics/fds-evac/issues/61) was fixed it did
+[#61](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/61) was fixed it did
 not. Both configs produced the same 18.20 s run, because agents were rooted at
 their assigned exit rather than their spawn area and the distribution's
 `familiarity` never reached them. The unit tests in
