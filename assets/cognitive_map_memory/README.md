@@ -87,17 +87,33 @@ mkdir -p /tmp/cmm && cd /tmp/cmm \
 
 .venv/bin/python scripts/plot_trajectories.py /tmp/cmm.sqlite \
     --config assets/cognitive_map_memory/config.json \
+    --route-history /tmp/cmm_routes.csv \
     -o assets/cognitive_map_memory/trajectories.png \
     --title "cognitive_map_memory -- 20 discovery agents"
 ```
 
 ![trajectories](trajectories.png)
 
+**`--route-history` is what makes this readable.** Without it the paths are
+coloured by the exit each agent *reached*, so every line is `E_side` orange from
+the spawn area onward and the scenario looks like agents that aimed at the side
+door from the start. With it, each path is coloured by the exit the agent was
+aiming at *at that moment*, and a dot marks the change of mind.
+
 **20 of 20 agents divert into `E_side`**, egress 21.9 s. Two switches each:
-`E_side → E_end` at t = 0 (the assigned nearest exit is not yet in the map, so
-routing falls back to the only exit that is), then `E_end → E_side` between
-t = 5 and t = 19 as each agent crosses `y = 12.5` and the sign becomes legible.
-Agent 1 switches at t = 8 s, y = 11.7.
+
+- `E_side → E_end` at t = 0 — the nearest exit by straight-line distance is
+  assigned before routing runs, but it is not yet in the map, so the first
+  evaluation falls back to the only exit that is. This is why the paths start
+  blue.
+- `E_end → E_side` between t = 5 and t = 19, as each agent crosses the
+  legibility window and the sign becomes readable. Agent 1 switches at
+  t = 8 s, y = 11.7.
+
+The switch dots are spread over roughly y ∈ [11.5, 16] rather than lying on a
+line at y = 12.5. That is correct: the window is derived for the centreline
+x = 2, and an agent off-centre sees the sign at a worse view angle, so it has to
+get closer before the sign becomes legible.
 
 **What this does not show is persistence.** An agent that turns off at y ≈ 13
 never reaches y = 30, so no trajectory exercises "still remembers `E_side`

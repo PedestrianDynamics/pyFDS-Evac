@@ -178,12 +178,22 @@ uv run python scripts/plot_smoke_history.py --input smoke.csv --output smoke_43.
 
 ### Trajectories coloured by exit — `plot_trajectories.py`
 
-Positional CLI (no flags). `config.json` is used to draw exit polygons;
-`route_costs.csv` colours each agent by its last-chosen exit.
+Reads `trajectory_data` from the run's SQLite: what agents *did*, as opposed to
+what `rank_routes` says they would do.
 
 ```
-uv run python scripts/plot_trajectories.py <traj.sqlite> [config.json] [route_costs.csv] [out.png]
+uv run python scripts/plot_trajectories.py <traj.sqlite> \
+    --config <config.json> -o out.png [--title "..."] \
+    [--route-history routes.csv] [--geometry geometry.wkt] [--reach 1.5]
 ```
+
+| Flag | Effect |
+|---|---|
+| `--config` (required) | Exit polygons, and the colour key. |
+| `-o/--out` (required) | Output PNG. |
+| `--route-history` | `run.py --output-route-history` CSV. Colours each path by the exit targeted **at that moment** and marks every switch with a dot. Without it paths are coloured by the exit finally reached, which hides mid-run decisions entirely. |
+| `--geometry` | Walkable-area WKT; defaults to `geometry.wkt` beside the config. |
+| `--reach` | Metres from an exit polygon that count as having reached it (default 1.5). Agents that finish elsewhere are drawn grey and counted separately. |
 
 ### Route cost curves — `plot_route_costs.py`
 
