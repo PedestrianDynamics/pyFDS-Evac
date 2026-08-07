@@ -1,0 +1,31 @@
+&HEAD CHID='iso_table21_coupled',
+      TITLE='ISO 20414 Table 21 corridor, prescribed soot for K = 1.0 1/m' /
+
+! ISO 20414 Table 21: "A corridor 2 m wide and 100 m long."
+! No combustion: the soot is prescribed, so K is constant in space and time and
+! the hand calculation of the expected egress time stays exact.
+&MESH IJK=200,4,6, XB=-50.00,50.00,-1.00,1.00,0.0,3.00 /
+&TIME T_END=150 /
+&MISC TMPA=20.0 /
+
+&SPEC ID='NITROGEN', BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN'                      /
+&SPEC ID='SOOT'                        /
+
+! Target K = 1.0 1/m. FDS computes the extinction coefficient as
+! MASS_EXTINCTION_COEFFICIENT * soot density, defaulting to 8700 m^2/kg, so
+! a soot density of 114.9 mg/m^3 is what produces it.
+!
+! NOTE: all species MUST be in a single &INIT. A second &INIT with no XB resets
+! the whole domain, overwriting the first and leaving everything at 0.
+&INIT SPEC_ID(1)='SOOT',
+      SPEC_ID(2)='OXYGEN',
+      MASS_FRACTION(1)=9.545929E-05,
+      MASS_FRACTION(2)=2.31000E-01 /
+
+! SPEC_ID is mandatory on the extinction slice once species are declared
+! explicitly, or FDS raises ERROR 1004.
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
+&DUMP DT_SLCF=100.0 /
+
+&TAIL /

@@ -1,0 +1,102 @@
+{
+  "project_version": "2.0",
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 150.0,
+        "dt": 0.05,
+        "model_type": "CollisionFreeSpeedModel"
+      },
+      "numberOfSimulations": 1,
+      "baseSeed": 420
+    },
+    "ui_state": {
+      "useShortestPaths": false,
+      "boundaries": [
+        {
+          "mode": "manual"
+        }
+      ]
+    }
+  },
+  "routing": {
+    "w_smoke": 0.0,
+    "w_fed": 0.0,
+    "w_queue": 0.0,
+    "base_speed_m_per_s": 1.25,
+    "default_exit_capacity": 1.0,
+    "sampling_step_m": 2.0
+  },
+  "exits": {
+    "E_end": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          49.92,
+          -0.5
+        ],
+        [
+          49.92,
+          0.5
+        ],
+        [
+          49.0,
+          0.5
+        ],
+        [
+          49.0,
+          -0.5
+        ],
+        [
+          49.92,
+          -0.5
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0
+    }
+  },
+  "distributions": {
+    "jps-distributions_0": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -48.5,
+          -0.5
+        ],
+        [
+          -48.5,
+          0.5
+        ],
+        [
+          -49.5,
+          0.5
+        ],
+        [
+          -49.5,
+          -0.5
+        ],
+        [
+          -48.5,
+          -0.5
+        ]
+      ],
+      "parameters": {
+        "number": 1,
+        "radius": 0.2,
+        "v0": 1.25,
+        "distribution_mode": "by_number",
+        "use_flow_spawning": false,
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant",
+        "familiarity": "full"
+      }
+    }
+  },
+  "checkpoints": {},
+  "zones": {},
+  "journeys": [],
+  "transitions": [],
+  "obstacles": {}
+}
