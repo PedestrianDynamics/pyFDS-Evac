@@ -35,7 +35,9 @@ def _sim_with(quantity_to_slices: dict):
     def filter_by_quantity(name):
         return list(quantity_to_slices.get(name, []))
 
-    return SimpleNamespace(slices=SimpleNamespace(filter_by_quantity=filter_by_quantity))
+    return SimpleNamespace(
+        slices=SimpleNamespace(filter_by_quantity=filter_by_quantity)
+    )
 
 
 def test_soot_extinction_coefficient_resolves():
