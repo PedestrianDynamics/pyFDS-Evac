@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import logging
 import sys
 import threading
 from typing import Any, Callable, Dict, List, Optional
@@ -18,6 +19,32 @@ from typing import Any, Callable, Dict, List, Optional
 from pyfds_evac.core import ProgressEvent, ScenarioResult, run_scenario
 
 _MAX_LOG_LINES = 800
+_MAX_WARNINGS = 50
+
+
+class _WarningCapture(logging.Handler):
+    """Collect WARNING-and-above records from the model into a list.
+
+    The console capture below only sees ``stdout``, so anything the engine
+    reports through ``logging`` never reached the GUI at all.  That hid the
+    warnings that matter most -- a slice sampled at the wrong height, or agents
+    walking outside the FDS domain -- because both produce a run that finishes
+    cleanly and looks entirely normal.
+    """
+
+    def __init__(self, sink: List[str]) -> None:
+        super().__init__(level=logging.WARNING)
+        self._sink = sink
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            message = record.getMessage()
+        except Exception:  # never let logging break a run
+            return
+        if message not in self._sink:  # warn-once sources still repeat on rerun
+            self._sink.append(message)
+        if len(self._sink) > _MAX_WARNINGS:
+            del self._sink[:-_MAX_WARNINGS]
 
 
 class _ConsoleCapture(io.TextIOBase):
@@ -67,6 +94,7 @@ class RunManager:
         self.last_event: Optional[ProgressEvent] = None
         self.fed_snapshots: List[tuple] = []  # (sim_time, max_fed, mean_fed)
         self.log_lines: List[str] = []
+        self.warnings: List[str] = []
 
     @property
     def running(self) -> bool:
@@ -99,6 +127,7 @@ class RunManager:
         self.last_event = None
         self.fed_snapshots = []
         self.log_lines = []
+        self.warnings = []
 
         def on_progress(ev: ProgressEvent) -> None:
             self.last_event = ev
@@ -111,6 +140,14 @@ class RunManager:
 
         def worker() -> None:
             capture = _ConsoleCapture(self.log_lines, echo=sys.__stdout__)
+            warning_handler = _WarningCapture(self.warnings)
+            model_logger = logging.getLogger("pyfds_evac")
+            model_logger.addHandler(warning_handler)
+            # A logger filters by level before handlers ever see a record, so an
+            # app or root configured above WARNING would drop these silently.
+            previous_level = model_logger.level
+            if model_logger.getEffectiveLevel() > logging.WARNING:
+                model_logger.setLevel(logging.WARNING)
             try:
                 with contextlib.redirect_stdout(capture):
                     result = run_scenario(
@@ -124,6 +161,8 @@ class RunManager:
                 self.error = f"{type(exc).__name__}: {exc}"
                 self.status = "error"
             finally:
+                model_logger.removeHandler(warning_handler)
+                model_logger.setLevel(previous_level)
                 self._lock.release()
 
         self._thread = threading.Thread(target=worker, daemon=True)

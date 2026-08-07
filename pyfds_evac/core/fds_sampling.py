@@ -7,10 +7,21 @@ FED model (gas concentrations).
 
 from __future__ import annotations
 
+import logging
+
 try:
     from fdsreader import Simulation
 except ModuleNotFoundError:
     Simulation = None
+
+
+_logger = logging.getLogger(__name__)
+
+# How far the selected slice may sit from the requested height before the
+# mismatch is worth reporting.  A slice this far off samples a different part
+# of the smoke layer than the caller asked for, which silently changes every
+# extinction and gas reading downstream.
+_SLICE_HEIGHT_TOLERANCE_M = 0.5
 
 
 class SliceFieldSampler:
@@ -73,6 +84,48 @@ class SliceFieldSampler:
         return float(subslice.data[t_index, i_index, j_index])
 
 
+def _slice_z_mid(slice_obj) -> float:
+    """Return the mid-height of a slice's z-extent."""
+    return (slice_obj.extent.z_start + slice_obj.extent.z_end) / 2
+
+
+def _warn_on_height_mismatch(
+    chosen,
+    requested_height_m: float | None,
+    quantity: str,
+    n_matches: int,
+    fds_dir: str,
+) -> None:
+    """Warn when the selected slice sits far from the requested height.
+
+    Height only ever breaks ties: a case holding a single slice of the
+    requested quantity uses it whatever its z, and a multi-slice case picks
+    the nearest available, which may still be nowhere near.  Either way the
+    caller gets readings from a different part of the smoke layer than it
+    asked for, with no other signal that it happened.
+    """
+
+    if requested_height_m is None:
+        return
+    z_mid = _slice_z_mid(chosen)
+    if abs(z_mid - requested_height_m) <= _SLICE_HEIGHT_TOLERANCE_M:
+        return
+    counted = "1 slice" if n_matches == 1 else f"{n_matches} slices"
+    _logger.warning(
+        "Requested a '%s' slice at z=%.2f m but the nearest available in %s is "
+        "at z=%.2f m (%.2f m away; %s of this quantity in the case). "
+        "Sampling continues at z=%.2f m, so every reading from this quantity "
+        "describes that height, not the one requested.",
+        quantity,
+        requested_height_m,
+        fds_dir,
+        z_mid,
+        abs(z_mid - requested_height_m),
+        counted,
+        z_mid,
+    )
+
+
 def load_slice_sampler(
     fds_dir: str,
     quantity: str | tuple[str, ...] | list[str],
@@ -119,9 +172,8 @@ def load_slice_sampler(
         tried = ", ".join(f"'{c}'" for c in candidates)
         raise IndexError(f"No slice with quantity {tried} found in {fds_dir}")
     if slice_height_m is not None and len(matches) > 1:
-        best = min(
-            matches,
-            key=lambda s: abs((s.extent.z_start + s.extent.z_end) / 2 - slice_height_m),
-        )
-        return SliceFieldSampler(best)
-    return SliceFieldSampler(matches[0])
+        chosen = min(matches, key=lambda s: abs(_slice_z_mid(s) - slice_height_m))
+    else:
+        chosen = matches[0]
+    _warn_on_height_mismatch(chosen, slice_height_m, name, len(matches), fds_dir)
+    return SliceFieldSampler(chosen)
