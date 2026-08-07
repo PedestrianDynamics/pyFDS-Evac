@@ -159,6 +159,32 @@ def set_agent_smoke_factor(
     state["smoke_factor"] = normalize_speed_factor(smoke_factor)
 
 
+def set_agent_fic_factor(
+    agent_speed_state: Dict[int, Dict[str, Any]],
+    agent_id: int,
+    agent,
+    fic_factor: float,
+) -> None:
+    """Cache the irritant multiplier, and apply it from the stored baseline.
+
+    FIC responds to the concentration present *now*, so it must be recomputed
+    from ``original_speed`` on every tick like the smoke and checkpoint factors.
+    Multiplying the agent's current speed instead compounds it: a constant
+    FIC of 0.5 gave 0.65, then 0.65^2, then 0.65^3, and the agent stopped.
+    """
+    state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
+    state["fic_factor"] = normalize_speed_factor(fic_factor)
+    original_speed = state.get("original_speed")
+    if original_speed is None:
+        return
+    combined = (
+        float(original_speed)
+        * normalize_speed_factor(state.get("smoke_factor", 1.0))
+        * state["fic_factor"]
+    )
+    set_agent_desired_speed(agent, max(0.0, combined))
+
+
 def ensure_agent_speed_state(
     agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
 ):
@@ -171,6 +197,7 @@ def ensure_agent_speed_state(
         "original_speed": current_speed,
         "active_checkpoint": None,
         "smoke_factor": 1.0,
+        "fic_factor": 1.0,
     }
     agent_speed_state[agent_id] = state
     return state
@@ -185,11 +212,19 @@ def restore_agent_speed(
     if original_speed is None:
         return
     smoke_factor = state.get("smoke_factor", 1.0)
-    # Skip redundant write when already at restored speed and no smoke modification
-    if state.get("active_checkpoint") is None and smoke_factor == 1.0:
+    fic_factor = state.get("fic_factor", 1.0)
+    # Skip redundant write when already at restored speed and nothing modifies it
+    if (
+        state.get("active_checkpoint") is None
+        and smoke_factor == 1.0
+        and fic_factor == 1.0
+    ):
         return
     smoke_factor = normalize_speed_factor(smoke_factor)
-    if set_agent_desired_speed(agent, float(original_speed) * smoke_factor):
+    fic_factor = normalize_speed_factor(fic_factor)
+    if set_agent_desired_speed(
+        agent, float(original_speed) * smoke_factor * fic_factor
+    ):
         state["active_checkpoint"] = None
 
 
@@ -256,7 +291,10 @@ def update_checkpoint_speed(
     if original_speed is None:
         return
     smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
-    slowed_speed = max(0.0, float(original_speed) * active_speed_factor * smoke_factor)
+    fic_factor = normalize_speed_factor(state.get("fic_factor", 1.0))
+    slowed_speed = max(
+        0.0, float(original_speed) * active_speed_factor * smoke_factor * fic_factor
+    )
     if set_agent_desired_speed(agent, slowed_speed):
         state["active_checkpoint"] = active_zone_key
 

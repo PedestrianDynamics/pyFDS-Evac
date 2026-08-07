@@ -43,6 +43,7 @@ from .direct_steering_runtime import (
     get_agent_desired_speed,
     sample_wait_time,
     set_agent_desired_speed,
+    set_agent_fic_factor,
     set_agent_smoke_factor,
     update_checkpoint_speed,
 )
@@ -1763,6 +1764,7 @@ def run_scenario(
                                 if speed_state is not None:
                                     speed_state["original_speed"] = 0.0
                                     speed_state["smoke_factor"] = 1.0
+                                    speed_state["fic_factor"] = 1.0
                                     speed_state["active_checkpoint"] = None
                                 smoke_speed_state[agent_id] = 0.0
                             elif tenability_config.enable_fic_speed and fic_value > 0.0:
@@ -1771,15 +1773,12 @@ def run_scenario(
                                     1.0
                                     - float(tenability_config.fic_alpha) * fic_value,
                                 )
-                                current = get_agent_desired_speed(agent)
-                                if (
-                                    current is not None
-                                    and current > 0.0
-                                    and fic_speed_factor < 1.0
-                                ):
-                                    set_agent_desired_speed(
-                                        agent, float(current) * fic_speed_factor
-                                    )
+                                set_agent_fic_factor(
+                                    agent_speed_state,
+                                    agent_id,
+                                    agent,
+                                    fic_speed_factor,
+                                )
 
                         desired_speed_now = get_agent_desired_speed(agent)
                         base_speed_logged = smoke_speed_state.get(agent_id)
