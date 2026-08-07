@@ -25,10 +25,9 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
-
-from types import SimpleNamespace
 
 from pyfds_evac.core.fed import default_fed_rate_per_minute
 from pyfds_evac.core.run_config import build_run_kwargs
