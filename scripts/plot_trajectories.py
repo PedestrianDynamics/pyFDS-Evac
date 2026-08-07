@@ -38,8 +38,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Polygon as MplPoly  # noqa: E402
-from shapely.geometry import Point, Polygon  # noqa: E402
 from shapely import wkt as shapely_wkt  # noqa: E402
+from shapely.geometry import Point, Polygon  # noqa: E402
 
 PALETTE = ["#2b7bba", "#d94801", "#31a354", "#756bb1", "#e6ab02"]
 UNFINISHED = "#b0b0b0"
