@@ -282,7 +282,10 @@ def sample_incapacitation_threshold(config: "TenabilityConfig", rng) -> float:
     incapacitation bands instead of all agents collapsing at the median.
     """
     return _sample_threshold(
-        config.fed_threshold, config.incapacitation_mode, config.susceptibility_sigma, rng
+        config.fed_threshold,
+        config.incapacitation_mode,
+        config.susceptibility_sigma,
+        rng,
     )
 
 

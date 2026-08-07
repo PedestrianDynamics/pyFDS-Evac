@@ -46,13 +46,18 @@ def test_a3_1_rate_matches_closed_form():
 
 
 def test_a3_2_rate_is_zero_only_at_or_below_zero_degrees():
-    assert default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=0.0)) == 0.0
     assert (
-        default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=-10.0)) == 0.0
+        default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=0.0)) == 0.0
+    )
+    assert (
+        default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=-10.0))
+        == 0.0
     )
     assert not math.isfinite(float("nan"))
     assert (
-        default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=float("nan")))
+        default_heat_fed_rate_per_minute(
+            HeatFedInputs(temperature_celsius=float("nan"))
+        )
         == 0.0
     )
 
@@ -63,7 +68,9 @@ def test_a3_2_rate_is_nonzero_and_small_at_moderate_temperature():
     ISO TS 13571 eq. 5 has no built-in validity cutoff -- a moderate exposure
     still accrues some dose, just slowly, self-limiting by the exponent alone.
     """
-    rate_below = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=80.0))
+    rate_below = default_heat_fed_rate_per_minute(
+        HeatFedInputs(temperature_celsius=80.0)
+    )
     assert rate_below > 0.0
     assert rate_below == pytest.approx(80.0**3.4 / 5e7, rel=1e-9)
 

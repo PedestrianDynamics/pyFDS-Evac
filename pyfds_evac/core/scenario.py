@@ -1721,7 +1721,9 @@ def run_scenario(
 
             if fed_model is not None or heat_fed_model is not None:
                 current_time = simulation.elapsed_time()
-                _interval_source = fed_model if fed_model is not None else heat_fed_model
+                _interval_source = (
+                    fed_model if fed_model is not None else heat_fed_model
+                )
                 fed_update_interval_s = max(
                     0.0,
                     float(
@@ -1828,8 +1830,7 @@ def run_scenario(
                                 heat_fed_model is not None
                                 and tenability_config.enable_heat_incapacitation
                                 and heat_cumulative is not None
-                                and heat_cumulative
-                                >= _incap_heat_threshold(agent_id)
+                                and heat_cumulative >= _incap_heat_threshold(agent_id)
                             )
                             if gas_crossed or heat_crossed:
                                 incapacitated_agents.add(agent_id)

@@ -126,9 +126,7 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         slice_height_m=opts.smoke_slice_height,
     )
     return DefaultHeatFedModel(
-        FdsHeatField.from_fds(
-            opts.fds_dir, slice_height_m=opts.smoke_slice_height
-        ),
+        FdsHeatField.from_fds(opts.fds_dir, slice_height_m=opts.smoke_slice_height),
         heat_fed_config,
     )
 
