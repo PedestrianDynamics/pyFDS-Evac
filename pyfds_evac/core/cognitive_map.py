@@ -267,13 +267,22 @@ def _cost_from_agent(graph, path, cost: float, agent_position) -> float:
 
     from .route_graph import _walkable_distance
 
-    first, second = graph.nodes.get(path[0]), graph.nodes.get(path[1])
-    if first is None or second is None:
+    second = graph.nodes.get(path[1])
+    if second is None:
+        return cost
+    # The edge's own weight -- the number Dijkstra summed into *cost* -- rather
+    # than a fresh query for the same two nodes. Recomputing would cost a
+    # routing-engine call per frontier candidate and could disagree with the
+    # weight actually used: both this and _make_edge fall back to a straight
+    # line when the engine declines a query, and they need not decline the same
+    # one.
+    first_leg = next(
+        (e.weight for e in graph.edges.get(path[0], []) if e.target == path[1]),
+        None,
+    )
+    if first_leg is None:
         return cost
     next_xy = (second.centroid_x, second.centroid_y)
-    first_leg = _walkable_distance(
-        graph.routing_engine, (first.centroid_x, first.centroid_y), next_xy
-    )
     return (
         cost
         - first_leg
