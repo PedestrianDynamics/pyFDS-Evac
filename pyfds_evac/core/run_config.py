@@ -16,13 +16,13 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable, Dict
 
+from .fds_inventory import inspect_fds_quantities
 from .fed import (
     DefaultFedConfig,
     DefaultFedModel,
     FdsFedField,
     TenabilityConfig,
 )
-from .fds_inventory import inspect_fds_quantities
 from .route_graph import RerouteConfig, RouteCostConfig
 from .smoke_speed import (
     ConstantExtinctionField,

@@ -1,6 +1,6 @@
-from jupedsim.internal.notebook_utils import animate, read_sqlite_file
-
 import sys
+
+from jupedsim.internal.notebook_utils import animate, read_sqlite_file
 
 trajectory_file = sys.argv[1]
 traj, walkable_area = read_sqlite_file(trajectory_file)

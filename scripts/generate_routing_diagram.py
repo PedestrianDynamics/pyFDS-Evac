@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 from pathlib import Path
+
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, Circle, Polygon
+from matplotlib.patches import Circle, FancyBboxPatch, Polygon
 
 OUT_PATH = Path("routing_diagram_final_result.png")
 

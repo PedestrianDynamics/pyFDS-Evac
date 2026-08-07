@@ -16,7 +16,6 @@ from pyfds_evac.core.visibility import (
     extract_sign_descriptors,
 )
 
-
 # ── helpers ───────────────────────────────────────────────────────────
 
 SIGNS = {

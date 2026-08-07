@@ -6,20 +6,20 @@ import pytest
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.route_graph import (
+    AgentRouteState,
+    RerouteConfig,
+    RouteCostConfig,
     StageEdge,
     StageGraph,
     StageNode,
-    RouteCostConfig,
-    RerouteConfig,
-    AgentRouteState,
+    _position_aware_length,
+    compute_eval_offset,
+    evaluate_and_reroute,
     evaluate_route,
     evaluate_segment,
     rank_routes,
-    compute_eval_offset,
-    should_reevaluate,
     reroute_agent,
-    evaluate_and_reroute,
-    _position_aware_length,
+    should_reevaluate,
 )
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
@@ -2252,8 +2252,8 @@ class TestWalkableRemainingDistance:
     @staticmethod
     def _l_corridor():
         """An L: a horizontal leg and a vertical leg meeting at the far end."""
-        from shapely.ops import unary_union
         from shapely.geometry import box as _shp_box
+        from shapely.ops import unary_union
 
         return unary_union([_shp_box(0, 0, 20, 3), _shp_box(17, 0, 20, 20)])
 

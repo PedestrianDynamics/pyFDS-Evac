@@ -12,9 +12,9 @@ import random
 import pytest
 
 from pyfds_evac.core.fed import (
+    _FIC_COEFFS_PPM,
     DefaultFedInputs,
     TenabilityConfig,
-    _FIC_COEFFS_PPM,
     accumulate_default_fed,
     default_fed_rate_per_minute,
     default_fic,

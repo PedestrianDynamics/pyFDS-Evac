@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.fed import (
     DefaultFedInputs,
     _cn_fed_rate_per_minute,
@@ -19,8 +20,6 @@ from pyfds_evac.core.fed import (
     default_fed_rate_per_minute,
     time_to_fed_threshold_s,
 )
-from pyfds_evac.core import load_scenario, run_scenario
-
 
 CONSTANT_EXPOSURE_CASES = {
     "co_only": DefaultFedInputs(

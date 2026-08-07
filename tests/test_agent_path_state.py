@@ -4,7 +4,6 @@ from shapely.geometry import box
 
 from pyfds_evac.core.simulation_init import build_agent_path_state
 
-
 # A single journey listing every stage, as the scenario loader emits it.  The
 # spurious sequential pairs this creates must not shadow the real transitions.
 _ALL_STAGES = [

@@ -11,8 +11,8 @@ from pyfds_evac.core import (
     load_scenario,
     run_scenario,
 )
-from pyfds_evac.core.run_config import build_run_kwargs
 from pyfds_evac.core.agent_scalars import write_agent_scalars
+from pyfds_evac.core.run_config import build_run_kwargs
 
 
 def _build_parser() -> argparse.ArgumentParser:

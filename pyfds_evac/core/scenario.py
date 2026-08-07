@@ -35,6 +35,12 @@ import numpy as np
 from shapely import wkt
 from shapely.geometry import Polygon
 
+from .cognitive_map import (
+    AgentCognitiveMap,
+    expand_from_visibility,
+    expand_on_arrival,
+    init_cognitive_map,
+)
 from .direct_steering_runtime import (
     advance_path_target,
     assign_agent_target,
@@ -47,11 +53,10 @@ from .direct_steering_runtime import (
     set_agent_smoke_factor,
     update_checkpoint_speed,
 )
-from .cognitive_map import (
-    AgentCognitiveMap,
-    expand_from_visibility,
-    expand_on_arrival,
-    init_cognitive_map,
+from .fed import (
+    default_fed_components,
+    default_fic,
+    sample_incapacitation_threshold,
 )
 from .route_graph import (
     AgentRouteState,
@@ -61,11 +66,6 @@ from .route_graph import (
     evaluate_and_reroute,
     rank_routes,
     should_reevaluate,
-)
-from .fed import (
-    default_fed_components,
-    default_fic,
-    sample_incapacitation_threshold,
 )
 from .smoke_speed import ConstantExtinctionField
 
@@ -402,8 +402,8 @@ class Scenario:
             _, ax = plt.subplots(figsize=(12, 7), constrained_layout=True)
 
         # Walkable area (exterior + interior holes as walls)
-        from matplotlib.path import Path as MplPath
         from matplotlib.patches import PathPatch
+        from matplotlib.path import Path as MplPath
 
         exterior_coords = list(self.walkable_polygon.exterior.coords)
         codes = (

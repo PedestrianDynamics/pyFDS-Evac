@@ -1,13 +1,14 @@
 """jupedsim related functions."""
 
-import numpy as np
-from .utilities import distance
-from typing import List, Tuple, Any
-import jupedsim as jps
+import logging
 from pathlib import Path
+from typing import Any, List, Tuple
+
+import jupedsim as jps
+import numpy as np
 
 from .config import SimulationConfig
-import logging
+from .utilities import distance
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

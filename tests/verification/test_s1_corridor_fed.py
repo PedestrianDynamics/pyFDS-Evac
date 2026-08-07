@@ -22,10 +22,6 @@ indistinguishable from the control).
 from __future__ import annotations
 
 import pytest
-
-from pyfds_evac.core.fed import TenabilityConfig
-from pyfds_evac.core.scenario import run_scenario
-
 from harness import (
     CorridorSpec,
     corridor_scenario,
@@ -35,6 +31,9 @@ from harness import (
     time_to_incapacitation_s,
     uniform,
 )
+
+from pyfds_evac.core.fed import TenabilityConfig
+from pyfds_evac.core.scenario import run_scenario
 
 # 6 % CO -> t* ~ 23.4 s, comfortably inside the 40 s free-walk egress.
 CO_PPM = 60_000.0

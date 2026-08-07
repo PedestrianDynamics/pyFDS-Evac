@@ -117,9 +117,10 @@ def test_full_run_streams_progress_and_completes(client):
 
 def test_second_run_rejected_while_active(client):
     # Hold the lock by faking an active run, then ensure start() refuses.
+    from argparse import Namespace
+
     from pyfds_evac.core import load_scenario
     from pyfds_evac.core.run_config import build_run_kwargs
-    from argparse import Namespace
 
     scenario = load_scenario("assets/ISO-table21")
     opts = Namespace(

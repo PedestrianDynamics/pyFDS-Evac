@@ -5,9 +5,10 @@ from .fds_inventory import (
     inspect_fds_quantities,
     list_simulations,
 )
+from .fds_sampling import SliceFieldSampler, load_slice_sampler
 from .fed import (
-    DefaultFedInputs,
     DefaultFedConfig,
+    DefaultFedInputs,
     DefaultFedModel,
     FdsFedField,
     FedComponents,
@@ -18,7 +19,6 @@ from .fed import (
     default_fic,
     time_to_fed_threshold_s,
 )
-from .fds_sampling import SliceFieldSampler, load_slice_sampler
 from .route_graph import (
     RerouteConfig,
     RouteCostConfig,
@@ -32,7 +32,6 @@ from .scenario import (
     load_scenario,
     run_scenario,
 )
-from .visibility import VisibilityModel
 from .smoke_speed import (
     ConstantExtinctionField,
     ExtinctionField,
@@ -41,6 +40,7 @@ from .smoke_speed import (
     extinction_from_soot_density,
     speed_from_soot_density,
 )
+from .visibility import VisibilityModel
 
 __all__ = [
     "ConstantExtinctionField",

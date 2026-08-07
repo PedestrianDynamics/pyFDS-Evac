@@ -43,8 +43,8 @@ Expected: the first two are indistinguishable; the third is ~1/0.65 = 1.54x
 slower.
 """
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from shapely.geometry import box
 
