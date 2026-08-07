@@ -135,12 +135,23 @@ class TestTheExtinctionArrivesFromFds:
         assert observed_k == pytest.approx(builder.TARGET_K, rel=0.01)
 
     def test_it_is_constant_in_space_and_time(self, observed_k):
-        """Prescribed, not burned — so a gradient would mean the deck is wrong."""
+        """Prescribed, not burned — so a gradient would mean the deck is wrong.
+
+        Not bit-identical, though. FDS still solves the flow, so density varies
+        by a few parts per million across the mesh and K varies with it; the
+        committed slice spans 0.9954427..0.9954541. The tolerance is 1e-4 —
+        two decades above that spread, and two decades below the 1 % the
+        cross-check asserts, so it still fails on any real gradient.
+        """
         field = ExtinctionField.from_fds(str(FDS_DIR), slice_height_m=2.0)
-        for time_s, x, y in [(0.0, -40.0, 0.0), (50.0, 0.0, 0.5), (100.0, 40.0, -0.5)]:
-            assert field.sample_extinction(time_s, x, y) == pytest.approx(
-                observed_k, rel=1e-6
-            )
+        samples = [
+            field.sample_extinction(time_s, x, y)
+            for time_s in (0.0, 50.0, 100.0)
+            for x in (-49.0, -25.0, 0.0, 25.0, 49.0)
+            for y in (-0.9, 0.0, 0.9)
+        ]
+        assert min(samples) == pytest.approx(max(samples), rel=1e-4)
+        assert min(samples) == pytest.approx(observed_k, rel=1e-4)
 
     def test_it_is_not_zero(self, observed_k):
         """A missing or misnamed slice would read as clear air and pass silently
@@ -184,17 +195,26 @@ def test_the_asset_readme_records_the_measured_numbers():
 
 
 def test_smoke_history_is_written_when_requested(tmp_path):
-    """The CSV is how a user checks this by hand, so it must contain the field."""
+    """The CSV is how a user checks this by hand, so it must carry both fields.
+
+    Named exactly: a substring test for "extinction" would pass on any column
+    whose name merely contains it, which is no check at all.
+    """
     outcome = _run(fds_dir=str(FDS_DIR))
     try:
+        history = outcome.smoke_history
+        assert history, "no smoke history was recorded"
+
         path = tmp_path / "smoke.csv"
         with path.open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(handle, fieldnames=outcome.smoke_history[0].keys())
+            writer = csv.DictWriter(handle, fieldnames=list(history[0]))
             writer.writeheader()
-            writer.writerows(outcome.smoke_history)
+            writer.writerows(history)
+
         rows = list(csv.DictReader(path.open(encoding="utf-8")))
-        assert (
-            rows and "speed_factor" in rows[0] and "extinction" in str(rows[0].keys())
-        )
+        assert rows
+        assert "speed_factor" in rows[0]
+        assert "extinction_per_m" in rows[0]
+        assert float(rows[0]["extinction_per_m"]) > 0.5
     finally:
         outcome.cleanup()
