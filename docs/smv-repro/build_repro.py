@@ -24,7 +24,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 from pyfds_evac.core.smv_export import (
     patch_ini_for_avatars,
     patch_smv_file,
