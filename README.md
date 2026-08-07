@@ -126,12 +126,17 @@ uv run run.py \
   --cleanup
 ```
 
-Run the smoke-speed model against FDS results read through `fdsreader`:
+Run the smoke-speed model against FDS results read through `fdsreader`. The
+repository ships the deck, not its output — the slices are 4.2 MB and the full
+run 54 MB — so run FDS once first:
 
 ```bash
+mkdir -p /tmp/iso21 && cd /tmp/iso21 \
+  && fds /path/to/assets/ISO-table21/ISO-table21.fds && cd -   # ~8 min
+
 uv run run.py \
   --scenario assets/ISO-table21 \
-  --fds-dir assets/ISO-table21 \
+  --fds-dir /tmp/iso21 \
   --smoke-update-interval 0.1 \
   --output-smoke-history /tmp/iso-table21-fds-smoke-history.csv \
   --cleanup
@@ -140,8 +145,12 @@ uv run run.py \
 Inspect the FDS quantities available through `fdsreader`:
 
 ```bash
-uv run run.py --inspect-fds --fds-dir assets/ISO-table21 --scenario assets/ISO-table21
+uv run run.py --inspect-fds --fds-dir /tmp/iso21 --scenario assets/ISO-table21
 ```
+
+For a case where the coupling is exercised without running FDS yourself, see
+[`assets/iso_table22_coupled`](assets/iso_table22_coupled/README.md): its output
+is committed (136 kB) and a test reads it on every CI run.
 
 Plot smoke-speed history for a single agent:
 
