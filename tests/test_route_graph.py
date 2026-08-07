@@ -2288,19 +2288,40 @@ class TestWalkableRemainingDistance:
 
         Removing that rule must not make an exit around a corner look close.
         The routing engine handles it: the walkable distance goes to the corner
-        and turns, so it exceeds the straight line through the wall -- without
-        any special-casing of what the agent is currently heading toward.
+        and turns, so it exceeds the straight line through the wall.
+
+        The comparison is against the *same* graph without a routing engine,
+        which is the only way to show the geodesic is doing the work. An earlier
+        version of this test looped over three headings, left over from when
+        ``_position_aware_length`` took one; the loop variable was unused, so it
+        asserted one thing three times and would have passed had the routing
+        engine been ignored entirely.
         """
         import math
 
-        graph = self._graph()
         agent = (5.0, 1.5)
-        for heading in ("e0", "j", None):
-            effective, _ = _position_aware_length(
-                graph, ["j", "e0"], agent, path_length=16.0, first_length_m=16.0
-            )
-            straight = math.hypot(agent[0] - 18.0, agent[1] - 18.0)
-            assert effective > straight, f"heading={heading}"
+        stages = {
+            "j": {"polygon": _box(18, 2), "stage_type": "checkpoint"},
+            "e0": {"polygon": _box(18, 18), "stage_type": "exit"},
+        }
+        transitions = [{"from": "j", "to": "e0"}]
+
+        with_engine, _ = _position_aware_length(
+            self._graph(), ["j", "e0"], agent, path_length=16.0, first_length_m=16.0
+        )
+        without_engine, _ = _position_aware_length(
+            StageGraph.from_scenario(stages, transitions),
+            ["j", "e0"],
+            agent,
+            path_length=16.0,
+            first_length_m=16.0,
+        )
+        straight = math.hypot(agent[0] - 18.0, agent[1] - 18.0)
+
+        assert without_engine == pytest.approx(straight), (
+            "no engine: the fallback is the straight line through the wall"
+        )
+        assert with_engine > straight, "engine: the walk turns at the corner"
 
     def test_euclidean_fallback_without_a_routing_engine(self):
         import math

@@ -87,6 +87,12 @@ else. Ties are resolved by `nearest_frontier_target`'s deterministic
 arbitrary — a test asserts it is *not* 30/0, which would mean the frontier
 choice ignores position.
 
+> **Outcome.** It was 30/0. `nearest_frontier_target` measured from the graph
+> node and never from the agent, so the tie broke identically for everyone. The
+> asset first shipped documenting that limitation; issue #68 fixed it and the
+> split is now 18/12. This paragraph was the prediction, and it was right for a
+> reason the spec did not anticipate.
+
 ## The expected sequence
 
 For a `discovery` agent, clear air:

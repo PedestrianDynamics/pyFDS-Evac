@@ -240,9 +240,16 @@ experiment is about.
 This writes `geometry.wkt`, both configs, and `exit_visibility_alpha.fds`. The
 FDS deck is generated from the WKT via `pyfds_evac.core.wkt_to_fds`, with the
 generator's burner stripped and its analysis slices kept — fdsvismap needs an
-`EXTINCTION COEFFICIENT` slice to answer any legibility query at all, so
-`--geometry-only` would not do, since it drops the slices along with the fire.
-The builder asserts both conditions and fails loudly if either is violated.
+extinction slice to answer any legibility query at all, so `--geometry-only`
+would not do, since it drops the slices along with the fire. The builder asserts
+both conditions and fails loudly if either is violated.
+
+The two names for that slice are not a typo. The deck **asks** for
+`QUANTITY='EXTINCTION COEFFICIENT'`, because FDS 6.10.1 rejects
+`'SOOT EXTINCTION COEFFICIENT'` as an input quantity (ERROR 1042) — but it
+**records** the result under `SOOT EXTINCTION COEFFICIENT`, which is the name
+fdsvismap filters slices by. Input name and output name differ, so matching one
+against the other is what goes wrong.
 
 The deck must then be run once to produce the slice files that `--fds-dir`
 points at:
