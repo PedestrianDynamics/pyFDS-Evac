@@ -1,0 +1,37 @@
+&HEAD CHID='iso_table22_b',
+      TITLE='ISO 20414 Table 22 room, case b: CO2 0.0%, CO 0.0%, O2 12.0%' /
+
+! ISO 20414 Table 22: "A room with no fire source (10 m x 10 m x 3 m)."
+! The gas is prescribed, not burned, so it is uniform in space and constant in
+! time and the hand calculation of ISO's Step 2 is exact.
+&MESH IJK=20,20,6, XB=0.00,10.00,0.00,10.00,0.0,3.00 /
+&TIME T_END=1950 /
+&MISC TMPA=20.0 /
+
+! Nitrogen background so O2 is not double-counted.
+&SPEC ID='NITROGEN',        BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN'                             /
+&SPEC ID='CARBON MONOXIDE'                    /
+&SPEC ID='CARBON DIOXIDE'                     /
+! Declared only so the extinction slice has a species to report on; SPEC_ID is
+! mandatory once species are declared explicitly, or FDS raises ERROR 1004.
+! With no combustion its mass fraction stays 0, so the room is optically clear.
+&SPEC ID='SOOT'                               /
+
+! Case b -- O2 hypoxia alone.
+! NOTE: all species MUST be in a single &INIT. A second &INIT with no XB resets
+! the whole domain, overwriting the first and leaving everything at 0.
+&INIT SPEC_ID(1)='CARBON MONOXIDE',
+      SPEC_ID(2)='CARBON DIOXIDE',
+      SPEC_ID(3)='OXYGEN',
+      MASS_FRACTION(1)=0.00000E+00,
+      MASS_FRACTION(2)=0.00000E+00,
+      MASS_FRACTION(3)=1.34774E-01 /
+
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
+&DUMP DT_SLCF=500.0 /
+
+&TAIL /

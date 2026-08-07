@@ -3,7 +3,7 @@
   "config": {
     "simulation_settings": {
       "simulationParams": {
-        "max_simulation_time": 500.0,
+        "max_simulation_time": 1950.0,
         "dt": 0.05,
         "model_type": "CollisionFreeSpeedModel"
       },
@@ -32,24 +32,24 @@
       "type": "polygon",
       "coordinates": [
         [
-          3.9,
-          3.4
+          9.8,
+          9.0
         ],
         [
-          3.9,
-          3.9
+          9.8,
+          9.8
         ],
         [
-          3.4,
-          3.9
+          9.0,
+          9.8
         ],
         [
-          3.4,
-          3.4
+          9.0,
+          9.0
         ],
         [
-          3.9,
-          3.4
+          9.8,
+          9.0
         ]
       ],
       "enable_throughput_throttling": false,
@@ -61,33 +61,37 @@
       "type": "polygon",
       "coordinates": [
         [
-          2.6,
-          1.4
+          5.6,
+          4.4
         ],
         [
-          2.6,
-          2.6
+          5.6,
+          5.6
         ],
         [
-          1.4,
-          2.6
+          4.4,
+          5.6
         ],
         [
-          1.4,
-          1.4
+          4.4,
+          4.4
         ],
         [
-          2.6,
-          1.4
+          5.6,
+          4.4
         ]
       ],
       "parameters": {
         "number": 1,
         "radius": 0.2,
-        "v0": 0.0,
+        "v0": 1.25,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 12000000.0,
+        "premovement_param_b": 20000000.0,
+        "premovement_seed": 420,
         "radius_distribution": "constant",
         "v0_distribution": "constant",
         "familiarity": "full"

@@ -18,12 +18,20 @@ from pyfds_evac.core.smoke_speed import (
 )
 
 
-def _run_iso_constant_extinction(extinction_per_m: float):
+def _run_iso_constant_extinction(extinction_per_m: float, v0: float | None = None):
     scenario = load_scenario("assets/ISO-table21")
-    baseline = run_scenario(scenario, seed=420)
+    if v0 is not None:
+        for distribution in scenario.raw["distributions"].values():
+            distribution["parameters"]["v0"] = v0
+    # A slower occupant needs proportionally longer, on top of the smoke factor.
+    stretch = 1.0 if v0 is None else 1.25 / v0
+    baseline = scenario.copy()
+    baseline.set_max_time(450.0 * stretch)
+    baseline = run_scenario(baseline, seed=420)
     smoke_scenario = scenario.copy()
-    if extinction_per_m >= 10.0:
-        smoke_scenario.set_max_time(450.0)
+    smoke_scenario.set_max_time(
+        450.0 * stretch / max(0.1, speed_factor_from_extinction(extinction_per_m))
+    )
     smoke_model = SmokeSpeedModel(
         ConstantExtinctionField(extinction_per_m),
         SmokeSpeedConfig(
@@ -120,6 +128,38 @@ def test_iso_table21_constant_extinction_matches_expected_time_ratio(extinction_
             round(row["speed_factor"], 6) for row in smoke.smoke_history
         }
         assert observed_factors == {round(expected_factor, 6)}
+    finally:
+        baseline.cleanup()
+        smoke.cleanup()
+
+
+@pytest.mark.parametrize("v0", [1.0, 0.75, 0.5, 0.25])
+def test_iso_table21_holds_across_unimpeded_walking_speeds(v0):
+    """ISO 20414 Table 21 asks for both axes, not just extinction.
+
+    "different combinations of unimpeded walking speeds ... and constant
+    extinction coefficients need to be tested. Examples of such values can be
+    1,0 m/s, 0,75 m/s, 0,5 m/s, and 0,25 m/s for the unimpeded walking speeds."
+
+    This is a null test by construction: the smoke factor multiplies ``v0``, so
+    the time *ratio* must not depend on ``v0`` at all. That is exactly why it is
+    worth running -- it fails if a clamp is applied to an absolute speed rather
+    than to the factor, which is the shape of defect the FIC speed factor turned
+    out to have.
+    """
+    baseline, smoke = _run_iso_constant_extinction(1.0, v0=v0)
+
+    try:
+        assert baseline.success and smoke.success
+        assert smoke.agents_remaining == 0
+
+        expected_factor = speed_factor_from_extinction(1.0)
+        observed_ratio = smoke.evacuation_time / baseline.evacuation_time
+        assert observed_ratio == pytest.approx(1.0 / expected_factor, rel=0.08)
+        observed = {round(row["speed_factor"], 6) for row in smoke.smoke_history}
+        assert observed == {round(expected_factor, 6)}, (
+            "the factor must not depend on the unimpeded speed"
+        )
     finally:
         baseline.cleanup()
         smoke.cleanup()

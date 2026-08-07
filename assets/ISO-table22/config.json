@@ -92,7 +92,7 @@
         "v0": 1.3,
         "use_premovement": true,
         "premovement_distribution": "uniform",
-        "premovement_param_a": 0,
+        "premovement_param_a": 12000000,
         "premovement_param_b": 20000000,
         "premovement_seed": null,
         "distribution_mode": "by_number",
