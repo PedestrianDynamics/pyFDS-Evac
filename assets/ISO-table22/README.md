@@ -33,7 +33,7 @@ non-compliant one.
 |---|---|---|
 | room 10 m × 10 m × 3 m | `POLYGON((-5 -5, -5 5, 5 5, 5 -5))` = 10 × 10 m | ✅ |
 | occupant in the centre | spawn box centred on the origin, `number: 1` | ✅ |
-| pre-evacuation > 10 000 000 s | uniform draw over **[0, 20 000 000]** | ⚠️ |
+| pre-evacuation > 10 000 000 s | uniform draw over [12 000 000, 20 000 000] | ✅ |
 | no fire source | no deck at all; the field is supplied by the test | ✅ |
 | Step 2 by hand calculation | `time_to_fed_threshold_s()` | ✅ |
 | repeat per hazardous condition | **one condition only** | ❌ |
@@ -43,19 +43,20 @@ depends on it.
 
 ## The two deviations
 
-**The pre-evacuation draw is unbounded below.** A uniform draw over
-`[0, 2 × 10⁷]` can return a few seconds, which would let the occupant walk away
-mid-test — the opposite of what ISO asks for. In practice this never bites,
-because the test overrides `use_premovement = False` and `v0 = 0.0` before
-running, achieving the same stationarity by a different route. That override is
-also why the flaw went unnoticed. Bounding the draw below at 1,2 × 10⁷ would be
-both faithful and robust; see
-[`assets/iso_table22_coupled`](../iso_table22_coupled/README.md), which does.
+**The pre-evacuation draw was unbounded below** — uniform over `[0, 2 × 10⁷]`,
+so it could return a few seconds and let the occupant walk away, the opposite of
+what ISO asks. It never bit, because the test overrides `use_premovement` and
+`v0` before running; that override is also why the flaw went unnoticed. The draw
+now starts at 1,2 × 10⁷, so every value satisfies the standard and the asset is
+compliant when run on its own.
 
-**Only one hazardous condition.** ISO asks for the test to be repeated for each
+**Only one hazardous condition** — the one deviation left standing. ISO asks for the test to be repeated for each
 condition the sub-model supports. This asset runs a single mixture
-(CO 0,1 %, CO₂ 5 %, O₂ 12 %). The four-case version lives in
-`iso_table22_coupled`.
+(CO 0,1 %, CO₂ 5 %, O₂ 12 %). This is deliberate rather than outstanding: the
+four cases ISO asks for are covered by
+[`iso_table22_coupled`](../iso_table22_coupled/README.md), and duplicating them
+here would mean maintaining the same sweep twice against a stubbed field that
+cannot check the thing the extra cases exist to check.
 
 ## What the test asserts, and what it does not
 

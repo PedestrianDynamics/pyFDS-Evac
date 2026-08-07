@@ -27,23 +27,18 @@ speed**, specified in **Table 21**.
 | one occupant | `number: 1` | ✅ |
 | constant extinction 1,0/m | swept, including 1.0 | ✅ |
 | repeat at 10, 7,5, 3,0, 0,5 /m | `[0.5, 1.0, 3.0, 7.5, 10.0]` | ✅ |
-| exit 1 m wide | opening is **1.78 m** across the corridor | ⚠️ |
-| repeat at speeds 1,0 / 0,75 / 0,5 / 0,25 m/s | **only 1,25 m/s is tested** | ❌ |
+| exit 1 m wide | 1.00 m opening, centred | ✅ |
+| repeat at speeds 1,0 / 0,75 / 0,5 / 0,25 m/s | `test_iso_table21_holds_across_unimpeded_walking_speeds` | ✅ |
 
-The two deviations are recorded rather than hidden:
+Both axes are covered, as ISO asks: "different combinations of unimpeded walking
+speeds … and constant extinction coefficients need to be tested".
 
-**Exit width.** The exit polygon spans 1.78 m of the 2 m corridor width, not the
-1 m ISO specifies. With a single occupant and no congestion this cannot affect
-the result — the test measures walking time along 100 m, and queueing is
-impossible — but it is a departure from the letter of the standard.
-
-**The walking-speed axis is untested.** ISO asks for the test to be repeated
-across *both* axes: four extinction coefficients **and** four unimpeded speeds
-(1,0 / 0,75 / 0,5 / 0,25 m/s), "in order to cover the range of walking speeds
-and extinction coefficients". We sweep extinction fully and hold speed at
-1,25 m/s. Since the model applies a multiplicative factor to `v0`, varying `v0`
-should be a null test — which is precisely why it is worth doing, and is not
-currently done.
+**The speed axis is a null test by construction.** The smoke factor multiplies
+`v0`, so the time *ratio* cannot depend on `v0`. That is exactly why it earns
+its place: it fails if a clamp is ever applied to an absolute speed rather than
+to the factor — the shape of defect the FIC speed factor turned out to have,
+where the multiplier was applied to the current speed instead of the baseline
+and compounded to zero.
 
 ## What the test asserts
 
