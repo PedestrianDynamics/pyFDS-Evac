@@ -262,32 +262,50 @@ class TestTheMapGrowsHopByHop:
         assert _ranked_exits(graph, cmap, "C2", (6.0, 22.0)) != []
 
 
-class TestTheFrontierTieBreakIsPositionBlind:
-    """A recorded property, not a desired one.
+class TestTheFrontierChoiceFollowsThePosition:
+    """Where an agent stands decides which doorway it explores (issue #68).
 
-    ``C2`` and ``C3`` are equidistant from ``C1``, and
-    ``nearest_frontier_target`` measures from the *node*, never from the agent.
-    So every agent standing anywhere at ``C1`` picks ``C2`` -- the run sends
-    30/30 through the west door and leaves the east room empty, however the
-    crowd is spread across the hall.
-
-    That is why no test here asserts a split. Fixing it means giving the
-    frontier choice the agent's position, which is a modelling change, not a
-    test fix. Recorded so the behaviour is documented rather than discovered
-    again.
+    ``C2`` and ``C3`` are equidistant from ``C1`` by construction, so the node
+    distance cannot separate them. Before the fix the choice was measured from
+    the node alone and ``sorted(frontier)`` broke the tie identically for
+    everyone: 30/30 agents through the west door, the east room never entered,
+    however the crowd was spread across the hall.
     """
 
+    @staticmethod
+    def _at_c1():
+        _, graph, vis, _ = _load()
+        cmap = init_cognitive_map(SPAWN, graph, "discovery", vis, 0.0)
+        expand_on_arrival(cmap, "C1", graph)
+        return graph, cmap
+
     def test_both_doorways_are_equidistant_from_the_first(self):
+        """The premise: node distance cannot decide, so position must."""
         _, graph, _, _ = _load()
         weights = {edge.target: edge.weight for edge in graph.edges["C1"]}
         assert weights["C2"] == pytest.approx(weights["C3"])
 
-    def test_the_tie_always_breaks_the_same_way_wherever_the_agent_stands(self):
-        _, graph, vis, _ = _load()
-        cmap = init_cognitive_map(SPAWN, graph, "discovery", vis, 0.0)
-        expand_on_arrival(cmap, "C1", graph)
-        chosen = {nearest_frontier_target(cmap, graph, "C1")[0] for _ in range(3)}
-        assert chosen == {"C2"}
+    def test_an_agent_to_the_west_explores_the_west_doorway(self):
+        graph, cmap = self._at_c1()
+        assert nearest_frontier_target(cmap, graph, "C1", (11.2, 18.5))[0] == "C2"
+
+    def test_an_agent_to_the_east_explores_the_east_doorway(self):
+        graph, cmap = self._at_c1()
+        assert nearest_frontier_target(cmap, graph, "C1", (12.8, 18.5))[0] == "C3"
+
+    def test_without_a_position_the_node_distance_still_decides(self):
+        """Backward compatible: callers that pass no position are unchanged."""
+        graph, cmap = self._at_c1()
+        assert nearest_frontier_target(cmap, graph, "C1")[0] == "C2"
+
+    def test_two_agents_in_the_same_place_agree(self):
+        """Determinism survives: the tie-break is still ``sorted(frontier)``."""
+        graph, cmap = self._at_c1()
+        chosen = {
+            nearest_frontier_target(cmap, graph, "C1", (12.0, 18.0))[0]
+            for _ in range(3)
+        }
+        assert len(chosen) == 1
 
 
 class TestTheOtherThreeConfigs:
