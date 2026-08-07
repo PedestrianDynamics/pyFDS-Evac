@@ -20,7 +20,9 @@ from .fds_inventory import inspect_fds_quantities
 from .fed import (
     DefaultFedConfig,
     DefaultFedModel,
+    DefaultHeatFedModel,
     FdsFedField,
+    FdsHeatField,
     TenabilityConfig,
 )
 from .route_graph import RerouteConfig, RouteCostConfig
@@ -99,6 +101,38 @@ def _build_fed_model(opts: Any, log: Logger):
     return DefaultFedModel(FdsFedField.from_fds(opts.fds_dir), fed_config)
 
 
+def _build_heat_fed_model(opts: Any, log: Logger):
+    """Build the heat FED (ISO TS 13571 eq. 5) model when a TEMPERATURE slice exists."""
+    if not opts.fds_dir:
+        return None
+    inventory = inspect_fds_quantities(opts.fds_dir)
+    if not inventory.supports_heat_fed():
+        # Not an error, same reasoning as _build_fed_model: plenty of cases
+        # carry no TEMPERATURE slice, and the run continues without heat FED
+        # -- but every heat FED column then reads zero, which looks exactly
+        # like a thermally survivable fire. Say so.
+        _logger.warning(
+            "Heat FED is disabled for %s: it has no TEMPERATURE slice. "
+            "Results will report zero heat dose and no thermal "
+            "incapacitation. Add `&SLCF QUANTITY='TEMPERATURE'` to the FDS "
+            "deck; see docs/fds-case-requirements.md.",
+            opts.fds_dir,
+        )
+        return None
+    log("Configuring heat FED calculation.")
+    heat_fed_config = DefaultFedConfig(
+        fds_dir=opts.fds_dir,
+        update_interval_s=opts.smoke_update_interval,
+        slice_height_m=opts.smoke_slice_height,
+    )
+    return DefaultHeatFedModel(
+        FdsHeatField.from_fds(
+            opts.fds_dir, slice_height_m=opts.smoke_slice_height
+        ),
+        heat_fed_config,
+    )
+
+
 def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
     """Build the rerouting configuration from scenario routing parameters."""
     if not opts.enable_rerouting:
@@ -153,25 +187,39 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     )
 
 
-def _build_tenability_config(opts: Any, fed_model, log: Logger):
-    """Build the tenability configuration when a FED model is active."""
-    if fed_model is None or opts.disable_tenability:
+def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
+    """Build the tenability configuration when a FED or heat FED model is active.
+
+    A temperature-only FDS case (no CO/CO2/O2, so ``fed_model`` is None) must
+    still get heat incapacitation -- the gate below only skips tenability
+    entirely when *neither* track has anything to sample.
+    """
+    if (fed_model is None and heat_fed_model is None) or opts.disable_tenability:
         return None
     mode = getattr(opts, "incapacitation_mode", "probabilistic")
     sigma = getattr(opts, "susceptibility_sigma", 0.94)
+    heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
+    heat_mode = getattr(opts, "heat_incapacitation_mode", "probabilistic")
+    heat_sigma = getattr(opts, "heat_susceptibility_sigma", 0.94)
     log(
         "Configuring tenability "
         f"(FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
-        f"FED median={opts.fed_threshold}, incapacitation={mode})."
+        f"FED median={opts.fed_threshold}, incapacitation={mode}, "
+        f"heat FED median={heat_threshold}, "
+        f"heat incapacitation={heat_mode})."
     )
     return TenabilityConfig(
-        enable_fic_speed=True,
+        enable_fic_speed=fed_model is not None,
         fic_alpha=opts.fic_alpha,
         fic_min_factor=opts.fic_min_factor,
-        enable_incapacitation=True,
+        enable_incapacitation=fed_model is not None,
         fed_threshold=opts.fed_threshold,
         incapacitation_mode=mode,
         susceptibility_sigma=sigma,
+        enable_heat_incapacitation=heat_fed_model is not None,
+        heat_fed_threshold=heat_threshold,
+        heat_incapacitation_mode=heat_mode,
+        heat_susceptibility_sigma=heat_sigma,
     )
 
 
@@ -179,16 +227,17 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> Dict[str,
     """Translate run options into keyword arguments for ``run_scenario``.
 
     Returns the kwargs dict accepted by ``run_scenario`` (``seed``,
-    ``smoke_speed_model``, ``fed_model``, ``tenability_config``,
-    ``reroute_config``, ``collect_route_cost_history``, ``vis_model``). Raises
-    ``ValueError`` for invalid option combinations.
+    ``smoke_speed_model``, ``fed_model``, ``heat_fed_model``,
+    ``tenability_config``, ``reroute_config``, ``collect_route_cost_history``,
+    ``vis_model``). Raises ``ValueError`` for invalid option combinations.
     """
     _validate_opts(opts)
     smoke_speed_model = _build_smoke_model(opts, log)
     fed_model = _build_fed_model(opts, log)
+    heat_fed_model = _build_heat_fed_model(opts, log)
     reroute_config = _build_reroute_config(scenario, opts, log)
     vis_model = _build_vis_model(scenario, opts, log)
-    tenability_config = _build_tenability_config(opts, fed_model, log)
+    tenability_config = _build_tenability_config(opts, fed_model, heat_fed_model, log)
 
     collect_route_cost_history = bool(
         getattr(opts, "output_route_cost_history", None)
@@ -198,6 +247,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> Dict[str,
         "seed": opts.seed,
         "smoke_speed_model": smoke_speed_model,
         "fed_model": fed_model,
+        "heat_fed_model": heat_fed_model,
         "tenability_config": tenability_config,
         "reroute_config": reroute_config,
         "collect_route_cost_history": collect_route_cost_history,

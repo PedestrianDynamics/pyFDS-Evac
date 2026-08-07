@@ -1,0 +1,43 @@
+&HEAD CHID='demo_homogeneous_heat_150C',
+      TITLE='30x30 m sealed room, homogeneous 150 C, heat FED hand-calc validation' /
+
+! Domain: 30x30m floor, 3m ceiling, 0.5m cells, split into 4 quadrants for MPI
+! Run with: mpiexec -n 4 fds demo_homogeneous_heat_150C.fds
+&MESH ID='M1', IJK=30,30,6, XB= 0,15, 0,15, 0,3 /
+&MESH ID='M2', IJK=30,30,6, XB=15,30, 0,15, 0,3 /
+&MESH ID='M3', IJK=30,30,6, XB= 0,15,15,30, 0,3 /
+&MESH ID='M4', IJK=30,30,6, XB=15,30,15,30, 0,3 /
+
+&TIME T_END=1000 /
+
+! Explicit ambient baseline (the CO ladder decks omit this and rely on the
+! FDS default of 20 C; stated here for clarity since this deck's entire
+! point is the initial temperature).
+&MISC TMPA=20.0 /
+
+! No &SPEC/&REAC needed: TEMPERATURE is a core solved gas-phase variable,
+! not a species yield -- unlike the CO ladder, this deck tracks no species
+! at all, just a prescribed initial temperature field.
+!
+! Whole-domain, single &INIT -- no combustion, no transient, no spatial
+! gradient, so FED_HEAT accumulates at the closed-form rate the whole run.
+&INIT XB=0,30,0,30,0,3, TEMPERATURE=150. /
+
+! Temperature at a few heights, to check it's actually uniform
+&SLCF PBZ=0.5, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.5, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=2.0, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=2.5, QUANTITY='TEMPERATURE' /
+
+! Vertical slices, another way to check homogeneity
+&SLCF PBY=15.0, QUANTITY='TEMPERATURE' /
+&SLCF PBX=15.0, QUANTITY='TEMPERATURE' /
+
+! Temperature readings at corners and center, should all read ~150 C
+&DEVC XB= 8, 8, 8, 8,2,2,   QUANTITY='TEMPERATURE', ID='TEMP_corner_SW' /
+&DEVC XB=22,22,22,22,2,2,   QUANTITY='TEMPERATURE', ID='TEMP_corner_NE' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2,   QUANTITY='TEMPERATURE', ID='TEMP_center'      /
+&DEVC XB=14.9,14.9,14.9,14.9,0.5,0.5, QUANTITY='TEMPERATURE', ID='TEMP_center_low'  /
+&DEVC XB=14.9,14.9,14.9,14.9,2.5,2.5, QUANTITY='TEMPERATURE', ID='TEMP_center_high' /
+
+&TAIL /

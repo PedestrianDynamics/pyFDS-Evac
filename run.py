@@ -146,6 +146,29 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Log-normal sigma of the per-agent incapacitation threshold in "
         "probabilistic mode (default: 0.94 -> ~10/50/88%% at FED 0.3/1/3)",
     )
+    parser.add_argument(
+        "--heat-fed-threshold",
+        type=float,
+        default=1.0,
+        help="Median cumulative heat FED (ISO TS 13571 eq. 5) at which an "
+        "agent is thermally incapacitated (default: 1.0). Independent of "
+        "--fed-threshold (toxic gas) -- see fed.py's TenabilityConfig",
+    )
+    parser.add_argument(
+        "--heat-incapacitation-mode",
+        choices=("probabilistic", "deterministic"),
+        default="probabilistic",
+        help="Same semantics as --incapacitation-mode, applied to the "
+        "independent heat FED track (default: probabilistic)",
+    )
+    parser.add_argument(
+        "--heat-susceptibility-sigma",
+        type=float,
+        default=0.94,
+        help="Log-normal sigma for the heat incapacitation threshold in "
+        "probabilistic mode (default: 0.94, reused from the gas value as a "
+        "starting assumption -- no independent literature support for heat)",
+    )
     return parser
 
 
@@ -207,6 +230,10 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "o2_rate_per_min",
         "fed_rate_per_min",
         "fed_cumulative",
+        "temperature_celsius",
+        "heat_fed_rate_per_min",
+        "heat_fed_cumulative",
+        "incapacitation_cause",
         "fic",
         "fic_speed_factor",
         "incapacitated",
