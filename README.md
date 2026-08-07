@@ -578,8 +578,10 @@ Scenario definitions are stored in [`assets/`](assets/).
 [`assets/README.md`](assets/README.md) indexes the folders and the file
 conventions; what each one proves is below.
 
-- **ISO-table21**: ISO 20414 corridor verification case, single agent, single
-  exit. Proves the smoke speed reduction law is applied correctly end to end:
+- **ISO-table21**: **ISO 20414:2020 Table 21** (Test 18, *reduced visibility vs
+  walking speed*) — corridor 2 m x 100 m, one occupant at 1,25 m/s, constant
+  extinction. See [the asset README](assets/ISO-table21/README.md) for the
+  clause-by-clause comparison, including the two places we deviate. Proves the smoke speed reduction law is applied correctly end to end:
   `test_iso_table21_constant_extinction_matches_expected_time_ratio` runs the
   scenario clear and then under a `ConstantExtinctionField` at five extinction
   coefficients (0.5, 1.0, 3.0, 7.5, 10.0 /m), asserting the ratio of evacuation
@@ -587,8 +589,13 @@ conventions; what each one proves is below.
   recorded `speed_factor` equals the expected one exactly. Doubles as the
   standard small fixture in `test_progress_callback.py`, `test_webapp.py` and
   `test_fed.py`, which use it for its size rather than its ISO provenance.
-- **ISO-table22**: ISO 20414 stationary benchmark, one agent with `v0` forced to
-  0 in a fixed gas concentration; config and geometry only, no deck. Proves the
+- **ISO-table22**: **ISO 20414:2020 Table 22** (Test 19, *occupant
+  incapacitation by fire/smoke*) — room 10 m x 10 m x 3 m, one occupant held
+  still by ISO's prescribed pre-evacuation time above 10 000 000 s. See
+  [the asset README](assets/ISO-table22/README.md). The gas field is stubbed, so
+  it verifies the accumulator, not the FDS coupling; the coupled four-case
+  version is [`iso_table22_coupled`](assets/iso_table22_coupled/README.md). One
+  agent with `v0` forced to 0 in a fixed gas concentration; config and geometry only, no deck. Proves the
   runtime FED accumulator agrees with the closed form:
   `test_iso_table22_stationary_runtime_matches_analytic_threshold_time` takes
   the analytic FED=1.0 time from `time_to_fed_threshold_s()` and asserts the
