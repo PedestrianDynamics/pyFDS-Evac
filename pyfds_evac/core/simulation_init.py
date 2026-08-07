@@ -1,18 +1,18 @@
+import importlib.util
 import json
 import math
 import random
-import zlib
-import pedpy
-from shapely.geometry import Point, Polygon
-from typing import Any, Dict, List, Tuple
-import jupedsim as jps
-import shapely
-from collections import defaultdict
-import numpy as np
-
-import importlib.util
 import subprocess
 import sys
+import zlib
+from collections import defaultdict
+from typing import Any, Dict, List, Tuple
+
+import jupedsim as jps
+import numpy as np
+import pedpy
+import shapely
+from shapely.geometry import Point, Polygon
 
 from .premovement_distributions import (
     PREMOVEMENT_PRESETS,
@@ -718,9 +718,9 @@ def _initialize_with_fallback(
     global_parameters=None,
 ) -> Tuple[Dict[str, Any], List[Tuple[float, float]], Dict[int, float], Dict[str, Any]]:
     """Fallback initialization logic"""
+    import numpy as np
     from shapely.geometry import Polygon
     from shapely.ops import unary_union
-    import numpy as np
 
     # print("Data:", data)
 

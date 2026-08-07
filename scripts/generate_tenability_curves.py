@@ -17,7 +17,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 # Frantzich-Nilsson defaults (Ronchi 2013 interpretation A3)
 ALPHA_K = 0.706
 BETA_K = -0.057

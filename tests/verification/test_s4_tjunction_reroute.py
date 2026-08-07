@@ -26,10 +26,6 @@ route evaluation entirely -- a verified limitation worth its own bug report).
 from __future__ import annotations
 
 import pytest
-
-from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
-from pyfds_evac.core.scenario import run_scenario
-
 from harness import (
     EXIT_LEFT,
     EXIT_RIGHT,
@@ -41,6 +37,9 @@ from harness import (
     t_junction_scenario,
     uniform,
 )
+
+from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
+from pyfds_evac.core.scenario import run_scenario
 
 REEVAL_INTERVAL_S = 5.0
 # Right-arm extinction: enough that the short smoky route costs more than the

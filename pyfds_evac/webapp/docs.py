@@ -6,9 +6,10 @@ Equation strings use $$ … $$ / $ … $; KaTeX auto-render handles them.
 """
 
 from __future__ import annotations
-from typing import Any
-from fasthtml.common import Button, Div, H1, NotStr, P, Span
 
+from typing import Any
+
+from fasthtml.common import H1, Button, Div, NotStr, P, Span
 
 # ── style tokens ──────────────────────────────────────────────────────────────
 _MONO = "font-family:'JetBrains Mono',monospace"

@@ -23,9 +23,6 @@ cannot pass.
 from __future__ import annotations
 
 import pytest
-
-from pyfds_evac.core.scenario import run_scenario
-
 from harness import (
     CorridorSpec,
     corridor_scenario,
@@ -34,6 +31,8 @@ from harness import (
     make_smoke_model,
     uniform,
 )
+
+from pyfds_evac.core.scenario import run_scenario
 
 # K0 = 2 /m: sub-lethal haze. Lund -> 0.839, Fridolf -> 0.429 (clear divergence).
 K0 = 2.0

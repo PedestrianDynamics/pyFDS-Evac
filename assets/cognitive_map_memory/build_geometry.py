@@ -50,9 +50,9 @@ Familiarity is ``discovery``; at ``full`` the map holds everything from t=0 and
 there is nothing to acquire.
 """
 
-from pathlib import Path
 import json
 import math
+from pathlib import Path
 
 from shapely.geometry import box
 

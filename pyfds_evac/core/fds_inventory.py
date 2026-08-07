@@ -1,7 +1,7 @@
 """Inspect which FDS quantities are available for smoke and FED models."""
 
-from dataclasses import dataclass
 import pathlib
+from dataclasses import dataclass
 
 try:
     from fdsreader import Simulation

@@ -48,9 +48,9 @@ Whether hop 1 also reveals the exits is a genuine open question about
 to record which happens rather than to assume three hops.
 """
 
-from pathlib import Path
 import json
 import math
+from pathlib import Path
 
 from shapely.geometry import box
 from shapely.ops import unary_union

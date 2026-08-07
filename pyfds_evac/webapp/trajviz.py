@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fasthtml.common import Div, H3, NotStr
+from fasthtml.common import H3, Div, NotStr
 
 from .plots import _PALETTE, _agent_exit_map
 

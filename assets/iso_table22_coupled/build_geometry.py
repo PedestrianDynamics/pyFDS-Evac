@@ -40,8 +40,8 @@ What this catches that the stubbed test cannot
     model wants volume fraction, or a mesh whose extent does not cover the agent.
 """
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from shapely.geometry import box
 

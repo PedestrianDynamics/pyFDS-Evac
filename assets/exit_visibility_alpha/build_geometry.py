@@ -38,8 +38,8 @@ viewing angle and distance only, never by smoke.  That keeps alpha the single
 independent variable.
 """
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from shapely.geometry import Point, box
 

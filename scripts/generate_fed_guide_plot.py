@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.core.fed import DefaultFedInputs, accumulate_default_fed
+from pyfds_evac.core.fed import DefaultFedInputs, accumulate_default_fed
 
 
 def _build_parser() -> argparse.ArgumentParser:
