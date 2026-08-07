@@ -80,10 +80,20 @@ def _run(case: str):
 
 @pytest.fixture(scope="module")
 def results():
-    outcomes = {case: _run(case) for case in CASES}
-    yield outcomes
-    for outcome in outcomes.values():
-        outcome.cleanup()
+    """Run all four cases, cleaning up even if one fails to start.
+
+    Built incrementally rather than in a comprehension: if ``_run`` raises on
+    case c, the comprehension never reaches ``yield`` and the temporary SQLite
+    files from a and b are never released.
+    """
+    outcomes: dict[str, object] = {}
+    try:
+        for case in CASES:
+            outcomes[case] = _run(case)
+        yield outcomes
+    finally:
+        for outcome in outcomes.values():
+            outcome.cleanup()
 
 
 def _history_interval(history) -> float:

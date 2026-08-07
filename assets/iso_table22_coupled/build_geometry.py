@@ -99,7 +99,14 @@ def threshold_time_s(case: str) -> float:
 
 
 def end_time_s(case: str) -> float:
-    """Long enough to observe the crossing, rounded to a whole slice dump."""
+    """15 % past the crossing, rounded up to a whole 50 s.
+
+    The rounding is cosmetic and deliberately *not* tied to ``DT_SLCF`` (500 s):
+    FDS writes a slice at ``T_END`` whatever the dump interval, and the field is
+    constant anyway, so there is nothing to gain from making the two divide.
+    The 15 % headroom is what matters -- the crossing has to land inside the
+    run, and ``build()`` refuses to write a deck where it does not.
+    """
     return math.ceil(threshold_time_s(case) * 1.15 / 50.0) * 50.0
 
 
