@@ -86,9 +86,13 @@ def load_slice_sampler(
     ----------
     quantity :
         The FDS slice quantity name, or a sequence of candidate names tried
-        in order (the first that matches wins).  A sequence lets callers cope
-        with decks that spell the same field differently, e.g.
-        ``("SOOT EXTINCTION COEFFICIENT", "EXTINCTION")``.
+        in order (the first that matches wins), for decks that spell the
+        same field differently.  Only list genuine synonyms: FDS's
+        ``'EXTINCTION'`` quantity, for example, is an unrelated 0/1/-1
+        combustion-suppression flag (User Guide Sec. 22.10.29), not a
+        spelling of ``'SOOT EXTINCTION COEFFICIENT'`` (the K [1/m] smoke
+        extinction coefficient, Sec. 22.10.5), and must never be used as a
+        fallback for it.
     simulation : optional
         A pre-loaded ``fdsreader.Simulation`` instance.  When provided the
         expensive directory parse is skipped.

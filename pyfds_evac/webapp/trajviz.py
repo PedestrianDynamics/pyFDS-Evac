@@ -28,10 +28,11 @@ _CARD = (
 _N_SAMPLES = 120
 
 
-# Extinction-slice quantity names, in preference order. FDS names the soot
-# extinction coefficient differently across cases ("SOOT EXTINCTION
-# COEFFICIENT" in newer decks, bare "EXTINCTION" in older ones).
-_EXTINCTION_QUANTITIES = ("SOOT EXTINCTION COEFFICIENT", "EXTINCTION")
+# The extinction-coefficient slice quantity. Not to be confused with FDS's
+# separate 'EXTINCTION' quantity, a 0/1/-1 combustion-suppression flag
+# (User Guide Sec. 22.10.29) that is not a smoke value and must never be
+# used as a fallback here.
+_EXTINCTION_QUANTITIES = ("SOOT EXTINCTION COEFFICIENT",)
 
 # Largest grid dimension shipped to the browser. The FDS slice is downsampled
 # to at most this many cells on its long axis; canvas image-smoothing blurs the

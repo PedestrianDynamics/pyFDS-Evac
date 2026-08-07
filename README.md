@@ -245,12 +245,18 @@ All new terms are fully tested with constant-exposure unit tests in
   an FDS input-authoring pitfall, not a pyFDS-Evac bug, but it produced the
   same symptom as the rate bug above (near-zero toxic gas readings) and is
   easy to reintroduce, so it's called out here.
-- **`load_slice_sampler` now accepts multiple candidate quantity names.**
-  Real FDS decks name the soot extinction slice `SOOT EXTINCTION
-  COEFFICIENT`; some older test decks in this repo used the bare alias
-  `EXTINCTION`. The smoke-speed model previously hardcoded the alias and
-  raised `IndexError` on decks using the standard name. It now tries a list
-  of candidates in order (`pyfds_evac/core/fds_sampling.py`).
+- **The smoke-speed model no longer falls back to FDS's `EXTINCTION`
+  quantity.** `EXTINCTION` and `SOOT EXTINCTION COEFFICIENT` are two
+  unrelated FDS slice quantities, not old/new spellings of the same field:
+  `EXTINCTION` is a 0/1/-1 combustion-suppression flag (FDS User Guide
+  Sec. 22.10.29), while the smoke extinction coefficient K [1/m] is
+  `EXTINCTION COEFFICIENT` (Sec. 22.10.5), recorded by FDS as `SOOT
+  EXTINCTION COEFFICIENT` for the default species. A case lacking the soot
+  slice was silently sampling the combustion flag instead and feeding 0/1/-1
+  into the smoke-speed model as if it were K. `load_slice_sampler` now
+  requires `SOOT EXTINCTION COEFFICIENT` and raises `IndexError` when it's
+  absent, instead of a quiet, meaningless fallback
+  (`pyfds_evac/core/fds_sampling.py`).
 
 ### Verification
 
