@@ -1,10 +1,11 @@
-&HEAD CHID='iso_table22_coupled',
-      TITLE='Sealed 4x4 m box, prescribed CO/CO2/O2 for stationary FED' /
+&HEAD CHID='iso_table22_a',
+      TITLE='ISO 20414 Table 22 room, case a: CO2 2.0%, CO 0.1%, O2 15.0%' /
 
-! No combustion: the mixture is prescribed, so it is uniform in space and
-! constant in time and the analytic FED crossing is exact.
-&MESH IJK=8,8,6, XB=0.00,4.00,0.00,4.00,0.0,3.00 /
-&TIME T_END=500 /
+! ISO 20414 Table 22: "A room with no fire source (10 m x 10 m x 3 m)."
+! The gas is prescribed, not burned, so it is uniform in space and constant in
+! time and the hand calculation of ISO's Step 2 is exact.
+&MESH IJK=20,20,6, XB=0.00,10.00,0.00,10.00,0.0,3.00 /
+&TIME T_END=1150 /
 &MISC TMPA=20.0 /
 
 ! Nitrogen background so O2 is not double-counted.
@@ -12,27 +13,25 @@
 &SPEC ID='OXYGEN'                             /
 &SPEC ID='CARBON MONOXIDE'                    /
 &SPEC ID='CARBON DIOXIDE'                     /
-! Declared only so the extinction slice has a species to report on; with no
-! combustion its mass fraction stays 0, so the box is optically clear.
+! Declared only so the extinction slice has a species to report on; SPEC_ID is
+! mandatory once species are declared explicitly, or FDS raises ERROR 1004.
+! With no combustion its mass fraction stays 0, so the room is optically clear.
 &SPEC ID='SOOT'                               /
 
-! Target volume fractions: CO = 0.1 %, CO2 = 5.0 %, O2 = 12.0 %.
-!
+! Case a -- all three terms.
 ! NOTE: all species MUST be in a single &INIT. A second &INIT with no XB resets
 ! the whole domain, overwriting the first and leaving everything at 0.
 &INIT SPEC_ID(1)='CARBON MONOXIDE',
       SPEC_ID(2)='CARBON DIOXIDE',
       SPEC_ID(3)='OXYGEN',
-      MASS_FRACTION(1)=9.56263E-04,
-      MASS_FRACTION(2)=7.51235E-02,
-      MASS_FRACTION(3)=1.31094E-01 /
+      MASS_FRACTION(1)=9.68172E-04,
+      MASS_FRACTION(2)=3.04236E-02,
+      MASS_FRACTION(3)=1.65908E-01 /
 
-! Slices pyFDS-Evac reads at breathing height. SPEC_ID is required on the
-! extinction slice once species are declared explicitly (FDS ERROR 1004).
 &SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
 &SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
 &SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
 &SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
-&DUMP DT_SLCF=10.0 /
+&DUMP DT_SLCF=500.0 /
 
 &TAIL /
