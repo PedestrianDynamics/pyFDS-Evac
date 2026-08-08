@@ -61,10 +61,12 @@ from .fed import (
 from .route_graph import (
     AgentRouteState,
     RerouteConfig,
+    RouteCostConfig,
     StageGraph,
     compute_eval_offset,
     evaluate_and_reroute,
     rank_routes,
+    reroute_agent,
     should_reevaluate,
 )
 from .smoke_speed import ConstantExtinctionField
@@ -920,6 +922,87 @@ def _extract_terminal_exit(
     return None
 
 
+def _assign_initial_exit(
+    agent_id: int,
+    wait_info: dict,
+    graph: "StageGraph",
+    cost_config,
+    vis_model,
+    time_s: float,
+    seed: int,
+    cognitive_maps: Dict[int, AgentCognitiveMap],
+    extinction_sampler,
+    fed_rate_sampler=None,
+    cached_segments: dict | None = None,
+) -> str | None:
+    """Point a freshly spawned agent at the best exit *it knows about*.
+
+    The agent arrives holding a target picked by geometry alone -- the exit
+    nearest its spawn point, chosen before it had a cognitive map. That is the
+    wrong question: an agent who only knows the front door should walk to the
+    front door however far it is. So the map is built first, then the exits are
+    ranked on the subgraph the agent actually knows, by the same composite cost
+    the reroute pass uses, and the cheapest one wins.
+
+    ``exit_counts`` is deliberately not passed. Ranking against a tally that the
+    very same loop is filling would let the queue term punish an exit for the
+    agents already assigned to it, scattering a crowd that -- by hypothesis --
+    all knows the same door. Congestion is a running condition, so it enters on
+    reroute, not at t=0.
+
+    Returns the exit the agent is now heading for, or None when it knows no
+    reachable exit, in which case the geometric assignment is left in place.
+    """
+    spawn_node = wait_info.get("current_origin") or wait_info.get(
+        "current_target_stage"
+    )
+    if spawn_node is None or spawn_node not in graph.nodes:
+        return None
+
+    cmap = cognitive_maps.get(agent_id)
+    if cmap is None:
+        cmap = init_cognitive_map(
+            spawn_node,
+            graph,
+            wait_info.get("familiarity", "full"),
+            vis_model,
+            time_s,
+            # Same stream as the reroute pass, so an agent that reaches the
+            # reroute loop first is given the identical map either way.
+            rng=random.Random(seed + agent_id * 7919),
+            entrance=wait_info.get("entrance"),
+        )
+        cognitive_maps[agent_id] = cmap
+
+    ranked = rank_routes(
+        graph,
+        spawn_node,
+        time_s,
+        0.0,
+        extinction_sampler,
+        fed_rate_sampler,
+        cost_config,
+        cached_segments=cached_segments,
+        cognitive_map=cmap,
+    )
+    ranked = [rc for rc in ranked if not rc.rejected] or ranked
+    if not ranked:
+        return None
+
+    best = ranked[0]
+    # Clear the geometric target so reroute_agent anchors on the spawn node and
+    # writes the whole path, rather than treating the old exit as a waypoint.
+    previous_stage = wait_info.get("current_target_stage")
+    wait_info["current_target_stage"] = None
+    reroute_agent(wait_info, list(best.path), wait_info.get("stage_configs", {}))
+    if wait_info.get("current_target_stage") is None:
+        # Nothing was applied, so ``target`` still points into the geometric
+        # exit's polygon; keep that assignment whole rather than half-updating.
+        wait_info["current_target_stage"] = previous_stage
+        return None
+    return best.exit_id
+
+
 def _migrate_journeys_v2(data: Dict[str, Any]) -> None:
     """Backfill legacy ``journeys``/``transitions`` from the editor's ``journeys_v2``.
 
@@ -1163,7 +1246,10 @@ def run_scenario(
         reroute_debug_printed = False
         reroute_debug_samples = 0
         _fed_rate_adapter = None
-        if reroute_config is not None and direct_steering_info:
+        # The graph is built whenever there are stages to walk between, not only
+        # when rerouting is on: the initial exit choice is ranked on it too, and
+        # that choice is made in every run.
+        if direct_steering_info:
             stage_graph = StageGraph.from_scenario(
                 direct_steering_info,
                 scenario.raw.get("transitions", []),
@@ -1171,14 +1257,22 @@ def run_scenario(
                 walkable_polygon=scenario.walkable_polygon,
             )
             route_segment_cache = {}
-            _fed_rate_adapter = _FedRateAdapter(fed_model) if fed_model else None
-            print(
-                "Reroute debug: "
-                f"nodes={len(stage_graph.nodes)} "
-                f"edges={sum(len(edges) for edges in stage_graph.edges.values())} "
-                f"direct_steering={len(direct_steering_info)} "
-                f"wait_info={len(agent_wait_info)}"
+            # Not every FED model can be sampled ahead of the agent -- the
+            # constant-input ones only know the dose here and now -- and route
+            # costs are the one caller that needs the spatial rate.
+            _fed_rate_adapter = (
+                _FedRateAdapter(fed_model)
+                if hasattr(fed_model, "sample_rate")
+                else None
             )
+            if reroute_config is not None:
+                print(
+                    "Reroute debug: "
+                    f"nodes={len(stage_graph.nodes)} "
+                    f"edges={sum(len(edges) for edges in stage_graph.edges.values())} "
+                    f"direct_steering={len(direct_steering_info)} "
+                    f"wait_info={len(agent_wait_info)}"
+                )
         # Pre-compute familiarity per distribution index. The value may be
         # "full", "discovery", or a probability in [0, 1] that each exit is
         # already known -- a real crowd is a gradient, not two camps.
@@ -1192,6 +1286,69 @@ def run_scenario(
             d.get("parameters", {}).get("entrance")
             for d in scenario.raw.get("distributions", {}).values()
         ]
+        # Weights for the opening choice. With rerouting on these are the same
+        # weights the reroute pass uses, so turning rerouting off changes when
+        # routes are re-ranked, not how they are scored.
+        initial_cost_config = (
+            reroute_config.cost_config
+            if reroute_config is not None
+            else RouteCostConfig.from_routing_params(scenario.raw.get("routing"))
+        )
+
+        def _initial_exit_choice(
+            agent_id: int, wait_info: dict, cached_segments: dict | None = None
+        ) -> str | None:
+            """Re-target one just-spawned agent onto the best exit it knows.
+
+            *cached_segments* is only safe to share between agents ranked at the
+            same instant, since segment costs depend on the smoke field at that
+            time; flow-spawned agents therefore pass nothing.
+            """
+            if stage_graph is None or wait_info.get("mode") != "path":
+                return None
+            spawn_time = simulation.elapsed_time()
+            chosen = _assign_initial_exit(
+                agent_id,
+                wait_info,
+                stage_graph,
+                initial_cost_config,
+                vis_model,
+                spawn_time,
+                seed,
+                cognitive_maps,
+                extinction_sampler=(
+                    smoke_speed_model.field
+                    if smoke_speed_model is not None
+                    else _ZERO_EXTINCTION
+                ),
+                fed_rate_sampler=_fed_rate_adapter,
+                cached_segments=cached_segments,
+            )
+            if chosen is not None and reroute_config is not None:
+                # This *was* the agent's first route evaluation, so record it as
+                # one. Otherwise the reroute pass fires its own first evaluation
+                # in the same timestep, differing only in that it now sees an
+                # exit_counts tally built from these very assignments -- and the
+                # queue term promptly scatters a crowd that, by hypothesis, all
+                # knows the same door. Congestion should redirect people once it
+                # exists, not before anyone has taken a step.
+                agent_route_state[agent_id] = AgentRouteState(
+                    current_exit=chosen,
+                    last_eval_time_s=spawn_time,
+                    eval_offset_s=compute_eval_offset(
+                        agent_id, reroute_config.reevaluation_interval_s
+                    ),
+                )
+            return chosen
+
+        # Every agent placed at t=0 arrived holding a geometrically nearest exit.
+        # Re-decide it now that the graph exists, before exit_counts is seeded
+        # from those assignments -- seeding first would tally the exits nobody
+        # actually chose.
+        _initial_segment_cache: dict = {}
+        for _agent_id_init, _wi in agent_wait_info.items():
+            _initial_exit_choice(_agent_id_init, _wi, _initial_segment_cache)
+
         exit_counts: dict[str, int] = {}
         if reroute_config is not None and stage_graph is not None:
             # Initialise all exits to zero.
@@ -1489,6 +1646,7 @@ def run_scenario(
                                             if _dist_idx < len(dist_entrance)
                                             else None
                                         )
+                                        _initial_exit_choice(agent_id, path_state)
                                         if path_state and stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
                                                 path_state, stage_graph.nodes
@@ -1497,7 +1655,11 @@ def run_scenario(
                                                 exit_counts[_spawn_exit] = (
                                                     exit_counts.get(_spawn_exit, 0) + 1
                                                 )
-                                                if reroute_config is not None:
+                                                if (
+                                                    reroute_config is not None
+                                                    and agent_id
+                                                    not in agent_route_state
+                                                ):
                                                     agent_route_state[agent_id] = (
                                                         AgentRouteState(
                                                             eval_offset_s=compute_eval_offset(
@@ -1581,6 +1743,9 @@ def run_scenario(
                                             < len(dist_entrance)
                                             else None,
                                         }
+                                        _initial_exit_choice(
+                                            agent_id, agent_wait_info[agent_id]
+                                        )
                                         if stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
                                                 agent_wait_info[agent_id],
@@ -1590,7 +1755,11 @@ def run_scenario(
                                                 exit_counts[_spawn_exit] = (
                                                     exit_counts.get(_spawn_exit, 0) + 1
                                                 )
-                                                if reroute_config is not None:
+                                                if (
+                                                    reroute_config is not None
+                                                    and agent_id
+                                                    not in agent_route_state
+                                                ):
                                                     agent_route_state[agent_id] = (
                                                         AgentRouteState(
                                                             eval_offset_s=compute_eval_offset(

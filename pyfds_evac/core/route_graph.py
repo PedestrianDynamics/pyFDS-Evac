@@ -573,6 +573,32 @@ class RouteCostConfig:
     min_speed_factor: float = 0.1
     default_exit_capacity: float = 1.3
 
+    @classmethod
+    def from_routing_params(cls, routing: dict | None) -> RouteCostConfig:
+        """Build the cost model from a scenario's ``routing`` block.
+
+        Route costs are needed for the initial exit assignment whether or not
+        rerouting is enabled, so this lives here rather than inside the reroute
+        configuration -- otherwise a run with rerouting off would rank the
+        opening choice under different weights than the same run with it on.
+        """
+        routing = routing or {}
+        return cls(
+            w_smoke=routing.get("w_smoke", 1.0),
+            w_fed=routing.get("w_fed", 10.0),
+            w_queue=routing.get("w_queue", 1.0),
+            fed_rejection_threshold=routing.get("fed_rejection_threshold", 1.0),
+            visibility_extinction_threshold=routing.get(
+                "visibility_extinction_threshold", 0.5
+            ),
+            sampling_step_m=routing.get("sampling_step_m", 2.0),
+            base_speed_m_per_s=routing.get("base_speed_m_per_s", 1.3),
+            alpha=routing.get("alpha", 0.706),
+            beta=routing.get("beta", -0.057),
+            min_speed_factor=routing.get("min_speed_factor", 0.1),
+            default_exit_capacity=routing.get("default_exit_capacity", 1.3),
+        )
+
 
 @dataclass(frozen=True)
 class SegmentCost:

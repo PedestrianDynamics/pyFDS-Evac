@@ -103,22 +103,7 @@ def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
     """Build the rerouting configuration from scenario routing parameters."""
     if not opts.enable_rerouting:
         return None
-    routing_params = scenario.raw.get("routing", {})
-    cost_config = RouteCostConfig(
-        w_smoke=routing_params.get("w_smoke", 1.0),
-        w_fed=routing_params.get("w_fed", 10.0),
-        w_queue=routing_params.get("w_queue", 1.0),
-        fed_rejection_threshold=routing_params.get("fed_rejection_threshold", 1.0),
-        visibility_extinction_threshold=routing_params.get(
-            "visibility_extinction_threshold", 0.5
-        ),
-        sampling_step_m=routing_params.get("sampling_step_m", 2.0),
-        base_speed_m_per_s=routing_params.get("base_speed_m_per_s", 1.3),
-        alpha=routing_params.get("alpha", 0.706),
-        beta=routing_params.get("beta", -0.057),
-        min_speed_factor=routing_params.get("min_speed_factor", 0.1),
-        default_exit_capacity=routing_params.get("default_exit_capacity", 1.3),
-    )
+    cost_config = RouteCostConfig.from_routing_params(scenario.raw.get("routing", {}))
     log("Configuring rerouting.")
     return RerouteConfig(
         reevaluation_interval_s=opts.reroute_interval,

@@ -444,24 +444,36 @@ Set per distribution group in the scenario config:
 }
 ```
 
-`discovery` only means something when a visibility model is present, which
-requires `--vis-cache` (and therefore `--fds-dir`). Without it every adjacent
-node is added to the map unconditionally and a `discovery` agent behaves like a
-`full` one.
+Without a visibility model — which requires `--vis-cache`, and therefore
+`--fds-dir` — the perception step adds nothing, so a `discovery` agent starts
+out knowing only its spawn node, its `entrance`, and whatever the familiarity
+draw gave it. Graph adjacency is not used as a stand-in for line of sight:
+with no `transitions` declared the graph is auto-wired from every spawn area to
+every unblocked stage, so treating a neighbour as seen would hand most agents
+most of the building's exits at t=0 and make `familiarity` inert.
 
-The tier binds whether or not the scenario defines a journey. In the no-journey
-mode — agents auto-assigned to their nearest exit — each agent is rooted at its
-spawn area, and rerouting ranks every exit reachable from there. Rooting it at
-the assigned exit instead would collapse the ranking to that one exit at zero
-cost, which is what issue #61 did until it was fixed;
+The tier binds whether or not the scenario defines a journey, and it binds from
+the **first step**: the agent's cognitive map is built at spawn and the exits it
+knows are ranked by the same composite cost the reroute pass uses, so an agent
+who knows only the front door walks to the front door however far it is. Until
+issue #86 was fixed the opening target was the geometrically nearest exit,
+picked before any map existed, and `familiarity` could only take effect on the
+first reroute. `tests/test_initial_exit_from_cognitive_map.py` pins the
+contract with rerouting off, where the opening choice is the only choice.
+
+Each agent is rooted at its spawn area, and routing ranks every exit reachable
+from there. Rooting it at the assigned exit instead would collapse the ranking
+to that one exit at zero cost, which is what issue #61 did until it was fixed;
 `tests/test_no_journey_routing_origin.py` pins the contract.
 
 Default when the key is absent: `"full"` (backward compatible).
 
 **Discovery expansion rules:**
 
-1. **At spawn** — agent learns its spawn node plus any adjacent node whose
-   sign is currently visible from the spawn centroid.
+1. **At spawn** — agent learns its spawn node, its `entrance` if one is set,
+   each exit drawn as known by a scalar `familiarity`, and any adjacent node
+   whose sign is currently visible from the spawn centroid. It then picks its
+   first exit by ranking that map, not by geometry.
 2. **On arrival** — when an agent physically reaches a node, all immediate
    neighbours are added to the cognitive map unconditionally.
 3. **At reevaluation** — adjacent nodes whose sign is visible from the
