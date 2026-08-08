@@ -58,14 +58,17 @@ from shapely.ops import unary_union
 #
 # The consequence, stated so it is not discovered later: agents may cross the
 # platform edge at any point, not only at the stairs the plan shows.
+# Matched case-insensitively, like OPENINGS: this deck writes both "CARPET"
+# (10 obstructions) and "carpet" (9), and a case-sensitive test silently blocks
+# whichever casing is not listed.
 HORIZONTAL_FINISHES = (
-    "A-FLOR",
-    "A-CEIL",
-    "A-STRS-TRED",
-    "A-RISR",
+    "a-flor",
+    "a-ceil",
+    "a-strs-tred",
+    "a-risr",
     "carpet",
-    "A-PLAT-RIM",
-    "A-HRAL",
+    "a-plat-rim",
+    "a-hral",
 )
 # Door leaves are openings, not walls -- see the module docstring. Matched on a
 # *substring*, case-insensitively, because a hand-edited deck names doors both
@@ -127,7 +130,7 @@ def blocks(name: str) -> bool:
     lowered = name.lower()
     if any(p in lowered for p in OPENINGS):
         return False
-    return not any(p in name for p in HORIZONTAL_FINISHES)
+    return not any(p in lowered for p in HORIZONTAL_FINISHES)
 
 
 def footprint(x0: float, x1: float, y0: float, y1: float, half_cell: float):
