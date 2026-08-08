@@ -112,10 +112,16 @@ def sample_wait_time(stage_cfg, base_seed, step_index):
     return max(0.0, mean_wait)
 
 
+# Every model in scenario._MODEL_BUILDERS must appear here: an unmapped model
+# reads back no speed and silently ignores the smoke and FIC factors, so agents
+# walk at v0 through any hazard. tests/test_model_speed_attrs.py enforces this.
 _MODEL_SPEED_ATTRS: dict[str, str] = {
-    "CollisionFreeSpeedModelState": "v0",
-    "CollisionFreeSpeedModelV2State": "v0",
-    "SocialForceModelState": "desiredSpeed",
+    "CollisionFreeSpeedModelState": "desired_speed",
+    "CollisionFreeSpeedModelV2State": "desired_speed",
+    "SocialForceModelState": "desired_speed",
+    "AnticipationVelocityModelState": "desired_speed",
+    "GeneralizedCentrifugalForceModelState": "desired_speed",
+    "WarpDriverModelState": "desired_speed",
 }
 
 

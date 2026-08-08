@@ -11,7 +11,7 @@ from pyfds_evac.core.direct_steering_runtime import (
 
 class CollisionFreeSpeedModelState:
     def __init__(self, desired_speed: float):
-        self.v0 = float(desired_speed)
+        self.desired_speed = float(desired_speed)
 
 
 class _FakeAgent:
@@ -38,7 +38,7 @@ def test_checkpoint_speed_combines_with_smoke_factor_and_restores_to_smoke_only(
         1.0,
     )
 
-    assert agent.model.v0 == 0.5
+    assert agent.model.desired_speed == 0.5
 
     update_checkpoint_speed(
         agent_speed_state,
@@ -51,7 +51,7 @@ def test_checkpoint_speed_combines_with_smoke_factor_and_restores_to_smoke_only(
         5.0,
     )
 
-    assert agent.model.v0 == 1.0
+    assert agent.model.desired_speed == 1.0
 
 
 class TestFicDoesNotCompound:
@@ -72,30 +72,30 @@ class TestFicDoesNotCompound:
         state = {}
         for _ in range(10):
             set_agent_fic_factor(state, 1, agent, 0.65)
-        assert agent.model.v0 == pytest.approx(1.3 * 0.65)
+        assert agent.model.desired_speed == pytest.approx(1.3 * 0.65)
 
     def test_the_factor_is_measured_from_the_baseline_not_the_current_speed(self):
         """A weaker irritant must speed the agent up again, not slow it further."""
         agent = _FakeAgent(1.3)
         state = {}
         set_agent_fic_factor(state, 1, agent, 0.5)
-        assert agent.model.v0 == pytest.approx(0.65)
+        assert agent.model.desired_speed == pytest.approx(0.65)
         set_agent_fic_factor(state, 1, agent, 0.9)
-        assert agent.model.v0 == pytest.approx(1.3 * 0.9)
+        assert agent.model.desired_speed == pytest.approx(1.3 * 0.9)
 
     def test_leaving_the_irritant_restores_full_speed(self):
         agent = _FakeAgent(1.3)
         state = {}
         set_agent_fic_factor(state, 1, agent, 0.65)
         set_agent_fic_factor(state, 1, agent, 1.0)
-        assert agent.model.v0 == pytest.approx(1.3)
+        assert agent.model.desired_speed == pytest.approx(1.3)
 
     def test_it_composes_with_smoke_rather_than_replacing_it(self):
         agent = _FakeAgent(2.0)
         state = {}
         set_agent_smoke_factor(state, 1, agent, 0.5)
         set_agent_fic_factor(state, 1, agent, 0.6)
-        assert agent.model.v0 == pytest.approx(2.0 * 0.5 * 0.6)
+        assert agent.model.desired_speed == pytest.approx(2.0 * 0.5 * 0.6)
 
     def test_a_checkpoint_zone_multiplies_all_three(self):
         agent = _FakeAgent(2.0)
@@ -112,7 +112,7 @@ class TestFicDoesNotCompound:
             1.0,
             1.0,
         )
-        assert agent.model.v0 == pytest.approx(2.0 * 0.5 * 0.6 * 0.5)
+        assert agent.model.desired_speed == pytest.approx(2.0 * 0.5 * 0.6 * 0.5)
 
     def test_restoring_outside_a_checkpoint_keeps_the_irritant_penalty(self):
         """Leaving a slow zone must not also clear an irritant still present."""
@@ -130,4 +130,4 @@ class TestFicDoesNotCompound:
             1.0,
         )
         restore_agent_speed(state, 1, agent)
-        assert agent.model.v0 == pytest.approx(2.0 * 0.6)
+        assert agent.model.desired_speed == pytest.approx(2.0 * 0.6)

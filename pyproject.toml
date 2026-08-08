@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Fire Dynamics Simulator (FDS) evacuation modeling with visibility analysis"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.13"
 authors = [{ name = "Mohcine Chraibi", email = "m.chraibi@fz-juelich.de" }]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "jupedsim",
+    "jupedsim>=1.4.2",
     "pedpy",
     "fdsreader",
     "plotly",
