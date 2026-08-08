@@ -91,6 +91,11 @@ def create_agent_parameters(
             {**base_params, "v0": desired_speed},
         )
 
+    elif model_type == "WarpDriverModel":
+        return jps.WarpDriverModelAgentParameters(
+            **base_params, desired_speed=params.get("v0", 1.2)
+        )
+
     elif model_type == "CollisionFreeSpeedModelV2":
         desired_speed = params.get("v0", 1.2)
         v2_params = base_params.copy()

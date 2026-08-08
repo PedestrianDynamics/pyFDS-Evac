@@ -93,10 +93,9 @@ _MODEL_BUILDERS = {
         strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
         range_neighbor_repulsion=p.get("range_neighbor_repulsion", 0.1),
     ),
-    "CollisionFreeSpeedModelV2": lambda p: jps.CollisionFreeSpeedModelV2(
-        strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
-        range_neighbor_repulsion=p.get("range_neighbor_repulsion", 0.1),
-    ),
+    # V2 carries the repulsion parameters per agent, not on the model, so its
+    # constructor takes nothing; create_agent_parameters supplies them.
+    "CollisionFreeSpeedModelV2": lambda p: jps.CollisionFreeSpeedModelV2(),
     "AnticipationVelocityModel": lambda p: jps.AnticipationVelocityModel(
         # strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
         # range_neighbor_repulsion=p.get("range_neighbor_repulsion", 0.1),
@@ -117,6 +116,14 @@ _MODEL_BUILDERS = {
     "SocialForceModel": lambda p: jps.SocialForceModel(
         bodyForce=p.get("agent_strength", 2000),
         friction=p.get("agent_range", 0.08),
+    ),
+    "WarpDriverModel": lambda p: jps.WarpDriverModel(
+        time_horizon=p.get("time_horizon", 2.0),
+        step_size=p.get("step_size", 0.5),
+        sigma=p.get("sigma", 0.3),
+        time_uncertainty=p.get("time_uncertainty", 0.5),
+        velocity_uncertainty_x=p.get("velocity_uncertainty_x", 0.2),
+        velocity_uncertainty_y=p.get("velocity_uncertainty_y", 0.2),
     ),
 }
 
@@ -143,6 +150,7 @@ _AGENT_PARAM_BUILDERS = {
     "AnticipationVelocityModel": lambda **kw: (
         jps.AnticipationVelocityModelAgentParameters(**kw)
     ),
+    "WarpDriverModel": lambda **kw: jps.WarpDriverModelAgentParameters(**kw),
 }
 
 
