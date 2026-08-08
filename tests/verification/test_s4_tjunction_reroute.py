@@ -11,8 +11,14 @@ Arms:
   reroutes -- ``route_switches == 0``.
 - **null-field control** (smoke model present, ``K = 0``): exercises the same
   route-cost-with-extinction wiring with a null field; still no switches.
-- **treatment** (smoke in the right arm): every agent switches from the right
+- **treatment** (smoke in the right arm): most agents switch from the right
   (smoky) exit to the left (clear) one, and never the reverse.
+
+The smoke starts at ``smoke_onset_s``, once the whole population is inside and
+still walking. That delay is what makes this a test of *re*-routing: the opening
+exit choice is itself ranked on the smoke field, so an agent spawning into smoke
+that is already there simply never picks the smoky route and has nothing to
+switch away from.
 
 Assertions are aggregate (counts, directions, earliest-switch latency), never
 per-agent or trajectory-level -- the coupled run is not bit-reproducible (see
@@ -30,6 +36,7 @@ from harness import (
     EXIT_LEFT,
     EXIT_RIGHT,
     TJunctionSpec,
+    after,
     make_smoke_model,
     region_x,
     route_switch_count,
@@ -50,12 +57,18 @@ SMOKE_K = 6.0
 def _reroute_config() -> RerouteConfig:
     return RerouteConfig(
         reevaluation_interval_s=REEVAL_INTERVAL_S,
-        cost_config=RouteCostConfig(w_smoke=5.0, w_fed=10.0),
+        # w_queue = 0: S4 isolates the *smoke* term. The population now enters
+        # over a short window so that everyone is inside before the fire starts,
+        # and at that density the queue term alone would shuffle agents between
+        # exits -- real behaviour, but not what this scenario is measuring.
+        cost_config=RouteCostConfig(w_smoke=5.0, w_fed=10.0, w_queue=0.0),
     )
 
 
 def _right_arm_smoke(spec: TJunctionSpec):
-    return make_smoke_model(region_x(SMOKE_K, x_min=spec.right_arm_x_min))
+    return make_smoke_model(
+        after(spec.smoke_onset_s, region_x(SMOKE_K, x_min=spec.right_arm_x_min))
+    )
 
 
 def test_control_no_smoke_no_reroute():
@@ -113,12 +126,12 @@ def test_smoke_forces_switch_to_clear_exit():
 def test_reroute_latency_within_interval():
     """Every reroute lands within one interval of that agent's spawn (B5.2).
 
-    Smoke is static from t=0, so an agent encounters the smoky cost as soon as it
-    spawns; it must reroute by its next reevaluation.  Agents spawn over
-    ``flow_end_time_s``, so the *last* reroute must occur within one interval of
-    the last spawn -- bounding the maximum, not just the minimum (a check on
-    ``min`` would pass even if latency blew up, since staggered eval offsets
-    guarantee some agent always switches early).
+    Everyone is inside and walking before the smoke appears at ``smoke_onset_s``,
+    so that is the instant the smoky cost becomes visible and each agent must
+    reroute by its next reevaluation.  The *last* reroute must therefore occur
+    within one interval of onset -- bounding the maximum, not just the minimum
+    (a check on ``min`` would pass even if latency blew up, since staggered eval
+    offsets guarantee some agent always switches early).
     """
     spec = TJunctionSpec(seed=42)
     result = run_scenario(
@@ -130,17 +143,24 @@ def test_reroute_latency_within_interval():
     try:
         times = [s["time_s"] for s in result.route_history or []]
         assert times, "expected at least one reroute"
-        assert max(times) <= spec.flow_end_time_s + REEVAL_INTERVAL_S
+        assert max(times) <= spec.smoke_onset_s + REEVAL_INTERVAL_S
     finally:
         result.cleanup()
 
 
 @pytest.mark.slow
-def test_switch_count_reproducible_under_fixed_seed():
-    """Aggregate determinism: same seed -> same number of reroutes."""
+def test_switch_outcome_stable_under_fixed_seed():
+    """Same seed -> same qualitative outcome: majority switch, all right->left.
+
+    Not the same *count*. The reroute now happens mid-walk rather than at spawn,
+    and by then agents have jostled each other into positions that vary run to
+    run, so which of them crosses the cost threshold on which evaluation tick
+    varies too. Coupled runs are not bit-reproducible under a fixed seed (see
+    project memory); the invariant that holds is the direction and the majority.
+    """
     spec = TJunctionSpec(seed=42)
 
-    def _count():
+    def _outcome():
         result = run_scenario(
             t_junction_scenario(spec),
             seed=spec.seed,
@@ -148,8 +168,11 @@ def test_switch_count_reproducible_under_fixed_seed():
             reroute_config=_reroute_config(),
         )
         try:
-            return route_switch_count(result)
+            return route_switch_count(result), set(route_switch_directions(result))
         finally:
             result.cleanup()
 
-    assert _count() == _count()
+    first_count, first_dirs = _outcome()
+    second_count, second_dirs = _outcome()
+    assert first_dirs == second_dirs == {(EXIT_RIGHT, EXIT_LEFT)}
+    assert min(first_count, second_count) >= spec.num_agents // 2
