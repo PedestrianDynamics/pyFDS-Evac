@@ -350,6 +350,10 @@ The routing system implements smoke-aware path planning with dynamic rerouting:
   is provided; otherwise only smoke drives ranking)
 - **Dynamic rerouting**: Agents recompute routes at configurable intervals,
   selecting lower-exposure paths when available
+- **Cognitive-map history**: `run_scenario(collect_cognitive_map_history=True)`
+  records what each agent knows, every time it changes — see
+  [docs/testing-familiarity.md](docs/testing-familiarity.md) and
+  `scripts/animate_cognitive_map.py`
 - **Congestion-aware routing**: Optional exit-congestion term (`w_queue`)
   balances load across exits based on current agent counts and capacities
 - **Throughput throttling**: Optional exit flux limiting via

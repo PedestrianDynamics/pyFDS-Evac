@@ -196,3 +196,36 @@ passes with no regressions.
   choice is deterministic (lexicographically-first checkpoint ID), not
   randomized per agent — every discovery agent facing an identical tie makes
   the identical choice.
+
+## Observing the map from outside: `collect_cognitive_map_history`
+
+The cognitive map is built and grown inside `run_scenario`, so until recently
+the only way to inspect it was to re-implement the expansion against a graph
+built the same way — which tests the re-implementation, not the engine's call
+sites, and those call sites are where the bugs above actually lived.
+
+`run_scenario(..., collect_cognitive_map_history=True)` returns
+`ScenarioResult.cognitive_map_history`: one row each time an agent's map
+changes, with `time_s`, `agent_id`, `familiarity`, `known_nodes` and
+`known_edges`. Maps only ever grow, so recording changes rather than every
+timestep keeps a crowd-scale run cheap while losing nothing.
+
+```python
+result = run_scenario(scenario, seed=420, vis_model=vis,
+                      collect_cognitive_map_history=True)
+for event in result.cognitive_map_history:
+    print(event["time_s"], len(event["known_nodes"]))
+```
+
+`scripts/animate_cognitive_map.py` turns that history into a movie of one agent
+walking with its known nodes highlighted, and authors inward-facing sign angles
+for a deck that has none.
+
+**Perception needs a visibility model.** With `vis_model=None`,
+`cognitive_map._expand_visible` returns immediately, so a discovery agent's map
+grows only when it physically arrives somewhere (`expand_on_arrival`). On a deck
+where the agent walks straight from spawn to an exit, that means it never grows
+at all — see the "blind agent" issue in the tracker. A clear-air stand-in
+(line of sight against the walkable polygon plus the sign's readable half-plane)
+is enough to exercise the wiring without FDS output; the test suite and the
+animation script each carry one.

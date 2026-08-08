@@ -819,6 +819,7 @@ class ScenarioResult:
     fed_history: Optional[list[dict[str, Any]]] = None
     route_history: Optional[list[dict[str, Any]]] = None
     route_cost_history: Optional[list[dict[str, Any]]] = None
+    cognitive_map_history: Optional[list[dict[str, Any]]] = None
 
     @property
     def success(self) -> bool:
@@ -1065,6 +1066,7 @@ def run_scenario(
     tenability_config=None,
     reroute_config: Optional[RerouteConfig] = None,
     collect_route_cost_history: bool = False,
+    collect_cognitive_map_history: bool = False,
     vis_model=None,
     progress_callback: Optional[ProgressCallback] = None,
 ) -> ScenarioResult:
@@ -1158,6 +1160,10 @@ def run_scenario(
         route_cost_history: list[dict[str, Any]] = []
         agent_route_state: Dict[int, AgentRouteState] = {}
         cognitive_maps: Dict[int, AgentCognitiveMap] = {}
+        cognitive_map_history: list[dict[str, Any]] = []
+        # Snapshot of what each agent knew, so a later frame can be compared
+        # against the previous one and only changes recorded.
+        _cmap_seen: Dict[int, int] = {}
         route_segment_cache: dict[tuple[str, str], Any] | None = None
         stage_graph: StageGraph | None = None
         reroute_debug_printed = False
@@ -2217,6 +2223,25 @@ def run_scenario(
                                 )
                         continue
 
+            if collect_cognitive_map_history:
+                # Cognitive maps only ever grow, so the pair of sizes is a
+                # faithful change detector and lets a long run record one row
+                # per learning event instead of one per agent per timestep.
+                for _aid, _map in cognitive_maps.items():
+                    _size = len(_map.known_nodes) * 100003 + len(_map.known_edges)
+                    if _cmap_seen.get(_aid) == _size:
+                        continue
+                    _cmap_seen[_aid] = _size
+                    cognitive_map_history.append(
+                        {
+                            "time_s": current_time,
+                            "agent_id": _aid,
+                            "familiarity": _map.familiarity,
+                            "known_nodes": sorted(_map.known_nodes),
+                            "known_edges": sorted(_map.known_edges),
+                        }
+                    )
+
             simulation.iterate()
 
         final_total_agents = initial_agent_count
@@ -2264,6 +2289,8 @@ def run_scenario(
             metrics["route_switches"] = len(route_history)
         if reroute_config is not None and collect_route_cost_history:
             metrics["route_cost_samples"] = len(route_cost_history)
+        if collect_cognitive_map_history:
+            metrics["cognitive_map_events"] = len(cognitive_map_history)
 
         return ScenarioResult(
             metrics=metrics,
@@ -2275,6 +2302,9 @@ def run_scenario(
                 route_cost_history
                 if reroute_config is not None and collect_route_cost_history
                 else None
+            ),
+            cognitive_map_history=(
+                cognitive_map_history if collect_cognitive_map_history else None
             ),
         )
     finally:
