@@ -151,7 +151,7 @@ from pyfds_evac.core.route_graph import RouteCostConfig
 config = RouteCostConfig(
     w_smoke=1.0,                          # smoke cost weight
     w_fed=10.0,                           # FED cost weight
-    w_queue=1.0,                          # queueing cost weight (0 disables)
+    w_queue=0.03,                         # queueing cost weight (0 disables)
     fed_rejection_threshold=1.0,          # reject if FED_max exceeds
     visibility_extinction_threshold=0.5,  # K threshold for visibility
     sampling_step_m=2.0,                  # ray sample spacing
@@ -189,6 +189,38 @@ that cannot change which path is selected to a given exit.
 
 Setting `w_queue = 0` disables congestion-aware routing entirely
 (backward compatible with existing behaviour).
+
+#### Provenance of the queue weight
+
+Calibrated, not conventional. `scripts/sweep_queue_weight.py` sweeps the
+weight on `assets/station_fahy` with rerouting on, three seeds per
+point, and scores each run with that asset's own `validate.py`. The
+front-door share falls monotonically with `w_queue`:
+
+| `w_queue` | front-door share | mean row deviation |
+|---|---|---|
+| 0 | 65.9 % | 18.2 % |
+| **0.03** | **53.3 %** | **17.9 %** |
+| 0.05 | 48.4 % | 18.0 % |
+| 0.1 | 44.9 % | 18.9 % |
+| 1.0 | 22.9 % | 21.8 % |
+
+Fahy, Proulx & Flynn measured 52.9 % of door users at the front door,
+so `w_queue = 0.03` reproduces the Station's aggregate exit split and
+the previous default of `1.0` did not. The mean per-row deviation is
+also lower, but it is nearly flat across 0.02–0.05 (17.1–18.0 %) while
+the front-door share swings 58.1 % → 48.4 %, so the row structure
+confirms that low weights beat 1.0 without discriminating 0.03 within
+that band. The value is fixed by the aggregate target alone.
+
+**This calibration holds at one crowd size.** The term is
+`w_queue * v0 * N / c` with `N` a global tally, so its magnitude
+relative to the path-length differences it competes with grows linearly
+with the population — 0.03 was fitted at the Station's 333 agents, and
+a scenario an order of magnitude smaller wants a correspondingly larger
+weight to express the same preference. That scale dependence is a
+property of the global-`N` form rather than of this number; a queue an
+agent could actually perceive would not have it.
 
 Exit capacity can be configured per exit in the scenario config:
 
