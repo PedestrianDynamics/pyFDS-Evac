@@ -124,7 +124,7 @@ def test_smoke_forces_switch_to_clear_exit():
 
 
 def test_reroute_latency_within_interval():
-    """Every reroute lands within one interval of that agent's spawn (B5.2).
+    """Every reroute lands within one interval of smoke onset (B5.2).
 
     Everyone is inside and walking before the smoke appears at ``smoke_onset_s``,
     so that is the instant the smoky cost becomes visible and each agent must

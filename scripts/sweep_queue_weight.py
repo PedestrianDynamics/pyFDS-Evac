@@ -41,7 +41,11 @@ sys.path.insert(0, str(ASSET))
 import fahy_table2 as F  # noqa: E402
 import validate as V  # noqa: E402
 
-DEFAULT_WEIGHTS = (0.0, 0.02, 0.05, 0.1, 0.2, 0.35, 0.5, 0.75, 1.0)
+# The grid reported in docs/routing.md and on #88. The cluster between 0.02 and
+# 0.05 is where the front-door share crosses Fahy's 52.9 %, so the calibrated
+# 0.03 is a point the defaults actually visit -- running this script with no
+# flags reproduces the published table.
+DEFAULT_WEIGHTS = (0.0, 0.02, 0.03, 0.035, 0.04, 0.05, 0.1, 0.2, 0.35, 0.5, 0.75, 1.0)
 DEFAULT_SEEDS = (420, 421, 422)
 
 
