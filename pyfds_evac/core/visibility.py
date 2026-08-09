@@ -5,9 +5,24 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import Protocol
 
 import numpy as np
 from shapely.geometry import Polygon
+
+
+class _VisBackend(Protocol):
+    """What VisibilityModel needs from its backend.
+
+    Satisfied structurally by both the npz-backed ``_VisMapCache`` and a live
+    ``fdsvismap.VisMap`` (the clear-air route), so ``clear_air`` can assign
+    either without lying to the type checker.
+    """
+
+    def wp_is_visible(
+        self, time: float, x: float, y: float, waypoint_id: int
+    ) -> bool: ...
+
 
 _logger = logging.getLogger(__name__)
 
@@ -96,6 +111,39 @@ def _make_meta(
         "time_step_s": time_step_s,
         "slice_height_m": slice_height_m,
     }
+
+
+def _blocked_runs(walkable, x_coords, y_coords, cell_size_m: float):
+    """Yield (x1, x2, y1, y2) rectangles covering every non-walkable cell.
+
+    Consecutive blocked cells in a row are merged into one rectangle, so a long
+    wall costs one call rather than one per cell, and the result still follows
+    an arbitrary polygon outline to the resolution of the grid.
+    """
+    from shapely.geometry import Point
+
+    half = cell_size_m / 2
+    for y in y_coords:
+        run_start = None
+        for i, x in enumerate(x_coords):
+            blocked = not walkable.covers(Point(float(x), float(y)))
+            if blocked and run_start is None:
+                run_start = x
+            elif not blocked and run_start is not None:
+                yield (
+                    float(run_start) - half,
+                    float(x_coords[i - 1]) + half,
+                    float(y) - half,
+                    float(y) + half,
+                )
+                run_start = None
+        if run_start is not None:
+            yield (
+                float(run_start) - half,
+                float(x_coords[-1]) + half,
+                float(y) - half,
+                float(y) + half,
+            )
 
 
 class _VisMapCache:
@@ -265,7 +313,7 @@ class VisibilityModel:
             str(fds_dir), sign_descriptors, time_step_s, slice_height_m
         )
 
-        self._vis: _VisMapCache = _resolve_vis(
+        self._vis: _VisBackend = _resolve_vis(
             str(fds_dir),
             sign_descriptors,
             time_step_s,
@@ -279,6 +327,76 @@ class VisibilityModel:
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
 
+    @classmethod
+    def clear_air(
+        cls,
+        walkable,
+        sign_descriptors: dict[str, dict],
+        *,
+        cell_size_m: float = 0.5,
+        extinction_per_m: float = 0.0,
+    ) -> "VisibilityModel":
+        """Build a model for a scene that has geometry but no fire.
+
+        ``fdsvismap`` normally takes its grid, extinction field and obstructions
+        from an FDS run.  Only the field has to: :meth:`VisMap.set_grid` and
+        :meth:`VisMap.set_uniform_extco` supply the other two, so a clear-air
+        deck is evaluated by the same ray casting, view angle and ``max_vis``
+        handling as a fire scene rather than by an approximation written here.
+
+        Obstructions come from *walkable*: every grid cell whose centre is
+        outside the walkable polygon blocks sight.  Cells are emitted as runs of
+        rectangles per row, which is what ``add_visual_obstruction`` accepts and
+        keeps arbitrary wall shapes exact to the grid.
+
+        ``cell_size_m`` is the resolution the scene is rasterised at, and it
+        matters.  A cell blocks sight when its centre lies outside *walkable*,
+        so **a wall thinner than one cell disappears** and sight passes through
+        it -- the same property an FDS mesh has, for the same reason.  An FDS
+        deck inherits the resolution from its mesh; here it has to be chosen.
+        Pick it below the thinnest wall that must block: at 0.5 m the 0.4 m
+        walls of ``assets/blind_spawn_discovery`` vanish entirely, while 0.25 m
+        resolves them.  Cost grows as the inverse square, so halving it
+        quadruples the build.
+        """
+        from fdsvismap import VisMap
+
+        if cell_size_m <= 0:
+            raise ValueError(f"cell_size_m must be positive, got {cell_size_m}")
+        min_x, min_y, max_x, max_y = walkable.bounds
+        x_coords = np.arange(min_x + cell_size_m / 2, max_x, cell_size_m)
+        y_coords = np.arange(min_y + cell_size_m / 2, max_y, cell_size_m)
+        if x_coords.size < 2 or y_coords.size < 2:
+            raise ValueError(
+                f"walkable bounds {tuple(round(b, 2) for b in walkable.bounds)} "
+                f"span fewer than two cells at cell_size_m={cell_size_m}; "
+                "shrink the cell size or check the geometry"
+            )
+
+        vis = VisMap()
+        vis.set_grid(x_coords, y_coords)
+        vis.set_uniform_extco(extinction_per_m)
+        vis.set_time_points([0.0])
+        for wp_id, (_node_id, sign) in enumerate(sign_descriptors.items()):
+            alpha = sign.get("alpha")
+            vis.set_waypoint(
+                wp_id,
+                float(sign["x"]),
+                float(sign["y"]),
+                c=float(sign.get("c", 3)),
+                alpha=None if alpha is None else float(alpha),
+            )
+        for x1, x2, y1, y2 in _blocked_runs(walkable, x_coords, y_coords, cell_size_m):
+            vis.add_visual_obstruction(x1, x2, y1, y2)
+        vis.compute_all(view_angle=True, obstructions=True, aa=True)
+
+        model = cls.__new__(cls)
+        model._vis = vis  # VisMap exposes the same wp_is_visible signature
+        model._wp_ids = {
+            node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
+        }
+        return model
+
     def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
         """Return True if the sign at *node_id* is visible from (x, y) at *time*.
 
@@ -289,4 +407,6 @@ class VisibilityModel:
         wp_id = self._wp_ids.get(node_id)
         if wp_id is None:
             return True
-        return self._vis.wp_is_visible(time=time, x=x, y=y, waypoint_id=wp_id)
+        # A clear-air model computes one time point; fdsvismap resolves any
+        # query time onto a uniform field itself, so no clamping is needed here.
+        return bool(self._vis.wp_is_visible(time=time, x=x, y=y, waypoint_id=wp_id))

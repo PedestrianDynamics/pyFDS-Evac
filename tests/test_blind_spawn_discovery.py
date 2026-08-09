@@ -13,9 +13,10 @@ that can hide them:
 
     view_angle * visibility * non_concealed >= distance
 
-``OccludingVisMap`` below reimplements that term on the walkable polygon, the
-same way ``VisMapClearAir`` in ``test_cognitive_map_memory.py`` reimplements the
-view-angle term.  No FDS output is needed.
+``VisibilityModel.clear_air`` supplies that term: fdsvismap evaluates the scene
+from the walkable polygon and a uniform zero extinction field, so the ray
+casting is the library's own rather than a local approximation.  No FDS output
+is needed.
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ from pathlib import Path
 
 import pytest
 from shapely import wkt as shapely_wkt
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import Polygon
 
 from pyfds_evac.core.cognitive_map import (
     cognitive_subgraph,
@@ -38,34 +39,15 @@ from pyfds_evac.core.cognitive_map import (
 )
 from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, rank_routes
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
+from pyfds_evac.core.visibility import VisibilityModel
 
 ASSET = Path("assets/blind_spawn_discovery")
+# Below the ~0.4 m walls of this asset: a cell blocks sight when its centre is
+# outside the walkable area, so at the 0.5 m default these walls fall between
+# centres and stop occluding anything -- which is the premise of the whole file.
+CELL_SIZE_M = 0.25
 MAX_VIS_M = 30.0
 SPAWN = "jps-distributions_0"
-
-
-class OccludingVisMap:
-    """Clear-air legibility including the line-of-sight mask.
-
-    ``view_angle`` is 1 for every sign in this asset (all omni-directional) and
-    ``visibility`` is ``max_vis`` in clear air, so the rule reduces to
-    "within 30 m and not behind a wall".
-    """
-
-    def __init__(self, signs: dict[str, dict], walkable, max_vis: float = MAX_VIS_M):
-        self._signs = signs
-        self._walkable = walkable
-        self._max_vis = max_vis
-
-    def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
-        del time
-        sign = self._signs.get(node_id)
-        if sign is None:
-            return True
-        target = (float(sign["x"]), float(sign["y"]))
-        if math.dist((x, y), target) > self._max_vis:
-            return False
-        return self._walkable.covers(LineString([(x, y), target]))
 
 
 def _builder():
@@ -107,7 +89,12 @@ def _load(variant: str = "discovery"):
         centroid = Polygon(value["coordinates"]).centroid
         # What _default_sign() synthesises for a crossing: omni-directional.
         signs[key] = {"x": centroid.x, "y": centroid.y, "c": 3}
-    return raw, graph, OccludingVisMap(signs, walkable), walkable
+    return (
+        raw,
+        graph,
+        VisibilityModel.clear_air(walkable, signs, cell_size_m=CELL_SIZE_M),
+        walkable,
+    )
 
 
 def _spawn_xy(graph):
@@ -174,8 +161,10 @@ class TestThePremise:
         """
         _, graph, _, walkable = _load()
         signs = {"E_west": {"x": 6.0, "y": 29.0, "c": 3}}
-        open_plan = OccludingVisMap(signs, walkable.envelope)
-        walled = OccludingVisMap(signs, walkable)
+        open_plan = VisibilityModel.clear_air(
+            walkable.envelope, signs, cell_size_m=CELL_SIZE_M
+        )
+        walled = VisibilityModel.clear_air(walkable, signs, cell_size_m=CELL_SIZE_M)
         x, y = _spawn_xy(graph)
         assert open_plan.node_is_visible(0.0, x, y, "E_west")
         assert not walled.node_is_visible(0.0, x, y, "E_west")

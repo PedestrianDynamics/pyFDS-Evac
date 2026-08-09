@@ -14,7 +14,7 @@ Persistence is the one that matters.  Delete the expansion rules and
 acquisition still appears to work for any agent that happens to start inside
 the band; only persistence catches it.
 
-No FDS output is needed: ``VisMapClearAir`` reimplements fdsvismap's clear-air
+No FDS output is needed: ``VisibilityModel.clear_air`` drives fdsvismap's own
 rule so the test exercises our map and routing rather than the third-party
 solver.
 """
@@ -22,10 +22,10 @@ solver.
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
 import pytest
+from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.cognitive_map import (
@@ -34,37 +34,14 @@ from pyfds_evac.core.cognitive_map import (
 )
 from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, rank_routes
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
+from pyfds_evac.core.visibility import VisibilityModel
 
 ASSET = Path("assets/cognitive_map_memory")
+# The corridor is open, so this only has to be fine enough to keep the walls
+# from swallowing it; see VisibilityModel.clear_air on why it matters.
+CELL_SIZE_M = 0.25
 MAX_VIS_M = 30.0
 CENTRELINE_X = 2.0
-
-
-class VisMapClearAir:
-    """fdsvismap's clear-air legibility rule: view_angle * max_vis >= distance."""
-
-    def __init__(self, signs: dict[str, dict], max_vis: float = MAX_VIS_M):
-        self._signs = signs
-        self._max_vis = max_vis
-
-    def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
-        del time
-        sign = self._signs.get(node_id)
-        if sign is None:
-            return True
-        dx, dy = x - float(sign["x"]), y - float(sign["y"])
-        distance = math.hypot(dx, dy)
-        if distance == 0.0:
-            return True
-        alpha = sign.get("alpha")
-        if alpha is None:
-            view_angle = 1.0
-        else:
-            a = math.radians(float(alpha))
-            view_angle = min(
-                1.0, max(0.0, (math.sin(a) * dx + math.cos(a) * dy) / distance)
-            )
-        return view_angle * self._max_vis >= distance
 
 
 def _load():
@@ -82,7 +59,9 @@ def _load():
     )
     signs = {eid: data["sign"] for eid, data in raw["exits"].items()}
     spawn = Polygon(next(iter(distributions.values()))["coordinates"]).centroid
-    return graph, (spawn.x, spawn.y), VisMapClearAir(signs)
+    walkable = shapely_wkt.loads((ASSET / "geometry.wkt").read_text().strip())
+    vis = VisibilityModel.clear_air(walkable, signs, cell_size_m=CELL_SIZE_M)
+    return graph, (spawn.x, spawn.y), vis
 
 
 def _walk(y_positions):

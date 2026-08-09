@@ -293,7 +293,7 @@ wheels = [
 [[package]]
 name = "fdsvismap"
 version = "0.2.1"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/FireDynamics/fdsvismap.git?rev=64d9aa73144b3902bdc6d2cdd1a08e3494ec5690#64d9aa73144b3902bdc6d2cdd1a08e3494ec5690" }
 dependencies = [
     { name = "fdsreader" },
     { name = "matplotlib" },
@@ -303,10 +303,6 @@ dependencies = [
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "sphinx-rtd-theme" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ed/a9/f19afbe4bcb783f5d5ca839cee7310527784a5655883fc0083d60f67f6cd/fdsvismap-0.2.1.tar.gz", hash = "sha256:97baaad98b56f795319e01aba1b66e13840bd44769c4fc16fa8ffbae2639f2c3", size = 19744, upload-time = "2026-04-08T19:38:32.737Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/aa/a3/3834cfb993c34caa009782d90894257bbc125f2fe8e467dc698e99aa279a/fdsvismap-0.2.1-py3-none-any.whl", hash = "sha256:f3620538975e82c5d1b2c71081ebe77f13dc7d5fdccffb4cc8715720071d243d", size = 16053, upload-time = "2026-04-08T19:38:31.727Z" },
 ]
 
 [[package]]
@@ -1082,7 +1078,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fdsreader" },
-    { name = "fdsvismap", specifier = ">=0.1.3" },
+    { name = "fdsvismap", git = "https://github.com/FireDynamics/fdsvismap.git?rev=64d9aa73144b3902bdc6d2cdd1a08e3494ec5690" },
     { name = "jupedsim", specifier = ">=1.4.2" },
     { name = "matplotlib" },
     { name = "monsterui", marker = "extra == 'gui'" },

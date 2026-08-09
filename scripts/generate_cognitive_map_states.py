@@ -20,7 +20,6 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
-import math
 from pathlib import Path
 
 import matplotlib
@@ -28,6 +27,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Rectangle  # noqa: E402
+from shapely import wkt as shapely_wkt  # noqa: E402
 from shapely.geometry import Polygon  # noqa: E402
 
 from pyfds_evac.core.cognitive_map import (  # noqa: E402
@@ -40,6 +40,7 @@ from pyfds_evac.core.route_graph import (  # noqa: E402
     rank_routes,
 )
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField  # noqa: E402
+from pyfds_evac.core.visibility import VisibilityModel  # noqa: E402
 
 ASSET = Path("assets/cognitive_map_memory")
 MAX_VIS_M = 30.0
@@ -56,29 +57,6 @@ def _builder():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-class VisMapClearAir:
-    """fdsvismap's clear-air rule, mirrored so the plot needs no FDS run."""
-
-    def __init__(self, signs):
-        self._signs = signs
-
-    def node_is_visible(self, time, x, y, node_id):
-        del time
-        sign = self._signs.get(node_id)
-        if sign is None:
-            return True
-        dx, dy = x - float(sign["x"]), y - float(sign["y"])
-        d = math.hypot(dx, dy)
-        if d == 0.0:
-            return True
-        alpha = sign.get("alpha")
-        if alpha is None:
-            return MAX_VIS_M >= d
-        a = math.radians(float(alpha))
-        view = min(1.0, max(0.0, (math.sin(a) * dx + math.cos(a) * dy) / d))
-        return view * MAX_VIS_M >= d
 
 
 def _load():
@@ -99,7 +77,8 @@ def _load():
 def main(out_path: Path) -> None:
     builder = _builder()
     graph, signs, _raw = _load()
-    vis = VisMapClearAir(signs)
+    walkable = shapely_wkt.loads((ASSET / "geometry.wkt").read_text().strip())
+    vis = VisibilityModel.clear_air(walkable, signs, cell_size_m=0.25)
 
     walkable = builder.CORRIDOR
     frames_y = [4.0, 10.0, 14.0, 20.0, 26.0, 30.0]
