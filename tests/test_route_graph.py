@@ -2698,3 +2698,43 @@ class TestWanderWhenKnowledgeIsExhausted:
         )
         wait_info = _make_wait_info(graph, "D0", "D0")
         assert self._evaluate(graph, wait_info, AgentRouteState(), loner, 0.0) is None
+
+
+class TestWanderCanGoHome:
+    """The patrol can walk back to the spawn area it came from.
+
+    Auto-wiring never points an edge at a distribution, so a directed
+    search over known edges cannot route the agent home -- and an agent
+    that knows only its spawn and the one checkpoint it stands on then
+    has no patrol at all and stands still. Corridors are physically
+    two-way: the patrol treats every known leg as walkable in both
+    directions.
+    """
+
+    @staticmethod
+    def _two_node_world():
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        direct = {"C1": {"polygon": _box(0, 10), "stage_type": "checkpoint"}}
+        graph = StageGraph.from_scenario(
+            direct,
+            [{"from": "D0", "to": "C1"}],
+            distributions={"D0": {"polygon": _box(0, 0)}},
+        )
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "C1"},
+            known_edges={("D0", "C1")},
+            visited_nodes={"D0", "C1"},
+        )
+        return graph, cmap
+
+    def test_the_only_patrol_stop_is_the_spawn_it_came_from(self):
+        from pyfds_evac.core.cognitive_map import wander_target
+
+        graph, cmap = self._two_node_world()
+        wander = wander_target(cmap, graph, "C1", 0)
+        assert wander is not None
+        target, path = wander
+        assert target == "D0"
+        assert path == ["C1", "D0"]

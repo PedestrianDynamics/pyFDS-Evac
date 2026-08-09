@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import heapq
+import math
 from dataclasses import dataclass, field
 
 
@@ -343,13 +345,55 @@ def wander_target(
     )
     if not candidates:
         return None
-    sub = cognitive_subgraph(cmap, graph)
     for offset in range(len(candidates)):
         node_id = candidates[(step + offset) % len(candidates)]
-        result = sub.shortest_path_to(source, node_id)
-        if result is None:
+        path = _undirected_known_path(cmap, graph, source, node_id)
+        if path is None:
             continue
-        return node_id, result[1]
+        return node_id, path
+    return None
+
+
+def _undirected_known_path(
+    cmap: AgentCognitiveMap, graph, source: str, target: str
+) -> list[str] | None:
+    """Shortest path over the known legs, walked in either direction.
+
+    The known subgraph is directed for routing (exits are terminal, nothing
+    points back at a spawn area), but a corridor the agent has walked or seen
+    is physically two-way -- without this an agent standing at its first
+    checkpoint cannot even patrol back to its own spawn area. Weights are
+    centroid distances, which is what the patrol optimises for.
+    """
+    adjacency: dict[str, set[str]] = {}
+    for a, b in cmap.known_edges:
+        if a in graph.nodes and b in graph.nodes:
+            adjacency.setdefault(a, set()).add(b)
+            adjacency.setdefault(b, set()).add(a)
+
+    def _dist(a: str, b: str) -> float:
+        na, nb = graph.nodes[a], graph.nodes[b]
+        return math.hypot(na.centroid_x - nb.centroid_x, na.centroid_y - nb.centroid_y)
+
+    best: dict[str, float] = {source: 0.0}
+    previous: dict[str, str] = {}
+    queue: list[tuple[float, str]] = [(0.0, source)]
+    while queue:
+        cost, node = heapq.heappop(queue)
+        if node == target:
+            path = [node]
+            while node in previous:
+                node = previous[node]
+                path.append(node)
+            return path[::-1]
+        if cost > best.get(node, math.inf):
+            continue
+        for neighbour in adjacency.get(node, ()):
+            candidate = cost + _dist(node, neighbour)
+            if candidate < best.get(neighbour, math.inf):
+                best[neighbour] = candidate
+                previous[neighbour] = node
+                heapq.heappush(queue, (candidate, neighbour))
     return None
 
 

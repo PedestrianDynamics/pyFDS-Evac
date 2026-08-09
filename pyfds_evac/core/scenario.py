@@ -1249,6 +1249,7 @@ def run_scenario(
         _cmap_seen: Dict[int, tuple[int, int]] = {}
         route_segment_cache: dict[tuple[str, str], Any] | None = None
         stage_graph: StageGraph | None = None
+        distribution_stage_configs: Dict[str, Dict[str, Any]] = {}
         reroute_debug_printed = False
         reroute_debug_samples = 0
         _fed_rate_adapter = None
@@ -1263,6 +1264,24 @@ def run_scenario(
                 walkable_polygon=scenario.walkable_polygon,
             )
             route_segment_cache = {}
+            # Spawn areas as steerable patrol stops. Stage configs are built
+            # from direct_steering_info, which holds crossings and exits only,
+            # so a wandering agent could never be routed back to its own
+            # spawn area -- and an agent that knows nothing but its spawn and
+            # the checkpoint it stands on would have no patrol at all.
+            for _dist_id, _dist in (scenario.raw.get("distributions") or {}).items():
+                _coords = _dist.get("coordinates")
+                if _dist_id in stage_graph.nodes and _coords and len(_coords) >= 3:
+                    distribution_stage_configs[_dist_id] = {
+                        "polygon": Polygon(_coords),
+                        "stage_type": "distribution",
+                        "waiting_time": 0.0,
+                        "waiting_time_distribution": "constant",
+                        "waiting_time_std": 1.0,
+                        "enable_throughput_throttling": False,
+                        "max_throughput": 1.0,
+                        "speed_factor": 1.0,
+                    }
             # Not every FED model can be sampled ahead of the agent -- the
             # constant-input ones only know the dose here and now -- and route
             # costs are the one caller that needs the spatial rate.
@@ -2043,6 +2062,9 @@ def run_scenario(
                     reroute_loop_agents += 1
                     if wait_info.get("state") == "done":
                         continue
+                    # Spawn areas become steerable patrol stops for wander.
+                    for _dist_id, _cfg in distribution_stage_configs.items():
+                        wait_info["stage_configs"].setdefault(_dist_id, _cfg)
                     # Initialize route state on first encounter.
                     if agent_id not in agent_route_state:
                         agent_route_state[agent_id] = AgentRouteState(
