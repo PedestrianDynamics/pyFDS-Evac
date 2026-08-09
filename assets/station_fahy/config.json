@@ -31920,5 +31920,8 @@
       }
     ],
     "calibrationDistance": 24.2
+  },
+  "routing": {
+    "w_queue": 0.03
   }
 }

@@ -151,7 +151,7 @@ from pyfds_evac.core.route_graph import RouteCostConfig
 config = RouteCostConfig(
     w_smoke=1.0,                          # smoke cost weight
     w_fed=10.0,                           # FED cost weight
-    w_queue=0.03,                         # queueing cost weight (0 disables)
+    w_queue=0.0,                          # congestion weight (0 = off, the default)
     fed_rejection_threshold=1.0,          # reject if FED_max exceeds
     visibility_extinction_threshold=0.5,  # K threshold for visibility
     sampling_step_m=2.0,                  # ray sample spacing
@@ -187,10 +187,33 @@ The queue term is applied at route-level ranking (Phase 3) only,
 not in Dijkstra edge weights, because it is a per-exit constant
 that cannot change which path is selected to a given exit.
 
-Setting `w_queue = 0` disables congestion-aware routing entirely
-(backward compatible with existing behaviour).
+**Congestion-aware routing is off by default** (`w_queue = 0`); set it in a
+scenario's `routing` block to switch it on.
 
-#### Provenance of the queue weight
+#### Why it is opt-in, and what 0.03 means
+
+The term is `w_queue * v0 * N / c` with `N` a **global** tally of every agent
+targeting the exit — where `v0` is the `base_speed_m_per_s` conversion constant
+(not any agent's desired speed) and `c` is the exit's `capacity_agents_per_s`,
+falling back to `default_exit_capacity`. With both at their 1.3 defaults the
+penalty is simply
+`w_queue * N` metres, so it grows without bound in the population while the
+path-length differences it competes against are fixed by the geometry:
+
+| N | `w_queue = 1.0` | `w_queue = 0.03` |
+|---|---|---|
+| 25 | 25 m | 0.8 m |
+| 50 | 50 m | 1.5 m |
+| 333 | 333 m | 10 m |
+
+No constant is right at more than one crowd size. 1.0 puts 333 m on a door at
+Station scale; the 0.03 that fixes that is inert in an ordinary room. So the
+library ships no congestion weight at all, and the calibrated value lives with
+the deck it was calibrated on — `assets/station_fahy` sets `w_queue = 0.03` in
+its own `routing` block. Issue #89 tracks replacing the global `N` with a queue
+the agent can perceive, which would remove the scale dependence.
+
+#### Provenance of the Station's 0.03
 
 Calibrated, not conventional. `scripts/sweep_queue_weight.py` sweeps the
 weight on `assets/station_fahy` with rerouting on, three seeds per
@@ -214,7 +237,8 @@ confirms that low weights beat 1.0 without discriminating 0.03 within
 that band. The value is fixed by the aggregate target alone.
 
 **This calibration holds at one crowd size.** The term is
-`w_queue * v0 * N / c` with `N` a global tally, so its magnitude
+`w_queue * v0 * N / c` (`v0`, `c` as above) with `N` a global tally, so its
+magnitude
 relative to the path-length differences it competes with grows linearly
 with the population — 0.03 was fitted at the Station's 333 agents, and
 a scenario an order of magnitude smaller wants a correspondingly larger

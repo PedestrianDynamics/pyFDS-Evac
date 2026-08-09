@@ -68,11 +68,12 @@ Symbols used below:
    queue_distance = base_speed · queue_time
    ```
    **The three routing weights live here:** `w_smoke = 1.0`, `w_fed = 10.0`,
-   `w_queue = 0.03`. `w_smoke` and `w_fed` are still hand-picked and NOT
-   calibrated. `w_queue` is calibrated against Fahy Table 2 on
-   `assets/station_fahy` (`scripts/sweep_queue_weight.py`), but at that deck's
-   crowd of 333 only — the term scales with a global `N`, so the weight that
-   expresses a given preference depends on the population size.
+   `w_queue = 0.0`. `w_smoke` and `w_fed` are hand-picked and NOT calibrated.
+   The queue term is **off by default**: it scales with a global `N`, so the
+   weight expressing a given preference depends on the population and no
+   constant suits every deck. `assets/station_fahy` opts in at `w_queue = 0.03`,
+   calibrated against Fahy Table 2 at that deck's crowd of 333
+   (`scripts/sweep_queue_weight.py`).
 
 5. **Pathfinding uses live edge weights, not raw geometry.**
    `rank_routes()` (`route_graph.py:668`) runs in three phases:
@@ -252,9 +253,9 @@ for picking weights. Key tensions:
 ---
 
 ### One-line takeaways
-- `w_smoke` and `w_fed` are uncalibrated — the core issue. `w_queue` now is
-  calibrated (Fahy Table 2), but only at one crowd size, because it scales with
-  a global agent tally.
+- `w_smoke` and `w_fed` are uncalibrated — the core issue. `w_queue` is off by
+  default: it scales with a global agent tally, so any constant is calibrated at
+  one crowd size only. The Station deck opts in at 0.03 (Fahy Table 2).
 - `w_smoke` is redundant: smoke's real effect (slowdown) is already the calibrated
   Lund speed law → route on travel-time instead.
 - Toxicity is a threshold, not a preference → keep it as the reject, drop `w_fed`.
