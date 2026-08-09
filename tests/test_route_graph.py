@@ -1581,7 +1581,8 @@ class TestStageNodeCapacity:
 class TestQueueConfigAndFields:
     def test_route_cost_config_defaults(self):
         config = RouteCostConfig()
-        assert config.w_queue == 1.0
+        # Calibrated against Fahy Table 2 -- see scripts/sweep_queue_weight.py.
+        assert config.w_queue == 0.03
         assert config.default_exit_capacity == 1.3
 
     def test_route_cost_config_queue_disabled(self):

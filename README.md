@@ -350,8 +350,13 @@ The routing system implements smoke-aware path planning with dynamic rerouting:
   is provided; otherwise only smoke drives ranking)
 - **Dynamic rerouting**: Agents recompute routes at configurable intervals,
   selecting lower-exposure paths when available
-- **Congestion-aware routing**: Optional exit-congestion term (`w_queue`)
-  balances load across exits based on current agent counts and capacities
+- **Congestion-aware routing**: Optional exit-congestion term (`w_queue`,
+  default 0.03) balances load across exits based on current agent counts and
+  capacities. The default is calibrated against Fahy Table 2 on
+  `assets/station_fahy` — see
+  [Provenance of the queue weight](docs/routing.md#provenance-of-the-queue-weight)
+  and
+  `scripts/sweep_queue_weight.py`
 - **Throughput throttling**: Optional exit flux limiting via
   `enable_throughput_throttling` and `max_throughput` in scenario config
 

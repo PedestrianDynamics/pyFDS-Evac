@@ -546,7 +546,16 @@ class RouteCostConfig:
 
     w_smoke: float = 1.0
     w_fed: float = 10.0
-    w_queue: float = 1.0
+    # Calibrated against Fahy Table 2 on assets/station_fahy (rerouting on, three
+    # seeds): 0.03 reproduces a 53.3 % front-door share against the measured
+    # 52.9 %, where the former default of 1.0 gave 22.9 %. See
+    # scripts/sweep_queue_weight.py. The calibration holds at that deck's crowd
+    # of 333, and only there: the term is w_queue * v0 * N / c, so its weight
+    # against the path-length differences it competes with grows linearly with
+    # the population. A scenario an order of magnitude smaller wants a
+    # correspondingly larger w_queue -- the scale dependence is a property of
+    # the global-N form, not of this number.
+    w_queue: float = 0.03
     fed_rejection_threshold: float = 1.0
     # Asymmetric FED hysteresis (Schmitt trigger) to stop agents flip-flopping
     # when a route's predicted dose wobbles across the rejection threshold. The
@@ -586,7 +595,7 @@ class RouteCostConfig:
         return cls(
             w_smoke=routing.get("w_smoke", 1.0),
             w_fed=routing.get("w_fed", 10.0),
-            w_queue=routing.get("w_queue", 1.0),
+            w_queue=routing.get("w_queue", 0.03),
             fed_rejection_threshold=routing.get("fed_rejection_threshold", 1.0),
             visibility_extinction_threshold=routing.get(
                 "visibility_extinction_threshold", 0.5

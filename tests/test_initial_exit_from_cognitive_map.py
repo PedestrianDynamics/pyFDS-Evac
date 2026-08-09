@@ -196,7 +196,13 @@ def test_no_reroute_in_the_spawn_timestep():
         _corridor_scenario("full", None),
         seed=SEED,
         reroute_config=RerouteConfig(
-            reevaluation_interval_s=5.0, cost_config=RouteCostConfig()
+            reevaluation_interval_s=5.0,
+            # w_queue is pinned, not taken from the default: this test only
+            # detects the same-timestep re-rank if the queue term is strong
+            # enough to scatter the crowd, and the default is now calibrated
+            # small (0.03). On the default it would pass whether or not the
+            # bug was present.
+            cost_config=RouteCostConfig(w_queue=1.0),
         ),
     )
     try:
