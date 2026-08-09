@@ -141,8 +141,9 @@ def build() -> dict:
     sim["model_type"] = "WarpDriverModel"
     sim["max_simulation_time"] = 600.0
     # The library default is 0 -- congestion-aware routing is opt-in, because
-    # w_queue * v0 * N / c scales with the population and no constant suits
-    # every deck. 0.03 is this deck's calibration: it reproduces Fahy's 52.9 %
+    # the queue term (w_queue * base_speed_m_per_s * N / exit capacity; no
+    # relation to this file's per-agent V0) scales with the population and no
+    # constant suits every deck. 0.03 is this deck's calibration: it reproduces Fahy's 52.9 %
     # front-door share at this crowd of 333 and nowhere else. See
     # scripts/sweep_queue_weight.py and docs/routing.md.
     cfg["routing"] = dict(cfg.get("routing") or {}, w_queue=0.03)

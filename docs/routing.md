@@ -193,7 +193,10 @@ scenario's `routing` block to switch it on.
 #### Why it is opt-in, and what 0.03 means
 
 The term is `w_queue * v0 * N / c` with `N` a **global** tally of every agent
-targeting the exit. With the default `v0` and capacity the penalty is simply
+targeting the exit — where `v0` is the `base_speed_m_per_s` conversion constant
+(not any agent's desired speed) and `c` is the exit's `capacity_agents_per_s`,
+falling back to `default_exit_capacity`. With both at their 1.3 defaults the
+penalty is simply
 `w_queue * N` metres, so it grows without bound in the population while the
 path-length differences it competes against are fixed by the geometry:
 
@@ -234,7 +237,8 @@ confirms that low weights beat 1.0 without discriminating 0.03 within
 that band. The value is fixed by the aggregate target alone.
 
 **This calibration holds at one crowd size.** The term is
-`w_queue * v0 * N / c` with `N` a global tally, so its magnitude
+`w_queue * v0 * N / c` (`v0`, `c` as above) with `N` a global tally, so its
+magnitude
 relative to the path-length differences it competes with grows linearly
 with the population — 0.03 was fitted at the Station's 333 agents, and
 a scenario an order of magnitude smaller wants a correspondingly larger

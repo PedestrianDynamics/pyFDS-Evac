@@ -546,9 +546,13 @@ class RouteCostConfig:
 
     w_smoke: float = 1.0
     w_fed: float = 10.0
-    # Off by default. The term is w_queue * v0 * N / c with N a *global* tally
-    # of every agent targeting the exit, so with the default v0 and capacity the
-    # penalty is simply w_queue * N metres: it grows without bound in the
+    # Off by default. The term is
+    #     w_queue * base_speed_m_per_s * N / capacity_agents_per_s
+    # with N a *global* tally of every agent targeting the exit. (The paper
+    # writes this v0 * N / c; base_speed_m_per_s is that conversion constant,
+    # NOT any agent's desired speed.) With both speed and capacity at their
+    # 1.3 defaults the penalty is simply w_queue * N metres: it grows without
+    # bound in the
     # population while the path lengths it competes against are fixed by the
     # geometry. No constant is therefore right at more than one crowd size --
     # 1.0 put 333 m on a door at Station scale, and the 0.03 that fixes that is
