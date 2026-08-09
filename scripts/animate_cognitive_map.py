@@ -141,6 +141,10 @@ def animate(
     """Render one agent's walk with the nodes it knows highlighted."""
     cfg = json.loads((bundle / "config.json").read_text())
     walkable = shapely_wkt.loads((bundle / "geometry.wkt").read_text().strip())
+    # The same descriptors the run's visibility model used, so the drawn
+    # orientation is the one that decided legibility. alpha is the compass
+    # bearing (deg from north, CW) of the readable side; None means omni.
+    signs = extract_sign_descriptors(cfg)
     nodes = {}
     for section, marker in (("exits", "s"), ("checkpoints", "o")):
         for node_id, data in (cfg.get(section) or {}).items():
@@ -167,6 +171,11 @@ def animate(
     if not frames:
         raise SystemExit(f"no trajectory rows for agent {agent_id}")
     history = [e for e in history if e["agent_id"] == agent_id]
+    # A stalled 600 s run has thousands of rows; cap the movie at ~600 frames
+    # so it stays watchable and renders in minutes, not hours. The trail is
+    # drawn from the kept rows only, which is visually indistinguishable.
+    stride = max(1, len(frames) // 600)
+    frames = frames[::stride]
 
     fig, ax = plt.subplots(figsize=(9, 7))
     writer = (
@@ -185,6 +194,31 @@ def animate(
             for ring in walkable.interiors:
                 rx, ry = ring.xy
                 ax.plot(rx, ry, color="#9298a8", lw=1)
+            for node_id, sign in signs.items():
+                sx, sy = float(sign["x"]), float(sign["y"])
+                alpha = sign.get("alpha")
+                if alpha is None:
+                    # Omni-directional: readable from every side.
+                    ax.plot(
+                        sx,
+                        sy,
+                        marker="o",
+                        ms=16,
+                        mfc="none",
+                        mec="#2e7d32",
+                        mew=1.0,
+                        zorder=3,
+                    )
+                    continue
+                rad = math.radians(float(alpha))
+                dx, dy = math.sin(rad), math.cos(rad)
+                ax.annotate(
+                    "",
+                    xy=(sx + 1.8 * dx, sy + 1.8 * dy),
+                    xytext=(sx, sy),
+                    arrowprops=dict(arrowstyle="-|>", color="#2e7d32", lw=1.6),
+                    zorder=5,
+                )
             for node_id, (nx, ny, marker) in nodes.items():
                 on = node_id in known
                 ax.plot(

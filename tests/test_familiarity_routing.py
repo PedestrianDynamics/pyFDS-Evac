@@ -187,6 +187,10 @@ class TestNearestFrontierTarget:
             familiarity="discovery",
             known_nodes={"D0", "C0", "E0"},
             known_edges={("D0", "C0"), ("C0", "E0")},
+            # Explored means visited: with gated arrival a visited node may
+            # keep unknown edges forever, so edge-completeness no longer
+            # defines the frontier (see nearest_frontier_target).
+            visited_nodes={"D0", "C0", "E0"},
         )
         assert nearest_frontier_target(cmap, g, "D0") is None
 

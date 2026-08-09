@@ -17,6 +17,10 @@ class AgentCognitiveMap:
     familiarity: str  # "full" | "discovery"
     known_nodes: set[str] = field(default_factory=set)
     known_edges: set[tuple[str, str]] = field(default_factory=set)
+    # Nodes the agent has physically stood on. A visited node is a closed
+    # frontier: standing there taught the agent everything that position will
+    # ever teach, however little that was (see nearest_frontier_target).
+    visited_nodes: set[str] = field(default_factory=set)
 
 
 def familiarity_probability(value) -> float:
@@ -108,7 +112,11 @@ def init_cognitive_map(
             known_edges=all_edges,
         )
 
-    cmap = AgentCognitiveMap(familiarity="discovery", known_nodes={spawn_node})
+    cmap = AgentCognitiveMap(
+        familiarity="discovery",
+        known_nodes={spawn_node},
+        visited_nodes={spawn_node},
+    )
 
     if entrance is not None and entrance in graph.nodes:
         _learn_route_to(cmap, graph, spawn_node, entrance)
@@ -163,6 +171,7 @@ def expand_on_arrival(
     if cmap.familiarity == "full":
         return
     cmap.known_nodes.add(arrived_node)
+    cmap.visited_nodes.add(arrived_node)
     for edge in graph.edges.get(arrived_node, []):
         if (
             vis_model is not None
@@ -252,14 +261,22 @@ def nearest_frontier_target(
     source: str,
     agent_position: tuple[float, float] | None = None,
 ) -> tuple[str, list[str]] | None:
-    """Return the nearest known-but-unexplored node to head toward, if any.
+    """Return the nearest known-but-unvisited node to head toward, if any.
 
-    A frontier node is one already in the agent's cognitive map whose real
-    outgoing edges (in the full *graph*) are not all known yet — a doorway
-    the agent has seen but not been through. Used when no exit is reachable
-    in the known subgraph: instead of standing still, the agent heads to the
-    nearest such node, expanding its knowledge on arrival
-    (see :func:`expand_on_arrival`) and re-evaluating from there.
+    A frontier node is one already in the agent's cognitive map that the
+    agent has never physically stood on — a doorway it has seen but not been
+    through. Used when no exit is reachable in the known subgraph: instead of
+    standing still, the agent heads to the nearest such node, expanding its
+    knowledge on arrival (see :func:`expand_on_arrival`) and re-evaluating
+    from there.
+
+    Visiting closes a frontier even when arrival taught nothing: with
+    visibility-gated arrival a node can hold unknown edges forever (its
+    neighbours' signs face away), and an edges-based frontier keeps offering
+    such nodes. Two of them adjacent to each other then trap the explorer —
+    the nearest frontier from each is the other — while genuinely unvisited
+    nodes wait. Consuming one unvisited node per hop makes exploration
+    terminate.
 
     With *agent_position* the first leg is measured from where the agent
     actually stands rather than from *source*'s centroid, the same substitution
@@ -275,14 +292,7 @@ def nearest_frontier_target(
     Returns None once every known node has been fully explored (no frontier
     left — a genuine dead end).
     """
-    frontier = {
-        node_id
-        for node_id in cmap.known_nodes
-        if any(
-            (edge.source, edge.target) not in cmap.known_edges
-            for edge in graph.edges.get(node_id, [])
-        )
-    }
+    frontier = cmap.known_nodes - cmap.visited_nodes
     if not frontier:
         return None
 
