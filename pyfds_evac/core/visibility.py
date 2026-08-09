@@ -5,9 +5,24 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import Protocol
 
 import numpy as np
 from shapely.geometry import Polygon
+
+
+class _VisBackend(Protocol):
+    """What VisibilityModel needs from its backend.
+
+    Satisfied structurally by both the npz-backed ``_VisMapCache`` and a live
+    ``fdsvismap.VisMap`` (the clear-air route), so ``clear_air`` can assign
+    either without lying to the type checker.
+    """
+
+    def wp_is_visible(
+        self, time: float, x: float, y: float, waypoint_id: int
+    ) -> bool: ...
+
 
 _logger = logging.getLogger(__name__)
 
@@ -298,7 +313,7 @@ class VisibilityModel:
             str(fds_dir), sign_descriptors, time_step_s, slice_height_m
         )
 
-        self._vis: _VisMapCache = _resolve_vis(
+        self._vis: _VisBackend = _resolve_vis(
             str(fds_dir),
             sign_descriptors,
             time_step_s,
@@ -351,6 +366,12 @@ class VisibilityModel:
         min_x, min_y, max_x, max_y = walkable.bounds
         x_coords = np.arange(min_x + cell_size_m / 2, max_x, cell_size_m)
         y_coords = np.arange(min_y + cell_size_m / 2, max_y, cell_size_m)
+        if x_coords.size < 2 or y_coords.size < 2:
+            raise ValueError(
+                f"walkable bounds {tuple(round(b, 2) for b in walkable.bounds)} "
+                f"span fewer than two cells at cell_size_m={cell_size_m}; "
+                "shrink the cell size or check the geometry"
+            )
 
         vis = VisMap()
         vis.set_grid(x_coords, y_coords)

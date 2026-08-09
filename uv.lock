@@ -293,7 +293,7 @@ wheels = [
 [[package]]
 name = "fdsvismap"
 version = "0.2.1"
-source = { git = "https://github.com/FireDynamics/fdsvismap.git?rev=feat%2Fsynthetic-clear-air-grid#64d9aa73144b3902bdc6d2cdd1a08e3494ec5690" }
+source = { git = "https://github.com/FireDynamics/fdsvismap.git?rev=64d9aa73144b3902bdc6d2cdd1a08e3494ec5690#64d9aa73144b3902bdc6d2cdd1a08e3494ec5690" }
 dependencies = [
     { name = "fdsreader" },
     { name = "matplotlib" },
@@ -1078,7 +1078,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fdsreader" },
-    { name = "fdsvismap", git = "https://github.com/FireDynamics/fdsvismap.git?rev=feat%2Fsynthetic-clear-air-grid" },
+    { name = "fdsvismap", git = "https://github.com/FireDynamics/fdsvismap.git?rev=64d9aa73144b3902bdc6d2cdd1a08e3494ec5690" },
     { name = "jupedsim", specifier = ">=1.4.2" },
     { name = "matplotlib" },
     { name = "monsterui", marker = "extra == 'gui'" },

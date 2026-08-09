@@ -27,7 +27,7 @@ dependencies = [
     # scene with geometry but no fire be evaluated by fdsvismap itself instead
     # of being approximated here. Repoint at a release once it lands:
     # https://github.com/FireDynamics/fdsvismap/pull/41
-    "fdsvismap @ git+https://github.com/FireDynamics/fdsvismap.git@feat/synthetic-clear-air-grid",
+    "fdsvismap @ git+https://github.com/FireDynamics/fdsvismap.git@64d9aa73144b3902bdc6d2cdd1a08e3494ec5690",
     "numpy>=1.26.4",
 ]
 
