@@ -1161,9 +1161,9 @@ def run_scenario(
         agent_route_state: Dict[int, AgentRouteState] = {}
         cognitive_maps: Dict[int, AgentCognitiveMap] = {}
         cognitive_map_history: list[dict[str, Any]] = []
-        # Snapshot of what each agent knew, so a later frame can be compared
-        # against the previous one and only changes recorded.
-        _cmap_seen: Dict[int, int] = {}
+        # Size of each agent's map when it was last recorded, so a later frame
+        # can be compared against the previous one and only changes recorded.
+        _cmap_seen: Dict[int, tuple[int, int]] = {}
         route_segment_cache: dict[tuple[str, str], Any] | None = None
         stage_graph: StageGraph | None = None
         reroute_debug_printed = False
@@ -2228,7 +2228,7 @@ def run_scenario(
                 # faithful change detector and lets a long run record one row
                 # per learning event instead of one per agent per timestep.
                 for _aid, _map in cognitive_maps.items():
-                    _size = len(_map.known_nodes) * 100003 + len(_map.known_edges)
+                    _size = (len(_map.known_nodes), len(_map.known_edges))
                     if _cmap_seen.get(_aid) == _size:
                         continue
                     _cmap_seen[_aid] = _size

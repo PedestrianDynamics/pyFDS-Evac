@@ -42,7 +42,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.animation import FFMpegWriter, PillowWriter  # noqa: E402
 from shapely import wkt as shapely_wkt  # noqa: E402
-from shapely.geometry import LineString, Polygon  # noqa: E402
+from shapely.geometry import LineString, Point, Polygon  # noqa: E402
 
 from pyfds_evac.core import load_scenario, run_scenario  # noqa: E402
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig  # noqa: E402
@@ -107,19 +107,37 @@ def inward_alpha(exit_polygon: Polygon, interior_point) -> float:
     )
 
 
+def _interior_reference(cfg: dict, deck: Path):
+    """A point inside the occupied space, to aim the exit signs at.
+
+    Prefers the mean of the checkpoint centroids: those are the nodes the author
+    placed inside the building, so they locate the occupied space without
+    hard-coding a coordinate. A deck may legitimately have no checkpoints -- this
+    script exists to fit out sparse decks -- so it falls back to the spawn areas,
+    and finally to a representative point of the walkable polygon, which every
+    deck has.
+    """
+    for section in ("checkpoints", "distributions"):
+        centroids = [
+            Polygon(v["coordinates"]).centroid
+            for v in (cfg.get(section) or {}).values()
+            if len(v.get("coordinates") or ()) >= 3
+        ]
+        if centroids:
+            n = len(centroids)
+            return Point(
+                sum(p.x for p in centroids) / n, sum(p.y for p in centroids) / n
+            )
+    walkable = shapely_wkt.loads((deck / "geometry.wkt").read_text().strip())
+    return walkable.representative_point()
+
+
 def build_variant(deck: Path, out: Path, familiarity: float) -> tuple[Path, dict]:
     """Write a deck with a familiarity and inward-facing sign angles set."""
     out.mkdir(parents=True, exist_ok=True)
     cfg = json.loads((deck / "config.json").read_text())
 
-    # The interior reference is the mean of the checkpoint centroids: those are
-    # the nodes the author placed inside the building, so they point the signs
-    # at the occupied space without hard-coding a coordinate.
-    inner = [Polygon(v["coordinates"]).centroid for v in cfg["checkpoints"].values()]
-    cx = sum(p.x for p in inner) / len(inner)
-    cy = sum(p.y for p in inner) / len(inner)
-    interior = Polygon([(cx - 0.1, cy - 0.1), (cx + 0.1, cy - 0.1), (cx, cy + 0.1)])
-    interior_point = interior.centroid
+    interior_point = _interior_reference(cfg, deck)
 
     angles = {}
     for node_id, data in cfg["exits"].items():
@@ -156,24 +174,43 @@ def run(bundle: Path, seed: int, sqlite_out: Path):
     return history, switches
 
 
-def animate(bundle: Path, sqlite_path: Path, history, out_path: Path, fps: int) -> None:
+def animate(
+    bundle: Path,
+    sqlite_path: Path,
+    history,
+    out_path: Path,
+    fps: int,
+    agent_id: int | None = None,
+) -> None:
+    """Render one agent's walk with the nodes it knows highlighted."""
     cfg = json.loads((bundle / "config.json").read_text())
     walkable = shapely_wkt.loads((bundle / "geometry.wkt").read_text().strip())
     nodes = {}
     for section, marker in (("exits", "s"), ("checkpoints", "o")):
-        for node_id, data in cfg[section].items():
+        for node_id, data in (cfg.get(section) or {}).items():
             c = Polygon(data["coordinates"]).centroid
             nodes[node_id] = (c.x, c.y, marker)
-    for node_id, data in cfg["distributions"].items():
+    for node_id, data in (cfg.get("distributions") or {}).items():
         c = Polygon(data["coordinates"]).centroid
         nodes[node_id] = (c.x, c.y, "*")
 
-    con = sqlite3.connect(sqlite_path)
-    frames = con.execute(
-        "SELECT frame, pos_x, pos_y FROM trajectory_data ORDER BY frame"
-    ).fetchall()
-    fps_db = con.execute("SELECT value FROM metadata WHERE key='fps'").fetchone()
-    sim_fps = float(fps_db[0]) if fps_db else 20.0
+    # One agent per movie: a multi-agent run would otherwise interleave every
+    # agent's positions into a single path, and the highlighted nodes would be
+    # one agent's knowledge drawn over everybody's trajectory.
+    with sqlite3.connect(sqlite_path) as con:
+        if agent_id is None:
+            row = con.execute("SELECT MIN(id) FROM trajectory_data").fetchone()
+            agent_id = int(row[0])
+        frames = con.execute(
+            "SELECT frame, pos_x, pos_y FROM trajectory_data WHERE id = ? "
+            "ORDER BY frame",
+            (agent_id,),
+        ).fetchall()
+        fps_db = con.execute("SELECT value FROM metadata WHERE key='fps'").fetchone()
+        sim_fps = float(fps_db[0]) if fps_db else 20.0
+    if not frames:
+        raise SystemExit(f"no trajectory rows for agent {agent_id}")
+    history = [e for e in history if e["agent_id"] == agent_id]
 
     fig, ax = plt.subplots(figsize=(9, 7))
     writer = (
@@ -242,6 +279,12 @@ def main() -> int:
     ap.add_argument("--familiarity", type=float, default=0.0)
     ap.add_argument("--seed", type=int, default=420)
     ap.add_argument("--fps", type=int, default=12)
+    ap.add_argument(
+        "--agent",
+        type=int,
+        default=None,
+        help="agent to follow (default: the lowest id in the run)",
+    )
     ap.add_argument("--work", type=Path, default=Path("results/cognitive_map_movie"))
     args = ap.parse_args()
 
@@ -262,7 +305,7 @@ def main() -> int:
         print(f"  switch t={s['time_s']:.2f} -> {s['new_exit']} ({s['reason']})")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    animate(bundle, sqlite_path, history, args.out, args.fps)
+    animate(bundle, sqlite_path, history, args.out, args.fps, args.agent)
     print(f"\nwrote {args.out}")
     return 0
 
