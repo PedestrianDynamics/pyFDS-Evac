@@ -2535,3 +2535,67 @@ class TestAnIdleAgentIsNotRetired:
             config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.3)),
         )
         assert switch is None
+
+
+class TestExploreCommitmentIsNotReissued:
+    """An explore switch to a multi-hop frontier must be recorded once.
+
+    The frontier target sits at the end of the path, but the agent's
+    current_target_stage is the next intermediate hop -- so a guard that
+    compares the frontier against the current target re-fires the same
+    switch on every reevaluation until arrival, resetting the leg and
+    flooding route_history (13 identical switches in 13 s were observed in
+    a CrowdRL world).
+    """
+
+    @staticmethod
+    def _chain_graph():
+        direct = {
+            "A": {"polygon": _box(0, 10), "stage_type": "checkpoint"},
+            "F": {"polygon": _box(0, 20), "stage_type": "checkpoint"},
+            "EX": {"polygon": _box(50, 0), "stage_type": "exit"},
+        }
+        trans = [
+            {"from": "D0", "to": "A"},
+            {"from": "A", "to": "F"},
+            {"from": "F", "to": "EX"},
+        ]
+        graph = StageGraph.from_scenario(
+            direct, trans, distributions={"D0": {"polygon": _box(0, 0)}}
+        )
+        return graph
+
+    def _evaluate(self, graph, wait_info, route_state, cmap, t):
+        return evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=graph,
+            current_time_s=t,
+            current_fed=0.0,
+            extinction_sampler=ConstantExtinctionField(0.0),
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0)),
+            cognitive_map=cmap,
+        )
+
+    def test_the_switch_fires_once_and_stays_committed(self):
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        graph = self._chain_graph()
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "A", "F"},
+            known_edges={("D0", "A"), ("A", "F")},
+            visited_nodes={"D0", "A"},
+        )
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        first = self._evaluate(graph, wait_info, route_state, cmap, 0.0)
+        assert first is not None
+        assert first.reason == "explore"
+        assert first.new_exit == "F"
+        # Mid-walk to the intermediate hop: same frontier, same commitment.
+        second = self._evaluate(graph, wait_info, route_state, cmap, 1.0)
+        assert second is None

@@ -1324,7 +1324,16 @@ def evaluate_and_reroute(
         if frontier is None:
             return None
         target_node, path = frontier
-        if wait_info.get("current_target_stage") == target_node:
+        # Already committed to this frontier: the agent's current target is an
+        # intermediate hop of the committed path, not the frontier node itself,
+        # so comparing against current_target_stage alone re-fires the same
+        # switch on every reevaluation until arrival.
+        committed = route_state.current_path
+        if wait_info.get("current_target_stage") == target_node or (
+            committed
+            and committed[-1] == target_node
+            and wait_info.get("current_target_stage") in committed
+        ):
             return None
         stage_configs = wait_info.get("stage_configs", {})
         changed = reroute_agent(wait_info, path, stage_configs)
