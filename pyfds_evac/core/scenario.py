@@ -2365,10 +2365,10 @@ def run_scenario(
                                             _acmap,
                                             _arrived,
                                             stage_graph,
-                                            vis_model,
-                                            current_time,
-                                            x,
-                                            y,
+                                            vis_model=vis_model,
+                                            time_s=current_time,
+                                            ax=x,
+                                            ay=y,
                                         )
                         continue
 
@@ -2389,15 +2389,17 @@ def run_scenario(
                             advance_path_target(wait_info)
                             _acmap = cognitive_maps.get(agent_id)
                             if _acmap is not None and stage_graph is not None:
-                                expand_on_arrival(
-                                    _acmap,
-                                    wait_info.get("current_origin", ""),
-                                    stage_graph,
-                                    vis_model,
-                                    current_time,
-                                    x,
-                                    y,
-                                )
+                                _arrived = wait_info.get("current_origin")
+                                if _arrived and _arrived in stage_graph.nodes:
+                                    expand_on_arrival(
+                                        _acmap,
+                                        _arrived,
+                                        stage_graph,
+                                        vis_model=vis_model,
+                                        time_s=current_time,
+                                        ax=x,
+                                        ay=y,
+                                    )
                         continue
 
             if collect_cognitive_map_history:
