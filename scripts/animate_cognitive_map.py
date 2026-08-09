@@ -108,10 +108,12 @@ def build_variant(deck: Path, out: Path, familiarity: float) -> tuple[Path, dict
     return out, angles
 
 
-def run(bundle: Path, seed: int, sqlite_out: Path):
+def run(bundle: Path, seed: int, sqlite_out: Path, cell_size_m: float):
     scenario = load_scenario(str(bundle))
     walkable = shapely_wkt.loads((bundle / "geometry.wkt").read_text().strip())
-    vis = VisibilityModel.clear_air(walkable, extract_sign_descriptors(scenario.raw))
+    vis = VisibilityModel.clear_air(
+        walkable, extract_sign_descriptors(scenario.raw), cell_size_m=cell_size_m
+    )
     result = run_scenario(
         scenario,
         seed=seed,
@@ -208,8 +210,9 @@ def animate(
                 fontsize=11,
             )
             ax.set_aspect("equal")
-            ax.set_xlim(-20, 20)
-            ax.set_ylim(-15, 14)
+            minx, miny, maxx, maxy = walkable.bounds
+            ax.set_xlim(minx - 1, maxx + 1)
+            ax.set_ylim(miny - 1, maxy + 1)
             ax.set_xticks([])
             ax.set_yticks([])
             writer.grab_frame()
@@ -239,6 +242,14 @@ def main() -> int:
         default=None,
         help="agent to follow (default: the lowest id in the run)",
     )
+    ap.add_argument(
+        "--cell-size",
+        type=float,
+        default=0.5,
+        help="visibility grid resolution in m; walls thinner than one cell "
+        "stop occluding, so pick it below the deck's thinnest wall "
+        "(see VisibilityModel.clear_air)",
+    )
     ap.add_argument("--work", type=Path, default=Path("results/cognitive_map_movie"))
     args = ap.parse_args()
 
@@ -248,7 +259,7 @@ def main() -> int:
         print(f"  {node_id}: alpha={alpha}")
 
     sqlite_path = args.work / "run.sqlite"
-    history, switches = run(bundle, args.seed, sqlite_path)
+    history, switches = run(bundle, args.seed, sqlite_path, args.cell_size)
     print(f"\nlearning events: {len(history)}   route switches: {len(switches)}")
     for event in history:
         print(

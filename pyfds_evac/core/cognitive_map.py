@@ -126,21 +126,53 @@ def init_cognitive_map(
     return cmap
 
 
+def _learn_edge(cmap: AgentCognitiveMap, graph, source: str, target: str) -> None:
+    """Learn an edge, and its reverse when the graph has one.
+
+    Route edges are directed, but knowledge of a corridor is not: an agent
+    that knows the leg A->B can walk it back. The reverse is added only when
+    the graph offers it -- exits are terminal and spawn areas have no inbound
+    edges -- so routing invariants hold. Without this, a discovery agent whose
+    arrival at a node reveals nothing new holds a known subgraph with no
+    outgoing edge, and :func:`nearest_frontier_target` cannot route it back
+    out of a dead end it can physically leave.
+    """
+    cmap.known_edges.add((source, target))
+    if any(edge.target == source for edge in graph.edges.get(target, [])):
+        cmap.known_edges.add((target, source))
+
+
 def expand_on_arrival(
     cmap: AgentCognitiveMap,
     arrived_node: str,
     graph,
+    vis_model=None,
+    time_s: float = 0.0,
+    ax: float | None = None,
+    ay: float | None = None,
 ) -> None:
-    """Expand map unconditionally when agent physically arrives at a node.
+    """Expand map when the agent physically arrives at a node.
 
-    The agent can now see all immediate neighbours (they are standing there).
+    Standing on a node does not mean seeing past its walls: auto-wired decks
+    keep nodes graph-adjacent to stages in other rooms, so with a visibility
+    model and a position each neighbour is revealed only if visible from
+    (ax, ay) -- the same gate perception uses in :func:`_expand_visible`.
+    Without one there is no evidence either way, and every neighbour is
+    revealed so an unperceiving agent can still progress hop by hop.
     """
     if cmap.familiarity == "full":
         return
     cmap.known_nodes.add(arrived_node)
     for edge in graph.edges.get(arrived_node, []):
+        if (
+            vis_model is not None
+            and ax is not None
+            and ay is not None
+            and not vis_model.node_is_visible(time_s, ax, ay, edge.target)
+        ):
+            continue
         cmap.known_nodes.add(edge.target)
-        cmap.known_edges.add((edge.source, edge.target))
+        _learn_edge(cmap, graph, edge.source, edge.target)
 
 
 def expand_from_visibility(
@@ -178,8 +210,9 @@ def _expand_visible(
     stage, so treating a neighbour as seen would hand every discovery agent most
     of the building's exits at t=0 and make ``familiarity`` inert in every run
     without a visibility cache. Perception is not the only way a map grows --
-    :func:`expand_on_arrival` still reveals neighbours on physical arrival, so
-    an agent is never stranded by this.
+    :func:`expand_on_arrival` still reveals visible neighbours on physical
+    arrival (and, without a visibility model, all of them), so an agent is
+    never stranded by this.
     """
     if vis_model is None:
         return
@@ -187,7 +220,7 @@ def _expand_visible(
         tgt = edge.target
         if vis_model.node_is_visible(time_s, ax, ay, tgt):
             cmap.known_nodes.add(tgt)
-            cmap.known_edges.add((edge.source, edge.target))
+            _learn_edge(cmap, graph, edge.source, edge.target)
 
 
 def cognitive_subgraph(cmap: AgentCognitiveMap, graph):

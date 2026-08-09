@@ -481,10 +481,15 @@ Default when the key is absent: `"full"` (backward compatible).
    each exit drawn as known by a scalar `familiarity`, and any adjacent node
    whose sign is currently visible from the spawn centroid. It then picks its
    first exit by ranking that map, not by geometry.
-2. **On arrival** — when an agent physically reaches a node, all immediate
-   neighbours are added to the cognitive map unconditionally.
+2. **On arrival** — when an agent physically reaches a node, the immediate
+   neighbours whose sign is visible from where it stands are added (all of
+   them when no visibility model is supplied).
 3. **At reevaluation** — adjacent nodes whose sign is visible from the
    agent's current position are added.
+
+Learning an edge also learns its reverse when the graph has one: knowledge
+of a corridor is bidirectional, so an agent can always retrace its steps
+out of a dead end whose far side shows it nothing new.
 
 Routing (Dijkstra) runs over the agent's known sub-graph only. If no exit
 is reachable in the cognitive map, the agent heads toward the nearest

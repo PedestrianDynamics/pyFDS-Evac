@@ -2365,6 +2365,10 @@ def run_scenario(
                                             _acmap,
                                             _arrived,
                                             stage_graph,
+                                            vis_model,
+                                            current_time,
+                                            x,
+                                            y,
                                         )
                         continue
 
@@ -2389,6 +2393,10 @@ def run_scenario(
                                     _acmap,
                                     wait_info.get("current_origin", ""),
                                     stage_graph,
+                                    vis_model,
+                                    current_time,
+                                    x,
+                                    y,
                                 )
                         continue
 

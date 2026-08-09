@@ -150,8 +150,8 @@ class StageGraph:
             # Connect a node only to those reachable without passing another,
             # so "neighbour" keeps its physical meaning.  A complete graph would
             # make it meaningless, and expand_on_arrival reveals every neighbour
-            # unconditionally -- so one arrival would expose the whole building
-            # and flatten the familiarity gradient.
+            # a vis-model-less run cannot rule out -- so one arrival would
+            # expose the whole building and flatten the familiarity gradient.
             # Only crossings can block. An exit is terminal -- you cannot pass
             # through one -- so an exit lying on the way to a farther exit must
             # not prune it, or that farther exit becomes unreachable outright.
