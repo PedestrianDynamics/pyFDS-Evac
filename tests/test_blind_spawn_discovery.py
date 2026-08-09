@@ -226,8 +226,9 @@ class TestTheMapGrowsHopByHop:
         assert {"C2", "C3"} <= cmap.known_nodes
 
     def test_but_still_no_exit(self):
-        """``expand_on_arrival`` ignores visibility and reveals every neighbour,
-        so this holds only because pruning kept the exits non-adjacent to C1.
+        """``expand_on_arrival`` without a visibility model reveals every
+        neighbour, so this holds only because pruning kept the exits
+        non-adjacent to C1.
 
         If pruning regresses, this fails and says so, instead of the scenario
         silently collapsing to a single hop.
@@ -383,3 +384,209 @@ class TestTheKnownSubgraphIsHonest:
         sub = cognitive_subgraph(cmap, graph)
         assert "E_west" not in sub.nodes
         assert "E_east" not in sub.nodes
+
+
+class TestArrivalRespectsVisibility:
+    """Arrival reveals a neighbour only when the agent can actually see it.
+
+    Auto-wiring keeps "neighbour" physical by pruning, but on a deck whose
+    crossings do not cover every doorway a node stays graph-adjacent to stages
+    in other rooms. Revealing those unconditionally hands a discovery agent
+    exits behind walls -- the exact leak ``_expand_visible`` refuses for
+    perception -- so with a visibility model the arrival reveal must run
+    through the same gate. Without one there is no evidence either way and
+    every neighbour is revealed, or an unperceiving agent could never leave
+    its first node.
+    """
+
+    class _WallVis:
+        def __init__(self, visible):
+            self.visible = visible
+
+        def node_is_visible(self, time, x, y, node_id):
+            return node_id in self.visible
+
+    @staticmethod
+    def _hallway_graph():
+        from pyfds_evac.core.route_graph import StageNode, _make_edge
+
+        graph = StageGraph()
+        graph.nodes = {
+            "C0": StageNode("C0", 0.0, 0.0, "checkpoint"),
+            "C_corridor": StageNode("C_corridor", 0.0, -10.0, "checkpoint"),
+            "E_walled": StageNode("E_walled", 5.0, -5.0, "exit"),
+        }
+        for tgt in ("C_corridor", "E_walled"):
+            graph.edges.setdefault("C0", []).append(
+                _make_edge(graph.nodes["C0"], graph.nodes[tgt], None)
+            )
+        return graph
+
+    def _arrive(self, vis_model):
+        graph = self._hallway_graph()
+        cmap = init_cognitive_map("C0", graph, "discovery", None, 0.0)
+        expand_on_arrival(
+            cmap, "C0", graph, vis_model=vis_model, time_s=1.0, ax=0.0, ay=0.0
+        )
+        return cmap
+
+    def test_a_neighbour_behind_a_wall_stays_unknown(self):
+        cmap = self._arrive(self._WallVis({"C_corridor"}))
+        assert "C_corridor" in cmap.known_nodes
+        assert "E_walled" not in cmap.known_nodes
+        assert ("C0", "E_walled") not in cmap.known_edges
+
+    def test_without_a_visibility_model_every_neighbour_is_revealed(self):
+        cmap = self._arrive(None)
+        assert {"C_corridor", "E_walled"} <= cmap.known_nodes
+
+
+class TestTraversalTeachesTheWayBack:
+    """Learning a leg teaches its reverse leg, when the graph has one.
+
+    Route edges are directed, but knowledge of a corridor is not: an agent
+    that knows A->B can walk it back. Without the reverse edge a discovery
+    agent whose arrival reveals nothing new -- a doorway whose far side is
+    all walls -- holds a known subgraph with no outgoing edge at all, so
+    ``nearest_frontier_target`` cannot route it anywhere and it stands at a
+    node it can physically leave for the rest of the run.
+    """
+
+    class _BlindVis:
+        def node_is_visible(self, time, x, y, node_id):
+            return False
+
+    @staticmethod
+    def _corridor_graph():
+        from pyfds_evac.core.route_graph import StageNode, _make_edge
+
+        graph = StageGraph()
+        graph.nodes = {
+            "C0": StageNode("C0", 0.0, 0.0, "checkpoint"),
+            "C_dead_end": StageNode("C_dead_end", 0.0, -10.0, "checkpoint"),
+            "C_far": StageNode("C_far", 20.0, 0.0, "checkpoint"),
+            "E0": StageNode("E0", 5.0, 0.0, "exit"),
+        }
+        for src, tgt in (
+            ("C0", "C_dead_end"),
+            ("C_dead_end", "C0"),
+            ("C0", "C_far"),
+            ("C_far", "C0"),
+            ("C0", "E0"),
+        ):
+            graph.edges.setdefault(src, []).append(
+                _make_edge(graph.nodes[src], graph.nodes[tgt], None)
+            )
+        return graph
+
+    def test_the_reverse_leg_is_learned_with_the_leg(self):
+        graph = self._corridor_graph()
+        cmap = init_cognitive_map("C0", graph, "discovery", None, 0.0)
+        expand_on_arrival(cmap, "C0", graph)
+        assert ("C0", "C_dead_end") in cmap.known_edges
+        assert ("C_dead_end", "C0") in cmap.known_edges
+
+    def test_but_no_reverse_edge_is_invented_into_a_terminal_exit(self):
+        graph = self._corridor_graph()
+        cmap = init_cognitive_map("C0", graph, "discovery", None, 0.0)
+        expand_on_arrival(cmap, "C0", graph)
+        assert ("C0", "E0") in cmap.known_edges
+        assert ("E0", "C0") not in cmap.known_edges
+
+    def test_an_agent_at_a_blind_dead_end_can_still_be_routed_back(self):
+        """From C0 the corridor and a far doorway are visible; the far one
+        stays unvisited. After walking into the dead end and seeing nothing,
+        the reverse leg is the agent's only known way back out toward that
+        frontier -- without it the frontier is unreachable and the agent
+        stands at a node it can physically leave for the rest of the run.
+        """
+
+        class _FromC0Vis:
+            def node_is_visible(self, time, x, y, node_id):
+                return node_id in ("C_dead_end", "C_far")
+
+        graph = self._corridor_graph()
+        cmap = init_cognitive_map("C0", graph, "discovery", None, 0.0)
+        expand_on_arrival(cmap, "C0", graph, vis_model=_FromC0Vis(), ax=0.0, ay=0.0)
+        expand_on_arrival(
+            cmap, "C_dead_end", graph, vis_model=self._BlindVis(), ax=0.0, ay=-10.0
+        )
+        frontier = nearest_frontier_target(cmap, graph, "C_dead_end", (0.0, -10.0))
+        assert frontier is not None
+        target, path = frontier
+        assert target == "C_far"
+        assert path == ["C_dead_end", "C0", "C_far"]
+
+
+class TestExploringNeverLoops:
+    """A visited node is a closed frontier, whatever it failed to teach.
+
+    With visibility-gated arrival, a visited node can keep unknown edges
+    forever -- its neighbours' signs face away, so no amount of standing
+    there reveals them. If such nodes stay frontiers, two of them adjacent
+    to each other trap the explorer: the nearest frontier from each is the
+    other, and the agent shuttles between them for the rest of the run
+    while genuinely unvisited nodes wait. Closing frontiers on arrival
+    makes every explore hop consume one unvisited node, so exploration
+    terminates.
+    """
+
+    class _BlindVis:
+        def node_is_visible(self, time, x, y, node_id):
+            return False
+
+    @staticmethod
+    def _cluster_graph():
+        from pyfds_evac.core.route_graph import StageNode, _make_edge
+
+        graph = StageGraph()
+        graph.nodes = {
+            "S": StageNode("S", 0.0, 0.0, "distribution"),
+            "A": StageNode("A", 0.0, -5.0, "checkpoint"),
+            "B": StageNode("B", 3.0, -5.0, "checkpoint"),
+            "C_far": StageNode("C_far", -20.0, -5.0, "checkpoint"),
+            "X": StageNode("X", 3.0, -20.0, "checkpoint"),
+        }
+        pairs = (
+            ("S", "A"),
+            ("A", "B"),
+            ("B", "A"),
+            ("A", "C_far"),
+            ("C_far", "A"),
+            ("A", "X"),
+            ("B", "X"),
+        )
+        for src, tgt in pairs:
+            graph.edges.setdefault(src, []).append(
+                _make_edge(graph.nodes[src], graph.nodes[tgt], None)
+            )
+        return graph
+
+    def _walk_a_then_b(self):
+        graph = self._cluster_graph()
+
+        class _FromAVis:
+            def node_is_visible(self, time, x, y, node_id):
+                return node_id in ("B", "C_far")
+
+        cmap = init_cognitive_map("S", graph, "discovery", None, 0.0)
+        expand_on_arrival(cmap, "A", graph, vis_model=_FromAVis(), ax=0.0, ay=-5.0)
+        expand_on_arrival(cmap, "B", graph, vis_model=self._BlindVis(), ax=3.0, ay=-5.0)
+        return graph, cmap
+
+    def test_a_visited_neighbour_is_not_offered_again(self):
+        """A and B both still have the unknown edge to X, but both were
+        visited: the frontier from B must be the unvisited C_far, not the
+        2 m hop back to A that taught nothing last time.
+        """
+        graph, cmap = self._walk_a_then_b()
+        frontier = nearest_frontier_target(cmap, graph, "B", (3.0, -5.0))
+        assert frontier is not None
+        assert frontier[0] == "C_far"
+
+    def test_exploration_terminates_when_every_known_node_was_visited(self):
+        graph, cmap = self._walk_a_then_b()
+        expand_on_arrival(
+            cmap, "C_far", graph, vis_model=self._BlindVis(), ax=-20.0, ay=-5.0
+        )
+        assert nearest_frontier_target(cmap, graph, "C_far", (-20.0, -5.0)) is None

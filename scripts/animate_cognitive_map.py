@@ -34,6 +34,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.animation import FFMpegWriter, PillowWriter  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
 from shapely import wkt as shapely_wkt  # noqa: E402
 from shapely.geometry import Point, Polygon  # noqa: E402
 
@@ -45,6 +46,7 @@ from pyfds_evac.core.visibility import (  # noqa: E402
 )
 
 UNKNOWN, KNOWN, AGENT = "#c4c4cc", "#d62728", "#5b4fc4"
+WANDER, SIGN = "#e08a1e", "#2e7d32"
 
 
 def inward_alpha(exit_polygon: Polygon, interior_point) -> float:
@@ -108,10 +110,12 @@ def build_variant(deck: Path, out: Path, familiarity: float) -> tuple[Path, dict
     return out, angles
 
 
-def run(bundle: Path, seed: int, sqlite_out: Path):
+def run(bundle: Path, seed: int, sqlite_out: Path, cell_size_m: float):
     scenario = load_scenario(str(bundle))
     walkable = shapely_wkt.loads((bundle / "geometry.wkt").read_text().strip())
-    vis = VisibilityModel.clear_air(walkable, extract_sign_descriptors(scenario.raw))
+    vis = VisibilityModel.clear_air(
+        walkable, extract_sign_descriptors(scenario.raw), cell_size_m=cell_size_m
+    )
     result = run_scenario(
         scenario,
         seed=seed,
@@ -135,10 +139,21 @@ def animate(
     out_path: Path,
     fps: int,
     agent_id: int | None = None,
+    switches=None,
 ) -> None:
-    """Render one agent's walk with the nodes it knows highlighted."""
+    """Render one agent's walk with the nodes it knows highlighted.
+
+    *switches* is the run's route history; when given, the agent and its
+    trail turn amber for the stretches where the last switch was a
+    ``wander`` -- knowledge-exhausted patrolling -- so those phases are
+    tellable apart from purposeful explore/exit legs at a glance.
+    """
     cfg = json.loads((bundle / "config.json").read_text())
     walkable = shapely_wkt.loads((bundle / "geometry.wkt").read_text().strip())
+    # The same descriptors the run's visibility model used, so the drawn
+    # orientation is the one that decided legibility. alpha is the compass
+    # bearing (deg from north, CW) of the readable side; None means omni.
+    signs = extract_sign_descriptors(cfg)
     nodes = {}
     for section, marker in (("exits", "s"), ("checkpoints", "o")):
         for node_id, data in (cfg.get(section) or {}).items():
@@ -165,8 +180,79 @@ def animate(
     if not frames:
         raise SystemExit(f"no trajectory rows for agent {agent_id}")
     history = [e for e in history if e["agent_id"] == agent_id]
+    switches = [s for s in (switches or []) if s["agent_id"] == agent_id]
+    # A stalled 600 s run has thousands of rows; cap the movie at ~600 frames
+    # so it stays watchable and renders in minutes, not hours. The trail is
+    # drawn from the kept rows only, which is visually indistinguishable.
+    stride = max(1, len(frames) // 600)
+    frames = frames[::stride]
+    wandering = [_wandering_at(switches, frame / sim_fps) for frame, _, _ in frames]
 
-    fig, ax = plt.subplots(figsize=(9, 7))
+    fig, ax = plt.subplots(figsize=(9, 7.6))
+    fig.legend(
+        handles=[
+            Line2D(
+                [],
+                [],
+                marker="s",
+                ls="",
+                mfc=KNOWN,
+                mec="#40404a",
+                ms=9,
+                label="exit, known",
+            ),
+            Line2D(
+                [],
+                [],
+                marker="s",
+                ls="",
+                mfc=UNKNOWN,
+                mec="#40404a",
+                ms=9,
+                label="exit, unknown",
+            ),
+            Line2D(
+                [],
+                [],
+                marker="o",
+                ls="",
+                mfc=KNOWN,
+                mec="#40404a",
+                ms=9,
+                label="stage, known",
+            ),
+            Line2D(
+                [],
+                [],
+                marker="o",
+                ls="",
+                mfc=UNKNOWN,
+                mec="#40404a",
+                ms=9,
+                label="stage, unknown",
+            ),
+            Line2D(
+                [],
+                [],
+                marker="*",
+                ls="",
+                mfc=KNOWN,
+                mec="#40404a",
+                ms=12,
+                label="spawn",
+            ),
+            Line2D([], [], color=SIGN, lw=1.6, label="sign facing"),
+            Line2D([], [], marker="o", ls="-", color=AGENT, ms=8, label="agent"),
+            Line2D(
+                [], [], marker="o", ls="-", color=WANDER, ms=8, label="agent, wandering"
+            ),
+        ],
+        loc="lower center",
+        ncol=4,
+        frameon=False,
+        fontsize=9,
+    )
+    fig.subplots_adjust(bottom=0.12)
     writer = (
         FFMpegWriter(fps=fps)
         if shutil.which("ffmpeg") and out_path.suffix == ".mp4"
@@ -183,6 +269,31 @@ def animate(
             for ring in walkable.interiors:
                 rx, ry = ring.xy
                 ax.plot(rx, ry, color="#9298a8", lw=1)
+            for node_id, sign in signs.items():
+                sx, sy = float(sign["x"]), float(sign["y"])
+                alpha = sign.get("alpha")
+                if alpha is None:
+                    # Omni-directional: readable from every side.
+                    ax.plot(
+                        sx,
+                        sy,
+                        marker="o",
+                        ms=16,
+                        mfc="none",
+                        mec="#2e7d32",
+                        mew=1.0,
+                        zorder=3,
+                    )
+                    continue
+                rad = math.radians(float(alpha))
+                dx, dy = math.sin(rad), math.cos(rad)
+                ax.annotate(
+                    "",
+                    xy=(sx + 1.8 * dx, sy + 1.8 * dy),
+                    xytext=(sx, sy),
+                    arrowprops=dict(arrowstyle="-|>", color="#2e7d32", lw=1.6),
+                    zorder=5,
+                )
             for node_id, (nx, ny, marker) in nodes.items():
                 on = node_id in known
                 ax.plot(
@@ -195,25 +306,57 @@ def animate(
                     mew=0.6,
                     zorder=4,
                 )
+            # Trail, drawn as runs of constant mode so wander stretches stay
+            # amber after the fact. Runs overlap by one point to keep the
+            # line unbroken.
+            start = 0
+            for j in range(1, i + 1):
+                if wandering[j] != wandering[start]:
+                    ax.plot(
+                        [p[1] for p in frames[start : j + 1]],
+                        [p[2] for p in frames[start : j + 1]],
+                        color=WANDER if wandering[start] else AGENT,
+                        lw=2,
+                        alpha=0.75,
+                    )
+                    start = j
             ax.plot(
-                [p[1] for p in frames[: i + 1]],
-                [p[2] for p in frames[: i + 1]],
-                color=AGENT,
+                [p[1] for p in frames[start : i + 1]],
+                [p[2] for p in frames[start : i + 1]],
+                color=WANDER if wandering[start] else AGENT,
                 lw=2,
                 alpha=0.75,
             )
-            ax.plot(x, y, marker="o", ms=11, color=AGENT, zorder=6)
+            ax.plot(
+                x,
+                y,
+                marker="o",
+                ms=11,
+                color=WANDER if wandering[i] else AGENT,
+                zorder=6,
+            )
             ax.set_title(
                 f"t = {t:5.2f} s     known nodes: {len(known)} / {len(nodes)}",
                 fontsize=11,
             )
             ax.set_aspect("equal")
-            ax.set_xlim(-20, 20)
-            ax.set_ylim(-15, 14)
+            minx, miny, maxx, maxy = walkable.bounds
+            ax.set_xlim(minx - 1, maxx + 1)
+            ax.set_ylim(miny - 1, maxy + 1)
             ax.set_xticks([])
             ax.set_yticks([])
             writer.grab_frame()
     plt.close(fig)
+
+
+def _wandering_at(switches, t: float) -> bool:
+    """Whether the last route switch at time *t* put the agent in wander mode."""
+    reason = None
+    for s in switches:
+        if s["time_s"] > t:
+            break
+        reason = s["reason"]
+    return reason == "wander"
 
 
 def _known_at(history, t: float) -> set[str]:
@@ -239,6 +382,14 @@ def main() -> int:
         default=None,
         help="agent to follow (default: the lowest id in the run)",
     )
+    ap.add_argument(
+        "--cell-size",
+        type=float,
+        default=0.5,
+        help="visibility grid resolution in m; walls thinner than one cell "
+        "stop occluding, so pick it below the deck's thinnest wall "
+        "(see VisibilityModel.clear_air)",
+    )
     ap.add_argument("--work", type=Path, default=Path("results/cognitive_map_movie"))
     args = ap.parse_args()
 
@@ -248,7 +399,7 @@ def main() -> int:
         print(f"  {node_id}: alpha={alpha}")
 
     sqlite_path = args.work / "run.sqlite"
-    history, switches = run(bundle, args.seed, sqlite_path)
+    history, switches = run(bundle, args.seed, sqlite_path, args.cell_size)
     print(f"\nlearning events: {len(history)}   route switches: {len(switches)}")
     for event in history:
         print(
@@ -259,7 +410,9 @@ def main() -> int:
         print(f"  switch t={s['time_s']:.2f} -> {s['new_exit']} ({s['reason']})")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    animate(bundle, sqlite_path, history, args.out, args.fps, args.agent)
+    animate(
+        bundle, sqlite_path, history, args.out, args.fps, args.agent, switches=switches
+    )
     print(f"\nwrote {args.out}")
     return 0
 

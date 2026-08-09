@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import heapq
+import math
 from dataclasses import dataclass, field
 
 
@@ -17,6 +19,10 @@ class AgentCognitiveMap:
     familiarity: str  # "full" | "discovery"
     known_nodes: set[str] = field(default_factory=set)
     known_edges: set[tuple[str, str]] = field(default_factory=set)
+    # Nodes the agent has physically stood on. A visited node is a closed
+    # frontier: standing there taught the agent everything that position will
+    # ever teach, however little that was (see nearest_frontier_target).
+    visited_nodes: set[str] = field(default_factory=set)
 
 
 def familiarity_probability(value) -> float:
@@ -108,7 +114,11 @@ def init_cognitive_map(
             known_edges=all_edges,
         )
 
-    cmap = AgentCognitiveMap(familiarity="discovery", known_nodes={spawn_node})
+    cmap = AgentCognitiveMap(
+        familiarity="discovery",
+        known_nodes={spawn_node},
+        visited_nodes={spawn_node},
+    )
 
     if entrance is not None and entrance in graph.nodes:
         _learn_route_to(cmap, graph, spawn_node, entrance)
@@ -126,21 +136,54 @@ def init_cognitive_map(
     return cmap
 
 
+def _learn_edge(cmap: AgentCognitiveMap, graph, source: str, target: str) -> None:
+    """Learn an edge, and its reverse when the graph has one.
+
+    Route edges are directed, but knowledge of a corridor is not: an agent
+    that knows the leg A->B can walk it back. The reverse is added only when
+    the graph offers it -- exits are terminal and spawn areas have no inbound
+    edges -- so routing invariants hold. Without this, a discovery agent whose
+    arrival at a node reveals nothing new holds a known subgraph with no
+    outgoing edge, and :func:`nearest_frontier_target` cannot route it back
+    out of a dead end it can physically leave.
+    """
+    cmap.known_edges.add((source, target))
+    if any(edge.target == source for edge in graph.edges.get(target, [])):
+        cmap.known_edges.add((target, source))
+
+
 def expand_on_arrival(
     cmap: AgentCognitiveMap,
     arrived_node: str,
     graph,
+    vis_model=None,
+    time_s: float = 0.0,
+    ax: float | None = None,
+    ay: float | None = None,
 ) -> None:
-    """Expand map unconditionally when agent physically arrives at a node.
+    """Expand map when the agent physically arrives at a node.
 
-    The agent can now see all immediate neighbours (they are standing there).
+    Standing on a node does not mean seeing past its walls: auto-wired decks
+    keep nodes graph-adjacent to stages in other rooms, so with a visibility
+    model and a position each neighbour is revealed only if visible from
+    (ax, ay) -- the same gate perception uses in :func:`_expand_visible`.
+    Without one there is no evidence either way, and every neighbour is
+    revealed so an unperceiving agent can still progress hop by hop.
     """
     if cmap.familiarity == "full":
         return
     cmap.known_nodes.add(arrived_node)
+    cmap.visited_nodes.add(arrived_node)
     for edge in graph.edges.get(arrived_node, []):
+        if (
+            vis_model is not None
+            and ax is not None
+            and ay is not None
+            and not vis_model.node_is_visible(time_s, ax, ay, edge.target)
+        ):
+            continue
         cmap.known_nodes.add(edge.target)
-        cmap.known_edges.add((edge.source, edge.target))
+        _learn_edge(cmap, graph, edge.source, edge.target)
 
 
 def expand_from_visibility(
@@ -178,8 +221,9 @@ def _expand_visible(
     stage, so treating a neighbour as seen would hand every discovery agent most
     of the building's exits at t=0 and make ``familiarity`` inert in every run
     without a visibility cache. Perception is not the only way a map grows --
-    :func:`expand_on_arrival` still reveals neighbours on physical arrival, so
-    an agent is never stranded by this.
+    :func:`expand_on_arrival` still reveals visible neighbours on physical
+    arrival (and, without a visibility model, all of them), so an agent is
+    never stranded by this.
     """
     if vis_model is None:
         return
@@ -187,7 +231,7 @@ def _expand_visible(
         tgt = edge.target
         if vis_model.node_is_visible(time_s, ax, ay, tgt):
             cmap.known_nodes.add(tgt)
-            cmap.known_edges.add((edge.source, edge.target))
+            _learn_edge(cmap, graph, edge.source, edge.target)
 
 
 def cognitive_subgraph(cmap: AgentCognitiveMap, graph):
@@ -219,14 +263,22 @@ def nearest_frontier_target(
     source: str,
     agent_position: tuple[float, float] | None = None,
 ) -> tuple[str, list[str]] | None:
-    """Return the nearest known-but-unexplored node to head toward, if any.
+    """Return the nearest known-but-unvisited node to head toward, if any.
 
-    A frontier node is one already in the agent's cognitive map whose real
-    outgoing edges (in the full *graph*) are not all known yet — a doorway
-    the agent has seen but not been through. Used when no exit is reachable
-    in the known subgraph: instead of standing still, the agent heads to the
-    nearest such node, expanding its knowledge on arrival
-    (see :func:`expand_on_arrival`) and re-evaluating from there.
+    A frontier node is one already in the agent's cognitive map that the
+    agent has never physically stood on — a doorway it has seen but not been
+    through. Used when no exit is reachable in the known subgraph: instead of
+    standing still, the agent heads to the nearest such node, expanding its
+    knowledge on arrival (see :func:`expand_on_arrival`) and re-evaluating
+    from there.
+
+    Visiting closes a frontier even when arrival taught nothing: with
+    visibility-gated arrival a node can hold unknown edges forever (its
+    neighbours' signs face away), and an edges-based frontier keeps offering
+    such nodes. Two of them adjacent to each other then trap the explorer —
+    the nearest frontier from each is the other — while genuinely unvisited
+    nodes wait. Consuming one unvisited node per hop makes exploration
+    terminate.
 
     With *agent_position* the first leg is measured from where the agent
     actually stands rather than from *source*'s centroid, the same substitution
@@ -242,14 +294,7 @@ def nearest_frontier_target(
     Returns None once every known node has been fully explored (no frontier
     left — a genuine dead end).
     """
-    frontier = {
-        node_id
-        for node_id in cmap.known_nodes
-        if any(
-            (edge.source, edge.target) not in cmap.known_edges
-            for edge in graph.edges.get(node_id, [])
-        )
-    }
+    frontier = cmap.known_nodes - cmap.visited_nodes
     if not frontier:
         return None
 
@@ -270,6 +315,86 @@ def nearest_frontier_target(
         return None
     node_id, _cost, path = best
     return node_id, path
+
+
+def wander_target(
+    cmap: AgentCognitiveMap,
+    graph,
+    source: str,
+    step: int,
+) -> tuple[str, list[str]] | None:
+    """The *step*-th stop of a patrol over the nodes the agent knows.
+
+    Called when the frontier is exhausted: every known node is visited and
+    no exit is reachable, so there is nowhere the agent *knows* to look.
+    Standing still would end discovery, but walking does not: perception
+    runs from the agent's position, and sign legibility depends on that
+    position (distance and the readable half-plane), so a leg between two
+    known nodes can make a sign readable that never was from either node.
+
+    The patrol is a deterministic rotation through the known nodes, not a
+    random draw: it needs no seeded state, reproduces under a fixed run
+    seed, and covers every known leg instead of favouring some. Returns
+    None when no other known node is reachable -- an agent alone on its
+    spawn node genuinely has nowhere to go.
+    """
+    candidates = sorted(
+        node_id
+        for node_id in cmap.known_nodes
+        if node_id != source and node_id in graph.nodes
+    )
+    if not candidates:
+        return None
+    for offset in range(len(candidates)):
+        node_id = candidates[(step + offset) % len(candidates)]
+        path = _undirected_known_path(cmap, graph, source, node_id)
+        if path is None:
+            continue
+        return node_id, path
+    return None
+
+
+def _undirected_known_path(
+    cmap: AgentCognitiveMap, graph, source: str, target: str
+) -> list[str] | None:
+    """Shortest path over the known legs, walked in either direction.
+
+    The known subgraph is directed for routing (exits are terminal, nothing
+    points back at a spawn area), but a corridor the agent has walked or seen
+    is physically two-way -- without this an agent standing at its first
+    checkpoint cannot even patrol back to its own spawn area. Weights are
+    centroid distances, which is what the patrol optimises for.
+    """
+    adjacency: dict[str, set[str]] = {}
+    for a, b in cmap.known_edges:
+        if a in graph.nodes and b in graph.nodes:
+            adjacency.setdefault(a, set()).add(b)
+            adjacency.setdefault(b, set()).add(a)
+
+    def _dist(a: str, b: str) -> float:
+        na, nb = graph.nodes[a], graph.nodes[b]
+        return math.hypot(na.centroid_x - nb.centroid_x, na.centroid_y - nb.centroid_y)
+
+    best: dict[str, float] = {source: 0.0}
+    previous: dict[str, str] = {}
+    queue: list[tuple[float, str]] = [(0.0, source)]
+    while queue:
+        cost, node = heapq.heappop(queue)
+        if node == target:
+            path = [node]
+            while node in previous:
+                node = previous[node]
+                path.append(node)
+            return path[::-1]
+        if cost > best.get(node, math.inf):
+            continue
+        for neighbour in adjacency.get(node, ()):
+            candidate = cost + _dist(node, neighbour)
+            if candidate < best.get(neighbour, math.inf):
+                best[neighbour] = candidate
+                previous[neighbour] = node
+                heapq.heappush(queue, (candidate, neighbour))
+    return None
 
 
 def _cost_from_agent(graph, path, cost: float, agent_position) -> float:

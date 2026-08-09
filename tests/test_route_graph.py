@@ -2535,3 +2535,206 @@ class TestAnIdleAgentIsNotRetired:
             config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.3)),
         )
         assert switch is None
+
+
+class TestExploreCommitmentIsNotReissued:
+    """An explore switch to a multi-hop frontier must be recorded once.
+
+    The frontier target sits at the end of the path, but the agent's
+    current_target_stage is the next intermediate hop -- so a guard that
+    compares the frontier against the current target re-fires the same
+    switch on every reevaluation until arrival, resetting the leg and
+    flooding route_history (13 identical switches in 13 s were observed in
+    a CrowdRL world).
+    """
+
+    @staticmethod
+    def _chain_graph():
+        direct = {
+            "A": {"polygon": _box(0, 10), "stage_type": "checkpoint"},
+            "F": {"polygon": _box(0, 20), "stage_type": "checkpoint"},
+            "EX": {"polygon": _box(50, 0), "stage_type": "exit"},
+        }
+        trans = [
+            {"from": "D0", "to": "A"},
+            {"from": "A", "to": "F"},
+            {"from": "F", "to": "EX"},
+        ]
+        graph = StageGraph.from_scenario(
+            direct, trans, distributions={"D0": {"polygon": _box(0, 0)}}
+        )
+        return graph
+
+    def _evaluate(self, graph, wait_info, route_state, cmap, t):
+        return evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=graph,
+            current_time_s=t,
+            current_fed=0.0,
+            extinction_sampler=ConstantExtinctionField(0.0),
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0)),
+            cognitive_map=cmap,
+        )
+
+    def test_the_switch_fires_once_and_stays_committed(self):
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        graph = self._chain_graph()
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "A", "F"},
+            known_edges={("D0", "A"), ("A", "F")},
+            visited_nodes={"D0", "A"},
+        )
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        first = self._evaluate(graph, wait_info, route_state, cmap, 0.0)
+        assert first is not None
+        assert first.reason == "explore"
+        assert first.new_exit == "F"
+        # Mid-walk to the intermediate hop: same frontier, same commitment.
+        second = self._evaluate(graph, wait_info, route_state, cmap, 1.0)
+        assert second is None
+
+
+class TestWanderWhenKnowledgeIsExhausted:
+    """No reachable exit, no unvisited frontier: patrol the known nodes.
+
+    Standing still ends discovery: perception evaluates from the agent's
+    position, and sign legibility is position-dependent (distance and the
+    readable half-plane), so a leg walked between two known nodes can make
+    a sign readable that never was from either node. The patrol rotates
+    deterministically through the known nodes -- reproducible under a fixed
+    run seed and guaranteed to cover every known leg, where a random draw
+    could favour some.
+    """
+
+    @staticmethod
+    def _graph_and_cmap():
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        direct = {
+            "A": {"polygon": _box(0, 10), "stage_type": "checkpoint"},
+            "F": {"polygon": _box(0, 20), "stage_type": "checkpoint"},
+            "EX": {"polygon": _box(50, 0), "stage_type": "exit"},
+        }
+        trans = [
+            {"from": "D0", "to": "A"},
+            {"from": "A", "to": "F"},
+            {"from": "A", "to": "D0"},
+            {"from": "F", "to": "A"},
+            {"from": "F", "to": "EX"},
+        ]
+        graph = StageGraph.from_scenario(
+            direct, trans, distributions={"D0": {"polygon": _box(0, 0)}}
+        )
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "A", "F"},
+            known_edges={("D0", "A"), ("A", "F"), ("A", "D0"), ("F", "A")},
+            visited_nodes={"D0", "A", "F"},
+        )
+        return graph, cmap
+
+    def _evaluate(self, graph, wait_info, route_state, cmap, t):
+        return evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=graph,
+            current_time_s=t,
+            current_fed=0.0,
+            extinction_sampler=ConstantExtinctionField(0.0),
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0)),
+            cognitive_map=cmap,
+        )
+
+    def test_the_agent_patrols_instead_of_standing(self):
+        graph, cmap = self._graph_and_cmap()
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        switch = self._evaluate(graph, wait_info, route_state, cmap, 0.0)
+        assert switch is not None
+        assert switch.reason == "wander"
+        assert switch.old_exit is None
+        assert switch.new_exit == "A"  # first stop of the sorted rotation
+
+    def test_a_committed_leg_is_not_reissued_mid_walk(self):
+        graph, cmap = self._graph_and_cmap()
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        self._evaluate(graph, wait_info, route_state, cmap, 0.0)
+        assert self._evaluate(graph, wait_info, route_state, cmap, 1.0) is None
+
+    def test_arrival_advances_the_patrol_to_the_next_stop(self):
+        graph, cmap = self._graph_and_cmap()
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        first = self._evaluate(graph, wait_info, route_state, cmap, 0.0)
+        wait_info["state"] = "idle"
+        wait_info["current_origin"] = first.new_exit
+        wait_info["current_target_stage"] = first.new_exit
+        second = self._evaluate(graph, wait_info, route_state, cmap, 10.0)
+        assert second is not None
+        assert second.reason == "wander"
+        assert second.new_exit == "F"
+
+    def test_still_stands_when_it_knows_nowhere_else(self):
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        graph, _ = self._graph_and_cmap()
+        loner = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0"},
+            visited_nodes={"D0"},
+        )
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        assert self._evaluate(graph, wait_info, AgentRouteState(), loner, 0.0) is None
+
+
+class TestWanderCanGoHome:
+    """The patrol can walk back to the spawn area it came from.
+
+    Auto-wiring never points an edge at a distribution, so a directed
+    search over known edges cannot route the agent home -- and an agent
+    that knows only its spawn and the one checkpoint it stands on then
+    has no patrol at all and stands still. Corridors are physically
+    two-way: the patrol treats every known leg as walkable in both
+    directions.
+    """
+
+    @staticmethod
+    def _two_node_world():
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        direct = {"C1": {"polygon": _box(0, 10), "stage_type": "checkpoint"}}
+        graph = StageGraph.from_scenario(
+            direct,
+            [{"from": "D0", "to": "C1"}],
+            distributions={"D0": {"polygon": _box(0, 0)}},
+        )
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "C1"},
+            known_edges={("D0", "C1")},
+            visited_nodes={"D0", "C1"},
+        )
+        return graph, cmap
+
+    def test_the_only_patrol_stop_is_the_spawn_it_came_from(self):
+        from pyfds_evac.core.cognitive_map import wander_target
+
+        graph, cmap = self._two_node_world()
+        wander = wander_target(cmap, graph, "C1", 0)
+        assert wander is not None
+        target, path = wander
+        assert target == "D0"
+        assert path == ["C1", "D0"]

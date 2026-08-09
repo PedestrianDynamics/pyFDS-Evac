@@ -150,8 +150,8 @@ class StageGraph:
             # Connect a node only to those reachable without passing another,
             # so "neighbour" keeps its physical meaning.  A complete graph would
             # make it meaningless, and expand_on_arrival reveals every neighbour
-            # unconditionally -- so one arrival would expose the whole building
-            # and flatten the familiarity gradient.
+            # a vis-model-less run cannot rule out -- so one arrival would
+            # expose the whole building and flatten the familiarity gradient.
             # Only crossings can block. An exit is terminal -- you cannot pass
             # through one -- so an exit lying on the way to a farther exit must
             # not prune it, or that farther exit becomes unreachable outright.
@@ -1111,6 +1111,7 @@ class AgentRouteState:
     current_path: list[str] = field(default_factory=list)
     last_eval_time_s: float = -math.inf
     eval_offset_s: float = 0.0  # staggering offset
+    wander_step: int = 0  # position in the knowledge-exhausted patrol rotation
 
 
 @dataclass(frozen=True)
@@ -1318,13 +1319,42 @@ def evaluate_and_reroute(
         route_state.last_eval_time_s = current_time_s
         if cognitive_map is None:
             return None
-        from .cognitive_map import nearest_frontier_target
+        from .cognitive_map import nearest_frontier_target, wander_target
 
+        idle = wait_info.get("state") == "idle"
+        reason = "explore"
         frontier = nearest_frontier_target(cognitive_map, graph, source, agent_position)
+        if frontier is None:
+            # Knowledge exhausted: every known node is visited and none of it
+            # leads to an exit. Patrol the known nodes instead of standing --
+            # perception runs from the agent's position, so a walked leg can
+            # make a sign readable that never was from any node it stood on.
+            if idle and route_state.current_path:
+                # The previous patrol leg was completed; move on to the next
+                # stop, or a single-candidate rotation would re-offer the node
+                # the agent is standing on the way to.
+                route_state.wander_step += 1
+            frontier = wander_target(
+                cognitive_map, graph, source, route_state.wander_step
+            )
+            reason = "wander"
         if frontier is None:
             return None
         target_node, path = frontier
-        if wait_info.get("current_target_stage") == target_node:
+        # Already committed to this target: the agent's current target is an
+        # intermediate hop of the committed path, not the destination itself,
+        # so comparing against current_target_stage alone re-fires the same
+        # switch on every reevaluation until arrival. An idle agent is never
+        # suppressed -- it is standing with no onward plan and must be routed.
+        committed = route_state.current_path
+        if not idle and (
+            wait_info.get("current_target_stage") == target_node
+            or (
+                committed
+                and committed[-1] == target_node
+                and wait_info.get("current_target_stage") in committed
+            )
+        ):
             return None
         stage_configs = wait_info.get("stage_configs", {})
         changed = reroute_agent(wait_info, path, stage_configs)
@@ -1342,7 +1372,7 @@ def evaluate_and_reroute(
             new_exit=target_node,
             old_cost=None,
             new_cost=0.0,
-            reason="explore",
+            reason=reason,
         )
 
     best = ranked[0]
