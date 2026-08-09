@@ -348,6 +348,8 @@ class VisibilityModel:
         """
         from fdsvismap import VisMap
 
+        if cell_size_m <= 0:
+            raise ValueError(f"cell_size_m must be positive, got {cell_size_m}")
         min_x, min_y, max_x, max_y = walkable.bounds
         x_coords = np.arange(min_x + cell_size_m / 2, max_x, cell_size_m)
         y_coords = np.arange(min_y + cell_size_m / 2, max_y, cell_size_m)

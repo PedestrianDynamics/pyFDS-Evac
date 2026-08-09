@@ -293,7 +293,7 @@ wheels = [
 [[package]]
 name = "fdsvismap"
 version = "0.2.1"
-source = { git = "https://github.com/FireDynamics/fdsvismap.git?rev=feat%2Fsynthetic-clear-air-grid#c9b7c6d34d0aab688ea76dc8e212b56606472ca4" }
+source = { git = "https://github.com/FireDynamics/fdsvismap.git?rev=feat%2Fsynthetic-clear-air-grid#7076df45ceb6caa6d0729c236a81e39d65f15616" }
 dependencies = [
     { name = "fdsreader" },
     { name = "matplotlib" },
