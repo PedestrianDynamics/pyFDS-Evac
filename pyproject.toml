@@ -45,6 +45,11 @@ Repository = "https://github.com/PedestrianDynamics/pyFDS-Evac"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+# Required while fdsvismap is pinned to a git branch (see the dependency
+# comment); remove together with the pin once a release is out.
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["pyfds_evac"]
 
