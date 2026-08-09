@@ -496,7 +496,12 @@ is reachable in the cognitive map, the agent heads toward the nearest
 known-but-unexplored node instead (a doorway it knows exists but hasn't
 been through) — expanding its knowledge on arrival and re-evaluating from
 there, until an exit becomes known. Reroute events for this show up in
-`route_history` with `reason="explore"`. Once an exit is known, the agent
+`route_history` with `reason="explore"`. When every known node has been
+visited and still no exit is reachable, the agent wanders: it patrols the
+nodes it knows in a deterministic rotation (`reason="wander"`), because
+sign legibility depends on position — a leg walked between two known nodes
+can make a sign readable that never was from either node, restarting
+discovery. Once an exit is known, the agent
 also reroutes onto a cheaper *path* to that same exit as its knowledge
 grows, not only when a different exit becomes preferable
 (`reason="better_path"`).

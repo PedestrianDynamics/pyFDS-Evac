@@ -315,6 +315,44 @@ def nearest_frontier_target(
     return node_id, path
 
 
+def wander_target(
+    cmap: AgentCognitiveMap,
+    graph,
+    source: str,
+    step: int,
+) -> tuple[str, list[str]] | None:
+    """The *step*-th stop of a patrol over the nodes the agent knows.
+
+    Called when the frontier is exhausted: every known node is visited and
+    no exit is reachable, so there is nowhere the agent *knows* to look.
+    Standing still would end discovery, but walking does not: perception
+    runs from the agent's position, and sign legibility depends on that
+    position (distance and the readable half-plane), so a leg between two
+    known nodes can make a sign readable that never was from either node.
+
+    The patrol is a deterministic rotation through the known nodes, not a
+    random draw: it needs no seeded state, reproduces under a fixed run
+    seed, and covers every known leg instead of favouring some. Returns
+    None when no other known node is reachable -- an agent alone on its
+    spawn node genuinely has nowhere to go.
+    """
+    candidates = sorted(
+        node_id
+        for node_id in cmap.known_nodes
+        if node_id != source and node_id in graph.nodes
+    )
+    if not candidates:
+        return None
+    sub = cognitive_subgraph(cmap, graph)
+    for offset in range(len(candidates)):
+        node_id = candidates[(step + offset) % len(candidates)]
+        result = sub.shortest_path_to(source, node_id)
+        if result is None:
+            continue
+        return node_id, result[1]
+    return None
+
+
 def _cost_from_agent(graph, path, cost: float, agent_position) -> float:
     """Replace the path's first leg with the walk from the agent's position."""
     if agent_position is None or len(path) < 2:

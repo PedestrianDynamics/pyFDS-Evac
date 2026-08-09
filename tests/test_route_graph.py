@@ -2599,3 +2599,102 @@ class TestExploreCommitmentIsNotReissued:
         # Mid-walk to the intermediate hop: same frontier, same commitment.
         second = self._evaluate(graph, wait_info, route_state, cmap, 1.0)
         assert second is None
+
+
+class TestWanderWhenKnowledgeIsExhausted:
+    """No reachable exit, no unvisited frontier: patrol the known nodes.
+
+    Standing still ends discovery: perception evaluates from the agent's
+    position, and sign legibility is position-dependent (distance and the
+    readable half-plane), so a leg walked between two known nodes can make
+    a sign readable that never was from either node. The patrol rotates
+    deterministically through the known nodes -- reproducible under a fixed
+    run seed and guaranteed to cover every known leg, where a random draw
+    could favour some.
+    """
+
+    @staticmethod
+    def _graph_and_cmap():
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        direct = {
+            "A": {"polygon": _box(0, 10), "stage_type": "checkpoint"},
+            "F": {"polygon": _box(0, 20), "stage_type": "checkpoint"},
+            "EX": {"polygon": _box(50, 0), "stage_type": "exit"},
+        }
+        trans = [
+            {"from": "D0", "to": "A"},
+            {"from": "A", "to": "F"},
+            {"from": "A", "to": "D0"},
+            {"from": "F", "to": "A"},
+            {"from": "F", "to": "EX"},
+        ]
+        graph = StageGraph.from_scenario(
+            direct, trans, distributions={"D0": {"polygon": _box(0, 0)}}
+        )
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0", "A", "F"},
+            known_edges={("D0", "A"), ("A", "F"), ("A", "D0"), ("F", "A")},
+            visited_nodes={"D0", "A", "F"},
+        )
+        return graph, cmap
+
+    def _evaluate(self, graph, wait_info, route_state, cmap, t):
+        return evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=route_state,
+            graph=graph,
+            current_time_s=t,
+            current_fed=0.0,
+            extinction_sampler=ConstantExtinctionField(0.0),
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0)),
+            cognitive_map=cmap,
+        )
+
+    def test_the_agent_patrols_instead_of_standing(self):
+        graph, cmap = self._graph_and_cmap()
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        switch = self._evaluate(graph, wait_info, route_state, cmap, 0.0)
+        assert switch is not None
+        assert switch.reason == "wander"
+        assert switch.old_exit is None
+        assert switch.new_exit == "A"  # first stop of the sorted rotation
+
+    def test_a_committed_leg_is_not_reissued_mid_walk(self):
+        graph, cmap = self._graph_and_cmap()
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        self._evaluate(graph, wait_info, route_state, cmap, 0.0)
+        assert self._evaluate(graph, wait_info, route_state, cmap, 1.0) is None
+
+    def test_arrival_advances_the_patrol_to_the_next_stop(self):
+        graph, cmap = self._graph_and_cmap()
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        route_state = AgentRouteState()
+
+        first = self._evaluate(graph, wait_info, route_state, cmap, 0.0)
+        wait_info["state"] = "idle"
+        wait_info["current_origin"] = first.new_exit
+        wait_info["current_target_stage"] = first.new_exit
+        second = self._evaluate(graph, wait_info, route_state, cmap, 10.0)
+        assert second is not None
+        assert second.reason == "wander"
+        assert second.new_exit == "F"
+
+    def test_still_stands_when_it_knows_nowhere_else(self):
+        from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+
+        graph, _ = self._graph_and_cmap()
+        loner = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"D0"},
+            visited_nodes={"D0"},
+        )
+        wait_info = _make_wait_info(graph, "D0", "D0")
+        assert self._evaluate(graph, wait_info, AgentRouteState(), loner, 0.0) is None

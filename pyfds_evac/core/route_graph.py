@@ -1111,6 +1111,7 @@ class AgentRouteState:
     current_path: list[str] = field(default_factory=list)
     last_eval_time_s: float = -math.inf
     eval_offset_s: float = 0.0  # staggering offset
+    wander_step: int = 0  # position in the knowledge-exhausted patrol rotation
 
 
 @dataclass(frozen=True)
@@ -1318,21 +1319,41 @@ def evaluate_and_reroute(
         route_state.last_eval_time_s = current_time_s
         if cognitive_map is None:
             return None
-        from .cognitive_map import nearest_frontier_target
+        from .cognitive_map import nearest_frontier_target, wander_target
 
+        idle = wait_info.get("state") == "idle"
+        reason = "explore"
         frontier = nearest_frontier_target(cognitive_map, graph, source, agent_position)
+        if frontier is None:
+            # Knowledge exhausted: every known node is visited and none of it
+            # leads to an exit. Patrol the known nodes instead of standing --
+            # perception runs from the agent's position, so a walked leg can
+            # make a sign readable that never was from any node it stood on.
+            if idle and route_state.current_path:
+                # The previous patrol leg was completed; move on to the next
+                # stop, or a single-candidate rotation would re-offer the node
+                # the agent is standing on the way to.
+                route_state.wander_step += 1
+            frontier = wander_target(
+                cognitive_map, graph, source, route_state.wander_step
+            )
+            reason = "wander"
         if frontier is None:
             return None
         target_node, path = frontier
-        # Already committed to this frontier: the agent's current target is an
-        # intermediate hop of the committed path, not the frontier node itself,
+        # Already committed to this target: the agent's current target is an
+        # intermediate hop of the committed path, not the destination itself,
         # so comparing against current_target_stage alone re-fires the same
-        # switch on every reevaluation until arrival.
+        # switch on every reevaluation until arrival. An idle agent is never
+        # suppressed -- it is standing with no onward plan and must be routed.
         committed = route_state.current_path
-        if wait_info.get("current_target_stage") == target_node or (
-            committed
-            and committed[-1] == target_node
-            and wait_info.get("current_target_stage") in committed
+        if not idle and (
+            wait_info.get("current_target_stage") == target_node
+            or (
+                committed
+                and committed[-1] == target_node
+                and wait_info.get("current_target_stage") in committed
+            )
         ):
             return None
         stage_configs = wait_info.get("stage_configs", {})
@@ -1351,7 +1372,7 @@ def evaluate_and_reroute(
             new_exit=target_node,
             old_cost=None,
             new_cost=0.0,
-            reason="explore",
+            reason=reason,
         )
 
     best = ranked[0]
