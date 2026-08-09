@@ -307,8 +307,6 @@ class VisibilityModel:
             force_recompute,
             expected_meta,
         )
-        # An FDS-backed field changes with time, so queries use the real clock.
-        self._static_time: float | None = None
         # Map node_id → internal waypoint index (insertion order preserved)
         self._wp_ids: dict[str, int] = {
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
@@ -373,10 +371,6 @@ class VisibilityModel:
 
         model = cls.__new__(cls)
         model._vis = vis  # VisMap exposes the same wp_is_visible signature
-        # A uniform field does not change, so one time point is computed and
-        # every query resolves to it. Without this a query at t > 0 would be
-        # rejected as outside the computed range.
-        model._static_time = 0.0
         model._wp_ids = {
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
@@ -392,6 +386,6 @@ class VisibilityModel:
         wp_id = self._wp_ids.get(node_id)
         if wp_id is None:
             return True
-        if self._static_time is not None:
-            time = self._static_time
+        # A clear-air model computes one time point; fdsvismap resolves any
+        # query time onto a uniform field itself, so no clamping is needed here.
         return bool(self._vis.wp_is_visible(time=time, x=x, y=y, waypoint_id=wp_id))
