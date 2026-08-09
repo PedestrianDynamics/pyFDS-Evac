@@ -140,6 +140,7 @@ def animate(
     fps: int,
     agent_id: int | None = None,
     switches=None,
+    title_label: str = "",
 ) -> None:
     """Render one agent's walk with the nodes it knows highlighted.
 
@@ -335,8 +336,9 @@ def animate(
                 color=WANDER if wandering[i] else AGENT,
                 zorder=6,
             )
+            prefix = f"{title_label}     " if title_label else ""
             ax.set_title(
-                f"t = {t:5.2f} s     known nodes: {len(known)} / {len(nodes)}",
+                f"{prefix}t = {t:5.2f} s     known nodes: {len(known)} / {len(nodes)}",
                 fontsize=11,
             )
             ax.set_aspect("equal")
@@ -411,7 +413,14 @@ def main() -> int:
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     animate(
-        bundle, sqlite_path, history, args.out, args.fps, args.agent, switches=switches
+        bundle,
+        sqlite_path,
+        history,
+        args.out,
+        args.fps,
+        args.agent,
+        switches=switches,
+        title_label=f"familiarity = {args.familiarity:g}",
     )
     print(f"\nwrote {args.out}")
     return 0
