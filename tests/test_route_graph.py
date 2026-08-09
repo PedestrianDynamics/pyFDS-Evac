@@ -1581,13 +1581,22 @@ class TestStageNodeCapacity:
 class TestQueueConfigAndFields:
     def test_route_cost_config_defaults(self):
         config = RouteCostConfig()
-        # Calibrated against Fahy Table 2 -- see scripts/sweep_queue_weight.py.
-        assert config.w_queue == 0.03
+        # Congestion-aware routing is opt-in: the term scales with the agent
+        # count, so no default suits every deck (see the field comment).
+        assert config.w_queue == 0.0
         assert config.default_exit_capacity == 1.3
 
-    def test_route_cost_config_queue_disabled(self):
-        config = RouteCostConfig(w_queue=0.0)
-        assert config.w_queue == 0.0
+    def test_route_cost_config_queue_opt_in(self):
+        """An explicit weight survives; the default does not silently apply one.
+
+        Asserting ``RouteCostConfig(w_queue=0.0).w_queue == 0.0`` would now be
+        vacuous -- 0.0 is the default, so it would pass however the field were
+        wired. Pin the opt-in direction instead.
+        """
+        assert RouteCostConfig(w_queue=1.0).w_queue == 1.0
+        assert RouteCostConfig.from_routing_params({"w_queue": 0.5}).w_queue == 0.5
+        assert RouteCostConfig.from_routing_params({}).w_queue == 0.0
+        assert RouteCostConfig.from_routing_params(None).w_queue == 0.0
 
     def test_route_cost_has_queue_time_field(self, linear_graph):
         field = ConstantExtinctionField(0.0)

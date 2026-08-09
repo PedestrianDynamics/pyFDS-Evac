@@ -546,16 +546,18 @@ class RouteCostConfig:
 
     w_smoke: float = 1.0
     w_fed: float = 10.0
-    # Calibrated against Fahy Table 2 on assets/station_fahy (rerouting on, three
-    # seeds): 0.03 reproduces a 53.3 % front-door share against the measured
-    # 52.9 %, where the former default of 1.0 gave 22.9 %. See
-    # scripts/sweep_queue_weight.py. The calibration holds at that deck's crowd
-    # of 333, and only there: the term is w_queue * v0 * N / c, so its weight
-    # against the path-length differences it competes with grows linearly with
-    # the population. A scenario an order of magnitude smaller wants a
-    # correspondingly larger w_queue -- the scale dependence is a property of
-    # the global-N form, not of this number.
-    w_queue: float = 0.03
+    # Off by default. The term is w_queue * v0 * N / c with N a *global* tally
+    # of every agent targeting the exit, so with the default v0 and capacity the
+    # penalty is simply w_queue * N metres: it grows without bound in the
+    # population while the path lengths it competes against are fixed by the
+    # geometry. No constant is therefore right at more than one crowd size --
+    # 1.0 put 333 m on a door at Station scale, and the 0.03 that fixes that is
+    # inert (0.8 m at N = 25) in an ordinary room. Rather than ship a number
+    # calibrated on one deck as the default for every deck, congestion-aware
+    # routing is opt-in; assets/station_fahy sets it in its own routing block.
+    # See issue #89 for the perceivable-queue form that would remove the scale
+    # dependence.
+    w_queue: float = 0.0
     fed_rejection_threshold: float = 1.0
     # Asymmetric FED hysteresis (Schmitt trigger) to stop agents flip-flopping
     # when a route's predicted dose wobbles across the rejection threshold. The
@@ -595,7 +597,7 @@ class RouteCostConfig:
         return cls(
             w_smoke=routing.get("w_smoke", 1.0),
             w_fed=routing.get("w_fed", 10.0),
-            w_queue=routing.get("w_queue", 0.03),
+            w_queue=routing.get("w_queue", 0.0),
             fed_rejection_threshold=routing.get("fed_rejection_threshold", 1.0),
             visibility_extinction_threshold=routing.get(
                 "visibility_extinction_threshold", 0.5
