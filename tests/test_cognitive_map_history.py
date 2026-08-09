@@ -10,43 +10,18 @@ only ever grows, and a ``full`` agent knows everything from the first frame.
 from __future__ import annotations
 
 import json
-import math
 import shutil
 from pathlib import Path
 
 import pytest
 from shapely import wkt as shapely_wkt
-from shapely.geometry import LineString
 
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
-from pyfds_evac.core.visibility import extract_sign_descriptors
+from pyfds_evac.core.visibility import VisibilityModel, extract_sign_descriptors
 
 ASSET = Path("assets/blind_spawn_discovery")
 MAX_VIS_M = 30.0
-
-
-class ClearAirVisMap:
-    """``node_is_visible`` reduced to line of sight, as in clear air.
-
-    Mirrors ``OccludingVisMap`` in test_blind_spawn_discovery: without it a
-    discovery agent perceives nothing (``cognitive_map._expand_visible`` returns
-    early when ``vis_model is None``) and the history has nothing to show.
-    """
-
-    def __init__(self, signs: dict[str, dict], walkable):
-        self._signs = signs
-        self._walkable = walkable
-
-    def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
-        del time
-        sign = self._signs.get(node_id)
-        if sign is None:
-            return True
-        target = (float(sign["x"]), float(sign["y"]))
-        if math.dist((x, y), target) > MAX_VIS_M:
-            return False
-        return self._walkable.covers(LineString([(x, y), target]))
 
 
 def _bundle(tmp_path: Path, variant: str) -> Path:
@@ -63,7 +38,9 @@ def _run(bundle: Path, *, collect: bool, with_vis: bool):
     vis = None
     if with_vis:
         walkable = shapely_wkt.loads((bundle / "geometry.wkt").read_text().strip())
-        vis = ClearAirVisMap(extract_sign_descriptors(scenario.raw), walkable)
+        vis = VisibilityModel.clear_air(
+            walkable, extract_sign_descriptors(scenario.raw), cell_size_m=0.25
+        )
     return run_scenario(
         scenario,
         seed=420,

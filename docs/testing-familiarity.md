@@ -229,3 +229,22 @@ at all — see the "blind agent" issue in the tracker. A clear-air stand-in
 (line of sight against the walkable polygon plus the sign's readable half-plane)
 is enough to exercise the wiring without FDS output; the test suite and the
 animation script each carry one.
+
+## Clear-air visibility without an FDS run
+
+`VisibilityModel.clear_air(walkable, sign_descriptors, cell_size_m=...)` builds a
+visibility model from geometry alone: fdsvismap's own ray casting, view angle and
+`max_vis` handling, over a uniform zero extinction field. It exists because
+`vis_model=None` silently disables perception — a discovery agent's map then
+never grows — and because five separate approximations of fdsvismap had
+accumulated in this repo, none of them applying the view angle.
+
+**Resolution is a real parameter.** A cell blocks sight when its centre lies
+outside the walkable polygon, so a wall thinner than one cell disappears and
+sight passes through it — the same property an FDS mesh has. At the 0.5 m
+default the ~0.4 m walls of `assets/blind_spawn_discovery` vanish entirely and
+occlusion tests silently stop testing anything; 0.25 m resolves them. Cost grows
+as the inverse square. Pick it below the thinnest wall that must block.
+
+This requires the fdsvismap branch adding `set_grid` / `set_uniform_extco`
+(FireDynamics/fdsvismap#41); `pyproject.toml` pins it until that is released.

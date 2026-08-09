@@ -98,6 +98,39 @@ def _make_meta(
     }
 
 
+def _blocked_runs(walkable, x_coords, y_coords, cell_size_m: float):
+    """Yield (x1, x2, y1, y2) rectangles covering every non-walkable cell.
+
+    Consecutive blocked cells in a row are merged into one rectangle, so a long
+    wall costs one call rather than one per cell, and the result still follows
+    an arbitrary polygon outline to the resolution of the grid.
+    """
+    from shapely.geometry import Point
+
+    half = cell_size_m / 2
+    for y in y_coords:
+        run_start = None
+        for i, x in enumerate(x_coords):
+            blocked = not walkable.covers(Point(float(x), float(y)))
+            if blocked and run_start is None:
+                run_start = x
+            elif not blocked and run_start is not None:
+                yield (
+                    float(run_start) - half,
+                    float(x_coords[i - 1]) + half,
+                    float(y) - half,
+                    float(y) + half,
+                )
+                run_start = None
+        if run_start is not None:
+            yield (
+                float(run_start) - half,
+                float(x_coords[-1]) + half,
+                float(y) - half,
+                float(y) + half,
+            )
+
+
 class _VisMapCache:
     """Lightweight visibility lookup backed by pre-computed numpy arrays.
 
@@ -274,10 +307,78 @@ class VisibilityModel:
             force_recompute,
             expected_meta,
         )
+        # An FDS-backed field changes with time, so queries use the real clock.
+        self._static_time: float | None = None
         # Map node_id → internal waypoint index (insertion order preserved)
         self._wp_ids: dict[str, int] = {
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
+
+    @classmethod
+    def clear_air(
+        cls,
+        walkable,
+        sign_descriptors: dict[str, dict],
+        *,
+        cell_size_m: float = 0.5,
+        extinction_per_m: float = 0.0,
+    ) -> "VisibilityModel":
+        """Build a model for a scene that has geometry but no fire.
+
+        ``fdsvismap`` normally takes its grid, extinction field and obstructions
+        from an FDS run.  Only the field has to: :meth:`VisMap.set_grid` and
+        :meth:`VisMap.set_uniform_extco` supply the other two, so a clear-air
+        deck is evaluated by the same ray casting, view angle and ``max_vis``
+        handling as a fire scene rather than by an approximation written here.
+
+        Obstructions come from *walkable*: every grid cell whose centre is
+        outside the walkable polygon blocks sight.  Cells are emitted as runs of
+        rectangles per row, which is what ``add_visual_obstruction`` accepts and
+        keeps arbitrary wall shapes exact to the grid.
+
+        ``cell_size_m`` is the resolution the scene is rasterised at, and it
+        matters.  A cell blocks sight when its centre lies outside *walkable*,
+        so **a wall thinner than one cell disappears** and sight passes through
+        it -- the same property an FDS mesh has, for the same reason.  An FDS
+        deck inherits the resolution from its mesh; here it has to be chosen.
+        Pick it below the thinnest wall that must block: at 0.5 m the 0.4 m
+        walls of ``assets/blind_spawn_discovery`` vanish entirely, while 0.25 m
+        resolves them.  Cost grows as the inverse square, so halving it
+        quadruples the build.
+        """
+        from fdsvismap import VisMap
+
+        min_x, min_y, max_x, max_y = walkable.bounds
+        x_coords = np.arange(min_x + cell_size_m / 2, max_x, cell_size_m)
+        y_coords = np.arange(min_y + cell_size_m / 2, max_y, cell_size_m)
+
+        vis = VisMap()
+        vis.set_grid(x_coords, y_coords)
+        vis.set_uniform_extco(extinction_per_m)
+        vis.set_time_points([0.0])
+        for wp_id, (_node_id, sign) in enumerate(sign_descriptors.items()):
+            alpha = sign.get("alpha")
+            vis.set_waypoint(
+                wp_id,
+                float(sign["x"]),
+                float(sign["y"]),
+                c=float(sign.get("c", 3)),
+                alpha=None if alpha is None else float(alpha),
+            )
+        for x1, x2, y1, y2 in _blocked_runs(walkable, x_coords, y_coords, cell_size_m):
+            vis.add_visual_obstruction(x1, x2, y1, y2)
+        vis.compute_all(view_angle=True, obstructions=True, aa=True)
+
+        model = cls.__new__(cls)
+        model._vis = vis  # VisMap exposes the same wp_is_visible signature
+        # A uniform field does not change, so one time point is computed and
+        # every query resolves to it. Without this a query at t > 0 would be
+        # rejected as outside the computed range.
+        model._static_time = 0.0
+        model._wp_ids = {
+            node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
+        }
+        return model
 
     def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
         """Return True if the sign at *node_id* is visible from (x, y) at *time*.
@@ -289,4 +390,6 @@ class VisibilityModel:
         wp_id = self._wp_ids.get(node_id)
         if wp_id is None:
             return True
-        return self._vis.wp_is_visible(time=time, x=x, y=y, waypoint_id=wp_id)
+        if self._static_time is not None:
+            time = self._static_time
+        return bool(self._vis.wp_is_visible(time=time, x=x, y=y, waypoint_id=wp_id))

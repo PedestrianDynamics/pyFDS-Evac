@@ -11,7 +11,7 @@ That is why the agents are ``discovery`` tier: a ``full`` agent knows every
 exit from t=0 and would walk to the near one under either bearing -- correctly,
 since it does not need to read a sign to find a door it already knows.
 
-No FDS output is needed.  ``VisMapClearAir`` below reimplements the rule
+No FDS output is needed.  ``VisibilityModel.clear_air`` drives fdsvismap itself
 fdsvismap applies in clear air, so the test exercises our routing decision
 rather than the third-party visibility solver.
 """
@@ -23,60 +23,22 @@ import math
 from pathlib import Path
 
 import pytest
+from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.cognitive_map import init_cognitive_map
 from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, rank_routes
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
+from pyfds_evac.core.visibility import VisibilityModel
 
 ASSET = Path("assets/exit_visibility_alpha")
 
 
 # fdsvismap's clear-air visibility distance saturates at this default.
 MAX_VIS_M = 30.0
-
-
-class VisMapClearAir:
-    """fdsvismap's legibility rule, in clear air.
-
-    ``FDSVisMap.get_vismap`` decides
-
-        view_angle * visibility * non_concealed >= distance
-
-    where ``view_angle`` is
-    ``clip((sin(alpha)*dx + cos(alpha)*dy) / distance, 0, 1)`` for a signed
-    waypoint (1.0 when omni-directional), and ``visibility`` is the
-    smoke-limited sight distance capped at ``max_vis``.  With no smoke that cap
-    binds, so the rule reduces to ``view_angle * max_vis >= distance``.
-
-    Modelling the distance comparison matters, not just the half-plane: a sign
-    beyond ``max_vis`` is illegible at every bearing, which would quietly turn
-    the experiment into "neither exit is visible".
-    """
-
-    def __init__(self, signs: dict[str, dict], max_vis: float = MAX_VIS_M):
-        self._signs = signs
-        self._max_vis = max_vis
-
-    def view_angle(self, x: float, y: float, node_id: str) -> float:
-        sign = self._signs.get(node_id)
-        if sign is None or sign.get("alpha") is None:
-            return 1.0  # omni-directional or unsigned
-        dx, dy = x - float(sign["x"]), y - float(sign["y"])
-        distance = math.hypot(dx, dy)
-        if distance == 0.0:
-            return 1.0
-        alpha = math.radians(float(sign["alpha"]))
-        projection = math.sin(alpha) * dx + math.cos(alpha) * dy
-        return min(1.0, max(0.0, projection / distance))
-
-    def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
-        del time
-        sign = self._signs.get(node_id)
-        if sign is None:
-            return True
-        distance = math.hypot(x - float(sign["x"]), y - float(sign["y"]))
-        return self.view_angle(x, y, node_id) * self._max_vis >= distance
+# Fine enough that this asset's walls still occlude; see
+# VisibilityModel.clear_air on why the rasterisation resolution matters.
+CELL_SIZE_M = 0.25
 
 
 def _load(config_name: str):
@@ -99,7 +61,9 @@ def _load(config_name: str):
     )
     signs = {eid: data["sign"] for eid, data in raw["exits"].items()}
     spawn = Polygon(next(iter(distributions.values()))["coordinates"]).centroid
-    return graph, (spawn.x, spawn.y), VisMapClearAir(signs)
+    walkable = shapely_wkt.loads((ASSET / "geometry.wkt").read_text().strip())
+    vis = VisibilityModel.clear_air(walkable, signs, cell_size_m=CELL_SIZE_M)
+    return graph, (spawn.x, spawn.y), vis
 
 
 def _known_exits(config_name: str) -> set[str]:
@@ -185,13 +149,16 @@ class TestAssetIsSingleVariable:
         reinstate the least-cost rejected route, and agents would take E_near
         regardless -- an experiment that proves nothing while appearing to pass.
         """
+        raw = json.loads((ASSET / "config_visible.json").read_text(encoding="utf-8"))
         _, position, vis_model = _load("config_visible")
         px, py = position
         for node_id in ("E_near", "E_far"):
-            sign = vis_model._signs[node_id]
+            sign = raw["exits"][node_id]["sign"]
             distance = math.hypot(px - sign["x"], py - sign["y"])
             assert distance < MAX_VIS_M, node_id
-            assert vis_model.view_angle(px, py, node_id) * MAX_VIS_M >= distance
+            # Legible in the reference config, so the hidden run's rejections
+            # can only come from the bearing it changes.
+            assert vis_model.node_is_visible(0.0, px, py, node_id), node_id
 
 
 class TestExitChoiceFollowsLegibility:

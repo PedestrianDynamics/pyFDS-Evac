@@ -11,19 +11,12 @@ bug would live.
 
 Clear-air visibility
 --------------------
-The real :class:`~pyfds_evac.core.visibility.VisibilityModel` reads FDS output,
-so a deck without a fire cannot build one -- and with ``vis_model=None`` the
-perception step adds nothing (``cognitive_map._expand_visible``), leaving a
-discovery agent's map frozen at its spawn node. :class:`ClearAirVisibility`
-below stands in: it answers the same ``node_is_visible`` question with the two
-terms that survive in clear air -- line of sight against the walkable polygon,
-and the sign's readable half-plane. It is deliberately *not* a substitute for
-fdsvismap's optics; it exercises the map-expansion wiring, and the smoke terms
-it drops are exactly the ones a clear-air deck has none of.
-
-The same surrogate is written twice in the test suite (``OccludingVisMap`` in
-tests/test_blind_spawn_discovery.py, ``VisMapClearAir`` in
-tests/test_cognitive_map_memory.py); consolidating the three is a separate job.
+With ``vis_model=None`` the perception step adds nothing
+(``cognitive_map._expand_visible``), leaving a discovery agent's map frozen at
+its spawn node. A deck with no fire still has geometry and signs, so
+:meth:`VisibilityModel.clear_air` builds the model from those -- fdsvismap's own
+ray casting, view angle and ``max_vis`` handling, with a uniform zero
+extinction field.
 """
 
 from __future__ import annotations
@@ -42,55 +35,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.animation import FFMpegWriter, PillowWriter  # noqa: E402
 from shapely import wkt as shapely_wkt  # noqa: E402
-from shapely.geometry import LineString, Point, Polygon  # noqa: E402
+from shapely.geometry import Point, Polygon  # noqa: E402
 
 from pyfds_evac.core import load_scenario, run_scenario  # noqa: E402
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig  # noqa: E402
-from pyfds_evac.core.visibility import extract_sign_descriptors  # noqa: E402
+from pyfds_evac.core.visibility import (  # noqa: E402
+    VisibilityModel,
+    extract_sign_descriptors,
+)
 
-MAX_VIS_M = 30.0
 UNKNOWN, KNOWN, AGENT = "#c4c4cc", "#d62728", "#5b4fc4"
-
-
-class ClearAirVisibility:
-    """``node_is_visible`` with the terms that survive in clear air.
-
-    A sign is readable when it is within *max_vis*, has unobstructed line of
-    sight across the walkable polygon, and the viewer stands inside its
-    half-plane of readability. Nodes with no descriptor stay unconditionally
-    visible, matching :class:`VisibilityModel`.
-    """
-
-    def __init__(self, signs: dict[str, dict], walkable, max_vis: float = MAX_VIS_M):
-        self._signs = signs
-        self._walkable = walkable
-        self._max_vis = max_vis
-
-    def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
-        del time  # clear air: legibility does not change with time
-        sign = self._signs.get(node_id)
-        if sign is None:
-            return True
-        sx, sy = float(sign["x"]), float(sign["y"])
-        if math.dist((x, y), (sx, sy)) > self._max_vis:
-            return False
-        if not self._walkable.covers(LineString([(x, y), (sx, sy)])):
-            return False
-        return _within_half_plane(sign.get("alpha"), sx, sy, x, y)
-
-
-def _within_half_plane(alpha, sx: float, sy: float, x: float, y: float) -> bool:
-    """Is the viewer inside the sign's readable half-plane?
-
-    ``alpha`` is a compass bearing in degrees from north, clockwise, pointing
-    at the side the sign can be read from -- the convention documented on
-    :class:`VisibilityModel` (90 = readable from the east). ``None`` means
-    omni-directional, so every viewer passes.
-    """
-    if alpha is None:
-        return True
-    bearing = math.degrees(math.atan2(x - sx, y - sy)) % 360.0
-    return abs((bearing - float(alpha) + 180.0) % 360.0 - 180.0) <= 90.0
 
 
 def inward_alpha(exit_polygon: Polygon, interior_point) -> float:
@@ -157,7 +111,7 @@ def build_variant(deck: Path, out: Path, familiarity: float) -> tuple[Path, dict
 def run(bundle: Path, seed: int, sqlite_out: Path):
     scenario = load_scenario(str(bundle))
     walkable = shapely_wkt.loads((bundle / "geometry.wkt").read_text().strip())
-    vis = ClearAirVisibility(extract_sign_descriptors(scenario.raw), walkable)
+    vis = VisibilityModel.clear_air(walkable, extract_sign_descriptors(scenario.raw))
     result = run_scenario(
         scenario,
         seed=seed,

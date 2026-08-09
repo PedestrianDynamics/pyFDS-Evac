@@ -23,7 +23,11 @@ dependencies = [
     "nbformat>=4.2.0",
     "matplotlib",
     "shapely",
-    "fdsvismap>=0.1.3",
+    # Pinned to the branch adding set_grid()/set_uniform_extco(), which lets a
+    # scene with geometry but no fire be evaluated by fdsvismap itself instead
+    # of being approximated here. Repoint at a release once it lands:
+    # https://github.com/FireDynamics/fdsvismap/pull/41
+    "fdsvismap @ git+https://github.com/FireDynamics/fdsvismap.git@feat/synthetic-clear-air-grid",
     "numpy>=1.26.4",
 ]
 
