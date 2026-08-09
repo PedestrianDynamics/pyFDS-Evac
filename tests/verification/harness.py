@@ -85,6 +85,17 @@ def region_x(value: float, *, x_min: float = -1e30, x_max: float = 1e30) -> Fiel
     return lambda t, x, y: value if x_min <= x <= x_max else 0.0
 
 
+def after(onset_s: float, field: FieldFn) -> FieldFn:
+    """``field`` from ``onset_s`` onward, zero before it.
+
+    Lets a scenario put the population in place in clear air and only then start
+    the fire, which is the order events actually happen in -- and the only order
+    that isolates *re*-routing, since agents choosing a route in smoke that is
+    already there simply never pick the smoky one.
+    """
+    return lambda t, x, y: field(t, x, y) if t >= onset_s else 0.0
+
+
 def make_smoke_model(
     extinction: FieldFn,
     *,
@@ -322,7 +333,10 @@ class TJunctionSpec:
     v0: float = 1.3
     seed: int = 42
     max_simulation_time: float = 120.0
-    flow_end_time_s: float = 40.0  # rerouting requires flow spawning (see note)
+    flow_end_time_s: float = 10.0  # rerouting requires flow spawning (see note)
+    # Smoke starts once the whole population is in and still walking, so every
+    # agent chooses its exit in clear air and every switch is a true reroute.
+    smoke_onset_s: float = 12.0
 
     @property
     def right_arm_x_min(self) -> float:

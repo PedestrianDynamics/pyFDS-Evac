@@ -154,8 +154,7 @@ def expand_from_visibility(
 ) -> None:
     """Expand map with adjacent nodes visible from (ax, ay) at *time_s*.
 
-    When *vis_model* is None, all adjacent nodes are added unconditionally
-    (no visibility data available → assume all neighbours are reachable).
+    When *vis_model* is None nothing is added; see :func:`_expand_visible`.
     """
     if cmap.familiarity == "full":
         return
@@ -171,9 +170,22 @@ def _expand_visible(
     ax: float,
     ay: float,
 ) -> None:
+    """Add the neighbours of *node_id* the agent can see from (ax, ay).
+
+    Without a visibility model there is no evidence the agent can see anything,
+    so nothing is added. Graph adjacency is not a stand-in: when the scenario
+    declares no transitions the graph is auto-wired spawn-to-every-unblocked
+    stage, so treating a neighbour as seen would hand every discovery agent most
+    of the building's exits at t=0 and make ``familiarity`` inert in every run
+    without a visibility cache. Perception is not the only way a map grows --
+    :func:`expand_on_arrival` still reveals neighbours on physical arrival, so
+    an agent is never stranded by this.
+    """
+    if vis_model is None:
+        return
     for edge in graph.edges.get(node_id, []):
         tgt = edge.target
-        if vis_model is None or vis_model.node_is_visible(time_s, ax, ay, tgt):
+        if vis_model.node_is_visible(time_s, ax, ay, tgt):
             cmap.known_nodes.add(tgt)
             cmap.known_edges.add((edge.source, edge.target))
 
