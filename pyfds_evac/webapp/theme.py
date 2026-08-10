@@ -318,6 +318,13 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   transition: border-color .12s, color .12s, background .12s;
 }
 .cmode.active { border-color: var(--ember); color: var(--ember); background: rgba(255,106,26,.12); }
+.speed-custom {
+  width: 4.2rem; font-family: var(--font-mono); font-size: .68rem;
+  padding: .28rem .5rem; border: 1px solid rgba(255,255,255,.1); border-radius: .45rem;
+  background: #2e2a2e; color: hsl(var(--foreground));
+}
+.speed-custom.active { border-color: var(--ember); box-shadow: 0 0 0 1px var(--ember) inset; }
+.speed-custom::-webkit-inner-spin-button, .speed-custom::-webkit-outer-spin-button { margin-left: .2rem; }
 
 /* ---- console ---- */
 .console-box {

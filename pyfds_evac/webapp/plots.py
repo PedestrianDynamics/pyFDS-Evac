@@ -148,24 +148,46 @@ def smoke_figure(result: Any) -> go.Figure:
     return fig
 
 
-def route_cost_figure(result: Any) -> go.Figure:
-    """Mean composite cost of the chosen route over time."""
-    rows = result.route_cost_history
+def cognitive_map_figure(result: Any) -> go.Figure:
+    """Mean known nodes/edges per agent over time (discovery-mode learning).
+
+    ``cognitive_map_history`` has one row per agent per growth event (map
+    size only ever increases, see scenario.py), so agents that stop growing
+    simply stop producing rows. Forward-filling each agent's node/edge count
+    onto the union of event times before averaging keeps agents who learned
+    everything early from vanishing out of the mean.
+    """
+    rows = result.cognitive_map_history
     if not rows:
-        return _empty("No route-cost history (enable rerouting).")
+        return _empty("No cognitive-map history (enable discovery familiarity).")
     df = pd.DataFrame(rows)
-    if "route_rank" not in df or "composite_cost" not in df:
-        return _empty("Route-cost history is missing expected columns.")
-    chosen = df[df["route_rank"] == 1]
-    agg = chosen.groupby("time_s")["composite_cost"].mean().reset_index()
+    if "known_nodes" not in df or "known_edges" not in df:
+        return _empty("Cognitive-map history is missing expected columns.")
+    df["n_nodes"] = df["known_nodes"].apply(len)
+    df["n_edges"] = df["known_edges"].apply(len)
+
+    def _mean_over_time(col: str) -> pd.Series:
+        wide = df.pivot_table(index="time_s", columns="agent_id", values=col, aggfunc="last")
+        return wide.sort_index().ffill().mean(axis=1)
+
+    nodes = _mean_over_time("n_nodes")
+    edges = _mean_over_time("n_edges")
     fig = go.Figure()
     fig.add_trace(
+        go.Scatter(x=nodes.index, y=nodes.values, mode="lines", name="mean known nodes")
+    )
+    fig.add_trace(
         go.Scatter(
-            x=agg["time_s"],
-            y=agg["composite_cost"],
+            x=edges.index,
+            y=edges.values,
             mode="lines",
-            name="mean chosen-route cost",
+            name="mean known edges",
+            yaxis="y2",
         )
     )
-    fig.update_layout(xaxis_title="time (s)", yaxis_title="composite cost")
+    fig.update_layout(
+        xaxis_title="time (s)",
+        yaxis_title="known nodes",
+        yaxis2=dict(title="known edges", overlaying="y", side="right"),
+    )
     return fig
