@@ -280,6 +280,7 @@ _JS = """
   var bx = D.bounds, pad = 0.06;
   var mode = D.hasFed ? 'fed' : 'exit';
   var zoom = 1, panX = 0, panY = 0, MIN_ZOOM = 0.5, MAX_ZOOM = 20;
+  var CANVAS_H = 440;           // render height; size() and the wheel handler must agree
   var dragging = false, dragStart = null;
 
   // Smoke field: decode base64 uint8 frames into an offscreen canvas we can
@@ -375,7 +376,7 @@ _JS = """
 
   function size() {
     var dpr = window.devicePixelRatio || 1;
-    var w = canvas.clientWidth || 600, h = 440;
+    var w = canvas.clientWidth || 600, h = CANVAS_H;
     canvas.width = w * dpr; canvas.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return [w, h];
@@ -560,7 +561,7 @@ _JS = """
     e.preventDefault();
     var rect = canvas.getBoundingClientRect();
     var mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    var w = canvas.clientWidth || 600, h = 440, cx = w / 2, cy = h / 2;
+    var w = canvas.clientWidth || 600, h = CANVAS_H, cx = w / 2, cy = h / 2;
     var worldX = (mx - cx - panX) / zoom + cx;
     var worldY = (my - cy - panY) / zoom + cy;
     var newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));

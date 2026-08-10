@@ -159,7 +159,7 @@ def cognitive_map_figure(result: Any) -> go.Figure:
     """
     rows = result.cognitive_map_history
     if not rows:
-        return _empty("No cognitive-map history (enable discovery familiarity).")
+        return _empty("No cognitive-map history (run had no routing stage graph).")
     df = pd.DataFrame(rows)
     if "known_nodes" not in df or "known_edges" not in df:
         return _empty("Cognitive-map history is missing expected columns.")
