@@ -320,7 +320,9 @@ def generate_world(seed: int, args: argparse.Namespace) -> tuple[Polygon, dict]:
             rng,
             room,
             placed,
-            lambda cx, cy: Point(cx, cy).buffer(CHECKPOINT_RADIUS, quad_segs=8),
+            # No quad_segs: 8 is already Shapely 2's default, and the keyword
+            # does not exist under Shapely 1.x (there it is `resolution`).
+            lambda cx, cy: Point(cx, cy).buffer(CHECKPOINT_RADIUS),
         )
         if circle is None:
             break

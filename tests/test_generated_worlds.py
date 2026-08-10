@@ -155,9 +155,21 @@ class TestDiscoveryInvariants:
             prev[event["agent_id"]] = set(event["known_nodes"])
             if event["time_s"] == 0.0:
                 continue  # spawn draw: seeded before the agent moved
-            pos = positions.get((event["agent_id"], round(event["time_s"] * fps)))
-            if pos is None:
-                continue
+            frame = round(event["time_s"] * fps)
+            pos = next(
+                (
+                    positions.get((event["agent_id"], f))
+                    for f in (frame, frame - 1, frame + 1)
+                    if (event["agent_id"], f) in positions
+                ),
+                None,
+            )
+            # A silent skip here would mask exactly the bug this test exists
+            # to catch, so a missing position is itself a failure.
+            assert pos is not None, (
+                f"no trajectory row near t={event['time_s']} for agent "
+                f"{event['agent_id']}; the evidence check cannot be skipped"
+            )
             ax, ay = pos
             for node_id in new:
                 cx, cy = centroids[node_id]
