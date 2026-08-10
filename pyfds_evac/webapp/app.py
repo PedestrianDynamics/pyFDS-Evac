@@ -304,6 +304,10 @@ _AUTOFILL_JS = """
     var sel = document.querySelector('#scenario select');
     return (inp && inp.value) || (sel && sel.value) || '';
   }
+  function fdsDirValue() {
+    var el = document.getElementById('fds_dir');
+    return (el && el.value.trim()) || '';
+  }
   function seedValue() {
     var el = document.getElementById('seed');
     return (el && el.value.trim()) || 'default';
@@ -322,12 +326,22 @@ _AUTOFILL_JS = """
     });
   }
   var last = null;
+  var lastFdsDir = null;
+  function fillVisCache() {
+    var fdsDir = fdsDirValue();
+    var el = document.getElementById('vis_cache');
+    if (el && !el.dataset.userEdited) el.value = fdsDir ? fdsDir + '/vis_cache.npz' : '';
+  }
   setInterval(function () {
     var k = scenarioName() + '|' + seedValue() + '|' + modeValue();
     if (k !== last) { last = k; fill(scenarioName()); }
+    var fdsDir = fdsDirValue();
+    if (fdsDir !== lastFdsDir) { lastFdsDir = fdsDir; fillVisCache(); }
   }, 250);
   document.addEventListener('input', function (e) {
-    if (e.target && OUT[e.target.id]) e.target.dataset.userEdited = '1';
+    if (e.target && (OUT[e.target.id] || e.target.id === 'vis_cache')) {
+      e.target.dataset.userEdited = '1';
+    }
   });
   // Strip surrounding quotes from path inputs on blur
   document.addEventListener('blur', function (e) {
@@ -881,7 +895,7 @@ def _finished_view() -> Div:
         trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
         plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
         plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
-        plot_card("Route cost", plots.route_cost_figure(result), "fig-route"),
+        plot_card("Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"),
         cls="space-y-6",
         style="display:flex;flex-direction:column;gap:18px",
     )

@@ -112,13 +112,7 @@
         "radius_distribution": "constant",
         "v0_distribution": "constant",
         "familiarity": "discovery"
-      },
-      "journey_weights": [
-        {
-          "journey_id": "journey-1783673721633-p9aah1",
-          "weight": 100
-        }
-      ]
+      }
     }
   },
   "checkpoints": {
@@ -151,7 +145,13 @@
       "waiting_time_std": 1,
       "enable_throughput_throttling": false,
       "max_throughput": 1,
-      "speed_factor": 1
+      "speed_factor": 1,
+      "sign": {
+        "x": 13.090516797295894,
+        "y": 1.6116815683060655,
+        "alpha": 90.0,
+        "c": 3.0
+      }
     },
     "jps-checkpoints_1": {
       "type": "polygon",
@@ -182,7 +182,13 @@
       "waiting_time_std": 1,
       "enable_throughput_throttling": false,
       "max_throughput": 1,
-      "speed_factor": 1
+      "speed_factor": 1,
+      "sign": {
+        "x": 7.023673486977326,
+        "y": 3.8965274279941955,
+        "alpha": 90.0,
+        "c": 3.0
+      }
     },
     "jps-checkpoints_2": {
       "type": "polygon",
@@ -213,30 +219,36 @@
       "waiting_time_std": 1,
       "enable_throughput_throttling": false,
       "max_throughput": 1,
-      "speed_factor": 1
+      "speed_factor": 1,
+      "sign": {
+        "x": 3.4474186985893938,
+        "y": 2.024744784436661,
+        "alpha": 0.0,
+        "c": 3.0
+      }
     },
     "jps-checkpoints_3": {
       "type": "polygon",
       "coordinates": [
         [
           16.942826582678553,
-          13.370917846737596
+          13.770917846737596
         ],
         [
           18.16509522235635,
-          13.370917846737596
+          13.770917846737596
         ],
         [
           18.16509522235635,
-          12.819698656294669
+          13.21969865629467
         ],
         [
           16.942826582678553,
-          12.819698656294669
+          13.21969865629467
         ],
         [
           16.942826582678553,
-          13.370917846737596
+          13.770917846737596
         ]
       ],
       "waiting_time": 0,
@@ -244,87 +256,18 @@
       "waiting_time_std": 1,
       "enable_throughput_throttling": false,
       "max_throughput": 1,
-      "speed_factor": 1
+      "speed_factor": 1,
+      "sign": {
+        "x": 17.553960902517456,
+        "y": 13.495308251516132,
+        "alpha": 180.0,
+        "c": 3.0
+      }
     }
   },
   "zones": {},
-  "journeys": [
-    {
-      "id": "journey-1783673721633-p9aah1",
-      "stages": [
-        "jps-distributions_0",
-        "jps-checkpoints_0",
-        "jps-checkpoints_1",
-        "jps-checkpoints_2",
-        "jps-checkpoints_3",
-        "jps-exits_0"
-      ],
-      "transitions": [
-        {
-          "from": "jps-distributions_0",
-          "to": "jps-checkpoints_0",
-          "journey_id": "journey-1783673721633-p9aah1"
-        },
-        {
-          "from": "jps-checkpoints_0",
-          "to": "jps-checkpoints_1",
-          "journey_id": "journey-1783673721633-p9aah1"
-        },
-        {
-          "from": "jps-checkpoints_1",
-          "to": "jps-checkpoints_2",
-          "journey_id": "journey-1783673721633-p9aah1"
-        },
-        {
-          "from": "jps-checkpoints_2",
-          "to": "jps-checkpoints_3",
-          "journey_id": "journey-1783673721633-p9aah1"
-        },
-        {
-          "from": "jps-checkpoints_3",
-          "to": "jps-exits_0",
-          "journey_id": "journey-1783673721633-p9aah1"
-        }
-      ]
-    }
-  ],
-  "transitions": [
-    {
-      "from": "jps-distributions_0",
-      "to": "jps-checkpoints_0",
-      "journey_id": "journey-1783673721633-p9aah1"
-    },
-    {
-      "from": "jps-checkpoints_0",
-      "to": "jps-checkpoints_1",
-      "journey_id": "journey-1783673721633-p9aah1"
-    },
-    {
-      "from": "jps-checkpoints_1",
-      "to": "jps-checkpoints_2",
-      "journey_id": "journey-1783673721633-p9aah1"
-    },
-    {
-      "from": "jps-checkpoints_2",
-      "to": "jps-checkpoints_3",
-      "journey_id": "journey-1783673721633-p9aah1"
-    },
-    {
-      "from": "jps-checkpoints_3",
-      "to": "jps-exits_0",
-      "journey_id": "journey-1783673721633-p9aah1"
-    },
-    {
-      "from": "jps-checkpoints_0",
-      "to": "jps-checkpoints_3",
-      "journey_id": "shortcut"
-    },
-    {
-      "from": "jps-distributions_0",
-      "to": "jps-checkpoints_3",
-      "journey_id": "shortcut"
-    }
-  ],
+  "journeys": [],
+  "transitions": [],
   "obstacles": {
     "jps-obstacles_0": {
       "height": 3
@@ -333,18 +276,5 @@
       "height": 3
     }
   },
-  "journeys_v2": [
-    {
-      "id": "journey-1783673721633-p9aah1",
-      "name": "Route 1",
-      "color": "#4949DF",
-      "sequence": [
-        "jps-checkpoints_0",
-        "jps-checkpoints_1",
-        "jps-checkpoints_2",
-        "jps-checkpoints_3",
-        "jps-exits_0"
-      ]
-    }
-  ]
+  "journeys_v2": []
 }
