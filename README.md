@@ -339,7 +339,10 @@ entirely with `--disable-tenability`. The FED history CSV
 ## Dynamic route rerouting
 
 See [docs/routing.md](docs/routing.md) for the full routing model,
-cost formulas, and API reference.
+cost formulas, and API reference, and
+[docs/routing-and-signs-notes.md](docs/routing-and-signs-notes.md) for
+working notes on exit choice and where the exit-choice research papers
+disagree with each other.
 
 The routing system implements smoke-aware path planning with dynamic rerouting:
 
@@ -592,14 +595,24 @@ fds-viewer uses to colour agents by FED dose or speed.
 
 ## References
 
-Reference materials are stored in [`materials/`](materials/):
+See [docs/model-comparison.md](docs/model-comparison.md) for a
+section-by-section comparison of the FDS+Evac and pyFDS-Evac evacuation
+models (movement, smoke speed, FED, routing), referenced against the
+FDS+Evac guide below and the pyFDS-Evac source.
+
+Reference materials are stored in [`materials/`](materials/), each with a
+short summary alongside the PDF:
 
 - [FDS+Evac Technical Reference and User's Guide](materials/FDS+EVAC_Guide.pdf) — Korhonen (2021). Primary reference for the FED equations (Section 3.4) and smoke-speed model (Section 3.4, Eq. 11).
-- [Boerger et al. (2024)](materials/waypoint_based_visibility.pdf) — Beer-Lambert integrated extinction along line of sight (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269.
-- [Haensel (2014)](materials/Haensel2014.pdf) — Knowledge-based routing and cognitive map framework for evacuation modelling.
-- [Schroder et al. (2020)](materials/Schroder2020.pdf) — Waypoint-based visibility and evacuation modeling.
+- [Boerger et al. (2024)](materials/waypoint_based_visibility.pdf) ([summary](materials/waypoint_based_visibility_summary.md)) — Beer-Lambert integrated extinction along line of sight (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269.
+- [Haensel (2014)](materials/Haensel2014.pdf) ([summary](materials/haensel2014_summary.md)) — Knowledge-based routing and cognitive map framework for evacuation modelling.
+- [Schroder et al. (2020)](materials/Schroder2020.pdf) ([summary](materials/schroder2020_summary.md)) — Waypoint-based visibility and evacuation modeling.
 - [Ronchi et al. (2013)](materials/Ronchi2013.pdf) — FDS+Evac evacuation model validation and verification.
 - [evac.f90](materials/evac.f90) — Original FDS+Evac Fortran source for cross-referencing implementation details.
+- [Haghani & Sarvi (2017)](materials/haghani2017_summary.md) — Human exit-choice behaviour under evacuation conditions: literature synthesis.
+- [Haghani & Sarvi (2018)](materials/haghani2018_summary.md) — Herding and route-choice in immersive-VR evacuation experiments.
+- [Lovreglio et al. (2014)](materials/lovreglio2014_summary.md) — Random-utility discrete choice model of exit selection.
+- [Lovreglio et al. (2016)](materials/lovreglio2016_summary.md) — Validation of a Bayesian random-utility exit-choice model.
 
 ## Assets
 

@@ -128,7 +128,7 @@ CSV/SQLite artefacts produced by `run.py` and write PNGs.
 |--------------------------------------|------------------|
 | FED history (`--output-fed-history fed.csv`) | `plot_fed_history.py`, `plot_trajectories_by_speed.py` |
 | Smoke history (`--output-smoke-history smoke.csv`) | `plot_smoke_history.py` |
-| Route cost history (`--output-route-cost-history route_costs.csv`) | `plot_route_costs.py`, `plot_exit_choice.py` |
+| Route cost history (`--output-route-cost-history route_costs.csv`) | `plot_route_costs.py` |
 | JuPedSim SQLite (`--output-sqlite demo3.sqlite`) | `plot_trajectories.py`, `plot_trajectories_by_speed.py` (backdrop) |
 
 ### FED curves — `plot_fed_history.py`
@@ -208,13 +208,64 @@ Mean composite cost per exit over time.
 uv run python scripts/plot_route_costs.py route_costs.csv [routes.csv]
 ```
 
-### Exit choice distribution — `plot_exit_choice.py`
+### Quick interactive replay — `vis.py`
 
-Time series and histogram of exit targeting.
+A one-line JuPedSim viewer: opens an interactive animation of a trajectory
+SQLite instead of writing a file. Handy for a fast look without picking plot
+options.
 
 ```
-uv run python scripts/plot_exit_choice.py route_costs.csv [routes.csv [config.json]]
+uv run python scripts/vis.py demo3.sqlite
 ```
+
+## Cognitive-map movies and diagnostics
+
+### One agent's walk, animated — `animate_cognitive_map.py`
+
+Renders an MP4 (falls back to GIF without `ffmpeg` on PATH) of a single
+agent walking a deck, with its known/unknown exits and checkpoints
+colour-coded, sign facing arrows, and amber trail segments where the agent
+is wandering (no known route). Runs its own simulation internally with
+`collect_cognitive_map_history=True` — it does not consume a `run.py`
+artefact.
+
+```
+uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
+    -o cognitive_map.mp4 [--familiarity 0.0] [--agent ID] [--fps 12]
+```
+
+| Flag | Purpose |
+|------|---------|
+| `--scenario` (required) | Bundle directory with `config.json` + `geometry.wkt` (e.g. from `run.py --export-app-bundle`). |
+| `--familiarity F` | Starting familiarity scalar for the spawn distributions (default 0.0). |
+| `--agent ID` | Agent to follow (default: lowest id in the run). |
+| `--fps N` | Movie frame rate (default 12). |
+| `--cell-size M` | Visibility grid resolution in metres (default 0.5). |
+| `--work DIR` | Working directory for the deck variant and run SQLite (default `results/cognitive_map_movie`). |
+
+## Deriving inputs from an FDS deck
+
+### Walkable area from FDS obstructions — `generate_walkable_from_fds.py`
+
+Subtracts an FDS deck's blocking `&OBST` records from its mesh footprint and
+writes the interior as WKT for JuPedSim. See the script's module docstring
+for the `XB` axis-pairing pitfall, zero-thickness obstructions, and how the
+CAD layer name decides what blocks.
+
+```
+uv run python scripts/generate_walkable_from_fds.py DECK.fds -o out.wkt \
+    [--z-band 0.1 1.8] [--min-hole 0.25] [--plot out.png] [--report]
+```
+
+| Flag | Purpose |
+|------|---------|
+| `deck` (positional) | FDS input file. |
+| `-o/--out` (required) | Output WKT path. |
+| `--z-band LO HI` | Height band an upright occupant occupies (default 0.1 1.8). |
+| `--half-cell M` | Half the grid spacing; widens zero-thickness obstructions (default 0.05). |
+| `--min-hole M2` | Interior rings smaller than this are grid noise and get filled (default 0.25). |
+| `--plot PNG` | Also render the walkable polygon. |
+| `--report` | Print the per-layer blocked footprint and blocking verdict. |
 
 ## Paper figures
 
@@ -228,6 +279,33 @@ need a simulation run.
 | `generate_iso_table21_sweep.py` / `generate_iso_table22_stationary_plot.py` | ISO 13571 sensitivity sweeps. |
 | `generate_routing_diagram.py` | Routing / cognitive-map diagram. |
 | `generate_smoke_density_speed_plot.py` | Smoke-speed reference curve. |
+| `generate_exit_visibility_map.py` | Which exit a `discovery` agent would take, gridded by position, for the two `assets/exit_visibility_alpha` configs (`-o OUT.png`). |
+| `generate_cognitive_map_states.py` | Known/legible/remembered exit states probed along `assets/cognitive_map_memory`'s corridor (`-o OUT.png`). |
+| `generate_smoke_weight_sweep.py` | How `w_smoke` reprices the T-junction's two routes, uniform vs. asymmetric smoke (`-o OUT.png`). |
+
+## Calibration sweeps
+
+### Route-cost queue weight — `sweep_queue_weight.py`
+
+Sweeps `RouteCostConfig`'s queue weight against Fahy Table 2's front-door
+share. Writes one scenario bundle per `(w_queue, seed)`, runs each with
+`run.py`, and scores it against `assets/station_fahy/validate.py`'s
+`observed_matrix`. Unlike the paper-figure scripts above, this drives real
+simulation runs (in parallel processes), so it takes minutes, not seconds.
+
+```
+uv run python scripts/sweep_queue_weight.py \
+    [--weights 0.0 0.03 0.1 ...] [--seeds 420 421 422] \
+    [--jobs 4] [--out results/queue_weight_sweep] [--reuse-existing]
+```
+
+| Flag | Purpose |
+|------|---------|
+| `--weights F [F ...]` | `w_queue` values to sweep (default: the grid in `docs/routing.md`). |
+| `--seeds N [N ...]` | Seeds per weight (default `420 421 422`). |
+| `--jobs N` | Parallel worker processes (default 4). |
+| `--out DIR` | Output directory for `sweep.csv`, `summary.csv`, `sweep.png`. |
+| `--reuse-existing` | Score an existing `run.sqlite` instead of rerunning it, if its deck/seed digest still matches. |
 
 ## One-shot driver — `scripts/run_and_plot.sh`
 

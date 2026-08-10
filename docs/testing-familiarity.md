@@ -27,8 +27,8 @@ were required before familiarity could have *any* observable effect at all
 
 - **Geometry:** hand-drawn maze-like floor plan, 20 m × 18 m, 0.1 m walls,
   1.2 m doors throughout, generated parametrically by each config folder's
-  `build_geometry.py` (`assets/Familiarity Test Full/`,
-  `assets/Familiarity Test Discovery/`). One spawn room (bottom-right), one
+  `build_geometry.py` (`assets/familiarity_test_full/`,
+  `assets/familiarity_test_discovery/`). One spawn room (bottom-right), one
   exit alcove (top-right).
 - **Model:** `SocialForceModel`, seed 420, 20 agents (`by_number` spawn, all
   at once — not flow-spawned).
@@ -101,8 +101,8 @@ Two additions closed that gap:
 
 ## Method
 
-1. Load both configs (`assets/Familiarity Test Full`,
-   `assets/Familiarity Test Discovery`) — identical except `familiarity`.
+1. Load both configs (`assets/familiarity_test_full`,
+   `assets/familiarity_test_discovery`) — identical except `familiarity`.
 2. Run each with rerouting enabled (default on) and route-history collection
    turned on.
 3. Compare total evacuation time and inspect `route_history` for which
@@ -111,26 +111,21 @@ Two additions closed that gap:
 ## Directory Contents
 
 ```
-assets/Familiarity Test Full/
+assets/familiarity_test_full/
 ├── config.json          — JuPedSim scenario: exits, checkpoints, distribution
 │                           (familiarity: "full"), scripted journey +
 │                           shortcut-only transitions
 ├── geometry.wkt          — Walkable area (Shapely WKT), matches the FDS deck
 ├── build_geometry.py     — Parametric geometry generator (re-run to reshape)
-└── layout_preview.png    — Rendered floor plan (green=spawn, red=exit)
+├── layout_preview.png    — Rendered floor plan (green=spawn, red=exit)
+└── familiarity_test.fds  — FDS input, real &REAC combustion; walls mirror
+                             geometry.wkt so smoke propagates through the
+                             same doorways agents use. Not run/committed
+                             here — see Scope for what does and doesn't
+                             need it.
 
-assets/Familiarity Test Discovery/
-└── (same four files; config.json differs only in familiarity: "discovery")
-
-assets/familiarity_test_full/
-├── familiarity_test.fds              — FDS input, real &REAC combustion
-├── social_force_sketch_fire.smv      — Smokeview scene file
-├── social_force_sketch_fire.out      — FDS console output / run log
-├── social_force_sketch_fire_devc.csv — Device output (time-series)
-├── social_force_sketch_fire_hrr.csv  — Heat release rate over time
-├── social_force_sketch_fire_steps.csv— Solver timestep log
-├── social_force_sketch_fire.pickle   — Cached fdsreader data
-└── social_force_sketch_fire_*.sf/.s3d — Slice/3D field data (multi-mesh)
+assets/familiarity_test_discovery/
+└── (same five files; config.json differs only in familiarity: "discovery")
 
 tests/test_familiarity_routing.py     — Unit tests for shortest_path_to,
                                           nearest_frontier_target, and the
@@ -142,12 +137,12 @@ tests/test_familiarity_routing.py     — Unit tests for shortest_path_to,
 CLI (rerouting is on by default; shown explicitly for clarity):
 
 ```bash
-uv run run.py --scenario "assets/Familiarity Test Full" \
+uv run run.py --scenario assets/familiarity_test_full \
   --enable-rerouting --reroute-interval 1 \
   --output-route-history results/familiarity_full_routes.csv \
   --seed 420
 
-uv run run.py --scenario "assets/Familiarity Test Discovery" \
+uv run run.py --scenario assets/familiarity_test_discovery \
   --enable-rerouting --reroute-interval 1 \
   --output-route-history results/familiarity_discovery_routes.csv \
   --seed 420
