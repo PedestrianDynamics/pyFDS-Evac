@@ -354,6 +354,10 @@ The routing system implements smoke-aware path planning with dynamic rerouting:
   records what each agent knows, every time it changes — see
   [docs/testing-familiarity.md](docs/testing-familiarity.md) and
   `scripts/animate_cognitive_map.py`
+- **Discovery-world generator**: `scripts/generate_discovery_world.py` produces
+  random test decks (open room, convex obstacles, signed checkpoints, exits
+  optionally hidden from the spawn) for exercising discovery routing; the same
+  decks drive the invariant tests in `tests/test_generated_worlds.py`
 - **Congestion-aware routing**: Optional exit-congestion term (`w_queue`), **off
   by default** — it scales with a global agent count, so no constant suits every
   scenario. `assets/station_fahy` opts in at 0.03, calibrated against Fahy
