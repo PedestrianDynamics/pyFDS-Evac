@@ -128,7 +128,7 @@ CSV/SQLite artefacts produced by `run.py` and write PNGs.
 |--------------------------------------|------------------|
 | FED history (`--output-fed-history fed.csv`) | `plot_fed_history.py`, `plot_trajectories_by_speed.py` |
 | Smoke history (`--output-smoke-history smoke.csv`) | `plot_smoke_history.py` |
-| Route cost history (`--output-route-cost-history route_costs.csv`) | `plot_route_costs.py` |
+| Route cost history (`--output-route-cost-history route_costs.csv`) | `plot_route_costs.py`, `plot_exit_choice.py` |
 | JuPedSim SQLite (`--output-sqlite demo3.sqlite`) | `plot_trajectories.py`, `plot_trajectories_by_speed.py` (backdrop) |
 
 ### FED curves — `plot_fed_history.py`
@@ -208,6 +208,16 @@ Mean composite cost per exit over time.
 uv run python scripts/plot_route_costs.py route_costs.csv [routes.csv]
 ```
 
+### Exit choice distribution — `plot_exit_choice.py`
+
+Time series of how many agents target each exit at each evaluation tick,
+plus a histogram of total agent-ticks per exit. Saves
+`exit_choice_plot.png`.
+
+```
+uv run python scripts/plot_exit_choice.py route_costs.csv [routes.csv [config.json]]
+```
+
 ### Quick interactive replay — `vis.py`
 
 A one-line JuPedSim viewer: opens an interactive animation of a trajectory
@@ -222,7 +232,7 @@ uv run python scripts/vis.py demo3.sqlite
 
 ### One agent's walk, animated — `animate_cognitive_map.py`
 
-Renders an MP4 (falls back to GIF without `ffmpeg` on PATH) of a single
+Renders an MP4 (requires `ffmpeg` on PATH for MP4 output) of a single
 agent walking a deck, with its known/unknown exits and checkpoints
 colour-coded, sign facing arrows, and amber trail segments where the agent
 is wandering (no known route). Runs its own simulation internally with
@@ -239,6 +249,7 @@ uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
 | `--scenario` (required) | Bundle directory with `config.json` + `geometry.wkt` (e.g. from `run.py --export-app-bundle`). |
 | `--familiarity F` | Starting familiarity scalar for the spawn distributions (default 0.0). |
 | `--agent ID` | Agent to follow (default: lowest id in the run). |
+| `--seed N` | Run seed (default 420); needed to reproduce a specific movie. |
 | `--fps N` | Movie frame rate (default 12). |
 | `--cell-size M` | Visibility grid resolution in metres (default 0.5). |
 | `--work DIR` | Working directory for the deck variant and run SQLite (default `results/cognitive_map_movie`). |
