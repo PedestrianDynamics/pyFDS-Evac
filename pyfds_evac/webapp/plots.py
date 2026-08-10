@@ -167,7 +167,9 @@ def cognitive_map_figure(result: Any) -> go.Figure:
     df["n_edges"] = df["known_edges"].apply(len)
 
     def _mean_over_time(col: str) -> pd.Series:
-        wide = df.pivot_table(index="time_s", columns="agent_id", values=col, aggfunc="last")
+        wide = df.pivot_table(
+            index="time_s", columns="agent_id", values=col, aggfunc="last"
+        )
         return wide.sort_index().ffill().mean(axis=1)
 
     nodes = _mean_over_time("n_nodes")

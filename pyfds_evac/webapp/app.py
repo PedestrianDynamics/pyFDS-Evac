@@ -895,7 +895,9 @@ def _finished_view() -> Div:
         trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
         plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
         plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
-        plot_card("Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"),
+        plot_card(
+            "Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"
+        ),
         cls="space-y-6",
         style="display:flex;flex-direction:column;gap:18px",
     )
