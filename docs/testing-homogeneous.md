@@ -20,6 +20,14 @@ rather than validating against just a single data point.
 Testing was also conducted using probabilistic tenability to make ensure that encapacitation 
 occurs at a log-normal distribution. 
 
+> **Note:** `fed_hand_calc.py` and the two onset-distribution graphs
+> referenced below are not currently committed to the repo — the formulae
+> and pass/fail numbers here were computed and verified with them at the
+> time, but a reader can't regenerate the reference curve or view the plots
+> from this checkout. The `TODO` in [How to Run](#how-to-run) and the
+> [Remaining](#remaining-before-this-test-case-is-complete) section below
+> are original and still open.
+
 ## Test Setup
 
 - **Geometry:** Sealed room (no vents/openings), so CO cannot escape and the

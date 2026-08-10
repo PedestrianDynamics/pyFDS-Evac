@@ -26,6 +26,10 @@ rest) is untracked. See the ignore rules in [`.gitignore`](../.gitignore).
 | `exit_visibility_alpha` | 4 x 30 m corridor, 40 discovery agents, two exits. The pair differs only in one exit sign's viewing bearing. | deck | [test_exit_visibility_alpha.py](../tests/test_exit_visibility_alpha.py) |
 | `fic_vs_fed_speed` | 4 x 50 m sealed corridor, 30 agents, prescribed CO + acrolein. Three runs differing only in which tenability rules are enabled. | deck | [test_fic_vs_fed_speed.py](../tests/test_fic_vs_fed_speed.py) |
 | `cognitive_map_memory` | 4 x 32 m corridor with a side alcove, 20 discovery agents. A side exit's sign is legible only from y in [12.5, 27.5]. | deck | [test_cognitive_map_memory.py](../tests/test_cognitive_map_memory.py) |
+| `blind_spawn_discovery` | Both exits occluded from spawn, so a `discovery` agent starts with no exit in its cognitive map and must explore. | deck | [README](blind_spawn_discovery/README.md), [test_blind_spawn_discovery.py](../tests/test_blind_spawn_discovery.py) |
+| `iso_table21_coupled` | ISO 20414 Table 21 (reduced visibility vs speed), coupled to a real FDS extinction slice instead of a constant `K`. | deck | [README](iso_table21_coupled/README.md), [test_iso_table21_coupled.py](../tests/test_iso_table21_coupled.py) |
+| `iso_table22_coupled` | ISO 20414 Table 22 (occupant incapacitation), four cases coupled to real FDS gas output instead of stubbed values. | deck | [README](iso_table22_coupled/README.md), [test_iso_table22_coupled.py](../tests/test_iso_table22_coupled.py) |
+| `station`<br>`station_fahy` | The 2003 Station nightclub, walkable area derived from the NIST FDS model. `station_fahy` adds the routing/spawn config validated against Fahy, Proulx & Flynn (2011)'s witness-statement door shares. | no | [station/README](station/README.md), [scripts/sweep_queue_weight.py](../scripts/sweep_queue_weight.py), [`assets/station_fahy/validate.py`](station_fahy/validate.py) |
 
 What each one proves, and where that proof is checked, is in the
 [Assets section of the main README](../README.md#assets).

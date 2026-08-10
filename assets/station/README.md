@@ -2,7 +2,7 @@
 
 The 2003 Station fire, for validation against the witness statements in
 Fahy, Proulx & Flynn (2011) rather than against another model. See
-[the validation spec](../../docs/superpowers/specs/2026-08-05-station-validation-design.md).
+[the validation spec](../../docs/archive/superpowers/specs/2026-08-05-station-validation-design.md).
 
 `geometry.wkt` is **derived from `Station210_clean.fds`**, the NIST model, not
 reconstructed by hand:

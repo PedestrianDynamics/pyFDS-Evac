@@ -123,7 +123,7 @@ Symbols used below:
 
 1. **Every routable node has a sign; authoring one is optional.**
    Any exit / checkpoint / waypoint may carry a `sign` block (e.g.
-   `on/config.json:60`):
+   `assets/t_junction/config.json:45`):
    ```json
    "sign": { "x": 0.5, "y": 11.5, "alpha": 90, "c": 3 }
    ```

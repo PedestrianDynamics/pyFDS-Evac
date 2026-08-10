@@ -4,7 +4,7 @@
     .venv/bin/python assets/station_fahy/build_scenario.py
 
 Stage 1 of the validation in
-``docs/superpowers/specs/2026-08-05-station-validation-design.md``: clear air,
+``docs/archive/superpowers/specs/2026-08-05-station-validation-design.md``: clear air,
 no FDS. It tests whether the *familiarity gradient* plus the rule that everyone
 entered through the front door reproduces the front-door pull Fahy measured.
 

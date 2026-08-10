@@ -6,7 +6,7 @@ Rows are where a survivor was at ignition; columns are the exit actually used.
 N = 355 survivors.
 
 Transcribed and reconciled in
-``docs/superpowers/specs/2026-08-05-station-validation-design.md``: every column
+``docs/archive/superpowers/specs/2026-08-05-station-validation-design.md``: every column
 total matches the aggregate percentages the paper states on p. 12, and
 355 - 8 unknown = 347, the count whose exit usage could be determined.
 
