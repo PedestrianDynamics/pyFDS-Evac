@@ -10,6 +10,7 @@ from typing import Protocol
 
 from shapely.geometry import Polygon
 
+from .geometry import node_position as _node_position
 from .smoke_speed import speed_factor_from_extinction
 
 _logger = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ class StageGraph:
                     polygon = Polygon(coords)
                 if polygon is None:
                     continue
-                cx, cy = polygon.centroid.x, polygon.centroid.y
+                cx, cy = _node_position(polygon)
                 graph.nodes[dist_id] = StageNode(
                     stage_id=dist_id,
                     centroid_x=cx,
@@ -111,7 +112,7 @@ class StageGraph:
             polygon = info.get("polygon")
             if polygon is None:
                 continue
-            cx, cy = polygon.centroid.x, polygon.centroid.y
+            cx, cy = _node_position(polygon)
             stage_type = info.get("stage_type", "checkpoint")
             graph.nodes[stage_id] = StageNode(
                 stage_id=stage_id,
