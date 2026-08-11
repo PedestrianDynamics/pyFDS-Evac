@@ -20,7 +20,14 @@ _SECONDS_PER_MINUTE = 60.0
 
 @dataclass(frozen=True)
 class StageNode:
-    """A node in the stage graph representing one stage."""
+    """A node in the stage graph representing one stage.
+
+    The ``centroid_*`` fields hold :func:`~pyfds_evac.core.geometry.node_position`,
+    which is the polygon's centroid for every convex stage but an interior
+    point for a concave one, whose centroid falls outside itself.  The names
+    predate that distinction and are kept because they are load-bearing across
+    the routing layer.
+    """
 
     stage_id: str
     centroid_x: float
