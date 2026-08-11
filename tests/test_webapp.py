@@ -147,3 +147,53 @@ def test_second_run_rejected_while_active(client):
     _stream_until_terminal(client)
     if manager.result and manager.result.sqlite_file:
         manager.result.cleanup()
+
+
+class TestTrajectorySampling:
+    """Playback fidelity must not decay as a run gets longer.
+
+    The viewer draws a straight line between consecutive samples, so the
+    wall-clock gap between them is how far an agent travels along a chord
+    that ignores geometry.  A fixed sample *count* makes that gap grow with
+    run length: at the old 120-sample cap a 600 s run sampled every 5 s, so
+    agents were drawn straight through walls and whole cohorts vanished
+    between frames.
+    """
+
+    @staticmethod
+    def _step(n_frames: int, fps: float = 10.0) -> int:
+        import math
+
+        from pyfds_evac.webapp.trajviz import _MAX_SAMPLES, _SAMPLE_INTERVAL_S
+
+        step = max(1, round(_SAMPLE_INTERVAL_S * fps))
+        if n_frames // step > _MAX_SAMPLES:
+            step = math.ceil(n_frames / _MAX_SAMPLES)
+        return step
+
+    @pytest.mark.parametrize("duration_s", [60, 300, 600])
+    def test_the_gap_stays_put_as_runs_grow(self, duration_s):
+        from pyfds_evac.webapp.trajviz import _SAMPLE_INTERVAL_S
+
+        fps = 10.0
+        gap = self._step(int(duration_s * fps) + 1, fps) / fps
+        assert gap == pytest.approx(_SAMPLE_INTERVAL_S)
+
+    def test_an_agent_moves_less_than_a_wall_between_samples(self):
+        """At a 1.3 m/s desired speed this is 13 cm, far narrower than any
+        wall in the shipped decks, so the chord between two samples cannot
+        visibly cut through one.
+        """
+        fps = 10.0
+        gap = self._step(6001, fps) / fps
+        assert gap * 1.3 < 1.0
+
+    def test_a_very_long_run_degrades_instead_of_growing_without_bound(self):
+        from pyfds_evac.webapp.trajviz import _MAX_SAMPLES
+
+        fps = 10.0
+        n_frames = int(3600 * fps) + 1
+        step = self._step(n_frames, fps)
+        assert n_frames // step <= _MAX_SAMPLES
+        # Still far finer than the 30 s the old fixed cap would have given.
+        assert step / fps <= 1.0

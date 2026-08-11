@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 import bisect
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -23,9 +24,27 @@ _CARD = (
     "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
 )
 
-# Number of position samples sent to the browser; the JS interpolates between
-# them, so this stays small while playback stays smooth.
-_N_SAMPLES = 120
+# Wall-clock gap between the position samples sent to the browser.  The JS
+# draws a straight line between consecutive samples, so this gap sets how far
+# an agent travels along a chord that ignores geometry.  A fixed sample
+# *count* cannot bound that -- it makes the gap grow with run length, and at
+# 120 samples a 600 s run was sampled every 5 s (6.5 m of travel), which drew
+# agents straight through walls and vanished whole cohorts between frames.
+#
+# 0.1 s is the rate the trajectory is recorded at (dt=0.01 s, every 10th frame),
+# so the browser is given the simulation's own positions and interpolates
+# nothing that was not measured.
+_SAMPLE_INTERVAL_S = 0.1
+# Ceiling on the sample count, so a very long run degrades to a coarser gap
+# rather than an unbounded payload.  Sized to let a typical run through at the
+# full rate (a 600 s run is 6001 samples) and to bite only past that: 1200 s
+# falls back to 0.2 s, 3600 s to 0.5 s, both still far finer than the wall
+# thickness that matters.  At 333 agents a 600 s run is about 24 MB of JSON;
+# the app is served locally, so that is parse time and memory, not transfer.
+_MAX_SAMPLES = 8000
+# Centimetre precision is finer than the canvas can show, and full float
+# repr is pure payload.
+_COORD_DP = 2
 
 
 # The extinction-coefficient slice quantity. Not to be confused with FDS's
@@ -176,7 +195,12 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
     colors = [color_of.get(agent_exit.get(a, ""), "#ff6a1a") for a in agent_ids]
 
     frames_all = sorted(data["frame"].unique())
-    step = max(1, len(frames_all) // _N_SAMPLES)
+    # Sample on a fixed wall-clock gap, not a fixed count, so playback fidelity
+    # does not decay as runs get longer. The cap only binds on runs long enough
+    # that _SAMPLE_INTERVAL_S would blow the payload budget.
+    step = max(1, round(_SAMPLE_INTERVAL_S * fps))
+    if len(frames_all) // step > _MAX_SAMPLES:
+        step = math.ceil(len(frames_all) / _MAX_SAMPLES)
     sampled = frames_all[::step]
     by_frame = {f: g for f, g in data.groupby("frame")}
 
@@ -190,8 +214,8 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
         flat: list[Any] = []
         for a in agent_ids:
             p = pos.get(a)
-            flat.append(p[0] if p else None)
-            flat.append(p[1] if p else None)
+            flat.append(round(p[0], _COORD_DP) if p else None)
+            flat.append(round(p[1], _COORD_DP) if p else None)
         samples.append(flat)
         times.append(round(f / fps, 2))
 
@@ -221,13 +245,18 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
         j = bisect.bisect_right(ts_list, ts) - 1
         return fed_v[aid][j] if j >= 0 else 0.0
 
+    # One entry per agent per sample, the same order of magnitude as the
+    # positions themselves. Every read of it in the JS sits behind a hasFed
+    # guard, so without a FED model this is a second copy of the payload
+    # carrying nothing but zeros and nulls.
     fed_samples: list[list[Any]] = []
-    for idx, f in enumerate(sampled):
-        present = {int(i) for i in by_frame[f]["id"]}
-        ts = times[idx]
-        fed_samples.append(
-            [_fed_at(a, ts) if a in present else None for a in agent_ids]
-        )
+    if has_fed:
+        for idx, f in enumerate(sampled):
+            present = {int(i) for i in by_frame[f]["id"]}
+            ts = times[idx]
+            fed_samples.append(
+                [_fed_at(a, ts) if a in present else None for a in agent_ids]
+            )
 
     try:
         wx, wy = walkable.polygon.exterior.xy
