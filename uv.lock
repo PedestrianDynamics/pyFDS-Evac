@@ -1066,6 +1066,7 @@ dependencies = [
 gui = [
     { name = "monsterui" },
     { name = "python-fasthtml" },
+    { name = "python-multipart" },
 ]
 
 [package.dev-dependencies]
@@ -1087,6 +1088,7 @@ requires-dist = [
     { name = "pedpy" },
     { name = "plotly" },
     { name = "python-fasthtml", marker = "extra == 'gui'" },
+    { name = "python-multipart", marker = "extra == 'gui'" },
     { name = "shapely" },
 ]
 provides-extras = ["gui"]

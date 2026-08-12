@@ -147,6 +147,52 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 /* run button running-state */
 .run-btn:disabled { cursor: progress; filter: saturate(.5) brightness(.92); opacity: .9; }
 .run-btn:disabled .run-btn-icon { animation: pulse 1.3s ease-in-out infinite; }
+.results-btn:hover:not(:disabled) { background: rgba(244,196,48,.10); }
+
+/* ---- scenario upload (sits under the picker, inside Core) ---- */
+.upload-block {
+  display: flex; flex-direction: column; gap: 8px;
+  border-top: 1px dashed rgba(255,255,255,.10); margin-top: 4px; padding-top: 11px;
+}
+.upload-title {
+  font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 500;
+  letter-spacing: .07em; text-transform: uppercase; color: #837A74;
+}
+.upload-name {
+  background: #2E2A2E; border: 1px solid rgba(255,255,255,.09); border-radius: 9px;
+  padding: 9px 11px; color: #F2EDE9; font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; outline: none; width: 100%; box-sizing: border-box;
+}
+.upload-drop {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 16px 12px; cursor: pointer; text-align: center;
+  border: 1px dashed rgba(255,255,255,.18); border-radius: 10px;
+  background: #211E21; transition: border-color .12s, background .12s;
+}
+.upload-drop:hover, .upload-drop.over {
+  border-color: var(--gold); background: rgba(244,196,48,.06);
+}
+.upload-drop-title {
+  font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #F2EDE9;
+}
+.upload-drop-sub, .upload-hint {
+  font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #837A74;
+  line-height: 1.5;
+}
+.upload-picked {
+  font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--gold);
+  word-break: break-all;
+}
+.upload-picked:empty { display: none; }
+.upload-btn {
+  display: flex; align-items: center; justify-content: center; gap: .35rem;
+  width: 100%; padding: 9px; border-radius: 9px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.12); background: #3A343A; color: #F2EDE9;
+  font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; font-weight: 500;
+}
+.upload-btn:hover { border-color: var(--gold); color: var(--gold); }
+.upload-busy { display: none; }
+.upload-busy.htmx-request { display: inline; animation: pulse 1.3s ease-in-out infinite; }
 
 /* ---- header ---- */
 .app-header {

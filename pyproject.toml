@@ -35,6 +35,8 @@ dependencies = [
 gui = [
     "python-fasthtml",
     "monsterui",
+    # Starlette needs this to parse multipart forms (the scenario upload).
+    "python-multipart",
 ]
 
 [project.urls]

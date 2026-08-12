@@ -12,7 +12,17 @@ from argparse import Namespace
 from pathlib import Path
 from typing import Any, Dict, List
 
-from fasthtml.common import Button, Div, Form, Input, Label, NotStr, Option, Select
+from fasthtml.common import (
+    Button,
+    Div,
+    Form,
+    Input,
+    Label,
+    NotStr,
+    Optgroup,
+    Option,
+    Select,
+)
 
 try:
     from fasthtml.common import to_xml
@@ -23,6 +33,12 @@ except ImportError:
         from fasthtml.core import to_xml
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+_ASSET_ROOT = _REPO_ROOT / "assets"
+# Scenarios uploaded through the GUI. Gitignored, and kept out of assets/ so a
+# user's drop can never shadow or overwrite a bundled scenario.
+_UPLOAD_ROOT = _REPO_ROOT / "uploads"
+# Picker values for uploads carry this prefix; bundled scenarios carry none.
+UPLOAD_PREFIX = "uploads/"
 
 _INPUT = (
     "background:#2E2A2E;border:1px solid rgba(255,255,255,.09);"
@@ -96,22 +112,102 @@ def _is_bool(action: argparse.Action) -> bool:
     return action.nargs == 0 and action.const is True
 
 
-def _scenario_options() -> List[tuple]:
-    assets = _REPO_ROOT / "assets"
-    if not assets.is_dir():
+def _options_under(root: Path, prefix: str = "") -> List[tuple]:
+    """(label, value) pairs for every scenario directory under *root*.
+
+    A directory qualifies when it holds a config.json; each *other* *.json
+    beside it becomes an extra selectable option, matching what
+    ``load_scenario`` accepts for a directory and for a bare .json file.
+    """
+    if not root.is_dir():
         return []
     options: List[tuple] = []
-    for p in sorted(assets.iterdir()):
+    for p in sorted(root.iterdir()):
         if not (p.is_dir() and (p / "config.json").exists()):
             continue
-        options.append((p.name, p.name))
+        options.append((p.name, f"{prefix}{p.name}"))
         for json_file in sorted(p.glob("*.json")):
             if json_file.name == "config.json":
                 continue
             options.append(
-                (f"{p.name} / {json_file.name}", f"{p.name}/{json_file.name}")
+                (
+                    f"{p.name} / {json_file.name}",
+                    f"{prefix}{p.name}/{json_file.name}",
+                )
             )
     return options
+
+
+def _scenario_options() -> List[tuple]:
+    return _options_under(_ASSET_ROOT)
+
+
+def _upload_options() -> List[tuple]:
+    return _options_under(_UPLOAD_ROOT, UPLOAD_PREFIX)
+
+
+def scenario_path(name: str) -> Path:
+    """Resolve a scenario picker value to a real path on disk.
+
+    Values are ``<dir>`` or ``<dir>/<file>.json``, optionally carrying the
+    ``uploads/`` prefix. The resolved path is required to stay inside its root
+    so a crafted value ("../../etc", an absolute path, a symlink out) cannot
+    reach arbitrary files -- the value reaches us straight from a form field,
+    not only from the <select> we rendered.
+    """
+    raw = (name or "").strip().replace("\\", "/")
+    if not raw:
+        raise ValueError("No scenario selected.")
+    if raw.startswith(UPLOAD_PREFIX):
+        root, rel = _UPLOAD_ROOT, raw[len(UPLOAD_PREFIX) :]
+    else:
+        root, rel = _ASSET_ROOT, raw
+    if not rel or rel.startswith("/"):
+        raise ValueError(f"Invalid scenario: {name!r}")
+
+    resolved = (root / rel).resolve()
+    root_resolved = root.resolve()
+    if resolved != root_resolved and root_resolved not in resolved.parents:
+        raise ValueError(f"Scenario is outside {root.name}/: {name!r}")
+    if not resolved.exists():
+        raise ValueError(f"Scenario not found: {name!r}")
+    return resolved
+
+
+def upload_block() -> NotStr:
+    """Drop zone for a user's own scenario, shown under the scenario picker.
+
+    It lives *inside* the run form so there is one place to choose what runs:
+    the picker lists bundled and uploaded scenarios together, and this adds to
+    that list. HTML forbids nested forms, so rather than a <form> of its own the
+    upload is posted by htmx straight off the button, pulling in the two inputs
+    by hx-include. The run form drops them again via hx-params.
+    """
+    return NotStr(
+        "<div class='upload-block'>"
+        "<div class='upload-title'>Or upload your own</div>"
+        "<input type='text' id='upload-name' name='upload_name' "
+        "placeholder='Name (optional)' autocomplete='off' spellcheck='false' "
+        "class='upload-name'>"
+        "<label id='upload-drop' class='upload-drop'>"
+        "<input type='file' name='files' multiple accept='.json,.wkt,.zip' hidden>"
+        "<span class='upload-drop-title'>Drop files or click to browse</span>"
+        "<span class='upload-drop-sub'>config JSON + geometry WKT, or a .zip bundle</span>"
+        "<span id='upload-picked' class='upload-picked'></span>"
+        "</label>"
+        "<button type='button' class='upload-btn' "
+        "hx-post='/upload-scenario' hx-encoding='multipart/form-data' "
+        "hx-include=\"#upload-drop input, #upload-name, [name='scenario']\" "
+        # hx-params is inherited from the enclosing run form, whose filter drops
+        # exactly the two fields this request needs. Opt back in to all of them.
+        "hx-params='*' "
+        "hx-target='#scenario-block' hx-swap='outerHTML' "
+        "hx-indicator='#upload-busy'>"
+        "<span id='upload-busy' class='upload-busy'>…</span>Add to list</button>"
+        "<span class='upload-hint'>Geometry and configuration only. Fire data is "
+        "supplied separately through the FDS dir field under Smoke.</span>"
+        "</div>"
+    )
 
 
 def _browse_button(target_id: str, mode: str) -> Any:
@@ -164,6 +260,12 @@ _HELP_TEXT: Dict[str, str] = {
     "reconsidering.",
     "vis_cache": "Precomputed sign-visibility map (.npz). Lets agents lose sight of exit "
     "signs through smoke and walls. Needs an FDS dir + rerouting enabled.",
+    "output_base": "Folder the run writes into. Leave it blank to use the derived path "
+    "shown greyed out, which keeps each scenario / mode / seed in its own "
+    "folder. Type a path to override it and everything below goes there.",
+    "results_only": "Finishes sooner by skipping the trajectory viewer and plots. "
+    "Writes every output file to results/: the SQLite, the CSVs, and a "
+    "config + geometry snapshot. Same as 'uv run run.py'.",
 }
 
 
@@ -276,32 +378,55 @@ def _incap_toggle() -> Any:
     )
 
 
+_SELECT = (
+    "appearance:none;"
+    'background:#2E2A2E url("data:image/svg+xml;utf8,'
+    "<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'>"
+    "<path d='M2 4l4 4 4-4' stroke='%23837A74' stroke-width='1.5' fill='none'/>"
+    '</svg>") no-repeat right 12px center;'
+    "border:1px solid rgba(255,255,255,.09);border-radius:9px;"
+    f"padding:10px 32px 10px 12px;color:#F2EDE9;{_GROTESK};font-size:13px;"
+    "outline:none;width:100%"
+)
+
+
+def scenario_block(selected: str | None = None, note: Any = None) -> Any:
+    """The scenario picker, as a self-contained swap target.
+
+    Split out of ``_field`` so /upload-scenario can re-render it with the fresh
+    upload preselected. Bundled and uploaded scenarios go in separate optgroups
+    so it stays obvious which are yours.
+    """
+    bundled = _scenario_options()
+    uploaded = _upload_options()
+    vals = [v for _, v in bundled + uploaded]
+    default = selected if selected in vals else (vals[0] if vals else "")
+
+    def _opts(pairs):
+        return [Option(ol, value=ov, selected=(ov == default)) for ol, ov in pairs]
+
+    if uploaded:
+        children = [
+            Optgroup(*_opts(bundled), label="Bundled"),
+            Optgroup(*_opts(uploaded), label="Uploaded"),
+        ]
+    else:
+        children = _opts(bundled)
+
+    return Div(
+        _lbl("Scenario", "scenario"),
+        Select(*children, name="scenario", id="scenario", style=_SELECT),
+        *([note] if note is not None else []),
+        id="scenario-block",
+        style=_FIELD,
+    )
+
+
 def _field(action: argparse.Action) -> Any:
     dest = action.dest
 
     if dest == "scenario":
-        opts = _scenario_options()
-        vals = [v for _, v in opts]
-        default = "demo" if "demo" in vals else (vals[0] if vals else "")
-        return Div(
-            _lbl("Scenario", "scenario"),
-            Select(
-                *[Option(ol, value=ov, selected=(ov == default)) for ol, ov in opts],
-                name="scenario",
-                id="scenario",
-                style=(
-                    "appearance:none;"
-                    'background:#2E2A2E url("data:image/svg+xml;utf8,'
-                    "<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'>"
-                    "<path d='M2 4l4 4 4-4' stroke='%23837A74' stroke-width='1.5' fill='none'/>"
-                    '</svg>") no-repeat right 12px center;'
-                    "border:1px solid rgba(255,255,255,.09);border-radius:9px;"
-                    f"padding:10px 32px 10px 12px;color:#F2EDE9;{_GROTESK};font-size:13px;"
-                    "outline:none;width:100%"
-                ),
-            ),
-            style=_FIELD,
-        )
+        return scenario_block()
 
     if dest == "seed":
         return Div(
@@ -415,22 +540,84 @@ def _details_block(
     )
 
 
+def _results_only_button() -> Any:
+    """Secondary submit: same run, no viewer built afterwards.
+
+    The ? badge has to sit *outside* the <button> -- inside it, clicking to
+    read the help would submit the form and start a run. It reuses the same
+    .lblwrap/.badge-tip mechanism as the field labels.
+    """
+    import html as _html
+
+    return Div(
+        Div(
+            Button(
+                NotStr(
+                    '<span class="run-btn-icon">↓</span>'
+                    '<span class="run-btn-label">Results only</span>'
+                ),
+                id="results-btn",
+                type="submit",
+                name="results_only",
+                value="1",
+                cls="run-btn results-btn",
+                style=(
+                    "display:flex;align-items:center;justify-content:center;gap:6px;"
+                    "flex:1;padding:11px;border-radius:12px;cursor:pointer;"
+                    f"{_GROTESK};font-size:13.5px;font-weight:600;"
+                    "background:transparent;color:#F4C430;"
+                    "border:1px solid rgba(244,196,48,.45)"
+                ),
+            ),
+            NotStr(
+                '<span class="help-badge" style="flex:none;align-self:center" '
+                "onclick=\"this.closest('.lblwrap').classList.toggle('open')\">?</span>"
+            ),
+            style="display:flex;align-items:stretch;gap:8px",
+        ),
+        NotStr(
+            f'<div class="badge-tip">{_html.escape(_HELP_TEXT["results_only"])}</div>'
+        ),
+        cls="lblwrap",
+    )
+
+
+# Filename suffixes appended to the run name, in sidebar display order. The
+# preview lines are re-rendered client-side from the selected scenario, so the
+# names here must stay in step with _OUTPUT_DEFAULTS in form_to_opts.
+ARTIFACT_SUFFIXES = (
+    ".sqlite",
+    "_smoke_history.csv",
+    "_fed_history.csv",
+    "_route_history.csv",
+    "_route_cost_history.csv",
+)
+
+_DOT = (
+    '<span style="width:4px;height:4px;border-radius:99px;'
+    'background:#FF6A1A;flex:none;display:inline-block;margin-right:8px"></span>'
+)
+_PREVIEW_ROW = f"display:flex;align-items:center;{_MONO};font-size:10.5px;color:#B2A9A3"
+
+
 def _output_files_section() -> NotStr:
     body = to_xml(
         Div(
             Div(
-                Label("Output folder", style=_LABEL),
+                _lbl("Output folder", "output_base"),
                 Input(
                     id="output_base",
                     name="output_base",
-                    placeholder="results/demo",
+                    autocomplete="off",
+                    spellcheck="false",
                     style=_INPUT,
                 ),
                 style=_FIELD,
             ),
             Div(
                 Div(
-                    "5 artifacts · auto-derived",
+                    "6 artifacts",
+                    id="artifact-heading",
                     style=f"{_GROTESK};font-size:9px;font-weight:600;letter-spacing:.07em;"
                     f"text-transform:uppercase;color:#837A74;margin-bottom:6px",
                 ),
@@ -442,31 +629,32 @@ def _output_files_section() -> NotStr:
                         "output_fed_history",
                         "output_route_history",
                         "output_route_cost_history",
+                        "export_app_bundle",
                     )
                 ],
+                # data-suffix lets the autofill script rewrite these to the real
+                # run name; the <run> text is what shows if the script is dead.
                 *[
                     Div(
+                        NotStr(_DOT),
                         NotStr(
-                            '<span style="width:4px;height:4px;border-radius:99px;'
-                            'background:#FF6A1A;flex:none;display:inline-block;margin-right:8px"></span>'
+                            f'<span class="artifact-preview" data-suffix="{suffix}">'
+                            f"&lt;run&gt;{suffix}</span>"
                         ),
-                        label,
-                        style=f"display:flex;align-items:center;{_MONO};font-size:10.5px;color:#B2A9A3",
+                        style=_PREVIEW_ROW,
                     )
-                    for label in (
-                        "<run>.sqlite",
-                        "<run>_smoke_history.csv",
-                        "<run>_fed_history.csv",
-                        "<run>_route_history.csv",
-                        "<run>_route_cost_history.csv",
-                    )
+                    for suffix in ARTIFACT_SUFFIXES
                 ],
+                Div(
+                    NotStr(_DOT),
+                    "bundle/{config.json,geometry.wkt}",
+                    style=_PREVIEW_ROW,
+                ),
                 style=(
                     "background:#252127;border:1px solid rgba(255,255,255,.06);"
                     "border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:5px"
                 ),
             ),
-            _switch("export_app_bundle", "Export app bundle", checked=True),
             style="display:flex;flex-direction:column;gap:11px;padding:14px 4px 4px",
         )
     )
@@ -497,6 +685,10 @@ def build_form(post_url: str) -> Any:
         fields = [_field(by_dest[d]) for d in dests if d in by_dest]
         if not fields:
             continue
+        # Uploading is a way of adding to the scenario picker, so it belongs
+        # beside it rather than in a section of its own.
+        if title == "Core":
+            fields.append(upload_block())
         grouped.update(dests)
         open_ = title in ("Core", "Smoke", "FED & Tenability")
         sections.append(_details_block(title, accent, fields, open_))
@@ -527,10 +719,33 @@ def build_form(post_url: str) -> Any:
                 "box-shadow:0 6px 20px rgba(232,89,12,.28)"
             ),
         ),
+        _results_only_button(),
         hx_post=post_url,
         hx_target="#run-panel",
         hx_swap="innerHTML show:top",
+        # The upload inputs sit inside this form for layout only. Exclude them
+        # so a staged file is not serialised into the urlencoded run request.
+        hx_params="not files,upload_name",
         style="display:flex;flex-direction:column;gap:14px",
+    )
+
+
+def run_name(scenario: Any) -> str:
+    """Filename stem for a scenario's artifacts.
+
+    ``clean()`` in the sidebar's autofill script mirrors this; the two must
+    agree or the hidden fields and this server-side fallback would disagree on
+    where a run writes.
+    """
+    name = str(scenario or "")
+    return name.replace(".json", "").replace("/", "_") if name else "run"
+
+
+def default_output_base(scenario: Any, mode: Any, seed: Any) -> str:
+    """Derived output folder: one per scenario / incapacitation mode / seed."""
+    return (
+        f"results/{run_name(scenario)}/{mode or 'probabilistic'}/"
+        f"seed{seed if seed is not None else 'default'}"
     )
 
 
@@ -554,22 +769,34 @@ def form_to_opts(form: Dict[str, Any]) -> Namespace:
         opts[dest] = action.type(raw) if action.type else str(raw)
     opts["collect_route_cost_history"] = True
 
-    # Ensure output paths are always populated — JS autofill may not have run
-    # before form submission, so derive server-side from the scenario name.
-    def _clean(n: str) -> str:
-        return n.replace(".json", "").replace("/", "_") if n else "run"
-
-    sc = _clean(str(opts.get("scenario") or "run"))
+    # Ensure output paths are always populated: the JS autofill may not have run
+    # before submission, so derive them server-side too. The typed "Output
+    # folder" wins when present -- it used to be read by nobody, so a path typed
+    # there was silently discarded and the run went to the derived path anyway.
+    sc = run_name(opts.get("scenario"))
     mode = str(opts.get("incapacitation_mode") or "probabilistic")
-    seed = opts.get("seed")
-    base = f"results/{sc}/{mode}/seed{seed if seed is not None else 'default'}"
+    base = (
+        str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
+    ) or (default_output_base(opts.get("scenario"), mode, opts.get("seed")))
     _OUTPUT_DEFAULTS = {
         "output_sqlite": f"{base}/{sc}.sqlite",
         "output_smoke_history": f"{base}/{sc}_smoke_history.csv",
         "output_fed_history": f"{base}/{sc}_fed_history.csv",
         "output_route_history": f"{base}/{sc}_route_history.csv",
         "output_route_cost_history": f"{base}/{sc}_route_cost_history.csv",
+        "export_app_bundle": f"{base}/bundle",
     }
+    # --export-app-bundle takes a *directory*, but the sidebar used to render it
+    # as a checkbox; the posted "on" was passed straight through as a path, so
+    # every GUI run dumped its bundle into a literal ./on/ folder. Treat the
+    # checkbox-era truthy strings as "just use the default".
+    if str(opts.get("export_app_bundle") or "").strip().lower() in (
+        "on",
+        "true",
+        "1",
+        "yes",
+    ):
+        opts["export_app_bundle"] = ""
     for k, v in _OUTPUT_DEFAULTS.items():
         if not opts.get(k):
             opts[k] = v

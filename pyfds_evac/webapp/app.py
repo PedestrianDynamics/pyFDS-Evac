@@ -8,7 +8,11 @@ streaming and JS helpers are unchanged from the original.
 from __future__ import annotations
 
 import asyncio
+import io
 import json
+import re
+import shutil
+import zipfile
 from pathlib import Path
 from urllib.parse import quote
 
@@ -297,12 +301,14 @@ _AUTOFILL_JS = """
     output_smoke_history:      function (n, d) { return d + '/' + n + '_smoke_history.csv'; },
     output_fed_history:        function (n, d) { return d + '/' + n + '_fed_history.csv'; },
     output_route_history:      function (n, d) { return d + '/' + n + '_route_history.csv'; },
-    output_route_cost_history: function (n, d) { return d + '/' + n + '_route_cost_history.csv'; }
+    output_route_cost_history: function (n, d) { return d + '/' + n + '_route_cost_history.csv'; },
+    export_app_bundle:         function (n, d) { return d + '/bundle'; }
   };
   function scenarioName() {
-    var inp = document.querySelector('input[name="scenario"]');
-    var sel = document.querySelector('#scenario select');
-    return (inp && inp.value) || (sel && sel.value) || '';
+    // The picker is a <select id="scenario">, not a wrapper around one, so
+    // match on the form name -- that holds however it ends up being rendered.
+    var el = document.querySelector('[name="scenario"]');
+    return (el && el.value) || '';
   }
   function fdsDirValue() {
     var el = document.getElementById('fds_dir');
@@ -317,12 +323,28 @@ _AUTOFILL_JS = """
     return (el && el.value) || 'probabilistic';
   }
   function clean(n) { return n.replace(/\\.json$/i, '').replace(/\\//g, '_'); }
+  // The typed "Output folder", normalised. Empty means "use the derived path".
+  function outputBase() {
+    var el = document.getElementById('output_base');
+    if (!el) return '';
+    return el.value.trim().replace(/\\\\/g, '/').replace(/\\/+$/, '');
+  }
   function fill(n) {
     var base = n ? clean(n) : '';
-    var dir = base ? 'results/' + base + '/' + modeValue() + '/seed' + seedValue() : '';
+    var derived = base ? 'results/' + base + '/' + modeValue() + '/seed' + seedValue() : '';
+    // Show the derived folder as a placeholder rather than a value, so an empty
+    // box still tells you where output lands while a typed path clearly wins.
+    var ob = document.getElementById('output_base');
+    if (ob) ob.placeholder = derived || 'results/<scenario>';
+    var dir = outputBase() || derived;
     Object.keys(OUT).forEach(function (id) {
       var el = document.getElementById(id);
       if (el && !el.dataset.userEdited) el.value = base ? OUT[id](base, dir) : '';
+    });
+    // Preview lines under the folder box, so the section shows the real
+    // filenames instead of a literal "<run>".
+    document.querySelectorAll('.artifact-preview').forEach(function (el) {
+      el.textContent = (base || '<run>') + el.dataset.suffix;
     });
   }
   var last = null;
@@ -333,7 +355,7 @@ _AUTOFILL_JS = """
     if (el && !el.dataset.userEdited) el.value = fdsDir ? fdsDir + '/vis_cache.npz' : '';
   }
   setInterval(function () {
-    var k = scenarioName() + '|' + seedValue() + '|' + modeValue();
+    var k = scenarioName() + '|' + seedValue() + '|' + modeValue() + '|' + outputBase();
     if (k !== last) { last = k; fill(scenarioName()); }
     var fdsDir = fdsDirValue();
     if (fdsDir !== lastFdsDir) { lastFdsDir = fdsDir; fillVisCache(); }
@@ -386,14 +408,21 @@ document.addEventListener('click', function (e) {
 # the active run.
 _RUN_BTN_JS = """
 (function () {
-  function runBtn() { return document.getElementById('run-btn'); }
+  // Both submit buttons post to /run; either one starting a run must lock out
+  // the other, so they are relabelled together.
+  var LABELS = {
+    'run-btn':     { idle: 'Run scenario', icon: '▶' },
+    'results-btn': { idle: 'Results only', icon: '↓' }
+  };
   function setRunning(on) {
-    var b = runBtn(); if (!b) return;
-    b.disabled = on;
-    var lbl = b.querySelector('.run-btn-label');
-    var ico = b.querySelector('.run-btn-icon');
-    if (lbl) lbl.textContent = on ? 'Scenario in progress…' : 'Run scenario';
-    if (ico) ico.textContent = on ? '⏳' : '▶';
+    Object.keys(LABELS).forEach(function (id) {
+      var b = document.getElementById(id); if (!b) return;
+      b.disabled = on;
+      var lbl = b.querySelector('.run-btn-label');
+      var ico = b.querySelector('.run-btn-icon');
+      if (lbl) lbl.textContent = on ? 'Scenario in progress…' : LABELS[id].idle;
+      if (ico) ico.textContent = on ? '⏳' : LABELS[id].icon;
+    });
   }
   function isRunPath(d) {
     var p = (d && d.pathInfo && (d.pathInfo.requestPath || d.pathInfo.path)) ||
@@ -556,6 +585,56 @@ document.addEventListener('DOMContentLoaded', window._renderMath);
 """
 
 
+# Drag-and-drop onto the upload zone. A file <input> can only be populated from
+# a DataTransfer, so the drop handler assigns dataTransfer.files directly rather
+# than trying to read the files itself.
+_UPLOAD_JS = """
+(function () {
+  function zone() { return document.getElementById('upload-drop'); }
+  function input() { var z = zone(); return z && z.querySelector('input[type=file]'); }
+  function names(list) {
+    return Array.prototype.map.call(list, function (f) { return f.name; }).join(', ');
+  }
+  function show() {
+    var i = input(), out = document.getElementById('upload-picked');
+    if (!i || !out) return;
+    out.textContent = i.files && i.files.length ? names(i.files) : '';
+  }
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.matches('#upload-drop input[type=file]')) show();
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      var z = zone(); if (!z || !z.contains(e.target)) return;
+      e.preventDefault(); z.classList.add('over');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      var z = zone(); if (!z || !z.contains(e.target)) return;
+      z.classList.remove('over');
+    });
+  });
+  document.addEventListener('drop', function (e) {
+    var z = zone(), i = input();
+    if (!z || !i || !z.contains(e.target)) return;
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      i.files = e.dataTransfer.files;
+      show();
+    }
+  });
+  // A successful upload swaps in a new picker; clear the staged files so the
+  // same drop can't be submitted twice by accident.
+  document.body.addEventListener('htmx:afterSwap', function (e) {
+    if (e.target && e.target.id === 'scenario-block') {
+      var i = input(); if (i) { i.value = ''; show(); }
+    }
+  });
+})();
+"""
+
+
 @rt("/")
 def index():
     grid = Div(
@@ -577,6 +656,7 @@ def index():
         Script(_MATH_JS),
         Script(_TENABILITY_JS),
         Script(_RUN_BTN_JS),
+        Script(_UPLOAD_JS),
     )
 
 
@@ -695,6 +775,143 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
     )
 
 
+# ── scenario upload ───────────────────────────────────────────────────────────
+_UPLOAD_MAX_BYTES = 25 * 1024 * 1024
+_UPLOAD_SUFFIXES = {".json", ".wkt"}
+
+
+def _slugify(raw: str) -> str:
+    """Filesystem-safe directory name. Never trust a client-supplied path."""
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "-", (raw or "").strip()).strip("-._")
+    return cleaned[:64] or "scenario"
+
+
+def _unique_dir(root: Path, slug: str) -> Path:
+    candidate = root / slug
+    n = 2
+    while candidate.exists():
+        candidate = root / f"{slug}-{n}"
+        n += 1
+    return candidate
+
+
+def _extract_zip(blob: bytes, dest: Path) -> list[str]:
+    """Extract the .json/.wkt members of a zip flat into *dest*.
+
+    zipfile does not sanitise member names, so an archive can carry '../' or an
+    absolute path and write outside the target ("zip slip"). Such members are
+    rejected outright; ordinary nested ones ("t_junction/config.json", the
+    shape you get zipping a scenario folder) keep just their basename.
+    """
+    written: list[str] = []
+    with zipfile.ZipFile(io.BytesIO(blob)) as zf:
+        for info in zf.infolist():
+            if info.is_dir():
+                continue
+            raw = info.filename.replace("\\", "/")
+            parts = [p for p in raw.split("/") if p not in ("", ".")]
+            # Drop traversal and absolute members outright rather than
+            # flattening them to a basename: a '../' entry is malformed at
+            # best, and flattening would quietly add a stray .json that the
+            # picker would then offer as an alternate config.
+            if not parts or ".." in parts or raw.startswith("/") or ":" in parts[0]:
+                continue
+            # A zip of a folder ("t_junction/config.json") is the normal case,
+            # so a nested member keeps its basename.
+            name = parts[-1]
+            if Path(name).suffix.lower() not in _UPLOAD_SUFFIXES:
+                continue
+            target = (dest / name).resolve()
+            if dest.resolve() not in target.parents:  # defence in depth
+                continue
+            if info.file_size > _UPLOAD_MAX_BYTES:
+                raise ValueError(f"{name} is too large.")
+            target.write_bytes(zf.read(info))
+            written.append(name)
+    return written
+
+
+def _upload_error(message: str, selected: str | None = None):
+    return params.scenario_block(
+        selected,
+        note=Div(
+            message,
+            style=(
+                f"{_MONO};font-size:10.5px;color:#E01E37;margin-top:6px;line-height:1.5"
+            ),
+        ),
+    )
+
+
+@rt("/upload-scenario")
+async def upload_scenario(request: Request):
+    form = await request.form()
+    current = str(form.get("scenario") or "") or None
+    uploads = [f for f in form.getlist("files") if getattr(f, "filename", "")]
+    if not uploads:
+        return _upload_error(
+            "Pick a config JSON + geometry WKT, or a .zip bundle.", current
+        )
+
+    blobs: list[tuple[str, bytes]] = []
+    total = 0
+    for item in uploads:
+        data = await item.read()
+        total += len(data)
+        if total > _UPLOAD_MAX_BYTES:
+            return _upload_error("Upload is over the 25 MB limit.", current)
+        blobs.append((Path(item.filename).name, data))
+
+    allowed = _UPLOAD_SUFFIXES | {".zip"}
+    accepted = [(n, d) for n, d in blobs if Path(n).suffix.lower() in allowed]
+    ignored = [n for n, _ in blobs if Path(n).suffix.lower() not in allowed]
+    if not accepted:
+        return _upload_error(
+            "Nothing usable here. Expected .json / .wkt files, or a .zip bundle.",
+            current,
+        )
+
+    name_field = str(form.get("upload_name") or "").strip()
+    fallback = next(
+        (Path(n).stem for n, _ in accepted if Path(n).suffix.lower() != ".wkt"),
+        Path(accepted[0][0]).stem,
+    )
+    params._UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+    dest = _unique_dir(params._UPLOAD_ROOT, _slugify(name_field or fallback))
+    dest.mkdir(parents=True)
+
+    try:
+        written: list[str] = []
+        for filename, data in accepted:
+            if Path(filename).suffix.lower() == ".zip":
+                written += _extract_zip(data, dest)
+            else:
+                (dest / Path(filename).name).write_bytes(data)
+                written.append(Path(filename).name)
+        if not written:
+            raise ValueError("The archive held no .json or .wkt files.")
+        # The one real check: if load_scenario accepts it, the run will too.
+        # Cheaper and more honest than re-implementing format validation.
+        load_scenario(str(dest))
+    except Exception as exc:
+        shutil.rmtree(dest, ignore_errors=True)
+        return _upload_error(
+            f"Could not load that scenario. {type(exc).__name__}: {exc}", current
+        )
+
+    value = f"{params.UPLOAD_PREFIX}{dest.name}"
+    summary = f"Added “{dest.name}” · {', '.join(sorted(written))}"
+    if ignored:
+        summary += f" · ignored {', '.join(sorted(ignored))}"
+    return params.scenario_block(
+        value,
+        note=Div(
+            summary,
+            style=f"{_MONO};font-size:10.5px;color:#F4C430;margin-top:6px;line-height:1.5",
+        ),
+    )
+
+
 # ── run routes ────────────────────────────────────────────────────────────────
 @rt("/run")
 async def post(request: Request):
@@ -713,7 +930,7 @@ async def post(request: Request):
         return _running_stream_view()
 
     try:
-        scenario = load_scenario(f"assets/{scenario_name}")
+        scenario = load_scenario(str(params.scenario_path(scenario_name)))
         opts = params.form_to_opts(form)
         # Normalise the FDS dir and fail fast on a bogus value. Without this,
         # a stale/garbage field (e.g. a pasted error string) is handed to
@@ -738,6 +955,8 @@ async def post(request: Request):
             scenario_name,
             post_run=post_run,
             fds_dir=getattr(opts, "fds_dir", None),
+            results_only=bool(form.get("results_only")),
+            opts=opts,
         )
     except Exception as exc:
         return Div(
@@ -832,14 +1051,8 @@ def _running_card(ev) -> Div:
     )
 
 
-def _finished_view() -> Div:
-    result = manager.result
-    scenario = None
-    try:
-        scenario = load_scenario(f"assets/{manager.scenario_name}")
-    except Exception:
-        pass
-
+def _kpi_tiles(result) -> Div:
+    """The four headline numbers, shared by both finished views."""
     status = "finished" if result.agents_remaining == 0 else "stopped"
     metrics = [
         ("Status", f"{status} ({result.metrics.get('success')})"),
@@ -848,8 +1061,7 @@ def _finished_view() -> Div:
         ("Remaining", f"{result.agents_remaining}"),
     ]
     accents = ["#F4C430", "#F4C430", "#3B82F6", "#E01E37"]
-
-    kpi_tiles = Div(
+    return Div(
         *[
             Div(
                 Div(
@@ -866,6 +1078,17 @@ def _finished_view() -> Div:
         ],
         style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px",
     )
+
+
+def _finished_view() -> Div:
+    result = manager.result
+    scenario = None
+    try:
+        scenario = load_scenario(str(params.scenario_path(manager.scenario_name)))
+    except Exception:
+        pass
+
+    kpi_tiles = _kpi_tiles(result)
     if manager.artifacts:
         art = Div(
             Div(
@@ -899,6 +1122,123 @@ def _finished_view() -> Div:
             "Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"
         ),
         cls="space-y-6",
+        style="display:flex;flex-direction:column;gap:18px",
+    )
+
+
+def _fmt_size(path: Path) -> str:
+    """Human byte count for a file, or the summed contents of a directory."""
+    try:
+        if path.is_dir():
+            total = sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
+        else:
+            total = path.stat().st_size
+    except OSError:
+        return "?"
+    for unit in ("B", "KB", "MB", "GB"):
+        if total < 1024 or unit == "GB":
+            return f"{total:.0f} {unit}" if unit == "B" else f"{total:.1f} {unit}"
+        total /= 1024.0
+    return "?"
+
+
+# Every artifact apply_outputs can write: the opts attribute holding its path,
+# a label, and the RunResult field it is gated on (None = always written).
+_ARTIFACT_SPECS = [
+    ("output_sqlite", "Trajectory SQLite", "sqlite_file"),
+    ("output_smoke_history", "Smoke history CSV", "smoke_history"),
+    ("output_fed_history", "FED history CSV", "fed_history"),
+    ("output_route_history", "Route switch CSV", "route_history"),
+    ("output_route_cost_history", "Route cost CSV", "route_cost_history"),
+    ("export_app_bundle", "Scenario bundle", None),
+]
+
+
+def _missing_reason(field: str, opts) -> str:
+    """Why a writer produced nothing -- these are settings, not failures."""
+    if field in ("smoke_history", "fed_history"):
+        no_smoke = not getattr(opts, "fds_dir", None) and not getattr(
+            opts, "constant_extinction", None
+        )
+        if no_smoke:
+            return "no smoke source: set an FDS dir or a constant extinction"
+        if field == "fed_history" and getattr(opts, "disable_tenability", False):
+            return "tenability disabled for this run"
+        return "the model recorded no samples"
+    if field in ("route_history", "route_cost_history"):
+        if not getattr(opts, "enable_rerouting", False):
+            return "rerouting disabled for this run"
+        return "no agent ever switched route"
+    if field == "sqlite_file":
+        return "no trajectory file was produced"
+    return "not produced by this run"
+
+
+def _artifact_rows(result, opts) -> Div:
+    rows = []
+    for attr, label, field in _ARTIFACT_SPECS:
+        raw = getattr(opts, attr, None) if opts is not None else None
+        produced = field is None or getattr(result, field, None) is not None
+        path = Path(raw) if raw else None
+        exists = bool(path and path.exists())
+
+        if exists:
+            detail, colour, mark = f"{path} · {_fmt_size(path)}", "#B2A9A3", "#F4C430"
+        elif not produced:
+            detail, colour, mark = _missing_reason(field, opts), "#837A74", "#3A343A"
+        else:
+            detail, colour, mark = "not written", "#837A74", "#3A343A"
+
+        rows.append(
+            Div(
+                Div(
+                    style=f"width:6px;height:6px;border-radius:99px;background:{mark};flex:none;margin-top:6px"
+                ),
+                Div(
+                    Div(label, style=f"{_GROTESK};font-size:12.5px;{_INK}"),
+                    Div(
+                        detail,
+                        style=f"{_MONO};font-size:10.5px;color:{colour};margin-top:3px;word-break:break-all",
+                    ),
+                ),
+                style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)",
+            )
+        )
+    return Div(*rows, style="display:flex;flex-direction:column")
+
+
+def _results_only_view() -> Div:
+    """Finished panel for a results-only run: numbers and files, no viewer."""
+    result = manager.result
+    opts = manager.opts
+    return Div(
+        _kpi_tiles(result),
+        _warnings_card(manager.warnings),
+        Div(
+            Div(
+                "Output files",
+                style=f"{_GROTESK};font-weight:600;font-size:15px;{_INK};margin-bottom:4px",
+            ),
+            Div(
+                "Same artifacts as a uv run of run.py.",
+                style=f"{_MONO};font-size:10.5px;{_MUTED};margin-bottom:10px",
+            ),
+            _artifact_rows(result, opts),
+            style=_CARD,
+        ),
+        Div(
+            Div(
+                "Viewer skipped",
+                style=f"{_GROTESK};font-weight:600;font-size:14px;color:#F4C430;margin-bottom:6px",
+            ),
+            P(
+                "The trajectory animation and the FED / smoke / cognitive-map plots "
+                "were not built for this run. Run the same scenario with "
+                "“Run scenario” to see them.",
+                style=f"font-size:.82rem;line-height:1.6;{_INK2};margin:0",
+            ),
+            style=_CARD,
+        ),
         style="display:flex;flex-direction:column;gap:18px",
     )
 
@@ -940,7 +1280,11 @@ async def progress():
             status = manager.status
             if status == "done":
                 try:
-                    finished = _finished_view()
+                    finished = (
+                        _results_only_view()
+                        if manager.results_only
+                        else _finished_view()
+                    )
                 except Exception as exc:
                     import traceback
 

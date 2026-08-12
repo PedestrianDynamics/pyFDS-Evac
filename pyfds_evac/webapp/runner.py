@@ -90,6 +90,8 @@ class RunManager:
         self.error: Optional[str] = None
         self.scenario_name: Optional[str] = None
         self.fds_dir: Optional[str] = None
+        self.results_only: bool = False
+        self.opts: Any = None
         self.artifacts: List[str] = []
         self.last_event: Optional[ProgressEvent] = None
         self.fed_snapshots: List[tuple] = []  # (sim_time, max_fed, mean_fed)
@@ -107,6 +109,8 @@ class RunManager:
         scenario_name: str,
         post_run: Optional[Callable[[ScenarioResult], List[str]]] = None,
         fds_dir: Optional[str] = None,
+        results_only: bool = False,
+        opts: Any = None,
     ) -> None:
         """Start a run on a background thread. Raises if one is already active.
 
@@ -114,6 +118,9 @@ class RunManager:
         status flips to ``done``; its returned strings (e.g. written output
         files) are stored on ``self.artifacts``. ``fds_dir`` is remembered so
         the results view can render the smoke field from the same FDS case.
+        ``results_only`` selects the finished view that skips building the
+        trajectory viewer and plots; ``opts`` is kept so that view can report
+        on every output path that was requested.
         """
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("A run is already in progress.")
@@ -123,6 +130,8 @@ class RunManager:
         self.error = None
         self.scenario_name = scenario_name
         self.fds_dir = fds_dir
+        self.results_only = results_only
+        self.opts = opts
         self.artifacts = []
         self.last_event = None
         self.fed_snapshots = []
