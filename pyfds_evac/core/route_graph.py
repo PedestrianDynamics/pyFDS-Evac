@@ -1205,6 +1205,12 @@ def reroute_agent(
     # choices for stages not on this path).
     old_choices = wait_info.get("path_choices", {})
     old_choices.update(new_choices)
+    # The path's terminal is where the agent must stop and re-decide (a
+    # frontier hop) or be retired (an exit). A stale leg left there from an
+    # earlier route makes advance_path_target walk on instead of going idle,
+    # so the agent never re-enters the decision path.
+    if remaining[-1] not in new_choices:
+        old_choices.pop(remaining[-1], None)
     wait_info["path_choices"] = old_choices
 
     # If the agent's current target is not on the remaining path, retarget to
