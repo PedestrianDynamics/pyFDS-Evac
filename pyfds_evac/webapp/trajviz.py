@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 import bisect
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -23,9 +24,27 @@ _CARD = (
     "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
 )
 
-# Number of position samples sent to the browser; the JS interpolates between
-# them, so this stays small while playback stays smooth.
-_N_SAMPLES = 120
+# Wall-clock gap between the position samples sent to the browser.  The JS
+# draws a straight line between consecutive samples, so this gap sets how far
+# an agent travels along a chord that ignores geometry.  A fixed sample
+# *count* cannot bound that -- it makes the gap grow with run length, and at
+# 120 samples a 600 s run was sampled every 5 s (6.5 m of travel), which drew
+# agents straight through walls and vanished whole cohorts between frames.
+#
+# 0.1 s is the rate the trajectory is recorded at (dt=0.01 s, every 10th frame),
+# so the browser is given the simulation's own positions and interpolates
+# nothing that was not measured.
+_SAMPLE_INTERVAL_S = 0.1
+# Ceiling on the sample count, so a very long run degrades to a coarser gap
+# rather than an unbounded payload.  Sized to let a typical run through at the
+# full rate (a 600 s run is 6001 samples) and to bite only past that: 1200 s
+# falls back to 0.2 s, 3600 s to 0.5 s, both still far finer than the wall
+# thickness that matters.  At 333 agents a 600 s run is about 24 MB of JSON;
+# the app is served locally, so that is parse time and memory, not transfer.
+_MAX_SAMPLES = 8000
+# Centimetre precision is finer than the canvas can show, and full float
+# repr is pure payload.
+_COORD_DP = 2
 
 
 # The extinction-coefficient slice quantity. Not to be confused with FDS's
@@ -176,24 +195,53 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
     colors = [color_of.get(agent_exit.get(a, ""), "#ff6a1a") for a in agent_ids]
 
     frames_all = sorted(data["frame"].unique())
-    step = max(1, len(frames_all) // _N_SAMPLES)
+    # Sample on a fixed wall-clock gap, not a fixed count, so playback fidelity
+    # does not decay as runs get longer. The cap only binds on runs long enough
+    # that _SAMPLE_INTERVAL_S would blow the payload budget.
+    step = max(1, round(_SAMPLE_INTERVAL_S * fps))
+    if len(frames_all) // step > _MAX_SAMPLES:
+        step = math.ceil(len(frames_all) / _MAX_SAMPLES)
     sampled = frames_all[::step]
-    by_frame = {f: g for f, g in data.groupby("frame")}
+    # Per-agent tracks, not a full agent-by-sample grid.  An agent exists from
+    # its spawn to the moment it reaches an exit, so a grid spends a slot on
+    # every agent that has not spawned yet or has already left: on a 600 s
+    # station_fahy run only 4.9 % of the grid holds a position and the other
+    # 95.1 % is the word "null".  Each agent instead carries the index of its
+    # first sample and a flat run of coordinates from there.
+    times = [round(f / fps, 2) for f in sampled]
+    # One pass over the rows rather than a groupby per sampled frame, which
+    # builds a DataFrame for each of the thousands of samples.
+    sample_of_frame = {f: t for t, f in enumerate(sampled)}
+    positions_by_sample: list[dict[int, tuple[float, float]]] = [{} for _ in sampled]
+    for i, f, x, y in zip(data["id"], data["frame"], data["x"], data["y"]):
+        t = sample_of_frame.get(f)
+        if t is None:
+            continue
+        positions_by_sample[t][int(i)] = (
+            round(float(x), _COORD_DP),
+            round(float(y), _COORD_DP),
+        )
 
-    samples, times = [], []
-    for f in sampled:
-        sub = by_frame[f]
-        pos = {
-            int(i): (float(x), float(y))
-            for i, x, y in zip(sub["id"], sub["x"], sub["y"])
-        }
-        flat: list[Any] = []
-        for a in agent_ids:
-            p = pos.get(a)
-            flat.append(p[0] if p else None)
-            flat.append(p[1] if p else None)
-        samples.append(flat)
-        times.append(round(f / fps, 2))
+    # One pass over the recorded positions, not one scan of every sample per
+    # agent, which would be agents x samples work for a payload this shape.
+    start_of: dict[int, int] = {}
+    track_of: dict[int, list[Any]] = {a: [] for a in agent_ids}
+    for t, pos in enumerate(positions_by_sample):
+        for a, xy in pos.items():
+            flat = track_of.get(a)
+            if flat is None:
+                continue
+            if a not in start_of:
+                start_of[a] = t
+            # Pad any gap (the writer does not produce one, but tolerating it
+            # costs nothing) so index k always means sample starts[i] + k.
+            expected = (t - start_of[a]) * 2
+            if len(flat) < expected:
+                flat.extend([None] * (expected - len(flat)))
+            flat.append(xy[0])
+            flat.append(xy[1])
+    starts = [start_of.get(a, -1) for a in agent_ids]
+    tracks = [track_of[a] for a in agent_ids]
 
     # Per-agent cumulative FED at each sample time, aligned with `samples`.
     # FED is a step function in time; we take the last value at or before the
@@ -221,13 +269,26 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
         j = bisect.bisect_right(ts_list, ts) - 1
         return fed_v[aid][j] if j >= 0 else 0.0
 
-    fed_samples: list[list[Any]] = []
-    for idx, f in enumerate(sampled):
-        present = {int(i) for i in by_frame[f]["id"]}
-        ts = times[idx]
-        fed_samples.append(
-            [_fed_at(a, ts) if a in present else None for a in agent_ids]
-        )
+    # Aligned with `tracks`: one value per agent per sample it is present for,
+    # starting at the same `starts[i]`.  Every read of it in the JS sits behind
+    # a hasFed guard, so without a FED model it is not built at all rather than
+    # shipping a second payload of zeros.
+    fed_tracks: list[list[Any]] = []
+    if has_fed:
+        for i, a in enumerate(agent_ids):
+            first = starts[i]
+            if first < 0:
+                fed_tracks.append([])
+                continue
+            n_samples = len(tracks[i]) // 2
+            fed_tracks.append(
+                [
+                    _fed_at(a, times[first + k])
+                    if a in positions_by_sample[first + k]
+                    else None
+                    for k in range(n_samples)
+                ]
+            )
 
     try:
         wx, wy = walkable.polygon.exterior.xy
@@ -249,9 +310,10 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
 
     return {
         "times": times,
-        "samples": samples,
+        "starts": starts,
+        "tracks": tracks,
         "colors": colors,
-        "fed": fed_samples,
+        "fed": fed_tracks,
         "hasFed": has_fed,
         "walk": walk,
         "walls": _interior_walls(
@@ -268,12 +330,30 @@ _JS = """
 (function () {
   var D = __DATA__;
   var canvas = document.getElementById('traj-canvas');
-  if (!canvas || !D.samples.length) return;
+  if (!canvas || !D.times.length) return;
   var playBtn = document.getElementById('traj-play');
   var slider = document.getElementById('traj-slider');
   var tlabel = document.getElementById('traj-time');
   var ctx = canvas.getContext('2d');
-  var T = D.times, S = D.samples, COL = D.colors, FED = D.fed, n = COL.length;
+  var T = D.times, ST = D.starts, TR = D.tracks, COL = D.colors, FED = D.fed,
+      n = COL.length;
+  // Agents carry their own track from ST[i], so a lookup is a bounds check
+  // rather than an index into a grid mostly full of nulls. Returns null when
+  // agent i had not spawned yet, or had already left, at sample ti.
+  function posAt(i, ti) {
+    var k = ti - ST[i];
+    if (ST[i] < 0 || k < 0) return null;
+    var tr = TR[i], j = 2 * k;
+    if (j + 1 >= tr.length || tr[j] == null) return null;
+    return [tr[j], tr[j + 1]];
+  }
+  function fedAt(i, ti) {
+    var k = ti - ST[i];
+    if (ST[i] < 0 || k < 0) return null;
+    var fr = FED[i];
+    if (!fr || k >= fr.length) return null;
+    return fr[k];
+  }
   var t0 = T[0], t1 = T[T.length - 1], span = Math.max(1e-6, t1 - t0);
   var PLAYBACK = 16;            // seconds of wall time to play the whole run
   var simT = t0, playing = false, lastTs = null;
@@ -335,15 +415,19 @@ _JS = """
   var fedMaxByTime = null, fedMeanByTime = null;
   if (D.hasFed) {
     fedMaxByTime = T.map(function (_, ti) {
-      var row = FED[ti]; if (!row) return 0;
       var m = 0;
-      for (var k = 0; k < n; k++) { if (row[k] != null && row[k] > m) m = row[k]; }
+      for (var k = 0; k < n; k++) {
+        var v = fedAt(k, ti);
+        if (v != null && v > m) m = v;
+      }
       return m;
     });
     fedMeanByTime = T.map(function (_, ti) {
-      var row = FED[ti]; if (!row) return 0;
       var s = 0, c = 0;
-      for (var k = 0; k < n; k++) { if (row[k] != null) { s += row[k]; c++; } }
+      for (var k = 0; k < n; k++) {
+        var v = fedAt(k, ti);
+        if (v != null) { s += v; c++; }
+      }
       return c > 0 ? s / c : 0;
     });
   }
@@ -470,7 +554,7 @@ _JS = """
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
     ctx.clearRect(0, 0, w, h);
     poly(D.walk, p, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.16)', 1.5);
-    var b = bracket(simT), a = S[b[0]], c = S[b[1]], f = b[2];
+    var b = bracket(simT), f = b[2];
     drawSmoke(b[0], p);
     // Interior walls (holes in the walkable area): drawn over the smoke as
     // solid voids so they read as obstacles the agents route around.
@@ -483,15 +567,15 @@ _JS = """
       poly(e.poly, p, e.color + '28', e.color, 2);
     });
     for (var i = 0; i < n; i++) {
-      var ax = a[2 * i], ay = a[2 * i + 1], cx = c[2 * i], cy = c[2 * i + 1];
+      var pa = posAt(i, b[0]), pc = posAt(i, b[1]);
       var X, Y;
-      if (ax == null && cx == null) continue;
-      else if (ax == null) { X = cx; Y = cy; }
-      else if (cx == null) { X = ax; Y = ay; }
-      else { X = ax + (cx - ax) * f; Y = ay + (cy - ay) * f; }
+      if (pa == null && pc == null) continue;
+      else if (pa == null) { X = pc[0]; Y = pc[1]; }
+      else if (pc == null) { X = pa[0]; Y = pa[1]; }
+      else { X = pa[0] + (pc[0] - pa[0]) * f; Y = pa[1] + (pc[1] - pa[1]) * f; }
       var col = COL[i];
       if (mode === 'fed') {
-        var da = FED[b[0]][i], dc = FED[b[1]][i], dv;
+        var da = fedAt(i, b[0]), dc = fedAt(i, b[1]), dv;
         if (da == null) dv = dc; else if (dc == null) dv = da;
         else dv = da + (dc - da) * f;
         col = fedColor(dv);
