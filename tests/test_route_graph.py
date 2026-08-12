@@ -730,6 +730,26 @@ class TestRerouteAgent:
         reroute_agent(wait_info, ["D0", "C0", "E1"], wait_info["stage_configs"])
         assert "OTHER" in wait_info["path_choices"]
 
+    def test_reroute_clears_stale_choices_at_new_terminal(self, two_exit_graph):
+        """Arrival at a rerouted path's terminal must idle, not auto-advance.
+
+        A frontier/wander hop ends at the node where the agent is supposed to
+        stop and re-decide. A stale leg left in path_choices from an earlier
+        route made advance_path_target walk on instead of going idle, so the
+        agent never re-entered the decision path -- two agents in
+        assets/familiarity_test_discovery ping-ponged CP1<->CP2 for 254 s
+        while one of them already knew a route to the exit.
+        """
+        from pyfds_evac.core.direct_steering_runtime import advance_path_target
+
+        wait_info = _make_wait_info(
+            two_exit_graph, "D0", "C0", path_choices={"C0": [("E1", 100.0)]}
+        )
+        reroute_agent(wait_info, ["D0", "C0"], wait_info["stage_configs"])
+        wait_info["current_target_stage"] = "C0"
+        advance_path_target(wait_info)
+        assert wait_info["state"] == "idle"
+
 
 @pytest.fixture
 def near_tie_graph():
