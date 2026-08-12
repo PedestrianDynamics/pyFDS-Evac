@@ -20,6 +20,7 @@ docs/testing-familiarity.md.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import importlib.util
 import json
 import math
@@ -93,7 +94,11 @@ def _run(deck: Path, familiarity: float):
     )
     history = list(result.cognitive_map_history or [])
     positions: dict[tuple[int, int], tuple[float, float]] = {}
-    with sqlite3.connect(result.sqlite_file) as con:
+    # closing(), not `with sqlite3.connect(...)`: the connection's context
+    # manager only ends the transaction, it does not close the connection, so
+    # the file stays open and result.cleanup() below cannot delete it on
+    # Windows, where an open file may not be unlinked.
+    with contextlib.closing(sqlite3.connect(result.sqlite_file)) as con:
         fps = float(
             con.execute("SELECT value FROM metadata WHERE key='fps'").fetchone()[0]
         )

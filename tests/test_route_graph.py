@@ -3,7 +3,7 @@
 import logging
 
 import pytest
-from shapely.geometry import Polygon
+from shapely.geometry import Point, Polygon
 
 from pyfds_evac.core.route_graph import (
     AgentRouteState,
@@ -2738,3 +2738,64 @@ class TestWanderCanGoHome:
         target, path = wander
         assert target == "D0"
         assert path == ["C1", "D0"]
+
+
+class TestNodePositionIsAlwaysWalkable:
+    """A stage's graph position must lie inside the stage's own polygon.
+
+    The area centroid of a non-convex polygon can land in a concavity the
+    shape wraps around, outside the polygon itself.  Such a point is not on
+    the walkable floor, so the routing engine rejects it and `_make_edge`
+    falls back to a straight centroid ray -- an edge cost that ignores every
+    wall between the two stages.  Four Station spawn areas hit exactly this
+    and had straight-line route costs as a result.
+    """
+
+    @staticmethod
+    def _c_shape() -> Polygon:
+        """A C, whose centroid sits in the mouth rather than in the shape."""
+        return Polygon(
+            [
+                (0, 0),
+                (10, 0),
+                (10, 3),
+                (3, 3),
+                (3, 7),
+                (10, 7),
+                (10, 10),
+                (0, 10),
+            ]
+        )
+
+    def test_a_concave_stage_gets_an_interior_position(self):
+        from pyfds_evac.core.geometry import node_position as _node_position
+
+        polygon = self._c_shape()
+        assert not polygon.contains(polygon.centroid), "fixture is not concave enough"
+
+        x, y = _node_position(polygon)
+        assert polygon.contains(Point(x, y))
+
+    def test_a_well_behaved_stage_keeps_its_centroid(self):
+        """Convex polygons must be untouched, or every deck's node positions
+        move and any calibration resting on them silently shifts.
+        """
+        from pyfds_evac.core.geometry import node_position as _node_position
+
+        polygon = Polygon([(0, 0), (4, 0), (4, 2), (0, 2)])
+        assert _node_position(polygon) == (polygon.centroid.x, polygon.centroid.y)
+
+    def test_the_graph_places_a_concave_spawn_inside_itself(self):
+        polygon = self._c_shape()
+        graph = StageGraph.from_scenario(
+            {
+                "EX": {
+                    "polygon": Polygon([(20, 20), (21, 20), (21, 21), (20, 21)]),
+                    "stage_type": "exit",
+                }
+            },
+            [{"from": "D0", "to": "EX"}],
+            distributions={"D0": {"polygon": polygon}},
+        )
+        node = graph.nodes["D0"]
+        assert polygon.contains(Point(node.centroid_x, node.centroid_y))

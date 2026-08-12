@@ -10,6 +10,8 @@ from typing import Protocol
 import numpy as np
 from shapely.geometry import Polygon
 
+from .geometry import node_position
+
 
 class _VisBackend(Protocol):
     """What VisibilityModel needs from its backend.
@@ -39,14 +41,19 @@ def _default_sign(entry: dict) -> dict | None:
     if not coords or len(coords) < 3:
         return None
     # Configs with unusable polygons simulate fine -- the stage setup skips
-    # them -- so a node that cannot yield a centroid gets no sign rather than
+    # them -- so a node that cannot yield a position gets no sign rather than
     # aborting the run the moment visibility is switched on.
+    #
+    # node_position, not the raw centroid: on a non-convex stage the centroid
+    # falls outside the polygon, which would bury this sign in a wall where no
+    # agent can read it. It is also the point the route graph routes to, and
+    # the two must agree or a node is seen from somewhere it is never routed.
     try:
-        centroid = Polygon(coords).centroid
+        x, y = node_position(Polygon(coords))
     except Exception as exc:
         _logger.warning("Cannot synthesise a sign from %r: %s", coords, exc)
         return None
-    return {"x": float(centroid.x), "y": float(centroid.y), "alpha": None, "c": 3}
+    return {"x": x, "y": y, "alpha": None, "c": 3}
 
 
 def extract_sign_descriptors(raw_config: dict) -> dict[str, dict]:

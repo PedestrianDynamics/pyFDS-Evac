@@ -10,6 +10,7 @@ from typing import Protocol
 
 from shapely.geometry import Polygon
 
+from .geometry import node_position as _node_position
 from .smoke_speed import speed_factor_from_extinction
 
 _logger = logging.getLogger(__name__)
@@ -19,7 +20,14 @@ _SECONDS_PER_MINUTE = 60.0
 
 @dataclass(frozen=True)
 class StageNode:
-    """A node in the stage graph representing one stage."""
+    """A node in the stage graph representing one stage.
+
+    The ``centroid_*`` fields hold :func:`~pyfds_evac.core.geometry.node_position`,
+    which is the polygon's centroid for every convex stage but an interior
+    point for a concave one, whose centroid falls outside itself.  The names
+    predate that distinction and are kept because they are load-bearing across
+    the routing layer.
+    """
 
     stage_id: str
     centroid_x: float
@@ -98,7 +106,7 @@ class StageGraph:
                     polygon = Polygon(coords)
                 if polygon is None:
                     continue
-                cx, cy = polygon.centroid.x, polygon.centroid.y
+                cx, cy = _node_position(polygon)
                 graph.nodes[dist_id] = StageNode(
                     stage_id=dist_id,
                     centroid_x=cx,
@@ -111,7 +119,7 @@ class StageGraph:
             polygon = info.get("polygon")
             if polygon is None:
                 continue
-            cx, cy = polygon.centroid.x, polygon.centroid.y
+            cx, cy = _node_position(polygon)
             stage_type = info.get("stage_type", "checkpoint")
             graph.nodes[stage_id] = StageNode(
                 stage_id=stage_id,
