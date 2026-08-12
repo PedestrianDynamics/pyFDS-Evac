@@ -187,4 +187,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> Dict[str,
         "reroute_config": reroute_config,
         "collect_route_cost_history": collect_route_cost_history,
         "vis_model": vis_model,
+        # Cheap (a size check per agent per timestep) and the GUI's cognitive
+        # map growth plot needs it, so there is no reason to gate it.
+        "collect_cognitive_map_history": True,
     }

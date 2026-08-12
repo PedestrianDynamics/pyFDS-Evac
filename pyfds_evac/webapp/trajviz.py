@@ -355,11 +355,13 @@ _JS = """
     return fr[k];
   }
   var t0 = T[0], t1 = T[T.length - 1], span = Math.max(1e-6, t1 - t0);
-  var PLAYBACK = 16;            // seconds of wall time to play the whole run
   var simT = t0, playing = false, lastTs = null;
-  var speedMult = 1;
+  var speedMult = 1;            // 1x = real time: 1 sim-second per wall-second
   var bx = D.bounds, pad = 0.06;
   var mode = D.hasFed ? 'fed' : 'exit';
+  var zoom = 1, panX = 0, panY = 0, MIN_ZOOM = 0.5, MAX_ZOOM = 20;
+  var CANVAS_H = 440;           // render height; size() and the wheel handler must agree
+  var dragging = false, dragStart = null;
 
   // Smoke field: decode base64 uint8 frames into an offscreen canvas we can
   // scale onto the main canvas under the agents. Each frame is W*H bytes,
@@ -458,18 +460,28 @@ _JS = """
 
   function size() {
     var dpr = window.devicePixelRatio || 1;
-    var w = canvas.clientWidth || 600, h = 440;
+    var w = canvas.clientWidth || 600, h = CANVAS_H;
     canvas.width = w * dpr; canvas.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return [w, h];
   }
-  function tf(w, h) {
+  function baseTf(w, h) {
     var dx = bx[2] - bx[0] || 1, dy = bx[3] - bx[1] || 1;
     var mw = w * (1 - 2 * pad), mh = h * (1 - 2 * pad);
     var s = Math.min(mw / dx, mh / dy);
     var ox = (w - s * dx) / 2 - s * bx[0];
     var oy = (h - s * dy) / 2 - s * bx[1];
     return function (x, y) { return [ox + s * x, h - (oy + s * y)]; };  // flip y
+  }
+  // Fit-to-bounds transform, then user zoom/pan applied on top around the
+  // canvas centre so scroll-to-zoom and drag-to-pan work independent of the
+  // world extent.
+  function tf(w, h) {
+    var base = baseTf(w, h), cx = w / 2, cy = h / 2;
+    return function (x, y) {
+      var q = base(x, y);
+      return [(q[0] - cx) * zoom + cx + panX, (q[1] - cy) * zoom + cy + panY];
+    };
   }
   function poly(P, p, fill, stroke, lw) {
     if (!P.length) return;
@@ -591,7 +603,7 @@ _JS = """
   }
   function loop(ts) {
     if (playing) {
-      if (lastTs != null) simT += ((ts - lastTs) / 1000) * (span / PLAYBACK) * speedMult;
+      if (lastTs != null) simT += ((ts - lastTs) / 1000) * speedMult;
       lastTs = ts;
       if (simT >= t1) { simT = t1; playing = false; playBtn.textContent = '▶'; }
     }
@@ -607,14 +619,60 @@ _JS = """
     playing = false; playBtn.textContent = '▶';
     simT = t0 + (parseFloat(slider.value) / 1000) * span;
   });
+  var customInput = document.getElementById('traj-speed-custom');
   document.querySelectorAll('.speed-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       speedMult = parseFloat(this.dataset.speed);
       document.querySelectorAll('.speed-btn').forEach(function (b) {
         b.classList.toggle('active', b === btn);
       });
+      if (customInput) customInput.classList.remove('active');
     });
   });
+  if (customInput) {
+    var applyCustomSpeed = function () {
+      var v = parseFloat(customInput.value);
+      if (!isFinite(v) || v <= 0) return;
+      speedMult = v;
+      document.querySelectorAll('.speed-btn').forEach(function (b) { b.classList.remove('active'); });
+      customInput.classList.add('active');
+    };
+    customInput.addEventListener('change', applyCustomSpeed);
+    customInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') applyCustomSpeed(); });
+  }
+  // Scroll to zoom (centred on the cursor), drag to pan.
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    var w = canvas.clientWidth || 600, h = CANVAS_H, cx = w / 2, cy = h / 2;
+    var worldX = (mx - cx - panX) / zoom + cx;
+    var worldY = (my - cy - panY) / zoom + cy;
+    var newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+    panX = mx - cx - (worldX - cx) * newZoom;
+    panY = my - cy - (worldY - cy) * newZoom;
+    zoom = newZoom;
+  }, { passive: false });
+  canvas.addEventListener('mousedown', function (e) {
+    dragging = true;
+    dragStart = { x: e.clientX, y: e.clientY, panX: panX, panY: panY };
+    canvas.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', function (e) {
+    if (!dragging) return;
+    panX = dragStart.panX + (e.clientX - dragStart.x);
+    panY = dragStart.panY + (e.clientY - dragStart.y);
+  });
+  window.addEventListener('mouseup', function () {
+    if (!dragging) return;
+    dragging = false;
+    canvas.style.cursor = 'grab';
+  });
+  canvas.style.cursor = 'grab';
+  var resetViewBtn = document.getElementById('traj-reset-view');
+  if (resetViewBtn) {
+    resetViewBtn.addEventListener('click', function () { zoom = 1; panX = 0; panY = 0; });
+  }
   var smBtn = document.getElementById('traj-smoke');
   if (smBtn) {
     smBtn.addEventListener('click', function () {
@@ -672,19 +730,22 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         )
     markup = (
         '<div class="traj-wrap">'
-        '<canvas id="traj-canvas" class="traj-canvas"></canvas>'
+        '<canvas id="traj-canvas" class="traj-canvas" title="Scroll to zoom, drag to pan"></canvas>'
         '<div class="traj-controls">'
         '<button id="traj-play" type="button" class="traj-play">▶</button>'
         '<input id="traj-slider" type="range" min="0" max="1000" value="0" '
         'class="traj-slider">'
         '<span id="traj-time" class="traj-time">t = 0 s</span>'
+        '<button id="traj-reset-view" type="button" class="traj-play" title="Reset zoom/pan" style="font-size:.85rem">&#8634;</button>'
         '<div class="traj-color">'
         '<span class="traj-color-lbl">speed</span>'
-        '<button type="button" class="cmode speed-btn" data-speed="0.25">&frac14;&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="0.5">&frac12;&times;</button>'
         '<button type="button" class="cmode speed-btn active" data-speed="1">1&times;</button>'
         '<button type="button" class="cmode speed-btn" data-speed="2">2&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="4">4&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="5">5&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="10">10&times;</button>'
+        '<button type="button" class="cmode speed-btn" data-speed="50">50&times;</button>'
+        '<input id="traj-speed-custom" type="number" step="0.1" min="0.05" '
+        'placeholder="custom" class="speed-custom" title="Custom speed multiplier">'
         "</div>"
         + toggle
         + "</div>"

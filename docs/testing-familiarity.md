@@ -23,13 +23,24 @@ This test also exercises, indirectly, three engine-level fixes/features that
 were required before familiarity could have *any* observable effect at all
 (see [Background](#background-why-this-test-exists) below).
 
+> **Deck rework (2026-08-10, PR #99).** The decks no longer contain the
+> scripted journey and shortcut-only transitions described below: journeys
+> and transitions are empty, so the stage graph auto-wires (as in
+> `station_fahy`), the second exit was dropped, all four checkpoints carry
+> authored direction-facing signs, and CP3 was moved 0.4 m off the
+> partition wall so an FDS-resolution visibility grid can resolve its
+> sightline. The scripted-tour/shortcut mechanics and the results quoted
+> below document the *original* experiment — kept because the engine fixes
+> it motivated are part of the routing system's history. Discovery on the
+> reworked decks is genuine frontier exploration, not a retrace of a tour.
+
 ## Test Setup
 
 - **Geometry:** hand-drawn maze-like floor plan, 20 m × 18 m, 0.1 m walls,
   1.2 m doors throughout, generated parametrically by each config folder's
   `build_geometry.py` (`assets/familiarity_test_full/`,
   `assets/familiarity_test_discovery/`). One spawn room (bottom-right), one
-  exit alcove (top-right).
+  exit alcove (top-left).
 - **Model:** `SocialForceModel`, seed 420, 20 agents (`by_number` spawn, all
   at once — not flow-spawned).
 - **Fire deck:** `assets/familiarity_test_full/familiarity_test.fds`.
@@ -112,9 +123,9 @@ Two additions closed that gap:
 
 ```
 assets/familiarity_test_full/
-├── config.json          — JuPedSim scenario: exits, checkpoints, distribution
-│                           (familiarity: "full"), scripted journey +
-│                           shortcut-only transitions
+├── config.json          — JuPedSim scenario: exit, four signed checkpoints,
+│                           distribution (familiarity: "full"); journeys and
+│                           transitions empty, so the stage graph auto-wires
 ├── geometry.wkt          — Walkable area (Shapely WKT), matches the FDS deck
 ├── build_geometry.py     — Parametric geometry generator (re-run to reshape)
 ├── layout_preview.png    — Rendered floor plan (green=spawn, red=exit)
