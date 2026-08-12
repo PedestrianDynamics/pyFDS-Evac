@@ -2796,6 +2796,37 @@ class TestNodePositionIsAlwaysWalkable:
         x, y = _node_position(polygon)
         assert polygon.contains(Point(x, y))
 
+    def test_the_fallback_point_maximises_boundary_clearance(self):
+        """Where the centroid is unusable the node must sit at the polygon's
+        most open interior point, not merely any interior one: a sign near a
+        wall is occluded from more of the room than one out in the open (#104).
+        """
+        from shapely.ops import polylabel
+
+        from pyfds_evac.core.geometry import node_position as _node_position
+
+        polygon = self._c_shape()
+        assert not polygon.contains(polygon.centroid), "fixture is not concave enough"
+
+        x, y = _node_position(polygon)
+        best = polylabel(polygon, tolerance=0.01)
+        clearance = polygon.boundary.distance(Point(x, y))
+        assert clearance >= polygon.boundary.distance(best) - 0.05
+
+    def test_an_exterior_polylabel_result_is_not_trusted(self, monkeypatch):
+        """polylabel has returned exterior points on some inputs (shapely
+        #1383).  Interiority is node_position's guarantee, so a bad polylabel
+        answer must be replaced, not passed through.
+        """
+        from pyfds_evac.core import geometry
+
+        polygon = self._c_shape()
+        assert not polygon.contains(polygon.centroid), "fixture is not concave enough"
+
+        monkeypatch.setattr(geometry, "polylabel", lambda p, tolerance: Point(-5, -5))
+        x, y = geometry.node_position(polygon)
+        assert polygon.contains(Point(x, y))
+
     def test_a_well_behaved_stage_keeps_its_centroid(self):
         """Convex polygons must be untouched, or every deck's node positions
         move and any calibration resting on them silently shifts.
