@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from shapely.ops import polylabel
+
 _logger = logging.getLogger(__name__)
 
 
@@ -31,14 +33,21 @@ def node_position(polygon) -> tuple[float, float]:
 
     The centroid is kept whenever it is already interior, so node positions
     are unchanged for every well-behaved polygon and no calibration resting
-    on them shifts silently.  ``representative_point`` is used only where the
-    centroid is unusable: it is always interior, though not always central.
+    on them shifts silently.  Where the centroid is unusable, ``polylabel``
+    (the pole of inaccessibility) picks the interior point furthest from any
+    edge: a sign there is occluded from the least of the stage, whereas a
+    merely-interior point can sit against a wall.
     """
     centroid = polygon.centroid
     try:
         if polygon.contains(centroid):
             return float(centroid.x), float(centroid.y)
-        interior = polygon.representative_point()
+        interior = polylabel(polygon, tolerance=0.01)
+        # polylabel has returned exterior points on some inputs (shapely
+        # #1383); interiority is the guarantee here, centrality only the
+        # preference, so fall back rather than trust it blindly.
+        if not polygon.contains(interior):
+            interior = polygon.representative_point()
     except Exception as exc:
         # A self-intersecting or degenerate polygon can refuse both queries.
         # The centroid is then no worse than aborting, and the stage setup
