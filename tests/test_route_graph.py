@@ -2806,10 +2806,12 @@ class TestNodePositionIsAlwaysWalkable:
         from pyfds_evac.core.geometry import node_position as _node_position
 
         polygon = self._c_shape()
+        assert not polygon.contains(polygon.centroid), "fixture is not concave enough"
+
         x, y = _node_position(polygon)
         best = polylabel(polygon, tolerance=0.01)
-        clearance = polygon.exterior.distance(Point(x, y))
-        assert clearance >= polygon.exterior.distance(best) - 0.05
+        clearance = polygon.boundary.distance(Point(x, y))
+        assert clearance >= polygon.boundary.distance(best) - 0.05
 
     def test_an_exterior_polylabel_result_is_not_trusted(self, monkeypatch):
         """polylabel has returned exterior points on some inputs (shapely
@@ -2819,6 +2821,8 @@ class TestNodePositionIsAlwaysWalkable:
         from pyfds_evac.core import geometry
 
         polygon = self._c_shape()
+        assert not polygon.contains(polygon.centroid), "fixture is not concave enough"
+
         monkeypatch.setattr(geometry, "polylabel", lambda p, tolerance: Point(-5, -5))
         x, y = geometry.node_position(polygon)
         assert polygon.contains(Point(x, y))
