@@ -1,5 +1,10 @@
 """End-to-end tests for the FastHTML web GUI via Starlette's TestClient."""
 
+import io
+import pathlib
+import shutil
+import zipfile
+
 import pytest
 
 pytest.importorskip("fasthtml")
@@ -87,6 +92,21 @@ def test_invalid_option_combo_shows_error(client, tmp_path):
     assert "enable-rerouting" in r.text
 
 
+def _drop_temp_trajectory():
+    """Delete the run's temp sqlite, tolerating a Windows file lock.
+
+    Building the finished view reads the trajectory through pedpy, and on
+    Windows that handle can outlive the read, so unlink raises PermissionError.
+    It's a temp file either way, and the lock is not what any test is asserting.
+    """
+    result = manager.result
+    if result and result.sqlite_file:
+        try:
+            result.cleanup()
+        except OSError:
+            pass
+
+
 def _stream_until_terminal(client, max_lines=2000):
     events = []
     with client.stream("GET", "/progress") as s:
@@ -111,8 +131,7 @@ def test_full_run_streams_progress_and_completes(client):
     assert manager.status == "done"
     assert manager.result is not None
     assert manager.result.total_agents >= 1
-    if manager.result.sqlite_file:
-        manager.result.cleanup()
+    _drop_temp_trajectory()
 
 
 def test_second_run_rejected_while_active(client):
@@ -145,8 +164,421 @@ def test_second_run_rejected_while_active(client):
         manager.start(scenario, kwargs, "ISO-table21")
     # Drain to completion so the lock releases for other tests.
     _stream_until_terminal(client)
-    if manager.result and manager.result.sqlite_file:
-        manager.result.cleanup()
+    _drop_temp_trajectory()
+
+
+class TestScenarioPath:
+    """The picker value reaches load_scenario as a path, so it must be clamped.
+
+    It arrives in a plain form field, not necessarily from the <select> we
+    rendered, so a crafted value must not be able to walk out of assets/.
+    """
+
+    @staticmethod
+    def _fn():
+        from pyfds_evac.webapp.params import scenario_path
+
+        return scenario_path
+
+    def test_resolves_bundled_scenario(self):
+        assert self._fn()("t_junction").name == "t_junction"
+
+    def test_resolves_alternate_json(self):
+        assert self._fn()("t_junction/config_full.json").name == "config_full.json"
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "../etc",
+            "t_junction/../../etc",
+            "uploads/../assets",
+            "/etc/passwd",
+            "",
+        ],
+    )
+    def test_rejects_traversal(self, value):
+        with pytest.raises(ValueError):
+            self._fn()(value)
+
+
+class TestScenarioUpload:
+    """Uploading a scenario's non-FDS files (config JSON + WKT, or a zip)."""
+
+    WKT = "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))"
+
+    @staticmethod
+    def _config():
+        import json
+        from pathlib import Path
+
+        return Path("assets/t_junction/config.json").read_text(), json
+
+    @staticmethod
+    def _uploads_root():
+        from pyfds_evac.webapp.params import _UPLOAD_ROOT
+
+        return _UPLOAD_ROOT
+
+    def _post(self, client, files, name="pytest-upload"):
+        return client.post("/upload-scenario", data={"upload_name": name}, files=files)
+
+    def test_json_and_wkt_pair_becomes_selectable(self, client):
+        cfg, _ = self._config()
+        r = self._post(
+            client,
+            [
+                ("files", ("config.json", cfg, "application/json")),
+                ("files", ("geometry.wkt", self.WKT, "text/plain")),
+            ],
+        )
+        assert r.status_code == 200
+        assert "uploads/pytest-upload" in r.text
+        assert "Uploaded" in r.text  # optgroup separating it from bundled
+        created = self._uploads_root() / "pytest-upload"
+        try:
+            assert (created / "config.json").exists()
+            assert (created / "geometry.wkt").exists()
+            # And it is now a runnable choice.
+            from pyfds_evac.webapp.params import _upload_options
+
+            assert "uploads/pytest-upload" in [v for _, v in _upload_options()]
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+
+    def test_zip_bundle_is_accepted(self, client):
+        cfg, _ = self._config()
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("config.json", cfg)
+            zf.writestr("geometry.wkt", self.WKT)
+        r = self._post(
+            client,
+            [("files", ("bundle.zip", buf.getvalue(), "application/zip"))],
+            name="pytest-zip",
+        )
+        assert r.status_code == 200
+        assert "uploads/pytest-zip" in r.text
+        created = self._uploads_root() / "pytest-zip"
+        try:
+            assert (created / "config.json").exists()
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+
+    def test_zip_slip_member_is_rejected_not_flattened(self, client):
+        """A '../' member must not escape, and must not be kept at all.
+
+        Flattening it to a basename would leave a stray .json inside the
+        scenario dir, which the picker then offers as an alternate config.
+        """
+        cfg, _ = self._config()
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("config.json", cfg)
+            zf.writestr("geometry.wkt", self.WKT)
+            zf.writestr("../../pwned.json", '{"evil": true}')
+        escaped = self._uploads_root().parent / "pwned.json"
+        r = self._post(
+            client,
+            [("files", ("evil.zip", buf.getvalue(), "application/zip"))],
+            name="pytest-slip",
+        )
+        created = self._uploads_root() / "pytest-slip"
+        try:
+            assert r.status_code == 200
+            assert not escaped.exists()  # nothing written outside uploads/
+            assert not (created / "pwned.json").exists()  # nor kept inside
+            assert sorted(p.name for p in created.iterdir()) == [
+                "config.json",
+                "geometry.wkt",
+            ]
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+            escaped.unlink(missing_ok=True)
+
+    def test_zip_of_a_folder_is_flattened(self, client):
+        """The common case: zipping the scenario folder, not its contents."""
+        cfg, _ = self._config()
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("t_junction/config.json", cfg)
+            zf.writestr("t_junction/geometry.wkt", self.WKT)
+            zf.writestr("t_junction/t_junction.fds", "&HEAD /")
+        r = self._post(
+            client,
+            [("files", ("folder.zip", buf.getvalue(), "application/zip"))],
+            name="pytest-folder",
+        )
+        created = self._uploads_root() / "pytest-folder"
+        try:
+            assert r.status_code == 200
+            # Nested members keep their basename; the FDS deck is not a
+            # scenario file and is left out.
+            assert sorted(p.name for p in created.iterdir()) == [
+                "config.json",
+                "geometry.wkt",
+            ]
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+
+    def test_non_scenario_files_are_ignored_and_reported(self, client):
+        cfg, _ = self._config()
+        r = self._post(
+            client,
+            [
+                ("files", ("config.json", cfg, "application/json")),
+                ("files", ("geometry.wkt", self.WKT, "text/plain")),
+                ("files", ("case.fds", "&HEAD /", "text/plain")),
+            ],
+            name="pytest-extra",
+        )
+        created = self._uploads_root() / "pytest-extra"
+        try:
+            assert r.status_code == 200
+            assert "ignored" in r.text and "case.fds" in r.text
+            assert not (created / "case.fds").exists()
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+
+    def test_unusable_upload_errors_and_leaves_nothing_behind(self, client):
+        r = self._post(
+            client,
+            [("files", ("notes.txt", "hello", "text/plain"))],
+            name="pytest-junk",
+        )
+        assert r.status_code == 200
+        assert "Nothing usable" in r.text
+        assert not (self._uploads_root() / "pytest-junk").exists()
+
+    def test_wkt_without_config_is_rejected_and_cleaned_up(self, client):
+        r = self._post(
+            client,
+            [("files", ("geometry.wkt", self.WKT, "text/plain"))],
+            name="pytest-nocfg",
+        )
+        assert r.status_code == 200
+        assert "Could not load that scenario" in r.text
+        assert not (self._uploads_root() / "pytest-nocfg").exists()
+
+    def test_empty_submission_is_rejected(self, client):
+        r = client.post("/upload-scenario", data={"upload_name": "x"})
+        assert r.status_code == 200
+        assert "Pick a config JSON" in r.text
+
+    def test_failed_upload_keeps_the_current_scenario_selected(self, client):
+        """A rejected upload must not silently reset the picker."""
+        r = client.post(
+            "/upload-scenario",
+            data={"upload_name": "x", "scenario": "t_junction/config_full.json"},
+            files=[("files", ("notes.txt", "hello", "text/plain"))],
+        )
+        assert r.status_code == 200
+        assert "Nothing usable" in r.text
+        # The still-selected option carries the selected attribute.
+        marker = 'value="t_junction/config_full.json" selected'
+        assert (
+            marker in r.text or 'selected value="t_junction/config_full.json"' in r.text
+        )
+
+    def test_uploaded_scenario_can_actually_be_run(self, client, tmp_path):
+        """The whole point: an upload has to be runnable, not just listed."""
+        cfg = pathlib.Path("assets/ISO-table21/config.json").read_text()
+        wkt = pathlib.Path("assets/ISO-table21/geometry.wkt").read_text()
+        r = self._post(
+            client,
+            [
+                ("files", ("config.json", cfg, "application/json")),
+                ("files", ("geometry.wkt", wkt, "text/plain")),
+            ],
+            name="pytest-runnable",
+        )
+        assert r.status_code == 200
+        created = self._uploads_root() / "pytest-runnable"
+        try:
+            out = tmp_path / "out"
+            r = client.post(
+                "/run",
+                data={
+                    "scenario": "uploads/pytest-runnable",
+                    "seed": "420",
+                    "results_only": "1",
+                    "output_sqlite": str(out / "run.sqlite"),
+                    "export_app_bundle": str(out / "bundle"),
+                },
+            )
+            assert r.status_code == 200
+            assert "sse-connect" in r.text or "sse_connect" in r.text
+            events = _stream_until_terminal(client)
+            assert events[-1] == "done"
+            assert manager.status == "done"
+            assert manager.result.total_agents >= 1
+            assert (out / "run.sqlite").exists()
+            _drop_temp_trajectory()
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+
+
+def test_results_only_run_skips_viewer_but_writes_files(client, tmp_path):
+    """The results-only button runs the sim and reports files, with no viewer."""
+    out = tmp_path / "out"
+    r = client.post(
+        "/run",
+        data={
+            "scenario": "ISO-table21",
+            "seed": "420",
+            "results_only": "1",
+            "output_sqlite": str(out / "run.sqlite"),
+            "output_fed_history": str(out / "fed.csv"),
+            "export_app_bundle": str(out / "bundle"),
+        },
+    )
+    assert r.status_code == 200
+    events = _stream_until_terminal(client)
+    assert events[-1] == "done"
+    assert manager.results_only is True
+
+    from fasthtml.common import to_xml
+
+    from pyfds_evac.webapp.app import _results_only_view
+
+    html = to_xml(_results_only_view())
+    assert "Output files" in html
+    assert "Viewer skipped" in html
+    assert "<canvas" not in html  # the trajectory animator was never built
+    assert "Trajectory SQLite" in html
+
+    # The artifacts really landed, and the bundle path is a directory now that
+    # export_app_bundle is a path field rather than a checkbox.
+    assert (out / "run.sqlite").exists()
+    assert (out / "bundle" / "config.json").exists()
+    assert (out / "bundle" / "geometry.wkt").exists()
+    _drop_temp_trajectory()
+
+
+def test_normal_run_still_builds_the_viewer(client):
+    """The default button path is unchanged: results_only stays off."""
+    r = client.post("/run", data={"scenario": "ISO-table21", "seed": "420"})
+    assert r.status_code == 200
+    assert manager.results_only is False
+    _stream_until_terminal(client)
+    _drop_temp_trajectory()
+
+
+def test_upload_sits_inside_core_beside_the_picker(client):
+    """One place to choose what runs, not two competing sections.
+
+    The upload is a way of adding to the scenario picker, so it renders inside
+    Core just after it. It cannot be its own <form> there (HTML forbids nested
+    forms), so it posts via htmx off the button instead.
+    """
+    r = client.get("/")
+    assert r.status_code == 200
+    body = r.text
+
+    # It is inside the Core block, after the scenario field. Match the markup
+    # rather than a bare class name, which also appears in the stylesheet.
+    core = body.index(">Core<")
+    picker = body.index('id="scenario-block"')
+    upload = body.index("id='upload-drop'")
+    assert core < picker < upload
+
+    # And no longer a separate collapsible section of its own.
+    assert "Upload your own scenario" not in body
+    assert "<form id='upload-form'" not in body
+
+    # Posted by htmx off the button, with multipart encoding.
+    assert "hx-encoding='multipart/form-data'" in body
+    assert "hx-post='/upload-scenario'" in body
+    # The staged file must not ride along on the urlencoded run request.
+    assert "not files,upload_name" in body
+
+
+class TestOutputBase:
+    """The "Output folder" box used to be wired to nothing at either end.
+
+    Nothing filled it and nothing read it, so a path typed there was silently
+    discarded and the run went to the derived path regardless.
+    """
+
+    @staticmethod
+    def _opts(**extra):
+        from pyfds_evac.webapp.params import form_to_opts
+
+        form = {"scenario": "t_junction", "seed": "42"}
+        form.update(extra)
+        return form_to_opts(form)
+
+    def test_blank_uses_the_derived_folder(self):
+        opts = self._opts()
+        assert opts.output_sqlite == (
+            "results/t_junction/probabilistic/seed42/t_junction.sqlite"
+        )
+
+    def test_typed_folder_is_honoured(self):
+        opts = self._opts(output_base="D:/scratch/my run")
+        assert opts.output_sqlite == "D:/scratch/my run/t_junction.sqlite"
+        assert opts.output_fed_history == "D:/scratch/my run/t_junction_fed_history.csv"
+        assert opts.export_app_bundle == "D:/scratch/my run/bundle"
+
+    def test_typed_folder_is_normalised(self):
+        # Backslashes and a trailing separator must not double up in the path.
+        opts = self._opts(output_base="out\\runs\\")
+        assert opts.output_sqlite == "out/runs/t_junction.sqlite"
+
+    def test_whitespace_only_falls_back_to_derived(self):
+        opts = self._opts(output_base="   ")
+        assert opts.output_sqlite.startswith("results/t_junction/")
+
+    def test_explicit_path_still_beats_the_folder(self):
+        # A fully-specified output path (hidden field) is not overridden.
+        opts = self._opts(output_base="out", output_sqlite="exact/place.sqlite")
+        assert opts.output_sqlite == "exact/place.sqlite"
+
+
+def test_artifact_preview_lines_are_rewritable(client):
+    """The sidebar preview must carry the data the script needs to fill it in.
+
+    Without data-suffix the list is stuck showing a literal "<run>".
+    """
+    from pyfds_evac.webapp.params import ARTIFACT_SUFFIXES
+
+    r = client.get("/")
+    assert r.status_code == 200
+    for suffix in ARTIFACT_SUFFIXES:
+        assert f'data-suffix="{suffix}"' in r.text
+    assert "artifact-preview" in r.text
+    assert "outputBase()" in r.text  # the script reads the folder box
+
+
+def test_run_name_matches_the_client_side_clean():
+    from pyfds_evac.webapp.params import default_output_base, run_name
+
+    assert run_name("t_junction") == "t_junction"
+    assert run_name("t_junction/config_full.json") == "t_junction_config_full"
+    assert run_name("uploads/mine") == "uploads_mine"
+    assert run_name(None) == "run"
+    assert (
+        default_output_base("t_junction", "deterministic", 7)
+        == "results/t_junction/deterministic/seed7"
+    )
+    assert default_output_base("t_junction", None, None).endswith(
+        "/probabilistic/seeddefault"
+    )
+
+
+def test_export_app_bundle_is_a_path_not_a_checkbox():
+    """Regression: the checkbox posted 'on', so bundles landed in ./on/.
+
+    --export-app-bundle takes a directory. The sidebar used to render it as a
+    switch, and the posted "on" was passed straight through as the path.
+    """
+    from pyfds_evac.webapp.params import form_to_opts
+
+    opts = form_to_opts(
+        {"scenario": "t_junction", "seed": "42", "export_app_bundle": "on"}
+    )
+    assert opts.export_app_bundle != "on"
+    assert opts.export_app_bundle.endswith("/bundle")
+    assert opts.export_app_bundle.startswith("results/t_junction/")
 
 
 class TestTrajectorySampling:
