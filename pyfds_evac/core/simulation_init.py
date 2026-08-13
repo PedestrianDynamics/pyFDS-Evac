@@ -206,6 +206,51 @@ def _get_max_agent_radius(params):
     return mean_radius
 
 
+def _seed_shared_areas(spawn_distributions, seed):
+    """Place agents once per distinct spawn area, then hand out the positions.
+
+    A deck that gives one room several agent profiles -- familiarity classes,
+    say -- writes one distribution per profile over the same polygon. Seeding
+    those one after another lets an agent of one profile land within a body
+    width of another's, which operational models with a hard contact constraint
+    reject when the agent is added. Seeding the polygon once, for everybody who
+    starts in it, keeps the spacing that ``distance_to_agents`` promises.
+    """
+    by_area: dict = {}
+    for spawn in spawn_distributions:
+        by_area.setdefault(spawn["area"].wkt, []).append(spawn)
+
+    positions_by_index: dict = {}
+    for members in by_area.values():
+        area = members[0]["area"]
+        max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
+        total = sum(int(m["params"]["number"]) for m in members)
+        capacity = _estimate_max_capacity(area, max_radius)
+        if total > capacity:
+            raise ValueError(
+                f"Distribution {members[0]['index']}: requested {total} agents "
+                f"but area can hold at most ~{capacity}. "
+                f"Reduce the number of agents or enlarge the distribution area."
+            )
+        area_seed = seed + members[0]["index"]
+        positions = jps.distribute_by_number(
+            polygon=area,
+            number_of_agents=total,
+            distance_to_agents=2 * max_radius,
+            distance_to_polygon=max_radius,
+            seed=area_seed,
+        )
+        # Shuffle so the profiles interleave across the room instead of one
+        # taking whichever corner the sampler happened to fill first.
+        random.Random(area_seed).shuffle(positions)
+        taken = 0
+        for member in members:
+            count = int(member["params"]["number"])
+            positions_by_index[member["index"]] = positions[taken : taken + count]
+            taken += count
+    return positions_by_index
+
+
 def _get_distribution_mode_and_count(params):
     """Get distribution mode and agent count based on distribution_mode parameter.
 
@@ -1152,24 +1197,11 @@ def _initialize_with_fallback(
     premovement_times = {}  # Dictionary mapping agent_id -> (premovement_time, position)
     has_premovement = False
 
+    seeded_positions = _seed_shared_areas(immediate_spawn_distributions, seed)
+
     for spawn_data in immediate_spawn_distributions:
         try:
-            max_radius = _get_max_agent_radius(spawn_data["params"])
-            requested_count = int(spawn_data["params"]["number"])
-            max_capacity = _estimate_max_capacity(spawn_data["area"], max_radius)
-            if requested_count > max_capacity:
-                raise ValueError(
-                    f"Distribution {spawn_data['index']}: requested {requested_count} agents "
-                    f"but area can hold at most ~{max_capacity}. "
-                    f"Reduce the number of agents or enlarge the distribution area."
-                )
-            positions = jps.distribute_by_number(
-                polygon=spawn_data["area"],
-                number_of_agents=requested_count,
-                distance_to_agents=2 * max_radius,
-                distance_to_polygon=max_radius,
-                seed=seed + spawn_data["index"],
-            )
+            positions = seeded_positions[spawn_data["index"]]
         except Exception as e:
             error_msg = (
                 f"CRITICAL: Failed to place agents in distribution area {spawn_data['index']}. "

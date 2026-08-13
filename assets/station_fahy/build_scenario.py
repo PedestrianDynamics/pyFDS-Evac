@@ -35,6 +35,9 @@ published counts give 21.5 % and 38.5 %.
 Every agent knows the front door regardless of class, via ``entrance``: every
 patron entered that way, tickets collected and hands stamped. That single
 empirically-grounded rule is the mechanism behind the crush.
+
+``source/geometry.wkt`` carries the drawing with its doorways already opened by
+``simplify_doors.py``; re-trace the drawing and that script has to run again.
 """
 
 from __future__ import annotations
@@ -44,7 +47,7 @@ import sys
 from pathlib import Path
 
 from shapely import wkt as W
-from shapely.geometry import Polygon, box
+from shapely.geometry import Point, Polygon
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
@@ -72,33 +75,52 @@ CLASSES = (
     ("regular", 111 / 288, 0.85),
 )
 
+# A population, not one repeated person. Uniform agents queue in perfect
+# symmetry, and collision-free speed has no push or noise to break the arch that
+# forms at a doorway, so a uniform crowd of them can stand at a door forever.
+# Spreads are ordinary adult figures, not fitted to anything this deck scores.
 V0 = 1.3
-RADIUS = 0.15
+V0_STD = 0.2
+# Half a 0.40 m body: at the 0.15 m this deck used, three agents fit abreast in
+# the 0.914 m interior door and the front entrance passed nearly 7 persons per
+# metre-second, several times any measured door flow.
+RADIUS = 0.20
+RADIUS_STD = 0.02
 
-# The doorway at the north-east corner of the main bar. Two freehand strokes in
-# the drawing -- a 0.15 m lip on the bar (ring 5) and a hook on the partition
-# behind it (ring 6) -- happen to pass within 0.40 m of each other, narrower
-# than two 0.15 m-radius bodies, so counterflow there deadlocks and those agents
-# never evacuate (issue #103). No dimension backs either stroke, so the drawing
-# stays as traced and the deck clips them here: 0.40 m -> 0.93 m.
-DOORWAY_CLIPS = (
-    (5, box(-3.60, 0.35, -2.45, 1.00)),
-    (6, box(-3.70, 0.00, -3.00, 1.149)),
-)
-
-
-def widen_bar_doorway(walkable: Polygon) -> Polygon:
-    """Cut :data:`DOORWAY_CLIPS` out of the obstacles they narrow."""
-    rings = list(walkable.interiors)
-    for index, clip in DOORWAY_CLIPS:
-        rings[index] = largest_part(Polygon(rings[index]).difference(clip)).exterior
-    return Polygon(walkable.exterior, rings)
+# Agents steer straight at their next route node, so every leg of a route has to
+# be one an agent can walk in a straight line. The last node before the front
+# door sits east of the vestibule opening with the wall between it and the exit:
+# agents reaching it then press into that wall instead of turning into the
+# doorway. This checkpoint stands inside the vestibule, in sight of both.
+VESTIBULE_CHECKPOINT = ("jps-checkpoints_6", (-0.25, -6.6), 0.35)
 
 
 def largest_part(poly):
-    if poly.geom_type == "MultiPolygon":
-        return max(poly.geoms, key=lambda p: p.area)
-    return poly
+    # Clipping an area against the building can leave a collection whose stray
+    # members are the lines where it grazed a wall; only the polygons can hold
+    # agents.
+    if poly.geom_type == "Polygon":
+        return poly
+    parts = [p for p in poly.geoms if p.geom_type == "Polygon"]
+    return max(parts, key=lambda p: p.area) if parts else poly
+
+
+def _checkpoint(center: tuple[float, float], radius: float) -> dict:
+    """A circular waypoint stage, in the shape the scenario schema expects."""
+    circle = Point(*center).buffer(radius, quad_segs=8)
+    return {
+        "type": "polygon",
+        "coordinates": [[round(x, 6), round(y, 6)] for x, y in circle.exterior.coords],
+        "waiting_time": 0,
+        "waiting_time_distribution": "constant",
+        "waiting_time_std": 1,
+        "enable_throughput_throttling": False,
+        "max_throughput": 1,
+        "speed_factor": 1,
+        "shape": "circle",
+        "center": list(center),
+        "radius": radius,
+    }
 
 
 def apportion(total: int, shares: list[float]) -> list[int]:
@@ -113,7 +135,7 @@ def apportion(total: int, shares: list[float]) -> list[int]:
 
 
 def build() -> tuple[dict, Polygon]:
-    walkable = widen_bar_doorway(W.loads((SOURCE / "geometry.wkt").read_text()))
+    walkable = W.loads((SOURCE / "geometry.wkt").read_text())
     base = json.loads((SOURCE / "config.json").read_text())
     polys = areas.polygons(walkable)
     counts = F.agents_per_row()
@@ -140,8 +162,10 @@ def build() -> tuple[dict, Polygon]:
                     "distribution_mode": "by_number",
                     "use_flow_spawning": False,
                     "use_premovement": False,
-                    "radius_distribution": "constant",
-                    "v0_distribution": "constant",
+                    "radius_distribution": "gaussian",
+                    "radius_std": RADIUS_STD,
+                    "v0_distribution": "gaussian",
+                    "v0_std": V0_STD,
                     "familiarity": familiarity,
                     "entrance": FRONT_DOOR,
                     # read by validate.py, not by the engine
@@ -153,19 +177,28 @@ def build() -> tuple[dict, Polygon]:
 
     cfg = json.loads(json.dumps(base))
     cfg["distributions"] = distributions
+    cfg["checkpoints"][VESTIBULE_CHECKPOINT[0]] = _checkpoint(*VESTIBULE_CHECKPOINT[1:])
     for exit_id, exit_cfg in cfg["exits"].items():
         c = Polygon(exit_cfg["coordinates"]).centroid
         exit_cfg["sign"] = {"x": c.x, "y": c.y, "alpha": None, "c": SIGN_C[exit_id]}
     sim = cfg["config"]["simulation_settings"]["simulationParams"]
+    # Collision-free speed is the model whose speed-density relation would limit
+    # door flow, which is what these egress times need. It cannot be used yet:
+    # agents steer straight at route nodes they cannot see (#114), and without a
+    # model that slides them along walls they stop dead against one. On this deck
+    # that leaves 141 of 333 standing in a four-way crossing at the 600 s cap.
     sim["model_type"] = "WarpDriverModel"
     sim["max_simulation_time"] = 600.0
     # The library default is 0 -- congestion-aware routing is opt-in, because
     # the queue term (w_queue * base_speed_m_per_s * N / exit capacity; no
     # relation to this file's per-agent V0) scales with the population and no
-    # constant suits every deck. 0.03 is this deck's calibration: it reproduces Fahy's 52.9 %
-    # front-door share at this crowd of 333 and nowhere else. See
-    # scripts/sweep_queue_weight.py and docs/routing.md.
-    cfg["routing"] = dict(cfg.get("routing") or {}, w_queue=0.03)
+    # constant suits every deck. 0.024 is this deck's calibration: it reproduces
+    # Fahy's 52.9 % front-door share at this crowd of 333 and nowhere else --
+    # 53.0 % over seeds 420-422, against 55.0 % at 0.02 and 50.2 % at 0.03. It
+    # replaces the 0.03 swept before the spawn areas were re-anchored, which the
+    # same sweep now scores at 50.2 %. See scripts/sweep_queue_weight.py and
+    # docs/routing.md.
+    cfg["routing"] = dict(cfg.get("routing") or {}, w_queue=0.024)
     return cfg, walkable
 
 
