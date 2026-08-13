@@ -10,41 +10,71 @@ Anchors that are **ground truth**, not interpretation:
   front/main-bar/kitchen/platform versus 4.16 m for the main-bar/kitchen swap.
 
 Everything else here is *derived* from those anchors and is the part a reviewer
-should push on. Each area is a rectangle clipped to the walkable geometry, so a
+should push on. Each area is a rectangle clipped to the building interior, so a
 boundary that clips away to nothing is a placement error rather than a silent
 shrink -- :func:`build` refuses to continue when an area cannot hold its
 occupants.
 
-Frame note: the drawing does not share the deck's origin, and the exits were
-deliberately pushed outside the building so agents keep walking after leaving.
-No transform between the two frames is used anywhere, on purpose: a similarity
-fit through those displaced doors has pairwise scale ratios spanning 1.15-1.37,
-so it cannot carry deck coordinates into this frame.
+Frame note: the exits were deliberately pushed outside the building so agents
+keep walking after leaving, which makes the outdoor apron walkable too. Areas
+are therefore clipped to :func:`building_interior` and not to the walkable area:
+clipped to the latter, six of these twelve rectangles reached past a wall and
+started about a quarter of the crowd in the open air.
+
+The rectangles below are anchored on the dimensions Fahy's floor plan prints,
+which the drawing reproduces to a few centimetres: 24.2 m across the front
+elevation, an 8.5 m main bar frontage running west from the entrance doors, a
+10.9 x 4.6 m sunroom east of them, and a 16.5 x 9.8 m club behind. Rooms the
+plan names but Table 2 has no row for -- storage, office, rest rooms, kitchen --
+are left empty, as they are in Tawil's reconstruction.
 """
 
 from __future__ import annotations
 
-from shapely.geometry import box
+from shapely.geometry import Polygon, box
+from shapely.ops import unary_union
 
 # name -> (x0, y0, x1, y1) in the drawing's frame.
 RECTS: dict[str, tuple[float, float, float, float]] = {
-    # --- the central hall, split west-to-east by distance from the stage ---
-    "Near stage or on dance floor": (7.5, -8.0, 15.8, 5.0),
-    "Behind dance floor": (0.0, -8.0, 7.5, 5.0),
-    "Between bars": (-9.0, -8.0, 0.0, -1.0),
-    "Center stage-side": (0.0, 5.0, 7.5, 8.0),
+    # --- the club, 16.5 x 9.8 m, split west-to-east by distance from the stage ---
+    "Near stage or on dance floor": (5.0, -4.3, 12.0, 3.0),
+    "Behind dance floor": (-2.0, -4.3, 5.0, 3.0),
+    "Center stage-side": (-2.0, 3.0, 5.0, 5.3),
+    "Stage": (5.0, 3.0, 12.0, 5.3),
+    "Back wall platform": (12.0, -3.0, 14.6, 3.0),
     # --- around the bars ---
-    "Main bar": (-10.5, -1.0, -2.5, 1.0),
-    "Rear bar / dart room": (-15.5, 4.0, -8.0, 9.0),
+    "Main bar": (-9.9, -8.8, -1.5, -1.0),
+    "Between bars": (-9.9, 1.5, -2.0, 5.3),
+    # the west wing, split front-to-back: the dart room end abuts the club, the
+    # hallway runs behind it to the storage rooms
+    "Rear bar / dart room": (-13.5, 1.5, -8.0, 6.5),
+    "Back hallway": (-13.5, 6.5, -8.0, 9.5),
     # --- the front of house ---
-    "Entryway": (-3.0, -10.2, 3.0, -8.0),
-    "Sunroom": (-9.0, -10.2, -3.0, -8.0),
-    "Back hallway": (-15.8, -9.5, -10.5, -2.0),
-    # --- stage end ---
-    "Stage": (10.0, 5.0, 15.8, 8.0),
-    "Near stage door": (13.0, -9.5, 16.4, -4.0),
-    "Back wall platform": (4.0, 8.5, 15.8, 11.5),
+    "Entryway": (-1.5, -8.8, 1.7, -5.6),
+    "Sunroom": (1.7, -8.8, 11.7, -4.3),
+    # --- stage end: the dressing room and the lobby off the platform door ---
+    "Near stage door": (11.7, -8.8, 16.6, -3.0),
 }
+
+
+def largest_part(geom):
+    """The biggest polygon of *geom*, which may already be a single one."""
+    if geom.geom_type != "MultiPolygon":
+        return geom
+    return max(geom.geoms, key=lambda part: part.area)
+
+
+def building_interior(walkable):
+    """The walkable area inside the building, apron excluded.
+
+    The walls are traced as separate strokes rather than one envelope, so the
+    outline is recovered by growing them until the doorways close, taking the
+    outer boundary of that single connected network, and shrinking back.
+    """
+    pad = 0.6
+    walls = unary_union([Polygon(r) for r in walkable.interiors])
+    network = largest_part(walls.buffer(pad))
+    return walkable.intersection(largest_part(Polygon(network.exterior).buffer(-pad)))
 
 
 # Specific places win over the broad hall areas where the rectangles overlap:
@@ -61,18 +91,17 @@ PRIORITY = (
 
 
 def polygons(walkable):
-    """Clip every area to the walkable geometry, resolving overlaps by priority.
+    """Clip every area to the building interior, resolving overlaps by priority.
 
     Overlapping spawn areas would let one agent be attributed to two rows,
     which quietly corrupts the origin->exit matrix this asset exists to measure.
     """
-    from shapely.ops import unary_union
-
+    indoors = building_interior(walkable)
     order = list(PRIORITY) + [n for n in RECTS if n not in PRIORITY]
     out: dict = {}
     claimed = None
     for name in order:
-        poly = box(*RECTS[name]).intersection(walkable)
+        poly = box(*RECTS[name]).intersection(indoors)
         if claimed is not None:
             poly = poly.difference(claimed)
         out[name] = poly

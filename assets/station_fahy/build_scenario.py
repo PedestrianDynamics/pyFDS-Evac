@@ -80,9 +80,13 @@ RADIUS = 0.15
 
 
 def largest_part(poly):
-    if poly.geom_type == "MultiPolygon":
-        return max(poly.geoms, key=lambda p: p.area)
-    return poly
+    # Clipping an area against the building can leave a collection whose stray
+    # members are the lines where it grazed a wall; only the polygons can hold
+    # agents.
+    if poly.geom_type == "Polygon":
+        return poly
+    parts = [p for p in poly.geoms if p.geom_type == "Polygon"]
+    return max(parts, key=lambda p: p.area) if parts else poly
 
 
 def apportion(total: int, shares: list[float]) -> list[int]:
@@ -146,10 +150,13 @@ def build() -> tuple[dict, Polygon]:
     # The library default is 0 -- congestion-aware routing is opt-in, because
     # the queue term (w_queue * base_speed_m_per_s * N / exit capacity; no
     # relation to this file's per-agent V0) scales with the population and no
-    # constant suits every deck. 0.03 is this deck's calibration: it reproduces Fahy's 52.9 %
-    # front-door share at this crowd of 333 and nowhere else. See
-    # scripts/sweep_queue_weight.py and docs/routing.md.
-    cfg["routing"] = dict(cfg.get("routing") or {}, w_queue=0.03)
+    # constant suits every deck. 0.024 is this deck's calibration: it reproduces
+    # Fahy's 52.9 % front-door share at this crowd of 333 and nowhere else --
+    # 53.0 % over seeds 420-422, against 55.0 % at 0.02 and 50.2 % at 0.03. It
+    # replaces the 0.03 swept before the spawn areas were re-anchored, which the
+    # same sweep now scores at 50.2 %. See scripts/sweep_queue_weight.py and
+    # docs/routing.md.
+    cfg["routing"] = dict(cfg.get("routing") or {}, w_queue=0.024)
     return cfg, walkable
 
 
