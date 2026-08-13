@@ -4,6 +4,7 @@ import io
 import pathlib
 import shutil
 import zipfile
+from types import SimpleNamespace
 
 import pytest
 
@@ -629,3 +630,71 @@ class TestTrajectorySampling:
         assert n_frames // step <= _MAX_SAMPLES
         # Still far finer than the 30 s the old fixed cap would have given.
         assert step / fps <= 1.0
+
+
+class TestAgentRadius:
+    """Agents are drawn at their real body size so they scale with the map.
+
+    That needs the radius the solver used.  ``ScenarioResult`` does not carry
+    it and the JuPedSim sqlite stores no per-agent geometry, so the viewer
+    reads it back off the scenario -- and a scenario that has been round
+    tripped through the webapp can hand back parameters as a JSON string.
+    """
+
+    @staticmethod
+    def _scenario(raw):
+        return SimpleNamespace(raw=raw)
+
+    def test_the_configured_radius_wins(self):
+        from pyfds_evac.webapp.trajviz import _agent_radius_m
+
+        scenario = self._scenario(
+            {"distributions": {"d1": {"parameters": {"radius": 0.25}}}}
+        )
+        assert _agent_radius_m(scenario) == pytest.approx(0.25)
+
+    def test_parameters_stored_as_json_are_read(self):
+        from pyfds_evac.webapp.trajviz import _agent_radius_m
+
+        scenario = self._scenario(
+            {"distributions": {"d1": {"parameters": '{"radius": 0.3}'}}}
+        )
+        assert _agent_radius_m(scenario) == pytest.approx(0.3)
+
+    def test_a_mixed_crowd_draws_at_its_mean(self):
+        from pyfds_evac.webapp.trajviz import _agent_radius_m
+
+        scenario = self._scenario(
+            {
+                "distributions": {
+                    "a": {"parameters": {"radius": 0.2}},
+                    "b": {"parameters": {"radius": 0.4}},
+                }
+            }
+        )
+        assert _agent_radius_m(scenario) == pytest.approx(0.3)
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            None,
+            {},
+            {"distributions": {}},
+            {"distributions": {"a": {"parameters": "not json"}}},
+            {"distributions": {"a": {"parameters": {"radius": "wide"}}}},
+            {"distributions": {"a": {"parameters": {}}}},
+            {"distributions": {"a": {"parameters": {"radius": 0}}}},
+            {"distributions": [1, 2]},
+        ],
+    )
+    def test_a_missing_or_junk_radius_falls_back(self, raw):
+        """Never zero: a zero radius would collapse every agent to the
+        visibility floor and silently stop the drawing scaling at all.
+        """
+        from pyfds_evac.webapp.trajviz import (
+            _DEFAULT_AGENT_RADIUS_M,
+            _agent_radius_m,
+        )
+
+        scenario = None if raw is None else self._scenario(raw)
+        assert _agent_radius_m(scenario) == pytest.approx(_DEFAULT_AGENT_RADIUS_M)
