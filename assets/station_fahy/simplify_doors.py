@@ -38,7 +38,25 @@ SEAL = 0.20  # below this an opening is a tracing slit, not a door
 TARGET = 0.90  # one leaf, wide open
 DEPTH = 1.20  # cut deeper than any wall, so the throat opens along its length
 SLIVER = 0.03  # obstacle fragments this small are cutting debris
-FRONT_ENTRANCE = box(-1.245, -9.25, 0.755, -8.55)  # the plan's 2.0 m
+
+# The front entrance is a vestibule, and the drawing traces only its outer
+# opening: patrons passed the exterior double doors, crossed a ticket area, and
+# went through a single interior door into the club. NIST NCSTAR 2 Vol. 1
+# Table 7-6 dimensions both -- 1727 mm clear at the double doors, 914 mm at the
+# interior door, which is the limiting element at 180 persons of code capacity:
+# "the rate of egress ... was limited initially by the single doorway inside the
+# vestibule, not the double doors visible from the outside". It was in this
+# vestibule that the crowd-crush formed inside 90 s. Restoring the interior door
+# is what keeps the front entrance from being the widest way out of the deck.
+# The blocks below are wall, added after the doorways are opened: they narrow
+# the traced outer opening to its clear width and close the inner end of the
+# vestibule down to one door.
+VESTIBULE_WALLS = (
+    box(-1.25, -9.10, -1.108, -8.74),  # outer doors, west jamb
+    box(0.619, -9.10, 0.76, -8.74),  # outer doors, east jamb
+    box(-1.20, -5.60, -0.702, -5.40),  # interior door, west leaf
+    box(0.212, -5.60, 0.70, -5.40),  # interior door, east leaf
+)
 
 
 def find_passages(walkable: Polygon, max_width: float) -> list[tuple]:
@@ -127,14 +145,19 @@ def _rebuild(walkable: Polygon, obstacles: list[Polygon]) -> Polygon:
     return Polygon(walkable.exterior, [o.exterior for o in kept])
 
 
-def seal(walkable: Polygon, passages: list[tuple]) -> Polygon:
-    """Close the gaps left where two wall strokes failed to meet."""
-    patches = [_patch(m, a, b, w + 0.30, 0.30) for w, a, b, m in passages if w < SEAL]
+def add_walls(walkable: Polygon, patches: list[Polygon]) -> Polygon:
+    """Merge *patches* into the obstacles, so they become wall."""
     if not patches:
         return walkable
     merged = unary_union([Polygon(r) for r in walkable.interiors] + patches)
     parts = list(merged.geoms) if merged.geom_type == "MultiPolygon" else [merged]
     return _rebuild(walkable, parts)
+
+
+def seal(walkable: Polygon, passages: list[tuple]) -> Polygon:
+    """Close the gaps left where two wall strokes failed to meet."""
+    patches = [_patch(m, a, b, w + 0.30, 0.30) for w, a, b, m in passages if w < SEAL]
+    return add_walls(walkable, patches)
 
 
 def widen(walkable: Polygon, patches: list[Polygon]) -> Polygon:
@@ -162,11 +185,12 @@ def open_doors(walkable: Polygon, rounds: int = 5) -> Polygon:
     at its narrowest chord can leave the next chord along the wall still tight.
     """
     walkable = seal(walkable, find_passages(walkable, 1.05))
-    walkable = widen(walkable, [FRONT_ENTRANCE])
     for _ in range(rounds):
         passages = find_passages(walkable, TARGET - 0.005)
         if not passages:
-            return walkable
+            # The vestibule goes in last: both its doors are wider than TARGET,
+            # so widening leaves them alone, but building it first would not.
+            return add_walls(walkable, list(VESTIBULE_WALLS))
         walkable = widen(
             walkable,
             [_patch(m, a, b, TARGET + 0.03, DEPTH) for _, a, b, m in passages],
