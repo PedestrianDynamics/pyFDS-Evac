@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable, Dict
 
+from .cognitive_map import familiarity_probability
 from .fds_inventory import inspect_fds_quantities
 from .fed import (
     DefaultFedConfig,
@@ -113,22 +114,71 @@ def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
 
 def _validate_opts(opts: Any) -> None:
     """Reject invalid option combinations before any expensive FDS reads."""
-    if opts.vis_cache and not opts.fds_dir:
-        raise ValueError("--vis-cache requires --fds-dir")
     if opts.vis_cache and not opts.enable_rerouting:
         raise ValueError("--vis-cache requires --enable-rerouting")
+    if getattr(opts, "clear_air_visibility", False) and opts.fds_dir:
+        raise ValueError(
+            "--clear-air-visibility contradicts --fds-dir: the deck has a fire, "
+            "so its smoke is what decides what an agent can see"
+        )
+    if getattr(opts, "no_visibility", False) and getattr(
+        opts, "clear_air_visibility", False
+    ):
+        raise ValueError("--no-visibility and --clear-air-visibility conflict")
+
+
+def _has_discovery_agents(scenario: Any) -> bool:
+    """Whether any spawn area starts agents that must find their way.
+
+    A fully familiar agent holds the whole graph from t=0 and never consults
+    the visibility model, so building one for such a deck costs time and
+    changes nothing.
+    """
+    for dist in scenario.raw.get("distributions", {}).values():
+        value = dist.get("parameters", {}).get("familiarity", "full")
+        if value is None:
+            continue
+        try:
+            if familiarity_probability(value) < 1.0:
+                return True
+        except ValueError:
+            continue  # the engine reports the bad value with better context
+    return False
 
 
 def _build_vis_model(scenario: Any, opts: Any, log: Logger):
-    """Build the sign-visibility model used for visibility-gated rerouting."""
-    if not opts.vis_cache:
+    """Build the sign-visibility model that gates what agents perceive.
+
+    Sight is gated by geometry, sign facing and contrast whether or not there
+    is a fire; smoke only adds to what hides a sign.  So a deck with discovery
+    agents gets a model either way -- from the FDS extinction field when one is
+    given, from clear air otherwise -- and running with no model at all, where
+    an agent learns every neighbour of each node it reaches by contact, is now
+    something you ask for with ``--no-visibility``.
+    """
+    if getattr(opts, "no_visibility", False):
+        return None
+    forced = getattr(opts, "clear_air_visibility", False)
+    if not forced and not opts.vis_cache and not _has_discovery_agents(scenario):
         return None
     sign_descriptors = extract_sign_descriptors(scenario.raw)
     if not sign_descriptors:
-        log("Warning: --vis-cache set but no sign descriptors found in config.")
+        log("Warning: visibility gating requested but the config has no signs.")
         return None
     n_signs = len(sign_descriptors)
-    log(f"Configuring visibility model ({n_signs} sign{'' if n_signs == 1 else 's'}).")
+    plural = "" if n_signs == 1 else "s"
+    if not opts.fds_dir:
+        cell = getattr(opts, "vis_cell_size", 0.25)
+        log(
+            f"Configuring clear-air visibility ({n_signs} sign{plural}, {cell} m grid)."
+        )
+        return VisibilityModel.clear_air(
+            scenario.walkable_polygon,
+            sign_descriptors,
+            cell_size_m=cell,
+            cache_path=opts.vis_cache,
+        )
+    log(f"Configuring visibility model ({n_signs} sign{plural}).")
     return VisibilityModel(
         fds_dir=opts.fds_dir,
         sign_descriptors=sign_descriptors,
