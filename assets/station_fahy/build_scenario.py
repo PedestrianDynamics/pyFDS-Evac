@@ -52,7 +52,7 @@ sys.path.insert(0, str(HERE))
 import areas  # noqa: E402
 import fahy_table2 as F  # noqa: E402
 
-SOURCE = Path("assets/station/handdrawn")
+SOURCE = HERE / "source"
 FRONT_DOOR = "jps-exits_0"
 
 # Unlit stage-door sign: six survivors noticed it unlit, one said there was no
