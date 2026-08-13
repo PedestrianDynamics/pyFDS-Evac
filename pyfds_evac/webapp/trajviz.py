@@ -46,6 +46,10 @@ _MAX_SAMPLES = 8000
 # repr is pure payload.
 _COORD_DP = 2
 
+# Body radius to draw an agent at when the scenario configures none, matching
+# the default `simulation_init` hands to JuPedSim.
+_DEFAULT_AGENT_RADIUS_M = 0.2
+
 
 # The extinction-coefficient slice quantity. Not to be confused with FDS's
 # separate 'EXTINCTION' quantity, a 0/1/-1 combustion-suppression flag
@@ -174,6 +178,39 @@ def _bounds(walkable, data) -> list[float]:
             float(data["x"].max()),
             float(data["y"].max()),
         ]
+
+
+def _agent_radius_m(scenario: Any) -> float:
+    """Mean configured agent body radius, in metres.
+
+    The viewer draws agents at their real size, so it needs the radius the
+    solver used. ``ScenarioResult`` does not carry it and the JuPedSim sqlite
+    stores no per-agent geometry, so it is read back off the scenario exactly
+    the way ``simulation_init`` reads it: from each distribution's parameters,
+    which may arrive as a JSON string. Per-agent sampled radii are not
+    recoverable here, so a mixed-radius crowd draws at its mean.
+    """
+    raw = getattr(scenario, "raw", None) or {}
+    dists = raw.get("distributions") or {}
+    if not isinstance(dists, dict):
+        return _DEFAULT_AGENT_RADIUS_M
+    radii: list[float] = []
+    for dist in dists.values():
+        params = dist.get("parameters") if isinstance(dist, dict) else None
+        if isinstance(params, str):
+            try:
+                params = json.loads(params)
+            except ValueError:
+                continue
+        if not isinstance(params, dict):
+            continue
+        try:
+            r = float(params["radius"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if r > 0:
+            radii.append(r)
+    return sum(radii) / len(radii) if radii else _DEFAULT_AGENT_RADIUS_M
 
 
 def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | None:
@@ -321,6 +358,7 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
             getattr(walkable, "polygon", None),
         ),
         "exits": exits,
+        "agentR": round(_agent_radius_m(scenario), 3),
         "bounds": _bounds(walkable, data),
         "smoke": _smoke_payload(fds_dir, times),
     }
@@ -360,6 +398,11 @@ _JS = """
   var bx = D.bounds, pad = 0.06;
   var mode = D.hasFed ? 'fed' : 'exit';
   var zoom = 1, panX = 0, panY = 0, MIN_ZOOM = 0.5, MAX_ZOOM = 20;
+  // Agent body radius in metres, drawn to scale with the geometry.  The floor
+  // is a visibility backstop only: on a plan hundreds of metres across a
+  // 0.2 m agent is sub-pixel when zoomed out, and a dot that rounds away
+  // entirely reads as a lost agent rather than a small one.
+  var AGENT_R = D.agentR > 0 ? D.agentR : 0.2, MIN_AGENT_PX = 2;
   var CANVAS_H = 440;           // render height; size() and the wheel handler must agree
   var dragging = false, dragStart = null;
 
@@ -471,17 +514,22 @@ _JS = """
     var s = Math.min(mw / dx, mh / dy);
     var ox = (w - s * dx) / 2 - s * bx[0];
     var oy = (h - s * dy) / 2 - s * bx[1];
-    return function (x, y) { return [ox + s * x, h - (oy + s * y)]; };  // flip y
+    var f = function (x, y) { return [ox + s * x, h - (oy + s * y)]; };  // flip y
+    f.s = s;                      // px per world metre, before user zoom
+    return f;
   }
   // Fit-to-bounds transform, then user zoom/pan applied on top around the
   // canvas centre so scroll-to-zoom and drag-to-pan work independent of the
-  // world extent.
+  // world extent.  `.s` rides along so anything sized in world units (the
+  // agents) can be drawn at the same scale as the geometry.
   function tf(w, h) {
     var base = baseTf(w, h), cx = w / 2, cy = h / 2;
-    return function (x, y) {
+    var f = function (x, y) {
       var q = base(x, y);
       return [(q[0] - cx) * zoom + cx + panX, (q[1] - cy) * zoom + cy + panY];
     };
+    f.s = base.s * zoom;          // px per world metre at the current zoom
+    return f;
   }
   function poly(P, p, fill, stroke, lw) {
     if (!P.length) return;
@@ -578,6 +626,10 @@ _JS = """
     D.exits.forEach(function (e) {
       poly(e.poly, p, e.color + '28', e.color, 2);
     });
+    // One radius for the whole frame: agents are all the same size, and it is
+    // the map scale, not the agent, that changes between frames.
+    var rpx = Math.max(MIN_AGENT_PX, AGENT_R * p.s);
+    var rlw = Math.max(0.5, Math.min(1.6, rpx * 0.16));
     for (var i = 0; i < n; i++) {
       var pa = posAt(i, b[0]), pc = posAt(i, b[1]);
       var X, Y;
@@ -593,9 +645,9 @@ _JS = """
         col = fedColor(dv);
       }
       var q = p(X, Y);
-      ctx.beginPath(); ctx.arc(q[0], q[1], 4.5, 0, 6.2832);
+      ctx.beginPath(); ctx.arc(q[0], q[1], rpx, 0, 6.2832);
       ctx.fillStyle = col; ctx.fill();
-      ctx.lineWidth = 0.7; ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
+      ctx.lineWidth = rlw; ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
     }
     tlabel.textContent = 't = ' + (simT - t0).toFixed(0) + ' s';
     slider.value = String(((simT - t0) / span) * 1000);
