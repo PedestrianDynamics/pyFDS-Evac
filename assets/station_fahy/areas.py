@@ -47,11 +47,13 @@ RECTS: dict[str, tuple[float, float, float, float]] = {
     "Between bars": (-9.9, 1.5, -2.0, 5.3),
     # the west wing, split front-to-back: the dart room end abuts the club, the
     # hallway runs behind it to the storage rooms
-    "Rear bar / dart room": (-13.5, 1.5, -8.0, 6.5),
-    "Back hallway": (-13.5, 6.5, -8.0, 9.5),
+    "Rear bar / dart room": (-13.5, 0.5, -8.0, 7.5),
+    "Back hallway": (-13.5, 7.5, -8.0, 9.5),
     # --- the front of house ---
-    "Entryway": (-1.5, -8.8, 1.7, -5.6),
-    "Sunroom": (1.7, -8.8, 11.7, -4.3),
+    # the entryway is the vestibule plus the ticket area beside it: 17 people
+    # stood here, which the 1.8 m wide vestibule alone cannot hold
+    "Entryway": (-1.5, -8.8, 3.2, -4.6),
+    "Sunroom": (3.2, -8.8, 11.7, -4.3),
     # --- stage end: the dressing room and the lobby off the platform door ---
     "Near stage door": (11.7, -8.8, 16.6, -3.0),
 }
@@ -109,12 +111,12 @@ def polygons(walkable):
     return {n: out[n] for n in RECTS}
 
 
-def capacity_report(walkable, counts, radius=0.15, packing=2.5):
+def capacity_report(walkable, counts, radius=0.225, packing=2.5):
     """Area needed per agent is generous on purpose.
 
     A disc of radius r occupies pi*r^2, but agents cannot be placed touching --
     JuPedSim rejects overlapping seeds -- so *packing* multiplies the bare disc
-    area. At r=0.15 that is about 0.18 m2 per agent.
+    area. At the deck's r=0.225 that is about 0.40 m2 per agent.
     """
     import math
 

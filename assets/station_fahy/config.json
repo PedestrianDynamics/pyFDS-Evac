@@ -254,13 +254,15 @@
       ],
       "parameters": {
         "number": 22,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage or on dance floor",
@@ -345,13 +347,15 @@
       ],
       "parameters": {
         "number": 8,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage or on dance floor",
@@ -436,13 +440,15 @@
       ],
       "parameters": {
         "number": 16,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage or on dance floor",
@@ -527,13 +533,15 @@
       ],
       "parameters": {
         "number": 29,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage or on dance floor",
@@ -553,6 +561,10 @@
         ],
         [
           5.0,
+          -4.3
+        ],
+        [
+          3.2,
           -4.3
         ],
         [
@@ -978,13 +990,15 @@
       ],
       "parameters": {
         "number": 22,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Behind dance floor",
@@ -1004,6 +1018,10 @@
         ],
         [
           5.0,
+          -4.3
+        ],
+        [
+          3.2,
           -4.3
         ],
         [
@@ -1429,13 +1447,15 @@
       ],
       "parameters": {
         "number": 8,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Behind dance floor",
@@ -1455,6 +1475,10 @@
         ],
         [
           5.0,
+          -4.3
+        ],
+        [
+          3.2,
           -4.3
         ],
         [
@@ -1880,13 +1904,15 @@
       ],
       "parameters": {
         "number": 16,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Behind dance floor",
@@ -1906,6 +1932,10 @@
         ],
         [
           5.0,
+          -4.3
+        ],
+        [
+          3.2,
           -4.3
         ],
         [
@@ -2331,13 +2361,15 @@
       ],
       "parameters": {
         "number": 28,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Behind dance floor",
@@ -2614,13 +2646,15 @@
       ],
       "parameters": {
         "number": 2,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Center stage-side",
@@ -2897,13 +2931,15 @@
       ],
       "parameters": {
         "number": 1,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Center stage-side",
@@ -3180,13 +3216,15 @@
       ],
       "parameters": {
         "number": 1,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Center stage-side",
@@ -3463,13 +3501,15 @@
       ],
       "parameters": {
         "number": 3,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Center stage-side",
@@ -3502,13 +3542,15 @@
       ],
       "parameters": {
         "number": 1,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Stage",
@@ -3541,13 +3583,15 @@
       ],
       "parameters": {
         "number": 1,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Stage",
@@ -3580,13 +3624,15 @@
       ],
       "parameters": {
         "number": 2,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Stage",
@@ -4271,13 +4317,15 @@
       ],
       "parameters": {
         "number": 4,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Back wall platform",
@@ -4962,13 +5010,15 @@
       ],
       "parameters": {
         "number": 2,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Back wall platform",
@@ -5653,13 +5703,15 @@
       ],
       "parameters": {
         "number": 3,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Back wall platform",
@@ -6344,13 +6396,15 @@
       ],
       "parameters": {
         "number": 6,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Back wall platform",
@@ -7234,7 +7288,7 @@
         ],
         [
           -1.5,
-          -5.6
+          -4.6
         ],
         [
           -1.5,
@@ -7255,13 +7309,15 @@
       ],
       "parameters": {
         "number": 11,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Main bar",
@@ -8145,7 +8201,7 @@
         ],
         [
           -1.5,
-          -5.6
+          -4.6
         ],
         [
           -1.5,
@@ -8166,13 +8222,15 @@
       ],
       "parameters": {
         "number": 4,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Main bar",
@@ -9056,7 +9114,7 @@
         ],
         [
           -1.5,
-          -5.6
+          -4.6
         ],
         [
           -1.5,
@@ -9077,13 +9135,15 @@
       ],
       "parameters": {
         "number": 8,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Main bar",
@@ -9967,7 +10027,7 @@
         ],
         [
           -1.5,
-          -5.6
+          -4.6
         ],
         [
           -1.5,
@@ -9988,13 +10048,15 @@
       ],
       "parameters": {
         "number": 14,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Main bar",
@@ -10239,13 +10301,15 @@
       ],
       "parameters": {
         "number": 9,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Between bars",
@@ -10490,13 +10554,15 @@
       ],
       "parameters": {
         "number": 3,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Between bars",
@@ -10741,13 +10807,15 @@
       ],
       "parameters": {
         "number": 6,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Between bars",
@@ -10992,13 +11060,15 @@
       ],
       "parameters": {
         "number": 11,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Between bars",
@@ -11009,10 +11079,6 @@
       "type": "polygon",
       "coordinates": [
         [
-          -9.122,
-          5.358
-        ],
-        [
           -9.294,
           5.415
         ],
@@ -11162,11 +11228,139 @@
         ],
         [
           -13.5,
-          6.5
+          7.5
         ],
         [
-          -8.286,
-          6.5
+          -12.962,
+          7.5
+        ],
+        [
+          -12.964,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.723,
+          7.5
+        ],
+        [
+          -8.0,
+          7.5
+        ],
+        [
+          -8.0,
+          6.84
+        ],
+        [
+          -8.231,
+          6.65
+        ],
+        [
+          -8.232,
+          6.65
+        ],
+        [
+          -8.232,
+          6.649
+        ],
+        [
+          -8.233,
+          6.649
+        ],
+        [
+          -8.234,
+          6.648
+        ],
+        [
+          -8.235,
+          6.648
+        ],
+        [
+          -8.236,
+          6.648
+        ],
+        [
+          -8.237,
+          6.648
+        ],
+        [
+          -8.238,
+          6.648
+        ],
+        [
+          -8.239,
+          6.648
+        ],
+        [
+          -8.24,
+          6.648
+        ],
+        [
+          -8.241,
+          6.649
+        ],
+        [
+          -8.242,
+          6.649
+        ],
+        [
+          -8.243,
+          6.65
+        ],
+        [
+          -8.244,
+          6.65
+        ],
+        [
+          -8.244,
+          6.651
+        ],
+        [
+          -8.699,
+          7.143
+        ],
+        [
+          -8.699,
+          7.143
+        ],
+        [
+          -8.699,
+          7.144
+        ],
+        [
+          -8.814,
+          7.144
+        ],
+        [
+          -8.814,
+          7.143
+        ],
+        [
+          -8.814,
+          7.143
+        ],
+        [
+          -8.852,
+          7.067
+        ],
+        [
+          -8.853,
+          7.067
+        ],
+        [
+          -8.852,
+          7.067
         ],
         [
           -8.181,
@@ -11193,12 +11387,8 @@
           6.433
         ],
         [
-          -8.008,
-          6.5
-        ],
-        [
           -8.0,
-          6.5
+          6.509
         ],
         [
           -8.0,
@@ -11219,17 +11409,23 @@
         [
           -9.122,
           5.358
+        ],
+        [
+          -9.294,
+          5.415
         ]
       ],
       "parameters": {
         "number": 8,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Rear bar / dart room",
@@ -11240,10 +11436,6 @@
       "type": "polygon",
       "coordinates": [
         [
-          -9.122,
-          5.358
-        ],
-        [
           -9.294,
           5.415
         ],
@@ -11393,11 +11585,139 @@
         ],
         [
           -13.5,
-          6.5
+          7.5
         ],
         [
-          -8.286,
-          6.5
+          -12.962,
+          7.5
+        ],
+        [
+          -12.964,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.723,
+          7.5
+        ],
+        [
+          -8.0,
+          7.5
+        ],
+        [
+          -8.0,
+          6.84
+        ],
+        [
+          -8.231,
+          6.65
+        ],
+        [
+          -8.232,
+          6.65
+        ],
+        [
+          -8.232,
+          6.649
+        ],
+        [
+          -8.233,
+          6.649
+        ],
+        [
+          -8.234,
+          6.648
+        ],
+        [
+          -8.235,
+          6.648
+        ],
+        [
+          -8.236,
+          6.648
+        ],
+        [
+          -8.237,
+          6.648
+        ],
+        [
+          -8.238,
+          6.648
+        ],
+        [
+          -8.239,
+          6.648
+        ],
+        [
+          -8.24,
+          6.648
+        ],
+        [
+          -8.241,
+          6.649
+        ],
+        [
+          -8.242,
+          6.649
+        ],
+        [
+          -8.243,
+          6.65
+        ],
+        [
+          -8.244,
+          6.65
+        ],
+        [
+          -8.244,
+          6.651
+        ],
+        [
+          -8.699,
+          7.143
+        ],
+        [
+          -8.699,
+          7.143
+        ],
+        [
+          -8.699,
+          7.144
+        ],
+        [
+          -8.814,
+          7.144
+        ],
+        [
+          -8.814,
+          7.143
+        ],
+        [
+          -8.814,
+          7.143
+        ],
+        [
+          -8.852,
+          7.067
+        ],
+        [
+          -8.853,
+          7.067
+        ],
+        [
+          -8.852,
+          7.067
         ],
         [
           -8.181,
@@ -11424,12 +11744,8 @@
           6.433
         ],
         [
-          -8.008,
-          6.5
-        ],
-        [
           -8.0,
-          6.5
+          6.509
         ],
         [
           -8.0,
@@ -11450,17 +11766,23 @@
         [
           -9.122,
           5.358
+        ],
+        [
+          -9.294,
+          5.415
         ]
       ],
       "parameters": {
         "number": 3,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Rear bar / dart room",
@@ -11471,10 +11793,6 @@
       "type": "polygon",
       "coordinates": [
         [
-          -9.122,
-          5.358
-        ],
-        [
           -9.294,
           5.415
         ],
@@ -11624,11 +11942,139 @@
         ],
         [
           -13.5,
-          6.5
+          7.5
         ],
         [
-          -8.286,
-          6.5
+          -12.962,
+          7.5
+        ],
+        [
+          -12.964,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.723,
+          7.5
+        ],
+        [
+          -8.0,
+          7.5
+        ],
+        [
+          -8.0,
+          6.84
+        ],
+        [
+          -8.231,
+          6.65
+        ],
+        [
+          -8.232,
+          6.65
+        ],
+        [
+          -8.232,
+          6.649
+        ],
+        [
+          -8.233,
+          6.649
+        ],
+        [
+          -8.234,
+          6.648
+        ],
+        [
+          -8.235,
+          6.648
+        ],
+        [
+          -8.236,
+          6.648
+        ],
+        [
+          -8.237,
+          6.648
+        ],
+        [
+          -8.238,
+          6.648
+        ],
+        [
+          -8.239,
+          6.648
+        ],
+        [
+          -8.24,
+          6.648
+        ],
+        [
+          -8.241,
+          6.649
+        ],
+        [
+          -8.242,
+          6.649
+        ],
+        [
+          -8.243,
+          6.65
+        ],
+        [
+          -8.244,
+          6.65
+        ],
+        [
+          -8.244,
+          6.651
+        ],
+        [
+          -8.699,
+          7.143
+        ],
+        [
+          -8.699,
+          7.143
+        ],
+        [
+          -8.699,
+          7.144
+        ],
+        [
+          -8.814,
+          7.144
+        ],
+        [
+          -8.814,
+          7.143
+        ],
+        [
+          -8.814,
+          7.143
+        ],
+        [
+          -8.852,
+          7.067
+        ],
+        [
+          -8.853,
+          7.067
+        ],
+        [
+          -8.852,
+          7.067
         ],
         [
           -8.181,
@@ -11655,12 +12101,8 @@
           6.433
         ],
         [
-          -8.008,
-          6.5
-        ],
-        [
           -8.0,
-          6.5
+          6.509
         ],
         [
           -8.0,
@@ -11681,17 +12123,23 @@
         [
           -9.122,
           5.358
+        ],
+        [
+          -9.294,
+          5.415
         ]
       ],
       "parameters": {
         "number": 6,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Rear bar / dart room",
@@ -11702,10 +12150,6 @@
       "type": "polygon",
       "coordinates": [
         [
-          -9.122,
-          5.358
-        ],
-        [
           -9.294,
           5.415
         ],
@@ -11855,11 +12299,139 @@
         ],
         [
           -13.5,
-          6.5
+          7.5
         ],
         [
-          -8.286,
-          6.5
+          -12.962,
+          7.5
+        ],
+        [
+          -12.964,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.732,
+          7.432
+        ],
+        [
+          -12.723,
+          7.5
+        ],
+        [
+          -8.0,
+          7.5
+        ],
+        [
+          -8.0,
+          6.84
+        ],
+        [
+          -8.231,
+          6.65
+        ],
+        [
+          -8.232,
+          6.65
+        ],
+        [
+          -8.232,
+          6.649
+        ],
+        [
+          -8.233,
+          6.649
+        ],
+        [
+          -8.234,
+          6.648
+        ],
+        [
+          -8.235,
+          6.648
+        ],
+        [
+          -8.236,
+          6.648
+        ],
+        [
+          -8.237,
+          6.648
+        ],
+        [
+          -8.238,
+          6.648
+        ],
+        [
+          -8.239,
+          6.648
+        ],
+        [
+          -8.24,
+          6.648
+        ],
+        [
+          -8.241,
+          6.649
+        ],
+        [
+          -8.242,
+          6.649
+        ],
+        [
+          -8.243,
+          6.65
+        ],
+        [
+          -8.244,
+          6.65
+        ],
+        [
+          -8.244,
+          6.651
+        ],
+        [
+          -8.699,
+          7.143
+        ],
+        [
+          -8.699,
+          7.143
+        ],
+        [
+          -8.699,
+          7.144
+        ],
+        [
+          -8.814,
+          7.144
+        ],
+        [
+          -8.814,
+          7.143
+        ],
+        [
+          -8.814,
+          7.143
+        ],
+        [
+          -8.852,
+          7.067
+        ],
+        [
+          -8.853,
+          7.067
+        ],
+        [
+          -8.852,
+          7.067
         ],
         [
           -8.181,
@@ -11886,12 +12458,8 @@
           6.433
         ],
         [
-          -8.008,
-          6.5
-        ],
-        [
           -8.0,
-          6.5
+          6.509
         ],
         [
           -8.0,
@@ -11912,17 +12480,23 @@
         [
           -9.122,
           5.358
+        ],
+        [
+          -9.294,
+          5.415
         ]
       ],
       "parameters": {
         "number": 11,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Rear bar / dart room",
@@ -11933,134 +12507,6 @@
       "type": "polygon",
       "coordinates": [
         [
-          -8.235,
-          6.648
-        ],
-        [
-          -8.236,
-          6.648
-        ],
-        [
-          -8.237,
-          6.648
-        ],
-        [
-          -8.238,
-          6.648
-        ],
-        [
-          -8.239,
-          6.648
-        ],
-        [
-          -8.24,
-          6.648
-        ],
-        [
-          -8.241,
-          6.649
-        ],
-        [
-          -8.242,
-          6.649
-        ],
-        [
-          -8.243,
-          6.65
-        ],
-        [
-          -8.244,
-          6.65
-        ],
-        [
-          -8.244,
-          6.651
-        ],
-        [
-          -8.699,
-          7.143
-        ],
-        [
-          -8.699,
-          7.143
-        ],
-        [
-          -8.699,
-          7.144
-        ],
-        [
-          -8.814,
-          7.144
-        ],
-        [
-          -8.814,
-          7.143
-        ],
-        [
-          -8.814,
-          7.143
-        ],
-        [
-          -8.852,
-          7.067
-        ],
-        [
-          -8.853,
-          7.067
-        ],
-        [
-          -8.852,
-          7.067
-        ],
-        [
-          -8.286,
-          6.5
-        ],
-        [
-          -13.5,
-          6.5
-        ],
-        [
-          -13.5,
-          7.567
-        ],
-        [
-          -12.96,
-          7.544
-        ],
-        [
-          -12.964,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.712,
-          7.585
-        ],
-        [
-          -12.712,
-          7.585
-        ],
-        [
-          -12.713,
-          7.585
-        ],
-        [
-          -13.476,
-          7.585
-        ],
-        [
           -13.477,
           7.585
         ],
@@ -12158,42 +12604,44 @@
         ],
         [
           -8.0,
-          6.84
+          7.5
         ],
         [
-          -8.231,
-          6.65
+          -12.723,
+          7.5
         ],
         [
-          -8.232,
-          6.65
+          -12.712,
+          7.585
         ],
         [
-          -8.232,
-          6.649
+          -12.712,
+          7.585
         ],
         [
-          -8.233,
-          6.649
+          -12.713,
+          7.585
         ],
         [
-          -8.234,
-          6.648
+          -13.476,
+          7.585
         ],
         [
-          -8.235,
-          6.648
+          -13.477,
+          7.585
         ]
       ],
       "parameters": {
         "number": 4,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Back hallway",
@@ -12204,134 +12652,6 @@
       "type": "polygon",
       "coordinates": [
         [
-          -8.235,
-          6.648
-        ],
-        [
-          -8.236,
-          6.648
-        ],
-        [
-          -8.237,
-          6.648
-        ],
-        [
-          -8.238,
-          6.648
-        ],
-        [
-          -8.239,
-          6.648
-        ],
-        [
-          -8.24,
-          6.648
-        ],
-        [
-          -8.241,
-          6.649
-        ],
-        [
-          -8.242,
-          6.649
-        ],
-        [
-          -8.243,
-          6.65
-        ],
-        [
-          -8.244,
-          6.65
-        ],
-        [
-          -8.244,
-          6.651
-        ],
-        [
-          -8.699,
-          7.143
-        ],
-        [
-          -8.699,
-          7.143
-        ],
-        [
-          -8.699,
-          7.144
-        ],
-        [
-          -8.814,
-          7.144
-        ],
-        [
-          -8.814,
-          7.143
-        ],
-        [
-          -8.814,
-          7.143
-        ],
-        [
-          -8.852,
-          7.067
-        ],
-        [
-          -8.853,
-          7.067
-        ],
-        [
-          -8.852,
-          7.067
-        ],
-        [
-          -8.286,
-          6.5
-        ],
-        [
-          -13.5,
-          6.5
-        ],
-        [
-          -13.5,
-          7.567
-        ],
-        [
-          -12.96,
-          7.544
-        ],
-        [
-          -12.964,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.712,
-          7.585
-        ],
-        [
-          -12.712,
-          7.585
-        ],
-        [
-          -12.713,
-          7.585
-        ],
-        [
-          -13.476,
-          7.585
-        ],
-        [
           -13.477,
           7.585
         ],
@@ -12429,42 +12749,44 @@
         ],
         [
           -8.0,
-          6.84
+          7.5
         ],
         [
-          -8.231,
-          6.65
+          -12.723,
+          7.5
         ],
         [
-          -8.232,
-          6.65
+          -12.712,
+          7.585
         ],
         [
-          -8.232,
-          6.649
+          -12.712,
+          7.585
         ],
         [
-          -8.233,
-          6.649
+          -12.713,
+          7.585
         ],
         [
-          -8.234,
-          6.648
+          -13.476,
+          7.585
         ],
         [
-          -8.235,
-          6.648
+          -13.477,
+          7.585
         ]
       ],
       "parameters": {
         "number": 2,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Back hallway",
@@ -12475,134 +12797,6 @@
       "type": "polygon",
       "coordinates": [
         [
-          -8.235,
-          6.648
-        ],
-        [
-          -8.236,
-          6.648
-        ],
-        [
-          -8.237,
-          6.648
-        ],
-        [
-          -8.238,
-          6.648
-        ],
-        [
-          -8.239,
-          6.648
-        ],
-        [
-          -8.24,
-          6.648
-        ],
-        [
-          -8.241,
-          6.649
-        ],
-        [
-          -8.242,
-          6.649
-        ],
-        [
-          -8.243,
-          6.65
-        ],
-        [
-          -8.244,
-          6.65
-        ],
-        [
-          -8.244,
-          6.651
-        ],
-        [
-          -8.699,
-          7.143
-        ],
-        [
-          -8.699,
-          7.143
-        ],
-        [
-          -8.699,
-          7.144
-        ],
-        [
-          -8.814,
-          7.144
-        ],
-        [
-          -8.814,
-          7.143
-        ],
-        [
-          -8.814,
-          7.143
-        ],
-        [
-          -8.852,
-          7.067
-        ],
-        [
-          -8.853,
-          7.067
-        ],
-        [
-          -8.852,
-          7.067
-        ],
-        [
-          -8.286,
-          6.5
-        ],
-        [
-          -13.5,
-          6.5
-        ],
-        [
-          -13.5,
-          7.567
-        ],
-        [
-          -12.96,
-          7.544
-        ],
-        [
-          -12.964,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.712,
-          7.585
-        ],
-        [
-          -12.712,
-          7.585
-        ],
-        [
-          -12.713,
-          7.585
-        ],
-        [
-          -13.476,
-          7.585
-        ],
-        [
           -13.477,
           7.585
         ],
@@ -12700,42 +12894,44 @@
         ],
         [
           -8.0,
-          6.84
+          7.5
         ],
         [
-          -8.231,
-          6.65
+          -12.723,
+          7.5
         ],
         [
-          -8.232,
-          6.65
+          -12.712,
+          7.585
         ],
         [
-          -8.232,
-          6.649
+          -12.712,
+          7.585
         ],
         [
-          -8.233,
-          6.649
+          -12.713,
+          7.585
         ],
         [
-          -8.234,
-          6.648
+          -13.476,
+          7.585
         ],
         [
-          -8.235,
-          6.648
+          -13.477,
+          7.585
         ]
       ],
       "parameters": {
         "number": 3,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Back hallway",
@@ -12746,134 +12942,6 @@
       "type": "polygon",
       "coordinates": [
         [
-          -8.235,
-          6.648
-        ],
-        [
-          -8.236,
-          6.648
-        ],
-        [
-          -8.237,
-          6.648
-        ],
-        [
-          -8.238,
-          6.648
-        ],
-        [
-          -8.239,
-          6.648
-        ],
-        [
-          -8.24,
-          6.648
-        ],
-        [
-          -8.241,
-          6.649
-        ],
-        [
-          -8.242,
-          6.649
-        ],
-        [
-          -8.243,
-          6.65
-        ],
-        [
-          -8.244,
-          6.65
-        ],
-        [
-          -8.244,
-          6.651
-        ],
-        [
-          -8.699,
-          7.143
-        ],
-        [
-          -8.699,
-          7.143
-        ],
-        [
-          -8.699,
-          7.144
-        ],
-        [
-          -8.814,
-          7.144
-        ],
-        [
-          -8.814,
-          7.143
-        ],
-        [
-          -8.814,
-          7.143
-        ],
-        [
-          -8.852,
-          7.067
-        ],
-        [
-          -8.853,
-          7.067
-        ],
-        [
-          -8.852,
-          7.067
-        ],
-        [
-          -8.286,
-          6.5
-        ],
-        [
-          -13.5,
-          6.5
-        ],
-        [
-          -13.5,
-          7.567
-        ],
-        [
-          -12.96,
-          7.544
-        ],
-        [
-          -12.964,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.732,
-          7.432
-        ],
-        [
-          -12.712,
-          7.585
-        ],
-        [
-          -12.712,
-          7.585
-        ],
-        [
-          -12.713,
-          7.585
-        ],
-        [
-          -13.476,
-          7.585
-        ],
-        [
           -13.477,
           7.585
         ],
@@ -12971,42 +13039,44 @@
         ],
         [
           -8.0,
-          6.84
+          7.5
         ],
         [
-          -8.231,
-          6.65
+          -12.723,
+          7.5
         ],
         [
-          -8.232,
-          6.65
+          -12.712,
+          7.585
         ],
         [
-          -8.232,
-          6.649
+          -12.712,
+          7.585
         ],
         [
-          -8.233,
-          6.649
+          -12.713,
+          7.585
         ],
         [
-          -8.234,
-          6.648
+          -13.476,
+          7.585
         ],
         [
-          -8.235,
-          6.648
+          -13.477,
+          7.585
         ]
       ],
       "parameters": {
         "number": 5,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Back hallway",
@@ -13017,6 +13087,102 @@
       "type": "polygon",
       "coordinates": [
         [
+          1.812,
+          -8.756
+        ],
+        [
+          1.811,
+          -8.756
+        ],
+        [
+          1.81,
+          -8.756
+        ],
+        [
+          1.809,
+          -8.756
+        ],
+        [
+          1.808,
+          -8.756
+        ],
+        [
+          1.807,
+          -8.755
+        ],
+        [
+          1.806,
+          -8.755
+        ],
+        [
+          1.805,
+          -8.754
+        ],
+        [
+          1.805,
+          -8.754
+        ],
+        [
+          1.804,
+          -8.753
+        ],
+        [
+          1.803,
+          -8.752
+        ],
+        [
+          1.803,
+          -8.751
+        ],
+        [
+          1.802,
+          -8.75
+        ],
+        [
+          1.748,
+          -8.622
+        ],
+        [
+          1.747,
+          -8.622
+        ],
+        [
+          1.747,
+          -8.622
+        ],
+        [
+          1.652,
+          -8.622
+        ],
+        [
+          1.651,
+          -8.622
+        ],
+        [
+          1.651,
+          -8.622
+        ],
+        [
+          1.596,
+          -8.75
+        ],
+        [
+          1.596,
+          -8.751
+        ],
+        [
+          1.596,
+          -8.752
+        ],
+        [
+          1.595,
+          -8.753
+        ],
+        [
+          1.594,
+          -8.754
+        ],
+        [
           1.594,
           -8.754
         ],
@@ -13158,62 +13324,64 @@
         ],
         [
           0.864,
-          -5.6
+          -4.6
         ],
         [
-          1.7,
-          -5.6
+          3.2,
+          -4.6
         ],
         [
-          1.7,
-          -8.622
+          3.2,
+          -8.8
         ],
         [
-          1.652,
-          -8.622
+          3.079,
+          -8.8
         ],
         [
-          1.651,
-          -8.622
+          3.053,
+          -8.738
         ],
         [
-          1.651,
-          -8.622
+          3.053,
+          -8.737
         ],
         [
-          1.596,
-          -8.75
+          3.053,
+          -8.737
         ],
         [
-          1.596,
-          -8.751
+          2.873,
+          -8.74
         ],
         [
-          1.596,
-          -8.752
+          2.546,
+          -8.745
         ],
         [
-          1.595,
+          2.277,
+          -8.749
+        ],
+        [
+          2.008,
           -8.753
         ],
         [
-          1.594,
-          -8.754
-        ],
-        [
-          1.594,
-          -8.754
+          1.812,
+          -8.756
         ]
       ],
       "parameters": {
         "number": 5,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Entryway",
@@ -13224,6 +13392,102 @@
       "type": "polygon",
       "coordinates": [
         [
+          1.812,
+          -8.756
+        ],
+        [
+          1.811,
+          -8.756
+        ],
+        [
+          1.81,
+          -8.756
+        ],
+        [
+          1.809,
+          -8.756
+        ],
+        [
+          1.808,
+          -8.756
+        ],
+        [
+          1.807,
+          -8.755
+        ],
+        [
+          1.806,
+          -8.755
+        ],
+        [
+          1.805,
+          -8.754
+        ],
+        [
+          1.805,
+          -8.754
+        ],
+        [
+          1.804,
+          -8.753
+        ],
+        [
+          1.803,
+          -8.752
+        ],
+        [
+          1.803,
+          -8.751
+        ],
+        [
+          1.802,
+          -8.75
+        ],
+        [
+          1.748,
+          -8.622
+        ],
+        [
+          1.747,
+          -8.622
+        ],
+        [
+          1.747,
+          -8.622
+        ],
+        [
+          1.652,
+          -8.622
+        ],
+        [
+          1.651,
+          -8.622
+        ],
+        [
+          1.651,
+          -8.622
+        ],
+        [
+          1.596,
+          -8.75
+        ],
+        [
+          1.596,
+          -8.751
+        ],
+        [
+          1.596,
+          -8.752
+        ],
+        [
+          1.595,
+          -8.753
+        ],
+        [
+          1.594,
+          -8.754
+        ],
+        [
           1.594,
           -8.754
         ],
@@ -13365,62 +13629,64 @@
         ],
         [
           0.864,
-          -5.6
+          -4.6
         ],
         [
-          1.7,
-          -5.6
+          3.2,
+          -4.6
         ],
         [
-          1.7,
-          -8.622
+          3.2,
+          -8.8
         ],
         [
-          1.652,
-          -8.622
+          3.079,
+          -8.8
         ],
         [
-          1.651,
-          -8.622
+          3.053,
+          -8.738
         ],
         [
-          1.651,
-          -8.622
+          3.053,
+          -8.737
         ],
         [
-          1.596,
-          -8.75
+          3.053,
+          -8.737
         ],
         [
-          1.596,
-          -8.751
+          2.873,
+          -8.74
         ],
         [
-          1.596,
-          -8.752
+          2.546,
+          -8.745
         ],
         [
-          1.595,
+          2.277,
+          -8.749
+        ],
+        [
+          2.008,
           -8.753
         ],
         [
-          1.594,
-          -8.754
-        ],
-        [
-          1.594,
-          -8.754
+          1.812,
+          -8.756
         ]
       ],
       "parameters": {
         "number": 2,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Entryway",
@@ -13431,6 +13697,102 @@
       "type": "polygon",
       "coordinates": [
         [
+          1.812,
+          -8.756
+        ],
+        [
+          1.811,
+          -8.756
+        ],
+        [
+          1.81,
+          -8.756
+        ],
+        [
+          1.809,
+          -8.756
+        ],
+        [
+          1.808,
+          -8.756
+        ],
+        [
+          1.807,
+          -8.755
+        ],
+        [
+          1.806,
+          -8.755
+        ],
+        [
+          1.805,
+          -8.754
+        ],
+        [
+          1.805,
+          -8.754
+        ],
+        [
+          1.804,
+          -8.753
+        ],
+        [
+          1.803,
+          -8.752
+        ],
+        [
+          1.803,
+          -8.751
+        ],
+        [
+          1.802,
+          -8.75
+        ],
+        [
+          1.748,
+          -8.622
+        ],
+        [
+          1.747,
+          -8.622
+        ],
+        [
+          1.747,
+          -8.622
+        ],
+        [
+          1.652,
+          -8.622
+        ],
+        [
+          1.651,
+          -8.622
+        ],
+        [
+          1.651,
+          -8.622
+        ],
+        [
+          1.596,
+          -8.75
+        ],
+        [
+          1.596,
+          -8.751
+        ],
+        [
+          1.596,
+          -8.752
+        ],
+        [
+          1.595,
+          -8.753
+        ],
+        [
+          1.594,
+          -8.754
+        ],
+        [
           1.594,
           -8.754
         ],
@@ -13572,62 +13934,64 @@
         ],
         [
           0.864,
-          -5.6
+          -4.6
         ],
         [
-          1.7,
-          -5.6
+          3.2,
+          -4.6
         ],
         [
-          1.7,
-          -8.622
+          3.2,
+          -8.8
         ],
         [
-          1.652,
-          -8.622
+          3.079,
+          -8.8
         ],
         [
-          1.651,
-          -8.622
+          3.053,
+          -8.738
         ],
         [
-          1.651,
-          -8.622
+          3.053,
+          -8.737
         ],
         [
-          1.596,
-          -8.75
+          3.053,
+          -8.737
         ],
         [
-          1.596,
-          -8.751
+          2.873,
+          -8.74
         ],
         [
-          1.596,
-          -8.752
+          2.546,
+          -8.745
         ],
         [
-          1.595,
+          2.277,
+          -8.749
+        ],
+        [
+          2.008,
           -8.753
         ],
         [
-          1.594,
-          -8.754
-        ],
-        [
-          1.594,
-          -8.754
+          1.812,
+          -8.756
         ]
       ],
       "parameters": {
         "number": 4,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Entryway",
@@ -13638,6 +14002,102 @@
       "type": "polygon",
       "coordinates": [
         [
+          1.812,
+          -8.756
+        ],
+        [
+          1.811,
+          -8.756
+        ],
+        [
+          1.81,
+          -8.756
+        ],
+        [
+          1.809,
+          -8.756
+        ],
+        [
+          1.808,
+          -8.756
+        ],
+        [
+          1.807,
+          -8.755
+        ],
+        [
+          1.806,
+          -8.755
+        ],
+        [
+          1.805,
+          -8.754
+        ],
+        [
+          1.805,
+          -8.754
+        ],
+        [
+          1.804,
+          -8.753
+        ],
+        [
+          1.803,
+          -8.752
+        ],
+        [
+          1.803,
+          -8.751
+        ],
+        [
+          1.802,
+          -8.75
+        ],
+        [
+          1.748,
+          -8.622
+        ],
+        [
+          1.747,
+          -8.622
+        ],
+        [
+          1.747,
+          -8.622
+        ],
+        [
+          1.652,
+          -8.622
+        ],
+        [
+          1.651,
+          -8.622
+        ],
+        [
+          1.651,
+          -8.622
+        ],
+        [
+          1.596,
+          -8.75
+        ],
+        [
+          1.596,
+          -8.751
+        ],
+        [
+          1.596,
+          -8.752
+        ],
+        [
+          1.595,
+          -8.753
+        ],
+        [
+          1.594,
+          -8.754
+        ],
+        [
           1.594,
           -8.754
         ],
@@ -13779,62 +14239,64 @@
         ],
         [
           0.864,
-          -5.6
+          -4.6
         ],
         [
-          1.7,
-          -5.6
+          3.2,
+          -4.6
         ],
         [
-          1.7,
-          -8.622
+          3.2,
+          -8.8
         ],
         [
-          1.652,
-          -8.622
+          3.079,
+          -8.8
         ],
         [
-          1.651,
-          -8.622
+          3.053,
+          -8.738
         ],
         [
-          1.651,
-          -8.622
+          3.053,
+          -8.737
         ],
         [
-          1.596,
-          -8.75
+          3.053,
+          -8.737
         ],
         [
-          1.596,
-          -8.751
+          2.873,
+          -8.74
         ],
         [
-          1.596,
-          -8.752
+          2.546,
+          -8.745
         ],
         [
-          1.595,
+          2.277,
+          -8.749
+        ],
+        [
+          2.008,
           -8.753
         ],
         [
-          1.594,
-          -8.754
-        ],
-        [
-          1.594,
-          -8.754
+          1.812,
+          -8.756
         ]
       ],
       "parameters": {
         "number": 6,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Entryway",
@@ -13925,167 +14387,15 @@
           -8.8
         ],
         [
-          3.079,
+          3.2,
           -8.8
         ],
         [
-          3.053,
-          -8.738
+          3.2,
+          -4.6
         ],
         [
-          3.053,
-          -8.737
-        ],
-        [
-          3.053,
-          -8.737
-        ],
-        [
-          2.873,
-          -8.74
-        ],
-        [
-          2.546,
-          -8.745
-        ],
-        [
-          2.277,
-          -8.749
-        ],
-        [
-          2.008,
-          -8.753
-        ],
-        [
-          1.812,
-          -8.756
-        ],
-        [
-          1.811,
-          -8.756
-        ],
-        [
-          1.81,
-          -8.756
-        ],
-        [
-          1.809,
-          -8.756
-        ],
-        [
-          1.808,
-          -8.756
-        ],
-        [
-          1.807,
-          -8.755
-        ],
-        [
-          1.806,
-          -8.755
-        ],
-        [
-          1.805,
-          -8.754
-        ],
-        [
-          1.805,
-          -8.754
-        ],
-        [
-          1.804,
-          -8.753
-        ],
-        [
-          1.803,
-          -8.752
-        ],
-        [
-          1.803,
-          -8.751
-        ],
-        [
-          1.802,
-          -8.75
-        ],
-        [
-          1.748,
-          -8.622
-        ],
-        [
-          1.747,
-          -8.622
-        ],
-        [
-          1.747,
-          -8.622
-        ],
-        [
-          1.7,
-          -8.622
-        ],
-        [
-          1.7,
-          -5.6
-        ],
-        [
-          1.7,
-          -4.387
-        ],
-        [
-          1.739,
-          -4.348
-        ],
-        [
-          1.783,
-          -4.304
-        ],
-        [
-          1.784,
-          -4.304
-        ],
-        [
-          1.784,
-          -4.303
-        ],
-        [
-          1.785,
-          -4.303
-        ],
-        [
-          1.786,
-          -4.302
-        ],
-        [
-          1.787,
-          -4.302
-        ],
-        [
-          1.788,
-          -4.302
-        ],
-        [
-          1.789,
-          -4.302
-        ],
-        [
-          1.79,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.017,
+          3.2,
           -4.3
         ],
         [
@@ -14199,13 +14509,15 @@
       ],
       "parameters": {
         "number": 5,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Sunroom",
@@ -14296,167 +14608,15 @@
           -8.8
         ],
         [
-          3.079,
+          3.2,
           -8.8
         ],
         [
-          3.053,
-          -8.738
+          3.2,
+          -4.6
         ],
         [
-          3.053,
-          -8.737
-        ],
-        [
-          3.053,
-          -8.737
-        ],
-        [
-          2.873,
-          -8.74
-        ],
-        [
-          2.546,
-          -8.745
-        ],
-        [
-          2.277,
-          -8.749
-        ],
-        [
-          2.008,
-          -8.753
-        ],
-        [
-          1.812,
-          -8.756
-        ],
-        [
-          1.811,
-          -8.756
-        ],
-        [
-          1.81,
-          -8.756
-        ],
-        [
-          1.809,
-          -8.756
-        ],
-        [
-          1.808,
-          -8.756
-        ],
-        [
-          1.807,
-          -8.755
-        ],
-        [
-          1.806,
-          -8.755
-        ],
-        [
-          1.805,
-          -8.754
-        ],
-        [
-          1.805,
-          -8.754
-        ],
-        [
-          1.804,
-          -8.753
-        ],
-        [
-          1.803,
-          -8.752
-        ],
-        [
-          1.803,
-          -8.751
-        ],
-        [
-          1.802,
-          -8.75
-        ],
-        [
-          1.748,
-          -8.622
-        ],
-        [
-          1.747,
-          -8.622
-        ],
-        [
-          1.747,
-          -8.622
-        ],
-        [
-          1.7,
-          -8.622
-        ],
-        [
-          1.7,
-          -5.6
-        ],
-        [
-          1.7,
-          -4.387
-        ],
-        [
-          1.739,
-          -4.348
-        ],
-        [
-          1.783,
-          -4.304
-        ],
-        [
-          1.784,
-          -4.304
-        ],
-        [
-          1.784,
-          -4.303
-        ],
-        [
-          1.785,
-          -4.303
-        ],
-        [
-          1.786,
-          -4.302
-        ],
-        [
-          1.787,
-          -4.302
-        ],
-        [
-          1.788,
-          -4.302
-        ],
-        [
-          1.789,
-          -4.302
-        ],
-        [
-          1.79,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.017,
+          3.2,
           -4.3
         ],
         [
@@ -14570,13 +14730,15 @@
       ],
       "parameters": {
         "number": 2,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Sunroom",
@@ -14667,167 +14829,15 @@
           -8.8
         ],
         [
-          3.079,
+          3.2,
           -8.8
         ],
         [
-          3.053,
-          -8.738
+          3.2,
+          -4.6
         ],
         [
-          3.053,
-          -8.737
-        ],
-        [
-          3.053,
-          -8.737
-        ],
-        [
-          2.873,
-          -8.74
-        ],
-        [
-          2.546,
-          -8.745
-        ],
-        [
-          2.277,
-          -8.749
-        ],
-        [
-          2.008,
-          -8.753
-        ],
-        [
-          1.812,
-          -8.756
-        ],
-        [
-          1.811,
-          -8.756
-        ],
-        [
-          1.81,
-          -8.756
-        ],
-        [
-          1.809,
-          -8.756
-        ],
-        [
-          1.808,
-          -8.756
-        ],
-        [
-          1.807,
-          -8.755
-        ],
-        [
-          1.806,
-          -8.755
-        ],
-        [
-          1.805,
-          -8.754
-        ],
-        [
-          1.805,
-          -8.754
-        ],
-        [
-          1.804,
-          -8.753
-        ],
-        [
-          1.803,
-          -8.752
-        ],
-        [
-          1.803,
-          -8.751
-        ],
-        [
-          1.802,
-          -8.75
-        ],
-        [
-          1.748,
-          -8.622
-        ],
-        [
-          1.747,
-          -8.622
-        ],
-        [
-          1.747,
-          -8.622
-        ],
-        [
-          1.7,
-          -8.622
-        ],
-        [
-          1.7,
-          -5.6
-        ],
-        [
-          1.7,
-          -4.387
-        ],
-        [
-          1.739,
-          -4.348
-        ],
-        [
-          1.783,
-          -4.304
-        ],
-        [
-          1.784,
-          -4.304
-        ],
-        [
-          1.784,
-          -4.303
-        ],
-        [
-          1.785,
-          -4.303
-        ],
-        [
-          1.786,
-          -4.302
-        ],
-        [
-          1.787,
-          -4.302
-        ],
-        [
-          1.788,
-          -4.302
-        ],
-        [
-          1.789,
-          -4.302
-        ],
-        [
-          1.79,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.017,
+          3.2,
           -4.3
         ],
         [
@@ -14941,13 +14951,15 @@
       ],
       "parameters": {
         "number": 3,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Sunroom",
@@ -15038,167 +15050,15 @@
           -8.8
         ],
         [
-          3.079,
+          3.2,
           -8.8
         ],
         [
-          3.053,
-          -8.738
+          3.2,
+          -4.6
         ],
         [
-          3.053,
-          -8.737
-        ],
-        [
-          3.053,
-          -8.737
-        ],
-        [
-          2.873,
-          -8.74
-        ],
-        [
-          2.546,
-          -8.745
-        ],
-        [
-          2.277,
-          -8.749
-        ],
-        [
-          2.008,
-          -8.753
-        ],
-        [
-          1.812,
-          -8.756
-        ],
-        [
-          1.811,
-          -8.756
-        ],
-        [
-          1.81,
-          -8.756
-        ],
-        [
-          1.809,
-          -8.756
-        ],
-        [
-          1.808,
-          -8.756
-        ],
-        [
-          1.807,
-          -8.755
-        ],
-        [
-          1.806,
-          -8.755
-        ],
-        [
-          1.805,
-          -8.754
-        ],
-        [
-          1.805,
-          -8.754
-        ],
-        [
-          1.804,
-          -8.753
-        ],
-        [
-          1.803,
-          -8.752
-        ],
-        [
-          1.803,
-          -8.751
-        ],
-        [
-          1.802,
-          -8.75
-        ],
-        [
-          1.748,
-          -8.622
-        ],
-        [
-          1.747,
-          -8.622
-        ],
-        [
-          1.747,
-          -8.622
-        ],
-        [
-          1.7,
-          -8.622
-        ],
-        [
-          1.7,
-          -5.6
-        ],
-        [
-          1.7,
-          -4.387
-        ],
-        [
-          1.739,
-          -4.348
-        ],
-        [
-          1.783,
-          -4.304
-        ],
-        [
-          1.784,
-          -4.304
-        ],
-        [
-          1.784,
-          -4.303
-        ],
-        [
-          1.785,
-          -4.303
-        ],
-        [
-          1.786,
-          -4.302
-        ],
-        [
-          1.787,
-          -4.302
-        ],
-        [
-          1.788,
-          -4.302
-        ],
-        [
-          1.789,
-          -4.302
-        ],
-        [
-          1.79,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.016,
-          -4.301
-        ],
-        [
-          2.017,
+          3.2,
           -4.3
         ],
         [
@@ -15312,13 +15172,15 @@
       ],
       "parameters": {
         "number": 6,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Sunroom",
@@ -16003,13 +15865,15 @@
       ],
       "parameters": {
         "number": 5,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage door",
@@ -16694,13 +16558,15 @@
       ],
       "parameters": {
         "number": 2,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage door",
@@ -17385,13 +17251,15 @@
       ],
       "parameters": {
         "number": 4,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage door",
@@ -18076,13 +17944,15 @@
       ],
       "parameters": {
         "number": 6,
-        "radius": 0.15,
+        "radius": 0.2,
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
         "use_premovement": false,
-        "radius_distribution": "constant",
-        "v0_distribution": "constant",
+        "radius_distribution": "gaussian",
+        "radius_std": 0.02,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage door",
@@ -19020,6 +18890,155 @@
         "alpha": 100.49147701233225,
         "c": 3
       }
+    },
+    "jps-checkpoints_6": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          0.1,
+          -6.6
+        ],
+        [
+          0.093275,
+          -6.668282
+        ],
+        [
+          0.073358,
+          -6.733939
+        ],
+        [
+          0.041014,
+          -6.79445
+        ],
+        [
+          -0.002513,
+          -6.847487
+        ],
+        [
+          -0.05555,
+          -6.891014
+        ],
+        [
+          -0.116061,
+          -6.923358
+        ],
+        [
+          -0.181718,
+          -6.943275
+        ],
+        [
+          -0.25,
+          -6.95
+        ],
+        [
+          -0.318282,
+          -6.943275
+        ],
+        [
+          -0.383939,
+          -6.923358
+        ],
+        [
+          -0.44445,
+          -6.891014
+        ],
+        [
+          -0.497487,
+          -6.847487
+        ],
+        [
+          -0.541014,
+          -6.79445
+        ],
+        [
+          -0.573358,
+          -6.733939
+        ],
+        [
+          -0.593275,
+          -6.668282
+        ],
+        [
+          -0.6,
+          -6.6
+        ],
+        [
+          -0.593275,
+          -6.531718
+        ],
+        [
+          -0.573358,
+          -6.466061
+        ],
+        [
+          -0.541014,
+          -6.40555
+        ],
+        [
+          -0.497487,
+          -6.352513
+        ],
+        [
+          -0.44445,
+          -6.308986
+        ],
+        [
+          -0.383939,
+          -6.276642
+        ],
+        [
+          -0.318282,
+          -6.256725
+        ],
+        [
+          -0.25,
+          -6.25
+        ],
+        [
+          -0.181718,
+          -6.256725
+        ],
+        [
+          -0.116061,
+          -6.276642
+        ],
+        [
+          -0.05555,
+          -6.308986
+        ],
+        [
+          -0.002513,
+          -6.352513
+        ],
+        [
+          0.041014,
+          -6.40555
+        ],
+        [
+          0.073358,
+          -6.466061
+        ],
+        [
+          0.093275,
+          -6.531718
+        ],
+        [
+          0.1,
+          -6.6
+        ]
+      ],
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 1,
+      "speed_factor": 1,
+      "shape": "circle",
+      "center": [
+        -0.25,
+        -6.6
+      ],
+      "radius": 0.35
     }
   },
   "zones": {},

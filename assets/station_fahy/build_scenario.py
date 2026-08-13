@@ -47,7 +47,7 @@ import sys
 from pathlib import Path
 
 from shapely import wkt as W
-from shapely.geometry import Polygon
+from shapely.geometry import Point, Polygon
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
@@ -75,8 +75,24 @@ CLASSES = (
     ("regular", 111 / 288, 0.85),
 )
 
+# A population, not one repeated person. Uniform agents queue in perfect
+# symmetry, and collision-free speed has no push or noise to break the arch that
+# forms at a doorway, so a uniform crowd of them can stand at a door forever.
+# Spreads are ordinary adult figures, not fitted to anything this deck scores.
 V0 = 1.3
-RADIUS = 0.15
+V0_STD = 0.2
+# Half a 0.40 m body: at the 0.15 m this deck used, three agents fit abreast in
+# the 0.914 m interior door and the front entrance passed nearly 7 persons per
+# metre-second, several times any measured door flow.
+RADIUS = 0.20
+RADIUS_STD = 0.02
+
+# Agents steer straight at their next route node, so every leg of a route has to
+# be one an agent can walk in a straight line. The last node before the front
+# door sits east of the vestibule opening with the wall between it and the exit:
+# agents reaching it then press into that wall instead of turning into the
+# doorway. This checkpoint stands inside the vestibule, in sight of both.
+VESTIBULE_CHECKPOINT = ("jps-checkpoints_6", (-0.25, -6.6), 0.35)
 
 
 def largest_part(poly):
@@ -87,6 +103,24 @@ def largest_part(poly):
         return poly
     parts = [p for p in poly.geoms if p.geom_type == "Polygon"]
     return max(parts, key=lambda p: p.area) if parts else poly
+
+
+def _checkpoint(center: tuple[float, float], radius: float) -> dict:
+    """A circular waypoint stage, in the shape the scenario schema expects."""
+    circle = Point(*center).buffer(radius, quad_segs=8)
+    return {
+        "type": "polygon",
+        "coordinates": [[round(x, 6), round(y, 6)] for x, y in circle.exterior.coords],
+        "waiting_time": 0,
+        "waiting_time_distribution": "constant",
+        "waiting_time_std": 1,
+        "enable_throughput_throttling": False,
+        "max_throughput": 1,
+        "speed_factor": 1,
+        "shape": "circle",
+        "center": list(center),
+        "radius": radius,
+    }
 
 
 def apportion(total: int, shares: list[float]) -> list[int]:
@@ -128,8 +162,10 @@ def build() -> tuple[dict, Polygon]:
                     "distribution_mode": "by_number",
                     "use_flow_spawning": False,
                     "use_premovement": False,
-                    "radius_distribution": "constant",
-                    "v0_distribution": "constant",
+                    "radius_distribution": "gaussian",
+                    "radius_std": RADIUS_STD,
+                    "v0_distribution": "gaussian",
+                    "v0_std": V0_STD,
                     "familiarity": familiarity,
                     "entrance": FRONT_DOOR,
                     # read by validate.py, not by the engine
@@ -141,10 +177,16 @@ def build() -> tuple[dict, Polygon]:
 
     cfg = json.loads(json.dumps(base))
     cfg["distributions"] = distributions
+    cfg["checkpoints"][VESTIBULE_CHECKPOINT[0]] = _checkpoint(*VESTIBULE_CHECKPOINT[1:])
     for exit_id, exit_cfg in cfg["exits"].items():
         c = Polygon(exit_cfg["coordinates"]).centroid
         exit_cfg["sign"] = {"x": c.x, "y": c.y, "alpha": None, "c": SIGN_C[exit_id]}
     sim = cfg["config"]["simulation_settings"]["simulationParams"]
+    # Collision-free speed is the model whose speed-density relation would limit
+    # door flow, which is what these egress times need. It cannot be used yet:
+    # agents steer straight at route nodes they cannot see (#114), and without a
+    # model that slides them along walls they stop dead against one. On this deck
+    # that leaves 141 of 333 standing in a four-way crossing at the 600 s cap.
     sim["model_type"] = "WarpDriverModel"
     sim["max_simulation_time"] = 600.0
     # The library default is 0 -- congestion-aware routing is opt-in, because
