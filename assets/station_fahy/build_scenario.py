@@ -35,6 +35,9 @@ published counts give 21.5 % and 38.5 %.
 Every agent knows the front door regardless of class, via ``entrance``: every
 patron entered that way, tickets collected and hands stamped. That single
 empirically-grounded rule is the mechanism behind the crush.
+
+``source/geometry.wkt`` carries the drawing with its doorways already opened by
+``simplify_doors.py``; re-trace the drawing and that script has to run again.
 """
 
 from __future__ import annotations
@@ -44,7 +47,7 @@ import sys
 from pathlib import Path
 
 from shapely import wkt as W
-from shapely.geometry import Polygon, box
+from shapely.geometry import Polygon
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
@@ -75,25 +78,6 @@ CLASSES = (
 V0 = 1.3
 RADIUS = 0.15
 
-# The doorway at the north-east corner of the main bar. Two freehand strokes in
-# the drawing -- a 0.15 m lip on the bar (ring 5) and a hook on the partition
-# behind it (ring 6) -- happen to pass within 0.40 m of each other, narrower
-# than two 0.15 m-radius bodies, so counterflow there deadlocks and those agents
-# never evacuate (issue #103). No dimension backs either stroke, so the drawing
-# stays as traced and the deck clips them here: 0.40 m -> 0.93 m.
-DOORWAY_CLIPS = (
-    (5, box(-3.60, 0.35, -2.45, 1.00)),
-    (6, box(-3.70, 0.00, -3.00, 1.149)),
-)
-
-
-def widen_bar_doorway(walkable: Polygon) -> Polygon:
-    """Cut :data:`DOORWAY_CLIPS` out of the obstacles they narrow."""
-    rings = list(walkable.interiors)
-    for index, clip in DOORWAY_CLIPS:
-        rings[index] = largest_part(Polygon(rings[index]).difference(clip)).exterior
-    return Polygon(walkable.exterior, rings)
-
 
 def largest_part(poly):
     if poly.geom_type == "MultiPolygon":
@@ -113,7 +97,7 @@ def apportion(total: int, shares: list[float]) -> list[int]:
 
 
 def build() -> tuple[dict, Polygon]:
-    walkable = widen_bar_doorway(W.loads((SOURCE / "geometry.wkt").read_text()))
+    walkable = W.loads((SOURCE / "geometry.wkt").read_text())
     base = json.loads((SOURCE / "config.json").read_text())
     polys = areas.polygons(walkable)
     counts = F.agents_per_row()
