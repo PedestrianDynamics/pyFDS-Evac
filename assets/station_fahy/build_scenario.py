@@ -44,7 +44,7 @@ import sys
 from pathlib import Path
 
 from shapely import wkt as W
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, box
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
@@ -52,7 +52,7 @@ sys.path.insert(0, str(HERE))
 import areas  # noqa: E402
 import fahy_table2 as F  # noqa: E402
 
-SOURCE = Path("assets/station/handdrawn")
+SOURCE = HERE / "source"
 FRONT_DOOR = "jps-exits_0"
 
 # Unlit stage-door sign: six survivors noticed it unlit, one said there was no
@@ -75,6 +75,25 @@ CLASSES = (
 V0 = 1.3
 RADIUS = 0.15
 
+# The doorway at the north-east corner of the main bar. Two freehand strokes in
+# the drawing -- a 0.15 m lip on the bar (ring 5) and a hook on the partition
+# behind it (ring 6) -- happen to pass within 0.40 m of each other, narrower
+# than two 0.15 m-radius bodies, so counterflow there deadlocks and those agents
+# never evacuate (issue #103). No dimension backs either stroke, so the drawing
+# stays as traced and the deck clips them here: 0.40 m -> 0.93 m.
+DOORWAY_CLIPS = (
+    (5, box(-3.60, 0.35, -2.45, 1.00)),
+    (6, box(-3.70, 0.00, -3.00, 1.149)),
+)
+
+
+def widen_bar_doorway(walkable: Polygon) -> Polygon:
+    """Cut :data:`DOORWAY_CLIPS` out of the obstacles they narrow."""
+    rings = list(walkable.interiors)
+    for index, clip in DOORWAY_CLIPS:
+        rings[index] = largest_part(Polygon(rings[index]).difference(clip)).exterior
+    return Polygon(walkable.exterior, rings)
+
 
 def largest_part(poly):
     if poly.geom_type == "MultiPolygon":
@@ -93,8 +112,8 @@ def apportion(total: int, shares: list[float]) -> list[int]:
     return out
 
 
-def build() -> dict:
-    walkable = W.loads((SOURCE / "geometry.wkt").read_text())
+def build() -> tuple[dict, Polygon]:
+    walkable = widen_bar_doorway(W.loads((SOURCE / "geometry.wkt").read_text()))
     base = json.loads((SOURCE / "config.json").read_text())
     polys = areas.polygons(walkable)
     counts = F.agents_per_row()
@@ -147,14 +166,14 @@ def build() -> dict:
     # front-door share at this crowd of 333 and nowhere else. See
     # scripts/sweep_queue_weight.py and docs/routing.md.
     cfg["routing"] = dict(cfg.get("routing") or {}, w_queue=0.03)
-    return cfg
+    return cfg, walkable
 
 
 def main() -> int:
-    cfg = build()
+    cfg, walkable = build()
     total = sum(d["parameters"]["number"] for d in cfg["distributions"].values())
     (HERE / "config.json").write_text(json.dumps(cfg, indent=2))
-    (HERE / "geometry.wkt").write_text((SOURCE / "geometry.wkt").read_text())
+    (HERE / "geometry.wkt").write_text(walkable.wkt + "\n")
 
     print(
         f"{len(cfg['distributions'])} distributions, {total} agents "
