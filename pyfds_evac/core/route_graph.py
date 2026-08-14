@@ -1172,18 +1172,25 @@ def evaluate_route(
     # Change_Target_Door). Being relative to distance is what lets the same
     # smoke allow a near exit and refuse a far one.
     #
-    # Two ways to measure it, in order of preference:
+    # Measured one of two ways, and never both for the same agent in the same
+    # run if a visibility model exists:
     #
-    # los  -- fdsvismap's sighting distance toward the exit's own sign, which is
-    #         Jin's c / K_ave with K_ave averaged along the real, obstruction-
-    #         aware line of sight, compared against the straight-line distance
-    #         to that sign. This is FDS+Evac's See_door quantity, and the test
-    #         is then a statement about optical depth along one leg: tau < 2c.
-    # path -- worst-case K over the route polyline against the whole remaining
-    #         length. Used when there is no line of sight to read: an exit with
-    #         no sign descriptor, a concealed one, or one the agent stands
-    #         behind. It is a stricter reading -- a long route needs low K
-    #         everywhere -- so it is the fallback, not the rule.
+    # los  -- fdsvismap's sighting distance toward the exit's own sign: Jin's
+    #         c / K_ave with K_ave averaged along the real, obstruction-aware
+    #         line of sight, against the straight-line distance to that sign.
+    #         This is FDS+Evac's See_door quantity, so the test is a statement
+    #         about optical depth along one leg, tau < 2c.
+    # path -- c / K_ave over the route polyline against the whole remaining
+    #         length. Used only when there is no visibility model at all.
+    #
+    # When a model exists but returns nothing -- no sign descriptor, concealed,
+    # or the agent is behind the sign -- the sight gate simply does not apply.
+    # Substituting the polyline number there was measured to be worse than not
+    # testing: the two estimators are not comparable (the same 22 m route
+    # reported 9.9 m of sight on one tick and 68.3 m on the next, purely because
+    # the sight line resolved), so a route flipped feasibility as the agent
+    # walked past an obstruction and the crowd followed it. Not seeing a sign is
+    # a statement about wayfinding, not about whether the route can be walked.
     feasible = not rejected
     band = _visibility_band(min_visibility, config.band_width_m)
     if config.cost_model == "gate":
@@ -1196,13 +1203,16 @@ def evaluate_route(
         if visibility_model is not None and eye is not None:
             los = visibility_model.visibility_to_node(time_s, eye[0], eye[1], exit_id)
             dist = visibility_model.distance_to_node(eye[0], eye[1], exit_id)
-            if los is not None and dist is not None:
+            if los is None or dist is None:
+                needed = -math.inf  # no sight line to read: no sight test
+                how = "none"
+            else:
                 sight, needed, how = los, config.sight_distance_fraction * dist, "los"
                 min_visibility = los
                 band = _visibility_band(los, config.band_width_m)
         if needed is None:
             needed = config.sight_distance_fraction * effective_length
-        if not is_current and current_exit is not None:
+        if needed > 0 and not is_current and current_exit is not None:
             needed *= config.sight_return_margin
         if sight < needed:
             feasible = False
@@ -1339,7 +1349,15 @@ def rank_routes(
     # learned once the sign went out of view.
     # K_vis fallback: reject routes where all segments are non-visible,
     # but only if at least one other route has visibility.
-    any_visible = any(
+    #
+    # Additive only. Under the gate this was a *second* smoke criterion on top
+    # of the sight test, and a bare threshold on K with no hysteresis, so a
+    # route sitting near it toggled every tick: measured on world100, a 9 m
+    # route with a 2 s travel time was struck out and reinstated repeatedly
+    # while the agent bounced to a 27 m rival and back. It also set `rejected`
+    # without clearing `feasible`, leaving the two fields disagreeing. The
+    # plan retired it under the gate; this is that retirement.
+    any_visible = config.cost_model != "gate" and any(
         any(s.visible for s in rc.segments) for rc in costs if not rc.rejected
     )
     if any_visible:
@@ -1358,22 +1376,16 @@ def rank_routes(
     # Under "gate" distance decides among routes that are still available, and
     # a route a whole visibility band clearer wins first: smoke says which
     # exits exist, not how much each metre of them is worth.
-    if config.cost_model == "gate":
-
-        def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
-            # Feasible routes are ordered by time alone. The band used to sit
-            # ahead of it, and it was not a tie-breaker: it decided. On
-            # l_corridor it placed 28 agents on the 58 m route at spawn while
-            # both routes were optically clear (k_ave = 0.000 for each), because
-            # a route with any trace of smoke gets a finite S = c/K and one with
-            # none gets _MAX_BAND -- so 10^6 beat N and a 5x distance penalty
-            # never entered the comparison. Smoke says which exits exist; it
-            # does not also get to say which of the survivors is nearer.
-            return (1 if rc.rejected else 0, 0, rc.rank_cost, len(rc.path))
-    else:
-
-        def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
-            return (1 if rc.rejected else 0, 0, rc.rank_cost, len(rc.path))
+    # Both models order the same way; only rank_cost differs between them, and
+    # evaluate_route already decided which quantity that is. The gate briefly
+    # ordered by visibility band first, and the band did not break ties, it
+    # decided: on l_corridor it placed agents on the 58 m route while both
+    # routes were optically clear (k_ave = 0.000 for each), because a route
+    # with any trace of smoke gets a finite S = c/K while one with none got
+    # _MAX_BAND. Smoke says which exits exist; it does not also get to say
+    # which of the survivors is nearer.
+    def sort_key(rc: RouteCost) -> tuple[int, float, int]:
+        return (1 if rc.rejected else 0, rc.rank_cost, len(rc.path))
 
     costs.sort(key=sort_key)
 

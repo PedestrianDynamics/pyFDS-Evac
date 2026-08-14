@@ -111,13 +111,14 @@ Symbols used below:
    `sight_distance_fraction` (0.5) × the distance still to walk
    (`route_graph.py:1152`), and the survivors sort as
    ```
-   ( rejected? , -visibility_band , travel_time + w_queue·queue_time , hops )
+   ( rejected? , travel_time + w_queue·queue_time , hops )
    ```
-   The band is `S // band_width_m` with `band_width_m = 10`. So a route a whole
-   class clearer wins outright and, inside a class, the quickest wins — smoke
-   says which exits exist, not what each metre of them costs. Refusals are
-   recomputed every tick and never remembered, so the criterion relaxes as an
-   agent closes on an exit.
+   The quickest available route wins — smoke says which exits exist, not what
+   each metre of them costs. The visibility band (`S // band_width_m`, capped at
+   3 classes) no longer enters this sort; it survives as a diagnostic, as the
+   ordering of the all-refused fallback, and as a condition on the anchor
+   bypass. Refusals are recomputed every tick and never remembered, so the
+   criterion relaxes as an agent closes on an exit.
 
 9. **There is always a fallback.**
    If *every* route is rejected (`route_graph.py:1350`), the least-bad one is
@@ -210,9 +211,11 @@ Symbols used below:
    the sighting distance to the *exit's own* sign and refuses the route when it
    falls below `sight_distance_fraction × distance_to_node`. The rejection
    reason reads `sight (los) …`. When no sight line resolves — no descriptor, a
-   concealed sign, or the agent standing behind it — it falls back to worst-case
+   concealed sign, or the agent standing behind it — it falls back to the *mean*
    K over the route polyline against the whole remaining length, reason
-   `sight (path) …`, which is the stricter of the two.
+   `sight (path) …`. Both criteria average K; `path` is the harsher of the two
+   only through its distance, which is the full bending route rather than a
+   straight line to a sign.
 
    The eye position is a separate parameter (`los_position`) from
    `agent_position` on purpose: `agent_position` also re-measures every route's
@@ -242,13 +245,13 @@ Symbols used below:
    at `--vis-cell-size` resolution.
 
 9. **Current limitation vs the literature.**
-   Sight is still **gating, not attractive**: it decides whether a route is
-   available (and, via the 10 m band, coarsely orders the ones that are). In the
-   choice papers, visibility (VIS) is the single largest *positive weight* in the
-   utility (≈ +0.71 in Haghani 2018) — a visible exit should be *more attractive*
-   on a spectrum. Banding is a step in that direction and no more: it is a
-   coarse class, chosen precisely so that visibility does not outweigh distance
-   within a class.
+   Sight is now **purely gating**: it decides whether a route is available and
+   nothing else. In the choice papers, visibility (VIS) is the single largest
+   *positive weight* in the utility (≈ +0.71 in Haghani 2018) — a visible exit
+   should be *more attractive* on a spectrum. Banding was the one step toward
+   that, and it was removed from the ordering in `cea33ce` because it decided
+   rather than broke ties. The gap is therefore wider than it was, not
+   narrower.
 
 ---
 
@@ -324,7 +327,7 @@ for picking weights. Key tensions:
   weight the Dijkstra edge costs that pick which path reaches each exit, under
   both models. That is a known limitation, not a design.
 - Toxicity is a threshold, not a preference → keep it as the reject, drop `w_fed`.
-- Visibility is richly modelled and now enters route choice twice — as the sight
-  gate and as the 10 m band ordering — but still never as an attractive term.
+- Visibility is richly modelled but enters route choice only as a gate — the
+  band ordering was removed — and never as an attractive term.
 - For distance-vs-congestion, prefer Haghani's **revealed-choice** weights over the
   Lovreglio **survey** weights.

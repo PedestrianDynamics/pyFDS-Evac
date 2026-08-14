@@ -159,8 +159,13 @@ exit-switch anchor and the same-exit path test all read:
 
 | model | `rank_cost` | sort key |
 |---|---|---|
-| `"gate"` | `travel_time_s + w_queue * queue_time_s` | `(rejected, -band, rank_cost, hops)` |
+| `"gate"` | `travel_time_s + w_queue * queue_time_s` | `(rejected, rank_cost, hops)` |
 | `"additive"` | `composite_cost` | `(rejected, rank_cost, hops)` |
+
+The two sort keys are now the same shape: what differs is the number in
+`rank_cost`. The visibility band used to precede `rank_cost` under the gate and
+no longer does — see
+[route-cost-gate.md](route-cost-gate.md#how-the-gate-decides).
 
 ### Route rejection
 
@@ -173,7 +178,10 @@ A route is rejected under any of these conditions:
   (0.9), so an agent flees a deadly exit at once but only switches onto
   a rival that is clearly safe.
 - **Gate model only:** the sighting distance falls below
-  `sight_distance_fraction` times the distance still to walk. See
+  `sight_distance_fraction` times the distance still to walk. This test is
+  asymmetric too: for an exit that is not the agent's current one the
+  requirement is multiplied by `sight_return_margin` (1.25), so switching needs
+  more sight than staying. See
   [route-cost-gate.md](route-cost-gate.md#sighting-distance-and-the-two-ways-it-is-measured)
   for the two criteria (`sight (los)` and `sight (path)`) and which one
   the rejection reason names.
@@ -209,6 +217,7 @@ from pyfds_evac.core.route_graph import RouteCostConfig
 config = RouteCostConfig(
     cost_model="gate",                    # "gate" (default) or "additive"
     sight_distance_fraction=0.5,          # gate: visible fraction of the way there
+    sight_return_margin=1.25,             # gate: extra sight demanded of a rival exit
     sign_contrast_c=3.0,                  # gate: Jin's c in S = c / K
     band_width_m=10.0,                    # gate: visibility band width (m)
     anticipate=True,                      # price segments at arrival time
@@ -401,14 +410,14 @@ the interval.
    │   (only the single lowest-cost path to each exit under these weights
    │    is evaluated; alternative paths to the same exit are not enumerated)
    ├─ evaluate_route on each path
-   │   ├─ FED rejection (asymmetric: stricter for a non-current exit)
+   │   ├─ FED rejection (asymmetric: x fed_return_margin for a non-current exit)
    │   └─ gate only: sight rejection, reason "sight (los)" or "sight (path)"
+   │       (asymmetric: x sight_return_margin for a non-current exit)
    ├─ visibility rejection pass
    │   └─ if ≥1 route has any visible segment:
    │       mark routes where ALL segments are non-visible as rejected
    ├─ sort: non-rejected first, rejected last
-   │   ├─ gate     → (rejected, -band, rank_cost, hops)
-   │   └─ additive → (rejected, rank_cost, hops)
+   │   └─ both models → (rejected, rank_cost, hops)
    └─ if all rejected → un-reject the least-bad route as fallback
        ├─ gate     → by (-band, rank_cost), held by fallback_switch_margin
        └─ additive → lowest composite
@@ -424,6 +433,7 @@ the interval.
        ├─ anchor: adopt only if rank_cost < old_cost * exit_switch_anchor
        │   ├─ bypassed when the old exit is FED-lethal or impassably smoky
        │   └─ gate: bypassed when the rival is feasible AND a whole band clearer
+       │       AND clearer in metres by the same anchor margin
        ├─ rewrite path_choices deterministically along new path
        ├─ retarget agent to first unvisited stage in new path
        └─ return RouteSwitch record
@@ -442,8 +452,9 @@ An exit switch is recorded when **all four** conditions hold:
 2. `rank_routes` finds a best route that is not hard-rejected.
 3. That best route leads to a **different exit** than the current one.
 4. It clears the exit-switch anchor, or qualifies for one of the anchor
-   bypasses (old exit FED-lethal or impassably smoky; or, under the
-   gate, a feasible rival a whole visibility band clearer).
+   bypasses (old exit FED-lethal or impassably smoky; or, under the gate, a
+   feasible rival a whole visibility band clearer *and* clearer in metres of
+   sighting distance by the anchor margin).
 
 No switch is recorded when:
 
@@ -525,16 +536,16 @@ Full cost evaluation for one candidate route:
 | `rank_cost`        | `float`             | The number ordering, the anchor and the same-exit test read |
 | `segments`         | `list[SegmentCost]` | Per-segment breakdowns            |
 | `queue_time_s`     | `float`             | Estimated queueing time at exit   |
-| `k_max_route`      | `float`             | Worst extinction anywhere on the route |
-| `min_visibility_m` | `float`             | Sighting distance at the route's worst point (gate) |
-| `band`             | `int`               | Visibility band the route falls in (gate) |
+| `k_max_route`      | `float`             | Worst extinction anywhere on the route. Reported; used only by the all-refused fallback's switch margin |
+| `min_visibility_m` | `float`             | Sighting distance from the route's **mean** `K`, or from the LOS query when one resolves (gate) |
+| `band`             | `int`               | Visibility band, 0-3 (gate). Diagnostic: it orders the all-refused fallback and gates the anchor bypass, not the main sort |
 | `feasible`         | `bool`              | Sight and dose both allow the route (gate) |
 | `rejected`         | `bool`              | Whether route was rejected        |
 | `rejection_reason` | `str \| None`       | Reason for rejection; `fallback: ` prefix when un-rejected |
 
-The last four are gate diagnostics and are **not** written to the
-route-cost CSV yet; only what the rejection string embeds is
-recoverable from the output.
+`rank_cost`, `k_max_route`, `min_visibility_m`, `band` and `feasible` are all
+written to the route-cost CSV (`run.py --output-route-cost-history`), so the
+gate's decisions can be audited from its own output.
 
 ## References
 

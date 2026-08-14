@@ -215,9 +215,15 @@ Mean composite cost per exit over time.
 
 **Under the default `"gate"` cost model this plot is not what ranks exits.**
 The script reads the `composite_cost` column, which the gate computes and
-reports but does not order on — it orders on visibility band, then travel time.
-Read the curves as a smoke-exposure diagnostic, and take exit choice from
-`plot_exit_choice.py` or the `rejection_reason` column instead.
+reports but does not order on — it orders on `rank_cost`, i.e. travel time plus
+the weighted queue time. Read the curves as a smoke-exposure diagnostic, and
+take exit choice from `plot_exit_choice.py`, the `rank_cost` column or the
+`rejection_reason` column instead.
+
+The CSV also carries the gate's own diagnostics — `rank_cost`, `k_max_route`,
+`min_visibility_m`, `band` and `feasible` — which is what makes a gate decision
+auditable: `feasible` says whether the route was available, `min_visibility_m`
+says how much sight it had, and `rank_cost` says why the survivor that won won.
 
 ```
 uv run python scripts/plot_route_costs.py route_costs.csv [routes.csv]

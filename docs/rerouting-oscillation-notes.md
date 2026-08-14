@@ -174,24 +174,36 @@ sweep is the path to a real value.
 ### What changed under the gate cost model
 
 Everything above still runs: `_must_flee_rejection` and both extinction thresholds apply
-under `cost_model: "gate"` as well as `"additive"`. Three things are different, and they
+under `cost_model: "gate"` as well as `"additive"`. Four things are different, and they
 matter for anyone reading a churn trace on a current run:
 
 - **Refusals are not remembered, and they relax on approach.** The sight criterion is
   measured against the distance *still to walk*, so the same haze refuses a door at 40 m
   and accepts it at 2 m. Ordering therefore follows the field tick by tick, and the
-  exit-switch anchor is the *only* churn protection left.
-- **The anchor has a second bypass.** A rival that is `feasible` and a whole visibility
-  band clearer is adopted outright, without having to beat `exit_switch_anchor` on time.
-  Banding is the model's statement that the two routes are not comparable on time, and
-  putting the anchor in front of it would veto exactly the clearer-but-longer switch the
-  gate exists to allow. The bypass requires feasibility: letting refused routes jump the
-  anchor made agents ping-pong as bands healed and re-broke.
+  anchor plus the two deadbands are all that hold an agent to an exit.
+- **The sight gate has its own deadband.** `sight_return_margin` (1.25) multiplies the
+  sight a *rival* exit must show, exactly as `fed_return_margin` does for dose. Without
+  it a route sitting near the threshold toggled in and out of feasibility every tick and
+  the agent followed: measured on world100, one exit swung between 2.9 m and 24.2 m of
+  sight on consecutive seconds, producing 169 returns to abandoned exits across 23 agents.
+- **The anchor has a second bypass, and it is narrow.** A rival is adopted outright when
+  it is `feasible`, a whole visibility band clearer, **and** clearer by
+  `min_visibility_m * exit_switch_anchor > current.min_visibility_m` — a real margin in
+  metres, not only a band edge. The feasibility condition stops refused routes jumping the
+  anchor, which made agents ping-pong as bands healed and re-broke; the metres condition
+  stops the band's own quantiser oscillating, which on world100 had two permanently
+  feasible exits, 24.3 m and 34.0 m long, trading places every second, 182 times across
+  26 agents.
 - **The all-refused branch has its own hysteresis.** When nothing is available, the agent
   keeps its least-bad target unless a rival's worst-case K is better by more than
   `fallback_switch_margin` (0.2). Ordering there is banded rather than raw: ordering by
   `k_max` alone once sent an agent 29 m out of its way over 0.2 m of sighting distance,
   neither value usable.
+
+**Churn is reduced, not eliminated.** On world100, `cea33ce` took 223 switches and 182
+returns to abandoned exits across 26 agents down to 59 switches and 38 returns across
+12 agents. The requirement is zero returns, so monotonicity is still violated and any
+`world100` route history will contain returns.
 
 The costs compared by the anchor are `rank_cost`, which is travel time under the gate and
 the additive composite under `"additive"` — so the numbers in the logs above are not
@@ -298,7 +310,14 @@ timer is *less* behaviourally realistic, not more.
   anti-backtracking `reversal_anchor` heuristic — all analysed, none the root cause;
   reverted in favour of the fixes above. Resurrect with a data-grounded test if a scenario
   ever needs them.
-- **Values (0.9 / 3.0):** *not* calibrated; sensitivity sweeps are the path to real numbers.
+- **Bug 5 (gate era):** sight and the visibility band both jittered tick to tick — sight
+  because it was read from the route's worst sample, the band because it was unbounded
+  above and had no hysteresis → **fix (`cea33ce`):** sight from the route's mean K, bands
+  saturating at 3 classes, the band out of the feasible ordering entirely, and
+  `sight_return_margin` (1.25) as a deadband. 182 returns → 38; **not zero.**
+- **Values (0.9 / 3.0 / 0.2 / 1.25 / 10 %):** *not* calibrated — five hysteresis constants
+  now, all chosen to suppress measured churn; sensitivity sweeps are the path to real
+  numbers.
 - **Frequency is not the culprit:** instant re-evaluation is realistic; a longer interval
   hides oscillation without fixing it. Correct rejection semantics + hysteresis are what
   make it stable — confirmed when 5 s still oscillated but graded rejection did not.

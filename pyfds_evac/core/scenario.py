@@ -2200,8 +2200,8 @@ def run_scenario(
                                         # The gate's own diagnostics. Without
                                         # them its decisions cannot be audited
                                         # from its output: composite_cost does
-                                        # not rank under the gate, and the band
-                                        # that does is invisible.
+                                        # not rank under the gate, and the sight
+                                        # that decides feasibility is invisible.
                                         "rank_cost": float(rc.rank_cost),
                                         "k_max_route": float(rc.k_max_route),
                                         "min_visibility_m": float(rc.min_visibility_m),

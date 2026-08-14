@@ -3,6 +3,11 @@
 Five independent reviews of `feat/smoke-gate-routing` @ `ba586d3`
 (architect, correctness, scientist, writer, scenario tester).
 
+**Sections A-E are the reviews as delivered, at that commit.** Read them for the
+argument, not for the current code: several findings have since been fixed, and
+[section F](#f-status-after-the-rework) carries the dispositions. For what the
+shipped model does now, read [route-cost-gate.md](route-cost-gate.md).
+
 ---
 
 ## Verdict
@@ -256,7 +261,9 @@ the least-K fallback, not the gate.
 # F. Status after the rework
 
 Monotone death was dropped and the gate kept self-healing (`e441b03`), then the
-fallback was banded and the anchor bypass narrowed (`f6eede0`).
+fallback was banded and the anchor bypass narrowed (`f6eede0`), then the band
+left the ordering and sight moved from the route's worst sample to its mean
+(`cea33ce`).
 
 | finding | status |
 |---|---|
@@ -270,14 +277,55 @@ fallback was banded and the anchor bypass narrowed (`f6eede0`).
 | A2 provenance comment inverted | **fixed** (`ca49e45`) |
 | annotations, test pins, red test on main | **fixed** (`ca49e45`) |
 | A3 fdsvismap LOS never wired in | **fixed** -- the gate reads `c / K_ave` along the real sight line to the exit's sign, with the cap raised from 30 m to the domain diagonal so it cannot clip a distance-relative test |
-| A1/A2 gate penalises long routes; aggregation unfaithful | **addressed where a sight line exists** -- the LOS test is per-leg optical depth, as in FDS+Evac's `See_door`. The whole-route worst-K criterion survives only as the fallback for exits with no readable sign, and the rejection reason now says which fired (`sight (los)` vs `sight (path)`) |
+| A1/A2 gate penalises long routes; aggregation unfaithful | **partly addressed** -- the LOS test is per-leg optical depth, as in FDS+Evac's `See_door`, and since `cea33ce` the `path` fallback averages K too, so worst-case K no longer refuses anything (it survives only in the fallback switch margin). What remains is the distance: `path` still compares against the whole bending route, so it holds long routes to a stricter standard. The rejection reason says which fired (`sight (los)` vs `sight (path)`) |
 | B7 Dijkstra still routes additively | **open** |
 | B8 `feasible` conflates gate failure with every rejection | **open**, but no longer irreversible |
-| B10 double-gating on the extinction thresholds | **open** |
-| B11 clear-air equivalence at small nonzero K | **open** -- bands are still unbounded above. Measured exact at K = 0 on world100 (7712 rows) and t_junction (4030 rows) |
-| A4 uniform band lattice | **open** |
+| B11 clear-air equivalence at small nonzero K | **addressed** (`cea33ce`) -- bands saturate at 3 classes and no longer order feasible routes, so the term that diverged at small nonzero K is out of the sort. Not re-measured at K = 1e-4; the K = 0 result stands (world100 7712 rows, t_junction 4030 rows) |
+| A4 uniform band lattice | **moot for ordering** (`cea33ce`) -- the lattice still exists but only orders the all-refused fallback |
+| A? sight read from the route's worst sample | **fixed** (`cea33ce`) -- `min_visibility_m` is now `c / k_ave`. `k_max_route` is reported and drives the fallback switch margin only |
+| B10 double-gating on the extinction thresholds | **open** -- still three smoke gates under the gate model |
+| E: gate diagnostics missing from the CSV | **fixed** (`cea33ce`) -- `rank_cost`, `k_max_route`, `min_visibility_m`, `band`, `feasible` are written |
+| monotonicity (returns to abandoned exits) | **open** -- 182 returns across 26 agents became 38 across 12 on world100. The requirement is zero |
 | E: `tests/test_route_gate.py` missing | **fixed** -- the file exists and covers the gate |
 | E: stale docs | **fixed** -- the model reference is now [route-cost-gate.md](route-cost-gate.md); `routing.md`, `model-comparison.md`, `routing-and-signs-notes.md`, `rerouting-oscillation-notes.md` and `usage.md` were brought in line with it. The paper is not done. |
+
+## Removing the band: the prediction and the measurement
+
+The review predicted that taking the visibility band out of the ordering would
+collapse `l_corridor`'s far-exit share toward 0/100 — that the band, not the
+sight gate, was producing the diversion the deck was built to show.
+
+**Measured, the split held at 84/16 against additive's 100/0**, produced by the
+sight gate itself. The prediction is refuted; record it as a prediction, not as
+a property of the model. The re-run is not in
+`<sciebo>/fds-evac-data/l_corridor/evac/`, whose CSVs are the `b3babc0` run;
+the measurement is reported in `cea33ce`'s commit message.
+
+What the band removal did fix is churn: 223 switches and 182 returns to
+abandoned exits across 26 agents on world100 became 59 and 38 across 12. The
+requirement is zero, so this stays open.
+
+## Still open after `cea33ce`
+
+- **B7** `w_smoke` and `w_fed` weight the Phase-1 Dijkstra edge costs under the
+  gate, so two objectives are stacked: smoke prices the path, then gates the
+  exit.
+- **B10** `visibility_extinction_threshold` (0.5 /m) and
+  `impassable_extinction_threshold` (3.0 /m) both still fire under the gate.
+  With the sight criterion that is three smoke gates, not one.
+- **A5** anticipation advances the clock at the unimpeded `base_speed_m_per_s`
+  while a smoke-slowed agent walks at as little as 0.1x it, so the field is
+  sampled systematically too early — and furthest ahead where the smoke is
+  thickest. `foresight_horizon_s = inf` is perfect foresight of the FDS
+  solution.
+- **Uncalibrated hysteresis, now five constants:** `exit_switch_anchor` (0.9),
+  `fallback_switch_margin` (0.2), `fed_return_margin` (0.9),
+  `sight_return_margin` (1.25), `_PATH_IMPROVEMENT_THRESHOLD` (10 %).
+- **Monotonicity:** 38 returns across 12 agents on world100.
+- **The dose veto never fires on the fires we have.** `fed_max_route` peaks at
+  0.0016 on `l_corridor`'s `fire_1MW_west` (counted over 3498 route-cost rows)
+  against a threshold of 1.0. On these decks the gate is wayfinding, not hazard
+  avoidance.
 
 ## Fallback tie-break: nearest, not farthest
 
