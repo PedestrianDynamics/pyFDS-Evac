@@ -547,7 +547,10 @@ class TestRankRoutes:
 
         field = SmokeNearE0()
         config = RouteCostConfig(
-            cost_model="additive", base_speed_m_per_s=1.0, w_smoke=2.0
+            cost_model="additive",
+            anticipate=False,
+            base_speed_m_per_s=1.0,
+            w_smoke=2.0,
         )
         ranked = rank_routes(two_exit_graph, "D0", 0.0, 0.0, field, None, config)
         assert ranked[0].exit_id == "E1"
@@ -1053,7 +1056,10 @@ class TestEvaluateAndReroute:
 
         config = RerouteConfig(
             cost_config=RouteCostConfig(
-                cost_model="additive", base_speed_m_per_s=1.0, w_smoke=2.0
+                cost_model="additive",
+                anticipate=False,
+                base_speed_m_per_s=1.0,
+                w_smoke=2.0,
             )
         )
         wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
@@ -1091,7 +1097,10 @@ class TestEvaluateAndReroute:
 
         config = RerouteConfig(
             cost_config=RouteCostConfig(
-                cost_model="additive", base_speed_m_per_s=1.0, w_smoke=2.0
+                cost_model="additive",
+                anticipate=False,
+                base_speed_m_per_s=1.0,
+                w_smoke=2.0,
             )
         )
         wait_info = _make_wait_info(two_exit_graph, "D0", "E0")

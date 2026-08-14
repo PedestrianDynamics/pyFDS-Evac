@@ -18,8 +18,15 @@ _logger = logging.getLogger(__name__)
 _SECONDS_PER_MINUTE = 60.0
 
 # Clear air is unbounded sight; every route there lands in the top band, so the
-# band never discriminates and the model reduces exactly to nearest-exit.
+# band never discriminates and the model reduces exactly to nearest-exit. Note
+# this holds at K = 0 exactly: at K = 1e-4 sight is 30 km and the band index is
+# in the thousands, so two physically clear routes can still be ordered by band.
 _MAX_BAND = 1_000_000
+
+# A segment is cached per (source, target) and, when anticipating, per whole
+# second of arrival time -- the same edge costs differently to an agent that
+# reaches it a minute later.
+SegmentCacheKey = tuple[str, str] | tuple[str, str, int]
 
 
 @dataclass(frozen=True)
@@ -761,7 +768,7 @@ def _sample_segment_extinction(
     extinction_sampler: ExtinctionSampler,
     step_m: float,
     waypoints: list[tuple[float, float]] | None = None,
-) -> tuple[float, float]:
+) -> tuple[float, float, float]:
     """Sample extinction along edge geometry.
 
     Uses the polyline waypoints if provided, otherwise falls back to the
@@ -965,7 +972,7 @@ def evaluate_route(
     fed_rate_sampler: FedRateSampler | None,
     config: RouteCostConfig,
     *,
-    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
     current_exit: str | None = None,
     agent_position: tuple[float, float] | None = None,
@@ -1092,9 +1099,17 @@ def evaluate_route(
         reason = f"FED_max {fed_max:.3f} > {fed_threshold:.3f}"
 
     # Sight gate: the distance still to walk has to be one the agent can see a
-    # useful fraction of. FDS+Evac applies the same test to a door before it
-    # can be chosen; being relative to distance is what lets the same smoke
+    # useful fraction of. Being relative to distance is what lets the same smoke
     # allow a near exit and refuse a far one.
+    #
+    # The S > 0.5 * d form is FDS+Evac's, but not its primary door test: there
+    # a door is gated on an absolute K_ave < ABS(FED_DOOR_CRIT) (0.03 /m), and
+    # the 0.5 * d rule is the last resort reached only when no smoke-free door
+    # remains (evac.f90, Change_Target_Door). FDS+Evac also measures K_ave along
+    # the straight sight line to that one door, which makes the test a statement
+    # about optical depth; comparing a worst-case K against a whole multi-leg
+    # route is a stricter reading that penalises long routes for their length.
+    # See docs -- this is the open question in the model, not settled practice.
     feasible = not rejected
     band = _visibility_band(min_visibility, config.band_width_m)
     if config.cost_model == "gate":
@@ -1135,7 +1150,7 @@ def rank_routes(
     fed_rate_sampler: FedRateSampler | None,
     config: RouteCostConfig,
     *,
-    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
     cognitive_map=None,
     agent_position: tuple[float, float] | None = None,
@@ -1517,10 +1532,16 @@ def _apply_exit_death(
             route_state.dead_exits.add(rc.exit_id)
 
     alive = [rc for rc in ranked if rc.exit_id not in route_state.dead_exits]
-    if alive:
+    if any(not rc.rejected for rc in alive):
         return alive
 
-    least_bad = sorted(ranked, key=lambda rc: (rc.k_max_route, rc.travel_time_s))
+    # Either every exit is dead, or the only un-rejected route rank_routes left
+    # us belongs to a dead one and has just been filtered out. Both cases need a
+    # target: fall back over whatever survives, or over the full list when
+    # nothing does.
+    least_bad = sorted(
+        alive or ranked, key=lambda rc: (rc.k_max_route, rc.travel_time_s)
+    )
     current = next(
         (rc for rc in least_bad if rc.exit_id == route_state.current_exit), None
     )
@@ -1531,10 +1552,11 @@ def _apply_exit_death(
                 rc for rc in least_bad if rc.exit_id != current.exit_id
             ]
 
+    scope = "every exit dead" if not alive else "no route passes"
     head = replace(
         least_bad[0],
         rejected=False,
-        rejection_reason=f"fallback: every exit dead ({least_bad[0].rejection_reason})",
+        rejection_reason=f"fallback: {scope} ({least_bad[0].rejection_reason})",
     )
     return [head] + least_bad[1:]
 
@@ -1549,7 +1571,7 @@ def evaluate_and_reroute(
     extinction_sampler: ExtinctionSampler,
     fed_rate_sampler: FedRateSampler | None,
     config: RerouteConfig,
-    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     *,
     exit_counts: dict[str, int] | None = None,
     cognitive_map=None,

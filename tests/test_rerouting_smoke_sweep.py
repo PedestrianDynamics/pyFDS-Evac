@@ -94,6 +94,7 @@ def _costs(graph, field, w_smoke: float) -> dict[str, float]:
         None,
         RouteCostConfig(
             cost_model="additive",
+            anticipate=False,
             base_speed_m_per_s=1.3,
             w_smoke=w_smoke,
             w_fed=0.0,
@@ -113,6 +114,7 @@ def _best(graph, field, w_smoke: float) -> str:
         None,
         RouteCostConfig(
             cost_model="additive",
+            anticipate=False,
             base_speed_m_per_s=1.3,
             w_smoke=w_smoke,
             w_fed=0.0,
