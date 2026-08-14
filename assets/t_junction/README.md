@@ -32,12 +32,12 @@ gases. The fire ramps up over 60 seconds.
 
 | Property | Value |
 |----------|-------|
-| Fuel | PVC cable (C2H3Cl) |
-| Peak HRR | 1 MW (500 kW/m^2 x 2 m^2) |
+| Fuel | PVC monomer C2H3Cl, explicit lumped reaction |
+| Peak HRR | 2 MW (1000 kW/m^2 x 2 m^2) |
 | Soot yield | 0.172 |
-| CO yield | 0.063 |
-| HCN yield | 0.006 |
-| HCl yield | 0.48 |
+| CO yield | 0.150 (under-ventilated) |
+| HCl yield | 0.583 (all the chlorine) |
+| HCN yield | none -- PVC carries no nitrogen |
 | Ramp-up | 0 to 100% over 60 s |
 | Ceiling height | 3 m |
 | Grid | 0.25 m (120 x 52 x 12 cells) |
@@ -64,13 +64,20 @@ Frantzich-Nilsson correlation.
 
 **FED incapacitation.** The 6 m branch narrows to a 3 m corridor,
 creating a bottleneck at the junction. Agents queuing in heavy smoke
-accumulate CO, HCN, and HCl exposure. The high HCl yield from PVC
-drives the irritant term, while CO and O2 depletion contribute to
-narcosis. Some agents reach FED = 1.0 and become incapacitated.
+accumulate CO and HCl exposure. The high HCl yield from PVC drives the
+irritant term, while CO and O2 depletion contribute to narcosis. Measured
+over 150 agents at 2 MW: FED median 0.16 and max 0.65, FIC clustered at
+4-6 against a threshold of 1.0, five agents incapacitated by the
+probabilistic per-agent thresholds, and 35 of 150 out within 300 s
+against 144 in clear air.
 
 **Rerouting.** Exit B is initially closer (10 m vs 20 m), so agents
-prefer it. As smoke builds and drifts right, the route cost to Exit B
-increases and agents switch to Exit A.
+prefer it. As smoke builds, the route cost to Exit B rises and agents
+switch to Exit A: 35 smoke_reroute events against none in clear air.
+They are not one-way, though -- 15 go B to A in the first 30 s, then 20
+go A to B around 50-70 s as the layer spreads down the 20 m corridor and
+degrades that route too. After 70 s no route is better than another and
+the switching stops.
 
 ## Running
 
