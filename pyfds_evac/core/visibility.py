@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 from pathlib import Path
 from typing import Protocol
 
@@ -370,6 +371,17 @@ def _make_clear_air_meta(
     return meta
 
 
+def _sign_positions(
+    sign_descriptors: dict[str, dict],
+) -> dict[str, tuple[float, float]]:
+    """Where each sign is, for distance queries that must not need the backend."""
+    return {
+        node_id: (float(sign["x"]), float(sign["y"]))
+        for node_id, sign in sign_descriptors.items()
+        if sign.get("x") is not None and sign.get("y") is not None
+    }
+
+
 class VisibilityModel:
     """Wraps a pre-computed VisMap to answer per-node sign-visibility queries.
 
@@ -415,6 +427,7 @@ class VisibilityModel:
         self._wp_ids: dict[str, int] = {
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
+        self._sign_xy = _sign_positions(sign_descriptors)
 
     @classmethod
     def clear_air(
@@ -512,6 +525,7 @@ class VisibilityModel:
         model._wp_ids = {
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
+        model._sign_xy = _sign_positions(sign_descriptors)
         return model
 
     def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
@@ -561,14 +575,15 @@ class VisibilityModel:
         return metres if metres > 0.0 else None
 
     def distance_to_node(self, x: float, y: float, node_id: str) -> float | None:
-        """Straight-line distance to the sign at *node_id*, or None."""
-        wp_id = self._wp_ids.get(node_id)
-        if wp_id is None:
+        """Straight-line distance to the sign at *node_id*, or None.
+
+        Computed from the descriptor rather than asked of the backend: a cache
+        loaded from disk holds arrays, not the VisMap that could answer, and
+        this is the same Euclidean distance ``get_distance_to_wp`` returns.
+        Reading it from the backend meant a cached run had no distance, so the
+        sight test had nothing to compare against and silently fell back.
+        """
+        sign = self._sign_xy.get(node_id)
+        if sign is None:
             return None
-        getter = getattr(self._vis, "get_distance_to_wp", None)
-        if getter is None:
-            return None
-        try:
-            return float(getter(x=x, y=y, waypoint_id=wp_id))
-        except (RuntimeError, IndexError, KeyError):
-            return None
+        return float(math.hypot(sign[0] - x, sign[1] - y))
