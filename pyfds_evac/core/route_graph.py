@@ -1172,55 +1172,43 @@ def evaluate_route(
     # Change_Target_Door). Being relative to distance is what lets the same
     # smoke allow a near exit and refuse a far one.
     #
-    # Measured one of two ways, and never both for the same agent in the same
-    # run if a visibility model exists:
+    # One estimator, applied to every candidate: c / K_ave over the route
+    # polyline against the distance still to walk. With k_ave the criterion is
+    # exactly an optical depth, tau = K_ave * L <= 2c, which is the same
+    # statement FDS+Evac's See_door makes along its sight line -- so the two are
+    # the same form, and the polyline is the one available for every exit.
     #
-    # los  -- fdsvismap's sighting distance toward the exit's own sign: Jin's
-    #         c / K_ave with K_ave averaged along the real, obstruction-aware
-    #         line of sight, against the straight-line distance to that sign.
-    #         This is FDS+Evac's See_door quantity, so the test is a statement
-    #         about optical depth along one leg, tau < 2c.
-    # path -- c / K_ave over the route polyline against the whole remaining
-    #         length. Used only when there is no visibility model at all.
+    # fdsvismap's line of sight is *not* used to gate, though it is the more
+    # faithful measurement, because it is only defined where a sign resolves.
+    # Selecting the criterion per exit made sign geometry decide which exits
+    # were gated at all: measured on world100, one exit was sight-tested 43
+    # times and fell back 2095 times, and moving a sign 2 m would change which
+    # exits are exempt. Mixing them was worse still -- the same 22 m route read
+    # 9.9 m on one tick and 68.3 m on the next as the line of sight resolved,
+    # and routes flipped feasibility as agents walked past obstructions.
     #
-    # When a model exists but returns nothing -- no sign descriptor, concealed,
-    # or the agent is behind the sign -- the sight gate simply does not apply.
-    # Substituting the polyline number there was measured to be worse than not
-    # testing: the two estimators are not comparable (the same 22 m route
-    # reported 9.9 m of sight on one tick and 68.3 m on the next, purely because
-    # the sight line resolved), so a route flipped feasibility as the agent
-    # walked past an obstruction and the crowd followed it. Not seeing a sign is
-    # a statement about wayfinding, not about whether the route can be walked.
+    # Not seeing a sign is a statement about wayfinding, not about whether a
+    # route can be walked, so it belongs in the cognitive map, not in this gate.
     feasible = not rejected
     band = _visibility_band(min_visibility, config.band_width_m)
     if config.cost_model == "gate":
-        sight, needed, how = min_visibility, None, "path"
-        # Where the agent looks from. Separate from agent_position on purpose:
-        # agent_position also re-measures every route from that point, so an
-        # agent standing on its spawn node can supply an eye position for the
-        # sight line without altering the distances.
-        eye = los_position or agent_position
-        if visibility_model is not None and eye is not None:
-            los = visibility_model.visibility_to_node(time_s, eye[0], eye[1], exit_id)
-            dist = visibility_model.distance_to_node(eye[0], eye[1], exit_id)
-            if los is None or dist is None:
-                needed = -math.inf  # no sight line to read: no sight test
-                how = "none"
-            else:
-                sight, needed, how = los, config.sight_distance_fraction * dist, "los"
-                min_visibility = los
-                band = _visibility_band(los, config.band_width_m)
-        if needed is None:
-            needed = config.sight_distance_fraction * effective_length
-        if needed > 0 and not is_current and current_exit is not None:
+        sight = min_visibility
+        needed = config.sight_distance_fraction * effective_length
+        # A rival exit has to clear the criterion by a margin before the agent
+        # will switch onto it. The reason string says so, because reading
+        # "6.8 m < 8.4 m (0.5 x 13.4 m)" and finding 0.5 x 13.4 = 6.7 sent a
+        # reviewer to the wrong conclusion about which rule refused the route.
+        needed_scaled = not is_current and current_exit is not None
+        if needed_scaled:
             needed *= config.sight_return_margin
+        how = "path"
         if sight < needed:
             feasible = False
             rejected = True
             reason = (
                 f"sight ({how}) {sight:.1f} m < {needed:.1f} m "
-                f"({config.sight_distance_fraction:g} x "
-                f"{dist if how == 'los' else effective_length:.1f} m)"
+                f"({config.sight_distance_fraction:g} x {effective_length:.1f} m"
+                f"{' x ' + format(config.sight_return_margin, 'g') if needed_scaled else ''})"
             )
 
     if config.cost_model == "gate":
