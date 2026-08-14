@@ -250,3 +250,48 @@ the least-K fallback, not the gate.
   model is currently undiagnosable from its own output.
 - Operational: `--vis-cache` is a **no-op for `familiarity: full`/`1.0` decks`**;
   dropping it turned a 10+ min world100 precompute into a ~5 min run.
+
+---
+
+# F. Status after the rework
+
+Monotone death was dropped and the gate kept self-healing (`e441b03`), then the
+fallback was banded and the anchor bypass narrowed (`f6eede0`).
+
+| finding | status |
+|---|---|
+| B3 permanent death cancels self-healing | **fixed** -- `dead_exits` and `_apply_exit_death` removed; refusal is never remembered |
+| B4 total death permanently swaps the objective | **fixed** with B3 |
+| B1 monotonicity violated in the all-dead branch | **moot** -- there is no death to be monotone about |
+| B2 which exit dies is decided by 1 Hz noise | **moot** with B3 |
+| B9 stalled tick | **fixed** (`ca49e45`) |
+| B5 `k_max` ignores `first_share` | **fixed** -- the first segment is resampled from the agent's position, outside the shared cache |
+| B6 anchor vetoes the band ordering | **fixed** -- one `rank_cost` read by ordering, anchor and the same-exit test; a band-clearer *feasible* rival bypasses the anchor |
+| A2 provenance comment inverted | **fixed** (`ca49e45`) |
+| annotations, test pins, red test on main | **fixed** (`ca49e45`) |
+| B7 Dijkstra still routes additively | **open** |
+| B8 `feasible` conflates gate failure with every rejection | **open**, but no longer irreversible |
+| B10 double-gating on the extinction thresholds | **open** |
+| B11 clear-air equivalence at small nonzero K | **open** -- bands are still unbounded above. Measured exact at K = 0 on world100 (7712 rows) and t_junction (4030 rows) |
+| A1 the gate penalises long routes for their length | **open** -- the design question |
+| A3 fdsvismap LOS never wired in | **open** |
+| A4 uniform band lattice | **open** |
+
+## Fallback tie-break: nearest, not farthest
+
+The original brainstorm specified "the smallest k wins; the same k, the farthest
+wins". The first half is implemented (banded -- see B-list above); the second is
+**not**, deliberately, and the user confirmed nearest on 2026-08-14.
+
+Farthest-wins is what produced the measured inversion: agent 99 sent to a 51 m
+exit over a 22 m one on 2.0 m of sight against 1.8 m. Once ties are banded rather
+than exact, they are common rather than measure-zero, so the tie-break decides
+real cases and "farthest" systematically sends agents the long way round inside
+a band. A deliberate move-away-from-the-fire rule would be a different
+mechanism -- distance from the fire, not route length -- and is not implemented.
+
+## What t_junction is for now
+
+Not routing. Its 2 MW PVC fire drives route K to 10.7 /m and refuses everything.
+Keep it as a lethality / speed-collapse case and use `assets/l_corridor` (near
+exit smokes first, long way round stays clean) for route-choice questions.
