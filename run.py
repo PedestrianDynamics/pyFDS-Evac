@@ -288,6 +288,8 @@ def _write_route_cost_history_csv(rows, output_path: str) -> None:
         "k_max_route",
         "min_visibility_m",
         "band",
+        "k_leg_max",
+        "clean",
         "feasible",
         "rejected",
         "rejection_reason",

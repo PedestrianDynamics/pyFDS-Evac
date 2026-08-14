@@ -671,6 +671,24 @@ class RouteCostConfig:
     # criterion (evac.f90: "Check that visibility > 0.5*distance to the door").
     # Being distance-relative is the point: haze 5 m from an exit is usable and
     # the same haze at 40 m is not, which no absolute extinction limit can say.
+    # Tier 1: an exit is "clean" while the smokiest leg of the route to it
+    # stays under this, and clean exits are preferred outright over smoky ones
+    # however far they are -- FDS+Evac's primary door rule, which minimises time
+    # among doors satisfying K_ave < ABS(FED_DOOR_CRIT) (evac.f90:16265 and
+    # :16272). The value is not chosen here: FED_DOOR_CRIT = -100 becomes
+    # 3.0/100 at evac.f90:5262, i.e. Jin's S = 3/K at a 100 m sighting distance.
+    #
+    # This is what lets a long clean route win. Ranking on time cannot: the
+    # Frantzich-Nilsson law gives only beta/alpha = -0.081 per unit K, so at a
+    # realistic K ~ 1 the cleanest exit in a hall earns under 1% more speed and
+    # can never repay a detour.
+    clean_extinction_threshold: float = 0.03
+    # Hysteresis on tier membership, applied to the exit the agent is already
+    # heading for. A bare threshold on K is what the retired
+    # visibility_extinction_threshold was, and it toggled every tick; here a
+    # toggle is worse than a reordering, because leaving the tier changes which
+    # objective is in force and the target jumps.
+    clean_exit_margin: float = 0.8
     sight_distance_fraction: float = 0.5
     # Asymmetric sight gate, mirroring fed_return_margin. A route the agent is
     # already on is judged against the bare criterion; a rival has to clear it
@@ -713,6 +731,8 @@ class RouteCostConfig:
         routing = routing or {}
         return cls(
             cost_model=routing.get("cost_model", "gate"),
+            clean_extinction_threshold=routing.get("clean_extinction_threshold", 0.03),
+            clean_exit_margin=routing.get("clean_exit_margin", 0.8),
             sight_distance_fraction=routing.get("sight_distance_fraction", 0.5),
             sight_return_margin=routing.get("sight_return_margin", 1.25),
             sign_contrast_c=routing.get("sign_contrast_c", 3.0),
@@ -779,6 +799,10 @@ class RouteCost:
     # place. Under "additive" it is the composite; under "gate" it is time,
     # which only decides within a visibility band.
     rank_cost: float = 0.0
+    # Tier 1 membership: the smokiest leg of this route is below the clean-door
+    # criterion. Clean exits are preferred outright; time decides among them.
+    k_leg_max: float = 0.0
+    clean: bool = True
 
 
 def _sample_segment_extinction(
@@ -1097,10 +1121,11 @@ def evaluate_route(
     # written to cached_segments: those entries are shared between agents in one
     # pass and this stretch belongs to one agent's position.
     first_k_max = segments[0].k_max if segments else 0.0
+    first_k_avg = segments[0].k_avg if segments else 0.0
     if agent_position is not None and first_share < 1.0 and len(path) >= 2:
         next_node = graph.nodes.get(path[1])
         if next_node is not None:
-            _, first_k_max = _los_stats(
+            first_k_avg, first_k_max = _los_stats(
                 agent_position[0],
                 agent_position[1],
                 next_node.centroid_x,
@@ -1112,6 +1137,17 @@ def evaluate_route(
             )
     k_max = max(
         [first_k_max] + [s.k_max for _, s in weighted[1:]],
+        default=0.0,
+    )
+    # The smokiest *leg* of the route, each leg taken as its own mean. Not the
+    # route mean: that dilutes a smoky stretch with however much clear corridor
+    # follows it, so a long route can look cleaner than a short one by being
+    # long -- the mirror of the length penalty this model was built to remove.
+    # Not the worst *sample* either, which is the step function that made the
+    # sighting distance jump between ticks. FDS+Evac applies its 0.03 /m to
+    # K_ave_Door, a per-door average, for the same reason.
+    k_leg_max = max(
+        [first_k_avg] + [s.k_avg for _, s in weighted[1:]],
         default=0.0,
     )
     # Sight is estimated from the route's *mean* extinction, not its worst
@@ -1219,6 +1255,13 @@ def evaluate_route(
     else:
         rank_cost = composite
 
+    # Tier 1. The exit the agent is already heading for keeps its place in the
+    # clean set a little past the criterion, so membership does not flicker.
+    clean_limit = config.clean_extinction_threshold
+    if is_current:
+        clean_limit /= max(config.clean_exit_margin, 1e-9)
+    clean = k_leg_max <= clean_limit
+
     return RouteCost(
         exit_id=exit_id,
         path=path,
@@ -1236,6 +1279,8 @@ def evaluate_route(
         band=band,
         feasible=feasible,
         rank_cost=rank_cost,
+        k_leg_max=k_leg_max,
+        clean=clean,
     )
 
 
@@ -1372,8 +1417,16 @@ def rank_routes(
     # with any trace of smoke gets a finite S = c/K while one with none got
     # _MAX_BAND. Smoke says which exits exist; it does not also get to say
     # which of the survivors is nearer.
-    def sort_key(rc: RouteCost) -> tuple[int, float, int]:
-        return (1 if rc.rejected else 0, rc.rank_cost, len(rc.path))
+    prefer_clean = config.cost_model == "gate"
+
+    def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
+        # Clean first, near second. A route whose smokiest leg is below the
+        # clean-door criterion outranks every smoky one however far it is; among
+        # equals, time decides. When no exit is clean the tier is empty, it
+        # discriminates nothing, and the ordering is time alone -- which is what
+        # happens for most of a real fire.
+        tier = 0 if (rc.clean or not prefer_clean) else 1
+        return (1 if rc.rejected else 0, tier, rc.rank_cost, len(rc.path))
 
     costs.sort(key=sort_key)
 
