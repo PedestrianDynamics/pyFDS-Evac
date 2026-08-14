@@ -344,7 +344,56 @@ cost formulas, and API reference, and
 working notes on exit choice and where the exit-choice research papers
 disagree with each other.
 
-The routing system implements smoke-aware path planning with dynamic rerouting:
+### How smoke enters route choice
+
+Two models, selected per deck with `routing.cost_model`.
+
+**`"gate"` (default).** Distance is the objective; smoke decides *which exits
+are available*. An exit is refused while the agent cannot see a useful fraction
+of the way to it -- `sight_distance_fraction`, 0.5 -- and among the exits that
+survive, the nearest in travel time wins. A route a whole visibility *band*
+clearer (`band_width_m`, 10 m) wins outright, so a genuinely clearer way round
+beats a shorter one but a few centimetres of visibility never sends anyone on a
+detour. In clear air nothing is ever refused and every route lands in the top
+band, so the model reduces to nearest-exit.
+
+The sighting distance is Jin's `S = c / K` with `c = 3` for light-reflecting
+signage (`sign_contrast_c`). Where the exit's sign is in line of sight it is read
+from the visibility model, which averages K along the real, obstruction-aware
+sight line -- the same quantity FDS+Evac's `See_door` returns, so the test is a
+statement about optical depth along one leg. Where there is no sight line (no
+sign, concealed, or the agent is behind the sign) it falls back to the worst K
+over the route polyline against the whole remaining length, which is a stricter
+reading. The rejection reason records which fired: `sight (los)` or
+`sight (path)`.
+
+Refusals are **not remembered**. The criterion is relative to the distance still
+to walk, so it relaxes on approach: smoke that refuses a door at 40 m accepts it
+at 2 m. When every route is refused the agent still has to move, so it takes the
+least-bad one -- banded, then nearest -- and holds it unless a rival's worst
+stretch is clearly milder (`fallback_switch_margin`). Churn is held down by the
+exit-switch anchor, which under this model is the only protection there is.
+
+Each segment is priced at the time the agent would *arrive* there (`anticipate`,
+`foresight_horizon_s`), using unimpeded speed.
+
+**`"additive"`.** The original model: smoke is a toll per metre walked,
+`effective_length * (1 + w_smoke * k_ave) + w_fed * fed_max`. Both terms scale
+with route length, so a long clean detour pays for its length twice and can
+never win -- which is why the gate exists. Pin it with
+`{"cost_model": "additive", "anticipate": false}`; `anticipate` is independent
+of the model, so the pin needs both.
+
+**FIC does not route** under either model. It drives the Purser slowdown and
+incapacitation only. FIC and the sight gate are driven by the same smoke, so
+routing on both would double-count.
+
+Full derivation, provenance against FDS+Evac / JPSfire / Simulex, and the open
+questions are in [docs/gate-model-review-notes.md](docs/gate-model-review-notes.md).
+`assets/l_corridor` is the deck the model is judged on -- a near exit behind the
+fire and a clean 58 m way round -- and its results are in the sciebo case folder.
+
+### Components
 
 - **StageGraph**: Dijkstra-based shortest-path routing on a graph of
   stages (distributions, checkpoints, exits)
