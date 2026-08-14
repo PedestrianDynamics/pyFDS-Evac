@@ -3,7 +3,7 @@
   "config": {
     "simulation_settings": {
       "simulationParams": {
-        "max_simulation_time": 600,
+        "max_simulation_time": 400.0,
         "dt": 0.05,
         "model_type": "WarpDriverModel",
         "strength_neighbor_repulsion": 2.6,
@@ -104,10 +104,10 @@
         "percentage": null,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
-        "premovement_distribution": "gamma",
-        "premovement_param_a": null,
-        "premovement_param_b": null,
+        "use_premovement": true,
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 60.0,
+        "premovement_param_b": 60.0,
         "premovement_seed": null,
         "radius_distribution": "constant",
         "v0_distribution": "constant",

@@ -1,4 +1,4 @@
-&HEAD CHID='world_77', TITLE='Generated from JuPedSim walkable WKT' /
+&HEAD CHID='world_77_fire', TITLE='Generated from JuPedSim walkable WKT' /
 ! --- 6 meshes (50x51x20 cells each), one per MPI process ---
 &MESH IJK=50,51,20, XB=-11.250,-3.750,-7.650,0.000,0.0,3.0 /
 &MESH IJK=50,51,20, XB=-3.750,3.750,-7.650,0.000,0.0,3.0 /
@@ -6,7 +6,7 @@
 &MESH IJK=50,51,20, XB=-11.250,-3.750,0.000,7.650,0.0,3.0 /
 &MESH IJK=50,51,20, XB=-3.750,3.750,0.000,7.650,0.0,3.0 /
 &MESH IJK=50,51,20, XB=3.750,11.250,0.000,7.650,0.0,3.0 /
-&TIME T_END=120.0 /
+&TIME T_END=100.0 /
 &MISC TMPA=20.0 /
 
 ! --- walls: complement of the walkable area (61 OBSTs) ---
@@ -74,8 +74,8 @@
 
 ! --- fire (edit to taste; not derived from geometry) ---
 &REAC FUEL='PROPANE', SOOT_YIELD=0.06, CO_YIELD=0.01 /
-&VENT XB=-2.250,-1.750,2.750,3.250,0.0,0.0, SURF_ID='BURNER' /
-&SURF ID='BURNER', HRRPUA=800.0, COLOR='RED', RAMP_Q='qramp' /
+&VENT XB=-2.500,-1.500,3.500,4.500,0.0,0.0, SURF_ID='BURNER' /
+&SURF ID='BURNER', HRRPUA=2000.0, COLOR='RED', RAMP_Q='qramp' /
 &RAMP ID='qramp', T=0.0, F=0.0 /
 &RAMP ID='qramp', T=10.0, F=1.0 /
 
