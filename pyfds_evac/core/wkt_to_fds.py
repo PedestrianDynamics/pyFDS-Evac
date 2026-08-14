@@ -174,14 +174,20 @@ def _obst_boxes(walkable, dx, margin_cells):
     return boxes, (mx0, my0, mx1, my1, ni, nj)
 
 
-def _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m, nd) -> str:
-    """A floor-vent burner at the walkable centroid plus the pyFDS-Evac slices.
+def _fire_and_slices(
+    walkable, slice_height_m, hrrpua, burner_size_m, nd, fire_xy=None
+) -> str:
+    """A floor-vent burner plus the pyFDS-Evac slices.
 
     The fire is a floor ``&VENT`` (z=0), not a raised ``&OBST`` -- an obstructing
     burner would carve a non-walkable patch out of the very void this deck is
     meant to mirror from the WKT.
+
+    *fire_xy* places the burner; without one it sits at a point inside the
+    walkable area, which is a placeholder rather than a fire scenario. Where the
+    fire starts decides which routes it cuts, so it is worth choosing.
     """
-    c = walkable.representative_point()
+    c = _burner_centre(walkable, fire_xy, burner_size_m)
     half = burner_size_m / 2.0
     lines = [
         "! --- fire (edit to taste; not derived from geometry) ---",
@@ -204,6 +210,63 @@ def _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m, nd) -> str
         )
     lines.append("&DUMP DT_SLCF=2.0 /")
     return "\n".join(lines)
+
+
+def _burner_centre(walkable, fire_xy, burner_size_m):
+    """Validate a requested burner centre, or fall back to any interior point."""
+    if fire_xy is None:
+        return walkable.representative_point()
+    from shapely.geometry import Point
+
+    centre = Point(*fire_xy)
+    footprint = box(
+        centre.x - burner_size_m / 2,
+        centre.y - burner_size_m / 2,
+        centre.x + burner_size_m / 2,
+        centre.y + burner_size_m / 2,
+    )
+    if not walkable.contains(footprint):
+        raise ValueError(
+            f"burner at ({centre.x}, {centre.y}) with size {burner_size_m} m does "
+            "not fit inside the walkable area; a burner under an OBST would be "
+            "sealed off from the space the deck models"
+        )
+    return centre
+
+
+def _mesh_lines(meshes, ni, nj, nk, mx0, my0, mx1, my1, z_max, dx, nd) -> list[str]:
+    """One ``&MESH`` per tile, splitting the domain on cell boundaries.
+
+    Tiles must divide the cell counts exactly: a mesh boundary that fell between
+    cells would leave FDS interpolating across a seam it cannot align.
+    """
+    nx, ny = meshes
+    if nx < 1 or ny < 1:
+        raise ValueError(f"meshes must be positive, got {meshes}")
+    if ni % nx or nj % ny:
+        raise ValueError(
+            f"cannot split {ni}x{nj} cells into {nx}x{ny} meshes evenly; "
+            f"pick divisors of {ni} and {nj}, or a different dx"
+        )
+    if nx == 1 and ny == 1:
+        return [
+            f"&MESH IJK={ni},{nj},{nk}, XB={mx0:.{nd}f},{mx1:.{nd}f},"
+            f"{my0:.{nd}f},{my1:.{nd}f},0.0,{z_max} /"
+        ]
+    per_i, per_j = ni // nx, nj // ny
+    out = [
+        f"! --- {nx * ny} meshes ({per_i}x{per_j}x{nk} cells each), one per MPI process ---"
+    ]
+    for jt in range(ny):
+        for it in range(nx):
+            x0 = mx0 + it * per_i * dx
+            y0 = my0 + jt * per_j * dx
+            out.append(
+                f"&MESH IJK={per_i},{per_j},{nk}, XB={x0:.{nd}f},"
+                f"{x0 + per_i * dx:.{nd}f},{y0:.{nd}f},{y0 + per_j * dx:.{nd}f},"
+                f"0.0,{z_max} /"
+            )
+    return out
 
 
 def resolve_dx(walkable: BaseGeometry, dx: float | None) -> float:
@@ -256,6 +319,8 @@ def wkt_to_fds(
     slice_height_m: float = 2.0,
     hrrpua: float = 800.0,
     burner_size_m: float = 0.5,
+    fire_xy: tuple[float, float] | None = None,
+    meshes: tuple[int, int] = (1, 1),
     t_end: float = 120.0,
 ) -> str:
     """Return an FDS input deck whose walkable void matches the given WKT.
@@ -265,6 +330,10 @@ def wkt_to_fds(
     ``include_fire`` (default) a burner and the pyFDS-Evac analysis slices
     (extinction + CO/CO2/O2) are appended so the deck runs end-to-end; set it
     False for a geometry-only deck (``&MESH`` + ``&OBST`` walls).
+
+    ``meshes`` splits the domain into that many meshes in x and y, one per MPI
+    process.  FDS parallelises over meshes and nothing else, so a single-mesh
+    deck runs on one core however many the machine has.
     """
     if include_fire and slice_height_m >= z_max:
         raise ValueError(
@@ -279,8 +348,7 @@ def wkt_to_fds(
 
     lines = [
         f"&HEAD CHID='{chid}', TITLE='Generated from JuPedSim walkable WKT' /",
-        f"&MESH IJK={ni},{nj},{nk}, XB={mx0:.{nd}f},{mx1:.{nd}f},"
-        f"{my0:.{nd}f},{my1:.{nd}f},0.0,{z_max} /",
+        *_mesh_lines(meshes, ni, nj, nk, mx0, my0, mx1, my1, z_max, dx, nd),
         f"&TIME T_END={t_end} /",
         "&MISC TMPA=20.0 /",
         "",
@@ -293,7 +361,9 @@ def wkt_to_fds(
     if include_fire:
         lines += [
             "",
-            _fire_and_slices(walkable, slice_height_m, hrrpua, burner_size_m, nd),
+            _fire_and_slices(
+                walkable, slice_height_m, hrrpua, burner_size_m, nd, fire_xy
+            ),
         ]
     lines += ["", "&TAIL /", ""]
     return "\n".join(lines)
@@ -316,6 +386,24 @@ if __name__ == "__main__":  # pragma: no cover
     parser.add_argument("--z-max", type=float, default=3.0)
     parser.add_argument("--chid", default="from_wkt")
     parser.add_argument("--geometry-only", action="store_true")
+    parser.add_argument(
+        "--fire-xy",
+        type=float,
+        nargs=2,
+        metavar=("X", "Y"),
+        default=None,
+        help="burner centre (default: any point inside the walkable area)",
+    )
+    parser.add_argument(
+        "--meshes",
+        type=int,
+        nargs=2,
+        metavar=("NX", "NY"),
+        default=(1, 1),
+        help="split the domain into NX by NY meshes, one per MPI process",
+    )
+    parser.add_argument("--hrrpua", type=float, default=800.0)
+    parser.add_argument("--t-end", type=float, default=120.0)
     args = parser.parse_args()
     text = pathlib.Path(args.wkt_file).read_text(encoding="utf-8").strip()
     print(
@@ -325,5 +413,9 @@ if __name__ == "__main__":  # pragma: no cover
             z_max=args.z_max,
             chid=args.chid,
             include_fire=not args.geometry_only,
+            fire_xy=tuple(args.fire_xy) if args.fire_xy else None,
+            meshes=tuple(args.meshes),
+            hrrpua=args.hrrpua,
+            t_end=args.t_end,
         )
     )

@@ -424,6 +424,43 @@ uv run run.py \
 Rejected routes are recorded in the route-cost CSV with
 `rejected=True, rejection_reason=next_node_not_visible`.
 
+#### Which visibility setting am I running?
+
+Sight gating decides how an agent comes to know a node, and the flags choose
+between three different scenarios. Nothing here changes the physics; it changes
+what the agent is allowed to perceive.
+
+| invocation | model | the scenario it means |
+|---|---|---|
+| *(no flags)*, deck has discovery agents | clear air | **no fire.** Agents learn a node by seeing its sign: walls occlude, sign facing and contrast apply |
+| *(no flags)*, every agent `familiarity = 1.0` | none built | agents hold the whole graph from t=0 and never consult it, so building one would cost time and change nothing |
+| `--clear-air-visibility` | clear air, forced | as above, on a deck whose agents are fully familiar -- only useful for comparison runs |
+| `--no-visibility` | none | **not a fire scenario.** The gate is absent, so an agent learns every neighbour of each node it reaches, by contact rather than by sight |
+| `--fds-dir DIR` | none for sight | smoke drives speed reduction and FED, but what an agent can *see* is ungated |
+| `--fds-dir DIR --vis-cache PATH` | smoke | **the coupled run.** Sight gated by that fire's extinction field: smoke hides signs, so the map stops growing |
+| `--vis-cache PATH` (no `--fds-dir`) | clear air, cached | same as the default, with the grid reused between runs |
+
+Rejected combinations:
+
+| combination | why |
+|---|---|
+| `--clear-air-visibility --fds-dir` | claims clear sight while a fire burns -- the one combination that silently produces a wrong answer |
+| `--clear-air-visibility --no-visibility` | contradictory |
+| `--vis-cache` or `--clear-air-visibility` with `--no-enable-rerouting` | a sight gate with nothing to act on |
+
+`--vis-cell-size` sets the grid the scene is rasterised at (default 0.25 m). A
+wall thinner than one cell stops occluding, so keep it below the thinnest wall
+that must block sight.
+
+The three settings are genuinely different agents. Measured on
+`assets/world_100`, one agent, `familiarity = 0`, same seed:
+
+| setting | evacuation | route switches | cognitive map |
+|---|---|---|---|
+| `--no-visibility` | 58.5 s | 0 | learns each node's neighbours on arrival |
+| clear air (default) | 188.8 s | 31, mostly `explore` | grows 3 -> 28 nodes |
+| `--fds-dir` + `--vis-cache` | did not evacuate (400 s cap) | 30, nearly all `wander` | stays at 3 nodes: no sign is legible, so no frontier appears |
+
 #### Diagnostic scripts
 
 ```bash

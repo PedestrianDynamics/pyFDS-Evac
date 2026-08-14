@@ -110,12 +110,32 @@ def build_variant(deck: Path, out: Path, familiarity: float) -> tuple[Path, dict
     return out, angles
 
 
-def run(bundle: Path, seed: int, sqlite_out: Path, cell_size_m: float):
+def run(
+    bundle: Path,
+    seed: int,
+    sqlite_out: Path,
+    cell_size_m: float,
+    fds_dir: Path | None = None,
+    vis_cache: Path | None = None,
+):
+    """Run the deck and record what the followed agent knows, frame by frame.
+
+    With *fds_dir* the sight gate comes from that run's extinction field, so the
+    frames show a map growing under smoke; without it, from clear air. Same
+    ray casting either way -- the difference is what the smoke hides.
+    """
     scenario = load_scenario(str(bundle))
     walkable = shapely_wkt.loads((bundle / "geometry.wkt").read_text().strip())
-    vis = VisibilityModel.clear_air(
-        walkable, extract_sign_descriptors(scenario.raw), cell_size_m=cell_size_m
-    )
+    signs = extract_sign_descriptors(scenario.raw)
+    if fds_dir is None:
+        vis = VisibilityModel.clear_air(walkable, signs, cell_size_m=cell_size_m)
+    else:
+        vis = VisibilityModel(
+            fds_dir=str(fds_dir),
+            sign_descriptors=signs,
+            cache_path=vis_cache,
+            time_step_s=1.0,
+        )
     result = run_scenario(
         scenario,
         seed=seed,
@@ -392,6 +412,18 @@ def main() -> int:
         "stop occluding, so pick it below the deck's thinnest wall "
         "(see VisibilityModel.clear_air)",
     )
+    ap.add_argument(
+        "--fds-dir",
+        type=Path,
+        default=None,
+        help="take the sight gate from this FDS run's smoke instead of clear air",
+    )
+    ap.add_argument(
+        "--vis-cache",
+        type=Path,
+        default=None,
+        help="npz cache for the visibility grid (reused across runs of a deck)",
+    )
     ap.add_argument("--work", type=Path, default=Path("results/cognitive_map_movie"))
     args = ap.parse_args()
 
@@ -401,7 +433,9 @@ def main() -> int:
         print(f"  {node_id}: alpha={alpha}")
 
     sqlite_path = args.work / "run.sqlite"
-    history, switches = run(bundle, args.seed, sqlite_path, args.cell_size)
+    history, switches = run(
+        bundle, args.seed, sqlite_path, args.cell_size, args.fds_dir, args.vis_cache
+    )
     print(f"\nlearning events: {len(history)}   route switches: {len(switches)}")
     for event in history:
         print(

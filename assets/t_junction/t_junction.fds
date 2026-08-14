@@ -3,22 +3,38 @@
 ! --- Computational domain ---
 ! T-shape: corridor x=[0,30] y=[10,13], branch x=[17,23] y=[0,10]
 ! Ceiling at 3 m
-&MESH IJK=120,52,12, XB=0,30,0,13,0,3 /
+&MESH IJK=30,52,12, XB=0.0,7.5,0,13,0,3 /
+&MESH IJK=30,52,12, XB=7.5,15.0,0,13,0,3 /
+&MESH IJK=30,52,12, XB=15.0,22.5,0,13,0,3 /
+&MESH IJK=30,52,12, XB=22.5,30.0,0,13,0,3 /
 
-&TIME T_END=300 /  ! TODO was 600
+&TIME T_END=300 /
 
 &DUMP DT_SLCF=1.0 /
 
-! --- Combustion: Cable fire fuel with soot and toxic gas production ---
-! Simple chemistry model using C/H/O/N fuel
-! HCN tracked via HCN_YIELD, HCl requires lumped species (omitted for simplicity)
-&SPEC ID='HYDROGEN CYANIDE' /
+! --- Combustion: PVC cable, with the chlorine actually modelled ---
+! Simple chemistry cannot carry Cl, so this is an explicit lumped reaction on
+! the PVC monomer C2H3Cl. All the chlorine leaves as HCl (0.583 kg/kg), which
+! is what makes a PVC fire an irritant hazard and what the FIC term needs --
+! the previous deck declared HCl in its README but omitted it from the input,
+! leaving FIC identically zero. CO is raised to 0.150 kg/kg, the under-
+! ventilated figure, from the 0.063 of a well-ventilated flame.
+! Atom balance per mole of fuel: C 2, H 3, Cl 1, O 2.874 on both sides.
+! A lumped reaction tracks primitive species, so each one is declared and the
+! background is nitrogen with ambient oxygen set explicitly -- otherwise the
+! domain starts as pure nitrogen and nothing burns.
+&SPEC ID='NITROGEN', BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN', MASS_FRACTION_0=0.232 /
+&SPEC ID='WATER VAPOR', MASS_FRACTION_0=0.006 /
+&SPEC ID='CARBON DIOXIDE' /
+&SPEC ID='CARBON MONOXIDE' /
+&SPEC ID='SOOT', FORMULA='C' /  ! pure carbon, so the balance below is exact
+&SPEC ID='HYDROGEN CHLORIDE' /
+&SPEC ID='VINYL CHLORIDE', FORMULA='C2H3Cl' /
 
-&REAC FUEL='CABLE_FUEL',
-      C=3, H=5, O=0, N=1,
-      SOOT_YIELD=0.172,
-      CO_YIELD=0.063,
-      HCN_YIELD=0.006,
+&REAC FUEL='VINYL CHLORIDE',
+      SPEC_ID_NU='VINYL CHLORIDE','OXYGEN','CARBON DIOXIDE','CARBON MONOXIDE','SOOT','WATER VAPOR','HYDROGEN CHLORIDE',
+      NU=-1.0,-1.4377,0.7704,0.3347,0.8950,1.0,1.0,
       HEAT_OF_COMBUSTION=16400 /
 
 ! --- Geometry: solid blocks forming the T-shape ---
@@ -29,9 +45,9 @@
 
 ! --- Fire source at the junction ---
 ! 2 m x 1 m burner on the floor, right where the branch meets the corridor.
-! HRRPUA=50 kW/m^2 x 2 m^2 = 100 kW peak; ramp reaches full intensity at 120 s.
+! HRRPUA=500 kW/m^2 x 2 m^2 = 1 MW peak; the ramp reaches full intensity at 200 s.
 &SURF ID='FIRE',
-      HRRPUA=400,  !TODO 1000 200 kW peak on a 2 m² burner (half of prior 400 kW)
+      HRRPUA=1000,  ! 1000 kW/m2 x 2 m2 = 2 MW peak
       COLOR='RED',
       RAMP_Q='fire_ramp' /
 
@@ -39,11 +55,11 @@
 ! rather than ~75 s; lets the agents entering later in the scenario
 ! still have meaningful walking time before visibility collapses.
 &RAMP ID='fire_ramp', T=  0, F=0.00 /
-&RAMP ID='fire_ramp', T=30, F=0.00 /
-&RAMP ID='fire_ramp', T=60, F=0.10 /
-&RAMP ID='fire_ramp', T=90, F=0.30 /
-&RAMP ID='fire_ramp', T=120, F=0.50 /
-&RAMP ID='fire_ramp', T=200, F=1.00 /
+&RAMP ID='fire_ramp', T=20, F=0.05 /
+&RAMP ID='fire_ramp', T=40, F=0.40 /
+&RAMP ID='fire_ramp', T=60, F=0.80 /
+&RAMP ID='fire_ramp', T=90, F=1.00 /
+&RAMP ID='fire_ramp', T=300, F=1.00 /
 
 
 &VENT XB=24,26, 10.5,11.5, 0,0, SURF_ID='FIRE' /
@@ -62,7 +78,7 @@
 &SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
 
 ! Optional species for full FED model
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='HYDROGEN CYANIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='HYDROGEN CHLORIDE' /
 
 ! Visibility slice for Smokeview visualization
 &SLCF PBZ=2.0, QUANTITY='VISIBILITY' /

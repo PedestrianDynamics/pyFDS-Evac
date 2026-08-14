@@ -107,6 +107,28 @@ def _build_parser() -> argparse.ArgumentParser:
         "--no-enable-rerouting). Cache is created if missing, loaded if present.",
     )
     parser.add_argument(
+        "--clear-air-visibility",
+        action="store_true",
+        help="Force clear-air sight gating even on a deck whose agents all "
+        "start fully familiar (they never consult it, so it is off by default "
+        "there). Decks with discovery agents get it without asking.",
+    )
+    parser.add_argument(
+        "--no-visibility",
+        action="store_true",
+        help="Turn sight gating off entirely. Agents then learn every "
+        "neighbour of each node they reach, by contact rather than by seeing "
+        "it -- faster, and not a fire scenario.",
+    )
+    parser.add_argument(
+        "--vis-cell-size",
+        type=float,
+        default=0.25,
+        help="Resolution of the clear-air visibility grid in meters. A wall "
+        "thinner than one cell stops occluding, so keep it below the thinnest "
+        "wall that must block sight (default: 0.25)",
+    )
+    parser.add_argument(
         "--disable-tenability",
         action="store_true",
         help="Disable both the FIC speed-reduction rule and the FED>=1 "

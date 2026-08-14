@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -288,6 +289,18 @@ def _load_vismap_cache(path: Path, expected_meta: dict) -> _VisMapCache | None:
         return None
 
 
+def _make_clear_air_meta(
+    walkable, sign_descriptors: dict[str, dict], cell_size_m: float, extinction: float
+) -> dict:
+    """Identify a clear-air vismap cache by what the grid is computed from."""
+    meta = _make_meta("", sign_descriptors, 0.0, 0.0)
+    meta["fds_dir"] = "<clear air>"
+    meta["walkable_wkt_hash"] = hashlib.sha256(walkable.wkt.encode()).hexdigest()
+    meta["cell_size_m"] = cell_size_m
+    meta["extinction_per_m"] = extinction
+    return meta
+
+
 class VisibilityModel:
     """Wraps a pre-computed VisMap to answer per-node sign-visibility queries.
 
@@ -342,6 +355,7 @@ class VisibilityModel:
         *,
         cell_size_m: float = 0.5,
         extinction_per_m: float = 0.0,
+        cache_path: str | Path | None = None,
     ) -> "VisibilityModel":
         """Build a model for a scene that has geometry but no fire.
 
@@ -364,7 +378,9 @@ class VisibilityModel:
         Pick it below the thinnest wall that must block: at 0.5 m the 0.4 m
         walls of ``assets/blind_spawn_discovery`` vanish entirely, while 0.25 m
         resolves them.  Cost grows as the inverse square, so halving it
-        quadruples the build.
+        quadruples the build -- which is what ``cache_path`` is for: the grid
+        depends only on the geometry, the signs and the resolution, none of
+        which change between runs of a deck.
         """
         from fdsvismap import VisMap
 
@@ -379,6 +395,20 @@ class VisibilityModel:
                 f"span fewer than two cells at cell_size_m={cell_size_m}; "
                 "shrink the cell size or check the geometry"
             )
+
+        expected_meta = _make_clear_air_meta(
+            walkable, sign_descriptors, cell_size_m, extinction_per_m
+        )
+        cache = Path(cache_path) if cache_path else None
+        if cache is not None:
+            cached = _load_vismap_cache(cache, expected_meta)
+            if cached is not None:
+                model = cls.__new__(cls)
+                model._vis = cached
+                model._wp_ids = {
+                    node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
+                }
+                return model
 
         vis = VisMap()
         vis.set_grid(x_coords, y_coords)
@@ -396,6 +426,8 @@ class VisibilityModel:
         for x1, x2, y1, y2 in _blocked_runs(walkable, x_coords, y_coords, cell_size_m):
             vis.add_visual_obstruction(x1, x2, y1, y2)
         vis.compute_all(view_angle=True, obstructions=True, aa=True)
+        if cache is not None:
+            _save_vismap_cache(cache, vis, _vis_bool_array(vis), expected_meta)
 
         model = cls.__new__(cls)
         model._vis = vis  # VisMap exposes the same wp_is_visible signature
