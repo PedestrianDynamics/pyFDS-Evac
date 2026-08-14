@@ -269,12 +269,12 @@ fallback was banded and the anchor bypass narrowed (`f6eede0`).
 | B6 anchor vetoes the band ordering | **fixed** -- one `rank_cost` read by ordering, anchor and the same-exit test; a band-clearer *feasible* rival bypasses the anchor |
 | A2 provenance comment inverted | **fixed** (`ca49e45`) |
 | annotations, test pins, red test on main | **fixed** (`ca49e45`) |
+| A3 fdsvismap LOS never wired in | **fixed** -- the gate reads `c / K_ave` along the real sight line to the exit's sign, with the cap raised from 30 m to the domain diagonal so it cannot clip a distance-relative test |
+| A1/A2 gate penalises long routes; aggregation unfaithful | **addressed where a sight line exists** -- the LOS test is per-leg optical depth, as in FDS+Evac's `See_door`. The whole-route worst-K criterion survives only as the fallback for exits with no readable sign, and the rejection reason now says which fired (`sight (los)` vs `sight (path)`) |
 | B7 Dijkstra still routes additively | **open** |
 | B8 `feasible` conflates gate failure with every rejection | **open**, but no longer irreversible |
 | B10 double-gating on the extinction thresholds | **open** |
 | B11 clear-air equivalence at small nonzero K | **open** -- bands are still unbounded above. Measured exact at K = 0 on world100 (7712 rows) and t_junction (4030 rows) |
-| A1 the gate penalises long routes for their length | **open** -- the design question |
-| A3 fdsvismap LOS never wired in | **open** |
 | A4 uniform band lattice | **open** |
 
 ## Fallback tie-break: nearest, not farthest
@@ -295,3 +295,33 @@ mechanism -- distance from the fire, not route length -- and is not implemented.
 Not routing. Its 2 MW PVC fire drives route K to 10.7 /m and refuses everything.
 Keep it as a lethality / speed-collapse case and use `assets/l_corridor` (near
 exit smokes first, long way round stays clean) for route-choice questions.
+
+## Reading the sight line from fdsvismap
+
+`VisMap._get_visibility_array` computes `wp.c / mean_extco_array`, i.e. Jin's
+relation with `K_ave` averaged along the obstruction-aware sight line. That is
+the same quantity FDS+Evac's `See_door` returns, which is what makes
+`S > 0.5 * d` a statement about optical depth (`tau < 2c`) rather than a
+worst-case sample compared against a whole bending route.
+
+Three properties had to be handled:
+
+* **the 30 m cap** -- applied inside the array build, so `set_visibility_bounds`
+  is called *before* `compute_all`, raised to the domain diagonal. This is what
+  made the first attempt at using fdsvismap unusable: a 68 m route compared
+  against a number that can never exceed 30 m fails wherever it stands.
+* **masked zeros** -- the returned value is the sight line multiplied by the
+  sign's readable half-plane and by obstructions, so `0.0` means "concealed",
+  "standing behind the sign" or "smoked out", indistinguishably. Only the last
+  is a passability statement, so `visibility_to_node` returns `None` instead and
+  the caller falls back to the polyline criterion. A hidden sign is not a wall.
+* **the eye position** -- the sight query needs a point to look from, but
+  `agent_position` also re-measures every route from that point. They are
+  separate parameters (`los_position`) because passing the spawn node as
+  `agent_position` silently re-ranked routes whose edges carry waypoints, and
+  broke a reroute-latency check.
+
+**Owed upstream:** `_vis_metre_array` mirrors the mask product from the public
+`get_visibility_to_wp` in order to vectorise it. fdsvismap should expose
+`get_visibility_array(waypoint_id, time)` and the pin be updated; until then
+that function is the one place duplicating library internals.

@@ -45,6 +45,15 @@ class _FakeVis:
         [np.zeros((1, 1), dtype=bool), np.zeros((1, 1), dtype=bool)],
         [np.zeros((1, 1), dtype=bool), np.zeros((1, 1), dtype=bool)],
     ]
+    # Sighting distances are cached alongside the booleans, so the fake has to
+    # answer the three arrays _vis_metre_array multiplies together.
+    all_wp_dict = {0: None, 1: None}
+    all_wp_angle_array_dict = {0: np.ones((1, 1)), 1: np.ones((1, 1))}
+    all_wp_non_concealed_cells_array_dict = {0: np.ones((1, 1)), 1: np.ones((1, 1))}
+
+    def _get_visibility_array(self, waypoint_id, time):
+        del waypoint_id, time
+        return np.zeros((1, 1))
 
 
 def _write_valid_cache(path: Path, fds_dir: str = FDS_DIR) -> dict:
@@ -264,6 +273,15 @@ class TestSignSynthesis:
             all_time_all_wp_vismap_array_list = [
                 [np.array([[True, False]])],
             ]
+            # Sight of 12 m where the sign is visible, masked to 0 where it is
+            # not -- the shape visibility_to_node has to read.
+            all_wp_dict = {0: None}
+            all_wp_angle_array_dict = {0: np.array([[1.0, 0.0]])}
+            all_wp_non_concealed_cells_array_dict = {0: np.array([[1.0, 1.0]])}
+
+            def _get_visibility_array(self, waypoint_id, time):
+                del waypoint_id, time
+                return np.array([[12.0, 12.0]])
 
         with patch(
             "pyfds_evac.core.visibility._build_vismap",
@@ -273,3 +291,9 @@ class TestSignSynthesis:
 
         assert model.node_is_visible(time=0.0, x=0.0, y=0.0, node_id="e0") is True
         assert model.node_is_visible(time=0.0, x=1.0, y=0.0, node_id="e0") is False
+
+        # And the metre-valued reader agrees: a distance where the sign reads,
+        # None where the mask zeroes it, because a hidden sign is not a wall.
+        assert model.visibility_to_node(0.0, 0.0, 0.0, "e0") == 12.0
+        assert model.visibility_to_node(0.0, 1.0, 0.0, "e0") is None
+        assert model.visibility_to_node(0.0, 0.0, 0.0, "no_such_node") is None

@@ -982,6 +982,8 @@ def evaluate_route(
     current_exit: str | None = None,
     agent_position: tuple[float, float] | None = None,
     current_target: str | None = None,
+    visibility_model=None,
+    los_position: tuple[float, float] | None = None,
 ) -> RouteCost:
     """Evaluate the composite cost for a full route (list of stage IDs).
 
@@ -1128,28 +1130,48 @@ def evaluate_route(
         rejected = True
         reason = f"FED_max {fed_max:.3f} > {fed_threshold:.3f}"
 
-    # Sight gate: the distance still to walk has to be one the agent can see a
-    # useful fraction of. Being relative to distance is what lets the same smoke
-    # allow a near exit and refuse a far one.
+    # Sight gate: FDS+Evac's rule that a door is only a candidate while the
+    # agent can see a useful fraction of the way to it (evac.f90,
+    # Change_Target_Door). Being relative to distance is what lets the same
+    # smoke allow a near exit and refuse a far one.
     #
-    # The S > 0.5 * d form is FDS+Evac's, but not its primary door test: there
-    # a door is gated on an absolute K_ave < ABS(FED_DOOR_CRIT) (0.03 /m), and
-    # the 0.5 * d rule is the last resort reached only when no smoke-free door
-    # remains (evac.f90, Change_Target_Door). FDS+Evac also measures K_ave along
-    # the straight sight line to that one door, which makes the test a statement
-    # about optical depth; comparing a worst-case K against a whole multi-leg
-    # route is a stricter reading that penalises long routes for their length.
-    # See docs -- this is the open question in the model, not settled practice.
+    # Two ways to measure it, in order of preference:
+    #
+    # los  -- fdsvismap's sighting distance toward the exit's own sign, which is
+    #         Jin's c / K_ave with K_ave averaged along the real, obstruction-
+    #         aware line of sight, compared against the straight-line distance
+    #         to that sign. This is FDS+Evac's See_door quantity, and the test
+    #         is then a statement about optical depth along one leg: tau < 2c.
+    # path -- worst-case K over the route polyline against the whole remaining
+    #         length. Used when there is no line of sight to read: an exit with
+    #         no sign descriptor, a concealed one, or one the agent stands
+    #         behind. It is a stricter reading -- a long route needs low K
+    #         everywhere -- so it is the fallback, not the rule.
     feasible = not rejected
     band = _visibility_band(min_visibility, config.band_width_m)
     if config.cost_model == "gate":
-        needed = config.sight_distance_fraction * effective_length
-        if min_visibility < needed:
+        sight, needed, how = min_visibility, None, "path"
+        # Where the agent looks from. Separate from agent_position on purpose:
+        # agent_position also re-measures every route from that point, so an
+        # agent standing on its spawn node can supply an eye position for the
+        # sight line without altering the distances.
+        eye = los_position or agent_position
+        if visibility_model is not None and eye is not None:
+            los = visibility_model.visibility_to_node(time_s, eye[0], eye[1], exit_id)
+            dist = visibility_model.distance_to_node(eye[0], eye[1], exit_id)
+            if los is not None and dist is not None:
+                sight, needed, how = los, config.sight_distance_fraction * dist, "los"
+                min_visibility = los
+                band = _visibility_band(los, config.band_width_m)
+        if needed is None:
+            needed = config.sight_distance_fraction * effective_length
+        if sight < needed:
             feasible = False
             rejected = True
             reason = (
-                f"sight {min_visibility:.1f} m < {needed:.1f} m "
-                f"({config.sight_distance_fraction:g} x {effective_length:.1f} m)"
+                f"sight ({how}) {sight:.1f} m < {needed:.1f} m "
+                f"({config.sight_distance_fraction:g} x "
+                f"{dist if how == 'los' else effective_length:.1f} m)"
             )
 
     if config.cost_model == "gate":
@@ -1195,6 +1217,8 @@ def rank_routes(
     agent_position: tuple[float, float] | None = None,
     current_exit: str | None = None,
     current_target: str | None = None,
+    visibility_model=None,
+    los_position: tuple[float, float] | None = None,
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
@@ -1262,6 +1286,8 @@ def rank_routes(
             current_exit=current_exit,
             agent_position=agent_position,
             current_target=current_target,
+            visibility_model=visibility_model,
+            los_position=los_position,
         )
         costs.append(rc)
 
@@ -1565,6 +1591,7 @@ def evaluate_and_reroute(
     exit_counts: dict[str, int] | None = None,
     cognitive_map=None,
     agent_position: tuple[float, float] | None = None,
+    visibility_model=None,
 ) -> RouteSwitch | None:
     """Evaluate routes and reroute the agent if a better exit is found.
 
@@ -1591,6 +1618,7 @@ def evaluate_and_reroute(
         config.cost_config,
         cached_segments=cached_segments,
         exit_counts=exit_counts,
+        visibility_model=visibility_model,
         cognitive_map=cognitive_map,
         agent_position=agent_position,
         current_exit=route_state.current_exit,
@@ -1716,6 +1744,7 @@ def evaluate_and_reroute(
                 exit_counts=exit_counts,
                 agent_position=agent_position,
                 current_target=current_target,
+                visibility_model=visibility_model,
             ).rank_cost
             if best.rank_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
                 stage_configs = wait_info.get("stage_configs", {})
