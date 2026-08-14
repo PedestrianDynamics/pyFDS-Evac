@@ -23,6 +23,12 @@ _SECONDS_PER_MINUTE = 60.0
 # in the thousands, so two physically clear routes can still be ordered by band.
 _MAX_BAND = 1_000_000
 
+# Sight is a discriminator while it is scarce. Three classes at the default
+# 10 m width means anything past 30 m is simply "clear", which is roughly where
+# fdsvismap used to cap and comfortably above the 10 m the C/VM2 tenability
+# limit is written at. Routes that saturate tie, and distance decides.
+_BAND_SATURATION_CLASSES = 3
+
 # A segment is cached per (source, target) and, when anticipating, per whole
 # second of arrival time -- the same edge costs differently to an agent that
 # reaches it a minute later.
@@ -666,6 +672,14 @@ class RouteCostConfig:
     # Being distance-relative is the point: haze 5 m from an exit is usable and
     # the same haze at 40 m is not, which no absolute extinction limit can say.
     sight_distance_fraction: float = 0.5
+    # Asymmetric sight gate, mirroring fed_return_margin. A route the agent is
+    # already on is judged against the bare criterion; a rival has to clear it
+    # by this factor before the agent will switch onto it. Without the deadband
+    # a route whose sight sits near the threshold toggles in and out of
+    # feasibility every tick and the agent follows it: measured on world100,
+    # one exit swung between 2.9 m and 24.2 m of sight on consecutive seconds,
+    # producing 169 returns to abandoned exits across 23 agents.
+    sight_return_margin: float = 1.25
     # Jin's constant for the sign being read: 3 for light-reflecting signage,
     # 8 for internally illuminated. Sighting distance is S = c / K, uncapped,
     # so clear air gives infinite visibility and the gate never fires there.
@@ -700,6 +714,7 @@ class RouteCostConfig:
         return cls(
             cost_model=routing.get("cost_model", "gate"),
             sight_distance_fraction=routing.get("sight_distance_fraction", 0.5),
+            sight_return_margin=routing.get("sight_return_margin", 1.25),
             sign_contrast_c=routing.get("sign_contrast_c", 3.0),
             band_width_m=routing.get("band_width_m", 10.0),
             anticipate=routing.get("anticipate", True),
@@ -815,10 +830,22 @@ def _visibility_band(visibility_m: float, band_width_m: float) -> int:
     Banding is what keeps distance in charge: two routes a few centimetres of
     visibility apart share a band and the nearer one wins, while a route a
     whole class clearer wins outright however far it is.
+
+    Saturating at ``_BAND_SATURATION_CLASSES`` is what makes that true at the
+    top of the range as well as the bottom. Sight is a discriminator while it
+    is scarce; past a few tens of metres it is not, and one route seeing 91 m
+    where another sees "unbounded" is not a difference anyone acts on. Before
+    the ceiling, clear air scored ``_MAX_BAND`` while 91 m of sight scored 9,
+    so a trace of smoke -- K = 0.03 /m -- dropped a route five orders of
+    magnitude and sent agents 10 m out of their way. Measured on world100: two
+    permanently feasible exits traded places every second, 182 times.
     """
-    if band_width_m <= 0 or visibility_m == math.inf:
+    if band_width_m <= 0:
         return _MAX_BAND
-    return min(_MAX_BAND, int(visibility_m // band_width_m))
+    ceiling = _BAND_SATURATION_CLASSES * band_width_m
+    if visibility_m >= ceiling:
+        return _BAND_SATURATION_CLASSES
+    return int(visibility_m // band_width_m)
 
 
 def _sighting_distance(k: float, contrast_c: float) -> float:
@@ -1087,7 +1114,17 @@ def evaluate_route(
         [first_k_max] + [s.k_max for _, s in weighted[1:]],
         default=0.0,
     )
-    min_visibility = _sighting_distance(k_max, config.sign_contrast_c)
+    # Sight is estimated from the route's *mean* extinction, not its worst
+    # point. FDS+Evac's See_door averages K along the sight line for the same
+    # reason: a maximum over sampled cells is a step function of where the
+    # agent stands, so one dense cell entering the sample swings the estimate
+    # by an order of magnitude between ticks. Measured on world100, the same
+    # 28.9 m route reported 91 m of sight, then 8 m, then 91 m again on
+    # consecutive seconds, and the ordering flipped with it -- 182 returns to
+    # abandoned exits across 26 agents. k_max_route is still reported, and
+    # still drives the all-refused fallback, where the question is which walk
+    # is survivable rather than which is legible.
+    min_visibility = _sighting_distance(k_ave, config.sign_contrast_c)
 
     # Composite cost: effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
     # Under "gate" this is reported but does not rank: see rank_routes.
@@ -1165,6 +1202,8 @@ def evaluate_route(
                 band = _visibility_band(los, config.band_width_m)
         if needed is None:
             needed = config.sight_distance_fraction * effective_length
+        if not is_current and current_exit is not None:
+            needed *= config.sight_return_margin
         if sight < needed:
             feasible = False
             rejected = True
@@ -1322,7 +1361,15 @@ def rank_routes(
     if config.cost_model == "gate":
 
         def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
-            return (1 if rc.rejected else 0, -rc.band, rc.rank_cost, len(rc.path))
+            # Feasible routes are ordered by time alone. The band used to sit
+            # ahead of it, and it was not a tie-breaker: it decided. On
+            # l_corridor it placed 28 agents on the 58 m route at spawn while
+            # both routes were optically clear (k_ave = 0.000 for each), because
+            # a route with any trace of smoke gets a finite S = c/K and one with
+            # none gets _MAX_BAND -- so 10^6 beat N and a 5x distance penalty
+            # never entered the comparison. Smoke says which exits exist; it
+            # does not also get to say which of the survivors is nearer.
+            return (1 if rc.rejected else 0, 0, rc.rank_cost, len(rc.path))
     else:
 
         def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
@@ -1797,6 +1844,16 @@ def evaluate_and_reroute(
             # ping-pong: the fallback pushes them onto a rival, the old exit
             # heals a band on the next tick, and back they go on a 1% gain.
             and best.feasible
+            # A band is a quantised sighting distance, and a quantiser with no
+            # hysteresis oscillates: sight jittering either side of a band edge
+            # flips the order every tick, and because the bypass skips the
+            # anchor entirely, every flip is an actual switch. Measured on
+            # world100, two permanently feasible exits 24.3 m and 34.0 m long
+            # traded places every second, 182 times across 26 agents. So the
+            # band has to be backed by a real margin in metres before it is
+            # allowed to overrule distance -- the same margin the anchor uses.
+            and best.min_visibility_m * config.exit_switch_anchor
+            > old_rc.min_visibility_m
         )
         and best.rank_cost >= old_cost * config.exit_switch_anchor
     ):

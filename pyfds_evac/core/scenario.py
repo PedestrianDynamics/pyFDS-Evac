@@ -2197,6 +2197,16 @@ def run_scenario(
                                         "travel_time_s": float(rc.travel_time_s),
                                         "fed_max_route": float(rc.fed_max_route),
                                         "composite_cost": float(rc.composite_cost),
+                                        # The gate's own diagnostics. Without
+                                        # them its decisions cannot be audited
+                                        # from its output: composite_cost does
+                                        # not rank under the gate, and the band
+                                        # that does is invisible.
+                                        "rank_cost": float(rc.rank_cost),
+                                        "k_max_route": float(rc.k_max_route),
+                                        "min_visibility_m": float(rc.min_visibility_m),
+                                        "band": int(rc.band),
+                                        "feasible": bool(rc.feasible),
                                         "rejected": bool(rc.rejected),
                                         "rejection_reason": rc.rejection_reason or "",
                                         "queue_time_s": float(rc.queue_time_s),
