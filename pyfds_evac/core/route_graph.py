@@ -17,6 +17,10 @@ _logger = logging.getLogger(__name__)
 
 _SECONDS_PER_MINUTE = 60.0
 
+# Clear air is unbounded sight; every route there lands in the top band, so the
+# band never discriminates and the model reduces exactly to nearest-exit.
+_MAX_BAND = 1_000_000
+
 
 @dataclass(frozen=True)
 class StageNode:
@@ -460,14 +464,38 @@ def integrated_extinction_along_los(
     if length < 1e-9:
         return extinction_sampler.sample_extinction(time_s, x_from, y_from)
 
+    return _los_stats(
+        x_from, y_from, x_to, y_to, time_s, extinction_sampler, step_m, length
+    )[0]
+
+
+def _los_stats(
+    x_from: float,
+    y_from: float,
+    x_to: float,
+    y_to: float,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+    length: float,
+) -> tuple[float, float]:
+    """Mean and worst K sampled along a line of sight.
+
+    The mean is what a route costs to walk; the worst is what stops an agent
+    walking it, and averaging hides exactly the wall of smoke a person refuses
+    to enter. Both come from one traverse.
+    """
     n_samples = max(2, int(math.ceil(length / step_m)) + 1)
     total = 0.0
+    worst = 0.0
     for i in range(n_samples):
         t = i / (n_samples - 1)
         x = x_from + t * (x_to - x_from)
         y = y_from + t * (y_to - y_from)
-        total += extinction_sampler.sample_extinction(time_s, x, y)
-    return total / n_samples
+        k = extinction_sampler.sample_extinction(time_s, x, y)
+        total += k
+        worst = max(worst, k)
+    return total / n_samples, worst
 
 
 def integrated_extinction_along_polyline(
@@ -490,14 +518,34 @@ def integrated_extinction_along_polyline(
             )
         return 0.0
 
+    return _polyline_stats(waypoints, time_s, extinction_sampler, step_m)[0]
+
+
+def _polyline_stats(
+    waypoints: list[tuple[float, float]],
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+) -> tuple[float, float]:
+    """Mean and worst K along a polyline -- see :func:`_los_stats`."""
+    if len(waypoints) < 2:
+        if waypoints:
+            k = extinction_sampler.sample_extinction(
+                time_s, waypoints[0][0], waypoints[0][1]
+            )
+            return k, k
+        return 0.0, 0.0
     total_k = 0.0
     total_samples = 0
+    worst = 0.0
     for i in range(len(waypoints) - 1):
         x0, y0 = waypoints[i]
         x1, y1 = waypoints[i + 1]
         seg_len = _euclidean(x0, y0, x1, y1)
         if seg_len < 1e-9:
-            total_k += extinction_sampler.sample_extinction(time_s, x0, y0)
+            k = extinction_sampler.sample_extinction(time_s, x0, y0)
+            total_k += k
+            worst = max(worst, k)
             total_samples += 1
             continue
         n_samples = max(2, int(math.ceil(seg_len / step_m)) + 1)
@@ -505,10 +553,12 @@ def integrated_extinction_along_polyline(
             t = j / (n_samples - 1)
             x = x0 + t * (x1 - x0)
             y = y0 + t * (y1 - y0)
-            total_k += extinction_sampler.sample_extinction(time_s, x, y)
+            k = extinction_sampler.sample_extinction(time_s, x, y)
+            total_k += k
+            worst = max(worst, k)
             total_samples += 1
 
-    return total_k / total_samples if total_samples > 0 else 0.0
+    return (total_k / total_samples if total_samples > 0 else 0.0), worst
 
 
 def _polyline_midpoint(
@@ -596,6 +646,40 @@ class RouteCostConfig:
     min_speed_factor: float = 0.1
     default_exit_capacity: float = 1.3
 
+    # ── Gate model ────────────────────────────────────────────────────────
+    # "gate": distance is the objective and smoke decides which exits remain
+    # available; "additive": the historical w_smoke/w_fed toll, kept because
+    # the smoke term multiplies route *length*, so a long clean detour pays for
+    # its own length and can never win however large w_smoke is (sweeping it
+    # 1 -> 20 on assets/world_100 moved 12 of 120 agents).
+    cost_model: str = "gate"
+    # A route is refused when the sighting distance at its worst point falls
+    # below this fraction of the distance still to walk -- FDS+Evac's own door
+    # criterion (evac.f90: "Check that visibility > 0.5*distance to the door").
+    # Being distance-relative is the point: haze 5 m from an exit is usable and
+    # the same haze at 40 m is not, which no absolute extinction limit can say.
+    sight_distance_fraction: float = 0.5
+    # Jin's constant for the sign being read: 3 for light-reflecting signage,
+    # 8 for internally illuminated. Sighting distance is S = c / K, uncapped,
+    # so clear air gives infinite visibility and the gate never fires there.
+    sign_contrast_c: float = 3.0
+    # Feasible routes are ranked by visibility band before distance, so a
+    # genuinely clearer way wins outright but a 0.02 /m difference does not
+    # send anyone 30 m out of their way. 10 m is the sighting distance the
+    # C/VM2 optical-density limits are derived from (0.13 /m reflective,
+    # 0.347 /m illuminated), which is what makes the band width citable.
+    band_width_m: float = 10.0
+    # Charge each leg the smoke present when the agent would arrive there,
+    # rather than the smoke standing there while it decides.
+    anticipate: bool = True
+    # Cap on how far ahead that reaches. Unbounded is perfect foresight; a
+    # finite horizon models an occupant who can only judge the near future.
+    foresight_horizon_s: float = math.inf
+    # When every exit is dead, the agent keeps its least-bad target unless a
+    # rival's worst extinction is better by this fraction -- without it the
+    # least-bad choice changes with every flicker of the field.
+    fallback_switch_margin: float = 0.2
+
     @classmethod
     def from_routing_params(cls, routing: dict | None) -> RouteCostConfig:
         """Build the cost model from a scenario's ``routing`` block.
@@ -607,6 +691,13 @@ class RouteCostConfig:
         """
         routing = routing or {}
         return cls(
+            cost_model=routing.get("cost_model", "gate"),
+            sight_distance_fraction=routing.get("sight_distance_fraction", 0.5),
+            sign_contrast_c=routing.get("sign_contrast_c", 3.0),
+            band_width_m=routing.get("band_width_m", 10.0),
+            anticipate=routing.get("anticipate", True),
+            foresight_horizon_s=routing.get("foresight_horizon_s", math.inf),
+            fallback_switch_margin=routing.get("fallback_switch_margin", 0.2),
             w_smoke=routing.get("w_smoke", 1.0),
             w_fed=routing.get("w_fed", 10.0),
             w_queue=routing.get("w_queue", 0.0),
@@ -635,6 +726,8 @@ class SegmentCost:
     travel_time_s: float
     fed_growth: float
     visible: bool
+    k_max: float = 0.0
+    arrival_time_s: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -652,6 +745,13 @@ class RouteCost:
     rejected: bool
     rejection_reason: str | None
     queue_time_s: float = 0.0
+    # Gate model only. `min_visibility_m` is Jin's sighting distance at the
+    # worst point of the route, `band` the class it falls in, and `feasible`
+    # whether sight and dose both allow the route at all.
+    k_max_route: float = 0.0
+    min_visibility_m: float = math.inf
+    band: int = 0
+    feasible: bool = True
 
 
 def _sample_segment_extinction(
@@ -667,11 +767,11 @@ def _sample_segment_extinction(
     Uses the polyline waypoints if provided, otherwise falls back to the
     centroid-to-centroid line of sight.
 
-    Returns (segment_length, mean_extinction).
+    Returns (segment_length, mean_extinction, worst_extinction).
     """
     if waypoints and len(waypoints) >= 2:
         length = _polyline_length(waypoints)
-        k_avg = integrated_extinction_along_polyline(
+        k_avg, k_max = _polyline_stats(
             waypoints,
             time_s,
             extinction_sampler,
@@ -684,7 +784,7 @@ def _sample_segment_extinction(
             tgt_node.centroid_x,
             tgt_node.centroid_y,
         )
-        k_avg = integrated_extinction_along_los(
+        k_avg, k_max = _los_stats(
             src_node.centroid_x,
             src_node.centroid_y,
             tgt_node.centroid_x,
@@ -692,8 +792,48 @@ def _sample_segment_extinction(
             time_s,
             extinction_sampler,
             step_m,
+            length,
         )
-    return length, k_avg
+    return length, k_avg, k_max
+
+
+def _visibility_band(visibility_m: float, band_width_m: float) -> int:
+    """Which class of sight a route falls in, coarse enough to tie often.
+
+    Banding is what keeps distance in charge: two routes a few centimetres of
+    visibility apart share a band and the nearer one wins, while a route a
+    whole class clearer wins outright however far it is.
+    """
+    if band_width_m <= 0 or visibility_m == math.inf:
+        return _MAX_BAND
+    return min(_MAX_BAND, int(visibility_m // band_width_m))
+
+
+def _sighting_distance(k: float, contrast_c: float) -> float:
+    """Jin's sighting distance S = c / K, in metres, uncapped.
+
+    Uncapped on purpose: clear air is K = 0 and must give infinite sight, or a
+    long route would fail a distance-relative criterion with no fire at all.
+    fdsvismap reports the same relation but clipped to its ``max_vis`` and
+    masked where geometry conceals the sign -- both right for "can this sign be
+    read", both wrong for "is this route passable".
+    """
+    if k <= 1e-9:
+        return math.inf
+    return contrast_c / k
+
+
+def _arrival_time(time_s: float, walked_m: float, config: RouteCostConfig) -> float:
+    """When the agent would reach a point *walked_m* along its route.
+
+    Uses the unimpeded speed, not the smoke-reduced one: the reduction depends
+    on the smoke at the arrival time this is computing, and one pass settles
+    what a second would only refine.
+    """
+    if not config.anticipate:
+        return time_s
+    speed = max(config.base_speed_m_per_s, 1e-9)
+    return time_s + min(walked_m / speed, config.foresight_horizon_s)
 
 
 def evaluate_segment(
@@ -704,8 +844,16 @@ def evaluate_segment(
     extinction_sampler: ExtinctionSampler,
     fed_rate_sampler: FedRateSampler | None,
     config: RouteCostConfig,
+    arrival_time_s: float | None = None,
 ) -> SegmentCost:
-    """Evaluate cost for one edge of a route."""
+    """Evaluate cost for one edge of a route.
+
+    *arrival_time_s* is when the agent would reach this edge, so the smoke it
+    is charged is the smoke it will meet rather than the smoke standing there
+    while it decides. Defaults to *time_s*, which is the no-foresight answer.
+    """
+    if arrival_time_s is None:
+        arrival_time_s = time_s
     src_node = graph.nodes[source]
     tgt_node = graph.nodes[target]
 
@@ -716,10 +864,10 @@ def evaluate_segment(
             waypoints = edge.waypoints
             break
 
-    length, k_avg = _sample_segment_extinction(
+    length, k_avg, k_max = _sample_segment_extinction(
         src_node,
         tgt_node,
-        time_s,
+        arrival_time_s,
         extinction_sampler,
         config.sampling_step_m,
         waypoints=waypoints,
@@ -740,7 +888,7 @@ def evaluate_segment(
         else:
             mid_x = (src_node.centroid_x + tgt_node.centroid_x) / 2
             mid_y = (src_node.centroid_y + tgt_node.centroid_y) / 2
-        fed_rate = fed_rate_sampler.sample_fed_rate(time_s, mid_x, mid_y)
+        fed_rate = fed_rate_sampler.sample_fed_rate(arrival_time_s, mid_x, mid_y)
         fed_growth = fed_rate * travel_time / _SECONDS_PER_MINUTE
 
     visible = k_avg < config.visibility_extinction_threshold
@@ -754,6 +902,8 @@ def evaluate_segment(
         travel_time_s=travel_time,
         fed_growth=fed_growth,
         visible=visible,
+        k_max=k_max,
+        arrival_time_s=arrival_time_s,
     )
 
 
@@ -838,8 +988,17 @@ def evaluate_route(
     available if a future rule needs the agent's heading.
     """
     segments: list[SegmentCost] = []
+    walked = 0.0
     for i in range(len(path) - 1):
         cache_key = (path[i], path[i + 1])
+        # With anticipation an edge costs what it costs *when you get there*,
+        # so the same edge on two routes is two different questions and the
+        # cache has to key on both. Bucketed to the second: finer than the
+        # reroute interval, coarser than nothing, and well under the interval
+        # FDS writes slices at.
+        t_arrive = _arrival_time(time_s, walked, config)
+        if config.anticipate:
+            cache_key = (path[i], path[i + 1], round(t_arrive))
         if cached_segments is not None and cache_key in cached_segments:
             seg = cached_segments[cache_key]
         else:
@@ -851,10 +1010,12 @@ def evaluate_route(
                 extinction_sampler,
                 fed_rate_sampler,
                 config,
+                arrival_time_s=t_arrive,
             )
             if cached_segments is not None:
                 cached_segments[cache_key] = seg
         segments.append(seg)
+        walked += seg.length_m
 
     path_length = sum(s.length_m for s in segments)
 
@@ -883,8 +1044,14 @@ def evaluate_route(
     travel_time = sum(w * s.travel_time_s for w, s in weighted)
     fed_growth = sum(w * s.fed_growth for w, s in weighted)
     fed_max = current_fed + fed_growth
+    # The worst point on the route, not its average: a route is refused because
+    # of the wall of smoke in it, and a mean over 30 clear metres and 3 blind
+    # ones reports a walk anyone would take.
+    k_max = max((s.k_max for _, s in weighted), default=0.0)
+    min_visibility = _sighting_distance(k_max, config.sign_contrast_c)
 
     # Composite cost: effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
+    # Under "gate" this is reported but does not rank: see rank_routes.
     composite = (
         effective_length * (1.0 + config.w_smoke * k_ave) + config.w_fed * fed_max
     )
@@ -924,6 +1091,22 @@ def evaluate_route(
         rejected = True
         reason = f"FED_max {fed_max:.3f} > {fed_threshold:.3f}"
 
+    # Sight gate: the distance still to walk has to be one the agent can see a
+    # useful fraction of. FDS+Evac applies the same test to a door before it
+    # can be chosen; being relative to distance is what lets the same smoke
+    # allow a near exit and refuse a far one.
+    feasible = not rejected
+    band = _visibility_band(min_visibility, config.band_width_m)
+    if config.cost_model == "gate":
+        needed = config.sight_distance_fraction * effective_length
+        if min_visibility < needed:
+            feasible = False
+            rejected = True
+            reason = (
+                f"sight {min_visibility:.1f} m < {needed:.1f} m "
+                f"({config.sight_distance_fraction:g} x {effective_length:.1f} m)"
+            )
+
     return RouteCost(
         exit_id=exit_id,
         path=path,
@@ -936,6 +1119,10 @@ def evaluate_route(
         rejected=rejected,
         rejection_reason=reason,
         queue_time_s=queue_time,
+        k_max_route=k_max,
+        min_visibility_m=min_visibility,
+        band=band,
+        feasible=feasible,
     )
 
 
@@ -1048,15 +1235,37 @@ def rank_routes(
             updated.append(rc)
         costs = updated
 
-    # Sort: non-rejected first by cost, then rejected by cost.
-    # Break ties by fewer intermediate stages.
-    def sort_key(rc: RouteCost) -> tuple[int, float, int]:
-        return (1 if rc.rejected else 0, rc.composite_cost, len(rc.path))
+    # Ordering. Under "additive" the composite decides, as it always has.
+    # Under "gate" distance decides among routes that are still available, and
+    # a route a whole visibility band clearer wins first: smoke says which
+    # exits exist, not how much each metre of them is worth.
+    if config.cost_model == "gate":
+
+        def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
+            # Queue delay is time, so it belongs beside travel time rather than
+            # in the composite the gate ignores -- otherwise opting into
+            # congestion-aware routing (w_queue) would silently do nothing.
+            return (
+                1 if rc.rejected else 0,
+                -rc.band,
+                rc.travel_time_s + rc.queue_time_s * config.w_queue,
+                len(rc.path),
+            )
+    else:
+
+        def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
+            return (1 if rc.rejected else 0, 0, rc.composite_cost, len(rc.path))
 
     costs.sort(key=sort_key)
 
-    # Fallback: if all rejected, un-reject the least-bad.
+    # Fallback: with every route refused the agent still has to go somewhere,
+    # and the least bad one is the one whose worst stretch is least bad -- the
+    # question is surviving the walk, not averaging it. Re-sorting the refused
+    # routes by k_max also makes the fallback stable: the same route stays first
+    # while the field only fluctuates, which the old "un-reject costs[0]" could
+    # not promise because it inherited an ordering by composite cost.
     if costs and all(rc.rejected for rc in costs):
+        costs.sort(key=lambda rc: (rc.k_max_route, rc.travel_time_s))
         best = costs[0]
         costs[0] = replace(
             best,
@@ -1120,6 +1329,13 @@ class AgentRouteState:
     last_eval_time_s: float = -math.inf
     eval_offset_s: float = 0.0  # staggering offset
     wander_step: int = 0  # position in the knowledge-exhausted patrol rotation
+    # Exits this agent has found impassable. Death is remembered, and per
+    # agent: an exit refused at t=60 s used to be a fresh candidate at t=61 s,
+    # which is what made the crowd oscillate between two worsening exits. It
+    # stays this agent's knowledge -- someone arriving later has never seen the
+    # exit alive and may still consider it, as in FDS+Evac, where the door is
+    # removed from that agent's own known set.
+    dead_exits: set[str] = field(default_factory=set)
 
 
 @dataclass(frozen=True)
@@ -1279,6 +1495,50 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
     return path
 
 
+def _apply_exit_death(
+    ranked: list[RouteCost],
+    route_state: AgentRouteState,
+    cost_config: RouteCostConfig,
+) -> list[RouteCost]:
+    """Retire exits this agent has found impassable, and never revive them.
+
+    An exit that failed the gate is remembered rather than re-scored from
+    scratch on the next tick. That is what makes the choice monotone: exits
+    fall away one by one and the crowd commits, instead of migrating back to a
+    route the moment its rival degrades by a hair.
+
+    When the last one goes the agent still has to move, so it keeps the route
+    whose *worst* stretch is least bad, and only trades it for one clearly
+    better -- ``fallback_switch_margin`` -- so the choice does not follow every
+    flicker of the field.
+    """
+    for rc in ranked:
+        if not rc.feasible and not (rc.rejection_reason or "").startswith("fallback"):
+            route_state.dead_exits.add(rc.exit_id)
+
+    alive = [rc for rc in ranked if rc.exit_id not in route_state.dead_exits]
+    if alive:
+        return alive
+
+    least_bad = sorted(ranked, key=lambda rc: (rc.k_max_route, rc.travel_time_s))
+    current = next(
+        (rc for rc in least_bad if rc.exit_id == route_state.current_exit), None
+    )
+    if current is not None and least_bad[0].exit_id != current.exit_id:
+        margin = 1.0 - cost_config.fallback_switch_margin
+        if least_bad[0].k_max_route > current.k_max_route * margin:
+            least_bad = [current] + [
+                rc for rc in least_bad if rc.exit_id != current.exit_id
+            ]
+
+    head = replace(
+        least_bad[0],
+        rejected=False,
+        rejection_reason=f"fallback: every exit dead ({least_bad[0].rejection_reason})",
+    )
+    return [head] + least_bad[1:]
+
+
 def evaluate_and_reroute(
     agent_id: int,
     wait_info: dict,
@@ -1388,6 +1648,9 @@ def evaluate_and_reroute(
             new_cost=0.0,
             reason=reason,
         )
+
+    if config.cost_config.cost_model == "gate":
+        ranked = _apply_exit_death(ranked, route_state, config.cost_config)
 
     best = ranked[0]
     if (
