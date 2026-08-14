@@ -140,8 +140,8 @@ Across the run, **14 switches move an agent to an equal-or-more-expensive exit**
 switch to a costlier exit can only happen when the current exit is **rejected** — which
 **bypasses the anchor** (`route_graph.py`, by design: an agent must be free to flee an
 *unsafe* exit). `fed_max ≈ 0.002` and `queue = 0` on these rows, so it is neither FED nor
-congestion: it is the **K_vis fallback** rejecting a route whose segments are all below
-the `visibility_extinction_threshold` (0.5).
+congestion: it is the **K_vis rule** rejecting a route whose segments are *all* at or
+above the `visibility_extinction_threshold` (0.5), i.e. all flagged non-visible.
 
 ### Why the binary rejection is wrong here
 

@@ -3,10 +3,18 @@
 > Part of [pyFDS-Evac](../README.md).
 
 The pyFDS-Evac routing system implements dynamic, smoke-aware path
-planning. Agents evaluate candidate routes based on smoke exposure
-and periodically reroute to lower-cost paths as conditions change.
-Route costs are recomputed from current hazard fields at each
-reevaluation tick, so the chosen path adapts as conditions evolve.
+planning. Agents evaluate candidate routes against the current hazard
+fields and periodically reroute as conditions change. Costs are
+recomputed at each reevaluation tick, so the chosen path adapts as
+conditions evolve.
+
+> **Which model is running.** Two cost models exist, selected per deck
+> with `routing.cost_model`. The **default is `"gate"`**: distance is
+> the objective and smoke decides which exits stay available. The
+> historical `"additive"` model, in which smoke is a toll per metre,
+> is still available. This page covers the machinery both share; the
+> gate itself is documented in
+> [route-cost-gate.md](route-cost-gate.md).
 
 > **Note:** The cost model supports both smoke and FED (toxic gas)
 > terms. FED-based route cost is active when a `fed_model` is
@@ -109,46 +117,103 @@ extinction at each point. The sample spacing is controlled by
 [Boerger et al. (2024)](../materials/waypoint_based_visibility.pdf),
 Eq. 8-9.
 
-### Composite cost
+### Arrival-time pricing
 
-The full route cost combines all segments:
+With `anticipate` (default `true`, and **independent of `cost_model`**),
+each segment is priced at the time the agent would reach it rather than
+the time it decides:
 
 ```
-composite = path_length * (1 + w_smoke * K_ave) + w_fed * FED_max
+arrival_time = now + min(walked_so_far / base_speed_m_per_s,
+                         foresight_horizon_s)
+```
+
+The unimpeded `base_speed_m_per_s` is used, not the smoke-reduced speed.
+`foresight_horizon_s` defaults to infinity.
+
+### Composite cost
+
+The composite is the additive model's ranking number. It is still
+computed and reported under the gate, where it does not rank:
+
+```
+composite = effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
 ```
 
 where:
 
+- `effective_length` is the route length measured from the agent's own
+  position when one is supplied, otherwise the node-to-node path length
 - `K_ave` is the length-weighted average extinction along the route
 - `FED_max` is the projected cumulative FED at route completion
 - `w_smoke` and `w_fed` are configurable weights
 
+Exposure on the part of the first segment the agent has already walked
+is credited out of `K_ave` and `FED_max`, because it is already carried
+in `current_fed`.
+
+### What each model ranks on
+
+Both models write a single `rank_cost` field, which ordering, the
+exit-switch anchor and the same-exit path test all read:
+
+| model | `rank_cost` | sort key |
+|---|---|---|
+| `"gate"` | `travel_time_s + w_queue * queue_time_s` | `(rejected, -band, rank_cost, hops)` |
+| `"additive"` | `composite_cost` | `(rejected, rank_cost, hops)` |
+
 ### Route rejection
 
-A route is rejected under either of these conditions:
+A route is rejected under any of these conditions:
 
 - `FED_max` exceeds `fed_rejection_threshold` (default 1.0) —
-  evaluated per route inside `evaluate_route`
+  evaluated per route inside `evaluate_route`. The threshold is
+  asymmetric: a route to an exit that is *not* the agent's current one
+  must come in under `fed_rejection_threshold * fed_return_margin`
+  (0.9), so an agent flees a deadly exit at once but only switches onto
+  a rival that is clearly safe.
+- **Gate model only:** the sighting distance falls below
+  `sight_distance_fraction` times the distance still to walk. See
+  [route-cost-gate.md](route-cost-gate.md#sighting-distance-and-the-two-ways-it-is-measured)
+  for the two criteria (`sight (los)` and `sight (path)`) and which one
+  the rejection reason names.
 - **All** of its segments have K ≥ `visibility_extinction_threshold`
   **and** at least one other route has at least one visible segment —
-  evaluated as a second pass in `rank_routes` after all routes are scored
+  evaluated as a second pass in `rank_routes` after all routes are
+  scored. This condition still applies under the gate.
 
-The second condition means a smoky-but-short route is only rejected
+The last condition means a smoky-but-short route is only rejected
 when a cleaner alternative exists. If every route is fully obscured,
 none are visibility-rejected.
 
-If all routes end up rejected (by either condition), the lowest-cost
-rejected route is un-rejected as a fallback so the agent always has
-a path.
+If all routes end up rejected, the least-bad one is un-rejected as a
+fallback so the agent always has a path, and its reason is prefixed
+`fallback: `. Under the gate the least-bad route is chosen by
+visibility band and then distance, with `fallback_switch_margin`
+hysteresis; under the additive model it is the lowest-composite route.
+
+Rejections are never remembered. Each tick re-decides from the current
+field, which is what lets the sight criterion relax as an agent closes
+on an exit.
 
 ### Configuration
 
-`RouteCostConfig` controls all cost evaluation parameters:
+`RouteCostConfig` controls all cost evaluation parameters. Every field
+listed here is also readable from a scenario's `routing` block via
+`RouteCostConfig.from_routing_params` — the full JSON key table is in
+[route-cost-gate.md](route-cost-gate.md#configuration).
 
 ```python
 from pyfds_evac.core.route_graph import RouteCostConfig
 
 config = RouteCostConfig(
+    cost_model="gate",                    # "gate" (default) or "additive"
+    sight_distance_fraction=0.5,          # gate: visible fraction of the way there
+    sign_contrast_c=3.0,                  # gate: Jin's c in S = c / K
+    band_width_m=10.0,                    # gate: visibility band width (m)
+    anticipate=True,                      # price segments at arrival time
+    foresight_horizon_s=float("inf"),     # cap on anticipation (s)
+    fallback_switch_margin=0.2,           # gate: all-refused hysteresis
     w_smoke=1.0,                          # smoke cost weight
     w_fed=10.0,                           # FED cost weight
     w_queue=0.0,                          # congestion weight (0 = off, the default)
@@ -163,17 +228,34 @@ config = RouteCostConfig(
 )
 ```
 
+Two further fields exist on the dataclass but are **not** readable from
+the `routing` block, so a scenario run always gets their defaults:
+`fed_return_margin` (0.9) and `impassable_extinction_threshold` (3.0).
+
+`w_smoke` and `w_fed` are **not inert under the gate.** They weight the
+Dijkstra edge costs that pick which path reaches each exit, under both
+models — a known limitation, tracked in
+[gate-model-review-notes.md](gate-model-review-notes.md).
+
 ### Congestion-aware routing
 
-When `w_queue > 0`, an exit-congestion term is added to the
-composite cost:
+When `w_queue > 0`, an exit-congestion term enters the ranking. Under
+the additive model it is converted to distance and added to the
+composite:
 
 ```
-queue_distance = base_speed_m_per_s * N_exit / capacity
+queue_time     = N_exit / capacity
+queue_distance = base_speed_m_per_s * queue_time
 composite = path_length * (1 + w_smoke * K_ave)
           + w_fed * FED_max
           + w_queue * queue_distance
 ```
+
+Under the gate the ranking number is a time, so the delay is added as a
+time instead — `rank_cost = travel_time_s + w_queue * queue_time_s`.
+Opting into congestion-aware routing therefore works under both models,
+but `w_queue` is not the same quantity in the two: the additive form
+carries the extra `base_speed_m_per_s` factor.
 
 where:
 
@@ -298,41 +380,63 @@ the interval.
 
 2. rank_routes(source, t, FED, K_field)
    ├─ evaluate all edges → dynamic costs from current smoke/FED
+   │   (w_smoke / w_fed weighted, under BOTH cost models)
    ├─ Dijkstra with dynamic weights → one minimum-cost path per reachable exit
    │   (only the single lowest-cost path to each exit under these weights
    │    is evaluated; alternative paths to the same exit are not enumerated)
-   ├─ evaluate_route on each path (composite cost + rejection flags)
+   ├─ evaluate_route on each path
+   │   ├─ FED rejection (asymmetric: stricter for a non-current exit)
+   │   └─ gate only: sight rejection, reason "sight (los)" or "sight (path)"
    ├─ visibility rejection pass
    │   └─ if ≥1 route has any visible segment:
    │       mark routes where ALL segments are non-visible as rejected
-   ├─ sort: non-rejected first (by composite cost), rejected last
-   └─ if all rejected → un-reject least-cost route as fallback
+   ├─ sort: non-rejected first, rejected last
+   │   ├─ gate     → (rejected, -band, rank_cost, hops)
+   │   └─ additive → (rejected, rank_cost, hops)
+   └─ if all rejected → un-reject the least-bad route as fallback
+       ├─ gate     → by (-band, rank_cost), held by fallback_switch_margin
+       └─ additive → lowest composite
 
 3. Pick best = ranked[0]
    └─ if best is hard-rejected (not a fallback) → skip (return None)
 
 4. Compare best.exit_id to agent's current exit
-   ├─ same exit → update cached path silently, return None
-   └─ different exit → reroute_agent(wait_info, best.path)
+   ├─ same exit → reroute only if the new path beats the path actually
+   │   being walked by more than 10 % on rank_cost ("better_path"),
+   │   else update the cached path silently and return None
+   └─ different exit → exit-switch anchor, then reroute_agent(wait_info, best.path)
+       ├─ anchor: adopt only if rank_cost < old_cost * exit_switch_anchor
+       │   ├─ bypassed when the old exit is FED-lethal or impassably smoky
+       │   └─ gate: bypassed when the rival is feasible AND a whole band clearer
        ├─ rewrite path_choices deterministically along new path
        ├─ retarget agent to first unvisited stage in new path
        └─ return RouteSwitch record
 ```
 
+When `rank_routes` returns nothing at all — a discovery agent whose
+known subgraph holds no exit — the agent is sent toward the nearest
+unexplored frontier node instead of standing still (`explore`), or
+patrols known nodes when its knowledge is exhausted (`wander`).
+
 ### When a switch is triggered
 
-A switch is recorded when **all three** conditions hold:
+An exit switch is recorded when **all four** conditions hold:
 
 1. The agent's reevaluation tick fires (staggered offset + interval).
 2. `rank_routes` finds a best route that is not hard-rejected.
 3. That best route leads to a **different exit** than the current one.
+4. It clears the exit-switch anchor, or qualifies for one of the anchor
+   bypasses (old exit FED-lethal or impassably smoky; or, under the
+   gate, a feasible rival a whole visibility band clearer).
 
 No switch is recorded when:
 
 - The agent has not yet reached its offset time.
 - The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).
-- All routes are hard-rejected (FED ≥ threshold and no visible fallback).
-- The best route leads to the same exit (path may still be updated).
+- All routes are hard-rejected and none was un-rejected as a fallback.
+- The anchor holds the agent on its current exit.
+- The best route leads to the same exit — though the path to it may
+  still be rewritten, which is recorded as `better_path`.
 
 ### Route switch reasons
 
@@ -341,8 +445,11 @@ Each `RouteSwitch` record includes a `reason` field:
 | Reason          | Condition                                                        |
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment                            |
-| `smoke_reroute` | Best route is a different exit (lower composite cost)            |
+| `smoke_reroute` | Best route is a different exit (lower `rank_cost`)               |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
+| `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`      |
+| `explore`       | No exit known yet; heading to the nearest unexplored frontier    |
+| `wander`        | Knowledge exhausted; patrolling known nodes                      |
 
 ### Segment caching
 
@@ -350,10 +457,14 @@ Route evaluation supports an optional `cached_segments` dictionary.
 When provided, segment costs are cached by `(source, target)` key and
 reused across route evaluations within the same timestep. This avoids
 redundant extinction sampling when multiple candidate routes share
-segments.
+segments. Under `anticipate` the same edge on two routes is priced at
+two different arrival times, so the key becomes
+`(source, target, round(arrival_time_s))`. The re-measured first leg of
+a position-aware route is deliberately not cached: it belongs to one
+agent's position, and the cache is shared across agents in a pass.
 
 ```python
-cache: dict[tuple[str, str], SegmentCost] = {}
+cache: dict[SegmentCacheKey, SegmentCost] = {}
 ranked = rank_routes(
     graph, source, time_s, current_fed,
     extinction_sampler, fed_rate_sampler, config,
@@ -378,7 +489,9 @@ Cost breakdown for one edge of a route:
 | `speed_factor`  | `float` | Speed multiplier from smoke law         |
 | `travel_time_s` | `float` | Estimated travel time                   |
 | `fed_growth`    | `float` | Estimated FED increase                  |
-| `visible`       | `bool`  | Whether K is below visibility threshold |
+| `visible`       | `bool`  | Whether `k_avg` is below `visibility_extinction_threshold` |
+| `k_max`         | `float` | Worst extinction sampled on the segment |
+| `arrival_time_s`| `float` | Time the segment was priced at (see anticipation) |
 
 ### `RouteCost`
 
@@ -392,14 +505,28 @@ Full cost evaluation for one candidate route:
 | `k_ave_route`      | `float`             | Length-weighted mean extinction    |
 | `travel_time_s`    | `float`             | Total estimated travel time       |
 | `fed_max_route`    | `float`             | Projected cumulative FED          |
-| `composite_cost`   | `float`             | Final cost used for ranking       |
+| `composite_cost`   | `float`             | Additive cost; reported but not ranking under the gate |
+| `rank_cost`        | `float`             | The number ordering, the anchor and the same-exit test read |
 | `segments`         | `list[SegmentCost]` | Per-segment breakdowns            |
 | `queue_time_s`     | `float`             | Estimated queueing time at exit   |
+| `k_max_route`      | `float`             | Worst extinction anywhere on the route |
+| `min_visibility_m` | `float`             | Sighting distance at the route's worst point (gate) |
+| `band`             | `int`               | Visibility band the route falls in (gate) |
+| `feasible`         | `bool`              | Sight and dose both allow the route (gate) |
 | `rejected`         | `bool`              | Whether route was rejected        |
-| `rejection_reason` | `str \| None`       | Reason for rejection              |
+| `rejection_reason` | `str \| None`       | Reason for rejection; `fallback: ` prefix when un-rejected |
+
+The last four are gate diagnostics and are **not** written to the
+route-cost CSV yet; only what the rejection string embeds is
+recoverable from the output.
 
 ## References
 
+- [route-cost-gate.md](route-cost-gate.md) -- the gate model: sight
+  criteria, banding, fallback, the full `routing` key table, and known
+  limitations.
+- [gate-model-review-notes.md](gate-model-review-notes.md) -- provenance
+  against `materials/evac.f90` and the open questions.
 - [FDS+Evac Technical Reference and User's Guide](../materials/FDS+EVAC_Guide.pdf)
   -- Korhonen (2021). Speed-reduction law and smoke-interaction model
   (Section 3.4).
