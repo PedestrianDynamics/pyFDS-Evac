@@ -759,6 +759,11 @@ class RouteCost:
     min_visibility_m: float = math.inf
     band: int = 0
     feasible: bool = True
+    # What the whole pipeline orders on -- ranking, the exit-switch anchor and
+    # the same-exit path test all read this, so a model change lands in one
+    # place. Under "additive" it is the composite; under "gate" it is time,
+    # which only decides within a visibility band.
+    rank_cost: float = 0.0
 
 
 def _sample_segment_extinction(
@@ -1054,7 +1059,32 @@ def evaluate_route(
     # The worst point on the route, not its average: a route is refused because
     # of the wall of smoke in it, and a mean over 30 clear metres and 3 blind
     # ones reports a walk anyone would take.
-    k_max = max((s.k_max for _, s in weighted), default=0.0)
+    #
+    # The first segment is resampled from where the agent stands, because the
+    # rest of it is behind them. Taking the whole segment would gate every route
+    # through that node on smoke already walked through -- and only the agent's
+    # *current* route has a partly-traversed first leg, so the error falls on
+    # the committed route alone and pushes the agent off it. Deliberately not
+    # written to cached_segments: those entries are shared between agents in one
+    # pass and this stretch belongs to one agent's position.
+    first_k_max = segments[0].k_max if segments else 0.0
+    if agent_position is not None and first_share < 1.0 and len(path) >= 2:
+        next_node = graph.nodes.get(path[1])
+        if next_node is not None:
+            _, first_k_max = _los_stats(
+                agent_position[0],
+                agent_position[1],
+                next_node.centroid_x,
+                next_node.centroid_y,
+                segments[0].arrival_time_s,
+                extinction_sampler,
+                config.sampling_step_m,
+                first_share * segments[0].length_m,
+            )
+    k_max = max(
+        [first_k_max] + [s.k_max for _, s in weighted[1:]],
+        default=0.0,
+    )
     min_visibility = _sighting_distance(k_max, config.sign_contrast_c)
 
     # Composite cost: effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
@@ -1122,6 +1152,14 @@ def evaluate_route(
                 f"({config.sight_distance_fraction:g} x {effective_length:.1f} m)"
             )
 
+    if config.cost_model == "gate":
+        # Queue delay is time, so it belongs beside travel time rather than in
+        # the composite the gate ignores -- otherwise opting into congestion-
+        # aware routing (w_queue) would silently do nothing.
+        rank_cost = travel_time + queue_time * config.w_queue
+    else:
+        rank_cost = composite
+
     return RouteCost(
         exit_id=exit_id,
         path=path,
@@ -1138,6 +1176,7 @@ def evaluate_route(
         min_visibility_m=min_visibility,
         band=band,
         feasible=feasible,
+        rank_cost=rank_cost,
     )
 
 
@@ -1257,30 +1296,32 @@ def rank_routes(
     if config.cost_model == "gate":
 
         def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
-            # Queue delay is time, so it belongs beside travel time rather than
-            # in the composite the gate ignores -- otherwise opting into
-            # congestion-aware routing (w_queue) would silently do nothing.
-            return (
-                1 if rc.rejected else 0,
-                -rc.band,
-                rc.travel_time_s + rc.queue_time_s * config.w_queue,
-                len(rc.path),
-            )
+            return (1 if rc.rejected else 0, -rc.band, rc.rank_cost, len(rc.path))
     else:
 
         def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
-            return (1 if rc.rejected else 0, 0, rc.composite_cost, len(rc.path))
+            return (1 if rc.rejected else 0, 0, rc.rank_cost, len(rc.path))
 
     costs.sort(key=sort_key)
 
     # Fallback: with every route refused the agent still has to go somewhere,
     # and the least bad one is the one whose worst stretch is least bad -- the
-    # question is surviving the walk, not averaging it. Re-sorting the refused
-    # routes by k_max also makes the fallback stable: the same route stays first
-    # while the field only fluctuates, which the old "un-reject costs[0]" could
-    # not promise because it inherited an ordering by composite cost.
+    # question is surviving the walk, not averaging it.
+    #
+    # Refusal is never remembered: the sight criterion is measured against the
+    # distance *still to walk*, so it relaxes as the agent closes on an exit and
+    # the smoke that refused a door at 40 m accepts it at 2 m. Recomputing every
+    # tick is what lets that happen. The price is that in a fire smoky enough to
+    # refuse everything -- which is most of a real run, see
+    # docs/gate-model-review-notes.md -- the ordering follows the field, so the
+    # current exit is held unless a rival's worst stretch is clearly milder.
     if costs and all(rc.rejected for rc in costs):
-        costs.sort(key=lambda rc: (rc.k_max_route, rc.travel_time_s))
+        costs.sort(key=lambda rc: (rc.k_max_route, rc.rank_cost))
+        current = next((rc for rc in costs if rc.exit_id == current_exit), None)
+        if current is not None and costs[0].exit_id != current.exit_id:
+            margin = 1.0 - config.fallback_switch_margin
+            if costs[0].k_max_route > current.k_max_route * margin:
+                costs = [current] + [rc for rc in costs if rc is not current]
         best = costs[0]
         costs[0] = replace(
             best,
@@ -1344,13 +1385,6 @@ class AgentRouteState:
     last_eval_time_s: float = -math.inf
     eval_offset_s: float = 0.0  # staggering offset
     wander_step: int = 0  # position in the knowledge-exhausted patrol rotation
-    # Exits this agent has found impassable. Death is remembered, and per
-    # agent: an exit refused at t=60 s used to be a fresh candidate at t=61 s,
-    # which is what made the crowd oscillate between two worsening exits. It
-    # stays this agent's knowledge -- someone arriving later has never seen the
-    # exit alive and may still consider it, as in FDS+Evac, where the door is
-    # removed from that agent's own known set.
-    dead_exits: set[str] = field(default_factory=set)
 
 
 @dataclass(frozen=True)
@@ -1510,57 +1544,6 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
     return path
 
 
-def _apply_exit_death(
-    ranked: list[RouteCost],
-    route_state: AgentRouteState,
-    cost_config: RouteCostConfig,
-) -> list[RouteCost]:
-    """Retire exits this agent has found impassable, and never revive them.
-
-    An exit that failed the gate is remembered rather than re-scored from
-    scratch on the next tick. That is what makes the choice monotone: exits
-    fall away one by one and the crowd commits, instead of migrating back to a
-    route the moment its rival degrades by a hair.
-
-    When the last one goes the agent still has to move, so it keeps the route
-    whose *worst* stretch is least bad, and only trades it for one clearly
-    better -- ``fallback_switch_margin`` -- so the choice does not follow every
-    flicker of the field.
-    """
-    for rc in ranked:
-        if not rc.feasible and not (rc.rejection_reason or "").startswith("fallback"):
-            route_state.dead_exits.add(rc.exit_id)
-
-    alive = [rc for rc in ranked if rc.exit_id not in route_state.dead_exits]
-    if any(not rc.rejected for rc in alive):
-        return alive
-
-    # Either every exit is dead, or the only un-rejected route rank_routes left
-    # us belongs to a dead one and has just been filtered out. Both cases need a
-    # target: fall back over whatever survives, or over the full list when
-    # nothing does.
-    least_bad = sorted(
-        alive or ranked, key=lambda rc: (rc.k_max_route, rc.travel_time_s)
-    )
-    current = next(
-        (rc for rc in least_bad if rc.exit_id == route_state.current_exit), None
-    )
-    if current is not None and least_bad[0].exit_id != current.exit_id:
-        margin = 1.0 - cost_config.fallback_switch_margin
-        if least_bad[0].k_max_route > current.k_max_route * margin:
-            least_bad = [current] + [
-                rc for rc in least_bad if rc.exit_id != current.exit_id
-            ]
-
-    scope = "every exit dead" if not alive else "no route passes"
-    head = replace(
-        least_bad[0],
-        rejected=False,
-        rejection_reason=f"fallback: {scope} ({least_bad[0].rejection_reason})",
-    )
-    return [head] + least_bad[1:]
-
-
 def evaluate_and_reroute(
     agent_id: int,
     wait_info: dict,
@@ -1671,9 +1654,6 @@ def evaluate_and_reroute(
             reason=reason,
         )
 
-    if config.cost_config.cost_model == "gate":
-        ranked = _apply_exit_death(ranked, route_state, config.cost_config)
-
     best = ranked[0]
     if (
         best.rejected
@@ -1683,17 +1663,19 @@ def evaluate_and_reroute(
         return None
 
     old_exit = route_state.current_exit
+    old_rc = None
     old_cost = None
     old_must_flee = False
     if old_exit and old_exit != best.exit_id:
-        # Find the old exit's cost (for diagnostics) and whether it is rejected
-        # for a *safety* reason (FED-lethal / impassable smoke), which disables
-        # anchoring below. A mild visibility rejection (light-haze path / an
-        # unreadable sign) is NOT a reason to bypass the anchor — see
-        # _must_flee_rejection.
+        # Find the old exit's route -- for its cost, its visibility band, and
+        # whether it is rejected for a *safety* reason (FED-lethal / impassable
+        # smoke), which disables anchoring below. A mild visibility rejection
+        # (light-haze path / an unreadable sign) is NOT a reason to bypass the
+        # anchor — see _must_flee_rejection.
         for rc in ranked:
             if rc.exit_id == old_exit:
-                old_cost = rc.composite_cost
+                old_rc = rc
+                old_cost = rc.rank_cost
                 old_must_flee = _must_flee_rejection(rc, config.cost_config)
                 break
 
@@ -1728,8 +1710,8 @@ def evaluate_and_reroute(
                 exit_counts=exit_counts,
                 agent_position=agent_position,
                 current_target=current_target,
-            ).composite_cost
-            if best.composite_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
+            ).rank_cost
+            if best.rank_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
                 stage_configs = wait_info.get("stage_configs", {})
                 changed = reroute_agent(wait_info, best.path, stage_configs)
                 if changed:
@@ -1740,7 +1722,7 @@ def evaluate_and_reroute(
                         old_exit=old_exit,
                         new_exit=best.exit_id,
                         old_cost=committed_cost,
-                        new_cost=best.composite_cost,
+                        new_cost=best.rank_cost,
                         reason="better_path",
                     )
         route_state.current_path = best.path
@@ -1756,11 +1738,26 @@ def evaluate_and_reroute(
     #     exit regardless of cost, so hysteresis must not pin it there. A merely
     #     smoke-obscured/low-visibility exit does NOT flee: smoke is already in the
     #     cost, and bypassing the anchor on it causes the flip-flop.
+    #
+    # Under the gate model this is the *only* churn protection: refusals are not
+    # remembered, so nothing else stops an agent following the field.
+    #
+    # Under the gate model the anchor is applied *within* a visibility band. A
+    # rival a whole band clearer is adopted outright: banding is the model's
+    # statement that the two routes are not comparable on time, and putting the
+    # anchor in front of it would veto exactly the clearer-but-longer switch the
+    # gate exists to allow. Once the bands tie, distance is the objective again
+    # and the rival has to beat the anchor on time like any other.
     if (
         old_exit is not None
         and old_cost is not None
         and not old_must_flee
-        and best.composite_cost >= old_cost * config.exit_switch_anchor
+        and not (
+            config.cost_config.cost_model == "gate"
+            and old_rc is not None
+            and best.band > old_rc.band
+        )
+        and best.rank_cost >= old_cost * config.exit_switch_anchor
     ):
         return None
 
