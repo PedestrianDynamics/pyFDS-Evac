@@ -156,6 +156,26 @@ class TestFallbackStability:
         assert not ranked[0].rejected
         assert (ranked[0].rejection_reason or "").startswith("fallback")
 
+    def test_a_hair_of_sight_does_not_buy_a_long_detour(self):
+        """Measured on world100: 2.0 m of sight beat 1.8 m over 29 m of walking.
+
+        Both routes are refused and neither is usable, so the tiny difference in
+        worst-case sight is noise. Banding makes them the same class and lets
+        distance decide.
+        """
+        graph = build_two_exit_graph()
+
+        class BarelyClearerFarAway:
+            def sample_extinction(self, time_s, x, y):
+                del time_s, y
+                return 5.0 if x < 0 else 4.9  # S = 0.60 m vs 0.61 m
+
+        ranked = rank_routes(
+            graph, "spawn", 0.0, 0.0, BarelyClearerFarAway(), None, _cfg()
+        )
+        assert ranked[0].exit_id == "near"
+        assert ranked[0].band == ranked[1].band
+
     def test_the_current_exit_is_held_when_rivals_are_no_milder(self):
         """Uniform smoke: k_max ties, so the margin must keep the incumbent."""
         for held in ("near", "far"):

@@ -1315,8 +1315,14 @@ def rank_routes(
     # refuse everything -- which is most of a real run, see
     # docs/gate-model-review-notes.md -- the ordering follows the field, so the
     # current exit is held unless a rival's worst stretch is clearly milder.
+    #
+    # Banded, not raw: measured on world100, ordering refused routes by k_max
+    # alone put a 51 m route ahead of a 22 m one on 2.0 m of sight against 1.8 m.
+    # Two tenths of a metre of visibility, neither of them usable, decided a 29 m
+    # detour. Sight this poor is a class, not a scale, so the band decides and
+    # distance breaks the tie -- the same rule the feasible routes get.
     if costs and all(rc.rejected for rc in costs):
-        costs.sort(key=lambda rc: (rc.k_max_route, rc.rank_cost))
+        costs.sort(key=lambda rc: (-rc.band, rc.rank_cost))
         current = next((rc for rc in costs if rc.exit_id == current_exit), None)
         if current is not None and costs[0].exit_id != current.exit_id:
             margin = 1.0 - config.fallback_switch_margin
@@ -1756,6 +1762,12 @@ def evaluate_and_reroute(
             config.cost_config.cost_model == "gate"
             and old_rc is not None
             and best.band > old_rc.band
+            # Only a route the agent can actually take earns the bypass. When
+            # every route is refused the bands compare two walks nobody can
+            # make, and letting one of them jump the anchor is what made agents
+            # ping-pong: the fallback pushes them onto a rival, the old exit
+            # heals a band on the next tick, and back they go on a 1% gain.
+            and best.feasible
         )
         and best.rank_cost >= old_cost * config.exit_switch_anchor
     ):
