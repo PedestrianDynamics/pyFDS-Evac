@@ -14,8 +14,10 @@ all-refused fallback keeps the current exit unless a rival's worst stretch is
 clearly milder, and the exit-switch anchor keeps it unless a rival is clearly
 quicker. Under the gate model those are the only churn protection there is.
 
-The band tests pin the other half: a route a whole visibility class clearer is
-adopted whatever it costs in distance, and within a band distance decides again.
+Smoke decides which exits are available; among the survivors distance decides,
+and the visibility band takes no part in the ordering. It used to, and on
+l_corridor it -- not the sight gate -- was placing agents on the 58 m route
+while both routes were optically clear.
 """
 
 from __future__ import annotations
@@ -29,6 +31,7 @@ from pyfds_evac.core.route_graph import (
     RouteCost,
     RouteCostConfig,
     StageGraph,
+    _must_flee_rejection,
     _sighting_distance,
     _visibility_band,
     evaluate_route,
@@ -82,24 +85,38 @@ class TestSightCriterion:
         assert _visibility_band(math.inf, 10.0) == _visibility_band(math.inf, 5.0)
 
 
-class TestBandOrdering:
-    def test_a_clearer_band_outranks_a_shorter_route(self):
+class TestSmokeDecidesAvailabilityNotOrder:
+    """The gate refuses; it does not also rank.
+
+    This class used to claim a clearer *band* outranked a shorter route, and it
+    passed for the wrong reason -- the near exit was refused, so the far one won
+    on feasibility and the band never entered it. The band has since been taken
+    out of the ordering entirely, and the test still passed, which is what gave
+    it away. Assert the mechanism, not the outcome.
+    """
+
+    def test_smoke_on_the_near_arm_refuses_it_and_the_far_exit_wins(self):
         graph = build_two_exit_graph()
 
-        # Smoke only on the near arm: the far exit is a whole band clearer.
         class SmokeOnNear:
             def sample_extinction(self, time_s, x, y):
                 del time_s, y
                 return 0.35 if x < 0 else 0.0
 
         ranked = rank_routes(graph, "spawn", 0.0, 0.0, SmokeOnNear(), None, _cfg())
+        near = next(rc for rc in ranked if rc.exit_id == "near")
+        assert near.rejected, "the far exit must win by refusal, not by ranking"
         assert ranked[0].exit_id == "far"
-        assert ranked[0].band > ranked[1].band
 
-    def test_within_a_band_the_nearer_route_wins(self):
+    def test_among_feasible_routes_the_nearer_one_wins_however_smoky(self):
+        """Both passable: distance decides, and smoke does not get a second vote."""
         graph = build_two_exit_graph()
-        ranked = rank_routes(graph, "spawn", 0.0, 0.0, ConstantK(0.0), None, _cfg())
-        assert ranked[0].exit_id == "near"
+        for k in (0.0, 0.05, 0.1):
+            ranked = rank_routes(graph, "spawn", 0.0, 0.0, ConstantK(k), None, _cfg())
+            feasible = [rc for rc in ranked if not rc.rejected]
+            if len(feasible) < 2:
+                continue
+            assert ranked[0].exit_id == "near", k
 
 
 class TestRefusalIsNotRemembered:
@@ -215,3 +232,76 @@ def test_route_cost_defaults_are_usable_without_the_gate_fields():
         rejection_reason=None,
     )
     assert rc.feasible and rc.rank_cost == 0.0
+
+
+class LethalOnTheNearArm:
+    """A dose that incapacitates on the west side, nothing on the east."""
+
+    def __init__(self, rate_per_min: float = 8.0):
+        self._rate = rate_per_min
+
+    def sample_fed_rate(self, time_s, x, y):
+        del time_s, y
+        return self._rate if x < 0 else 0.0
+
+
+class TestDoseVetoesAnExit:
+    """Dose gates availability; it does not rank.
+
+    This is FDS+Evac's other branch, the one selected when FED_DOOR_CRIT is
+    positive (evac.f90, Change_Target_Door): score a door by the dose already
+    taken plus the dose predicted over the walk to it, and strike it out when
+    that reaches incapacitation. Here it only strikes out -- the surviving
+    routes are still ordered by time, not by dose.
+    """
+
+    def test_a_lethal_route_is_refused_and_the_long_clean_one_wins(self):
+        graph = build_two_exit_graph()
+        ranked = rank_routes(
+            graph,
+            "spawn",
+            0.0,
+            0.0,
+            ConstantK(0.0),  # clear air: the sight gate cannot be the cause
+            LethalOnTheNearArm(),
+            _cfg(),
+        )
+        by_exit = {rc.exit_id: rc for rc in ranked}
+        assert by_exit["near"].fed_max_route > 1.0
+        assert by_exit["near"].rejected
+        assert "FED" in (by_exit["near"].rejection_reason or "")
+        assert not by_exit["far"].rejected
+        # The near exit is half the distance and still loses: dose vetoed it.
+        assert ranked[0].exit_id == "far"
+
+    def test_dose_below_the_threshold_leaves_the_nearer_exit_alone(self):
+        graph = build_two_exit_graph()
+        ranked = rank_routes(
+            graph,
+            "spawn",
+            0.0,
+            0.0,
+            ConstantK(0.0),
+            LethalOnTheNearArm(rate_per_min=0.05),
+            _cfg(),
+        )
+        by_exit = {rc.exit_id: rc for rc in ranked}
+        assert by_exit["near"].fed_max_route < 1.0
+        assert not by_exit["near"].rejected
+        assert ranked[0].exit_id == "near"
+
+    def test_a_dose_rejection_lets_the_agent_flee_past_the_anchor(self):
+        """Hysteresis must not pin an agent to an exit that will kill it."""
+        graph = build_two_exit_graph()
+        ranked = rank_routes(
+            graph,
+            "spawn",
+            0.0,
+            0.0,
+            ConstantK(0.0),
+            LethalOnTheNearArm(),
+            _cfg(),
+            current_exit="near",
+        )
+        near = next(rc for rc in ranked if rc.exit_id == "near")
+        assert _must_flee_rejection(near, _cfg())
