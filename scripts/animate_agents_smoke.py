@@ -59,6 +59,80 @@ def _read_history(path: Path) -> dict[float, list[tuple[float, float, float]]]:
     return frames
 
 
+def _draw_deck(ax, config: Path | None) -> None:
+    """Outline where agents come from and where they are trying to get to.
+
+    Without these the animation shows dots on a smoke field and leaves the
+    reader to guess which blob is a door -- and the whole question the picture
+    answers is which exit the crowd chose.
+    """
+    if config is None:
+        return
+    import json
+
+    from shapely.geometry import Polygon
+
+    raw = json.loads(config.read_text(encoding="utf-8"))
+    for name, spec in (raw.get("distributions") or {}).items():
+        coords = spec.get("coordinates")
+        if not coords:
+            continue
+        poly = Polygon(coords)
+        ax.fill(
+            *poly.exterior.xy,
+            facecolor="none",
+            edgecolor="deepskyblue",
+            lw=1.8,
+            ls="--",
+            zorder=4,
+        )
+        ax.annotate(
+            "spawn",
+            (poly.centroid.x, poly.centroid.y),
+            color="deepskyblue",
+            fontsize=9,
+            ha="center",
+            va="center",
+            zorder=5,
+        )
+        del name
+    for name, spec in (raw.get("exits") or {}).items():
+        coords = spec.get("coordinates")
+        if not coords:
+            continue
+        c = Polygon(coords).centroid
+        ax.plot(
+            [c.x],
+            [c.y],
+            marker="s",
+            ms=10,
+            mfc="white",
+            mec="black",
+            mew=1.4,
+            zorder=6,
+            clip_on=False,
+        )
+        # Exits sit on the domain boundary, so the label is offset *inward*: a
+        # fixed offset leaves half of them outside the axes and clipped away.
+        xa, xb = ax.get_xlim()
+        ya, yb = ax.get_ylim()
+        dx = -22 if c.x > 0.5 * (xa + xb) else 22
+        dy = -16 if c.y > 0.5 * (ya + yb) else 16
+        ax.annotate(
+            name.replace("jps-exits_", "E"),
+            (c.x, c.y),
+            textcoords="offset points",
+            xytext=(dx, dy),
+            ha="center",
+            va="center",
+            fontsize=12,
+            fontweight="bold",
+            color="white",
+            zorder=6,
+            clip_on=False,
+        )
+
+
 def _walkable(geometry: Path | None):
     if geometry is None:
         return None
@@ -100,6 +174,11 @@ def main() -> None:
     ap.add_argument("--fds-dir", required=True)
     ap.add_argument(
         "--geometry", type=Path, help="walkable-area WKT, drawn as backdrop"
+    )
+    ap.add_argument(
+        "--config",
+        type=Path,
+        help="deck config.json; draws the spawn areas and labels the exits",
     )
     ap.add_argument("--out", "-o", type=Path, default=Path("agents_smoke.mp4"))
     ap.add_argument("--slice-height", type=float, default=2.0)
@@ -185,6 +264,8 @@ def main() -> None:
             for hole in geom.interiors:
                 ax.fill(*hole.xy, color="0.55", zorder=2, lw=0)
                 ax.plot(*hole.xy, color="0.15", lw=0.6, zorder=2)
+
+    _draw_deck(ax, args.config)
 
     scat = ax.scatter(
         [],
