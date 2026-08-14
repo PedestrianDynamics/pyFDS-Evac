@@ -276,6 +276,8 @@ fallback was banded and the anchor bypass narrowed (`f6eede0`).
 | B10 double-gating on the extinction thresholds | **open** |
 | B11 clear-air equivalence at small nonzero K | **open** -- bands are still unbounded above. Measured exact at K = 0 on world100 (7712 rows) and t_junction (4030 rows) |
 | A4 uniform band lattice | **open** |
+| E: `tests/test_route_gate.py` missing | **fixed** -- the file exists and covers the gate |
+| E: stale docs | **fixed** -- the model reference is now [route-cost-gate.md](route-cost-gate.md); `routing.md`, `model-comparison.md`, `routing-and-signs-notes.md`, `rerouting-oscillation-notes.md` and `usage.md` were brought in line with it. The paper is not done. |
 
 ## Fallback tie-break: nearest, not farthest
 

@@ -272,7 +272,7 @@ that cannot change which path is selected to a given exit.
 **Congestion-aware routing is off by default** (`w_queue = 0`); set it in a
 scenario's `routing` block to switch it on.
 
-#### Why it is opt-in, and what 0.03 means
+#### Why it is opt-in, and what 0.024 means
 
 The term is `w_queue * v0 * N / c` with `N` a **global** tally of every agent
 targeting the exit — where `v0` is the `base_speed_m_per_s` conversion constant
@@ -291,13 +291,29 @@ path-length differences it competes against are fixed by the geometry:
 No constant is right at more than one crowd size. 1.0 puts 333 m on a door at
 Station scale; the 0.03 that fixes that is inert in an ordinary room. So the
 library ships no congestion weight at all, and the calibrated value lives with
-the deck it was calibrated on — `assets/station_fahy` sets `w_queue = 0.03` in
-its own `routing` block. Issue #89 tracks replacing the global `N` with a queue
-the agent can perceive, which would remove the scale dependence.
+the deck it was calibrated on. Issue #89 tracks replacing the global `N` with a
+queue the agent can perceive, which would remove the scale dependence.
 
-#### Provenance of the Station's 0.03
+**`assets/station_fahy` currently ships `w_queue = 0.024`, not 0.03.** The 0.03
+below was swept against a geometry whose doorways were narrower than the
+building's; when the doorways were opened to their clear width the same sweep
+scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy's 52.9 %.
+The reasoning in this section is unchanged — only the fitted number moved.
 
-Calibrated, not conventional. `scripts/sweep_queue_weight.py` sweeps the
+**Two further caveats on that number.** The sweep was run under the additive
+composite, where `w_queue` multiplies a *distance*
+(`w_queue * base_speed_m_per_s * queue_time`). Under the default gate model it
+multiplies a *time* (`w_queue * queue_time_s`, against travel time), which is a
+different quantity, and no deck pins `cost_model` — so the Station deck now runs
+under the gate with a weight fitted under the additive model. It has not been
+re-swept there.
+
+#### Provenance of the Station's queue weight
+
+Calibrated, not conventional. The table below is the original sweep, which
+selected 0.03; see the caveats above for why the deck now ships 0.024 and why
+neither value has been re-fitted under the gate cost model.
+`scripts/sweep_queue_weight.py` sweeps the
 weight on `assets/station_fahy` with rerouting on, three seeds per
 point, and scores each run with that asset's own `validate.py`. The
 front-door share falls monotonically with `w_queue`:

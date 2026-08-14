@@ -53,8 +53,8 @@ silent unless you check the warning log.
 | `--reroute-interval S` | Seconds between per-agent reevaluations (default 1). |
 | `--output-route-history CSV` | Write route switches. |
 | `--output-route-cost-history CSV` | Ranked route cost snapshots. |
-| `--vis-cache NPZ` | Path to a vismap `.npz` cache — written if missing, loaded if present. Requires `--fds-dir` and rerouting enabled. |
-| `--clear-air-visibility` | Force sight gating with no fire. |
+| `--vis-cache NPZ` | Path to a vismap `.npz` cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With `--fds-dir` it caches the smoke-aware vismap; without one, the clear-air grid. |
+| `--clear-air-visibility` | Force sight gating on a deck with no fire. Conflicts with `--fds-dir` (a deck with a fire has smoke to decide sight) and with `--no-visibility`. |
 | `--no-visibility` | Turn sight gating off entirely; agents then learn each node's neighbours by contact. Not a fire scenario. |
 | `--vis-cell-size M` | Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight. |
 

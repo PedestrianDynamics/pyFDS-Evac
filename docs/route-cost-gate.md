@@ -99,8 +99,12 @@ What differs between the two criteria is *which* `K` and *which* distance:
 | `sight (los)` | `K_ave` along the real, obstruction-aware sight line to the exit's own sign, read from fdsvismap | `sight_distance_fraction` x straight-line distance to that sign | whenever a sight line resolves |
 | `sight (path)` | worst `K` sampled over the route polyline | `sight_distance_fraction` x the whole remaining route length | fallback, when no sight line resolves |
 
-`los` is FDS+Evac's `See_door` quantity, so the test reduces to a statement
-about optical depth along one leg. `path` is the stricter reading: it demands
+`los` is FDS+Evac's `See_door` quantity (evac.f90:15343), so the test reduces to
+a statement about optical depth along one leg. Note the borrowing is partial:
+`S > 0.5 x d` is FDS+Evac's *last-resort* door criterion (evac.f90:16456), not
+its primary one, which is the absolute `K_ave < ABS(FED_DOOR_CRIT)` = 0.03 /m
+(evac.f90:1459, :5262). pyFDS-Evac has no absolute door criterion. See
+[model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door). `path` is the stricter reading: it demands
 low `K` *everywhere* on the route and compares against the full remaining
 length, so it penalises long routes. It is used only where there is no sight
 line to read — an exit with no sign descriptor, a concealed one, one the agent

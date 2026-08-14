@@ -171,6 +171,32 @@ and `test_smoke_triggers_reroute` (dense k_ave 8.0 → still reroutes).
 haze that caused the flip-flop (≤ ~0.9) and below genuine walls of smoke; a sensitivity
 sweep is the path to a real value.
 
+### What changed under the gate cost model
+
+Everything above still runs: `_must_flee_rejection` and both extinction thresholds apply
+under `cost_model: "gate"` as well as `"additive"`. Three things are different, and they
+matter for anyone reading a churn trace on a current run:
+
+- **Refusals are not remembered, and they relax on approach.** The sight criterion is
+  measured against the distance *still to walk*, so the same haze refuses a door at 40 m
+  and accepts it at 2 m. Ordering therefore follows the field tick by tick, and the
+  exit-switch anchor is the *only* churn protection left.
+- **The anchor has a second bypass.** A rival that is `feasible` and a whole visibility
+  band clearer is adopted outright, without having to beat `exit_switch_anchor` on time.
+  Banding is the model's statement that the two routes are not comparable on time, and
+  putting the anchor in front of it would veto exactly the clearer-but-longer switch the
+  gate exists to allow. The bypass requires feasibility: letting refused routes jump the
+  anchor made agents ping-pong as bands healed and re-broke.
+- **The all-refused branch has its own hysteresis.** When nothing is available, the agent
+  keeps its least-bad target unless a rival's worst-case K is better by more than
+  `fallback_switch_margin` (0.2). Ordering there is banded rather than raw: ordering by
+  `k_max` alone once sent an agent 29 m out of its way over 0.2 m of sighting distance,
+  neither value usable.
+
+The costs compared by the anchor are `rank_cost`, which is travel time under the gate and
+the additive composite under `"additive"` — so the numbers in the logs above are not
+directly comparable with a gate run's.
+
 ## Fourth source — position-blind routing (the deepest cause)
 
 With the rejection-bypass fixed (above), a residual remained: agents walking **back and

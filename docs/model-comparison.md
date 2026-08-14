@@ -126,11 +126,15 @@ congestion points*, not the exit-selection cost function itself.
 #### The smoke criteria on a door
 
 FDS+Evac's *primary* smoke test on a door is **absolute**: a door
-counts as smoke-free while `K_ave < ABS(FED_DOOR_CRIT)` = 0.03 /m
-(evac.f90:1459, :5260), and among the doors that pass, the agent
-minimises the time `T` above.  The distance-relative rule — "check that
-visibility > 0.5 * distance to the door" — is FDS+Evac's **tier-4 last
-resort** (evac.f90:16455), reached only when no smoke-free door exists.
+counts as smoke-free while `K_ave < ABS(FED_DOOR_CRIT)`.  The input is
+a visibility in metres (`FED_DOOR_CRIT = -100.0`, evac.f90:1459) which
+is converted to an extinction coefficient by Jin's relation,
+`FED_DOOR_CRIT = 3.0 / FED_DOOR_CRIT` (evac.f90:5262) — so the default
+is 0.03 /m, and the branch that uses it is at evac.f90:16159.  Among
+the doors that pass, the agent minimises the time `T` above.  The
+distance-relative rule — "check that visibility > 0.5 * distance to the
+door" — is FDS+Evac's **tier-4 last resort** (evac.f90:16456), reached
+only when no smoke-free door exists.
 That rule reads `K_ave` along the straight, occlusion-blocked bee line
 (`See_door`, evac.f90:15343), so `S > 0.5 * d` is a statement about
 optical depth along one real sight line.
@@ -186,7 +190,7 @@ group.
 |--------|----------|------------|
 | **Algorithm** | N-player best-response game (NE in pure strategies) with preference-order filter [9] | Dijkstra shortest-path with dynamic edge weights, then a per-route gate |
 | **Cost function** | `T_i = beta_k * lambda_i + tau_i` (queueing + walking time) [9] Eq. 6 | gate: travel time (+ `w_queue` x queue time), ordered within visibility bands; additive: `length * (1 + w_smoke * K) + w_fed * FED` |
-| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5260); the `0.5 x d` visibility rule is the tier-4 last resort (:16455) | Distance-relative `S = c/K > 0.5 x d` as the primary gate; no absolute `K` door criterion |
+| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5262, :16159); the `0.5 x d` visibility rule is the tier-4 last resort (:16456) | Distance-relative `S = c/K > 0.5 x d` as the primary gate; no absolute `K` door criterion |
 | **Congestion** | Modelled: queueing time depends on count of closer agents heading to same exit | Optional (`w_queue`), off by default; a global tally of agents targeting the exit |
 | **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered |
 | **Social behaviour** | Herding and follower agent types observe neighbours | Not modelled |
@@ -483,7 +487,7 @@ require correction:
   independently pick the cheapest path without considering how many
   others are heading to the same exit — exactly the overcrowding the
   game-theoretic model in FDS+Evac was designed to solve.  See
-  [docs/routing.md](routing.md#why-it-is-opt-in-and-what-003-means).
+  [docs/routing.md](routing.md#why-it-is-opt-in-and-what-0024-means).
 
 - **No equilibrium concept.**  Without agent interaction in the cost
   function, there is no mechanism for agents to self-organise across

@@ -388,8 +388,9 @@ of the model, so the pin needs both.
 incapacitation only. FIC and the sight gate are driven by the same smoke, so
 routing on both would double-count.
 
-Full derivation, provenance against FDS+Evac / JPSfire / Simulex, and the open
-questions are in [docs/gate-model-review-notes.md](docs/gate-model-review-notes.md).
+The model reference is [docs/route-cost-gate.md](docs/route-cost-gate.md);
+provenance and the open questions are in
+[docs/gate-model-review-notes.md](docs/gate-model-review-notes.md).
 `assets/l_corridor` is the deck the model is judged on -- a near exit behind the
 fire and a clean 58 m way round -- and its results are in the sciebo case folder.
 
@@ -412,8 +413,8 @@ fire and a clean 58 m way round -- and its results are in the sciebo case folder
   decks drive the invariant tests in `tests/test_generated_worlds.py`
 - **Congestion-aware routing**: Optional exit-congestion term (`w_queue`), **off
   by default** — it scales with a global agent count, so no constant suits every
-  scenario. `assets/station_fahy` opts in at 0.03, calibrated against Fahy
-  Table 2 — see [docs/routing.md](docs/routing.md#why-it-is-opt-in-and-what-003-means)
+  scenario. `assets/station_fahy` opts in at 0.024, calibrated against Fahy
+  Table 2 — see [docs/routing.md](docs/routing.md#why-it-is-opt-in-and-what-0024-means)
   and `scripts/sweep_queue_weight.py`
 - **Throughput throttling**: Optional exit flux limiting via
   `enable_throughput_throttling` and `max_throughput` in scenario config

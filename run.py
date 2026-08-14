@@ -103,15 +103,18 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--vis-cache",
         help="Path to vismap .npz cache for visibility-gated route rejection. "
-        "Requires --fds-dir and rerouting enabled (on by default; do not pass "
-        "--no-enable-rerouting). Cache is created if missing, loaded if present.",
+        "Requires rerouting enabled (on by default; do not pass "
+        "--no-enable-rerouting). With --fds-dir the cache holds the smoke-aware "
+        "vismap, without it the clear-air one. Created if missing, loaded if "
+        "present.",
     )
     parser.add_argument(
         "--clear-air-visibility",
         action="store_true",
         help="Force clear-air sight gating even on a deck whose agents all "
-        "start fully familiar (they never consult it, so it is off by default "
-        "there). Decks with discovery agents get it without asking.",
+        "start fully familiar. Such agents never consult it to learn the graph, "
+        "but the gate route model reads its line of sight, so a gate deck builds "
+        "one anyway. Decks with discovery agents get it without asking.",
     )
     parser.add_argument(
         "--no-visibility",
