@@ -682,13 +682,27 @@ class RouteCostConfig:
     # Frantzich-Nilsson law gives only beta/alpha = -0.081 per unit K, so at a
     # realistic K ~ 1 the cleanest exit in a hall earns under 1% more speed and
     # can never repay a detour.
-    clean_extinction_threshold: float = 0.03
-    # Hysteresis on tier membership, applied to the exit the agent is already
-    # heading for. A bare threshold on K is what the retired
-    # visibility_extinction_threshold was, and it toggled every tick; here a
-    # toggle is worse than a reordering, because leaving the tier changes which
-    # objective is in force and the target jumps.
-    clean_exit_margin: float = 0.8
+    #
+    # Off by default (0.0 means no route is ever clean, so the tier never
+    # discriminates). Measured on l_corridor at 0.03 it changed the far-exit
+    # share not at all -- 16 of 100, the same as without it -- while taking
+    # monotonicity from 0 returns to abandoned exits to 243 across 35 agents,
+    # and on world100 from 0 to 7. Tier membership is binary, so a route
+    # drifting across the criterion does not reorder the list, it swaps which
+    # objective is in force, and the agent's target jumps. FDS+Evac can afford
+    # that because a door leaves an agent's known set permanently; here nothing
+    # is remembered, by design, so the tier flickers. Available for decks with
+    # a genuinely clean alternative to reach for.
+    clean_extinction_threshold: float = 0.0
+    # Hysteresis on tier membership for the exit the agent already heads for:
+    # its limit is clean_extinction_threshold / this. FDS+Evac supplies the
+    # value -- FAC_DOOR_OLD = 0.1 (evac.f90:1506), applied as
+    # L2_tmp = FAC_DOOR_OLD * L2_tmp for the current door (:16255), so the door
+    # an agent is already walking to stays "smoke free" up to ten times the
+    # criterion. An earlier 0.8 here was invented, and 1.25x proved far too
+    # narrow: 0.0075 /m of drift in one leg was enough to make an agent leave
+    # a clean exit and come back.
+    clean_exit_margin: float = 0.1
     sight_distance_fraction: float = 0.5
     # Asymmetric sight gate, mirroring fed_return_margin. A route the agent is
     # already on is judged against the bare criterion; a rival has to clear it
@@ -731,7 +745,7 @@ class RouteCostConfig:
         routing = routing or {}
         return cls(
             cost_model=routing.get("cost_model", "gate"),
-            clean_extinction_threshold=routing.get("clean_extinction_threshold", 0.03),
+            clean_extinction_threshold=routing.get("clean_extinction_threshold", 0.0),
             clean_exit_margin=routing.get("clean_exit_margin", 0.8),
             sight_distance_fraction=routing.get("sight_distance_fraction", 0.5),
             sight_return_margin=routing.get("sight_return_margin", 1.25),
@@ -1122,7 +1136,13 @@ def evaluate_route(
     # pass and this stretch belongs to one agent's position.
     first_k_max = segments[0].k_max if segments else 0.0
     first_k_avg = segments[0].k_avg if segments else 0.0
-    if agent_position is not None and first_share < 1.0 and len(path) >= 2:
+    # Resampled for every route, not only the one the agent is walking. The
+    # share is clamped at 1.0, so a route the agent has diverged from is
+    # otherwise charged its whole first leg including the stretch behind the
+    # agent -- and with a binary clean test that asymmetry decided membership:
+    # an agent past a smoke blob read its committed route as clean and every
+    # rival as dirty, on smoke none of them would walk through.
+    if agent_position is not None and len(path) >= 2:
         next_node = graph.nodes.get(path[1])
         if next_node is not None:
             first_k_avg, first_k_max = _los_stats(
@@ -1260,7 +1280,10 @@ def evaluate_route(
     clean_limit = config.clean_extinction_threshold
     if is_current:
         clean_limit /= max(config.clean_exit_margin, 1e-9)
-    clean = k_leg_max <= clean_limit
+    # A zero threshold turns the tier off rather than declaring clear air
+    # clean, which would make every route tier 0 and change nothing anyway --
+    # but the explicit form says which is meant.
+    clean = clean_limit > 0.0 and k_leg_max <= clean_limit
 
     return RouteCost(
         exit_id=exit_id,
@@ -1417,7 +1440,9 @@ def rank_routes(
     # with any trace of smoke gets a finite S = c/K while one with none got
     # _MAX_BAND. Smoke says which exits exist; it does not also get to say
     # which of the survivors is nearer.
-    prefer_clean = config.cost_model == "gate"
+    prefer_clean = (
+        config.cost_model == "gate" and config.clean_extinction_threshold > 0.0
+    )
 
     def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
         # Clean first, near second. A route whose smokiest leg is below the
@@ -1676,6 +1701,31 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
     return path
 
 
+def _adoptable(
+    candidate: RouteCost,
+    ranked: list[RouteCost],
+    route_state: AgentRouteState,
+    config: "RerouteConfig",
+) -> bool:
+    """Whether the exit-switch anchor would let the agent take *candidate*.
+
+    Used to skip past a promoted route the anchor will refuse, so that a route
+    further down the list still gets its chance. The rule it applies is the one
+    the anchor applies below; keep them in step.
+    """
+    old_exit = route_state.current_exit
+    if old_exit is None or candidate.exit_id == old_exit:
+        return True
+    old_rc = next((rc for rc in ranked if rc.exit_id == old_exit), None)
+    if old_rc is None:
+        return True
+    if _must_flee_rejection(old_rc, config.cost_config):
+        return True
+    if candidate.band > old_rc.band or (candidate.clean and not old_rc.clean):
+        return True
+    return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+
+
 def evaluate_and_reroute(
     agent_id: int,
     wait_info: dict,
@@ -1789,6 +1839,26 @@ def evaluate_and_reroute(
         )
 
     best = ranked[0]
+    # A route the ordering promoted but the agent cannot adopt must not hide
+    # the rest of the list. Tier 1 can put a clean exit first that the anchor
+    # then refuses on time; before this, the agent returned None and never saw
+    # the rival at rank 2 it would have switched to -- so adding the tier could
+    # suppress a switch the model made without it, which is strictly worse than
+    # having no tier at all. Candidates are tried in rank order and the first
+    # adoptable one wins; if none is, nothing changes, as before.
+    current_exit_now = route_state.current_exit
+    if (
+        current_exit_now is not None
+        and config.cost_config.cost_model == "gate"
+        and best.exit_id != current_exit_now
+    ):
+        for candidate in ranked:
+            if candidate.exit_id == current_exit_now:
+                break  # the agent's own exit outranks the rest: stay
+            if _adoptable(candidate, ranked, route_state, config):
+                best = candidate
+                break
+
     if (
         best.rejected
         and best.rejection_reason
@@ -1890,12 +1960,20 @@ def evaluate_and_reroute(
         and not (
             config.cost_config.cost_model == "gate"
             and old_rc is not None
-            and best.band > old_rc.band
+            and (best.band > old_rc.band or (best.clean and not old_rc.clean))
             # Only a route the agent can actually take earns the bypass. When
             # every route is refused the bands compare two walks nobody can
             # make, and letting one of them jump the anchor is what made agents
             # ping-pong: the fallback pushes them onto a rival, the old exit
             # heals a band on the next tick, and back they go on a 1% gain.
+            #
+            # The clean-exit clause is what makes tier 1 mean anything for an
+            # agent already walking. Clean implies sight of 100 m and the band
+            # saturates at 30, so a clean route and one three times smokier
+            # always share a band: without this the band test could never fire
+            # in the tier's own regime, the anchor vetoed every promotion, and
+            # "clean exits are preferred outright" was true of the ordering and
+            # false of the outcome.
             and best.feasible
             # A band is a quantised sighting distance, and a quantiser with no
             # hysteresis oscillates: sight jittering either side of a band edge
