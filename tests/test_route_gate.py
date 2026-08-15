@@ -28,9 +28,12 @@ from dataclasses import replace
 from shapely.geometry import box
 
 from pyfds_evac.core.route_graph import (
+    AgentRouteState,
+    RerouteConfig,
     RouteCost,
     RouteCostConfig,
     StageGraph,
+    _adoptable,
     _must_flee_rejection,
     _sighting_distance,
     _visibility_band,
@@ -305,3 +308,36 @@ class TestDoseVetoesAnExit:
         )
         near = next(rc for rc in ranked if rc.exit_id == "near")
         assert _must_flee_rejection(near, _cfg())
+
+
+class TestClearAirIsUntouched:
+    """At small but nonzero K the gate must still reduce to nearest-exit.
+
+    Tested at K = 1e-4 rather than at 0: a check at exactly zero cannot fail,
+    and that hole hid the visibility-band defect twice. The promotion scan added
+    with `_anchor_allows` is the newest thing that could break this -- it walks
+    the ranked list looking for a route the anchor would accept, and in clear
+    air it must find nothing to promote, because every bypass is dead (no route
+    is clean, every band saturates) and a farther exit cannot beat the anchor on
+    time.
+    """
+
+    def test_no_route_is_promoted_over_the_current_exit(self):
+        graph = build_two_exit_graph()
+        state = AgentRouteState(current_exit="near", current_path=["spawn", "near"])
+        ranked = rank_routes(
+            graph, "spawn", 0.0, 0.0, ConstantK(1e-4), None, _cfg(), current_exit="near"
+        )
+        config = RerouteConfig(cost_config=_cfg())
+        assert ranked[0].exit_id == "near", "clear air must rank the nearer exit first"
+        far = next(rc for rc in ranked if rc.exit_id == "far")
+        assert not _adoptable(far, ranked, state, config), (
+            "the farther exit must not be adoptable in clear air"
+        )
+
+    def test_the_tier_never_discriminates_in_clear_air(self):
+        graph = build_two_exit_graph()
+        for k in (0.0, 1e-4, 1e-3):
+            ranked = rank_routes(graph, "spawn", 0.0, 0.0, ConstantK(k), None, _cfg())
+            assert len({rc.clean for rc in ranked}) == 1, k
+            assert ranked[0].exit_id == "near", k

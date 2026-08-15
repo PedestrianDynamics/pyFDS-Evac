@@ -406,3 +406,89 @@ wider deadband delays that without removing it.
 
 The tier stays off by default. Anyone re-opening the question should start from
 these numbers, not from `45e146f`'s.
+
+## Ruling: the gate is an exposure criterion, not a visibility one
+
+The shipped test is `c / K_ave_route >= 0.5 * L_remaining`, i.e.
+
+    tau = K_ave * L <= 2c = 6
+
+an **optical depth along the walked route**. That is a real physical quantity --
+`tau = integral K ds = kappa_m * integral rho_s ds` is the soot column the agent
+passes through, proportional to inhaled dose up to the nearly constant speed
+factor. It is computable for every exit and independent of sign placement, which
+is why it replaced the line-of-sight form.
+
+It is **not** a sighting distance. Jin's `S = c/K` is contrast attenuation along
+a straight, unobstructed line between a sign and its background. Integrate K
+along a route that turns ninety degrees twice and the result is not a sighting
+distance of anything -- you cannot see around a corner. `See_door` shares the
+form `tau <= 2c` only because its path is a bee line and its `d` a bee-line
+distance; on a straight corridor the two coincide, on l_corridor's far route
+they do not.
+
+Three consequences.
+
+1. **The names are false.** `min_visibility_m`, `_sighting_distance`,
+   `sight_distance_fraction`, `sign_contrast_c`, and the reason string
+   `sight (path) X m < Y m` all assert visibility, and none of it measures
+   visibility. They should become route optical depth `tau` and a budget
+   `tau_max`.
+2. **The FDS+Evac provenance is gone.** Once the path changed from a bee line to
+   a walked route, neither the 0.5 nor the `c` can be cited from `evac.f90`.
+   `2c = 6` is a free parameter that happens to equal twice a sign-contrast
+   constant, and that is not a derivation. The paper may say the gate is
+   *inspired by* FDS+Evac's visibility door rule; it may not say it implements
+   it.
+3. **A1 is retired rather than open.** Scaling the threshold with route length
+   was a defect for a visibility criterion and is correct for an exposure one: a
+   longer walk through the same haze does expose you more.
+
+`c = 3` is Jin's constant for **light-reflecting sign legibility** -- the
+contrast at which a subject can recognise a sign -- and it is not a statement
+about whether a person can walk somewhere. Frantzich and Nilsson's subjects
+walked at K = 7-8 /m, where Jin gives S = 0.4 m: people walk where they
+demonstrably cannot read signs. Under the gate the constant now sets the
+exposure budget directly, `tau_max = 2c`, so `c = 8` is a 2.7x looser gate than
+`c = 3`. The earlier finding that `sign_contrast_c = 8` "barely moves it" was
+measured on t_junction, which is optically saturated at K ~ 10.7 /m and cannot
+discriminate anything; it is not evidence that `c` is inert where the gate works.
+
+Jin and `c = 3` belong to the cognitive map, where the sign-legibility semantics
+are correct and the constant is properly sourced. The gate needs its own
+constant, named as an exposure budget and either calibrated against a soot-dose
+or FED-equivalent limit, or declared uncalibrated. Nothing currently does either.
+
+## Why the clean-exit tier cannot work here, structurally
+
+The hysteresis protects the wrong crossing. Entering the clean set is guarded by
+the 10x `FAC_DOOR_OLD` deadband; **returning is not a tier crossing at all**.
+Once the near exit re-enters the set both routes are clean, the tier ties, both
+bands sit at saturation, and the decision falls through to a plain time
+comparison that the nearer exit wins immediately. That is why a wider margin
+delays the oscillation without removing it.
+
+FDS+Evac's tier is stable because refusal is **remembered**:
+`Is_Visible_Door(i) = .FALSE.` and `Is_Known_Door(i) = .FALSE.`
+(`evac.f90:16460-16461`) are permanent within the run. pyFDS-Evac removed that
+memory at `e441b03`, deliberately, because permanent death destroyed the gate's
+self-healing property (B3). **The tier cannot be had without the memory.** That
+is a structural incompatibility, not a tuning failure, and it is a better reason
+to keep the tier off than any seed count.
+
+Scope limit: l_corridor has no persistent clean alternative, so it cannot refute
+clean-preference in general. What is established is narrower and sufficient --
+this implementation is unstable, and the instability is intrinsic to a
+memoryless lexicographic tier.
+
+## Under the gate, no hazard bypasses the anchor
+
+`_must_flee_rejection` matches `reason.startswith("FED")` or `"visible" in
+reason`. The gate's only rejection reason is `sight (path) ...`, and
+`visibility_extinction_threshold` no longer fires under the gate, so the
+`"visible"` branch is unreachable there and `impassable_extinction_threshold` is
+dead code under the default model. The only surviving flee path is FED, which on
+these fires never fires (`max fed_max_route = 0.0016` against a threshold of
+1.0). This is defensible if the sight gate is genuinely not a hazard statement,
+which per the ruling above it is not -- but it should be stated rather than left
+as vestigial code implying a protection that does not exist.
