@@ -130,8 +130,17 @@ counts as smoke-free while `K_ave < ABS(FED_DOOR_CRIT)`.  The input is
 a visibility in metres (`FED_DOOR_CRIT = -100.0`, evac.f90:1459) which
 is converted to an extinction coefficient by Jin's relation,
 `FED_DOOR_CRIT = 3.0 / FED_DOOR_CRIT` (evac.f90:5262) — so the default
-is 0.03 /m, and the branch that uses it is at evac.f90:16159.  Among
-the doors that pass, the agent minimises the time `T` above.  The
+is 0.03 /m.  `K_ave_Door` is assigned from `See_door` at evac.f90:16149,
+and the tier-1 test that reads it is at evac.f90:16265 and :16272.  Among
+the doors that pass, the agent minimises the time `T` above.
+
+**That test is a hard filter.**  `IF (T_tmp < L2_min .AND. L2_tmp <
+ABS(FED_DOOR_CRIT))` sets the chosen door `i_tmp` only for a door that
+qualifies; when none qualifies the tier selects nothing and the search
+moves to the next tier of doors, not to a time-only ranking.  pyFDS-Evac's
+clean-exit tier falls through to plain time ranking when it is empty,
+which is our construction and not FDS+Evac's.  The
+
 distance-relative rule — "check that visibility > 0.5 * distance to the
 door" — is FDS+Evac's **tier-4 last resort** (evac.f90:16456), reached
 only when no smoke-free door exists.
@@ -177,22 +186,30 @@ The routes it returns are then judged by one of two models
   availability.  A route is refused when Jin's sighting distance
   `S = c / K` falls below `sight_distance_fraction` (0.5) times the
   distance still to walk; survivors are ordered by travel time alone
-  (plus `w_queue` x queue time).  Where the exit's sign is in line of
-  sight, `K` is `K_ave` along the obstruction-aware sight line — the
-  same `See_door` quantity as FDS+Evac's tier-4 rule; otherwise it
-  falls back to `K_ave` over the route polyline against the whole
-  remaining length.  Visibility bands are still computed, but they
-  order only the all-refused fallback.
+  (plus `w_queue` x queue time).  `K` is `K_ave` over the route's own
+  polyline, and every exit is judged that way — with the mean, the
+  criterion is exactly an optical depth `K_ave * L <= 2c`, the same
+  statement a line of sight makes, and it is the one estimator defined
+  for every exit.  The obstruction-aware sight line is kept as a
+  diagnostic: it is defined only where a sign resolves, so gating on it
+  let sign geometry decide which exits were tested at all.  Visibility
+  bands are still computed, but they order only the all-refused
+  fallback.  An opt-in tier above time reproduces FDS+Evac's absolute
+  criterion (`clean_extinction_threshold`, default 0, off).
 - **`"additive"`.** The composite
   `path_length * (1 + w_smoke * K_ave) + w_fed * FED_max`.
 
-Under both, routes are also rejected if FED exceeds a threshold or if
-all segments are non-visible when a cleaner alternative exists, and a
-fallback un-rejection ensures agents always have a path.
+Under both, routes are rejected if FED exceeds a threshold, and a
+fallback un-rejection ensures agents always have a path.  The
+all-segments-non-visible rejection runs under `"additive"` only.
 
 **The borrowing is partial and should be read as such.** pyFDS-Evac
-takes FDS+Evac's *last-resort* criterion as its *primary* gate, and
-takes no absolute `K_ave < 0.03 /m` test at all.  The distance-relative
+takes FDS+Evac's *last-resort* criterion as its *primary* gate.  The
+absolute `K_ave < 0.03 /m` test exists as an opt-in tier that ships
+off, because measured on two decks it produced churn rather than
+redirection — see
+[route-cost-gate.md](route-cost-gate.md#the-clean-exit-tier-off-by-default).
+The distance-relative
 form is the point of the choice — the same haze is usable 5 m from an
 exit and not at 40 m — but it is not what FDS+Evac reaches for first.
 

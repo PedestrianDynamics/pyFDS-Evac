@@ -276,8 +276,9 @@ left the ordering and sight moved from the route's worst sample to its mean
 | B6 anchor vetoes the band ordering | **fixed** -- one `rank_cost` read by ordering, anchor and the same-exit test; a band-clearer *feasible* rival bypasses the anchor |
 | A2 provenance comment inverted | **fixed** (`ca49e45`) |
 | annotations, test pins, red test on main | **fixed** (`ca49e45`) |
-| A3 fdsvismap LOS never wired in | **fixed** -- the gate reads `c / K_ave` along the real sight line to the exit's sign, with the cap raised from 30 m to the domain diagonal so it cannot clip a distance-relative test |
-| A1/A2 gate penalises long routes; aggregation unfaithful | **partly addressed** -- the LOS test is per-leg optical depth, as in FDS+Evac's `See_door`, and since `cea33ce` the `path` fallback averages K too, so worst-case K no longer refuses anything (it survives only in the fallback switch margin). What remains is the distance: `path` still compares against the whole bending route, so it holds long routes to a stricter standard. The rejection reason says which fired (`sight (los)` vs `sight (path)`) |
+| A3 fdsvismap LOS never wired in | **reversed** (`b16e900`) -- the LOS reading is wired in and reported, but it no longer gates. It is defined only where a sign resolves, so selecting it per exit let sign geometry decide which exits were tested: on `l_corridor` the far exit lies around two corners, was never sight-tested, and the diversion vanished (84/16 became 100/0); on `world100` one exit was tested 43 times and fell back 2095. Every exit is now gated on `c / K_ave` over its own polyline |
+| A1/A2 gate penalises long routes; aggregation unfaithful | **partly addressed** -- since `cea33ce` the criterion averages K, so worst-case K no longer refuses anything (it survives only in the fallback switch margin), and with the mean the test is exactly an optical depth `K_ave * L <= 2c` -- the same form `See_door` computes. What remains is the distance: it compares against the whole bending route, so it holds long routes to a stricter standard. The rejection reason always names `sight (path)` |
+| A2 absolute 0.03 /m criterion absent | **available, off** (`2ee36d4`, `45e146f`) -- shipped as `clean_extinction_threshold`, defaulting to 0. Measured on `l_corridor` over five seeds it moved the far-exit share not at all (15-22 with, 15-17 without) while median RSET rose 17 % and monotonicity went from 0 returns to 34-38 agents per run. Note also that FDS+Evac's tier 1 is a hard filter, whereas ours falls through to time when empty |
 | B7 Dijkstra still routes additively | **open** |
 | B8 `feasible` conflates gate failure with every rejection | **open**, but no longer irreversible |
 | B11 clear-air equivalence at small nonzero K | **addressed** (`cea33ce`) -- bands saturate at 3 classes and no longer order feasible routes, so the term that diverged at small nonzero K is out of the sort. Not re-measured at K = 1e-4; the K = 0 result stands (world100 7712 rows, t_junction 4030 rows) |
@@ -375,3 +376,33 @@ Three properties had to be handled:
 `get_visibility_to_wp` in order to vectorise it. fdsvismap should expose
 `get_visibility_array(waypoint_id, time)` and the pin be updated; until then
 that function is the one place duplicating library internals.
+
+## Correction: the clean-exit tier was measured with the wrong hysteresis
+
+`clean_exit_margin` had two defaults -- `0.1` on the dataclass and `0.8` in
+`from_routing_params` -- and every deck-driven run took the second. So the
+eight-seed refutation recorded in `45e146f` ran with a hysteresis band of
+`0.03/0.8 - 0.03` = **0.0075 /m** rather than the intended
+`0.03/0.1 - 0.03` = **0.27 /m**, a factor of 36. The commit message argues the
+tier fails because that band is narrower than the median per-tick drift in a
+leg mean (0.0072 /m). At the intended margin the band is twice the *p90* drift,
+so that explanation was an artefact of the bug and not a property of the design.
+
+Re-measured on l_corridor with the defaults reconciled, three seeds:
+
+| seed | tier on (near/far) | off | switches on/off | violations on/off |
+|---|---|---|---|---|
+| 1 | 84/16 | 84/16 | 42 / 4 | 7 agents / 0 |
+| 2 | 84/16 | 85/15 | 56 / 5 | 19 agents / 0 |
+| 3 | 88/12 | 88/12 | 48 / 8 | 10 agents / 0 |
+
+**The conclusion survives, the numbers and the mechanism do not.** The far-exit
+share is unchanged by the tier at either margin, so it still does not redirect
+anyone -- the prediction of 25-40 is refuted at the intended setting too. But
+monotonicity costs 3-8 agents per run, not the 34-38 quoted, and the cause is
+not simply a band narrower than the noise. Tier membership is binary, so a
+crossing swaps which objective is in force rather than reordering a list, and a
+wider deadband delays that without removing it.
+
+The tier stays off by default. Anyone re-opening the question should start from
+these numbers, not from `45e146f`'s.

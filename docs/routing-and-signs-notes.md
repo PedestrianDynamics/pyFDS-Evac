@@ -199,34 +199,36 @@ Symbols used below:
 
 5. **Legibility no longer rejects routes; it decides what the agent knows.**
    `rank_routes` does **not** consult sign legibility (see the comment at
-   `route_graph.py:1294`). Readability feeds
+   `route_graph.py:1399`). Readability feeds
    `cognitive_map.expand_from_visibility`, and the cognitive map decides what
    Dijkstra can see — so an unknown exit is *absent from the graph* rather than
    present-and-vetoed. Checking it again in ranking double-gated the same
    criterion, blocked agents who already knew the building, and forbade an agent
    from using an exit it had legitimately learned once the sign left view.
 
-6. **Where the sight line does enter the route decision: the gate.**
-   Under `cost_model: "gate"`, `evaluate_route` asks `visibility_to_node` for
-   the sighting distance to the *exit's own* sign and refuses the route when it
-   falls below `sight_distance_fraction × distance_to_node`. The rejection
-   reason reads `sight (los) …`. When no sight line resolves — no descriptor, a
-   concealed sign, or the agent standing behind it — it falls back to the *mean*
-   K over the route polyline against the whole remaining length, reason
-   `sight (path) …`. Both criteria average K; `path` is the harsher of the two
-   only through its distance, which is the full bending route rather than a
-   straight line to a sign.
+6. **The sight line no longer enters the route decision.** Under
+   `cost_model: "gate"`, `evaluate_route` refuses a route when the *mean* K over
+   its own polyline gives a sighting distance below `sight_distance_fraction ×`
+   the whole remaining length; the reason always reads `sight (path) …`. The
+   `visibility_to_node` reading is still taken and reported, but since
+   `b16e900` it does not gate: it resolves only where a sign does, so choosing
+   the criterion per exit let sign geometry decide which exits were tested at
+   all — the `l_corridor` far exit lies around two corners, was never tested,
+   and the deck's diversion disappeared. With the mean, the polyline test is
+   itself an optical depth, `K_ave × L ≤ 2c`, so the two criteria share a form
+   and the polyline is the one defined everywhere.
 
    The eye position is a separate parameter (`los_position`) from
    `agent_position` on purpose: `agent_position` also re-measures every route's
    length from that point, and conflating them silently re-ranked routes whose
    edges carry waypoints.
 
-7. **The crude per-segment rule still exists, under both models.**
+7. **The crude per-segment rule is now additive-only.**
    Reject routes where *all* segments are non-visible, i.e. every segment has
    `k_avg ≥ visibility_extinction_threshold` (0.5) — but only if some other
-   route does have visibility. It was meant to be additive-model machinery and was not
-   removed when the gate landed.
+   route does have visibility. It was always meant to be additive-model
+   machinery; under the gate it was a second, hysteresis-free smoke criterion on
+   top of the sight test, and `22c0888` retired it there.
 
 8. **How to turn the sign model on.**
    `_build_vis_model()` (`run_config.py:167`) builds one when *any* of these

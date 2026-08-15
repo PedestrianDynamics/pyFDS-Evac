@@ -58,11 +58,14 @@ silent unless you check the warning log.
 | `--no-visibility` | Turn sight gating off entirely; agents then learn each node's neighbours by contact. Not a fire scenario. |
 | `--vis-cell-size M` | Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight. |
 
-**The default route-choice model needs the visibility model.** With rerouting
-on and `routing.cost_model` left at its `"gate"` default, a vismap is built even
-for decks whose agents all start fully familiar, because the gate reads sighting
-distance from it. That is a precompute the deck used to skip; `--vis-cache`
-makes it a one-off. See [route-cost-gate.md](route-cost-gate.md).
+**The default route-choice model still triggers the visibility model.** With
+rerouting on and `routing.cost_model` left at its `"gate"` default, a vismap is
+built even for decks whose agents all start fully familiar. The gate itself no
+longer reads it — the sight criterion is computed from the route polyline
+(`b16e900`) — so what the precompute now buys is the line-of-sight diagnostic
+and sign legibility for the cognitive map. It is a precompute the deck used to
+skip; `--vis-cache` makes it a one-off. See
+[route-cost-gate.md](route-cost-gate.md).
 
 ### Tenability (FIC slowdown + FED incapacitation)
 
@@ -221,9 +224,12 @@ take exit choice from `plot_exit_choice.py`, the `rank_cost` column or the
 `rejection_reason` column instead.
 
 The CSV also carries the gate's own diagnostics — `rank_cost`, `k_max_route`,
-`min_visibility_m`, `band` and `feasible` — which is what makes a gate decision
-auditable: `feasible` says whether the route was available, `min_visibility_m`
-says how much sight it had, and `rank_cost` says why the survivor that won won.
+`min_visibility_m`, `band`, `k_leg_max`, `clean` and `feasible` — which is what
+makes a gate decision auditable: `feasible` says whether the route was
+available, `min_visibility_m` says how much sight it had, and `rank_cost` says
+why the survivor that won won. `k_leg_max` is the smokiest leg of the route and
+`clean` whether that puts the exit in the clean-exit tier; `clean` is `False`
+throughout unless the deck sets `clean_extinction_threshold`.
 
 ```
 uv run python scripts/plot_route_costs.py route_costs.csv [routes.csv]

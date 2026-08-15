@@ -746,7 +746,9 @@ class RouteCostConfig:
         return cls(
             cost_model=routing.get("cost_model", "gate"),
             clean_extinction_threshold=routing.get("clean_extinction_threshold", 0.0),
-            clean_exit_margin=routing.get("clean_exit_margin", 0.8),
+            clean_exit_margin=routing.get(
+                "clean_exit_margin", RouteCostConfig.clean_exit_margin
+            ),
             sight_distance_fraction=routing.get("sight_distance_fraction", 0.5),
             sight_return_margin=routing.get("sight_return_margin", 1.25),
             sign_contrast_c=routing.get("sign_contrast_c", 3.0),
