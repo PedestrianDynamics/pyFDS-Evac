@@ -34,39 +34,94 @@
     "exit_A_near": {
       "type": "polygon",
       "coordinates": [
-        [0, 0],
-        [1, 0],
-        [1, 3],
-        [0, 3],
-        [0, 0]
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ]
       ],
       "enable_throughput_throttling": false,
       "max_throughput": 0,
-      "sign": {"x": 0.5, "y": 1.5, "alpha": 90, "c": 3}
+      "sign": {
+        "x": 0.5,
+        "y": 1.5,
+        "alpha": 90,
+        "c": 3
+      }
     },
     "exit_B_far": {
       "type": "polygon",
       "coordinates": [
-        [44, 25],
-        [45, 25],
-        [45, 28],
-        [44, 28],
-        [44, 25]
+        [
+          44,
+          25
+        ],
+        [
+          45,
+          25
+        ],
+        [
+          45,
+          28
+        ],
+        [
+          44,
+          28
+        ],
+        [
+          44,
+          25
+        ]
       ],
       "enable_throughput_throttling": false,
       "max_throughput": 0,
-      "sign": {"x": 44.5, "y": 26.5, "alpha": 270, "c": 3}
+      "sign": {
+        "x": 44.5,
+        "y": 26.5,
+        "alpha": 270,
+        "c": 3
+      }
     }
   },
   "distributions": {
     "jps-distributions_0": {
       "type": "polygon",
       "coordinates": [
-        [13.8, 0.3],
-        [16.2, 0.3],
-        [16.2, 2.7],
-        [13.8, 2.7],
-        [13.8, 0.3]
+        [
+          10.3,
+          13.5
+        ],
+        [
+          12.7,
+          13.5
+        ],
+        [
+          12.7,
+          16.5
+        ],
+        [
+          10.3,
+          16.5
+        ],
+        [
+          10.3,
+          13.5
+        ]
       ],
       "parameters": {
         "number": 100,
@@ -92,13 +147,33 @@
     "jps-checkpoints_junction": {
       "type": "polygon",
       "coordinates": [
-        [10, 0],
-        [13, 0],
-        [13, 3],
-        [10, 3],
-        [10, 0]
+        [
+          10,
+          0
+        ],
+        [
+          13,
+          0
+        ],
+        [
+          13,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          0
+        ]
       ],
-      "sign": {"x": 11.5, "y": 1.5, "alpha": 90, "c": 3},
+      "sign": {
+        "x": 11.5,
+        "y": 1.5,
+        "alpha": 90,
+        "c": 3
+      },
       "waiting_time": 0,
       "waiting_time_distribution": "constant",
       "waiting_time_std": 1,
@@ -109,13 +184,33 @@
     "jps-checkpoints_topcorner": {
       "type": "polygon",
       "coordinates": [
-        [10, 25],
-        [13, 25],
-        [13, 28],
-        [10, 28],
-        [10, 25]
+        [
+          10,
+          25
+        ],
+        [
+          13,
+          25
+        ],
+        [
+          13,
+          28
+        ],
+        [
+          10,
+          28
+        ],
+        [
+          10,
+          25
+        ]
       ],
-      "sign": {"x": 11.5, "y": 26.5, "alpha": 180, "c": 3},
+      "sign": {
+        "x": 11.5,
+        "y": 26.5,
+        "alpha": 180,
+        "c": 3
+      },
       "waiting_time": 0,
       "waiting_time_distribution": "constant",
       "waiting_time_std": 1,
