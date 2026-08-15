@@ -677,6 +677,12 @@ class RouteCostConfig:
     # rather than derived, and calibrating it against a soot-dose or FED
     # equivalent is open work -- docs/gate-model-review-notes.md.
     tau_max: float = 6.0
+    # The exit an agent already walks to has its optical depth discounted by
+    # this when routes are ordered, so it keeps its place unless a rival is
+    # clearly cleaner rather than momentarily cleaner. FDS+Evac's
+    # FAC_DOOR_WAIT = 0.9 (evac.f90:1503) discounts the current door in exactly
+    # this position, inside the comparison that ranks doors.
+    current_exit_discount: float = 0.9
     tau_return_margin: float = 0.8
     # Charge each leg the smoke present when the agent would arrive there,
     # rather than the smoke standing there while it decides.
@@ -706,6 +712,9 @@ class RouteCostConfig:
                 "clean_exit_margin", RouteCostConfig.clean_exit_margin
             ),
             tau_max=routing.get("tau_max", RouteCostConfig.tau_max),
+            current_exit_discount=routing.get(
+                "current_exit_discount", RouteCostConfig.current_exit_discount
+            ),
             tau_return_margin=routing.get(
                 "tau_return_margin", RouteCostConfig.tau_return_margin
             ),
@@ -1361,6 +1370,20 @@ def rank_routes(
     # band could not have, since a band compared cleanliness with no reference
     # to how far the agent had to carry it.
     order_by_tau = config.cost_model == "gate"
+
+    def tau_of(rc: RouteCost) -> float:
+        # The exit the agent already walks to has its optical depth discounted,
+        # so it keeps its place unless a rival is clearly cleaner rather than
+        # momentarily cleaner. This is FDS+Evac's FAC_DOOR_WAIT = 0.9
+        # (evac.f90:1503), which discounts the current door in exactly the same
+        # position -- inside the comparison that ranks doors, not in a separate
+        # veto afterwards. Hysteresis belongs in the ordering: bolted on after
+        # it, the ordering and the veto disagree and the agent oscillates
+        # between what each of them prefers.
+        if current_exit is not None and rc.exit_id == current_exit:
+            return rc.tau_route * config.current_exit_discount
+        return rc.tau_route
+
     prefer_clean = order_by_tau and config.clean_extinction_threshold > 0.0
 
     def sort_key(rc: RouteCost) -> tuple[int, int, float, float, int]:
@@ -1368,7 +1391,7 @@ def rank_routes(
         return (
             1 if rc.rejected else 0,
             tier,
-            rc.tau_route if order_by_tau else 0.0,
+            tau_of(rc) if order_by_tau else 0.0,
             rc.rank_cost,
             len(rc.path),
         )
