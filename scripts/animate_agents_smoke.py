@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import csv
 import logging
+from bisect import bisect_left
 from collections import defaultdict
 from pathlib import Path
 
@@ -44,19 +45,47 @@ from pyfds_evac.core.smoke_speed import ExtinctionField  # noqa: E402
 _logger = logging.getLogger(__name__)
 
 
-def _read_history(path: Path) -> dict[float, list[tuple[float, float, float]]]:
-    """Group the smoke history into frames: time -> [(x, y, speed_factor)]."""
-    frames: dict[float, list[tuple[float, float, float]]] = defaultdict(list)
+def _read_history(path: Path) -> dict[str, list[tuple[float, float, float, float]]]:
+    """Per-agent tracks: agent -> [(time, x, y, speed_factor)], time-ordered.
+
+    Kept per agent rather than per frame so positions can be interpolated
+    between samples. The history is written once a second; showing one sample
+    per frame plays the run back at twelve times life, and at that rate a
+    1.3 m/s walk and a 1.0 m/s crawl look identical -- which defeats the point
+    of colouring agents by how much the smoke has slowed them.
+    """
+    tracks: dict[str, list[tuple[float, float, float, float]]] = defaultdict(list)
     with path.open(newline="", encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
-            frames[float(row["time_s"])].append(
+            tracks[row.get("agent_id", "0")].append(
                 (
+                    float(row["time_s"]),
                     float(row["x"]),
                     float(row["y"]),
                     float(row.get("speed_factor") or 1.0),
                 )
             )
-    return frames
+    for track in tracks.values():
+        track.sort()
+    return tracks
+
+
+def _agents_at(tracks, t: float) -> list[tuple[float, float, float]]:
+    """Where every agent is at *t*, interpolated between its samples."""
+    out = []
+    for track in tracks.values():
+        if not track or t < track[0][0] or t > track[-1][0]:
+            continue
+        i = bisect_left([p[0] for p in track], t)
+        if i == 0:
+            _, x, y, sf = track[0]
+        else:
+            t0, x0, y0, s0 = track[i - 1]
+            t1, x1, y1, s1 = track[min(i, len(track) - 1)]
+            f = 0.0 if t1 == t0 else (t - t0) / (t1 - t0)
+            x, y, sf = x0 + f * (x1 - x0), y0 + f * (y1 - y0), s0 + f * (s1 - s0)
+        out.append((x, y, sf))
+    return out
 
 
 def _draw_deck(ax, config: Path | None) -> None:
@@ -152,11 +181,11 @@ def _walkable(geometry: Path | None):
     return wkt.loads(geometry.read_text(encoding="utf-8").strip())
 
 
-def _bounds(walkable, frames) -> tuple[float, float, float, float]:
+def _bounds(walkable, tracks) -> tuple[float, float, float, float]:
     if walkable is not None:
         return walkable.bounds
-    xs = [x for f in frames.values() for x, _, _ in f]
-    ys = [y for f in frames.values() for _, y, _ in f]
+    xs = [x for tr in tracks.values() for _, x, _, _ in tr]
+    ys = [y for tr in tracks.values() for _, _, y, _ in tr]
     pad = 2.0
     return (
         float(min(xs)) - pad,
@@ -218,8 +247,13 @@ def main() -> None:
     ap.add_argument("--out", "-o", type=Path, default=Path("agents_smoke.mp4"))
     ap.add_argument("--slice-height", type=float, default=2.0)
     ap.add_argument("--cell-size", type=float, default=0.5, help="field raster [m]")
-    ap.add_argument("--fps", type=int, default=10)
-    ap.add_argument("--stride", type=int, default=1, help="use every Nth frame")
+    ap.add_argument("--fps", type=int, default=24)
+    ap.add_argument(
+        "--playback",
+        type=float,
+        default=1.0,
+        help="seconds of simulation per second of video (1 = real time)",
+    )
     ap.add_argument("--kmax", type=float, help="colour ceiling for K [1/m]")
     ap.add_argument(
         "--speed-min",
@@ -235,28 +269,39 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    frames = _read_history(args.smoke_history)
-    if not frames:
+    tracks = _read_history(args.smoke_history)
+    if not tracks:
         raise SystemExit(f"no rows in {args.smoke_history}")
     field = ExtinctionField.from_fds(args.fds_dir, slice_height_m=args.slice_height)
 
-    times = sorted(frames)
+    sample_times = sorted({t for tr in tracks.values() for t, _, _, _ in tr})
     end = _last_fds_time(field)
     if end is not None and not args.past_fds_end:
-        kept = [t for t in times if t <= end]
-        if len(kept) < len(times):
+        kept = [t for t in sample_times if t <= end]
+        if len(kept) < len(sample_times):
             _logger.info(
                 "FDS data ends at %.1f s; stopping there (%d of %d frames). "
                 "--past-fds-end to continue with a frozen field.",
                 end,
                 len(kept),
-                len(times),
+                len(sample_times),
             )
-        times = kept or times
-    times = times[:: max(1, args.stride)]
+        sample_times = kept or sample_times
+    # Frame times are chosen from the wall clock, not from the samples, so the
+    # video runs at a stated rate rather than at whatever the logging interval
+    # happens to be.
+    step = args.playback / max(args.fps, 1)
+    n_frames = max(2, int((sample_times[-1] - sample_times[0]) / step) + 1)
+    times = [sample_times[0] + k * step for k in range(n_frames)]
+    _logger.info(
+        "%d frames at %d fps: %.3g s of simulation per second of video",
+        len(times),
+        args.fps,
+        args.playback,
+    )
 
     walkable = _walkable(args.geometry)
-    x0, y0, x1, y1 = _bounds(walkable, frames)
+    x0, y0, x1, y1 = _bounds(walkable, tracks)
     # Exits sit on the domain boundary and their labels are drawn outside it,
     # so the axes need room or the text is cut off at the frame edge.
     pad = 0.06 * max(x1 - x0, y1 - y0)
@@ -321,7 +366,7 @@ def main() -> None:
     # "smoke had no effect" when the truth is "the model avoided the worst of
     # it". The floor is padded so a run with no variation does not divide by
     # zero and does not exaggerate noise.
-    sf_all = [sf for f in frames.values() for _, _, sf in f]
+    sf_all = [sf for tr in tracks.values() for _, _, _, sf in tr]
     sf_lo = args.speed_min if args.speed_min is not None else min(sf_all, default=0.0)
     if 1.0 - sf_lo < 0.02:
         sf_lo = 0.98
@@ -340,14 +385,27 @@ def main() -> None:
     cb2.set_label(f"agent speed factor ({sf_lo:.2f} = slowest here, 1 = unimpeded)")
     title = ax.set_title("")
 
+    # The field is only written once per history sample, so grids are computed
+    # per sample and reused across the frames that interpolate between them --
+    # otherwise real-time playback would resample the whole grid 24 times a
+    # second for a field that changes once.
+    grid_cache: dict[float, np.ndarray] = {}
+
+    def _grid_for(t):
+        key = min(sample_times, key=lambda s: abs(s - t))
+        if key not in grid_cache:
+            grid_cache[key] = _field_grid(field, key, xs, ys, outside)
+        return grid_cache[key]
+
     def update(t):
-        im.set_data(_field_grid(field, t, xs, ys, outside))
-        pts = frames[t]
+        im.set_data(_grid_for(t))
+        pts = _agents_at(tracks, t)
         scat.set_offsets(
             np.array([[x, y] for x, y, _ in pts]) if pts else np.empty((0, 2))
         )
         scat.set_array(np.array([sf for _, _, sf in pts]))
-        title.set_text(f"t = {t:6.1f} s     {len(pts)} agents inside")
+        rate = "real time" if args.playback == 1 else f"{args.playback:g}x real time"
+        title.set_text(f"t = {t:6.1f} s     {len(pts)} agents inside     ({rate})")
         return im, scat, title
 
     anim = animation.FuncAnimation(fig, update, frames=times, blit=False)
