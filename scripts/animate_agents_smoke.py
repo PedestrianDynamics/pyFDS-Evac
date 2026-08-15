@@ -116,14 +116,18 @@ def _draw_deck(ax, config: Path | None) -> None:
         # fixed offset leaves half of them outside the axes and clipped away.
         xa, xb = ax.get_xlim()
         ya, yb = ax.get_ylim()
-        dx = -22 if c.x > 0.5 * (xa + xb) else 22
+        inward_x = c.x <= 0.5 * (xa + xb)
+        dx = 22 if inward_x else -22
         dy = -16 if c.y > 0.5 * (ya + yb) else 16
         ax.annotate(
             name.replace("jps-exits_", "E"),
             (c.x, c.y),
             textcoords="offset points",
             xytext=(dx, dy),
-            ha="center",
+            # Anchored on the side the label runs toward, not centred: an exit
+            # on the domain edge with a long name is otherwise half outside the
+            # frame however much padding the axes get.
+            ha="left" if inward_x else "right",
             va="center",
             fontsize=12,
             fontweight="bold",
@@ -131,6 +135,13 @@ def _draw_deck(ax, config: Path | None) -> None:
             zorder=6,
             clip_on=False,
         )
+
+
+def _masked_cmap(name: str):
+    """The field colormap, with everything outside the building drawn as wall."""
+    cmap = matplotlib.colormaps[name].copy()
+    cmap.set_bad("0.55")
+    return cmap
 
 
 def _walkable(geometry: Path | None):
@@ -155,8 +166,32 @@ def _bounds(walkable, frames) -> tuple[float, float, float, float]:
     )
 
 
-def _field_grid(field, time_s, xs, ys):
-    return np.array([[field.sample_extinction(time_s, x, y) for x in xs] for y in ys])
+def _field_grid(field, time_s, xs, ys, outside=None):
+    grid = np.array([[field.sample_extinction(time_s, x, y) for x in xs] for y in ys])
+    if outside is not None:
+        grid[outside] = np.nan
+    return grid
+
+
+def _outside_mask(walkable, xs, ys):
+    """Cells that are not part of the building at all.
+
+    Without this the ground outside the walkable polygon samples as K = 0 and
+    renders as the clearest air in the frame -- so an L-shaped corridor reads
+    as a small dark building floating in a large safe room, which is the
+    opposite of the truth. Obstacles inside the polygon are filled separately;
+    this is everything beyond its outer boundary.
+    """
+    if walkable is None:
+        return None
+    from matplotlib.path import Path as MplPath
+
+    gx, gy = np.meshgrid(xs, ys)
+    pts = np.column_stack([gx.ravel(), gy.ravel()])
+    inside = np.zeros(len(pts), dtype=bool)
+    for geom in getattr(walkable, "geoms", [walkable]):
+        inside |= MplPath(np.asarray(geom.exterior.coords)).contains_points(pts)
+    return ~inside.reshape(gx.shape)
 
 
 def _last_fds_time(field) -> float | None:
@@ -186,6 +221,11 @@ def main() -> None:
     ap.add_argument("--fps", type=int, default=10)
     ap.add_argument("--stride", type=int, default=1, help="use every Nth frame")
     ap.add_argument("--kmax", type=float, help="colour ceiling for K [1/m]")
+    ap.add_argument(
+        "--speed-min",
+        type=float,
+        help="lower end of the agent colour scale (default: the run's own minimum)",
+    )
     ap.add_argument(
         "--past-fds-end",
         action="store_true",
@@ -217,8 +257,13 @@ def main() -> None:
 
     walkable = _walkable(args.geometry)
     x0, y0, x1, y1 = _bounds(walkable, frames)
+    # Exits sit on the domain boundary and their labels are drawn outside it,
+    # so the axes need room or the text is cut off at the frame edge.
+    pad = 0.06 * max(x1 - x0, y1 - y0)
     xs = np.arange(x0, x1 + args.cell_size, args.cell_size)
     ys = np.arange(y0, y1 + args.cell_size, args.cell_size)
+
+    outside = _outside_mask(walkable, xs, ys)
 
     kmax = args.kmax
     if kmax is None:
@@ -226,28 +271,30 @@ def main() -> None:
         # above everything else, and scaling to it renders the whole hall as a
         # single flat colour with no gradient to read.
         probe = times[len(times) // 2 :: max(1, len(times) // 5)] or times[-1:]
-        pooled = np.concatenate([_field_grid(field, t, xs, ys).ravel() for t in probe])
-        kmax = max(float(np.percentile(pooled, 99.0)), 0.1)
+        pooled = np.concatenate(
+            [_field_grid(field, t, xs, ys, outside).ravel() for t in probe]
+        )
+        kmax = max(float(np.nanpercentile(pooled, 99.0)), 0.1)
         _logger.info(
             "colour ceiling K = %.2f /m (99th percentile; field peaks at %.1f)",
             kmax,
-            float(pooled.max()),
+            float(np.nanmax(pooled)),
         )
 
     fig, ax = plt.subplots(
         figsize=(11, 10 * (y1 - y0) / max(x1 - x0, 1e-9)), layout="constrained"
     )
     ax.set_aspect("equal")
-    ax.set_xlim(x0, x1)
-    ax.set_ylim(y0, y1)
+    ax.set_xlim(x0 - pad, x1 + pad)
+    ax.set_ylim(y0 - pad, y1 + pad)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
 
     im = ax.imshow(
-        _field_grid(field, times[0], xs, ys),
+        _field_grid(field, times[0], xs, ys, outside),
         origin="lower",
         extent=(x0, x1, y0, y1),
-        cmap="inferno_r",
+        cmap=_masked_cmap("inferno_r"),
         norm=Normalize(0.0, kmax),
         interpolation="bilinear",
         zorder=0,
@@ -267,23 +314,34 @@ def main() -> None:
 
     _draw_deck(ax, args.config)
 
+    # Scaled to the spread that actually occurs, not to [0, 1]. Routing steers
+    # agents around the heaviest smoke, so speed factors sit in a narrow band
+    # near 1 -- measured 0.83-1.00 on l_corridor and 0.87-1.00 on world100 --
+    # and a fixed 0-1 norm renders every agent the same colour, which reads as
+    # "smoke had no effect" when the truth is "the model avoided the worst of
+    # it". The floor is padded so a run with no variation does not divide by
+    # zero and does not exaggerate noise.
+    sf_all = [sf for f in frames.values() for _, _, sf in f]
+    sf_lo = args.speed_min if args.speed_min is not None else min(sf_all, default=0.0)
+    if 1.0 - sf_lo < 0.02:
+        sf_lo = 0.98
     scat = ax.scatter(
         [],
         [],
         s=42,
         c=[],
         cmap="winter",
-        norm=Normalize(0.0, 1.0),
+        norm=Normalize(sf_lo, 1.0),
         edgecolors="white",
         linewidths=0.6,
         zorder=3,
     )
     cb2 = fig.colorbar(scat, ax=ax, fraction=0.035, pad=0.02)
-    cb2.set_label("agent speed factor (1 = unimpeded)")
+    cb2.set_label(f"agent speed factor ({sf_lo:.2f} = slowest here, 1 = unimpeded)")
     title = ax.set_title("")
 
     def update(t):
-        im.set_data(_field_grid(field, t, xs, ys))
+        im.set_data(_field_grid(field, t, xs, ys, outside))
         pts = frames[t]
         scat.set_offsets(
             np.array([[x, y] for x, y, _ in pts]) if pts else np.empty((0, 2))
