@@ -45,7 +45,8 @@ route may carry before it is refused:
     "cost_model": "gate",
     "tau_max": 6.0,
     "tau_return_margin": 0.8,
-    "current_exit_discount": 0.9
+    "current_exit_discount": 0.9,
+    "tau_deadband": 0.1
   }
 }
 ```
@@ -60,7 +61,7 @@ graph.
 
 ## How the gate decides
 
-> **This page describes `9f55f6e`.**
+> **This page describes `25a6f8f`.**
 
 Per agent, per reevaluation tick:
 
@@ -76,6 +77,16 @@ Per agent, per reevaluation tick:
    `rank_cost = travel_time_s + w_queue * queue_time_s`. The `tau` in the key
    is scaled by `current_exit_discount` (0.9) for the exit the agent already
    heads for. `tier` is the clean-exit tier, off by default.
+4. **Adoption.** The ordering proposes; the exit-switch anchor disposes.
+   `evaluate_and_reroute` walks the ranked list and takes the first candidate
+   `_anchor_allows` admits, stopping at the agent's own exit — so the head of
+   the sort is not necessarily the exit the agent walks to. See
+   [Churn protection](#churn-protection) for the rule.
+
+**Three separate `tau` comparisons happen per tick**, and it is worth keeping
+them apart: `tau_return_margin` decides which routes are *candidates*,
+`current_exit_discount` decides their *order*, and `tau_deadband` decides
+whether the agent *acts* on that order. Only the third can change an exit.
 
 **One quantity refuses a route, orders it, and weights its edges.** That is the
 change at `0d9bf79`. Before it, Dijkstra minimised the additive composite, the
@@ -159,16 +170,16 @@ The second is a rival exit, held to `tau_max * tau_return_margin` = 4.8.
 
 **Where the 6 comes from.** FDS+Evac's tier-4 door test computes
 `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out when
-`L2_tmp >= 1.0` (`evac.f90:16456-16462`). That expression is `K_ave * d / 6`, so
+`L2_tmp >= 1.0` (`evac.f90:16458, :16463`). That expression is `K_ave * d / 6`, so
 the test is exactly `tau > 6` with Jin's `c = 3`. The threshold is therefore
 citable, but **the quantity it is applied to is not the same quantity**:
 FDS+Evac's `K_ave_Door` is a mean along `See_door`'s straight sight line, and
 for a door with no resolved sight line the distance is an L1 norm
-(`evac.f90:16458-16459`); pyFDS-Evac averages `K` along the walked polyline.
+(`evac.f90:16460`); pyFDS-Evac averages `K` along the walked polyline.
 Two further scope limits: the test lives in the tier-4 last-resort branch,
 reached only once no smoke-free door is available and looping only over doors
 that are already known or visible; and in FDS+Evac a struck-out door is struck
-out *permanently* (`Is_Visible_Door(i) = .FALSE.`, `:16460-16461`), which
+out *permanently* (`Is_Visible_Door(i) = .FALSE.`, `:16464-16465`), which
 pyFDS-Evac deliberately does not do. So: the gate is *inspired by* FDS+Evac's
 tier-4 visibility door rule and inherits its threshold with a citation; it does
 not implement it. **`tau_max` has not been calibrated against a soot-dose or
@@ -202,7 +213,7 @@ place unless a rival is clearly cleaner rather than momentarily cleaner.
 
 **Its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`** (`evac.f90:1507`), which
 is applied as `L2_tmp = FAC_DOOR_OLD2 * L2_tmp` to the current door at `:16290`
-and `:16466` — and at `:16466` that `L2_tmp` is the `tau/6` of the tier-4 test,
+and `:16467` — and at `:16467` that `L2_tmp` is the `tau/6` of the tier-4 test,
 i.e. the same quantity, discounted in the same place, inside the loop that
 minimises it to pick a door. Note the shipped code comment in `route_graph.py`
 instead cites `FAC_DOOR_WAIT` at `evac.f90:1503`; `FAC_DOOR_WAIT` is at `:1505`,
@@ -352,53 +363,78 @@ the least-bad walk is the one with least smoke to walk through.
 
 Three mechanisms hold an agent on its exit.
 
-**The exit-switch anchor.** A different exit is adopted only when its rank cost
-beats `old_cost * exit_switch_anchor` (default 0.9). Note that `rank_cost` is a
-**travel time**, so the anchor compares time while the ordering compares optical
-depth — see [limitations](#known-limitations). One gate-specific bypass applies:
-a rival is adopted outright when it is `feasible` **and** either clean while the
-current exit is not, or cleaner in relative *and* absolute terms:
+**The exit-switch anchor.** Under `"additive"` a different exit is adopted only
+when its rank cost beats `old_cost * exit_switch_anchor` (default 0.9). Under
+the gate, `_anchor_allows` decides in this order (`25a6f8f`):
+
+1. The current exit is a "must flee" rejection — adopt. In practice only a
+   dose rejection reaches this; see [limitations](#known-limitations).
+2. The rival is clean and the current exit is not — adopt.
+3. The rival is not `feasible` — fall through to the `rank_cost` comparison.
+4. Otherwise a **symmetric deadband** on `tau`, with
+   `margin = tau_max * tau_deadband` (6 x 0.1 = 0.6):
 
 ```
-candidate.tau_route < current.tau_route * exit_switch_anchor
-and current.tau_route - candidate.tau_route > tau_max * 0.1
+delta = current.tau_route - candidate.tau_route
+delta >  margin  ->  adopt
+delta < -margin  ->  refuse
+otherwise        ->  candidate.rank_cost < current.rank_cost * exit_switch_anchor
 ```
 
-The absolute term matters because the ratio alone fires on noise: `tau` 0.02
-against 0.03 is a 33 % improvement and no difference at all to anyone walking
-it. Measured on `l_corridor`, the ratio on its own produced 109 returns to
-abandoned exits; adding the floor took that to 51. The `0.1` multiplier is
-hard-coded, not configurable.
+**Symmetric is the point.** Before `25a6f8f` only the adopt half existed:
+leaving an exit had to clear a margin in `tau`, while returning to it fell
+straight through to the time comparison, which the nearer exit wins
+unconditionally. Departure cost a margin and the return was free — the same
+shape of failure as the clean tier's, one level up. Hysteresis applied to one
+side of a disjunction is not hysteresis.
+
+**Absolute, not a ratio.** `tau` is zero in clear air, so a ratio test reads
+`0 < 0`: no agent could switch at all, and `w_queue` would count for nothing
+exactly where decks calibrate it. An earlier ratio-only form produced 109
+returns to abandoned exits on `l_corridor`.
 
 A route the ordering promotes but the anchor refuses no longer hides the rest of
 the list: candidates are tried in rank order and the first the anchor would
 admit wins, stopping at the agent's own exit.
 
 **The deadbands.** `tau_return_margin` (0.8) and `fed_return_margin` (0.9) make
-a rival exit harder to *qualify* than the current one;
-`current_exit_discount` (0.9) makes it harder to *outrank* it.
+a rival exit harder to *qualify* than the current one; `current_exit_discount`
+(0.9) makes it harder to *outrank* it; `tau_deadband` (0.1 of `tau_max`) makes
+it harder to *switch onto*, in both directions. Four constants, three of them
+acting on the same quantity at three different stages. A reviewer will
+reasonably ask why, and no run isolates any one of them.
 
 **Monotonicity holds on `world100` and does not on `l_corridor`.** The
 requirement is that an agent never returns to an exit it has abandoned. At
 `0d9bf79` and `9f55f6e`:
 
-| deck | before (`4ce4ac7`) | at `0d9bf79` | at `9f55f6e` |
-|---|---|---|---|
-| `world100`, far clean exit E3 | 12 agents | **39 agents**, 9 switches, **0 returns** | unchanged |
-| `l_corridor`, returns to abandoned exits | **0** | 51 across 20 agents | 34 across 14 agents |
-| `l_corridor`, switches | 4 | 74 | 55 |
-| `l_corridor`, far-exit share | ~18 | ~18 | ~18 |
+| deck | before (`4ce4ac7`) | at `0d9bf79` | at `9f55f6e` | at `25a6f8f` |
+|---|---|---|---|---|
+| `world100`, far clean exit E3 | 12 agents | **39 agents**, 9 switches, **0 returns** | unchanged | not re-reported |
+| `l_corridor`, returns to abandoned exits | **0** | 51 across 20 agents | 34 across 14 agents | 34 across 14 agents |
+| `l_corridor`, switches | 4 | 74 | 55 | 55 |
+| `l_corridor`, far-exit share | ~18 | ~18 | ~18 | ~18 |
 
 The `world100` result is what the model was asked for — prefer a clean exit even
 when far — and no earlier version of the gate produced it. **`l_corridor`
 regressed**, from no returns to 34, and the far-exit share did not move to pay
-for it. Both figures come from the commit messages of `0d9bf79` and `9f55f6e`;
-no CSV for them is in the results folder.
+for it. The figures come from the commit messages of `0d9bf79`, `9f55f6e` and
+`25a6f8f`; no CSV for them is in the results folder. `25a6f8f` reports only
+`l_corridor`, so the `world100` column for it is unverified rather than
+measured.
+
+**Most of `l_corridor`'s 34 returns are not oscillation.** Making the anchor's
+`tau` deadband symmetric at `25a6f8f` changed nothing measurable, and that is
+the finding: of the 34 returns, **29 have the returned-to route cleaner by more
+than the deadband** — median 0.95 of optical depth against a margin of 0.6 — so
+the agent is following a field that genuinely reversed, not flickering across a
+threshold. No further constant can damp those. Whether a memoryless model
+*should* follow a reversing field is a modelling question, and it is open.
 
 Enabling the clean-exit tier gives further violations back (34-38 agents per run
 on `l_corridor`, measured before `0d9bf79`), which is why it is off.
 
-**Two attempts that made it worse, recorded so they are not repeated.**
+**Three attempts that did not close it, recorded so they are not repeated.**
 
 - *Making `tau` the anchor's currency* — replacing the `rank_cost` ratio test
   with a `tau` ratio test — took `l_corridor` from 51 returns to **90**. `tau`
@@ -406,8 +442,10 @@ on `l_corridor`, measured before `0d9bf79`), which is why it is off.
   anchor stops discriminating. This is also why `rank_cost` stays a time: a
   `tau` anchor would let no agent switch in clear air, and a congestion weight
   would count for nothing exactly where decks calibrate one.
-- *An absolute floor on the bypass* — the `tau_max * 0.1` term above — took 109
-  returns to 51. It helped; it did not close the problem.
+- *An absolute floor on the one-sided bypass* — the `tau_max * 0.1` term — took
+  109 returns to 51. It helped; it did not close the problem.
+- *Making that deadband symmetric* (`25a6f8f`) — the correct fix for a real
+  asymmetry, and it moved nothing: 34 returns before and after.
 
 ### Anticipation
 
@@ -466,6 +504,7 @@ Every key below is read from the scenario's `routing` block by
 | `tau_max` | `6.0` | Optical depth `K_ave * L` a route may carry before it is refused. Also orders the feasible routes. | active | inert |
 | `tau_return_margin` | `0.8` | Factor a *rival* exit's budget is multiplied by, so switching needs a cleaner route than staying. | active | inert |
 | `current_exit_discount` | `0.9` | Factor the current exit's `tau` is scaled by in the sort key. FDS+Evac's `FAC_DOOR_OLD2` is 0.9. | active | inert |
+| `tau_deadband` | `0.1` | Half-width of the exit-switch anchor's symmetric `tau` deadband, as a fraction of `tau_max` (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — `evac.f90:16463` tests the raw value. | active | inert |
 | `clean_extinction_threshold` | `0.0` (off) | Extinction at or below which a route's smokiest leg makes the exit `clean`; clean exits outrank smoky ones. FDS+Evac's value is `0.03`. | active | inert |
 | `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
 | `anticipate` | `true` | Price each segment at the agent's arrival time. | active | **active** |
@@ -502,15 +541,20 @@ Setting them requires constructing `RouteCostConfig` in Python.
 These are real and documented, not hypothetical. Details and measurements are
 in [gate-model-review-notes.md](gate-model-review-notes.md).
 
-- **The ordering is in optical depth and the anchor is in time.** This is the
-  open defect. `rank_routes` orders by `tau`; `_anchor_allows` compares
-  `rank_cost`, a travel time. The two can disagree, and an agent then oscillates
-  between what each prefers. That is the mechanism behind `l_corridor`'s 34
-  returns. The two constants damping it — `exit_switch_anchor` and
-  `current_exit_discount` — are both 0.9, which in FDS+Evac is
-  `FAC_DOOR_WAIT` on time and `FAC_DOOR_OLD2` on smoke; here they were arrived
-  at separately. Closing this properly means the anchor and the ordering
-  agreeing by construction, not by two constants that coincide.
+- **The ordering is in optical depth and the anchor is partly in time.** The
+  ordering is `tau`; `_anchor_allows` falls through to `rank_cost`, a travel
+  time, whenever the two routes' `tau` are within the deadband. So the two
+  currencies still meet, and mixing them was the presumed cause of
+  `l_corridor`'s 34 returns. Measurement at `25a6f8f` does not support that
+  reading: 29 of the 34 have the returned-to route cleaner by more than the
+  deadband, so they are the ordering correctly following a field that reversed.
+  What remains open is the modelling question — whether a memoryless model
+  should follow a reversing field at all — not a missing constant.
+- **Four hysteresis mechanisms act on `tau` or on the exit choice.**
+  `tau_return_margin` on feasibility, `current_exit_discount` on the sort,
+  `tau_deadband` on the anchor, `exit_switch_anchor` on the time fallthrough.
+  None has been measured in isolation, and the last two are both keyed to 0.9
+  and 0.1 x 6 without a joint sweep.
 - **The `1e-6 * length` edge-weight floor is a hard-coded tiebreaker.** It
   decides path choice in clear air, where every `k_avg * length` is zero. Its
   effect at small nonzero `K` has not been measured.
@@ -534,7 +578,7 @@ in [gate-model-review-notes.md](gate-model-review-notes.md).
   the agent also has perfect foresight of the FDS solution.
 - **Six hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
   `fallback_switch_margin` (0.2), `fed_return_margin` (0.9),
-  `tau_return_margin` (0.8), the hard-coded `tau_max * 0.1` bypass floor, and
+  `tau_return_margin` (0.8), `tau_deadband` (0.1), and
   `_PATH_IMPROVEMENT_THRESHOLD` (10 %) are all chosen to stop measured churn,
   not fitted to observed behaviour. Two have FDS+Evac values behind them:
   `clean_exit_margin` = `FAC_DOOR_OLD`, and `current_exit_discount` =

@@ -669,24 +669,27 @@ class RouteCostConfig:
     # The route the agent will accept, as an optical depth: tau = K_ave * L,
     # the soot column it walks through. Refused above this.
     #
-    # Not a visibility criterion, though it started as one. tau <= 2c with
-    # Jin's c = 3 is where 6 comes from, and on a straight corridor that is
-    # FDS+Evac's "visibility > half the distance to the door". On a route that
-    # turns a corner it is not: you cannot see around one, so integrating K
-    # along a walked path measures exposure, not sight. The number is inherited
-    # rather than derived, and calibrating it against a soot-dose or FED
-    # equivalent is open work -- docs/gate-model-review-notes.md.
+    # 6 is FDS+Evac's own threshold, not an analogy: evac.f90:16458 computes
+    # L2_tmp = d * 0.5 / (3/K_ave) = K_ave * d / 6, and :16463 refuses the door
+    # at L2_tmp >= 1, which is tau >= 6. Writing it as an optical depth is what
+    # made that visible.
+    #
+    # Three things still differ from the source: the quantity (a straight sight
+    # line there, a walked polyline here, so this is exposure rather than
+    # sight), the scope (there it is a last-resort branch over known-or-visible
+    # doors), and the memory (there a refused door is struck out permanently).
+    # Citable as a threshold, uncalibrated as an exposure budget --
+    # docs/gate-model-review-notes.md.
     tau_max: float = 6.0
-    # The exit an agent already walks to has its optical depth discounted by
-    # this when routes are ordered, so it keeps its place unless a rival is
-    # clearly cleaner rather than momentarily cleaner. FDS+Evac's
-    # FAC_DOOR_WAIT = 0.9 (evac.f90:1503) discounts the current door in exactly
-    # this position, inside the comparison that ranks doors.
     # How far apart two routes' optical depths must be before the difference
     # overrides the exit an agent already walks to. Ours: the reference applies
     # no hysteresis to this veto (evac.f90:16463 tests the raw value).
     tau_deadband: float = 0.1
     current_exit_discount: float = 0.9
+    # A rival exit must come in under tau_max * this before an agent switches
+    # onto it, so a route sitting near the budget does not toggle. Ours: the
+    # reference applies no hysteresis to this veto (evac.f90:16463 tests the
+    # raw value); its 0.1 hysteresis is on the tier-1 test at :16255.
     tau_return_margin: float = 0.8
     # Charge each leg the smoke present when the agent would arrive there,
     # rather than the smoke standing there while it decides.
@@ -1655,20 +1658,15 @@ def _anchor_allows(
 ) -> bool:
     """Whether the exit-switch anchor lets the agent leave *old_rc* for *candidate*.
 
-    The single statement of that rule. It used to be written twice -- once here
-    to skip past a promoted route the anchor would refuse, once inline at the
-    decision -- and the two drifted: the copy omitted the feasibility test and
-    the sight margin, so it would wave through switches the anchor then vetoed.
+    The single statement of that rule. It was once written twice -- here, to
+    skip past a promoted route the anchor would refuse, and inline at the
+    decision -- and the two drifted, so the copy waved through switches the
+    anchor then vetoed.
 
-    Anchoring is bypassed when the old exit is a hazard the agent must flee, and
-    under the gate when the candidate is a route it can actually take that is
-    either a whole visibility band clearer or clean where the old one is not.
-    The band case additionally needs a real margin in metres behind it: a band
-    is a quantised sighting distance, and a quantiser with no hysteresis
-    oscillates. The clean case is what makes tier 1 mean anything for an agent
-    already walking -- clean implies 100 m of sight while the band saturates at
-    30, so a clean route and one three times smokier always share a band, and
-    without this clause the anchor vetoed every promotion the tier made.
+    Anchoring is bypassed when the old exit is a hazard the agent must flee,
+    and when the candidate is clean where the old one is not. Otherwise the
+    comparison is a deadband on optical depth, falling through to time only
+    when the two routes are within it.
     """
     if old_rc is None:
         return True

@@ -194,29 +194,36 @@ trace on a current run:
   `current_exit_discount` (0.9) scales the current exit's `tau` in the sort key, so it
   holds its place unless a rival is clearly cleaner rather than momentarily cleaner. The
   second is the fix at `9f55f6e`, and its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`
-  (`evac.f90:1507`, applied `:16290` and `:16466`), which discounts exactly this quantity
+  (`evac.f90:1507`, applied `:16290` and `:16467`), which discounts exactly this quantity
   in exactly this position.
-- **The anchor has a second bypass, and it is narrow.** A rival is adopted outright when
-  it is `feasible` and either clean while the current exit is not, or cleaner in relative
-  *and* absolute terms — `candidate.tau < current.tau * exit_switch_anchor` **and**
-  `current.tau - candidate.tau > 0.1 * tau_max`. The ratio alone fires on noise: `tau`
-  0.02 against 0.03 is a 33 % improvement and no difference to anyone walking it, and on
-  l_corridor it produced 109 returns to abandoned exits. Adding the absolute floor took
-  that to 51.
+- **The anchor's tau test is a symmetric deadband** (`25a6f8f`). With
+  `margin = tau_max * tau_deadband` (0.6), a rival cleaner by more than the margin is
+  adopted, a rival dirtier by more than the margin is refused, and only a tie falls
+  through to the `rank_cost` comparison. The refusal half was missing before: leaving an
+  exit had to clear a margin in tau while returning fell straight through to time, which
+  the nearer exit wins unconditionally — departure cost a margin and the return was free.
+  Absolute, not a ratio: `tau` is zero in clear air, where a ratio reads `0 < 0` and no
+  agent could switch at all. The ratio-only form produced 109 returns on l_corridor.
 - **The all-refused branch has its own hysteresis.** When nothing is available, the agent
   keeps its least-bad target unless a rival's worst-case K is better by more than
   `fallback_switch_margin` (0.2). Ordering there is by undiscounted `tau_route`, then
   `rank_cost`: ordering by `k_max` alone once sent an agent 29 m out of its way over 0.2 m
   of sighting distance, neither value usable.
 
-**The open defect.** The ordering is in `tau` and the anchor compares `rank_cost`, a
-travel time. The two can disagree, and an agent oscillates between what each prefers.
-Making `tau` the anchor's currency instead made it *worse* — l_corridor went from 51
-returns to 90 — because `tau` is zero in clear air and every ratio test degenerates to
-`0 < 0`. The two constants damping the disagreement, `exit_switch_anchor` and
-`current_exit_discount`, are both 0.9; in FDS+Evac those are `FAC_DOOR_WAIT` on time and
-`FAC_DOOR_OLD2` on smoke, but here they were arrived at separately and their agreement is
-coincidence, not construction.
+**The open question, and what it is not.** The presumed defect was mixed currency: the
+ordering is in `tau` while the anchor falls through to `rank_cost`, a travel time. Making
+`tau` the anchor's currency outright made it *worse* — l_corridor went from 51 returns to
+90 — because `tau` is zero in clear air and every ratio test degenerates to `0 < 0`.
+Making the deadband symmetric (`25a6f8f`) fixed a real asymmetry and changed nothing
+measurable: 34 returns before and after.
+
+That null result is the finding. Of l_corridor's 34 returns, **29 have the returned-to
+route cleaner by more than the deadband** — median 0.95 of optical depth against a margin
+of 0.6 — so the agent is following a field that genuinely reversed, not flickering across
+a threshold. No further hysteresis constant can damp those. What is open is a modelling
+question: whether a memoryless model should follow a reversing field at all. FDS+Evac's
+answer is memory — a door struck out stays struck out (`evac.f90:16464-16465`) — which
+pyFDS-Evac removed deliberately at `e441b03`.
 
 **Churn is reduced, not eliminated, and monotonicity now holds on one deck and not the
 other.** At `9f55f6e`, `world100` sends 39 agents to the far clean exit (against 12 before
@@ -339,12 +346,15 @@ timer is *less* behaviourally realistic, not more.
   `sight_return_margin` (1.25) as a deadband. 182 returns → 38; **not zero.** *(History:
   the band and the sighting distance were removed entirely at `0d9bf79`.)*
 - **Bug 6 (open, `0d9bf79`):** the routes are ordered by optical depth while the
-  exit-switch anchor compares travel time, so the two disagree and agents oscillate
-  between what each prefers → **partial fix (`9f55f6e`):** discount the current exit's
-  `tau` in the sort, `current_exit_discount` = 0.9. l_corridor 51 returns → 34; **not
-  zero.** Two attempts that made it worse are recorded above: `tau` as the anchor's
-  currency (51 → 90) and the ratio-only bypass (109, floored to 51).
-- **Values (0.9 / 0.9 / 3.0 / 0.2 / 0.8 / 10 %):** *not* calibrated — six hysteresis
+  exit-switch anchor falls through to travel time, so the two can disagree → **partial
+  fix (`9f55f6e`):** discount the current exit's `tau` in the sort,
+  `current_exit_discount` = 0.9. l_corridor 51 returns → 34. **Then (`25a6f8f`) the
+  anchor's tau deadband was made symmetric, and nothing moved: still 34.** 29 of those
+  34 are the model following a field that genuinely reversed, so the remainder is a
+  modelling question about memory, not a missing constant. Three attempts recorded
+  above: `tau` as the anchor's currency (51 → 90), the ratio-only bypass (109, floored
+  to 51), and symmetry (34 → 34).
+- **Values (0.9 / 0.9 / 3.0 / 0.2 / 0.8 / 0.1 / 10 %):** *not* calibrated — seven hysteresis
   constants now, all chosen to suppress measured churn; sensitivity sweeps are the path
   to real numbers. Two carry FDS+Evac values (`clean_exit_margin` = `FAC_DOOR_OLD`,
   `current_exit_discount` = `FAC_DOOR_OLD2`), which is provenance, not calibration.

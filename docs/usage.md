@@ -218,16 +218,16 @@ Mean composite cost per exit over time.
 
 **Under the default `"gate"` cost model this plot is not what ranks exits.**
 The script reads the `composite_cost` column, which the gate computes and
-reports but does not order on — it orders on `rank_cost`, i.e. travel time plus
-the weighted queue time. Read the curves as a smoke-exposure diagnostic, and
-take exit choice from `plot_exit_choice.py`, the `rank_cost` column or the
+reports but does not order on — it orders on `tau_route`, the route's optical
+depth, with `rank_cost` (travel time plus weighted queue time) as tie-break. Read the curves as a smoke-exposure diagnostic, and
+take exit choice from `plot_exit_choice.py`, the `tau_route` column or the
 `rejection_reason` column instead.
 
-The CSV also carries the gate's own diagnostics — `rank_cost`, `k_max_route`,
-`min_visibility_m`, `band`, `k_leg_max`, `clean` and `feasible` — which is what
+The CSV also carries the gate's own diagnostics — `tau_route`, `rank_cost`,
+`k_max_route`, `k_leg_max`, `clean` and `feasible` — which is what
 makes a gate decision auditable: `feasible` says whether the route was
-available, `min_visibility_m` says how much sight it had, and `rank_cost` says
-why the survivor that won won. `k_leg_max` is the smokiest leg of the route and
+available, `tau_route` is the optical depth that both refused it and ordered
+it, and `rank_cost` breaks ties between routes of equal `tau_route`. `k_leg_max` is the smokiest leg of the route and
 `clean` whether that puts the exit in the clean-exit tier; `clean` is `False`
 throughout unless the deck sets `clean_extinction_threshold`.
 

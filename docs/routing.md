@@ -232,6 +232,7 @@ config = RouteCostConfig(
     tau_max=6.0,                          # gate: optical depth budget K_ave * L
     tau_return_margin=0.8,                # gate: stricter budget for a rival exit
     current_exit_discount=0.9,            # gate: current exit's tau in the sort key
+    tau_deadband=0.1,                     # gate: anchor deadband, as a fraction of tau_max
     clean_extinction_threshold=0.0,       # gate: clean-exit tier, 0 = off
     clean_exit_margin=0.1,                # gate: hysteresis on tier membership
     anticipate=True,                      # price segments at arrival time
@@ -421,23 +422,26 @@ the interval.
 
 2. rank_routes(source, t, FED, K_field)
    ├─ evaluate all edges → dynamic costs from current smoke/FED
-   │   (w_smoke / w_fed weighted, under BOTH cost models)
+   │   (gate: k_avg * length + 1e-6 * length, the edge's own optical depth;
+   │    additive: w_smoke / w_fed weighted composite)
    ├─ Dijkstra with dynamic weights → one minimum-cost path per reachable exit
    │   (only the single lowest-cost path to each exit under these weights
    │    is evaluated; alternative paths to the same exit are not enumerated)
    ├─ evaluate_route on each path
    │   ├─ FED rejection (asymmetric: x fed_return_margin for a non-current exit)
-   │   └─ gate only: sight rejection, reason "sight (path)", every exit tested
-   │       (asymmetric: x sight_return_margin for a non-current exit)
+   │   └─ gate only: optical-depth rejection, reason "tau ...", every exit
+   │       tested (asymmetric: budget x tau_return_margin for a non-current
+   │       exit)
    ├─ visibility rejection pass (additive only)
    │   └─ if ≥1 route has any visible segment:
    │       mark routes where ALL segments are non-visible as rejected
    ├─ sort: non-rejected first, rejected last
-   │   └─ both models → (rejected, tier, rank_cost, hops)
+   │   └─ gate     → (rejected, tier, tau x current_exit_discount, rank_cost, hops)
+   │       additive → (rejected, tier, 0.0, rank_cost, hops)
    │       tier splits clean from smoky only when the gate runs with
    │       clean_extinction_threshold > 0 (not the default)
    └─ if all rejected → un-reject the least-bad route as fallback
-       ├─ gate     → by (-band, rank_cost), held by fallback_switch_margin
+       ├─ gate     → by (tau_route, rank_cost), held by fallback_switch_margin
        └─ additive → lowest composite
 
 3. Pick best = ranked[0]
@@ -559,23 +563,22 @@ Full cost evaluation for one candidate route:
 | `segments`         | `list[SegmentCost]` | Per-segment breakdowns            |
 | `queue_time_s`     | `float`             | Estimated queueing time at exit   |
 | `k_max_route`      | `float`             | Worst extinction anywhere on the route. Reported; used only by the all-refused fallback's switch margin |
-| `min_visibility_m` | `float`             | Sighting distance from the route's **mean** `K` over its own polyline (gate) |
-| `band`             | `int`               | Visibility band, 0-3 (gate). Diagnostic: it orders the all-refused fallback and gates the anchor bypass, not the main sort |
+| `tau_route`        | `float`             | Route optical depth `k_ave_route * effective_length` (gate). Refuses the route, orders the survivors, and orders the all-refused fallback |
 | `k_leg_max`        | `float`             | Extinction of the route's smokiest leg, each leg taken as its own mean. Decides clean-exit membership |
 | `clean`            | `bool`             | Whether `k_leg_max` is within the clean-exit limit. Always `False` at the default `clean_extinction_threshold = 0.0` |
-| `feasible`         | `bool`              | Sight and dose both allow the route (gate) |
+| `feasible`         | `bool`              | Optical depth and dose both allow the route (gate) |
 | `rejected`         | `bool`              | Whether route was rejected        |
 | `rejection_reason` | `str \| None`       | Reason for rejection; `fallback: ` prefix when un-rejected |
 
-`rank_cost`, `k_max_route`, `min_visibility_m`, `band` and `feasible` are all
+`rank_cost`, `k_max_route`, `tau_route` and `feasible` are all
 written to the route-cost CSV (`run.py --output-route-cost-history`), so the
 gate's decisions can be audited from its own output.
 
 ## References
 
-- [route-cost-gate.md](route-cost-gate.md) -- the gate model: sight
-  criteria, banding, fallback, the full `routing` key table, and known
-  limitations.
+- [route-cost-gate.md](route-cost-gate.md) -- the gate model: the
+  optical-depth criterion, the ordering, the fallback, the full `routing`
+  key table, and known limitations.
 - [gate-model-review-notes.md](gate-model-review-notes.md) -- provenance
   against `materials/evac.f90` and the open questions.
 - [FDS+Evac Technical Reference and User's Guide](../materials/FDS+EVAC_Guide.pdf)

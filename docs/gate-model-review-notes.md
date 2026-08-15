@@ -437,18 +437,18 @@ Three consequences.
 2. **The FDS+Evac provenance is weakened, not gone.** *(Corrected after
    re-reading `evac.f90`.)* The **threshold** is citable: FDS+Evac's tier-4 test
    computes `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out at
-   `L2_tmp >= 1.0` (`:16456-16462`), which is exactly `K_ave * d > 6`. What does
+   `L2_tmp >= 1.0` (`:16458`, `:16463`), which is exactly `K_ave * d > 6`. What does
    not carry over is the **quantity** — `K_ave_Door` is a mean along `See_door`'s
    straight sight line, with an L1 distance for doors with no resolved sight line
-   (`:16458-16459`) — nor the **scope**: the test sits in a last-resort branch,
+   (`:16460`) — nor the **scope**: the test sits in a last-resort branch,
    loops only over known-or-visible doors, and strikes doors out permanently
-   (`:16460-16461`). So the paper may say the gate is *inspired by* FDS+Evac's
+   (`:16464-16465`). So the paper may say the gate is *inspired by* FDS+Evac's
    tier-4 visibility door rule and inherits its threshold with a citation; it may
    not say it implements it, and 6 is still uncalibrated as an exposure budget.
 
    The same re-read supplies provenance for the hysteresis added at `9f55f6e`:
    `FAC_DOOR_OLD2 = 0.9` (`:1507`) discounts the current door's `L2_tmp` at
-   `:16290` and `:16466`, and at `:16466` that `L2_tmp` **is** `tau/6`. So
+   `:16290` and `:16467`, and at `:16467` that `L2_tmp` **is** `tau/6`. So
    `current_exit_discount = 0.9` discounts the same quantity in the same place.
    The shipped code comment instead cites `FAC_DOOR_WAIT` at `evac.f90:1503`;
    `FAC_DOOR_WAIT` is at `:1505` and discounts travel time, not smoke.
@@ -483,7 +483,7 @@ delays the oscillation without removing it.
 
 FDS+Evac's tier is stable because refusal is **remembered**:
 `Is_Visible_Door(i) = .FALSE.` and `Is_Known_Door(i) = .FALSE.`
-(`evac.f90:16460-16461`) are permanent within the run. pyFDS-Evac removed that
+(`evac.f90:16464-16465`) are permanent within the run. pyFDS-Evac removed that
 memory at `e441b03`, deliberately, because permanent death destroyed the gate's
 self-healing property (B3). **The tier cannot be had without the memory.** That
 is a structural incompatibility, not a tuning failure, and it is a better reason
@@ -530,9 +530,18 @@ Two attempts made it worse and should not be repeated:
   for nothing exactly where decks calibrate it.
 - **A ratio-only bypass**: 109 returns. Adding the absolute floor
   `old.tau - candidate.tau > 0.1 * tau_max` took it to 51.
+- **Making that deadband symmetric** (`25a6f8f`): 34 returns before, 34 after.
+  The asymmetry was real -- leaving an exit had to clear a margin in `tau` while
+  returning fell straight through to the time comparison, which the nearer exit
+  wins unconditionally -- and fixing it changed nothing measurable.
 
-Closing this means the anchor and the ordering agreeing **by construction**. The
-two constants currently damping the disagreement, `exit_switch_anchor` and
-`current_exit_discount`, are both 0.9 -- which in FDS+Evac corresponds to
-`FAC_DOOR_WAIT` on time and `FAC_DOOR_OLD2` on smoke, but here they were arrived
-at separately, and a coincidence of values is not a construction.
+**That null result reframes the finding.** Of l_corridor's 34 returns, 29 have
+the returned-to route cleaner by more than the deadband (median 0.95 of optical
+depth against a margin of 0.6). They are the ordering correctly following a
+field that reversed, not an oscillation any constant could damp. What is open is
+therefore not the mixed currency but a modelling question: **should a memoryless
+model follow a reversing field?** FDS+Evac's answer is memory -- a door struck
+out at `evac.f90:16463` stays struck out (`:16464-16465`) -- and pyFDS-Evac
+removed that at `e441b03` on purpose, because permanent death destroyed the
+gate's self-healing property (B3). The two cannot both be had as the code
+stands. This belongs in the PR discussion.

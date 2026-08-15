@@ -142,7 +142,7 @@ clean-exit tier falls through to the plain optical-depth ranking when it
 is empty, which is our construction and not FDS+Evac's.  The
 
 distance-relative rule — "check that visibility > 0.5 * distance to the
-door" — is FDS+Evac's **tier-4 last resort** (evac.f90:16456), reached
+door" — is FDS+Evac's **tier-4 last resort** (evac.f90:16456-16463), reached
 only when no smoke-free door exists.
 That rule reads `K_ave` along the straight, occlusion-blocked bee line
 (`See_door`, evac.f90:15343), so `S > 0.5 * d` is a statement about
@@ -150,11 +150,11 @@ optical depth along one real sight line.
 
 Written out, the tier-4 test is
 `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` struck out at `L2_tmp >= 1.0`
-(evac.f90:16456-16462) — that is `K_ave * d / 6 >= 1`, i.e. an optical
+(evac.f90:16458, :16463) — that is `K_ave * d / 6 >= 1`, i.e. an optical
 depth above 6, which is where pyFDS-Evac's `tau_max = 6` comes from.
 Two scope limits on the citation: the loop runs only over doors already
 known or visible, and a door struck out here is struck out
-**permanently** (`Is_Visible_Door(i) = .FALSE.`, :16460-16461).
+**permanently** (`Is_Visible_Door(i) = .FALSE.`, :16464-16465).
 pyFDS-Evac inherits the threshold, applies it to the walked polyline
 rather than the bee line, and remembers nothing.
 
@@ -233,7 +233,7 @@ group.
 |--------|----------|------------|
 | **Algorithm** | N-player best-response game (NE in pure strategies) with preference-order filter [9] | Dijkstra shortest-path with dynamic edge weights, then a per-route gate |
 | **Cost function** | `T_i = beta_k * lambda_i + tau_i` (queueing + walking time) [9] Eq. 6 | gate: route optical depth `K_ave * L`, with travel time (+ `w_queue` x queue time) as tie-break; additive: `length * (1 + w_smoke * K) + w_fed * FED` |
-| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5262, :16159); the `0.5 x d` visibility rule is the tier-4 last resort (:16456), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
+| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5262, :16159); the `0.5 x d` visibility rule is the tier-4 last resort (:16463), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
 | **Congestion** | Modelled: queueing time depends on count of closer agents heading to same exit | Optional (`w_queue`), off by default; a global tally of agents targeting the exit |
 | **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered |
 | **Social behaviour** | Herding and follower agent types observe neighbours | Not modelled |
@@ -242,7 +242,7 @@ group.
 | **Distance metric** | L2 for visible exits, L1 (Manhattan) for non-visible exits; direct agent-to-exit | Polyline arc length along corridor geometry (via JuPedSim RoutingEngine); routes through intermediate stages |
 | **Anticipation** | `FED_max_Door * dist / Speed`: extrapolation from presently observable conditions | `anticipate` prices each segment at the agent's arrival time from the FDS solution itself — an upper bound on foresight, not FDS+Evac's model |
 | **Equilibrium** | Proven NE existence; RRA converges in ~3–4 rounds [9] | No equilibrium concept; each agent independently picks the cheapest Dijkstra path |
-| **Anchoring** | Current door favoured by 10 %: `FAC_DOOR_WAIT` = 0.9 on the time criterion (:1505, applied :16264), `FAC_DOOR_OLD2` = 0.9 on the smoke criterion (:1507, applied :16290, :16466) | `exit_switch_anchor` = 0.9 on travel time, mirroring `FAC_DOOR_WAIT`; `current_exit_discount` = 0.9 on the current exit's optical depth in the sort, mirroring `FAC_DOOR_OLD2`; bypasses for a lethal current exit and (gate) a feasible rival clearer both in ratio and by `0.1 * tau_max`; plus deadbands of 0.9 on dose and 0.8 on the optical-depth budget |
+| **Anchoring** | Current door favoured by 10 %: `FAC_DOOR_WAIT` = 0.9 on the time criterion (:1505, applied :16264), `FAC_DOOR_OLD2` = 0.9 on the smoke criterion (:1507, applied :16290, :16467) | `exit_switch_anchor` = 0.9 on travel time, mirroring `FAC_DOOR_WAIT`; `current_exit_discount` = 0.9 on the current exit's optical depth in the sort, mirroring `FAC_DOOR_OLD2`; bypasses for a lethal current exit and (gate) a feasible rival clearer by more than the symmetric deadband `tau_deadband * tau_max` (0.6), which also refuses a rival dirtier by that much; plus deadbands of 0.9 on dose and 0.8 on the optical-depth budget |
 | **Rerouting frequency** | ~1 Hz (every second on average, `TAU_CHANGE_DOOR = 1.0`, evac.f90:1466) | Configurable interval, staggered per agent |
 
 ---

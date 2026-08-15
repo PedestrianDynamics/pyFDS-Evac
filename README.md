@@ -365,7 +365,7 @@ Path choice and exit choice are therefore one objective. In clear air every
 `tau` is an **exposure** statement, not a sighting distance. The criterion grew
 out of one -- `c / K_ave >= 0.5 * L` rearranges to `K_ave * L <= 2c`, which is
 `tau <= 6` at Jin's `c = 3` -- and FDS+Evac's tier-4 door rule is exactly
-`tau > 6` (`evac.f90:16456-16462`). But Jin's `S = c / K` is contrast along a
+`tau > 6` (`evac.f90:16458, :16463`). But Jin's `S = c / K` is contrast along a
 straight unobstructed line to a sign; integrating `K` around two corners
 measures what you walk through, not what you can see. The two coincide only on a
 straight corridor, and `tau_max` is **not calibrated** against a soot-dose or
