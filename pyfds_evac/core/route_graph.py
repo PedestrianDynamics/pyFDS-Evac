@@ -17,18 +17,6 @@ _logger = logging.getLogger(__name__)
 
 _SECONDS_PER_MINUTE = 60.0
 
-# Clear air is unbounded sight; every route there lands in the top band, so the
-# band never discriminates and the model reduces exactly to nearest-exit. Note
-# this holds at K = 0 exactly: at K = 1e-4 sight is 30 km and the band index is
-# in the thousands, so two physically clear routes can still be ordered by band.
-_MAX_BAND = 1_000_000
-
-# Sight is a discriminator while it is scarce. Three classes at the default
-# 10 m width means anything past 30 m is simply "clear", which is roughly where
-# fdsvismap used to cap and comfortably above the 10 m the C/VM2 tenability
-# limit is written at. Routes that saturate tie, and distance decides.
-_BAND_SATURATION_CLASSES = 3
-
 # A segment is cached per (source, target) and, when anticipating, per whole
 # second of arrival time -- the same edge costs differently to an agent that
 # reaches it a minute later.
@@ -672,56 +660,24 @@ class RouteCostConfig:
     # Being distance-relative is the point: haze 5 m from an exit is usable and
     # the same haze at 40 m is not, which no absolute extinction limit can say.
     # Tier 1: an exit is "clean" while the smokiest leg of the route to it
-    # stays under this, and clean exits are preferred outright over smoky ones
-    # however far they are -- FDS+Evac's primary door rule, which minimises time
-    # among doors satisfying K_ave < ABS(FED_DOOR_CRIT) (evac.f90:16265 and
-    # :16272). The value is not chosen here: FED_DOOR_CRIT = -100 becomes
-    # 3.0/100 at evac.f90:5262, i.e. Jin's S = 3/K at a 100 m sighting distance.
-    #
-    # This is what lets a long clean route win. Ranking on time cannot: the
-    # Frantzich-Nilsson law gives only beta/alpha = -0.081 per unit K, so at a
-    # realistic K ~ 1 the cleanest exit in a hall earns under 1% more speed and
-    # can never repay a detour.
-    #
-    # Off by default (0.0 means no route is ever clean, so the tier never
-    # discriminates). Measured on l_corridor at 0.03 it changed the far-exit
-    # share not at all -- 16 of 100, the same as without it -- while taking
-    # monotonicity from 0 returns to abandoned exits to 243 across 35 agents,
-    # and on world100 from 0 to 7. Tier membership is binary, so a route
-    # drifting across the criterion does not reorder the list, it swaps which
-    # objective is in force, and the agent's target jumps. FDS+Evac can afford
-    # that because a door leaves an agent's known set permanently; here nothing
-    # is remembered, by design, so the tier flickers. Available for decks with
-    # a genuinely clean alternative to reach for.
+    # stays under this. Off by default -- see docs/gate-model-review-notes.md
+    # for why it does not survive contact with either reference deck.
     clean_extinction_threshold: float = 0.0
-    # Hysteresis on tier membership for the exit the agent already heads for:
-    # its limit is clean_extinction_threshold / this. FDS+Evac supplies the
-    # value -- FAC_DOOR_OLD = 0.1 (evac.f90:1506), applied as
-    # L2_tmp = FAC_DOOR_OLD * L2_tmp for the current door (:16255), so the door
-    # an agent is already walking to stays "smoke free" up to ten times the
-    # criterion. An earlier 0.8 here was invented, and 1.25x proved far too
-    # narrow: 0.0075 /m of drift in one leg was enough to make an agent leave
-    # a clean exit and come back.
+    # Hysteresis on tier membership for the exit the agent already heads for,
+    # from FDS+Evac's FAC_DOOR_OLD = 0.1 (evac.f90:1506).
     clean_exit_margin: float = 0.1
-    sight_distance_fraction: float = 0.5
-    # Asymmetric sight gate, mirroring fed_return_margin. A route the agent is
-    # already on is judged against the bare criterion; a rival has to clear it
-    # by this factor before the agent will switch onto it. Without the deadband
-    # a route whose sight sits near the threshold toggles in and out of
-    # feasibility every tick and the agent follows it: measured on world100,
-    # one exit swung between 2.9 m and 24.2 m of sight on consecutive seconds,
-    # producing 169 returns to abandoned exits across 23 agents.
-    sight_return_margin: float = 1.25
-    # Jin's constant for the sign being read: 3 for light-reflecting signage,
-    # 8 for internally illuminated. Sighting distance is S = c / K, uncapped,
-    # so clear air gives infinite visibility and the gate never fires there.
-    sign_contrast_c: float = 3.0
-    # Feasible routes are ranked by visibility band before distance, so a
-    # genuinely clearer way wins outright but a 0.02 /m difference does not
-    # send anyone 30 m out of their way. 10 m is the sighting distance the
-    # C/VM2 optical-density limits are derived from (0.13 /m reflective,
-    # 0.347 /m illuminated), which is what makes the band width citable.
-    band_width_m: float = 10.0
+    # The route the agent will accept, as an optical depth: tau = K_ave * L,
+    # the soot column it walks through. Refused above this.
+    #
+    # Not a visibility criterion, though it started as one. tau <= 2c with
+    # Jin's c = 3 is where 6 comes from, and on a straight corridor that is
+    # FDS+Evac's "visibility > half the distance to the door". On a route that
+    # turns a corner it is not: you cannot see around one, so integrating K
+    # along a walked path measures exposure, not sight. The number is inherited
+    # rather than derived, and calibrating it against a soot-dose or FED
+    # equivalent is open work -- docs/gate-model-review-notes.md.
+    tau_max: float = 6.0
+    tau_return_margin: float = 0.8
     # Charge each leg the smoke present when the agent would arrive there,
     # rather than the smoke standing there while it decides.
     anticipate: bool = True
@@ -749,10 +705,10 @@ class RouteCostConfig:
             clean_exit_margin=routing.get(
                 "clean_exit_margin", RouteCostConfig.clean_exit_margin
             ),
-            sight_distance_fraction=routing.get("sight_distance_fraction", 0.5),
-            sight_return_margin=routing.get("sight_return_margin", 1.25),
-            sign_contrast_c=routing.get("sign_contrast_c", 3.0),
-            band_width_m=routing.get("band_width_m", 10.0),
+            tau_max=routing.get("tau_max", RouteCostConfig.tau_max),
+            tau_return_margin=routing.get(
+                "tau_return_margin", RouteCostConfig.tau_return_margin
+            ),
             anticipate=routing.get("anticipate", True),
             foresight_horizon_s=routing.get("foresight_horizon_s", math.inf),
             fallback_switch_margin=routing.get("fallback_switch_margin", 0.2),
@@ -803,12 +759,11 @@ class RouteCost:
     rejected: bool
     rejection_reason: str | None
     queue_time_s: float = 0.0
-    # Gate model only. `min_visibility_m` is Jin's sighting distance at the
-    # worst point of the route, `band` the class it falls in, and `feasible`
-    # whether sight and dose both allow the route at all.
+    # Gate model only. `tau_route` is the route's optical depth, K_ave times
+    # the distance still to walk -- the soot column the agent passes through --
+    # and `feasible` whether that and the predicted dose both allow the route.
     k_max_route: float = 0.0
-    min_visibility_m: float = math.inf
-    band: int = 0
+    tau_route: float = 0.0
     feasible: bool = True
     # What the whole pipeline orders on -- ranking, the exit-switch anchor and
     # the same-exit path test all read this, so a model change lands in one
@@ -862,44 +817,6 @@ def _sample_segment_extinction(
             length,
         )
     return length, k_avg, k_max
-
-
-def _visibility_band(visibility_m: float, band_width_m: float) -> int:
-    """Which class of sight a route falls in, coarse enough to tie often.
-
-    Banding is what keeps distance in charge: two routes a few centimetres of
-    visibility apart share a band and the nearer one wins, while a route a
-    whole class clearer wins outright however far it is.
-
-    Saturating at ``_BAND_SATURATION_CLASSES`` is what makes that true at the
-    top of the range as well as the bottom. Sight is a discriminator while it
-    is scarce; past a few tens of metres it is not, and one route seeing 91 m
-    where another sees "unbounded" is not a difference anyone acts on. Before
-    the ceiling, clear air scored ``_MAX_BAND`` while 91 m of sight scored 9,
-    so a trace of smoke -- K = 0.03 /m -- dropped a route five orders of
-    magnitude and sent agents 10 m out of their way. Measured on world100: two
-    permanently feasible exits traded places every second, 182 times.
-    """
-    if band_width_m <= 0:
-        return _MAX_BAND
-    ceiling = _BAND_SATURATION_CLASSES * band_width_m
-    if visibility_m >= ceiling:
-        return _BAND_SATURATION_CLASSES
-    return int(visibility_m // band_width_m)
-
-
-def _sighting_distance(k: float, contrast_c: float) -> float:
-    """Jin's sighting distance S = c / K, in metres, uncapped.
-
-    Uncapped on purpose: clear air is K = 0 and must give infinite sight, or a
-    long route would fail a distance-relative criterion with no fire at all.
-    fdsvismap reports the same relation but clipped to its ``max_vis`` and
-    masked where geometry conceals the sign -- both right for "can this sign be
-    read", both wrong for "is this route passable".
-    """
-    if k <= 1e-9:
-        return math.inf
-    return contrast_c / k
 
 
 def _arrival_time(time_s: float, walked_m: float, config: RouteCostConfig) -> float:
@@ -1170,17 +1087,20 @@ def evaluate_route(
         [first_k_avg] + [s.k_avg for _, s in weighted[1:]],
         default=0.0,
     )
-    # Sight is estimated from the route's *mean* extinction, not its worst
-    # point. FDS+Evac's See_door averages K along the sight line for the same
-    # reason: a maximum over sampled cells is a step function of where the
-    # agent stands, so one dense cell entering the sample swings the estimate
-    # by an order of magnitude between ticks. Measured on world100, the same
-    # 28.9 m route reported 91 m of sight, then 8 m, then 91 m again on
-    # consecutive seconds, and the ordering flipped with it -- 182 returns to
-    # abandoned exits across 26 agents. k_max_route is still reported, and
-    # still drives the all-refused fallback, where the question is which walk
-    # is survivable rather than which is legible.
-    min_visibility = _sighting_distance(k_ave, config.sign_contrast_c)
+    # Route optical depth: the soot column still to be walked through, and the
+    # whole of the smoke criterion. tau = K_ave * L is the integral of
+    # extinction along the path, not the sighting distance it grew out of --
+    # Jin's S = c/K measures contrast along a straight unobstructed line to a
+    # sign, and integrating K around two corners measures exposure instead. The
+    # two coincide only on a straight corridor.
+    #
+    # The mean rather than the worst sample: a maximum over sampled cells is a
+    # step function of where the agent stands, and the same 28.9 m route
+    # reported 91 m of sight, then 8 m, then 91 m again on consecutive seconds,
+    # taking the ordering with it. k_max_route is still reported and still
+    # orders the all-refused fallback, where the question is which walk is
+    # survivable rather than which is cleanest.
+    tau_route = k_ave * effective_length
 
     # Composite cost: effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
     # Under "gate" this is reported but does not rank: see rank_routes.
@@ -1228,49 +1148,38 @@ def evaluate_route(
     # Change_Target_Door). Being relative to distance is what lets the same
     # smoke allow a near exit and refuse a far one.
     #
-    # One estimator, applied to every candidate: c / K_ave over the route
-    # polyline against the distance still to walk. With k_ave the criterion is
-    # exactly an optical depth, tau = K_ave * L <= 2c, which is the same
-    # statement FDS+Evac's See_door makes along its sight line -- so the two are
-    # the same form, and the polyline is the one available for every exit.
-    #
-    # fdsvismap's line of sight is *not* used to gate, though it is the more
-    # faithful measurement, because it is only defined where a sign resolves.
-    # Selecting the criterion per exit made sign geometry decide which exits
-    # were gated at all: measured on world100, one exit was sight-tested 43
-    # times and fell back 2095 times, and moving a sign 2 m would change which
-    # exits are exempt. Mixing them was worse still -- the same 22 m route read
-    # 9.9 m on one tick and 68.3 m on the next as the line of sight resolved,
-    # and routes flipped feasibility as agents walked past obstructions.
-    #
-    # Not seeing a sign is a statement about wayfinding, not about whether a
-    # route can be walked, so it belongs in the cognitive map, not in this gate.
+    # The gate: refuse a route whose optical depth exceeds the budget. A rival
+    # exit is held to a stricter budget than the one the agent already walks
+    # to, so a route sitting near tau_max does not toggle in and out of the
+    # feasible set and take the crowd with it.
     feasible = not rejected
-    band = _visibility_band(min_visibility, config.band_width_m)
     if config.cost_model == "gate":
-        sight = min_visibility
-        needed = config.sight_distance_fraction * effective_length
-        # A rival exit has to clear the criterion by a margin before the agent
-        # will switch onto it. The reason string says so, because reading
-        # "6.8 m < 8.4 m (0.5 x 13.4 m)" and finding 0.5 x 13.4 = 6.7 sent a
-        # reviewer to the wrong conclusion about which rule refused the route.
-        needed_scaled = not is_current and current_exit is not None
-        if needed_scaled:
-            needed *= config.sight_return_margin
-        how = "path"
-        if sight < needed:
+        budget = config.tau_max
+        if not is_current and current_exit is not None:
+            budget *= config.tau_return_margin
+        if tau_route > budget:
             feasible = False
             rejected = True
             reason = (
-                f"sight ({how}) {sight:.1f} m < {needed:.1f} m "
-                f"({config.sight_distance_fraction:g} x {effective_length:.1f} m"
-                f"{' x ' + format(config.sight_return_margin, 'g') if needed_scaled else ''})"
+                f"tau {tau_route:.2f} > {budget:.2f} "
+                f"(K_ave {k_ave:.3f} x {effective_length:.1f} m)"
             )
 
     if config.cost_model == "gate":
         # Queue delay is time, so it belongs beside travel time rather than in
         # the composite the gate ignores -- otherwise opting into congestion-
         # aware routing (w_queue) would silently do nothing.
+        # One currency: the quantity that refuses a route also ranks it and is
+        # what the anchor compares. Ranking on tau while anchoring on time left
+        # the two disagreeing, and a separate "clearly cleaner" bypass fired
+        # every time the field flickered -- 109 returns to abandoned exits on
+        # l_corridor.
+        #
+        # rank_cost stays a time. tau orders the routes (see rank_routes), but
+        # it is zero in clear air, so using it for the anchor's ratio test would
+        # make every comparison 0 < 0 -- no agent could ever switch, and a
+        # congestion weight would count for nothing exactly where decks
+        # calibrate one.
         rank_cost = travel_time + queue_time * config.w_queue
     else:
         rank_cost = composite
@@ -1298,8 +1207,7 @@ def evaluate_route(
         rejection_reason=reason,
         queue_time_s=queue_time,
         k_max_route=k_max,
-        min_visibility_m=min_visibility,
-        band=band,
+        tau_route=tau_route,
         feasible=feasible,
         rank_cost=rank_cost,
         k_leg_max=k_leg_max,
@@ -1360,13 +1268,29 @@ def rank_routes(
                 )
                 if cached_segments is not None:
                     cached_segments[cache_key] = seg
-            # Per-edge cost: additive decomposition of the composite formula.
-            # current_fed is constant across routes for one agent, so omitting
-            # it from edge costs does not affect ranking.
-            dynamic_weights[cache_key] = (
-                seg.length_m * (1.0 + config.w_smoke * seg.k_avg)
-                + config.w_fed * seg.fed_growth
-            )
+            # Per-edge cost. Under "gate" this is the edge's own optical
+            # depth, the same quantity the routes are ranked and refused on, so
+            # the path chosen to reach an exit and the choice between exits are
+            # finally one objective. Before this, Dijkstra minimised the
+            # additive composite and the exit was then judged on tau, which
+            # meant a gate could refuse an exit on a smoky path while a longer
+            # passable path to the same exit existed and was never offered.
+            #
+            # A floor on length keeps a clear-air graph from collapsing to
+            # all-zero weights, where every path ties and Dijkstra returns an
+            # arbitrary one.
+            if config.cost_model == "gate":
+                dynamic_weights[cache_key] = seg.k_avg * seg.length_m + 1e-6 * (
+                    seg.length_m
+                )
+            else:
+                # Additive decomposition of the composite formula. current_fed
+                # is constant across routes for one agent, so omitting it from
+                # edge costs does not affect ranking.
+                dynamic_weights[cache_key] = (
+                    seg.length_m * (1.0 + config.w_smoke * seg.k_avg)
+                    + config.w_fed * seg.fed_growth
+                )
 
     # Phase 2: Dijkstra with dynamic weights.
     all_paths = graph.shortest_paths_to_exits(source, dynamic_weights=dynamic_weights)
@@ -1428,26 +1352,26 @@ def rank_routes(
     # Under "gate" distance decides among routes that are still available, and
     # a route a whole visibility band clearer wins first: smoke says which
     # exits exist, not how much each metre of them is worth.
-    # Both models order the same way; only rank_cost differs between them, and
-    # evaluate_route already decided which quantity that is. The gate briefly
-    # ordered by visibility band first, and the band did not break ties, it
-    # decided: on l_corridor it placed agents on the 58 m route while both
-    # routes were optically clear (k_ave = 0.000 for each), because a route
-    # with any trace of smoke gets a finite S = c/K while one with none got
-    # _MAX_BAND. Smoke says which exits exist; it does not also get to say
-    # which of the survivors is nearer.
-    prefer_clean = (
-        config.cost_model == "gate" and config.clean_extinction_threshold > 0.0
-    )
+    # Ordering. Under "additive" the composite decides, as it always has.
+    # Under "gate" the route's optical depth decides and travel time breaks
+    # ties: tau = K_ave * L already contains the distance, so two routes
+    # through equally thin haze order by length and in clear air every tau is
+    # zero and time decides alone. A cleaner route wins only by enough less
+    # smoke to pay for its extra metres -- which is the property a visibility
+    # band could not have, since a band compared cleanliness with no reference
+    # to how far the agent had to carry it.
+    order_by_tau = config.cost_model == "gate"
+    prefer_clean = order_by_tau and config.clean_extinction_threshold > 0.0
 
-    def sort_key(rc: RouteCost) -> tuple[int, int, float, int]:
-        # Clean first, near second. A route whose smokiest leg is below the
-        # clean-door criterion outranks every smoky one however far it is; among
-        # equals, time decides. When no exit is clean the tier is empty, it
-        # discriminates nothing, and the ordering is time alone -- which is what
-        # happens for most of a real fire.
+    def sort_key(rc: RouteCost) -> tuple[int, int, float, float, int]:
         tier = 0 if (rc.clean or not prefer_clean) else 1
-        return (1 if rc.rejected else 0, tier, rc.rank_cost, len(rc.path))
+        return (
+            1 if rc.rejected else 0,
+            tier,
+            rc.tau_route if order_by_tau else 0.0,
+            rc.rank_cost,
+            len(rc.path),
+        )
 
     costs.sort(key=sort_key)
 
@@ -1463,13 +1387,13 @@ def rank_routes(
     # docs/gate-model-review-notes.md -- the ordering follows the field, so the
     # current exit is held unless a rival's worst stretch is clearly milder.
     #
-    # Banded, not raw: measured on world100, ordering refused routes by k_max
-    # alone put a 51 m route ahead of a 22 m one on 2.0 m of sight against 1.8 m.
-    # Two tenths of a metre of visibility, neither of them usable, decided a 29 m
-    # detour. Sight this poor is a class, not a scale, so the band decides and
-    # distance breaks the tie -- the same rule the feasible routes get.
+    # Ordered by optical depth here too, not by the worst sample: ordering
+    # refused routes by k_max alone once put a 51 m route ahead of a 22 m one
+    # on 2.0 m of sight against 1.8 m -- two tenths of a metre of visibility,
+    # neither usable, deciding a 29 m detour. tau carries the distance with it,
+    # so the least-bad walk is the one with least smoke to walk through.
     if costs and all(rc.rejected for rc in costs):
-        costs.sort(key=lambda rc: (-rc.band, rc.rank_cost))
+        costs.sort(key=lambda rc: (rc.tau_route, rc.rank_cost))
         current = next((rc for rc in costs if rc.exit_id == current_exit), None)
         if current is not None and costs[0].exit_id != current.exit_id:
             margin = 1.0 - config.fallback_switch_margin
@@ -1727,9 +1651,19 @@ def _anchor_allows(
     if (
         cost_config.cost_model == "gate"
         and candidate.feasible
-        and (candidate.band > old_rc.band or (candidate.clean and not old_rc.clean))
-        and candidate.min_visibility_m * config.exit_switch_anchor
-        > old_rc.min_visibility_m
+        and (
+            (candidate.clean and not old_rc.clean)
+            # Clearly cleaner, in relative *and* absolute terms. The ratio alone
+            # fires on noise when both routes are nearly clear -- tau 0.02
+            # against 0.03 is a 33% improvement and no difference at all to
+            # anyone walking it. Measured on l_corridor, the ratio on its own
+            # produced 109 returns to abandoned exits.
+            or (
+                candidate.tau_route < old_rc.tau_route * config.exit_switch_anchor
+                and old_rc.tau_route - candidate.tau_route
+                > config.cost_config.tau_max * 0.1
+            )
+        )
     ):
         return True
     return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor

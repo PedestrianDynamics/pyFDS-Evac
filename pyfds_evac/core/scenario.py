@@ -2196,8 +2196,7 @@ def run_scenario(
                                         # that decides feasibility is invisible.
                                         "rank_cost": float(rc.rank_cost),
                                         "k_max_route": float(rc.k_max_route),
-                                        "min_visibility_m": float(rc.min_visibility_m),
-                                        "band": int(rc.band),
+                                        "tau_route": float(rc.tau_route),
                                         "k_leg_max": float(rc.k_leg_max),
                                         "clean": bool(rc.clean),
                                         "feasible": bool(rc.feasible),

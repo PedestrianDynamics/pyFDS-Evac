@@ -22,7 +22,6 @@ while both routes were optically clear.
 
 from __future__ import annotations
 
-import math
 from dataclasses import replace
 
 from shapely.geometry import box
@@ -35,8 +34,6 @@ from pyfds_evac.core.route_graph import (
     StageGraph,
     _adoptable,
     _must_flee_rejection,
-    _sighting_distance,
-    _visibility_band,
     evaluate_route,
     rank_routes,
 )
@@ -73,19 +70,23 @@ class ConstantK:
         return self._k
 
 
-class TestSightCriterion:
-    def test_the_same_smoke_refuses_a_far_exit_and_allows_a_near_one(self):
-        """Distance-relative, not a threshold on K."""
-        k = 0.2  # S = 15 m
-        assert _sighting_distance(k, 3.0) == 15.0
-        cfg = _cfg(sight_distance_fraction=0.5)
-        # needed = 0.5 * length, so anything under 30 m is passable at this K.
-        assert 15.0 >= cfg.sight_distance_fraction * 20.0
-        assert 15.0 < cfg.sight_distance_fraction * 40.0
+class TestTauCriterion:
+    def test_the_same_smoke_refuses_a_long_route_and_allows_a_short_one(self):
+        """The budget is on optical depth, so length is part of the test."""
+        graph = build_two_exit_graph()
+        ranked = rank_routes(graph, "spawn", 0.0, 0.0, ConstantK(0.2), None, _cfg())
+        by_exit = {rc.exit_id: rc for rc in ranked}
+        # near is 20 m: tau = 4.0, under the budget of 6. far is 40 m: tau = 8.
+        assert by_exit["near"].tau_route < 6.0 <= by_exit["far"].tau_route
+        assert not by_exit["near"].rejected
+        assert by_exit["far"].rejected
+        assert "tau" in (by_exit["far"].rejection_reason or "")
 
-    def test_clear_air_gives_unbounded_sight(self):
-        assert _sighting_distance(0.0, 3.0) == math.inf
-        assert _visibility_band(math.inf, 10.0) == _visibility_band(math.inf, 5.0)
+    def test_clear_air_gives_zero_optical_depth(self):
+        graph = build_two_exit_graph()
+        ranked = rank_routes(graph, "spawn", 0.0, 0.0, ConstantK(0.0), None, _cfg())
+        assert all(rc.tau_route == 0.0 for rc in ranked)
+        assert not any(rc.rejected for rc in ranked)
 
 
 class TestSmokeDecidesAvailabilityNotOrder:
@@ -153,7 +154,7 @@ class TestRefusalIsNotRemembered:
         )
         assert not far_off.feasible
         assert close_up.feasible
-        assert close_up.min_visibility_m == far_off.min_visibility_m
+        assert close_up.tau_route < far_off.tau_route
 
 
 class TestFallbackStability:
@@ -176,12 +177,12 @@ class TestFallbackStability:
         assert not ranked[0].rejected
         assert (ranked[0].rejection_reason or "").startswith("fallback")
 
-    def test_a_hair_of_sight_does_not_buy_a_long_detour(self):
+    def test_a_hair_of_cleanliness_does_not_buy_a_long_detour(self):
         """Measured on world100: 2.0 m of sight beat 1.8 m over 29 m of walking.
 
         Both routes are refused and neither is usable, so the tiny difference in
-        worst-case sight is noise. Banding makes them the same class and lets
-        distance decide.
+        extinction is noise. Optical depth carries the distance with it, so the
+        least-bad walk is the one with least smoke to walk *through*.
         """
         graph = build_two_exit_graph()
 
@@ -194,7 +195,6 @@ class TestFallbackStability:
             graph, "spawn", 0.0, 0.0, BarelyClearerFarAway(), None, _cfg()
         )
         assert ranked[0].exit_id == "near"
-        assert ranked[0].band == ranked[1].band
 
     def test_the_current_exit_is_held_when_rivals_are_no_milder(self):
         """Uniform smoke: k_max ties, so the margin must keep the incumbent."""
@@ -340,4 +340,5 @@ class TestClearAirIsUntouched:
         for k in (0.0, 1e-4, 1e-3):
             ranked = rank_routes(graph, "spawn", 0.0, 0.0, ConstantK(k), None, _cfg())
             assert len({rc.clean for rc in ranked}) == 1, k
+            assert all(rc.tau_route <= k * 45.0 for rc in ranked), k
             assert ranked[0].exit_id == "near", k
