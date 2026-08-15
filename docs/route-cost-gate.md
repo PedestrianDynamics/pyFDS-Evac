@@ -10,12 +10,13 @@ Route choice runs under one of two cost models, selected per deck with
 
 | value | what decides the exit |
 |---|---|
-| `"gate"` (default) | Travel time is the objective; smoke decides which exits are *available*. |
+| `"gate"` (default) | Route optical depth decides which exits are *available* and orders the survivors; travel time breaks ties. |
 | `"additive"` | Smoke is a toll per metre walked, folded into one composite cost. |
 
-Under the gate, smoke reaches the ordering only through the speed law inside
-`travel_time_s`. No visibility term ranks the survivors — see
-[How the gate decides](#how-the-gate-decides).
+Under the gate one quantity does the whole of the smoke reasoning: the route's
+optical depth `tau = K_ave * L`, the soot column the agent walks through. It
+refuses a route, it orders the routes it does not refuse, and it weights every
+Dijkstra edge — see [How the gate decides](#how-the-gate-decides).
 
 Both are implemented in `pyfds_evac/core/route_graph.py`
 (`RouteCostConfig`, `evaluate_route`, `rank_routes`, `evaluate_and_reroute`).
@@ -35,178 +36,189 @@ of an existing deck, set **both** keys — `anticipate` is independent of
 }
 ```
 
-To make the gate stricter or laxer, change `sight_distance_fraction` (a route
-is refused when sighting distance falls below this fraction of the distance
-still to walk):
+To make the gate stricter or laxer, change `tau_max` — the optical depth a
+route may carry before it is refused:
 
 ```json
 {
   "routing": {
     "cost_model": "gate",
-    "sight_distance_fraction": 0.5,
-    "sign_contrast_c": 3.0,
-    "band_width_m": 10.0
+    "tau_max": 6.0,
+    "tau_return_margin": 0.8,
+    "current_exit_discount": 0.9
   }
 }
 ```
 
-**Precondition.** `_gate_needs_sight` (`pyfds_evac/core/run_config.py`) builds a
-visibility model for *any* deck that runs with rerouting enabled and
-`cost_model` left at `"gate"`, including decks whose agents are all
-`familiarity: 1.0`. That costs a vismap precompute at startup. Pass
-`--vis-cache PATH` to make it a one-off: the cache is written if missing and
-loaded if present.
-
-Since `b16e900` the model is no longer what the gate reads: the sight criterion
-is computed from the route polyline and needs no vismap. What the model still
-supplies is the line-of-sight diagnostic and the sign legibility the cognitive
-map expands on. Its own docstring has not caught up with that, and neither has
-the trigger — `_gate_needs_sight` keys on `cost_model == "gate"`, which no longer
-implies a vismap is needed.
+**No vismap precondition.** The gate reads no visibility model. `b16e900`
+unified the criterion on the route polyline and `89d13d4` removed the
+`_gate_needs_sight` precompute that a gate deck used to trigger, so a
+familiarity-1.0 gate deck now runs with no `--vis-cache` at all: `l_corridor`
+takes 5 seconds and reproduces the cached run's 84/16. A visibility model is
+still built for decks with discovery agents, which consult it to learn the
+graph.
 
 ## How the gate decides
 
-> **This page describes `45e146f`.**
+> **This page describes `9f55f6e`.**
 
 Per agent, per reevaluation tick:
 
-1. **Availability.** Each candidate route is tested twice. **Sight:** it is
-   refused when its sighting distance falls below `sight_distance_fraction`
-   (default 0.5) times the distance still to walk. **Dose:** it is refused when
-   its projected FED exceeds `fed_rejection_threshold`. Either refusal alone
-   removes the route. Every candidate faces the same sight test; none is
-   exempt.
-2. **Ordering among survivors.** Travel time alone:
-   `rank_cost = travel_time_s + w_queue * queue_time_s`. With
-   `clean_extinction_threshold > 0` a clean-exit tier sits ahead of time — see
-   [The clean-exit tier](#the-clean-exit-tier-off-by-default), which is off by
-   default.
-3. **Tie-break.** Fewer hops.
+1. **Path per exit.** Dijkstra runs with each edge weighted by its own optical
+   depth, `k_avg * length` (plus a `1e-6 * length` floor, below).
+2. **Availability.** Each candidate route is tested twice. **Optical depth:**
+   it is refused when `tau = K_ave * L_eff` exceeds `tau_max` (default 6), or
+   `tau_max * tau_return_margin` if it is not the exit the agent already walks
+   to. **Dose:** it is refused when its projected FED exceeds
+   `fed_rejection_threshold`. Either refusal alone removes the route.
+3. **Ordering among survivors.** Optical depth first, travel time second. The
+   sort key is `(rejected, tier, tau, rank_cost, hops)` with
+   `rank_cost = travel_time_s + w_queue * queue_time_s`. The `tau` in the key
+   is scaled by `current_exit_discount` (0.9) for the exit the agent already
+   heads for. `tier` is the clean-exit tier, off by default.
 
-**The visibility band does not order feasible routes.** It is computed and
-reported as a diagnostic, and it still has two jobs — ordering the all-refused
-fallback, and the anchor bypass — but it no longer sits ahead of time in the
-main sort. It used to, and measurement showed it was not breaking ties but
-deciding: on `l_corridor` it put agents on the 58 m route while both routes
-read `k_ave = 0.000`, because a route carrying any trace of smoke gets a finite
-`S = c / K` while a route with none got the unbounded band. A 5x distance
-penalty never entered the comparison. Smoke now says which exits exist; it does
-not also say which of the survivors is nearer.
+**One quantity refuses a route, orders it, and weights its edges.** That is the
+change at `0d9bf79`. Before it, Dijkstra minimised the additive composite, the
+survivors were ordered by travel time, and the gate judged them on optical
+depth — three currencies, and a gate could refuse an exit on a smoky path while
+a longer passable path to the same exit existed and was never offered.
 
-Band index is `int(sighting_distance // band_width_m)`, **saturating at three
-classes** (`_BAND_SATURATION_CLASSES`, 30 m at the default width). Anything
-past the ceiling — including infinite sight in clear air — ties at band 3.
-Sight is a discriminator while it is scarce; past a few tens of metres one
-route seeing 91 m where another sees "unbounded" is not a difference anyone
-acts on, and before the ceiling that difference was five orders of magnitude.
-The unbounded `_MAX_BAND` survives only for the degenerate `band_width_m <= 0`.
+**Optical depth can order routes where a visibility band could not**, because
+`tau = K_ave * L` already contains the distance. Two routes through equally thin
+haze order by length; in clear air every `tau` is zero and travel time decides
+alone; a cleaner route wins only by carrying enough less smoke to pay for its
+extra metres. A band compared cleanliness with no reference to how far the agent
+had to carry it, which is why it had to be kept out of the main sort: on
+`l_corridor` it put agents on the 58 m route while both routes read
+`k_ave = 0.000`. `_visibility_band`, `_sighting_distance`, `band_width_m` and
+the saturation constant are all gone at `0d9bf79`.
 
-In clear air `K = 0`, sighting distance is infinite, nothing is refused, and
-the gate reduces to fastest-exit — which in clear air is nearest-exit. The two
-models were measured identical on the `world_100` (7712 route-cost rows) and
+**The `1e-6 * length` floor on the edge weight is not a tuning constant.** In
+clear air every `k_avg` is zero, so without it every path ties at weight zero
+and Dijkstra returns an arbitrary one. The floor makes the tie break on length.
+It is not configurable and has not been measured for its effect at small
+nonzero `K`.
+
+In clear air `K = 0`, every `tau` is zero, nothing is refused, and the gate
+reduces to fastest-exit — which in clear air is nearest-exit. The two models
+were measured identical on the `world_100` (7712 route-cost rows) and
 `t_junction` (4030 rows) clear-air runs, and the `l_corridor` clear-air pair
-evacuates 100/0 to the near exit under both with zero switches. Those runs
-predate the band's removal from the ordering, and they were the check that
-held only at `K = 0` exactly. The term that broke it at small nonzero `K` was
-the band, which no longer orders feasible routes; equivalence at `K = 1e-4` has
-not been re-measured since.
+evacuates 100/0 to the near exit under both with zero switches. **Those runs
+predate `0d9bf79` entirely**, and the ordering has changed since. Equivalence
+has not been re-measured under `tau` ordering, at `K = 0` or at `K = 1e-4`.
 
-### Sighting distance, and the one estimator that measures it
-
-Sighting distance is Jin's relation
+### Optical depth: what it measures, and what it does not
 
 ```
-S = c / K
+tau = K_ave * L_eff
 ```
 
-with `c = sign_contrast_c` (default 3, light-reflecting signage; 8 is the value
-for internally illuminated signs). It is deliberately uncapped, so `K = 0`
-gives infinite sight.
+`K_ave` is the length-weighted mean extinction over the route's own polyline;
+`L_eff` is the distance still to walk. The product is the Beer-Lambert integral
+of extinction along the walked path — the soot column the agent passes through.
+It is an **exposure** statement.
 
-Every candidate is judged on the same quantity: `K` is `K_ave` over that
-route's own polyline, length-weighted across its segments, and the distance it
-is compared against is the whole remaining route length. Because the estimator
-uses the mean, the criterion `c / K_ave >= f * L` rearranges to a statement
-about optical depth,
+**It is not a sighting distance.** The criterion grew out of one: `c / K_ave >=
+0.5 * L` rearranges to `K_ave * L <= 2c`, and with Jin's `c = 3` that is
+`tau <= 6`. But Jin's `S = c / K` is contrast along a straight, unobstructed
+line to a sign. Integrating `K` around two corners measures how much smoke you
+walk through, not how far you can see. The two coincide only on a straight
+corridor. The names changed at `0d9bf79` to say what the quantity is.
 
-```
-K_ave * L <= c / f          (= 2c at the default f = 0.5)
-```
-
-which is the same statement fdsvismap's line of sight makes along its own path.
-The polyline is the estimator available for *every* exit, which is why it is
-the one that gates.
-
-**The estimator averages `K`; it does not take the route's worst point.** The
-criterion used the worst sample until `cea33ce`. A maximum over sampled cells
-is a step function of where the agent stands: one dense cell entering the
-sample swings the estimate by an order of magnitude between ticks, and measured
-on `world100` the same 28.9 m route reported 91 m of sight, then 8 m, then 91 m
-again on consecutive seconds, with the ordering flipping each time. Averaging
-is what FDS+Evac's `See_door` does too. `k_max_route` is still computed and
-reported, and still decides the all-refused fallback's switch margin, where the
-question is which walk is survivable rather than which is legible.
+**The estimator averages `K`; it does not take the route's worst point.** A
+maximum over sampled cells is a step function of where the agent stands: one
+dense cell entering the sample swings the estimate by an order of magnitude
+between ticks, and measured on `world100` the same 28.9 m route reported 91 m of
+sight, then 8 m, then 91 m again on consecutive seconds, with the ordering
+flipping each time. `k_max_route` is still computed and reported, and still
+decides the all-refused fallback's switch margin, where the question is which
+walk is survivable rather than which is cleanest.
 
 **The line of sight is a diagnostic, not a gate.** fdsvismap's obstruction-aware
-sight line to an exit's own sign is the more faithful measurement, and it is
-still read and reported, but it is defined only where a sign resolves — so
-selecting the criterion per exit let sign geometry decide *which exits were
-tested at all*. Measured before `b16e900`: on `l_corridor` the far exit lies
-around two corners, never resolved a sight line, was therefore never sight-
-tested, and the diversion the gate exists to produce vanished (84/16 became
-100/0). On `world100` one exit was sight-tested 43 times and fell back 2095
-times, so moving a sign two metres would have changed which exits were gated.
-Mixing the two was worse still: the same 22 m route read 9.9 m on one tick and
-68.3 m on the next as the sight line resolved. Not seeing a sign is a fact
-about wayfinding, not about whether a route can be walked, so it belongs in the
+sight line to an exit's own sign is the more faithful measurement of what an
+occupant can see, but it is defined only where a sign resolves — so selecting
+the criterion per exit let sign geometry decide *which exits were tested at
+all*. Measured before `b16e900`: on `l_corridor` the far exit lies around two
+corners, never resolved a sight line, was therefore never tested, and the
+diversion the gate exists to produce vanished (84/16 became 100/0). On
+`world100` one exit was tested by sight line 43 times and fell back 2095 times,
+so moving a sign two metres would have changed which exits were gated. Mixing
+the two was worse still: the same 22 m route read 9.9 m on one tick and 68.3 m
+on the next as the sight line resolved. Not seeing a sign is a fact about
+wayfinding, not about whether a route can be walked, so it belongs in the
 cognitive map (`cognitive_map.expand_from_visibility`), not in this gate.
 
-The rejection reason therefore always names the `path` criterion, for example:
+The rejection reason names the quantity and both factors of it:
 
 ```
-sight (path) 2.1 m < 29.0 m (0.5 x 58.0 m)
-sight (path) 6.8 m < 8.4 m (0.5 x 13.4 m x 1.25)
+tau 8.41 > 6.00 (K_ave 0.145 x 58.0 m)
+tau 5.20 > 4.80 (K_ave 0.388 x 13.4 m)
 ```
 
-**The parenthetical shows the whole threshold.** For any exit other than the one
-the agent is walking to, the requirement carries an extra `sight_return_margin`
-factor (below), and the string names it — reading `(0.5 x 13.4 m)` on a rival
-and finding `0.5 x 13.4 = 6.7` had led a reviewer to conclude the deadband had
-produced a result it had not.
+The second is a rival exit, held to `tau_max * tau_return_margin` = 4.8.
 
-**The borrowing from FDS+Evac is partial, and it is from the last resort.**
-`S > 0.5 x d` is FDS+Evac's tier-4 door criterion (`evac.f90:16456`), reached
-only once no smoke-free door is available. Its *primary* rule is an absolute
-one: minimise time among doors satisfying `K_ave_Door < ABS(FED_DOOR_CRIT)`
-= 0.03 /m (`evac.f90:16265`, `:16272`; `FED_DOOR_CRIT = -100` becomes `3.0/100`
-at `:5262`, Jin's `S = 3/K` at 100 m). pyFDS-Evac ships that absolute criterion
-as the opt-in clean-exit tier below. See
-[model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door).
+**Where the 6 comes from.** FDS+Evac's tier-4 door test computes
+`L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out when
+`L2_tmp >= 1.0` (`evac.f90:16456-16462`). That expression is `K_ave * d / 6`, so
+the test is exactly `tau > 6` with Jin's `c = 3`. The threshold is therefore
+citable, but **the quantity it is applied to is not the same quantity**:
+FDS+Evac's `K_ave_Door` is a mean along `See_door`'s straight sight line, and
+for a door with no resolved sight line the distance is an L1 norm
+(`evac.f90:16458-16459`); pyFDS-Evac averages `K` along the walked polyline.
+Two further scope limits: the test lives in the tier-4 last-resort branch,
+reached only once no smoke-free door is available and looping only over doors
+that are already known or visible; and in FDS+Evac a struck-out door is struck
+out *permanently* (`Is_Visible_Door(i) = .FALSE.`, `:16460-16461`), which
+pyFDS-Evac deliberately does not do. So: the gate is *inspired by* FDS+Evac's
+tier-4 visibility door rule and inherits its threshold with a citation; it does
+not implement it. **`tau_max` has not been calibrated against a soot-dose or
+FED-equivalent limit.** That is open work.
 
-### Switching onto a rival needs more sight than staying
+Under FDS+Evac's *primary* rule the criterion is different again — minimise time
+among doors satisfying `K_ave_Door < ABS(FED_DOOR_CRIT)` = 0.03 /m
+(`evac.f90:16265`, `:16272`; `FED_DOOR_CRIT = -100` becomes `3.0/100` at
+`:5262`). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
+below. See [model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door).
 
-`sight_return_margin` (default 1.25) is an asymmetric deadband on the sight
-gate, mirroring `fed_return_margin` on dose. The route the agent is already
-walking is judged against the bare criterion; a rival exit must clear it by
-that factor before the agent will switch onto it:
+### Two asymmetries favour the exit the agent already walks to
+
+`tau_return_margin` (default 0.8) is a deadband on **feasibility**. The current
+route is judged against the bare `tau_max`; a rival must come in under
+`tau_max * 0.8` before it is even a candidate:
 
 ```
-needed = sight_distance_fraction * distance          (current exit)
-needed = sight_distance_fraction * distance * 1.25   (any other exit)
+budget = tau_max                        (current exit)
+budget = tau_max * tau_return_margin    (any other exit)
 ```
 
-Without the deadband a route whose sight sits near the threshold toggles in and
-out of feasibility every tick and the agent follows it. Measured on `world100`
-before the fix, one exit swung between 2.9 m and 24.2 m of sight on consecutive
-seconds, producing 169 returns to abandoned exits across 23 agents. The margin
-is uncalibrated — see [limitations](#known-limitations).
+Without it a route whose `tau` sits near the budget toggles in and out of the
+feasible set every tick and the agent follows it. It replaces the old
+`sight_return_margin`, which multiplied a sight requirement (1.25 *up*) where
+this one scales a budget (0.8 *down*).
+
+`current_exit_discount` (default 0.9) is a deadband on **ordering**. Only the
+current exit's `tau` is discounted, and only in the sort key, so it holds its
+place unless a rival is clearly cleaner rather than momentarily cleaner.
+
+**Its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`** (`evac.f90:1507`), which
+is applied as `L2_tmp = FAC_DOOR_OLD2 * L2_tmp` to the current door at `:16290`
+and `:16466` — and at `:16466` that `L2_tmp` is the `tau/6` of the tier-4 test,
+i.e. the same quantity, discounted in the same place, inside the loop that
+minimises it to pick a door. Note the shipped code comment in `route_graph.py`
+instead cites `FAC_DOOR_WAIT` at `evac.f90:1503`; `FAC_DOOR_WAIT` is at `:1505`,
+and it discounts the current door's *travel time* (`T_tmp`), not its smoke.
+
+**A reviewer will ask why both.** They act on different stages — one on the
+feasible set, one on the order within it — but they have not been measured
+independently, and no run isolates the contribution of either.
 
 ### The clean-exit tier (off by default)
 
-`clean_extinction_threshold` adds one rank above time. A route whose smokiest
-*leg* stays at or below the threshold is `clean`, and clean routes outrank smoky
-ones outright however far they are; among routes of the same tier, time decides.
-The sort key is `(rejected, tier, rank_cost, hops)`.
+`clean_extinction_threshold` adds one rank above optical depth. A route whose
+smokiest *leg* stays at or below the threshold is `clean`, and clean routes
+outrank smoky ones outright however far they are; among routes of the same tier,
+optical depth then time decides. The sort key is
+`(rejected, tier, tau, rank_cost, hops)`.
 
 This is FDS+Evac's primary door rule (`evac.f90:16265`, `:16272`), and its
 threshold is not a new constant: `FED_DOOR_CRIT = -100` becomes `3.0/100` =
@@ -234,10 +246,11 @@ FDS+Evac supplies the value — `FAC_DOOR_OLD = 0.1` (`evac.f90:1506`), applied 
 agent already walks to stays smoke-free up to ten times the criterion.
 
 The exit-switch anchor has a matching clause: a rival that is clean while the
-current exit is not bypasses the anchor. Without it the tier could never change
-an outcome, because clean implies about 100 m of sight while the visibility band
-saturates at 30 m, so a clean route and one 3.3x smokier always share a band and
-the band bypass never fires.
+current exit is not bypasses the anchor. It was added because the anchor's other
+bypass, then keyed on the visibility band, could not fire between a clean route
+and one 3.3x smokier — both saturated the band. That reasoning is now stale: the
+bypass compares optical depth, which does discriminate there. The clause has not
+been re-measured since, and the tier ships off anyway.
 
 **It ships off (`clean_extinction_threshold = 0.0`, which means no route is ever
 clean) because measurement refuted it.** On `l_corridor` over five seeds the
@@ -277,15 +290,16 @@ FED enters route choice as a veto only. Each route's `fed_max_route` is the
 dose already taken plus the dose predicted over the walk
 (`current_fed + sum(fed_growth)`), and a route above `fed_rejection_threshold`
 (default 1.0, incapacitation) is refused. Refusal is asymmetric in the same way
-as sight: the current exit is held to the bare threshold so an agent flees a
-lethal door at once, while a rival must come in under
+as optical depth: the current exit is held to the bare threshold so an agent
+flees a lethal door at once, while a rival must come in under
 `fed_rejection_threshold * fed_return_margin` (0.9). A dose refusal is a
 "must flee" rejection, so it bypasses the exit-switch anchor — hysteresis
 cannot pin an agent to a door that will kill it.
 
-Surviving routes are then ordered by time. Dose never makes one exit outrank
-another; it only removes exits. `tests/test_route_gate.py::TestDoseVetoesAnExit`
-covers all three parts in clear air, so the sight gate cannot be the cause.
+Surviving routes are then ordered by optical depth and time. Dose never makes
+one exit outrank another; it only removes exits.
+`tests/test_route_gate.py::TestDoseVetoesAnExit` covers all three parts in clear
+air, so the smoke gate cannot be the cause.
 
 **This is FDS+Evac's other branch, and we run both halves at once.** In
 `evac.f90` (`Change_Target_Door`, :16439-:16467) the sign of `FED_DOOR_CRIT`
@@ -297,14 +311,16 @@ differences are worth knowing:
 
 - FDS+Evac's chosen quantity both strikes a door out (`L2_tmp >= 1.0` marks it
   not visible) **and** ranks the survivors (`L2_tmp < L2_min` picks the door).
-  Here both dose and sight only strike out, and travel time ranks.
-- pyFDS-Evac applies dose and sight together rather than choosing one.
+  Since `0d9bf79` pyFDS-Evac's optical depth does the same — it refuses and it
+  ranks. Dose still only strikes out.
+- pyFDS-Evac applies dose and optical depth together rather than choosing one.
 
 **On the fires we have measured, the dose veto never fires.** On `l_corridor`'s
 `fire_1MW_west` run the largest `fed_max_route` over 3498 route-cost rows is
 0.0016, against a threshold of 1.0, and `world100` is reported the same way. On
-these fires the gate is wayfinding, not hazard avoidance, and every refusal
-that changes an exit comes from the sight criterion.
+these fires the model is **exposure-gated wayfinding, not hazard avoidance**:
+every refusal that changes an exit comes from the optical-depth criterion, and
+nothing in the run is near a tenability limit.
 
 ### Refusals are not remembered
 
@@ -315,56 +331,83 @@ Every tick re-decides from the current field; there is no permanent exit death.
 ### When every route is refused
 
 The agent still has to move. `rank_routes` re-sorts the refused routes by
-`(-band, rank_cost)` — banded, then nearest — and un-rejects the head with a
-`fallback:` prefix on its reason. The agent keeps its current target unless a
-rival's worst extinction is better by more than `fallback_switch_margin`
-(default 0.2), i.e. unless
+`(tau_route, rank_cost)` — least smoke to walk through, then quickest — and
+un-rejects the head with a `fallback:` prefix on its reason. The agent keeps its
+current target unless a rival's worst extinction is better by more than
+`fallback_switch_margin` (default 0.2), i.e. unless
 
 ```
 rival.k_max_route <= current.k_max_route * (1 - fallback_switch_margin)
 ```
 
-Nearest, not farthest, breaks the tie inside a band. Banding makes ties common
-rather than measure-zero, and "farthest" systematically sent agents the long
-way round — measured: a 51 m route chosen over a 22 m one on 2.0 m of sight
-against 1.8 m. This is the one place the band still orders routes, and with the
-band now saturating at three classes it orders them more coarsely than before:
-every refused route with 30 m or more of sight ties, and distance decides.
+The fallback sort uses the **undiscounted** `tau_route`;
+`current_exit_discount` applies to the feasible ordering only, and the
+`fallback_switch_margin` on `k_max_route` is the hysteresis here instead.
+Ordering refused routes by `k_max` alone once put a 51 m route ahead of a 22 m
+one on 2.0 m of sight against 1.8 m — two tenths of a metre of visibility,
+neither usable, deciding a 29 m detour. `tau` carries the distance with it, so
+the least-bad walk is the one with least smoke to walk through.
 
 ### Churn protection
 
 Three mechanisms hold an agent on its exit.
 
 **The exit-switch anchor.** A different exit is adopted only when its rank cost
-beats `old_cost * exit_switch_anchor` (default 0.9). One gate-specific bypass
-applies: a rival is adopted outright when it is `feasible`, clearer by a real
-margin in metres — `rival.min_visibility_m * exit_switch_anchor >
-current.min_visibility_m` — **and** either a whole band clearer or clean while
-the current exit is not. The
-feasibility requirement stops refused routes jumping the anchor, which made
-agents ping-pong as bands healed and re-broke. The metres requirement was added
-in `cea33ce`: a band is a quantised sighting distance, and a quantiser with no
-hysteresis oscillates, so sight jittering either side of a band edge flipped
-the order every tick — and because the bypass skips the anchor, every flip was
-an actual switch.
+beats `old_cost * exit_switch_anchor` (default 0.9). Note that `rank_cost` is a
+**travel time**, so the anchor compares time while the ordering compares optical
+depth — see [limitations](#known-limitations). One gate-specific bypass applies:
+a rival is adopted outright when it is `feasible` **and** either clean while the
+current exit is not, or cleaner in relative *and* absolute terms:
+
+```
+candidate.tau_route < current.tau_route * exit_switch_anchor
+and current.tau_route - candidate.tau_route > tau_max * 0.1
+```
+
+The absolute term matters because the ratio alone fires on noise: `tau` 0.02
+against 0.03 is a 33 % improvement and no difference at all to anyone walking
+it. Measured on `l_corridor`, the ratio on its own produced 109 returns to
+abandoned exits; adding the floor took that to 51. The `0.1` multiplier is
+hard-coded, not configurable.
 
 A route the ordering promotes but the anchor refuses no longer hides the rest of
 the list: candidates are tried in rank order and the first the anchor would
-admit wins, stopping at the agent's own exit. Before `45e146f`, a promoted route
-the anchor vetoed made the agent see nothing below it, so enabling the
-clean-exit tier could *suppress* a switch the model made without it.
+admit wins, stopping at the agent's own exit.
 
-**The two deadbands.** `sight_return_margin` (1.25) and `fed_return_margin`
-(0.9) make a rival exit harder to qualify than the current one, so a route
-sitting on either threshold cannot toggle the agent back and forth.
+**The deadbands.** `tau_return_margin` (0.8) and `fed_return_margin` (0.9) make
+a rival exit harder to *qualify* than the current one;
+`current_exit_discount` (0.9) makes it harder to *outrank* it.
 
-**Monotonicity holds at `45e146f`.** The requirement is that an agent never
-returns to an exit it has abandoned. `cea33ce` took `world100` from 223
-switches and 182 returns across 26 agents down to 59 switches and 38 returns
-across 12 agents; at `45e146f` both decks report **zero** returns —
-`l_corridor` with 2 switches, `world100` with 5. Enabling the clean-exit tier
-gives the violations back (34-38 agents per run on `l_corridor`), which is why
-it is off.
+**Monotonicity holds on `world100` and does not on `l_corridor`.** The
+requirement is that an agent never returns to an exit it has abandoned. At
+`0d9bf79` and `9f55f6e`:
+
+| deck | before (`4ce4ac7`) | at `0d9bf79` | at `9f55f6e` |
+|---|---|---|---|
+| `world100`, far clean exit E3 | 12 agents | **39 agents**, 9 switches, **0 returns** | unchanged |
+| `l_corridor`, returns to abandoned exits | **0** | 51 across 20 agents | 34 across 14 agents |
+| `l_corridor`, switches | 4 | 74 | 55 |
+| `l_corridor`, far-exit share | ~18 | ~18 | ~18 |
+
+The `world100` result is what the model was asked for — prefer a clean exit even
+when far — and no earlier version of the gate produced it. **`l_corridor`
+regressed**, from no returns to 34, and the far-exit share did not move to pay
+for it. Both figures come from the commit messages of `0d9bf79` and `9f55f6e`;
+no CSV for them is in the results folder.
+
+Enabling the clean-exit tier gives further violations back (34-38 agents per run
+on `l_corridor`, measured before `0d9bf79`), which is why it is off.
+
+**Two attempts that made it worse, recorded so they are not repeated.**
+
+- *Making `tau` the anchor's currency* — replacing the `rank_cost` ratio test
+  with a `tau` ratio test — took `l_corridor` from 51 returns to **90**. `tau`
+  is zero in clear air, so every ratio test degenerates to `0 < 0` and the
+  anchor stops discriminating. This is also why `rank_cost` stays a time: a
+  `tau` anchor would let no agent switch in clear air, and a congestion weight
+  would count for nothing exactly where decks calibrate one.
+- *An absolute floor on the bypass* — the `tau_max * 0.1` term above — took 109
+  returns to 51. It helped; it did not close the problem.
 
 ### Anticipation
 
@@ -412,8 +455,7 @@ Every key below is read from the scenario's `routing` block by
 {
   "routing": {
     "cost_model": "gate",
-    "sight_distance_fraction": 0.5,
-    "band_width_m": 10.0
+    "tau_max": 6.0
   }
 }
 ```
@@ -421,17 +463,16 @@ Every key below is read from the scenario's `routing` block by
 | JSON key | Default | Effect | Under `"gate"` | Under `"additive"` |
 |---|---|---|---|---|
 | `cost_model` | `"gate"` | Selects the model. Unvalidated: any other string behaves as `"additive"`. | — | — |
-| `sight_distance_fraction` | `0.5` | Fraction of remaining distance that must be visible for a route to stay available. | active | inert |
-| `sight_return_margin` | `1.25` | Factor a *rival* exit's sight requirement is multiplied by, so switching needs more sight than staying. | active | inert |
+| `tau_max` | `6.0` | Optical depth `K_ave * L` a route may carry before it is refused. Also orders the feasible routes. | active | inert |
+| `tau_return_margin` | `0.8` | Factor a *rival* exit's budget is multiplied by, so switching needs a cleaner route than staying. | active | inert |
+| `current_exit_discount` | `0.9` | Factor the current exit's `tau` is scaled by in the sort key. FDS+Evac's `FAC_DOOR_OLD2` is 0.9. | active | inert |
 | `clean_extinction_threshold` | `0.0` (off) | Extinction at or below which a route's smokiest leg makes the exit `clean`; clean exits outrank smoky ones. FDS+Evac's value is `0.03`. | active | inert |
-| `clean_exit_margin` | `0.8` from JSON, `0.1` in the dataclass | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. The two defaults disagree — see the note below the table. | active | inert |
-| `sign_contrast_c` | `3.0` | Jin's `c` in `S = c / K`. 3 reflective, 8 internally illuminated. | active | inert |
-| `band_width_m` | `10.0` | Width of a visibility band, in metres of sighting distance; bands saturate at 3 classes. Bands order the all-refused fallback and gate the anchor bypass — they do **not** order feasible routes. | active | inert |
+| `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
 | `anticipate` | `true` | Price each segment at the agent's arrival time. | active | **active** |
 | `foresight_horizon_s` | `inf` | Cap on how far ahead anticipation reaches, in seconds. | active | **active** |
 | `fallback_switch_margin` | `0.2` | Hysteresis when every route is refused. | active | inert |
-| `w_smoke` | `1.0` | Smoke weight. Multiplies `K_ave` in the composite **and in the Dijkstra edge weights** — see limitations. | partly active | active |
-| `w_fed` | `10.0` | FED weight. Same: composite **and** Dijkstra edge weights. | partly active | active |
+| `w_smoke` | `1.0` | Smoke weight in the additive composite and its Dijkstra edge weights. Since `0d9bf79` the gate weights edges by their own `tau`, so neither weight reaches route choice under the gate; the composite is still reported. | **inert** (reported only) | active |
+| `w_fed` | `10.0` | FED weight. Same. | **inert** (reported only) | active |
 | `w_queue` | `0.0` | Congestion weight, off by default. | active (as `w_queue * queue_time_s` on the rank cost) | active (as distance-equivalent in the composite) |
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused. Veto only: dose never ranks. | active | active |
 | `visibility_extinction_threshold` | `0.5` | `K` above which a segment is flagged non-visible; a route whose segments are *all* non-visible is refused when some other route has a visible segment. | **inert** | active |
@@ -442,13 +483,10 @@ Every key below is read from the scenario's `routing` block by
 | `min_speed_factor` | `0.1` | Floor on the smoke speed factor. | active | active |
 | `default_exit_capacity` | `1.3` | Fallback exit capacity, agents/s, when the exit sets none. | active | active |
 
-**`clean_exit_margin` has two different defaults.** `RouteCostConfig` declares
-0.1, but `from_routing_params` — the path every scenario JSON takes — supplies
-0.8 when the key is absent. A deck that enables the tier without naming the
-margin therefore gets 0.8, i.e. a current-exit limit of `threshold / 0.8`,
-1.25x, not the 10x that `FAC_DOOR_OLD` intends. The commit that set the
-dataclass to 0.1 (`45e146f`) records 1.25x as measured far too narrow. Set the
-key explicitly until the two agree.
+`clean_exit_margin` had two disagreeing defaults — 0.1 in the dataclass, 0.8
+from `from_routing_params` — until `9508181` made both 0.1, the value
+`FAC_DOOR_OLD` supplies. The clean-tier measurements below were made at 0.8 and
+have not been repeated at 0.1.
 
 Two `RouteCostConfig` fields are **not** readable from the `routing` block and
 keep their dataclass defaults in any scenario run: `fed_return_margin` (0.9,
@@ -464,43 +502,52 @@ Setting them requires constructing `RouteCostConfig` in Python.
 These are real and documented, not hypothetical. Details and measurements are
 in [gate-model-review-notes.md](gate-model-review-notes.md).
 
-- **`w_smoke` and `w_fed` still choose the path.** Dijkstra's edge weights are
-  `length * (1 + w_smoke * k_avg) + w_fed * fed_growth` under both models, at
-  the decision time and without anticipation. The gate then judges the single
-  path Dijkstra returned per exit. If an exit has a short smoky path and a
-  longer clean one, Dijkstra returns the smoky one and the gate refuses the
-  exit. (Measured neutral on `t_junction`: gate with `w_smoke = 0` reproduced
-  gate with `w_smoke = 5` exactly.)
-- **The other two smoke thresholds are now additive-only machinery.**
-  `visibility_extinction_threshold` (0.5 /m, per segment) is skipped under the
-  gate, and `impassable_extinction_threshold` (3.0 /m) can no longer fire there
-  either: it is reached only from a rejection reason containing "visible", and
-  the gate emits no such reason. Both keys still take values under `"gate"` and
-  do nothing.
+- **The ordering is in optical depth and the anchor is in time.** This is the
+  open defect. `rank_routes` orders by `tau`; `_anchor_allows` compares
+  `rank_cost`, a travel time. The two can disagree, and an agent then oscillates
+  between what each prefers. That is the mechanism behind `l_corridor`'s 34
+  returns. The two constants damping it — `exit_switch_anchor` and
+  `current_exit_discount` — are both 0.9, which in FDS+Evac is
+  `FAC_DOOR_WAIT` on time and `FAC_DOOR_OLD2` on smoke; here they were arrived
+  at separately. Closing this properly means the anchor and the ordering
+  agreeing by construction, not by two constants that coincide.
+- **The `1e-6 * length` edge-weight floor is a hard-coded tiebreaker.** It
+  decides path choice in clear air, where every `k_avg * length` is zero. Its
+  effect at small nonzero `K` has not been measured.
+- **`tau_max = 6` is uncalibrated as an exposure budget.** The threshold is
+  citable from FDS+Evac's tier-4 rule, but that rule applies it to a straight
+  sight line, not to a walked route, and nothing here checks 6 against a
+  soot-dose or FED-equivalent limit.
+- **`impassable_extinction_threshold` is dead code under the default model.**
+  `_must_flee_rejection` fires only on a rejection reason starting `FED` or
+  containing `"visible"`; the gate's only reason string starts `tau`. So no
+  smoke rejection bypasses the exit-switch anchor, at any density, and the key
+  still takes a value and does nothing. `visibility_extinction_threshold`
+  (0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
+  survives, and on the fires measured here FED never reaches its threshold, so
+  in practice **nothing bypasses the anchor**.
 - **Anticipation samples the field too early.** Segments are priced at
   `now + walked_so_far / base_speed_m_per_s`, the *unimpeded* speed, while an
   agent in smoke walks at as little as `min_speed_factor` = 0.1 of it. The
   clock therefore runs ahead of the agent systematically, and it runs furthest
   ahead exactly where the smoke is thickest. With `foresight_horizon_s = inf`
   the agent also has perfect foresight of the FDS solution.
-- **Five hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
+- **Six hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
   `fallback_switch_margin` (0.2), `fed_return_margin` (0.9),
-  `sight_return_margin` (1.25) and `_PATH_IMPROVEMENT_THRESHOLD` (10 %) are all
-  chosen to stop measured churn, not fitted to observed behaviour.
-  `clean_exit_margin` is the one that is not invented: it is FDS+Evac's
-  `FAC_DOOR_OLD`.
-- **`_adoptable` is a laxer test than the anchor it stands in for.** The
-  skip-past-a-refused-promotion loop tests only band, cleanliness and rank cost;
-  the anchor itself also requires `feasible` and a margin in metres. Its
-  docstring says to keep the two in step, and they are not.
-- **Clear-air equivalence is verified at `K = 0`, not at `K = 1e-4`.** The band
-  that caused the divergence no longer orders feasible routes, but the check
-  has not been re-run at small nonzero `K`.
+  `tau_return_margin` (0.8), the hard-coded `tau_max * 0.1` bypass floor, and
+  `_PATH_IMPROVEMENT_THRESHOLD` (10 %) are all chosen to stop measured churn,
+  not fitted to observed behaviour. Two have FDS+Evac values behind them:
+  `clean_exit_margin` = `FAC_DOOR_OLD`, and `current_exit_discount` =
+  `FAC_DOOR_OLD2`. Neither was fitted here either.
+- **Clear-air equivalence has not been re-measured since `0d9bf79`.** The gate
+  now orders by `tau` and weights edges by `tau`; the last equivalence runs
+  predate both. In clear air every `tau` is zero and the argument still holds by
+  construction, but it is an argument, not a measurement.
 - **`cost_model` is an unvalidated free string.** A typo silently yields the
   additive model.
 - **FIC does not participate in routing under either model.** It drives the
-  Purser slowdown and incapacitation only. FIC and the sight gate are driven by
-  the same smoke, so routing on both would double-count.
+  Purser slowdown and incapacitation only. FIC and the optical-depth gate are
+  driven by the same smoke, so routing on both would double-count.
 
 ## Evidence
 
@@ -528,9 +575,9 @@ first; the gate then diverts 1 agent instead of 16, so it is not simply
 preferring long routes.
 
 The table is the run made at `b3babc0`, before the band left the ordering. The
-84/16 split was re-measured after `cea33ce` and reported unchanged, now
-produced by the sight gate alone; that re-run is not in the folder above, so
-take the attribution from the commit message rather than from a CSV.
+84/16 split was re-measured after `cea33ce` and reported unchanged; that re-run
+is not in the folder above, so take the attribution from the commit message
+rather than from a CSV.
 
 At `45e146f` the reported state is `l_corridor` 84 near / 16 far with 2
 switches and no returns to an abandoned exit, and `world100` E1 91 / E2 17 /
@@ -539,6 +586,13 @@ and re-reported 84 / 16 with 4 switches, still no returns. The `world100` far
 clean exit is used at all only since `b16e900`. These figures come from the
 commit messages of `b16e900`, `45e146f` and `a98f8bb`; no CSV for them is in
 the results folder.
+
+**Since `0d9bf79` these are history.** Ranking on optical depth moved
+`world100`'s far clean exit from 12 agents to 39, and moved `l_corridor` from no
+returns to an abandoned exit to 51, then 34 at `9f55f6e`, with the far-exit
+share unchanged at about 18. See
+[Churn protection](#churn-protection) for the full table. No archived result set
+exists for either; both come from the commit messages.
 
 **Read the headline with its caveat.** Counted directly from `f_gate_costs.csv`
 (3498 rows, the `b3babc0` run), the refusals break down as:
@@ -552,17 +606,19 @@ the results folder.
 So in that run the `path` criterion did the work, and it refused the *near* exit
 200 times as well as the far one — the split is not a one-sided refusal of the
 long way round. The `los` criterion appears there only under a `fallback:`
-prefix, i.e. in ticks where every route was already refused. That matters
-before anyone calibrates `sight_distance_fraction`. The `los` criterion no
-longer gates at all (`b16e900`), so a CSV taken at `45e146f` carries only
-`sight (path)` rows.
-`RESULTS.md` in the folder above states that all 1220 `path` refusals were on
-the far exit; the CSV says 1020, and this table supersedes it.
+prefix, i.e. in ticks where every route was already refused. That matters before
+anyone calibrates `tau_max`. The `los` criterion no longer gates at all
+(`b16e900`), and the reason strings are `tau ...` since `0d9bf79`, so a current
+CSV carries neither label.
+
+**The route-cost CSV columns changed at `0d9bf79`.** `min_visibility_m` and
+`band` are gone; `tau_route` replaces both. Any analysis script reading the old
+columns needs updating.
 
 `assets/t_junction` is **not** a route-choice benchmark. Its 2 MW PVC fire
-drives route `K` to about 10.7 /m — a Jin sighting distance of 0.28 m — so every
-route is refused under any Jin-based criterion. Keep it as a lethality and
-speed-collapse case.
+drives route `K` to about 10.7 /m, so every route on it carries an optical depth
+far above any plausible budget and all of them are refused. Keep it as a
+lethality and speed-collapse case.
 
 ## References
 

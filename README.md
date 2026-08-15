@@ -348,29 +348,47 @@ disagree with each other.
 
 Two models, selected per deck with `routing.cost_model`.
 
-**`"gate"` (default).** Distance is the objective; smoke decides *which exits
-are available*. An exit is refused while the agent cannot see a useful fraction
-of the way to it -- `sight_distance_fraction`, 0.5 -- and among the exits that
-survive, the nearest in travel time wins. Nothing else orders them: smoke says
-which exits exist, not which of the survivors is nearer. In clear air nothing is
-ever refused, so the model reduces to nearest-exit.
+**`"gate"` (default).** One quantity does the whole of the smoke reasoning: the
+route's **optical depth**
 
-The sighting distance is Jin's `S = c / K` with `c = 3` for light-reflecting
-signage (`sign_contrast_c`), taken as the *mean* K over the route polyline
-against the distance still to walk. With the mean that criterion is exactly an
-optical depth, `K_ave * L <= 2c`, the same statement FDS+Evac's `See_door` makes
-along its sight line. fdsvismap's line of sight is the more faithful
-measurement, but it is only defined where a sign resolves, so using it to gate
-let sign geometry decide which exits were tested at all; it is kept as a
-diagnostic. Not seeing a sign is a fact about wayfinding, and belongs in the
-cognitive map rather than in this gate.
+```
+tau = K_ave * L
+```
+
+the soot column the agent walks through, with `K_ave` the mean extinction along
+the route polyline and `L` the distance still to walk. A route is refused when
+`tau` exceeds `tau_max` (default 6), Dijkstra weights every edge by its own
+`tau`, and `tau` orders the routes that survive, with travel time breaking ties.
+Path choice and exit choice are therefore one objective. In clear air every
+`tau` is zero, nothing is refused, and the model reduces to nearest-exit.
+
+`tau` is an **exposure** statement, not a sighting distance. The criterion grew
+out of one -- `c / K_ave >= 0.5 * L` rearranges to `K_ave * L <= 2c`, which is
+`tau <= 6` at Jin's `c = 3` -- and FDS+Evac's tier-4 door rule is exactly
+`tau > 6` (`evac.f90:16456-16462`). But Jin's `S = c / K` is contrast along a
+straight unobstructed line to a sign; integrating `K` around two corners
+measures what you walk through, not what you can see. The two coincide only on a
+straight corridor, and `tau_max` is **not calibrated** against a soot-dose or
+FED-equivalent limit. Jin's constant keeps its proper meaning in the cognitive
+map, where sign legibility is the question being asked.
 
 Refusals are **not remembered**. The criterion is relative to the distance still
 to walk, so it relaxes on approach: smoke that refuses a door at 40 m accepts it
 at 2 m. When every route is refused the agent still has to move, so it takes the
-least-bad one and holds it unless a rival's worst stretch is clearly milder
-(`fallback_switch_margin`). Churn is held down by the exit-switch anchor, which
-under this model is the main protection there is.
+one with least smoke to walk through and holds it unless a rival's worst stretch
+is clearly milder (`fallback_switch_margin`). Churn is held down by the
+exit-switch anchor, by a stricter budget for a rival exit
+(`tau_return_margin`, 0.8), and by a discount on the current exit's `tau` in the
+sort (`current_exit_discount`, 0.9, FDS+Evac's `FAC_DOOR_OLD2`).
+
+**Measured, with the regression stated.** Ranking on `tau` sends 39 of
+`world100`'s agents to the far clean exit against 12 before, with 9 switches and
+no agent returning to an exit it abandoned -- the outcome the model exists to
+produce. On `l_corridor` it **regressed**: returns to abandoned exits went from
+0 to 51 and then to 34 across 14 agents, with switches 4 -> 74 -> 55 and the
+far-exit share unchanged at about 18. The cause is open -- the ordering is in
+`tau` and the exit-switch anchor compares travel time, so the two can disagree.
+See [docs/route-cost-gate.md](docs/route-cost-gate.md#known-limitations).
 
 An optional **clean-exit tier** (`clean_extinction_threshold`, **off by
 default**) prefers exits below an absolute smoke criterion outright, however
@@ -389,8 +407,16 @@ never win -- which is why the gate exists. Pin it with
 of the model, so the pin needs both.
 
 **FIC does not route** under either model. It drives the Purser slowdown and
-incapacitation only. FIC and the sight gate are driven by the same smoke, so
-routing on both would double-count.
+incapacitation only. FIC and the optical-depth gate are driven by the same
+smoke, so routing on both would double-count.
+
+**What this model does not do.** It is not hazard avoidance. On the fires
+measured here the dose veto never comes close to firing -- the largest projected
+FED over a whole `l_corridor` run is 0.0016 against a threshold of 1.0 -- and
+`impassable_extinction_threshold` cannot fire under the gate at all, because it
+is reached only from a rejection reason containing `"visible"` and the gate's
+only reason string starts `tau`. So no smoke rejection bypasses the exit-switch
+anchor at any density. What the gate does is exposure-gated wayfinding.
 
 The model reference is [docs/route-cost-gate.md](docs/route-cost-gate.md);
 provenance and the open questions are in

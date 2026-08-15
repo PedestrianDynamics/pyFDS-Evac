@@ -682,6 +682,10 @@ class RouteCostConfig:
     # clearly cleaner rather than momentarily cleaner. FDS+Evac's
     # FAC_DOOR_WAIT = 0.9 (evac.f90:1503) discounts the current door in exactly
     # this position, inside the comparison that ranks doors.
+    # How far apart two routes' optical depths must be before the difference
+    # overrides the exit an agent already walks to. Ours: the reference applies
+    # no hysteresis to this veto (evac.f90:16463 tests the raw value).
+    tau_deadband: float = 0.1
     current_exit_discount: float = 0.9
     tau_return_margin: float = 0.8
     # Charge each leg the smoke present when the agent would arrive there,
@@ -712,6 +716,7 @@ class RouteCostConfig:
                 "clean_exit_margin", RouteCostConfig.clean_exit_margin
             ),
             tau_max=routing.get("tau_max", RouteCostConfig.tau_max),
+            tau_deadband=routing.get("tau_deadband", RouteCostConfig.tau_deadband),
             current_exit_discount=routing.get(
                 "current_exit_discount", RouteCostConfig.current_exit_discount
             ),
@@ -1374,10 +1379,9 @@ def rank_routes(
     def tau_of(rc: RouteCost) -> float:
         # The exit the agent already walks to has its optical depth discounted,
         # so it keeps its place unless a rival is clearly cleaner rather than
-        # momentarily cleaner. This is FDS+Evac's FAC_DOOR_WAIT = 0.9
-        # (evac.f90:1503), which discounts the current door in exactly the same
-        # position -- inside the comparison that ranks doors, not in a separate
-        # veto afterwards. Hysteresis belongs in the ordering: bolted on after
+        # momentarily cleaner. This is FDS+Evac's FAC_DOOR_OLD2 = 0.9
+        # (evac.f90:1507), applied at :16467 inside the IF that ranks doors --
+        # the same position, not a separate veto afterwards. Hysteresis belongs in the ordering: bolted on after
         # it, the ordering and the veto disagree and the agent oscillates
         # between what each of them prefers.
         if current_exit is not None and rc.exit_id == current_exit:
@@ -1671,24 +1675,34 @@ def _anchor_allows(
     if _must_flee_rejection(old_rc, config.cost_config):
         return True
     cost_config = config.cost_config
-    if (
-        cost_config.cost_model == "gate"
-        and candidate.feasible
-        and (
-            (candidate.clean and not old_rc.clean)
-            # Clearly cleaner, in relative *and* absolute terms. The ratio alone
-            # fires on noise when both routes are nearly clear -- tau 0.02
-            # against 0.03 is a 33% improvement and no difference at all to
-            # anyone walking it. Measured on l_corridor, the ratio on its own
-            # produced 109 returns to abandoned exits.
-            or (
-                candidate.tau_route < old_rc.tau_route * config.exit_switch_anchor
-                and old_rc.tau_route - candidate.tau_route
-                > config.cost_config.tau_max * 0.1
-            )
-        )
-    ):
+    if cost_config.cost_model != "gate":
+        return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+
+    if candidate.clean and not old_rc.clean:
         return True
+    if not candidate.feasible:
+        return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+
+    # A deadband on the quantity the routes are ordered by, symmetric. Clearly
+    # cleaner is adopted, clearly dirtier is refused, and only a tie falls
+    # through to time and queue.
+    #
+    # The refusal half was missing, and its absence was the oscillation:
+    # leaving an exit had to clear a margin in tau, while returning went
+    # straight to the time comparison, which the nearer exit wins
+    # unconditionally and permanently. Departure cost a margin and the return
+    # was free. Same shape as the clean tier's failure one level up --
+    # hysteresis applied to one side of a disjunction is not hysteresis.
+    #
+    # Absolute rather than a ratio: tau is zero in clear air, where a ratio
+    # reads 0 < 0, no agent could switch at all, and a congestion weight would
+    # count for nothing exactly where decks calibrate one.
+    margin = cost_config.tau_max * cost_config.tau_deadband
+    delta = old_rc.tau_route - candidate.tau_route
+    if delta > margin:
+        return True
+    if delta < -margin:
+        return False
     return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
 
 

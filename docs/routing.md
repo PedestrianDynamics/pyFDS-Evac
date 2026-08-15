@@ -9,10 +9,11 @@ recomputed at each reevaluation tick, so the chosen path adapts as
 conditions evolve.
 
 > **Which model is running.** Two cost models exist, selected per deck
-> with `routing.cost_model`. The **default is `"gate"`**: distance is
-> the objective and smoke decides which exits stay available. The
-> historical `"additive"` model, in which smoke is a toll per metre,
-> is still available. This page covers the machinery both share; the
+> with `routing.cost_model`. The **default is `"gate"`**: the route's
+> optical depth `K_ave * L` decides which exits stay available and
+> orders the survivors, with travel time as tie-break. The historical
+> `"additive"` model, in which smoke is a toll per metre, is still
+> available. This page covers the machinery both share; the
 > gate itself is documented in
 > [route-cost-gate.md](route-cost-gate.md).
 
@@ -159,19 +160,24 @@ exit-switch anchor and the same-exit path test all read:
 
 | model | `rank_cost` | sort key |
 |---|---|---|
-| `"gate"` | `travel_time_s + w_queue * queue_time_s` | `(rejected, tier, rank_cost, hops)` |
-| `"additive"` | `composite_cost` | `(rejected, tier, rank_cost, hops)` |
+| `"gate"` | `travel_time_s + w_queue * queue_time_s` | `(rejected, tier, tau, rank_cost, hops)` |
+| `"additive"` | `composite_cost` | `(rejected, tier, 0.0, rank_cost, hops)` |
+
+Under the gate the route's optical depth `tau = K_ave * L` leads the sort and
+`rank_cost` breaks ties; under the additive model the `tau` slot is a constant
+and `rank_cost` decides alone. The `tau` in the key is scaled by
+`current_exit_discount` (0.9) for the exit the agent already heads for.
+
+`rank_cost` is still what the exit-switch anchor and the same-exit path test
+compare — a travel time under the gate. That the ordering and the anchor read
+different quantities is a known defect; see
+[route-cost-gate.md](route-cost-gate.md#known-limitations).
 
 `tier` is 0 for every route unless `clean_extinction_threshold > 0` under the
 gate, which is not the default; then a route whose smokiest leg is at or below
 the threshold takes tier 0 and every other route takes tier 1. See
 [the clean-exit tier](route-cost-gate.md#the-clean-exit-tier-off-by-default) for
 what it does and why it ships off.
-
-Apart from the tier the two sort keys are the same shape: what differs is the
-number in `rank_cost`. The visibility band used to precede `rank_cost` under the
-gate and no longer does — see
-[route-cost-gate.md](route-cost-gate.md#how-the-gate-decides).
 
 ### Route rejection
 
@@ -183,19 +189,18 @@ A route is rejected under any of these conditions:
   must come in under `fed_rejection_threshold * fed_return_margin`
   (0.9), so an agent flees a deadly exit at once but only switches onto
   a rival that is clearly safe.
-- **Gate model only:** the sighting distance falls below
-  `sight_distance_fraction` times the distance still to walk. This test is
-  asymmetric too: for an exit that is not the agent's current one the
-  requirement is multiplied by `sight_return_margin` (1.25), so switching needs
-  more sight than staying. Sighting distance is `sign_contrast_c / K_ave` over
-  the route's own polyline, and every exit is judged on it — see
-  [route-cost-gate.md](route-cost-gate.md#sighting-distance-and-the-one-estimator-that-measures-it).
-  The rejection reason always names `sight (path)`.
+- **Gate model only:** the route's optical depth `tau = K_ave * L_eff` exceeds
+  `tau_max` (default 6). This test is asymmetric too: for an exit that is not
+  the agent's current one the budget is `tau_max * tau_return_margin` (0.8), so
+  switching needs a cleaner route than staying. `K_ave` is the length-weighted
+  mean over the route's own polyline, and every exit is judged on it — see
+  [route-cost-gate.md](route-cost-gate.md#optical-depth-what-it-measures-and-what-it-does-not).
+  The rejection reason reads `tau 8.41 > 6.00 (K_ave 0.145 x 58.0 m)`.
 - **Additive model only:** **all** of its segments have K ≥
   `visibility_extinction_threshold` **and** at least one other route has at
   least one visible segment — evaluated as a second pass in `rank_routes` after
   all routes are scored. This pass is skipped under the gate, where it was a
-  second, hysteresis-free smoke criterion on top of the sight test.
+  second, hysteresis-free smoke criterion on top of the optical-depth test.
 
 The last condition means a smoky-but-short route is only rejected
 when a cleaner alternative exists. If every route is fully obscured,
@@ -203,13 +208,14 @@ none are visibility-rejected.
 
 If all routes end up rejected, the least-bad one is un-rejected as a
 fallback so the agent always has a path, and its reason is prefixed
-`fallback: `. Under the gate the least-bad route is chosen by
-visibility band and then distance, with `fallback_switch_margin`
-hysteresis; under the additive model it is the lowest-composite route.
+`fallback: `. Under the gate the least-bad route is the one with the
+lowest undiscounted `tau_route`, then the lowest `rank_cost`, with
+`fallback_switch_margin` hysteresis on `k_max_route`; under the additive
+model it is the lowest-composite route.
 
 Rejections are never remembered. Each tick re-decides from the current
-field, which is what lets the sight criterion relax as an agent closes
-on an exit.
+field, which is what lets the optical-depth criterion relax as an agent
+closes on an exit — the distance in `tau` is the distance that remains.
 
 ### Configuration
 
@@ -223,13 +229,11 @@ from pyfds_evac.core.route_graph import RouteCostConfig
 
 config = RouteCostConfig(
     cost_model="gate",                    # "gate" (default) or "additive"
-    sight_distance_fraction=0.5,          # gate: visible fraction of the way there
-    sight_return_margin=1.25,             # gate: extra sight demanded of a rival exit
+    tau_max=6.0,                          # gate: optical depth budget K_ave * L
+    tau_return_margin=0.8,                # gate: stricter budget for a rival exit
+    current_exit_discount=0.9,            # gate: current exit's tau in the sort key
     clean_extinction_threshold=0.0,       # gate: clean-exit tier, 0 = off
     clean_exit_margin=0.1,                # gate: hysteresis on tier membership
-                                          #   (from_routing_params supplies 0.8)
-    sign_contrast_c=3.0,                  # gate: Jin's c in S = c / K
-    band_width_m=10.0,                    # gate: visibility band width (m)
     anticipate=True,                      # price segments at arrival time
     foresight_horizon_s=float("inf"),     # cap on anticipation (s)
     fallback_switch_margin=0.2,           # gate: all-refused hysteresis
@@ -251,10 +255,12 @@ Two further fields exist on the dataclass but are **not** readable from
 the `routing` block, so a scenario run always gets their defaults:
 `fed_return_margin` (0.9) and `impassable_extinction_threshold` (3.0).
 
-`w_smoke` and `w_fed` are **not inert under the gate.** They weight the
-Dijkstra edge costs that pick which path reaches each exit, under both
-models — a known limitation, tracked in
-[gate-model-review-notes.md](gate-model-review-notes.md).
+`w_smoke` and `w_fed` **no longer reach route choice under the gate.**
+Since `0d9bf79` a gate run weights each Dijkstra edge by its own optical
+depth, `k_avg * length` (plus a `1e-6 * length` floor that keeps a
+clear-air graph from collapsing to all-zero weights). The composite is
+still computed and reported; it does not rank, and it no longer picks
+the path either. Under `"additive"` both weights are active as before.
 
 ### Congestion-aware routing
 

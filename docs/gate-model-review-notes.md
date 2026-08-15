@@ -433,13 +433,25 @@ Three consequences.
    `sight_distance_fraction`, `sign_contrast_c`, and the reason string
    `sight (path) X m < Y m` all assert visibility, and none of it measures
    visibility. They should become route optical depth `tau` and a budget
-   `tau_max`.
-2. **The FDS+Evac provenance is gone.** Once the path changed from a bee line to
-   a walked route, neither the 0.5 nor the `c` can be cited from `evac.f90`.
-   `2c = 6` is a free parameter that happens to equal twice a sign-contrast
-   constant, and that is not a derivation. The paper may say the gate is
-   *inspired by* FDS+Evac's visibility door rule; it may not say it implements
-   it.
+   `tau_max`. **Done at `0d9bf79`.**
+2. **The FDS+Evac provenance is weakened, not gone.** *(Corrected after
+   re-reading `evac.f90`.)* The **threshold** is citable: FDS+Evac's tier-4 test
+   computes `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out at
+   `L2_tmp >= 1.0` (`:16456-16462`), which is exactly `K_ave * d > 6`. What does
+   not carry over is the **quantity** — `K_ave_Door` is a mean along `See_door`'s
+   straight sight line, with an L1 distance for doors with no resolved sight line
+   (`:16458-16459`) — nor the **scope**: the test sits in a last-resort branch,
+   loops only over known-or-visible doors, and strikes doors out permanently
+   (`:16460-16461`). So the paper may say the gate is *inspired by* FDS+Evac's
+   tier-4 visibility door rule and inherits its threshold with a citation; it may
+   not say it implements it, and 6 is still uncalibrated as an exposure budget.
+
+   The same re-read supplies provenance for the hysteresis added at `9f55f6e`:
+   `FAC_DOOR_OLD2 = 0.9` (`:1507`) discounts the current door's `L2_tmp` at
+   `:16290` and `:16466`, and at `:16466` that `L2_tmp` **is** `tau/6`. So
+   `current_exit_discount = 0.9` discounts the same quantity in the same place.
+   The shipped code comment instead cites `FAC_DOOR_WAIT` at `evac.f90:1503`;
+   `FAC_DOOR_WAIT` is at `:1505` and discounts travel time, not smoke.
 3. **A1 is retired rather than open.** Scaling the threshold with route length
    was a defect for a visibility criterion and is correct for an exposure one: a
    longer walk through the same haze does expose you more.
@@ -455,9 +467,10 @@ measured on t_junction, which is optically saturated at K ~ 10.7 /m and cannot
 discriminate anything; it is not evidence that `c` is inert where the gate works.
 
 Jin and `c = 3` belong to the cognitive map, where the sign-legibility semantics
-are correct and the constant is properly sourced. The gate needs its own
-constant, named as an exposure budget and either calibrated against a soot-dose
-or FED-equivalent limit, or declared uncalibrated. Nothing currently does either.
+are correct and the constant is properly sourced. **Done at `0d9bf79`:** the gate
+now carries `tau_max = 6.0` as its own constant, `sign_contrast_c` is gone, and
+the docs declare it uncalibrated. Calibrating it against a soot-dose or
+FED-equivalent limit remains open.
 
 ## Why the clean-exit tier cannot work here, structurally
 
@@ -484,11 +497,42 @@ memoryless lexicographic tier.
 ## Under the gate, no hazard bypasses the anchor
 
 `_must_flee_rejection` matches `reason.startswith("FED")` or `"visible" in
-reason`. The gate's only rejection reason is `sight (path) ...`, and
-`visibility_extinction_threshold` no longer fires under the gate, so the
+reason`. The gate's only rejection reason is `tau ...` (was `sight (path) ...`),
+and `visibility_extinction_threshold` no longer fires under the gate, so the
 `"visible"` branch is unreachable there and `impassable_extinction_threshold` is
 dead code under the default model. The only surviving flee path is FED, which on
 these fires never fires (`max fed_max_route = 0.0016` against a threshold of
-1.0). This is defensible if the sight gate is genuinely not a hazard statement,
-which per the ruling above it is not -- but it should be stated rather than left
-as vestigial code implying a protection that does not exist.
+1.0). This is defensible if the gate is genuinely not a hazard statement, which
+per the ruling above it is not -- but it should be stated rather than left as
+vestigial code implying a protection that does not exist.
+
+**Status: documented, not fixed.** Stated in
+[route-cost-gate.md](route-cost-gate.md#known-limitations), in the README, and in
+[rerouting-oscillation-notes.md](rerouting-oscillation-notes.md). Renaming the
+reason string to `tau` at `0d9bf79` did not change the disposition; it made the
+`"visible"` branch unreachable by a second route.
+
+## Open after `9f55f6e`: the ordering and the anchor are in different currencies
+
+`rank_routes` orders feasible routes by `tau`; `_anchor_allows` compares
+`rank_cost`, a travel time. The two can disagree, and an agent then oscillates
+between what each prefers. Measured on l_corridor: 51 returns to abandoned exits
+at `0d9bf79`, 34 at `9f55f6e` once the current exit's `tau` was discounted.
+world100 is unaffected -- 39 agents to the far clean exit, 9 switches, no
+returns.
+
+Two attempts made it worse and should not be repeated:
+
+- **`tau` as the anchor's currency**: 51 returns became 90. `tau` is zero in
+  clear air, so `candidate.tau < old.tau * 0.9` degenerates to `0 < 0` and the
+  anchor stops discriminating. It is also why `rank_cost` must stay a time: a
+  `tau` anchor would let no agent switch in clear air, and `w_queue` would count
+  for nothing exactly where decks calibrate it.
+- **A ratio-only bypass**: 109 returns. Adding the absolute floor
+  `old.tau - candidate.tau > 0.1 * tau_max` took it to 51.
+
+Closing this means the anchor and the ordering agreeing **by construction**. The
+two constants currently damping the disagreement, `exit_switch_anchor` and
+`current_exit_discount`, are both 0.9 -- which in FDS+Evac corresponds to
+`FAC_DOOR_WAIT` on time and `FAC_DOOR_OLD2` on smoke, but here they were arrived
+at separately, and a coincidence of values is not a construction.

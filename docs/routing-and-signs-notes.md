@@ -106,25 +106,28 @@ Symbols used below:
    ```
    → survivable routes first, cheapest first, ties broken by fewer hops.
 
-8a. **Under the default gate model, smoke gates instead of pricing.**
-   A route is refused when Jin's sighting distance `S = c/K` drops below
-   `sight_distance_fraction` (0.5) × the distance still to walk
-   (`route_graph.py:1152`), and the survivors sort as
+8a. **Under the default gate model, one quantity gates and orders.**
+   A route is refused when its optical depth `tau = K_ave × L` exceeds `tau_max`
+   (6), or `tau_max × tau_return_margin` (4.8) for an exit the agent is not
+   already walking to, and the survivors sort as
    ```
-   ( rejected? , travel_time + w_queue·queue_time , hops )
+   ( rejected? , tau , travel_time + w_queue·queue_time , hops )
    ```
-   The quickest available route wins — smoke says which exits exist, not what
-   each metre of them costs. The visibility band (`S // band_width_m`, capped at
-   3 classes) no longer enters this sort; it survives as a diagnostic, as the
-   ordering of the all-refused fallback, and as a condition on the anchor
-   bypass. Refusals are recomputed every tick and never remembered, so the
-   criterion relaxes as an agent closes on an exit.
+   with the current exit's `tau` scaled by `current_exit_discount` (0.9). `tau`
+   already contains the distance, so a cleaner route wins only by carrying
+   enough less smoke to pay for its extra metres; in clear air every `tau` is
+   zero and travel time decides alone. Dijkstra weights each edge by its own
+   `tau` too, so path choice and exit choice are one objective. The visibility
+   band and the sighting distance were removed at `0d9bf79`. Refusals are
+   recomputed every tick and never remembered, so the criterion relaxes as an
+   agent closes on an exit.
 
 9. **There is always a fallback.**
    If *every* route is rejected (`route_graph.py:1350`), the least-bad one is
    un-rejected so the agent always has somewhere to go. Under the gate,
-   "least bad" is banded then nearest, held by `fallback_switch_margin` (0.2)
-   against the rival's worst-case K.
+   "least bad" is the lowest undiscounted `tau_route`, then the lowest
+   `rank_cost`, held by `fallback_switch_margin` (0.2) against the rival's
+   worst-case K.
 
 10. **Agents re-choose periodically, staggered.**
     - `should_reevaluate()` (`route_graph.py:856`): re-run every
@@ -194,8 +197,9 @@ Symbols used below:
      "concealed", "behind the sign" or "smoked out" indistinguishably, and only
      the last is a statement about passability. A hidden sign is not a wall.
    - `distance_to_node(x, y, node_id)` supplies the straight-line distance the
-     sighting distance is tested against. It is computed from the descriptor,
-     not asked of the backend, so a run loaded from an `.npz` cache still has it.
+     sighting distance was tested against when the sight line still gated. It is
+     computed from the descriptor, not asked of the backend, so a run loaded
+     from an `.npz` cache still has it. The gate no longer reads it.
 
 5. **Legibility no longer rejects routes; it decides what the agent knows.**
    `rank_routes` does **not** consult sign legibility (see the comment at
@@ -206,17 +210,19 @@ Symbols used below:
    criterion, blocked agents who already knew the building, and forbade an agent
    from using an exit it had legitimately learned once the sign left view.
 
-6. **The sight line no longer enters the route decision.** Under
-   `cost_model: "gate"`, `evaluate_route` refuses a route when the *mean* K over
-   its own polyline gives a sighting distance below `sight_distance_fraction ×`
-   the whole remaining length; the reason always reads `sight (path) …`. The
+6. **The sight line no longer enters the route decision, and neither does
+   sight.** Under `cost_model: "gate"`, `evaluate_route` refuses a route when
+   the *mean* K over its own polyline times the remaining length exceeds
+   `tau_max`; the reason reads `tau 8.41 > 6.00 (K_ave 0.145 x 58.0 m)`. The
    `visibility_to_node` reading is still taken and reported, but since
    `b16e900` it does not gate: it resolves only where a sign does, so choosing
    the criterion per exit let sign geometry decide which exits were tested at
    all — the `l_corridor` far exit lies around two corners, was never tested,
-   and the deck's diversion disappeared. With the mean, the polyline test is
-   itself an optical depth, `K_ave × L ≤ 2c`, so the two criteria share a form
-   and the polyline is the one defined everywhere.
+   and the deck's diversion disappeared. Since `0d9bf79` the polyline test is
+   named for what it is, an exposure budget rather than a sighting distance:
+   integrating K along a route that turns two corners does not measure how far
+   anyone can see. Jin's `S = c/K` keeps its proper meaning one section up, in
+   sign legibility, where the question really is what an occupant can read.
 
    The eye position is a separate parameter (`los_position`) from
    `agent_position` on purpose: `agent_position` also re-measures every route's
@@ -323,13 +329,12 @@ for picking weights. Key tensions:
 - `w_smoke` and `w_fed` are uncalibrated — the core issue. `w_queue` is off by
   default: it scales with a global agent tally, so any constant is calibrated at
   one crowd size only. The Station deck opts in at 0.03 (Fahy Table 2).
-- **"`w_smoke` is redundant: route on travel time instead" is now the default.**
-  Under `cost_model: "gate"` the ranking number *is* travel time and smoke only
-  decides availability. `w_smoke` and `w_fed` are not gone, though: they still
-  weight the Dijkstra edge costs that pick which path reaches each exit, under
-  both models. That is a known limitation, not a design.
+- **"`w_smoke` is redundant" is now true under the gate.** Since `0d9bf79` the
+  gate weights each Dijkstra edge by its own optical depth and ranks routes by
+  theirs, so neither `w_smoke` nor `w_fed` reaches route choice; the composite is
+  computed and reported only. Under `"additive"` both still apply.
 - Toxicity is a threshold, not a preference → keep it as the reject, drop `w_fed`.
-- Visibility is richly modelled but enters route choice only as a gate — the
-  band ordering was removed — and never as an attractive term.
+- Visibility is richly modelled but enters route choice only through the
+  cognitive map. What gates a route is exposure, not sight.
 - For distance-vs-congestion, prefer Haghani's **revealed-choice** weights over the
   Lovreglio **survey** weights.
