@@ -993,13 +993,6 @@ def _assign_initial_exit(
         cost_config,
         cached_segments=cached_segments,
         cognitive_map=cmap,
-        # The eye position only, not agent_position: the agent stands on its
-        # spawn node, so this lets the gate read a line of sight toward each
-        # exit without re-measuring the routes from that point. Without it the
-        # opening choice -- which decides most agents' outcome -- would fall
-        # back to the coarser whole-route criterion.
-        los_position=_spawn_position(graph, spawn_node),
-        visibility_model=vis_model,
     )
     ranked = [rc for rc in ranked if not rc.rejected] or ranked
     if not ranked:
@@ -2172,7 +2165,6 @@ def run_scenario(
                                 else None,
                                 current_exit=rs.current_exit or None,
                                 current_target=wait_info.get("current_target_stage"),
-                                visibility_model=vis_model,
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
                                 _exit_node = stage_graph.nodes.get(rc.exit_id)
@@ -2230,7 +2222,6 @@ def run_scenario(
                         exit_counts=exit_counts,
                         cognitive_map=_cmap,
                         agent_position=tuple(_pos) if _pos is not None else None,
-                        visibility_model=vis_model,
                     )
                     if switch is not None:
                         # Update exit_counts: decrement old, increment new.

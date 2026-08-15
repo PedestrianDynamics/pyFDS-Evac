@@ -1049,8 +1049,6 @@ def evaluate_route(
     current_exit: str | None = None,
     agent_position: tuple[float, float] | None = None,
     current_target: str | None = None,
-    visibility_model=None,
-    los_position: tuple[float, float] | None = None,
 ) -> RouteCost:
     """Evaluate the composite cost for a full route (list of stage IDs).
 
@@ -1324,8 +1322,6 @@ def rank_routes(
     agent_position: tuple[float, float] | None = None,
     current_exit: str | None = None,
     current_target: str | None = None,
-    visibility_model=None,
-    los_position: tuple[float, float] | None = None,
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
@@ -1393,8 +1389,6 @@ def rank_routes(
             current_exit=current_exit,
             agent_position=agent_position,
             current_target=current_target,
-            visibility_model=visibility_model,
-            los_position=los_position,
         )
         costs.append(rc)
 
@@ -1703,29 +1697,56 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
     return path
 
 
+def _anchor_allows(
+    candidate: RouteCost,
+    old_rc: RouteCost | None,
+    config: "RerouteConfig",
+) -> bool:
+    """Whether the exit-switch anchor lets the agent leave *old_rc* for *candidate*.
+
+    The single statement of that rule. It used to be written twice -- once here
+    to skip past a promoted route the anchor would refuse, once inline at the
+    decision -- and the two drifted: the copy omitted the feasibility test and
+    the sight margin, so it would wave through switches the anchor then vetoed.
+
+    Anchoring is bypassed when the old exit is a hazard the agent must flee, and
+    under the gate when the candidate is a route it can actually take that is
+    either a whole visibility band clearer or clean where the old one is not.
+    The band case additionally needs a real margin in metres behind it: a band
+    is a quantised sighting distance, and a quantiser with no hysteresis
+    oscillates. The clean case is what makes tier 1 mean anything for an agent
+    already walking -- clean implies 100 m of sight while the band saturates at
+    30, so a clean route and one three times smokier always share a band, and
+    without this clause the anchor vetoed every promotion the tier made.
+    """
+    if old_rc is None:
+        return True
+    if _must_flee_rejection(old_rc, config.cost_config):
+        return True
+    cost_config = config.cost_config
+    if (
+        cost_config.cost_model == "gate"
+        and candidate.feasible
+        and (candidate.band > old_rc.band or (candidate.clean and not old_rc.clean))
+        and candidate.min_visibility_m * config.exit_switch_anchor
+        > old_rc.min_visibility_m
+    ):
+        return True
+    return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+
+
 def _adoptable(
     candidate: RouteCost,
     ranked: list[RouteCost],
     route_state: AgentRouteState,
     config: "RerouteConfig",
 ) -> bool:
-    """Whether the exit-switch anchor would let the agent take *candidate*.
-
-    Used to skip past a promoted route the anchor will refuse, so that a route
-    further down the list still gets its chance. The rule it applies is the one
-    the anchor applies below; keep them in step.
-    """
+    """Whether the agent could switch to *candidate* if the ordering offered it."""
     old_exit = route_state.current_exit
     if old_exit is None or candidate.exit_id == old_exit:
         return True
     old_rc = next((rc for rc in ranked if rc.exit_id == old_exit), None)
-    if old_rc is None:
-        return True
-    if _must_flee_rejection(old_rc, config.cost_config):
-        return True
-    if candidate.band > old_rc.band or (candidate.clean and not old_rc.clean):
-        return True
-    return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+    return _anchor_allows(candidate, old_rc, config)
 
 
 def evaluate_and_reroute(
@@ -1743,7 +1764,6 @@ def evaluate_and_reroute(
     exit_counts: dict[str, int] | None = None,
     cognitive_map=None,
     agent_position: tuple[float, float] | None = None,
-    visibility_model=None,
 ) -> RouteSwitch | None:
     """Evaluate routes and reroute the agent if a better exit is found.
 
@@ -1770,7 +1790,6 @@ def evaluate_and_reroute(
         config.cost_config,
         cached_segments=cached_segments,
         exit_counts=exit_counts,
-        visibility_model=visibility_model,
         cognitive_map=cognitive_map,
         agent_position=agent_position,
         current_exit=route_state.current_exit,
@@ -1871,18 +1890,14 @@ def evaluate_and_reroute(
     old_exit = route_state.current_exit
     old_rc = None
     old_cost = None
-    old_must_flee = False
     if old_exit and old_exit != best.exit_id:
-        # Find the old exit's route -- for its cost, its visibility band, and
-        # whether it is rejected for a *safety* reason (FED-lethal / impassable
-        # smoke), which disables anchoring below. A mild visibility rejection
-        # (light-haze path / an unreadable sign) is NOT a reason to bypass the
-        # anchor — see _must_flee_rejection.
+        # Find the old exit's route: its cost, its band and whether it is
+        # clean all feed _anchor_allows, which also decides whether it is a
+        # hazard the agent must flee.
         for rc in ranked:
             if rc.exit_id == old_exit:
                 old_rc = rc
                 old_cost = rc.rank_cost
-                old_must_flee = _must_flee_rejection(rc, config.cost_config)
                 break
 
     route_state.last_eval_time_s = current_time_s
@@ -1916,7 +1931,6 @@ def evaluate_and_reroute(
                 exit_counts=exit_counts,
                 agent_position=agent_position,
                 current_target=current_target,
-                visibility_model=visibility_model,
             ).rank_cost
             if best.rank_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
                 stage_configs = wait_info.get("stage_configs", {})
@@ -1935,60 +1949,16 @@ def evaluate_and_reroute(
         route_state.current_path = best.path
         return None
 
-    # Anchoring / hysteresis: don't abandon the current exit for a *different* one
-    # unless the new exit is meaningfully cheaper (beats the current exit's cost by
-    # more than the anchor margin). Without this, near-tied exits flip-flop on every
-    # reevaluation — worst at short reroute intervals. Anchoring is skipped when:
-    #   - it is the initial choice (old_exit is None), or
-    #   - the old exit is no longer reachable / priced (old_cost is None), or
-    #   - the old exit is FED-lethal (old_must_flee) — the agent must flee a deadly
-    #     exit regardless of cost, so hysteresis must not pin it there. A merely
-    #     smoke-obscured/low-visibility exit does NOT flee: smoke is already in the
-    #     cost, and bypassing the anchor on it causes the flip-flop.
-    #
-    # Under the gate model this is the *only* churn protection: refusals are not
-    # remembered, so nothing else stops an agent following the field.
-    #
-    # Under the gate model the anchor is applied *within* a visibility band. A
-    # rival a whole band clearer is adopted outright: banding is the model's
-    # statement that the two routes are not comparable on time, and putting the
-    # anchor in front of it would veto exactly the clearer-but-longer switch the
-    # gate exists to allow. Once the bands tie, distance is the objective again
-    # and the rival has to beat the anchor on time like any other.
+    # Anchoring / hysteresis: don't abandon the current exit for a *different*
+    # one unless the new exit is meaningfully better. Without this, near-tied
+    # exits flip-flop on every reevaluation -- worst at short reroute intervals.
+    # Anchoring does not apply to the initial choice (old_exit is None) or when
+    # the old exit is no longer reachable and so was never priced. Everything
+    # else is _anchor_allows, which is also what chose `best` above.
     if (
         old_exit is not None
         and old_cost is not None
-        and not old_must_flee
-        and not (
-            config.cost_config.cost_model == "gate"
-            and old_rc is not None
-            and (best.band > old_rc.band or (best.clean and not old_rc.clean))
-            # Only a route the agent can actually take earns the bypass. When
-            # every route is refused the bands compare two walks nobody can
-            # make, and letting one of them jump the anchor is what made agents
-            # ping-pong: the fallback pushes them onto a rival, the old exit
-            # heals a band on the next tick, and back they go on a 1% gain.
-            #
-            # The clean-exit clause is what makes tier 1 mean anything for an
-            # agent already walking. Clean implies sight of 100 m and the band
-            # saturates at 30, so a clean route and one three times smokier
-            # always share a band: without this the band test could never fire
-            # in the tier's own regime, the anchor vetoed every promotion, and
-            # "clean exits are preferred outright" was true of the ordering and
-            # false of the outcome.
-            and best.feasible
-            # A band is a quantised sighting distance, and a quantiser with no
-            # hysteresis oscillates: sight jittering either side of a band edge
-            # flips the order every tick, and because the bypass skips the
-            # anchor entirely, every flip is an actual switch. Measured on
-            # world100, two permanently feasible exits 24.3 m and 34.0 m long
-            # traded places every second, 182 times across 26 agents. So the
-            # band has to be backed by a real margin in metres before it is
-            # allowed to overrule distance -- the same margin the anchor uses.
-            and best.min_visibility_m * config.exit_switch_anchor
-            > old_rc.min_visibility_m
-        )
-        and best.rank_cost >= old_cost * config.exit_switch_anchor
+        and not _anchor_allows(best, old_rc, config)
     ):
         return None
 

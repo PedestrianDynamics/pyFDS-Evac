@@ -130,9 +130,10 @@ def _validate_opts(opts: Any) -> None:
 def _has_discovery_agents(scenario: Any) -> bool:
     """Whether any spawn area starts agents that must find their way.
 
-    A fully familiar agent holds the whole graph from t=0, so it never consults
-    the visibility model *to learn the graph*. It may still consult it to route
-    -- see :func:`_gate_needs_sight`.
+    A fully familiar agent holds the whole graph from t=0 and never consults the
+    visibility model, so building one for such a deck costs time and changes
+    nothing. Route choice does not consult it either: the gate measures sight as
+    c / K_ave over the route polyline, which needs only the extinction field.
     """
     for dist in scenario.raw.get("distributions", {}).values():
         value = dist.get("parameters", {}).get("familiarity", "full")
@@ -144,24 +145,6 @@ def _has_discovery_agents(scenario: Any) -> bool:
         except ValueError:
             continue  # the engine reports the bad value with better context
     return False
-
-
-def _gate_needs_sight(scenario: Any, opts: Any) -> bool:
-    """Whether route choice itself needs the visibility model.
-
-    Under the gate model an exit is refused when the agent cannot see a useful
-    fraction of the way to it, and the sighting distance is read from the
-    visibility model's line of sight. Without a model the gate silently falls
-    back to a coarser estimate over the route polyline -- which is what happened
-    to every familiarity-1.0 deck, the ones routing is actually tested on.
-
-    Costs a vismap precompute the deck would otherwise skip; ``--vis-cache``
-    makes it a one-off.
-    """
-    if not getattr(opts, "enable_rerouting", False):
-        return False
-    routing = scenario.raw.get("routing", {}) or {}
-    return routing.get("cost_model", "gate") == "gate"
 
 
 def _build_vis_model(scenario: Any, opts: Any, log: Logger):
@@ -177,12 +160,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     if getattr(opts, "no_visibility", False):
         return None
     forced = getattr(opts, "clear_air_visibility", False)
-    if (
-        not forced
-        and not opts.vis_cache
-        and not _has_discovery_agents(scenario)
-        and not _gate_needs_sight(scenario, opts)
-    ):
+    if not forced and not opts.vis_cache and not _has_discovery_agents(scenario):
         return None
     sign_descriptors = extract_sign_descriptors(scenario.raw)
     if not sign_descriptors:

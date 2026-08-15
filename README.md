@@ -10,7 +10,7 @@ The project includes:
 - Smoke-speed model (visibility/extinction-based speed reduction)
 - Full ISO 13571 FED model (toxic gas dose accumulation)
 - Dynamic smoke-based route rerouting with congestion awareness
-- Sign-visibility-gated route rejection (fdsvismap integration)
+- Smoke-gated exit availability, and sign visibility for what agents learn (fdsvismap integration)
 - Per-agent cognitive maps with `full` and `discovery` familiarity tiers
 - JuPedSim scenario loading and simulation
 
@@ -351,28 +351,32 @@ Two models, selected per deck with `routing.cost_model`.
 **`"gate"` (default).** Distance is the objective; smoke decides *which exits
 are available*. An exit is refused while the agent cannot see a useful fraction
 of the way to it -- `sight_distance_fraction`, 0.5 -- and among the exits that
-survive, the nearest in travel time wins. A route a whole visibility *band*
-clearer (`band_width_m`, 10 m) wins outright, so a genuinely clearer way round
-beats a shorter one but a few centimetres of visibility never sends anyone on a
-detour. In clear air nothing is ever refused and every route lands in the top
-band, so the model reduces to nearest-exit.
+survive, the nearest in travel time wins. Nothing else orders them: smoke says
+which exits exist, not which of the survivors is nearer. In clear air nothing is
+ever refused, so the model reduces to nearest-exit.
 
 The sighting distance is Jin's `S = c / K` with `c = 3` for light-reflecting
-signage (`sign_contrast_c`). Where the exit's sign is in line of sight it is read
-from the visibility model, which averages K along the real, obstruction-aware
-sight line -- the same quantity FDS+Evac's `See_door` returns, so the test is a
-statement about optical depth along one leg. Where there is no sight line (no
-sign, concealed, or the agent is behind the sign) it falls back to the worst K
-over the route polyline against the whole remaining length, which is a stricter
-reading. The rejection reason records which fired: `sight (los)` or
-`sight (path)`.
+signage (`sign_contrast_c`), taken as the *mean* K over the route polyline
+against the distance still to walk. With the mean that criterion is exactly an
+optical depth, `K_ave * L <= 2c`, the same statement FDS+Evac's `See_door` makes
+along its sight line. fdsvismap's line of sight is the more faithful
+measurement, but it is only defined where a sign resolves, so using it to gate
+let sign geometry decide which exits were tested at all; it is kept as a
+diagnostic. Not seeing a sign is a fact about wayfinding, and belongs in the
+cognitive map rather than in this gate.
 
 Refusals are **not remembered**. The criterion is relative to the distance still
 to walk, so it relaxes on approach: smoke that refuses a door at 40 m accepts it
 at 2 m. When every route is refused the agent still has to move, so it takes the
-least-bad one -- banded, then nearest -- and holds it unless a rival's worst
-stretch is clearly milder (`fallback_switch_margin`). Churn is held down by the
-exit-switch anchor, which under this model is the only protection there is.
+least-bad one and holds it unless a rival's worst stretch is clearly milder
+(`fallback_switch_margin`). Churn is held down by the exit-switch anchor, which
+under this model is the main protection there is.
+
+An optional **clean-exit tier** (`clean_extinction_threshold`, **off by
+default**) prefers exits below an absolute smoke criterion outright, however
+far. It is FDS+Evac's primary door rule, and measured on both reference decks it
+did not redirect anyone while costing monotonicity -- see
+[docs/gate-model-review-notes.md](docs/gate-model-review-notes.md).
 
 Each segment is priced at the time the agent would *arrive* there (`anticipate`,
 `foresight_horizon_s`), using unimpeded speed.
@@ -555,7 +559,7 @@ most of the building's exits at t=0 and make `familiarity` inert.
 
 The tier binds whether or not the scenario defines a journey, and it binds from
 the **first step**: the agent's cognitive map is built at spawn and the exits it
-knows are ranked by the same composite cost the reroute pass uses, so an agent
+knows are ranked by the same cost the reroute pass uses, so an agent
 who knows only the front door walks to the front door however far it is. Until
 issue #86 was fixed the opening target was the geometrically nearest exit,
 picked before any map existed, and `familiarity` could only take effect on the
