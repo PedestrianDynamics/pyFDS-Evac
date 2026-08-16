@@ -198,6 +198,22 @@ passes with no regressions.
   and is geometrically paired with this maze for a follow-up smoke/toxicity-
   driven variant (discovery agents losing sight of exits through smoke via
   `--vis-cache`).
+- **The tiers limit topology, not perception of smoke.** A `discovery` agent is
+  ignorant of the *building* — it routes over `cognitive_subgraph` and learns
+  nodes through `VisibilityModel`, which is genuinely perception-limited. It is
+  not ignorant of the *smoke field*: to choose among the exits it does know it
+  integrates `tau = K_ave * L_remaining` over the whole remaining route,
+  including legs it has never visited, and (with `anticipate = True` and
+  `foresight_horizon_s = inf`) at times that have not happened. The extinction
+  sampler is global and the cognitive map never touches it. So the results on
+  this page — which are purely distance-based and run in clear air — are
+  unaffected, and so is every result about map growth, exploration order and
+  wander behaviour. What must **not** be claimed from this test, or from any
+  discovery run, is that a discovery agent's *route choice* is
+  perception-limited. It is an optimality bound over the agent's known
+  subgraph. See
+  [#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125) and
+  [route-cost-gate.md](route-cost-gate.md#route-choice-is-an-optimality-bound-not-a-perception-limited-model).
 - On a tie (two frontier candidates equidistant from a discovery agent), the
   choice is deterministic (lexicographically-first checkpoint ID), not
   randomized per agent — every discovery agent facing an identical tie makes

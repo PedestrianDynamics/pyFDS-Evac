@@ -386,9 +386,28 @@ sort (`current_exit_discount`, 0.9, FDS+Evac's `FAC_DOOR_OLD2`).
 no agent returning to an exit it abandoned -- the outcome the model exists to
 produce. On `l_corridor` it **regressed**: returns to abandoned exits went from
 0 to 51 and then to 34 across 14 agents, with switches 4 -> 74 -> 55 and the
-far-exit share unchanged at about 18. The cause is open -- the ordering is in
-`tau` and the exit-switch anchor compares travel time, so the two can disagree.
+far-exit share unchanged at about 18. The cause is **not** a currency mismatch
+between the `tau` ordering and the anchor's time fallthrough, which was the
+earlier reading: 29 of the 34 returns go to a route cleaner by more than the
+deadband, and 31 fall in `t = 40-60 s` where the two routes' `tau` genuinely
+cross over. The model is following a field that reverses, and no constant damps
+that -- what is missing is commitment
+([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)).
 See [docs/route-cost-gate.md](docs/route-cost-gate.md#known-limitations).
+
+**This is a departure from FDS+Evac, not a reproduction of it.** The threshold
+`tau > 6` is borrowed with a citation; the *place* it is used is not. In the
+reference's first three tiers the rank is a time or distance norm and smoke is
+only a boolean admission test (`evac.f90:16265, :16354, :16401`), so smoke can
+move a door between tiers but cannot reorder candidates. It ranks on smoke only
+in the tier-4 last resort, over known-or-visible doors, on a bee line, with
+permanent strike-out. Here `tau` is the ordering everywhere, with no memory.
+On `l_corridor` that diverts 18 of 100 agents where the reference criterion
+would send essentially everyone to the near exit -- a prediction reasoned from
+`evac.f90`, not a measured run of it. A `L/d` geometric bias (1.41 near against
+1.27 far on that deck) tilts the criterion about 11 % further in the same
+direction. Both are written up in
+[docs/route-cost-gate.md](docs/route-cost-gate.md#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it).
 
 An optional **clean-exit tier** (`clean_extinction_threshold`, **off by
 default**) prefers exits below an absolute smoke criterion outright, however
@@ -459,8 +478,10 @@ that consume the generated route-cost CSVs.
 ## Visibility-aware routing and cognitive maps
 
 Implements [Spec 008](specs/008-visibility-aware-routing/SPEC.md): sign
-visibility gates route rejection and per-agent cognitive maps control what
-knowledge each agent has about the building layout.
+visibility gates what each agent comes to *know*, and per-agent cognitive maps
+carry that knowledge into routing. (The spec's original design also had sign
+visibility reject routes directly; that second gate has since been removed --
+see below.)
 
 ### Sign visibility (Phase 1)
 
@@ -485,10 +506,20 @@ Every exit, checkpoint and waypoint gets a sign: nodes without an authored
 `alpha=None`, i.e. omni-directional). A node is never exempt from
 visibility gating for lack of an authored sign.
 
-At each reevaluation tick the `VisibilityModel` checks whether an agent
-can see the next node's sign using a cached [fdsvismap](https://github.com/FireDynamics/fdsvismap)
-pickle. If the sign is not visible, the route is rejected with
-`rejection_reason="next_node_not_visible"`.
+At each reevaluation tick the `VisibilityModel` checks whether an agent can see
+a node's sign, using a cached
+[fdsvismap](https://github.com/FireDynamics/fdsvismap) grid.
+
+**Sign legibility decides what an agent *knows*, not whether a route is
+allowed.** A sign it can see admits that node to the agent's cognitive map
+(`cognitive_map.expand_from_visibility`), and the map is what Dijkstra may route
+over -- so an unknown exit is *absent from the graph* rather than
+present-and-vetoed. Route choice does not consult the visibility model at all.
+An earlier version also re-checked sign visibility inside `rank_routes` and
+rejected the route with `rejection_reason="next_node_not_visible"`; that
+double-gated the same criterion, blocked agents who already knew the building,
+and forbade an agent from using an exit it had legitimately learned once the
+sign went out of view. That check and that reason string are gone.
 
 ```bash
 # Build or reuse the vismap cache and enable visibility-gated rejection
@@ -501,8 +532,9 @@ uv run run.py \
   --cleanup
 ```
 
-Rejected routes are recorded in the route-cost CSV with
-`rejected=True, rejection_reason=next_node_not_visible`.
+Under the gate the only rejection reasons a route-cost CSV carries are `tau ...`
+(optical depth over budget), `FED_max ...` (dose over threshold), and either of
+those under a `fallback:` prefix.
 
 #### Which visibility setting am I running?
 
@@ -561,6 +593,18 @@ know at the start of the simulation:
 | Trained staff | `"full"` | Complete stage graph | — |
 | Visitors | `"discovery"` | Spawn node + visible neighbors | On arrival + at reevaluation |
 
+**The tier limits topology, not perception of smoke.** A `discovery` agent does
+not know the building — it routes only over its cognitive subgraph and learns
+nodes through the perception-limited `VisibilityModel`. It *does* know the smoke
+field: to choose among the exits it knows, it integrates `tau = K_ave * L` over
+the whole remaining route, including legs it has never visited, and with
+`anticipate = True` and `foresight_horizon_s = inf` at times that have not
+happened. So route choice is an **optimality bound over the agent's known
+subgraph**, not a behavioural model — map growth, exploration order and wander
+behaviour are unaffected, but nothing here licenses the claim that a discovery
+agent's *route choice* is perception-limited. Open as
+[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125).
+
 Set per distribution group in the scenario config:
 
 ```json
@@ -575,8 +619,12 @@ Set per distribution group in the scenario config:
 }
 ```
 
-Without a visibility model — which requires `--vis-cache`, and therefore
-`--fds-dir` — the perception step adds nothing, so a `discovery` agent starts
+A deck with discovery agents gets a visibility model either way — from the FDS
+extinction field when `--fds-dir` is given, from clear air otherwise (see the
+table above) — because sight is gated by geometry, sign facing and contrast
+whether or not there is a fire. Running with no model at all is what
+`--no-visibility` asks for. Without a model the perception step adds nothing, so
+a `discovery` agent starts
 out knowing only its spawn node, its `entrance`, and whatever the familiarity
 draw gave it. Graph adjacency is not used as a stand-in for line of sight:
 with no `transitions` declared the graph is auto-wired from every spawn area to

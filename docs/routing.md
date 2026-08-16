@@ -570,9 +570,11 @@ Full cost evaluation for one candidate route:
 | `rejected`         | `bool`              | Whether route was rejected        |
 | `rejection_reason` | `str \| None`       | Reason for rejection; `fallback: ` prefix when un-rejected |
 
-`rank_cost`, `k_max_route`, `tau_route` and `feasible` are all
-written to the route-cost CSV (`run.py --output-route-cost-history`), so the
-gate's decisions can be audited from its own output.
+`rank_cost`, `k_max_route`, `tau_route`, `k_leg_max`, `clean` and `feasible` are
+all written to the route-cost CSV (`run.py --output-route-cost-history`), so the
+gate's decisions can be audited from its own output. `composite_cost` is
+deliberately not enough on its own: it does not rank under the gate, and the
+quantity that does is `tau_route`.
 
 ## References
 
