@@ -123,6 +123,56 @@ hawk-dove game against nearby neighbours to decide whether to push
 aggressively (hawk) or yield (dove).  This modulates *behaviour at
 congestion points*, not the exit-selection cost function itself.
 
+#### The smoke criteria on a door
+
+FDS+Evac's *primary* smoke test on a door is **absolute**: a door
+counts as smoke-free while `K_ave < ABS(FED_DOOR_CRIT)`.  The input is
+a visibility in metres (`FED_DOOR_CRIT = -100.0`, evac.f90:1459) which
+is converted to an extinction coefficient by Jin's relation,
+`FED_DOOR_CRIT = 3.0 / FED_DOOR_CRIT` (evac.f90:5262) — so the default
+is 0.03 /m.  `K_ave_Door` is assigned from `See_door` at evac.f90:16149,
+and the tier-1 test that reads it is at evac.f90:16265 and :16272.  Among
+the doors that pass, the agent minimises the time `T` above.
+
+**That test is a hard filter.**  `IF (T_tmp < L2_min .AND. L2_tmp <
+ABS(FED_DOOR_CRIT))` sets the chosen door `i_tmp` only for a door that
+qualifies; when none qualifies the tier selects nothing and the search
+moves to the next tier of doors, not to a time-only ranking.  pyFDS-Evac's
+clean-exit tier falls through to the plain optical-depth ranking when it
+is empty, which is our construction and not FDS+Evac's.  The
+
+distance-relative rule — "check that visibility > 0.5 * distance to the
+door" — is FDS+Evac's **tier-4 last resort** (evac.f90:16456-16463), reached
+only when no smoke-free door exists.
+That rule reads `K_ave` along the straight, occlusion-blocked bee line
+(`See_door`, evac.f90:15343), so `S > 0.5 * d` is a statement about
+optical depth along one real sight line.
+
+Written out, the tier-4 test is
+`L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` struck out at `L2_tmp >= 1.0`
+(evac.f90:16458, :16463) — that is `K_ave * d / 6 >= 1`, i.e. an optical
+depth above 6, which is where pyFDS-Evac's `tau_max = 6` comes from.
+Two scope limits on the citation: the loop runs only over doors already
+known or visible, and a door struck out here is struck out
+**permanently** (`Is_Visible_Door(i) = .FALSE.`, :16464-16465).
+pyFDS-Evac inherits the threshold, applies it to the walked polyline
+rather than the bee line, and remembers nothing.
+
+Inside that tier, **dose and sight are alternatives, not layers**: the
+sign of `FED_DOOR_CRIT` picks the branch (evac.f90:16439-16467).
+Positive, and the door is scored by the dose the agent would arrive
+with (`IntDose + FED_max_Door * distance / Speed`); negative — the
+default `-100.0` — and it is scored by the visibility rule above.
+Either way the resulting `L2_tmp` does **two** jobs: `L2_tmp >= 1.0`
+strikes the door out ("too much smoke"), and `L2_tmp < L2_min` picks
+the winner among those left.  The criterion vetoes *and* ranks, with
+`FAC_DOOR_OLD2 = 0.9` favouring the door already targeted.
+
+pyFDS-Evac splits those jobs.  Dose and sight both veto — dose when
+`fed_max_route` exceeds `fed_rejection_threshold`, sight on the rule
+above — and neither ranks; travel time ranks the survivors.  It also
+applies both criteria at once rather than choosing one by a sign.
+
 ### pyFDS-Evac
 
 Route selection uses a **stage graph** (directed weighted graph of
@@ -137,31 +187,62 @@ edge_cost = length_m * (1 + w_smoke * k_avg) + w_fed * fed_growth
 ```
 
 Dijkstra finds one cheapest path per reachable exit using these
-dynamic weights.  The full route composite cost is:
+dynamic weights.  This step is the same under both cost models.
 
-```
-composite = path_length * (1 + w_smoke * K_ave) + w_fed * FED_max
-```
+The routes it returns are then judged by one of two models
+([docs/route-cost-gate.md](route-cost-gate.md)):
 
-Routes are rejected if FED exceeds a threshold or if all segments
-are non-visible when a cleaner alternative exists.  A fallback
-un-rejection ensures agents always have a path.
+- **`"gate"` (default).** Route optical depth `tau = K_ave * L` decides
+  availability *and* the ordering.  A route is refused when `tau`
+  exceeds `tau_max` (6), or `tau_max * tau_return_margin` (4.8) for an
+  exit the agent is not already walking to; survivors are ordered by
+  `tau`, with travel time (plus `w_queue` x queue time) breaking ties.
+  `K_ave` is the length-weighted mean over the route's own polyline, so
+  `tau` is the soot column the agent walks through — an exposure
+  statement, not a sighting distance.  Dijkstra weights each edge by its
+  own `tau`, so path choice and exit choice are one objective.  The
+  obstruction-aware sight line is kept as a diagnostic: it is defined
+  only where a sign resolves, so gating on it let sign geometry decide
+  which exits were tested at all.  An opt-in tier above `tau`
+  reproduces FDS+Evac's absolute criterion
+  (`clean_extinction_threshold`, default 0, off).
+- **`"additive"`.** The composite
+  `path_length * (1 + w_smoke * K_ave) + w_fed * FED_max`.
 
-There is **no** familiarity model, no preference ordering, no agent
-types (conservative/active/herding/follower), and no game-theoretic
-component.
+Under both, routes are rejected if FED exceeds a threshold, and a
+fallback un-rejection ensures agents always have a path.  The
+all-segments-non-visible rejection runs under `"additive"` only.
+
+**The borrowing is partial and should be read as such.** pyFDS-Evac
+takes FDS+Evac's *last-resort* criterion as its *primary* gate.  The
+absolute `K_ave < 0.03 /m` test exists as an opt-in tier that ships
+off, because measured on two decks it produced churn rather than
+redirection — see
+[route-cost-gate.md](route-cost-gate.md#the-clean-exit-tier-off-by-default).
+The distance-relative
+form is the point of the choice — the same haze is usable 5 m from an
+exit and not at 40 m — but it is not what FDS+Evac reaches for first.
+
+There is **no** preference ordering, no agent types
+(conservative/active/herding/follower), and no game-theoretic
+component.  Familiarity is modelled, but as a per-agent cognitive map
+that restricts the graph before routing, not as a per-exit preference
+group.
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **Algorithm** | N-player best-response game (NE in pure strategies) with preference-order filter [9] | Dijkstra shortest-path with dynamic edge weights |
-| **Cost function** | `T_i = beta_k * lambda_i + tau_i` (queueing + walking time) [9] Eq. 6 | `length * (1 + w_smoke * K) + w_fed * FED` |
-| **Congestion** | Modelled: queueing time depends on count of closer agents heading to same exit | Not modelled in route cost |
-| **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Not modelled |
+| **Algorithm** | N-player best-response game (NE in pure strategies) with preference-order filter [9] | Dijkstra shortest-path with dynamic edge weights, then a per-route gate |
+| **Cost function** | `T_i = beta_k * lambda_i + tau_i` (queueing + walking time) [9] Eq. 6 | gate: route optical depth `K_ave * L`, with travel time (+ `w_queue` x queue time) as tie-break; additive: `length * (1 + w_smoke * K) + w_fed * FED` |
+| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5262, :16159); the `0.5 x d` visibility rule is the tier-4 last resort (:16463), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
+| **Congestion** | Modelled: queueing time depends on count of closer agents heading to same exit | Optional (`w_queue`), off by default; a global tally of agents targeting the exit |
+| **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered |
 | **Social behaviour** | Herding and follower agent types observe neighbours | Not modelled |
-| **Smoke in cost** | Binary: disturbing conditions at exit affect preference group, but extinction is not a continuous term in the cost function | Continuous: extinction K is a weighted term in the per-edge cost |
-| **FED in cost** | Not in cost function; only used for incapacitation at FED >= 1.0 | Continuous: `w_fed * FED_max` term in composite cost |
+| **Smoke in cost** | Binary: disturbing conditions at exit affect preference group, but extinction is not a continuous term in the cost function | gate: availability *and* ordering, both on route optical depth; additive: continuous weighted term |
+| **FED in cost** | Not in cost function; only used for incapacitation at FED >= 1.0 | Veto threshold under both models (never a ranking term); additionally a `w_fed * FED_max` term under additive |
 | **Distance metric** | L2 for visible exits, L1 (Manhattan) for non-visible exits; direct agent-to-exit | Polyline arc length along corridor geometry (via JuPedSim RoutingEngine); routes through intermediate stages |
+| **Anticipation** | `FED_max_Door * dist / Speed`: extrapolation from presently observable conditions | `anticipate` prices each segment at the agent's arrival time from the FDS solution itself — an upper bound on foresight, not FDS+Evac's model |
 | **Equilibrium** | Proven NE existence; RRA converges in ~3–4 rounds [9] | No equilibrium concept; each agent independently picks the cheapest Dijkstra path |
+| **Anchoring** | Current door favoured by 10 %: `FAC_DOOR_WAIT` = 0.9 on the time criterion (:1505, applied :16264), `FAC_DOOR_OLD2` = 0.9 on the smoke criterion (:1507, applied :16290, :16467) | `exit_switch_anchor` = 0.9 on travel time, mirroring `FAC_DOOR_WAIT`; `current_exit_discount` = 0.9 on the current exit's optical depth in the sort, mirroring `FAC_DOOR_OLD2`; bypasses for a lethal current exit and (gate) a feasible rival clearer by more than the symmetric deadband `tau_deadband * tau_max` (0.6), which also refuses a rival dirtier by that much; plus deadbands of 0.9 on dose and 0.8 on the optical-depth budget |
 | **Rerouting frequency** | ~1 Hz (every second on average, `TAU_CHANGE_DOOR = 1.0`, evac.f90:1466) | Configurable interval, staggered per agent |
 
 ---
@@ -402,12 +483,18 @@ require correction:
 
 **Advantages:**
 
-- **Continuous smoke and FED in routing cost.**  Extinction
-  coefficient K and projected FED are continuous, weighted terms in
-  the per-edge cost function.  Dijkstra finds the cheapest path
-  under current smoke/FED conditions, so agents are steered away
-  from hazardous routes proportionally to the hazard level, not just
-  above/below a threshold.
+- **Two explicit route-choice models, switchable per deck.**
+  Extinction K and projected FED are continuous, weighted terms in
+  the per-edge cost Dijkstra minimises, under both models.  What
+  differs is how the resulting routes are judged: `"additive"`
+  (historical) keeps smoke as a continuous toll per metre, while
+  `"gate"` (default) makes distance the objective and lets smoke
+  decide which exits remain available, ordering the survivors by
+  travel time.  The gate exists because in the additive form both terms
+  scale with route length, so a long clean detour can never win.
+  Being able to run the same deck under both is itself the
+  comparison instrument — see
+  [docs/route-cost-gate.md](route-cost-gate.md).
 
 - **Path-integrated extinction sampling.**  Smoke is sampled along
   corridor-following polylines (JuPedSim RoutingEngine waypoints)
@@ -436,24 +523,32 @@ require correction:
 
 **Disadvantages:**
 
-- **No congestion modelling in route cost.**  The cost function has
-  no queueing term.  All agents independently pick the cheapest
-  Dijkstra path without considering how many others are heading to
-  the same exit.  This can lead to overcrowding at "obviously best"
-  exits — exactly the problem the game-theoretic model in FDS+Evac
-  was designed to solve.
+- **Congestion modelling is opt-in and scale-dependent.**  A queueing
+  term exists (`w_queue`) but is **off by default**: it is driven by a
+  global tally of every agent targeting an exit, so no constant is
+  right at more than one crowd size.  With it off, agents
+  independently pick the cheapest path without considering how many
+  others are heading to the same exit — exactly the overcrowding the
+  game-theoretic model in FDS+Evac was designed to solve.  See
+  [docs/routing.md](routing.md#why-it-is-opt-in-and-what-0024-means).
 
 - **No equilibrium concept.**  Without agent interaction in the cost
   function, there is no mechanism for agents to self-organise across
   exits.  If 100 agents face two exits and one has slightly less
   smoke, all 100 may choose the same exit.
 
-- **No familiarity or social behaviour.**  All agents are
-  omniscient: they know all exits and evaluate all routes.  There is
-  no model for exit familiarity, herding, following, or the
-  well-documented preference for familiar routes.  This limits
-  realism in scenarios where human knowledge and social dynamics
-  matter.
+- **Familiarity but no social behaviour.**  Agents can be given a
+  per-agent cognitive map, so an unfamiliar agent routes only over
+  stages it has discovered.  There is still no model for herding,
+  following, or a preference for the familiar route among known ones.
+
+- **The gate's sight test is only as good as its sight line.**  Where
+  an exit's sign resolves no line of sight — around a corner,
+  concealed, or without a sign descriptor — the criterion falls back
+  to mean K over the whole route polyline, compared against the whole
+  remaining length, which holds long routes to a stricter standard than
+  short ones.  On the deck the model is judged on, every refusal that
+  changed an exit came from that fallback.
 
 - **Loose FDS coupling.**  Reading pre-computed FDS output means the
   evacuation cannot influence the fire (e.g., agents opening doors),
@@ -478,8 +573,8 @@ The two systems make fundamentally different trade-offs:
 
 | Trade-off | FDS+Evac | pyFDS-Evac |
 |-----------|----------|------------|
-| **Congestion vs. hazard awareness** | Strong congestion model (game-theoretic queueing); weak continuous hazard influence on routing | No congestion model; strong continuous hazard influence on routing |
-| **Behavioural realism** | Rich (familiarity, herding, hawk-dove) | Minimal (omniscient agents) |
+| **Congestion vs. hazard awareness** | Strong congestion model (game-theoretic queueing); weak continuous hazard influence on routing | Congestion opt-in and uncalibrated across crowd sizes; strong hazard influence on routing |
+| **Behavioural realism** | Rich (familiarity, herding, hawk-dove) | Familiarity via cognitive maps; no herding or social types |
 | **Geometric fidelity** | Grid-constrained; L1/L2 distance approximations | Continuous geometry; polyline corridor paths |
 | **Coupling** | Tight (inside FDS) | Loose (post-processing) |
 | **Extensibility** | Fortran, tightly integrated | Python, modular |

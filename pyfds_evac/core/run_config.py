@@ -130,9 +130,10 @@ def _validate_opts(opts: Any) -> None:
 def _has_discovery_agents(scenario: Any) -> bool:
     """Whether any spawn area starts agents that must find their way.
 
-    A fully familiar agent holds the whole graph from t=0 and never consults
-    the visibility model, so building one for such a deck costs time and
-    changes nothing.
+    A fully familiar agent holds the whole graph from t=0 and never consults the
+    visibility model, so building one for such a deck costs time and changes
+    nothing. Route choice does not consult it either: the gate measures sight as
+    c / K_ave over the route polyline, which needs only the extinction field.
     """
     for dist in scenario.raw.get("distributions", {}).values():
         value = dist.get("parameters", {}).get("familiarity", "full")

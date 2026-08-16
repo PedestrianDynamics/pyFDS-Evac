@@ -10,7 +10,7 @@ The project includes:
 - Smoke-speed model (visibility/extinction-based speed reduction)
 - Full ISO 13571 FED model (toxic gas dose accumulation)
 - Dynamic smoke-based route rerouting with congestion awareness
-- Sign-visibility-gated route rejection (fdsvismap integration)
+- Smoke-gated exit availability, and sign visibility for what agents learn (fdsvismap integration)
 - Per-agent cognitive maps with `full` and `discovery` familiarity tiers
 - JuPedSim scenario loading and simulation
 
@@ -344,7 +344,87 @@ cost formulas, and API reference, and
 working notes on exit choice and where the exit-choice research papers
 disagree with each other.
 
-The routing system implements smoke-aware path planning with dynamic rerouting:
+### How smoke enters route choice
+
+Two models, selected per deck with `routing.cost_model`.
+
+**`"gate"` (default).** One quantity does the whole of the smoke reasoning: the
+route's **optical depth**
+
+```
+tau = K_ave * L
+```
+
+the soot column the agent walks through, with `K_ave` the mean extinction along
+the route polyline and `L` the distance still to walk. A route is refused when
+`tau` exceeds `tau_max` (default 6), Dijkstra weights every edge by its own
+`tau`, and `tau` orders the routes that survive, with travel time breaking ties.
+Path choice and exit choice are therefore one objective. In clear air every
+`tau` is zero, nothing is refused, and the model reduces to nearest-exit.
+
+`tau` is an **exposure** statement, not a sighting distance. The criterion grew
+out of one -- `c / K_ave >= 0.5 * L` rearranges to `K_ave * L <= 2c`, which is
+`tau <= 6` at Jin's `c = 3` -- and FDS+Evac's tier-4 door rule is exactly
+`tau > 6` (`evac.f90:16458, :16463`). But Jin's `S = c / K` is contrast along a
+straight unobstructed line to a sign; integrating `K` around two corners
+measures what you walk through, not what you can see. The two coincide only on a
+straight corridor, and `tau_max` is **not calibrated** against a soot-dose or
+FED-equivalent limit. Jin's constant keeps its proper meaning in the cognitive
+map, where sign legibility is the question being asked.
+
+Refusals are **not remembered**. The criterion is relative to the distance still
+to walk, so it relaxes on approach: smoke that refuses a door at 40 m accepts it
+at 2 m. When every route is refused the agent still has to move, so it takes the
+one with least smoke to walk through and holds it unless a rival's worst stretch
+is clearly milder (`fallback_switch_margin`). Churn is held down by the
+exit-switch anchor, by a stricter budget for a rival exit
+(`tau_return_margin`, 0.8), and by a discount on the current exit's `tau` in the
+sort (`current_exit_discount`, 0.9, FDS+Evac's `FAC_DOOR_OLD2`).
+
+**Measured, with the regression stated.** Ranking on `tau` sends 39 of
+`world100`'s agents to the far clean exit against 12 before, with 9 switches and
+no agent returning to an exit it abandoned -- the outcome the model exists to
+produce. On `l_corridor` it **regressed**: returns to abandoned exits went from
+0 to 51 and then to 34 across 14 agents, with switches 4 -> 74 -> 55 and the
+far-exit share unchanged at about 18. The cause is open -- the ordering is in
+`tau` and the exit-switch anchor compares travel time, so the two can disagree.
+See [docs/route-cost-gate.md](docs/route-cost-gate.md#known-limitations).
+
+An optional **clean-exit tier** (`clean_extinction_threshold`, **off by
+default**) prefers exits below an absolute smoke criterion outright, however
+far. It is FDS+Evac's primary door rule, and measured on both reference decks it
+did not redirect anyone while costing monotonicity -- see
+[docs/gate-model-review-notes.md](docs/gate-model-review-notes.md).
+
+Each segment is priced at the time the agent would *arrive* there (`anticipate`,
+`foresight_horizon_s`), using unimpeded speed.
+
+**`"additive"`.** The original model: smoke is a toll per metre walked,
+`effective_length * (1 + w_smoke * k_ave) + w_fed * fed_max`. Both terms scale
+with route length, so a long clean detour pays for its length twice and can
+never win -- which is why the gate exists. Pin it with
+`{"cost_model": "additive", "anticipate": false}`; `anticipate` is independent
+of the model, so the pin needs both.
+
+**FIC does not route** under either model. It drives the Purser slowdown and
+incapacitation only. FIC and the optical-depth gate are driven by the same
+smoke, so routing on both would double-count.
+
+**What this model does not do.** It is not hazard avoidance. On the fires
+measured here the dose veto never comes close to firing -- the largest projected
+FED over a whole `l_corridor` run is 0.0016 against a threshold of 1.0 -- and
+`impassable_extinction_threshold` cannot fire under the gate at all, because it
+is reached only from a rejection reason containing `"visible"` and the gate's
+only reason string starts `tau`. So no smoke rejection bypasses the exit-switch
+anchor at any density. What the gate does is exposure-gated wayfinding.
+
+The model reference is [docs/route-cost-gate.md](docs/route-cost-gate.md);
+provenance and the open questions are in
+[docs/gate-model-review-notes.md](docs/gate-model-review-notes.md).
+`assets/l_corridor` is the deck the model is judged on -- a near exit behind the
+fire and a clean 58 m way round -- and its results are in the sciebo case folder.
+
+### Components
 
 - **StageGraph**: Dijkstra-based shortest-path routing on a graph of
   stages (distributions, checkpoints, exits)
@@ -363,8 +443,8 @@ The routing system implements smoke-aware path planning with dynamic rerouting:
   decks drive the invariant tests in `tests/test_generated_worlds.py`
 - **Congestion-aware routing**: Optional exit-congestion term (`w_queue`), **off
   by default** — it scales with a global agent count, so no constant suits every
-  scenario. `assets/station_fahy` opts in at 0.03, calibrated against Fahy
-  Table 2 — see [docs/routing.md](docs/routing.md#why-it-is-opt-in-and-what-003-means)
+  scenario. `assets/station_fahy` opts in at 0.024, calibrated against Fahy
+  Table 2 — see [docs/routing.md](docs/routing.md#why-it-is-opt-in-and-what-0024-means)
   and `scripts/sweep_queue_weight.py`
 - **Throughput throttling**: Optional exit flux limiting via
   `enable_throughput_throttling` and `max_throughput` in scenario config
@@ -505,7 +585,7 @@ most of the building's exits at t=0 and make `familiarity` inert.
 
 The tier binds whether or not the scenario defines a journey, and it binds from
 the **first step**: the agent's cognitive map is built at spawn and the exits it
-knows are ranked by the same composite cost the reroute pass uses, so an agent
+knows are ranked by the same cost the reroute pass uses, so an agent
 who knows only the front door walks to the front door however far it is. Until
 issue #86 was fixed the opening target was the geometrically nearest exit,
 picked before any map existed, and `familiarity` could only take effect on the

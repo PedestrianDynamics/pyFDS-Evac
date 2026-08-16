@@ -923,6 +923,14 @@ def _extract_terminal_exit(
     return None
 
 
+def _spawn_position(graph: "StageGraph", node_id: str) -> tuple[float, float] | None:
+    """Where an agent standing on *node_id* is, for position-aware costs."""
+    node = graph.nodes.get(node_id)
+    if node is None:
+        return None
+    return (node.centroid_x, node.centroid_y)
+
+
 def _assign_initial_exit(
     agent_id: int,
     wait_info: dict,
@@ -2181,6 +2189,17 @@ def run_scenario(
                                         "travel_time_s": float(rc.travel_time_s),
                                         "fed_max_route": float(rc.fed_max_route),
                                         "composite_cost": float(rc.composite_cost),
+                                        # The gate's own diagnostics. Without
+                                        # them its decisions cannot be audited
+                                        # from its output: composite_cost does
+                                        # not rank under the gate, and the sight
+                                        # that decides feasibility is invisible.
+                                        "rank_cost": float(rc.rank_cost),
+                                        "k_max_route": float(rc.k_max_route),
+                                        "tau_route": float(rc.tau_route),
+                                        "k_leg_max": float(rc.k_leg_max),
+                                        "clean": bool(rc.clean),
+                                        "feasible": bool(rc.feasible),
                                         "rejected": bool(rc.rejected),
                                         "rejection_reason": rc.rejection_reason or "",
                                         "queue_time_s": float(rc.queue_time_s),

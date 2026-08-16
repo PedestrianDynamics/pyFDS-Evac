@@ -17,6 +17,11 @@ _logger = logging.getLogger(__name__)
 
 _SECONDS_PER_MINUTE = 60.0
 
+# A segment is cached per (source, target) and, when anticipating, per whole
+# second of arrival time -- the same edge costs differently to an agent that
+# reaches it a minute later.
+SegmentCacheKey = tuple[str, str] | tuple[str, str, int]
+
 
 @dataclass(frozen=True)
 class StageNode:
@@ -460,14 +465,38 @@ def integrated_extinction_along_los(
     if length < 1e-9:
         return extinction_sampler.sample_extinction(time_s, x_from, y_from)
 
+    return _los_stats(
+        x_from, y_from, x_to, y_to, time_s, extinction_sampler, step_m, length
+    )[0]
+
+
+def _los_stats(
+    x_from: float,
+    y_from: float,
+    x_to: float,
+    y_to: float,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+    length: float,
+) -> tuple[float, float]:
+    """Mean and worst K sampled along a line of sight.
+
+    The mean is what a route costs to walk; the worst is what stops an agent
+    walking it, and averaging hides exactly the wall of smoke a person refuses
+    to enter. Both come from one traverse.
+    """
     n_samples = max(2, int(math.ceil(length / step_m)) + 1)
     total = 0.0
+    worst = 0.0
     for i in range(n_samples):
         t = i / (n_samples - 1)
         x = x_from + t * (x_to - x_from)
         y = y_from + t * (y_to - y_from)
-        total += extinction_sampler.sample_extinction(time_s, x, y)
-    return total / n_samples
+        k = extinction_sampler.sample_extinction(time_s, x, y)
+        total += k
+        worst = max(worst, k)
+    return total / n_samples, worst
 
 
 def integrated_extinction_along_polyline(
@@ -490,14 +519,34 @@ def integrated_extinction_along_polyline(
             )
         return 0.0
 
+    return _polyline_stats(waypoints, time_s, extinction_sampler, step_m)[0]
+
+
+def _polyline_stats(
+    waypoints: list[tuple[float, float]],
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+) -> tuple[float, float]:
+    """Mean and worst K along a polyline -- see :func:`_los_stats`."""
+    if len(waypoints) < 2:
+        if waypoints:
+            k = extinction_sampler.sample_extinction(
+                time_s, waypoints[0][0], waypoints[0][1]
+            )
+            return k, k
+        return 0.0, 0.0
     total_k = 0.0
     total_samples = 0
+    worst = 0.0
     for i in range(len(waypoints) - 1):
         x0, y0 = waypoints[i]
         x1, y1 = waypoints[i + 1]
         seg_len = _euclidean(x0, y0, x1, y1)
         if seg_len < 1e-9:
-            total_k += extinction_sampler.sample_extinction(time_s, x0, y0)
+            k = extinction_sampler.sample_extinction(time_s, x0, y0)
+            total_k += k
+            worst = max(worst, k)
             total_samples += 1
             continue
         n_samples = max(2, int(math.ceil(seg_len / step_m)) + 1)
@@ -505,10 +554,12 @@ def integrated_extinction_along_polyline(
             t = j / (n_samples - 1)
             x = x0 + t * (x1 - x0)
             y = y0 + t * (y1 - y0)
-            total_k += extinction_sampler.sample_extinction(time_s, x, y)
+            k = extinction_sampler.sample_extinction(time_s, x, y)
+            total_k += k
+            worst = max(worst, k)
             total_samples += 1
 
-    return total_k / total_samples if total_samples > 0 else 0.0
+    return (total_k / total_samples if total_samples > 0 else 0.0), worst
 
 
 def _polyline_midpoint(
@@ -596,6 +647,61 @@ class RouteCostConfig:
     min_speed_factor: float = 0.1
     default_exit_capacity: float = 1.3
 
+    # ── Gate model ────────────────────────────────────────────────────────
+    # "gate": distance is the objective and smoke decides which exits remain
+    # available; "additive": the historical w_smoke/w_fed toll, kept because
+    # the smoke term multiplies route *length*, so a long clean detour pays for
+    # its own length and can never win however large w_smoke is (sweeping it
+    # 1 -> 20 on assets/world_100 moved 12 of 120 agents).
+    cost_model: str = "gate"
+    # A route is refused when the sighting distance at its worst point falls
+    # below this fraction of the distance still to walk -- FDS+Evac's own door
+    # criterion (evac.f90: "Check that visibility > 0.5*distance to the door").
+    # Being distance-relative is the point: haze 5 m from an exit is usable and
+    # the same haze at 40 m is not, which no absolute extinction limit can say.
+    # Tier 1: an exit is "clean" while the smokiest leg of the route to it
+    # stays under this. Off by default -- see docs/gate-model-review-notes.md
+    # for why it does not survive contact with either reference deck.
+    clean_extinction_threshold: float = 0.0
+    # Hysteresis on tier membership for the exit the agent already heads for,
+    # from FDS+Evac's FAC_DOOR_OLD = 0.1 (evac.f90:1506).
+    clean_exit_margin: float = 0.1
+    # The route the agent will accept, as an optical depth: tau = K_ave * L,
+    # the soot column it walks through. Refused above this.
+    #
+    # 6 is FDS+Evac's own threshold, not an analogy: evac.f90:16458 computes
+    # L2_tmp = d * 0.5 / (3/K_ave) = K_ave * d / 6, and :16463 refuses the door
+    # at L2_tmp >= 1, which is tau >= 6. Writing it as an optical depth is what
+    # made that visible.
+    #
+    # Three things still differ from the source: the quantity (a straight sight
+    # line there, a walked polyline here, so this is exposure rather than
+    # sight), the scope (there it is a last-resort branch over known-or-visible
+    # doors), and the memory (there a refused door is struck out permanently).
+    # Citable as a threshold, uncalibrated as an exposure budget --
+    # docs/gate-model-review-notes.md.
+    tau_max: float = 6.0
+    # How far apart two routes' optical depths must be before the difference
+    # overrides the exit an agent already walks to. Ours: the reference applies
+    # no hysteresis to this veto (evac.f90:16463 tests the raw value).
+    tau_deadband: float = 0.1
+    current_exit_discount: float = 0.9
+    # A rival exit must come in under tau_max * this before an agent switches
+    # onto it, so a route sitting near the budget does not toggle. Ours: the
+    # reference applies no hysteresis to this veto (evac.f90:16463 tests the
+    # raw value); its 0.1 hysteresis is on the tier-1 test at :16255.
+    tau_return_margin: float = 0.8
+    # Charge each leg the smoke present when the agent would arrive there,
+    # rather than the smoke standing there while it decides.
+    anticipate: bool = True
+    # Cap on how far ahead that reaches. Unbounded is perfect foresight; a
+    # finite horizon models an occupant who can only judge the near future.
+    foresight_horizon_s: float = math.inf
+    # When every exit is dead, the agent keeps its least-bad target unless a
+    # rival's worst extinction is better by this fraction -- without it the
+    # least-bad choice changes with every flicker of the field.
+    fallback_switch_margin: float = 0.2
+
     @classmethod
     def from_routing_params(cls, routing: dict | None) -> RouteCostConfig:
         """Build the cost model from a scenario's ``routing`` block.
@@ -607,6 +713,22 @@ class RouteCostConfig:
         """
         routing = routing or {}
         return cls(
+            cost_model=routing.get("cost_model", "gate"),
+            clean_extinction_threshold=routing.get("clean_extinction_threshold", 0.0),
+            clean_exit_margin=routing.get(
+                "clean_exit_margin", RouteCostConfig.clean_exit_margin
+            ),
+            tau_max=routing.get("tau_max", RouteCostConfig.tau_max),
+            tau_deadband=routing.get("tau_deadband", RouteCostConfig.tau_deadband),
+            current_exit_discount=routing.get(
+                "current_exit_discount", RouteCostConfig.current_exit_discount
+            ),
+            tau_return_margin=routing.get(
+                "tau_return_margin", RouteCostConfig.tau_return_margin
+            ),
+            anticipate=routing.get("anticipate", True),
+            foresight_horizon_s=routing.get("foresight_horizon_s", math.inf),
+            fallback_switch_margin=routing.get("fallback_switch_margin", 0.2),
             w_smoke=routing.get("w_smoke", 1.0),
             w_fed=routing.get("w_fed", 10.0),
             w_queue=routing.get("w_queue", 0.0),
@@ -635,6 +757,8 @@ class SegmentCost:
     travel_time_s: float
     fed_growth: float
     visible: bool
+    k_max: float = 0.0
+    arrival_time_s: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -652,6 +776,21 @@ class RouteCost:
     rejected: bool
     rejection_reason: str | None
     queue_time_s: float = 0.0
+    # Gate model only. `tau_route` is the route's optical depth, K_ave times
+    # the distance still to walk -- the soot column the agent passes through --
+    # and `feasible` whether that and the predicted dose both allow the route.
+    k_max_route: float = 0.0
+    tau_route: float = 0.0
+    feasible: bool = True
+    # What the whole pipeline orders on -- ranking, the exit-switch anchor and
+    # the same-exit path test all read this, so a model change lands in one
+    # place. Under "additive" it is the composite; under "gate" it is time,
+    # which only decides within a visibility band.
+    rank_cost: float = 0.0
+    # Tier 1 membership: the smokiest leg of this route is below the clean-door
+    # criterion. Clean exits are preferred outright; time decides among them.
+    k_leg_max: float = 0.0
+    clean: bool = True
 
 
 def _sample_segment_extinction(
@@ -661,17 +800,17 @@ def _sample_segment_extinction(
     extinction_sampler: ExtinctionSampler,
     step_m: float,
     waypoints: list[tuple[float, float]] | None = None,
-) -> tuple[float, float]:
+) -> tuple[float, float, float]:
     """Sample extinction along edge geometry.
 
     Uses the polyline waypoints if provided, otherwise falls back to the
     centroid-to-centroid line of sight.
 
-    Returns (segment_length, mean_extinction).
+    Returns (segment_length, mean_extinction, worst_extinction).
     """
     if waypoints and len(waypoints) >= 2:
         length = _polyline_length(waypoints)
-        k_avg = integrated_extinction_along_polyline(
+        k_avg, k_max = _polyline_stats(
             waypoints,
             time_s,
             extinction_sampler,
@@ -684,7 +823,7 @@ def _sample_segment_extinction(
             tgt_node.centroid_x,
             tgt_node.centroid_y,
         )
-        k_avg = integrated_extinction_along_los(
+        k_avg, k_max = _los_stats(
             src_node.centroid_x,
             src_node.centroid_y,
             tgt_node.centroid_x,
@@ -692,8 +831,22 @@ def _sample_segment_extinction(
             time_s,
             extinction_sampler,
             step_m,
+            length,
         )
-    return length, k_avg
+    return length, k_avg, k_max
+
+
+def _arrival_time(time_s: float, walked_m: float, config: RouteCostConfig) -> float:
+    """When the agent would reach a point *walked_m* along its route.
+
+    Uses the unimpeded speed, not the smoke-reduced one: the reduction depends
+    on the smoke at the arrival time this is computing, and one pass settles
+    what a second would only refine.
+    """
+    if not config.anticipate:
+        return time_s
+    speed = max(config.base_speed_m_per_s, 1e-9)
+    return time_s + min(walked_m / speed, config.foresight_horizon_s)
 
 
 def evaluate_segment(
@@ -704,8 +857,16 @@ def evaluate_segment(
     extinction_sampler: ExtinctionSampler,
     fed_rate_sampler: FedRateSampler | None,
     config: RouteCostConfig,
+    arrival_time_s: float | None = None,
 ) -> SegmentCost:
-    """Evaluate cost for one edge of a route."""
+    """Evaluate cost for one edge of a route.
+
+    *arrival_time_s* is when the agent would reach this edge, so the smoke it
+    is charged is the smoke it will meet rather than the smoke standing there
+    while it decides. Defaults to *time_s*, which is the no-foresight answer.
+    """
+    if arrival_time_s is None:
+        arrival_time_s = time_s
     src_node = graph.nodes[source]
     tgt_node = graph.nodes[target]
 
@@ -716,10 +877,10 @@ def evaluate_segment(
             waypoints = edge.waypoints
             break
 
-    length, k_avg = _sample_segment_extinction(
+    length, k_avg, k_max = _sample_segment_extinction(
         src_node,
         tgt_node,
-        time_s,
+        arrival_time_s,
         extinction_sampler,
         config.sampling_step_m,
         waypoints=waypoints,
@@ -740,7 +901,7 @@ def evaluate_segment(
         else:
             mid_x = (src_node.centroid_x + tgt_node.centroid_x) / 2
             mid_y = (src_node.centroid_y + tgt_node.centroid_y) / 2
-        fed_rate = fed_rate_sampler.sample_fed_rate(time_s, mid_x, mid_y)
+        fed_rate = fed_rate_sampler.sample_fed_rate(arrival_time_s, mid_x, mid_y)
         fed_growth = fed_rate * travel_time / _SECONDS_PER_MINUTE
 
     visible = k_avg < config.visibility_extinction_threshold
@@ -754,6 +915,8 @@ def evaluate_segment(
         travel_time_s=travel_time,
         fed_growth=fed_growth,
         visible=visible,
+        k_max=k_max,
+        arrival_time_s=arrival_time_s,
     )
 
 
@@ -815,7 +978,7 @@ def evaluate_route(
     fed_rate_sampler: FedRateSampler | None,
     config: RouteCostConfig,
     *,
-    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
     current_exit: str | None = None,
     agent_position: tuple[float, float] | None = None,
@@ -838,8 +1001,17 @@ def evaluate_route(
     available if a future rule needs the agent's heading.
     """
     segments: list[SegmentCost] = []
+    walked = 0.0
     for i in range(len(path) - 1):
         cache_key = (path[i], path[i + 1])
+        # With anticipation an edge costs what it costs *when you get there*,
+        # so the same edge on two routes is two different questions and the
+        # cache has to key on both. Bucketed to the second: finer than the
+        # reroute interval, coarser than nothing, and well under the interval
+        # FDS writes slices at.
+        t_arrive = _arrival_time(time_s, walked, config)
+        if config.anticipate:
+            cache_key = (path[i], path[i + 1], round(t_arrive))
         if cached_segments is not None and cache_key in cached_segments:
             seg = cached_segments[cache_key]
         else:
@@ -851,10 +1023,12 @@ def evaluate_route(
                 extinction_sampler,
                 fed_rate_sampler,
                 config,
+                arrival_time_s=t_arrive,
             )
             if cached_segments is not None:
                 cached_segments[cache_key] = seg
         segments.append(seg)
+        walked += seg.length_m
 
     path_length = sum(s.length_m for s in segments)
 
@@ -883,8 +1057,70 @@ def evaluate_route(
     travel_time = sum(w * s.travel_time_s for w, s in weighted)
     fed_growth = sum(w * s.fed_growth for w, s in weighted)
     fed_max = current_fed + fed_growth
+    # The worst point on the route, not its average: a route is refused because
+    # of the wall of smoke in it, and a mean over 30 clear metres and 3 blind
+    # ones reports a walk anyone would take.
+    #
+    # The first segment is resampled from where the agent stands, because the
+    # rest of it is behind them. Taking the whole segment would gate every route
+    # through that node on smoke already walked through -- and only the agent's
+    # *current* route has a partly-traversed first leg, so the error falls on
+    # the committed route alone and pushes the agent off it. Deliberately not
+    # written to cached_segments: those entries are shared between agents in one
+    # pass and this stretch belongs to one agent's position.
+    first_k_max = segments[0].k_max if segments else 0.0
+    first_k_avg = segments[0].k_avg if segments else 0.0
+    # Resampled for every route, not only the one the agent is walking. The
+    # share is clamped at 1.0, so a route the agent has diverged from is
+    # otherwise charged its whole first leg including the stretch behind the
+    # agent -- and with a binary clean test that asymmetry decided membership:
+    # an agent past a smoke blob read its committed route as clean and every
+    # rival as dirty, on smoke none of them would walk through.
+    if agent_position is not None and len(path) >= 2:
+        next_node = graph.nodes.get(path[1])
+        if next_node is not None:
+            first_k_avg, first_k_max = _los_stats(
+                agent_position[0],
+                agent_position[1],
+                next_node.centroid_x,
+                next_node.centroid_y,
+                segments[0].arrival_time_s,
+                extinction_sampler,
+                config.sampling_step_m,
+                first_share * segments[0].length_m,
+            )
+    k_max = max(
+        [first_k_max] + [s.k_max for _, s in weighted[1:]],
+        default=0.0,
+    )
+    # The smokiest *leg* of the route, each leg taken as its own mean. Not the
+    # route mean: that dilutes a smoky stretch with however much clear corridor
+    # follows it, so a long route can look cleaner than a short one by being
+    # long -- the mirror of the length penalty this model was built to remove.
+    # Not the worst *sample* either, which is the step function that made the
+    # sighting distance jump between ticks. FDS+Evac applies its 0.03 /m to
+    # K_ave_Door, a per-door average, for the same reason.
+    k_leg_max = max(
+        [first_k_avg] + [s.k_avg for _, s in weighted[1:]],
+        default=0.0,
+    )
+    # Route optical depth: the soot column still to be walked through, and the
+    # whole of the smoke criterion. tau = K_ave * L is the integral of
+    # extinction along the path, not the sighting distance it grew out of --
+    # Jin's S = c/K measures contrast along a straight unobstructed line to a
+    # sign, and integrating K around two corners measures exposure instead. The
+    # two coincide only on a straight corridor.
+    #
+    # The mean rather than the worst sample: a maximum over sampled cells is a
+    # step function of where the agent stands, and the same 28.9 m route
+    # reported 91 m of sight, then 8 m, then 91 m again on consecutive seconds,
+    # taking the ordering with it. k_max_route is still reported and still
+    # orders the all-refused fallback, where the question is which walk is
+    # survivable rather than which is cleanest.
+    tau_route = k_ave * effective_length
 
     # Composite cost: effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
+    # Under "gate" this is reported but does not rank: see rank_routes.
     composite = (
         effective_length * (1.0 + config.w_smoke * k_ave) + config.w_fed * fed_max
     )
@@ -924,6 +1160,57 @@ def evaluate_route(
         rejected = True
         reason = f"FED_max {fed_max:.3f} > {fed_threshold:.3f}"
 
+    # Sight gate: FDS+Evac's rule that a door is only a candidate while the
+    # agent can see a useful fraction of the way to it (evac.f90,
+    # Change_Target_Door). Being relative to distance is what lets the same
+    # smoke allow a near exit and refuse a far one.
+    #
+    # The gate: refuse a route whose optical depth exceeds the budget. A rival
+    # exit is held to a stricter budget than the one the agent already walks
+    # to, so a route sitting near tau_max does not toggle in and out of the
+    # feasible set and take the crowd with it.
+    feasible = not rejected
+    if config.cost_model == "gate":
+        budget = config.tau_max
+        if not is_current and current_exit is not None:
+            budget *= config.tau_return_margin
+        if tau_route > budget:
+            feasible = False
+            rejected = True
+            reason = (
+                f"tau {tau_route:.2f} > {budget:.2f} "
+                f"(K_ave {k_ave:.3f} x {effective_length:.1f} m)"
+            )
+
+    if config.cost_model == "gate":
+        # Queue delay is time, so it belongs beside travel time rather than in
+        # the composite the gate ignores -- otherwise opting into congestion-
+        # aware routing (w_queue) would silently do nothing.
+        # One currency: the quantity that refuses a route also ranks it and is
+        # what the anchor compares. Ranking on tau while anchoring on time left
+        # the two disagreeing, and a separate "clearly cleaner" bypass fired
+        # every time the field flickered -- 109 returns to abandoned exits on
+        # l_corridor.
+        #
+        # rank_cost stays a time. tau orders the routes (see rank_routes), but
+        # it is zero in clear air, so using it for the anchor's ratio test would
+        # make every comparison 0 < 0 -- no agent could ever switch, and a
+        # congestion weight would count for nothing exactly where decks
+        # calibrate one.
+        rank_cost = travel_time + queue_time * config.w_queue
+    else:
+        rank_cost = composite
+
+    # Tier 1. The exit the agent is already heading for keeps its place in the
+    # clean set a little past the criterion, so membership does not flicker.
+    clean_limit = config.clean_extinction_threshold
+    if is_current:
+        clean_limit /= max(config.clean_exit_margin, 1e-9)
+    # A zero threshold turns the tier off rather than declaring clear air
+    # clean, which would make every route tier 0 and change nothing anyway --
+    # but the explicit form says which is meant.
+    clean = clean_limit > 0.0 and k_leg_max <= clean_limit
+
     return RouteCost(
         exit_id=exit_id,
         path=path,
@@ -936,6 +1223,12 @@ def evaluate_route(
         rejected=rejected,
         rejection_reason=reason,
         queue_time_s=queue_time,
+        k_max_route=k_max,
+        tau_route=tau_route,
+        feasible=feasible,
+        rank_cost=rank_cost,
+        k_leg_max=k_leg_max,
+        clean=clean,
     )
 
 
@@ -948,7 +1241,7 @@ def rank_routes(
     fed_rate_sampler: FedRateSampler | None,
     config: RouteCostConfig,
     *,
-    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
     cognitive_map=None,
     agent_position: tuple[float, float] | None = None,
@@ -992,13 +1285,29 @@ def rank_routes(
                 )
                 if cached_segments is not None:
                     cached_segments[cache_key] = seg
-            # Per-edge cost: additive decomposition of the composite formula.
-            # current_fed is constant across routes for one agent, so omitting
-            # it from edge costs does not affect ranking.
-            dynamic_weights[cache_key] = (
-                seg.length_m * (1.0 + config.w_smoke * seg.k_avg)
-                + config.w_fed * seg.fed_growth
-            )
+            # Per-edge cost. Under "gate" this is the edge's own optical
+            # depth, the same quantity the routes are ranked and refused on, so
+            # the path chosen to reach an exit and the choice between exits are
+            # finally one objective. Before this, Dijkstra minimised the
+            # additive composite and the exit was then judged on tau, which
+            # meant a gate could refuse an exit on a smoky path while a longer
+            # passable path to the same exit existed and was never offered.
+            #
+            # A floor on length keeps a clear-air graph from collapsing to
+            # all-zero weights, where every path ties and Dijkstra returns an
+            # arbitrary one.
+            if config.cost_model == "gate":
+                dynamic_weights[cache_key] = seg.k_avg * seg.length_m + 1e-6 * (
+                    seg.length_m
+                )
+            else:
+                # Additive decomposition of the composite formula. current_fed
+                # is constant across routes for one agent, so omitting it from
+                # edge costs does not affect ranking.
+                dynamic_weights[cache_key] = (
+                    seg.length_m * (1.0 + config.w_smoke * seg.k_avg)
+                    + config.w_fed * seg.fed_growth
+                )
 
     # Phase 2: Dijkstra with dynamic weights.
     all_paths = graph.shortest_paths_to_exits(source, dynamic_weights=dynamic_weights)
@@ -1033,7 +1342,15 @@ def rank_routes(
     # learned once the sign went out of view.
     # K_vis fallback: reject routes where all segments are non-visible,
     # but only if at least one other route has visibility.
-    any_visible = any(
+    #
+    # Additive only. Under the gate this was a *second* smoke criterion on top
+    # of the sight test, and a bare threshold on K with no hysteresis, so a
+    # route sitting near it toggled every tick: measured on world100, a 9 m
+    # route with a 2 s travel time was struck out and reinstated repeatedly
+    # while the agent bounced to a 27 m rival and back. It also set `rejected`
+    # without clearing `feasible`, leaving the two fields disagreeing. The
+    # plan retired it under the gate; this is that retirement.
+    any_visible = config.cost_model != "gate" and any(
         any(s.visible for s in rc.segments) for rc in costs if not rc.rejected
     )
     if any_visible:
@@ -1048,15 +1365,70 @@ def rank_routes(
             updated.append(rc)
         costs = updated
 
-    # Sort: non-rejected first by cost, then rejected by cost.
-    # Break ties by fewer intermediate stages.
-    def sort_key(rc: RouteCost) -> tuple[int, float, int]:
-        return (1 if rc.rejected else 0, rc.composite_cost, len(rc.path))
+    # Ordering. Under "additive" the composite decides, as it always has.
+    # Under "gate" distance decides among routes that are still available, and
+    # a route a whole visibility band clearer wins first: smoke says which
+    # exits exist, not how much each metre of them is worth.
+    # Ordering. Under "additive" the composite decides, as it always has.
+    # Under "gate" the route's optical depth decides and travel time breaks
+    # ties: tau = K_ave * L already contains the distance, so two routes
+    # through equally thin haze order by length and in clear air every tau is
+    # zero and time decides alone. A cleaner route wins only by enough less
+    # smoke to pay for its extra metres -- which is the property a visibility
+    # band could not have, since a band compared cleanliness with no reference
+    # to how far the agent had to carry it.
+    order_by_tau = config.cost_model == "gate"
+
+    def tau_of(rc: RouteCost) -> float:
+        # The exit the agent already walks to has its optical depth discounted,
+        # so it keeps its place unless a rival is clearly cleaner rather than
+        # momentarily cleaner. This is FDS+Evac's FAC_DOOR_OLD2 = 0.9
+        # (evac.f90:1507), applied at :16467 inside the IF that ranks doors --
+        # the same position, not a separate veto afterwards. Hysteresis belongs in the ordering: bolted on after
+        # it, the ordering and the veto disagree and the agent oscillates
+        # between what each of them prefers.
+        if current_exit is not None and rc.exit_id == current_exit:
+            return rc.tau_route * config.current_exit_discount
+        return rc.tau_route
+
+    prefer_clean = order_by_tau and config.clean_extinction_threshold > 0.0
+
+    def sort_key(rc: RouteCost) -> tuple[int, int, float, float, int]:
+        tier = 0 if (rc.clean or not prefer_clean) else 1
+        return (
+            1 if rc.rejected else 0,
+            tier,
+            tau_of(rc) if order_by_tau else 0.0,
+            rc.rank_cost,
+            len(rc.path),
+        )
 
     costs.sort(key=sort_key)
 
-    # Fallback: if all rejected, un-reject the least-bad.
+    # Fallback: with every route refused the agent still has to go somewhere,
+    # and the least bad one is the one whose worst stretch is least bad -- the
+    # question is surviving the walk, not averaging it.
+    #
+    # Refusal is never remembered: the sight criterion is measured against the
+    # distance *still to walk*, so it relaxes as the agent closes on an exit and
+    # the smoke that refused a door at 40 m accepts it at 2 m. Recomputing every
+    # tick is what lets that happen. The price is that in a fire smoky enough to
+    # refuse everything -- which is most of a real run, see
+    # docs/gate-model-review-notes.md -- the ordering follows the field, so the
+    # current exit is held unless a rival's worst stretch is clearly milder.
+    #
+    # Ordered by optical depth here too, not by the worst sample: ordering
+    # refused routes by k_max alone once put a 51 m route ahead of a 22 m one
+    # on 2.0 m of sight against 1.8 m -- two tenths of a metre of visibility,
+    # neither usable, deciding a 29 m detour. tau carries the distance with it,
+    # so the least-bad walk is the one with least smoke to walk through.
     if costs and all(rc.rejected for rc in costs):
+        costs.sort(key=lambda rc: (rc.tau_route, rc.rank_cost))
+        current = next((rc for rc in costs if rc.exit_id == current_exit), None)
+        if current is not None and costs[0].exit_id != current.exit_id:
+            margin = 1.0 - config.fallback_switch_margin
+            if costs[0].k_max_route > current.k_max_route * margin:
+                costs = [current] + [rc for rc in costs if rc is not current]
         best = costs[0]
         costs[0] = replace(
             best,
@@ -1279,6 +1651,73 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
     return path
 
 
+def _anchor_allows(
+    candidate: RouteCost,
+    old_rc: RouteCost | None,
+    config: "RerouteConfig",
+) -> bool:
+    """Whether the exit-switch anchor lets the agent leave *old_rc* for *candidate*.
+
+    The single statement of that rule. It was once written twice -- here, to
+    skip past a promoted route the anchor would refuse, and inline at the
+    decision -- and the two drifted, so the copy waved through switches the
+    anchor then vetoed.
+
+    Anchoring is bypassed when the old exit is a hazard the agent must flee,
+    and when the candidate is clean where the old one is not. Otherwise the
+    comparison is a deadband on optical depth, falling through to time only
+    when the two routes are within it.
+    """
+    if old_rc is None:
+        return True
+    if _must_flee_rejection(old_rc, config.cost_config):
+        return True
+    cost_config = config.cost_config
+    if cost_config.cost_model != "gate":
+        return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+
+    if candidate.clean and not old_rc.clean:
+        return True
+    if not candidate.feasible:
+        return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+
+    # A deadband on the quantity the routes are ordered by, symmetric. Clearly
+    # cleaner is adopted, clearly dirtier is refused, and only a tie falls
+    # through to time and queue.
+    #
+    # The refusal half was missing, and its absence was the oscillation:
+    # leaving an exit had to clear a margin in tau, while returning went
+    # straight to the time comparison, which the nearer exit wins
+    # unconditionally and permanently. Departure cost a margin and the return
+    # was free. Same shape as the clean tier's failure one level up --
+    # hysteresis applied to one side of a disjunction is not hysteresis.
+    #
+    # Absolute rather than a ratio: tau is zero in clear air, where a ratio
+    # reads 0 < 0, no agent could switch at all, and a congestion weight would
+    # count for nothing exactly where decks calibrate one.
+    margin = cost_config.tau_max * cost_config.tau_deadband
+    delta = old_rc.tau_route - candidate.tau_route
+    if delta > margin:
+        return True
+    if delta < -margin:
+        return False
+    return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+
+
+def _adoptable(
+    candidate: RouteCost,
+    ranked: list[RouteCost],
+    route_state: AgentRouteState,
+    config: "RerouteConfig",
+) -> bool:
+    """Whether the agent could switch to *candidate* if the ordering offered it."""
+    old_exit = route_state.current_exit
+    if old_exit is None or candidate.exit_id == old_exit:
+        return True
+    old_rc = next((rc for rc in ranked if rc.exit_id == old_exit), None)
+    return _anchor_allows(candidate, old_rc, config)
+
+
 def evaluate_and_reroute(
     agent_id: int,
     wait_info: dict,
@@ -1289,7 +1728,7 @@ def evaluate_and_reroute(
     extinction_sampler: ExtinctionSampler,
     fed_rate_sampler: FedRateSampler | None,
     config: RerouteConfig,
-    cached_segments: dict[tuple[str, str], SegmentCost] | None = None,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     *,
     exit_counts: dict[str, int] | None = None,
     cognitive_map=None,
@@ -1390,6 +1829,26 @@ def evaluate_and_reroute(
         )
 
     best = ranked[0]
+    # A route the ordering promoted but the agent cannot adopt must not hide
+    # the rest of the list. Tier 1 can put a clean exit first that the anchor
+    # then refuses on time; before this, the agent returned None and never saw
+    # the rival at rank 2 it would have switched to -- so adding the tier could
+    # suppress a switch the model made without it, which is strictly worse than
+    # having no tier at all. Candidates are tried in rank order and the first
+    # adoptable one wins; if none is, nothing changes, as before.
+    current_exit_now = route_state.current_exit
+    if (
+        current_exit_now is not None
+        and config.cost_config.cost_model == "gate"
+        and best.exit_id != current_exit_now
+    ):
+        for candidate in ranked:
+            if candidate.exit_id == current_exit_now:
+                break  # the agent's own exit outranks the rest: stay
+            if _adoptable(candidate, ranked, route_state, config):
+                best = candidate
+                break
+
     if (
         best.rejected
         and best.rejection_reason
@@ -1398,18 +1857,16 @@ def evaluate_and_reroute(
         return None
 
     old_exit = route_state.current_exit
+    old_rc = None
     old_cost = None
-    old_must_flee = False
     if old_exit and old_exit != best.exit_id:
-        # Find the old exit's cost (for diagnostics) and whether it is rejected
-        # for a *safety* reason (FED-lethal / impassable smoke), which disables
-        # anchoring below. A mild visibility rejection (light-haze path / an
-        # unreadable sign) is NOT a reason to bypass the anchor — see
-        # _must_flee_rejection.
+        # Find the old exit's route: its cost, its band and whether it is
+        # clean all feed _anchor_allows, which also decides whether it is a
+        # hazard the agent must flee.
         for rc in ranked:
             if rc.exit_id == old_exit:
-                old_cost = rc.composite_cost
-                old_must_flee = _must_flee_rejection(rc, config.cost_config)
+                old_rc = rc
+                old_cost = rc.rank_cost
                 break
 
     route_state.last_eval_time_s = current_time_s
@@ -1443,8 +1900,8 @@ def evaluate_and_reroute(
                 exit_counts=exit_counts,
                 agent_position=agent_position,
                 current_target=current_target,
-            ).composite_cost
-            if best.composite_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
+            ).rank_cost
+            if best.rank_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
                 stage_configs = wait_info.get("stage_configs", {})
                 changed = reroute_agent(wait_info, best.path, stage_configs)
                 if changed:
@@ -1455,27 +1912,22 @@ def evaluate_and_reroute(
                         old_exit=old_exit,
                         new_exit=best.exit_id,
                         old_cost=committed_cost,
-                        new_cost=best.composite_cost,
+                        new_cost=best.rank_cost,
                         reason="better_path",
                     )
         route_state.current_path = best.path
         return None
 
-    # Anchoring / hysteresis: don't abandon the current exit for a *different* one
-    # unless the new exit is meaningfully cheaper (beats the current exit's cost by
-    # more than the anchor margin). Without this, near-tied exits flip-flop on every
-    # reevaluation — worst at short reroute intervals. Anchoring is skipped when:
-    #   - it is the initial choice (old_exit is None), or
-    #   - the old exit is no longer reachable / priced (old_cost is None), or
-    #   - the old exit is FED-lethal (old_must_flee) — the agent must flee a deadly
-    #     exit regardless of cost, so hysteresis must not pin it there. A merely
-    #     smoke-obscured/low-visibility exit does NOT flee: smoke is already in the
-    #     cost, and bypassing the anchor on it causes the flip-flop.
+    # Anchoring / hysteresis: don't abandon the current exit for a *different*
+    # one unless the new exit is meaningfully better. Without this, near-tied
+    # exits flip-flop on every reevaluation -- worst at short reroute intervals.
+    # Anchoring does not apply to the initial choice (old_exit is None) or when
+    # the old exit is no longer reachable and so was never priced. Everything
+    # else is _anchor_allows, which is also what chose `best` above.
     if (
         old_exit is not None
         and old_cost is not None
-        and not old_must_flee
-        and best.composite_cost >= old_cost * config.exit_switch_anchor
+        and not _anchor_allows(best, old_rc, config)
     ):
         return None
 

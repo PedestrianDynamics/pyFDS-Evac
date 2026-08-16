@@ -1,5 +1,11 @@
 """Smoke reprices routes, and the exit choice follows the price.
 
+These are the *additive* cost model, which prices smoke per metre walked and is
+what ``w_smoke`` means. They pin ``cost_model="additive"`` explicitly: under the
+default gate model smoke decides which exits are available rather than what each
+metre of them costs, so a sweep over ``w_smoke`` has nothing to say -- see
+tests/test_route_gate.py for that model's behaviour.
+
 Drives the existing ``assets/t_junction`` asset -- the scenario already built
 for this mechanism -- through the real cost function at a range of ``w_smoke``.
 
@@ -87,7 +93,12 @@ def _costs(graph, field, w_smoke: float) -> dict[str, float]:
         field,
         None,
         RouteCostConfig(
-            base_speed_m_per_s=1.3, w_smoke=w_smoke, w_fed=0.0, w_queue=0.0
+            cost_model="additive",
+            anticipate=False,
+            base_speed_m_per_s=1.3,
+            w_smoke=w_smoke,
+            w_fed=0.0,
+            w_queue=0.0,
         ),
     )
     return {rc.exit_id: rc.composite_cost for rc in ranked}
@@ -102,7 +113,12 @@ def _best(graph, field, w_smoke: float) -> str:
         field,
         None,
         RouteCostConfig(
-            base_speed_m_per_s=1.3, w_smoke=w_smoke, w_fed=0.0, w_queue=0.0
+            cost_model="additive",
+            anticipate=False,
+            base_speed_m_per_s=1.3,
+            w_smoke=w_smoke,
+            w_fed=0.0,
+            w_queue=0.0,
         ),
     )
     return ranked[0].exit_id

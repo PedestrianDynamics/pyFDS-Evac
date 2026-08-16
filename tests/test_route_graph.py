@@ -494,7 +494,10 @@ class TestRouteCost:
     def test_cache_reuse(self, two_exit_graph):
         """Cached segments are reused across calls."""
         field = ConstantExtinctionField(0.0)
-        config = RouteCostConfig(base_speed_m_per_s=1.0)
+        # anticipate=False keys the cache by edge alone; with anticipation the
+        # key carries the arrival second, because the same edge walked at two
+        # different times is two different costs.
+        config = RouteCostConfig(base_speed_m_per_s=1.0, anticipate=False)
         cache: dict = {}
         evaluate_route(
             two_exit_graph,
@@ -543,7 +546,12 @@ class TestRankRoutes:
                 return 8.0 if y < 15 else 0.0
 
         field = SmokeNearE0()
-        config = RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=2.0)
+        config = RouteCostConfig(
+            cost_model="additive",
+            anticipate=False,
+            base_speed_m_per_s=1.0,
+            w_smoke=2.0,
+        )
         ranked = rank_routes(two_exit_graph, "D0", 0.0, 0.0, field, None, config)
         assert ranked[0].exit_id == "E1"
 
@@ -1047,7 +1055,12 @@ class TestEvaluateAndReroute:
                 return 8.0 if y < 15 else 0.0
 
         config = RerouteConfig(
-            cost_config=RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=2.0)
+            cost_config=RouteCostConfig(
+                cost_model="additive",
+                anticipate=False,
+                base_speed_m_per_s=1.0,
+                w_smoke=2.0,
+            )
         )
         wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
         route_state = AgentRouteState(current_exit="E0")
@@ -1083,7 +1096,12 @@ class TestEvaluateAndReroute:
                 return 1.0 if y < 15 else 0.0
 
         config = RerouteConfig(
-            cost_config=RouteCostConfig(base_speed_m_per_s=1.0, w_smoke=2.0)
+            cost_config=RouteCostConfig(
+                cost_model="additive",
+                anticipate=False,
+                base_speed_m_per_s=1.0,
+                w_smoke=2.0,
+            )
         )
         wait_info = _make_wait_info(two_exit_graph, "D0", "E0")
         route_state = AgentRouteState(current_exit="E0")

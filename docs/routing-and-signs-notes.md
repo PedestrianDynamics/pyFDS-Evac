@@ -8,7 +8,10 @@ each other. All code references point at `pyfds_evac/core/route_graph.py`,
 Symbols used below:
 - `K` — smoke extinction coefficient [1/m], sampled from the FDS field.
 - `FED` — Fractional Effective Dose (toxic dose; incapacitation at ~1.0).
-- Config defaults come from `RouteCostConfig` (`route_graph.py:439`).
+- Config defaults come from `RouteCostConfig` (`route_graph.py:609`), which a
+  deck overrides through its `routing` block.
+- `cost_model` selects between the default `"gate"` and the historical
+  `"additive"` model — see [route-cost-gate.md](route-cost-gate.md).
 
 ---
 
@@ -48,8 +51,11 @@ Symbols used below:
      ```
    - A crude per-edge visibility flag: `visible = (k_avg < 0.5)`.
 
-4. **A full route's cost is the composite formula.**
-   `evaluate_route()` (`route_graph.py:589`) sums edges into one route:
+4. **A full route's cost is the composite formula — under `cost_model:
+   "additive"`.**
+   The default is now `"gate"`, where the composite is still computed but does
+   not rank; see item 8a below and [route-cost-gate.md](route-cost-gate.md).
+   `evaluate_route()` (`route_graph.py:971`) sums edges into one route:
    ```
    path_length = Σ length
    K_ave       = Σ (k_avg · length) / Σ length      # length-weighted mean smoke
@@ -94,15 +100,34 @@ Symbols used below:
 7. **Visibility is a hard reject too** (details in Part 2).
 
 8. **Routes are sorted; the agent takes the best.**
-   Sort key (`route_graph.py:793`):
+   Sort key (`route_graph.py:1322`), additive:
    ```
-   ( rejected? , composite_cost , path_length )
+   ( rejected? , composite_cost , hops )
    ```
    → survivable routes first, cheapest first, ties broken by fewer hops.
 
+8a. **Under the default gate model, one quantity gates and orders.**
+   A route is refused when its optical depth `tau = K_ave × L` exceeds `tau_max`
+   (6), or `tau_max × tau_return_margin` (4.8) for an exit the agent is not
+   already walking to, and the survivors sort as
+   ```
+   ( rejected? , tau , travel_time + w_queue·queue_time , hops )
+   ```
+   with the current exit's `tau` scaled by `current_exit_discount` (0.9). `tau`
+   already contains the distance, so a cleaner route wins only by carrying
+   enough less smoke to pay for its extra metres; in clear air every `tau` is
+   zero and travel time decides alone. Dijkstra weights each edge by its own
+   `tau` too, so path choice and exit choice are one objective. The visibility
+   band and the sighting distance were removed at `0d9bf79`. Refusals are
+   recomputed every tick and never remembered, so the criterion relaxes as an
+   agent closes on an exit.
+
 9. **There is always a fallback.**
-   If *every* route is rejected (`route_graph.py:799`), the least-bad one is
-   un-rejected so the agent always has somewhere to go.
+   If *every* route is rejected (`route_graph.py:1350`), the least-bad one is
+   un-rejected so the agent always has somewhere to go. Under the gate,
+   "least bad" is the lowest undiscounted `tau_route`, then the lowest
+   `rank_cost`, held by `fallback_switch_margin` (0.2) against the rival's
+   worst-case K.
 
 10. **Agents re-choose periodically, staggered.**
     - `should_reevaluate()` (`route_graph.py:856`): re-run every
@@ -159,34 +184,82 @@ Symbols used below:
    The result is a precomputed boolean grid: for every `(time, sign, x, y)`, can an
    agent at `(x, y)` read that sign at that time? Cached to a safe `.npz`.
 
-4. **The routing query is a single boolean.**
-   `node_is_visible(time, x, y, node_id)` (`visibility.py:251`) → True/False.
-   Nodes with no descriptor at all — spawn areas, and nodes whose geometry was
-   unusable — return True.
+4. **There are two routing queries, and they answer different questions.**
+   - `node_is_visible(time, x, y, node_id)` (`visibility.py:531`) → True/False:
+     can the sign be *read* from here. Nodes with no descriptor — spawn areas, and nodes whose geometry
+     was unusable — return True.
+   - `visibility_to_node(time, x, y, node_id)` (`visibility.py:545`) → metres:
+     how far the agent can *see* toward that node. This is Jin's `c / K_ave`
+     with `K_ave` averaged along the real, obstruction-aware sight line — the
+     same quantity FDS+Evac's `See_door` returns. It returns `None` rather than
+     0 when there is no answer to give, because fdsvismap multiplies the sight
+     line by the sign's readable half-plane and by obstructions, so a zero means
+     "concealed", "behind the sign" or "smoked out" indistinguishably, and only
+     the last is a statement about passability. A hidden sign is not a wall.
+   - `distance_to_node(x, y, node_id)` supplies the straight-line distance the
+     sighting distance was tested against when the sight line still gated. It is
+     computed from the descriptor, not asked of the backend, so a run loaded
+     from an `.npz` cache still has it. The gate no longer reads it.
 
-5. **Signs gate routes (rejection), they don't (yet) change cost.**
-   In `rank_routes` (`route_graph.py:750`): a route is **rejected if the agent
-   cannot currently see the sign for the next node** on that path. So a sign that is
-   smoke-obscured, faced the wrong way, or behind a wall makes that route unusable.
+5. **Legibility no longer rejects routes; it decides what the agent knows.**
+   `rank_routes` does **not** consult sign legibility (see the comment at
+   `route_graph.py:1399`). Readability feeds
+   `cognitive_map.expand_from_visibility`, and the cognitive map decides what
+   Dijkstra can see — so an unknown exit is *absent from the graph* rather than
+   present-and-vetoed. Checking it again in ranking double-gated the same
+   criterion, blocked agents who already knew the building, and forbade an agent
+   from using an exit it had legitimately learned once the sign left view.
 
-6. **Fallback when no sign model is loaded.**
-   If `vis_model is None`, a cruder rule applies (`route_graph.py:774`): reject
-   routes where *all* segments are non-visible (`k_avg ≥ 0.5`), but only if some
-   other route does have visibility.
+6. **The sight line no longer enters the route decision, and neither does
+   sight.** Under `cost_model: "gate"`, `evaluate_route` refuses a route when
+   the *mean* K over its own polyline times the remaining length exceeds
+   `tau_max`; the reason reads `tau 8.41 > 6.00 (K_ave 0.145 x 58.0 m)`. The
+   `visibility_to_node` reading is still taken and reported, but since
+   `b16e900` it does not gate: it resolves only where a sign does, so choosing
+   the criterion per exit let sign geometry decide which exits were tested at
+   all — the `l_corridor` far exit lies around two corners, was never tested,
+   and the deck's diversion disappeared. Since `0d9bf79` the polyline test is
+   named for what it is, an exposure budget rather than a sighting distance:
+   integrating K along a route that turns two corners does not measure how far
+   anyone can see. Jin's `S = c/K` keeps its proper meaning one section up, in
+   sign legibility, where the question really is what an occupant can read.
 
-7. **How to turn the full sign model on.**
-   `_build_vis_model()` (`run_config.py:116`): active only if you pass
-   **`--vis-cache <path>`** AND the config actually contains sign descriptors.
-   It reuses `--fds-dir`, `--reroute-interval` (as time step), and
-   `--smoke-slice-height`.
+   The eye position is a separate parameter (`los_position`) from
+   `agent_position` on purpose: `agent_position` also re-measures every route's
+   length from that point, and conflating them silently re-ranked routes whose
+   edges carry waypoints.
 
-8. **Current limitation vs the literature.**
-   Signs here are **binary + gating** (visible → allowed, else rejected). In the
-   choice papers, visibility (VIS) is the single largest *positive weight* in the
-   utility (≈ +0.71 in Haghani 2018) — a visible exit should be *more attractive*
-   on a spectrum, not merely "not forbidden." The rich, physically-grounded
-   visibility field is already computed; it is just wired as a filter, not a
-   weighted term.
+7. **The crude per-segment rule is now additive-only.**
+   Reject routes where *all* segments are non-visible, i.e. every segment has
+   `k_avg ≥ visibility_extinction_threshold` (0.5) — but only if some other
+   route does have visibility. It was always meant to be additive-model
+   machinery; under the gate it was a second, hysteresis-free smoke criterion on
+   top of the sight test, and `22c0888` retired it there.
+
+8. **How to turn the sign model on.**
+   `_build_vis_model()` (`run_config.py:167`) builds one when *any* of these
+   holds, provided the config contains sign descriptors:
+   - the deck has agents below full familiarity (they need it to discover), or
+   - `--vis-cache <path>` was passed, or
+   - rerouting is on and `cost_model` is `"gate"` — i.e. the default, which is
+     why familiarity-1.0 decks now pay for a vismap precompute they used to
+     skip (`_gate_needs_sight`). `--vis-cache` makes it a one-off.
+   - `--clear-air-visibility` forces it on with no fire.
+
+   `--no-visibility` turns it off entirely; agents then learn every neighbour of
+   each node they reach by contact. With `--fds-dir` the model reads the FDS
+   field and reuses `--reroute-interval` as its time step and
+   `--smoke-slice-height` as its slice; without one it is built from clear air
+   at `--vis-cell-size` resolution.
+
+9. **Current limitation vs the literature.**
+   Sight is now **purely gating**: it decides whether a route is available and
+   nothing else. In the choice papers, visibility (VIS) is the single largest
+   *positive weight* in the utility (≈ +0.71 in Haghani 2018) — a visible exit
+   should be *more attractive* on a spectrum. Banding was the one step toward
+   that, and it was removed from the ordering in `cea33ce` because it decided
+   rather than broke ties. The gap is therefore wider than it was, not
+   narrower.
 
 ---
 
@@ -256,10 +329,12 @@ for picking weights. Key tensions:
 - `w_smoke` and `w_fed` are uncalibrated — the core issue. `w_queue` is off by
   default: it scales with a global agent tally, so any constant is calibrated at
   one crowd size only. The Station deck opts in at 0.03 (Fahy Table 2).
-- `w_smoke` is redundant: smoke's real effect (slowdown) is already the calibrated
-  Lund speed law → route on travel-time instead.
+- **"`w_smoke` is redundant" is now true under the gate.** Since `0d9bf79` the
+  gate weights each Dijkstra edge by its own optical depth and ranks routes by
+  theirs, so neither `w_smoke` nor `w_fed` reaches route choice; the composite is
+  computed and reported only. Under `"additive"` both still apply.
 - Toxicity is a threshold, not a preference → keep it as the reject, drop `w_fed`.
-- Visibility is already richly modelled but only used as a gate → could become a
-  weighted term (biggest positive factor in the literature).
+- Visibility is richly modelled but enters route choice only through the
+  cognitive map. What gates a route is exposure, not sight.
 - For distance-vs-congestion, prefer Haghani's **revealed-choice** weights over the
   Lovreglio **survey** weights.

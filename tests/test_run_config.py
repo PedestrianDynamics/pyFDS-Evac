@@ -79,9 +79,10 @@ def test_collect_route_cost_history_explicit_flag():
     assert kwargs["collect_route_cost_history"] is True
 
 
-def test_vis_cache_requires_fds_dir():
-    with pytest.raises(ValueError, match="--vis-cache requires --fds-dir"):
-        build_run_kwargs(_scenario(), _opts(vis_cache="cache.pkl"))
+def test_vis_cache_without_fds_dir_is_allowed():
+    # Since clear-air sight became the default for fire-free decks, a cache with
+    # no --fds-dir is meaningful: it holds the geometry-only visibility.
+    build_run_kwargs(_scenario(), _opts(vis_cache="cache.pkl", enable_rerouting=True))
 
 
 def test_vis_cache_requires_rerouting():
