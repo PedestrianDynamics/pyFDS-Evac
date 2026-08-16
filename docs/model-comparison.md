@@ -13,7 +13,7 @@
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **Locomotion model** | Social Force Model (Helbing et al. [17–20], three-circle body shape [21]), continuous 2-D equation of motion solved with a modified velocity-Verlet integrator ([1] §3.1–3.2, §3.6) | JuPedSim collision-free speed model (operational model configured externally); no social forces |
+| **Locomotion model** | Social Force Model (Helbing et al. [7], three-circle body shape [1] Table 1), continuous 2-D equation of motion solved with a modified velocity-Verlet integrator ([1] §3.1–3.2, §3.6) | JuPedSim collision-free speed model (operational model configured externally); no social forces |
 | **Body shape** | Three overlapping circles (torso Rd, shoulder Rs, head Rt) with rotational degree of freedom ([1] Table 1, Fig. 1) | Point agent (circle of configurable radius in JuPedSim) |
 | **Counterflow** | Dedicated counterflow collision-avoidance algorithm ([1] §3.3, evac.f90:8965–8979) | Handled by JuPedSim's operational model; no separate counterflow algorithm |
 | **Spatial discretisation** | Rectilinear evacuation mesh (separate from the FDS fire mesh); geometry is fitted to the underlying grid; minimum ~0.25 m cell size recommended ([1] §1.2) | Continuous walkable polygon (Shapely geometry); no grid |
@@ -180,14 +180,19 @@ distributions, checkpoints, and exits) with **Dijkstra shortest-path**
 queries ([docs/routing.md](routing.md), `route_graph.py`).
 
 At each reevaluation tick, per-edge costs are computed from current
-smoke and FED fields:
+smoke and FED fields.  The weight depends on the cost model
+(`route_graph.py:1299-1310`):
 
 ```
-edge_cost = length_m * (1 + w_smoke * k_avg) + w_fed * fed_growth
+gate      edge_cost = k_avg * length_m + 1e-6 * length_m
+additive  edge_cost = length_m * (1 + w_smoke * k_avg) + w_fed * fed_growth
 ```
 
-Dijkstra finds one cheapest path per reachable exit using these
-dynamic weights.  This step is the same under both cost models.
+Under the gate the edge weight is the segment's optical depth, with a
+length floor that keeps a clear-air graph from collapsing to all-zero
+weights; under `"additive"` it is the composite decomposed per segment.
+Dijkstra then finds one cheapest path per reachable exit using these
+dynamic weights.
 
 The routes it returns are then judged by one of two models
 ([docs/route-cost-gate.md](route-cost-gate.md)):
@@ -233,7 +238,7 @@ group.
 |--------|----------|------------|
 | **Algorithm** | N-player best-response game (NE in pure strategies) with preference-order filter [9] | Dijkstra shortest-path with dynamic edge weights, then a per-route gate |
 | **Cost function** | `T_i = beta_k * lambda_i + tau_i` (queueing + walking time) [9] Eq. 6 | gate: route optical depth `K_ave * L`, with travel time (+ `w_queue` x queue time) as tie-break; additive: `length * (1 + w_smoke * K) + w_fed * FED` |
-| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5262, :16159); the `0.5 x d` visibility rule is the tier-4 last resort (:16463), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
+| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5262, :16149); the `0.5 x d` visibility rule is the tier-4 last resort (:16463), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
 | **Congestion** | Modelled: queueing time depends on count of closer agents heading to same exit | Optional (`w_queue`), off by default; a global tally of agents targeting the exit |
 | **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered |
 | **Social behaviour** | Herding and follower agent types observe neighbours | Not modelled |
@@ -250,7 +255,7 @@ group.
 ## 3. Smoke–speed interaction
 
 Both systems use the same underlying correlation from the Frantzich
-& Nilsson experiments (Lund 2003, Report 3126 [30]).
+& Nilsson experiments (Lund 2003, Report 3126 [4]).
 
 ### Speed reduction formula
 
@@ -262,8 +267,8 @@ with default coefficients `alpha = 0.706`, `beta = -0.057`.
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11; evac.f90:8173–8175) | Same formula (`smoke_speed.py:199`) |
-| **Default alpha/beta** | 0.706 / -0.057 (evac.f90:1479–1480) | 0.706 / -0.057 (`smoke_speed.py:71–72`) |
+| **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11; evac.f90:8173–8175) | Same formula (`smoke_speed.py:225`) |
+| **Default alpha/beta** | 0.706 / -0.057 (evac.f90:1479–1480) | 0.706 / -0.057 (`smoke_speed.py:91–92`) |
 | **Minimum speed** | Configurable `SMOKE_MIN_SPEED_FACTOR`; additional visibility-based cutoff (evac.f90:8183–8189) | Configurable `min_speed_factor` (default 0.1) |
 | **Smoke input** | Soot density from FDS mesh converted to extinction via `K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6` (evac.f90:8160–8161) | Extinction coefficient K read directly from FDS `SOOT EXTINCTION COEFFICIENT` slice via fdsreader |
 | **Sampling geometry** | Local value at agent position on the evacuation mesh | Beer-Lambert path-integrated mean along edge polyline (Boerger et al. 2024 [3], Eq. 8–9) |
@@ -282,7 +287,7 @@ at the agent's current position.
 
 ### FDS+Evac
 
-FED is computed using Purser's Fractional Effective Dose concept [29].
+FED is computed using Purser's Fractional Effective Dose concept [5].
 The default calculation uses **CO, CO2, and O2** gas phase
 concentrations ([1] §1.2 p11, §2.7 p19).  The effects of additional
 gases (NO, NO2, CN, HCl, HBr, HF, SO2, C3H4O, CH2O) are included
@@ -320,17 +325,18 @@ Optional slices: HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,
 formaldehyde.
 
 When only CO/CO2/O2 are available, the model falls back to the
-three-gas subset (`fed.py:130`).
+three-gas subset: every optional species defaults to zero concentration in
+`DefaultFedInputs` (`fed.py:14–40`), so an absent slice contributes nothing.
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **FED standard** | Purser's FED concept [29] | ISO 13571 / Purser equations |
+| **FED standard** | Purser's FED concept [5] | ISO 13571 / Purser equations |
 | **Default gases** | CO, CO2, O2 | CO, CO2, O2 (same three-gas minimum) |
 | **Optional gases** | NO, NO2, CN, HCl, HBr, HF, SO2, C3H4O, CH2O (user must provide species) | HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde (auto-detected from FDS slices) |
 | **HCN/HCl by default** | Not modelled unless user provides species ([1] §2.7 p19) | Not modelled unless FDS slices are present |
 | **Incapacitation** | FED >= 1.0, agent stops (v0 = 0) ([1] §3.4 p31) | FED >= 1.0, route is rejected; agent incapacitation handled by simulation config |
 | **Activity level** | Configurable (rest/light/heavy) | Not configurable (fixed light work equivalent) |
-| **FED in routing** | Not used in exit selection cost; only used for incapacitation | Used in route cost: `w_fed * FED_max` term in composite cost |
+| **FED in routing** | Not used in exit selection cost; only used for incapacitation | A veto under both cost models; additionally a ranking term (`w_fed * FED_max`) under `"additive"` only, not under the default gate |
 | **Temperature/radiation** | Not implemented for agent effects ([1] §1.2 p11) | Not implemented |
 
 > **Note on the PDF claim [2]**: The PDF states FDS+Evac uses "Basic
