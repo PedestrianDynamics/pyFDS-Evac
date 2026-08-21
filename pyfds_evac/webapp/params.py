@@ -41,15 +41,15 @@ _UPLOAD_ROOT = _REPO_ROOT / "uploads"
 UPLOAD_PREFIX = "uploads/"
 
 _INPUT = (
-    "background:#2E2A2E;border:1px solid rgba(255,255,255,.09);"
-    "border-radius:9px;padding:10px 12px;color:#F2EDE9;"
+    "background:var(--surface-input);border:1px solid var(--hairline);"
+    "border-radius:9px;padding:10px 12px;color:var(--ink);"
     "font-family:'JetBrains Mono',monospace;font-size:13px;"
     "outline:none;width:100%;box-sizing:border-box"
 )
 _LABEL = (
     "display:block;font-family:'Space Grotesk',sans-serif;"
     "font-size:10.5px;font-weight:500;letter-spacing:.07em;"
-    "text-transform:uppercase;color:#837A74;margin-bottom:6px"
+    "text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px"
 )
 _FIELD = "display:flex;flex-direction:column;gap:6px"
 _GROTESK = "font-family:'Space Grotesk',sans-serif"
@@ -221,9 +221,9 @@ def _browse_button(target_id: str, mode: str) -> Any:
         hx_target="#dir-modal",
         hx_swap="innerHTML",
         style=(
-            "flex:none;background:#3A343A;border:1px solid rgba(255,255,255,.10);"
+            "flex:none;background:var(--surface-raised);border:1px solid var(--hairline-strong);"
             "border-radius:9px;padding:0 12px;height:42px;"
-            f"{_GROTESK};font-size:12px;color:#B2A9A3;cursor:pointer"
+            f"{_GROTESK};font-size:12px;color:var(--ink-dim);cursor:pointer"
         ),
     )
 
@@ -328,14 +328,14 @@ def _switch(
     dest: str, label: str, checked: bool = False, action: argparse.Action | None = None
 ) -> Any:
     _chk = "checked " if checked else ""
-    _track_bg = "#F4C430" if checked else "#2E2A2E"
+    _track_bg = "#F4C430" if checked else "var(--surface-input)"
     _knob_pos = "19px" if checked else "2px"
     import html as _html
 
     _tip = _help_text(dest, action)
     _label_node = Label(
         NotStr(_label_line(label, bool(_tip))),
-        style=f"{_GROTESK};font-size:12px;font-weight:500;color:#F2EDE9",
+        style=f"{_GROTESK};font-size:12px;font-weight:500;color:var(--ink)",
     )
     _row = Div(
         _label_node,
@@ -344,12 +344,12 @@ def _switch(
             f'<input type="checkbox" id="{dest}" name="{dest}" value="on" {_chk}'
             f'style="opacity:0;width:0;height:0;position:absolute">'
             f'<span onclick="event.preventDefault();var cb=this.previousElementSibling;cb.checked=!cb.checked;'
-            f"this.style.background=cb.checked?'#F4C430':'#2E2A2E';"
+            f"this.style.background=cb.checked?'#F4C430':'var(--surface-input)';"
             f"this.querySelector('span').style.left=cb.checked?'19px':'2px';\" "
             f'style="position:absolute;inset:0;border-radius:99px;'
-            f'background:{_track_bg};border:1px solid rgba(255,255,255,.12);transition:background .18s">'
+            f'background:{_track_bg};border:1px solid var(--hairline-strong);transition:background .18s">'
             f'<span style="position:absolute;top:2px;left:{_knob_pos};width:17px;height:17px;'
-            f'border-radius:99px;background:#B2A9A3;transition:left .18s;display:block"></span>'
+            f'border-radius:99px;background:var(--ink-dim);transition:left .18s;display:block"></span>'
             f"</span></label>"
         ),
         style="display:flex;align-items:center;justify-content:space-between;gap:10px",
@@ -382,7 +382,7 @@ def _incap_toggle() -> Any:
             value="probabilistic",
         ),
         NotStr(
-            '<div id="incap-dist" style="margin-top:10px;border-radius:9px;overflow:hidden;background:#131113">'
+            '<div id="incap-dist" style="margin-top:10px;border-radius:9px;overflow:hidden;background:var(--surface-panel)">'
             '<canvas id="incap-canvas" style="width:100%;height:108px;display:block"></canvas>'
             "</div>"
         ),
@@ -392,12 +392,12 @@ def _incap_toggle() -> Any:
 
 _SELECT = (
     "appearance:none;"
-    'background:#2E2A2E url("data:image/svg+xml;utf8,'
+    'background:var(--surface-input) url("data:image/svg+xml;utf8,'
     "<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'>"
     "<path d='M2 4l4 4 4-4' stroke='%23837A74' stroke-width='1.5' fill='none'/>"
     '</svg>") no-repeat right 12px center;'
-    "border:1px solid rgba(255,255,255,.09);border-radius:9px;"
-    f"padding:10px 32px 10px 12px;color:#F2EDE9;{_GROTESK};font-size:13px;"
+    "border:1px solid var(--hairline);border-radius:9px;"
+    f"padding:10px 32px 10px 12px;color:var(--ink);{_GROTESK};font-size:13px;"
     "outline:none;width:100%"
 )
 
@@ -544,10 +544,10 @@ def _details_block(
     return NotStr(
         f"<details {'open' if open_ else ''}>"
         f'<summary style="display:flex;align-items:center;justify-content:space-between;'
-        f"padding:11px 13px;background:#322E32;border:1px solid rgba(255,255,255,.07);"
+        f"padding:11px 13px;background:var(--surface-accent);border:1px solid var(--hairline);"
         f'border-left:2px solid {accent};border-radius:11px;list-style:none;cursor:pointer">'
-        f'<span style="{_GROTESK};font-weight:600;font-size:12.5px;letter-spacing:.01em;color:#F2EDE9">{title}</span>'
-        f'<svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="#837A74" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        f'<span style="{_GROTESK};font-weight:600;font-size:12.5px;letter-spacing:.01em;color:var(--ink)">{title}</span>'
+        f'<svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         f"</summary>" + body + "</details>"
     )
 
@@ -609,7 +609,7 @@ _DOT = (
     '<span style="width:4px;height:4px;border-radius:99px;'
     'background:#FF6A1A;flex:none;display:inline-block;margin-right:8px"></span>'
 )
-_PREVIEW_ROW = f"display:flex;align-items:center;{_MONO};font-size:10.5px;color:#B2A9A3"
+_PREVIEW_ROW = f"display:flex;align-items:center;{_MONO};font-size:10.5px;color:var(--ink-dim)"
 
 
 def _output_files_section() -> NotStr:
@@ -631,7 +631,7 @@ def _output_files_section() -> NotStr:
                     "6 artifacts",
                     id="artifact-heading",
                     style=f"{_GROTESK};font-size:9px;font-weight:600;letter-spacing:.07em;"
-                    f"text-transform:uppercase;color:#837A74;margin-bottom:6px",
+                    f"text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px",
                 ),
                 *[
                     Input(id=k, name=k, type="hidden")
@@ -663,7 +663,7 @@ def _output_files_section() -> NotStr:
                     style=_PREVIEW_ROW,
                 ),
                 style=(
-                    "background:#252127;border:1px solid rgba(255,255,255,.06);"
+                    "background:var(--surface-accent);border:1px solid var(--hairline);"
                     "border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:5px"
                 ),
             ),
@@ -673,10 +673,10 @@ def _output_files_section() -> NotStr:
     return NotStr(
         "<details>"
         f'<summary style="display:flex;align-items:center;justify-content:space-between;'
-        f"padding:11px 13px;background:#322E32;border:1px solid rgba(255,255,255,.07);"
+        f"padding:11px 13px;background:var(--surface-accent);border:1px solid var(--hairline);"
         f'border-left:2px solid #FFB020;border-radius:11px;list-style:none;cursor:pointer">'
-        f'<span style="{_GROTESK};font-weight:600;font-size:12.5px;letter-spacing:.01em;color:#F2EDE9">Output files</span>'
-        f'<svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="#837A74" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        f'<span style="{_GROTESK};font-weight:600;font-size:12.5px;letter-spacing:.01em;color:var(--ink)">Output files</span>'
+        f'<svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         "</summary>" + body + "</details>"
     )
 
@@ -707,7 +707,7 @@ def build_form(post_url: str) -> Any:
 
     other = [_field(a) for d, a in by_dest.items() if d not in grouped]
     if other:
-        sections.append(_details_block("Other", "#837A74", other, False))
+        sections.append(_details_block("Other", "var(--ink-faint)", other, False))
 
     return Form(
         Div(
@@ -727,7 +727,7 @@ def build_form(post_url: str) -> Any:
                 "display:flex;align-items:center;justify-content:center;gap:6px;"
                 "width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;"
                 f"{_GROTESK};font-size:14.5px;font-weight:600;"
-                "background:linear-gradient(180deg,#FFC24D,#E8590C);color:#2A1606;"
+                "background:linear-gradient(180deg,#FFC24D,#E8590C);color:var(--on-heat);"
                 "box-shadow:0 6px 20px rgba(232,89,12,.28)"
             ),
         ),

@@ -36,8 +36,14 @@ _FG = "#b2a9a3"
 def figure_html(fig: go.Figure, div_id: str) -> Any:
     """Embed a Plotly figure as an HTML fragment (no bundled Plotly.js).
 
-    Applies the Warm Paper Lab light template so charts match the GUI's cream
-    ground (transparent background, warm ink, hue-shifted grid).
+    Both backgrounds are transparent, so the figure sits on whichever ground
+    the page is currently painting and only the ink has to follow the theme.
+    The values below are the dark defaults; Plotly bakes them in at render
+    time and resolves no CSS variables, so ``theme.py``'s switch re-applies
+    the font and grid colours with ``Plotly.relayout`` after a flip.
+
+    ``colorway`` is deliberately *not* re-applied: the exit palette is drawn
+    from the heat ramp, which is identical in both themes.
     """
     fig.update_layout(
         margin=dict(l=52, r=22, t=30, b=46),

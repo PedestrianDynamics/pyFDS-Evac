@@ -20,8 +20,8 @@ from fasthtml.common import H3, Div, NotStr
 from .plots import _PALETTE, _agent_exit_map
 
 _CARD = (
-    "background:#2A262A;border:1px solid rgba(255,255,255,.07);"
-    "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
+    "background:var(--surface-card);border:1px solid var(--hairline);"
+    "border-radius:1.1rem;padding:20px;box-shadow:var(--shadow-md)"
 )
 
 # Wall-clock gap between the position samples sent to the browser.  The JS
@@ -403,6 +403,28 @@ _JS = """
   // 0.2 m agent is sub-pixel when zoomed out, and a dot that rounds away
   // entirely reads as a lost agent rather than a small one.
   var AGENT_R = D.agentR > 0 ? D.agentR : 0.2, MIN_AGENT_PX = 2;
+
+  // ---- theme ----------------------------------------------------------
+  // Canvas takes literal colours only. TH is refreshed whenever the page
+  // theme flips (see window.trajRepaint at the foot of this script), so a
+  // light-mode reader gets dark geometry on paper rather than white-on-white.
+  var TH = {};
+  function readTheme() {
+    var light = document.documentElement.getAttribute('data-theme') === 'light';
+    TH.light      = light;
+    TH.walkFill   = light ? 'rgba(31,23,16,0.035)' : 'rgba(255,255,255,0.03)';
+    TH.walkLine   = light ? 'rgba(31,23,16,0.22)'  : 'rgba(255,255,255,0.16)';
+    TH.wallFill   = light ? '#d9d2c8'              : '#14161b';
+    TH.wallLine   = light ? 'rgba(31,23,16,0.38)'  : 'rgba(255,255,255,0.34)';
+    TH.agentRing  = light ? 'rgba(31,23,16,0.35)'  : 'rgba(0,0,0,0.45)';
+    TH.sparkLine  = light ? 'rgba(31,23,16,.55)'   : 'rgba(255,255,255,.55)';
+    TH.noData     = light ? '#6f665e'              : '#9aa0a6';
+    // Smoke is drawn as raw RGBA bytes: pale grey reads on the dark ground,
+    // but on paper it has to darken instead or it vanishes.
+    TH.smokeRGB   = light ? [90, 88, 100] : [205, 203, 214];
+  }
+  readTheme();
+
   var CANVAS_H = 440;           // render height; size() and the wheel handler must agree
   var dragging = false, dragStart = null;
 
@@ -430,8 +452,8 @@ _JS = """
         var a = 1 - Math.exp(-K * 0.6);      // Beer-Lambert-ish opacity
         if (a > 0.9) a = 0.9;                 // keep agents visible through it
         var pi = ((H - 1 - iy) * W + ix) * 4; // flip y: world +y is screen up
-        // Light gray smoke: reads clearly against the dark canvas theme.
-        d[pi] = 205; d[pi + 1] = 203; d[pi + 2] = 214; d[pi + 3] = Math.round(a * 255);
+        d[pi] = TH.smokeRGB[0]; d[pi + 1] = TH.smokeRGB[1]; d[pi + 2] = TH.smokeRGB[2];
+        d[pi + 3] = Math.round(a * 255);
       }
     }
     smCtx.putImageData(id, 0, 0);
@@ -489,7 +511,7 @@ _JS = """
     return 'rgb(' + r + ',' + g + ',' + bl + ')';
   }
   function fedColor(d) {
-    if (d == null) return '#9aa0a6';
+    if (d == null) return TH.noData;
     if (d <= 0) return STOPS[0][1];
     if (d >= 1) return STOPS[STOPS.length - 1][1];
     for (var k = 1; k < STOPS.length; k++) {
@@ -606,21 +628,21 @@ _JS = """
     var curFrac = T.length > 1 ? (simT - T[0]) / (T[T.length - 1] - T[0]) : 0;
     var cx = Math.max(0, Math.min(sw, curFrac * sw));
     sctx.beginPath(); sctx.moveTo(cx, 0); sctx.lineTo(cx, sh);
-    sctx.strokeStyle = 'rgba(255,255,255,.55)'; sctx.lineWidth = 1.5; sctx.stroke();
+    sctx.strokeStyle = TH.sparkLine; sctx.lineWidth = 1.5; sctx.stroke();
     sctx.beginPath(); sctx.arc(cx, py(curMax), 3.5, 0, 6.2832);
     sctx.fillStyle = fc(curMax); sctx.fill();
   }
   function draw() {
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
     ctx.clearRect(0, 0, w, h);
-    poly(D.walk, p, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.16)', 1.5);
+    poly(D.walk, p, TH.walkFill, TH.walkLine, 1.5);
     var b = bracket(simT), f = b[2];
     drawSmoke(b[0], p);
     // Interior walls (holes in the walkable area): drawn over the smoke as
     // solid voids so they read as obstacles the agents route around.
     if (D.walls) {
       for (var wI = 0; wI < D.walls.length; wI++) {
-        poly(D.walls[wI], p, '#14161b', 'rgba(255,255,255,0.34)', 1.4);
+        poly(D.walls[wI], p, TH.wallFill, TH.wallLine, 1.4);
       }
     }
     D.exits.forEach(function (e) {
@@ -647,7 +669,7 @@ _JS = """
       var q = p(X, Y);
       ctx.beginPath(); ctx.arc(q[0], q[1], rpx, 0, 6.2832);
       ctx.fillStyle = col; ctx.fill();
-      ctx.lineWidth = rlw; ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
+      ctx.lineWidth = rlw; ctx.strokeStyle = TH.agentRing; ctx.stroke();
     }
     tlabel.textContent = 't = ' + (simT - t0).toFixed(0) + ' s';
     slider.value = String(((simT - t0) / span) * 1000);
@@ -753,6 +775,16 @@ _JS = """
     });
   }
   window.addEventListener('resize', draw);
+
+  // Called by the footer theme switch. Nothing here is reachable from CSS:
+  // the geometry, the smoke bitmap and the FED sparkline are all painted
+  // into a canvas with literal colours, so they need an explicit repaint.
+  window.trajRepaint = function () {
+    readTheme();
+    draw();
+    if (typeof drawFedPanel === 'function') drawFedPanel();
+  };
+
   draw();
   requestAnimationFrame(loop);
 })();
@@ -766,10 +798,10 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         return Div(
             H3(
                 "Trajectories",
-                style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0 0 10px;color:#F2EDE9",
+                style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0 0 10px;color:var(--ink)",
             ),
             NotStr(
-                '<p style="font-size:.85rem;color:#B2A9A3">Trajectory data unavailable.</p>'
+                '<p style="font-size:.85rem;color:var(--ink-dim)">Trajectory data unavailable.</p>'
             ),
             style=_CARD,
         )
@@ -814,11 +846,11 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         + (
             payload["hasFed"]
             and (
-                '<div id="fed-panel" style="margin-top:14px;background:#1A171A;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px">'
+                '<div id="fed-panel" style="margin-top:14px;background:var(--surface-panel);border:1px solid var(--hairline);border-radius:12px;padding:14px 16px">'
                 '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
                 '<span style="font-family:'
                 + "'JetBrains Mono'"
-                + ',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#837A74">FED Dose</span>'
+                + ',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)">FED Dose</span>'
                 '<div style="display:flex;gap:12px">'
                 '<span style="font-family:'
                 + "'JetBrains Mono'"
@@ -836,24 +868,24 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
                 '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
                 '<div><div style="font-family:'
                 + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#837A74;margin-bottom:2px">max</div>'
+                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">max</div>'
                 '<div id="fed-val-max" style="font-family:'
                 + "'JetBrains Mono'"
                 + ',monospace;font-size:26px;font-weight:500;color:#F4C430;transition:color .3s">0.0000</div></div>'
                 '<div><div style="font-family:'
                 + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#837A74;margin-bottom:2px">mean</div>'
+                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">mean</div>'
                 '<div id="fed-val-mean" style="font-family:'
                 + "'JetBrains Mono'"
                 + ',monospace;font-size:26px;font-weight:500;color:#FF8A3D;transition:color .3s">0.0000</div></div>'
                 "</div>"
-                '<div style="position:relative;height:6px;border-radius:99px;background:#2A262A;border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:4px">'
+                '<div style="position:relative;height:6px;border-radius:99px;background:var(--surface-card);border:1px solid var(--hairline);overflow:hidden;margin-bottom:4px">'
                 '<div id="fed-bar-fill" style="position:absolute;inset:0;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .15s"></div>'
                 "</div>"
                 '<div style="display:flex;justify-content:space-between;margin-bottom:10px">'
                 '<span style="font-family:'
                 + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#837A74">0</span>'
+                + ',monospace;font-size:9px;color:var(--ink-faint)">0</span>'
                 '<span style="font-family:'
                 + "'JetBrains Mono'"
                 + ',monospace;font-size:9px;color:#FFB020">0.3</span>'
@@ -876,7 +908,7 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         Div(
             H3(
                 "Trajectories",
-                style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0;color:#F2EDE9",
+                style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin:0;color:var(--ink)",
             ),
             style="display:flex;align-items:center;margin-bottom:14px",
         ),
