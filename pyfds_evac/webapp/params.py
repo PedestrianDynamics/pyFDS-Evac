@@ -118,19 +118,33 @@ def _is_bool(action: argparse.Action) -> bool:
 def _options_under(root: Path, prefix: str = "") -> List[tuple]:
     """(label, value) pairs for every scenario directory under *root*.
 
-    A directory qualifies when it holds a config.json; each *other* *.json
-    beside it becomes an extra selectable option, matching what
-    ``load_scenario`` accepts for a directory and for a bare .json file.
+    The rule here is deliberately the same one ``load_scenario`` applies to a
+    directory: it needs one JSON and one WKT, preferring ``config.json`` and
+    ``geometry.wkt`` but falling back to the alphabetically first of each.
+    The picker used to demand a literal ``config.json``, which made a
+    directory the CLI loads happily invisible in the GUI -- ``assets/Haspel``
+    (``BUW_Geometrie_EG.wkt`` + ``inifile_template.json``) was exactly that.
+
+    Each *other* *.json beside the primary one becomes an extra option, since
+    ``load_scenario`` also accepts a bare .json path and reads the geometry
+    from a sibling .wkt.
     """
     if not root.is_dir():
         return []
     options: List[tuple] = []
     for p in sorted(root.iterdir()):
-        if not (p.is_dir() and (p / "config.json").exists()):
+        if not p.is_dir():
             continue
+        jsons = sorted(p.glob("*.json"))
+        if not jsons or not any(p.glob("*.wkt")):
+            continue
+        # Mirror load_scenario's preference so the bare-directory option and
+        # the loader agree on which JSON is the primary one.
+        preferred = p / "config.json"
+        primary = preferred if preferred.exists() else jsons[0]
         options.append((p.name, f"{prefix}{p.name}"))
-        for json_file in sorted(p.glob("*.json")):
-            if json_file.name == "config.json":
+        for json_file in jsons:
+            if json_file == primary:
                 continue
             options.append(
                 (
