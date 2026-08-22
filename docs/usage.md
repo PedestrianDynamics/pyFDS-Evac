@@ -58,13 +58,13 @@ silent unless you check the warning log.
 | `--no-visibility` | Turn sight gating off entirely; agents then learn each node's neighbours by contact. Not a fire scenario. |
 | `--vis-cell-size M` | Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight. |
 
-**The default route-choice model still triggers the visibility model.** With
-rerouting on and `routing.cost_model` left at its `"gate"` default, a vismap is
-built even for decks whose agents all start fully familiar. The gate itself no
-longer reads it — the sight criterion is computed from the route polyline
-(`b16e900`) — so what the precompute now buys is the line-of-sight diagnostic
-and sign legibility for the cognitive map. It is a precompute the deck used to
-skip; `--vis-cache` makes it a one-off. See
+**The default route-choice model does not trigger the visibility model.** The
+gate reads no vismap: `b16e900` moved the sight criterion onto the route
+polyline, and `89d13d4` removed the `_gate_needs_sight` precompute a gate deck
+used to trigger. A deck whose agents all start fully familiar therefore builds
+no visibility model at all unless you pass `--vis-cache` or
+`--clear-air-visibility`. A deck with discovery agents builds one either way,
+because they need it to learn the graph. See
 [route-cost-gate.md](route-cost-gate.md).
 
 ### Tenability (FIC slowdown + FED incapacitation)

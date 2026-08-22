@@ -61,7 +61,7 @@ graph.
 
 ## How the gate decides
 
-> **This page describes `25a6f8f`.**
+> **This page describes `081380b`.**
 
 Per agent, per reevaluation tick:
 
@@ -191,6 +191,112 @@ among doors satisfying `K_ave_Door < ABS(FED_DOOR_CRIT)` = 0.03 /m
 `:5262`). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
 below. See [model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door).
 
+### The diversion is a departure from FDS+Evac, not a reproduction of it
+
+The threshold is borrowed; **the place the quantity is used is not**, and that
+difference is what produces the diversion the model exists for.
+
+In FDS+Evac's first three tiers the rank is `T_tmp` — a time in tier 1 when
+`FAC_DOOR_QUEUE` is active, a plain L2 or L1 distance norm otherwise — and
+`K_ave_Door` enters only as the boolean admission test
+`L2_tmp < ABS(FED_DOOR_CRIT)`:
+
+```fortran
+IF (T_tmp < L2_min .AND. L2_tmp < ABS(FED_DOOR_CRIT)) THEN   ! :16265, :16354, :16401
+   L2_min = MAX(0.0_EB, T_tmp)
+   i_tmp  = i
+END IF
+```
+
+Smoke can move a door between tiers, or out of the admitted set; it cannot
+reorder the doors inside a tier, and geometry does not reorder itself. Here
+`tau` **is** the ordering, at every tick and for every candidate.
+
+**One qualification, and it matters.** Smoke is not absent from FDS+Evac's
+ordering everywhere: the tier-4 last-resort branch minimises `L2_tmp` directly
+(`IF (L2_tmp < L2_min)`, `:16467`), and under the default `FED_DOOR_CRIT < 0`
+that `L2_tmp` is `tau/6`. So the reference does rank on smoke — but only after
+tiers 1-3 have all failed to find any admitted door, only over doors already
+known or visible, on a bee-line (or L1) distance to the door rather than a
+walked route, and with a door struck out there struck out *permanently*
+(`:16463-16465`). Stated exactly: **pyFDS-Evac promotes FDS+Evac's last-resort
+ranking criterion to its primary one, and drops the memory that makes it stable
+there.** "Smoke never enters FDS+Evac's ordering" is too strong and should not
+be written; "smoke never enters the ordering until every smoke-free tier is
+exhausted" is what the source supports.
+
+**The measured consequence, and what it is not.** On `l_corridor` the model
+diverts 18 of 100 agents to the longer, cleaner route. The reference criterion
+would not: tiers 1-3 rank on distance, both doors clear the `K_ave < 0.03 /m`
+admission test until the smoke is well developed, and the near exit is nearer
+throughout — so essentially every occupant goes near, roughly 100/0. **That
+100/0 is a reasoned prediction from the source, not a measured FDS+Evac run.**
+No run of the reference criterion on this deck exists here. The nearest
+empirical proxy is the deck's own additive model, which also ranks on a
+distance-like composite and does evacuate 100/0 (see [Evidence](#evidence)) —
+a proxy, not the same criterion. The diversion stands or falls on its own
+merits, not on fidelity to the reference.
+
+**A geometric bias rides along with the change of quantity.** FDS+Evac applies
+its threshold to a straight-line `d`; pyFDS-Evac applies it to the walked
+polyline `L`, and `L/d` is not the same on every route. On `l_corridor` from the
+spawn centroid (11.5, 15.0). Both legs are computed corner-to-corner along the
+corridor centreline, which is why they come out a metre under the 26 m / 46 m
+node-to-node figures the [Evidence](#evidence) section quotes — those run
+spawn-polygon to exit-polygon through the graph's own nodes:
+
+| route | walked `L` | bee-line `d` | `L/d` |
+|---|---|---|---|
+| near (exit A, (0, 1.5)) | 25.0 m | 17.7 m | **1.410** |
+| far (exit B, (45, 26.5)) | 45.0 m | 35.4 m | **1.271** |
+
+At equal `K_ave` the polyline form is therefore about 11 % (1.410 / 1.271)
+stricter on the near route than the far one, purely from geometry — a
+systematic tilt toward the diversion that no smoke measurement put there. The
+tilt is against the L2 bee line specifically; against the L1 norm FDS+Evac uses
+for non-visible doors (`:16460`) it vanishes on this deck, because both
+corridors are axis-aligned and the L1 distance equals the polyline exactly. The
+sign and size of the bias on other geometries have not been measured.
+
+### Route choice is an optimality bound, not a perception-limited model
+
+Issue [#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125). Two assumptions
+apply to the same agent on the same tick and point in opposite directions:
+
+- **The cognitive map assumes the agent does not know the building.** A
+  `familiarity = 0` agent routes only over `cognitive_subgraph` and does not
+  know an exit exists until it reads a sign — through `VisibilityModel`, which
+  is genuinely perception-limited (obstruction-aware sight lines, sign facing,
+  extinction along the line).
+- **Route choice assumes the agent knows the smoke field.** To choose among the
+  exits it does know, it integrates `tau = K_ave * L_remaining` over the whole
+  remaining route, including legs it has never visited and corners it cannot see
+  past, and with `anticipate = True` and `foresight_horizon_s = inf` at times
+  that have not happened yet. The extinction sampler is global; the cognitive
+  map never touches it.
+
+These are different kinds of knowledge — topology versus state — so it is not a
+formal contradiction. It is still not a coherent position, and it is sharpest
+exactly where the discovery tier's modelling is most careful.
+
+**What this affects.** *Not* map growth: what an agent learns and when runs
+through `VisibilityModel` alone, so results about map expansion, exploration
+order, wander behaviour and the lost-exit failure mode stand. What it undercuts
+is any claim that a **discovery agent's route choice** is perception-limited. It
+is not.
+
+**So name what the model is.** Route choice here is an **optimality bound**:
+what an evacuee with perfect knowledge of the smoke field would choose *over the
+part of the building it happens to know*. Not "what a perfectly informed
+evacuee would choose" — the topology restriction is real and still binds. That
+bound is a legitimate and useful thing to publish, and the discovery tier
+remains a perception-limited model of *wayfinding*; but the two are different
+claims and only one of them is about smoke.
+
+Nothing is fixed here. `foresight_horizon_s` is the one lever already shipped
+that bounds half of it (the temporal half); it defaults to `inf`. #125 records
+the three options and evaluates none.
+
 ### Two asymmetries favour the exit the agent already walks to
 
 `tau_return_margin` (default 0.8) is a deadband on **feasibility**. The current
@@ -215,9 +321,12 @@ place unless a rival is clearly cleaner rather than momentarily cleaner.
 is applied as `L2_tmp = FAC_DOOR_OLD2 * L2_tmp` to the current door at `:16290`
 and `:16467` — and at `:16467` that `L2_tmp` is the `tau/6` of the tier-4 test,
 i.e. the same quantity, discounted in the same place, inside the loop that
-minimises it to pick a door. Note the shipped code comment in `route_graph.py`
-instead cites `FAC_DOOR_WAIT` at `evac.f90:1503`; `FAC_DOOR_WAIT` is at `:1505`,
-and it discounts the current door's *travel time* (`T_tmp`), not its smoke.
+minimises it to pick a door. The shipped comment on `tau_of` in `route_graph.py`
+cites that provenance correctly since `9508181`; an earlier version cited
+`FAC_DOOR_WAIT`, which is at `:1505` and discounts the current door's *travel
+time* (`T_tmp`), not its smoke. `FAC_DOOR_WAIT` is still the correct citation for
+`exit_switch_anchor` and `_PATH_IMPROVEMENT_THRESHOLD`, which are time
+comparisons, and the code cites it only there.
 
 **A reviewer will ask why both.** They act on different stages — one on the
 feasible set, one on the order within it — but they have not been measured
@@ -539,8 +648,39 @@ Setting them requires constructing `RouteCostConfig` in Python.
 ## Known limitations
 
 These are real and documented, not hypothetical. Details and measurements are
-in [gate-model-review-notes.md](gate-model-review-notes.md).
+in [gate-model-review-notes.md](gate-model-review-notes.md). This section is the
+single consolidated statement; anyone assessing the model should be able to read
+it alone.
 
+**Two open issues carry the unresolved ones.**
+
+- **[#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124) — route
+  choice oscillates at a genuine optical-depth crossover.** `l_corridor`'s 34
+  returns, 31 of them in `t = 40-60 s`, the window in which the two routes' `tau`
+  cross over; at `t = 40 s` their distributions overlap by 61 %. The crossover
+  swings through 1.5-3x and sails past any
+  hysteresis constant that would not also blind the model to real change. What is
+  missing is *commitment* — hysteresis in time or in progress along a leg — not a
+  bigger threshold. Three attempts are already recorded as failures below.
+- **[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125) — route
+  choice is not perception-limited.** See
+  [Route choice is an optimality bound](#route-choice-is-an-optimality-bound-not-a-perception-limited-model).
+  It bounds what the discovery tier can be said to demonstrate about route
+  choice; it does not touch map growth.
+
+**And the model is a departure, not a reproduction.** `tau` is the ordering here;
+in FDS+Evac smoke ranks only inside the tier-4 last resort, over known-or-visible
+doors, on a bee line, with permanent strike-out. See
+[The diversion is a departure](#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it).
+The 100/0 attributed to the reference criterion on `l_corridor` is a reasoned
+prediction from `evac.f90`, not a measured run of it.
+
+- **The `L/d` bias tilts the criterion by geometry alone.** `tau` is measured on
+  the walked polyline where the reference measures on a straight line, and
+  `L/d` is 1.41 on `l_corridor`'s near route against 1.27 on the far one — so at
+  equal `K_ave` the polyline form is about 11 % stricter on the near route, in
+  the same direction as the diversion the deck is used to demonstrate. Not
+  measured on any other geometry.
 - **The ordering is in optical depth and the anchor is partly in time.** The
   ordering is `tau`; `_anchor_allows` falls through to `rank_cost`, a travel
   time, whenever the two routes' `tau` are within the deadband. So the two

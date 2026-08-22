@@ -168,10 +168,46 @@ strikes the door out ("too much smoke"), and `L2_tmp < L2_min` picks
 the winner among those left.  The criterion vetoes *and* ranks, with
 `FAC_DOOR_OLD2 = 0.9` favouring the door already targeted.
 
-pyFDS-Evac splits those jobs.  Dose and sight both veto — dose when
-`fed_max_route` exceeds `fed_rejection_threshold`, sight on the rule
-above — and neither ranks; travel time ranks the survivors.  It also
-applies both criteria at once rather than choosing one by a sign.
+pyFDS-Evac splits those jobs differently.  Dose vetoes only: a route above
+`fed_rejection_threshold` is removed and dose never makes one exit outrank
+another.  Optical depth does both, as in tier 4 — it refuses a route above
+`tau_max` *and* orders the survivors, with travel time breaking ties.  It also
+applies dose and smoke at once rather than choosing one by a sign.
+
+#### Where the quantity is used: the decisive difference
+
+The threshold `tau > 6` is borrowed from tier 4 with a citation.  **The place
+the quantity is used is not**, and that is what changes the behaviour.
+
+In FDS+Evac's first three tiers the rank is `T_tmp` — a time in tier 1 when
+`FAC_DOOR_QUEUE` is active, a plain L2 or L1 distance norm otherwise — while
+`K_ave_Door` appears only as a boolean admission test:
+
+```fortran
+IF (T_tmp < L2_min .AND. L2_tmp < ABS(FED_DOOR_CRIT)) THEN   ! :16265, :16354, :16401
+```
+
+A change in the smoke field can move a door between tiers or out of the admitted
+set, but it cannot reorder the doors inside a tier — and geometry does not
+reorder itself.  Smoke enters the ordering only in the **tier-4 last resort**
+(`IF (L2_tmp < L2_min)`, `:16467`), reached once no smoke-free door is available,
+looping only over doors already known or visible, scoring a bee-line or L1
+distance, and striking a refused door out permanently (`:16463-16465`).
+
+pyFDS-Evac promotes that last-resort ranking criterion to its primary one, over
+all candidates, at every tick, on the walked polyline, and drops the permanent
+strike-out that makes it stable in the reference.  Measured consequence on
+`assets/l_corridor`: this model diverts **18 of 100** agents to the longer,
+cleaner route, where the reference criterion — distance ranking, both doors
+clearing the 0.03 /m admission test until the smoke is well developed — would
+send essentially everyone to the near exit, roughly 100/0.  **That 100/0 is a
+prediction reasoned from `evac.f90`, not a measured run of FDS+Evac**; the
+deck's own additive model is the nearest empirical proxy and does evacuate
+100/0.  The diversion is a deliberate departure, and stands or falls on its own
+merits.  See
+[route-cost-gate.md](route-cost-gate.md#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it)
+for the accompanying `L/d` geometric bias (1.41 near against 1.27 far on that
+deck).
 
 ### pyFDS-Evac
 
@@ -240,9 +276,9 @@ group.
 | **Cost function** | `T_i = beta_k * lambda_i + tau_i` (queueing + walking time) [9] Eq. 6 | gate: route optical depth `K_ave * L`, with travel time (+ `w_queue` x queue time) as tie-break; additive: `length * (1 + w_smoke * K) + w_fed * FED` |
 | **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5262, :16149); the `0.5 x d` visibility rule is the tier-4 last resort (:16463), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
 | **Congestion** | Modelled: queueing time depends on count of closer agents heading to same exit | Optional (`w_queue`), off by default; a global tally of agents targeting the exit |
-| **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered |
+| **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on *topology* only — smoke is sampled globally, so a discovery agent's route choice is not perception-limited ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)) |
 | **Social behaviour** | Herding and follower agent types observe neighbours | Not modelled |
-| **Smoke in cost** | Binary: disturbing conditions at exit affect preference group, but extinction is not a continuous term in the cost function | gate: availability *and* ordering, both on route optical depth; additive: continuous weighted term |
+| **Smoke in cost** | Admission only in tiers 1–3 (`K_ave_Door < 0.03 /m`, the rank stays `T_tmp`); smoke ranks doors only in the tier-4 last resort (`:16467`), over known-or-visible doors, with permanent strike-out | gate: availability *and* ordering, both on route optical depth, for every candidate at every tick and with no memory; additive: continuous weighted term |
 | **FED in cost** | Not in cost function; only used for incapacitation at FED >= 1.0 | Veto threshold under both models (never a ranking term); additionally a `w_fed * FED_max` term under additive |
 | **Distance metric** | L2 for visible exits, L1 (Manhattan) for non-visible exits; direct agent-to-exit | Polyline arc length along corridor geometry (via JuPedSim RoutingEngine); routes through intermediate stages |
 | **Anticipation** | `FED_max_Door * dist / Speed`: extrapolation from presently observable conditions | `anticipate` prices each segment at the agent's arrival time from the FDS solution itself — an upper bound on foresight, not FDS+Evac's model |

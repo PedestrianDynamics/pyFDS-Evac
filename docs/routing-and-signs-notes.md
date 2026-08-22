@@ -97,7 +97,11 @@ Symbols used below:
    marked **rejected**. NOTE: FED currently appears twice — as the `w_fed` penalty
    *and* as this hard cut — which is conceptually muddled (see the toxicity notes).
 
-7. **Visibility is a hard reject too** (details in Part 2).
+7. **Visibility is not a reject at all under the gate.** Sign legibility decides
+   what enters the agent's cognitive map, and the map decides what Dijkstra can
+   see — an unknown exit is absent from the graph, not present-and-vetoed. The
+   per-segment `all segments non-visible` reject survives under `"additive"`
+   only. Details in Part 2, points 5 and 7.
 
 8. **Routes are sorted; the agent takes the best.**
    Sort key (`route_graph.py:1322`), additive:
@@ -241,10 +245,12 @@ Symbols used below:
    holds, provided the config contains sign descriptors:
    - the deck has agents below full familiarity (they need it to discover), or
    - `--vis-cache <path>` was passed, or
-   - rerouting is on and `cost_model` is `"gate"` — i.e. the default, which is
-     why familiarity-1.0 decks now pay for a vismap precompute they used to
-     skip (`_gate_needs_sight`). `--vis-cache` makes it a one-off.
    - `--clear-air-visibility` forces it on with no fire.
+
+   The gate no longer triggers it. `b16e900` moved the sight criterion onto the
+   route polyline and `89d13d4` removed the `_gate_needs_sight` precompute, so a
+   familiarity-1.0 gate deck builds no visibility model and runs without a
+   vismap.
 
    `--no-visibility` turns it off entirely; agents then learn every neighbour of
    each node they reach by contact. With `--fds-dir` the model reads the FDS
