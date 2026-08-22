@@ -150,7 +150,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--heat-fed-threshold",
         type=float,
         default=1.0,
-        help="Median cumulative heat FED (ISO TS 13571 eq. 5) at which an "
+        help="Median cumulative heat FED (SFPE Handbook Eq. 63.44) at which an "
         "agent is thermally incapacitated (default: 1.0). Independent of "
         "--fed-threshold (toxic gas) -- see fed.py's TenabilityConfig",
     )

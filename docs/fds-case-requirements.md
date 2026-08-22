@@ -28,7 +28,7 @@ quantity name `load_slice_sampler` looks up
 |-------|-------|-----------|
 | Extinction coefficient | smoke-speed, visibility gating, GUI smoke layer | `IndexError` when `--fds-dir` is given without `--constant-extinction` |
 | CO **and** CO2 **and** O2 | FED toxic dose | **FED is switched off and the run continues** (see below) |
-| TEMPERATURE | heat FED (ISO TS 13571 eq. 5) | **heat FED is switched off and the run continues** (see below) |
+| TEMPERATURE | heat FED (SFPE Handbook Eq. 63.44) | **heat FED is switched off and the run continues** (see below) |
 
 It is all three gases or none of them; there is no partial FED. TEMPERATURE
 is independent of that gate — it needs neither CO/CO2/O2 nor any `&REAC`

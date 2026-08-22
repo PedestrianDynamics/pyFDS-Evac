@@ -179,24 +179,25 @@ def default_fic(inputs: DefaultFedInputs) -> float:
 
 @dataclass(frozen=True)
 class HeatFedInputs:
-    """Store gas-phase temperature for the ISO TS 13571 heat FED model.
+    """Store gas-phase temperature for the SFPE Handbook heat FED model.
 
     Tracked independently of ``DefaultFedInputs`` -- heat and toxic gases
     incapacitate through different physiological mechanisms (thermal injury
-    vs. asphyxiation), so ISO 13571 keeps their doses as two separate running
-    totals rather than summing them (see ``TenabilityConfig``).
+    vs. asphyxiation), so the SFPE Handbook keeps their doses as two separate
+    running totals rather than summing them (see ``TenabilityConfig``).
     """
 
     temperature_celsius: float = 20.0
 
 
 def _heat_fed_rate_per_minute(temperature_celsius: float) -> float:
-    """Return the convective-heat FED contribution in 1/min (ISO TS 13571 eq. 5).
+    """Return the convective-heat FED contribution in 1/min (SFPE Handbook Eq. 63.44).
 
     rate [1/min] = T[deg C] ** 3.4 / 5e7
 
     Not in the FDS+Evac guide like the other terms in this module -- this is
-    ISO TS 13571 eq. 5, scoped to convective heat from elevated gas
+    SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 63 (Purser &
+    McAllister), Eq. 63.44, scoped to convective heat from elevated gas
     temperature only (radiant heat is a separate, unmodelled term). Already
     negligible at ambient temperature, so no floor is applied beyond the
     domain guard.
@@ -207,7 +208,7 @@ def _heat_fed_rate_per_minute(temperature_celsius: float) -> float:
 
 
 def default_heat_fed_rate_per_minute(inputs: HeatFedInputs) -> float:
-    """Return the ISO TS 13571 heat FED accumulation rate in 1/min."""
+    """Return the SFPE Handbook (Eq. 63.44) heat FED accumulation rate in 1/min."""
     return _heat_fed_rate_per_minute(inputs.temperature_celsius)
 
 
@@ -229,11 +230,11 @@ class TenabilityConfig:
       speed is driven to zero and the agent remains as a static
       obstacle.
     - Binary heat incapacitation when ``FED_HEAT_cumulative >=
-      heat_fed_threshold`` (ISO TS 13571 eq. 5), tracked as a completely
+      heat_fed_threshold`` (SFPE Handbook Eq. 63.44), tracked as a completely
       separate running total from the gas ``fed_threshold`` above -- heat
-      and toxic gases incapacitate through different mechanisms, so ISO
-      13571 does not sum them into one dose. An agent is incapacitated the
-      instant *either* threshold is crossed.
+      and toxic gases incapacitate through different mechanisms, so the
+      SFPE Handbook does not sum them into one dose. An agent is
+      incapacitated the instant *either* threshold is crossed.
     """
 
     enable_fic_speed: bool = True
@@ -648,7 +649,7 @@ class FdsHeatField:
 
 
 class DefaultHeatFedModel:
-    """Combine sampled gas-phase temperature with the ISO TS 13571 heat FED equation."""
+    """Combine sampled gas-phase temperature with the SFPE Handbook heat FED equation."""
 
     def __init__(self, field: FdsHeatField, config: DefaultFedConfig):
         """Store the temperature field sampler and FED runtime settings."""

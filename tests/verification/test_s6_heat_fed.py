@@ -1,4 +1,4 @@
-"""S6 -- heat FED lethality (ISO TS 13571 eq. 5) and the OR incapacitation check.
+"""S6 -- heat FED lethality (SFPE Handbook Eq. 63.44) and the OR incapacitation check.
 
 Tier A already pins the heat FED equation to machine precision; this scenario
 verifies the *wiring* the gas-FED suite (S1) can't exercise: gas and heat are
@@ -69,8 +69,8 @@ def test_null_field_control_no_meaningful_accumulation():
 
     Unlike the gas null-field control (CO=0 gives an exact-zero rate via a
     deliberate hypoxia gate in fed.py), ambient temperature has no artificial
-    floor on the heat FED rate -- eq. 5 is merely self-limiting, by design
-    (see fed.py's TenabilityConfig / the user-supplied ISO TS 13571 source).
+    floor on the heat FED rate -- Eq. 63.44 is merely self-limiting, by
+    design (see fed.py's TenabilityConfig / SFPE Handbook Ch. 63, Eq. 63.44).
     So this control asserts the accumulated dose stays negligible over the
     run, not exactly zero -- the honest claim the model actually makes.
     """

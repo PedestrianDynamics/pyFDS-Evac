@@ -40,7 +40,7 @@ class FdsQuantityInventory:
         return {"co", "co2", "o2"}.issubset(self.canonical_slice_names())
 
     def supports_heat_fed(self) -> bool:
-        """Return whether the heat FED (ISO TS 13571 eq. 5) path can run."""
+        """Return whether the heat FED (SFPE Handbook Eq. 63.44) path can run."""
         return "temperature" in self.canonical_slice_names()
 
 

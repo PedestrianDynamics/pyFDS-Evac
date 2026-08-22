@@ -26,7 +26,7 @@ FDS run.
 | **S1** | `test_s1_corridor_fed.py` | FED lethality | incapacitation at closed-form `t* = 60·D/rate(CO)` within one FED tick; null-field control accrues 0; log-normal population endpoint *(slow)*; aggregate reproducibility *(slow)* |
 | **S2** | `test_s2_corridor_speed.py` | smoke-speed | applied factor == closed-form Lund / Fridolf exactly; laws diverge; `K=0` → factor 1; egress scales `1/factor` |
 | **S4** | `test_s4_tjunction_reroute.py` | dynamic rerouting | control 0 switches; smoke forces every agent `B→A` (never reverse); latency bound; reproducible count *(slow)* |
-| **S6** | `test_s6_heat_fed.py` | heat FED (ISO TS 13571 eq. 5) | incapacitation at closed-form `t*` within one tick, `incapacitation_cause == "heat"`; ambient null-field control stays negligible (not exactly 0 — eq. 5 has no artificial floor); OR-incapacitation fires on the faster of the gas/heat tracks. Heat does not yet affect routing (open design question) |
+| **S6** | `test_s6_heat_fed.py` | heat FED (SFPE Handbook Eq. 63.44) | incapacitation at closed-form `t*` within one tick, `incapacitation_cause == "heat"`; ambient null-field control stays negligible (not exactly 0 — Eq. 63.44 has no artificial floor); OR-incapacitation fires on the faster of the gas/heat tracks. Heat does not yet affect routing (open design question) |
 
 Pending (see `Gregory.md.txt`): **S3** visibility gating, **S5** cognitive map,
 **D** gradient (live-position sampling), **E** asymmetric-room transpose.

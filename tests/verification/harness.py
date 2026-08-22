@@ -167,7 +167,7 @@ def deterministic_heat_tenability(heat_fed_threshold: float = 1.0) -> Tenability
 
 
 def heat_fed_rate_per_min(temperature_celsius: float) -> float:
-    """Closed-form heat FED rate (1/min), ISO TS 13571 eq. 5.
+    """Closed-form heat FED rate (1/min), SFPE Handbook Eq. 63.44.
 
     Re-derived here (not imported from ``pyfds_evac.core.fed``) so the test
     catches an integration regression independently of the model's own

@@ -166,7 +166,7 @@ _HELP_TEXT: Dict[str, str] = {
     "heat_susceptibility_sigma": "Spread of how differently people tolerate heat exposure. Reuses the "
     "toxic-gas default as a starting assumption — there's no published "
     "population data for heat specifically.",
-    "heat_fed_threshold": "Heat dose (ISO TS 13571) at which a typical person is thermally "
+    "heat_fed_threshold": "Heat dose (SFPE Handbook Eq. 63.44) at which a typical person is thermally "
     "incapacitated — tracked separately from toxic gas dose; 1.0 is the "
     "standard tenability limit.",
     "enable_rerouting": "Let agents rethink their route mid-evacuation as smoke and crowding "

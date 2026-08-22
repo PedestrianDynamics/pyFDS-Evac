@@ -1,4 +1,4 @@
-"""Tier A verification tests for the ISO TS 13571 heat (convective) FED model.
+"""Tier A verification tests for the SFPE Handbook heat (convective) FED model.
 
 Each reference value is rebuilt from raw formulae (math/random only) so the
 tests verify ``pyfds_evac.core.fed``'s heat FED symbols against an independent
@@ -6,8 +6,9 @@ computation rather than echoing the module's own internals.  See
 specs/012-model-verification SPEC.md section "2. FED toxicity and tenability"
 for the sibling gas-FED suite this mirrors (``test_fed_verif.py``).
 
-Formula under test, ISO TS 13571 eq. 5 (not in the FDS+Evac guide, unlike the
-gas terms -- see the paper quoted in ``pyfds_evac/core/fed.py``):
+Formula under test, SFPE Handbook Ch. 63 Eq. 63.44 (not in the FDS+Evac
+guide, unlike the gas terms -- see the paper quoted in
+``pyfds_evac/core/fed.py``):
 
     rate [1/min] = T[deg C] ** 3.4 / 5e7
 """
@@ -66,7 +67,7 @@ def test_a3_2_rate_is_zero_only_at_or_below_zero_degrees():
 def test_a3_2_rate_is_nonzero_and_small_at_moderate_temperature():
     """Confirms there is deliberately NO artificial floor anywhere above 0C.
 
-    ISO TS 13571 eq. 5 has no built-in validity cutoff -- a moderate exposure
+    SFPE Handbook Eq. 63.44 has no built-in validity cutoff -- a moderate exposure
     still accrues some dose, just slowly, self-limiting by the exponent alone.
     """
     rate_below = default_heat_fed_rate_per_minute(

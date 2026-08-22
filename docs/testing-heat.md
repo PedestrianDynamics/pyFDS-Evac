@@ -3,7 +3,7 @@
 ## Purpose
 
 This test case validates the heat FED (Fractional Effective Dose from
-convective heat, ISO TS 13571 eq. 5) accumulation logic in the pyFDS-Evac
+convective heat, SFPE Handbook Ch. 63 Eq. 63.44) accumulation logic in the pyFDS-Evac
 pipeline against hand-calculated predictions, using a simplified scenario
 with a spatially **homogeneous** (uniform) gas-phase temperature field. It
 is the direct sibling of [`docs/testing-homogeneous.md`](testing-homogeneous.md)
@@ -78,7 +78,7 @@ FED trace as a speed trace.
 ## Method
 
 1. Hand-calculate the expected FED_HEAT(t) curve for each of the three
-   temperatures (100, 150, 200 °C) using ISO TS 13571 eq. 5 (see
+   temperatures (100, 150, 200 °C) using SFPE Handbook Eq. 63.44 (see
    `scripts/fed_heat_hand_calc.py`).
 2. Run the full FDS → fdsreader → JuPedSim pipeline on each of the three
    scenarios.
@@ -89,13 +89,16 @@ FED trace as a speed trace.
 
 ## Hand-Calculated Heat FED Reference
 
-Computed with `scripts/fed_heat_hand_calc.py`, using ISO TS 13571 eq. 5 directly —
-quoted from the user-supplied source, not derived, and **not** in
+Computed with `scripts/fed_heat_hand_calc.py`, using SFPE Handbook Eq. 63.44
+directly — *SFPE Handbook of Fire Protection Engineering*, 5th ed., Ch. 63
+"Assessment of Hazards to Occupants from Smoke, Toxic Gases, and Heat"
+(Purser & McAllister), p. 2382, quoted rather than derived. **Not** ISO TS
+13571 (the formula was previously miscited as that standard) and **not** in
 `materials/FDS+EVAC_Guide.pdf` (that document has no heat term at all).
 
 ### Formula used
 
-**FED from convective heat** (ISO TS 13571 eq. 5), T in °C, Δt in minutes:
+**FED from convective heat** (SFPE Handbook Eq. 63.44), T in °C, Δt in minutes:
 
 ```
 FED_HEAT = sum_{t1}^{t2} [ T^3.4 / 5e7 ] * dt

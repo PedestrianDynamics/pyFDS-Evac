@@ -102,7 +102,7 @@ def _build_fed_model(opts: Any, log: Logger):
 
 
 def _build_heat_fed_model(opts: Any, log: Logger):
-    """Build the heat FED (ISO TS 13571 eq. 5) model when a TEMPERATURE slice exists."""
+    """Build the heat FED (SFPE Handbook Eq. 63.44) model when a TEMPERATURE slice exists."""
     if not opts.fds_dir:
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
