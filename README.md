@@ -13,7 +13,9 @@ The project includes:
   of the gas track -- an agent is incapacitated when either crosses its own
   threshold, because thermal injury and asphyxiation are different mechanisms
   and the standard does not sum them. Radiant heat is not modelled, and heat
-  does not enter route choice.
+  does not enter route choice. It also does not slow an agent down: unlike
+  smoke and irritants, heat has no effect at all until the dose is reached, at
+  which point the agent stops.
 - Dynamic smoke-based route rerouting with congestion awareness
 - Sign-visibility-gated route rejection (fdsvismap integration)
 - Per-agent cognitive maps with `full` and `discovery` familiarity tiers

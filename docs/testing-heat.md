@@ -24,6 +24,14 @@ only. Heat does not currently factor into route cost or rejection — that
 routing question is deliberately deferred pending further design discussion,
 so there is nothing routing-related to validate here.
 
+Heat also has no effect on walking speed below the threshold. Extinction
+(Frantzich–Nilsson) and irritants (FIC) both degrade speed continuously; heat
+does nothing at all until the dose is reached and then sets the target speed to
+zero. That is faithful to the standard, which gives a tolerance time rather
+than a performance decrement — but it means an agent walks unimpeded through a
+200 °C layer for the 45 s the dose takes to accumulate, so do not read a heat
+FED trace as a speed trace.
+
 ## Test Setup
 
 - **Geometry:** Sealed room (no vents/openings), so temperature cannot
