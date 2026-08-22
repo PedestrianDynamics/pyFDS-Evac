@@ -534,13 +534,12 @@ rerouting bug under by-number placement
 ## Agent scalars for fds-viewer
 
 When `--output-sqlite` is combined with FED computation, the SQLite also carries
-an optional `agent_scalars(frame, id, fed, heat_fed, speed)` table. The base JuPedSim
-schema is untouched. Note `heat_fed` was inserted **before** `speed` rather
-than appended, so a consumer doing `SELECT *` positionally -- fds-viewer among
+an optional `agent_scalars(frame, id, fed, heat_fed, speed)` table. The base
+JuPedSim schema is unchanged, so `jupedsim` replay and Web-Based-JuPedSim still
+read the file. Note `heat_fed` was inserted **before** `speed` rather than
+appended, so a consumer reading positionally with `SELECT *` -- fds-viewer among
 them -- must be updated with this release; name your columns and it does not
-matter.
-schema is unchanged, so `jupedsim` replay and Web-Based-JuPedSim still read the
-file. [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) reads this
+matter. [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) reads this
 table to colour agents by FED dose or speed in a 3D scene alongside the FDS
 smoke.
 

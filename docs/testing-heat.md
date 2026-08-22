@@ -93,11 +93,16 @@ quoted from the user-supplied source, not derived, and **not** in
 FED_HEAT = sum_{t1}^{t2} [ T^3.4 / 5e7 ] * dt
 ```
 
-Under this test's constant-T exposure, the accumulator reduces to an exact
-closed form, `FED_HEAT(t) = (T^3.4 / 5e7) * t_min` — `scripts/fed_heat_hand_calc.py`
-still accumulates it per-timestep (rather than as a single multiplication) so
-it can be driven directly off a real FDS dump's timestamps, structurally
-matching the CO hand-calc script (`fed_hand_calc.py`).
+Under this test's constant-T exposure the accumulator reduces to an exact
+closed form, `FED_HEAT(t) = (T^3.4 / 5e7) * t_min`, and that is what
+`scripts/fed_heat_hand_calc.py` evaluates — one multiplication per temperature,
+not a per-timestep sum. The sum is what the *engine* does, over the FDS dump's
+own timestamps; the point of the closed form is to be an independent check on
+it, so the reference deliberately does not reproduce the engine's loop.
+
+Driving the reference off a real dump would only be necessary for a
+time-varying field. These decks hold temperature constant precisely so that it
+is not.
 
 | Temperature | FED = 0.3 (onset) | FED = 1.0 (incapacitation) |
 |-------------|-------------------|-----------------------------|
