@@ -10,10 +10,24 @@
 
 &TIME T_END=1000 /
 
-! Explicit ambient baseline (the CO ladder decks omit this and rely on the
-! FDS default of 20 C; stated here for clarity since this deck's entire
-! point is the initial temperature).
+! Ambient is the *initial* condition only. The boundaries below hold the
+! prescribed temperature; without them FDS applies its default INERT wall at
+! TMP_FRONT = TMPA, which would pin ~2160 m2 of enclosure surface at 20 C
+! against the prescribed gas and drain the room. That is the one place the CO
+! ladder's layout cannot be copied: species do not diffuse into inert walls,
+! temperature does.
 &MISC TMPA=20.0 /
+
+! Adiabatic boundaries on all six faces: no heat flux through any surface, so
+! the prescribed field is genuinely time-invariant and the closed-form rate
+! holds for the whole run.
+&SURF ID='ADIABATIC_WALL', ADIABATIC=.TRUE. /
+&VENT MB='XMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='XMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMAX', SURF_ID='ADIABATIC_WALL' /
 
 ! No &SPEC/&REAC needed: TEMPERATURE is a core solved gas-phase variable,
 ! not a species yield -- unlike the CO ladder, this deck tracks no species
@@ -29,9 +43,10 @@
 &SLCF PBZ=2.0, QUANTITY='TEMPERATURE' /
 &SLCF PBZ=2.5, QUANTITY='TEMPERATURE' /
 
-! Vertical slices, another way to check homogeneity
-&SLCF PBY=15.0, QUANTITY='TEMPERATURE' /
-&SLCF PBX=15.0, QUANTITY='TEMPERATURE' /
+! No vertical slices: load_slice_sampler picks the slice whose mid-height is
+! nearest --smoke-slice-height, and a vertical slice has zero extent in one
+! axis, so if one ever won that tie every sample would miss and the run would
+! silently report ambient everywhere.
 
 ! Temperature readings at corners and center, should all read ~150 C
 &DEVC XB= 8, 8, 8, 8,2,2,   QUANTITY='TEMPERATURE', ID='TEMP_corner_SW' /

@@ -14,6 +14,7 @@ gas terms -- see the paper quoted in ``pyfds_evac/core/fed.py``):
 
 import math
 import random
+from dataclasses import replace
 
 import pytest
 
@@ -148,19 +149,59 @@ def test_a3_5_deterministic_heat_mode_returns_threshold_exactly():
 
 
 def test_a3_5_gas_and_heat_threshold_draws_are_independent():
-    """Locks in that the two tracks draw independently, not from a shared stream.
+    """The two tracks draw from independent streams, one per agent.
 
-    Regression guard: if a future refactor accidentally shares one RNG call
-    between the gas and heat draws, the two sequences would become
-    correlated (e.g. identical after a fixed seed) instead of independent.
+    The engine seeds them separately -- ``seed ^ 0x5EED1`` for gas and
+    ``seed ^ 0x5EED2`` for heat (``scenario.py``) -- so the test mirrors that
+    rather than drawing both from one generator. Drawing 200 of each from a
+    single shared ``Random`` and asserting the lists differ is true of any
+    generator, including one where the heat sampler is the gas sampler, so it
+    would not catch the defect it names.
+
+    Independence is checked where it matters: correlation across a population,
+    with each agent's two draws taken from its own two streams.
     """
+    import math
+
     from pyfds_evac.core.fed import sample_incapacitation_threshold
 
     cfg = TenabilityConfig()
-    rng = random.Random(555)
-    gas_draws = [sample_incapacitation_threshold(cfg, rng) for _ in range(200)]
-    heat_draws = [sample_heat_incapacitation_threshold(cfg, rng) for _ in range(200)]
-    assert gas_draws != heat_draws
+    n = 1000
+    gas = [
+        sample_incapacitation_threshold(cfg, random.Random(i ^ 0x5EED1))
+        for i in range(n)
+    ]
+    heat = [
+        sample_heat_incapacitation_threshold(cfg, random.Random(i ^ 0x5EED2))
+        for i in range(n)
+    ]
+
+    # Log-space, because the draws are log-normal and the correlation of the
+    # underlying normals is what "independent stream" actually means.
+    lg = [math.log(x) for x in gas]
+    lh = [math.log(x) for x in heat]
+    mg, mh = sum(lg) / n, sum(lh) / n
+    cov = sum((a - mg) * (b - mh) for a, b in zip(lg, lh)) / n
+    sg = (sum((a - mg) ** 2 for a in lg) / n) ** 0.5
+    sh = (sum((b - mh) ** 2 for b in lh) / n) ** 0.5
+    r = cov / (sg * sh)
+
+    assert abs(r) < 0.15, f"gas and heat draws are correlated: r={r:.3f}"
+
+    # Independent streams are only half of it. The heat sampler must also read
+    # the *heat* configuration: aliasing it to the gas sampler leaves the
+    # streams as independent as ever, so correlation alone cannot catch that.
+    # Separate the two medians by 5x and check which one the draws land on.
+    split = replace(cfg, fed_threshold=1.0, heat_fed_threshold=5.0)
+    heat_split = sorted(
+        sample_heat_incapacitation_threshold(split, random.Random(i ^ 0x5EED2))
+        for i in range(n)
+    )
+    median = heat_split[n // 2]
+    assert 4.0 < median < 6.25, (
+        f"heat draws have median {median:.2f}, expected ~5.0 -- the sampler is "
+        "reading fed_threshold rather than heat_fed_threshold"
+    )
 
 
 # --- A3.6: determinism and monotonicity -------------------------------------

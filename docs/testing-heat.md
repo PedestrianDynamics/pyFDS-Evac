@@ -27,13 +27,22 @@ so there is nothing routing-related to validate here.
 ## Test Setup
 
 - **Geometry:** Sealed room (no vents/openings), so temperature cannot
-  redistribute and the field stays spatially uniform.
+  redistribute, with **adiabatic boundaries on all six faces**. The boundary
+  condition is the one place the CO ladder's layout cannot be copied: FDS's
+  default is an `INERT` wall at `TMP_FRONT = TMPA`, which would hold ~2160 m²
+  of enclosure surface at ambient against the prescribed gas and drain the
+  room. Species do not diffuse into inert walls; temperature does.
 - **Source:** No combustion at all — unlike the CO ladder, this deck tracks
   no species and needs no `&REAC`/yield setup. A single `&INIT` prescribes a
-  constant initial temperature across the whole domain, producing a known,
-  time-*invariant* gas temperature (constant T, not even the CO ladder's
-  "constant concentration" — here there is no source term or decay to hold
-  constant against; it simply never changes).
+  constant initial temperature across the whole domain. With no source term,
+  no decay and no heat flux through any surface, the field stays at that
+  temperature for the whole run, which is what makes the closed-form rate the
+  right reference to compare against.
+
+  Verify this before trusting a result: the `TEMP_center*` and `TEMP_corner*`
+  devices should all read the prescribed value at `T_END`, not merely at
+  t = 0. A falling trace means the boundaries are not holding and the
+  comparison below is measuring the deck rather than the model.
 - **Domain decomposition:** 4 MPI sub-meshes — confirms heat FED values are
   consistent across mesh boundaries (i.e. splitting the domain doesn't
   introduce discontinuities in the gas data JuPedSim consumes), same as the
@@ -62,7 +71,7 @@ so there is nothing routing-related to validate here.
 
 1. Hand-calculate the expected FED_HEAT(t) curve for each of the three
    temperatures (100, 150, 200 °C) using ISO TS 13571 eq. 5 (see
-   `fed_heat_hand_calc.py`).
+   `scripts/fed_heat_hand_calc.py`).
 2. Run the full FDS → fdsreader → JuPedSim pipeline on each of the three
    scenarios.
 3. Compare simulated per-agent heat FED accumulation curves against the
@@ -72,7 +81,7 @@ so there is nothing routing-related to validate here.
 
 ## Hand-Calculated Heat FED Reference
 
-Computed with `fed_heat_hand_calc.py`, using ISO TS 13571 eq. 5 directly —
+Computed with `scripts/fed_heat_hand_calc.py`, using ISO TS 13571 eq. 5 directly —
 quoted from the user-supplied source, not derived, and **not** in
 `materials/FDS+EVAC_Guide.pdf` (that document has no heat term at all).
 
@@ -85,7 +94,7 @@ FED_HEAT = sum_{t1}^{t2} [ T^3.4 / 5e7 ] * dt
 ```
 
 Under this test's constant-T exposure, the accumulator reduces to an exact
-closed form, `FED_HEAT(t) = (T^3.4 / 5e7) * t_min` — `fed_heat_hand_calc.py`
+closed form, `FED_HEAT(t) = (T^3.4 / 5e7) * t_min` — `scripts/fed_heat_hand_calc.py`
 still accumulates it per-timestep (rather than as a single multiplication) so
 it can be driven directly off a real FDS dump's timestamps, structurally
 matching the CO hand-calc script (`fed_hand_calc.py`).
