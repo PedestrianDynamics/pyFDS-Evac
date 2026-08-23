@@ -37,7 +37,9 @@ from typing import Callable
 from pyfds_evac.core.fed import (
     DefaultFedConfig,
     DefaultFedModel,
+    DefaultHeatFedModel,
     FdsFedField,
+    FdsHeatField,
     TenabilityConfig,
 )
 from pyfds_evac.core.scenario import Scenario
@@ -145,6 +147,51 @@ def deterministic_tenability(fed_threshold: float = 1.0) -> TenabilityConfig:
         fed_threshold=fed_threshold,
         incapacitation_mode="deterministic",
     )
+
+
+def make_heat_model(
+    temperature_celsius: FieldFn,
+    *,
+    update_interval_s: float = 1.0,
+) -> DefaultHeatFedModel:
+    """Wrap a synthetic gas-temperature field (deg C) as a heat FED model."""
+    # Duck-typed: FdsHeatField only calls the sampler's sample(t, x, y).
+    field = FdsHeatField(SyntheticSampler(temperature_celsius))  # type: ignore[arg-type]
+    config = DefaultFedConfig(fds_dir="", update_interval_s=update_interval_s)
+    return DefaultHeatFedModel(field, config)
+
+
+def deterministic_heat_tenability(heat_fed_threshold: float = 1.0) -> TenabilityConfig:
+    """Tenability with every agent thermally collapsing at exactly the threshold.
+
+    Mirrors ``deterministic_tenability`` but isolates the *heat* dose track:
+    gas incapacitation and FIC speed reduction are disabled so only the heat
+    FED -> incapacitation path is under test.
+    """
+    return TenabilityConfig(
+        enable_fic_speed=False,
+        enable_incapacitation=False,
+        enable_heat_incapacitation=True,
+        heat_fed_threshold=heat_fed_threshold,
+        heat_incapacitation_mode="deterministic",
+    )
+
+
+def heat_fed_rate_per_min(temperature_celsius: float) -> float:
+    """Closed-form heat FED rate (1/min), SFPE Handbook Eq. 63.44.
+
+    Re-derived here (not imported from ``pyfds_evac.core.fed``) so the test
+    catches an integration regression independently of the model's own
+    coefficients -- mirrors ``co_fed_rate_per_min``.
+    """
+    return temperature_celsius**3.4 / 5e7
+
+
+def time_to_heat_incapacitation_s(
+    temperature_celsius: float, heat_fed_threshold: float = 1.0
+) -> float:
+    """Closed-form ``t*``: seconds for cumulative heat FED to reach the threshold."""
+    return 60.0 * heat_fed_threshold / heat_fed_rate_per_min(temperature_celsius)
 
 
 def co_fed_rate_per_min(co_ppm: float) -> float:
@@ -308,6 +355,26 @@ def first_incapacitation_times(result) -> dict[int, float]:
         if agent_id not in times or t < times[agent_id]:
             times[agent_id] = t
     return times
+
+
+def first_incapacitation_causes(result) -> dict[int, str]:
+    """Map agent_id -> ``incapacitation_cause`` ('gas'/'heat'/'gas+heat') at collapse.
+
+    Reads the cause recorded at each agent's *earliest* incapacitated row --
+    the only way to tell which of the two independent dose tracks (see
+    ``fed.py``'s ``TenabilityConfig``) actually tripped it.
+    """
+    causes: dict[int, str] = {}
+    times: dict[int, float] = {}
+    for row in result.fed_history or []:
+        if not row.get("incapacitated"):
+            continue
+        agent_id = row["agent_id"]
+        t = float(row["time_s"])
+        if agent_id not in times or t < times[agent_id]:
+            times[agent_id] = t
+            causes[agent_id] = row.get("incapacitation_cause", "")
+    return causes
 
 
 # Exit IDs emitted by ``t_junction_scenario`` (referenced by S4 assertions).

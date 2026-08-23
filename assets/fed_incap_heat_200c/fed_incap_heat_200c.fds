@@ -1,0 +1,58 @@
+&HEAD CHID='demo_homogeneous_heat_200C',
+      TITLE='30x30 m sealed room, homogeneous 200 C, heat FED hand-calc validation' /
+
+! Domain: 30x30m floor, 3m ceiling, 0.5m cells, split into 4 quadrants for MPI
+! Run with: mpiexec -n 4 fds demo_homogeneous_heat_200C.fds
+&MESH ID='M1', IJK=30,30,6, XB= 0,15, 0,15, 0,3 /
+&MESH ID='M2', IJK=30,30,6, XB=15,30, 0,15, 0,3 /
+&MESH ID='M3', IJK=30,30,6, XB= 0,15,15,30, 0,3 /
+&MESH ID='M4', IJK=30,30,6, XB=15,30,15,30, 0,3 /
+
+&TIME T_END=1000 /
+
+! Ambient is the *initial* condition only. The boundaries below hold the
+! prescribed temperature; without them FDS applies its default INERT wall at
+! TMP_FRONT = TMPA, which would pin ~2160 m2 of enclosure surface at 20 C
+! against the prescribed gas and drain the room. That is the one place the CO
+! ladder's layout cannot be copied: species do not diffuse into inert walls,
+! temperature does.
+&MISC TMPA=20.0 /
+
+! Adiabatic boundaries on all six faces: no heat flux through any surface, so
+! the prescribed field is genuinely time-invariant and the closed-form rate
+! holds for the whole run.
+&SURF ID='ADIABATIC_WALL', ADIABATIC=.TRUE. /
+&VENT MB='XMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='XMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMAX', SURF_ID='ADIABATIC_WALL' /
+
+! No &SPEC/&REAC needed: TEMPERATURE is a core solved gas-phase variable,
+! not a species yield -- unlike the CO ladder, this deck tracks no species
+! at all, just a prescribed initial temperature field.
+!
+! Whole-domain, single &INIT -- no combustion, no transient, no spatial
+! gradient, so FED_HEAT accumulates at the closed-form rate the whole run.
+&INIT XB=0,30,0,30,0,3, TEMPERATURE=200. /
+
+! Temperature at a few heights, to check it's actually uniform
+&SLCF PBZ=0.5, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.5, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=2.0, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=2.5, QUANTITY='TEMPERATURE' /
+
+! No vertical slices: load_slice_sampler picks the slice whose mid-height is
+! nearest --smoke-slice-height, and a vertical slice has zero extent in one
+! axis, so if one ever won that tie every sample would miss and the run would
+! silently report ambient everywhere.
+
+! Temperature readings at corners and center, should all read ~200 C
+&DEVC XB= 8, 8, 8, 8,2,2,   QUANTITY='TEMPERATURE', ID='TEMP_corner_SW' /
+&DEVC XB=22,22,22,22,2,2,   QUANTITY='TEMPERATURE', ID='TEMP_corner_NE' /
+&DEVC XB=14.9,14.9,14.9,14.9,2,2,   QUANTITY='TEMPERATURE', ID='TEMP_center'      /
+&DEVC XB=14.9,14.9,14.9,14.9,0.5,0.5, QUANTITY='TEMPERATURE', ID='TEMP_center_low'  /
+&DEVC XB=14.9,14.9,14.9,14.9,2.5,2.5, QUANTITY='TEMPERATURE', ID='TEMP_center_high' /
+
+&TAIL /

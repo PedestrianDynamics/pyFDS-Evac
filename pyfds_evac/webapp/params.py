@@ -77,6 +77,9 @@ FIELD_GROUPS: List[tuple] = [
             "fic_alpha",
             "fic_min_factor",
             "fed_threshold",
+            "heat_incapacitation_mode",
+            "heat_susceptibility_sigma",
+            "heat_fed_threshold",
         ],
     ),
     ("Rerouting", ["enable_rerouting", "reroute_interval"]),
@@ -253,6 +256,15 @@ _HELP_TEXT: Dict[str, str] = {
     "of its speed from irritants alone.",
     "fed_threshold": "Toxic dose (FED) at which a typical person is incapacitated. 1.0 is the "
     "standard 'untenable' dose (ISO 13571). Lower = agents succumb sooner.",
+    "heat_incapacitation_mode": "Same idea as toxic-dose mode, but for heat: probabilistic draws a "
+    "per-agent tolerance, deterministic gives everyone the same one. "
+    "Independent of the toxic-gas track.",
+    "heat_susceptibility_sigma": "Spread of how differently people tolerate heat exposure. Reuses the "
+    "toxic-gas default as a starting assumption — there's no published "
+    "population data for heat specifically.",
+    "heat_fed_threshold": "Heat dose (SFPE Handbook Eq. 63.44) at which a typical person is thermally "
+    "incapacitated — tracked separately from toxic gas dose; 1.0 is the "
+    "standard tenability limit.",
     "enable_rerouting": "Let agents rethink their route mid-evacuation as smoke and crowding "
     "change, instead of blindly following their first assigned route.",
     "reroute_interval": "How often (sim seconds) each agent rethinks its route. 1 = very "

@@ -54,8 +54,11 @@ from .direct_steering_runtime import (
     update_checkpoint_speed,
 )
 from .fed import (
+    DefaultFedInputs,
+    HeatFedInputs,
     default_fed_components,
     default_fic,
+    sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
 from .route_graph import (
@@ -1154,6 +1157,7 @@ def run_scenario(
     seed: Optional[int] = None,
     smoke_speed_model=None,
     fed_model=None,
+    heat_fed_model=None,
     tenability_config=None,
     reroute_config: Optional[RerouteConfig] = None,
     collect_route_cost_history: bool = False,
@@ -1226,13 +1230,24 @@ def run_scenario(
         smoke_speed_state: Dict[int, float] = {}
         smoke_history: list[dict[str, Any]] = []
         fed_state: Dict[int, Dict[str, float]] = {}
+        heat_fed_state: Dict[int, Dict[str, float]] = {}
         fed_history: list[dict[str, Any]] = []
         incapacitated_agents: set[int] = set()
+        # Which track (gas / heat / both) tripped incapacitation for each
+        # agent -- the two doses are independent (see fed.py's
+        # TenabilityConfig docstring), so "why" isn't recoverable from
+        # fed_cumulative/heat_fed_cumulative alone once both are being
+        # tracked.
+        incapacitated_cause: Dict[int, str] = {}
         # Per-agent incapacitation threshold (population variability). Sampled
         # lazily on first FED evaluation from a dedicated seeded stream so runs
         # stay reproducible; deterministic mode reuses fed_threshold for all.
         incap_thresholds: Dict[int, float] = {}
         incap_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED1)
+        # Independent stream for the heat track -- not the same dose as gas
+        # FED, so its threshold draws must not be correlated with the gas ones.
+        incap_heat_thresholds: Dict[int, float] = {}
+        incap_heat_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED2)
 
         def _incap_threshold(aid: int) -> float:
             t = incap_thresholds.get(aid)
@@ -1242,6 +1257,18 @@ def run_scenario(
                 else:
                     t = sample_incapacitation_threshold(tenability_config, incap_rng)
                 incap_thresholds[aid] = t
+            return t
+
+        def _incap_heat_threshold(aid: int) -> float:
+            t = incap_heat_thresholds.get(aid)
+            if t is None:
+                if tenability_config is None:
+                    t = float("inf")
+                else:
+                    t = sample_heat_incapacitation_threshold(
+                        tenability_config, incap_heat_rng
+                    )
+                incap_heat_thresholds[aid] = t
             return t
 
         last_smoke_update_time = None
@@ -1902,13 +1929,16 @@ def run_scenario(
                         )
                     last_smoke_update_time = current_time
 
-            if fed_model is not None:
+            if fed_model is not None or heat_fed_model is not None:
                 current_time = simulation.elapsed_time()
+                _interval_source = (
+                    fed_model if fed_model is not None else heat_fed_model
+                )
                 fed_update_interval_s = max(
                     0.0,
                     float(
                         getattr(
-                            getattr(fed_model, "config", None),
+                            getattr(_interval_source, "config", None),
                             "update_interval_s",
                             0.0,
                         )
@@ -1923,46 +1953,102 @@ def run_scenario(
                         x, y = extract_agent_xy(agent)
                         if x is None or y is None:
                             continue
-                        state = fed_state.setdefault(
-                            agent_id,
-                            {"cumulative": 0.0, "last_update_s": float(current_time)},
-                        )
-                        dt_s = max(
-                            0.0,
-                            float(current_time) - float(state["last_update_s"]),
-                        )
-                        advance_with_components = getattr(
-                            fed_model, "advance_with_components", None
-                        )
-                        if advance_with_components is not None:
-                            inputs, components, cumulative = advance_with_components(
-                                current_time,
-                                x,
-                                y,
-                                dt_s=dt_s,
-                                current_fed=state["cumulative"],
+
+                        cumulative = None
+                        if fed_model is not None:
+                            state = fed_state.setdefault(
+                                agent_id,
+                                {
+                                    "cumulative": 0.0,
+                                    "last_update_s": float(current_time),
+                                },
                             )
+                            dt_s = max(
+                                0.0,
+                                float(current_time) - float(state["last_update_s"]),
+                            )
+                            advance_with_components = getattr(
+                                fed_model, "advance_with_components", None
+                            )
+                            if advance_with_components is not None:
+                                inputs, components, cumulative = (
+                                    advance_with_components(
+                                        current_time,
+                                        x,
+                                        y,
+                                        dt_s=dt_s,
+                                        current_fed=state["cumulative"],
+                                    )
+                                )
+                            else:
+                                inputs, _rate_per_min, cumulative = fed_model.advance(
+                                    current_time,
+                                    x,
+                                    y,
+                                    dt_s=dt_s,
+                                    current_fed=state["cumulative"],
+                                )
+                                components = default_fed_components(inputs)
+                            state["cumulative"] = float(cumulative)
+                            state["last_update_s"] = float(current_time)
                         else:
-                            inputs, _rate_per_min, cumulative = fed_model.advance(
+                            inputs = DefaultFedInputs()
+                            components = default_fed_components(inputs)
+
+                        heat_cumulative = None
+                        if heat_fed_model is not None:
+                            heat_state = heat_fed_state.setdefault(
+                                agent_id,
+                                {
+                                    "cumulative": 0.0,
+                                    "last_update_s": float(current_time),
+                                },
+                            )
+                            heat_dt_s = max(
+                                0.0,
+                                float(current_time)
+                                - float(heat_state["last_update_s"]),
+                            )
+                            (
+                                heat_inputs,
+                                heat_rate_per_min,
+                                heat_cumulative,
+                            ) = heat_fed_model.advance(
                                 current_time,
                                 x,
                                 y,
-                                dt_s=dt_s,
-                                current_fed=state["cumulative"],
+                                dt_s=heat_dt_s,
+                                current_fed=heat_state["cumulative"],
                             )
-                            components = default_fed_components(inputs)
-                        state["cumulative"] = float(cumulative)
-                        state["last_update_s"] = float(current_time)
+                            heat_state["cumulative"] = float(heat_cumulative)
+                            heat_state["last_update_s"] = float(current_time)
+                        else:
+                            heat_inputs = HeatFedInputs()
+                            heat_rate_per_min = 0.0
 
                         fic_value = default_fic(inputs)
                         incapacitated_now = agent_id in incapacitated_agents
                         fic_speed_factor = 1.0
                         if tenability_config is not None and not incapacitated_now:
-                            if (
-                                tenability_config.enable_incapacitation
+                            gas_crossed = (
+                                fed_model is not None
+                                and tenability_config.enable_incapacitation
+                                and cumulative is not None
                                 and cumulative >= _incap_threshold(agent_id)
-                            ):
+                            )
+                            heat_crossed = (
+                                heat_fed_model is not None
+                                and tenability_config.enable_heat_incapacitation
+                                and heat_cumulative is not None
+                                and heat_cumulative >= _incap_heat_threshold(agent_id)
+                            )
+                            if gas_crossed or heat_crossed:
                                 incapacitated_agents.add(agent_id)
+                                incapacitated_cause[agent_id] = (
+                                    "gas+heat"
+                                    if (gas_crossed and heat_crossed)
+                                    else ("gas" if gas_crossed else "heat")
+                                )
                                 set_agent_desired_speed(agent, 0.0)
                                 incapacitated_now = True
                                 # Pin the baseline too so downstream speed
@@ -1977,7 +2063,11 @@ def run_scenario(
                                     speed_state["fic_factor"] = 1.0
                                     speed_state["active_checkpoint"] = None
                                 smoke_speed_state[agent_id] = 0.0
-                            elif tenability_config.enable_fic_speed and fic_value > 0.0:
+                            elif (
+                                fed_model is not None
+                                and tenability_config.enable_fic_speed
+                                and fic_value > 0.0
+                            ):
                                 fic_speed_factor = max(
                                     float(tenability_config.fic_min_factor),
                                     1.0
@@ -2026,7 +2116,19 @@ def run_scenario(
                                 "fed_rate_per_min": float(
                                     components.total_rate_per_min
                                 ),
-                                "fed_cumulative": float(cumulative),
+                                "fed_cumulative": float(cumulative)
+                                if cumulative is not None
+                                else 0.0,
+                                "temperature_celsius": float(
+                                    heat_inputs.temperature_celsius
+                                ),
+                                "heat_fed_rate_per_min": float(heat_rate_per_min),
+                                "heat_fed_cumulative": float(heat_cumulative)
+                                if heat_cumulative is not None
+                                else 0.0,
+                                "incapacitation_cause": incapacitated_cause.get(
+                                    agent_id, ""
+                                ),
                                 "fic": float(fic_value),
                                 "fic_speed_factor": float(fic_speed_factor),
                                 "incapacitated": bool(incapacitated_now),
@@ -2504,6 +2606,12 @@ def run_scenario(
                 (row["fed_cumulative"] for row in fed_history),
                 default=0.0,
             )
+        if heat_fed_model is not None:
+            metrics["heat_fed_history_samples"] = len(fed_history)
+            metrics["heat_fed_max"] = max(
+                (row["heat_fed_cumulative"] for row in fed_history),
+                default=0.0,
+            )
 
         if reroute_config is not None and route_history:
             metrics["route_switches"] = len(route_history)
@@ -2516,7 +2624,9 @@ def run_scenario(
             metrics=metrics,
             sqlite_file=output_file,
             smoke_history=smoke_history if smoke_speed_model is not None else None,
-            fed_history=fed_history if fed_model is not None else None,
+            fed_history=fed_history
+            if (fed_model is not None or heat_fed_model is not None)
+            else None,
             route_history=route_history if reroute_config is not None else None,
             route_cost_history=(
                 route_cost_history

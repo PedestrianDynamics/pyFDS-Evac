@@ -39,6 +39,10 @@ class FdsQuantityInventory:
         """Return whether the default CO/CO2/O2 FED path can run."""
         return {"co", "co2", "o2"}.issubset(self.canonical_slice_names())
 
+    def supports_heat_fed(self) -> bool:
+        """Return whether the heat FED (SFPE Handbook Eq. 63.44) path can run."""
+        return "temperature" in self.canonical_slice_names()
+
 
 def _quantity_names(collection) -> list[str]:
     """Extract unique quantity names from one `fdsreader` collection."""

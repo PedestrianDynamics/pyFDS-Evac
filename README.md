@@ -9,6 +9,13 @@ The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
 - Full ISO 13571 FED model (toxic gas dose accumulation)
+- Convective heat FED (ISO TS 13571 eq. 5), accumulated as a dose independent
+  of the gas track -- an agent is incapacitated when either crosses its own
+  threshold, because thermal injury and asphyxiation are different mechanisms
+  and the standard does not sum them. Radiant heat is not modelled, and heat
+  does not enter route choice. It also does not slow an agent down: unlike
+  smoke and irritants, heat has no effect at all until the dose is reached, at
+  which point the agent stops.
 - Dynamic smoke-based route rerouting with congestion awareness
 - Smoke-gated exit availability, and sign visibility for what agents learn (fdsvismap integration)
 - Per-agent cognitive maps with `full` and `discovery` familiarity tiers
@@ -739,9 +746,12 @@ rerouting bug under by-number placement
 ## Agent scalars for fds-viewer
 
 When `--output-sqlite` is combined with FED computation, the SQLite also carries
-an optional `agent_scalars(frame, id, fed, speed)` table. The base JuPedSim
-schema is unchanged, so `jupedsim` replay and Web-Based-JuPedSim still read the
-file. [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) reads this
+an optional `agent_scalars(frame, id, fed, heat_fed, speed)` table. The base
+JuPedSim schema is unchanged, so `jupedsim` replay and Web-Based-JuPedSim still
+read the file. Note `heat_fed` was inserted **before** `speed` rather than
+appended, so a consumer reading positionally with `SELECT *` -- fds-viewer among
+them -- must be updated with this release; name your columns and it does not
+matter. [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) reads this
 table to colour agents by FED dose or speed in a 3D scene alongside the FDS
 smoke.
 
@@ -759,7 +769,7 @@ uv run run.py --scenario assets/t_junction \
 ```
 
 When FED is computed, the SQLite also carries the optional
-`agent_scalars(frame, id, fed, speed)` table (see above), which
+`agent_scalars(frame, id, fed, heat_fed, speed)` table (see above), which
 fds-viewer uses to colour agents by FED dose or speed.
 
 ## References

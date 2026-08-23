@@ -3,7 +3,7 @@
 import math
 from dataclasses import dataclass
 
-from .fds_sampling import SliceFieldSampler
+from .fds_sampling import SliceFieldSampler, load_slice_sampler
 
 _SECONDS_PER_MINUTE = 60.0
 
@@ -178,6 +178,41 @@ def default_fic(inputs: DefaultFedInputs) -> float:
 
 
 @dataclass(frozen=True)
+class HeatFedInputs:
+    """Store gas-phase temperature for the SFPE Handbook heat FED model.
+
+    Tracked independently of ``DefaultFedInputs`` -- heat and toxic gases
+    incapacitate through different physiological mechanisms (thermal injury
+    vs. asphyxiation), so the SFPE Handbook keeps their doses as two separate
+    running totals rather than summing them (see ``TenabilityConfig``).
+    """
+
+    temperature_celsius: float = 20.0
+
+
+def _heat_fed_rate_per_minute(temperature_celsius: float) -> float:
+    """Return the convective-heat FED contribution in 1/min (SFPE Handbook Eq. 63.44).
+
+    rate [1/min] = T[deg C] ** 3.4 / 5e7
+
+    Not in the FDS+Evac guide like the other terms in this module -- this is
+    SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 63 (Purser &
+    McAllister), Eq. 63.44, scoped to convective heat from elevated gas
+    temperature only (radiant heat is a separate, unmodelled term). Already
+    negligible at ambient temperature, so no floor is applied beyond the
+    domain guard.
+    """
+    if not math.isfinite(temperature_celsius) or temperature_celsius <= 0.0:
+        return 0.0
+    return (temperature_celsius**3.4) / 5e7
+
+
+def default_heat_fed_rate_per_minute(inputs: HeatFedInputs) -> float:
+    """Return the SFPE Handbook (Eq. 63.44) heat FED accumulation rate in 1/min."""
+    return _heat_fed_rate_per_minute(inputs.temperature_celsius)
+
+
+@dataclass(frozen=True)
 class TenabilityConfig:
     """Runtime tenability rules applied on top of Frantzich smoke-speed.
 
@@ -194,6 +229,12 @@ class TenabilityConfig:
       matching the FDS+Evac criterion of Korhonen 2021 §3.4: desired
       speed is driven to zero and the agent remains as a static
       obstacle.
+    - Binary heat incapacitation when ``FED_HEAT_cumulative >=
+      heat_fed_threshold`` (SFPE Handbook Eq. 63.44), tracked as a completely
+      separate running total from the gas ``fed_threshold`` above -- heat
+      and toxic gases incapacitate through different mechanisms, so the
+      SFPE Handbook does not sum them into one dose. An agent is
+      incapacitated the instant *either* threshold is crossed.
     """
 
     enable_fic_speed: bool = True
@@ -209,21 +250,59 @@ class TenabilityConfig:
     # "deterministic" mode every agent uses fed_threshold (the legacy rule).
     incapacitation_mode: str = "probabilistic"
     susceptibility_sigma: float = 0.94
+    enable_heat_incapacitation: bool = True
+    heat_fed_threshold: float = 1.0
+    # Same log-normal mechanism as susceptibility_sigma above, applied to the
+    # independent heat FED track. Unlike the gas sigma (NIST TN 1797-backed),
+    # there is no published population-variance data for heat incapacitation;
+    # reusing 0.94 is a starting assumption, not a cited value.
+    heat_incapacitation_mode: str = "probabilistic"
+    heat_susceptibility_sigma: float = 0.94
+
+
+def _sample_threshold(threshold: float, mode: str, sigma: float, rng) -> float:
+    """Draw one log-normal (or flat) incapacitation threshold.
+
+    Shared by the gas and heat FED tracks. Deterministic mode returns
+    ``threshold`` for every agent. Probabilistic mode returns a log-normal
+    draw with median ``threshold`` and log-scale ``sigma`` (``rng`` is a
+    ``random.Random``), so a population of agents reproduces an
+    incapacitation band instead of all collapsing at the median.
+    """
+    if mode == "deterministic":
+        return float(threshold)
+    return float(threshold) * math.exp(float(sigma) * rng.gauss(0.0, 1.0))
 
 
 def sample_incapacitation_threshold(config: "TenabilityConfig", rng) -> float:
-    """Draw one agent's cumulative-FED incapacitation threshold.
+    """Draw one agent's cumulative-FED (gas) incapacitation threshold.
 
-    Deterministic mode returns ``fed_threshold`` for every agent. Probabilistic
-    mode returns a log-normal draw with median ``fed_threshold`` and log-scale
-    sigma ``susceptibility_sigma`` (``rng`` is a ``random.Random``), so a
-    population of agents reproduces the NIST TN 1797 / Purser incapacitation
-    bands instead of all collapsing at the median.
+    See ``_sample_threshold``; deterministic mode returns ``fed_threshold``
+    for every agent, probabilistic mode log-normal-draws around it with
+    ``susceptibility_sigma``, reproducing the NIST TN 1797 / Purser
+    incapacitation bands instead of all agents collapsing at the median.
     """
-    if config.incapacitation_mode == "deterministic":
-        return float(config.fed_threshold)
-    return float(config.fed_threshold) * math.exp(
-        float(config.susceptibility_sigma) * rng.gauss(0.0, 1.0)
+    return _sample_threshold(
+        config.fed_threshold,
+        config.incapacitation_mode,
+        config.susceptibility_sigma,
+        rng,
+    )
+
+
+def sample_heat_incapacitation_threshold(config: "TenabilityConfig", rng) -> float:
+    """Draw one agent's cumulative heat-FED incapacitation threshold.
+
+    Same mechanism as ``sample_incapacitation_threshold``, applied to
+    ``heat_fed_threshold``/``heat_incapacitation_mode``/
+    ``heat_susceptibility_sigma`` -- an independent draw from the gas
+    threshold, since the two tracks are not the same dose.
+    """
+    return _sample_threshold(
+        config.heat_fed_threshold,
+        config.heat_incapacitation_mode,
+        config.heat_susceptibility_sigma,
+        rng,
     )
 
 
@@ -304,6 +383,35 @@ def time_to_fed_threshold_s(
     if remaining <= 0.0:
         return 0.0
     rate_per_min = default_fed_rate_per_minute(inputs)
+    if rate_per_min <= 0.0:
+        return math.inf
+    return (remaining / rate_per_min) * _SECONDS_PER_MINUTE
+
+
+def accumulate_default_heat_fed(
+    inputs: HeatFedInputs,
+    *,
+    duration_s: float,
+    initial_fed: float = 0.0,
+) -> float:
+    """Accumulate heat FED over a constant-exposure interval in seconds."""
+
+    duration_min = max(0.0, float(duration_s)) / _SECONDS_PER_MINUTE
+    return float(initial_fed) + default_heat_fed_rate_per_minute(inputs) * duration_min
+
+
+def time_to_heat_fed_threshold_s(
+    inputs: HeatFedInputs,
+    *,
+    threshold: float = 1.0,
+    initial_fed: float = 0.0,
+) -> float:
+    """Return the seconds needed to reach a heat FED threshold under constant exposure."""
+
+    remaining = float(threshold) - float(initial_fed)
+    if remaining <= 0.0:
+        return 0.0
+    rate_per_min = default_heat_fed_rate_per_minute(inputs)
     if rate_per_min <= 0.0:
         return math.inf
     return (remaining / rate_per_min) * _SECONDS_PER_MINUTE
@@ -491,3 +599,87 @@ class DefaultFedModel:
             / _SECONDS_PER_MINUTE
         )
         return inputs, components, updated
+
+
+class FdsHeatField:
+    """Sample gas-phase temperature from FDS slice output via fdsreader.
+
+    Required slice: TEMPERATURE. Unlike ``FdsFedField``, this goes through
+    ``load_slice_sampler`` so a mismatched slice height triggers the same
+    warning the extinction/smoke-speed path already gets -- ``FdsFedField``
+    bypasses that check entirely (raw ``filter_by_quantity(...)[0]``, no
+    height-matching), a known blind spot this project has been bitten by
+    twice before (the O2 hypoxia rate bug, the conflicting ``&INIT`` bug);
+    the new heat sampler should not repeat it.
+    """
+
+    def __init__(self, sampler: SliceFieldSampler):
+        """Wrap a ``SliceFieldSampler`` for the TEMPERATURE slice."""
+        self._sampler = sampler
+
+    @classmethod
+    def from_fds(
+        cls,
+        fds_dir: str,
+        *,
+        slice_height_m: float = 2.0,
+        simulation=None,
+    ) -> "FdsHeatField":
+        """Load the TEMPERATURE slice from an FDS case directory."""
+        sampler = load_slice_sampler(
+            fds_dir,
+            "TEMPERATURE",
+            simulation=simulation,
+            slice_height_m=slice_height_m,
+        )
+        return cls(sampler)
+
+    def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
+        """Return the heat FED gas-temperature input at one time and x/y point.
+
+        FDS's TEMPERATURE quantity is natively in degrees Celsius, so unlike
+        the gas volume-fraction slices sampled by ``FdsFedField`` this needs
+        no unit conversion.
+        """
+        try:
+            temperature_celsius = self._sampler.sample(time_s, x, y)
+        except ValueError:
+            return HeatFedInputs()
+        return HeatFedInputs(temperature_celsius=temperature_celsius)
+
+
+class DefaultHeatFedModel:
+    """Combine sampled gas-phase temperature with the SFPE Handbook heat FED equation."""
+
+    def __init__(self, field: FdsHeatField, config: DefaultFedConfig):
+        """Store the temperature field sampler and FED runtime settings."""
+        self.field = field
+        self.config = config
+
+    def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
+        """Return the heat FED input at one time and x/y point."""
+        return self.field.sample_inputs(time_s, x, y)
+
+    def sample_rate(
+        self, time_s: float, x: float, y: float
+    ) -> tuple[HeatFedInputs, float]:
+        """Return both the sampled input and its heat FED rate in 1/min."""
+        inputs = self.sample_inputs(time_s, x, y)
+        return inputs, default_heat_fed_rate_per_minute(inputs)
+
+    def advance(
+        self,
+        time_s: float,
+        x: float,
+        y: float,
+        *,
+        dt_s: float,
+        current_fed: float,
+    ) -> tuple[HeatFedInputs, float, float]:
+        """Advance cumulative heat FED by one simulation interval."""
+        inputs, rate_per_min = self.sample_rate(time_s, x, y)
+        updated = (
+            float(current_fed)
+            + rate_per_min * max(0.0, float(dt_s)) / _SECONDS_PER_MINUTE
+        )
+        return inputs, rate_per_min, updated
