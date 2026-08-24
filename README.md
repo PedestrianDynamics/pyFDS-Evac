@@ -105,6 +105,37 @@ a hard clamp. Select it with `SmokeSpeedConfig(speed_law="fridolf")`;
 `visibility_factor_c` controls the Jin constant (default `3` for reflective
 signs, `8` for light-emitting signs).
 
+**These are library-level fields, not scenario configuration.** `speed_law`,
+`alpha`, `beta`, `min_speed_factor` and `visibility_factor_c` are constructed
+with their defaults by `run_config.py` and are reachable from no CLI flag and
+no scenario JSON key, so a configured run always uses the Lund law with
+`alpha=0.706`, `beta=-0.057`, `min_speed_factor=0.1`. The `routing` block
+does accept keys named `alpha`, `beta` and `min_speed_factor` with the same
+defaults, but those parameterise the speed factor used to *estimate travel
+time when pricing a route* — setting them changes what routes cost, not how
+fast agents walk. The same split applies to speed itself: `routing.
+base_speed_m_per_s` (1.3 m/s) is a route-pricing constant, while an agent's
+own `desired_speed` defaults to 1.2 m/s (see below).
+
+## Agent speed and pre-movement
+
+Each distribution group sets the attributes an agent starts with:
+
+| Key | Default | Effect |
+|-----|---------|--------|
+| `desired_speed` (`v0`) | `1.2` m/s (`0.8` for `SocialForceModel`) | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
+| `desired_speed_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
+| `desired_speed_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
+| `radius` (`radius_std`) | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. Clipped to `[0.1, 1.0]` m. |
+| `use_premovement` | `false` | Delay before the agent starts moving. |
+| `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform`; `premovement_param_a`/`_b` override the presets. |
+
+Pre-movement is implemented by spawning the agent at `v0 = 0` and restoring
+its sampled speed on release. While it waits, the smoke update skips it, so a
+delayed occupant's baseline speed is never degraded by smoke it has not walked
+through, and it starts at full clear-air speed however dense the smoke has
+become around it.
+
 For real FDS output, `fdsreader` provides the local extinction field
 via `SliceFieldSampler`. For verification cases such as ISO 20414 Table 21,
 the runner can also apply a constant extinction coefficient directly.
@@ -473,7 +504,16 @@ fire and a clean 58 m way round -- and its results are in the sciebo case folder
   Table 2 — see [docs/routing.md](docs/routing.md#why-it-is-opt-in-and-what-0024-means)
   and `scripts/sweep_queue_weight.py`
 - **Throughput throttling**: Optional exit flux limiting via
-  `enable_throughput_throttling` and `max_throughput` in scenario config
+  `enable_throughput_throttling` (default off) and `max_throughput`
+  (default `1.0` agents/s) in scenario config. It admits at most one agent
+  every `1 / max_throughput` seconds and physically holds the rest — unlike
+  the exit capacity `c` in the route cost, which blocks nobody.
+- **Checkpoint dwell and speed zones**: a checkpoint or steering zone may set
+  `waiting_time` (default `0` s; `waiting_time_distribution: "gaussian"` with
+  `waiting_time_std`, default `1` s, floored at `0.1` s) and a multiplicative
+  `speed_factor` (default `1.0`, capped at `3.0`). Where zones overlap the
+  factor furthest from `1.0` wins rather than their product. These are
+  author-declared, not hazard-driven.
 
 ### Usage
 
