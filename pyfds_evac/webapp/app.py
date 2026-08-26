@@ -1320,11 +1320,23 @@ def _artifact_rows(result, opts) -> Div:
         exists = bool(path and path.exists())
 
         if exists:
-            detail, colour, mark = f"{path} · {_fmt_size(path)}", "var(--ink-dim)", "#F4C430"
+            detail, colour, mark = (
+                f"{path} · {_fmt_size(path)}",
+                "var(--ink-dim)",
+                "#F4C430",
+            )
         elif not produced:
-            detail, colour, mark = _missing_reason(field, opts), "var(--ink-faint)", "var(--surface-raised)"
+            detail, colour, mark = (
+                _missing_reason(field, opts),
+                "var(--ink-faint)",
+                "var(--surface-raised)",
+            )
         else:
-            detail, colour, mark = "not written", "var(--ink-faint)", "var(--surface-raised)"
+            detail, colour, mark = (
+                "not written",
+                "var(--ink-faint)",
+                "var(--surface-raised)",
+            )
 
         rows.append(
             Div(

@@ -623,7 +623,9 @@ _DOT = (
     '<span style="width:4px;height:4px;border-radius:99px;'
     'background:#FF6A1A;flex:none;display:inline-block;margin-right:8px"></span>'
 )
-_PREVIEW_ROW = f"display:flex;align-items:center;{_MONO};font-size:10.5px;color:var(--ink-dim)"
+_PREVIEW_ROW = (
+    f"display:flex;align-items:center;{_MONO};font-size:10.5px;color:var(--ink-dim)"
+)
 
 
 def _output_files_section() -> NotStr:
