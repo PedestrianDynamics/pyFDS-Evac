@@ -22,6 +22,16 @@ _MAX_LOG_LINES = 800
 _MAX_WARNINGS = 50
 
 
+class RunCancelled(Exception):
+    """Raised inside the progress callback to unwind an in-flight run.
+
+    A worker thread can't be killed from outside, so cancellation is
+    cooperative: ``cancel()`` sets a flag and the next progress tick raises
+    this, which propagates out of ``run_scenario``'s step loop. Ticks fire
+    roughly once per simulated second, so a cancel lands promptly.
+    """
+
+
 class _WarningCapture(logging.Handler):
     """Collect WARNING-and-above records from the model into a list.
 
@@ -84,8 +94,9 @@ class RunManager:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
+        self._cancel = threading.Event()
         self._thread: Optional[threading.Thread] = None
-        self.status: str = "idle"  # idle | running | done | error
+        self.status: str = "idle"  # idle | running | done | error | cancelled
         self.result: Optional[ScenarioResult] = None
         self.error: Optional[str] = None
         self.scenario_name: Optional[str] = None
@@ -105,7 +116,7 @@ class RunManager:
     def start(
         self,
         scenario: Any,
-        run_kwargs: Dict[str, Any],
+        build_run_kwargs: Callable[[], Dict[str, Any]],
         scenario_name: str,
         post_run: Optional[Callable[[ScenarioResult], List[str]]] = None,
         fds_dir: Optional[str] = None,
@@ -113,6 +124,16 @@ class RunManager:
         opts: Any = None,
     ) -> None:
         """Start a run on a background thread. Raises if one is already active.
+
+        ``build_run_kwargs`` is a zero-arg callable that builds the
+        ``run_scenario`` kwargs, called on the worker thread rather than by
+        the caller -- it's where FDS directory inspection happens (parsing
+        every slice header via fdsreader), which can take real time for a
+        large deck. Building it inline in the request handler blocked the
+        HTTP response until it finished, so the browser sat on the old page
+        with no visible progress for however long that parse took, even
+        though the button had already flipped to "in progress". Deferring it
+        here means the SSE-driven progress view mounts immediately instead.
 
         ``post_run`` runs in the worker after the simulation and before the
         status flips to ``done``; its returned strings (e.g. written output
@@ -125,6 +146,7 @@ class RunManager:
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("A run is already in progress.")
 
+        self._cancel.clear()
         self.status = "running"
         self.result = None
         self.error = None
@@ -139,6 +161,8 @@ class RunManager:
         self.warnings = []
 
         def on_progress(ev: ProgressEvent) -> None:
+            if self._cancel.is_set():
+                raise RunCancelled()
             self.last_event = ev
             _max = getattr(ev, "max_fed", None)
             _mean = getattr(ev, "mean_fed", None)
@@ -159,6 +183,7 @@ class RunManager:
                 model_logger.setLevel(logging.WARNING)
             try:
                 with contextlib.redirect_stdout(capture):
+                    run_kwargs = build_run_kwargs()
                     result = run_scenario(
                         scenario, progress_callback=on_progress, **run_kwargs
                     )
@@ -166,6 +191,12 @@ class RunManager:
                     if post_run is not None:
                         self.artifacts = post_run(result)
                 self.status = "done"
+            except RunCancelled:
+                # A deliberate stop, not a failure: leave no error for the UI
+                # to report and drop any partial result.
+                self.result = None
+                self.error = None
+                self.status = "cancelled"
             except Exception as exc:  # surface any run failure to the UI
                 self.error = f"{type(exc).__name__}: {exc}"
                 self.status = "error"
@@ -176,3 +207,28 @@ class RunManager:
 
         self._thread = threading.Thread(target=worker, daemon=True)
         self._thread.start()
+
+    def cancel(self) -> bool:
+        """Ask an in-flight run to stop. Returns whether one was running."""
+        if not self.running:
+            return False
+        self._cancel.set()
+        return True
+
+    def reset(self) -> None:
+        """Drop the finished run's state and return the manager to idle.
+
+        Only meaningful once a run has ended -- an active run owns the lock
+        and must be cancelled, not reset out from under itself.
+        """
+        if self.running:
+            return
+        self.status = "idle"
+        self.result = None
+        self.error = None
+        self.scenario_name = None
+        self.last_event = None
+        self.artifacts = []
+        self.fed_snapshots = []
+        self.log_lines = []
+        self.warnings = []

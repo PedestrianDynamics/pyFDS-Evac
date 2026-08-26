@@ -36,8 +36,14 @@ _FG = "#b2a9a3"
 def figure_html(fig: go.Figure, div_id: str) -> Any:
     """Embed a Plotly figure as an HTML fragment (no bundled Plotly.js).
 
-    Applies the Warm Paper Lab light template so charts match the GUI's cream
-    ground (transparent background, warm ink, hue-shifted grid).
+    Both backgrounds are transparent, so the figure sits on whichever ground
+    the page is currently painting and only the ink has to follow the theme.
+    The values below are the dark defaults; Plotly bakes them in at render
+    time and resolves no CSS variables, so ``theme.py``'s switch re-applies
+    the font and grid colours with ``Plotly.relayout`` after a flip.
+
+    ``colorway`` is deliberately *not* re-applied: the exit palette is drawn
+    from the heat ramp, which is identical in both themes.
     """
     fig.update_layout(
         margin=dict(l=52, r=22, t=30, b=46),
@@ -77,35 +83,6 @@ def _agent_exit_map(
     chosen = df[df["route_rank"] == 1].sort_values("time_s")
     last = chosen.groupby("agent_id").last()
     return last["current_exit"].to_dict()
-
-
-def fed_figure(result: Any) -> go.Figure:
-    """Cumulative FED over time (mean and max across agents)."""
-    rows = result.fed_history
-    if not rows:
-        return _empty("No FED history (load an FDS field with a FED model).")
-    df = pd.DataFrame(rows)
-    if "fed_cumulative" not in df or "time_s" not in df:
-        return _empty("FED history is missing expected columns.")
-    agg = df.groupby("time_s")["fed_cumulative"].agg(["mean", "max"]).reset_index()
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(x=agg["time_s"], y=agg["max"], mode="lines", name="max FED")
-    )
-    fig.add_trace(
-        go.Scatter(x=agg["time_s"], y=agg["mean"], mode="lines", name="mean FED")
-    )
-    fig.add_hline(
-        y=0.3,
-        line_dash="dot",
-        line_color="#ffb020",
-        annotation_text="incapacitation (0.3)",
-    )
-    fig.add_hline(
-        y=1.0, line_dash="dot", line_color="#e01e37", annotation_text="untenable (1.0)"
-    )
-    fig.update_layout(xaxis_title="time (s)", yaxis_title="cumulative FED")
-    return fig
 
 
 def smoke_figure(result: Any) -> go.Figure:

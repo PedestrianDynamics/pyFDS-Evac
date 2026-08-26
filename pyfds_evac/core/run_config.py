@@ -144,8 +144,14 @@ def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
     )
 
 
-def _validate_opts(opts: Any) -> None:
-    """Reject invalid option combinations before any expensive FDS reads."""
+def validate_opts(opts: Any) -> None:
+    """Reject invalid option combinations before any expensive FDS reads.
+
+    Public because callers that defer ``build_run_kwargs`` onto a worker
+    thread still need these checks to run synchronously: they are pure
+    attribute comparisons, and reporting them from a background thread would
+    bury a plain user mistake in a run log instead of answering the request.
+    """
     if opts.vis_cache and not opts.enable_rerouting:
         raise ValueError("--vis-cache requires --enable-rerouting")
     if getattr(opts, "clear_air_visibility", False) and opts.fds_dir:
@@ -265,7 +271,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> Dict[str,
     ``tenability_config``, ``reroute_config``, ``collect_route_cost_history``,
     ``vis_model``). Raises ``ValueError`` for invalid option combinations.
     """
-    _validate_opts(opts)
+    validate_opts(opts)
     smoke_speed_model = _build_smoke_model(opts, log)
     fed_model = _build_fed_model(opts, log)
     heat_fed_model = _build_heat_fed_model(opts, log)
