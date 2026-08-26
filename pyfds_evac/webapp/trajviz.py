@@ -653,9 +653,18 @@ _JS = """
     slider.value = String(((simT - t0) / span) * 1000);
     if (D.hasFed) drawFedPanel();
   }
+  // A stalled tab or a frame that took too long to render must not let simT
+  // leap past what was actually recorded: the wall-clock gap between two
+  // rAF callbacks is capped at one sample interval (0.1 s) before it is
+  // applied, so a late callback plays back slow rather than skipping the
+  // steps in between -- the same 0.1 s granularity the data was sampled at.
+  var _RAF_DT_CAP_S = 0.1;
   function loop(ts) {
     if (playing) {
-      if (lastTs != null) simT += ((ts - lastTs) / 1000) * speedMult;
+      if (lastTs != null) {
+        var dt = Math.min((ts - lastTs) / 1000, _RAF_DT_CAP_S);
+        simT += dt * speedMult;
+      }
       lastTs = ts;
       if (simT >= t1) { simT = t1; playing = false; playBtn.textContent = '▶'; }
     }
@@ -744,6 +753,7 @@ _JS = """
     });
   }
   window.addEventListener('resize', draw);
+  draw();
   requestAnimationFrame(loop);
 })();
 """
