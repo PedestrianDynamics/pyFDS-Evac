@@ -1,0 +1,164 @@
+{
+  "JuPedSim": {
+    "@project": "JPS-Project",
+    "@version": "0.9.6",
+    "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "header": {
+      "seed": "1254",
+      "max_sim_time": "10000",
+      "geometry": "geometry.xml",
+      "trajectories": {
+        "@format": "plain",
+        "@fps": "8",
+        "file": {
+          "@location": "trajectories-ScenarioXX.txt"
+        }
+      }
+    },
+    "traffic_constraints": {
+      "doors": null
+    },
+    "routing": {
+      "goals": null
+    },
+    "agents": {
+      "@operational_model_id": "3",
+      "agents_distribution": {
+        "group": {
+          "@group_id": "0",
+          "@agent_parameter_id": "1",
+          "@router_id": "1"
+        }
+      }
+    },
+    "operational_models": {
+      "model": [
+        {
+          "@operational_model_id": "1",
+          "@description": "gcfm",
+          "model_parameters": {
+            "stepsize": "0.01",
+            "exit_crossing_strategy": "8",
+            "linkedcells": {
+              "@enabled": "true",
+              "@cell_size": "2.2"
+            },
+            "force_ped": {
+              "@nu": "0.3",
+              "@dist_max": "3",
+              "@disteff_max": "2",
+              "@interpolation_width": "0.1"
+            },
+            "force_wall": {
+              "@nu": "0.2",
+              "@dist_max": "2",
+              "@disteff_max": "1",
+              "@interpolation_width": "0.1"
+            }
+          },
+          "agent_parameters": {
+            "@agent_parameter_id": "1",
+            "v0": {
+              "@mu": "1.0",
+              "@sigma": "0.0"
+            },
+            "bmax": {
+              "@mu": "0.15",
+              "@sigma": "0.001"
+            },
+            "bmin": {
+              "@mu": "0.15",
+              "@sigma": "0.001"
+            },
+            "amin": {
+              "@mu": "0.15",
+              "@sigma": "0.001"
+            },
+            "tau": {
+              "@mu": "0.5",
+              "@sigma": "0.001"
+            },
+            "atau": {
+              "@mu": "0.0",
+              "@sigma": "0.000"
+            }
+          }
+        },
+        {
+          "@operational_model_id": "3",
+          "@description": "Tordeux2015",
+          "model_parameters": {
+            "stepsize": "0.05",
+            "exit_crossing_strategy": "8",
+            "linkedcells": {
+              "@enabled": "true",
+              "@cell_size": "2.2"
+            },
+            "force_ped": {
+              "@a": "5",
+              "@D": "0.2"
+            },
+            "force_wall": {
+              "@a": "5",
+              "@D": "0.02"
+            }
+          },
+          "agent_parameters": {
+            "@agent_parameter_id": "1",
+            "v0": {
+              "@mu": "1.34",
+              "@sigma": "0.25"
+            },
+            "v0_upstairs": {
+              "@mu": "0.668",
+              "@sigma": "0.167"
+            },
+            "v0_downstairs": {
+              "@mu": "0.750",
+              "@sigma": "0.188"
+            },
+            "v0_idle_escalator_upstairs": {
+              "@mu": "0.5",
+              "@sigma": "0.0"
+            },
+            "v0_idle_escalator_downstairs": {
+              "@mu": "0.5",
+              "@sigma": "0.0"
+            },
+            "bmax": {
+              "@mu": "0.15",
+              "@sigma": "0.0"
+            },
+            "bmin": {
+              "@mu": "0.15",
+              "@sigma": "0.0"
+            },
+            "amin": {
+              "@mu": "0.15",
+              "@sigma": "0.0"
+            },
+            "atau": {
+              "@mu": "0.",
+              "@sigma": "0.0"
+            },
+            "tau": {
+              "@mu": "0.5",
+              "@sigma": "0.0"
+            },
+            "T": {
+              "@mu": "1.2",
+              "@sigma": "0.0"
+            }
+          }
+        }
+      ]
+    },
+    "route_choice_models": {
+      "router": {
+        "@router_id": "1",
+        "@description": "ff_global_shortest",
+        "parameters": null
+      }
+    }
+  }
+}

@@ -242,6 +242,12 @@ materials/
 /assets/social_force/
 /assets/haspel/
 
+# assets/Haspel (capital H) is a different, live scenario -- the real BUW HC
+# building -- but git's default case-insensitive matching makes the retired
+# lowercase rule above swallow it too. Carve it back out explicitly.
+!/assets/Haspel/
+!/assets/Haspel/**
+
 # The 50x50 m corn maze pair. Never had an FDS deck, so it could only ever test
 # pure-distance wayfinding; the familiarity_test_* pair covers the same
 # full-vs-discovery question on a smaller plan that does have a fire.
