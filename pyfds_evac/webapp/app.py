@@ -12,6 +12,7 @@ import io
 import json
 import re
 import shutil
+import time
 import zipfile
 from pathlib import Path
 from urllib.parse import quote
@@ -35,7 +36,7 @@ from fasthtml.common import (
 from starlette.requests import Request
 
 from pyfds_evac.core import load_scenario
-from pyfds_evac.core.run_config import build_run_kwargs
+from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
 from . import docs, params, plots, theme, trajviz
 from .runner import RunManager
@@ -275,31 +276,41 @@ def _warnings_card(messages: list[str]) -> Div:
     )
 
 
-def _run_panel_idle() -> Div:
+def _run_panel_idle_body() -> Div:
+    """Standby contents of the run panel.
+
+    Kept separate from the ``#run-panel`` wrapper because the run form and
+    the cancel/clear actions swap this element's *innerHTML* -- returning the
+    wrapper too would nest a second ``#run-panel`` inside the first.
+    """
     return Div(
         Div(
             Div(
-                Div(
-                    _LOGO_SVG,
-                    style=(
-                        "width:64px;height:64px;border-radius:50%;display:flex;"
-                        "align-items:center;justify-content:center;"
-                        "background:rgba(255,106,26,.07);margin:0 auto 20px;"
-                        "animation:pulse 2.6s ease-in-out infinite"
-                    ),
+                _LOGO_SVG,
+                style=(
+                    "width:64px;height:64px;border-radius:50%;display:flex;"
+                    "align-items:center;justify-content:center;"
+                    "background:rgba(255,106,26,.07);margin:0 auto 20px;"
+                    "animation:pulse 2.6s ease-in-out infinite"
                 ),
-                Div(
-                    Div(
-                        "Choose a scenario and ",
-                        B("run", style="color:#FF6A1A"),
-                        style=f"{_GROTESK};font-weight:600;font-size:22px;letter-spacing:-.02em;{_INK}",
-                    ),
-                    style="max-width:46ch;text-align:center",
-                ),
-                cls="standby",
             ),
-            style=_PANEL,
+            Div(
+                Div(
+                    "Choose a scenario and ",
+                    B("run", style="color:#FF6A1A"),
+                    style=f"{_GROTESK};font-weight:600;font-size:22px;letter-spacing:-.02em;{_INK}",
+                ),
+                style="max-width:46ch;text-align:center",
+            ),
+            cls="standby",
         ),
+        style=_PANEL,
+    )
+
+
+def _run_panel_idle() -> Div:
+    return Div(
+        _run_panel_idle_body(),
         id="run-panel",
         cls="rise",
         style="animation-delay:.12s",
@@ -455,6 +466,25 @@ _RUN_BTN_JS = """
   });
   // Run finished: the progress stream closed (sse-close="done").
   document.body.addEventListener('htmx:sseClose', function () { setRunning(false); });
+  // Cancelling swaps the whole panel away, which tears down the SSE element
+  // without necessarily firing sseClose -- unlock the buttons explicitly.
+  function isPath(d, want) {
+    var p = (d && d.pathInfo && (d.pathInfo.requestPath || d.pathInfo.path)) ||
+            (d && d.requestConfig && d.requestConfig.path) || '';
+    return p === want;
+  }
+  document.body.addEventListener('htmx:beforeRequest', function (e) {
+    if (!isPath(e.detail, '/cancel')) return;
+    var c = document.getElementById('cancel-btn');
+    if (c) {
+      c.disabled = true;
+      var cl = c.querySelector('.run-btn-label');
+      if (cl) cl.textContent = 'Cancelling…';
+    }
+  });
+  document.body.addEventListener('htmx:afterRequest', function (e) {
+    if (isPath(e.detail, '/cancel') || isPath(e.detail, '/clear')) setRunning(false);
+  });
   document.body.addEventListener('htmx:responseError', function (e) {
     if (isRunPath(e.detail)) setRunning(false);
   });
@@ -965,7 +995,11 @@ async def post(request: Request):
                 f"FDS dir is not a folder: {shown}",
                 style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
             )
-        run_kwargs = build_run_kwargs(scenario, opts)
+        # Cheap option-combination checks stay on the request thread. Only the
+        # expensive half of build_run_kwargs (FDS slice parsing) is deferred to
+        # the worker, so a plain misconfiguration still answers the request
+        # instead of surfacing later as a failed run.
+        validate_opts(opts)
         import run as cli
 
         def post_run(result):
@@ -973,7 +1007,7 @@ async def post(request: Request):
 
         manager.start(
             scenario,
-            run_kwargs,
+            lambda: build_run_kwargs(scenario, opts, log=print),
             scenario_name,
             post_run=post_run,
             fds_dir=getattr(opts, "fds_dir", None),
@@ -989,10 +1023,64 @@ async def post(request: Request):
     return _running_stream_view()
 
 
+@rt("/cancel")
+async def cancel():
+    """Stop an in-flight run and hand the panel back in its standby state.
+
+    Cancellation is cooperative (the worker unwinds on its next progress
+    tick), so wait briefly for the run to actually let go before resetting.
+    Without that wait the manager can still report ``running`` when the user
+    immediately clicks Run again, and ``/run``'s guard would reconnect them
+    to the run they just stopped. The wait is bounded so a scenario with slow
+    ticks can't hang the request.
+    """
+    manager.cancel()
+    deadline = time.monotonic() + 2.0
+    while manager.running and time.monotonic() < deadline:
+        await asyncio.sleep(0.05)
+    manager.reset()
+    return _run_panel_idle_body()
+
+
+@rt("/clear")
+async def clear():
+    """Discard a finished run's results and return to the standby panel."""
+    manager.reset()
+    return _run_panel_idle_body()
+
+
 def _running_stream_view() -> Div:
     """The live run panel: progress card + console, wired to the SSE stream."""
     return Div(
-        Div(_running_card(None), id="run-status", sse_swap="progress,done"),
+        Div(
+            # Only the dynamic half lives in the SSE swap target. Cancel sits
+            # outside it: #run-status is re-rendered on every progress tick,
+            # and a stop control that is destroyed and rebuilt ~once a second
+            # can swallow a click that lands mid-swap.
+            Div(_running_card(None), id="run-status", sse_swap="progress,done"),
+            Div(
+                Button(
+                    NotStr(
+                        '<span style="font-size:9px">■</span>'
+                        '<span class="run-btn-label">Cancel scenario</span>'
+                    ),
+                    id="cancel-btn",
+                    type="button",
+                    hx_post="/cancel",
+                    hx_target="#run-panel",
+                    hx_swap="innerHTML show:top",
+                    style=(
+                        "display:inline-flex;align-items:center;gap:7px;"
+                        "padding:9px 16px;border-radius:10px;cursor:pointer;"
+                        f"{_GROTESK};font-size:13px;font-weight:600;"
+                        "background:transparent;color:#E01E37;"
+                        "border:1px solid #E01E37"
+                    ),
+                ),
+                style="display:flex;justify-content:flex-end;margin-top:18px",
+            ),
+            style=_PANEL,
+        ),
         Div(
             Div(
                 Div(
@@ -1069,7 +1157,34 @@ def _running_card(ev) -> Div:
             style="height:10px;border-radius:99px;background:var(--surface-page);border:1px solid var(--hairline);overflow:hidden;margin-bottom:18px",
         ),
         Div(line, style=f"{_MONO};font-size:.82rem;{_INK2}"),
-        style=_PANEL,
+    )
+
+
+def _clear_run_bar() -> Div:
+    """Header strip over a finished run, with the way back to standby.
+
+    Without this a completed run is a dead end: the panel keeps showing the
+    old results and there is no way to dismiss them short of reloading.
+    """
+    return Div(
+        Div(
+            f"Results · {manager.scenario_name or 'run'}",
+            style=f"{_MONO};font-size:11px;letter-spacing:.06em;text-transform:uppercase;{_MUTED}",
+        ),
+        Button(
+            "Clear results",
+            type="button",
+            hx_post="/clear",
+            hx_target="#run-panel",
+            hx_swap="innerHTML show:top",
+            style=(
+                "padding:7px 13px;border-radius:9px;cursor:pointer;"
+                f"{_MONO};font-size:11px;"
+                "background:transparent;color:var(--ink-dim);"
+                "border:1px solid var(--hairline)"
+            ),
+        ),
+        style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px",
     )
 
 
@@ -1134,11 +1249,11 @@ def _finished_view() -> Div:
         )
 
     return Div(
+        _clear_run_bar(),
         kpi_tiles,
         _warnings_card(manager.warnings),
         art,
         trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
-        plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
         plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
         plot_card(
             "Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"
@@ -1234,6 +1349,7 @@ def _results_only_view() -> Div:
     result = manager.result
     opts = manager.opts
     return Div(
+        _clear_run_bar(),
         _kpi_tiles(result),
         _warnings_card(manager.warnings),
         Div(
@@ -1281,7 +1397,7 @@ async def fed_progress():
                     }
                 )
                 yield sse_message(payload, event="fed")
-            if manager.status in ("done", "error", "idle"):
+            if manager.status in ("done", "error", "idle", "cancelled"):
                 yield sse_message("{}", event="close")
                 return
             await asyncio.sleep(0.5)
@@ -1333,7 +1449,10 @@ async def progress():
                     event="done",
                 )
                 return
-            if status == "idle":
+            # Cancelled and idle both just close the stream: /cancel has
+            # already swapped the whole panel back to its standby state, so
+            # emitting anything here would fight that swap.
+            if status in ("cancelled", "idle"):
                 return
             ev = manager.last_event
             if ev is not None and ev != last:

@@ -160,7 +160,10 @@ def test_second_run_rejected_while_active(client):
         collect_route_cost_history=True,
     )
     kwargs = build_run_kwargs(scenario, opts)
-    manager.start(scenario, kwargs, "ISO-table21")
+    # start() takes a builder, not the kwargs themselves: the expensive part of
+    # build_run_kwargs runs on the worker thread so /run can answer straight
+    # away. Prebuilt here, since this test is about the second-run guard.
+    manager.start(scenario, lambda: kwargs, "ISO-table21")
     with pytest.raises(RuntimeError):
         manager.start(scenario, kwargs, "ISO-table21")
     # Drain to completion so the lock releases for other tests.
