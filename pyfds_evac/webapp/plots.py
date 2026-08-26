@@ -85,35 +85,6 @@ def _agent_exit_map(
     return last["current_exit"].to_dict()
 
 
-def fed_figure(result: Any) -> go.Figure:
-    """Cumulative FED over time (mean and max across agents)."""
-    rows = result.fed_history
-    if not rows:
-        return _empty("No FED history (load an FDS field with a FED model).")
-    df = pd.DataFrame(rows)
-    if "fed_cumulative" not in df or "time_s" not in df:
-        return _empty("FED history is missing expected columns.")
-    agg = df.groupby("time_s")["fed_cumulative"].agg(["mean", "max"]).reset_index()
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(x=agg["time_s"], y=agg["max"], mode="lines", name="max FED")
-    )
-    fig.add_trace(
-        go.Scatter(x=agg["time_s"], y=agg["mean"], mode="lines", name="mean FED")
-    )
-    fig.add_hline(
-        y=0.3,
-        line_dash="dot",
-        line_color="#ffb020",
-        annotation_text="incapacitation (0.3)",
-    )
-    fig.add_hline(
-        y=1.0, line_dash="dot", line_color="#e01e37", annotation_text="untenable (1.0)"
-    )
-    fig.update_layout(xaxis_title="time (s)", yaxis_title="cumulative FED")
-    return fig
-
-
 def smoke_figure(result: Any) -> go.Figure:
     """Mean speed factor and extinction over time."""
     rows = result.smoke_history

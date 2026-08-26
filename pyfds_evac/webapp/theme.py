@@ -259,7 +259,7 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 .lblwrap.open .help-badge { color: var(--gold); border-color: var(--gold); }
 .badge-tip {
   display: none;
-  background: var(--surface-tooltip); color: var(--ink);
+  background: var(--surface-tooltip); color: var(--tooltip-ink);
   font-size: .72rem; font-weight: 400; line-height: 1.5;
   text-transform: none; letter-spacing: normal;
   padding: .5rem .65rem; border-radius: .5rem; border: 1px solid var(--hairline-badge);
@@ -269,7 +269,10 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 
 /* run button running-state */
 .run-btn:disabled { cursor: progress; filter: saturate(.5) brightness(.92); opacity: .9; }
-.run-btn:disabled .run-btn-icon { animation: pulse 1.3s ease-in-out infinite; }
+.run-btn:disabled .run-btn-icon {
+  display: inline-block; border-radius: 99px;
+  animation: pulse 1.3s ease-in-out infinite;
+}
 .results-btn:hover:not(:disabled) { background: rgba(244,196,48,.10); }
 
 /* ---- scenario upload (sits under the picker, inside Core) ---- */
@@ -459,10 +462,63 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 
 /* ---- trajectory canvas ---- */
 .traj-wrap { margin-top: .6rem; }
+.traj-canvas-shell { position: relative; }
 .traj-canvas {
   width: 100%; height: 460px; display: block;
   border: 1px solid var(--hairline-strong); border-radius: .9rem; background: var(--surface-canvas);
 }
+.traj-fs-btn {
+  position: absolute; right: 12px; bottom: 12px; z-index: 3;
+  width: 2.1rem; height: 2.1rem; border-radius: .5rem;
+  border: 1px solid rgba(255,255,255,.25); background: rgba(20,16,12,.55);
+  color: #fff; cursor: pointer; font-size: 1.05rem; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  opacity: .75; transition: opacity .15s, border-color .12s, color .12s;
+}
+.traj-fs-btn:hover { opacity: 1; border-color: var(--ember); color: var(--ember); }
+/* Fullscreen goes edge-to-edge, YouTube-style: the canvas fills the whole
+   screen, the controls float as a bottom overlay instead of pushing it up,
+   and the FED panel (a separate summary widget, not part of the playback) is
+   hidden rather than eating vertical space underneath.
+
+   Keyed off a JS-toggled .traj-fs class, NOT :fullscreen. A selector list is
+   invalid as a whole if any one selector in it is unrecognised, so pairing
+   :fullscreen with a vendor-prefixed twin makes the browser discard the
+   entire rule on any engine that knows only one of them -- which silently
+   left fullscreen completely unstyled. Keep the vendor pseudo-classes in
+   their own single-selector rules below as a no-JS fallback. */
+.traj-wrap.traj-fs {
+  position: fixed; inset: 0; width: 100vw; height: 100vh;
+  z-index: 9999; background: var(--surface-canvas);
+  padding: 0; margin: 0; border-radius: 0;
+}
+.traj-wrap.traj-fs .traj-canvas-shell { position: absolute; inset: 0; }
+.traj-wrap.traj-fs .traj-canvas {
+  width: 100%; height: 100%; border: none; border-radius: 0;
+}
+.traj-wrap.traj-fs .traj-controls {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+  margin: 0; padding: 1rem 1.6rem 1.2rem;
+  background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,0));
+}
+.traj-wrap.traj-fs .traj-time { color: #fff; }
+.traj-wrap.traj-fs .traj-color-lbl { color: rgba(255,255,255,.72); }
+.traj-wrap.traj-fs #fed-panel { display: none; }
+.traj-wrap.traj-fs .traj-fs-btn { top: 14px; right: 14px; bottom: auto; z-index: 5; }
+/* Idle state while playing (inline and fullscreen alike): chrome fades out,
+   pointer vanishes. The canvas carries an inline `cursor: grab` set from JS,
+   and an inline style outranks a plain class rule -- hence !important on
+   that one selector. */
+.traj-wrap .traj-controls,
+.traj-wrap .traj-fs-btn { transition: opacity .28s ease; }
+.traj-wrap.traj-idle { cursor: none; }
+.traj-wrap.traj-idle .traj-canvas { cursor: none !important; }
+.traj-wrap.traj-idle .traj-controls,
+.traj-wrap.traj-idle .traj-fs-btn { opacity: 0; pointer-events: none; }
+/* Fallback for a browser that enters fullscreen without firing our handler.
+   Deliberately one selector per rule -- see the note above. */
+.traj-wrap:fullscreen { background: var(--surface-canvas); padding: 0; }
+.traj-wrap:-webkit-full-screen { background: var(--surface-canvas); padding: 0; }
 .traj-controls { display: flex; align-items: center; gap: .8rem; margin-top: .7rem; }
 .traj-play {
   width: 2.2rem; height: 2.2rem; flex: none; border-radius: 99px;

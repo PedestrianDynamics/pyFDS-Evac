@@ -425,7 +425,10 @@ _JS = """
   }
   readTheme();
 
-  var CANVAS_H = 440;           // render height; size() and the wheel handler must agree
+  var CANVAS_H = 440;           // fallback render height when the CSS box hasn't laid out yet
+  // Fullscreen stretches .traj-canvas to fill the viewport via CSS, so the
+  // draw buffer must track clientHeight rather than the fixed fallback.
+  function currentH() { return canvas.clientHeight || CANVAS_H; }
   var dragging = false, dragStart = null;
 
   // Smoke field: decode base64 uint8 frames into an offscreen canvas we can
@@ -478,25 +481,18 @@ _JS = """
     if (clipped) ctx.restore();
   }
 
-  // Pre-compute per-sample FED statistics for the panel
-  var fedMaxByTime = null, fedMeanByTime = null;
+  // Only one agent's dose actually matters for a tenability verdict: whoever
+  // ends up worst off. Find that agent once and track just their curve,
+  // rather than a max/mean blended across the whole crowd.
+  var worstAgent = -1;
   if (D.hasFed) {
-    fedMaxByTime = T.map(function (_, ti) {
-      var m = 0;
-      for (var k = 0; k < n; k++) {
-        var v = fedAt(k, ti);
-        if (v != null && v > m) m = v;
-      }
-      return m;
-    });
-    fedMeanByTime = T.map(function (_, ti) {
-      var s = 0, c = 0;
-      for (var k = 0; k < n; k++) {
-        var v = fedAt(k, ti);
-        if (v != null) { s += v; c++; }
-      }
-      return c > 0 ? s / c : 0;
-    });
+    var worstFinal = -1;
+    for (var wk = 0; wk < n; wk++) {
+      var fr = FED[wk];
+      if (!fr || !fr.length) continue;
+      var last = fr[fr.length - 1];
+      if (last != null && last > worstFinal) { worstFinal = last; worstAgent = wk; }
+    }
   }
 
   // FED dose -> tier colour (green -> amber -> orange -> red).
@@ -525,7 +521,7 @@ _JS = """
 
   function size() {
     var dpr = window.devicePixelRatio || 1;
-    var w = canvas.clientWidth || 600, h = CANVAS_H;
+    var w = canvas.clientWidth || 600, h = currentH();
     canvas.width = w * dpr; canvas.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return [w, h];
@@ -573,64 +569,17 @@ _JS = """
     return [lo, hi, f];
   }
   function drawFedPanel() {
-    if (!D.hasFed || !fedMaxByTime) return;
+    if (!D.hasFed || worstAgent < 0) return;
     var b = bracket(simT), lo = b[0], hi = b[1], f = b[2];
-    var curMax  = fedMaxByTime[lo]  + (fedMaxByTime[hi]  - fedMaxByTime[lo])  * f;
-    var curMean = fedMeanByTime[lo] + (fedMeanByTime[hi] - fedMeanByTime[lo]) * f;
+    var da = fedAt(worstAgent, lo), dc = fedAt(worstAgent, hi), cur;
+    if (da == null) cur = dc; else if (dc == null) cur = da;
+    else cur = da + (dc - da) * f;
+    if (cur == null) cur = 0;
     function fc(v) { return v >= 1.0 ? '#E01E37' : v >= 0.6 ? '#FF6A1A' : v >= 0.3 ? '#FFB020' : '#F4C430'; }
     var maxEl = document.getElementById('fed-val-max');
-    if (maxEl) { maxEl.textContent = curMax.toFixed(4); maxEl.style.color = fc(curMax); }
-    var meanEl = document.getElementById('fed-val-mean');
-    if (meanEl) { meanEl.textContent = curMean.toFixed(4); meanEl.style.color = fc(curMean); }
+    if (maxEl) { maxEl.textContent = cur.toFixed(4); maxEl.style.color = fc(cur); }
     var barEl = document.getElementById('fed-bar-fill');
-    if (barEl) barEl.style.width = Math.min(100, curMax * 100) + '%';
-    var sc = document.getElementById('fed-spark');
-    if (!sc) return;
-    var dpr = window.devicePixelRatio || 1;
-    var sw = sc.clientWidth, sh = sc.clientHeight;
-    if (!sw || !sh) return;
-    sc.width = sw * dpr; sc.height = sh * dpr;
-    var sctx = sc.getContext('2d');
-    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    sctx.clearRect(0, 0, sw, sh);
-    var N = fedMaxByTime.length;
-    var maxV = 0;
-    for (var i = 0; i < N; i++) { if (fedMaxByTime[i] > maxV) maxV = fedMaxByTime[i]; }
-    maxV = Math.max(1.05, maxV * 1.12);
-    function px(i) { return N > 1 ? (i / (N - 1)) * sw : sw / 2; }
-    function py(v) { return sh - (v / maxV) * (sh - 2); }
-    var grad = sctx.createLinearGradient(0, 0, 0, sh);
-    grad.addColorStop(0, 'rgba(244,196,48,.22)');
-    grad.addColorStop(1, 'rgba(244,196,48,0)');
-    sctx.beginPath();
-    sctx.moveTo(px(0), sh);
-    for (var i = 0; i < N; i++) sctx.lineTo(px(i), py(fedMaxByTime[i]));
-    sctx.lineTo(px(N - 1), sh); sctx.closePath();
-    sctx.fillStyle = grad; sctx.fill();
-    sctx.beginPath();
-    for (var i = 0; i < N; i++) { i === 0 ? sctx.moveTo(px(i), py(fedMaxByTime[i])) : sctx.lineTo(px(i), py(fedMaxByTime[i])); }
-    sctx.strokeStyle = '#F4C430'; sctx.lineWidth = 1.5; sctx.stroke();
-    sctx.beginPath();
-    for (var i = 0; i < N; i++) { i === 0 ? sctx.moveTo(px(i), py(fedMeanByTime[i])) : sctx.lineTo(px(i), py(fedMeanByTime[i])); }
-    sctx.strokeStyle = 'rgba(255,138,61,.7)'; sctx.lineWidth = 1;
-    sctx.setLineDash([3, 3]); sctx.stroke(); sctx.setLineDash([]);
-    var threshs = [[0.3, 'rgba(255,176,32,.55)', '0.3'], [1.0, 'rgba(224,30,55,.55)', '1.0']];
-    for (var ti2 = 0; ti2 < threshs.length; ti2++) {
-      var ty = py(threshs[ti2][0]);
-      if (ty >= 0 && ty <= sh) {
-        sctx.beginPath(); sctx.moveTo(0, ty); sctx.lineTo(sw, ty);
-        sctx.strokeStyle = threshs[ti2][1]; sctx.lineWidth = 1;
-        sctx.setLineDash([4, 4]); sctx.stroke(); sctx.setLineDash([]);
-        sctx.fillStyle = threshs[ti2][1]; sctx.font = '9px JetBrains Mono, monospace';
-        sctx.textAlign = 'right'; sctx.fillText(threshs[ti2][2], sw - 3, ty - 3); sctx.textAlign = 'left';
-      }
-    }
-    var curFrac = T.length > 1 ? (simT - T[0]) / (T[T.length - 1] - T[0]) : 0;
-    var cx = Math.max(0, Math.min(sw, curFrac * sw));
-    sctx.beginPath(); sctx.moveTo(cx, 0); sctx.lineTo(cx, sh);
-    sctx.strokeStyle = TH.sparkLine; sctx.lineWidth = 1.5; sctx.stroke();
-    sctx.beginPath(); sctx.arc(cx, py(curMax), 3.5, 0, 6.2832);
-    sctx.fillStyle = fc(curMax); sctx.fill();
+    if (barEl) barEl.style.width = Math.min(100, cur * 100) + '%';
   }
   function draw() {
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
@@ -688,7 +637,10 @@ _JS = """
         simT += dt * speedMult;
       }
       lastTs = ts;
-      if (simT >= t1) { simT = t1; playing = false; playBtn.textContent = '▶'; }
+      if (simT >= t1) {
+        simT = t1; playing = false; playBtn.textContent = '▶';
+        nudgeChrome();  // playback ended: bring the controls back
+      }
     }
     draw();
     requestAnimationFrame(loop);
@@ -697,9 +649,11 @@ _JS = """
     if (simT >= t1) simT = t0;
     playing = !playing; lastTs = null;
     playBtn.textContent = playing ? '❚❚' : '▶';
+    nudgeChrome();
   });
   slider.addEventListener('input', function () {
     playing = false; playBtn.textContent = '▶';
+    nudgeChrome();
     simT = t0 + (parseFloat(slider.value) / 1000) * span;
   });
   var customInput = document.getElementById('traj-speed-custom');
@@ -728,7 +682,7 @@ _JS = """
     e.preventDefault();
     var rect = canvas.getBoundingClientRect();
     var mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    var w = canvas.clientWidth || 600, h = CANVAS_H, cx = w / 2, cy = h / 2;
+    var w = canvas.clientWidth || 600, h = currentH(), cx = w / 2, cy = h / 2;
     var worldX = (mx - cx - panX) / zoom + cx;
     var worldY = (my - cy - panY) / zoom + cy;
     var newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
@@ -755,6 +709,72 @@ _JS = """
   var resetViewBtn = document.getElementById('traj-reset-view');
   if (resetViewBtn) {
     resetViewBtn.addEventListener('click', function () { zoom = 1; panX = 0; panY = 0; });
+  }
+  var fsBtn = document.getElementById('traj-fullscreen');
+  var trajWrap = canvas.closest('.traj-wrap');
+  if (fsBtn && trajWrap) {
+    fsBtn.addEventListener('click', function () {
+      var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fsEl) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      } else {
+        var req = trajWrap.requestFullscreen || trajWrap.webkitRequestFullscreen;
+        if (req) req.call(trajWrap);
+      }
+    });
+    // Drive the fullscreen layout off an explicit class rather than the
+    // :fullscreen pseudo-class. A selector list containing an unrecognised
+    // vendor-prefixed pseudo (:-webkit-full-screen on a non-WebKit engine,
+    // say) is invalid as a whole, so the browser discards the entire rule
+    // and no fullscreen styling applies at all. A plain class can't be
+    // dropped that way.
+    ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (evt) {
+      document.addEventListener(evt, function () {
+        var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        var on = fsEl === trajWrap;
+        trajWrap.classList.toggle('traj-fs', on);
+        fsBtn.title = on ? 'Exit fullscreen' : 'Fullscreen';
+        nudgeChrome();
+        // The canvas backing store is sized from clientWidth/clientHeight,
+        // which only change after the layout flip lands.
+        requestAnimationFrame(function () { size(); draw(); });
+      });
+    });
+  }
+
+  // Idle chrome hiding, YouTube-style: while playback runs, the controls fade
+  // out and the cursor disappears after a few seconds without input, and any
+  // input brings both straight back.
+  //
+  // Applies inline as well as in fullscreen. Inline the controls sit in their
+  // own row below the canvas, so fading them could leave an unexplained blank
+  // gap for someone who hit play and then went off to read the rest of the
+  // page -- the mouseleave handler below closes that hole by restoring the
+  // chrome whenever the pointer is not actually over the viewer. In
+  // fullscreen the viewer is the whole screen, so mouseleave never fires and
+  // the behaviour stays exactly like a video player's.
+  var IDLE_MS = 2600;
+  var idleTimer = null;
+  function clearIdle() {
+    if (!trajWrap) return;
+    trajWrap.classList.remove('traj-idle');
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+  }
+  function nudgeChrome() {
+    if (!trajWrap) return;
+    clearIdle();
+    if (!playing) return;
+    idleTimer = setTimeout(function () {
+      if (playing) trajWrap.classList.add('traj-idle');
+    }, IDLE_MS);
+  }
+  if (trajWrap) {
+    ['mousemove', 'mousedown', 'wheel', 'touchstart', 'keydown'].forEach(
+      function (evt) {
+        trajWrap.addEventListener(evt, nudgeChrome, { passive: true });
+      }
+    );
+    trajWrap.addEventListener('mouseleave', clearIdle);
   }
   var smBtn = document.getElementById('traj-smoke');
   if (smBtn) {
@@ -824,7 +844,10 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         )
     markup = (
         '<div class="traj-wrap">'
+        '<div class="traj-canvas-shell">'
         '<canvas id="traj-canvas" class="traj-canvas" title="Scroll to zoom, drag to pan"></canvas>'
+        '<button id="traj-fullscreen" type="button" class="traj-fs-btn" title="Fullscreen">&#9974;</button>'
+        "</div>"
         '<div class="traj-controls">'
         '<button id="traj-play" type="button" class="traj-play">▶</button>'
         '<input id="traj-slider" type="range" min="0" max="1000" value="0" '
@@ -868,35 +891,14 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
                 '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
                 '<div><div style="font-family:'
                 + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">max</div>'
+                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">worst agent</div>'
                 '<div id="fed-val-max" style="font-family:'
                 + "'JetBrains Mono'"
                 + ',monospace;font-size:26px;font-weight:500;color:#F4C430;transition:color .3s">0.0000</div></div>'
-                '<div><div style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">mean</div>'
-                '<div id="fed-val-mean" style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:26px;font-weight:500;color:#FF8A3D;transition:color .3s">0.0000</div></div>'
                 "</div>"
-                '<div style="position:relative;height:6px;border-radius:99px;background:var(--surface-card);border:1px solid var(--hairline);overflow:hidden;margin-bottom:4px">'
+                '<div style="position:relative;height:6px;border-radius:99px;background:var(--surface-card);border:1px solid var(--hairline);overflow:hidden">'
                 '<div id="fed-bar-fill" style="position:absolute;inset:0;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .15s"></div>'
                 "</div>"
-                '<div style="display:flex;justify-content:space-between;margin-bottom:10px">'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:var(--ink-faint)">0</span>'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#FFB020">0.3</span>'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#FF6A1A">0.6</span>'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#E01E37">1.0+</span>'
-                "</div>"
-                '<canvas id="fed-spark" style="width:100%;height:60px;display:block"></canvas>'
                 "</div>"
             )
             or ""
