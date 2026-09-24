@@ -63,7 +63,12 @@ menu:
 params:
   navbar:
     displayTitle: true
-    displayLogo: false
+    displayLogo: true
+    logo:
+      path: images/logo.png
+      link: /
+      width: 28
+      height: 28
 
   page:
     width: wide
