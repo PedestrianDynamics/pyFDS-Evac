@@ -1,0 +1,94 @@
+&HEAD CHID='t_junction', TITLE='T-corridor fire for pyFDS-Evac rerouting test' /
+
+! --- Computational domain ---
+! T-shape: corridor x=[0,30] y=[10,13], branch x=[17,23] y=[0,10]
+! Ceiling at 3 m
+&MESH IJK=30,52,12, XB=0.0,7.5,0,13,0,3 /
+&MESH IJK=30,52,12, XB=7.5,15.0,0,13,0,3 /
+&MESH IJK=30,52,12, XB=15.0,22.5,0,13,0,3 /
+&MESH IJK=30,52,12, XB=22.5,30.0,0,13,0,3 /
+
+&TIME T_END=300 /
+
+&DUMP DT_SLCF=1.0 /
+
+! --- Combustion: PVC cable, with the chlorine actually modelled ---
+! Simple chemistry cannot carry Cl, so this is an explicit lumped reaction on
+! the PVC monomer C2H3Cl. All the chlorine leaves as HCl (0.583 kg/kg), which
+! is what makes a PVC fire an irritant hazard and what the FIC term needs --
+! the previous deck declared HCl in its README but omitted it from the input,
+! leaving FIC identically zero. CO is raised to 0.150 kg/kg, the under-
+! ventilated figure, from the 0.063 of a well-ventilated flame.
+! Atom balance per mole of fuel: C 2, H 3, Cl 1, O 2.874 on both sides.
+! A lumped reaction tracks primitive species, so each one is declared and the
+! background is nitrogen with ambient oxygen set explicitly -- otherwise the
+! domain starts as pure nitrogen and nothing burns.
+&SPEC ID='NITROGEN', BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN', MASS_FRACTION_0=0.232 /
+&SPEC ID='WATER VAPOR', MASS_FRACTION_0=0.006 /
+&SPEC ID='CARBON DIOXIDE' /
+&SPEC ID='CARBON MONOXIDE' /
+&SPEC ID='SOOT', FORMULA='C' /  ! pure carbon, so the balance below is exact
+&SPEC ID='HYDROGEN CHLORIDE' /
+&SPEC ID='VINYL CHLORIDE', FORMULA='C2H3Cl' /
+
+&REAC FUEL='VINYL CHLORIDE',
+      SPEC_ID_NU='VINYL CHLORIDE','OXYGEN','CARBON DIOXIDE','CARBON MONOXIDE','SOOT','WATER VAPOR','HYDROGEN CHLORIDE',
+      NU=-1.0,-1.4377,0.7704,0.3347,0.8950,1.0,1.0,
+      HEAT_OF_COMBUSTION=16400 /
+
+! --- Geometry: solid blocks forming the T-shape ---
+! Floor, ceiling, and outer walls are default (solid).
+! Fill the two corners below the corridor that are outside the walkable T.
+&OBST XB= 0,17, 0,10, 0,3, COLOR='GRAY 80' /   ! left of branch
+&OBST XB=23,30, 0,10, 0,3, COLOR='GRAY 80' /   ! right of branch
+
+! --- Fire source at the junction ---
+! 2 m x 1 m burner on the floor, right where the branch meets the corridor.
+! HRRPUA=500 kW/m^2 x 2 m^2 = 1 MW peak; the ramp reaches full intensity at 200 s.
+&SURF ID='FIRE',
+      HRRPUA=1000,  ! 1000 kW/m2 x 2 m2 = 2 MW peak
+      COLOR='RED',
+      RAMP_Q='fire_ramp' /
+
+! Slow ramp so the smoke layer needs ~3-4 min to fill the corridor
+! rather than ~75 s; lets the agents entering later in the scenario
+! still have meaningful walking time before visibility collapses.
+&RAMP ID='fire_ramp', T=  0, F=0.00 /
+&RAMP ID='fire_ramp', T=20, F=0.05 /
+&RAMP ID='fire_ramp', T=40, F=0.40 /
+&RAMP ID='fire_ramp', T=60, F=0.80 /
+&RAMP ID='fire_ramp', T=90, F=1.00 /
+&RAMP ID='fire_ramp', T=300, F=1.00 /
+
+
+&VENT XB=24,26, 10.5,11.5, 0,0, SURF_ID='FIRE' /
+
+! --- Exit boundaries: A and B both open ---
+&VENT XB= 0, 0, 10,13, 0,3, SURF_ID='OPEN' /    ! Exit A (left)
+&VENT XB=30,30, 10,13, 0,3, SURF_ID='OPEN' /    ! Exit B (right)
+
+! --- Slice outputs at head height (z = 2 m) ---
+! Extinction (smoke-speed model)
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT' /
+
+! Required species for FED model (CO, CO2, O2)
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+
+! Optional species for full FED model
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='HYDROGEN CHLORIDE' /
+
+! Visibility slice for Smokeview visualization
+&SLCF PBZ=2.0, QUANTITY='VISIBILITY' /
+
+! --- Point devices for diagnostics ---
+&DEVC XB=25,25,11.5,11.5,2,2, QUANTITY='TEMPERATURE', ID='T_fire' /
+&DEVC XB=25,25,11.5,11.5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_fire' /
+&DEVC XB=25,25,11.5,11.5,2,2, QUANTITY='VISIBILITY', ID='V_fire' /
+&DEVC XB=10,10,11.5,11.5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_left' /
+&DEVC XB=25,25,11.5,11.5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_right' /
+&DEVC XB=20,20,5,5,2,2, QUANTITY='EXTINCTION COEFFICIENT', ID='K_branch' /
+
+&TAIL /
