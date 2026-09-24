@@ -53,6 +53,8 @@ layout: hextra-home
   >}}
 {{< /hextra/feature-grid >}}
 
+<div class="content hx-mt-16">
+
 ## Installation
 
 pyFDS-Evac is installed from the repository until the PyPI release, which waits
@@ -86,3 +88,5 @@ the deck has to dump specific slices for that to work.
 | [JuPedSim](https://jupedsim.org) | Moves agents collision-free on the walkable area. |
 
 pyFDS-Evac adds no movement model and no fire model.
+
+</div>
