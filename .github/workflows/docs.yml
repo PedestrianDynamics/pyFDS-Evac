@@ -21,7 +21,6 @@ concurrency:
 defaults:
   run:
     shell: bash
-    working-directory: site
 
 jobs:
   build:
@@ -45,6 +44,7 @@ jobs:
         env:
           HUGO_ENVIRONMENT: production
           HUGO_ENV: production
+        working-directory: site
         run: hugo --minify
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
