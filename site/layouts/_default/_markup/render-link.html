@@ -1,0 +1,32 @@
+{{- /* Resolve markdown links the way GitHub does for the repository.
+
+     docs/ is mounted into the site unchanged, so its pages link each other
+     as sibling .md files. A link to a page in the site becomes that page's
+     URL; a link to any other file in the repository goes to GitHub. */ -}}
+{{- $dest := .Destination -}}
+{{- $repo := "https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/" -}}
+{{- $external := or (strings.HasPrefix $dest "http") (strings.HasPrefix $dest "mailto:") (strings.HasPrefix $dest "#") -}}
+{{- if not $external -}}
+  {{- $path := $dest -}}
+  {{- $fragment := "" -}}
+  {{- with (index (split $dest "#") 1) -}}
+    {{- $fragment = printf "#%s" . -}}
+    {{- $path = index (split $dest "#") 0 -}}
+  {{- end -}}
+  {{- $page := "" -}}
+  {{- if strings.HasSuffix $path ".md" -}}
+    {{- $page = .Page.GetPage $path -}}
+  {{- end -}}
+  {{- if $page -}}
+    {{- $dest = printf "%s%s" $page.RelPermalink $fragment -}}
+  {{- else if strings.HasPrefix $path "../" -}}
+    {{- $dest = printf "%s%s%s" $repo (strings.TrimPrefix "../" $path) $fragment -}}
+  {{- else if strings.HasPrefix $path "/docs/" -}}
+    {{- $dest = printf "%s%s%s" $repo (strings.TrimPrefix "/" $path) $fragment -}}
+  {{- else if or (strings.HasSuffix $path ".md") (strings.HasSuffix $path ".pdf") (strings.HasSuffix $path ".py") -}}
+    {{- $dest = printf "%sdocs/%s%s" $repo $path $fragment -}}
+  {{- else -}}
+    {{- $dest = relURL $dest -}}
+  {{- end -}}
+{{- end -}}
+<a href="{{ $dest | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if strings.HasPrefix $dest "http" }} target="_blank" rel="noopener"{{ end }}>{{ .Text | safeHTML }}</a>

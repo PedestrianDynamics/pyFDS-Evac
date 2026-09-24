@@ -1,4 +1,7 @@
-# Model comparison: FDS+Evac vs pyFDS-Evac
+---
+title: "Model comparison: FDS+Evac vs pyFDS-Evac"
+weight: 7
+---
 
 > This document compares the evacuation models in FDS+Evac (v2.6.0,
 > Korhonen 2021) and pyFDS-Evac as implemented in this repository.

@@ -1,4 +1,7 @@
-# Smoke-aware routing
+---
+title: "Smoke-aware routing"
+weight: 4
+---
 
 > Part of [pyFDS-Evac](../README.md).
 

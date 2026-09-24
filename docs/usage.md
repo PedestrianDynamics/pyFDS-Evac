@@ -1,4 +1,7 @@
-# Usage: running simulations and producing plots
+---
+title: "Usage: running simulations and producing plots"
+weight: 1
+---
 
 This page catalogues every user-facing script in the repository: how to run
 an evacuation simulation, what artefacts it writes, and which plotting

@@ -1,4 +1,7 @@
-# Smoke-speed model
+---
+title: "Smoke-speed model"
+weight: 3
+---
 
 > Part of [pyFDS-Evac](../README.md).
 

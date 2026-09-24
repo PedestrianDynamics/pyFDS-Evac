@@ -1,4 +1,7 @@
-# Familiarity Routing Test (Full vs. Discovery)
+---
+title: "Familiarity Routing Test (Full vs. Discovery)"
+weight: 10
+---
 
 ## Purpose
 

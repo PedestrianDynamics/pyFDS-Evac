@@ -1,4 +1,7 @@
-# The gate cost model
+---
+title: "The gate cost model"
+weight: 5
+---
 
 > Part of [pyFDS-Evac](../README.md). Reference for `routing.cost_model`.
 > Provenance, review findings and the open questions live in

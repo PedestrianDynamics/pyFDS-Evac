@@ -1,4 +1,7 @@
-# Homogeneous CO FED Validation
+---
+title: "Homogeneous CO FED Validation"
+weight: 8
+---
 
 ## Purpose
 
