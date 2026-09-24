@@ -66,7 +66,6 @@ params:
     displayLogo: true
     logo:
       path: images/logo.png
-      link: /
       width: 28
       height: 28
 
