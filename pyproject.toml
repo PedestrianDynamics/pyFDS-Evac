@@ -5,7 +5,11 @@ description = "Fire Dynamics Simulator (FDS) evacuation modeling with visibility
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11,<3.13"
-authors = [{ name = "Mohcine Chraibi", email = "m.chraibi@fz-juelich.de" }]
+authors = [
+    { name = "Mohcine Chraibi", email = "m.chraibi@fz-juelich.de" },
+    { name = "Gregory Shouldice", email = "gregoryshouldice@gmail.com" },
+    { name = "Kristian Börger", email = "boerger@uni-wuppertal.de" },
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
