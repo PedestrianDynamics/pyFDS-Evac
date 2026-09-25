@@ -18,8 +18,8 @@ rest) is untracked. See the ignore rules in [`.gitignore`](../.gitignore).
 
 | Folder | What it is | Fire | Detail |
 |--------|------------|------|--------|
-| `ISO-table21` | **ISO 20414:2020 Table 21** (Test 18) reduced visibility vs walking speed. Also the default small fixture for unrelated tests. | deck | [README](../README.md#assets) |
-| `ISO-table22` | **ISO 20414:2020 Table 22** (Test 19) occupant incapacitation; gas field stubbed. | no | [README](../README.md#assets) |
+| `ISO-table21` | **ISO 20414:2020 Table 21** (Test 18) reduced visibility vs walking speed. Also the default small fixture for unrelated tests. | deck | [docs/assets.md](../docs/assets.md) |
+| `ISO-table22` | **ISO 20414:2020 Table 22** (Test 19) occupant incapacitation; gas field stubbed. | no | [docs/assets.md](../docs/assets.md) |
 | `t_junction` | T-corridor, cable fire at the junction, two exits. The rerouting case. | deck | [t_junction/README.md](t_junction/README.md), [test_rerouting_smoke_sweep.py](../tests/test_rerouting_smoke_sweep.py) |
 | `fed_incap_co_2000ppm`<br>`fed_incap_co_4000ppm`<br>`fed_incap_co_8000ppm` | Sealed uniform room at three constant CO concentrations, 100 non-evacuating agents, 4 MPI meshes. | deck | [testing-homogeneous.md](../docs/testing-homogeneous.md) |
 | `fed_incap_heat_100c`<br>`fed_incap_heat_150c`<br>`fed_incap_heat_200c` | Sealed uniform room at three constant gas temperatures (heat FED, SFPE Handbook Eq. 63.44), 100 non-evacuating agents, 4 MPI meshes. Same `config.json`/`geometry.wkt` as the CO ladder. | deck | [testing-heat.md](../docs/testing-heat.md) |
@@ -33,7 +33,7 @@ rest) is untracked. See the ignore rules in [`.gitignore`](../.gitignore).
 | `station_fahy` | The 2003 Station nightclub, walkable area traced by hand from the floor plan (`station_fahy/source`, rebuilt by `build_scenario.py`), with the routing/spawn config validated against Fahy, Proulx & Flynn (2011)'s witness-statement door shares. | no | [scripts/sweep_queue_weight.py](../scripts/sweep_queue_weight.py), [`assets/station_fahy/validate.py`](station_fahy/validate.py) |
 
 What each one proves, and where that proof is checked, is in the
-[Assets section of the main README](../README.md#assets).
+[docs/assets.md](../docs/assets.md).
 
 Note that the component verification suite,
 [`tests/verification/`](../tests/verification/README.md), does not load these

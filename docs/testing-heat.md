@@ -97,7 +97,7 @@ directly — *SFPE Handbook of Fire Protection Engineering*, 5th ed., Ch. 63
 "Assessment of Hazards to Occupants from Smoke, Toxic Gases, and Heat"
 (Purser & McAllister), p. 2382, quoted rather than derived. **Not** ISO TS
 13571 (the formula was previously miscited as that standard) and **not** in
-`materials/FDS+EVAC_Guide.pdf` (that document has no heat term at all).
+the FDS+Evac guide (that document has no heat term at all).
 
 ### Formula used
 

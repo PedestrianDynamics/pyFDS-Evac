@@ -809,11 +809,11 @@ lethality and speed-collapse case.
 
 ## References
 
-- [FDS+Evac Technical Reference and User's Guide](../materials/FDS+EVAC_Guide.pdf)
+- FDS+Evac Technical Reference and User's Guide
   — Korhonen (2021).
 - `materials/evac.f90` — the reference implementation; line-level citations for
   the door criteria are in [gate-model-review-notes.md](gate-model-review-notes.md).
-- [Boerger et al. (2024)](../materials/waypoint_based_visibility.pdf) —
+- [Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269) —
   waypoint-based visibility, Beer-Lambert integrated extinction (Eq. 8-9).
 - Jin, T. (1978). Visibility through fire smoke. *Journal of Fire and
   Flammability*, 9, 135-155. — `S = c / K`, `c = 3` for reflecting signs.

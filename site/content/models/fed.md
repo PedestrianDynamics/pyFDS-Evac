@@ -6,7 +6,7 @@ math: true
 
 The FED model implements the full ISO 13571 / Purser formulation as
 described in Section 3.4 of the
-[FDS+Evac Technical Reference and User's Guide](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/FDS+EVAC_Guide.pdf)
+FDS+Evac Technical Reference and User's Guide
 (Korhonen, 2021).
 
 ## Implemented equation (guide Eq. 12)

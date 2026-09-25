@@ -3,7 +3,7 @@
 Why agents flip-flop between exits during dynamic rerouting, what the game-theory
 literature says about it, and the fix we implemented. Code: `route_graph.py`.
 FDS+Evac reference: `materials/evac.f90`. Theory: Ehtamo et al. (2010),
-`materials/Ehtamo2010.pdf`.
+[doi:10.1142/S021952591000244X](https://doi.org/10.1142/S021952591000244X).
 
 ## The symptom
 

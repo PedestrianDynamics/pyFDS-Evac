@@ -15,7 +15,7 @@ via `SmokeSpeedConfig.speed_law`.
 ### Lund / FDS+Evac (`speed_law="lund"`, default)
 
 Linear speed-reduction derived from the Frantzich-Nilsson (Lund) data,
-as used in the original [FDS+Evac](../materials/FDS+EVAC_Guide.pdf)
+as used in the original FDS+Evac
 (Section 3.4, Eq. 11):
 
 ```
@@ -146,7 +146,7 @@ factor = model.speed_factor(time_s=30.0, x=5.0, y=3.0)
 ## Conversion utilities
 
 Two helper functions support the soot-density-based workflow from the
-original [FDS+Evac guide](../materials/FDS+EVAC_Guide.pdf):
+original FDS+Evac guide:
 
 - `extinction_from_soot_density(soot_density_mg_per_m3)` -- converts
   soot density to extinction using `K = K_m * rho_s * 1e-6`, where
@@ -157,10 +157,10 @@ original [FDS+Evac guide](../materials/FDS+EVAC_Guide.pdf):
 
 ## References
 
-- [FDS+Evac Technical Reference and User's Guide](../materials/FDS+EVAC_Guide.pdf)
+- FDS+Evac Technical Reference and User's Guide
   -- Korhonen (2021). Speed-reduction law (Section 3.4, Eq. 11),
   soot-density-to-extinction conversion.
-- [Ronchi et al. (2013)](../materials/Ronchi2013.pdf) --
+- [Ronchi et al. (2013)](https://doi.org/10.1007/s10694-012-0280-y) --
   Interpretation A3 comparison of speed-extinction models across
   evacuation tools.
 - [evac.f90](../materials/evac.f90) -- Original FDS+Evac Fortran

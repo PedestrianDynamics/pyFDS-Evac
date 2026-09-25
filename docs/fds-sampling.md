@@ -142,7 +142,7 @@ k_mean = integrated_extinction_along_los(
 ```
 
 This is the discrete form of
-[Boerger et al. (2024)](../materials/waypoint_based_visibility.pdf),
+[Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269),
 Eq. 8-9, and is used internally by the route-cost evaluator for
 smoke-aware [routing](routing.md).
 
