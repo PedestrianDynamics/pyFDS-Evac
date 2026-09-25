@@ -50,6 +50,9 @@ menu:
     - name: Models
       pageRef: /models
       weight: 2
+    - name: Talks
+      pageRef: /talks
+      weight: 3
     - name: Search
       weight: 4
       params:

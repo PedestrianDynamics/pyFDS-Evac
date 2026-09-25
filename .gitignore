@@ -245,3 +245,6 @@ materials/
 # full-vs-discovery question on a smaller plan that does have a fire.
 /assets/maze_test_full/
 /assets/maze_test_discovery/
+
+# published talk slides
+!site/static/talks/*.pdf
