@@ -52,3 +52,6 @@ jobs:
           folder: site/public
           branch: gh-pages
           force: false
+          # Slidev talk builds are pushed to gh-pages by hand, not built here.
+          clean-exclude: |
+            talks/visibility-seminar-2026
