@@ -12,6 +12,7 @@ from pyfds_evac.core import (
     run_scenario,
 )
 from pyfds_evac.core.agent_scalars import write_agent_scalars
+from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs
 
 
@@ -134,8 +135,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--disable-tenability",
         action="store_true",
-        help="Disable both the FIC speed-reduction rule and the FED>=1 "
-        "incapacitation rule (default: both active when a FED model is loaded)",
+        help="Run without a tenability config: disables the FIC speed-reduction "
+        "rule, toxic FED incapacitation and heat FED incapacitation. FED is "
+        "still accumulated and reported (default: all three active when a FED "
+        "or heat FED model is loaded)",
     )
     parser.add_argument(
         "--fic-alpha",
@@ -337,6 +340,16 @@ def _maybe_write_agent_scalars(output_path, fed_history) -> None:
     write_agent_scalars(pathlib.Path(output_path).resolve(), fed_history)
 
 
+def _copy_manifest(result, output_path: pathlib.Path) -> pathlib.Path | None:
+    """Copy the run manifest beside the copied trajectory, if there is one."""
+    manifest_file = getattr(result, "manifest_file", None)
+    if not manifest_file or not pathlib.Path(manifest_file).is_file():
+        return None
+    destination = manifest_path_for(output_path)
+    shutil.copy2(manifest_file, destination)
+    return destination
+
+
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
     parser = _build_parser()
@@ -418,6 +431,9 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(result.sqlite_file, output_path)
         artifacts.append(f"Trajectory SQLite: {output_path}")
+        manifest_path = _copy_manifest(result, output_path)
+        if manifest_path is not None:
+            artifacts.append(f"Run manifest: {manifest_path}")
         _maybe_write_agent_scalars(output_path, result.fed_history)
 
     if getattr(opts, "cleanup", False):

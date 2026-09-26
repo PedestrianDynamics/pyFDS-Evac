@@ -4,7 +4,7 @@ No dependency on the web backend — only JuPedSim, Shapely, and NumPy.
 
 Usage::
 
-    from core.scenario import load_scenario, run_scenario
+    from pyfds_evac.core.scenario import load_scenario, run_scenario
 
     scenario = load_scenario("scenario.zip")
     print(scenario.summary())
@@ -62,6 +62,7 @@ from .fed import (
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
+from .manifest import fds_dir_from_models, write_manifest
 from .route_graph import (
     AgentRouteState,
     RerouteConfig,
@@ -826,6 +827,7 @@ class ScenarioResult:
     route_history: list[dict[str, Any]] | None = None
     route_cost_history: list[dict[str, Any]] | None = None
     cognitive_map_history: list[dict[str, Any]] | None = None
+    manifest_file: str | None = None
 
     @property
     def success(self) -> bool:
@@ -888,10 +890,13 @@ class ScenarioResult:
         return df
 
     def cleanup(self):
-        """Delete the temporary SQLite trajectory file."""
+        """Delete the temporary SQLite trajectory file and its manifest."""
         if self.sqlite_file and os.path.exists(self.sqlite_file):
             os.unlink(self.sqlite_file)
             self.sqlite_file = None
+        if self.manifest_file and os.path.exists(self.manifest_file):
+            os.unlink(self.manifest_file)
+            self.manifest_file = None
 
 
 def _extract_terminal_exit(
@@ -2621,9 +2626,23 @@ def run_scenario(
         if collect_cognitive_map_history:
             metrics["cognitive_map_events"] = len(cognitive_map_history)
 
+        try:
+            manifest_file = write_manifest(
+                output_file,
+                seed=seed,
+                scenario_path=scenario.source_path,
+                fds_dir=fds_dir_from_models(
+                    smoke_speed_model, fed_model, heat_fed_model
+                ),
+            )
+        except (OSError, ValueError) as exc:
+            _logger.warning("Could not write the run manifest: %s", exc)
+            manifest_file = None
+
         return ScenarioResult(
             metrics=metrics,
             sqlite_file=output_file,
+            manifest_file=manifest_file,
             smoke_history=smoke_history if smoke_speed_model is not None else None,
             fed_history=fed_history
             if (fed_model is not None or heat_fed_model is not None)
