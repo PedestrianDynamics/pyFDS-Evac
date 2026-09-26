@@ -7,11 +7,11 @@ cascade:
 
 The sub-models that turn FDS output into agent behaviour, one page each,
 with the equations, the configuration keys, and the references. The
-[documentation](/docs) section holds the full reference for each model;
+[documentation](/docs/) section holds the full reference for each model;
 these pages are the overview.
 
 {{< cards >}}
-  {{< card link="smoke-speed" title="Smoke-speed model" subtitle="Extinction coefficient to walking speed: Frantzich–Nilsson and Fridolf." >}}
+  {{< card link="smoke-speed" title="Smoke-speed model" subtitle="Extinction coefficient to walking speed: Frantzich–Nilsson, and the `fridolf` option." >}}
   {{< card link="fed" title="Fractional effective dose" subtitle="Purser toxic gas dose, convective heat dose, irritant concentration." >}}
   {{< card link="routing" title="Dynamic route rerouting" subtitle="Smoke integrated along the route refuses and orders exits." >}}
   {{< card link="visibility" title="Visibility and cognitive maps" subtitle="Sign legibility through smoke decides what each agent knows." >}}

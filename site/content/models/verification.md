@@ -4,6 +4,8 @@ weight: 5
 math: true
 ---
 
+Symbols follow the [notation table](/docs/concepts.md#notation).
+
 A two-layer verification suite checks each sub-model against a hand-computable
 reference:
 
@@ -62,7 +64,7 @@ and 0.25 m/s at *K* = 1.0 1/m. With *K* read from FDS
 prescribes the soot density for *K* = 1.0 1/m. The test requires the slice to
 return that value within 1 % and to be non-zero. The second check is a null
 control, because a missing slice reads as clear air. Only the default
-Frantzich–Nilsson law is run in the ISO layout. Fridolf's law (`speed_law="fridolf"`), which
+Frantzich–Nilsson law is run in the ISO layout. The `fridolf` option (`speed_law="fridolf"`), which
 is reachable only from Python, is checked by the S2 corridor scenario of the
 suite above, not by this test.
 

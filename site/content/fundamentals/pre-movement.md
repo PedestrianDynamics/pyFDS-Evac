@@ -40,7 +40,7 @@ from 9 fire incidents and 103 evacuation drills, covering 13 591 evacuees in
 16 countries, grouped by occupancy type and clustered to identify
 sub-groups. They fitted gamma, log-normal, log-logistic and Weibull
 distributions, all two-parameter, positive and right-skewed, for use as
-model inputs. The database extends the tables of Gwynne and Boyce (2016,
+model inputs (their Eqs. 2–5). The database extends the tables of Gwynne and Boyce (2016,
 Ch. 64). A corrigendum was published in 2019. ISO/TR 16738 (Annex E) gives
 guidance and default pre-travel times from published data.
 
@@ -55,24 +55,26 @@ two distributions cannot simply be added (ISO/TR 16738, §7).
 
 ## Sources
 
-- ISO/TR 16738:2009, §5.4, §5.7 and §7.
+- ISO (2009). *ISO/TR 16738:2009 Fire-safety engineering — Technical
+  information on methods for evaluating behaviour and movement of people*,
+  §5.4, §5.7 and §7. ISO, Geneva.
   [iso.org/standard/42887](https://www.iso.org/standard/42887.html). Read
   from the public preview.
-- S. M. V. Gwynne and K. E. Boyce (2016). Engineering data. *SFPE Handbook*,
-  5th ed., Ch. 64.
+- Gwynne, S. M. V., & Boyce, K. E. (2016). *Engineering data*. SFPE
+  Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
   [doi:10.1007/978-1-4939-2565-0_64](https://doi.org/10.1007/978-1-4939-2565-0_64)
-- E. D. Kuligowski (2016). Human behavior in fire. *SFPE Handbook*, 5th ed.,
-  Ch. 58, 2070–2114.
+- Kuligowski, E. D. (2016). *Human behavior in fire*. SFPE Handbook of
+  Fire Protection Engineering, 5th ed., Ch. 58, 2070–2114.
   [doi:10.1007/978-1-4939-2565-0_58](https://doi.org/10.1007/978-1-4939-2565-0_58)
-- R. Lovreglio, E. Kuligowski, S. Gwynne and K. Boyce (2019). A
-  pre-evacuation database for use in egress simulations. *Fire Safety
-  Journal* 105:107–128.
+- Lovreglio, R., Kuligowski, E., Gwynne, S., & Boyce, K. (2019). *A
+  pre-evacuation database for use in egress simulations*. Fire Safety
+  Journal, 105, 107–128.
   [doi:10.1016/j.firesaf.2018.12.009](https://doi.org/10.1016/j.firesaf.2018.12.009).
-  Corrigendum: *Fire Safety Journal* 108:102829.
+  Corrigendum: Fire Safety Journal, 108, 102829.
   [doi:10.1016/j.firesaf.2019.102829](https://doi.org/10.1016/j.firesaf.2019.102829)
-- R. Lovreglio, E. Ronchi and D. Nilsson (2015). A model of the
-  decision-making process during pre-evacuation. *Fire Safety Journal*
-  78:168–179.
+- Lovreglio, R., Ronchi, E., & Nilsson, D. (2015). *A model of the
+  decision-making process during pre-evacuation*. Fire Safety Journal, 78,
+  168–179.
   [doi:10.1016/j.firesaf.2015.07.001](https://doi.org/10.1016/j.firesaf.2015.07.001)
   (further reading; not summarised here).
 

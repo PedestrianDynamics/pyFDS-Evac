@@ -65,19 +65,21 @@ population (see [Incapacitation thresholds](/fundamentals/incapacitation-thresho
 
 ## Sources
 
-- ISO/TR 16738:2009. *Fire-safety engineering — Technical information on
-  methods for evaluating behaviour and movement of people.* ISO, Geneva.
-  [iso.org/standard/42887](https://www.iso.org/standard/42887.html).
+- ISO (2009). *ISO/TR 16738:2009 Fire-safety engineering — Technical
+  information on methods for evaluating behaviour and movement of people*.
+  ISO, Geneva. [iso.org/standard/42887](https://www.iso.org/standard/42887.html).
   Read from the public preview (§1–7).
-- R. W. Bukowski and J. S. Tubbs (2016). Egress concepts and design
-  approaches. *SFPE Handbook*, 5th ed., Ch. 56, 2012–2046.
-  [doi:10.1007/978-1-4939-2565-0_56](https://doi.org/10.1007/978-1-4939-2565-0_56)
-- S. M. V. Gwynne and K. E. Boyce (2016). Engineering data. *SFPE
-  Handbook*, 5th ed., Ch. 64, 2429–2551.
-  [doi:10.1007/978-1-4939-2565-0_64](https://doi.org/10.1007/978-1-4939-2565-0_64)
-- ISO 13571:2012. *Life-threatening components of fire — Guidelines for the
-  estimation of time to compromised tenability in fires.*
+- ISO (2012). *ISO 13571:2012 Life-threatening components of fire —
+  Guidelines for the estimation of time to compromised tenability in
+  fires*. ISO, Geneva.
   [iso.org/standard/56172](https://www.iso.org/standard/56172.html).
+- Bukowski, R. W., & Tubbs, J. S. (2016). *Egress concepts and design
+  approaches*. SFPE Handbook of Fire Protection Engineering, 5th ed.,
+  Ch. 56, 2012–2046.
+  [doi:10.1007/978-1-4939-2565-0_56](https://doi.org/10.1007/978-1-4939-2565-0_56)
+- Gwynne, S. M. V., & Boyce, K. E. (2016). *Engineering data*. SFPE
+  Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
+  [doi:10.1007/978-1-4939-2565-0_64](https://doi.org/10.1007/978-1-4939-2565-0_64)
 
 How pyFDS-Evac uses this: see the
 [RSET ensemble how-to](/docs/howto-rset-ensemble.md).

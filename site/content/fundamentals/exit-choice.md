@@ -31,7 +31,11 @@ influence was stronger with two neighbours than with one.
 ## Discrete-choice models
 
 Lovreglio, Borri, dell'Olio and Ibeas (2014) introduced a random-utility
-discrete-choice model for exit choice in emergency evacuations. Lovreglio,
+discrete-choice model for exit choice in emergency evacuations. Haghani and
+Sarvi (2017, p. 241) describe it as an internet-based stated-choice
+experiment with binary choices in simple visualised geometries, which
+investigates the effect of individuals' demographic characteristics on exit
+choice. Lovreglio,
 Fonzone and dell'Olio (2016) calibrated a mixed logit model on an online
 stated-preference survey with non-immersive virtual reality and 1503
 participants. Smoke, emergency lighting, exit distance, the number of
@@ -63,30 +67,34 @@ exits are rarely used in many real evacuations because they are unfamiliar
 
 ## Sources
 
-- J. D. Sime (1985). Movement toward the familiar: person and place
-  affiliation in a fire entrapment setting. *Environment and Behavior*
-  17(6):697–724.
+- Sime, J. D. (1985). *Movement toward the familiar: person and place
+  affiliation in a fire entrapment setting*. Environment and Behavior,
+  17(6), 697–724.
   [doi:10.1177/0013916585176003](https://doi.org/10.1177/0013916585176003)
-- M. Kinateder, B. Comunale and W. H. Warren (2018). Exit choice in an
+- Kinateder, M., Comunale, B., & Warren, W. H. (2018). *Exit choice in an
   emergency evacuation scenario is influenced by exit familiarity and
-  neighbor behavior. *Safety Science* 106:170–175.
+  neighbor behavior*. Safety Science, 106, 170–175.
   [doi:10.1016/j.ssci.2018.03.015](https://doi.org/10.1016/j.ssci.2018.03.015)
-- R. Lovreglio, D. Borri, L. dell'Olio and A. Ibeas (2014). A discrete choice
-  model based on random utilities for exit choice in emergency evacuations.
-  *Safety Science* 62:418–426.
+- Lovreglio, R., Borri, D., dell'Olio, L., & Ibeas, A. (2014). *A discrete
+  choice model based on random utilities for exit choice in emergency
+  evacuations*. Safety Science, 62, 418–426.
   [doi:10.1016/j.ssci.2013.10.004](https://doi.org/10.1016/j.ssci.2013.10.004)
-- R. Lovreglio, A. Fonzone and L. dell'Olio (2016). A mixed logit model for
-  predicting exit choice during building evacuations. *Transportation
-  Research Part A* 92:59–75.
+- Lovreglio, R., Fonzone, A., & dell'Olio, L. (2016). *A mixed logit model
+  for predicting exit choice during building evacuations*. Transportation
+  Research Part A: Policy and Practice, 92, 59–75.
   [doi:10.1016/j.tra.2016.06.018](https://doi.org/10.1016/j.tra.2016.06.018)
-- M. Haghani and M. Sarvi (2017). Stated and revealed exit choices of
-  pedestrian crowd evacuees. *Transportation Research Part B* 95:238–259.
+- Haghani, M., & Sarvi, M. (2017). *Stated and revealed exit choices of
+  pedestrian crowd evacuees*. Transportation Research Part B:
+  Methodological, 95, 238–259.
   [doi:10.1016/j.trb.2016.10.019](https://doi.org/10.1016/j.trb.2016.10.019)
-- M. Haghani and M. Sarvi (2018). Crowd behaviour and motion: empirical
-  methods. *Transportation Research Part B* 107:253–294.
+- Haghani, M., & Sarvi, M. (2018). *Crowd behaviour and motion: empirical
+  methods*. Transportation Research Part B: Methodological, 107, 253–294.
   [doi:10.1016/j.trb.2017.06.017](https://doi.org/10.1016/j.trb.2017.06.017)
-- T. Korhonen (2021). *FDS+Evac Technical Reference and User's Guide*, §3.5.
-  VTT Technical Research Centre of Finland. Secondary source.
+- Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
+  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0 draft),
+  §3.5. VTT Technical Research Centre of Finland.
+  [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).
+  Secondary source.
 
 How pyFDS-Evac uses this: see [route rerouting](/models/routing.md) and
 [visibility and cognitive maps](/models/visibility.md).

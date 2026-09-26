@@ -33,15 +33,17 @@ $$
 with further expressions for serious injury (Eq. 63.46) and for fatal
 exposure (Eq. 63.47). Thermal tolerance data for unprotected skin suggest a
 limit of about 120 °C for convected heat, above which considerable pain
-occurs quickly. Burns to the respiratory tract do not occur from air with
-less than 10 % water vapour in the absence of burns to the facial skin, but
-saturated air above only 60 °C can cause them.
+occurs quickly (Ch. 63, p. 2383 and Table 63.20). Burns to the respiratory
+tract do not occur from air with less than 10 % water vapour in the absence
+of burns to the facial skin, but saturated air above only 60 °C can cause
+them (p. 2382).
 
 ## Radiant heat: pain and burns
 
 The tenability limit for radiant heat on skin is about
 **2.5 kW/m²**, below which exposure can be tolerated for at least several
-minutes; at and above it, pain is followed by burns within seconds. Below
+minutes; at and above it, pain is followed by burns within seconds
+(Ch. 63, p. 2382 and Table 63.20). Below
 this flux the radiant contribution is neglected. Above it, the time
 \(t_{I\,\mathrm{rad}}\) [min] to a given endpoint at radiant flux
 *q* [kW/m²] is
@@ -53,9 +55,9 @@ $$
 where *r* [(kW/m²)^4/3·min] is the dose for the endpoint: about 1.33–1.67 for
 severe skin pain, 4.0–12.2 for second-degree burns and 16.7 for third-degree
 burns. Purser proposes 1.33 as a tolerance threshold and 10 as a threshold
-for incapacitation and serious injury. For occupants passing under a hot
-smoke layer, 2.5 kW/m² corresponds approximately to a layer temperature of
-200 °C.
+for incapacitation and serious injury (p. 2382). For occupants passing
+under a hot smoke layer, 2.5 kW/m² corresponds approximately to a layer
+temperature of 200 °C (p. 2382).
 
 ## Combining the two
 
@@ -86,11 +88,14 @@ equations describe the effect of heat on walking speed or on route choice.
 
 ## Sources
 
-- D. A. Purser and J. L. McAllister (2016). Assessment of hazards to
-  occupants from smoke, toxic gases, and heat. *SFPE Handbook*, 5th ed.,
-  Ch. 63, Eqs. 63.43–63.49 and Table 63.20.
+- Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
+  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
+  Protection Engineering, 5th ed., Ch. 63, 2308–2428. Eqs. 63.43–63.49,
+  Fig. 63.28 and Table 63.20.
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
-- ISO 13571:2012, §4.4.
+- ISO (2012). *ISO 13571:2012 Life-threatening components of fire —
+  Guidelines for the estimation of time to compromised tenability in
+  fires*, §4.4. ISO, Geneva.
   [iso.org/standard/56172](https://www.iso.org/standard/56172.html).
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md#convective-heat).

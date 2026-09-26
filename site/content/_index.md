@@ -34,7 +34,7 @@ Research software, provided without warranty. Not intended for regulatory or des
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Speed"
-    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or Fridolf's non-linear law from Python. Irritant gases add a further slowdown."
+    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or the non-linear `fridolf` option, V/(V+2), from Python. Irritant gases add a further slowdown."
   >}}
   {{< hextra/feature-card
     title="Dose"

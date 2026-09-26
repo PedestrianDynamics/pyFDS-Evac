@@ -12,8 +12,9 @@ cost formulas, and API reference, and
 working notes on exit choice and where the exit-choice research papers
 disagree with each other.
 
-Background: the ideas behind this model are explained on the [Concepts](/docs/concepts.md) page
-and in the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
+Symbols follow the [notation table](/docs/concepts.md#notation).
+
+Background: the [Concepts](/docs/concepts.md) page and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
 ([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
 
 ## How smoke enters route choice
@@ -31,7 +32,7 @@ the soot column the agent walks through, with `K_ave` the mean extinction along
 the route polyline and `L` the distance still to walk. On this page `tau` is
 always this dimensionless optical depth, not the relaxation time τ of
 FDS+Evac's movement model. A route is refused when
-`tau` exceeds `tau_max` (default 6), Dijkstra weights every edge by its own
+`tau` exceeds `tau_max` (see [Parameters](#parameters)), Dijkstra weights every edge by its own
 `tau`, and `tau` orders the routes that survive, with travel time breaking ties.
 Path choice and exit choice are therefore one objective. In clear air every
 `tau` is zero, nothing is refused, and the model reduces to nearest-exit.
@@ -45,15 +46,8 @@ initial choice) and 0.8 `tau_max` = 4.8 (any other exit). Route C is refused;
 route B ranks first although it is the longest walk.
 Script: `scripts/figures/exposure_gate.py`.*
 
-`tau` is an **exposure** statement, not a sighting distance. The criterion grew
-out of one -- `c / K_ave >= 0.5 * L` rearranges to `K_ave * L <= 2c`, which is
-`tau <= 6` at Jin's `c = 3` -- and FDS+Evac's tier-4 door rule is exactly
-`tau > 6` (`evac.f90:16458, :16463`). But Jin's `S = c / K` is contrast along a
-straight unobstructed line to a sign; integrating `K` around two corners
-measures what you walk through, not what you can see. The two coincide only on a
-straight corridor, and `tau_max` is **not calibrated** against a soot-dose or
-FED-equivalent limit. Jin's constant keeps its proper meaning in the cognitive
-map, where sign legibility is the question being asked.
+`tau` is an **exposure** statement, not a sighting distance; where its budget
+comes from is under [Deviations from the literature](#deviations-from-the-literature).
 
 Refusals are **not remembered**. The criterion is relative to the distance still
 to walk, so it relaxes on approach: smoke that refuses a door at 40 m accepts it
@@ -61,8 +55,8 @@ at 2 m. When every route is refused the agent still has to move, so it takes the
 one with least smoke to walk through and holds it unless a rival's worst stretch
 is clearly milder (`fallback_switch_margin`). Churn is held down by the
 exit-switch anchor, by a stricter budget for a rival exit
-(`tau_return_margin`, 0.8), and by a discount on the current exit's `tau` in the
-sort (`current_exit_discount`, 0.9, FDS+Evac's `FAC_DOOR_OLD2`).
+(`tau_return_margin`), and by a discount on the current exit's `tau` in the
+sort (`current_exit_discount`, FDS+Evac's `FAC_DOOR_OLD2`).
 
 **Measured, with the limitation stated.** Ranking on `tau` sends 39 of
 `world100`'s agents to the far clean exit, with 9 switches and no agent
@@ -151,6 +145,37 @@ fire and a clean 58 m way round -- and its results are in the sciebo case folder
 - **Throughput throttling**: Optional exit flux limiting via
   `enable_throughput_throttling` and `max_throughput` in scenario config
 
+## Parameters
+
+Defaults in the code, as a scenario's `routing` block reads them
+(`RouteCostConfig.from_routing_params`, `pyfds_evac/core/route_graph.py`). The
+full key table, with which keys act under which cost model, is in
+[docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
+
+| `routing` key | Default | Meaning |
+|---|---|---|
+| `cost_model` | `"gate"` | `"gate"` or `"additive"` |
+| `tau_max` | `6.0` | Budget \(\tau_{\max}\) on the optical depth of a route |
+| `tau_return_margin` | `0.8` | A rival exit must come in under `tau_max` times this |
+| `current_exit_discount` | `0.9` | Factor on the current exit's `tau` in the sort |
+| `tau_deadband` | `0.1` | Anchor deadband, as a fraction of `tau_max` |
+| `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused |
+| `anticipate` | `true` | Price each segment at the agent's arrival time |
+| `sampling_step_m` | `2.0` | \(\Delta s\), spacing of smoke samples along a polyline [m] |
+| `base_speed_m_per_s` | `1.3` | Router's clear-air speed [m/s], not the agent's \(v_0\) |
+| `alpha` | `0.706` | Router's copy of \(\alpha\) [m/s], for travel time only |
+| `beta` | `-0.057` | Router's copy of \(\beta\) [m²/s], for travel time only |
+| `min_speed_factor` | `0.1` | Router's copy of \(f_{\min}\), for travel time only |
+
+The router always uses the linear speed law, whatever `SmokeSpeedConfig`
+the agents walk with. Each agent re-decides every
+`RerouteConfig.reevaluation_interval_s`:
+
+| Where the run starts | Re-decision interval |
+|---|---|
+| `RerouteConfig()` built in Python | `10.0` s |
+| `run.py --reroute-interval` | `1.0` s |
+
 ## Usage
 
 See [docs/usage.md](/docs/usage.md) for the full rerouting CLI
@@ -160,13 +185,20 @@ that consume the generated route-cost CSVs.
 
 ## Deviations from the literature
 
-The refusal budget \(\tau_{\max}\) = 6 (`pyfds_evac/core/route_graph.py:683`)
-is FDS+Evac's door rule, visibility \(3/K\) at least half the distance to the
-door, which rests on Jin's \(S = C/K\) with *C* = 3. Jin's law describes a
-straight line of sight to a sign in uniform smoke. Here the same number
-bounds the integral of *K* along a walked polyline, which measures exposure,
-not sight, and it has not been calibrated against a smoke-exposure or FED
-limit. Exit choice is ranked on optical depth and travel time; familiarity
-and social influence, which the exit-choice literature finds significant
-(Sime 1985; Kinateder et al. 2018; Lovreglio et al. 2016), enter only through
-the cognitive map, not through the route cost.
+The published laws are on [Visibility through smoke](/fundamentals/visibility.md)
+and [Exit choice and familiarity](/fundamentals/exit-choice.md).
+
+- **Where the budget comes from.** FDS+Evac's tier-4 door rule requires the
+  visibility of a reflective sign at the door, \(3/\bar K\), to be at least half
+  the distance *d* to the door, which rearranges to \(\bar K d \le 6\)
+  (`evac.f90:16458`, `:16463`). That is the default `tau_max`
+  (`route_graph.py:683`). Jin's law describes a straight line of sight to a
+  sign in uniform smoke; here the same number bounds the integral of *K* along
+  a walked polyline, which measures exposure, not sight. The two agree only
+  on a straight corridor, and the budget has not been calibrated against a
+  smoke-exposure or FED limit. The line-level comparison with `evac.f90` is in
+  [docs/route-cost-gate.md](/docs/route-cost-gate.md#where-the-6-comes-from).
+- **Exit choice.** Routes are ranked on optical depth and travel time.
+  Familiarity and social influence, which the exit-choice literature finds
+  significant, enter only through the cognitive map, not through the route
+  cost, and herding is not modelled.

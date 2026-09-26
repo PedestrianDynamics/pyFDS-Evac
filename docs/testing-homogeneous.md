@@ -193,7 +193,7 @@ to the hand-calc's **FED = 1.0** threshold (186.6 s), not the FED = 0.3
 two when comparing numbers.
 
 
-Remaining before this test case is complete:
+### Remaining before this test case is complete
 
 - Decide and document a formal tolerance (±5%, absolute FED difference,
   etc.) rather than eyeballing agreement from the plots.

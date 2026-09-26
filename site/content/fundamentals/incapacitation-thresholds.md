@@ -30,14 +30,15 @@ Purser and McAllister (2016, Society of Fire Protection Engineers (SFPE)
 Handbook Ch. 63) state that the endpoints of their
 equations represent the median of the distribution, and that approximately
 11.3 % of the population is likely to be susceptible below an FED of 0.3,
-citing ISO 13571. In the same paragraph they write that approximately 90 %
-of the population is susceptible below an FED of 1.3. For a log-normal with
+citing ISO 13571 (p. 2334; repeated on p. 2415). In the same paragraph they
+write that approximately 90 % of the population is susceptible below an FED
+of 1.3. For a log-normal with
 median 1, these two statements are not consistent: 11.3 % below 0.3 implies a
 log-scale standard deviation near 1.0, whereas 90 % below 1.3 implies about
 0.2. The source does not give the distribution parameters that would resolve
 this. Ch. 63 also notes that, because gas concentrations rise quickly in most
 flaming fires, variations in individual susceptibility have relatively minor
-effects on predicted times to incapacitation.
+effects on predicted times to incapacitation (p. 2334).
 
 ## NIST Technical Note 1797
 
@@ -68,19 +69,28 @@ preview does not state which standard deviation ISO used.
 
 ## Sources
 
-- ISO 13571:2012, §4.1 and §5.4.
+- ISO (2012). *ISO 13571:2012 Life-threatening components of fire —
+  Guidelines for the estimation of time to compromised tenability in
+  fires*, §4.1 and §5.4. ISO, Geneva.
   [iso.org/standard/56172](https://www.iso.org/standard/56172.html). Read
   from the public preview; Annex A.5.2 was not available.
-- ISO 13571:2007. Read from the public preview (§5).
-- ISO/TR 13571-2:2016.
+- ISO (2007). *ISO 13571:2007 Life-threatening components of fire —
+  Guidelines for the estimation of time available for escape using fire
+  data*, §5. ISO, Geneva. Withdrawn.
+  [iso.org/standard/42967](https://www.iso.org/standard/42967.html). Read
+  from the public preview.
+- ISO (2016). *ISO/TR 13571-2:2016 Life-threatening components of fire —
+  Part 2: Methodology and examples of tenability assessment*. ISO, Geneva.
   [iso.org/standard/65996](https://www.iso.org/standard/65996.html). Read
   from the public preview.
-- D. A. Purser and J. L. McAllister (2016). *SFPE Handbook*, 5th ed., Ch. 63.
+- Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
+  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
+  Protection Engineering, 5th ed., Ch. 63, 2308–2428.
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
-- J. D. Averill, L. Moore-Merrell, R. T. Ranellone Jr., C. Weinschenk,
-  N. Taylor, R. Goldstein, R. Santos, D. Wissoker and K. Notarianni (2013).
-  *Report on High-Rise Fireground Field Experiments.* NIST Technical Note
-  1797.
+- Averill, J. D., Moore-Merrell, L., Ranellone, R. T., Jr., Weinschenk, C.,
+  Taylor, N., Goldstein, R., Santos, R., Wissoker, D., & Notarianni, K. A.
+  (2013). *Report on high-rise fireground field experiments* (K. M.
+  Butler, Ed.). NIST Technical Note 1797.
   [doi:10.6028/NIST.TN.1797](https://doi.org/10.6028/NIST.TN.1797)
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md#tenability-irritant-slowdown-and-incapacitation).
