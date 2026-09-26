@@ -83,9 +83,10 @@ on the [smoke-speed model](/models/smoke-speed.md) page.
 
 ![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V+2) with C = 3 and C = 8](/images/concepts/speed_laws.png)
 
-*Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Blue: Frantzich–Nilsson
-at the defaults, with its floor. Orange: the `fridolf` option, \(V/(V+2)\)
-with \(V = C/K\), for C = 3 (solid) and C = 8 (dashed). Script: `scripts/figures/speed_laws.py`.*
+*Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Solid dark blue:
+Frantzich–Nilsson at the defaults, with its floor. The `fridolf` option,
+\(V/(V+2)\) with \(V = C/K\): red dashed for C = 3, orange dash-dotted for
+C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: `scripts/figures/speed_laws.py`.*
 
 ### Tenability: a brake and a stop
 
@@ -129,7 +130,8 @@ The coded forms are on the [FED model](/models/fed.md) page.
 
 ![Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
 
-*Figure 2. The brake: f(K), g(FIC) and their product. FED does not appear on
+*Figure 2. The brake: (a) f(K), (b) g(FIC) and (c) their product, with
+contours of equal speed factor. FED does not appear on
 these axes; it only sets the speed to zero at the agent's threshold.
 Script: `scripts/generate_tenability_curves.py`.*
 
@@ -195,7 +197,7 @@ budget, the `"additive"` alternative and a measured case of oscillation.
 ![Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6](/images/concepts/exposure_gate.png)
 
 *Figure 4. Schematic with a toy plume, not a simulation. Top: three candidate
-routes coloured by K [1/m]. Bottom: their optical depth \(\tau\) against the
+routes, their samples shaded by K [1/m]. Bottom: their optical depth \(\tau\) against the
 budget for the current exit (solid) and the stricter one for a rival
 (dashed). Route C is refused; route B ranks first although it is the longest
 walk. Script: `scripts/figures/exposure_gate.py`.*
@@ -283,7 +285,7 @@ sight gating and what each one means.
 ![Six copies of a corridor with an agent probe at y = 4, 10, 14, 20, 26 and 30 m; the side exit is unknown below the legibility band, known inside it, and still known above it](/images/concepts/map_memory.png)
 
 *Figure 7. Asset `assets/cognitive_map_memory`: a corridor whose side-exit
-sign is legible only inside the green band. A discovery agent probed at six
+sign is legible only inside the shaded band. A discovery agent probed at six
 positions: above the band the sign is no longer legible, but the exit is still
 in the map and still chosen. Outcomes as recorded in the asset README and
 pinned by tests. Script: `scripts/figures/map_memory.py`.*

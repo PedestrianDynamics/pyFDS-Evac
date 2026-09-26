@@ -31,15 +31,20 @@ except ImportError:  # seaborn only sets the theme; fall back to rcParams
 
 OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
 
-BLUE = "#023d6b"
-GREY = "#5a6b7d"
-LIGHT = "#c3cad3"
-ORANGE = "#e4661b"
-GREEN = "#2e7d32"
-RED = "#b3261e"
-FLOOR = "#f2f4f7"
-WALL = "#4a4a4a"
+# Shared palette of the concept figures: one meaning, one colour, one style.
 SMOKE = LinearSegmentedColormap.from_list("smoke", ["#ffffff00", "#8a8a8a"])
+CHOSEN = "#4575b4"  # chosen / walked route: solid line
+REFUSED = "#d73027"  # refused route: dashed line, hatched bar
+OPTION = "#969696"  # candidate neither chosen nor refused
+KNOWN = "#324465"  # stage in the map: filled marker
+UNKNOWN = "#bdbdbd"  # stage not in the map: hollow marker, dashed edge
+LEGIBLE = "#fee090"  # legible sign: yellow fill with a gold outline
+LEGIBLE_EDGE = "#c89b00"
+EXIT = "#33a02c"  # exit door
+AGENT = "#1a1a1a"  # agent: star marker
+WALL = "dimgrey"
+FLOOR = "#f7f7f7"
+TEXT = "dimgrey"
 
 # T-corridor: horizontal corridor on top, stem down to the spawn area
 CORRIDOR = [(0, 9), (30, 9), (30, 13), (0, 13)]
@@ -118,7 +123,7 @@ def draw_smoke(ax):
         zorder=2,
         interpolation="bilinear",
     )
-    ax.text(25.0, 8.4, "smoke", fontsize=8, color=GREY, ha="center", va="top", zorder=6)
+    ax.text(25.0, 8.4, "smoke", fontsize=8, color=TEXT, ha="center", va="top", zorder=6)
 
 
 def draw_graph(ax, known, chosen):
@@ -130,7 +135,7 @@ def draw_graph(ax, known, chosen):
         ax.plot(
             [x0, x1],
             [y0, y1],
-            color=ORANGE if is_chosen else (BLUE if is_known else LIGHT),
+            color=CHOSEN if is_chosen else (KNOWN if is_known else UNKNOWN),
             lw=3.6 if is_chosen else 1.8,
             ls="-" if is_known else (0, (3, 3)),
             zorder=3,
@@ -138,15 +143,15 @@ def draw_graph(ax, known, chosen):
 
     for name, n in NODES.items():
         is_known = name in known
-        face = BLUE if is_known else "white"
+        face = KNOWN if is_known else "white"
         if is_known and name.startswith("exit"):
-            face = GREEN
+            face = EXIT
         ax.scatter(
             *n["xy"],
             marker=n["marker"],
             s=150,
             fc=face,
-            ec=BLUE if is_known else LIGHT,
+            ec=KNOWN if is_known else UNKNOWN,
             lw=1.6,
             zorder=5,
         )
@@ -156,20 +161,20 @@ def draw_graph(ax, known, chosen):
             fontsize=8.5,
             ha=n["ha"],
             va="center",
-            color=BLUE if is_known else LIGHT,
+            color=TEXT if is_known else UNKNOWN,
             fontweight="bold" if is_known else None,
             zorder=6,
         )
 
 
 def draw_agent(ax, xy):
-    ax.scatter(*xy, marker="*", s=260, fc=ORANGE, ec="white", lw=0.8, zorder=8)
+    ax.scatter(*xy, marker="*", s=260, fc=AGENT, ec="white", lw=0.8, zorder=8)
     ax.text(
         xy[0] + 1.0,
         xy[1],
         "agent",
         fontsize=8.5,
-        color=ORANGE,
+        color=TEXT,
         ha="left",
         va="center",
         fontweight="bold",
@@ -185,7 +190,7 @@ def main():
     site/static/images/concepts/cognitive_map.png
     """
     if sns is not None:
-        sns.set_theme(font_scale=1.0, style="white", font="DejaVu Sans")
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     else:
         plt.rcParams["font.family"] = "DejaVu Sans"
 
@@ -201,6 +206,7 @@ def main():
         ax.set_xlim(-1, 31)
         ax.set_ylim(-1, 14.6)
         ax.set_aspect("equal")
+        # a floor plan has no data axes: grid, ticks and frame add nothing
         ax.axis("off")
         ax.set_anchor("N")
         ax.text(
@@ -210,7 +216,6 @@ def main():
             transform=ax.transAxes,
             fontsize=10,
             fontweight="bold",
-            color=BLUE,
             ha="left",
             va="bottom",
         )
@@ -220,7 +225,7 @@ def main():
             p["sub"],
             transform=ax.transAxes,
             fontsize=8,
-            color="dimgrey",
+            color=TEXT,
             ha="left",
             va="bottom",
         )
@@ -231,8 +236,8 @@ def main():
             [0],
             marker="o",
             color="w",
-            mfc=BLUE,
-            mec=BLUE,
+            mfc=KNOWN,
+            mec=KNOWN,
             ms=8,
             label="known node",
         ),
@@ -242,15 +247,15 @@ def main():
             marker="o",
             color="w",
             mfc="white",
-            mec=LIGHT,
+            mec=UNKNOWN,
             mew=1.6,
             ms=8,
             label="unknown node",
         ),
-        Line2D([0], [0], color=BLUE, lw=1.8, label="known edge"),
-        Line2D([0], [0], color=LIGHT, lw=1.8, ls=(0, (3, 3)), label="unknown edge"),
-        Line2D([0], [0], color=ORANGE, lw=3.6, label="chosen route"),
-        Line2D([0], [0], marker="*", color="w", mfc=ORANGE, ms=12, label="agent"),
+        Line2D([0], [0], color=KNOWN, lw=1.8, label="known edge"),
+        Line2D([0], [0], color=UNKNOWN, lw=1.8, ls=(0, (3, 3)), label="unknown edge"),
+        Line2D([0], [0], color=CHOSEN, lw=3.6, label="chosen route"),
+        Line2D([0], [0], marker="*", color="w", mfc=AGENT, ms=12, label="agent"),
     ]
     # anchor the legend just below the drawn floor, whatever the figure height
     fig.canvas.draw()
@@ -266,6 +271,29 @@ def main():
         framealpha=0.8,
         edgecolor="lightgrey",
         labelcolor="dimgrey",
+    )
+    if sns is not None:
+        sns.despine(fig=fig, left=True, bottom=True)
+
+    # the smoke panel against the one before it: same map, different choice
+    i = next(k for k, p in enumerate(PANELS) if p["smoke"])
+    before, smoky = PANELS[i - 1], PANELS[i]
+    avoided = sorted(
+        n
+        for n in smoky["known"]
+        if n.startswith("exit") and n not in (smoky["chosen"] or ())
+    )
+    same_map = "the same map" if before["known"] == smoky["known"] else "a new map"
+    fig.text(
+        0.5,
+        y_floor - 0.13,
+        f"Panels {i} and {i + 1}: {same_map}. With smoke the router picks "
+        f"{smoky['chosen'][1]}, and {', '.join(avoided)} stays in the map.",
+        ha="center",
+        va="top",
+        fontsize=8.5,
+        color=TEXT,
+        style="italic",
     )
 
     out = OUT

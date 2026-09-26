@@ -40,7 +40,7 @@ Path choice and exit choice are therefore one objective. In clear air every
 ![Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6](/images/concepts/exposure_gate.png)
 
 *Schematic with a prescribed toy plume, not a simulation. Top: three candidate
-routes, sampled along each walk and coloured by extinction K [1/m]. Bottom:
+routes, sampled along each walk, the samples shaded by extinction K [1/m]. Bottom:
 optical depth `tau` [-] per route against `tau_max` = 6 (current exit and
 initial choice) and 0.8 `tau_max` = 4.8 (any other exit). Route C is refused;
 route B ranks first although it is the longest walk.

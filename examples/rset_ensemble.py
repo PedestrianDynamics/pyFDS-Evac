@@ -34,6 +34,7 @@ from pyfds_evac import (
 SEEDS = [1, 2, 3, 4, 5]
 FIGURE = pathlib.Path("site/static/images/howto/egress_exit_curve.png")
 COLOURS = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9"]  # Okabe-Ito
+LINESTYLES = ["-", "--", "-.", ":", (0, (5, 1, 1, 1, 1, 1))]
 
 
 # %% [markdown]
@@ -104,12 +105,31 @@ print(f"95th percentile = {np.percentile(last, 95):.1f} s")
 # %%
 fig = Figure(figsize=(6, 4))
 ax = fig.subplots()
-for (seed, times), colour in zip(curves.items(), COLOURS):
+for (seed, times), colour, style in zip(curves.items(), COLOURS, LINESTYLES):
     counts = np.arange(1, len(times) + 1)
-    ax.step(times, counts, where="post", color=colour, label=f"seed {seed}")
-ax.set_xlabel("time since start of simulation [s]")
-ax.set_ylabel("agents evacuated [-]")
-ax.legend()
+    ax.step(times, counts, where="post", color=colour, ls=style, label=f"seed {seed}")
+ax.axvspan(last.min(), last.max(), color="lightgrey", alpha=0.5, lw=0)
+ax.text(
+    last.min() - 0.3,
+    2,
+    f"last exit {last.min():.1f}-{last.max():.1f} s\nover {len(last)} seeds",
+    color="dimgrey",
+    ha="right",
+)
+ax.grid(color="lightgrey", linewidth=0.8)
+ax.set_axisbelow(True)
+for spine in ax.spines.values():
+    spine.set_visible(False)
+ax.tick_params(length=0, labelcolor="dimgrey")
+ax.set_xlabel("time since start of simulation [s]", color="dimgrey")
+ax.set_ylabel("agents evacuated [-]", color="dimgrey")
+ax.legend(
+    frameon=True,
+    facecolor="white",
+    framealpha=0.8,
+    edgecolor="lightgrey",
+    labelcolor="dimgrey",
+)
 FIGURE.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(FIGURE, dpi=150, bbox_inches="tight")
 print(f"figure: {FIGURE}")

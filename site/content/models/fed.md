@@ -105,9 +105,10 @@ history CSV (`--output-fed-history`) carries the columns `fic`,
 
 ![Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
 
-*Left: Frantzich–Nilsson factor f(K) [-] against K [1/m], floor 0.1. Middle:
-irritant factor g(FIC) [-] against FIC [-], floor 0.3. Right: the product
-f(K)·g(FIC) [-]. FED does not appear on these axes; it only sets the speed to
+*(a) Frantzich–Nilsson factor f(K) [-] against K [1/m], floor 0.1.
+(b) Irritant factor g(FIC) [-] against FIC [-], floor 0.3. (c) The product
+f(K)·g(FIC) [-], with contours at 0.25, 0.5 and 0.75; where both floors apply
+it is 0.1 × 0.3 = 0.03. FED does not appear on these axes; it only sets the speed to
 zero at the agent's threshold. Script: `scripts/generate_tenability_curves.py`.*
 
 ## FDS input pitfalls

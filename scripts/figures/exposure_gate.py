@@ -39,12 +39,21 @@ from pyfds_evac import (
 OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
 ROUTING = RouteCostConfig()
 
-BLUE = "#023d6b"
-GREY = "#5a6b7d"
-ORANGE = "#e4661b"
-GREEN = "#2e7d32"
-RED = "#b3261e"
+# Shared palette of the concept figures: one meaning, one colour, one style.
 SMOKE = LinearSegmentedColormap.from_list("smoke", ["#f7f7f7", "#9a9a9a", "#2b2b2b"])
+CHOSEN = "#4575b4"  # chosen / walked route: solid line
+REFUSED = "#d73027"  # refused route: dashed line, hatched bar
+OPTION = "#969696"  # candidate neither chosen nor refused
+KNOWN = "#324465"  # stage in the map: filled marker
+UNKNOWN = "#bdbdbd"  # stage not in the map: hollow marker, dashed edge
+LEGIBLE = "#fee090"  # legible sign: yellow fill with a gold outline
+LEGIBLE_EDGE = "#c89b00"
+EXIT = "#33a02c"  # exit door
+AGENT = "#1a1a1a"  # agent: star marker
+WALL = "dimgrey"
+FLOOR = "#f7f7f7"
+TEXT = "dimgrey"
+LABEL_BOX = dict(fc="white", ec="none", alpha=0.85, pad=1.5)
 TAU_MAX = ROUTING.tau_max
 MU = ROUTING.tau_return_margin
 
@@ -113,9 +122,25 @@ def route_metrics():
     return out
 
 
+def gate_ranks(metrics):
+    """Rank of each route that passes the rival-exit budget, by tau then time."""
+    survivors = sorted(
+        (n for n in metrics if metrics[n]["tau"] <= TAU_MAX * MU),
+        key=lambda n: (metrics[n]["tau"], metrics[n]["time"]),
+    )
+    return {n: i + 1 for i, n in enumerate(survivors)}
+
+
+def route_style(rank):
+    """Colour and line style of a route: chosen, other survivor, or refused."""
+    if rank is None:
+        return REFUSED, "--"
+    return (CHOSEN, "-") if rank == 1 else (OPTION, "-")
+
+
 def draw_plan(ax, metrics):
     """Left panel: agent, plume, three walked routes to three exits."""
-    ax.add_patch(Rectangle((0, 0), 12.5, 7.2, fc="white", ec=BLUE, lw=1.6, zorder=0))
+    ax.add_patch(Rectangle((0, 0), 12.5, 7.2, fc=FLOOR, ec=WALL, lw=1.6, zorder=0))
     gx, gy = np.meshgrid(np.linspace(0, 12.5, 250), np.linspace(0, 7.2, 150))
     ax.contourf(
         gx,
@@ -130,18 +155,20 @@ def draw_plan(ax, metrics):
     )
 
     sc = None
+    rank = gate_ranks(metrics)
     for name, m in metrics.items():
-        ax.plot(m["x"], m["y"], color=BLUE, lw=1.8, zorder=4)
+        color, ls = route_style(rank.get(name))
+        ax.plot(m["x"], m["y"], color=color, lw=2.2, ls=ls, zorder=4)
         sc = ax.scatter(
             m["x"],
             m["y"],
             c=m["k"],
-            cmap="Oranges",
+            cmap=SMOKE,
             vmin=0,
             vmax=1.6,
-            s=20,
-            edgecolors=BLUE,
-            linewidths=0.5,
+            s=22,
+            edgecolors=color,
+            linewidths=1.0,
             zorder=5,
         )
 
@@ -153,26 +180,26 @@ def draw_plan(ax, metrics):
     }
     for name, (rect, lab) in exits.items():
         w, h = (0.8, 0.2) if name == "A" else (0.2, 0.8)
-        ax.add_patch(Rectangle(rect, w, h, fc=GREEN, ec="none", zorder=6))
+        ax.add_patch(Rectangle(rect, w, h, fc=EXIT, ec="none", zorder=6))
         ax.text(
             *lab,
             f"exit {name}",
             fontsize=9,
             fontweight="bold",
-            color=BLUE,
+            color=TEXT,
             ha="center",
             va="center",
             zorder=7,
-            bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.5),
+            bbox=LABEL_BOX,
         )
 
-    ax.scatter([1.5], [3.5], s=90, fc=ORANGE, ec="white", lw=1.2, zorder=7)
+    ax.scatter([1.5], [3.5], marker="*", s=220, fc=AGENT, ec="white", lw=0.8, zorder=7)
     ax.text(
         1.5,
         3.95,
         "agent",
         fontsize=8.5,
-        color=ORANGE,
+        color=TEXT,
         ha="center",
         va="bottom",
         zorder=7,
@@ -181,11 +208,11 @@ def draw_plan(ax, metrics):
     ax.set_xlim(-0.2, 12.9)
     ax.set_ylim(-0.2, 7.5)
     ax.set_aspect("equal")
+    # a floor plan has no data axes: grid, ticks and frame add nothing
     ax.axis("off")
     ax.set_title(
-        "Three candidate routes, smoke sampled along each walk",
-        fontsize=9.5,
-        color=BLUE,
+        r"$\bf{(a)}$  Three candidate routes, smoke sampled along each walk",
+        fontsize=10,
         loc="left",
         pad=4,
     )
@@ -198,15 +225,16 @@ def draw_gate(ax, metrics):
     ypos = np.arange(len(names))[::-1]
     budget_other = MU * TAU_MAX
 
-    ax.axvspan(budget_other, TAU_MAX, color=ORANGE, alpha=0.10, zorder=0)
-    ax.axvline(TAU_MAX, color=RED, lw=1.4, zorder=1)
-    ax.axvline(budget_other, color=ORANGE, lw=1.2, ls="--", zorder=1)
+    ax.axvspan(budget_other, TAU_MAX, color=OPTION, alpha=0.12, zorder=0)
+    ax.axvline(TAU_MAX, color=TEXT, lw=1.4, zorder=1)
+    ax.axvline(budget_other, color=TEXT, lw=1.2, ls="--", zorder=1)
+    ax.axvline(0, color="lightgrey", lw=0.8, zorder=1)
     # threshold captions sit above the bars, so no bar label can run into them
     ax.text(
         TAU_MAX + 0.12,
         2.95,
         rf"$\tau_{{\max}} = {TAU_MAX:g}$" + "\ncurrent exit",
-        color=RED,
+        color=TEXT,
         fontsize=8,
         ha="left",
         va="bottom",
@@ -215,27 +243,24 @@ def draw_gate(ax, metrics):
         budget_other - 0.12,
         2.95,
         rf"${MU:g}\,\tau_{{\max}} = {budget_other:g}$" + "\nany other exit",
-        color=ORANGE,
+        color=TEXT,
         fontsize=8,
         ha="right",
         va="bottom",
     )
 
-    survivors = sorted(
-        (n for n in names if metrics[n]["tau"] <= budget_other),
-        key=lambda n: (metrics[n]["tau"], metrics[n]["time"]),
-    )
-    rank = {n: i + 1 for i, n in enumerate(survivors)}
+    rank = gate_ranks(metrics)
 
     for y, name in zip(ypos, names):
         m = metrics[name]
         refused = name not in rank
+        color, _ = route_style(rank.get(name))
         ax.barh(
             y,
             m["tau"],
             height=0.55,
-            color="white" if refused else BLUE,
-            edgecolor=RED if refused else BLUE,
+            color="white" if refused else color,
+            edgecolor=color,
             hatch="////" if refused else None,
             lw=1.2,
             zorder=2,
@@ -252,7 +277,8 @@ def draw_gate(ax, metrics):
                 fontsize=8.5,
                 va="center",
                 ha="left",
-                color=RED,
+                color=REFUSED,
+                fontweight="bold",
             )
         elif m["tau"] > 2.5:
             # long bar: label inside, clear of the budget lines
@@ -274,28 +300,26 @@ def draw_gate(ax, metrics):
                 fontsize=8.5,
                 va="center",
                 ha="left",
-                color=BLUE,
+                color=color,
                 fontweight="bold",
             )
 
     ax.set_yticks(ypos)
-    ax.set_yticklabels([f"route {n}" for n in names], fontsize=9, color=BLUE)
+    ax.set_yticklabels([f"route {n}" for n in names], fontsize=9)
     ax.set_xlim(0, 9.5)
     ax.set_ylim(-0.5, 3.75)
     ax.set_xlabel(
         r"optical depth along the walk  $\tau_k = \bar K_k\, L_k$",
         fontsize=8.5,
-        color=GREY,
+        color=TEXT,
     )
-    ax.tick_params(labelsize=7.5, colors=GREY)
-    ax.tick_params(axis="y", length=0)
+    ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT)
+    ax.tick_params(axis="x", labelsize=7.5)
+    # value labels carry the numbers; the zero line anchors the bars
     ax.grid(False)
-    for side in ("top", "right", "left"):
-        ax.spines[side].set_visible(False)
     ax.set_title(
-        r"Gate: refuse above the budget, then sort by $\tau$, then by time",
-        fontsize=9.5,
-        color=BLUE,
+        r"$\bf{(b)}$  Gate: refuse above the budget, then sort by $\tau$, then by time",
+        fontsize=10,
         loc="left",
         pad=4,
     )
@@ -309,7 +333,7 @@ def main():
     site/static/images/concepts/exposure_gate.png
     """
     if sns is not None:
-        sns.set_theme(font_scale=1.0, style="white", font="DejaVu Sans")
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     else:
         plt.rcParams["font.family"] = "DejaVu Sans"
 
@@ -330,9 +354,35 @@ def main():
     draw_gate(ax_gate, metrics)
 
     cbar = fig.colorbar(sc, ax=ax_plan, fraction=0.04, pad=0.02)
-    cbar.set_label(r"extinction $K_p$ [m$^{-1}$]", fontsize=8.5, color=GREY)
-    cbar.ax.tick_params(labelsize=7.5, colors=GREY)
+    cbar.set_label(r"extinction $K_p$ [m$^{-1}$]", fontsize=8.5, color=TEXT)
+    cbar.ax.tick_params(labelsize=7.5, length=0, labelcolor=TEXT)
+    cbar.ax.grid(False)
     cbar.outline.set_visible(False)
+    if sns is not None:
+        sns.despine(fig=fig, left=True, bottom=True)
+
+    rank = gate_ranks(metrics)
+    best = min(rank, key=rank.get)
+    shortest = min(metrics, key=lambda n: metrics[n]["L"])
+    longest = max(metrics, key=lambda n: metrics[n]["L"])
+    note = (
+        f"Route {best} wins with the least smoke, "
+        rf"$\tau$ = {metrics[best]['tau']:.1f}, "
+        f"over {metrics[best]['L']:.1f} m"
+    )
+    if best == longest:
+        note += f", the longest walk (route {shortest}: {metrics[shortest]['L']:.1f} m)"
+    ax_gate.text(
+        0.0,
+        -0.22,
+        note,
+        transform=ax_gate.transAxes,
+        ha="left",
+        va="top",
+        fontsize=8.5,
+        color=TEXT,
+        style="italic",
+    )
 
     out = OUT
     out.mkdir(parents=True, exist_ok=True)

@@ -16,6 +16,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 # Frantzich-Nilsson defaults (Ronchi 2013 interpretation A3)
 ALPHA_K = 0.706
@@ -46,7 +47,9 @@ def _build_figure() -> plt.Figure:
     k_vals = np.linspace(0.0, 15.0, 500)
     fic_vals = np.linspace(0.0, 1.5, 500)
 
-    fig = plt.figure(figsize=(12, 3.8), constrained_layout=True)
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    line = sns.cubehelix_palette(6, rot=-0.25, light=0.7)[5]
+    fig = plt.figure(figsize=(12, 3.8), dpi=150, constrained_layout=True)
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 1.1])
     ax_k = fig.add_subplot(gs[0, 0])
     ax_fic = fig.add_subplot(gs[0, 1])
@@ -54,39 +57,51 @@ def _build_figure() -> plt.Figure:
 
     # Panel 1: Frantzich
     fk = frantzich_factor(k_vals)
-    ax_k.plot(k_vals, fk, color="#1f77b4", linewidth=2.0)
-    ax_k.axhline(
-        F_MIN,
-        color="#888",
-        linestyle=":",
-        linewidth=0.8,
-        label=f"floor $f_\\min={F_MIN}$",
-    )
+    ax_k.plot(k_vals, fk, color=line, linewidth=2.0)
+    ax_k.axhline(F_MIN, color="grey", linestyle=":", linewidth=0.8)
     k_knee = -(1.0 - F_MIN) * ALPHA_K / BETA_K
-    ax_k.axvline(k_knee, color="#888", linestyle=":", linewidth=0.8)
-    ax_k.set_xlabel(r"Extinction $K$  [m$^{-1}$]")
-    ax_k.set_ylabel(r"$v/v_0$")
-    ax_k.set_title(rf"Frantzich: $v/v_0 = \max({F_MIN},\, 1 + \beta/\alpha \cdot K)$")
+    ax_k.axvline(k_knee, color="grey", linestyle=":", linewidth=0.8)
+    ax_k.text(
+        k_vals[-1],
+        F_MIN - 0.03,
+        rf"floor $f_\min={F_MIN}$",
+        color="dimgrey",
+        fontsize=9,
+        ha="right",
+        va="top",
+    )
+    ax_k.set_xlabel(r"Extinction $K$  [m$^{-1}$]", color="dimgrey")
+    ax_k.set_ylabel(r"$v/v_0$", color="dimgrey")
+    ax_k.set_title(
+        r"$\bf{(a)}$ " + rf"$v/v_0 = \max({F_MIN},\, 1 + \beta/\alpha \cdot K)$",
+        loc="left",
+        fontsize=11,
+    )
     ax_k.set_ylim(0, 1.05)
-    ax_k.grid(True, alpha=0.3)
-    ax_k.legend(loc="upper right", fontsize=8)
 
     # Panel 2: FIC
     gf = fic_factor(fic_vals)
-    ax_fic.plot(fic_vals, gf, color="#d62728", linewidth=2.0)
-    ax_fic.axhline(
-        MU, color="#888", linestyle=":", linewidth=0.8, label=rf"floor $\mu={MU}$"
-    )
+    ax_fic.plot(fic_vals, gf, color=line, linewidth=2.0)
+    ax_fic.axhline(MU, color="grey", linestyle=":", linewidth=0.8)
     fic_knee = (1.0 - MU) / ALPHA_FIC
-    ax_fic.axvline(fic_knee, color="#888", linestyle=":", linewidth=0.8)
-    ax_fic.set_xlabel(r"FIC")
-    ax_fic.set_ylabel(r"$v/v_0$")
+    ax_fic.axvline(fic_knee, color="grey", linestyle=":", linewidth=0.8)
+    ax_fic.text(
+        fic_knee - 0.03,
+        MU - 0.03,
+        rf"floor $\mu={MU}$",
+        color="dimgrey",
+        fontsize=9,
+        ha="right",
+        va="top",
+    )
+    ax_fic.set_xlabel(r"FIC", color="dimgrey")
     ax_fic.set_title(
-        rf"FIC: $v/v_0 = \max({MU},\, 1 - \alpha_{{\mathrm{{FIC}}}}\cdot \mathrm{{FIC}})$"
+        r"$\bf{(b)}$ "
+        + rf"$v/v_0 = \max({MU},\, 1 - \alpha_{{\mathrm{{FIC}}}}\cdot \mathrm{{FIC}})$",
+        loc="left",
+        fontsize=11,
     )
     ax_fic.set_ylim(0, 1.05)
-    ax_fic.grid(True, alpha=0.3)
-    ax_fic.legend(loc="upper right", fontsize=8)
 
     # Panel 3: 2D heatmap of the product
     k_grid = np.linspace(0.0, 15.0, 200)
@@ -97,28 +112,53 @@ def _build_figure() -> plt.Figure:
         k_grid,
         fic_grid,
         combined,
-        cmap="viridis",
+        cmap="inferno",
         vmin=0.0,
         vmax=1.0,
         shading="auto",
+        rasterized=True,
     )
-    ax_hm.set_xlabel(r"Extinction $K$  [m$^{-1}$]")
-    ax_hm.set_ylabel(r"FIC")
-    ax_hm.set_title(r"Combined: $v/v_0 = f(K)\,\cdot\,g(\mathrm{FIC})$")
+    ax_hm.set_xlabel(r"Extinction $K$  [m$^{-1}$]", color="dimgrey")
+    ax_hm.set_ylabel(r"FIC", color="dimgrey")
+    ax_hm.set_title(
+        r"$\bf{(c)}$ " + r"$v/v_0 = f(K)\,\cdot\,g(\mathrm{FIC})$",
+        loc="left",
+        fontsize=11,
+    )
     cbar = fig.colorbar(im, ax=ax_hm)
-    cbar.set_label(r"$v/v_0$")
+    cbar.set_label(r"$v/v_0$", color="dimgrey")
+    cbar.outline.set_visible(False)
+    cbar.ax.tick_params(length=0, labelcolor="dimgrey")
 
     # Overlay floor product dashed contour
     floor = F_MIN * MU
-    ax_hm.contour(
+    cs = ax_hm.contour(
         k_grid,
         fic_grid,
         combined,
         levels=[floor, 0.25, 0.5, 0.75],
         colors="white",
         linewidths=0.8,
-        alpha=0.6,
+        alpha=0.8,
     )
+    ax_hm.clabel(cs, levels=cs.levels[1:], fmt="%.2g", fontsize=8)
+    ax_hm.text(
+        (k_knee + k_grid[-1]) / 2,
+        (fic_knee + fic_grid[-1]) / 2,
+        f"both floors\n{F_MIN} × {MU}\n= {floor:.2g}",
+        color="white",
+        fontsize=8.5,
+        ha="center",
+        va="center",
+    )
+    ax_hm.set_xticks([0, 5, 10, 15])
+
+    ax_hm.grid(False)
+    for ax in (ax_k, ax_fic, ax_hm):
+        ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+        ax.patch.set_edgecolor("lightgrey")
+        ax.patch.set_linewidth(0.8)
+    sns.despine(left=True, bottom=True)
 
     return fig
 
@@ -135,7 +175,7 @@ def main() -> int:
 
     fig = _build_figure()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.output, dpi=160, bbox_inches="tight")
+    fig.savefig(args.output, dpi=150, bbox_inches="tight")
     print(f"Wrote {args.output}")
     return 0
 

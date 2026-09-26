@@ -65,10 +65,11 @@ where \(g\) is the irritant factor of the [FED model](/models/fed.md).
 
 ![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V+2) with C = 3 and C = 8](/images/concepts/speed_laws.png)
 
-*Speed factor \(v/v_0\) [-] against extinction coefficient K [1/m]. Solid blue:
-Frantzich–Nilsson with the default constants, floor 0.1 reached at K = 11.1 m⁻¹.
-Orange: the `fridolf` option, \(V/(V+2)\) with \(V = C/K\), for C = 3 (solid)
-and C = 8 (dashed).
+*Speed factor \(v/v_0\) [-] against extinction coefficient K [1/m]. Solid dark
+blue: Frantzich–Nilsson with the default constants, floor 0.1 reached at
+K = 11.1 m⁻¹. The `fridolf` option, \(V/(V+2)\) with \(V = C/K\): red dashed
+for C = 3, orange dash-dotted for C = 8. The arrow marks the largest gap
+between Frantzich–Nilsson and C = 3.
 Script: `scripts/figures/speed_laws.py`.*
 
 Background: the [Concepts](/docs/concepts.md) page
