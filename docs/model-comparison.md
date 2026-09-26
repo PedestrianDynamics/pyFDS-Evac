@@ -354,8 +354,8 @@ This is not the ISO 13571 [5] form: ISO 13571 keeps irritants in a
 separate fractional effective concentration (FEC) and does not add
 them into the FED, whereas here an irritant lethal-dose term is summed
 into the FED total.  Irritants also slow agents through Purser's
-fractional irritant concentration (FIC); ISO 13571 calls the same
-quantity the FEC.  The full model is:
+fractional irritant concentration (FIC). ISO 13571's FEC is a related
+but different quantity, with its own denominators.  The full model is:
 
 ```
 FED_tot = (FED_CO + FED_CN + FED_NOx + FLD_irr) * HV_CO2 + FED_O2

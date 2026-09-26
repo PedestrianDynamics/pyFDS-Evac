@@ -157,7 +157,8 @@ agents walk.
 >   read a sign, and so which exits enter its cognitive map. The dose is not
 >   a gate: when it reaches the agent's threshold, the agent stops.
 > - **FIC**, Purser's fractional irritant concentration, which slows agents,
->   is called FEC (fractional effective concentration) in ISO 13571.
+>   is related to, but not the same as, the FEC (fractional effective
+>   concentration) of ISO 13571, which uses different denominators.
 > - **Cognitive map** is the graph of stages an agent knows. It is not meant
 >   in the psychological sense.
 

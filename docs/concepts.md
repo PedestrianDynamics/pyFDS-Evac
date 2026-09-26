@@ -16,7 +16,8 @@ pyFDS-Evac answers each question from the output of a finished Fire Dynamics
 Simulator (FDS) run and hands the answers to JuPedSim, which moves the agents.
 This page explains the ideas behind each answer and the rules you need to read
 a result. The equations, parameters and evidence are on the
-[model pages](/models/_index.md).
+[model pages](/models/_index.md). The published laws these models rest on, independent
+of this code, are on the [Fundamentals](/fundamentals/_index.md) pages.
 
 pyFDS-Evac is research software, provided without warranty. It is not intended
 for regulatory or design use. See [Limitations](/docs/limitations.md).
@@ -275,7 +276,7 @@ from the FDS extinction field when `run.py` is given `--fds-dir`, and from clear
 air otherwise. The model is built when the deck has discovery agents, and
 `--no-visibility` turns sight gating off. A sign
 is legible from a floor cell when its visibility \(C/\bar K\) along the line of
-sight, capped at 30 m and scaled by the viewing angle, reaches the distance to
+sight, capped at the domain diagonal and scaled by the viewing angle, reaches the distance to
 the sign. Walls block the line of sight. pyFDS-Evac builds this map once per
 run, and `--vis-cache` stores it for reuse between runs. During the run, it asks only whether the sign of a node is legible
 from the agent's cell at the current time.
@@ -387,7 +388,7 @@ agents walk with Fridolf's law. See [Limitations](/docs/limitations.md).
 | *f*(*K*) | Smoke speed factor | - | `speed_factor` |
 | \(\alpha\), \(\beta\) | Frantzich–Nilsson coefficients | m/s, m²/s | `alpha`, `beta` |
 | \(f_{\min}\) | Floor of the smoke speed factor | - | `min_speed_factor` |
-| FIC | Fractional irritant concentration (FEC in ISO 13571) | - | `fic` |
+| FIC | Fractional irritant concentration (Purser; related to, but not the same as, ISO 13571 FEC) | - | `fic` |
 | *g*(FIC) | Irritant speed factor, \(\max(0.3, 1 - 0.7\,\mathrm{FIC})\) | - | `fic_min_factor`, `fic_alpha` |
 | FED | Fractional effective dose, toxic gases | - | `fed` |
 | \(\mathrm{FED}_{\mathrm{heat}}\) | Fractional effective dose, convective heat | - | heat FED |

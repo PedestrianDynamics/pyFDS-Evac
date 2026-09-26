@@ -4,6 +4,8 @@ weight: 3
 math: true
 ---
 
+Based on: [Extinction coefficient](/fundamentals/extinction.md), [Visibility through smoke](/fundamentals/visibility.md) and [Exit choice and familiarity](/fundamentals/exit-choice.md).
+
 See [docs/routing.md](/docs/routing.md) for the full routing model,
 cost formulas, and API reference, and
 [docs/routing-and-signs-notes.md](/docs/routing-and-signs-notes.md) for
@@ -155,3 +157,16 @@ See [docs/usage.md](/docs/usage.md) for the full rerouting CLI
 (`--enable-rerouting`, `--reroute-interval`, `--output-route-history`,
 `--output-route-cost-history`, `--vis-cache`) and the plotting scripts
 that consume the generated route-cost CSVs.
+
+## Deviations from the literature
+
+The refusal budget \(\tau_{\max}\) = 6 (`pyfds_evac/core/route_graph.py:683`)
+is FDS+Evac's door rule, visibility \(3/K\) at least half the distance to the
+door, which rests on Jin's \(S = C/K\) with *C* = 3. Jin's law describes a
+straight line of sight to a sign in uniform smoke. Here the same number
+bounds the integral of *K* along a walked polyline, which measures exposure,
+not sight, and it has not been calibrated against a smoke-exposure or FED
+limit. Exit choice is ranked on optical depth and travel time; familiarity
+and social influence, which the exit-choice literature finds significant
+(Sime 1985; Kinateder et al. 2018; Lovreglio et al. 2016), enter only through
+the cognitive map, not through the route cost.

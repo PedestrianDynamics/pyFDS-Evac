@@ -4,6 +4,8 @@ weight: 2
 math: true
 ---
 
+Based on: [Asphyxiant fractional effective dose](/fundamentals/asphyxiant-fed.md), [Irritant gases](/fundamentals/irritants.md), [Heat](/fundamentals/heat.md) and [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
+
 The FED model implements the Purser formulation (as in the FDS+Evac guide; ISO 13571 keeps irritants in a separate FEC rather than in FED) as
 described in Section 3.4 of the
 FDS+Evac Technical Reference and User's Guide
@@ -164,3 +166,46 @@ entirely with `--disable-tenability`. The FED history CSV
 irritant factor g(FIC) [-] against FIC [-], floor 0.3. Right: the product
 f(K)·g(FIC) [-]. FED does not appear on these axes; it only sets the speed to
 zero at the agent's threshold. Script: `scripts/generate_tenability_curves.py`.*
+
+## Deviations from the literature
+
+The toxic-gas sum follows the Purser / FDS+Evac guide form: \(\mathrm{FLD_{irr}}\)
+sits inside the term multiplied by \(\mathrm{HV_{CO_2}}\)
+(`pyfds_evac/core/fed.py:334`), as in SFPE Handbook Eq. 63.38 and guide
+Eq. 12. It is not the ISO 13571 form, which keeps irritants in a separate
+FEC and has no oxygen term. Within that form, the code follows the
+guide, which cites the 3rd edition of the Handbook, rather than the 5th
+edition:
+
+- **HCN.** \(\exp(C_{CN}/43)/220 - 0.0045\) with \(C_{CN} = C_{HCN} - C_{NO_2}\)
+  (`fed.py:106`, `:109`). The 5th edition gives \([\mathrm{CN}]^{2.36}\,t/(1.2\times10^{6})\)
+  with \([\mathrm{CN}] = [\mathrm{HCN}] + \text{nitriles} - [\mathrm{NO}+\mathrm{NO_2}]\)
+  (Eqs. 63.24, 63.26).
+- **CO₂.** \(\exp(0.1903\,C + 2.0004)/7.1\) (`fed.py:63`) is Eq. 63.34; the
+  5th edition simplifies it to \(\exp(C/5)\) (Eq. 63.35) for use in
+  Eq. 63.38. Purser's recommended limit of 70 L/min on \(V_E\times VCO_2\) is
+  not applied, and the alternative CO₂ endpoint \(F_{I_{CO_2}}\) is not
+  computed.
+- **CO.** Fixed at light work, \(2.764\times10^{-5}\) (`fed.py:54`), which
+  equals Eq. 63.18 with its defaults \(V_E\) = 25 L/min and *D* = 30 %COHb.
+- **O₂.** The hypoxia rate is set to zero at or above 19.5 % O₂
+  (`fed.py:66`, `:92`); neither Purser nor the guide has this guard. The
+  guide's Eq. 18 carries a factor 60 in the denominator while stating that
+  *t* is in minutes; the code, and the table above, follow Handbook
+  Eq. 63.50 without it.
+
+The irritant slowdown \(g = \max(0.3,\ 1 - 0.7\,\mathrm{FIC})\)
+(`fed.py:241`–`242`, applied in `scenario.py:2076`–`2081`) is multiplied
+with the smoke factor (`direct_steering_runtime.py:186`–`190`). Its constants
+were not found in the Handbook, the FDS+Evac guide or `evac.f90`. The Handbook
+gives a different curve that reaches zero at FIC = 1 (Eq. 63.13) and combines
+the smoke and irritant losses additively (Eq. 63.14).
+
+Heat uses the convective Eq. 63.44 only (`fed.py:207`), not the mid-humidity
+design form Eq. 63.45, and no radiant term (Eq. 63.43). The two
+incapacitation thresholds are log-normal with σ = 0.94 (`fed.py:252`,
+`:260`). For the gas dose this is a compromise between the TN 1797 bins
+(it gives 10 % below 0.3 and 88 % below 3, against 11 % and 89 %); TN 1797
+has no population data of its own, and the "89 % by 3" figure is from
+TN 1797, not from Purser, whose Ch. 63 instead states about 90 % below 1.3.
+The heat dose reuses the same σ without a data basis.

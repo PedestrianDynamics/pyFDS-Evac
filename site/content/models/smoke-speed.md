@@ -4,6 +4,8 @@ weight: 1
 math: true
 ---
 
+Based on: [Walking speed in smoke](/fundamentals/walking-speed.md) and [Extinction coefficient](/fundamentals/extinction.md).
+
 See [docs/smoke-speed-model.md](/docs/smoke-speed-model.md) for the full
 model description, configuration, and API reference.
 
@@ -118,3 +120,20 @@ uv run python scripts/generate_smoke_density_speed_plot.py
 ```
 
 Figure: ![soot_density vs speed](/artifacts/smoke-density-vs-speed.png)
+
+## Deviations from the literature
+
+The linear law is applied as a factor of each agent's unimpeded speed,
+\(v = v_0\,(1 + \beta K/\alpha)\) (`pyfds_evac/core/smoke_speed.py:227`),
+following the FDS+Evac normalisation (Korhonen 2021, Eq. 11). Frantzich and
+Nilsson (2003) published an absolute speed, \(v = 0.706 - 0.057\,K\) [m/s];
+dividing by the intercept 0.706 m/s treats an extrapolation to *K* = 0 as the
+free walking speed. The floor \(f_{\min}\) = 0.1 is FDS+Evac's convention,
+not a measured minimum; Ronchi et al. (2013) put the minimum speed from
+both the Jin and the Frantzich–Nilsson data at about 0.3–0.4 m/s. The law is evaluated at every *K*, including
+*K* below about 2 1/m, outside the tunnel data, and uses only the mean
+coefficients, not their standard deviations (0.069 and 0.015). The
+`fridolf` form \(V/(V+2)\) (`smoke_speed.py:261`) has not been checked
+against Fridolf et al. (2019), which is not open access. The irritant factor
+\(g(\mathrm{FIC})\) is multiplied onto this factor; see the
+[FED page](/models/fed.md#deviations-from-the-literature).

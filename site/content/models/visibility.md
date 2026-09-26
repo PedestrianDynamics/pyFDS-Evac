@@ -4,6 +4,8 @@ weight: 4
 math: true
 ---
 
+Based on: [Visibility through smoke](/fundamentals/visibility.md) and [Exit choice and familiarity](/fundamentals/exit-choice.md).
+
 Implements [Spec 008](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/specs/008-visibility-aware-routing/SPEC.md): sign
 visibility gates what each agent comes to *know*, and per-agent cognitive maps
 carry that knowledge into routing. Sign visibility does not reject routes.
@@ -241,3 +243,14 @@ uv run python scripts/run_familiarity_comparison.py \
 
 Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,
 `results/familiarity_comparison/comparison.png`.
+
+## Deviations from the literature
+
+Jin's constant *C* is a property of the sign, but every node without an
+authored sign receives a synthetic reflective sign with *C* = 3, readable from
+every direction, at its centroid (`pyfds_evac/core/visibility.py:58`).
+Legibility uses the mean extinction along the line of sight and a
+view-angle correction (Börger et al. 2024), neither of which is part of Jin's
+experiments in uniform smoke. fdsvismap's 30 m cap on visibility, the FDS
+default, is raised to the domain diagonal before the map is computed
+(`visibility.py:103`).
