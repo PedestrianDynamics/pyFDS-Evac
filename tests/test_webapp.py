@@ -11,9 +11,9 @@ import pytest
 pytest.importorskip("fasthtml")
 pytest.importorskip("monsterui")
 
-from starlette.testclient import TestClient  # noqa: E402
+from starlette.testclient import TestClient
 
-from pyfds_evac.webapp.app import app, manager  # noqa: E402
+from pyfds_evac.webapp.app import app, manager
 
 
 @pytest.fixture

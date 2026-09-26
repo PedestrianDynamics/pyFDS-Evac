@@ -4,13 +4,18 @@ weight: 4
 math: true
 ---
 
+Based on: [Visibility through smoke](/fundamentals/visibility.md) and [Exit choice and familiarity](/fundamentals/exit-choice.md).
+
 Implements [Spec 008](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/specs/008-visibility-aware-routing/SPEC.md): sign
 visibility gates what each agent comes to *know*, and per-agent cognitive maps
-carry that knowledge into routing. (The spec's original design also had sign
-visibility reject routes directly; that second gate has since been removed --
-see below.)
+carry that knowledge into routing. Sign visibility does not reject routes.
 
-## Sign visibility (Phase 1)
+Symbols follow the [notation table](/docs/concepts.md#notation).
+
+Background: the [Concepts](/docs/concepts.md) page and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
+([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
+
+## Sign visibility
 
 Each exit and checkpoint can carry a `"sign"` descriptor in the scenario
 config:
@@ -41,15 +46,19 @@ a node's sign, using a cached
 allowed.** A sign it can see admits that node to the agent's cognitive map
 (`cognitive_map.expand_from_visibility`), and the map is what Dijkstra may route
 over -- so an unknown exit is *absent from the graph* rather than
-present-and-vetoed. Route choice does not consult the visibility model at all.
-An earlier version also re-checked sign visibility inside `rank_routes` and
-rejected the route with `rejection_reason="next_node_not_visible"`; that
-double-gated the same criterion, blocked agents who already knew the building,
-and forbade an agent from using an exit it had legitimately learned once the
-sign went out of view. That check and that reason string are gone.
+present-and-vetoed. Route choice does not consult the visibility model at all,
+so an agent can use an exit it has learned after the sign goes out of view.
+
+![Two 30 m corridors, each with an exit at both ends; left, the near sign faces the agents and all 40 go to the near exit; right, the near sign faces away and all 40 walk to the far exit](/images/concepts/sign_bearing.png)
+
+*`assets/exit_visibility_alpha`: 4 m × 30 m corridor in clear air, 40 agents with
+familiarity 0. The two configurations differ only in the bearing of the near
+exit's sign. Facing the agents (0°), all 40 took the near exit; facing away
+(180°), all 40 walked to the far exit. One run of each configuration, as
+recorded in the asset README. Script: `scripts/figures/sign_bearing.py`.*
 
 ```bash
-# Build or reuse the vismap cache and enable visibility-gated rejection
+# Build or reuse the vismap cache; smoke hides signs from the cognitive map
 uv run run.py \
   --scenario assets/t_junction \
   --fds-dir assets/t_junction \
@@ -59,7 +68,7 @@ uv run run.py \
   --cleanup
 ```
 
-Under the gate the only rejection reasons a route-cost CSV carries are `tau ...`
+Under the default `"gate"` route-cost model the only rejection reasons a route-cost CSV carries are `tau ...`
 (optical depth over budget), `FED_max ...` (dose over threshold), and either of
 those under a `fallback:` prefix.
 
@@ -74,7 +83,7 @@ what the agent is allowed to perceive.
 | *(no flags)*, deck has discovery agents | clear air | **no fire.** Agents learn a node by seeing its sign: walls occlude, sign facing and contrast apply |
 | *(no flags)*, every agent `familiarity = 1.0` | none built | agents hold the whole graph from t=0 and never consult it, so building one would cost time and change nothing |
 | `--clear-air-visibility` | clear air, forced | as above, on a deck whose agents are fully familiar -- only useful for comparison runs |
-| `--no-visibility` | none | **not a fire scenario.** The gate is absent, so an agent learns every neighbour of each node it reaches, by contact rather than by sight |
+| `--no-visibility` | none | **not a fire scenario.** Sight gating is absent, so an agent learns every neighbour of each node it reaches, by contact rather than by sight |
 | `--fds-dir DIR` | none for sight | smoke drives speed reduction and FED, but what an agent can *see* is ungated |
 | `--fds-dir DIR --vis-cache PATH` | smoke | **the coupled run.** Sight gated by that fire's extinction field: smoke hides signs, so the map stops growing |
 | `--vis-cache PATH` (no `--fds-dir`) | clear air, cached | same as the default, with the grid reused between runs |
@@ -110,7 +119,7 @@ uv run python scripts/demo_vismap_phase0.py
 uv run python scripts/demo_vismap_phase0.py --no-cache
 ```
 
-## Cognitive maps (Phase 2)
+## Cognitive maps
 
 Agents have a familiarity tier that controls how much of the building they
 know at the start of the simulation:
@@ -124,7 +133,7 @@ know at the start of the simulation:
 not know the building — it routes only over its cognitive subgraph and learns
 nodes through the perception-limited `VisibilityModel`. It *does* know the smoke
 field: to choose among the exits it knows, it integrates `tau = K_ave * L` over
-the whole remaining route, including legs it has never visited, and with
+the whole remaining route (optical depth, dimensionless), including legs it has never visited, and with
 `anticipate = True` and `foresight_horizon_s = inf` at times that have not
 happened. So route choice is an **optimality bound over the agent's known
 subgraph**, not a behavioural model — map growth, exploration order and wander
@@ -161,15 +170,13 @@ most of the building's exits at t=0 and make `familiarity` inert.
 The tier binds whether or not the scenario defines a journey, and it binds from
 the **first step**: the agent's cognitive map is built at spawn and the exits it
 knows are ranked by the same cost the reroute pass uses, so an agent
-who knows only the front door walks to the front door however far it is. Until
-issue #86 was fixed the opening target was the geometrically nearest exit,
-picked before any map existed, and `familiarity` could only take effect on the
-first reroute. `tests/test_initial_exit_from_cognitive_map.py` pins the
+who knows only the front door walks to the front door however far it is.
+`tests/test_initial_exit_from_cognitive_map.py` pins the
 contract with rerouting off, where the opening choice is the only choice.
 
 Each agent is rooted at its spawn area, and routing ranks every exit reachable
 from there. Rooting it at the assigned exit instead would collapse the ranking
-to that one exit at zero cost, which is what issue #61 did until it was fixed;
+to that one exit at zero cost;
 `tests/test_no_journey_routing_origin.py` pins the contract.
 
 Default when the key is absent: `"full"` (backward compatible).
@@ -217,7 +224,7 @@ uv run python scripts/demo_cognitive_map_vis.py --no-cache
 
 Figure: ![cognitive map evolution](/t_junction/cognitive_map_evolution.png)
 
-## Phase 2 verification: familiarity comparison
+## Verification: familiarity comparison
 
 Two scenario configs differ only in familiarity tier:
 
@@ -237,3 +244,15 @@ uv run python scripts/run_familiarity_comparison.py \
 
 Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,
 `results/familiarity_comparison/comparison.png`.
+
+## Deviations from the literature
+
+The published law is on [Visibility through smoke](/fundamentals/visibility.md).
+There *C* is a property of the sign, but every node without an authored sign
+receives a synthetic reflective sign, readable from every direction, at its
+centroid (`pyfds_evac/core/visibility.py:58`).
+Legibility uses the mean extinction along the line of sight and a
+view-angle correction (Börger et al. 2024), neither of which is part of Jin's
+experiments in uniform smoke. fdsvismap's 30 m cap on visibility, the FDS
+default, is raised to the domain diagonal before the map is computed
+(`visibility.py:103`).

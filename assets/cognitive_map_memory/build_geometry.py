@@ -84,7 +84,7 @@ def legibility_window(sign_x, sign_y, alpha_deg, max_vis=MAX_VIS_M):
     """
     fx = math.sin(math.radians(alpha_deg))
     fy = math.cos(math.radians(alpha_deg))
-    ys = [y / 100.0 for y in range(0, int(CORRIDOR[3] * 100))]
+    ys = [y / 100.0 for y in range(int(CORRIDOR[3] * 100))]
     legible = []
     for y in ys:
         dx, dy = CENTRELINE_X - sign_x, y - sign_y

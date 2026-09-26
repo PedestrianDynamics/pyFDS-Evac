@@ -6,7 +6,7 @@ import subprocess
 import sys
 import zlib
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import jupedsim as jps
 import numpy as np
@@ -365,7 +365,7 @@ def _normalize_checkpoint_mode(
     waiting_time: Any,
     enable_throughput_throttling: Any,
     speed_factor: Any,
-) -> Tuple[float, bool, float]:
+) -> tuple[float, bool, float]:
     """Enforce mutually exclusive checkpoint behavior modes."""
     try:
         normalized_waiting_time = float(waiting_time)
@@ -391,10 +391,10 @@ def _normalize_checkpoint_mode(
 
 
 def _normalize_variant_weights(
-    distribution_journeys: List[Dict[str, Any]],
-) -> Tuple[List[float], float]:
+    distribution_journeys: list[dict[str, Any]],
+) -> tuple[list[float], float]:
     """Return non-negative variant weights and a strictly positive total."""
-    weights: List[float] = []
+    weights: list[float] = []
     for variant_info in distribution_journeys:
         raw_percentage = variant_info.get("variant_data", {}).get("percentage", 0.0)
         try:
@@ -441,8 +441,8 @@ def _largest_polygon(geometry):
 
 
 def _pick_initial_stage_target(
-    stage_cfg: Dict[str, Any],
-    current_position: Tuple[float, float] | None,
+    stage_cfg: dict[str, Any],
+    current_position: tuple[float, float] | None,
     rng,
     agent_radius: float,
     reach_penetration: float = 0.25,
@@ -457,17 +457,17 @@ def _pick_initial_stage_target(
 
 
 def build_agent_path_state(
-    variant_data: Dict[str, Any],
+    variant_data: dict[str, Any],
     journey_key: str | None,
-    transitions: List[Dict[str, Any]],
-    direct_steering_info: Dict[str, Dict[str, Any]],
-    waypoint_routing: Dict[str, Any] | None,
+    transitions: list[dict[str, Any]],
+    direct_steering_info: dict[str, dict[str, Any]],
+    waypoint_routing: dict[str, Any] | None,
     seed: int,
     agent_id: int,
-    initial_position: Tuple[float, float] | None = None,
+    initial_position: tuple[float, float] | None = None,
     agent_radius: float = 0.2,
     spawn_origin: str | None = None,
-) -> Dict[str, Any] | None:
+) -> dict[str, Any] | None:
     """Build DS routing state as origin->weighted-next mapping.
 
     ``spawn_origin`` is the distribution the agent was actually placed in.
@@ -477,7 +477,7 @@ def build_agent_path_state(
     if not direct_steering_info:
         return None
 
-    outgoing: Dict[str, List[str]] = {}
+    outgoing: dict[str, list[str]] = {}
 
     def _append_edge(origin: str, target: str) -> None:
         targets = outgoing.setdefault(origin, [])
@@ -524,7 +524,7 @@ def build_agent_path_state(
     if not outgoing:
         return None
 
-    path_choices: Dict[str, List[Tuple[str, float]]] = {}
+    path_choices: dict[str, list[tuple[str, float]]] = {}
     routing_for_journey = waypoint_routing if isinstance(waypoint_routing, dict) else {}
     for origin, targets in outgoing.items():
         configured = None
@@ -535,7 +535,7 @@ def build_agent_path_state(
                 .get("destinations", [])
             )
 
-        choices: List[Tuple[str, float]] = []
+        choices: list[tuple[str, float]] = []
         if configured:
             for dest in configured:
                 target = dest.get("target")
@@ -605,7 +605,7 @@ def build_agent_path_state(
                 current_target_stage = stage_key
                 break
 
-    stage_configs: Dict[str, Dict[str, Any]] = {}
+    stage_configs: dict[str, dict[str, Any]] = {}
     for stage_key, info in direct_steering_info.items():
         stage_configs[stage_key] = {
             "polygon": info.get("polygon"),
@@ -657,7 +657,7 @@ def initialize_simulation_from_json(
     seed: int = 42,
     model_type: str = "CollisionFreeSpeedModel",
     global_parameters=None,
-) -> Tuple[Dict[str, Any], List[Tuple[float, float]], Dict[int, float]]:
+) -> tuple[dict[str, Any], list[tuple[float, float]], dict[int, float]]:
     """
     Initialize a JuPedSim simulation from a JSON configuration with fallback logic.
     """
@@ -709,12 +709,12 @@ def initialize_simulation_from_json(
 
 def _initialize_complete_config(
     simulation: jps.Simulation,
-    data: Dict[str, Any],
+    data: dict[str, Any],
     walkable_area: pedpy.WalkableArea,
     seed: int,
     model_type: str,
     global_parameters=None,
-) -> Tuple[Dict[str, Any], List[Tuple[float, float]], Dict[int, float]]:
+) -> tuple[dict[str, Any], list[tuple[float, float]], dict[int, float]]:
     """Original initialization logic for complete configurations"""
     stage_map, direct_steering_info = _add_stages(simulation, data)
     dist_geom, dist_params = _process_distributions(data)
@@ -761,12 +761,12 @@ def _initialize_complete_config(
 
 def _initialize_with_fallback(
     simulation: jps.Simulation,
-    data: Dict[str, Any],
+    data: dict[str, Any],
     walkable_area: pedpy.WalkableArea,
     seed: int,
     model_type: str,
     global_parameters=None,
-) -> Tuple[Dict[str, Any], List[Tuple[float, float]], Dict[int, float], Dict[str, Any]]:
+) -> tuple[dict[str, Any], list[tuple[float, float]], dict[int, float], dict[str, Any]]:
     """Fallback initialization logic"""
     import numpy as np
     from shapely.geometry import Polygon
@@ -780,7 +780,7 @@ def _initialize_with_fallback(
     default_n_agents = 100
 
     # Try to get parameters from the first distribution with valid parameters
-    if "distributions" in data and data["distributions"]:
+    if data.get("distributions"):
         for dist_id, dist_data in data["distributions"].items():
             if "parameters" in dist_data:
                 params = dist_data["parameters"]
@@ -900,7 +900,7 @@ def _initialize_with_fallback(
     distribution_keys = []  # Parallel list of dist_id strings
     total_agents = 0
 
-    if "distributions" in data and data["distributions"]:
+    if data.get("distributions"):
         # Use provided distributions
         for dist_id, dist_data in data["distributions"].items():
             if "coordinates" in dist_data:
@@ -1205,7 +1205,7 @@ def _initialize_with_fallback(
         except Exception as e:
             error_msg = (
                 f"CRITICAL: Failed to place agents in distribution area {spawn_data['index']}. "
-                f"Error: {str(e)}. This usually means the spawn area is too small or crowded. "
+                f"Error: {e!s}. This usually means the spawn area is too small or crowded. "
                 f"Consider: 1) Making the distribution area larger, 2) Reducing the number of agents, "
                 f"3) Increasing distance between agents, or 4) Checking for obstacles in the area."
             )
@@ -1472,8 +1472,8 @@ def _random_point_in_polygon(polygon, rng, min_clearance: float = 0.2):
 
 
 def _add_stages(
-    simulation: jps.Simulation, data: Dict[str, Any]
-) -> Tuple[Dict[str, int], Dict[str, Dict]]:
+    simulation: jps.Simulation, data: dict[str, Any]
+) -> tuple[dict[str, int], dict[str, dict]]:
     """Add checkpoints and exits. Returns (stage_map, direct_steering_info)."""
     stage_map = {}
     direct_steering_info = {}
@@ -1570,8 +1570,8 @@ def _add_stages(
 
 
 def _process_distributions(
-    data: Dict[str, Any],
-) -> Tuple[Dict[str, List[List[float]]], Dict[str, Dict[str, Any]]]:
+    data: dict[str, Any],
+) -> tuple[dict[str, list[list[float]]], dict[str, dict[str, Any]]]:
     """Process distribution geometries from JSON."""
     dist_geom = {}
     dist_params = {}
@@ -1621,7 +1621,7 @@ def _is_routing_split_node(stage_key: Any) -> bool:
     )
 
 
-def _distribution_stage_keys(stages: List[Any]) -> List[str]:
+def _distribution_stage_keys(stages: list[Any]) -> list[str]:
     """Return unique distribution stage keys preserving first-seen order."""
     keys = [
         stage
@@ -1633,10 +1633,10 @@ def _distribution_stage_keys(stages: List[Any]) -> List[str]:
 
 def _create_journeys_with_percentages(
     simulation: jps.Simulation,
-    data: Dict[str, Any],
-    stage_map: Dict[str, int],
+    data: dict[str, Any],
+    stage_map: dict[str, int],
     direct_steering_keys: set | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Enhanced journey creation with percentage-based routing"""
 
     journey_ids = {}
@@ -1819,10 +1819,10 @@ def _create_journeys_with_percentages(
 
 def _generate_journey_variants(
     journey_id: str,
-    base_stages: List[str],
-    waypoint_routing: Dict,
-    stage_map: Dict[str, int],
-) -> List[Tuple[List[str], float]]:
+    base_stages: list[str],
+    waypoint_routing: dict,
+    stage_map: dict[str, int],
+) -> list[tuple[list[str], float]]:
     """Generate all possible journey variants with their percentages."""
     _ = stage_map  # kept for compatibility with existing call sites
 
@@ -1891,11 +1891,11 @@ def _generate_journey_variants(
 def _explore_all_paths_from_waypoint(
     waypoint: str,
     journey_id: str,
-    waypoint_routing: Dict,
-    path_so_far: List[str],
-    base_stages: List[str],
+    waypoint_routing: dict,
+    path_so_far: list[str],
+    base_stages: list[str],
     visited: set | None = None,
-) -> List[Tuple[List[str], float]]:
+) -> list[tuple[list[str], float]]:
     """Explore all paths from a given routing split node."""
     current_path = path_so_far + [waypoint]
 
@@ -1993,10 +1993,10 @@ def _explore_all_paths_from_waypoint(
 # Update the main function name call
 def _create_journeys(
     simulation: jps.Simulation,
-    data: Dict[str, Any],
-    stage_map: Dict[str, int],
+    data: dict[str, Any],
+    stage_map: dict[str, int],
     direct_steering_keys: set | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Wrapper to maintain compatibility"""
     return _create_journeys_with_percentages(
         simulation, data, stage_map, direct_steering_keys
@@ -2005,11 +2005,11 @@ def _create_journeys(
 
 def _add_agents(
     simulation: jps.Simulation,
-    data: Dict[str, Any],
-    stage_map: Dict[str, int],
-    dist_geom: Dict[str, List[List[float]]],
-    dist_params: Dict[str, Dict[str, Any]],
-    journey_data: Dict[str, Any],
+    data: dict[str, Any],
+    stage_map: dict[str, int],
+    dist_geom: dict[str, list[list[float]]],
+    dist_params: dict[str, dict[str, Any]],
+    journey_data: dict[str, Any],
     walkable_area: pedpy.WalkableArea,
     seed: int,
     model_type: str = "CollisionFreeSpeedModel",
@@ -2017,7 +2017,7 @@ def _add_agents(
     direct_steering_info=None,
     global_ds_journey_id=None,
     global_ds_stage_id=None,
-) -> Tuple[List[Tuple[float, float]], Dict[int, float], Dict[str, Any]]:
+) -> tuple[list[tuple[float, float]], dict[int, float], dict[str, Any]]:
     """Add agents to the simulation based on distributions and journeys."""
     journey_ids = journey_data["journey_ids"]
     journeys_per_distribution = journey_data["journeys_per_distribution"]
@@ -2500,7 +2500,7 @@ def _add_agents(
         except Exception as e:
             error_msg = (
                 f"CRITICAL: Failed to place agents in distribution '{dist_key}'. "
-                f"Error: {str(e)}. This usually means the spawn area is too small or crowded. "
+                f"Error: {e!s}. This usually means the spawn area is too small or crowded. "
                 f"Consider: 1) Making the distribution area larger, 2) Reducing the number of agents, "
                 f"3) Increasing distance between agents, or 4) Checking for obstacles in the area."
             )

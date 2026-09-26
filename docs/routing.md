@@ -1,6 +1,6 @@
 ---
 title: "Smoke-aware routing"
-weight: 4
+weight: 10
 ---
 
 > Part of [pyFDS-Evac](../README.md).
@@ -94,11 +94,10 @@ For each segment (edge between two stages), the system performs
 the following steps:
 
 1. Sample the extinction coefficient K along the edge polyline
-   using the Beer-Lambert path-integrated mean
-   ([Boerger et al. 2024](https://doi.org/10.1016/j.firesaf.2024.104269),
-   Eq. 8-9).
-2. Compute the smoke-adjusted speed factor from the mean K using
-   the [smoke-speed model](smoke-speed-model.md).
+   and take its mean (see [Line-of-sight extinction](#line-of-sight-extinction)).
+2. Compute the smoke-adjusted speed factor from the mean K with the
+   linear speed law, using the router's own `alpha`, `beta` and
+   `min_speed_factor` (see the [smoke-speed model](/models/smoke-speed.md)).
 3. Estimate the travel time from the segment length and reduced
    speed.
 4. Optionally, estimate the FED growth along the segment from the
@@ -117,9 +116,11 @@ sigma_bar = (1 / |P|) * sum(K_p)
 
 where `|P|` is the number of sample points and `K_p` is the
 extinction at each point. The sample spacing is controlled by
-`sampling_step_m` (default 2.0 m). This is the discrete form of
+`sampling_step_m`. This is the discrete form of the Beer-Lambert
+path-integrated mean of
 [Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269),
-Eq. 8-9.
+Eq. 8-9; the Beer-Lambert law itself is on
+[Extinction coefficient](/fundamentals/extinction.md).
 
 ### Arrival-time pricing
 
@@ -222,38 +223,25 @@ closes on an exit — the distance in `tau` is the distance that remains.
 
 ### Configuration
 
-`RouteCostConfig` controls all cost evaluation parameters. Every field
-listed here is also readable from a scenario's `routing` block via
-`RouteCostConfig.from_routing_params` — the full JSON key table is in
-[route-cost-gate.md](route-cost-gate.md#configuration).
+`RouteCostConfig` controls all cost evaluation parameters. Most fields are
+also readable from a scenario's `routing` block via
+`RouteCostConfig.from_routing_params`. The defaults are on the
+[routing model](/models/routing.md#parameters) page, and the full JSON key
+table is in [route-cost-gate.md](route-cost-gate.md#configuration).
 
 ```python
 from pyfds_evac.core.route_graph import RouteCostConfig
 
+# Fields not passed keep their defaults (see the routing model page).
 config = RouteCostConfig(
-    cost_model="gate",                    # "gate" (default) or "additive"
-    tau_max=6.0,                          # gate: optical depth budget K_ave * L
-    tau_return_margin=0.8,                # gate: stricter budget for a rival exit
-    current_exit_discount=0.9,            # gate: current exit's tau in the sort key
-    tau_deadband=0.1,                     # gate: anchor deadband, as a fraction of tau_max
-    clean_extinction_threshold=0.0,       # gate: clean-exit tier, 0 = off
-    clean_exit_margin=0.1,                # gate: hysteresis on tier membership
-    anticipate=True,                      # price segments at arrival time
-    foresight_horizon_s=float("inf"),     # cap on anticipation (s)
-    fallback_switch_margin=0.2,           # gate: all-refused hysteresis
-    w_smoke=1.0,                          # smoke cost weight
-    w_fed=10.0,                           # FED cost weight
-    w_queue=0.0,                          # congestion weight (0 = off, the default)
-    fed_rejection_threshold=1.0,          # reject if FED_max exceeds
-    visibility_extinction_threshold=0.5,  # K threshold for visibility
-    sampling_step_m=2.0,                  # ray sample spacing
-    base_speed_m_per_s=1.3,               # clear-air walking speed
-    alpha=0.706,                          # speed-law coefficient
-    beta=-0.057,                          # speed-law coefficient
-    min_speed_factor=0.1,                 # speed factor floor
-    default_exit_capacity=1.3,            # fallback capacity (agents/s)
+    cost_model="gate",  # "gate" (default) or "additive"
+    w_queue=0.03,       # override: turn the congestion term on (default off)
 )
 ```
+
+`alpha`, `beta` and `min_speed_factor` are the router's copy of the linear
+speed law, used only to estimate travel time; their defaults are on the
+[routing model](/models/routing.md#parameters) page.
 
 Two further fields exist on the dataclass but are **not** readable from
 the `routing` block, so a scenario run always gets their defaults:
@@ -587,16 +575,16 @@ quantity that does is `tau_route`.
 - [gate-model-review-notes.md](gate-model-review-notes.md) -- provenance
   against `materials/evac.f90` and the open questions.
 - FDS+Evac Technical Reference and User's Guide
-  -- Korhonen (2021). Speed-reduction law and smoke-interaction model
-  (Section 3.4).
+  -- Korhonen (2021). Smoke-interaction model (Section 3.4).
+- [Routing model](/models/routing.md) -- defaults and deviations from the
+  literature; the published laws are on
+  [Extinction coefficient](/fundamentals/extinction.md) and
+  [Visibility through smoke](/fundamentals/visibility.md).
 - [Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269)
   -- Beer-Lambert integrated extinction along line of sight (Eq. 8-9),
   waypoint-based visibility maps. Fire Safety Journal 150:104269.
 - [Schroder et al. (2020)](https://doi.org/10.1016/j.firesaf.2020.103154) --
   A map representation of the ASET-RSET concept. Fire Safety Journal.
-- [Ronchi et al. (2013)](https://doi.org/10.1007/s10694-012-0280-y) -- Representation
-  of the impact of smoke on agent walking speeds in evacuation models.
-  Fire Technology 49.
 - Ehtamo, H., Heliövaara, S., Korhonen, T. & Hostikka, S. (2010).
   Game theoretic best-response dynamics for evacuees' exit selection.
   *Advances in Complex Systems*, 13(1), 113–134.

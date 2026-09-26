@@ -32,15 +32,15 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.animation import FFMpegWriter, PillowWriter  # noqa: E402
-from matplotlib.lines import Line2D  # noqa: E402
-from shapely import wkt as shapely_wkt  # noqa: E402
-from shapely.geometry import Point, Polygon  # noqa: E402
+import matplotlib.pyplot as plt
+from matplotlib.animation import FFMpegWriter, PillowWriter
+from matplotlib.lines import Line2D
+from shapely import wkt as shapely_wkt
+from shapely.geometry import Point, Polygon
 
-from pyfds_evac.core import load_scenario, run_scenario  # noqa: E402
-from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig  # noqa: E402
-from pyfds_evac.core.visibility import (  # noqa: E402
+from pyfds_evac.core import load_scenario, run_scenario
+from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
+from pyfds_evac.core.visibility import (
     VisibilityModel,
     extract_sign_descriptors,
 )

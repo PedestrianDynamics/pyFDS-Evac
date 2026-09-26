@@ -4,7 +4,7 @@ No dependency on the web backend — only JuPedSim, Shapely, and NumPy.
 
 Usage::
 
-    from core.scenario import load_scenario, run_scenario
+    from pyfds_evac.core.scenario import load_scenario, run_scenario
 
     scenario = load_scenario("scenario.zip")
     print(scenario.summary())
@@ -23,9 +23,10 @@ import pathlib
 import random
 import sqlite3
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from types import SimpleNamespace
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 try:
     import jupedsim as jps
@@ -61,6 +62,7 @@ from .fed import (
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
+from .manifest import fds_dir_from_models, write_manifest
 from .route_graph import (
     AgentRouteState,
     RerouteConfig,
@@ -174,7 +176,7 @@ def _build_agent_params(
     model_type: str,
     v0: float,
     radius: float,
-    position: Tuple[float, float],
+    position: tuple[float, float],
     journey_id: int,
     stage_id: int,
 ):
@@ -214,7 +216,7 @@ def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
 
 def _sample_agent_values(
     params: dict, n_agents: int, rng: np.random.Generator
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Sample radii and speeds for *n_agents*."""
     mean_radius = max(0.1, min(1.0, params.get("radius", 0.2)))
     mean_v0 = max(0.1, min(5.0, params.get("desired_speed", params.get("v0", 1.2))))
@@ -297,12 +299,12 @@ def _distribution_agent_budget(dist: dict) -> int:
 class Scenario:
     """A loaded scenario ready for inspection and execution."""
 
-    raw: Dict[str, Any]
+    raw: dict[str, Any]
     walkable_area_wkt: str
     model_type: str
     seed: int
-    sim_params: Dict[str, Any]
-    source_path: Optional[str] = None
+    sim_params: dict[str, Any]
+    source_path: str | None = None
 
     _walkable_polygon: Any = field(default=None, repr=False)
 
@@ -319,30 +321,30 @@ class Scenario:
         return self.sim_params.get("max_simulation_time", 300)
 
     @property
-    def exits(self) -> Dict[str, Any]:
+    def exits(self) -> dict[str, Any]:
         return self.raw.get("exits", {})
 
     @property
-    def distributions(self) -> Dict[str, Any]:
+    def distributions(self) -> dict[str, Any]:
         return self.raw.get("distributions", {})
 
     @property
-    def stages(self) -> Dict[str, Any]:
+    def stages(self) -> dict[str, Any]:
         return self.raw.get("checkpoints", {})
 
     @property
-    def zones(self) -> Dict[str, Any]:
+    def zones(self) -> dict[str, Any]:
         return self.raw.get("zones", {})
 
     @property
-    def journeys(self) -> List[Dict[str, Any]]:
+    def journeys(self) -> list[dict[str, Any]]:
         return self.raw.get("journeys", [])
 
-    def _simulation_settings(self) -> Dict[str, Any]:
+    def _simulation_settings(self) -> dict[str, Any]:
         config = self.raw.setdefault("config", {})
         return config.setdefault("simulation_settings", {})
 
-    def _simulation_params(self) -> Dict[str, Any]:
+    def _simulation_params(self) -> dict[str, Any]:
         settings = self._simulation_settings()
         return settings.setdefault("simulationParams", {})
 
@@ -818,13 +820,14 @@ ProgressCallback = Callable[[ProgressEvent], None]
 class ScenarioResult:
     """Results from running a scenario."""
 
-    metrics: Dict[str, Any]
-    sqlite_file: Optional[str] = None
-    smoke_history: Optional[list[dict[str, Any]]] = None
-    fed_history: Optional[list[dict[str, Any]]] = None
-    route_history: Optional[list[dict[str, Any]]] = None
-    route_cost_history: Optional[list[dict[str, Any]]] = None
-    cognitive_map_history: Optional[list[dict[str, Any]]] = None
+    metrics: dict[str, Any]
+    sqlite_file: str | None = None
+    smoke_history: list[dict[str, Any]] | None = None
+    fed_history: list[dict[str, Any]] | None = None
+    route_history: list[dict[str, Any]] | None = None
+    route_cost_history: list[dict[str, Any]] | None = None
+    cognitive_map_history: list[dict[str, Any]] | None = None
+    manifest_file: str | None = None
 
     @property
     def success(self) -> bool:
@@ -887,10 +890,13 @@ class ScenarioResult:
         return df
 
     def cleanup(self):
-        """Delete the temporary SQLite trajectory file."""
+        """Delete the temporary SQLite trajectory file and its manifest."""
         if self.sqlite_file and os.path.exists(self.sqlite_file):
             os.unlink(self.sqlite_file)
             self.sqlite_file = None
+        if self.manifest_file and os.path.exists(self.manifest_file):
+            os.unlink(self.manifest_file)
+            self.manifest_file = None
 
 
 def _extract_terminal_exit(
@@ -942,7 +948,7 @@ def _assign_initial_exit(
     vis_model,
     time_s: float,
     seed: int,
-    cognitive_maps: Dict[int, AgentCognitiveMap],
+    cognitive_maps: dict[int, AgentCognitiveMap],
     extinction_sampler,
     fed_rate_sampler=None,
     cached_segments: dict | None = None,
@@ -1015,7 +1021,7 @@ def _assign_initial_exit(
     return best.exit_id
 
 
-def _migrate_journeys_v2(data: Dict[str, Any]) -> None:
+def _migrate_journeys_v2(data: dict[str, Any]) -> None:
     """Backfill legacy ``journeys``/``transitions`` from the editor's ``journeys_v2``.
 
     The web UI saves routes as ``journeys_v2`` (id/name/color/sequence) with
@@ -1154,16 +1160,16 @@ def load_scenario(path: str) -> Scenario:
 def run_scenario(
     scenario: Scenario,
     *,
-    seed: Optional[int] = None,
+    seed: int | None = None,
     smoke_speed_model=None,
     fed_model=None,
     heat_fed_model=None,
     tenability_config=None,
-    reroute_config: Optional[RerouteConfig] = None,
+    reroute_config: RerouteConfig | None = None,
     collect_route_cost_history: bool = False,
     collect_cognitive_map_history: bool = False,
     vis_model=None,
-    progress_callback: Optional[ProgressCallback] = None,
+    progress_callback: ProgressCallback | None = None,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app.
 
@@ -1226,11 +1232,11 @@ def run_scenario(
         direct_steering_info = spawning_info.get("direct_steering_info", {})
         agent_wait_info = spawning_info.get("agent_wait_info", {})
         checkpoint_throughput_tracker = {}
-        agent_speed_state: Dict[int, Dict[str, Any]] = {}
-        smoke_speed_state: Dict[int, float] = {}
+        agent_speed_state: dict[int, dict[str, Any]] = {}
+        smoke_speed_state: dict[int, float] = {}
         smoke_history: list[dict[str, Any]] = []
-        fed_state: Dict[int, Dict[str, float]] = {}
-        heat_fed_state: Dict[int, Dict[str, float]] = {}
+        fed_state: dict[int, dict[str, float]] = {}
+        heat_fed_state: dict[int, dict[str, float]] = {}
         fed_history: list[dict[str, Any]] = []
         incapacitated_agents: set[int] = set()
         # Which track (gas / heat / both) tripped incapacitation for each
@@ -1238,15 +1244,15 @@ def run_scenario(
         # TenabilityConfig docstring), so "why" isn't recoverable from
         # fed_cumulative/heat_fed_cumulative alone once both are being
         # tracked.
-        incapacitated_cause: Dict[int, str] = {}
+        incapacitated_cause: dict[int, str] = {}
         # Per-agent incapacitation threshold (population variability). Sampled
         # lazily on first FED evaluation from a dedicated seeded stream so runs
         # stay reproducible; deterministic mode reuses fed_threshold for all.
-        incap_thresholds: Dict[int, float] = {}
+        incap_thresholds: dict[int, float] = {}
         incap_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED1)
         # Independent stream for the heat track -- not the same dose as gas
         # FED, so its threshold draws must not be correlated with the gas ones.
-        incap_heat_thresholds: Dict[int, float] = {}
+        incap_heat_thresholds: dict[int, float] = {}
         incap_heat_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED2)
 
         def _incap_threshold(aid: int) -> float:
@@ -1276,15 +1282,15 @@ def run_scenario(
         last_reroute_check_time: float | None = None
         route_history: list[dict[str, Any]] = []
         route_cost_history: list[dict[str, Any]] = []
-        agent_route_state: Dict[int, AgentRouteState] = {}
-        cognitive_maps: Dict[int, AgentCognitiveMap] = {}
+        agent_route_state: dict[int, AgentRouteState] = {}
+        cognitive_maps: dict[int, AgentCognitiveMap] = {}
         cognitive_map_history: list[dict[str, Any]] = []
         # Size of each agent's map when it was last recorded, so a later frame
         # can be compared against the previous one and only changes recorded.
-        _cmap_seen: Dict[int, tuple[int, int]] = {}
+        _cmap_seen: dict[int, tuple[int, int]] = {}
         route_segment_cache: dict[tuple[str, str], Any] | None = None
         stage_graph: StageGraph | None = None
-        distribution_stage_configs: Dict[str, Dict[str, Any]] = {}
+        distribution_stage_configs: dict[str, dict[str, Any]] = {}
         reroute_debug_printed = False
         reroute_debug_samples = 0
         _fed_rate_adapter = None
@@ -2620,9 +2626,23 @@ def run_scenario(
         if collect_cognitive_map_history:
             metrics["cognitive_map_events"] = len(cognitive_map_history)
 
+        try:
+            manifest_file = write_manifest(
+                output_file,
+                seed=seed,
+                scenario_path=scenario.source_path,
+                fds_dir=fds_dir_from_models(
+                    smoke_speed_model, fed_model, heat_fed_model
+                ),
+            )
+        except (OSError, ValueError) as exc:
+            _logger.warning("Could not write the run manifest: %s", exc)
+            manifest_file = None
+
         return ScenarioResult(
             metrics=metrics,
             sqlite_file=output_file,
+            manifest_file=manifest_file,
             smoke_history=smoke_history if smoke_speed_model is not None else None,
             fed_history=fed_history
             if (fed_model is not None or heat_fed_model is not None)

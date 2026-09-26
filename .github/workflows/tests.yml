@@ -22,4 +22,4 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
       - name: Run smoke, FED, and routing tests
-        run: uv run pytest tests/test_smoke_speed.py tests/test_fed.py tests/test_route_graph.py tests/test_familiarity_routing.py -q
+        run: uv run pytest tests/test_smoke_speed.py tests/test_fed.py tests/test_route_graph.py tests/test_familiarity_routing.py tests/test_examples.py tests/test_public_api.py tests/test_manifest.py tests/test_docs_defaults.py -q

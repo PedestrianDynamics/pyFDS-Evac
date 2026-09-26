@@ -35,12 +35,12 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from matplotlib import animation  # noqa: E402
-from matplotlib.colors import Normalize  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import animation
+from matplotlib.colors import Normalize
 
-from pyfds_evac.core.smoke_speed import ExtinctionField  # noqa: E402
+from pyfds_evac.core.smoke_speed import ExtinctionField
 
 _logger = logging.getLogger(__name__)
 

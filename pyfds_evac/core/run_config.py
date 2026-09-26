@@ -14,7 +14,8 @@ from the GUI. It defaults to a no-op.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 from .cognitive_map import familiarity_probability
 from .fds_inventory import inspect_fds_quantities
@@ -257,7 +258,7 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     )
 
 
-def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> Dict[str, Any]:
+def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str, Any]:
     """Translate run options into keyword arguments for ``run_scenario``.
 
     Returns the kwargs dict accepted by ``run_scenario`` (``seed``,

@@ -47,18 +47,21 @@ menu:
     - name: Documentation
       pageRef: /docs
       weight: 1
+    - name: Fundamentals
+      pageRef: /fundamentals
+      weight: 2
     - name: Models
       pageRef: /models
-      weight: 2
+      weight: 3
     - name: Talks
       pageRef: /talks
-      weight: 3
-    - name: Search
       weight: 4
+    - name: Search
+      weight: 5
       params:
         type: search
     - name: GitHub
-      weight: 5
+      weight: 6
       url: "https://github.com/PedestrianDynamics/pyFDS-Evac"
       params:
         icon: github

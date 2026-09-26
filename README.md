@@ -8,11 +8,11 @@ Fire Dynamics Simulator (FDS) coupled evacuation modeling with smoke-speed reduc
 The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
-- Full ISO 13571 FED model (toxic gas dose accumulation)
-- Convective heat FED (ISO TS 13571 eq. 5), accumulated as a dose independent
-  of the gas track -- an agent is incapacitated when either crosses its own
-  threshold, because thermal injury and asphyxiation are different mechanisms
-  and the standard does not sum them. Radiant heat is not modelled, and heat
+- Purser FED model as in the FDS+Evac guide (toxic gas dose accumulation, up to 12 species)
+- Convective heat FED (Purser, SFPE Handbook Eq. 63.44), accumulated as a dose
+  independent of the gas track -- an agent is incapacitated when either crosses
+  its own threshold; the heat dose is a running total of its own and is never
+  added to the gas FED. Radiant heat is not modelled, and heat
   does not enter route choice. It also does not slow an agent down: unlike
   smoke and irritants, heat has no effect at all until the dose is reached, at
   which point the agent stops.
@@ -111,31 +111,41 @@ Server-Sent Events; one run is active at a time.
 **Smoke-speed parameters are library-level fields, not scenario configuration.** `speed_law`,
 `alpha`, `beta`, `min_speed_factor` and `visibility_factor_c` are constructed
 with their defaults by `run_config.py` and are reachable from no CLI flag and
-no scenario JSON key, so a configured run always uses the Lund law with
-`alpha=0.706`, `beta=-0.057`, `min_speed_factor=0.1`. The `routing` block
+no scenario JSON key, so a configured run always uses the Lund law with the
+defaults listed on the [smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters)
+page. The `routing` block
 does accept keys named `alpha`, `beta` and `min_speed_factor` with the same
 defaults, but those parameterise the speed factor used to *estimate travel
 time when pricing a route* — setting them changes what routes cost, not how
 fast agents walk. The same split applies to speed itself: `routing.
-base_speed_m_per_s` (1.3 m/s) is a route-pricing constant, while an agent's
-own `desired_speed` defaults to 1.2 m/s (see below).
+base_speed_m_per_s` is a route-pricing constant (default on the
+[routing model](https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters)
+page), while an agent's own `v0` defaults to 1.2 m/s (see below).
 
 Each distribution group sets the attributes an agent starts with:
 
 | Key | Default | Effect |
 |-----|---------|--------|
-| `desired_speed` (`v0`) | `1.2` m/s (`0.8` for `SocialForceModel`) | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
-| `desired_speed_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
-| `desired_speed_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
-| `radius` (`radius_std`) | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. Clipped to `[0.1, 1.0]` m. |
+| `v0` | `1.2` m/s, for every model | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
+| `v0_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
+| `v0_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
+| `radius` | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. With `radius_distribution` = `"gaussian"` and `radius_std`, drawn per agent and clipped to `[0.1, 1.0]` m. |
 | `use_premovement` | `false` | Delay before the agent starts moving. |
 | `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform`; `premovement_param_a`/`_b` override the presets. |
+
+The run reads only the `v0*` keys. `desired_speed`, `desired_speed_distribution`
+and `desired_speed_std` are aliases accepted by `Scenario.set_agent_params()`
+in Python; in a scenario JSON they are silently ignored
+([#143](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/143)).
 
 Pre-movement is implemented by spawning the agent at `v0 = 0` and restoring
 its sampled speed on release. While it waits, the smoke update skips it, so a
 delayed occupant's baseline speed is never degraded by smoke it has not walked
 through, and it starts at full clear-air speed however dense the smoke has
-become around it.
+become around it. The release does not check incapacitation, so an agent
+that reaches its FED threshold while still waiting walks off when its
+pre-movement time ends
+([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)).
 
 For real FDS output, `fdsreader` provides the local extinction field
 via `SliceFieldSampler`. For verification cases such as ISO 20414 Table 21,

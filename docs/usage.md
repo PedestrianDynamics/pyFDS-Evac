@@ -1,6 +1,6 @@
 ---
 title: "Usage: running simulations and producing plots"
-weight: 1
+weight: 6
 ---
 
 This page catalogues every user-facing script in the repository: how to run
@@ -62,9 +62,9 @@ silent unless you check the warning log.
 | `--vis-cell-size M` | Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight. |
 
 **The default route-choice model does not trigger the visibility model.** The
-gate reads no vismap: `b16e900` moved the sight criterion onto the route
-polyline, and `89d13d4` removed the `_gate_needs_sight` precompute a gate deck
-used to trigger. A deck whose agents all start fully familiar therefore builds
+default `"gate"` route-cost model reads no vismap: its smoke criterion is the
+optical depth along the route polyline, and sign legibility only decides what
+enters an agent's cognitive map. A deck whose agents all start fully familiar therefore builds
 no visibility model at all unless you pass `--vis-cache` or
 `--clear-air-visibility`. A deck with discovery agents builds one either way,
 because they need it to learn the graph. See
@@ -73,18 +73,19 @@ because they need it to learn the graph. See
 ### Tenability (FIC slowdown + FED incapacitation)
 
 A FED model is instantiated automatically when `--fds-dir` points at
-an FDS case that exposes the ISO 13571 species (CO, CO₂, O₂ at
+an FDS case that exposes the FED species (CO, CO₂, O₂ at
 minimum — HCN, NO/NO₂, and irritants are used if present). When that
-happens, the Purser FIC slowdown and the `FED ≥ 1` incapacitation gate
+happens, the Purser FIC slowdown and the FED incapacitation rule
 are on by default. Without `--fds-dir` (or with a case missing the
-required species) no FED is computed and these flags have no effect.
+required species) no FED is computed and these flags have no effect;
+a case with a `TEMPERATURE` slice still gets heat incapacitation.
 
 | Flag | Purpose |
 |------|---------|
 | `--disable-tenability` | Turn both rules off. |
 | `--fic-alpha F` | Slope of `v/v₀ = max(μ, 1 − α·FIC)` (default 0.7). |
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
-| `--fed-threshold F` | FED at which agents are declared incapacitated (default 1.0). |
+| `--fed-threshold F` | Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless `--incapacitation-mode deterministic`. |
 
 ### Agent visualisation
 
@@ -317,7 +318,7 @@ need a simulation run.
 |--------|--------|
 | `generate_tenability_curves.py` | 3-panel Frantzich + FIC + combined heatmap (`--output PATH`). |
 | `generate_fed_guide_plot.py` | FED guide reference curves. |
-| `generate_iso_table21_sweep.py` / `generate_iso_table22_stationary_plot.py` | ISO 13571 sensitivity sweeps. |
+| `generate_iso_table21_sweep.py` / `generate_iso_table22_stationary_plot.py` | ISO 20414:2020 Test 18 (Table 21) sweep over extinction and walking speed / Test 19 (Table 22) stationary FED check. |
 | `generate_routing_diagram.py` | Routing / cognitive-map diagram. |
 | `generate_smoke_density_speed_plot.py` | Smoke-speed reference curve. |
 | `generate_exit_visibility_map.py` | Which exit a `discovery` agent would take, gridded by position, for the two `assets/exit_visibility_alpha` configs (`-o OUT.png`). |

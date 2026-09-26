@@ -292,7 +292,7 @@ def _resolve_vis(
     cache: Path | None,
     force_recompute: bool,
     expected_meta: dict,
-) -> "_VisMapCache":
+) -> _VisMapCache:
     """Return a _VisMapCache, loading from disk or computing from FDS data."""
     if not force_recompute and cache:
         cached = _load_vismap_cache(cache, expected_meta)
@@ -438,7 +438,7 @@ class VisibilityModel:
         cell_size_m: float = 0.5,
         extinction_per_m: float = 0.0,
         cache_path: str | Path | None = None,
-    ) -> "VisibilityModel":
+    ) -> VisibilityModel:
         """Build a model for a scene that has geometry but no fire.
 
         ``fdsvismap`` normally takes its grid, extinction field and obstructions

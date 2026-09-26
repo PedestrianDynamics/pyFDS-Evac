@@ -10,7 +10,7 @@ import argparse
 import sys
 from argparse import Namespace
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from fasthtml.common import (
     Button,
@@ -57,7 +57,7 @@ _MONO = "font-family:'JetBrains Mono',monospace"
 
 _GROUP_ACCENT = ["#F4C430", "#FF8A3D", "#E01E37", "#C81D4E", "#F4C430", "#FFB020"]
 
-FIELD_GROUPS: List[tuple] = [
+FIELD_GROUPS: list[tuple] = [
     ("Core", ["scenario", "seed"]),
     (
         "Smoke",
@@ -115,7 +115,7 @@ def _is_bool(action: argparse.Action) -> bool:
     return action.nargs == 0 and action.const is True
 
 
-def _options_under(root: Path, prefix: str = "") -> List[tuple]:
+def _options_under(root: Path, prefix: str = "") -> list[tuple]:
     """(label, value) pairs for every scenario directory under *root*.
 
     A directory qualifies when it holds a config.json; each *other* *.json
@@ -124,7 +124,7 @@ def _options_under(root: Path, prefix: str = "") -> List[tuple]:
     """
     if not root.is_dir():
         return []
-    options: List[tuple] = []
+    options: list[tuple] = []
     for p in sorted(root.iterdir()):
         if not (p.is_dir() and (p / "config.json").exists()):
             continue
@@ -141,11 +141,11 @@ def _options_under(root: Path, prefix: str = "") -> List[tuple]:
     return options
 
 
-def _scenario_options() -> List[tuple]:
+def _scenario_options() -> list[tuple]:
     return _options_under(_ASSET_ROOT)
 
 
-def _upload_options() -> List[tuple]:
+def _upload_options() -> list[tuple]:
     return _options_under(_UPLOAD_ROOT, UPLOAD_PREFIX)
 
 
@@ -230,7 +230,7 @@ def _browse_button(target_id: str, mode: str) -> Any:
 
 # Curated, friendly explanations shown in the ? badge next to each field.
 # Preferred over argparse's terse help text; keyed by the field's dest.
-_HELP_TEXT: Dict[str, str] = {
+_HELP_TEXT: dict[str, str] = {
     "scenario": "Which building + agent setup to run. Each option under assets/ pairs "
     "a floor plan (geometry) with an exits/agents config.",
     "seed": "Random seed. The same seed reproduces the exact same run; change it to "
@@ -533,7 +533,7 @@ def _field(action: argparse.Action) -> Any:
 
 
 def _details_block(
-    title: str, accent: str, fields: List[Any], open_: bool = False
+    title: str, accent: str, fields: list[Any], open_: bool = False
 ) -> NotStr:
     body = to_xml(
         Div(
@@ -687,7 +687,7 @@ def build_form(post_url: str) -> Any:
         a.dest: a for a in parser._actions if a.dest not in _HIDDEN and a.option_strings
     }
     grouped: set = set()
-    sections: List[Any] = []
+    sections: list[Any] = []
 
     for (title, dests), accent in zip(FIELD_GROUPS, _GROUP_ACCENT):
         if title == "Output files":
@@ -761,9 +761,9 @@ def default_output_base(scenario: Any, mode: Any, seed: Any) -> str:
     )
 
 
-def form_to_opts(form: Dict[str, Any]) -> Namespace:
+def form_to_opts(form: dict[str, Any]) -> Namespace:
     parser = _load_parser()
-    opts: Dict[str, Any] = {}
+    opts: dict[str, Any] = {}
     for action in parser._actions:
         dest = action.dest
         if dest == "help":

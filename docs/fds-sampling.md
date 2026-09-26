@@ -1,6 +1,6 @@
 ---
 title: "FDS slice sampling"
-weight: 6
+weight: 12
 ---
 
 > Part of [pyFDS-Evac](../README.md).

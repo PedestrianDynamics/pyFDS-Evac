@@ -1,6 +1,6 @@
 ---
 title: "The gate cost model"
-weight: 5
+weight: 11
 ---
 
 > Part of [pyFDS-Evac](../README.md). Reference for `routing.cost_model`.
@@ -132,12 +132,13 @@ tau = K_ave * L_eff
 of extinction along the walked path — the soot column the agent passes through.
 It is an **exposure** statement.
 
-**It is not a sighting distance.** The criterion grew out of one: `c / K_ave >=
-0.5 * L` rearranges to `K_ave * L <= 2c`, and with Jin's `c = 3` that is
-`tau <= 6`. But Jin's `S = c / K` is contrast along a straight, unobstructed
-line to a sign. Integrating `K` around two corners measures how much smoke you
-walk through, not how far you can see. The two coincide only on a straight
-corridor. The names changed at `0d9bf79` to say what the quantity is.
+**It is not a sighting distance.** The criterion grew out of one (see
+[Where the 6 comes from](#where-the-6-comes-from) below), but Jin's visibility
+law ([Visibility through smoke](/fundamentals/visibility.md)) describes a
+straight, unobstructed line to a sign. Integrating `K` around two corners
+measures how much smoke you walk through, not how far you can see. The two
+coincide only on a straight corridor. The names changed at `0d9bf79` to say
+what the quantity is.
 
 **The estimator averages `K`; it does not take the route's worst point.** A
 maximum over sampled cells is a step function of where the agent stands: one
@@ -171,7 +172,7 @@ tau 5.20 > 4.80 (K_ave 0.388 x 13.4 m)
 
 The second is a rival exit, held to `tau_max * tau_return_margin` = 4.8.
 
-**Where the 6 comes from.** FDS+Evac's tier-4 door test computes
+<a id="where-the-6-comes-from"></a>**Where the 6 comes from.** FDS+Evac's tier-4 door test computes
 `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out when
 `L2_tmp >= 1.0` (`evac.f90:16458, :16463`). That expression is `K_ave * d / 6`, so
 the test is exactly `tau > 6` with Jin's `c = 3`. The threshold is therefore
@@ -629,9 +630,9 @@ Every key below is read from the scenario's `routing` block by
 | `visibility_extinction_threshold` | `0.5` | `K` above which a segment is flagged non-visible; a route whose segments are *all* non-visible is refused when some other route has a visible segment. | **inert** | active |
 | `sampling_step_m` | `2.0` | Spacing of extinction samples along an edge polyline. | active | active |
 | `base_speed_m_per_s` | `1.3` | Clear-air walking speed. Sets travel time, anticipation, and the queue conversion. It is not a speed floor; `min_speed_factor` is. | active | active |
-| `alpha` | `0.706` | Lund speed-law coefficient. | active | active |
-| `beta` | `-0.057` | Lund speed-law coefficient. | active | active |
-| `min_speed_factor` | `0.1` | Floor on the smoke speed factor. | active | active |
+| `alpha` | `0.706` | Router's copy of the linear speed-law coefficient, for travel time only; agents walk with `SmokeSpeedConfig` ([smoke-speed model](/models/smoke-speed.md)). | active | active |
+| `beta` | `-0.057` | Same, the slope. | active | active |
+| `min_speed_factor` | `0.1` | Same, the floor on the router's speed factor. | active | active |
 | `default_exit_capacity` | `1.3` | Fallback exit capacity, agents/s, when the exit sets none. | active | active |
 
 `clean_exit_margin` had two disagreeing defaults — 0.1 in the dataclass, 0.8
@@ -815,7 +816,9 @@ lethality and speed-collapse case.
   the door criteria are in [gate-model-review-notes.md](gate-model-review-notes.md).
 - [Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269) —
   waypoint-based visibility, Beer-Lambert integrated extinction (Eq. 8-9).
-- Jin, T. (1978). Visibility through fire smoke. *Journal of Fire and
-  Flammability*, 9, 135-155. — `S = c / K`, `c = 3` for reflecting signs.
+- [Visibility through smoke](/fundamentals/visibility.md) — Jin's law and
+  its sources.
+- [Routing model](/models/routing.md) — defaults and deviations from the
+  literature.
 - [assets/l_corridor/README.md](../assets/l_corridor/README.md) — the deck, its
   fire, and the measured smoke contrast.

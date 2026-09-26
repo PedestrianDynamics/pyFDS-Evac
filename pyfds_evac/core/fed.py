@@ -10,7 +10,7 @@ _SECONDS_PER_MINUTE = 60.0
 
 @dataclass(frozen=True)
 class DefaultFedInputs:
-    """Store gas concentrations for the ISO 13571 FED model.
+    """Store gas concentrations for the Purser FED model.
 
     All toxicant concentrations default to 0 (absent) and O2 defaults to
     normal air (20.9%).  When an FDS simulation does not track a species
@@ -36,7 +36,7 @@ class DefaultFedInputs:
 class DefaultFedConfig:
     """Store FDS path and sampling settings for FED evaluation."""
 
-    fds_dir: str
+    fds_dir: str | None = None
     update_interval_s: float = 1.0
     slice_height_m: float = 2.0
 
@@ -122,7 +122,7 @@ def _nox_fed_rate_per_minute(no_ppm: float, no2_ppm: float) -> float:
 
 
 def _irritant_fld_rate_per_minute(inputs: DefaultFedInputs) -> float:
-    """Return the irritant FLD contribution in 1/min (ISO 13571).
+    """Return the irritant FLD contribution in 1/min (Purser).
 
     Each irritant gas contributes concentration / Ct, where Ct (ppm·min) is
     the lethal exposure dose for that species.
@@ -310,7 +310,7 @@ def sample_heat_incapacitation_threshold(config: "TenabilityConfig", rng) -> flo
 class FedComponents:
     """Per-term breakdown of one FED rate evaluation (all in 1/min).
 
-    Summed per ISO 13571: total = (co + cn + nox + fld) * hv_co2 + o2.
+    Summed per Purser (FDS+Evac guide): total = (co + cn + nox + fld) * hv_co2 + o2.
     Each narcotic/irritant term is reported pre-HV so contributions stack
     cleanly in plots; ``hv_co2`` carries the multiplier separately.
     """
@@ -349,7 +349,7 @@ def default_fed_components(inputs: DefaultFedInputs) -> FedComponents:
 
 
 def default_fed_rate_per_minute(inputs: DefaultFedInputs) -> float:
-    """Return the full ISO 13571 FED accumulation rate in 1/min.
+    """Return the Purser FED accumulation rate in 1/min.
 
     FED_tot = (FED_CO + FED_CN + FED_NOx + FLD_irr) * HV_CO2 + FED_O2
 
@@ -494,12 +494,14 @@ class FdsFedField:
             matches = sim.slices.filter_by_quantity(quantity)
             if matches:
                 optional[key] = SliceFieldSampler(matches[0])
-        return cls(
+        field = cls(
             SliceFieldSampler(co_slice),
             SliceFieldSampler(co2_slice),
             SliceFieldSampler(o2_slice),
             **optional,
         )
+        field.fds_dir = str(fds_dir)
+        return field
 
     def _sample_optional_ppm(
         self, sampler: SliceFieldSampler | None, time_s: float, x: float, y: float
@@ -632,7 +634,9 @@ class FdsHeatField:
             simulation=simulation,
             slice_height_m=slice_height_m,
         )
-        return cls(sampler)
+        field = cls(sampler)
+        field.fds_dir = str(fds_dir)
+        return field
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
         """Return the heat FED gas-temperature input at one time and x/y point.

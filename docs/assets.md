@@ -1,6 +1,6 @@
 ---
 title: "Scenario assets"
-weight: 11
+weight: 17
 ---
 
 Scenario definitions are stored in [`assets/`](../assets/).
@@ -34,7 +34,7 @@ conventions; what each one proves, and where that proof is checked, is below.
   FED history throttling test.
 - **t_junction**: T-corridor FDS scenario with cable fire, two exits (A open, B smoke-accumulating),
   200 visitors spawning in the branch; used for visibility-aware routing and cognitive
-  map verification (Spec 008). Includes `config_full.json` and `config_discovery.json`
+  map verification. Includes `config_full.json` and `config_discovery.json`
   for familiarity-tier comparison. The rerouting mechanism itself is verified by
   scenario **S4** in
   [`tests/verification/test_s4_tjunction_reroute.py`](../tests/verification/test_s4_tjunction_reroute.py)
@@ -48,7 +48,7 @@ conventions; what each one proves, and where that proof is checked, is below.
   route-eval source node is its assigned exit, which makes rerouting degenerate
   ([issue #21](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21)).
 - **fed_incap_co_2000ppm** / **fed_incap_co_4000ppm** / **fed_incap_co_8000ppm**:
-  FED accumulation and probabilistic-incapacitation validation against a
+  FED accumulation and probabilistic-incapacitation verification against a
   hand-calculated reference (`fed_hand_calc.py`), at three constant CO
   concentrations (2000/4000/8000 ppm) in a sealed, spatially uniform room —
   removing gas-transport physics as a variable isolates the FED/incapacitation
@@ -56,13 +56,11 @@ conventions; what each one proves, and where that proof is checked, is below.
   domain split across 4 MPI meshes to confirm gas data is consistent at mesh
   boundaries. All three concentrations currently match the hand-calc's FED=1.0
   crossing time to <0.5% (2000 ppm: 782.4 s hand-calc vs 786 s simulated;
-  4000 ppm: 382.3 s vs 384 s; 8000 ppm: 186.6 s vs 187 s). Validated by running
-  the cases and comparing, not by a test in `tests/`. (See the bug fixes on the
-  [FED page](https://pedestriandynamics.org/pyFDS-Evac/models/fed/):
-  this suite is what surfaced
-  both the O2 rate bug and the conflicting-`&INIT` FDS pitfall. The earlier
-  `fed_incap_co_v1`, `fed_incap_co_v2` and `fed_incap_co_smol` iterations from
-  the same debugging lineage are no longer tracked.) Full writeup:
+  4000 ppm: 382.3 s vs 384 s; 8000 ppm: 186.6 s vs 187 s). Verified by running
+  the cases and comparing, not by a test in `tests/`. (See the FDS input
+  pitfalls on the
+  [FED page](https://pedestriandynamics.org/pyFDS-Evac/models/fed/#fds-input-pitfalls)
+  for the conflicting-`&INIT` pitfall this suite surfaced.) Full writeup:
   `docs/testing-homogeneous.md`.
 - **Cognitive Map Memory**: 4x32 m corridor with a side alcove, 20 `discovery`
   agents. The side exit's sign faces west and is legible only from
@@ -74,8 +72,7 @@ conventions; what each one proves, and where that proof is checked, is below.
   where the sign is long unreadable. Persistence is the load-bearing claim —
   delete the expansion rules and acquisition still appears to work for any agent
   starting inside the window. A third test closes the loop to routing: a
-  remembered-but-illegible exit must still be routable, which it was not before
-  the visibility consolidation. `scripts/generate_cognitive_map_states.py` renders the
+  remembered-but-illegible exit must still be routable. `scripts/generate_cognitive_map_states.py` renders the
   three states (unknown / legible now / remembered), and the amber band is the
   memory made visible. Checked by `tests/test_cognitive_map_memory.py`.
 - **FIC vs FED Speed**: 4x50 m sealed corridor, 30 agents, one exit. The gas is

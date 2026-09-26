@@ -1,6 +1,6 @@
 ---
 title: "Smoke-speed model"
-weight: 3
+weight: 9
 ---
 
 > Part of [pyFDS-Evac](../README.md).
@@ -12,54 +12,18 @@ via `SmokeSpeedConfig.speed_law`.
 
 ## Speed-reduction laws
 
-### Lund / FDS+Evac (`speed_law="lund"`, default)
+`speed_law="lund"` (default) applies the linear Frantzich–Nilsson law in the
+FDS+Evac fractional form, clamped to `[min_speed_factor, 1.0]`;
+`speed_law="fridolf"` applies `V / (V + 2)` through the sighting distance
+`V = C / K`, with no floor. Its attribution to Fridolf et al. (2019) is
+unverified: the paper's own law differs
+([#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)). In both cases the
+agent walks at `v0 * speed_factor(K)`, where `v0` is its clear-air speed.
 
-Linear speed-reduction derived from the Frantzich-Nilsson (Lund) data,
-as used in the original FDS+Evac
-(Section 3.4, Eq. 11):
-
-```
-speed_factor(K) = 1 + beta * K / alpha
-```
-
-The factor is clamped to `[min_speed_factor, 1.0]`, so agents always
-retain a minimum fraction of their clear-air speed. The default
-coefficients are:
-
-| Parameter          | Default | Description                        |
-|--------------------|---------|------------------------------------|
-| `alpha`            | 0.706   | Normalization constant             |
-| `beta`             | -0.057  | Slope (negative = speed decreases) |
-| `min_speed_factor` | 0.1     | Floor for the speed multiplier     |
-
-### Fridolf et al. (2019) (`speed_law="fridolf"`)
-
-Non-linear model validated against individual walking-speed measurements
-in smoke-filled tunnels (Fridolf et al. 2019, method 3). Visibility is
-derived from extinction via the Jin (1970-1978) relation `V = C / K`,
-then:
-
-```
-speed_factor(V) = V / (V + 2)
-```
-
-| Parameter            | Default | Description                                         |
-|----------------------|---------|-----------------------------------------------------|
-| `visibility_factor_c`| 3.0     | Jin constant C (3 = reflective sign, 8 = lit sign)  |
-
-Properties:
-- At K = 0 (clear air): V → ∞, factor → 1.
-- At K = C/2: V = 2 m, factor = 0.5 (half speed).
-- As K → ∞: factor → 0 — no hard clamp needed.
-- Also used by Pathfinder (Thunderhead Engineering).
-
-### Actual walking speed
-
-```
-v(K) = v0 * speed_factor(K)
-```
-
-where `v0` is the agent's clear-air speed.
+The coded equations, the `SmokeSpeedConfig` defaults and the departures from
+the literature are on the [smoke-speed model](/models/smoke-speed.md) page;
+the published laws are on
+[Walking speed in smoke](/fundamentals/walking-speed.md).
 
 ## Extinction sources
 
@@ -112,11 +76,13 @@ config = SmokeSpeedConfig(
     fds_dir="path/to/fds_case",
     update_interval_s=1.0,    # how often agents resample extinction
     slice_height_m=2.0,       # FDS slice height
-    alpha=0.706,
-    beta=-0.057,
-    min_speed_factor=0.1,
+    speed_law="lund",         # or "fridolf"
 )
 ```
+
+The law coefficients (`alpha`, `beta`, `min_speed_factor`,
+`visibility_factor_c`) are further fields; their defaults are listed on the
+[smoke-speed model](/models/smoke-speed.md#parameters) page.
 
 The `update_interval_s` field controls how frequently each agent
 queries the extinction field during the simulation loop. A value of
@@ -149,25 +115,19 @@ Two helper functions support the soot-density-based workflow from the
 original FDS+Evac guide:
 
 - `extinction_from_soot_density(soot_density_mg_per_m3)` -- converts
-  soot density to extinction using `K = K_m * rho_s * 1e-6`, where
-  `K_m = 8700 m^2/kg` is the mass-specific extinction coefficient
-  for red light at 633 nm.
+  soot density to extinction using `K = K_m * rho_s * 1e-6`, where `K_m`
+  (`mass_extinction_coefficient_m2_per_kg`, default 8700 m²/kg) is the FDS
+  default mass-specific extinction coefficient (see
+  [Extinction coefficient](/fundamentals/extinction.md)).
 - `speed_from_soot_density(base_speed, soot_density_mg_per_m3)` --
   computes the reduced walking speed directly from soot density.
 
 ## References
 
-- FDS+Evac Technical Reference and User's Guide
-  -- Korhonen (2021). Speed-reduction law (Section 3.4, Eq. 11),
-  soot-density-to-extinction conversion.
-- [Ronchi et al. (2013)](https://doi.org/10.1007/s10694-012-0280-y) --
-  Interpretation A3 comparison of speed-extinction models across
-  evacuation tools.
+- [Smoke-speed model](/models/smoke-speed.md): coded form, defaults and
+  deviations from the literature.
+- [Walking speed in smoke](/fundamentals/walking-speed.md) and
+  [Extinction coefficient](/fundamentals/extinction.md): the published laws
+  and their sources.
 - [evac.f90](../materials/evac.f90) -- Original FDS+Evac Fortran
   source for cross-referencing implementation details.
-- Jin (1970-1978) -- empirical visibility-extinction correlation
-  `V = C / sigma`.
-- Frantzich & Nilsson (Lund) -- linear speed-extinction relation
-  used by FDS+Evac.
-- Boerger et al. (2024), Fire Safety Journal 150:104269 --
-  Beer-Lambert integrated extinction along line of sight (Eq. 8-9).

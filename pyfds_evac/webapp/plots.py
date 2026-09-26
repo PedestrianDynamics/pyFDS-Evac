@@ -9,7 +9,7 @@ was active.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -66,8 +66,8 @@ def _empty(message: str) -> go.Figure:
 
 
 def _agent_exit_map(
-    route_cost_history: Optional[List[Dict[str, Any]]],
-) -> Dict[int, str]:
+    route_cost_history: list[dict[str, Any]] | None,
+) -> dict[int, str]:
     """Map agent_id -> last chosen exit (route_rank == 1) for colouring."""
     if not route_cost_history:
         return {}

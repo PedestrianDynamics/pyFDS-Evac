@@ -1,22 +1,30 @@
-name: Deploy documentation site
+name: Documentation site
 
 on:
   push:
     branches: ["main"]
-    paths:
+    paths: &docs-paths
       - "site/**"
       - "docs/**"
+      - "examples/**"
+      - "pyfds_evac/**"
+      - "run.py"
+      - "scripts/figures/**"
+      - "scripts/generate_tenability_curves.py"
       - "artifacts/**"
       - "assets/t_junction/**"
+      - "tests/test_docs_defaults.py"
+      - "tests/test_examples.py"
+      - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/docs.yml"
+  pull_request:
+    branches: ["main"]
+    paths: *docs-paths
   workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  contents: read
 
 defaults:
   run:
@@ -40,12 +48,57 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # full history for enableGitInfo (last-updated dates)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install uv
+        run: pip install --upgrade uv
+      - name: Install dependencies
+        run: uv sync --all-groups
+      # The pages quote code defaults and embed code from examples/; both
+      # tests fail when the code moves and the docs do not.
+      - name: Check docs against the code
+        run: uv run pytest tests/test_docs_defaults.py tests/test_examples.py -q
+      # Regenerate every figure from the current code, so a figure script
+      # that no longer runs fails the build and the site never ships a
+      # figure the code can no longer produce.
+      - name: Regenerate figures
+        run: |
+          for script in scripts/figures/*.py; do
+            uv run python "$script"
+          done
+          uv run python scripts/generate_tenability_curves.py \
+            --output site/static/images/concepts/tenability_speed_curves.png
       - name: Build with Hugo
         env:
           HUGO_ENVIRONMENT: production
           HUGO_ENV: production
         working-directory: site
-        run: hugo --minify
+        run: hugo --minify --panicOnWarning
+      - name: Upload site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site/public
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download site
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site/public
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:

@@ -1,6 +1,6 @@
 ---
 title: "Homogeneous CO FED Validation"
-weight: 8
+weight: 14
 ---
 
 ## Purpose
@@ -84,6 +84,9 @@ itself uses to produce its `FED` device output. Background CO2 = 500 ppm
 all three cases.
 
 ### Formulae used
+
+These are the terms the hand calculation evaluates; the coded forms are on the
+[FED model](/models/fed.md#coded-form) page.
 
 **FED from CO** (eq. 22.43), C_CO in ppm, t in minutes:
 
@@ -193,7 +196,7 @@ to the hand-calc's **FED = 1.0** threshold (186.6 s), not the FED = 0.3
 two when comparing numbers.
 
 
-Remaining before this test case is complete:
+### Remaining before this test case is complete
 
 - Decide and document a formal tolerance (±5%, absolute FED difference,
   etc.) rather than eyeballing agreement from the plots.
