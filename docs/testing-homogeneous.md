@@ -85,6 +85,9 @@ all three cases.
 
 ### Formulae used
 
+These are the terms the hand calculation evaluates; the coded forms are on the
+[FED model](/models/fed.md#coded-form) page.
+
 **FED from CO** (eq. 22.43), C_CO in ppm, t in minutes:
 
 ```

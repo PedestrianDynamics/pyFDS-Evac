@@ -11,6 +11,10 @@ impairs escape at once. Damage to the deep lung depends on the inhaled dose
 and develops over hours. The literature treats the two with different
 quantities, and the standards and the handbook combine them differently.
 
+Symbols follow the [notation table](/docs/concepts.md#notation). The
+equations below keep the sources' own notation (FEC, \(F_{\mathrm{FIC}}\),
+\(F_{\mathrm{FLD}}\)).
+
 ## ISO 13571: a separate concentration endpoint
 
 ISO 13571:2012 treats asphyxiants and irritants separately, because they are

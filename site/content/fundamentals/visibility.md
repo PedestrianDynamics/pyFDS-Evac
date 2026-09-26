@@ -8,6 +8,11 @@ exit sign, can still be seen through smoke. Its standard engineering form is
 due to Tadahisa Jin, who measured the distance at which signs vanished in
 smoke-filled chambers.
 
+Symbols follow the [notation table](/docs/concepts.md#notation). The
+equations below keep the SFPE Handbook's own notation: *V* for the
+visibility *S*, \(C_s\) for the extinction coefficient *K* and *k* for the
+constant *C*.
+
 ## The equation as published
 
 Jin found that, in the range of visibilities from about 5 to 15 m, the

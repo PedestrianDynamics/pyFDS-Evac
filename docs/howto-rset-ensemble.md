@@ -235,9 +235,9 @@ times, the incapacitated count and the remaining count tell you what happened.
 ## Incapacitation mode
 
 `TenabilityConfig()` defaults to `incapacitation_mode="probabilistic"`. Each
-agent then draws its own threshold, `fed_threshold * exp(0.94 * Z)` with
-*Z* ~ N(0, 1): a log-normal with median `fed_threshold = 1.0` and
-`susceptibility_sigma = 0.94`. For results comparable with FDS+Evac, where
+agent then draws its own threshold, `fed_threshold * exp(susceptibility_sigma * Z)`
+with *Z* ~ N(0, 1): a log-normal with median `fed_threshold`. The defaults
+are on the [FED model](/models/fed.md#tenability-irritant-slowdown-and-incapacitation) page. For results comparable with FDS+Evac, where
 every agent is incapacitated at FED = 1, use
 `TenabilityConfig(incapacitation_mode="deterministic")`, or
 `--incapacitation-mode deterministic` on the command line. Part 2 uses the

@@ -73,8 +73,9 @@ the evacuation time in seconds.
 
 `ConstantExtinctionField` returns the same *K* at every point and time.
 `SmokeSpeedConfig()` uses the default speed law (`"lund"`), which scales the
-walking speed by `1 + beta * K / alpha` with `alpha = 0.706` and
-`beta = -0.057`, clamped to `[0.1, 1.0]`.
+walking speed by `1 + beta * K / alpha`, clamped to `[min_speed_factor, 1.0]`,
+with the defaults listed on the
+[smoke-speed model](/models/smoke-speed.md#parameters) page.
 
 ```python
 smoke = SmokeSpeedModel(ConstantExtinctionField(K_PER_M), SmokeSpeedConfig())

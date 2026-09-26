@@ -9,6 +9,8 @@ population is more susceptible. Design therefore uses a lower threshold, most
 often 0.3. This page gives the published rationale for that value and the
 limits of its population basis.
 
+Symbols follow the [notation table](/docs/concepts.md#notation).
+
 ## The ISO 13571 rationale
 
 ISO 13571:2012 (§4.1, §5.4) assumes a priori that occupant responses follow a

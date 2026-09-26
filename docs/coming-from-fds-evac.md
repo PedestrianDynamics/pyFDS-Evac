@@ -60,7 +60,7 @@ runs uploaded scenarios. It does not edit geometry or stages.
 | `TDET_SMOKE_DENS` (§8.7) | Smoke at the agent's position triggers detection | Not supported. The pre-movement delay does not depend on smoke. |
 | `VELOCITY_DIST` and speed ranges (§8.7) | Unimpeded walking speed distribution | `v0` [m/s], default 1.2, with `v0_distribution` = `"constant"` or `"gaussian"` and `v0_std`. These are the keys the run reads from the JSON. `desired_speed`, `desired_speed_distribution` and `desired_speed_std` are aliases accepted only by `Scenario.set_agent_params()` in Python, which writes the `v0` keys; in the JSON they are ignored. Gaussian draws are clipped to 0.1–5.0 m/s. There is no uniform speed distribution. |
 | Smoke-speed reduction (Eq. 11) and `SMOKE_MIN_SPEED` | Linear speed reduction with extinction, floored at `SMOKE_MIN_SPEED` × *v*0 | The default is the same law, Frantzich–Nilsson (the `lund` option; the linear FDS+Evac law). Its coefficients (`alpha`, `beta`, `min_speed_factor`) are library-level; see [What needs Python](#what-needs-python). |
-| FED, fractional effective dose (§3.4) | Purser FED from CO, CO2, O2 (and optional gases), incapacitation at FED ≥ 1 | Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. A separate convective heat dose is computed from a `TEMPERATURE` slice. By default each agent draws its own threshold (log-normal, median 1, spread 0.94), so about half stop below FED = 1. Use `--incapacitation-mode deterministic` (and `--heat-incapacitation-mode deterministic`) to stop every agent at FED = 1 as FDS+Evac does. Thresholds are set with `--fed-threshold` and `--heat-fed-threshold`. |
+| FED, fractional effective dose (§3.4) | Purser FED from CO, CO2, O2 (and optional gases), incapacitation at FED ≥ 1 | Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. A separate convective heat dose is computed from a `TEMPERATURE` slice. By default each agent draws its own threshold (log-normal, median 1; spread on the [FED model](/models/fed.md#tenability-irritant-slowdown-and-incapacitation) page), so about half stop below FED = 1. Use `--incapacitation-mode deterministic` (and `--heat-incapacitation-mode deterministic`) to stop every agent at FED = 1 as FDS+Evac does. Thresholds are set with `--fed-threshold` and `--heat-fed-threshold`. |
 | FED activity level | Rest, light work or heavy work | Not supported. The CO term is fixed. See [issue #135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135). |
 | `KNOWN_DOOR_NAMES`, `KNOWN_DOOR_PROBS` (§8.8) | Which exits an agent knows, with a probability per exit | `familiarity` on a distribution: `"full"`, `"discovery"`, or one probability in [0, 1] applied to every exit. `entrance` names one exit the agents always know. A probability per exit is not supported; see [issue #136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136). |
 | Door selection with smoke (`FED_DOOR_CRIT`) | Ranks doors as smoke-free by FED or visibility | Route choice is a different model, configured in the JSON `routing` block and switched on by default (`--enable-rerouting`). See [Smoke-aware routing](routing.md). |
@@ -78,8 +78,9 @@ values cannot be copied across unchanged. The delay is in seconds.
 | `weibull` | scale [s] | shape | 139.285, 1.195 |
 | `uniform` | lower bound [s] | upper bound [s] | 0.0, 60.0 |
 
-The presets are illustrative, not from a cited dataset. Set both parameters
-from data for your occupancy.
+The presets are illustrative, not from a cited dataset
+([#144](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144)). Set both
+parameters from data for your occupancy.
 
 The presets are used when `use_premovement` is `true` and `premovement_param_a`
 or `premovement_param_b` is missing; both parameters must be given for either
@@ -107,8 +108,7 @@ smoke-speed parameters are the main case. `speed_law` (`"lund"` or
 `"fridolf"`), `alpha`, `beta`, `min_speed_factor` and `visibility_factor_c`
 are fields of `SmokeSpeedConfig`, and `run.py` and the web GUI build that
 object with its defaults. A run started from either one uses the
-Frantzich–Nilsson law with `alpha` = 0.706, `beta` = −0.057 and `min_speed_factor` =
-0.1.
+Frantzich–Nilsson law with the defaults listed on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 
 To change them, build a `SmokeSpeedModel` yourself and pass it to
 `run_scenario()` from Python.
@@ -148,7 +148,8 @@ agents walk.
 > - **`tau`** is an *optical depth* here: the mean extinction coefficient
 >   along a route times its length, *τ* = *K*ave · *L* (dimensionless).
 >   It is not the relaxation time `TAU` of FDS+Evac. The routing key
->   `tau_max` (default 6.0) is an optical depth.
+>   `tau_max` is an optical depth (default on the
+>   [routing model](/models/routing.md#parameters) page).
 > - **Stage** is a JuPedSim target: a distribution, a checkpoint or an exit.
 >   Journeys are sequences of stages.
 > - **Gate** has two meanings, and only two. The route-cost gate

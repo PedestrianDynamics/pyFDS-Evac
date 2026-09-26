@@ -7,6 +7,9 @@ The extinction coefficient *K* [1/m] measures how strongly smoke attenuates
 light per metre of path. It is the quantity from which visibility, walking
 speed in smoke and most smoke tenability limits are computed.
 
+Symbols follow the [notation table](/docs/concepts.md#notation); here *L* is
+the length of a light path, not the route length \(L_k\) of the table.
+
 ## The equations as published
 
 Light of intensity \(I_0\) that crosses a path of length *L* [m] through

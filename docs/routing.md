@@ -223,33 +223,19 @@ closes on an exit — the distance in `tau` is the distance that remains.
 
 ### Configuration
 
-`RouteCostConfig` controls all cost evaluation parameters. Every field
-listed here is also readable from a scenario's `routing` block via
-`RouteCostConfig.from_routing_params` — the full JSON key table is in
-[route-cost-gate.md](route-cost-gate.md#configuration).
+`RouteCostConfig` controls all cost evaluation parameters. Most fields are
+also readable from a scenario's `routing` block via
+`RouteCostConfig.from_routing_params`. The defaults are on the
+[routing model](/models/routing.md#parameters) page, and the full JSON key
+table is in [route-cost-gate.md](route-cost-gate.md#configuration).
 
 ```python
 from pyfds_evac.core.route_graph import RouteCostConfig
 
+# Fields not passed keep their defaults (see the routing model page).
 config = RouteCostConfig(
-    cost_model="gate",                    # "gate" (default) or "additive"
-    tau_max=6.0,                          # gate: optical depth budget K_ave * L
-    tau_return_margin=0.8,                # gate: stricter budget for a rival exit
-    current_exit_discount=0.9,            # gate: current exit's tau in the sort key
-    tau_deadband=0.1,                     # gate: anchor deadband, as a fraction of tau_max
-    clean_extinction_threshold=0.0,       # gate: clean-exit tier, 0 = off
-    clean_exit_margin=0.1,                # gate: hysteresis on tier membership
-    anticipate=True,                      # price segments at arrival time
-    foresight_horizon_s=float("inf"),     # cap on anticipation (s)
-    fallback_switch_margin=0.2,           # gate: all-refused hysteresis
-    w_smoke=1.0,                          # smoke cost weight
-    w_fed=10.0,                           # FED cost weight
-    w_queue=0.0,                          # congestion weight (0 = off, the default)
-    fed_rejection_threshold=1.0,          # reject if FED_max exceeds
-    visibility_extinction_threshold=0.5,  # K threshold for visibility
-    sampling_step_m=2.0,                  # ray sample spacing
-    base_speed_m_per_s=1.3,               # clear-air walking speed
-    default_exit_capacity=1.3,            # fallback capacity (agents/s)
+    cost_model="gate",  # "gate" (default) or "additive"
+    w_queue=0.03,       # override: turn the congestion term on (default off)
 )
 ```
 

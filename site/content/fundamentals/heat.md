@@ -10,6 +10,10 @@ followed by burns, and burns to the respiratory tract (Purser and McAllister
 The two are described by **separate equations with different endpoints**,
 and neither should be read as the other.
 
+Symbols follow the [notation table](/docs/concepts.md#notation); *T* is the
+gas temperature [°C]. The equations below keep the SFPE Handbook's notation
+(\(t_I\), *q*, *r*).
+
 ## Convective heat: time to incapacitation
 
 For exposures of up to 2 h to convected heat from air containing less than

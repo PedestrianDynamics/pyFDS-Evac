@@ -101,7 +101,8 @@ the FDS+Evac guide (that document has no heat term at all).
 
 ### Formula used
 
-**FED from convective heat** (SFPE Handbook Eq. 63.44), T in °C, Δt in minutes:
+**FED from convective heat** (SFPE Handbook Eq. 63.44), T in °C, Δt in minutes;
+the coded form is on the [FED model](/models/fed.md#convective-heat) page:
 
 ```
 FED_HEAT = sum_{t1}^{t2} [ T^3.4 / 5e7 ] * dt
@@ -163,7 +164,7 @@ mpiexec -n 4 fds assets/fed_incap_heat_100c/fed_incap_heat_100c.fds
 mpiexec -n 4 fds assets/fed_incap_heat_150c/fed_incap_heat_150c.fds
 mpiexec -n 4 fds assets/fed_incap_heat_200c/fed_incap_heat_200c.fds
 
-.venv/bin/python run.py \
+uv run python run.py \
     --scenario assets/fed_incap_heat_100c \
     --fds-dir assets/fed_incap_heat_100c \
     --heat-fed-threshold 1.0 \

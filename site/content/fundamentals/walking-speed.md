@@ -10,6 +10,13 @@ extinction coefficient *K* [1/m] (see [Extinction coefficient](/fundamentals/ext
 The data sets were recorded under different conditions and are not
 interchangeable (Ronchi et al. 2013).
 
+Symbols follow the [notation table](/docs/concepts.md#notation). Each
+section below keeps its source's own notation: Korhonen's \(K_s\) and
+\(v_i^0\) for *K* and \(v_0\); Purser's \(\alpha_k\), which is the
+extinction coefficient *K*, not the coefficient \(\alpha\); and Fridolf et
+al.'s *w* for walking speed, *x* for visibility (*S* in the table) and *A*
+for the visibility constant (*C*).
+
 ## Jin: irritant and non-irritant smoke
 
 Jin's subjects walked along a 20 m corridor filled with irritant white smoke

@@ -23,7 +23,8 @@ JSON. The smoke-speed parameters (`speed_law`, `alpha`, `beta`,
 `min_speed_factor` and `visibility_factor_c`) are fields of
 `SmokeSpeedConfig`. `run.py` and the web GUI build that object with its
 defaults, so every run they start uses the Frantzich–Nilsson law (the `lund`
-option; the linear FDS+Evac law) with `alpha` = 0.706, `beta` = −0.057 and `min_speed_factor` = 0.1. Another law or
+option; the linear FDS+Evac law) with the defaults listed on the
+[smoke-speed model](/models/smoke-speed.md#parameters) page. Another law or
 other coefficients require building the model in Python and passing it to
 `run_scenario()`.
 
@@ -39,11 +40,14 @@ agent walks at its own `v0` (1.2 m/s by default).
 FED below means fractional effective dose. By default
 (`--incapacitation-mode probabilistic`), each agent draws its own
 incapacitation threshold from a log-normal distribution with median
-`--fed-threshold` (1.0) and log-scale spread `--susceptibility-sigma` (0.94).
+`--fed-threshold` and log-scale spread `--susceptibility-sigma` (defaults on
+the [FED model](/models/fed.md#tenability-irritant-slowdown-and-incapacitation) page).
 About half of the agents therefore stop below FED = 1, and about 10 % stop
-below FED = 0.3. The spread of 0.94 is fitted to the incapacitation fractions
-of NIST TN 1797. The heat dose uses the same mechanism, and its spread of 0.94
-is reused from the gas value without a data basis of its own. FDS+Evac stops
+below FED = 0.3. The default spread is fitted to the incapacitation fractions
+of NIST TN 1797
+([#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The
+heat dose uses the same mechanism, and its spread is reused from the gas value
+without a data basis of its own. FDS+Evac stops
 every agent at FED = 1. For results comparable with FDS+Evac, run with
 `--incapacitation-mode deterministic` (and `--heat-incapacitation-mode
 deterministic` for the heat dose).
@@ -96,8 +100,8 @@ flat floor that agents cross at full speed. A `zones` entry with a
 direction of travel on a stair.
 
 **FED activity level.** The CO term of the toxic dose uses one fixed
-coefficient, 2.764 × 10⁻⁵ ppm⁻¹·⁰³⁶ min⁻¹, which is the FDS+Evac default for light work
-(Korhonen 2021, Eq. 13). Rest and heavy work cannot be selected, although
+coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
+the [FED model](/models/fed.md#coded-form)). Rest and heavy work cannot be selected, although
 breathing rate changes the CO dose. Not supported; see
 [issue #135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135).
 
@@ -128,11 +132,13 @@ predict.
 **Recovery from irritants.** The irritant slowdown is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it
 returns to exactly zero, the last slowdown stays in force, so an agent that
-leaves an irritant plume into clean air does not return to full speed.
+leaves an irritant plume into clean air does not return to full speed
+([issue #142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 
 **Sourced pre-movement defaults.** The preset parameters of the four
 pre-movement distributions are illustrative, not from a cited dataset. Set
-`premovement_param_a` and `premovement_param_b` from data for your occupancy.
+`premovement_param_a` and `premovement_param_b` from data for your occupancy
+([issue #144](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144)).
 
 **Smoke-triggered detection.** Pre-movement is one delay per agent, drawn
 from a distribution. Smoke reaching the agent does not end the delay early,

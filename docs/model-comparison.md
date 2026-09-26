@@ -306,12 +306,14 @@ Both systems use the same underlying correlation from the Frantzich
 speed_factor(K) = 1 + (beta / alpha) * K
 ```
 
-with default coefficients `alpha = 0.706`, `beta = -0.057`.
+with the Frantzich–Nilsson coefficients; the published values are on
+[Walking speed in smoke](/fundamentals/walking-speed.md) and the code defaults
+on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11) | Same formula (`smoke_speed.py:225`) |
-| **Default alpha/beta** | 0.706 / -0.057 (evac.f90:1479–1480) | 0.706 / -0.057 (`smoke_speed.py:91–92`) |
+| **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11) | Same formula (`smoke_speed.py:227`) |
+| **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1479–1480) | Same values (`smoke_speed.py:91–92`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
 | **Minimum speed** | Configurable `SMOKE_MIN_SPEED_FACTOR`; additional visibility-based cutoff (evac.f90:8183–8189) | Configurable `min_speed_factor` (default 0.1) |
 | **Smoke input** | Soot density from FDS mesh converted to extinction via `K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6` (evac.f90:8160–8161) | Extinction coefficient K read directly from FDS `SOOT EXTINCTION COEFFICIENT` slice via fdsreader |
 | **Sampling geometry** | Local value at agent position on the evacuation mesh | Local value at agent position: nearest cell of the extinction slice at a fixed height |
@@ -384,7 +386,7 @@ three-gas subset: every optional species defaults to zero concentration in
 | **Optional gases** | NO, NO2, CN, HCl, HBr, HF, SO2, C3H4O, CH2O (user must provide species) | HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde (auto-detected from FDS slices) |
 | **HCN/HCl by default** | Not modelled unless user provides species ([1] §2.7 p19) | Not modelled unless FDS slices are present |
 | **Incapacitation** | FED >= 1.0, agent stops (v0 = 0) ([1] §3.4 p31) | Agent stops (desired speed 0) and remains as a static obstacle. Per-agent threshold, log-normal with median 1.0 by default, or 1.0 for every agent in deterministic mode. The convective heat FED is a separate running total; crossing either threshold incapacitates |
-| **Activity level** | Configurable (rest/light/heavy) | Not supported ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)); the CO term uses the light-work coefficient 2.764e-5 |
+| **Activity level** | Configurable (rest/light/heavy) | Not supported ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)); the CO term uses the light-work coefficient ([FED model](/models/fed.md#coded-form)) |
 | **FED in routing** | Not used in exit selection cost by default (`FED_DOOR_CRIT < 0`); only used for incapacitation | A veto under both cost models; additionally a ranking term (`w_fed * FED_max`) under `"additive"` only, not under the default gate |
 | **Temperature/radiation** | Not implemented for agent effects ([1] §1.2 p11) | Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS `TEMPERATURE` slice, tracked separately from the gas FED; it does not affect route choice or speed. Radiant heat is not modelled |
 

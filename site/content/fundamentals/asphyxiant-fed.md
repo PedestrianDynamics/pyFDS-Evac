@@ -10,6 +10,10 @@ asphyxiants in fires are carbon monoxide (CO), hydrogen cyanide (HCN), low
 oxygen (O₂) and, indirectly, carbon dioxide (CO₂), which speeds up
 breathing and so the uptake of the others.
 
+Symbols follow the [notation table](/docs/concepts.md#notation). The
+equations below keep the sources' own notation (\(F_I\) terms,
+concentrations in brackets such as [CO], ventilation \(V_E\)).
+
 ## The ISO 13571 principle
 
 ISO 13571:2012 (§6.1.1, Eq. 1) sums over gases *i* and time steps
