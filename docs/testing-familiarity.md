@@ -1,6 +1,6 @@
 ---
 title: "Familiarity Routing Test (Full vs. Discovery)"
-weight: 10
+weight: 16
 ---
 
 ## Purpose

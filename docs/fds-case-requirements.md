@@ -1,6 +1,6 @@
 ---
 title: "What your FDS case must provide"
-weight: 2
+weight: 4
 ---
 
 Read this before pointing `--fds-dir` at a case for the first time.

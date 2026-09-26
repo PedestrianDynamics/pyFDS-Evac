@@ -8,7 +8,7 @@ Fire Dynamics Simulator (FDS) coupled evacuation modeling with smoke-speed reduc
 The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
-- Full ISO 13571 FED model (toxic gas dose accumulation)
+- Purser FED model as in the FDS+Evac guide (toxic gas dose accumulation, up to 12 species)
 - Convective heat FED (ISO TS 13571 eq. 5), accumulated as a dose independent
   of the gas track -- an agent is incapacitated when either crosses its own
   threshold, because thermal injury and asphyxiation are different mechanisms

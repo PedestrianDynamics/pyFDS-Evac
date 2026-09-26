@@ -59,10 +59,9 @@ worth having — they fail for different reasons.
 `use_premovement: true` with a uniform draw over **[1.2 × 10⁷, 2 × 10⁷] s**,
 satisfying ISO's "> 10 000 000 s".
 
-The lower bound matters. `assets/ISO-table22` draws over `[0, 2 × 10⁷]`, which
-can return a few seconds and let the occupant walk away mid-test; its own test
-sidesteps that by overriding `use_premovement = False` and `v0 = 0`. Bounding
-the draw below is both faithful and robust, and no override is needed.
+The lower bound matters: a draw that starts at 0 can return a few seconds and
+let the occupant walk away mid-test. `assets/ISO-table22` uses the same bounded
+draw.
 
 `agents_remaining == 1` and the position-invariance check are guards, not
 results: if the occupant moved, the exposure would have changed and the timing

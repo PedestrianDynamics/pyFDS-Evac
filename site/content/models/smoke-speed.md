@@ -21,8 +21,19 @@ a hard clamp. Select it with `SmokeSpeedConfig(speed_law="fridolf")`;
 `visibility_factor_c` controls the Jin constant (default `3` for reflective
 signs, `8` for light-emitting signs).
 
+![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for Fridolf's law with C = 3 and C = 8](/images/concepts/speed_laws.png)
+
+*Speed factor \(v/v_0\) [-] against extinction coefficient K [1/m]. Solid blue:
+Frantzich–Nilsson with the default constants, floor 0.1 reached at K = 11.1 m⁻¹.
+Orange: Fridolf et al. (2019) with C = 3 (solid) and C = 8 (dashed).
+Script: `scripts/figures/speed_laws.py`.*
+
+Background: the ideas behind this model are explained on the [Concepts](/docs/concepts.md) page
+and in the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
+([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
+
 For real FDS output, `fdsreader` provides the local extinction field
-via `SliceFieldSampler`. For verification cases such as ISO 20414 Table 21,
+via `SliceFieldSampler`. For verification cases such as ISO 20414:2020 Test 18 (Table 21),
 the runner can also apply a constant extinction coefficient directly.
 
 ## FDS data access
@@ -38,7 +49,7 @@ All FDS slice data is read through a single library:
   case, pass a shared `fdsreader.Simulation` instance to avoid parsing
   the directory twice (see [FDS sampling API](/docs/fds-sampling.md))
 
-Run the ISO Table 21 corridor with a constant extinction coefficient:
+Run the ISO 20414 Test 18 (Table 21) corridor with a constant extinction coefficient:
 
 ```bash
 uv run run.py \
@@ -92,13 +103,13 @@ uv run python scripts/plot_smoke_history.py \
   --output /tmp/iso-table21-smoke-history-aggregate.png
 ```
 
-Generate a stable ISO Table 21 sweep artifact under `artifacts/`:
+Generate a stable ISO 20414 Test 18 (Table 21) sweep artifact under `artifacts/`:
 
 ```bash
 uv run python scripts/generate_iso_table21_sweep.py
 ```
 
-Figure: ![ISO Table 21 sweep](/artifacts/iso-table21-sweep.png)
+Figure: ![ISO 20414 Test 18 (Table 21) sweep](/artifacts/iso-table21-sweep.png)
 
 Generate the FDS+Evac smoke-density vs speed verification plot:
 

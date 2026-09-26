@@ -1,6 +1,6 @@
 ---
 title: "The gate cost model"
-weight: 5
+weight: 11
 ---
 
 > Part of [pyFDS-Evac](../README.md). Reference for `routing.cost_model`.

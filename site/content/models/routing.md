@@ -10,6 +10,10 @@ cost formulas, and API reference, and
 working notes on exit choice and where the exit-choice research papers
 disagree with each other.
 
+Background: the ideas behind this model are explained on the [Concepts](/docs/concepts.md) page
+and in the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
+([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
+
 ## How smoke enters route choice
 
 Two models, selected per deck with `routing.cost_model`.
@@ -22,11 +26,22 @@ tau = K_ave * L
 ```
 
 the soot column the agent walks through, with `K_ave` the mean extinction along
-the route polyline and `L` the distance still to walk. A route is refused when
+the route polyline and `L` the distance still to walk. On this page `tau` is
+always this dimensionless optical depth, not the relaxation time τ of
+FDS+Evac's movement model. A route is refused when
 `tau` exceeds `tau_max` (default 6), Dijkstra weights every edge by its own
 `tau`, and `tau` orders the routes that survive, with travel time breaking ties.
 Path choice and exit choice are therefore one objective. In clear air every
 `tau` is zero, nothing is refused, and the model reduces to nearest-exit.
+
+![Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6](/images/concepts/exposure_gate.png)
+
+*Schematic with a prescribed toy plume, not a simulation. Top: three candidate
+routes, sampled along each walk and coloured by extinction K [1/m]. Bottom:
+optical depth `tau` [-] per route against `tau_max` = 6 (current exit and
+initial choice) and 0.8 `tau_max` = 4.8 (any other exit). Route C is refused;
+route B ranks first although it is the longest walk.
+Script: `scripts/figures/exposure_gate.py`.*
 
 `tau` is an **exposure** statement, not a sighting distance. The criterion grew
 out of one -- `c / K_ave >= 0.5 * L` rearranges to `K_ave * L <= 2c`, which is
@@ -47,14 +62,13 @@ exit-switch anchor, by a stricter budget for a rival exit
 (`tau_return_margin`, 0.8), and by a discount on the current exit's `tau` in the
 sort (`current_exit_discount`, 0.9, FDS+Evac's `FAC_DOOR_OLD2`).
 
-**Measured, with the regression stated.** Ranking on `tau` sends 39 of
-`world100`'s agents to the far clean exit against 12 before, with 9 switches and
-no agent returning to an exit it abandoned -- the outcome the model exists to
-produce. On `l_corridor` it **regressed**: returns to abandoned exits went from
-0 to 51 and then to 34 across 14 agents, with switches 4 -> 74 -> 55 and the
-far-exit share unchanged at about 18. The cause is **not** a currency mismatch
-between the `tau` ordering and the anchor's time fallthrough, which was the
-earlier reading: 29 of the 34 returns go to a route cleaner by more than the
+**Measured, with the limitation stated.** Ranking on `tau` sends 39 of
+`world100`'s agents to the far clean exit, with 9 switches and no agent
+returning to an exit it abandoned -- the outcome the model exists to produce.
+On `l_corridor` agents oscillate: 34 returns to abandoned exits across 14
+agents and 55 switches, with a far-exit share of about 18. The cause is **not**
+a currency mismatch between the `tau` ordering and the anchor's time
+fallthrough: 29 of the 34 returns go to a route cleaner by more than the
 deadband, and 31 fall in `t = 40-60 s` where the two routes' `tau` genuinely
 cross over. The model is following a field that reverses, and no constant damps
 that -- what is missing is commitment
@@ -114,8 +128,9 @@ fire and a clean 58 m way round -- and its results are in the sciebo case folder
 - **StageGraph**: Dijkstra-based shortest-path routing on a graph of
   stages (distributions, checkpoints, exits)
 - **Route cost evaluation**: Samples extinction (K) along candidate paths
-  to compute smoke exposure (FED terms are supported when a `fed_model`
-  is provided; otherwise only smoke drives ranking)
+  to compute smoke exposure. When a `fed_model` is provided, projected FED
+  vetoes routes under both models and enters the ranking only under
+  `"additive"`
 - **Dynamic rerouting**: Agents recompute routes at configurable intervals,
   selecting lower-exposure paths when available
 - **Cognitive-map history**: `run_scenario(collect_cognitive_map_history=True)`

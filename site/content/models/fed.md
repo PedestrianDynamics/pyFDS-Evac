@@ -4,10 +4,14 @@ weight: 2
 math: true
 ---
 
-The FED model implements the full ISO 13571 / Purser formulation as
+The FED model implements the Purser formulation (as in the FDS+Evac guide; ISO 13571 keeps irritants in a separate FEC rather than in FED) as
 described in Section 3.4 of the
 FDS+Evac Technical Reference and User's Guide
 (Korhonen, 2021).
+
+Background: the ideas behind this model are explained on the [Concepts](/docs/concepts.md) page
+and in the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
+([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
 
 ## Implemented equation (guide Eq. 12)
 
@@ -37,9 +41,9 @@ default to 0 and contribute nothing to the FED sum. With only the three
 required species, the model reduces to the original FDS+Evac default
 pathway: `FED_CO * HV_CO2 + FED_O2`.
 
-## Recent additions
+## Additional terms
 
-The FED model was extended in March 2026 to include all ISO 13571 terms:
+Beyond the three-gas FDS+Evac default, the model includes all Purser terms:
 
 - **HCN (hydrogen cyanide) and NO2 (nitrogen dioxide)**: CN-term for narcosis,
   where NO2 has a protective effect (C_CN = C_HCN - C_NO2)
@@ -54,59 +58,61 @@ The FED model was extended in March 2026 to include all ISO 13571 terms:
   when O2 ≥ 19.5 %, matching the default behaviour in Pathfinder (Thunderhead
   Engineering).
 
-All new terms are fully tested with constant-exposure unit tests in
+All terms are tested with constant-exposure unit tests in
 `tests/test_fed.py`.
 
-## Bug fixes (July 2026)
+## Convective heat
 
-- **O2 hypoxia rate was 60x too slow.** `_o2_hypoxia_rate_per_minute` divided
-  by an extra factor of 60, turning the per-minute rate from guide Eq. 18 into
-  a per-hour rate before it was accumulated on a per-minute clock. Below the
-  19.5 % suppression threshold (a real hypoxic atmosphere, e.g. 0 % O2), this
-  understated incapacitation risk by 60x — 2.6 s of true incapacitation time
-  was reported as ~155 s. Fixed in `pyfds_evac/core/fed.py`; the equation
-  table above and the formula were both corrected to match. Caught while
-  validating a deliberately oxygen-depleted homogeneous-gas test case.
+A separate heat FED is accumulated from the FDS gas temperature when the case
+has a `TEMPERATURE` slice (SFPE Handbook, 5th ed., Eq. 63.44):
+$\mathrm{FED}_{\mathrm{heat}} = \int T^{3.4} / (5 \times 10^{7})\, dt$, with
+$T$ in °C and $t$ in minutes. It is a running total of its own, not added to the
+gas FED; an agent is incapacitated when either total crosses its threshold
+(`--heat-fed-threshold`, median 1.0).
+
+## FDS input pitfalls
+
 - **Conflicting `&INIT` records silently zero out prescribed gas
   concentrations.** FDS resets the *entire* domain's species composition on
   each `&INIT` record that has no `XB` bounding box, so a second `&INIT`
   (e.g. one that only sets soot) overwrites an earlier one (e.g. one that
   sets CO/CO2/O2), leaving those species at 0 with no warning. All species
   prescribed via `&INIT` in a test deck must go in a single record. This is
-  an FDS input-authoring pitfall, not a pyFDS-Evac bug, but it produced the
-  same symptom as the rate bug above (near-zero toxic gas readings) and is
-  easy to reintroduce, so it's called out here.
-- **The smoke-speed model no longer falls back to FDS's `EXTINCTION`
-  quantity.** `EXTINCTION` and `SOOT EXTINCTION COEFFICIENT` are two
+  an FDS input-authoring pitfall, not a pyFDS-Evac bug; its symptom is
+  near-zero toxic gas readings.
+- **`EXTINCTION` is not the smoke extinction coefficient.**
+  `EXTINCTION` and `SOOT EXTINCTION COEFFICIENT` are two
   unrelated FDS slice quantities, not old/new spellings of the same field:
   `EXTINCTION` is a 0/1/-1 combustion-suppression flag (FDS User Guide
   Sec. 22.10.29), while the smoke extinction coefficient K [1/m] is
   `EXTINCTION COEFFICIENT` (Sec. 22.10.5), recorded by FDS as `SOOT
-  EXTINCTION COEFFICIENT` for the default species. A case lacking the soot
-  slice was silently sampling the combustion flag instead and feeding 0/1/-1
-  into the smoke-speed model as if it were K. `load_slice_sampler` now
-  requires `SOOT EXTINCTION COEFFICIENT` and raises `IndexError` when it's
-  absent, instead of a quiet, meaningless fallback
-  (`pyfds_evac/core/fds_sampling.py`).
+  EXTINCTION COEFFICIENT` for the default species. `load_slice_sampler`
+  requires `SOOT EXTINCTION COEFFICIENT` and raises `IndexError` when it is
+  absent (`pyfds_evac/core/fds_sampling.py`).
 
 ## Verification
 
-- Equation-level constant-exposure checks for all ISO 13571 terms are covered in
+- Equation-level constant-exposure checks for all Purser terms are covered in
   [tests/test_fed.py](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_fed.py)
-- An ISO Table 22 style stationary benchmark is covered with `assets/ISO-table22`,
+- An ISO 20414:2020 Test 19 (Table 22) stationary benchmark is covered with `assets/ISO-table22`,
   comparing the runtime `FED=1` crossing time against the analytical reference
 
-Generate the ISO Table 22 stationary FED verification figure:
+Generate the ISO 20414 Test 19 (Table 22) stationary FED verification figure:
 
 ```bash
 uv run python scripts/generate_iso_table22_stationary_plot.py
 ```
 
-Figure: ![ISO Table 22 stationary FED verification](/artifacts/iso-table22-stationary-fed.png)
+Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/iso-table22-stationary-fed.png)
 
-## What is not implemented yet
+## What is not modelled
 
-- Thermal FED terms (radiant heat, convective heat)
+- Radiant heat. Only convective heat from the gas temperature is modelled.
+- Effects of heat on route choice or walking speed: the heat FED only
+  incapacitates.
+- FED activity level: the CO term uses the light-work coefficient
+  2.764e-5; rest and heavy work are not supported
+  ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)).
 - **Height-relative FED and smoke sampling**: gas concentrations and extinction
   are sampled from a single horizontal FDS slice at a fixed height
   (`slice_height_m`, default 2.0 m), shared by all agents regardless of their
@@ -151,3 +157,10 @@ Both rules are enabled by default and can be tuned via CLI flags
 entirely with `--disable-tenability`. The FED history CSV
 (`--output-fed-history`) gains three extra columns `fic`,
 `fic_speed_factor`, `incapacitated`.
+
+![Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
+
+*Left: Frantzich–Nilsson factor f(K) [-] against K [1/m], floor 0.1. Middle:
+irritant factor g(FIC) [-] against FIC [-], floor 0.3. Right: the product
+f(K)·g(FIC) [-]. FED does not appear on these axes; it only sets the speed to
+zero at the agent's threshold. Script: `scripts/generate_tenability_curves.py`.*

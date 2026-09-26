@@ -22,7 +22,11 @@ layout: hextra-home
 </div>
 
 <div class="hx-mb-6">
-{{< hextra/hero-button text="Get started" link="docs/usage" >}}
+{{< hextra/hero-button text="Get started" link="docs/quickstart" >}}
+</div>
+
+<div class="hx-mb-6">
+Research software, provided without warranty. Not intended for regulatory or design use.
 </div>
 
 <div class="hx-mt-6"></div>
@@ -30,11 +34,11 @@ layout: hextra-home
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Speed"
-    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law used by FDS+Evac, or Fridolf's non-linear law. Irritants slow agents instantly and recover on leaving the plume."
+    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or Fridolf's non-linear law from Python. Irritant gases add a further slowdown."
   >}}
   {{< hextra/feature-card
     title="Dose"
-    subtitle="Full ISO 13571 fractional effective dose from twelve species, plus a convective heat dose accumulated separately. Each agent stops at its own threshold."
+    subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus a convective heat dose accumulated separately. By default each agent stops at its own threshold."
   >}}
   {{< hextra/feature-card
     title="Route choice"
@@ -65,14 +69,27 @@ on an upstream fdsvismap merge.
 pip install "pyfds-evac @ git+https://github.com/PedestrianDynamics/pyFDS-Evac.git"
 ```
 
-For development, clone the repository and use [uv](https://github.com/astral-sh/uv):
+The examples and the tracked scenarios live in the repository (`examples/`,
+`assets/`), not in the installed package. To run them, clone the repository and
+use [uv](https://github.com/astral-sh/uv):
 
 ```bash
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
 cd pyFDS-Evac
 uv sync
-uv run run.py --scenario assets/ISO-table21 --cleanup
+uv run python run.py --scenario assets/ISO-table21 --cleanup
 ```
+
+## Where to start
+
+{{< cards >}}
+  {{< card link="docs/quickstart" title="Quickstart" subtitle="One run on a tracked scenario, no FDS output needed." >}}
+  {{< card link="docs/coming-from-fds-evac" title="Coming from FDS+Evac" subtitle="Where each FDS+Evac input goes, and what has no equivalent." >}}
+  {{< card link="docs/walkthrough" title="Real-FDS walkthrough" subtitle="From tracked FDS output to doses and exit times." >}}
+  {{< card link="docs/limitations" title="Limitations" subtitle="Status, library-level parameters, and what is not modelled." >}}
+{{< /cards >}}
+
+## Your own FDS case
 
 Bringing your own FDS case? Read [what your FDS case must provide](docs/fds-case-requirements)
 first: pyFDS-Evac does not run FDS, it samples the output of a finished run, and
@@ -89,5 +106,10 @@ the deck has to dump specific slices for that to work.
 | [JuPedSim](https://jupedsim.org) | Moves agents collision-free on the walkable area. |
 
 pyFDS-Evac adds no movement model and no fire model.
+
+For the ideas behind speed, route choice and wayfinding, read
+[Concepts](docs/concepts) and the talk
+[*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
+([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
 
 </div>
