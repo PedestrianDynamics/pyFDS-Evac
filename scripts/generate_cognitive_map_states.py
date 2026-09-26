@@ -25,22 +25,22 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.patches import Rectangle  # noqa: E402
-from shapely import wkt as shapely_wkt  # noqa: E402
-from shapely.geometry import Polygon  # noqa: E402
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from shapely import wkt as shapely_wkt
+from shapely.geometry import Polygon
 
-from pyfds_evac.core.cognitive_map import (  # noqa: E402
+from pyfds_evac.core.cognitive_map import (
     expand_from_visibility,
     init_cognitive_map,
 )
-from pyfds_evac.core.route_graph import (  # noqa: E402
+from pyfds_evac.core.route_graph import (
     RouteCostConfig,
     StageGraph,
     rank_routes,
 )
-from pyfds_evac.core.smoke_speed import ConstantExtinctionField  # noqa: E402
-from pyfds_evac.core.visibility import VisibilityModel  # noqa: E402
+from pyfds_evac.core.smoke_speed import ConstantExtinctionField
+from pyfds_evac.core.visibility import VisibilityModel
 
 ASSET = Path("assets/cognitive_map_memory")
 MAX_VIS_M = 30.0

@@ -31,8 +31,8 @@ Design rules baked in (see specs/012-model-verification/SPEC.md):
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from pyfds_evac.core.fed import (
     DefaultFedConfig,

@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Any, List, Tuple
+from typing import Any
 
 import jupedsim as jps
 import numpy as np
@@ -57,9 +57,9 @@ def get_next_waypoint(point, waypoints):
 def compute_waypoints_and_visibility(
     vis: Any,
     routing: Any,
-    agent_position: Tuple[float, float],
-    primary_exit: Tuple[float, float],
-    waypoints: List[Tuple[float, float, float]],
+    agent_position: tuple[float, float],
+    primary_exit: tuple[float, float],
+    waypoints: list[tuple[float, float, float]],
     time: float,
 ):
     """Compute the waypoints and their visibility.
@@ -94,9 +94,9 @@ def compute_waypoints_and_visibility(
 
 def log_path_info(
     time: float,
-    path: List[Any],
+    path: list[Any],
     agent: jps.Agent,
-    waypoints_info: List[Any],
+    waypoints_info: list[Any],
     speed: float,
 ):
     """Print logging messages."""
@@ -116,8 +116,8 @@ def log_path_info(
 
 
 def process_waypoints(
-    waypoints_info: List, waypoints: List, vis: Any, time: float
-) -> Tuple[float, float]:
+    waypoints_info: list, waypoints: list, vis: Any, time: float
+) -> tuple[float, float]:
     vis_point = 0
     seen = set()
     for wp_id, is_visible in zip(waypoints_info[1], waypoints_info[2]):
@@ -133,13 +133,13 @@ def check_and_update_journeys(
     routing,
     simulation: jps.Simulation,
     time: float,
-    primary_exit: Tuple[float, float],
-    secondary_exit: Tuple[float, float],
+    primary_exit: tuple[float, float],
+    secondary_exit: tuple[float, float],
     primary_journey_id: int,
     secondary_journey_id: int,
     primary_exit_id: int,
     secondary_exit_id: int,
-    waypoints: List[Tuple[float, float, float]],
+    waypoints: list[tuple[float, float, float]],
     vis: Any,
     config: SimulationConfig,
 ):

@@ -24,18 +24,18 @@ import matplotlib
 import numpy as np
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.patches import Rectangle  # noqa: E402
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 
 sys.path.insert(0, "tests")
-from test_exit_visibility_alpha import _load  # noqa: E402
+from test_exit_visibility_alpha import _load
 
-from pyfds_evac.core.cognitive_map import init_cognitive_map  # noqa: E402
-from pyfds_evac.core.route_graph import (  # noqa: E402
+from pyfds_evac.core.cognitive_map import init_cognitive_map
+from pyfds_evac.core.route_graph import (
     RouteCostConfig,
     rank_routes,
 )
-from pyfds_evac.core.smoke_speed import ConstantExtinctionField  # noqa: E402
+from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
 ASSET = Path("assets/exit_visibility_alpha")
 CFG = RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0, w_queue=0.0)

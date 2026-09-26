@@ -3,7 +3,7 @@
 import logging
 import math
 import random
-from typing import Any, Dict
+from typing import Any
 
 from . import simulation_init
 
@@ -155,7 +155,7 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
 
 
 def set_agent_smoke_factor(
-    agent_speed_state: Dict[int, Dict[str, Any]],
+    agent_speed_state: dict[int, dict[str, Any]],
     agent_id: int,
     agent,
     smoke_factor: float,
@@ -166,7 +166,7 @@ def set_agent_smoke_factor(
 
 
 def set_agent_fic_factor(
-    agent_speed_state: Dict[int, Dict[str, Any]],
+    agent_speed_state: dict[int, dict[str, Any]],
     agent_id: int,
     agent,
     fic_factor: float,
@@ -192,7 +192,7 @@ def set_agent_fic_factor(
 
 
 def ensure_agent_speed_state(
-    agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
+    agent_speed_state: dict[int, dict[str, Any]], agent_id: int, agent
 ):
     """Create or refresh cached per-agent speed state."""
     state = agent_speed_state.get(agent_id)
@@ -210,7 +210,7 @@ def ensure_agent_speed_state(
 
 
 def restore_agent_speed(
-    agent_speed_state: Dict[int, Dict[str, Any]], agent_id: int, agent
+    agent_speed_state: dict[int, dict[str, Any]], agent_id: int, agent
 ) -> None:
     """Restore the effective desired speed outside checkpoint and zone slowdowns."""
     state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
@@ -236,7 +236,7 @@ def restore_agent_speed(
 
 def _find_checkpoint_zone(
     checkpoint_key: str,
-    stage_cfg: Dict[str, Any],
+    stage_cfg: dict[str, Any],
     x: float,
     y: float,
 ) -> tuple[str, float] | None:
@@ -250,7 +250,7 @@ def _find_checkpoint_zone(
 
 
 def _find_steering_zone(
-    direct_steering_info: Dict[str, Dict[str, Any]] | None,
+    direct_steering_info: dict[str, dict[str, Any]] | None,
     x: float,
     y: float,
 ) -> tuple[str, float] | None:
@@ -270,12 +270,12 @@ def _find_steering_zone(
 
 
 def update_checkpoint_speed(
-    agent_speed_state: Dict[int, Dict[str, Any]],
-    direct_steering_info: Dict[str, Dict[str, Any]] | None,
+    agent_speed_state: dict[int, dict[str, Any]],
+    direct_steering_info: dict[str, dict[str, Any]] | None,
     agent_id: int,
     agent,
     checkpoint_key: str | None,
-    stage_cfg: Dict[str, Any] | None,
+    stage_cfg: dict[str, Any] | None,
     x: float,
     y: float,
 ) -> None:

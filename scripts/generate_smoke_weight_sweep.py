@@ -19,10 +19,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, "tests")
-from test_rerouting_smoke_sweep import (  # noqa: E402
+from test_rerouting_smoke_sweep import (
     FAR_EXIT,
     NEAR_EXIT,
     SmokeOnTheNearArm,
@@ -34,7 +34,7 @@ from test_rerouting_smoke_sweep import (  # noqa: E402
 
 def main(out_path: Path) -> None:
     graph = _graph()
-    weights = [w / 20.0 for w in range(0, 61)]
+    weights = [w / 20.0 for w in range(61)]
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.4), sharey=True)
     for ax, field, title in (

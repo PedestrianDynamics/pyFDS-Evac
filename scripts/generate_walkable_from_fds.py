@@ -311,7 +311,7 @@ def main() -> None:
         import matplotlib
 
         matplotlib.use("Agg")
-        import matplotlib.pyplot as plt  # noqa: E402
+        import matplotlib.pyplot as plt
         from matplotlib.patches import PathPatch
         from matplotlib.path import Path as MplPath
 

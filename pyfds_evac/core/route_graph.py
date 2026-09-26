@@ -1667,7 +1667,7 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
 def _anchor_allows(
     candidate: RouteCost,
     old_rc: RouteCost | None,
-    config: "RerouteConfig",
+    config: RerouteConfig,
 ) -> bool:
     """Whether the exit-switch anchor lets the agent leave *old_rc* for *candidate*.
 
@@ -1721,7 +1721,7 @@ def _adoptable(
     candidate: RouteCost,
     ranked: list[RouteCost],
     route_state: AgentRouteState,
-    config: "RerouteConfig",
+    config: RerouteConfig,
 ) -> bool:
     """Whether the agent could switch to *candidate* if the ordering offered it."""
     old_exit = route_state.current_exit

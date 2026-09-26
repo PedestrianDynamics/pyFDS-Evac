@@ -1,14 +1,12 @@
 """Pre-movement time distributions used by scenario initialization."""
 
-from typing import Dict, Optional
-
 import numpy as np
 
 
 class PreMovementDistribution:
     """Base class for pre-evacuation time distributions."""
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int | None = None):
         self.rng = np.random.default_rng(seed)
 
     def sample(self, n_samples: int) -> np.ndarray:
@@ -19,9 +17,7 @@ class PreMovementDistribution:
 class GammaDistribution(PreMovementDistribution):
     """Gamma distribution for pre-evacuation times."""
 
-    def __init__(
-        self, a: float = 1.291, b: float = 103.901, seed: Optional[int] = None
-    ):
+    def __init__(self, a: float = 1.291, b: float = 103.901, seed: int | None = None):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -33,7 +29,7 @@ class GammaDistribution(PreMovementDistribution):
 class LognormalDistribution(PreMovementDistribution):
     """Lognormal distribution for pre-evacuation times."""
 
-    def __init__(self, a: float = 4.586, b: float = 0.967, seed: Optional[int] = None):
+    def __init__(self, a: float = 4.586, b: float = 0.967, seed: int | None = None):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -45,9 +41,7 @@ class LognormalDistribution(PreMovementDistribution):
 class WeibullDistribution(PreMovementDistribution):
     """Weibull distribution for pre-evacuation times."""
 
-    def __init__(
-        self, a: float = 139.285, b: float = 1.195, seed: Optional[int] = None
-    ):
+    def __init__(self, a: float = 139.285, b: float = 1.195, seed: int | None = None):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -59,7 +53,7 @@ class WeibullDistribution(PreMovementDistribution):
 class UniformDistribution(PreMovementDistribution):
     """Uniform distribution for pre-evacuation times."""
 
-    def __init__(self, a: float = 0.0, b: float = 60.0, seed: Optional[int] = None):
+    def __init__(self, a: float = 0.0, b: float = 60.0, seed: int | None = None):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -78,8 +72,8 @@ PREMOVEMENT_PRESETS = {
 
 def create_premovement_distribution(
     distribution_type: str,
-    params: Dict[str, float],
-    seed: Optional[int] = None,
+    params: dict[str, float],
+    seed: int | None = None,
 ) -> PreMovementDistribution:
     """Return a configured pre-movement distribution instance."""
     distributions = {
