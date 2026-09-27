@@ -52,6 +52,7 @@ module:
         - "smoke-speed-model.md"
         - "routing.md"
         - "route-cost-gate.md"
+        - "wayfinding.md"
         - "testing-*.md"
     - source: ../docs
       target: content/docs/getting-started
@@ -82,6 +83,10 @@ module:
       includeFiles:
         - "routing.md"
         - "route-cost-gate.md"
+    - source: ../docs
+      target: content/docs/implementation/wayfinding
+      includeFiles:
+        - "wayfinding.md"
     - source: ../docs
       target: content/models/verification
       includeFiles:

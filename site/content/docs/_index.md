@@ -20,5 +20,6 @@ Reference documentation, served from the `docs/` directory of the repository.
   {{< card link="implementation/speed/smoke-speed-model" title="Smoke-speed model" subtitle="Full model description, configuration, and API." >}}
   {{< card link="implementation/routing/routing" title="Smoke-aware routing" subtitle="Cost formulas, the exposure gate, and the decision pipeline." >}}
   {{< card link="implementation/routing/route-cost-gate" title="The gate cost model" subtitle="How one quantity refuses a route and orders the survivors." >}}
+  {{< card link="implementation/wayfinding/wayfinding" title="Wayfinding" subtitle="Sign legibility, per-agent cognitive maps, and the examples of the talk." >}}
   {{< card link="understanding/model-comparison" title="FDS+Evac comparison" subtitle="Mechanism by mechanism against FDS+Evac, where the two agree and where they differ." >}}
 {{< /cards >}}
