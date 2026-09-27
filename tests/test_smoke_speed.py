@@ -131,6 +131,20 @@ class TestFridolfSpeedFactor:
         assert cfg.fridolf_visibility_threshold_m == 3.0
         assert cfg.fridolf_min_speed_m_per_s == 0.2
 
+    @pytest.mark.parametrize("v0", [0.5, 1.0, 1.19, 1.35, 1.85])
+    def test_factor_is_non_increasing_in_extinction(self, v0):
+        ks = [0.0, 0.1, 0.5, 1.0, 1.2, 1.5, 2.0, 3.0, 6.0, 10.0, 60.0, 1e6]
+        factors = [
+            speed_factor_from_extinction_fridolf(k, free_speed_m_per_s=v0) for k in ks
+        ]
+        assert all(a >= b for a, b in zip(factors, factors[1:]))
+        assert factors[-1] < factors[0]
+
+    @pytest.mark.parametrize("c", [0.0, -3.0, math.nan, math.inf])
+    def test_invalid_visibility_factor_is_rejected(self, c):
+        with pytest.raises(ValueError, match="visibility_factor_c"):
+            speed_factor_from_extinction_fridolf(1.0, visibility_factor_c=c)
+
     def test_larger_c_gives_higher_factor(self):
         # Higher C means better visibility at the same K
         f_c3 = speed_factor_from_extinction_fridolf(3.0, visibility_factor_c=3.0)
@@ -165,12 +179,41 @@ class TestSmokeSpeedModelFridolf:
         _, f2 = model.sample(0.0, 0.0, 0.0)
         assert f1 == f2 == speed_factor_from_extinction(1.0)
 
+    def test_three_argument_sample_override_still_works(self):
+        """A subclass whose sample() predates free_speed_m_per_s keeps working."""
+
+        class LegacyModel(SmokeSpeedModel):
+            def sample(self, time_s, x, y):
+                return 1.0, 0.5
+
+        model = LegacyModel(ConstantExtinctionField(1.0), SmokeSpeedConfig())
+        assert model.speed_factor(0.0, 0.0, 0.0) == 0.5
+        assert model.speed_factor(0.0, 0.0, 0.0, free_speed_m_per_s=1.19) == 0.5
+
     def test_lund_law_used_by_default(self):
         field = ConstantExtinctionField(0.0)
         cfg = SmokeSpeedConfig(fds_dir=".")
         model = SmokeSpeedModel(field, cfg)
         _, factor = model.sample(0.0, 0.0, 0.0)
         assert factor == pytest.approx(1.0)
+
+
+def test_run_scenario_accepts_three_argument_sample():
+    """run_scenario must not pass free_speed_m_per_s to a sample() without it."""
+
+    class LegacyModel(SmokeSpeedModel):
+        def sample(self, time_s, x, y):
+            return 1.0, 0.5
+
+    scenario = load_scenario("assets/ISO-table21")
+    scenario.set_max_time(3.0)
+    model = LegacyModel(ConstantExtinctionField(1.0), SmokeSpeedConfig(fds_dir="."))
+    result = run_scenario(scenario, seed=420, smoke_speed_model=model)
+    try:
+        assert result.smoke_history
+        assert all(row["speed_factor"] == 0.5 for row in result.smoke_history)
+    finally:
+        result.cleanup()
 
 
 def test_speed_factor_reduces_with_extinction():

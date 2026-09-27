@@ -28,10 +28,12 @@ from harness import (
     corridor_scenario,
     fridolf_speed_factor,
     lund_speed_factor,
+    make_fed_model,
     make_smoke_model,
     uniform,
 )
 
+from pyfds_evac.core.fed import TenabilityConfig
 from pyfds_evac.core.scenario import run_scenario
 
 # K0 = 2 /m: sub-lethal haze. Lund -> 0.839, Fridolf -> 0.49 at v0 = 1 (clear divergence).
@@ -216,3 +218,81 @@ def test_egress_slows_by_inverse_factor():
     finally:
         control.cleanup()
         treatment.cleanup()
+
+
+def _flow_agent_in_slow_zone(zone_factor: float):
+    """One flow-spawned agent at v0 = 1.19 inside a zone that slows it."""
+    spec = CorridorSpec(
+        length_m=30.0,
+        width_m=4.0,
+        num_agents=1,
+        v0=1.19,
+        seed=42,
+        max_simulation_time=60.0,
+    )
+    scenario = corridor_scenario(spec)
+    params = scenario.raw["distributions"]["spawn_near"]["parameters"]
+    params.update(use_flow_spawning=True, flow_start_time=1, flow_end_time=2)
+    scenario.raw["zones"] = {
+        "slow": {
+            "coordinates": [[0, 0], [12, 0], [12, 4], [0, 4], [0, 0]],
+            "speed_factor": zone_factor,
+        }
+    }
+    return spec, scenario
+
+
+def _smoke_every_5_s(visibility_m: float):
+    model = make_smoke_model(uniform(3.0 / visibility_m), speed_law="fridolf")
+    model.config.update_interval_s = 5.0
+    return model
+
+
+def _assert_free_speed_baseline(history, v0: float, w: float):
+    rows = [row for row in history if row["time_s"] > 0.0]
+    assert rows, "the flow agent was never sampled by the smoke model"
+    for row in rows:
+        assert row["base_speed"] == pytest.approx(v0, rel=1e-12)
+        assert row["desired_speed"] == pytest.approx(w, rel=1e-12)
+
+
+def test_flow_agent_in_slow_zone_uses_free_speed():
+    """A zone that slows an agent before its first smoke update is not its v0.
+
+    The agent spawns between smoke updates inside a 0.5 zone, so its current
+    speed is 0.595 m/s when smoke is first sampled; the baseline must still be
+    1.19 m/s, which gives w = 0.85 m/s at V = 2 m.
+    """
+    spec, scenario = _flow_agent_in_slow_zone(0.5)
+    result = run_scenario(
+        scenario, seed=spec.seed, smoke_speed_model=_smoke_every_5_s(2.0)
+    )
+    try:
+        _assert_free_speed_baseline(result.smoke_history, 1.19, 0.85)
+    finally:
+        result.cleanup()
+
+
+def test_flow_agent_slowed_by_fic_uses_free_speed():
+    """As above, with the irritant (FIC) slowdown instead of a zone."""
+    spec, scenario = _flow_agent_in_slow_zone(1.0)
+    fed = make_fed_model(
+        co_volume_fraction=uniform(0.0),
+        co2_volume_fraction=uniform(0.0),
+        o2_volume_fraction=uniform(0.209),
+        update_interval_s=0.1,
+        hcl=uniform(450e-6),
+    )
+    result = run_scenario(
+        scenario,
+        seed=spec.seed,
+        smoke_speed_model=_smoke_every_5_s(2.0),
+        fed_model=fed,
+        tenability_config=TenabilityConfig(
+            enable_fic_speed=True, enable_incapacitation=False
+        ),
+    )
+    try:
+        _assert_free_speed_baseline(result.smoke_history, 1.19, 0.85)
+    finally:
+        result.cleanup()
