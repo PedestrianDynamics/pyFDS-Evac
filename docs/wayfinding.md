@@ -20,7 +20,7 @@ figure belongs there. Where the talk and the code disagree, a **Talk vs code**
 note says so, and the code is the reference.
 
 Mechanisms were checked against main at `f363758`, which includes #170 and
-#174. Each reported run outcome names its source: a repository test, an
+#174; `route_graph.py` references follow the first-leg resample of #171. Each reported run outcome names its source: a repository test, an
 asset README, a figure script, or a run on main by one of the investigations
 of #160 and #168. None of the examples validates human wayfinding. They
 verify that the implementation does what this page says.

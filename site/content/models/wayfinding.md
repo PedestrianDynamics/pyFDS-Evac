@@ -12,8 +12,9 @@ aliases: [/models/visibility/]
 Based on: [Visibility through smoke](/fundamentals/visibility.md) and
 [Exit choice and familiarity](/fundamentals/exit-choice.md).
 
-Code references are to main at `f363758`, which includes #170 and #174, and
-to fdsvismap `64d9aa7`.
+Code references are to main at `f363758`, which includes #170 and #174,
+except `route_graph.py`, whose references follow the first-leg resample of
+#171; and to fdsvismap `64d9aa7`.
 
 The [routing model](/models/routing.md) ranks and refuses routes. This page
 describes the part of the model that decides which routes it may rank: what
