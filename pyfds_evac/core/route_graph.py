@@ -1910,7 +1910,7 @@ def evaluate_and_reroute(
             and committed_path[-1] == best.exit_id
             and all(n in graph.nodes for n in committed_path)
         ):
-            committed_cost = evaluate_route(
+            committed = evaluate_route(
                 graph,
                 committed_path,
                 current_time_s,
@@ -1922,8 +1922,16 @@ def evaluate_and_reroute(
                 exit_counts=exit_counts,
                 agent_position=agent_position,
                 current_target=current_target,
-            ).rank_cost
-            if best.rank_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD:
+            )
+            committed_cost = committed.rank_cost
+            # A rejected walked path is left for a feasible one whatever the
+            # time saving: the 10 % rule damps churn between acceptable
+            # paths, it must not hold an agent on one that failed a limit.
+            leaves_rejected = committed.rejected and best.feasible and not best.rejected
+            if (
+                leaves_rejected
+                or best.rank_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD
+            ):
                 stage_configs = wait_info.get("stage_configs", {})
                 changed = reroute_agent(wait_info, best.path, stage_configs)
                 if changed:
