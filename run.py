@@ -138,6 +138,14 @@ def _build_parser() -> argparse.ArgumentParser:
         "wall that must block sight (default: 0.25)",
     )
     parser.add_argument(
+        "--max-sign-distance",
+        type=float,
+        default=30.0,
+        help="Farthest distance in meters from which a sign can be read, even "
+        "in clear air. A sign's own 'max_distance' overrides it (default: 30, "
+        "as in fdsvismap)",
+    )
+    parser.add_argument(
         "--disable-tenability",
         action="store_true",
         help="Run without a tenability config: disables the FIC speed-reduction "

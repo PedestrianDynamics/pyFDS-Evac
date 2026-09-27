@@ -294,7 +294,7 @@ the smoke field of the fire, including stretches the agent has never seen
 ![Five probes of one corridor: the side exit is unknown, learned, legible, known but not legible, and first-ranked at a return probe where its sign cannot be read](/images/wayfinding/map_memory.png)
 
 *Figure 7. A corridor whose side-exit sign is legible only inside the shaded
-region, y = 12.0–28.0 m on the centreline (gold ticks). One discovery agent is probed at a sequence of positions: northward,
+region, y = 12.3–27.8 m on the centreline (gold ticks). One discovery agent is probed at a sequence of positions: northward,
 then back south. These are probes, not a walk. Northward, the side exit is
 learned inside the region and stays known beyond it, where the nearer end exit
 ranks first. Back south, where the side sign cannot be read, the remembered

@@ -33,12 +33,10 @@ With `d² = 4 + (y−20)²` that gives
 legible while |y − 20| <= 7.48   →   y ∈ [12.5, 27.5]
 ```
 
-This uses fdsvismap's default 30 m cap. pyFDS-Evac replaces the cap with the
-grid diagonal, which may be larger or smaller than 30 m (see
-[#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)). For the
-0.25 m clear-air grid of this deck it is 32.1 m, which widens the window to `|y − 20| <= 7.76`, y ∈ [12.2, 27.8]. On the
-0.25 m grid the model reads the sign from y = 12.0 to 28.0 on the centreline
-(`scripts/figures/map_memory.py` computes and draws it).
+This uses the 30 m cap, fdsvismap's default and pyFDS-Evac's. On the
+0.25 m grid the model reads the sign from y = 12.3 to 27.8 on the centreline
+(`scripts/figures/map_memory.py` computes and draws it); the difference comes
+from the rasterised sight line.
 
 Off-axis geometry kills the view angle faster than proximity helps, which is
 what produces a band rather than a half-plane. `build_geometry.py` recomputes

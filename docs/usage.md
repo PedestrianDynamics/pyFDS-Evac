@@ -62,6 +62,7 @@ silent unless you check the warning log.
 | `--clear-air-visibility` | Force sight gating on a deck with no fire. Conflicts with `--fds-dir` (a deck with a fire has smoke to decide sight) and with `--no-visibility`. |
 | `--no-visibility` | Turn sight gating off entirely; agents then learn each node's neighbours by contact. Not a fire scenario. |
 | `--vis-cell-size M` | Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight. |
+| `--max-sign-distance M` | Farthest distance from which a sign can be read, also in clear air (default 30 m). A sign's own `"max_distance"` overrides it. |
 
 **The default route-choice model does not trigger the visibility model.** The
 default `"gate"` route-cost model reads no vismap: its smoke criterion is the

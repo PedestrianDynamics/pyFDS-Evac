@@ -65,8 +65,8 @@ conventions; what each one proves, and where that proof is checked, is below.
   `docs/testing-homogeneous.md`.
 - **Cognitive Map Memory**: 4x32 m corridor with a side alcove, 20 `discovery`
   agents. The side exit's sign faces west and is legible only from
-  `y ∈ [12.0, 28.0]` on the centreline (`[12.5, 27.5]` under fdsvismap's
-  default 30 m cap; pyFDS-Evac uses the grid diagonal) — a window that falls out of
+  `y ∈ [12.3, 27.8]` on the centreline on the 0.25 m grid (`[12.5, 27.5]`
+  analytically under the 30 m cap) — a window that falls out of
   `view_angle * max_vis >= distance` rather than being tuned, and that
   `build_geometry.py` recomputes and asserts. Proves the cognitive map does the
   one thing a visibility query cannot: **remember**. The side exit is unknown at
@@ -116,7 +116,7 @@ conventions; what each one proves, and where that proof is checked, is below.
   solver. A companion test pins that a `full`-familiarity agent ignores the
   bearing entirely — signs are wayfinding information and bind only where
   knowledge is incomplete. The folder README documents the **visibility
-  ceiling** (the grid diagonal, about 30 m for this deck) that makes a sign
+  ceiling** (30 m by default) that makes a sign
   illegible at any bearing, and how much tighter it becomes once smoke is
   present (`c / K̄`, so 6 m at `c=3`, `K̄=0.5`).
 - **Familiarity Test Full** / **Familiarity Test Discovery**: `SocialForceModel`

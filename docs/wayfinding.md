@@ -62,14 +62,13 @@ synthesised signs alike (`visibility.py:58`, `:94`).
 > node's routing point for all agents of that spawn area
 > (`cognitive_map.py:131–135`).
 >
-> **Code changed since the talk.** pyFDS-Evac replaces fdsvismap's 30 m
-> visibility cap with the diagonal of the grid (`visibility.py:103`, `:512`).
+> The reading distance \(V_{\max}\) is 30 m, as in fdsvismap. Change it with
+> `--max-sign-distance`, or per sign with `"max_distance"`.
 
 <!-- FIGURE: none. The talk shows Börger, Belt and Arnold (2024), Fig. 11,
 a third-party figure; link to the paper instead of reproducing it.
 Proposed new figure: plan view of one sign's legible region at mean K = 0,
-0.2 and 0.5 1/m, C = 3, drawn once with the 30 m cap and once with the grid
-diagonal, computed by fdsvismap on a small deck with one wall. -->
+0.2 and 0.5 1/m, C = 3, drawn with the 30 m cap, computed by fdsvismap on a small deck with one wall. -->
 
 ## 2. One number flips the exit
 
@@ -105,8 +104,8 @@ seed 1904, on main after #170:
 | \(\alpha_s = 0\) | 40 to `E_near` | 17.07 s | 0 |
 | \(\alpha_s = 180\) | 40 to `E_far` | 25.89 s | 0 |
 
-The visibility cap is the grid diagonal: 30.83 m on the FDS grid, 29.99 m on
-the 0.25 m clear-air grid of Figure 1.
+The visibility cap is 30 m. Rerun in clear air with that cap, both configs
+give the same counts and egress times.
 
 The asset's probe map of the ranked exit along the corridor
 (`exit_choice_map.png`) was shifted by
@@ -272,11 +271,10 @@ position and time.
 The asset `assets/cognitive_map_memory` separates the two. A corridor has an
 end exit, legible from spawn, and a side exit whose sign, at \((4, 20)\)
 facing west, is legible from the centreline only inside a region. The asset
-builder's estimate, y ≈ 12.5–27.5 m, assumes the 30 m cap
-(`build_geometry.py:61`, `:78–95`), which the code no longer uses
-(`visibility.py:512`). With the grid diagonal as the cap, on the 0.25 m
-clear-air grid, the model reads the sign from y = 12.0 to 28.0 m on the
-centreline (Figure 4).
+builder's estimate, y ≈ 12.5–27.5 m, follows from the 30 m cap
+(`build_geometry.py:61`, `:78–95`). On the 0.25 m clear-air grid the model
+reads the sign from y = 12.3 to 27.8 m on the centreline (Figure 4); the
+difference comes from the rasterised sight line.
 
 The probes place one discovery agent at fixed positions on the centreline, in
 sequence, and ask the router which exit ranks first there. They are sequential
@@ -339,7 +337,7 @@ to the side exit (`assets/cognitive_map_memory/README.md`).
 *Figure 4. The map remembers. `assets/cognitive_map_memory`, clear air, one
 discovery agent probed in sequence at y = 4, 14, 20 and 30 m, then at y = 10 m
 again. These are state probes, not a walk. The shaded, lens-shaped region is
-where the side sign is legible; on the centreline it spans y = 12.0–28.0 m
+where the side sign is legible; on the centreline it spans y = 12.3–27.8 m
 (gold ticks). Northbound, the side exit is learned inside the region and
 stays known beyond it. At y = 30 the nearer end exit ranks first. At the return
 probe, where the side sign is not legible, the known side exit is nearer and

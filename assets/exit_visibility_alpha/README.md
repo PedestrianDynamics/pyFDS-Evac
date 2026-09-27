@@ -41,18 +41,14 @@ visibility = c / mean_extinction     capped at max_vis
 ```
 
 (`FDSVisMap._get_visibility_array`, `FDSVisMap.get_vismap`). fdsvismap's
-default `max_vis` is 30 m; pyFDS-Evac replaces the cap with the grid
-diagonal, which may be larger or smaller than 30 m
-(`pyfds_evac/core/visibility.py`; see
-[#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173), which
-proposes restoring a finite default). Here it is 29.99 m on the 0.25 m
-clear-air grid and 30.83 m on the FDS grid.
+default `max_vis` is 30 m, and pyFDS-Evac uses the same default
+(`--max-sign-distance`, or `"max_distance"` per sign;
+`pyfds_evac/core/visibility.py`).
 
 Two consequences that are easy to miss:
 
-**In clear air the reach is the grid diagonal.** Extinction is zero, so
-`visibility` is `max_vis`, the diagonal of the visibility grid: 30.8 m for
-this deck's FDS mesh, 30.0 m for the 0.25 m clear-air grid. Because
+**In clear air the reach is the cap.** Extinction is zero, so
+`visibility` is `max_vis`, 30 m. Because
 `view_angle` cannot exceed 1, a sign farther away than that is illegible **at
 every bearing**, and no choice of `alpha` rescues it. The legible region of a
 sign in clear air is the disc `distance <= max_vis * view_angle`: diameter
@@ -63,7 +59,7 @@ stops mattering almost immediately:
 
 | `c` | mean extinction `K̄` | usable radius |
 |---|---|---|
-| 3 (reflective) | 0.0 (clear) | `max_vis` — the cap, here about 30 m |
+| 3 (reflective) | 0.0 (clear) | `max_vis` — the cap, 30 m |
 | 3 | 0.1 | 30 m |
 | 3 | 0.2 | 15 m |
 | 3 | 0.5 | 6 m |
