@@ -299,10 +299,14 @@ def main():
     run = simulate(walls)
     taken, dist = check_claims(run)
     xy, t = run["xy"], run["t"]
-    walked = float(np.linalg.norm(np.diff(xy, axis=0), axis=1).sum())
+    steps = np.linalg.norm(np.diff(xy, axis=0), axis=1)
+    walked = float(steps.sum())
+    # pre-movement: the agent stands still until its first step
+    t_move = float(t[int(np.argmax(steps > 1e-3))])
     print(
         f"map = spawn only for {t[-1]:.1f} s, {len(run['switches'])} switches, "
-        f"left by {taken} at {run['evac_time']:.1f} s after {walked:.1f} m; "
+        f"starts at {t_move:.1f} s, left by {taken} at {run['evac_time']:.1f} s "
+        f"after {walked:.1f} m; "
         f"start to exit: " + ", ".join(f"{k} {v:.1f} m" for k, v in dist.items())
     )
 
@@ -412,8 +416,8 @@ def main():
         0.5,
         -0.13,
         f"The map holds only the spawn for all {t[-1]:.0f} s and the agent never "
-        f"re-decides,\nyet it walks {walked:.0f} m to the nearest exit "
-        f"({taken}) and is out at {run['evac_time']:.0f} s.",
+        f"re-decides,\nyet from t = {t_move:.0f} s it walks {walked:.0f} m to "
+        f"the nearest exit ({taken}) and is out at {run['evac_time']:.0f} s.",
         transform=ax.transAxes,
         fontsize=8.5,
         color=TEXT,
