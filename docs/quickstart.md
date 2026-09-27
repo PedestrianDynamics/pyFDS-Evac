@@ -144,7 +144,7 @@ Without it, `run_scenario` models no smoke.
 - [Real-FDS walkthrough](walkthrough.md): the same steps with extinction and
   gas read from FDS slices, and how to spot a run that succeeds but is wrong.
 - [How do I get RSET with its spread from an ensemble of seeds?](howto-rset-ensemble.md)
-- [Smoke-speed model](smoke-speed-model.md) for the speed laws and their
+- [Smoke-speed model](/models/smoke-speed.md) for the speed laws and their
   parameters.
 
 pyFDS-Evac is research software, provided without warranty.

@@ -151,7 +151,7 @@ smoke-aware [routing](routing.md).
 
 - [FDS case requirements](fds-case-requirements.md) -- the `&SLCF` lines a
   case must declare, and the failure modes when they're missing.
-- [Smoke-speed model](smoke-speed-model.md) -- how extinction drives
+- [Smoke-speed model](/models/smoke-speed.md) -- how extinction drives
   agent speed reduction.
 - [Smoke-aware routing](routing.md) -- how extinction and FED drive
   dynamic route selection.

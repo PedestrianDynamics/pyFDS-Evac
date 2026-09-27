@@ -1,8 +1,14 @@
 ---
-title: "Smoke-aware routing"
+title: "Routing in practice"
+linkTitle: "Routing in practice"
 weight: 10
 aliases: [/docs/routing/]
 ---
+
+> [!NOTE]
+> This page shows the routing model at work: its machinery, API and data
+> structures. For its definition, parameters and defaults, see
+> [Models › Dynamic route rerouting](/models/routing.md).
 
 > Part of [pyFDS-Evac](../README.md).
 
@@ -404,57 +410,50 @@ the interval.
 
 ### Rerouting decision flow
 
-`evaluate_and_reroute` runs once per agent per reevaluation tick:
+`evaluate_and_reroute` runs once per agent per reevaluation tick. It
+answers three questions in turn: which routes are available, which one is
+preferred, and whether the agent should change.
 
+```mermaid
+flowchart TD
+    A("Resolve source, one candidate path per reachable exit") --> B("Measure length, time, FED and smoke")
+    B --> C("Any route not rejected?")
+    C -->|Yes| D("Rank the routes")
+    C -->|No| E("Fallback: least-bad rejected route")
+    D --> F("Apply switching policy")
+    E --> F
+    F --> G("Change justified?")
+    G -->|Yes| H("Reroute and record the reason")
+    G -->|No| I("Keep the active route")
+    classDef step fill:#e3f0fb,stroke:#c6dcf0,color:#0b4f8a,font-weight:bold
+    classDef ask fill:#f4f9fe,stroke:#c6dcf0,stroke-dasharray:4 3,color:#0b4f8a,font-weight:bold
+    class A,B,D,E,F,H,I step
+    class C,G ask
+    linkStyle default stroke:#8a9bb0,stroke-width:1.5px
 ```
-1. Resolve source node
-   ├─ use current_origin  (stage the agent is coming from)
-   └─ fall back to current_target_stage
-   → if source not in graph → skip (return None)
 
-2. rank_routes(source, t, FED, K_field)
-   ├─ evaluate all edges → dynamic costs from current smoke/FED
-   │   (gate: k_avg * length + 1e-6 * length, the edge's own optical depth;
-   │    additive: w_smoke / w_fed weighted composite)
-   ├─ Dijkstra with dynamic weights → one minimum-cost path per reachable exit
-   │   (only the single lowest-cost path to each exit under these weights
-   │    is evaluated; alternative paths to the same exit are not enumerated)
-   ├─ evaluate_route on each path
-   │   ├─ FED rejection (asymmetric: x fed_return_margin for a non-current exit)
-   │   └─ gate only: optical-depth rejection, reason "tau ...", every exit
-   │       tested (asymmetric: budget x tau_return_margin for a non-current
-   │       exit)
-   ├─ visibility rejection pass (additive only)
-   │   └─ if ≥1 route has any visible segment:
-   │       mark routes where ALL segments are non-visible as rejected
-   ├─ sort: non-rejected first, rejected last
-   │   └─ gate     → (rejected, tier, tau x current_exit_discount, rank_cost, hops)
-   │       additive → (rejected, tier, 0.0, rank_cost, hops)
-   │       tier splits clean from smoky only when the gate runs with
-   │       clean_extinction_threshold > 0 (not the default)
-   └─ if all rejected → un-reject the least-bad route as fallback
-       ├─ gate     → by (tau_route, rank_cost), held by fallback_switch_margin
-       └─ additive → lowest composite
+The flow also ends early in three cases: a source that is not in the graph
+skips the tick, a best route that is still hard-rejected is not adopted, and a
+discovery agent with no known exit explores or wanders instead (see below).
 
-3. Pick best = ranked[0]
-   └─ if best is hard-rejected (not a fallback) → skip (return None)
+| Step | Gate (default) | Additive |
+|---|---|---|
+| **Source** | `current_origin`, else `current_target_stage` | same |
+| **Candidates** | Dijkstra on each edge's optical depth (`k_avg` × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)) | Dijkstra on the weighted composite (`w_smoke`, `w_fed`); one path per exit |
+| **Rejection** | FED over the threshold (× `fed_return_margin` for a rival exit), or τ over the budget (× `tau_return_margin` for a rival); every exit is tested | FED as for the gate; plus, when at least one route has a visible segment, routes whose every segment is non-visible |
+| **Ranking** | not rejected first, then tier (clean vs smoky, only with `clean_extinction_threshold` > 0), then τ (× `current_exit_discount` for the current exit), then `rank_cost`, then hops | not rejected first, then tier, then `rank_cost`, then hops |
+| **Fallback** | by (τ, `rank_cost`); the current exit is kept unless the winner is clearer by `fallback_switch_margin` | lowest composite |
+| **Switch, same exit** | reroute only if the new path beats the walked path by more than 10 % on `rank_cost` (`better_path`); otherwise keep walking, and the cached path is updated | same |
+| **Switch, other exit** | candidates tried in rank order; the anchor adopts one only if `rank_cost` < old × `exit_switch_anchor`, unless the old exit is FED-lethal or impassably smoky, or the rival is feasible, clearer by the anchor margin, and a whole band clearer or clean while the current exit is not | anchor on `rank_cost`, with the same hazard bypasses |
+| **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, a `RouteSwitch` recorded | same |
 
-4. Compare best.exit_id to agent's current exit
-   ├─ same exit → reroute only if the new path beats the path actually
-   │   being walked by more than 10 % on rank_cost ("better_path"),
-   │   else update the cached path silently and return None
-   └─ different exit → exit-switch anchor, then reroute_agent(wait_info, best.path)
-       ├─ candidates are tried in rank order; a promotion the anchor would
-       │   refuse is skipped so it cannot hide the rest of the list
-       ├─ anchor: adopt only if rank_cost < old_cost * exit_switch_anchor
-       │   ├─ bypassed when the old exit is FED-lethal or impassably smoky
-       │   └─ gate: bypassed when the rival is feasible, clearer in metres by
-       │       the anchor margin, AND either a whole band clearer or clean
-       │       while the current exit is not
-       ├─ rewrite path_choices deterministically along new path
-       ├─ retarget agent to first unvisited stage in new path
-       └─ return RouteSwitch record
-```
+Several of these rules resist switching at different points (return margins,
+discount, anchor, fallback margin, same-exit threshold). Their consolidation is
+[#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); the
+same-exit test can keep a rejected walked path
+([#184](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/184)), and the
+anchor's baseline is the best path to the current exit, not the walked one
+([#186](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186)).
 
 When `rank_routes` returns nothing at all — a discovery agent whose
 known subgraph holds no exit — the agent is sent toward the nearest

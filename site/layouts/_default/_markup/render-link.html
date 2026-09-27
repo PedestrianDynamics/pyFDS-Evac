@@ -23,8 +23,14 @@
       {{- $name := path.Base $path -}}
       {{- $fromDocs := (site.GetPage "/docs").RegularPagesRecursive -}}
       {{- $fromDocs = $fromDocs | append (site.GetPage "/models/verification").RegularPages -}}
-      {{- range first 1 (where $fromDocs "File.LogicalName" $name) -}}
-        {{- $page = . -}}
+      {{- /* A group with a single page mounts it as the group's _index.md,
+           so sections are matched by the name of their source file. */ -}}
+      {{- $fromDocs = $fromDocs | append (site.GetPage "/docs").Sections -}}
+      {{- $fromDocs = $fromDocs | append (site.GetPage "/docs/implementation").Sections -}}
+      {{- range $fromDocs -}}
+        {{- if and (not $page) .File (eq (path.Base .File.Filename) $name) -}}
+          {{- $page = . -}}
+        {{- end -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
@@ -40,4 +46,4 @@
     {{- $dest = relURL $dest -}}
   {{- end -}}
 {{- end -}}
-<a href="{{ $dest | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if strings.HasPrefix $dest "http" }} target="_blank" rel="noopener"{{ end }}>{{ .Text | safeHTML }}</a>
+<a href="{{ $dest | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if strings.HasPrefix $dest "http" }} target="_blank" rel="noopener"{{ end }}>{{ .Text | safeHTML }}</a>{{- /* no trailing newline: it renders as a space before punctuation */ -}}

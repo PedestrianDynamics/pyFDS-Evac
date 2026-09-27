@@ -17,9 +17,9 @@ Reference documentation, served from the `docs/` directory of the repository.
   {{< card link="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" title="The talk" subtitle="Visibility Seminar 2026 slides: the theory behind speed, routing and wayfinding." >}}
   {{< card link="using/usage" title="Usage" subtitle="Running simulations, every CLI flag, and the post-processing scripts." >}}
   {{< card link="using/fds-case-requirements" title="Your FDS case" subtitle="Which slices and yields a deck must provide, and two silent failure modes." >}}
-  {{< card link="implementation/speed/smoke-speed-model" title="Smoke-speed model" subtitle="Full model description, configuration, and API." >}}
-  {{< card link="implementation/routing/routing" title="Smoke-aware routing" subtitle="Cost formulas, the exposure gate, and the decision pipeline." >}}
-  {{< card link="implementation/routing/route-cost-gate" title="The gate cost model" subtitle="How one quantity refuses a route and orders the survivors." >}}
-  {{< card link="implementation/wayfinding/wayfinding" title="Wayfinding" subtitle="Sign legibility, per-agent cognitive maps, and the examples of the talk." >}}
+  {{< card link="implementation/speed" title="Speed in practice" subtitle="Configuration, API, and the ISO 20414 Table 21 runs." >}}
+  {{< card link="implementation/routing/routing" title="Routing in practice" subtitle="Cost formulas, the exposure gate, and the decision pipeline." >}}
+  {{< card link="implementation/routing/route-cost-gate" title="Gate model in practice" subtitle="How one quantity refuses a route and orders the survivors." >}}
+  {{< card link="implementation/wayfinding" title="Wayfinding in practice" subtitle="Sign legibility, per-agent cognitive maps, and the examples of the talk." >}}
   {{< card link="understanding/model-comparison" title="FDS+Evac comparison" subtitle="Mechanism by mechanism against FDS+Evac, where the two agree and where they differ." >}}
 {{< /cards >}}

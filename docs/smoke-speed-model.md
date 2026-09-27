@@ -1,8 +1,14 @@
 ---
-title: "Smoke-speed model"
-weight: 9
-aliases: [/docs/smoke-speed-model/]
+title: "Speed in practice"
+linkTitle: "Speed in practice"
+weight: 1
+aliases: [/docs/smoke-speed-model/, /docs/implementation/speed/smoke-speed-model/]
 ---
+
+> [!NOTE]
+> This page shows the smoke-speed model at work: its API and runs on the
+> assets. For its definition, parameters and defaults, see
+> [Models › Smoke-speed model](/models/smoke-speed.md).
 
 > Part of [pyFDS-Evac](../README.md).
 
@@ -13,16 +19,10 @@ via `SmokeSpeedConfig.speed_law`.
 
 ## Speed-reduction laws
 
-`speed_law="lund"` (default) applies the linear Frantzich–Nilsson law in the
-FDS+Evac fractional form, clamped to `[min_speed_factor, 1.0]`;
-`speed_law="fridolf"` applies `V / (V + 2)` through the sighting distance
-`V = C / K`, with no floor. Its attribution to Fridolf et al. (2019) is
-unverified: the paper's own law differs
-([#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)). In both cases the
-agent walks at `v0 * speed_factor(K)`, where `v0` is its clear-air speed.
-
-The coded equations, the `SmokeSpeedConfig` defaults and the departures from
-the literature are on the [smoke-speed model](/models/smoke-speed.md) page;
+The agent walks at `v0 * speed_factor(K)`, where `v0` is its clear-air speed
+and the factor follows `speed_law="lund"` (default) or `"fridolf"`. The coded
+equations, the `SmokeSpeedConfig` defaults and the departures from the
+literature are on the [smoke-speed model](/models/smoke-speed.md) page;
 the published laws are on
 [Walking speed in smoke](/fundamentals/walking-speed.md).
 
@@ -109,6 +109,78 @@ extinction_K, speed_factor = model.sample(time_s=30.0, x=5.0, y=3.0)
 # Or get just the factor
 factor = model.speed_factor(time_s=30.0, x=5.0, y=3.0)
 ```
+
+## Runs on the assets
+
+Run the ISO 20414 Test 18 (Table 21) corridor with a constant extinction coefficient:
+
+```bash
+uv run run.py \
+  --scenario assets/ISO-table21 \
+  --constant-extinction 1.0 \
+  --smoke-update-interval 0.1 \
+  --output-smoke-history /tmp/iso-table21-smoke-history.csv \
+  --cleanup
+```
+
+Run the smoke-speed model against FDS results read through `fdsreader`. The
+repository ships the deck, not its output — the slices are 4.2 MB and the full
+run 54 MB — so run FDS once first:
+
+```bash
+mkdir -p /tmp/iso21 && cd /tmp/iso21 \
+  && fds /path/to/assets/ISO-table21/ISO-table21.fds && cd -   # ~8 min
+
+uv run run.py \
+  --scenario assets/ISO-table21 \
+  --fds-dir /tmp/iso21 \
+  --smoke-update-interval 0.1 \
+  --output-smoke-history /tmp/iso-table21-fds-smoke-history.csv \
+  --cleanup
+```
+
+Inspect the FDS quantities available through `fdsreader`:
+
+```bash
+uv run run.py --inspect-fds --fds-dir /tmp/iso21 --scenario assets/ISO-table21
+```
+
+For a case where the coupling is exercised without running FDS yourself, see
+[`assets/iso_table22_coupled`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/iso_table22_coupled/README.md): its output
+is committed (136 kB) and a test reads it on every CI run.
+
+Plot smoke-speed history for a single agent:
+
+```bash
+uv run python scripts/plot_smoke_history.py \
+  --input /tmp/iso-table21-smoke-history.csv \
+  --output /tmp/iso-table21-smoke-history.png \
+  --agent-id 1
+```
+
+Plot aggregate smoke-speed history:
+
+```bash
+uv run python scripts/plot_smoke_history.py \
+  --input /tmp/iso-table21-smoke-history.csv \
+  --output /tmp/iso-table21-smoke-history-aggregate.png
+```
+
+Generate a stable ISO 20414 Test 18 (Table 21) sweep artifact under `artifacts/`:
+
+```bash
+uv run python scripts/generate_iso_table21_sweep.py
+```
+
+Figure: ![ISO 20414 Test 18 (Table 21) sweep](/artifacts/iso-table21-sweep.png)
+
+Generate the FDS+Evac smoke-density vs speed verification plot:
+
+```bash
+uv run python scripts/generate_smoke_density_speed_plot.py
+```
+
+Figure: ![soot_density vs speed](/artifacts/smoke-density-vs-speed.png)
 
 ## Conversion utilities
 
