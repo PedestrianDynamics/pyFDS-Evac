@@ -7,8 +7,9 @@ The fractional effective dose (FED) [-] is the fraction of an
 incapacitating dose received, summed over short time steps; incapacitation
 of a person of average susceptibility is predicted when it reaches 1. The
 asphyxiants in fires are carbon monoxide (CO), hydrogen cyanide (HCN), low
-oxygen (O₂) and, indirectly, carbon dioxide (CO₂), which speeds up
-breathing and so the uptake of the others.
+oxygen (O₂) and carbon dioxide (CO₂), which speeds up breathing and so the
+uptake of the others, and is itself an asphyxiant from about 5 % (Purser and
+McAllister 2016, p. 2367).
 
 Symbols follow the [notation table](/docs/concepts.md#notation). The
 equations below keep the sources' own notation (\(F_I\) terms,
@@ -20,9 +21,10 @@ ISO 13571:2012 (§6.1.1, Eq. 1) sums over gases *i* and time steps
 \(\Delta t\) [min] the ratio \(C_i\,\Delta t/(C\cdot t)_i\) of the average
 concentration \(C_i\) [µL/L] to the dose \((C\cdot t)_i\) that compromises
 tenability, or equivalently \(\Delta t / t_i\) (Eq. 1a). Its gas-specific
-terms are not reproduced here. Unlike Purser, it expresses the CO term as a
-Ct dose of 35 000 ppm·min (Purser and McAllister 2016, Note 2 to
-Eq. 63.18) and does "not incorporate the rarefaction of oxygen", while
+terms are not reproduced here. Unlike Eq. 63.18 below, it expresses the CO
+term as a Ct dose of 35 000 ppm·min, which Purser and McAllister equate to
+light work at about 20 L/min rather than 25 L/min (2016, Note 2 to
+Eq. 63.18, p. 2417), and does "not incorporate the rarefaction of oxygen", while
 treating CO₂ as a hyperventilation factor (ISO/TR 13571-2:2016, §6.2).
 
 ## Purser's simplified equation
@@ -41,7 +43,8 @@ with the terms, *t* in minutes and concentrations in ppm or % by volume:
 - **CO** (Stewart equation, Eq. 63.18):
   \(F_{I_{CO}} = 3.317\times10^{-5}\,[\mathrm{CO}]^{1.036}\,V_E\,t/D\), with
   \(V_E\) = 25 L/min (light work) and *D* = 30 % carboxyhaemoglobin (COHb)
-  by default. With these defaults the coefficient is
+  by default; *D* is 40 % at rest and 20 % for heavy work (table under
+  Eq. 63.18, p. 2356). With these defaults the coefficient is
   \(3.317\times10^{-5}\times 25/30 = 2.764\times10^{-5}\) per minute, the
   constant used by FDS+Evac, the evacuation module of the Fire Dynamics
   Simulator (Korhonen 2021, Eq. 13).
@@ -57,7 +60,8 @@ with the terms, *t* in minutes and concentrations in ppm or % by volume:
   irritants impair lung function and so add some hypoxia.
 - **CO₂ hyperventilation** (Eq. 63.35): \(VCO_2 = \exp([\mathrm{CO_2}]/5)\).
   Purser recommends a limiting value of 70 L/min for \(V_E\times VCO_2\)
-  (Ch. 63, p. 2416).
+  (Ch. 63, p. 2416). At \(V_E\) = 25 L/min this caps \(VCO_2\) at 2.8,
+  which Eq. 63.35 reaches at about 5.1 % CO₂ (our arithmetic).
 - **Low-oxygen hypoxia** (Eq. 63.50):
   \(F_{I_O} = t/\exp\left[8.13 - 0.54\,(20.9 - [\%\mathrm{O_2}])\right]\),
   added outside the CO₂ multiplier because CO₂ improves oxygen uptake.
@@ -65,13 +69,18 @@ with the terms, *t* in minutes and concentrations in ppm or % by volume:
   \(t_{I_{CO_2}} = \exp(6.1623 - 0.5189\,\%\mathrm{CO_2})\) (Eqs. 63.36–63.37),
   used as an alternative endpoint and normally negligible.
 
-## Published forms differ by edition
+## Published forms differ
 
-The FDS+Evac guide follows the 3rd edition of the Handbook and uses a
-different CO₂ factor and HCN term from Eq. 63.38, so a result quoted as
-"Purser FED" depends on the edition (Korhonen 2021, Eqs. 12–19).
+The FDS+Evac guide (Korhonen 2021, Eqs. 12–19) and the FDS User's Guide
+(McGrattan et al. 2025, Eqs. 22.42–22.49) do not use Eq. 63.38 as printed:
+they take Eq. 63.34 for CO₂ instead of its simplification Eq. 63.35, and an
+exponential HCN term that is not in Chs. 62–63 of the 5th edition. The
+FDS+Evac guide cites the 3rd edition for these equations, the header of the
+FDS `FED` function (`func.f90`) the 4th, and the FDS User's Guide the 5th;
+which edition first gave the exponential term is not verified here. A result quoted as "Purser FED"
+therefore depends on the variant used.
 
-{{< details title="The CO₂ factor and HCN term by edition (Eqs. 63.31–63.35)" closed="true" >}}
+{{< details title="The CO₂ factor and HCN term (Eqs. 63.31–63.35)" closed="true" >}}
 A regression of minute volume on CO₂, fitted to three published human data
 sets (Eq. 63.31, Fig. 63.26), gives the factor
 \(\exp(0.2496\,\%\mathrm{CO_2} + 1.9086)/6.8\) (Eq. 63.32), simplified to
@@ -83,22 +92,59 @@ VCO_2 = \frac{\exp(0.1903\,\%\mathrm{CO_2} + 2.0004)}{7.1} \qquad \text{(Eq. 63.
 $$
 
 and simplifies this to \(\exp([\mathrm{CO_2}]/5)\) (Eq. 63.35), the form
-used in Eq. 63.38. The FDS+Evac guide uses Eq. 63.34 and the older HCN
-term \(\left(\exp(C_{CN}/43)/220 - 0.0045\right)\) with
-\(C_{CN} = C_{HCN} - C_{NO_2}\), citing Purser in the 3rd edition
-(Korhonen 2021, Eq. 14; Purser 2002); the 5th edition gives the power form
-instead (Eq. 63.24).
+used in Eq. 63.38. The two agree within about 4 % below 5 % CO₂, and
+at 0 % CO₂ Eq. 63.34 gives \(\exp(2.0004)/7.1 \approx 1.04\), not 1 (our
+arithmetic; Hostikka and Linna 2025 make the same point). The chapter's own
+worked example (Table 63.16, p. 2374), stated to follow Eq. 63.38, lists
+\(VCO_2\) = 1.442, 2.376 and 4.434 at 1.5, 3.5 and 6 % CO₂. These match
+Eq. 63.32, not Eq. 63.35, which gives 1.35, 2.01 and 3.32 (our arithmetic),
+so the chapter is inconsistent here.
+
+For HCN, the FDS+Evac guide uses
+\(\left(\exp(C_{CN}/43)/220 - 0.0045\right)\) with
+\(C_{CN} = C_{HCN} - C_{NO_2}\) (Korhonen 2021, Eqs. 14–15), citing Purser
+in the 3rd edition (Purser 2002). The FDS User's Guide writes the same term
+with \(C_{CN} = C_{HCN} - C_{NO_2} - C_{NO}\) (Eqs. 22.44–22.45). The 5th
+edition gives the power form instead (Eq. 63.24); its rat-lethality FED in
+the companion chapter subtracts [NOx] from [CN] with coefficient 1 and uses
+yet another CO₂ factor, \(1 + (\exp(0.14\,[\mathrm{CO_2}]) - 1)/2\)
+(Purser 2016, Eq. 62.3, pp. 2227–2228). Hostikka and Linna (2025)
+attribute the exponential form to a 2010 Purser chapter, with NOₓ
+reduction factors of 0, 2/3 or 1 and no clear guidance between them
+(secondary; that chapter was not read here). For low oxygen, the FDS+Evac
+guide divides by an extra factor 60 while stating *t* in minutes (Eq. 18);
+Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not.
 {{< /details >}}
 
 {{< details title="The data behind the terms" closed="true" >}}
-The CO term comes from the Stewart equation, obtained from young adult male
-volunteers; Purser notes that it somewhat underestimates uptake in children
-and that the Coburn–Forster–Kane equation is preferable near equilibrium
-(Ch. 63, Notes 1–2 to Eq. 63.18, pp. 2416–2417). The HCN term is fitted to
-exposures of non-human primates and the hypoxia term to human data
-(p. 2417), and the CO₂ curve to three human data sets (Fig. 63.26). The
-default is light work; \(V_E\) = 8.5 L/min at rest and 50 L/min for heavy
-work (table beside Eq. 63.39, p. 2416).
+- **CO.** The Stewart equation was obtained from young adult male
+  volunteers; it somewhat underestimates uptake in children, and the
+  Coburn–Forster–Kane equation is preferable near equilibrium (Ch. 63,
+  Note 1 to Eq. 63.18, pp. 2416–2417). Being linear, it has no saturation:
+  for a 4 h exposure it predicts 50 % COHb at 550 ppm where the
+  Coburn–Forster–Kane equation needs 840 ppm (p. 2352).
+- **HCN.** The time to incapacitation \(t_{ICN} = 1.2\times10^{6}/[\mathrm{CN}]^{2.36}\)
+  (Eq. 63.20) is fitted to resting macaque monkeys, with a regression
+  coefficient of 0.84 (p. 2360; Fig. 63.24, primate points up to about
+  250 ppm). It is applied to humans because the time to incapacitation of
+  an average adult doing light work "would be similar to that in a resting
+  monkey" (p. 2360). The critical range is about 80 ppm, below which incapacitation
+  is unlikely within 1 h, to 180 ppm, above which it is rapid (p. 2361).
+- **Low oxygen.** Eq. 63.27 is derived from the time of useful consciousness
+  of resting humans after sudden decompression (under 1 s) to simulated
+  altitudes of 20 000–40 000 ft, a sea-level equivalent of 9.6 % down to
+  3.9 % O₂ (Fig. 63.25, pp. 2365–2366). In humans there is little effect
+  down to 15 % O₂ (p. 2364). Use above about 10 % O₂ is therefore an
+  extrapolation (our inference); the equation gives \(t_{IO}\) ≈ 140 min at
+  15 % and about 35 h at 20 % O₂ (our arithmetic).
+- **CO₂.** The minute-volume curve is an average of three human data sets
+  covering 0–10 % CO₂ (Eq. 63.31, Fig. 63.26). \(t_{ICO_2}\) (Eq. 63.36) is
+  derived from approximate tolerance data in Fig. 63.26 and reproduces its
+  three points, 5 % for 30 min, 7.5 % for 10 min and 10.5 % for 2 min (our
+  arithmetic); the 5 % point is severe breathing discomfort, not loss of
+  consciousness.
+- **Activity.** The default is light work; \(V_E\) = 8.5 L/min at rest and
+  50 L/min for heavy work (table beside Eq. 63.39, p. 2416).
 {{< /details >}}
 
 ## Known limits
@@ -109,7 +155,10 @@ susceptible people needs a threshold below 1 (see
 ISO 13571 (§5.8) finds very little reliable information on exposures
 shorter than 1 min or longer than 1 h, and its Introduction states that,
 for ethical reasons, much of the method cannot be validated with humans,
-although the CO database is extensive and well validated.
+although the CO database is extensive and well validated. The irritant
+term \(FLD_{irr}\) is a fraction of a lethal dose (p. 2416) added to
+fractions of an incapacitating dose, so Eq. 63.38 mixes two endpoints
+(Hostikka and Linna 2025).
 
 ## Sources
 
@@ -130,6 +179,21 @@ although the CO database is extensive and well validated.
   Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0 draft),
   §3.4. VTT Technical Research Centre of Finland.
   [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).
+  Secondary source.
+- Purser, D. A. (2016). *Combustion toxicity*. SFPE Handbook of Fire
+  Protection Engineering, 5th ed., Ch. 62, 2207–2307.
+  [doi:10.1007/978-1-4939-2565-0_62](https://doi.org/10.1007/978-1-4939-2565-0_62)
+- FDS source code, `Source/func.f90`, function `FED`, tag FDS6.7.6.
+  [github.com/firemodels/fds](https://github.com/firemodels/fds/blob/FDS6.7.6/Source/func.f90).
+  Secondary source.
+- McGrattan, K., Hostikka, S., Floyd, J., McDermott, R., Vanella, M.,
+  Mueller, E., & Paul, C. (2025). *Fire Dynamics Simulator User's Guide*,
+  6th ed. (FDS 6.10.1), §22.10.18. NIST Special Publication 1019.
+  [doi:10.6028/NIST.SP.1019](https://doi.org/10.6028/NIST.SP.1019).
+  Secondary source.
+- Hostikka, S., & Linna, A. (2025). *On the use of surrogate gases in fire
+  toxicity calculations*. Fire Safety Journal, 156, 104435.
+  [doi:10.1016/j.firesaf.2025.104435](https://doi.org/10.1016/j.firesaf.2025.104435).
   Secondary source.
 - Purser, D. A. (2002). *Toxicity assessment of combustion products*. SFPE
   Handbook of Fire Protection Engineering, 3rd ed., 2-83–2-171. National
