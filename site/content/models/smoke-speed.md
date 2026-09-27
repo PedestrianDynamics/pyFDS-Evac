@@ -50,7 +50,7 @@ web GUI set only the last two (`--smoke-update-interval`,
 | `min_speed_factor` | `0.1` | - | \(f_{\min}\), `lund` only |
 | `visibility_factor_c` | `3.0` | - | *C*, `fridolf` only |
 | `update_interval_s` | `1.0` | s | Time between samples of *K* for each agent |
-| `slice_height_m` | `2.0` | m | Height of the FDS slice that is read |
+| `slice_height_m` | `1.6` | m | Height of the FDS slice that is read (FDS+Evac `HUMAN_SMOKE_HEIGHT`; the previous default was 2.0) |
 
 The routing block has its own copy of `alpha`, `beta` and `min_speed_factor`,
 used only to price routes; see the [routing model](/models/routing.md#parameters).

@@ -13,6 +13,7 @@ import pytest
 
 import run
 from pyfds_evac.core.fed import (
+    DefaultFedConfig,
     TenabilityConfig,
     _co_fed_rate_per_minute,
     _heat_fed_rate_per_minute,
@@ -94,7 +95,9 @@ DEFAULTS = [
         "| `update_interval_s` | `1.0` |",
         lambda: SmokeSpeedConfig().update_interval_s,
     ),
-    (SMOKE, "| `slice_height_m` | `2.0` |", lambda: SmokeSpeedConfig().slice_height_m),
+    (SMOKE, "| `slice_height_m` | `1.6` |", lambda: SmokeSpeedConfig().slice_height_m),
+    (SMOKE, "| `slice_height_m` | `1.6` |", lambda: DefaultFedConfig().slice_height_m),
+    (SMOKE, "| `slice_height_m` | `1.6` |", lambda: _cli().smoke_slice_height),
     # fed: TenabilityConfig fields and the run.py flags that set them
     (FED, "| `fic_alpha` | `0.7` |", lambda: TenabilityConfig().fic_alpha),
     (FED, "| `fic_alpha` | `0.7` |", lambda: _cli().fic_alpha),

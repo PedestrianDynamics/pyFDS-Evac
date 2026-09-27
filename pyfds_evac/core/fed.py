@@ -38,7 +38,7 @@ class DefaultFedConfig:
 
     fds_dir: str | None = None
     update_interval_s: float = 1.0
-    slice_height_m: float = 2.0
+    slice_height_m: float = 1.6
 
 
 def _co_percent_to_ppm(co_volume_fraction_percent: float) -> float:
@@ -629,7 +629,7 @@ class FdsHeatField:
         cls,
         fds_dir: str,
         *,
-        slice_height_m: float = 2.0,
+        slice_height_m: float = 1.6,
         simulation=None,
     ) -> "FdsHeatField":
         """Load the TEMPERATURE slice from an FDS case directory."""

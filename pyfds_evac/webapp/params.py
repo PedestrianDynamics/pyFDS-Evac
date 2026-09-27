@@ -242,7 +242,7 @@ _HELP_TEXT: dict[str, str] = {
     "smoke_update_interval": "How often (sim seconds) the smoke each agent feels is refreshed. "
     "Smaller is smoother but costs more compute.",
     "smoke_slice_height": "Height (m) of the horizontal FDS slice sampled for smoke — roughly "
-    "head height of a standing person.",
+    "head height of a standing person. 1.6 by default, as FDS+Evac.",
     "disable_tenability": "Turn off smoke's effect on people: no slowing from irritants and no "
     "collapse from toxic dose. Agents just walk at normal speed.",
     "incapacitation_mode": "Probabilistic: each agent draws its own tolerance from a population "

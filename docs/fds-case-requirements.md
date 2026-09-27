@@ -12,11 +12,11 @@ be told to dump the specific slices this tool samples.
 ## The slices
 
 ```
-&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT' /
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
-&SLCF PBZ=2.0, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
 &DUMP DT_SLCF=1.0 /
 ```
 
@@ -88,7 +88,7 @@ column reads zero:
 Heat FED is disabled for <dir>: it has no TEMPERATURE slice. ...
 ```
 
-**Wrong slice height.** `--smoke-slice-height` (default 2.0 m) is a
+**Wrong slice height.** `--smoke-slice-height` (default 1.6 m, FDS+Evac's `HUMAN_SMOKE_HEIGHT`) is a
 preference, not a filter: a case with one slice of a quantity uses it whatever
 its height, and a mismatch never fails the run. A case you inherit often
 carries a single slice at whatever height its author chose, so you can end up

@@ -64,7 +64,7 @@ _SMOKE_MAX_CELLS = 70
 
 
 def _smoke_payload(
-    fds_dir: str | None, times: list[float], slice_height_m: float = 2.0
+    fds_dir: str | None, times: list[float], slice_height_m: float = 1.6
 ) -> dict | None:
     """Sample the FDS extinction slice onto a coarse grid for each render time.
 

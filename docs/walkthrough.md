@@ -151,7 +151,7 @@ manifest: fds_dir=/…/fds-evac/assets/iso_table21_coupled/fds
 The manifest stores `fds_dir` as an absolute path; it is shortened here.
 
 `ExtinctionField.from_fds` reads the `SOOT EXTINCTION COEFFICIENT` slice
-nearest to `slice_height_m` (default 2.0 m). The deck prescribes a soot density
+nearest to `slice_height_m` (default 1.6 m). The deck prescribes a soot density
 that gives *K* = 1.0 1/m. The slice returns 0.99545 1/m, and the default speed
 law turns it into a speed factor of 0.919631. The ratio of the exit times,
 84.97 / 78.14 = 1.0874, matches 1 / 0.919631 = 1.0874 to four decimals.

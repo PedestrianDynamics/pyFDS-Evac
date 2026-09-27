@@ -271,7 +271,7 @@ def main() -> None:
         help="deck config.json; draws the spawn areas and labels the exits",
     )
     ap.add_argument("--out", "-o", type=Path, default=Path("agents_smoke.mp4"))
-    ap.add_argument("--slice-height", type=float, default=2.0)
+    ap.add_argument("--slice-height", type=float, default=1.6)
     ap.add_argument("--cell-size", type=float, default=0.5, help="field raster [m]")
     ap.add_argument("--fps", type=int, default=24)
     ap.add_argument(

@@ -153,7 +153,7 @@ Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/i
   ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)).
 - **Height-relative FED and smoke sampling**: extinction and temperature are
   sampled from the horizontal FDS slice closest to `--smoke-slice-height`
-  (default 2.0 m); each gas is read from the first slice of its quantity in the
+  (default 1.6 m, FDS+Evac `HUMAN_SMOKE_HEIGHT`); each gas is read from the first slice of its quantity in the
   deck, whatever its height. All agents share these slices regardless of
   their individual heights.  Pathfinder samples at 90 % of each occupant's height,
   which is more accurate for scenarios with mixed-height populations (children,

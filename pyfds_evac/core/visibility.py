@@ -406,7 +406,7 @@ class VisibilityModel:
         *,
         cache_path: str | Path | None = None,
         time_step_s: float = 10.0,
-        slice_height_m: float = 2.0,
+        slice_height_m: float = 1.6,
         force_recompute: bool = False,
     ) -> None:
         cache = Path(cache_path) if cache_path else None

@@ -64,8 +64,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--smoke-slice-height",
         type=float,
-        default=2.0,
-        help="FDS slice height in meters for extinction sampling",
+        default=1.6,
+        help="FDS slice height in meters for smoke and heat sampling "
+        "(default: 1.6, FDS+Evac HUMAN_SMOKE_HEIGHT; pass 2.0 for the "
+        "previous pyFDS-Evac default)",
     )
     parser.add_argument(
         "--output-smoke-history",
