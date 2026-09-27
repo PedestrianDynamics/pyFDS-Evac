@@ -1027,19 +1027,19 @@ title="Copy code"
 &lt;p>The second is a rival exit, held to &lt;code>tau_max * tau_return_margin&lt;/code> = 4.8.&lt;/p>
 &lt;p>&lt;a id="where-the-6-comes-from">&lt;/a>&lt;strong>Where the 6 comes from.&lt;/strong> FDS+Evac&amp;rsquo;s tier-4 door test computes
 &lt;code>L2_tmp = d * 0.5 / (3.0 / K_ave_Door)&lt;/code> and strikes the door out when
-&lt;code>L2_tmp &amp;gt;= 1.0&lt;/code> (&lt;code>evac.f90:16458, :16463&lt;/code>). That expression is &lt;code>K_ave * d / 6&lt;/code>, so
+&lt;code>L2_tmp &amp;gt;= 1.0&lt;/code> (&lt;code>evac.f90:16794, :16799&lt;/code>). That expression is &lt;code>K_ave * d / 6&lt;/code>, so
 the test is exactly &lt;code>tau &amp;gt; 6&lt;/code> with Jin&amp;rsquo;s &lt;code>c = 3&lt;/code>. The threshold is therefore
 citable, but &lt;strong>the quantity it is applied to is not the same quantity&lt;/strong>:
 FDS+Evac&amp;rsquo;s &lt;code>K_ave_Door&lt;/code> is a mean along &lt;code>See_door&lt;/code>&amp;rsquo;s straight sight line, and
 for a door with no resolved sight line the distance is an L1 norm
-(&lt;code>evac.f90:16460&lt;/code>); pyFDS-Evac averages &lt;code>K&lt;/code> along the walked polyline.
+(&lt;code>evac.f90:16796&lt;/code>); pyFDS-Evac averages &lt;code>K&lt;/code> along the walked polyline.
 Two further scope limits: the test lives in the tier-4 last-resort branch,
 reached only once no smoke-free door is available and looping only over doors
 that are already known or visible; and the strike-out there
-(&lt;code>Is_Visible_Door(i) = .FALSE.&lt;/code>, &lt;code>:16464-16465&lt;/code>) lasts one call of
-&lt;code>Change_Target_Door&lt;/code>, whose door arrays are reset at &lt;code>:15831-15832&lt;/code>. FDS+Evac&amp;rsquo;s
+(&lt;code>Is_Visible_Door(i) = .FALSE.&lt;/code>, &lt;code>:16800-16801&lt;/code>) lasts one call of
+&lt;code>Change_Target_Door&lt;/code>, whose door arrays are reset at &lt;code>:16170-16171&lt;/code>. FDS+Evac&amp;rsquo;s
 only lasting smoke memory is a weak mark in a lone agent&amp;rsquo;s known-door list on
-its previous target once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> there (&lt;code>:16292-16301&lt;/code>), and only if
+its previous target once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> there (&lt;code>:16628-16637&lt;/code>), and only if
 that door already has an entry in the list filled at initialisation (the loop
 rewrites entries but never adds one). A &amp;ldquo;some
 smoke&amp;rdquo; mark forces the door unknown only in the periodic re-evaluation; a &amp;ldquo;too
@@ -1052,8 +1052,8 @@ citation; it does not implement it. &lt;strong>&lt;code>tau_max&lt;/code> has no
 against a soot-dose or FED-equivalent limit.&lt;/strong> That is open work.&lt;/p>
 &lt;p>Under FDS+Evac&amp;rsquo;s &lt;em>primary&lt;/em> rule the criterion is different again — minimise time
 among doors satisfying &lt;code>K_ave_Door &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code> = 0.03 /m
-(&lt;code>evac.f90:16265&lt;/code>, &lt;code>:16272&lt;/code>; &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> at
-&lt;code>:5262&lt;/code>). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
+(&lt;code>evac.f90:16601&lt;/code>, &lt;code>:16608&lt;/code>; &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> at
+&lt;code>:5496&lt;/code>). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
 below. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>.&lt;/p>
 &lt;h3>The diversion is a departure from FDS+Evac, not a reproduction of it&lt;span class="hx-absolute -hx-mt-20" id="the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it">&lt;/span>
 &lt;a href="#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The threshold is borrowed; &lt;strong>the place the quantity is used is not&lt;/strong>, and that
@@ -1063,7 +1063,7 @@ difference is what produces the diversion the model exists for.&lt;/p>
 &lt;code>K_ave_Door&lt;/code> enters only as the boolean admission test
 &lt;code>L2_tmp &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code>:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-fortran" data-lang="fortran">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">IF&lt;/span> (T_tmp &lt;span style="color:#f92672">&amp;lt;&lt;/span> L2_min .AND. L2_tmp &lt;span style="color:#f92672">&amp;lt;&lt;/span> ABS(FED_DOOR_CRIT)) &lt;span style="color:#66d9ef">THEN&lt;/span> &lt;span style="color:#75715e">! :16265, :16354, :16401
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-fortran" data-lang="fortran">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">IF&lt;/span> (T_tmp &lt;span style="color:#f92672">&amp;lt;&lt;/span> L2_min .AND. L2_tmp &lt;span style="color:#f92672">&amp;lt;&lt;/span> ABS(FED_DOOR_CRIT)) &lt;span style="color:#66d9ef">THEN&lt;/span> &lt;span style="color:#75715e">! :16601, :16690, :16737
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> L2_min &lt;span style="color:#f92672">=&lt;/span> MAX(&lt;span style="color:#ae81ff">0.0_EB&lt;/span>, T_tmp)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> i_tmp &lt;span style="color:#f92672">=&lt;/span> i
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">END&lt;/span> &lt;span style="color:#66d9ef">IF&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -1081,15 +1081,15 @@ reorder the doors inside a tier, and geometry does not reorder itself. Here
 &lt;code>tau&lt;/code> &lt;strong>is&lt;/strong> the ordering, at every tick and for every candidate.&lt;/p>
 &lt;p>&lt;strong>One qualification, and it matters.&lt;/strong> Smoke is not absent from FDS+Evac&amp;rsquo;s
 ordering everywhere: the tier-4 last-resort branch minimises &lt;code>L2_tmp&lt;/code> directly
-(&lt;code>IF (L2_tmp &amp;lt; L2_min)&lt;/code>, &lt;code>:16467&lt;/code>), and under the default &lt;code>FED_DOOR_CRIT &amp;lt; 0&lt;/code>
+(&lt;code>IF (L2_tmp &amp;lt; L2_min)&lt;/code>, &lt;code>:16803&lt;/code>), and under the default &lt;code>FED_DOOR_CRIT &amp;lt; 0&lt;/code>
 that &lt;code>L2_tmp&lt;/code> is &lt;code>tau/6&lt;/code>. So the reference does rank on smoke — but only after
 tiers 1-3 have all failed to find any admitted door, only over doors already
 known or visible, on a bee-line (or L1) distance to the door rather than a
-walked route, and with a strike-out there that lasts one call (&lt;code>:16463-16465&lt;/code>;
-reset at &lt;code>:15831-15832&lt;/code>). Stated exactly: &lt;strong>pyFDS-Evac promotes FDS+Evac&amp;rsquo;s
+walked route, and with a strike-out there that lasts one call (&lt;code>:16799-16801&lt;/code>;
+reset at &lt;code>:16170-16171&lt;/code>). Stated exactly: &lt;strong>pyFDS-Evac promotes FDS+Evac&amp;rsquo;s
 last-resort ranking criterion to its primary one, and drops the one lasting
 smoke memory the reference has&lt;/strong>, a weak mark on a lone agent&amp;rsquo;s previous target
-once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> (&lt;code>:16292-16301&lt;/code>). &amp;ldquo;Smoke never enters FDS+Evac&amp;rsquo;s
+once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> (&lt;code>:16628-16637&lt;/code>). &amp;ldquo;Smoke never enters FDS+Evac&amp;rsquo;s
 ordering&amp;rdquo; is too strong and should not be written; &amp;ldquo;smoke never enters the
 ordering until every smoke-free tier is exhausted&amp;rdquo; is what the source supports.&lt;/p>
 &lt;p>&lt;strong>The measured consequence, and what it is not.&lt;/strong> On &lt;code>l_corridor&lt;/code> the model
@@ -1138,7 +1138,7 @@ spawn-polygon to exit-polygon through the graph&amp;rsquo;s own nodes:&lt;/p>
 stricter on the near route than the far one, purely from geometry — a
 systematic tilt toward the diversion that no smoke measurement put there. The
 tilt is against the L2 bee line specifically; against the L1 norm FDS+Evac uses
-for non-visible doors (&lt;code>:16460&lt;/code>) it vanishes on this deck, because both
+for non-visible doors (&lt;code>:16796&lt;/code>) it vanishes on this deck, because both
 corridors are axis-aligned and the L1 distance equals the polyline exactly. The
 sign and size of the bias on other geometries have not been measured.&lt;/p>
 &lt;h3>Route choice is an optimality bound, not a perception-limited model&lt;span class="hx-absolute -hx-mt-20" id="route-choice-is-an-optimality-bound-not-a-perception-limited-model">&lt;/span>
@@ -1198,13 +1198,13 @@ this one scales a budget (0.8 &lt;em>down&lt;/em>).&lt;/p>
 &lt;p>&lt;code>current_exit_discount&lt;/code> (default 0.9) is a deadband on &lt;strong>ordering&lt;/strong>. Only the
 current exit&amp;rsquo;s &lt;code>tau&lt;/code> is discounted, and only in the sort key, so it holds its
 place unless a rival is clearly cleaner rather than momentarily cleaner.&lt;/p>
-&lt;p>&lt;strong>Its provenance is FDS+Evac&amp;rsquo;s &lt;code>FAC_DOOR_OLD2 = 0.9&lt;/code>&lt;/strong> (&lt;code>evac.f90:1507&lt;/code>), which
-is applied as &lt;code>L2_tmp = FAC_DOOR_OLD2 * L2_tmp&lt;/code> to the current door at &lt;code>:16290&lt;/code>
-and &lt;code>:16467&lt;/code> — and at &lt;code>:16467&lt;/code> that &lt;code>L2_tmp&lt;/code> is the &lt;code>tau/6&lt;/code> of the tier-4 test,
+&lt;p>&lt;strong>Its provenance is FDS+Evac&amp;rsquo;s &lt;code>FAC_DOOR_OLD2 = 0.9&lt;/code>&lt;/strong> (&lt;code>evac.f90:1572&lt;/code>), which
+is applied as &lt;code>L2_tmp = FAC_DOOR_OLD2 * L2_tmp&lt;/code> to the current door at &lt;code>:16626&lt;/code>
+and &lt;code>:16803&lt;/code> — and at &lt;code>:16803&lt;/code> that &lt;code>L2_tmp&lt;/code> is the &lt;code>tau/6&lt;/code> of the tier-4 test,
 i.e. the same quantity, discounted in the same place, inside the loop that
 minimises it to pick a door. The shipped comment on &lt;code>tau_of&lt;/code> in &lt;code>route_graph.py&lt;/code>
 cites that provenance correctly since &lt;code>9508181&lt;/code>; an earlier version cited
-&lt;code>FAC_DOOR_WAIT&lt;/code>, which is at &lt;code>:1505&lt;/code> and discounts the current door&amp;rsquo;s &lt;em>travel
+&lt;code>FAC_DOOR_WAIT&lt;/code>, which is at &lt;code>:1570&lt;/code> and discounts the current door&amp;rsquo;s &lt;em>travel
 time&lt;/em> (&lt;code>T_tmp&lt;/code>), not its smoke. &lt;code>FAC_DOOR_WAIT&lt;/code> is still the correct citation for
 &lt;code>exit_switch_anchor&lt;/code> and &lt;code>_PATH_IMPROVEMENT_THRESHOLD&lt;/code>, which are time
 comparisons, and the code cites it only there.&lt;/p>
@@ -1217,9 +1217,9 @@ smokiest &lt;em>leg&lt;/em> stays at or below the threshold is &lt;code>clean&lt
 outrank smoky ones outright however far they are; among routes of the same tier,
 optical depth then time decides. The sort key is
 &lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code>.&lt;/p>
-&lt;p>This is FDS+Evac&amp;rsquo;s primary door rule (&lt;code>evac.f90:16265&lt;/code>, &lt;code>:16272&lt;/code>), and its
+&lt;p>This is FDS+Evac&amp;rsquo;s primary door rule (&lt;code>evac.f90:16601&lt;/code>, &lt;code>:16608&lt;/code>), and its
 threshold is not a new constant: &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> =
-0.03 /m at &lt;code>:5262&lt;/code>, which is Jin&amp;rsquo;s &lt;code>S = 3/K&lt;/code> at a 100 m sighting distance. Two
+0.03 /m at &lt;code>:5496&lt;/code>, which is Jin&amp;rsquo;s &lt;code>S = 3/K&lt;/code> at a 100 m sighting distance. Two
 differences from the reference implementation are worth stating:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>FDS+Evac&amp;rsquo;s tier 1 is a hard filter.&lt;/strong> &lt;code>IF (T_tmp &amp;lt; L2_min .AND. L2_tmp &amp;lt; ABS(FED_DOOR_CRIT))&lt;/code> only ever selects a &lt;em>qualifying&lt;/em> door; when no door
@@ -1233,12 +1233,12 @@ penalty the gate exists to remove. The worst &lt;em>sample&lt;/em> is the step f
 that made sighting distances jump between ticks. FDS+Evac applies its 0.03 to
 &lt;code>K_ave_Door&lt;/code>, a per-door average, for the same reason — though note that
 &lt;code>K_ave_Door&lt;/code> is a mean along a bee-line sight line (&lt;code>See_door&lt;/code>,
-&lt;code>evac.f90:16147&lt;/code>, assigned at &lt;code>:16158&lt;/code>), not a maximum over legs.&lt;/li>
+&lt;code>evac.f90:16486&lt;/code>, assigned at &lt;code>:16497&lt;/code>), not a maximum over legs.&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>clean_exit_margin&lt;/code> is hysteresis on membership for the exit the agent already
 heads for: its limit is &lt;code>clean_extinction_threshold / clean_exit_margin&lt;/code>.
-FDS+Evac supplies the value — &lt;code>FAC_DOOR_OLD = 0.1&lt;/code> (&lt;code>evac.f90:1506&lt;/code>), applied as
-&lt;code>L2_tmp = FAC_DOOR_OLD * L2_tmp&lt;/code> for the current door (&lt;code>:16255&lt;/code>), so the door an
+FDS+Evac supplies the value — &lt;code>FAC_DOOR_OLD = 0.1&lt;/code> (&lt;code>evac.f90:1571&lt;/code>), applied as
+&lt;code>L2_tmp = FAC_DOOR_OLD * L2_tmp&lt;/code> for the current door (&lt;code>:16591&lt;/code>), so the door an
 agent already walks to stays smoke-free up to ten times the criterion.&lt;/p>
 &lt;p>The exit-switch anchor has a matching clause: a rival that is clean while the
 current exit is not bypasses the anchor. It was added because the anchor&amp;rsquo;s other
@@ -1262,7 +1262,7 @@ run. The band is also one-sided: the incumbent is relaxed to 0.0375 /m while a
 rival is admitted at the bare 0.03 /m. And because tier membership is binary, a
 crossing does not reorder the list, it swaps which objective is in force, so the
 target jumps. FDS+Evac has only a weak memory against that: a mark on a lone
-agent&amp;rsquo;s previous target once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> (&lt;code>evac.f90:16292-16301&lt;/code>), which
+agent&amp;rsquo;s previous target once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> (&lt;code>evac.f90:16628-16637&lt;/code>), which
 acts weakly (see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>); here
 nothing is remembered, by design.&lt;/p>
@@ -1292,9 +1292,9 @@ one exit outrank another; it only removes exits.
 &lt;code>tests/test_route_gate.py::TestDoseVetoesAnExit&lt;/code> covers all three parts in clear
 air, so the smoke gate cannot be the cause.&lt;/p>
 &lt;p>&lt;strong>This is FDS+Evac&amp;rsquo;s other branch, and we run both halves at once.&lt;/strong> In
-&lt;code>evac.f90&lt;/code> (&lt;code>Change_Target_Door&lt;/code>, :16439-:16467) the sign of &lt;code>FED_DOOR_CRIT&lt;/code>
+&lt;code>evac.f90&lt;/code> (&lt;code>Change_Target_Door&lt;/code>, :16775-:16803) the sign of &lt;code>FED_DOOR_CRIT&lt;/code>
 selects between a dose criterion and a smoke criterion — they are alternatives,
-not layers — and the default of &lt;code>-100.0&lt;/code> (:1459) selects the smoke branch that
+not layers — and the default of &lt;code>-100.0&lt;/code> (:1524) selects the smoke branch that
 this model implements. Which smoke criterion depends on the tier: absolute
 &lt;code>K_ave_Door&lt;/code> in tier 1, the &lt;code>0.5 x d&lt;/code> sight ratio in tier 4. Two further
 differences are worth knowing:&lt;/p>
@@ -1562,7 +1562,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>tau_deadband&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.1&lt;/code>&lt;/td>
-&lt;td>Half-width of the exit-switch anchor&amp;rsquo;s symmetric &lt;code>tau&lt;/code> deadband, as a fraction of &lt;code>tau_max&lt;/code> (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — &lt;code>evac.f90:16463&lt;/code> tests the raw value.&lt;/td>
+&lt;td>Half-width of the exit-switch anchor&amp;rsquo;s symmetric &lt;code>tau&lt;/code> deadband, as a fraction of &lt;code>tau_max&lt;/code> (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — &lt;code>evac.f90:16799&lt;/code> tests the raw value.&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>inert&lt;/td>
 &lt;/tr>

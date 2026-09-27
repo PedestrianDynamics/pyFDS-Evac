@@ -505,7 +505,7 @@ Paths learned from familiarity or &lt;code>entrance&lt;/code> are forward only
 (&lt;code>cognitive_map.py:71–74&lt;/code>, &lt;code>:139–152&lt;/code>).&lt;/p>
 &lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide calls &lt;code>full&lt;/code> &amp;ldquo;the FDS+Evac default&amp;rdquo;. It is
 pyFDS-Evac&amp;rsquo;s default. FDS+Evac&amp;rsquo;s &lt;code>KNOWN_DOOR&lt;/code> defaults to &lt;code>.FALSE.&lt;/code>
-(&lt;code>evac.f90:2223&lt;/code>, &lt;code>:2666&lt;/code>).&lt;/p>
+(&lt;code>evac.f90:2291&lt;/code>, &lt;code>:2733&lt;/code>).&lt;/p>
 &lt;/blockquote>&lt;h2>6. The map remembers&lt;span class="hx-absolute -hx-mt-20" id="6-the-map-remembers">&lt;/span>
 &lt;a href="#6-the-map-remembers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A known node stays known after its sign stops being legible. A visibility
 query cannot do that on its own, because it answers only for the present
