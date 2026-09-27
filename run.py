@@ -103,7 +103,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--vis-cache",
-        help="Path to vismap .npz cache for visibility-gated route rejection. "
+        help="Path to vismap .npz cache for sight gating, which decides which "
+        "graph nodes enter an agent's cognitive map; route choice does not read "
+        "it. "
         "Requires rerouting enabled (on by default; do not pass "
         "--no-enable-rerouting). With --fds-dir the cache holds the smoke-aware "
         "vismap, without it the clear-air one. Created if missing, loaded if "
@@ -114,8 +116,9 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Force clear-air sight gating even on a deck whose agents all "
         "start fully familiar. Such agents never consult it to learn the graph, "
-        "but the gate route model reads its line of sight, so a gate deck builds "
-        "one anyway. Decks with discovery agents get it without asking.",
+        "and route choice does not read it either (the gate uses the optical "
+        "depth K_ave * L of the route polyline), so on such a deck it changes "
+        "nothing. Decks with discovery agents get it without asking.",
     )
     parser.add_argument(
         "--no-visibility",
@@ -144,7 +147,8 @@ def _build_parser() -> argparse.ArgumentParser:
         "--fic-alpha",
         type=float,
         default=0.7,
-        help="Slope of the Purser FIC speed-reduction rule (default: 0.7)",
+        help="Slope of the FIC speed-reduction rule, a pyFDS-Evac "
+        "assumption, source unknown (#147) (default: 0.7)",
     )
     parser.add_argument(
         "--fic-min-factor",

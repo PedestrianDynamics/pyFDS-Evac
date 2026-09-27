@@ -193,7 +193,7 @@ Short summaries are stored in [`materials/`](materials/). The papers
 themselves are linked by DOI and not redistributed here:
 
 - FDS+Evac Technical Reference and User's Guide — Korhonen (2021). Primary reference for the FED equations (Section 3.4) and smoke-speed model (Section 3.4, Eq. 11).
-- [Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269) ([summary](materials/waypoint_based_visibility_summary.md)) — Beer-Lambert integrated extinction along line of sight (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269.
+- [Börger, Belt & Arnold (2024)](https://doi.org/10.1016/j.firesaf.2024.104269) ([summary](materials/waypoint_based_visibility_summary.md)) — Beer-Lambert extinction averaged along the line of sight to a sign (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269. Averaging along the walked route, as pyFDS-Evac's route cost does, is our extension.
 - Haensel (2014) ([summary](materials/haensel2014_summary.md)) — Knowledge-based routing and cognitive map framework for evacuation modelling.
 - [Schroder et al. (2020)](https://doi.org/10.1016/j.firesaf.2020.103154) ([summary](materials/schroder2020_summary.md)) — A map representation of the ASET-RSET concept. *Fire Safety Journal*.
 - [Ronchi et al. (2013)](https://doi.org/10.1007/s10694-012-0280-y) — Representation of the impact of smoke on agent walking speeds in evacuation models. *Fire Technology* 49.

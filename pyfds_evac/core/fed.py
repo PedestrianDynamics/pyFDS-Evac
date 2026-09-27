@@ -217,16 +217,21 @@ class TenabilityConfig:
     """Runtime tenability rules applied on top of Frantzich smoke-speed.
 
     The Frantzich--Nilsson extinction--speed law is already handled by
-    ``SmokeSpeedModel``.  This config adds two further Purser/FDS+Evac
-    rules on top of it:
+    ``SmokeSpeedModel``.  This config adds three further rules on top
+    of it:
 
     - FIC-driven speed reduction: ``v_final = v_frantzich * max(
-      fic_min_factor, 1 - fic_alpha * FIC)``.  Irritant gases are
-      assumed to slow evacuees beyond what pure visibility loss
-      predicts, bounded so no agent falls below ``fic_min_factor`` of
-      its Frantzich speed.
-    - Binary incapacitation when ``FED_cumulative >= fed_threshold``,
-      matching the FDS+Evac criterion of Korhonen 2021 §3.4: desired
+      fic_min_factor, 1 - fic_alpha * FIC)``.  A pyFDS-Evac
+      assumption, source unknown (#147): FDS+Evac has no irritant
+      slowdown, and Purser's own curve is SFPE Handbook Eq. 63.13.
+      Irritant gases are assumed to slow evacuees beyond what pure
+      visibility loss predicts, bounded so no agent falls below
+      ``fic_min_factor`` of its Frantzich speed.
+    - Binary incapacitation when ``FED_cumulative`` reaches the agent's
+      threshold: a per-agent log-normal draw with median
+      ``fed_threshold`` in ``probabilistic`` mode, ``fed_threshold``
+      itself in ``deterministic`` mode (the FDS+Evac criterion of
+      Korhonen 2021 §3.4, with the default 1.0): desired
       speed is driven to zero and the agent remains as a static
       obstacle.
     - Binary heat incapacitation when ``FED_HEAT_cumulative >=
