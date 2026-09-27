@@ -9,8 +9,8 @@ moment of their journey through the T-corridor demo scenario:
   Panel 4 — full-familiarity baseline: knows everything from t=0 at spawn
 
 Agent position moves (spawn → junction → junction → spawn) so panels are
-visually distinct.  Panel 3 adds a smoke overlay on exit B and a bold route
-arrow to exit A.  Panel 4 contrasts with Panel 1: same agent position, but
+visually distinct.  Panel 3 adds a smoke ramp over the right arm, draws the
+refused edge to exit B dashed red and the chosen route to exit A bold blue.  Panel 4 contrasts with Panel 1: same agent position, but
 complete knowledge from the start.
 
 Usage:
@@ -25,26 +25,44 @@ import pickle
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 from shapely.geometry import Polygon
+
+try:
+    import seaborn as sns
+except ImportError:  # seaborn only sets the theme; fall back to rcParams
+    sns = None
 
 CONFIG_PATH = Path("assets/t_junction/config.json")
 CACHE_PATH = Path("assets/t_junction/vismap_cache.npz")
 OUT_PATH = Path("assets/t_junction/cognitive_map_evolution.png")
 
-# Colours
-C_KNOWN_NODE = "#2196F3"
-C_UNKNOWN_NODE = "#BDBDBD"
-C_KNOWN_EDGE = "#2196F3"
-C_UNKNOWN_EDGE = "#E0E0E0"
-C_SPAWN = "#FF9800"
-C_CHECKPOINT = "#4CAF50"
-C_EXIT_OPEN = "#4CAF50"
-C_EXIT_BLOCKED = "#F44336"
-C_FLOOR = "#F5F5F5"
-C_WALL = "#757575"
-C_AGENT = "#FF5722"
-C_CHOSEN_ROUTE = "#1565C0"  # bold blue for selected path in panel 3
+# Shared palette of the concept figures: one meaning, one colour, one style.
+SMOKE = LinearSegmentedColormap.from_list("smoke", ["#ffffff00", "#8a8a8a"])
+CHOSEN = "#4575b4"  # chosen / walked route: solid line
+REFUSED = "#d73027"  # refused route: dashed line
+KNOWN = "#324465"  # stage in the map: filled marker
+UNKNOWN = "#bdbdbd"  # stage not in the map: hollow marker, dashed edge
+EXIT = "#33a02c"  # exit door
+AGENT = "#1a1a1a"  # agent: star marker
+WALL = "dimgrey"
+FLOOR = "#f7f7f7"
+TEXT = "dimgrey"
+
+C_KNOWN_NODE = KNOWN
+C_UNKNOWN_NODE = UNKNOWN
+C_KNOWN_EDGE = KNOWN
+C_UNKNOWN_EDGE = UNKNOWN
+C_SPAWN = KNOWN
+C_CHECKPOINT = KNOWN
+C_EXIT_OPEN = EXIT
+C_EXIT_BLOCKED = EXIT  # the exit stays a known exit; its edge is refused
+C_FLOOR = FLOOR
+C_WALL = WALL
+C_AGENT = AGENT
+C_CHOSEN_ROUTE = CHOSEN
 
 NODE_LABELS = {
     "jps-distributions_0": "spawn",
@@ -152,97 +170,94 @@ def draw_graph(
         tx, ty, _ = nodes[tgt]
         known = (src, tgt) in known_edges
         is_bold = bold_path is not None and (src, tgt) == bold_path
-
-        ax_plot.annotate(
-            "",
-            xy=(tx, ty),
-            xytext=(sx, sy),
-            arrowprops=dict(
-                arrowstyle="->" if (known or is_bold) else "-",
-                color=C_CHOSEN_ROUTE
-                if is_bold
-                else (C_KNOWN_EDGE if known else C_UNKNOWN_EDGE),
-                lw=3.5 if is_bold else (2.0 if known else 1.0),
-                connectionstyle="arc3,rad=0.0",
-                alpha=1.0 if (known or is_bold) else 0.4,
-            ),
-            zorder=3 if is_bold else 2,
-        )
+        is_refused = highlight_blocked is not None and tgt == highlight_blocked
+        if is_bold:
+            color, lw, ls = C_CHOSEN_ROUTE, 3.6, "-"
+        elif is_refused and known:
+            color, lw, ls = REFUSED, 2.2, (0, (4, 2))
+        elif known:
+            color, lw, ls = C_KNOWN_EDGE, 1.8, "-"
+        else:
+            color, lw, ls = C_UNKNOWN_EDGE, 1.8, (0, (3, 3))
+        ax_plot.plot([sx, tx], [sy, ty], color=color, lw=lw, ls=ls, zorder=3)
 
     for node_id, (cx, cy, stype) in nodes.items():
         known = node_id in known_nodes
-        base_color = NODE_COLORS.get(node_id, C_CHECKPOINT)
-
-        if node_id == highlight_blocked:
-            facecolor = C_EXIT_BLOCKED if known else C_UNKNOWN_NODE
-            edgecolor = C_EXIT_BLOCKED
-        else:
-            facecolor = base_color if known else C_UNKNOWN_NODE
-            edgecolor = base_color if known else C_UNKNOWN_NODE
+        facecolor = NODE_COLORS.get(node_id, C_CHECKPOINT) if known else "white"
 
         marker = "s" if stype == "exit" else ("^" if stype == "distribution" else "o")
-        size = 160 if stype == "exit" else 140
 
         ax_plot.scatter(
             cx,
             cy,
-            s=size,
+            s=150,
             marker=marker,
-            facecolors=facecolor if known else "white",
-            edgecolors=edgecolor,
-            linewidths=2,
-            zorder=4,
+            facecolors=facecolor,
+            edgecolors=KNOWN if known else UNKNOWN,
+            linewidths=1.6,
+            zorder=5,
         )
         label = NODE_LABELS.get(node_id, node_id)
+        # spawn sits low in the stem: label it below, the rest above the corridor
+        below = stype == "distribution"
         ax_plot.text(
             cx,
-            cy + 0.8,
+            cy - 1.6 if below else 13.7,
             label,
             ha="center",
-            va="bottom",
-            fontsize=7,
-            color="#333333" if known else "#AAAAAA",
-            zorder=5,
+            va="center",
+            fontsize=8.5,
+            color=TEXT if known else UNKNOWN,
+            fontweight="bold" if known else None,
+            zorder=6,
         )
 
 
 def draw_smoke(ax_plot, nodes: dict, blocked_id: str):
-    """Draw a translucent smoke cloud over the blocked exit."""
+    """Draw smoke filling the corridor arm of the blocked exit, densest at it."""
     if blocked_id not in nodes:
         return
-    cx, cy, _ = nodes[blocked_id]
-    from matplotlib.patches import Ellipse
-
-    smoke = Ellipse(
-        (cx, cy),
-        width=5,
-        height=2.5,
-        facecolor="#9E9E9E",
-        alpha=0.45,
-        zorder=6,
+    cx, _, _ = nodes[blocked_id]
+    x0, x1 = min(cx, 23.0), max(cx, 23.0) + 0.5
+    xlim, ylim = ax_plot.get_xlim(), ax_plot.get_ylim()
+    gx, _ = np.meshgrid(np.linspace(x0, x1, 160), np.linspace(10, 13, 60))
+    dens = np.clip((gx - x0) / (x1 - x0), 0, 1) ** 1.2
+    ax_plot.imshow(
+        dens,
+        extent=(x0, x1, 10, 13),
+        origin="lower",
+        cmap=SMOKE,
+        vmin=0,
+        vmax=1,
+        alpha=0.9,
+        aspect="auto",
+        zorder=2,
+        interpolation="bilinear",
     )
-    ax_plot.add_patch(smoke)
+    # imshow rescales the axes; keep the panel on the same floor frame
+    ax_plot.set_xlim(xlim)
+    ax_plot.set_ylim(ylim)
+    ax_plot.set_aspect("equal")
     ax_plot.text(
-        cx,
-        cy,
+        0.5 * (x0 + x1),
+        9.4,
         "smoke",
         ha="center",
-        va="center",
-        fontsize=6,
-        color="white",
-        fontweight="bold",
+        va="top",
+        fontsize=8,
+        color=TEXT,
         zorder=7,
     )
 
 
 def draw_agent(ax_plot, x: float, y: float):
-    ax_plot.scatter(x, y, s=200, marker="*", color=C_AGENT, zorder=8)
+    ax_plot.scatter(x, y, s=260, marker="*", fc=C_AGENT, ec="white", lw=0.8, zorder=8)
     ax_plot.text(
-        x + 0.8,
-        y,
+        x + 0.9,
+        y + 0.9,
         "agent",
-        fontsize=7,
-        color=C_AGENT,
+        fontsize=8.5,
+        color=TEXT,
         va="center",
         fontweight="bold",
         zorder=9,
@@ -252,11 +267,11 @@ def draw_agent(ax_plot, x: float, y: float):
 def setup_ax(ax_plot, title: str, walkable: Polygon):
     draw_floor(ax_plot, walkable)
     ax_plot.set_xlim(-1, 31)
-    ax_plot.set_ylim(-1, 14)
+    ax_plot.set_ylim(-1, 14.6)
     ax_plot.set_aspect("equal")
-    ax_plot.set_title(title, fontsize=8.5, pad=4)
-    ax_plot.set_xticks([])
-    ax_plot.set_yticks([])
+    ax_plot.set_title(title, fontsize=8.5, pad=4, loc="left")
+    # a floor plan has no data axes: grid, ticks and frame add nothing
+    ax_plot.axis("off")
 
 
 def main():
@@ -317,7 +332,8 @@ def main():
         dict(
             known=known1,
             edges=edges1,
-            title="Panel 1 — spawn (t = 0)\ndiscovery: knows spawn + visible neighbors",
+            title=r"$\bf{1}$  "
+            + "spawn (t = 0)\ndiscovery: knows spawn + visible neighbors",
             agent_xy=(spawn_cx, spawn_cy),
             blocked=None,
             bold_path=None,
@@ -326,7 +342,8 @@ def main():
         dict(
             known=known2,
             edges=edges2,
-            title="Panel 2 — arrives at junction\ndiscovery: discovers both exits",
+            title=r"$\bf{2}$  "
+            + "arrives at junction\ndiscovery: discovers both exits",
             agent_xy=(junc_cx, junc_cy),
             blocked=None,
             bold_path=None,
@@ -335,7 +352,8 @@ def main():
         dict(
             known=known3,
             edges=edges3,
-            title="Panel 3 — reroutes at junction\ndiscovery: exit B blocked → takes exit A",
+            title=r"$\bf{3}$  "
+            + "reroutes at junction\ndiscovery: exit B blocked → takes exit A",
             agent_xy=(junc_cx, junc_cy),
             blocked="exit_B_right",
             bold_path=("jps-checkpoints_0", "exit_A_left"),
@@ -344,7 +362,8 @@ def main():
         dict(
             known=known4,
             edges=edges4,
-            title="Panel 4 — spawn (t = 0)\nfull familiarity: knows complete graph",
+            title=r"$\bf{4}$  "
+            + "spawn (t = 0)\nfull familiarity: knows complete graph",
             agent_xy=(spawn_cx, spawn_cy),
             blocked=None,
             bold_path=None,
@@ -352,8 +371,12 @@ def main():
         ),
     ]
 
-    fig, axes = plt.subplots(1, 4, figsize=(14, 4))
-    fig.suptitle("Cognitive map evolution — discovery vs full familiarity", fontsize=10)
+    if sns is not None:
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    else:
+        plt.rcParams["font.family"] = "DejaVu Sans"
+    fig, axes = plt.subplots(1, 4, figsize=(14, 4), gridspec_kw=dict(wspace=0.08))
+    fig.suptitle("Cognitive map evolution — discovery vs full familiarity", fontsize=11)
 
     for ax_plot, p in zip(axes, panels):
         setup_ax(ax_plot, p["title"], walkable)
@@ -388,29 +411,60 @@ def main():
             color="w",
             markerfacecolor="white",
             markeredgecolor=C_UNKNOWN_NODE,
+            markeredgewidth=1.6,
             markersize=8,
             label="unknown node",
         ),
-        Line2D([0], [0], color=C_KNOWN_EDGE, lw=2, label="known edge"),
-        Line2D([0], [0], color=C_UNKNOWN_EDGE, lw=1, label="unknown edge"),
-        Line2D([0], [0], color=C_CHOSEN_ROUTE, lw=3, label="chosen route"),
+        Line2D(
+            [0],
+            [0],
+            marker="s",
+            color="w",
+            markerfacecolor=EXIT,
+            markeredgecolor=KNOWN,
+            markersize=8,
+            label="known exit",
+        ),
+        Line2D([0], [0], color=C_KNOWN_EDGE, lw=1.8, label="known edge"),
+        Line2D(
+            [0], [0], color=C_UNKNOWN_EDGE, lw=1.8, ls=(0, (3, 3)), label="unknown edge"
+        ),
+        Line2D([0], [0], color=C_CHOSEN_ROUTE, lw=3.6, label="chosen route"),
+        Line2D([0], [0], color=REFUSED, lw=2.2, ls=(0, (4, 2)), label="refused route"),
         Line2D(
             [0],
             [0],
             marker="*",
             color="w",
             markerfacecolor=C_AGENT,
-            markersize=10,
+            markersize=12,
             label="agent",
         ),
     ]
     fig.legend(
         handles=legend_elements,
         loc="lower center",
-        ncol=6,
-        fontsize=8,
-        frameon=False,
-        bbox_to_anchor=(0.5, -0.02),
+        ncol=8,
+        fontsize=8.5,
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor=TEXT,
+        bbox_to_anchor=(0.5, 0.02),
+    )
+    if sns is not None:
+        sns.despine(fig=fig, left=True, bottom=True)
+    fig.text(
+        0.5,
+        -0.02,
+        "Panels 2 and 3: the same map. With smoke on exit B's arm the router "
+        "takes exit A, and exit B stays in the map.",
+        ha="center",
+        va="top",
+        fontsize=8.5,
+        color=TEXT,
+        style="italic",
     )
 
     fig.tight_layout(rect=(0, 0.06, 1, 1))

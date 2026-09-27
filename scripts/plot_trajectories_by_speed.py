@@ -24,6 +24,11 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+try:
+    import seaborn as sns
+except ImportError:  # seaborn only sets the theme; fall back to rcParams
+    sns = None
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
@@ -120,7 +125,11 @@ def _build_figure(
     if effective_vmax <= 0.0:
         effective_vmax = 1.0  # avoid zero-range cmap
 
-    fig, ax = plt.subplots(figsize=(9, 6), constrained_layout=True)
+    if sns is not None:
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    else:
+        plt.rcParams["font.family"] = "DejaVu Sans"
+    fig, ax = plt.subplots(figsize=(9, 6), constrained_layout=True, dpi=150)
 
     if walkable_patch is not None:
         ax.add_patch(walkable_patch)
@@ -160,19 +169,39 @@ def _build_figure(
         if agents_filter is not None and len(agents_filter) <= 12:
             ax.plot(xs[0], ys[0], "o", color="white", mec="black", ms=5, zorder=3)
             ax.plot(xs[-1], ys[-1], "s", color="black", mec="white", ms=5, zorder=3)
-            ax.text(xs[-1], ys[-1], f" {agent_id}", fontsize=7, zorder=4)
+            ax.text(
+                xs[-1], ys[-1], f" {agent_id}", fontsize=7, color="dimgrey", zorder=4
+            )
 
     # Add a colorbar using a dummy mappable (so it works even when every
     # agent was rendered via LineCollection rather than scatter).
     dummy = plt.cm.ScalarMappable(cmap=cmap, norm=Normalize(0.0, effective_vmax))
     dummy.set_array([])
     cbar = fig.colorbar(dummy, ax=ax)
-    cbar.set_label("desired speed (m/s)")
+    cbar.set_label("desired speed (m/s)", color="dimgrey")
+    cbar.outline.set_visible(False)
+    cbar.ax.tick_params(length=0, labelcolor="dimgrey")
 
+    ax.text(
+        1.0,
+        1.01,
+        f"desired speed {np.nanmin(all_v):.2f}-{np.nanmax(all_v):.2f} m/s, "
+        f"median {np.nanmedian(all_v):.2f}",
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=9,
+        color="dimgrey",
+        style="italic",
+    )
     ax.set_aspect("equal")
-    ax.set_xlabel("x (m)")
-    ax.set_ylabel("y (m)")
-    ax.set_title(title)
+    ax.set_xlabel("x (m)", color="dimgrey")
+    ax.set_ylabel("y (m)", color="dimgrey")
+    ax.set_title(title, loc="left", pad=16, color="dimgrey")
+    ax.grid(False)
+    ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+    if sns is not None:
+        sns.despine(left=True, bottom=True)
     ax.autoscale_view()
     return fig
 

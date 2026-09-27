@@ -6,6 +6,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
+try:
+    import seaborn as sns
+except ImportError:  # seaborn only sets the theme; fall back to rcParams
+    sns = None
+
 from pyfds_evac.core.fed import DefaultFedInputs, accumulate_default_fed
 
 
@@ -39,16 +44,58 @@ def main() -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     times_s = np.linspace(0.0, 100.0, 101)
-    fig, ax = plt.subplots(figsize=(9, 6))
-    for label, inputs in _guide_stationary_cases().items():
+    if sns is not None:
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    else:
+        plt.rcParams["font.family"] = "DejaVu Sans"
+    colours = ["#d73027", "#fc8d59", "#4575b4", "#1f253f"]
+    styles = ["-", "--", "-.", ":"]
+    fig, ax = plt.subplots(figsize=(9, 6), dpi=150)
+    finals = {}
+    for (label, inputs), colour, style in zip(
+        _guide_stationary_cases().items(), colours, styles
+    ):
         fed_curve = [accumulate_default_fed(inputs, duration_s=t) for t in times_s]
-        ax.plot(times_s, fed_curve, linewidth=2, label=label)
+        finals[label] = fed_curve[-1]
+        ax.plot(
+            times_s, fed_curve, linewidth=2, color=colour, linestyle=style, label=label
+        )
 
-    ax.set_xlabel("Time [s]")
-    ax.set_ylabel("FED Index [-]")
-    ax.set_title("FDS+Evac stationary FED verification cases")
-    ax.legend(loc="best")
-    ax.grid(True, alpha=0.3)
+    co_only = finals["CO Only (0, 0.1, 21)%"]
+    co2_boost = finals["CO2-Enhanced (3.43, 0.1, 21)%"]
+    ax.text(
+        0.98,
+        0.02,
+        f"3.43 % CO2 multiplies the CO-only dose by {co2_boost / co_only:.1f} "
+        f"(FED {co2_boost:.3f} vs {co_only:.3f} at {times_s[-1]:.0f} s)",
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=9,
+        color="dimgrey",
+        style="italic",
+    )
+    ax.set_xlabel("Time [s]", color="dimgrey")
+    ax.set_ylabel("FED Index [-]", color="dimgrey")
+    ax.set_title(
+        "FDS+Evac stationary FED verification cases",
+        loc="left",
+        pad=7,
+        color="dimgrey",
+    )
+    ax.legend(
+        loc="upper left",
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor="dimgrey",
+    )
+    ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+    ax.patch.set_edgecolor("lightgrey")
+    ax.patch.set_linewidth(0.8)
+    if sns is not None:
+        sns.despine(left=True, bottom=True)
     fig.tight_layout()
     fig.savefig(output, dpi=150, bbox_inches="tight")
     plt.close(fig)

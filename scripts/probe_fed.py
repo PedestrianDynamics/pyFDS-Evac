@@ -121,22 +121,67 @@ def _plot(path: Path, per_point: dict[str, list[dict[str, float]]]) -> None:
     """Save a two-panel plot: cumulative FED (top) and rate (bottom) per probe."""
     import matplotlib.pyplot as plt
 
+    try:
+        import seaborn as sns
+    except ImportError:  # seaborn only sets the theme; fall back to rcParams
+        sns = None
+
+    if sns is not None:
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    else:
+        plt.rcParams["font.family"] = "DejaVu Sans"
+    colours = ["#d73027", "#4575b4", "#fc8d59", "#1f253f"]
+    styles = ["-", "--", "-.", ":"]
     fig, (ax_cum, ax_rate) = plt.subplots(
-        2, 1, sharex=True, figsize=(9, 6), constrained_layout=True
+        2, 1, sharex=True, figsize=(9, 6), constrained_layout=True, dpi=150
     )
-    for label, rows in per_point.items():
+    first: tuple[float, str] | None = None
+    for i, (label, rows) in enumerate(per_point.items()):
         t = [r["time_s"] for r in rows]
-        ax_cum.plot(t, [r["fed_cumulative"] for r in rows], label=label, linewidth=1.2)
-        ax_rate.plot(
-            t, [r["fed_rate_per_min"] for r in rows], label=label, linewidth=1.2
+        fed = [r["fed_cumulative"] for r in rows]
+        style = dict(
+            color=colours[i % len(colours)],
+            linestyle=styles[i % len(styles)],
+            linewidth=1.2,
+            label=label,
         )
-    ax_cum.axhline(1.0, color="#c0392b", linestyle="--", linewidth=1.0, label="FED=1")
-    ax_cum.set_ylabel("Cumulative FED")
-    ax_cum.grid(True, alpha=0.3)
-    ax_cum.legend(loc="upper left", fontsize=9)
-    ax_rate.set_ylabel("FED rate (1/min)")
-    ax_rate.set_xlabel("time (s)")
-    ax_rate.grid(True, alpha=0.3)
+        ax_cum.plot(t, fed, **style)
+        ax_rate.plot(t, [r["fed_rate_per_min"] for r in rows], **style)
+        crossing = next((tt for tt, f in zip(t, fed) if f >= 1.0), None)
+        if crossing is not None and (first is None or crossing < first[0]):
+            first = (crossing, label)
+    ax_cum.axhline(1.0, color="grey", linestyle=":", linewidth=1.0, label="FED=1")
+    ax_cum.text(
+        1.0,
+        1.01,
+        f"{first[1]} reaches FED 1 first, at {first[0]:.0f} s"
+        if first
+        else "no probe reaches FED 1",
+        transform=ax_cum.transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=9,
+        color="dimgrey",
+        style="italic",
+    )
+    ax_cum.set_ylabel("Cumulative FED", color="dimgrey")
+    ax_cum.legend(
+        loc="upper left",
+        fontsize=9,
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor="dimgrey",
+    )
+    ax_rate.set_ylabel("FED rate (1/min)", color="dimgrey")
+    ax_rate.set_xlabel("time (s)", color="dimgrey")
+    for ax in (ax_cum, ax_rate):
+        ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+        ax.patch.set_edgecolor("lightgrey")
+        ax.patch.set_linewidth(0.8)
+    if sns is not None:
+        sns.despine(left=True, bottom=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=150, bbox_inches="tight")
 

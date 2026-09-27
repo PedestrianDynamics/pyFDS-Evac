@@ -37,11 +37,16 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+try:
+    import seaborn as sns
+except ImportError:  # seaborn only sets the theme; fall back to rcParams
+    sns = None
 from matplotlib.patches import Polygon as MplPoly
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Point, Polygon
 
-PALETTE = ["#2b7bba", "#d94801", "#31a354", "#756bb1", "#e6ab02"]
+PALETTE = ["#d73027", "#4575b4", "#fc8d59", "#1f253f", "#72a5b4"]
 UNFINISHED = "#b0b0b0"
 
 
@@ -150,6 +155,10 @@ def main() -> None:
     targets = load_targets(args.route_history) if args.route_history else {}
     used: dict[str | None, int] = {}
     switch_count = 0
+    if sns is not None:
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    else:
+        plt.rcParams["font.family"] = "DejaVu Sans"
     fig, ax = plt.subplots(figsize=(6.5, 9))
 
     geometry_path = args.geometry or args.config.with_name("geometry.wkt")
@@ -176,7 +185,11 @@ def main() -> None:
     for name, poly in exits.items():
         ax.add_patch(
             MplPoly(
-                list(zip(*poly.exterior.xy)), fc=colours[name], ec="k", lw=1.2, zorder=4
+                list(zip(*poly.exterior.xy)),
+                fc=colours[name],
+                ec="dimgrey",
+                lw=1.2,
+                zorder=4,
             )
         )
         cx, cy = poly.centroid.x, poly.centroid.y
@@ -186,7 +199,9 @@ def main() -> None:
             textcoords="offset points",
             xytext=(6, 6),
             fontsize=8,
-            fontweight="bold",
+            fontweight="semibold",
+            color="dimgrey",
+            bbox=dict(fc="white", ec="none", alpha=0.7, pad=1.0),
             zorder=6,
         )
 
@@ -201,13 +216,21 @@ def main() -> None:
             f"\ncolour = exit targeted at that moment;  dot = switch"
             f"  ({switch_count} in flight)"
         )
-    ax.set_title((args.title or args.sqlite.stem) + f"\n{subtitle}", fontsize=9)
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("y [m]")
+    ax.set_title(
+        (args.title or args.sqlite.stem) + f"\n{subtitle}",
+        fontsize=9,
+        loc="left",
+        color="dimgrey",
+    )
+    ax.set_xlabel("x [m]", color="dimgrey")
+    ax.set_ylabel("y [m]", color="dimgrey")
     ax.set_aspect("equal")
-    ax.grid(alpha=0.2)
+    ax.grid(False)
+    ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+    if sns is not None:
+        sns.despine(left=True, bottom=True)
     fig.tight_layout()
-    fig.savefig(args.out, dpi=140)
+    fig.savefig(args.out, dpi=140, bbox_inches="tight")
     print(f"Wrote: {args.out}")
     print(f"  {total} agents:  {summary}")
     if targets:

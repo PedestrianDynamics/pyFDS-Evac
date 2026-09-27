@@ -5,19 +5,26 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyBboxPatch, Polygon
 
+try:
+    import seaborn as sns
+except ImportError:  # seaborn only sets the theme; fall back to rcParams
+    sns = None
+
 OUT_PATH = Path("routing_diagram_final_result.png")
 
 # --- Colors ---
-C_INPUT = "#E3F2FD"  # Light Blue
-C_PHASE = "#E8F5E9"  # Light Green
-C_REJECT = "#FFF3E0"  # Light Orange
-C_FALLBACK = "#FCE4EC"  # Light Pink
-C_OUTPUT = "#F3E5F5"  # Light Purple
-C_ARROW = "#37474F"
-C_REJECT_BORDER = "#E65100"
-C_PHASE_BORDER = "#2E7D32"
-C_INPUT_BORDER = "#1565C0"
-C_OUT_BORDER = "#4A148C"
+# Shared palette of the concept figures: chosen route blue, refused route red
+# (dashed), stages in the map dark slate, neutral inputs grey.
+C_INPUT = "#f7f7f7"  # neutral input
+C_PHASE = "#e3e7ee"  # routing step, tint of the known-stage slate
+C_REJECT = "#fbe3e1"  # tint of the refused-route red
+C_FALLBACK = "#fbe3e1"
+C_OUTPUT = "#dde6f3"  # tint of the chosen-route blue
+C_ARROW = "dimgrey"
+C_REJECT_BORDER = "#d73027"
+C_PHASE_BORDER = "#324465"
+C_INPUT_BORDER = "#969696"
+C_OUT_BORDER = "#4575b4"
 
 
 def draw_box(ax, x, y, w, h, text, facecolor, edgecolor, fontsize=8, bold=False):
@@ -74,11 +81,13 @@ def draw_arrow(
     label_pos=0.5,
     shrink=0,
     connectionstyle=None,
+    linestyle="-",
 ):
     arrow_props = dict(
         arrowstyle="-|>",
         color=color,
         lw=1.2,
+        linestyle=linestyle,
         mutation_scale=12,
         shrinkA=shrink,
         shrinkB=shrink,
@@ -96,11 +105,16 @@ def draw_arrow(
             color=color,
             fontweight="bold",
             va="center",
+            bbox=dict(fc="white", ec="none", pad=1.0),
             zorder=6,
         )
 
 
 def main():
+    if sns is not None:
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    else:
+        plt.rcParams["font.family"] = "DejaVu Sans"
     fig, ax = plt.subplots(figsize=(10, 11))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
@@ -171,6 +185,7 @@ def main():
         CX,
         Y_DIAMOND + 0.04,
         color=C_REJECT_BORDER,
+        linestyle="--",
     )
 
     # 5. Decision Diamond & Fallback
@@ -207,6 +222,7 @@ def main():
         label="Yes",
         color=C_REJECT_BORDER,
         label_pos=0.6,
+        linestyle="--",
     )
     draw_box(
         ax,
@@ -228,6 +244,7 @@ def main():
         Y_SORT + 0.01,
         color=C_REJECT_BORDER,
         connectionstyle="angle,angleA=-90,angleB=180,rad=5",
+        linestyle="--",
     )
 
     # 6. Sort & Output
@@ -242,7 +259,7 @@ def main():
         C_PHASE,
         C_PHASE_BORDER,
     )
-    draw_arrow(ax, CX, Y_SORT - 0.03, CX, Y_OUTPUT + 0.045)
+    draw_arrow(ax, CX, Y_SORT - 0.03, CX, Y_OUTPUT + 0.045, color=C_OUT_BORDER)
     draw_box(
         ax,
         CX,
@@ -254,6 +271,17 @@ def main():
         C_OUT_BORDER,
         bold=True,
         fontsize=9.5,
+    )
+    ax.text(
+        CX,
+        0.06,
+        "Red dashed: the rejection path. If every route is rejected, the "
+        "least-cost one is reinstated, so an agent always has a target",
+        ha="center",
+        va="center",
+        fontsize=8.5,
+        color="dimgrey",
+        style="italic",
     )
 
     plt.savefig(OUT_PATH, dpi=300, bbox_inches="tight")

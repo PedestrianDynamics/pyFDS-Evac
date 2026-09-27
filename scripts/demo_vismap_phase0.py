@@ -35,6 +35,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fdsvismap import VisMap
 
+try:
+    import seaborn as sns
+except ImportError:  # seaborn only sets the theme; fall back to rcParams
+    sns = None
+
 FDS_DIR = Path("assets/t_junction")
 # Separate cache path from the runtime cache (assets/t_junction/vismap_cache.npz).
 # This script builds a raw VisMap with set_start_point which is incompatible
@@ -44,6 +49,19 @@ CONFIG_PATH = Path("assets/t_junction/config.json")
 OUT_DIR = Path("assets/t_junction")
 
 TIME_STEP_S = 10  # match reevaluation interval
+
+
+def _style_axes(fig, ax) -> None:
+    """House style on top of fdsvismap's own map: its colours stay as drawn."""
+    ax.grid(False)
+    ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+    ax.xaxis.label.set_color("dimgrey")
+    ax.yaxis.label.set_color("dimgrey")
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    for other in fig.axes:  # colourbars
+        if other is not ax:
+            other.tick_params(length=0, labelcolor="dimgrey")
 
 
 def _load_waypoints(config_path: Path) -> list[tuple[int, float, float, float, float]]:
@@ -113,14 +131,23 @@ def main() -> None:
     vis = load_or_compute(FDS_DIR, CACHE_PATH, force=args.no_cache)
     vis.set_start_point(20.0, 4.5)  # centroid of spawn area
 
+    if sns is not None:
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    else:
+        plt.rcParams["font.family"] = "DejaVu Sans"
+
     # ── Plot 1: time-aggregated, waypoint-aggregated visibility map ────
     fig1, ax1 = vis.create_time_agg_wp_agg_vismap_plot(
         plot_obstructions=True, flip_y_axis=True
     )
     ax1.set_title(
         "Sign coverage map (green = visible from any time, red = never visible)\n"
-        "Waypoints: exit_A (0), exit_B (1), junction (2)"
+        "Waypoints: exit_A (0), exit_B (1), junction (2)",
+        loc="left",
+        fontsize=11,
+        pad=7,
     )
+    _style_axes(fig1, ax1)
     out1 = OUT_DIR / "vismap_coverage.png"
     fig1.savefig(out1, dpi=150, bbox_inches="tight")
     print(f"Saved: {out1}")
@@ -130,8 +157,12 @@ def main() -> None:
     fig2, ax2 = vis.create_aset_map_plot(plot_obstructions=True, flip_y_axis=True)
     ax2.set_title(
         "ASET map — first time any sign becomes invisible [s]\n"
-        "(earlier = visibility lost sooner; fire source near exit_B)"
+        "(earlier = visibility lost sooner; fire source near exit_B)",
+        loc="left",
+        fontsize=11,
+        pad=7,
     )
+    _style_axes(fig2, ax2)
     out2 = OUT_DIR / "vismap_aset.png"
     fig2.savefig(out2, dpi=150, bbox_inches="tight")
     print(f"Saved: {out2}")

@@ -315,6 +315,15 @@ def main() -> None:
         from matplotlib.patches import PathPatch
         from matplotlib.path import Path as MplPath
 
+        try:
+            import seaborn as sns
+        except ImportError:  # seaborn only sets the theme; fall back to rcParams
+            sns = None
+        if sns is not None:
+            sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+        else:
+            plt.rcParams["font.family"] = "DejaVu Sans"
+
         # Draw the polygon as a single path with the holes as reversed subpaths,
         # not as a filled exterior with the holes painted over. Filling the
         # exterior ring alone also fills every concavity -- which once made a
@@ -332,18 +341,28 @@ def main() -> None:
             )
         ax_path = MplPath(vertices, codes)
         fig, ax = plt.subplots(figsize=(11, 8))
+        # floor light, walls dimgrey; obstacles are hatched holes with a wall
+        # outline, so they read as excluded without relying on colour
         ax.add_patch(
-            PathPatch(ax_path, facecolor="#2b7bba", alpha=0.5, edgecolor="#1f4e79")
+            PathPatch(ax_path, facecolor="#f7f7f7", edgecolor="dimgrey", lw=1.0)
         )
         for ring in walkable.interiors:
-            ax.plot(*ring.xy, color="#d94801", lw=1.0)
+            ax.fill(*ring.xy, fc="white", ec="dimgrey", hatch="////", lw=0.8)
         bounds = walkable.bounds
         ax.set_xlim(bounds[0] - 1, bounds[2] + 1)
         ax.set_ylim(bounds[1] - 1, bounds[3] + 1)
         ax.set_aspect("equal")
+        ax.grid(False)
+        ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+        ax.set_xlabel("x [m]", color="dimgrey")
+        ax.set_ylabel("y [m]", color="dimgrey")
+        if sns is not None:
+            sns.despine(left=True, bottom=True)
         ax.set_title(
             f"{args.deck.stem}: walkable {walkable.area:.0f} m2, "
-            f"{len(walkable.interiors)} obstacles"
+            f"{len(walkable.interiors)} obstacles",
+            loc="left",
+            pad=7,
         )
         fig.tight_layout()
         fig.savefig(args.plot, dpi=130)
