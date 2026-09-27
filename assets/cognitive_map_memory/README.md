@@ -33,6 +33,13 @@ With `d² = 4 + (y−20)²` that gives
 legible while |y − 20| <= 7.48   →   y ∈ [12.5, 27.5]
 ```
 
+This uses fdsvismap's default 30 m cap. pyFDS-Evac raises the cap to the
+diagonal of the visibility grid (32.1 m for the 0.25 m clear-air grid of this
+deck, [#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)),
+which widens the window to `|y − 20| <= 7.76`, y ∈ [12.2, 27.8]. On the
+0.25 m grid the model reads the sign from y = 12.0 to 28.0 on the centreline
+(`scripts/figures/map_memory.py` computes and draws it).
+
 Off-axis geometry kills the view angle faster than proximity helps, which is
 what produces a band rather than a half-plane. `build_geometry.py` recomputes
 this window and asserts it, so changing the corridor width or the sign position
@@ -42,7 +49,7 @@ cannot silently move it.
 
 | claim | what it asserts | why it matters |
 |---|---|---|
-| **acquisition** | `E_side` enters the map on crossing `y = 12.5`, and the agent would then take it | perception writes to memory, and it changes behaviour |
+| **acquisition** | `E_side` enters the map on crossing `y = 12`, and the agent would then take it | perception writes to memory, and it changes behaviour |
 | **persistence** | it is *still* in the map at `y = 30` | memory outlives perception |
 
 Persistence is the one that matters. Delete the expansion rules and acquisition
@@ -116,7 +123,7 @@ legibility window and the sign becomes readable. Agent 1 switches at
 t = 10 s, y = 12.3.
 
 The switch dots are spread over roughly y ∈ [11.5, 16] rather than lying on a
-line at y = 12.5. That is correct: the window is derived for the centreline
+line at y = 12. That is correct: the window is derived for the centreline
 x = 2, and an agent off-centre sees the sign at a worse view angle, so it has to
 get closer before the sign becomes legible.
 

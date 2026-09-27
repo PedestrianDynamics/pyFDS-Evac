@@ -65,11 +65,12 @@ conventions; what each one proves, and where that proof is checked, is below.
   `docs/testing-homogeneous.md`.
 - **Cognitive Map Memory**: 4x32 m corridor with a side alcove, 20 `discovery`
   agents. The side exit's sign faces west and is legible only from
-  `y ∈ [12.5, 27.5]` on the centreline — a window that falls out of
+  `y ∈ [12.0, 28.0]` on the centreline (`[12.5, 27.5]` under fdsvismap's
+  default 30 m cap; pyFDS-Evac uses the grid diagonal) — a window that falls out of
   `view_angle * max_vis >= distance` rather than being tuned, and that
   `build_geometry.py` recomputes and asserts. Proves the cognitive map does the
   one thing a visibility query cannot: **remember**. The side exit is unknown at
-  spawn, enters the map on crossing `y=12.5`, and is *still* there at `y=30`
+  spawn, enters the map on crossing `y=12`, and is *still* there at `y=30`
   where the sign is long unreadable. Persistence is the load-bearing claim —
   delete the expansion rules and acquisition still appears to work for any agent
   starting inside the window. A third test closes the loop to routing: a
