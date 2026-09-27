@@ -129,7 +129,8 @@ run holds for the time the agent would arrive there. Route choice is therefore
 a best case with perfect foresight, not a model of what an occupant can see or
 predict.
 
-**Recovery from irritants.** The irritant slowdown is recomputed only while
+**Recovery from irritants.** The irritant slowdown (opt-in with
+`--enable-fic-speed`) is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it
 returns to exactly zero, the last slowdown stays in force, so an agent that
 leaves an irritant plume into clean air does not return to full speed

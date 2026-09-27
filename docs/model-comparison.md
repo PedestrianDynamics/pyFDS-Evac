@@ -400,7 +400,8 @@ O2, HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein and formaldehyde.
 This is not the ISO 13571 [5] form: ISO 13571 keeps irritants in a
 separate fractional effective concentration (FEC) and does not add
 them into the FED, whereas here an irritant lethal-dose term is summed
-into the FED total.  Irritants also slow agents through Purser's
+into the FED total.  With `--enable-fic-speed` (off by default, as
+FDS+Evac has no such rule), irritants also slow agents through Purser's
 fractional irritant concentration (FIC). ISO 13571's FEC is a related
 but different quantity, with its own denominators.  The full model is:
 

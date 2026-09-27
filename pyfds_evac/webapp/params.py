@@ -74,6 +74,7 @@ FIELD_GROUPS: list[tuple] = [
             "disable_tenability",
             "incapacitation_mode",
             "susceptibility_sigma",
+            "enable_fic_speed",
             "fic_alpha",
             "fic_min_factor",
             "fed_threshold",
@@ -250,6 +251,8 @@ _HELP_TEXT: dict[str, str] = {
     "shares the same threshold.",
     "susceptibility_sigma": "Spread of how differently people tolerate toxic smoke. Higher = more "
     "variation between agents in when they're overcome.",
+    "enable_fic_speed": "Let irritant gases slow agents on top of smoke. Off by default, "
+    "as in FDS+Evac, which has no irritant slowdown.",
     "fic_alpha": "How strongly irritant gases slow an agent. Higher = agents slow down "
     "more in irritating smoke.",
     "fic_min_factor": "Floor on irritant slowdown — an agent never drops below this fraction "

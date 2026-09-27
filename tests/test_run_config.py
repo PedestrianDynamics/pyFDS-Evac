@@ -94,3 +94,29 @@ def test_log_callable_receives_status_lines():
     messages = []
     build_run_kwargs(_scenario(), _opts(constant_extinction=0.5), log=messages.append)
     assert any("smoke" in m.lower() for m in messages)
+
+
+_GAS_DIR = "assets/iso_table22_coupled/fds/a"
+
+
+def test_fic_speed_is_off_by_default():
+    """FDS+Evac has no irritant slowdown, so the FIC rule is opt-in."""
+    kwargs = build_run_kwargs(_scenario(), _opts(fds_dir=_GAS_DIR))
+    assert kwargs["fed_model"] is not None
+    assert kwargs["tenability_config"].enable_fic_speed is False
+
+
+def test_enable_fic_speed_opts_in():
+    kwargs = build_run_kwargs(
+        _scenario(), _opts(fds_dir=_GAS_DIR, enable_fic_speed=True)
+    )
+    assert kwargs["tenability_config"].enable_fic_speed is True
+
+
+def test_cli_fic_speed_flag():
+    import run
+
+    parser = run._build_parser()
+    assert parser.parse_args(["--scenario", "x"]).enable_fic_speed is False
+    args = parser.parse_args(["--scenario", "x", "--enable-fic-speed"])
+    assert args.enable_fic_speed is True

@@ -69,13 +69,16 @@ The basis is on [Heat](/fundamentals/heat.md).
 stop need the gas FED model; the heat stop needs only the heat FED model
 (`run_config.py:246`–`256`).
 
-- **Irritant slowdown.** `default_fic` sums \(C_i / F_{\mathrm{FIC},i}\) over the
+- **Irritant slowdown, off by default.** FDS+Evac has no irritant slowdown, so
+  `enable_fic_speed` defaults to false and `run.py` switches the rule on only
+  with `--enable-fic-speed`. Before it became opt-in, it was on whenever a gas
+  FED model was loaded. When on, `default_fic` sums \(C_i / F_{\mathrm{FIC},i}\) over the
   same seven irritants (constants in `_FIC_COEFFS_PPM`, not integrated over
   time). At each FED update where FIC > 0, the agent's irritant factor is set
   to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
   (`scenario.py:2076`–`2081`) and multiplies the smoke factor. The rule is a
-  pyFDS-Evac assumption with no known source; FDS+Evac has no irritant
-  slowdown ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
+  pyFDS-Evac assumption with no known source
+  ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
   When FIC is exactly 0 the last factor stays in force
   ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 - **Incapacitation.** Once the cumulative gas FED or heat FED reaches the
@@ -90,6 +93,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 
 | Field | Default | CLI flag |
 |---|---|---|
+| `enable_fic_speed` | `False` | `--enable-fic-speed` |
 | `fic_alpha` | `0.7` | `--fic-alpha` |
 | `fic_min_factor` | `0.3` | `--fic-min-factor` |
 | `fed_threshold` | `1.0` | `--fed-threshold` |
@@ -210,7 +214,7 @@ rather than the 5th edition
   stating that *t* is in minutes; the code follows Handbook Eq. 63.50 without
   it.
 
-The irritant slowdown \(g\) (`fed.py:241`–`242`) is multiplied with the smoke
+The irritant slowdown \(g\), when enabled (`fed.py:241`–`242`), is multiplied with the smoke
 factor (`direct_steering_runtime.py:186`–`190`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The

@@ -75,15 +75,17 @@ because they need it to learn the graph. See
 A FED model is instantiated automatically when `--fds-dir` points at
 an FDS case that exposes the FED species (CO, CO₂, O₂ at
 minimum — HCN, NO/NO₂, and irritants are used if present). When that
-happens, the FIC slowdown (a pyFDS-Evac assumption, source unknown;
-[#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) and
-the FED incapacitation rule are on by default. Without `--fds-dir` (or with a case missing the
+happens, the FED incapacitation rule is on by default. The FIC slowdown
+(a pyFDS-Evac assumption, source unknown;
+[#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) is off
+by default, as FDS+Evac has none; `--enable-fic-speed` turns it on. Without `--fds-dir` (or with a case missing the
 required species) no FED is computed and these flags have no effect;
 a case with a `TEMPERATURE` slice still gets heat incapacitation.
 
 | Flag | Purpose |
 |------|---------|
 | `--disable-tenability` | Turn both rules off. |
+| `--enable-fic-speed` | Turn the FIC slowdown on (off by default). |
 | `--fic-alpha F` | Slope of `v/v₀ = max(μ, 1 − α·FIC)` (default 0.7). |
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
 | `--fed-threshold F` | Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless `--incapacitation-mode deterministic`. |

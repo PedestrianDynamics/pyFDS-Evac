@@ -220,13 +220,13 @@ class TenabilityConfig:
     ``SmokeSpeedModel``.  This config adds three further rules on top
     of it:
 
-    - FIC-driven speed reduction: ``v_final = v_frantzich * max(
-      fic_min_factor, 1 - fic_alpha * FIC)``.  A pyFDS-Evac
-      assumption, source unknown (#147): FDS+Evac has no irritant
-      slowdown, and Purser's own curve is SFPE Handbook Eq. 63.13.
-      Irritant gases are assumed to slow evacuees beyond what pure
-      visibility loss predicts, bounded so no agent falls below
-      ``fic_min_factor`` of its Frantzich speed.
+    - FIC-driven speed reduction, off by default (``enable_fic_speed``):
+      ``v_final = v_frantzich * max(fic_min_factor, 1 - fic_alpha * FIC)``.
+      A pyFDS-Evac assumption, source unknown (#147): FDS+Evac has no
+      irritant slowdown, so it is opt-in, and Purser's own curve is SFPE
+      Handbook Eq. 63.13.  Irritant gases are assumed to slow evacuees
+      beyond what pure visibility loss predicts, bounded so no agent falls
+      below ``fic_min_factor`` of its Frantzich speed.
     - Binary incapacitation when ``FED_cumulative`` reaches the agent's
       threshold: a per-agent log-normal draw with median
       ``fed_threshold`` in ``probabilistic`` mode, ``fed_threshold``
@@ -242,7 +242,7 @@ class TenabilityConfig:
       incapacitated the instant *either* threshold is crossed.
     """
 
-    enable_fic_speed: bool = True
+    enable_fic_speed: bool = False
     fic_alpha: float = 0.7
     fic_min_factor: float = 0.3
     enable_incapacitation: bool = True

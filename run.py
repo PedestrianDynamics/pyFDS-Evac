@@ -142,21 +142,32 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run without a tenability config: disables the FIC speed-reduction "
         "rule, toxic FED incapacitation and heat FED incapacitation. FED is "
-        "still accumulated and reported (default: all three active when a FED "
-        "or heat FED model is loaded)",
+        "still accumulated and reported (default: incapacitation active when a "
+        "FED or heat FED model is loaded; the FIC rule only with "
+        "--enable-fic-speed)",
+    )
+    parser.add_argument(
+        "--enable-fic-speed",
+        action="store_true",
+        help="Slow agents by the irritant (FIC) rule max(fic-min-factor, "
+        "1 - fic-alpha * FIC) on top of the smoke-speed law. Off by default, "
+        "as FDS+Evac has no irritant slowdown; before this became opt-in it "
+        "was on whenever a FED model was loaded",
     )
     parser.add_argument(
         "--fic-alpha",
         type=float,
         default=0.7,
         help="Slope of the FIC speed-reduction rule, a pyFDS-Evac "
-        "assumption, source unknown (#147) (default: 0.7)",
+        "assumption, source unknown (#147); needs --enable-fic-speed "
+        "(default: 0.7)",
     )
     parser.add_argument(
         "--fic-min-factor",
         type=float,
         default=0.3,
-        help="Lower bound on the FIC speed factor (default: 0.3)",
+        help="Lower bound on the FIC speed factor; needs --enable-fic-speed "
+        "(default: 0.3)",
     )
     parser.add_argument(
         "--fed-threshold",

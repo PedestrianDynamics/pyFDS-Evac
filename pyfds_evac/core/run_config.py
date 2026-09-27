@@ -236,15 +236,17 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
     heat_mode = getattr(opts, "heat_incapacitation_mode", "probabilistic")
     heat_sigma = getattr(opts, "heat_susceptibility_sigma", 0.94)
+    fic_speed = fed_model is not None and getattr(opts, "enable_fic_speed", False)
     log(
         "Configuring tenability "
-        f"(FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
+        f"(FIC slowdown={'on' if fic_speed else 'off'}, "
+        f"FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
         f"FED median={opts.fed_threshold}, incapacitation={mode}, "
         f"heat FED median={heat_threshold}, "
         f"heat incapacitation={heat_mode})."
     )
     return TenabilityConfig(
-        enable_fic_speed=fed_model is not None,
+        enable_fic_speed=fic_speed,
         fic_alpha=opts.fic_alpha,
         fic_min_factor=opts.fic_min_factor,
         enable_incapacitation=fed_model is not None,
