@@ -7,8 +7,8 @@ aliases: [/docs/limitations/]
 ## Status
 
 pyFDS-Evac is research software, provided without warranty. It is not intended
-for regulatory or design use. It is maintained by one researcher at
-Forschungszentrum Jülich (IAS-7) and has no release policy yet, so behaviour
+for regulatory or design use. It is developed at Forschungszentrum Jülich
+(IAS-7) and has no release policy yet, so behaviour
 and defaults can change between commits. A result from pyFDS-Evac is a
 research result. It is not an assessment of a building.
 
