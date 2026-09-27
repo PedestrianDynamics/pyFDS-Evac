@@ -29,7 +29,10 @@ Usage::
 ``--data-root`` defaults to the maintainer's sciebo ``fds-evac-data`` folder.
 A deck whose files are missing there is reported and skipped. ``--compare``
 reports, per run and file, which columns differ and where the first
-difference is. Both runs and compare check the full inventory of the selected
+difference is; the files must be byte-identical. With ``--expect-base`` and
+``--expect-head`` it also checks that each folder was run at that commit, and
+it fails on a folder run from a dirty tree or on a folder compared with
+itself. Both runs and compare check the full inventory of the selected
 decks times both history modes, and exit non-zero if a run or a file is
 missing on either side, or if anything differs.
 """
@@ -451,9 +454,47 @@ def _manifest_problems(out: Path, names: list[str]) -> list[str]:
     return problems
 
 
-def _compare(dir_a: Path, dir_b: Path, names: list[str]) -> int:
-    """Compare the full inventory of *names*; a missing file is a difference."""
+def _provenance_problems(out: Path, role: str, expect: str | None) -> list[str]:
+    """Whether *out* was written by the expected commit from a clean tree."""
+    path = out / "manifest.json"
+    if not path.is_file():
+        return []  # reported by _manifest_problems
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    commit = str(manifest.get("commit", ""))
+    dirty = manifest.get("pyfds_evac_dirty")
+    print(f"{role}  {out}: commit {commit}, pyfds_evac dirty {dirty}")
+    problems = []
+    if dirty is not False:
+        problems.append(f"{role} {out} was not run from a clean pyfds_evac")
+    if expect is not None and not (len(expect) >= 7 and commit.startswith(expect)):
+        problems.append(f"{role} {out} is commit {commit!r}, expected {expect!r}")
+    return problems
+
+
+def _compare(
+    dir_a: Path,
+    dir_b: Path,
+    names: list[str],
+    expect_base: str | None = None,
+    expect_head: str | None = None,
+) -> int:
+    """Compare the full inventory of *names*; a missing file is a difference.
+
+    *dir_a* is the base and *dir_b* the head. Each must come from a clean
+    tree and, when given, from the expected commit.
+    """
+    if dir_a.resolve() == dir_b.resolve():
+        print(f"BAD   refusing to compare {dir_a} with itself")
+        print("differences found")
+        return 1
     differs = False
+    for out, role, expect in (
+        (dir_a, "base", expect_base),
+        (dir_b, "head", expect_head),
+    ):
+        for problem in _provenance_problems(out, role, expect):
+            print(f"BAD   {problem}")
+            differs = True
     for out in (dir_a, dir_b):
         for problem in _manifest_problems(out, names):
             print(f"BAD   {problem}")
@@ -491,8 +532,18 @@ def main() -> int:
         "--compare",
         nargs=2,
         type=Path,
-        metavar=("A", "B"),
+        metavar=("BASE", "HEAD"),
         help="Compare two output folders instead of running",
+    )
+    parser.add_argument(
+        "--expect-base",
+        metavar="SHA",
+        help="With --compare: fail unless BASE was run at this commit",
+    )
+    parser.add_argument(
+        "--expect-head",
+        metavar="SHA",
+        help="With --compare: fail unless HEAD was run at this commit",
     )
     parser.add_argument("--run-one", choices=sorted(DECKS), help=argparse.SUPPRESS)
     parser.add_argument(
@@ -501,7 +552,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.compare:
-        return _compare(*args.compare, args.decks)
+        return _compare(*args.compare, args.decks, args.expect_base, args.expect_head)
     if args.out is None:
         parser.error("--out is required unless --compare is given")
     if args.run_one:

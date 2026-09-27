@@ -16,6 +16,8 @@ import pytest
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "golden_rerouting.py"
 DECK = "familiarity_test_full"
+BASE = "a" * 40
+HEAD = "b" * 40
 
 
 @pytest.fixture(scope="module")
@@ -40,7 +42,13 @@ def _fake_run(golden, out: Path, **manifest) -> Path:
             text = "{}\n" if name.endswith(".json") else "a,b\n1,2\n"
             (folder / name).write_text(text, encoding="utf-8")
     runs = [f"{d}/{m}" for d, m in golden._inventory([DECK])]
-    record = {"runs": runs, "skipped": {}, "incomplete": {}} | manifest
+    record = {
+        "commit": BASE,
+        "pyfds_evac_dirty": False,
+        "runs": runs,
+        "skipped": {},
+        "incomplete": {},
+    } | manifest
     (out / "manifest.json").write_text(json.dumps(record), encoding="utf-8")
     return out
 
@@ -115,3 +123,33 @@ def test_bytes_decide(golden, tmp_path, name, text_a, text_b):
     b.write_bytes(text_b.encode())
     assert golden._compare_file(a, b)
     assert golden._compare_file(a, a) == []
+
+
+def test_provenance_matches(golden, tmp_path):
+    a = _fake_run(golden, tmp_path / "a")
+    b = _fake_run(golden, tmp_path / "b", commit=HEAD)
+    assert golden._compare(a, b, [DECK], BASE[:7], HEAD[:7]) == 0
+    assert golden._compare(a, b, [DECK], BASE, HEAD) == 0
+
+
+@pytest.mark.parametrize(
+    ("head_manifest", "expect_base", "expect_head"),
+    [
+        ({"commit": HEAD}, BASE, BASE),
+        ({"commit": HEAD}, HEAD, HEAD),
+        ({"commit": HEAD, "pyfds_evac_dirty": True}, BASE, HEAD),
+        ({"commit": HEAD, "pyfds_evac_dirty": True}, None, None),
+        ({"commit": HEAD}, BASE, HEAD[:6]),
+    ],
+    ids=["head_mismatch", "base_mismatch", "dirty_head", "dirty_unchecked", "short"],
+)
+def test_provenance_fails(golden, tmp_path, head_manifest, expect_base, expect_head):
+    a = _fake_run(golden, tmp_path / "a")
+    b = _fake_run(golden, tmp_path / "b", **head_manifest)
+    assert golden._compare(a, b, [DECK], expect_base, expect_head) == 1
+
+
+def test_compare_refuses_itself(golden, tmp_path):
+    a = _fake_run(golden, tmp_path / "a")
+    assert golden._compare(a, a, [DECK]) == 1
+    assert golden._compare(a, tmp_path / "x" / ".." / "a", [DECK]) == 1
