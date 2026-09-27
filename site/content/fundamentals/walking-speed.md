@@ -417,7 +417,8 @@ because it starts from each person's own clear-condition speed (§3.3.3 and
 *(a) Speed against visibility x [m]: Fridolf Eq. 2 (dark), Eq. 7 design
 lines (thin), Frantzich–Nilsson with x = 2/K (blue). (b) Eq. 2 converted to
 K [1/m] with x = A/K (A = 2, 8; Fridolf's A, not the FDS C) over x = 0.3–3 m,
-beside Frantzich–Nilsson and Purser.*
+beside Frantzich–Nilsson and Purser. The axis stops at K = 8 1/m, so the
+A = 8 curve is shown only for x ≥ 1 m (x = 0.3 m would be K ≈ 27 1/m).*
 
 {{< details title="Figure provenance" closed="true" >}}
 In (a), Eq. 2, w = 0.34 x + 0.31, is solid over x = 0.3–3 m, dotted over
