@@ -17,9 +17,11 @@ constant *C*.
 
 Jin found that, in the range of visibilities from about 5 to 15 m, the
 product of the visibility at the obscuration threshold and the smoke density
-was almost constant (Jin 1978, as reported by Yamada and Akizuki 2016,
-Society of Fire Protection Engineers (SFPE) Handbook Ch. 61, Eq. 61.4 and
-Fig. 61.8). Ch. 61
+was almost constant (Jin and Yamada 1985, pp. 80–81 and Fig. 1, citing
+Jin 1978; reproduced by Yamada and Akizuki 2016, Society of Fire
+Protection Engineers (SFPE) Handbook Ch. 61, Eq. 61.4 and Fig. 61.8). Jin
+and Yamada define \(C_s\) with the natural logarithm,
+\(C_s = (2.3/\ell)\log_{10}(I_0/I)\) (p. 80). Ch. 61
 writes it with \(C_s\) [1/m] for the extinction coefficient:
 
 $$
@@ -63,8 +65,17 @@ in white smoke of the same density. For reading the words on a sign, the
 constant product holds only in non-irritant smoke. In irritant smoke,
 legibility falls sharply above a certain density, and above about
 0.5 1/m subjects could keep their eyes open only briefly (Ch. 61,
-Fig. 61.11, from the corridor experiments of Jin 1978 and Jin and Yamada
-1985).
+Fig. 61.11; Jin and Yamada 1985, Fig. 2). In our inference the primary is
+Jin (1972): ten observers walked a 20 m smoke-filled corridor towards a lit
+EXIT sign. For merely seeing the sign, σV ≈ const held in both irritant
+and non-irritant smoke; for telling its colour or reading its letters, the
+visibility in irritant smoke at 0.5 1/m fell, by "more than 30 %" in the
+English abstract (p. 11) and to "a fraction" in the Japanese text (p. 14,
+our translation), compared with non-irritant smoke (Figs. 3–5). Normal
+lighting (about 80 lx in the corridor, sign lit by a 10 W fluorescent
+lamp) and a blackout (0.1–0.5 lx, sign lit by three 2.5 V tungsten bulbs)
+gave almost the same visibility (pp. 11, 13, 15); the comparison changes
+corridor light and sign luminance together.
 
 ## Known limits
 
@@ -84,6 +95,10 @@ threshold for seeing a sign, not for recognising or understanding it.
   9(2), 135–155, and the
   [FDS+Evac guide](https://github.com/tkorhon1/FDS-Evac-Guide) gives
   9, 135–155.
+- Jin, T. (1972). *Visibility through fire smoke (III)* [煙中の見透し距離に
+  ついて (III)]. Bulletin of Japanese Association of Fire Science and
+  Engineering, 22(1–2), 11–15. In Japanese with an English abstract.
+  [doi:10.11196/kasai.22.11](https://doi.org/10.11196/kasai.22.11)
 - Jin, T., & Yamada, T. (1985). *Irritating effects of fire smoke on
   visibility*. Fire Science and Technology, 5(1), 79–90.
   [doi:10.3210/fst.5.79](https://doi.org/10.3210/fst.5.79)
