@@ -34,7 +34,11 @@ from .smoke_speed import (
     SmokeSpeedConfig,
     SmokeSpeedModel,
 )
-from .visibility import VisibilityModel, extract_sign_descriptors
+from .visibility import (
+    DEFAULT_MAX_SIGN_DISTANCE_M,
+    VisibilityModel,
+    extract_sign_descriptors,
+)
 
 Logger = Callable[[str], None]
 
@@ -207,6 +211,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     if not sign_descriptors:
         log("Warning: visibility gating requested but the config has no signs.")
         return None
+    max_distance = getattr(opts, "max_sign_distance", DEFAULT_MAX_SIGN_DISTANCE_M)
     n_signs = len(sign_descriptors)
     plural = "" if n_signs == 1 else "s"
     if not opts.fds_dir:
@@ -219,6 +224,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
             sign_descriptors,
             cell_size_m=cell,
             cache_path=opts.vis_cache,
+            max_sign_distance_m=max_distance,
         )
     log(f"Configuring visibility model ({n_signs} sign{plural}).")
     return VisibilityModel(
@@ -227,6 +233,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
         cache_path=opts.vis_cache,
         time_step_s=opts.reroute_interval,
         slice_height_m=opts.smoke_slice_height,
+        max_sign_distance_m=max_distance,
     )
 
 

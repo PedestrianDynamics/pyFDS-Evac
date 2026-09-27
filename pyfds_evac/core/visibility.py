@@ -30,6 +30,10 @@ class _VisBackend(Protocol):
 
 _logger = logging.getLogger(__name__)
 
+# How far a sign can be read in clear air, the fdsvismap default and the value
+# of Börger et al. (2024). A sign may override it with ``max_distance``.
+DEFAULT_MAX_SIGN_DISTANCE_M = 30.0
+
 
 def _default_sign(entry: dict) -> dict | None:
     """A reflective, omni-directional sign at the node's centroid.
@@ -73,11 +77,58 @@ def extract_sign_descriptors(raw_config: dict) -> dict[str, dict]:
     return descriptors
 
 
+def _sign_caps(sign_descriptors: dict[str, dict]) -> dict[int, float]:
+    """Per-waypoint reading distances, for the signs that set ``max_distance``."""
+    caps: dict[int, float] = {}
+    for wp_id, (node_id, sign) in enumerate(sign_descriptors.items()):
+        cap = sign.get("max_distance")
+        if cap is None:
+            continue
+        if float(cap) <= 0:
+            raise ValueError(
+                f"sign of {node_id!r}: max_distance must be positive, got {cap}"
+            )
+        caps[wp_id] = float(cap)
+    return caps
+
+
+def _apply_distance_caps(
+    vis, sign_descriptors: dict[str, dict], max_sign_distance_m: float
+) -> None:
+    """Cap C/K at the reading distance, per sign where one is given.
+
+    fdsvismap holds one ``max_vis`` and applies it to C/K before the view angle
+    and obstructions, inside ``_get_visibility_array``. A sign with its own
+    ``max_distance`` swaps that value in for its own waypoint only, so the
+    order of operations stays fdsvismap's.
+    """
+    if max_sign_distance_m <= 0:
+        raise ValueError(
+            f"max_sign_distance_m must be positive, got {max_sign_distance_m}"
+        )
+    vis.set_visibility_bounds(vis.min_vis, max_sign_distance_m)
+    caps = _sign_caps(sign_descriptors)
+    if not caps:
+        return
+    base = vis._get_visibility_array
+
+    def capped(waypoint_id, time):
+        default = vis.max_vis
+        vis.max_vis = caps.get(waypoint_id, default)
+        try:
+            return base(waypoint_id, time)
+        finally:
+            vis.max_vis = default
+
+    vis._get_visibility_array = capped
+
+
 def _build_vismap(
     fds_dir: str,
     sign_descriptors: dict[str, dict],
     time_step_s: float,
     slice_height_m: float,
+    max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
 ):
     from fdsvismap import VisMap
 
@@ -95,21 +146,11 @@ def _build_vismap(
             # None is meaningful: fdsvismap reads it as omni-directional.
             alpha=None if alpha is None else float(alpha),
         )
-    # fdsvismap clips visibility at max_vis (30 m by default) inside the array
-    # build, which is right for "is this sign readable" and wrong for a test
-    # against a route length -- a 68 m route compared against a value that can
-    # never exceed 30 m fails wherever it stands. The cap has to go up before
-    # compute_all, because that is when the clipping happens.
-    vis.set_visibility_bounds(vis.min_vis, _domain_diagonal(vis))
+    # fdsvismap clips visibility inside the array build, so the caps have to
+    # be in place before compute_all.
+    _apply_distance_caps(vis, sign_descriptors, max_sign_distance_m)
     vis.compute_all(view_angle=True, obstructions=True, aa=True)
     return vis
-
-
-def _domain_diagonal(vis) -> float:
-    """The longest sight line the domain can hold, as the visibility ceiling."""
-    dx = float(vis.all_x_coords[-1] - vis.all_x_coords[0])
-    dy = float(vis.all_y_coords[-1] - vis.all_y_coords[0])
-    return float(np.hypot(dx, dy))
 
 
 def _make_meta(
@@ -117,6 +158,7 @@ def _make_meta(
     sign_descriptors: dict[str, dict],
     time_step_s: float,
     slice_height_m: float,
+    max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
 ) -> dict:
     """Build a metadata dict that uniquely identifies a vismap cache.
 
@@ -124,7 +166,14 @@ def _make_meta(
     FDS datasets are never silently reused even if the waypoint list matches.
     """
     waypoints = [
-        [node_id, sign.get("x"), sign.get("y"), sign.get("alpha"), sign.get("c", 3)]
+        [
+            node_id,
+            sign.get("x"),
+            sign.get("y"),
+            sign.get("alpha"),
+            sign.get("c", 3),
+            sign.get("max_distance"),
+        ]
         for node_id, sign in sign_descriptors.items()
     ]
     return {
@@ -132,10 +181,12 @@ def _make_meta(
         "waypoints": waypoints,
         "time_step_s": time_step_s,
         "slice_height_m": slice_height_m,
+        "max_sign_distance_m": max_sign_distance_m,
         # Bumped when the arrays change shape or meaning. Caches written before
         # sighting distances were stored hold booleans only, and must be
-        # rebuilt rather than read as metres.
-        "format": 2,
+        # rebuilt rather than read as metres. Format 3 caps at the sign's
+        # reading distance instead of the domain diagonal.
+        "format": 3,
     }
 
 
@@ -292,6 +343,7 @@ def _resolve_vis(
     cache: Path | None,
     force_recompute: bool,
     expected_meta: dict,
+    max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
 ) -> _VisMapCache:
     """Return a _VisMapCache, loading from disk or computing from FDS data."""
     if not force_recompute and cache:
@@ -299,7 +351,13 @@ def _resolve_vis(
         if cached is not None:
             return cached
     return _build_cache_from_fds(
-        fds_dir, sign_descriptors, time_step_s, slice_height_m, cache, expected_meta
+        fds_dir,
+        sign_descriptors,
+        time_step_s,
+        slice_height_m,
+        cache,
+        expected_meta,
+        max_sign_distance_m,
     )
 
 
@@ -310,9 +368,12 @@ def _build_cache_from_fds(
     slice_height_m: float,
     cache: Path | None,
     expected_meta: dict,
+    max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
 ) -> _VisMapCache:
     """Build VisMapCache from FDS data and optionally save to disk."""
-    vis_obj = _build_vismap(fds_dir, sign_descriptors, time_step_s, slice_height_m)
+    vis_obj = _build_vismap(
+        fds_dir, sign_descriptors, time_step_s, slice_height_m, max_sign_distance_m
+    )
     arrays = _vis_bool_array(vis_obj)
     metres = _vis_metre_array(vis_obj)
     result = _VisMapCache(
@@ -360,10 +421,14 @@ def _load_vismap_cache(path: Path, expected_meta: dict) -> _VisMapCache | None:
 
 
 def _make_clear_air_meta(
-    walkable, sign_descriptors: dict[str, dict], cell_size_m: float, extinction: float
+    walkable,
+    sign_descriptors: dict[str, dict],
+    cell_size_m: float,
+    extinction: float,
+    max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
 ) -> dict:
     """Identify a clear-air vismap cache by what the grid is computed from."""
-    meta = _make_meta("", sign_descriptors, 0.0, 0.0)
+    meta = _make_meta("", sign_descriptors, 0.0, 0.0, max_sign_distance_m)
     meta["fds_dir"] = "<clear air>"
     meta["walkable_wkt_hash"] = hashlib.sha256(walkable.wkt.encode()).hexdigest()
     meta["cell_size_m"] = cell_size_m
@@ -408,10 +473,16 @@ class VisibilityModel:
         time_step_s: float = 10.0,
         slice_height_m: float = 1.6,
         force_recompute: bool = False,
+        max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
     ) -> None:
         cache = Path(cache_path) if cache_path else None
+        _sign_caps(sign_descriptors)
         expected_meta = _make_meta(
-            str(fds_dir), sign_descriptors, time_step_s, slice_height_m
+            str(fds_dir),
+            sign_descriptors,
+            time_step_s,
+            slice_height_m,
+            max_sign_distance_m,
         )
 
         self._vis: _VisBackend = _resolve_vis(
@@ -422,6 +493,7 @@ class VisibilityModel:
             cache,
             force_recompute,
             expected_meta,
+            max_sign_distance_m,
         )
         # Map node_id → internal waypoint index (insertion order preserved)
         self._wp_ids: dict[str, int] = {
@@ -438,6 +510,7 @@ class VisibilityModel:
         cell_size_m: float = 0.5,
         extinction_per_m: float = 0.0,
         cache_path: str | Path | None = None,
+        max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
     ) -> VisibilityModel:
         """Build a model for a scene that has geometry but no fire.
 
@@ -478,8 +551,13 @@ class VisibilityModel:
                 "shrink the cell size or check the geometry"
             )
 
+        _sign_caps(sign_descriptors)
         expected_meta = _make_clear_air_meta(
-            walkable, sign_descriptors, cell_size_m, extinction_per_m
+            walkable,
+            sign_descriptors,
+            cell_size_m,
+            extinction_per_m,
+            max_sign_distance_m,
         )
         cache = Path(cache_path) if cache_path else None
         if cache is not None:
@@ -507,9 +585,7 @@ class VisibilityModel:
             )
         for x1, x2, y1, y2 in _blocked_runs(walkable, x_coords, y_coords, cell_size_m):
             vis.add_visual_obstruction(x1, x2, y1, y2)
-        # Same reason as the FDS path: the default 30 m ceiling would make a
-        # long clear-air route fail a test against its own length.
-        vis.set_visibility_bounds(vis.min_vis, _domain_diagonal(vis))
+        _apply_distance_caps(vis, sign_descriptors, max_sign_distance_m)
         vis.compute_all(view_angle=True, obstructions=True, aa=True)
         if cache is not None:
             _save_vismap_cache(

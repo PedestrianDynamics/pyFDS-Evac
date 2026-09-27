@@ -210,6 +210,11 @@ DEFAULTS = [
         lambda: RouteCostConfig().default_exit_capacity,
     ),
     (WAYFINDING, "| `--vis-cell-size` | CLI | 0.25", lambda: _cli().vis_cell_size),
+    (
+        WAYFINDING,
+        "| \\(V_{\\max}\\) | `--max-sign-distance` | 30",
+        lambda: _cli().max_sign_distance,
+    ),
     (LIMITATIONS, "`v0` (1.25 m/s by default)", _v0),
     # hand calculations on the tutorial and testing pages
     (QUICKSTART, "`1 + (-0.057", lambda: SmokeSpeedConfig().beta),
