@@ -540,8 +540,12 @@ the returned-to route cleaner by more than the deadband (median 0.95 of optical
 depth against a margin of 0.6). They are the ordering correctly following a
 field that reversed, not an oscillation any constant could damp. What is open is
 therefore not the mixed currency but a modelling question: **should a memoryless
-model follow a reversing field?** FDS+Evac's answer is memory -- a door struck
-out at `evac.f90:16799` stays struck out (`:16800-16801`) -- and pyFDS-Evac
-removed that at `e441b03` on purpose, because permanent death destroyed the
-gate's self-healing property (B3). The two cannot both be had as the code
+model follow a reversing field?** FDS+Evac keeps little memory: a door struck
+out for smoke at `evac.f90:16799` (`:16800-16801`) is struck out only for that
+call, since `Change_Target_Door` resets `Is_Known_Door` and `Is_Visible_Door`
+at its start (`:16169-16170`); the one lasting trace is that a lone agent marks
+its previous target negative or zero (Models › Wayfinding, "Relation to
+FDS+Evac"). pyFDS-Evac removed its own permanent refusal at `e441b03` on
+purpose, because permanent death destroyed the gate's self-healing property
+(B3). The two cannot both be had as the code
 stands. This belongs in the PR discussion.
