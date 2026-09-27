@@ -13,7 +13,8 @@ Run from the repository root::
 
     .venv/bin/python scripts/figures/cognitive_map.py
 
-Writes ``site/static/images/concepts/cognitive_map.png``.
+Writes ``site/static/images/wayfinding/cognitive_map.png`` and, until the docs
+move there, ``site/static/images/concepts/cognitive_map.png``.
 """
 
 from pathlib import Path
@@ -25,7 +26,8 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon as MplPolygon
 
-OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
+IMAGES = Path(__file__).resolve().parents[2] / "site" / "static" / "images"
+OUTS = [IMAGES / "wayfinding", IMAGES / "concepts"]
 
 # Shared palette of the concept figures: one meaning, one colour, one style.
 SMOKE = LinearSegmentedColormap.from_list("smoke", ["#ffffff00", "#8a8a8a"])
@@ -183,6 +185,7 @@ def main():
 
     Saves
     -----
+    site/static/images/wayfinding/cognitive_map.png
     site/static/images/concepts/cognitive_map.png
     """
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
@@ -288,9 +291,9 @@ def main():
         style="italic",
     )
 
-    out = OUT
-    out.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out / "cognitive_map.png", dpi=150, bbox_inches="tight")
+    for out in OUTS:
+        out.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out / "cognitive_map.png", dpi=150, bbox_inches="tight")
 
 
 if __name__ == "__main__":
