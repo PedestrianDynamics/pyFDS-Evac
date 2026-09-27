@@ -65,7 +65,7 @@ route may carry before it is refused:
 unified the criterion on the route polyline and `89d13d4` removed the
 `_gate_needs_sight` precompute that a gate deck used to trigger, so a
 familiarity-1.0 gate deck now runs with no `--vis-cache` at all: `l_corridor`
-takes 5 seconds and reproduces the cached run's 84/16. A visibility model is
+takes 5 seconds and reproduces the cached run's 82/18. A visibility model is
 still built for decks with discovery agents, which consult it to learn the
 graph.
 
@@ -460,7 +460,7 @@ differences are worth knowing:
 - pyFDS-Evac applies dose and optical depth together rather than choosing one.
 
 **On the fires we have measured, the dose veto never fires.** On `l_corridor`'s
-`fire_1MW_west` run the largest `fed_max_route` over 3498 route-cost rows is
+`fire_1MW_west` run the largest `fed_max_route` over 5049 route-cost rows is
 0.0016, against a threshold of 1.0, and `world100` is reported the same way. On
 these fires the model is **exposure-gated wayfinding, not hazard avoidance**:
 every refusal that changes an exit comes from the optical-depth criterion, and
@@ -763,10 +763,11 @@ prediction from `evac.f90`, not a measured run of it.
 passing the fire, and a clean way round. Since `a98f8bb` the spawn sits in the
 middle of the vertical leg and the two routes are 26 m and 46 m, a 1.8x ratio;
 before that it sat 3 m from the junction and they were 11 m and 58 m, 5.3x —
-a spread wide enough that no smoke could justify the detour. Exit shares are
-unchanged across the move at 84 / 16, with 4 switches and no agent returning to
-an abandoned exit. **The numbers below predate the move**, so read their route
-lengths against the old geometry. Results are in
+a spread wide enough that no smoke could justify the detour. At `a98f8bb` exit
+shares were unchanged across the move at 84 / 16, with 4 switches and no agent
+returning to an abandoned exit; at `7a3617d` they are 82 / 18, with 55 switches
+and 34 returns across 14 agents. **The numbers below predate the move**, so read
+their route lengths against the old geometry. Results are in
 `<sciebo>/fds-evac-data/l_corridor/evac/RESULTS.md` (100 agents, seed 1,
 familiarity 1.0):
 

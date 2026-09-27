@@ -71,10 +71,10 @@ were required before familiarity could have *any* observable effect at all
 ## What's Being Verified
 
 1. **`full` finds and uses the shortcut** — with its complete graph
-   knowledge, a `full` agent's very first route evaluation (forced to happen
-   at spawn, before it starts walking the scripted tour) finds
-   `spawn→CP3→exit` cheaper than the scripted route and reroutes onto it
-   immediately (`reason="better_path"`).
+   knowledge, a `full` agent's opening route choice at spawn already takes
+   `spawn→CP3→exit`, so no switch is recorded: in the run on `7a3617d` all
+   20 agents pass CP3 and none passes CP1. (Earlier versions reached the
+   same route through a `better_path` switch at t ≈ 0.)
 2. **`discovery` explores instead of knowing** — a `discovery` agent starts
    knowing only its spawn's one declared neighbor (CP0). With no exit
    reachable in its own knowledge yet, it heads to the nearest known-but-
@@ -172,11 +172,9 @@ purely distance-based (see [Scope](#scope--caveats)).
 
 ## Results / Pass Criteria
 
-> **Numbers not yet rerun.** The times below were measured before the
-> travel-time fix (#170), the discovery routing-engine fix (#174) and the
-> 30 m sign reading distance (#177). The last replaced a cap equal to the
-> grid diagonal, about 27 m for this 20 m × 18 m plan. The pass criteria
-> still hold in the test suite; the times will be updated after a rerun.
+> **Measured on main at `7a3617d`.** The `discovery` tier gets clear-air
+> sight gating on the default 0.25 m grid, and its time depends on that grid
+> (see [Wayfinding §7](wayfinding.md#7-full-versus-discovery)).
 
 **Status: passing.** Both tiers evacuate all agents; `full` takes the
 shortcut and finishes markedly faster than `discovery`, which retraces the
@@ -184,10 +182,10 @@ scripted maze tour.
 
 | Tier      | Evacuated | Evacuation time | Route switches                    |
 |-----------|-----------|------------------|------------------------------------|
-| full      | 20/20     | **35.1 s**       | 20 × `better_path` (at spawn, t≈0) |
-| discovery | 20/20     | **75.1 s**       | 0 (nearest-unexplored always matched the scripted tour) |
+| full      | 20/20     | **33.9 s**       | 0 (the shortcut is assigned at spawn) |
+| discovery | 20/20     | **88.6 s**       | 100: 80 × `explore`, 20 onto the exit |
 
-`discovery` showing zero explicit switches is expected, not a bug: its
+Every `discovery` agent explores CP0 → CP1 → CP2 → CP3 in that order: its
 frontier choice happens to coincide with the scripted route at every step
 for this maze's specific checkpoint distances (see
 [What's Being Verified](#whats-being-verified), point 2) — it's still
