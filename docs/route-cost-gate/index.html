@@ -32,9 +32,9 @@ Under the gate one quantity does the whole of the smoke reasoning: the route&rsq
 optical depth tau = K_ave * L, the soot column the agent walks through. It
 refuses a route, it orders the routes it does not refuse, and it weights every
 Dijkstra edge — see How the gate decides
-.'><meta property="og:type" content="article"><meta property="og:url" content="https://pedestriandynamics.org/pyFDS-Evac/docs/route-cost-gate/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2026-09-26T21:24:29+02:00"><meta itemprop=name content="The gate cost model"><meta itemprop=description content='Part of pyFDS-Evac . Reference for routing.cost_model. Provenance, review findings and the open questions live in gate-model-review-notes.md ; this page documents what the shipped code does.
+.'><meta property="og:type" content="article"><meta property="og:url" content="https://pedestriandynamics.org/pyFDS-Evac/docs/route-cost-gate/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2026-09-27T12:15:27+02:00"><meta itemprop=name content="The gate cost model"><meta itemprop=description content='Part of pyFDS-Evac . Reference for routing.cost_model. Provenance, review findings and the open questions live in gate-model-review-notes.md ; this page documents what the shipped code does.
 Route choice runs under one of two cost models, selected per deck with routing.cost_model in the scenario JSON:
-value what decides the exit "gate" (default) Route optical depth decides which exits are available and orders the survivors; travel time breaks ties. "additive" Smoke is a toll per metre walked, folded into one composite cost. Under the gate one quantity does the whole of the smoke reasoning: the route’s optical depth tau = K_ave * L, the soot column the agent walks through. It refuses a route, it orders the routes it does not refuse, and it weights every Dijkstra edge — see How the gate decides .'><meta itemprop=dateModified content="2026-09-26T21:24:29+02:00"><meta itemprop=wordCount content="7045"><meta name=twitter:card content="summary"><meta name=twitter:title content="The gate cost model"><meta name=twitter:description content='Part of pyFDS-Evac . Reference for routing.cost_model. Provenance, review findings and the open questions live in gate-model-review-notes.md ; this page documents what the shipped code does.
+value what decides the exit "gate" (default) Route optical depth decides which exits are available and orders the survivors; travel time breaks ties. "additive" Smoke is a toll per metre walked, folded into one composite cost. Under the gate one quantity does the whole of the smoke reasoning: the route’s optical depth tau = K_ave * L, the soot column the agent walks through. It refuses a route, it orders the routes it does not refuse, and it weights every Dijkstra edge — see How the gate decides .'><meta itemprop=dateModified content="2026-09-27T12:15:27+02:00"><meta itemprop=wordCount content="7174"><meta name=twitter:card content="summary"><meta name=twitter:title content="The gate cost model"><meta name=twitter:description content='Part of pyFDS-Evac . Reference for routing.cost_model. Provenance, review findings and the open questions live in gate-model-review-notes.md ; this page documents what the shipped code does.
 Route choice runs under one of two cost models, selected per deck with routing.cost_model in the scenario JSON:
 value what decides the exit "gate" (default) Route optical depth decides which exits are available and orders the survivors; travel time breaks ties. "additive" Smoke is a toll per metre walked, folded into one composite cost. Under the gate one quantity does the whole of the smoke reasoning: the route’s optical depth tau = K_ave * L, the soot column the agent walks through. It refuses a route, it orders the routes it does not refuse, and it weights every Dijkstra edge — see How the gate decides .'><link rel=preload href=/pyFDS-Evac/css/compiled/main.min.53c9617cf9cb82685ec5af463dec3ecab7f3b4c3ad5c9cf22185fc7cf9b39519.css as=style integrity="sha256-U8lhfPnLgmhexa9GPew+yrfztMOtXJzyIYX8fPmzlRk="><link href=/pyFDS-Evac/css/compiled/main.min.53c9617cf9cb82685ec5af463dec3ecab7f3b4c3ad5c9cf22185fc7cf9b39519.css rel=stylesheet integrity="sha256-U8lhfPnLgmhexa9GPew+yrfztMOtXJzyIYX8fPmzlRk="><link href=/pyFDS-Evac/css/custom.min.e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.css rel=stylesheet integrity="sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="><script>const defaultTheme="system",setDarkTheme=()=>{document.documentElement.classList.add("dark"),document.documentElement.style.colorScheme="dark"},setLightTheme=()=>{document.documentElement.classList.remove("dark"),document.documentElement.style.colorScheme="light"};"color-theme"in localStorage?localStorage.getItem("color-theme")==="dark"?setDarkTheme():setLightTheme():(defaultTheme==="dark"?setDarkTheme():setLightTheme(),defaultTheme==="system"&&(window.matchMedia("(prefers-color-scheme: dark)").matches?setDarkTheme():setLightTheme()))</script></head><body dir=ltr><div class="nav-container hx-sticky hx-top-0 hx-z-20 hx-w-full hx-bg-transparent print:hx-hidden"><div class="nav-container-blur hx-pointer-events-none hx-absolute hx-z-[-1] hx-h-full hx-w-full hx-bg-white dark:hx-bg-dark hx-shadow-[0_2px_4px_rgba(0,0,0,.02),0_1px_0_rgba(0,0,0,.06)] contrast-more:hx-shadow-[0_0_0_1px_#000] dark:hx-shadow-[0_-1px_0_rgba(255,255,255,.1)_inset] contrast-more:dark:hx-shadow-[0_0_0_1px_#fff]"></div><nav class="hx-mx-auto hx-flex hx-items-center hx-justify-end hx-gap-2 hx-h-16 hx-px-6 hx-max-w-[90rem]"><a class="hx-flex hx-items-center hover:hx-opacity-75 ltr:hx-mr-auto rtl:hx-ml-auto" href=/pyFDS-Evac/><img class="hx-block dark:hx-hidden" src=/pyFDS-Evac/images/logo.png alt=pyFDS-Evac height=28 width=28>
 <img class="hx-hidden dark:hx-block" src=/pyFDS-Evac/images/logo.png alt=pyFDS-Evac height=28 width=28>
@@ -219,12 +219,22 @@ for a door with no resolved sight line the distance is an L1 norm
 (<code>evac.f90:16460</code>); pyFDS-Evac averages <code>K</code> along the walked polyline.
 Two further scope limits: the test lives in the tier-4 last-resort branch,
 reached only once no smoke-free door is available and looping only over doors
-that are already known or visible; and in FDS+Evac a struck-out door is struck
-out <em>permanently</em> (<code>Is_Visible_Door(i) = .FALSE.</code>, <code>:16464-16465</code>), which
-pyFDS-Evac deliberately does not do. So: the gate is <em>inspired by</em> FDS+Evac&rsquo;s
-tier-4 visibility door rule and inherits its threshold with a citation; it does
-not implement it. <strong><code>tau_max</code> has not been calibrated against a soot-dose or
-FED-equivalent limit.</strong> That is open work.</p><p>Under FDS+Evac&rsquo;s <em>primary</em> rule the criterion is different again — minimise time
+that are already known or visible; and the strike-out there
+(<code>Is_Visible_Door(i) = .FALSE.</code>, <code>:16464-16465</code>) lasts one call of
+<code>Change_Target_Door</code>, whose door arrays are reset at <code>:15831-15832</code>. FDS+Evac&rsquo;s
+only lasting smoke memory is a weak mark in a lone agent&rsquo;s known-door list on
+its previous target once <code>K_ave >= 0.3 /m</code> there (<code>:16292-16301</code>), and only if
+that door already has an entry in the list filled at initialisation (the loop
+rewrites entries but never adds one). A &ldquo;some
+smoke&rdquo; mark forces the door unknown only in the periodic re-evaluation; a &ldquo;too
+much smoke&rdquo; mark only drops the door from the list, and it can become known
+again (see
+<a href=/pyFDS-Evac/docs/model-comparison/#the-smoke-criteria-on-a-door>model-comparison.md</a>
+).
+pyFDS-Evac deliberately keeps no such memory. So: the gate is <em>inspired by</em>
+FDS+Evac&rsquo;s tier-4 visibility door rule and inherits its threshold with a
+citation; it does not implement it. <strong><code>tau_max</code> has not been calibrated
+against a soot-dose or FED-equivalent limit.</strong> That is open work.</p><p>Under FDS+Evac&rsquo;s <em>primary</em> rule the criterion is different again — minimise time
 among doors satisfying <code>K_ave_Door &lt; ABS(FED_DOOR_CRIT)</code> = 0.03 /m
 (<code>evac.f90:16265</code>, <code>:16272</code>; <code>FED_DOOR_CRIT = -100</code> becomes <code>3.0/100</code> at
 <code>:5262</code>). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
@@ -245,12 +255,13 @@ ordering everywhere: the tier-4 last-resort branch minimises <code>L2_tmp</code>
 that <code>L2_tmp</code> is <code>tau/6</code>. So the reference does rank on smoke — but only after
 tiers 1-3 have all failed to find any admitted door, only over doors already
 known or visible, on a bee-line (or L1) distance to the door rather than a
-walked route, and with a door struck out there struck out <em>permanently</em>
-(<code>:16463-16465</code>). Stated exactly: <strong>pyFDS-Evac promotes FDS+Evac&rsquo;s last-resort
-ranking criterion to its primary one, and drops the memory that makes it stable
-there.</strong> &ldquo;Smoke never enters FDS+Evac&rsquo;s ordering&rdquo; is too strong and should not
-be written; &ldquo;smoke never enters the ordering until every smoke-free tier is
-exhausted&rdquo; is what the source supports.</p><p><strong>The measured consequence, and what it is not.</strong> On <code>l_corridor</code> the model
+walked route, and with a strike-out there that lasts one call (<code>:16463-16465</code>;
+reset at <code>:15831-15832</code>). Stated exactly: <strong>pyFDS-Evac promotes FDS+Evac&rsquo;s
+last-resort ranking criterion to its primary one, and drops the one lasting
+smoke memory the reference has</strong>, a weak mark on a lone agent&rsquo;s previous target
+once <code>K_ave >= 0.3 /m</code> (<code>:16292-16301</code>). &ldquo;Smoke never enters FDS+Evac&rsquo;s
+ordering&rdquo; is too strong and should not be written; &ldquo;smoke never enters the
+ordering until every smoke-free tier is exhausted&rdquo; is what the source supports.</p><p><strong>The measured consequence, and what it is not.</strong> On <code>l_corridor</code> the model
 diverts 18 of 100 agents to the longer, cleaner route. The reference criterion
 would not: tiers 1-3 rank on distance, both doors clear the <code>K_ave &lt; 0.03 /m</code>
 admission test until the smoke is well developed, and the near exit is nearer
@@ -338,7 +349,7 @@ penalty the gate exists to remove. The worst <em>sample</em> is the step functio
 that made sighting distances jump between ticks. FDS+Evac applies its 0.03 to
 <code>K_ave_Door</code>, a per-door average, for the same reason — though note that
 <code>K_ave_Door</code> is a mean along a bee-line sight line (<code>See_door</code>,
-<code>evac.f90:16149</code>), not a maximum over legs.</li></ul><p><code>clean_exit_margin</code> is hysteresis on membership for the exit the agent already
+<code>evac.f90:16147</code>, assigned at <code>:16158</code>), not a maximum over legs.</li></ul><p><code>clean_exit_margin</code> is hysteresis on membership for the exit the agent already
 heads for: its limit is <code>clean_extinction_threshold / clean_exit_margin</code>.
 FDS+Evac supplies the value — <code>FAC_DOOR_OLD = 0.1</code> (<code>evac.f90:1506</code>), applied as
 <code>L2_tmp = FAC_DOOR_OLD * L2_tmp</code> for the current door (<code>:16255</code>), so the door an
@@ -361,8 +372,12 @@ hysteresis band of 0.0075 /m — narrower than the median jump, 116 crossings pe
 run. The band is also one-sided: the incumbent is relaxed to 0.0375 /m while a
 rival is admitted at the bare 0.03 /m. And because tier membership is binary, a
 crossing does not reorder the list, it swaps which objective is in force, so the
-target jumps. FDS+Evac can afford that because a door leaves an agent&rsquo;s known
-set permanently; here nothing is remembered, by design.</p><p><strong>Read the refutation as provisional.</strong> A band of 0.0075 /m is
+target jumps. FDS+Evac has only a weak memory against that: a mark on a lone
+agent&rsquo;s previous target once <code>K_ave >= 0.3 /m</code> (<code>evac.f90:16292-16301</code>), which
+acts weakly (see
+<a href=/pyFDS-Evac/docs/model-comparison/#the-smoke-criteria-on-a-door>model-comparison.md</a>
+); here
+nothing is remembered, by design.</p><p><strong>Read the refutation as provisional.</strong> A band of 0.0075 /m is
 <code>0.03 / 0.8 - 0.03</code>, so those runs were made at <code>clean_exit_margin = 0.8</code> — the
 value <code>from_routing_params</code> still hands out, and the value the same commit
 records as invented. At the 0.1 that <code>FAC_DOOR_OLD</code> supplies, the incumbent&rsquo;s
@@ -509,7 +524,7 @@ choice is not perception-limited.</strong> See
 It bounds what the discovery tier can be said to demonstrate about route
 choice; it does not touch map growth.</li></ul><p><strong>And the model is a departure, not a reproduction.</strong> <code>tau</code> is the ordering here;
 in FDS+Evac smoke ranks only inside the tier-4 last resort, over known-or-visible
-doors, on a bee line, with permanent strike-out. See
+doors, on a bee line, with a strike-out that lasts one call. See
 <a href=#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it>The diversion is a departure</a>
 .
 The 100/0 attributed to the reference criterion on <code>l_corridor</code> is a reasoned
@@ -610,4 +625,4 @@ its sources.</li><li><a href=/pyFDS-Evac/models/routing/>Routing model</a>
 — defaults and deviations from the
 literature.</li><li><a href=https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/l_corridor/README.md target=_blank rel=noopener>assets/l_corridor/README.md</a>
 — the deck, its
-fire, and the measured smoke contrast.</li></ul></div><div class="hx-mt-12 hx-mb-8 hx-block hx-text-xs hx-text-gray-500 ltr:hx-text-right rtl:hx-text-left dark:hx-text-gray-400">Last updated on <time datetime=2026-09-26T21:24:29.000Z>September 26, 2026</time></div><div class="hx-mb-8 hx-flex hx-items-center hx-border-t hx-pt-8 dark:hx-border-neutral-800 contrast-more:hx-border-neutral-400 dark:contrast-more:hx-border-neutral-400 print:hx-hidden"><a href=/pyFDS-Evac/docs/routing/ title="Smoke-aware routing" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-pr-4 rtl:hx-pl-4"><svg class="hx-inline hx-h-5 hx-shrink-0 ltr:hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>Smoke-aware routing</a><a href=/pyFDS-Evac/docs/fds-sampling/ title="FDS slice sampling" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-ml-auto ltr:hx-pl-4 ltr:hx-text-right rtl:hx-mr-auto rtl:hx-pr-4 rtl:hx-text-left">FDS slice sampling<svg class="hx-inline hx-h-5 hx-shrink-0 rtl:-hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a></div></main></article></div><footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hx-max-w-screen-xl hx-mx-auto hx-flex hx-justify-center hx-py-12 hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400 md:hx-justify-start"><div class="hx-flex hx-w-full hx-flex-col hx-items-center sm:hx-items-start"></div></div></footer><script defer src=/pyFDS-Evac/js/main.min.998f7d6b2520d6d9875145cbe14b35964b365b44b3b1bfa6b797a74a9c173b07.js integrity="sha256-mY99ayUg1tmHUUXL4Us1lks2W0Szsb+mt5enSpwXOwc="></script><script defer src=/pyFDS-Evac/lib/flexsearch/flexsearch.bundle.min.0425860527cc9968f9f049421c7a56b39327d475e2e3a8f550416be3a9134327.js integrity="sha256-BCWGBSfMmWj58ElCHHpWs5Mn1HXi46j1UEFr46kTQyc="></script><script defer src=/pyFDS-Evac/en.search.min.e94b9ab87af7e694584cf0f3e04ac9730f28249975a722351bf7ca00f4977934.js integrity="sha256-6UuauHr35pRYTPDz4ErJcw8oJJl1pyI1G/fKAPSXeTQ="></script></body></html>
+fire, and the measured smoke contrast.</li></ul></div><div class="hx-mt-12 hx-mb-8 hx-block hx-text-xs hx-text-gray-500 ltr:hx-text-right rtl:hx-text-left dark:hx-text-gray-400">Last updated on <time datetime=2026-09-27T12:15:27.000Z>September 27, 2026</time></div><div class="hx-mb-8 hx-flex hx-items-center hx-border-t hx-pt-8 dark:hx-border-neutral-800 contrast-more:hx-border-neutral-400 dark:contrast-more:hx-border-neutral-400 print:hx-hidden"><a href=/pyFDS-Evac/docs/routing/ title="Smoke-aware routing" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-pr-4 rtl:hx-pl-4"><svg class="hx-inline hx-h-5 hx-shrink-0 ltr:hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>Smoke-aware routing</a><a href=/pyFDS-Evac/docs/fds-sampling/ title="FDS slice sampling" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-ml-auto ltr:hx-pl-4 ltr:hx-text-right rtl:hx-mr-auto rtl:hx-pr-4 rtl:hx-text-left">FDS slice sampling<svg class="hx-inline hx-h-5 hx-shrink-0 rtl:-hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a></div></main></article></div><footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hx-max-w-screen-xl hx-mx-auto hx-flex hx-justify-center hx-py-12 hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400 md:hx-justify-start"><div class="hx-flex hx-w-full hx-flex-col hx-items-center sm:hx-items-start"></div></div></footer><script defer src=/pyFDS-Evac/js/main.min.998f7d6b2520d6d9875145cbe14b35964b365b44b3b1bfa6b797a74a9c173b07.js integrity="sha256-mY99ayUg1tmHUUXL4Us1lks2W0Szsb+mt5enSpwXOwc="></script><script defer src=/pyFDS-Evac/lib/flexsearch/flexsearch.bundle.min.0425860527cc9968f9f049421c7a56b39327d475e2e3a8f550416be3a9134327.js integrity="sha256-BCWGBSfMmWj58ElCHHpWs5Mn1HXi46j1UEFr46kTQyc="></script><script defer src=/pyFDS-Evac/en.search.min.e94b9ab87af7e694584cf0f3e04ac9730f28249975a722351bf7ca00f4977934.js integrity="sha256-6UuauHr35pRYTPDz4ErJcw8oJJl1pyI1G/fKAPSXeTQ="></script></body></html>
