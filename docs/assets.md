@@ -79,7 +79,7 @@ conventions; what each one proves, and where that proof is checked, is below.
   exit from `y = 14` to `24` and the end exit from `y = 26` (the two are equally
   far at `y ≈ 25.4`); walking back to `y = 10` with its map, it takes the side
   exit where it took the end exit on the way up. In the full run each agent
-  switches once, `E_end → E_side` at t = 5–17 s, and egress takes 21.6 s.
+  switches once, `E_end → E_side` at t = 5–19 s, and egress takes 21.2 s.
   Checked by `tests/test_cognitive_map_memory.py`, which pins the probe outcomes.
 - **FIC vs FED Speed**: 4x50 m sealed corridor, 30 agents, one exit. The gas is
   *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 10 ppm) rather

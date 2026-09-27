@@ -110,8 +110,8 @@ the spawn area onward and the scenario looks like agents that aimed at the side
 door from the start. With it, each path is coloured by the exit the agent was
 aiming at *at that moment*, and a dot marks the change of mind.
 
-**20 of 20 agents divert into `E_side`**, egress 21.6 s. One switch each:
-`E_end → E_side` between t = 5 and t = 17 s, as each agent crosses the
+**20 of 20 agents divert into `E_side`**, egress 21.2 s. One switch each:
+`E_end → E_side` between t = 5 and t = 19 s, as each agent crosses the
 legibility window and the sign becomes readable. Agent 1 switches at
 t = 10 s, y = 12.3.
 
