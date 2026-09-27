@@ -69,11 +69,11 @@ def _o2_intercept():
 
 
 def _hv_slope():
-    return math.log(_hyperventilation_factor(1.0) / _hyperventilation_factor(0.0))
+    return math.log(_hyperventilation_factor(2.0) / _hyperventilation_factor(1.0))
 
 
 def _hv_divisor():
-    return math.exp(2.0004) / _hyperventilation_factor(0.0)
+    return math.exp(0.1903 + 2.0004) / _hyperventilation_factor(1.0)
 
 
 def _heat_exponent():

@@ -59,12 +59,16 @@ def _co_fed_rate_per_minute(co_ppm: float) -> float:
 
 
 def _hyperventilation_factor(co2_percent: float) -> float:
-    """Return the CO2 hyperventilation factor from guide Eq. 19."""
+    """Return the CO2 hyperventilation factor from guide Eq. 19.
 
-    if not math.isfinite(co2_percent):
-        co2_percent = 0.0
-    co2_percent = max(0.0, float(co2_percent))
-    return math.exp(0.1903 * co2_percent + 2.0004) / 7.1
+    As in FDS (``func.f90``, function ``FED``), the factor applies only when
+    CO2 is present: with no CO2, or a missing reading, it is 1. Eq. 19 read
+    literally would give exp(2.0004)/7.1 = 1.0418 at zero CO2.
+    """
+
+    if not math.isfinite(co2_percent) or co2_percent <= 0.0:
+        return 1.0
+    return math.exp(0.1903 * float(co2_percent) + 2.0004) / 7.1
 
 
 _O2_HYPOXIA_THRESHOLD_PERCENT: float = 20.0

@@ -117,8 +117,9 @@ FED_tot = FED_CO x HV_CO2 + FED_O2
 
 `fed_hand_calc.py` accumulates this per-timestep (matching how FDS itself
 does it internally) rather than as a single closed-form multiplication —
-this matters because `HV_CO2` is not 1.0 even at 0% CO2 (it evaluates to
-~1.04), so it can't be pulled out and applied once at the end.
+this matters because `HV_CO2` depends on the CO2 present (here 500 ppm, so
+it is above 1), and it multiplies only the CO term, not the O2 term. With no
+CO2 at all the factor is 1, as in FDS (#194).
 
 | CO Concentration | FED = 0.3 (onset) | FED = 1.0 (incapacitation) |
 |------------------|-------------------|----------------------------|
