@@ -99,8 +99,13 @@ they take Eq. 63.34 for CO₂ instead of its simplification Eq. 63.35, and an
 HCN term \(\exp(C/43)/220\) that is not in Chs. 62–63 of the 5th edition,
 where "exponential" names the power law of Eq. 63.20 (p. 2360). The
 FDS+Evac guide cites the 3rd edition for these equations, the header of the
-FDS `FED` function (`func.f90`) the 4th, and the FDS User's Guide the 5th;
-which edition first gave that term is not verified here. The User's Guide
+FDS `FED` function (`func.f90`) the 4th, and the FDS User's Guide the 5th.
+The 3rd edition gives the term: \(F_{ICN} = \exp([\mathrm{CN}]/43)/220\)
+(Purser 2002, p. 2-105), which it calls a simplification of
+\(t_{ICN} = \exp(5.396 - 0.023\,C_{HCN})\) min (Eq. 9, regression
+coefficient 0.984): \(1/0.023 \approx 43\) and \(e^{5.396} \approx 220\) (our
+arithmetic). It has no offset. The 4th edition, which the FDS code cites, was
+not read here. The User's Guide
 reference (ref. [91]) is Ch. 62, which contains neither Eq. 63.34 nor an
 HCN incapacitation term (text search of Ch. 62). A result quoted as "Purser FED"
 therefore depends on the variant used.
@@ -137,10 +142,13 @@ per minute at 0 ppm instead of 0 (our arithmetic). The 5th
 edition gives the power form instead (Eq. 63.24); its rat-lethality FED in
 the companion chapter subtracts [NOx] from [CN] with coefficient 1 and uses
 yet another CO₂ factor, \(1 + (\exp(0.14\,[\mathrm{CO_2}]) - 1)/2\)
-(Purser 2016, Eq. 62.3, pp. 2227–2228). Hostikka and Linna (2025)
-attribute the exponential form to a 2010 Purser chapter, with NOₓ
-reduction factors of 0, 2/3 or 1 and no clear guidance between them
-(secondary; that chapter was not read here). For low oxygen, the FDS+Evac
+(Purser 2016, Eq. 62.3, pp. 2227–2228). The offset makes the term
+zero at zero concentration: Hostikka and Linna (2025, Eq. 3) write it as
+\(F_{I,CN0} = \exp(0)/220\). They cite a 2010 Purser chapter ("Toxic hazard
+calculation models for use with fire effluent data", their ref. [2]) for
+three NOₓ reduction factors, 0 in simple conservative analyses, otherwise
+2/3 or 1, "without a clear guidance which one to choose"; that chapter was
+not read here. For low oxygen, the FDS+Evac
 guide divides by an extra factor 60 while stating *t* in minutes (Eq. 18);
 Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not. The factor is a
 leftover from the 2009 guide (VTT Working Papers 119, FDS 5.3.0), which
