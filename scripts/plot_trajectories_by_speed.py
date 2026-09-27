@@ -24,11 +24,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
@@ -125,10 +121,7 @@ def _build_figure(
     if effective_vmax <= 0.0:
         effective_vmax = 1.0  # avoid zero-range cmap
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(9, 6), constrained_layout=True, dpi=150)
 
     if walkable_patch is not None:
@@ -200,8 +193,7 @@ def _build_figure(
     ax.set_title(title, loc="left", pad=16, color="dimgrey")
     ax.grid(False)
     ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
     ax.autoscale_view()
     return fig
 

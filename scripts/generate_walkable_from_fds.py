@@ -312,17 +312,11 @@ def main() -> None:
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        import seaborn as sns
         from matplotlib.patches import PathPatch
         from matplotlib.path import Path as MplPath
 
-        try:
-            import seaborn as sns
-        except ImportError:  # seaborn only sets the theme; fall back to rcParams
-            sns = None
-        if sns is not None:
-            sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-        else:
-            plt.rcParams["font.family"] = "DejaVu Sans"
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
 
         # Draw the polygon as a single path with the holes as reversed subpaths,
         # not as a filled exterior with the holes painted over. Filling the
@@ -356,8 +350,7 @@ def main() -> None:
         ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
         ax.set_xlabel("x [m]", color="dimgrey")
         ax.set_ylabel("y [m]", color="dimgrey")
-        if sns is not None:
-            sns.despine(left=True, bottom=True)
+        sns.despine(left=True, bottom=True)
         ax.set_title(
             f"{args.deck.stem}: walkable {walkable.area:.0f} m2, "
             f"{len(walkable.interiors)} obstacles",

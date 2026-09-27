@@ -27,12 +27,8 @@ import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.patches import Rectangle
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 sys.path.insert(0, "tests")
 from test_exit_visibility_alpha import _load
@@ -82,10 +78,7 @@ def chosen_exit(graph, vis, position):
 
 
 def main(out_path: Path) -> None:
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(1, 2, figsize=(8.6, 8.4), sharey=True)
     titles = [
         ("config_visible", r"$\bf{(a)}$  alpha = 0" + "\nnear sign faces the agents"),
@@ -174,8 +167,7 @@ def main(out_path: Path) -> None:
         ax.grid(False)
         ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT)
     axes[0].set_ylabel("y [m]", color=TEXT)
-    if sns is not None:
-        sns.despine(fig=fig, left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
 
     handles = [
         Rectangle((0, 0), 1, 1, fc=NEAR_C, ec="none"),

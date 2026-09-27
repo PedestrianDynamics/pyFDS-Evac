@@ -20,14 +20,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon as MplPolygon
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
 
@@ -189,10 +185,7 @@ def main():
     -----
     site/static/images/concepts/cognitive_map.png
     """
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
 
     fig, axes = plt.subplots(
         1, 4, figsize=(14.5, 3.0), dpi=150, gridspec_kw=dict(wspace=0.08)
@@ -272,8 +265,7 @@ def main():
         edgecolor="lightgrey",
         labelcolor="dimgrey",
     )
-    if sns is not None:
-        sns.despine(fig=fig, left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
 
     # the smoke panel against the one before it: same map, different choice
     i = next(k for k, p in enumerate(PANELS) if p["smoke"])

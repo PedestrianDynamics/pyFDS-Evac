@@ -37,15 +37,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from matplotlib import animation, patheffects
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 from pyfds_evac.core.smoke_speed import ExtinctionField
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 _logger = logging.getLogger(__name__)
 
@@ -347,10 +343,7 @@ def main() -> None:
             float(np.nanmax(pooled)),
         )
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(
         figsize=(11, 10 * (y1 - y0) / max(x1 - x0, 1e-9)), layout="constrained"
     )
@@ -361,8 +354,7 @@ def main() -> None:
     ax.set_ylabel("y [m]", color=TEXT)
     ax.grid(False)
     ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT)
-    if sns is not None:
-        sns.despine(ax=ax, left=True, bottom=True)
+    sns.despine(ax=ax, left=True, bottom=True)
 
     im = ax.imshow(
         _field_grid(field, times[0], xs, ys, outside),

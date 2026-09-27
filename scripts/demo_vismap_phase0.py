@@ -33,12 +33,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from fdsvismap import VisMap
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 FDS_DIR = Path("assets/t_junction")
 # Separate cache path from the runtime cache (assets/t_junction/vismap_cache.npz).
@@ -57,8 +53,7 @@ def _style_axes(fig, ax) -> None:
     ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
     ax.xaxis.label.set_color("dimgrey")
     ax.yaxis.label.set_color("dimgrey")
-    for spine in ax.spines.values():
-        spine.set_visible(False)
+    sns.despine(ax=ax, left=True, bottom=True)
     for other in fig.axes:  # colourbars
         if other is not ax:
             other.tick_params(length=0, labelcolor="dimgrey")
@@ -131,10 +126,7 @@ def main() -> None:
     vis = load_or_compute(FDS_DIR, CACHE_PATH, force=args.no_cache)
     vis.set_start_point(20.0, 4.5)  # centroid of spawn area
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
 
     # ── Plot 1: time-aggregated, waypoint-aggregated visibility map ────
     fig1, ax1 = vis.create_time_agg_wp_agg_vismap_plot(

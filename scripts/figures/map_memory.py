@@ -17,12 +17,8 @@ Writes ``site/static/images/concepts/map_memory.png``.
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.patches import Rectangle
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
 
@@ -68,10 +64,7 @@ def main():
     -----
     site/static/images/concepts/map_memory.png
     """
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(
         1, len(PROBES), figsize=(9.0, 4.6), dpi=150, gridspec_kw=dict(wspace=0.15)
     )
@@ -164,8 +157,7 @@ def main():
         labelcolor="dimgrey",
         bbox_to_anchor=(0.5, -0.02),
     )
-    if sns is not None:
-        sns.despine(fig=fig, left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
 
     remembered = [y for y, state, take in PROBES if state == "remembered"]
     remembered_takes = {take for _, state, take in PROBES if state == "remembered"}

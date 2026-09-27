@@ -19,13 +19,9 @@ import csv
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 _COMPONENT_COLS = (
     "co_rate_per_min",
@@ -46,9 +42,8 @@ _STACK_LABELS = (
 _STACK_HATCHES = ("", "//", "..", "xx", "\\\\")
 
 _THRESHOLD_COLOUR = "#d73027"
-# cubehelix(rot=-0.25, light=0.7), fixed so the plot does not need seaborn.
 _CUBEHELIX = LinearSegmentedColormap.from_list(
-    "cubehelix6", ["#90c1c6", "#72a5b4", "#58849f", "#446485", "#324465", "#1f253f"]
+    "cubehelix6", sns.cubehelix_palette(6, rot=-0.25, light=0.7)
 )
 _LEGEND_STYLE = dict(
     frameon=True,
@@ -61,10 +56,7 @@ _LEGEND_STYLE = dict(
 
 def _set_style() -> None:
     """Apply the house plot theme."""
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
 
 
 def _finish_axes(*axes) -> None:
@@ -73,8 +65,7 @@ def _finish_axes(*axes) -> None:
         ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
         ax.patch.set_edgecolor("lightgrey")
         ax.patch.set_linewidth(0.8)
-        if sns is not None:
-            sns.despine(ax=ax, left=True, bottom=True)
+        sns.despine(ax=ax, left=True, bottom=True)
 
 
 def _style_colorbar(cbar, label: str) -> None:
@@ -427,8 +418,7 @@ def _speed_and_fed_plot(
         )
     _finish_axes(ax_speed)
     ax_fed.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
-    if sns is not None:
-        sns.despine(ax=ax_fed, left=True, bottom=True, right=True)
+    sns.despine(ax=ax_fed, left=True, bottom=True, right=True)
     return fig
 
 

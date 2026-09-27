@@ -4,11 +4,7 @@ import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 
 from pyfds_evac.core import extinction_from_soot_density, speed_from_soot_density
 
@@ -45,10 +41,7 @@ def main() -> int:
     ]
     extinction_points = [extinction_from_soot_density(value) for value in soot_points]
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(9, 6), dpi=150)
     ax.plot(
         theory_x,
@@ -102,10 +95,8 @@ def main() -> int:
         edgecolor="lightgrey",
         labelcolor="dimgrey",
     )
-    if sns is not None:
-        sns.despine(ax=ax, left=True, bottom=True)
-    if sns is not None:
-        sns.despine(ax=top, left=True, bottom=True)
+    sns.despine(ax=ax, left=True, bottom=True)
+    sns.despine(ax=top, left=True, bottom=True)
     fig.tight_layout()
     fig.savefig(output, dpi=150, bbox_inches="tight")
     plt.close(fig)

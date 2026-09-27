@@ -20,11 +20,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 
 sys.path.insert(0, "tests")
 from test_rerouting_smoke_sweep import (
@@ -41,10 +37,7 @@ def main(out_path: Path) -> None:
     graph = _graph()
     weights = [w / 20.0 for w in range(61)]
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.4), sharey=True)
     for ax, field, title in (
         (axes[0], SmokeOnTheNearArm(), r"$\bf{(a)}$ smoke on the near exit's arm"),
@@ -91,8 +84,7 @@ def main(out_path: Path) -> None:
         ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
         ax.patch.set_edgecolor("lightgrey")
         ax.patch.set_linewidth(0.8)
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
     axes[0].set_ylabel("composite route cost", color="dimgrey")
     fig.suptitle(
         "Smoke shifts the exit choice only when it is asymmetric\n"

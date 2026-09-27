@@ -33,15 +33,11 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.animation import FFMpegWriter, PillowWriter
 from matplotlib.lines import Line2D
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Point, Polygon
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
@@ -223,10 +219,7 @@ def animate(
     frames = frames[::stride]
     wandering = [_wandering_at(switches, frame / sim_fps) for frame, _, _ in frames]
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(9, 7.6))
     fig.legend(
         handles=[

@@ -17,11 +17,7 @@ import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 
 from pyfds_evac.core import (
     ConstantExtinctionField,
@@ -119,10 +115,7 @@ def main() -> int:
     def residual_pct(rows):
         return [100.0 * (r["ratio"] / r["expected_ratio"] - 1.0) for r in rows]
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     expected_colour = "#1f253f"
     observed_colour = "#d73027"
     band_colour = "#33a02c"
@@ -242,8 +235,7 @@ def main() -> int:
         ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
         ax.patch.set_edgecolor("lightgrey")
         ax.patch.set_linewidth(0.8)
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
 
     worst = max(abs(v) for v in residual_pct(k_rows) + residual_pct(v_rows))
     fig.suptitle(

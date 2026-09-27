@@ -253,15 +253,9 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
         return
 
     import matplotlib.pyplot as plt
+    import seaborn as sns
 
-    try:
-        import seaborn as sns
-    except ImportError:  # seaborn only sets the theme; fall back to rcParams
-        sns = None
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
 
     n = len(results)
     if n == 0:
@@ -318,8 +312,7 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
     for ax in axes[n:]:
         ax.set_visible(False)
 
-    if sns is not None:
-        sns.despine(fig=fig, left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
     fig.suptitle(f"FDS inspection: {fds_dir}", fontsize=11)
     fig.tight_layout()
 

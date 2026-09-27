@@ -18,12 +18,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from matplotlib.patches import FancyArrowPatch, Rectangle, Wedge
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
 
@@ -222,18 +218,14 @@ def main():
     -----
     site/static/images/concepts/sign_bearing.png
     """
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, (ax0, ax1) = plt.subplots(
         1, 2, figsize=(6.8, 5.6), dpi=150, gridspec_kw=dict(wspace=0.02)
     )
     n_taking = 40
     draw_run(ax0, 0, r"$\bf{(a)}$  Near sign faces the agents", "near", n_taking)
     draw_run(ax1, 180, r"$\bf{(b)}$  Near sign turned around", "far", n_taking)
-    if sns is not None:
-        sns.despine(fig=fig, left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
 
     walk = {k: abs(walk_end(k) - np.mean(SPAWN)) for k in ("near", "far")}
     fig.text(

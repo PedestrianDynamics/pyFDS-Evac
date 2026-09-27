@@ -4,11 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 
 _LEGEND_STYLE = dict(
     frameon=True,
@@ -25,10 +21,7 @@ _EXTINCTION_COLOUR = "#d73027"
 
 def _subplots():
     """Two stacked panels sharing the time axis, in the house style."""
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     return plt.subplots(2, 1, figsize=(10, 7), sharex=True, dpi=150)
 
 
@@ -56,8 +49,7 @@ def _finish(fig, ax1, ax2, times, factors, extinction, title) -> None:
         ax.ticklabel_format(axis="y", useOffset=False)
         ax.patch.set_edgecolor("lightgrey")
         ax.patch.set_linewidth(0.8)
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
     fig.suptitle(title, color="dimgrey")
 
 

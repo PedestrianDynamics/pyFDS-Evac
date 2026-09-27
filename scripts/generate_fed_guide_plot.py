@@ -5,11 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 
 from pyfds_evac.core.fed import DefaultFedInputs, accumulate_default_fed
 
@@ -44,10 +40,7 @@ def main() -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     times_s = np.linspace(0.0, 100.0, 101)
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     colours = ["#d73027", "#fc8d59", "#4575b4", "#1f253f"]
     styles = ["-", "--", "-.", ":"]
     fig, ax = plt.subplots(figsize=(9, 6), dpi=150)
@@ -94,8 +87,7 @@ def main() -> int:
     ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
     ax.patch.set_edgecolor("lightgrey")
     ax.patch.set_linewidth(0.8)
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
     fig.tight_layout()
     fig.savefig(output, dpi=150, bbox_inches="tight")
     plt.close(fig)

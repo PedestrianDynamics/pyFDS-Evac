@@ -26,12 +26,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.patches import Rectangle
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon
 
@@ -110,10 +106,7 @@ def main(out_path: Path) -> None:
         "jps-distributions_0", graph, "discovery", vis_model=vis, time_s=0.0
     )
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(
         1,
         len(frames_y),
@@ -208,8 +201,7 @@ def main(out_path: Path) -> None:
         if ax is not axes[0]:
             ax.set_yticks([])
     axes[0].set_ylabel("y [m]", color=TEXT)
-    if sns is not None:
-        sns.despine(fig=fig, left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
 
     handles = [
         Rectangle((0, 0), 1, 1, **STATE_STYLE["unknown"]),

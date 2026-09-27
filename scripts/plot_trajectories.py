@@ -37,11 +37,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 from matplotlib.patches import Polygon as MplPoly
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Point, Polygon
@@ -155,10 +151,7 @@ def main() -> None:
     targets = load_targets(args.route_history) if args.route_history else {}
     used: dict[str | None, int] = {}
     switch_count = 0
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(6.5, 9))
 
     geometry_path = args.geometry or args.config.with_name("geometry.wkt")
@@ -227,8 +220,7 @@ def main() -> None:
     ax.set_aspect("equal")
     ax.grid(False)
     ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
     fig.tight_layout()
     fig.savefig(args.out, dpi=140, bbox_inches="tight")
     print(f"Wrote: {args.out}")

@@ -3,12 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.patches import Circle, FancyBboxPatch, Polygon
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 OUT_PATH = Path("routing_diagram_final_result.png")
 
@@ -111,10 +107,7 @@ def draw_arrow(
 
 
 def main():
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(10, 11))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)

@@ -28,11 +28,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 
 from pyfds_evac.core import (
     ExtinctionField,
@@ -150,10 +146,7 @@ def save_csvs(results: list[dict], out_dir: Path) -> None:
 
 
 def plot_comparison(results: list[dict], out_dir: Path) -> None:
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(1, 3, figsize=(13, 4), dpi=150)
     fig.suptitle(
         "Phase 2 verification: full vs discovery familiarity",
@@ -308,8 +301,7 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
         ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
         ax.patch.set_edgecolor("lightgrey")
         ax.patch.set_linewidth(0.8)
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
     for r in results:
         frac = (
             r["agents_evacuated"] / r["total_agents"] * 100

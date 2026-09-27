@@ -188,11 +188,7 @@ def plot(summary: list[dict], out_path: Path) -> None:
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-
-    try:
-        import seaborn as sns
-    except ImportError:  # seaborn only sets the theme; fall back to rcParams
-        sns = None
+    import seaborn as sns
 
     target = F.aggregate_door_shares()["front"]
     weights = [s["w_queue"] for s in summary]
@@ -200,10 +196,7 @@ def plot(summary: list[dict], out_path: Path) -> None:
     lo = [s["front_mean"] - s["front_min"] for s in summary]
     hi = [s["front_max"] - s["front_mean"] for s in summary]
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(7.0, 4.4), dpi=150)
     ax.errorbar(
         weights,
@@ -267,10 +260,8 @@ def plot(summary: list[dict], out_path: Path) -> None:
     )
     for axis in (ax, twin):
         axis.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
-    if sns is not None:
-        sns.despine(ax=ax, left=True, bottom=True)
-    if sns is not None:
-        sns.despine(ax=twin, left=True, bottom=True, right=True)
+    sns.despine(ax=ax, left=True, bottom=True)
+    sns.despine(ax=twin, left=True, bottom=True, right=True)
     fig.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
 

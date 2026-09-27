@@ -8,7 +8,7 @@ The curves are computed through the public API (``SmokeSpeedModel`` on a
 
 Run from the repository root::
 
-    uv run --group docs python scripts/figures/speed_laws.py
+    uv run python scripts/figures/speed_laws.py
 
 Writes ``site/static/images/concepts/speed_laws.png``.
 """

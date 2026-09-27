@@ -120,16 +120,9 @@ def _write_csv(path: Path, rows: list[dict[str, float]]) -> None:
 def _plot(path: Path, per_point: dict[str, list[dict[str, float]]]) -> None:
     """Save a two-panel plot: cumulative FED (top) and rate (bottom) per probe."""
     import matplotlib.pyplot as plt
+    import seaborn as sns
 
-    try:
-        import seaborn as sns
-    except ImportError:  # seaborn only sets the theme; fall back to rcParams
-        sns = None
-
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     colours = ["#d73027", "#4575b4", "#fc8d59", "#1f253f"]
     styles = ["-", "--", "-.", ":"]
     fig, (ax_cum, ax_rate) = plt.subplots(
@@ -180,8 +173,7 @@ def _plot(path: Path, per_point: dict[str, list[dict[str, float]]]) -> None:
         ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
         ax.patch.set_edgecolor("lightgrey")
         ax.patch.set_linewidth(0.8)
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=150, bbox_inches="tight")
 

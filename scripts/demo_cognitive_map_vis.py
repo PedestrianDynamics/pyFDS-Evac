@@ -26,14 +26,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 from shapely.geometry import Polygon
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 CONFIG_PATH = Path("assets/t_junction/config.json")
 CACHE_PATH = Path("assets/t_junction/vismap_cache.npz")
@@ -371,10 +367,7 @@ def main():
         ),
     ]
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(1, 4, figsize=(14, 4), gridspec_kw=dict(wspace=0.08))
     fig.suptitle("Cognitive map evolution — discovery vs full familiarity", fontsize=11)
 
@@ -453,8 +446,7 @@ def main():
         labelcolor=TEXT,
         bbox_to_anchor=(0.5, 0.02),
     )
-    if sns is not None:
-        sns.despine(fig=fig, left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
     fig.text(
         0.5,
         -0.02,

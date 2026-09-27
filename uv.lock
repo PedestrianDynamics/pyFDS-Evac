@@ -1074,8 +1074,6 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
-]
-docs = [
     { name = "seaborn" },
 ]
 
@@ -1101,8 +1099,8 @@ dev = [
     { name = "mypy", specifier = ">=1.19.1" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "ruff", specifier = ">=0.15.7" },
+    { name = "seaborn", specifier = ">=0.13.2" },
 ]
-docs = [{ name = "seaborn", specifier = ">=0.13.2" }]
 
 [[package]]
 name = "pygments"

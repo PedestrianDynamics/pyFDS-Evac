@@ -6,11 +6,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.fed import (
@@ -92,10 +88,7 @@ def main() -> int:
         ]
         dt = result.metrics["dt"]
 
-        if sns is not None:
-            sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-        else:
-            plt.rcParams["font.family"] = "DejaVu Sans"
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
         analytic_colour = "#1f253f"
         runtime_colour = "#d73027"
         legend_style = dict(
@@ -197,8 +190,7 @@ def main() -> int:
             axis.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
             axis.patch.set_edgecolor("lightgrey")
             axis.patch.set_linewidth(0.8)
-        if sns is not None:
-            sns.despine(left=True, bottom=True)
+        sns.despine(left=True, bottom=True)
 
         worst = max(abs(v) for v in residual)
         print(

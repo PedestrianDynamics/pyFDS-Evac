@@ -11,11 +11,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
+import seaborn as sns
 
 
 def main(cost_csv: str, routes_csv: str | None = None) -> None:
@@ -28,10 +24,7 @@ def main(cost_csv: str, routes_csv: str | None = None) -> None:
     colors = ["#d73027", "#4575b4", "#fc8d59", "#1f253f"]
     styles = ["-", "--", "-.", ":"]
 
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(10, 5), dpi=150)
 
     for i, exit_id in enumerate(exits):
@@ -92,8 +85,7 @@ def main(cost_csv: str, routes_csv: str | None = None) -> None:
     ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
     ax.patch.set_edgecolor("lightgrey")
     ax.patch.set_linewidth(0.8)
-    if sns is not None:
-        sns.despine(left=True, bottom=True)
+    sns.despine(left=True, bottom=True)
 
     out = Path(cost_csv).with_name("route_costs_plot.png")
     fig.tight_layout()
