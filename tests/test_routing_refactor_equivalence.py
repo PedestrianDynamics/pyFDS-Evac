@@ -594,10 +594,117 @@ def _limit_cases() -> list[tuple[str, golden.RankCase]]:
                 ),
             )
         )
+    return cases + _margin_limit_cases()
+
+
+def _scaled_limit(target: float, factor: float, divide: bool = False) -> float | None:
+    """A threshold that, times *factor* (or divided by it), is exactly *target*.
+
+    Searched over a few ulps around the naive quotient, since the code
+    multiplies (or divides) and the product has to land on *target* exactly.
+    """
+    guess = target * factor if divide else target / factor
+    candidates = [guess]
+    for direction in (-math.inf, math.inf):
+        value = guess
+        for _ in range(8):
+            value = math.nextafter(value, direction)
+            candidates.append(value)
+    for value in candidates:
+        if (value / factor if divide else value * factor) == target:
+            return value
+    return None
+
+
+# The limits a rival exit is held to, and the clean limit of the current exit.
+# Each case names (config field, margin field, margin, current exit, measure).
+_MARGIN_LIMITS = (
+    ("fed_rejection_threshold", "fed_return_margin", "east", "fed_max_route"),
+    ("tau_max", "tau_return_margin", "east", "tau_route"),
+    ("clean_extinction_threshold", "clean_exit_margin", "west", "k_leg_max"),
+)
+
+
+def _margin_config(model, field_name: str, margin_name: str, margin, limit):
+    return model(**{field_name: limit, margin_name: margin})
+
+
+def _margin_limit_cases() -> list[tuple[str, golden.RankCase]]:
+    """Rival-adjusted FED and tau limits, and the current exit's clean limit.
+
+    ``current_exit`` is set, so the margin applies to the measured route; the
+    threshold is chosen so the adjusted limit lands exactly on the measured
+    value, one ulp below it and one above.
+    """
+    cases = []
+    for field_name, margin_name, current, measure in _MARGIN_LIMITS:
+        default = getattr(RouteCostConfig(), margin_name)
+        divide = margin_name == "clean_exit_margin"
+        models = (golden._gate, golden._additive)
+        if field_name == "tau_max":
+            models = (golden._gate,)
+        for model in models:
+            for margin in (0.5, default):
+                probe = _margin_config(model, field_name, margin_name, margin, 1.0)
+                measured = getattr(_west(probe, _SMOKE, _DOSE, 0.1), measure)
+                for i, target in enumerate(_around(measured)):
+                    limit = _scaled_limit(target, margin, divide)
+                    if limit is None:
+                        continue
+                    config = _margin_config(
+                        model, field_name, margin_name, margin, limit
+                    )
+                    for exit_ in (current, None):
+                        cases.append(
+                            (
+                                f"{field_name}-{model.__name__}-{margin}[{i}]-{exit_}",
+                                golden.RankCase(
+                                    _star2,
+                                    config,
+                                    _SMOKE,
+                                    fed=_DOSE,
+                                    current_fed=0.1,
+                                    current_exit=exit_,
+                                ),
+                            )
+                        )
     return cases
 
 
 _LIMIT_CASES = dict(_limit_cases())
+
+
+def test_margin_limits_are_hit_exactly():
+    """With margin 0.5 every adjusted limit lands on the measured value."""
+    for field_name, margin_name, current, measure in _MARGIN_LIMITS:
+        divide = margin_name == "clean_exit_margin"
+        probe = _margin_config(golden._gate, field_name, margin_name, 0.5, 1.0)
+        measured = getattr(_west(probe, _SMOKE, _DOSE, 0.1), measure)
+        below, exact, _ = (_scaled_limit(t, 0.5, divide) for t in _around(measured))
+        assert below is not None and exact is not None
+        ranked = {
+            limit: next(
+                rc
+                for rc in live.rank_routes(
+                    _star2(),
+                    "spawn",
+                    0.0,
+                    0.1,
+                    _SMOKE,
+                    _DOSE,
+                    _margin_config(golden._gate, field_name, margin_name, 0.5, limit),
+                    current_exit=current,
+                )
+                if rc.exit_id == "west"
+            )
+            for limit in (below, exact)
+        }
+        if field_name == "clean_extinction_threshold":
+            assert not ranked[below].clean and ranked[exact].clean
+        else:
+            prefix = "FED" if field_name.startswith("fed") else "tau"
+            reasons = [ranked[limit].rejection_reason or "" for limit in (below, exact)]
+            assert prefix in reasons[0] and prefix not in reasons[1], reasons
 
 
 @pytest.mark.parametrize("name", sorted(_LIMIT_CASES))
