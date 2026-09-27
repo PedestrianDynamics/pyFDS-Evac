@@ -134,6 +134,22 @@ def _tied_detour() -> StageGraph:
     )
 
 
+def _length_tie() -> StageGraph:
+    """Two exits 10 m away, one direct and one through a checkpoint.
+
+    In clear air the routes tie on tau and time exactly, so only the path
+    length orders them; the longer path is listed first.
+    """
+    return golden._graph(
+        {
+            "E1": (0.0, 10.0, "exit"),
+            "C": (0.0, 5.0, "checkpoint"),
+            "E0": (10.0, 0.0, "exit"),
+        },
+        golden._edges(("D0", "C"), ("C", "E1"), ("D0", "E0")),
+    )
+
+
 # ── Configuration variants ────────────────────────────────────────────
 
 _VARIANTS: dict[str, Callable[[RouteCostConfig], RouteCostConfig]] = {
@@ -225,6 +241,22 @@ _EXTRA_RANK_CASES: dict[str, golden.RankCase] = {
     "additive_twin_paths_dose": golden.RankCase(
         golden._twin, golden._additive(), fed=_FedBelow(1.0), source="D0"
     ),
+    # Every route refused: the current exit leads on discounted tau, the rival
+    # on raw tau, which is what the fallback orders by.
+    "gate_fallback_raw_tau": golden.RankCase(
+        lambda: golden._star({"west": 24.0, "east": 20.0}),
+        golden._gate(),
+        golden.ArmField({"west": 0.4, "east": 0.5}),
+        current_exit="east",
+    ),
+    # Gate: a short route through non-visible smoke is not refused for it.
+    "gate_nonvisible_short_route": golden.RankCase(
+        lambda: golden._star({"west": 4.0, "east": 20.0}),
+        golden._gate(),
+        golden.ArmField({"west": 1.0}),
+    ),
+    # Clear air: two exits tie on everything but the path length.
+    "gate_path_length_tie": golden.RankCase(_length_tie, golden._gate(), source="D0"),
 }
 
 _ALL_RANK_CASES = {**golden.RANK_CASES, **_EXTRA_RANK_CASES}
@@ -525,6 +557,36 @@ _PASS_CONFIGS = {
     "additive": golden._additive(w_queue=0.5),
     "unknown_mode": golden._gate(cost_model="weird"),
 }
+
+
+def test_ordering_cases_hit_their_branch():
+    """The ordering cases put the route they are meant to put first."""
+
+    def ranked(name):
+        case = _EXTRA_RANK_CASES[name]
+        return live.rank_routes(
+            case.graph(),
+            case.source,
+            case.time_s,
+            case.current_fed,
+            case.extinction,
+            case.fed,
+            case.config,
+            current_exit=case.current_exit,
+        )
+
+    fallback = ranked("gate_fallback_raw_tau")
+    west, east = sorted(fallback, key=lambda rc: rc.exit_id != "west")
+    assert west.tau_route < east.tau_route
+    assert east.tau_route * 0.9 < west.tau_route
+    assert fallback[0].exit_id == "west"
+    assert fallback[0].rejection_reason.startswith("fallback: ")
+    nonvisible = {rc.exit_id: rc for rc in ranked("gate_nonvisible_short_route")}
+    assert not any(s.visible for s in nonvisible["west"].segments)
+    assert not nonvisible["west"].rejected
+    tie = ranked("gate_path_length_tie")
+    assert tie[0].rank_cost == tie[1].rank_cost and tie[0].tau_route == 0.0
+    assert [rc.exit_id for rc in tie] == ["E0", "E1"]
 
 
 def test_edge_weight_cases_turn_on_the_weight():
