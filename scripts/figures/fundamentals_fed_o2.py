@@ -18,8 +18,8 @@ sudden decompression to 20 000-40 000 ft, a sea-level equivalent of 9.6 %
 down to 3.9 % O2 (Fig. 63.25, pp. 2365-2366); the curve is solid there and
 dashed above. The vertical lines mark 15 % O2, down to which there is
 little effect in humans (p. 2364), and 20 % O2, at or above which FDS
-(``func.f90``, function ``FED``) drops the O2 term; 20 % is also the
-pyFDS-Evac default (``o2_threshold_percent``), quoted here, not imported.
+(``func.f90``, function ``FED``) drops the O2 term, quoted here, not
+imported.
 
 Run from the repository root::
 
@@ -88,7 +88,7 @@ def main():
 
     for x0, text, ls, y_text in (
         (15.0, "15 %: little effect\nin humans (p. 2364)", ":", 0.45),
-        (20.0, "20 %: FDS and\npyFDS-Evac zero\nthe term at or above", "-.", 0.13),
+        (20.0, "20 %: FDS zeroes\nthe term at or above", "-.", 0.13),
     ):
         ax.axvline(x0, color="grey", lw=1.0, ls=ls, zorder=1)
         ax.plot(x0, t_io(x0), "o", color=c_ch63, ms=5, mec="white", zorder=5)

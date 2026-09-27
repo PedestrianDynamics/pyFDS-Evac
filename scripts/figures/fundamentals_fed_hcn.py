@@ -105,7 +105,7 @@ def main():
         0.98,
         0.97,
         "Near 70–115 ppm the curves agree within 6 %;\n"
-        "above 150 ppm the exponential form is far more severe",
+        "above 150 ppm they diverge: 2.1× at 200, 4× at 250 ppm",
         transform=ax.transAxes,
         ha="right",
         va="top",

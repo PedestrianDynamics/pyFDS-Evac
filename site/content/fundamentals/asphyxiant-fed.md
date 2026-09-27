@@ -123,7 +123,8 @@ arithmetic; Hostikka and Linna 2025 make the same point). The chapter's own
 worked example (Table 63.16, p. 2374), stated to follow Eq. 63.38, lists
 \(VCO_2\) = 1.442, 2.376 and 4.434 at 1.5, 3.5 and 6 % CO₂. These match
 Eq. 63.32, not Eq. 63.35, which gives 1.35, 2.01 and 3.32 (our arithmetic),
-so the chapter is inconsistent here.
+so the chapter is inconsistent here. Its 6 % point also exceeds the
+70 L/min cap: 25 × 4.434 = 111 L/min (our arithmetic).
 
 For HCN, the FDS+Evac guide uses
 \(\left(\exp(C_{CN}/43)/220 - 0.0045\right)\) with
@@ -141,7 +142,17 @@ attribute the exponential form to a 2010 Purser chapter, with NOₓ
 reduction factors of 0, 2/3 or 1 and no clear guidance between them
 (secondary; that chapter was not read here). For low oxygen, the FDS+Evac
 guide divides by an extra factor 60 while stating *t* in minutes (Eq. 18);
-Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not.
+Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not. The factor is a
+leftover from the 2009 guide (VTT Working Papers 119, FDS 5.3.0), which
+gave every FED equation with *t* in seconds: its Eq. 12 is
+\(4.607 \times 10^{-7}\,C_{CO}^{1.036}\,t\), i.e. \(2.764 \times 10^{-5}/60\),
+and its Eq. 13 is \(t/(60\exp[8.13 - 0.54(20.9 - C_{O_2})])\), "where t is
+time in seconds". The 2021 guide rewrote Eqs. 13–17 per minute and dropped
+the 60, but kept it in Eq. 18. The FDS code divides by 60 because its time
+step is in seconds (`func.f90`, function `FED`, before and after commit
+694e033), so the code is consistent and only the 2021 guide's Eq. 18 is
+not. The 2009 guide also prints the CO₂ coefficient as 0.1930 (Eq. 14),
+where Purser and the code use 0.1903.
 {{< /details >}}
 
 ![VCO2 against CO2 from 0 to 10 %: Eqs. 63.32 and 63.33 rise to about 12 at 10 %, Eqs. 63.34 and 63.35 lie close together and reach about 7; the three Table 63.16 points sit on Eq. 63.32; a horizontal line at 2.8 marks the 70 L/min cap](/images/fundamentals/fed_co2.png)
@@ -228,16 +239,15 @@ Script: `scripts/figures/fundamentals_fed_hcn.py`.
 (derived as Eq. 63.27): solid over the decompression data (3.9–9.6 % O₂,
 shaded), dashed above. Dotted: 15 % O₂, down to which there is little
 effect in humans (p. 2364), 140 min. Dash-dot: 20 % O₂, at or above which
-FDS and pyFDS-Evac (default) set the O₂ term to zero, about 2090 min.
+FDS sets the O₂ term to zero, about 2090 min.
 Almost all of the O₂ range a fire simulation visits is extrapolation.*
 
 {{< details title="Figure provenance" closed="true" >}}
 \(t_{IO} = \exp[8.13 - 0.54\,(20.9 - \%\mathrm{O_2})]\) (Eq. 63.50;
 Eq. 63.27, pp. 2365–2366), 0.35 min at 3.9 %, 7.6 min at 9.6 % and
 3395 min at 20.9 % (our arithmetic). Data span from Fig. 63.25. The 20 %
-gate is the condition X_O2 < 0.20 in FDS `func.f90` (function `FED`) and
-the pyFDS-Evac default `o2_threshold_percent = 20.0`, quoted, not
-imported. Script: `scripts/figures/fundamentals_fed_o2.py`.
+gate is the condition X_O2 < 0.20 in FDS `func.f90` (function `FED`),
+quoted, not imported. Script: `scripts/figures/fundamentals_fed_o2.py`.
 {{< /details >}}
 
 ## Known limits
