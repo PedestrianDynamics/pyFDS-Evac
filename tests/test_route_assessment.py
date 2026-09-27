@@ -7,20 +7,26 @@ public result, so the projection back onto it must be exact.
 
 from __future__ import annotations
 
-from dataclasses import fields
+from dataclasses import fields, replace
 
 import test_rerouting_golden as golden
 
 from pyfds_evac.core.route_graph import (
+    AdditivePolicy,
+    GatePolicy,
     RouteAssessment,
     RouteCost,
     RouteFeasibility,
     RouteMeasurements,
     RouteViolation,
     SegmentCost,
+    _assess_measurements,
+    _fed_limit,
+    _measure_route,
     _must_flee_rejection,
     _project_route_cost,
     evaluate_route,
+    policy_for,
     rank_routes,
 )
 
@@ -128,46 +134,84 @@ def test_projection_round_trips_a_ranked_route():
         assert _project_route_cost(_assessment_of(rc)) == rc
 
 
+_DUAL_SMOKE = golden.ArmField({"west": 0.5})
+_DUAL_DOSE = golden.ArmFed({"west": 4.0})
+
+
+def _assess_west(config, current_exit=None):
+    graph = golden._star2()
+    path = ["spawn", "west"]
+    m = _measure_route(graph, path, 0.0, 0.2, _DUAL_SMOKE, _DUAL_DOSE, config)
+    rc = evaluate_route(
+        graph,
+        path,
+        0.0,
+        0.2,
+        _DUAL_SMOKE,
+        _DUAL_DOSE,
+        config,
+        current_exit=current_exit,
+    )
+    return m, _assess_measurements(m, config, current_exit), rc
+
+
 def test_dual_violation_reports_tau_reason():
     """A route over both limits reports tau, and loses the must-flee bypass.
 
     #128: the tau test overwrites the FED reason. Stage 1 keeps that; the
-    violations list records both, FED first, and the public reason is the
-    last one.
+    violations record both, FED first, and the public reason is the last one.
     """
     config = golden._gate()
-    rc = evaluate_route(
-        golden._star2(),
-        ["spawn", "west"],
-        0.0,
-        0.2,
-        golden.ArmField({"west": 0.5}),
-        golden.ArmFed({"west": 4.0}),
-        config,
-    )
-    assert rc.fed_max_route > config.fed_rejection_threshold
-    assert rc.tau_route > config.tau_max
+    m, assessment, rc = _assess_west(config)
+    violations = assessment.feasibility.violations
+    assert [v.kind for v in violations] == ["fed", "tau"]
+    fed, tau = violations
+    assert (fed.measured, fed.limit) == (m.fed_max_route, 1.0)
+    assert (tau.measured, tau.limit) == (m.tau_route, config.tau_max)
+    assert fed.reason.startswith("FED_max")
+    assert tau.reason == rc.rejection_reason
     assert rc.rejection_reason.startswith("tau")
-    assert not rc.feasible
+    assert not rc.feasible and rc.rejected
     assert not _must_flee_rejection(rc, config)
-    violations = (
-        RouteViolation(
-            kind="fed",
-            reason=f"FED_max {rc.fed_max_route:.3f} > "
-            f"{config.fed_rejection_threshold:.3f}",
-            measured=rc.fed_max_route,
-            limit=config.fed_rejection_threshold,
-        ),
-        RouteViolation(
-            kind="tau",
-            reason=rc.rejection_reason,
-            measured=rc.tau_route,
-            limit=config.tau_max,
-        ),
-    )
-    assessment = _assessment_of(rc, violations)
-    assert assessment.feasibility.violations[-1].reason == rc.rejection_reason
     assert _project_route_cost(assessment) == rc
+
+
+def test_additive_records_the_dose_only():
+    """The additive model has no sight gate: the same route breaks FED alone."""
+    config = golden._additive()
+    _, assessment, rc = _assess_west(config)
+    violations = assessment.feasibility.violations
+    assert [v.kind for v in violations] == ["fed"]
+    assert violations[0].reason == rc.rejection_reason
+    assert _must_flee_rejection(rc, config)
+    assert _project_route_cost(assessment) == rc
+
+
+def test_rival_limits_carry_their_margins():
+    """A rival exit is held to the margin-adjusted limits, the current one not."""
+    config = golden._gate()
+    for current_exit, fed_limit, tau_limit in (
+        (None, 1.0, config.tau_max),
+        ("west", 1.0, config.tau_max),
+        (
+            "east",
+            config.fed_rejection_threshold * config.fed_return_margin,
+            config.tau_max * config.tau_return_margin,
+        ),
+    ):
+        _, assessment, rc = _assess_west(config, current_exit)
+        fed, tau = assessment.feasibility.violations
+        assert fed.limit == fed_limit == _fed_limit(config, "west", current_exit)
+        assert tau.limit == tau_limit
+        assert tau_limit == GatePolicy._tau_budget(config, "west", current_exit)
+        assert _project_route_cost(assessment) == rc
+
+
+def test_policy_for_picks_gate_only_for_gate():
+    assert isinstance(policy_for(golden._gate()), GatePolicy)
+    for model in ("additive", "weird", "Gate"):
+        policy = policy_for(replace(golden._gate(), cost_model=model))
+        assert isinstance(policy, AdditivePolicy)
 
 
 def test_kvis_rejection_keeps_route_feasible():
