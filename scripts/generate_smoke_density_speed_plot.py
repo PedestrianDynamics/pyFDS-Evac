@@ -42,7 +42,7 @@ def main() -> int:
     extinction_points = [extinction_from_soot_density(value) for value in soot_points]
 
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    fig, ax = plt.subplots(figsize=(9, 6), dpi=150)
+    fig, ax = plt.subplots(figsize=(9, 6))
     ax.plot(
         theory_x,
         theory_y,

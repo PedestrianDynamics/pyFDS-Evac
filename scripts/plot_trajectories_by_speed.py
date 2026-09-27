@@ -93,6 +93,33 @@ def _walkable_patch_from_sqlite(sqlite_path: Path) -> PathPatch | None:
     )
 
 
+def _slow_is_thick(v: np.ndarray, vmax: float, base: float) -> np.ndarray:
+    """Width per segment: *base* at full speed, three times that when stopped.
+
+    Speed is then read from width as well as colour.
+    """
+    return base * (1.0 + 2.0 * (1.0 - np.clip(v / vmax, 0.0, 1.0)))
+
+
+def _mark_slowest(ax, by_agent: dict[int, dict[str, list[float]]]) -> None:
+    """Ring and label the slowest recorded sample."""
+    agent_id, i = min(
+        ((aid, j) for aid, s in by_agent.items() for j in range(len(s["v"]))),
+        key=lambda item: by_agent[item[0]]["v"][item[1]],
+    )
+    s = by_agent[agent_id]
+    ax.plot(s["x"][i], s["y"][i], "o", mfc="none", mec="dimgrey", ms=9, zorder=5)
+    ax.annotate(
+        f"slowest: {s['v'][i]:.2f} m/s (agent {agent_id})",
+        xy=(s["x"][i], s["y"][i]),
+        xytext=(8, 8),
+        textcoords="offset points",
+        fontsize=8,
+        color="dimgrey",
+        zorder=5,
+    )
+
+
 def _parse_agents(raw: str | None) -> set[int] | None:
     """Parse a comma-separated agent-id list, or ``None`` for all agents."""
     if raw is None:
@@ -122,7 +149,7 @@ def _build_figure(
         effective_vmax = 1.0  # avoid zero-range cmap
 
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    fig, ax = plt.subplots(figsize=(9, 6), constrained_layout=True, dpi=150)
+    fig, ax = plt.subplots(figsize=(9, 6), constrained_layout=True)
 
     if walkable_patch is not None:
         ax.add_patch(walkable_patch)
@@ -152,7 +179,7 @@ def _build_figure(
             list(segments),
             cmap=cmap,
             norm=Normalize(0.0, effective_vmax),
-            linewidth=linewidth,
+            linewidth=_slow_is_thick(seg_v, effective_vmax, linewidth),
             alpha=alpha,
         )
         lc.set_array(seg_v)
@@ -166,12 +193,14 @@ def _build_figure(
                 xs[-1], ys[-1], f" {agent_id}", fontsize=7, color="dimgrey", zorder=4
             )
 
+    _mark_slowest(ax, by_agent)
+
     # Add a colorbar using a dummy mappable (so it works even when every
     # agent was rendered via LineCollection rather than scatter).
     dummy = plt.cm.ScalarMappable(cmap=cmap, norm=Normalize(0.0, effective_vmax))
     dummy.set_array([])
     cbar = fig.colorbar(dummy, ax=ax)
-    cbar.set_label("desired speed (m/s)", color="dimgrey")
+    cbar.set_label("desired speed (m/s); thicker line = slower", color="dimgrey")
     cbar.outline.set_visible(False)
     cbar.ax.tick_params(length=0, labelcolor="dimgrey")
 
@@ -224,7 +253,8 @@ def _build_parser() -> argparse.ArgumentParser:
         "--linewidth",
         type=float,
         default=0.5,
-        help="Line width for trajectory polylines (default: 0.5)",
+        help="Line width at full speed; slower segments are drawn up to three "
+        "times wider (default: 0.5)",
     )
     parser.add_argument(
         "--alpha",

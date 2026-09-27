@@ -197,7 +197,7 @@ def plot(summary: list[dict], out_path: Path) -> None:
     hi = [s["front_max"] - s["front_mean"] for s in summary]
 
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    fig, ax = plt.subplots(figsize=(7.0, 4.4), dpi=150)
+    fig, ax = plt.subplots(figsize=(7.0, 4.4))
     ax.errorbar(
         weights,
         means,

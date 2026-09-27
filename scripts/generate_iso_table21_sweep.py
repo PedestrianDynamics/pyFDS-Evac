@@ -128,7 +128,7 @@ def main() -> int:
         fontsize=8,
     )
 
-    fig, axes = plt.subplots(2, 2, figsize=(12, 7), height_ratios=[2, 1], dpi=150)
+    fig, axes = plt.subplots(2, 2, figsize=(12, 7), height_ratios=[2, 1])
 
     ax = axes[0][0]
     ax.plot(

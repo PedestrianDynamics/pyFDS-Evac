@@ -22,7 +22,7 @@ _EXTINCTION_COLOUR = "#d73027"
 def _subplots():
     """Two stacked panels sharing the time axis, in the house style."""
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    return plt.subplots(2, 1, figsize=(10, 7), sharex=True, dpi=150)
+    return plt.subplots(2, 1, figsize=(10, 7), sharex=True)
 
 
 def _finish(fig, ax1, ax2, times, factors, extinction, title) -> None:

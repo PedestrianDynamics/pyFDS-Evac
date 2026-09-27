@@ -108,6 +108,21 @@ class QuantityStats:
     scale: float = 1.0
 
 
+def _insight(stats: QuantityStats, qinfo: dict) -> str:
+    """One line per panel: the peak, and when the threshold is first crossed."""
+    i = int(np.nanargmax(stats.peak))
+    text = f"peak {stats.peak[i]:.3g} {stats.unit} at {stats.times[i]:.0f} s"
+    threshold = qinfo.get("threshold")
+    if threshold is None:
+        return text
+    invert = qinfo.get("invert", False)
+    crossed = stats.peak < threshold if invert else stats.peak > threshold
+    if not crossed.any():
+        return f"{text}; threshold {threshold:g} not crossed"
+    side = "below" if invert else "above"
+    return f"{text}; {side} {threshold:g} from {stats.times[crossed.argmax()]:.0f} s"
+
+
 def _load_quantity(sim, fds_name: str, height: float | None) -> object | None:
     """Return the best matching slice object, or None if not found."""
     try:
@@ -295,6 +310,17 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
             pad=7,
         )
         ax.set_xlabel("Time (s)", color="dimgrey")
+        ax.text(
+            1.0,
+            1.02,
+            _insight(stats, qinfo),
+            transform=ax.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=8,
+            color="dimgrey",
+            style="italic",
+        )
         ax.legend(
             fontsize=7,
             frameon=True,

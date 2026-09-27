@@ -28,6 +28,7 @@ import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib import patheffects
 from matplotlib.patches import Rectangle
 
 sys.path.insert(0, "tests")
@@ -122,9 +123,10 @@ def main(out_path: Path) -> None:
                 (0, 0), 4.0, 30.0, fill=False, ec=WALL, lw=1.4, zorder=3, clip_on=False
             )
         )
+        # outline only: the exit choice inside the spawn area stays visible
         ax.add_patch(
             Rectangle(
-                (0.5, 8.0), 3.0, 4.0, fc="white", ec=TEXT, lw=1.2, ls="--", zorder=4
+                (0.5, 8.0), 3.0, 4.0, fill=False, ec=TEXT, lw=1.4, ls="--", zorder=4
             )
         )
         ax.text(
@@ -136,6 +138,7 @@ def main(out_path: Path) -> None:
             color=TEXT,
             fontsize=8,
             fontweight="bold",
+            path_effects=[patheffects.withStroke(linewidth=2.5, foreground="white")],
             zorder=5,
         )
 

@@ -25,7 +25,7 @@ def main(cost_csv: str, routes_csv: str | None = None) -> None:
     styles = ["-", "--", "-.", ":"]
 
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    fig, ax = plt.subplots(figsize=(10, 5), dpi=150)
+    fig, ax = plt.subplots(figsize=(10, 5))
 
     for i, exit_id in enumerate(exits):
         sub = mean_cost[mean_cost["exit_id"] == exit_id].sort_values("time_s")

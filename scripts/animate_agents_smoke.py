@@ -179,6 +179,15 @@ def _draw_deck(ax, config: Path | None) -> None:
         )
 
 
+def _dot_sizes(factors, sf_lo: float) -> np.ndarray:
+    """Marker area per agent: 42 when unimpeded, three times that at *sf_lo*.
+
+    Speed is then read from dot size as well as colour.
+    """
+    slow = (1.0 - np.asarray(factors, dtype=float)) / max(1.0 - sf_lo, 1e-9)
+    return 42.0 * (1.0 + 2.0 * np.clip(slow, 0.0, 1.0))
+
+
 def _masked_cmap(cmap):
     """The field colormap, with everything outside the building left blank.
 
@@ -406,7 +415,9 @@ def main() -> None:
     )
     cb2 = fig.colorbar(scat, ax=ax, fraction=0.035, pad=0.02)
     cb2.set_label(
-        f"agent speed factor ({sf_lo:.2f} = slowest here, 1 = unimpeded)", color=TEXT
+        f"agent speed factor ({sf_lo:.2f} = slowest here, 1 = unimpeded)\n"
+        "larger dot = slower",
+        color=TEXT,
     )
     cb2.ax.tick_params(length=0, labelcolor=TEXT)
     cb2.outline.set_visible(False)
@@ -430,7 +441,9 @@ def main() -> None:
         scat.set_offsets(
             np.array([[x, y] for x, y, _ in pts]) if pts else np.empty((0, 2))
         )
-        scat.set_array(np.array([sf for _, _, sf in pts]))
+        factors = np.array([sf for _, _, sf in pts])
+        scat.set_array(factors)
+        scat.set_sizes(_dot_sizes(factors, sf_lo))
         rate = "real time" if args.playback == 1 else f"{args.playback:g}x real time"
         title.set_text(f"t = {t:6.1f} s     {len(pts)} agents inside     ({rate})")
         return im, scat, title

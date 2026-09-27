@@ -35,6 +35,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from fdsvismap import VisMap
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Rectangle
 
 FDS_DIR = Path("assets/t_junction")
 # Separate cache path from the runtime cache (assets/t_junction/vismap_cache.npz).
@@ -46,9 +48,14 @@ OUT_DIR = Path("assets/t_junction")
 
 TIME_STEP_S = 10  # match reevaluation interval
 
+# fdsvismap draws coverage red/lime and ASET in jet_r; both are recoloured.
+COVER_NOT, COVER_YES = "#d73027", "#4575b4"
+NOT_HATCH = "xxx"
+PATH_C = "#1f253f"
+
 
 def _style_axes(fig, ax) -> None:
-    """House style on top of fdsvismap's own map: its colours stay as drawn."""
+    """House style on top of fdsvismap's own map."""
     ax.grid(False)
     ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
     ax.xaxis.label.set_color("dimgrey")
@@ -57,6 +64,50 @@ def _style_axes(fig, ax) -> None:
     for other in fig.axes:  # colourbars
         if other is not ax:
             other.tick_params(length=0, labelcolor="dimgrey")
+            other.xaxis.label.set_color("dimgrey")
+
+
+def _map_image(ax):
+    """fdsvismap draws the map last, over the obstructions."""
+    return ax.images[-1]
+
+
+def _recolour_coverage(ax) -> None:
+    """Blue/red instead of lime/red, and never-visible cells hatched."""
+    im = _map_image(ax)
+    im.set_cmap(ListedColormap([COVER_NOT, COVER_YES]))
+    for line in ax.lines:
+        line.set_color(PATH_C)
+    for coll in ax.collections:
+        coll.set_color(PATH_C)
+    x0, x1, y0, y1 = im.get_extent()
+    grid = np.asarray(im.get_array(), dtype=float)
+    ax.contourf(
+        np.linspace(x0, x1, grid.shape[1]),
+        np.linspace(y0, y1, grid.shape[0]),
+        grid,
+        levels=[-0.5, 0.5],
+        colors="none",
+        hatches=[NOT_HATCH],
+    )
+    im.colorbar.ax.add_patch(
+        Rectangle(
+            (0.0, 0.0),
+            0.5,
+            1.0,
+            transform=im.colorbar.ax.transAxes,
+            fill=False,
+            hatch=NOT_HATCH,
+            lw=0,
+        )
+    )
+
+
+def _recolour_aset(ax) -> None:
+    """Sequential cubehelix instead of jet_r: darker = visibility lost sooner."""
+    _map_image(ax).set_cmap(
+        sns.cubehelix_palette(rot=-0.25, light=0.7, as_cmap=True, reverse=True)
+    )
 
 
 def _load_waypoints(config_path: Path) -> list[tuple[int, float, float, float, float]]:
@@ -133,12 +184,13 @@ def main() -> None:
         plot_obstructions=True, flip_y_axis=True
     )
     ax1.set_title(
-        "Sign coverage map (green = visible from any time, red = never visible)\n"
+        "Sign coverage map (blue = visible at some time, red hatched = never)\n"
         "Waypoints: exit_A (0), exit_B (1), junction (2)",
         loc="left",
         fontsize=11,
         pad=7,
     )
+    _recolour_coverage(ax1)
     _style_axes(fig1, ax1)
     out1 = OUT_DIR / "vismap_coverage.png"
     fig1.savefig(out1, dpi=150, bbox_inches="tight")
@@ -149,11 +201,12 @@ def main() -> None:
     fig2, ax2 = vis.create_aset_map_plot(plot_obstructions=True, flip_y_axis=True)
     ax2.set_title(
         "ASET map — first time any sign becomes invisible [s]\n"
-        "(earlier = visibility lost sooner; fire source near exit_B)",
+        "(darker = visibility lost sooner; fire source near exit_B)",
         loc="left",
         fontsize=11,
         pad=7,
     )
+    _recolour_aset(ax2)
     _style_axes(fig2, ax2)
     out2 = OUT_DIR / "vismap_aset.png"
     fig2.savefig(out2, dpi=150, bbox_inches="tight")

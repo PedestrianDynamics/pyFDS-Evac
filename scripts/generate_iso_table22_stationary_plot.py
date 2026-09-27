@@ -100,7 +100,7 @@ def main() -> int:
             fontsize=8,
         )
         fig, (ax, ax_r) = plt.subplots(
-            2, 1, figsize=(8, 6.5), height_ratios=[3, 1], sharex=True, dpi=150
+            2, 1, figsize=(8, 6.5), height_ratios=[3, 1], sharex=True
         )
         ax.plot(
             theory_times,

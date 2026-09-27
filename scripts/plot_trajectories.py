@@ -38,12 +38,17 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon as MplPoly
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Point, Polygon
 
 PALETTE = ["#d73027", "#4575b4", "#fc8d59", "#1f253f", "#72a5b4"]
 UNFINISHED = "#b0b0b0"
+# Exits differ by line style too, so they survive greyscale; a stranded
+# agent's end is marked with a cross.
+STYLES = ["-", "--", "-.", ":", (0, (5, 1.5))]
+UNFINISHED_STYLE, UNFINISHED_MARKER = (0, (1, 3)), "x"
 
 
 def load_tracks(db_path: Path):
@@ -82,8 +87,8 @@ def target_at(entries: list[tuple[float, str]], t: float) -> str | None:
     return entries[idx][1] if idx >= 0 else None
 
 
-def draw_by_target(ax, track, entries, colours):
-    """Draw one path in segments, recoloured wherever the target changes."""
+def draw_by_target(ax, track, entries, colours, styles):
+    """Draw one path in segments, restyled wherever the target changes."""
     run: list[tuple[float, float]] = []
     current: str | None = None
     for t, x, y in track:
@@ -91,7 +96,11 @@ def draw_by_target(ax, track, entries, colours):
         if aim != current and run:
             # Carry the joining point into the next run so the line stays whole.
             ax.plot(
-                *zip(*run), lw=0.8, alpha=0.6, color=colours.get(current, UNFINISHED)
+                *zip(*run),
+                lw=0.8,
+                alpha=0.6,
+                color=colours.get(current, UNFINISHED),
+                ls=styles.get(current, UNFINISHED_STYLE),
             )
             ax.plot(
                 [x],
@@ -107,7 +116,13 @@ def draw_by_target(ax, track, entries, colours):
         current = aim
         run.append((x, y))
     if len(run) > 1:
-        ax.plot(*zip(*run), lw=0.8, alpha=0.6, color=colours.get(current, UNFINISHED))
+        ax.plot(
+            *zip(*run),
+            lw=0.8,
+            alpha=0.6,
+            color=colours.get(current, UNFINISHED),
+            ls=styles.get(current, UNFINISHED_STYLE),
+        )
 
 
 def exit_reached(last_xy, exits, reach: float):
@@ -146,6 +161,7 @@ def main() -> None:
     raw = json.loads(args.config.read_text(encoding="utf-8"))
     exits = {k: Polygon(v["coordinates"]) for k, v in raw["exits"].items()}
     colours = {name: PALETTE[i % len(PALETTE)] for i, name in enumerate(sorted(exits))}
+    styles = {name: STYLES[i % len(STYLES)] for i, name in enumerate(sorted(exits))}
 
     tracks = load_tracks(args.sqlite)
     targets = load_targets(args.route_history) if args.route_history else {}
@@ -166,14 +182,31 @@ def main() -> None:
     for agent_id, track in tracks.items():
         reached = exit_reached(track[-1][1:], exits, args.reach)
         used[reached] = used.get(reached, 0) + 1
+        if reached is None:
+            ax.plot(
+                track[-1][1],
+                track[-1][2],
+                marker=UNFINISHED_MARKER,
+                ms=4,
+                ls="none",
+                color="dimgrey",
+                zorder=5,
+            )
         entries = targets.get(agent_id)
         if entries:
-            draw_by_target(ax, track, entries, colours)
+            draw_by_target(ax, track, entries, colours, styles)
             switch_count += max(0, len(entries) - 1)
             continue
         xs = [x for _t, x, _y in track]
         ys = [y for _t, _x, y in track]
-        ax.plot(xs, ys, lw=0.8, alpha=0.55, color=colours.get(reached, UNFINISHED))
+        ax.plot(
+            xs,
+            ys,
+            lw=0.8,
+            alpha=0.55,
+            color=colours.get(reached, UNFINISHED),
+            ls=styles.get(reached, UNFINISHED_STYLE),
+        )
 
     for name, poly in exits.items():
         ax.add_patch(
@@ -198,6 +231,33 @@ def main() -> None:
             zorder=6,
         )
 
+    handles = [
+        Line2D([], [], color=colours[n], ls=styles[n], label=n) for n in sorted(exits)
+    ]
+    if used.get(None):
+        handles.append(
+            Line2D(
+                [],
+                [],
+                color=UNFINISHED,
+                ls=UNFINISHED_STYLE,
+                marker=UNFINISHED_MARKER,
+                mec="dimgrey",
+                ms=4,
+                label="no exit reached",
+            )
+        )
+    ax.legend(
+        handles=handles,
+        loc="best",
+        fontsize=8,
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor="dimgrey",
+    )
+
     total = len(tracks)
     stranded = used.get(None, 0)
     summary = "  ".join(f"{n}={used.get(n, 0)}" for n in sorted(exits)) + (
@@ -206,7 +266,7 @@ def main() -> None:
     subtitle = f"{total} agents:  {summary}"
     if targets:
         subtitle += (
-            f"\ncolour = exit targeted at that moment;  dot = switch"
+            f"\ncolour and line = exit targeted at that moment;  dot = switch"
             f"  ({switch_count} in flight)"
         )
     ax.set_title(

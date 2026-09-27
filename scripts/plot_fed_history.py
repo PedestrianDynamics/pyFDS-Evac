@@ -129,10 +129,10 @@ def _spaghetti_plot(
     palette = [_CUBEHELIX(i / max(n_agents - 1, 1)) for i in range(n_agents)]
     if show_rate:
         fig, (ax_fed, ax_rate) = plt.subplots(
-            2, 1, sharex=True, figsize=(9, 6), constrained_layout=True, dpi=150
+            2, 1, sharex=True, figsize=(9, 6), constrained_layout=True
         )
     else:
-        fig, ax_fed = plt.subplots(figsize=(9, 4), constrained_layout=True, dpi=150)
+        fig, ax_fed = plt.subplots(figsize=(9, 4), constrained_layout=True)
         ax_rate = None
 
     for i, agent_id in enumerate(sorted(by_agent)):
@@ -168,6 +168,7 @@ def _spaghetti_plot(
         for s in by_agent.values()
         if s["fed"] and max(s["fed"]) >= threshold
     ]
+    _highlight_lead(ax_fed, by_agent, threshold, palette)
     if crossings:
         _note(
             ax_fed,
@@ -190,6 +191,48 @@ def _spaghetti_plot(
         _finish_axes(ax_fed)
 
     return fig
+
+
+def _first_crossing(series: dict[str, list[float]], threshold: float) -> float | None:
+    """Time the agent's cumulative FED first reaches *threshold*, if ever."""
+    return next((t for t, f in zip(series["t"], series["fed"]) if f >= threshold), None)
+
+
+def _highlight_lead(ax, by_agent, threshold: float, palette) -> None:
+    """Redraw the agent that crosses first (or peaks highest) bold and label it.
+
+    Agents share one line style, so the extreme one is picked out by width
+    and a direct label rather than by colour alone.
+    """
+    ids = sorted(by_agent)
+    crossings = {a: _first_crossing(by_agent[a], threshold) for a in ids}
+    crossed = [a for a in ids if crossings[a] is not None]
+    if crossed:
+        lead = min(crossed, key=crossings.get)
+        text = f"agent {lead}: first to FED {threshold:g} ({crossings[lead]:.0f} s)"
+    else:
+        lead = max(ids, key=lambda a: max(by_agent[a]["fed"], default=0.0))
+        text = f"agent {lead}: highest FED"
+    series = by_agent[lead]
+    if not series["fed"]:
+        return
+    ax.plot(series["t"], series["fed"], color=palette[ids.index(lead)], linewidth=2.2)
+    anchor = (series["t"][-1], series["fed"][-1])
+    offset, align = (-8, 10), "right"
+    if crossings[lead] is not None:
+        anchor = (crossings[lead], threshold)
+        offset, align = (8, -10), "left"
+        ax.plot(*anchor, "o", color="#1f253f", ms=5, zorder=5)
+    ax.annotate(
+        text,
+        xy=anchor,
+        xytext=offset,
+        textcoords="offset points",
+        ha=align,
+        va="center",
+        fontsize=8,
+        color="dimgrey",
+    )
 
 
 def _effective_rates(series: dict[str, list[float]]) -> dict[str, list[float]]:
@@ -238,7 +281,7 @@ def _stack_plot(
 
     _set_style()
     fig, (ax_cum, ax_rate) = plt.subplots(
-        2, 1, sharex=True, figsize=(9, 6.5), constrained_layout=True, dpi=150
+        2, 1, sharex=True, figsize=(9, 6.5), constrained_layout=True
     )
 
     ax_cum.stackplot(
@@ -318,7 +361,7 @@ def _speed_vs_fed_plot(
         raise SystemExit("No data to scatter.")
 
     _set_style()
-    fig, ax = plt.subplots(figsize=(8, 5), constrained_layout=True, dpi=150)
+    fig, ax = plt.subplots(figsize=(8, 5), constrained_layout=True)
     cmap = _CUBEHELIX
     sc = ax.scatter(
         all_fed, all_speed, c=all_t, s=6, alpha=0.5, cmap=cmap, edgecolors="none"
@@ -344,6 +387,13 @@ def _speed_vs_fed_plot(
             f"past FED {threshold:g}: {len(past) / len(all_fed):.0%} of samples, "
             f"mean speed {sum(past) / len(past):.2f} m/s",
         )
+    else:
+        i_peak = max(range(len(all_fed)), key=all_fed.__getitem__)
+        _note(
+            ax,
+            f"peak FED {all_fed[i_peak]:.2g} at {all_t[i_peak]:.0f} s "
+            f"(threshold {threshold:g} not reached)",
+        )
     _finish_axes(ax)
     cb = fig.colorbar(sc, ax=ax)
     cb.solids.set_alpha(1.0)
@@ -357,7 +407,7 @@ def _speed_and_fed_plot(
     """Per-agent time series with speed on the left axis and FED on the right."""
     speed_colour = "#4575b4"
     _set_style()
-    fig, ax_speed = plt.subplots(figsize=(9, 4.5), constrained_layout=True, dpi=150)
+    fig, ax_speed = plt.subplots(figsize=(9, 4.5), constrained_layout=True)
     ax_speed.plot(
         series["t"],
         series["desired_speed"],
@@ -415,6 +465,13 @@ def _speed_and_fed_plot(
             ax_speed,
             f"FED {threshold:g} at {crossing:.0f} s, desired speed then "
             f"{speed_at:.2f} m/s",
+        )
+    elif series["fed"]:
+        i_peak = max(range(len(series["fed"])), key=series["fed"].__getitem__)
+        _note(
+            ax_speed,
+            f"peak FED {series['fed'][i_peak]:.2g} at {series['t'][i_peak]:.0f} s "
+            f"(threshold {threshold:g} not reached)",
         )
     _finish_axes(ax_speed)
     ax_fed.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")

@@ -43,7 +43,7 @@ def main() -> int:
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     colours = ["#d73027", "#fc8d59", "#4575b4", "#1f253f"]
     styles = ["-", "--", "-.", ":"]
-    fig, ax = plt.subplots(figsize=(9, 6), dpi=150)
+    fig, ax = plt.subplots(figsize=(9, 6))
     finals = {}
     for (label, inputs), colour, style in zip(
         _guide_stationary_cases().items(), colours, styles

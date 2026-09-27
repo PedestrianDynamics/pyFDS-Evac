@@ -147,7 +147,7 @@ def save_csvs(results: list[dict], out_dir: Path) -> None:
 
 def plot_comparison(results: list[dict], out_dir: Path) -> None:
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    fig, axes = plt.subplots(1, 3, figsize=(13, 4), dpi=150)
+    fig, axes = plt.subplots(1, 3, figsize=(13, 4))
     fig.suptitle(
         "Phase 2 verification: full vs discovery familiarity",
         fontsize=11,

@@ -126,7 +126,7 @@ def _plot(path: Path, per_point: dict[str, list[dict[str, float]]]) -> None:
     colours = ["#d73027", "#4575b4", "#fc8d59", "#1f253f"]
     styles = ["-", "--", "-.", ":"]
     fig, (ax_cum, ax_rate) = plt.subplots(
-        2, 1, sharex=True, figsize=(9, 6), constrained_layout=True, dpi=150
+        2, 1, sharex=True, figsize=(9, 6), constrained_layout=True
     )
     first: tuple[float, str] | None = None
     for i, (label, rows) in enumerate(per_point.items()):
