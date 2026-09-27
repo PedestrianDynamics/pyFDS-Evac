@@ -230,9 +230,10 @@ present and refused.
 
 *Figure 5. Asset `assets/exit_visibility_alpha`: a corridor in clear air with
 an exit at each end and 40 agents with familiarity 0. Only the bearing of the
-near exit's sign differs. Facing the agents, all 40 took the near exit; facing
-away, all 40 walked to the far one, and egress took 26.0 s instead of 18.2 s.
-Outcomes as recorded in the asset README.
+near exit's sign differs. Yellow cells are those from which the visibility
+model reads the near sign. Facing the agents, all 40 took the near exit;
+facing away, all 40 walked to the far one, and egress took 25.9 s instead of
+17.1 s. The script runs both configurations in clear air.
 Script: `scripts/figures/sign_bearing.py`.*
 
 ### Per-agent cognitive maps

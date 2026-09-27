@@ -53,9 +53,10 @@ so an agent can use an exit it has learned after the sign goes out of view.
 
 *`assets/exit_visibility_alpha`: 4 m × 30 m corridor in clear air, 40 agents with
 familiarity 0. The two configurations differ only in the bearing of the near
-exit's sign. Facing the agents (0°), all 40 took the near exit; facing away
-(180°), all 40 walked to the far exit. One run of each configuration, as
-recorded in the asset README. Script: `scripts/figures/sign_bearing.py`.*
+exit's sign. Yellow cells are those from which the visibility model reads the
+near sign. Facing the agents (0°), all 40 took the near exit in 17.1 s; facing
+away (180°), all 40 walked to the far exit in 25.9 s. One clear-air run of each
+configuration. Script: `scripts/figures/sign_bearing.py`.*
 
 ```bash
 # Build or reuse the vismap cache; smoke hides signs from the cognitive map
