@@ -5347,8 +5347,10 @@ Butler, Ed.). NIST Technical Note 1797.
 &lt;p>How pyFDS-Evac uses this: see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">Fractional effective dose&lt;/a>.&lt;/p></description></item><item><title>Limitations</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</guid><description>
 &lt;h2>Status&lt;span class="hx-absolute -hx-mt-20" id="status">&lt;/span>
 &lt;a href="#status" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac is research software, provided without warranty. It is not intended
-for regulatory or design use. It is maintained by one researcher at
-Forschungszentrum Jülich (IAS-7) and has no release policy yet, so behaviour
+for regulatory or design use. It is developed at Forschungszentrum Jülich
+(IAS-7); its maintainers are listed in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/.github/CODEOWNERS" target="_blank" rel="noopener">CODEOWNERS&lt;/a>.
+It has no release policy yet, so behaviour
 and defaults can change between commits. A result from pyFDS-Evac is a
 research result. It is not an assessment of a building.&lt;/p>
 &lt;p>The evidence that exists is listed on the
