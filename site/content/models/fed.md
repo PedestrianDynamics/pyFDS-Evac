@@ -187,7 +187,7 @@ rather than the 5th edition
   formed by NO and NO2 binds cyanide (Ch. 63, p. 2370): with coefficient 1 in
   Eq. 63.26 (p. 2362) but 0.67 in the note to the FED equation (p. 2372), so
   the chapter is inconsistent. The FDS code that FDS+Evac runs subtracts
-  NO + NO2, with the offset 1/220 (FDS 6.7.6 `func.f90`, function `FED`), and
+  NO + NO2, with the offset 0.00454545, about 1/220 (FDS 6.7.6 `func.f90`, function `FED`), and
   has done so since firemodels/fds 694e033 (2011); earlier versions had no HCN
   term. No
   source we read supports NO2 alone, and the 3rd-edition wording the guide

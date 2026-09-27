@@ -186,7 +186,9 @@ that are already known or visible; and the strike-out there
 (`Is_Visible_Door(i) = .FALSE.`, `:16464-16465`) lasts one call of
 `Change_Target_Door`, whose door arrays are reset at `:15831-15832`. FDS+Evac's
 only lasting smoke memory is a weak mark in a lone agent's known-door list on
-its previous target once `K_ave >= 0.3 /m` there (`:16292-16301`). A "some
+its previous target once `K_ave >= 0.3 /m` there (`:16292-16301`), and only if
+that door already has an entry in the list filled at initialisation (the loop
+rewrites entries but never adds one). A "some
 smoke" mark forces the door unknown only in the periodic re-evaluation; a "too
 much smoke" mark only drops the door from the list, and it can become known
 again (see

@@ -172,7 +172,9 @@ known-door list, `Human_Known_Doors%I_nodes`, and its effect is weak.
 The mark is written in the tier-1 loop (:16277-16302) only for the
 agent's previous target door, only while that door is still known and
 visible at that call (:16223), only for a lone agent
-(`HR%GROUP_ID < 0`), and only when `FAC_DOOR_OLD * K_ave >= 0.03 /m`
+(`HR%GROUP_ID < 0`), only if the door already has an entry in the
+agent's known-door list filled at initialisation (:15891, :15940-15954;
+the loop at :16296-16304 rewrites entries but never adds one), and only when `FAC_DOOR_OLD * K_ave >= 0.03 /m`
 (:16292), i.e. `K_ave >= 0.3 /m` with `FAC_DOOR_OLD = 0.1` (:1506)
 under the default negative `FED_DOOR_CRIT`.  The entry becomes negative
 ("some smoke") or 0 ("too much smoke", when `0.9 * K_ave * d / 6 >= 1`,
@@ -380,7 +382,7 @@ CO2 hyperventilation factor is included ([1] §2.7 p19).
 
 The FED function itself is in FDS's `PHYSICAL_FUNCTIONS` module (the
 `FED` function imported at evac.f90:26), not in evac.f90 directly.  Its
-HCN term subtracts NO + NO2 with the offset 1/220 (FDS 6.7.6
+HCN term subtracts NO + NO2 with the offset 0.00454545, about 1/220 (FDS 6.7.6
 `func.f90`), not the NO2 alone of [1] Eq. 15; it has done so since
 firemodels/fds 694e033 (2011), and earlier versions had no HCN term
 ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
