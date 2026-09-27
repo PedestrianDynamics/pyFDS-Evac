@@ -77,7 +77,7 @@ def simulate(tier):
     history = result.cognitive_map_history or []
     exit_ids = set(scenario.raw.get("exits", {}))
     out = dict(
-        switches=len(result.route_history or []),
+        switches=route_changes(result.route_history or [], exit_ids),
         exit_learned=exit_learned_times(history, exit_ids),
         final_known=final_map_sizes(history),
         scenario=scenario,
@@ -108,6 +108,28 @@ def final_map_sizes(history):
     return np.array(list(last.values()))
 
 
+def route_changes(rows, exit_ids):
+    """Route changes after t = 0, by kind: onto an exit, or explore / wander.
+
+    Rows at t = 0 are initial assignments, not changes of mind.
+    """
+    later = [r for r in rows if r["time_s"] > 0]
+    kinds = {"to exit": sum(r["new_exit"] in exit_ids for r in later)}
+    for r in later:
+        if r["new_exit"] not in exit_ids:
+            kinds[r["reason"]] = kinds.get(r["reason"], 0) + 1
+    return len(later), kinds
+
+
+def describe_changes(changes):
+    """'N route changes after t = 0 (a explore, b wander, c to exit)'."""
+    n, kinds = changes
+    if not n:
+        return "no route changes after t = 0"
+    parts = ", ".join(f"{v} {k}" for k, v in sorted(kinds.items()) if v)
+    return f"{n} route changes after t = 0 ({parts})"
+
+
 def footer(full, disc, n_disc_t0, n_nodes):
     """Three lines of computed facts: what each tier knew, did and took."""
     learned = disc["exit_learned"]
@@ -119,11 +141,11 @@ def footer(full, disc, n_disc_t0, n_nodes):
     )
     return (
         f"(a) Full: all {n_nodes} stages known from t = 0; "
-        f"{full['switches']} route re-decisions; last agent out at "
+        f"{describe_changes(full['switches'])}; last agent out at "
         f"{full['evac_time']:.1f} s.\n"
         f"(b) Discovery: {n_disc_t0} of {n_nodes} stages known at t = 0, a median "
         f"of {np.median(disc['final_known']):.0f} at the end; {when};\n"
-        f"{disc['switches']} route re-decisions; last agent out at "
+        f"{describe_changes(disc['switches'])}; last agent out at "
         f"{disc['evac_time']:.1f} s."
     )
 
