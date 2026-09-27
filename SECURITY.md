@@ -13,8 +13,8 @@ vulnerability reporting: on the
 **Report a vulnerability**. Include the commit, the steps to reproduce and what
 an attacker could do.
 
-The project is maintained by one researcher
-([@chraibi](https://github.com/chraibi)), so replies are best effort.
+The project is maintained by a small research team (see
+[CODEOWNERS](.github/CODEOWNERS)), so replies are best effort.
 
 ## Scope
 

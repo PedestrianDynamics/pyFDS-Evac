@@ -1,7 +1,7 @@
 # Contributing to pyFDS-Evac
 
-pyFDS-Evac is maintained by one researcher at Forschungszentrum Jülich
-([@chraibi](https://github.com/chraibi)). It is research software, provided
+pyFDS-Evac is developed at Forschungszentrum Jülich (IAS-7); its maintainers
+are listed in [CODEOWNERS](.github/CODEOWNERS). It is research software, provided
 without warranty, and not intended for regulatory or design use (see
 [LICENSE](LICENSE) and [docs/limitations.md](docs/limitations.md)). There is no
 release policy yet, so behaviour and defaults can change between commits.
