@@ -1355,6 +1355,8 @@ def _clean_limit(
 class RouteModePolicy(Protocol):
     """What a cost model decides about a measured route."""
 
+    def edge_weight(self, seg: SegmentCost, config: RouteCostConfig) -> float: ...
+
     def feasibility(
         self,
         m: RouteMeasurements,
@@ -1367,6 +1369,15 @@ class RouteModePolicy(Protocol):
 
 class AdditivePolicy:
     """The historical w_smoke/w_fed toll: the composite ranks, dose refuses."""
+
+    def edge_weight(self, seg: SegmentCost, config: RouteCostConfig) -> float:
+        # Additive decomposition of the composite formula. current_fed
+        # is constant across routes for one agent, so omitting it from
+        # edge costs does not affect ranking.
+        return (
+            seg.length_m * (1.0 + config.w_smoke * seg.k_avg)
+            + config.w_fed * seg.fed_growth
+        )
 
     def feasibility(
         self,
@@ -1389,6 +1400,20 @@ class AdditivePolicy:
 
 class GatePolicy:
     """Smoke decides which exits remain available; time ranks them."""
+
+    def edge_weight(self, seg: SegmentCost, config: RouteCostConfig) -> float:
+        # Per-edge cost. Under "gate" this is the edge's own optical
+        # depth, the same quantity the routes are ranked and refused on, so
+        # the path chosen to reach an exit and the choice between exits are
+        # finally one objective. Before this, Dijkstra minimised the
+        # additive composite and the exit was then judged on tau, which
+        # meant a gate could refuse an exit on a smoky path while a longer
+        # passable path to the same exit existed and was never offered.
+        #
+        # A floor on length keeps a clear-air graph from collapsing to
+        # all-zero weights, where every path ties and Dijkstra returns an
+        # arbitrary one.
+        return seg.k_avg * seg.length_m + 1e-6 * (seg.length_m)
 
     @staticmethod
     def _tau_budget(
@@ -1538,6 +1563,50 @@ def evaluate_route(
     return _project_route_cost(_assess_measurements(m, config, current_exit))
 
 
+def _generate_candidates(
+    graph: StageGraph,
+    source: str,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
+    policy: RouteModePolicy,
+    *,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
+) -> dict[str, tuple[float, list[str]]]:
+    """The cheapest path from *source* to every reachable exit under *policy*.
+
+    Computes dynamic edge weights from current smoke/FED conditions, then runs
+    Dijkstra with those weights. *graph* is already restricted to what the
+    agent knows. Returns exit_id -> (cost, path), as
+    ``StageGraph.shortest_paths_to_exits``.
+    """
+    # Phase 1: evaluate all edges to get dynamic costs.
+    dynamic_weights: dict[tuple[str, str], float] = {}
+    for src_id, edges in graph.edges.items():
+        for edge in edges:
+            cache_key = (edge.source, edge.target)
+            if cached_segments is not None and cache_key in cached_segments:
+                seg = cached_segments[cache_key]
+            else:
+                seg = evaluate_segment(
+                    graph,
+                    edge.source,
+                    edge.target,
+                    time_s,
+                    extinction_sampler,
+                    fed_rate_sampler,
+                    config,
+                )
+                if cached_segments is not None:
+                    cached_segments[cache_key] = seg
+            dynamic_weights[cache_key] = policy.edge_weight(seg, config)
+
+    # Phase 2: Dijkstra with dynamic weights.
+    all_paths = graph.shortest_paths_to_exits(source, dynamic_weights=dynamic_weights)
+    return all_paths
+
+
 def rank_routes(
     graph: StageGraph,
     source: str,
@@ -1572,51 +1641,16 @@ def rank_routes(
 
         graph = cognitive_subgraph(cognitive_map, graph)
 
-    # Phase 1: evaluate all edges to get dynamic costs.
-    dynamic_weights: dict[tuple[str, str], float] = {}
-    for src_id, edges in graph.edges.items():
-        for edge in edges:
-            cache_key = (edge.source, edge.target)
-            if cached_segments is not None and cache_key in cached_segments:
-                seg = cached_segments[cache_key]
-            else:
-                seg = evaluate_segment(
-                    graph,
-                    edge.source,
-                    edge.target,
-                    time_s,
-                    extinction_sampler,
-                    fed_rate_sampler,
-                    config,
-                )
-                if cached_segments is not None:
-                    cached_segments[cache_key] = seg
-            # Per-edge cost. Under "gate" this is the edge's own optical
-            # depth, the same quantity the routes are ranked and refused on, so
-            # the path chosen to reach an exit and the choice between exits are
-            # finally one objective. Before this, Dijkstra minimised the
-            # additive composite and the exit was then judged on tau, which
-            # meant a gate could refuse an exit on a smoky path while a longer
-            # passable path to the same exit existed and was never offered.
-            #
-            # A floor on length keeps a clear-air graph from collapsing to
-            # all-zero weights, where every path ties and Dijkstra returns an
-            # arbitrary one.
-            if config.cost_model == "gate":
-                dynamic_weights[cache_key] = seg.k_avg * seg.length_m + 1e-6 * (
-                    seg.length_m
-                )
-            else:
-                # Additive decomposition of the composite formula. current_fed
-                # is constant across routes for one agent, so omitting it from
-                # edge costs does not affect ranking.
-                dynamic_weights[cache_key] = (
-                    seg.length_m * (1.0 + config.w_smoke * seg.k_avg)
-                    + config.w_fed * seg.fed_growth
-                )
-
-    # Phase 2: Dijkstra with dynamic weights.
-    all_paths = graph.shortest_paths_to_exits(source, dynamic_weights=dynamic_weights)
+    all_paths = _generate_candidates(
+        graph,
+        source,
+        time_s,
+        extinction_sampler,
+        fed_rate_sampler,
+        config,
+        policy_for(config),
+        cached_segments=cached_segments,
+    )
     if not all_paths:
         return []
 
