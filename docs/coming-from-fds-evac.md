@@ -130,7 +130,7 @@ runs uploaded scenarios. It does not edit geometry or stages.
 
 ![Two plan views of the same hall with one exit and an obstacle. Left, FDS+Evac: every cell with an unblocked line of sight to the door sees it, at any distance. Right, pyFDS-Evac: only cells inside the 30 m reading circle and outside the obstacle's shadow read the sign](/images/wayfinding/sign_range_fds_evac.png)
 
-*FIGURE CAPTION PENDING*
+*A 60 × 30 m hall with one exit and a 3 × 8 m obstacle; the door centre and the sign are the same point. Left: a re-implementation of FDS+Evac's `Is_Visible_Door`, where a cell sees the door when the segment to the door centre is not blocked, at any distance. Right: the cells from which pyFDS-Evac's visibility model reads the sign, for an omni-directional sign (C = 3) in clear air with the default 30 m reading distance (dashed circle, drawn faintly on the left for reference). Both need a clear line of sight, so the obstacle casts the same shadow; the only difference is range. Agent 1 (12 m, in view) sees the exit in both; agent 2 (45 m, in view) sees the door in FDS+Evac but cannot read the sign; agent 3 (23 m, behind the obstacle) sees neither. A directional sign shrinks the right-hand region further by the angle factor, and smoke shrinks it again.*
 
 Consequences for a deck carried over from FDS+Evac:
 
