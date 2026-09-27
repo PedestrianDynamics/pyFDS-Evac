@@ -24,14 +24,14 @@ layout: hextra-home
 <div class="hx-mb-6 hx-flex hx-flex-wrap hx-items-center hx-gap-4">
 {{< hextra/hero-button text="Quickstart" link="docs/getting-started/quickstart/" >}}
 {{< hextra/hero-button text="Coming from FDS+Evac" link="docs/getting-started/coming-from-fds-evac/" >}}
-<a href="docs/" class="hx-font-medium hx-underline">Documentation</a>
+{{< hextra/hero-button text="Documentation" link="docs/" >}}
 </div>
 
-<div class="hx-mb-6">
+<div class="content hx-mb-6">
 Research software, provided without warranty. Not intended for regulatory or design use.
 </div>
 
-<div class="hx-mb-6">
+<div class="content hx-mb-6">
 Defaults follow FDS+Evac; see <a href="docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac">what changed</a>.
 </div>
 
