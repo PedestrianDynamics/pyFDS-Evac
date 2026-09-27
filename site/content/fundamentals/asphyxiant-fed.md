@@ -74,10 +74,11 @@ with the terms, *t* in minutes and concentrations in ppm or % by volume:
 The FDS+Evac guide (Korhonen 2021, Eqs. 12–19) and the FDS User's Guide
 (McGrattan et al. 2025, Eqs. 22.42–22.49) do not use Eq. 63.38 as printed:
 they take Eq. 63.34 for CO₂ instead of its simplification Eq. 63.35, and an
-exponential HCN term that is not in Chs. 62–63 of the 5th edition. The
+HCN term \(\exp(C/43)/220\) that is not in Chs. 62–63 of the 5th edition,
+where "exponential" names the power law of Eq. 63.20 (p. 2360). The
 FDS+Evac guide cites the 3rd edition for these equations, the header of the
 FDS `FED` function (`func.f90`) the 4th, and the FDS User's Guide the 5th;
-which edition first gave the exponential term is not verified here. A result quoted as "Purser FED"
+which edition first gave that term is not verified here. A result quoted as "Purser FED"
 therefore depends on the variant used.
 
 {{< details title="The CO₂ factor and HCN term (Eqs. 63.31–63.35)" closed="true" >}}
@@ -139,10 +140,11 @@ Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not.
   15 % and about 35 h at 20 % O₂ (our arithmetic).
 - **CO₂.** The minute-volume curve is an average of three human data sets
   covering 0–10 % CO₂ (Eq. 63.31, Fig. 63.26). \(t_{ICO_2}\) (Eq. 63.36) is
-  derived from approximate tolerance data in Fig. 63.26 and reproduces its
-  three points, 5 % for 30 min, 7.5 % for 10 min and 10.5 % for 2 min (our
-  arithmetic); the 5 % point is severe breathing discomfort, not loss of
-  consciousness.
+  derived from approximate tolerance data in Fig. 63.26, whose three points
+  are 5 % for 30 min, 7.5 % for 10 min and 10.5 % for 2 min. It gives
+  9.7 min at 7.5 % and 2.0 min at 10.5 %, but 35 min at 5 % (our
+  arithmetic; p. 2368 uses 35.44 min); the 5 % point is severe breathing
+  discomfort, not loss of consciousness.
 - **Activity.** The default is light work; \(V_E\) = 8.5 L/min at rest and
   50 L/min for heavy work (table beside Eq. 63.39, p. 2416).
 {{< /details >}}
