@@ -301,11 +301,17 @@ sign-legibility test or a line-of-sight visibility
 `distance_to_node` have no caller in `pyfds_evac/`
 ([#158](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158)). Route
 smoke is sampled from the global extinction field (see
-[routing](/models/routing.md)): along the stored polylines for the legs from
-the next node on, and, when the agent's position is given, on a **straight
-line** from the agent to its next node for the first leg (`_los_stats`,
-`route_graph.py:1088–1100`). That straight line can pass through walls, for
-every familiarity tier ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). Under the `"additive"` model only, a route
+[routing](/models/routing.md)) along the stored node-to-node polylines. The
+route mean \(\bar K\), and so \(\tau\), the gate and the ranking, take the
+first leg as the agent's share of that polyline. When the agent's position is
+given, the first leg is also resampled on a **straight line** from the agent
+to its next node (`_los_stats`, `route_graph.py:1088–1100`), and that line can
+pass through walls, for every familiarity tier
+([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). The
+resample feeds only two secondary quantities: the route's worst sample
+`k_max_route`, which decides whether an agent keeps its exit when every route
+is refused (`:1439`), and the worst leg mean, which decides the optional
+clean tier, off by default (`clean_extinction_threshold` = 0). Under the `"additive"` model only, a route
 whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
 non-refused route has a segment below it (`route_graph.py:1362–1375`); this is
 an extinction threshold, not a sign test.
