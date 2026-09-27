@@ -220,10 +220,14 @@ computes it
   `func.f90` adds the term only when X_O2 < 0.20); neither Purser nor the
   guide has it. It stops a tiny ambient rate from accumulating over long runs
   or outside the FDS domain. `--o2-threshold-percent 19.5` restores the
-  previous default, the OSHA limit that Pathfinder uses. The guide's Eq. 18 carries a factor 60 in the denominator while
-  stating that *t* is in minutes; the code follows Handbook Eq. 63.50 without
-  it. That 60 is left over from the 2009 guide, which gave the FED equations
-  with *t* in seconds (see [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)).
+  previous default, the OSHA limit that Pathfinder uses. The O₂ rate is Handbook Eq. 63.50
+  per minute, with no factor 60. The FDS+Evac guide's Eq. 18 divides by 60
+  while stating *t* in minutes, which read literally would make the O₂ dose
+  60 times smaller; FDS itself does not do this (its `FED` function divides
+  by 60 only because its time step is in seconds), so it is a documentation
+  error, not a difference in the model. Our reading is that the 60 survives
+  from the 2009 guide, where *t* was in seconds (see
+  [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)).
 
 ![Low-oxygen time to incapacitation against O2 from 3.9 to 20.9 % on a log time axis: a straight line, solid over the decompression data from 3.9 to 9.6 % and dashed above, with vertical lines at 15 % (140 min) and 20 % (about 2090 min)](/images/fundamentals/fed_o2.png)
 
