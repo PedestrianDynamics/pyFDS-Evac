@@ -2353,6 +2353,74 @@ def _decide_exit_change(
     )
 
 
+def _decide_explore(
+    wait_info: dict,
+    route_state: AgentRouteState,
+    graph: StageGraph,
+    source: str,
+    cognitive_map,
+    agent_position: tuple[float, float] | None,
+) -> RouteDecision:
+    """Where an agent with no known exit goes: a frontier node, or a patrol.
+
+    Called when no exit is reachable in the agent's known subgraph (typically
+    a discovery agent that hasn't found the way out yet). Rather than standing
+    still, it heads toward the nearest known-but-unexplored node so the
+    cognitive map keeps growing until an exit is found.
+
+    The one state change made here is the patrol step, which advances before
+    the next stop is looked up and stays advanced whatever the lookup does.
+    """
+    from .cognitive_map import nearest_frontier_target, wander_target
+
+    idle = wait_info.get("state") == "idle"
+    reason = "explore"
+    frontier = nearest_frontier_target(cognitive_map, graph, source, agent_position)
+    if frontier is None:
+        # Knowledge exhausted: every known node is visited and none of it
+        # leads to an exit. Patrol the known nodes instead of standing --
+        # perception runs from the agent's position, so a walked leg can
+        # make a sign readable that never was from any node it stood on.
+        if idle and route_state.current_path:
+            # The previous patrol leg was completed; move on to the next
+            # stop, or a single-candidate rotation would re-offer the node
+            # the agent is standing on the way to.
+            route_state.wander_step += 1
+        frontier = wander_target(cognitive_map, graph, source, route_state.wander_step)
+        reason = "wander"
+    if frontier is None:
+        return RouteDecision(kind="keep")
+    target_node, path = frontier
+    # Already committed to this target: the agent's current target is an
+    # intermediate hop of the committed path, not the destination itself,
+    # so comparing against current_target_stage alone re-fires the same
+    # switch on every reevaluation until arrival. An idle agent is never
+    # suppressed -- it is standing with no onward plan and must be routed.
+    committed = route_state.current_path
+    if not idle and (
+        wait_info.get("current_target_stage") == target_node
+        or (
+            committed
+            and committed[-1] == target_node
+            and wait_info.get("current_target_stage") in committed
+        )
+    ):
+        return RouteDecision(kind="keep")
+    # old_exit is left None on purpose: exploring toward a frontier node
+    # does not abandon any exit commitment, so this switch must not drive
+    # the caller's exit_counts bookkeeping (new_exit is a checkpoint, not
+    # an exit). route_state.current_exit is deliberately unchanged.
+    return RouteDecision(
+        kind=reason,
+        path=path,
+        old_exit=None,
+        target_id=target_node,
+        old_cost=None,
+        new_cost=0.0,
+        switch_reason=reason,
+    )
+
+
 def _apply_decision(
     decision: RouteDecision,
     agent_id: int,
@@ -2364,7 +2432,9 @@ def _apply_decision(
 
     A same-exit decision (``update_cached_path``) records its path whether or
     not the switch applies and leaves the exit alone. An exit change records
-    exit and path only once the agent has been rerouted.
+    exit and path only once the agent has been rerouted. An explore or wander
+    decision records the path only once the agent has been rerouted, and
+    never touches the exit.
     """
     if decision.kind == "keep":
         if decision.update_cached_path:
@@ -2376,7 +2446,7 @@ def _apply_decision(
         if decision.update_cached_path:
             route_state.current_path = decision.path
         return None
-    if not decision.update_cached_path:
+    if decision.kind in ("switch", "fallback") and not decision.update_cached_path:
         route_state.current_exit = decision.target_id
     route_state.current_path = decision.path
     return RouteSwitch(
@@ -2444,60 +2514,11 @@ def evaluate_and_reroute(
         route_state.last_eval_time_s = current_time_s
         if cognitive_map is None:
             return None
-        from .cognitive_map import nearest_frontier_target, wander_target
-
-        idle = wait_info.get("state") == "idle"
-        reason = "explore"
-        frontier = nearest_frontier_target(cognitive_map, graph, source, agent_position)
-        if frontier is None:
-            # Knowledge exhausted: every known node is visited and none of it
-            # leads to an exit. Patrol the known nodes instead of standing --
-            # perception runs from the agent's position, so a walked leg can
-            # make a sign readable that never was from any node it stood on.
-            if idle and route_state.current_path:
-                # The previous patrol leg was completed; move on to the next
-                # stop, or a single-candidate rotation would re-offer the node
-                # the agent is standing on the way to.
-                route_state.wander_step += 1
-            frontier = wander_target(
-                cognitive_map, graph, source, route_state.wander_step
-            )
-            reason = "wander"
-        if frontier is None:
-            return None
-        target_node, path = frontier
-        # Already committed to this target: the agent's current target is an
-        # intermediate hop of the committed path, not the destination itself,
-        # so comparing against current_target_stage alone re-fires the same
-        # switch on every reevaluation until arrival. An idle agent is never
-        # suppressed -- it is standing with no onward plan and must be routed.
-        committed = route_state.current_path
-        if not idle and (
-            wait_info.get("current_target_stage") == target_node
-            or (
-                committed
-                and committed[-1] == target_node
-                and wait_info.get("current_target_stage") in committed
-            )
-        ):
-            return None
-        stage_configs = wait_info.get("stage_configs", {})
-        changed = reroute_agent(wait_info, path, stage_configs)
-        if not changed:
-            return None
-        route_state.current_path = path
-        # old_exit is left None on purpose: exploring toward a frontier node
-        # does not abandon any exit commitment, so this switch must not drive
-        # the caller's exit_counts bookkeeping (new_exit is a checkpoint, not
-        # an exit). route_state.current_exit is deliberately unchanged.
-        return RouteSwitch(
-            time_s=current_time_s,
-            agent_id=agent_id,
-            old_exit=None,
-            new_exit=target_node,
-            old_cost=None,
-            new_cost=0.0,
-            reason=reason,
+        decision = _decide_explore(
+            wait_info, route_state, graph, source, cognitive_map, agent_position
+        )
+        return _apply_decision(
+            decision, agent_id, wait_info, route_state, current_time_s
         )
 
     best = _select_candidate(ranked, route_state, config)

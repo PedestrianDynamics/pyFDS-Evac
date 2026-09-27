@@ -453,6 +453,21 @@ discovery agent with no known exit explores or wanders instead (see below).
 | **Switch, other exit** | candidates tried in rank order; the anchor adopts one only if `rank_cost` < old × `exit_switch_anchor`, unless the old exit is FED-lethal or impassably smoky, or the rival is feasible, clearer by the anchor margin, and a whole band clearer or clean while the current exit is not | anchor on `rank_cost`, with the same hazard bypasses |
 | **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, a `RouteSwitch` recorded | same |
 
+In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
+`AdditivePolicy`, and each row is one function:
+
+| Step | Function |
+|---|---|
+| **Candidates** | `_generate_candidates`, weighting edges with the policy's `edge_weight` |
+| **Rejection** | `_measure_route`, then `_assess_measurements` with the policy's `feasibility`; the K_vis pass is `apply_candidate_set_rules` |
+| **Ranking** | the policy's `order_key` |
+| **Fallback** | `_apply_fallback` |
+| **Switch, same exit** | `_decide_same_exit` |
+| **Switch, other exit** | `_select_candidate`, then `_decide_exit_change`; the anchor is `_anchor_allows` |
+| **Applied** | `_apply_decision` |
+
+The explore and wander decisions are made by `_decide_explore`.
+
 Several of these rules resist switching at different points (return margins,
 discount, anchor, fallback margin, same-exit threshold). Their consolidation is
 [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); the
