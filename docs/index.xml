@@ -380,8 +380,7 @@ Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>Background: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/">Concepts&lt;/a>
 page
 and the talk &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf" target="_blank" rel="noopener">PDF&lt;/a>
-).&lt;/p>
+.&lt;/p>
 &lt;p>For real FDS output, &lt;code>fdsreader&lt;/code> provides the local extinction field
 via &lt;code>SliceFieldSampler&lt;/code>. For verification cases such as ISO 20414:2020 Test 18 (Table 21),
 the runner can also apply a constant extinction coefficient directly.&lt;/p>
@@ -546,8 +545,7 @@ two losses instead
 event of a fire as a result of a behavioural or decision-making process&amp;rdquo;. The
 talk
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>
-(Visibility Seminar 2026, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf" target="_blank" rel="noopener">PDF&lt;/a>
-)
+(Visibility Seminar 2026)
 splits the behaviour that smoke disturbs into three questions. &lt;strong>Speed&lt;/strong> asks
 how fast an occupant can walk. &lt;strong>Route choice&lt;/strong> asks which exit the occupant
 heads for. &lt;strong>Wayfinding&lt;/strong> asks which exits the occupant knows about at all.
@@ -974,7 +972,6 @@ enters the cognitive map. The dose does not gate anything; it stops the agent.&l
 &lt;h2>Further reading&lt;span class="hx-absolute -hx-mt-20" id="further-reading">&lt;/span>
 &lt;a href="#further-reading" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>The talk: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">slides&lt;/a>
-and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf" target="_blank" rel="noopener">PDF&lt;/a>
 , Visibility
 Seminar 2026, University of Wuppertal, 25 September 2026.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/">Fundamentals&lt;/a>
@@ -1070,8 +1067,7 @@ linked above.&lt;/p>
 &lt;p>Background: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/">Concepts&lt;/a>
 page
 and the talk &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf" target="_blank" rel="noopener">PDF&lt;/a>
-).&lt;/p>
+.&lt;/p>
 &lt;h2>Coded form&lt;span class="hx-absolute -hx-mt-20" id="coded-form">&lt;/span>
 &lt;a href="#coded-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>FedComponents.total_rate_per_min&lt;/code> (&lt;code>pyfds_evac/core/fed.py:334&lt;/code>) returns the
 gas FED rate [1/min]&lt;/p>
@@ -2313,8 +2309,7 @@ disagree with each other.&lt;/p>
 .&lt;/p>
 &lt;p>Background: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/">Concepts&lt;/a>
 page and the talk &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf" target="_blank" rel="noopener">PDF&lt;/a>
-).&lt;/p>
+.&lt;/p>
 &lt;h2>How smoke enters route choice&lt;span class="hx-absolute -hx-mt-20" id="how-smoke-enters-route-choice">&lt;/span>
 &lt;a href="#how-smoke-enters-route-choice" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Two models, selected per deck with &lt;code>routing.cost_model&lt;/code>.&lt;/p>
 &lt;p>&lt;strong>&lt;code>&amp;quot;gate&amp;quot;&lt;/code> (default).&lt;/strong> One quantity does the whole of the smoke reasoning: the
