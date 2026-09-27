@@ -55,8 +55,8 @@ Defaults follow FDS+Evac; see <a href="docs/getting-started/coming-from-fds-evac
   >}}
   {{< hextra/feature-card
     title="Wayfinding"
-    subtitle="fdsvismap decides which signs an agent can read through smoke. What it reads enters its cognitive map; staff know the building, visitors discover it."
-    link="models/visibility/"
+    subtitle="fdsvismap decides which signs an agent can read through smoke. What it reads enters its cognitive map; fully familiar agents know the building, discovery agents learn it."
+    link="models/wayfinding/"
   >}}
   {{< hextra/feature-card
     title="One-way coupling"

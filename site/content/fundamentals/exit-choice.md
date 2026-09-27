@@ -97,4 +97,4 @@ exits are rarely used in many real evacuations because they are unfamiliar
   Secondary source.
 
 How pyFDS-Evac uses this: see [route rerouting](/models/routing.md) and
-[visibility and cognitive maps](/models/visibility.md).
+[wayfinding](/models/wayfinding.md).

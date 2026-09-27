@@ -117,4 +117,4 @@ threshold for seeing a sign, not for recognising or understanding it.
   the FDS User Guide (its ref. 83).
 
 How pyFDS-Evac uses this: see
-[visibility and cognitive maps](/models/visibility.md).
+[wayfinding](/models/wayfinding.md).

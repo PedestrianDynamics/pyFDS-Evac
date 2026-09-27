@@ -14,6 +14,6 @@ these pages are the overview.
   {{< card link="smoke-speed" title="Smoke-speed model" subtitle="Extinction coefficient to walking speed: Frantzich–Nilsson, and the `fridolf` option." >}}
   {{< card link="fed" title="Fractional effective dose" subtitle="Purser toxic gas dose, convective heat dose, irritant concentration." >}}
   {{< card link="routing" title="Dynamic route rerouting" subtitle="Smoke integrated along the route refuses and orders exits." >}}
-  {{< card link="visibility" title="Visibility and cognitive maps" subtitle="Sign legibility through smoke decides what each agent knows." >}}
+  {{< card link="wayfinding" title="Wayfinding" subtitle="Sign legibility through smoke decides what each agent knows." >}}
   {{< card link="verification" title="Verification suite" subtitle="Closed-form checks per model and behavioural scenarios through the coupling." >}}
 {{< /cards >}}
