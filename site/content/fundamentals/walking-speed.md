@@ -18,9 +18,9 @@ al.'s *w*, *x* (*S* in the notation table) and *A*, which plays the role of
 
 | Law | Variable | Equation | Data range | Reduction | Smoke |
 |---|---|---|---|---|---|
-| Jin, non-irritant (Purser's fit) | *K* | v = 1.0573 − 0.4326 K | 0.2–1.13 1/m | absolute | kerosene, less irritant |
-| Jin, irritant (Purser's fit) | *K* | v = 1.1517 − 0.9578 K | 0.32–0.5 1/m | absolute | wood cribs, highly irritant |
-| Purser 2003, fit to Jin, non-irritant | OD/m (K ≈ 2.303 OD/m) | F = 1.236 − 1.738 OD/m | OD/m 0.13–0.55 (K ≈ 0.30–1.27 1/m) | fractional | non-irritant |
+| Jin, non-irritant (Purser's fit) | *K* | v = 1.0573 − 0.4326 K | points 0.5–1.13 1/m (Purser: 0.2–1.13) | absolute | kerosene, less irritant |
+| Jin, irritant (Purser's fit) | *K* | v = 1.1517 − 0.9578 K | points 0.32–0.47 1/m (Purser: 0.32–0.5) | absolute | wood cribs, highly irritant |
+| Purser 2003, fit to Jin, non-irritant | OD/m (K ≈ 2.303 OD/m) | F = 1.236 − 1.738 OD/m | Purser's stated range OD/m 0.13–0.55 (K ≈ 0.30–1.27 1/m); Jin's data K ≈ 0.5–1.13 1/m | fractional | non-irritant |
 | Frantzich–Nilsson, Eq. 3 | *K* | v = 0.706 − 0.057 K | 1.9–7.4 1/m | absolute | artificial, mild (acetic acid) |
 | FDS+Evac, Eq. 11 | *K* | v = max(0.1 v₀, v₀ (1 − 0.057 K / 0.706)) | as Frantzich–Nilsson | fractional | as Frantzich–Nilsson |
 | Purser, Eq. 63.10 | *K* | W = −0.1364 ln K + 0.6423 | 0.32–0.5 and 1.9–7.5 1/m | absolute | pooled, "moderately irritant" |
@@ -29,19 +29,17 @@ al.'s *w*, *x* (*S* in the notation table) and *A*, which plays the role of
 
 ## Jin: irritant and non-irritant smoke
 
-Jin's subjects walked along a 20 m corridor filled with highly irritant
-white smoke (burning wood cribs with narrow spacing between the sticks) or
-less irritant black smoke (burning kerosene) (Jin 1997, §1.3 and Fig. 3;
-the same account and figure are in Yamada and Akizuki 2016, Society of Fire
-Protection Engineers (SFPE) Handbook Ch. 61, Fig. 61.22). Jin gives no
-fitted equation: his Fig. 3 shows the individual speeds with trend curves,
-at *K* = 0.52–1.13 1/m in non-irritant smoke and 0.32–0.48 1/m in irritant
-smoke. In irritant smoke the speed dropped sharply over a narrow
-range of *K*, and subjects walked zigzag or along the wall because they
-could not keep their eyes open.
+Jin (1976, FRI Report No. 42, pp. 12–15) had ten men aged 23–37 walk (one
+at a time, in our reading) along a 20 m corridor filled with highly irritant white
+smoke (burning wood cribs) or less irritant black smoke (burning
+kerosene). Report Fig. 2 plots speed against *K* [1/m]: non-irritant
+points at *K* ≈ 0.5–1.13 1/m, irritant points at 0.32–0.47 1/m, with
+trend lines but no equation. In irritant smoke the speed dropped sharply,
+and subjects walked zigzag or along the wall because tears ran too heavily
+to see (pp. 14–15).
 
 Purser and McAllister (2016, Ch. 63) replot Jin's data in their Fig. 63.16
-and fit straight lines to them (legend), over *K* = 0.2–1.13 1/m
+and fit straight lines to them (legend), over a stated *K* = 0.2–1.13 1/m
 (non-irritant) and 0.32–0.5 1/m (irritant) (p. 2339):
 
 $$
@@ -50,69 +48,92 @@ v = 1.0573 - 0.4326\,K \quad (\text{non-irritant},\ R^2 = 0.27),
 v = 1.1517 - 0.9578\,K \quad (\text{irritant},\ R^2 = 0.035).
 $$
 
-{{< details title="Jin's data: sources, ranges and participants" closed="true" >}}
+{{< details title="Jin's data: sources, ranges, darkness and participants" closed="true" >}}
+**Setup.** Subjects wore no air masks and waited in a normally lit room
+before entering (text below Table 1, p. 13). The corridor was lit (about
+80 lx at the floor) or blacked out (0.1–0.5 lx from the sign and the
+meters), and the two gave the same speeds (p. 15). In the blackout runs the
+sign also switched from a 10 W fluorescent lamp to three 2.5 V tungsten
+bulbs (Jin 1972, abstract and p. 13), so the comparison changes corridor
+light and sign luminance together. Speed came from a wire each subject
+unwound from a reel, averaged over the whole corridor including stops
+(pp. 12, 15); *K* came from two 4 m-path and one 1 m-path light meters
+1.5 m above the floor (p. 13).
+
 **Scatter.** The irritant fit explains almost none of the scatter: at an
 average *K* = 0.42 1/m the speeds ranged from 0.37 to 1.1 m/s, mean
 0.75 m/s (standard deviation (SD) 0.21). In non-irritant smoke, at an
 average *K* = 0.73 1/m, the mean was 0.74 m/s (SD 0.17) (Ch. 63,
 pp. 2339–2340).
 
-**Two versions of the data.** Purser and McAllister's Fig. 63.16 (p. 2340)
-is not a copy of Jin (1997, Fig. 3). It has a non-irritant point at
-*K* ≈ 0.2 1/m (about 1.1 m/s), which Jin's figure lacks (his non-irritant
-points start at 0.52 1/m), and its speeds sit a few hundredths of a m/s
-below Jin's. Both may come from different Jin reports; Ch. 63 cites Jin's
-FRI Report No. 42 (ref. 53) for this material. Purser's 2003 fit reaches OD/m 0.55 (*K* ≈ 1.27 1/m),
-also beyond Jin's 1997 points. The fits above belong to Purser's replotted data,
-and their ranges are his. Ronchi et al. (2013) give 0.2–1.0 and 0.1–0.5
-1/m on p. 414, and 0.2–0.5 1/m for irritant smoke on p. 421. Their
-"1.0 to 0.3 m/s as *K* rose from 0.1 to 0.5 1/m" appears, as our
-inference, to follow Jin's irritant trend curve rather than the measured
-points. That Jin's trend curves were drawn by hand is also our inference;
-Jin (1997) does not say how they were obtained.
+**Ranges.** Report Fig. 2 has no non-irritant point below about 0.5 1/m;
+Jin (1997, Fig. 3) redraws the same data. Purser and McAllister's
+non-irritant point at *K* ≈ 0.2 1/m (about 1.1 m/s) sits, in our reading,
+at the start of Jin's drawn non-irritant trend line, not on a measured
+point, and their replotted speeds lie a few hundredths of a m/s below
+Jin's. Their stated range 0.2–1.13 1/m is therefore that of the trend line;
+Jin's points cover about 0.5–1.13 1/m. In report Fig. 2 the irritant
+trend line starts near 0.30 1/m and stops near 0.47 m/s, so Ronchi et
+al.'s "1.0 to 0.3 m/s as *K* rose from 0.1 to 0.5 1/m" (p. 414) does not
+follow it; in our inference it follows Jin (1997, Fig. 3), where the
+non-irritant curve starts near 0.1 1/m and the irritant dotted line falls
+towards zero.
 
-**Darkness.** Ch. 63 attributes the 0.3 m/s to Jin: in non-irritant smoke
-at *K* ≈ 1.15 1/m, speed fell to about 0.3 m/s and subjects moved as if in
-darkness (p. 2339, citing ref. 53), and speed "has been shown" to fall to
-about 0.3 m/s (p. 2413); Ronchi et al. (p. 415) say the same. Ch. 63 pairs
-*K* 1.15 with OD/m 0.55 in its prose but with OD/m 0.5 in Table 63.5 on
-the same page; only 0.5 is consistent with base 10 (1.15/ln 10 = 0.50).
-Purser (2003, p. 98) describes Jin's data "between the limits of 0.13 …
-and 0.55 (above which movement speed is as in darkness at 0.3 m/s)" and
-justifies the value "since it is still possible to move at this speed in
-total darkness". Our inference is that 0.3 m/s is a floor assumption, not
-a measured Jin point; only FRI Report No. 42 can settle it. No plotted
-data set shows 0.3 m/s in non-irritant smoke: in Jin (1997, Fig. 3) the speed at *K* = 1.13 1/m is near 0.8 m/s
-and none is below about 0.5 m/s, and in Fig. 63.16 the lowest non-irritant
-point is about 0.45 m/s at *K* ≈ 0.97 1/m.
+**Darkness.** The 0.3 m/s is not a measurement in this experiment. Jin
+writes that as smoke thickens "the condition becomes very much like
+walking in darkness (0.3–0.7 m/s)", citing Togawa (1969) for that range
+(report p. 14), and calls 0.3 m/s "the speed in darkness shown by a
+horizontal broken line in Fig. 2", without a citation (p. 17); tying the
+0.3 m/s line to Togawa is our inference. Jin takes the density at which
+the average speed slows to 0.3 m/s as the maximum for people familiar with
+the building, "approximately 0.5/m–1.2/m" (p. 17). No non-irritant point
+in Fig. 2 is below about 0.45 m/s, so the 1.2 1/m end rests on the trend
+line extended (our reading). In our inference, Ch. 63's "at an extinction
+coefficient of 1.15 … approximately 0.3 m/s" (p. 2339) and "has been
+shown" (p. 2413), Ronchi et al. (p. 415) and Purser (2003, p. 98) all go
+back to this reference line; the 1.15 1/m itself is not in the report
+(pp. 12–18). Ch. 63 pairs
+*K* 1.15 with OD/m 0.55 in its prose but with OD/m 0.5 in Table 63.5 on the
+same page; only 0.5 is consistent with base 10.
 
-**Irritant smoke.** Jin (1997) and Ch. 61 describe burning wood cribs;
-Purser (2003, p. 98) says "smoke from non-flaming wood" and Ch. 63
-(p. 2339) "heating wood chippings". As our inference, the latter may be a
-mix-up with the wood-chip furnace smoke of Jin and Yamada (1989).
+**Allowable smoke density.** Two routes lead to Jin's conclusion. From
+the minimum visibility proposed by others (3–5 m if familiar, 15–20 m if
+not) and the rule "Visibility (m) × Extinction coefficient ≈ 2" (p. 17,
+citing Jin 1971, FRI Report 33), Table 3 gives 0.4–0.7 1/m for familiar
+people and 0.1 1/m for strangers. From the walks, the density that slows
+the average speed to 0.3 m/s gives 0.5–1.2 1/m for familiar people, and
+the density below which irritancy does not affect speed gives 0.2–0.3 1/m
+for strangers (p. 17). The conclusion merges the two: about 0.4–1.2 1/m
+for familiar people and 0.1–0.3 1/m for strangers (p. 18).
 
-**Source of the data.** Jin (1997) §1.3 attaches ref. [2], Jin and Yamada
-(1985), *Irritating effects of fire smoke on visibility*, to the sentence
-describing the corridor tasks; SFPE Ch. 61 cites the same sentence as
-[6, 9], that is Jin (1978) and Jin and Yamada (1985) (pp. 2189, 2205–2206).
-Whether either paper holds the walking data is not established. Fridolf et
-al. (2019) name the study three ways: Jin 1976 in the Fig. 1 legend, Jin
-1978 and 1997 in §3.2.1, and Jin 1979 in Table 2. FRI Report No. 42 is
-dated 1975 in Purser (2003, ref. 7) and 1976 in Ch. 63 (ref. 53, same
-title and number) and Ronchi et al. (ref. 11, same number); the year is
-not established. That Fridolf et al.'s "Jin 1976" is the same report is
-our inference.
+**Irritant smoke.** The report (p. 13) and Jin (1972, p. 12, Japanese
+text, our translation) describe burning wood cribs with very narrow
+spacing; the English abstract of Jin (1972, p. 11) calls the same smoke
+"generated from smoldering wood (nearly white smoke)". Purser's "smoke from
+non-flaming wood" (2003, p. 98) matches that abstract; Ch. 63's "heating
+wood chippings" (p. 2339) may, as our inference, mix it up with the
+wood-chip furnace smoke of Jin and Yamada (1985, 1989).
 
-**Measurement.** Speed was measured along the corridor axis from a cable
-each subject unwound from a drum (Frantzich and Nilsson 2003, §3.3.1).
+**Source chain.** FRI Report No. 42 (September 1976, p. 12) states that the
+distance at which the sign became visible was recorded "and at the same
+time the speed at which each subject managed to walk", citing ref. 1, Jin
+(1972); Jin (1972) used the same corridor and the same ten observers (its
+Table 1 is identical) and reports the sign visibility. Jin and Yamada
+(1985, §3 and Fig. 3, p. 82) reprint the walking data as "an example data
+of the experiment … conducted before", without a citation for the figure;
+their ref. [5], Jin (1978), is attached to the corridor-task sentence on
+p. 81. Jin (1997, §1.3 and Fig. 3) repeats that section almost word for
+word and cites it as ref. [2], with pages 79–89; the paper's header and
+Crossref give 79–90, and the scan ends at p. 89.
+Purser (2003) dates Report No. 42 1975; the cover says 1976. Fridolf et
+al. (2019) name the study Jin 1976 (Fig. 1 legend), Jin 1978/1997
+(§3.2.1) and Jin 1979 (Table 2).
 
 **Participants.** Ronchi et al. (p. 414) report 17 women and 14 men aged 20
-to 51, without a citation of their own for that sentence. That is the
-population of a different experiment: Jin and Yamada's 11 m corridor study
-of emotional instability (Jin and Yamada 1989, "Subjects", p. 513; Jin
-1997, §2.2). Fridolf et al. (2019, §3.2.1 and Table 2) list the 20 m study
-as ten men aged 23 to 37. Jin 1997 does not give the number, and this page
-has not been checked against Jin 1978.
+to 51. That is the population of Jin and Yamada's 11 m corridor study of
+emotional instability (Jin and Yamada 1989, "Subjects", p. 513; Jin 1997,
+§2.2). The walking study had ten men aged 23–37 (report Table 1), as
+Fridolf et al. (2019, Table 2) state.
 
 **A third data set.** Jin and Yamada (1989) also measured walking speed
 against *K* (Fig. 7, p. 517), with smoke from smouldering Japanese cedar
@@ -126,8 +147,8 @@ towel that removed about 90 % of the smoke and lessened its irritation
 ## Purser 2003: a fractional law fitted to Jin
 
 Purser (2003, p. 93 and pp. 98–99, Fig. 1) fitted "a curve directly to
-Jin's data" on non-irritant smoke (refs. 7 and 15: Jin 1975/1976, FRI
-Report No. 42, and Purser's own 2001 paper "Human Tenability") with a
+Jin's data" on non-irritant smoke (refs. 7 and 15: Jin's FRI Report No. 42,
+which he dates 1975, and Purser's own 2001 paper "Human Tenability") with a
 fraction *F* of the unexposed walking speed:
 
 $$
@@ -136,15 +157,33 @@ $$
 
 with normal speed below OD/m = 0.13 and, above 0.55, speed "as in darkness
 at 0.3 m/s … since it is still possible to move at this speed in total
-darkness". Purser does not define OD/m there; Ch. 63 defines it as
-log₁₀(*I*₀/*I*) over 1 m (p. 2413), so *K* = ln 10 · OD/m ≈ 2.303 OD/m and
-the fit spans *K* ≈ 0.30–1.27 1/m (our conversion). No fit quality or
-number of points is given, and the squares in Fig. 1 lie exactly on the
-line (1.010, 0.888, 0.715, 0.541, 0.454, 0.280 at OD/m 0.13–0.55), so
-Fig. 1 shows the fitted line, not Jin's points. The floor is written as an
-absolute 0.3 m/s (0.25 of 1.2 m/s), while the line reaches 0.28 at
-OD/m 0.55 and Fig. 1 shows about 0.27. Whether 0.3 m/s was measured is open (see
-the details block on Jin's data above).
+darkness". With *K* = ln 10 · OD/m the stated range is *K* ≈
+0.30–1.27 1/m (our conversion), but Jin's non-irritant points span only
+about 0.5–1.13 1/m (OD/m 0.22–0.49): *K* 0.30 lies below every
+non-irritant point. The 0.3 m/s floor is Jin's reference line for walking
+in darkness, not a measured point (Jin 1976, pp. 14, 17).
+
+{{< details title="Caveats on Purser's 2003 law" closed="true" >}}
+**Units.** Purser does not define OD/m; Ch. 63 defines it as
+log₁₀(*I*₀/*I*) over 1 m (p. 2413). Jin and Yamada (1985, p. 80,
+footnote) define the extinction coefficient with the natural log; applying
+that definition to the 1976 data is our inference, hence the factor ln 10.
+
+**Range.** The upper end, OD/m 0.55 (*K* ≈ 1.27 1/m), is close to the top
+of Jin's "approximately 0.5/m–1.2/m" (p. 17) but matches neither Jin's 1.2
+(OD/m 0.52) nor Ch. 63's 1.15 (OD/m 0.50); in our inference it comes from
+Ch. 63's prose pairing of 1.15 with OD/m 0.55 (p. 2339). It lies beyond
+Jin's measured points.
+
+**Fit.** No fit quality or number of points is given, and the squares in
+Fig. 1 lie exactly on the line (1.010, 0.888, 0.715, 0.541, 0.454, 0.280
+at OD/m 0.13–0.55), so Fig. 1 shows the fitted line, not Jin's points.
+
+**Floor.** It is written as an absolute 0.3 m/s (0.25 of the 1.2 m/s
+unexposed speed that Ch. 63 uses; FRI Report No. 42 gives no such value),
+while
+the line reaches 0.28 at OD/m 0.55 and Fig. 1 shows about 0.27.
+{{< /details >}}
 
 ## Frantzich and Nilsson: a linear regression in dense smoke
 
@@ -259,17 +298,19 @@ measured by Jin was 0.37 m/s (p. 2341); Frantzich and Nilsson measured
 ![Two panels. (a) Walking speed against extinction coefficient: Purser's straight-line fits to Jin's irritant and non-irritant data below K = 1.2 1/m, the Frantzich–Nilsson regression at K 1.9 to 7.4 1/m, and Purser's Eq. 63.10 across both, dotted where it has no data. (b) Fractional speed against extinction coefficient: Purser's 2003 line from K 0.3 to 1.27 with dashed assumed segments, and the FDS+Evac normalised Frantzich–Nilsson line](/images/fundamentals/speed_extinction.png)
 
 *(a) Absolute laws against K [1/m]: Purser's fits to his replotted Jin data
-(red, mean ± 1 SD), Frantzich–Nilsson with its prediction interval (blue),
-Purser Eq. 63.10 (orange). (b) Fractional laws: Purser 2003 (orange),
-relative to the unexposed speed, and FDS+Evac Eq. 11 (blue), relative to
+(red, solid over Jin's points, dashed over Purser's wider stated range;
+mean ± 1 SD), Frantzich–Nilsson with its prediction interval (blue),
+Purser Eq. 63.10 (orange). (b) Fractional laws: Purser 2003 (orange,
+solid over Jin's points), relative to the unexposed speed, and FDS+Evac Eq. 11 (blue), relative to
 0.706 m/s, itself an extrapolation, so part of the gap is the reference.
-Purser's floor is drawn at 0.28 (our construction; he writes 0.3 m/s, Fig. 1
-shows about 0.27). Solid: source data; dashed: extrapolation or assumption.*
+Purser's floor, Jin's reference speed for walking in darkness, is drawn at
+0.28 (our construction; he writes 0.3 m/s, Fig. 1 shows about 0.27). Solid: source data; dashed: extrapolation or assumption.*
 
 {{< details title="Figure provenance" closed="true" >}}
-Jin: v = 1.0573 − 0.4326 K on K = 0.2–1.13 1/m and v = 1.1517 − 0.9578 K
-on K = 0.32–0.5 1/m (Ch. 63, Fig. 63.16 legend; ranges as stated on
-p. 2339 for Purser's replotted data, which differ from Jin 1997, Fig. 3);
+Jin: v = 1.0573 − 0.4326 K and v = 1.1517 − 0.9578 K (Ch. 63, Fig. 63.16
+legend), solid over the range of Jin's points in FRI Report No. 42, Fig. 2
+(about 0.5–1.13 and 0.32–0.47 1/m), dashed over the rest of Purser's stated
+ranges (0.2–1.13 and 0.32–0.5 1/m, p. 2339);
 means 0.74 ± 0.17 m/s at K = 0.73 1/m (circle) and 0.75 ± 0.21 m/s
 at K = 0.42 1/m (square) (Ch. 63, pp. 2339–2340). Frantzich–Nilsson:
 v = 0.706 − 0.057 K on K = 1.9–7.4 1/m (report Eq. 3; range from Fig. 9),
@@ -277,10 +318,13 @@ prediction interval 0.2–0.7 m/s at K = 4 1/m (§3.3.2, "ca 0,2 och 0,7").
 Purser: W = −0.1364 ln K + 0.6423 (Eq. 63.10) on K = 0.32–0.5 and
 1.9–7.5 1/m, the ranges Ch. 63 states for the pooled data (pp. 2339–2340).
 Panel (b): Purser (2003, p. 98), F = −1.738 OD/m + 1.236 on OD/m
-0.13–0.55, starting at the computed 1.010; F = 1 below (dashed, Purser's
+0.13–0.55, starting at the computed 1.010, solid only over Jin's
+non-irritant points (K ≈ 0.5–1.13 1/m) and dashed over the rest of the
+stated range; F = 1 below (dashed, Purser's
 stated normal speed); above 0.55 the fraction the equation reaches there,
-0.28, dashed, as the darkness floor (a floor assumption in our reading); OD/m converted with
-K = ln 10 · OD/m (base 10 as in Ch. 63, p. 2413; our conversion). FDS+Evac
+0.28, dashed, as the darkness floor (Jin's reference line, FRI Report
+No. 42, Fig. 2 and p. 17); OD/m converted with K = ln 10 · OD/m
+(base 10 as in Ch. 63, p. 2413; our conversion). FDS+Evac
 (Korhonen 2021, Eq. 11): F = max(0.1, 1 − 0.057 K/0.706), solid over the
 Frantzich–Nilsson data. No curve is digitised from a figure.
 Script: `scripts/figures/fundamentals_speed_extinction.py`.
@@ -313,10 +357,13 @@ chosen for conservatism (§3.3.2). Above 3 m, speed is taken as unaffected.
 {{< details title="Caveats on Fridolf et al.'s laws" closed="true" >}}
 **The visibility constant.** *A* is chosen for each data set from its
 lighting (§3.3.1); the paper does not list which *A* was applied to which
-set. Jin (1997, Eqs. 3–4) gives *V* = (5–10)/*C*ₛ for light-emitting and
-(2–4)/*C*ₛ for reflecting signs, and his Fig. 1 draws the line
-*C*ₛ·*V* = 8 for light-emitting signs, which matches *A* = 8; *A* = 2 is
-the lower end of the reflecting range. FDS uses *C* = 3 for reflecting
+set. Jin and Yamada (1985, p. 81; repeated in Jin 1997, Eqs. 3–4) give
+*V* = (5–10)/*C*ₛ for light-emitting and (2–4)/*C*ₛ for reflecting
+signs, and their Fig. 1 draws the line *C*ₛ·*V* = 8 for light-emitting
+signs, which matches *A* = 8; *A* = 2 is the lower end of the reflecting
+range, and Jin (1976, p. 17, citing Jin 1971) uses "Visibility (m) ×
+Extinction coefficient (1/m) ≈ 2" to turn the visibility needed for
+escape into an allowable density. FDS uses *C* = 3 for reflecting
 signs by default (see [Visibility through smoke](/fundamentals/visibility.md)).
 *A* = 2 is also the constant Frantzich and Nilsson (2003, report Eq. 2)
 used for lit walls and objects. Jin's constants come from a chamber lit at
@@ -400,13 +447,14 @@ relation used outside its measured range is an extrapolation.
 
 In our assessment, mostly not in their data.
 
-**Citation chains.** Most apparent conflicts come from how later sources
-cite Jin: a participant population taken from another Jin study, a
-0.3 m/s darkness speed that Ch. 63 attributes to Jin but that, in our
-inference, is a floor assumption, three descriptions of the irritant smoke, two page ranges and
-several dates for Jin's work, and a floor of 0.2 or 0.3 m/s. One difference sits in the data: Purser's replotted Jin
-points are not those of Jin (1997, Fig. 3), possibly because they come
-from a different Jin report. Details are in the block below.
+**Citation chains.** Jin's primary report (FRI Report No. 42, 1976)
+settles most apparent conflicts: they come from how later sources cite it.
+A participant population was taken from another Jin study; the 0.3 m/s
+"as if in darkness" is Jin's reference line for walking in darkness, which
+later sources report as a measurement (our inference for the chain);
+Purser's lower range of 0.2 1/m follows Jin's trend line, not his points;
+and the smoke, the report's year and the floor (0.2 or 0.3 m/s) are
+described in several ways. Details are in the block below.
 
 **Different measurements.** The experiments differ in smoke, light, speed
 definition and *K* range, and their *K* ranges do not overlap. Each law is
@@ -427,22 +475,21 @@ established rather than conflicting.
 
 {{< details title="The assessment in detail" closed="true" >}}
 **Citation chains.** Ronchi et al.'s population of 17 women and 14 men
-belongs to Jin and Yamada's 1989 heat-and-smoke study, not the walking
-experiment. Ch. 63 attributes the 0.3 m/s "as if in darkness" to Jin;
-Purser (2003, p. 98) gives it for OD/m above 0.55 "since it is still
-possible to move at this speed in total darkness". Our inference is that it
-is a floor assumption, which only FRI Report No. 42 can settle; it appears
-neither in Fig. 63.16 (lowest
-non-irritant point about 0.45 m/s) nor in Jin (1997, Fig. 3). The
-irritant smoke is burning wood cribs in Jin (1997) and Ch. 61, non-flaming
-wood in Purser (2003) and heated wood chippings in Ch. 63. Jin 1978 is
-given as pp. 135–157 and 135–155. FRI Report No. 42 is dated 1975 by
-Purser (2003) and 1976 by Ch. 63 and Ronchi et al., same title and number; Fridolf et al. date
-the same Jin study 1976, 1978/1997 and 1979, and take a 0.2 m/s floor from
-Purser and McAllister, who give about 0.3 m/s. Purser's Jin fits use
-his own replotted points (non-irritant *K* = 0.2–1.13 1/m); Jin's 1997
-figure starts at 0.52 1/m and sits a few hundredths of a m/s higher. That
-is an open question about sources, not an error by either.
+belongs to Jin and Yamada's 1989 heat-and-smoke study; the walking study
+had ten men aged 23–37 (FRI Report No. 42, Table 1). Ch. 63's "has been
+shown" 0.3 m/s in darkness (pp. 2339, 2413) and Purser's 2003 floor go
+back, in our inference, to Jin's horizontal reference line in report
+Fig. 2 (p. 17; Jin cites Togawa 1969 only for a darkness range of
+0.3–0.7 m/s, p. 14); no non-irritant point in that figure is below about
+0.45 m/s. Purser's stated non-irritant range starts at
+0.2 1/m, at the start of Jin's trend line, while Jin's points start near
+0.5 1/m (our reading of report Fig. 2). The irritant smoke is burning wood
+cribs in the report and in Jin (1972, 1997), "smoldering wood" in Jin's
+1972 English abstract, non-flaming wood in Purser (2003) and heated wood
+chippings in Ch. 63. The report is dated September 1976 on its cover;
+Purser (2003) gives 1975. Jin 1978 is given as pp. 135–157 and 135–155.
+Fridolf et al. date the walking study 1976, 1978/1997 and 1979, and take a
+0.2 m/s floor from Purser and McAllister, who give about 0.3 m/s.
 
 **Different measurements.** Smoke: real-fire smoke, irritant or not, in
 Jin; cold artificial smoke with 10–15 ppm acetic acid in Frantzich and
@@ -476,17 +523,21 @@ Findings relevant here:
 
 They identify Jin's source for the sign experiment as Jin (1970),
 *Visibility through fire smoke (I)*, Bull. Japan Assoc. Fire Sci. Eng. 19,
-with parts II (1971) and III (1972) following; "Part 5" (FRI Report
-No. 42, 1975/1976) appears to belong to the same series (our inference).
+with parts II (1971) and III (1972, read for this page) following. FRI
+Report No. 42 (1976) carries the same English title as "Part 5", under a
+different Japanese title (煙中の視程について 第5報).
 {{< /details >}}
 
 ## Sources
 
-- Jin, T. (1975/1976). *Visibility through fire smoke, Part 5: Allowable
-  smoke density for escape from fire*. Report of Fire Research Institute
-  of Japan, No. 42, p. 12. No DOI or public URL. Dated 1975 in Purser
-  (2003, ref. 7) and 1976 in SFPE Ch. 63 (ref. 53) and Ronchi et al.
-  (2013, ref. 11); the year is not established.
+- Jin, T. (1972). *Visibility through fire smoke (III)* [煙中の見透し距離に
+  ついて (III)]. Bulletin of Japanese Association of Fire Science and
+  Engineering, 22(1–2), 11–15. In Japanese with an English abstract.
+  [doi:10.11196/kasai.22.11](https://doi.org/10.11196/kasai.22.11)
+- Jin, T. (1976). *Visibility through fire smoke, Part 5: Allowable smoke
+  density for escape from fire*. Report of Fire Research Institute of
+  Japan, 42, 11–18 (Japanese abstract p. 11, English text pp. 12–18).
+  No DOI or public URL. Purser (2003, ref. 7) dates it 1975.
 - Jin, T. (1978). *Visibility through fire smoke*. Journal of Fire &
   Flammability, 9, 135–157. No DOI or public URL; pages 135–155 in
   Fridolf et al. (2019).

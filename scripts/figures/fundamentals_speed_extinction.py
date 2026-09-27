@@ -22,7 +22,11 @@ nothing is digitised from a figure:
 - Purser and McAllister's straight-line fits to Jin's data as replotted
   in their Fig. 63.16 (legend): non-irritant v = 1.0573 - 0.4326 K on
   K = 0.2-1.13 1/m, irritant v = 1.1517 - 0.9578 K on K = 0.32-0.5 1/m
-  (ranges as stated on p. 2339). The means with their standard
+  (ranges as stated on p. 2339). They are drawn solid only where Jin's
+  points lie in the primary report (Jin 1976, FRI Report 42, Fig. 2):
+  about 0.5-1.13 1/m non-irritant and 0.32-0.47 1/m irritant, extents read
+  from the figure's axis, not digitised points; the rest of Purser's range
+  is dashed. The means with their standard
   deviations (0.74 +/- 0.17 m/s at K = 0.73 1/m, non-irritant;
   0.75 +/- 0.21 m/s at K = 0.42 1/m, irritant) are quoted on
   p. 2339-2340.
@@ -33,8 +37,13 @@ Panel (b), fractional laws (speed as a fraction of the unexposed speed):
   F = -1.738 OD/m + 1.236 for OD/m = 0.13-0.55, normal speed below, and
   above 0.55 the speed "as in darkness at 0.3 m/s". The floor is drawn at
   the fraction the equation reaches at 0.55 (0.28), our construction;
-  Purser writes 0.3 m/s (0.25 of 1.2 m/s) and his Fig. 1 shows about 0.27.
-  That it is an assumption rather than a measured Jin point is our reading.
+  Purser writes 0.3 m/s (0.25 of the 1.2 m/s that SFPE Ch. 63 uses) and
+  his Fig. 1 shows about 0.27. The line is solid only over Jin's
+  non-irritant points (K about 0.5-1.13 1/m, FRI Report 42, Fig. 2) and
+  dashed over the rest of Purser's stated range. The 0.3 m/s is Jin's
+  reference value for walking in darkness, drawn as a horizontal line in FRI Report 42, Fig. 2 (p. 17; tying it to Togawa
+  1969, cited on p. 14 for 0.3-0.7 m/s, is our inference),
+  not a measured point.
   The fitted line starts at its computed value, 1.010 at OD/m 0.13; the
   F = 1 segment below is Purser's stated normal speed, drawn dashed. OD/m is converted to K with the
   base-10 definition of SFPE Ch. 63 (p. 2413), K = ln(10) OD/m.
@@ -95,6 +104,8 @@ def main():
 
     k_irr = (0.32, 0.5)
     k_nonirr = (0.2, 1.13)
+    k_jin_ni_pts = (0.5, 1.13)
+    k_jin_i_pts = (0.32, 0.47)
     k_fn = (1.9, 7.4)
     k_pooled_fn = (1.9, 7.5)
     k_max = 8.0
@@ -176,9 +187,15 @@ def main():
     )
 
     # Jin, Purser's straight-line fits over the range of Jin's points
-    k = np.linspace(*k_nonirr, 50)
+    # Solid over the range of Jin's points (FRI Report 42, Fig. 2),
+    # dashed over the rest of Purser's stated ranges.
+    k = np.linspace(k_nonirr[0], k_jin_ni_pts[0], 20)
+    ax.plot(k, jin_ni(k), color=c_jin, lw=1.4, ls="--")
+    k = np.linspace(*k_jin_ni_pts, 50)
     ax.plot(k, jin_ni(k), color=c_jin, lw=2.6)
-    k = np.linspace(*k_irr, 20)
+    k = np.linspace(k_jin_i_pts[1], k_irr[1], 5)
+    ax.plot(k, jin_i(k), color=c_jin, lw=1.4, ls="--")
+    k = np.linspace(*k_jin_i_pts, 20)
     ax.plot(k, jin_i(k), color=c_jin, lw=2.6)
     ax.errorbar(
         0.73, 0.74, yerr=0.17, fmt="o", color=c_jin, ms=6, capsize=3, mec="white"
@@ -244,14 +261,17 @@ def main():
         return -1.738 * k / ln10 + 1.236
 
     ax_f.plot([0.0, k_p03[0]], [1.0, 1.0], color=c_purser, lw=1.4, ls="--")
-    k = np.linspace(*k_p03, 50)
+    for lo, hi in ((k_p03[0], k_jin_ni_pts[0]), (k_jin_ni_pts[1], k_p03[1])):
+        k = np.linspace(lo, hi, 20)
+        ax_f.plot(k, purser03(k), color=c_purser, lw=1.4, ls="--")
+    k = np.linspace(*k_jin_ni_pts, 50)
     ax_f.plot(k, purser03(k), color=c_purser, lw=2.6)
     f_floor = purser03(k_p03[1])
     ax_f.plot([k_p03[1], k_max], [f_floor, f_floor], color=c_purser, lw=1.4, ls="--")
     ax_f.text(
         2.0,
         f_floor + 0.03,
-        "Purser 2003: 'as in darkness'\n(our reading: an assumed floor)",
+        "Purser 2003: 'as in darkness', Jin's reference\nline for darkness, not measured",
         fontsize=8,
         color="dimgrey",
     )
