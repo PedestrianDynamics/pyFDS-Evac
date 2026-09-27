@@ -868,23 +868,11 @@ class RouteAssessment:
 
 
 @dataclass(frozen=True)
-class RankedRoute:
-    """An assessed route in the ranking, with its public projection."""
-
-    assessment: RouteAssessment
-    cost: RouteCost
-    # Un-rejected as the least bad route when every route was refused.
-    fallback_promoted: bool = False
-
-
-@dataclass(frozen=True)
 class RouteDecision:
     """What one reevaluation decided for an agent, before it is applied."""
 
     # "keep", "switch", "fallback", "explore" or "wander".
     kind: str
-    reason: str | None = None
-    candidate: RouteCost | None = None
     path: list[str] | None = None
     old_exit: str | None = None
     target_id: str | None = None
@@ -895,8 +883,6 @@ class RouteDecision:
     # Same-exit decisions: the path is recorded whether or not the switch
     # applies, and the exit is left as it is.
     update_cached_path: bool = False
-    stamp_eval: bool = False
-    wander_step: int | None = None
 
 
 def _project_route_cost(assessment: RouteAssessment) -> RouteCost:
@@ -2300,7 +2286,6 @@ def _decide_same_exit(
         ):
             return RouteDecision(
                 kind="switch",
-                candidate=best,
                 path=best.path,
                 old_exit=old_exit,
                 target_id=best.exit_id,
@@ -2309,9 +2294,7 @@ def _decide_same_exit(
                 switch_reason="better_path",
                 update_cached_path=True,
             )
-    return RouteDecision(
-        kind="keep", candidate=best, path=best.path, update_cached_path=True
-    )
+    return RouteDecision(kind="keep", path=best.path, update_cached_path=True)
 
 
 def _decide_exit_change(
@@ -2336,14 +2319,13 @@ def _decide_exit_change(
         and old_cost is not None
         and not _anchor_allows(best, old_rc, config)
     ):
-        return RouteDecision(kind="keep", candidate=best)
+        return RouteDecision(kind="keep")
 
     reason = "initial" if old_exit is None else "smoke_reroute"
     if best.rejection_reason and best.rejection_reason.startswith("fallback"):
         reason = "fallback"
     return RouteDecision(
         kind="fallback" if reason == "fallback" else "switch",
-        candidate=best,
         path=best.path,
         old_exit=old_exit,
         target_id=best.exit_id,
