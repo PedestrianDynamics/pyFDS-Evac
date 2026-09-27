@@ -26,6 +26,7 @@ from pyfds_evac.core.route_graph import (
     RouteCostConfig,
     StageGraph,
     evaluate_and_reroute,
+    evaluate_route,
     rank_routes,
 )
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
@@ -483,3 +484,136 @@ class TestDiscoveryMeasuresAroundWalls:
         )
         node, _ = nearest_frontier_target(cmap, g, "s", (1.5, 17.0))
         assert node == "b"
+
+
+class _SmokeInBox:
+    """K > 0 inside an axis-aligned box, clear air elsewhere."""
+
+    def __init__(self, x0, y0, x1, y1, k=5.0):
+        self.box = (x0, y0, x1, y1)
+        self.k = k
+
+    def sample_extinction(self, time_s, x, y):
+        x0, y0, x1, y1 = self.box
+        return self.k if x0 <= x <= x1 and y0 <= y <= y1 else 0.0
+
+
+class _RecordingField:
+    """Clear air that records every point it is asked about."""
+
+    def __init__(self):
+        self.points: list[tuple[float, float]] = []
+
+    def sample_extinction(self, time_s, x, y):
+        self.points.append((x, y))
+        return 0.0
+
+
+def _max_gap(points: list[tuple[float, float]]) -> float:
+    return max(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(points, points[1:]))
+
+
+class TestFirstLegResampledAlongWalkedPath:
+    """The first leg is resampled along the walk to the next node.
+
+    ``k_max_route`` and ``k_leg_max`` take the first leg from where the agent
+    stands. That stretch must follow the walkable path, not a straight line
+    through a wall, and be sampled at ``sampling_step_m`` over its real length.
+    """
+
+    _AGENT = (5.0, 1.5)  # behind j; the straight line to e0 leaves the L
+    # Outside the walkable L, on the straight line from the agent to e0.
+    _BEHIND_WALL = _SmokeInBox(9.0, 6.0, 15.0, 14.0)
+
+    @staticmethod
+    def _evaluate(graph, path, sampler, agent, config=_DIST_ONLY):
+        return evaluate_route(
+            graph, path, 0.0, 0.0, sampler, None, config, agent_position=agent
+        )
+
+    def test_smoke_behind_a_wall_is_not_sampled(self):
+        g = TestDiscoveryMeasuresAroundWalls._l_graph()
+        smoky = self._evaluate(g, ["j", "e0"], self._BEHIND_WALL, self._AGENT)
+        clear = self._evaluate(g, ["j", "e0"], _CLEAR, self._AGENT)
+
+        assert smoky.k_max_route == 0.0
+        assert smoky.k_leg_max == 0.0
+        assert smoky.tau_route == pytest.approx(clear.tau_route)
+
+    def test_smoke_behind_a_wall_does_not_leave_the_clean_tier(self):
+        g = TestDiscoveryMeasuresAroundWalls._l_graph()
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0,
+            w_smoke=0.0,
+            w_fed=0.0,
+            w_queue=0.0,
+            clean_extinction_threshold=0.03,
+        )
+        route = self._evaluate(g, ["j", "e0"], self._BEHIND_WALL, self._AGENT, config)
+        assert route.clean
+
+    def test_walked_first_leg_is_sampled_at_the_step(self):
+        g = TestDiscoveryMeasuresAroundWalls._l_graph()
+        cache: dict = {}
+        evaluate_route(
+            g,
+            ["j", "e0"],
+            0.0,
+            0.0,
+            _CLEAR,
+            None,
+            _DIST_ONLY,
+            cached_segments=cache,
+            agent_position=self._AGENT,
+        )
+        field = _RecordingField()
+        evaluate_route(
+            g,
+            ["j", "e0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            _DIST_ONLY,
+            cached_segments=cache,
+            agent_position=self._AGENT,
+        )
+        # With the segment cached, every sample belongs to the first-leg
+        # resample, which runs from the agent to e0 around the corner.
+        assert field.points[0] == pytest.approx(self._AGENT)
+        assert field.points[-1] == pytest.approx((18.5, 18.0), abs=0.5)
+        assert _max_gap(field.points) <= _DIST_ONLY.sampling_step_m + 1e-6
+
+    def test_straight_fallback_is_sampled_at_the_step(self):
+        """Without a routing engine the resample stays a straight line."""
+        g = _linear_graph()
+        assert g.routing_engine is None
+        agent = (-5.0, 0.0)  # 15 m behind C0; the first leg is 10 m long
+        cache: dict = {}
+        evaluate_route(
+            g,
+            ["C0", "E0"],
+            0.0,
+            0.0,
+            _CLEAR,
+            None,
+            _DIST_ONLY,
+            cached_segments=cache,
+            agent_position=agent,
+        )
+        field = _RecordingField()
+        evaluate_route(
+            g,
+            ["C0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            _DIST_ONLY,
+            cached_segments=cache,
+            agent_position=agent,
+        )
+        assert field.points[0] == pytest.approx(agent)
+        assert field.points[-1] == pytest.approx((20.0, 0.0))
+        assert all(y == pytest.approx(0.0) for _, y in field.points)
+        assert _max_gap(field.points) <= _DIST_ONLY.sampling_step_m + 1e-6

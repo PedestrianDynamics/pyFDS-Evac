@@ -162,7 +162,10 @@ where:
 
 Exposure on the part of the first segment the agent has already walked
 is credited out of `K_ave` and `FED_max`, because it is already carried
-in `current_fed`.
+in `current_fed`. For `k_max_route` and `k_leg_max` the first segment is
+resampled along the walk from the agent to its next node: the routing
+engine's path through the walkable area, or the straight line when no
+engine is available, sampled every `sampling_step_m` along its length.
 
 ### What each model ranks on
 

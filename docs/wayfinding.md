@@ -160,9 +160,9 @@ structure.
 - **Knowledge.** `AgentCognitiveMap`: known nodes, known edges, visited nodes
   (`cognitive_map.py:10–25`).
 - **Decision.** `rank_routes` on `cognitive_subgraph(map, graph)`
-  (`route_graph.py:1272–1276`), then the switching rules of
+  (`route_graph.py:1293–1297`), then the switching rules of
   `evaluate_and_reroute`. With no reachable known exit, exploration or the
-  patrol (`route_graph.py:1789–1851`).
+  patrol (`route_graph.py:1810–1872`).
 - **The loop.** Moving changes the stored position that the next periodic
   learning uses (`scenario.py:2238–2254`), and advancing along the path
   triggers learning at the node left behind (`scenario.py:2508–2551`).
@@ -232,7 +232,7 @@ that schematic the discovery agent learns the junction at spawn and both exits
 at the junction. Smoke then fills the right arm, and the agent heads for exit A.
 In the code, whether exit B is refused depends on its route's optical depth
 exceeding the gate budget. Legibility of B's sign plays no part in that
-(`route_graph.py:1345–1351`).
+(`route_graph.py:1366–1372`).
 
 <!-- FIGURE: cognitive_map (four panels + legend)
 Source: scripts/figures/cognitive_map.py. Schematic: the known sets, the
@@ -355,7 +355,7 @@ thing differs in the code, and until #174 a second one did:
    discovery agent explores: it takes the frontier with the lowest path cost
    from its position, learns as the path advances, and, with no frontier left,
    patrols its known nodes (`cognitive_map.py:262–399`). Route history logs
-   `reason="explore"` and `reason="wander"` (`route_graph.py:1800`, `:1815`).
+   `reason="explore"` and `reason="wander"` (`route_graph.py:1821`, `:1836`).
 2. **The ranked length of the first leg**
    ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
    by #174, now merged), measured as a straight line, even through walls, for
@@ -364,8 +364,9 @@ thing differs in the code, and until #174 a second one did:
 
 Before #174, a comparison around obstacles mixed the effect of knowledge with
 the effect of #172. The run of Figure 7 gives the same numbers before and
-after #174. For both tiers, the first leg's smoke is sampled on a straight
-line from the agent to its next node
+after #174. For both tiers, the first leg's smoke is resampled along the
+walked path from the agent to its next node, the path that also measures the
+first leg's length
 ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)).
 
 The patrol can stall: when smoke limits legibility to a few metres, a patrol
