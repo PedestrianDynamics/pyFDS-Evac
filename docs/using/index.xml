@@ -1348,17 +1348,23 @@ for the conflicting-&lt;code>&amp;amp;INIT&lt;/code> pitfall this suite surfaced
 &lt;code>docs/testing-homogeneous.md&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Cognitive Map Memory&lt;/strong>: 4x32 m corridor with a side alcove, 20 &lt;code>discovery&lt;/code>
 agents. The side exit&amp;rsquo;s sign faces west and is legible only from
-&lt;code>y ∈ [12.5, 27.5]&lt;/code> on the centreline — a window that falls out of
+&lt;code>y ∈ [12.0, 28.0]&lt;/code> on the centreline (&lt;code>[12.5, 27.5]&lt;/code> under fdsvismap&amp;rsquo;s
+default 30 m cap; pyFDS-Evac uses the grid diagonal) — a window that falls out of
 &lt;code>view_angle * max_vis &amp;gt;= distance&lt;/code> rather than being tuned, and that
 &lt;code>build_geometry.py&lt;/code> recomputes and asserts. Proves the cognitive map does the
 one thing a visibility query cannot: &lt;strong>remember&lt;/strong>. The side exit is unknown at
-spawn, enters the map on crossing &lt;code>y=12.5&lt;/code>, and is &lt;em>still&lt;/em> there at &lt;code>y=30&lt;/code>
+spawn, enters the map on crossing &lt;code>y=12&lt;/code>, and is &lt;em>still&lt;/em> there at &lt;code>y=30&lt;/code>
 where the sign is long unreadable. Persistence is the load-bearing claim —
 delete the expansion rules and acquisition still appears to work for any agent
 starting inside the window. A third test closes the loop to routing: a
 remembered-but-illegible exit must still be routable. &lt;code>scripts/generate_cognitive_map_states.py&lt;/code> renders the
-three states (unknown / legible now / remembered), and the amber band is the
-memory made visible. Checked by &lt;code>tests/test_cognitive_map_memory.py&lt;/code>.&lt;/li>
+three states (unknown / legible now / remembered, the hatched exit being the
+memory made visible) from live &lt;code>rank_routes&lt;/code> probes. The agent takes the side
+exit from &lt;code>y = 14&lt;/code> to &lt;code>24&lt;/code> and the end exit from &lt;code>y = 26&lt;/code> (the two are equally
+far at &lt;code>y ≈ 25.4&lt;/code>); walking back to &lt;code>y = 10&lt;/code> with its map, it takes the side
+exit where it took the end exit on the way up. In the full run each agent
+switches once, &lt;code>E_end → E_side&lt;/code> at t = 5–19 s, and egress takes 21.2 s.
+Checked by &lt;code>tests/test_cognitive_map_memory.py&lt;/code>, which pins the probe outcomes.&lt;/li>
 &lt;li>&lt;strong>FIC vs FED Speed&lt;/strong>: 4x50 m sealed corridor, 30 agents, one exit. The gas is
 &lt;em>prescribed&lt;/em> by a single &lt;code>&amp;amp;INIT&lt;/code> (CO at 2000 ppm, acrolein at 10 ppm) rather
 than burned, so concentration is constant in space and time and the only
@@ -1392,9 +1398,10 @@ reimplements fdsvismap&amp;rsquo;s clear-air rule (&lt;code>view_angle * max_vis
 so the test exercises the routing decision rather than the third-party
 solver. A companion test pins that a &lt;code>full&lt;/code>-familiarity agent ignores the
 bearing entirely — signs are wayfinding information and bind only where
-knowledge is incomplete. The folder README documents the &lt;strong>30 m visibility
-ceiling&lt;/strong> that makes a sign illegible at any bearing, and how much tighter it
-becomes once smoke is present (&lt;code>c / K̄&lt;/code>, so 6 m at &lt;code>c=3&lt;/code>, &lt;code>K̄=0.5&lt;/code>).&lt;/li>
+knowledge is incomplete. The folder README documents the &lt;strong>visibility
+ceiling&lt;/strong> (the grid diagonal, about 30 m for this deck) that makes a sign
+illegible at any bearing, and how much tighter it becomes once smoke is
+present (&lt;code>c / K̄&lt;/code>, so 6 m at &lt;code>c=3&lt;/code>, &lt;code>K̄=0.5&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Familiarity Test Full&lt;/strong> / &lt;strong>Familiarity Test Discovery&lt;/strong>: &lt;code>SocialForceModel&lt;/code>
 scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
 doors throughout, generated parametrically by each folder&amp;rsquo;s

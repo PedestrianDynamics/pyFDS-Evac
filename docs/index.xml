@@ -731,82 +731,89 @@ budget for the current exit (solid) and the stricter one for a rival
 (dashed). Route C is refused; route B ranks first although it is the longest
 walk. Script: &lt;code>scripts/figures/exposure_gate.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>Wayfinding&lt;span class="hx-absolute -hx-mt-20" id="wayfinding">&lt;/span>
-&lt;a href="#wayfinding" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>A sign is more than a position&lt;span class="hx-absolute -hx-mt-20" id="a-sign-is-more-than-a-position">&lt;/span>
-&lt;a href="#a-sign-is-more-than-a-position" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>What an agent knows about the building depends on the signs it can read.
-Each exit, checkpoint and waypoint carries a sign with a position, a bearing
-\(\alpha_s\) that gives the side from which it can be read, and a visibility
-constant &lt;em>C&lt;/em>, a property of the sign (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
-). A node without an
-authored sign receives a reflective sign at its centroid, readable from every
-direction.&lt;/p>
-&lt;p>&lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>
-computes legibility
-from the FDS extinction field when &lt;code>run.py&lt;/code> is given &lt;code>--fds-dir&lt;/code>, and from
-clear air otherwise. A sign is legible from a floor cell when its visibility
-along the line of sight, reduced by the viewing angle, reaches the distance to
-it; walls block the line. The map is built once per run, and the run only asks
-whether a node&amp;rsquo;s sign is legible from the agent&amp;rsquo;s cell at the current time.&lt;/p>
-&lt;p>Legibility decides what an agent &lt;strong>knows&lt;/strong>, not whether a route is allowed. An
-exit whose sign the agent has never read is absent from its graph. It is not
-present and refused.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/sign_bearing.png" alt="Two 30 m corridors, each with an exit at both ends; left, the near sign faces the agents and all 40 go to the near exit; right, the near sign faces away and all 40 walk to the far exit" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Figure 5. Asset &lt;code>assets/exit_visibility_alpha&lt;/code>: a corridor in clear air with
-an exit at each end and 40 agents with familiarity 0. Only the bearing of the
-near exit&amp;rsquo;s sign differs. Facing the agents, all 40 took the near exit; facing
-away, all 40 walked to the far one, and egress took 26.0 s instead of 18.2 s.
-Outcomes as recorded in the asset README.
-Script: &lt;code>scripts/figures/sign_bearing.py&lt;/code>.&lt;/em>&lt;/p>
-&lt;h3>Per-agent cognitive maps&lt;span class="hx-absolute -hx-mt-20" id="per-agent-cognitive-maps">&lt;/span>
-&lt;a href="#per-agent-cognitive-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent carries a cognitive map: the graph of stages it knows, not a
-psychological construct. Routing runs only on this subgraph. The &lt;code>familiarity&lt;/code>
-key of a distribution group sets how it starts. With &lt;code>&amp;quot;full&amp;quot;&lt;/code>, the default,
-the agent knows the whole graph, as trained staff would. With &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>,
-it knows its spawn node and the neighbours whose signs are legible from the
-spawn area. A number &lt;em>p&lt;/em> between 0 and 1 sits between the two: each exit
-enters the map at spawn with probability &lt;em>p&lt;/em>, so a population can be a
-gradient rather than two groups. An &lt;code>entrance&lt;/code> key names an exit the agent
-always knows, such as the door it came in by. Setting familiarity
-separately for each exit is not supported
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>
-). The
-literature on why familiarity matters is summarised on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/">Exit choice and familiarity&lt;/a>
+&lt;a href="#wayfinding" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Route choice picks among the exits an agent knows. Wayfinding decides which
+exits those are. The code, its defaults and its limitations are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>
+. A walk-through in the order of
+the talk, with the examples, is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/wayfinding/">Wayfinding implementation notes&lt;/a>
 .&lt;/p>
-&lt;p>The map grows at spawn, on arrival at a node and at each re-decision, by the
-neighbours legible from where the agent stands. A learned corridor is known in
-both directions, so an agent can always retrace its steps out of a dead end.
-If no exit is known, the agent heads for the nearest known node it has not
-visited; when none is left, it patrols the nodes it knows, because a new
-position can bring a new sign into view.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/cognitive_map.png" alt="Four panels of a T-shaped corridor showing which nodes and edges an agent knows: at spawn, at the junction, with smoke hiding exit B, and for a fully familiar agent" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Figure 6. Schematic on a T-shaped corridor. Filled nodes and solid edges are
-in the agent&amp;rsquo;s map. (1) At spawn a discovery agent knows the junction, whose
-sign is legible. (2) At the junction both exits enter the map. (3) Smoke fills
-the right arm; exit B stays known, and the router picks exit A. (4) A fully
-familiar agent knows the whole graph at t = 0.
-Script: &lt;code>scripts/figures/cognitive_map.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h3>Knowing is not seeing&lt;span class="hx-absolute -hx-mt-20" id="knowing-is-not-seeing">&lt;/span>
+&lt;a href="#knowing-is-not-seeing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent carries a cognitive map: the part of the building&amp;rsquo;s route graph it
+&lt;strong>knows&lt;/strong>. The map is a data structure, not a psychological construct. It
+starts with whatever the agent&amp;rsquo;s familiarity gives it:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Fully familiar&lt;/strong> (the default): the whole graph, by assumption.&lt;/li>
+&lt;li>&lt;strong>Discovery&lt;/strong>: only its spawn area, plus the neighbouring places whose
+signs can be read from the spawn area&amp;rsquo;s routing point (the same point for
+everyone spawning there).&lt;/li>
+&lt;li>&lt;strong>A number between 0 and 1&lt;/strong>: each exit is known from the start with that
+probability, so a crowd can be a mixture rather than two groups.&lt;/li>
+&lt;li>&lt;strong>&lt;code>entrance&lt;/code>&lt;/strong>: names one exit that is also known from the start, such as the
+door the agent came in by. It must be an exit reachable from the spawn area;
+otherwise it is ignored without a warning.&lt;/li>
+&lt;/ul>
+&lt;p>After that, the map grows only when the agent can read a sign (a run with
+visibility switched off lets it learn by contact instead). A sign is
+&lt;strong>legible&lt;/strong> from where the agent stands when three conditions hold:&lt;/p>
+&lt;ol>
+&lt;li>the agent is on the side the sign faces (a sign without a bearing is
+readable from every side);&lt;/li>
+&lt;li>no wall stands between them;&lt;/li>
+&lt;li>the smoke along the line of sight leaves enough visibility, by Jin&amp;rsquo;s law,
+to cover the distance.&lt;/li>
+&lt;/ol>
+&lt;p>For a sign with a bearing, the more obliquely it is seen, the more
+visibility it needs. Legibility is
+precomputed for the whole floor, from the fire&amp;rsquo;s smoke or from clear air, and
+the run only looks it up.&lt;/p>
+&lt;p>When a neighbouring place&amp;rsquo;s sign becomes legible, that place is added to the
+map. Being legible is a state of the moment. Being known lasts.&lt;/p>
+&lt;h3>Routing on what is known&lt;span class="hx-absolute -hx-mt-20" id="routing-on-what-is-known">&lt;/span>
+&lt;a href="#routing-on-what-is-known" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The router ranks only routes over places the agent knows. An exit the agent
+has not learned is not a rejected option; for the router, it does not exist.
+If no known exit is reachable, the agent heads for a known place it has not
+been to yet, and when none is left, it walks between the places it knows,
+hoping to see a new sign on the way.&lt;/p>
+&lt;p>One exception matters when reading results. An agent that knows no exit and
+no other place does not explore. It keeps walking to the geometrically nearest
+exit, whether or not it has learned it. It may read that exit&amp;rsquo;s sign on the
+way and learn it then, but it walks there either way
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>
+).&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/sign_bearing.png" alt="Two 30 m corridors, each with an exit at both ends and the cells from which the near sign is legible shaded yellow; left, the near sign faces the agents and they take the near exit; right, the near sign faces away and they walk to the far exit" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 5. One number flips the exit. A corridor with an exit at
+each end and 40 agents at familiarity 0. Only the bearing of the near exit&amp;rsquo;s
+sign differs. Yellow cells are those from which the near sign is legible.
+Facing the agents, the near exit is learned and taken; facing away, it is
+never learned and the agents walk to the far one. Script:
+&lt;code>scripts/figures/sign_bearing.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/cognitive_map.png" alt="Four panels of a T-shaped corridor showing which places and connections an agent knows: at spawn, at the junction, with smoke in the right arm, and for a fully familiar agent" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 6. Schematic, drawn by hand, not a simulation. Filled nodes and solid
+edges are known. (1) At spawn, a discovery agent knows the junction, whose sign
+is legible. (2) At the junction, both exits are learned. (3) Smoke fills the
+right arm. Exit B stays known; the router judges its route by the smoke on it,
+not by its sign. (4) A fully familiar agent knows everything at t = 0. Script:
+&lt;code>scripts/figures/cognitive_map.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h3>The map remembers&lt;span class="hx-absolute -hx-mt-20" id="the-map-remembers">&lt;/span>
-&lt;a href="#the-map-remembers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Nothing leaves a cognitive map. An exit learned while its sign was legible
-stays known and routable after smoke or distance hides the sign; with a
-visibility query alone, the agent would forget it as soon as it lost sight of
-it.&lt;/p>
-&lt;p>The map limits topology, not knowledge of the smoke. A discovery agent ranks
-the exits it knows by \(\tau\) over the whole remaining route, including legs
-it has never walked and, with anticipation, times that have not yet happened.
-Its route choice is a best case over its known subgraph, not a model of what
-it can perceive
+&lt;a href="#the-map-remembers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A place stays known after its sign is hidden again by distance, angle, a wall
+or smoke. Knowing an exit does not mean choosing it: the router still compares
+it with the other known exits from where the agent stands. Memory shows when
+the agent is somewhere it cannot read the sign. There it can still choose the
+exit it learned earlier. Without the memory, the same place would give a
+different choice.&lt;/p>
+&lt;p>The map limits what an agent knows of the building, not what it knows of the
+smoke. Once it knows an exit, the router prices the whole route to it with
+the smoke field of the fire, including stretches the agent has never seen
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
-). The
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/visibility/">visibility page&lt;/a>
-lists the command-line settings for
-sight gating and what each one means.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/map_memory.png" alt="Six copies of a corridor with an agent probe at y = 4, 10, 14, 20, 26 and 30 m; the side exit is unknown below the legibility band, known inside it, and still known above it" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Figure 7. Asset &lt;code>assets/cognitive_map_memory&lt;/code>: a corridor whose side-exit
-sign is legible only inside the shaded band. A discovery agent probed at six
-positions: above the band the sign is no longer legible, but the exit is still
-in the map and still chosen. Outcomes as recorded in the asset README and
-pinned by tests. Script: &lt;code>scripts/figures/map_memory.py&lt;/code>.&lt;/em>&lt;/p>
+).&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/map_memory.png" alt="Five probes of one corridor: the side exit is unknown, learned, legible, known but not legible, and first-ranked at a return probe where its sign cannot be read" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 7. A corridor whose side-exit sign is legible only inside the shaded
+region, y = 12.0–28.0 m on the centreline (gold ticks). One discovery agent is probed at a sequence of positions: northward,
+then back south. These are probes, not a walk. Northward, the side exit is
+learned inside the region and stays known beyond it, where the nearer end exit
+ranks first. Back south, where the side sign cannot be read, the remembered
+side exit is nearer and ranks first. Script: &lt;code>scripts/figures/map_memory.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>The parameter split&lt;span class="hx-absolute -hx-mt-20" id="the-parameter-split">&lt;/span>
 &lt;a href="#the-parameter-split" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some parameters with the same name live in two places, and they do different
 things. The walking-speed parameters (&lt;code>speed_law&lt;/code>, &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>,
@@ -977,7 +984,7 @@ sources.&lt;/li>
 , &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED&lt;/a>
 ,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>
-, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/visibility/">visibility and cognitive maps&lt;/a>
+, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>
 ,
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/">verification&lt;/a>
 .&lt;/li>
@@ -2096,7 +2103,7 @@ page), so about half stop below FED = 1. Use &lt;code>--incapacitation-mode dete
 &lt;tr>
 &lt;td>&lt;code>KNOWN_DOOR_NAMES&lt;/code>, &lt;code>KNOWN_DOOR_PROBS&lt;/code> (§8.8)&lt;/td>
 &lt;td>Which exits an agent knows, with a probability per exit. An exit not listed is known only if its &lt;code>&amp;amp;EXIT&lt;/code> or &lt;code>&amp;amp;DOOR&lt;/code> line sets &lt;code>KNOWN_DOOR&lt;/code>, which defaults to .FALSE. (&lt;code>evac.f90:2223&lt;/code>, &lt;code>:2666&lt;/code>), so by default agents rely on the exits they can see&lt;/td>
-&lt;td>&lt;code>familiarity&lt;/code> on a distribution: &lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>, or one probability in [0, 1] applied to every exit. The default is &lt;code>&amp;quot;full&amp;quot;&lt;/code>: every agent knows every exit. The FDS+Evac default is closer to &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>. &lt;code>entrance&lt;/code> names one exit the agents always know. A probability per exit is not supported; see &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">issue #136&lt;/a>
+&lt;td>&lt;code>familiarity&lt;/code> on a distribution: &lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>, or one probability in [0, 1] applied to every exit. The default is &lt;code>&amp;quot;full&amp;quot;&lt;/code>: every agent knows every exit. The FDS+Evac default is closer to &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>. &lt;code>entrance&lt;/code> names one exit, reachable from the spawn area, that the agents know from the start. A probability per exit is not supported; see &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">issue #136&lt;/a>
 .&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -2637,383 +2644,8 @@ Protection Association, Quincy, MA. No DOI or public URL; cited through
 the FDS User Guide (its ref. 83).&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/visibility/">visibility and cognitive maps&lt;/a>
-.&lt;/p></description></item><item><title>Visibility-aware routing and cognitive maps</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/visibility/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/visibility/</guid><description>
-&lt;p>Based on: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
-and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/">Exit choice and familiarity&lt;/a>
-.&lt;/p>
-&lt;p>Implements &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/specs/008-visibility-aware-routing/SPEC.md" target="_blank" rel="noopener">Spec 008&lt;/a>
-: sign
-visibility gates what each agent comes to &lt;em>know&lt;/em>, and per-agent cognitive maps
-carry that knowledge into routing. Sign visibility does not reject routes.&lt;/p>
-&lt;p>Symbols follow the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#notation">notation table&lt;/a>
-.&lt;/p>
-&lt;p>Background: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/">Concepts&lt;/a>
-page and the talk &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf" target="_blank" rel="noopener">PDF&lt;/a>
-).&lt;/p>
-&lt;h2>Sign visibility&lt;span class="hx-absolute -hx-mt-20" id="sign-visibility">&lt;/span>
-&lt;a href="#sign-visibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Each exit and checkpoint can carry a &lt;code>&amp;quot;sign&amp;quot;&lt;/code> descriptor in the scenario
-config:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;exits&amp;#34;&lt;/span>: {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;exit_A&amp;#34;&lt;/span>: {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;sign&amp;#34;&lt;/span>: {&lt;span style="color:#f92672">&amp;#34;x&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.5&lt;/span>, &lt;span style="color:#f92672">&amp;#34;y&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">11.5&lt;/span>, &lt;span style="color:#f92672">&amp;#34;alpha&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">90&lt;/span>, &lt;span style="color:#f92672">&amp;#34;c&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">3&lt;/span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>&lt;code>alpha&lt;/code> is a compass bearing (degrees from north, clockwise): 90 = sign
-visible from the east, 270 = from the west, 180 = from the south.&lt;/p>
-&lt;p>Every exit, checkpoint and waypoint gets a sign: nodes without an authored
-&lt;code>&amp;quot;sign&amp;quot;&lt;/code> get one synthesised at the node&amp;rsquo;s polygon centroid (&lt;code>c=3&lt;/code>,
-&lt;code>alpha=None&lt;/code>, i.e. omni-directional). A node is never exempt from
-visibility gating for lack of an authored sign.&lt;/p>
-&lt;p>At each reevaluation tick the &lt;code>VisibilityModel&lt;/code> checks whether an agent can see
-a node&amp;rsquo;s sign, using a cached
-&lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>
-grid.&lt;/p>
-&lt;p>&lt;strong>Sign legibility decides what an agent &lt;em>knows&lt;/em>, not whether a route is
-allowed.&lt;/strong> A sign it can see admits that node to the agent&amp;rsquo;s cognitive map
-(&lt;code>cognitive_map.expand_from_visibility&lt;/code>), and the map is what Dijkstra may route
-over &amp;ndash; so an unknown exit is &lt;em>absent from the graph&lt;/em> rather than
-present-and-vetoed. Route choice does not consult the visibility model at all,
-so an agent can use an exit it has learned after the sign goes out of view.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/sign_bearing.png" alt="Two 30 m corridors, each with an exit at both ends; left, the near sign faces the agents and all 40 go to the near exit; right, the near sign faces away and all 40 walk to the far exit" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>&lt;code>assets/exit_visibility_alpha&lt;/code>: 4 m × 30 m corridor in clear air, 40 agents with
-familiarity 0. The two configurations differ only in the bearing of the near
-exit&amp;rsquo;s sign. Facing the agents (0°), all 40 took the near exit; facing away
-(180°), all 40 walked to the far exit. One run of each configuration, as
-recorded in the asset README. Script: &lt;code>scripts/figures/sign_bearing.py&lt;/code>.&lt;/em>&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Build or reuse the vismap cache; smoke hides signs from the cognitive map&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run run.py &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --scenario assets/t_junction &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/t_junction &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-rerouting &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --vis-cache assets/t_junction/vismap_cache.npz &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-cost-history route_costs.csv &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>Under the default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> route-cost model the only rejection reasons a route-cost CSV carries are &lt;code>tau ...&lt;/code>
-(optical depth over budget), &lt;code>FED_max ...&lt;/code> (dose over threshold), and either of
-those under a &lt;code>fallback:&lt;/code> prefix.&lt;/p>
-&lt;h3>Which visibility setting am I running?&lt;span class="hx-absolute -hx-mt-20" id="which-visibility-setting-am-i-running">&lt;/span>
-&lt;a href="#which-visibility-setting-am-i-running" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Sight gating decides how an agent comes to know a node, and the flags choose
-between three different scenarios. Nothing here changes the physics; it changes
-what the agent is allowed to perceive.&lt;/p>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th>invocation&lt;/th>
-&lt;th>model&lt;/th>
-&lt;th>the scenario it means&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td>&lt;em>(no flags)&lt;/em>, deck has discovery agents&lt;/td>
-&lt;td>clear air&lt;/td>
-&lt;td>&lt;strong>no fire.&lt;/strong> Agents learn a node by seeing its sign: walls occlude, sign facing and contrast apply&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;em>(no flags)&lt;/em>, every agent &lt;code>familiarity = 1.0&lt;/code>&lt;/td>
-&lt;td>none built&lt;/td>
-&lt;td>agents hold the whole graph from t=0 and never consult it, so building one would cost time and change nothing&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--clear-air-visibility&lt;/code>&lt;/td>
-&lt;td>clear air, forced&lt;/td>
-&lt;td>as above, on a deck whose agents are fully familiar &amp;ndash; only useful for comparison runs&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--no-visibility&lt;/code>&lt;/td>
-&lt;td>none&lt;/td>
-&lt;td>&lt;strong>not a fire scenario.&lt;/strong> Sight gating is absent, so an agent learns every neighbour of each node it reaches, by contact rather than by sight&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--fds-dir DIR&lt;/code>&lt;/td>
-&lt;td>none for sight&lt;/td>
-&lt;td>smoke drives speed reduction and FED, but what an agent can &lt;em>see&lt;/em> is ungated&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--fds-dir DIR --vis-cache PATH&lt;/code>&lt;/td>
-&lt;td>smoke&lt;/td>
-&lt;td>&lt;strong>the coupled run.&lt;/strong> Sight gated by that fire&amp;rsquo;s extinction field: smoke hides signs, so the map stops growing&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--vis-cache PATH&lt;/code> (no &lt;code>--fds-dir&lt;/code>)&lt;/td>
-&lt;td>clear air, cached&lt;/td>
-&lt;td>same as the default, with the grid reused between runs&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;p>Rejected combinations:&lt;/p>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th>combination&lt;/th>
-&lt;th>why&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td>&lt;code>--clear-air-visibility --fds-dir&lt;/code>&lt;/td>
-&lt;td>claims clear sight while a fire burns &amp;ndash; the one combination that silently produces a wrong answer&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--clear-air-visibility --no-visibility&lt;/code>&lt;/td>
-&lt;td>contradictory&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--vis-cache&lt;/code> or &lt;code>--clear-air-visibility&lt;/code> with &lt;code>--no-enable-rerouting&lt;/code>&lt;/td>
-&lt;td>a sight gate with nothing to act on&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;p>&lt;code>--vis-cell-size&lt;/code> sets the grid the scene is rasterised at (default 0.25 m). A
-wall thinner than one cell stops occluding, so keep it below the thinnest wall
-that must block sight.&lt;/p>
-&lt;p>The three settings are genuinely different agents. Measured on
-&lt;code>assets/world_100&lt;/code>, one agent, &lt;code>familiarity = 0&lt;/code>, same seed:&lt;/p>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th>setting&lt;/th>
-&lt;th>evacuation&lt;/th>
-&lt;th>route switches&lt;/th>
-&lt;th>cognitive map&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td>&lt;code>--no-visibility&lt;/code>&lt;/td>
-&lt;td>58.5 s&lt;/td>
-&lt;td>0&lt;/td>
-&lt;td>learns each node&amp;rsquo;s neighbours on arrival&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>clear air (default)&lt;/td>
-&lt;td>188.8 s&lt;/td>
-&lt;td>31, mostly &lt;code>explore&lt;/code>&lt;/td>
-&lt;td>grows 3 -&amp;gt; 28 nodes&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--fds-dir&lt;/code> + &lt;code>--vis-cache&lt;/code>&lt;/td>
-&lt;td>did not evacuate (400 s cap)&lt;/td>
-&lt;td>30, nearly all &lt;code>wander&lt;/code>&lt;/td>
-&lt;td>stays at 3 nodes: no sign is legible, so no frontier appears&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3>Diagnostic scripts&lt;span class="hx-absolute -hx-mt-20" id="diagnostic-scripts">&lt;/span>
-&lt;a href="#diagnostic-scripts" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Coverage and ASET maps (sign placement validation)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python scripts/demo_vismap_phase0.py
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># With fresh vismap recompute&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python scripts/demo_vismap_phase0.py --no-cache&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;h2>Cognitive maps&lt;span class="hx-absolute -hx-mt-20" id="cognitive-maps">&lt;/span>
-&lt;a href="#cognitive-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Agents have a familiarity tier that controls how much of the building they
-know at the start of the simulation:&lt;/p>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th>Tier&lt;/th>
-&lt;th>&lt;code>familiarity&lt;/code>&lt;/th>
-&lt;th>Knowledge at spawn&lt;/th>
-&lt;th>Expansion&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td>Trained staff&lt;/td>
-&lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code>&lt;/td>
-&lt;td>Complete stage graph&lt;/td>
-&lt;td>—&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>Visitors&lt;/td>
-&lt;td>&lt;code>&amp;quot;discovery&amp;quot;&lt;/code>&lt;/td>
-&lt;td>Spawn node + visible neighbors&lt;/td>
-&lt;td>On arrival + at reevaluation&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;p>&lt;strong>The tier limits topology, not perception of smoke.&lt;/strong> A &lt;code>discovery&lt;/code> agent does
-not know the building — it routes only over its cognitive subgraph and learns
-nodes through the perception-limited &lt;code>VisibilityModel&lt;/code>. It &lt;em>does&lt;/em> know the smoke
-field: to choose among the exits it knows, it integrates &lt;code>tau = K_ave * L&lt;/code> over
-the whole remaining route (optical depth, dimensionless), including legs it has never visited, and with
-&lt;code>anticipate = True&lt;/code> and &lt;code>foresight_horizon_s = inf&lt;/code> at times that have not
-happened. So route choice is an &lt;strong>optimality bound over the agent&amp;rsquo;s known
-subgraph&lt;/strong>, not a behavioural model — map growth, exploration order and wander
-behaviour are unaffected, but nothing here licenses the claim that a discovery
-agent&amp;rsquo;s &lt;em>route choice&lt;/em> is perception-limited. Open as
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
-.&lt;/p>
-&lt;p>Set per distribution group in the scenario config:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;distributions&amp;#34;&lt;/span>: {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;visitors&amp;#34;&lt;/span>: {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;parameters&amp;#34;&lt;/span>: {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;familiarity&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;discovery&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>A deck with discovery agents gets a visibility model either way — from the FDS
-extinction field when &lt;code>--fds-dir&lt;/code> is given, from clear air otherwise (see the
-table above) — because sight is gated by geometry, sign facing and contrast
-whether or not there is a fire. Running with no model at all is what
-&lt;code>--no-visibility&lt;/code> asks for. Without a model the perception step adds nothing, so
-a &lt;code>discovery&lt;/code> agent starts
-out knowing only its spawn node, its &lt;code>entrance&lt;/code>, and whatever the familiarity
-draw gave it. Graph adjacency is not used as a stand-in for line of sight:
-with no &lt;code>transitions&lt;/code> declared the graph is auto-wired from every spawn area to
-every unblocked stage, so treating a neighbour as seen would hand most agents
-most of the building&amp;rsquo;s exits at t=0 and make &lt;code>familiarity&lt;/code> inert.&lt;/p>
-&lt;p>The tier binds whether or not the scenario defines a journey, and it binds from
-the &lt;strong>first step&lt;/strong>: the agent&amp;rsquo;s cognitive map is built at spawn and the exits it
-knows are ranked by the same cost the reroute pass uses, so an agent
-who knows only the front door walks to the front door however far it is.
-&lt;code>tests/test_initial_exit_from_cognitive_map.py&lt;/code> pins the
-contract with rerouting off, where the opening choice is the only choice.&lt;/p>
-&lt;p>Each agent is rooted at its spawn area, and routing ranks every exit reachable
-from there. Rooting it at the assigned exit instead would collapse the ranking
-to that one exit at zero cost;
-&lt;code>tests/test_no_journey_routing_origin.py&lt;/code> pins the contract.&lt;/p>
-&lt;p>Default when the key is absent: &lt;code>&amp;quot;full&amp;quot;&lt;/code> (backward compatible).&lt;/p>
-&lt;p>&lt;strong>Discovery expansion rules:&lt;/strong>&lt;/p>
-&lt;ol>
-&lt;li>&lt;strong>At spawn&lt;/strong> — agent learns its spawn node, its &lt;code>entrance&lt;/code> if one is set,
-each exit drawn as known by a scalar &lt;code>familiarity&lt;/code>, and any adjacent node
-whose sign is currently visible from the spawn centroid. It then picks its
-first exit by ranking that map, not by geometry.&lt;/li>
-&lt;li>&lt;strong>On arrival&lt;/strong> — when an agent physically reaches a node, the immediate
-neighbours whose sign is visible from where it stands are added (all of
-them when no visibility model is supplied).&lt;/li>
-&lt;li>&lt;strong>At reevaluation&lt;/strong> — adjacent nodes whose sign is visible from the
-agent&amp;rsquo;s current position are added.&lt;/li>
-&lt;/ol>
-&lt;p>Learning an edge also learns its reverse when the graph has one: knowledge
-of a corridor is bidirectional, so an agent can always retrace its steps
-out of a dead end whose far side shows it nothing new.&lt;/p>
-&lt;p>Routing (Dijkstra) runs over the agent&amp;rsquo;s known sub-graph only. If no exit
-is reachable in the cognitive map, the agent heads toward the nearest
-known-but-unexplored node instead (a doorway it knows exists but hasn&amp;rsquo;t
-been through) — expanding its knowledge on arrival and re-evaluating from
-there, until an exit becomes known. Reroute events for this show up in
-&lt;code>route_history&lt;/code> with &lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code>. When every known node has been
-visited and still no exit is reachable, the agent wanders: it patrols the
-nodes it knows in a deterministic rotation (&lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code>), because
-sign legibility depends on position — a leg walked between two known nodes
-can make a sign readable that never was from either node, restarting
-discovery. Once an exit is known, the agent
-also reroutes onto a cheaper &lt;em>path&lt;/em> to that same exit as its knowledge
-grows, not only when a different exit becomes preferable
-(&lt;code>reason=&amp;quot;better_path&amp;quot;&lt;/code>).&lt;/p>
-&lt;h3>Visualising cognitive map evolution&lt;span class="hx-absolute -hx-mt-20" id="visualising-cognitive-map-evolution">&lt;/span>
-&lt;a href="#visualising-cognitive-map-evolution" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 4-panel figure: spawn → junction → reroute → full baseline&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python scripts/demo_cognitive_map_vis.py
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Without cached vismap (all neighbours assumed visible at spawn)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python scripts/demo_cognitive_map_vis.py --no-cache&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>Figure: &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/t_junction/cognitive_map_evolution.png" alt="cognitive map evolution" loading="lazy" />&lt;/p>
-&lt;h2>Verification: familiarity comparison&lt;span class="hx-absolute -hx-mt-20" id="verification-familiarity-comparison">&lt;/span>
-&lt;a href="#verification-familiarity-comparison" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Two scenario configs differ only in familiarity tier:&lt;/p>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th>Config&lt;/th>
-&lt;th>Tier&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td>&lt;code>assets/t_junction/config_full.json&lt;/code>&lt;/td>
-&lt;td>&lt;code>familiarity=full&lt;/code>&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>assets/t_junction/config_discovery.json&lt;/code>&lt;/td>
-&lt;td>&lt;code>familiarity=discovery&lt;/code>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;p>Run both back-to-back and produce a 3-panel comparison (exit split,
-rejection timeline, evacuation time):&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/run_familiarity_comparison.py &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/t_junction &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --vis-cache assets/t_junction/vismap_cache.npz&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>Outputs: &lt;code>results/familiarity_comparison/{full,discovery}_route_costs.csv&lt;/code>,
-&lt;code>results/familiarity_comparison/comparison.png&lt;/code>.&lt;/p>
-&lt;h2>Deviations from the literature&lt;span class="hx-absolute -hx-mt-20" id="deviations-from-the-literature">&lt;/span>
-&lt;a href="#deviations-from-the-literature" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The published law is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
-.
-There &lt;em>C&lt;/em> is a property of the sign, but every node without an authored sign
-receives a synthetic reflective sign, readable from every direction, at its
-centroid (&lt;code>pyfds_evac/core/visibility.py:58&lt;/code>).
-Legibility uses the mean extinction along the line of sight and a
-view-angle correction (Börger et al. 2024), neither of which is part of Jin&amp;rsquo;s
-experiments in uniform smoke. fdsvismap&amp;rsquo;s 30 m cap on visibility, the FDS
-default, is raised to the domain diagonal before the map is computed
-(&lt;code>visibility.py:103&lt;/code>).&lt;/p></description></item><item><title>Walking speed in smoke</title><link>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/</guid><description>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>
+.&lt;/p></description></item><item><title>Walking speed in smoke</title><link>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/</guid><description>
 &lt;p>Smoke slows people down because they see less, and irritant smoke slows them
 further because it hurts their eyes and airways. Evacuation models take this
 from a small number of experiments that relate walking speed &lt;em>v&lt;/em> [m/s] to the
@@ -3648,7 +3280,732 @@ Technical Research Centre of Finland.
 Secondary source for the fractional form.&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>
-.&lt;/p></description></item><item><title>What your FDS case must provide</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</guid><description>
+.&lt;/p></description></item><item><title>Wayfinding</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/</guid><description>
+&lt;p>Based on: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
+and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/">Exit choice and familiarity&lt;/a>
+.&lt;/p>
+&lt;p>Code references are to main at &lt;code>f363758&lt;/code>, which includes #170 and #174, and
+to fdsvismap &lt;code>64d9aa7&lt;/code>.&lt;/p>
+&lt;p>The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing model&lt;/a>
+ranks and refuses routes. This page
+describes the part of the model that decides which routes it may rank: what
+each agent knows about the stage graph, how that knowledge starts, how it
+grows, and how route choice reads it. The step-by-step walk-through, with
+figures and the talk&amp;rsquo;s examples, is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/wayfinding/">Wayfinding implementation notes&lt;/a>
+. The intuition is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#wayfinding">Concepts › Wayfinding&lt;/a>
+. Symbols follow the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#notation">notation table&lt;/a>
+.&lt;/p>
+&lt;h2>Terms&lt;span class="hx-absolute -hx-mt-20" id="terms">&lt;/span>
+&lt;a href="#terms" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These words are used with one meaning each, here and on the linked pages.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Stage graph.&lt;/strong> The directed graph of spawn areas, checkpoints, waypoints
+and exits, with the walkable legs between them as edges
+(&lt;code>route_graph.py:104–192&lt;/code>). A &lt;strong>neighbour&lt;/strong> of a node is the target of one
+of its outgoing edges.&lt;/li>
+&lt;li>&lt;strong>Sign.&lt;/strong> A descriptor \(\{x, y, \alpha_s, C\}\) attached to a node: position,
+compass bearing \(\alpha_s\) of the direction the sign faces, and the
+visibility constant &lt;em>C&lt;/em> of Jin&amp;rsquo;s law.&lt;/li>
+&lt;li>&lt;strong>Legible.&lt;/strong> A sign is legible from a grid cell at a time when it passes the
+precomputed sign-legibility test below. Legibility is a property of the
+present position and time.&lt;/li>
+&lt;li>&lt;strong>Known.&lt;/strong> A node or edge is known to an agent when it is stored in that
+agent&amp;rsquo;s cognitive map. Knowledge persists.&lt;/li>
+&lt;li>&lt;strong>Learn.&lt;/strong> A node or edge is learned when it is added to the map.&lt;/li>
+&lt;li>&lt;strong>Visited.&lt;/strong> A node is visited when the agent&amp;rsquo;s stage at that node
+completes, after any wait there (&lt;code>expand_on_arrival&lt;/code>, called at
+&lt;code>scenario.py:2508–2551&lt;/code>). This includes a stage with nothing scripted after
+it, where the agent goes idle (&lt;code>direct_steering_runtime.py:328–337&lt;/code>). The
+spawn node is visited from the start.&lt;/li>
+&lt;li>&lt;strong>Frontier.&lt;/strong> A known node that is not visited.&lt;/li>
+&lt;li>&lt;strong>Sign-legibility test&lt;/strong> versus &lt;strong>route exposure gate.&lt;/strong> The first decides
+whether a neighbour is learned. The second, described on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing page&lt;/a>
+, judges the smoke along a route that is
+already known. They are separate mechanisms.&lt;/li>
+&lt;/ul>
+&lt;h2>Coded form&lt;span class="hx-absolute -hx-mt-20" id="coded-form">&lt;/span>
+&lt;a href="#coded-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;a id="sign-visibility">&lt;/a>&lt;/p>
+&lt;h3>1. The sign-legibility test&lt;span class="hx-absolute -hx-mt-20" id="1-the-sign-legibility-test">&lt;/span>
+&lt;a href="#1-the-sign-legibility-test" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Every exit, checkpoint and waypoint carries a sign (&lt;code>visibility.py:61–73&lt;/code>). A
+non-empty authored &lt;code>&amp;quot;sign&amp;quot;&lt;/code> is used as written and must give &lt;code>x&lt;/code> and &lt;code>y&lt;/code>. A
+node without one, or with an empty one, receives a synthesised sign at its
+routing point with \(C = 3\) and \(\alpha_s\) = &lt;code>None&lt;/code> (&lt;code>visibility.py:34–58&lt;/code>).
+A node whose polygon cannot give a position gets no sign. Spawn areas carry no
+sign. The model treats every node without a sign as legible from everywhere
+(&lt;code>visibility.py:538–540&lt;/code>).&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;exits&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;exit_A&amp;#34;&lt;/span>: { &lt;span style="color:#f92672">&amp;#34;sign&amp;#34;&lt;/span>: {&lt;span style="color:#f92672">&amp;#34;x&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.5&lt;/span>, &lt;span style="color:#f92672">&amp;#34;y&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">11.5&lt;/span>, &lt;span style="color:#f92672">&amp;#34;alpha&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">90&lt;/span>, &lt;span style="color:#f92672">&amp;#34;c&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">3&lt;/span>} }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>\(\alpha_s\) is a bearing in degrees, clockwise from north (+y). The sign faces
+\((\sin\alpha_s, \cos\alpha_s)\), so 90 is readable from the east, 270 from the
+west and 180 from the south (&lt;code>visibility.py:388–391&lt;/code>).&lt;/p>
+&lt;p>The test is computed by &lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>
+(pinned at &lt;code>64d9aa7&lt;/code>, &lt;code>pyproject.toml:34&lt;/code>). For sign &lt;em>k&lt;/em> and a grid cell at
+distance \(L\) (&lt;code>FDSVisMap._get_view_angle_array&lt;/code>, &lt;code>_get_visibility_array&lt;/code>,
+&lt;code>get_vismap&lt;/code>):&lt;/p>
+$$
+A = \begin{cases}
+\operatorname{clip}_{[0,1]}\!\left(\dfrac{\sin\alpha_s\,\Delta x + \cos\alpha_s\,\Delta y}{L}\right) &amp; \alpha_s \text{ given},\\[1ex]
+1 &amp; \alpha_s = \texttt{None},
+\end{cases}
+\qquad
+\bar K = \frac{1}{|P|}\sum_{p\in P} K_p ,
+$$$$
+V = A \cdot U \cdot \min\!\left(\frac{C}{\bar K},\, V_{\max}\right),
+\qquad \text{legible} \iff V \ge L .
+$$&lt;ul>
+&lt;li>\((\Delta x, \Delta y)\) is the cell position minus the sign position
+(&lt;code>FDSVisMap.py:481–482&lt;/code>), and \(L\) is their distance; reversing the
+vector would flip the readable half-plane.&lt;/li>
+&lt;li>\(U\) is 0 when an obstruction cell lies on the rasterised ray from the sign,
+1 otherwise (anti-aliased rays, &lt;code>aa=True&lt;/code>).&lt;/li>
+&lt;li>\(\bar K\) is the arithmetic mean extinction over the cells of a rasterised
+line between the two cells, not a length-weighted integral.&lt;/li>
+&lt;li>When \(\bar K = 0\), the capped term is \(V_{\max}\).&lt;/li>
+&lt;li>\(V_{\max}\) is &lt;strong>replaced&lt;/strong> by the diagonal between the extreme grid
+coordinates before the arrays are built (&lt;code>visibility.py:103&lt;/code>, &lt;code>:108–112&lt;/code>,
+&lt;code>:512&lt;/code>). Upstream, it is 30 m. The diagonal can be larger or smaller than
+30 m; it is smaller when the grid spans less than about 21 m in each
+direction.&lt;/li>
+&lt;/ul>
+&lt;p>The obstruction factor applies in clear air too: a wall hides a sign there as
+it does in smoke.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/sign_rotation.gif" alt="Animation of a sign turning away from a standing agent. As the angle grows, the visibility curve falls; when it drops below the 6 m distance near 53°, the sight line turns from solid blue to dashed red and the heading changes from a filled blue “sign legible” to a hollow red “sign not legible”" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>An agent stands 6 m from a sign in uniform smoke (\(\bar K\) = 0.3 m⁻¹,
+C = 3, so \(C/\bar K\) = 10 m) while the sign turns away. Every value comes
+from the pyFDS-Evac visibility model. Right: the visibility
+\(A \cdot C/\bar K\) against the bearing \(\alpha_s\); the dotted line is the
+agent&amp;rsquo;s distance \(L\). Solid blue line and filled marker: legible; dashed red
+line and hollow marker: not legible. Yellow cells are the positions from which
+the model reads the sign; the gold arrow shows which way it faces. \(V_{\max}\)
+is the room&amp;rsquo;s 11.3 m diagonal and does not bind. The sign is lost at about
+53°, well before it is side-on.
+Script: &lt;code>scripts/figures/sign_rotation.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>&lt;strong>Two ways to build the model&lt;/strong> (&lt;code>run_config.py:191–230&lt;/code>):&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>From an FDS run&lt;/strong> (&lt;code>--fds-dir&lt;/code>). Grid, obstructions and extinction come
+from the FDS output. The &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice nearest the
+point (0, 0, &lt;code>--smoke-slice-height&lt;/code>) is used (1.6 m by default since #164,
+&lt;code>run.py:65–67&lt;/code>). Stored times are spaced by &lt;code>--reroute-interval&lt;/code>
+(&lt;code>visibility.py:86–87&lt;/code>, &lt;code>run_config.py:228&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>From clear air&lt;/strong> (no &lt;code>--fds-dir&lt;/code>). The walkable polygon is rasterised at
+&lt;code>--vis-cell-size&lt;/code>. A cell is an obstruction when its centre lies outside the
+polygon (&lt;code>visibility.py:155&lt;/code>, &lt;code>:508–509&lt;/code>). A wall thinner than one cell
+&lt;em>may&lt;/em> therefore let sight through, depending on how it falls on the grid.
+The extinction is zero, and one time point is stored (&lt;code>visibility.py:498&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>At run time the model answers &lt;code>node_is_visible(t, x, y, node)&lt;/code> by looking up
+the nearest stored time and cell, clamped to the stored range
+(&lt;code>visibility.py:197–211&lt;/code>, &lt;code>:531–543&lt;/code>). No ray is cast inside the time loop.
+&lt;code>--vis-cache&lt;/code> stores the arrays in an &lt;code>.npz&lt;/code> file. The FDS cache is keyed by
+the FDS directory path, the signs, the time step and the slice height; it
+does not hash the FDS output, so replacing the output in place leaves a stale
+cache valid (&lt;code>visibility.py:115–139&lt;/code>, &lt;code>:330–359&lt;/code>).&lt;/p>
+&lt;p>&lt;a id="which-visibility-setting-am-i-running">&lt;/a>&lt;/p>
+&lt;p>&lt;strong>Which model a run gets&lt;/strong> (&lt;code>run_config.py:156–230&lt;/code>):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>invocation&lt;/th>
+&lt;th>model&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>no flags, some group with familiarity &amp;lt; 1&lt;/td>
+&lt;td>clear air&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>no flags, every group at familiarity 1&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--clear-air-visibility&lt;/code>&lt;/td>
+&lt;td>clear air, even if every group is fully familiar&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--no-visibility&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fds-dir DIR&lt;/code>, some group with familiarity &amp;lt; 1&lt;/td>
+&lt;td>FDS smoke, uncached&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fds-dir DIR --vis-cache PATH&lt;/code>&lt;/td>
+&lt;td>FDS smoke, cached&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fds-dir DIR&lt;/code>, every group at familiarity 1&lt;/td>
+&lt;td>none (smoke still drives speed, FED and the exposure gate)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--vis-cache PATH&lt;/code>, no &lt;code>--fds-dir&lt;/code>&lt;/td>
+&lt;td>clear air, cached&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>In every case a scenario from which no sign can be extracted gets no model
+(&lt;code>run_config.py:206–209&lt;/code>). Rejected combinations: &lt;code>--clear-air-visibility&lt;/code>
+with &lt;code>--fds-dir&lt;/code>, &lt;code>--clear-air-visibility&lt;/code> with &lt;code>--no-visibility&lt;/code>, and
+&lt;code>--vis-cache&lt;/code> with &lt;code>--no-enable-rerouting&lt;/code> (&lt;code>run_config.py:156–168&lt;/code>).&lt;/p>
+&lt;p>&lt;a id="cognitive-maps">&lt;/a>&lt;/p>
+&lt;h3>2. The knowledge contract&lt;span class="hx-absolute -hx-mt-20" id="2-the-knowledge-contract">&lt;/span>
+&lt;a href="#2-the-knowledge-contract" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent&amp;rsquo;s &lt;code>AgentCognitiveMap&lt;/code> holds known nodes, known edges and visited
+nodes (&lt;code>cognitive_map.py:10–25&lt;/code>). The contract has four parts.&lt;/p>
+&lt;p>&lt;strong>2.1 Initial knowledge&lt;/strong> (&lt;code>init_cognitive_map&lt;/code>, &lt;code>cognitive_map.py:78–136&lt;/code>).
+&lt;code>familiarity&lt;/code> is a scenario key on a distribution group, normalised to a
+probability \(p\): &lt;code>&amp;quot;full&amp;quot;&lt;/code> is 1, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code> is 0, a number in [0, 1] is
+used as given, anything else raises (&lt;code>cognitive_map.py:28–56&lt;/code>). The key
+defaults to &lt;code>&amp;quot;full&amp;quot;&lt;/code> (&lt;code>simulation_init.py:996&lt;/code>).&lt;/p>
+&lt;ul>
+&lt;li>\(p = 1\): the map is the whole stage graph. It is never extended.&lt;/li>
+&lt;li>\(p &lt; 1\): the map starts with the spawn node, marked visited. Then, in
+order:
+&lt;ol>
+&lt;li>&lt;strong>Entrance.&lt;/strong> If &lt;code>entrance&lt;/code> names an exit reachable from the spawn node,
+the shortest path to it is learned. A name that is missing, is not an
+exit, or cannot be reached is silently ignored (&lt;code>cognitive_map.py:66–69&lt;/code>,
+&lt;code>:123–124&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Familiarity draw.&lt;/strong> Each other reachable exit is learned, with its
+shortest path, with probability \(p\). The draw uses an RNG seeded with
+&lt;code>seed + 7919·agent_id&lt;/code> (&lt;code>scenario.py:990&lt;/code>, &lt;code>:2207&lt;/code>). A library caller
+that passes no RNG gets no draw (&lt;code>cognitive_map.py:126&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Perception at spawn.&lt;/strong> Each neighbour of the spawn node whose sign is
+legible &lt;strong>from the spawn node&amp;rsquo;s routing point&lt;/strong> is learned
+(&lt;code>cognitive_map.py:131–135&lt;/code>). Agents of one spawn area that spawn at
+the same time therefore start with the same perceived neighbours.&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ul>
+&lt;p>Paths learned in steps 1 and 2 add forward edges only
+(&lt;code>cognitive_map.py:71–74&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>2.2 Learning&lt;/strong> (\(p &lt; 1\) only). Two calls add knowledge:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Periodic.&lt;/strong> When an agent&amp;rsquo;s re-evaluation is due, each neighbour of its
+current node (&lt;code>current_origin&lt;/code>, else &lt;code>current_target_stage&lt;/code>) whose sign is
+legible from the agent&amp;rsquo;s &lt;strong>stored position&lt;/strong> is learned
+(&lt;code>expand_from_visibility&lt;/code>, &lt;code>cognitive_map.py:189–234&lt;/code>, called at
+&lt;code>scenario.py:2238–2254&lt;/code>). The stored position is written in the steering
+loop (&lt;code>scenario.py:2423&lt;/code>), which runs after the reroute pass, so it holds
+the previous step&amp;rsquo;s coordinates. Without a visibility model nothing is
+learned.&lt;/li>
+&lt;li>&lt;strong>On advancing along the path.&lt;/strong> When the agent completes a stage and its
+path advances (after any waiting time at that stage), the node is marked
+visited, and each of its neighbours whose sign is legible from the agent&amp;rsquo;s
+position is learned (&lt;code>expand_on_arrival&lt;/code>, &lt;code>cognitive_map.py:155–186&lt;/code>,
+called at &lt;code>scenario.py:2508–2521&lt;/code>, &lt;code>:2535–2551&lt;/code>). Without a visibility
+model, &lt;strong>every&lt;/strong> neighbour is learned.&lt;/li>
+&lt;/ul>
+&lt;p>The three places knowledge is sensed from:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>When&lt;/th>
+&lt;th>Sensing position&lt;/th>
+&lt;th>Code&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Initialisation&lt;/td>
+&lt;td>spawn node&amp;rsquo;s routing point&lt;/td>
+&lt;td>&lt;code>cognitive_map.py:131–135&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Periodic learning&lt;/td>
+&lt;td>previous step&amp;rsquo;s stored position&lt;/td>
+&lt;td>&lt;code>scenario.py:2240–2253&lt;/code>, &lt;code>:2423&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Stage completion (arrival)&lt;/td>
+&lt;td>current position&lt;/td>
+&lt;td>&lt;code>scenario.py:2508–2551&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Learning is &lt;strong>limited to neighbours&lt;/strong> of one node. A legible sign that belongs
+to any other node is not tested. An edge learned by either call also teaches
+its reverse when the graph contains that reverse edge (&lt;code>_learn_edge&lt;/code>,
+&lt;code>cognitive_map.py:139–152&lt;/code>). With automatic wiring, exits have no outgoing
+edges and spawn areas no incoming ones (&lt;code>route_graph.py:148–192&lt;/code>), so no
+reverse edge into a spawn area or out of an exit is learned. Explicit
+&lt;code>transitions&lt;/code> are added without these restrictions (&lt;code>route_graph.py:137–146&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>2.3 Memory.&lt;/strong> No code removes a node or an edge from the map of an agent
+that is still in the simulation. A node learned while its sign was legible
+stays known after the sign stops being legible, through distance, bearing,
+obstruction or smoke. The map is deleted when the agent leaves
+(&lt;code>scenario.py:2394–2400&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>2.4 Decision.&lt;/strong> Route ranking works on the known subgraph only:
+&lt;code>rank_routes&lt;/code> replaces the stage graph with &lt;code>cognitive_subgraph(map, graph)&lt;/code>
+before it evaluates any edge (&lt;code>route_graph.py:1272–1276&lt;/code>,
+&lt;code>cognitive_map.py:237–259&lt;/code>). Dijkstra, the exposure gate, the ordering and the
+all-refused fallback see known nodes and edges only. An exit that is not known
+is not refused; it is absent, and the fallback cannot restore it.&lt;/p>
+&lt;p>&lt;strong>Exception (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>
+).&lt;/strong>
+Every agent receives the geometrically nearest exit as its steering target
+before its map exists (&lt;code>simulation_init.py:1430–1449&lt;/code>). The opening choice
+replaces that target only when the map contains a reachable exit
+(&lt;code>scenario.py:1006–1008&lt;/code>). If it contains none, and neither exploration nor
+patrol yields a target (below), the agent keeps steering towards that
+geometric exit (&lt;code>route_graph.py:1816–1817&lt;/code>). Periodic learning may add the exit
+on the way once its sign is legible, but the target was never chosen from the
+map. This is a defect, not intended behaviour.&lt;/p>
+&lt;p>The contract covers &lt;strong>ranking&lt;/strong>, not &lt;strong>adoption&lt;/strong>. Ranking orders the known
+routes; adoption is whether a moving agent switches to the first of them. The
+two differ:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Opening choice&lt;/strong> (&lt;code>_assign_initial_exit&lt;/code>, &lt;code>scenario.py:943–1021&lt;/code>). It
+ranks from the spawn node, without the agent&amp;rsquo;s position and without the
+queue tally (&lt;code>scenario.py:995–1005&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Re-evaluation&lt;/strong> (&lt;code>evaluate_and_reroute&lt;/code>). It ranks from the agent&amp;rsquo;s
+position. It adopts a different exit only if the rival passes the
+switching rule: an optical-depth margin, then an anchor on the ranking cost
+(&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>route_graph.py:1505&lt;/code>, &lt;code>:1712–1726&lt;/code>). The
+optional queue term (&lt;code>w_queue&lt;/code>, 0 by default) enters the ranking cost.&lt;/li>
+&lt;li>&lt;strong>All refused.&lt;/strong> When every known route fails the gate, the least smoky one
+is re-admitted, but the current route is kept first if the rival&amp;rsquo;s worst
+extinction is not lower by &lt;code>fallback_switch_margin&lt;/code>
+(&lt;code>route_graph.py:1434–1445&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>An agent can therefore keep a known route that is not first in the ranking.&lt;/p>
+&lt;p>&lt;em>Worked example (clear air).&lt;/em> Every \(\tau\) is 0, both routes are clean,
+and the optical-depth deadband (\(\tau_{\max}\cdot\) &lt;code>tau_deadband&lt;/code> =
+6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
+adopted only if its ranking cost, here its travel time, is below 0.9 times the
+current route&amp;rsquo;s (&lt;code>_anchor_allows&lt;/code>, &lt;code>route_graph.py:1674–1726&lt;/code>;
+&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>:1505&lt;/code>; &lt;code>tau_max&lt;/code> = 6.0 and &lt;code>tau_deadband&lt;/code> = 0.1,
+&lt;code>:685&lt;/code>, &lt;code>:689&lt;/code>). An exit learned on the way is therefore adopted only if it is
+more than 10 % faster than the exit the agent is heading for.&lt;/p>
+&lt;p>&lt;strong>No known exit.&lt;/strong> When the known subgraph contains no reachable exit,
+&lt;code>evaluate_and_reroute&lt;/code> looks for a target (&lt;code>route_graph.py:1789–1851&lt;/code>):&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Explore.&lt;/strong> The frontier node with the lowest path cost through the known
+subgraph, with the first leg measured from the agent&amp;rsquo;s position; ties
+break on node id (&lt;code>nearest_frontier_target&lt;/code>, &lt;code>cognitive_map.py:262–319&lt;/code>).
+Logged as &lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Wander.&lt;/strong> When no frontier is reachable, the next node in a fixed
+rotation over the sorted known nodes other than the current one, reached
+over known edges taken &lt;strong>in either direction&lt;/strong>
+(&lt;code>wander_target&lt;/code>, &lt;code>_undirected_known_path&lt;/code>, &lt;code>cognitive_map.py:322–399&lt;/code>).
+Logged as &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code>.&lt;/li>
+&lt;/ol>
+&lt;p>&lt;strong>What route choice does not read.&lt;/strong> Route choice never reads the
+sign-legibility test or a line-of-sight visibility
+(&lt;code>route_graph.py:1345–1351&lt;/code>). &lt;code>VisibilityModel.visibility_to_node&lt;/code> and
+&lt;code>distance_to_node&lt;/code> have no caller in &lt;code>pyfds_evac/&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158" target="_blank" rel="noopener">#158&lt;/a>
+). Route
+smoke is sampled from the global extinction field (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>
+): along the stored polylines for the legs from
+the next node on, and, when the agent&amp;rsquo;s position is given, on a &lt;strong>straight
+line&lt;/strong> from the agent to its next node for the first leg (&lt;code>_los_stats&lt;/code>,
+&lt;code>route_graph.py:1088–1100&lt;/code>). That straight line can pass through walls, for
+every familiarity tier (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>
+). Under the &lt;code>&amp;quot;additive&amp;quot;&lt;/code> model only, a route
+whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
+non-refused route has a segment below it (&lt;code>route_graph.py:1362–1375&lt;/code>); this is
+an extinction threshold, not a sign test.&lt;/p>
+&lt;h2>Parameters&lt;span class="hx-absolute -hx-mt-20" id="parameters">&lt;/span>
+&lt;a href="#parameters" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>familiarity&lt;/code>, &lt;code>entrance&lt;/code> and &lt;code>sign&lt;/code> are scenario keys. The other rows are
+command-line options, with the default of the underlying class for direct
+library use.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Setting&lt;/th>
+&lt;th>Source&lt;/th>
+&lt;th>&lt;code>run.py&lt;/code> value&lt;/th>
+&lt;th>Library default&lt;/th>
+&lt;th>Unit&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>familiarity&lt;/code>&lt;/td>
+&lt;td>distribution &lt;code>parameters&lt;/code>&lt;/td>
+&lt;td>–&lt;/td>
+&lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code> (&lt;code>simulation_init.py:996&lt;/code>)&lt;/td>
+&lt;td>–&lt;/td>
+&lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code> or \(p \in [0,1]\)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>entrance&lt;/code>&lt;/td>
+&lt;td>distribution &lt;code>parameters&lt;/code>&lt;/td>
+&lt;td>–&lt;/td>
+&lt;td>none (&lt;code>simulation_init.py:997&lt;/code>)&lt;/td>
+&lt;td>–&lt;/td>
+&lt;td>a reachable exit learned at spawn&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>sign.c&lt;/code>&lt;/td>
+&lt;td>node &lt;code>sign&lt;/code>&lt;/td>
+&lt;td>–&lt;/td>
+&lt;td>3 (&lt;code>visibility.py:58&lt;/code>, &lt;code>:94&lt;/code>)&lt;/td>
+&lt;td>–&lt;/td>
+&lt;td>&lt;em>C&lt;/em>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>sign.alpha&lt;/code>&lt;/td>
+&lt;td>node &lt;code>sign&lt;/code>&lt;/td>
+&lt;td>–&lt;/td>
+&lt;td>&lt;code>None&lt;/code>, i.e. \(A = 1\) (&lt;code>visibility.py:58&lt;/code>)&lt;/td>
+&lt;td>°&lt;/td>
+&lt;td>bearing the sign faces&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(V_{\max}\)&lt;/td>
+&lt;td>code&lt;/td>
+&lt;td>grid diagonal&lt;/td>
+&lt;td>grid diagonal (&lt;code>visibility.py:103&lt;/code>, &lt;code>:512&lt;/code>)&lt;/td>
+&lt;td>m&lt;/td>
+&lt;td>fdsvismap cap, 30 m upstream&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--smoke-slice-height&lt;/code>&lt;/td>
+&lt;td>CLI&lt;/td>
+&lt;td>1.6 (&lt;code>run.py:67&lt;/code>)&lt;/td>
+&lt;td>1.6 (&lt;code>visibility.py:409&lt;/code>)&lt;/td>
+&lt;td>m&lt;/td>
+&lt;td>FDS slice height&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--reroute-interval&lt;/code>&lt;/td>
+&lt;td>CLI&lt;/td>
+&lt;td>1.0 (&lt;code>run.py:95&lt;/code>)&lt;/td>
+&lt;td>10.0 (&lt;code>route_graph.py:1498&lt;/code>)&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>re-evaluation interval, hence periodic learning&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>vismap time step&lt;/td>
+&lt;td>= &lt;code>--reroute-interval&lt;/code>&lt;/td>
+&lt;td>1.0 (&lt;code>run_config.py:228&lt;/code>)&lt;/td>
+&lt;td>10.0 (&lt;code>visibility.py:408&lt;/code>)&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>FDS model only; clear air stores one time&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--vis-cell-size&lt;/code>&lt;/td>
+&lt;td>CLI&lt;/td>
+&lt;td>0.25 (&lt;code>run.py:135&lt;/code>)&lt;/td>
+&lt;td>0.5 (&lt;code>visibility.py:438&lt;/code>)&lt;/td>
+&lt;td>m&lt;/td>
+&lt;td>clear-air grid; FDS models use the FDS mesh&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--vis-cache&lt;/code>&lt;/td>
+&lt;td>CLI&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>–&lt;/td>
+&lt;td>&lt;code>.npz&lt;/code> cache path&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The &lt;code>--vis-cell-size&lt;/code> docstring advises a cell smaller than the thinnest wall
+(&lt;code>visibility.py:455–465&lt;/code>). Results for discovery agents have not converged
+with the cell size (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>
+).&lt;/p>
+&lt;h2>Where it acts in the time step&lt;span class="hx-absolute -hx-mt-20" id="where-it-acts-in-the-time-step">&lt;/span>
+&lt;a href="#where-it-acts-in-the-time-step" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>&lt;strong>Before the loop.&lt;/strong> The visibility model is built or loaded
+(&lt;code>run_config.py:284&lt;/code>). Each agent placed at t = 0 gets its map and opening
+choice (&lt;code>scenario.py:1414–1416&lt;/code>); flow-spawned agents get theirs when they
+appear (&lt;code>scenario.py:1699–1715&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Reroute pass.&lt;/strong> It runs at most once per simulated second
+(&lt;code>scenario.py:2152–2159&lt;/code>). For each agent whose re-evaluation is due,
+periodic learning runs first, then ranking and possible adoption.&lt;/li>
+&lt;li>&lt;strong>Steering loop, every step.&lt;/strong> Positions are stored
+(&lt;code>scenario.py:2423&lt;/code>), and learning on advancing along the path runs when a
+stage completes (&lt;code>scenario.py:2508–2551&lt;/code>). This learning is not tied to the
+reroute pass.&lt;/li>
+&lt;li>&lt;strong>History.&lt;/strong> With &lt;code>collect_cognitive_map_history&lt;/code> (on in &lt;code>run.py&lt;/code>,
+&lt;code>run_config.py:302&lt;/code>), a row is written whenever the number of known nodes or
+edges changes (&lt;code>scenario.py:2554–2571&lt;/code>).&lt;/li>
+&lt;/ol>
+&lt;p>With &lt;code>--no-enable-rerouting&lt;/code>, the map is still built, still sets the opening
+choice, and still grows on advancing along the path, but no later decision
+reads it.&lt;/p>
+&lt;h2>Deviations from the literature&lt;span class="hx-absolute -hx-mt-20" id="deviations-from-the-literature">&lt;/span>
+&lt;a href="#deviations-from-the-literature" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The published visibility law is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
+. The legibility test
+is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
+(7)–(10). The cognitive map follows the design of Haensel (2014).&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>\(V_{\max}\) replaced by the grid diagonal.&lt;/strong> Börger et al. cap
+visibility at 30 m and add that &amp;ldquo;the exit signs have a maximum visual
+distance even in a smoke-free environment&amp;rdquo; (p. 5, below Eq. 10). The code
+comment justifies the replacement by a comparison with route length
+(&lt;code>visibility.py:98–102&lt;/code>) that no longer exists (#158). In a large
+clear-air deck, a sign in front of an agent, with nothing in between, is
+legible well beyond 30 m.&lt;/li>
+&lt;li>&lt;strong>Cap before angle.&lt;/strong> Börger et al. write
+\(V = \min(U\,A\,C/\bar\sigma,\ V_{\max})\) (Eq. 10, p. 5). fdsvismap computes
+\(A\,U\,\min(C/\bar K, V_{\max})\). They agree while \(C/\bar K &lt; V_{\max}\);
+in clear air, off-axis, the paper gives \(V_{\max}\) and fdsvismap gives
+\(A\,V_{\max}\). This is our reading of the rendered Eq. (10) against the
+pinned source.&lt;/li>
+&lt;li>&lt;strong>Averaged extinction.&lt;/strong> \(\bar K\) is the cell average of Börger et al.
+Eq. (9), a simplification of their Eq. (8). Jin measured his law in uniform
+smoke, so applying it to an average along a line of sight is an
+extrapolation.&lt;/li>
+&lt;li>&lt;strong>View angle.&lt;/strong> The cosine factor is the Lambertian assumption of Börger et
+al., who call it &amp;ldquo;highly simplified&amp;rdquo; (p. 4). It is not part of Jin&amp;rsquo;s
+experiments.&lt;/li>
+&lt;li>&lt;strong>Sampling height.&lt;/strong> Börger et al. use one slice at 2 m, with the eye at
+sign height (p. 4). The code uses 1.6 m, the FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>.
+fdsvismap takes the nearest slice without a warning when it is far from the
+requested height. &lt;em>Our inference:&lt;/em> exit signs are usually mounted above
+doors, higher than 1.6 m. Under a hot smoke layer, a 1.6 m slice reads less
+extinction than the line of sight to such a sign crosses, so it overstates
+legibility. That error is non-conservative.&lt;/li>
+&lt;li>&lt;strong>Synthesised signs.&lt;/strong> A sign the building may not have: reflective,
+&lt;em>C&lt;/em> = 3, readable from every direction. &lt;em>C&lt;/em> = 3 is the FDS default for a
+reflecting sign; the Fundamentals page gives Jin&amp;rsquo;s range as 2–4 for
+reflecting and 5–10 for light-emitting signs.&lt;/li>
+&lt;li>&lt;strong>Legibility is binary&lt;/strong> and acts only on knowledge. In the discrete-choice
+studies on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/">Exit choice and familiarity&lt;/a>
+, exit
+visibility enters the utility as a graded attribute.&lt;/li>
+&lt;li>&lt;strong>Knowledge of topology, not of smoke&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
+).
+Learning is limited by the sign-legibility test. Route costs are not: an
+agent that knows an exit prices the whole route to it from the global
+extinction field, including legs it has never seen and, with &lt;code>anticipate&lt;/code>,
+future times (&lt;code>route_graph.py:698–701&lt;/code>). The route choice of a discovery
+agent is therefore not limited by what it has perceived.&lt;/li>
+&lt;li>&lt;strong>Haensel&amp;rsquo;s heuristics are not reproduced.&lt;/strong> Haensel (2014, §3.2) weights
+known edges by sensors (smoke, density, room-to-corridor) and uses a
+&lt;code>LastDestinationsSensor&lt;/code> against back-tracking. He reports that with an
+empty map and no sensors agents stay where they are, and calls the
+&lt;code>DiscoverDoorsSensor&lt;/code> mandatory for empty maps (§4.3, p. 47). That sensor
+&amp;ldquo;adds all possible out edges&amp;rdquo; of the agent&amp;rsquo;s current sub-room (§3.2.2). It is
+the counterpart of &lt;code>expand_on_arrival&lt;/code> without a visibility model. With a
+visibility model, the code gates the same step by sign legibility. The code
+uses frontier exploration and a patrol instead of his weighting heuristics.&lt;/li>
+&lt;/ul>
+&lt;h2>Limitations&lt;span class="hx-absolute -hx-mt-20" id="limitations">&lt;/span>
+&lt;a href="#limitations" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>An agent with no known exit can walk to an unknown one&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>
+). See
+the exception under §2.4. The intended behaviour is exploration.&lt;/li>
+&lt;li>&lt;strong>Discovery agents ranked the first leg as a straight line&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172" target="_blank" rel="noopener">#172&lt;/a>
+, fixed
+by #174). &lt;code>cognitive_subgraph&lt;/code> built a new &lt;code>StageGraph&lt;/code> without the
+routing engine (&lt;code>cognitive_map.py:245–259&lt;/code>). In &lt;code>rank_routes&lt;/code>, the length of
+the walk from the agent&amp;rsquo;s position to its next node therefore fell back to a
+straight line (&lt;code>route_graph.py:398–404&lt;/code>, &lt;code>:961–964&lt;/code>). Frontier selection was
+not affected, because it measures that leg on the full graph
+(&lt;code>cognitive_map.py:312&lt;/code>, &lt;code>:402–429&lt;/code>). Fully familiar agents always had the
+engine.&lt;/li>
+&lt;li>&lt;strong>First-leg smoke is sampled on a straight line&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>
+). See
+§2.4, &amp;ldquo;What route choice does not read&amp;rdquo;.&lt;/li>
+&lt;li>&lt;strong>Clear-air travel time was under-priced&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167" target="_blank" rel="noopener">#167&lt;/a>
+, fixed
+by #170). The share of the first leg is capped at 1
+(&lt;code>route_graph.py:970&lt;/code>), so a route was under-priced when the agent was
+farther from its next node than the route&amp;rsquo;s origin is. In clear air the gate
+ranks by that travel time. Since #170, the walk to the origin is timed at
+the route&amp;rsquo;s mean pace (&lt;code>route_graph.py:1060–1066&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Learning is limited to neighbours&lt;/strong>, spawn perception is per spawn area,
+and periodic learning uses the previous step&amp;rsquo;s position (§2.1–2.2).&lt;/li>
+&lt;li>&lt;strong>The patrol can stall&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/122" target="_blank" rel="noopener">#122&lt;/a>
+). It
+visits only known nodes. When smoke limits legibility to a few metres, the
+walks between them may never pass a new legible sign.&lt;/li>
+&lt;li>&lt;strong>Discovery results depend on the clear-air grid&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>
+). Do
+not report a discovery egress time without its grid; the implementation
+notes give the measured spread.&lt;/li>
+&lt;li>&lt;strong>No per-exit familiarity&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>
+). One
+\(p\) per group, plus one &lt;code>entrance&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>No sharing.&lt;/strong> Maps are per agent; no agent learns from another.&lt;/li>
+&lt;li>&lt;strong>No individual variation&lt;/strong> in &lt;em>C&lt;/em>, eye height or the legibility threshold.&lt;/li>
+&lt;/ul>
+&lt;h2>Relation to FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="relation-to-fdsevac">&lt;/span>
+&lt;a href="#relation-to-fdsevac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>From &lt;code>materials/evac.f90&lt;/code> (FDS commit 16cf79652c); line numbers refer to that
+file. The detailed account of FDS+Evac door choice is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/">model comparison&lt;/a>
+.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Concept&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Visible&lt;/strong>&lt;/td>
+&lt;td>Geometric line of sight from agent to door centre, or to the door&amp;rsquo;s &lt;code>XB&lt;/code> centre from the correct side; no range limit, no contrast, no angle factor&lt;/td>
+&lt;td>&lt;em>Legible&lt;/em>: sign test with &lt;em>C&lt;/em>, view angle, obstruction, \(V_{\max}\) and line-of-sight extinction&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Known&lt;/strong>&lt;/td>
+&lt;td>&lt;code>KNOWN_DOOR&lt;/code> (default &lt;code>.FALSE.&lt;/code>) and &lt;code>KNOWN_DOOR_PROBS&lt;/code> per door, written at initialisation into a per-agent or per-group list; afterwards only downgraded&lt;/td>
+&lt;td>&lt;em>Known&lt;/em>: seeded by &lt;code>familiarity&lt;/code> (one \(p\) per group) and &lt;code>entrance&lt;/code>, then learned from legible signs; never downgraded&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Visible counts as known&lt;/strong>&lt;/td>
+&lt;td>for the current target in every call (&lt;code>:16197–16199&lt;/code>), and for any visible door for type-1 agents; both for the current call only&lt;/td>
+&lt;td>a legible neighbour is learned and kept&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Memory of the target&lt;/strong>&lt;/td>
+&lt;td>a current target with positive &lt;code>I_Target&lt;/code> stays visible&lt;/td>
+&lt;td>every known node persists&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Smoke-free door&lt;/strong>&lt;/td>
+&lt;td>tiers 1–3 admit a door with \(\bar K &lt; \lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at &lt;code>FAC_DOOR_OLD&lt;/code> = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹&lt;/td>
+&lt;td>roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Last resort&lt;/strong>&lt;/td>
+&lt;td>tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call&lt;/td>
+&lt;td>the all-refused fallback re-admits the least smoky known route&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Smoke memory&lt;/strong>&lt;/td>
+&lt;td>lone agents mark the previous target negative or zero&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Default&lt;/strong>&lt;/td>
+&lt;td>agent type 2, &lt;code>KNOWN_DOOR = .FALSE.&lt;/code>&lt;/td>
+&lt;td>&lt;code>familiarity = &amp;quot;full&amp;quot;&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Details, with line numbers:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Default knowledge.&lt;/strong> &lt;code>KNOWN_DOOR&lt;/code> defaults to &lt;code>.FALSE.&lt;/code> on &lt;code>&amp;amp;EXIT&lt;/code> and
+&lt;code>&amp;amp;DOOR&lt;/code> (&lt;code>:2223&lt;/code>, &lt;code>:2666&lt;/code>), and the default agent type is 2, the &amp;ldquo;known
+door&amp;rdquo; agent (&lt;code>:3712&lt;/code>). Our reading is that FDS+Evac&amp;rsquo;s default agent is
+closer to &lt;code>discovery&lt;/code> than to &lt;code>full&lt;/code>. The two are not equivalent: see
+&amp;ldquo;Knowledge&amp;rdquo; below.&lt;/li>
+&lt;li>&lt;strong>Visibility.&lt;/strong> &lt;code>See_door&lt;/code> casts a straight line and returns &lt;code>.FALSE.&lt;/code> only
+when an obstruction blocks it (&lt;code>:15343–15474&lt;/code>, walls at &lt;code>:15423&lt;/code>, &lt;code>:15464&lt;/code>).
+It also returns the mean extinction on that line. A door counts as seen when
+its centre is seen, or when the centre of its &lt;code>XB&lt;/code> is seen from the correct
+side: &lt;code>PP_see_door = See_door(X,Y) .OR. (See_door(XB) .AND. PP_correct_side)&lt;/code>
+(&lt;code>:16147–16155&lt;/code>). For DOORs without &lt;code>EXIT_SIGN&lt;/code>, visibility also needs the
+door to be the current target or already known (&lt;code>:16164–16171&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Smoke acts in the door choice, not in seeing.&lt;/strong> \(\bar K\) is floored at
+\(0.5\,\lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.015 m⁻¹ with the default negative
+criterion (&lt;code>:16158–16160&lt;/code>), which is converted from a visibility with
+\(S = 3/K\) (&lt;code>:5260–5262&lt;/code>).
+&lt;ul>
+&lt;li>Tiers 1–3 admit a door only while \(\bar K &lt; \lvert\texttt{FED\_DOOR\_CRIT}\rvert\)
+(&lt;code>:16253&lt;/code>, &lt;code>:16265&lt;/code>, &lt;code>:16272&lt;/code>, &lt;code>:16347–16354&lt;/code>, &lt;code>:16396–16401&lt;/code>).
+The door that shares the current target&amp;rsquo;s flow field is discounted
+first: its \(\bar K\) is multiplied by &lt;code>FAC_DOOR_OLD&lt;/code> (default 0.1,
+&lt;code>:1506&lt;/code>; applied at &lt;code>:16255&lt;/code>, &lt;code>:16349&lt;/code>, &lt;code>:16398&lt;/code>), so the current door
+stays &amp;ldquo;smoke free&amp;rdquo; up to 0.3 m⁻¹ by default. This is a hysteresis on
+route retention, comparable in role to our anchor and deadband.&lt;/li>
+&lt;li>In tier 4, with the default criterion, a door is scored
+\(0.5\,d/(3/\bar K)\). \(d\) is the Euclidean distance for a visible door
+and the L1 distance for a non-visible one (&lt;code>:16457–16461&lt;/code>). A score ≥ 1
+clears the door&amp;rsquo;s visible and known flags for that call (&lt;code>:16462–16465&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Knowledge.&lt;/strong> The known list is written at initialisation (&lt;code>:15891&lt;/code>,
+&lt;code>:15940–15954&lt;/code>), per agent or per group (&lt;code>Group_Known_Doors&lt;/code>,
+&lt;code>:15920–15937&lt;/code>), and it persists across calls. The visible and known flags
+of one call are rebuilt from it each time (&lt;code>:15831–15832&lt;/code>). Type-1 agents
+count a visible door as known within the call (&lt;code>:16177&lt;/code>), and a current
+target with positive &lt;code>I_Target&lt;/code> stays visible (&lt;code>:16195&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Smoke marks&lt;/strong> (lone agents only, &lt;code>HR%GROUP_ID &amp;lt; 0&lt;/code>, &lt;code>:16292&lt;/code>). For the
+previous target, &lt;code>L2_tmp&lt;/code> and &lt;code>L2_tmp2&lt;/code> are scaled by &lt;code>FAC_DOOR_OLD2&lt;/code> and
+&lt;code>FAC_DOOR_OLD&lt;/code> (&lt;code>:16290–16291&lt;/code>). When &lt;code>L2_tmp2 ≥ |FED_DOOR_CRIT|&lt;/code>, the list
+entry becomes its negative node id, or zero when &lt;code>L2_tmp ≥ 1&lt;/code>
+(&lt;code>:16292–16301&lt;/code>). Under the defaults the mark starts at
+\(\bar K \ge 0.3\) m⁻¹.&lt;/li>
+&lt;li>&lt;strong>The difference.&lt;/strong> In our reading of the code, FDS+Evac never adds a door
+to the known list after initialisation. It only downgrades entries. What an
+agent sees counts only within the call that sees it. pyFDS-Evac learns: a
+legible sign adds the node to the map, and the node stays known after the
+sign stops being legible. The legibility test itself (&lt;em>C&lt;/em>, bearing, view
+angle, line-of-sight extinction) has no FDS+Evac counterpart. The exposure
+gate is a separate mechanism, related to FDS+Evac&amp;rsquo;s smoke-free and tier-4
+criteria (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>
+).&lt;/li>
+&lt;li>&lt;strong>No counterpart.&lt;/strong> FDS+Evac&amp;rsquo;s herding and follower agents (types 3 and 4)
+and its group behaviour.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;a id="verification-familiarity-comparison">&lt;/a>&lt;a id="visualising-cognitive-map-evolution">&lt;/a>&lt;a id="diagnostic-scripts">&lt;/a>&lt;/p>
+&lt;h2>Verification&lt;span class="hx-absolute -hx-mt-20" id="verification">&lt;/span>
+&lt;a href="#verification" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These tests check implementation behaviour. They do not validate human
+wayfinding or evacuation times.&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>tests/test_exit_visibility_alpha.py&lt;/code> (&lt;code>assets/exit_visibility_alpha&lt;/code>): the
+bearing of the near sign decides whether the near exit is learned; an
+unknown exit is absent, not refused.&lt;/li>
+&lt;li>&lt;code>tests/test_cognitive_map_memory.py&lt;/code> (&lt;code>assets/cognitive_map_memory&lt;/code>): an exit
+is learned inside its legibility region, stays known and routable outside
+it, is not learned by a probe that never enters the region, and ranks first
+at a return probe where its sign is not legible.&lt;/li>
+&lt;li>&lt;code>tests/test_blind_spawn_discovery.py&lt;/code> (&lt;code>assets/blind_spawn_discovery&lt;/code>):
+learning hop by hop, occlusion on advancing, reverse edges, frontier choice
+by position, termination of exploration.&lt;/li>
+&lt;li>&lt;code>tests/test_scalar_familiarity.py&lt;/code>: \(p\) as a probability, reproducible
+draws, &lt;code>entrance&lt;/code> known and reachable.&lt;/li>
+&lt;li>&lt;code>tests/test_initial_exit_from_cognitive_map.py&lt;/code>: the opening choice ranks
+the map, with rerouting off.&lt;/li>
+&lt;li>&lt;code>tests/verification/test_cognitive_map_verif.py&lt;/code>: tier invariants on a toy
+graph.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>tests/test_familiarity_routing.py::TestDiscoveryMeasuresAroundWalls&lt;/code> pins
+the #172 fix. No test pins the #91 behaviour or convergence with the grid
+(#168).&lt;/p>
+&lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
+&lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>Börger, K., Belt, A., &amp;amp; Arnold, L. (2024). &lt;em>A waypoint based approach to
+visibility in performance based fire safety design&lt;/em>. Fire Safety Journal,
+150, 104269.
+&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2024.104269&lt;/a>
+&lt;/li>
+&lt;li>Haensel, D. (2014). &lt;em>A knowledge-based routing framework for pedestrian
+dynamics simulation&lt;/em>. Diploma thesis, Technische Universität Dresden. No
+DOI or public URL known.&lt;/li>
+&lt;li>fdsvismap, &lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">github.com/FireDynamics/fdsvismap&lt;/a>
+,
+commit &lt;code>64d9aa73144b3902bdc6d2cdd1a08e3494ec5690&lt;/code>.&lt;/li>
+&lt;li>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
+Technical Reference and User&amp;rsquo;s Guide&lt;/em>.
+&lt;a href="https://github.com/tkorhon1/FDS-Evac-Guide" target="_blank" rel="noopener">github.com/tkorhon1/FDS-Evac-Guide&lt;/a>
+.&lt;/li>
+&lt;/ul></description></item><item><title>What your FDS case must provide</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</guid><description>
 &lt;p>Read this before pointing &lt;code>--fds-dir&lt;/code> at a case for the first time.&lt;/p>
 &lt;p>&lt;strong>pyFDS-Evac never runs FDS.&lt;/strong> It reads the output of a finished FDS run.
 A deck written for some other purpose usually will not work as-is: it has to
@@ -5163,15 +5520,16 @@ and an exit never becomes more attractive because others use it. See
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>
 .&lt;/p>
 &lt;p>&lt;strong>Perception-limited route choice.&lt;/strong> A discovery agent knows only the exits
-whose signs it has read, but it prices the routes to them with the smoke
+its familiarity, &lt;code>entrance&lt;/code> or a legible sign gave it, but it prices the routes to them with the smoke
 sampled along the whole route, including stretches it has never seen
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">issue #125&lt;/a>
 ).
 By default (&lt;code>routing.anticipate&lt;/code> = true, &lt;code>routing.foresight_horizon_s&lt;/code>
 unbounded), each stretch is also priced with the smoke that the finished FDS
-run holds for the time the agent would arrive there. Route choice is therefore
-a best case with perfect foresight, not a model of what an occupant can see or
-predict.&lt;/p>
+run holds for the time the agent would arrive there. Knowledge limits which
+routes an agent ranks, and only fully familiar agents know the whole graph;
+it does not limit the smoke those routes are priced with. The route choice of
+a discovery agent is therefore not limited by what it has perceived.&lt;/p>
 &lt;p>&lt;strong>Recovery from irritants.&lt;/strong> The irritant slowdown (opt-in with
 &lt;code>--enable-fic-speed&lt;/code>) is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it
@@ -5525,7 +5883,7 @@ Secondary source.&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">route rerouting&lt;/a>
 and
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/visibility/">visibility and cognitive maps&lt;/a>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>
 .&lt;/p></description></item><item><title>Smoke-aware routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/</guid><description>
 &lt;blockquote>
 &lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>
@@ -7440,6 +7798,459 @@ literature.&lt;/li>
 &lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/l_corridor/README.md" target="_blank" rel="noopener">assets/l_corridor/README.md&lt;/a>
 — the deck, its
 fire, and the measured smoke contrast.&lt;/li>
+&lt;/ul></description></item><item><title>Wayfinding implementation notes</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/wayfinding/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/wayfinding/</guid><description>
+&lt;blockquote>
+&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>
+. The coded form, parameters and
+limitations are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>
+, which also
+defines the terms used here: &lt;em>legible&lt;/em>, &lt;em>known&lt;/em>, &lt;em>learn&lt;/em>, &lt;em>visited&lt;/em>,
+&lt;em>frontier&lt;/em>. The intuition is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#wayfinding">Concepts › Wayfinding&lt;/a>
+.&lt;/p>&lt;/blockquote>
+&lt;p>This page follows §3 of the talk
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>
+,
+one slide per section. Each section says what the code does, where, and which
+figure belongs there. Where the talk and the code disagree, a &lt;strong>Talk vs code&lt;/strong>
+note says so, and the code is the reference.&lt;/p>
+&lt;p>Mechanisms were checked against main at &lt;code>f363758&lt;/code>, which includes #170 and
+#174. Each reported run outcome names its source: a repository test, an
+asset README, a figure script, or a run on main by one of the investigations
+of #160 and #168. None of the examples validates human wayfinding. They
+verify that the implementation does what this page says.&lt;/p>
+&lt;p>The argument of the section is that &lt;strong>route choice can only choose among
+routes the agent knows, so what the agent knows is as much part of the model
+as how it prices smoke&lt;/strong>. An agent starts with what its familiarity gives it.
+After that, its map grows only through legible signs, or, with
+&lt;code>--no-visibility&lt;/code>, through every neighbour of the nodes it advances from.&lt;/p>
+&lt;h2>1. A sign is more than a position&lt;span class="hx-absolute -hx-mt-20" id="1-a-sign-is-more-than-a-position">&lt;/span>
+&lt;a href="#1-a-sign-is-more-than-a-position" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A node is a place. A sign tells someone standing elsewhere that the place
+exists. Every exit, checkpoint and waypoint therefore carries a sign
+descriptor \(\{x, y, \alpha_s, C\}\), authored or synthesised
+(&lt;code>visibility.py:34–73&lt;/code>).&lt;/p>
+&lt;p>pyFDS-Evac does not compute legibility itself. It hands the descriptors to
+&lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>
+, the implementation of
+the waypoint method of Börger, Belt and Arnold (2024). fdsvismap precomputes,
+for every sign, grid cell and stored time, whether the sign is legible there.
+The rule, with its view-angle, obstruction and extinction factors, is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#1-the-sign-legibility-test">Models › Wayfinding §1&lt;/a>
+.
+During the run the model only looks the answer up (&lt;code>visibility.py:531–543&lt;/code>).
+A better visibility model in fdsvismap, or a &lt;em>C&lt;/em> measured for a real sign,
+therefore reaches the evacuation model without a change to the routing code.&lt;/p>
+&lt;p>&lt;em>C&lt;/em> is set per sign. The code has one default, &lt;em>C&lt;/em> = 3, for authored and
+synthesised signs alike (&lt;code>visibility.py:58&lt;/code>, &lt;code>:94&lt;/code>).&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The speaker notes say &lt;em>C&lt;/em> defaults &amp;ldquo;to Jin&amp;rsquo;s 3 for
+reflective and 8 for lit signs&amp;rdquo;. The code has no default for lit signs; a
+sign gets 8 only if its author writes it. 3 and 8 are the FDS User Guide
+values. The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Fundamentals page&lt;/a>
+gives Jin&amp;rsquo;s
+ranges as 2–4 for reflecting and 5–10 for light-emitting signs.&lt;/p>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says legibility is &amp;ldquo;evaluated from the agent&amp;rsquo;s
+actual position, not the source node centroid&amp;rdquo;. Periodic learning uses the
+agent&amp;rsquo;s stored position, which is the previous step&amp;rsquo;s
+(&lt;code>scenario.py:2240–2253&lt;/code>, &lt;code>:2423&lt;/code>). Perception at spawn uses the spawn
+node&amp;rsquo;s routing point for all agents of that spawn area
+(&lt;code>cognitive_map.py:131–135&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>Code changed since the talk.&lt;/strong> pyFDS-Evac replaces fdsvismap&amp;rsquo;s 30 m
+visibility cap with the diagonal of the grid (&lt;code>visibility.py:103&lt;/code>, &lt;code>:512&lt;/code>).&lt;/p>&lt;/blockquote>
+&lt;!-- FIGURE: none. The talk shows Börger, Belt and Arnold (2024), Fig. 11,
+a third-party figure; link to the paper instead of reproducing it.
+Proposed new figure: plan view of one sign's legible region at mean K = 0,
+0.2 and 0.5 1/m, C = 3, drawn once with the 30 m cap and once with the grid
+diagonal, computed by fdsvismap on a small deck with one wall. -->
+&lt;h2>2. One number flips the exit&lt;span class="hx-absolute -hx-mt-20" id="2-one-number-flips-the-exit">&lt;/span>
+&lt;a href="#2-one-number-flips-the-exit" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The asset &lt;code>assets/exit_visibility_alpha&lt;/code> isolates the bearing. It is a
+corridor 4 m wide and 30 m long, with an exit at each end, and 40 agents at
+familiarity 0 about 9 m from the near exit and 19 m from the far one. The two
+configs differ only in the bearing of the near exit&amp;rsquo;s sign; the far sign faces
+the agents in both (&lt;code>assets/exit_visibility_alpha/README.md&lt;/code>).&lt;/p>
+&lt;p>With the near sign facing the agents (\(\alpha_s = 0\)), both exits are learned
+at spawn and the near one ranks first. With it facing away (\(\alpha_s = 180\)),
+\(A = 0\) at every agent cell, so the near exit is never learned. Ranking runs
+on the known subgraph only (&lt;code>route_graph.py:1272–1276&lt;/code>), so the near exit is
+absent, not refused.&lt;/p>
+&lt;p>This distinction matters because of the all-refused fallback. When every known
+route fails the exposure gate, one refused route is re-admitted
+(&lt;code>route_graph.py:1434–1445&lt;/code>). A refused route can come back that way. An
+unknown route cannot, because the fallback never sees it.&lt;/p>
+&lt;p>The tests pin the mechanism at router level
+(&lt;code>tests/test_exit_visibility_alpha.py::TestExitChoiceFollowsLegibility::test_illegible_near_exit_never_enters_the_map&lt;/code>,
+&lt;code>::TestExitChoiceFollowsLegibility::test_the_near_exit_is_absent_not_rejected&lt;/code>,
+&lt;code>::TestExitChoiceFollowsLegibility::test_a_fully_familiar_agent_ignores_the_bearing&lt;/code>).
+Full runs of the asset follow the README&amp;rsquo;s recipe, which uses &lt;code>--fds-dir&lt;/code>, so
+legibility comes from the FDS vismap, not from clear air. In those runs all 40
+agents take the near exit when the sign faces them, and all 40 take the far
+exit when it faces away. With FDS 6.10.1 output of the smoke-free deck and
+seed 1904, on main after #170:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Near sign&lt;/th>
+&lt;th>Exit taken&lt;/th>
+&lt;th>Egress&lt;/th>
+&lt;th>Route switches&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>\(\alpha_s = 0\)&lt;/td>
+&lt;td>40 to &lt;code>E_near&lt;/code>&lt;/td>
+&lt;td>17.07 s&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\alpha_s = 180\)&lt;/td>
+&lt;td>40 to &lt;code>E_far&lt;/code>&lt;/td>
+&lt;td>25.89 s&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The visibility cap is the grid diagonal: 30.83 m on the FDS grid, 29.99 m on
+the 0.25 m clear-air grid of Figure 1.&lt;/p>
+&lt;p>The asset&amp;rsquo;s probe map of the ranked exit along the corridor
+(&lt;code>exit_choice_map.png&lt;/code>) was shifted by
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167" target="_blank" rel="noopener">#167&lt;/a>
+: before
+#170 the switch from near to far fell at y ≈ 20.25. With the fix, clear-air
+ranking uses travel time measured from the agent&amp;rsquo;s position, and the switch is
+at y ≈ 15.0, midway between the two exits.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/sign_bearing.png" alt="Two 30 m corridors side by side, each with an exit at both ends and the cells from which the near sign is legible shaded yellow; in the left corridor the near sign faces the agents and all 40 take the near exit, in the right the near sign faces away and all 40 walk to the far exit" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 1. One number flips the exit. &lt;code>assets/exit_visibility_alpha&lt;/code>: a
+4 m × 30 m corridor, 40 agents at familiarity 0, run in clear air on the
+0.25 m grid, seed 1904. The two configurations differ only in the bearing of
+the near exit&amp;rsquo;s sign. Yellow: cells from which the near sign is legible. The
+far sign is legible for y = 0–29.2 m in both panels. (a) \(\alpha_s = 0\): the
+near sign is legible for y = 0.8–30.0 m; 40 of 40 agents take the near exit,
+median walk 9.2 m, out at 17.1 s. (b) \(\alpha_s = 180\): the near sign is
+legible only for y = 0–0.8 m; the near exit is never learned, and 40 of 40
+agents walk to the far exit, median walk 19.0 m, out at 25.9 s. Counts, walks
+and times are computed from the runs. Script:
+&lt;code>scripts/figures/sign_bearing.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>3. What the agent knows&lt;span class="hx-absolute -hx-mt-20" id="3-what-the-agent-knows">&lt;/span>
+&lt;a href="#3-what-the-agent-knows" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk draws wayfinding as a loop of three stages. The code has the same
+structure.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Perception.&lt;/strong> &lt;code>node_is_visible&lt;/code>, called by &lt;code>expand_from_visibility&lt;/code> and
+&lt;code>expand_on_arrival&lt;/code>. It is asked only about neighbours of one node
+(&lt;code>cognitive_map.py:177–186&lt;/code>, &lt;code>:228–234&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Knowledge.&lt;/strong> &lt;code>AgentCognitiveMap&lt;/code>: known nodes, known edges, visited nodes
+(&lt;code>cognitive_map.py:10–25&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Decision.&lt;/strong> &lt;code>rank_routes&lt;/code> on &lt;code>cognitive_subgraph(map, graph)&lt;/code>
+(&lt;code>route_graph.py:1272–1276&lt;/code>), then the switching rules of
+&lt;code>evaluate_and_reroute&lt;/code>. With no reachable known exit, exploration or the
+patrol (&lt;code>route_graph.py:1789–1851&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>The loop.&lt;/strong> Moving changes the stored position that the next periodic
+learning uses (&lt;code>scenario.py:2238–2254&lt;/code>), and advancing along the path
+triggers learning at the node left behind (&lt;code>scenario.py:2508–2551&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>The full contract, including the #91 exception, the difference between
+ranking and adoption, and the learning schedule, is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2&lt;/a>
+.&lt;/p>
+&lt;!-- FIGURE: loop (proposed). A static redraw of the talk's HTML diagram:
+three boxes (perception, knowledge, decision) and a loop back, with the
+function name under each box. The talk slide has no image file. -->
+&lt;h2>4. An empty map&lt;span class="hx-absolute -hx-mt-20" id="4-an-empty-map">&lt;/span>
+&lt;a href="#4-an-empty-map" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk asks where an agent goes when it knows nothing and no sign is legible
+anywhere. Its intended answer: the agent has nothing to route to, explores,
+learns nothing new, and circles. That is why the map has to be filled by
+something, and the following slides show signs filling it.&lt;/p>
+&lt;p>&lt;strong>The code does not do this for a map that holds only the spawn node. This is
+a known defect, not intended behaviour&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>
+; see also
+defect 2 in &lt;code>assets/blind_spawn_discovery/README.md&lt;/code>). The chain is:&lt;/p>
+&lt;ul>
+&lt;li>the agent is given the geometrically nearest exit as its steering target
+before its map exists (&lt;code>simulation_init.py:1430–1449&lt;/code>);&lt;/li>
+&lt;li>the opening choice finds no reachable known exit and leaves that target in
+place (&lt;code>scenario.py:1006–1008&lt;/code>);&lt;/li>
+&lt;li>the spawn node is visited from the start (&lt;code>cognitive_map.py:117–121&lt;/code>), so
+there is no frontier;&lt;/li>
+&lt;li>the patrol excludes the current node, so a one-node map has no stop
+(&lt;code>cognitive_map.py:343–349&lt;/code>);&lt;/li>
+&lt;li>&lt;code>evaluate_and_reroute&lt;/code> returns without a switch (&lt;code>route_graph.py:1816–1817&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>The agent keeps steering towards an exit it does not know. Periodic learning
+can still add that exit on the way, once its sign becomes legible. The target,
+however, was never chosen from the map.&lt;/p>
+&lt;p>Two probes support this. In ours, we ran the three-exit corridor of
+&lt;code>tests/test_initial_exit_from_cognitive_map.py&lt;/code> with 40 agents at familiarity
+0, no &lt;code>entrance&lt;/code>, rerouting every 1 s and seed 7. We ran it first with no
+visibility model, and then with a clear-air model at 0.5 m in which every sign
+faced away from the crowd. In both runs every agent left by the geometrically
+nearest exit, and the route history recorded no switch. In the clear-air run,
+3 of the 40 agents learned that exit on the way. Our probe scripts are
+not in the repository. Figure 2 shows the same behaviour for one agent.&lt;/p>
+&lt;p>Circling needs a patrol target: at least one other known node reachable over
+known edges. Whether the agent then circles also depends on connectivity and
+steering. That is the smoke case of &lt;code>assets/world_100&lt;/code> in #122.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says the map &amp;ldquo;holds a single node&amp;rdquo; and &amp;ldquo;the agent
+circles&amp;rdquo;. For a single node the code keeps the geometric target. No
+repository test pins either behaviour.&lt;/p>&lt;/blockquote>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/empty_map_routes.png" alt="Plan of a floor with two exits and one agent whose map holds only its spawn node; yellow cells mark where a sign is legible, none of them on the agent’s path, and the agent walks straight to the south exit, which is not in its map" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 2. An empty map, as the code behaves on main. One agent at
+familiarity 0 with a clear-air visibility model. Yellow: cells from which a
+sign is legible. The south exit, 22.4 m from the start, has a sign facing out
+of the building; the west exit, 30.1 m away, has a sign facing along the
+corridor behind walls. The map holds only the spawn for the whole run, and the
+agent makes 0 route switches. After the default 10 s pre-movement it walks
+23.4 m to the geometrically nearest exit, the south one, which it does not
+know, and is out at 28.8 s. Nothing replaces the target it received at spawn
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>
+). The
+intended behaviour is exploration. Script: &lt;code>scripts/figures/empty_map_routes.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>5. Per-agent cognitive maps&lt;span class="hx-absolute -hx-mt-20" id="5-per-agent-cognitive-maps">&lt;/span>
+&lt;a href="#5-per-agent-cognitive-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk calls this slide &amp;ldquo;staff know the building, visitors discover it&amp;rdquo;.
+In the code there are no staff and no visitors. There is a familiarity value
+per group. At \(p = 1\) the agent is given the whole graph; that is an
+assumption about the agent, not a model of training. At \(p &lt; 1\) the map
+starts from the spawn node, an optional reachable &lt;code>entrance&lt;/code>, a draw per exit
+with probability \(p\), and the neighbours legible from the spawn area&amp;rsquo;s
+routing point (&lt;code>init_cognitive_map&lt;/code>, &lt;code>cognitive_map.py:78–136&lt;/code>).&lt;/p>
+&lt;p>After spawn, the map grows at each due re-evaluation and each time the agent
+advances along its path, by the neighbours whose signs are legible
+(&lt;code>cognitive_map.py:155–234&lt;/code>). Edges learned this way also teach their
+reverse, when the graph has one. Routing then works on the known subgraph.&lt;/p>
+&lt;p>The talk illustrates this on a T-corridor with a junction and two exits. In
+that schematic the discovery agent learns the junction at spawn and both exits
+at the junction. Smoke then fills the right arm, and the agent heads for exit A.
+In the code, whether exit B is refused depends on its route&amp;rsquo;s optical depth
+exceeding the gate budget. Legibility of B&amp;rsquo;s sign plays no part in that
+(&lt;code>route_graph.py:1345–1351&lt;/code>).&lt;/p>
+&lt;!-- FIGURE: cognitive_map (four panels + legend)
+Source: scripts/figures/cognitive_map.py. Schematic: the known sets, the
+smoke and the chosen exit are hard-coded (cognitive_map.py:66–99); nothing is
+computed. -->
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/cognitive_map.png" alt="Four panels of a T-shaped corridor showing which nodes and edges one agent knows: at spawn, at the junction, with smoke in the right arm, and for a fully familiar agent" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 3. Schematic, not a simulation: known sets and choices are drawn by
+hand. A T-shaped corridor; filled nodes and solid edges are known. (1) A
+discovery agent at spawn knows its spawn node and the junction, whose sign is
+legible from there. (2) At the junction both exit signs are legible, and both
+exits are learned. (3) Smoke fills the right arm. Exit B stays known; if its
+route exceeds the exposure budget, the gate refuses it and the agent heads for
+A. (4) A fully familiar agent knows the whole graph at t = 0. Script:
+&lt;code>scripts/figures/cognitive_map.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> Panel 2 says &amp;ldquo;every neighbour whose sign is legible from the
+new node&amp;rdquo;. The code tests legibility from the agent&amp;rsquo;s position when the
+path advances (&lt;code>scenario.py:2519–2520&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says &amp;ldquo;Learned edges are bidirectional&amp;rdquo;. That holds
+only for edges learned by perception and arrival, and only where the graph
+has the reverse edge. With automatic wiring, exits have no outgoing edges.
+Paths learned from familiarity or &lt;code>entrance&lt;/code> are forward only
+(&lt;code>cognitive_map.py:71–74&lt;/code>, &lt;code>:139–152&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide calls &lt;code>full&lt;/code> &amp;ldquo;the FDS+Evac default&amp;rdquo;. It is
+pyFDS-Evac&amp;rsquo;s default. FDS+Evac&amp;rsquo;s &lt;code>KNOWN_DOOR&lt;/code> defaults to &lt;code>.FALSE.&lt;/code>
+(&lt;code>evac.f90:2223&lt;/code>, &lt;code>:2666&lt;/code>).&lt;/p>&lt;/blockquote>
+&lt;h2>6. The map remembers&lt;span class="hx-absolute -hx-mt-20" id="6-the-map-remembers">&lt;/span>
+&lt;a href="#6-the-map-remembers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A known node stays known after its sign stops being legible. A visibility
+query cannot do that on its own, because it answers only for the present
+position and time.&lt;/p>
+&lt;p>The asset &lt;code>assets/cognitive_map_memory&lt;/code> separates the two. A corridor has an
+end exit, legible from spawn, and a side exit whose sign, at \((4, 20)\)
+facing west, is legible from the centreline only inside a region. The asset
+builder&amp;rsquo;s estimate, y ≈ 12.5–27.5 m, assumes the 30 m cap
+(&lt;code>build_geometry.py:61&lt;/code>, &lt;code>:78–95&lt;/code>), which the code no longer uses
+(&lt;code>visibility.py:512&lt;/code>). With the grid diagonal as the cap, on the 0.25 m
+clear-air grid, the model reads the sign from y = 12.0 to 28.0 m on the
+centreline (Figure 4).&lt;/p>
+&lt;p>The probes place one discovery agent at fixed positions on the centreline, in
+sequence, and ask the router which exit ranks first there. They are sequential
+state probes, not a walked trajectory. The tests assert four things
+(&lt;code>tests/test_cognitive_map_memory.py&lt;/code>):&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Learning.&lt;/strong> The side exit is unknown at y = 8 and known at y = 14
+(&lt;code>::TestAcquisitionAndPersistence::test_side_exit_is_acquired_on_entering_the_window&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Memory.&lt;/strong> At y = 30 the sign is not legible, and the side exit is still
+known and routable (&lt;code>::TestAcquisitionAndPersistence::test_side_exit_persists_after_its_sign_goes_illegible&lt;/code>,
+&lt;code>::TestAcquisitionAndPersistence::test_a_remembered_exit_is_routable_though_illegible&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Control.&lt;/strong> A probe that never enters the region never learns it
+(&lt;code>::TestAcquisitionAndPersistence::test_an_agent_that_never_enters_the_window_never_learns_it&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Ranking.&lt;/strong> The side exit ranks first at y = 14, the end exit at y = 30
+(&lt;code>::TestAcquisitionAndPersistence::test_acquiring_the_side_exit_changes_where_the_agent_would_go&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>::test_map_memory_probes_match_engine&lt;/code> pins the whole northbound sequence.
+The probes use the test&amp;rsquo;s clear-air setup, which has no routing engine, so the
+distances are straight lines.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>y [m]&lt;/th>
+&lt;th>side exit&lt;/th>
+&lt;th>first-ranked exit&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>4&lt;/td>
+&lt;td>unknown&lt;/td>
+&lt;td>end&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>10&lt;/td>
+&lt;td>unknown&lt;/td>
+&lt;td>end&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>14&lt;/td>
+&lt;td>known, legible&lt;/td>
+&lt;td>side&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>20&lt;/td>
+&lt;td>known, legible&lt;/td>
+&lt;td>side&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>26&lt;/td>
+&lt;td>known, legible&lt;/td>
+&lt;td>end (5.30 m against 6.50 m)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>30&lt;/td>
+&lt;td>known, not legible&lt;/td>
+&lt;td>end&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The two distances are equal at y ≈ 25.4. At every probe where both exits are
+known, the distance from the agent to each exit is shorter than that route&amp;rsquo;s
+first leg from the spawn node (16.3 m to the side exit, 27.3 m to the end
+exit, from the test&amp;rsquo;s comment). The #167 cap is therefore inactive here. We
+checked this by hand.&lt;/p>
+&lt;p>Memory therefore shows on the way north as &lt;em>known and routable&lt;/em>, not as
+&lt;em>first-ranked&lt;/em>. It changes the ranking on the way back. Probed again at
+y = 10 after the northbound sequence, the side sign is still not legible
+there, but the side exit is known and nearer (10.31 m against 21.30 m), and it
+ranks first. At the same place before learning, the end exit ranked first.
+&lt;code>::test_map_memory_probes_match_engine&lt;/code> pins this return probe too.&lt;/p>
+&lt;p>In a moving agent, ranking is not adoption: the switching rules can keep a
+current exit that no longer ranks first
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>
+).
+In the full run of the asset README, with the FDS vismap, all 20 agents
+left by the side exit, egress 21.2 s, each after one switch from the end exit
+to the side exit (&lt;code>assets/cognitive_map_memory/README.md&lt;/code>).&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says the side exit is learned &amp;ldquo;at y = 12.5&amp;rdquo; and
+&amp;ldquo;at y = 30 … the agent still routes to it&amp;rdquo;. 12.5 m is the builder&amp;rsquo;s 30 m
+estimate. The first test probe inside the region is at y = 14. At y = 26 and
+30 the end exit ranks first. This follows from
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/pull/65" target="_blank" rel="noopener">#65&lt;/a>
+, which prices
+routes from the agent&amp;rsquo;s position (see
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/160" target="_blank" rel="noopener">#160&lt;/a>
+).&lt;/p>&lt;/blockquote>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/map_memory.png" alt="Five probes of one corridor: side exit unknown at y = 4, learned at y = 14, legible at y = 20, known but not legible at y = 30, and first-ranked at a return probe at y = 10" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 4. The map remembers. &lt;code>assets/cognitive_map_memory&lt;/code>, clear air, one
+discovery agent probed in sequence at y = 4, 14, 20 and 30 m, then at y = 10 m
+again. These are state probes, not a walk. The shaded, lens-shaped region is
+where the side sign is legible; on the centreline it spans y = 12.0–28.0 m
+(gold ticks). Northbound, the side exit is learned inside the region and
+stays known beyond it. At y = 30 the nearer end exit ranks first. At the return
+probe, where the side sign is not legible, the known side exit is nearer and
+ranks first. At that place before learning, the end exit ranked first. Each
+ranking is computed by &lt;code>rank_routes&lt;/code>. Script: &lt;code>scripts/figures/map_memory.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>7. Full versus discovery&lt;span class="hx-absolute -hx-mt-20" id="7-full-versus-discovery">&lt;/span>
+&lt;a href="#7-full-versus-discovery" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk compares the two tiers on the same geometry, seed and signs. One
+thing differs in the code, and until #174 a second one did:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>The initial map.&lt;/strong> A fully familiar agent knows the whole graph. A
+discovery agent explores: it takes the frontier with the lowest path cost
+from its position, learns as the path advances, and, with no frontier left,
+patrols its known nodes (&lt;code>cognitive_map.py:262–399&lt;/code>). Route history logs
+&lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code> and &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code> (&lt;code>route_graph.py:1800&lt;/code>, &lt;code>:1815&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>The ranked length of the first leg&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172" target="_blank" rel="noopener">#172&lt;/a>
+, fixed
+by #174, now merged). The discovery agent&amp;rsquo;s subgraph lacked the routing
+engine, so &lt;code>rank_routes&lt;/code> measured the walk from the agent to its next node as a
+straight line, even through walls. Exploration was not affected, because
+frontier selection measures that leg on the full graph.&lt;/li>
+&lt;/ol>
+&lt;p>Before #174, a comparison around obstacles mixed the effect of knowledge with
+the effect of #172. The run of Figure 5 gives the same numbers before and
+after #174. For both tiers, the first leg&amp;rsquo;s smoke is sampled on a straight
+line from the agent to its next node
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>
+).&lt;/p>
+&lt;p>The patrol can stall: when smoke limits legibility to a few metres, a patrol
+over a few known nodes may never pass a legible new sign
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/122" target="_blank" rel="noopener">#122&lt;/a>
+).&lt;/p>
+&lt;p>&lt;strong>Discovery times depend on the grid.&lt;/strong> On
+&lt;code>assets/familiarity_test_discovery&lt;/code>, seed 420, the #168 investigation measured
+the following discovery egress times on main:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Clear-air cell&lt;/th>
+&lt;th>Discovery egress&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>0.25 m&lt;/td>
+&lt;td>88.6 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.1 m&lt;/td>
+&lt;td>138.2 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.05 m&lt;/td>
+&lt;td>158.5 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.025 m&lt;/td>
+&lt;td>200.8 s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The fully familiar tier took 33.9 s. The code advises a cell smaller than the
+thinnest wall (&lt;code>visibility.py:455–465&lt;/code>). The #168 investigation recommends at
+most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
+continued change below that is not explained
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>
+). Do not
+quote a discovery egress time without its grid.&lt;/p>
+&lt;p>The talk also shows discovery with and without sign gating on the NIST floor
+plan of The Station (&lt;code>assets/station_fahy&lt;/code>). With &lt;code>--no-visibility&lt;/code>, advancing
+from a node teaches every neighbour. With a visibility model, only neighbours
+with legible signs are learned, so walls and bearings cut the known set even
+in clear air. The talk&amp;rsquo;s counts (8 of 11 and 3 of 11 nodes) were not
+reproduced for this page.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/full_vs_discovery_paths.png" alt="Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, discovery agents detour through a dead-end room first" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 5. Full versus discovery. &lt;code>assets/familiarity_test_full&lt;/code> and
+&lt;code>assets/familiarity_test_discovery&lt;/code>: 20 agents, seed 420, same geometry and
+signs; &lt;code>familiarity&lt;/code> differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
+known from t = 0, no route changes; the last agent leaves at 33.9 s, median
+path 29 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
+end; the exit enters the maps at t = 34–145 s (median 60 s). After t = 0 the
+agents make 101 route changes (60 explore, 21 wander, 20 onto the exit), with a
+detour into a dead-end room; the last leaves at 158.5 s, median path 61 m. The
+discovery time has not converged with the grid (88.6 s at 0.25 m, 200.8 s at
+0.025 m; #168). This illustrates the mechanism; it is not a result. Script: &lt;code>scripts/figures/full_vs_discovery_paths.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The talk caption gives 35.1 s and 75.1 s. Those are results
+from the deck before its rework in #99 (&lt;code>docs/testing-familiarity.md&lt;/code>). The
+world_100 clip (&amp;ldquo;42 signs&amp;rdquo;) and the Station clips were not reproduced for this
+page, and their decks and commits are not recorded.&lt;/p>&lt;/blockquote>
+&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
+&lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>Börger, K., Belt, A., &amp;amp; Arnold, L. (2024). &lt;em>A waypoint based approach to
+visibility in performance based fire safety design&lt;/em>. Fire Safety Journal,
+150, 104269.
+&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2024.104269&lt;/a>
+&lt;/li>
+&lt;li>Haensel, D. (2014). &lt;em>A knowledge-based routing framework for pedestrian
+dynamics simulation&lt;/em>. Diploma thesis, TU Dresden.&lt;/li>
 &lt;/ul></description></item><item><title>Model comparison: FDS+Evac vs pyFDS-Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</guid><description>
 &lt;blockquote>
 &lt;p>This document compares the evacuation models in FDS+Evac (v2.6.0,
@@ -9640,17 +10451,23 @@ for the conflicting-&lt;code>&amp;amp;INIT&lt;/code> pitfall this suite surfaced
 &lt;code>docs/testing-homogeneous.md&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Cognitive Map Memory&lt;/strong>: 4x32 m corridor with a side alcove, 20 &lt;code>discovery&lt;/code>
 agents. The side exit&amp;rsquo;s sign faces west and is legible only from
-&lt;code>y ∈ [12.5, 27.5]&lt;/code> on the centreline — a window that falls out of
+&lt;code>y ∈ [12.0, 28.0]&lt;/code> on the centreline (&lt;code>[12.5, 27.5]&lt;/code> under fdsvismap&amp;rsquo;s
+default 30 m cap; pyFDS-Evac uses the grid diagonal) — a window that falls out of
 &lt;code>view_angle * max_vis &amp;gt;= distance&lt;/code> rather than being tuned, and that
 &lt;code>build_geometry.py&lt;/code> recomputes and asserts. Proves the cognitive map does the
 one thing a visibility query cannot: &lt;strong>remember&lt;/strong>. The side exit is unknown at
-spawn, enters the map on crossing &lt;code>y=12.5&lt;/code>, and is &lt;em>still&lt;/em> there at &lt;code>y=30&lt;/code>
+spawn, enters the map on crossing &lt;code>y=12&lt;/code>, and is &lt;em>still&lt;/em> there at &lt;code>y=30&lt;/code>
 where the sign is long unreadable. Persistence is the load-bearing claim —
 delete the expansion rules and acquisition still appears to work for any agent
 starting inside the window. A third test closes the loop to routing: a
 remembered-but-illegible exit must still be routable. &lt;code>scripts/generate_cognitive_map_states.py&lt;/code> renders the
-three states (unknown / legible now / remembered), and the amber band is the
-memory made visible. Checked by &lt;code>tests/test_cognitive_map_memory.py&lt;/code>.&lt;/li>
+three states (unknown / legible now / remembered, the hatched exit being the
+memory made visible) from live &lt;code>rank_routes&lt;/code> probes. The agent takes the side
+exit from &lt;code>y = 14&lt;/code> to &lt;code>24&lt;/code> and the end exit from &lt;code>y = 26&lt;/code> (the two are equally
+far at &lt;code>y ≈ 25.4&lt;/code>); walking back to &lt;code>y = 10&lt;/code> with its map, it takes the side
+exit where it took the end exit on the way up. In the full run each agent
+switches once, &lt;code>E_end → E_side&lt;/code> at t = 5–19 s, and egress takes 21.2 s.
+Checked by &lt;code>tests/test_cognitive_map_memory.py&lt;/code>, which pins the probe outcomes.&lt;/li>
 &lt;li>&lt;strong>FIC vs FED Speed&lt;/strong>: 4x50 m sealed corridor, 30 agents, one exit. The gas is
 &lt;em>prescribed&lt;/em> by a single &lt;code>&amp;amp;INIT&lt;/code> (CO at 2000 ppm, acrolein at 10 ppm) rather
 than burned, so concentration is constant in space and time and the only
@@ -9684,9 +10501,10 @@ reimplements fdsvismap&amp;rsquo;s clear-air rule (&lt;code>view_angle * max_vis
 so the test exercises the routing decision rather than the third-party
 solver. A companion test pins that a &lt;code>full&lt;/code>-familiarity agent ignores the
 bearing entirely — signs are wayfinding information and bind only where
-knowledge is incomplete. The folder README documents the &lt;strong>30 m visibility
-ceiling&lt;/strong> that makes a sign illegible at any bearing, and how much tighter it
-becomes once smoke is present (&lt;code>c / K̄&lt;/code>, so 6 m at &lt;code>c=3&lt;/code>, &lt;code>K̄=0.5&lt;/code>).&lt;/li>
+knowledge is incomplete. The folder README documents the &lt;strong>visibility
+ceiling&lt;/strong> (the grid diagonal, about 30 m for this deck) that makes a sign
+illegible at any bearing, and how much tighter it becomes once smoke is
+present (&lt;code>c / K̄&lt;/code>, so 6 m at &lt;code>c=3&lt;/code>, &lt;code>K̄=0.5&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Familiarity Test Full&lt;/strong> / &lt;strong>Familiarity Test Discovery&lt;/strong>: &lt;code>SocialForceModel&lt;/code>
 scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
 doors throughout, generated parametrically by each folder&amp;rsquo;s

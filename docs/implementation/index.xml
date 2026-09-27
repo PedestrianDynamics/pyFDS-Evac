@@ -12,12 +12,8 @@ class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hid
 class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="route-cost-gate"
 >&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">The gate cost model&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">How one quantity refuses a route and orders the survivors.&lt;/div>&lt;/a>
 &lt;/div></description></item><item><title>Wayfinding</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/</guid><description>
-&lt;p>The wayfinding model is
-described in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/visibility/">Visibility and cognitive maps&lt;/a>
-: sign
-legibility through smoke, and the per-agent cognitive map it feeds. The ideas
-behind it, with figures, are in the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#wayfinding">Wayfinding section of Concepts&lt;/a>
-. The
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/">familiarity routing verification&lt;/a>
-checks that fully familiar and discovering agents behave differently.&lt;/p></description></item></channel></rss>
+&lt;div class="hextra-cards hx-mt-4 hx-gap-4 hx-grid not-prose" style="--hextra-cards-grid-cols: 3;">
+&lt;a
+class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="wayfinding"
+>&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">Wayfinding&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">Sign legibility, per-agent cognitive maps, and the examples of the talk.&lt;/div>&lt;/a>
+&lt;/div></description></item></channel></rss>
