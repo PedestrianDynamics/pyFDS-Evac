@@ -54,13 +54,12 @@ agent&amp;rsquo;s stored position, which is the previous step&amp;rsquo;s
 (&lt;code>scenario.py:2240–2253&lt;/code>, &lt;code>:2423&lt;/code>). Perception at spawn uses the spawn
 node&amp;rsquo;s routing point for all agents of that spawn area
 (&lt;code>cognitive_map.py:131–135&lt;/code>).&lt;/p>
-&lt;p>&lt;strong>Code changed since the talk.&lt;/strong> pyFDS-Evac replaces fdsvismap&amp;rsquo;s 30 m
-visibility cap with the diagonal of the grid (&lt;code>visibility.py:103&lt;/code>, &lt;code>:512&lt;/code>).&lt;/p>&lt;/blockquote>
+&lt;p>The reading distance \(V_{\max}\) is 30 m, as in fdsvismap. Change it with
+&lt;code>--max-sign-distance&lt;/code>, or per sign with &lt;code>&amp;quot;max_distance&amp;quot;&lt;/code>.&lt;/p>&lt;/blockquote>
 &lt;!-- FIGURE: none. The talk shows Börger, Belt and Arnold (2024), Fig. 11,
 a third-party figure; link to the paper instead of reproducing it.
 Proposed new figure: plan view of one sign's legible region at mean K = 0,
-0.2 and 0.5 1/m, C = 3, drawn once with the 30 m cap and once with the grid
-diagonal, computed by fdsvismap on a small deck with one wall. -->
+0.2 and 0.5 1/m, C = 3, drawn with the 30 m cap, computed by fdsvismap on a small deck with one wall. -->
 &lt;h2>2. One number flips the exit&lt;span class="hx-absolute -hx-mt-20" id="2-one-number-flips-the-exit">&lt;/span>
 &lt;a href="#2-one-number-flips-the-exit" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The asset &lt;code>assets/exit_visibility_alpha&lt;/code> isolates the bearing. It is a
 corridor 4 m wide and 30 m long, with an exit at each end, and 40 agents at
@@ -109,8 +108,8 @@ seed 1904, on main after #170:&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The visibility cap is the grid diagonal: 30.83 m on the FDS grid, 29.99 m on
-the 0.25 m clear-air grid of Figure 1.&lt;/p>
+&lt;p>The visibility cap is 30 m. Rerun in clear air with that cap, both configs
+give the same counts and egress times.&lt;/p>
 &lt;p>The asset&amp;rsquo;s probe map of the ranked exit along the corridor
 (&lt;code>exit_choice_map.png&lt;/code>) was shifted by
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167" target="_blank" rel="noopener">#167&lt;/a>
@@ -255,11 +254,10 @@ position and time.&lt;/p>
 &lt;p>The asset &lt;code>assets/cognitive_map_memory&lt;/code> separates the two. A corridor has an
 end exit, legible from spawn, and a side exit whose sign, at \((4, 20)\)
 facing west, is legible from the centreline only inside a region. The asset
-builder&amp;rsquo;s estimate, y ≈ 12.5–27.5 m, assumes the 30 m cap
-(&lt;code>build_geometry.py:61&lt;/code>, &lt;code>:78–95&lt;/code>), which the code no longer uses
-(&lt;code>visibility.py:512&lt;/code>). With the grid diagonal as the cap, on the 0.25 m
-clear-air grid, the model reads the sign from y = 12.0 to 28.0 m on the
-centreline (Figure 4).&lt;/p>
+builder&amp;rsquo;s estimate, y ≈ 12.5–27.5 m, follows from the 30 m cap
+(&lt;code>build_geometry.py:61&lt;/code>, &lt;code>:78–95&lt;/code>). On the 0.25 m clear-air grid the model
+reads the sign from y = 12.3 to 27.8 m on the centreline (Figure 4); the
+difference comes from the rasterised sight line.&lt;/p>
 &lt;p>The probes place one discovery agent at fixed positions on the centreline, in
 sequence, and ask the router which exit ranks first there. They are sequential
 state probes, not a walked trajectory. The tests assert four things
@@ -351,7 +349,7 @@ routes from the agent&amp;rsquo;s position (see
 &lt;p>&lt;em>Figure 4. The map remembers. &lt;code>assets/cognitive_map_memory&lt;/code>, clear air, one
 discovery agent probed in sequence at y = 4, 14, 20 and 30 m, then at y = 10 m
 again. These are state probes, not a walk. The shaded, lens-shaped region is
-where the side sign is legible; on the centreline it spans y = 12.0–28.0 m
+where the side sign is legible; on the centreline it spans y = 12.3–27.8 m
 (gold ticks). Northbound, the side exit is learned inside the region and
 stays known beyond it. At y = 30 the nearer end exit ranks first. At the return
 probe, where the side sign is not legible, the known side exit is nearer and

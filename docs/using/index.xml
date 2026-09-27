@@ -321,6 +321,10 @@ silent unless you check the warning log.&lt;/p>
 &lt;td>&lt;code>--vis-cell-size M&lt;/code>&lt;/td>
 &lt;td>Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight.&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--max-sign-distance M&lt;/code>&lt;/td>
+&lt;td>Farthest distance from which a sign can be read, also in clear air (default 30 m). A sign&amp;rsquo;s own &lt;code>&amp;quot;max_distance&amp;quot;&lt;/code> overrides it.&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>&lt;strong>The default route-choice model does not trigger the visibility model.&lt;/strong> The
@@ -1348,8 +1352,8 @@ for the conflicting-&lt;code>&amp;amp;INIT&lt;/code> pitfall this suite surfaced
 &lt;code>docs/testing-homogeneous.md&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Cognitive Map Memory&lt;/strong>: 4x32 m corridor with a side alcove, 20 &lt;code>discovery&lt;/code>
 agents. The side exit&amp;rsquo;s sign faces west and is legible only from
-&lt;code>y ∈ [12.0, 28.0]&lt;/code> on the centreline (&lt;code>[12.5, 27.5]&lt;/code> under fdsvismap&amp;rsquo;s
-default 30 m cap; pyFDS-Evac uses the grid diagonal) — a window that falls out of
+&lt;code>y ∈ [12.3, 27.8]&lt;/code> on the centreline on the 0.25 m grid (&lt;code>[12.5, 27.5]&lt;/code>
+analytically under the 30 m cap) — a window that falls out of
 &lt;code>view_angle * max_vis &amp;gt;= distance&lt;/code> rather than being tuned, and that
 &lt;code>build_geometry.py&lt;/code> recomputes and asserts. Proves the cognitive map does the
 one thing a visibility query cannot: &lt;strong>remember&lt;/strong>. The side exit is unknown at
@@ -1399,7 +1403,7 @@ so the test exercises the routing decision rather than the third-party
 solver. A companion test pins that a &lt;code>full&lt;/code>-familiarity agent ignores the
 bearing entirely — signs are wayfinding information and bind only where
 knowledge is incomplete. The folder README documents the &lt;strong>visibility
-ceiling&lt;/strong> (the grid diagonal, about 30 m for this deck) that makes a sign
+ceiling&lt;/strong> (30 m by default) that makes a sign
 illegible at any bearing, and how much tighter it becomes once smoke is
 present (&lt;code>c / K̄&lt;/code>, so 6 m at &lt;code>c=3&lt;/code>, &lt;code>K̄=0.5&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Familiarity Test Full&lt;/strong> / &lt;strong>Familiarity Test Discovery&lt;/strong>: &lt;code>SocialForceModel&lt;/code>
