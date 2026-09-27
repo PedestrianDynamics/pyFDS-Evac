@@ -27,6 +27,20 @@ nothing is digitised from a figure:
   0.75 +/- 0.21 m/s at K = 0.42 1/m, irritant) are quoted on
   p. 2339-2340.
 
+Panel (b), fractional laws (speed as a fraction of the unexposed speed):
+
+- Purser (2003), p. 98 and Fig. 1, fitted to Jin's non-irritant data:
+  F = -1.738 OD/m + 1.236 for OD/m = 0.13-0.55, normal speed below, and
+  above 0.55 the speed "as in darkness at 0.3 m/s". The floor is drawn at
+  the fraction the equation reaches at 0.55 (0.28), our construction;
+  Purser writes 0.3 m/s (0.25 of 1.2 m/s) and his Fig. 1 shows about 0.27.
+  That it is an assumption rather than a measured Jin point is our reading.
+  The fitted line starts at its computed value, 1.010 at OD/m 0.13; the
+  F = 1 segment below is Purser's stated normal speed, drawn dashed. OD/m is converted to K with the
+  base-10 definition of SFPE Ch. 63 (p. 2413), K = ln(10) OD/m.
+- FDS+Evac (Korhonen 2021, Eq. 11): F = max(0.1, 1 + (beta/alpha) K) with
+  the Frantzich-Nilsson constants.
+
 Solid: within the source's data range. Dashed: extrapolation. Dotted: the
 gap between the two pooled data sets of Eq. 63.10, where it has no data.
 Colours: one per source, shared with fundamentals_speed_visibility.py.
@@ -43,6 +57,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib import gridspec
 from matplotlib.lines import Line2D
 
 
@@ -85,7 +100,11 @@ def main():
     k_max = 8.0
 
     # --- Plot ---
-    fig, ax = plt.subplots(figsize=(9.0, 5.0), dpi=150)
+    fig = plt.figure(figsize=(13.0, 5.0), dpi=150)
+    gs = gridspec.GridSpec(1, 2, width_ratios=[1.6, 1.0])
+    gs.update(wspace=0.12, left=0.06, right=0.99, top=0.9, bottom=0.12)
+    ax = plt.subplot(gs[0, 0])
+    ax_f = plt.subplot(gs[0, 1])
 
     # Frantzich-Nilsson, Eq. 3
     for lo, hi in ((0.0, k_fn[0]), (k_fn[1], k_max)):
@@ -190,6 +209,7 @@ def main():
     ax.set_ylim(0.0, 1.2)
     ax.set_xlabel("extinction coefficient K [1/m]", color="dimgrey")
     ax.set_ylabel("walking speed v [m/s]", color="dimgrey")
+    ax.set_title(r"$\bf{(a)}$" + " absolute laws", loc="left", fontsize=12)
     ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
     ax.grid(False)
     sns.despine(left=True, bottom=True)
@@ -215,6 +235,62 @@ def main():
         fontsize=8,
         loc="upper right",
     )
+
+    # (b) fractional laws
+    ln10 = np.log(10.0)
+    k_p03 = (0.13 * ln10, 0.55 * ln10)
+
+    def purser03(k):
+        return -1.738 * k / ln10 + 1.236
+
+    ax_f.plot([0.0, k_p03[0]], [1.0, 1.0], color=c_purser, lw=1.4, ls="--")
+    k = np.linspace(*k_p03, 50)
+    ax_f.plot(k, purser03(k), color=c_purser, lw=2.6)
+    f_floor = purser03(k_p03[1])
+    ax_f.plot([k_p03[1], k_max], [f_floor, f_floor], color=c_purser, lw=1.4, ls="--")
+    ax_f.text(
+        2.0,
+        f_floor + 0.03,
+        "Purser 2003: 'as in darkness'\n(our reading: an assumed floor)",
+        fontsize=8,
+        color="dimgrey",
+    )
+    ax_f.text(
+        1.45,
+        0.48,
+        "Purser 2003,\nfit to Jin\n(OD/m 0.13–0.55)",
+        fontsize=9,
+        color=c_purser,
+        weight="semibold",
+    )
+
+    def fds_evac(k):
+        return np.maximum(0.1, 1.0 - 0.057 / 0.706 * k)
+
+    k = np.linspace(0.0, k_fn[0], 100)
+    ax_f.plot(k, fds_evac(k), color=c_fn, lw=1.4, ls="--")
+    k = np.linspace(*k_fn, 100)
+    ax_f.plot(k, fds_evac(k), color=c_fn, lw=2.6)
+    k = np.linspace(k_fn[1], k_max, 50)
+    ax_f.plot(k, fds_evac(k), color=c_fn, lw=1.4, ls="--")
+    ax_f.text(
+        3.9,
+        fds_evac(3.9) + 0.05,
+        "FDS+Evac Eq. 11\n(Frantzich–Nilsson / 0.706)",
+        fontsize=9,
+        color=c_fn,
+        weight="semibold",
+    )
+    ax_f.set_xlim(0.0, k_max)
+    ax_f.set_ylim(0.0, 1.1)
+    ax_f.set_xlabel("extinction coefficient K [1/m]", color="dimgrey")
+    ax_f.set_ylabel("fraction of unexposed speed [-]", color="dimgrey")
+    ax_f.set_title(r"$\bf{(b)}$" + " fractional laws", loc="left", fontsize=12)
+    ax_f.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+    ax_f.grid(False)
+    sns.despine(left=True, bottom=True)
+    ax_f.patch.set_edgecolor("lightgrey")
+    ax_f.patch.set_linewidth(0.8)
 
     # --- Save ---
     fig.savefig(out / "speed_extinction.png", dpi=150, bbox_inches="tight")
