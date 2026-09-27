@@ -29,6 +29,16 @@ nondeterminism (only aggregate outcomes reproduce under a fixed seed) and a
 rerouting bug under by-number placement
 ([issue #21](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21)).
 
+## FDS-backed test cases
+
+Three test cases run on tracked FDS output, one page each:
+
+{{< cards >}}
+  {{< card link="testing-homogeneous" title="CO dose" subtitle="FED accumulation in a sealed room at three constant CO concentrations." >}}
+  {{< card link="testing-heat" title="Heat dose" subtitle="Heat FED in a sealed room at three constant gas temperatures." >}}
+  {{< card link="testing-familiarity" title="Familiarity routing" subtitle="Fully familiar agents against discovering agents on one floor plan." >}}
+{{< /cards >}}
+
 ## Status against ISO 20414
 
 ISO 20414:2020 (*Fire safety engineering — Verification and validation

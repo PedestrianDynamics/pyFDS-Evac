@@ -1,6 +1,7 @@
 ---
 title: "Smoke-speed model"
 weight: 9
+aliases: [/docs/smoke-speed-model/]
 ---
 
 > Part of [pyFDS-Evac](../README.md).

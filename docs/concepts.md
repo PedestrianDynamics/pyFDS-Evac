@@ -2,6 +2,7 @@
 title: "Concepts"
 weight: 2
 math: true
+aliases: [/docs/concepts/]
 ---
 
 ISO 13943:2023 defines human behaviour in fire as "actions performed in the

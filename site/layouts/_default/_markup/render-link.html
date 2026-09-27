@@ -16,6 +16,17 @@
   {{- $page := "" -}}
   {{- if strings.HasSuffix $path ".md" -}}
     {{- $page = .Page.GetPage $path -}}
+    {{- /* hugo.yaml mounts docs/ files into sidebar groups, so a link
+         written against the flat docs/ tree (docs/x.md, /docs/x.md) is
+         looked up by file name among the pages mounted from docs/. */ -}}
+    {{- if and (not $page) (or (strings.HasPrefix $path "/docs/") (not (strings.Contains $path "/"))) -}}
+      {{- $name := path.Base $path -}}
+      {{- $fromDocs := (site.GetPage "/docs").RegularPagesRecursive -}}
+      {{- $fromDocs = $fromDocs | append (site.GetPage "/models/verification").RegularPages -}}
+      {{- range first 1 (where $fromDocs "File.LogicalName" $name) -}}
+        {{- $page = . -}}
+      {{- end -}}
+    {{- end -}}
   {{- end -}}
   {{- if $page -}}
     {{- $dest = printf "%s%s" $page.RelPermalink $fragment -}}

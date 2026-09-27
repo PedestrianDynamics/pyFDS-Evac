@@ -1,6 +1,7 @@
 ---
 title: "Scenario assets"
 weight: 17
+aliases: [/docs/assets/]
 ---
 
 Scenario definitions are stored in [`assets/`](../assets/).

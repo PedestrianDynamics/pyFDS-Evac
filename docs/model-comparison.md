@@ -1,6 +1,8 @@
 ---
 title: "Model comparison: FDS+Evac vs pyFDS-Evac"
+linkTitle: "FDS+Evac comparison"
 weight: 13
+aliases: [/docs/model-comparison/]
 ---
 
 > This document compares the evacuation models in FDS+Evac (v2.6.0,

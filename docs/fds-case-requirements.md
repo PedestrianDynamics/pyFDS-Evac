@@ -1,6 +1,8 @@
 ---
 title: "What your FDS case must provide"
+linkTitle: "Your FDS case"
 weight: 4
+aliases: [/docs/fds-case-requirements/]
 ---
 
 Read this before pointing `--fds-dir` at a case for the first time.

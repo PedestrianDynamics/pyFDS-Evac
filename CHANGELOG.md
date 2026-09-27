@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 Defaults now follow FDS+Evac where a mechanism has a direct FDS+Evac
 counterpart ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)).
-See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/coming-from-fds-evac/#defaults-follow-fdsevac).
+See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac).
 
 - Smoke, heat and visibility are sampled at 1.6 m (`HUMAN_SMOKE_HEIGHT`)
   instead of 2.0 m.
