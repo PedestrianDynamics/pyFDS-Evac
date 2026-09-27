@@ -21,7 +21,10 @@ from pyfds_evac.core.route_graph import (
     reroute_agent,
     should_reevaluate,
 )
-from pyfds_evac.core.smoke_speed import ConstantExtinctionField
+from pyfds_evac.core.smoke_speed import (
+    ConstantExtinctionField,
+    speed_factor_from_extinction,
+)
 
 
 def _box(cx: float, cy: float, half: float = 1.0) -> Polygon:
@@ -878,6 +881,35 @@ class TestPositionAwareRouting:
         # 10 m node distance from J.
         g = self._graph()
         assert self._cost(g, ["J", "E1"], (2.0, 0.0), "E0") == pytest.approx(28.0)
+
+    @pytest.mark.parametrize("extinction", [0.0, 2.0])
+    def test_travel_time_includes_the_walk_to_the_origin(self, extinction):
+        """The gate ranks on travel time, so it must be timed from here too.
+
+        The agent at (2, 0) stands 18 m behind J, the origin of J -> E1, and
+        must walk 28 m to E1. The 10 m J -> E1 leg alone is 10 m of that.
+        """
+        g = self._graph()
+        config = RouteCostConfig(base_speed_m_per_s=1.3)
+        rc = evaluate_route(
+            g,
+            ["J", "E1"],
+            0.0,
+            0.0,
+            ConstantExtinctionField(extinction),
+            None,
+            config,
+            agent_position=(2.0, 0.0),
+        )
+        sf = speed_factor_from_extinction(
+            extinction,
+            alpha=config.alpha,
+            beta=config.beta,
+            min_speed_factor=config.min_speed_factor,
+        )
+        expected = 28.0 / (1.3 * sf)
+        assert rc.travel_time_s == pytest.approx(expected)
+        assert rc.rank_cost == pytest.approx(expected)
 
     def test_the_heading_does_not_change_the_price(self):
         """Geometry-independence: a route costs what it costs from here.
