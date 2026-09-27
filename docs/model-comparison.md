@@ -355,8 +355,8 @@ on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11) | Same formula (`smoke_speed.py:227`) |
-| **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1544–1545) | Same values (`smoke_speed.py:91–92`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
+| **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11) | Same formula (`smoke_speed.py:234`) |
+| **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1544–1545) | Same values (`smoke_speed.py:95–96`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
 | **Minimum speed** | `SMOKE_MIN_SPEED_FACTOR` (default 0.1, evac.f90:2154) as a factor of *v*0, or `SMOKE_MIN_SPEED`, which the code treats as a speed in m/s (`SMOKE_MIN_SPEED/HR%SPEED`, :8516) although the guide calls it a factor ([1] §8.7 p. 81). The visibility-based cutoff (`SMOKE_MIN_SPEED_VISIBILITY`, :8529–8536) is marked obsolete in the source ("obsolote feature ... it is not used if default SMOKE_MIN_SPEED_VISIBILITY is given", :8529-8530) and is inactive by default: the default 0.0 is clamped to 0.01 m, so it would act only above K = 300 /m (:1528, :2160-2161) | Configurable `min_speed_factor` (default 0.1) |
 | **Smoke input** | Soot density from FDS mesh converted to extinction via `K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6` (evac.f90:8522–8523) | Extinction coefficient K read directly from FDS `SOOT EXTINCTION COEFFICIENT` slice via fdsreader |
 | **Sampling geometry** | Local value at agent position on the evacuation mesh, at `HUMAN_SMOKE_HEIGHT` above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61) | Local value at agent position: nearest cell of the extinction slice closest to `--smoke-slice-height` (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)) |

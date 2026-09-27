@@ -30,7 +30,8 @@ determinism, and every deterministic transform against a closed form.
 - **Börger et al. (vismap / FDSVisMap)** — path-integrated Beer-Lambert
   extinction, Lambertian cosine correction, Bresenham occlusion, required
   visibility from geometry. (`materials/waypoint_based_visibility_summary.md`)
-- **Fridolf et al. (2016, 2019)** — walking speed in smoke, `v ∝ V/(V+2)`.
+- **Fridolf et al. (2018)** — walking speed in smoke,
+  `w = min(v₀, max(0.2, v₀ − 0.34(3 − V)))`.
 - **Frantzich & Nilsson (2003) / Lund** — linear `factor = 1 + βK/α`.
 - **Jin (1970)** — `V = C/K`.
 - **ISO 13571 / SFPE** — FED toxicity model (`pyfds_evac/core/fed.py`).
@@ -74,9 +75,9 @@ them directly into the model functions (bypassing `read_fds_data` /
 
 - **A1.1** F1, Lund: assert `factor == 1 + β·K₀/α` exactly (α=0.706,
   β=−0.057). Choose `K₀=0.706 ⇒ factor=0.943`.
-- **A1.2** F1, Fridolf: `V=c/K₀`, assert `factor == V/(V+2)` exactly.
+- **A1.2** F1, Fridolf: `V=c/K₀`, assert `v₀·factor == min(v₀, max(0.2, v₀ − 0.34(3 − V)))`.
 - **A1.3** Clamp edges: `K=0 ⇒ 1.0`; large `K` ⇒ `min_speed_factor` (Lund)
-  vs `→0` (Fridolf, no hard clamp) — verify the two laws differ as
+  vs `0.2/v₀` (Fridolf, absolute 0.2 m/s floor) — verify the two laws differ as
   documented.
 - **A1.4 (key)** F2, route cost: ray from `x=0` to `x=L`; assert sampled
   mean-K `== a·L/2`. This is the test that distinguishes the pipeline from

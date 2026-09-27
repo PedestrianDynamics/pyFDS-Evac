@@ -1,7 +1,8 @@
 """Speed factor against extinction: Frantzich–Nilsson (Lund) and the `fridolf` option.
 
-The `fridolf` option computes V/(V+2); its attribution to Fridolf et al.
-(2019) is unverified (issue #146), so the figure does not name it after them.
+The `fridolf` option is the additive law of Fridolf et al. (2018),
+w = min(v0, max(0.2, v0 - 0.34 (3 - V))) with V = C/K. Its factor w/v0
+depends on v0, so it is drawn at the default v0 = 1.25 m/s (VEL_MEAN).
 
 The curves are computed through the public API (``SmokeSpeedModel`` on a
 ``ConstantExtinctionField``), so the figure follows the code's defaults.
@@ -21,6 +22,7 @@ import seaborn as sns
 
 from pyfds_evac import ConstantExtinctionField, SmokeSpeedConfig, SmokeSpeedModel
 
+V0 = 1.25
 OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
 
 
@@ -29,7 +31,7 @@ def speed_factors(k_values, config):
     return np.array(
         [
             SmokeSpeedModel(ConstantExtinctionField(float(k)), config).speed_factor(
-                0.0, 0.0, 0.0
+                0.0, 0.0, 0.0, free_speed_m_per_s=V0
             )
             for k in k_values
         ]
@@ -66,7 +68,7 @@ def main():
         color=red,
         lw=2.0,
         ls="--",
-        label="fridolf option, C = 3 (reflective)",
+        label=f"fridolf option, v₀ = {V0:g} m/s, C = 3 (reflective)",
     )
     ax.plot(
         k,
@@ -74,7 +76,7 @@ def main():
         color=orange,
         lw=2.0,
         ls="-.",
-        label="fridolf option, C = 8 (emitting)",
+        label=f"fridolf option, v₀ = {V0:g} m/s, C = 8 (emitting)",
     )
     ax.axhline(fmin, color="grey", lw=0.8, ls=":", zorder=1)
     ax.axvline(ksat, color="grey", lw=0.8, ls=":", zorder=1)
@@ -94,14 +96,14 @@ def main():
         arrowprops=dict(arrowstyle="<->", color="dimgrey", lw=0.8),
     )
     ax.text(
-        k[i] + 0.2,
-        lund[i] + 0.04,
+        0.3,
+        frid3[i] - 0.12,
         f"largest gap {gap[i]:.2f} at K = {k[i]:.1f} m⁻¹\n"
         f"({lund[i]:.2f} vs {frid3[i]:.2f} with C = 3)",
         fontsize=8.5,
         color="dimgrey",
         ha="left",
-        va="bottom",
+        va="top",
     )
     ax.set_xlabel("extinction coefficient K [1/m]", color="dimgrey")
     ax.set_ylabel("speed factor v / v₀ [-]", color="dimgrey")

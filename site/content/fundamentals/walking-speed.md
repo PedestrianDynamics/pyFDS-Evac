@@ -353,6 +353,12 @@ $$
 
 Eq. 7 is a design rule, not a fit: the slope of Eq. 2 plus two thresholds
 chosen for conservatism (§3.3.2). Above 3 m, speed is taken as unaffected.
+The same rule appeared first in Fridolf, Nilsson, Frantzich, Ronchi and
+Arias (2018, pp. 4–5) as method 3, with *w* and *w*_smoke free in m/s and
+visibility *v* in m; their method 1 is the same with *w*_smoke free = 1 m/s.
+They call the reduction absolute, the same 0.34 m/s per metre for everyone,
+with an absolute floor of 0.2 m/s, and give no constant for turning *K* into
+visibility.
 
 {{< details title="Caveats on Fridolf et al.'s laws" closed="true" >}}
 **The visibility constant.** *A* is chosen for each data set from its
@@ -565,6 +571,9 @@ different Japanese title (煙中の視程について 第5報).
   transportation systems*. Tunnelling and Underground Space Technology,
   90, 28–41.
   [doi:10.1016/j.tust.2019.04.016](https://doi.org/10.1016/j.tust.2019.04.016)
+- Fridolf, K., Nilsson, D., Frantzich, H., Ronchi, E., & Arias, S. (2018).
+  *Walking speed in smoke: representation in life safety verifications*.
+  SFPE 2018, extended abstract. No DOI or public URL.
 - Purser, D. A. (2003). *ASET and RSET: addressing some issues in relation
   to occupant behaviour and tenability*. Fire Safety Science, 7, 91–102.
   [doi:10.3801/IAFSS.FSS.7-91](https://doi.org/10.3801/IAFSS.FSS.7-91)
