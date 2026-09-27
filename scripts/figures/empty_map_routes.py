@@ -1,15 +1,18 @@
-"""An empty map: one discovery agent that can read no sign, run and drawn.
+"""An empty map: one discovery agent that never reads a sign, run and drawn.
 
 A 30 x 30 m floor: a hall at the bottom, three rooms above it, a corridor on
-top with the only exit at its west end. One agent, familiarity 0, spawns in
-the hall. Sight is clear air (fdsvismap ray casting on the walkable polygon),
-so the exit sign is hidden by walls alone, and the script asserts that the
-agent's map at t = 0 holds nothing but its spawn.
+top. Two exits: one in the hall's south wall, whose sign faces out of the
+building, and one at the corridor's west end, whose sign faces down the
+corridor, behind the rooms' walls. One agent, familiarity 0, spawns in the
+east of the hall. Sight is clear air (fdsvismap ray casting on the walkable
+polygon), and the shaded cells are those from which the model reads a sign.
 
-Three candidate routes, one per door, are drawn in grey; the solid line is
-what ``run_scenario`` actually walks. The scene is built here in code, not
-read from ``assets/``: the talk's version was hand-drawn over a video frame
-and has no deck to re-run.
+The script asserts what the figure claims (issue #91): the agent's map holds
+the spawn and nothing else for the whole run, it never re-decides its route,
+no exit sign is legible from any point of its walk, and it still leaves by
+the exit geometrically nearest its start. The scene is built here in code,
+not read from ``assets/``: the talk's version was hand-drawn over a video
+frame and has no deck to re-run.
 
 Run from the repository root::
 
@@ -26,8 +29,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.colors import ListedColormap
 from matplotlib.lines import Line2D
-from shapely.geometry import box
+from matplotlib.patches import FancyArrowPatch, Patch
+from shapely.geometry import Point, box
 from shapely.ops import unary_union
 
 from pyfds_evac import RerouteConfig, VisibilityModel, load_scenario, run_scenario
@@ -52,12 +57,18 @@ TEXT = "dimgrey"
 SIZE = 30.0
 WALL_T = 0.4  # two cells at CELL_M, so no wall leaks sight
 CELL_M = 0.1
-Y_LOW, Y_HIGH, CORRIDOR_Y = 12.5, 25.0, 27.5
+SHADE_M = 0.2  # sampling of the drawn legible region
+Y_LOW, Y_HIGH = 12.5, 25.0
 # door gaps on both horizontal walls; the middle column is open end to end
 DOORS = {"C": (3.5, 6.0), "B": (7.5, 12.5), "A": (20.0, 22.5)}
 SIDE_DOOR = (17.5, 20.0)  # in both walls of the middle column
 SPAWN = (24.5, 6.5, 26.5, 8.5)
-EXIT_BOX = (0.2, 25.6, 1.0, 29.4)
+# exit polygon, sign position and bearing (degrees clockwise from north; the
+# sign is read from the side it faces)
+EXITS = {
+    "south": dict(box=(1.0, 0.2, 4.0, 1.0), sign=(2.5, 0.25), alpha=180),
+    "west": dict(box=(0.2, 25.6, 1.0, 29.4), sign=(0.25, 27.5), alpha=90),
+}
 SEED = 1
 
 
@@ -92,6 +103,14 @@ def write_deck(folder, walls):
         "distribution_mode": "by_number",
         "familiarity": 0.0,
     }
+    exits = {
+        name: {
+            "type": "polygon",
+            "coordinates": rect(*e["box"]),
+            "sign": {"x": e["sign"][0], "y": e["sign"][1], "alpha": e["alpha"], "c": 3},
+        }
+        for name, e in EXITS.items()
+    }
     cfg = {
         "project_version": "2.0",
         "config": {
@@ -104,7 +123,7 @@ def write_deck(folder, walls):
                 "baseSeed": SEED,
             }
         },
-        "exits": {"exit": {"type": "polygon", "coordinates": rect(*EXIT_BOX)}},
+        "exits": exits,
         "distributions": {
             "spawn": {
                 "type": "polygon",
@@ -120,8 +139,14 @@ def write_deck(folder, walls):
     (folder / "geometry.wkt").write_text(walkable.wkt)
 
 
+def legible_cells(vis, node_id):
+    """Boolean grid (rows y, cols x) of the cells that read *node_id*'s sign."""
+    c = np.arange(SHADE_M / 2, SIZE, SHADE_M)
+    return np.array([[vis.node_is_visible(0.0, x, y, node_id) for x in c] for y in c])
+
+
 def simulate(walls):
-    """Run the deck; return trajectory, map history and exit time."""
+    """Run the deck; return trajectory, map history, switches and sight."""
     folder = Path(tempfile.mkdtemp(prefix="empty_map_"))
     try:
         write_deck(folder, walls)
@@ -138,13 +163,24 @@ def simulate(walls):
             collect_cognitive_map_history=True,
         )
         traj = result.trajectory_dataframe().sort_values("frame")
-        history = list(result.cognitive_map_history or [])
+        xy = traj[["x", "y"]].to_numpy()
         out = dict(
-            xy=traj[["x", "y"]].to_numpy(),
+            xy=xy,
             t=traj["frame"].to_numpy() / result.frame_rate,
-            history=history,
+            history=list(result.cognitive_map_history or []),
+            switches=list(result.route_history or []),
             evac_time=result.evacuation_time,
             evacuated=result.agents_evacuated,
+            # every sampled position of the walk, asked of the same model
+            seen=sorted(
+                {
+                    name
+                    for x, y in xy
+                    for name in EXITS
+                    if vis.node_is_visible(0.0, x, y, name)
+                }
+            ),
+            legible={name: legible_cells(vis, name) for name in EXITS},
         )
         result.cleanup()
         return out
@@ -152,93 +188,108 @@ def simulate(walls):
         shutil.rmtree(folder, ignore_errors=True)
 
 
-def door_taken(xy):
-    """Letter of the door the walk crosses the hall wall through."""
-    i = int(np.argmax(xy[:, 1] > Y_LOW))
-    x = xy[i, 0]
-    return next((k for k, (a, b) in DOORS.items() if a <= x <= b), "?")
-
-
-def candidate_routes(start):
-    """Spawn -> door -> corridor -> exit, one polyline per door."""
-    ex = (EXIT_BOX[0] + EXIT_BOX[2]) / 2
-    routes = {}
-    for name, (a, b) in DOORS.items():
-        xd = (a + b) / 2
-        routes[name] = [start, (xd, Y_LOW), (xd, CORRIDOR_Y), (ex, CORRIDOR_Y)]
-    return routes
+def check_claims(run):
+    """Fail loudly if the run no longer shows an empty map (#91)."""
+    maps = {tuple(h["known_nodes"]) for h in run["history"]}
+    if maps != {("spawn",)}:
+        raise SystemExit(f"the map grew: {sorted(maps)}")
+    if run["switches"]:
+        raise SystemExit(f"the agent re-decided: {run['switches']}")
+    if run["seen"]:
+        raise SystemExit(f"signs legible from the walk: {run['seen']}")
+    if not run["evacuated"]:
+        raise SystemExit("the agent did not leave")
+    start, end = Point(*run["xy"][0]), Point(*run["xy"][-1])
+    polys = {name: box(*e["box"]) for name, e in EXITS.items()}
+    dist = {name: p.distance(start) for name, p in polys.items()}
+    taken = min(polys, key=lambda n: polys[n].distance(end))
+    nearest = min(dist, key=dist.get)
+    if taken != nearest:
+        raise SystemExit(f"left by {taken}, but {nearest} is nearest")
+    return taken, dist
 
 
 def draw_floor(ax, walls):
-    ax.add_patch(plt.Rectangle((0, 0), SIZE, SIZE, fc=FLOOR, ec=WALL, lw=1.6, zorder=0))
+    ax.add_patch(plt.Rectangle((0, 0), SIZE, SIZE, fc=FLOOR, ec="none", zorder=0))
     for w in walls:
         x0, y0, x1, y1 = w.bounds
-        ax.add_patch(plt.Rectangle((x0, y0), x1 - x0, y1 - y0, fc=WALL, lw=0))
-
-
-def draw_candidates(ax, routes):
-    for k, (name, pts) in enumerate(routes.items()):
-        # small vertical offsets keep the three corridor legs apart
-        dy = 0.7 * (k - 1)
-        xs, ys = zip(*pts)
-        ys = [ys[0], ys[1], ys[2] + dy, ys[3] + dy]
-        ax.plot(xs, ys, color=OPTION, lw=1.6, ls=(0, (4, 3)), zorder=2)
-        ax.text(
-            xs[1],
-            Y_LOW - 1.3,
-            name,
-            fontsize=9,
-            fontweight="bold",
-            color="white",
-            ha="center",
-            va="center",
-            zorder=6,
-            bbox=dict(boxstyle="circle,pad=0.25", fc=OPTION, ec="none"),
-        )
-
-
-def draw_nodes(ax, known_at_t0):
-    """Spawn node and exit box, filled when in the map at t = 0."""
-    sx = (SPAWN[0] + SPAWN[2]) / 2
-    spawn_known = "spawn" in known_at_t0
-    exit_known = "exit" in known_at_t0
-    ax.scatter(
-        sx,
-        SPAWN[1] - 0.9,
-        marker="^",
-        s=130,
-        fc=KNOWN if spawn_known else "white",
-        ec=KNOWN if spawn_known else UNKNOWN,
-        lw=1.6,
-        zorder=5,
-    )
-    x0, y0, x1, y1 = EXIT_BOX
+        ax.add_patch(plt.Rectangle((x0, y0), x1 - x0, y1 - y0, fc=WALL, lw=0, zorder=3))
     ax.add_patch(
-        plt.Rectangle(
-            (x0, y0),
-            x1 - x0,
-            y1 - y0,
-            fc=EXIT if exit_known else "white",
-            ec=KNOWN if exit_known else UNKNOWN,
-            lw=1.8,
-            ls="-" if exit_known else "--",
-            zorder=5,
-        )
+        plt.Rectangle((0, 0), SIZE, SIZE, fc="none", ec=WALL, lw=1.6, zorder=3)
     )
+
+
+def draw_legible(ax, masks):
+    """Cells from which any exit sign is legible: yellow, gold outline."""
+    union = np.logical_or.reduce(list(masks.values()))
+    ax.imshow(
+        np.where(union, 1.0, np.nan),
+        origin="lower",
+        extent=(0, SIZE, 0, SIZE),
+        cmap=ListedColormap([LEGIBLE]),
+        alpha=0.8,
+        interpolation="nearest",
+        zorder=1,
+    )
+    c = np.arange(SHADE_M / 2, SIZE, SHADE_M)
+    ax.contour(
+        c, c, union.astype(float), levels=[0.5], colors=LEGIBLE_EDGE, linewidths=0.8
+    )
+
+
+def draw_exits(ax, taken, dist):
+    """Exits: hollow and dashed (not in the map), sign plate and its facing."""
+    for name, e in EXITS.items():
+        x0, y0, x1, y1 = e["box"]
+        ax.add_patch(
+            plt.Rectangle(
+                (x0, y0),
+                x1 - x0,
+                y1 - y0,
+                fc="white",
+                ec=CHOSEN if name == taken else UNKNOWN,
+                lw=1.8,
+                ls="--",
+                zorder=5,
+            )
+        )
+        sx, sy = e["sign"]
+        a = np.deg2rad(e["alpha"])
+        ax.add_patch(
+            FancyArrowPatch(
+                (sx, sy),
+                (sx + 2.2 * np.sin(a), sy + 2.2 * np.cos(a)),
+                arrowstyle="-|>",
+                mutation_scale=12,
+                color=OPTION,
+                lw=1.8,
+                zorder=6,
+                clip_on=False,
+            )
+        )
+    label = dict(fontsize=8.5, color=TEXT, zorder=7)
     ax.text(
-        x1 + 0.5,
-        SIZE - 0.35,
-        "exit, not in the map",
-        fontsize=8.5,
-        color=TEXT,
+        4.4,
+        -0.3,
+        f"exit south, {dist['south']:.0f} m from the start\n"
+        "sign faces out of the building",
         ha="left",
         va="top",
-        zorder=6,
+        **label,
+    )
+    ax.text(
+        1.6,
+        29.2,
+        f"exit west, {dist['west']:.0f} m from the start\n"
+        "sign faces along the corridor",
+        ha="left",
+        va="top",
+        **label,
     )
 
 
 def main():
-    """Run the empty-map scene and draw it.
+    """Run the empty-map scene, check its claims and draw it.
 
     Saves
     -----
@@ -246,39 +297,26 @@ def main():
     """
     walls = build_walls()
     run = simulate(walls)
-    known_t0 = set(run["history"][0]["known_nodes"])
-    if known_t0 != {"spawn"}:
-        raise SystemExit(f"map at t = 0 is {sorted(known_t0)}, not the spawn alone")
+    taken, dist = check_claims(run)
     xy, t = run["xy"], run["t"]
-    learned = next(
-        (h["time_s"] for h in run["history"] if "exit" in h["known_nodes"]), None
-    )
     walked = float(np.linalg.norm(np.diff(xy, axis=0), axis=1).sum())
-    door = door_taken(xy)
+    print(
+        f"map = spawn only for {t[-1]:.1f} s, {len(run['switches'])} switches, "
+        f"left by {taken} at {run['evac_time']:.1f} s after {walked:.1f} m; "
+        f"start to exit: " + ", ".join(f"{k} {v:.1f} m" for k, v in dist.items())
+    )
 
     # --- Style Setup ---
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(6.4, 7.0), dpi=150)
 
     # --- Plot ---
+    draw_legible(ax, run["legible"])
     draw_floor(ax, walls)
-    draw_candidates(ax, candidate_routes(tuple(xy[0])))
+    draw_exits(ax, taken, dist)
     ax.plot(xy[:, 0], xy[:, 1], color=CHOSEN, lw=2.6, zorder=4)
-    if learned is not None:
-        i = int(np.searchsorted(t, learned))
-        ax.scatter(
-            *xy[i], marker="o", s=70, fc=LEGIBLE, ec=LEGIBLE_EDGE, lw=1.6, zorder=7
-        )
-        ax.annotate(
-            f"exit enters the map, t = {learned:.0f} s",
-            xy=xy[i],
-            xytext=(14.0, 22.3),
-            fontsize=8.5,
-            color=TEXT,
-            arrowprops=dict(arrowstyle="-", color=TEXT, lw=0.8),
-            zorder=8,
-        )
-    draw_nodes(ax, known_t0)
+    sx = (SPAWN[0] + SPAWN[2]) / 2
+    ax.scatter(sx, SPAWN[1] - 0.9, marker="^", s=130, fc=KNOWN, ec=KNOWN, zorder=5)
     ax.scatter(*xy[0], marker="*", s=260, fc=AGENT, ec="white", lw=0.8, zorder=8)
     ax.text(
         SIZE - 0.6,
@@ -293,7 +331,7 @@ def main():
     )
 
     ax.set_xlim(-0.5, SIZE + 0.5)
-    ax.set_ylim(-0.5, SIZE + 0.5)
+    ax.set_ylim(-3.0, SIZE + 0.5)
     ax.set_aspect("equal")
     # a floor plan has no data axes: grid, ticks and frame add nothing
     ax.axis("off")
@@ -310,7 +348,7 @@ def main():
     ax.text(
         0.0,
         1.02,
-        "familiarity 0, clear air, no sign legible from the spawn",
+        "familiarity 0, clear air, no sign legible anywhere on its path",
         transform=ax.transAxes,
         fontsize=9,
         color=TEXT,
@@ -319,18 +357,8 @@ def main():
     )
 
     handles = [
-        Line2D([0], [0], color=OPTION, lw=1.6, ls=(0, (4, 3)), label="candidate"),
         Line2D([0], [0], color=CHOSEN, lw=2.6, label="walked"),
-        Line2D(
-            [0],
-            [0],
-            marker="^",
-            color="w",
-            mfc=KNOWN,
-            mec=KNOWN,
-            ms=9,
-            label="known node",
-        ),
+        Patch(fc=LEGIBLE, ec=LEGIBLE_EDGE, alpha=0.8, label="a sign is legible"),
         Line2D(
             [0],
             [0],
@@ -340,18 +368,27 @@ def main():
             mec=UNKNOWN,
             mew=1.6,
             ms=9,
-            label="unknown node",
+            label="exit, not in the map",
         ),
         Line2D(
             [0],
             [0],
-            marker="o",
+            color=OPTION,
+            lw=1.8,
+            marker=">",
+            ms=6,
+            markevery=[1],
+            label="way a sign faces",
+        ),
+        Line2D(
+            [0],
+            [0],
+            marker="^",
             color="w",
-            mfc=LEGIBLE,
-            mec=LEGIBLE_EDGE,
-            mew=1.6,
-            ms=8,
-            label="sign read",
+            mfc=KNOWN,
+            mec=KNOWN,
+            ms=9,
+            label="node in the map",
         ),
         Line2D([0], [0], marker="*", color="w", mfc=AGENT, ms=13, label="agent"),
     ]
@@ -371,16 +408,12 @@ def main():
     )
     sns.despine(fig=fig, left=True, bottom=True)
 
-    outcome = (
-        f"walks {walked:.0f} m through door {door} and exits at "
-        f"{run['evac_time']:.0f} s"
-        if run["evacuated"]
-        else f"walks {walked:.0f} m and does not exit in {t[-1]:.0f} s"
-    )
     ax.text(
         0.5,
         -0.13,
-        f"The map at t = 0 holds only the spawn,\nyet the agent {outcome}.",
+        f"The map holds only the spawn for all {t[-1]:.0f} s and the agent never "
+        f"re-decides,\nyet it walks {walked:.0f} m to the nearest exit "
+        f"({taken}) and is out at {run['evac_time']:.0f} s.",
         transform=ax.transAxes,
         fontsize=8.5,
         color=TEXT,
