@@ -74,8 +74,13 @@ conventions; what each one proves, and where that proof is checked, is below.
   delete the expansion rules and acquisition still appears to work for any agent
   starting inside the window. A third test closes the loop to routing: a
   remembered-but-illegible exit must still be routable. `scripts/generate_cognitive_map_states.py` renders the
-  three states (unknown / legible now / remembered), and the amber band is the
-  memory made visible. Checked by `tests/test_cognitive_map_memory.py`.
+  three states (unknown / legible now / remembered, the hatched exit being the
+  memory made visible) from live `rank_routes` probes. The agent takes the side
+  exit from `y = 14` to `24` and the end exit from `y = 26` (the two are equally
+  far at `y ≈ 25.4`); walking back to `y = 10` with its map, it takes the side
+  exit where it took the end exit on the way up. In the full run each agent
+  switches once, `E_end → E_side` at t = 5–17 s, and egress takes 21.6 s.
+  Checked by `tests/test_cognitive_map_memory.py`, which pins the probe outcomes.
 - **FIC vs FED Speed**: 4x50 m sealed corridor, 30 agents, one exit. The gas is
   *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 10 ppm) rather
   than burned, so concentration is constant in space and time and the only
