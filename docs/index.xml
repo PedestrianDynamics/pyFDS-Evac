@@ -1912,9 +1912,11 @@ constant &lt;em>C&lt;/em>.&lt;/p>
 &lt;h2>The equation as published&lt;span class="hx-absolute -hx-mt-20" id="the-equation-as-published">&lt;/span>
 &lt;a href="#the-equation-as-published" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Jin found that, in the range of visibilities from about 5 to 15 m, the
 product of the visibility at the obscuration threshold and the smoke density
-was almost constant (Jin 1978, as reported by Yamada and Akizuki 2016,
-Society of Fire Protection Engineers (SFPE) Handbook Ch. 61, Eq. 61.4 and
-Fig. 61.8). Ch. 61
+was almost constant (Jin and Yamada 1985, pp. 80–81 and Fig. 1, citing
+Jin 1978; reproduced by Yamada and Akizuki 2016, Society of Fire
+Protection Engineers (SFPE) Handbook Ch. 61, Eq. 61.4 and Fig. 61.8). Jin
+and Yamada define \(C_s\) with the natural logarithm,
+\(C_s = (2.3/\ell)\log_{10}(I_0/I)\) (p. 80). Ch. 61
 writes it with \(C_s\) [1/m] for the extinction coefficient:&lt;/p>
 $$
 V = k\,\frac{1}{C_s} \qquad \text{(Eq. 61.4)}
@@ -1948,8 +1950,17 @@ in white smoke of the same density. For reading the words on a sign, the
 constant product holds only in non-irritant smoke. In irritant smoke,
 legibility falls sharply above a certain density, and above about
 0.5 1/m subjects could keep their eyes open only briefly (Ch. 61,
-Fig. 61.11, from the corridor experiments of Jin 1978 and Jin and Yamada
-1985).&lt;/p>
+Fig. 61.11; Jin and Yamada 1985, Fig. 2). In our inference the primary is
+Jin (1972): ten observers walked a 20 m smoke-filled corridor towards a lit
+EXIT sign. For merely seeing the sign, σV ≈ const held in both irritant
+and non-irritant smoke; for telling its colour or reading its letters, the
+visibility in irritant smoke at 0.5 1/m fell, by &amp;ldquo;more than 30 %&amp;rdquo; in the
+English abstract (p. 11) and to &amp;ldquo;a fraction&amp;rdquo; in the Japanese text (p. 14,
+our translation), compared with non-irritant smoke (Figs. 3–5). Normal
+lighting (about 80 lx in the corridor, sign lit by a 10 W fluorescent
+lamp) and a blackout (0.1–0.5 lx, sign lit by three 2.5 V tungsten bulbs)
+gave almost the same visibility (pp. 11, 13, 15); the comparison changes
+corridor light and sign luminance together.&lt;/p>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The law describes a straight, unobstructed line of sight through uniform
 smoke to one object. It does not describe how far a person can see around
@@ -1968,6 +1979,11 @@ give
 &lt;a href="https://github.com/tkorhon1/FDS-Evac-Guide" target="_blank" rel="noopener">FDS+Evac guide&lt;/a>
 gives
 9, 135–155.&lt;/li>
+&lt;li>Jin, T. (1972). &lt;em>Visibility through fire smoke (III)&lt;/em> [煙中の見透し距離に
+ついて (III)]. Bulletin of Japanese Association of Fire Science and
+Engineering, 22(1–2), 11–15. In Japanese with an English abstract.
+&lt;a href="https://doi.org/10.11196/kasai.22.11" target="_blank" rel="noopener">doi:10.11196/kasai.22.11&lt;/a>
+&lt;/li>
 &lt;li>Jin, T., &amp;amp; Yamada, T. (1985). &lt;em>Irritating effects of fire smoke on
 visibility&lt;/em>. Fire Science and Technology, 5(1), 79–90.
 &lt;a href="https://doi.org/10.3210/fst.5.79" target="_blank" rel="noopener">doi:10.3210/fst.5.79&lt;/a>
@@ -2374,49 +2390,278 @@ extinction coefficient &lt;em>K&lt;/em> [1/m] (see &lt;a href="https://pedestria
 The data sets were recorded under different conditions and are not
 interchangeable (Ronchi et al. 2013).&lt;/p>
 &lt;p>Symbols follow the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/concepts/#notation">notation table&lt;/a>
-. Each
-section below keeps its source&amp;rsquo;s own notation: Korhonen&amp;rsquo;s \(K_s\) and
-\(v_i^0\) for &lt;em>K&lt;/em> and \(v_0\); Purser&amp;rsquo;s \(\alpha_k\), which is the
-extinction coefficient &lt;em>K&lt;/em>, not the coefficient \(\alpha\); and Fridolf et
-al.&amp;rsquo;s &lt;em>w&lt;/em> for walking speed, &lt;em>x&lt;/em> for visibility (&lt;em>S&lt;/em> in the table) and &lt;em>A&lt;/em>
-for the visibility constant (&lt;em>C&lt;/em>).&lt;/p>
+; each
+section keeps its source&amp;rsquo;s notation: Korhonen&amp;rsquo;s \(K_s\), \(v_i^0\);
+Purser&amp;rsquo;s \(\alpha_k\) (= &lt;em>K&lt;/em>, not the coefficient \(\alpha\)); Fridolf et
+al.&amp;rsquo;s &lt;em>w&lt;/em>, &lt;em>x&lt;/em> (&lt;em>S&lt;/em> in the notation table) and &lt;em>A&lt;/em>, which plays the role of
+&lt;em>C&lt;/em> with its own values.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Law&lt;/th>
+&lt;th>Variable&lt;/th>
+&lt;th>Equation&lt;/th>
+&lt;th>Data range&lt;/th>
+&lt;th>Reduction&lt;/th>
+&lt;th>Smoke&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Jin, non-irritant (Purser&amp;rsquo;s fit)&lt;/td>
+&lt;td>&lt;em>K&lt;/em>&lt;/td>
+&lt;td>v = 1.0573 − 0.4326 K&lt;/td>
+&lt;td>points 0.5–1.13 1/m (Purser: 0.2–1.13)&lt;/td>
+&lt;td>absolute&lt;/td>
+&lt;td>kerosene, less irritant&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Jin, irritant (Purser&amp;rsquo;s fit)&lt;/td>
+&lt;td>&lt;em>K&lt;/em>&lt;/td>
+&lt;td>v = 1.1517 − 0.9578 K&lt;/td>
+&lt;td>points 0.32–0.47 1/m (Purser: 0.32–0.5)&lt;/td>
+&lt;td>absolute&lt;/td>
+&lt;td>wood cribs, highly irritant&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Purser 2003, fit to Jin, non-irritant&lt;/td>
+&lt;td>OD/m (K ≈ 2.303 OD/m)&lt;/td>
+&lt;td>F = 1.236 − 1.738 OD/m&lt;/td>
+&lt;td>Purser&amp;rsquo;s stated range OD/m 0.13–0.55 (K ≈ 0.30–1.27 1/m); Jin&amp;rsquo;s data K ≈ 0.5–1.13 1/m&lt;/td>
+&lt;td>fractional&lt;/td>
+&lt;td>non-irritant&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Frantzich–Nilsson, Eq. 3&lt;/td>
+&lt;td>&lt;em>K&lt;/em>&lt;/td>
+&lt;td>v = 0.706 − 0.057 K&lt;/td>
+&lt;td>1.9–7.4 1/m&lt;/td>
+&lt;td>absolute&lt;/td>
+&lt;td>artificial, mild (acetic acid)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>FDS+Evac, Eq. 11&lt;/td>
+&lt;td>&lt;em>K&lt;/em>&lt;/td>
+&lt;td>v = max(0.1 v₀, v₀ (1 − 0.057 K / 0.706))&lt;/td>
+&lt;td>as Frantzich–Nilsson&lt;/td>
+&lt;td>fractional&lt;/td>
+&lt;td>as Frantzich–Nilsson&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Purser, Eq. 63.10&lt;/td>
+&lt;td>&lt;em>K&lt;/em>&lt;/td>
+&lt;td>W = −0.1364 ln K + 0.6423&lt;/td>
+&lt;td>0.32–0.5 and 1.9–7.5 1/m&lt;/td>
+&lt;td>absolute&lt;/td>
+&lt;td>pooled, &amp;ldquo;moderately irritant&amp;rdquo;&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Fridolf et al., Eq. 2&lt;/td>
+&lt;td>&lt;em>x&lt;/em> = &lt;em>A&lt;/em>/&lt;em>K&lt;/em>&lt;/td>
+&lt;td>w = 0.34 x + 0.31&lt;/td>
+&lt;td>x ≈ 0.3–3 m&lt;/td>
+&lt;td>absolute&lt;/td>
+&lt;td>mostly non-irritant&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Fridolf et al., Eq. 7&lt;/td>
+&lt;td>&lt;em>x&lt;/em>&lt;/td>
+&lt;td>w = min(w_sf, max(0.2, w_sf − 0.34 (3 − x)))&lt;/td>
+&lt;td>design rule&lt;/td>
+&lt;td>both&lt;/td>
+&lt;td>as Eq. 2&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
 &lt;h2>Jin: irritant and non-irritant smoke&lt;span class="hx-absolute -hx-mt-20" id="jin-irritant-and-non-irritant-smoke">&lt;/span>
-&lt;a href="#jin-irritant-and-non-irritant-smoke" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Jin&amp;rsquo;s subjects walked along a 20 m corridor filled with irritant white smoke
-(burning wood cribs) or less irritant black smoke (burning kerosene)
-(Yamada and Akizuki 2016, Society of Fire Protection Engineers (SFPE)
-Handbook Ch. 61, Fig. 61.22, citing Jin 1978 and Jin and Yamada 1985; see
-also Jin 1997). In irritant smoke the speed fell from about 1.0 to 0.3 m/s
-as &lt;em>K&lt;/em> rose from 0.1 to 0.5 1/m, and subjects walked zigzag or along the
-wall because they could not keep their eyes open. In non-irritant smoke it
-fell from about 1.0 to 0.5 m/s over &lt;em>K&lt;/em> = 0.2 to 1.0 1/m (Ronchi et al.
-2013, p. 414 and Fig. 1). At high densities subjects moved at about
-0.3 m/s, as if in darkness (Purser and McAllister 2016, Ch. 63,
-pp. 2340–2341).&lt;/p>
+&lt;a href="#jin-irritant-and-non-irritant-smoke" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Jin (1976, FRI Report No. 42, pp. 12–15) had ten men aged 23–37 walk (one
+at a time, in our reading) along a 20 m corridor filled with highly irritant white
+smoke (burning wood cribs) or less irritant black smoke (burning
+kerosene). Report Fig. 2 plots speed against &lt;em>K&lt;/em> [1/m]: non-irritant
+points at &lt;em>K&lt;/em> ≈ 0.5–1.13 1/m, irritant points at 0.32–0.47 1/m, with
+trend lines but no equation. In irritant smoke the speed dropped sharply,
+and subjects walked zigzag or along the wall because tears ran too heavily
+to see (pp. 14–15).&lt;/p>
+&lt;p>Purser and McAllister (2016, Ch. 63) replot Jin&amp;rsquo;s data in their Fig. 63.16
+and fit straight lines to them (legend), over a stated &lt;em>K&lt;/em> = 0.2–1.13 1/m
+(non-irritant) and 0.32–0.5 1/m (irritant) (p. 2339):&lt;/p>
+$$
+v = 1.0573 - 0.4326\,K \quad (\text{non-irritant},\ R^2 = 0.27),
+\qquad
+v = 1.1517 - 0.9578\,K \quad (\text{irritant},\ R^2 = 0.035).
+$$&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Jin&amp;rsquo;s data: sources, ranges, darkness and participants&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>&lt;strong>Setup.&lt;/strong> Subjects wore no air masks and waited in a normally lit room
+before entering (text below Table 1, p. 13). The corridor was lit (about
+80 lx at the floor) or blacked out (0.1–0.5 lx from the sign and the
+meters), and the two gave the same speeds (p. 15). In the blackout runs the
+sign also switched from a 10 W fluorescent lamp to three 2.5 V tungsten
+bulbs (Jin 1972, abstract and p. 13), so the comparison changes corridor
+light and sign luminance together. Speed came from a wire each subject
+unwound from a reel, averaged over the whole corridor including stops
+(pp. 12, 15); &lt;em>K&lt;/em> came from two 4 m-path and one 1 m-path light meters
+1.5 m above the floor (p. 13).&lt;/p>
+&lt;p>&lt;strong>Scatter.&lt;/strong> The irritant fit explains almost none of the scatter: at an
+average &lt;em>K&lt;/em> = 0.42 1/m the speeds ranged from 0.37 to 1.1 m/s, mean
+0.75 m/s (standard deviation (SD) 0.21). In non-irritant smoke, at an
+average &lt;em>K&lt;/em> = 0.73 1/m, the mean was 0.74 m/s (SD 0.17) (Ch. 63,
+pp. 2339–2340).&lt;/p>
+&lt;p>&lt;strong>Ranges.&lt;/strong> Report Fig. 2 has no non-irritant point below about 0.5 1/m;
+Jin (1997, Fig. 3) redraws the same data. Purser and McAllister&amp;rsquo;s
+non-irritant point at &lt;em>K&lt;/em> ≈ 0.2 1/m (about 1.1 m/s) sits, in our reading,
+at the start of Jin&amp;rsquo;s drawn non-irritant trend line, not on a measured
+point, and their replotted speeds lie a few hundredths of a m/s below
+Jin&amp;rsquo;s. Their stated range 0.2–1.13 1/m is therefore that of the trend line;
+Jin&amp;rsquo;s points cover about 0.5–1.13 1/m. In report Fig. 2 the irritant
+trend line starts near 0.30 1/m and stops near 0.47 m/s, so Ronchi et
+al.&amp;rsquo;s &amp;ldquo;1.0 to 0.3 m/s as &lt;em>K&lt;/em> rose from 0.1 to 0.5 1/m&amp;rdquo; (p. 414) does not
+follow it; in our inference it follows Jin (1997, Fig. 3), where the
+non-irritant curve starts near 0.1 1/m and the irritant dotted line falls
+towards zero.&lt;/p>
+&lt;p>&lt;strong>Darkness.&lt;/strong> The 0.3 m/s is not a measurement in this experiment. Jin
+writes that as smoke thickens &amp;ldquo;the condition becomes very much like
+walking in darkness (0.3–0.7 m/s)&amp;rdquo;, citing Togawa (1969) for that range
+(report p. 14), and calls 0.3 m/s &amp;ldquo;the speed in darkness shown by a
+horizontal broken line in Fig. 2&amp;rdquo;, without a citation (p. 17); tying the
+0.3 m/s line to Togawa is our inference. Jin takes the density at which
+the average speed slows to 0.3 m/s as the maximum for people familiar with
+the building, &amp;ldquo;approximately 0.5/m–1.2/m&amp;rdquo; (p. 17). No non-irritant point
+in Fig. 2 is below about 0.45 m/s, so the 1.2 1/m end rests on the trend
+line extended (our reading). In our inference, Ch. 63&amp;rsquo;s &amp;ldquo;at an extinction
+coefficient of 1.15 … approximately 0.3 m/s&amp;rdquo; (p. 2339) and &amp;ldquo;has been
+shown&amp;rdquo; (p. 2413), Ronchi et al. (p. 415) and Purser (2003, p. 98) all go
+back to this reference line; the 1.15 1/m itself is not in the report
+(pp. 12–18). Ch. 63 pairs
+&lt;em>K&lt;/em> 1.15 with OD/m 0.55 in its prose but with OD/m 0.5 in Table 63.5 on the
+same page; only 0.5 is consistent with base 10.&lt;/p>
+&lt;p>&lt;strong>Allowable smoke density.&lt;/strong> Two routes lead to Jin&amp;rsquo;s conclusion. From
+the minimum visibility proposed by others (3–5 m if familiar, 15–20 m if
+not) and the rule &amp;ldquo;Visibility (m) × Extinction coefficient ≈ 2&amp;rdquo; (p. 17,
+citing Jin 1971, FRI Report 33), Table 3 gives 0.4–0.7 1/m for familiar
+people and 0.1 1/m for strangers. From the walks, the density that slows
+the average speed to 0.3 m/s gives 0.5–1.2 1/m for familiar people, and
+the density below which irritancy does not affect speed gives 0.2–0.3 1/m
+for strangers (p. 17). The conclusion merges the two: about 0.4–1.2 1/m
+for familiar people and 0.1–0.3 1/m for strangers (p. 18).&lt;/p>
+&lt;p>&lt;strong>Irritant smoke.&lt;/strong> The report (p. 13) and Jin (1972, p. 12, Japanese
+text, our translation) describe burning wood cribs with very narrow
+spacing; the English abstract of Jin (1972, p. 11) calls the same smoke
+&amp;ldquo;generated from smoldering wood (nearly white smoke)&amp;rdquo;. Purser&amp;rsquo;s &amp;ldquo;smoke from
+non-flaming wood&amp;rdquo; (2003, p. 98) matches that abstract; Ch. 63&amp;rsquo;s &amp;ldquo;heating
+wood chippings&amp;rdquo; (p. 2339) may, as our inference, mix it up with the
+wood-chip furnace smoke of Jin and Yamada (1985, 1989).&lt;/p>
+&lt;p>&lt;strong>Source chain.&lt;/strong> FRI Report No. 42 (September 1976, p. 12) states that the
+distance at which the sign became visible was recorded &amp;ldquo;and at the same
+time the speed at which each subject managed to walk&amp;rdquo;, citing ref. 1, Jin
+(1972); Jin (1972) used the same corridor and the same ten observers (its
+Table 1 is identical) and reports the sign visibility. Jin and Yamada
+(1985, §3 and Fig. 3, p. 82) reprint the walking data as &amp;ldquo;an example data
+of the experiment … conducted before&amp;rdquo;, without a citation for the figure;
+their ref. [5], Jin (1978), is attached to the corridor-task sentence on
+p. 81. Jin (1997, §1.3 and Fig. 3) repeats that section almost word for
+word and cites it as ref. [2], with pages 79–89; the paper&amp;rsquo;s header and
+Crossref give 79–90, and the scan ends at p. 89.
+Purser (2003) dates Report No. 42 1975; the cover says 1976. Fridolf et
+al. (2019) name the study Jin 1976 (Fig. 1 legend), Jin 1978/1997
+(§3.2.1) and Jin 1979 (Table 2).&lt;/p>
+&lt;p>&lt;strong>Participants.&lt;/strong> Ronchi et al. (p. 414) report 17 women and 14 men aged 20
+to 51. That is the population of Jin and Yamada&amp;rsquo;s 11 m corridor study of
+emotional instability (Jin and Yamada 1989, &amp;ldquo;Subjects&amp;rdquo;, p. 513; Jin 1997,
+§2.2). The walking study had ten men aged 23–37 (report Table 1), as
+Fridolf et al. (2019, Table 2) state.&lt;/p>
+&lt;p>&lt;strong>A third data set.&lt;/strong> Jin and Yamada (1989) also measured walking speed
+against &lt;em>K&lt;/em> (Fig. 7, p. 517), with smoke from smouldering Japanese cedar
+crib chips in an electric furnace, set to 1.2 1/m and decaying to about
+0.1 1/m over 30 minutes (p. 512, &amp;ldquo;Experimental condition of the
+corridor&amp;rdquo;), under radiant heat. The subjects breathed through a 16-layer
+towel that removed about 90 % of the smoke and lessened its irritation
+(pp. 513, 517), so these data do not give a law for unprotected walkers.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;h2>Purser 2003: a fractional law fitted to Jin&lt;span class="hx-absolute -hx-mt-20" id="purser-2003-a-fractional-law-fitted-to-jin">&lt;/span>
+&lt;a href="#purser-2003-a-fractional-law-fitted-to-jin" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser (2003, p. 93 and pp. 98–99, Fig. 1) fitted &amp;ldquo;a curve directly to
+Jin&amp;rsquo;s data&amp;rdquo; on non-irritant smoke (refs. 7 and 15: Jin&amp;rsquo;s FRI Report No. 42,
+which he dates 1975, and Purser&amp;rsquo;s own 2001 paper &amp;ldquo;Human Tenability&amp;rdquo;) with a
+fraction &lt;em>F&lt;/em> of the unexposed walking speed:&lt;/p>
+$$
+F = -1.738\;\mathrm{OD/m} + 1.236, \qquad 0.13 \le \mathrm{OD/m} \le 0.55,
+$$&lt;p>with normal speed below OD/m = 0.13 and, above 0.55, speed &amp;ldquo;as in darkness
+at 0.3 m/s … since it is still possible to move at this speed in total
+darkness&amp;rdquo;. With &lt;em>K&lt;/em> = ln 10 · OD/m the stated range is &lt;em>K&lt;/em> ≈
+0.30–1.27 1/m (our conversion), but Jin&amp;rsquo;s non-irritant points span only
+about 0.5–1.13 1/m (OD/m 0.22–0.49): &lt;em>K&lt;/em> 0.30 lies below every
+non-irritant point. The 0.3 m/s floor is Jin&amp;rsquo;s reference line for walking
+in darkness, not a measured point (Jin 1976, pp. 14, 17).&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Caveats on Purser&amp;rsquo;s 2003 law&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>&lt;strong>Units.&lt;/strong> Purser does not define OD/m; Ch. 63 defines it as
+log₁₀(&lt;em>I&lt;/em>₀/&lt;em>I&lt;/em>) over 1 m (p. 2413). Jin and Yamada (1985, p. 80,
+footnote) define the extinction coefficient with the natural log; applying
+that definition to the 1976 data is our inference, hence the factor ln 10.&lt;/p>
+&lt;p>&lt;strong>Range.&lt;/strong> The upper end, OD/m 0.55 (&lt;em>K&lt;/em> ≈ 1.27 1/m), is close to the top
+of Jin&amp;rsquo;s &amp;ldquo;approximately 0.5/m–1.2/m&amp;rdquo; (p. 17) but matches neither Jin&amp;rsquo;s 1.2
+(OD/m 0.52) nor Ch. 63&amp;rsquo;s 1.15 (OD/m 0.50); in our inference it comes from
+Ch. 63&amp;rsquo;s prose pairing of 1.15 with OD/m 0.55 (p. 2339). It lies beyond
+Jin&amp;rsquo;s measured points.&lt;/p>
+&lt;p>&lt;strong>Fit.&lt;/strong> No fit quality or number of points is given, and the squares in
+Fig. 1 lie exactly on the line (1.010, 0.888, 0.715, 0.541, 0.454, 0.280
+at OD/m 0.13–0.55), so Fig. 1 shows the fitted line, not Jin&amp;rsquo;s points.&lt;/p>
+&lt;p>&lt;strong>Floor.&lt;/strong> It is written as an absolute 0.3 m/s (0.25 of the 1.2 m/s
+unexposed speed that Ch. 63 uses; FRI Report No. 42 gives no such value),
+while
+the line reaches 0.28 at OD/m 0.55 and Fig. 1 shows about 0.27.&lt;/p>
+&lt;/div>
+&lt;/details>
 &lt;h2>Frantzich and Nilsson: a linear regression in dense smoke&lt;span class="hx-absolute -hx-mt-20" id="frantzich-and-nilsson-a-linear-regression-in-dense-smoke">&lt;/span>
 &lt;a href="#frantzich-and-nilsson-a-linear-regression-in-dense-smoke" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Frantzich and Nilsson (2003, Lund report 3126) sent 46 young volunteers one
 at a time through a 36.75 m tunnel filled with artificial smoke made
-irritant with acetic acid, at &lt;em>K&lt;/em> ≈ 2–7 1/m (§3.2). For the 32 runs with
-the lighting on, a linear regression (report Eq. 3, Table D2, model 1) gave
-the &lt;strong>absolute&lt;/strong> speed&lt;/p>
+irritating with acetic acid. For the 32 runs with the lighting on, a linear
+regression (report Eq. 3, Table D2, model 1) gave the &lt;strong>absolute&lt;/strong> speed&lt;/p>
 $$
-v = \alpha + \beta K, \qquad \alpha = 0.706~\mathrm{m/s}\;(\text{s.d. } 0.069),\quad
-\beta = -0.057~\mathrm{m^2/s}\;(\text{s.d. } 0.015),
-$$&lt;p>with \(R^2\) = 0.342.&lt;/p>
+v = \alpha + \beta K, \qquad \alpha = 0.706~\mathrm{m/s}\;(\text{s.e. } 0.069),\quad
+\beta = -0.057~\mathrm{m^2/s}\;(\text{s.e. } 0.015),
+$$&lt;p>with \(R^2\) = 0.342 (Table D3); the bracketed values are standard errors
+of the coefficients, not the spread between people. The lit runs cover
+&lt;em>K&lt;/em> ≈ 1.9–7.4 1/m (Fig. 9).&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">More on the Frantzich–Nilsson data&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-The participants were 30 men and 16 women, mean age about 22, mostly
-students; the tunnel was 5 m wide. Their comparison with Jin gives the
-smoke range as about 2 to 8 1/m. With the lighting off (12 observations)
-the slope was not significantly different from zero. A second model with
-the share of the route walked along the wall fitted better (adjusted
-\(R^2\) 0.416 against 0.320): walking along the wall raised the speed. The
-95 % prediction interval at &lt;em>K&lt;/em> = 4 1/m was about 0.2 to 0.7 m/s, and the
-authors state that a randomly chosen person in dense smoke (&lt;em>K&lt;/em> = 8 1/m)
-could walk at anything between 0 and 0.6 m/s. The participants were young
-and fit, so the authors expect a real population to do worse.
+&lt;p>&lt;strong>Participants.&lt;/strong> 30 men and 16 women, mean age about 22, mostly students
+(Table 1). The 32 lit runs pool four wayfinding scenarios, 1–4 in Table 3.&lt;/p>
+&lt;p>&lt;strong>Measurement.&lt;/strong> &lt;em>K&lt;/em> is the mean of two laser extinction meters (670 nm,
+1 m path, 2.0 m above the floor), averaged over each person&amp;rsquo;s time in the
+tunnel (§2.5.1, App. D). The walking speed is the distance each person
+actually walked, measured from the video on the tunnel plan, divided by the
+time in the tunnel, stops included (§3.3.1). The speed over the
+straight-line distance to the chosen exit (the &amp;ldquo;gross speed&amp;rdquo;, Fig. 12) was
+on average 0.88 of it (SD 0.09; Fig. 11). Measured speeds ranged from 0.2 to
+0.9 m/s (§3.3.1), although the lit points in Fig. 9 reach only about
+0.76 m/s.&lt;/p>
+&lt;p>&lt;strong>Smoke and light.&lt;/strong> The acetic acid concentration was 10–15 ppm (§2.3).
+Fridolf et al. (2019, Table 2) call the smoke &amp;ldquo;semi-irritant&amp;rdquo;, and Ronchi et
+al. (2013, p. 421) call the irritation much less severe than in Jin&amp;rsquo;s
+experiments. It follows, as our inference, that the regression already
+includes the effect of this mild irritancy. The ceiling lighting gave
+2–21 lx without smoke and 0–8 lx with smoke (§2.2).&lt;/p>
+&lt;p>&lt;strong>Range and scatter.&lt;/strong> The report&amp;rsquo;s text gives &lt;em>K&lt;/em> ≈ 2–7 1/m (§3.2).
+The 95 % prediction interval at &lt;em>K&lt;/em> = 4 1/m is about 0.2–0.7 m/s
+(§3.3.2); adjusted \(R^2\) is 0.320.&lt;/p>
+&lt;p>&lt;strong>Other models.&lt;/strong> With the lighting off (12 runs) the slope was not
+significantly different from zero (Table D1). A second model with the share
+of the route walked along the wall fitted better (Eq. 4, Table D2 model 2:
+α = 0.692 m/s, β₁ = −0.073 m²/s, β₂ = 0.139 m/s per unit share; adjusted
+\(R^2\) 0.416 against 0.320): walking along the wall raised the speed. For
+dense smoke (&lt;em>K&lt;/em> = 8 1/m) the authors state that a randomly chosen person
+could walk at anything between 0 and 0.6 m/s (§5), and expect a real
+population to do worse than their young, fit participants (§3.1.1).&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h2>The fractional form is FDS+Evac&amp;rsquo;s normalisation&lt;span class="hx-absolute -hx-mt-20" id="the-fractional-form-is-fdsevacs-normalisation">&lt;/span>
@@ -2426,64 +2671,301 @@ unimpeded speed \(v_i^0\) by the same factor (Korhonen 2021, Eq. 11):&lt;/p>
 $$
 v_i^0(K_s) = \max\!\left(v^0_{i,\min},\; v_i^0\left(1 + \frac{\beta}{\alpha}K_s\right)\right),
 \qquad v^0_{i,\min} = 0.1\,v_i^0 \text{ by default.}
-$$&lt;p>The factor divides the regression by its intercept, 0.706 m/s, an
-extrapolation to &lt;em>K&lt;/em> = 0 from data at &lt;em>K&lt;/em> ≈ 2–8 1/m, not a measured free
+$$&lt;p>The divisor 0.706 m/s is an extrapolation to &lt;em>K&lt;/em> = 0, not a measured free
 walking speed. Ronchi et al. (2013) call the two readings fractional and
-absolute reductions, and show that the same model can give different
-evacuation times depending on the data set and reading chosen.&lt;/p>
+absolute, and show that they give different evacuation times.&lt;/p>
 &lt;h2>Purser: a logarithmic fit for irritant smoke&lt;span class="hx-absolute -hx-mt-20" id="purser-a-logarithmic-fit-for-irritant-smoke">&lt;/span>
-&lt;a href="#purser-a-logarithmic-fit-for-irritant-smoke" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>For able-bodied occupants in moderately irritant smoke, Purser and
-McAllister (2016, Ch. 63) give an average speed, with a population
-standard deviation of 0.157 m/s (p. 2414),&lt;/p>
+&lt;a href="#purser-a-logarithmic-fit-for-irritant-smoke" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2016, Ch. 63, p. 2341) pooled Jin&amp;rsquo;s irritant data
+with Frantzich and Nilsson&amp;rsquo;s and fitted a logarithm, which they suggest for
+a simple, deterministic and most conservative estimate of the average
+walking speed in moderately irritant smoke:&lt;/p>
 $$
 W_{\mathrm{smoke}}~[\mathrm{m/s}] = -0.1364\,\ln \alpha_k + 0.6423 \qquad \text{(Eq. 63.10)}
-$$&lt;p>where \(\alpha_k\) [1/m] is the extinction coefficient.&lt;/p>
-&lt;h2>Fridolf et al. 2019: speed as a function of visibility&lt;span class="hx-absolute -hx-mt-20" id="fridolf-et-al-2019-speed-as-a-function-of-visibility">&lt;/span>
-&lt;a href="#fridolf-et-al-2019-speed-as-a-function-of-visibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Fridolf, Ronchi, Nilsson and Frantzich (2019) reviewed smoke-filled tunnel
-and corridor experiments from seven countries and express walking speed
-&lt;em>w&lt;/em> [m/s] as a function of visibility &lt;em>x&lt;/em> [m], which lets data recorded
-under different lighting be compared. They take \(x = A/K_s\) with &lt;em>A&lt;/em> = 2
-for light-reflecting and 8 for light-emitting items (their Eq. 1); note
-that the reflecting value differs from the conventional &lt;em>C&lt;/em> = 3 of Jin and
-FDS (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
-). Fitting
-the data at 0–3 m visibility gives&lt;/p>
-$$
-w = 0.34\,x + 0.31 \qquad \text{(Fridolf et al. 2019, Eq. 2)}
-$$&lt;p>with \(R^2\) = 0.54. For design, each person&amp;rsquo;s clear-condition speed
-\(w_{\text{smoke free}}\) is reduced by 0.34 m/s per metre of visibility
-below 3 m, down to 0.2 m/s:&lt;/p>
-$$
-w = \min\!\left(w_{\text{smoke free}},\; \max\!\left(0.2,\; w_{\text{smoke free}} - 0.34\,(3 - x)\right)\right) \qquad \text{(Eq. 7)}
-$$&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+$$&lt;p>with \(R^2\) = 0.50 (Fig. 63.16) and a population SD of 0.157 m/s
+(pp. 2341, 2414), on pooled data at \(\alpha_k\) = 0.32–0.5 and
+1.9–7.5 1/m, with none in between (pp. 2339–2340).&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">Fridolf et al.&amp;rsquo;s three design methods&lt;/strong>
+&lt;strong class="hx-text-lg">Caveats on Eq. 63.10&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-The methods differ in \(w_{\text{smoke free}}\): 1 m/s for everyone
-(method 1, Eq. 3); 1.35, 1.10 or 0.85 m/s for medium, slow and very slow
-walkers (method 2, Eqs. 4–6); or a value drawn for each person from a
-normal distribution with mean 1.35 m/s and standard deviation 0.25 m/s,
-truncated at 0.85 and 1.85 m/s (method 3, Eq. 7). The authors describe the
-reduction as absolute, because every person loses the same speed, and
-fractional, because it starts from each person&amp;rsquo;s own clear-condition speed
-(§3.4).
+&lt;p>&lt;strong>Pooling.&lt;/strong> The fit combines smoke from real fires with artificial smoke
+made mildly irritating, which is the pooling the
+&lt;a href="#known-limits">Known limits&lt;/a>
+section warns against; Purser and McAllister
+do it deliberately, as a conservative envelope.&lt;/p>
+&lt;p>&lt;strong>Behaviour outside the data.&lt;/strong> The logarithm has no upper bound as
+\(\alpha_k \to 0\): it exceeds 1 m/s below \(\alpha_k\) ≈ 0.07 1/m (our
+arithmetic).&lt;/p>
+&lt;p>&lt;strong>Other fits on the same page.&lt;/strong> Fig. 63.16 also gives logarithmic fits to
+other combinations of the Jin, Frantzich–Nilsson and Fridolf et al. data
+(Ch. 63 ref. 55, Interflam 2013); the three that leave out the Fridolf data
+are &amp;ldquo;quite similar&amp;rdquo; (p. 2341). Ch. 63 takes the Frantzich–Nilsson data from
+their 2004 Human Behaviour in Fire paper (ref. 54), not from report 3126,
+and its straight-line fit to them, v = 0.7099 − 0.0573 K (\(R^2\) = 0.349),
+differs slightly from the report&amp;rsquo;s.&lt;/p>
+&lt;p>&lt;strong>Population values.&lt;/strong> p. 2341 also suggests drawing each person&amp;rsquo;s speed
+from a normal distribution &amp;ldquo;with a mean from Equation 63.12 and standard
+deviation of 0.125&amp;rdquo;; Eq. 63.12 in this edition is the irritant FIC sum, so
+the reference is probably meant to be Eq. 63.10, and 0.125 differs from the
+0.157 given on the same page. For clear air it suggests a mean of 1.2 m/s
+with SD 0.15 m/s. It compares Frantzich and Nilsson&amp;rsquo;s mean of 0.45 m/s
+(SD 0.21) with Jin&amp;rsquo;s 0.3 m/s in dense smoke, noting that the slowest speed
+measured by Jin was 0.37 m/s (p. 2341); Frantzich and Nilsson measured
+0.2–0.9 m/s.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/speed_extinction.png" alt="Two panels. (a) Walking speed against extinction coefficient: Purser’s straight-line fits to Jin’s irritant and non-irritant data below K = 1.2 1/m, the Frantzich–Nilsson regression at K 1.9 to 7.4 1/m, and Purser’s Eq. 63.10 across both, dotted where it has no data. (b) Fractional speed against extinction coefficient: Purser’s 2003 line from K 0.3 to 1.27 with dashed assumed segments, and the FDS&amp;#43;Evac normalised Frantzich–Nilsson line" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>(a) Absolute laws against K [1/m]: Purser&amp;rsquo;s fits to his replotted Jin data
+(red, solid over Jin&amp;rsquo;s points, dashed over Purser&amp;rsquo;s wider stated range;
+mean ± 1 SD), Frantzich–Nilsson with its prediction interval (blue),
+Purser Eq. 63.10 (orange). (b) Fractional laws: Purser 2003 (orange,
+solid over Jin&amp;rsquo;s points), relative to the unexposed speed, and FDS+Evac Eq. 11 (blue), relative to
+0.706 m/s, itself an extrapolation, so part of the gap is the reference.
+Purser&amp;rsquo;s floor, Jin&amp;rsquo;s reference speed for walking in darkness, is drawn at
+0.28 (our construction; he writes 0.3 m/s, Fig. 1 shows about 0.27). Solid: source data; dashed: extrapolation or assumption.&lt;/em>&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Figure provenance&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+Jin: v = 1.0573 − 0.4326 K and v = 1.1517 − 0.9578 K (Ch. 63, Fig. 63.16
+legend), solid over the range of Jin&amp;rsquo;s points in FRI Report No. 42, Fig. 2
+(about 0.5–1.13 and 0.32–0.47 1/m), dashed over the rest of Purser&amp;rsquo;s stated
+ranges (0.2–1.13 and 0.32–0.5 1/m, p. 2339);
+means 0.74 ± 0.17 m/s at K = 0.73 1/m (circle) and 0.75 ± 0.21 m/s
+at K = 0.42 1/m (square) (Ch. 63, pp. 2339–2340). Frantzich–Nilsson:
+v = 0.706 − 0.057 K on K = 1.9–7.4 1/m (report Eq. 3; range from Fig. 9),
+prediction interval 0.2–0.7 m/s at K = 4 1/m (§3.3.2, &amp;ldquo;ca 0,2 och 0,7&amp;rdquo;).
+Purser: W = −0.1364 ln K + 0.6423 (Eq. 63.10) on K = 0.32–0.5 and
+1.9–7.5 1/m, the ranges Ch. 63 states for the pooled data (pp. 2339–2340).
+Panel (b): Purser (2003, p. 98), F = −1.738 OD/m + 1.236 on OD/m
+0.13–0.55, starting at the computed 1.010, solid only over Jin&amp;rsquo;s
+non-irritant points (K ≈ 0.5–1.13 1/m) and dashed over the rest of the
+stated range; F = 1 below (dashed, Purser&amp;rsquo;s
+stated normal speed); above 0.55 the fraction the equation reaches there,
+0.28, dashed, as the darkness floor (Jin&amp;rsquo;s reference line, FRI Report
+No. 42, Fig. 2 and p. 17); OD/m converted with K = ln 10 · OD/m
+(base 10 as in Ch. 63, p. 2413; our conversion). FDS+Evac
+(Korhonen 2021, Eq. 11): F = max(0.1, 1 − 0.057 K/0.706), solid over the
+Frantzich–Nilsson data. No curve is digitised from a figure.
+Script: &lt;code>scripts/figures/fundamentals_speed_extinction.py&lt;/code>.
+&lt;/div>
+&lt;/details>
+&lt;h2>Fridolf et al. 2019: speed as a function of visibility&lt;span class="hx-absolute -hx-mt-20" id="fridolf-et-al-2019-speed-as-a-function-of-visibility">&lt;/span>
+&lt;a href="#fridolf-et-al-2019-speed-as-a-function-of-visibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Fridolf, Ronchi, Nilsson and Frantzich (2019) reviewed smoke experiments
+from seven countries and express walking speed &lt;em>w&lt;/em> [m/s] against visibility
+\(x = A/K_s\) [m], with &lt;em>A&lt;/em> = 2 for light-reflecting and 8 for
+light-emitting items (Eq. 1, citing Jin 2008). Fitting six data sets,
+including Frantzich and Nilsson&amp;rsquo;s, gives&lt;/p>
+$$
+w = 0.34\,x + 0.31 \qquad \text{(Fridolf et al. 2019, Eq. 2)}
+$$&lt;p>with \(R^2\) = 0.54 on data at &lt;em>x&lt;/em> ≈ 0.3–3 m, none between about 1.17 and
+1.78 m (Fig. 3); the authors call it a first approximation (§3.3.3). For
+design, each person&amp;rsquo;s clear-condition speed is reduced by 0.34 m/s per
+metre of visibility below 3 m, down to 0.2 m/s:&lt;/p>
+$$
+w = \min\!\left(w_{\text{smoke free}},\; \max\!\left(0.2,\; w_{\text{smoke free}} - 0.34\,(3 - x)\right)\right) \qquad \text{(Eq. 7)}
+$$&lt;p>Eq. 7 is a design rule, not a fit: the slope of Eq. 2 plus two thresholds
+chosen for conservatism (§3.3.2). Above 3 m, speed is taken as unaffected.&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Caveats on Fridolf et al.&amp;rsquo;s laws&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>&lt;strong>The visibility constant.&lt;/strong> &lt;em>A&lt;/em> is chosen for each data set from its
+lighting (§3.3.1); the paper does not list which &lt;em>A&lt;/em> was applied to which
+set. Jin and Yamada (1985, p. 81; repeated in Jin 1997, Eqs. 3–4) give
+&lt;em>V&lt;/em> = (5–10)/&lt;em>C&lt;/em>ₛ for light-emitting and (2–4)/&lt;em>C&lt;/em>ₛ for reflecting
+signs, and their Fig. 1 draws the line &lt;em>C&lt;/em>ₛ·&lt;em>V&lt;/em> = 8 for light-emitting
+signs, which matches &lt;em>A&lt;/em> = 8; &lt;em>A&lt;/em> = 2 is the lower end of the reflecting
+range, and Jin (1976, p. 17, citing Jin 1971) uses &amp;ldquo;Visibility (m) ×
+Extinction coefficient (1/m) ≈ 2&amp;rdquo; to turn the visibility needed for
+escape into an allowable density. FDS uses &lt;em>C&lt;/em> = 3 for reflecting
+signs by default (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
+).
+&lt;em>A&lt;/em> = 2 is also the constant Frantzich and Nilsson (2003, report Eq. 2)
+used for lit walls and objects. Jin&amp;rsquo;s constants come from a chamber lit at
+22–180 lx, and his σV values for light-emitting signs refer to 180 lx
+(Cheung et al. 2026, §2 and §4.1); in dimmer light the constant for
+light-emitting signs is larger (see &lt;a href="#do-the-sources-conflict">Do the sources conflict?&lt;/a>
+).&lt;/p>
+&lt;p>&lt;strong>The data sets.&lt;/strong> Jin&amp;rsquo;s non-irritant data only, Frantzich and Nilsson
+(2003), Akizuki et al. (2007), Fridolf et al. (2013, 2014), Ronchi et al.
+(2017) with Fridolf et al. (2015), and Seike et al. (2016) (§3.3). They
+include an older group (Akizuki et al., mean age 70) and walks of up to
+700 m (Table 2). Frantzich and Nilsson&amp;rsquo;s data are an input to Eq. 2, so
+the two laws agreeing is not an independent check.&lt;/p>
+&lt;p>&lt;strong>The data range.&lt;/strong> The points in Fig. 3 span &lt;em>x&lt;/em> ≈ 0.3–3 m, with none
+between about 1.17 and 1.78 m. The value at &lt;em>x&lt;/em> = 0, 0.31 m/s, is an
+extrapolation. In terms of &lt;em>K&lt;/em>, &lt;em>x&lt;/em> = 0.3–3 m corresponds to
+&lt;em>K&lt;/em> = &lt;em>A&lt;/em>/3 to &lt;em>A&lt;/em>/0.3 (our arithmetic; each data set was converted with
+its own &lt;em>A&lt;/em>).&lt;/p>
+&lt;p>&lt;strong>Speed definitions.&lt;/strong> All speeds include pauses. Table 2 codes Frantzich
+and Nilsson&amp;rsquo;s speed as &amp;ldquo;shortest way with pauses&amp;rdquo;, whereas the report&amp;rsquo;s
+Eq. 3 uses the speed along the actual path, about 1/0.88 of the
+shortest-way speed (report Fig. 11).&lt;/p>
+&lt;p>&lt;strong>Irritancy.&lt;/strong> The authors call the selected data sets &amp;ldquo;non-irritant&amp;rdquo;
+(§3.3). Table 2 marks Frantzich and Nilsson and Fridolf et al. (2013, 2014)
+as &amp;ldquo;semi-irritant&amp;rdquo; and Ronchi et al. (2017) as non-irritant, while §4 names
+Fridolf et al. (2013) and Ronchi et al. (2017) as the experiments with
+acetic acid. They caution that the recommendation may not be conservative
+in irritant smoke, where Jin saw speeds drop at visibilities of about 5 m,
+against below 3 m in non-irritant smoke (§4).&lt;/p>
+&lt;p>&lt;strong>The floor.&lt;/strong> The 0.2 m/s floor is attributed to Purser and McAllister
+(2016) (§3.3.2); Ch. 63 gives about 0.3 m/s for walking in darkness
+(pp. 2339 and 2413).&lt;/p>
+&lt;p>&lt;strong>The three design methods.&lt;/strong> \(w_{\text{smoke free}}\) is 1 m/s for
+everyone (method 1, Eq. 3); 1.35, 1.10 or 0.85 m/s for medium, slow and
+very slow walkers (method 2, Eqs. 4–6); or drawn for each person from a
+normal distribution with mean 1.35 m/s and SD 0.25 m/s, truncated at 0.85
+and 1.85 m/s (method 3, Eq. 7). The authors describe the reduction as
+absolute, because every person loses the same speed, and fractional,
+because it starts from each person&amp;rsquo;s own clear-condition speed (§3.3.3 and
+§4). Worked example: at 2 m visibility, 1.2 m/s becomes 0.86 m/s and
+1.0 m/s becomes 0.66 m/s (§3.3.3).&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/speed_visibility.png" alt="Two panels. Left: walking speed against visibility, with Fridolf’s regression over 0.3 to 3 m, the Eq. 7 design lines for four clear-condition speeds, and Frantzich–Nilsson converted with x = 2/K. Right: Fridolf’s regression converted to extinction coefficient with A = 2 and A = 8, next to Frantzich–Nilsson and Purser" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>(a) Speed against visibility x [m]: Fridolf Eq. 2 (dark), Eq. 7 design
+lines (thin), Frantzich–Nilsson with x = 2/K (blue). (b) Eq. 2 converted to
+K [1/m] with x = A/K (A = 2, 8; Fridolf&amp;rsquo;s A, not the FDS C) over x = 0.3–3 m,
+beside Frantzich–Nilsson and Purser. The axis stops at K = 8 1/m, so the
+A = 8 curve is shown only for x ≥ 1 m (x = 0.3 m would be K ≈ 27 1/m).&lt;/em>&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Figure provenance&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+In (a), Eq. 2, w = 0.34 x + 0.31, is solid over x = 0.3–3 m, dotted over
+the gap without data at 1.17–1.78 m and dashed below 0.3 m (Fridolf et al.
+2019, Fig. 3). Eq. 7 is
+drawn for the clear-condition speeds of Eqs. 3–6 (1.00, 1.35, 1.10 and
+0.85 m/s); Eq. 4 runs 0.02 m/s above Eq. 2 below 3 m. Frantzich–Nilsson,
+v = 0.706 − 0.057 K on K = 1.9–7.4 1/m, is converted with their own
+constant for lit objects, x = 2/K, to x ≈ 0.27–1.05 m; its speed is along the
+actual path, not the shortest way (see the caveats above). In (b) the
+conversion x = A/K maps x = 0.3–3 m to K = A/3 to A/0.3. Each data set was
+converted with its own A, which the paper does not state, so the curves
+show the two bounding conversions, not data ranges in K. Purser Eq. 63.10
+is drawn on K = 0.32–0.5 and 1.9–7.5 1/m. Script: &lt;code>scripts/figures/fundamentals_speed_visibility.py&lt;/code>.
 &lt;/div>
 &lt;/details>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
-&lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>All of these relations come from short walks by healthy, mostly young adults
-who knew they were in an experiment. None covers a real fire&amp;rsquo;s heat or toxic
-gases. The Jin and Frantzich–Nilsson data do not overlap in &lt;em>K&lt;/em>, differ in
-irritancy and lighting, and should not be combined as if they were one data
-set. Using a relation outside its measured &lt;em>K&lt;/em> range is an extrapolation.&lt;/p>
+&lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>All laws come from volunteers who knew they were in an experiment: short
+walks by healthy, mostly young adults for Jin (20 m) and Frantzich and
+Nilsson (37 m), plus longer tunnels and older people in Fridolf et al.&amp;rsquo;s fit.
+Only Jin used smoke from real fires, and none covers heat. The Jin and
+Frantzich–Nilsson data should not be combined as one data set, and a
+relation used outside its measured range is an extrapolation.&lt;/p>
+&lt;h2>Do the sources conflict?&lt;span class="hx-absolute -hx-mt-20" id="do-the-sources-conflict">&lt;/span>
+&lt;a href="#do-the-sources-conflict" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>In our assessment, mostly not in their data.&lt;/p>
+&lt;p>&lt;strong>Citation chains.&lt;/strong> Jin&amp;rsquo;s primary report (FRI Report No. 42, 1976)
+settles most apparent conflicts: they come from how later sources cite it.
+A participant population was taken from another Jin study; the 0.3 m/s
+&amp;ldquo;as if in darkness&amp;rdquo; is Jin&amp;rsquo;s reference line for walking in darkness, which
+later sources report as a measurement (our inference for the chain);
+Purser&amp;rsquo;s lower range of 0.2 1/m follows Jin&amp;rsquo;s trend line, not his points;
+and the smoke, the report&amp;rsquo;s year and the floor (0.2 or 0.3 m/s) are
+described in several ways. Details are in the block below.&lt;/p>
+&lt;p>&lt;strong>Different measurements.&lt;/strong> The experiments differ in smoke, light, speed
+definition and &lt;em>K&lt;/em> range, and their &lt;em>K&lt;/em> ranges do not overlap. Each law is
+consistent with its own data; they part where one is extrapolated into
+another&amp;rsquo;s range. The visibility constant also depends on light: Cheung et
+al. (2026) found σV = 4.7–9.5 for light-emitting signs at 180 lx, close to
+Jin&amp;rsquo;s 5–8, but 6–11 at 1–22 lx (§4.4, §6). They measured seeing a sign,
+not walking; our inference is that any law written in &lt;em>x&lt;/em> = &lt;em>A&lt;/em>/&lt;em>K&lt;/em>
+carries the lighting of its experiments.&lt;/p>
+&lt;p>&lt;strong>The functional form is not established.&lt;/strong> Linear in &lt;em>K&lt;/em>
+(Frantzich–Nilsson), logarithmic in &lt;em>K&lt;/em> (Purser) or linear in &lt;em>x&lt;/em>
+(Fridolf): the data cannot choose, because there are none where the forms
+differ most (about 1.1–1.9 1/m, and low &lt;em>K&lt;/em>), \(R^2\) is only 0.34–0.54,
+irritancy and low light are confounded in the Frantzich–Nilsson tunnel,
+and low light also shifts the visibility constant. We read this as not
+established rather than conflicting.&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">The assessment in detail&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>&lt;strong>Citation chains.&lt;/strong> Ronchi et al.&amp;rsquo;s population of 17 women and 14 men
+belongs to Jin and Yamada&amp;rsquo;s 1989 heat-and-smoke study; the walking study
+had ten men aged 23–37 (FRI Report No. 42, Table 1). Ch. 63&amp;rsquo;s &amp;ldquo;has been
+shown&amp;rdquo; 0.3 m/s in darkness (pp. 2339, 2413) and Purser&amp;rsquo;s 2003 floor go
+back, in our inference, to Jin&amp;rsquo;s horizontal reference line in report
+Fig. 2 (p. 17; Jin cites Togawa 1969 only for a darkness range of
+0.3–0.7 m/s, p. 14); no non-irritant point in that figure is below about
+0.45 m/s. Purser&amp;rsquo;s stated non-irritant range starts at
+0.2 1/m, at the start of Jin&amp;rsquo;s trend line, while Jin&amp;rsquo;s points start near
+0.5 1/m (our reading of report Fig. 2). The irritant smoke is burning wood
+cribs in the report and in Jin (1972, 1997), &amp;ldquo;smoldering wood&amp;rdquo; in Jin&amp;rsquo;s
+1972 English abstract, non-flaming wood in Purser (2003) and heated wood
+chippings in Ch. 63. The report is dated September 1976 on its cover;
+Purser (2003) gives 1975. Jin 1978 is given as pp. 135–157 and 135–155.
+Fridolf et al. date the walking study 1976, 1978/1997 and 1979, and take a
+0.2 m/s floor from Purser and McAllister, who give about 0.3 m/s.&lt;/p>
+&lt;p>&lt;strong>Different measurements.&lt;/strong> Smoke: real-fire smoke, irritant or not, in
+Jin; cold artificial smoke with 10–15 ppm acetic acid in Frantzich and
+Nilsson. Light: 0–8 lx in the smoke-filled Frantzich–Nilsson tunnel.
+Speed: along the corridor for Jin, along the walked path for Frantzich and
+Nilsson (about 1/0.88 of the shortest-way speed that Fridolf et al.
+record). &lt;em>K&lt;/em>: Jin&amp;rsquo;s data end near 1.1 1/m and Frantzich and Nilsson&amp;rsquo;s
+begin at 1.9 1/m.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Cheung et al. (2026) in more detail&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>Cheung et al. rebuilt Jin&amp;rsquo;s 5.5 m chamber (2.4 × 2.4 m cross-section),
+viewed a light-emitting Landolt &amp;ldquo;C&amp;rdquo; through industrial white smoke at 5.5,
+10.5 and 15.5 m, and varied the ambient light from 1 to 222 lx (§3).
+Findings relevant here:&lt;/p>
+&lt;ul>
+&lt;li>Jin&amp;rsquo;s σV range of 5–8 for light-emitting signs refers to 180 lx; at that
+light they measure 5.3–9.5 at 5.5 and 10.5 m and 4.7–8 at 15.5 m
+(§4.1, Fig. 8). At 1 lx σV is 7.5–11, and at 22 lx 6–11 (§4.4, Fig. 11).
+σV rises with the logarithm of the normalised sign brightness πLₜ/E, so
+it is constant only for a given brightness.&lt;/li>
+&lt;li>At 60 and 22 lx, a sign of the same luminance was seen at about 7 % and
+11 % higher extinction in Jin&amp;rsquo;s data than in theirs (§4.1, §6); the
+abstract states the direction the other way round.&lt;/li>
+&lt;li>The critical extinction coefficient falls by about 40 % for every 5 m
+added to the viewing distance (§4.3).&lt;/li>
+&lt;li>Limits they state: one observer with visual acuity 1.0 who knew the
+sign&amp;rsquo;s shape and location, industrial smoke rather than fire smoke, a
+laboratory sign, and no reflecting signs, so the reflecting range
+C = 2–4 is not retested (§5).&lt;/li>
+&lt;/ul>
+&lt;p>They identify Jin&amp;rsquo;s source for the sign experiment as Jin (1970),
+&lt;em>Visibility through fire smoke (I)&lt;/em>, Bull. Japan Assoc. Fire Sci. Eng. 19,
+with parts II (1971) and III (1972, read for this page) following. FRI
+Report No. 42 (1976) carries the same English title as &amp;ldquo;Part 5&amp;rdquo;, under a
+different Japanese title (煙中の視程について 第5報).&lt;/p>
+&lt;/div>
+&lt;/details>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>Jin, T. (1972). &lt;em>Visibility through fire smoke (III)&lt;/em> [煙中の見透し距離に
+ついて (III)]. Bulletin of Japanese Association of Fire Science and
+Engineering, 22(1–2), 11–15. In Japanese with an English abstract.
+&lt;a href="https://doi.org/10.11196/kasai.22.11" target="_blank" rel="noopener">doi:10.11196/kasai.22.11&lt;/a>
+&lt;/li>
+&lt;li>Jin, T. (1976). &lt;em>Visibility through fire smoke, Part 5: Allowable smoke
+density for escape from fire&lt;/em>. Report of Fire Research Institute of
+Japan, 42, 11–18 (Japanese abstract p. 11, English text pp. 12–18).
+No DOI or public URL. Purser (2003, ref. 7) dates it 1975.&lt;/li>
 &lt;li>Jin, T. (1978). &lt;em>Visibility through fire smoke&lt;/em>. Journal of Fire &amp;amp;
 Flammability, 9, 135–157. No DOI or public URL; pages 135–155 in
 Fridolf et al. (2019).&lt;/li>
 &lt;li>Jin, T., &amp;amp; Yamada, T. (1985). &lt;em>Irritating effects of fire smoke on
 visibility&lt;/em>. Fire Science and Technology, 5(1), 79–90.
 &lt;a href="https://doi.org/10.3210/fst.5.79" target="_blank" rel="noopener">doi:10.3210/fst.5.79&lt;/a>
+&lt;/li>
+&lt;li>Jin, T., &amp;amp; Yamada, T. (1989). &lt;em>Experimental study of human behavior in
+smoke filled corridors&lt;/em>. Fire Safety Science, 2, 511–519.
+&lt;a href="https://doi.org/10.3801/iafss.fss.2-511" target="_blank" rel="noopener">doi:10.3801/iafss.fss.2-511&lt;/a>
 &lt;/li>
 &lt;li>Jin, T. (1997). &lt;em>Studies on human behavior and tenability in fire
 smoke&lt;/em>. Fire Safety Science, 5, 3–21.
@@ -2506,6 +2988,10 @@ transportation systems&lt;/em>. Tunnelling and Underground Space Technology,
 90, 28–41.
 &lt;a href="https://doi.org/10.1016/j.tust.2019.04.016" target="_blank" rel="noopener">doi:10.1016/j.tust.2019.04.016&lt;/a>
 &lt;/li>
+&lt;li>Purser, D. A. (2003). &lt;em>ASET and RSET: addressing some issues in relation
+to occupant behaviour and tenability&lt;/em>. Fire Safety Science, 7, 91–102.
+&lt;a href="https://doi.org/10.3801/IAFSS.FSS.7-91" target="_blank" rel="noopener">doi:10.3801/IAFSS.FSS.7-91&lt;/a>
+&lt;/li>
 &lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
 Protection Engineering, 5th ed., Ch. 63, 2308–2428.
@@ -2515,6 +3001,12 @@ Protection Engineering, 5th ed., Ch. 63, 2308–2428.
 smoke&lt;/em>. SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 61,
 2181–2206.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_61" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_61&lt;/a>
+&lt;/li>
+&lt;li>Cheung, W. K., Bielawski, J., Arnold, L., Huang, X., &amp;amp; Węgrzyński, W.
+(2026). &lt;em>Reappraisal of Jin&amp;rsquo;s visibility through fire smoke experiment:
+Insights into signage visibility and the impact of ambient light&lt;/em>. Fire
+Safety Journal, 159, 104573.
+&lt;a href="https://doi.org/10.1016/j.firesaf.2025.104573" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2025.104573&lt;/a>
 &lt;/li>
 &lt;li>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em> (FDS 6.7.6, Evac 2.6.0 draft). VTT
@@ -3561,10 +4053,6 @@ not integrated over time. The same table lists the corresponding ISO 13571
 values, which differ for several gases: for HCl, for example, the SFPE
 incapacitation concentration is 900 ppm and the ISO value 1000 ppm
 (Table 63.6).&lt;/p>
-&lt;p>For the effect of irritants on walking, Ch. 63 gives a fractional walking
-speed that falls to zero at FIC = 1 (Eq. 63.13, a Gaussian-type curve with
-&lt;em>b&lt;/em> = 160), and combines it with the smoke-visibility effect by adding the
-two losses, \(F_{wv} = 1 - (1 - F_{wv\,smoke}) - (1 - F_{wv\,irr})\) (Eq. 63.14).&lt;/p>
 &lt;p>The lung effects are a dose. The fractional lethal dose of irritants
 \(FLD_{irr}\) [-] sums, for each irritant, the Ct exposure dose [ppm·min]
 divided by the dose predicted to be lethal to half the population (Eq. 63.15,
@@ -3575,6 +4063,59 @@ escape calculation&amp;rdquo; (p. 2415), but in the simplified asphyxiant equati
 irritants impair lung function and add some hypoxia (Eq. 63.38; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>
 ).&lt;/p>
+&lt;h2>Purser: irritants and walking speed&lt;span class="hx-absolute -hx-mt-20" id="purser-irritants-and-walking-speed">&lt;/span>
+&lt;a href="#purser-irritants-and-walking-speed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser (2003, pp. 93 and 99–100) proposed that irritants do not slow
+people at low concentrations and stop effective movement at
+incapacitation, FIC = 1, with a sigmoid fall in between: &amp;ldquo;a curve has been
+fitted between these two extremes&amp;rdquo; (p. 93). Ch. 63 calls it an &amp;ldquo;estimated
+relationship&amp;rdquo; based on a concept (p. 2343, Fig. 63.17). In our reading, no
+walking data lie behind the curve. Ch. 63 gives it as&lt;/p>
+$$
+F_{wv\,irr} = \frac{e^{-(1000\,x/b)^2} + (-0.2\,x + 0.2)}{1.2},
+\qquad b = 160,\ x = \mathrm{FIC}
+\qquad \text{(Eq. 63.13)}
+$$&lt;p>where \(F_{wv\,irr}\) is the fractional walking speed (1 = normal walking
+speed of 1.2 m/s). It is 1 at FIC = 0, about 0.31 at FIC = 0.2 and 0 at
+FIC = 1 (Ch. 63, p. 2344). The smoke and irritant effects are combined by
+adding their losses (Purser 2003, p. 100; Ch. 63, Eq. 63.14, p. 2345):&lt;/p>
+$$
+F_{wv} = 1 - (1 - F_{wv\,smoke}) - (1 - F_{wv\,irr})
+$$&lt;p>where \(F_{wv\,smoke}\) is the fractional walking speed due to smoke
+obscuration (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>
+).
+The sum can fall below 0, and neither source clips it. It assumes a smoke
+term for non-irritant smoke, as in Purser&amp;rsquo;s 2003 fit to Jin&amp;rsquo;s data; pairing
+it with Eq. 63.10, which is fitted to pooled &amp;ldquo;moderately irritant&amp;rdquo; data,
+would in our reading count irritancy twice (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/#purser-a-logarithmic-fit-for-irritant-smoke">Walking speed in smoke&lt;/a>
+).&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/irritant_speed.png" alt="Fractional walking speed against FIC from Eq. 63.13: 1 at FIC 0, 0.71 at 0.1, 0.31 at 0.2, 0.08 at 0.5 and 0 at 1" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Fractional walking speed against fractional irritant concentration FIC
+from Ch. 63, Eq. 63.13, drawn thin because, in our reading, no walking data
+lie behind it. Script: &lt;code>scripts/figures/fundamentals_irritant_speed.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">The equation as printed in Purser (2003)&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+Purser (2003, p. 100) prints the curve of his Fig. 1 as
+\(F_{wv\,irr} = 1 - \big((1 - e^{-(x/b)^a}) + (-0.2x + 0.2)/1.2\big)\)
+with &lt;em>a&lt;/em> = 2, &lt;em>b&lt;/em> = 160, &lt;em>x&lt;/em> = FIC. As printed it gives 0.83 at FIC = 0
+and rises to 1 at FIC = 1, the opposite of his Fig. 1. We compared it
+with values read from Fig. 1 (about 1.0, 0.92, 0.71, 0.31, 0.14, 0.08 and
+0 at FIC = 0, 0.05, 0.1, 0.2, 0.3, 0.5 and 1), scaling &lt;em>x&lt;/em> by 1, 10, 100,
+1000 and 10 000, in both terms or in the exponential term only. No scaling
+gives 1 at FIC = 0, because the linear term alone fixes 0.83 there. The
+best tested case, 1000 &lt;em>x&lt;/em> in the exponent only, ends at 0 at FIC = 1 but
+dips to −0.10 in between, with a mean absolute error of 0.16 against the
+readings. Ch. 63&amp;rsquo;s Eq. 63.13, with 1000 &lt;em>x&lt;/em> in the exponent and the whole
+numerator divided by 1.2, matches the readings with a mean absolute error
+of 0.002, and is the form given above. The figure on this page is computed
+from Eq. 63.13, not from the 2003 printing. A second, minor misprint:
+Purser (2003, p. 99) refers to &amp;ldquo;Figure 2&amp;rdquo; for the irritant curve, which is
+his Fig. 1.
+&lt;/div>
+&lt;/details>
 &lt;h2>The Purser / FDS+Evac guide form&lt;span class="hx-absolute -hx-mt-20" id="the-purser--fdsevac-guide-form">&lt;/span>
 &lt;a href="#the-purser--fdsevac-guide-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The guide to FDS+Evac, the evacuation module of the Fire Dynamics Simulator
 (Korhonen 2021, Eqs. 12 and 17, Table 2), follows this
@@ -3611,6 +4152,10 @@ occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
 Protection Engineering, 5th ed., Ch. 63, 2308–2428. Eqs. 63.11,
 63.13–63.15, 63.38, Tables 63.6–63.7.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>
+&lt;/li>
+&lt;li>Purser, D. A. (2003). &lt;em>ASET and RSET: addressing some issues in relation
+to occupant behaviour and tenability&lt;/em>. Fire Safety Science, 7, 91–102.
+&lt;a href="https://doi.org/10.3801/IAFSS.FSS.7-91" target="_blank" rel="noopener">doi:10.3801/IAFSS.FSS.7-91&lt;/a>
 &lt;/li>
 &lt;li>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em> (FDS 6.7.6, Evac 2.6.0 draft),
