@@ -5945,7 +5945,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, same exit&lt;/strong>&lt;/td>
-&lt;td>reroute only if the new path beats the walked path by more than 10 % on &lt;code>rank_cost&lt;/code> (&lt;code>better_path&lt;/code>); otherwise keep walking, and the cached path is updated&lt;/td>
+&lt;td>reroute if the new path beats the walked path by more than 10 % on &lt;code>rank_cost&lt;/code>, or if the walked path is rejected and the new one is feasible (&lt;code>better_path&lt;/code>); otherwise keep walking, and the cached path is updated&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -5963,8 +5963,6 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;p>Several of these rules resist switching at different points (return margins,
 discount, anchor, fallback margin, same-exit threshold). Their consolidation is
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>; the
-same-exit test can keep a rejected walked path
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/184" target="_blank" rel="noopener">#184&lt;/a>), and the
 anchor&amp;rsquo;s baseline is the best path to the current exit, not the walked one
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186" target="_blank" rel="noopener">#186&lt;/a>).&lt;/p>
 &lt;p>When &lt;code>rank_routes&lt;/code> returns nothing at all — a discovery agent whose
@@ -6016,7 +6014,7 @@ still be rewritten, which is recorded as &lt;code>better_path&lt;/code>.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>better_path&lt;/code>&lt;/td>
-&lt;td>Same exit, but a path more than 10 % cheaper on &lt;code>rank_cost&lt;/code>&lt;/td>
+&lt;td>Same exit, but a path more than 10 % cheaper on &lt;code>rank_cost&lt;/code>, or a feasible path replacing a rejected walked one&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>explore&lt;/code>&lt;/td>
