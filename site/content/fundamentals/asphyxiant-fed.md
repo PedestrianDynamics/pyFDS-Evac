@@ -71,6 +71,26 @@ with the terms, *t* in minutes and concentrations in ppm or % by volume:
   to more than about 7 % CO₂, however, can itself cause rapid intoxication
   and collapse (pp. 2371–2372).
 
+![CO FED rate per minute against CO concentration from 100 to 10 000 ppm on log–log axes: the Stewart equation for rest, light work and heavy work as three parallel lines about 12-fold apart, and the ISO 13571 rate C/35 000 just below the light-work line](/images/fundamentals/fed_co.png)
+
+*CO FED rate [1/min] from the Stewart equation, Eq. 63.18, for rest
+(pale blue, squares), light work (mid blue, circles) and heavy work (dark blue,
+triangles), and the ISO 13571 dose of 35 000 ppm·min (red, dash-dot).
+Heavy work accumulates dose about 12 times as fast as rest; the ISO rate
+equals the Stewart form at D = 30 % for a V_E of about 20 L/min.*
+
+{{< details title="Figure provenance" closed="true" >}}
+Stewart: \(3.317\times10^{-5}\,[\mathrm{CO}]^{1.036}\,V_E/D\) per minute
+(Eq. 63.18, p. 2356), with \(V_E\) = 8.5, 25 and 50 L/min and *D* = 40, 30
+and 20 % (table under Eq. 63.18, p. 2356; table beside Eq. 63.39,
+p. 2416). At 1000 ppm this gives 0.0090, 0.0354 and 0.106 per minute
+(our arithmetic). ISO: [CO]/35 000 per minute, 0.0286 at 1000 ppm, the
+Ct dose as given in Ch. 63, Note 2 to Eq. 63.18 (p. 2417). The \(V_E\)
+at which the two agree for *D* = 30 % drifts from about 22 L/min at
+100 ppm to 18.5 L/min at 10 000 ppm, because of the exponent 1.036 (our
+arithmetic). Script: `scripts/figures/fundamentals_fed_co.py`.
+{{< /details >}}
+
 ## Published forms differ
 
 The FDS+Evac guide (Korhonen 2021, Eqs. 12–19) and the FDS User's Guide
@@ -124,6 +144,45 @@ guide divides by an extra factor 60 while stating *t* in minutes (Eq. 18);
 Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not.
 {{< /details >}}
 
+![VCO2 against CO2 from 0 to 10 %: Eqs. 63.32 and 63.33 rise to about 12 at 10 %, Eqs. 63.34 and 63.35 lie close together and reach about 7; the three Table 63.16 points sit on Eq. 63.32; a horizontal line at 2.8 marks the 70 L/min cap](/images/fundamentals/fed_co2.png)
+
+*CO₂ hyperventilation factor VCO₂ from Ch. 63: the regression Eq. 63.32
+(red, circles) and its simplification Eq. 63.33 (red, dotted), the
+modified Eq. 63.34 used by FDS and FDS+Evac (blue, squares) and its
+simplification Eq. 63.35, used in Eq. 63.38 (orange, dash-dot). Diamonds:
+the worked example, Table 63.16. Dotted grey: the cap of 2.8, i.e.
+70 L/min at V_E = 25 L/min. Line styles here only separate the curves;
+all lie within the 0–10 % CO₂ data.*
+
+{{< details title="Figure provenance" closed="true" >}}
+Eqs. 63.32–63.35 as written above (Ch. 63, pp. 2369–2371); Table 63.16
+(p. 2374): 1.442, 2.376 and 4.434 at 1.5, 3.5 and 6 % CO₂, which Eq. 63.32
+reproduces to three decimals (our arithmetic). The cap of 2.8 is Purser's
+70 L/min limit for \(V_E\times VCO_2\) (p. 2416) at \(V_E\) = 25 L/min;
+Eqs. 63.32 and 63.33 reach it at 4.2 and 4.1 % CO₂, Eq. 63.34 at 5.2 % and
+Eq. 63.35 at about 5.1 % (our arithmetic). Script: `scripts/figures/fundamentals_fed_co2.py`.
+{{< /details >}}
+
+![Time to incapacitation by HCN against concentration from 20 to 300 ppm on a log time axis: Eq. 63.20 and the FDS exponential form cross near 70 and 115 ppm and diverge above 150 ppm, where the exponential form falls much faster; the critical range 80 to 180 ppm is shaded](/images/fundamentals/fed_hcn.png)
+
+*Time to incapacitation [min] by HCN: Ch. 63 Eq. 63.20 (orange, circles)
+and the FDS form 220/(exp(C/43) − 1) (blue, squares). Solid over the
+primate data behind Eq. 63.20 (about 85–250 ppm, Fig. 63.24), dashed
+outside; shaded: the critical range of about 80–180 ppm (p. 2361). The two
+agree within 6 % between about 70 and 115 ppm; at 250 ppm the FDS form
+gives 0.66 min against 2.6 min, four times shorter.*
+
+{{< details title="Figure provenance" closed="true" >}}
+Eq. 63.20: \(t_{ICN} = 1.2\times10^{6}/[\mathrm{CN}]^{2.36}\) (p. 2360).
+FDS form: the inverse of the rate \(\exp(C/43)/220 - 1/220\) in FDS
+`func.f90` (function `FED`), which uses the offset 0.00454545 ≈ 1/220, not
+the manuals' 0.0045. The data span is that of Eq. 63.20's primate points
+(our reading of Fig. 63.24); no data behind the FDS form are verified here.
+Ratios of Eq. 63.20 to the FDS form: 0.96 at 100 ppm, 1.27 at 150, 2.1 at
+200 and 4.0 at 250 ppm (our arithmetic).
+Script: `scripts/figures/fundamentals_fed_hcn.py`.
+{{< /details >}}
+
 {{< details title="The data behind the terms" closed="true" >}}
 - **CO.** The Stewart equation was obtained from young adult male
   volunteers; it somewhat underestimates uptake in children, and the
@@ -161,6 +220,24 @@ Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not.
   5 to 10.5 % CO₂ only; below 5 % it is an extrapolation (our inference).
 - **Activity.** The default is light work; \(V_E\) = 8.5 L/min at rest and
   50 L/min for heavy work (table beside Eq. 63.39, p. 2416).
+{{< /details >}}
+
+![Low-oxygen time to incapacitation against O2 from 3.9 to 20.9 % on a log time axis: a straight line, solid over the decompression data from 3.9 to 9.6 % and dashed above, with vertical lines at 15 % (140 min) and 20 % (about 2090 min)](/images/fundamentals/fed_o2.png)
+
+*Time to incapacitation by low oxygen, \(t_{IO}\) [min], from Eq. 63.50
+(derived as Eq. 63.27): solid over the decompression data (3.9–9.6 % O₂,
+shaded), dashed above. Dotted: 15 % O₂, down to which there is little
+effect in humans (p. 2364), 140 min. Dash-dot: 20 % O₂, at or above which
+FDS and pyFDS-Evac (default) set the O₂ term to zero, about 2090 min.
+Almost all of the O₂ range a fire simulation visits is extrapolation.*
+
+{{< details title="Figure provenance" closed="true" >}}
+\(t_{IO} = \exp[8.13 - 0.54\,(20.9 - \%\mathrm{O_2})]\) (Eq. 63.50;
+Eq. 63.27, pp. 2365–2366), 0.35 min at 3.9 %, 7.6 min at 9.6 % and
+3395 min at 20.9 % (our arithmetic). Data span from Fig. 63.25. The 20 %
+gate is the condition X_O2 < 0.20 in FDS `func.f90` (function `FED`) and
+the pyFDS-Evac default `o2_threshold_percent = 20.0`, quoted, not
+imported. Script: `scripts/figures/fundamentals_fed_o2.py`.
 {{< /details >}}
 
 ## Known limits
