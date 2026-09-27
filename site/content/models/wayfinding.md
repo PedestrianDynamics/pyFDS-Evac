@@ -301,11 +301,17 @@ sign-legibility test or a line-of-sight visibility
 `distance_to_node` have no caller in `pyfds_evac/`
 ([#158](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158)). Route
 smoke is sampled from the global extinction field (see
-[routing](/models/routing.md)): along the stored polylines for the legs from
-the next node on, and, when the agent's position is given, on a **straight
-line** from the agent to its next node for the first leg (`_los_stats`,
-`route_graph.py:1088–1100`). That straight line can pass through walls, for
-every familiarity tier ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). Under the `"additive"` model only, a route
+[routing](/models/routing.md)) along the stored node-to-node polylines. The
+route mean \(\bar K\), and so \(\tau\), the gate and the ranking, take the
+first leg as the agent's share of that polyline. When the agent's position is
+given, the first leg is also resampled on a **straight line** from the agent
+to its next node (`_los_stats`, `route_graph.py:1088–1100`), and that line can
+pass through walls, for every familiarity tier
+([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). The
+resample feeds only two secondary quantities: the route's worst sample
+`k_max_route`, which decides whether an agent keeps its exit when every route
+is refused (`:1439`), and the worst leg mean, which decides the optional
+clean tier, off by default (`clean_extinction_threshold` = 0). Under the `"additive"` model only, a route
 whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
 non-refused route has a segment below it (`route_graph.py:1362–1375`); this is
 an extinction threshold, not a sign test.
@@ -435,6 +441,13 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   farther from its next node than the route's origin is. In clear air the gate
   ranks by that travel time. Since #170, the walk to the origin is timed at
   the route's mean pace (`route_graph.py:1060–1066`).
+- **A sign is never read beyond its reading distance.** \(V_{\max}\) is
+  30 m by default ([#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)),
+  so in clear air a sign farther away is illegible at any bearing, and a
+  discovery agent in a space wider than that must approach an exit to learn
+  it. The value is a default, not derived from sign size or a signage
+  standard; set `"max_distance"` per sign where it matters. FDS+Evac has no
+  such limit ([Coming from FDS+Evac](/docs/coming-from-fds-evac.md#seeing-a-door-vs-reading-a-sign)).
 - **Learning is limited to neighbours**, spawn perception is per spawn area,
   and periodic learning uses the previous step's position (§2.1–2.2).
 - **The patrol can stall**
