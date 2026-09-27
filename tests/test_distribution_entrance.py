@@ -101,3 +101,69 @@ def test_discovery_agents_start_knowing_the_entrance(base_raw, use_flow_spawning
         assert ENTRANCE in row["known_nodes"], (
             f"agent {agent_id} does not know its entrance: {row['known_nodes']}"
         )
+
+
+FULL_KEY = "jps-distributions_full"
+
+
+def _two_distributions(base_raw: dict) -> Scenario:
+    """A placed "full" group listed before a flow-spawned "discovery" group.
+
+    Issue #190: flow entries on the complete-config path carried no
+    ``dist_index``, so the flow group looked up familiarity and entrance by
+    its position among flow entries (0) and took the placed group's.
+    """
+    raw = copy.deepcopy(base_raw)
+    raw["config"]["simulation_settings"]["simulationParams"]["max_simulation_time"] = (
+        5.0
+    )
+    flow = raw["distributions"].pop(SPAWN_KEY)
+    full = copy.deepcopy(flow)
+    full["coordinates"] = [[18, 1], [22, 1], [22, 4], [18, 4], [18, 1]]
+    full["parameters"].update(
+        {"number": 3, "use_flow_spawning": False, "familiarity": "full"}
+    )
+    flow["coordinates"] = [[18, 5], [22, 5], [22, 8], [18, 8], [18, 5]]
+    flow["parameters"].update(
+        {
+            "number": 3,
+            "use_flow_spawning": True,
+            "flow_start_time": 0,
+            "flow_end_time": 2,
+            "familiarity": "discovery",
+            "entrance": ENTRANCE,
+        }
+    )
+    raw["distributions"] = {FULL_KEY: full, SPAWN_KEY: flow}
+    journey = copy.deepcopy(raw["journeys"][0])
+    journey["id"] = "journey_full"
+    journey["stages"][0] = FULL_KEY
+    for t in journey["transitions"]:
+        t["journey_id"] = "journey_full"
+        if t["from"] == SPAWN_KEY:
+            t["from"] = FULL_KEY
+    raw["journeys"].append(journey)
+    raw["transitions"] = raw["transitions"] + [
+        t for t in journey["transitions"] if t["from"] == FULL_KEY
+    ]
+    sim_params = raw["config"]["simulation_settings"]["simulationParams"]
+    return Scenario(
+        raw=raw,
+        walkable_area_wkt=(ASSET / "geometry.wkt").read_text(encoding="utf-8").strip(),
+        model_type="CollisionFreeSpeedModel",
+        seed=SEED,
+        sim_params=sim_params,
+        source_path=None,
+    )
+
+
+def test_flow_agents_take_their_own_distribution(base_raw):
+    first = _first_maps(_two_distributions(base_raw))
+    by_familiarity: dict[str, list[dict]] = {}
+    for row in first.values():
+        by_familiarity.setdefault(row["familiarity"], []).append(row)
+    assert len(by_familiarity.get("full", [])) == 3
+    assert len(by_familiarity.get("discovery", [])) == 3
+    for row in by_familiarity["discovery"]:
+        assert ENTRANCE in row["known_nodes"]
+        assert OTHER_EXIT not in row["known_nodes"]

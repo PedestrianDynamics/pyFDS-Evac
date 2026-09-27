@@ -2134,7 +2134,9 @@ def _add_agents(
     immediate_spawn_distributions = {}
     journeys_per_distribution = journey_data["journeys_per_distribution"]
 
-    for dist_key, polygon in dist_geom.items():
+    # dist_index is the distribution's position in the scenario, which is how
+    # scenario.py looks up its familiarity and entrance.
+    for dist_index, (dist_key, polygon) in enumerate(dist_geom.items()):
         params = dist_params[dist_key]
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(params)
         use_flow_spawning = params.get("use_flow_spawning", False)
@@ -2212,6 +2214,7 @@ def _add_agents(
 
                     flow_distributions.append(
                         {
+                            "dist_index": dist_index,
                             "dist_key": dist_key,
                             "source_id": len(flow_distributions),
                             "params": flow_params,
@@ -2290,6 +2293,7 @@ def _add_agents(
                 # Store distribution info for flow spawning
                 flow_distributions.append(
                     {
+                        "dist_index": dist_index,
                         "dist_key": dist_key,
                         "source_id": len(flow_distributions),
                         "params": params,
