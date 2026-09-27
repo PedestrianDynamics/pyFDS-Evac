@@ -170,7 +170,8 @@ for v in visible hidden; do
       --scenario assets/exit_visibility_alpha/config_$v.json \
       --fds-dir "$FDS_DIR" \
       --vis-cache /tmp/vis_$v.npz \
-      --output-sqlite /tmp/run_$v.sqlite
+      --output-sqlite /tmp/run_$v.sqlite \
+      --output-route-history /tmp/routes_$v.csv
 
   .venv/bin/python scripts/plot_trajectories.py /tmp/run_$v.sqlite \
       --config assets/exit_visibility_alpha/config_$v.json \
