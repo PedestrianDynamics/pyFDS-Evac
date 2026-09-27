@@ -577,6 +577,7 @@ class VisibilityModel:
                 model._wp_ids = {
                     node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
                 }
+                model._sign_xy = _sign_positions(sign_descriptors)
                 return model
 
         vis = VisMap()
