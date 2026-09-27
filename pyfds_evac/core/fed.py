@@ -97,16 +97,23 @@ def _o2_hypoxia_rate_per_minute(o2_percent: float) -> float:
     return 1.0 / t_incap_min
 
 
-def _cn_fed_rate_per_minute(hcn_ppm: float, no2_ppm: float) -> float:
-    """Return the CN narcosis FED contribution in 1/min (guide Eq. 14-15).
+def _cn_fed_rate_per_minute(hcn_ppm: float, no_ppm: float, no2_ppm: float) -> float:
+    """Return the CN narcosis FED contribution in 1/min, as FDS computes it.
 
-    C_CN = C_HCN - C_NO2 (NO2 has a protective effect on HCN toxicity).
-    Rate = exp(C_CN/43)/220 - 0.0045.
+    C_CN = C_HCN - (C_NO + C_NO2) (NOx has a protective effect on HCN
+    toxicity).  Rate = exp(C_CN/43)/220 - 1/220, which is zero at C_CN = 0.
+
+    This is the form of FDS ``FED()`` in ``func.f90`` (User Guide 6.10.1,
+    Eq. 22.45), which FDS+Evac calls, and which has carried the HCN term
+    since FDS commit 694e033 (2011).  The FDS+Evac guide's Eq. 15 subtracts
+    NO2 only and uses the offset 0.0045; FDS and FDS+Evac never computed
+    that form (#159).
     """
-    c_cn = max(0.0, float(hcn_ppm) - float(no2_ppm))
+    c_nox = max(0.0, float(no_ppm)) + max(0.0, float(no2_ppm))
+    c_cn = max(0.0, float(hcn_ppm) - c_nox)
     if not math.isfinite(c_cn) or c_cn <= 0.0:
         return 0.0
-    rate = math.exp(c_cn / 43.0) / 220.0 - 0.0045
+    rate = (math.exp(c_cn / 43.0) - 1.0) / 220.0
     return max(0.0, rate)
 
 
@@ -345,7 +352,9 @@ def default_fed_components(inputs: DefaultFedInputs) -> FedComponents:
         co_rate_per_min=_co_fed_rate_per_minute(
             _co_percent_to_ppm(inputs.co_volume_fraction_percent)
         ),
-        cn_rate_per_min=_cn_fed_rate_per_minute(inputs.hcn_ppm, inputs.no2_ppm),
+        cn_rate_per_min=_cn_fed_rate_per_minute(
+            inputs.hcn_ppm, inputs.no_ppm, inputs.no2_ppm
+        ),
         nox_rate_per_min=_nox_fed_rate_per_minute(inputs.no_ppm, inputs.no2_ppm),
         fld_rate_per_min=_irritant_fld_rate_per_minute(inputs),
         hv_co2=_hyperventilation_factor(inputs.co2_volume_fraction_percent),

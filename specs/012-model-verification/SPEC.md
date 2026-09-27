@@ -113,6 +113,10 @@ omitted from any reference value.
   incapacitated at FED = 0.3 / 1 / 3 reproduces the documented ≈ 10/50/88 %
   bands. Deterministic mode returns `fed_threshold` for every agent.
 - **A2.7** Monotonicity in each toxicant; determinism under a fixed seed.
+- **A2.8** FDS verification case `FED_FIC`, zone "Asphyxiants" (O₂, CO₂,
+  CO, NO, HCN at constant mole fractions, no NO₂, no irritants): FED at
+  100 s = 0.97403 (FDS csv). Separates the CN forms: C_HCN − (C_NO + C_NO2)
+  gives 0.97401, the guide's C_HCN − C_NO2 gives 6.17 (#159).
 - **B2.1** Real fire field: assert accumulated FED equals the closed form
   integrated over the **sampled** CO/CO₂/O₂ trajectory along an agent path.
 

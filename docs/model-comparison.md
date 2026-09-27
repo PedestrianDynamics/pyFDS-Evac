@@ -395,7 +395,8 @@ Incapacitation occurs at FED >= 1.0 ([1] §3.4 p31).
 ### pyFDS-Evac
 
 FED is computed with the Purser equations as written out in the
-FDS+Evac guide [1] (`fed.py`), from up to 12 gas species: CO, CO2,
+FDS+Evac guide [1] (`fed.py`), except the HCN term, which is computed as
+the FDS code computes it (#159), from up to 12 gas species: CO, CO2,
 O2, HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein and formaldehyde.
 This is not the ISO 13571 [5] form: ISO 13571 keeps irritants in a
 separate fractional effective concentration (FEC) and does not add
@@ -411,7 +412,7 @@ FED_tot = (FED_CO + FED_CN + FED_NOx + FLD_irr) * HV_CO2 + FED_O2
 
 where:
 - `FED_CO`: CO narcosis (Eq. 13 from guide)
-- `FED_CN`: HCN − NO2 (protective effect of NO2 on HCN toxicity)
+- `FED_CN`: HCN − (NO + NO2) (protective effect of NOx on HCN toxicity), as FDS computes it (#159)
 - `FED_NOx`: NO + NO2 (Ct product = 1500 ppm·min)
 - `FLD_irr`: irritant gases (HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde)
 - `HV_CO2`: CO2 hyperventilation factor

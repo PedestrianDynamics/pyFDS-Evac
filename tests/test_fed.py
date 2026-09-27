@@ -157,29 +157,39 @@ class TestCoFedRate:
 
 
 class TestCnFedRate:
-    """Verify CN FED rate against guide Eq. 14-15.
+    """Verify the CN FED rate against the FDS code form (func.f90, #159).
 
-    C_CN = max(0, C_HCN - C_NO2).
-    Rate = exp(C_CN / 43) / 220 - 0.0045.
+    C_CN = max(0, C_HCN - (C_NO + C_NO2)).
+    Rate = exp(C_CN / 43) / 220 - 1/220.
     """
 
     def test_known_value(self):
-        hcn, no2 = 150.0, 20.0
+        hcn, no, no2 = 150.0, 0.0, 20.0
         c_cn = hcn - no2  # 130 ppm
-        expected = math.exp(c_cn / 43.0) / 220.0 - 0.0045
-        rate = _cn_fed_rate_per_minute(hcn, no2)
+        expected = math.exp(c_cn / 43.0) / 220.0 - 1.0 / 220.0
+        rate = _cn_fed_rate_per_minute(hcn, no, no2)
         assert rate == pytest.approx(expected, rel=1e-10)
 
-    def test_no2_exceeds_hcn(self):
-        """NO2 protective effect zeroes the CN term when NO2 >= HCN."""
-        assert _cn_fed_rate_per_minute(50.0, 100.0) == 0.0
+    def test_no_and_no2_both_subtract(self):
+        """HCN 100, NO 50, NO2 10 ppm: C_CN = 40 ppm, rate ~0.00698 /min."""
+        rate = _cn_fed_rate_per_minute(100.0, 50.0, 10.0)
+        assert rate == pytest.approx((math.exp(40.0 / 43.0) - 1.0) / 220.0)
+        assert rate == pytest.approx(0.00698, abs=1e-5)
+        # The guide's NO2-only form would give C_CN = 90 ppm instead.
+        assert rate < _cn_fed_rate_per_minute(100.0, 0.0, 10.0) / 3.0
+
+    def test_nox_exceeds_hcn(self):
+        """NOx protective effect zeroes the CN term when NO + NO2 >= HCN."""
+        assert _cn_fed_rate_per_minute(50.0, 0.0, 100.0) == 0.0
+        assert _cn_fed_rate_per_minute(50.0, 30.0, 20.0) == 0.0
 
     def test_zero_hcn(self):
-        assert _cn_fed_rate_per_minute(0.0, 0.0) == 0.0
+        assert _cn_fed_rate_per_minute(0.0, 0.0, 0.0) == 0.0
 
-    def test_small_cn_yields_nonnegative(self):
-        """When C_CN is small, exp(C_CN/43)/220 < 0.0045 → rate clamped to 0."""
-        assert _cn_fed_rate_per_minute(1.0, 0.0) >= 0.0
+    def test_small_cn_is_small_and_nonnegative(self):
+        """The 1/220 offset makes the rate vanish continuously at C_CN = 0."""
+        rate = _cn_fed_rate_per_minute(1.0, 0.0, 0.0)
+        assert 0.0 < rate < 1.1e-4
 
 
 class TestNoxFedRate:
@@ -284,8 +294,8 @@ class TestFullFormulaClosedForm:
         )
         co_ppm = _co_percent_to_ppm(0.05)  # 500
         co_rate = 2.764e-5 * (co_ppm**1.036)
-        c_cn = 80.0 - 10.0  # 70
-        cn_rate = math.exp(c_cn / 43.0) / 220.0 - 0.0045
+        c_cn = 80.0 - (30.0 + 10.0)  # 40: NO and NO2 both subtract (FDS form)
+        cn_rate = math.exp(c_cn / 43.0) / 220.0 - 1.0 / 220.0
         nox_rate = (30.0 + 10.0) / 1500.0
         fld_irr = 200.0 / 114000.0 + 50.0 / 12000.0 + 10.0 / 1900.0
         hv = math.exp(0.1903 * 3.0 + 2.0004) / 7.1
