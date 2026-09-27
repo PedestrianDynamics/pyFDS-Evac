@@ -22,7 +22,7 @@ al.'s *w*, *x* (*S* in the notation table) and *A*, which plays the role of
 | Jin, irritant (Purser's fit) | *K* | v = 1.1517 − 0.9578 K | points 0.32–0.47 1/m (Purser: 0.32–0.5) | absolute | wood cribs, highly irritant |
 | Purser 2003, fit to Jin, non-irritant | OD/m (K ≈ 2.303 OD/m) | F = 1.236 − 1.738 OD/m | Purser's stated range OD/m 0.13–0.55 (K ≈ 0.30–1.27 1/m); Jin's data K ≈ 0.5–1.13 1/m | fractional | non-irritant |
 | Frantzich–Nilsson, Eq. 3 | *K* | v = 0.706 − 0.057 K | 1.9–7.4 1/m | absolute | artificial, mild (acetic acid) |
-| FDS+Evac, Eq. 11 | *K* | v = max(0.1 v₀, v₀ (1 − 0.057 K / 0.706)) | as Frantzich–Nilsson | fractional | as Frantzich–Nilsson |
+| [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), Eq. 11 | *K* | v = max(0.1 v₀, v₀ (1 − 0.057 K / 0.706)) | as Frantzich–Nilsson | fractional | as Frantzich–Nilsson |
 | Purser, Eq. 63.10 | *K* | W = −0.1364 ln K + 0.6423 | 0.32–0.5 and 1.9–7.5 1/m | absolute | pooled, "moderately irritant" |
 | Fridolf et al., Eq. 2 | *x* = *A*/*K* | w = 0.34 x + 0.31 | x ≈ 0.3–3 m | absolute | mostly non-irritant |
 | Fridolf et al., Eq. 7 | *x* | w = min(w_sf, max(0.2, w_sf − 0.34 (3 − x))) | design rule | both | as Eq. 2 |

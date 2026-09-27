@@ -32,7 +32,7 @@ Research software, provided without warranty. Not intended for regulatory or des
 </div>
 
 <div class="content hx-mb-6">
-Defaults follow FDS+Evac; see <a href="docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac">what changed</a>.
+Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source">FDS+Evac</a>; see <a href="docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac">what changed</a>.
 </div>
 
 <div class="hx-mt-6"></div>

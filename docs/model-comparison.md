@@ -5,7 +5,7 @@ weight: 13
 aliases: [/docs/model-comparison/]
 ---
 
-> This document compares the evacuation models in FDS+Evac (v2.6.0,
+> This document compares the evacuation models in [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) (v2.6.0,
 > Korhonen 2021) and pyFDS-Evac as implemented in this repository.
 > Claims are referenced to the FDS+Evac Technical Reference and User's
 > Guide [1] and to the pyFDS-Evac source code.  Where the two systems

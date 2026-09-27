@@ -88,6 +88,6 @@ because it is small and stationary.
 
 - [`assets/ISO-table21`](../ISO-table21/README.md) — ISO 20414 Table 21, the
   walking-speed-in-smoke counterpart.
-- FDS+Evac Technical Reference **Figure 8** ("A FED test") is the vendor's
+- [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) Technical Reference **Figure 8** ("A FED test") is the vendor's
   version of this test and supplies the four concentration sets ISO leaves to
   the tester.

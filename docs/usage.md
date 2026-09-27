@@ -45,7 +45,7 @@ silent unless you check the warning log.
 | `--fds-dir DIR` | FDS result directory driving smoke-speed and FED. |
 | `--constant-extinction K` | Use a constant `K` [1/m] instead of FDS. |
 | `--smoke-update-interval S` | Seconds between smoke-speed refreshes. |
-| `--smoke-slice-height M` | FDS slice height (m) for smoke and heat sampling (default 1.6, FDS+Evac `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). |
+| `--smoke-slice-height M` | FDS slice height (m) for smoke and heat sampling (default 1.6, [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). |
 | `--output-smoke-history CSV` | Write `(t, agent, K, v, factor)` CSV. |
 | `--output-fed-history CSV` | Write per-agent per-sample FED+species CSV. |
 | `--inspect-fds` | Inspect FDS quantities (like `scripts/inspect_fds.py`) and exit. |

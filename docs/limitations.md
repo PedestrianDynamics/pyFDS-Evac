@@ -26,7 +26,7 @@ JSON. The smoke-speed parameters (`speed_law`, `alpha`, `beta`,
 `min_speed_factor` and `visibility_factor_c`) are fields of
 `SmokeSpeedConfig`. `run.py` and the web GUI build that object with its
 defaults, so every run they start uses the Frantzich–Nilsson law (the `lund`
-option; the linear FDS+Evac law) with the defaults listed on the
+option; the linear [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) law) with the defaults listed on the
 [smoke-speed model](/models/smoke-speed.md#parameters) page. Another law or
 other coefficients require building the model in Python and passing it to
 `run_scenario()`.

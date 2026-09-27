@@ -119,7 +119,7 @@ his Fig. 1.
 
 ## The Purser / FDS+Evac guide form
 
-The guide to FDS+Evac, the evacuation module of the Fire Dynamics Simulator
+The guide to [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), the evacuation module of the Fire Dynamics Simulator
 (Korhonen 2021, Eqs. 12 and 17, Table 2), follows this
 structure: its total dose
 

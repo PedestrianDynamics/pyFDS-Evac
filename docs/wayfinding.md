@@ -261,7 +261,7 @@ A. (4) A fully familiar agent knows the whole graph at t = 0. Script:
 > Paths learned from familiarity or `entrance` are forward only
 > (`cognitive_map.py:71–74`, `:139–152`).
 >
-> **Talk vs code.** The slide calls `full` "the FDS+Evac default". It is
+> **Talk vs code.** The slide calls `full` "the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) default". It is
 > pyFDS-Evac's default. FDS+Evac's `KNOWN_DOOR` defaults to `.FALSE.`
 > (`evac.f90:2291`, `:2733`).
 

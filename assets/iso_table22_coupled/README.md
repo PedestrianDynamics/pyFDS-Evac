@@ -22,7 +22,7 @@ burned, so it is uniform in space and constant in time.
 ## Where the concentrations come from
 
 ISO deliberately prescribes none — it says to repeat for each hazardous
-condition. The FDS+Evac Technical Reference, **Figure 8** ("A FED test"),
+condition. The [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) Technical Reference, **Figure 8** ("A FED test"),
 supplies exactly the concrete sets ISO leaves to the tester:
 
 | case | CO₂ % | CO % | O₂ % | isolates | FED = 1 |

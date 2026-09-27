@@ -85,7 +85,7 @@ Changing it therefore ripples well beyond the ISO tests.
 
 - [`assets/ISO-table22`](../ISO-table22/README.md) — ISO 20414 Table 22, the
   occupant-incapacitation counterpart.
-- FDS+Evac Technical Reference **Figure 9** ("A smoke vs speed test") is the
+- [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) Technical Reference **Figure 9** ("A smoke vs speed test") is the
   vendor's version of this same test, with different numbers: a 10 m corridor,
   1,5 m/s, soot densities 0/500/1000/1500 mg/m³. It is implemented separately as
   `test_fds_evac_guide_smoke_density_points_match_theory`.

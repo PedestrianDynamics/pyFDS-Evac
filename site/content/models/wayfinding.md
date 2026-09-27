@@ -397,7 +397,7 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   al., who call it "highly simplified" (p. 4). It is not part of Jin's
   experiments.
 - **Sampling height.** Börger et al. use one slice at 2 m, with the eye at
-  sign height (p. 4). The code uses 1.6 m, the FDS+Evac `HUMAN_SMOKE_HEIGHT`.
+  sign height (p. 4). The code uses 1.6 m, the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`.
   fdsvismap takes the nearest slice without a warning when it is far from the
   requested height. *Our inference:* exit signs are usually mounted above
   doors, higher than 1.6 m. Under a hot smoke layer, a 1.6 m slice reads less

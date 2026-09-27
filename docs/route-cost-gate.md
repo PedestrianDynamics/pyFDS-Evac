@@ -179,7 +179,7 @@ tau 5.20 > 4.80 (K_ave 0.388 x 13.4 m)
 
 The second is a rival exit, held to `tau_max * tau_return_margin` = 4.8.
 
-<a id="where-the-6-comes-from"></a>**Where the 6 comes from.** FDS+Evac's tier-4 door test computes
+<a id="where-the-6-comes-from"></a>**Where the 6 comes from.** [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)'s tier-4 door test computes
 `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out when
 `L2_tmp >= 1.0` (`evac.f90:16794, :16799`). That expression is `K_ave * d / 6`, so
 the test is exactly `tau > 6` with Jin's `c = 3`. The threshold is therefore

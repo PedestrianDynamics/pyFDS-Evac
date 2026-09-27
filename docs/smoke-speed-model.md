@@ -174,7 +174,7 @@ uv run python scripts/generate_iso_table21_sweep.py
 
 Figure: ![ISO 20414 Test 18 (Table 21) sweep](/artifacts/iso-table21-sweep.png)
 
-Generate the FDS+Evac smoke-density vs speed verification plot:
+Generate the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) smoke-density vs speed verification plot:
 
 ```bash
 uv run python scripts/generate_smoke_density_speed_plot.py
