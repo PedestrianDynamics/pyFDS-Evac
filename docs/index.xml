@@ -1187,13 +1187,8 @@ by default, the guard of FDS+Evac&amp;rsquo;s code (the &lt;code>FED&lt;/code> f
 guide has it. It stops a tiny ambient rate from accumulating over long runs
 or outside the FDS domain. &lt;code>--o2-threshold-percent 19.5&lt;/code> restores the
 previous default, the OSHA limit that Pathfinder uses. The O₂ rate is Handbook Eq. 63.50
-per minute, with no factor 60. The FDS+Evac guide&amp;rsquo;s Eq. 18 divides by 60
-while stating &lt;em>t&lt;/em> in minutes, which read literally would make the O₂ dose
-60 times smaller; FDS itself does not do this (its &lt;code>FED&lt;/code> function divides
-by 60 only because its time step is in seconds), so it is a documentation
-error, not a difference in the model. Our reading is that the 60 survives
-from the 2009 guide, where &lt;em>t&lt;/em> was in seconds (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>).&lt;/li>
+per minute, with no factor 60; see the warning below on the FDS+Evac
+guide&amp;rsquo;s Eq. 18.&lt;/li>
 &lt;/ul>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fed_o2.png" alt="Low-oxygen time to incapacitation against O2 from 3.9 to 20.9 % on a log time axis: a straight line, solid over the decompression data from 3.9 to 9.6 % and dashed above, with vertical lines at 15 % (140 min) and 20 % (about 2090 min)" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Time to incapacitation by low oxygen, \(t_{IO}\) [min], Eq. 63.50: solid
@@ -1204,7 +1199,18 @@ about 10 % and the gate is extrapolation. Dotted: 15 % O₂, down to which
 there is little effect in humans (Purser &amp;amp; McAllister 2016, p. 2364). Figure
 and sources: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>. Script:
 &lt;code>scripts/figures/fundamentals_fed_o2.py&lt;/code>.&lt;/em>&lt;/p>
-&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py:241&lt;/code>–&lt;code>242&lt;/code>), is multiplied with the smoke
+&lt;div class="gh-alert gh-alert-warning" role="note">
+&lt;p class="gh-alert-title">&lt;svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">&lt;path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z">&lt;/path>&lt;/svg>Warning&lt;/p>
+&lt;p>&lt;strong>FDS+Evac guide, Eq. 18 (low O₂).&lt;/strong> The guide (Korhonen 2021) divides the
+O₂ term by 60 while stating that &lt;em>t&lt;/em> is in minutes. Taken literally, that
+gives an O₂ dose 60 times smaller than Purser&amp;rsquo;s Eq. 63.50. The code
+FDS+Evac runs does not do this: FDS divides by 60 only because its time step
+is in seconds. pyFDS-Evac uses Eq. 63.50 per minute, as the code does. If
+you rebuild FDS+Evac&amp;rsquo;s FED from the guide, leave the 60 out.&lt;/p>
+&lt;p>Our reading is that the 60 survives from the 2009 guide, which gave the
+FED equations with &lt;em>t&lt;/em> in seconds; the evidence is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>.&lt;/p>
+&lt;/div>&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py:241&lt;/code>–&lt;code>242&lt;/code>), is multiplied with the smoke
 factor (&lt;code>direct_steering_runtime.py:186&lt;/code>–&lt;code>190&lt;/code>). Its constants were not found
 in the Handbook, the FDS+Evac guide or &lt;code>evac.f90&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>). The
@@ -4028,7 +4034,15 @@ arithmetic). Script: &lt;code>scripts/figures/fundamentals_fed_co.py&lt;/code>.
 &lt;/div>
 &lt;/details>
 &lt;h2>Published forms differ&lt;span class="hx-absolute -hx-mt-20" id="published-forms-differ">&lt;/span>
-&lt;a href="#published-forms-differ" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The FDS+Evac guide (Korhonen 2021, Eqs. 12–19) and the FDS User&amp;rsquo;s Guide
+&lt;a href="#published-forms-differ" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="gh-alert gh-alert-warning" role="note">
+&lt;p class="gh-alert-title">&lt;svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">&lt;path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z">&lt;/path>&lt;/svg>Warning&lt;/p>
+&lt;p>&lt;strong>FDS+Evac guide, Eq. 18 (low O₂).&lt;/strong> The guide (Korhonen 2021) divides the
+O₂ term by 60 while stating that &lt;em>t&lt;/em> is in minutes. Taken literally, that
+gives an O₂ dose 60 times smaller than Purser&amp;rsquo;s Eq. 63.50. The code
+FDS+Evac runs does not do this: FDS divides by 60 only because its time step
+is in seconds. If you rebuild FDS+Evac&amp;rsquo;s FED from the guide, leave the 60
+out. The evidence is in &amp;ldquo;The CO₂ factor and HCN term&amp;rdquo; below.&lt;/p>
+&lt;/div>&lt;p>The FDS+Evac guide (Korhonen 2021, Eqs. 12–19) and the FDS User&amp;rsquo;s Guide
 (McGrattan et al. 2025, Eqs. 22.42–22.49) do not use Eq. 63.38 as printed:
 they take Eq. 63.34 for CO₂ instead of its simplification Eq. 63.35, and an
 HCN term \(\exp(C/43)/220\) that is not in Chs. 62–63 of the 5th edition,
