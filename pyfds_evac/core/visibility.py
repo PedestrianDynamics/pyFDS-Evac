@@ -77,6 +77,15 @@ def extract_sign_descriptors(raw_config: dict) -> dict[str, dict]:
     return descriptors
 
 
+def _check_max_sign_distance(max_sign_distance_m: float) -> None:
+    """Reject a global reading distance that is not finite and positive."""
+    if not (math.isfinite(max_sign_distance_m) and max_sign_distance_m > 0):
+        raise ValueError(
+            "max_sign_distance_m must be finite and positive, "
+            f"got {max_sign_distance_m}"
+        )
+
+
 def _sign_caps(sign_descriptors: dict[str, dict]) -> dict[int, float]:
     """Per-waypoint reading distances, for the signs that set ``max_distance``."""
     caps: dict[int, float] = {}
@@ -84,9 +93,10 @@ def _sign_caps(sign_descriptors: dict[str, dict]) -> dict[int, float]:
         cap = sign.get("max_distance")
         if cap is None:
             continue
-        if float(cap) <= 0:
+        if not (math.isfinite(float(cap)) and float(cap) > 0):
             raise ValueError(
-                f"sign of {node_id!r}: max_distance must be positive, got {cap}"
+                f"sign of {node_id!r}: max_distance must be finite and "
+                f"positive, got {cap}"
             )
         caps[wp_id] = float(cap)
     return caps
@@ -102,10 +112,7 @@ def _apply_distance_caps(
     ``max_distance`` swaps that value in for its own waypoint only, so the
     order of operations stays fdsvismap's.
     """
-    if max_sign_distance_m <= 0:
-        raise ValueError(
-            f"max_sign_distance_m must be positive, got {max_sign_distance_m}"
-        )
+    _check_max_sign_distance(max_sign_distance_m)
     vis.set_visibility_bounds(vis.min_vis, max_sign_distance_m)
     caps = _sign_caps(sign_descriptors)
     if not caps:
@@ -476,6 +483,7 @@ class VisibilityModel:
         max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
     ) -> None:
         cache = Path(cache_path) if cache_path else None
+        _check_max_sign_distance(max_sign_distance_m)
         _sign_caps(sign_descriptors)
         expected_meta = _make_meta(
             str(fds_dir),
@@ -551,6 +559,7 @@ class VisibilityModel:
                 "shrink the cell size or check the geometry"
             )
 
+        _check_max_sign_distance(max_sign_distance_m)
         _sign_caps(sign_descriptors)
         expected_meta = _make_clear_air_meta(
             walkable,

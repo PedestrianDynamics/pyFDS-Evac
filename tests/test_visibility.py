@@ -344,10 +344,32 @@ class TestSignDistanceCap:
         metres = self._model(signs).visibility_to_node(0.0, *self.NEAR, "exit")
         assert metres == pytest.approx(10.0)
 
-    def test_non_positive_max_distance_is_rejected(self):
-        signs = {"exit": {**self.SIGN["exit"], "max_distance": 0}}
+    @pytest.mark.parametrize("cap", [0, -5.0, float("nan"), float("inf")])
+    def test_invalid_max_distance_is_rejected(self, cap):
+        signs = {"exit": {**self.SIGN["exit"], "max_distance": cap}}
         with pytest.raises(ValueError, match="max_distance"):
             self._model(signs)
+
+    @pytest.mark.parametrize("cap", [0.0, float("nan"), float("inf")])
+    def test_invalid_global_cap_is_rejected(self, cap):
+        with pytest.raises(ValueError, match="max_sign_distance_m"):
+            self._model(max_sign_distance_m=cap)
+
+    @pytest.mark.parametrize("cap", [float("nan"), float("inf")])
+    def test_invalid_global_cap_is_rejected_on_a_cache_hit(self, cap):
+        """A cache must not let an invalid cap through before it is checked."""
+        with patch(
+            "pyfds_evac.core.visibility._load_vismap_cache", return_value=object()
+        ):
+            with pytest.raises(ValueError, match="max_sign_distance_m"):
+                self._model(cache_path="unused.npz", max_sign_distance_m=cap)
+            with pytest.raises(ValueError, match="max_sign_distance_m"):
+                VisibilityModel(
+                    FDS_DIR,
+                    self.SIGN,
+                    cache_path="unused.npz",
+                    max_sign_distance_m=cap,
+                )
 
     def test_cap_is_part_of_the_cache_key(self):
         base = _make_meta(FDS_DIR, SIGNS, TIME_STEP, HEIGHT)
