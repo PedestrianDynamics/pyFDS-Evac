@@ -18,9 +18,7 @@ to fdsvismap `64d9aa7`.
 The [routing model](/models/routing.md) ranks and refuses routes. This page
 describes the part of the model that decides which routes it may rank: what
 each agent knows about the stage graph, how that knowledge starts, how it
-grows, and how route choice reads it. The step-by-step walk-through, with
-figures and the talk's examples, is on
-[Wayfinding in practice](/docs/wayfinding.md). The intuition is on
+grows, and how route choice reads it. The intuition is on
 [Concepts › Wayfinding](/docs/concepts.md#wayfinding). Symbols follow the
 [notation table](/docs/concepts.md#notation).
 

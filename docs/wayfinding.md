@@ -8,12 +8,10 @@ aliases: [/docs/wayfinding/, /docs/implementation/wayfinding/wayfinding/]
 
 > [!NOTE]
 > This page shows the wayfinding model at work on the assets. For its
-> definition, parameters and defaults, see [Models › Wayfinding](/models/wayfinding.md).
-
-> Part of [pyFDS-Evac](../README.md). The coded form, parameters and
-> limitations are on [Models › Wayfinding](/models/wayfinding.md), which also
-> defines the terms used here: *legible*, *known*, *learn*, *visited*,
-> *frontier*. The intuition is on [Concepts › Wayfinding](/docs/concepts.md#wayfinding).
+> definition, parameters, defaults and limitations, and the terms used here
+> (*legible*, *known*, *learn*, *visited*, *frontier*), see
+> [Models › Wayfinding](/models/wayfinding.md). The intuition is on
+> [Concepts › Wayfinding](/docs/concepts.md#wayfinding).
 
 This page follows §3 of the talk
 [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/),

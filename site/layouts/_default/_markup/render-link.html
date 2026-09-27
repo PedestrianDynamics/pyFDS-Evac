@@ -46,4 +46,4 @@
     {{- $dest = relURL $dest -}}
   {{- end -}}
 {{- end -}}
-<a href="{{ $dest | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if strings.HasPrefix $dest "http" }} target="_blank" rel="noopener"{{ end }}>{{ .Text | safeHTML }}</a>
+<a href="{{ $dest | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if strings.HasPrefix $dest "http" }} target="_blank" rel="noopener"{{ end }}>{{ .Text | safeHTML }}</a>{{- /* no trailing newline: it renders as a space before punctuation */ -}}
