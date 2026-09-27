@@ -959,6 +959,14 @@ def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfi
         )
         out.append(
             (
+                f"{model}-clean_infeasible_over_dirty",
+                _rc("a", clean=True, feasible=False, rank_cost=20.0),
+                _rc("b", clean=False, rank_cost=10.0),
+                cfg,
+            )
+        )
+        out.append(
+            (
                 f"{model}-infeasible_candidate",
                 _rc("a", feasible=False, tau_route=0.0, rank_cost=5.0),
                 _rc("b", tau_route=5.0, rank_cost=10.0),
@@ -1240,6 +1248,44 @@ def test_explore_keeps_the_exit_commitment():
     assert switch.new_exit == "C0"
     assert result["route_state"]["current_exit"] == "E0"
     assert result["route_state"]["current_path"] == ["D0", "C0"]
+
+
+_ADDITIVE_NO_SCAN = golden.RerouteCase(
+    lambda: golden._star({"west": 10.0, "east": 30.0, "north": 60.0}),
+    golden._additive(),
+    "spawn",
+    "east",
+    "east",
+    extinction=golden.ArmField({"west": 0.8, "east": 0.8}),
+)
+
+
+def test_additive_does_not_scan_past_rank_one():
+    """Under additive, rank 1 is the candidate even when a later one would do.
+
+    Rank 1 (north) is refused by the anchor; rank 2 (west) is cheap enough
+    to adopt but refused on sight. A scan would pick west and return early,
+    unstamped; without one, the anchor refuses north and the evaluation is
+    stamped.
+    """
+    case = _ADDITIVE_NO_SCAN
+    ranked = _ranked_for(case)
+    assert [rc.exit_id for rc in ranked] == ["north", "west", "east"]
+    rs = AgentRouteState(current_exit="east")
+    cfg = RerouteConfig(cost_config=case.config)
+    assert not live._adoptable(ranked[0], ranked, rs, cfg)
+    assert live._adoptable(ranked[1], ranked, rs, cfg)
+    result = _both(case)
+    assert result["switch"] is None
+    assert result["route_state"]["last_eval_time_s"] == case.time_s
+
+
+def test_clean_bypass_comes_before_candidate_feasibility():
+    config = RerouteConfig(cost_config=golden._gate())
+    candidate = _rc("a", clean=True, feasible=False, rank_cost=20.0)
+    old_rc = _rc("b", clean=False, rank_cost=10.0)
+    for mod in _SIDES.values():
+        assert mod._anchor_allows(candidate, old_rc, config)
 
 
 def test_wander_step_advances_before_a_failed_lookup():
