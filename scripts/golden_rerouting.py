@@ -3,12 +3,19 @@
 The CI golden test (tests/test_rerouting_golden.py) runs small decks on a
 synthetic smoke field. This script runs the full decks against their real FDS
 output, which lives in sciebo and not in the repository, and records what a
-behaviour-preserving refactor must leave unchanged:
+behaviour-preserving refactor must leave unchanged. Every deck runs twice, with
+the route-cost history on and off: the history ranking shares the segment
+cache with rerouting and can be the first to write an entry, so the two modes
+exercise different cache contents::
 
-    <out>/<deck>/route_history.csv       every route switch
-    <out>/<deck>/route_cost_history.csv  every ranked candidate, every tick
-    <out>/<deck>/egress_summary.json     run metrics and per-agent egress
-    <out>/manifest.json                  commit, decks and data root
+    <out>/<deck>/<mode>/route_history.csv       every route switch
+    <out>/<deck>/<mode>/route_cost_history.csv  every ranked candidate, every
+                                                tick (mode "history_on" only)
+    <out>/<deck>/<mode>/egress_summary.json     run metrics and per-agent egress
+    <out>/manifest.json                         commit, runs and data root
+
+The familiarity decks come from the repository's ``assets/`` and need no FDS
+run; they include the #168 sweep of the clear-air visibility grid.
 
 Each deck runs in its own interpreter: JuPedSim numbers agents process-wide
 and the agent id seeds the reevaluation stagger, so a deck run after another
@@ -21,10 +28,10 @@ Usage::
 
 ``--data-root`` defaults to the maintainer's sciebo ``fds-evac-data`` folder.
 A deck whose files are missing there is reported and skipped. ``--compare``
-reports, per deck and file, which columns differ and where the first
+reports, per run and file, which columns differ and where the first
 difference is. Both runs and compare check the full inventory of the selected
-decks, and exit non-zero if a deck or a file is missing on either side, or if
-anything differs.
+decks times both history modes, and exit non-zero if a run or a file is
+missing on either side, or if anything differs.
 """
 
 from __future__ import annotations
@@ -45,17 +52,32 @@ DEFAULT_DATA_ROOT = Path(
     "/Users/chraibi/sciebo - ped23 (ped23.pbox@fz-juelich.de)"
     "@fz-juelich.sciebo.de/fds-evac-data"
 )
-FILES = ("route_history.csv", "route_cost_history.csv", "egress_summary.json")
+# Route-cost history on and off. With it on, run_scenario ranks every agent's
+# routes once more before rerouting, into the same segment cache.
+MODES: dict[str, tuple[str, ...]] = {
+    "history_on": (
+        "route_history.csv",
+        "route_cost_history.csv",
+        "egress_summary.json",
+    ),
+    "history_off": ("route_history.csv", "egress_summary.json"),
+}
 
 
 @dataclass(frozen=True)
 class GoldenDeck:
-    """A deck in the data root: its config, geometry and FDS run."""
+    """A deck: its config, geometry, FDS run and extra command-line options.
+
+    Paths are relative to the data root, or to the repository when *in_repo*
+    is set. A deck without *fds_dir* runs in clear air.
+    """
 
     config: str
     geometry: str
-    fds_dir: str
+    fds_dir: str | None
     seed: int | None = None
+    in_repo: bool = False
+    extra_args: tuple[str, ...] = ()
 
 
 DECKS: dict[str, GoldenDeck] = {
@@ -92,27 +114,67 @@ DECKS: dict[str, GoldenDeck] = {
         "t_junction/evac/deck_geometry.wkt",
         "t_junction/fire_2MW_PVC",
     ),
+    # Familiarity tiers, clear air, as docs/testing-familiarity.md runs them.
+    "familiarity_test_full": GoldenDeck(
+        "assets/familiarity_test_full/config.json",
+        "assets/familiarity_test_full/geometry.wkt",
+        None,
+        seed=420,
+        in_repo=True,
+        extra_args=("--enable-rerouting", "--reroute-interval", "1"),
+    ),
+    "familiarity_test_discovery": GoldenDeck(
+        "assets/familiarity_test_discovery/config.json",
+        "assets/familiarity_test_discovery/geometry.wkt",
+        None,
+        seed=420,
+        in_repo=True,
+        extra_args=("--enable-rerouting", "--reroute-interval", "1"),
+    ),
 }
+# The #168 sweep: the discovery tier's time depends on the visibility grid.
+for _cell in ("0.25", "0.1", "0.05", "0.025"):
+    DECKS[f"familiarity_test_discovery_cell{_cell}"] = GoldenDeck(
+        "assets/familiarity_test_discovery/config.json",
+        "assets/familiarity_test_discovery/geometry.wkt",
+        None,
+        seed=420,
+        in_repo=True,
+        extra_args=("--vis-cell-size", _cell),
+    )
 
 
 # ── Running ───────────────────────────────────────────────────────────
 
 
+def _inventory(names: list[str]) -> list[tuple[str, str]]:
+    """Every run the selected decks must produce: deck times history mode."""
+    return [(name, mode) for name in names for mode in MODES]
+
+
+def _base(deck: GoldenDeck, root: Path) -> Path:
+    return REPO if deck.in_repo else root
+
+
 def _missing(deck: GoldenDeck, root: Path) -> list[Path]:
-    paths = (root / deck.config, root / deck.geometry, root / deck.fds_dir)
+    base = _base(deck, root)
+    paths = [base / deck.config, base / deck.geometry]
+    if deck.fds_dir is not None:
+        paths.append(root / deck.fds_dir)
     return [p for p in paths if not p.exists()]
 
 
 def _stage_bundle(deck: GoldenDeck, root: Path, into: Path) -> Path:
     """Copy config and geometry under the names ``load_scenario`` expects."""
     into.mkdir(parents=True, exist_ok=True)
-    shutil.copy(root / deck.config, into / "config.json")
-    shutil.copy(root / deck.geometry, into / "geometry.wkt")
+    base = _base(deck, root)
+    shutil.copy(base / deck.config, into / "config.json")
+    shutil.copy(base / deck.geometry, into / "geometry.wkt")
     return into
 
 
-def _run_one(name: str, root: Path, out: Path) -> None:
-    """Run one deck in this process and write its three outputs."""
+def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
+    """Run one deck in one history mode, in this process, and write its outputs."""
     sys.path.insert(0, str(REPO))
     import run as cli
     from pyfds_evac.core import load_scenario, run_scenario
@@ -125,15 +187,19 @@ def _run_one(name: str, root: Path, out: Path) -> None:
         argv = [
             "--scenario",
             str(bundle),
-            "--fds-dir",
-            str(root / deck.fds_dir),
             "--output-route-history",
             str(out / "route_history.csv"),
-            "--output-route-cost-history",
-            str(out / "route_cost_history.csv"),
         ]
+        if deck.fds_dir is not None:
+            argv += ["--fds-dir", str(root / deck.fds_dir)]
+        if mode == "history_on":
+            argv += [
+                "--output-route-cost-history",
+                str(out / "route_cost_history.csv"),
+            ]
         if deck.seed is not None:
             argv += ["--seed", str(deck.seed)]
+        argv += list(deck.extra_args)
         opts = cli._build_parser().parse_args(argv)
         scenario = load_scenario(opts.scenario)
         result = run_scenario(scenario, **build_run_kwargs(scenario, opts, log=print))
@@ -155,6 +221,7 @@ def _egress_summary(result, scenario, deck: GoldenDeck) -> dict:
             "config": deck.config,
             "fds_dir": deck.fds_dir,
             "seed": deck.seed,
+            "extra_args": list(deck.extra_args),
         },
         "metrics": metrics,
         "agents": _per_agent_egress(
@@ -215,32 +282,34 @@ def _git(*args: str) -> str:
 
 
 def _run_all(names: list[str], root: Path, out: Path) -> int:
-    """Run every deck in *names*; non-zero if any could not be run."""
+    """Run the inventory of *names*; non-zero if any run could not be made."""
     out.mkdir(parents=True, exist_ok=True)
     ran, skipped = [], {}
-    for name in names:
+    for name, mode in _inventory(names):
         missing = _missing(DECKS[name], root)
         if missing:
-            skipped[name] = [str(p) for p in missing]
-            print(f"MISSING {name}: {', '.join(map(str, missing))}")
+            skipped[f"{name}/{mode}"] = [str(p) for p in missing]
+            print(f"MISSING {name}/{mode}: {', '.join(map(str, missing))}")
             continue
-        print(f"run  {name}")
+        print(f"run  {name}/{mode}")
         subprocess.run(
             [
                 sys.executable,
                 __file__,
                 "--run-one",
                 name,
+                "--mode",
+                mode,
                 "--data-root",
                 str(root),
                 "--out",
-                str(out / name),
+                str(out / name / mode),
             ],
             check=True,
             cwd=REPO,
             stdout=subprocess.DEVNULL,
         )
-        ran.append(name)
+        ran.append(f"{name}/{mode}")
     manifest = {
         "commit": _git("rev-parse", "HEAD"),
         "pyfds_evac_dirty": bool(_git("status", "--porcelain", "--", "pyfds_evac")),
@@ -253,7 +322,7 @@ def _run_all(names: list[str], root: Path, out: Path) -> int:
         json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8"
     )
     if skipped:
-        print(f"{len(skipped)} of {len(names)} decks missing")
+        print(f"{len(skipped)} of {len(ran) + len(skipped)} runs missing")
         return 1
     return 0
 
@@ -333,13 +402,14 @@ def _compare_file(a: Path, b: Path) -> list[str]:
 
 
 def _compare(dir_a: Path, dir_b: Path, names: list[str]) -> int:
-    """Compare every deck in *names*; a missing file is a difference."""
+    """Compare the full inventory of *names*; a missing file is a difference."""
     differs = False
-    for deck in names:
-        for name in FILES:
-            report = _compare_file(dir_a / deck / name, dir_b / deck / name)
+    for deck, mode in _inventory(names):
+        for name in MODES[mode]:
+            where = f"{deck}/{mode}/{name}"
+            report = _compare_file(dir_a / where, dir_b / where)
             status = "DIFF" if report else "same"
-            print(f"{status}  {deck}/{name}")
+            print(f"{status}  {where}")
             for line in report:
                 print(f"      {line}")
             differs = differs or bool(report)
@@ -371,6 +441,9 @@ def main() -> int:
         help="Compare two output folders instead of running",
     )
     parser.add_argument("--run-one", choices=sorted(DECKS), help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--mode", choices=sorted(MODES), default="history_on", help=argparse.SUPPRESS
+    )
     args = parser.parse_args()
 
     if args.compare:
@@ -378,7 +451,7 @@ def main() -> int:
     if args.out is None:
         parser.error("--out is required unless --compare is given")
     if args.run_one:
-        _run_one(args.run_one, args.data_root, args.out)
+        _run_one(args.run_one, args.mode, args.data_root, args.out)
         return 0
     return _run_all(args.decks, args.data_root, args.out)
 
