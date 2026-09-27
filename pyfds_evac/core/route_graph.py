@@ -1057,6 +1057,13 @@ def evaluate_route(
     total_k_samples = sum(w * s.k_avg * s.length_m for w, s in weighted)
     k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
     travel_time = sum(w * s.travel_time_s for w, s in weighted)
+    # The share is capped at 1, so an agent behind the route's origin node
+    # would be timed over the node legs alone and not the walk to the origin.
+    # That stretch is timed at the route's mean pace, the same assumption
+    # tau = K_ave * effective_length makes about its extinction. Only ever a
+    # stretch, never a shrink, so an impassable route stays infinite.
+    if effective_length > exposure_length > 1e-9:
+        travel_time *= effective_length / exposure_length
     fed_growth = sum(w * s.fed_growth for w, s in weighted)
     fed_max = current_fed + fed_growth
     # The worst point on the route, not its average: a route is refused because
