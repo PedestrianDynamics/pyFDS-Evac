@@ -132,8 +132,8 @@ Each distribution group sets the attributes an agent starts with:
 | `v0_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
 | `v0_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
 | `radius` | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. With `radius_distribution` = `"gaussian"` and `radius_std`, drawn per agent and clipped to `[0.1, 1.0]` m. |
-| `use_premovement` | `false` | Delay before the agent starts moving. |
-| `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform`; `premovement_param_a`/`_b` override the presets. |
+| `use_premovement` | constant 10 s when no pre-movement key is set (FDS+Evac `PRE_MEAN`), with a warning; `false` otherwise | Delay before the agent starts moving. |
+| `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform` / `constant`; `premovement_param_a`/`_b` override the presets. |
 
 The run reads only the `v0*` keys. `desired_speed`, `desired_speed_distribution`
 and `desired_speed_std` are aliases accepted by `Scenario.set_agent_params()`

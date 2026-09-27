@@ -81,6 +81,7 @@ values cannot be copied across unchanged. The delay is in seconds.
 | `lognormal` | mean of ln(*t*) | standard deviation of ln(*t*) | 4.586, 0.967 |
 | `weibull` | scale [s] | shape | 139.285, 1.195 |
 | `uniform` | lower bound [s] | upper bound [s] | 0.0, 60.0 |
+| `constant` | delay [s] | unused | 10.0, - |
 
 The presets are illustrative, not from a cited dataset
 ([#144](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144)). Set both
@@ -88,11 +89,15 @@ parameters from data for your occupancy.
 
 The presets are used when `use_premovement` is `true` and `premovement_param_a`
 or `premovement_param_b` is missing; both parameters must be given for either
-to take effect. With `use_premovement` false, which is the default, agents
-start moving at *t* = 0. The FDS+Evac default is a constant 10 s after `T_BEGIN`
-([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)).
-When `premovement_seed` is null, the draws are seeded from the run seed, so
-they repeat under a fixed `--seed`.
+to take effect (`constant` needs only `premovement_param_a`). A spawn area that
+sets none of these keys gets the FDS+Evac default, a constant 10 s after
+`T_BEGIN` (`PRE_MEAN`;
+[#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)), and the
+run logs a warning, since the FDS+Evac guide advises against relying on
+defaults. With `use_premovement` false, agents start moving at *t* = 0, as
+every spawn area without pre-movement keys did before. When
+`premovement_seed` is null, the draws are seeded from the run seed, so they
+repeat under a fixed `--seed`.
 
 While an agent waits, its walking speed is not reduced by the smoke around
 it. It starts at its full clear-air speed when it is released. Its toxic dose

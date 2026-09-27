@@ -70,7 +70,9 @@ An agent that is incapacitated while it is still waiting out its
 pre-movement time starts walking when that time ends
 ([issue #145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)).
 Scenarios that combine pre-movement with FED therefore under-report
-incapacitations and over-report evacuees. Until this is fixed, check the
+incapacitations and over-report evacuees. A scenario that sets no pre-movement
+gets the FDS+Evac default of 10 s, so this applies to it too, for its first
+10 s. Until this is fixed, check the
 per-agent FED history for agents that crossed their threshold and still
 reached an exit.
 
@@ -136,8 +138,10 @@ returns to exactly zero, the last slowdown stays in force, so an agent that
 leaves an irritant plume into clean air does not return to full speed
 ([issue #142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 
-**Sourced pre-movement defaults.** The preset parameters of the four
-pre-movement distributions are illustrative, not from a cited dataset. Set
+**Sourced pre-movement defaults.** The preset parameters of the four random
+pre-movement distributions are illustrative, not from a cited dataset. The
+10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
+data either. Set
 `premovement_param_a` and `premovement_param_b` from data for your occupancy
 ([issue #144](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144)).
 

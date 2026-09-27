@@ -24,7 +24,8 @@ time, all in seconds.
 
 A pyFDS-Evac run starts at *t* = 0 and gives at most
 *t*<sub>pre</sub> + *t*<sub>trav</sub>. It includes *t*<sub>pre</sub> only if
-the scenario models pre-movement (`use_premovement` in a spawn area). You add
+the scenario models pre-movement (`use_premovement` in a spawn area; a spawn
+area that sets no pre-movement key gets a constant 10 s, as FDS+Evac). You add
 *t*<sub>det</sub> and *t*<sub>a</sub> yourself. The scenario in Part 1 models no
 pre-movement, so its exit times are travel times only.
 
@@ -271,7 +272,7 @@ deterministic mode.
   `run_scenario` inside the loop, as in the [Real-FDS walkthrough](walkthrough.md).
 - Pre-movement is set per spawn area in the scenario JSON, with
   `use_premovement`, `premovement_distribution` (`gamma`, `lognormal`,
-  `weibull` or `uniform`), `premovement_param_a`, `premovement_param_b` and
+  `weibull`, `uniform` or `constant`), `premovement_param_a`, `premovement_param_b` and
   `premovement_seed`. If `premovement_seed` is `null`, it is derived from the
   run seed, so the pre-movement times change with the seed. If it is set, they
   stay the same across seeds.
