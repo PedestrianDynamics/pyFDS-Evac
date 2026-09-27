@@ -21,7 +21,10 @@ from pyfds_evac.core.route_graph import (
     reroute_agent,
     should_reevaluate,
 )
-from pyfds_evac.core.smoke_speed import ConstantExtinctionField
+from pyfds_evac.core.smoke_speed import (
+    ConstantExtinctionField,
+    speed_factor_from_extinction,
+)
 
 
 def _box(cx: float, cy: float, half: float = 1.0) -> Polygon:
@@ -879,6 +882,35 @@ class TestPositionAwareRouting:
         g = self._graph()
         assert self._cost(g, ["J", "E1"], (2.0, 0.0), "E0") == pytest.approx(28.0)
 
+    @pytest.mark.parametrize("extinction", [0.0, 2.0])
+    def test_travel_time_includes_the_walk_to_the_origin(self, extinction):
+        """The gate ranks on travel time, so it must be timed from here too.
+
+        The agent at (2, 0) stands 18 m behind J, the origin of J -> E1, and
+        must walk 28 m to E1. The 10 m J -> E1 leg alone is 10 m of that.
+        """
+        g = self._graph()
+        config = RouteCostConfig(base_speed_m_per_s=1.3)
+        rc = evaluate_route(
+            g,
+            ["J", "E1"],
+            0.0,
+            0.0,
+            ConstantExtinctionField(extinction),
+            None,
+            config,
+            agent_position=(2.0, 0.0),
+        )
+        sf = speed_factor_from_extinction(
+            extinction,
+            alpha=config.alpha,
+            beta=config.beta,
+            min_speed_factor=config.min_speed_factor,
+        )
+        expected = 28.0 / (1.3 * sf)
+        assert rc.travel_time_s == pytest.approx(expected)
+        assert rc.rank_cost == pytest.approx(expected)
+
     def test_the_heading_does_not_change_the_price(self):
         """Geometry-independence: a route costs what it costs from here.
 
@@ -1026,6 +1058,38 @@ class TestEvaluateAndReroute:
         assert switch.reason == "initial"
         assert switch.new_exit == "E0"  # shortest
         assert route_state.current_exit == "E0"
+
+    def test_switch_logs_the_new_cost_as_a_rank_cost(self, two_exit_graph):
+        """old_cost is a rank_cost, so new_cost must be one too.
+
+        Under the gate that is a time. At 1.3 m/s it differs from the
+        composite, which is a distance, so the two cannot be confused.
+        """
+        cost_config = RouteCostConfig(base_speed_m_per_s=1.3)
+        wait_info = _make_wait_info(two_exit_graph, "D0", "D0")
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=AgentRouteState(),
+            graph=two_exit_graph,
+            current_time_s=0.0,
+            current_fed=0.0,
+            extinction_sampler=ConstantExtinctionField(0.0),
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=cost_config),
+        )
+        best = rank_routes(
+            two_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            None,
+            cost_config,
+        )[0]
+        assert switch is not None
+        assert switch.new_cost == pytest.approx(best.rank_cost)
+        assert best.rank_cost != pytest.approx(best.composite_cost)
 
     def test_no_switch_when_same_exit_wins(self, two_exit_graph):
         """No switch returned when best exit hasn't changed."""
