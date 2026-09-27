@@ -1,0 +1,815 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Verification suite</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/</link><description>Recent content in Verification suite on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/index.xml" rel="self" type="application/rss+xml"/><item><title>Homogeneous CO FED verification</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/</guid><description>
+&lt;h2>Purpose&lt;span class="hx-absolute -hx-mt-20" id="purpose">&lt;/span>
+&lt;a href="#purpose" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This test case verifies the FED (Fractional Effective Dose) accumulation and
+probabilistic incapacitation logic in the pyFDS-Evac pipeline against
+hand-calculated predictions, using a simplified scenario with a spatially
+&lt;strong>homogeneous&lt;/strong> (uniform) CO concentration field.&lt;/p>
+&lt;p>By removing spatial gradients as a variable, any deviation between simulated
+and hand-calculated FED/incapacitation results can be attributed to the
+model/pipeline logic itself, rather than to local concentration variation —
+isolating the FED accumulation and incapacitation-probability code from the
+gas-transport physics.&lt;/p>
+&lt;p>Three CO concentration levels are tested (2000, 4000, and 8000 ppm) to check
+that the pipeline&amp;rsquo;s FED/incapacitation results scale correctly with dose,
+rather than verifying against just a single data point.&lt;/p>
+&lt;p>Testing was also conducted using probabilistic tenability to make ensure that encapacitation
+occurs at a log-normal distribution.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> &lt;code>fed_hand_calc.py&lt;/code> and the two onset-distribution graphs
+referenced below are not currently committed to the repo — the formulae
+and pass/fail numbers here were computed and verified with them at the
+time, but a reader can&amp;rsquo;t regenerate the reference curve or view the plots
+from this checkout. The &lt;code>TODO&lt;/code> in &lt;a href="#how-to-run">How to Run&lt;/a>
+and the
+&lt;a href="#remaining-before-this-test-case-is-complete">Remaining&lt;/a>
+section below
+are original and still open.&lt;/p>&lt;/blockquote>
+&lt;h2>Test Setup&lt;span class="hx-absolute -hx-mt-20" id="test-setup">&lt;/span>
+&lt;a href="#test-setup" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>Geometry:&lt;/strong> Sealed room (no vents/openings), so CO cannot escape and the
+concentration field stays spatially uniform once mixed.&lt;/li>
+&lt;li>&lt;strong>Source:&lt;/strong> Constant CO generation rate, homogeneous throughout the room.
+Three variants of this test are run, at 2000 ppm, 4000 ppm, and 8000 ppm
+CO, each producing a known, time-resolved CO concentration that can be
+predicted analytically.&lt;/li>
+&lt;li>&lt;strong>Domain decomposition:&lt;/strong> 4 MPI sub-meshes — confirms FED values are
+consistent across mesh boundaries (i.e. splitting the domain doesn&amp;rsquo;t
+introduce discontinuities in the gas data JuPedSim consumes).&lt;/li>
+&lt;li>&lt;strong>Agents:&lt;/strong> 100 JuPedSim agents, non-evacuating travelling in a rectangular circuit, exposed
+uniformly to the CO field — isolates FED/incapacitation tracking from
+movement and exit-routing dynamics.&lt;/li>
+&lt;/ul>
+&lt;h2>What&amp;rsquo;s Being Verified&lt;span class="hx-absolute -hx-mt-20" id="whats-being-verified">&lt;/span>
+&lt;a href="#whats-being-verified" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>&lt;strong>FED accumulation&lt;/strong> — per-agent FED(t) computed from FDS CO output
+matches the hand-calculated FED curve for a known, constant CO
+concentration, across all three concentration levels.&lt;/li>
+&lt;li>&lt;strong>Probabilistic incapacitation&lt;/strong> — agents are incapacitated according to
+the correct FED-derived probability model, not deterministically at a
+fixed FED threshold.&lt;/li>
+&lt;li>&lt;strong>Pipeline integration&lt;/strong> — FDS gas slice output → &lt;code>fdsreader&lt;/code> → JuPedSim
+correctly carries FED data across the 4-mesh decomposition with no
+per-mesh discrepancies. (Not &lt;code>fdsvismap&lt;/code>: that&amp;rsquo;s a separate component
+used only by the sign-visibility model that gates rerouting/&lt;code>discovery&lt;/code>
+familiarity — this test has a single exit, non-evacuating agents, and no
+&lt;code>--vis-cache&lt;/code>/&lt;code>--enable-rerouting&lt;/code>, so it never touches fdsvismap.)&lt;/li>
+&lt;/ol>
+&lt;h2>Method&lt;span class="hx-absolute -hx-mt-20" id="method">&lt;/span>
+&lt;a href="#method" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>Hand-calculate the expected FED(t) curve for each of the three CO
+concentrations (2000, 4000, 8000 ppm) using the FDS-native Purser
+FED/CO incapacitation model (see &lt;code>fed_hand_calc.py&lt;/code>).&lt;/li>
+&lt;li>Run the full FDS → fdsreader → JuPedSim pipeline on each of the three
+scenarios.&lt;/li>
+&lt;li>Compare simulated per-agent FED accumulation curves and incapacitation
+timing/probability distribution against the hand-calculated reference,
+for each concentration.&lt;/li>
+&lt;li>Confirm agreement within tolerance across all 100 agents and all 4
+sub-meshes, at all three concentration levels.&lt;/li>
+&lt;li>Run the homogenous test at different seeds with the probabilistic incapacitation to ensure they&amp;rsquo;re following the log-normal distribution.&lt;/li>
+&lt;/ol>
+&lt;h2>Hand-Calculated FED Reference&lt;span class="hx-absolute -hx-mt-20" id="hand-calculated-fed-reference">&lt;/span>
+&lt;a href="#hand-calculated-fed-reference" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Computed with &lt;code>fed_hand_calc.py&lt;/code>, using the exact FDS Purser equations
+(NIST SP 1019, Section 22.10.18, eqs 22.42–22.49) — the same equations FDS
+itself uses to produce its &lt;code>FED&lt;/code> device output. Background CO2 = 500 ppm
+(0.05%), O2 = 20.9% (ambient, no hypoxia contribution) held constant for
+all three cases.&lt;/p>
+&lt;h3>Formulae used&lt;span class="hx-absolute -hx-mt-20" id="formulae-used">&lt;/span>
+&lt;a href="#formulae-used" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>These are the terms the hand calculation evaluates; the coded forms are on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>
+page.&lt;/p>
+&lt;p>&lt;strong>FED from CO&lt;/strong> (eq. 22.43), C_CO in ppm, t in minutes:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>FED_CO = 2.764e-5 x (C_CO)^1.036 x t&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>FED from O2 hypoxia&lt;/strong> (eq. 22.48), C_O2 in volume percent, t in minutes:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>FED_O2 = t / exp[8.13 - 0.54 x (20.9 - C_O2)]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>Hyperventilation factor from CO2&lt;/strong> (eq. 22.49), C_CO2 in percent:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>HV_CO2 = exp(0.1903 x C_CO2 &amp;#43; 2.0004) / 7.1&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>Total FED&lt;/strong> (eq. 22.42) — FED_CN, FED_NOx, and FLD_irr are omitted here
+since this scenario is CO-only:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>FED_tot = FED_CO x HV_CO2 &amp;#43; FED_O2&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>fed_hand_calc.py&lt;/code> accumulates this per-timestep (matching how FDS itself
+does it internally) rather than as a single closed-form multiplication —
+this matters because &lt;code>HV_CO2&lt;/code> is not 1.0 even at 0% CO2 (it evaluates to
+~1.04), so it can&amp;rsquo;t be pulled out and applied once at the end.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>CO Concentration&lt;/th>
+&lt;th>FED = 0.3 (onset)&lt;/th>
+&lt;th>FED = 1.0 (incapacitation)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>2000 ppm&lt;/td>
+&lt;td>234.7 s&lt;/td>
+&lt;td>782.4 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>4000 ppm&lt;/td>
+&lt;td>114.7 s&lt;/td>
+&lt;td>382.3 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>8000 ppm&lt;/td>
+&lt;td>56.0 s&lt;/td>
+&lt;td>186.6 s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Directory Contents&lt;span class="hx-absolute -hx-mt-20" id="directory-contents">&lt;/span>
+&lt;a href="#directory-contents" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Each case is a self-contained scenario directory. The deck, the JuPedSim
+config and the walkable area live together; FDS run output lands beside them
+and is gitignored.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>assets/
+├── fed_incap_co_2000ppm/
+│ ├── fed_incap_co_2000ppm.fds — FDS deck, 2000 ppm CO (CHID demo_homogeneous_CO_2000ppm)
+│ ├── config.json — JuPedSim scenario (agents, journey, routing)
+│ ├── geometry.wkt — Walkable area (Shapely WKT)
+│ └── &amp;lt;untracked run output&amp;gt; — .smv .out .pickle .sf/.sf.bnd (4 meshes x 17 quantities),
+│ _devc.csv _hrr.csv _cpu.csv _steps.csv _git.txt
+├── fed_incap_co_4000ppm/ — same layout, 4000 ppm
+└── fed_incap_co_8000ppm/ — same layout, 8000 ppm&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Three earlier iterations from this debugging lineage are no longer tracked:
+&lt;code>fed_incap_co_v1&lt;/code> and &lt;code>fed_incap_co_v2&lt;/code> (both 4000 ppm), and
+&lt;code>fed_incap_co_smol&lt;/code>, which never had a deck of its own. The 2000/4000/8000 ppm
+ladder supersedes all three.&lt;/p>
+&lt;p>pyFDS-Evac run artefacts (written wherever you point the &lt;code>--output-*&lt;/code> flags):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>&amp;lt;scenario&amp;gt;.sqlite — Agent trajectory database
+&amp;lt;scenario&amp;gt;_fed_history.csv — Per-agent FED accumulation over time
+&amp;lt;scenario&amp;gt;_smoke_history.csv — Per-agent smoke exposure over time
+&amp;lt;scenario&amp;gt;_route_history.csv — Agent route decisions over time
+&amp;lt;scenario&amp;gt;_route_cost_history.csv — Route cost values over time&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Analysis plots (incapacitation-onset histograms and cumulative onset curves
+per concentration) are produced from the FED history CSV by the plotting
+scripts in &lt;code>scripts/&lt;/code>; see &lt;code>docs/usage.md&lt;/code>.&lt;/p>
+&lt;h2>How to Run&lt;span class="hx-absolute -hx-mt-20" id="how-to-run">&lt;/span>
+&lt;a href="#how-to-run" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
+&lt;p>TODO — fill in exact commands once finalized.&lt;/p>&lt;/blockquote>
+&lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
+&lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Status: All cases of 2000, 4000, and 8000 ppm are passing.&lt;/strong>&lt;/p>
+&lt;p>For the 8000 ppm case, all 100 agents now show &lt;code>incapacitated = True&lt;/code> at
+~186–187 s, matching the hand-calculated FED = 1.0 time of &lt;strong>186.6 s&lt;/strong>
+within about 1 s. This is the first run where the sampler bug (CO/CO2/O2
+all reading 0, per earlier debugging) is no longer visibly affecting the
+result.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Case&lt;/th>
+&lt;th>FED = 1.0 (Hand Calculation)&lt;/th>
+&lt;th>FED = 1.0 (Simulation)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>2000 ppm&lt;/td>
+&lt;td>782.4 s&lt;/td>
+&lt;td>786 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>4000 ppm&lt;/td>
+&lt;td>382.3 s&lt;/td>
+&lt;td>384 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>8000 ppm&lt;/td>
+&lt;td>186.6 s&lt;/td>
+&lt;td>187 s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>All of these result in a percent difference &amp;lt;0.50% which is accepted.&lt;/p>
+&lt;p>
+&lt;img src="../graphs/homogenous_co_incapacitation_onset_8000ppm.png" alt="Incapacitation onset time distribution, 8000ppm" loading="lazy" />&lt;/p>
+&lt;p>
+&lt;img src="../graphs/homogenous_onset_cumulative_8000ppm.png" alt="Cumulative incapacitation over time, 8000ppm" loading="lazy" />&lt;/p>
+&lt;p>Note on terminology: the pipeline&amp;rsquo;s &amp;ldquo;onset time&amp;rdquo; (plotted above) is the
+timestamp at which &lt;code>incapacitated&lt;/code> first flips &lt;code>True&lt;/code> — this corresponds
+to the hand-calc&amp;rsquo;s &lt;strong>FED = 1.0&lt;/strong> threshold (186.6 s), not the FED = 0.3
+&amp;ldquo;onset&amp;rdquo; threshold used elsewhere in this doc&amp;rsquo;s reference table (56.0 s for
+8000 ppm). Same word, two different thresholds — worth not conflating the
+two when comparing numbers.&lt;/p>
+&lt;h3>Remaining before this test case is complete&lt;span class="hx-absolute -hx-mt-20" id="remaining-before-this-test-case-is-complete">&lt;/span>
+&lt;a href="#remaining-before-this-test-case-is-complete" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>Decide and document a formal tolerance (±5%, absolute FED difference,
+etc.) rather than eyeballing agreement from the plots.&lt;/li>
+&lt;li>Confirm whether the single-instant incapacitation spike is expected
+behavior for the probabilistic model in a homogeneous scenario.&lt;/li>
+&lt;/ul></description></item><item><title>Homogeneous heat FED verification</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/</guid><description>
+&lt;h2>Purpose&lt;span class="hx-absolute -hx-mt-20" id="purpose">&lt;/span>
+&lt;a href="#purpose" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This test case verifies the heat FED (Fractional Effective Dose from
+convective heat, SFPE Handbook Ch. 63 Eq. 63.44) accumulation logic in the pyFDS-Evac
+pipeline against hand-calculated predictions, using a simplified scenario
+with a spatially &lt;strong>homogeneous&lt;/strong> (uniform) gas-phase temperature field. It
+is the direct sibling of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/">&lt;code>docs/testing-homogeneous.md&lt;/code>&lt;/a>
+(the toxic-CO verification), following the same method and the same directory
+conventions.&lt;/p>
+&lt;p>By removing spatial gradients as a variable, any deviation between simulated
+and hand-calculated heat FED results can be attributed to the model/pipeline
+logic itself, rather than to local temperature variation — isolating the
+heat FED accumulation code from the heat-transport physics.&lt;/p>
+&lt;p>Three temperature levels are tested (100, 150, 200 °C) to check that the
+pipeline&amp;rsquo;s heat FED results scale correctly with the T^3.4 power law, rather
+than verifying against just a single data point.&lt;/p>
+&lt;p>&lt;strong>Scope note:&lt;/strong> this verifies the heat FED &lt;em>dose&lt;/em> track (incapacitation)
+only. Heat does not currently factor into route cost or rejection — that
+routing question is deliberately deferred pending further design discussion,
+so there is nothing routing-related to verify here.&lt;/p>
+&lt;p>Heat also has no effect on walking speed below the threshold. Extinction
+(Frantzich–Nilsson) and irritants (FIC) both degrade speed continuously; heat
+does nothing at all until the dose is reached and then sets the target speed to
+zero. That is faithful to the standard, which gives a tolerance time rather
+than a performance decrement — but it means an agent walks unimpeded through a
+200 °C layer for the 45 s the dose takes to accumulate, so do not read a heat
+FED trace as a speed trace.&lt;/p>
+&lt;h2>Test Setup&lt;span class="hx-absolute -hx-mt-20" id="test-setup">&lt;/span>
+&lt;a href="#test-setup" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>
+&lt;p>&lt;strong>Geometry:&lt;/strong> Sealed room (no vents/openings), so temperature cannot
+redistribute, with &lt;strong>adiabatic boundaries on all six faces&lt;/strong>. The boundary
+condition is the one place the CO ladder&amp;rsquo;s layout cannot be copied: FDS&amp;rsquo;s
+default is an &lt;code>INERT&lt;/code> wall at &lt;code>TMP_FRONT = TMPA&lt;/code>, which would hold ~2160 m²
+of enclosure surface at ambient against the prescribed gas and drain the
+room. Species do not diffuse into inert walls; temperature does.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Source:&lt;/strong> No combustion at all — unlike the CO ladder, this deck tracks
+no species and needs no &lt;code>&amp;amp;REAC&lt;/code>/yield setup. A single &lt;code>&amp;amp;INIT&lt;/code> prescribes a
+constant initial temperature across the whole domain. With no source term,
+no decay and no heat flux through any surface, the field stays at that
+temperature for the whole run, which is what makes the closed-form rate the
+right reference to compare against.&lt;/p>
+&lt;p>Verify this before trusting a result: the &lt;code>TEMP_center*&lt;/code> and &lt;code>TEMP_corner*&lt;/code>
+devices should all read the prescribed value at &lt;code>T_END&lt;/code>, not merely at
+t = 0. A falling trace means the boundaries are not holding and the
+comparison below is measuring the deck rather than the model.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Domain decomposition:&lt;/strong> 4 MPI sub-meshes — confirms heat FED values are
+consistent across mesh boundaries (i.e. splitting the domain doesn&amp;rsquo;t
+introduce discontinuities in the gas data JuPedSim consumes), same as the
+CO ladder.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Agents:&lt;/strong> 100 JuPedSim agents, non-evacuating travelling in a rectangular
+circuit, exposed uniformly to the temperature field — isolates heat FED
+tracking from movement and exit-routing dynamics. Reuses the CO ladder&amp;rsquo;s
+&lt;code>config.json&lt;/code>/&lt;code>geometry.wkt&lt;/code> verbatim (the scenario config is physics-track
+agnostic).&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2>What&amp;rsquo;s Being Verified&lt;span class="hx-absolute -hx-mt-20" id="whats-being-verified">&lt;/span>
+&lt;a href="#whats-being-verified" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>&lt;strong>Heat FED accumulation&lt;/strong> — per-agent FED_HEAT(t) computed from the FDS
+TEMPERATURE slice output matches the hand-calculated closed form for a
+known, constant gas temperature, across all three levels.&lt;/li>
+&lt;li>&lt;strong>Pipeline integration&lt;/strong> — FDS TEMPERATURE slice output → &lt;code>fdsreader&lt;/code> →
+JuPedSim correctly carries heat FED data across the 4-mesh decomposition
+with no per-mesh discrepancies.&lt;/li>
+&lt;li>&lt;strong>Slice-height correctness&lt;/strong> — &lt;code>FdsHeatField.from_fds()&lt;/code> goes through
+&lt;code>load_slice_sampler()&lt;/code> (unlike the gas &lt;code>FdsFedField&lt;/code>, a known pre-existing
+blind spot — see &lt;code>pyfds_evac/core/fed.py&lt;/code>), so this is also, incidentally,
+the first asset to exercise the height-mismatch warning path for a newly
+added slice type.&lt;/li>
+&lt;/ol>
+&lt;h2>Method&lt;span class="hx-absolute -hx-mt-20" id="method">&lt;/span>
+&lt;a href="#method" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>Hand-calculate the expected FED_HEAT(t) curve for each of the three
+temperatures (100, 150, 200 °C) using SFPE Handbook Eq. 63.44 (see
+&lt;code>scripts/fed_heat_hand_calc.py&lt;/code>).&lt;/li>
+&lt;li>Run the full FDS → fdsreader → JuPedSim pipeline on each of the three
+scenarios.&lt;/li>
+&lt;li>Compare simulated per-agent heat FED accumulation curves against the
+hand-calculated reference, for each temperature.&lt;/li>
+&lt;li>Confirm agreement within tolerance across all 100 agents and all 4
+sub-meshes, at all three temperature levels.&lt;/li>
+&lt;/ol>
+&lt;h2>Hand-Calculated Heat FED Reference&lt;span class="hx-absolute -hx-mt-20" id="hand-calculated-heat-fed-reference">&lt;/span>
+&lt;a href="#hand-calculated-heat-fed-reference" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Computed with &lt;code>scripts/fed_heat_hand_calc.py&lt;/code>, using SFPE Handbook Eq. 63.44
+directly — &lt;em>SFPE Handbook of Fire Protection Engineering&lt;/em>, 5th ed., Ch. 63
+&amp;ldquo;Assessment of Hazards to Occupants from Smoke, Toxic Gases, and Heat&amp;rdquo;
+(Purser &amp;amp; McAllister), p. 2382, quoted rather than derived. &lt;strong>Not&lt;/strong> ISO TS
+13571 (the formula was previously miscited as that standard) and &lt;strong>not&lt;/strong> in
+the FDS+Evac guide (that document has no heat term at all).&lt;/p>
+&lt;h3>Formula used&lt;span class="hx-absolute -hx-mt-20" id="formula-used">&lt;/span>
+&lt;a href="#formula-used" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>FED from convective heat&lt;/strong> (SFPE Handbook Eq. 63.44), T in °C, Δt in minutes;
+the coded form is on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#convective-heat">FED model&lt;/a>
+page:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>FED_HEAT = sum_{t1}^{t2} [ T^3.4 / 5e7 ] * dt&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Under this test&amp;rsquo;s constant-T exposure the accumulator reduces to an exact
+closed form, &lt;code>FED_HEAT(t) = (T^3.4 / 5e7) * t_min&lt;/code>, and that is what
+&lt;code>scripts/fed_heat_hand_calc.py&lt;/code> evaluates — one multiplication per temperature,
+not a per-timestep sum. The sum is what the &lt;em>engine&lt;/em> does, over the FDS dump&amp;rsquo;s
+own timestamps; the point of the closed form is to be an independent check on
+it, so the reference deliberately does not reproduce the engine&amp;rsquo;s loop.&lt;/p>
+&lt;p>Driving the reference off a real dump would only be necessary for a
+time-varying field. These decks hold temperature constant precisely so that it
+is not.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Temperature&lt;/th>
+&lt;th>FED = 0.3 (onset)&lt;/th>
+&lt;th>FED = 1.0 (incapacitation)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>100 °C&lt;/td>
+&lt;td>142.6 s&lt;/td>
+&lt;td>475.5 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>150 °C&lt;/td>
+&lt;td>35.9 s&lt;/td>
+&lt;td>119.8 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>200 °C&lt;/td>
+&lt;td>13.5 s&lt;/td>
+&lt;td>45.0 s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>(Accumulator and closed-form agree to all printed digits — expected, since
+there is no HV-style multiplier or ramp to introduce discretisation error
+the way the CO ladder&amp;rsquo;s CO2 hyperventilation term does.)&lt;/p>
+&lt;h2>Directory Contents&lt;span class="hx-absolute -hx-mt-20" id="directory-contents">&lt;/span>
+&lt;a href="#directory-contents" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Each case is a self-contained scenario directory, following the CO ladder&amp;rsquo;s
+layout exactly:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>assets/
+├── fed_incap_heat_100c/
+│ ├── fed_incap_heat_100c.fds — FDS deck, 100 C (CHID demo_homogeneous_heat_100C)
+│ ├── config.json — JuPedSim scenario (reused from fed_incap_co_2000ppm)
+│ ├── geometry.wkt — Walkable area (reused from fed_incap_co_2000ppm)
+│ └── &amp;lt;untracked run output&amp;gt; — .smv .out .sf/.sf.bnd (4 meshes), _devc.csv _cpu.csv _steps.csv
+├── fed_incap_heat_150c/ — same layout, 150 C
+└── fed_incap_heat_200c/ — same layout, 200 C&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>config.json&lt;/code>/&lt;code>geometry.wkt&lt;/code> are byte-identical copies of
+&lt;code>fed_incap_co_2000ppm&lt;/code>&amp;rsquo;s — the scenario config (agents, journey, routing
+weights) has no dependency on which hazard track is under test.&lt;/p>
+&lt;p>pyFDS-Evac run artefacts (written wherever you point the &lt;code>--output-*&lt;/code> flags):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>&amp;lt;scenario&amp;gt;.sqlite — Agent trajectory database
+&amp;lt;scenario&amp;gt;_fed_history.csv — Per-agent FED &amp;#43; heat FED accumulation over time&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>How to Run&lt;span class="hx-absolute -hx-mt-20" id="how-to-run">&lt;/span>
+&lt;a href="#how-to-run" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Requires an FDS install with a working MPI runtime (e.g. Intel MPI) on PATH.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mpiexec -n &lt;span style="color:#ae81ff">4&lt;/span> fds assets/fed_incap_heat_100c/fed_incap_heat_100c.fds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mpiexec -n &lt;span style="color:#ae81ff">4&lt;/span> fds assets/fed_incap_heat_150c/fed_incap_heat_150c.fds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mpiexec -n &lt;span style="color:#ae81ff">4&lt;/span> fds assets/fed_incap_heat_200c/fed_incap_heat_200c.fds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --scenario assets/fed_incap_heat_100c &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/fed_incap_heat_100c &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-heat-fed &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --heat-fed-threshold 1.0 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history /tmp/heat_100c_fed_history.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite /tmp/heat_100c.sqlite
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># repeat --fds-dir/--scenario for the 150c and 200c decks&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>No &lt;code>--fed-threshold&lt;/code>/CO-related flags are needed — these decks track no gas
+species, so the toxic FED path stays inactive (&lt;code>fed_model=None&lt;/code>) and only
+&lt;code>heat_fed_model&lt;/code> is built. &lt;code>--enable-heat-fed&lt;/code> is required: the heat dose is
+off by default, as FDS+Evac has none.&lt;/p>
+&lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
+&lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Status: not yet run.&lt;/strong> FDS could not be executed to produce real output in
+the environment this test case was built in — the installed FDS binary
+requires the Intel MPI runtime (&lt;code>impi.dll&lt;/code>), which is not present, and
+installing it is a system-level change outside the scope of adding this
+verification asset. The decks, hand-calc reference, and pipeline wiring are
+all in place and unit/behavioural-tested (see &lt;code>tests/verification/test_s6_heat_fed.py&lt;/code>
+and &lt;code>test_heat_fed_verif.py&lt;/code>, which verify the same formula and OR-incapacitation
+logic against synthetic fields, no FDS required) — what remains is running
+the three decks above in an environment with FDS+MPI available and filling
+in this table:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Case&lt;/th>
+&lt;th>FED = 1.0 (Hand Calculation)&lt;/th>
+&lt;th>FED = 1.0 (Simulation)&lt;/th>
+&lt;th>% difference&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>100 °C&lt;/td>
+&lt;td>475.5 s&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>—&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>150 °C&lt;/td>
+&lt;td>119.8 s&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>—&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>200 °C&lt;/td>
+&lt;td>45.0 s&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>—&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Target tolerance: &amp;lt;0.5%, matching the CO ladder&amp;rsquo;s precedent in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/">&lt;code>docs/testing-homogeneous.md&lt;/code>&lt;/a>
+.&lt;/p>
+&lt;p>Remaining before this test case is complete:&lt;/p>
+&lt;ul>
+&lt;li>Run all three decks through FDS and fill in the table above.&lt;/li>
+&lt;li>Confirm the &lt;code>FdsHeatField.from_fds()&lt;/code> height-matching warning path fires
+correctly if a mismatched &lt;code>--smoke-slice-height&lt;/code> is passed (it reuses the
+same flag as smoke/gas FED).&lt;/li>
+&lt;/ul></description></item><item><title>Familiarity routing verification (full vs. discovery)</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/</guid><description>
+&lt;h2>Purpose&lt;span class="hx-absolute -hx-mt-20" id="purpose">&lt;/span>
+&lt;a href="#purpose" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This test case verifies that the &lt;code>full&lt;/code> and &lt;code>discovery&lt;/code> agent familiarity
+tiers produce &lt;strong>different evacuation behavior&lt;/strong>, not just a config
+flag with no observable effect.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>full&lt;/code>&lt;/strong> agents know the entire building layout from the moment they
+spawn (trained staff) and take the true shortest route to the exit.&lt;/li>
+&lt;li>&lt;strong>&lt;code>discovery&lt;/code>&lt;/strong> agents start knowing almost nothing (a first-time visitor)
+and can only route through checkpoints they&amp;rsquo;ve either started at or
+physically passed through. When no known route to an exit exists yet, they
+head toward the nearest checkpoint they know about but haven&amp;rsquo;t explored,
+discover what&amp;rsquo;s beyond it on arrival, and repeat until an exit is found.&lt;/li>
+&lt;/ul>
+&lt;p>The two configs (&lt;code>Full&lt;/code>/&lt;code>Discovery&lt;/code>) are identical except for one field
+(&lt;code>familiarity&lt;/code> on the spawn distribution) and share the same hand-drawn maze
+geometry and the same paired real-fire FDS deck, so any difference in
+outcome is attributable to the familiarity mechanism itself.&lt;/p>
+&lt;p>This test also exercises, indirectly, three engine-level fixes/features that
+were required before familiarity could have &lt;em>any&lt;/em> observable effect at all
+(see &lt;a href="#background-why-this-test-exists">Background&lt;/a>
+below).&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Deck rework (2026-08-10, PR #99).&lt;/strong> The decks no longer contain the
+scripted journey and shortcut-only transitions described below: journeys
+and transitions are empty, so the stage graph auto-wires (as in
+&lt;code>station_fahy&lt;/code>), the second exit was dropped, all four checkpoints carry
+authored direction-facing signs, and CP3 was moved 0.4 m off the
+partition wall so an FDS-resolution visibility grid can resolve its
+sightline. The scripted-tour/shortcut mechanics and the results quoted
+below document the &lt;em>original&lt;/em> experiment — kept because the engine fixes
+it motivated are part of the routing system&amp;rsquo;s history. Discovery on the
+reworked decks is genuine frontier exploration, not a retrace of a tour.&lt;/p>&lt;/blockquote>
+&lt;h2>Test Setup&lt;span class="hx-absolute -hx-mt-20" id="test-setup">&lt;/span>
+&lt;a href="#test-setup" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>Geometry:&lt;/strong> hand-drawn maze-like floor plan, 20 m × 18 m, 0.1 m walls,
+1.2 m doors throughout, generated parametrically by each config folder&amp;rsquo;s
+&lt;code>build_geometry.py&lt;/code> (&lt;code>assets/familiarity_test_full/&lt;/code>,
+&lt;code>assets/familiarity_test_discovery/&lt;/code>). One spawn room (bottom-right), one
+exit alcove (top-left).&lt;/li>
+&lt;li>&lt;strong>Model:&lt;/strong> &lt;code>SocialForceModel&lt;/code>, seed 420, 20 agents (&lt;code>by_number&lt;/code> spawn, all
+at once — not flow-spawned).&lt;/li>
+&lt;li>&lt;strong>Fire deck:&lt;/strong> &lt;code>assets/familiarity_test_full/familiarity_test.fds&lt;/code>.
+Real combustion via &lt;code>&amp;amp;REAC&lt;/code> (not a prescribed &lt;code>&amp;amp;INIT&lt;/code>); the FDS walls
+mirror the walkable geometry exactly so smoke propagates through the same
+doorways agents use. &lt;em>Not required for the pure-routing result below&lt;/em> —
+see &lt;a href="#scope--caveats">Scope&lt;/a>
+.&lt;/li>
+&lt;li>&lt;strong>Checkpoint graph:&lt;/strong> the maze has one &lt;strong>scripted tour&lt;/strong> —
+&lt;code>spawn → CP0 → CP1 → CP2 → CP3 → exit&lt;/code> — walking the doorway at the west
+wall (CP0), through a floating-wall gap (CP1), a pocket door (CP2), and the
+door into the exit alcove (CP3). This is the only route either tier is
+&lt;em>assigned&lt;/em> at spawn, and it&amp;rsquo;s what a config with rerouting disabled always
+produces regardless of &lt;code>familiarity&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Shortcut edges:&lt;/strong> the spawn room and the exit-alcove doorway (CP3) sit in
+the same open room with no wall between them — a real, walkable shortcut
+the scripted tour ignores. Two extra graph edges (&lt;code>CP0→CP3&lt;/code>,
+&lt;code>spawn→CP3&lt;/code>, real walking distance ≈12.3 m / ≈11.4 m via JuPedSim&amp;rsquo;s own
+routing engine) are declared in each config&amp;rsquo;s top-level &lt;code>transitions&lt;/code>,
+tagged with a &lt;code>journey_id&lt;/code> that isn&amp;rsquo;t part of the scripted tour — so they
+exist only for the rerouting/cognitive-map system to discover, and never
+affect a plain (non-rerouted) run.&lt;/li>
+&lt;/ul>
+&lt;h2>What&amp;rsquo;s Being Verified&lt;span class="hx-absolute -hx-mt-20" id="whats-being-verified">&lt;/span>
+&lt;a href="#whats-being-verified" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>&lt;strong>&lt;code>full&lt;/code> finds and uses the shortcut&lt;/strong> — with its complete graph
+knowledge, a &lt;code>full&lt;/code> agent&amp;rsquo;s very first route evaluation (forced to happen
+at spawn, before it starts walking the scripted tour) finds
+&lt;code>spawn→CP3→exit&lt;/code> cheaper than the scripted route and reroutes onto it
+immediately (&lt;code>reason=&amp;quot;better_path&amp;quot;&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>&lt;code>discovery&lt;/code> explores instead of knowing&lt;/strong> — a &lt;code>discovery&lt;/code> agent starts
+knowing only its spawn&amp;rsquo;s one declared neighbor (CP0). With no exit
+reachable in its own knowledge yet, it heads to the nearest known-but-
+unvisited checkpoint (frontier exploration, &lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code>),
+physically arrives, learns what&amp;rsquo;s beyond it, and repeats. For this
+maze&amp;rsquo;s specific distances, the nearest unexplored checkpoint at every
+step happens to be the next stop on the original scripted tour (e.g. from
+CP0, the CP1 detour at ~6.5 m is closer than the CP3 shortcut at
+~12.3 m) — so &lt;code>discovery&lt;/code> retraces the full scripted tour, never
+discovering the shortcut before it reaches the exit anyway.&lt;/li>
+&lt;li>&lt;strong>The two tiers produce measurably different outcomes&lt;/strong> — not just
+different internal state, but different total evacuation time.&lt;/li>
+&lt;/ol>
+&lt;h2>Background: why this test exists&lt;span class="hx-absolute -hx-mt-20" id="background-why-this-test-exists">&lt;/span>
+&lt;a href="#background-why-this-test-exists" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Two independent bugs meant &lt;code>familiarity&lt;/code> had &lt;em>no effect whatsoever&lt;/em> before
+this work, on any scenario:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>journeys_v2&lt;/code> schema mismatch.&lt;/strong> The web editor saves drawn routes as
+&lt;code>journeys_v2&lt;/code>; the simulation loader only ever read the legacy &lt;code>journeys&lt;/code>
+field. Editor-drawn routes were silently dropped and the scenario fell
+back to auto-routing. Fixed by migrating &lt;code>journeys_v2&lt;/code> → legacy
+&lt;code>journeys&lt;/code>/&lt;code>transitions&lt;/code> in &lt;code>load_scenario&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>familiarity&lt;/code> dropped before reaching agents.&lt;/strong> &lt;code>_process_distributions&lt;/code>
+rebuilt each distribution&amp;rsquo;s parameters from a fixed allowlist that didn&amp;rsquo;t
+include &lt;code>familiarity&lt;/code>, so every agent was silently treated as &lt;code>full&lt;/code>
+regardless of what the config said. Fixed by adding it to the allowlist
+and propagating it onto each spawned agent&amp;rsquo;s path state.&lt;/li>
+&lt;/ul>
+&lt;p>And even with both fixed, the routing engine had no way to &lt;em>act&lt;/em> on a
+&lt;code>full&lt;/code> agent&amp;rsquo;s superior knowledge in a single-exit scenario: rerouting only
+ever compared &lt;em>which exit&lt;/em> to head for, never &lt;em>which path&lt;/em> to a fixed exit.
+Two additions closed that gap:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>nearest_frontier_target&lt;/code> (frontier exploration) for the &amp;ldquo;no route to an
+exit known yet&amp;rdquo; case.&lt;/li>
+&lt;li>Same-exit path-cost comparison in &lt;code>evaluate_and_reroute&lt;/code>
+(&lt;code>reason=&amp;quot;better_path&amp;quot;&lt;/code>) so an agent can switch onto a cheaper path to the
+exit it&amp;rsquo;s already assigned to, not just a different exit.&lt;/li>
+&lt;/ul>
+&lt;h2>Method&lt;span class="hx-absolute -hx-mt-20" id="method">&lt;/span>
+&lt;a href="#method" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>Load both configs (&lt;code>assets/familiarity_test_full&lt;/code>,
+&lt;code>assets/familiarity_test_discovery&lt;/code>) — identical except &lt;code>familiarity&lt;/code>.&lt;/li>
+&lt;li>Run each with rerouting enabled (default on) and route-history collection
+turned on.&lt;/li>
+&lt;li>Compare total evacuation time and inspect &lt;code>route_history&lt;/code> for which
+reroute reasons fired for each tier.&lt;/li>
+&lt;/ol>
+&lt;h2>Directory Contents&lt;span class="hx-absolute -hx-mt-20" id="directory-contents">&lt;/span>
+&lt;a href="#directory-contents" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>assets/familiarity_test_full/
+├── config.json — JuPedSim scenario: exit, four signed checkpoints,
+│ distribution (familiarity: &amp;#34;full&amp;#34;); journeys and
+│ transitions empty, so the stage graph auto-wires
+├── geometry.wkt — Walkable area (Shapely WKT), matches the FDS deck
+├── build_geometry.py — Parametric geometry generator (re-run to reshape)
+├── layout_preview.png — Rendered floor plan (green=spawn, red=exit)
+└── familiarity_test.fds — FDS input, real &amp;amp;REAC combustion; walls mirror
+geometry.wkt so smoke propagates through the
+same doorways agents use. Not run/committed
+here — see Scope for what does and doesn&amp;#39;t
+need it.
+assets/familiarity_test_discovery/
+└── (same five files; config.json differs only in familiarity: &amp;#34;discovery&amp;#34;)
+tests/test_familiarity_routing.py — Unit tests for shortest_path_to,
+nearest_frontier_target, and the
+better_path/explore reroute branches&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>How to Run&lt;span class="hx-absolute -hx-mt-20" id="how-to-run">&lt;/span>
+&lt;a href="#how-to-run" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>CLI (rerouting is on by default; shown explicitly for clarity):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run run.py --scenario assets/familiarity_test_full &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-rerouting --reroute-interval &lt;span style="color:#ae81ff">1&lt;/span> &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-history results/familiarity_full_routes.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --seed &lt;span style="color:#ae81ff">420&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run run.py --scenario assets/familiarity_test_discovery &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-rerouting --reroute-interval &lt;span style="color:#ae81ff">1&lt;/span> &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-history results/familiarity_discovery_routes.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --seed &lt;span style="color:#ae81ff">420&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Or from the webapp: pick the scenario in the sidebar, leave &lt;code>Enable rerouting&lt;/code> checked (default), and run.&lt;/p>
+&lt;p>No &lt;code>--fds-dir&lt;/code>/&lt;code>--vis-cache&lt;/code> needed for the result below — the divergence is
+purely distance-based (see &lt;a href="#scope--caveats">Scope&lt;/a>
+).&lt;/p>
+&lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
+&lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Status: passing.&lt;/strong> Both tiers evacuate all agents; &lt;code>full&lt;/code> takes the
+shortcut and finishes markedly faster than &lt;code>discovery&lt;/code>, which retraces the
+scripted maze tour.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Tier&lt;/th>
+&lt;th>Evacuated&lt;/th>
+&lt;th>Evacuation time&lt;/th>
+&lt;th>Route switches&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>full&lt;/td>
+&lt;td>20/20&lt;/td>
+&lt;td>&lt;strong>35.1 s&lt;/strong>&lt;/td>
+&lt;td>20 × &lt;code>better_path&lt;/code> (at spawn, t≈0)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>discovery&lt;/td>
+&lt;td>20/20&lt;/td>
+&lt;td>&lt;strong>75.1 s&lt;/strong>&lt;/td>
+&lt;td>0 (nearest-unexplored always matched the scripted tour)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;code>discovery&lt;/code> showing zero explicit switches is expected, not a bug: its
+frontier choice happens to coincide with the scripted route at every step
+for this maze&amp;rsquo;s specific checkpoint distances (see
+&lt;a href="#whats-being-verified">What&amp;rsquo;s Being Verified&lt;/a>
+, point 2) — it&amp;rsquo;s still
+routing purely off its own explored knowledge, it just never gets lucky
+enough to find the shortcut before finishing.&lt;/p>
+&lt;p>Full test suite (&lt;code>tests/test_familiarity_routing.py&lt;/code> plus the existing
+&lt;code>tests/test_route_graph.py&lt;/code> / &lt;code>tests/verification/test_s4_tjunction_reroute.py&lt;/code>)
+passes with no regressions.&lt;/p>
+&lt;h2>Scope / Caveats&lt;span class="hx-absolute -hx-mt-20" id="scope--caveats">&lt;/span>
+&lt;a href="#scope--caveats" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>The scenario is authored to exhibit this behavior&lt;/strong>, not automatically
+discovering it on arbitrary geometry. The shortcut edges are hand-added to
+the config; a checkpoint graph with only one possible route (or a
+single-hop map with nothing to explore) will make &lt;code>full&lt;/code> and &lt;code>discovery&lt;/code>
+behave identically regardless of the underlying mechanism.&lt;/li>
+&lt;li>&lt;strong>This result doesn&amp;rsquo;t need the fire deck.&lt;/strong> &lt;code>familiarity_test.fds&lt;/code> exists
+and is geometrically paired with this maze for a follow-up smoke/toxicity-
+driven variant (discovery agents losing sight of exits through smoke via
+&lt;code>--vis-cache&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>The tiers limit topology, not perception of smoke.&lt;/strong> A &lt;code>discovery&lt;/code> agent is
+ignorant of the &lt;em>building&lt;/em> — it routes over &lt;code>cognitive_subgraph&lt;/code> and learns
+nodes through &lt;code>VisibilityModel&lt;/code>, which is genuinely perception-limited. It is
+not ignorant of the &lt;em>smoke field&lt;/em>: to choose among the exits it does know it
+integrates &lt;code>tau = K_ave * L_remaining&lt;/code> over the whole remaining route,
+including legs it has never visited, and (with &lt;code>anticipate = True&lt;/code> and
+&lt;code>foresight_horizon_s = inf&lt;/code>) at times that have not happened. The extinction
+sampler is global and the cognitive map never touches it. So the results on
+this page — which are purely distance-based and run in clear air — are
+unaffected, and so is every result about map growth, exploration order and
+wander behaviour. What must &lt;strong>not&lt;/strong> be claimed from this test, or from any
+discovery run, is that a discovery agent&amp;rsquo;s &lt;em>route choice&lt;/em> is
+perception-limited. It is an optimality bound over the agent&amp;rsquo;s known
+subgraph. See
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
+and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#route-choice-is-an-optimality-bound-not-a-perception-limited-model">route-cost-gate.md&lt;/a>
+.&lt;/li>
+&lt;li>On a tie (two frontier candidates equidistant from a discovery agent), the
+choice is deterministic (lexicographically-first checkpoint ID), not
+randomized per agent — every discovery agent facing an identical tie makes
+the identical choice.&lt;/li>
+&lt;/ul>
+&lt;h2>Observing the map from outside: &lt;code>collect_cognitive_map_history&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="observing-the-map-from-outside-collect_cognitive_map_history">&lt;/span>
+&lt;a href="#observing-the-map-from-outside-collect_cognitive_map_history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The cognitive map is built and grown inside &lt;code>run_scenario&lt;/code>, so until recently
+the only way to inspect it was to re-implement the expansion against a graph
+built the same way — which tests the re-implementation, not the engine&amp;rsquo;s call
+sites, and those call sites are where the bugs above actually lived.&lt;/p>
+&lt;p>&lt;code>run_scenario(..., collect_cognitive_map_history=True)&lt;/code> returns
+&lt;code>ScenarioResult.cognitive_map_history&lt;/code>: one row each time an agent&amp;rsquo;s map
+changes, with &lt;code>time_s&lt;/code>, &lt;code>agent_id&lt;/code>, &lt;code>familiarity&lt;/code>, &lt;code>known_nodes&lt;/code> and
+&lt;code>known_edges&lt;/code>. Maps only ever grow, so recording changes rather than every
+timestep keeps a crowd-scale run cheap while losing nothing.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#f92672">=&lt;/span> run_scenario(scenario, seed&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">420&lt;/span>, vis_model&lt;span style="color:#f92672">=&lt;/span>vis,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> collect_cognitive_map_history&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> event &lt;span style="color:#f92672">in&lt;/span> result&lt;span style="color:#f92672">.&lt;/span>cognitive_map_history:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(event[&lt;span style="color:#e6db74">&amp;#34;time_s&amp;#34;&lt;/span>], len(event[&lt;span style="color:#e6db74">&amp;#34;known_nodes&amp;#34;&lt;/span>]))&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>scripts/animate_cognitive_map.py&lt;/code> turns that history into a movie of one agent
+walking with its known nodes highlighted, and authors inward-facing sign angles
+for a deck that has none.&lt;/p>
+&lt;p>&lt;strong>Perception needs a visibility model.&lt;/strong> With &lt;code>vis_model=None&lt;/code>,
+&lt;code>cognitive_map._expand_visible&lt;/code> returns immediately, so a discovery agent&amp;rsquo;s map
+grows only when it physically arrives somewhere (&lt;code>expand_on_arrival&lt;/code>). On a deck
+where the agent walks straight from spawn to an exit, that means it never grows
+at all — see the &amp;ldquo;blind agent&amp;rdquo; issue in the tracker. A clear-air stand-in
+(line of sight against the walkable polygon plus the sign&amp;rsquo;s readable half-plane)
+is enough to exercise the wiring without FDS output; the test suite and the
+animation script each carry one.&lt;/p>
+&lt;h2>Clear-air visibility without an FDS run&lt;span class="hx-absolute -hx-mt-20" id="clear-air-visibility-without-an-fds-run">&lt;/span>
+&lt;a href="#clear-air-visibility-without-an-fds-run" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>VisibilityModel.clear_air(walkable, sign_descriptors, cell_size_m=...)&lt;/code> builds a
+visibility model from geometry alone: fdsvismap&amp;rsquo;s own ray casting, view angle and
+&lt;code>max_vis&lt;/code> handling, over a uniform zero extinction field. It exists because
+&lt;code>vis_model=None&lt;/code> silently disables perception — a discovery agent&amp;rsquo;s map then
+never grows — and because five separate approximations of fdsvismap had
+accumulated in this repo, none of them applying the view angle.&lt;/p>
+&lt;p>&lt;strong>Resolution is a real parameter.&lt;/strong> A cell blocks sight when its centre lies
+outside the walkable polygon, so a wall thinner than one cell disappears and
+sight passes through it — the same property an FDS mesh has. At the 0.5 m
+default the ~0.4 m walls of &lt;code>assets/blind_spawn_discovery&lt;/code> vanish entirely and
+occlusion tests silently stop testing anything; 0.25 m resolves them. Cost grows
+as the inverse square. Pick it below the thinnest wall that must block.&lt;/p>
+&lt;p>This requires the fdsvismap branch adding &lt;code>set_grid&lt;/code> / &lt;code>set_uniform_extco&lt;/code>
+(FireDynamics/fdsvismap#41); &lt;code>pyproject.toml&lt;/code> pins it until that is released.&lt;/p></description></item></channel></rss>

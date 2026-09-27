@@ -1,0 +1,1581 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Understanding</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/</link><description>Recent content in Understanding on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/index.xml" rel="self" type="application/rss+xml"/><item><title>Concepts</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/</guid><description>
+&lt;p>ISO 13943:2023 defines human behaviour in fire as &amp;ldquo;actions performed in the
+event of a fire as a result of a behavioural or decision-making process&amp;rdquo;. The
+talk
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>
+(Visibility Seminar 2026, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf" target="_blank" rel="noopener">PDF&lt;/a>
+)
+splits the behaviour that smoke disturbs into three questions. &lt;strong>Speed&lt;/strong> asks
+how fast an occupant can walk. &lt;strong>Route choice&lt;/strong> asks which exit the occupant
+heads for. &lt;strong>Wayfinding&lt;/strong> asks which exits the occupant knows about at all.
+pyFDS-Evac answers each question from the output of a finished Fire Dynamics
+Simulator (FDS) run and hands the answers to JuPedSim, which moves the agents.&lt;/p>
+&lt;p>This page gives the intuition behind each answer and the rules you need to
+read a result. The published laws the answers rest on, in their authors'
+notation, are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/">Fundamentals&lt;/a>
+pages. How the
+code implements them, with its defaults and its departures from the
+literature, is on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/">Models&lt;/a>
+pages.&lt;/p>
+&lt;p>pyFDS-Evac is research software, provided without warranty. It is not intended
+for regulatory or design use. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>
+.&lt;/p>
+&lt;h2>One-way coupling and the data flow&lt;span class="hx-absolute -hx-mt-20" id="one-way-coupling-and-the-data-flow">&lt;/span>
+&lt;a href="#one-way-coupling-and-the-data-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS runs once, before any agent moves, and pyFDS-Evac only reads the slice
+files it stored. This is one-way coupling: a crowd that blocks a door does not
+change the smoke that reaches it. In return, one fire can serve any number of
+egress runs, and a prescribed field can replace FDS entirely, as in the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>
+.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>FDS output (.smv + slice files)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> │
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ├─ fdsreader ─ SliceFieldSampler ─┬─ ExtinctionField K [1/m]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> │ nearest-neighbour lookup ├─ FdsFedField CO, CO₂, O₂, irritants
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> │ of (t, x, y) at one height └─ FdsHeatField gas temperature [°C]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> │
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> └─ fdsvismap ─ VisibilityModel which cells can read which sign, per time
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> │
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Scenario (load_scenario) ──────────┤
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ▼
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> run_scenario() ── JuPedSim moves the agents
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> │
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ▼
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> trajectory (SQLite) + optional per-agent histories (smoke, FED, route,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> route cost, cognitive map) + &amp;lt;trajectory&amp;gt;.manifest.json&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The sampler takes the nearest stored value on a slice. Extinction and
+temperature come from the horizontal slice nearest a set height, the same for
+every agent; for the gases, see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#what-is-not-modelled">FED model&lt;/a>
+. The manifest records the package versions, the
+seed, the scenario and the FDS version, so a result can be traced to the code
+and the fire that produced it. The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">walkthrough&lt;/a>
+runs this
+chain on a tracked case, and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">Your FDS case&lt;/a>
+lists the slices the deck must write.&lt;/p>
+&lt;h2>Speed&lt;span class="hx-absolute -hx-mt-20" id="speed">&lt;/span>
+&lt;a href="#speed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>From extinction to walking speed&lt;span class="hx-absolute -hx-mt-20" id="from-extinction-to-walking-speed">&lt;/span>
+&lt;a href="#from-extinction-to-walking-speed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Smoke enters the speed model through the extinction coefficient &lt;em>K&lt;/em> [1/m],
+read from the FDS &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice at the agent&amp;rsquo;s position.
+Each agent keeps its own unimpeded speed \(v_0\) and walks at a fraction of it,&lt;/p>
+$$
+v = v_0 \, f(K),
+$$&lt;p>where the speed factor \(f\) falls from 1 in clear air towards a floor in
+dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
+form and with the constants of FDS+Evac, so a difference between the two tools
+downstream of speed cannot come from the speed law. The alternative is the
+&lt;code>fridolf&lt;/code> option, \(V/(V+2)\) with the sighting distance \(V = C/K\). Its
+attribution to Fridolf et al. (2019) is unverified, and the paper&amp;rsquo;s own law
+differs (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>
+). It is steeper in light smoke, has no floor, and is
+available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>
+). The published laws are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>
+; the coded forms are
+on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>
+page.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V&amp;#43;2) with C = 3 and C = 8" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Solid dark blue:
+Frantzich–Nilsson at the defaults, with its floor. The &lt;code>fridolf&lt;/code> option,
+\(V/(V+2)\) with \(V = C/K\): red dashed for C = 3, orange dash-dotted for
+C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h3>Tenability: a brake and a stop&lt;span class="hx-absolute -hx-mt-20" id="tenability-a-brake-and-a-stop">&lt;/span>
+&lt;a href="#tenability-a-brake-and-a-stop" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Some effects of smoke depend only on what the agent meets now; others
+accumulate into a dose. pyFDS-Evac keeps them apart: speed follows what the
+agent meets at the moment, and a dose acts only as a switch:&lt;/p>
+$$
+v_i = v_{0,i}\; f(K)\; g(\mathrm{FIC})\;
+\mathbb{1}\!\left[\mathrm{FED}_i &lt; D_i\right]\;
+\mathbb{1}\!\left[\mathrm{FED}_{\mathrm{heat},i} &lt; D_{\mathrm{heat},i}\right].
+$$&lt;p>The brake is \(f(K)\,g(\mathrm{FIC})\). The fractional irritant concentration
+(FIC) sums the irritant gases, each over a reference concentration, and \(g\)
+lowers the speed further as it rises, down to a floor. FIC is a concentration,
+not a dose, so \(g\) follows the gas where the agent stands. One quirk: when
+FIC drops to exactly zero the factor is not recomputed, so an agent that walks
+out of a plume into clean air keeps its last slowdown
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>
+).&lt;/p>
+&lt;p>The stop is the fractional effective dose (FED). The toxic-gas dose follows
+the Purser sum of the FDS+Evac guide, which adds irritants into the dose,
+unlike ISO 13571. Convective heat from an FDS &lt;code>TEMPERATURE&lt;/code> slice accumulates
+in a second dose; without that slice there is no heat dose, and the log says
+so. The two doses are never added. Each agent draws its own threshold for each
+dose, so a population does not stop all at once. When either dose crosses its
+threshold, the agent&amp;rsquo;s speed is set to zero and it stays in place as an
+obstacle. &lt;code>--disable-tenability&lt;/code> turns off the slowdown and both stops, while
+the doses are still logged; &lt;code>--incapacitation-mode deterministic&lt;/code> stops every
+agent at FED = 1, as FDS+Evac does.&lt;/p>
+&lt;p>Two consequences matter when you read a result. An FED below the threshold
+leaves the walking speed unchanged, however close it comes. And the heat dose
+only incapacitates: it neither slows agents nor affects route choice, and
+radiant heat is not modelled. The published dose laws are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant fractional effective dose&lt;/a>
+,
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>
+, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>
+and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>
+.
+The coded forms are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a>
+page.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/tenability_speed_curves.png" alt="Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 2. The brake: (a) f(K), (b) g(FIC) and (c) their product, with
+contours of equal speed factor. FED does not appear on
+these axes; it only sets the speed to zero at the agent&amp;rsquo;s threshold.
+Script: &lt;code>scripts/generate_tenability_curves.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>Route choice&lt;span class="hx-absolute -hx-mt-20" id="route-choice">&lt;/span>
+&lt;a href="#route-choice" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>Routes live on a stage graph&lt;span class="hx-absolute -hx-mt-20" id="routes-live-on-a-stage-graph">&lt;/span>
+&lt;a href="#routes-live-on-a-stage-graph" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Routes are paths on a directed graph whose nodes are the spawn areas,
+checkpoints and exits. Each edge carries a polyline that JuPedSim computes
+along the walkable area, so it follows the corridors, not a straight line
+through walls. Smoke is sampled at short steps along it, and the mean of the
+samples, \(\bar K_{uv}\), is a discrete Beer–Lambert mean (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>
+) taken along a walked
+path instead of a line of sight.&lt;/p>
+&lt;p>A route is measured from where the agent stands. Its mean extinction
+\(\bar K_k\) is the length-weighted mean over its edges, and \(L_k\) is the
+distance still to walk. Each agent re-decides at a fixed interval, and a
+decision is not remembered: every re-decision starts again from the current
+field.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/stage_graph.png" alt="Plan view of a room with an internal wall; a dashed straight line from agent to exit crosses the wall, a solid walked polyline goes around it with sample points coloured by extinction" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 3. Schematic with a toy extinction field, not a simulation. The
+straight line (dashed) passes through a wall; the walked polyline (solid) goes
+around it, its samples coloured by K [1/m] at the time the agent would reach
+them. \(d_W\) is the walkable distance to the first node.
+Script: &lt;code>scripts/figures/stage_graph.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h3>The exposure gate&lt;span class="hx-absolute -hx-mt-20" id="the-exposure-gate">&lt;/span>
+&lt;a href="#the-exposure-gate" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Under the default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> cost model, one quantity carries all of the smoke
+reasoning: the optical depth along the walk, \(\tau_k = \bar K_k L_k\), the
+column of smoke the agent would pass through.&lt;/p>
+&lt;p>First, a shortest-path search finds one path to each exit, with every edge
+weighted by its own optical depth: the least-smoky path, which in clear air is
+the shortest. Second, each candidate is re-evaluated with anticipation, each
+edge sampled at the time the agent would reach it. By default the router sees
+the whole future of the fire, so the result is an upper bound on how well an
+occupant could route. Third, the gate refuses a route whose \(\tau\) exceeds a
+budget \(\tau_{\max}\), or whose projected dose at arrival exceeds a fixed
+limit. The
+survivors are ranked by \(\tau\), and travel time breaks ties, so in clear
+air the model reduces to the nearest exit.&lt;/p>
+&lt;p>Because \(\tau\) contains the distance, a long clean route can beat a short
+smoky one, but a slightly cleaner route cannot divert an agent for free. A
+rival exit is held to a stricter budget than the current one, and the current
+exit gets a discount in the ranking. If every route is refused, the agent
+still moves and takes the least smoky one. Irritants and heat do not enter
+route choice: FIC and the gate respond to the same smoke, so routing on both
+would count it twice.&lt;/p>
+&lt;p>The budget is inherited from the door rule of FDS+Evac, which rests on Jin&amp;rsquo;s
+visibility law (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
+).
+Here it bounds smoke integrated along a walked path, which measures exposure,
+not sight. It is cited, not calibrated, and FDS+Evac ranks on smoke only as a
+last resort, so the gate departs from FDS+Evac rather than reproducing it. The
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing page&lt;/a>
+gives the defaults, the derivation of the
+budget, the &lt;code>&amp;quot;additive&amp;quot;&lt;/code> alternative and a measured case of oscillation.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/exposure_gate.png" alt="Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 4. Schematic with a toy plume, not a simulation. Top: three candidate
+routes, their samples shaded by K [1/m]. Bottom: their optical depth \(\tau\) against the
+budget for the current exit (solid) and the stricter one for a rival
+(dashed). Route C is refused; route B ranks first although it is the longest
+walk. Script: &lt;code>scripts/figures/exposure_gate.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>Wayfinding&lt;span class="hx-absolute -hx-mt-20" id="wayfinding">&lt;/span>
+&lt;a href="#wayfinding" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>A sign is more than a position&lt;span class="hx-absolute -hx-mt-20" id="a-sign-is-more-than-a-position">&lt;/span>
+&lt;a href="#a-sign-is-more-than-a-position" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>What an agent knows about the building depends on the signs it can read.
+Each exit, checkpoint and waypoint carries a sign with a position, a bearing
+\(\alpha_s\) that gives the side from which it can be read, and a visibility
+constant &lt;em>C&lt;/em>, a property of the sign (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
+). A node without an
+authored sign receives a reflective sign at its centroid, readable from every
+direction.&lt;/p>
+&lt;p>&lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>
+computes legibility
+from the FDS extinction field when &lt;code>run.py&lt;/code> is given &lt;code>--fds-dir&lt;/code>, and from
+clear air otherwise. A sign is legible from a floor cell when its visibility
+along the line of sight, reduced by the viewing angle, reaches the distance to
+it; walls block the line. The map is built once per run, and the run only asks
+whether a node&amp;rsquo;s sign is legible from the agent&amp;rsquo;s cell at the current time.&lt;/p>
+&lt;p>Legibility decides what an agent &lt;strong>knows&lt;/strong>, not whether a route is allowed. An
+exit whose sign the agent has never read is absent from its graph. It is not
+present and refused.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/sign_bearing.png" alt="Two 30 m corridors, each with an exit at both ends; left, the near sign faces the agents and all 40 go to the near exit; right, the near sign faces away and all 40 walk to the far exit" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 5. Asset &lt;code>assets/exit_visibility_alpha&lt;/code>: a corridor in clear air with
+an exit at each end and 40 agents with familiarity 0. Only the bearing of the
+near exit&amp;rsquo;s sign differs. Facing the agents, all 40 took the near exit; facing
+away, all 40 walked to the far one, and egress took 26.0 s instead of 18.2 s.
+Outcomes as recorded in the asset README.
+Script: &lt;code>scripts/figures/sign_bearing.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h3>Per-agent cognitive maps&lt;span class="hx-absolute -hx-mt-20" id="per-agent-cognitive-maps">&lt;/span>
+&lt;a href="#per-agent-cognitive-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent carries a cognitive map: the graph of stages it knows, not a
+psychological construct. Routing runs only on this subgraph. The &lt;code>familiarity&lt;/code>
+key of a distribution group sets how it starts. With &lt;code>&amp;quot;full&amp;quot;&lt;/code>, the default,
+the agent knows the whole graph, as trained staff would. With &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>,
+it knows its spawn node and the neighbours whose signs are legible from the
+spawn area. A number &lt;em>p&lt;/em> between 0 and 1 sits between the two: each exit
+enters the map at spawn with probability &lt;em>p&lt;/em>, so a population can be a
+gradient rather than two groups. An &lt;code>entrance&lt;/code> key names an exit the agent
+always knows, such as the door it came in by. Setting familiarity
+separately for each exit is not supported
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>
+). The
+literature on why familiarity matters is summarised on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/">Exit choice and familiarity&lt;/a>
+.&lt;/p>
+&lt;p>The map grows at spawn, on arrival at a node and at each re-decision, by the
+neighbours legible from where the agent stands. A learned corridor is known in
+both directions, so an agent can always retrace its steps out of a dead end.
+If no exit is known, the agent heads for the nearest known node it has not
+visited; when none is left, it patrols the nodes it knows, because a new
+position can bring a new sign into view.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/cognitive_map.png" alt="Four panels of a T-shaped corridor showing which nodes and edges an agent knows: at spawn, at the junction, with smoke hiding exit B, and for a fully familiar agent" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 6. Schematic on a T-shaped corridor. Filled nodes and solid edges are
+in the agent&amp;rsquo;s map. (1) At spawn a discovery agent knows the junction, whose
+sign is legible. (2) At the junction both exits enter the map. (3) Smoke fills
+the right arm; exit B stays known, and the router picks exit A. (4) A fully
+familiar agent knows the whole graph at t = 0.
+Script: &lt;code>scripts/figures/cognitive_map.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h3>The map remembers&lt;span class="hx-absolute -hx-mt-20" id="the-map-remembers">&lt;/span>
+&lt;a href="#the-map-remembers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Nothing leaves a cognitive map. An exit learned while its sign was legible
+stays known and routable after smoke or distance hides the sign; with a
+visibility query alone, the agent would forget it as soon as it lost sight of
+it.&lt;/p>
+&lt;p>The map limits topology, not knowledge of the smoke. A discovery agent ranks
+the exits it knows by \(\tau\) over the whole remaining route, including legs
+it has never walked and, with anticipation, times that have not yet happened.
+Its route choice is a best case over its known subgraph, not a model of what
+it can perceive
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
+). The
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/visibility/">visibility page&lt;/a>
+lists the command-line settings for
+sight gating and what each one means.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/map_memory.png" alt="Six copies of a corridor with an agent probe at y = 4, 10, 14, 20, 26 and 30 m; the side exit is unknown below the legibility band, known inside it, and still known above it" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 7. Asset &lt;code>assets/cognitive_map_memory&lt;/code>: a corridor whose side-exit
+sign is legible only inside the shaded band. A discovery agent probed at six
+positions: above the band the sign is no longer legible, but the exit is still
+in the map and still chosen. Outcomes as recorded in the asset README and
+pinned by tests. Script: &lt;code>scripts/figures/map_memory.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>The parameter split&lt;span class="hx-absolute -hx-mt-20" id="the-parameter-split">&lt;/span>
+&lt;a href="#the-parameter-split" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some parameters with the same name live in two places, and they do different
+things. The walking-speed parameters (&lt;code>speed_law&lt;/code>, &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>,
+&lt;code>min_speed_factor&lt;/code> and &lt;code>visibility_factor_c&lt;/code>) are fields of &lt;code>SmokeSpeedConfig&lt;/code>.
+&lt;code>run.py&lt;/code> and the web GUI build that object with its defaults, so every run they
+start uses the Frantzich–Nilsson law with the FDS+Evac constants. Another law
+or other coefficients require building the model in Python and passing it to
+&lt;code>run_scenario()&lt;/code>.&lt;/p>
+&lt;p>The &lt;code>routing&lt;/code> block of the scenario JSON accepts &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code> and
+&lt;code>min_speed_factor&lt;/code> with the same defaults. They only set the speed factor the
+router uses to estimate travel time when it prices a route. Setting
+&lt;code>routing.alpha&lt;/code> changes which route an agent prefers, but not how fast it walks
+in smoke. The same holds for speed itself: the router prices routes at its own
+speed, &lt;code>routing.base_speed_m_per_s&lt;/code>, not at the agent&amp;rsquo;s \(v_0\). The router
+always uses the linear law, even when agents walk with the &lt;code>fridolf&lt;/code> option. The
+defaults are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed&lt;/a>
+and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>
+pages; see also
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>
+.&lt;/p>
+&lt;h2>Notation&lt;span class="hx-absolute -hx-mt-20" id="notation">&lt;/span>
+&lt;a href="#notation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This table is the shared notation for the Concepts, Fundamentals and Models
+pages. Defaults are on the Models pages.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Symbol&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;th>Unit&lt;/th>
+&lt;th>Code name&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;em>K&lt;/em>&lt;/td>
+&lt;td>Extinction coefficient at a point (FDS &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code>)&lt;/td>
+&lt;td>1/m&lt;/td>
+&lt;td>&lt;code>extinction_per_m&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\bar K\)&lt;/td>
+&lt;td>Mean extinction along an edge or a route&lt;/td>
+&lt;td>1/m&lt;/td>
+&lt;td>&lt;code>k_avg&lt;/code>, &lt;code>k_ave_route&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;em>S&lt;/em> = &lt;em>C&lt;/em>/&lt;em>K&lt;/em>&lt;/td>
+&lt;td>Sighting distance (Jin); &lt;em>V&lt;/em> in the code&amp;rsquo;s &lt;code>fridolf&lt;/code> option&lt;/td>
+&lt;td>m&lt;/td>
+&lt;td>—&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;em>C&lt;/em>&lt;/td>
+&lt;td>Visibility constant of a sign (Jin); reflective or light-emitting&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>visibility_factor_c&lt;/code>, sign &lt;code>c&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(v_0\)&lt;/td>
+&lt;td>Unimpeded desired speed of an agent&lt;/td>
+&lt;td>m/s&lt;/td>
+&lt;td>&lt;code>v0&lt;/code> (distribution group)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;em>f&lt;/em>(&lt;em>K&lt;/em>)&lt;/td>
+&lt;td>Smoke speed factor&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>speed_factor&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\alpha\), \(\beta\)&lt;/td>
+&lt;td>Frantzich–Nilsson coefficients&lt;/td>
+&lt;td>m/s, m²/s&lt;/td>
+&lt;td>&lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(f_{\min}\)&lt;/td>
+&lt;td>Floor of the smoke speed factor&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>min_speed_factor&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>FIC&lt;/td>
+&lt;td>Fractional irritant concentration (Purser; related to, but not the same as, ISO 13571 FEC)&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>fic&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;em>g&lt;/em>(FIC)&lt;/td>
+&lt;td>Irritant speed factor&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>fic_min_factor&lt;/code>, &lt;code>fic_alpha&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>FED&lt;/td>
+&lt;td>Fractional effective dose, toxic gases&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>fed&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\mathrm{FED}_{\mathrm{heat}}\)&lt;/td>
+&lt;td>Fractional effective dose, convective heat&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>heat FED&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(D_i\), \(D_{\mathrm{heat},i}\)&lt;/td>
+&lt;td>Incapacitation threshold of agent &lt;em>i&lt;/em>, log-normal&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>fed_threshold&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;em>T&lt;/em>&lt;/td>
+&lt;td>Gas temperature&lt;/td>
+&lt;td>°C&lt;/td>
+&lt;td>&lt;code>TEMPERATURE&lt;/code> slice&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(L_k\)&lt;/td>
+&lt;td>Walkable distance still to go on route &lt;em>k&lt;/em>&lt;/td>
+&lt;td>m&lt;/td>
+&lt;td>&lt;code>effective_length&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\tau_k = \bar K_k L_k\)&lt;/td>
+&lt;td>Optical depth along route &lt;em>k&lt;/em>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>tau_route&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\tau_{\max}\)&lt;/td>
+&lt;td>Refusal budget for \(\tau\)&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>tau_max&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\Delta s\)&lt;/td>
+&lt;td>Maximum spacing of smoke samples along a polyline&lt;/td>
+&lt;td>m&lt;/td>
+&lt;td>&lt;code>sampling_step_m&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\alpha_s\)&lt;/td>
+&lt;td>Bearing of a sign, degrees clockwise from north&lt;/td>
+&lt;td>°&lt;/td>
+&lt;td>sign &lt;code>alpha&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The same code name &lt;code>alpha&lt;/code> is used for the Frantzich–Nilsson coefficient, for
+the irritant slope &lt;code>fic_alpha&lt;/code> and for the sign bearing; the table keeps them
+apart. In FDS+Evac, \(\tau\) is the relaxation time of the movement model. On
+these pages \(\tau\) is always the dimensionless optical depth. &amp;ldquo;Gate&amp;rdquo; is used
+in two senses only: the exposure gate (the route-cost gate) that refuses a
+route, and sight gating, which decides whether a sign is legible and so what
+enters the cognitive map. The dose does not gate anything; it stops the agent.&lt;/p>
+&lt;h2>Further reading&lt;span class="hx-absolute -hx-mt-20" id="further-reading">&lt;/span>
+&lt;a href="#further-reading" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>The talk: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">slides&lt;/a>
+and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf" target="_blank" rel="noopener">PDF&lt;/a>
+, Visibility
+Seminar 2026, University of Wuppertal, 25 September 2026.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/">Fundamentals&lt;/a>
+: the published laws, with their
+sources.&lt;/li>
+&lt;li>Model pages: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke speed&lt;/a>
+, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED&lt;/a>
+,
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>
+, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/visibility/">visibility and cognitive maps&lt;/a>
+,
+and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/">verification&lt;/a>
+.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>
+: what is not modelled, and which
+parameters are library-level.&lt;/li>
+&lt;/ul></description></item><item><title>Limitations</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</guid><description>
+&lt;h2>Status&lt;span class="hx-absolute -hx-mt-20" id="status">&lt;/span>
+&lt;a href="#status" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac is research software, provided without warranty. It is not intended
+for regulatory or design use. It is maintained by one researcher at
+Forschungszentrum Jülich (IAS-7) and has no release policy yet, so behaviour
+and defaults can change between commits. A result from pyFDS-Evac is a
+research result. It is not an assessment of a building.&lt;/p>
+&lt;p>The evidence that exists is listed on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>
+.
+That evidence is verification (the code does what its equations say), not
+validation (the equations describe how people behave).&lt;/p>
+&lt;h2>Some parameters are library-level&lt;span class="hx-absolute -hx-mt-20" id="some-parameters-are-library-level">&lt;/span>
+&lt;a href="#some-parameters-are-library-level" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Not every model parameter is reachable from the command line or the scenario
+JSON. The smoke-speed parameters (&lt;code>speed_law&lt;/code>, &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>,
+&lt;code>min_speed_factor&lt;/code> and &lt;code>visibility_factor_c&lt;/code>) are fields of
+&lt;code>SmokeSpeedConfig&lt;/code>. &lt;code>run.py&lt;/code> and the web GUI build that object with its
+defaults, so every run they start uses the Frantzich–Nilsson law (the &lt;code>lund&lt;/code>
+option; the linear FDS+Evac law) with the defaults listed on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>
+page. Another law or
+other coefficients require building the model in Python and passing it to
+&lt;code>run_scenario()&lt;/code>.&lt;/p>
+&lt;p>The JSON &lt;code>routing&lt;/code> block has keys with the same names. They parameterise the
+speed factor used to estimate travel time when a route is priced, not the
+walking speed. Setting &lt;code>routing.alpha&lt;/code> therefore changes which route an agent
+prefers but leaves its speed in smoke unchanged. The same split applies to
+speed itself: &lt;code>routing.base_speed_m_per_s&lt;/code> (1.3 m/s) prices routes, while an
+agent walks at its own &lt;code>v0&lt;/code> (1.25 m/s by default).&lt;/p>
+&lt;h2>Incapacitation is probabilistic by default&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-is-probabilistic-by-default">&lt;/span>
+&lt;a href="#incapacitation-is-probabilistic-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FED below means fractional effective dose. By default
+(&lt;code>--incapacitation-mode probabilistic&lt;/code>), each agent draws its own
+incapacitation threshold from a log-normal distribution with median
+&lt;code>--fed-threshold&lt;/code> and log-scale spread &lt;code>--susceptibility-sigma&lt;/code> (defaults on
+the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a>
+page).
+About half of the agents therefore stop below FED = 1, and about 10 % stop
+below FED = 0.3. The default spread is fitted to the incapacitation fractions
+of NIST TN 1797
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>
+). The
+heat dose uses the same mechanism, and its spread is reused from the gas value
+without a data basis of its own. FDS+Evac stops
+every agent at FED = 1. For results comparable with FDS+Evac, run with
+&lt;code>--incapacitation-mode deterministic&lt;/code> (and &lt;code>--heat-incapacitation-mode deterministic&lt;/code> for the heat dose).&lt;/p>
+&lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
+&lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
+run ends early only when no agent is left, so a run in which any agent is
+incapacitated continues until &lt;code>max_simulation_time&lt;/code> (300 s by default). Its
+reported &lt;code>evacuation_time&lt;/code> is then that time limit, not the time the last
+mobile agent left. &lt;code>success&lt;/code> is also true at the time limit even when agents
+remain (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">issue #139&lt;/a>
+).
+Read &lt;code>agents_remaining&lt;/code>, and take the time each agent left from the
+trajectory file, instead of relying on these two values
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">issue #141&lt;/a>
+).&lt;/p>
+&lt;h2>Incapacitation during pre-movement is undone&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-during-pre-movement-is-undone">&lt;/span>
+&lt;a href="#incapacitation-during-pre-movement-is-undone" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An agent that is incapacitated while it is still waiting out its
+pre-movement time starts walking when that time ends
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">issue #145&lt;/a>
+).
+Scenarios that combine pre-movement with FED therefore under-report
+incapacitations and over-report evacuees. A scenario that sets no pre-movement
+gets the FDS+Evac default of 10 s, so this applies to it too, for its first
+10 s. Until this is fixed, check the
+per-agent FED history for agents that crossed their threshold and still
+reached an exit.&lt;/p>
+&lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
+&lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is the convective term of Purser and
+McAllister (SFPE Handbook, 5th ed., Eq. 63.44), computed from the gas
+temperature of an FDS &lt;code>TEMPERATURE&lt;/code> slice. Radiant heat flux is not read and
+does not contribute to any dose. An agent near a flame or under a hot layer
+that radiates strongly is therefore treated as less exposed than it is.&lt;/p>
+&lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
+opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
+incapacitated when either dose reaches its threshold. Before that point, heat
+has no effect. Route choice is given the toxic dose only, so an agent can
+choose a route that will incapacitate it thermally. Walking speed is reduced
+by extinction and by irritant gases, but not by temperature, so an agent walks
+at full speed through a hot layer until the heat dose is reached.&lt;/p>
+&lt;p>&lt;strong>Multi-floor buildings and stairs.&lt;/strong> The walkable area is a single 2-D
+polygon, and hazards are sampled from slices at one height
+(&lt;code>--smoke-slice-height&lt;/code>). There is no stair model, no floor-to-floor
+connection and no speed reduction on inclines. &lt;code>generate_walkable_from_fds.py&lt;/code>
+treats stair treads and risers as floor, so a staircase in an FDS deck becomes
+flat floor that agents cross at full speed. A &lt;code>zones&lt;/code> entry with a
+&lt;code>speed_factor&lt;/code> can slow agents inside a polygon, but it does not represent
+direction of travel on a stair.&lt;/p>
+&lt;p>&lt;strong>FED activity level.&lt;/strong> The CO term of the toxic dose uses one fixed
+coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
+the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>
+). Rest and heavy work cannot be selected, although
+breathing rate changes the CO dose. Not supported; see
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">issue #135&lt;/a>
+.&lt;/p>
+&lt;p>&lt;strong>Per-exit familiarity.&lt;/strong> Familiarity is set per spawn distribution, as
+&lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>, or one probability applied to every exit. The
+&lt;code>entrance&lt;/code> key adds one exit that the whole group knows. A separate
+probability for each exit, as FDS+Evac allows with &lt;code>KNOWN_DOOR_PROBS&lt;/code>, is not
+supported; see
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">issue #136&lt;/a>
+.&lt;/p>
+&lt;p>&lt;strong>Herding and social influence.&lt;/strong> Each agent chooses its route from its own
+cognitive map and the hazard along each route. When &lt;code>routing.w_queue&lt;/code> is
+above zero (the default is 0.0), expected queueing at an exit also enters the
+cost, so a crowded exit becomes less attractive. Agents do not follow others,
+and an exit never becomes more attractive because others use it. See
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>
+.&lt;/p>
+&lt;p>&lt;strong>Perception-limited route choice.&lt;/strong> A discovery agent knows only the exits
+whose signs it has read, but it prices the routes to them with the smoke
+sampled along the whole route, including stretches it has never seen
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">issue #125&lt;/a>
+).
+By default (&lt;code>routing.anticipate&lt;/code> = true, &lt;code>routing.foresight_horizon_s&lt;/code>
+unbounded), each stretch is also priced with the smoke that the finished FDS
+run holds for the time the agent would arrive there. Route choice is therefore
+a best case with perfect foresight, not a model of what an occupant can see or
+predict.&lt;/p>
+&lt;p>&lt;strong>Recovery from irritants.&lt;/strong> The irritant slowdown (opt-in with
+&lt;code>--enable-fic-speed&lt;/code>) is recomputed only while
+the sampled fractional irritant concentration (FIC) is positive. When it
+returns to exactly zero, the last slowdown stays in force, so an agent that
+leaves an irritant plume into clean air does not return to full speed
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">issue #142&lt;/a>
+).&lt;/p>
+&lt;p>&lt;strong>Sourced pre-movement defaults.&lt;/strong> The preset parameters of the four random
+pre-movement distributions are illustrative, not from a cited dataset. The
+10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
+data either. Set
+&lt;code>premovement_param_a&lt;/code> and &lt;code>premovement_param_b&lt;/code> from data for your occupancy
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144" target="_blank" rel="noopener">issue #144&lt;/a>
+).&lt;/p>
+&lt;p>&lt;strong>Smoke-triggered detection.&lt;/strong> Pre-movement is one delay per agent, drawn
+from a distribution. Smoke reaching the agent does not end the delay early,
+and there is no separate detection phase.&lt;/p>
+&lt;p>&lt;strong>Feedback from occupants to the fire.&lt;/strong> The coupling is one-way. The FDS run
+is finished before the evacuation starts, so occupants cannot open doors or
+otherwise change the fire. The time resolution of the hazard is that of the
+slice output (&lt;code>&amp;amp;DUMP DT_SLCF&lt;/code>).&lt;/p>
+&lt;h2>Reproducibility&lt;span class="hx-absolute -hx-mt-20" id="reproducibility">&lt;/span>
+&lt;a href="#reproducibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A fixed seed does not give identical trajectories. The verification suite
+found that individual trajectories differ between runs with the same seed,
+while aggregate outcomes (counts and fractions, such as the number of agents
+incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
+and do not compare single trajectories between runs. See the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>
+.&lt;/p>
+&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
+&lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
+Technical Reference and User&amp;rsquo;s Guide&lt;/em>. VTT Technical Research Centre of
+Finland.&lt;/p>
+&lt;p>Purser, D. A., and McAllister, J. L. (2016). Assessment of hazards to
+occupants from smoke, toxic gases, and heat. In &lt;em>SFPE Handbook of Fire
+Protection Engineering&lt;/em>, 5th ed., Chapter 63. Springer.&lt;/p></description></item><item><title>Model comparison: FDS+Evac vs pyFDS-Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</guid><description>
+&lt;blockquote>
+&lt;p>This document compares the evacuation models in FDS+Evac (v2.6.0,
+Korhonen 2021) and pyFDS-Evac as implemented in this repository.
+Claims are referenced to the FDS+Evac Technical Reference and User&amp;rsquo;s
+Guide [1] and to the pyFDS-Evac source code. Where the two systems
+differ, the differences are stated precisely; where they agree, that
+is noted too.&lt;/p>
+&lt;p>Line numbers of the form &lt;code>evac.f90:NNNN&lt;/code> refer to the &lt;code>evac.f90&lt;/code>
+source at FDS commit 16cf79652c (2016), the copy in &lt;code>materials/&lt;/code>, not
+to the FDS 6.7.6 / Evac 2.6.0 release that [1] documents. The defaults
+cited here are the same in FDS 6.7.6, and so is &lt;code>Change_Target_Door&lt;/code>
+apart from the floor on &lt;code>K_ave_Door&lt;/code>, which 6.7.6 applies for either
+sign of &lt;code>FED_DOOR_CRIT&lt;/code>; the line numbers differ.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2>1. Movement model&lt;span class="hx-absolute -hx-mt-20" id="1-movement-model">&lt;/span>
+&lt;a href="#1-movement-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Aspect&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Locomotion model&lt;/strong>&lt;/td>
+&lt;td>Social Force Model (Helbing et al. [6], three-circle body shape [1] Table 1), continuous 2-D equation of motion solved with a modified velocity-Verlet integrator ([1] §3.1–3.2, §3.6)&lt;/td>
+&lt;td>JuPedSim collision-free speed model (operational model configured externally); no social forces&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Body shape&lt;/strong>&lt;/td>
+&lt;td>Three overlapping circles (torso Rd, shoulder Rs, head Rt) with rotational degree of freedom ([1] Table 1, Fig. 1)&lt;/td>
+&lt;td>Point agent (circle of configurable radius in JuPedSim)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Counterflow&lt;/strong>&lt;/td>
+&lt;td>Dedicated counterflow collision-avoidance algorithm ([1] §3.3)&lt;/td>
+&lt;td>Handled by JuPedSim&amp;rsquo;s operational model; no separate counterflow algorithm&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Spatial discretisation&lt;/strong>&lt;/td>
+&lt;td>Rectilinear evacuation mesh (separate from the FDS fire mesh); geometry is fitted to the underlying grid; minimum ~0.25 m cell size recommended ([1] §1.2)&lt;/td>
+&lt;td>Continuous walkable polygon (Shapely geometry); no grid&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;strong>References:&lt;/strong> [1] §3.1–3.2 (agent model), §3.3 (counterflow), §3.6 (numerical method).&lt;/p>
+&lt;hr>
+&lt;h2>2. Exit / route selection&lt;span class="hx-absolute -hx-mt-20" id="2-exit--route-selection">&lt;/span>
+&lt;a href="#2-exit--route-selection" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This is the area of largest conceptual difference.&lt;/p>
+&lt;h3>FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="fdsevac">&lt;/span>
+&lt;a href="#fdsevac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Exit selection is formulated as an &lt;strong>N-player game&lt;/strong> where each agent
+minimises its own &lt;strong>estimated evacuation time&lt;/strong> by choosing among
+available exits [8]. The model is based on the concept of
+&lt;em>best-response dynamics&lt;/em>: each agent periodically updates its exit
+choice by selecting the exit that minimises its estimated evacuation
+time, given the current choices of all other agents.&lt;/p>
+&lt;h4>Cost function&lt;span class="hx-absolute -hx-mt-20" id="cost-function">&lt;/span>
+&lt;a href="#cost-function" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The estimated evacuation time of agent &lt;em>i&lt;/em> through exit &lt;em>e_k&lt;/em> is
+([8] Eq. 6):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>T_i(e_k, s_{-i}; r) = beta_k * lambda_i(e_k, s_{-i}; r) &amp;#43; tau_i(e_k; r_i)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>where:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>beta_k&lt;/code> is a capacity parameter for exit &lt;em>k&lt;/em> (seconds per agent)&lt;/li>
+&lt;li>&lt;code>lambda_i&lt;/code> is the number of other agents heading to exit &lt;em>e_k&lt;/em>
+who are closer to it than agent &lt;em>i&lt;/em> ([8] Eq. 7)&lt;/li>
+&lt;li>&lt;code>tau_i = d(e_k; r_i) / v_i^0&lt;/code> is the walking time ([8] Eq. 8); in
+this section &lt;code>tau&lt;/code> is Ehtamo&amp;rsquo;s notation for a time, unrelated to the
+optical depth &lt;code>tau&lt;/code> used for pyFDS-Evac below&lt;/li>
+&lt;/ul>
+&lt;p>The term &lt;code>beta_k * lambda_i&lt;/code> estimates the queueing delay; &lt;code>tau_i&lt;/code>
+estimates the walking time. Thus &lt;code>T_i&lt;/code> = queueing time + walking
+time.&lt;/p>
+&lt;p>In the FDS+Evac implementation ([1] §3.6 p35–36), this is computed
+as:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>T = alpha * t_walk &amp;#43; (1 - alpha) * t_queue&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>where &lt;code>t_walk = distance / v0&lt;/code>, &lt;code>t_queue = N_queue / (FAC_DOOR_QUEUE * Width)&lt;/code>, and &lt;code>alpha&lt;/code> is &lt;code>FAC_DOOR_ALPHA&lt;/code>.
+Distance is L2 (Euclidean) for visible exits and L1 (Manhattan) for
+non-visible exits. The currently chosen exit is favoured by 10%
+(anchoring parameter) to prevent oscillation.&lt;/p>
+&lt;h4>Nash equilibrium and convergence&lt;span class="hx-absolute -hx-mt-20" id="nash-equilibrium-and-convergence">&lt;/span>
+&lt;a href="#nash-equilibrium-and-convergence" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>Ehtamo et al. [8] prove that this game has a &lt;strong>Nash equilibrium in
+pure strategies&lt;/strong> (Theorem 3.1) when all agents have the same walking
+speed. The NE is a fixed point of the system of all agents'
+best-response functions. The existence proof is constructive: agents
+can be fixed to their equilibrium strategies one by one, in
+ascending order of their evacuation times.&lt;/p>
+&lt;p>Three decentralised algorithms are analysed for finding the NE:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Parallel Update Algorithm (PUA)&lt;/strong>: all agents update
+simultaneously; converges in at most N iterations ([8] Theorem 4.1)&lt;/li>
+&lt;li>&lt;strong>Round Robin Algorithm (RRA)&lt;/strong>: agents update one at a time in
+sequence; converges in at most N² iterations ([8] Theorem 4.2).
+&lt;strong>FDS+Evac uses RRA&lt;/strong> ([8] §6 p127).&lt;/li>
+&lt;li>&lt;strong>Random Polling Algorithm (RPA)&lt;/strong>: agents update stochastically.&lt;/li>
+&lt;/ol>
+&lt;p>In practice, RRA converges in ~3–4 iteration rounds regardless of
+parameter values, while PUA can oscillate and require 10–18 rounds
+([8] §6, Figs. 1–4). The initial assignment at simulation start
+iterates until door-target counts stabilise (evac.f90:6699).&lt;/p>
+&lt;p>Numerical experiments in [8] show that using the exit selection
+game (vs. nearest-exit) reduces total evacuation time by ~29%
+(Fig. 6).&lt;/p>
+&lt;h4>Preference ordering&lt;span class="hx-absolute -hx-mt-20" id="preference-ordering">&lt;/span>
+&lt;a href="#preference-ordering" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>Exits are additionally filtered by a &lt;strong>preference order&lt;/strong> (Table 3
+in [1], Table 1 in [8]) determined by three Boolean criteria:
+visibility (&lt;code>vis&lt;/code>), familiarity (&lt;code>fam&lt;/code>), and disturbing conditions
+(&lt;code>con&lt;/code>). The best-response is constrained to the highest-priority
+non-empty group ([8] Eq. 31):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>s_i = BR_i(s_{-i}; r) = arg min T_i(s&amp;#39;_i, s_{-i}; r)
+s.t. s&amp;#39;_i in E_i(z_bar)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>where &lt;code>E_i(z_bar)&lt;/code> is the set of exits in the best available
+preference group for agent &lt;em>i&lt;/em>.&lt;/p>
+&lt;p>Four agent types modulate which exits enter the feasible set:
+conservative, active, herding, follower ([1] §3.5.1–3.5.4).
+Herding and follower agents incorporate social information from
+neighbours to expand their feasible exit set.&lt;/p>
+&lt;h4>Hawk-dove game extension&lt;span class="hx-absolute -hx-mt-20" id="hawk-dove-game-extension">&lt;/span>
+&lt;a href="#hawk-dove-game-extension" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>A separate &lt;strong>hawk-dove game&lt;/strong> (Heliövaara et al. [9]) is available
+as an optional overlay (&lt;code>C_HAWK &amp;gt;= 0&lt;/code>, default off: &lt;code>C_HAWK = -2.0&lt;/code>,
+evac.f90:1523). When enabled, agents near an exit play a
+hawk-dove game against nearby neighbours to decide whether to push
+aggressively (hawk) or yield (dove). This modulates &lt;em>behaviour at
+congestion points&lt;/em>, not the exit-selection cost function itself.&lt;/p>
+&lt;h4>The smoke criteria on a door&lt;span class="hx-absolute -hx-mt-20" id="the-smoke-criteria-on-a-door">&lt;/span>
+&lt;a href="#the-smoke-criteria-on-a-door" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>FDS+Evac&amp;rsquo;s &lt;em>primary&lt;/em> smoke test on a door is &lt;strong>absolute&lt;/strong>: a door
+counts as smoke-free while &lt;code>K_ave &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code>. The input is
+a visibility in metres (&lt;code>FED_DOOR_CRIT = -100.0&lt;/code>, evac.f90:1459) which
+is converted to an extinction coefficient by Jin&amp;rsquo;s relation,
+&lt;code>FED_DOOR_CRIT = 3.0 / FED_DOOR_CRIT&lt;/code> (evac.f90:5262) — so the default
+is 0.03 /m. &lt;code>K_ave_Door&lt;/code> is assigned from &lt;code>See_door&lt;/code> at evac.f90:16158,
+and the tier-1 test that reads it is at evac.f90:16265 and :16272. Among
+the doors that pass, the agent minimises the time &lt;code>T&lt;/code> above.&lt;/p>
+&lt;p>&lt;strong>That test is a hard filter.&lt;/strong> &lt;code>IF (T_tmp &amp;lt; L2_min .AND. L2_tmp &amp;lt; ABS(FED_DOOR_CRIT))&lt;/code> sets the chosen door &lt;code>i_tmp&lt;/code> only for a door that
+qualifies; when none qualifies the tier selects nothing and the search
+moves to the next tier of doors, not to a time-only ranking. pyFDS-Evac&amp;rsquo;s
+clean-exit tier falls through to the plain optical-depth ranking when it
+is empty, which is our construction and not FDS+Evac&amp;rsquo;s. The
+distance-relative rule — &amp;ldquo;check that visibility &amp;gt; 0.5 * distance to the
+door&amp;rdquo; — is FDS+Evac&amp;rsquo;s &lt;strong>tier-4 last resort&lt;/strong> (evac.f90:16456-16463), reached
+only when no smoke-free door exists.
+That rule reads &lt;code>K_ave&lt;/code> along the straight, occlusion-blocked bee line
+(&lt;code>See_door&lt;/code>, evac.f90:15343), so &lt;code>S &amp;gt; 0.5 * d&lt;/code> is a statement about
+optical depth along one real sight line.&lt;/p>
+&lt;p>Written out, the tier-4 test is
+&lt;code>L2_tmp = d * 0.5 / (3.0 / K_ave_Door)&lt;/code> struck out at &lt;code>L2_tmp &amp;gt;= 1.0&lt;/code>
+(evac.f90:16458, :16463) — that is &lt;code>K_ave * d / 6 &amp;gt;= 1&lt;/code>, i.e. an optical
+depth above 6, which is where pyFDS-Evac&amp;rsquo;s &lt;code>tau_max = 6&lt;/code> comes from.
+Two scope limits on the citation: the loop runs only over doors already
+known or visible, and the strike-out (&lt;code>Is_Visible_Door(i) = .FALSE.&lt;/code>,
+&lt;code>Is_Known_Door(i) = .FALSE.&lt;/code>, :16464-16465) lasts for &lt;strong>one call&lt;/strong> of
+&lt;code>Change_Target_Door&lt;/code> only: both arrays are reset at the start of every
+call (:15831-15832). What persists is a mark in the agent&amp;rsquo;s
+known-door list, &lt;code>Human_Known_Doors%I_nodes&lt;/code>, and its effect is weak.
+The mark is written in the tier-1 loop (:16277-16302) only for the
+agent&amp;rsquo;s previous target door, only while that door is still known and
+visible at that call (:16223), only for a lone agent
+(&lt;code>HR%GROUP_ID &amp;lt; 0&lt;/code>), only if the door already has an entry in the
+agent&amp;rsquo;s known-door list filled at initialisation (:15891, :15940-15954;
+the loop at :16296-16304 rewrites entries but never adds one), and only when &lt;code>FAC_DOOR_OLD * K_ave &amp;gt;= 0.03 /m&lt;/code>
+(:16292), i.e. &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> with &lt;code>FAC_DOOR_OLD = 0.1&lt;/code> (:1506)
+under the default negative &lt;code>FED_DOOR_CRIT&lt;/code>. The entry becomes negative
+(&amp;ldquo;some smoke&amp;rdquo;) or 0 (&amp;ldquo;too much smoke&amp;rdquo;, when &lt;code>0.9 * K_ave * d / 6 &amp;gt;= 1&lt;/code>,
+:16298-16301), and it is never set positive again. What the mark does
+depends on its value and on the call:&lt;/p>
+&lt;ul>
+&lt;li>&lt;em>Negative entry.&lt;/em> In the periodic re-evaluation (&lt;code>imode = 1&lt;/code>) the
+door is forced unknown (:16197, :16206). In the calls made on a floor
+or mesh change (&lt;code>imode = 2&lt;/code>, from &lt;code>CHECK_TARGET_NODE&lt;/code>, :12618) that
+override is skipped, and the &lt;code>ABS&lt;/code> at :15849 and :15859 counts the
+door as known.&lt;/li>
+&lt;li>&lt;em>Zero entry.&lt;/em> It matches no door, because &lt;code>ABS(0)&lt;/code> never equals
+&lt;code>n_egrids+N_ENTRYS+i&lt;/code> (:16204); so the override at :16205-16206 never
+fires for it, and the door is never made non-visible by memory. It
+simply drops out of the list, so it is not known from memory on any
+later call, but it becomes known again if it is the current, visible
+target (:16199) or has &lt;code>KNOWN_DOOR&lt;/code> = .TRUE. (:15846, :15856).&lt;/li>
+&lt;/ul>
+&lt;p>So in the periodic re-evaluation the &amp;ldquo;too much smoke&amp;rdquo; door is forgotten
+less firmly than the &amp;ldquo;some smoke&amp;rdquo; one. That the zero branch does not act as its comments intend
+is our inference from the code, not a documented behaviour.
+pyFDS-Evac inherits the threshold, applies it to the walked polyline
+rather than the bee line, and remembers nothing.&lt;/p>
+&lt;p>Inside that tier, &lt;strong>dose and sight are alternatives, not layers&lt;/strong>: the
+sign of &lt;code>FED_DOOR_CRIT&lt;/code> picks the branch (evac.f90:16439-16467).
+Positive, and the door is scored by the dose the agent would arrive
+with (&lt;code>IntDose + FED_max_Door * distance / Speed&lt;/code>); negative — the
+default &lt;code>-100.0&lt;/code> — and it is scored by the visibility rule above.
+Either way the resulting &lt;code>L2_tmp&lt;/code> does &lt;strong>two&lt;/strong> jobs: &lt;code>L2_tmp &amp;gt;= 1.0&lt;/code>
+strikes the door out (&amp;ldquo;too much smoke&amp;rdquo;), and &lt;code>L2_tmp &amp;lt; L2_min&lt;/code> picks
+the winner among those left. The criterion vetoes &lt;em>and&lt;/em> ranks, with
+&lt;code>FAC_DOOR_OLD2 = 0.9&lt;/code> favouring the door already targeted.&lt;/p>
+&lt;p>pyFDS-Evac splits those jobs differently. Dose vetoes only: a route above
+&lt;code>fed_rejection_threshold&lt;/code> is removed and dose never makes one exit outrank
+another. Optical depth does both, as in tier 4 — it refuses a route above
+&lt;code>tau_max&lt;/code> &lt;em>and&lt;/em> orders the survivors, with travel time breaking ties. It also
+applies dose and smoke at once rather than choosing one by a sign.&lt;/p>
+&lt;h4>Where the quantity is used: the decisive difference&lt;span class="hx-absolute -hx-mt-20" id="where-the-quantity-is-used-the-decisive-difference">&lt;/span>
+&lt;a href="#where-the-quantity-is-used-the-decisive-difference" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The threshold &lt;code>tau &amp;gt; 6&lt;/code> is borrowed from tier 4 with a citation. &lt;strong>The place
+the quantity is used is not&lt;/strong>, and that is what changes the behaviour.&lt;/p>
+&lt;p>In FDS+Evac&amp;rsquo;s first three tiers the rank is &lt;code>T_tmp&lt;/code> — a time in tier 1 when
+&lt;code>FAC_DOOR_QUEUE&lt;/code> is active, a plain L2 or L1 distance norm otherwise — while
+&lt;code>K_ave_Door&lt;/code> appears only as a boolean admission test:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-fortran" data-lang="fortran">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">IF&lt;/span> (T_tmp &lt;span style="color:#f92672">&amp;lt;&lt;/span> L2_min .AND. L2_tmp &lt;span style="color:#f92672">&amp;lt;&lt;/span> ABS(FED_DOOR_CRIT)) &lt;span style="color:#66d9ef">THEN&lt;/span> &lt;span style="color:#960050;background-color:#1e0010">!&lt;/span> :&lt;span style="color:#ae81ff">16265&lt;/span>, :&lt;span style="color:#ae81ff">16354&lt;/span>, :&lt;span style="color:#ae81ff">16401&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>A change in the smoke field can move a door between tiers or out of the admitted
+set, but it cannot reorder the doors inside a tier — and geometry does not
+reorder itself. Smoke enters the ordering only in the &lt;strong>tier-4 last resort&lt;/strong>
+(&lt;code>IF (L2_tmp &amp;lt; L2_min)&lt;/code>, &lt;code>:16467&lt;/code>), reached once no smoke-free door is available,
+looping only over doors already known or visible, scoring a bee-line or L1
+distance, and striking a refused door out for that call only (&lt;code>:16463-16465&lt;/code>;
+the arrays are reset at &lt;code>:15831-15832&lt;/code>).&lt;/p>
+&lt;p>pyFDS-Evac promotes that last-resort ranking criterion to its primary one, over
+all candidates, at every tick, on the walked polyline, and drops the reference&amp;rsquo;s
+one lasting smoke memory, a weak mark on a lone agent&amp;rsquo;s previous target once its
+&lt;code>K_ave&lt;/code> reaches 0.3 /m (&lt;code>:16292-16301&lt;/code>; see &lt;a href="#the-smoke-criteria-on-a-door">The smoke criteria on a door&lt;/a>
+). Measured consequence on
+&lt;code>assets/l_corridor&lt;/code>: this model diverts &lt;strong>18 of 100&lt;/strong> agents to the longer,
+cleaner route, where the reference criterion — distance ranking, both doors
+clearing the 0.03 /m admission test until the smoke is well developed — would
+send essentially everyone to the near exit, roughly 100/0. &lt;strong>That 100/0 is a
+prediction reasoned from &lt;code>evac.f90&lt;/code>, not a measured run of FDS+Evac&lt;/strong>; the
+deck&amp;rsquo;s own additive model is the nearest empirical proxy and does evacuate
+100/0. The diversion is a deliberate departure, and stands or falls on its own
+merits. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it">route-cost-gate.md&lt;/a>
+for the accompanying &lt;code>L/d&lt;/code> geometric bias (1.41 near against 1.27 far on that
+deck).&lt;/p>
+&lt;h3>pyFDS-Evac&lt;span class="hx-absolute -hx-mt-20" id="pyfds-evac">&lt;/span>
+&lt;a href="#pyfds-evac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Route selection uses a &lt;strong>stage graph&lt;/strong> (directed weighted graph of
+distributions, checkpoints, and exits) with &lt;strong>Dijkstra shortest-path&lt;/strong>
+queries (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">docs/routing.md&lt;/a>
+, &lt;code>route_graph.py&lt;/code>).&lt;/p>
+&lt;p>At each reevaluation tick, per-edge costs are computed from current
+smoke and FED fields. The weight depends on the cost model
+(&lt;code>route_graph.py:1299-1310&lt;/code>):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>gate edge_cost = k_avg * length_m &amp;#43; 1e-6 * length_m
+additive edge_cost = length_m * (1 &amp;#43; w_smoke * k_avg) &amp;#43; w_fed * fed_growth&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Under the gate the edge weight is the segment&amp;rsquo;s optical depth, with a
+length floor that keeps a clear-air graph from collapsing to all-zero
+weights; under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> it is the composite decomposed per segment.
+Dijkstra then finds one cheapest path per reachable exit using these
+dynamic weights.&lt;/p>
+&lt;p>The routes it returns are then judged by one of two models
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">docs/route-cost-gate.md&lt;/a>
+):&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>&amp;quot;gate&amp;quot;&lt;/code> (default).&lt;/strong> Route optical depth &lt;code>tau = K_ave * L&lt;/code>
+(dimensionless; &lt;code>L&lt;/code> is the distance still to walk) decides
+availability &lt;em>and&lt;/em> the ordering. Here &lt;code>tau&lt;/code> is always optical
+depth, not the relaxation time τ of FDS+Evac&amp;rsquo;s movement model. A route is refused when &lt;code>tau&lt;/code>
+exceeds &lt;code>tau_max&lt;/code> (6), or &lt;code>tau_max * tau_return_margin&lt;/code> (4.8) for an
+exit the agent is not already walking to; survivors are ordered by
+&lt;code>tau&lt;/code>, with travel time (plus &lt;code>w_queue&lt;/code> x queue time) breaking ties.
+&lt;code>K_ave&lt;/code> is the length-weighted mean over the route&amp;rsquo;s own polyline, so
+&lt;code>tau&lt;/code> is the soot column the agent walks through — an exposure
+statement, not a sighting distance. Dijkstra weights each edge by its
+own &lt;code>tau&lt;/code>, so path choice and exit choice are one objective. Sign
+legibility is not consulted in route choice; it decides only which
+exits enter the agent&amp;rsquo;s cognitive map. An opt-in tier above &lt;code>tau&lt;/code>
+reproduces FDS+Evac&amp;rsquo;s absolute criterion
+(&lt;code>clean_extinction_threshold&lt;/code>, default 0, off).&lt;/li>
+&lt;li>&lt;strong>&lt;code>&amp;quot;additive&amp;quot;&lt;/code>.&lt;/strong> The composite
+&lt;code>path_length * (1 + w_smoke * K_ave) + w_fed * FED_max&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>Under both, routes are rejected if FED exceeds a threshold, and a
+fallback un-rejection ensures agents always have a path. The
+all-segments-non-visible rejection runs under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> only.&lt;/p>
+&lt;p>&lt;strong>The borrowing is partial and should be read as such.&lt;/strong> pyFDS-Evac
+takes FDS+Evac&amp;rsquo;s &lt;em>last-resort&lt;/em> criterion as the primary criterion of
+its &lt;code>&amp;quot;gate&amp;quot;&lt;/code> cost model. The
+absolute &lt;code>K_ave &amp;lt; 0.03 /m&lt;/code> test exists as an opt-in tier that ships
+off, because measured on two decks it produced churn rather than
+redirection — see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#the-clean-exit-tier-off-by-default">route-cost-gate.md&lt;/a>
+.
+The distance-relative
+form is the point of the choice — the same haze is usable 5 m from an
+exit and not at 40 m — but it is not what FDS+Evac reaches for first.&lt;/p>
+&lt;p>There is &lt;strong>no&lt;/strong> preference ordering, no agent types
+(conservative/active/herding/follower), and no game-theoretic
+component. Familiarity is modelled, but as a per-agent cognitive map
+that restricts the graph before routing, not as a per-exit preference
+group. Per-exit familiarity is not supported
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>
+).&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Aspect&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Algorithm&lt;/strong>&lt;/td>
+&lt;td>N-player best-response game (NE in pure strategies) with preference-order filter [8]&lt;/td>
+&lt;td>Dijkstra shortest-path with dynamic edge weights, then a per-route check under the selected cost model&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Cost function&lt;/strong>&lt;/td>
+&lt;td>&lt;code>T_i = beta_k * lambda_i + tau_i&lt;/code> (queueing + walking time) [8] Eq. 6&lt;/td>
+&lt;td>gate: route optical depth &lt;code>K_ave * L&lt;/code>, with travel time (+ &lt;code>w_queue&lt;/code> x queue time) as tie-break; additive: &lt;code>length * (1 + w_smoke * K) + w_fed * FED&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Smoke test on a door&lt;/strong>&lt;/td>
+&lt;td>Absolute &lt;code>K_ave &amp;lt; 0.03 /m&lt;/code> (&lt;code>FED_DOOR_CRIT&lt;/code>, evac.f90:1459, :5262, :16158); the &lt;code>0.5 x d&lt;/code> visibility rule is the tier-4 last resort (:16463), where &lt;code>L2_tmp = d * 0.5 / (3/K_ave) &amp;gt;= 1&lt;/code> is exactly &lt;code>K_ave * d &amp;gt; 6&lt;/code>&lt;/td>
+&lt;td>Optical depth &lt;code>K_ave * L &amp;lt;= 6&lt;/code>, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute &lt;code>K&lt;/code> door criterion. It vetoes &lt;em>and&lt;/em> ranks&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Congestion&lt;/strong>&lt;/td>
+&lt;td>Modelled: queueing time depends on count of closer agents heading to same exit&lt;/td>
+&lt;td>Optional (&lt;code>w_queue&lt;/code>), off by default; a global tally of agents targeting the exit&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Familiarity&lt;/strong>&lt;/td>
+&lt;td>Per-agent per-exit familiarity (user-configurable, constrains feasible exit set)&lt;/td>
+&lt;td>Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on &lt;em>topology&lt;/em> only — smoke is sampled globally, so a discovery agent&amp;rsquo;s route choice is not perception-limited (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
+). Per-exit familiarity is not supported (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>
+)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Social behaviour&lt;/strong>&lt;/td>
+&lt;td>Herding and follower agent types observe neighbours&lt;/td>
+&lt;td>Not modelled&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Smoke in cost&lt;/strong>&lt;/td>
+&lt;td>Admission only in tiers 1–3 (&lt;code>K_ave_Door &amp;lt; 0.03 /m&lt;/code>, the rank stays &lt;code>T_tmp&lt;/code>); smoke ranks doors only in the tier-4 last resort (&lt;code>:16467&lt;/code>), over known-or-visible doors, with a strike-out that lasts one call; the only lasting memory is a weak mark on a lone agent&amp;rsquo;s previous target once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> (:16292-16301), which acts weakly: a &amp;ldquo;some smoke&amp;rdquo; mark forces the door unknown only in the periodic re-evaluation, and a &amp;ldquo;too much smoke&amp;rdquo; mark only drops it from the list&lt;/td>
+&lt;td>gate: availability &lt;em>and&lt;/em> ordering, both on route optical depth, for every candidate at every tick and with no memory; additive: continuous weighted term&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>FED in cost&lt;/strong>&lt;/td>
+&lt;td>Not in cost function by default (&lt;code>FED_DOOR_CRIT &amp;lt; 0&lt;/code>); only used for incapacitation at FED &amp;gt;= 1.0&lt;/td>
+&lt;td>Veto threshold under both models; a ranking term (&lt;code>w_fed * FED_max&lt;/code>) under additive only&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Distance metric&lt;/strong>&lt;/td>
+&lt;td>L2 for visible exits, L1 (Manhattan) for non-visible exits; direct agent-to-exit&lt;/td>
+&lt;td>Polyline arc length along corridor geometry (via JuPedSim RoutingEngine); routes through intermediate stages&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Anticipation&lt;/strong>&lt;/td>
+&lt;td>&lt;code>FED_max_Door * dist / Speed&lt;/code>: extrapolation from presently observable conditions&lt;/td>
+&lt;td>&lt;code>anticipate&lt;/code> prices each segment at the agent&amp;rsquo;s arrival time from the FDS solution itself — an upper bound on foresight, not FDS+Evac&amp;rsquo;s model&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Equilibrium&lt;/strong>&lt;/td>
+&lt;td>Proven NE existence; RRA converges in ~3–4 rounds [8]&lt;/td>
+&lt;td>No equilibrium concept; each agent independently picks the cheapest Dijkstra path&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Anchoring&lt;/strong>&lt;/td>
+&lt;td>Current door favoured by 10 %: &lt;code>FAC_DOOR_WAIT&lt;/code> = 0.9 on the time criterion (:1505, applied :16264), &lt;code>FAC_DOOR_OLD2&lt;/code> = 0.9 on the smoke criterion (:1507, applied :16290, :16467)&lt;/td>
+&lt;td>&lt;code>exit_switch_anchor&lt;/code> = 0.9 on travel time, mirroring &lt;code>FAC_DOOR_WAIT&lt;/code>; &lt;code>current_exit_discount&lt;/code> = 0.9 on the current exit&amp;rsquo;s optical depth in the sort, mirroring &lt;code>FAC_DOOR_OLD2&lt;/code>; bypasses for a lethal current exit and (gate) a feasible rival clearer by more than the symmetric deadband &lt;code>tau_deadband * tau_max&lt;/code> (0.6), which also refuses a rival dirtier by that much; plus deadbands of 0.9 on dose and 0.8 on the optical-depth budget&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Rerouting frequency&lt;/strong>&lt;/td>
+&lt;td>~1 Hz (every second on average, &lt;code>TAU_CHANGE_DOOR = 1.0&lt;/code>, evac.f90:1466)&lt;/td>
+&lt;td>Configurable interval, staggered per agent&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2>3. Smoke–speed interaction&lt;span class="hx-absolute -hx-mt-20" id="3-smokespeed-interaction">&lt;/span>
+&lt;a href="#3-smokespeed-interaction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Both systems use the same underlying correlation from the Frantzich
+&amp;amp; Nilsson experiments (Lund 2003, Report 3126 [3]).&lt;/p>
+&lt;h3>Speed reduction formula&lt;span class="hx-absolute -hx-mt-20" id="speed-reduction-formula">&lt;/span>
+&lt;a href="#speed-reduction-formula" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>speed_factor(K) = 1 &amp;#43; (beta / alpha) * K&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>with the Frantzich–Nilsson coefficients; the published values are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>
+and the code defaults
+on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>
+page.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Aspect&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Speed formula&lt;/strong>&lt;/td>
+&lt;td>&lt;code>c(Ks) = 1 + beta * Ks / alpha&lt;/code> ([1] §3.4 Eq. 11)&lt;/td>
+&lt;td>Same formula (&lt;code>smoke_speed.py:227&lt;/code>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Default alpha/beta&lt;/strong>&lt;/td>
+&lt;td>Frantzich–Nilsson values (evac.f90:1479–1480)&lt;/td>
+&lt;td>Same values (&lt;code>smoke_speed.py:91–92&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>
+&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Minimum speed&lt;/strong>&lt;/td>
+&lt;td>&lt;code>SMOKE_MIN_SPEED_FACTOR&lt;/code> (default 0.1, evac.f90:2085) as a factor of &lt;em>v&lt;/em>0, or &lt;code>SMOKE_MIN_SPEED&lt;/code>, which the code treats as a speed in m/s (&lt;code>SMOKE_MIN_SPEED/HR%SPEED&lt;/code>, :8168) although the guide calls it a factor ([1] §8.7 p. 81). The visibility-based cutoff (&lt;code>SMOKE_MIN_SPEED_VISIBILITY&lt;/code>, :8181–8188) is marked obsolete in the source (&amp;ldquo;obsolote feature &amp;hellip; it is not used if default SMOKE_MIN_SPEED_VISIBILITY is given&amp;rdquo;, :8181-8182) and is inactive by default: the default 0.0 is clamped to 0.01 m, so it would act only above K = 300 /m (:1463, :2091-2092)&lt;/td>
+&lt;td>Configurable &lt;code>min_speed_factor&lt;/code> (default 0.1)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Smoke input&lt;/strong>&lt;/td>
+&lt;td>Soot density from FDS mesh converted to extinction via &lt;code>K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6&lt;/code> (evac.f90:8160–8161)&lt;/td>
+&lt;td>Extinction coefficient K read directly from FDS &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice via fdsreader&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Sampling geometry&lt;/strong>&lt;/td>
+&lt;td>Local value at agent position on the evacuation mesh, at &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> above the floor (default 1.6 m, evac.f90:1072; [1] §8.7 p. 81; [7] p. 61)&lt;/td>
+&lt;td>Local value at agent position: nearest cell of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>
+)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;strong>Key difference:&lt;/strong> Both systems apply the speed reduction using the
+&lt;em>local&lt;/em> smoke at the agent&amp;rsquo;s position. FDS+Evac converts the soot
+density in the agent&amp;rsquo;s grid cell at runtime; pyFDS-Evac reads the
+extinction coefficient from the nearest cell of an FDS slice at a fixed
+height. The path-averaged extinction coefficient, which Börger et al.
+(2024) [2] take along the line of sight to a sign and pyFDS-Evac takes
+along the walked polyline, is used in pyFDS-Evac for route cost only,
+not for walking speed.&lt;/p>
+&lt;hr>
+&lt;h2>4. Toxicity / FED model&lt;span class="hx-absolute -hx-mt-20" id="4-toxicity--fed-model">&lt;/span>
+&lt;a href="#4-toxicity--fed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="fdsevac-1">&lt;/span>
+&lt;a href="#fdsevac-1" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>FED is computed using Purser&amp;rsquo;s Fractional Effective Dose concept [4].
+The default calculation uses &lt;strong>CO, CO2, and O2&lt;/strong> gas phase
+concentrations ([1] §1.2 p11, §2.7 p19). The effects of additional
+gases (NO, NO2, CN, HCl, HBr, HF, SO2, C3H4O, CH2O) are included
+&lt;strong>only if the user provides the corresponding FDS species&lt;/strong> ([1] §1.2
+p11). By default, HCN and HCl effects are &lt;strong>not&lt;/strong> modelled; only the
+CO2 hyperventilation factor is included ([1] §2.7 p19).&lt;/p>
+&lt;p>The FED function itself is in FDS&amp;rsquo;s &lt;code>PHYSICAL_FUNCTIONS&lt;/code> module (the
+&lt;code>FED&lt;/code> function imported at evac.f90:26), not in evac.f90 directly. Its
+HCN term subtracts NO + NO2 with the offset 0.00454545, about 1/220 (FDS 6.7.6
+&lt;code>func.f90&lt;/code>), not the NO2 alone of [1] Eq. 15; it has done so since
+firemodels/fds 694e033 (2011), and earlier versions had no HCN term
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>
+).&lt;/p>
+&lt;p>FED activity level is configurable: 1 (at rest), 2 (light work,
+default), 3 (heavy work) (evac.f90:1465).&lt;/p>
+&lt;p>Incapacitation occurs at FED &amp;gt;= 1.0 ([1] §3.4 p31).&lt;/p>
+&lt;h3>pyFDS-Evac&lt;span class="hx-absolute -hx-mt-20" id="pyfds-evac-1">&lt;/span>
+&lt;a href="#pyfds-evac-1" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>FED is computed with the Purser equations as written out in the
+FDS+Evac guide [1] (&lt;code>fed.py&lt;/code>), except the HCN term, which is computed as
+the FDS code computes it (#159), from up to 12 gas species: CO, CO2,
+O2, HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein and formaldehyde.
+This is not the ISO 13571 [5] form: ISO 13571 keeps irritants in a
+separate fractional effective concentration (FEC) and does not add
+them into the FED, whereas here an irritant lethal-dose term is summed
+into the FED total. With &lt;code>--enable-fic-speed&lt;/code> (off by default, as
+FDS+Evac has no such rule), irritants also slow agents through Purser&amp;rsquo;s
+fractional irritant concentration (FIC). ISO 13571&amp;rsquo;s FEC is a related
+but different quantity, with its own denominators. The full model is:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>FED_tot = (FED_CO &amp;#43; FED_CN &amp;#43; FED_NOx &amp;#43; FLD_irr) * HV_CO2 &amp;#43; FED_O2&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>where:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>FED_CO&lt;/code>: CO narcosis (Eq. 13 from guide)&lt;/li>
+&lt;li>&lt;code>FED_CN&lt;/code>: HCN − (NO + NO2) (protective effect of NOx on HCN toxicity), as FDS computes it (#159)&lt;/li>
+&lt;li>&lt;code>FED_NOx&lt;/code>: NO + NO2 (Ct product = 1500 ppm·min)&lt;/li>
+&lt;li>&lt;code>FLD_irr&lt;/code>: irritant gases (HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde)&lt;/li>
+&lt;li>&lt;code>HV_CO2&lt;/code>: CO2 hyperventilation factor&lt;/li>
+&lt;li>&lt;code>FED_O2&lt;/code>: O2 vitiation&lt;/li>
+&lt;/ul>
+&lt;p>Required FDS slices: CO, CO2, O2.
+Optional slices: HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,
+formaldehyde.&lt;/p>
+&lt;p>When only CO/CO2/O2 are available, the model falls back to the
+three-gas subset: every optional species defaults to zero concentration in
+&lt;code>DefaultFedInputs&lt;/code> (&lt;code>fed.py&lt;/code>), so an absent slice contributes nothing.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Aspect&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>FED standard&lt;/strong>&lt;/td>
+&lt;td>Purser&amp;rsquo;s FED concept [4]&lt;/td>
+&lt;td>Purser equations as in the FDS+Evac guide, with irritants summed into FED (not the ISO 13571 split into FED and FEC)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Default gases&lt;/strong>&lt;/td>
+&lt;td>CO, CO2, O2&lt;/td>
+&lt;td>CO, CO2, O2 (same three-gas minimum)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Optional gases&lt;/strong>&lt;/td>
+&lt;td>NO, NO2, CN, HCl, HBr, HF, SO2, C3H4O, CH2O (user must provide species)&lt;/td>
+&lt;td>HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde (auto-detected from FDS slices)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>HCN/HCl by default&lt;/strong>&lt;/td>
+&lt;td>Not modelled unless user provides species ([1] §2.7 p19)&lt;/td>
+&lt;td>Not modelled unless FDS slices are present&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Incapacitation&lt;/strong>&lt;/td>
+&lt;td>FED &amp;gt;= 1.0, agent stops (v0 = 0) ([1] §3.4 p31)&lt;/td>
+&lt;td>Agent stops (desired speed 0) and remains as a static obstacle. Per-agent threshold, log-normal with median 1.0 by default, or 1.0 for every agent in deterministic mode. The convective heat FED is a separate running total; crossing either threshold incapacitates&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Activity level&lt;/strong>&lt;/td>
+&lt;td>Configurable (rest/light/heavy)&lt;/td>
+&lt;td>Not supported (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">#135&lt;/a>
+); the CO term uses the light-work coefficient (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>
+)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>FED in routing&lt;/strong>&lt;/td>
+&lt;td>Not used in exit selection cost by default (&lt;code>FED_DOOR_CRIT &amp;lt; 0&lt;/code>); only used for incapacitation&lt;/td>
+&lt;td>A veto under both cost models; additionally a ranking term (&lt;code>w_fed * FED_max&lt;/code>) under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> only, not under the default gate&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
+&lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
+&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Radiant heat is not modelled&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2>5. FDS data integration&lt;span class="hx-absolute -hx-mt-20" id="5-fds-data-integration">&lt;/span>
+&lt;a href="#5-fds-data-integration" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Aspect&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Coupling&lt;/strong>&lt;/td>
+&lt;td>Tightly coupled: evacuation module is compiled into FDS and runs as subroutines within the same executable ([1] §2.1)&lt;/td>
+&lt;td>Loosely coupled: reads pre-computed FDS output files via fdsreader; runs as a separate post-processing step&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Smoke data&lt;/strong>&lt;/td>
+&lt;td>Direct access to soot density on the FDS computational grid at runtime&lt;/td>
+&lt;td>Reads FDS slice files (SOOT EXTINCTION COEFFICIENT, gas species volume fractions)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Visibility check&lt;/strong>&lt;/td>
+&lt;td>Bee-line visibility from agent to exit; checks if smoke along the line exceeds a user-defined threshold ([1] §3.5 p32, §3.6 p36)&lt;/td>
+&lt;td>Sign legibility on a precomputed visibility grid (smoke-aware fdsvismap with &lt;code>--fds-dir&lt;/code> and &lt;code>--vis-cache&lt;/code>, clear air otherwise); it decides which exits enter the agent&amp;rsquo;s cognitive map, not whether a route is admitted. Route cost separately uses the mean of K along the walked edge polylines; Börger et al. (2024) [2] average K along the line of sight to a sign, and applying the average to a walked path is a pyFDS-Evac extension&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Temporal resolution&lt;/strong>&lt;/td>
+&lt;td>Smoke, gas and FED fields are copied from the fire meshes to the evacuation meshes every &lt;code>DT_SAVE&lt;/code> = 2 s (evac.f90:6892), not every FDS time step; the agents move on their own time step in between&lt;/td>
+&lt;td>Reads FDS output at whatever temporal resolution is available in the slice files&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2>6. Exit flow / throughput&lt;span class="hx-absolute -hx-mt-20" id="6-exit-flow--throughput">&lt;/span>
+&lt;a href="#6-exit-flow--throughput" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Aspect&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Flow model&lt;/strong>&lt;/td>
+&lt;td>Emergent from social-force dynamics; door width × specific flow (default 1.3 1/m/s) used for queueing time estimation ([1] §3.6 p36)&lt;/td>
+&lt;td>JuPedSim collision-free model produces emergent flow; optional per-checkpoint throughput throttling (&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput&lt;/code> in scenario config)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Agent update order&lt;/strong>&lt;/td>
+&lt;td>Agents are updated in sequence within each evacuation mesh; order can affect results ([1] §3.6)&lt;/td>
+&lt;td>JuPedSim handles agent updates internally&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2>7. Geometry representation&lt;span class="hx-absolute -hx-mt-20" id="7-geometry-representation">&lt;/span>
+&lt;a href="#7-geometry-representation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Aspect&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Domain&lt;/strong>&lt;/td>
+&lt;td>2-D rectilinear evacuation meshes; obstacles conform to grid ([1] §1.2)&lt;/td>
+&lt;td>Continuous walkable polygon (Shapely); arbitrary geometry&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Multi-floor&lt;/strong>&lt;/td>
+&lt;td>Separate evacuation meshes per floor connected by DOOR/ENTR/CORR/STRS namelists ([1] §1.2, §8.11–8.15)&lt;/td>
+&lt;td>Single floor only; multi-floor buildings are not supported&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Stairs&lt;/strong>&lt;/td>
+&lt;td>Dedicated staircase models (CORR, EVSS, STRS) with speed reduction factors ([1] §1.2 p13)&lt;/td>
+&lt;td>Not implemented&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Doors&lt;/strong>&lt;/td>
+&lt;td>Explicit DOOR and EXIT namelists with width, flow fields, opening/closing times ([1] §8.10–8.12)&lt;/td>
+&lt;td>Stages (distributions, checkpoints, exits) in the stage graph&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2>8. Advantages and disadvantages&lt;span class="hx-absolute -hx-mt-20" id="8-advantages-and-disadvantages">&lt;/span>
+&lt;a href="#8-advantages-and-disadvantages" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="fdsevac-2">&lt;/span>
+&lt;a href="#fdsevac-2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>Advantages:&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;strong>Congestion-aware routing with theoretical guarantees.&lt;/strong> The
+game-theoretic exit-selection model accounts for queueing at exits.
+The NE existence proof [8] guarantees a consistent solution, and
+the RRA converges in a few rounds. This means agents
+self-organise to balance load across exits — shown to reduce total
+evacuation time by ~29% versus nearest-exit [8] Fig. 6.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Rich behavioural model.&lt;/strong> Four agent types
+(conservative/active/herding/follower) with per-agent exit
+familiarity and visibility model a heterogeneous population. The
+preference-order system captures the well-documented tendency to
+prefer familiar exits over unfamiliar ones, even when the familiar
+route is longer [8] §5.2, [1] §3.5.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Tight FDS coupling.&lt;/strong> Running inside the FDS executable gives
+access to the fire-simulation fields without slice-file I/O. The
+fields are copied to the evacuation meshes every &lt;code>DT_SAVE&lt;/code> = 2 s
+(evac.f90:6892), not every FDS time step.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Social Force Model with counterflow.&lt;/strong> The three-circle body
+shape and social-force locomotion produce realistic crowd dynamics
+including pushing, lane formation, and counterflow effects ([1]
+§3.2–3.3).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Documented testing.&lt;/strong> The guide reports component tests based on
+the IMO test cases ([1] §4.2), sensitivity analyses ([1] Ch. 5), and
+comparisons with test data and with other evacuation models ([1]
+Ch. 6).&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>Disadvantages:&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;strong>Smoke does not enter the cost function continuously.&lt;/strong> Fire
+conditions affect exit selection only through the binary
+preference-order filter (disturbing conditions yes/no) and
+visibility checks. A heavily smoke-filled route and a lightly
+smoke-filled route receive the same cost if both are in the same
+preference group. The cost function T_i has no continuous
+extinction or FED term.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>No path-integrated smoke assessment.&lt;/strong> Visibility is checked
+along a bee line from agent to exit ([1] §3.6 p36). Smoke
+conditions along the actual walking path (which may follow
+corridors around obstacles) are not sampled.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>FED does not influence routing by default.&lt;/strong> FED is accumulated
+per agent and triggers incapacitation at FED &amp;gt;= 1.0, but with the
+default &lt;code>FED_DOOR_CRIT &amp;lt; 0&lt;/code> projected FED along
+candidate routes is not used to steer agents away from toxic paths
+before incapacitation occurs.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Rectilinear mesh constraint.&lt;/strong> Geometry is fitted to a
+rectangular grid; obstacles snap to cell boundaries. Minimum
+corridor width ~0.7 m. Fine geometric details (angled walls,
+curved corridors) require very fine meshes ([1] §1.2, §2.7).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Distance metric approximation.&lt;/strong> L1 (Manhattan) distance is
+used for non-visible exits as an approximation of walking distance
+([1] §3.5.1 p33). This can over- or under-estimate actual
+corridor-following paths.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Single-threaded evacuation.&lt;/strong> The evacuation calculation runs
+as a single thread even when FDS uses MPI parallelism ([1] §1.2
+p12). This limits scalability for large agent populations.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>FDS version lock-in.&lt;/strong> The evacuation module is compiled into
+FDS. Updating the movement model or routing algorithm requires
+modifying and recompiling the FDS Fortran source.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h3>pyFDS-Evac&lt;span class="hx-absolute -hx-mt-20" id="pyfds-evac-2">&lt;/span>
+&lt;a href="#pyfds-evac-2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>Advantages:&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;strong>Two explicit route-choice models, switchable per deck.&lt;/strong>
+&lt;code>&amp;quot;additive&amp;quot;&lt;/code> keeps smoke and projected FED as continuous, weighted
+terms in the per-edge cost Dijkstra minimises: a toll per metre plus
+&lt;code>w_fed * FED&lt;/code>. &lt;code>&amp;quot;gate&amp;quot;&lt;/code> (default) weights each edge by its own
+optical depth, refuses a route whose optical depth exceeds &lt;code>tau_max&lt;/code>
+or whose projected FED exceeds the veto threshold, and orders the
+survivors by optical depth, with travel time breaking ties. The gate
+exists because in the additive form both terms scale with route
+length, so a long clean detour can never win.
+Being able to run the same deck under both is itself the
+comparison instrument — see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">docs/route-cost-gate.md&lt;/a>
+.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Path-integrated extinction sampling for route cost.&lt;/strong> For route
+cost, smoke is sampled along corridor-following polylines (JuPedSim
+RoutingEngine waypoints) and averaged along the path. Börger et al. [2]
+average K along the line of sight to a sign; averaging it along a walked
+path is a pyFDS-Evac extension. This captures spatially varying smoke
+along the actual walking path, not just along a straight line.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Continuous geometry.&lt;/strong> Walkable areas are arbitrary polygons
+(Shapely). No grid snapping, no minimum corridor width imposed by
+cell size.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Decoupled from FDS.&lt;/strong> Reads FDS output via fdsreader. Can be
+used with any FDS version, any fire simulator that produces
+compatible output, or even with synthetic hazard fields. The
+movement model (JuPedSim) and routing logic (Python) can be
+updated independently.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>FED-aware route rejection.&lt;/strong> Routes with projected FED above a
+threshold are rejected before the agent commits to them. This is
+proactive (avoid lethal routes) rather than reactive (incapacitate
+after exposure).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Modular and extensible.&lt;/strong> Python codebase with clear separation
+between routing (&lt;code>route_graph.py&lt;/code>), FED (&lt;code>fed.py&lt;/code>), smoke-speed
+(&lt;code>smoke_speed.py&lt;/code>), and scenario orchestration (&lt;code>scenario.py&lt;/code>).&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>Disadvantages:&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;strong>Congestion modelling is opt-in and scale-dependent.&lt;/strong> A queueing
+term exists (&lt;code>w_queue&lt;/code>) but is &lt;strong>off by default&lt;/strong>: it is driven by a
+global tally of every agent targeting an exit, so no constant is
+right at more than one crowd size. With it off, agents
+independently pick the cheapest path without considering how many
+others are heading to the same exit — exactly the overcrowding the
+game-theoretic model in FDS+Evac was designed to solve. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#why-it-is-opt-in-and-what-0024-means">docs/routing.md&lt;/a>
+.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>No equilibrium concept.&lt;/strong> Without agent interaction in the cost
+function, there is no mechanism for agents to self-organise across
+exits. If 100 agents face two exits and one has slightly less
+smoke, all 100 may choose the same exit.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Familiarity but no social behaviour.&lt;/strong> Agents can be given a
+per-agent cognitive map, so an unfamiliar agent routes only over
+stages it has discovered. There is still no model for herding,
+following, or a preference for the familiar route among known ones.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>The &lt;code>&amp;quot;gate&amp;quot;&lt;/code> cost model measures exposure, not sight.&lt;/strong> Its
+criterion is always the mean K over the route polyline times the
+distance still to walk; no line of sight to the exit is tested.
+Integrated around corners this is the soot column the agent walks
+through, not how far it can see, and &lt;code>tau_max&lt;/code> is not calibrated
+against a soot-dose or FED-equivalent limit.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Loose FDS coupling.&lt;/strong> Reading pre-computed FDS output means the
+evacuation cannot influence the fire (e.g., agents opening doors),
+and temporal resolution depends on slice file output frequency.
+There is no real-time feedback loop.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Single-floor only.&lt;/strong> Multi-floor buildings and stairs are not
+supported.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>No collision-based locomotion model.&lt;/strong> JuPedSim&amp;rsquo;s collision-free
+speed model does not produce social forces, body compression, or
+pushing. Counterflow effects depend on the operational model&amp;rsquo;s
+collision avoidance rather than explicit force-based interactions.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Limited validation.&lt;/strong> The routing model is new and has not yet
+been validated against experimental evacuation data or benchmarked
+against other evacuation models.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h3>Summary&lt;span class="hx-absolute -hx-mt-20" id="summary">&lt;/span>
+&lt;a href="#summary" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The two systems make fundamentally different trade-offs:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Trade-off&lt;/th>
+&lt;th>FDS+Evac&lt;/th>
+&lt;th>pyFDS-Evac&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Congestion vs. hazard awareness&lt;/strong>&lt;/td>
+&lt;td>Strong congestion model (game-theoretic queueing); weak continuous hazard influence on routing&lt;/td>
+&lt;td>Congestion opt-in and uncalibrated across crowd sizes; strong hazard influence on routing&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Behavioural realism&lt;/strong>&lt;/td>
+&lt;td>Rich (familiarity, herding, hawk-dove)&lt;/td>
+&lt;td>Familiarity via cognitive maps; no herding or social types&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Geometric fidelity&lt;/strong>&lt;/td>
+&lt;td>Grid-constrained; L1/L2 distance approximations&lt;/td>
+&lt;td>Continuous geometry; polyline corridor paths&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Coupling&lt;/strong>&lt;/td>
+&lt;td>Tight (inside FDS)&lt;/td>
+&lt;td>Loose (post-processing)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Extensibility&lt;/strong>&lt;/td>
+&lt;td>Fortran, tightly integrated&lt;/td>
+&lt;td>Python, modular&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Maturity&lt;/strong>&lt;/td>
+&lt;td>Published; its own guide states it &amp;ldquo;is not yet fully validated&amp;rdquo; ([1] §1.4)&lt;/td>
+&lt;td>New, not yet validated&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Neither model is strictly superior. An ideal system would combine
+FDS+Evac&amp;rsquo;s congestion-aware game-theoretic routing and behavioural
+agent types with pyFDS-Evac&amp;rsquo;s smoke-aware route cost (optical depth
+under &lt;code>&amp;quot;gate&amp;quot;&lt;/code>, a smoke/FED-weighted toll under &lt;code>&amp;quot;additive&amp;quot;&lt;/code>) and
+path-integrated hazard sampling.&lt;/p>
+&lt;hr>
+&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
+&lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>
+&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation:
+FDS+Evac. Technical Reference and User&amp;rsquo;s Guide.&lt;/em> FDS 6.7.6, Evac
+2.6.0-draft. VTT Technical Research Centre of Finland.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Börger, K., Belt, A. &amp;amp; Arnold, L. (2024). A waypoint based
+approach to visibility in performance based fire safety design.
+&lt;em>Fire Safety Journal&lt;/em>, 150, 104269.
+DOI: &lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">10.1016/j.firesaf.2024.104269&lt;/a>
+.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Frantzich, H. &amp;amp; Nilsson, D. (2003). &lt;em>Utrymning genom tät rök:
+beteende och förflyttning.&lt;/em> Department of Fire Safety Engineering,
+Lund University, Report 3126.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Purser, D. A. (2008). Assessment of hazards to occupants from
+smoke, toxic gases, and heat. In &lt;em>SFPE Handbook of Fire Protection
+Engineering&lt;/em> (4th ed.), Chapter 2-6.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>ISO 13571:2012. &lt;em>Life-threatening components of fire — Guidelines
+for the estimation of time to compromised tenability in fires.&lt;/em>&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Helbing, D. &amp;amp; Molnár, P. (1995). Social force model for
+pedestrian dynamics. &lt;em>Physical Review E&lt;/em>, 51(5), 4282.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Korhonen, T. &amp;amp; Hostikka, S. (2009). Fire Dynamics Simulator with
+Evacuation: FDS+Evac. Technical Reference and User&amp;rsquo;s Guide.
+VTT Working Papers 119.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Ehtamo, H., Heliövaara, S., Korhonen, T. &amp;amp; Hostikka, S. (2010).
+Game theoretic best-response dynamics for evacuees&amp;rsquo; exit selection.
+&lt;em>Advances in Complex Systems&lt;/em>, 13(1), 113–134.
+DOI: 10.1142/S021952591000244X.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Heliövaara, S., Ehtamo, H., Helbing, D. &amp;amp; Korhonen, T. (2013).
+Patient and impatient pedestrians in a spatial game for egress
+congestion. &lt;em>Physical Review E&lt;/em>, 87(1), 012802.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Ronchi, E., Fridolf, K., Frantzich, H., Nilsson, D., Walter, A.
+L. &amp;amp; Modig, H. (2018). A tunnel evacuation experiment on movement
+speed and exit choice in smoke. &lt;em>Fire Safety Journal&lt;/em>, 97, 126–136.
+DOI: &lt;a href="https://doi.org/10.1016/j.firesaf.2017.06.002" target="_blank" rel="noopener">10.1016/j.firesaf.2017.06.002&lt;/a>
+.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Schroder, B., Arnold, L., Seyfried, A. (2020). A map
+representation of the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>,
+115, 103154.&lt;/p>
+&lt;/li>
+&lt;/ol></description></item></channel></rss>

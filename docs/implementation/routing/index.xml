@@ -1,0 +1,1915 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</link><description>Recent content in Routing on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/index.xml" rel="self" type="application/rss+xml"/><item><title>Smoke-aware routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/</guid><description>
+&lt;blockquote>
+&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>
+.&lt;/p>&lt;/blockquote>
+&lt;p>The pyFDS-Evac routing system implements dynamic, smoke-aware path
+planning. Agents evaluate candidate routes against the current hazard
+fields and periodically reroute as conditions change. Costs are
+recomputed at each reevaluation tick, so the chosen path adapts as
+conditions evolve.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Which model is running.&lt;/strong> Two cost models exist, selected per deck
+with &lt;code>routing.cost_model&lt;/code>. The &lt;strong>default is &lt;code>&amp;quot;gate&amp;quot;&lt;/code>&lt;/strong>: the route&amp;rsquo;s
+optical depth &lt;code>K_ave * L&lt;/code> decides which exits stay available and
+orders the survivors, with travel time as tie-break. The historical
+&lt;code>&amp;quot;additive&amp;quot;&lt;/code> model, in which smoke is a toll per metre, is still
+available. This page covers the machinery both share; the
+gate itself is documented in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a>
+.&lt;/p>&lt;/blockquote>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> The cost model supports both smoke and FED (toxic gas)
+terms. FED-based route cost is active when a &lt;code>fed_model&lt;/code> is
+provided to &lt;code>run_scenario&lt;/code>; otherwise &lt;code>fed_rate_sampler&lt;/code> is &lt;code>None&lt;/code>
+and only smoke influences route ranking.&lt;/p>&lt;/blockquote>
+&lt;h2>Stage graph&lt;span class="hx-absolute -hx-mt-20" id="stage-graph">&lt;/span>
+&lt;a href="#stage-graph" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Routes are evaluated on a &lt;code>StageGraph&lt;/code> &amp;ndash; a directed weighted graph
+where nodes represent stages (distributions, checkpoints, exits).
+The graph is built once at simulation start from the scenario
+configuration.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.route_graph &lt;span style="color:#f92672">import&lt;/span> StageGraph
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>graph &lt;span style="color:#f92672">=&lt;/span> StageGraph&lt;span style="color:#f92672">.&lt;/span>from_scenario(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> direct_steering_info&lt;span style="color:#f92672">=&lt;/span>stage_info, &lt;span style="color:#75715e"># stage_id -&amp;gt; {polygon, stage_type}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> transitions&lt;span style="color:#f92672">=&lt;/span>transitions, &lt;span style="color:#75715e"># [{from, to}, ...]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> distributions&lt;span style="color:#f92672">=&lt;/span>distributions, &lt;span style="color:#75715e"># optional spawn areas&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> walkable_polygon&lt;span style="color:#f92672">=&lt;/span>walkable_polygon, &lt;span style="color:#75715e"># optional Shapely Polygon&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Graph construction without a journey&lt;span class="hx-absolute -hx-mt-20" id="graph-construction-without-a-journey">&lt;/span>
+&lt;a href="#graph-construction-without-a-journey" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When a scenario defines no &lt;code>transitions&lt;/code>, the stage graph wires itself by
+stage type: spawn areas and crossings reach every crossing and every exit,
+exits are terminal, and nothing points back at a spawn area. Crossings
+therefore participate in cost-driven routing without a hand-authored journey.
+In clear air the direct spawn-to-exit edge is cheapest, so agents take the
+nearest exit and crossings sit inert; smoke can make a route through a
+crossing cheaper.&lt;/p>
+&lt;p>Explicit &lt;code>transitions&lt;/code> remain authoritative and skip this path entirely.&lt;/p>
+&lt;h3>Edge geometry&lt;span class="hx-absolute -hx-mt-20" id="edge-geometry">&lt;/span>
+&lt;a href="#edge-geometry" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Edges carry a polyline that follows the corridor geometry computed
+by JuPedSim&amp;rsquo;s &lt;code>RoutingEngine&lt;/code> at graph construction time. Smoke
+and FED are sampled along this polyline, not along a straight
+centroid-to-centroid ray. Edge weight is the polyline arc length.&lt;/p>
+&lt;p>When no walkable polygon is provided (e.g. in unit tests), edges
+fall back to a straight centroid-to-centroid ray.&lt;/p>
+&lt;h3>Shortest-path queries&lt;span class="hx-absolute -hx-mt-20" id="shortest-path-queries">&lt;/span>
+&lt;a href="#shortest-path-queries" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The graph provides Dijkstra-based shortest-path queries to find
+reachable exits. When dynamic weights are provided, Dijkstra uses
+smoke/FED-adjusted costs instead of static arc lengths:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># All reachable exits with costs and paths&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>paths &lt;span style="color:#f92672">=&lt;/span> graph&lt;span style="color:#f92672">.&lt;/span>shortest_paths_to_exits(source&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;dist_1&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Nearest exit only&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#f92672">=&lt;/span> graph&lt;span style="color:#f92672">.&lt;/span>shortest_exit(source&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;dist_1&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">if&lt;/span> result:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exit_id, cost, path &lt;span style="color:#f92672">=&lt;/span> result&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Route cost evaluation&lt;span class="hx-absolute -hx-mt-20" id="route-cost-evaluation">&lt;/span>
+&lt;a href="#route-cost-evaluation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Each candidate route is scored by evaluating its segments (edges)
+against current smoke conditions. The cost model combines path
+length and smoke exposure (FED terms are supported but not currently
+active — see note above).&lt;/p>
+&lt;h3>Segment evaluation&lt;span class="hx-absolute -hx-mt-20" id="segment-evaluation">&lt;/span>
+&lt;a href="#segment-evaluation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>For each segment (edge between two stages), the system performs
+the following steps:&lt;/p>
+&lt;ol>
+&lt;li>Sample the extinction coefficient K along the edge polyline
+and take its mean (see &lt;a href="#line-of-sight-extinction">Line-of-sight extinction&lt;/a>
+).&lt;/li>
+&lt;li>Compute the smoke-adjusted speed factor from the mean K with the
+linear speed law, using the router&amp;rsquo;s own &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code> and
+&lt;code>min_speed_factor&lt;/code> (see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>
+).&lt;/li>
+&lt;li>Estimate the travel time from the segment length and reduced
+speed.&lt;/li>
+&lt;li>Optionally, estimate the FED growth along the segment from the
+FED rate at the polyline midpoint (by arc length) and the
+estimated travel time. (Active only when a &lt;code>fed_model&lt;/code> is
+provided; otherwise &lt;code>fed_rate_sampler&lt;/code> is &lt;code>None&lt;/code>.)&lt;/li>
+&lt;/ol>
+&lt;h3>Line-of-sight extinction&lt;span class="hx-absolute -hx-mt-20" id="line-of-sight-extinction">&lt;/span>
+&lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The mean extinction along a segment is computed by sampling K at
+uniform intervals along the edge polyline:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>sigma_bar = (1 / |P|) * sum(K_p)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>where &lt;code>|P|&lt;/code> is the number of sample points and &lt;code>K_p&lt;/code> is the
+extinction at each point. The sample spacing is controlled by
+&lt;code>sampling_step_m&lt;/code>. This is the discrete form of the Beer-Lambert
+path-integrated mean of
+&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>
+,
+Eq. 8-9; the Beer-Lambert law itself is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>
+.&lt;/p>
+&lt;h3>Arrival-time pricing&lt;span class="hx-absolute -hx-mt-20" id="arrival-time-pricing">&lt;/span>
+&lt;a href="#arrival-time-pricing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>, and &lt;strong>independent of &lt;code>cost_model&lt;/code>&lt;/strong>),
+each segment is priced at the time the agent would reach it rather than
+the time it decides:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>arrival_time = now &amp;#43; min(walked_so_far / base_speed_m_per_s,
+foresight_horizon_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The unimpeded &lt;code>base_speed_m_per_s&lt;/code> is used, not the smoke-reduced speed.
+&lt;code>foresight_horizon_s&lt;/code> defaults to infinity.&lt;/p>
+&lt;h3>Composite cost&lt;span class="hx-absolute -hx-mt-20" id="composite-cost">&lt;/span>
+&lt;a href="#composite-cost" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The composite is the additive model&amp;rsquo;s ranking number. It is still
+computed and reported under the gate, where it does not rank:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>composite = effective_length * (1 &amp;#43; w_smoke * K_ave) &amp;#43; w_fed * FED_max&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>where:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>effective_length&lt;/code> is the route length measured from the agent&amp;rsquo;s own
+position when one is supplied, otherwise the node-to-node path length&lt;/li>
+&lt;li>&lt;code>K_ave&lt;/code> is the length-weighted average extinction along the route&lt;/li>
+&lt;li>&lt;code>FED_max&lt;/code> is the projected cumulative FED at route completion&lt;/li>
+&lt;li>&lt;code>w_smoke&lt;/code> and &lt;code>w_fed&lt;/code> are configurable weights&lt;/li>
+&lt;/ul>
+&lt;p>Exposure on the part of the first segment the agent has already walked
+is credited out of &lt;code>K_ave&lt;/code> and &lt;code>FED_max&lt;/code>, because it is already carried
+in &lt;code>current_fed&lt;/code>.&lt;/p>
+&lt;h3>What each model ranks on&lt;span class="hx-absolute -hx-mt-20" id="what-each-model-ranks-on">&lt;/span>
+&lt;a href="#what-each-model-ranks-on" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Both models write a single &lt;code>rank_cost&lt;/code> field, which ordering, the
+exit-switch anchor and the same-exit path test all read:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>model&lt;/th>
+&lt;th>&lt;code>rank_cost&lt;/code>&lt;/th>
+&lt;th>sort key&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>&amp;quot;gate&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>travel_time_s + w_queue * queue_time_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>&amp;quot;additive&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>composite_cost&lt;/code>&lt;/td>
+&lt;td>&lt;code>(rejected, tier, 0.0, rank_cost, hops)&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Under the gate the route&amp;rsquo;s optical depth &lt;code>tau = K_ave * L&lt;/code> leads the sort and
+&lt;code>rank_cost&lt;/code> breaks ties; under the additive model the &lt;code>tau&lt;/code> slot is a constant
+and &lt;code>rank_cost&lt;/code> decides alone. The &lt;code>tau&lt;/code> in the key is scaled by
+&lt;code>current_exit_discount&lt;/code> (0.9) for the exit the agent already heads for.&lt;/p>
+&lt;p>&lt;code>rank_cost&lt;/code> is still what the exit-switch anchor and the same-exit path test
+compare — a travel time under the gate. That the ordering and the anchor read
+different quantities is a known defect; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#known-limitations">route-cost-gate.md&lt;/a>
+.&lt;/p>
+&lt;p>&lt;code>tier&lt;/code> is 0 for every route unless &lt;code>clean_extinction_threshold &amp;gt; 0&lt;/code> under the
+gate, which is not the default; then a route whose smokiest leg is at or below
+the threshold takes tier 0 and every other route takes tier 1. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#the-clean-exit-tier-off-by-default">the clean-exit tier&lt;/a>
+for
+what it does and why it ships off.&lt;/p>
+&lt;h3>Route rejection&lt;span class="hx-absolute -hx-mt-20" id="route-rejection">&lt;/span>
+&lt;a href="#route-rejection" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A route is rejected under any of these conditions:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>FED_max&lt;/code> exceeds &lt;code>fed_rejection_threshold&lt;/code> (default 1.0) —
+evaluated per route inside &lt;code>evaluate_route&lt;/code>. The threshold is
+asymmetric: a route to an exit that is &lt;em>not&lt;/em> the agent&amp;rsquo;s current one
+must come in under &lt;code>fed_rejection_threshold * fed_return_margin&lt;/code>
+(0.9), so an agent flees a deadly exit at once but only switches onto
+a rival that is clearly safe.&lt;/li>
+&lt;li>&lt;strong>Gate model only:&lt;/strong> the route&amp;rsquo;s optical depth &lt;code>tau = K_ave * L_eff&lt;/code> exceeds
+&lt;code>tau_max&lt;/code> (default 6). This test is asymmetric too: for an exit that is not
+the agent&amp;rsquo;s current one the budget is &lt;code>tau_max * tau_return_margin&lt;/code> (0.8), so
+switching needs a cleaner route than staying. &lt;code>K_ave&lt;/code> is the length-weighted
+mean over the route&amp;rsquo;s own polyline, and every exit is judged on it — see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#optical-depth-what-it-measures-and-what-it-does-not">route-cost-gate.md&lt;/a>
+.
+The rejection reason reads &lt;code>tau 8.41 &amp;gt; 6.00 (K_ave 0.145 x 58.0 m)&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Additive model only:&lt;/strong> &lt;strong>all&lt;/strong> of its segments have K ≥
+&lt;code>visibility_extinction_threshold&lt;/code> &lt;strong>and&lt;/strong> at least one other route has at
+least one visible segment — evaluated as a second pass in &lt;code>rank_routes&lt;/code> after
+all routes are scored. This pass is skipped under the gate, where it was a
+second, hysteresis-free smoke criterion on top of the optical-depth test.&lt;/li>
+&lt;/ul>
+&lt;p>The last condition means a smoky-but-short route is only rejected
+when a cleaner alternative exists. If every route is fully obscured,
+none are visibility-rejected.&lt;/p>
+&lt;p>If all routes end up rejected, the least-bad one is un-rejected as a
+fallback so the agent always has a path, and its reason is prefixed
+&lt;code>fallback: &lt;/code>. Under the gate the least-bad route is the one with the
+lowest undiscounted &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>, with
+&lt;code>fallback_switch_margin&lt;/code> hysteresis on &lt;code>k_max_route&lt;/code>; under the additive
+model it is the lowest-composite route.&lt;/p>
+&lt;p>Rejections are never remembered. Each tick re-decides from the current
+field, which is what lets the optical-depth criterion relax as an agent
+closes on an exit — the distance in &lt;code>tau&lt;/code> is the distance that remains.&lt;/p>
+&lt;h3>Configuration&lt;span class="hx-absolute -hx-mt-20" id="configuration">&lt;/span>
+&lt;a href="#configuration" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>RouteCostConfig&lt;/code> controls all cost evaluation parameters. Most fields are
+also readable from a scenario&amp;rsquo;s &lt;code>routing&lt;/code> block via
+&lt;code>RouteCostConfig.from_routing_params&lt;/code>. The defaults are on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a>
+page, and the full JSON key
+table is in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#configuration">route-cost-gate.md&lt;/a>
+.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.route_graph &lt;span style="color:#f92672">import&lt;/span> RouteCostConfig
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Fields not passed keep their defaults (see the routing model page).&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>config &lt;span style="color:#f92672">=&lt;/span> RouteCostConfig(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cost_model&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;gate&amp;#34;&lt;/span>, &lt;span style="color:#75715e"># &amp;#34;gate&amp;#34; (default) or &amp;#34;additive&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> w_queue&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.03&lt;/span>, &lt;span style="color:#75715e"># override: turn the congestion term on (default off)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code> and &lt;code>min_speed_factor&lt;/code> are the router&amp;rsquo;s copy of the linear
+speed law, used only to estimate travel time; their defaults are on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a>
+page.&lt;/p>
+&lt;p>Two further fields exist on the dataclass but are &lt;strong>not&lt;/strong> readable from
+the &lt;code>routing&lt;/code> block, so a scenario run always gets their defaults:
+&lt;code>fed_return_margin&lt;/code> (0.9) and &lt;code>impassable_extinction_threshold&lt;/code> (3.0).&lt;/p>
+&lt;p>&lt;code>w_smoke&lt;/code> and &lt;code>w_fed&lt;/code> &lt;strong>no longer reach route choice under the gate.&lt;/strong>
+Since &lt;code>0d9bf79&lt;/code> a gate run weights each Dijkstra edge by its own optical
+depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor that keeps a
+clear-air graph from collapsing to all-zero weights). The composite is
+still computed and reported; it does not rank, and it no longer picks
+the path either. Under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> both weights are active as before.&lt;/p>
+&lt;h3>Congestion-aware routing&lt;span class="hx-absolute -hx-mt-20" id="congestion-aware-routing">&lt;/span>
+&lt;a href="#congestion-aware-routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When &lt;code>w_queue &amp;gt; 0&lt;/code>, an exit-congestion term enters the ranking. Under
+the additive model it is converted to distance and added to the
+composite:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>queue_time = N_exit / capacity
+queue_distance = base_speed_m_per_s * queue_time
+composite = path_length * (1 &amp;#43; w_smoke * K_ave)
+&amp;#43; w_fed * FED_max
+&amp;#43; w_queue * queue_distance&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Under the gate the ranking number is a time, so the delay is added as a
+time instead — &lt;code>rank_cost = travel_time_s + w_queue * queue_time_s&lt;/code>.
+Opting into congestion-aware routing therefore works under both models,
+but &lt;code>w_queue&lt;/code> is not the same quantity in the two: the additive form
+carries the extra &lt;code>base_speed_m_per_s&lt;/code> factor.&lt;/p>
+&lt;p>where:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>N_exit&lt;/code> is the number of agents currently targeting that exit&lt;/li>
+&lt;li>&lt;code>capacity&lt;/code> is the exit&amp;rsquo;s &lt;code>capacity_agents_per_s&lt;/code> (default 1.3)&lt;/li>
+&lt;li>&lt;code>base_speed_m_per_s&lt;/code> converts queueing delay (seconds) into
+distance-equivalent cost (metres) so all terms share the same
+unit space&lt;/li>
+&lt;/ul>
+&lt;p>The queue term is applied at route-level ranking (Phase 3) only,
+not in Dijkstra edge weights, because it is a per-exit constant
+that cannot change which path is selected to a given exit.&lt;/p>
+&lt;p>&lt;strong>Congestion-aware routing is off by default&lt;/strong> (&lt;code>w_queue = 0&lt;/code>); set it in a
+scenario&amp;rsquo;s &lt;code>routing&lt;/code> block to switch it on.&lt;/p>
+&lt;h4>Why it is opt-in, and what 0.024 means&lt;span class="hx-absolute -hx-mt-20" id="why-it-is-opt-in-and-what-0024-means">&lt;/span>
+&lt;a href="#why-it-is-opt-in-and-what-0024-means" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The term is &lt;code>w_queue * v0 * N / c&lt;/code> with &lt;code>N&lt;/code> a &lt;strong>global&lt;/strong> tally of every agent
+targeting the exit — where &lt;code>v0&lt;/code> is the &lt;code>base_speed_m_per_s&lt;/code> conversion constant
+(not any agent&amp;rsquo;s desired speed) and &lt;code>c&lt;/code> is the exit&amp;rsquo;s &lt;code>capacity_agents_per_s&lt;/code>,
+falling back to &lt;code>default_exit_capacity&lt;/code>. With both at their 1.3 defaults the
+penalty is simply
+&lt;code>w_queue * N&lt;/code> metres, so it grows without bound in the population while the
+path-length differences it competes against are fixed by the geometry:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>N&lt;/th>
+&lt;th>&lt;code>w_queue = 1.0&lt;/code>&lt;/th>
+&lt;th>&lt;code>w_queue = 0.03&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>25&lt;/td>
+&lt;td>25 m&lt;/td>
+&lt;td>0.8 m&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>50&lt;/td>
+&lt;td>50 m&lt;/td>
+&lt;td>1.5 m&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>333&lt;/td>
+&lt;td>333 m&lt;/td>
+&lt;td>10 m&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>No constant is right at more than one crowd size. 1.0 puts 333 m on a door at
+Station scale; the 0.03 that fixes that is inert in an ordinary room. So the
+library ships no congestion weight at all, and the calibrated value lives with
+the deck it was calibrated on. Issue #89 tracks replacing the global &lt;code>N&lt;/code> with a
+queue the agent can perceive, which would remove the scale dependence.&lt;/p>
+&lt;p>&lt;strong>&lt;code>assets/station_fahy&lt;/code> currently ships &lt;code>w_queue = 0.024&lt;/code>, not 0.03.&lt;/strong> The 0.03
+below was swept against a geometry whose doorways were narrower than the
+building&amp;rsquo;s; when the doorways were opened to their clear width the same sweep
+scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy&amp;rsquo;s 52.9 %.
+The reasoning in this section is unchanged — only the fitted number moved.&lt;/p>
+&lt;p>&lt;strong>Two further caveats on that number.&lt;/strong> The sweep was run under the additive
+composite, where &lt;code>w_queue&lt;/code> multiplies a &lt;em>distance&lt;/em>
+(&lt;code>w_queue * base_speed_m_per_s * queue_time&lt;/code>). Under the default gate model it
+multiplies a &lt;em>time&lt;/em> (&lt;code>w_queue * queue_time_s&lt;/code>, against travel time), which is a
+different quantity, and no deck pins &lt;code>cost_model&lt;/code> — so the Station deck now runs
+under the gate with a weight fitted under the additive model. It has not been
+re-swept there.&lt;/p>
+&lt;h4>Provenance of the Station&amp;rsquo;s queue weight&lt;span class="hx-absolute -hx-mt-20" id="provenance-of-the-stations-queue-weight">&lt;/span>
+&lt;a href="#provenance-of-the-stations-queue-weight" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>Calibrated, not conventional. The table below is the original sweep, which
+selected 0.03; see the caveats above for why the deck now ships 0.024 and why
+neither value has been re-fitted under the gate cost model.
+&lt;code>scripts/sweep_queue_weight.py&lt;/code> sweeps the
+weight on &lt;code>assets/station_fahy&lt;/code> with rerouting on, three seeds per
+point, and scores each run with that asset&amp;rsquo;s own &lt;code>validate.py&lt;/code>. The
+front-door share falls monotonically with &lt;code>w_queue&lt;/code>:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>&lt;code>w_queue&lt;/code>&lt;/th>
+&lt;th>front-door share&lt;/th>
+&lt;th>mean row deviation&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>0&lt;/td>
+&lt;td>65.9 %&lt;/td>
+&lt;td>18.2 %&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>0.03&lt;/strong>&lt;/td>
+&lt;td>&lt;strong>53.3 %&lt;/strong>&lt;/td>
+&lt;td>&lt;strong>17.9 %&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.05&lt;/td>
+&lt;td>48.4 %&lt;/td>
+&lt;td>18.0 %&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.1&lt;/td>
+&lt;td>44.9 %&lt;/td>
+&lt;td>18.9 %&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>1.0&lt;/td>
+&lt;td>22.9 %&lt;/td>
+&lt;td>21.8 %&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Fahy, Proulx &amp;amp; Flynn measured 52.9 % of door users at the front door,
+so &lt;code>w_queue = 0.03&lt;/code> reproduces the Station&amp;rsquo;s aggregate exit split and
+the previous default of &lt;code>1.0&lt;/code> did not. The mean per-row deviation is
+also lower, but it is nearly flat across 0.02–0.05 (17.1–18.0 %) while
+the front-door share swings 58.1 % → 48.4 %, so the row structure
+confirms that low weights beat 1.0 without discriminating 0.03 within
+that band. The value is fixed by the aggregate target alone.&lt;/p>
+&lt;p>&lt;strong>This calibration holds at one crowd size.&lt;/strong> The term is
+&lt;code>w_queue * v0 * N / c&lt;/code> (&lt;code>v0&lt;/code>, &lt;code>c&lt;/code> as above) with &lt;code>N&lt;/code> a global tally, so its
+magnitude
+relative to the path-length differences it competes with grows linearly
+with the population — 0.03 was fitted at the Station&amp;rsquo;s 333 agents, and
+a scenario an order of magnitude smaller wants a correspondingly larger
+weight to express the same preference. That scale dependence is a
+property of the global-&lt;code>N&lt;/code> form rather than of this number; a queue an
+agent could actually perceive would not have it.&lt;/p>
+&lt;p>Exit capacity can be configured per exit in the scenario config:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;exits&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;exit_1&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;capacity_agents_per_s&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">2.5&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>When not specified, the default from
+&lt;code>RouteCostConfig.default_exit_capacity&lt;/code> (1.3 agents/s) is used.&lt;/p>
+&lt;p>This approach is inspired by the game-theoretic exit selection
+model of Ehtamo et al. (2010), where each agent minimises
+estimated evacuation time (queueing + walking). The staggered
+reevaluation schedule provides natural convergence to Nash
+equilibrium without explicit iteration.&lt;/p>
+&lt;h2>Dynamic rerouting&lt;span class="hx-absolute -hx-mt-20" id="dynamic-rerouting">&lt;/span>
+&lt;a href="#dynamic-rerouting" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>During simulation, agents periodically reevaluate their routes and
+switch to lower-cost exits when conditions change.&lt;/p>
+&lt;h3>Reevaluation scheduling&lt;span class="hx-absolute -hx-mt-20" id="reevaluation-scheduling">&lt;/span>
+&lt;a href="#reevaluation-scheduling" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent has a personal time offset derived from its ID so that
+not all agents reevaluate on the same timestep:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>offset = (agent_id % steps_per_interval) * dt_s&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>An agent fires its &lt;strong>first&lt;/strong> evaluation once &lt;code>current_time &amp;gt;= offset&lt;/code>,
+then fires again every &lt;code>reevaluation_interval_s&lt;/code> thereafter. With a
+10-second interval and 100 agents the load is spread uniformly across
+the interval.&lt;/p>
+&lt;h3>Rerouting decision flow&lt;span class="hx-absolute -hx-mt-20" id="rerouting-decision-flow">&lt;/span>
+&lt;a href="#rerouting-decision-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>evaluate_and_reroute&lt;/code> runs once per agent per reevaluation tick:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>1. Resolve source node
+├─ use current_origin (stage the agent is coming from)
+└─ fall back to current_target_stage
+→ if source not in graph → skip (return None)
+2. rank_routes(source, t, FED, K_field)
+├─ evaluate all edges → dynamic costs from current smoke/FED
+│ (gate: k_avg * length &amp;#43; 1e-6 * length, the edge&amp;#39;s own optical depth;
+│ additive: w_smoke / w_fed weighted composite)
+├─ Dijkstra with dynamic weights → one minimum-cost path per reachable exit
+│ (only the single lowest-cost path to each exit under these weights
+│ is evaluated; alternative paths to the same exit are not enumerated)
+├─ evaluate_route on each path
+│ ├─ FED rejection (asymmetric: x fed_return_margin for a non-current exit)
+│ └─ gate only: optical-depth rejection, reason &amp;#34;tau ...&amp;#34;, every exit
+│ tested (asymmetric: budget x tau_return_margin for a non-current
+│ exit)
+├─ visibility rejection pass (additive only)
+│ └─ if ≥1 route has any visible segment:
+│ mark routes where ALL segments are non-visible as rejected
+├─ sort: non-rejected first, rejected last
+│ └─ gate → (rejected, tier, tau x current_exit_discount, rank_cost, hops)
+│ additive → (rejected, tier, 0.0, rank_cost, hops)
+│ tier splits clean from smoky only when the gate runs with
+│ clean_extinction_threshold &amp;gt; 0 (not the default)
+└─ if all rejected → un-reject the least-bad route as fallback
+├─ gate → by (tau_route, rank_cost), held by fallback_switch_margin
+└─ additive → lowest composite
+3. Pick best = ranked[0]
+└─ if best is hard-rejected (not a fallback) → skip (return None)
+4. Compare best.exit_id to agent&amp;#39;s current exit
+├─ same exit → reroute only if the new path beats the path actually
+│ being walked by more than 10 % on rank_cost (&amp;#34;better_path&amp;#34;),
+│ else update the cached path silently and return None
+└─ different exit → exit-switch anchor, then reroute_agent(wait_info, best.path)
+├─ candidates are tried in rank order; a promotion the anchor would
+│ refuse is skipped so it cannot hide the rest of the list
+├─ anchor: adopt only if rank_cost &amp;lt; old_cost * exit_switch_anchor
+│ ├─ bypassed when the old exit is FED-lethal or impassably smoky
+│ └─ gate: bypassed when the rival is feasible, clearer in metres by
+│ the anchor margin, AND either a whole band clearer or clean
+│ while the current exit is not
+├─ rewrite path_choices deterministically along new path
+├─ retarget agent to first unvisited stage in new path
+└─ return RouteSwitch record&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>When &lt;code>rank_routes&lt;/code> returns nothing at all — a discovery agent whose
+known subgraph holds no exit — the agent is sent toward the nearest
+unexplored frontier node instead of standing still (&lt;code>explore&lt;/code>), or
+patrols known nodes when its knowledge is exhausted (&lt;code>wander&lt;/code>).&lt;/p>
+&lt;h3>When a switch is triggered&lt;span class="hx-absolute -hx-mt-20" id="when-a-switch-is-triggered">&lt;/span>
+&lt;a href="#when-a-switch-is-triggered" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>An exit switch is recorded when &lt;strong>all four&lt;/strong> conditions hold:&lt;/p>
+&lt;ol>
+&lt;li>The agent&amp;rsquo;s reevaluation tick fires (staggered offset + interval).&lt;/li>
+&lt;li>&lt;code>rank_routes&lt;/code> finds a best route that is not hard-rejected.&lt;/li>
+&lt;li>That best route leads to a &lt;strong>different exit&lt;/strong> than the current one.&lt;/li>
+&lt;li>It clears the exit-switch anchor, or qualifies for one of the anchor
+bypasses (old exit FED-lethal or impassably smoky; or, under the gate, a
+feasible rival clearer in metres of sighting distance by the anchor margin
+&lt;em>and&lt;/em> either a whole visibility band clearer or clean while the current exit
+is not).&lt;/li>
+&lt;/ol>
+&lt;p>No switch is recorded when:&lt;/p>
+&lt;ul>
+&lt;li>The agent has not yet reached its offset time.&lt;/li>
+&lt;li>The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).&lt;/li>
+&lt;li>All routes are hard-rejected and none was un-rejected as a fallback.&lt;/li>
+&lt;li>The anchor holds the agent on its current exit.&lt;/li>
+&lt;li>The best route leads to the same exit — though the path to it may
+still be rewritten, which is recorded as &lt;code>better_path&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h3>Route switch reasons&lt;span class="hx-absolute -hx-mt-20" id="route-switch-reasons">&lt;/span>
+&lt;a href="#route-switch-reasons" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each &lt;code>RouteSwitch&lt;/code> record includes a &lt;code>reason&lt;/code> field:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Reason&lt;/th>
+&lt;th>Condition&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>initial&lt;/code>&lt;/td>
+&lt;td>Agent had no previous exit assignment&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>smoke_reroute&lt;/code>&lt;/td>
+&lt;td>Best route is a different exit (lower &lt;code>rank_cost&lt;/code>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fallback&lt;/code>&lt;/td>
+&lt;td>Best route was un-rejected as fallback (all routes rejected)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>better_path&lt;/code>&lt;/td>
+&lt;td>Same exit, but a path more than 10 % cheaper on &lt;code>rank_cost&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>explore&lt;/code>&lt;/td>
+&lt;td>No exit known yet; heading to the nearest unexplored frontier&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>wander&lt;/code>&lt;/td>
+&lt;td>Knowledge exhausted; patrolling known nodes&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Segment caching&lt;span class="hx-absolute -hx-mt-20" id="segment-caching">&lt;/span>
+&lt;a href="#segment-caching" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Route evaluation supports an optional &lt;code>cached_segments&lt;/code> dictionary.
+When provided, segment costs are cached by &lt;code>(source, target)&lt;/code> key and
+reused across route evaluations within the same timestep. This avoids
+redundant extinction sampling when multiple candidate routes share
+segments. Under &lt;code>anticipate&lt;/code> the same edge on two routes is priced at
+two different arrival times, so the key becomes
+&lt;code>(source, target, round(arrival_time_s))&lt;/code>. The re-measured first leg of
+a position-aware route is deliberately not cached: it belongs to one
+agent&amp;rsquo;s position, and the cache is shared across agents in a pass.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>cache: dict[SegmentCacheKey, SegmentCost] &lt;span style="color:#f92672">=&lt;/span> {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ranked &lt;span style="color:#f92672">=&lt;/span> rank_routes(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> graph, source, time_s, current_fed,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> extinction_sampler, fed_rate_sampler, config,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cached_segments&lt;span style="color:#f92672">=&lt;/span>cache,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Data structures&lt;span class="hx-absolute -hx-mt-20" id="data-structures">&lt;/span>
+&lt;a href="#data-structures" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The routing module uses two main data structures for cost reporting.&lt;/p>
+&lt;h3>&lt;code>SegmentCost&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="segmentcost">&lt;/span>
+&lt;a href="#segmentcost" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Cost breakdown for one edge of a route:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Field&lt;/th>
+&lt;th>Type&lt;/th>
+&lt;th>Description&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>source&lt;/code>&lt;/td>
+&lt;td>&lt;code>str&lt;/code>&lt;/td>
+&lt;td>Source stage ID&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>target&lt;/code>&lt;/td>
+&lt;td>&lt;code>str&lt;/code>&lt;/td>
+&lt;td>Target stage ID&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>length_m&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Segment length (polyline arc length)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>k_avg&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Mean extinction along the segment&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>speed_factor&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Speed multiplier from smoke law&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>travel_time_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Estimated travel time&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fed_growth&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Estimated FED increase&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>visible&lt;/code>&lt;/td>
+&lt;td>&lt;code>bool&lt;/code>&lt;/td>
+&lt;td>Whether &lt;code>k_avg&lt;/code> is below &lt;code>visibility_extinction_threshold&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>k_max&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Worst extinction sampled on the segment&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>arrival_time_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Time the segment was priced at (see anticipation)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>&lt;code>RouteCost&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="routecost">&lt;/span>
+&lt;a href="#routecost" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Full cost evaluation for one candidate route:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Field&lt;/th>
+&lt;th>Type&lt;/th>
+&lt;th>Description&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>exit_id&lt;/code>&lt;/td>
+&lt;td>&lt;code>str&lt;/code>&lt;/td>
+&lt;td>Target exit stage ID&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>path&lt;/code>&lt;/td>
+&lt;td>&lt;code>list[str]&lt;/code>&lt;/td>
+&lt;td>Stage IDs from source to exit&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>path_length_m&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Total path length&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>k_ave_route&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Length-weighted mean extinction&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>travel_time_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Total estimated travel time&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fed_max_route&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Projected cumulative FED&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>composite_cost&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Additive cost; reported but not ranking under the gate&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>rank_cost&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>The number ordering, the anchor and the same-exit test read&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>segments&lt;/code>&lt;/td>
+&lt;td>&lt;code>list[SegmentCost]&lt;/code>&lt;/td>
+&lt;td>Per-segment breakdowns&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>queue_time_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Estimated queueing time at exit&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>k_max_route&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Worst extinction anywhere on the route. Reported; used only by the all-refused fallback&amp;rsquo;s switch margin&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>tau_route&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Route optical depth &lt;code>k_ave_route * effective_length&lt;/code> (gate). Refuses the route, orders the survivors, and orders the all-refused fallback&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>k_leg_max&lt;/code>&lt;/td>
+&lt;td>&lt;code>float&lt;/code>&lt;/td>
+&lt;td>Extinction of the route&amp;rsquo;s smokiest leg, each leg taken as its own mean. Decides clean-exit membership&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>clean&lt;/code>&lt;/td>
+&lt;td>&lt;code>bool&lt;/code>&lt;/td>
+&lt;td>Whether &lt;code>k_leg_max&lt;/code> is within the clean-exit limit. Always &lt;code>False&lt;/code> at the default &lt;code>clean_extinction_threshold = 0.0&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>feasible&lt;/code>&lt;/td>
+&lt;td>&lt;code>bool&lt;/code>&lt;/td>
+&lt;td>Optical depth and dose both allow the route (gate)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>rejected&lt;/code>&lt;/td>
+&lt;td>&lt;code>bool&lt;/code>&lt;/td>
+&lt;td>Whether route was rejected&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>rejection_reason&lt;/code>&lt;/td>
+&lt;td>&lt;code>str | None&lt;/code>&lt;/td>
+&lt;td>Reason for rejection; &lt;code>fallback: &lt;/code> prefix when un-rejected&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;code>rank_cost&lt;/code>, &lt;code>k_max_route&lt;/code>, &lt;code>tau_route&lt;/code>, &lt;code>k_leg_max&lt;/code>, &lt;code>clean&lt;/code> and &lt;code>feasible&lt;/code> are
+all written to the route-cost CSV (&lt;code>run.py --output-route-cost-history&lt;/code>), so the
+gate&amp;rsquo;s decisions can be audited from its own output. &lt;code>composite_cost&lt;/code> is
+deliberately not enough on its own: it does not rank under the gate, and the
+quantity that does is &lt;code>tau_route&lt;/code>.&lt;/p>
+&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
+&lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a>
+&amp;ndash; the gate model: the
+optical-depth criterion, the ordering, the fallback, the full &lt;code>routing&lt;/code>
+key table, and known limitations.&lt;/li>
+&lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>
+&amp;ndash; provenance
+against &lt;code>materials/evac.f90&lt;/code> and the open questions.&lt;/li>
+&lt;li>FDS+Evac Technical Reference and User&amp;rsquo;s Guide
+&amp;ndash; Korhonen (2021). Smoke-interaction model (Section 3.4).&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing model&lt;/a>
+&amp;ndash; defaults and deviations from the
+literature; the published laws are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>
+and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
+.&lt;/li>
+&lt;li>&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>
+&amp;ndash; Beer-Lambert integrated extinction along line of sight (Eq. 8-9),
+waypoint-based visibility maps. Fire Safety Journal 150:104269.&lt;/li>
+&lt;li>&lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">Schroder et al. (2020)&lt;/a>
+&amp;ndash;
+A map representation of the ASET-RSET concept. Fire Safety Journal.&lt;/li>
+&lt;li>Ehtamo, H., Heliövaara, S., Korhonen, T. &amp;amp; Hostikka, S. (2010).
+Game theoretic best-response dynamics for evacuees&amp;rsquo; exit selection.
+&lt;em>Advances in Complex Systems&lt;/em>, 13(1), 113–134.&lt;/li>
+&lt;/ul></description></item><item><title>The gate cost model</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/</guid><description>
+&lt;blockquote>
+&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>
+. Reference for &lt;code>routing.cost_model&lt;/code>.
+Provenance, review findings and the open questions live in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>
+; this page documents
+what the shipped code does.&lt;/p>&lt;/blockquote>
+&lt;p>Route choice runs under one of two cost models, selected per deck with
+&lt;code>routing.cost_model&lt;/code> in the scenario JSON:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>value&lt;/th>
+&lt;th>what decides the exit&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>&amp;quot;gate&amp;quot;&lt;/code> (default)&lt;/td>
+&lt;td>Route optical depth decides which exits are &lt;em>available&lt;/em> and orders the survivors; travel time breaks ties.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>&amp;quot;additive&amp;quot;&lt;/code>&lt;/td>
+&lt;td>Smoke is a toll per metre walked, folded into one composite cost.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Under the gate one quantity does the whole of the smoke reasoning: the route&amp;rsquo;s
+optical depth &lt;code>tau = K_ave * L&lt;/code>, the soot column the agent walks through. It
+refuses a route, it orders the routes it does not refuse, and it weights every
+Dijkstra edge — see &lt;a href="#how-the-gate-decides">How the gate decides&lt;/a>
+.&lt;/p>
+&lt;p>Both are implemented in &lt;code>pyfds_evac/core/route_graph.py&lt;/code>
+(&lt;code>RouteCostConfig&lt;/code>, &lt;code>evaluate_route&lt;/code>, &lt;code>rank_routes&lt;/code>, &lt;code>evaluate_and_reroute&lt;/code>).&lt;/p>
+&lt;h2>Quick start&lt;span class="hx-absolute -hx-mt-20" id="quick-start">&lt;/span>
+&lt;a href="#quick-start" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Nothing to configure: the gate is the default. To pin the pre-gate behaviour
+of an existing deck, set &lt;strong>both&lt;/strong> keys — &lt;code>anticipate&lt;/code> is independent of
+&lt;code>cost_model&lt;/code> and defaults to &lt;code>true&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;routing&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;cost_model&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;additive&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;anticipate&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>To make the gate stricter or laxer, change &lt;code>tau_max&lt;/code> — the optical depth a
+route may carry before it is refused:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;routing&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;cost_model&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;gate&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_max&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">6.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_return_margin&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.8&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;current_exit_discount&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.9&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_deadband&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>No vismap precondition.&lt;/strong> The gate reads no visibility model. &lt;code>b16e900&lt;/code>
+unified the criterion on the route polyline and &lt;code>89d13d4&lt;/code> removed the
+&lt;code>_gate_needs_sight&lt;/code> precompute that a gate deck used to trigger, so a
+familiarity-1.0 gate deck now runs with no &lt;code>--vis-cache&lt;/code> at all: &lt;code>l_corridor&lt;/code>
+takes 5 seconds and reproduces the cached run&amp;rsquo;s 84/16. A visibility model is
+still built for decks with discovery agents, which consult it to learn the
+graph.&lt;/p>
+&lt;h2>How the gate decides&lt;span class="hx-absolute -hx-mt-20" id="how-the-gate-decides">&lt;/span>
+&lt;a href="#how-the-gate-decides" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
+&lt;p>&lt;strong>This page describes &lt;code>081380b&lt;/code>.&lt;/strong>&lt;/p>&lt;/blockquote>
+&lt;p>Per agent, per reevaluation tick:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Path per exit.&lt;/strong> Dijkstra runs with each edge weighted by its own optical
+depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor, below).&lt;/li>
+&lt;li>&lt;strong>Availability.&lt;/strong> Each candidate route is tested twice. &lt;strong>Optical depth:&lt;/strong>
+it is refused when &lt;code>tau = K_ave * L_eff&lt;/code> exceeds &lt;code>tau_max&lt;/code> (default 6), or
+&lt;code>tau_max * tau_return_margin&lt;/code> if it is not the exit the agent already walks
+to. &lt;strong>Dose:&lt;/strong> it is refused when its projected FED exceeds
+&lt;code>fed_rejection_threshold&lt;/code>. Either refusal alone removes the route.&lt;/li>
+&lt;li>&lt;strong>Ordering among survivors.&lt;/strong> Optical depth first, travel time second. The
+sort key is &lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code> with
+&lt;code>rank_cost = travel_time_s + w_queue * queue_time_s&lt;/code>. The &lt;code>tau&lt;/code> in the key
+is scaled by &lt;code>current_exit_discount&lt;/code> (0.9) for the exit the agent already
+heads for. &lt;code>tier&lt;/code> is the clean-exit tier, off by default.&lt;/li>
+&lt;li>&lt;strong>Adoption.&lt;/strong> The ordering proposes; the exit-switch anchor disposes.
+&lt;code>evaluate_and_reroute&lt;/code> walks the ranked list and takes the first candidate
+&lt;code>_anchor_allows&lt;/code> admits, stopping at the agent&amp;rsquo;s own exit — so the head of
+the sort is not necessarily the exit the agent walks to. See
+&lt;a href="#churn-protection">Churn protection&lt;/a>
+for the rule.&lt;/li>
+&lt;/ol>
+&lt;p>&lt;strong>Three separate &lt;code>tau&lt;/code> comparisons happen per tick&lt;/strong>, and it is worth keeping
+them apart: &lt;code>tau_return_margin&lt;/code> decides which routes are &lt;em>candidates&lt;/em>,
+&lt;code>current_exit_discount&lt;/code> decides their &lt;em>order&lt;/em>, and &lt;code>tau_deadband&lt;/code> decides
+whether the agent &lt;em>acts&lt;/em> on that order. Only the third can change an exit.&lt;/p>
+&lt;p>&lt;strong>One quantity refuses a route, orders it, and weights its edges.&lt;/strong> That is the
+change at &lt;code>0d9bf79&lt;/code>. Before it, Dijkstra minimised the additive composite, the
+survivors were ordered by travel time, and the gate judged them on optical
+depth — three currencies, and a gate could refuse an exit on a smoky path while
+a longer passable path to the same exit existed and was never offered.&lt;/p>
+&lt;p>&lt;strong>Optical depth can order routes where a visibility band could not&lt;/strong>, because
+&lt;code>tau = K_ave * L&lt;/code> already contains the distance. Two routes through equally thin
+haze order by length; in clear air every &lt;code>tau&lt;/code> is zero and travel time decides
+alone; a cleaner route wins only by carrying enough less smoke to pay for its
+extra metres. A band compared cleanliness with no reference to how far the agent
+had to carry it, which is why it had to be kept out of the main sort: on
+&lt;code>l_corridor&lt;/code> it put agents on the 58 m route while both routes read
+&lt;code>k_ave = 0.000&lt;/code>. &lt;code>_visibility_band&lt;/code>, &lt;code>_sighting_distance&lt;/code>, &lt;code>band_width_m&lt;/code> and
+the saturation constant are all gone at &lt;code>0d9bf79&lt;/code>.&lt;/p>
+&lt;p>&lt;strong>The &lt;code>1e-6 * length&lt;/code> floor on the edge weight is not a tuning constant.&lt;/strong> In
+clear air every &lt;code>k_avg&lt;/code> is zero, so without it every path ties at weight zero
+and Dijkstra returns an arbitrary one. The floor makes the tie break on length.
+It is not configurable and has not been measured for its effect at small
+nonzero &lt;code>K&lt;/code>.&lt;/p>
+&lt;p>In clear air &lt;code>K = 0&lt;/code>, every &lt;code>tau&lt;/code> is zero, nothing is refused, and the gate
+reduces to fastest-exit — which in clear air is nearest-exit. The two models
+were measured identical on the &lt;code>world_100&lt;/code> (7712 route-cost rows) and
+&lt;code>t_junction&lt;/code> (4030 rows) clear-air runs, and the &lt;code>l_corridor&lt;/code> clear-air pair
+evacuates 100/0 to the near exit under both with zero switches. &lt;strong>Those runs
+predate &lt;code>0d9bf79&lt;/code> entirely&lt;/strong>, and the ordering has changed since. Equivalence
+has not been re-measured under &lt;code>tau&lt;/code> ordering, at &lt;code>K = 0&lt;/code> or at &lt;code>K = 1e-4&lt;/code>.&lt;/p>
+&lt;h3>Optical depth: what it measures, and what it does not&lt;span class="hx-absolute -hx-mt-20" id="optical-depth-what-it-measures-and-what-it-does-not">&lt;/span>
+&lt;a href="#optical-depth-what-it-measures-and-what-it-does-not" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>tau = K_ave * L_eff&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>K_ave&lt;/code> is the length-weighted mean extinction over the route&amp;rsquo;s own polyline;
+&lt;code>L_eff&lt;/code> is the distance still to walk. The product is the Beer-Lambert integral
+of extinction along the walked path — the soot column the agent passes through.
+It is an &lt;strong>exposure&lt;/strong> statement.&lt;/p>
+&lt;p>&lt;strong>It is not a sighting distance.&lt;/strong> The criterion grew out of one (see
+&lt;a href="#where-the-6-comes-from">Where the 6 comes from&lt;/a>
+below), but Jin&amp;rsquo;s visibility
+law (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
+) describes a
+straight, unobstructed line to a sign. Integrating &lt;code>K&lt;/code> around two corners
+measures how much smoke you walk through, not how far you can see. The two
+coincide only on a straight corridor. The names changed at &lt;code>0d9bf79&lt;/code> to say
+what the quantity is.&lt;/p>
+&lt;p>&lt;strong>The estimator averages &lt;code>K&lt;/code>; it does not take the route&amp;rsquo;s worst point.&lt;/strong> A
+maximum over sampled cells is a step function of where the agent stands: one
+dense cell entering the sample swings the estimate by an order of magnitude
+between ticks, and measured on &lt;code>world100&lt;/code> the same 28.9 m route reported 91 m of
+sight, then 8 m, then 91 m again on consecutive seconds, with the ordering
+flipping each time. &lt;code>k_max_route&lt;/code> is still computed and reported, and still
+decides the all-refused fallback&amp;rsquo;s switch margin, where the question is which
+walk is survivable rather than which is cleanest.&lt;/p>
+&lt;p>&lt;strong>The line of sight is a diagnostic, not a gate.&lt;/strong> fdsvismap&amp;rsquo;s obstruction-aware
+sight line to an exit&amp;rsquo;s own sign is the more faithful measurement of what an
+occupant can see, but it is defined only where a sign resolves — so selecting
+the criterion per exit let sign geometry decide &lt;em>which exits were tested at
+all&lt;/em>. Measured before &lt;code>b16e900&lt;/code>: on &lt;code>l_corridor&lt;/code> the far exit lies around two
+corners, never resolved a sight line, was therefore never tested, and the
+diversion the gate exists to produce vanished (84/16 became 100/0). On
+&lt;code>world100&lt;/code> one exit was tested by sight line 43 times and fell back 2095 times,
+so moving a sign two metres would have changed which exits were gated. Mixing
+the two was worse still: the same 22 m route read 9.9 m on one tick and 68.3 m
+on the next as the sight line resolved. Not seeing a sign is a fact about
+wayfinding, not about whether a route can be walked, so it belongs in the
+cognitive map (&lt;code>cognitive_map.expand_from_visibility&lt;/code>), not in this gate.&lt;/p>
+&lt;p>The rejection reason names the quantity and both factors of it:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>tau 8.41 &amp;gt; 6.00 (K_ave 0.145 x 58.0 m)
+tau 5.20 &amp;gt; 4.80 (K_ave 0.388 x 13.4 m)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The second is a rival exit, held to &lt;code>tau_max * tau_return_margin&lt;/code> = 4.8.&lt;/p>
+&lt;p>&lt;a id="where-the-6-comes-from">&lt;/a>&lt;strong>Where the 6 comes from.&lt;/strong> FDS+Evac&amp;rsquo;s tier-4 door test computes
+&lt;code>L2_tmp = d * 0.5 / (3.0 / K_ave_Door)&lt;/code> and strikes the door out when
+&lt;code>L2_tmp &amp;gt;= 1.0&lt;/code> (&lt;code>evac.f90:16458, :16463&lt;/code>). That expression is &lt;code>K_ave * d / 6&lt;/code>, so
+the test is exactly &lt;code>tau &amp;gt; 6&lt;/code> with Jin&amp;rsquo;s &lt;code>c = 3&lt;/code>. The threshold is therefore
+citable, but &lt;strong>the quantity it is applied to is not the same quantity&lt;/strong>:
+FDS+Evac&amp;rsquo;s &lt;code>K_ave_Door&lt;/code> is a mean along &lt;code>See_door&lt;/code>&amp;rsquo;s straight sight line, and
+for a door with no resolved sight line the distance is an L1 norm
+(&lt;code>evac.f90:16460&lt;/code>); pyFDS-Evac averages &lt;code>K&lt;/code> along the walked polyline.
+Two further scope limits: the test lives in the tier-4 last-resort branch,
+reached only once no smoke-free door is available and looping only over doors
+that are already known or visible; and the strike-out there
+(&lt;code>Is_Visible_Door(i) = .FALSE.&lt;/code>, &lt;code>:16464-16465&lt;/code>) lasts one call of
+&lt;code>Change_Target_Door&lt;/code>, whose door arrays are reset at &lt;code>:15831-15832&lt;/code>. FDS+Evac&amp;rsquo;s
+only lasting smoke memory is a weak mark in a lone agent&amp;rsquo;s known-door list on
+its previous target once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> there (&lt;code>:16292-16301&lt;/code>), and only if
+that door already has an entry in the list filled at initialisation (the loop
+rewrites entries but never adds one). A &amp;ldquo;some
+smoke&amp;rdquo; mark forces the door unknown only in the periodic re-evaluation; a &amp;ldquo;too
+much smoke&amp;rdquo; mark only drops the door from the list, and it can become known
+again (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>
+).
+pyFDS-Evac deliberately keeps no such memory. So: the gate is &lt;em>inspired by&lt;/em>
+FDS+Evac&amp;rsquo;s tier-4 visibility door rule and inherits its threshold with a
+citation; it does not implement it. &lt;strong>&lt;code>tau_max&lt;/code> has not been calibrated
+against a soot-dose or FED-equivalent limit.&lt;/strong> That is open work.&lt;/p>
+&lt;p>Under FDS+Evac&amp;rsquo;s &lt;em>primary&lt;/em> rule the criterion is different again — minimise time
+among doors satisfying &lt;code>K_ave_Door &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code> = 0.03 /m
+(&lt;code>evac.f90:16265&lt;/code>, &lt;code>:16272&lt;/code>; &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> at
+&lt;code>:5262&lt;/code>). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
+below. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>
+.&lt;/p>
+&lt;h3>The diversion is a departure from FDS+Evac, not a reproduction of it&lt;span class="hx-absolute -hx-mt-20" id="the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it">&lt;/span>
+&lt;a href="#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The threshold is borrowed; &lt;strong>the place the quantity is used is not&lt;/strong>, and that
+difference is what produces the diversion the model exists for.&lt;/p>
+&lt;p>In FDS+Evac&amp;rsquo;s first three tiers the rank is &lt;code>T_tmp&lt;/code> — a time in tier 1 when
+&lt;code>FAC_DOOR_QUEUE&lt;/code> is active, a plain L2 or L1 distance norm otherwise — and
+&lt;code>K_ave_Door&lt;/code> enters only as the boolean admission test
+&lt;code>L2_tmp &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-fortran" data-lang="fortran">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">IF&lt;/span> (T_tmp &lt;span style="color:#f92672">&amp;lt;&lt;/span> L2_min .AND. L2_tmp &lt;span style="color:#f92672">&amp;lt;&lt;/span> ABS(FED_DOOR_CRIT)) &lt;span style="color:#66d9ef">THEN&lt;/span> &lt;span style="color:#75715e">! :16265, :16354, :16401
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> L2_min &lt;span style="color:#f92672">=&lt;/span> MAX(&lt;span style="color:#ae81ff">0.0_EB&lt;/span>, T_tmp)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> i_tmp &lt;span style="color:#f92672">=&lt;/span> i
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">END&lt;/span> &lt;span style="color:#66d9ef">IF&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Smoke can move a door between tiers, or out of the admitted set; it cannot
+reorder the doors inside a tier, and geometry does not reorder itself. Here
+&lt;code>tau&lt;/code> &lt;strong>is&lt;/strong> the ordering, at every tick and for every candidate.&lt;/p>
+&lt;p>&lt;strong>One qualification, and it matters.&lt;/strong> Smoke is not absent from FDS+Evac&amp;rsquo;s
+ordering everywhere: the tier-4 last-resort branch minimises &lt;code>L2_tmp&lt;/code> directly
+(&lt;code>IF (L2_tmp &amp;lt; L2_min)&lt;/code>, &lt;code>:16467&lt;/code>), and under the default &lt;code>FED_DOOR_CRIT &amp;lt; 0&lt;/code>
+that &lt;code>L2_tmp&lt;/code> is &lt;code>tau/6&lt;/code>. So the reference does rank on smoke — but only after
+tiers 1-3 have all failed to find any admitted door, only over doors already
+known or visible, on a bee-line (or L1) distance to the door rather than a
+walked route, and with a strike-out there that lasts one call (&lt;code>:16463-16465&lt;/code>;
+reset at &lt;code>:15831-15832&lt;/code>). Stated exactly: &lt;strong>pyFDS-Evac promotes FDS+Evac&amp;rsquo;s
+last-resort ranking criterion to its primary one, and drops the one lasting
+smoke memory the reference has&lt;/strong>, a weak mark on a lone agent&amp;rsquo;s previous target
+once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> (&lt;code>:16292-16301&lt;/code>). &amp;ldquo;Smoke never enters FDS+Evac&amp;rsquo;s
+ordering&amp;rdquo; is too strong and should not be written; &amp;ldquo;smoke never enters the
+ordering until every smoke-free tier is exhausted&amp;rdquo; is what the source supports.&lt;/p>
+&lt;p>&lt;strong>The measured consequence, and what it is not.&lt;/strong> On &lt;code>l_corridor&lt;/code> the model
+diverts 18 of 100 agents to the longer, cleaner route. The reference criterion
+would not: tiers 1-3 rank on distance, both doors clear the &lt;code>K_ave &amp;lt; 0.03 /m&lt;/code>
+admission test until the smoke is well developed, and the near exit is nearer
+throughout — so essentially every occupant goes near, roughly 100/0. &lt;strong>That
+100/0 is a reasoned prediction from the source, not a measured FDS+Evac run.&lt;/strong>
+No run of the reference criterion on this deck exists here. The nearest
+empirical proxy is the deck&amp;rsquo;s own additive model, which also ranks on a
+distance-like composite and does evacuate 100/0 (see &lt;a href="#evidence">Evidence&lt;/a>
+) —
+a proxy, not the same criterion. The diversion stands or falls on its own
+merits, not on fidelity to the reference.&lt;/p>
+&lt;p>&lt;strong>A geometric bias rides along with the change of quantity.&lt;/strong> FDS+Evac applies
+its threshold to a straight-line &lt;code>d&lt;/code>; pyFDS-Evac applies it to the walked
+polyline &lt;code>L&lt;/code>, and &lt;code>L/d&lt;/code> is not the same on every route. On &lt;code>l_corridor&lt;/code> from the
+spawn centroid (11.5, 15.0). Both legs are computed corner-to-corner along the
+corridor centreline, which is why they come out a metre under the 26 m / 46 m
+node-to-node figures the &lt;a href="#evidence">Evidence&lt;/a>
+section quotes — those run
+spawn-polygon to exit-polygon through the graph&amp;rsquo;s own nodes:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>route&lt;/th>
+&lt;th>walked &lt;code>L&lt;/code>&lt;/th>
+&lt;th>bee-line &lt;code>d&lt;/code>&lt;/th>
+&lt;th>&lt;code>L/d&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>near (exit A, (0, 1.5))&lt;/td>
+&lt;td>25.0 m&lt;/td>
+&lt;td>17.7 m&lt;/td>
+&lt;td>&lt;strong>1.410&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>far (exit B, (45, 26.5))&lt;/td>
+&lt;td>45.0 m&lt;/td>
+&lt;td>35.4 m&lt;/td>
+&lt;td>&lt;strong>1.271&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>At equal &lt;code>K_ave&lt;/code> the polyline form is therefore about 11 % (1.410 / 1.271)
+stricter on the near route than the far one, purely from geometry — a
+systematic tilt toward the diversion that no smoke measurement put there. The
+tilt is against the L2 bee line specifically; against the L1 norm FDS+Evac uses
+for non-visible doors (&lt;code>:16460&lt;/code>) it vanishes on this deck, because both
+corridors are axis-aligned and the L1 distance equals the polyline exactly. The
+sign and size of the bias on other geometries have not been measured.&lt;/p>
+&lt;h3>Route choice is an optimality bound, not a perception-limited model&lt;span class="hx-absolute -hx-mt-20" id="route-choice-is-an-optimality-bound-not-a-perception-limited-model">&lt;/span>
+&lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Issue &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
+. Two assumptions
+apply to the same agent on the same tick and point in opposite directions:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>The cognitive map assumes the agent does not know the building.&lt;/strong> A
+&lt;code>familiarity = 0&lt;/code> agent routes only over &lt;code>cognitive_subgraph&lt;/code> and does not
+know an exit exists until it reads a sign — through &lt;code>VisibilityModel&lt;/code>, which
+is genuinely perception-limited (obstruction-aware sight lines, sign facing,
+extinction along the line).&lt;/li>
+&lt;li>&lt;strong>Route choice assumes the agent knows the smoke field.&lt;/strong> To choose among the
+exits it does know, it integrates &lt;code>tau = K_ave * L_remaining&lt;/code> over the whole
+remaining route, including legs it has never visited and corners it cannot see
+past, and with &lt;code>anticipate = True&lt;/code> and &lt;code>foresight_horizon_s = inf&lt;/code> at times
+that have not happened yet. The extinction sampler is global; the cognitive
+map never touches it.&lt;/li>
+&lt;/ul>
+&lt;p>These are different kinds of knowledge — topology versus state — so it is not a
+formal contradiction. It is still not a coherent position, and it is sharpest
+exactly where the discovery tier&amp;rsquo;s modelling is most careful.&lt;/p>
+&lt;p>&lt;strong>What this affects.&lt;/strong> &lt;em>Not&lt;/em> map growth: what an agent learns and when runs
+through &lt;code>VisibilityModel&lt;/code> alone, so results about map expansion, exploration
+order, wander behaviour and the lost-exit failure mode stand. What it undercuts
+is any claim that a &lt;strong>discovery agent&amp;rsquo;s route choice&lt;/strong> is perception-limited. It
+is not.&lt;/p>
+&lt;p>&lt;strong>So name what the model is.&lt;/strong> Route choice here is an &lt;strong>optimality bound&lt;/strong>:
+what an evacuee with perfect knowledge of the smoke field would choose &lt;em>over the
+part of the building it happens to know&lt;/em>. Not &amp;ldquo;what a perfectly informed
+evacuee would choose&amp;rdquo; — the topology restriction is real and still binds. That
+bound is a legitimate and useful thing to publish, and the discovery tier
+remains a perception-limited model of &lt;em>wayfinding&lt;/em>; but the two are different
+claims and only one of them is about smoke.&lt;/p>
+&lt;p>Nothing is fixed here. &lt;code>foresight_horizon_s&lt;/code> is the one lever already shipped
+that bounds half of it (the temporal half); it defaults to &lt;code>inf&lt;/code>. #125 records
+the three options and evaluates none.&lt;/p>
+&lt;h3>Two asymmetries favour the exit the agent already walks to&lt;span class="hx-absolute -hx-mt-20" id="two-asymmetries-favour-the-exit-the-agent-already-walks-to">&lt;/span>
+&lt;a href="#two-asymmetries-favour-the-exit-the-agent-already-walks-to" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>tau_return_margin&lt;/code> (default 0.8) is a deadband on &lt;strong>feasibility&lt;/strong>. The current
+route is judged against the bare &lt;code>tau_max&lt;/code>; a rival must come in under
+&lt;code>tau_max * 0.8&lt;/code> before it is even a candidate:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>budget = tau_max (current exit)
+budget = tau_max * tau_return_margin (any other exit)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Without it a route whose &lt;code>tau&lt;/code> sits near the budget toggles in and out of the
+feasible set every tick and the agent follows it. It replaces the old
+&lt;code>sight_return_margin&lt;/code>, which multiplied a sight requirement (1.25 &lt;em>up&lt;/em>) where
+this one scales a budget (0.8 &lt;em>down&lt;/em>).&lt;/p>
+&lt;p>&lt;code>current_exit_discount&lt;/code> (default 0.9) is a deadband on &lt;strong>ordering&lt;/strong>. Only the
+current exit&amp;rsquo;s &lt;code>tau&lt;/code> is discounted, and only in the sort key, so it holds its
+place unless a rival is clearly cleaner rather than momentarily cleaner.&lt;/p>
+&lt;p>&lt;strong>Its provenance is FDS+Evac&amp;rsquo;s &lt;code>FAC_DOOR_OLD2 = 0.9&lt;/code>&lt;/strong> (&lt;code>evac.f90:1507&lt;/code>), which
+is applied as &lt;code>L2_tmp = FAC_DOOR_OLD2 * L2_tmp&lt;/code> to the current door at &lt;code>:16290&lt;/code>
+and &lt;code>:16467&lt;/code> — and at &lt;code>:16467&lt;/code> that &lt;code>L2_tmp&lt;/code> is the &lt;code>tau/6&lt;/code> of the tier-4 test,
+i.e. the same quantity, discounted in the same place, inside the loop that
+minimises it to pick a door. The shipped comment on &lt;code>tau_of&lt;/code> in &lt;code>route_graph.py&lt;/code>
+cites that provenance correctly since &lt;code>9508181&lt;/code>; an earlier version cited
+&lt;code>FAC_DOOR_WAIT&lt;/code>, which is at &lt;code>:1505&lt;/code> and discounts the current door&amp;rsquo;s &lt;em>travel
+time&lt;/em> (&lt;code>T_tmp&lt;/code>), not its smoke. &lt;code>FAC_DOOR_WAIT&lt;/code> is still the correct citation for
+&lt;code>exit_switch_anchor&lt;/code> and &lt;code>_PATH_IMPROVEMENT_THRESHOLD&lt;/code>, which are time
+comparisons, and the code cites it only there.&lt;/p>
+&lt;p>&lt;strong>A reviewer will ask why both.&lt;/strong> They act on different stages — one on the
+feasible set, one on the order within it — but they have not been measured
+independently, and no run isolates the contribution of either.&lt;/p>
+&lt;h3>The clean-exit tier (off by default)&lt;span class="hx-absolute -hx-mt-20" id="the-clean-exit-tier-off-by-default">&lt;/span>
+&lt;a href="#the-clean-exit-tier-off-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>clean_extinction_threshold&lt;/code> adds one rank above optical depth. A route whose
+smokiest &lt;em>leg&lt;/em> stays at or below the threshold is &lt;code>clean&lt;/code>, and clean routes
+outrank smoky ones outright however far they are; among routes of the same tier,
+optical depth then time decides. The sort key is
+&lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code>.&lt;/p>
+&lt;p>This is FDS+Evac&amp;rsquo;s primary door rule (&lt;code>evac.f90:16265&lt;/code>, &lt;code>:16272&lt;/code>), and its
+threshold is not a new constant: &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> =
+0.03 /m at &lt;code>:5262&lt;/code>, which is Jin&amp;rsquo;s &lt;code>S = 3/K&lt;/code> at a 100 m sighting distance. Two
+differences from the reference implementation are worth stating:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>FDS+Evac&amp;rsquo;s tier 1 is a hard filter.&lt;/strong> &lt;code>IF (T_tmp &amp;lt; L2_min .AND. L2_tmp &amp;lt; ABS(FED_DOOR_CRIT))&lt;/code> only ever selects a &lt;em>qualifying&lt;/em> door; when no door
+qualifies the tier picks nothing and the search falls to the next tier of
+doors. Falling through to plain time ranking when our tier is empty is
+pyFDS-Evac&amp;rsquo;s choice, not FDS+Evac&amp;rsquo;s.&lt;/li>
+&lt;li>&lt;strong>Membership is measured on the smokiest leg, each leg its own mean.&lt;/strong> The
+route mean would dilute a smoky stretch with whatever clear corridor follows,
+so a long route could qualify by being long — the mirror of the length
+penalty the gate exists to remove. The worst &lt;em>sample&lt;/em> is the step function
+that made sighting distances jump between ticks. FDS+Evac applies its 0.03 to
+&lt;code>K_ave_Door&lt;/code>, a per-door average, for the same reason — though note that
+&lt;code>K_ave_Door&lt;/code> is a mean along a bee-line sight line (&lt;code>See_door&lt;/code>,
+&lt;code>evac.f90:16147&lt;/code>, assigned at &lt;code>:16158&lt;/code>), not a maximum over legs.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>clean_exit_margin&lt;/code> is hysteresis on membership for the exit the agent already
+heads for: its limit is &lt;code>clean_extinction_threshold / clean_exit_margin&lt;/code>.
+FDS+Evac supplies the value — &lt;code>FAC_DOOR_OLD = 0.1&lt;/code> (&lt;code>evac.f90:1506&lt;/code>), applied as
+&lt;code>L2_tmp = FAC_DOOR_OLD * L2_tmp&lt;/code> for the current door (&lt;code>:16255&lt;/code>), so the door an
+agent already walks to stays smoke-free up to ten times the criterion.&lt;/p>
+&lt;p>The exit-switch anchor has a matching clause: a rival that is clean while the
+current exit is not bypasses the anchor. It was added because the anchor&amp;rsquo;s other
+bypass, then keyed on the visibility band, could not fire between a clean route
+and one 3.3x smokier — both saturated the band. That reasoning is now stale: the
+bypass compares optical depth, which does discriminate there. The clause has not
+been re-measured since, and the tier ships off anyway.&lt;/p>
+&lt;p>&lt;strong>It ships off (&lt;code>clean_extinction_threshold = 0.0&lt;/code>, which means no route is ever
+clean) because measurement refuted it.&lt;/strong> On &lt;code>l_corridor&lt;/code> over five seeds the
+far-exit share was 15-22 with the tier against 15-17 without, identical on four
+of the five; the prediction that motivated the tier was 25-40. The tier is not
+inert — it is non-empty on 52 % of decision ticks and changes the ordering on
+41 % — but the effect is churn rather than redirection: agents flip toward the
+clean exit and back before reaching the junction. Median RSET rises 17 %
+(71.2 s to 83.7 s) and monotonicity goes from 0 returns to an abandoned exit to
+34-38 agents per run.&lt;/p>
+&lt;p>The proposed mechanism is a threshold too sharp for the signal. Tick-to-tick
+movement in a leg mean has median 0.0072 /m and p90 0.134 /m, against a
+hysteresis band of 0.0075 /m — narrower than the median jump, 116 crossings per
+run. The band is also one-sided: the incumbent is relaxed to 0.0375 /m while a
+rival is admitted at the bare 0.03 /m. And because tier membership is binary, a
+crossing does not reorder the list, it swaps which objective is in force, so the
+target jumps. FDS+Evac has only a weak memory against that: a mark on a lone
+agent&amp;rsquo;s previous target once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> (&lt;code>evac.f90:16292-16301&lt;/code>), which
+acts weakly (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>
+); here
+nothing is remembered, by design.&lt;/p>
+&lt;p>&lt;strong>Read the refutation as provisional.&lt;/strong> A band of 0.0075 /m is
+&lt;code>0.03 / 0.8 - 0.03&lt;/code>, so those runs were made at &lt;code>clean_exit_margin = 0.8&lt;/code> — the
+value &lt;code>from_routing_params&lt;/code> still hands out, and the value the same commit
+records as invented. At the 0.1 that &lt;code>FAC_DOOR_OLD&lt;/code> supplies, the incumbent&amp;rsquo;s
+limit is 0.3 /m and the band is 0.27 /m: twice the p90 of the drift instead of
+a third of the median, which is a different regime for exactly the quantity the
+mechanism blames. The tier has not been measured at 0.1. Anyone re-opening this
+should set the key explicitly and re-run before trusting either the numbers or
+the explanation.&lt;/p>
+&lt;p>Turn it on for a deck that has a genuinely clean alternative to reach for, and
+read the &lt;code>clean&lt;/code> and &lt;code>k_leg_max&lt;/code> columns of the route-cost CSV when you do.&lt;/p>
+&lt;h3>Dose vetoes an exit; it does not rank&lt;span class="hx-absolute -hx-mt-20" id="dose-vetoes-an-exit-it-does-not-rank">&lt;/span>
+&lt;a href="#dose-vetoes-an-exit-it-does-not-rank" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>FED enters route choice as a veto only. Each route&amp;rsquo;s &lt;code>fed_max_route&lt;/code> is the
+dose already taken plus the dose predicted over the walk
+(&lt;code>current_fed + sum(fed_growth)&lt;/code>), and a route above &lt;code>fed_rejection_threshold&lt;/code>
+(default 1.0, incapacitation) is refused. Refusal is asymmetric in the same way
+as optical depth: the current exit is held to the bare threshold so an agent
+flees a lethal door at once, while a rival must come in under
+&lt;code>fed_rejection_threshold * fed_return_margin&lt;/code> (0.9). A dose refusal is a
+&amp;ldquo;must flee&amp;rdquo; rejection, so it bypasses the exit-switch anchor — hysteresis
+cannot pin an agent to a door that will kill it.&lt;/p>
+&lt;p>Surviving routes are then ordered by optical depth and time. Dose never makes
+one exit outrank another; it only removes exits.
+&lt;code>tests/test_route_gate.py::TestDoseVetoesAnExit&lt;/code> covers all three parts in clear
+air, so the smoke gate cannot be the cause.&lt;/p>
+&lt;p>&lt;strong>This is FDS+Evac&amp;rsquo;s other branch, and we run both halves at once.&lt;/strong> In
+&lt;code>evac.f90&lt;/code> (&lt;code>Change_Target_Door&lt;/code>, :16439-:16467) the sign of &lt;code>FED_DOOR_CRIT&lt;/code>
+selects between a dose criterion and a smoke criterion — they are alternatives,
+not layers — and the default of &lt;code>-100.0&lt;/code> (:1459) selects the smoke branch that
+this model implements. Which smoke criterion depends on the tier: absolute
+&lt;code>K_ave_Door&lt;/code> in tier 1, the &lt;code>0.5 x d&lt;/code> sight ratio in tier 4. Two further
+differences are worth knowing:&lt;/p>
+&lt;ul>
+&lt;li>FDS+Evac&amp;rsquo;s chosen quantity both strikes a door out (&lt;code>L2_tmp &amp;gt;= 1.0&lt;/code> marks it
+not visible) &lt;strong>and&lt;/strong> ranks the survivors (&lt;code>L2_tmp &amp;lt; L2_min&lt;/code> picks the door).
+Since &lt;code>0d9bf79&lt;/code> pyFDS-Evac&amp;rsquo;s optical depth does the same — it refuses and it
+ranks. Dose still only strikes out.&lt;/li>
+&lt;li>pyFDS-Evac applies dose and optical depth together rather than choosing one.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>On the fires we have measured, the dose veto never fires.&lt;/strong> On &lt;code>l_corridor&lt;/code>&amp;rsquo;s
+&lt;code>fire_1MW_west&lt;/code> run the largest &lt;code>fed_max_route&lt;/code> over 3498 route-cost rows is
+0.0016, against a threshold of 1.0, and &lt;code>world100&lt;/code> is reported the same way. On
+these fires the model is &lt;strong>exposure-gated wayfinding, not hazard avoidance&lt;/strong>:
+every refusal that changes an exit comes from the optical-depth criterion, and
+nothing in the run is near a tenability limit.&lt;/p>
+&lt;h3>Refusals are not remembered&lt;span class="hx-absolute -hx-mt-20" id="refusals-are-not-remembered">&lt;/span>
+&lt;a href="#refusals-are-not-remembered" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The criterion is measured against the distance &lt;em>still to walk&lt;/em>, so it relaxes
+as the agent closes in: smoke that refuses a door at 40 m accepts it at 2 m.
+Every tick re-decides from the current field; there is no permanent exit death.&lt;/p>
+&lt;h3>When every route is refused&lt;span class="hx-absolute -hx-mt-20" id="when-every-route-is-refused">&lt;/span>
+&lt;a href="#when-every-route-is-refused" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The agent still has to move. &lt;code>rank_routes&lt;/code> re-sorts the refused routes by
+&lt;code>(tau_route, rank_cost)&lt;/code> — least smoke to walk through, then quickest — and
+un-rejects the head with a &lt;code>fallback:&lt;/code> prefix on its reason. The agent keeps its
+current target unless a rival&amp;rsquo;s worst extinction is better by more than
+&lt;code>fallback_switch_margin&lt;/code> (default 0.2), i.e. unless&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>rival.k_max_route &amp;lt;= current.k_max_route * (1 - fallback_switch_margin)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The fallback sort uses the &lt;strong>undiscounted&lt;/strong> &lt;code>tau_route&lt;/code>;
+&lt;code>current_exit_discount&lt;/code> applies to the feasible ordering only, and the
+&lt;code>fallback_switch_margin&lt;/code> on &lt;code>k_max_route&lt;/code> is the hysteresis here instead.
+Ordering refused routes by &lt;code>k_max&lt;/code> alone once put a 51 m route ahead of a 22 m
+one on 2.0 m of sight against 1.8 m — two tenths of a metre of visibility,
+neither usable, deciding a 29 m detour. &lt;code>tau&lt;/code> carries the distance with it, so
+the least-bad walk is the one with least smoke to walk through.&lt;/p>
+&lt;h3>Churn protection&lt;span class="hx-absolute -hx-mt-20" id="churn-protection">&lt;/span>
+&lt;a href="#churn-protection" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Three mechanisms hold an agent on its exit.&lt;/p>
+&lt;p>&lt;strong>The exit-switch anchor.&lt;/strong> Under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> a different exit is adopted only
+when its rank cost beats &lt;code>old_cost * exit_switch_anchor&lt;/code> (default 0.9). Under
+the gate, &lt;code>_anchor_allows&lt;/code> decides in this order (&lt;code>25a6f8f&lt;/code>):&lt;/p>
+&lt;ol>
+&lt;li>The current exit is a &amp;ldquo;must flee&amp;rdquo; rejection — adopt. In practice only a
+dose rejection reaches this; see &lt;a href="#known-limitations">limitations&lt;/a>
+.&lt;/li>
+&lt;li>The rival is clean and the current exit is not — adopt.&lt;/li>
+&lt;li>The rival is not &lt;code>feasible&lt;/code> — fall through to the &lt;code>rank_cost&lt;/code> comparison.&lt;/li>
+&lt;li>Otherwise a &lt;strong>symmetric deadband&lt;/strong> on &lt;code>tau&lt;/code>, with
+&lt;code>margin = tau_max * tau_deadband&lt;/code> (6 x 0.1 = 0.6):&lt;/li>
+&lt;/ol>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>delta = current.tau_route - candidate.tau_route
+delta &amp;gt; margin -&amp;gt; adopt
+delta &amp;lt; -margin -&amp;gt; refuse
+otherwise -&amp;gt; candidate.rank_cost &amp;lt; current.rank_cost * exit_switch_anchor&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>Symmetric is the point.&lt;/strong> Before &lt;code>25a6f8f&lt;/code> only the adopt half existed:
+leaving an exit had to clear a margin in &lt;code>tau&lt;/code>, while returning to it fell
+straight through to the time comparison, which the nearer exit wins
+unconditionally. Departure cost a margin and the return was free — the same
+shape of failure as the clean tier&amp;rsquo;s, one level up. Hysteresis applied to one
+side of a disjunction is not hysteresis.&lt;/p>
+&lt;p>&lt;strong>Absolute, not a ratio.&lt;/strong> &lt;code>tau&lt;/code> is zero in clear air, so a ratio test reads
+&lt;code>0 &amp;lt; 0&lt;/code>: no agent could switch at all, and &lt;code>w_queue&lt;/code> would count for nothing
+exactly where decks calibrate it. An earlier ratio-only form produced 109
+returns to abandoned exits on &lt;code>l_corridor&lt;/code>.&lt;/p>
+&lt;p>A route the ordering promotes but the anchor refuses no longer hides the rest of
+the list: candidates are tried in rank order and the first the anchor would
+admit wins, stopping at the agent&amp;rsquo;s own exit.&lt;/p>
+&lt;p>&lt;strong>The deadbands.&lt;/strong> &lt;code>tau_return_margin&lt;/code> (0.8) and &lt;code>fed_return_margin&lt;/code> (0.9) make
+a rival exit harder to &lt;em>qualify&lt;/em> than the current one; &lt;code>current_exit_discount&lt;/code>
+(0.9) makes it harder to &lt;em>outrank&lt;/em> it; &lt;code>tau_deadband&lt;/code> (0.1 of &lt;code>tau_max&lt;/code>) makes
+it harder to &lt;em>switch onto&lt;/em>, in both directions. Four constants, three of them
+acting on the same quantity at three different stages. A reviewer will
+reasonably ask why, and no run isolates any one of them.&lt;/p>
+&lt;p>&lt;strong>Monotonicity holds on &lt;code>world100&lt;/code> and does not on &lt;code>l_corridor&lt;/code>.&lt;/strong> The
+requirement is that an agent never returns to an exit it has abandoned. At
+&lt;code>0d9bf79&lt;/code> and &lt;code>9f55f6e&lt;/code>:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>deck&lt;/th>
+&lt;th>before (&lt;code>4ce4ac7&lt;/code>)&lt;/th>
+&lt;th>at &lt;code>0d9bf79&lt;/code>&lt;/th>
+&lt;th>at &lt;code>9f55f6e&lt;/code>&lt;/th>
+&lt;th>at &lt;code>25a6f8f&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>world100&lt;/code>, far clean exit E3&lt;/td>
+&lt;td>12 agents&lt;/td>
+&lt;td>&lt;strong>39 agents&lt;/strong>, 9 switches, &lt;strong>0 returns&lt;/strong>&lt;/td>
+&lt;td>unchanged&lt;/td>
+&lt;td>not re-reported&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>l_corridor&lt;/code>, returns to abandoned exits&lt;/td>
+&lt;td>&lt;strong>0&lt;/strong>&lt;/td>
+&lt;td>51 across 20 agents&lt;/td>
+&lt;td>34 across 14 agents&lt;/td>
+&lt;td>34 across 14 agents&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>l_corridor&lt;/code>, switches&lt;/td>
+&lt;td>4&lt;/td>
+&lt;td>74&lt;/td>
+&lt;td>55&lt;/td>
+&lt;td>55&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>l_corridor&lt;/code>, far-exit share&lt;/td>
+&lt;td>~18&lt;/td>
+&lt;td>~18&lt;/td>
+&lt;td>~18&lt;/td>
+&lt;td>~18&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The &lt;code>world100&lt;/code> result is what the model was asked for — prefer a clean exit even
+when far — and no earlier version of the gate produced it. &lt;strong>&lt;code>l_corridor&lt;/code>
+regressed&lt;/strong>, from no returns to 34, and the far-exit share did not move to pay
+for it. The figures come from the commit messages of &lt;code>0d9bf79&lt;/code>, &lt;code>9f55f6e&lt;/code> and
+&lt;code>25a6f8f&lt;/code>; no CSV for them is in the results folder. &lt;code>25a6f8f&lt;/code> reports only
+&lt;code>l_corridor&lt;/code>, so the &lt;code>world100&lt;/code> column for it is unverified rather than
+measured.&lt;/p>
+&lt;p>&lt;strong>Most of &lt;code>l_corridor&lt;/code>&amp;rsquo;s 34 returns are not oscillation.&lt;/strong> Making the anchor&amp;rsquo;s
+&lt;code>tau&lt;/code> deadband symmetric at &lt;code>25a6f8f&lt;/code> changed nothing measurable, and that is
+the finding: of the 34 returns, &lt;strong>29 have the returned-to route cleaner by more
+than the deadband&lt;/strong> — median 0.95 of optical depth against a margin of 0.6 — so
+the agent is following a field that genuinely reversed, not flickering across a
+threshold. No further constant can damp those. Whether a memoryless model
+&lt;em>should&lt;/em> follow a reversing field is a modelling question, and it is open.&lt;/p>
+&lt;p>Enabling the clean-exit tier gives further violations back (34-38 agents per run
+on &lt;code>l_corridor&lt;/code>, measured before &lt;code>0d9bf79&lt;/code>), which is why it is off.&lt;/p>
+&lt;p>&lt;strong>Three attempts that did not close it, recorded so they are not repeated.&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>&lt;em>Making &lt;code>tau&lt;/code> the anchor&amp;rsquo;s currency&lt;/em> — replacing the &lt;code>rank_cost&lt;/code> ratio test
+with a &lt;code>tau&lt;/code> ratio test — took &lt;code>l_corridor&lt;/code> from 51 returns to &lt;strong>90&lt;/strong>. &lt;code>tau&lt;/code>
+is zero in clear air, so every ratio test degenerates to &lt;code>0 &amp;lt; 0&lt;/code> and the
+anchor stops discriminating. This is also why &lt;code>rank_cost&lt;/code> stays a time: a
+&lt;code>tau&lt;/code> anchor would let no agent switch in clear air, and a congestion weight
+would count for nothing exactly where decks calibrate one.&lt;/li>
+&lt;li>&lt;em>An absolute floor on the one-sided bypass&lt;/em> — the &lt;code>tau_max * 0.1&lt;/code> term — took
+109 returns to 51. It helped; it did not close the problem.&lt;/li>
+&lt;li>&lt;em>Making that deadband symmetric&lt;/em> (&lt;code>25a6f8f&lt;/code>) — the correct fix for a real
+asymmetry, and it moved nothing: 34 returns before and after.&lt;/li>
+&lt;/ul>
+&lt;h3>Anticipation&lt;span class="hx-absolute -hx-mt-20" id="anticipation">&lt;/span>
+&lt;a href="#anticipation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>), each segment is priced at the time the
+agent would &lt;em>arrive&lt;/em> there rather than the time it decides:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>arrival_time = now &amp;#43; min(distance_walked_so_far / base_speed_m_per_s,
+foresight_horizon_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The unimpeded &lt;code>base_speed_m_per_s&lt;/code> is used, not the smoke-reduced speed: the
+reduction depends on the smoke at the arrival time being computed, and one pass
+settles what a second would only refine. &lt;code>foresight_horizon_s&lt;/code> defaults to
+infinity, which is perfect foresight of the FDS solution; a finite horizon
+models an occupant who can only judge the near future.&lt;/p>
+&lt;p>&lt;strong>&lt;code>anticipate&lt;/code> is independent of &lt;code>cost_model&lt;/code>.&lt;/strong> It applies under &lt;code>&amp;quot;additive&amp;quot;&lt;/code>
+too, which is why pinning pre-gate behaviour needs both keys.&lt;/p>
+&lt;h2>The additive model&lt;span class="hx-absolute -hx-mt-20" id="the-additive-model">&lt;/span>
+&lt;a href="#the-additive-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>composite = effective_length * (1 &amp;#43; w_smoke * K_ave)
+&amp;#43; w_fed * FED_max
+&amp;#43; w_queue * base_speed_m_per_s * queue_time (when w_queue &amp;gt; 0)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>and routes are ordered by &lt;code>(rejected, composite, hops)&lt;/code>.&lt;/p>
+&lt;p>Both smoke and length terms scale with route length, so a long clean detour
+pays for its own length and can never win however large &lt;code>w_smoke&lt;/code> is — sweeping
+it 1 → 20 on &lt;code>assets/world_100&lt;/code> moved 12 of 120 agents. That is the reason the
+gate exists.&lt;/p>
+&lt;p>&lt;code>composite_cost&lt;/code> is still computed and reported under the gate; it simply does
+not rank.&lt;/p>
+&lt;h2>Configuration&lt;span class="hx-absolute -hx-mt-20" id="configuration">&lt;/span>
+&lt;a href="#configuration" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Every key below is read from the scenario&amp;rsquo;s &lt;code>routing&lt;/code> block by
+&lt;code>RouteCostConfig.from_routing_params&lt;/code>. Keys are flat, not nested:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;routing&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;cost_model&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;gate&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_max&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">6.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>JSON key&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;th>Under &lt;code>&amp;quot;gate&amp;quot;&lt;/code>&lt;/th>
+&lt;th>Under &lt;code>&amp;quot;additive&amp;quot;&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>cost_model&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;gate&amp;quot;&lt;/code>&lt;/td>
+&lt;td>Selects the model. Unvalidated: any other string behaves as &lt;code>&amp;quot;additive&amp;quot;&lt;/code>.&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>—&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>tau_max&lt;/code>&lt;/td>
+&lt;td>&lt;code>6.0&lt;/code>&lt;/td>
+&lt;td>Optical depth &lt;code>K_ave * L&lt;/code> a route may carry before it is refused. Also orders the feasible routes.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>inert&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>tau_return_margin&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.8&lt;/code>&lt;/td>
+&lt;td>Factor a &lt;em>rival&lt;/em> exit&amp;rsquo;s budget is multiplied by, so switching needs a cleaner route than staying.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>inert&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>current_exit_discount&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.9&lt;/code>&lt;/td>
+&lt;td>Factor the current exit&amp;rsquo;s &lt;code>tau&lt;/code> is scaled by in the sort key. FDS+Evac&amp;rsquo;s &lt;code>FAC_DOOR_OLD2&lt;/code> is 0.9.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>inert&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>tau_deadband&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.1&lt;/code>&lt;/td>
+&lt;td>Half-width of the exit-switch anchor&amp;rsquo;s symmetric &lt;code>tau&lt;/code> deadband, as a fraction of &lt;code>tau_max&lt;/code> (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — &lt;code>evac.f90:16463&lt;/code> tests the raw value.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>inert&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>clean_extinction_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.0&lt;/code> (off)&lt;/td>
+&lt;td>Extinction at or below which a route&amp;rsquo;s smokiest leg makes the exit &lt;code>clean&lt;/code>; clean exits outrank smoky ones. FDS+Evac&amp;rsquo;s value is &lt;code>0.03&lt;/code>.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>inert&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>clean_exit_margin&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.1&lt;/code>&lt;/td>
+&lt;td>Divides the threshold for the exit the agent already heads for. FDS+Evac&amp;rsquo;s &lt;code>FAC_DOOR_OLD&lt;/code> is 0.1.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>inert&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>anticipate&lt;/code>&lt;/td>
+&lt;td>&lt;code>true&lt;/code>&lt;/td>
+&lt;td>Price each segment at the agent&amp;rsquo;s arrival time.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>&lt;strong>active&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>foresight_horizon_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>inf&lt;/code>&lt;/td>
+&lt;td>Cap on how far ahead anticipation reaches, in seconds.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>&lt;strong>active&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fallback_switch_margin&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.2&lt;/code>&lt;/td>
+&lt;td>Hysteresis when every route is refused.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>inert&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>w_smoke&lt;/code>&lt;/td>
+&lt;td>&lt;code>1.0&lt;/code>&lt;/td>
+&lt;td>Smoke weight in the additive composite and its Dijkstra edge weights. Since &lt;code>0d9bf79&lt;/code> the gate weights edges by their own &lt;code>tau&lt;/code>, so neither weight reaches route choice under the gate; the composite is still reported.&lt;/td>
+&lt;td>&lt;strong>inert&lt;/strong> (reported only)&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>w_fed&lt;/code>&lt;/td>
+&lt;td>&lt;code>10.0&lt;/code>&lt;/td>
+&lt;td>FED weight. Same.&lt;/td>
+&lt;td>&lt;strong>inert&lt;/strong> (reported only)&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>w_queue&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.0&lt;/code>&lt;/td>
+&lt;td>Congestion weight, off by default.&lt;/td>
+&lt;td>active (as &lt;code>w_queue * queue_time_s&lt;/code> on the rank cost)&lt;/td>
+&lt;td>active (as distance-equivalent in the composite)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fed_rejection_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>1.0&lt;/code>&lt;/td>
+&lt;td>Projected FED above which a route is refused. Veto only: dose never ranks.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>visibility_extinction_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.5&lt;/code>&lt;/td>
+&lt;td>&lt;code>K&lt;/code> above which a segment is flagged non-visible; a route whose segments are &lt;em>all&lt;/em> non-visible is refused when some other route has a visible segment.&lt;/td>
+&lt;td>&lt;strong>inert&lt;/strong>&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>sampling_step_m&lt;/code>&lt;/td>
+&lt;td>&lt;code>2.0&lt;/code>&lt;/td>
+&lt;td>Spacing of extinction samples along an edge polyline.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>base_speed_m_per_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>1.3&lt;/code>&lt;/td>
+&lt;td>Clear-air walking speed. Sets travel time, anticipation, and the queue conversion. It is not a speed floor; &lt;code>min_speed_factor&lt;/code> is.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>alpha&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.706&lt;/code>&lt;/td>
+&lt;td>Router&amp;rsquo;s copy of the linear speed-law coefficient, for travel time only; agents walk with &lt;code>SmokeSpeedConfig&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>
+).&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>beta&lt;/code>&lt;/td>
+&lt;td>&lt;code>-0.057&lt;/code>&lt;/td>
+&lt;td>Same, the slope.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>min_speed_factor&lt;/code>&lt;/td>
+&lt;td>&lt;code>0.1&lt;/code>&lt;/td>
+&lt;td>Same, the floor on the router&amp;rsquo;s speed factor.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>default_exit_capacity&lt;/code>&lt;/td>
+&lt;td>&lt;code>1.3&lt;/code>&lt;/td>
+&lt;td>Fallback exit capacity, agents/s, when the exit sets none.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;code>clean_exit_margin&lt;/code> had two disagreeing defaults — 0.1 in the dataclass, 0.8
+from &lt;code>from_routing_params&lt;/code> — until &lt;code>9508181&lt;/code> made both 0.1, the value
+&lt;code>FAC_DOOR_OLD&lt;/code> supplies. The clean-tier measurements below were made at 0.8 and
+have not been repeated at 0.1.&lt;/p>
+&lt;p>Two &lt;code>RouteCostConfig&lt;/code> fields are &lt;strong>not&lt;/strong> readable from the &lt;code>routing&lt;/code> block and
+keep their dataclass defaults in any scenario run: &lt;code>fed_return_margin&lt;/code> (0.9,
+the asymmetric FED hysteresis) and &lt;code>impassable_extinction_threshold&lt;/code> (3.0, the
+route-average extinction above which a smoke rejection bypasses the anchor).
+Setting them requires constructing &lt;code>RouteCostConfig&lt;/code> in Python.&lt;/p>
+&lt;p>&lt;code>exit_switch_anchor&lt;/code> (default 0.9) belongs to &lt;code>RerouteConfig&lt;/code>, not to
+&lt;code>RouteCostConfig&lt;/code>.&lt;/p>
+&lt;h2>Known limitations&lt;span class="hx-absolute -hx-mt-20" id="known-limitations">&lt;/span>
+&lt;a href="#known-limitations" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These are real and documented, not hypothetical. Details and measurements are
+in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>
+. This section is the
+single consolidated statement; anyone assessing the model should be able to read
+it alone.&lt;/p>
+&lt;p>&lt;strong>Two open issues carry the unresolved ones.&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a>
+— route
+choice oscillates at a genuine optical-depth crossover.&lt;/strong> &lt;code>l_corridor&lt;/code>&amp;rsquo;s 34
+returns, 31 of them in &lt;code>t = 40-60 s&lt;/code>, the window in which the two routes&amp;rsquo; &lt;code>tau&lt;/code>
+cross over; at &lt;code>t = 40 s&lt;/code> their distributions overlap by 61 %. The crossover
+swings through 1.5-3x and sails past any
+hysteresis constant that would not also blind the model to real change. What is
+missing is &lt;em>commitment&lt;/em> — hysteresis in time or in progress along a leg — not a
+bigger threshold. Three attempts are already recorded as failures below.&lt;/li>
+&lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
+— route
+choice is not perception-limited.&lt;/strong> See
+&lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model">Route choice is an optimality bound&lt;/a>
+.
+It bounds what the discovery tier can be said to demonstrate about route
+choice; it does not touch map growth.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>And the model is a departure, not a reproduction.&lt;/strong> &lt;code>tau&lt;/code> is the ordering here;
+in FDS+Evac smoke ranks only inside the tier-4 last resort, over known-or-visible
+doors, on a bee line, with a strike-out that lasts one call. See
+&lt;a href="#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it">The diversion is a departure&lt;/a>
+.
+The 100/0 attributed to the reference criterion on &lt;code>l_corridor&lt;/code> is a reasoned
+prediction from &lt;code>evac.f90&lt;/code>, not a measured run of it.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>The &lt;code>L/d&lt;/code> bias tilts the criterion by geometry alone.&lt;/strong> &lt;code>tau&lt;/code> is measured on
+the walked polyline where the reference measures on a straight line, and
+&lt;code>L/d&lt;/code> is 1.41 on &lt;code>l_corridor&lt;/code>&amp;rsquo;s near route against 1.27 on the far one — so at
+equal &lt;code>K_ave&lt;/code> the polyline form is about 11 % stricter on the near route, in
+the same direction as the diversion the deck is used to demonstrate. Not
+measured on any other geometry.&lt;/li>
+&lt;li>&lt;strong>The ordering is in optical depth and the anchor is partly in time.&lt;/strong> The
+ordering is &lt;code>tau&lt;/code>; &lt;code>_anchor_allows&lt;/code> falls through to &lt;code>rank_cost&lt;/code>, a travel
+time, whenever the two routes&amp;rsquo; &lt;code>tau&lt;/code> are within the deadband. So the two
+currencies still meet, and mixing them was the presumed cause of
+&lt;code>l_corridor&lt;/code>&amp;rsquo;s 34 returns. Measurement at &lt;code>25a6f8f&lt;/code> does not support that
+reading: 29 of the 34 have the returned-to route cleaner by more than the
+deadband, so they are the ordering correctly following a field that reversed.
+What remains open is the modelling question — whether a memoryless model
+should follow a reversing field at all — not a missing constant.&lt;/li>
+&lt;li>&lt;strong>Four hysteresis mechanisms act on &lt;code>tau&lt;/code> or on the exit choice.&lt;/strong>
+&lt;code>tau_return_margin&lt;/code> on feasibility, &lt;code>current_exit_discount&lt;/code> on the sort,
+&lt;code>tau_deadband&lt;/code> on the anchor, &lt;code>exit_switch_anchor&lt;/code> on the time fallthrough.
+None has been measured in isolation, and the last two are both keyed to 0.9
+and 0.1 x 6 without a joint sweep.&lt;/li>
+&lt;li>&lt;strong>The &lt;code>1e-6 * length&lt;/code> edge-weight floor is a hard-coded tiebreaker.&lt;/strong> It
+decides path choice in clear air, where every &lt;code>k_avg * length&lt;/code> is zero. Its
+effect at small nonzero &lt;code>K&lt;/code> has not been measured.&lt;/li>
+&lt;li>&lt;strong>&lt;code>tau_max = 6&lt;/code> is uncalibrated as an exposure budget.&lt;/strong> The threshold is
+citable from FDS+Evac&amp;rsquo;s tier-4 rule, but that rule applies it to a straight
+sight line, not to a walked route, and nothing here checks 6 against a
+soot-dose or FED-equivalent limit.&lt;/li>
+&lt;li>&lt;strong>&lt;code>impassable_extinction_threshold&lt;/code> is dead code under the default model.&lt;/strong>
+&lt;code>_must_flee_rejection&lt;/code> fires only on a rejection reason starting &lt;code>FED&lt;/code> or
+containing &lt;code>&amp;quot;visible&amp;quot;&lt;/code>; the gate&amp;rsquo;s only reason string starts &lt;code>tau&lt;/code>. So no
+smoke rejection bypasses the exit-switch anchor, at any density, and the key
+still takes a value and does nothing. &lt;code>visibility_extinction_threshold&lt;/code>
+(0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
+survives, and on the fires measured here FED never reaches its threshold, so
+in practice &lt;strong>nothing bypasses the anchor&lt;/strong>.&lt;/li>
+&lt;li>&lt;strong>Anticipation samples the field too early.&lt;/strong> Segments are priced at
+&lt;code>now + walked_so_far / base_speed_m_per_s&lt;/code>, the &lt;em>unimpeded&lt;/em> speed, while an
+agent in smoke walks at as little as &lt;code>min_speed_factor&lt;/code> = 0.1 of it. The
+clock therefore runs ahead of the agent systematically, and it runs furthest
+ahead exactly where the smoke is thickest. With &lt;code>foresight_horizon_s = inf&lt;/code>
+the agent also has perfect foresight of the FDS solution.&lt;/li>
+&lt;li>&lt;strong>Six hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
+&lt;code>fallback_switch_margin&lt;/code> (0.2), &lt;code>fed_return_margin&lt;/code> (0.9),
+&lt;code>tau_return_margin&lt;/code> (0.8), &lt;code>tau_deadband&lt;/code> (0.1), and
+&lt;code>_PATH_IMPROVEMENT_THRESHOLD&lt;/code> (10 %) are all chosen to stop measured churn,
+not fitted to observed behaviour. Two have FDS+Evac values behind them:
+&lt;code>clean_exit_margin&lt;/code> = &lt;code>FAC_DOOR_OLD&lt;/code>, and &lt;code>current_exit_discount&lt;/code> =
+&lt;code>FAC_DOOR_OLD2&lt;/code>. Neither was fitted here either.&lt;/li>
+&lt;li>&lt;strong>Clear-air equivalence has not been re-measured since &lt;code>0d9bf79&lt;/code>.&lt;/strong> The gate
+now orders by &lt;code>tau&lt;/code> and weights edges by &lt;code>tau&lt;/code>; the last equivalence runs
+predate both. In clear air every &lt;code>tau&lt;/code> is zero and the argument still holds by
+construction, but it is an argument, not a measurement.&lt;/li>
+&lt;li>&lt;strong>&lt;code>cost_model&lt;/code> is an unvalidated free string.&lt;/strong> A typo silently yields the
+additive model.&lt;/li>
+&lt;li>&lt;strong>FIC does not participate in routing under either model.&lt;/strong> It drives the
+Purser slowdown and incapacitation only. FIC and the optical-depth gate are
+driven by the same smoke, so routing on both would double-count.&lt;/li>
+&lt;/ul>
+&lt;h2>Evidence&lt;span class="hx-absolute -hx-mt-20" id="evidence">&lt;/span>
+&lt;a href="#evidence" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>assets/l_corridor&lt;/code> is the deck the model is judged on: a near exit reached by
+passing the fire, and a clean way round. Since &lt;code>a98f8bb&lt;/code> the spawn sits in the
+middle of the vertical leg and the two routes are 26 m and 46 m, a 1.8x ratio;
+before that it sat 3 m from the junction and they were 11 m and 58 m, 5.3x —
+a spread wide enough that no smoke could justify the detour. Exit shares are
+unchanged across the move at 84 / 16, with 4 switches and no agent returning to
+an abandoned exit. &lt;strong>The numbers below predate the move&lt;/strong>, so read their route
+lengths against the old geometry. Results are in
+&lt;code>&amp;lt;sciebo&amp;gt;/fds-evac-data/l_corridor/evac/RESULTS.md&lt;/code> (100 agents, seed 1,
+familiarity 1.0):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>run&lt;/th>
+&lt;th>fire&lt;/th>
+&lt;th>near / far&lt;/th>
+&lt;th>switches&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>gate&lt;/td>
+&lt;td>&lt;code>fire_1MW_west&lt;/code>&lt;/td>
+&lt;td>&lt;strong>84 / 16&lt;/strong>&lt;/td>
+&lt;td>14 &lt;code>smoke_reroute&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>additive&lt;/td>
+&lt;td>&lt;code>fire_1MW_west&lt;/code>&lt;/td>
+&lt;td>100 / 0&lt;/td>
+&lt;td>23 &lt;code>smoke_reroute&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>gate, control&lt;/td>
+&lt;td>&lt;code>fire_1MW&lt;/code>&lt;/td>
+&lt;td>99 / 1&lt;/td>
+&lt;td>—&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>gate, clear air&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>100 / 0&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>additive, clear air&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>100 / 0&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The control run puts the fire east of the junction, where the far route smokes
+first; the gate then diverts 1 agent instead of 16, so it is not simply
+preferring long routes.&lt;/p>
+&lt;p>The table is the run made at &lt;code>b3babc0&lt;/code>, before the band left the ordering. The
+84/16 split was re-measured after &lt;code>cea33ce&lt;/code> and reported unchanged; that re-run
+is not in the folder above, so take the attribution from the commit message
+rather than from a CSV.&lt;/p>
+&lt;p>At &lt;code>45e146f&lt;/code> the reported state is &lt;code>l_corridor&lt;/code> 84 near / 16 far with 2
+switches and no returns to an abandoned exit, and &lt;code>world100&lt;/code> E1 91 / E2 17 /
+E3 12 with 5 switches and no returns. &lt;code>a98f8bb&lt;/code> then moved the l_corridor spawn
+and re-reported 84 / 16 with 4 switches, still no returns. The &lt;code>world100&lt;/code> far
+clean exit is used at all only since &lt;code>b16e900&lt;/code>. These figures come from the
+commit messages of &lt;code>b16e900&lt;/code>, &lt;code>45e146f&lt;/code> and &lt;code>a98f8bb&lt;/code>; no CSV for them is in
+the results folder.&lt;/p>
+&lt;p>&lt;strong>Since &lt;code>0d9bf79&lt;/code> these are history.&lt;/strong> Ranking on optical depth moved
+&lt;code>world100&lt;/code>&amp;rsquo;s far clean exit from 12 agents to 39, and moved &lt;code>l_corridor&lt;/code> from no
+returns to an abandoned exit to 51, then 34 at &lt;code>9f55f6e&lt;/code>, with the far-exit
+share unchanged at about 18. See
+&lt;a href="#churn-protection">Churn protection&lt;/a>
+for the full table. No archived result set
+exists for either; both come from the commit messages.&lt;/p>
+&lt;p>&lt;strong>Read the headline with its caveat.&lt;/strong> Counted directly from &lt;code>f_gate_costs.csv&lt;/code>
+(3498 rows, the &lt;code>b3babc0&lt;/code> run), the refusals break down as:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>refusal&lt;/th>
+&lt;th>near exit&lt;/th>
+&lt;th>far exit&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>sight (path)&lt;/code>&lt;/td>
+&lt;td>200&lt;/td>
+&lt;td>1020&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fallback: sight (path)&lt;/code>&lt;/td>
+&lt;td>12&lt;/td>
+&lt;td>25&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fallback: sight (los)&lt;/code>&lt;/td>
+&lt;td>130&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>So in that run the &lt;code>path&lt;/code> criterion did the work, and it refused the &lt;em>near&lt;/em> exit
+200 times as well as the far one — the split is not a one-sided refusal of the
+long way round. The &lt;code>los&lt;/code> criterion appears there only under a &lt;code>fallback:&lt;/code>
+prefix, i.e. in ticks where every route was already refused. That matters before
+anyone calibrates &lt;code>tau_max&lt;/code>. The &lt;code>los&lt;/code> criterion no longer gates at all
+(&lt;code>b16e900&lt;/code>), and the reason strings are &lt;code>tau ...&lt;/code> since &lt;code>0d9bf79&lt;/code>, so a current
+CSV carries neither label.&lt;/p>
+&lt;p>&lt;strong>The route-cost CSV columns changed at &lt;code>0d9bf79&lt;/code>.&lt;/strong> &lt;code>min_visibility_m&lt;/code> and
+&lt;code>band&lt;/code> are gone; &lt;code>tau_route&lt;/code> replaces both. Any analysis script reading the old
+columns needs updating.&lt;/p>
+&lt;p>&lt;code>assets/t_junction&lt;/code> is &lt;strong>not&lt;/strong> a route-choice benchmark. Its 2 MW PVC fire
+drives route &lt;code>K&lt;/code> to about 10.7 /m, so every route on it carries an optical depth
+far above any plausible budget and all of them are refused. Keep it as a
+lethality and speed-collapse case.&lt;/p>
+&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
+&lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>FDS+Evac Technical Reference and User&amp;rsquo;s Guide
+— Korhonen (2021).&lt;/li>
+&lt;li>&lt;code>materials/evac.f90&lt;/code> — the reference implementation; line-level citations for
+the door criteria are in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>
+.&lt;/li>
+&lt;li>&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>
+—
+waypoint-based visibility, Beer-Lambert integrated extinction (Eq. 8-9).&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
+— Jin&amp;rsquo;s law and
+its sources.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing model&lt;/a>
+— defaults and deviations from the
+literature.&lt;/li>
+&lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/l_corridor/README.md" target="_blank" rel="noopener">assets/l_corridor/README.md&lt;/a>
+— the deck, its
+fire, and the measured smoke contrast.&lt;/li>
+&lt;/ul></description></item></channel></rss>

@@ -1,0 +1,1607 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Using pyFDS-Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/</link><description>Recent content in Using pyFDS-Evac on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/index.xml" rel="self" type="application/rss+xml"/><item><title>What your FDS case must provide</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</guid><description>
+&lt;p>Read this before pointing &lt;code>--fds-dir&lt;/code> at a case for the first time.&lt;/p>
+&lt;p>&lt;strong>pyFDS-Evac never runs FDS.&lt;/strong> It reads the output of a finished FDS run.
+A deck written for some other purpose usually will not work as-is: it has to
+be told to dump the specific slices this tool samples.&lt;/p>
+&lt;h2>The slices&lt;span class="hx-absolute -hx-mt-20" id="the-slices">&lt;/span>
+&lt;a href="#the-slices" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;EXTINCTION COEFFICIENT&amp;#39; /
+&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;CARBON MONOXIDE&amp;#39; /
+&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;CARBON DIOXIDE&amp;#39; /
+&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;OXYGEN&amp;#39; /
+&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;TEMPERATURE&amp;#39; /
+&amp;amp;DUMP DT_SLCF=1.0 /&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Nothing here is dumped by default. FDS writes only what the deck asks for.&lt;/p>
+&lt;p>For the default species (soot), FDS records the extinction-coefficient
+slice internally as &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code>, and that is the exact
+quantity name &lt;code>load_slice_sampler&lt;/code> looks up
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">fds-sampling.md&lt;/a>
+).&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Slice&lt;/th>
+&lt;th>Feeds&lt;/th>
+&lt;th>If absent&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Extinction coefficient&lt;/td>
+&lt;td>smoke-speed, visibility gating, GUI smoke layer&lt;/td>
+&lt;td>&lt;code>IndexError&lt;/code> when &lt;code>--fds-dir&lt;/code> is given without &lt;code>--constant-extinction&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>CO &lt;strong>and&lt;/strong> CO2 &lt;strong>and&lt;/strong> O2&lt;/td>
+&lt;td>FED toxic dose&lt;/td>
+&lt;td>&lt;strong>FED is switched off and the run continues&lt;/strong> (see below)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>TEMPERATURE&lt;/td>
+&lt;td>heat FED (SFPE Handbook Eq. 63.44), only with &lt;code>--enable-heat-fed&lt;/code>&lt;/td>
+&lt;td>&lt;strong>heat FED is switched off and the run continues&lt;/strong> (see below)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>It is all three gases or none of them; there is no partial FED. TEMPERATURE
+is independent of that gate — it needs neither CO/CO2/O2 nor any &lt;code>&amp;amp;REAC&lt;/code>
+yield to work (see below), so a case can have heat FED without toxic FED
+or vice versa.&lt;/p>
+&lt;p>&lt;code>EXTINCTION&lt;/code> and &lt;code>EXTINCTION COEFFICIENT&lt;/code> are two unrelated gas-phase output
+quantities (FDS User Guide Table 22.4) — don&amp;rsquo;t confuse them. &lt;code>EXTINCTION&lt;/code>
+(Sec. 22.10.29) is a combustion-suppression flag with no units: 0 if the
+extinction routine did not prevent combustion, 1 if it did, -1 if there was
+no fuel or oxidizer. &lt;code>EXTINCTION COEFFICIENT&lt;/code> (Sec. 22.10.5) is the light
+extinction coefficient K [1/m] that the smoke-speed model actually needs.
+If your deck has &lt;code>QUANTITY='EXTINCTION'&lt;/code> where you meant the extinction
+coefficient, fix it to &lt;code>QUANTITY='EXTINCTION COEFFICIENT'&lt;/code> and rerun FDS.&lt;/p>
+&lt;h2>Declaring a slice is not enough&lt;span class="hx-absolute -hx-mt-20" id="declaring-a-slice-is-not-enough">&lt;/span>
+&lt;a href="#declaring-a-slice-is-not-enough" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The species also has to exist in the run. Under simple chemistry, &lt;code>OXYGEN&lt;/code>,
+&lt;code>NITROGEN&lt;/code>, &lt;code>WATER VAPOR&lt;/code> and &lt;code>CARBON DIOXIDE&lt;/code> are always present, but
+&lt;code>CARBON MONOXIDE&lt;/code> only exists if &lt;code>CO_YIELD&lt;/code> is set on &lt;code>&amp;amp;REAC&lt;/code>, and &lt;code>SOOT&lt;/code> only
+if &lt;code>SOOT_YIELD&lt;/code> is set. A plain &lt;code>&amp;amp;REAC FUEL='PROPANE' /&lt;/code> cannot produce FED no
+matter what &lt;code>&amp;amp;SLCF&lt;/code> lines you add. Fix it at the source:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>&amp;amp;REAC FUEL=&amp;#39;CABLE_FUEL&amp;#39;, C=3, H=5, O=0, N=1,
+SOOT_YIELD=0.172, CO_YIELD=0.063, HCN_YIELD=0.006,
+HEAT_OF_COMBUSTION=16400 /&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>That is the &lt;code>t_junction&lt;/code> reaction. Yields are fuel properties: take them from
+your material&amp;rsquo;s data rather than copying these.&lt;/p>
+&lt;p>&lt;code>TEMPERATURE&lt;/code> is the one exception: it is a core solved gas-phase variable in
+every FDS run, not a species yield, so it needs no &lt;code>&amp;amp;REAC&lt;/code> setup at all — the
+&lt;code>&amp;amp;SLCF&lt;/code> line above is sufficient on its own.&lt;/p>
+&lt;h2>Two silent failure modes&lt;span class="hx-absolute -hx-mt-20" id="two-silent-failure-modes">&lt;/span>
+&lt;a href="#two-silent-failure-modes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>FED disabled.&lt;/strong> If CO, CO2 or O2 is missing, pyFDS-Evac carries on with
+smoke-speed only and every FED column reads zero. A zero-dose result looks
+exactly like a never-computed one. A warning is logged when this happens, and
+it is the only signal you get:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>FED is disabled for &amp;lt;dir&amp;gt;: it has no CO slice, and all three of CO, CO2 and
+O2 are needed. ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>Heat FED disabled.&lt;/strong> The heat FED track is off unless &lt;code>--enable-heat-fed&lt;/code>
+is given. With it, the same applies as for the gases: if there is no
+&lt;code>TEMPERATURE&lt;/code> slice, heat FED is off, and every heat FED column reads zero:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>Heat FED is disabled for &amp;lt;dir&amp;gt;: it has no TEMPERATURE slice. ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>Wrong slice height.&lt;/strong> &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m, FDS+Evac&amp;rsquo;s &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>) is a
+preference, not a filter: a case with one slice of a quantity uses it whatever
+its height, and a mismatch never fails the run. A case you inherit often
+carries a single slice at whatever height its author chose, so you can end up
+sampling floor-level CO for standing agents. A warning fires past 0.5 m:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>Requested a &amp;#39;SOOT EXTINCTION COEFFICIENT&amp;#39; slice at z=0.50 m but the nearest
+available in &amp;lt;dir&amp;gt; is at z=2.00 m ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Do not ignore either warning. Nothing else will tell you.&lt;/p>
+&lt;h2>Failure modes&lt;span class="hx-absolute -hx-mt-20" id="failure-modes">&lt;/span>
+&lt;a href="#failure-modes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Symptom&lt;/th>
+&lt;th>Cause&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>IndexError: No slice with quantity 'SOOT EXTINCTION COEFFICIENT' found in &amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
+&lt;td>The deck never declared &lt;code>&amp;amp;SLCF QUANTITY='EXTINCTION COEFFICIENT'&lt;/code>, or the species was never tracked.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>IndexError: No slice with quantity '...' found in &amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
+&lt;td>The deck never declared that &lt;code>&amp;amp;SLCF&lt;/code>, or the species was never tracked.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Warning: FED is disabled for &lt;code>&amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
+&lt;td>CO, CO2 or O2 is missing. Check &lt;code>CO_YIELD&lt;/code> on &lt;code>&amp;amp;REAC&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Warning: Heat FED is disabled for &lt;code>&amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
+&lt;td>No &lt;code>TEMPERATURE&lt;/code> slice. Add &lt;code>&amp;amp;SLCF QUANTITY='TEMPERATURE'&lt;/code> — no &lt;code>&amp;amp;REAC&lt;/code> change needed.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>FED is zero everywhere and nobody is incapacitated&lt;/td>
+&lt;td>Either genuinely survivable, or FED never ran. Check for the warning above before concluding the former.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: Point (x, y) is outside the sampled FDS slice domain&lt;/code>&lt;/td>
+&lt;td>Walkable area extends past the slice extent.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Warning: requested slice at z=A, nearest is z=B&lt;/td>
+&lt;td>Your case has no slice near the height you asked for.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table></description></item><item><title>Usage: running simulations and producing plots</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</guid><description>
+&lt;p>This page catalogues every user-facing script in the repository: how to run
+an evacuation simulation, what artefacts it writes, and which plotting
+script consumes each artefact. All commands assume the project venv
+(&lt;code>uv run ...&lt;/code>).&lt;/p>
+&lt;h2>Running a simulation — &lt;code>run.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="running-a-simulation--runpy">&lt;/span>
+&lt;a href="#running-a-simulation--runpy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>run.py&lt;/code> is the single entry point for an evacuation run. It loads a
+JSON-first JuPedSim scenario, optionally couples it to an FDS case for
+smoke-speed / FED / visibility, and writes CSV/SQLite artefacts for
+post-processing.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python run.py --scenario &amp;lt;scenario.json|.zip|dir&amp;gt; [options]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Scenario selection and export&lt;span class="hx-absolute -hx-mt-20" id="scenario-selection-and-export">&lt;/span>
+&lt;a href="#scenario-selection-and-export" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--scenario PATH&lt;/code>&lt;/td>
+&lt;td>Scenario JSON, ZIP, or directory (required).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--seed N&lt;/code>&lt;/td>
+&lt;td>Override scenario seed.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--print-summary&lt;/code>&lt;/td>
+&lt;td>Print the loaded scenario summary before running.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--output-sqlite PATH&lt;/code>&lt;/td>
+&lt;td>Copy the JuPedSim trajectory SQLite here. When FED is computed, also writes an optional &lt;code>agent_scalars(frame, id, fed, heat_fed, speed)&lt;/code> side table (base JuPedSim schema untouched) so &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>
+can colour agents by FED or speed.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--cleanup&lt;/code>&lt;/td>
+&lt;td>Delete the temp SQLite after the run.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--export-app-bundle DIR&lt;/code>&lt;/td>
+&lt;td>Write &lt;code>config.json&lt;/code> and &lt;code>geometry.wkt&lt;/code> for the app.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--export-only&lt;/code>&lt;/td>
+&lt;td>Export the bundle without running the simulation.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>FDS coupling (smoke / FED / visibility)&lt;span class="hx-absolute -hx-mt-20" id="fds-coupling-smoke--fed--visibility">&lt;/span>
+&lt;a href="#fds-coupling-smoke--fed--visibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Your FDS case has to dump specific slices before any of this works. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">fds-case-requirements.md&lt;/a>
+for the deck lines to add
+and two failure modes (FED silently disabled, wrong slice height) that stay
+silent unless you check the warning log.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--fds-dir DIR&lt;/code>&lt;/td>
+&lt;td>FDS result directory driving smoke-speed and FED.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--constant-extinction K&lt;/code>&lt;/td>
+&lt;td>Use a constant &lt;code>K&lt;/code> [1/m] instead of FDS.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--smoke-update-interval S&lt;/code>&lt;/td>
+&lt;td>Seconds between smoke-speed refreshes.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--smoke-slice-height M&lt;/code>&lt;/td>
+&lt;td>FDS slice height (m) for smoke and heat sampling (default 1.6, FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
+&lt;td>Write &lt;code>(t, agent, K, v, factor)&lt;/code> CSV.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--output-fed-history CSV&lt;/code>&lt;/td>
+&lt;td>Write per-agent per-sample FED+species CSV.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--inspect-fds&lt;/code>&lt;/td>
+&lt;td>Inspect FDS quantities (like &lt;code>scripts/inspect_fds.py&lt;/code>) and exit.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Dynamic rerouting (smoke-aware route choice)&lt;span class="hx-absolute -hx-mt-20" id="dynamic-rerouting-smoke-aware-route-choice">&lt;/span>
+&lt;a href="#dynamic-rerouting-smoke-aware-route-choice" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--enable-rerouting&lt;/code> / &lt;code>--no-enable-rerouting&lt;/code>&lt;/td>
+&lt;td>Let agents re-evaluate exits during the run (on by default).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--reroute-interval S&lt;/code>&lt;/td>
+&lt;td>Seconds between per-agent reevaluations (default 1).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--output-route-history CSV&lt;/code>&lt;/td>
+&lt;td>Write route switches.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--output-route-cost-history CSV&lt;/code>&lt;/td>
+&lt;td>Ranked route cost snapshots.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--vis-cache NPZ&lt;/code>&lt;/td>
+&lt;td>Path to a vismap &lt;code>.npz&lt;/code> cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With &lt;code>--fds-dir&lt;/code> it caches the smoke-aware vismap; without one, the clear-air grid.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--clear-air-visibility&lt;/code>&lt;/td>
+&lt;td>Force sight gating on a deck with no fire. Conflicts with &lt;code>--fds-dir&lt;/code> (a deck with a fire has smoke to decide sight) and with &lt;code>--no-visibility&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--no-visibility&lt;/code>&lt;/td>
+&lt;td>Turn sight gating off entirely; agents then learn each node&amp;rsquo;s neighbours by contact. Not a fire scenario.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--vis-cell-size M&lt;/code>&lt;/td>
+&lt;td>Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;strong>The default route-choice model does not trigger the visibility model.&lt;/strong> The
+default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> route-cost model reads no vismap: its smoke criterion is the
+optical depth along the route polyline, and sign legibility only decides what
+enters an agent&amp;rsquo;s cognitive map. A deck whose agents all start fully familiar therefore builds
+no visibility model at all unless you pass &lt;code>--vis-cache&lt;/code> or
+&lt;code>--clear-air-visibility&lt;/code>. A deck with discovery agents builds one either way,
+because they need it to learn the graph. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a>
+.&lt;/p>
+&lt;h3>Tenability (FIC slowdown + FED incapacitation)&lt;span class="hx-absolute -hx-mt-20" id="tenability-fic-slowdown--fed-incapacitation">&lt;/span>
+&lt;a href="#tenability-fic-slowdown--fed-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A FED model is instantiated automatically when &lt;code>--fds-dir&lt;/code> points at
+an FDS case that exposes the FED species (CO, CO₂, O₂ at
+minimum — HCN, NO/NO₂, and irritants are used if present). When that
+happens, the FED incapacitation rule is on by default. The FIC slowdown
+(a pyFDS-Evac assumption, source unknown;
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>
+) is off
+by default, as FDS+Evac has none; &lt;code>--enable-fic-speed&lt;/code> turns it on. Without &lt;code>--fds-dir&lt;/code> (or with a case missing the
+required species) no FED is computed and these flags have no effect;
+a case with a &lt;code>TEMPERATURE&lt;/code> slice still gets heat incapacitation when
+&lt;code>--enable-heat-fed&lt;/code> is given (the heat dose is off by default, as FDS+Evac has
+none).&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--disable-tenability&lt;/code>&lt;/td>
+&lt;td>Turn both rules off.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--enable-fic-speed&lt;/code>&lt;/td>
+&lt;td>Turn the FIC slowdown on (off by default).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--enable-heat-fed&lt;/code>&lt;/td>
+&lt;td>Accumulate the heat dose from a &lt;code>TEMPERATURE&lt;/code> slice and incapacitate on it (off by default).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fic-alpha F&lt;/code>&lt;/td>
+&lt;td>Slope of &lt;code>v/v₀ = max(μ, 1 − α·FIC)&lt;/code> (default 0.7).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fic-min-factor F&lt;/code>&lt;/td>
+&lt;td>Floor &lt;code>μ&lt;/code> (default 0.3).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fed-threshold F&lt;/code>&lt;/td>
+&lt;td>Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--o2-threshold-percent P&lt;/code>&lt;/td>
+&lt;td>O₂ vol % at or above which the hypoxia term is zero (default 20.0, as FDS; 19.5 was the previous default).&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Agent visualisation&lt;span class="hx-absolute -hx-mt-20" id="agent-visualisation">&lt;/span>
+&lt;a href="#agent-visualisation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Agent 3-D visualisation is handled by
+&lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>
+, which
+loads the JuPedSim trajectory SQLite written by &lt;code>--output-sqlite&lt;/code> (and
+its optional &lt;code>agent_scalars&lt;/code> table for FED/speed colouring).&lt;/p>
+&lt;h3>Typical invocations&lt;span class="hx-absolute -hx-mt-20" id="typical-invocations">&lt;/span>
+&lt;a href="#typical-invocations" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Bare JuPedSim run, no smoke coupling&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction/config.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Smoke-coupled run with all diagnostic outputs&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction/config.json &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/t_junction &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite demo3.sqlite &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-smoke-history smoke.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history fed.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-history routes.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-cost-history route_costs.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-rerouting &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --vis-cache assets/t_junction/vismap_cache.npz&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Inspecting an FDS case&lt;span class="hx-absolute -hx-mt-20" id="inspecting-an-fds-case">&lt;/span>
+&lt;a href="#inspecting-an-fds-case" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>scripts/inspect_fds.py&lt;/code> summarises what quantities FDS wrote and whether
+they are within tenability-relevant ranges.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/inspect_fds.py assets/t_junction --plot --height 2.0&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Probing FED without running a simulation&lt;span class="hx-absolute -hx-mt-20" id="probing-fed-without-running-a-simulation">&lt;/span>
+&lt;a href="#probing-fed-without-running-a-simulation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>scripts/probe_fed.py&lt;/code> integrates FED at fixed &lt;code>(x, y)&lt;/code> points directly
+from the FDS output. Useful as a sanity check (&amp;ldquo;if an agent stood still
+here, would it be incapacitated?&amp;rdquo;).&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/probe_fed.py --fds-dir assets/t_junction &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --point 17,12 --point 20,12 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output probe.csv --plot probe.png&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Plotting&lt;span class="hx-absolute -hx-mt-20" id="plotting">&lt;/span>
+&lt;a href="#plotting" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>All plotting scripts are pure post-processors: they consume one of the
+CSV/SQLite artefacts produced by &lt;code>run.py&lt;/code> and write PNGs.&lt;/p>
+&lt;h3>Artefact → plotting-script map&lt;span class="hx-absolute -hx-mt-20" id="artefact--plotting-script-map">&lt;/span>
+&lt;a href="#artefact--plotting-script-map" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Artefact (run.py flag that writes it)&lt;/th>
+&lt;th>Plotting scripts&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>FED history (&lt;code>--output-fed-history fed.csv&lt;/code>)&lt;/td>
+&lt;td>&lt;code>plot_fed_history.py&lt;/code>, &lt;code>plot_trajectories_by_speed.py&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Smoke history (&lt;code>--output-smoke-history smoke.csv&lt;/code>)&lt;/td>
+&lt;td>&lt;code>plot_smoke_history.py&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Route cost history (&lt;code>--output-route-cost-history route_costs.csv&lt;/code>)&lt;/td>
+&lt;td>&lt;code>plot_route_costs.py&lt;/code>, &lt;code>plot_exit_choice.py&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>JuPedSim SQLite (&lt;code>--output-sqlite demo3.sqlite&lt;/code>)&lt;/td>
+&lt;td>&lt;code>plot_trajectories.py&lt;/code>, &lt;code>plot_trajectories_by_speed.py&lt;/code> (backdrop)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>FED curves — &lt;code>plot_fed_history.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="fed-curves--plot_fed_historypy">&lt;/span>
+&lt;a href="#fed-curves--plot_fed_historypy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/plot_fed_history.py fed.csv [options]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Mode&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;em>(default)&lt;/em>&lt;/td>
+&lt;td>Spaghetti plot: one cumulative-FED line per agent; the first agent to reach the threshold (or, if none does, the one with the highest FED) is drawn bold and labelled.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--show-rate&lt;/code>&lt;/td>
+&lt;td>Add a second panel with the FED rate.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--stack AGENT_ID&lt;/code>&lt;/td>
+&lt;td>Per-species stacked FED breakdown for one agent.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--stack-all DIR&lt;/code>&lt;/td>
+&lt;td>One stacked plot per agent, written as &lt;code>DIR/fed_agent_NNNN.png&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--speed-vs-fed&lt;/code>&lt;/td>
+&lt;td>Scatter of desired speed vs cumulative FED, coloured by time.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--speed-and-fed AGENT_ID&lt;/code>&lt;/td>
+&lt;td>Dual-axis time series (speed + FED) for one agent.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--threshold F&lt;/code>&lt;/td>
+&lt;td>Threshold line (default 1.0).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--title STR&lt;/code>&lt;/td>
+&lt;td>Override title.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--output PNG&lt;/code>&lt;/td>
+&lt;td>Write PNG instead of showing.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Trajectories coloured by speed — &lt;code>plot_trajectories_by_speed.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="trajectories-coloured-by-speed--plot_trajectories_by_speedpy">&lt;/span>
+&lt;a href="#trajectories-coloured-by-speed--plot_trajectories_by_speedpy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/plot_trajectories_by_speed.py fed.csv \
+--sqlite demo3.sqlite --output trajs.png&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Per-segment RdBu colouring (red = slow, blue = fast) from the extended
+FED CSV; slower segments are also drawn wider, and the slowest sample is
+ringed and labelled. The walkable area is drawn as backdrop via pedpy.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--sqlite PATH&lt;/code>&lt;/td>
+&lt;td>JuPedSim SQLite; backdrop via &lt;code>pedpy.load_walkable_area_from_jupedsim_sqlite&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--agents 7,8,43&lt;/code>&lt;/td>
+&lt;td>Comma-separated agent ids (default: all).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--vmax F&lt;/code>&lt;/td>
+&lt;td>Upper bound for the colormap (default: data max).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--linewidth F&lt;/code>&lt;/td>
+&lt;td>Polyline width at full speed; slower segments are up to three times wider (default 0.5).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--alpha F&lt;/code>&lt;/td>
+&lt;td>Polyline transparency (default 0.4).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--title STR&lt;/code> / &lt;code>--output PNG&lt;/code>&lt;/td>
+&lt;td>As usual.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Smoke history — &lt;code>plot_smoke_history.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="smoke-history--plot_smoke_historypy">&lt;/span>
+&lt;a href="#smoke-history--plot_smoke_historypy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/plot_smoke_history.py --input smoke.csv --output smoke.png
+uv run python scripts/plot_smoke_history.py --input smoke.csv --output smoke_43.png --agent-id 43&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--input CSV&lt;/code> (required)&lt;/td>
+&lt;td>Smoke history CSV.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--output PNG&lt;/code> (required)&lt;/td>
+&lt;td>Output path.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--agent-id N&lt;/code>&lt;/td>
+&lt;td>Single-agent plot instead of the aggregate.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Trajectories coloured by exit — &lt;code>plot_trajectories.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="trajectories-coloured-by-exit--plot_trajectoriespy">&lt;/span>
+&lt;a href="#trajectories-coloured-by-exit--plot_trajectoriespy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Reads &lt;code>trajectory_data&lt;/code> from the run&amp;rsquo;s SQLite: what agents &lt;em>did&lt;/em>, as opposed to
+what &lt;code>rank_routes&lt;/code> says they would do.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/plot_trajectories.py &amp;lt;traj.sqlite&amp;gt; \
+--config &amp;lt;config.json&amp;gt; -o out.png [--title &amp;#34;...&amp;#34;] \
+[--route-history routes.csv] [--geometry geometry.wkt] [--reach 1.5]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--config&lt;/code> (required)&lt;/td>
+&lt;td>Exit polygons, and the colour and line-style key (one style per exit).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>-o/--out&lt;/code> (required)&lt;/td>
+&lt;td>Output PNG.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--route-history&lt;/code>&lt;/td>
+&lt;td>&lt;code>run.py --output-route-history&lt;/code> CSV. Colours each path by the exit targeted &lt;strong>at that moment&lt;/strong> and marks every switch with a dot. Without it paths are coloured by the exit finally reached, which hides mid-run decisions entirely.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--geometry&lt;/code>&lt;/td>
+&lt;td>Walkable-area WKT; defaults to &lt;code>geometry.wkt&lt;/code> beside the config.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--reach&lt;/code>&lt;/td>
+&lt;td>Metres from an exit polygon that count as having reached it (default 1.5). Agents that finish elsewhere are drawn grey and dotted, their end marked with a cross, and counted separately.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Route cost curves — &lt;code>plot_route_costs.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="route-cost-curves--plot_route_costspy">&lt;/span>
+&lt;a href="#route-cost-curves--plot_route_costspy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Mean composite cost per exit over time.&lt;/p>
+&lt;p>&lt;strong>Under the default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> cost model this plot is not what ranks exits.&lt;/strong>
+The script reads the &lt;code>composite_cost&lt;/code> column, which the gate computes and
+reports but does not order on — it orders on &lt;code>tau_route&lt;/code>, the route&amp;rsquo;s optical
+depth, with &lt;code>rank_cost&lt;/code> (travel time plus weighted queue time) as tie-break. Read the curves as a smoke-exposure diagnostic, and
+take exit choice from &lt;code>plot_exit_choice.py&lt;/code>, the &lt;code>tau_route&lt;/code> column or the
+&lt;code>rejection_reason&lt;/code> column instead.&lt;/p>
+&lt;p>The CSV also carries the gate&amp;rsquo;s own diagnostics — &lt;code>tau_route&lt;/code>, &lt;code>rank_cost&lt;/code>,
+&lt;code>k_max_route&lt;/code>, &lt;code>k_leg_max&lt;/code>, &lt;code>clean&lt;/code> and &lt;code>feasible&lt;/code> — which is what
+makes a gate decision auditable: &lt;code>feasible&lt;/code> says whether the route was
+available, &lt;code>tau_route&lt;/code> is the optical depth that both refused it and ordered
+it, and &lt;code>rank_cost&lt;/code> breaks ties between routes of equal &lt;code>tau_route&lt;/code>. &lt;code>k_leg_max&lt;/code> is the smokiest leg of the route and
+&lt;code>clean&lt;/code> whether that puts the exit in the clean-exit tier; &lt;code>clean&lt;/code> is &lt;code>False&lt;/code>
+throughout unless the deck sets &lt;code>clean_extinction_threshold&lt;/code>.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/plot_route_costs.py route_costs.csv [routes.csv]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Exit choice distribution — &lt;code>plot_exit_choice.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="exit-choice-distribution--plot_exit_choicepy">&lt;/span>
+&lt;a href="#exit-choice-distribution--plot_exit_choicepy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Time series of how many agents target each exit at each evaluation tick,
+plus a histogram of total agent-ticks per exit. Saves
+&lt;code>exit_choice_plot.png&lt;/code>.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/plot_exit_choice.py route_costs.csv [routes.csv [config.json]]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Quick interactive replay — &lt;code>vis.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="quick-interactive-replay--vispy">&lt;/span>
+&lt;a href="#quick-interactive-replay--vispy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A one-line JuPedSim viewer: opens an interactive animation of a trajectory
+SQLite instead of writing a file. Handy for a fast look without picking plot
+options.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/vis.py demo3.sqlite&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Cognitive-map movies and diagnostics&lt;span class="hx-absolute -hx-mt-20" id="cognitive-map-movies-and-diagnostics">&lt;/span>
+&lt;a href="#cognitive-map-movies-and-diagnostics" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>One agent&amp;rsquo;s walk, animated — &lt;code>animate_cognitive_map.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="one-agents-walk-animated--animate_cognitive_mappy">&lt;/span>
+&lt;a href="#one-agents-walk-animated--animate_cognitive_mappy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Renders an MP4 (requires &lt;code>ffmpeg&lt;/code> on PATH for MP4 output) of a single
+agent walking a deck, with its known/unknown exits and checkpoints
+colour-coded, sign facing arrows, and amber trail segments where the agent
+is wandering (no known route). Runs its own simulation internally with
+&lt;code>collect_cognitive_map_history=True&lt;/code> — it does not consume a &lt;code>run.py&lt;/code>
+artefact.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
+-o cognitive_map.mp4 [--familiarity 0.0] [--agent ID] [--fps 12]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--scenario&lt;/code> (required)&lt;/td>
+&lt;td>Bundle directory with &lt;code>config.json&lt;/code> + &lt;code>geometry.wkt&lt;/code> (e.g. from &lt;code>run.py --export-app-bundle&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--familiarity F&lt;/code>&lt;/td>
+&lt;td>Starting familiarity scalar for the spawn distributions (default 0.0).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--agent ID&lt;/code>&lt;/td>
+&lt;td>Agent to follow (default: lowest id in the run).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--seed N&lt;/code>&lt;/td>
+&lt;td>Run seed (default 420); needed to reproduce a specific movie.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fps N&lt;/code>&lt;/td>
+&lt;td>Movie frame rate (default 12).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--cell-size M&lt;/code>&lt;/td>
+&lt;td>Visibility grid resolution in metres (default 0.5).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--work DIR&lt;/code>&lt;/td>
+&lt;td>Working directory for the deck variant and run SQLite (default &lt;code>results/cognitive_map_movie&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Deriving inputs from an FDS deck&lt;span class="hx-absolute -hx-mt-20" id="deriving-inputs-from-an-fds-deck">&lt;/span>
+&lt;a href="#deriving-inputs-from-an-fds-deck" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>Walkable area from FDS obstructions — &lt;code>generate_walkable_from_fds.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="walkable-area-from-fds-obstructions--generate_walkable_from_fdspy">&lt;/span>
+&lt;a href="#walkable-area-from-fds-obstructions--generate_walkable_from_fdspy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Subtracts an FDS deck&amp;rsquo;s blocking &lt;code>&amp;amp;OBST&lt;/code> records from its mesh footprint and
+writes the interior as WKT for JuPedSim. See the script&amp;rsquo;s module docstring
+for the &lt;code>XB&lt;/code> axis-pairing pitfall, zero-thickness obstructions, and how the
+CAD layer name decides what blocks.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/generate_walkable_from_fds.py DECK.fds -o out.wkt \
+[--z-band 0.1 1.8] [--min-hole 0.25] [--plot out.png] [--report]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>deck&lt;/code> (positional)&lt;/td>
+&lt;td>FDS input file.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>-o/--out&lt;/code> (required)&lt;/td>
+&lt;td>Output WKT path.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--z-band LO HI&lt;/code>&lt;/td>
+&lt;td>Height band an upright occupant occupies (default 0.1 1.8).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--half-cell M&lt;/code>&lt;/td>
+&lt;td>Half the grid spacing; widens zero-thickness obstructions (default 0.05).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--min-hole M2&lt;/code>&lt;/td>
+&lt;td>Interior rings smaller than this are grid noise and get filled (default 0.25).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--plot PNG&lt;/code>&lt;/td>
+&lt;td>Also render the walkable polygon.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--report&lt;/code>&lt;/td>
+&lt;td>Print the per-layer blocked footprint and blocking verdict.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Paper figures&lt;span class="hx-absolute -hx-mt-20" id="paper-figures">&lt;/span>
+&lt;a href="#paper-figures" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These are generators for figures in &lt;code>../pyFDS-Evac-paper/&lt;/code>. They don&amp;rsquo;t
+need a simulation run.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Script&lt;/th>
+&lt;th>Figure&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>generate_tenability_curves.py&lt;/code>&lt;/td>
+&lt;td>3-panel Frantzich + FIC + combined heatmap (&lt;code>--output PATH&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>generate_fed_guide_plot.py&lt;/code>&lt;/td>
+&lt;td>FED guide reference curves.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>generate_iso_table21_sweep.py&lt;/code> / &lt;code>generate_iso_table22_stationary_plot.py&lt;/code>&lt;/td>
+&lt;td>ISO 20414:2020 Test 18 (Table 21) sweep over extinction and walking speed / Test 19 (Table 22) stationary FED check.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>generate_routing_diagram.py&lt;/code>&lt;/td>
+&lt;td>Routing / cognitive-map diagram.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>generate_smoke_density_speed_plot.py&lt;/code>&lt;/td>
+&lt;td>Smoke-speed reference curve.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>generate_exit_visibility_map.py&lt;/code>&lt;/td>
+&lt;td>Which exit a &lt;code>discovery&lt;/code> agent would take, gridded by position, for the two &lt;code>assets/exit_visibility_alpha&lt;/code> configs (&lt;code>-o OUT.png&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>generate_cognitive_map_states.py&lt;/code>&lt;/td>
+&lt;td>Known/legible/remembered exit states probed along &lt;code>assets/cognitive_map_memory&lt;/code>&amp;rsquo;s corridor (&lt;code>-o OUT.png&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>generate_smoke_weight_sweep.py&lt;/code>&lt;/td>
+&lt;td>How &lt;code>w_smoke&lt;/code> reprices the T-junction&amp;rsquo;s two routes, uniform vs. asymmetric smoke (&lt;code>-o OUT.png&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Calibration sweeps&lt;span class="hx-absolute -hx-mt-20" id="calibration-sweeps">&lt;/span>
+&lt;a href="#calibration-sweeps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>Route-cost queue weight — &lt;code>sweep_queue_weight.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="route-cost-queue-weight--sweep_queue_weightpy">&lt;/span>
+&lt;a href="#route-cost-queue-weight--sweep_queue_weightpy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Sweeps &lt;code>RouteCostConfig&lt;/code>&amp;rsquo;s queue weight against Fahy Table 2&amp;rsquo;s front-door
+share. Writes one scenario bundle per &lt;code>(w_queue, seed)&lt;/code>, runs each with
+&lt;code>run.py&lt;/code>, and scores it against &lt;code>assets/station_fahy/validate.py&lt;/code>&amp;rsquo;s
+&lt;code>observed_matrix&lt;/code>. Unlike the paper-figure scripts above, this drives real
+simulation runs (in parallel processes), so it takes minutes, not seconds.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python scripts/sweep_queue_weight.py \
+[--weights 0.0 0.03 0.1 ...] [--seeds 420 421 422] \
+[--jobs 4] [--out results/queue_weight_sweep] [--reuse-existing]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--weights F [F ...]&lt;/code>&lt;/td>
+&lt;td>&lt;code>w_queue&lt;/code> values to sweep (default: the grid in &lt;code>docs/routing.md&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--seeds N [N ...]&lt;/code>&lt;/td>
+&lt;td>Seeds per weight (default &lt;code>420 421 422&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--jobs N&lt;/code>&lt;/td>
+&lt;td>Parallel worker processes (default 4).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--out DIR&lt;/code>&lt;/td>
+&lt;td>Output directory for &lt;code>sweep.csv&lt;/code>, &lt;code>summary.csv&lt;/code>, &lt;code>sweep.png&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--reuse-existing&lt;/code>&lt;/td>
+&lt;td>Score an existing &lt;code>run.sqlite&lt;/code> instead of rerunning it, if its deck/seed digest still matches.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>One-shot driver — &lt;code>scripts/run_and_plot.sh&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="one-shot-driver--scriptsrun_and_plotsh">&lt;/span>
+&lt;a href="#one-shot-driver--scriptsrun_and_plotsh" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Runs one simulation and produces the full plot set into a results
+directory.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>./scripts/run_and_plot.sh assets/t_junction/config.json assets/t_junction results/demo&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Arguments: &lt;code>&amp;lt;scenario&amp;gt; &amp;lt;fds-dir&amp;gt; &amp;lt;results-dir&amp;gt;&lt;/code>. The script calls
+&lt;code>run.py&lt;/code> with all diagnostic outputs enabled and then invokes each
+plotting script against the resulting CSVs / SQLite.&lt;/p></description></item><item><title>How do I get the egress time and its spread from an ensemble of seeds?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</guid><description>
+&lt;p>&lt;strong>This how-to reads tracked FDS output. You do not need to run FDS.&lt;/strong> Part 1
+needs no FDS output at all.&lt;/p>
+&lt;p>Run the scenario once per seed. Read each agent&amp;rsquo;s exit time from the trajectory
+file, not from &lt;code>result.evacuation_time&lt;/code>. Then report the last exit time over the
+seeds as a mean, a standard deviation (SD), a range and a high percentile, not
+as a single value.&lt;/p>
+&lt;h2>What the simulation gives you&lt;span class="hx-absolute -hx-mt-20" id="what-the-simulation-gives-you">&lt;/span>
+&lt;a href="#what-the-simulation-gives-you" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>ISO/TR 16738 splits the required safe escape time as&lt;/p>
+&lt;p>&lt;em>RSET&lt;/em> = &lt;em>t&lt;/em>&lt;sub>det&lt;/sub> + &lt;em>t&lt;/em>&lt;sub>a&lt;/sub> + &lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> + &lt;em>t&lt;/em>&lt;sub>trav&lt;/sub>&lt;/p>
+&lt;p>where &lt;em>t&lt;/em>&lt;sub>det&lt;/sub> is the detection time, &lt;em>t&lt;/em>&lt;sub>a&lt;/sub> the alarm
+time, &lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> the pre-movement time and &lt;em>t&lt;/em>&lt;sub>trav&lt;/sub> the travel
+time, all in seconds.&lt;/p>
+&lt;p>A pyFDS-Evac run starts at &lt;em>t&lt;/em> = 0 and gives at most
+&lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> + &lt;em>t&lt;/em>&lt;sub>trav&lt;/sub>. It includes &lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> only if
+the scenario models pre-movement (&lt;code>use_premovement&lt;/code> in a spawn area; a spawn
+area that sets no pre-movement key gets a constant 10 s, as FDS+Evac). You add
+&lt;em>t&lt;/em>&lt;sub>det&lt;/sub> and &lt;em>t&lt;/em>&lt;sub>a&lt;/sub> yourself. The scenario in Part 1 models no
+pre-movement, so its exit times are travel times only.&lt;/p>
+&lt;h2>Why not &lt;code>result.evacuation_time&lt;/code>?&lt;span class="hx-absolute -hx-mt-20" id="why-not-resultevacuation_time">&lt;/span>
+&lt;a href="#why-not-resultevacuation_time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;code>result.evacuation_time&lt;/code> is the time at which the simulation loop stopped.
+The loop stops when no agent is left, or at &lt;code>max_simulation_time&lt;/code>. An
+incapacitated agent stays in the simulation, so one incapacitation makes
+&lt;code>evacuation_time&lt;/code> equal to &lt;code>max_simulation_time&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>
+).&lt;/li>
+&lt;li>&lt;code>result.success&lt;/code> is &lt;code>True&lt;/code> when the run reaches &lt;code>max_simulation_time&lt;/code>, even
+with agents still inside
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">#139&lt;/a>
+).&lt;/li>
+&lt;/ul>
+&lt;p>Part 2 below shows both.&lt;/p>
+&lt;h2>Runnable example&lt;span class="hx-absolute -hx-mt-20" id="runnable-example">&lt;/span>
+&lt;a href="#runnable-example" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/rset_ensemble.py" target="_blank" rel="noopener">&lt;code>examples/rset_ensemble.py&lt;/code>&lt;/a>
+.
+Run it from the repository root (runtime about 10 s):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python examples/rset_ensemble.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> pathlib
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> sqlite3
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> numpy &lt;span style="color:#66d9ef">as&lt;/span> np
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> matplotlib.figure &lt;span style="color:#f92672">import&lt;/span> Figure
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac &lt;span style="color:#f92672">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> DefaultFedConfig,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> DefaultFedModel,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> FdsFedField,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> TenabilityConfig,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> load_scenario,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> run_scenario,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SEEDS &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">2&lt;/span>, &lt;span style="color:#ae81ff">3&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">5&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FIGURE &lt;span style="color:#f92672">=&lt;/span> pathlib&lt;span style="color:#f92672">.&lt;/span>Path(&lt;span style="color:#e6db74">&amp;#34;site/static/images/howto/egress_exit_curve.png&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>COLOURS &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;#0072B2&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;#E69F00&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;#009E73&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;#CC79A7&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;#56B4E9&amp;#34;&lt;/span>] &lt;span style="color:#75715e"># Okabe-Ito&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>LINESTYLES &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;-&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;--&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;-.&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;:&amp;#34;&lt;/span>, (&lt;span style="color:#ae81ff">0&lt;/span>, (&lt;span style="color:#ae81ff">5&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>))]&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Read exit times from the trajectory&lt;span class="hx-absolute -hx-mt-20" id="read-exit-times-from-the-trajectory">&lt;/span>
+&lt;a href="#read-exit-times-from-the-trajectory" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>run_scenario&lt;/code> writes the trajectory to a SQLite file (&lt;code>result.sqlite_file&lt;/code>)
+at 10 frames per second. An agent&amp;rsquo;s exit time is the time of the last frame
+it appears in, so it is accurate to 0.1 s. Agents still inside at the end
+appear up to the last frame and are dropped. The incapacitated agents are
+read from &lt;code>result.fed_history&lt;/code>, which exists only when a FED model ran.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">exit_times&lt;/span>(result):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;&amp;#34;&amp;#34;Exit time [s] of every agent that left, from the trajectory file.&amp;#34;&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> con &lt;span style="color:#f92672">=&lt;/span> sqlite3&lt;span style="color:#f92672">.&lt;/span>connect(result&lt;span style="color:#f92672">.&lt;/span>sqlite_file)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fps &lt;span style="color:#f92672">=&lt;/span> float(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> con&lt;span style="color:#f92672">.&lt;/span>execute(&lt;span style="color:#e6db74">&amp;#34;SELECT value FROM metadata WHERE key = &amp;#39;fps&amp;#39;&amp;#34;&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>fetchone()[&lt;span style="color:#ae81ff">0&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> last &lt;span style="color:#f92672">=&lt;/span> con&lt;span style="color:#f92672">.&lt;/span>execute(&lt;span style="color:#e6db74">&amp;#34;SELECT MAX(frame) FROM trajectory_data GROUP BY id&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> times &lt;span style="color:#f92672">=&lt;/span> sorted(frame &lt;span style="color:#f92672">/&lt;/span> fps &lt;span style="color:#66d9ef">for&lt;/span> (frame,) &lt;span style="color:#f92672">in&lt;/span> last)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">finally&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> con&lt;span style="color:#f92672">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># Agents still inside at the end are the ones seen in the last frames.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> times[: len(times) &lt;span style="color:#f92672">-&lt;/span> result&lt;span style="color:#f92672">.&lt;/span>agents_remaining]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">incapacitated&lt;/span>(result):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;&amp;#34;&amp;#34;Number of agents incapacitated during the run.&amp;#34;&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> rows &lt;span style="color:#f92672">=&lt;/span> result&lt;span style="color:#f92672">.&lt;/span>fed_history &lt;span style="color:#f92672">or&lt;/span> []
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> len({row[&lt;span style="color:#e6db74">&amp;#34;agent_id&amp;#34;&lt;/span>] &lt;span style="color:#66d9ef">for&lt;/span> row &lt;span style="color:#f92672">in&lt;/span> rows &lt;span style="color:#66d9ef">if&lt;/span> row[&lt;span style="color:#e6db74">&amp;#34;incapacitated&amp;#34;&lt;/span>]})&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Part 1: one run per seed&lt;span class="hx-absolute -hx-mt-20" id="part-1-one-run-per-seed">&lt;/span>
+&lt;a href="#part-1-one-run-per-seed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The scenario is &lt;code>assets/fic_vs_fed_speed&lt;/code>: 30 agents at one end of a
+4 m × 50 m corridor with one exit, in clear air. Each run writes a manifest
+next to its trajectory, and the loop reads the seed back from it.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>scenario &lt;span style="color:#f92672">=&lt;/span> load_scenario(&lt;span style="color:#e6db74">&amp;#34;assets/fic_vs_fed_speed&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> name, dist &lt;span style="color:#f92672">in&lt;/span> scenario&lt;span style="color:#f92672">.&lt;/span>distributions&lt;span style="color:#f92672">.&lt;/span>items():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> params &lt;span style="color:#f92672">=&lt;/span> dist[&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>name&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>params[&lt;span style="color:#e6db74">&amp;#39;number&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> agents, &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;use_premovement=&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>params&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#39;use_premovement&amp;#39;&lt;/span>, &lt;span style="color:#66d9ef">False&lt;/span>)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>curves &lt;span style="color:#f92672">=&lt;/span> {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> seed &lt;span style="color:#f92672">in&lt;/span> SEEDS:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result &lt;span style="color:#f92672">=&lt;/span> run_scenario(scenario, seed&lt;span style="color:#f92672">=&lt;/span>seed)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> manifest &lt;span style="color:#f92672">=&lt;/span> json&lt;span style="color:#f92672">.&lt;/span>loads(pathlib&lt;span style="color:#f92672">.&lt;/span>Path(result&lt;span style="color:#f92672">.&lt;/span>manifest_file)&lt;span style="color:#f92672">.&lt;/span>read_text())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> curves[manifest[&lt;span style="color:#e6db74">&amp;#34;seed&amp;#34;&lt;/span>]] &lt;span style="color:#f92672">=&lt;/span> exit_times(result)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;seed &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>manifest[&lt;span style="color:#e6db74">&amp;#39;seed&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">: last exit &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>curves[seed][&lt;span style="color:#f92672">-&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span>]&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s, &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;evacuated &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>len(curves[seed])&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">, incapacitated &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>incapacitated(result)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">, &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;remaining &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>result&lt;span style="color:#f92672">.&lt;/span>agents_remaining&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result&lt;span style="color:#f92672">.&lt;/span>cleanup()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;versions: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>manifest[&lt;span style="color:#e6db74">&amp;#39;versions&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;git: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>manifest[&lt;span style="color:#e6db74">&amp;#39;git_commit&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">, dirty: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>manifest[&lt;span style="color:#e6db74">&amp;#39;git_dirty&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Expected output, without the &lt;code>Evacuated 30/30 … done&lt;/code> progress line that
+&lt;code>run_scenario&lt;/code> prints for each run:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>jps-distributions_0: 30 agents, use_premovement=False
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 1: last exit 44.4 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 2: last exit 43.0 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 3: last exit 43.6 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 4: last exit 44.3 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 5: last exit 42.2 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>versions: {&amp;#39;pyfds-evac&amp;#39;: &amp;#39;0.1.0&amp;#39;, &amp;#39;jupedsim&amp;#39;: &amp;#39;1.4.2&amp;#39;, &amp;#39;fdsreader&amp;#39;: &amp;#39;1.11.7&amp;#39;, &amp;#39;fdsvismap&amp;#39;: &amp;#39;0.2.1&amp;#39;}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git: 3f47897b351d9f8c403782611282c0bc2a2bdcb0, dirty: True&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The versions and the git state depend on your checkout. &lt;code>dirty: True&lt;/code> means the
+working tree had uncommitted changes when the run started. The seed changes
+where the agents start in their spawn area, so each seed gives a different
+time. There is no fire in Part 1, so nobody is incapacitated.&lt;/p>
+&lt;h3>Summarise the last exit over the seeds&lt;span class="hx-absolute -hx-mt-20" id="summarise-the-last-exit-over-the-seeds">&lt;/span>
+&lt;a href="#summarise-the-last-exit-over-the-seeds" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>last &lt;span style="color:#f92672">=&lt;/span> np&lt;span style="color:#f92672">.&lt;/span>array([times[&lt;span style="color:#f92672">-&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span>] &lt;span style="color:#66d9ef">for&lt;/span> times &lt;span style="color:#f92672">in&lt;/span> curves&lt;span style="color:#f92672">.&lt;/span>values()])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;n = &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>len(last)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> seeds&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;mean = &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>last&lt;span style="color:#f92672">.&lt;/span>mean()&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s, SD = &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>last&lt;span style="color:#f92672">.&lt;/span>std(ddof&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span>)&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;min-max = &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>last&lt;span style="color:#f92672">.&lt;/span>min()&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">-&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>last&lt;span style="color:#f92672">.&lt;/span>max()&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;95th percentile = &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>np&lt;span style="color:#f92672">.&lt;/span>percentile(last, &lt;span style="color:#ae81ff">95&lt;/span>)&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s&amp;#34;&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>n = 5 seeds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mean = 43.5 s, SD = 0.9 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>min-max = 42.2-44.4 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>95th percentile = 44.4 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>Five seeds are too few for a study.&lt;/strong> They keep this example fast. The SD and
+the percentiles need many more runs to settle. The 95th percentile uses NumPy&amp;rsquo;s
+default linear interpolation; with five values it lies between the two largest.
+Increase &lt;code>SEEDS&lt;/code>, and check that the summary no longer changes much when you
+add runs.&lt;/p>
+&lt;h3>Plot the exit curves&lt;span class="hx-absolute -hx-mt-20" id="plot-the-exit-curves">&lt;/span>
+&lt;a href="#plot-the-exit-curves" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>fig &lt;span style="color:#f92672">=&lt;/span> Figure(figsize&lt;span style="color:#f92672">=&lt;/span>(&lt;span style="color:#ae81ff">6&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax &lt;span style="color:#f92672">=&lt;/span> fig&lt;span style="color:#f92672">.&lt;/span>subplots()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (seed, times), colour, style &lt;span style="color:#f92672">in&lt;/span> zip(curves&lt;span style="color:#f92672">.&lt;/span>items(), COLOURS, LINESTYLES):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> counts &lt;span style="color:#f92672">=&lt;/span> np&lt;span style="color:#f92672">.&lt;/span>arange(&lt;span style="color:#ae81ff">1&lt;/span>, len(times) &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ax&lt;span style="color:#f92672">.&lt;/span>step(times, counts, where&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;post&amp;#34;&lt;/span>, color&lt;span style="color:#f92672">=&lt;/span>colour, ls&lt;span style="color:#f92672">=&lt;/span>style, label&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;seed &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>seed&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax&lt;span style="color:#f92672">.&lt;/span>axvspan(last&lt;span style="color:#f92672">.&lt;/span>min(), last&lt;span style="color:#f92672">.&lt;/span>max(), color&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;lightgrey&amp;#34;&lt;/span>, alpha&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.5&lt;/span>, lw&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax&lt;span style="color:#f92672">.&lt;/span>text(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> last&lt;span style="color:#f92672">.&lt;/span>min() &lt;span style="color:#f92672">-&lt;/span> &lt;span style="color:#ae81ff">0.3&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">2&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;last exit &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>last&lt;span style="color:#f92672">.&lt;/span>min()&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">-&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>last&lt;span style="color:#f92672">.&lt;/span>max()&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">over &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>len(last)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> seeds&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> color&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;dimgrey&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ha&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;right&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax&lt;span style="color:#f92672">.&lt;/span>grid(color&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;lightgrey&amp;#34;&lt;/span>, linewidth&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.8&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax&lt;span style="color:#f92672">.&lt;/span>set_axisbelow(&lt;span style="color:#66d9ef">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> spine &lt;span style="color:#f92672">in&lt;/span> ax&lt;span style="color:#f92672">.&lt;/span>spines&lt;span style="color:#f92672">.&lt;/span>values():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> spine&lt;span style="color:#f92672">.&lt;/span>set_visible(&lt;span style="color:#66d9ef">False&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax&lt;span style="color:#f92672">.&lt;/span>tick_params(length&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0&lt;/span>, labelcolor&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;dimgrey&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax&lt;span style="color:#f92672">.&lt;/span>set_xlabel(&lt;span style="color:#e6db74">&amp;#34;time since start of simulation [s]&amp;#34;&lt;/span>, color&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;dimgrey&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax&lt;span style="color:#f92672">.&lt;/span>set_ylabel(&lt;span style="color:#e6db74">&amp;#34;agents evacuated [-]&amp;#34;&lt;/span>, color&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;dimgrey&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ax&lt;span style="color:#f92672">.&lt;/span>legend(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> frameon&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">True&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> facecolor&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;white&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> framealpha&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.8&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> edgecolor&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;lightgrey&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> labelcolor&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;dimgrey&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FIGURE&lt;span style="color:#f92672">.&lt;/span>parent&lt;span style="color:#f92672">.&lt;/span>mkdir(parents&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">True&lt;/span>, exist_ok&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fig&lt;span style="color:#f92672">.&lt;/span>savefig(FIGURE, dpi&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">150&lt;/span>, bbox_inches&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;tight&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;figure: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>FIGURE&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/howto/egress_exit_curve.png" alt="Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 33–35 s to 30 between 42 and 45 s, and a grey band spans the range of last exit times" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Cumulative number of agents evacuated [-] against time since the start of the
+simulation [s], &lt;code>assets/fic_vs_fed_speed&lt;/code>, N = 30 agents, clear air, no
+pre-movement. One line per seed, each with its own colour and line style,
+n = 5 seeds. The grey band spans the last exit time over the seeds, from the
+earliest to the latest. Exit times are read from the
+trajectory at 0.1 s resolution. Regenerated by &lt;code>examples/rset_ensemble.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h3>Part 2: an incapacitated agent and &lt;code>evacuation_time&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="part-2-an-incapacitated-agent-and-evacuation_time">&lt;/span>
+&lt;a href="#part-2-an-incapacitated-agent-and-evacuation_time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>No tracked FDS case gives incapacitations and exits in the same run within a
+few seconds of runtime. Part 2 therefore uses the ISO 20414 Test 19 room of the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>
+: one occupant held still in 0.10 % CO,
+2.0 % CO2 and 15.0 % O2, read from the FDS slices in
+&lt;code>assets/iso_table22_coupled/fds/a&lt;/code>.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>room &lt;span style="color:#f92672">=&lt;/span> load_scenario(&lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/config_a.json&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>gas_dir &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/fds/a&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed &lt;span style="color:#f92672">=&lt;/span> DefaultFedModel(FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(gas_dir), DefaultFedConfig())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>tenability &lt;span style="color:#f92672">=&lt;/span> TenabilityConfig(incapacitation_mode&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;deterministic&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fire &lt;span style="color:#f92672">=&lt;/span> run_scenario(room, seed&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">420&lt;/span>, fed_model&lt;span style="color:#f92672">=&lt;/span>fed, tenability_config&lt;span style="color:#f92672">=&lt;/span>tenability)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;evacuation_time &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>fire&lt;span style="color:#f92672">.&lt;/span>evacuation_time&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.0f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;(max_simulation_time &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>room&lt;span style="color:#f92672">.&lt;/span>max_simulation_time&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.0f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s), &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;success &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>fire&lt;span style="color:#f92672">.&lt;/span>success&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;exit times &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>exit_times(fire)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">, incapacitated &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>incapacitated(fire)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">, &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;remaining &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>fire&lt;span style="color:#f92672">.&lt;/span>agents_remaining&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fire&lt;span style="color:#f92672">.&lt;/span>cleanup()&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>evacuation_time 1150 s (max_simulation_time 1150 s), success True
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>exit times [], incapacitated 1, remaining 1&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The occupant is incapacitated at 982 s and never leaves. Nevertheless
+&lt;code>evacuation_time&lt;/code> reports the time limit and &lt;code>success&lt;/code> is &lt;code>True&lt;/code>. The exit
+times, the incapacitated count and the remaining count tell you what happened.&lt;/p>
+&lt;h2>Incapacitation mode&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-mode">&lt;/span>
+&lt;a href="#incapacitation-mode" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;probabilistic&amp;quot;&lt;/code>. Each
+agent then draws its own threshold, &lt;code>fed_threshold * exp(susceptibility_sigma * Z)&lt;/code>
+with &lt;em>Z&lt;/em> ~ N(0, 1): a log-normal with median &lt;code>fed_threshold&lt;/code>. The defaults
+are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a>
+page. For results comparable with FDS+Evac, where
+every agent is incapacitated at FED = 1, use
+&lt;code>TenabilityConfig(incapacitation_mode=&amp;quot;deterministic&amp;quot;)&lt;/code>, or
+&lt;code>--incapacitation-mode deterministic&lt;/code> on the command line. Part 2 uses the
+deterministic mode.&lt;/p>
+&lt;h2>Related options&lt;span class="hx-absolute -hx-mt-20" id="related-options">&lt;/span>
+&lt;a href="#related-options" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>To add smoke or FED from FDS output to an ensemble, pass the same models to
+&lt;code>run_scenario&lt;/code> inside the loop, as in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>
+.&lt;/li>
+&lt;li>Pre-movement is set per spawn area in the scenario JSON, with
+&lt;code>use_premovement&lt;/code>, &lt;code>premovement_distribution&lt;/code> (&lt;code>gamma&lt;/code>, &lt;code>lognormal&lt;/code>,
+&lt;code>weibull&lt;/code>, &lt;code>uniform&lt;/code> or &lt;code>constant&lt;/code>), &lt;code>premovement_param_a&lt;/code>, &lt;code>premovement_param_b&lt;/code> and
+&lt;code>premovement_seed&lt;/code>. If &lt;code>premovement_seed&lt;/code> is &lt;code>null&lt;/code>, it is derived from the
+run seed, so the pre-movement times change with the seed. If it is set, they
+stay the same across seeds.&lt;/li>
+&lt;li>Each manifest also records &lt;code>uv_lock_sha256&lt;/code>, &lt;code>scenario_path&lt;/code>, &lt;code>fds_dir&lt;/code>,
+&lt;code>fds_version&lt;/code> and &lt;code>created_utc&lt;/code>. &lt;code>cleanup()&lt;/code> deletes it with the trajectory,
+so copy both first if you want to keep them. With &lt;code>run.py --output-sqlite PATH&lt;/code>, the manifest is copied next to &lt;code>PATH&lt;/code> as &lt;code>&amp;lt;stem&amp;gt;.manifest.json&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2>See also&lt;span class="hx-absolute -hx-mt-20" id="see-also">&lt;/span>
+&lt;a href="#see-also" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>
+&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>
+&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>
+&lt;/li>
+&lt;/ul>
+&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Scenario assets</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/assets/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/assets/</guid><description>
+&lt;p>Scenario definitions are stored in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/" target="_blank" rel="noopener">&lt;code>assets/&lt;/code>&lt;/a>
+.
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/README.md" target="_blank" rel="noopener">&lt;code>assets/README.md&lt;/code>&lt;/a>
+indexes the folders and the file
+conventions; what each one proves, and where that proof is checked, is below.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>ISO-table21&lt;/strong>: &lt;strong>ISO 20414:2020 Table 21&lt;/strong> (Test 18, &lt;em>reduced visibility vs
+walking speed&lt;/em>) — corridor 2 m x 100 m, one occupant at 1,25 m/s, constant
+extinction. See &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/ISO-table21/README.md" target="_blank" rel="noopener">the asset README&lt;/a>
+for the
+clause-by-clause comparison, including the two places we deviate. Proves the smoke speed reduction law is applied correctly end to end:
+&lt;code>test_iso_table21_constant_extinction_matches_expected_time_ratio&lt;/code> runs the
+scenario clear and then under a &lt;code>ConstantExtinctionField&lt;/code> at five extinction
+coefficients (0.5, 1.0, 3.0, 7.5, 10.0 /m), asserting the ratio of evacuation
+times matches &lt;code>1 / speed_factor_from_extinction(k)&lt;/code> within 8% and that every
+recorded &lt;code>speed_factor&lt;/code> equals the expected one exactly. Doubles as the
+standard small fixture in &lt;code>test_progress_callback.py&lt;/code>, &lt;code>test_webapp.py&lt;/code> and
+&lt;code>test_fed.py&lt;/code>, which use it for its size rather than its ISO provenance.&lt;/li>
+&lt;li>&lt;strong>ISO-table22&lt;/strong>: &lt;strong>ISO 20414:2020 Table 22&lt;/strong> (Test 19, &lt;em>occupant
+incapacitation by fire/smoke&lt;/em>) — room 10 m x 10 m x 3 m, one occupant held
+still by ISO&amp;rsquo;s prescribed pre-evacuation time above 10 000 000 s. See
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/ISO-table22/README.md" target="_blank" rel="noopener">the asset README&lt;/a>
+. The gas field is stubbed, so
+it verifies the accumulator, not the FDS coupling; the coupled four-case
+version is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/iso_table22_coupled/README.md" target="_blank" rel="noopener">&lt;code>iso_table22_coupled&lt;/code>&lt;/a>
+. One
+agent with &lt;code>v0&lt;/code> forced to 0 in a fixed gas concentration; config and geometry only, no deck. Proves the
+runtime FED accumulator agrees with the closed form:
+&lt;code>test_iso_table22_stationary_runtime_matches_analytic_threshold_time&lt;/code> takes
+the analytic FED=1.0 time from &lt;code>time_to_fed_threshold_s()&lt;/code> and asserts the
+observed crossing lands within one timestep of it, that &lt;code>fed_max &amp;gt;= 1.0&lt;/code>, and
+that the agent does not evacuate. Holding the gas inputs constant is
+deliberate; this tests the accumulator, not the gas sampling. Also backs the
+FED history throttling test.&lt;/li>
+&lt;li>&lt;strong>t_junction&lt;/strong>: T-corridor FDS scenario with cable fire, two exits (A open, B smoke-accumulating),
+200 visitors spawning in the branch; used for visibility-aware routing and cognitive
+map verification. Includes &lt;code>config_full.json&lt;/code> and &lt;code>config_discovery.json&lt;/code>
+for familiarity-tier comparison. The rerouting mechanism itself is verified by
+scenario &lt;strong>S4&lt;/strong> in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s4_tjunction_reroute.py" target="_blank" rel="noopener">&lt;code>tests/verification/test_s4_tjunction_reroute.py&lt;/code>&lt;/a>
+(control arm and null-field control both record zero switches; smoke forces
+every agent B→A and never the reverse; reroute latency stays within the
+configured interval; switch count is reproducible under a fixed seed). Note
+that S4 builds its own T-corridor via &lt;code>harness.t_junction_scenario()&lt;/code> with a
+synthetic smoke field rather than loading this asset, so the mechanism is
+covered but the deck and config here are not exercised by the suite. This
+config uses flow spawning deliberately: under by-number placement an agent&amp;rsquo;s
+route-eval source node is its assigned exit, which makes rerouting degenerate
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21" target="_blank" rel="noopener">issue #21&lt;/a>
+).&lt;/li>
+&lt;li>&lt;strong>fed_incap_co_2000ppm&lt;/strong> / &lt;strong>fed_incap_co_4000ppm&lt;/strong> / &lt;strong>fed_incap_co_8000ppm&lt;/strong>:
+FED accumulation and probabilistic-incapacitation verification against a
+hand-calculated reference (&lt;code>fed_hand_calc.py&lt;/code>), at three constant CO
+concentrations (2000/4000/8000 ppm) in a sealed, spatially uniform room —
+removing gas-transport physics as a variable isolates the FED/incapacitation
+&lt;em>pipeline&lt;/em> logic. 100 non-evacuating agents circling a rectangular path, FDS
+domain split across 4 MPI meshes to confirm gas data is consistent at mesh
+boundaries. All three concentrations currently match the hand-calc&amp;rsquo;s FED=1.0
+crossing time to &amp;lt;0.5% (2000 ppm: 782.4 s hand-calc vs 786 s simulated;
+4000 ppm: 382.3 s vs 384 s; 8000 ppm: 186.6 s vs 187 s). Verified by running
+the cases and comparing, not by a test in &lt;code>tests/&lt;/code>. (See the FDS input
+pitfalls on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#fds-input-pitfalls" target="_blank" rel="noopener">FED page&lt;/a>
+for the conflicting-&lt;code>&amp;amp;INIT&lt;/code> pitfall this suite surfaced.) Full writeup:
+&lt;code>docs/testing-homogeneous.md&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Cognitive Map Memory&lt;/strong>: 4x32 m corridor with a side alcove, 20 &lt;code>discovery&lt;/code>
+agents. The side exit&amp;rsquo;s sign faces west and is legible only from
+&lt;code>y ∈ [12.5, 27.5]&lt;/code> on the centreline — a window that falls out of
+&lt;code>view_angle * max_vis &amp;gt;= distance&lt;/code> rather than being tuned, and that
+&lt;code>build_geometry.py&lt;/code> recomputes and asserts. Proves the cognitive map does the
+one thing a visibility query cannot: &lt;strong>remember&lt;/strong>. The side exit is unknown at
+spawn, enters the map on crossing &lt;code>y=12.5&lt;/code>, and is &lt;em>still&lt;/em> there at &lt;code>y=30&lt;/code>
+where the sign is long unreadable. Persistence is the load-bearing claim —
+delete the expansion rules and acquisition still appears to work for any agent
+starting inside the window. A third test closes the loop to routing: a
+remembered-but-illegible exit must still be routable. &lt;code>scripts/generate_cognitive_map_states.py&lt;/code> renders the
+three states (unknown / legible now / remembered), and the amber band is the
+memory made visible. Checked by &lt;code>tests/test_cognitive_map_memory.py&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>FIC vs FED Speed&lt;/strong>: 4x50 m sealed corridor, 30 agents, one exit. The gas is
+&lt;em>prescribed&lt;/em> by a single &lt;code>&amp;amp;INIT&lt;/code> (CO at 2000 ppm, acrolein at 10 ppm) rather
+than burned, so concentration is constant in space and time and the only
+variable across runs is which tenability rules are enabled — set from the
+command line (&lt;code>--disable-tenability&lt;/code>, &lt;code>--fic-alpha 0&lt;/code>, or the default).
+Separates the two rules by timescale: &lt;strong>FED is a cumulative dose with a
+threshold and does nothing below it&lt;/strong> (0.079 /min here, so 13 minutes to reach
+FED = 1, against a ~33 s egress), while &lt;strong>FIC responds instantaneously&lt;/strong>
+(&lt;code>FIC = 0.5&lt;/code>, speed factor 0.65, so ~51 s). The prediction is stated in the
+asset README before running and is falsifiable: if FED materially slows an
+agent over a minute of exposure, the model or the reasoning is wrong. A
+control test records that acrolein is &lt;em>not&lt;/em> only an irritant — it also sits in
+FED&amp;rsquo;s Fractional Lethal Dose sum, so removing it takes 100% of the speed
+penalty but only 3% of the dose rate, and that asymmetry is what makes the two
+rules separable. Also pins the O2 hypoxia term against the published closed
+form (Fire Safety Journal, surrogate-gases paper, Eq. 9) rather than against
+our own docs. Checked by &lt;code>tests/test_fic_vs_fed_speed.py&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Exit Visibility Alpha&lt;/strong>: 4x30 m corridor, 40 &lt;code>discovery&lt;/code> agents, two
+exits. The two configs differ in exactly one value — the viewing bearing
+(&lt;code>alpha&lt;/code>) of the near exit&amp;rsquo;s sign — so any difference in exit choice is
+attributable to sign orientation and nothing else. Proves that legibility
+decides cognitive-map membership, and membership decides the exit: at
+&lt;code>alpha=0&lt;/code> both exits enter the map and agents take the nearer one; at
+&lt;code>alpha=180&lt;/code> the near exit never enters the map and agents walk 10 m further
+to the only exit they know about, even though distance favours the near one
+by more than 2:1. The near exit is &lt;em>absent&lt;/em>, not rejected — a stronger claim,
+since a rejected route still appears in the ranking and the all-rejected
+fallback can reinstate it. Checked by
+&lt;code>tests/test_exit_visibility_alpha.py&lt;/code>, which needs no FDS output: it
+reimplements fdsvismap&amp;rsquo;s clear-air rule (&lt;code>view_angle * max_vis &amp;gt;= distance&lt;/code>)
+so the test exercises the routing decision rather than the third-party
+solver. A companion test pins that a &lt;code>full&lt;/code>-familiarity agent ignores the
+bearing entirely — signs are wayfinding information and bind only where
+knowledge is incomplete. The folder README documents the &lt;strong>30 m visibility
+ceiling&lt;/strong> that makes a sign illegible at any bearing, and how much tighter it
+becomes once smoke is present (&lt;code>c / K̄&lt;/code>, so 6 m at &lt;code>c=3&lt;/code>, &lt;code>K̄=0.5&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Familiarity Test Full&lt;/strong> / &lt;strong>Familiarity Test Discovery&lt;/strong>: &lt;code>SocialForceModel&lt;/code>
+scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
+doors throughout, generated parametrically by each folder&amp;rsquo;s
+&lt;code>build_geometry.py&lt;/code>), differing only in the spawn distribution&amp;rsquo;s
+&lt;code>familiarity&lt;/code> value. A matching fire deck lives at
+&lt;code>assets/familiarity_test_full/familiarity_test.fds&lt;/code> (real
+combustion via &lt;code>&amp;amp;REAC&lt;/code>, not a prescribed &lt;code>&amp;amp;INIT&lt;/code>; walls mirror the
+walkable geometry exactly so smoke propagates through the same
+doorways agents use). These two configs use the legacy &lt;code>journeys&lt;/code>/
+&lt;code>transitions&lt;/code> shape directly (the web editor&amp;rsquo;s &lt;code>journeys_v2&lt;/code> format is
+auto-migrated to this shape by &lt;code>load_scenario&lt;/code>, but was hand-converted
+here to add the extra edge below). The maze&amp;rsquo;s start room is one open
+box that connects directly to the checkpoint outside the exit door
+(&lt;code>jps-checkpoints_0 → jps-checkpoints_3&lt;/code>), completely bypassing the
+scripted checkpoint tour through the rest of the maze — a real ~39%
+shorter route (32 m vs 52 m) that&amp;rsquo;s declared as an extra graph edge
+(tagged &lt;code>journey_id: &amp;quot;shortcut&amp;quot;&lt;/code> in &lt;code>transitions&lt;/code>, invisible to the
+static spawn-time journey) for the rerouting/cognitive-map system to
+find. Run with &lt;code>--enable-rerouting&lt;/code> (no &lt;code>--fds-dir&lt;/code>/vis-cache needed —
+divergence here is pure-distance, not smoke-driven) to see it: &lt;code>full&lt;/code>
+agents know the whole graph immediately and reroute onto the shortcut
+within the first reevaluation tick; &lt;code>discovery&lt;/code> agents start knowing
+only the spawn&amp;rsquo;s declared neighbor and explore the nearest
+known-but-unvisited doorway at each step — which for this maze&amp;rsquo;s
+geometry happens to coincide with the original scripted tour the whole
+way, so they end up taking the long route without ever finding the
+shortcut. Verified: &lt;code>full&lt;/code> evacuates in 35.1 s vs &lt;code>discovery&lt;/code>&amp;rsquo;s 75.1 s
+(both 20/20 evacuated; see the results table in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/">&lt;code>docs/testing-familiarity.md&lt;/code>&lt;/a>
+).&lt;/li>
+&lt;/ul></description></item><item><title>FDS slice sampling</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</guid><description>
+&lt;blockquote>
+&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>
+.&lt;/p>&lt;/blockquote>
+&lt;p>The &lt;code>SliceFieldSampler&lt;/code> class in &lt;code>pyfds_evac/core/fds_sampling.py&lt;/code> provides
+nearest-neighbor spatial and temporal lookup on horizontal FDS slice
+files. It&amp;rsquo;s the shared pyFDS-Evac data-access layer used by both the
+smoke-speed model (extinction coefficient) and the FED model (gas
+concentrations).&lt;/p>
+&lt;h2>How it works&lt;span class="hx-absolute -hx-mt-20" id="how-it-works">&lt;/span>
+&lt;a href="#how-it-works" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>SliceFieldSampler&lt;/code> wraps a single &lt;code>fdsreader&lt;/code> slice object and
+exposes a &lt;code>sample(time_s, x, y)&lt;/code> method that returns the scalar value
+at the nearest grid cell and timestep.&lt;/p>
+&lt;p>Internally it:&lt;/p>
+&lt;ol>
+&lt;li>Finds the subslice whose bounding box covers the queried &lt;code>(x, y)&lt;/code>
+point (one subslice per FDS mesh the slice intersects).&lt;/li>
+&lt;li>Resolves the nearest timestep index via binary search
+(&lt;code>get_nearest_timestep&lt;/code>).&lt;/li>
+&lt;li>Computes the nearest cell indices along the x and y axes.&lt;/li>
+&lt;li>Returns &lt;code>subslice.data[t_index, i_index, j_index]&lt;/code>.&lt;/li>
+&lt;/ol>
+&lt;h3>Performance caches&lt;span class="hx-absolute -hx-mt-20" id="performance-caches">&lt;/span>
+&lt;a href="#performance-caches" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Two caches reduce per-call overhead on hot paths (for example, sampling
+along a line of sight where all points share the same timestep and
+typically the same subslice):&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Last-hit subslice cache&lt;/strong> &amp;ndash; the most recently matched subslice is
+checked first before falling back to a linear scan. Consecutive
+sample points along a ray almost always hit the same subslice.&lt;/li>
+&lt;li>&lt;strong>Timestep cache&lt;/strong> &amp;ndash; when &lt;code>time_s&lt;/code> hasn&amp;rsquo;t changed since the last
+call, the cached &lt;code>t_index&lt;/code> is reused, skipping the binary search.&lt;/li>
+&lt;/ul>
+&lt;h2>Loading a sampler&lt;span class="hx-absolute -hx-mt-20" id="loading-a-sampler">&lt;/span>
+&lt;a href="#loading-a-sampler" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Use &lt;code>load_slice_sampler()&lt;/code> to load a single FDS quantity:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fds_sampling &lt;span style="color:#f92672">import&lt;/span> load_slice_sampler
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler &lt;span style="color:#f92672">=&lt;/span> load_slice_sampler(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;SOOT EXTINCTION COEFFICIENT&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>value &lt;span style="color:#f92672">=&lt;/span> sampler&lt;span style="color:#f92672">.&lt;/span>sample(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Selecting a slice height&lt;span class="hx-absolute -hx-mt-20" id="selecting-a-slice-height">&lt;/span>
+&lt;a href="#selecting-a-slice-height" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When an FDS case contains multiple horizontal slices for the same
+quantity at different heights, pass &lt;code>slice_height_m&lt;/code> to select the
+closest one:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>sampler &lt;span style="color:#f92672">=&lt;/span> load_slice_sampler(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;SOOT EXTINCTION COEFFICIENT&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>If only one slice matches the quantity, &lt;code>slice_height_m&lt;/code> has no effect.&lt;/p>
+&lt;h3>Sharing a &lt;code>Simulation&lt;/code> instance&lt;span class="hx-absolute -hx-mt-20" id="sharing-a-simulation-instance">&lt;/span>
+&lt;a href="#sharing-a-simulation-instance" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Parsing an FDS case directory is expensive. When you need both
+extinction and FED fields from the same case, load the &lt;code>Simulation&lt;/code>
+once and pass it to both factory methods:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> fdsreader &lt;span style="color:#f92672">import&lt;/span> Simulation
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> ExtinctionField
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fed &lt;span style="color:#f92672">import&lt;/span> FdsFedField
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sim &lt;span style="color:#f92672">=&lt;/span> Simulation(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>extinction &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, simulation&lt;span style="color:#f92672">=&lt;/span>sim)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed_field &lt;span style="color:#f92672">=&lt;/span> FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, simulation&lt;span style="color:#f92672">=&lt;/span>sim)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>All three factory functions (&lt;code>load_slice_sampler&lt;/code>,
+&lt;code>ExtinctionField.from_fds&lt;/code>, &lt;code>FdsFedField.from_fds&lt;/code>) accept an optional
+&lt;code>simulation&lt;/code> keyword argument. When omitted, each creates its own
+&lt;code>Simulation&lt;/code> instance internally.&lt;/p>
+&lt;h2>Integration with models&lt;span class="hx-absolute -hx-mt-20" id="integration-with-models">&lt;/span>
+&lt;a href="#integration-with-models" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>Smoke-speed model&lt;span class="hx-absolute -hx-mt-20" id="smoke-speed-model">&lt;/span>
+&lt;a href="#smoke-speed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>ExtinctionField&lt;/code> wraps a &lt;code>SliceFieldSampler&lt;/code> for the
+&lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> quantity and exposes
+&lt;code>sample_extinction(time_s, x, y)&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> ExtinctionField, SmokeSpeedModel
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>field &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>model &lt;span style="color:#f92672">=&lt;/span> SmokeSpeedModel(field, config)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>speed_factor &lt;span style="color:#f92672">=&lt;/span> model&lt;span style="color:#f92672">.&lt;/span>sample(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>If a queried point falls outside the FDS domain, &lt;code>sample_extinction&lt;/code>
+returns &lt;code>0.0&lt;/code> (clear air) and logs a warning on the first occurrence.&lt;/p>
+&lt;h3>FED model&lt;span class="hx-absolute -hx-mt-20" id="fed-model">&lt;/span>
+&lt;a href="#fed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>FdsFedField&lt;/code> creates one &lt;code>SliceFieldSampler&lt;/code> per gas species (CO,
+CO2, O2, and optionally HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,
+formaldehyde):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fed &lt;span style="color:#f92672">import&lt;/span> FdsFedField, DefaultFedModel
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed_field &lt;span style="color:#f92672">=&lt;/span> FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>model &lt;span style="color:#f92672">=&lt;/span> DefaultFedModel(fed_field)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>inputs &lt;span style="color:#f92672">=&lt;/span> model&lt;span style="color:#f92672">.&lt;/span>sample_inputs(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Line-of-sight extinction&lt;span class="hx-absolute -hx-mt-20" id="line-of-sight-extinction">&lt;/span>
+&lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The &lt;code>integrated_extinction_along_los()&lt;/code> function in
+&lt;code>pyfds_evac/core/route_graph.py&lt;/code> computes the Beer-Lambert path-integrated
+mean extinction coefficient between two points. It samples at uniform
+intervals along the ray and returns the arithmetic mean:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.route_graph &lt;span style="color:#f92672">import&lt;/span> integrated_extinction_along_los
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>k_mean &lt;span style="color:#f92672">=&lt;/span> integrated_extinction_along_los(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> x_from&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>, y_from&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> x_to&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">10.0&lt;/span>, y_to&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> extinction_sampler&lt;span style="color:#f92672">=&lt;/span>field,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> step_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>This is the discrete form of
+&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>
+,
+Eq. 8-9, and is used internally by the route-cost evaluator for
+smoke-aware &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">routing&lt;/a>
+.&lt;/p>
+&lt;h2>Next steps&lt;span class="hx-absolute -hx-mt-20" id="next-steps">&lt;/span>
+&lt;a href="#next-steps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">FDS case requirements&lt;/a>
+&amp;ndash; the &lt;code>&amp;amp;SLCF&lt;/code> lines a
+case must declare, and the failure modes when they&amp;rsquo;re missing.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/speed/smoke-speed-model/">Smoke-speed model&lt;/a>
+&amp;ndash; how extinction drives
+agent speed reduction.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">Smoke-aware routing&lt;/a>
+&amp;ndash; how extinction and FED drive
+dynamic route selection.&lt;/li>
+&lt;/ul></description></item></channel></rss>
