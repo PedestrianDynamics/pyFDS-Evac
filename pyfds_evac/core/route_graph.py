@@ -1104,7 +1104,7 @@ def _position_aware_length(
     return path_length - first_length_m + remaining, share
 
 
-def evaluate_route(
+def _measure_route(
     graph: StageGraph,
     path: list[str],
     time_s: float,
@@ -1115,25 +1115,12 @@ def evaluate_route(
     *,
     cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
-    current_exit: str | None = None,
     agent_position: tuple[float, float] | None = None,
-    current_target: str | None = None,
-) -> RouteCost:
-    """Evaluate the composite cost for a full route (list of stage IDs).
+) -> RouteMeasurements:
+    """Measure a route: its segments, length, smoke, dose, time and queue.
 
-    When ``agent_position`` is given, the distance is measured from where the
-    agent actually is (Haensel 2014 "path-integrated distance") instead of from
-    the route's first graph node, so an agent 1 m from one exit is not priced as
-    if standing at the far upstream junction. Every route is measured the same
-    way, whatever the agent is currently heading for -- see
-    ``_position_aware_length``. The smoke and FED terms are credited over the
-    same stretch as the distance, so exposure already incurred on the traversed
-    part -- and already carried in ``current_fed`` -- is not charged a second
-    time.
-
-    ``current_target`` is accepted and ignored; it is kept so callers that
-    already thread it through do not have to change, and so the parameter is
-    available if a future rule needs the agent's heading.
+    The measuring half of ``evaluate_route``, which see. No limit and no cost
+    model's ranking is applied here.
     """
     segments: list[SegmentCost] = []
     walked = 0.0
@@ -1291,6 +1278,78 @@ def evaluate_route(
             queue_time = n_exit / capacity
             queue_distance = config.base_speed_m_per_s * queue_time
             composite += config.w_queue * queue_distance
+
+    return RouteMeasurements(
+        exit_id=path[-1] if path else "",
+        path=path,
+        segments=segments,
+        path_length_m=path_length,
+        effective_length_m=effective_length,
+        k_ave_route=k_ave,
+        travel_time_s=travel_time,
+        fed_max_route=fed_max,
+        composite_cost=composite,
+        queue_time_s=queue_time,
+        k_max_route=k_max,
+        tau_route=tau_route,
+        k_leg_max=k_leg_max,
+    )
+
+
+def evaluate_route(
+    graph: StageGraph,
+    path: list[str],
+    time_s: float,
+    current_fed: float,
+    extinction_sampler: ExtinctionSampler,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
+    *,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
+    exit_counts: dict[str, int] | None = None,
+    current_exit: str | None = None,
+    agent_position: tuple[float, float] | None = None,
+    current_target: str | None = None,
+) -> RouteCost:
+    """Evaluate the composite cost for a full route (list of stage IDs).
+
+    When ``agent_position`` is given, the distance is measured from where the
+    agent actually is (Haensel 2014 "path-integrated distance") instead of from
+    the route's first graph node, so an agent 1 m from one exit is not priced as
+    if standing at the far upstream junction. Every route is measured the same
+    way, whatever the agent is currently heading for -- see
+    ``_position_aware_length``. The smoke and FED terms are credited over the
+    same stretch as the distance, so exposure already incurred on the traversed
+    part -- and already carried in ``current_fed`` -- is not charged a second
+    time.
+
+    ``current_target`` is accepted and ignored; it is kept so callers that
+    already thread it through do not have to change, and so the parameter is
+    available if a future rule needs the agent's heading.
+    """
+    m = _measure_route(
+        graph,
+        path,
+        time_s,
+        current_fed,
+        extinction_sampler,
+        fed_rate_sampler,
+        config,
+        cached_segments=cached_segments,
+        exit_counts=exit_counts,
+        agent_position=agent_position,
+    )
+    segments = m.segments
+    path_length = m.path_length_m
+    effective_length = m.effective_length_m
+    k_ave = m.k_ave_route
+    travel_time = m.travel_time_s
+    fed_max = m.fed_max_route
+    composite = m.composite_cost
+    queue_time = m.queue_time_s
+    k_max = m.k_max_route
+    tau_route = m.tau_route
+    k_leg_max = m.k_leg_max
 
     # Asymmetric FED rejection (deadband). The agent's current exit keeps the
     # full threshold so it always flees the instant dose crosses incapacitation.
