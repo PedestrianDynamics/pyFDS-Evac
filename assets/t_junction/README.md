@@ -1,8 +1,9 @@
 # T-junction test: smoke-blocked T-corridor
 
-This scenario exercises speed reduction, FED incapacitation and dynamic
-rerouting. In the run on `7a3617d` (defaults, so no irritant slowdown) the
-agents choose exit A at spawn and no reroute occurs; see the results below
+This scenario was built to exercise speed reduction, FED incapacitation and
+dynamic rerouting. In the run on `7a3617d` (defaults, so no irritant
+slowdown) the first two act; rerouting is enabled but not exercised: the
+agents choose exit A at spawn and no reroute occurs. See the results below
 and [#195](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/195).
 
 ## Geometry
