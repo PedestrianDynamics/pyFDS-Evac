@@ -441,7 +441,7 @@ Three consequences.
    not carry over is the **quantity** — `K_ave_Door` is a mean along `See_door`'s
    straight sight line, with an L1 distance for doors with no resolved sight line
    (`:16796`) — nor the **scope**: the test sits in a last-resort branch,
-   loops only over known-or-visible doors, and strikes doors out permanently
+   loops only over known-or-visible doors, and strikes doors out for that call
    (`:16800-16801`). So the paper may say the gate is *inspired by* FDS+Evac's
    tier-4 visibility door rule and inherits its threshold with a citation; it may
    not say it implements it, and 6 is still uncalibrated as an exposure budget.
@@ -450,7 +450,7 @@ Three consequences.
    `FAC_DOOR_OLD2 = 0.9` (`:1572`) discounts the current door's `L2_tmp` at
    `:16626` and `:16803`, and at `:16803` that `L2_tmp` **is** `tau/6`. So
    `current_exit_discount = 0.9` discounts the same quantity in the same place.
-   The shipped code comment instead cites `FAC_DOOR_WAIT` at `evac.f90:1503`;
+   The shipped code comment instead cites `FAC_DOOR_WAIT` at `evac.f90:1503` (2016 numbering);
    `FAC_DOOR_WAIT` is at `:1570` and discounts travel time, not smoke.
 3. **A1 is retired rather than open.** Scaling the threshold with route length
    was a defect for a visibility criterion and is correct for an exposure one: a
@@ -472,7 +472,7 @@ now carries `tau_max = 6.0` as its own constant, `sign_contrast_c` is gone, and
 the docs declare it uncalibrated. Calibrating it against a soot-dose or
 FED-equivalent limit remains open.
 
-## Why the clean-exit tier cannot work here, structurally
+## Why the clean-exit tier does not work here
 
 The hysteresis protects the wrong crossing. Entering the clean set is guarded by
 the 10x `FAC_DOOR_OLD` deadband; **returning is not a tier crossing at all**.
@@ -481,18 +481,23 @@ bands sit at saturation, and the decision falls through to a plain time
 comparison that the nearer exit wins immediately. That is why a wider margin
 delays the oscillation without removing it.
 
-FDS+Evac's tier is stable because refusal is **remembered**:
-`Is_Visible_Door(i) = .FALSE.` and `Is_Known_Door(i) = .FALSE.`
-(`evac.f90:16800-16801`) are permanent within the run. pyFDS-Evac removed that
-memory at `e441b03`, deliberately, because permanent death destroyed the gate's
-self-healing property (B3). **The tier cannot be had without the memory.** That
-is a structural incompatibility, not a tuning failure, and it is a better reason
-to keep the tier off than any seed count.
+FDS+Evac does not remember a refusal either. `Is_Visible_Door(i) = .FALSE.`
+and `Is_Known_Door(i) = .FALSE.` (`evac.f90:16800-16801`) last for one
+`Change_Target_Door` call, since the call resets both flags at its start
+(`:16170-16171`). The only lasting trace is the lone-agent mark
+(`:16628-16637`, only when `HR%GROUP_ID < 0`): the previous target's node is
+set to 0 (`:16635`) or made negative (`:16637`). **Retracted:** an earlier
+version of this section said the refusal is permanent within the run and
+concluded that the tier cannot be had without that memory, a structural
+incompatibility. Both rest on the misreading and are withdrawn. pyFDS-Evac
+removed its own permanent refusal at `e441b03`, deliberately, because
+permanent death destroyed the gate's self-healing property (B3).
 
 Scope limit: l_corridor has no persistent clean alternative, so it cannot refute
 clean-preference in general. What is established is narrower and sufficient --
-this implementation is unstable, and the instability is intrinsic to a
-memoryless lexicographic tier.
+this implementation is unstable on l_corridor. Whether the instability is
+intrinsic to a memoryless lexicographic tier is open: FDS+Evac's tier is also
+memoryless from call to call, apart from the lone-agent mark.
 
 ## Under the gate, no hazard bypasses the anchor
 
@@ -543,7 +548,7 @@ therefore not the mixed currency but a modelling question: **should a memoryless
 model follow a reversing field?** FDS+Evac keeps little memory: a door struck
 out for smoke at `evac.f90:16799` (`:16800-16801`) is struck out only for that
 call, since `Change_Target_Door` resets `Is_Known_Door` and `Is_Visible_Door`
-at its start (`:16169-16170`); the one lasting trace is that a lone agent marks
+at its start (`:16170-16171`); the one lasting trace is that a lone agent marks
 its previous target negative or zero (Models › Wayfinding, "Relation to
 FDS+Evac"). pyFDS-Evac removed its own permanent refusal at `e441b03` on
 purpose, because permanent death destroyed the gate's self-healing property

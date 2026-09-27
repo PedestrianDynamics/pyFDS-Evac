@@ -487,7 +487,7 @@ refer to that file. The detailed account of FDS+Evac door choice is on
 |---|---|---|
 | **Visible** | Geometric line of sight from agent to door centre, or to the door's `XB` centre from the correct side; no range limit, no contrast, no angle factor | *Legible*: sign test with *C*, view angle, obstruction, \(V_{\max}\) and line-of-sight extinction |
 | **Known** | `KNOWN_DOOR` (default `.FALSE.`) and `KNOWN_DOOR_PROBS` per door, written at initialisation into a per-agent or per-group list; afterwards only downgraded | *Known*: seeded by `familiarity` (one \(p\) per group) and `entrance`, then learned from legible signs; never downgraded |
-| **Visible counts as known** | for the current target in every call (`:16533–16535`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
+| **Visible counts as known** | for the current target in `imode == 1` calls (`:16533–16535`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
 | **Memory of the target** | a current target with positive `I_Target` stays visible | every known node persists |
 | **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹ | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
 | **Last resort** | tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call | the all-refused fallback re-admits the least smoky known route |
@@ -509,7 +509,7 @@ Details, with line numbers:
   (`:16486–16494`). For DOORs without `EXIT_SIGN`, visibility also needs the
   door to be the current target or already known (`:16500–16507`).
 - **Smoke acts in the door choice, not in seeing.** \(\bar K\) is floored at
-  \(0.5\,\lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.015 m⁻¹ with the default negative
+  \(0.5\,\lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.015 m⁻¹ for either sign of the
   criterion (`:16497`), which is converted from a visibility with
   \(S = 3/K\) (`:5494–5496`).
   - Tiers 1–3 admit a door only while \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\)

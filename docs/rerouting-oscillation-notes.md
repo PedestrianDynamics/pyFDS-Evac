@@ -224,7 +224,7 @@ a threshold. No further hysteresis constant can damp those. What is open is a mo
 question: whether a memoryless model should follow a reversing field at all. FDS+Evac
 keeps little memory: a door struck out for smoke (`evac.f90:16800-16801`) is struck out
 only for that call, since its flags are reset at the start of the next
-(`:16169-16170`); a lone agent only marks its previous target negative or zero.
+(`:16170-16171`); a lone agent only marks its previous target negative or zero.
 pyFDS-Evac removed its own permanent refusal deliberately at `e441b03`.
 
 **Churn is reduced, not eliminated, and monotonicity now holds on one deck and not the
