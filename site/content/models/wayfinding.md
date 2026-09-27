@@ -106,7 +106,7 @@ $$
 The obstruction factor applies in clear air too: a wall hides a sign there as
 it does in smoke.
 
-![Animation of a sign turning away from a standing agent. As the angle grows, the visibility curve falls; when it drops below the 6 m distance near 53°, the sight line turns from solid blue to dashed red and the label changes from "sign legible" to "sign not legible"](/images/wayfinding/sign_rotation.gif)
+![Animation of a sign turning away from a standing agent. As the angle grows, the visibility curve falls; when it drops below the 6 m distance near 53°, the sight line turns from solid blue to dashed red and the heading changes from a filled blue "sign legible" to a hollow red "sign not legible"](/images/wayfinding/sign_rotation.gif)
 
 *An agent stands 6 m from a sign in uniform smoke (\(\bar K\) = 0.3 m⁻¹,
 C = 3, so \(C/\bar K\) = 10 m) while the sign turns away. Every value comes
