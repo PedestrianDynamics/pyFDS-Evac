@@ -435,6 +435,13 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   farther from its next node than the route's origin is. In clear air the gate
   ranks by that travel time. Since #170, the walk to the origin is timed at
   the route's mean pace (`route_graph.py:1060–1066`).
+- **A sign is never read beyond its reading distance.** \(V_{\max}\) is
+  30 m by default ([#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)),
+  so in clear air a sign farther away is illegible at any bearing, and a
+  discovery agent in a space wider than that must approach an exit to learn
+  it. The value is a default, not derived from sign size or a signage
+  standard; set `"max_distance"` per sign where it matters. FDS+Evac has no
+  such limit ([Coming from FDS+Evac](/docs/coming-from-fds-evac.md#seeing-a-door-vs-reading-a-sign)).
 - **Learning is limited to neighbours**, spawn perception is per spawn area,
   and periodic learning uses the previous step's position (§2.1–2.2).
 - **The patrol can stall**

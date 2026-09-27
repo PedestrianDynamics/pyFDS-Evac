@@ -172,6 +172,12 @@ purely distance-based (see [Scope](#scope--caveats)).
 
 ## Results / Pass Criteria
 
+> **Numbers not yet rerun.** The times below were measured before the
+> travel-time fix (#170), the discovery routing-engine fix (#174) and the
+> 30 m sign reading distance (#177). The last replaced a cap equal to the
+> grid diagonal, about 27 m for this 20 m × 18 m plan. The pass criteria
+> still hold in the test suite; the times will be updated after a rerun.
+
 **Status: passing.** Both tiers evacuate all agents; `full` takes the
 shortcut and finishes markedly faster than `discovery`, which retraces the
 scripted maze tour.

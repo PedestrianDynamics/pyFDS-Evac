@@ -78,6 +78,11 @@ suite ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
   one-to-one FDS+Evac counterpart
   ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)); see
   [Smoke-aware routing](routing.md).
+- An exit is found by reading its sign, not by seeing the door. FDS+Evac
+  counts a door as visible at any distance if nothing blocks the line of
+  sight. pyFDS-Evac reads a sign only within its reading distance, 30 m by
+  default even in clear air, and less off-axis or in smoke. See
+  [Seeing a door vs reading a sign](#seeing-a-door-vs-reading-a-sign).
 - Known issues: an agent incapacitated during its pre-movement time is
   released when that time ends
   ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)), and
@@ -116,9 +121,34 @@ runs uploaded scenarios. It does not edit geometry or stages.
 | Irritant slowdown (FIC) | None: no FIC acts on the agents, since `evac.f90` imports only `FED` from FDS (`evac.f90:26`). Irritants enter only the FED sum. FDS can write FIC as an output quantity, and the guide tabulates *F*FIC (Table 2), but neither feeds the agents' speed | Off by default, as in FDS+Evac. `--enable-fic-speed` (`opts.enable_fic_speed`) turns on speed × max(0.3, 1 − 0.7 · FIC) whenever the gas FED is computed; before, it was on by default. The rule is a pyFDS-Evac assumption with no known source ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147), [#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). |
 | FED activity level | Rest, light work or heavy work | Not supported. The CO term is fixed. See [issue #135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135). |
 | `KNOWN_DOOR_NAMES`, `KNOWN_DOOR_PROBS` (§8.8) | Which exits an agent knows, with a probability per exit. An exit not listed is known only if its `&EXIT` or `&DOOR` line sets `KNOWN_DOOR`, which defaults to .FALSE. (`evac.f90:2223`, `:2666`), so by default agents rely on the exits they can see | `familiarity` on a distribution: `"full"`, `"discovery"`, or one probability in [0, 1] applied to every exit. The default is `"full"`: every agent knows every exit. The FDS+Evac default is closer to `"discovery"`. `entrance` names one exit, reachable from the spawn area, that the agents know from the start. A probability per exit is not supported; see [issue #136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136). |
+| Door visibility (`Is_Visible_Door`) | A door is visible when the line of sight from the agent to the door centre is not blocked (or, for an `XB` door, to its centre from the correct side). There is no range limit, no contrast and no angle factor | A sign is legible when \(A \cdot U \cdot \min(C/\bar K, V_{\max}) \ge L\) (see [Wayfinding](/models/wayfinding.md#sign-visibility)). \(V_{\max}\) = 30 m by default (`--max-sign-distance`, or `"max_distance"` per sign), so a door farther than 30 m is not found by sight even in clear air. See [below](#seeing-a-door-vs-reading-a-sign). |
 | Door selection with smoke (`FED_DOOR_CRIT`) | Ranks doors as smoke-free by FED or visibility | Route choice is a different model, configured in the JSON `routing` block and switched on by default (`--enable-rerouting`). See [Smoke-aware routing](routing.md). |
 | Queueing in door selection (`FAC_DOOR_QUEUE`) | On by default (1.3 persons/m/s, `evac.f90:1503`). Within `Change_Target_Door` the estimated queueing time ranks only the first preference tier, the doors that are both known and visible (`:16256`); the parameter also switches on the Nash iteration of the initial exit choice (`:6775`) and enters the queue estimates in `EVACUATE_HUMANS` (`:9011`) | Off by default: `w_queue` = 0 in the JSON `routing` block. When set, it counts all agents targeting an exit, not a local queue. |
 | `TAU` (`TAU_MEAN` etc., §8.7) | Relaxation time of the social-force model | No equivalent. Movement parameters belong to the JuPedSim model named in `model_type`. |
+
+### Seeing a door vs reading a sign
+
+![Two plan views of the same hall with one exit and an obstacle. Left, FDS+Evac: every cell with an unblocked line of sight to the door sees it, at any distance. Right, pyFDS-Evac: only cells inside the 30 m reading circle and outside the obstacle's shadow read the sign](/images/wayfinding/sign_range_fds_evac.png)
+
+*FIGURE CAPTION PENDING*
+
+Consequences for a deck carried over from FDS+Evac:
+
+- In a space wider than 30 m, an agent that does not know an exit (a
+  `discovery` agent, or one whose `familiarity` draw missed it) learns it only
+  once it comes within reading distance of its sign. Egress times of such
+  agents are longer than FDS+Evac's in large, open spaces.
+- Off-axis, the reading distance shrinks with the angle factor \(A\): in
+  clear air a sign is legible up to \(A \cdot V_{\max}\). An omni-directional
+  sign (no `alpha`) has \(A = 1\).
+- Smoke shortens it further, to \(A \cdot C/\bar K\) once
+  \(C/\bar K < V_{\max}\). FDS+Evac's door visibility ignores smoke; smoke
+  acts only in its door ranking.
+- To model a sign that is read from farther away (a larger or illuminated
+  sign), set its `"max_distance"`. To approximate FDS+Evac's unlimited range,
+  raise `--max-sign-distance` above the largest distance in the deck.
+- Agents with `familiarity` `"full"`, the default, know every exit and are
+  unaffected.
 
 ### Pre-movement parameters
 
