@@ -1972,6 +1972,6 @@ def evaluate_and_reroute(
         old_exit=old_exit,
         new_exit=best.exit_id,
         old_cost=old_cost,
-        new_cost=best.composite_cost,
+        new_cost=best.rank_cost,
         reason=reason,
     )

@@ -1059,6 +1059,38 @@ class TestEvaluateAndReroute:
         assert switch.new_exit == "E0"  # shortest
         assert route_state.current_exit == "E0"
 
+    def test_switch_logs_the_new_cost_as_a_rank_cost(self, two_exit_graph):
+        """old_cost is a rank_cost, so new_cost must be one too.
+
+        Under the gate that is a time. At 1.3 m/s it differs from the
+        composite, which is a distance, so the two cannot be confused.
+        """
+        cost_config = RouteCostConfig(base_speed_m_per_s=1.3)
+        wait_info = _make_wait_info(two_exit_graph, "D0", "D0")
+        switch = evaluate_and_reroute(
+            agent_id=0,
+            wait_info=wait_info,
+            route_state=AgentRouteState(),
+            graph=two_exit_graph,
+            current_time_s=0.0,
+            current_fed=0.0,
+            extinction_sampler=ConstantExtinctionField(0.0),
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=cost_config),
+        )
+        best = rank_routes(
+            two_exit_graph,
+            "D0",
+            0.0,
+            0.0,
+            ConstantExtinctionField(0.0),
+            None,
+            cost_config,
+        )[0]
+        assert switch is not None
+        assert switch.new_cost == pytest.approx(best.rank_cost)
+        assert best.rank_cost != pytest.approx(best.composite_cost)
+
     def test_no_switch_when_same_exit_wins(self, two_exit_graph):
         """No switch returned when best exit hasn't changed."""
         field = ConstantExtinctionField(0.0)
