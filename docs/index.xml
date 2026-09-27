@@ -354,9 +354,9 @@ web GUI set only the last two (&lt;code>--smoke-update-interval&lt;/code>,
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>slice_height_m&lt;/code>&lt;/td>
-&lt;td>&lt;code>2.0&lt;/code>&lt;/td>
+&lt;td>&lt;code>1.6&lt;/code>&lt;/td>
 &lt;td>m&lt;/td>
-&lt;td>Height of the FDS slice that is read&lt;/td>
+&lt;td>Height of the FDS slice that is read (FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; the previous default was 2.0)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1091,8 +1091,8 @@ is one function in &lt;code>fed.py&lt;/code>:&lt;/p>
 &lt;tr>
 &lt;td>CN&lt;/td>
 &lt;td>&lt;code>_cn_fed_rate_per_minute&lt;/code>&lt;/td>
-&lt;td>\(\max\bigl(0,\ \exp(C_{\mathrm{CN}}/43)/220 - 0.0045\bigr)\), \(C_{\mathrm{CN}} = \max(0,\ C_{\mathrm{HCN}} - C_{\mathrm{NO_2}})\)&lt;/td>
-&lt;td>HCN, NO2 (ppm)&lt;/td>
+&lt;td>\(\max\bigl(0,\ \exp(C_{\mathrm{CN}}/43)/220 - 1/220\bigr)\), \(C_{\mathrm{CN}} = \max\bigl(0,\ C_{\mathrm{HCN}} - (C_{\mathrm{NO}} + C_{\mathrm{NO_2}})\bigr)\)&lt;/td>
+&lt;td>HCN, NO, NO2 (ppm)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>NOₓ&lt;/td>
@@ -1115,7 +1115,7 @@ is one function in &lt;code>fed.py&lt;/code>:&lt;/p>
 &lt;tr>
 &lt;td>O2&lt;/td>
 &lt;td>&lt;code>_o2_hypoxia_rate_per_minute&lt;/code>&lt;/td>
-&lt;td>\(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above 19.5 %&lt;/td>
+&lt;td>\(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above &lt;code>o2_threshold_percent&lt;/code>, 20.0 % by default&lt;/td>
 &lt;td>O2 (vol %)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -1155,7 +1155,9 @@ missing species reads 0 and contributes nothing. With only the three required
 species the sum reduces to the FDS+Evac default,
 \(\dot{\mathrm{FED}}_{\mathrm{CO}}\,\mathrm{HV}_{\mathrm{CO_2}} + \dot{\mathrm{FED}}_{\mathrm{O_2}}\).&lt;/p>
 &lt;h2>Convective heat&lt;span class="hx-absolute -hx-mt-20" id="convective-heat">&lt;/span>
-&lt;a href="#convective-heat" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>When the case has a &lt;code>TEMPERATURE&lt;/code> slice, a separate heat dose accumulates at
+&lt;a href="#convective-heat" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS+Evac has no heat dose, so this one is opt-in: with &lt;code>--enable-heat-fed&lt;/code>
+(&lt;code>opts.enable_heat_fed&lt;/code>) and a &lt;code>TEMPERATURE&lt;/code> slice in the case, a separate
+heat dose accumulates at
 &lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>fed.py:207&lt;/code>),&lt;/p>
 $$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
@@ -1167,13 +1169,16 @@ The basis is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamenta
 stop need the gas FED model; the heat stop needs only the heat FED model
 (&lt;code>run_config.py:246&lt;/code>–&lt;code>256&lt;/code>).&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>Irritant slowdown.&lt;/strong> &lt;code>default_fic&lt;/code> sums \(C_i / F_{\mathrm{FIC},i}\) over the
+&lt;li>&lt;strong>Irritant slowdown, off by default.&lt;/strong> FDS+Evac has no irritant slowdown, so
+&lt;code>enable_fic_speed&lt;/code> defaults to false and &lt;code>run.py&lt;/code> switches the rule on only
+with &lt;code>--enable-fic-speed&lt;/code>. Before it became opt-in, it was on whenever a gas
+FED model was loaded. When on, &lt;code>default_fic&lt;/code> sums \(C_i / F_{\mathrm{FIC},i}\) over the
 same seven irritants (constants in &lt;code>_FIC_COEFFS_PPM&lt;/code>, not integrated over
 time). At each FED update where FIC &amp;gt; 0, the agent&amp;rsquo;s irritant factor is set
 to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
 (&lt;code>scenario.py:2076&lt;/code>–&lt;code>2081&lt;/code>) and multiplies the smoke factor. The rule is a
-pyFDS-Evac assumption with no known source; FDS+Evac has no irritant
-slowdown (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>
+pyFDS-Evac assumption with no known source
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>
 ).
 When FIC is exactly 0 the last factor stays in force
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>
@@ -1198,6 +1203,11 @@ In &lt;code>deterministic&lt;/code> mode every agent uses the threshold itself.&
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>enable_fic_speed&lt;/code>&lt;/td>
+&lt;td>&lt;code>False&lt;/code>&lt;/td>
+&lt;td>&lt;code>--enable-fic-speed&lt;/code>&lt;/td>
+&lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fic_alpha&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.7&lt;/code>&lt;/td>
@@ -1237,6 +1247,11 @@ In &lt;code>deterministic&lt;/code> mode every agent uses the threshold itself.&
 &lt;td>&lt;code>heat_susceptibility_sigma&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.94&lt;/code>&lt;/td>
 &lt;td>&lt;code>--heat-susceptibility-sigma&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>o2_threshold_percent&lt;/code> (&lt;code>DefaultFedConfig&lt;/code>)&lt;/td>
+&lt;td>&lt;code>20.0&lt;/code>&lt;/td>
+&lt;td>&lt;code>--o2-threshold-percent&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1299,7 +1314,7 @@ work are not supported
 ).&lt;/li>
 &lt;li>&lt;strong>Height-relative FED and smoke sampling&lt;/strong>: extinction and temperature are
 sampled from the horizontal FDS slice closest to &lt;code>--smoke-slice-height&lt;/code>
-(default 2.0 m); each gas is read from the first slice of its quantity in the
+(default 1.6 m, FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>); each gas is read from the first slice of its quantity in the
 deck, whatever its height. All agents share these slices regardless of
 their individual heights. Pathfinder samples at 90 % of each occupant&amp;rsquo;s height,
 which is more accurate for scenarios with mixed-height populations (children,
@@ -1320,46 +1335,55 @@ and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants
 . The gas sum has the Purser /
 FDS+Evac guide structure (&lt;code>fed.py:334&lt;/code>), not the ISO 13571 one. Within it, the
 code follows the guide, which cites the 3rd edition of the SFPE Handbook,
-rather than the 5th edition
+rather than the 5th edition, except that the HCN term is computed as FDS
+computes it
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/149" target="_blank" rel="noopener">#149&lt;/a>
 ):&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>HCN.&lt;/strong> The code uses the guide&amp;rsquo;s exponential term
-\(\exp(C_{\mathrm{CN}}/43)/220 - 0.0045\) (Guide Eq. 14; &lt;code>fed.py:109&lt;/code>),
-not the 5th-edition power law (Eq. 63.24;
+&lt;li>&lt;strong>HCN.&lt;/strong> The code computes the exponential term as FDS does,
+\(\exp(C_{\mathrm{CN}}/43)/220 - 1/220\) with
+\(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - (C_{\mathrm{NO}} + C_{\mathrm{NO_2}})\)
+(&lt;code>_cn_fed_rate_per_minute&lt;/code>), not the 5th-edition power law (Eq. 63.24;
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/149" target="_blank" rel="noopener">#149&lt;/a>
-), with
-\(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - C_{\mathrm{NO_2}}\) (Guide Eq. 15;
-&lt;code>fed.py:106&lt;/code>). The 5th edition subtracts NO + NO2, because methaemoglobin
-formed by NO and NO2 binds cyanide (Ch. 63, p. 2370): with coefficient 1 in
-Eq. 63.26 (p. 2362) but 0.67 in the note to the FED equation (p. 2372), so
-the chapter is inconsistent. The FDS code that FDS+Evac runs subtracts
-NO + NO2, with the offset 0.00454545, about 1/220 (FDS 6.7.6 &lt;code>func.f90&lt;/code>, function &lt;code>FED&lt;/code>), and
-has done so since firemodels/fds 694e033 (2011); earlier versions had no HCN
-term. No
-source we read supports NO2 alone, and the 3rd-edition wording the guide
-cites is not verified (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/152" target="_blank" rel="noopener">#152&lt;/a>
-). Organic nitriles are ignored. Ch. 63
-gives the critical range of its 5th-edition time-to-incapacitation
-relationship as about 80 to 180 ppm, from primate and human data (p. 2361).
-That range is not documented for the guide&amp;rsquo;s exponential term; that the term
-is an extrapolation below 80 ppm is our inference
+). The
+FDS code that FDS+Evac runs subtracts NO + NO2, with the offset 0.00454545,
+about 1/220 (FDS 6.7.6 &lt;code>func.f90&lt;/code>, function &lt;code>FED&lt;/code>), and has done so since
+firemodels/fds 694e033 (2011); earlier versions had no HCN term. The
+FDS+Evac guide instead writes the offset as 0.0045 (Eq. 14) and
+\(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - C_{\mathrm{NO_2}}\) (Eq. 15), which
+FDS and FDS+Evac never computed; pyFDS-Evac followed that text before
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>
+). The
+FDS verification case &lt;code>FED_FIC&lt;/code> separates the two forms and is reproduced in
+&lt;code>tests/verification/test_fed_verif.py&lt;/code> (A2.8). The 5th edition also
+subtracts NO + NO2, because methaemoglobin formed by NO and NO2 binds
+cyanide (Ch. 63, p. 2370): with coefficient 1 in Eq. 63.26 (p. 2362) but
+0.67 in the note to the FED equation (p. 2372), so the chapter is
+inconsistent. No source we read supports NO2 alone, and the 3rd-edition
+wording the guide cites is not verified
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/152" target="_blank" rel="noopener">#152&lt;/a>
+).
+Organic nitriles are ignored. Ch. 63 gives the critical range of its
+5th-edition time-to-incapacitation relationship as about 80 to 180 ppm,
+from primate and human data (p. 2361). That range is not documented for the
+exponential term; that the term is an extrapolation below 80 ppm is our
+inference (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>
 ).&lt;/li>
 &lt;li>&lt;strong>CO₂.&lt;/strong> Eq. 63.34 (&lt;code>fed.py:63&lt;/code>), not its simplification Eq. 63.35 used in
 Eq. 63.38. The 70 L/min limit on \(V_E\times VCO_2\) is not applied, and
 the CO₂ asphyxiant endpoint \(F_{I_{CO_2}}\) is not computed.&lt;/li>
 &lt;li>&lt;strong>CO.&lt;/strong> Fixed at light work (&lt;code>fed.py:54&lt;/code>), Eq. 63.18 at its default
 \(V_E\) and &lt;em>D&lt;/em>.&lt;/li>
-&lt;li>&lt;strong>O₂.&lt;/strong> The rate is zero at or above 19.5 % O₂ (&lt;code>fed.py:66&lt;/code>, &lt;code>:92&lt;/code>), a
-guard that neither Purser nor the guide has (FDS+Evac&amp;rsquo;s code, the &lt;code>FED&lt;/code>
-function of FDS 6.7.6 &lt;code>func.f90&lt;/code>, guards at 20 % instead); it stops a tiny
-ambient rate from accumulating over long runs or outside the FDS domain, as Pathfinder
-does. The guide&amp;rsquo;s Eq. 18 carries a factor 60 in the denominator while
+&lt;li>&lt;strong>O₂.&lt;/strong> The rate is zero at or above &lt;code>o2_threshold_percent&lt;/code>, 20.0 % O₂
+by default, the guard of FDS+Evac&amp;rsquo;s code (the &lt;code>FED&lt;/code> function of FDS 6.7.6
+&lt;code>func.f90&lt;/code> adds the term only when X_O2 &amp;lt; 0.20); neither Purser nor the
+guide has it. It stops a tiny ambient rate from accumulating over long runs
+or outside the FDS domain. &lt;code>--o2-threshold-percent 19.5&lt;/code> restores the
+previous default, the OSHA limit that Pathfinder uses. The guide&amp;rsquo;s Eq. 18 carries a factor 60 in the denominator while
 stating that &lt;em>t&lt;/em> is in minutes; the code follows Handbook Eq. 63.50 without
 it.&lt;/li>
 &lt;/ul>
-&lt;p>The irritant slowdown \(g\) (&lt;code>fed.py:241&lt;/code>–&lt;code>242&lt;/code>) is multiplied with the smoke
+&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py:241&lt;/code>–&lt;code>242&lt;/code>), is multiplied with the smoke
 factor (&lt;code>direct_steering_runtime.py:186&lt;/code>–&lt;code>190&lt;/code>). Its constants were not found
 in the Handbook, the FDS+Evac guide or &lt;code>evac.f90&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>
@@ -1403,6 +1427,102 @@ positions. The coupling is one-way: the fire acts on the occupants, and
 nothing the occupants do (opening a door, for example) acts on the fire.&lt;/p>
 &lt;p>A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). &lt;code>uv run python run.py --scenario &amp;lt;json|dir|zip&amp;gt; --fds-dir &amp;lt;fds output&amp;gt;&lt;/code> combines them.&lt;/p>
+&lt;h2>Defaults follow FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="defaults-follow-fdsevac">&lt;/span>
+&lt;a href="#defaults-follow-fdsevac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac is an enhancement of FDS+Evac, not a clone. Where a mechanism has
+a direct FDS+Evac counterpart, the default is the FDS+Evac form, so that a
+case converted from FDS+Evac behaves as its author expects. Newer or
+alternative forms stay available as options. Earlier pyFDS-Evac versions
+used other defaults for seven mechanisms
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
+):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Mechanism&lt;/th>
+&lt;th>Default now (= FDS+Evac)&lt;/th>
+&lt;th>Previous pyFDS-Evac default&lt;/th>
+&lt;th>To get the previous behaviour&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Sampling height&lt;/td>
+&lt;td>1.6 m, &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> (&lt;code>evac.f90:1072&lt;/code>; Guide §8.7)&lt;/td>
+&lt;td>2.0 m&lt;/td>
+&lt;td>&lt;code>--smoke-slice-height 2.0&lt;/code>; &lt;code>opts.smoke_slice_height = 2.0&lt;/code>, or &lt;code>slice_height_m=2.0&lt;/code> in &lt;code>SmokeSpeedConfig&lt;/code> and &lt;code>DefaultFedConfig&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Irritant (FIC) slowdown&lt;/td>
+&lt;td>None; &lt;code>evac.f90&lt;/code> imports only &lt;code>FED&lt;/code> (&lt;code>evac.f90:26&lt;/code>)&lt;/td>
+&lt;td>On whenever the gas FED is computed&lt;/td>
+&lt;td>&lt;code>--enable-fic-speed&lt;/code>; &lt;code>opts.enable_fic_speed = True&lt;/code>, or &lt;code>TenabilityConfig(enable_fic_speed=True)&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>HCN term of the FED&lt;/td>
+&lt;td>&lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2), offset 1/220 (function &lt;code>FED&lt;/code> in FDS &lt;code>func.f90&lt;/code>)&lt;/td>
+&lt;td>&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045 (Guide Eq. 14–15)&lt;/td>
+&lt;td>Not available; see the note below&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>O2 term of the FED&lt;/td>
+&lt;td>Applied only below 20 % O2 (function &lt;code>FED&lt;/code> in FDS &lt;code>func.f90&lt;/code>)&lt;/td>
+&lt;td>Applied below 19.5 %&lt;/td>
+&lt;td>&lt;code>--o2-threshold-percent 19.5&lt;/code>; &lt;code>opts.o2_threshold_percent = 19.5&lt;/code>, or &lt;code>DefaultFedConfig(o2_threshold_percent=19.5)&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Pre-movement, when a spawn area sets none&lt;/td>
+&lt;td>Constant 10 s, &lt;code>PRE_MEAN&lt;/code> (&lt;code>evac.f90:1605&lt;/code>), with a warning in the log&lt;/td>
+&lt;td>0 s&lt;/td>
+&lt;td>&lt;code>&amp;quot;use_premovement&amp;quot;: false&lt;/code> in the spawn area&amp;rsquo;s &lt;code>parameters&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Unimpeded walking speed &lt;code>v0&lt;/code>, when a spawn area sets none&lt;/td>
+&lt;td>1.25 m/s, &lt;code>VEL_MEAN&lt;/code> (&lt;code>evac.f90:1603&lt;/code>)&lt;/td>
+&lt;td>1.2 m/s&lt;/td>
+&lt;td>&lt;code>&amp;quot;v0&amp;quot;: 1.2&lt;/code> in the spawn area&amp;rsquo;s &lt;code>parameters&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Convective heat dose&lt;/td>
+&lt;td>None (Guide §1.2)&lt;/td>
+&lt;td>On whenever the output has a &lt;code>TEMPERATURE&lt;/code> slice&lt;/td>
+&lt;td>&lt;code>--enable-heat-fed&lt;/code>; &lt;code>opts.enable_heat_fed = True&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The CLI flags are also fields of the web GUI, and the &lt;code>opts&lt;/code> attributes are
+what &lt;code>build_run_kwargs&lt;/code> reads, so a script that builds its own options sets
+them the same way. The &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md" target="_blank" rel="noopener">changelog&lt;/a>
+lists the same changes.&lt;/p>
+&lt;p>&lt;strong>The HCN term follows the FED as FDS and FDS+Evac compute it.&lt;/strong> FDS+Evac
+calls the &lt;code>FED&lt;/code> function of FDS, which has subtracted NO + NO2 from HCN,
+with the offset 0.00454545 (about 1/220), since FDS commit 694e033 (2011);
+earlier versions had no HCN term. The FDS+Evac Guide&amp;rsquo;s Eq. 15 subtracts NO2
+alone, which no FDS version computed, so pyFDS-Evac follows the code, not the
+guide&amp;rsquo;s text, and does not offer the guide&amp;rsquo;s form as an option. The FDS
+verification case &lt;code>FED_FIC&lt;/code> separates the two forms and is part of the test
+suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>
+).&lt;/p>
+&lt;p>&lt;strong>What deliberately still differs:&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>Incapacitation is probabilistic by default: each agent draws its own
+threshold, where FDS+Evac stops every agent at FED = 1. This is under
+discussion (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
+);
+&lt;code>--incapacitation-mode deterministic&lt;/code> gives the FDS+Evac rule.&lt;/li>
+&lt;li>Route choice, cognitive maps and sign visibility are enhancements with no
+one-to-one FDS+Evac counterpart
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
+); see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/routing/">Smoke-aware routing&lt;/a>
+.&lt;/li>
+&lt;li>Known issues: an agent incapacitated during its pre-movement time is
+released when that time ends
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>
+), and
+the gas FED reads the first slice of each species whatever its height
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>
+).&lt;/li>
+&lt;/ul>
 &lt;h2>Where each FDS+Evac input goes&lt;span class="hx-absolute -hx-mt-20" id="where-each-fdsevac-input-goes">&lt;/span>
 &lt;a href="#where-each-fdsevac-input-goes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Section numbers refer to the FDS+Evac Technical Reference and User&amp;rsquo;s Guide
 (Korhonen 2021). &amp;ldquo;JSON&amp;rdquo; means the scenario JSON. Its stage layout
@@ -1433,7 +1553,7 @@ runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> (§8.7)&lt;/td>
 &lt;td>Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61)&lt;/td>
-&lt;td>&lt;code>--smoke-slice-height&lt;/code> [m], default 2.0, an absolute z in the FDS domain rather than a height above the floor (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
+&lt;td>&lt;code>--smoke-slice-height&lt;/code> [m], default 1.6 as in FDS+Evac (2.0 before; pass &lt;code>--smoke-slice-height 2.0&lt;/code> for it), an absolute z in the FDS domain rather than a height above the floor (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
 ). It selects the extinction and temperature slices closest to it, so the deck must contain an &lt;code>&amp;amp;SLCF PBZ=&lt;/code> at that height. Gas slices are taken from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>
 ).&lt;/td>
 &lt;/tr>
@@ -1495,7 +1615,7 @@ runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>VELOCITY_DIST&lt;/code> and speed ranges (§8.7)&lt;/td>
 &lt;td>Unimpeded walking speed distribution; default &lt;code>VEL_MEAN&lt;/code> = 1.25 m/s (&lt;code>evac.f90:1603&lt;/code>)&lt;/td>
-&lt;td>&lt;code>v0&lt;/code> [m/s], default 1.2 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
+&lt;td>&lt;code>v0&lt;/code> [m/s], default 1.25 as in FDS+Evac (1.2 before; set &lt;code>v0&lt;/code> per spawn area for it; &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
 ), with &lt;code>v0_distribution&lt;/code> = &lt;code>&amp;quot;constant&amp;quot;&lt;/code> or &lt;code>&amp;quot;gaussian&amp;quot;&lt;/code> and &lt;code>v0_std&lt;/code>. These are the keys the run reads from the JSON. &lt;code>desired_speed&lt;/code>, &lt;code>desired_speed_distribution&lt;/code> and &lt;code>desired_speed_std&lt;/code> are aliases accepted only by &lt;code>Scenario.set_agent_params()&lt;/code> in Python, which writes the &lt;code>v0&lt;/code> keys; in the JSON they are ignored. Gaussian draws are clipped to 0.1–5.0 m/s. There is no uniform speed distribution.&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -1507,24 +1627,23 @@ runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;tr>
 &lt;td>FED, fractional effective dose (§3.4)&lt;/td>
 &lt;td>Purser FED from CO, CO2, O2 (and optional gases), incapacitation at FED ≥ 1. The O2 term is applied only below 20 % O2 (function &lt;code>FED&lt;/code> in FDS 6.7.6 &lt;code>func.f90&lt;/code>, which FDS+Evac calls). The HCN term in the code (the same &lt;code>FED&lt;/code> function) is exp(&lt;em>C&lt;/em>CN/43)/220 − 0.00454545 (about 1/220) with &lt;em>C&lt;/em>CN = &lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2); Guide Eq. 14–15 write the offset as 0.0045 and &lt;em>C&lt;/em>CN = &lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2. The code form has been in FDS since firemodels/fds 694e033 (2011); earlier versions had no HCN term. FDS&amp;rsquo;s &lt;code>FED_FIC&lt;/code> verification case reproduces only with it (0.97402 against the expected 0.97403 at 100 s; 6.17 with NO2 alone). The FDS User Guide was corrected to NO + NO2 in 2016 (903df07); the FDS+Evac Guide and the FDS Verification Guide were not. An agent that reaches FED ≥ 1 stays down for the rest of the run&lt;/td>
-&lt;td>Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 19.5 %. The HCN term follows Guide Eq. 14–15 (&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045), not the code FDS+Evac ran (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>
-, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
-). The two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.032 /min here against 0.007 /min in FDS+Evac; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default each agent draws its own threshold (log-normal, median 1; spread on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a>
+&lt;td>Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 20 %, as in FDS+Evac; &lt;code>--o2-threshold-percent 19.5&lt;/code> (&lt;code>opts.o2_threshold_percent&lt;/code>) gives the previous 19.5 %. The HCN term is the one in the code FDS+Evac ran (&lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2), offset 1/220), and &lt;code>FED_FIC&lt;/code> is reproduced in the test suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>
+). Earlier pyFDS-Evac versions followed Guide Eq. 14–15 (&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045); the two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.007 /min now against 0.032 /min before; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default each agent draws its own threshold (log-normal, median 1; spread on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a>
 page), so about half stop below FED = 1. Use &lt;code>--incapacitation-mode deterministic&lt;/code> (and &lt;code>--heat-incapacitation-mode deterministic&lt;/code>) to stop every agent at FED = 1 as FDS+Evac does. Thresholds are set with &lt;code>--fed-threshold&lt;/code> and &lt;code>--heat-fed-threshold&lt;/code>. An agent incapacitated while it is still waiting is released when its pre-movement time ends, a known bug (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>
 ).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Convective heat&lt;/td>
 &lt;td>None: gas temperature and radiation do not act on agents (Guide §1.2)&lt;/td>
-&lt;td>A separate heat dose is computed automatically whenever the output has a &lt;code>TEMPERATURE&lt;/code> slice, and it incapacitates on its own threshold. &lt;code>--disable-tenability&lt;/code> turns off both stops (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
+&lt;td>Off by default, as in FDS+Evac. With &lt;code>--enable-heat-fed&lt;/code> (&lt;code>opts.enable_heat_fed&lt;/code>), a separate heat dose is computed from the &lt;code>TEMPERATURE&lt;/code> slice and incapacitates on its own threshold; before, this happened automatically whenever the output had such a slice. &lt;code>--disable-tenability&lt;/code> turns off both stops (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
 ).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Irritant slowdown (FIC)&lt;/td>
 &lt;td>None: no FIC acts on the agents, since &lt;code>evac.f90&lt;/code> imports only &lt;code>FED&lt;/code> from FDS (&lt;code>evac.f90:26&lt;/code>). Irritants enter only the FED sum. FDS can write FIC as an output quantity, and the guide tabulates &lt;em>F&lt;/em>FIC (Table 2), but neither feeds the agents&amp;rsquo; speed&lt;/td>
-&lt;td>On by default whenever the gas FED is computed: speed × max(0.3, 1 − 0.7 · FIC). The rule is a pyFDS-Evac assumption with no known source (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>
+&lt;td>Off by default, as in FDS+Evac. &lt;code>--enable-fic-speed&lt;/code> (&lt;code>opts.enable_fic_speed&lt;/code>) turns on speed × max(0.3, 1 − 0.7 · FIC) whenever the gas FED is computed; before, it was on by default. The rule is a pyFDS-Evac assumption with no known source (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>
 , &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
-). &lt;code>--disable-tenability&lt;/code> turns it off, together with both stops.&lt;/td>
+).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FED activity level&lt;/td>
@@ -1593,6 +1712,12 @@ values cannot be copied across unchanged. The delay is in seconds.&lt;/p>
 &lt;td>upper bound [s]&lt;/td>
 &lt;td>0.0, 60.0&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>constant&lt;/code>&lt;/td>
+&lt;td>delay [s]&lt;/td>
+&lt;td>unused&lt;/td>
+&lt;td>10.0, -&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The presets are illustrative, not from a cited dataset
@@ -1601,12 +1726,16 @@ values cannot be copied across unchanged. The delay is in seconds.&lt;/p>
 parameters from data for your occupancy.&lt;/p>
 &lt;p>The presets are used when &lt;code>use_premovement&lt;/code> is &lt;code>true&lt;/code> and &lt;code>premovement_param_a&lt;/code>
 or &lt;code>premovement_param_b&lt;/code> is missing; both parameters must be given for either
-to take effect. With &lt;code>use_premovement&lt;/code> false, which is the default, agents
-start moving at &lt;em>t&lt;/em> = 0. The FDS+Evac default is a constant 10 s after &lt;code>T_BEGIN&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
-).
-When &lt;code>premovement_seed&lt;/code> is null, the draws are seeded from the run seed, so
-they repeat under a fixed &lt;code>--seed&lt;/code>.&lt;/p>
+to take effect (&lt;code>constant&lt;/code> needs only &lt;code>premovement_param_a&lt;/code>). A spawn area that
+sets none of these keys gets the FDS+Evac default, a constant 10 s after
+&lt;code>T_BEGIN&lt;/code> (&lt;code>PRE_MEAN&lt;/code>;
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>
+), and the
+run logs a warning, since the FDS+Evac guide advises against relying on
+defaults. With &lt;code>use_premovement&lt;/code> false, agents start moving at &lt;em>t&lt;/em> = 0, as
+every spawn area without pre-movement keys did before. When
+&lt;code>premovement_seed&lt;/code> is null, the draws are seeded from the run seed, so they
+repeat under a fixed &lt;code>--seed&lt;/code>.&lt;/p>
 &lt;p>While an agent waits, its walking speed is not reduced by the smoke around
 it. It starts at its full clear-air speed when it is released. Its toxic dose
 does accumulate while it waits.&lt;/p>
@@ -1675,7 +1804,8 @@ Journeys are sequences of stages.&lt;/li>
 optical depth is too high. Sight gating decides whether an agent can
 read a sign, and so which exits enter its cognitive map. The dose is not
 a gate: when it reaches the agent&amp;rsquo;s threshold, the agent stops.&lt;/li>
-&lt;li>&lt;strong>FIC&lt;/strong>, Purser&amp;rsquo;s fractional irritant concentration, which slows agents,
+&lt;li>&lt;strong>FIC&lt;/strong>, Purser&amp;rsquo;s fractional irritant concentration, which slows agents
+when &lt;code>--enable-fic-speed&lt;/code> is given,
 is related to, but not the same as, the FEC (fractional effective
 concentration) of ISO 13571, which uses different denominators.&lt;/li>
 &lt;li>&lt;strong>Cognitive map&lt;/strong> is the graph of stages an agent knows. It is not meant
@@ -3083,11 +3213,11 @@ A deck written for some other purpose usually will not work as-is: it has to
 be told to dump the specific slices this tool samples.&lt;/p>
 &lt;h2>The slices&lt;span class="hx-absolute -hx-mt-20" id="the-slices">&lt;/span>
 &lt;a href="#the-slices" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>&amp;amp;SLCF PBZ=2.0, QUANTITY=&amp;#39;EXTINCTION COEFFICIENT&amp;#39; /
-&amp;amp;SLCF PBZ=2.0, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;CARBON MONOXIDE&amp;#39; /
-&amp;amp;SLCF PBZ=2.0, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;CARBON DIOXIDE&amp;#39; /
-&amp;amp;SLCF PBZ=2.0, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;OXYGEN&amp;#39; /
-&amp;amp;SLCF PBZ=2.0, QUANTITY=&amp;#39;TEMPERATURE&amp;#39; /
+&lt;pre>&lt;code>&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;EXTINCTION COEFFICIENT&amp;#39; /
+&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;CARBON MONOXIDE&amp;#39; /
+&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;CARBON DIOXIDE&amp;#39; /
+&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;OXYGEN&amp;#39; /
+&amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;TEMPERATURE&amp;#39; /
 &amp;amp;DUMP DT_SLCF=1.0 /&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
@@ -3125,7 +3255,7 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;/tr>
 &lt;tr>
 &lt;td>TEMPERATURE&lt;/td>
-&lt;td>heat FED (SFPE Handbook Eq. 63.44)&lt;/td>
+&lt;td>heat FED (SFPE Handbook Eq. 63.44), only with &lt;code>--enable-heat-fed&lt;/code>&lt;/td>
 &lt;td>&lt;strong>heat FED is switched off and the run continues&lt;/strong> (see below)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -3183,9 +3313,9 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;strong>Heat FED disabled.&lt;/strong> The same applies to the independent heat FED track: if
-there is no &lt;code>TEMPERATURE&lt;/code> slice, heat FED is silently off, and every heat FED
-column reads zero:&lt;/p>
+&lt;p>&lt;strong>Heat FED disabled.&lt;/strong> The heat FED track is off unless &lt;code>--enable-heat-fed&lt;/code>
+is given. With it, the same applies as for the gases: if there is no
+&lt;code>TEMPERATURE&lt;/code> slice, heat FED is off, and every heat FED column reads zero:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>Heat FED is disabled for &amp;lt;dir&amp;gt;: it has no TEMPERATURE slice. ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -3197,7 +3327,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;strong>Wrong slice height.&lt;/strong> &lt;code>--smoke-slice-height&lt;/code> (default 2.0 m) is a
+&lt;p>&lt;strong>Wrong slice height.&lt;/strong> &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m, FDS+Evac&amp;rsquo;s &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>) is a
 preference, not a filter: a case with one slice of a quantity uses it whatever
 its height, and a mismatch never fails the run. A case you inherit often
 carries a single slice at whatever height its author chose, so you can end up
@@ -3584,7 +3714,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>The manifest stores &lt;code>fds_dir&lt;/code> as an absolute path; it is shortened here.&lt;/p>
 &lt;p>&lt;code>ExtinctionField.from_fds&lt;/code> reads the &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice
-nearest to &lt;code>slice_height_m&lt;/code> (default 2.0 m). The deck prescribes a soot density
+nearest to &lt;code>slice_height_m&lt;/code> (default 1.6 m). The deck prescribes a soot density
 that gives &lt;em>K&lt;/em> = 1.0 1/m. The slice returns 0.99545 1/m, and the default speed
 law turns it into a speed factor of 0.919631. The ratio of the exit times,
 84.97 / 78.14 = 1.0874, matches 1 / 0.919631 = 1.0874 to four decimals.&lt;/p>
@@ -4316,7 +4446,7 @@ silent unless you check the warning log.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--smoke-slice-height M&lt;/code>&lt;/td>
-&lt;td>FDS slice height (m) for extinction sampling.&lt;/td>
+&lt;td>FDS slice height (m) for smoke and heat sampling (default 1.6, FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
@@ -4388,12 +4518,15 @@ because they need it to learn the graph. See
 &lt;a href="#tenability-fic-slowdown--fed-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A FED model is instantiated automatically when &lt;code>--fds-dir&lt;/code> points at
 an FDS case that exposes the FED species (CO, CO₂, O₂ at
 minimum — HCN, NO/NO₂, and irritants are used if present). When that
-happens, the FIC slowdown (a pyFDS-Evac assumption, source unknown;
+happens, the FED incapacitation rule is on by default. The FIC slowdown
+(a pyFDS-Evac assumption, source unknown;
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>
-) and
-the FED incapacitation rule are on by default. Without &lt;code>--fds-dir&lt;/code> (or with a case missing the
+) is off
+by default, as FDS+Evac has none; &lt;code>--enable-fic-speed&lt;/code> turns it on. Without &lt;code>--fds-dir&lt;/code> (or with a case missing the
 required species) no FED is computed and these flags have no effect;
-a case with a &lt;code>TEMPERATURE&lt;/code> slice still gets heat incapacitation.&lt;/p>
+a case with a &lt;code>TEMPERATURE&lt;/code> slice still gets heat incapacitation when
+&lt;code>--enable-heat-fed&lt;/code> is given (the heat dose is off by default, as FDS+Evac has
+none).&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -4407,6 +4540,14 @@ a case with a &lt;code>TEMPERATURE&lt;/code> slice still gets heat incapacitatio
 &lt;td>Turn both rules off.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--enable-fic-speed&lt;/code>&lt;/td>
+&lt;td>Turn the FIC slowdown on (off by default).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--enable-heat-fed&lt;/code>&lt;/td>
+&lt;td>Accumulate the heat dose from a &lt;code>TEMPERATURE&lt;/code> slice and incapacitate on it (off by default).&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--fic-alpha F&lt;/code>&lt;/td>
 &lt;td>Slope of &lt;code>v/v₀ = max(μ, 1 − α·FIC)&lt;/code> (default 0.7).&lt;/td>
 &lt;/tr>
@@ -4417,6 +4558,10 @@ a case with a &lt;code>TEMPERATURE&lt;/code> slice still gets heat incapacitatio
 &lt;tr>
 &lt;td>&lt;code>--fed-threshold F&lt;/code>&lt;/td>
 &lt;td>Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--o2-threshold-percent P&lt;/code>&lt;/td>
+&lt;td>O₂ vol % at or above which the hypoxia term is zero (default 20.0, as FDS; 19.5 was the previous default).&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -5180,7 +5325,7 @@ speed factor used to estimate travel time when a route is priced, not the
 walking speed. Setting &lt;code>routing.alpha&lt;/code> therefore changes which route an agent
 prefers but leaves its speed in smoke unchanged. The same split applies to
 speed itself: &lt;code>routing.base_speed_m_per_s&lt;/code> (1.3 m/s) prices routes, while an
-agent walks at its own &lt;code>v0&lt;/code> (1.2 m/s by default).&lt;/p>
+agent walks at its own &lt;code>v0&lt;/code> (1.25 m/s by default).&lt;/p>
 &lt;h2>Incapacitation is probabilistic by default&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-is-probabilistic-by-default">&lt;/span>
 &lt;a href="#incapacitation-is-probabilistic-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FED below means fractional effective dose. By default
 (&lt;code>--incapacitation-mode probabilistic&lt;/code>), each agent draws its own
@@ -5215,7 +5360,9 @@ pre-movement time starts walking when that time ends
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">issue #145&lt;/a>
 ).
 Scenarios that combine pre-movement with FED therefore under-report
-incapacitations and over-report evacuees. Until this is fixed, check the
+incapacitations and over-report evacuees. A scenario that sets no pre-movement
+gets the FDS+Evac default of 10 s, so this applies to it too, for its first
+10 s. Until this is fixed, check the
 per-agent FED history for agents that crossed their threshold and still
 reached an exit.&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
@@ -5225,7 +5372,7 @@ temperature of an FDS &lt;code>TEMPERATURE&lt;/code> slice. Radiant heat flux is
 does not contribute to any dose. An agent near a flame or under a hot layer
 that radiates strongly is therefore treated as less exposed than it is.&lt;/p>
 &lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
-tracked per agent, separately from the toxic dose, and an agent is
+opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
 incapacitated when either dose reaches its threshold. Before that point, heat
 has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced
@@ -5270,14 +5417,17 @@ unbounded), each stretch is also priced with the smoke that the finished FDS
 run holds for the time the agent would arrive there. Route choice is therefore
 a best case with perfect foresight, not a model of what an occupant can see or
 predict.&lt;/p>
-&lt;p>&lt;strong>Recovery from irritants.&lt;/strong> The irritant slowdown is recomputed only while
+&lt;p>&lt;strong>Recovery from irritants.&lt;/strong> The irritant slowdown (opt-in with
+&lt;code>--enable-fic-speed&lt;/code>) is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it
 returns to exactly zero, the last slowdown stays in force, so an agent that
 leaves an irritant plume into clean air does not return to full speed
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">issue #142&lt;/a>
 ).&lt;/p>
-&lt;p>&lt;strong>Sourced pre-movement defaults.&lt;/strong> The preset parameters of the four
-pre-movement distributions are illustrative, not from a cited dataset. Set
+&lt;p>&lt;strong>Sourced pre-movement defaults.&lt;/strong> The preset parameters of the four random
+pre-movement distributions are illustrative, not from a cited dataset. The
+10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
+data either. Set
 &lt;code>premovement_param_a&lt;/code> and &lt;code>premovement_param_b&lt;/code> from data for your occupancy
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144" target="_blank" rel="noopener">issue #144&lt;/a>
 ).&lt;/p>
@@ -8182,7 +8332,7 @@ page.&lt;/p>
 &lt;tr>
 &lt;td>&lt;strong>Sampling geometry&lt;/strong>&lt;/td>
 &lt;td>Local value at agent position on the evacuation mesh, at &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> above the floor (default 1.6 m, evac.f90:1072; [1] §8.7 p. 81; [7] p. 61)&lt;/td>
-&lt;td>Local value at agent position: nearest cell of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 2.0 m, an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>
+&lt;td>Local value at agent position: nearest cell of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>
 )&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -8217,12 +8367,14 @@ default), 3 (heavy work) (evac.f90:1465).&lt;/p>
 &lt;p>Incapacitation occurs at FED &amp;gt;= 1.0 ([1] §3.4 p31).&lt;/p>
 &lt;h3>pyFDS-Evac&lt;span class="hx-absolute -hx-mt-20" id="pyfds-evac-1">&lt;/span>
 &lt;a href="#pyfds-evac-1" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>FED is computed with the Purser equations as written out in the
-FDS+Evac guide [1] (&lt;code>fed.py&lt;/code>), from up to 12 gas species: CO, CO2,
+FDS+Evac guide [1] (&lt;code>fed.py&lt;/code>), except the HCN term, which is computed as
+the FDS code computes it (#159), from up to 12 gas species: CO, CO2,
 O2, HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein and formaldehyde.
 This is not the ISO 13571 [5] form: ISO 13571 keeps irritants in a
 separate fractional effective concentration (FEC) and does not add
 them into the FED, whereas here an irritant lethal-dose term is summed
-into the FED total. Irritants also slow agents through Purser&amp;rsquo;s
+into the FED total. With &lt;code>--enable-fic-speed&lt;/code> (off by default, as
+FDS+Evac has no such rule), irritants also slow agents through Purser&amp;rsquo;s
 fractional irritant concentration (FIC). ISO 13571&amp;rsquo;s FEC is a related
 but different quantity, with its own denominators. The full model is:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -8239,7 +8391,7 @@ title="Copy code"
 &lt;p>where:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>FED_CO&lt;/code>: CO narcosis (Eq. 13 from guide)&lt;/li>
-&lt;li>&lt;code>FED_CN&lt;/code>: HCN − NO2 (protective effect of NO2 on HCN toxicity)&lt;/li>
+&lt;li>&lt;code>FED_CN&lt;/code>: HCN − (NO + NO2) (protective effect of NOx on HCN toxicity), as FDS computes it (#159)&lt;/li>
 &lt;li>&lt;code>FED_NOx&lt;/code>: NO + NO2 (Ct product = 1500 ppm·min)&lt;/li>
 &lt;li>&lt;code>FLD_irr&lt;/code>: irritant gases (HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde)&lt;/li>
 &lt;li>&lt;code>HV_CO2&lt;/code>: CO2 hyperventilation factor&lt;/li>
@@ -8709,7 +8861,8 @@ time, &lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> the pre-movement time and &lt;em>t&lt
 time, all in seconds.&lt;/p>
 &lt;p>A pyFDS-Evac run starts at &lt;em>t&lt;/em> = 0 and gives at most
 &lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> + &lt;em>t&lt;/em>&lt;sub>trav&lt;/sub>. It includes &lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> only if
-the scenario models pre-movement (&lt;code>use_premovement&lt;/code> in a spawn area). You add
+the scenario models pre-movement (&lt;code>use_premovement&lt;/code> in a spawn area; a spawn
+area that sets no pre-movement key gets a constant 10 s, as FDS+Evac). You add
 &lt;em>t&lt;/em>&lt;sub>det&lt;/sub> and &lt;em>t&lt;/em>&lt;sub>a&lt;/sub> yourself. The scenario in Part 1 models no
 pre-movement, so its exit times are travel times only.&lt;/p>
 &lt;h2>Why not &lt;code>result.evacuation_time&lt;/code>?&lt;span class="hx-absolute -hx-mt-20" id="why-not-resultevacuation_time">&lt;/span>
@@ -9012,7 +9165,7 @@ deterministic mode.&lt;/p>
 .&lt;/li>
 &lt;li>Pre-movement is set per spawn area in the scenario JSON, with
 &lt;code>use_premovement&lt;/code>, &lt;code>premovement_distribution&lt;/code> (&lt;code>gamma&lt;/code>, &lt;code>lognormal&lt;/code>,
-&lt;code>weibull&lt;/code> or &lt;code>uniform&lt;/code>), &lt;code>premovement_param_a&lt;/code>, &lt;code>premovement_param_b&lt;/code> and
+&lt;code>weibull&lt;/code>, &lt;code>uniform&lt;/code> or &lt;code>constant&lt;/code>), &lt;code>premovement_param_a&lt;/code>, &lt;code>premovement_param_b&lt;/code> and
 &lt;code>premovement_seed&lt;/code>. If &lt;code>premovement_seed&lt;/code> is &lt;code>null&lt;/code>, it is derived from the
 run seed, so the pre-movement times change with the seed. If it is set, they
 stay the same across seeds.&lt;/li>
@@ -9483,6 +9636,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --scenario assets/fed_incap_heat_100c &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/fed_incap_heat_100c &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-heat-fed &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --heat-fed-threshold 1.0 &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history /tmp/heat_100c_fed_history.csv &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite /tmp/heat_100c.sqlite
@@ -9498,7 +9652,8 @@ title="Copy code"
 &lt;/div>
 &lt;p>No &lt;code>--fed-threshold&lt;/code>/CO-related flags are needed — these decks track no gas
 species, so the toxic FED path stays inactive (&lt;code>fed_model=None&lt;/code>) and only
-&lt;code>heat_fed_model&lt;/code> is built.&lt;/p>
+&lt;code>heat_fed_model&lt;/code> is built. &lt;code>--enable-heat-fed&lt;/code> is required: the heat dose is
+off by default, as FDS+Evac has none.&lt;/p>
 &lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
 &lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Status: not yet run.&lt;/strong> FDS could not be executed to produce real output in
 the environment this test case was built in — the installed FDS binary

@@ -17,9 +17,9 @@ Background: the Concepts
 and the talk A Modular Workflow for Visibility-Aware Evacuation Modelling
 
 (PDF
-)."><meta property="og:type" content="article"><meta property="og:url" content="https://pedestriandynamics.org/pyFDS-Evac/models/fed/"><meta property="article:section" content="models"><meta property="article:modified_time" content="2026-09-27T12:15:27+02:00"><meta itemprop=name content="Fractional effective dose"><meta itemprop=description content="Based on: Asphyxiant fractional effective dose , Irritant gases , Heat and Incapacitation thresholds .
+)."><meta property="og:type" content="article"><meta property="og:url" content="https://pedestriandynamics.org/pyFDS-Evac/models/fed/"><meta property="article:section" content="models"><meta property="article:modified_time" content="2026-09-27T12:30:52+02:00"><meta itemprop=name content="Fractional effective dose"><meta itemprop=description content="Based on: Asphyxiant fractional effective dose , Irritant gases , Heat and Incapacitation thresholds .
 Symbols follow the notation table . The model codes the Purser sum in the form of the FDS+Evac guide (Korhonen 2021, §3.4), which adds irritants into the dose; ISO 13571 keeps them in a separate concentration endpoint. The published equations are on the Fundamentals pages linked above.
-Background: the Concepts page and the talk A Modular Workflow for Visibility-Aware Evacuation Modelling (PDF )."><meta itemprop=dateModified content="2026-09-27T12:15:27+02:00"><meta itemprop=wordCount content="1515"><meta name=twitter:card content="summary"><meta name=twitter:title content="Fractional effective dose"><meta name=twitter:description content="Based on: Asphyxiant fractional effective dose , Irritant gases , Heat and Incapacitation thresholds .
+Background: the Concepts page and the talk A Modular Workflow for Visibility-Aware Evacuation Modelling (PDF )."><meta itemprop=dateModified content="2026-09-27T12:30:52+02:00"><meta itemprop=wordCount content="1647"><meta name=twitter:card content="summary"><meta name=twitter:title content="Fractional effective dose"><meta name=twitter:description content="Based on: Asphyxiant fractional effective dose , Irritant gases , Heat and Incapacitation thresholds .
 Symbols follow the notation table . The model codes the Purser sum in the form of the FDS+Evac guide (Korhonen 2021, §3.4), which adds irritants into the dose; ISO 13571 keeps them in a separate concentration endpoint. The published equations are on the Fundamentals pages linked above.
 Background: the Concepts page and the talk A Modular Workflow for Visibility-Aware Evacuation Modelling (PDF )."><link rel=preload href=/pyFDS-Evac/css/compiled/main.min.53c9617cf9cb82685ec5af463dec3ecab7f3b4c3ad5c9cf22185fc7cf9b39519.css as=style integrity="sha256-U8lhfPnLgmhexa9GPew+yrfztMOtXJzyIYX8fPmzlRk="><link href=/pyFDS-Evac/css/compiled/main.min.53c9617cf9cb82685ec5af463dec3ecab7f3b4c3ad5c9cf22185fc7cf9b39519.css rel=stylesheet integrity="sha256-U8lhfPnLgmhexa9GPew+yrfztMOtXJzyIYX8fPmzlRk="><link href=/pyFDS-Evac/css/custom.min.e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.css rel=stylesheet integrity="sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="><script>const defaultTheme="system",setDarkTheme=()=>{document.documentElement.classList.add("dark"),document.documentElement.style.colorScheme="dark"},setLightTheme=()=>{document.documentElement.classList.remove("dark"),document.documentElement.style.colorScheme="light"};"color-theme"in localStorage?localStorage.getItem("color-theme")==="dark"?setDarkTheme():setLightTheme():(defaultTheme==="dark"?setDarkTheme():setLightTheme(),defaultTheme==="system"&&(window.matchMedia("(prefers-color-scheme: dark)").matches?setDarkTheme():setLightTheme()))</script></head><body dir=ltr><div class="nav-container hx-sticky hx-top-0 hx-z-20 hx-w-full hx-bg-transparent print:hx-hidden"><div class="nav-container-blur hx-pointer-events-none hx-absolute hx-z-[-1] hx-h-full hx-w-full hx-bg-white dark:hx-bg-dark hx-shadow-[0_2px_4px_rgba(0,0,0,.02),0_1px_0_rgba(0,0,0,.06)] contrast-more:hx-shadow-[0_0_0_1px_#000] dark:hx-shadow-[0_-1px_0_rgba(255,255,255,.1)_inset] contrast-more:dark:hx-shadow-[0_0_0_1px_#fff]"></div><nav class="hx-mx-auto hx-flex hx-items-center hx-justify-end hx-gap-2 hx-h-16 hx-px-6 hx-max-w-[90rem]"><a class="hx-flex hx-items-center hover:hx-opacity-75 ltr:hx-mr-auto rtl:hx-ml-auto" href=/pyFDS-Evac/><img class="hx-block dark:hx-hidden" src=/pyFDS-Evac/images/logo.png alt=pyFDS-Evac height=28 width=28>
 <img class="hx-hidden dark:hx-block" src=/pyFDS-Evac/images/logo.png alt=pyFDS-Evac height=28 width=28>
@@ -94,14 +94,16 @@ and the talk <a href=https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-
 gas FED rate [1/min]</p>$$
 \dot{\mathrm{FED}} = \bigl(\dot{\mathrm{FED}}_{\mathrm{CO}} + \dot{\mathrm{FED}}_{\mathrm{CN}} + \dot{\mathrm{FED}}_{\mathrm{NO_x}} + \dot{\mathrm{FLD}}_{\mathrm{irr}}\bigr) \times \mathrm{HV}_{\mathrm{CO_2}} + \dot{\mathrm{FED}}_{\mathrm{O_2}},
 $$<p>and <code>DefaultFedModel</code> integrates it over time, with <em>t</em> in minutes. Each term
-is one function in <code>fed.py</code>:</p><table><thead><tr><th>Term</th><th>Function</th><th>Coded rate [1/min]</th><th>Input</th></tr></thead><tbody><tr><td>CO</td><td><code>_co_fed_rate_per_minute</code></td><td>\(2.764 \times 10^{-5}\, C_{\mathrm{CO}}^{1.036}\)</td><td>CO (ppm)</td></tr><tr><td>CN</td><td><code>_cn_fed_rate_per_minute</code></td><td>\(\max\bigl(0,\ \exp(C_{\mathrm{CN}}/43)/220 - 0.0045\bigr)\), \(C_{\mathrm{CN}} = \max(0,\ C_{\mathrm{HCN}} - C_{\mathrm{NO_2}})\)</td><td>HCN, NO2 (ppm)</td></tr><tr><td>NOₓ</td><td><code>_nox_fed_rate_per_minute</code></td><td>\((C_{\mathrm{NO}} + C_{\mathrm{NO_2}})/1500\)</td><td>NO, NO2 (ppm)</td></tr><tr><td>Irritants</td><td><code>_irritant_fld_rate_per_minute</code></td><td>\(\sum_i C_i / F_{\mathrm{FLD},i}\)</td><td>seven irritants (ppm)</td></tr><tr><td>HV_CO2</td><td><code>_hyperventilation_factor</code></td><td>\(\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1\) (a factor, not a rate)</td><td>CO2 (vol %)</td></tr><tr><td>O2</td><td><code>_o2_hypoxia_rate_per_minute</code></td><td>\(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above 19.5 %</td><td>O2 (vol %)</td></tr></tbody></table><p>The lethal Ct doses \(F_{\mathrm{FLD},i}\) [ppm·min] are constants in
+is one function in <code>fed.py</code>:</p><table><thead><tr><th>Term</th><th>Function</th><th>Coded rate [1/min]</th><th>Input</th></tr></thead><tbody><tr><td>CO</td><td><code>_co_fed_rate_per_minute</code></td><td>\(2.764 \times 10^{-5}\, C_{\mathrm{CO}}^{1.036}\)</td><td>CO (ppm)</td></tr><tr><td>CN</td><td><code>_cn_fed_rate_per_minute</code></td><td>\(\max\bigl(0,\ \exp(C_{\mathrm{CN}}/43)/220 - 1/220\bigr)\), \(C_{\mathrm{CN}} = \max\bigl(0,\ C_{\mathrm{HCN}} - (C_{\mathrm{NO}} + C_{\mathrm{NO_2}})\bigr)\)</td><td>HCN, NO, NO2 (ppm)</td></tr><tr><td>NOₓ</td><td><code>_nox_fed_rate_per_minute</code></td><td>\((C_{\mathrm{NO}} + C_{\mathrm{NO_2}})/1500\)</td><td>NO, NO2 (ppm)</td></tr><tr><td>Irritants</td><td><code>_irritant_fld_rate_per_minute</code></td><td>\(\sum_i C_i / F_{\mathrm{FLD},i}\)</td><td>seven irritants (ppm)</td></tr><tr><td>HV_CO2</td><td><code>_hyperventilation_factor</code></td><td>\(\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1\) (a factor, not a rate)</td><td>CO2 (vol %)</td></tr><tr><td>O2</td><td><code>_o2_hypoxia_rate_per_minute</code></td><td>\(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above <code>o2_threshold_percent</code>, 20.0 % by default</td><td>O2 (vol %)</td></tr></tbody></table><p>The lethal Ct doses \(F_{\mathrm{FLD},i}\) [ppm·min] are constants in
 <code>_irritant_fld_rate_per_minute</code>, taken from Table 2 of the FDS+Evac guide:</p><table><thead><tr><th>Species</th><th>HCl</th><th>HBr</th><th>HF</th><th>SO2</th><th>NO2</th><th>acrolein</th><th>formaldehyde</th></tr></thead><tbody><tr><td>F_FLD</td><td>114000</td><td>114000</td><td>87000</td><td>12000</td><td>1900</td><td>4500</td><td>22500</td></tr></tbody></table><p>Gas species are read from FDS slice outputs via <code>fdsreader</code>. CO, CO2 and O2
 are required. The optional species (HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,
 formaldehyde), the guide&rsquo;s optional terms, are loaded when available; a
 missing species reads 0 and contributes nothing. With only the three required
 species the sum reduces to the FDS+Evac default,
 \(\dot{\mathrm{FED}}_{\mathrm{CO}}\,\mathrm{HV}_{\mathrm{CO_2}} + \dot{\mathrm{FED}}_{\mathrm{O_2}}\).</p><h2>Convective heat<span class="hx-absolute -hx-mt-20" id=convective-heat></span>
-<a href=#convective-heat class=subheading-anchor aria-label="Permalink for this section"></a></h2><p>When the case has a <code>TEMPERATURE</code> slice, a separate heat dose accumulates at
+<a href=#convective-heat class=subheading-anchor aria-label="Permalink for this section"></a></h2><p>FDS+Evac has no heat dose, so this one is opt-in: with <code>--enable-heat-fed</code>
+(<code>opts.enable_heat_fed</code>) and a <code>TEMPERATURE</code> slice in the case, a separate
+heat dose accumulates at
 <code>_heat_fed_rate_per_minute</code> (<code>fed.py:207</code>),</p>$$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
 $$<p>with <em>T</em> in °C. It is a running total of its own, never added to the gas FED.
@@ -109,13 +111,16 @@ The basis is on <a href=/pyFDS-Evac/fundamentals/heat/>Heat</a>
 .</p><h2>Tenability: irritant slowdown and incapacitation<span class="hx-absolute -hx-mt-20" id=tenability-irritant-slowdown-and-incapacitation></span>
 <a href=#tenability-irritant-slowdown-and-incapacitation class=subheading-anchor aria-label="Permalink for this section"></a></h2><p><code>TenabilityConfig</code> (<code>fed.py:216</code>) adds two rules. The slowdown and the gas
 stop need the gas FED model; the heat stop needs only the heat FED model
-(<code>run_config.py:246</code>–<code>256</code>).</p><ul><li><strong>Irritant slowdown.</strong> <code>default_fic</code> sums \(C_i / F_{\mathrm{FIC},i}\) over the
+(<code>run_config.py:246</code>–<code>256</code>).</p><ul><li><strong>Irritant slowdown, off by default.</strong> FDS+Evac has no irritant slowdown, so
+<code>enable_fic_speed</code> defaults to false and <code>run.py</code> switches the rule on only
+with <code>--enable-fic-speed</code>. Before it became opt-in, it was on whenever a gas
+FED model was loaded. When on, <code>default_fic</code> sums \(C_i / F_{\mathrm{FIC},i}\) over the
 same seven irritants (constants in <code>_FIC_COEFFS_PPM</code>, not integrated over
 time). At each FED update where FIC > 0, the agent&rsquo;s irritant factor is set
 to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
 (<code>scenario.py:2076</code>–<code>2081</code>) and multiplies the smoke factor. The rule is a
-pyFDS-Evac assumption with no known source; FDS+Evac has no irritant
-slowdown (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147 target=_blank rel=noopener>#147</a>
+pyFDS-Evac assumption with no known source
+(<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147 target=_blank rel=noopener>#147</a>
 ).
 When FIC is exactly 0 the last factor stays in force
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142 target=_blank rel=noopener>#142</a>
@@ -128,7 +133,7 @@ released again when its pre-movement time ends
 <code>probabilistic</code> mode each agent draws each threshold once, from the run&rsquo;s
 seed, as <code>_sample_threshold</code> does:
 \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
-In <code>deterministic</code> mode every agent uses the threshold itself.</li></ul><table><thead><tr><th>Field</th><th>Default</th><th>CLI flag</th></tr></thead><tbody><tr><td><code>fic_alpha</code></td><td><code>0.7</code></td><td><code>--fic-alpha</code></td></tr><tr><td><code>fic_min_factor</code></td><td><code>0.3</code></td><td><code>--fic-min-factor</code></td></tr><tr><td><code>fed_threshold</code></td><td><code>1.0</code></td><td><code>--fed-threshold</code></td></tr><tr><td><code>incapacitation_mode</code></td><td><code>"probabilistic"</code></td><td><code>--incapacitation-mode</code></td></tr><tr><td><code>susceptibility_sigma</code></td><td><code>0.94</code></td><td><code>--susceptibility-sigma</code></td></tr><tr><td><code>heat_fed_threshold</code></td><td><code>1.0</code></td><td><code>--heat-fed-threshold</code></td></tr><tr><td><code>heat_incapacitation_mode</code></td><td><code>"probabilistic"</code></td><td><code>--heat-incapacitation-mode</code></td></tr><tr><td><code>heat_susceptibility_sigma</code></td><td><code>0.94</code></td><td><code>--heat-susceptibility-sigma</code></td></tr></tbody></table><p>The gas and heat FED are updated every <code>DefaultFedConfig.update_interval_s</code>,
+In <code>deterministic</code> mode every agent uses the threshold itself.</li></ul><table><thead><tr><th>Field</th><th>Default</th><th>CLI flag</th></tr></thead><tbody><tr><td><code>enable_fic_speed</code></td><td><code>False</code></td><td><code>--enable-fic-speed</code></td></tr><tr><td><code>fic_alpha</code></td><td><code>0.7</code></td><td><code>--fic-alpha</code></td></tr><tr><td><code>fic_min_factor</code></td><td><code>0.3</code></td><td><code>--fic-min-factor</code></td></tr><tr><td><code>fed_threshold</code></td><td><code>1.0</code></td><td><code>--fed-threshold</code></td></tr><tr><td><code>incapacitation_mode</code></td><td><code>"probabilistic"</code></td><td><code>--incapacitation-mode</code></td></tr><tr><td><code>susceptibility_sigma</code></td><td><code>0.94</code></td><td><code>--susceptibility-sigma</code></td></tr><tr><td><code>heat_fed_threshold</code></td><td><code>1.0</code></td><td><code>--heat-fed-threshold</code></td></tr><tr><td><code>heat_incapacitation_mode</code></td><td><code>"probabilistic"</code></td><td><code>--heat-incapacitation-mode</code></td></tr><tr><td><code>heat_susceptibility_sigma</code></td><td><code>0.94</code></td><td><code>--heat-susceptibility-sigma</code></td></tr><tr><td><code>o2_threshold_percent</code> (<code>DefaultFedConfig</code>)</td><td><code>20.0</code></td><td><code>--o2-threshold-percent</code></td></tr></tbody></table><p>The gas and heat FED are updated every <code>DefaultFedConfig.update_interval_s</code>,
 which <code>run.py</code> sets from <code>--smoke-update-interval</code>. <code>--disable-tenability</code>
 turns off the slowdown and both stops; the doses are still computed. The FED
 history CSV (<code>--output-fed-history</code>) carries the columns <code>fic</code>,
@@ -158,7 +163,7 @@ work are not supported
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135 target=_blank rel=noopener>#135</a>
 ).</li><li><strong>Height-relative FED and smoke sampling</strong>: extinction and temperature are
 sampled from the horizontal FDS slice closest to <code>--smoke-slice-height</code>
-(default 2.0 m); each gas is read from the first slice of its quantity in the
+(default 1.6 m, FDS+Evac <code>HUMAN_SMOKE_HEIGHT</code>); each gas is read from the first slice of its quantity in the
 deck, whatever its height. All agents share these slices regardless of
 their individual heights. Pathfinder samples at 90 % of each occupant&rsquo;s height,
 which is more accurate for scenarios with mixed-height populations (children,
@@ -176,39 +181,48 @@ and <a href=/pyFDS-Evac/fundamentals/irritants/>Irritant gases</a>
 . The gas sum has the Purser /
 FDS+Evac guide structure (<code>fed.py:334</code>), not the ISO 13571 one. Within it, the
 code follows the guide, which cites the 3rd edition of the SFPE Handbook,
-rather than the 5th edition
+rather than the 5th edition, except that the HCN term is computed as FDS
+computes it
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/149 target=_blank rel=noopener>#149</a>
-):</p><ul><li><strong>HCN.</strong> The code uses the guide&rsquo;s exponential term
-\(\exp(C_{\mathrm{CN}}/43)/220 - 0.0045\) (Guide Eq. 14; <code>fed.py:109</code>),
-not the 5th-edition power law (Eq. 63.24;
+):</p><ul><li><strong>HCN.</strong> The code computes the exponential term as FDS does,
+\(\exp(C_{\mathrm{CN}}/43)/220 - 1/220\) with
+\(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - (C_{\mathrm{NO}} + C_{\mathrm{NO_2}})\)
+(<code>_cn_fed_rate_per_minute</code>), not the 5th-edition power law (Eq. 63.24;
 <a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/149 target=_blank rel=noopener>#149</a>
-), with
-\(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - C_{\mathrm{NO_2}}\) (Guide Eq. 15;
-<code>fed.py:106</code>). The 5th edition subtracts NO + NO2, because methaemoglobin
-formed by NO and NO2 binds cyanide (Ch. 63, p. 2370): with coefficient 1 in
-Eq. 63.26 (p. 2362) but 0.67 in the note to the FED equation (p. 2372), so
-the chapter is inconsistent. The FDS code that FDS+Evac runs subtracts
-NO + NO2, with the offset 0.00454545, about 1/220 (FDS 6.7.6 <code>func.f90</code>, function <code>FED</code>), and
-has done so since firemodels/fds 694e033 (2011); earlier versions had no HCN
-term. No
-source we read supports NO2 alone, and the 3rd-edition wording the guide
-cites is not verified (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/152 target=_blank rel=noopener>#152</a>
-). Organic nitriles are ignored. Ch. 63
-gives the critical range of its 5th-edition time-to-incapacitation
-relationship as about 80 to 180 ppm, from primate and human data (p. 2361).
-That range is not documented for the guide&rsquo;s exponential term; that the term
-is an extrapolation below 80 ppm is our inference
+). The
+FDS code that FDS+Evac runs subtracts NO + NO2, with the offset 0.00454545,
+about 1/220 (FDS 6.7.6 <code>func.f90</code>, function <code>FED</code>), and has done so since
+firemodels/fds 694e033 (2011); earlier versions had no HCN term. The
+FDS+Evac guide instead writes the offset as 0.0045 (Eq. 14) and
+\(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - C_{\mathrm{NO_2}}\) (Eq. 15), which
+FDS and FDS+Evac never computed; pyFDS-Evac followed that text before
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159 target=_blank rel=noopener>#159</a>
+). The
+FDS verification case <code>FED_FIC</code> separates the two forms and is reproduced in
+<code>tests/verification/test_fed_verif.py</code> (A2.8). The 5th edition also
+subtracts NO + NO2, because methaemoglobin formed by NO and NO2 binds
+cyanide (Ch. 63, p. 2370): with coefficient 1 in Eq. 63.26 (p. 2362) but
+0.67 in the note to the FED equation (p. 2372), so the chapter is
+inconsistent. No source we read supports NO2 alone, and the 3rd-edition
+wording the guide cites is not verified
+(<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/152 target=_blank rel=noopener>#152</a>
+).
+Organic nitriles are ignored. Ch. 63 gives the critical range of its
+5th-edition time-to-incapacitation relationship as about 80 to 180 ppm,
+from primate and human data (p. 2361). That range is not documented for the
+exponential term; that the term is an extrapolation below 80 ppm is our
+inference (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159 target=_blank rel=noopener>#159</a>
 ).</li><li><strong>CO₂.</strong> Eq. 63.34 (<code>fed.py:63</code>), not its simplification Eq. 63.35 used in
 Eq. 63.38. The 70 L/min limit on \(V_E\times VCO_2\) is not applied, and
 the CO₂ asphyxiant endpoint \(F_{I_{CO_2}}\) is not computed.</li><li><strong>CO.</strong> Fixed at light work (<code>fed.py:54</code>), Eq. 63.18 at its default
-\(V_E\) and <em>D</em>.</li><li><strong>O₂.</strong> The rate is zero at or above 19.5 % O₂ (<code>fed.py:66</code>, <code>:92</code>), a
-guard that neither Purser nor the guide has (FDS+Evac&rsquo;s code, the <code>FED</code>
-function of FDS 6.7.6 <code>func.f90</code>, guards at 20 % instead); it stops a tiny
-ambient rate from accumulating over long runs or outside the FDS domain, as Pathfinder
-does. The guide&rsquo;s Eq. 18 carries a factor 60 in the denominator while
+\(V_E\) and <em>D</em>.</li><li><strong>O₂.</strong> The rate is zero at or above <code>o2_threshold_percent</code>, 20.0 % O₂
+by default, the guard of FDS+Evac&rsquo;s code (the <code>FED</code> function of FDS 6.7.6
+<code>func.f90</code> adds the term only when X_O2 &lt; 0.20); neither Purser nor the
+guide has it. It stops a tiny ambient rate from accumulating over long runs
+or outside the FDS domain. <code>--o2-threshold-percent 19.5</code> restores the
+previous default, the OSHA limit that Pathfinder uses. The guide&rsquo;s Eq. 18 carries a factor 60 in the denominator while
 stating that <em>t</em> is in minutes; the code follows Handbook Eq. 63.50 without
-it.</li></ul><p>The irritant slowdown \(g\) (<code>fed.py:241</code>–<code>242</code>) is multiplied with the smoke
+it.</li></ul><p>The irritant slowdown \(g\), when enabled (<code>fed.py:241</code>–<code>242</code>), is multiplied with the smoke
 factor (<code>direct_steering_runtime.py:186</code>–<code>190</code>). Its constants were not found
 in the Handbook, the FDS+Evac guide or <code>evac.f90</code>
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147 target=_blank rel=noopener>#147</a>
@@ -225,4 +239,4 @@ two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see <a href=/pyFDS-Evac/fundamentals/incapacitation-thresholds/>Incapacitation thresholds</a>
 and <a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148 target=_blank rel=noopener>#148</a>
 ). The
-heat dose reuses the same σ without a data basis.</p></div><div class="hx-mt-12 hx-mb-8 hx-block hx-text-xs hx-text-gray-500 ltr:hx-text-right rtl:hx-text-left dark:hx-text-gray-400">Last updated on <time datetime=2026-09-27T12:15:27.000Z>September 27, 2026</time></div><div class="hx-mb-8 hx-flex hx-items-center hx-border-t hx-pt-8 dark:hx-border-neutral-800 contrast-more:hx-border-neutral-400 dark:contrast-more:hx-border-neutral-400 print:hx-hidden"><a href=/pyFDS-Evac/models/smoke-speed/ title="Smoke-speed model" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-pr-4 rtl:hx-pl-4"><svg class="hx-inline hx-h-5 hx-shrink-0 ltr:hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>Smoke-speed model</a><a href=/pyFDS-Evac/models/routing/ title="Dynamic route rerouting" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-ml-auto ltr:hx-pl-4 ltr:hx-text-right rtl:hx-mr-auto rtl:hx-pr-4 rtl:hx-text-left">Dynamic route rerouting<svg class="hx-inline hx-h-5 hx-shrink-0 rtl:-hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a></div></main></article></div><footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hx-max-w-screen-xl hx-mx-auto hx-flex hx-justify-center hx-py-12 hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400 md:hx-justify-start"><div class="hx-flex hx-w-full hx-flex-col hx-items-center sm:hx-items-start"></div></div></footer><script defer src=/pyFDS-Evac/js/main.min.998f7d6b2520d6d9875145cbe14b35964b365b44b3b1bfa6b797a74a9c173b07.js integrity="sha256-mY99ayUg1tmHUUXL4Us1lks2W0Szsb+mt5enSpwXOwc="></script><script defer src=/pyFDS-Evac/lib/flexsearch/flexsearch.bundle.min.0425860527cc9968f9f049421c7a56b39327d475e2e3a8f550416be3a9134327.js integrity="sha256-BCWGBSfMmWj58ElCHHpWs5Mn1HXi46j1UEFr46kTQyc="></script><script defer src=/pyFDS-Evac/en.search.min.e94b9ab87af7e694584cf0f3e04ac9730f28249975a722351bf7ca00f4977934.js integrity="sha256-6UuauHr35pRYTPDz4ErJcw8oJJl1pyI1G/fKAPSXeTQ="></script><link type=text/css rel=stylesheet href=/pyFDS-Evac/lib/katex/katex.min.7e5db7914b97e596a36c1abb67ccc7f174f8bb71d38c9a88c55b262ed1737f97.css integrity="sha256-fl23kUuX5ZajbBq7Z8zH8XT4u3HTjJqIxVsmLtFzf5c="><script defer src=/pyFDS-Evac/lib/katex/katex.min.9f45307c5794ed247a0d095f3a62e52ef2215a67b2327203a7fd919959ae79d1.js integrity="sha256-n0UwfFeU7SR6DQlfOmLlLvIhWmeyMnIDp/2RmVmuedE="></script><script defer src=/pyFDS-Evac/lib/katex/auto-render.min.7b57d427ac6270677daf8d8380ded2cc73336f9149a167b8e1fe0d6ef66604ae.js integrity="sha256-e1fUJ6xicGd9r42DgN7SzHMzb5FJoWe44f4NbvZmBK4="></script><script defer src=/pyFDS-Evac/lib/katex/mhchem.min.f0ca03df194b8c3d6017ff455db6a0ef98857905663fa311a6cded788b15340b.js integrity="sha256-8MoD3xlLjD1gF/9FXbag75iFeQVmP6MRps3teIsVNAs="></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\begin{equation}",right:"\\end{equation}",display:!0},{left:"\\begin{align}",right:"\\end{align}",display:!0},{left:"\\begin{alignat}",right:"\\end{alignat}",display:!0},{left:"\\begin{gather}",right:"\\end{gather}",display:!0},{left:"\\begin{CD}",right:"\\end{CD}",display:!0},{left:"\\[",right:"\\]",display:!0}],throwOnError:!1})})</script></body></html>
+heat dose reuses the same σ without a data basis.</p></div><div class="hx-mt-12 hx-mb-8 hx-block hx-text-xs hx-text-gray-500 ltr:hx-text-right rtl:hx-text-left dark:hx-text-gray-400">Last updated on <time datetime=2026-09-27T12:30:52.000Z>September 27, 2026</time></div><div class="hx-mb-8 hx-flex hx-items-center hx-border-t hx-pt-8 dark:hx-border-neutral-800 contrast-more:hx-border-neutral-400 dark:contrast-more:hx-border-neutral-400 print:hx-hidden"><a href=/pyFDS-Evac/models/smoke-speed/ title="Smoke-speed model" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-pr-4 rtl:hx-pl-4"><svg class="hx-inline hx-h-5 hx-shrink-0 ltr:hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>Smoke-speed model</a><a href=/pyFDS-Evac/models/routing/ title="Dynamic route rerouting" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-ml-auto ltr:hx-pl-4 ltr:hx-text-right rtl:hx-mr-auto rtl:hx-pr-4 rtl:hx-text-left">Dynamic route rerouting<svg class="hx-inline hx-h-5 hx-shrink-0 rtl:-hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a></div></main></article></div><footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hx-max-w-screen-xl hx-mx-auto hx-flex hx-justify-center hx-py-12 hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400 md:hx-justify-start"><div class="hx-flex hx-w-full hx-flex-col hx-items-center sm:hx-items-start"></div></div></footer><script defer src=/pyFDS-Evac/js/main.min.998f7d6b2520d6d9875145cbe14b35964b365b44b3b1bfa6b797a74a9c173b07.js integrity="sha256-mY99ayUg1tmHUUXL4Us1lks2W0Szsb+mt5enSpwXOwc="></script><script defer src=/pyFDS-Evac/lib/flexsearch/flexsearch.bundle.min.0425860527cc9968f9f049421c7a56b39327d475e2e3a8f550416be3a9134327.js integrity="sha256-BCWGBSfMmWj58ElCHHpWs5Mn1HXi46j1UEFr46kTQyc="></script><script defer src=/pyFDS-Evac/en.search.min.e94b9ab87af7e694584cf0f3e04ac9730f28249975a722351bf7ca00f4977934.js integrity="sha256-6UuauHr35pRYTPDz4ErJcw8oJJl1pyI1G/fKAPSXeTQ="></script><link type=text/css rel=stylesheet href=/pyFDS-Evac/lib/katex/katex.min.7e5db7914b97e596a36c1abb67ccc7f174f8bb71d38c9a88c55b262ed1737f97.css integrity="sha256-fl23kUuX5ZajbBq7Z8zH8XT4u3HTjJqIxVsmLtFzf5c="><script defer src=/pyFDS-Evac/lib/katex/katex.min.9f45307c5794ed247a0d095f3a62e52ef2215a67b2327203a7fd919959ae79d1.js integrity="sha256-n0UwfFeU7SR6DQlfOmLlLvIhWmeyMnIDp/2RmVmuedE="></script><script defer src=/pyFDS-Evac/lib/katex/auto-render.min.7b57d427ac6270677daf8d8380ded2cc73336f9149a167b8e1fe0d6ef66604ae.js integrity="sha256-e1fUJ6xicGd9r42DgN7SzHMzb5FJoWe44f4NbvZmBK4="></script><script defer src=/pyFDS-Evac/lib/katex/mhchem.min.f0ca03df194b8c3d6017ff455db6a0ef98857905663fa311a6cded788b15340b.js integrity="sha256-8MoD3xlLjD1gF/9FXbag75iFeQVmP6MRps3teIsVNAs="></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\begin{equation}",right:"\\end{equation}",display:!0},{left:"\\begin{align}",right:"\\end{align}",display:!0},{left:"\\begin{alignat}",right:"\\end{alignat}",display:!0},{left:"\\begin{gather}",right:"\\end{gather}",display:!0},{left:"\\begin{CD}",right:"\\end{CD}",display:!0},{left:"\\[",right:"\\]",display:!0}],throwOnError:!1})})</script></body></html>
