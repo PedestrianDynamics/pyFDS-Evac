@@ -1296,6 +1296,202 @@ def _measure_route(
     )
 
 
+# ── Cost-model policies ──────────────────────────────────────────────
+
+
+def _fed_limit(
+    config: RouteCostConfig, exit_id: str, current_exit: str | None
+) -> float:
+    """The predicted dose above which the route to *exit_id* is refused.
+
+    Asymmetric FED rejection (deadband). The agent's current exit keeps the
+    full threshold so it always flees the instant dose crosses incapacitation.
+    A different exit is held to the stricter fed_return_margin fraction, so the
+    agent only switches onto it once its dose is clearly safe — this stops the
+    flip-flop when a marginal route's predicted dose wobbles around 1.0.
+    current_exit=None (e.g. initial choice, or a direct evaluate_route call)
+    falls back to the plain threshold for every route.
+    """
+    is_current = current_exit is not None and exit_id == current_exit
+    fed_threshold = config.fed_rejection_threshold
+    if not is_current and current_exit is not None:
+        fed_threshold *= config.fed_return_margin
+    return fed_threshold
+
+
+def _fed_violations(
+    m: RouteMeasurements, config: RouteCostConfig, current_exit: str | None
+) -> list[RouteViolation]:
+    """The FED violation of a measured route, if it has one."""
+    fed_max = m.fed_max_route
+    fed_threshold = _fed_limit(config, m.exit_id, current_exit)
+    if fed_max > fed_threshold:
+        return [
+            RouteViolation(
+                kind="fed",
+                reason=f"FED_max {fed_max:.3f} > {fed_threshold:.3f}",
+                measured=fed_max,
+                limit=fed_threshold,
+            )
+        ]
+    return []
+
+
+def _clean_limit(
+    config: RouteCostConfig, exit_id: str, current_exit: str | None
+) -> float:
+    """The smokiest leg the route to *exit_id* may have and still be clean.
+
+    Tier 1. The exit the agent is already heading for keeps its place in the
+    clean set a little past the criterion, so membership does not flicker.
+    """
+    is_current = current_exit is not None and exit_id == current_exit
+    clean_limit = config.clean_extinction_threshold
+    if is_current:
+        clean_limit /= max(config.clean_exit_margin, 1e-9)
+    return clean_limit
+
+
+class RouteModePolicy(Protocol):
+    """What a cost model decides about a measured route."""
+
+    def feasibility(
+        self,
+        m: RouteMeasurements,
+        config: RouteCostConfig,
+        current_exit: str | None,
+    ) -> RouteFeasibility: ...
+
+    def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float: ...
+
+
+class AdditivePolicy:
+    """The historical w_smoke/w_fed toll: the composite ranks, dose refuses."""
+
+    def feasibility(
+        self,
+        m: RouteMeasurements,
+        config: RouteCostConfig,
+        current_exit: str | None,
+    ) -> RouteFeasibility:
+        violations = _fed_violations(m, config, current_exit)
+        rejected = bool(violations)
+        return RouteFeasibility(
+            feasible=not rejected,
+            rejected=rejected,
+            rejection_reason=violations[-1].reason if violations else None,
+            violations=tuple(violations),
+        )
+
+    def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float:
+        return m.composite_cost
+
+
+class GatePolicy:
+    """Smoke decides which exits remain available; time ranks them."""
+
+    @staticmethod
+    def _tau_budget(
+        config: RouteCostConfig, exit_id: str, current_exit: str | None
+    ) -> float:
+        """The optical depth above which the route to *exit_id* is refused.
+
+        A rival exit is held to a stricter budget than the one the agent
+        already walks to, so a route sitting near tau_max does not toggle in
+        and out of the feasible set and take the crowd with it.
+        """
+        is_current = current_exit is not None and exit_id == current_exit
+        budget = config.tau_max
+        if not is_current and current_exit is not None:
+            budget *= config.tau_return_margin
+        return budget
+
+    def feasibility(
+        self,
+        m: RouteMeasurements,
+        config: RouteCostConfig,
+        current_exit: str | None,
+    ) -> RouteFeasibility:
+        violations = _fed_violations(m, config, current_exit)
+        feasible = not violations
+        # Sight gate: FDS+Evac's rule that a door is only a candidate while the
+        # agent can see a useful fraction of the way to it (evac.f90,
+        # Change_Target_Door). Being relative to distance is what lets the same
+        # smoke allow a near exit and refuse a far one.
+        #
+        # The gate: refuse a route whose optical depth exceeds the budget.
+        # Appended after the dose, so a route over both limits reports tau.
+        budget = self._tau_budget(config, m.exit_id, current_exit)
+        tau_route = m.tau_route
+        if tau_route > budget:
+            feasible = False
+            violations.append(
+                RouteViolation(
+                    kind="tau",
+                    reason=(
+                        f"tau {tau_route:.2f} > {budget:.2f} "
+                        f"(K_ave {m.k_ave_route:.3f} x {m.effective_length_m:.1f} m)"
+                    ),
+                    measured=tau_route,
+                    limit=budget,
+                )
+            )
+        return RouteFeasibility(
+            feasible=feasible,
+            rejected=bool(violations),
+            rejection_reason=violations[-1].reason if violations else None,
+            violations=tuple(violations),
+        )
+
+    def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float:
+        # Queue delay is time, so it belongs beside travel time rather than in
+        # the composite the gate ignores -- otherwise opting into congestion-
+        # aware routing (w_queue) would silently do nothing.
+        # One currency: the quantity that refuses a route also ranks it and is
+        # what the anchor compares. Ranking on tau while anchoring on time left
+        # the two disagreeing, and a separate "clearly cleaner" bypass fired
+        # every time the field flickered -- 109 returns to abandoned exits on
+        # l_corridor.
+        #
+        # rank_cost stays a time. tau orders the routes (see rank_routes), but
+        # it is zero in clear air, so using it for the anchor's ratio test would
+        # make every comparison 0 < 0 -- no agent could ever switch, and a
+        # congestion weight would count for nothing exactly where decks
+        # calibrate one.
+        return m.travel_time_s + m.queue_time_s * config.w_queue
+
+
+_GATE_POLICY = GatePolicy()
+_ADDITIVE_POLICY = AdditivePolicy()
+
+
+def policy_for(config: RouteCostConfig) -> RouteModePolicy:
+    """The gate policy for ``cost_model == "gate"``, the additive one otherwise."""
+    if config.cost_model == "gate":
+        return _GATE_POLICY
+    return _ADDITIVE_POLICY
+
+
+def _assess_measurements(
+    m: RouteMeasurements, config: RouteCostConfig, current_exit: str | None
+) -> RouteAssessment:
+    """Judge a measured route under the configured cost model."""
+    policy = policy_for(config)
+    feasibility = policy.feasibility(m, config, current_exit)
+    rank_cost = policy.rank_cost(m, config)
+    clean_limit = _clean_limit(config, m.exit_id, current_exit)
+    # A zero threshold turns the tier off rather than declaring clear air
+    # clean, which would make every route tier 0 and change nothing anyway --
+    # but the explicit form says which is meant.
+    clean = clean_limit > 0.0 and m.k_leg_max <= clean_limit
+    return RouteAssessment(
+        measurements=m,
+        feasibility=feasibility,
+        rank_cost=rank_cost,
+        clean=clean,
+    )
+
+
 def evaluate_route(
     graph: StageGraph,
     path: list[str],
@@ -1339,107 +1535,7 @@ def evaluate_route(
         exit_counts=exit_counts,
         agent_position=agent_position,
     )
-    segments = m.segments
-    path_length = m.path_length_m
-    effective_length = m.effective_length_m
-    k_ave = m.k_ave_route
-    travel_time = m.travel_time_s
-    fed_max = m.fed_max_route
-    composite = m.composite_cost
-    queue_time = m.queue_time_s
-    k_max = m.k_max_route
-    tau_route = m.tau_route
-    k_leg_max = m.k_leg_max
-
-    # Asymmetric FED rejection (deadband). The agent's current exit keeps the
-    # full threshold so it always flees the instant dose crosses incapacitation.
-    # A different exit is held to the stricter fed_return_margin fraction, so the
-    # agent only switches onto it once its dose is clearly safe — this stops the
-    # flip-flop when a marginal route's predicted dose wobbles around 1.0.
-    # current_exit=None (e.g. initial choice, or a direct evaluate_route call)
-    # falls back to the plain threshold for every route.
-    exit_id = path[-1] if path else ""
-    is_current = current_exit is not None and exit_id == current_exit
-    fed_threshold = config.fed_rejection_threshold
-    if not is_current and current_exit is not None:
-        fed_threshold *= config.fed_return_margin
-
-    rejected = False
-    reason = None
-    if fed_max > fed_threshold:
-        rejected = True
-        reason = f"FED_max {fed_max:.3f} > {fed_threshold:.3f}"
-
-    # Sight gate: FDS+Evac's rule that a door is only a candidate while the
-    # agent can see a useful fraction of the way to it (evac.f90,
-    # Change_Target_Door). Being relative to distance is what lets the same
-    # smoke allow a near exit and refuse a far one.
-    #
-    # The gate: refuse a route whose optical depth exceeds the budget. A rival
-    # exit is held to a stricter budget than the one the agent already walks
-    # to, so a route sitting near tau_max does not toggle in and out of the
-    # feasible set and take the crowd with it.
-    feasible = not rejected
-    if config.cost_model == "gate":
-        budget = config.tau_max
-        if not is_current and current_exit is not None:
-            budget *= config.tau_return_margin
-        if tau_route > budget:
-            feasible = False
-            rejected = True
-            reason = (
-                f"tau {tau_route:.2f} > {budget:.2f} "
-                f"(K_ave {k_ave:.3f} x {effective_length:.1f} m)"
-            )
-
-    if config.cost_model == "gate":
-        # Queue delay is time, so it belongs beside travel time rather than in
-        # the composite the gate ignores -- otherwise opting into congestion-
-        # aware routing (w_queue) would silently do nothing.
-        # One currency: the quantity that refuses a route also ranks it and is
-        # what the anchor compares. Ranking on tau while anchoring on time left
-        # the two disagreeing, and a separate "clearly cleaner" bypass fired
-        # every time the field flickered -- 109 returns to abandoned exits on
-        # l_corridor.
-        #
-        # rank_cost stays a time. tau orders the routes (see rank_routes), but
-        # it is zero in clear air, so using it for the anchor's ratio test would
-        # make every comparison 0 < 0 -- no agent could ever switch, and a
-        # congestion weight would count for nothing exactly where decks
-        # calibrate one.
-        rank_cost = travel_time + queue_time * config.w_queue
-    else:
-        rank_cost = composite
-
-    # Tier 1. The exit the agent is already heading for keeps its place in the
-    # clean set a little past the criterion, so membership does not flicker.
-    clean_limit = config.clean_extinction_threshold
-    if is_current:
-        clean_limit /= max(config.clean_exit_margin, 1e-9)
-    # A zero threshold turns the tier off rather than declaring clear air
-    # clean, which would make every route tier 0 and change nothing anyway --
-    # but the explicit form says which is meant.
-    clean = clean_limit > 0.0 and k_leg_max <= clean_limit
-
-    return RouteCost(
-        exit_id=exit_id,
-        path=path,
-        path_length_m=path_length,
-        k_ave_route=k_ave,
-        travel_time_s=travel_time,
-        fed_max_route=fed_max,
-        composite_cost=composite,
-        segments=segments,
-        rejected=rejected,
-        rejection_reason=reason,
-        queue_time_s=queue_time,
-        k_max_route=k_max,
-        tau_route=tau_route,
-        feasible=feasible,
-        rank_cost=rank_cost,
-        k_leg_max=k_leg_max,
-        clean=clean,
-    )
+    return _project_route_cost(_assess_measurements(m, config, current_exit))
 
 
 def rank_routes(
