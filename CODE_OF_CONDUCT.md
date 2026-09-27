@@ -36,7 +36,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement, the maintainer [@chraibi](https://github.com/chraibi), by a private report on GitHub, or, for security matters, through [GitHub's private vulnerability reporting](https://github.com/PedestrianDynamics/pyFDS-Evac/security/advisories/new). All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement, the maintainer [@chraibi](https://github.com/chraibi), at [m.chraibi@fz-juelich.de](mailto:m.chraibi@fz-juelich.de). Security issues go through [GitHub's private vulnerability reporting](https://github.com/PedestrianDynamics/pyFDS-Evac/security/advisories/new) instead (see [SECURITY.md](SECURITY.md)). All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
