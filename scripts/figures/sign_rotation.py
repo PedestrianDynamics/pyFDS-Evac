@@ -80,7 +80,7 @@ def sweep():
         for n in nodes
     ]
     dist = vis.distance_to_node(*AGENT_XY, nodes[0])
-    # The model's own ceiling (the domain diagonal); read once, never recomputed.
+    # The model's own ceiling (30 m unless raised); read once, never recomputed.
     v_max = float(vis._vis.max_vis)
     return np.array(legible), np.array(metres), regions, dist, v_max
 

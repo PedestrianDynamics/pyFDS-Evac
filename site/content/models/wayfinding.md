@@ -68,6 +68,9 @@ sign. The model treats every node without a sign as legible from everywhere
 }
 ```
 
+An optional `"max_distance"` (m, positive) sets that sign's reading distance
+\(V_{\max}\), for example for a larger or internally illuminated sign.
+
 \(\alpha_s\) is a bearing in degrees, clockwise from north (+y). The sign faces
 \((\sin\alpha_s, \cos\alpha_s)\), so 90 is readable from the east, 270 from the
 west and 180 from the south (`visibility.py:388–391`).
@@ -99,11 +102,12 @@ $$
 - \(\bar K\) is the arithmetic mean extinction over the cells of a rasterised
   line between the two cells, not a length-weighted integral.
 - When \(\bar K = 0\), the capped term is \(V_{\max}\).
-- \(V_{\max}\) is **replaced** by the diagonal between the extreme grid
-  coordinates before the arrays are built (`visibility.py:103`, `:108–112`,
-  `:512`). Upstream, it is 30 m. The diagonal can be larger or smaller than
-  30 m; it is smaller when the grid spans less than about 21 m in each
-  direction.
+- \(V_{\max}\) is the sign's reading distance: 30 m by default, as in
+  fdsvismap and Börger et al. `--max-sign-distance` sets it for every sign,
+  and a sign's own `max_distance` overrides it for that sign
+  (`_apply_distance_caps` in `visibility.py`). It caps \(C/\bar K\) before
+  \(A\) and \(U\) apply, as upstream, so in clear air a sign is legible up
+  to \(A \cdot V_{\max}\).
 
 The obstruction factor applies in clear air too: a wall hides a sign there as
 it does in smoke.
@@ -117,7 +121,7 @@ from the pyFDS-Evac visibility model. Right: the visibility
 agent's distance \(L\). Solid blue line and filled marker: legible; dashed red
 line and hollow marker: not legible. Yellow cells are the positions from which
 the model reads the sign; the gold arrow shows which way it faces. \(V_{\max}\)
-is the room's 11.3 m diagonal and does not bind. The sign is lost at about
+= 30 m does not bind. The sign is lost at about
 53°, well before it is side-on.
 Script: `scripts/figures/sign_rotation.py`.*
 
@@ -318,7 +322,8 @@ library use.
 | `entrance` | distribution `parameters` | – | none (`simulation_init.py:997`) | – | a reachable exit learned at spawn |
 | `sign.c` | node `sign` | – | 3 (`visibility.py:58`, `:94`) | – | *C* |
 | `sign.alpha` | node `sign` | – | `None`, i.e. \(A = 1\) (`visibility.py:58`) | ° | bearing the sign faces |
-| \(V_{\max}\) | code | grid diagonal | grid diagonal (`visibility.py:103`, `:512`) | m | fdsvismap cap, 30 m upstream |
+| \(V_{\max}\) | `--max-sign-distance` | 30 | 30 (`DEFAULT_MAX_SIGN_DISTANCE_M`) | m | reading distance of every sign, also in clear air |
+| `sign.max_distance` | node `sign` | – | none, i.e. \(V_{\max}\) | m | reading distance of this sign |
 | `--smoke-slice-height` | CLI | 1.6 (`run.py:67`) | 1.6 (`visibility.py:409`) | m | FDS slice height |
 | `--reroute-interval` | CLI | 1.0 (`run.py:95`) | 10.0 (`route_graph.py:1498`) | s | re-evaluation interval, hence periodic learning |
 | vismap time step | = `--reroute-interval` | 1.0 (`run_config.py:228`) | 10.0 (`visibility.py:408`) | s | FDS model only; clear air stores one time |
@@ -357,13 +362,11 @@ The published visibility law is on
 is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 (7)–(10). The cognitive map follows the design of Haensel (2014).
 
-- **\(V_{\max}\) replaced by the grid diagonal.** Börger et al. cap
-  visibility at 30 m and add that "the exit signs have a maximum visual
-  distance even in a smoke-free environment" (p. 5, below Eq. 10). The code
-  comment justifies the replacement by a comparison with route length
-  (`visibility.py:98–102`) that no longer exists (#158). In a large
-  clear-air deck, a sign in front of an agent, with nothing in between, is
-  legible well beyond 30 m.
+- **Per-sign reading distance.** Börger et al. cap visibility at 30 m and
+  add that "the exit signs have a maximum visual distance even in a
+  smoke-free environment" (p. 5, below Eq. 10). pyFDS-Evac keeps 30 m as the
+  default and lets a sign set its own `max_distance`. It does not derive that
+  distance from sign size or a signage standard.
 - **Cap before angle.** Börger et al. write
   \(V = \min(U\,A\,C/\bar\sigma,\ V_{\max})\) (Eq. 10, p. 5). fdsvismap computes
   \(A\,U\,\min(C/\bar K, V_{\max})\). They agree while \(C/\bar K < V_{\max}\);
