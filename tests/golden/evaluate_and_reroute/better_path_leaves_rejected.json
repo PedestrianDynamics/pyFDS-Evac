@@ -1,0 +1,46 @@
+{
+ "route_state": {
+  "current_exit": "E0",
+  "current_path": [
+   "D0",
+   "C0",
+   "E0"
+  ],
+  "last_eval_time_s": 5.0,
+  "wander_step": 0
+ },
+ "switch": {
+  "agent_id": 7,
+  "new_cost": 20.3961,
+  "new_exit": "E0",
+  "old_cost": 20.672,
+  "old_exit": "E0",
+  "reason": "better_path",
+  "time_s": 5.0
+ },
+ "wait_info": {
+  "current_origin": "D0",
+  "current_target_stage": "C0",
+  "path_choices": {
+   "C0": [
+    [
+     "E0",
+     100.0
+    ]
+   ],
+   "C1": [
+    [
+     "E0",
+     100.0
+    ]
+   ],
+   "D0": [
+    [
+     "C0",
+     100.0
+    ]
+   ]
+  },
+  "state": "to_target"
+ }
+}

@@ -1,0 +1,15 @@
+{
+ "route_state": {
+  "current_exit": "east",
+  "current_path": [],
+  "last_eval_time_s": -Infinity,
+  "wander_step": 0
+ },
+ "switch": null,
+ "wait_info": {
+  "current_origin": "spawn",
+  "current_target_stage": "east",
+  "path_choices": {},
+  "state": "to_target"
+ }
+}

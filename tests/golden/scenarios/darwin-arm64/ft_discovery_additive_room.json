@@ -1,0 +1,323 @@
+{
+ "deck": {
+  "agents": 6,
+  "blobs": [
+   [
+    4.0,
+    10.0,
+    0.0,
+    8.0,
+    5.0,
+    0.3,
+    4.0,
+    Infinity
+   ],
+   [
+    14.0,
+    20.0,
+    8.0,
+    18.0,
+    15.0,
+    0.3,
+    4.0,
+    Infinity
+   ]
+  ],
+  "config": "familiarity_test_discovery/config.json",
+  "cost_model": "additive",
+  "familiarity": null,
+  "flow_end_s": 20.0,
+  "max_time_s": 60.0,
+  "seed": 1,
+  "vis_extinction": 0.0
+ },
+ "rankings": [
+  [
+   43.0,
+   1,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   51.0,
+   2,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   52.0,
+   4,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   59.0,
+   3,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ]
+ ],
+ "summary": {
+  "agents_evacuated": 0,
+  "evacuation_time": 60.0,
+  "total_agents": 6
+ },
+ "switches": [
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 0.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 4.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 4.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 7.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 8.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 10.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 10.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 10.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 12.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_3",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 14.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 14.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 14.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 16.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 17.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_3",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 18.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 18.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 18.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 20.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_3",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 22.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_3",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 24.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 24.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 26.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_3",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 34.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_3",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 37.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 30.018,
+   "new_exit": "jps-exits_0",
+   "old_cost": null,
+   "old_exit": "jps-exits_0",
+   "reason": "smoke_reroute",
+   "time_s": 43.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 29.95,
+   "new_exit": "jps-exits_0",
+   "old_cost": null,
+   "old_exit": "jps-exits_0",
+   "reason": "smoke_reroute",
+   "time_s": 51.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 30.446,
+   "new_exit": "jps-exits_0",
+   "old_cost": null,
+   "old_exit": "jps-exits_0",
+   "reason": "smoke_reroute",
+   "time_s": 52.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 30.128,
+   "new_exit": "jps-exits_0",
+   "old_cost": null,
+   "old_exit": "jps-exits_0",
+   "reason": "smoke_reroute",
+   "time_s": 59.0
+  }
+ ]
+}

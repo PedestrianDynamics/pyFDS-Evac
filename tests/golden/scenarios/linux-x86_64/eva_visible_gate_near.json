@@ -1,0 +1,274 @@
+{
+ "deck": {
+  "agents": 10,
+  "blobs": [
+   [
+    0.0,
+    4.0,
+    0.0,
+    6.0,
+    5.0,
+    0.3,
+    3.0,
+    Infinity
+   ]
+  ],
+  "config": "exit_visibility_alpha/config_visible.json",
+  "cost_model": "gate",
+  "familiarity": null,
+  "flow_end_s": null,
+  "max_time_s": 60.0,
+  "seed": 1,
+  "vis_extinction": 0.0
+ },
+ "rankings": [
+  [
+   1.0,
+   1,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   2,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   3,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   4,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   5,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   6,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   7,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   8,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   9,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   1.0,
+   10,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   6.0,
+   1,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   6.0,
+   3,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   6.0,
+   4,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   6.0,
+   5,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   6.0,
+   6,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   6.0,
+   7,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   6.0,
+   8,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   6.0,
+   10,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   7.0,
+   1,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   7.0,
+   3,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   7.0,
+   7,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   7.0,
+   8,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   8.0,
+   4,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   9.0,
+   3,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   9.0,
+   8,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   10.0,
+   1,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   10.0,
+   7,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   11.0,
+   4,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ]
+ ],
+ "summary": {
+  "agents_evacuated": 10,
+  "evacuation_time": 29.0,
+  "total_agents": 10
+ },
+ "switches": [
+  {
+   "agent_id": 1,
+   "new_cost": 18.861,
+   "new_exit": "E_far",
+   "old_cost": 3.203,
+   "old_exit": "E_near",
+   "reason": "smoke_reroute",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 17.77,
+   "new_exit": "E_far",
+   "old_cost": 4.282,
+   "old_exit": "E_near",
+   "reason": "smoke_reroute",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 18.62,
+   "new_exit": "E_far",
+   "old_cost": 3.422,
+   "old_exit": "E_near",
+   "reason": "smoke_reroute",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 18.218,
+   "new_exit": "E_far",
+   "old_cost": 3.86,
+   "old_exit": "E_near",
+   "reason": "smoke_reroute",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 20.235,
+   "new_exit": "E_far",
+   "old_cost": 1.809,
+   "old_exit": "E_near",
+   "reason": "smoke_reroute",
+   "time_s": 7.0
+  }
+ ]
+}

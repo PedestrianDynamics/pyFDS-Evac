@@ -1,0 +1,572 @@
+{
+ "deck": {
+  "agents": 10,
+  "blobs": [
+   [
+    0.0,
+    12.0,
+    19.0,
+    30.0,
+    10.0,
+    0.2,
+    2.0,
+    Infinity
+   ]
+  ],
+  "config": "blind_spawn_discovery/config_discovery.json",
+  "cost_model": "gate",
+  "familiarity": null,
+  "flow_end_s": null,
+  "max_time_s": 60.0,
+  "seed": 1,
+  "vis_extinction": 1.0
+ },
+ "rankings": [],
+ "summary": {
+  "agents_evacuated": 0,
+  "evacuation_time": 60.0,
+  "total_agents": 10
+ },
+ "switches": [
+  {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 7.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 8.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 8.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 8.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 9.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 9.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 9.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 10.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 10.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 10.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 10.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 11.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 11.0
+  },
+  {
+   "agent_id": 9,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 12.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 13.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 13.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 14.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 15.0
+  },
+  {
+   "agent_id": 9,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 15.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 16.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 18.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 20.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 21.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 24.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 25.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 25.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 25.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 25.0
+  },
+  {
+   "agent_id": 9,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 25.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 26.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 26.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 29.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 31.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 34.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 35.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 35.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 35.0
+  },
+  {
+   "agent_id": 9,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 36.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 37.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 37.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 38.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 38.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 42.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 43.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 44.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 46.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 46.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 46.0
+  },
+  {
+   "agent_id": 9,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 47.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 49.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 50.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 51.0
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 52.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 52.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 54.0
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 55.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 57.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 57.0
+  },
+  {
+   "agent_id": 9,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 58.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "wander",
+   "time_s": 59.0
+  }
+ ]
+}

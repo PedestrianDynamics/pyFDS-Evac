@@ -1,0 +1,783 @@
+{
+ "deck": {
+  "agents": 30,
+  "blobs": [
+   [
+    21.0,
+    31.0,
+    -1.0,
+    20.0,
+    12.0,
+    0.3,
+    4.0,
+    Infinity
+   ],
+   [
+    -1.0,
+    16.0,
+    -1.0,
+    20.0,
+    20.0,
+    0.2,
+    4.0,
+    Infinity
+   ],
+   [
+    -1.0,
+    31.0,
+    -1.0,
+    20.0,
+    28.0,
+    0.3,
+    5.0,
+    Infinity
+   ]
+  ],
+  "config": "t_junction/config_discovery.json",
+  "cost_model": "additive",
+  "familiarity": null,
+  "flow_end_s": 20.0,
+  "max_time_s": 60.0,
+  "seed": 1,
+  "vis_extinction": 0.0
+ },
+ "rankings": [
+  [
+   6.0,
+   4,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   7.0,
+   2,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   9.0,
+   6,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   10.0,
+   1,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   10.0,
+   5,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   10.0,
+   9,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   11.0,
+   3,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   11.0,
+   7,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   11.0,
+   8,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   12.0,
+   10,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:ok"
+  ],
+  [
+   13.0,
+   7,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   13.0,
+   10,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   14.0,
+   8,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   14.0,
+   10,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   14.0,
+   11,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   14.0,
+   13,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   15.0,
+   1,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   3,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   5,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   6,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   7,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   8,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   9,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   10,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   11,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   13,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   15.0,
+   17,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   16.0,
+   14,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   16.0,
+   17,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   16.0,
+   19,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   17.0,
+   12,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   17.0,
+   15,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   17.0,
+   19,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   18.0,
+   12,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   18.0,
+   15,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   18.0,
+   16,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   19.0,
+   16,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   19.0,
+   18,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   20.0,
+   18,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   21.0,
+   22,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   22.0,
+   22,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   22.0,
+   23,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   22.0,
+   30,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   23.0,
+   20,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   23.0,
+   21,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   23.0,
+   23,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   23.0,
+   26,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   23.0,
+   30,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   24.0,
+   7,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   8,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   10,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   11,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   12,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   13,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   14,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   15,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   16,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   17,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   18,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   19,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   20,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   21,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   22,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   23,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   26,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   27,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   28,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   24.0,
+   30,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   25.0,
+   27,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   25.0,
+   28,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   26.0,
+   31,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   27.0,
+   25,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   27.0,
+   31,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   28.0,
+   25,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   28.0,
+   29,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   29.0,
+   29,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:ok"
+  ]
+ ],
+ "summary": {
+  "agents_evacuated": 27,
+  "evacuation_time": 60.0,
+  "total_agents": 30
+ },
+ "switches": [
+  {
+   "agent_id": 10,
+   "new_cost": 19.013,
+   "new_exit": "exit_A_left",
+   "old_cost": 21.223,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 13.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 20.393,
+   "new_exit": "exit_A_left",
+   "old_cost": 28.119,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 14.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 21.397,
+   "new_exit": "exit_A_left",
+   "old_cost": 24.709,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 14.0
+  },
+  {
+   "agent_id": 11,
+   "new_cost": 18.411,
+   "new_exit": "exit_A_left",
+   "old_cost": 34.483,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 14.0
+  },
+  {
+   "agent_id": 13,
+   "new_cost": 18.189,
+   "new_exit": "exit_A_left",
+   "old_cost": 35.135,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 14.0
+  },
+  {
+   "agent_id": 17,
+   "new_cost": 18.86,
+   "new_exit": "exit_A_left",
+   "old_cost": 44.653,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 15.0
+  },
+  {
+   "agent_id": 19,
+   "new_cost": 19.642,
+   "new_exit": "exit_A_left",
+   "old_cost": 51.574,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 16.0
+  },
+  {
+   "agent_id": 12,
+   "new_cost": 18.502,
+   "new_exit": "exit_A_left",
+   "old_cost": 70.048,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 17.0
+  },
+  {
+   "agent_id": 15,
+   "new_cost": 17.772,
+   "new_exit": "exit_A_left",
+   "old_cost": 75.177,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 17.0
+  },
+  {
+   "agent_id": 16,
+   "new_cost": 18.544,
+   "new_exit": "exit_A_left",
+   "old_cost": 82.637,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 18.0
+  },
+  {
+   "agent_id": 18,
+   "new_cost": 18.713,
+   "new_exit": "exit_A_left",
+   "old_cost": 91.643,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 19.0
+  },
+  {
+   "agent_id": 22,
+   "new_cost": 35.787,
+   "new_exit": "exit_A_left",
+   "old_cost": 104.627,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 21.0
+  },
+  {
+   "agent_id": 23,
+   "new_cost": 46.152,
+   "new_exit": "exit_A_left",
+   "old_cost": 141.125,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 22.0
+  },
+  {
+   "agent_id": 30,
+   "new_cost": 48.83,
+   "new_exit": "exit_A_left",
+   "old_cost": 129.375,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 22.0
+  },
+  {
+   "agent_id": 20,
+   "new_cost": 60.532,
+   "new_exit": "exit_A_left",
+   "old_cost": 153.697,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 23.0
+  },
+  {
+   "agent_id": 21,
+   "new_cost": 65.795,
+   "new_exit": "exit_A_left",
+   "old_cost": 133.295,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 23.0
+  },
+  {
+   "agent_id": 26,
+   "new_cost": 61.977,
+   "new_exit": "exit_A_left",
+   "old_cost": 147.918,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 23.0
+  },
+  {
+   "agent_id": 27,
+   "new_cost": 77.328,
+   "new_exit": "exit_A_left",
+   "old_cost": 159.4,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 24.0
+  },
+  {
+   "agent_id": 28,
+   "new_cost": 80.412,
+   "new_exit": "exit_A_left",
+   "old_cost": 149.781,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 24.0
+  },
+  {
+   "agent_id": 31,
+   "new_cost": 114.986,
+   "new_exit": "exit_A_left",
+   "old_cost": 153.079,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 26.0
+  },
+  {
+   "agent_id": 25,
+   "new_cost": 128.642,
+   "new_exit": "exit_A_left",
+   "old_cost": 158.149,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 27.0
+  },
+  {
+   "agent_id": 29,
+   "new_cost": 143.295,
+   "new_exit": "exit_A_left",
+   "old_cost": 160.496,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 28.0
+  }
+ ]
+}
