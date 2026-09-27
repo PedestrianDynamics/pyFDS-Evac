@@ -33,7 +33,21 @@ def golden():
         sys.modules.pop(spec.name, None)
 
 
-def _fake_run(golden, out: Path, **manifest) -> Path:
+def _provenance(golden, commit=BASE, dirty=None, fingerprints=None) -> dict:
+    clean = {p: False for p in (*golden.CODE_PATHS, golden.HARNESS)}
+    prints = {
+        "harness": "h" * 64,
+        "run.py": "r" * 64,
+        "decks": {DECK: {"config": "c", "geometry": "g", "fds_dir": None}},
+    }
+    return {
+        "commit": commit,
+        "dirty": clean | (dirty or {}),
+        "fingerprints": prints | (fingerprints or {}),
+    }
+
+
+def _fake_run(golden, out: Path, provenance=None, **manifest) -> Path:
     """Outputs for every run of DECK, and a manifest saying *manifest*."""
     for deck, mode in golden._inventory([DECK]):
         folder = out / deck / mode
@@ -43,8 +57,8 @@ def _fake_run(golden, out: Path, **manifest) -> Path:
             (folder / name).write_text(text, encoding="utf-8")
     runs = [f"{d}/{m}" for d, m in golden._inventory([DECK])]
     record = {
-        "commit": BASE,
-        "pyfds_evac_dirty": False,
+        "provenance": provenance or _provenance(golden),
+        "provenance_changed": [],
         "runs": runs,
         "skipped": {},
         "incomplete": {},
@@ -127,26 +141,137 @@ def test_bytes_decide(golden, tmp_path, name, text_a, text_b):
 
 def test_provenance_matches(golden, tmp_path):
     a = _fake_run(golden, tmp_path / "a")
-    b = _fake_run(golden, tmp_path / "b", commit=HEAD)
+    b = _fake_run(golden, tmp_path / "b", _provenance(golden, HEAD))
     assert golden._compare(a, b, [DECK], BASE[:7], HEAD[:7]) == 0
     assert golden._compare(a, b, [DECK], BASE, HEAD) == 0
 
 
 @pytest.mark.parametrize(
-    ("head_manifest", "expect_base", "expect_head"),
+    ("head", "expect_base", "expect_head"),
     [
         ({"commit": HEAD}, BASE, BASE),
         ({"commit": HEAD}, HEAD, HEAD),
-        ({"commit": HEAD, "pyfds_evac_dirty": True}, BASE, HEAD),
-        ({"commit": HEAD, "pyfds_evac_dirty": True}, None, None),
+        ({"commit": HEAD, "dirty": {"pyfds_evac": True}}, BASE, HEAD),
+        ({"commit": HEAD, "dirty": {"pyfds_evac": True}}, None, None),
+        ({"commit": HEAD, "dirty": {"run.py": True}}, None, None),
+        ({"commit": HEAD, "dirty": {"assets": True}}, None, None),
         ({"commit": HEAD}, BASE, HEAD[:6]),
+        ({"commit": HEAD, "fingerprints": {"run.py": "x" * 64}}, None, None),
+        ({"commit": HEAD, "fingerprints": {"harness": "x" * 64}}, None, None),
+        ({"commit": HEAD, "fingerprints": {"decks": {}}}, None, None),
     ],
-    ids=["head_mismatch", "base_mismatch", "dirty_head", "dirty_unchecked", "short"],
+    ids=[
+        "head_mismatch",
+        "base_mismatch",
+        "dirty_head",
+        "dirty_unchecked",
+        "dirty_run_py",
+        "dirty_assets",
+        "short",
+        "run_py_differs",
+        "harness_differs",
+        "deck_inputs_missing",
+    ],
 )
-def test_provenance_fails(golden, tmp_path, head_manifest, expect_base, expect_head):
+def test_provenance_fails(golden, tmp_path, head, expect_base, expect_head):
     a = _fake_run(golden, tmp_path / "a")
-    b = _fake_run(golden, tmp_path / "b", **head_manifest)
+    b = _fake_run(golden, tmp_path / "b", _provenance(golden, **head))
     assert golden._compare(a, b, [DECK], expect_base, expect_head) == 1
+
+
+def test_harness_may_be_dirty(golden, tmp_path):
+    """A baseline runs a newer harness in an older checkout; the print decides."""
+    a = _fake_run(
+        golden, tmp_path / "a", _provenance(golden, dirty={golden.HARNESS: True})
+    )
+    b = _fake_run(golden, tmp_path / "b", _provenance(golden, HEAD))
+    assert golden._compare(a, b, [DECK], BASE, HEAD) == 0
+
+
+def test_provenance_change_or_absence_fails(golden, tmp_path):
+    a = _fake_run(golden, tmp_path / "a")
+    b = _fake_run(golden, tmp_path / "b", provenance_changed=["commit"])
+    assert golden._compare(a, b, [DECK]) == 1
+    c = _fake_run(golden, tmp_path / "c")
+    manifest = json.loads((c / "manifest.json").read_text(encoding="utf-8"))
+    del manifest["provenance"]
+    (c / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert golden._compare(a, c, [DECK]) == 1
+
+
+def _write_outputs(argv, **kwargs):
+    """Stand-in for the per-run subprocess: write the files a run writes."""
+    out = Path(argv[argv.index("--out") + 1])
+    mode = argv[argv.index("--mode") + 1]
+    out.mkdir(parents=True)
+    for name in ("route_history.csv", "egress_summary.json"):
+        (out / name).write_text("x\n", encoding="utf-8")
+    if mode == "history_on":
+        (out / "route_cost_history.csv").write_text("x\n", encoding="utf-8")
+
+
+def _git_stub(commits, dirty_path=None):
+    commits = iter(commits)
+
+    def git(*args):
+        if args[0] == "rev-parse":
+            return next(commits)
+        if args[0] == "status" and args[-1] == dirty_path:
+            return f" M {dirty_path}"
+        return ""
+
+    return git
+
+
+def test_run_refuses_a_dirty_run_py(golden, tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(golden, "_git", _git_stub([BASE] * 2, "run.py"))
+    monkeypatch.setattr(golden.subprocess, "run", lambda *a, **k: calls.append(a))
+    assert golden._run_all([DECK], tmp_path, tmp_path / "out") != 0
+    assert calls == []
+
+
+def test_run_fails_if_the_commit_changes(golden, tmp_path, monkeypatch):
+    monkeypatch.setattr(golden, "_git", _git_stub([BASE, HEAD]))
+    monkeypatch.setattr(golden.subprocess, "run", _write_outputs)
+    out = tmp_path / "out"
+    assert golden._run_all([DECK], tmp_path, out) == 1
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["provenance_changed"] == ["commit"]
+    assert manifest["provenance"]["commit"] == BASE
+
+
+def test_run_fails_if_an_input_changes(golden, tmp_path, monkeypatch):
+    real = golden._provenance
+    seen = []
+
+    def provenance(names, root):
+        result = real(names, root)
+        if seen:
+            result["fingerprints"]["run.py"] = "x" * 64
+        seen.append(result)
+        return result
+
+    monkeypatch.setattr(golden, "_git", _git_stub([BASE] * 2))
+    monkeypatch.setattr(golden, "_provenance", provenance)
+    monkeypatch.setattr(golden.subprocess, "run", _write_outputs)
+    out = tmp_path / "out"
+    assert golden._run_all([DECK], tmp_path, out) == 1
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["provenance_changed"] == ["fingerprints"]
+
+
+def test_clean_run_records_provenance(golden, tmp_path, monkeypatch):
+    monkeypatch.setattr(golden, "_git", _git_stub([BASE] * 2))
+    monkeypatch.setattr(golden.subprocess, "run", _write_outputs)
+    out = tmp_path / "out"
+    assert golden._run_all([DECK], tmp_path, out) == 0
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    prints = manifest["provenance"]["fingerprints"]
+    assert prints["harness"] == golden._sha256_file(Path(golden.__file__))
+    assert prints["run.py"] == golden._sha256_file(golden.REPO / "run.py")
+    assert prints["decks"][DECK]["config"] is not None
+    assert manifest["provenance_changed"] == []
 
 
 def test_compare_refuses_itself(golden, tmp_path):

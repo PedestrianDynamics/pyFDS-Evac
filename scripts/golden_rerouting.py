@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import shutil
 import sqlite3
@@ -284,14 +285,76 @@ def _git(*args: str) -> str:
     ).stdout.strip()
 
 
+# What a run's outputs depend on in the repository. A change to any of them
+# must be committed before the run, or the recorded commit would not name the
+# code that produced the outputs.
+CODE_PATHS = ("pyfds_evac", "run.py", "assets")
+# The harness is recorded too. It is allowed to differ from the checked-out
+# commit -- a baseline is run with a newer harness copied into an older
+# checkout -- so its fingerprint, not its git state, is what is compared.
+HARNESS = "scripts/golden_rerouting.py"
+
+
+def _sha256_file(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _sha256_tree(path: Path) -> str | None:
+    """One digest over every file below *path*: relative names and contents."""
+    if not path.is_dir():
+        return None
+    digest = hashlib.sha256()
+    for file in sorted(p for p in path.rglob("*") if p.is_file()):
+        digest.update(file.relative_to(path).as_posix().encode() + b"\0")
+        digest.update((_sha256_file(file) or "").encode() + b"\0")
+    return digest.hexdigest()
+
+
+def _deck_fingerprint(deck: GoldenDeck, root: Path) -> dict[str, str | None]:
+    base = _base(deck, root)
+    return {
+        "config": _sha256_file(base / deck.config),
+        "geometry": _sha256_file(base / deck.geometry),
+        "fds_dir": None if deck.fds_dir is None else _sha256_tree(root / deck.fds_dir),
+    }
+
+
+def _provenance(names: list[str], root: Path) -> dict:
+    """The commit, the dirty state and the input fingerprints of a run."""
+    dirty = {p: bool(_git("status", "--porcelain", "--", p)) for p in CODE_PATHS}
+    dirty[HARNESS] = bool(_git("status", "--porcelain", "--", HARNESS))
+    return {
+        "commit": _git("rev-parse", "HEAD"),
+        "dirty": dirty,
+        "fingerprints": {
+            "harness": _sha256_file(Path(__file__)),
+            "run.py": _sha256_file(REPO / "run.py"),
+            "decks": {name: _deck_fingerprint(DECKS[name], root) for name in names},
+        },
+    }
+
+
 def _run_all(names: list[str], root: Path, out: Path) -> int:
     """Run the inventory of *names*; non-zero if any run could not be made.
 
     *out* must be new or empty, so no file from an earlier run can stand in
-    for one this run failed to write.
+    for one this run failed to write. The provenance is taken before the first
+    run and again after the last; the run fails if it changed in between, and
+    it does not start while any of CODE_PATHS has uncommitted changes.
     """
     if out.exists() and any(out.iterdir()):
         print(f"refusing to write into non-empty {out}; use a fresh folder")
+        return 2
+    before = _provenance(names, root)
+    dirty = sorted(p for p in CODE_PATHS if before["dirty"][p])
+    if dirty:
+        print(f"refusing to run with uncommitted changes in {', '.join(dirty)}")
         return 2
     out.mkdir(parents=True, exist_ok=True)
     ran, skipped, incomplete = [], {}, {}
@@ -325,9 +388,15 @@ def _run_all(names: list[str], root: Path, out: Path) -> int:
             print(f"INCOMPLETE {name}/{mode}: {', '.join(absent)}")
             continue
         ran.append(f"{name}/{mode}")
+    after = _provenance(names, root)
+    changed = sorted(k for k in before if before[k] != after[k])
+    if changed:
+        print(f"provenance changed during the run: {', '.join(changed)}")
     manifest = {
-        "commit": _git("rev-parse", "HEAD"),
-        "pyfds_evac_dirty": bool(_git("status", "--porcelain", "--", "pyfds_evac")),
+        "commit": before["commit"],
+        "pyfds_evac_dirty": before["dirty"]["pyfds_evac"],
+        "provenance": before,
+        "provenance_changed": changed,
         "data_root": str(root),
         "decks": {name: vars(DECKS[name]) for name in names},
         "runs": ran,
@@ -341,7 +410,7 @@ def _run_all(names: list[str], root: Path, out: Path) -> int:
     if failed:
         print(f"{failed} of {len(ran) + failed} runs missing or incomplete")
         return 1
-    return 0
+    return 1 if changed else 0
 
 
 # ── Comparing ─────────────────────────────────────────────────────────
@@ -454,20 +523,56 @@ def _manifest_problems(out: Path, names: list[str]) -> list[str]:
     return problems
 
 
-def _provenance_problems(out: Path, role: str, expect: str | None) -> list[str]:
-    """Whether *out* was written by the expected commit from a clean tree."""
+def _load_manifest(out: Path) -> dict | None:
     path = out / "manifest.json"
     if not path.is_file():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _provenance_problems(out: Path, role: str, expect: str | None) -> list[str]:
+    """Whether *out* was written by the expected commit from a clean tree."""
+    manifest = _load_manifest(out)
+    if manifest is None:
         return []  # reported by _manifest_problems
-    manifest = json.loads(path.read_text(encoding="utf-8"))
-    commit = str(manifest.get("commit", ""))
-    dirty = manifest.get("pyfds_evac_dirty")
-    print(f"{role}  {out}: commit {commit}, pyfds_evac dirty {dirty}")
+    provenance = manifest.get("provenance")
+    if not isinstance(provenance, dict):
+        return [f"{role} {out} records no provenance"]
+    commit = str(provenance.get("commit", ""))
+    dirty = provenance.get("dirty", {})
+    print(f"{role}  {out}: commit {commit}, dirty {dirty}")
     problems = []
-    if dirty is not False:
-        problems.append(f"{role} {out} was not run from a clean pyfds_evac")
+    unclean = [p for p in CODE_PATHS if dirty.get(p) is not False]
+    if unclean:
+        problems.append(f"{role} {out} was run with uncommitted {unclean}")
+    if manifest.get("provenance_changed") != []:
+        problems.append(
+            f"{role} {out} provenance changed during the run: "
+            f"{manifest.get('provenance_changed')}"
+        )
     if expect is not None and not (len(expect) >= 7 and commit.startswith(expect)):
         problems.append(f"{role} {out} is commit {commit!r}, expected {expect!r}")
+    return problems
+
+
+def _fingerprint_problems(dir_a: Path, dir_b: Path, names: list[str]) -> list[str]:
+    """Whether both folders ran the same harness, run.py and deck inputs."""
+    prints = []
+    for out in (dir_a, dir_b):
+        manifest = _load_manifest(out) or {}
+        prints.append((manifest.get("provenance") or {}).get("fingerprints"))
+    a, b = prints
+    if a is None or b is None:
+        return []  # reported by _provenance_problems
+    problems = []
+    for key in ("harness", "run.py"):
+        if a.get(key) is None or a.get(key) != b.get(key):
+            problems.append(f"{key} differs: {a.get(key)} vs {b.get(key)}")
+    for name in names:
+        fa = (a.get("decks") or {}).get(name)
+        fb = (b.get("decks") or {}).get(name)
+        if fa is None or fa != fb:
+            problems.append(f"inputs of {name} differ: {fa} vs {fb}")
     return problems
 
 
@@ -499,6 +604,9 @@ def _compare(
         for problem in _manifest_problems(out, names):
             print(f"BAD   {problem}")
             differs = True
+    for problem in _fingerprint_problems(dir_a, dir_b, names):
+        print(f"BAD   {problem}")
+        differs = True
     for deck, mode in _inventory(names):
         for name in MODES[mode]:
             where = f"{deck}/{mode}/{name}"
