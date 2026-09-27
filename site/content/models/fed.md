@@ -221,13 +221,8 @@ computes it
   guide has it. It stops a tiny ambient rate from accumulating over long runs
   or outside the FDS domain. `--o2-threshold-percent 19.5` restores the
   previous default, the OSHA limit that Pathfinder uses. The O₂ rate is Handbook Eq. 63.50
-  per minute, with no factor 60. The FDS+Evac guide's Eq. 18 divides by 60
-  while stating *t* in minutes, which read literally would make the O₂ dose
-  60 times smaller; FDS itself does not do this (its `FED` function divides
-  by 60 only because its time step is in seconds), so it is a documentation
-  error, not a difference in the model. Our reading is that the 60 survives
-  from the 2009 guide, where *t* was in seconds (see
-  [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)).
+  per minute, with no factor 60; see the warning below on the FDS+Evac
+  guide's Eq. 18.
 
 ![Low-oxygen time to incapacitation against O2 from 3.9 to 20.9 % on a log time axis: a straight line, solid over the decompression data from 3.9 to 9.6 % and dashed above, with vertical lines at 15 % (140 min) and 20 % (about 2090 min)](/images/fundamentals/fed_o2.png)
 
@@ -239,6 +234,18 @@ about 10 % and the gate is extrapolation. Dotted: 15 % O₂, down to which
 there is little effect in humans (Purser & McAllister 2016, p. 2364). Figure
 and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 `scripts/figures/fundamentals_fed_o2.py`.*
+
+> [!WARNING]
+> **FDS+Evac guide, Eq. 18 (low O₂).** The guide (Korhonen 2021) divides the
+> O₂ term by 60 while stating that *t* is in minutes. Taken literally, that
+> gives an O₂ dose 60 times smaller than Purser's Eq. 63.50. The code
+> FDS+Evac runs does not do this: FDS divides by 60 only because its time step
+> is in seconds. pyFDS-Evac uses Eq. 63.50 per minute, as the code does. If
+> you rebuild FDS+Evac's FED from the guide, leave the 60 out.
+>
+> Our reading is that the 60 survives from the 2009 guide, which gave the
+> FED equations with *t* in seconds; the evidence is on
+> [Asphyxiant FED](/fundamentals/asphyxiant-fed.md).
 
 The irritant slowdown \(g\), when enabled (`fed.py:241`–`242`), is multiplied with the smoke
 factor (`direct_steering_runtime.py:186`–`190`). Its constants were not found

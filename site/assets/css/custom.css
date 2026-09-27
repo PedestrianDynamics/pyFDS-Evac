@@ -1,4 +1,5 @@
-/* GitHub alerts (> [!NOTE]), rendered by render-blockquote.html. */
+/* GitHub alerts (> [!NOTE] and the other four types), rendered by
+   render-blockquote.html. Colours follow GitHub's. */
 .gh-alert {
   --gh-alert-color: hsl(var(--primary-hue) var(--primary-saturation) 45%);
   margin-top: 1.5rem;
@@ -28,3 +29,11 @@
 .gh-alert-title svg {
   fill: currentColor;
 }
+.gh-alert-tip { --gh-alert-color: #1a7f37; }
+.gh-alert-important { --gh-alert-color: #8250df; }
+.gh-alert-warning { --gh-alert-color: #9a6700; }
+.gh-alert-caution { --gh-alert-color: #d1242f; }
+.dark .gh-alert-tip { --gh-alert-color: #3fb950; }
+.dark .gh-alert-important { --gh-alert-color: #ab7df8; }
+.dark .gh-alert-warning { --gh-alert-color: #d29922; }
+.dark .gh-alert-caution { --gh-alert-color: #f85149; }
