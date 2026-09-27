@@ -89,6 +89,9 @@ V = A \cdot U \cdot \min\!\left(\frac{C}{\bar K},\, V_{\max}\right),
 \qquad \text{legible} \iff V \ge L .
 $$
 
+- \((\Delta x, \Delta y)\) is the cell position minus the sign position
+  (`FDSVisMap.py:481–482`), and \(L\) is their distance; reversing the
+  vector would flip the readable half-plane.
 - \(U\) is 0 when an obstruction cell lies on the rasterised ray from the sign,
   1 otherwise (anti-aliased rays, `aa=True`).
 - \(\bar K\) is the arithmetic mean extinction over the cells of a rasterised
@@ -436,9 +439,9 @@ file. The detailed account of FDS+Evac door choice is on
 |---|---|---|
 | **Visible** | Geometric line of sight from agent to door centre, or to the door's `XB` centre from the correct side; no range limit, no contrast, no angle factor | *Legible*: sign test with *C*, view angle, obstruction, \(V_{\max}\) and line-of-sight extinction |
 | **Known** | `KNOWN_DOOR` (default `.FALSE.`) and `KNOWN_DOOR_PROBS` per door, written at initialisation into a per-agent or per-group list; afterwards only downgraded | *Known*: seeded by `familiarity` (one \(p\) per group) and `entrance`, then learned from legible signs; never downgraded |
-| **Visible counts as known** | only for type-1 agents, for the current call | a legible neighbour is learned and kept |
+| **Visible counts as known** | for the current target in every call (`:16197–16199`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
 | **Memory of the target** | a current target with positive `I_Target` stays visible | every known node persists |
-| **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < |\)`FED_DOOR_CRIT`\(|\) = 0.03 m⁻¹ by default (≈ 100 m visibility) | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
+| **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < |\)`FED_DOOR_CRIT`\(|\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹ | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
 | **Last resort** | tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call | the all-refused fallback re-admits the least smoky known route |
 | **Smoke memory** | lone agents mark the previous target negative or zero | none |
 | **Default** | agent type 2, `KNOWN_DOOR = .FALSE.` | `familiarity = "full"` |
@@ -463,6 +466,11 @@ Details, with line numbers:
   \(S = 3/K\) (`:5260–5262`).
   - Tiers 1–3 admit a door only while \(\bar K < |\)`FED_DOOR_CRIT`\(|\)
     (`:16253`, `:16265`, `:16272`, `:16347–16354`, `:16396–16401`).
+    The door that shares the current target's flow field is discounted
+    first: its \(\bar K\) is multiplied by `FAC_DOOR_OLD` (default 0.1,
+    `:1506`; applied at `:16255`, `:16349`, `:16398`), so the current door
+    stays "smoke free" up to 0.3 m⁻¹ by default. This is a hysteresis on
+    route retention, comparable in role to our anchor and deadband.
   - In tier 4, with the default criterion, a door is scored
     \(0.5\,d/(3/\bar K)\). \(d\) is the Euclidean distance for a visible door
     and the L1 distance for a non-visible one (`:16457–16461`). A score ≥ 1
