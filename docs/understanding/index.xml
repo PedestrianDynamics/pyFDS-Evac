@@ -11,21 +11,17 @@ pyFDS-Evac answers each question from the output of a finished Fire Dynamics
 Simulator (FDS) run and hands the answers to JuPedSim, which moves the agents.&lt;/p>
 &lt;p>This page gives the intuition behind each answer and the rules you need to
 read a result. The published laws the answers rest on, in their authors'
-notation, are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/">Fundamentals&lt;/a>
-pages. How the
+notation, are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/">Fundamentals&lt;/a> pages. How the
 code implements them, with its defaults and its departures from the
-literature, is on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/">Models&lt;/a>
-pages.&lt;/p>
+literature, is on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/">Models&lt;/a> pages.&lt;/p>
 &lt;p>pyFDS-Evac is research software, provided without warranty. It is not intended
-for regulatory or design use. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>
-.&lt;/p>
+for regulatory or design use. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>.&lt;/p>
 &lt;h2>One-way coupling and the data flow&lt;span class="hx-absolute -hx-mt-20" id="one-way-coupling-and-the-data-flow">&lt;/span>
 &lt;a href="#one-way-coupling-and-the-data-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS runs once, before any agent moves, and pyFDS-Evac only reads the slice
 files it stored. This is one-way coupling: a crowd that blocks a door does not
 change the smoke that reaches it. In return, one fire can serve any number of
 egress runs, and a prescribed field can replace FDS entirely, as in the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>FDS output (.smv + slice files)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> │
@@ -53,11 +49,9 @@ title="Copy code"
 &lt;/div>
 &lt;p>The sampler takes the nearest stored value on a slice. Extinction and
 temperature come from the horizontal slice nearest a set height, the same for
-every agent; for the gases, see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#what-is-not-modelled">FED model&lt;/a>
-. The manifest records the package versions, the
+every agent; for the gases, see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#what-is-not-modelled">FED model&lt;/a>. The manifest records the package versions, the
 seed, the scenario and the FDS version, so a result can be traced to the code
-and the fire that produced it. The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">walkthrough&lt;/a>
-runs this
+and the fire that produced it. The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">walkthrough&lt;/a> runs this
 chain on a tracked case, and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">Your FDS case&lt;/a>
 lists the slices the deck must write.&lt;/p>
 &lt;h2>Speed&lt;span class="hx-absolute -hx-mt-20" id="speed">&lt;/span>
@@ -73,14 +67,10 @@ form and with the constants of FDS+Evac, so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
 &lt;code>fridolf&lt;/code> option, \(V/(V+2)\) with the sighting distance \(V = C/K\). Its
 attribution to Fridolf et al. (2019) is unverified, and the paper&amp;rsquo;s own law
-differs (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>
-). It is steeper in light smoke, has no floor, and is
-available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>
-). The published laws are on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>
-; the coded forms are
-on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>
-page.&lt;/p>
+differs (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>). It is steeper in light smoke, has no floor, and is
+available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>). The published laws are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>; the coded forms are
+on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V&amp;#43;2) with C = 3 and C = 8" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Solid dark blue:
 Frantzich–Nilsson at the defaults, with its floor. The &lt;code>fridolf&lt;/code> option,
@@ -100,8 +90,7 @@ lowers the speed further as it rises, down to a floor. FIC is a concentration,
 not a dose, so \(g\) follows the gas where the agent stands. One quirk: when
 FIC drops to exactly zero the factor is not recomputed, so an agent that walks
 out of a plume into clean air keeps its last slowdown
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>
-).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>).&lt;/p>
 &lt;p>The stop is the fractional effective dose (FED). The toxic-gas dose follows
 the Purser sum of the FDS+Evac guide, which adds irritants into the dose,
 unlike ISO 13571. Convective heat from an FDS &lt;code>TEMPERATURE&lt;/code> slice accumulates
@@ -116,14 +105,10 @@ agent at FED = 1, as FDS+Evac does.&lt;/p>
 leaves the walking speed unchanged, however close it comes. And the heat dose
 only incapacitates: it neither slows agents nor affects route choice, and
 radiant heat is not modelled. The published dose laws are on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant fractional effective dose&lt;/a>
-,
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>
-, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>
-and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>
-.
-The coded forms are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a>
-page.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant fractional effective dose&lt;/a>,
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>
+and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.
+The coded forms are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a> page.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/tenability_speed_curves.png" alt="Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 2. The brake: (a) f(K), (b) g(FIC) and (c) their product, with
 contours of equal speed factor. FED does not appear on
@@ -136,8 +121,7 @@ checkpoints and exits. Each edge carries a polyline that JuPedSim computes
 along the walkable area, so it follows the corridors, not a straight line
 through walls. Smoke is sampled at short steps along it, and the mean of the
 samples, \(\bar K_{uv}\), is a discrete Beer–Lambert mean (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>
-) taken along a walked
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>) taken along a walked
 path instead of a line of sight.&lt;/p>
 &lt;p>A route is measured from where the agent stands. Its mean extinction
 \(\bar K_k\) is the length-weighted mean over its edges, and \(L_k\) is the
@@ -172,13 +156,11 @@ still moves and takes the least smoky one. Irritants and heat do not enter
 route choice: FIC and the gate respond to the same smoke, so routing on both
 would count it twice.&lt;/p>
 &lt;p>The budget is inherited from the door rule of FDS+Evac, which rests on Jin&amp;rsquo;s
-visibility law (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
-).
+visibility law (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>).
 Here it bounds smoke integrated along a walked path, which measures exposure,
 not sight. It is cited, not calibrated, and FDS+Evac ranks on smoke only as a
 last resort, so the gate departs from FDS+Evac rather than reproducing it. The
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing page&lt;/a>
-gives the defaults, the derivation of the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing page&lt;/a> gives the defaults, the derivation of the
 budget, the &lt;code>&amp;quot;additive&amp;quot;&lt;/code> alternative and a measured case of oscillation.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/exposure_gate.png" alt="Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 4. Schematic with a toy plume, not a simulation. Top: three candidate
@@ -189,11 +171,9 @@ walk. Script: &lt;code>scripts/figures/exposure_gate.py&lt;/code>.&lt;/em>&lt;/p
 &lt;h2>Wayfinding&lt;span class="hx-absolute -hx-mt-20" id="wayfinding">&lt;/span>
 &lt;a href="#wayfinding" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Route choice picks among the exits an agent knows. Wayfinding decides which
 exits those are. The code, its defaults and its limitations are on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>
-. A walk-through in the order of
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>. A walk-through in the order of
 the talk, with the examples, is on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/wayfinding/">Wayfinding implementation notes&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/">Wayfinding in practice&lt;/a>.&lt;/p>
 &lt;h3>Knowing is not seeing&lt;span class="hx-absolute -hx-mt-20" id="knowing-is-not-seeing">&lt;/span>
 &lt;a href="#knowing-is-not-seeing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent carries a cognitive map: the part of the building&amp;rsquo;s route graph it
 &lt;strong>knows&lt;/strong>. The map is a data structure, not a psychological construct. It
@@ -235,8 +215,7 @@ hoping to see a new sign on the way.&lt;/p>
 no other place does not explore. It keeps walking to the geometrically nearest
 exit, whether or not it has learned it. It may read that exit&amp;rsquo;s sign on the
 way and learn it then, but it walks there either way
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>
-).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>).&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/sign_bearing.png" alt="Two 30 m corridors, each with an exit at both ends and the cells from which the near sign is legible shaded yellow; left, the near sign faces the agents and they take the near exit; right, the near sign faces away and they walk to the far exit" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 5. One number flips the exit. A corridor with an exit at
 each end and 40 agents at familiarity 0. Only the bearing of the near exit&amp;rsquo;s
@@ -261,8 +240,7 @@ different choice.&lt;/p>
 &lt;p>The map limits what an agent knows of the building, not what it knows of the
 smoke. Once it knows an exit, the router prices the whole route to it with
 the smoke field of the fire, including stretches the agent has never seen
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
-).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>).&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/map_memory.png" alt="Five probes of one corridor: the side exit is unknown, learned, legible, known but not legible, and first-ranked at a return probe where its sign cannot be read" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 7. A corridor whose side-exit sign is legible only inside the shaded
 region, y = 12.3–27.8 m on the centreline (gold ticks). One discovery agent is probed at a sequence of positions: northward,
@@ -285,12 +263,9 @@ router uses to estimate travel time when it prices a route. Setting
 in smoke. The same holds for speed itself: the router prices routes at its own
 speed, &lt;code>routing.base_speed_m_per_s&lt;/code>, not at the agent&amp;rsquo;s \(v_0\). The router
 always uses the linear law, even when agents walk with the &lt;code>fridolf&lt;/code> option. The
-defaults are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed&lt;/a>
-and
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>
-pages; see also
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>
-.&lt;/p>
+defaults are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed&lt;/a> and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a> pages; see also
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>.&lt;/p>
 &lt;h2>Notation&lt;span class="hx-absolute -hx-mt-20" id="notation">&lt;/span>
 &lt;a href="#notation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This table is the shared notation for the Concepts, Fundamentals and Models
 pages. Defaults are on the Models pages.&lt;/p>
@@ -429,22 +404,14 @@ route, and sight gating, which decides whether a sign is legible and so what
 enters the cognitive map. The dose does not gate anything; it stops the agent.&lt;/p>
 &lt;h2>Further reading&lt;span class="hx-absolute -hx-mt-20" id="further-reading">&lt;/span>
 &lt;a href="#further-reading" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>The talk: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">slides&lt;/a>
-, Visibility
+&lt;li>The talk: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">slides&lt;/a>, Visibility
 Seminar 2026, University of Wuppertal, 25 September 2026.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/">Fundamentals&lt;/a>
-: the published laws, with their
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/">Fundamentals&lt;/a>: the published laws, with their
 sources.&lt;/li>
-&lt;li>Model pages: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke speed&lt;/a>
-, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED&lt;/a>
-,
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>
-, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>
-,
-and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/">verification&lt;/a>
-.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>
-: what is not modelled, and which
+&lt;li>Model pages: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke speed&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED&lt;/a>,
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>,
+and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/">verification&lt;/a>.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>: what is not modelled, and which
 parameters are library-level.&lt;/li>
 &lt;/ul></description></item><item><title>Limitations</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</guid><description>
 &lt;h2>Status&lt;span class="hx-absolute -hx-mt-20" id="status">&lt;/span>
@@ -454,8 +421,7 @@ Forschungszentrum Jülich (IAS-7) and has no release policy yet, so behaviour
 and defaults can change between commits. A result from pyFDS-Evac is a
 research result. It is not an assessment of a building.&lt;/p>
 &lt;p>The evidence that exists is listed on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>
-.
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>.
 That evidence is verification (the code does what its equations say), not
 validation (the equations describe how people behave).&lt;/p>
 &lt;h2>Some parameters are library-level&lt;span class="hx-absolute -hx-mt-20" id="some-parameters-are-library-level">&lt;/span>
@@ -465,8 +431,7 @@ JSON. The smoke-speed parameters (&lt;code>speed_law&lt;/code>, &lt;code>alpha&l
 &lt;code>SmokeSpeedConfig&lt;/code>. &lt;code>run.py&lt;/code> and the web GUI build that object with its
 defaults, so every run they start uses the Frantzich–Nilsson law (the &lt;code>lund&lt;/code>
 option; the linear FDS+Evac law) with the defaults listed on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>
-page. Another law or
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page. Another law or
 other coefficients require building the model in Python and passing it to
 &lt;code>run_scenario()&lt;/code>.&lt;/p>
 &lt;p>The JSON &lt;code>routing&lt;/code> block has keys with the same names. They parameterise the
@@ -480,13 +445,11 @@ agent walks at its own &lt;code>v0&lt;/code> (1.25 m/s by default).&lt;/p>
 (&lt;code>--incapacitation-mode probabilistic&lt;/code>), each agent draws its own
 incapacitation threshold from a log-normal distribution with median
 &lt;code>--fed-threshold&lt;/code> and log-scale spread &lt;code>--susceptibility-sigma&lt;/code> (defaults on
-the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a>
-page).
+the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page).
 About half of the agents therefore stop below FED = 1, and about 10 % stop
 below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>
-). The
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>). The
 heat dose uses the same mechanism, and its spread is reused from the gas value
 without a data basis of its own. FDS+Evac stops
 every agent at FED = 1. For results comparable with FDS+Evac, run with
@@ -497,17 +460,14 @@ run ends early only when no agent is left, so a run in which any agent is
 incapacitated continues until &lt;code>max_simulation_time&lt;/code> (300 s by default). Its
 reported &lt;code>evacuation_time&lt;/code> is then that time limit, not the time the last
 mobile agent left. &lt;code>success&lt;/code> is also true at the time limit even when agents
-remain (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">issue #139&lt;/a>
-).
+remain (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">issue #139&lt;/a>).
 Read &lt;code>agents_remaining&lt;/code>, and take the time each agent left from the
 trajectory file, instead of relying on these two values
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">issue #141&lt;/a>
-).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">issue #141&lt;/a>).&lt;/p>
 &lt;h2>Incapacitation during pre-movement is undone&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-during-pre-movement-is-undone">&lt;/span>
 &lt;a href="#incapacitation-during-pre-movement-is-undone" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An agent that is incapacitated while it is still waiting out its
 pre-movement time starts walking when that time ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">issue #145&lt;/a>
-).
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">issue #145&lt;/a>).
 Scenarios that combine pre-movement with FED therefore under-report
 incapacitations and over-report evacuees. A scenario that sets no pre-movement
 gets the FDS+Evac default of 10 s, so this applies to it too, for its first
@@ -537,30 +497,25 @@ flat floor that agents cross at full speed. A &lt;code>zones&lt;/code> entry wit
 direction of travel on a stair.&lt;/p>
 &lt;p>&lt;strong>FED activity level.&lt;/strong> The CO term of the toxic dose uses one fixed
 coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
-the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>
-). Rest and heavy work cannot be selected, although
+the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>). Rest and heavy work cannot be selected, although
 breathing rate changes the CO dose. Not supported; see
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">issue #135&lt;/a>
-.&lt;/p>
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">issue #135&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Per-exit familiarity.&lt;/strong> Familiarity is set per spawn distribution, as
 &lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>, or one probability applied to every exit. The
 &lt;code>entrance&lt;/code> key adds one exit that the whole group knows. A separate
 probability for each exit, as FDS+Evac allows with &lt;code>KNOWN_DOOR_PROBS&lt;/code>, is not
 supported; see
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">issue #136&lt;/a>
-.&lt;/p>
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">issue #136&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Herding and social influence.&lt;/strong> Each agent chooses its route from its own
 cognitive map and the hazard along each route. When &lt;code>routing.w_queue&lt;/code> is
 above zero (the default is 0.0), expected queueing at an exit also enters the
 cost, so a crowded exit becomes less attractive. Agents do not follow others,
 and an exit never becomes more attractive because others use it. See
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>
-.&lt;/p>
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Perception-limited route choice.&lt;/strong> A discovery agent knows only the exits
 its familiarity, &lt;code>entrance&lt;/code> or a legible sign gave it, but it prices the routes to them with the smoke
 sampled along the whole route, including stretches it has never seen
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">issue #125&lt;/a>
-).
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">issue #125&lt;/a>).
 By default (&lt;code>routing.anticipate&lt;/code> = true, &lt;code>routing.foresight_horizon_s&lt;/code>
 unbounded), each stretch is also priced with the smoke that the finished FDS
 run holds for the time the agent would arrive there. Knowledge limits which
@@ -572,15 +527,13 @@ a discovery agent is therefore not limited by what it has perceived.&lt;/p>
 the sampled fractional irritant concentration (FIC) is positive. When it
 returns to exactly zero, the last slowdown stays in force, so an agent that
 leaves an irritant plume into clean air does not return to full speed
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">issue #142&lt;/a>
-).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">issue #142&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Sourced pre-movement defaults.&lt;/strong> The preset parameters of the four random
 pre-movement distributions are illustrative, not from a cited dataset. The
 10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
 data either. Set
 &lt;code>premovement_param_a&lt;/code> and &lt;code>premovement_param_b&lt;/code> from data for your occupancy
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144" target="_blank" rel="noopener">issue #144&lt;/a>
-).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144" target="_blank" rel="noopener">issue #144&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Smoke-triggered detection.&lt;/strong> Pre-movement is one delay per agent, drawn
 from a distribution. Smoke reaching the agent does not end the delay early,
 and there is no separate detection phase.&lt;/p>
@@ -594,8 +547,7 @@ found that individual trajectories differ between runs with the same seed,
 while aggregate outcomes (counts and fractions, such as the number of agents
 incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
 and do not compare single trajectories between runs. See the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>.&lt;/p>
 &lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em>. VTT Technical Research Centre of
@@ -615,8 +567,8 @@ source at FDS commit 16cf79652c (2016), the copy in &lt;code>materials/&lt;/code
 to the FDS 6.7.6 / Evac 2.6.0 release that [1] documents. The defaults
 cited here are the same in FDS 6.7.6, and so is &lt;code>Change_Target_Door&lt;/code>
 apart from the floor on &lt;code>K_ave_Door&lt;/code>, which 6.7.6 applies for either
-sign of &lt;code>FED_DOOR_CRIT&lt;/code>; the line numbers differ.&lt;/p>&lt;/blockquote>
-&lt;hr>
+sign of &lt;code>FED_DOOR_CRIT&lt;/code>; the line numbers differ.&lt;/p>
+&lt;/blockquote>&lt;hr>
 &lt;h2>1. Movement model&lt;span class="hx-absolute -hx-mt-20" id="1-movement-model">&lt;/span>
 &lt;a href="#1-movement-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -857,8 +809,7 @@ the arrays are reset at &lt;code>:15831-15832&lt;/code>).&lt;/p>
 &lt;p>pyFDS-Evac promotes that last-resort ranking criterion to its primary one, over
 all candidates, at every tick, on the walked polyline, and drops the reference&amp;rsquo;s
 one lasting smoke memory, a weak mark on a lone agent&amp;rsquo;s previous target once its
-&lt;code>K_ave&lt;/code> reaches 0.3 /m (&lt;code>:16292-16301&lt;/code>; see &lt;a href="#the-smoke-criteria-on-a-door">The smoke criteria on a door&lt;/a>
-). Measured consequence on
+&lt;code>K_ave&lt;/code> reaches 0.3 /m (&lt;code>:16292-16301&lt;/code>; see &lt;a href="#the-smoke-criteria-on-a-door">The smoke criteria on a door&lt;/a>). Measured consequence on
 &lt;code>assets/l_corridor&lt;/code>: this model diverts &lt;strong>18 of 100&lt;/strong> agents to the longer,
 cleaner route, where the reference criterion — distance ranking, both doors
 clearing the 0.03 /m admission test until the smoke is well developed — would
@@ -873,8 +824,7 @@ deck).&lt;/p>
 &lt;h3>pyFDS-Evac&lt;span class="hx-absolute -hx-mt-20" id="pyfds-evac">&lt;/span>
 &lt;a href="#pyfds-evac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Route selection uses a &lt;strong>stage graph&lt;/strong> (directed weighted graph of
 distributions, checkpoints, and exits) with &lt;strong>Dijkstra shortest-path&lt;/strong>
-queries (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">docs/routing.md&lt;/a>
-, &lt;code>route_graph.py&lt;/code>).&lt;/p>
+queries (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">docs/routing.md&lt;/a>, &lt;code>route_graph.py&lt;/code>).&lt;/p>
 &lt;p>At each reevaluation tick, per-edge costs are computed from current
 smoke and FED fields. The weight depends on the cost model
 (&lt;code>route_graph.py:1299-1310&lt;/code>):&lt;/p>
@@ -896,8 +846,7 @@ weights; under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> it is the composi
 Dijkstra then finds one cheapest path per reachable exit using these
 dynamic weights.&lt;/p>
 &lt;p>The routes it returns are then judged by one of two models
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">docs/route-cost-gate.md&lt;/a>
-):&lt;/p>
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">docs/route-cost-gate.md&lt;/a>):&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>&lt;code>&amp;quot;gate&amp;quot;&lt;/code> (default).&lt;/strong> Route optical depth &lt;code>tau = K_ave * L&lt;/code>
 (dimensionless; &lt;code>L&lt;/code> is the distance still to walk) decides
@@ -926,8 +875,7 @@ its &lt;code>&amp;quot;gate&amp;quot;&lt;/code> cost model. The
 absolute &lt;code>K_ave &amp;lt; 0.03 /m&lt;/code> test exists as an opt-in tier that ships
 off, because measured on two decks it produced churn rather than
 redirection — see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#the-clean-exit-tier-off-by-default">route-cost-gate.md&lt;/a>
-.
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#the-clean-exit-tier-off-by-default">route-cost-gate.md&lt;/a>.
 The distance-relative
 form is the point of the choice — the same haze is usable 5 m from an
 exit and not at 40 m — but it is not what FDS+Evac reaches for first.&lt;/p>
@@ -936,8 +884,7 @@ exit and not at 40 m — but it is not what FDS+Evac reaches for first.&lt;/p>
 component. Familiarity is modelled, but as a per-agent cognitive map
 that restricts the graph before routing, not as a per-exit preference
 group. Per-exit familiarity is not supported
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>
-).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>).&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -970,9 +917,7 @@ group. Per-exit familiarity is not supported
 &lt;tr>
 &lt;td>&lt;strong>Familiarity&lt;/strong>&lt;/td>
 &lt;td>Per-agent per-exit familiarity (user-configurable, constrains feasible exit set)&lt;/td>
-&lt;td>Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on &lt;em>topology&lt;/em> only — smoke is sampled globally, so a discovery agent&amp;rsquo;s route choice is not perception-limited (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
-). Per-exit familiarity is not supported (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>
-)&lt;/td>
+&lt;td>Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on &lt;em>topology&lt;/em> only — smoke is sampled globally, so a discovery agent&amp;rsquo;s route choice is not perception-limited (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>). Per-exit familiarity is not supported (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Social behaviour&lt;/strong>&lt;/td>
@@ -1033,10 +978,8 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>with the Frantzich–Nilsson coefficients; the published values are on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>
-and the code defaults
-on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>
-page.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a> and the code defaults
+on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -1054,8 +997,7 @@ page.&lt;/p>
 &lt;tr>
 &lt;td>&lt;strong>Default alpha/beta&lt;/strong>&lt;/td>
 &lt;td>Frantzich–Nilsson values (evac.f90:1479–1480)&lt;/td>
-&lt;td>Same values (&lt;code>smoke_speed.py:91–92&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>
-&lt;/td>
+&lt;td>Same values (&lt;code>smoke_speed.py:91–92&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Minimum speed&lt;/strong>&lt;/td>
@@ -1070,8 +1012,7 @@ page.&lt;/p>
 &lt;tr>
 &lt;td>&lt;strong>Sampling geometry&lt;/strong>&lt;/td>
 &lt;td>Local value at agent position on the evacuation mesh, at &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> above the floor (default 1.6 m, evac.f90:1072; [1] §8.7 p. 81; [7] p. 61)&lt;/td>
-&lt;td>Local value at agent position: nearest cell of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>
-)&lt;/td>
+&lt;td>Local value at agent position: nearest cell of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1098,8 +1039,7 @@ CO2 hyperventilation factor is included ([1] §2.7 p19).&lt;/p>
 HCN term subtracts NO + NO2 with the offset 0.00454545, about 1/220 (FDS 6.7.6
 &lt;code>func.f90&lt;/code>), not the NO2 alone of [1] Eq. 15; it has done so since
 firemodels/fds 694e033 (2011), and earlier versions had no HCN term
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>
-).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>).&lt;/p>
 &lt;p>FED activity level is configurable: 1 (at rest), 2 (light work,
 default), 3 (heavy work) (evac.f90:1465).&lt;/p>
 &lt;p>Incapacitation occurs at FED &amp;gt;= 1.0 ([1] §3.4 p31).&lt;/p>
@@ -1178,9 +1118,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Activity level&lt;/strong>&lt;/td>
 &lt;td>Configurable (rest/light/heavy)&lt;/td>
-&lt;td>Not supported (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">#135&lt;/a>
-); the CO term uses the light-work coefficient (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>
-)&lt;/td>
+&lt;td>Not supported (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">#135&lt;/a>); the CO term uses the light-work coefficient (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>FED in routing&lt;/strong>&lt;/td>
@@ -1385,8 +1323,7 @@ exists because in the additive form both terms scale with route
 length, so a long clean detour can never win.
 Being able to run the same deck under both is itself the
 comparison instrument — see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">docs/route-cost-gate.md&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">docs/route-cost-gate.md&lt;/a>.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>Path-integrated extinction sampling for route cost.&lt;/strong> For route
@@ -1430,8 +1367,7 @@ right at more than one crowd size. With it off, agents
 independently pick the cheapest path without considering how many
 others are heading to the same exit — exactly the overcrowding the
 game-theoretic model in FDS+Evac was designed to solve. See
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#why-it-is-opt-in-and-what-0024-means">docs/routing.md&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#why-it-is-opt-in-and-what-0024-means">docs/routing.md&lt;/a>.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>No equilibrium concept.&lt;/strong> Without agent interaction in the cost
@@ -1535,8 +1471,7 @@ FDS+Evac. Technical Reference and User&amp;rsquo;s Guide.&lt;/em> FDS 6.7.6, Eva
 &lt;p>Börger, K., Belt, A. &amp;amp; Arnold, L. (2024). A waypoint based
 approach to visibility in performance based fire safety design.
 &lt;em>Fire Safety Journal&lt;/em>, 150, 104269.
-DOI: &lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">10.1016/j.firesaf.2024.104269&lt;/a>
-.&lt;/p>
+DOI: &lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">10.1016/j.firesaf.2024.104269&lt;/a>.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>Frantzich, H. &amp;amp; Nilsson, D. (2003). &lt;em>Utrymning genom tät rök:
@@ -1576,8 +1511,7 @@ congestion. &lt;em>Physical Review E&lt;/em>, 87(1), 012802.&lt;/p>
 &lt;p>Ronchi, E., Fridolf, K., Frantzich, H., Nilsson, D., Walter, A.
 L. &amp;amp; Modig, H. (2018). A tunnel evacuation experiment on movement
 speed and exit choice in smoke. &lt;em>Fire Safety Journal&lt;/em>, 97, 126–136.
-DOI: &lt;a href="https://doi.org/10.1016/j.firesaf.2017.06.002" target="_blank" rel="noopener">10.1016/j.firesaf.2017.06.002&lt;/a>
-.&lt;/p>
+DOI: &lt;a href="https://doi.org/10.1016/j.firesaf.2017.06.002" target="_blank" rel="noopener">10.1016/j.firesaf.2017.06.002&lt;/a>.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>Schroder, B., Arnold, L., Seyfried, A. (2020). A map

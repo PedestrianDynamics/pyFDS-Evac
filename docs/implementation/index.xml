@@ -1,19 +1,701 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Implementation notes</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/</link><description>Recent content in Implementation notes on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/index.xml" rel="self" type="application/rss+xml"/><item><title>Speed</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/speed/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/speed/</guid><description>
-&lt;div class="hextra-cards hx-mt-4 hx-gap-4 hx-grid not-prose" style="--hextra-cards-grid-cols: 3;">
-&lt;a
-class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="smoke-speed-model"
->&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">Smoke-speed model&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">Full model description, configuration, and API.&lt;/div>&lt;/a>
-&lt;/div></description></item><item><title>Routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</guid><description>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Implementation notes</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/</link><description>Recent content in Implementation notes on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/index.xml" rel="self" type="application/rss+xml"/><item><title>Speed in practice</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/speed/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/speed/</guid><description>
+&lt;div class="gh-alert gh-alert-note" role="note">
+&lt;p class="gh-alert-title">&lt;svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">&lt;path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z">&lt;/path>&lt;/svg>Note&lt;/p>
+&lt;p>This page shows the smoke-speed model at work: its API and runs on the
+assets. For its definition, parameters and defaults, see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">Models › Smoke-speed model&lt;/a>.&lt;/p>
+&lt;/div>&lt;blockquote>
+&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>.&lt;/p>
+&lt;/blockquote>&lt;p>The pyFDS-Evac smoke-speed model reduces agent walking speed based on
+local smoke conditions. It takes the extinction coefficient K [1/m] as
+its primary input and applies one of two speed-reduction laws, selected
+via &lt;code>SmokeSpeedConfig.speed_law&lt;/code>.&lt;/p>
+&lt;h2>Speed-reduction laws&lt;span class="hx-absolute -hx-mt-20" id="speed-reduction-laws">&lt;/span>
+&lt;a href="#speed-reduction-laws" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The agent walks at &lt;code>v0 * speed_factor(K)&lt;/code>, where &lt;code>v0&lt;/code> is its clear-air speed
+and the factor follows &lt;code>speed_law=&amp;quot;lund&amp;quot;&lt;/code> (default) or &lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>. The coded
+equations, the &lt;code>SmokeSpeedConfig&lt;/code> defaults and the departures from the
+literature are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page;
+the published laws are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>.&lt;/p>
+&lt;h2>Extinction sources&lt;span class="hx-absolute -hx-mt-20" id="extinction-sources">&lt;/span>
+&lt;a href="#extinction-sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The model accepts any object that implements the &lt;code>ExtinctionSampler&lt;/code>
+protocol (a &lt;code>sample_extinction(time_s, x, y) -&amp;gt; float&lt;/code> method). Two
+built-in implementations are available:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>ExtinctionField&lt;/code>&lt;/strong> &amp;ndash; reads the &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code>
+quantity from FDS slice data via &lt;code>fdsreader&lt;/code>. Use this for real FDS
+output.&lt;/li>
+&lt;li>&lt;strong>&lt;code>ConstantExtinctionField&lt;/code>&lt;/strong> &amp;ndash; returns a fixed K value everywhere.
+Use this for deterministic verification cases such as ISO 20414
+Table 21.&lt;/li>
+&lt;/ul>
+&lt;h3>Loading from FDS data&lt;span class="hx-absolute -hx-mt-20" id="loading-from-fds-data">&lt;/span>
+&lt;a href="#loading-from-fds-data" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>To load extinction data from an FDS case directory:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> ExtinctionField
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>field &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>, &lt;span style="color:#75715e"># select the horizontal slice closest to 2 m&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>If a queried point falls outside the FDS domain, &lt;code>sample_extinction&lt;/code>
+returns &lt;code>0.0&lt;/code> (clear air) and logs a warning on the first occurrence.&lt;/p>
+&lt;h3>Using a constant field&lt;span class="hx-absolute -hx-mt-20" id="using-a-constant-field">&lt;/span>
+&lt;a href="#using-a-constant-field" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>To use a uniform extinction value for verification:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> ConstantExtinctionField
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>field &lt;span style="color:#f92672">=&lt;/span> ConstantExtinctionField(extinction_per_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Configuration&lt;span class="hx-absolute -hx-mt-20" id="configuration">&lt;/span>
+&lt;a href="#configuration" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>SmokeSpeedConfig&lt;/code> bundles the model coefficients with runtime
+settings:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> SmokeSpeedConfig
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>config &lt;span style="color:#f92672">=&lt;/span> SmokeSpeedConfig(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fds_dir&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> update_interval_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>, &lt;span style="color:#75715e"># how often agents resample extinction&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>, &lt;span style="color:#75715e"># FDS slice height&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> speed_law&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;lund&amp;#34;&lt;/span>, &lt;span style="color:#75715e"># or &amp;#34;fridolf&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The law coefficients (&lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code>,
+&lt;code>visibility_factor_c&lt;/code>) are further fields; their defaults are listed on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page.&lt;/p>
+&lt;p>The &lt;code>update_interval_s&lt;/code> field controls how frequently each agent
+queries the extinction field during the simulation loop. A value of
+&lt;code>1.0&lt;/code> means one sample per agent per second of simulated time.&lt;/p>
+&lt;h2>Putting it together&lt;span class="hx-absolute -hx-mt-20" id="putting-it-together">&lt;/span>
+&lt;a href="#putting-it-together" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>To create a full smoke-speed model and query it:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ExtinctionField,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SmokeSpeedConfig,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SmokeSpeedModel,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>field &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(config&lt;span style="color:#f92672">.&lt;/span>fds_dir)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>model &lt;span style="color:#f92672">=&lt;/span> SmokeSpeedModel(field, config)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Query at a specific point and time&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>extinction_K, speed_factor &lt;span style="color:#f92672">=&lt;/span> model&lt;span style="color:#f92672">.&lt;/span>sample(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Or get just the factor&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>factor &lt;span style="color:#f92672">=&lt;/span> model&lt;span style="color:#f92672">.&lt;/span>speed_factor(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Runs on the assets&lt;span class="hx-absolute -hx-mt-20" id="runs-on-the-assets">&lt;/span>
+&lt;a href="#runs-on-the-assets" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Run the ISO 20414 Test 18 (Table 21) corridor with a constant extinction coefficient:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run run.py &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --scenario assets/ISO-table21 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --constant-extinction 1.0 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --smoke-update-interval 0.1 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-smoke-history /tmp/iso-table21-smoke-history.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Run the smoke-speed model against FDS results read through &lt;code>fdsreader&lt;/code>. The
+repository ships the deck, not its output — the slices are 4.2 MB and the full
+run 54 MB — so run FDS once first:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p /tmp/iso21 &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> cd /tmp/iso21 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> fds /path/to/assets/ISO-table21/ISO-table21.fds &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> cd - &lt;span style="color:#75715e"># ~8 min&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run run.py &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --scenario assets/ISO-table21 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir /tmp/iso21 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --smoke-update-interval 0.1 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-smoke-history /tmp/iso-table21-fds-smoke-history.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Inspect the FDS quantities available through &lt;code>fdsreader&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run run.py --inspect-fds --fds-dir /tmp/iso21 --scenario assets/ISO-table21&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>For a case where the coupling is exercised without running FDS yourself, see
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/iso_table22_coupled/README.md" target="_blank" rel="noopener">&lt;code>assets/iso_table22_coupled&lt;/code>&lt;/a>: its output
+is committed (136 kB) and a test reads it on every CI run.&lt;/p>
+&lt;p>Plot smoke-speed history for a single agent:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/plot_smoke_history.py &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --input /tmp/iso-table21-smoke-history.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output /tmp/iso-table21-smoke-history.png &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --agent-id &lt;span style="color:#ae81ff">1&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Plot aggregate smoke-speed history:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/plot_smoke_history.py &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --input /tmp/iso-table21-smoke-history.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output /tmp/iso-table21-smoke-history-aggregate.png&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Generate a stable ISO 20414 Test 18 (Table 21) sweep artifact under &lt;code>artifacts/&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/generate_iso_table21_sweep.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Figure: &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/artifacts/iso-table21-sweep.png" alt="ISO 20414 Test 18 (Table 21) sweep" loading="lazy" />&lt;/p>
+&lt;p>Generate the FDS+Evac smoke-density vs speed verification plot:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/generate_smoke_density_speed_plot.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Figure: &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/artifacts/smoke-density-vs-speed.png" alt="soot_density vs speed" loading="lazy" />&lt;/p>
+&lt;h2>Conversion utilities&lt;span class="hx-absolute -hx-mt-20" id="conversion-utilities">&lt;/span>
+&lt;a href="#conversion-utilities" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Two helper functions support the soot-density-based workflow from the
+original FDS+Evac guide:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>extinction_from_soot_density(soot_density_mg_per_m3)&lt;/code> &amp;ndash; converts
+soot density to extinction using &lt;code>K = K_m * rho_s * 1e-6&lt;/code>, where &lt;code>K_m&lt;/code>
+(&lt;code>mass_extinction_coefficient_m2_per_kg&lt;/code>, default 8700 m²/kg) is the FDS
+default mass-specific extinction coefficient (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>).&lt;/li>
+&lt;li>&lt;code>speed_from_soot_density(base_speed, soot_density_mg_per_m3)&lt;/code> &amp;ndash;
+computes the reduced walking speed directly from soot density.&lt;/li>
+&lt;/ul>
+&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
+&lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">Smoke-speed model&lt;/a>: coded form, defaults and
+deviations from the literature.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a> and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>: the published laws
+and their sources.&lt;/li>
+&lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/evac.f90" target="_blank" rel="noopener">evac.f90&lt;/a> &amp;ndash; Original FDS+Evac Fortran
+source for cross-referencing implementation details.&lt;/li>
+&lt;/ul></description></item><item><title>Routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</guid><description>
 &lt;div class="hextra-cards hx-mt-4 hx-gap-4 hx-grid not-prose" style="--hextra-cards-grid-cols: 3;">
 &lt;a
 class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="routing"
->&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">Smoke-aware routing&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">Cost formulas, the exposure gate, and the decision pipeline.&lt;/div>&lt;/a>
+>&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">Routing in practice&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">Cost formulas, the exposure gate, and the decision pipeline.&lt;/div>&lt;/a>
 &lt;a
 class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="route-cost-gate"
->&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">The gate cost model&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">How one quantity refuses a route and orders the survivors.&lt;/div>&lt;/a>
-&lt;/div></description></item><item><title>Wayfinding</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/</guid><description>
-&lt;div class="hextra-cards hx-mt-4 hx-gap-4 hx-grid not-prose" style="--hextra-cards-grid-cols: 3;">
-&lt;a
-class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="wayfinding"
->&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">Wayfinding&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">Sign legibility, per-agent cognitive maps, and the examples of the talk.&lt;/div>&lt;/a>
-&lt;/div></description></item></channel></rss>
+>&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">Gate model in practice&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">How one quantity refuses a route and orders the survivors.&lt;/div>&lt;/a>
+&lt;/div></description></item><item><title>Wayfinding in practice</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/</guid><description>
+&lt;div class="gh-alert gh-alert-note" role="note">
+&lt;p class="gh-alert-title">&lt;svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">&lt;path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z">&lt;/path>&lt;/svg>Note&lt;/p>
+&lt;p>This page shows the wayfinding model at work on the assets. For its
+definition, parameters, defaults and limitations, and the terms used here
+(&lt;em>legible&lt;/em>, &lt;em>known&lt;/em>, &lt;em>learn&lt;/em>, &lt;em>visited&lt;/em>, &lt;em>frontier&lt;/em>), see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>. The intuition is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#wayfinding">Concepts › Wayfinding&lt;/a>.&lt;/p>
+&lt;/div>&lt;p>This page follows §3 of the talk
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>,
+one slide per section. Each section says what the code does, where, and which
+figure belongs there. Where the talk and the code disagree, a &lt;strong>Talk vs code&lt;/strong>
+note says so, and the code is the reference.&lt;/p>
+&lt;p>Mechanisms were checked against main at &lt;code>f363758&lt;/code>, which includes #170 and
+#174. Each reported run outcome names its source: a repository test, an
+asset README, a figure script, or a run on main by one of the investigations
+of #160 and #168. None of the examples validates human wayfinding. They
+verify that the implementation does what this page says.&lt;/p>
+&lt;p>The argument of the section is that &lt;strong>route choice can only choose among
+routes the agent knows, so what the agent knows is as much part of the model
+as how it prices smoke&lt;/strong>. An agent starts with what its familiarity gives it.
+After that, its map grows only through legible signs, or, with
+&lt;code>--no-visibility&lt;/code>, through every neighbour of the nodes it advances from.&lt;/p>
+&lt;h2>1. A sign is more than a position&lt;span class="hx-absolute -hx-mt-20" id="1-a-sign-is-more-than-a-position">&lt;/span>
+&lt;a href="#1-a-sign-is-more-than-a-position" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A node is a place. A sign tells someone standing elsewhere that the place
+exists. Every exit, checkpoint and waypoint therefore carries a sign
+descriptor \(\{x, y, \alpha_s, C\}\), authored or synthesised
+(&lt;code>visibility.py:34–73&lt;/code>).&lt;/p>
+&lt;p>pyFDS-Evac does not compute legibility itself. It hands the descriptors to
+&lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>, the implementation of
+the waypoint method of Börger, Belt and Arnold (2024). fdsvismap precomputes,
+for every sign, grid cell and stored time, whether the sign is legible there.
+The rule, with its view-angle, obstruction and extinction factors, is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#1-the-sign-legibility-test">Models › Wayfinding §1&lt;/a>.
+During the run the model only looks the answer up (&lt;code>visibility.py:531–543&lt;/code>).
+A better visibility model in fdsvismap, or a &lt;em>C&lt;/em> measured for a real sign,
+therefore reaches the evacuation model without a change to the routing code.&lt;/p>
+&lt;p>&lt;em>C&lt;/em> is set per sign. The code has one default, &lt;em>C&lt;/em> = 3, for authored and
+synthesised signs alike (&lt;code>visibility.py:58&lt;/code>, &lt;code>:94&lt;/code>).&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The speaker notes say &lt;em>C&lt;/em> defaults &amp;ldquo;to Jin&amp;rsquo;s 3 for
+reflective and 8 for lit signs&amp;rdquo;. The code has no default for lit signs; a
+sign gets 8 only if its author writes it. 3 and 8 are the FDS User Guide
+values. The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Fundamentals page&lt;/a> gives Jin&amp;rsquo;s
+ranges as 2–4 for reflecting and 5–10 for light-emitting signs.&lt;/p>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says legibility is &amp;ldquo;evaluated from the agent&amp;rsquo;s
+actual position, not the source node centroid&amp;rdquo;. Periodic learning uses the
+agent&amp;rsquo;s stored position, which is the previous step&amp;rsquo;s
+(&lt;code>scenario.py:2240–2253&lt;/code>, &lt;code>:2423&lt;/code>). Perception at spawn uses the spawn
+node&amp;rsquo;s routing point for all agents of that spawn area
+(&lt;code>cognitive_map.py:131–135&lt;/code>). The three sensing positions are tabulated on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.2&lt;/a>.&lt;/p>
+&lt;p>The reading distance \(V_{\max}\) and how to change it are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#1-the-sign-legibility-test">Models › Wayfinding §1&lt;/a>.&lt;/p>
+&lt;/blockquote>&lt;!-- FIGURE: none. The talk shows Börger, Belt and Arnold (2024), Fig. 11,
+a third-party figure; link to the paper instead of reproducing it.
+Proposed new figure: plan view of one sign's legible region at mean K = 0,
+0.2 and 0.5 1/m, C = 3, drawn with the 30 m cap, computed by fdsvismap on a small deck with one wall. -->
+&lt;h2>2. One number flips the exit&lt;span class="hx-absolute -hx-mt-20" id="2-one-number-flips-the-exit">&lt;/span>
+&lt;a href="#2-one-number-flips-the-exit" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The asset &lt;code>assets/exit_visibility_alpha&lt;/code> isolates the bearing. It is a
+corridor 4 m wide and 30 m long, with an exit at each end, and 40 agents at
+familiarity 0 about 9 m from the near exit and 19 m from the far one. The two
+configs differ only in the bearing of the near exit&amp;rsquo;s sign; the far sign faces
+the agents in both (&lt;code>assets/exit_visibility_alpha/README.md&lt;/code>).&lt;/p>
+&lt;p>With the near sign facing the agents (\(\alpha_s = 0\)), both exits are learned
+at spawn and the near one ranks first. With it facing away (\(\alpha_s = 180\)),
+\(A = 0\) at every agent cell, so the near exit is never learned. It is
+absent, not refused, so the all-refused fallback cannot restore it
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>).&lt;/p>
+&lt;p>The tests pin the mechanism at router level
+(&lt;code>tests/test_exit_visibility_alpha.py::TestExitChoiceFollowsLegibility::test_illegible_near_exit_never_enters_the_map&lt;/code>,
+&lt;code>::TestExitChoiceFollowsLegibility::test_the_near_exit_is_absent_not_rejected&lt;/code>,
+&lt;code>::TestExitChoiceFollowsLegibility::test_a_fully_familiar_agent_ignores_the_bearing&lt;/code>).
+Full runs of the asset follow the README&amp;rsquo;s recipe, which uses &lt;code>--fds-dir&lt;/code>, so
+legibility comes from the FDS vismap, not from clear air. In those runs all 40
+agents take the near exit when the sign faces them, and all 40 take the far
+exit when it faces away. With FDS 6.10.1 output of the smoke-free deck and
+seed 1904, on main after #170:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Near sign&lt;/th>
+&lt;th>Exit taken&lt;/th>
+&lt;th>Egress&lt;/th>
+&lt;th>Route switches&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>\(\alpha_s = 0\)&lt;/td>
+&lt;td>40 to &lt;code>E_near&lt;/code>&lt;/td>
+&lt;td>17.07 s&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(\alpha_s = 180\)&lt;/td>
+&lt;td>40 to &lt;code>E_far&lt;/code>&lt;/td>
+&lt;td>25.89 s&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The visibility cap is 30 m. Rerun in clear air with that cap, both configs
+give the same counts and egress times.&lt;/p>
+&lt;p>The ranked exit along the corridor (Figure 2) was shifted by
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167" target="_blank" rel="noopener">#167&lt;/a>: before
+#170 the switch from near to far fell at y ≈ 20.25. With the fix, clear-air
+ranking uses travel time measured from the agent&amp;rsquo;s position, and the switch is
+at y ≈ 15.0, midway between the two exits.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/sign_bearing.png" alt="Two 30 m corridors side by side, each with an exit at both ends and the cells from which the near sign is legible shaded yellow; in the left corridor the near sign faces the agents and all 40 take the near exit, in the right the near sign faces away and all 40 walk to the far exit" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 1. One number flips the exit. &lt;code>assets/exit_visibility_alpha&lt;/code>: a
+4 m × 30 m corridor, 40 agents at familiarity 0, run in clear air on the
+0.25 m grid, seed 1904. The two configurations differ only in the bearing of
+the near exit&amp;rsquo;s sign. Yellow: cells from which the near sign is legible. The
+far sign is legible for y = 0–29.2 m in both panels. (a) \(\alpha_s = 0\): the
+near sign is legible for y = 0.8–30.0 m; 40 of 40 agents take the near exit,
+median walk 9.2 m, out at 17.1 s. (b) \(\alpha_s = 180\): the near sign is
+legible only for y = 0–0.8 m; the near exit is never learned, and 40 of 40
+agents walk to the far exit, median walk 19.0 m, out at 25.9 s. Counts, walks
+and times are computed from the runs. Script:
+&lt;code>scripts/figures/sign_bearing.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/exit_choice_map.png" alt="Two corridors side by side, each cell shaded by the exit a discovery agent standing there would take; left, blue for the near exit below y = 15 m and hatched orange for the far exit above it; right, hatched orange almost everywhere because the near exit is not in the map" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 2. What routing would decide, by position. Each cell is shaded by the
+exit that &lt;code>rank_routes&lt;/code> ranks first for a discovery agent standing there,
+given what it perceives from that spot: blue for &lt;code>E_near&lt;/code>, hatched orange for
+&lt;code>E_far&lt;/code>. (a) \(\alpha_s = 0\): both exits are in the map, and the split is a
+cost crossover at y = 15.0 m, midway between them. (b) \(\alpha_s = 180\):
+there is no crossover; the near exit is absent from the map, so every cell
+above the near sign takes &lt;code>E_far&lt;/code>. The few near-exit cells at the bottom of
+(b) lie south of the sign, in the half-plane it faces. Script:
+&lt;code>scripts/generate_exit_visibility_map.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>\(\alpha_s = 0\)&lt;/th>
+&lt;th>\(\alpha_s = 180\)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/trajectories_visible.png" alt="Walked trajectories of 40 agents from the spawn area, all dashed blue, all going south to the near exit" loading="lazy" />&lt;/td>
+&lt;td>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/trajectories_hidden.png" alt="Walked trajectories of 40 agents from the spawn area, all solid red, all going north to the far exit" loading="lazy" />&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;em>Figure 3. What the agents did. Trajectories of the FDS-backed runs in the
+table above (FDS 6.10.1, clear air, seed 1904): 40 of 40 agents walk to
+&lt;code>E_near&lt;/code> when its sign faces them, and 40 of 40 to &lt;code>E_far&lt;/code> when it faces away.
+The runs used the earlier visibility cap (the grid diagonal, 30.8 m); both
+signs are within 30 m of every agent, and the clear-air reruns with the 30 m
+cap give the same counts and times. Script: &lt;code>scripts/plot_trajectories.py&lt;/code>
+on the runs&amp;rsquo; SQLite output.&lt;/em>&lt;/p>
+&lt;h2>3. What the agent knows&lt;span class="hx-absolute -hx-mt-20" id="3-what-the-agent-knows">&lt;/span>
+&lt;a href="#3-what-the-agent-knows" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk draws wayfinding as a loop of three stages. The code has the same
+structure.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Perception.&lt;/strong> &lt;code>node_is_visible&lt;/code>, called by &lt;code>expand_from_visibility&lt;/code> and
+&lt;code>expand_on_arrival&lt;/code>. It is asked only about neighbours of one node
+(&lt;code>cognitive_map.py:177–186&lt;/code>, &lt;code>:228–234&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Knowledge.&lt;/strong> &lt;code>AgentCognitiveMap&lt;/code>: known nodes, known edges, visited nodes
+(&lt;code>cognitive_map.py:10–25&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Decision.&lt;/strong> &lt;code>rank_routes&lt;/code> on &lt;code>cognitive_subgraph(map, graph)&lt;/code>
+(&lt;code>route_graph.py:1272–1276&lt;/code>), then the switching rules of
+&lt;code>evaluate_and_reroute&lt;/code>. With no reachable known exit, exploration or the
+patrol (&lt;code>route_graph.py:1789–1851&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>The loop.&lt;/strong> Moving changes the stored position that the next periodic
+learning uses (&lt;code>scenario.py:2238–2254&lt;/code>), and advancing along the path
+triggers learning at the node left behind (&lt;code>scenario.py:2508–2551&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>The full contract, including the #91 exception, the difference between
+ranking and adoption, and the learning schedule, is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2&lt;/a>.&lt;/p>
+&lt;!-- FIGURE: loop (proposed). A static redraw of the talk's HTML diagram:
+three boxes (perception, knowledge, decision) and a loop back, with the
+function name under each box. The talk slide has no image file. -->
+&lt;h2>4. An empty map&lt;span class="hx-absolute -hx-mt-20" id="4-an-empty-map">&lt;/span>
+&lt;a href="#4-an-empty-map" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk asks where an agent goes when it knows nothing and no sign is legible
+anywhere. Its intended answer: the agent has nothing to route to, explores,
+learns nothing new, and circles. That is why the map has to be filled by
+something, and the following slides show signs filling it.&lt;/p>
+&lt;p>&lt;strong>The code does not do this for a map that holds only the spawn node. This is
+a known defect, not intended behaviour&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>): the agent
+keeps steering towards the geometrically nearest exit, which it does not know.
+The chain of code is under the exception in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>.&lt;/p>
+&lt;p>Two probes support this. In ours, we ran the three-exit corridor of
+&lt;code>tests/test_initial_exit_from_cognitive_map.py&lt;/code> with 40 agents at familiarity
+0, no &lt;code>entrance&lt;/code>, rerouting every 1 s and seed 7. We ran it first with no
+visibility model, and then with a clear-air model at 0.5 m in which every sign
+faced away from the crowd. In both runs every agent left by the geometrically
+nearest exit, and the route history recorded no switch. In the clear-air run,
+3 of the 40 agents learned that exit on the way. Our probe scripts are
+not in the repository. Figure 4 shows the same behaviour for one agent.&lt;/p>
+&lt;p>Circling needs a patrol target: at least one other known node reachable over
+known edges. Whether the agent then circles also depends on connectivity and
+steering. That is the smoke case of &lt;code>assets/world_100&lt;/code> in #122.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says the map &amp;ldquo;holds a single node&amp;rdquo; and &amp;ldquo;the agent
+circles&amp;rdquo;. For a single node the code keeps the geometric target. No
+repository test pins either behaviour.&lt;/p>
+&lt;/blockquote>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/empty_map_routes.png" alt="Plan of a floor with two exits and one agent whose map holds only its spawn node; yellow cells mark where a sign is legible, none of them on the agent’s path, and the agent walks straight to the south exit, which is not in its map" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 4. An empty map, as the code behaves on main. One agent at
+familiarity 0 with a clear-air visibility model. Yellow: cells from which a
+sign is legible. The south exit, 22.4 m from the start, has a sign facing out
+of the building; the west exit, 30.1 m away, has a sign facing along the
+corridor behind walls. The map holds only the spawn for the whole run, and the
+agent makes 0 route switches. After the default 10 s pre-movement it walks
+23.4 m to the geometrically nearest exit, the south one, which it does not
+know, and is out at 28.8 s. Nothing replaces the target it received at spawn
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>). The
+intended behaviour is exploration. Script: &lt;code>scripts/figures/empty_map_routes.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>5. Per-agent cognitive maps&lt;span class="hx-absolute -hx-mt-20" id="5-per-agent-cognitive-maps">&lt;/span>
+&lt;a href="#5-per-agent-cognitive-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk calls this slide &amp;ldquo;staff know the building, visitors discover it&amp;rdquo;.
+In the code there are no staff and no visitors. There is a familiarity value
+per group; at \(p = 1\) the agent is given the whole graph, which is an
+assumption about the agent, not a model of training. How the map starts and
+grows is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.1–2.2&lt;/a>.&lt;/p>
+&lt;p>The talk illustrates this on a T-corridor with a junction and two exits. In
+that schematic the discovery agent learns the junction at spawn and both exits
+at the junction. Smoke then fills the right arm, and the agent heads for exit A.
+In the code, whether exit B is refused depends on its route&amp;rsquo;s optical depth
+exceeding the gate budget. Legibility of B&amp;rsquo;s sign plays no part in that
+(&lt;code>route_graph.py:1345–1351&lt;/code>).&lt;/p>
+&lt;!-- FIGURE: cognitive_map (four panels + legend)
+Source: scripts/figures/cognitive_map.py. Schematic: the known sets, the
+smoke and the chosen exit are hard-coded (cognitive_map.py:66–99); nothing is
+computed. -->
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/cognitive_map.png" alt="Four panels of a T-shaped corridor showing which nodes and edges one agent knows: at spawn, at the junction, with smoke in the right arm, and for a fully familiar agent" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 5. Schematic, not a simulation: known sets and choices are drawn by
+hand. A T-shaped corridor; filled nodes and solid edges are known. (1) A
+discovery agent at spawn knows its spawn node and the junction, whose sign is
+legible from there. (2) At the junction both exit signs are legible, and both
+exits are learned. (3) Smoke fills the right arm. Exit B stays known; if its
+route exceeds the exposure budget, the gate refuses it and the agent heads for
+A. (4) A fully familiar agent knows the whole graph at t = 0. Script:
+&lt;code>scripts/figures/cognitive_map.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> Panel 2 says &amp;ldquo;every neighbour whose sign is legible from the
+new node&amp;rdquo;. The code tests legibility from the agent&amp;rsquo;s position when the
+path advances (&lt;code>scenario.py:2519–2520&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says &amp;ldquo;Learned edges are bidirectional&amp;rdquo;. That holds
+only for edges learned by perception and arrival, and only where the graph
+has the reverse edge. With automatic wiring, exits have no outgoing edges.
+Paths learned from familiarity or &lt;code>entrance&lt;/code> are forward only
+(&lt;code>cognitive_map.py:71–74&lt;/code>, &lt;code>:139–152&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide calls &lt;code>full&lt;/code> &amp;ldquo;the FDS+Evac default&amp;rdquo;. It is
+pyFDS-Evac&amp;rsquo;s default. FDS+Evac&amp;rsquo;s &lt;code>KNOWN_DOOR&lt;/code> defaults to &lt;code>.FALSE.&lt;/code>
+(&lt;code>evac.f90:2223&lt;/code>, &lt;code>:2666&lt;/code>).&lt;/p>
+&lt;/blockquote>&lt;h2>6. The map remembers&lt;span class="hx-absolute -hx-mt-20" id="6-the-map-remembers">&lt;/span>
+&lt;a href="#6-the-map-remembers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A known node stays known after its sign stops being legible. A visibility
+query cannot do that on its own, because it answers only for the present
+position and time.&lt;/p>
+&lt;p>The asset &lt;code>assets/cognitive_map_memory&lt;/code> separates the two. A corridor has an
+end exit, legible from spawn, and a side exit whose sign, at \((4, 20)\)
+facing west, is legible from the centreline only inside a region. The asset
+builder&amp;rsquo;s estimate, y ≈ 12.5–27.5 m, follows from the 30 m cap
+(&lt;code>build_geometry.py:61&lt;/code>, &lt;code>:78–95&lt;/code>). On the 0.25 m clear-air grid the model
+reads the sign from y = 12.3 to 27.8 m on the centreline (Figure 6); the
+difference comes from the rasterised sight line.&lt;/p>
+&lt;p>The probes place one discovery agent at fixed positions on the centreline, in
+sequence, and ask the router which exit ranks first there. They are sequential
+state probes, not a walked trajectory. The tests assert four things
+(&lt;code>tests/test_cognitive_map_memory.py&lt;/code>):&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Learning.&lt;/strong> The side exit is unknown at y = 8 and known at y = 14
+(&lt;code>::TestAcquisitionAndPersistence::test_side_exit_is_acquired_on_entering_the_window&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Memory.&lt;/strong> At y = 30 the sign is not legible, and the side exit is still
+known and routable (&lt;code>::TestAcquisitionAndPersistence::test_side_exit_persists_after_its_sign_goes_illegible&lt;/code>,
+&lt;code>::TestAcquisitionAndPersistence::test_a_remembered_exit_is_routable_though_illegible&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Control.&lt;/strong> A probe that never enters the region never learns it
+(&lt;code>::TestAcquisitionAndPersistence::test_an_agent_that_never_enters_the_window_never_learns_it&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Ranking.&lt;/strong> The side exit ranks first at y = 14, the end exit at y = 30
+(&lt;code>::TestAcquisitionAndPersistence::test_acquiring_the_side_exit_changes_where_the_agent_would_go&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>::test_map_memory_probes_match_engine&lt;/code> pins the whole northbound sequence.
+The probes use the test&amp;rsquo;s clear-air setup, which has no routing engine, so the
+distances are straight lines.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>y [m]&lt;/th>
+&lt;th>side exit&lt;/th>
+&lt;th>first-ranked exit&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>4&lt;/td>
+&lt;td>unknown&lt;/td>
+&lt;td>end&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>10&lt;/td>
+&lt;td>unknown&lt;/td>
+&lt;td>end&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>14&lt;/td>
+&lt;td>known, legible&lt;/td>
+&lt;td>side&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>20&lt;/td>
+&lt;td>known, legible&lt;/td>
+&lt;td>side&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>26&lt;/td>
+&lt;td>known, legible&lt;/td>
+&lt;td>end (5.30 m against 6.50 m)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>30&lt;/td>
+&lt;td>known, not legible&lt;/td>
+&lt;td>end&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The two distances are equal at y ≈ 25.4. At every probe where both exits are
+known, the distance from the agent to each exit is shorter than that route&amp;rsquo;s
+first leg from the spawn node (16.3 m to the side exit, 27.3 m to the end
+exit, from the test&amp;rsquo;s comment). The #167 cap is therefore inactive here. We
+checked this by hand.&lt;/p>
+&lt;p>Memory therefore shows on the way north as &lt;em>known and routable&lt;/em>, not as
+&lt;em>first-ranked&lt;/em>. It changes the ranking on the way back. Probed again at
+y = 10 after the northbound sequence, the side sign is still not legible
+there, but the side exit is known and nearer (10.31 m against 21.30 m), and it
+ranks first. At the same place before learning, the end exit ranked first.
+&lt;code>::test_map_memory_probes_match_engine&lt;/code> pins this return probe too.&lt;/p>
+&lt;p>In a moving agent, ranking is not adoption: the switching rules can keep a
+current exit that no longer ranks first
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>).
+In the full run of the asset README, with the FDS vismap, all 20 agents
+left by the side exit, egress 21.2 s, each after one switch from the end exit
+to the side exit (&lt;code>assets/cognitive_map_memory/README.md&lt;/code>).&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says the side exit is learned &amp;ldquo;at y = 12.5&amp;rdquo; and
+&amp;ldquo;at y = 30 … the agent still routes to it&amp;rdquo;. 12.5 m is the builder&amp;rsquo;s 30 m
+estimate. The first test probe inside the region is at y = 14. At y = 26 and
+30 the end exit ranks first. This follows from
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/pull/65" target="_blank" rel="noopener">#65&lt;/a>, which prices
+routes from the agent&amp;rsquo;s position (see
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/160" target="_blank" rel="noopener">#160&lt;/a>).&lt;/p>
+&lt;/blockquote>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/map_memory.png" alt="Five probes of one corridor: side exit unknown at y = 4, learned at y = 14, legible at y = 20, known but not legible at y = 30, and first-ranked at a return probe at y = 10" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 6. The map remembers. &lt;code>assets/cognitive_map_memory&lt;/code>, clear air, one
+discovery agent probed in sequence at y = 4, 14, 20 and 30 m, then at y = 10 m
+again. These are state probes, not a walk. The shaded, lens-shaped region is
+where the side sign is legible; on the centreline it spans y = 12.3–27.8 m
+(gold ticks). Northbound, the side exit is learned inside the region and
+stays known beyond it. At y = 30 the nearer end exit ranks first. At the return
+probe, where the side sign is not legible, the known side exit is nearer and
+ranks first. At that place before learning, the end exit ranked first. Each
+ranking is computed by &lt;code>rank_routes&lt;/code>. Script: &lt;code>scripts/figures/map_memory.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>7. Full versus discovery&lt;span class="hx-absolute -hx-mt-20" id="7-full-versus-discovery">&lt;/span>
+&lt;a href="#7-full-versus-discovery" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk compares the two tiers on the same geometry, seed and signs. One
+thing differs in the code, and until #174 a second one did:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>The initial map.&lt;/strong> A fully familiar agent knows the whole graph. A
+discovery agent explores: it takes the frontier with the lowest path cost
+from its position, learns as the path advances, and, with no frontier left,
+patrols its known nodes (&lt;code>cognitive_map.py:262–399&lt;/code>). Route history logs
+&lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code> and &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code> (&lt;code>route_graph.py:1800&lt;/code>, &lt;code>:1815&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>The ranked length of the first leg&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172" target="_blank" rel="noopener">#172&lt;/a>, fixed
+by #174, now merged), measured as a straight line, even through walls, for
+discovery agents; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Models › Wayfinding, Limitations&lt;/a>.&lt;/li>
+&lt;/ol>
+&lt;p>Before #174, a comparison around obstacles mixed the effect of knowledge with
+the effect of #172. The run of Figure 7 gives the same numbers before and
+after #174. For both tiers, the first leg&amp;rsquo;s smoke is sampled on a straight
+line from the agent to its next node
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>).&lt;/p>
+&lt;p>The patrol can stall: when smoke limits legibility to a few metres, a patrol
+over a few known nodes may never pass a legible new sign
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/122" target="_blank" rel="noopener">#122&lt;/a>).&lt;/p>
+&lt;p>&lt;strong>Discovery times depend on the grid.&lt;/strong> On
+&lt;code>assets/familiarity_test_discovery&lt;/code>, seed 420, the #168 investigation measured
+the following discovery egress times on main:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Clear-air cell&lt;/th>
+&lt;th>Discovery egress&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>0.25 m&lt;/td>
+&lt;td>88.6 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.1 m&lt;/td>
+&lt;td>138.2 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.05 m&lt;/td>
+&lt;td>158.5 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.025 m&lt;/td>
+&lt;td>200.8 s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The fully familiar tier took 33.9 s. The code advises a cell smaller than the
+thinnest wall (&lt;code>visibility.py:455–465&lt;/code>). The #168 investigation recommends at
+most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
+continued change below that is not explained
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>). Do not
+quote a discovery egress time without its grid.&lt;/p>
+&lt;p>The talk also shows discovery with and without sign gating on the NIST floor
+plan of The Station (&lt;code>assets/station_fahy&lt;/code>). With &lt;code>--no-visibility&lt;/code>, advancing
+from a node teaches every neighbour. With a visibility model, only neighbours
+with legible signs are learned, so walls and bearings cut the known set even
+in clear air. The talk&amp;rsquo;s counts (8 of 11 and 3 of 11 nodes) were not
+reproduced for this page.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/full_vs_discovery_paths.png" alt="Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, discovery agents detour through a dead-end room first" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 7. Full versus discovery. &lt;code>assets/familiarity_test_full&lt;/code> and
+&lt;code>assets/familiarity_test_discovery&lt;/code>: 20 agents, seed 420, same geometry and
+signs; &lt;code>familiarity&lt;/code> differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
+known from t = 0, no route changes; the last agent leaves at 33.9 s, median
+path 29 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
+end; the exit enters the maps at t = 34–145 s (median 60 s). After t = 0 the
+agents make 101 route changes (60 explore, 21 wander, 20 onto the exit), with a
+detour into a dead-end room; the last leaves at 158.5 s, median path 61 m. The
+discovery time has not converged with the grid (88.6 s at 0.25 m, 200.8 s at
+0.025 m; #168). This illustrates the mechanism; it is not a result. Script: &lt;code>scripts/figures/full_vs_discovery_paths.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The talk caption gives 35.1 s and 75.1 s. Those are results
+from the deck before its rework in #99 (&lt;code>docs/testing-familiarity.md&lt;/code>). The
+world_100 clip (&amp;ldquo;42 signs&amp;rdquo;) and the Station clips were not reproduced for this
+page, and their decks and commits are not recorded.&lt;/p>
+&lt;/blockquote>&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
+&lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>Börger, K., Belt, A., &amp;amp; Arnold, L. (2024). &lt;em>A waypoint based approach to
+visibility in performance based fire safety design&lt;/em>. Fire Safety Journal,
+150, 104269.
+&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2024.104269&lt;/a>&lt;/li>
+&lt;li>Haensel, D. (2014). &lt;em>A knowledge-based routing framework for pedestrian
+dynamics simulation&lt;/em>. Diploma thesis, TU Dresden.&lt;/li>
+&lt;/ul></description></item></channel></rss>

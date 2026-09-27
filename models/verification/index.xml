@@ -19,12 +19,10 @@ occurs at a log-normal distribution.&lt;/p>
 referenced below are not currently committed to the repo — the formulae
 and pass/fail numbers here were computed and verified with them at the
 time, but a reader can&amp;rsquo;t regenerate the reference curve or view the plots
-from this checkout. The &lt;code>TODO&lt;/code> in &lt;a href="#how-to-run">How to Run&lt;/a>
-and the
-&lt;a href="#remaining-before-this-test-case-is-complete">Remaining&lt;/a>
-section below
-are original and still open.&lt;/p>&lt;/blockquote>
-&lt;h2>Test Setup&lt;span class="hx-absolute -hx-mt-20" id="test-setup">&lt;/span>
+from this checkout. The &lt;code>TODO&lt;/code> in &lt;a href="#how-to-run">How to Run&lt;/a> and the
+&lt;a href="#remaining-before-this-test-case-is-complete">Remaining&lt;/a> section below
+are original and still open.&lt;/p>
+&lt;/blockquote>&lt;h2>Test Setup&lt;span class="hx-absolute -hx-mt-20" id="test-setup">&lt;/span>
 &lt;a href="#test-setup" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;strong>Geometry:&lt;/strong> Sealed room (no vents/openings), so CO cannot escape and the
 concentration field stays spatially uniform once mixed.&lt;/li>
@@ -76,8 +74,7 @@ itself uses to produce its &lt;code>FED&lt;/code> device output. Background CO2 
 all three cases.&lt;/p>
 &lt;h3>Formulae used&lt;span class="hx-absolute -hx-mt-20" id="formulae-used">&lt;/span>
 &lt;a href="#formulae-used" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>These are the terms the hand calculation evaluates; the coded forms are on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>
-page.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a> page.&lt;/p>
 &lt;p>&lt;strong>FED from CO&lt;/strong> (eq. 22.43), C_CO in ppm, t in minutes:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>FED_CO = 2.764e-5 x (C_CO)^1.036 x t&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -205,8 +202,8 @@ per concentration) are produced from the FED history CSV by the plotting
 scripts in &lt;code>scripts/&lt;/code>; see &lt;code>docs/usage.md&lt;/code>.&lt;/p>
 &lt;h2>How to Run&lt;span class="hx-absolute -hx-mt-20" id="how-to-run">&lt;/span>
 &lt;a href="#how-to-run" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
-&lt;p>TODO — fill in exact commands once finalized.&lt;/p>&lt;/blockquote>
-&lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
+&lt;p>TODO — fill in exact commands once finalized.&lt;/p>
+&lt;/blockquote>&lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
 &lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Status: All cases of 2000, 4000, and 8000 ppm are passing.&lt;/strong>&lt;/p>
 &lt;p>For the 8000 ppm case, all 100 agents now show &lt;code>incapacitated = True&lt;/code> at
 ~186–187 s, matching the hand-calculated FED = 1.0 time of &lt;strong>186.6 s&lt;/strong>
@@ -354,8 +351,7 @@ directly — &lt;em>SFPE Handbook of Fire Protection Engineering&lt;/em>, 5th ed
 the FDS+Evac guide (that document has no heat term at all).&lt;/p>
 &lt;h3>Formula used&lt;span class="hx-absolute -hx-mt-20" id="formula-used">&lt;/span>
 &lt;a href="#formula-used" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>FED from convective heat&lt;/strong> (SFPE Handbook Eq. 63.44), T in °C, Δt in minutes;
-the coded form is on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#convective-heat">FED model&lt;/a>
-page:&lt;/p>
+the coded form is on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#convective-heat">FED model&lt;/a> page:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>FED_HEAT = sum_{t1}^{t2} [ T^3.4 / 5e7 ] * dt&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -512,8 +508,7 @@ in this table:&lt;/p>
 &lt;/tbody>
 &lt;/table>
 &lt;p>Target tolerance: &amp;lt;0.5%, matching the CO ladder&amp;rsquo;s precedent in
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/">&lt;code>docs/testing-homogeneous.md&lt;/code>&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/">&lt;code>docs/testing-homogeneous.md&lt;/code>&lt;/a>.&lt;/p>
 &lt;p>Remaining before this test case is complete:&lt;/p>
 &lt;ul>
 &lt;li>Run all three decks through FDS and fill in the table above.&lt;/li>
@@ -540,8 +535,7 @@ geometry and the same paired real-fire FDS deck, so any difference in
 outcome is attributable to the familiarity mechanism itself.&lt;/p>
 &lt;p>This test also exercises, indirectly, three engine-level fixes/features that
 were required before familiarity could have &lt;em>any&lt;/em> observable effect at all
-(see &lt;a href="#background-why-this-test-exists">Background&lt;/a>
-below).&lt;/p>
+(see &lt;a href="#background-why-this-test-exists">Background&lt;/a> below).&lt;/p>
 &lt;blockquote>
 &lt;p>&lt;strong>Deck rework (2026-08-10, PR #99).&lt;/strong> The decks no longer contain the
 scripted journey and shortcut-only transitions described below: journeys
@@ -552,8 +546,8 @@ partition wall so an FDS-resolution visibility grid can resolve its
 sightline. The scripted-tour/shortcut mechanics and the results quoted
 below document the &lt;em>original&lt;/em> experiment — kept because the engine fixes
 it motivated are part of the routing system&amp;rsquo;s history. Discovery on the
-reworked decks is genuine frontier exploration, not a retrace of a tour.&lt;/p>&lt;/blockquote>
-&lt;h2>Test Setup&lt;span class="hx-absolute -hx-mt-20" id="test-setup">&lt;/span>
+reworked decks is genuine frontier exploration, not a retrace of a tour.&lt;/p>
+&lt;/blockquote>&lt;h2>Test Setup&lt;span class="hx-absolute -hx-mt-20" id="test-setup">&lt;/span>
 &lt;a href="#test-setup" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;strong>Geometry:&lt;/strong> hand-drawn maze-like floor plan, 20 m × 18 m, 0.1 m walls,
 1.2 m doors throughout, generated parametrically by each config folder&amp;rsquo;s
@@ -566,8 +560,7 @@ at once — not flow-spawned).&lt;/li>
 Real combustion via &lt;code>&amp;amp;REAC&lt;/code> (not a prescribed &lt;code>&amp;amp;INIT&lt;/code>); the FDS walls
 mirror the walkable geometry exactly so smoke propagates through the same
 doorways agents use. &lt;em>Not required for the pure-routing result below&lt;/em> —
-see &lt;a href="#scope--caveats">Scope&lt;/a>
-.&lt;/li>
+see &lt;a href="#scope--caveats">Scope&lt;/a>.&lt;/li>
 &lt;li>&lt;strong>Checkpoint graph:&lt;/strong> the maze has one &lt;strong>scripted tour&lt;/strong> —
 &lt;code>spawn → CP0 → CP1 → CP2 → CP3 → exit&lt;/code> — walking the doorway at the west
 wall (CP0), through a floating-wall gap (CP1), a pocket door (CP2), and the
@@ -689,16 +682,15 @@ title="Copy code"
 &lt;/div>
 &lt;p>Or from the webapp: pick the scenario in the sidebar, leave &lt;code>Enable rerouting&lt;/code> checked (default), and run.&lt;/p>
 &lt;p>No &lt;code>--fds-dir&lt;/code>/&lt;code>--vis-cache&lt;/code> needed for the result below — the divergence is
-purely distance-based (see &lt;a href="#scope--caveats">Scope&lt;/a>
-).&lt;/p>
+purely distance-based (see &lt;a href="#scope--caveats">Scope&lt;/a>).&lt;/p>
 &lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
 &lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
 &lt;p>&lt;strong>Numbers not yet rerun.&lt;/strong> The times below were measured before the
 travel-time fix (#170), the discovery routing-engine fix (#174) and the
 30 m sign reading distance (#177). The last replaced a cap equal to the
 grid diagonal, about 27 m for this 20 m × 18 m plan. The pass criteria
-still hold in the test suite; the times will be updated after a rerun.&lt;/p>&lt;/blockquote>
-&lt;p>&lt;strong>Status: passing.&lt;/strong> Both tiers evacuate all agents; &lt;code>full&lt;/code> takes the
+still hold in the test suite; the times will be updated after a rerun.&lt;/p>
+&lt;/blockquote>&lt;p>&lt;strong>Status: passing.&lt;/strong> Both tiers evacuate all agents; &lt;code>full&lt;/code> takes the
 shortcut and finishes markedly faster than &lt;code>discovery&lt;/code>, which retraces the
 scripted maze tour.&lt;/p>
 &lt;table>
@@ -728,8 +720,7 @@ scripted maze tour.&lt;/p>
 &lt;p>&lt;code>discovery&lt;/code> showing zero explicit switches is expected, not a bug: its
 frontier choice happens to coincide with the scripted route at every step
 for this maze&amp;rsquo;s specific checkpoint distances (see
-&lt;a href="#whats-being-verified">What&amp;rsquo;s Being Verified&lt;/a>
-, point 2) — it&amp;rsquo;s still
+&lt;a href="#whats-being-verified">What&amp;rsquo;s Being Verified&lt;/a>, point 2) — it&amp;rsquo;s still
 routing purely off its own explored knowledge, it just never gets lucky
 enough to find the shortcut before finishing.&lt;/p>
 &lt;p>Full test suite (&lt;code>tests/test_familiarity_routing.py&lt;/code> plus the existing
@@ -760,10 +751,8 @@ wander behaviour. What must &lt;strong>not&lt;/strong> be claimed from this test
 discovery run, is that a discovery agent&amp;rsquo;s &lt;em>route choice&lt;/em> is
 perception-limited. It is an optimality bound over the agent&amp;rsquo;s known
 subgraph. See
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
-and
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#route-choice-is-an-optimality-bound-not-a-perception-limited-model">route-cost-gate.md&lt;/a>
-.&lt;/li>
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a> and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#route-choice-is-an-optimality-bound-not-a-perception-limited-model">route-cost-gate.md&lt;/a>.&lt;/li>
 &lt;li>On a tie (two frontier candidates equidistant from a discovery agent), the
 choice is deterministic (lexicographically-first checkpoint ID), not
 randomized per agent — every discovery agent facing an identical tie makes

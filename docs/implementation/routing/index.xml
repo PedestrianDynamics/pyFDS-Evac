@@ -1,8 +1,12 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</link><description>Recent content in Routing on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/index.xml" rel="self" type="application/rss+xml"/><item><title>Smoke-aware routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/</guid><description>
-&lt;blockquote>
-&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>
-.&lt;/p>&lt;/blockquote>
-&lt;p>The pyFDS-Evac routing system implements dynamic, smoke-aware path
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</link><description>Recent content in Routing on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/index.xml" rel="self" type="application/rss+xml"/><item><title>Routing in practice</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/</guid><description>
+&lt;div class="gh-alert gh-alert-note" role="note">
+&lt;p class="gh-alert-title">&lt;svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">&lt;path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z">&lt;/path>&lt;/svg>Note&lt;/p>
+&lt;p>This page shows the routing model at work: its machinery, API and data
+structures. For its definition, parameters and defaults, see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Models › Dynamic route rerouting&lt;/a>.&lt;/p>
+&lt;/div>&lt;blockquote>
+&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>.&lt;/p>
+&lt;/blockquote>&lt;p>The pyFDS-Evac routing system implements dynamic, smoke-aware path
 planning. Agents evaluate candidate routes against the current hazard
 fields and periodically reroute as conditions change. Costs are
 recomputed at each reevaluation tick, so the chosen path adapts as
@@ -15,14 +19,13 @@ orders the survivors, with travel time as tie-break. The historical
 &lt;code>&amp;quot;additive&amp;quot;&lt;/code> model, in which smoke is a toll per metre, is still
 available. This page covers the machinery both share; the
 gate itself is documented in
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a>
-.&lt;/p>&lt;/blockquote>
-&lt;blockquote>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a>.&lt;/p>
+&lt;/blockquote>&lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> The cost model supports both smoke and FED (toxic gas)
 terms. FED-based route cost is active when a &lt;code>fed_model&lt;/code> is
 provided to &lt;code>run_scenario&lt;/code>; otherwise &lt;code>fed_rate_sampler&lt;/code> is &lt;code>None&lt;/code>
-and only smoke influences route ranking.&lt;/p>&lt;/blockquote>
-&lt;h2>Stage graph&lt;span class="hx-absolute -hx-mt-20" id="stage-graph">&lt;/span>
+and only smoke influences route ranking.&lt;/p>
+&lt;/blockquote>&lt;h2>Stage graph&lt;span class="hx-absolute -hx-mt-20" id="stage-graph">&lt;/span>
 &lt;a href="#stage-graph" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Routes are evaluated on a &lt;code>StageGraph&lt;/code> &amp;ndash; a directed weighted graph
 where nodes represent stages (distributions, checkpoints, exits).
 The graph is built once at simulation start from the scenario
@@ -92,12 +95,10 @@ active — see note above).&lt;/p>
 the following steps:&lt;/p>
 &lt;ol>
 &lt;li>Sample the extinction coefficient K along the edge polyline
-and take its mean (see &lt;a href="#line-of-sight-extinction">Line-of-sight extinction&lt;/a>
-).&lt;/li>
+and take its mean (see &lt;a href="#line-of-sight-extinction">Line-of-sight extinction&lt;/a>).&lt;/li>
 &lt;li>Compute the smoke-adjusted speed factor from the mean K with the
 linear speed law, using the router&amp;rsquo;s own &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code> and
-&lt;code>min_speed_factor&lt;/code> (see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>
-).&lt;/li>
+&lt;code>min_speed_factor&lt;/code> (see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>).&lt;/li>
 &lt;li>Estimate the travel time from the segment length and reduced
 speed.&lt;/li>
 &lt;li>Optionally, estimate the FED growth along the segment from the
@@ -123,11 +124,9 @@ title="Copy code"
 extinction at each point. The sample spacing is controlled by
 &lt;code>sampling_step_m&lt;/code>. This is the discrete form of the Beer-Lambert
 path-integrated mean of
-&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>
-,
+&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>,
 Eq. 8-9; the Beer-Lambert law itself is on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>.&lt;/p>
 &lt;h3>Arrival-time pricing&lt;span class="hx-absolute -hx-mt-20" id="arrival-time-pricing">&lt;/span>
 &lt;a href="#arrival-time-pricing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>, and &lt;strong>independent of &lt;code>cost_model&lt;/code>&lt;/strong>),
 each segment is priced at the time the agent would reach it rather than
@@ -202,13 +201,11 @@ and &lt;code>rank_cost&lt;/code> decides alone. The &lt;code>tau&lt;/code> in th
 &lt;p>&lt;code>rank_cost&lt;/code> is still what the exit-switch anchor and the same-exit path test
 compare — a travel time under the gate. That the ordering and the anchor read
 different quantities is a known defect; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#known-limitations">route-cost-gate.md&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#known-limitations">route-cost-gate.md&lt;/a>.&lt;/p>
 &lt;p>&lt;code>tier&lt;/code> is 0 for every route unless &lt;code>clean_extinction_threshold &amp;gt; 0&lt;/code> under the
 gate, which is not the default; then a route whose smokiest leg is at or below
 the threshold takes tier 0 and every other route takes tier 1. See
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#the-clean-exit-tier-off-by-default">the clean-exit tier&lt;/a>
-for
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#the-clean-exit-tier-off-by-default">the clean-exit tier&lt;/a> for
 what it does and why it ships off.&lt;/p>
 &lt;h3>Route rejection&lt;span class="hx-absolute -hx-mt-20" id="route-rejection">&lt;/span>
 &lt;a href="#route-rejection" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A route is rejected under any of these conditions:&lt;/p>
@@ -224,8 +221,7 @@ a rival that is clearly safe.&lt;/li>
 the agent&amp;rsquo;s current one the budget is &lt;code>tau_max * tau_return_margin&lt;/code> (0.8), so
 switching needs a cleaner route than staying. &lt;code>K_ave&lt;/code> is the length-weighted
 mean over the route&amp;rsquo;s own polyline, and every exit is judged on it — see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#optical-depth-what-it-measures-and-what-it-does-not">route-cost-gate.md&lt;/a>
-.
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#optical-depth-what-it-measures-and-what-it-does-not">route-cost-gate.md&lt;/a>.
 The rejection reason reads &lt;code>tau 8.41 &amp;gt; 6.00 (K_ave 0.145 x 58.0 m)&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Additive model only:&lt;/strong> &lt;strong>all&lt;/strong> of its segments have K ≥
 &lt;code>visibility_extinction_threshold&lt;/code> &lt;strong>and&lt;/strong> at least one other route has at
@@ -249,10 +245,8 @@ closes on an exit — the distance in &lt;code>tau&lt;/code> is the distance tha
 &lt;a href="#configuration" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>RouteCostConfig&lt;/code> controls all cost evaluation parameters. Most fields are
 also readable from a scenario&amp;rsquo;s &lt;code>routing&lt;/code> block via
 &lt;code>RouteCostConfig.from_routing_params&lt;/code>. The defaults are on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a>
-page, and the full JSON key
-table is in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#configuration">route-cost-gate.md&lt;/a>
-.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a> page, and the full JSON key
+table is in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#configuration">route-cost-gate.md&lt;/a>.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.route_graph &lt;span style="color:#f92672">import&lt;/span> RouteCostConfig
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -272,8 +266,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code> and &lt;code>min_speed_factor&lt;/code> are the router&amp;rsquo;s copy of the linear
 speed law, used only to estimate travel time; their defaults are on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a>
-page.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a> page.&lt;/p>
 &lt;p>Two further fields exist on the dataclass but are &lt;strong>not&lt;/strong> readable from
 the &lt;code>routing&lt;/code> block, so a scenario run always gets their defaults:
 &lt;code>fed_return_margin&lt;/code> (0.9) and &lt;code>impassable_extinction_threshold&lt;/code> (3.0).&lt;/p>
@@ -478,61 +471,84 @@ then fires again every &lt;code>reevaluation_interval_s&lt;/code> thereafter. Wi
 10-second interval and 100 agents the load is spread uniformly across
 the interval.&lt;/p>
 &lt;h3>Rerouting decision flow&lt;span class="hx-absolute -hx-mt-20" id="rerouting-decision-flow">&lt;/span>
-&lt;a href="#rerouting-decision-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>evaluate_and_reroute&lt;/code> runs once per agent per reevaluation tick:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>1. Resolve source node
-├─ use current_origin (stage the agent is coming from)
-└─ fall back to current_target_stage
-→ if source not in graph → skip (return None)
-2. rank_routes(source, t, FED, K_field)
-├─ evaluate all edges → dynamic costs from current smoke/FED
-│ (gate: k_avg * length &amp;#43; 1e-6 * length, the edge&amp;#39;s own optical depth;
-│ additive: w_smoke / w_fed weighted composite)
-├─ Dijkstra with dynamic weights → one minimum-cost path per reachable exit
-│ (only the single lowest-cost path to each exit under these weights
-│ is evaluated; alternative paths to the same exit are not enumerated)
-├─ evaluate_route on each path
-│ ├─ FED rejection (asymmetric: x fed_return_margin for a non-current exit)
-│ └─ gate only: optical-depth rejection, reason &amp;#34;tau ...&amp;#34;, every exit
-│ tested (asymmetric: budget x tau_return_margin for a non-current
-│ exit)
-├─ visibility rejection pass (additive only)
-│ └─ if ≥1 route has any visible segment:
-│ mark routes where ALL segments are non-visible as rejected
-├─ sort: non-rejected first, rejected last
-│ └─ gate → (rejected, tier, tau x current_exit_discount, rank_cost, hops)
-│ additive → (rejected, tier, 0.0, rank_cost, hops)
-│ tier splits clean from smoky only when the gate runs with
-│ clean_extinction_threshold &amp;gt; 0 (not the default)
-└─ if all rejected → un-reject the least-bad route as fallback
-├─ gate → by (tau_route, rank_cost), held by fallback_switch_margin
-└─ additive → lowest composite
-3. Pick best = ranked[0]
-└─ if best is hard-rejected (not a fallback) → skip (return None)
-4. Compare best.exit_id to agent&amp;#39;s current exit
-├─ same exit → reroute only if the new path beats the path actually
-│ being walked by more than 10 % on rank_cost (&amp;#34;better_path&amp;#34;),
-│ else update the cached path silently and return None
-└─ different exit → exit-switch anchor, then reroute_agent(wait_info, best.path)
-├─ candidates are tried in rank order; a promotion the anchor would
-│ refuse is skipped so it cannot hide the rest of the list
-├─ anchor: adopt only if rank_cost &amp;lt; old_cost * exit_switch_anchor
-│ ├─ bypassed when the old exit is FED-lethal or impassably smoky
-│ └─ gate: bypassed when the rival is feasible, clearer in metres by
-│ the anchor margin, AND either a whole band clearer or clean
-│ while the current exit is not
-├─ rewrite path_choices deterministically along new path
-├─ retarget agent to first unvisited stage in new path
-└─ return RouteSwitch record&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
+&lt;a href="#rerouting-decision-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>evaluate_and_reroute&lt;/code> runs once per agent per reevaluation tick. It
+answers three questions in turn: which routes are available, which one is
+preferred, and whether the agent should change.&lt;/p>
+&lt;pre class="mermaid hx-mt-6">flowchart TD
+A("Resolve source, one candidate path per reachable exit") --> B("Measure length, time, FED and smoke")
+B --> C("Any route not rejected?")
+C -->|Yes| D("Rank the routes")
+C -->|No| E("Fallback: least-bad rejected route")
+D --> F("Apply switching policy")
+E --> F
+F --> G("Change justified?")
+G -->|Yes| H("Reroute and record the reason")
+G -->|No| I("Keep the active route")
+classDef step fill:#e3f0fb,stroke:#c6dcf0,color:#0b4f8a,font-weight:bold
+classDef ask fill:#f4f9fe,stroke:#c6dcf0,stroke-dasharray:4 3,color:#0b4f8a,font-weight:bold
+class A,B,D,E,F,H,I step
+class C,G ask
+linkStyle default stroke:#8a9bb0,stroke-width:1.5px&lt;/pre>&lt;p>The flow also ends early in three cases: a source that is not in the graph
+skips the tick, a best route that is still hard-rejected is not adopted, and a
+discovery agent with no known exit explores or wanders instead (see below).&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Step&lt;/th>
+&lt;th>Gate (default)&lt;/th>
+&lt;th>Additive&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Source&lt;/strong>&lt;/td>
+&lt;td>&lt;code>current_origin&lt;/code>, else &lt;code>current_target_stage&lt;/code>&lt;/td>
+&lt;td>same&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Candidates&lt;/strong>&lt;/td>
+&lt;td>Dijkstra on each edge&amp;rsquo;s optical depth (&lt;code>k_avg&lt;/code> × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>)&lt;/td>
+&lt;td>Dijkstra on the weighted composite (&lt;code>w_smoke&lt;/code>, &lt;code>w_fed&lt;/code>); one path per exit&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
+&lt;td>FED over the threshold (× &lt;code>fed_return_margin&lt;/code> for a rival exit), or τ over the budget (× &lt;code>tau_return_margin&lt;/code> for a rival); every exit is tested&lt;/td>
+&lt;td>FED as for the gate; plus, when at least one route has a visible segment, routes whose every segment is non-visible&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Ranking&lt;/strong>&lt;/td>
+&lt;td>not rejected first, then tier (clean vs smoky, only with &lt;code>clean_extinction_threshold&lt;/code> &amp;gt; 0), then τ (× &lt;code>current_exit_discount&lt;/code> for the current exit), then &lt;code>rank_cost&lt;/code>, then hops&lt;/td>
+&lt;td>not rejected first, then tier, then &lt;code>rank_cost&lt;/code>, then hops&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Fallback&lt;/strong>&lt;/td>
+&lt;td>by (τ, &lt;code>rank_cost&lt;/code>); the current exit is kept unless the winner is clearer by &lt;code>fallback_switch_margin&lt;/code>&lt;/td>
+&lt;td>lowest composite&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Switch, same exit&lt;/strong>&lt;/td>
+&lt;td>reroute only if the new path beats the walked path by more than 10 % on &lt;code>rank_cost&lt;/code> (&lt;code>better_path&lt;/code>); otherwise keep walking, and the cached path is updated&lt;/td>
+&lt;td>same&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
+&lt;td>candidates tried in rank order; the anchor adopts one only if &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>, unless the old exit is FED-lethal or impassably smoky, or the rival is feasible, clearer by the anchor margin, and a whole band clearer or clean while the current exit is not&lt;/td>
+&lt;td>anchor on &lt;code>rank_cost&lt;/code>, with the same hazard bypasses&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
+&lt;td>&lt;code>path_choices&lt;/code> rewritten along the new path, the agent retargeted to its first unvisited stage, a &lt;code>RouteSwitch&lt;/code> recorded&lt;/td>
+&lt;td>same&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Several of these rules resist switching at different points (return margins,
+discount, anchor, fallback margin, same-exit threshold). Their consolidation is
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>; the
+same-exit test can keep a rejected walked path
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/184" target="_blank" rel="noopener">#184&lt;/a>), and the
+anchor&amp;rsquo;s baseline is the best path to the current exit, not the walked one
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186" target="_blank" rel="noopener">#186&lt;/a>).&lt;/p>
 &lt;p>When &lt;code>rank_routes&lt;/code> returns nothing at all — a discovery agent whose
 known subgraph holds no exit — the agent is sent toward the nearest
 unexplored frontier node instead of standing still (&lt;code>explore&lt;/code>), or
@@ -790,40 +806,37 @@ deliberately not enough on its own: it does not rank under the gate, and the
 quantity that does is &lt;code>tau_route&lt;/code>.&lt;/p>
 &lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a>
-&amp;ndash; the gate model: the
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a> &amp;ndash; the gate model: the
 optical-depth criterion, the ordering, the fallback, the full &lt;code>routing&lt;/code>
 key table, and known limitations.&lt;/li>
-&lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>
-&amp;ndash; provenance
+&lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a> &amp;ndash; provenance
 against &lt;code>materials/evac.f90&lt;/code> and the open questions.&lt;/li>
 &lt;li>FDS+Evac Technical Reference and User&amp;rsquo;s Guide
 &amp;ndash; Korhonen (2021). Smoke-interaction model (Section 3.4).&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing model&lt;/a>
-&amp;ndash; defaults and deviations from the
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing model&lt;/a> &amp;ndash; defaults and deviations from the
 literature; the published laws are on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>
-and
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
-.&lt;/li>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a> and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>.&lt;/li>
 &lt;li>&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>
 &amp;ndash; Beer-Lambert integrated extinction along line of sight (Eq. 8-9),
 waypoint-based visibility maps. Fire Safety Journal 150:104269.&lt;/li>
-&lt;li>&lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">Schroder et al. (2020)&lt;/a>
-&amp;ndash;
+&lt;li>&lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">Schroder et al. (2020)&lt;/a> &amp;ndash;
 A map representation of the ASET-RSET concept. Fire Safety Journal.&lt;/li>
 &lt;li>Ehtamo, H., Heliövaara, S., Korhonen, T. &amp;amp; Hostikka, S. (2010).
 Game theoretic best-response dynamics for evacuees&amp;rsquo; exit selection.
 &lt;em>Advances in Complex Systems&lt;/em>, 13(1), 113–134.&lt;/li>
-&lt;/ul></description></item><item><title>The gate cost model</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/</guid><description>
-&lt;blockquote>
-&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>
-. Reference for &lt;code>routing.cost_model&lt;/code>.
+&lt;/ul></description></item><item><title>Gate model in practice</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/</guid><description>
+&lt;div class="gh-alert gh-alert-note" role="note">
+&lt;p class="gh-alert-title">&lt;svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">&lt;path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z">&lt;/path>&lt;/svg>Note&lt;/p>
+&lt;p>This page shows the gate cost model at work on the assets, with its
+evidence and known limitations. For the routing model&amp;rsquo;s definition,
+parameters and defaults, see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Models › Dynamic route rerouting&lt;/a>.&lt;/p>
+&lt;/div>&lt;blockquote>
+&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>. Reference for &lt;code>routing.cost_model&lt;/code>.
 Provenance, review findings and the open questions live in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>
-; this page documents
-what the shipped code does.&lt;/p>&lt;/blockquote>
-&lt;p>Route choice runs under one of two cost models, selected per deck with
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>; this page documents
+what the shipped code does.&lt;/p>
+&lt;/blockquote>&lt;p>Route choice runs under one of two cost models, selected per deck with
 &lt;code>routing.cost_model&lt;/code> in the scenario JSON:&lt;/p>
 &lt;table>
 &lt;thead>
@@ -846,8 +859,7 @@ what the shipped code does.&lt;/p>&lt;/blockquote>
 &lt;p>Under the gate one quantity does the whole of the smoke reasoning: the route&amp;rsquo;s
 optical depth &lt;code>tau = K_ave * L&lt;/code>, the soot column the agent walks through. It
 refuses a route, it orders the routes it does not refuse, and it weights every
-Dijkstra edge — see &lt;a href="#how-the-gate-decides">How the gate decides&lt;/a>
-.&lt;/p>
+Dijkstra edge — see &lt;a href="#how-the-gate-decides">How the gate decides&lt;/a>.&lt;/p>
 &lt;p>Both are implemented in &lt;code>pyfds_evac/core/route_graph.py&lt;/code>
 (&lt;code>RouteCostConfig&lt;/code>, &lt;code>evaluate_route&lt;/code>, &lt;code>rank_routes&lt;/code>, &lt;code>evaluate_and_reroute&lt;/code>).&lt;/p>
 &lt;h2>Quick start&lt;span class="hx-absolute -hx-mt-20" id="quick-start">&lt;/span>
@@ -900,8 +912,8 @@ still built for decks with discovery agents, which consult it to learn the
 graph.&lt;/p>
 &lt;h2>How the gate decides&lt;span class="hx-absolute -hx-mt-20" id="how-the-gate-decides">&lt;/span>
 &lt;a href="#how-the-gate-decides" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
-&lt;p>&lt;strong>This page describes &lt;code>081380b&lt;/code>.&lt;/strong>&lt;/p>&lt;/blockquote>
-&lt;p>Per agent, per reevaluation tick:&lt;/p>
+&lt;p>&lt;strong>This page describes &lt;code>081380b&lt;/code>.&lt;/strong>&lt;/p>
+&lt;/blockquote>&lt;p>Per agent, per reevaluation tick:&lt;/p>
 &lt;ol>
 &lt;li>&lt;strong>Path per exit.&lt;/strong> Dijkstra runs with each edge weighted by its own optical
 depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor, below).&lt;/li>
@@ -919,8 +931,7 @@ heads for. &lt;code>tier&lt;/code> is the clean-exit tier, off by default.&lt;/l
 &lt;code>evaluate_and_reroute&lt;/code> walks the ranked list and takes the first candidate
 &lt;code>_anchor_allows&lt;/code> admits, stopping at the agent&amp;rsquo;s own exit — so the head of
 the sort is not necessarily the exit the agent walks to. See
-&lt;a href="#churn-protection">Churn protection&lt;/a>
-for the rule.&lt;/li>
+&lt;a href="#churn-protection">Churn protection&lt;/a> for the rule.&lt;/li>
 &lt;/ol>
 &lt;p>&lt;strong>Three separate &lt;code>tau&lt;/code> comparisons happen per tick&lt;/strong>, and it is worth keeping
 them apart: &lt;code>tau_return_margin&lt;/code> decides which routes are &lt;em>candidates&lt;/em>,
@@ -969,10 +980,8 @@ title="Copy code"
 of extinction along the walked path — the soot column the agent passes through.
 It is an &lt;strong>exposure&lt;/strong> statement.&lt;/p>
 &lt;p>&lt;strong>It is not a sighting distance.&lt;/strong> The criterion grew out of one (see
-&lt;a href="#where-the-6-comes-from">Where the 6 comes from&lt;/a>
-below), but Jin&amp;rsquo;s visibility
-law (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
-) describes a
+&lt;a href="#where-the-6-comes-from">Where the 6 comes from&lt;/a> below), but Jin&amp;rsquo;s visibility
+law (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>) describes a
 straight, unobstructed line to a sign. Integrating &lt;code>K&lt;/code> around two corners
 measures how much smoke you walk through, not how far you can see. The two
 coincide only on a straight corridor. The names changed at &lt;code>0d9bf79&lt;/code> to say
@@ -1032,8 +1041,7 @@ rewrites entries but never adds one). A &amp;ldquo;some
 smoke&amp;rdquo; mark forces the door unknown only in the periodic re-evaluation; a &amp;ldquo;too
 much smoke&amp;rdquo; mark only drops the door from the list, and it can become known
 again (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>
-).
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>).
 pyFDS-Evac deliberately keeps no such memory. So: the gate is &lt;em>inspired by&lt;/em>
 FDS+Evac&amp;rsquo;s tier-4 visibility door rule and inherits its threshold with a
 citation; it does not implement it. &lt;strong>&lt;code>tau_max&lt;/code> has not been calibrated
@@ -1042,8 +1050,7 @@ against a soot-dose or FED-equivalent limit.&lt;/strong> That is open work.&lt;/
 among doors satisfying &lt;code>K_ave_Door &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code> = 0.03 /m
 (&lt;code>evac.f90:16265&lt;/code>, &lt;code>:16272&lt;/code>; &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> at
 &lt;code>:5262&lt;/code>). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
-below. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>
-.&lt;/p>
+below. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>.&lt;/p>
 &lt;h3>The diversion is a departure from FDS+Evac, not a reproduction of it&lt;span class="hx-absolute -hx-mt-20" id="the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it">&lt;/span>
 &lt;a href="#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The threshold is borrowed; &lt;strong>the place the quantity is used is not&lt;/strong>, and that
 difference is what produces the diversion the model exists for.&lt;/p>
@@ -1089,8 +1096,7 @@ throughout — so essentially every occupant goes near, roughly 100/0. &lt;stron
 100/0 is a reasoned prediction from the source, not a measured FDS+Evac run.&lt;/strong>
 No run of the reference criterion on this deck exists here. The nearest
 empirical proxy is the deck&amp;rsquo;s own additive model, which also ranks on a
-distance-like composite and does evacuate 100/0 (see &lt;a href="#evidence">Evidence&lt;/a>
-) —
+distance-like composite and does evacuate 100/0 (see &lt;a href="#evidence">Evidence&lt;/a>) —
 a proxy, not the same criterion. The diversion stands or falls on its own
 merits, not on fidelity to the reference.&lt;/p>
 &lt;p>&lt;strong>A geometric bias rides along with the change of quantity.&lt;/strong> FDS+Evac applies
@@ -1098,8 +1104,7 @@ its threshold to a straight-line &lt;code>d&lt;/code>; pyFDS-Evac applies it to 
 polyline &lt;code>L&lt;/code>, and &lt;code>L/d&lt;/code> is not the same on every route. On &lt;code>l_corridor&lt;/code> from the
 spawn centroid (11.5, 15.0). Both legs are computed corner-to-corner along the
 corridor centreline, which is why they come out a metre under the 26 m / 46 m
-node-to-node figures the &lt;a href="#evidence">Evidence&lt;/a>
-section quotes — those run
+node-to-node figures the &lt;a href="#evidence">Evidence&lt;/a> section quotes — those run
 spawn-polygon to exit-polygon through the graph&amp;rsquo;s own nodes:&lt;/p>
 &lt;table>
 &lt;thead>
@@ -1133,8 +1138,7 @@ for non-visible doors (&lt;code>:16460&lt;/code>) it vanishes on this deck, beca
 corridors are axis-aligned and the L1 distance equals the polyline exactly. The
 sign and size of the bias on other geometries have not been measured.&lt;/p>
 &lt;h3>Route choice is an optimality bound, not a perception-limited model&lt;span class="hx-absolute -hx-mt-20" id="route-choice-is-an-optimality-bound-not-a-perception-limited-model">&lt;/span>
-&lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Issue &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
-. Two assumptions
+&lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Issue &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>. Two assumptions
 apply to the same agent on the same tick and point in opposite directions:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>The cognitive map assumes the agent does not know the building.&lt;/strong> A
@@ -1256,8 +1260,7 @@ crossing does not reorder the list, it swaps which objective is in force, so the
 target jumps. FDS+Evac has only a weak memory against that: a mark on a lone
 agent&amp;rsquo;s previous target once &lt;code>K_ave &amp;gt;= 0.3 /m&lt;/code> (&lt;code>evac.f90:16292-16301&lt;/code>), which
 acts weakly (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>
-); here
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>); here
 nothing is remembered, by design.&lt;/p>
 &lt;p>&lt;strong>Read the refutation as provisional.&lt;/strong> A band of 0.0075 /m is
 &lt;code>0.03 / 0.8 - 0.03&lt;/code>, so those runs were made at &lt;code>clean_exit_margin = 0.8&lt;/code> — the
@@ -1339,8 +1342,7 @@ when its rank cost beats &lt;code>old_cost * exit_switch_anchor&lt;/code> (defau
 the gate, &lt;code>_anchor_allows&lt;/code> decides in this order (&lt;code>25a6f8f&lt;/code>):&lt;/p>
 &lt;ol>
 &lt;li>The current exit is a &amp;ldquo;must flee&amp;rdquo; rejection — adopt. In practice only a
-dose rejection reaches this; see &lt;a href="#known-limitations">limitations&lt;/a>
-.&lt;/li>
+dose rejection reaches this; see &lt;a href="#known-limitations">limitations&lt;/a>.&lt;/li>
 &lt;li>The rival is clean and the current exit is not — adopt.&lt;/li>
 &lt;li>The rival is not &lt;code>feasible&lt;/code> — fall through to the &lt;code>rank_cost&lt;/code> comparison.&lt;/li>
 &lt;li>Otherwise a &lt;strong>symmetric deadband&lt;/strong> on &lt;code>tau&lt;/code>, with
@@ -1647,8 +1649,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>alpha&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.706&lt;/code>&lt;/td>
-&lt;td>Router&amp;rsquo;s copy of the linear speed-law coefficient, for travel time only; agents walk with &lt;code>SmokeSpeedConfig&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>
-).&lt;/td>
+&lt;td>Router&amp;rsquo;s copy of the linear speed-law coefficient, for travel time only; agents walk with &lt;code>SmokeSpeedConfig&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>).&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>active&lt;/td>
 &lt;/tr>
@@ -1688,14 +1689,12 @@ Setting them requires constructing &lt;code>RouteCostConfig&lt;/code> in Python.
 &lt;code>RouteCostConfig&lt;/code>.&lt;/p>
 &lt;h2>Known limitations&lt;span class="hx-absolute -hx-mt-20" id="known-limitations">&lt;/span>
 &lt;a href="#known-limitations" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These are real and documented, not hypothetical. Details and measurements are
-in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>
-. This section is the
+in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>. This section is the
 single consolidated statement; anyone assessing the model should be able to read
 it alone.&lt;/p>
 &lt;p>&lt;strong>Two open issues carry the unresolved ones.&lt;/strong>&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a>
-— route
+&lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a> — route
 choice oscillates at a genuine optical-depth crossover.&lt;/strong> &lt;code>l_corridor&lt;/code>&amp;rsquo;s 34
 returns, 31 of them in &lt;code>t = 40-60 s&lt;/code>, the window in which the two routes&amp;rsquo; &lt;code>tau&lt;/code>
 cross over; at &lt;code>t = 40 s&lt;/code> their distributions overlap by 61 %. The crossover
@@ -1703,19 +1702,16 @@ swings through 1.5-3x and sails past any
 hysteresis constant that would not also blind the model to real change. What is
 missing is &lt;em>commitment&lt;/em> — hysteresis in time or in progress along a leg — not a
 bigger threshold. Three attempts are already recorded as failures below.&lt;/li>
-&lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>
-— route
+&lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a> — route
 choice is not perception-limited.&lt;/strong> See
-&lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model">Route choice is an optimality bound&lt;/a>
-.
+&lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model">Route choice is an optimality bound&lt;/a>.
 It bounds what the discovery tier can be said to demonstrate about route
 choice; it does not touch map growth.&lt;/li>
 &lt;/ul>
 &lt;p>&lt;strong>And the model is a departure, not a reproduction.&lt;/strong> &lt;code>tau&lt;/code> is the ordering here;
 in FDS+Evac smoke ranks only inside the tier-4 last resort, over known-or-visible
 doors, on a bee line, with a strike-out that lasts one call. See
-&lt;a href="#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it">The diversion is a departure&lt;/a>
-.
+&lt;a href="#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it">The diversion is a departure&lt;/a>.
 The 100/0 attributed to the reference criterion on &lt;code>l_corridor&lt;/code> is a reasoned
 prediction from &lt;code>evac.f90&lt;/code>, not a measured run of it.&lt;/p>
 &lt;ul>
@@ -1848,8 +1844,7 @@ the results folder.&lt;/p>
 &lt;code>world100&lt;/code>&amp;rsquo;s far clean exit from 12 agents to 39, and moved &lt;code>l_corridor&lt;/code> from no
 returns to an abandoned exit to 51, then 34 at &lt;code>9f55f6e&lt;/code>, with the far-exit
 share unchanged at about 18. See
-&lt;a href="#churn-protection">Churn protection&lt;/a>
-for the full table. No archived result set
+&lt;a href="#churn-protection">Churn protection&lt;/a> for the full table. No archived result set
 exists for either; both come from the commit messages.&lt;/p>
 &lt;p>&lt;strong>Read the headline with its caveat.&lt;/strong> Counted directly from &lt;code>f_gate_costs.csv&lt;/code>
 (3498 rows, the &lt;code>b3babc0&lt;/code> run), the refusals break down as:&lt;/p>
@@ -1898,18 +1893,13 @@ lethality and speed-collapse case.&lt;/p>
 &lt;li>FDS+Evac Technical Reference and User&amp;rsquo;s Guide
 — Korhonen (2021).&lt;/li>
 &lt;li>&lt;code>materials/evac.f90&lt;/code> — the reference implementation; line-level citations for
-the door criteria are in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>
-.&lt;/li>
-&lt;li>&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>
-—
+the door criteria are in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a>.&lt;/li>
+&lt;li>&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a> —
 waypoint-based visibility, Beer-Lambert integrated extinction (Eq. 8-9).&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>
-— Jin&amp;rsquo;s law and
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a> — Jin&amp;rsquo;s law and
 its sources.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing model&lt;/a>
-— defaults and deviations from the
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing model&lt;/a> — defaults and deviations from the
 literature.&lt;/li>
-&lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/l_corridor/README.md" target="_blank" rel="noopener">assets/l_corridor/README.md&lt;/a>
-— the deck, its
+&lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/l_corridor/README.md" target="_blank" rel="noopener">assets/l_corridor/README.md&lt;/a> — the deck, its
 fire, and the measured smoke contrast.&lt;/li>
 &lt;/ul></description></item></channel></rss>
