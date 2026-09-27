@@ -443,7 +443,7 @@ default).&lt;/p>
 &lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;probabilistic&amp;quot;&lt;/code>, which
 draws a log-normal threshold for each agent with median &lt;code>fed_threshold = 1.0&lt;/code>.
 This page uses &lt;code>&amp;quot;deterministic&amp;quot;&lt;/code>, so the threshold is exactly 1.0, as in
-FDS+Evac. The command-line equivalent is &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/p>
+&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>. The command-line equivalent is &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/p>
 &lt;p>The incapacitated occupant stays in the simulation, so the run continues to
 &lt;code>max_simulation_time&lt;/code> and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s. It is not
 an exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
@@ -620,10 +620,13 @@ add to your deck and the full list of failure modes.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS sampling&lt;/a>: how slices are selected and sampled.&lt;/li>
 &lt;/ul>
 &lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Coming from FDS+Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/</guid><description>
-&lt;p>This page is for engineers who have an FDS+Evac input file and want to run the
+&lt;p>This page is for engineers who have an &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> input file and want to run the
 same case in pyFDS-Evac. It maps each FDS+Evac input to its place here, and it
-lists what has no equivalent. Read &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a> before you
-rely on a result.&lt;/p>
+lists what has no equivalent. FDS+Evac was removed from FDS in 2021 (FDS
+commit &lt;code>6a1d48aa5e&lt;/code>); the link above and every &lt;code>evac.f90:NNNN&lt;/code> reference in
+these docs point to its last version before removal, FDS
+&lt;code>6.7.6-404-gc9da70d7a&lt;/code>, which the 2021 guide describes. Read
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a> before you rely on a result.&lt;/p>
 &lt;p>pyFDS-Evac is research software, provided without warranty. It is not intended
 for regulatory or design use.&lt;/p>
 &lt;h2>What carries over and what changes&lt;span class="hx-absolute -hx-mt-20" id="what-carries-over-and-what-changes">&lt;/span>

@@ -348,7 +348,7 @@ directly — &lt;em>SFPE Handbook of Fire Protection Engineering&lt;/em>, 5th ed
 &amp;ldquo;Assessment of Hazards to Occupants from Smoke, Toxic Gases, and Heat&amp;rdquo;
 (Purser &amp;amp; McAllister), p. 2382, quoted rather than derived. &lt;strong>Not&lt;/strong> ISO TS
 13571 (the formula was previously miscited as that standard) and &lt;strong>not&lt;/strong> in
-the FDS+Evac guide (that document has no heat term at all).&lt;/p>
+the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> guide (that document has no heat term at all).&lt;/p>
 &lt;h3>Formula used&lt;span class="hx-absolute -hx-mt-20" id="formula-used">&lt;/span>
 &lt;a href="#formula-used" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>FED from convective heat&lt;/strong> (SFPE Handbook Eq. 63.44), T in °C, Δt in minutes;
 the coded form is on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#convective-heat">FED model&lt;/a> page:&lt;/p>

@@ -815,7 +815,7 @@ optical-depth criterion, the ordering, the fallback, the full &lt;code>routing&l
 key table, and known limitations.&lt;/li>
 &lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a> &amp;ndash; provenance
 against &lt;code>materials/evac.f90&lt;/code> and the open questions.&lt;/li>
-&lt;li>FDS+Evac Technical Reference and User&amp;rsquo;s Guide
+&lt;li>&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> Technical Reference and User&amp;rsquo;s Guide
 &amp;ndash; Korhonen (2021). Smoke-interaction model (Section 3.4).&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing model&lt;/a> &amp;ndash; defaults and deviations from the
 literature; the published laws are on
@@ -1025,7 +1025,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>The second is a rival exit, held to &lt;code>tau_max * tau_return_margin&lt;/code> = 4.8.&lt;/p>
-&lt;p>&lt;a id="where-the-6-comes-from">&lt;/a>&lt;strong>Where the 6 comes from.&lt;/strong> FDS+Evac&amp;rsquo;s tier-4 door test computes
+&lt;p>&lt;a id="where-the-6-comes-from">&lt;/a>&lt;strong>Where the 6 comes from.&lt;/strong> &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>&amp;rsquo;s tier-4 door test computes
 &lt;code>L2_tmp = d * 0.5 / (3.0 / K_ave_Door)&lt;/code> and strikes the door out when
 &lt;code>L2_tmp &amp;gt;= 1.0&lt;/code> (&lt;code>evac.f90:16794, :16799&lt;/code>). That expression is &lt;code>K_ave * d / 6&lt;/code>, so
 the test is exactly &lt;code>tau &amp;gt; 6&lt;/code> with Jin&amp;rsquo;s &lt;code>c = 3&lt;/code>. The threshold is therefore

@@ -214,7 +214,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>Figure: &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/artifacts/iso-table21-sweep.png" alt="ISO 20414 Test 18 (Table 21) sweep" loading="lazy" />&lt;/p>
-&lt;p>Generate the FDS+Evac smoke-density vs speed verification plot:&lt;/p>
+&lt;p>Generate the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> smoke-density vs speed verification plot:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/generate_smoke_density_speed_plot.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -503,7 +503,7 @@ only for edges learned by perception and arrival, and only where the graph
 has the reverse edge. With automatic wiring, exits have no outgoing edges.
 Paths learned from familiarity or &lt;code>entrance&lt;/code> are forward only
 (&lt;code>cognitive_map.py:71–74&lt;/code>, &lt;code>:139–152&lt;/code>).&lt;/p>
-&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide calls &lt;code>full&lt;/code> &amp;ldquo;the FDS+Evac default&amp;rdquo;. It is
+&lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide calls &lt;code>full&lt;/code> &amp;ldquo;the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> default&amp;rdquo;. It is
 pyFDS-Evac&amp;rsquo;s default. FDS+Evac&amp;rsquo;s &lt;code>KNOWN_DOOR&lt;/code> defaults to &lt;code>.FALSE.&lt;/code>
 (&lt;code>evac.f90:2291&lt;/code>, &lt;code>:2733&lt;/code>).&lt;/p>
 &lt;/blockquote>&lt;h2>6. The map remembers&lt;span class="hx-absolute -hx-mt-20" id="6-the-map-remembers">&lt;/span>

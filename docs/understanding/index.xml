@@ -63,7 +63,7 @@ $$
 v = v_0 \, f(K),
 $$&lt;p>where the speed factor \(f\) falls from 1 in clear air towards a floor in
 dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
-form and with the constants of FDS+Evac, so a difference between the two tools
+form and with the constants of &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
 &lt;code>fridolf&lt;/code> option, \(V/(V+2)\) with the sighting distance \(V = C/K\). Its
 attribution to Fridolf et al. (2019) is unverified, and the paper&amp;rsquo;s own law
@@ -432,7 +432,7 @@ JSON. The smoke-speed parameters (&lt;code>speed_law&lt;/code>, &lt;code>alpha&l
 &lt;code>min_speed_factor&lt;/code> and &lt;code>visibility_factor_c&lt;/code>) are fields of
 &lt;code>SmokeSpeedConfig&lt;/code>. &lt;code>run.py&lt;/code> and the web GUI build that object with its
 defaults, so every run they start uses the Frantzich–Nilsson law (the &lt;code>lund&lt;/code>
-option; the linear FDS+Evac law) with the defaults listed on the
+option; the linear &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> law) with the defaults listed on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page. Another law or
 other coefficients require building the model in Python and passing it to
 &lt;code>run_scenario()&lt;/code>.&lt;/p>
@@ -558,7 +558,7 @@ Finland.&lt;/p>
 occupants from smoke, toxic gases, and heat. In &lt;em>SFPE Handbook of Fire
 Protection Engineering&lt;/em>, 5th ed., Chapter 63. Springer.&lt;/p></description></item><item><title>Model comparison: FDS+Evac vs pyFDS-Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</guid><description>
 &lt;blockquote>
-&lt;p>This document compares the evacuation models in FDS+Evac (v2.6.0,
+&lt;p>This document compares the evacuation models in &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> (v2.6.0,
 Korhonen 2021) and pyFDS-Evac as implemented in this repository.
 Claims are referenced to the FDS+Evac Technical Reference and User&amp;rsquo;s
 Guide [1] and to the pyFDS-Evac source code. Where the two systems

@@ -336,7 +336,7 @@ web GUI set only the last two (&lt;code>--smoke-update-interval&lt;/code>,
 &lt;td>&lt;code>slice_height_m&lt;/code>&lt;/td>
 &lt;td>&lt;code>1.6&lt;/code>&lt;/td>
 &lt;td>m&lt;/td>
-&lt;td>Height of the FDS slice that is read (FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; the previous default was 2.0)&lt;/td>
+&lt;td>Height of the FDS slice that is read (&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; the previous default was 2.0)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -467,7 +467,7 @@ $$
 v = v_0 \, f(K),
 $$&lt;p>where the speed factor \(f\) falls from 1 in clear air towards a floor in
 dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
-form and with the constants of FDS+Evac, so a difference between the two tools
+form and with the constants of &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
 &lt;code>fridolf&lt;/code> option, \(V/(V+2)\) with the sighting distance \(V = C/K\). Its
 attribution to Fridolf et al. (2019) is unverified, and the paper&amp;rsquo;s own law
@@ -880,7 +880,7 @@ Protection Engineering, 5th ed., Ch. 63, 2308–2428.
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">route rerouting&lt;/a>.&lt;/p></description></item><item><title>Fractional effective dose</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/fed/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/fed/</guid><description>
 &lt;p>Based on: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant fractional effective dose&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a> and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.&lt;/p>
 &lt;p>Symbols follow the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#notation">notation table&lt;/a>. The model
-codes the Purser sum in the form of the FDS+Evac guide (Korhonen 2021, §3.4),
+codes the Purser sum in the form of the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> guide (Korhonen 2021, §3.4),
 which adds irritants into the dose; ISO 13571 keeps them in a separate
 concentration endpoint. The published equations are on the Fundamentals pages
 linked above.&lt;/p>
@@ -1484,7 +1484,7 @@ default).&lt;/p>
 &lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;probabilistic&amp;quot;&lt;/code>, which
 draws a log-normal threshold for each agent with median &lt;code>fed_threshold = 1.0&lt;/code>.
 This page uses &lt;code>&amp;quot;deterministic&amp;quot;&lt;/code>, so the threshold is exactly 1.0, as in
-FDS+Evac. The command-line equivalent is &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/p>
+&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>. The command-line equivalent is &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/p>
 &lt;p>The incapacitated occupant stays in the simulation, so the run continues to
 &lt;code>max_simulation_time&lt;/code> and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s. It is not
 an exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
@@ -1661,10 +1661,13 @@ add to your deck and the full list of failure modes.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS sampling&lt;/a>: how slices are selected and sampled.&lt;/li>
 &lt;/ul>
 &lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Coming from FDS+Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/</guid><description>
-&lt;p>This page is for engineers who have an FDS+Evac input file and want to run the
+&lt;p>This page is for engineers who have an &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> input file and want to run the
 same case in pyFDS-Evac. It maps each FDS+Evac input to its place here, and it
-lists what has no equivalent. Read &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a> before you
-rely on a result.&lt;/p>
+lists what has no equivalent. FDS+Evac was removed from FDS in 2021 (FDS
+commit &lt;code>6a1d48aa5e&lt;/code>); the link above and every &lt;code>evac.f90:NNNN&lt;/code> reference in
+these docs point to its last version before removal, FDS
+&lt;code>6.7.6-404-gc9da70d7a&lt;/code>, which the 2021 guide describes. Read
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a> before you rely on a result.&lt;/p>
 &lt;p>pyFDS-Evac is research software, provided without warranty. It is not intended
 for regulatory or design use.&lt;/p>
 &lt;h2>What carries over and what changes&lt;span class="hx-absolute -hx-mt-20" id="what-carries-over-and-what-changes">&lt;/span>
@@ -2106,7 +2109,7 @@ title="Copy code"
 &lt;p>the soot column the agent walks through, with &lt;code>K_ave&lt;/code> the mean extinction along
 the route polyline and &lt;code>L&lt;/code> the distance still to walk. On this page &lt;code>tau&lt;/code> is
 always this dimensionless optical depth, not the relaxation time τ of
-FDS+Evac&amp;rsquo;s movement model. A route is refused when
+&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>&amp;rsquo;s movement model. A route is refused when
 &lt;code>tau&lt;/code> exceeds &lt;code>tau_max&lt;/code> (see &lt;a href="#parameters">Parameters&lt;/a>), Dijkstra weights every edge by its own
 &lt;code>tau&lt;/code>, and &lt;code>tau&lt;/code> orders the routes that survive, with travel time breaking ties.
 Path choice and exit choice are therefore one objective. In clear air every
@@ -2482,7 +2485,7 @@ al.&amp;rsquo;s &lt;em>w&lt;/em>, &lt;em>x&lt;/em> (&lt;em>S&lt;/em> in the nota
 &lt;td>artificial, mild (acetic acid)&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>FDS+Evac, Eq. 11&lt;/td>
+&lt;td>&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, Eq. 11&lt;/td>
 &lt;td>&lt;em>K&lt;/em>&lt;/td>
 &lt;td>v = max(0.1 v₀, v₀ (1 − 0.057 K / 0.706))&lt;/td>
 &lt;td>as Frantzich–Nilsson&lt;/td>
@@ -3546,7 +3549,7 @@ extrapolation.&lt;/li>
 al., who call it &amp;ldquo;highly simplified&amp;rdquo; (p. 4). It is not part of Jin&amp;rsquo;s
 experiments.&lt;/li>
 &lt;li>&lt;strong>Sampling height.&lt;/strong> Börger et al. use one slice at 2 m, with the eye at
-sign height (p. 4). The code uses 1.6 m, the FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>.
+sign height (p. 4). The code uses 1.6 m, the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>.
 fdsvismap takes the nearest slice without a warning when it is far from the
 requested height. &lt;em>Our inference:&lt;/em> exit signs are usually mounted above
 doors, higher than 1.6 m. Under a hot smoke layer, a 1.6 m slice reads less
@@ -3895,7 +3898,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;strong>Wrong slice height.&lt;/strong> &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m, FDS+Evac&amp;rsquo;s &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>) is a
+&lt;p>&lt;strong>Wrong slice height.&lt;/strong> &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m, &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>&amp;rsquo;s &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>) is a
 preference, not a filter: a case with one slice of a quantity uses it whatever
 its height, and a mismatch never fails the run. A case you inherit often
 carries a single slice at whatever height its author chose, so you can end up
@@ -3987,7 +3990,7 @@ $$&lt;p>with the terms, &lt;em>t&lt;/em> in minutes and concentrations in ppm or
 by default; &lt;em>D&lt;/em> is 40 % at rest and 20 % for heavy work (table under
 Eq. 63.18, p. 2356). With these defaults the coefficient is
 \(3.317\times10^{-5}\times 25/30 = 2.764\times10^{-5}\) per minute, the
-constant used by FDS+Evac, the evacuation module of the Fire Dynamics
+constant used by &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, the evacuation module of the Fire Dynamics
 Simulator (Korhonen 2021, Eq. 13).&lt;/li>
 &lt;li>&lt;strong>HCN&lt;/strong> (Eq. 63.24): \(F_{I_{CN}} = [\mathrm{CN}]^{2.36}\,t/(1.2\times10^{6})\),
 where [CN] may be corrected for other nitriles and for the protective effect
@@ -4374,7 +4377,7 @@ his Fig. 1.
 &lt;/div>
 &lt;/details>
 &lt;h2>The Purser / FDS+Evac guide form&lt;span class="hx-absolute -hx-mt-20" id="the-purser--fdsevac-guide-form">&lt;/span>
-&lt;a href="#the-purser--fdsevac-guide-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The guide to FDS+Evac, the evacuation module of the Fire Dynamics Simulator
+&lt;a href="#the-purser--fdsevac-guide-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The guide to &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, the evacuation module of the Fire Dynamics Simulator
 (Korhonen 2021, Eqs. 12 and 17, Table 2), follows this
 structure: its total dose&lt;/p>
 $$
@@ -4504,7 +4507,7 @@ silent unless you check the warning log.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--smoke-slice-height M&lt;/code>&lt;/td>
-&lt;td>FDS slice height (m) for smoke and heat sampling (default 1.6, FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default).&lt;/td>
+&lt;td>FDS slice height (m) for smoke and heat sampling (default 1.6, &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
@@ -5364,7 +5367,7 @@ JSON. The smoke-speed parameters (&lt;code>speed_law&lt;/code>, &lt;code>alpha&l
 &lt;code>min_speed_factor&lt;/code> and &lt;code>visibility_factor_c&lt;/code>) are fields of
 &lt;code>SmokeSpeedConfig&lt;/code>. &lt;code>run.py&lt;/code> and the web GUI build that object with its
 defaults, so every run they start uses the Frantzich–Nilsson law (the &lt;code>lund&lt;/code>
-option; the linear FDS+Evac law) with the defaults listed on the
+option; the linear &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> law) with the defaults listed on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page. Another law or
 other coefficients require building the model in Python and passing it to
 &lt;code>run_scenario()&lt;/code>.&lt;/p>
@@ -5603,7 +5606,7 @@ research (Haghani and Sarvi 2018) surveys more than 160 studies.&lt;/p>
 hypothetical choices, virtual reality and evacuation trials, none of which
 carries the threat of a real fire. Whether parameters calibrated in one
 geometry and population transfer to another is an open question; Haghani and
-Sarvi (2017) set out to test exactly this context-dependence. The guide to FDS+Evac, the evacuation module of the Fire Dynamics
+Sarvi (2017) set out to test exactly this context-dependence. The guide to &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, the evacuation module of the Fire Dynamics
 Simulator (FDS),
 notes, citing the socio-psychological literature, that familiarity of
 exit routes is an essential factor in evacuees&amp;rsquo; decisions and that emergency
@@ -6458,7 +6461,7 @@ optical-depth criterion, the ordering, the fallback, the full &lt;code>routing&l
 key table, and known limitations.&lt;/li>
 &lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/docs/gate-model-review-notes.md" target="_blank" rel="noopener">gate-model-review-notes.md&lt;/a> &amp;ndash; provenance
 against &lt;code>materials/evac.f90&lt;/code> and the open questions.&lt;/li>
-&lt;li>FDS+Evac Technical Reference and User&amp;rsquo;s Guide
+&lt;li>&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> Technical Reference and User&amp;rsquo;s Guide
 &amp;ndash; Korhonen (2021). Smoke-interaction model (Section 3.4).&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing model&lt;/a> &amp;ndash; defaults and deviations from the
 literature; the published laws are on
@@ -6668,7 +6671,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>The second is a rival exit, held to &lt;code>tau_max * tau_return_margin&lt;/code> = 4.8.&lt;/p>
-&lt;p>&lt;a id="where-the-6-comes-from">&lt;/a>&lt;strong>Where the 6 comes from.&lt;/strong> FDS+Evac&amp;rsquo;s tier-4 door test computes
+&lt;p>&lt;a id="where-the-6-comes-from">&lt;/a>&lt;strong>Where the 6 comes from.&lt;/strong> &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>&amp;rsquo;s tier-4 door test computes
 &lt;code>L2_tmp = d * 0.5 / (3.0 / K_ave_Door)&lt;/code> and strikes the door out when
 &lt;code>L2_tmp &amp;gt;= 1.0&lt;/code> (&lt;code>evac.f90:16794, :16799&lt;/code>). That expression is &lt;code>K_ave * d / 6&lt;/code>, so
 the test is exactly &lt;code>tau &amp;gt; 6&lt;/code> with Jin&amp;rsquo;s &lt;code>c = 3&lt;/code>. The threshold is therefore
@@ -7552,7 +7555,7 @@ literature.&lt;/li>
 fire, and the measured smoke contrast.&lt;/li>
 &lt;/ul></description></item><item><title>Model comparison: FDS+Evac vs pyFDS-Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</guid><description>
 &lt;blockquote>
-&lt;p>This document compares the evacuation models in FDS+Evac (v2.6.0,
+&lt;p>This document compares the evacuation models in &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> (v2.6.0,
 Korhonen 2021) and pyFDS-Evac as implemented in this repository.
 Claims are referenced to the FDS+Evac Technical Reference and User&amp;rsquo;s
 Guide [1] and to the pyFDS-Evac source code. Where the two systems
@@ -8789,7 +8792,7 @@ time, all in seconds.&lt;/p>
 &lt;p>A pyFDS-Evac run starts at &lt;em>t&lt;/em> = 0 and gives at most
 &lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> + &lt;em>t&lt;/em>&lt;sub>trav&lt;/sub>. It includes &lt;em>t&lt;/em>&lt;sub>pre&lt;/sub> only if
 the scenario models pre-movement (&lt;code>use_premovement&lt;/code> in a spawn area; a spawn
-area that sets no pre-movement key gets a constant 10 s, as FDS+Evac). You add
+area that sets no pre-movement key gets a constant 10 s, as &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>). You add
 &lt;em>t&lt;/em>&lt;sub>det&lt;/sub> and &lt;em>t&lt;/em>&lt;sub>a&lt;/sub> yourself. The scenario in Part 1 models no
 pre-movement, so its exit times are travel times only.&lt;/p>
 &lt;h2>Why not &lt;code>result.evacuation_time&lt;/code>?&lt;span class="hx-absolute -hx-mt-20" id="why-not-resultevacuation_time">&lt;/span>
@@ -9195,7 +9198,7 @@ directly — &lt;em>SFPE Handbook of Fire Protection Engineering&lt;/em>, 5th ed
 &amp;ldquo;Assessment of Hazards to Occupants from Smoke, Toxic Gases, and Heat&amp;rdquo;
 (Purser &amp;amp; McAllister), p. 2382, quoted rather than derived. &lt;strong>Not&lt;/strong> ISO TS
 13571 (the formula was previously miscited as that standard) and &lt;strong>not&lt;/strong> in
-the FDS+Evac guide (that document has no heat term at all).&lt;/p>
+the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> guide (that document has no heat term at all).&lt;/p>
 &lt;h3>Formula used&lt;span class="hx-absolute -hx-mt-20" id="formula-used">&lt;/span>
 &lt;a href="#formula-used" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>FED from convective heat&lt;/strong> (SFPE Handbook Eq. 63.44), T in °C, Δt in minutes;
 the coded form is on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#convective-heat">FED model&lt;/a> page:&lt;/p>
