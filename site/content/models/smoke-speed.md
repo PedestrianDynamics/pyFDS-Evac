@@ -73,8 +73,7 @@ between Frantzich–Nilsson and C = 3.
 Script: `scripts/figures/speed_laws.py`.*
 
 Background: the [Concepts](/docs/concepts.md) page
-and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
-([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
+and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/).
 
 For real FDS output, `fdsreader` provides the local extinction field
 via `SliceFieldSampler`. For verification cases such as ISO 20414:2020 Test 18 (Table 21),

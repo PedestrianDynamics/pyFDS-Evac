@@ -246,5 +246,3 @@ materials/
 /assets/maze_test_full/
 /assets/maze_test_discovery/
 
-# published talk slides
-!site/static/talks/*.pdf

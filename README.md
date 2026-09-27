@@ -42,8 +42,7 @@ The model descriptions, usage and verification live on the documentation site:
 
 - **A Modular Workflow for Visibility-Aware Evacuation Modelling**, Visibility
   Seminar 2026, University of Wuppertal, 25 September 2026:
-  [slides](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/),
-  [PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)
+  [slides](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
 
 ## Installation
 
