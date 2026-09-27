@@ -150,6 +150,34 @@ def _length_tie() -> StageGraph:
     )
 
 
+def _twin_exits(first: str, second: str):
+    """Two exits 10 m from D0, on the x and y axes, inserted in the given order.
+
+    In clear air the two routes tie on all five sort keys, so only the
+    insertion order separates them.
+    """
+    where = {"E0": (10.0, 0.0), "E1": (0.0, 10.0)}
+
+    def build() -> StageGraph:
+        return golden._graph(
+            {eid: (*where[eid], "exit") for eid in (first, second)},
+            golden._edges(("D0", first), ("D0", second)),
+        )
+
+    return build
+
+
+@dataclass(frozen=True)
+class _UniformFed:
+    """The same FED rate everywhere."""
+
+    rate: float
+
+    def sample_fed_rate(self, time_s: float, x: float, y: float) -> float:
+        del time_s, x, y
+        return self.rate
+
+
 # ── Configuration variants ────────────────────────────────────────────
 
 _VARIANTS: dict[str, Callable[[RouteCostConfig], RouteCostConfig]] = {
@@ -257,6 +285,27 @@ _EXTRA_RANK_CASES: dict[str, golden.RankCase] = {
     ),
     # Clear air: two exits tie on everything but the path length.
     "gate_path_length_tie": golden.RankCase(_length_tie, golden._gate(), source="D0"),
+    # A complete five-key tie, in both insertion orders.
+    "gate_full_tie_e0_first": golden.RankCase(
+        _twin_exits("E0", "E1"), golden._gate(), source="D0"
+    ),
+    "gate_full_tie_e1_first": golden.RankCase(
+        _twin_exits("E1", "E0"), golden._gate(), source="D0"
+    ),
+    # Every route FED-refused and tied on (tau, rank_cost): the fallback's
+    # stable sort keeps the first sort's order, shorter path first.
+    "gate_fallback_tie_keeps_order": golden.RankCase(
+        _length_tie, golden._gate(), fed=_UniformFed(20.0), source="D0"
+    ),
+    # Additive: the only visible route is already FED-refused, so the K_vis
+    # screen has no visible route to prefer and refuses nothing.
+    "additive_kvis_visible_route_rejected": golden.RankCase(
+        _star2,
+        golden._additive(),
+        golden.ArmField({"east": 0.8}),
+        fed=golden.ArmFed({"west": 4.0}),
+        current_fed=0.2,
+    ),
 }
 
 _ALL_RANK_CASES = {**golden.RANK_CASES, **_EXTRA_RANK_CASES}
@@ -962,6 +1011,95 @@ def test_anchor_and_flee_equivalent(name):
         assert live._adoptable(candidate, ranked, rs, cfg) == legacy._adoptable(
             candidate, ranked, rs, cfg
         )
+
+
+# ── Ties, fallback identity and the K_vis screen ─────────────────────
+
+
+def _ranked_extra(name: str, side: str = "live") -> list[RouteCost]:
+    case = _EXTRA_RANK_CASES[name]
+    return _SIDES[side].rank_routes(
+        case.graph(),
+        case.source,
+        case.time_s,
+        case.current_fed,
+        case.extinction,
+        case.fed,
+        case.config,
+        current_exit=case.current_exit,
+    )
+
+
+def _sort_fields(rc: RouteCost) -> tuple:
+    return (rc.rejected, rc.clean, rc.tau_route, rc.rank_cost, len(rc.path))
+
+
+def test_full_tie_keeps_insertion_order():
+    for name, order in (
+        ("gate_full_tie_e0_first", ["E0", "E1"]),
+        ("gate_full_tie_e1_first", ["E1", "E0"]),
+    ):
+        for side in _SIDES:
+            first, second = _ranked_extra(name, side)
+            assert _sort_fields(first) == _sort_fields(second), (name, side)
+            assert [first.exit_id, second.exit_id] == order, (name, side)
+
+
+def test_fallback_tie_keeps_first_sort_order():
+    for side in _SIDES:
+        first, second = _ranked_extra("gate_fallback_tie_keeps_order", side)
+        assert (first.tau_route, first.rank_cost) == (
+            second.tau_route,
+            second.rank_cost,
+        )
+        # E1 is inserted first; the first sort puts the shorter path ahead.
+        assert first.path == ["D0", "E0"]
+        assert first.rejection_reason.startswith("fallback: FED")
+        assert second.rejected
+
+
+def test_kvis_with_only_the_rejected_route_visible():
+    for side in _SIDES:
+        ranked = _ranked_extra("additive_kvis_visible_route_rejected", side)
+        by_exit = {rc.exit_id: rc for rc in ranked}
+        assert any(s.visible for s in by_exit["west"].segments)
+        assert by_exit["west"].rejection_reason.startswith("FED")
+        assert not any(s.visible for s in by_exit["east"].segments)
+        assert not by_exit["east"].rejected
+
+
+def test_fallback_promotes_the_current_record_by_identity():
+    """Two records share the current exit's id; promotion keeps both.
+
+    rank_routes cannot produce this today (one path per exit, #185), so the
+    fallback is called directly: promoting by filtering on the exit id would
+    drop the second record.
+    """
+    rival = _rc("west", rejected=True, rejection_reason="tau r", tau_route=1.0)
+    rival = replace(rival, k_max_route=0.9)
+    current = _rc(
+        "east",
+        rejected=True,
+        rejection_reason="tau c1",
+        tau_route=2.0,
+        k_max_route=1.0,
+    )
+    twin = _rc(
+        "east",
+        rejected=True,
+        rejection_reason="tau c2",
+        tau_route=3.0,
+        path=["spawn", "mid", "east"],
+    )
+    result = live._apply_fallback([twin, rival, current], golden._gate(), "east")
+    assert [rc.rejection_reason for rc in result] == [
+        "fallback: tau c1",
+        "tau r",
+        "tau c2",
+    ]
+    assert result[2] is twin
+    assert result[0].feasible == current.feasible
+    assert not result[0].rejected
 
 
 # ── The harness compares legacy with live, not live with itself ──────
