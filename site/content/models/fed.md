@@ -222,7 +222,19 @@ computes it
   or outside the FDS domain. `--o2-threshold-percent 19.5` restores the
   previous default, the OSHA limit that Pathfinder uses. The guide's Eq. 18 carries a factor 60 in the denominator while
   stating that *t* is in minutes; the code follows Handbook Eq. 63.50 without
-  it.
+  it. That 60 is left over from the 2009 guide, which gave the FED equations
+  with *t* in seconds (see [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)).
+
+![Low-oxygen time to incapacitation against O2 from 3.9 to 20.9 % on a log time axis: a straight line, solid over the decompression data from 3.9 to 9.6 % and dashed above, with vertical lines at 15 % (140 min) and 20 % (about 2090 min)](/images/fundamentals/fed_o2.png)
+
+*Time to incapacitation by low oxygen, \(t_{IO}\) [min], Eq. 63.50: solid
+over the decompression data (3.9–9.6 % O₂), dashed above. pyFDS-Evac
+evaluates this law up to `o2_threshold_percent` (20 % by default, dash-dot
+line, about 2090 min) and adds nothing at or above it; everything between
+about 10 % and the gate is extrapolation. Dotted: 15 % O₂, down to which
+there is little effect in humans (Purser & McAllister 2016, p. 2364). Figure
+and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
+`scripts/figures/fundamentals_fed_o2.py`.*
 
 The irritant slowdown \(g\), when enabled (`fed.py:241`–`242`), is multiplied with the smoke
 factor (`direct_steering_runtime.py:186`–`190`). Its constants were not found
