@@ -1374,9 +1374,56 @@ class RouteModePolicy(Protocol):
         self, rc: RouteCost, config: RouteCostConfig, current_exit: str | None
     ) -> tuple[int, int, float, float, int]: ...
 
+    def improvement(
+        self, candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
+    ) -> bool: ...
 
-class AdditivePolicy:
+    def anchor_allows(
+        self,
+        candidate: RouteCost,
+        old_rc: RouteCost | None,
+        config: RerouteConfig,
+    ) -> bool: ...
+
+    def scan_before_current_exit(self) -> bool: ...
+
+
+class _AnchoredPolicy:
+    """The exit-switch anchor, shared by both cost models."""
+
+    def improvement(
+        self, candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
+    ) -> bool:
+        raise NotImplementedError
+
+    def anchor_allows(
+        self,
+        candidate: RouteCost,
+        old_rc: RouteCost | None,
+        config: RerouteConfig,
+    ) -> bool:
+        """Whether the agent may leave *old_rc* for *candidate*.
+
+        No baseline allows, a hazard the agent must flee allows, and
+        otherwise the cost model says whether *candidate* is enough better.
+        """
+        if old_rc is None:
+            return True
+        if _must_flee_rejection(old_rc, config.cost_config):
+            return True
+        return self.improvement(candidate, old_rc, config)
+
+
+class AdditivePolicy(_AnchoredPolicy):
     """The historical w_smoke/w_fed toll: the composite ranks, dose refuses."""
+
+    def improvement(
+        self, candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
+    ) -> bool:
+        return _clears_exit_anchor(candidate, old_rc, config)
+
+    def scan_before_current_exit(self) -> bool:
+        return False
 
     def edge_weight(self, seg: SegmentCost, config: RouteCostConfig) -> float:
         # Additive decomposition of the composite formula. current_fed
@@ -1449,8 +1496,59 @@ class AdditivePolicy:
         )
 
 
-class GatePolicy:
+class GatePolicy(_AnchoredPolicy):
     """Smoke decides which exits remain available; time ranks them."""
+
+    @staticmethod
+    def _clean_bypass(candidate: RouteCost, old_rc: RouteCost) -> bool:
+        """A clean candidate leaves a dirty exit whatever the anchor says."""
+        return candidate.clean and not old_rc.clean
+
+    @staticmethod
+    def _tau_band(
+        candidate: RouteCost, old_rc: RouteCost, cost_config: RouteCostConfig
+    ) -> int:
+        """+1 if *candidate* is clearly cleaner, -1 if clearly dirtier, else 0.
+
+        A deadband on the quantity the routes are ordered by, symmetric. Clearly
+        cleaner is adopted, clearly dirtier is refused, and only a tie falls
+        through to time and queue.
+
+        The refusal half was missing, and its absence was the oscillation:
+        leaving an exit had to clear a margin in tau, while returning went
+        straight to the time comparison, which the nearer exit wins
+        unconditionally and permanently. Departure cost a margin and the return
+        was free. Same shape as the clean tier's failure one level up --
+        hysteresis applied to one side of a disjunction is not hysteresis.
+
+        Absolute rather than a ratio: tau is zero in clear air, where a ratio
+        reads 0 < 0, no agent could switch at all, and a congestion weight would
+        count for nothing exactly where decks calibrate one.
+        """
+        margin = cost_config.tau_max * cost_config.tau_deadband
+        delta = old_rc.tau_route - candidate.tau_route
+        if delta > margin:
+            return 1
+        if delta < -margin:
+            return -1
+        return 0
+
+    def improvement(
+        self, candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
+    ) -> bool:
+        if self._clean_bypass(candidate, old_rc):
+            return True
+        if not candidate.feasible:
+            return _clears_exit_anchor(candidate, old_rc, config)
+        band = self._tau_band(candidate, old_rc, config.cost_config)
+        if band > 0:
+            return True
+        if band < 0:
+            return False
+        return _clears_exit_anchor(candidate, old_rc, config)
+
+    def scan_before_current_exit(self) -> bool:
+        return True
 
     def edge_weight(self, seg: SegmentCost, config: RouteCostConfig) -> float:
         # Per-edge cost. Under "gate" this is the edge's own optical
@@ -2078,40 +2176,48 @@ def _anchor_allows(
     comparison is a deadband on optical depth, falling through to time only
     when the two routes are within it.
     """
-    if old_rc is None:
-        return True
-    if _must_flee_rejection(old_rc, config.cost_config):
-        return True
-    cost_config = config.cost_config
-    if cost_config.cost_model != "gate":
-        return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+    return policy_for(config.cost_config).anchor_allows(candidate, old_rc, config)
 
-    if candidate.clean and not old_rc.clean:
-        return True
-    if not candidate.feasible:
-        return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
 
-    # A deadband on the quantity the routes are ordered by, symmetric. Clearly
-    # cleaner is adopted, clearly dirtier is refused, and only a tie falls
-    # through to time and queue.
-    #
-    # The refusal half was missing, and its absence was the oscillation:
-    # leaving an exit had to clear a margin in tau, while returning went
-    # straight to the time comparison, which the nearer exit wins
-    # unconditionally and permanently. Departure cost a margin and the return
-    # was free. Same shape as the clean tier's failure one level up --
-    # hysteresis applied to one side of a disjunction is not hysteresis.
-    #
-    # Absolute rather than a ratio: tau is zero in clear air, where a ratio
-    # reads 0 < 0, no agent could switch at all, and a congestion weight would
-    # count for nothing exactly where decks calibrate one.
-    margin = cost_config.tau_max * cost_config.tau_deadband
-    delta = old_rc.tau_route - candidate.tau_route
-    if delta > margin:
-        return True
-    if delta < -margin:
-        return False
+def _clears_exit_anchor(
+    candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
+) -> bool:
+    """Whether *candidate* beats *old_rc* by the exit_switch_anchor ratio."""
     return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+
+
+def _select_candidate(
+    ranked: list[RouteCost],
+    route_state: AgentRouteState,
+    config: RerouteConfig,
+) -> RouteCost:
+    """The route the agent would move to: rank 1, or the first it can adopt.
+
+    A route the ordering promoted but the agent cannot adopt must not hide
+    the rest of the list. Tier 1 can put a clean exit first that the anchor
+    then refuses on time; before this, the agent returned None and never saw
+    the rival at rank 2 it would have switched to -- so adding the tier could
+    suppress a switch the model made without it, which is strictly worse than
+    having no tier at all. Candidates are tried in rank order and the first
+    adoptable one wins; if none is, nothing changes, as before.
+
+    Gate only. The scan stops at the agent's own exit and does not skip
+    refused routes.
+    """
+    best = ranked[0]
+    current_exit_now = route_state.current_exit
+    if (
+        current_exit_now is not None
+        and policy_for(config.cost_config).scan_before_current_exit()
+        and best.exit_id != current_exit_now
+    ):
+        for candidate in ranked:
+            if candidate.exit_id == current_exit_now:
+                break  # the agent's own exit outranks the rest: stay
+            if _adoptable(candidate, ranked, route_state, config):
+                best = candidate
+                break
+    return best
 
 
 def _adoptable(
@@ -2238,26 +2344,7 @@ def evaluate_and_reroute(
             reason=reason,
         )
 
-    best = ranked[0]
-    # A route the ordering promoted but the agent cannot adopt must not hide
-    # the rest of the list. Tier 1 can put a clean exit first that the anchor
-    # then refuses on time; before this, the agent returned None and never saw
-    # the rival at rank 2 it would have switched to -- so adding the tier could
-    # suppress a switch the model made without it, which is strictly worse than
-    # having no tier at all. Candidates are tried in rank order and the first
-    # adoptable one wins; if none is, nothing changes, as before.
-    current_exit_now = route_state.current_exit
-    if (
-        current_exit_now is not None
-        and config.cost_config.cost_model == "gate"
-        and best.exit_id != current_exit_now
-    ):
-        for candidate in ranked:
-            if candidate.exit_id == current_exit_now:
-                break  # the agent's own exit outranks the rest: stay
-            if _adoptable(candidate, ranked, route_state, config):
-                best = candidate
-                break
+    best = _select_candidate(ranked, route_state, config)
 
     if (
         best.rejected
