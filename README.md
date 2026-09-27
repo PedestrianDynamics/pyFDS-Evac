@@ -122,13 +122,13 @@ time when pricing a route* — setting them changes what routes cost, not how
 fast agents walk. The same split applies to speed itself: `routing.
 base_speed_m_per_s` is a route-pricing constant (default on the
 [routing model](https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters)
-page), while an agent's own `v0` defaults to 1.2 m/s (see below).
+page), while an agent's own `v0` defaults to 1.25 m/s (see below).
 
 Each distribution group sets the attributes an agent starts with:
 
 | Key | Default | Effect |
 |-----|---------|--------|
-| `v0` | `1.2` m/s, for every model | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
+| `v0` | `1.25` m/s (FDS+Evac `VEL_MEAN`; 1.2 before), except 0.8 for `SocialForceModel` | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
 | `v0_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
 | `v0_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
 | `radius` | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. With `radius_distribution` = `"gaussian"` and `radius_std`, drawn per agent and clipped to `[0.1, 1.0]` m. |

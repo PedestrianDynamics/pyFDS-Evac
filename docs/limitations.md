@@ -33,7 +33,7 @@ speed factor used to estimate travel time when a route is priced, not the
 walking speed. Setting `routing.alpha` therefore changes which route an agent
 prefers but leaves its speed in smoke unchanged. The same split applies to
 speed itself: `routing.base_speed_m_per_s` (1.3 m/s) prices routes, while an
-agent walks at its own `v0` (1.2 m/s by default).
+agent walks at its own `v0` (1.25 m/s by default).
 
 ## Incapacitation is probabilistic by default
 
