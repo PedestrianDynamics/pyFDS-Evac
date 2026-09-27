@@ -200,11 +200,20 @@ def _build_parser() -> argparse.ArgumentParser:
         "probabilistic mode (default: 0.94 -> ~10/50/88%% at FED 0.3/1/3)",
     )
     parser.add_argument(
+        "--enable-heat-fed",
+        action="store_true",
+        help="Accumulate the convective heat FED (SFPE Handbook Eq. 63.44) from "
+        "the FDS TEMPERATURE slice and incapacitate on it. Off by default, as "
+        "FDS+Evac has no heat dose; before this became opt-in it was on "
+        "whenever the case had a TEMPERATURE slice",
+    )
+    parser.add_argument(
         "--heat-fed-threshold",
         type=float,
         default=1.0,
         help="Median cumulative heat FED (SFPE Handbook Eq. 63.44) at which an "
-        "agent is thermally incapacitated (default: 1.0). Independent of "
+        "agent is thermally incapacitated; needs --enable-heat-fed "
+        "(default: 1.0). Independent of "
         "--fed-threshold (toxic gas) -- see fed.py's TenabilityConfig",
     )
     parser.add_argument(

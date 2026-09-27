@@ -167,6 +167,7 @@ mpiexec -n 4 fds assets/fed_incap_heat_200c/fed_incap_heat_200c.fds
 uv run python run.py \
     --scenario assets/fed_incap_heat_100c \
     --fds-dir assets/fed_incap_heat_100c \
+    --enable-heat-fed \
     --heat-fed-threshold 1.0 \
     --output-fed-history /tmp/heat_100c_fed_history.csv \
     --output-sqlite /tmp/heat_100c.sqlite
@@ -175,7 +176,8 @@ uv run python run.py \
 
 No `--fed-threshold`/CO-related flags are needed — these decks track no gas
 species, so the toxic FED path stays inactive (`fed_model=None`) and only
-`heat_fed_model` is built.
+`heat_fed_model` is built. `--enable-heat-fed` is required: the heat dose is
+off by default, as FDS+Evac has none.
 
 ## Results / Pass Criteria
 

@@ -85,7 +85,7 @@ does not contribute to any dose. An agent near a flame or under a hot layer
 that radiates strongly is therefore treated as less exposed than it is.
 
 **Heat does not affect route choice or walking speed.** The heat dose is
-tracked per agent, separately from the toxic dose, and an agent is
+opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is
 incapacitated when either dose reaches its threshold. Before that point, heat
 has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced

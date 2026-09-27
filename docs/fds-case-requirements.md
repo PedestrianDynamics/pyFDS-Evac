@@ -31,7 +31,7 @@ quantity name `load_slice_sampler` looks up
 |-------|-------|-----------|
 | Extinction coefficient | smoke-speed, visibility gating, GUI smoke layer | `IndexError` when `--fds-dir` is given without `--constant-extinction` |
 | CO **and** CO2 **and** O2 | FED toxic dose | **FED is switched off and the run continues** (see below) |
-| TEMPERATURE | heat FED (SFPE Handbook Eq. 63.44) | **heat FED is switched off and the run continues** (see below) |
+| TEMPERATURE | heat FED (SFPE Handbook Eq. 63.44), only with `--enable-heat-fed` | **heat FED is switched off and the run continues** (see below) |
 
 It is all three gases or none of them; there is no partial FED. TEMPERATURE
 is independent of that gate — it needs neither CO/CO2/O2 nor any `&REAC`
@@ -80,9 +80,9 @@ FED is disabled for <dir>: it has no CO slice, and all three of CO, CO2 and
 O2 are needed. ...
 ```
 
-**Heat FED disabled.** The same applies to the independent heat FED track: if
-there is no `TEMPERATURE` slice, heat FED is silently off, and every heat FED
-column reads zero:
+**Heat FED disabled.** The heat FED track is off unless `--enable-heat-fed`
+is given. With it, the same applies as for the gases: if there is no
+`TEMPERATURE` slice, heat FED is off, and every heat FED column reads zero:
 
 ```
 Heat FED is disabled for <dir>: it has no TEMPERATURE slice. ...

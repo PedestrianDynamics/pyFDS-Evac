@@ -80,12 +80,15 @@ happens, the FED incapacitation rule is on by default. The FIC slowdown
 [#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) is off
 by default, as FDS+Evac has none; `--enable-fic-speed` turns it on. Without `--fds-dir` (or with a case missing the
 required species) no FED is computed and these flags have no effect;
-a case with a `TEMPERATURE` slice still gets heat incapacitation.
+a case with a `TEMPERATURE` slice still gets heat incapacitation when
+`--enable-heat-fed` is given (the heat dose is off by default, as FDS+Evac has
+none).
 
 | Flag | Purpose |
 |------|---------|
 | `--disable-tenability` | Turn both rules off. |
 | `--enable-fic-speed` | Turn the FIC slowdown on (off by default). |
+| `--enable-heat-fed` | Accumulate the heat dose from a `TEMPERATURE` slice and incapacitate on it (off by default). |
 | `--fic-alpha F` | Slope of `v/v₀ = max(μ, 1 − α·FIC)` (default 0.7). |
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
 | `--fed-threshold F` | Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless `--incapacitation-mode deterministic`. |

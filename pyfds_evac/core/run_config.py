@@ -105,8 +105,15 @@ def _build_fed_model(opts: Any, log: Logger):
 
 
 def _build_heat_fed_model(opts: Any, log: Logger):
-    """Build the heat FED (SFPE Handbook Eq. 63.44) model when a TEMPERATURE slice exists."""
+    """Build the heat FED (SFPE Handbook Eq. 63.44) model when asked for.
+
+    FDS+Evac has no heat dose, so it is opt-in (``opts.enable_heat_fed``) and
+    then needs a TEMPERATURE slice.
+    """
     if not opts.fds_dir:
+        return None
+    if not getattr(opts, "enable_heat_fed", False):
+        log("Heat FED is off; pass --enable-heat-fed to accumulate it.")
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():

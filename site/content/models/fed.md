@@ -53,7 +53,9 @@ species the sum reduces to the FDS+Evac default,
 
 ## Convective heat
 
-When the case has a `TEMPERATURE` slice, a separate heat dose accumulates at
+FDS+Evac has no heat dose, so this one is opt-in: with `--enable-heat-fed`
+(`opts.enable_heat_fed`) and a `TEMPERATURE` slice in the case, a separate
+heat dose accumulates at
 `_heat_fed_rate_per_minute` (`fed.py:207`),
 
 $$

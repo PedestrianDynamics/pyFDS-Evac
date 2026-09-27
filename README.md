@@ -11,7 +11,8 @@ The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
 - Purser FED model as in the FDS+Evac guide (toxic gas dose accumulation, up to 12 species)
-- Convective heat FED (Purser, SFPE Handbook Eq. 63.44), accumulated as a dose
+- Convective heat FED (Purser, SFPE Handbook Eq. 63.44), opt-in with
+  `--enable-heat-fed` (FDS+Evac has none), accumulated as a dose
   independent of the gas track -- an agent is incapacitated when either crosses
   its own threshold; the heat dose is a running total of its own and is never
   added to the gas FED. Radiant heat is not modelled, and heat

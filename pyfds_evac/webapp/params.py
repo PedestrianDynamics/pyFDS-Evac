@@ -79,6 +79,7 @@ FIELD_GROUPS: list[tuple] = [
             "fic_min_factor",
             "fed_threshold",
             "o2_threshold_percent",
+            "enable_heat_fed",
             "heat_incapacitation_mode",
             "heat_susceptibility_sigma",
             "heat_fed_threshold",
@@ -262,6 +263,8 @@ _HELP_TEXT: dict[str, str] = {
     "standard 'untenable' dose (ISO 13571). Lower = agents succumb sooner.",
     "o2_threshold_percent": "Oxygen level (vol %) below which low oxygen adds to the toxic "
     "dose. 20.0 as in FDS+Evac; 19.5 is the OSHA limit Pathfinder uses.",
+    "enable_heat_fed": "Accumulate a heat dose from the FDS temperature slice and let it "
+    "incapacitate. Off by default, as FDS+Evac has no heat dose.",
     "heat_incapacitation_mode": "Same idea as toxic-dose mode, but for heat: probabilistic draws a "
     "per-agent tolerance, deterministic gives everyone the same one. "
     "Independent of the toxic-gas track.",

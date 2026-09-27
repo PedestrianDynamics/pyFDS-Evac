@@ -38,7 +38,7 @@ Research software, provided without warranty. Not intended for regulatory or des
   >}}
   {{< hextra/feature-card
     title="Dose"
-    subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus a convective heat dose accumulated separately. By default each agent stops at its own threshold."
+    subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus an opt-in convective heat dose accumulated separately. By default each agent stops at its own threshold."
   >}}
   {{< hextra/feature-card
     title="Route choice"
