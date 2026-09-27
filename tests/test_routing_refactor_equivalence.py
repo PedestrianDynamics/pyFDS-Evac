@@ -1350,6 +1350,53 @@ def test_wander_step_advances_before_a_failed_lookup():
     assert result["route_state"]["last_eval_time_s"] == case.time_s
 
 
+def test_wander_step_survives_a_failing_lookup(monkeypatch):
+    """The patrol step is advanced before the lookup, so an error keeps it."""
+    import pyfds_evac.core.cognitive_map as cognitive_map
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("lookup failed")
+
+    monkeypatch.setattr(cognitive_map, "wander_target", broken)
+    case = replace(
+        golden.REROUTE_CASES["wander_nowhere"],
+        state="idle",
+        current_path=("D0",),
+        wander_step=2,
+    )
+    for side in _SIDES:
+        world = _reroute_world(case)
+        with pytest.raises(RuntimeError, match="lookup failed"):
+            _SIDES[side].evaluate_and_reroute(
+                7,
+                world["wait_info"],
+                world["route_state"],
+                world["graph"],
+                case.time_s,
+                0.0,
+                case.extinction,
+                None,
+                RerouteConfig(cost_config=case.config),
+                {},
+                cognitive_map=world["cmap"],
+            )
+        assert world["route_state"].wander_step == 3, side
+        assert world["route_state"].last_eval_time_s == case.time_s, side
+
+
+def test_explore_decides_without_writing_the_exit(monkeypatch):
+    """A successful explore and a failed one both leave current_exit alone."""
+    case = replace(golden.REROUTE_CASES["explore_frontier"], current_exit="E0")
+    assigned = _assignments(case)
+    assert assigned["live"] == assigned["legacy"]
+    assert assigned["live"] == ["last_eval_time_s", "current_path"]
+    failing = _FailingReroute(monkeypatch)
+    result, calls = failing.run(case)
+    assert [c["new_path"] for c in calls] == [["D0", "C0"]]
+    assert result["route_state"]["current_exit"] == "E0"
+    assert result["route_state"]["current_path"] == []
+
+
 def test_wander_step_is_kept_after_a_patrol_leg():
     case = golden.REROUTE_CASES["wander_patrol"]
     result = _both(case)
