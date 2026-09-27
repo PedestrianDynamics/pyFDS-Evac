@@ -71,10 +71,10 @@ were required before familiarity could have *any* observable effect at all
 ## What's Being Verified
 
 1. **`full` finds and uses the shortcut** — with its complete graph
-   knowledge, a `full` agent's very first route evaluation (forced to happen
-   at spawn, before it starts walking the scripted tour) finds
-   `spawn→CP3→exit` cheaper than the scripted route and reroutes onto it
-   immediately (`reason="better_path"`).
+   knowledge, a `full` agent's opening route choice at spawn already takes
+   `spawn→CP3→exit`, so no switch is recorded: in the run on `7a3617d` all
+   20 agents pass CP3 and none passes CP1. (Earlier versions reached the
+   same route through a `better_path` switch at t ≈ 0.)
 2. **`discovery` explores instead of knowing** — a `discovery` agent starts
    knowing only its spawn's one declared neighbor (CP0). With no exit
    reachable in its own knowledge yet, it heads to the nearest known-but-

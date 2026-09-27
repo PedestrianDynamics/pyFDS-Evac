@@ -1,7 +1,9 @@
 # T-junction test: smoke-blocked T-corridor
 
-This scenario demonstrates all three pyFDS-Evac model features:
-speed reduction, FED incapacitation, and dynamic rerouting.
+This scenario exercises speed reduction, FED incapacitation and dynamic
+rerouting. In the run on `7a3617d` (defaults, so no irritant slowdown) the
+agents choose exit A at spawn and no reroute occurs; see the results below
+and [#195](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/195).
 
 ## Geometry
 
@@ -56,7 +58,7 @@ Horizontal slices at z = 2 m (head height):
 | Hydrogen chloride volume fraction | FED (irritant) |
 | Visibility | fds-viewer visualization only |
 
-## Why all three features are exercised
+## What each feature does here
 
 **Speed reduction.** Agents approaching the junction encounter
 increasing extinction, reducing their walking speed via the
