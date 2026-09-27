@@ -283,13 +283,15 @@ it can perceive
 [visibility page](/models/visibility.md) lists the command-line settings for
 sight gating and what each one means.
 
-![Six copies of a corridor with an agent probe at y = 4, 10, 14, 20, 26 and 30 m; the side exit is unknown below the legibility band, known inside it, and still known above it](/images/concepts/map_memory.png)
+![Five copies of a corridor with an agent probe at y = 4, 14, 20 and 30 m walking north, then at y = 10 m walking back; the side exit is unknown below the legibility band, known inside it, and still known above it, and at y = 10 m the agent takes the end exit on the way up and the side exit on the way back](/images/concepts/map_memory.png)
 
 *Figure 7. Asset `assets/cognitive_map_memory`: a corridor whose side-exit
-sign is legible only inside the shaded band. A discovery agent probed at six
-positions: above the band the sign is no longer legible, but the exit is still
-in the map and still chosen. Outcomes as recorded in the asset README and
-pinned by tests. Script: `scripts/figures/map_memory.py`.*
+sign is legible only inside the shaded band. A discovery agent walks north,
+then back to y = 10 m. Above the band the sign is no longer legible, but the
+exit is still in the map and still routable. Back at y = 10 m the agent takes
+the side exit, where on the way up it took the end exit: same place, different
+history. Outcomes from live engine probes, pinned by
+`test_map_memory_probes_match_engine`. Script: `scripts/figures/map_memory.py`.*
 
 ## The parameter split
 
