@@ -263,7 +263,7 @@ A. (4) A fully familiar agent knows the whole graph at t = 0. Script:
 >
 > **Talk vs code.** The slide calls `full` "the FDS+Evac default". It is
 > pyFDS-Evac's default. FDS+Evac's `KNOWN_DOOR` defaults to `.FALSE.`
-> (`evac.f90:2223`, `:2666`).
+> (`evac.f90:2291`, `:2733`).
 
 ## 6. The map remembers
 

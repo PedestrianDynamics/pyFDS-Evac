@@ -181,19 +181,19 @@ The second is a rival exit, held to `tau_max * tau_return_margin` = 4.8.
 
 <a id="where-the-6-comes-from"></a>**Where the 6 comes from.** FDS+Evac's tier-4 door test computes
 `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out when
-`L2_tmp >= 1.0` (`evac.f90:16458, :16463`). That expression is `K_ave * d / 6`, so
+`L2_tmp >= 1.0` (`evac.f90:16794, :16799`). That expression is `K_ave * d / 6`, so
 the test is exactly `tau > 6` with Jin's `c = 3`. The threshold is therefore
 citable, but **the quantity it is applied to is not the same quantity**:
 FDS+Evac's `K_ave_Door` is a mean along `See_door`'s straight sight line, and
 for a door with no resolved sight line the distance is an L1 norm
-(`evac.f90:16460`); pyFDS-Evac averages `K` along the walked polyline.
+(`evac.f90:16796`); pyFDS-Evac averages `K` along the walked polyline.
 Two further scope limits: the test lives in the tier-4 last-resort branch,
 reached only once no smoke-free door is available and looping only over doors
 that are already known or visible; and the strike-out there
-(`Is_Visible_Door(i) = .FALSE.`, `:16464-16465`) lasts one call of
-`Change_Target_Door`, whose door arrays are reset at `:15831-15832`. FDS+Evac's
+(`Is_Visible_Door(i) = .FALSE.`, `:16800-16801`) lasts one call of
+`Change_Target_Door`, whose door arrays are reset at `:16170-16171`. FDS+Evac's
 only lasting smoke memory is a weak mark in a lone agent's known-door list on
-its previous target once `K_ave >= 0.3 /m` there (`:16292-16301`), and only if
+its previous target once `K_ave >= 0.3 /m` there (`:16628-16637`), and only if
 that door already has an entry in the list filled at initialisation (the loop
 rewrites entries but never adds one). A "some
 smoke" mark forces the door unknown only in the periodic re-evaluation; a "too
@@ -207,8 +207,8 @@ against a soot-dose or FED-equivalent limit.** That is open work.
 
 Under FDS+Evac's *primary* rule the criterion is different again — minimise time
 among doors satisfying `K_ave_Door < ABS(FED_DOOR_CRIT)` = 0.03 /m
-(`evac.f90:16265`, `:16272`; `FED_DOOR_CRIT = -100` becomes `3.0/100` at
-`:5262`). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
+(`evac.f90:16601`, `:16608`; `FED_DOOR_CRIT = -100` becomes `3.0/100` at
+`:5496`). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
 below. See [model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door).
 
 ### The diversion is a departure from FDS+Evac, not a reproduction of it
@@ -222,7 +222,7 @@ In FDS+Evac's first three tiers the rank is `T_tmp` — a time in tier 1 when
 `L2_tmp < ABS(FED_DOOR_CRIT)`:
 
 ```fortran
-IF (T_tmp < L2_min .AND. L2_tmp < ABS(FED_DOOR_CRIT)) THEN   ! :16265, :16354, :16401
+IF (T_tmp < L2_min .AND. L2_tmp < ABS(FED_DOOR_CRIT)) THEN   ! :16601, :16690, :16737
    L2_min = MAX(0.0_EB, T_tmp)
    i_tmp  = i
 END IF
@@ -234,15 +234,15 @@ reorder the doors inside a tier, and geometry does not reorder itself. Here
 
 **One qualification, and it matters.** Smoke is not absent from FDS+Evac's
 ordering everywhere: the tier-4 last-resort branch minimises `L2_tmp` directly
-(`IF (L2_tmp < L2_min)`, `:16467`), and under the default `FED_DOOR_CRIT < 0`
+(`IF (L2_tmp < L2_min)`, `:16803`), and under the default `FED_DOOR_CRIT < 0`
 that `L2_tmp` is `tau/6`. So the reference does rank on smoke — but only after
 tiers 1-3 have all failed to find any admitted door, only over doors already
 known or visible, on a bee-line (or L1) distance to the door rather than a
-walked route, and with a strike-out there that lasts one call (`:16463-16465`;
-reset at `:15831-15832`). Stated exactly: **pyFDS-Evac promotes FDS+Evac's
+walked route, and with a strike-out there that lasts one call (`:16799-16801`;
+reset at `:16170-16171`). Stated exactly: **pyFDS-Evac promotes FDS+Evac's
 last-resort ranking criterion to its primary one, and drops the one lasting
 smoke memory the reference has**, a weak mark on a lone agent's previous target
-once `K_ave >= 0.3 /m` (`:16292-16301`). "Smoke never enters FDS+Evac's
+once `K_ave >= 0.3 /m` (`:16628-16637`). "Smoke never enters FDS+Evac's
 ordering" is too strong and should not be written; "smoke never enters the
 ordering until every smoke-free tier is exhausted" is what the source supports.
 
@@ -275,7 +275,7 @@ At equal `K_ave` the polyline form is therefore about 11 % (1.410 / 1.271)
 stricter on the near route than the far one, purely from geometry — a
 systematic tilt toward the diversion that no smoke measurement put there. The
 tilt is against the L2 bee line specifically; against the L1 norm FDS+Evac uses
-for non-visible doors (`:16460`) it vanishes on this deck, because both
+for non-visible doors (`:16796`) it vanishes on this deck, because both
 corridors are axis-aligned and the L1 distance equals the polyline exactly. The
 sign and size of the bias on other geometries have not been measured.
 
@@ -338,13 +338,13 @@ this one scales a budget (0.8 *down*).
 current exit's `tau` is discounted, and only in the sort key, so it holds its
 place unless a rival is clearly cleaner rather than momentarily cleaner.
 
-**Its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`** (`evac.f90:1507`), which
-is applied as `L2_tmp = FAC_DOOR_OLD2 * L2_tmp` to the current door at `:16290`
-and `:16467` — and at `:16467` that `L2_tmp` is the `tau/6` of the tier-4 test,
+**Its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`** (`evac.f90:1572`), which
+is applied as `L2_tmp = FAC_DOOR_OLD2 * L2_tmp` to the current door at `:16626`
+and `:16803` — and at `:16803` that `L2_tmp` is the `tau/6` of the tier-4 test,
 i.e. the same quantity, discounted in the same place, inside the loop that
 minimises it to pick a door. The shipped comment on `tau_of` in `route_graph.py`
 cites that provenance correctly since `9508181`; an earlier version cited
-`FAC_DOOR_WAIT`, which is at `:1505` and discounts the current door's *travel
+`FAC_DOOR_WAIT`, which is at `:1570` and discounts the current door's *travel
 time* (`T_tmp`), not its smoke. `FAC_DOOR_WAIT` is still the correct citation for
 `exit_switch_anchor` and `_PATH_IMPROVEMENT_THRESHOLD`, which are time
 comparisons, and the code cites it only there.
@@ -361,9 +361,9 @@ outrank smoky ones outright however far they are; among routes of the same tier,
 optical depth then time decides. The sort key is
 `(rejected, tier, tau, rank_cost, hops)`.
 
-This is FDS+Evac's primary door rule (`evac.f90:16265`, `:16272`), and its
+This is FDS+Evac's primary door rule (`evac.f90:16601`, `:16608`), and its
 threshold is not a new constant: `FED_DOOR_CRIT = -100` becomes `3.0/100` =
-0.03 /m at `:5262`, which is Jin's `S = 3/K` at a 100 m sighting distance. Two
+0.03 /m at `:5496`, which is Jin's `S = 3/K` at a 100 m sighting distance. Two
 differences from the reference implementation are worth stating:
 
 - **FDS+Evac's tier 1 is a hard filter.** `IF (T_tmp < L2_min .AND. L2_tmp <
@@ -378,12 +378,12 @@ differences from the reference implementation are worth stating:
   that made sighting distances jump between ticks. FDS+Evac applies its 0.03 to
   `K_ave_Door`, a per-door average, for the same reason — though note that
   `K_ave_Door` is a mean along a bee-line sight line (`See_door`,
-  `evac.f90:16147`, assigned at `:16158`), not a maximum over legs.
+  `evac.f90:16486`, assigned at `:16497`), not a maximum over legs.
 
 `clean_exit_margin` is hysteresis on membership for the exit the agent already
 heads for: its limit is `clean_extinction_threshold / clean_exit_margin`.
-FDS+Evac supplies the value — `FAC_DOOR_OLD = 0.1` (`evac.f90:1506`), applied as
-`L2_tmp = FAC_DOOR_OLD * L2_tmp` for the current door (`:16255`), so the door an
+FDS+Evac supplies the value — `FAC_DOOR_OLD = 0.1` (`evac.f90:1571`), applied as
+`L2_tmp = FAC_DOOR_OLD * L2_tmp` for the current door (`:16591`), so the door an
 agent already walks to stays smoke-free up to ten times the criterion.
 
 The exit-switch anchor has a matching clause: a rival that is clean while the
@@ -410,7 +410,7 @@ run. The band is also one-sided: the incumbent is relaxed to 0.0375 /m while a
 rival is admitted at the bare 0.03 /m. And because tier membership is binary, a
 crossing does not reorder the list, it swaps which objective is in force, so the
 target jumps. FDS+Evac has only a weak memory against that: a mark on a lone
-agent's previous target once `K_ave >= 0.3 /m` (`evac.f90:16292-16301`), which
+agent's previous target once `K_ave >= 0.3 /m` (`evac.f90:16628-16637`), which
 acts weakly (see
 [model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door)); here
 nothing is remembered, by design.
@@ -446,9 +446,9 @@ one exit outrank another; it only removes exits.
 air, so the smoke gate cannot be the cause.
 
 **This is FDS+Evac's other branch, and we run both halves at once.** In
-`evac.f90` (`Change_Target_Door`, :16439-:16467) the sign of `FED_DOOR_CRIT`
+`evac.f90` (`Change_Target_Door`, :16775-:16803) the sign of `FED_DOOR_CRIT`
 selects between a dose criterion and a smoke criterion — they are alternatives,
-not layers — and the default of `-100.0` (:1459) selects the smoke branch that
+not layers — and the default of `-100.0` (:1524) selects the smoke branch that
 this model implements. Which smoke criterion depends on the tier: absolute
 `K_ave_Door` in tier 1, the `0.5 x d` sight ratio in tier 4. Two further
 differences are worth knowing:
@@ -637,7 +637,7 @@ Every key below is read from the scenario's `routing` block by
 | `tau_max` | `6.0` | Optical depth `K_ave * L` a route may carry before it is refused. Also orders the feasible routes. | active | inert |
 | `tau_return_margin` | `0.8` | Factor a *rival* exit's budget is multiplied by, so switching needs a cleaner route than staying. | active | inert |
 | `current_exit_discount` | `0.9` | Factor the current exit's `tau` is scaled by in the sort key. FDS+Evac's `FAC_DOOR_OLD2` is 0.9. | active | inert |
-| `tau_deadband` | `0.1` | Half-width of the exit-switch anchor's symmetric `tau` deadband, as a fraction of `tau_max` (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — `evac.f90:16463` tests the raw value. | active | inert |
+| `tau_deadband` | `0.1` | Half-width of the exit-switch anchor's symmetric `tau` deadband, as a fraction of `tau_max` (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — `evac.f90:16799` tests the raw value. | active | inert |
 | `clean_extinction_threshold` | `0.0` (off) | Extinction at or below which a route's smokiest leg makes the exit `clean`; clean exits outrank smoky ones. FDS+Evac's value is `0.03`. | active | inert |
 | `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
 | `anticipate` | `true` | Price each segment at the agent's arrival time. | active | **active** |

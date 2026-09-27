@@ -479,15 +479,15 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 
 ## Relation to FDS+Evac
 
-From `materials/evac.f90` (FDS commit 16cf79652c); line numbers refer to that
-file. The detailed account of FDS+Evac door choice is on
+From `materials/evac.f90` (FDS commit c9da70d7a, FDS 6.7.6); line numbers
+refer to that file. The detailed account of FDS+Evac door choice is on
 [model comparison](/docs/model-comparison.md).
 
 | Concept | FDS+Evac | pyFDS-Evac |
 |---|---|---|
 | **Visible** | Geometric line of sight from agent to door centre, or to the door's `XB` centre from the correct side; no range limit, no contrast, no angle factor | *Legible*: sign test with *C*, view angle, obstruction, \(V_{\max}\) and line-of-sight extinction |
 | **Known** | `KNOWN_DOOR` (default `.FALSE.`) and `KNOWN_DOOR_PROBS` per door, written at initialisation into a per-agent or per-group list; afterwards only downgraded | *Known*: seeded by `familiarity` (one \(p\) per group) and `entrance`, then learned from legible signs; never downgraded |
-| **Visible counts as known** | for the current target in every call (`:16197–16199`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
+| **Visible counts as known** | for the current target in `imode == 1` calls (`:16533–16535`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
 | **Memory of the target** | a current target with positive `I_Target` stays visible | every known node persists |
 | **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹ | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
 | **Last resort** | tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call | the all-refused fallback re-admits the least smoky known route |
@@ -497,43 +497,43 @@ file. The detailed account of FDS+Evac door choice is on
 Details, with line numbers:
 
 - **Default knowledge.** `KNOWN_DOOR` defaults to `.FALSE.` on `&EXIT` and
-  `&DOOR` (`:2223`, `:2666`), and the default agent type is 2, the "known
-  door" agent (`:3712`). Our reading is that FDS+Evac's default agent is
+  `&DOOR` (`:2291`, `:2733`), and the default agent type is 2, the "known
+  door" agent (`:3774`). Our reading is that FDS+Evac's default agent is
   closer to `discovery` than to `full`. The two are not equivalent: see
   "Knowledge" below.
 - **Visibility.** `See_door` casts a straight line and returns `.FALSE.` only
-  when an obstruction blocks it (`:15343–15474`, walls at `:15423`, `:15464`).
+  when an obstruction blocks it (`:15682–15813`, walls at `:15762`, `:15803`).
   It also returns the mean extinction on that line. A door counts as seen when
   its centre is seen, or when the centre of its `XB` is seen from the correct
   side: `PP_see_door = See_door(X,Y) .OR. (See_door(XB) .AND. PP_correct_side)`
-  (`:16147–16155`). For DOORs without `EXIT_SIGN`, visibility also needs the
-  door to be the current target or already known (`:16164–16171`).
+  (`:16486–16494`). For DOORs without `EXIT_SIGN`, visibility also needs the
+  door to be the current target or already known (`:16500–16507`).
 - **Smoke acts in the door choice, not in seeing.** \(\bar K\) is floored at
-  \(0.5\,\lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.015 m⁻¹ with the default negative
-  criterion (`:16158–16160`), which is converted from a visibility with
-  \(S = 3/K\) (`:5260–5262`).
+  \(0.5\,\lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.015 m⁻¹ for either sign of the
+  criterion (`:16497`), which is converted from a visibility with
+  \(S = 3/K\) (`:5494–5496`).
   - Tiers 1–3 admit a door only while \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\)
-    (`:16253`, `:16265`, `:16272`, `:16347–16354`, `:16396–16401`).
+    (`:16589`, `:16601`, `:16608`, `:16683–16690`, `:16732–16737`).
     The door that shares the current target's flow field is discounted
     first: its \(\bar K\) is multiplied by `FAC_DOOR_OLD` (default 0.1,
-    `:1506`; applied at `:16255`, `:16349`, `:16398`), so the current door
+    `:1571`; applied at `:16591`, `:16685`, `:16734`), so the current door
     stays "smoke free" up to 0.3 m⁻¹ by default. This is a hysteresis on
     route retention, comparable in role to our anchor and deadband.
   - In tier 4, with the default criterion, a door is scored
     \(0.5\,d/(3/\bar K)\). \(d\) is the Euclidean distance for a visible door
-    and the L1 distance for a non-visible one (`:16457–16461`). A score ≥ 1
-    clears the door's visible and known flags for that call (`:16462–16465`).
-- **Knowledge.** The known list is written at initialisation (`:15891`,
-  `:15940–15954`), per agent or per group (`Group_Known_Doors`,
-  `:15920–15937`), and it persists across calls. The visible and known flags
-  of one call are rebuilt from it each time (`:15831–15832`). Type-1 agents
-  count a visible door as known within the call (`:16177`), and a current
-  target with positive `I_Target` stays visible (`:16195`).
-- **Smoke marks** (lone agents only, `HR%GROUP_ID < 0`, `:16292`). For the
+    and the L1 distance for a non-visible one (`:16793–16797`). A score ≥ 1
+    clears the door's visible and known flags for that call (`:16798–16801`).
+- **Knowledge.** The known list is written at initialisation (`:16230`,
+  `:16279–16293`), per agent or per group (`Group_Known_Doors`,
+  `:16259–16276`), and it persists across calls. The visible and known flags
+  of one call are rebuilt from it each time (`:16170–16171`). Type-1 agents
+  count a visible door as known within the call (`:16513`), and a current
+  target with positive `I_Target` stays visible (`:16531`).
+- **Smoke marks** (lone agents only, `HR%GROUP_ID < 0`, `:16628`). For the
   previous target, `L2_tmp` and `L2_tmp2` are scaled by `FAC_DOOR_OLD2` and
-  `FAC_DOOR_OLD` (`:16290–16291`). When `L2_tmp2 ≥ |FED_DOOR_CRIT|`, the list
+  `FAC_DOOR_OLD` (`:16626–16627`). When `L2_tmp2 ≥ |FED_DOOR_CRIT|`, the list
   entry becomes its negative node id, or zero when `L2_tmp ≥ 1`
-  (`:16292–16301`). Under the defaults the mark starts at
+  (`:16628–16637`). Under the defaults the mark starts at
   \(\bar K \ge 0.3\) m⁻¹.
 - **The difference.** In our reading of the code, FDS+Evac never adds a door
   to the known list after initialisation. It only downgrades entries. What an

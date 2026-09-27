@@ -13,11 +13,13 @@ aliases: [/docs/model-comparison/]
 > is noted too.
 >
 > Line numbers of the form `evac.f90:NNNN` refer to the `evac.f90`
-> source at FDS commit 16cf79652c (2016), the copy in `materials/`, not
-> to the FDS 6.7.6 / Evac 2.6.0 release that [1] documents.  The defaults
-> cited here are the same in FDS 6.7.6, and so is `Change_Target_Door`
-> apart from the floor on `K_ave_Door`, which 6.7.6 applies for either
-> sign of `FED_DOOR_CRIT`; the line numbers differ.
+> source at FDS commit c9da70d7a (`FDS6.7.6-404-gc9da70d7a`), the copy
+> in `materials/`, which is the FDS 6.7.6 / Evac 2.6.0 version that [1]
+> documents.  The guide's title page shows `FDS6.7.6-404-gc9da70d7a`;
+> its body text names `FDS6.7.6-336-gf2e836c15`, whose `evac.f90` equals
+> the `FDS6.7.6` tag's.  This copy differs from the tag only by the
+> `HR_SPEED`/`TPRE` initialisation (:11023–11024) and one `EVALUATE_RAMP`
+> call (:13256), with no behaviour change.
 
 ---
 
@@ -101,7 +103,7 @@ Three decentralised algorithms are analysed for finding the NE:
 In practice, RRA converges in ~3–4 iteration rounds regardless of
 parameter values, while PUA can oscillate and require 10–18 rounds
 ([8] §6, Figs. 1–4).  The initial assignment at simulation start
-iterates until door-target counts stabilise (evac.f90:6699).
+iterates until door-target counts stabilise (evac.f90:6995).
 
 Numerical experiments in [8] show that using the exit selection
 game (vs. nearest-exit) reduces total evacuation time by ~29%
@@ -132,7 +134,7 @@ neighbours to expand their feasible exit set.
 
 A separate **hawk-dove game** (Heliövaara et al. [9]) is available
 as an optional overlay (`C_HAWK >= 0`, default off: `C_HAWK = -2.0`,
-evac.f90:1523).  When enabled, agents near an exit play a
+evac.f90:1589).  When enabled, agents near an exit play a
 hawk-dove game against nearby neighbours to decide whether to push
 aggressively (hawk) or yield (dove).  This modulates *behaviour at
 congestion points*, not the exit-selection cost function itself.
@@ -141,11 +143,11 @@ congestion points*, not the exit-selection cost function itself.
 
 FDS+Evac's *primary* smoke test on a door is **absolute**: a door
 counts as smoke-free while `K_ave < ABS(FED_DOOR_CRIT)`.  The input is
-a visibility in metres (`FED_DOOR_CRIT = -100.0`, evac.f90:1459) which
+a visibility in metres (`FED_DOOR_CRIT = -100.0`, evac.f90:1524) which
 is converted to an extinction coefficient by Jin's relation,
-`FED_DOOR_CRIT = 3.0 / FED_DOOR_CRIT` (evac.f90:5262) — so the default
-is 0.03 /m.  `K_ave_Door` is assigned from `See_door` at evac.f90:16158,
-and the tier-1 test that reads it is at evac.f90:16265 and :16272.  Among
+`FED_DOOR_CRIT = 3.0 / FED_DOOR_CRIT` (evac.f90:5496) — so the default
+is 0.03 /m.  `K_ave_Door` is assigned from `See_door` at evac.f90:16497,
+and the tier-1 test that reads it is at evac.f90:16601 and :16608.  Among
 the doors that pass, the agent minimises the time `T` above.
 
 **That test is a hard filter.**  `IF (T_tmp < L2_min .AND. L2_tmp <
@@ -155,45 +157,45 @@ moves to the next tier of doors, not to a time-only ranking.  pyFDS-Evac's
 clean-exit tier falls through to the plain optical-depth ranking when it
 is empty, which is our construction and not FDS+Evac's.  The
 distance-relative rule — "check that visibility > 0.5 * distance to the
-door" — is FDS+Evac's **tier-4 last resort** (evac.f90:16456-16463), reached
+door" — is FDS+Evac's **tier-4 last resort** (evac.f90:16792-16799), reached
 only when no smoke-free door exists.
 That rule reads `K_ave` along the straight, occlusion-blocked bee line
-(`See_door`, evac.f90:15343), so `S > 0.5 * d` is a statement about
+(`See_door`, evac.f90:15682), so `S > 0.5 * d` is a statement about
 optical depth along one real sight line.
 
 Written out, the tier-4 test is
 `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` struck out at `L2_tmp >= 1.0`
-(evac.f90:16458, :16463) — that is `K_ave * d / 6 >= 1`, i.e. an optical
+(evac.f90:16794, :16799) — that is `K_ave * d / 6 >= 1`, i.e. an optical
 depth above 6, which is where pyFDS-Evac's `tau_max = 6` comes from.
 Two scope limits on the citation: the loop runs only over doors already
 known or visible, and the strike-out (`Is_Visible_Door(i) = .FALSE.`,
-`Is_Known_Door(i) = .FALSE.`, :16464-16465) lasts for **one call** of
+`Is_Known_Door(i) = .FALSE.`, :16800-16801) lasts for **one call** of
 `Change_Target_Door` only: both arrays are reset at the start of every
-call (:15831-15832).  What persists is a mark in the agent's
+call (:16170-16171).  What persists is a mark in the agent's
 known-door list, `Human_Known_Doors%I_nodes`, and its effect is weak.
-The mark is written in the tier-1 loop (:16277-16302) only for the
+The mark is written in the tier-1 loop (:16613-16638) only for the
 agent's previous target door, only while that door is still known and
-visible at that call (:16223), only for a lone agent
+visible at that call (:16559), only for a lone agent
 (`HR%GROUP_ID < 0`), only if the door already has an entry in the
-agent's known-door list filled at initialisation (:15891, :15940-15954;
-the loop at :16296-16304 rewrites entries but never adds one), and only when `FAC_DOOR_OLD * K_ave >= 0.03 /m`
-(:16292), i.e. `K_ave >= 0.3 /m` with `FAC_DOOR_OLD = 0.1` (:1506)
+agent's known-door list filled at initialisation (:16230, :16279-16293;
+the loop at :16632-16640 rewrites entries but never adds one), and only when `FAC_DOOR_OLD * K_ave >= 0.03 /m`
+(:16628), i.e. `K_ave >= 0.3 /m` with `FAC_DOOR_OLD = 0.1` (:1571)
 under the default negative `FED_DOOR_CRIT`.  The entry becomes negative
 ("some smoke") or 0 ("too much smoke", when `0.9 * K_ave * d / 6 >= 1`,
-:16298-16301), and it is never set positive again.  What the mark does
+:16634-16637), and it is never set positive again.  What the mark does
 depends on its value and on the call:
 
 - *Negative entry.*  In the periodic re-evaluation (`imode = 1`) the
-  door is forced unknown (:16197, :16206).  In the calls made on a floor
-  or mesh change (`imode = 2`, from `CHECK_TARGET_NODE`, :12618) that
-  override is skipped, and the `ABS` at :15849 and :15859 counts the
+  door is forced unknown (:16533, :16542).  In the calls made on a floor
+  or mesh change (`imode = 2`, from `CHECK_TARGET_NODE`, :12961) that
+  override is skipped, and the `ABS` at :16188 and :16198 counts the
   door as known.
 - *Zero entry.*  It matches no door, because `ABS(0)` never equals
-  `n_egrids+N_ENTRYS+i` (:16204); so the override at :16205-16206 never
+  `n_egrids+N_ENTRYS+i` (:16540); so the override at :16541-16542 never
   fires for it, and the door is never made non-visible by memory.  It
   simply drops out of the list, so it is not known from memory on any
   later call, but it becomes known again if it is the current, visible
-  target (:16199) or has `KNOWN_DOOR` = .TRUE. (:15846, :15856).
+  target (:16535) or has `KNOWN_DOOR` = .TRUE. (:16185, :16195).
 
 So in the periodic re-evaluation the "too much smoke" door is forgotten
 less firmly than the "some smoke" one.  That the zero branch does not act as its comments intend
@@ -202,7 +204,7 @@ pyFDS-Evac inherits the threshold, applies it to the walked polyline
 rather than the bee line, and remembers nothing.
 
 Inside that tier, **dose and sight are alternatives, not layers**: the
-sign of `FED_DOOR_CRIT` picks the branch (evac.f90:16439-16467).
+sign of `FED_DOOR_CRIT` picks the branch (evac.f90:16775-16803).
 Positive, and the door is scored by the dose the agent would arrive
 with (`IntDose + FED_max_Door * distance / Speed`); negative — the
 default `-100.0` — and it is scored by the visibility rule above.
@@ -227,21 +229,21 @@ In FDS+Evac's first three tiers the rank is `T_tmp` — a time in tier 1 when
 `K_ave_Door` appears only as a boolean admission test:
 
 ```fortran
-IF (T_tmp < L2_min .AND. L2_tmp < ABS(FED_DOOR_CRIT)) THEN   ! :16265, :16354, :16401
+IF (T_tmp < L2_min .AND. L2_tmp < ABS(FED_DOOR_CRIT)) THEN   ! :16601, :16690, :16737
 ```
 
 A change in the smoke field can move a door between tiers or out of the admitted
 set, but it cannot reorder the doors inside a tier — and geometry does not
 reorder itself.  Smoke enters the ordering only in the **tier-4 last resort**
-(`IF (L2_tmp < L2_min)`, `:16467`), reached once no smoke-free door is available,
+(`IF (L2_tmp < L2_min)`, `:16803`), reached once no smoke-free door is available,
 looping only over doors already known or visible, scoring a bee-line or L1
-distance, and striking a refused door out for that call only (`:16463-16465`;
-the arrays are reset at `:15831-15832`).
+distance, and striking a refused door out for that call only (`:16799-16801`;
+the arrays are reset at `:16170-16171`).
 
 pyFDS-Evac promotes that last-resort ranking criterion to its primary one, over
 all candidates, at every tick, on the walked polyline, and drops the reference's
 one lasting smoke memory, a weak mark on a lone agent's previous target once its
-`K_ave` reaches 0.3 /m (`:16292-16301`; see [The smoke criteria on a door](#the-smoke-criteria-on-a-door)).  Measured consequence on
+`K_ave` reaches 0.3 /m (`:16628-16637`; see [The smoke criteria on a door](#the-smoke-criteria-on-a-door)).  Measured consequence on
 `assets/l_corridor`: this model diverts **18 of 100** agents to the longer,
 cleaner route, where the reference criterion — distance ranking, both doors
 clearing the 0.03 /m admission test until the smoke is well developed — would
@@ -322,17 +324,17 @@ group.  Per-exit familiarity is not supported
 |--------|----------|------------|
 | **Algorithm** | N-player best-response game (NE in pure strategies) with preference-order filter [8] | Dijkstra shortest-path with dynamic edge weights, then a per-route check under the selected cost model |
 | **Cost function** | `T_i = beta_k * lambda_i + tau_i` (queueing + walking time) [8] Eq. 6 | gate: route optical depth `K_ave * L`, with travel time (+ `w_queue` x queue time) as tie-break; additive: `length * (1 + w_smoke * K) + w_fed * FED` |
-| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1459, :5262, :16158); the `0.5 x d` visibility rule is the tier-4 last resort (:16463), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
+| **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1524, :5496, :16497); the `0.5 x d` visibility rule is the tier-4 last resort (:16799), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
 | **Congestion** | Modelled: queueing time depends on count of closer agents heading to same exit | Optional (`w_queue`), off by default; a global tally of agents targeting the exit |
 | **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on *topology* only — smoke is sampled globally, so a discovery agent's route choice is not perception-limited ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)). Per-exit familiarity is not supported ([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)) |
 | **Social behaviour** | Herding and follower agent types observe neighbours | Not modelled |
-| **Smoke in cost** | Admission only in tiers 1–3 (`K_ave_Door < 0.03 /m`, the rank stays `T_tmp`); smoke ranks doors only in the tier-4 last resort (`:16467`), over known-or-visible doors, with a strike-out that lasts one call; the only lasting memory is a weak mark on a lone agent's previous target once `K_ave >= 0.3 /m` (:16292-16301), which acts weakly: a "some smoke" mark forces the door unknown only in the periodic re-evaluation, and a "too much smoke" mark only drops it from the list | gate: availability *and* ordering, both on route optical depth, for every candidate at every tick and with no memory; additive: continuous weighted term |
+| **Smoke in cost** | Admission only in tiers 1–3 (`K_ave_Door < 0.03 /m`, the rank stays `T_tmp`); smoke ranks doors only in the tier-4 last resort (`:16803`), over known-or-visible doors, with a strike-out that lasts one call; the only lasting memory is a weak mark on a lone agent's previous target once `K_ave >= 0.3 /m` (:16628-16637), which acts weakly: a "some smoke" mark forces the door unknown only in the periodic re-evaluation, and a "too much smoke" mark only drops it from the list | gate: availability *and* ordering, both on route optical depth, for every candidate at every tick and with no memory; additive: continuous weighted term |
 | **FED in cost** | Not in cost function by default (`FED_DOOR_CRIT < 0`); only used for incapacitation at FED >= 1.0 | Veto threshold under both models; a ranking term (`w_fed * FED_max`) under additive only |
 | **Distance metric** | L2 for visible exits, L1 (Manhattan) for non-visible exits; direct agent-to-exit | Polyline arc length along corridor geometry (via JuPedSim RoutingEngine); routes through intermediate stages |
 | **Anticipation** | `FED_max_Door * dist / Speed`: extrapolation from presently observable conditions | `anticipate` prices each segment at the agent's arrival time from the FDS solution itself — an upper bound on foresight, not FDS+Evac's model |
 | **Equilibrium** | Proven NE existence; RRA converges in ~3–4 rounds [8] | No equilibrium concept; each agent independently picks the cheapest Dijkstra path |
-| **Anchoring** | Current door favoured by 10 %: `FAC_DOOR_WAIT` = 0.9 on the time criterion (:1505, applied :16264), `FAC_DOOR_OLD2` = 0.9 on the smoke criterion (:1507, applied :16290, :16467) | `exit_switch_anchor` = 0.9 on travel time, mirroring `FAC_DOOR_WAIT`; `current_exit_discount` = 0.9 on the current exit's optical depth in the sort, mirroring `FAC_DOOR_OLD2`; bypasses for a lethal current exit and (gate) a feasible rival clearer by more than the symmetric deadband `tau_deadband * tau_max` (0.6), which also refuses a rival dirtier by that much; plus deadbands of 0.9 on dose and 0.8 on the optical-depth budget |
-| **Rerouting frequency** | ~1 Hz (every second on average, `TAU_CHANGE_DOOR = 1.0`, evac.f90:1466) | Configurable interval, staggered per agent |
+| **Anchoring** | Current door favoured by 10 %: `FAC_DOOR_WAIT` = 0.9 on the time criterion (:1570, applied :16600), `FAC_DOOR_OLD2` = 0.9 on the smoke criterion (:1572, applied :16626, :16803) | `exit_switch_anchor` = 0.9 on travel time, mirroring `FAC_DOOR_WAIT`; `current_exit_discount` = 0.9 on the current exit's optical depth in the sort, mirroring `FAC_DOOR_OLD2`; bypasses for a lethal current exit and (gate) a feasible rival clearer by more than the symmetric deadband `tau_deadband * tau_max` (0.6), which also refuses a rival dirtier by that much; plus deadbands of 0.9 on dose and 0.8 on the optical-depth budget |
+| **Rerouting frequency** | ~1 Hz (every second on average, `TAU_CHANGE_DOOR = 1.0`, evac.f90:1531) | Configurable interval, staggered per agent |
 
 ---
 
@@ -354,10 +356,10 @@ on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
 | **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11) | Same formula (`smoke_speed.py:227`) |
-| **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1479–1480) | Same values (`smoke_speed.py:91–92`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
-| **Minimum speed** | `SMOKE_MIN_SPEED_FACTOR` (default 0.1, evac.f90:2085) as a factor of *v*0, or `SMOKE_MIN_SPEED`, which the code treats as a speed in m/s (`SMOKE_MIN_SPEED/HR%SPEED`, :8168) although the guide calls it a factor ([1] §8.7 p. 81). The visibility-based cutoff (`SMOKE_MIN_SPEED_VISIBILITY`, :8181–8188) is marked obsolete in the source ("obsolote feature ... it is not used if default SMOKE_MIN_SPEED_VISIBILITY is given", :8181-8182) and is inactive by default: the default 0.0 is clamped to 0.01 m, so it would act only above K = 300 /m (:1463, :2091-2092) | Configurable `min_speed_factor` (default 0.1) |
-| **Smoke input** | Soot density from FDS mesh converted to extinction via `K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6` (evac.f90:8160–8161) | Extinction coefficient K read directly from FDS `SOOT EXTINCTION COEFFICIENT` slice via fdsreader |
-| **Sampling geometry** | Local value at agent position on the evacuation mesh, at `HUMAN_SMOKE_HEIGHT` above the floor (default 1.6 m, evac.f90:1072; [1] §8.7 p. 81; [7] p. 61) | Local value at agent position: nearest cell of the extinction slice closest to `--smoke-slice-height` (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)) |
+| **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1544–1545) | Same values (`smoke_speed.py:91–92`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
+| **Minimum speed** | `SMOKE_MIN_SPEED_FACTOR` (default 0.1, evac.f90:2154) as a factor of *v*0, or `SMOKE_MIN_SPEED`, which the code treats as a speed in m/s (`SMOKE_MIN_SPEED/HR%SPEED`, :8516) although the guide calls it a factor ([1] §8.7 p. 81). The visibility-based cutoff (`SMOKE_MIN_SPEED_VISIBILITY`, :8529–8536) is marked obsolete in the source ("obsolote feature ... it is not used if default SMOKE_MIN_SPEED_VISIBILITY is given", :8529-8530) and is inactive by default: the default 0.0 is clamped to 0.01 m, so it would act only above K = 300 /m (:1528, :2160-2161) | Configurable `min_speed_factor` (default 0.1) |
+| **Smoke input** | Soot density from FDS mesh converted to extinction via `K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6` (evac.f90:8522–8523) | Extinction coefficient K read directly from FDS `SOOT EXTINCTION COEFFICIENT` slice via fdsreader |
+| **Sampling geometry** | Local value at agent position on the evacuation mesh, at `HUMAN_SMOKE_HEIGHT` above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61) | Local value at agent position: nearest cell of the extinction slice closest to `--smoke-slice-height` (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)) |
 
 **Key difference:** Both systems apply the speed reduction using the
 *local* smoke at the agent's position.  FDS+Evac converts the soot
@@ -383,14 +385,16 @@ p11).  By default, HCN and HCl effects are **not** modelled; only the
 CO2 hyperventilation factor is included ([1] §2.7 p19).
 
 The FED function itself is in FDS's `PHYSICAL_FUNCTIONS` module (the
-`FED` function imported at evac.f90:26), not in evac.f90 directly.  Its
+`FED` function imported at evac.f90:65), not in evac.f90 directly.  Its
 HCN term subtracts NO + NO2 with the offset 0.00454545, about 1/220 (FDS 6.7.6
 `func.f90`), not the NO2 alone of [1] Eq. 15; it has done so since
 firemodels/fds 694e033 (2011), and earlier versions had no HCN term
 ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
 
-FED activity level is configurable: 1 (at rest), 2 (light work,
-default), 3 (heavy work) (evac.f90:1465).
+FED activity level is an input: 1 (at rest), 2 (light work,
+default), 3 (heavy work) (evac.f90:1530).  In this version it has no
+effect on the dose: `GET_FIRE_CONDITIONS` evaluates `FED` at all three
+levels and only the light-work value is kept (evac.f90:16086-16088).
 
 Incapacitation occurs at FED >= 1.0 ([1] §3.4 p31).
 
@@ -435,7 +439,7 @@ three-gas subset: every optional species defaults to zero concentration in
 | **Optional gases** | NO, NO2, CN, HCl, HBr, HF, SO2, C3H4O, CH2O (user must provide species) | HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde (auto-detected from FDS slices) |
 | **HCN/HCl by default** | Not modelled unless user provides species ([1] §2.7 p19) | Not modelled unless FDS slices are present |
 | **Incapacitation** | FED >= 1.0, agent stops (v0 = 0) ([1] §3.4 p31) | Agent stops (desired speed 0) and remains as a static obstacle. Per-agent threshold, log-normal with median 1.0 by default, or 1.0 for every agent in deterministic mode. The convective heat FED is a separate running total; crossing either threshold incapacitates |
-| **Activity level** | Configurable (rest/light/heavy) | Not supported ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)); the CO term uses the light-work coefficient ([FED model](/models/fed.md#coded-form)) |
+| **Activity level** | Input accepted; no effect in 6.7.6, the dose is always light work (`evac.f90:16086–16088`) | Not supported ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)); the CO term uses the light-work coefficient ([FED model](/models/fed.md#coded-form)) |
 | **FED in routing** | Not used in exit selection cost by default (`FED_DOOR_CRIT < 0`); only used for incapacitation | A veto under both cost models; additionally a ranking term (`w_fed * FED_max`) under `"additive"` only, not under the default gate |
 | **Temperature/radiation** | Not implemented for agent effects ([1] §1.2 p11) | Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS `TEMPERATURE` slice, tracked separately from the gas FED; it does not affect route choice or speed. Radiant heat is not modelled |
 
@@ -448,7 +452,7 @@ three-gas subset: every optional species defaults to zero concentration in
 | **Coupling** | Tightly coupled: evacuation module is compiled into FDS and runs as subroutines within the same executable ([1] §2.1) | Loosely coupled: reads pre-computed FDS output files via fdsreader; runs as a separate post-processing step |
 | **Smoke data** | Direct access to soot density on the FDS computational grid at runtime | Reads FDS slice files (SOOT EXTINCTION COEFFICIENT, gas species volume fractions) |
 | **Visibility check** | Bee-line visibility from agent to exit; checks if smoke along the line exceeds a user-defined threshold ([1] §3.5 p32, §3.6 p36) | Sign legibility on a precomputed visibility grid (smoke-aware fdsvismap with `--fds-dir` and `--vis-cache`, clear air otherwise); it decides which exits enter the agent's cognitive map, not whether a route is admitted. Route cost separately uses the mean of K along the walked edge polylines; Börger et al. (2024) [2] average K along the line of sight to a sign, and applying the average to a walked path is a pyFDS-Evac extension |
-| **Temporal resolution** | Smoke, gas and FED fields are copied from the fire meshes to the evacuation meshes every `DT_SAVE` = 2 s (evac.f90:6892), not every FDS time step; the agents move on their own time step in between | Reads FDS output at whatever temporal resolution is available in the slice files |
+| **Temporal resolution** | Smoke, gas and FED fields are copied from the fire meshes to the evacuation meshes every `DT_SAVE` = 2 s (evac.f90:7187), not every FDS time step; the agents move on their own time step in between | Reads FDS output at whatever temporal resolution is available in the slice files |
 
 ---
 
@@ -495,7 +499,7 @@ three-gas subset: every optional species defaults to zero concentration in
 - **Tight FDS coupling.**  Running inside the FDS executable gives
   access to the fire-simulation fields without slice-file I/O.  The
   fields are copied to the evacuation meshes every `DT_SAVE` = 2 s
-  (evac.f90:6892), not every FDS time step.
+  (evac.f90:7187), not every FDS time step.
 
 - **Social Force Model with counterflow.**  The three-circle body
   shape and social-force locomotion produce realistic crowd dynamics

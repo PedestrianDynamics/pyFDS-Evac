@@ -73,12 +73,12 @@ and [Known limitations](/docs/route-cost-gate.md#known-limitations).
 **This is a departure from FDS+Evac, not a reproduction of it.** The threshold
 `tau > 6` is borrowed with a citation; the *place* it is used is not. In the
 reference's first three tiers the rank is a time or distance norm and smoke is
-only a boolean admission test (`evac.f90:16265, :16354, :16401`), so smoke can
+only a boolean admission test (`evac.f90:16601, :16690, :16737`), so smoke can
 move a door between tiers but cannot reorder candidates. It ranks on smoke only
 in the tier-4 last resort, over known-or-visible doors, on a bee line, with a
-strike-out that lasts one call (`evac.f90:16464-16465`, reset at `:15831-15832`).
+strike-out that lasts one call (`evac.f90:16800-16801`, reset at `:16170-16171`).
 Its only lasting smoke memory is a weak mark on a lone agent's previous
-target once `K_ave >= 0.3 /m` (`:16292-16301`), described in
+target once `K_ave >= 0.3 /m` (`:16628-16637`), described in
 [docs/model-comparison.md](/docs/model-comparison.md#the-smoke-criteria-on-a-door). Here `tau` is the
 ordering everywhere, with no memory.
 On `l_corridor` that diverts 18 of 100 agents where the reference criterion
@@ -194,7 +194,7 @@ and [Exit choice and familiarity](/fundamentals/exit-choice.md).
 - **Where the budget comes from.** FDS+Evac's tier-4 door rule requires the
   visibility of a reflective sign at the door, \(3/\bar K\), to be at least half
   the distance *d* to the door, which rearranges to \(\bar K d \le 6\)
-  (`evac.f90:16458`, `:16463`). That is the default `tau_max`
+  (`evac.f90:16794`, `:16799`). That is the default `tau_max`
   (`route_graph.py:683`). Jin's law describes a straight line of sight to a
   sign in uniform smoke; here the same number bounds the integral of *K* along
   a walked polyline, which measures exposure, not sight. The two agree only
