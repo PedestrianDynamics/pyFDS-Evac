@@ -444,14 +444,14 @@ discovery agent with no known exit explores or wanders instead (see below).
 
 | Step | Gate (default) | Additive |
 |---|---|---|
-| **Source** | `current_origin`, else `current_target_stage` | same |
-| **Candidates** | Dijkstra on each edge's optical depth (`k_avg` × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)) | Dijkstra on the weighted composite (`w_smoke`, `w_fed`); one path per exit |
-| **Rejection** | FED over the threshold (× `fed_return_margin` for a rival exit), or τ over the budget (× `tau_return_margin` for a rival); every exit is tested | FED as for the gate; plus, when at least one route has a visible segment, routes whose every segment is non-visible |
-| **Ranking** | not rejected first, then tier (clean vs smoky, only with `clean_extinction_threshold` > 0), then τ (× `current_exit_discount` for the current exit), then `rank_cost`, then hops | not rejected first, then tier, then `rank_cost`, then hops |
-| **Fallback** | by (τ, `rank_cost`); the current exit is kept unless the winner is clearer by `fallback_switch_margin` | lowest composite |
-| **Switch, same exit** | reroute if the new path beats the walked path by more than 10 % on `rank_cost`, or if the walked path is rejected and the new one is feasible (`better_path`); otherwise keep walking, and the cached path is updated | same |
-| **Switch, other exit** | candidates tried in rank order; the anchor adopts one only if `rank_cost` < old × `exit_switch_anchor`, unless the old exit is FED-lethal or impassably smoky, or the rival is feasible, clearer by the anchor margin, and a whole band clearer or clean while the current exit is not | anchor on `rank_cost`, with the same hazard bypasses |
-| **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, a `RouteSwitch` recorded | same |
+| **Source** | `current_origin`, else `current_target_stage`; a source outside the graph skips the tick | same |
+| **Candidates** | Dijkstra over the agent's known subgraph on each edge's optical depth (`k_avg` × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)) | Dijkstra on each edge's share of the composite (length × (1 + `w_smoke` × `k_avg`) + `w_fed` × FED growth); one path per exit |
+| **Rejection** | FED over the threshold (× `fed_return_margin` for a rival while a current exit is set), then τ over `tau_max` (× `tau_return_margin` for a rival); both are tested, and a route over both reports the τ reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
+| **Ranking** | not rejected first, then tier (clean before smoky, only with `clean_extinction_threshold` > 0; the current exit's limit is divided by `clean_exit_margin`), then τ (× `current_exit_discount` for the current exit), then `rank_cost` (travel time + queue time × `w_queue`), then hops; ties keep candidate order | not rejected first, then `rank_cost` (the composite), then hops; no tier and no τ |
+| **Fallback** | when every route is rejected: re-sorted by raw τ, then `rank_cost`; the current exit goes first unless the winner's worst extinction is at or below the current exit's × (1 − `fallback_switch_margin`); the first route is un-rejected with a `fallback: ` reason, its `feasible` unchanged | same |
+| **Switch, same exit** | for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path's `rank_cost` is below 0.9 × the walked path's, or if the walked path is rejected and the new one is feasible and not rejected (`better_path`); otherwise, or if rerouting fails, it keeps walking, and the cached path is updated either way | same |
+| **Switch, other exit** | the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, when it must be fled (a FED rejection, or a non-visible one above `impassable_extinction_threshold`), or when the rival is clean and the current exit is not. Otherwise an infeasible rival needs `rank_cost` < old × `exit_switch_anchor`; a feasible one is accepted if its τ is lower by more than `tau_max` × `tau_deadband`, refused if higher by more, and between those needs the same `rank_cost` ratio | only the top-ranked route is tried; the anchor accepts under the same hazard bypasses, else needs `rank_cost` < old × `exit_switch_anchor` |
+| **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, the exit and path recorded, a `RouteSwitch` recorded; if rerouting fails nothing is recorded | same |
 
 In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 `AdditivePolicy`, and each row is one function:
@@ -488,9 +488,8 @@ An exit switch is recorded when **all four** conditions hold:
 3. That best route leads to a **different exit** than the current one.
 4. It clears the exit-switch anchor, or qualifies for one of the anchor
    bypasses (old exit FED-lethal or impassably smoky; or, under the gate, a
-   feasible rival clearer in metres of sighting distance by the anchor margin
-   *and* either a whole visibility band clearer or clean while the current exit
-   is not).
+   clean rival while the current exit is not, or a feasible rival whose τ is
+   lower by more than `tau_max` × `tau_deadband`).
 
 No switch is recorded when:
 
