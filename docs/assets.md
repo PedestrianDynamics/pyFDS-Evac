@@ -80,7 +80,7 @@ conventions; what each one proves, and where that proof is checked, is below.
   exit from `y = 14` to `24` and the end exit from `y = 26` (the two are equally
   far at `y ≈ 25.4`); walking back to `y = 10` with its map, it takes the side
   exit where it took the end exit on the way up. In the full run each agent
-  switches once, `E_end → E_side` at t = 5–19 s, and egress takes 21.2 s.
+  switches once, `E_end → E_side` at t = 5–18 s, and egress takes 21.2 s.
   Checked by `tests/test_cognitive_map_memory.py`, which pins the probe outcomes.
 - **FIC vs FED Speed**: 4x50 m sealed corridor, 30 agents, one exit. The gas is
   *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 10 ppm) rather
@@ -139,12 +139,12 @@ conventions; what each one proves, and where that proof is checked, is below.
   static spawn-time journey) for the rerouting/cognitive-map system to
   find. Run with `--enable-rerouting` (no `--fds-dir`/vis-cache needed —
   divergence here is pure-distance, not smoke-driven) to see it: `full`
-  agents know the whole graph immediately and reroute onto the shortcut
-  within the first reevaluation tick; `discovery` agents start knowing
+  agents know the whole graph immediately and are assigned the shortcut
+  at spawn; `discovery` agents start knowing
   only the spawn's declared neighbor and explore the nearest
   known-but-unvisited doorway at each step — which for this maze's
   geometry happens to coincide with the original scripted tour the whole
   way, so they end up taking the long route without ever finding the
-  shortcut. Verified: `full` evacuates in 35.1 s vs `discovery`'s 75.1 s
+  shortcut. Verified: `full` evacuates in 33.9 s vs `discovery`'s 88.6 s
   (both 20/20 evacuated; see the results table in
   [`docs/testing-familiarity.md`](testing-familiarity.md)).

@@ -62,13 +62,14 @@ and the test asserts 1 % rather than pretending to be exact.
 
 | run | egress |
 |---|---|
-| clear (no `--fds-dir`) | 78.29 s |
-| K from FDS = 0.99545 /m | 85.13 s |
+| clear (no `--fds-dir`) | 78.14 s |
+| K from FDS = 0.99545 /m | 84.97 s |
 | observed ratio | 1.0874 |
 | expected `1 / speed_factor(0.99545)` | 1.0874 |
 
 The recorded `speed_factor` is 0.919631 at every sample, matching
-`speed_factor_from_extinction(0.99545)` exactly.
+`speed_factor_from_extinction(0.99545)` exactly. Measured at `7a3617d`; the
+logs are in the project's data store under `iso_table21_coupled/rerun_7a3617d/`.
 
 ## Running it
 

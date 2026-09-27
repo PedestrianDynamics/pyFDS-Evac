@@ -116,9 +116,11 @@ door from the start. With it, each path is coloured by the exit the agent was
 aiming at *at that moment*, and a dot marks the change of mind.
 
 **20 of 20 agents divert into `E_side`**, egress 21.2 s. One switch each:
-`E_end → E_side` between t = 5 and t = 19 s, as each agent crosses the
+`E_end → E_side` between t = 5 and t = 18 s, as each agent crosses the
 legibility window and the sign becomes readable. Agent 1 switches at
-t = 10 s, y = 12.3.
+t = 10 s, y = 12.3. Measured at `7a3617d` against the deck's FDS output; the
+run files are in the project's data store under
+`cognitive_map_memory/rerun_7a3617d/`.
 
 The switch dots are spread over roughly y ∈ [11.5, 16] rather than lying on a
 line at y = 12. That is correct: the window is derived for the centreline

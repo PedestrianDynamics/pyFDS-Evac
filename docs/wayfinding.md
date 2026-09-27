@@ -95,7 +95,7 @@ Full runs of the asset follow the README's recipe, which uses `--fds-dir`, so
 legibility comes from the FDS vismap, not from clear air. In those runs all 40
 agents take the near exit when the sign faces them, and all 40 take the far
 exit when it faces away. With FDS 6.10.1 output of the smoke-free deck and
-seed 1904, on main after #170:
+seed 1904, on main at `7a3617d`:
 
 | Near sign | Exit taken | Egress | Route switches |
 |---|---|---|---|
@@ -144,9 +144,10 @@ above the near sign takes `E_far`. The few near-exit cells at the bottom of
 *Figure 3. What the agents did. Trajectories of the FDS-backed runs in the
 table above (FDS 6.10.1, clear air, seed 1904): 40 of 40 agents walk to
 `E_near` when its sign faces them, and 40 of 40 to `E_far` when it faces away.
-The runs used the earlier visibility cap (the grid diagonal, 30.8 m); both
-signs are within 30 m of every agent, and the clear-air reruns with the 30 m
-cap give the same counts and times. Script: `scripts/plot_trajectories.py`
+The trajectories are from the first runs, at `91896c7`, with the earlier
+visibility cap (the grid diagonal, 30.8 m); both signs are within 30 m of every
+agent, and the reruns with the 30 m cap, clear-air and at `7a3617d`, give the
+same counts and times. Script: `scripts/plot_trajectories.py`
 on the runs' SQLite output.*
 
 ## 3. What the agent knows

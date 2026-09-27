@@ -326,6 +326,9 @@ below was swept against a geometry whose doorways were narrower than the
 building's; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy's 52.9 %.
 The reasoning in this section is unchanged — only the fitted number moved.
+Rerun on main at `7a3617d`, under the gate, the same sweep scores 0.03 at
+31.6 % and 0.024 at 34.1 %: the deck no longer reproduces Fahy's split, and has
+not been re-fitted.
 
 **Two further caveats on that number.** The sweep was run under the additive
 composite, where `w_queue` multiplies a *distance*
@@ -333,7 +336,7 @@ composite, where `w_queue` multiplies a *distance*
 multiplies a *time* (`w_queue * queue_time_s`, against travel time), which is a
 different quantity, and no deck pins `cost_model` — so the Station deck now runs
 under the gate with a weight fitted under the additive model. It has not been
-re-swept there.
+re-fitted there.
 
 #### Provenance of the Station's queue weight
 

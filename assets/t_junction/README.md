@@ -66,18 +66,20 @@ Frantzich-Nilsson correlation.
 creating a bottleneck at the junction. Agents queuing in heavy smoke
 accumulate CO and HCl exposure. The high HCl yield from PVC drives the
 irritant term, while CO and O2 depletion contribute to narcosis. Measured
-over 150 agents at 2 MW: FED median 0.16 and max 0.65, FIC clustered at
-4-6 against a threshold of 1.0, five agents incapacitated by the
-probabilistic per-agent thresholds, and 35 of 150 out within 300 s
-against 144 in clear air.
+over 150 agents at 2 MW: FED median 0.10 and max 0.33, FIC median 5.7
+(interquartile 5.3-12.4) against a threshold of 1.0, two agents incapacitated by the
+probabilistic per-agent thresholds, and 90 of 150 out within 300 s
+against 143 in clear air (36 of 150 with `--enable-fic-speed`).
 
-**Rerouting.** Exit B is initially closer (10 m vs 20 m), so agents
-prefer it. As smoke builds, the route cost to Exit B rises and agents
-switch to Exit A: 35 smoke_reroute events against none in clear air.
-They are not one-way, though -- 15 go B to A in the first 30 s, then 20
-go A to B around 50-70 s as the layer spreads down the 20 m corridor and
-degrades that route too. After 70 s no route is better than another and
-the switching stops.
+**Rerouting.** Exit B is initially closer (10 m vs 20 m), and in clear
+air every agent takes it. In the fire, 23 of the first 26 agents, spawned
+in the first 50 s, head for Exit A from spawn, and every other agent that
+gets out leaves by Exit B. No agent changes exit on the way: 0 smoke_reroute events,
+as in clear air.
+
+Measured at `7a3617d` with the command below, run on `config_full.json`
+against the FDS output in the project's data store (`t_junction/fire_2MW_PVC/`);
+the run files are under `t_junction/rerun_7a3617d/`.
 
 ## Running
 

@@ -217,6 +217,8 @@ never enters that map, so there is nothing to reconsider later.
 These runs used the FDS vismap of the deck (FDS 6.10.1, clear air) and
 `--output-route-history`; the FDS output, the SQLite files and the route
 histories are in the project's data store under `exit_visibility_alpha/`.
+The rerun at `7a3617d`, with the same result, is in
+`exit_visibility_alpha/rerun_7a3617d/`.
 `scripts/figures/sign_bearing.py` reruns both configs with the clear-air
 model and gets the same counts and times.
 

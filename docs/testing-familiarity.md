@@ -172,11 +172,9 @@ purely distance-based (see [Scope](#scope--caveats)).
 
 ## Results / Pass Criteria
 
-> **Numbers not yet rerun.** The times below were measured before the
-> travel-time fix (#170), the discovery routing-engine fix (#174) and the
-> 30 m sign reading distance (#177). The last replaced a cap equal to the
-> grid diagonal, about 27 m for this 20 m × 18 m plan. The pass criteria
-> still hold in the test suite; the times will be updated after a rerun.
+> **Measured on main at `7a3617d`.** The `discovery` tier gets clear-air
+> sight gating on the default 0.25 m grid, and its time depends on that grid
+> (see [Wayfinding §7](wayfinding.md#7-full-versus-discovery)).
 
 **Status: passing.** Both tiers evacuate all agents; `full` takes the
 shortcut and finishes markedly faster than `discovery`, which retraces the
@@ -184,10 +182,10 @@ scripted maze tour.
 
 | Tier      | Evacuated | Evacuation time | Route switches                    |
 |-----------|-----------|------------------|------------------------------------|
-| full      | 20/20     | **35.1 s**       | 20 × `better_path` (at spawn, t≈0) |
-| discovery | 20/20     | **75.1 s**       | 0 (nearest-unexplored always matched the scripted tour) |
+| full      | 20/20     | **33.9 s**       | 0 (the shortcut is assigned at spawn) |
+| discovery | 20/20     | **88.6 s**       | 100: 80 × `explore`, 20 onto the exit |
 
-`discovery` showing zero explicit switches is expected, not a bug: its
+Every `discovery` agent explores CP0 → CP1 → CP2 → CP3 in that order: its
 frontier choice happens to coincide with the scripted route at every step
 for this maze's specific checkpoint distances (see
 [What's Being Verified](#whats-being-verified), point 2) — it's still
