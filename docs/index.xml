@@ -3028,8 +3028,9 @@ Secondary source for the fractional form.&lt;/li>
 the assets (runs, figures, numbers), see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/">Wayfinding in practice&lt;/a>.&lt;/p>
 &lt;/div>&lt;p>Based on: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a> and
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/">Exit choice and familiarity&lt;/a>.&lt;/p>
-&lt;p>Code references are to main at &lt;code>f363758&lt;/code>, which includes #170 and #174, and
-to fdsvismap &lt;code>64d9aa7&lt;/code>.&lt;/p>
+&lt;p>Code references are to main at &lt;code>f363758&lt;/code>, which includes #170 and #174,
+except &lt;code>route_graph.py&lt;/code>, whose references follow the first-leg resample of
+#171; and to fdsvismap &lt;code>64d9aa7&lt;/code>.&lt;/p>
 &lt;p>The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing model&lt;/a> ranks and refuses routes. This page
 describes the part of the model that decides which routes it may rank: what
 each agent knows about the stage graph, how that knowledge starts, how it
@@ -3291,7 +3292,7 @@ obstruction or smoke. The map is deleted when the agent leaves
 (&lt;code>scenario.py:2394–2400&lt;/code>).&lt;/p>
 &lt;p>&lt;strong>2.4 Decision.&lt;/strong> Route ranking works on the known subgraph only:
 &lt;code>rank_routes&lt;/code> replaces the stage graph with &lt;code>cognitive_subgraph(map, graph)&lt;/code>
-before it evaluates any edge (&lt;code>route_graph.py:1272–1276&lt;/code>,
+before it evaluates any edge (&lt;code>route_graph.py:1293–1297&lt;/code>,
 &lt;code>cognitive_map.py:237–259&lt;/code>). Dijkstra, the exposure gate, the ordering and the
 all-refused fallback see known nodes and edges only. An exit that is not known
 is not refused; it is absent, and the fallback cannot restore it.&lt;/p>
@@ -3301,7 +3302,7 @@ before its map exists (&lt;code>simulation_init.py:1430–1449&lt;/code>). The o
 replaces that target only when the map contains a reachable exit
 (&lt;code>scenario.py:1006–1008&lt;/code>). If it contains none, and neither exploration nor
 patrol yields a target (below), the agent keeps steering towards that
-geometric exit (&lt;code>route_graph.py:1816–1817&lt;/code>). For a map that holds only the
+geometric exit (&lt;code>route_graph.py:1837–1838&lt;/code>). For a map that holds only the
 spawn node neither does: the spawn node is visited from the start
 (&lt;code>cognitive_map.py:117–121&lt;/code>), so there is no frontier, and the patrol
 excludes the current node, so a one-node map has no stop
@@ -3319,24 +3320,24 @@ queue tally (&lt;code>scenario.py:995–1005&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Re-evaluation&lt;/strong> (&lt;code>evaluate_and_reroute&lt;/code>). It ranks from the agent&amp;rsquo;s
 position. It adopts a different exit only if the rival passes the
 switching rule: an optical-depth margin, then an anchor on the ranking cost
-(&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>route_graph.py:1505&lt;/code>, &lt;code>:1712–1726&lt;/code>). The
+(&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>route_graph.py:1526&lt;/code>, &lt;code>:1733–1747&lt;/code>). The
 optional queue term (&lt;code>w_queue&lt;/code>, 0 by default) enters the ranking cost.&lt;/li>
 &lt;li>&lt;strong>All refused.&lt;/strong> When every known route fails the gate, the least smoky one
 is re-admitted, but the current route is kept first if the rival&amp;rsquo;s worst
 extinction is not lower by &lt;code>fallback_switch_margin&lt;/code>
-(&lt;code>route_graph.py:1434–1445&lt;/code>).&lt;/li>
+(&lt;code>route_graph.py:1455–1466&lt;/code>).&lt;/li>
 &lt;/ul>
 &lt;p>An agent can therefore keep a known route that is not first in the ranking.&lt;/p>
 &lt;p>&lt;em>Worked example (clear air).&lt;/em> Every \(\tau\) is 0, both routes are clean,
 and the optical-depth deadband (\(\tau_{\max}\cdot\) &lt;code>tau_deadband&lt;/code> =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
 adopted only if its ranking cost, here its travel time, is below 0.9 times the
-current route&amp;rsquo;s (&lt;code>_anchor_allows&lt;/code>, &lt;code>route_graph.py:1674–1726&lt;/code>;
-&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>:1505&lt;/code>; &lt;code>tau_max&lt;/code> = 6.0 and &lt;code>tau_deadband&lt;/code> = 0.1,
-&lt;code>:685&lt;/code>, &lt;code>:689&lt;/code>). An exit learned on the way is therefore adopted only if it is
+current route&amp;rsquo;s (&lt;code>_anchor_allows&lt;/code>, &lt;code>route_graph.py:1695–1747&lt;/code>;
+&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>:1526&lt;/code>; &lt;code>tau_max&lt;/code> = 6.0 and &lt;code>tau_deadband&lt;/code> = 0.1,
+&lt;code>:691&lt;/code>, &lt;code>:695&lt;/code>). An exit learned on the way is therefore adopted only if it is
 more than 10 % faster than the exit the agent is heading for.&lt;/p>
 &lt;p>&lt;strong>No known exit.&lt;/strong> When the known subgraph contains no reachable exit,
-&lt;code>evaluate_and_reroute&lt;/code> looks for a target (&lt;code>route_graph.py:1789–1851&lt;/code>):&lt;/p>
+&lt;code>evaluate_and_reroute&lt;/code> looks for a target (&lt;code>route_graph.py:1810–1872&lt;/code>):&lt;/p>
 &lt;ol>
 &lt;li>&lt;strong>Explore.&lt;/strong> The frontier node with the lowest path cost through the known
 subgraph, with the first leg measured from the agent&amp;rsquo;s position; ties
@@ -3350,23 +3351,25 @@ Logged as &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code>.&lt;/li>
 &lt;/ol>
 &lt;p>&lt;strong>What route choice does not read.&lt;/strong> Route choice never reads the
 sign-legibility test or a line-of-sight visibility
-(&lt;code>route_graph.py:1345–1351&lt;/code>). &lt;code>VisibilityModel.visibility_to_node&lt;/code> and
+(&lt;code>route_graph.py:1366–1372&lt;/code>). &lt;code>VisibilityModel.visibility_to_node&lt;/code> and
 &lt;code>distance_to_node&lt;/code> have no caller in &lt;code>pyfds_evac/&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158" target="_blank" rel="noopener">#158&lt;/a>). Route
 smoke is sampled from the global extinction field (see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>) along the stored node-to-node polylines. The
 route mean \(\bar K\), and so \(\tau\), the gate and the ranking, take the
 first leg as the agent&amp;rsquo;s share of that polyline. When the agent&amp;rsquo;s position is
-given, the first leg is also resampled on a &lt;strong>straight line&lt;/strong> from the agent
-to its next node (&lt;code>_los_stats&lt;/code>, &lt;code>route_graph.py:1088–1100&lt;/code>), and that line can
-pass through walls, for every familiarity tier
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). The
-resample feeds only two secondary quantities: the route&amp;rsquo;s worst sample
+given, the first leg is also resampled along the walk from the agent to its
+next node, for every familiarity tier (&lt;code>_polyline_stats&lt;/code> in &lt;code>evaluate_route&lt;/code>).
+That walk is the routing engine&amp;rsquo;s path through the walkable area, the same one
+that measures the first leg&amp;rsquo;s length; without an engine, or when the query
+fails, it is the straight line. Samples are spaced at most &lt;code>sampling_step_m&lt;/code>
+along the walk&amp;rsquo;s full length, including the stretch behind the route&amp;rsquo;s origin
+node. The resample feeds only two secondary quantities: the route&amp;rsquo;s worst sample
 &lt;code>k_max_route&lt;/code>, which decides whether an agent keeps its exit when every route
-is refused (&lt;code>:1439&lt;/code>), and the worst leg mean, which decides the optional
+is refused (&lt;code>:1460&lt;/code>), and the worst leg mean, which decides the optional
 clean tier, off by default (&lt;code>clean_extinction_threshold&lt;/code> = 0). Under the &lt;code>&amp;quot;additive&amp;quot;&lt;/code> model only, a route
 whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
-non-refused route has a segment below it (&lt;code>route_graph.py:1362–1375&lt;/code>); this is
+non-refused route has a segment below it (&lt;code>route_graph.py:1383–1396&lt;/code>); this is
 an extinction threshold, not a sign test.&lt;/p>
 &lt;h2>Parameters&lt;span class="hx-absolute -hx-mt-20" id="parameters">&lt;/span>
 &lt;a href="#parameters" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>familiarity&lt;/code>, &lt;code>entrance&lt;/code> and &lt;code>sign&lt;/code> are scenario keys. The other rows are
@@ -3444,7 +3447,7 @@ library use.&lt;/p>
 &lt;td>&lt;code>--reroute-interval&lt;/code>&lt;/td>
 &lt;td>CLI&lt;/td>
 &lt;td>1.0 (&lt;code>run.py:95&lt;/code>)&lt;/td>
-&lt;td>10.0 (&lt;code>route_graph.py:1498&lt;/code>)&lt;/td>
+&lt;td>10.0 (&lt;code>route_graph.py:1519&lt;/code>)&lt;/td>
 &lt;td>s&lt;/td>
 &lt;td>re-evaluation interval, hence periodic learning&lt;/td>
 &lt;/tr>
@@ -3540,7 +3543,7 @@ visibility enters the utility as a graded attribute.&lt;/li>
 Learning is limited by the sign-legibility test. Route costs are not: an
 agent that knows an exit prices the whole route to it from the global
 extinction field, including legs it has never seen and, with &lt;code>anticipate&lt;/code>,
-future times (&lt;code>route_graph.py:698–701&lt;/code>). The route choice of a discovery
+future times (&lt;code>route_graph.py:704–707&lt;/code>). The route choice of a discovery
 agent is therefore not limited by what it has perceived.&lt;/li>
 &lt;li>&lt;strong>Haensel&amp;rsquo;s heuristics are not reproduced.&lt;/strong> Haensel (2014, §3.2) weights
 known edges by sensors (smoke, density, room-to-corridor) and uses a
@@ -3562,20 +3565,23 @@ the exception under §2.4. The intended behaviour is exploration.&lt;/li>
 by #174). &lt;code>cognitive_subgraph&lt;/code> built a new &lt;code>StageGraph&lt;/code> without the
 routing engine (&lt;code>cognitive_map.py:245–259&lt;/code>). In &lt;code>rank_routes&lt;/code>, the length of
 the walk from the agent&amp;rsquo;s position to its next node therefore fell back to a
-straight line (&lt;code>route_graph.py:398–404&lt;/code>, &lt;code>:961–964&lt;/code>). Frontier selection was
+straight line (&lt;code>route_graph.py:398–405&lt;/code>, &lt;code>:1059–1063&lt;/code>). Frontier selection was
 not affected, because it measures that leg on the full graph
 (&lt;code>cognitive_map.py:312&lt;/code>, &lt;code>:402–429&lt;/code>). Fully familiar agents always had the
 engine.&lt;/li>
-&lt;li>&lt;strong>First-leg smoke is sampled on a straight line&lt;/strong>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). See
-§2.4, &amp;ldquo;What route choice does not read&amp;rdquo;.&lt;/li>
+&lt;li>&lt;strong>First-leg smoke was sampled on a straight line&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). The
+resample from the agent to its next node ran on a straight line that could
+pass through walls, with its sample count taken from the capped first-leg
+length. It now follows the walked path at &lt;code>sampling_step_m&lt;/code>. See §2.4,
+&amp;ldquo;What route choice does not read&amp;rdquo;.&lt;/li>
 &lt;li>&lt;strong>Clear-air travel time was under-priced&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167" target="_blank" rel="noopener">#167&lt;/a>, fixed
 by #170). The share of the first leg is capped at 1
-(&lt;code>route_graph.py:970&lt;/code>), so a route was under-priced when the agent was
+(&lt;code>route_graph.py:982&lt;/code>), so a route was under-priced when the agent was
 farther from its next node than the route&amp;rsquo;s origin is. In clear air the gate
 ranks by that travel time. Since #170, the walk to the origin is timed at
-the route&amp;rsquo;s mean pace (&lt;code>route_graph.py:1060–1066&lt;/code>).&lt;/li>
+the route&amp;rsquo;s mean pace (&lt;code>route_graph.py:1083–1089&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>A sign is never read beyond its reading distance.&lt;/strong> \(V_{\max}\) is
 30 m by default (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173" target="_blank" rel="noopener">#173&lt;/a>),
 so in clear air a sign farther away is illegible at any bearing, and a
@@ -5587,7 +5593,10 @@ position when one is supplied, otherwise the node-to-node path length&lt;/li>
 &lt;/ul>
 &lt;p>Exposure on the part of the first segment the agent has already walked
 is credited out of &lt;code>K_ave&lt;/code> and &lt;code>FED_max&lt;/code>, because it is already carried
-in &lt;code>current_fed&lt;/code>.&lt;/p>
+in &lt;code>current_fed&lt;/code>. For &lt;code>k_max_route&lt;/code> and &lt;code>k_leg_max&lt;/code> the first segment is
+resampled along the walk from the agent to its next node: the routing
+engine&amp;rsquo;s path through the walkable area, or the straight line when no
+engine is available, sampled every &lt;code>sampling_step_m&lt;/code> along its length.&lt;/p>
 &lt;h3>What each model ranks on&lt;span class="hx-absolute -hx-mt-20" id="what-each-model-ranks-on">&lt;/span>
 &lt;a href="#what-each-model-ranks-on" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Both models write a single &lt;code>rank_cost&lt;/code> field, which ordering, the
 exit-switch anchor and the same-exit path test all read:&lt;/p>

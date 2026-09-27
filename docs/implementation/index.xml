@@ -270,7 +270,7 @@ one slide per section. Each section says what the code does, where, and which
 figure belongs there. Where the talk and the code disagree, a &lt;strong>Talk vs code&lt;/strong>
 note says so, and the code is the reference.&lt;/p>
 &lt;p>Mechanisms were checked against main at &lt;code>f363758&lt;/code>, which includes #170 and
-#174. Each reported run outcome names its source: a repository test, an
+#174; &lt;code>route_graph.py&lt;/code> references follow the first-leg resample of #171. Each reported run outcome names its source: a repository test, an
 asset README, a figure script, or a run on main by one of the investigations
 of #160 and #168. None of the examples validates human wayfinding. They
 verify that the implementation does what this page says.&lt;/p>
@@ -418,9 +418,9 @@ structure.&lt;/p>
 &lt;li>&lt;strong>Knowledge.&lt;/strong> &lt;code>AgentCognitiveMap&lt;/code>: known nodes, known edges, visited nodes
 (&lt;code>cognitive_map.py:10–25&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Decision.&lt;/strong> &lt;code>rank_routes&lt;/code> on &lt;code>cognitive_subgraph(map, graph)&lt;/code>
-(&lt;code>route_graph.py:1272–1276&lt;/code>), then the switching rules of
+(&lt;code>route_graph.py:1293–1297&lt;/code>), then the switching rules of
 &lt;code>evaluate_and_reroute&lt;/code>. With no reachable known exit, exploration or the
-patrol (&lt;code>route_graph.py:1789–1851&lt;/code>).&lt;/li>
+patrol (&lt;code>route_graph.py:1810–1872&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>The loop.&lt;/strong> Moving changes the stored position that the next periodic
 learning uses (&lt;code>scenario.py:2238–2254&lt;/code>), and advancing along the path
 triggers learning at the node left behind (&lt;code>scenario.py:2508–2551&lt;/code>).&lt;/li>
@@ -479,7 +479,7 @@ that schematic the discovery agent learns the junction at spawn and both exits
 at the junction. Smoke then fills the right arm, and the agent heads for exit A.
 In the code, whether exit B is refused depends on its route&amp;rsquo;s optical depth
 exceeding the gate budget. Legibility of B&amp;rsquo;s sign plays no part in that
-(&lt;code>route_graph.py:1345–1351&lt;/code>).&lt;/p>
+(&lt;code>route_graph.py:1366–1372&lt;/code>).&lt;/p>
 &lt;!-- FIGURE: cognitive_map (four panels + legend)
 Source: scripts/figures/cognitive_map.py. Schematic: the known sets, the
 smoke and the chosen exit are hard-coded (cognitive_map.py:66–99); nothing is
@@ -618,7 +618,7 @@ thing differs in the code, and until #174 a second one did:&lt;/p>
 discovery agent explores: it takes the frontier with the lowest path cost
 from its position, learns as the path advances, and, with no frontier left,
 patrols its known nodes (&lt;code>cognitive_map.py:262–399&lt;/code>). Route history logs
-&lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code> and &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code> (&lt;code>route_graph.py:1800&lt;/code>, &lt;code>:1815&lt;/code>).&lt;/li>
+&lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code> and &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code> (&lt;code>route_graph.py:1821&lt;/code>, &lt;code>:1836&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>The ranked length of the first leg&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172" target="_blank" rel="noopener">#172&lt;/a>, fixed
 by #174, now merged), measured as a straight line, even through walls, for
@@ -627,8 +627,9 @@ discovery agents; see
 &lt;/ol>
 &lt;p>Before #174, a comparison around obstacles mixed the effect of knowledge with
 the effect of #172. The run of Figure 7 gives the same numbers before and
-after #174. For both tiers, the first leg&amp;rsquo;s smoke is sampled on a straight
-line from the agent to its next node
+after #174. For both tiers, the first leg&amp;rsquo;s smoke is resampled along the
+walked path from the agent to its next node, the path that also measures the
+first leg&amp;rsquo;s length
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>).&lt;/p>
 &lt;p>The patrol can stall: when smoke limits legibility to a few metres, a patrol
 over a few known nodes may never pass a legible new sign
