@@ -150,16 +150,17 @@ three NOₓ reduction factors, 0 in simple conservative analyses, otherwise
 2/3 or 1, "without a clear guidance which one to choose"; that chapter was
 not read here. For low oxygen, the FDS+Evac
 guide divides by an extra factor 60 while stating *t* in minutes (Eq. 18);
-Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not. The factor is a
-leftover from the 2009 guide (VTT Working Papers 119, FDS 5.3.0), which
-gave every FED equation with *t* in seconds: its Eq. 12 is
+Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not. Read literally,
+Eq. 18 makes the O₂ dose 60 times smaller than Eq. 63.50. Our reading is
+that the factor survives from the 2009 guide (VTT Working Papers 119, FDS
+5.3.0), which gave every FED equation with *t* in seconds: its Eq. 12 is
 \(4.607 \times 10^{-7}\,C_{CO}^{1.036}\,t\), i.e. \(2.764 \times 10^{-5}/60\),
 and its Eq. 13 is \(t/(60\exp[8.13 - 0.54(20.9 - C_{O_2})])\), "where t is
 time in seconds". The 2021 guide rewrote Eqs. 13–17 per minute and dropped
 the 60, but kept it in Eq. 18. The FDS code divides by 60 because its time
 step is in seconds (`func.f90`, function `FED`, before and after commit
-694e033), so the code is consistent and only the 2021 guide's Eq. 18 is
-not. The 2009 guide also prints the CO₂ coefficient as 0.1930 (Eq. 14),
+694e033), so the code is consistent: the discrepancy is in the 2021
+guide's text only. The 2009 guide also prints the CO₂ coefficient as 0.1930 (Eq. 14),
 where Purser and the code use 0.1903.
 {{< /details >}}
 
