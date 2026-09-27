@@ -9,7 +9,7 @@ ISO 13943:2023 defines human behaviour in fire as "actions performed in the
 event of a fire as a result of a behavioural or decision-making process". The
 talk
 [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
-(Visibility Seminar 2026, [PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf))
+(Visibility Seminar 2026)
 splits the behaviour that smoke disturbs into three questions. **Speed** asks
 how fast an occupant can walk. **Route choice** asks which exit the occupant
 heads for. **Wayfinding** asks which exits the occupant knows about at all.
@@ -358,8 +358,7 @@ enters the cognitive map. The dose does not gate anything; it stops the agent.
 
 ## Further reading
 
-- The talk: [slides](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
-  and [PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf), Visibility
+- The talk: [slides](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/), Visibility
   Seminar 2026, University of Wuppertal, 25 September 2026.
 - [Fundamentals](/fundamentals/_index.md): the published laws, with their
   sources.

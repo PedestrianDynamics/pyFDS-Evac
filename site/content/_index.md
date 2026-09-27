@@ -121,7 +121,6 @@ pyFDS-Evac adds no movement model and no fire model.
 
 For the ideas behind speed, route choice and wayfinding, read
 [Concepts](docs/understanding/concepts/) and the talk
-[*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
-([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
+[*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/).
 
 </div>

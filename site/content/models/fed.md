@@ -13,8 +13,7 @@ concentration endpoint. The published equations are on the Fundamentals pages
 linked above.
 
 Background: the [Concepts](/docs/concepts.md) page
-and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
-([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
+and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/).
 
 ## Coded form
 
