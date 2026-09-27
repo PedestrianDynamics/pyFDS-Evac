@@ -67,7 +67,9 @@ with the terms, *t* in minutes and concentrations in ppm or % by volume:
   added outside the CO₂ multiplier because CO₂ improves oxygen uptake.
 - **CO₂ as an asphyxiant**, \(F_{I_{CO_2}}\), from
   \(t_{I_{CO_2}} = \exp(6.1623 - 0.5189\,\%\mathrm{CO_2})\) (Eqs. 63.36–63.37),
-  used as an alternative endpoint and normally negligible.
+  used as an alternative endpoint and normally negligible; sudden exposure
+  to more than about 7 % CO₂, however, can itself cause rapid intoxication
+  and collapse (pp. 2371–2372).
 
 ## Published forms differ
 
@@ -78,7 +80,9 @@ HCN term \(\exp(C/43)/220\) that is not in Chs. 62–63 of the 5th edition,
 where "exponential" names the power law of Eq. 63.20 (p. 2360). The
 FDS+Evac guide cites the 3rd edition for these equations, the header of the
 FDS `FED` function (`func.f90`) the 4th, and the FDS User's Guide the 5th;
-which edition first gave that term is not verified here. A result quoted as "Purser FED"
+which edition first gave that term is not verified here. The User's Guide
+reference (ref. [91]) is Ch. 62, which contains neither Eq. 63.34 nor an
+HCN incapacitation term (text search of Ch. 62). A result quoted as "Purser FED"
 therefore depends on the variant used.
 
 {{< details title="The CO₂ factor and HCN term (Eqs. 63.31–63.35)" closed="true" >}}
@@ -105,7 +109,10 @@ For HCN, the FDS+Evac guide uses
 \(\left(\exp(C_{CN}/43)/220 - 0.0045\right)\) with
 \(C_{CN} = C_{HCN} - C_{NO_2}\) (Korhonen 2021, Eqs. 14–15), citing Purser
 in the 3rd edition (Purser 2002). The FDS User's Guide writes the same term
-with \(C_{CN} = C_{HCN} - C_{NO_2} - C_{NO}\) (Eqs. 22.44–22.45). The 5th
+with \(C_{CN} = C_{HCN} - C_{NO_2} - C_{NO}\) (Eqs. 22.44–22.45). Both
+manuals print the offset 0.0045, whereas FDS `func.f90` uses
+0.00454545 ≈ 1/220; with 0.0045 the term is about \(4.5\times10^{-5}\)
+per minute at 0 ppm instead of 0 (our arithmetic). The 5th
 edition gives the power form instead (Eq. 63.24); its rat-lethality FED in
 the companion chapter subtracts [NOx] from [CN] with coefficient 1 and uses
 yet another CO₂ factor, \(1 + (\exp(0.14\,[\mathrm{CO_2}]) - 1)/2\)
@@ -121,16 +128,22 @@ Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not.
 - **CO.** The Stewart equation was obtained from young adult male
   volunteers; it somewhat underestimates uptake in children, and the
   Coburn–Forster–Kane equation is preferable near equilibrium (Ch. 63,
-  Note 1 to Eq. 63.18, pp. 2416–2417). Being linear, it has no saturation:
-  for a 4 h exposure it predicts 50 % COHb at 550 ppm where the
+  Note 1 to Eq. 63.18, pp. 2416–2417). The linear form is offered for short
+  exposures "when the blood concentration is well below saturation level"
+  (p. 2352); that it overpredicts uptake as COHb approaches saturation is our
+  inference, consistent with the source's comparison: for a 4 h exposure it predicts 50 % COHb at 550 ppm where the
   Coburn–Forster–Kane equation needs 840 ppm (p. 2352).
 - **HCN.** The time to incapacitation \(t_{ICN} = 1.2\times10^{6}/[\mathrm{CN}]^{2.36}\)
   (Eq. 63.20) is fitted to resting macaque monkeys, with a regression
-  coefficient of 0.84 (p. 2360; Fig. 63.24, primate points up to about
-  250 ppm). It is applied to humans because the time to incapacitation of
+  coefficient of 0.84 (p. 2360; Fig. 63.24, primate points from about 85 to
+  250 ppm). The legend of Fig. 63.24 gives the constant as
+  \(1.21\times10^{6}\), the equation as \(1.2\times10^{6}\). It is applied to humans because the time to incapacitation of
   an average adult doing light work "would be similar to that in a resting
   monkey" (p. 2360). The critical range is about 80 ppm, below which incapacitation
   is unlikely within 1 h, to 180 ppm, above which it is rapid (p. 2361).
+  Below about 85 ppm, the lower edge of the primate data, Eq. 63.20 is an
+  extrapolation, and the 80 ppm bound sits at that edge (our reading of
+  Fig. 63.24).
 - **Low oxygen.** Eq. 63.27 is derived from the time of useful consciousness
   of resting humans after sudden decompression (under 1 s) to simulated
   altitudes of 20 000–40 000 ft, a sea-level equivalent of 9.6 % down to
@@ -144,7 +157,8 @@ Eq. 63.50 and the FDS User's Guide (Eq. 22.48) do not.
   are 5 % for 30 min, 7.5 % for 10 min and 10.5 % for 2 min. It gives
   9.7 min at 7.5 % and 2.0 min at 10.5 %, but 35 min at 5 % (our
   arithmetic; p. 2368 uses 35.44 min); the 5 % point is severe breathing
-  discomfort, not loss of consciousness.
+  discomfort, not loss of consciousness. Eq. 63.36 thus rests on data from
+  5 to 10.5 % CO₂ only; below 5 % it is an extrapolation (our inference).
 - **Activity.** The default is light work; \(V_E\) = 8.5 L/min at rest and
   50 L/min for heavy work (table beside Eq. 63.39, p. 2416).
 {{< /details >}}
@@ -158,9 +172,12 @@ ISO 13571 (§5.8) finds very little reliable information on exposures
 shorter than 1 min or longer than 1 h, and its Introduction states that,
 for ethical reasons, much of the method cannot be validated with humans,
 although the CO database is extensive and well validated. The irritant
-term \(FLD_{irr}\) is a fraction of a lethal dose (p. 2416) added to
-fractions of an incapacitating dose, so Eq. 63.38 mixes two endpoints
-(Hostikka and Linna 2025).
+term \(FLD_{irr}\) is defined as a fractional lethal dose (p. 2416) but
+described as a correction for the effect of irritants on lung function,
+which adds some hypoxia (p. 2372). Read the first way, Eq. 63.38 adds a
+lethal-dose fraction to incapacitating-dose fractions (Hostikka and Linna
+2025); read the second way, it is a hypoxia correction scaled by the lethal
+dose. The chapter does not say which reading is intended.
 
 ## Sources
 
