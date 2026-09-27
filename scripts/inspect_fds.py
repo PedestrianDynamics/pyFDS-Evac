@@ -108,6 +108,21 @@ class QuantityStats:
     scale: float = 1.0
 
 
+def _insight(stats: QuantityStats, qinfo: dict) -> str:
+    """One line per panel: the peak, and when the threshold is first crossed."""
+    i = int(np.nanargmax(stats.peak))
+    text = f"peak {stats.peak[i]:.3g} {stats.unit} at {stats.times[i]:.0f} s"
+    threshold = qinfo.get("threshold")
+    if threshold is None:
+        return text
+    invert = qinfo.get("invert", False)
+    crossed = stats.peak < threshold if invert else stats.peak > threshold
+    if not crossed.any():
+        return f"{text}; threshold {threshold:g} not crossed"
+    side = "below" if invert else "above"
+    return f"{text}; {side} {threshold:g} from {stats.times[crossed.argmax()]:.0f} s"
+
+
 def _load_quantity(sim, fds_name: str, height: float | None) -> object | None:
     """Return the best matching slice object, or None if not found."""
     try:
@@ -253,6 +268,9 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
         return
 
     import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
 
     n = len(results)
     if n == 0:
@@ -263,9 +281,12 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
     rows = (n + 1) // cols
     fig, axes = plt.subplots(rows, cols, figsize=(12, 3 * rows), sharex=False)
     axes = np.array(axes).ravel()
+    labels = [chr(ord("a") + i) for i in range(len(axes))]
 
-    for ax, (qinfo, stats) in zip(axes, results):
-        color = qinfo.get("color", "tab:blue")
+    for ax, label, (qinfo, stats) in zip(axes, labels, results):
+        # every panel is its own quantity and unit, so one colour serves all;
+        # the threshold is the only other colour (red, dotted)
+        color = "#324465"
         ax.plot(stats.times, stats.peak, color=color, lw=2, label="spatial max")
         ax.fill_between(stats.times, stats.mean, stats.peak, alpha=0.2, color=color)
         ax.plot(
@@ -276,21 +297,48 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
         if threshold is not None:
             ax.axhline(
                 threshold,
-                color="red",
-                lw=1,
+                color="#d73027",
+                lw=1.2,
                 ls=":",
                 label=qinfo.get("threshold_label", f"threshold={threshold}"),
             )
 
-        ax.set_title(f"{stats.label} [{stats.unit}]")
-        ax.set_xlabel("Time (s)")
-        ax.legend(fontsize=7)
-        ax.grid(True, alpha=0.3)
+        ax.set_title(
+            r"$\bf{(" + label + r")}$" + f"  {stats.label} [{stats.unit}]",
+            loc="left",
+            fontsize=11,
+            pad=7,
+        )
+        ax.set_xlabel("Time (s)", color="dimgrey")
+        ax.text(
+            1.0,
+            1.02,
+            _insight(stats, qinfo),
+            transform=ax.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=8,
+            color="dimgrey",
+            style="italic",
+        )
+        ax.legend(
+            fontsize=7,
+            frameon=True,
+            facecolor="white",
+            framealpha=0.8,
+            edgecolor="lightgrey",
+            labelcolor="dimgrey",
+        )
+        ax.grid(False)
+        ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+        ax.patch.set_edgecolor("lightgrey")
+        ax.patch.set_linewidth(0.8)
 
     # hide unused axes
     for ax in axes[n:]:
         ax.set_visible(False)
 
+    sns.despine(fig=fig, left=True, bottom=True)
     fig.suptitle(f"FDS inspection: {fds_dir}", fontsize=11)
     fig.tight_layout()
 

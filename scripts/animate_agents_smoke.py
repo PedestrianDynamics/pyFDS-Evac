@@ -13,8 +13,8 @@ history CSV (``run.py --output-smoke-history``), which already carries per
 sample ``(time_s, agent_id, x, y, speed_factor, extinction_per_m)``, so no
 trajectory join is needed and the two layers cannot fall out of step.
 
-Agents are coloured by ``speed_factor``: pale where smoke has slowed them,
-saturated where they are walking freely. That is the coupling the picture is
+Agents are coloured by ``speed_factor``: red where smoke has slowed them,
+blue where they are walking freely. That is the coupling the picture is
 meant to show -- the field on the left of the colourbar, its effect on the
 people.
 
@@ -37,12 +37,21 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import animation
-from matplotlib.colors import Normalize
+import seaborn as sns
+from matplotlib import animation, patheffects
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 from pyfds_evac.core.smoke_speed import ExtinctionField
 
 _logger = logging.getLogger(__name__)
+
+# Shared palette of the concept figures: one meaning, one colour, one style.
+SMOKE = LinearSegmentedColormap.from_list("smoke", ["#f7f7f7", "#9a9a9a", "#2b2b2b"])
+EXIT = "#33a02c"  # exit door
+WALL = "dimgrey"
+TEXT = "dimgrey"
+# agent speed factor: red = slowed by smoke, blue = unimpeded (RdYlBu)
+SPEED_CMAP = "RdYlBu"
 
 
 def _read_history(path: Path) -> dict[str, list[tuple[float, float, float, float]]]:
@@ -110,15 +119,18 @@ def _draw_deck(ax, config: Path | None) -> None:
         ax.fill(
             *poly.exterior.xy,
             facecolor="none",
-            edgecolor="deepskyblue",
-            lw=1.8,
+            edgecolor=TEXT,
+            lw=1.4,
             ls="--",
+            # a white halo keeps the outline readable over dense smoke
+            path_effects=[patheffects.withStroke(linewidth=3.0, foreground="white")],
             zorder=4,
         )
         ax.annotate(
             "spawn",
             (poly.centroid.x, poly.centroid.y),
-            color="deepskyblue",
+            color=TEXT,
+            path_effects=[patheffects.withStroke(linewidth=2.5, foreground="white")],
             fontsize=9,
             ha="center",
             va="center",
@@ -135,9 +147,9 @@ def _draw_deck(ax, config: Path | None) -> None:
             [c.y],
             marker="s",
             ms=10,
-            mfc="white",
-            mec="black",
-            mew=1.4,
+            mfc=EXIT,
+            mec="white",
+            mew=1.2,
             zorder=6,
             clip_on=False,
         )
@@ -160,16 +172,30 @@ def _draw_deck(ax, config: Path | None) -> None:
             va="center",
             fontsize=12,
             fontweight="bold",
-            color="white",
+            color="#1a1a1a",
+            path_effects=[patheffects.withStroke(linewidth=2.5, foreground="white")],
             zorder=6,
             clip_on=False,
         )
 
 
-def _masked_cmap(name: str):
-    """The field colormap, with everything outside the building drawn as wall."""
-    cmap = matplotlib.colormaps[name].copy()
-    cmap.set_bad("0.55")
+def _dot_sizes(factors, sf_lo: float) -> np.ndarray:
+    """Marker area per agent: 42 when unimpeded, three times that at *sf_lo*.
+
+    Speed is then read from dot size as well as colour.
+    """
+    slow = (1.0 - np.asarray(factors, dtype=float)) / max(1.0 - sf_lo, 1e-9)
+    return 42.0 * (1.0 + 2.0 * np.clip(slow, 0.0, 1.0))
+
+
+def _masked_cmap(cmap):
+    """The field colormap, with everything outside the building left blank.
+
+    Blank rather than grey: grey is what smoke looks like on this ramp, so a
+    grey exterior would read as smoke-filled ground.
+    """
+    cmap = (matplotlib.colormaps[cmap] if isinstance(cmap, str) else cmap).copy()
+    cmap.set_bad("white")
     return cmap
 
 
@@ -326,36 +352,42 @@ def main() -> None:
             float(np.nanmax(pooled)),
         )
 
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(
         figsize=(11, 10 * (y1 - y0) / max(x1 - x0, 1e-9)), layout="constrained"
     )
     ax.set_aspect("equal")
     ax.set_xlim(x0 - pad, x1 + pad)
     ax.set_ylim(y0 - pad, y1 + pad)
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("y [m]")
+    ax.set_xlabel("x [m]", color=TEXT)
+    ax.set_ylabel("y [m]", color=TEXT)
+    ax.grid(False)
+    ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT)
+    sns.despine(ax=ax, left=True, bottom=True)
 
     im = ax.imshow(
         _field_grid(field, times[0], xs, ys, outside),
         origin="lower",
         extent=(x0, x1, y0, y1),
-        cmap=_masked_cmap("inferno_r"),
+        cmap=_masked_cmap(SMOKE),
         norm=Normalize(0.0, kmax),
         interpolation="bilinear",
         zorder=0,
     )
     cb = fig.colorbar(im, ax=ax, fraction=0.035, pad=0.02)
-    cb.set_label("extinction K [1/m]   (Jin sight S = 3/K)")
+    cb.set_label("extinction K [1/m]   (Jin sight S = 3/K)", color=TEXT)
+    cb.ax.tick_params(length=0, labelcolor=TEXT)
+    cb.outline.set_visible(False)
 
     if walkable is not None:
         # Obstacles are filled, not outlined. The extinction field is zero
         # inside them, so an unfilled obstacle reads as the clearest air in the
-        # room -- the exact opposite of what it is.
+        # room -- the exact opposite of what it is. Hatched, not grey: grey is
+        # smoke on this ramp.
         for geom in getattr(walkable, "geoms", [walkable]):
-            ax.plot(*geom.exterior.xy, color="0.15", lw=1.2, zorder=2)
+            ax.plot(*geom.exterior.xy, color=WALL, lw=1.2, zorder=2)
             for hole in geom.interiors:
-                ax.fill(*hole.xy, color="0.55", zorder=2, lw=0)
-                ax.plot(*hole.xy, color="0.15", lw=0.6, zorder=2)
+                ax.fill(*hole.xy, fc="white", ec=WALL, hatch="////", zorder=2, lw=0.6)
 
     _draw_deck(ax, args.config)
 
@@ -375,15 +407,21 @@ def main() -> None:
         [],
         s=42,
         c=[],
-        cmap="winter",
+        cmap=SPEED_CMAP,
         norm=Normalize(sf_lo, 1.0),
         edgecolors="white",
         linewidths=0.6,
         zorder=3,
     )
     cb2 = fig.colorbar(scat, ax=ax, fraction=0.035, pad=0.02)
-    cb2.set_label(f"agent speed factor ({sf_lo:.2f} = slowest here, 1 = unimpeded)")
-    title = ax.set_title("")
+    cb2.set_label(
+        f"agent speed factor ({sf_lo:.2f} = slowest here, 1 = unimpeded)\n"
+        "larger dot = slower",
+        color=TEXT,
+    )
+    cb2.ax.tick_params(length=0, labelcolor=TEXT)
+    cb2.outline.set_visible(False)
+    title = ax.set_title("", loc="left", pad=7)
 
     # The field is only written once per history sample, so grids are computed
     # per sample and reused across the frames that interpolate between them --
@@ -403,7 +441,9 @@ def main() -> None:
         scat.set_offsets(
             np.array([[x, y] for x, y, _ in pts]) if pts else np.empty((0, 2))
         )
-        scat.set_array(np.array([sf for _, _, sf in pts]))
+        factors = np.array([sf for _, _, sf in pts])
+        scat.set_array(factors)
+        scat.set_sizes(_dot_sizes(factors, sf_lo))
         rate = "real time" if args.playback == 1 else f"{args.playback:g}x real time"
         title.set_text(f"t = {t:6.1f} s     {len(pts)} agents inside     ({rate})")
         return im, scat, title

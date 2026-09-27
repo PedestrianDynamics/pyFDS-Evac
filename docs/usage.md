@@ -156,7 +156,7 @@ uv run python scripts/plot_fed_history.py fed.csv [options]
 
 | Flag | Mode |
 |------|------|
-| *(default)* | Spaghetti plot: one cumulative-FED line per agent. |
+| *(default)* | Spaghetti plot: one cumulative-FED line per agent; the first agent to reach the threshold (or, if none does, the one with the highest FED) is drawn bold and labelled. |
 | `--show-rate` | Add a second panel with the FED rate. |
 | `--stack AGENT_ID` | Per-species stacked FED breakdown for one agent. |
 | `--stack-all DIR` | One stacked plot per agent, written as `DIR/fed_agent_NNNN.png`. |
@@ -174,14 +174,15 @@ uv run python scripts/plot_trajectories_by_speed.py fed.csv \
 ```
 
 Per-segment RdBu colouring (red = slow, blue = fast) from the extended
-FED CSV. The walkable area is drawn as backdrop via pedpy.
+FED CSV; slower segments are also drawn wider, and the slowest sample is
+ringed and labelled. The walkable area is drawn as backdrop via pedpy.
 
 | Flag | Purpose |
 |------|---------|
 | `--sqlite PATH` | JuPedSim SQLite; backdrop via `pedpy.load_walkable_area_from_jupedsim_sqlite`. |
 | `--agents 7,8,43` | Comma-separated agent ids (default: all). |
 | `--vmax F` | Upper bound for the colormap (default: data max). |
-| `--linewidth F` | Polyline width (default 0.5). |
+| `--linewidth F` | Polyline width at full speed; slower segments are up to three times wider (default 0.5). |
 | `--alpha F` | Polyline transparency (default 0.4). |
 | `--title STR` / `--output PNG` | As usual. |
 
@@ -211,11 +212,11 @@ uv run python scripts/plot_trajectories.py <traj.sqlite> \
 
 | Flag | Effect |
 |---|---|
-| `--config` (required) | Exit polygons, and the colour key. |
+| `--config` (required) | Exit polygons, and the colour and line-style key (one style per exit). |
 | `-o/--out` (required) | Output PNG. |
 | `--route-history` | `run.py --output-route-history` CSV. Colours each path by the exit targeted **at that moment** and marks every switch with a dot. Without it paths are coloured by the exit finally reached, which hides mid-run decisions entirely. |
 | `--geometry` | Walkable-area WKT; defaults to `geometry.wkt` beside the config. |
-| `--reach` | Metres from an exit polygon that count as having reached it (default 1.5). Agents that finish elsewhere are drawn grey and counted separately. |
+| `--reach` | Metres from an exit polygon that count as having reached it (default 1.5). Agents that finish elsewhere are drawn grey and dotted, their end marked with a cross, and counted separately. |
 
 ### Route cost curves — `plot_route_costs.py`
 

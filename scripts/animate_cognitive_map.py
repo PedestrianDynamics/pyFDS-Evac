@@ -33,6 +33,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.animation import FFMpegWriter, PillowWriter
 from matplotlib.lines import Line2D
 from shapely import wkt as shapely_wkt
@@ -45,8 +46,17 @@ from pyfds_evac.core.visibility import (
     extract_sign_descriptors,
 )
 
-UNKNOWN, KNOWN, AGENT = "#c4c4cc", "#d62728", "#5b4fc4"
-WANDER, SIGN = "#e08a1e", "#2e7d32"
+# Shared palette of the concept figures: one meaning, one colour, one style.
+CHOSEN = "#4575b4"  # walked route: solid line
+KNOWN = "#324465"  # stage in the map: filled marker
+UNKNOWN = "#bdbdbd"  # stage not in the map: hollow marker
+EXIT = "#33a02c"  # exit door
+AGENT = "#1a1a1a"  # agent: star marker
+SIGN = "#c89b00"  # sign facing: gold, the legible-sign outline colour
+WALL = "dimgrey"
+FLOOR = "#f7f7f7"
+TEXT = "dimgrey"
+WANDER = "#e08a1e"  # amber, dashed: knowledge-exhausted patrolling
 
 
 def inward_alpha(exit_polygon: Polygon, interior_point) -> float:
@@ -182,7 +192,7 @@ def animate(
             nodes[node_id] = (c.x, c.y, marker)
     for node_id, data in (cfg.get("distributions") or {}).items():
         c = Polygon(data["coordinates"]).centroid
-        nodes[node_id] = (c.x, c.y, "*")
+        nodes[node_id] = (c.x, c.y, "^")
 
     # One agent per movie: a multi-agent run would otherwise interleave every
     # agent's positions into a single path, and the highlighted nodes would be
@@ -209,6 +219,7 @@ def animate(
     frames = frames[::stride]
     wandering = [_wandering_at(switches, frame / sim_fps) for frame, _, _ in frames]
 
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(9, 7.6))
     fig.legend(
         handles=[
@@ -217,8 +228,8 @@ def animate(
                 [],
                 marker="s",
                 ls="",
-                mfc=KNOWN,
-                mec="#40404a",
+                mfc=EXIT,
+                mec=KNOWN,
                 ms=9,
                 label="exit, known",
             ),
@@ -227,8 +238,9 @@ def animate(
                 [],
                 marker="s",
                 ls="",
-                mfc=UNKNOWN,
-                mec="#40404a",
+                mfc="white",
+                mec=UNKNOWN,
+                mew=1.4,
                 ms=9,
                 label="exit, unknown",
             ),
@@ -238,7 +250,7 @@ def animate(
                 marker="o",
                 ls="",
                 mfc=KNOWN,
-                mec="#40404a",
+                mec=KNOWN,
                 ms=9,
                 label="stage, known",
             ),
@@ -247,31 +259,47 @@ def animate(
                 [],
                 marker="o",
                 ls="",
-                mfc=UNKNOWN,
-                mec="#40404a",
+                mfc="white",
+                mec=UNKNOWN,
+                mew=1.4,
                 ms=9,
                 label="stage, unknown",
+            ),
+            Line2D(
+                [], [], marker="^", ls="", mfc=KNOWN, mec=KNOWN, ms=9, label="spawn"
+            ),
+            Line2D([], [], color=SIGN, lw=1.6, label="sign facing"),
+            Line2D(
+                [],
+                [],
+                marker="*",
+                ls="-",
+                color=CHOSEN,
+                mfc=AGENT,
+                mec="white",
+                ms=12,
+                label="agent, walked path",
             ),
             Line2D(
                 [],
                 [],
                 marker="*",
-                ls="",
-                mfc=KNOWN,
-                mec="#40404a",
+                ls="--",
+                color=WANDER,
+                mfc=WANDER,
+                mec="white",
                 ms=12,
-                label="spawn",
-            ),
-            Line2D([], [], color=SIGN, lw=1.6, label="sign facing"),
-            Line2D([], [], marker="o", ls="-", color=AGENT, ms=8, label="agent"),
-            Line2D(
-                [], [], marker="o", ls="-", color=WANDER, ms=8, label="agent, wandering"
+                label="agent, wandering",
             ),
         ],
         loc="lower center",
         ncol=4,
-        frameon=False,
         fontsize=9,
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor=TEXT,
     )
     fig.subplots_adjust(bottom=0.12)
     writer = (
@@ -284,12 +312,13 @@ def animate(
             t = frame / sim_fps
             known = _known_at(history, t)
             ax.clear()
-            ax.set_facecolor("#f4f1ea")
             bx, by = walkable.exterior.xy
-            ax.plot(bx, by, color="#9298a8", lw=1)
+            ax.fill(bx, by, color=FLOOR, zorder=0)
+            ax.plot(bx, by, color=WALL, lw=1.2)
             for ring in walkable.interiors:
                 rx, ry = ring.xy
-                ax.plot(rx, ry, color="#9298a8", lw=1)
+                ax.fill(rx, ry, color="white", zorder=0)
+                ax.plot(rx, ry, color=WALL, lw=1.2)
             for node_id, sign in signs.items():
                 sx, sy = float(sign["x"]), float(sign["y"])
                 alpha = sign.get("alpha")
@@ -301,7 +330,7 @@ def animate(
                         marker="o",
                         ms=16,
                         mfc="none",
-                        mec="#2e7d32",
+                        mec=SIGN,
                         mew=1.0,
                         zorder=3,
                     )
@@ -312,19 +341,20 @@ def animate(
                     "",
                     xy=(sx + 1.8 * dx, sy + 1.8 * dy),
                     xytext=(sx, sy),
-                    arrowprops=dict(arrowstyle="-|>", color="#2e7d32", lw=1.6),
+                    arrowprops=dict(arrowstyle="-|>", color=SIGN, lw=1.6),
                     zorder=5,
                 )
             for node_id, (nx, ny, marker) in nodes.items():
                 on = node_id in known
+                fill = EXIT if marker == "s" else KNOWN
                 ax.plot(
                     nx,
                     ny,
                     marker=marker,
-                    ms=13 if on else 8,
-                    color=KNOWN if on else UNKNOWN,
-                    mec="#40404a",
-                    mew=0.6,
+                    ms=13 if on else 9,
+                    mfc=fill if on else "white",
+                    mec=KNOWN if on else UNKNOWN,
+                    mew=1.0 if on else 1.4,
                     zorder=4,
                 )
             # Trail, drawn as runs of constant mode so wander stretches stay
@@ -336,7 +366,8 @@ def animate(
                     ax.plot(
                         [p[1] for p in frames[start : j + 1]],
                         [p[2] for p in frames[start : j + 1]],
-                        color=WANDER if wandering[start] else AGENT,
+                        color=WANDER if wandering[start] else CHOSEN,
+                        ls="--" if wandering[start] else "-",
                         lw=2,
                         alpha=0.75,
                     )
@@ -344,29 +375,34 @@ def animate(
             ax.plot(
                 [p[1] for p in frames[start : i + 1]],
                 [p[2] for p in frames[start : i + 1]],
-                color=WANDER if wandering[start] else AGENT,
+                color=WANDER if wandering[start] else CHOSEN,
+                ls="--" if wandering[start] else "-",
                 lw=2,
                 alpha=0.75,
             )
             ax.plot(
                 x,
                 y,
-                marker="o",
-                ms=11,
-                color=WANDER if wandering[i] else AGENT,
+                marker="*",
+                ms=16,
+                mfc=WANDER if wandering[i] else AGENT,
+                mec="white",
+                mew=0.8,
                 zorder=6,
             )
             prefix = f"{title_label}     " if title_label else ""
             ax.set_title(
                 f"{prefix}t = {t:5.2f} s     known nodes: {len(known)} / {len(nodes)}",
                 fontsize=11,
+                loc="left",
+                pad=7,
             )
             ax.set_aspect("equal")
             minx, miny, maxx, maxy = walkable.bounds
             ax.set_xlim(minx - 1, maxx + 1)
             ax.set_ylim(miny - 1, maxy + 1)
-            ax.set_xticks([])
-            ax.set_yticks([])
+            # a floor plan has no data axes: grid, ticks and frame add nothing
+            ax.axis("off")
             writer.grab_frame()
     plt.close(fig)
 

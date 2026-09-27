@@ -21,13 +21,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
-
-try:
-    import seaborn as sns
-except ImportError:  # seaborn only sets the theme; fall back to rcParams
-    sns = None
 
 from pyfds_evac import (
     ConstantExtinctionField,
@@ -332,10 +328,7 @@ def main():
     -----
     site/static/images/concepts/exposure_gate.png
     """
-    if sns is not None:
-        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
-    else:
-        plt.rcParams["font.family"] = "DejaVu Sans"
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
 
     metrics = route_metrics()
     for n, m in metrics.items():
@@ -358,8 +351,7 @@ def main():
     cbar.ax.tick_params(labelsize=7.5, length=0, labelcolor=TEXT)
     cbar.ax.grid(False)
     cbar.outline.set_visible(False)
-    if sns is not None:
-        sns.despine(fig=fig, left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
 
     rank = gate_ranks(metrics)
     best = min(rank, key=rank.get)
