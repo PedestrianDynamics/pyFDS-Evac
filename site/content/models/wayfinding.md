@@ -106,6 +106,19 @@ $$
 The obstruction factor applies in clear air too: a wall hides a sign there as
 it does in smoke.
 
+![Animation of a sign turning away from a standing agent. As the angle grows, the visibility curve falls; when it drops below the 6 m distance near 53°, the sight line turns from solid blue to dashed red and the label changes from "sign legible" to "sign not legible"](/images/wayfinding/sign_rotation.gif)
+
+*An agent stands 6 m from a sign in uniform smoke (\(\bar K\) = 0.3 m⁻¹,
+C = 3, so \(C/\bar K\) = 10 m) while the sign turns away. Every value comes
+from the pyFDS-Evac visibility model. Right: the visibility
+\(A \cdot C/\bar K\) against the bearing \(\alpha_s\); the dotted line is the
+agent's distance \(L\). Solid blue line and filled marker: legible; dashed red
+line and hollow marker: not legible. Yellow cells are the positions from which
+the model reads the sign; the gold arrow shows which way it faces. \(V_{\max}\)
+is the room's 11.3 m diagonal and does not bind. The sign is lost at about
+53°, well before it is side-on.
+Script: `scripts/figures/sign_rotation.py`.*
+
 **Two ways to build the model** (`run_config.py:191–230`):
 
 - **From an FDS run** (`--fds-dir`). Grid, obstructions and extinction come
