@@ -107,6 +107,33 @@ class _FedRamp:
         return self.rate * time_s if y >= self.y_min else 0.0
 
 
+@dataclass(frozen=True)
+class _FedBelow:
+    """A constant FED rate where ``y < 0``."""
+
+    rate: float
+
+    def sample_fed_rate(self, time_s: float, x: float, y: float) -> float:
+        del time_s, x
+        return self.rate if y < 0.0 else 0.0
+
+
+def _tied_detour() -> StageGraph:
+    """A long detour via A and a short path via B, tied in clear air at zero.
+
+    Without the gate's length floor every edge weighs zero, and Dijkstra's
+    tie-break on the node id takes the detour.
+    """
+    return golden._graph(
+        {
+            "A": (0.0, 20.0, "checkpoint"),
+            "B": (10.0, 0.0, "checkpoint"),
+            "E0": (20.0, 0.0, "exit"),
+        },
+        golden._edges(("D0", "A"), ("A", "E0"), ("D0", "B"), ("B", "E0")),
+    )
+
+
 # ── Configuration variants ────────────────────────────────────────────
 
 _VARIANTS: dict[str, Callable[[RouteCostConfig], RouteCostConfig]] = {
@@ -189,6 +216,14 @@ _EXTRA_RANK_CASES: dict[str, golden.RankCase] = {
         fed=_FedRamp(0.02, -5.0),
         source="D0",
         time_s=30.3,
+    ),
+    # Clear air: the gate's length floor is what picks the short path.
+    "gate_clear_floor_breaks_tie": golden.RankCase(
+        _tied_detour, golden._gate(), source="D0"
+    ),
+    # Additive: the dose on the shorter twin path sends Dijkstra the long way.
+    "additive_twin_paths_dose": golden.RankCase(
+        golden._twin, golden._additive(), fed=_FedBelow(1.0), source="D0"
     ),
 }
 
@@ -490,6 +525,25 @@ _PASS_CONFIGS = {
     "additive": golden._additive(w_queue=0.5),
     "unknown_mode": golden._gate(cost_model="weird"),
 }
+
+
+def test_edge_weight_cases_turn_on_the_weight():
+    """The two edge-weight cases pick the path they are meant to pick."""
+    for name, via in (
+        ("gate_clear_floor_breaks_tie", "B"),
+        ("additive_twin_paths_dose", "C0"),
+    ):
+        case = _EXTRA_RANK_CASES[name]
+        ranked = live.rank_routes(
+            case.graph(),
+            case.source,
+            case.time_s,
+            case.current_fed,
+            case.extinction,
+            case.fed,
+            case.config,
+        )
+        assert ranked[0].path == ["D0", via, "E0"], name
 
 
 def test_shared_cache_is_order_sensitive():
