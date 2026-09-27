@@ -107,8 +107,7 @@ seed 1904, on main after #170:
 The visibility cap is 30 m. Rerun in clear air with that cap, both configs
 give the same counts and egress times.
 
-The asset's probe map of the ranked exit along the corridor
-(`exit_choice_map.png`) was shifted by
+The ranked exit along the corridor (Figure 2) was shifted by
 [#167](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167): before
 #170 the switch from near to far fell at y ≈ 20.25. With the fix, clear-air
 ranking uses travel time measured from the agent's position, and the switch is
@@ -127,6 +126,30 @@ legible only for y = 0–0.8 m; the near exit is never learned, and 40 of 40
 agents walk to the far exit, median walk 19.0 m, out at 25.9 s. Counts, walks
 and times are computed from the runs. Script:
 `scripts/figures/sign_bearing.py`.*
+
+![Two corridors side by side, each cell shaded by the exit a discovery agent standing there would take; left, blue for the near exit below y = 15 m and hatched orange for the far exit above it; right, hatched orange almost everywhere because the near exit is not in the map](/images/wayfinding/exit_choice_map.png)
+
+*Figure 2. What routing would decide, by position. Each cell is shaded by the
+exit that `rank_routes` ranks first for a discovery agent standing there,
+given what it perceives from that spot: blue for `E_near`, hatched orange for
+`E_far`. (a) \(\alpha_s = 0\): both exits are in the map, and the split is a
+cost crossover at y = 15.0 m, midway between them. (b) \(\alpha_s = 180\):
+there is no crossover; the near exit is absent from the map, so every cell
+above the near sign takes `E_far`. The few near-exit cells at the bottom of
+(b) lie south of the sign, in the half-plane it faces. Script:
+`scripts/generate_exit_visibility_map.py`.*
+
+| \(\alpha_s = 0\) | \(\alpha_s = 180\) |
+|---|---|
+| ![Walked trajectories of 40 agents from the spawn area, all dashed blue, all going south to the near exit](/images/wayfinding/trajectories_visible.png) | ![Walked trajectories of 40 agents from the spawn area, all solid red, all going north to the far exit](/images/wayfinding/trajectories_hidden.png) |
+
+*Figure 3. What the agents did. Trajectories of the FDS-backed runs in the
+table above (FDS 6.10.1, clear air, seed 1904): 40 of 40 agents walk to
+`E_near` when its sign faces them, and 40 of 40 to `E_far` when it faces away.
+The runs used the earlier visibility cap (the grid diagonal, 30.8 m); both
+signs are within 30 m of every agent, and the clear-air reruns with the 30 m
+cap give the same counts and times. Script: `scripts/plot_trajectories.py`
+on the runs' SQLite output.*
 
 ## 3. What the agent knows
 
@@ -187,7 +210,7 @@ visibility model, and then with a clear-air model at 0.5 m in which every sign
 faced away from the crowd. In both runs every agent left by the geometrically
 nearest exit, and the route history recorded no switch. In the clear-air run,
 3 of the 40 agents learned that exit on the way. Our probe scripts are
-not in the repository. Figure 2 shows the same behaviour for one agent.
+not in the repository. Figure 4 shows the same behaviour for one agent.
 
 Circling needs a patrol target: at least one other known node reachable over
 known edges. Whether the agent then circles also depends on connectivity and
@@ -199,7 +222,7 @@ steering. That is the smoke case of `assets/world_100` in #122.
 
 ![Plan of a floor with two exits and one agent whose map holds only its spawn node; yellow cells mark where a sign is legible, none of them on the agent's path, and the agent walks straight to the south exit, which is not in its map](/images/wayfinding/empty_map_routes.png)
 
-*Figure 2. An empty map, as the code behaves on main. One agent at
+*Figure 4. An empty map, as the code behaves on main. One agent at
 familiarity 0 with a clear-air visibility model. Yellow: cells from which a
 sign is legible. The south exit, 22.4 m from the start, has a sign facing out
 of the building; the west exit, 30.1 m away, has a sign facing along the
@@ -239,7 +262,7 @@ computed. -->
 
 ![Four panels of a T-shaped corridor showing which nodes and edges one agent knows: at spawn, at the junction, with smoke in the right arm, and for a fully familiar agent](/images/wayfinding/cognitive_map.png)
 
-*Figure 3. Schematic, not a simulation: known sets and choices are drawn by
+*Figure 5. Schematic, not a simulation: known sets and choices are drawn by
 hand. A T-shaped corridor; filled nodes and solid edges are known. (1) A
 discovery agent at spawn knows its spawn node and the junction, whose sign is
 legible from there. (2) At the junction both exit signs are legible, and both
@@ -273,7 +296,7 @@ end exit, legible from spawn, and a side exit whose sign, at \((4, 20)\)
 facing west, is legible from the centreline only inside a region. The asset
 builder's estimate, y ≈ 12.5–27.5 m, follows from the 30 m cap
 (`build_geometry.py:61`, `:78–95`). On the 0.25 m clear-air grid the model
-reads the sign from y = 12.3 to 27.8 m on the centreline (Figure 4); the
+reads the sign from y = 12.3 to 27.8 m on the centreline (Figure 6); the
 difference comes from the rasterised sight line.
 
 The probes place one discovery agent at fixed positions on the centreline, in
@@ -334,7 +357,7 @@ to the side exit (`assets/cognitive_map_memory/README.md`).
 
 ![Five probes of one corridor: side exit unknown at y = 4, learned at y = 14, legible at y = 20, known but not legible at y = 30, and first-ranked at a return probe at y = 10](/images/wayfinding/map_memory.png)
 
-*Figure 4. The map remembers. `assets/cognitive_map_memory`, clear air, one
+*Figure 6. The map remembers. `assets/cognitive_map_memory`, clear air, one
 discovery agent probed in sequence at y = 4, 14, 20 and 30 m, then at y = 10 m
 again. These are state probes, not a walk. The shaded, lens-shaped region is
 where the side sign is legible; on the centreline it spans y = 12.3–27.8 m
@@ -362,7 +385,7 @@ thing differs in the code, and until #174 a second one did:
    frontier selection measures that leg on the full graph.
 
 Before #174, a comparison around obstacles mixed the effect of knowledge with
-the effect of #172. The run of Figure 5 gives the same numbers before and
+the effect of #172. The run of Figure 7 gives the same numbers before and
 after #174. For both tiers, the first leg's smoke is sampled on a straight
 line from the agent to its next node
 ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)).
@@ -398,7 +421,7 @@ reproduced for this page.
 
 ![Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, discovery agents detour through a dead-end room first](/images/wayfinding/full_vs_discovery_paths.png)
 
-*Figure 5. Full versus discovery. `assets/familiarity_test_full` and
+*Figure 7. Full versus discovery. `assets/familiarity_test_full` and
 `assets/familiarity_test_discovery`: 20 agents, seed 420, same geometry and
 signs; `familiarity` differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
 known from t = 0, no route changes; the last agent leaves at 33.9 s, median
