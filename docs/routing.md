@@ -443,15 +443,13 @@ discovery agent with no known exit explores or wanders instead (see below).
 | **Rejection** | FED over the threshold (× `fed_return_margin` for a rival exit), or τ over the budget (× `tau_return_margin` for a rival); every exit is tested | FED as for the gate; plus, when at least one route has a visible segment, routes whose every segment is non-visible |
 | **Ranking** | not rejected first, then tier (clean vs smoky, only with `clean_extinction_threshold` > 0), then τ (× `current_exit_discount` for the current exit), then `rank_cost`, then hops | not rejected first, then tier, then `rank_cost`, then hops |
 | **Fallback** | by (τ, `rank_cost`); the current exit is kept unless the winner is clearer by `fallback_switch_margin` | lowest composite |
-| **Switch, same exit** | reroute only if the new path beats the walked path by more than 10 % on `rank_cost` (`better_path`); otherwise keep walking, and the cached path is updated | same |
+| **Switch, same exit** | reroute if the new path beats the walked path by more than 10 % on `rank_cost`, or if the walked path is rejected and the new one is feasible (`better_path`); otherwise keep walking, and the cached path is updated | same |
 | **Switch, other exit** | candidates tried in rank order; the anchor adopts one only if `rank_cost` < old × `exit_switch_anchor`, unless the old exit is FED-lethal or impassably smoky, or the rival is feasible, clearer by the anchor margin, and a whole band clearer or clean while the current exit is not | anchor on `rank_cost`, with the same hazard bypasses |
 | **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, a `RouteSwitch` recorded | same |
 
 Several of these rules resist switching at different points (return margins,
 discount, anchor, fallback margin, same-exit threshold). Their consolidation is
 [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); the
-same-exit test can keep a rejected walked path
-([#184](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/184)), and the
 anchor's baseline is the best path to the current exit, not the walked one
 ([#186](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186)).
 
@@ -491,7 +489,7 @@ Each `RouteSwitch` record includes a `reason` field:
 | `initial`       | Agent had no previous exit assignment                            |
 | `smoke_reroute` | Best route is a different exit (lower `rank_cost`)               |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
-| `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`      |
+| `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`, or a feasible path replacing a rejected walked one |
 | `explore`       | No exit known yet; heading to the nearest unexplored frontier    |
 | `wander`        | Knowledge exhausted; patrolling known nodes                      |
 

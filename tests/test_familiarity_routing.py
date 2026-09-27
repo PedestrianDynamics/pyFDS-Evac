@@ -268,6 +268,75 @@ class TestBetterPathReroute:
         assert self._run(g, wait_info, rs) is None
 
 
+class _SmokeBelowAxis:
+    """K = 0.4 /m south of y = 0, clear air north of it.
+
+    Along the southern path that is an optical depth of about 6.9, over the
+    gate's budget of 6, while slowing the walk by only about 3 %.
+    """
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        return 0.4 if y < 0.0 else 0.0
+
+
+def _twin_graph() -> StageGraph:
+    """Two near-equal paths to E0: D0→C1→E0 (south) and D0→C0→E0 (north).
+
+    The northern leg is slightly longer, so on time alone it is never 10 %
+    better than the southern one.
+    """
+    return _graph(
+        {
+            "C0": (10, 2, "checkpoint"),
+            "C1": (10, -1, "checkpoint"),
+            "E0": (20, 0, "exit"),
+        },
+        [
+            {"from": "D0", "to": "C0"},
+            {"from": "D0", "to": "C1"},
+            {"from": "C0", "to": "E0"},
+            {"from": "C1", "to": "E0"},
+        ],
+    )
+
+
+class TestSameExitLeavesRejectedPath:
+    """#184: the 10 % time rule must not keep an agent on a rejected path."""
+
+    def _run(self, extinction_sampler):
+        g = _twin_graph()
+        wait_info = _wait_info(
+            g,
+            "D0",
+            "C1",
+            path_choices={"D0": [("C1", 100.0)], "C1": [("E0", 100.0)]},
+        )
+        rs = AgentRouteState(current_exit="E0", current_path=["D0", "C1", "E0"])
+        switch = evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=rs,
+            graph=g,
+            current_time_s=5.0,
+            current_fed=0.0,
+            extinction_sampler=extinction_sampler,
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0)),
+        )
+        return switch, rs
+
+    def test_leaves_a_smoke_rejected_path_for_a_feasible_one(self):
+        switch, rs = self._run(_SmokeBelowAxis())
+        assert switch is not None
+        assert switch.new_exit == "E0"
+        assert "C0" in rs.current_path
+
+    def test_keeps_the_walked_path_when_it_is_feasible(self):
+        """Without the smoke the northern leg is not 10 % faster."""
+        switch, rs = self._run(_CLEAR)
+        assert switch is None
+
+
 # ── evaluate_and_reroute: explore (frontier) ──────────────────────────
 
 
