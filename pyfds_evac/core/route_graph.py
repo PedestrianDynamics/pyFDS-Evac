@@ -394,21 +394,27 @@ def _polyline_length(waypoints: list[tuple[float, float]]) -> float:
     return total
 
 
-def _walkable_distance(routing_engine, from_xy, to_xy) -> float:
-    """Path length through the walkable area, or straight-line if unavailable.
+def _walkable_waypoints(routing_engine, from_xy, to_xy) -> list[tuple[float, float]]:
+    """Path through the walkable area, or the straight line if unavailable.
 
-    A wrong distance only degrades ranking, so a failed or degenerate query
+    A wrong path only degrades ranking, so a failed or degenerate query
     falls back rather than ending the run.
     """
+    straight = [tuple(from_xy), tuple(to_xy)]
     if routing_engine is None:
-        return _euclidean(from_xy[0], from_xy[1], to_xy[0], to_xy[1])
+        return straight
     try:
         waypoints = list(routing_engine.compute_waypoints(from_xy, to_xy))
     except Exception:
-        return _euclidean(from_xy[0], from_xy[1], to_xy[0], to_xy[1])
+        return straight
     if len(waypoints) < 2:
-        return _euclidean(from_xy[0], from_xy[1], to_xy[0], to_xy[1])
-    return _polyline_length(waypoints)
+        return straight
+    return waypoints
+
+
+def _walkable_distance(routing_engine, from_xy, to_xy) -> float:
+    """Path length through the walkable area, or straight-line if unavailable."""
+    return _polyline_length(_walkable_waypoints(routing_engine, from_xy, to_xy))
 
 
 # ── Route cost evaluation (Phase 3) ──────────────────────────────────
@@ -928,6 +934,7 @@ def _position_aware_length(
     agent_position: tuple[float, float],
     path_length: float,
     first_length_m: float,
+    first_waypoints: list[tuple[float, float]] | None = None,
 ) -> tuple[float, float]:
     """Haensel path-integrated distance measured from the agent's position.
 
@@ -952,17 +959,22 @@ def _position_aware_length(
     can cut through a wall and understate a divergent route. That is a property
     of the fallback, not of this rule, and it applies equally to the route the
     agent is already walking.
+
+    ``first_waypoints``, when given, is the walk from the agent to the next
+    node, already computed by the caller; it saves a second engine query.
     """
     first_node = graph.nodes.get(path[0])
     next_node = graph.nodes.get(path[1])
     if first_node is None or next_node is None:
         return path_length, 1.0
 
-    remaining = _walkable_distance(
-        graph.routing_engine,
-        agent_position,
-        (next_node.centroid_x, next_node.centroid_y),
-    )
+    if first_waypoints is None:
+        first_waypoints = _walkable_waypoints(
+            graph.routing_engine,
+            agent_position,
+            (next_node.centroid_x, next_node.centroid_y),
+        )
+    remaining = _polyline_length(first_waypoints)
     if first_length_m <= 1e-9:
         return path_length - first_length_m + remaining, 1.0
     # Floored above zero so an impassable first segment (infinite travel time)
@@ -1038,13 +1050,24 @@ def evaluate_route(
     # node-to-node path_length (used everywhere agent_position is absent).
     effective_length = path_length
     first_share = 1.0
+    # The walk from the agent to the next node, through the walkable area. It
+    # measures the first leg here and is resampled for smoke below.
+    first_waypoints = None
     if agent_position is not None and len(path) >= 2:
+        next_node = graph.nodes.get(path[1])
+        if next_node is not None:
+            first_waypoints = _walkable_waypoints(
+                graph.routing_engine,
+                agent_position,
+                (next_node.centroid_x, next_node.centroid_y),
+            )
         effective_length, first_share = _position_aware_length(
             graph,
             path,
             agent_position,
             path_length,
             segments[0].length_m,
+            first_waypoints,
         )
 
     # Exposure is accumulated over the same stretch the distance term charges:
@@ -1085,19 +1108,17 @@ def evaluate_route(
     # agent -- and with a binary clean test that asymmetry decided membership:
     # an agent past a smoke blob read its committed route as clean and every
     # rival as dirty, on smoke none of them would walk through.
-    if agent_position is not None and len(path) >= 2:
-        next_node = graph.nodes.get(path[1])
-        if next_node is not None:
-            first_k_avg, first_k_max = _los_stats(
-                agent_position[0],
-                agent_position[1],
-                next_node.centroid_x,
-                next_node.centroid_y,
-                segments[0].arrival_time_s,
-                extinction_sampler,
-                config.sampling_step_m,
-                first_share * segments[0].length_m,
-            )
+    #
+    # Sampled along the walk itself, around walls, at sampling_step_m over its
+    # real length -- which, behind the origin node, is longer than the capped
+    # first_share of the segment.
+    if first_waypoints is not None:
+        first_k_avg, first_k_max = _polyline_stats(
+            first_waypoints,
+            segments[0].arrival_time_s,
+            extinction_sampler,
+            config.sampling_step_m,
+        )
     k_max = max(
         [first_k_max] + [s.k_max for _, s in weighted[1:]],
         default=0.0,
