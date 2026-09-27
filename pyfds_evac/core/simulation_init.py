@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import logging
 import math
 import random
 import subprocess
@@ -18,6 +19,51 @@ from .premovement_distributions import (
     PREMOVEMENT_PRESETS,
     create_premovement_distribution,
 )
+
+_logger = logging.getLogger(__name__)
+
+DEFAULT_PREMOVEMENT_S = 10.0
+"""Pre-movement time [s] used when a distribution sets none (FDS+Evac PRE_MEAN)."""
+
+
+def _apply_default_premovement(params: dict, dist_id: Any) -> dict:
+    """Give a distribution that sets no pre-movement the FDS+Evac default.
+
+    A distribution with none of ``use_premovement`` or ``premovement_*`` gets a
+    constant ``DEFAULT_PREMOVEMENT_S`` delay, as FDS+Evac does, and a warning,
+    because the FDS+Evac guide advises against relying on it. Any explicit
+    setting, including ``use_premovement: false``, is left alone, and
+    flow-spawned distributions, which have no pre-movement, are skipped.
+    """
+    if params.get("use_flow_spawning", False):
+        return params
+    if any(k == "use_premovement" or k.startswith("premovement_") for k in params):
+        return params
+    _logger.warning(
+        "Distribution '%s' sets no pre-movement; using the FDS+Evac default, a "
+        "constant %.0f s. Set use_premovement and the premovement_* keys from "
+        "data for your occupancy, or use_premovement: false for none.",
+        dist_id,
+        DEFAULT_PREMOVEMENT_S,
+    )
+    return {
+        **params,
+        "use_premovement": True,
+        "premovement_distribution": "constant",
+        "premovement_param_a": DEFAULT_PREMOVEMENT_S,
+    }
+
+
+def _premovement_params(dist_type: str, param_a, param_b) -> dict:
+    """Return the (a, b) of a pre-movement distribution, falling back to presets.
+
+    Both parameters must be given for either to take effect, except for
+    ``constant``, which has only ``a``.
+    """
+    if param_a is not None and (param_b is not None or dist_type == "constant"):
+        return {"a": param_a, "b": param_b}
+    return PREMOVEMENT_PRESETS.get(dist_type, PREMOVEMENT_PRESETS["gamma"])
+
 
 required_packages = [
     ("jupedsim", "jupedsim"),
@@ -84,7 +130,7 @@ def create_agent_parameters(
         base_params["stage_id"] = stage_id
 
     if model_type == "CollisionFreeSpeedModel":
-        desired_speed = params.get("v0", 1.2)
+        desired_speed = params.get("v0", 1.25)
         return _construct_with_fallbacks(
             jps.CollisionFreeSpeedModelAgentParameters,
             {**base_params, "desired_speed": desired_speed},
@@ -93,11 +139,11 @@ def create_agent_parameters(
 
     elif model_type == "WarpDriverModel":
         return jps.WarpDriverModelAgentParameters(
-            **base_params, desired_speed=params.get("v0", 1.2)
+            **base_params, desired_speed=params.get("v0", 1.25)
         )
 
     elif model_type == "CollisionFreeSpeedModelV2":
-        desired_speed = params.get("v0", 1.2)
+        desired_speed = params.get("v0", 1.25)
         v2_params = base_params.copy()
         v2_params["desired_speed"] = desired_speed
         v2_params["time_gap"] = 1.0
@@ -120,7 +166,7 @@ def create_agent_parameters(
     elif model_type == "GeneralizedCentrifugalForceModel":
         gcfm_params = {
             "position": position,
-            "desired_speed": params.get("v0", 1.2),
+            "desired_speed": params.get("v0", 1.25),
             "mass": getattr(global_params, "mass", 80.0) if global_params else 80.0,
             "tau": getattr(global_params, "tau", 0.5) if global_params else 0.5,
             "a_v": getattr(global_params, "a_v", 1.0) if global_params else 1.0,
@@ -167,7 +213,7 @@ def create_agent_parameters(
 
     elif model_type == "AnticipationVelocityModel":
         avm_params = base_params.copy()
-        avm_params["desired_speed"] = params.get("v0", 1.2)
+        avm_params["desired_speed"] = params.get("v0", 1.25)
         avm_params["time_gap"] = 1.06  # Default value
         if global_params:
             avm_params["anticipation_time"] = (
@@ -183,7 +229,7 @@ def create_agent_parameters(
 
     else:
         # Fallback to CollisionFreeSpeedModel
-        base_params["v0"] = params.get("v0", 1.2)
+        base_params["v0"] = params.get("v0", 1.25)
         return jps.CollisionFreeSpeedModelAgentParameters(**base_params)
 
 
@@ -322,7 +368,7 @@ def _normalize_flow_schedule_entries(params):
 def _sample_agent_values(params, n_agents, rng):
     """Sample per-agent radius and v0 values based on distribution settings."""
     mean_radius = params.get("radius", 0.2)
-    mean_v0 = params.get("v0", 1.2)
+    mean_v0 = params.get("v0", 1.25)
 
     if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
         radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(0.1, 1.0)
@@ -776,7 +822,7 @@ def _initialize_with_fallback(
 
     # Extract default parameters from distributions if available
     default_agent_radius = 0.2
-    default_v0 = 1.2
+    default_v0 = 1.25
     default_n_agents = 100
 
     # Try to get parameters from the first distribution with valid parameters
@@ -917,6 +963,7 @@ def _initialize_with_fallback(
                             params = json.loads(params)
                         except Exception:
                             params = {}
+                    params = _apply_default_premovement(params, dist_id)
 
                     # Use distribution-specific parameters or fall back to defaults
                     dist_params = {
@@ -977,6 +1024,9 @@ def _initialize_with_fallback(
                 "entrance": None,
             }
         ]
+        distribution_params[0].update(
+            _apply_default_premovement({}, "__walkable_area__")
+        )
         total_agents = default_n_agents
 
     # Step 3: Create a single global DS journey for all fallback agents
@@ -1225,12 +1275,7 @@ def _initialize_with_fallback(
             premovement_seed = spawn_data["params"].get("premovement_seed")
 
             # Use custom parameters if provided, otherwise use presets
-            if param_a is not None and param_b is not None:
-                dist_params = {"a": param_a, "b": param_b}
-            else:
-                dist_params = PREMOVEMENT_PRESETS.get(
-                    dist_type, PREMOVEMENT_PRESETS["gamma"]
-                )
+            dist_params = _premovement_params(dist_type, param_a, param_b)
 
             # Use distribution-specific seed or global seed
             if premovement_seed is None:
@@ -1584,14 +1629,15 @@ def _process_distributions(
             try:
                 params = json.loads(params)
             except json.JSONDecodeError:
-                params = {"number": 10, "radius": 0.2, "v0": 1.2}
+                params = {"number": 10, "radius": 0.2, "v0": 1.25}
         elif not isinstance(params, dict):
-            params = {"number": 10, "radius": 0.2, "v0": 1.2}
+            params = {"number": 10, "radius": 0.2, "v0": 1.25}
+        params = _apply_default_premovement(params, dist_id)
 
         dist_params[dist_id] = {
             "number": params.get("number", 10),
             "radius": params.get("radius", 0.2),
-            "v0": params.get("v0", 1.2),
+            "v0": params.get("v0", 1.25),
             "use_flow_spawning": params.get("use_flow_spawning", False),
             "flow_start_time": params.get("flow_start_time", 0),
             "flow_end_time": params.get("flow_end_time", 10),
@@ -2313,12 +2359,7 @@ def _add_agents(
                 premovement_seed = spawn_params.get("premovement_seed")
 
                 # Use custom parameters if provided, otherwise use presets
-                if param_a is not None and param_b is not None:
-                    dist_params = {"a": param_a, "b": param_b}
-                else:
-                    dist_params = PREMOVEMENT_PRESETS.get(
-                        dist_type, PREMOVEMENT_PRESETS["gamma"]
-                    )
+                dist_params = _premovement_params(dist_type, param_a, param_b)
 
                 # Use distribution-specific seed or global seed
                 if premovement_seed is None:

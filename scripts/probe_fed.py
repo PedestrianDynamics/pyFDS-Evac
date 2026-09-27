@@ -195,7 +195,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--t-start", type=float, default=None)
     parser.add_argument("--t-end", type=float, default=None)
     parser.add_argument(
-        "--slice-height", type=float, default=2.0, help="Slice height in metres"
+        "--slice-height", type=float, default=1.6, help="Slice height in metres"
     )
     parser.add_argument(
         "--threshold",

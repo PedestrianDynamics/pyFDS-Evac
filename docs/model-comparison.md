@@ -355,7 +355,7 @@ on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 | **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1479–1480) | Same values (`smoke_speed.py:91–92`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
 | **Minimum speed** | `SMOKE_MIN_SPEED_FACTOR` (default 0.1, evac.f90:2085) as a factor of *v*0, or `SMOKE_MIN_SPEED`, which the code treats as a speed in m/s (`SMOKE_MIN_SPEED/HR%SPEED`, :8168) although the guide calls it a factor ([1] §8.7 p. 81). The visibility-based cutoff (`SMOKE_MIN_SPEED_VISIBILITY`, :8181–8188) is marked obsolete in the source ("obsolote feature ... it is not used if default SMOKE_MIN_SPEED_VISIBILITY is given", :8181-8182) and is inactive by default: the default 0.0 is clamped to 0.01 m, so it would act only above K = 300 /m (:1463, :2091-2092) | Configurable `min_speed_factor` (default 0.1) |
 | **Smoke input** | Soot density from FDS mesh converted to extinction via `K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6` (evac.f90:8160–8161) | Extinction coefficient K read directly from FDS `SOOT EXTINCTION COEFFICIENT` slice via fdsreader |
-| **Sampling geometry** | Local value at agent position on the evacuation mesh, at `HUMAN_SMOKE_HEIGHT` above the floor (default 1.6 m, evac.f90:1072; [1] §8.7 p. 81; [7] p. 61) | Local value at agent position: nearest cell of the extinction slice closest to `--smoke-slice-height` (default 2.0 m, an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)) |
+| **Sampling geometry** | Local value at agent position on the evacuation mesh, at `HUMAN_SMOKE_HEIGHT` above the floor (default 1.6 m, evac.f90:1072; [1] §8.7 p. 81; [7] p. 61) | Local value at agent position: nearest cell of the extinction slice closest to `--smoke-slice-height` (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)) |
 
 **Key difference:** Both systems apply the speed reduction using the
 *local* smoke at the agent's position.  FDS+Evac converts the soot
@@ -395,12 +395,14 @@ Incapacitation occurs at FED >= 1.0 ([1] §3.4 p31).
 ### pyFDS-Evac
 
 FED is computed with the Purser equations as written out in the
-FDS+Evac guide [1] (`fed.py`), from up to 12 gas species: CO, CO2,
+FDS+Evac guide [1] (`fed.py`), except the HCN term, which is computed as
+the FDS code computes it (#159), from up to 12 gas species: CO, CO2,
 O2, HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein and formaldehyde.
 This is not the ISO 13571 [5] form: ISO 13571 keeps irritants in a
 separate fractional effective concentration (FEC) and does not add
 them into the FED, whereas here an irritant lethal-dose term is summed
-into the FED total.  Irritants also slow agents through Purser's
+into the FED total.  With `--enable-fic-speed` (off by default, as
+FDS+Evac has no such rule), irritants also slow agents through Purser's
 fractional irritant concentration (FIC). ISO 13571's FEC is a related
 but different quantity, with its own denominators.  The full model is:
 
@@ -410,7 +412,7 @@ FED_tot = (FED_CO + FED_CN + FED_NOx + FLD_irr) * HV_CO2 + FED_O2
 
 where:
 - `FED_CO`: CO narcosis (Eq. 13 from guide)
-- `FED_CN`: HCN − NO2 (protective effect of NO2 on HCN toxicity)
+- `FED_CN`: HCN − (NO + NO2) (protective effect of NOx on HCN toxicity), as FDS computes it (#159)
 - `FED_NOx`: NO + NO2 (Ct product = 1500 ppm·min)
 - `FLD_irr`: irritant gases (HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde)
 - `HV_CO2`: CO2 hyperventilation factor

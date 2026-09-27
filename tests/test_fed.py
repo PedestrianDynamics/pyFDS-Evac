@@ -8,7 +8,9 @@ import pytest
 
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.fed import (
+    DefaultFedConfig,
     DefaultFedInputs,
+    DefaultFedModel,
     _cn_fed_rate_per_minute,
     _co_fed_rate_per_minute,
     _co_percent_to_ppm,
@@ -113,7 +115,7 @@ def test_default_fed_rate_is_zero_in_clear_air():
 
 
 class TestO2HypoxiaThreshold:
-    """O2 hypoxia term is suppressed at or above the 19.5 % threshold."""
+    """O2 hypoxia term is suppressed at or above the threshold (20.0 %, FDS)."""
 
     def test_ambient_o2_returns_zero(self):
         rate = _o2_hypoxia_rate_per_minute(20.9)
@@ -128,6 +130,38 @@ class TestO2HypoxiaThreshold:
     def test_below_threshold_is_positive(self):
         rate = _o2_hypoxia_rate_per_minute(15.0)
         assert rate > 0.0
+
+    def test_default_threshold_is_the_fds_guard(self):
+        """FDS applies the O2 term only when X_O2 < 0.20 (func.f90)."""
+        from pyfds_evac.core.fed import _O2_HYPOXIA_THRESHOLD_PERCENT
+
+        assert _O2_HYPOXIA_THRESHOLD_PERCENT == 20.0
+        assert DefaultFedConfig().o2_threshold_percent == 20.0
+        # 19.5 % now contributes: t_incap = exp(8.13 - 0.54 * 1.4) min.
+        expected = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.5))
+        assert _o2_hypoxia_rate_per_minute(19.5) == pytest.approx(expected)
+
+    def test_previous_threshold_stays_available(self):
+        """19.5 % (OSHA / Pathfinder) is selectable; the equation is unchanged."""
+        assert _o2_hypoxia_rate_per_minute(19.5, 19.5) == 0.0
+        assert _o2_hypoxia_rate_per_minute(19.7, 19.5) == 0.0
+        assert _o2_hypoxia_rate_per_minute(19.7) == pytest.approx(
+            1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.7))
+        )
+        inputs = DefaultFedInputs(o2_volume_fraction_percent=19.7)
+        assert default_fed_rate_per_minute(inputs, o2_threshold_percent=19.5) == 0.0
+        assert default_fed_rate_per_minute(inputs) > 0.0
+
+    def test_model_uses_the_configured_threshold(self):
+        class _Field:
+            def sample_inputs(self, time_s, x, y):
+                return DefaultFedInputs(o2_volume_fraction_percent=19.7)
+
+        fds_like = DefaultFedModel(_Field(), DefaultFedConfig())
+        legacy = DefaultFedModel(_Field(), DefaultFedConfig(o2_threshold_percent=19.5))
+        assert fds_like.sample_rate(0.0, 0.0, 0.0)[1] > 0.0
+        assert legacy.sample_rate(0.0, 0.0, 0.0)[1] == 0.0
+        assert legacy.sample_components(0.0, 0.0, 0.0)[1].o2_rate_per_min == 0.0
 
     def test_ambient_conditions_no_fed_accumulation(self):
         """Full FED rate is zero under ambient conditions (no spurious drift)."""
@@ -157,29 +191,39 @@ class TestCoFedRate:
 
 
 class TestCnFedRate:
-    """Verify CN FED rate against guide Eq. 14-15.
+    """Verify the CN FED rate against the FDS code form (func.f90, #159).
 
-    C_CN = max(0, C_HCN - C_NO2).
-    Rate = exp(C_CN / 43) / 220 - 0.0045.
+    C_CN = max(0, C_HCN - (C_NO + C_NO2)).
+    Rate = exp(C_CN / 43) / 220 - 1/220.
     """
 
     def test_known_value(self):
-        hcn, no2 = 150.0, 20.0
+        hcn, no, no2 = 150.0, 0.0, 20.0
         c_cn = hcn - no2  # 130 ppm
-        expected = math.exp(c_cn / 43.0) / 220.0 - 0.0045
-        rate = _cn_fed_rate_per_minute(hcn, no2)
+        expected = math.exp(c_cn / 43.0) / 220.0 - 1.0 / 220.0
+        rate = _cn_fed_rate_per_minute(hcn, no, no2)
         assert rate == pytest.approx(expected, rel=1e-10)
 
-    def test_no2_exceeds_hcn(self):
-        """NO2 protective effect zeroes the CN term when NO2 >= HCN."""
-        assert _cn_fed_rate_per_minute(50.0, 100.0) == 0.0
+    def test_no_and_no2_both_subtract(self):
+        """HCN 100, NO 50, NO2 10 ppm: C_CN = 40 ppm, rate ~0.00698 /min."""
+        rate = _cn_fed_rate_per_minute(100.0, 50.0, 10.0)
+        assert rate == pytest.approx((math.exp(40.0 / 43.0) - 1.0) / 220.0)
+        assert rate == pytest.approx(0.00698, abs=1e-5)
+        # The guide's NO2-only form would give C_CN = 90 ppm instead.
+        assert rate < _cn_fed_rate_per_minute(100.0, 0.0, 10.0) / 3.0
+
+    def test_nox_exceeds_hcn(self):
+        """NOx protective effect zeroes the CN term when NO + NO2 >= HCN."""
+        assert _cn_fed_rate_per_minute(50.0, 0.0, 100.0) == 0.0
+        assert _cn_fed_rate_per_minute(50.0, 30.0, 20.0) == 0.0
 
     def test_zero_hcn(self):
-        assert _cn_fed_rate_per_minute(0.0, 0.0) == 0.0
+        assert _cn_fed_rate_per_minute(0.0, 0.0, 0.0) == 0.0
 
-    def test_small_cn_yields_nonnegative(self):
-        """When C_CN is small, exp(C_CN/43)/220 < 0.0045 → rate clamped to 0."""
-        assert _cn_fed_rate_per_minute(1.0, 0.0) >= 0.0
+    def test_small_cn_is_small_and_nonnegative(self):
+        """The 1/220 offset makes the rate vanish continuously at C_CN = 0."""
+        rate = _cn_fed_rate_per_minute(1.0, 0.0, 0.0)
+        assert 0.0 < rate < 1.1e-4
 
 
 class TestNoxFedRate:
@@ -284,8 +328,8 @@ class TestFullFormulaClosedForm:
         )
         co_ppm = _co_percent_to_ppm(0.05)  # 500
         co_rate = 2.764e-5 * (co_ppm**1.036)
-        c_cn = 80.0 - 10.0  # 70
-        cn_rate = math.exp(c_cn / 43.0) / 220.0 - 0.0045
+        c_cn = 80.0 - (30.0 + 10.0)  # 40: NO and NO2 both subtract (FDS form)
+        cn_rate = math.exp(c_cn / 43.0) / 220.0 - 1.0 / 220.0
         nox_rate = (30.0 + 10.0) / 1500.0
         fld_irr = 200.0 / 114000.0 + 50.0 / 12000.0 + 10.0 / 1900.0
         hv = math.exp(0.1903 * 3.0 + 2.0004) / 7.1

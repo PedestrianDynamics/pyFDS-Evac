@@ -43,7 +43,7 @@ silent unless you check the warning log.
 | `--fds-dir DIR` | FDS result directory driving smoke-speed and FED. |
 | `--constant-extinction K` | Use a constant `K` [1/m] instead of FDS. |
 | `--smoke-update-interval S` | Seconds between smoke-speed refreshes. |
-| `--smoke-slice-height M` | FDS slice height (m) for extinction sampling. |
+| `--smoke-slice-height M` | FDS slice height (m) for smoke and heat sampling (default 1.6, FDS+Evac `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). |
 | `--output-smoke-history CSV` | Write `(t, agent, K, v, factor)` CSV. |
 | `--output-fed-history CSV` | Write per-agent per-sample FED+species CSV. |
 | `--inspect-fds` | Inspect FDS quantities (like `scripts/inspect_fds.py`) and exit. |
@@ -75,18 +75,24 @@ because they need it to learn the graph. See
 A FED model is instantiated automatically when `--fds-dir` points at
 an FDS case that exposes the FED species (CO, CO₂, O₂ at
 minimum — HCN, NO/NO₂, and irritants are used if present). When that
-happens, the FIC slowdown (a pyFDS-Evac assumption, source unknown;
-[#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) and
-the FED incapacitation rule are on by default. Without `--fds-dir` (or with a case missing the
+happens, the FED incapacitation rule is on by default. The FIC slowdown
+(a pyFDS-Evac assumption, source unknown;
+[#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) is off
+by default, as FDS+Evac has none; `--enable-fic-speed` turns it on. Without `--fds-dir` (or with a case missing the
 required species) no FED is computed and these flags have no effect;
-a case with a `TEMPERATURE` slice still gets heat incapacitation.
+a case with a `TEMPERATURE` slice still gets heat incapacitation when
+`--enable-heat-fed` is given (the heat dose is off by default, as FDS+Evac has
+none).
 
 | Flag | Purpose |
 |------|---------|
 | `--disable-tenability` | Turn both rules off. |
+| `--enable-fic-speed` | Turn the FIC slowdown on (off by default). |
+| `--enable-heat-fed` | Accumulate the heat dose from a `TEMPERATURE` slice and incapacitate on it (off by default). |
 | `--fic-alpha F` | Slope of `v/v₀ = max(μ, 1 − α·FIC)` (default 0.7). |
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
 | `--fed-threshold F` | Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless `--incapacitation-mode deterministic`. |
+| `--o2-threshold-percent P` | O₂ vol % at or above which the hypoxia term is zero (default 20.0, as FDS; 19.5 was the previous default). |
 
 ### Agent visualisation
 

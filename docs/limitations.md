@@ -33,7 +33,7 @@ speed factor used to estimate travel time when a route is priced, not the
 walking speed. Setting `routing.alpha` therefore changes which route an agent
 prefers but leaves its speed in smoke unchanged. The same split applies to
 speed itself: `routing.base_speed_m_per_s` (1.3 m/s) prices routes, while an
-agent walks at its own `v0` (1.2 m/s by default).
+agent walks at its own `v0` (1.25 m/s by default).
 
 ## Incapacitation is probabilistic by default
 
@@ -70,7 +70,9 @@ An agent that is incapacitated while it is still waiting out its
 pre-movement time starts walking when that time ends
 ([issue #145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)).
 Scenarios that combine pre-movement with FED therefore under-report
-incapacitations and over-report evacuees. Until this is fixed, check the
+incapacitations and over-report evacuees. A scenario that sets no pre-movement
+gets the FDS+Evac default of 10 s, so this applies to it too, for its first
+10 s. Until this is fixed, check the
 per-agent FED history for agents that crossed their threshold and still
 reached an exit.
 
@@ -83,7 +85,7 @@ does not contribute to any dose. An agent near a flame or under a hot layer
 that radiates strongly is therefore treated as less exposed than it is.
 
 **Heat does not affect route choice or walking speed.** The heat dose is
-tracked per agent, separately from the toxic dose, and an agent is
+opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is
 incapacitated when either dose reaches its threshold. Before that point, heat
 has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced
@@ -129,14 +131,17 @@ run holds for the time the agent would arrive there. Route choice is therefore
 a best case with perfect foresight, not a model of what an occupant can see or
 predict.
 
-**Recovery from irritants.** The irritant slowdown is recomputed only while
+**Recovery from irritants.** The irritant slowdown (opt-in with
+`--enable-fic-speed`) is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it
 returns to exactly zero, the last slowdown stays in force, so an agent that
 leaves an irritant plume into clean air does not return to full speed
 ([issue #142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 
-**Sourced pre-movement defaults.** The preset parameters of the four
-pre-movement distributions are illustrative, not from a cited dataset. Set
+**Sourced pre-movement defaults.** The preset parameters of the four random
+pre-movement distributions are illustrative, not from a cited dataset. The
+10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
+data either. Set
 `premovement_param_a` and `premovement_param_b` from data for your occupancy
 ([issue #144](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144)).
 

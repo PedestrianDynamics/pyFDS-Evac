@@ -64,8 +64,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--smoke-slice-height",
         type=float,
-        default=2.0,
-        help="FDS slice height in meters for extinction sampling",
+        default=1.6,
+        help="FDS slice height in meters for smoke and heat sampling "
+        "(default: 1.6, FDS+Evac HUMAN_SMOKE_HEIGHT; pass 2.0 for the "
+        "previous pyFDS-Evac default)",
     )
     parser.add_argument(
         "--output-smoke-history",
@@ -140,21 +142,32 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run without a tenability config: disables the FIC speed-reduction "
         "rule, toxic FED incapacitation and heat FED incapacitation. FED is "
-        "still accumulated and reported (default: all three active when a FED "
-        "or heat FED model is loaded)",
+        "still accumulated and reported (default: incapacitation active when a "
+        "FED or heat FED model is loaded; the FIC rule only with "
+        "--enable-fic-speed)",
+    )
+    parser.add_argument(
+        "--enable-fic-speed",
+        action="store_true",
+        help="Slow agents by the irritant (FIC) rule max(fic-min-factor, "
+        "1 - fic-alpha * FIC) on top of the smoke-speed law. Off by default, "
+        "as FDS+Evac has no irritant slowdown; before this became opt-in it "
+        "was on whenever a FED model was loaded",
     )
     parser.add_argument(
         "--fic-alpha",
         type=float,
         default=0.7,
         help="Slope of the FIC speed-reduction rule, a pyFDS-Evac "
-        "assumption, source unknown (#147) (default: 0.7)",
+        "assumption, source unknown (#147); needs --enable-fic-speed "
+        "(default: 0.7)",
     )
     parser.add_argument(
         "--fic-min-factor",
         type=float,
         default=0.3,
-        help="Lower bound on the FIC speed factor (default: 0.3)",
+        help="Lower bound on the FIC speed factor; needs --enable-fic-speed "
+        "(default: 0.3)",
     )
     parser.add_argument(
         "--fed-threshold",
@@ -162,6 +175,14 @@ def _build_parser() -> argparse.ArgumentParser:
         default=1.0,
         help="Median cumulative FED at which an agent is incapacitated "
         "(default: 1.0 per ISO 13571 / Korhonen 2021)",
+    )
+    parser.add_argument(
+        "--o2-threshold-percent",
+        type=float,
+        default=20.0,
+        help="O2 volume percent at or above which the hypoxia term of the gas "
+        "FED is zero (default: 20.0, as FDS/FDS+Evac; 19.5 was the previous "
+        "pyFDS-Evac default, the OSHA limit used by Pathfinder)",
     )
     parser.add_argument(
         "--incapacitation-mode",
@@ -179,11 +200,20 @@ def _build_parser() -> argparse.ArgumentParser:
         "probabilistic mode (default: 0.94 -> ~10/50/88%% at FED 0.3/1/3)",
     )
     parser.add_argument(
+        "--enable-heat-fed",
+        action="store_true",
+        help="Accumulate the convective heat FED (SFPE Handbook Eq. 63.44) from "
+        "the FDS TEMPERATURE slice and incapacitate on it. Off by default, as "
+        "FDS+Evac has no heat dose; before this became opt-in it was on "
+        "whenever the case had a TEMPERATURE slice",
+    )
+    parser.add_argument(
         "--heat-fed-threshold",
         type=float,
         default=1.0,
         help="Median cumulative heat FED (SFPE Handbook Eq. 63.44) at which an "
-        "agent is thermally incapacitated (default: 1.0). Independent of "
+        "agent is thermally incapacitated; needs --enable-heat-fed "
+        "(default: 1.0). Independent of "
         "--fed-threshold (toxic gas) -- see fed.py's TenabilityConfig",
     )
     parser.add_argument(

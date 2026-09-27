@@ -29,16 +29,20 @@ layout: hextra-home
 Research software, provided without warranty. Not intended for regulatory or design use.
 </div>
 
+<div class="hx-mb-6">
+Defaults follow FDS+Evac; see <a href="docs/coming-from-fds-evac/#defaults-follow-fdsevac">what changed</a>.
+</div>
+
 <div class="hx-mt-6"></div>
 
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Speed"
-    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or the non-linear `fridolf` option, V/(V+2), from Python. Irritant gases add a further slowdown."
+    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or the non-linear `fridolf` option, V/(V+2), from Python. Irritant gases can add a further slowdown (opt-in)."
   >}}
   {{< hextra/feature-card
     title="Dose"
-    subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus a convective heat dose accumulated separately. By default each agent stops at its own threshold."
+    subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus an opt-in convective heat dose accumulated separately. By default each agent stops at its own threshold."
   >}}
   {{< hextra/feature-card
     title="Route choice"

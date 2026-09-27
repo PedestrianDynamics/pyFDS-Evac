@@ -34,7 +34,7 @@ supplies exactly the concrete sets ISO leaves to the tester:
 
 Cases c and d share the same CO and differ only in CO₂, so d must be strictly
 faster — that pair is what makes the hyperventilation factor observable. Case b
-has no CO at all, and c and d sit above the 19.5 % O₂ gate so the hypoxia term
+has no CO at all, and c and d sit above the 20.0 % O₂ gate so the hypoxia term
 is switched off in them. A single case could not separate any of this.
 
 ## What is live

@@ -12,11 +12,11 @@ be told to dump the specific slices this tool samples.
 ## The slices
 
 ```
-&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT' /
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
-&SLCF PBZ=2.0, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
 &DUMP DT_SLCF=1.0 /
 ```
 
@@ -31,7 +31,7 @@ quantity name `load_slice_sampler` looks up
 |-------|-------|-----------|
 | Extinction coefficient | smoke-speed, visibility gating, GUI smoke layer | `IndexError` when `--fds-dir` is given without `--constant-extinction` |
 | CO **and** CO2 **and** O2 | FED toxic dose | **FED is switched off and the run continues** (see below) |
-| TEMPERATURE | heat FED (SFPE Handbook Eq. 63.44) | **heat FED is switched off and the run continues** (see below) |
+| TEMPERATURE | heat FED (SFPE Handbook Eq. 63.44), only with `--enable-heat-fed` | **heat FED is switched off and the run continues** (see below) |
 
 It is all three gases or none of them; there is no partial FED. TEMPERATURE
 is independent of that gate — it needs neither CO/CO2/O2 nor any `&REAC`
@@ -80,15 +80,15 @@ FED is disabled for <dir>: it has no CO slice, and all three of CO, CO2 and
 O2 are needed. ...
 ```
 
-**Heat FED disabled.** The same applies to the independent heat FED track: if
-there is no `TEMPERATURE` slice, heat FED is silently off, and every heat FED
-column reads zero:
+**Heat FED disabled.** The heat FED track is off unless `--enable-heat-fed`
+is given. With it, the same applies as for the gases: if there is no
+`TEMPERATURE` slice, heat FED is off, and every heat FED column reads zero:
 
 ```
 Heat FED is disabled for <dir>: it has no TEMPERATURE slice. ...
 ```
 
-**Wrong slice height.** `--smoke-slice-height` (default 2.0 m) is a
+**Wrong slice height.** `--smoke-slice-height` (default 1.6 m, FDS+Evac's `HUMAN_SMOKE_HEIGHT`) is a
 preference, not a filter: a case with one slice of a quantity uses it whatever
 its height, and a mismatch never fails the run. A case you inherit often
 carries a single slice at whatever height its author chose, so you can end up

@@ -31,11 +31,11 @@ is one function in `fed.py`:
 | Term | Function | Coded rate [1/min] | Input |
 |------|----------|--------------------|-------|
 | CO | `_co_fed_rate_per_minute` | \(2.764 \times 10^{-5}\, C_{\mathrm{CO}}^{1.036}\) | CO (ppm) |
-| CN | `_cn_fed_rate_per_minute` | \(\max\bigl(0,\ \exp(C_{\mathrm{CN}}/43)/220 - 0.0045\bigr)\), \(C_{\mathrm{CN}} = \max(0,\ C_{\mathrm{HCN}} - C_{\mathrm{NO_2}})\) | HCN, NO2 (ppm) |
+| CN | `_cn_fed_rate_per_minute` | \(\max\bigl(0,\ \exp(C_{\mathrm{CN}}/43)/220 - 1/220\bigr)\), \(C_{\mathrm{CN}} = \max\bigl(0,\ C_{\mathrm{HCN}} - (C_{\mathrm{NO}} + C_{\mathrm{NO_2}})\bigr)\) | HCN, NO, NO2 (ppm) |
 | NOₓ | `_nox_fed_rate_per_minute` | \((C_{\mathrm{NO}} + C_{\mathrm{NO_2}})/1500\) | NO, NO2 (ppm) |
 | Irritants | `_irritant_fld_rate_per_minute` | \(\sum_i C_i / F_{\mathrm{FLD},i}\) | seven irritants (ppm) |
 | HV_CO2 | `_hyperventilation_factor` | \(\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1\) (a factor, not a rate) | CO2 (vol %) |
-| O2 | `_o2_hypoxia_rate_per_minute` | \(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above 19.5 % | O2 (vol %) |
+| O2 | `_o2_hypoxia_rate_per_minute` | \(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above `o2_threshold_percent`, 20.0 % by default | O2 (vol %) |
 
 The lethal Ct doses \(F_{\mathrm{FLD},i}\) [ppm·min] are constants in
 `_irritant_fld_rate_per_minute`, taken from Table 2 of the FDS+Evac guide:
@@ -53,7 +53,9 @@ species the sum reduces to the FDS+Evac default,
 
 ## Convective heat
 
-When the case has a `TEMPERATURE` slice, a separate heat dose accumulates at
+FDS+Evac has no heat dose, so this one is opt-in: with `--enable-heat-fed`
+(`opts.enable_heat_fed`) and a `TEMPERATURE` slice in the case, a separate
+heat dose accumulates at
 `_heat_fed_rate_per_minute` (`fed.py:207`),
 
 $$
@@ -69,13 +71,16 @@ The basis is on [Heat](/fundamentals/heat.md).
 stop need the gas FED model; the heat stop needs only the heat FED model
 (`run_config.py:246`–`256`).
 
-- **Irritant slowdown.** `default_fic` sums \(C_i / F_{\mathrm{FIC},i}\) over the
+- **Irritant slowdown, off by default.** FDS+Evac has no irritant slowdown, so
+  `enable_fic_speed` defaults to false and `run.py` switches the rule on only
+  with `--enable-fic-speed`. Before it became opt-in, it was on whenever a gas
+  FED model was loaded. When on, `default_fic` sums \(C_i / F_{\mathrm{FIC},i}\) over the
   same seven irritants (constants in `_FIC_COEFFS_PPM`, not integrated over
   time). At each FED update where FIC > 0, the agent's irritant factor is set
   to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
   (`scenario.py:2076`–`2081`) and multiplies the smoke factor. The rule is a
-  pyFDS-Evac assumption with no known source; FDS+Evac has no irritant
-  slowdown ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
+  pyFDS-Evac assumption with no known source
+  ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
   When FIC is exactly 0 the last factor stays in force
   ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 - **Incapacitation.** Once the cumulative gas FED or heat FED reaches the
@@ -90,6 +95,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 
 | Field | Default | CLI flag |
 |---|---|---|
+| `enable_fic_speed` | `False` | `--enable-fic-speed` |
 | `fic_alpha` | `0.7` | `--fic-alpha` |
 | `fic_min_factor` | `0.3` | `--fic-min-factor` |
 | `fed_threshold` | `1.0` | `--fed-threshold` |
@@ -98,6 +104,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 | `heat_fed_threshold` | `1.0` | `--heat-fed-threshold` |
 | `heat_incapacitation_mode` | `"probabilistic"` | `--heat-incapacitation-mode` |
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
+| `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` | `--o2-threshold-percent` |
 
 The gas and heat FED are updated every `DefaultFedConfig.update_interval_s`,
 which `run.py` sets from `--smoke-update-interval`. `--disable-tenability`
@@ -153,7 +160,7 @@ Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/i
   ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)).
 - **Height-relative FED and smoke sampling**: extinction and temperature are
   sampled from the horizontal FDS slice closest to `--smoke-slice-height`
-  (default 2.0 m); each gas is read from the first slice of its quantity in the
+  (default 1.6 m, FDS+Evac `HUMAN_SMOKE_HEIGHT`); each gas is read from the first slice of its quantity in the
   deck, whatever its height. All agents share these slices regardless of
   their individual heights.  Pathfinder samples at 90 % of each occupant's height,
   which is more accurate for scenarios with mixed-height populations (children,
@@ -175,42 +182,50 @@ The published forms are on [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)
 and [Irritant gases](/fundamentals/irritants.md). The gas sum has the Purser /
 FDS+Evac guide structure (`fed.py:334`), not the ISO 13571 one. Within it, the
 code follows the guide, which cites the 3rd edition of the SFPE Handbook,
-rather than the 5th edition
+rather than the 5th edition, except that the HCN term is computed as FDS
+computes it
 ([#149](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/149)):
 
-- **HCN.** The code uses the guide's exponential term
-  \(\exp(C_{\mathrm{CN}}/43)/220 - 0.0045\) (Guide Eq. 14; `fed.py:109`),
-  not the 5th-edition power law (Eq. 63.24;
-  [#149](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/149)), with
-  \(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - C_{\mathrm{NO_2}}\) (Guide Eq. 15;
-  `fed.py:106`). The 5th edition subtracts NO + NO2, because methaemoglobin
-  formed by NO and NO2 binds cyanide (Ch. 63, p. 2370): with coefficient 1 in
-  Eq. 63.26 (p. 2362) but 0.67 in the note to the FED equation (p. 2372), so
-  the chapter is inconsistent. The FDS code that FDS+Evac runs subtracts
-  NO + NO2, with the offset 0.00454545, about 1/220 (FDS 6.7.6 `func.f90`, function `FED`), and
-  has done so since firemodels/fds 694e033 (2011); earlier versions had no HCN
-  term. No
-  source we read supports NO2 alone, and the 3rd-edition wording the guide
-  cites is not verified ([#152](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/152)). Organic nitriles are ignored. Ch. 63
-  gives the critical range of its 5th-edition time-to-incapacitation
-  relationship as about 80 to 180 ppm, from primate and human data (p. 2361).
-  That range is not documented for the guide's exponential term; that the term
-  is an extrapolation below 80 ppm is our inference
-  ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
+- **HCN.** The code computes the exponential term as FDS does,
+  \(\exp(C_{\mathrm{CN}}/43)/220 - 1/220\) with
+  \(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - (C_{\mathrm{NO}} + C_{\mathrm{NO_2}})\)
+  (`_cn_fed_rate_per_minute`), not the 5th-edition power law (Eq. 63.24;
+  [#149](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/149)). The
+  FDS code that FDS+Evac runs subtracts NO + NO2, with the offset 0.00454545,
+  about 1/220 (FDS 6.7.6 `func.f90`, function `FED`), and has done so since
+  firemodels/fds 694e033 (2011); earlier versions had no HCN term. The
+  FDS+Evac guide instead writes the offset as 0.0045 (Eq. 14) and
+  \(C_{\mathrm{CN}} = C_{\mathrm{HCN}} - C_{\mathrm{NO_2}}\) (Eq. 15), which
+  FDS and FDS+Evac never computed; pyFDS-Evac followed that text before
+  ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)). The
+  FDS verification case `FED_FIC` separates the two forms and is reproduced in
+  `tests/verification/test_fed_verif.py` (A2.8). The 5th edition also
+  subtracts NO + NO2, because methaemoglobin formed by NO and NO2 binds
+  cyanide (Ch. 63, p. 2370): with coefficient 1 in Eq. 63.26 (p. 2362) but
+  0.67 in the note to the FED equation (p. 2372), so the chapter is
+  inconsistent. No source we read supports NO2 alone, and the 3rd-edition
+  wording the guide cites is not verified
+  ([#152](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/152)).
+  Organic nitriles are ignored. Ch. 63 gives the critical range of its
+  5th-edition time-to-incapacitation relationship as about 80 to 180 ppm,
+  from primate and human data (p. 2361). That range is not documented for the
+  exponential term; that the term is an extrapolation below 80 ppm is our
+  inference ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
 - **CO₂.** Eq. 63.34 (`fed.py:63`), not its simplification Eq. 63.35 used in
   Eq. 63.38. The 70 L/min limit on \(V_E\times VCO_2\) is not applied, and
   the CO₂ asphyxiant endpoint \(F_{I_{CO_2}}\) is not computed.
 - **CO.** Fixed at light work (`fed.py:54`), Eq. 63.18 at its default
   \(V_E\) and *D*.
-- **O₂.** The rate is zero at or above 19.5 % O₂ (`fed.py:66`, `:92`), a
-  guard that neither Purser nor the guide has (FDS+Evac's code, the `FED`
-  function of FDS 6.7.6 `func.f90`, guards at 20 % instead); it stops a tiny
-  ambient rate from accumulating over long runs or outside the FDS domain, as Pathfinder
-  does. The guide's Eq. 18 carries a factor 60 in the denominator while
+- **O₂.** The rate is zero at or above `o2_threshold_percent`, 20.0 % O₂
+  by default, the guard of FDS+Evac's code (the `FED` function of FDS 6.7.6
+  `func.f90` adds the term only when X_O2 < 0.20); neither Purser nor the
+  guide has it. It stops a tiny ambient rate from accumulating over long runs
+  or outside the FDS domain. `--o2-threshold-percent 19.5` restores the
+  previous default, the OSHA limit that Pathfinder uses. The guide's Eq. 18 carries a factor 60 in the denominator while
   stating that *t* is in minutes; the code follows Handbook Eq. 63.50 without
   it.
 
-The irritant slowdown \(g\) (`fed.py:241`–`242`) is multiplied with the smoke
+The irritant slowdown \(g\), when enabled (`fed.py:241`–`242`), is multiplied with the smoke
 factor (`direct_steering_runtime.py:186`–`190`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The

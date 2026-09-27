@@ -85,7 +85,7 @@ class SmokeSpeedConfig:
 
     fds_dir: str | None = None
     update_interval_s: float = 1.0
-    slice_height_m: float = 2.0
+    slice_height_m: float = 1.6
     speed_law: str = "lund"
     # lund coefficients
     alpha: float = 0.706
@@ -113,7 +113,7 @@ class ExtinctionField:
         cls,
         fds_dir: str,
         *,
-        slice_height_m: float = 2.0,
+        slice_height_m: float = 1.6,
         simulation=None,
     ) -> "ExtinctionField":
         """Load extinction slices from an FDS case directory via fdsreader."""

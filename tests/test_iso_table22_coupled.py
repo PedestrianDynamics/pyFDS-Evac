@@ -210,7 +210,7 @@ class TestTheDoseMatchesTheHandCalculation:
     def test_the_four_cases_separate_the_terms(self):
         """The reason the guide uses four sets rather than one.
 
-        Case c is CO alone -- its O2 is above the 19.5 % gate and it has no CO2.
+        Case c is CO alone -- its O2 is above the 20.0 % gate and it has no CO2.
         Case d adds only the CO2 hyperventilation factor, so it must be strictly
         faster while sharing case c's CO. If the CO2 term were dropped the two
         would coincide, and a single-case test would not notice.

@@ -34,6 +34,55 @@ A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). `uv run python run.py --scenario <json|dir|zip> --fds-dir
 <fds output>` combines them.
 
+## Defaults follow FDS+Evac
+
+pyFDS-Evac is an enhancement of FDS+Evac, not a clone. Where a mechanism has
+a direct FDS+Evac counterpart, the default is the FDS+Evac form, so that a
+case converted from FDS+Evac behaves as its author expects. Newer or
+alternative forms stay available as options. Earlier pyFDS-Evac versions
+used other defaults for seven mechanisms
+([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)):
+
+| Mechanism | Default now (= FDS+Evac) | Previous pyFDS-Evac default | To get the previous behaviour |
+|---|---|---|---|
+| Sampling height | 1.6 m, `HUMAN_SMOKE_HEIGHT` (`evac.f90:1072`; Guide §8.7) | 2.0 m | `--smoke-slice-height 2.0`; `opts.smoke_slice_height = 2.0`, or `slice_height_m=2.0` in `SmokeSpeedConfig` and `DefaultFedConfig` |
+| Irritant (FIC) slowdown | None; `evac.f90` imports only `FED` (`evac.f90:26`) | On whenever the gas FED is computed | `--enable-fic-speed`; `opts.enable_fic_speed = True`, or `TenabilityConfig(enable_fic_speed=True)` |
+| HCN term of the FED | *C*HCN − (*C*NO + *C*NO2), offset 1/220 (function `FED` in FDS `func.f90`) | *C*HCN − *C*NO2, offset 0.0045 (Guide Eq. 14–15) | Not available; see the note below |
+| O2 term of the FED | Applied only below 20 % O2 (function `FED` in FDS `func.f90`) | Applied below 19.5 % | `--o2-threshold-percent 19.5`; `opts.o2_threshold_percent = 19.5`, or `DefaultFedConfig(o2_threshold_percent=19.5)` |
+| Pre-movement, when a spawn area sets none | Constant 10 s, `PRE_MEAN` (`evac.f90:1605`), with a warning in the log | 0 s | `"use_premovement": false` in the spawn area's `parameters` |
+| Unimpeded walking speed `v0`, when a spawn area sets none | 1.25 m/s, `VEL_MEAN` (`evac.f90:1603`) | 1.2 m/s | `"v0": 1.2` in the spawn area's `parameters` |
+| Convective heat dose | None (Guide §1.2) | On whenever the output has a `TEMPERATURE` slice | `--enable-heat-fed`; `opts.enable_heat_fed = True` |
+
+The CLI flags are also fields of the web GUI, and the `opts` attributes are
+what `build_run_kwargs` reads, so a script that builds its own options sets
+them the same way. The [changelog](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md)
+lists the same changes.
+
+**The HCN term follows the FED as FDS and FDS+Evac compute it.** FDS+Evac
+calls the `FED` function of FDS, which has subtracted NO + NO2 from HCN,
+with the offset 0.00454545 (about 1/220), since FDS commit 694e033 (2011);
+earlier versions had no HCN term. The FDS+Evac Guide's Eq. 15 subtracts NO2
+alone, which no FDS version computed, so pyFDS-Evac follows the code, not the
+guide's text, and does not offer the guide's form as an option. The FDS
+verification case `FED_FIC` separates the two forms and is part of the test
+suite ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
+
+**What deliberately still differs:**
+
+- Incapacitation is probabilistic by default: each agent draws its own
+  threshold, where FDS+Evac stops every agent at FED = 1. This is under
+  discussion ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157));
+  `--incapacitation-mode deterministic` gives the FDS+Evac rule.
+- Route choice, cognitive maps and sign visibility are enhancements with no
+  one-to-one FDS+Evac counterpart
+  ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)); see
+  [Smoke-aware routing](routing.md).
+- Known issues: an agent incapacitated during its pre-movement time is
+  released when that time ends
+  ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)), and
+  the gas FED reads the first slice of each species whatever its height
+  ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)).
+
 ## Where each FDS+Evac input goes
 
 Section numbers refer to the FDS+Evac Technical Reference and User's Guide
@@ -47,7 +96,7 @@ runs uploaded scenarios. It does not edit geometry or stages.
 |---|---|---|
 | Evacuation meshes (`&MESH EVACUATION=.TRUE.`, §8.1) | 2-D grids for movement, separate from the fire meshes | Replaced by one walkable polygon (WKT). `scripts/generate_walkable_from_fds.py` derives it from the `&OBST` lines of a deck (see [Usage](usage.md)). |
 | `EVAC_Z_OFFSET` (§8.1) | Distance from the mid height of an evacuation mesh down to its floor, which is the reference level for `HUMAN_SMOKE_HEIGHT` | No equivalent: pyFDS-Evac has no evacuation meshes. |
-| `HUMAN_SMOKE_HEIGHT` (§8.7) | Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61) | `--smoke-slice-height` [m], default 2.0, an absolute z in the FDS domain rather than a height above the floor ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). It selects the extinction and temperature slices closest to it, so the deck must contain an `&SLCF PBZ=` at that height. Gas slices are taken from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)). |
+| `HUMAN_SMOKE_HEIGHT` (§8.7) | Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61) | `--smoke-slice-height` [m], default 1.6 as in FDS+Evac (2.0 before; pass `--smoke-slice-height 2.0` for it), an absolute z in the FDS domain rather than a height above the floor ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). It selects the extinction and temperature slices closest to it, so the deck must contain an `&SLCF PBZ=` at that height. Gas slices are taken from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)). |
 | `&EVAC` (§8.8) | Places a group of agents in a rectangle | A `distributions` entry in the JSON: a polygon plus `parameters` (`number`, `v0`, `radius`, pre-movement, familiarity). |
 | `&PERS` (§8.7) | Agent type: body size, speed, pre-movement, force constants | Per distribution in the JSON: `v0` [m/s], `radius` [m] and the pre-movement keys below. There are no named agent types and no three-circle body; an agent is a circle. |
 | `&EVHO` (§8.9) | Area where no agents are placed | Not supported. Draw the distribution polygon so that it excludes the area. |
@@ -59,11 +108,11 @@ runs uploaded scenarios. It does not edit geometry or stages.
 | `&EVSS` (§8.14) | Incline with speed factors `FAC_V0_UP/DOWN/HORI` | Not supported as an incline. A `zones` or `checkpoints` entry with a `speed_factor` (0 to 3) scales the speed of agents inside a polygon, with no direction dependence. |
 | `DET_*` and `PRE_*` (§8.7, §8.8) | Detection time plus reaction time, each from a distribution. The default reaction time is a constant `PRE_MEAN` = 10 s (`evac.f90:1605`; `PRE_EVAC_DIST` = 0 is a constant, Guide §8.7), added to the detection time, whose default `DET_MEAN` is `T_BEGIN` (`:1606`); an agent starts moving at `TDET + TPRE` (`:7670`) | One pre-movement delay per agent: `use_premovement`, `premovement_distribution`, `premovement_param_a`, `premovement_param_b`, `premovement_seed`. There is no separate detection phase. See the table below. |
 | `TDET_SMOKE_DENS` (§8.7) | Smoke at the agent's position triggers detection | Not supported. The pre-movement delay does not depend on smoke. |
-| `VELOCITY_DIST` and speed ranges (§8.7) | Unimpeded walking speed distribution; default `VEL_MEAN` = 1.25 m/s (`evac.f90:1603`) | `v0` [m/s], default 1.2 ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)), with `v0_distribution` = `"constant"` or `"gaussian"` and `v0_std`. These are the keys the run reads from the JSON. `desired_speed`, `desired_speed_distribution` and `desired_speed_std` are aliases accepted only by `Scenario.set_agent_params()` in Python, which writes the `v0` keys; in the JSON they are ignored. Gaussian draws are clipped to 0.1–5.0 m/s. There is no uniform speed distribution. |
+| `VELOCITY_DIST` and speed ranges (§8.7) | Unimpeded walking speed distribution; default `VEL_MEAN` = 1.25 m/s (`evac.f90:1603`) | `v0` [m/s], default 1.25 as in FDS+Evac (1.2 before; set `v0` per spawn area for it; [#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)), with `v0_distribution` = `"constant"` or `"gaussian"` and `v0_std`. These are the keys the run reads from the JSON. `desired_speed`, `desired_speed_distribution` and `desired_speed_std` are aliases accepted only by `Scenario.set_agent_params()` in Python, which writes the `v0` keys; in the JSON they are ignored. Gaussian draws are clipped to 0.1–5.0 m/s. There is no uniform speed distribution. |
 | Smoke-speed reduction (Eq. 11), `SMOKE_MIN_SPEED_FACTOR` and `SMOKE_MIN_SPEED` | Linear speed reduction with extinction, floored at `SMOKE_MIN_SPEED_FACTOR` × *v*0 (default 0.1). The guide calls `SMOKE_MIN_SPEED` a factor too, but the code divides it by *v*0 (`evac.f90:8168`), so it is a speed in m/s | The default is the same law, Frantzich–Nilsson (the `lund` option; the linear FDS+Evac law). Its coefficients (`alpha`, `beta`, `min_speed_factor`) are library-level; see [What needs Python](#what-needs-python). |
-| FED, fractional effective dose (§3.4) | Purser FED from CO, CO2, O2 (and optional gases), incapacitation at FED ≥ 1. The O2 term is applied only below 20 % O2 (function `FED` in FDS 6.7.6 `func.f90`, which FDS+Evac calls). The HCN term in the code (the same `FED` function) is exp(*C*CN/43)/220 − 0.00454545 (about 1/220) with *C*CN = *C*HCN − (*C*NO + *C*NO2); Guide Eq. 14–15 write the offset as 0.0045 and *C*CN = *C*HCN − *C*NO2. The code form has been in FDS since firemodels/fds 694e033 (2011); earlier versions had no HCN term. FDS's `FED_FIC` verification case reproduces only with it (0.97402 against the expected 0.97403 at 100 s; 6.17 with NO2 alone). The FDS User Guide was corrected to NO + NO2 in 2016 (903df07); the FDS+Evac Guide and the FDS Verification Guide were not. An agent that reaches FED ≥ 1 stays down for the rest of the run | Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 19.5 %. The HCN term follows Guide Eq. 14–15 (*C*HCN − *C*NO2, offset 0.0045), not the code FDS+Evac ran ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159), [#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). The two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.032 /min here against 0.007 /min in FDS+Evac; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default each agent draws its own threshold (log-normal, median 1; spread on the [FED model](/models/fed.md#tenability-irritant-slowdown-and-incapacitation) page), so about half stop below FED = 1. Use `--incapacitation-mode deterministic` (and `--heat-incapacitation-mode deterministic`) to stop every agent at FED = 1 as FDS+Evac does. Thresholds are set with `--fed-threshold` and `--heat-fed-threshold`. An agent incapacitated while it is still waiting is released when its pre-movement time ends, a known bug ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)). |
-| Convective heat | None: gas temperature and radiation do not act on agents (Guide §1.2) | A separate heat dose is computed automatically whenever the output has a `TEMPERATURE` slice, and it incapacitates on its own threshold. `--disable-tenability` turns off both stops ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). |
-| Irritant slowdown (FIC) | None: no FIC acts on the agents, since `evac.f90` imports only `FED` from FDS (`evac.f90:26`). Irritants enter only the FED sum. FDS can write FIC as an output quantity, and the guide tabulates *F*FIC (Table 2), but neither feeds the agents' speed | On by default whenever the gas FED is computed: speed × max(0.3, 1 − 0.7 · FIC). The rule is a pyFDS-Evac assumption with no known source ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147), [#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). `--disable-tenability` turns it off, together with both stops. |
+| FED, fractional effective dose (§3.4) | Purser FED from CO, CO2, O2 (and optional gases), incapacitation at FED ≥ 1. The O2 term is applied only below 20 % O2 (function `FED` in FDS 6.7.6 `func.f90`, which FDS+Evac calls). The HCN term in the code (the same `FED` function) is exp(*C*CN/43)/220 − 0.00454545 (about 1/220) with *C*CN = *C*HCN − (*C*NO + *C*NO2); Guide Eq. 14–15 write the offset as 0.0045 and *C*CN = *C*HCN − *C*NO2. The code form has been in FDS since firemodels/fds 694e033 (2011); earlier versions had no HCN term. FDS's `FED_FIC` verification case reproduces only with it (0.97402 against the expected 0.97403 at 100 s; 6.17 with NO2 alone). The FDS User Guide was corrected to NO + NO2 in 2016 (903df07); the FDS+Evac Guide and the FDS Verification Guide were not. An agent that reaches FED ≥ 1 stays down for the rest of the run | Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 20 %, as in FDS+Evac; `--o2-threshold-percent 19.5` (`opts.o2_threshold_percent`) gives the previous 19.5 %. The HCN term is the one in the code FDS+Evac ran (*C*HCN − (*C*NO + *C*NO2), offset 1/220), and `FED_FIC` is reproduced in the test suite ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)). Earlier pyFDS-Evac versions followed Guide Eq. 14–15 (*C*HCN − *C*NO2, offset 0.0045); the two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.007 /min now against 0.032 /min before; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default each agent draws its own threshold (log-normal, median 1; spread on the [FED model](/models/fed.md#tenability-irritant-slowdown-and-incapacitation) page), so about half stop below FED = 1. Use `--incapacitation-mode deterministic` (and `--heat-incapacitation-mode deterministic`) to stop every agent at FED = 1 as FDS+Evac does. Thresholds are set with `--fed-threshold` and `--heat-fed-threshold`. An agent incapacitated while it is still waiting is released when its pre-movement time ends, a known bug ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)). |
+| Convective heat | None: gas temperature and radiation do not act on agents (Guide §1.2) | Off by default, as in FDS+Evac. With `--enable-heat-fed` (`opts.enable_heat_fed`), a separate heat dose is computed from the `TEMPERATURE` slice and incapacitates on its own threshold; before, this happened automatically whenever the output had such a slice. `--disable-tenability` turns off both stops ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). |
+| Irritant slowdown (FIC) | None: no FIC acts on the agents, since `evac.f90` imports only `FED` from FDS (`evac.f90:26`). Irritants enter only the FED sum. FDS can write FIC as an output quantity, and the guide tabulates *F*FIC (Table 2), but neither feeds the agents' speed | Off by default, as in FDS+Evac. `--enable-fic-speed` (`opts.enable_fic_speed`) turns on speed × max(0.3, 1 − 0.7 · FIC) whenever the gas FED is computed; before, it was on by default. The rule is a pyFDS-Evac assumption with no known source ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147), [#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). |
 | FED activity level | Rest, light work or heavy work | Not supported. The CO term is fixed. See [issue #135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135). |
 | `KNOWN_DOOR_NAMES`, `KNOWN_DOOR_PROBS` (§8.8) | Which exits an agent knows, with a probability per exit. An exit not listed is known only if its `&EXIT` or `&DOOR` line sets `KNOWN_DOOR`, which defaults to .FALSE. (`evac.f90:2223`, `:2666`), so by default agents rely on the exits they can see | `familiarity` on a distribution: `"full"`, `"discovery"`, or one probability in [0, 1] applied to every exit. The default is `"full"`: every agent knows every exit. The FDS+Evac default is closer to `"discovery"`. `entrance` names one exit the agents always know. A probability per exit is not supported; see [issue #136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136). |
 | Door selection with smoke (`FED_DOOR_CRIT`) | Ranks doors as smoke-free by FED or visibility | Route choice is a different model, configured in the JSON `routing` block and switched on by default (`--enable-rerouting`). See [Smoke-aware routing](routing.md). |
@@ -81,6 +130,7 @@ values cannot be copied across unchanged. The delay is in seconds.
 | `lognormal` | mean of ln(*t*) | standard deviation of ln(*t*) | 4.586, 0.967 |
 | `weibull` | scale [s] | shape | 139.285, 1.195 |
 | `uniform` | lower bound [s] | upper bound [s] | 0.0, 60.0 |
+| `constant` | delay [s] | unused | 10.0, - |
 
 The presets are illustrative, not from a cited dataset
 ([#144](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144)). Set both
@@ -88,11 +138,15 @@ parameters from data for your occupancy.
 
 The presets are used when `use_premovement` is `true` and `premovement_param_a`
 or `premovement_param_b` is missing; both parameters must be given for either
-to take effect. With `use_premovement` false, which is the default, agents
-start moving at *t* = 0. The FDS+Evac default is a constant 10 s after `T_BEGIN`
-([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)).
-When `premovement_seed` is null, the draws are seeded from the run seed, so
-they repeat under a fixed `--seed`.
+to take effect (`constant` needs only `premovement_param_a`). A spawn area that
+sets none of these keys gets the FDS+Evac default, a constant 10 s after
+`T_BEGIN` (`PRE_MEAN`;
+[#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)), and the
+run logs a warning, since the FDS+Evac guide advises against relying on
+defaults. With `use_premovement` false, agents start moving at *t* = 0, as
+every spawn area without pre-movement keys did before. When
+`premovement_seed` is null, the draws are seeded from the run seed, so they
+repeat under a fixed `--seed`.
 
 While an agent waits, its walking speed is not reduced by the smoke around
 it. It starts at its full clear-air speed when it is released. Its toxic dose
@@ -163,7 +217,8 @@ agents walk.
 >   optical depth is too high. Sight gating decides whether an agent can
 >   read a sign, and so which exits enter its cognitive map. The dose is not
 >   a gate: when it reaches the agent's threshold, the agent stops.
-> - **FIC**, Purser's fractional irritant concentration, which slows agents,
+> - **FIC**, Purser's fractional irritant concentration, which slows agents
+>   when `--enable-fic-speed` is given,
 >   is related to, but not the same as, the FEC (fractional effective
 >   concentration) of ISO 13571, which uses different denominators.
 > - **Cognitive map** is the graph of stages an agent knows. It is not meant

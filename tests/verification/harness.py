@@ -199,7 +199,7 @@ def co_fed_rate_per_min(co_ppm: float) -> float:
 
     Mirrors the model: CO rate (guide Eq. 13) times the CO2 hyperventilation
     factor at CO2 = 0 (which is >= 1.04 and cannot be omitted).  O2 at ambient
-    contributes nothing (hypoxia gated at 19.5 %).
+    contributes nothing (hypoxia gated at 20.0 %).
     """
     import math
 

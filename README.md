@@ -11,7 +11,8 @@ The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
 - Purser FED model as in the FDS+Evac guide (toxic gas dose accumulation, up to 12 species)
-- Convective heat FED (Purser, SFPE Handbook Eq. 63.44), accumulated as a dose
+- Convective heat FED (Purser, SFPE Handbook Eq. 63.44), opt-in with
+  `--enable-heat-fed` (FDS+Evac has none), accumulated as a dose
   independent of the gas track -- an agent is incapacitated when either crosses
   its own threshold; the heat dose is a running total of its own and is never
   added to the gas FED. Radiant heat is not modelled, and heat
@@ -30,6 +31,7 @@ The model descriptions, usage and verification live on the documentation site:
 **<https://pedestriandynamics.org/pyFDS-Evac/>**
 
 - [Usage](https://pedestriandynamics.org/pyFDS-Evac/docs/usage/): CLI flags, post-processing scripts, run-and-plot driver
+- Defaults follow FDS+Evac; see [what changed](https://pedestriandynamics.org/pyFDS-Evac/docs/coming-from-fds-evac/#defaults-follow-fdsevac) and the [changelog](CHANGELOG.md)
 - [Smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/), including FDS data access through `fdsreader`
 - [Fractional effective dose](https://pedestriandynamics.org/pyFDS-Evac/models/fed/), including heat dose and irritant slowdown
 - [Dynamic route rerouting](https://pedestriandynamics.org/pyFDS-Evac/models/routing/)
@@ -122,18 +124,18 @@ time when pricing a route* — setting them changes what routes cost, not how
 fast agents walk. The same split applies to speed itself: `routing.
 base_speed_m_per_s` is a route-pricing constant (default on the
 [routing model](https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters)
-page), while an agent's own `v0` defaults to 1.2 m/s (see below).
+page), while an agent's own `v0` defaults to 1.25 m/s (see below).
 
 Each distribution group sets the attributes an agent starts with:
 
 | Key | Default | Effect |
 |-----|---------|--------|
-| `v0` | `1.2` m/s, for every model | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
+| `v0` | `1.25` m/s (FDS+Evac `VEL_MEAN`; 1.2 before), except 0.8 for `SocialForceModel` | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
 | `v0_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
 | `v0_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
 | `radius` | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. With `radius_distribution` = `"gaussian"` and `radius_std`, drawn per agent and clipped to `[0.1, 1.0]` m. |
-| `use_premovement` | `false` | Delay before the agent starts moving. |
-| `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform`; `premovement_param_a`/`_b` override the presets. |
+| `use_premovement` | constant 10 s when no pre-movement key is set (FDS+Evac `PRE_MEAN`), with a warning; `false` otherwise | Delay before the agent starts moving. |
+| `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform` / `constant`; `premovement_param_a`/`_b` override the presets. |
 
 The run reads only the `v0*` keys. `desired_speed`, `desired_speed_distribution`
 and `desired_speed_std` are aliases accepted by `Scenario.set_agent_params()`

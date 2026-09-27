@@ -99,13 +99,21 @@ def _build_fed_model(opts: Any, log: Logger):
         fds_dir=opts.fds_dir,
         update_interval_s=opts.smoke_update_interval,
         slice_height_m=opts.smoke_slice_height,
+        o2_threshold_percent=getattr(opts, "o2_threshold_percent", 20.0),
     )
     return DefaultFedModel(FdsFedField.from_fds(opts.fds_dir), fed_config)
 
 
 def _build_heat_fed_model(opts: Any, log: Logger):
-    """Build the heat FED (SFPE Handbook Eq. 63.44) model when a TEMPERATURE slice exists."""
+    """Build the heat FED (SFPE Handbook Eq. 63.44) model when asked for.
+
+    FDS+Evac has no heat dose, so it is opt-in (``opts.enable_heat_fed``) and
+    then needs a TEMPERATURE slice.
+    """
     if not opts.fds_dir:
+        return None
+    if not getattr(opts, "enable_heat_fed", False):
+        log("Heat FED is off; pass --enable-heat-fed to accumulate it.")
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():
@@ -236,15 +244,17 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
     heat_mode = getattr(opts, "heat_incapacitation_mode", "probabilistic")
     heat_sigma = getattr(opts, "heat_susceptibility_sigma", 0.94)
+    fic_speed = fed_model is not None and getattr(opts, "enable_fic_speed", False)
     log(
         "Configuring tenability "
-        f"(FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
+        f"(FIC slowdown={'on' if fic_speed else 'off'}, "
+        f"FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
         f"FED median={opts.fed_threshold}, incapacitation={mode}, "
         f"heat FED median={heat_threshold}, "
         f"heat incapacitation={heat_mode})."
     )
     return TenabilityConfig(
-        enable_fic_speed=fed_model is not None,
+        enable_fic_speed=fic_speed,
         fic_alpha=opts.fic_alpha,
         fic_min_factor=opts.fic_min_factor,
         enable_incapacitation=fed_model is not None,

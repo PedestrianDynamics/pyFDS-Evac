@@ -62,11 +62,30 @@ class UniformDistribution(PreMovementDistribution):
         return self.rng.uniform(self.a, self.b, n_samples)
 
 
+class ConstantDistribution(PreMovementDistribution):
+    """Every agent gets the same pre-movement time ``a`` [s].
+
+    FDS+Evac's default is a constant 10 s (``PRE_MEAN``); ``b`` is accepted
+    for a uniform call signature and ignored.
+    """
+
+    def __init__(
+        self, a: float = 10.0, b: float | None = None, seed: int | None = None
+    ):
+        super().__init__(seed)
+        self.a = a
+        self.b = b
+
+    def sample(self, n_samples: int) -> np.ndarray:
+        return np.full(n_samples, float(self.a))
+
+
 PREMOVEMENT_PRESETS = {
     "gamma": {"a": 1.291, "b": 103.901},
     "lognormal": {"a": 4.586, "b": 0.967},
     "weibull": {"a": 139.285, "b": 1.195},
     "uniform": {"a": 0.0, "b": 60.0},
+    "constant": {"a": 10.0, "b": None},
 }
 
 
@@ -81,6 +100,7 @@ def create_premovement_distribution(
         "lognormal": LognormalDistribution,
         "weibull": WeibullDistribution,
         "uniform": UniformDistribution,
+        "constant": ConstantDistribution,
     }
     if distribution_type not in distributions:
         raise ValueError(

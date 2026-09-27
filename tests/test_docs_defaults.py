@@ -9,10 +9,12 @@ import math
 import re
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import run
 from pyfds_evac.core.fed import (
+    DefaultFedConfig,
     TenabilityConfig,
     _co_fed_rate_per_minute,
     _heat_fed_rate_per_minute,
@@ -20,6 +22,7 @@ from pyfds_evac.core.fed import (
     _o2_hypoxia_rate_per_minute,
 )
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
+from pyfds_evac.core.simulation_init import _sample_agent_values
 from pyfds_evac.core.smoke_speed import SmokeSpeedConfig
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,12 +36,18 @@ ROUTING_DOC = ROOT / "docs" / "routing.md"
 QUICKSTART = ROOT / "docs" / "quickstart.md"
 HOMOGENEOUS = ROOT / "docs" / "testing-homogeneous.md"
 HEAT = ROOT / "docs" / "testing-heat.md"
+LIMITATIONS = ROOT / "docs" / "limitations.md"
 
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?(?:[eE]-?\d+)?")
 
 
 def _cli():
     return run._build_parser().parse_args(["--scenario", "unused"])
+
+
+def _v0():
+    """The v0 an agent gets from a spawn area that sets none."""
+    return _sample_agent_values({}, 1, np.random.RandomState(0))[1][0]
 
 
 def _routing():
@@ -94,7 +103,9 @@ DEFAULTS = [
         "| `update_interval_s` | `1.0` |",
         lambda: SmokeSpeedConfig().update_interval_s,
     ),
-    (SMOKE, "| `slice_height_m` | `2.0` |", lambda: SmokeSpeedConfig().slice_height_m),
+    (SMOKE, "| `slice_height_m` | `1.6` |", lambda: SmokeSpeedConfig().slice_height_m),
+    (SMOKE, "| `slice_height_m` | `1.6` |", lambda: DefaultFedConfig().slice_height_m),
+    (SMOKE, "| `slice_height_m` | `1.6` |", lambda: _cli().smoke_slice_height),
     # fed: TenabilityConfig fields and the run.py flags that set them
     (FED, "| `fic_alpha` | `0.7` |", lambda: TenabilityConfig().fic_alpha),
     (FED, "| `fic_alpha` | `0.7` |", lambda: _cli().fic_alpha),
@@ -123,6 +134,16 @@ DEFAULTS = [
         FED,
         "| `heat_susceptibility_sigma` | `0.94` |",
         lambda: _cli().heat_susceptibility_sigma,
+    ),
+    (
+        FED,
+        "| `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` |",
+        lambda: DefaultFedConfig().o2_threshold_percent,
+    ),
+    (
+        FED,
+        "| `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` |",
+        lambda: _cli().o2_threshold_percent,
     ),
     # routing: the scenario `routing` block, and the reevaluation interval
     (ROUTING, "| `tau_max` | `6.0` |", lambda: _routing().tau_max),
@@ -189,6 +210,7 @@ DEFAULTS = [
         lambda: RouteCostConfig().default_exit_capacity,
     ),
     (VISIBILITY, "(default 0.25 m)", lambda: _cli().vis_cell_size),
+    (LIMITATIONS, "`v0` (1.25 m/s by default)", _v0),
     # hand calculations on the tutorial and testing pages
     (QUICKSTART, "`1 + (-0.057", lambda: SmokeSpeedConfig().beta),
     (QUICKSTART, "× 3.0) / 0.706", lambda: SmokeSpeedConfig().alpha),

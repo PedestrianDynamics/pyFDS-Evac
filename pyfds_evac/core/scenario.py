@@ -219,7 +219,7 @@ def _sample_agent_values(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Sample radii and speeds for *n_agents*."""
     mean_radius = max(0.1, min(1.0, params.get("radius", 0.2)))
-    mean_v0 = max(0.1, min(5.0, params.get("desired_speed", params.get("v0", 1.2))))
+    mean_v0 = max(0.1, min(5.0, params.get("desired_speed", params.get("v0", 1.25))))
 
     if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
         radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(0.1, 1.0)
