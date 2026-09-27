@@ -15,8 +15,8 @@ Open an [issue](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/new/choo
 and pick a template:
 
 - **Bug report:** the commit, the exact command, the scenario and, if an FDS
-  run is involved, the FDS version. A report that can be rerun gets fixed
-  first.
+  run is involved, the FDS version. A report that can be rerun is much
+  easier to fix.
 - **Feature request:** what you want to model and why. Features that do not
   exist yet are tracked as issues, not described in the docs.
 - **Documentation:** a wrong or unclear page. For a scientific claim, cite the
@@ -75,7 +75,9 @@ Delete `site/public` afterwards; it is not committed.
 - Figures are made by the scripts in [`scripts/figures/`](scripts/figures/).
   Change the script, rerun it, and commit the image; CI reruns every script on
   each docs build and fails if one no longer runs.
-- FDS output never goes into the repository. Point to the case instead.
+- Do not add FDS output to the repository; point to the case instead. The
+  small verification fixtures already committed (e.g.
+  `assets/iso_table21_coupled`) stay.
 
 ## Licence
 

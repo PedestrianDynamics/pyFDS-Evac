@@ -22,7 +22,7 @@ body:
       label: Source
       description: >
         For a model change, the paper, equation or FDS+Evac section it follows.
-        FDS+Evac behaviour is the default; anything beyond it is opt-in.
+        Prefer FDS+Evac-compatible defaults; name and justify any departure.
   - type: textarea
     id: alternatives
     attributes:

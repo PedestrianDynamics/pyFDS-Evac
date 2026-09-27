@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-pyFDS-Evac has no releases yet. Only the `main` branch is supported, and fixes
-land there.
+Only the `main` branch is supported: security fixes land there. Releases
+(currently `v0.1`) and older revisions are not patched.
 
 ## Reporting a vulnerability
 
