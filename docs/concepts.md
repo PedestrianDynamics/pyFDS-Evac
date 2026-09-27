@@ -205,96 +205,100 @@ walk. Script: `scripts/figures/exposure_gate.py`.*
 
 ## Wayfinding
 
-### A sign is more than a position
+Route choice picks among the exits an agent knows. Wayfinding decides which
+exits those are. The code, its defaults and its limitations are on
+[Models › Wayfinding](/models/wayfinding.md). A walk-through in the order of
+the talk, with the examples, is on
+[Wayfinding implementation notes](/docs/wayfinding.md).
 
-What an agent knows about the building depends on the signs it can read.
-Each exit, checkpoint and waypoint carries a sign with a position, a bearing
-\(\alpha_s\) that gives the side from which it can be read, and a visibility
-constant *C*, a property of the sign (see
-[Visibility through smoke](/fundamentals/visibility.md)). A node without an
-authored sign receives a reflective sign at its centroid, readable from every
-direction.
+### Knowing is not seeing
 
-[fdsvismap](https://github.com/FireDynamics/fdsvismap) computes legibility
-from the FDS extinction field when `run.py` is given `--fds-dir`, and from
-clear air otherwise. A sign is legible from a floor cell when its visibility
-along the line of sight, reduced by the viewing angle, reaches the distance to
-it; walls block the line. The map is built once per run, and the run only asks
-whether a node's sign is legible from the agent's cell at the current time.
+Each agent carries a cognitive map: the part of the building's route graph it
+**knows**. The map is a data structure, not a psychological construct. It
+starts with whatever the agent's familiarity gives it:
 
-Legibility decides what an agent **knows**, not whether a route is allowed. An
-exit whose sign the agent has never read is absent from its graph. It is not
-present and refused.
+- **Fully familiar** (the default): the whole graph, by assumption.
+- **Discovery**: only its spawn area, plus the neighbouring places whose
+  signs can be read from the spawn area's routing point (the same point for
+  everyone spawning there).
+- **A number between 0 and 1**: each exit is known from the start with that
+  probability, so a crowd can be a mixture rather than two groups.
+- **`entrance`**: names one exit that is also known from the start, such as the
+  door the agent came in by. It must be an exit reachable from the spawn area;
+  otherwise it is ignored without a warning.
 
-![Two 30 m corridors, each with an exit at both ends; left, the near sign faces the agents and all 40 go to the near exit; right, the near sign faces away and all 40 walk to the far exit](/images/concepts/sign_bearing.png)
+After that, the map grows only when the agent can read a sign (a run with
+visibility switched off lets it learn by contact instead). A sign is
+**legible** from where the agent stands when three conditions hold:
 
-*Figure 5. Asset `assets/exit_visibility_alpha`: a corridor in clear air with
-an exit at each end and 40 agents with familiarity 0. Only the bearing of the
-near exit's sign differs. Yellow cells are those from which the visibility
-model reads the near sign. Facing the agents, all 40 took the near exit;
-facing away, all 40 walked to the far one, and egress took 25.9 s instead of
-17.1 s. The script runs both configurations in clear air.
-Script: `scripts/figures/sign_bearing.py`.*
+1. the agent is on the side the sign faces (a sign without a bearing is
+   readable from every side);
+2. no wall stands between them;
+3. the smoke along the line of sight leaves enough visibility, by Jin's law,
+   to cover the distance.
 
-### Per-agent cognitive maps
+For a sign with a bearing, the more obliquely it is seen, the more
+visibility it needs. Legibility is
+precomputed for the whole floor, from the fire's smoke or from clear air, and
+the run only looks it up.
 
-Each agent carries a cognitive map: the graph of stages it knows, not a
-psychological construct. Routing runs only on this subgraph. The `familiarity`
-key of a distribution group sets how it starts. With `"full"`, the default,
-the agent knows the whole graph, as trained staff would. With `"discovery"`,
-it knows its spawn node and the neighbours whose signs are legible from the
-spawn area. A number *p* between 0 and 1 sits between the two: each exit
-enters the map at spawn with probability *p*, so a population can be a
-gradient rather than two groups. An `entrance` key names an exit the agent
-always knows, such as the door it came in by. Setting familiarity
-separately for each exit is not supported
-([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)). The
-literature on why familiarity matters is summarised on
-[Exit choice and familiarity](/fundamentals/exit-choice.md).
+When a neighbouring place's sign becomes legible, that place is added to the
+map. Being legible is a state of the moment. Being known lasts.
 
-The map grows at spawn, on arrival at a node and at each re-decision, by the
-neighbours legible from where the agent stands. A learned corridor is known in
-both directions, so an agent can always retrace its steps out of a dead end.
-If no exit is known, the agent heads for the nearest known node it has not
-visited; when none is left, it patrols the nodes it knows, because a new
-position can bring a new sign into view.
+### Routing on what is known
 
-![Four panels of a T-shaped corridor showing which nodes and edges an agent knows: at spawn, at the junction, with smoke hiding exit B, and for a fully familiar agent](/images/concepts/cognitive_map.png)
+The router ranks only routes over places the agent knows. An exit the agent
+has not learned is not a rejected option; for the router, it does not exist.
+If no known exit is reachable, the agent heads for a known place it has not
+been to yet, and when none is left, it walks between the places it knows,
+hoping to see a new sign on the way.
 
-*Figure 6. Schematic on a T-shaped corridor. Filled nodes and solid edges are
-in the agent's map. (1) At spawn a discovery agent knows the junction, whose
-sign is legible. (2) At the junction both exits enter the map. (3) Smoke fills
-the right arm; exit B stays known, and the router picks exit A. (4) A fully
-familiar agent knows the whole graph at t = 0.
-Script: `scripts/figures/cognitive_map.py`.*
+One exception matters when reading results. An agent that knows no exit and
+no other place does not explore. It keeps walking to the geometrically nearest
+exit, whether or not it has learned it. It may read that exit's sign on the
+way and learn it then, but it walks there either way
+([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)).
+
+![Two 30 m corridors, each with an exit at both ends and the cells from which the near sign is legible shaded yellow; left, the near sign faces the agents and they take the near exit; right, the near sign faces away and they walk to the far exit](/images/wayfinding/sign_bearing.png)
+
+*Figure 5. One number flips the exit. A corridor with an exit at
+each end and 40 agents at familiarity 0. Only the bearing of the near exit's
+sign differs. Yellow cells are those from which the near sign is legible.
+Facing the agents, the near exit is learned and taken; facing away, it is
+never learned and the agents walk to the far one. Script:
+`scripts/figures/sign_bearing.py`.*
+
+![Four panels of a T-shaped corridor showing which places and connections an agent knows: at spawn, at the junction, with smoke in the right arm, and for a fully familiar agent](/images/wayfinding/cognitive_map.png)
+
+*Figure 6. Schematic, drawn by hand, not a simulation. Filled nodes and solid
+edges are known. (1) At spawn, a discovery agent knows the junction, whose sign
+is legible. (2) At the junction, both exits are learned. (3) Smoke fills the
+right arm. Exit B stays known; the router judges its route by the smoke on it,
+not by its sign. (4) A fully familiar agent knows everything at t = 0. Script:
+`scripts/figures/cognitive_map.py`.*
 
 ### The map remembers
 
-Nothing leaves a cognitive map. An exit learned while its sign was legible
-stays known and routable after smoke or distance hides the sign; with a
-visibility query alone, the agent would forget it as soon as it lost sight of
-it.
+A place stays known after its sign is hidden again by distance, angle, a wall
+or smoke. Knowing an exit does not mean choosing it: the router still compares
+it with the other known exits from where the agent stands. Memory shows when
+the agent is somewhere it cannot read the sign. There it can still choose the
+exit it learned earlier. Without the memory, the same place would give a
+different choice.
 
-The map limits topology, not knowledge of the smoke. A discovery agent ranks
-the exits it knows by \(\tau\) over the whole remaining route, including legs
-it has never walked and, with anticipation, times that have not yet happened.
-Its route choice is a best case over its known subgraph, not a model of what
-it can perceive
-([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)). The
-[visibility page](/models/visibility.md) lists the command-line settings for
-sight gating and what each one means.
+The map limits what an agent knows of the building, not what it knows of the
+smoke. Once it knows an exit, the router prices the whole route to it with
+the smoke field of the fire, including stretches the agent has never seen
+([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 
-![Five copies of a corridor with an agent probe at y = 4, 14, 20 and 30 m walking north, then at y = 10 m walking back; the side exit is unknown before the agent enters the shaded legible region, known inside it, and still known above it, and at y = 10 m the agent takes the end exit on the way up and the side exit on the way back](/images/concepts/map_memory.png)
+![Five probes of one corridor: the side exit is unknown, learned, legible, known but not legible, and first-ranked at a return probe where its sign cannot be read](/images/wayfinding/map_memory.png)
 
-*Figure 7. Asset `assets/cognitive_map_memory`: a corridor whose side-exit
-sign is legible only from the shaded cells, computed with the clear-air
-visibility model; on the centreline, the agent's path, that is y = 12.0 to
-28.0 m (gold ticks). A discovery agent walks north,
-then back to y = 10 m. Above y = 28 m the sign is no longer legible, but the
-exit is still in the map and still routable. Back at y = 10 m the agent takes
-the side exit, where on the way up it took the end exit: same place, different
-history. Outcomes from live engine probes, pinned by
-`test_map_memory_probes_match_engine`. Script: `scripts/figures/map_memory.py`.*
+*Figure 7. A corridor whose side-exit sign is legible only inside the shaded
+region, y = 12.0–28.0 m on the centreline (gold ticks). One discovery agent is probed at a sequence of positions: northward,
+then back south. These are probes, not a walk. Northward, the side exit is
+learned inside the region and stays known beyond it, where the nearer end exit
+ranks first. Back south, where the side sign cannot be read, the remembered
+side exit is nearer and ranks first. Script: `scripts/figures/map_memory.py`.*
 
 ## The parameter split
 
@@ -360,7 +364,7 @@ enters the cognitive map. The dose does not gate anything; it stops the agent.
 - [Fundamentals](/fundamentals/_index.md): the published laws, with their
   sources.
 - Model pages: [smoke speed](/models/smoke-speed.md), [FED](/models/fed.md),
-  [routing](/models/routing.md), [visibility and cognitive maps](/models/visibility.md),
+  [routing](/models/routing.md), [wayfinding](/models/wayfinding.md),
   and [verification](/models/verification.md).
 - [Limitations](/docs/limitations.md): what is not modelled, and which
   parameters are library-level.
