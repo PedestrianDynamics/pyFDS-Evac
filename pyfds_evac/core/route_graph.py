@@ -677,7 +677,9 @@ class RouteCostConfig:
     # Three things still differ from the source: the quantity (a straight sight
     # line there, a walked polyline here, so this is exposure rather than
     # sight), the scope (there it is a last-resort branch over known-or-visible
-    # doors), and the memory (there a refused door is struck out permanently).
+    # doors), and the memory (there a strike-out lasts one call; the only
+    # lasting mark is on a lone agent's previous target once K_ave >= 0.3 /m,
+    # evac.f90:16292-16301, and it acts weakly -- see docs/model-comparison.md).
     # Citable as a threshold, uncalibrated as an exposure budget --
     # docs/gate-model-review-notes.md.
     tau_max: float = 6.0

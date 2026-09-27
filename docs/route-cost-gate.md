@@ -182,12 +182,19 @@ for a door with no resolved sight line the distance is an L1 norm
 (`evac.f90:16460`); pyFDS-Evac averages `K` along the walked polyline.
 Two further scope limits: the test lives in the tier-4 last-resort branch,
 reached only once no smoke-free door is available and looping only over doors
-that are already known or visible; and in FDS+Evac a struck-out door is struck
-out *permanently* (`Is_Visible_Door(i) = .FALSE.`, `:16464-16465`), which
-pyFDS-Evac deliberately does not do. So: the gate is *inspired by* FDS+Evac's
-tier-4 visibility door rule and inherits its threshold with a citation; it does
-not implement it. **`tau_max` has not been calibrated against a soot-dose or
-FED-equivalent limit.** That is open work.
+that are already known or visible; and the strike-out there
+(`Is_Visible_Door(i) = .FALSE.`, `:16464-16465`) lasts one call of
+`Change_Target_Door`, whose door arrays are reset at `:15831-15832`. FDS+Evac's
+only lasting smoke memory is a weak mark in a lone agent's known-door list on
+its previous target once `K_ave >= 0.3 /m` there (`:16292-16301`). A "some
+smoke" mark forces the door unknown only in the periodic re-evaluation; a "too
+much smoke" mark only drops the door from the list, and it can become known
+again (see
+[model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door)).
+pyFDS-Evac deliberately keeps no such memory. So: the gate is *inspired by*
+FDS+Evac's tier-4 visibility door rule and inherits its threshold with a
+citation; it does not implement it. **`tau_max` has not been calibrated
+against a soot-dose or FED-equivalent limit.** That is open work.
 
 Under FDS+Evac's *primary* rule the criterion is different again — minimise time
 among doors satisfying `K_ave_Door < ABS(FED_DOOR_CRIT)` = 0.03 /m
@@ -222,12 +229,13 @@ ordering everywhere: the tier-4 last-resort branch minimises `L2_tmp` directly
 that `L2_tmp` is `tau/6`. So the reference does rank on smoke — but only after
 tiers 1-3 have all failed to find any admitted door, only over doors already
 known or visible, on a bee-line (or L1) distance to the door rather than a
-walked route, and with a door struck out there struck out *permanently*
-(`:16463-16465`). Stated exactly: **pyFDS-Evac promotes FDS+Evac's last-resort
-ranking criterion to its primary one, and drops the memory that makes it stable
-there.** "Smoke never enters FDS+Evac's ordering" is too strong and should not
-be written; "smoke never enters the ordering until every smoke-free tier is
-exhausted" is what the source supports.
+walked route, and with a strike-out there that lasts one call (`:16463-16465`;
+reset at `:15831-15832`). Stated exactly: **pyFDS-Evac promotes FDS+Evac's
+last-resort ranking criterion to its primary one, and drops the one lasting
+smoke memory the reference has**, a weak mark on a lone agent's previous target
+once `K_ave >= 0.3 /m` (`:16292-16301`). "Smoke never enters FDS+Evac's
+ordering" is too strong and should not be written; "smoke never enters the
+ordering until every smoke-free tier is exhausted" is what the source supports.
 
 **The measured consequence, and what it is not.** On `l_corridor` the model
 diverts 18 of 100 agents to the longer, cleaner route. The reference criterion
@@ -361,7 +369,7 @@ differences from the reference implementation are worth stating:
   that made sighting distances jump between ticks. FDS+Evac applies its 0.03 to
   `K_ave_Door`, a per-door average, for the same reason — though note that
   `K_ave_Door` is a mean along a bee-line sight line (`See_door`,
-  `evac.f90:16149`), not a maximum over legs.
+  `evac.f90:16147`, assigned at `:16158`), not a maximum over legs.
 
 `clean_exit_margin` is hysteresis on membership for the exit the agent already
 heads for: its limit is `clean_extinction_threshold / clean_exit_margin`.
@@ -392,8 +400,11 @@ hysteresis band of 0.0075 /m — narrower than the median jump, 116 crossings pe
 run. The band is also one-sided: the incumbent is relaxed to 0.0375 /m while a
 rival is admitted at the bare 0.03 /m. And because tier membership is binary, a
 crossing does not reorder the list, it swaps which objective is in force, so the
-target jumps. FDS+Evac can afford that because a door leaves an agent's known
-set permanently; here nothing is remembered, by design.
+target jumps. FDS+Evac has only a weak memory against that: a mark on a lone
+agent's previous target once `K_ave >= 0.3 /m` (`evac.f90:16292-16301`), which
+acts weakly (see
+[model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door)); here
+nothing is remembered, by design.
 
 **Read the refutation as provisional.** A band of 0.0075 /m is
 `0.03 / 0.8 - 0.03`, so those runs were made at `clean_exit_margin = 0.8` — the
@@ -674,7 +685,7 @@ it alone.
 
 **And the model is a departure, not a reproduction.** `tau` is the ordering here;
 in FDS+Evac smoke ranks only inside the tier-4 last resort, over known-or-visible
-doors, on a bee line, with permanent strike-out. See
+doors, on a bee line, with a strike-out that lasts one call. See
 [The diversion is a departure](#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it).
 The 100/0 attributed to the reference criterion on `l_corridor` is a reasoned
 prediction from `evac.f90`, not a measured run of it.

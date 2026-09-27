@@ -75,8 +75,9 @@ because they need it to learn the graph. See
 A FED model is instantiated automatically when `--fds-dir` points at
 an FDS case that exposes the FED species (CO, CO₂, O₂ at
 minimum — HCN, NO/NO₂, and irritants are used if present). When that
-happens, the Purser FIC slowdown and the FED incapacitation rule
-are on by default. Without `--fds-dir` (or with a case missing the
+happens, the FIC slowdown (a pyFDS-Evac assumption, source unknown;
+[#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) and
+the FED incapacitation rule are on by default. Without `--fds-dir` (or with a case missing the
 required species) no FED is computed and these flags have no effect;
 a case with a `TEMPERATURE` slice still gets heat incapacitation.
 

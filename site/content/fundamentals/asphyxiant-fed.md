@@ -48,7 +48,9 @@ with the terms, *t* in minutes and concentrations in ppm or % by volume:
 - **HCN** (Eq. 63.24): \(F_{I_{CN}} = [\mathrm{CN}]^{2.36}\,t/(1.2\times10^{6})\),
   where [CN] may be corrected for other nitriles and for the protective effect
   of NO and NO₂ as \([\mathrm{CN}] = [\mathrm{HCN}] + [\text{organic nitriles}] - [\mathrm{NO}+\mathrm{NO_2}]\)
-  (Eq. 63.26).
+  (Eq. 63.26, p. 2362). The note to Eq. 63.38 writes the same correction with
+  \(0.67\,[\mathrm{NO}+\mathrm{NO_2}]\) (p. 2372), so the chapter gives two
+  coefficients.
 - **NOₓ**: \(F_{I_{NO_x}} = [\mathrm{NO_x}]\,t/1500\) (definitions under Eq. 63.38).
 - **Irritants**: \(FLD_{irr}\), the fractional lethal dose of irritants
   (Eq. 63.15; see [Irritant gases](/fundamentals/irritants.md)), included because

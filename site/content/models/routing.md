@@ -76,8 +76,12 @@ See [docs/route-cost-gate.md](/docs/route-cost-gate.md#known-limitations).
 reference's first three tiers the rank is a time or distance norm and smoke is
 only a boolean admission test (`evac.f90:16265, :16354, :16401`), so smoke can
 move a door between tiers but cannot reorder candidates. It ranks on smoke only
-in the tier-4 last resort, over known-or-visible doors, on a bee line, with
-permanent strike-out. Here `tau` is the ordering everywhere, with no memory.
+in the tier-4 last resort, over known-or-visible doors, on a bee line, with a
+strike-out that lasts one call (`evac.f90:16464-16465`, reset at `:15831-15832`).
+Its only lasting smoke memory is a weak mark on a lone agent's previous
+target once `K_ave >= 0.3 /m` (`:16292-16301`), described in
+[docs/model-comparison.md](/docs/model-comparison.md#the-smoke-criteria-on-a-door). Here `tau` is the
+ordering everywhere, with no memory.
 On `l_corridor` that diverts 18 of 100 agents where the reference criterion
 would send essentially everyone to the near exit -- a prediction reasoned from
 `evac.f90`, not a measured run of it. A `L/d` geometric bias (1.41 near against
