@@ -93,6 +93,14 @@ arithmetic). Script: `scripts/figures/fundamentals_fed_co.py`.
 
 ## Published forms differ
 
+> [!WARNING]
+> **FDS+Evac guide, Eq. 18 (low O₂).** The guide (Korhonen 2021) divides the
+> O₂ term by 60 while stating that *t* is in minutes. Taken literally, that
+> gives an O₂ dose 60 times smaller than Purser's Eq. 63.50. The code
+> FDS+Evac runs does not do this: FDS divides by 60 only because its time step
+> is in seconds. If you rebuild FDS+Evac's FED from the guide, leave the 60
+> out. The evidence is in "The CO₂ factor and HCN term" below.
+
 The FDS+Evac guide (Korhonen 2021, Eqs. 12–19) and the FDS User's Guide
 (McGrattan et al. 2025, Eqs. 22.42–22.49) do not use Eq. 63.38 as printed:
 they take Eq. 63.34 for CO₂ instead of its simplification Eq. 63.35, and an
