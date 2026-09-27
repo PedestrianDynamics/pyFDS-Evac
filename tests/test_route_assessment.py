@@ -239,3 +239,32 @@ def test_kvis_rejection_keeps_route_feasible():
     assessment = _assessment_of(west, (violation,))
     assert assessment.feasibility.feasible and assessment.feasibility.rejected
     assert _project_route_cost(assessment) == west
+
+
+def test_clean_limit_divides_by_the_margin():
+    """The current exit's clean limit is threshold / margin, computed as such.
+
+    0.3 / 0.7 and 0.3 * (1 / 0.7) differ in the last bit, and a route whose
+    smokiest leg sits exactly on the quotient is clean under the first and not
+    under the second, so this pins the operation, not just the value.
+    """
+    k_leg_max = 0.4285714285714286
+    assert 0.3 / 0.7 == k_leg_max != 0.3 * (1 / 0.7)
+    m = RouteMeasurements(
+        exit_id="west",
+        path=["spawn", "west"],
+        segments=[],
+        path_length_m=10.0,
+        effective_length_m=10.0,
+        k_ave_route=0.1,
+        travel_time_s=10.0,
+        fed_max_route=0.0,
+        composite_cost=10.0,
+        queue_time_s=0.0,
+        k_max_route=k_leg_max,
+        tau_route=1.0,
+        k_leg_max=k_leg_max,
+    )
+    config = golden._gate(clean_extinction_threshold=0.3, clean_exit_margin=0.7)
+    assert _assess_measurements(m, config, "west").clean
+    assert not _assess_measurements(m, config, "east").clean
