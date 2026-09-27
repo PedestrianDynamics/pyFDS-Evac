@@ -4533,7 +4533,7 @@ title="Copy code"
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;em>(default)&lt;/em>&lt;/td>
-&lt;td>Spaghetti plot: one cumulative-FED line per agent.&lt;/td>
+&lt;td>Spaghetti plot: one cumulative-FED line per agent; the first agent to reach the threshold (or, if none does, the one with the highest FED) is drawn bold and labelled.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--show-rate&lt;/code>&lt;/td>
@@ -4583,7 +4583,8 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>Per-segment RdBu colouring (red = slow, blue = fast) from the extended
-FED CSV. The walkable area is drawn as backdrop via pedpy.&lt;/p>
+FED CSV; slower segments are also drawn wider, and the slowest sample is
+ringed and labelled. The walkable area is drawn as backdrop via pedpy.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -4606,7 +4607,7 @@ FED CSV. The walkable area is drawn as backdrop via pedpy.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--linewidth F&lt;/code>&lt;/td>
-&lt;td>Polyline width (default 0.5).&lt;/td>
+&lt;td>Polyline width at full speed; slower segments are up to three times wider (default 0.5).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--alpha F&lt;/code>&lt;/td>
@@ -4679,7 +4680,7 @@ title="Copy code"
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>--config&lt;/code> (required)&lt;/td>
-&lt;td>Exit polygons, and the colour key.&lt;/td>
+&lt;td>Exit polygons, and the colour and line-style key (one style per exit).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>-o/--out&lt;/code> (required)&lt;/td>
@@ -4695,7 +4696,7 @@ title="Copy code"
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--reach&lt;/code>&lt;/td>
-&lt;td>Metres from an exit polygon that count as having reached it (default 1.5). Agents that finish elsewhere are drawn grey and counted separately.&lt;/td>
+&lt;td>Metres from an exit polygon that count as having reached it (default 1.5). Agents that finish elsewhere are drawn grey and dotted, their end marked with a cross, and counted separately.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
