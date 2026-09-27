@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a model, option or tool that does not exist yet.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What do you want to model or do, and what stops you today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should pyFDS-Evac do? Name the CLI flag or config key if you have one in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source
+      description: >
+        For a model change, the paper, equation or FDS+Evac section it follows.
+        Prefer FDS+Evac-compatible defaults; name and justify any departure.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
