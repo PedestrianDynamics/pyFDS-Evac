@@ -74,19 +74,16 @@ module:
         - "howto-rset-ensemble.md"
         - "assets.md"
         - "fds-sampling.md"
-    - source: ../docs
-      target: content/docs/implementation/speed
-      includeFiles:
-        - "smoke-speed-model.md"
+    # A group with a single page takes that page as its index.
+    - source: ../docs/smoke-speed-model.md
+      target: content/docs/implementation/speed/_index.md
     - source: ../docs
       target: content/docs/implementation/routing
       includeFiles:
         - "routing.md"
         - "route-cost-gate.md"
-    - source: ../docs
-      target: content/docs/implementation/wayfinding
-      includeFiles:
-        - "wayfinding.md"
+    - source: ../docs/wayfinding.md
+      target: content/docs/implementation/wayfinding/_index.md
     - source: ../docs
       target: content/models/verification
       includeFiles:

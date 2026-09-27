@@ -5,6 +5,10 @@ math: true
 aliases: [/models/visibility/]
 ---
 
+> [!NOTE]
+> This page is the specification of the wayfinding model. For worked cases on
+> the assets (runs, figures, numbers), see [Wayfinding in practice](/docs/wayfinding.md).
+
 Based on: [Visibility through smoke](/fundamentals/visibility.md) and
 [Exit choice and familiarity](/fundamentals/exit-choice.md).
 
@@ -16,7 +20,7 @@ describes the part of the model that decides which routes it may rank: what
 each agent knows about the stage graph, how that knowledge starts, how it
 grows, and how route choice reads it. The step-by-step walk-through, with
 figures and the talk's examples, is on
-[Wayfinding implementation notes](/docs/wayfinding.md). The intuition is on
+[Wayfinding in practice](/docs/wayfinding.md). The intuition is on
 [Concepts › Wayfinding](/docs/concepts.md#wayfinding). Symbols follow the
 [notation table](/docs/concepts.md#notation).
 
@@ -250,9 +254,14 @@ before its map exists (`simulation_init.py:1430–1449`). The opening choice
 replaces that target only when the map contains a reachable exit
 (`scenario.py:1006–1008`). If it contains none, and neither exploration nor
 patrol yields a target (below), the agent keeps steering towards that
-geometric exit (`route_graph.py:1816–1817`). Periodic learning may add the exit
+geometric exit (`route_graph.py:1816–1817`). For a map that holds only the
+spawn node neither does: the spawn node is visited from the start
+(`cognitive_map.py:117–121`), so there is no frontier, and the patrol
+excludes the current node, so a one-node map has no stop
+(`cognitive_map.py:343–349`). Periodic learning may add the exit
 on the way once its sign is legible, but the target was never chosen from the
-map. This is a defect, not intended behaviour.
+map. This is a defect, not intended behaviour (see also defect 2 in
+`assets/blind_spawn_discovery/README.md`).
 
 The contract covers **ranking**, not **adoption**. Ranking orders the known
 routes; adoption is whether a moving agent switches to the first of them. The
@@ -456,8 +465,8 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   walks between them may never pass a new legible sign.
 - **Discovery results depend on the clear-air grid**
   ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). Do
-  not report a discovery egress time without its grid; the implementation
-  notes give the measured spread.
+  not report a discovery egress time without its grid;
+  [Wayfinding in practice](/docs/wayfinding.md) gives the measured spread.
 - **No per-exit familiarity**
   ([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)). One
   \(p\) per group, plus one `entrance`.

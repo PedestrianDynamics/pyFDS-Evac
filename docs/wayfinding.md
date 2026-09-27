@@ -1,10 +1,14 @@
 ---
-title: "Wayfinding implementation notes"
-linkTitle: "Wayfinding"
-weight: 11
+title: "Wayfinding in practice"
+linkTitle: "Wayfinding in practice"
+weight: 3
 math: true
-aliases: [/docs/wayfinding/]
+aliases: [/docs/wayfinding/, /docs/implementation/wayfinding/wayfinding/]
 ---
+
+> [!NOTE]
+> This page shows the wayfinding model at work on the assets. For its
+> definition, parameters and defaults, see [Models › Wayfinding](/models/wayfinding.md).
 
 > Part of [pyFDS-Evac](../README.md). The coded form, parameters and
 > limitations are on [Models › Wayfinding](/models/wayfinding.md), which also
@@ -60,10 +64,11 @@ synthesised signs alike (`visibility.py:58`, `:94`).
 > agent's stored position, which is the previous step's
 > (`scenario.py:2240–2253`, `:2423`). Perception at spawn uses the spawn
 > node's routing point for all agents of that spawn area
-> (`cognitive_map.py:131–135`).
+> (`cognitive_map.py:131–135`). The three sensing positions are tabulated on
+> [Models › Wayfinding §2.2](/models/wayfinding.md#2-the-knowledge-contract).
 >
-> The reading distance \(V_{\max}\) is 30 m, as in fdsvismap. Change it with
-> `--max-sign-distance`, or per sign with `"max_distance"`.
+> The reading distance \(V_{\max}\) and how to change it are on
+> [Models › Wayfinding §1](/models/wayfinding.md#1-the-sign-legibility-test).
 
 <!-- FIGURE: none. The talk shows Börger, Belt and Arnold (2024), Fig. 11,
 a third-party figure; link to the paper instead of reproducing it.
@@ -80,14 +85,9 @@ the agents in both (`assets/exit_visibility_alpha/README.md`).
 
 With the near sign facing the agents (\(\alpha_s = 0\)), both exits are learned
 at spawn and the near one ranks first. With it facing away (\(\alpha_s = 180\)),
-\(A = 0\) at every agent cell, so the near exit is never learned. Ranking runs
-on the known subgraph only (`route_graph.py:1272–1276`), so the near exit is
-absent, not refused.
-
-This distinction matters because of the all-refused fallback. When every known
-route fails the exposure gate, one refused route is re-admitted
-(`route_graph.py:1434–1445`). A refused route can come back that way. An
-unknown route cannot, because the fallback never sees it.
+\(A = 0\) at every agent cell, so the near exit is never learned. It is
+absent, not refused, so the all-refused fallback cannot restore it
+([Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract)).
 
 The tests pin the mechanism at router level
 (`tests/test_exit_visibility_alpha.py::TestExitChoiceFollowsLegibility::test_illegible_near_exit_never_enters_the_map`,
@@ -186,22 +186,10 @@ something, and the following slides show signs filling it.
 
 **The code does not do this for a map that holds only the spawn node. This is
 a known defect, not intended behaviour**
-([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91); see also
-defect 2 in `assets/blind_spawn_discovery/README.md`). The chain is:
-
-- the agent is given the geometrically nearest exit as its steering target
-  before its map exists (`simulation_init.py:1430–1449`);
-- the opening choice finds no reachable known exit and leaves that target in
-  place (`scenario.py:1006–1008`);
-- the spawn node is visited from the start (`cognitive_map.py:117–121`), so
-  there is no frontier;
-- the patrol excludes the current node, so a one-node map has no stop
-  (`cognitive_map.py:343–349`);
-- `evaluate_and_reroute` returns without a switch (`route_graph.py:1816–1817`).
-
-The agent keeps steering towards an exit it does not know. Periodic learning
-can still add that exit on the way, once its sign becomes legible. The target,
-however, was never chosen from the map.
+([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)): the agent
+keeps steering towards the geometrically nearest exit, which it does not know.
+The chain of code is under the exception in
+[Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract).
 
 Two probes support this. In ours, we ran the three-exit corridor of
 `tests/test_initial_exit_from_cognitive_map.py` with 40 agents at familiarity
@@ -237,16 +225,9 @@ intended behaviour is exploration. Script: `scripts/figures/empty_map_routes.py`
 
 The talk calls this slide "staff know the building, visitors discover it".
 In the code there are no staff and no visitors. There is a familiarity value
-per group. At \(p = 1\) the agent is given the whole graph; that is an
-assumption about the agent, not a model of training. At \(p < 1\) the map
-starts from the spawn node, an optional reachable `entrance`, a draw per exit
-with probability \(p\), and the neighbours legible from the spawn area's
-routing point (`init_cognitive_map`, `cognitive_map.py:78–136`).
-
-After spawn, the map grows at each due re-evaluation and each time the agent
-advances along its path, by the neighbours whose signs are legible
-(`cognitive_map.py:155–234`). Edges learned this way also teach their
-reverse, when the graph has one. Routing then works on the known subgraph.
+per group; at \(p = 1\) the agent is given the whole graph, which is an
+assumption about the agent, not a model of training. How the map starts and
+grows is on [Models › Wayfinding §2.1–2.2](/models/wayfinding.md#2-the-knowledge-contract).
 
 The talk illustrates this on a T-corridor with a junction and two exits. In
 that schematic the discovery agent learns the junction at spawn and both exits
@@ -379,10 +360,9 @@ thing differs in the code, and until #174 a second one did:
    `reason="explore"` and `reason="wander"` (`route_graph.py:1800`, `:1815`).
 2. **The ranked length of the first leg**
    ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
-   by #174, now merged). The discovery agent's subgraph lacked the routing
-   engine, so `rank_routes` measured the walk from the agent to its next node as a
-   straight line, even through walls. Exploration was not affected, because
-   frontier selection measures that leg on the full graph.
+   by #174, now merged), measured as a straight line, even through walls, for
+   discovery agents; see
+   [Models › Wayfinding, Limitations](/models/wayfinding.md#limitations).
 
 Before #174, a comparison around obstacles mixed the effect of knowledge with
 the effect of #172. The run of Figure 7 gives the same numbers before and

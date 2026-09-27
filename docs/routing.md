@@ -1,8 +1,14 @@
 ---
-title: "Smoke-aware routing"
+title: "Routing in practice"
+linkTitle: "Routing in practice"
 weight: 10
 aliases: [/docs/routing/]
 ---
+
+> [!NOTE]
+> This page shows the routing model at work: its machinery, API and data
+> structures. For its definition, parameters and defaults, see
+> [Models › Dynamic route rerouting](/models/routing.md).
 
 > Part of [pyFDS-Evac](../README.md).
 

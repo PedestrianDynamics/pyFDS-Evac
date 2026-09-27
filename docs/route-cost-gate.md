@@ -1,8 +1,14 @@
 ---
-title: "The gate cost model"
+title: "Gate model in practice"
+linkTitle: "Gate model in practice"
 weight: 11
 aliases: [/docs/route-cost-gate/]
 ---
+
+> [!NOTE]
+> This page shows the gate cost model at work on the assets, with its
+> evidence and known limitations. For the routing model's definition,
+> parameters and defaults, see [Models › Dynamic route rerouting](/models/routing.md).
 
 > Part of [pyFDS-Evac](../README.md). Reference for `routing.cost_model`.
 > Provenance, review findings and the open questions live in

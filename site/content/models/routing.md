@@ -4,9 +4,14 @@ weight: 3
 math: true
 ---
 
+> [!NOTE]
+> This page is the specification of the routing model. For worked cases on the
+> assets (runs, figures, numbers), see [Routing in practice](/docs/routing.md)
+> and [Gate model in practice](/docs/route-cost-gate.md).
+
 Based on: [Extinction coefficient](/fundamentals/extinction.md), [Visibility through smoke](/fundamentals/visibility.md) and [Exit choice and familiarity](/fundamentals/exit-choice.md).
 
-See [docs/routing.md](/docs/routing.md) for the full routing model,
+See [docs/routing.md](/docs/routing.md) for the routing machinery,
 cost formulas, and API reference, and
 [docs/routing-and-signs-notes.md](/docs/routing-and-signs-notes.md) for
 working notes on exit choice and where the exit-choice research papers
@@ -57,18 +62,13 @@ exit-switch anchor, by a stricter budget for a rival exit
 (`tau_return_margin`), and by a discount on the current exit's `tau` in the
 sort (`current_exit_discount`, FDS+Evac's `FAC_DOOR_OLD2`).
 
-**Measured, with the limitation stated.** Ranking on `tau` sends 39 of
-`world100`'s agents to the far clean exit, with 9 switches and no agent
-returning to an exit it abandoned -- the outcome the model exists to produce.
-On `l_corridor` agents oscillate: 34 returns to abandoned exits across 14
-agents and 55 switches, with a far-exit share of about 18. The cause is **not**
-a currency mismatch between the `tau` ordering and the anchor's time
-fallthrough: 29 of the 34 returns go to a route cleaner by more than the
-deadband, and 31 fall in `t = 40-60 s` where the two routes' `tau` genuinely
-cross over. The model is following a field that reverses, and no constant damps
-that -- what is missing is commitment
-([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)).
-See [docs/route-cost-gate.md](/docs/route-cost-gate.md#known-limitations).
+**Measured, with the limitation stated.** Ranking on `tau` sends `world100`'s
+agents to the far clean exit without returns, while on `l_corridor` agents
+return to exits they abandoned, following a field that reverses; what is
+missing is commitment
+([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)). The
+counts are in [docs/route-cost-gate.md](/docs/route-cost-gate.md#churn-protection)
+and [Known limitations](/docs/route-cost-gate.md#known-limitations).
 
 **This is a departure from FDS+Evac, not a reproduction of it.** The threshold
 `tau > 6` is borrowed with a citation; the *place* it is used is not. In the
@@ -116,7 +116,7 @@ is reached only from a rejection reason containing `"visible"` and the gate's
 only reason string starts `tau`. So no smoke rejection bypasses the exit-switch
 anchor at any density. What the gate does is exposure-gated wayfinding.
 
-The model reference is [docs/route-cost-gate.md](/docs/route-cost-gate.md);
+The gate at work, with its evidence, is in [docs/route-cost-gate.md](/docs/route-cost-gate.md);
 provenance and the open questions are in
 [docs/gate-model-review-notes.md](/docs/gate-model-review-notes.md).
 `assets/l_corridor` is the deck the model is judged on -- a near exit behind the

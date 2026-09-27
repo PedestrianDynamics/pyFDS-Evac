@@ -209,7 +209,7 @@ Route choice picks among the exits an agent knows. Wayfinding decides which
 exits those are. The code, its defaults and its limitations are on
 [Models › Wayfinding](/models/wayfinding.md). A walk-through in the order of
 the talk, with the examples, is on
-[Wayfinding implementation notes](/docs/wayfinding.md).
+[Wayfinding in practice](/docs/wayfinding.md).
 
 ### Knowing is not seeing
 

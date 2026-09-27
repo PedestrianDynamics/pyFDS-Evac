@@ -4,6 +4,10 @@ weight: 1
 math: true
 ---
 
+> [!NOTE]
+> This page is the specification of the smoke-speed model. For worked cases on
+> the assets (runs, figures, numbers), see [Speed in practice](/docs/smoke-speed-model.md).
+
 Based on: [Walking speed in smoke](/fundamentals/walking-speed.md) and [Extinction coefficient](/fundamentals/extinction.md).
 
 Symbols follow the [notation table](/docs/concepts.md#notation). The Python
@@ -92,75 +96,9 @@ All FDS slice data is read through a single library:
   case, pass a shared `fdsreader.Simulation` instance to avoid parsing
   the directory twice (see [FDS sampling API](/docs/fds-sampling.md))
 
-Run the ISO 20414 Test 18 (Table 21) corridor with a constant extinction coefficient:
-
-```bash
-uv run run.py \
-  --scenario assets/ISO-table21 \
-  --constant-extinction 1.0 \
-  --smoke-update-interval 0.1 \
-  --output-smoke-history /tmp/iso-table21-smoke-history.csv \
-  --cleanup
-```
-
-Run the smoke-speed model against FDS results read through `fdsreader`. The
-repository ships the deck, not its output — the slices are 4.2 MB and the full
-run 54 MB — so run FDS once first:
-
-```bash
-mkdir -p /tmp/iso21 && cd /tmp/iso21 \
-  && fds /path/to/assets/ISO-table21/ISO-table21.fds && cd -   # ~8 min
-
-uv run run.py \
-  --scenario assets/ISO-table21 \
-  --fds-dir /tmp/iso21 \
-  --smoke-update-interval 0.1 \
-  --output-smoke-history /tmp/iso-table21-fds-smoke-history.csv \
-  --cleanup
-```
-
-Inspect the FDS quantities available through `fdsreader`:
-
-```bash
-uv run run.py --inspect-fds --fds-dir /tmp/iso21 --scenario assets/ISO-table21
-```
-
-For a case where the coupling is exercised without running FDS yourself, see
-[`assets/iso_table22_coupled`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/iso_table22_coupled/README.md): its output
-is committed (136 kB) and a test reads it on every CI run.
-
-Plot smoke-speed history for a single agent:
-
-```bash
-uv run python scripts/plot_smoke_history.py \
-  --input /tmp/iso-table21-smoke-history.csv \
-  --output /tmp/iso-table21-smoke-history.png \
-  --agent-id 1
-```
-
-Plot aggregate smoke-speed history:
-
-```bash
-uv run python scripts/plot_smoke_history.py \
-  --input /tmp/iso-table21-smoke-history.csv \
-  --output /tmp/iso-table21-smoke-history-aggregate.png
-```
-
-Generate a stable ISO 20414 Test 18 (Table 21) sweep artifact under `artifacts/`:
-
-```bash
-uv run python scripts/generate_iso_table21_sweep.py
-```
-
-Figure: ![ISO 20414 Test 18 (Table 21) sweep](/artifacts/iso-table21-sweep.png)
-
-Generate the FDS+Evac smoke-density vs speed verification plot:
-
-```bash
-uv run python scripts/generate_smoke_density_speed_plot.py
-```
-
-Figure: ![soot_density vs speed](/artifacts/smoke-density-vs-speed.png)
+Runs of the ISO 20414 Test 18 (Table 21) corridor, with a constant extinction
+coefficient and with FDS output, the plotting scripts and the verification
+figures are on [Speed in practice](/docs/smoke-speed-model.md#runs-on-the-assets).
 
 ## Deviations from the literature
 
