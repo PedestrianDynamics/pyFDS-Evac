@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import logging
 
+import numpy as np
+
 try:
     from fdsreader import Simulation
 except ModuleNotFoundError:
@@ -34,6 +36,7 @@ class SliceFieldSampler:
         self._last_subslice = None
         self._cached_time_s: float | None = None
         self._cached_t_index: int = 0
+        self._axes_cache: dict[int, tuple[np.ndarray, np.ndarray]] = {}
 
     def _find_subslice(self, x: float, y: float):
         """Return the subslice covering the requested x/y point."""
@@ -53,14 +56,36 @@ class SliceFieldSampler:
         return None
 
     @staticmethod
-    def _nearest_index(start: float, end: float, count: int, value: float) -> int:
-        """Return the nearest cell index along one slice axis."""
-        if count <= 1 or end <= start:
+    def _nearest_index(coords: np.ndarray, value: float) -> int:
+        """Return the index of the coordinate nearest to ``value``.
+
+        ``coords`` are the positions fdsreader reports for the slice values:
+        nodes for FDS's default node-centred slices, cell centres for
+        cell-centred ones. Ties go to the lower index.
+        """
+        count = len(coords)
+        if count <= 1:
             return 0
-        dx = (end - start) / count
-        center = start + 0.5 * dx
-        index = round((value - center) / dx)
-        return max(0, min(count - 1, int(index)))
+        right = int(np.searchsorted(coords, value))
+        if right <= 0:
+            return 0
+        if right >= count:
+            return count - 1
+        left = right - 1
+        return left if value - coords[left] <= coords[right] - value else right
+
+    def _axes(self, subslice) -> tuple[np.ndarray, np.ndarray]:
+        """Return the x and y value positions of a subslice, cached."""
+        key = id(subslice)
+        axes = self._axes_cache.get(key)
+        if axes is None:
+            coords = subslice.get_coordinates()
+            axes = (
+                np.asarray(coords["x"], dtype=float),
+                np.asarray(coords["y"], dtype=float),
+            )
+            self._axes_cache[key] = axes
+        return axes
 
     def sample(self, time_s: float, x: float, y: float) -> float:
         """Return the sampled scalar value at one time and x/y point."""
@@ -75,12 +100,9 @@ class SliceFieldSampler:
             self._cached_time_s = ts
             self._cached_t_index = int(self._slice.get_nearest_timestep(ts))
         t_index = self._cached_t_index
-        i_index = self._nearest_index(
-            subslice.extent.x_start, subslice.extent.x_end, subslice.shape[0], float(x)
-        )
-        j_index = self._nearest_index(
-            subslice.extent.y_start, subslice.extent.y_end, subslice.shape[1], float(y)
-        )
+        xs, ys = self._axes(subslice)
+        i_index = self._nearest_index(xs, float(x))
+        j_index = self._nearest_index(ys, float(y))
         return float(subslice.data[t_index, i_index, j_index])
 
 
