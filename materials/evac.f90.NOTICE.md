@@ -1,14 +1,15 @@
 # Notice for `evac.f90`
 
 `evac.f90` is an unmodified copy of `Source/evac.f90` from the Fire Dynamics
-Simulator repository (https://github.com/firemodels/fds), commit `16cf79652c`
-(2016-12-14, `FDS6.5.3-237-g16cf79652c`). It is the FDS+Evac human movement
+Simulator repository (https://github.com/firemodels/fds), commit `c9da70d7a0`
+(2021-08-09, `FDS6.7.6-404-gc9da70d7a`). It is the FDS+Evac human movement
 module by Timo Korhonen, VTT Technical Research Centre of Finland. FDS+Evac was
 removed from FDS in commit `6a1d48aa5e` (2021-12-01).
 
 It is kept here, unchanged, so that the documentation can cite line numbers.
-Line references in the pyFDS-Evac docs are to this copy, which predates the
-FDS 6.7.6 version described by the 2021 FDS+Evac guide.
+Line references in the pyFDS-Evac docs are to this copy, which matches the
+version described by the 2021 FDS+Evac guide (`FDS6.7.6-404-gc9da70d7a` on its
+title page).
 
 The file is distributed under the notice of the FDS repository, reproduced
 below. The source of the software is the National Institute of Standards and
