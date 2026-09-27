@@ -1186,10 +1186,24 @@ by default, the guard of FDS+Evac&amp;rsquo;s code (the &lt;code>FED&lt;/code> f
 &lt;code>func.f90&lt;/code> adds the term only when X_O2 &amp;lt; 0.20); neither Purser nor the
 guide has it. It stops a tiny ambient rate from accumulating over long runs
 or outside the FDS domain. &lt;code>--o2-threshold-percent 19.5&lt;/code> restores the
-previous default, the OSHA limit that Pathfinder uses. The guide&amp;rsquo;s Eq. 18 carries a factor 60 in the denominator while
-stating that &lt;em>t&lt;/em> is in minutes; the code follows Handbook Eq. 63.50 without
-it.&lt;/li>
+previous default, the OSHA limit that Pathfinder uses. The O₂ rate is Handbook Eq. 63.50
+per minute, with no factor 60. The FDS+Evac guide&amp;rsquo;s Eq. 18 divides by 60
+while stating &lt;em>t&lt;/em> in minutes, which read literally would make the O₂ dose
+60 times smaller; FDS itself does not do this (its &lt;code>FED&lt;/code> function divides
+by 60 only because its time step is in seconds), so it is a documentation
+error, not a difference in the model. Our reading is that the 60 survives
+from the 2009 guide, where &lt;em>t&lt;/em> was in seconds (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>).&lt;/li>
 &lt;/ul>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fed_o2.png" alt="Low-oxygen time to incapacitation against O2 from 3.9 to 20.9 % on a log time axis: a straight line, solid over the decompression data from 3.9 to 9.6 % and dashed above, with vertical lines at 15 % (140 min) and 20 % (about 2090 min)" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Time to incapacitation by low oxygen, \(t_{IO}\) [min], Eq. 63.50: solid
+over the decompression data (3.9–9.6 % O₂), dashed above. pyFDS-Evac
+evaluates this law up to &lt;code>o2_threshold_percent&lt;/code> (20 % by default, dash-dot
+line, about 2090 min) and adds nothing at or above it; everything between
+about 10 % and the gate is extrapolation. Dotted: 15 % O₂, down to which
+there is little effect in humans (Purser &amp;amp; McAllister 2016, p. 2364). Figure
+and sources: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>. Script:
+&lt;code>scripts/figures/fundamentals_fed_o2.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py:241&lt;/code>–&lt;code>242&lt;/code>), is multiplied with the smoke
 factor (&lt;code>direct_steering_runtime.py:186&lt;/code>–&lt;code>190&lt;/code>). Its constants were not found
 in the Handbook, the FDS+Evac guide or &lt;code>evac.f90&lt;/code>
@@ -4070,16 +4084,17 @@ three NOₓ reduction factors, 0 in simple conservative analyses, otherwise
 2/3 or 1, &amp;ldquo;without a clear guidance which one to choose&amp;rdquo;; that chapter was
 not read here. For low oxygen, the FDS+Evac
 guide divides by an extra factor 60 while stating &lt;em>t&lt;/em> in minutes (Eq. 18);
-Eq. 63.50 and the FDS User&amp;rsquo;s Guide (Eq. 22.48) do not. The factor is a
-leftover from the 2009 guide (VTT Working Papers 119, FDS 5.3.0), which
-gave every FED equation with &lt;em>t&lt;/em> in seconds: its Eq. 12 is
+Eq. 63.50 and the FDS User&amp;rsquo;s Guide (Eq. 22.48) do not. Read literally,
+Eq. 18 makes the O₂ dose 60 times smaller than Eq. 63.50. Our reading is
+that the factor survives from the 2009 guide (VTT Working Papers 119, FDS
+5.3.0), which gave every FED equation with &lt;em>t&lt;/em> in seconds: its Eq. 12 is
 \(4.607 \times 10^{-7}\,C_{CO}^{1.036}\,t\), i.e. \(2.764 \times 10^{-5}/60\),
 and its Eq. 13 is \(t/(60\exp[8.13 - 0.54(20.9 - C_{O_2})])\), &amp;ldquo;where t is
 time in seconds&amp;rdquo;. The 2021 guide rewrote Eqs. 13–17 per minute and dropped
 the 60, but kept it in Eq. 18. The FDS code divides by 60 because its time
 step is in seconds (&lt;code>func.f90&lt;/code>, function &lt;code>FED&lt;/code>, before and after commit
-694e033), so the code is consistent and only the 2021 guide&amp;rsquo;s Eq. 18 is
-not. The 2009 guide also prints the CO₂ coefficient as 0.1930 (Eq. 14),
+694e033), so the code is consistent: the discrepancy is in the 2021
+guide&amp;rsquo;s text only. The 2009 guide also prints the CO₂ coefficient as 0.1930 (Eq. 14),
 where Purser and the code use 0.1903.&lt;/p>
 &lt;/div>
 &lt;/details>
