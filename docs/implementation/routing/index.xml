@@ -359,14 +359,17 @@ queue the agent can perceive, which would remove the scale dependence.&lt;/p>
 below was swept against a geometry whose doorways were narrower than the
 building&amp;rsquo;s; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy&amp;rsquo;s 52.9 %.
-The reasoning in this section is unchanged — only the fitted number moved.&lt;/p>
+The reasoning in this section is unchanged — only the fitted number moved.
+Rerun on main at &lt;code>7a3617d&lt;/code>, under the gate, the same sweep scores 0.03 at
+31.6 % and 0.024 at 34.1 %: the deck no longer reproduces Fahy&amp;rsquo;s split, and has
+not been re-fitted.&lt;/p>
 &lt;p>&lt;strong>Two further caveats on that number.&lt;/strong> The sweep was run under the additive
 composite, where &lt;code>w_queue&lt;/code> multiplies a &lt;em>distance&lt;/em>
 (&lt;code>w_queue * base_speed_m_per_s * queue_time&lt;/code>). Under the default gate model it
 multiplies a &lt;em>time&lt;/em> (&lt;code>w_queue * queue_time_s&lt;/code>, against travel time), which is a
 different quantity, and no deck pins &lt;code>cost_model&lt;/code> — so the Station deck now runs
 under the gate with a weight fitted under the additive model. It has not been
-re-swept there.&lt;/p>
+re-fitted there.&lt;/p>
 &lt;h4>Provenance of the Station&amp;rsquo;s queue weight&lt;span class="hx-absolute -hx-mt-20" id="provenance-of-the-stations-queue-weight">&lt;/span>
 &lt;a href="#provenance-of-the-stations-queue-weight" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>Calibrated, not conventional. The table below is the original sweep, which
 selected 0.03; see the caveats above for why the deck now ships 0.024 and why
@@ -908,7 +911,7 @@ title="Copy code"
 unified the criterion on the route polyline and &lt;code>89d13d4&lt;/code> removed the
 &lt;code>_gate_needs_sight&lt;/code> precompute that a gate deck used to trigger, so a
 familiarity-1.0 gate deck now runs with no &lt;code>--vis-cache&lt;/code> at all: &lt;code>l_corridor&lt;/code>
-takes 5 seconds and reproduces the cached run&amp;rsquo;s 84/16. A visibility model is
+takes 5 seconds and reproduces the cached run&amp;rsquo;s 82/18. A visibility model is
 still built for decks with discovery agents, which consult it to learn the
 graph.&lt;/p>
 &lt;h2>How the gate decides&lt;span class="hx-absolute -hx-mt-20" id="how-the-gate-decides">&lt;/span>
@@ -1303,7 +1306,7 @@ ranks. Dose still only strikes out.&lt;/li>
 &lt;li>pyFDS-Evac applies dose and optical depth together rather than choosing one.&lt;/li>
 &lt;/ul>
 &lt;p>&lt;strong>On the fires we have measured, the dose veto never fires.&lt;/strong> On &lt;code>l_corridor&lt;/code>&amp;rsquo;s
-&lt;code>fire_1MW_west&lt;/code> run the largest &lt;code>fed_max_route&lt;/code> over 3498 route-cost rows is
+&lt;code>fire_1MW_west&lt;/code> run the largest &lt;code>fed_max_route&lt;/code> over 5049 route-cost rows is
 0.0016, against a threshold of 1.0, and &lt;code>world100&lt;/code> is reported the same way. On
 these fires the model is &lt;strong>exposure-gated wayfinding, not hazard avoidance&lt;/strong>:
 every refusal that changes an exit comes from the optical-depth criterion, and
@@ -1779,10 +1782,11 @@ driven by the same smoke, so routing on both would double-count.&lt;/li>
 passing the fire, and a clean way round. Since &lt;code>a98f8bb&lt;/code> the spawn sits in the
 middle of the vertical leg and the two routes are 26 m and 46 m, a 1.8x ratio;
 before that it sat 3 m from the junction and they were 11 m and 58 m, 5.3x —
-a spread wide enough that no smoke could justify the detour. Exit shares are
-unchanged across the move at 84 / 16, with 4 switches and no agent returning to
-an abandoned exit. &lt;strong>The numbers below predate the move&lt;/strong>, so read their route
-lengths against the old geometry. Results are in
+a spread wide enough that no smoke could justify the detour. At &lt;code>a98f8bb&lt;/code> exit
+shares were unchanged across the move at 84 / 16, with 4 switches and no agent
+returning to an abandoned exit; at &lt;code>7a3617d&lt;/code> they are 82 / 18, with 55 switches
+and 34 returns across 14 agents. &lt;strong>The numbers below predate the move&lt;/strong>, so read
+their route lengths against the old geometry. Results are in
 &lt;code>&amp;lt;sciebo&amp;gt;/fds-evac-data/l_corridor/evac/RESULTS.md&lt;/code> (100 agents, seed 1,
 familiarity 1.0):&lt;/p>
 &lt;table>

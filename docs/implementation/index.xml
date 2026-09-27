@@ -333,7 +333,7 @@ Full runs of the asset follow the README&amp;rsquo;s recipe, which uses &lt;code
 legibility comes from the FDS vismap, not from clear air. In those runs all 40
 agents take the near exit when the sign faces them, and all 40 take the far
 exit when it faces away. With FDS 6.10.1 output of the smoke-free deck and
-seed 1904, on main after #170:&lt;/p>
+seed 1904, on main at &lt;code>7a3617d&lt;/code>:&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -404,9 +404,10 @@ above the near sign takes &lt;code>E_far&lt;/code>. The few near-exit cells at t
 &lt;p>&lt;em>Figure 3. What the agents did. Trajectories of the FDS-backed runs in the
 table above (FDS 6.10.1, clear air, seed 1904): 40 of 40 agents walk to
 &lt;code>E_near&lt;/code> when its sign faces them, and 40 of 40 to &lt;code>E_far&lt;/code> when it faces away.
-The runs used the earlier visibility cap (the grid diagonal, 30.8 m); both
-signs are within 30 m of every agent, and the clear-air reruns with the 30 m
-cap give the same counts and times. Script: &lt;code>scripts/plot_trajectories.py&lt;/code>
+The trajectories are from the first runs, at &lt;code>91896c7&lt;/code>, with the earlier
+visibility cap (the grid diagonal, 30.8 m); both signs are within 30 m of every
+agent, and the reruns with the 30 m cap, clear-air and at &lt;code>7a3617d&lt;/code>, give the
+same counts and times. Script: &lt;code>scripts/plot_trajectories.py&lt;/code>
 on the runs&amp;rsquo; SQLite output.&lt;/em>&lt;/p>
 &lt;h2>3. What the agent knows&lt;span class="hx-absolute -hx-mt-20" id="3-what-the-agent-knows">&lt;/span>
 &lt;a href="#3-what-the-agent-knows" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The talk draws wayfinding as a loop of three stages. The code has the same

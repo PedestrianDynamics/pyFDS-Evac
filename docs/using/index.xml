@@ -1346,7 +1346,7 @@ memory made visible) from live &lt;code>rank_routes&lt;/code> probes. The agent 
 exit from &lt;code>y = 14&lt;/code> to &lt;code>24&lt;/code> and the end exit from &lt;code>y = 26&lt;/code> (the two are equally
 far at &lt;code>y ≈ 25.4&lt;/code>); walking back to &lt;code>y = 10&lt;/code> with its map, it takes the side
 exit where it took the end exit on the way up. In the full run each agent
-switches once, &lt;code>E_end → E_side&lt;/code> at t = 5–19 s, and egress takes 21.2 s.
+switches once, &lt;code>E_end → E_side&lt;/code> at t = 5–18 s, and egress takes 21.2 s.
 Checked by &lt;code>tests/test_cognitive_map_memory.py&lt;/code>, which pins the probe outcomes.&lt;/li>
 &lt;li>&lt;strong>FIC vs FED Speed&lt;/strong>: 4x50 m sealed corridor, 30 agents, one exit. The gas is
 &lt;em>prescribed&lt;/em> by a single &lt;code>&amp;amp;INIT&lt;/code> (CO at 2000 ppm, acrolein at 10 ppm) rather
@@ -1405,13 +1405,13 @@ shorter route (32 m vs 52 m) that&amp;rsquo;s declared as an extra graph edge
 static spawn-time journey) for the rerouting/cognitive-map system to
 find. Run with &lt;code>--enable-rerouting&lt;/code> (no &lt;code>--fds-dir&lt;/code>/vis-cache needed —
 divergence here is pure-distance, not smoke-driven) to see it: &lt;code>full&lt;/code>
-agents know the whole graph immediately and reroute onto the shortcut
-within the first reevaluation tick; &lt;code>discovery&lt;/code> agents start knowing
+agents know the whole graph immediately and are assigned the shortcut
+at spawn; &lt;code>discovery&lt;/code> agents start knowing
 only the spawn&amp;rsquo;s declared neighbor and explore the nearest
 known-but-unvisited doorway at each step — which for this maze&amp;rsquo;s
 geometry happens to coincide with the original scripted tour the whole
 way, so they end up taking the long route without ever finding the
-shortcut. Verified: &lt;code>full&lt;/code> evacuates in 35.1 s vs &lt;code>discovery&lt;/code>&amp;rsquo;s 75.1 s
+shortcut. Verified: &lt;code>full&lt;/code> evacuates in 33.9 s vs &lt;code>discovery&lt;/code>&amp;rsquo;s 88.6 s
 (both 20/20 evacuated; see the results table in
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/">&lt;code>docs/testing-familiarity.md&lt;/code>&lt;/a>).&lt;/li>
 &lt;/ul></description></item><item><title>FDS slice sampling</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</guid><description>

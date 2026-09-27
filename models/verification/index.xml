@@ -579,10 +579,10 @@ affect a plain (non-rerouted) run.&lt;/li>
 &lt;h2>What&amp;rsquo;s Being Verified&lt;span class="hx-absolute -hx-mt-20" id="whats-being-verified">&lt;/span>
 &lt;a href="#whats-being-verified" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
 &lt;li>&lt;strong>&lt;code>full&lt;/code> finds and uses the shortcut&lt;/strong> — with its complete graph
-knowledge, a &lt;code>full&lt;/code> agent&amp;rsquo;s very first route evaluation (forced to happen
-at spawn, before it starts walking the scripted tour) finds
-&lt;code>spawn→CP3→exit&lt;/code> cheaper than the scripted route and reroutes onto it
-immediately (&lt;code>reason=&amp;quot;better_path&amp;quot;&lt;/code>).&lt;/li>
+knowledge, a &lt;code>full&lt;/code> agent&amp;rsquo;s opening route choice at spawn already takes
+&lt;code>spawn→CP3→exit&lt;/code>, so no switch is recorded: in the run on &lt;code>7a3617d&lt;/code> all
+20 agents pass CP3 and none passes CP1. (Earlier versions reached the
+same route through a &lt;code>better_path&lt;/code> switch at t ≈ 0.)&lt;/li>
 &lt;li>&lt;strong>&lt;code>discovery&lt;/code> explores instead of knowing&lt;/strong> — a &lt;code>discovery&lt;/code> agent starts
 knowing only its spawn&amp;rsquo;s one declared neighbor (CP0). With no exit
 reachable in its own knowledge yet, it heads to the nearest known-but-
@@ -685,11 +685,9 @@ title="Copy code"
 purely distance-based (see &lt;a href="#scope--caveats">Scope&lt;/a>).&lt;/p>
 &lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
 &lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
-&lt;p>&lt;strong>Numbers not yet rerun.&lt;/strong> The times below were measured before the
-travel-time fix (#170), the discovery routing-engine fix (#174) and the
-30 m sign reading distance (#177). The last replaced a cap equal to the
-grid diagonal, about 27 m for this 20 m × 18 m plan. The pass criteria
-still hold in the test suite; the times will be updated after a rerun.&lt;/p>
+&lt;p>&lt;strong>Measured on main at &lt;code>7a3617d&lt;/code>.&lt;/strong> The &lt;code>discovery&lt;/code> tier gets clear-air
+sight gating on the default 0.25 m grid, and its time depends on that grid
+(see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/#7-full-versus-discovery">Wayfinding §7&lt;/a>).&lt;/p>
 &lt;/blockquote>&lt;p>&lt;strong>Status: passing.&lt;/strong> Both tiers evacuate all agents; &lt;code>full&lt;/code> takes the
 shortcut and finishes markedly faster than &lt;code>discovery&lt;/code>, which retraces the
 scripted maze tour.&lt;/p>
@@ -706,18 +704,18 @@ scripted maze tour.&lt;/p>
 &lt;tr>
 &lt;td>full&lt;/td>
 &lt;td>20/20&lt;/td>
-&lt;td>&lt;strong>35.1 s&lt;/strong>&lt;/td>
-&lt;td>20 × &lt;code>better_path&lt;/code> (at spawn, t≈0)&lt;/td>
+&lt;td>&lt;strong>33.9 s&lt;/strong>&lt;/td>
+&lt;td>0 (the shortcut is assigned at spawn)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>discovery&lt;/td>
 &lt;td>20/20&lt;/td>
-&lt;td>&lt;strong>75.1 s&lt;/strong>&lt;/td>
-&lt;td>0 (nearest-unexplored always matched the scripted tour)&lt;/td>
+&lt;td>&lt;strong>88.6 s&lt;/strong>&lt;/td>
+&lt;td>100: 80 × &lt;code>explore&lt;/code>, 20 onto the exit&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>&lt;code>discovery&lt;/code> showing zero explicit switches is expected, not a bug: its
+&lt;p>Every &lt;code>discovery&lt;/code> agent explores CP0 → CP1 → CP2 → CP3 in that order: its
 frontier choice happens to coincide with the scripted route at every step
 for this maze&amp;rsquo;s specific checkpoint distances (see
 &lt;a href="#whats-being-verified">What&amp;rsquo;s Being Verified&lt;/a>, point 2) — it&amp;rsquo;s still
