@@ -1,16 +1,18 @@
 ---
-title: "Homogeneous Heat FED Validation"
+title: "Homogeneous heat FED verification"
+linkTitle: "Heat dose"
 weight: 15
+aliases: [/docs/testing-heat/]
 ---
 
 ## Purpose
 
-This test case validates the heat FED (Fractional Effective Dose from
+This test case verifies the heat FED (Fractional Effective Dose from
 convective heat, SFPE Handbook Ch. 63 Eq. 63.44) accumulation logic in the pyFDS-Evac
 pipeline against hand-calculated predictions, using a simplified scenario
 with a spatially **homogeneous** (uniform) gas-phase temperature field. It
 is the direct sibling of [`docs/testing-homogeneous.md`](testing-homogeneous.md)
-(the toxic-CO validation), following the same method and the same directory
+(the toxic-CO verification), following the same method and the same directory
 conventions.
 
 By removing spatial gradients as a variable, any deviation between simulated
@@ -20,12 +22,12 @@ heat FED accumulation code from the heat-transport physics.
 
 Three temperature levels are tested (100, 150, 200 °C) to check that the
 pipeline's heat FED results scale correctly with the T^3.4 power law, rather
-than validating against just a single data point.
+than verifying against just a single data point.
 
-**Scope note:** this validates the heat FED *dose* track (incapacitation)
+**Scope note:** this verifies the heat FED *dose* track (incapacitation)
 only. Heat does not currently factor into route cost or rejection — that
 routing question is deliberately deferred pending further design discussion,
-so there is nothing routing-related to validate here.
+so there is nothing routing-related to verify here.
 
 Heat also has no effect on walking speed below the threshold. Extinction
 (Frantzich–Nilsson) and irritants (FIC) both degrade speed continuously; heat
@@ -64,7 +66,7 @@ FED trace as a speed trace.
   `config.json`/`geometry.wkt` verbatim (the scenario config is physics-track
   agnostic).
 
-## What's Being Validated
+## What's Being Verified
 
 1. **Heat FED accumulation** — per-agent FED_HEAT(t) computed from the FDS
    TEMPERATURE slice output matches the hand-calculated closed form for a
@@ -187,7 +189,7 @@ requires the Intel MPI runtime (`impi.dll`), which is not present, and
 installing it is a system-level change outside the scope of adding this
 verification asset. The decks, hand-calc reference, and pipeline wiring are
 all in place and unit/behavioural-tested (see `tests/verification/test_s6_heat_fed.py`
-and `test_heat_fed_verif.py`, which validate the same formula and OR-incapacitation
+and `test_heat_fed_verif.py`, which verify the same formula and OR-incapacitation
 logic against synthetic fields, no FDS required) — what remains is running
 the three decks above in an environment with FDS+MPI available and filling
 in this table:

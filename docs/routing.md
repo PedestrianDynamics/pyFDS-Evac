@@ -1,6 +1,7 @@
 ---
 title: "Smoke-aware routing"
 weight: 10
+aliases: [/docs/routing/]
 ---
 
 > Part of [pyFDS-Evac](../README.md).

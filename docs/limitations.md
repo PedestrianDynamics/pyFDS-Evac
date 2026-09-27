@@ -1,6 +1,7 @@
 ---
 title: "Limitations"
 weight: 8
+aliases: [/docs/limitations/]
 ---
 
 ## Status

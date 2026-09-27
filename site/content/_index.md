@@ -21,8 +21,10 @@ layout: hextra-home
 {{< /hextra/hero-subtitle >}}
 </div>
 
-<div class="hx-mb-6">
-{{< hextra/hero-button text="Get started" link="docs/quickstart" >}}
+<div class="hx-mb-6 hx-flex hx-flex-wrap hx-items-center hx-gap-4">
+{{< hextra/hero-button text="Quickstart" link="docs/getting-started/quickstart/" >}}
+{{< hextra/hero-button text="Coming from FDS+Evac" link="docs/getting-started/coming-from-fds-evac/" >}}
+<a href="docs/" class="hx-font-medium hx-underline">Documentation</a>
 </div>
 
 <div class="hx-mb-6">
@@ -30,7 +32,7 @@ Research software, provided without warranty. Not intended for regulatory or des
 </div>
 
 <div class="hx-mb-6">
-Defaults follow FDS+Evac; see <a href="docs/coming-from-fds-evac/#defaults-follow-fdsevac">what changed</a>.
+Defaults follow FDS+Evac; see <a href="docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac">what changed</a>.
 </div>
 
 <div class="hx-mt-6"></div>
@@ -38,27 +40,33 @@ Defaults follow FDS+Evac; see <a href="docs/coming-from-fds-evac/#defaults-follo
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Speed"
-    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or the non-linear `fridolf` option, V/(V+2), from Python. Irritant gases can add a further slowdown (opt-in)."
+    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or the non-linear `fridolf` option, V/(V+2), from Python, with an optional irritant slowdown."
+    link="fundamentals/walking-speed/"
   >}}
   {{< hextra/feature-card
     title="Dose"
     subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus an opt-in convective heat dose accumulated separately. By default each agent stops at its own threshold."
+    link="models/fed/"
   >}}
   {{< hextra/feature-card
     title="Route choice"
     subtitle="Optical depth integrated along the route the agent will actually walk refuses exits and orders the rest. Re-decided every second."
+    link="models/routing/"
   >}}
   {{< hextra/feature-card
     title="Wayfinding"
     subtitle="fdsvismap decides which signs an agent can read through smoke. What it reads enters its cognitive map; staff know the building, visitors discover it."
+    link="models/visibility/"
   >}}
   {{< hextra/feature-card
     title="One-way coupling"
     subtitle="FDS runs once. Egress reads the stored slices through one sampling interface, so a synthetic field replaces FDS in tests and routing sweeps never re-run the fire."
+    link="docs/understanding/concepts/#one-way-coupling-and-the-data-flow"
   >}}
   {{< hextra/feature-card
     title="One entry point"
     subtitle="Script, test, command line, and the optional web GUI all call the same run_scenario(). Results are a JuPedSim trajectory file plus per-agent CSV histories."
+    link="docs/using/usage/"
   >}}
 {{< /hextra/feature-grid >}}
 
@@ -87,15 +95,15 @@ uv run python run.py --scenario assets/ISO-table21 --cleanup
 ## Where to start
 
 {{< cards >}}
-  {{< card link="docs/quickstart" title="Quickstart" subtitle="One run on a tracked scenario, no FDS output needed." >}}
-  {{< card link="docs/coming-from-fds-evac" title="Coming from FDS+Evac" subtitle="Where each FDS+Evac input goes, and what has no equivalent." >}}
-  {{< card link="docs/walkthrough" title="Real-FDS walkthrough" subtitle="From tracked FDS output to doses and exit times." >}}
-  {{< card link="docs/limitations" title="Limitations" subtitle="Status, library-level parameters, and what is not modelled." >}}
+  {{< card link="docs/getting-started/quickstart/" title="Quickstart" subtitle="One run on a tracked scenario, no FDS output needed." >}}
+  {{< card link="docs/getting-started/coming-from-fds-evac/" title="Coming from FDS+Evac" subtitle="Where each FDS+Evac input goes, and what has no equivalent." >}}
+  {{< card link="docs/getting-started/walkthrough/" title="Real-FDS walkthrough" subtitle="From tracked FDS output to doses and exit times." >}}
+  {{< card link="docs/understanding/limitations/" title="Limitations" subtitle="Status, library-level parameters, and what is not modelled." >}}
 {{< /cards >}}
 
 ## Your own FDS case
 
-Bringing your own FDS case? Read [what your FDS case must provide](docs/fds-case-requirements)
+Bringing your own FDS case? Read [what your FDS case must provide](docs/using/fds-case-requirements/)
 first: pyFDS-Evac does not run FDS, it samples the output of a finished run, and
 the deck has to dump specific slices for that to work.
 
@@ -112,7 +120,7 @@ the deck has to dump specific slices for that to work.
 pyFDS-Evac adds no movement model and no fire model.
 
 For the ideas behind speed, route choice and wayfinding, read
-[Concepts](docs/concepts) and the talk
+[Concepts](docs/understanding/concepts/) and the talk
 [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
 ([PDF](https://pedestriandynamics.org/pyFDS-Evac/talks/pyFDS-Evac_visibility_seminar_2026.pdf)).
 

@@ -1,6 +1,7 @@
 ---
 title: "Real-FDS walkthrough"
-weight: 5
+weight: 2
+aliases: [/docs/walkthrough/]
 ---
 
 **This page reads FDS output, but you do not need to run FDS.** The output of

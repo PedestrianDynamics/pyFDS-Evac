@@ -1,6 +1,7 @@
 ---
 title: "Coming from FDS+Evac"
 weight: 3
+aliases: [/docs/coming-from-fds-evac/]
 ---
 
 This page is for engineers who have an FDS+Evac input file and want to run the

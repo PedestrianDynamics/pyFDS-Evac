@@ -29,12 +29,65 @@ module:
       target: content
     # The reference documentation lives in the repository's docs/ directory
     # and is served from there unchanged; working notes stay out of the site.
+    # docs/ stays flat for GitHub readers; the mounts below place each page
+    # into its sidebar group. A page listed in a group mount must also be
+    # listed in excludeFiles here, or it is served twice.
     - source: ../docs
       target: content/docs
       excludeFiles:
         - "*-notes.md"
         - "archive/**"
         - "superpowers/**"
+        - "quickstart.md"
+        - "walkthrough.md"
+        - "coming-from-fds-evac.md"
+        - "concepts.md"
+        - "limitations.md"
+        - "model-comparison.md"
+        - "fds-case-requirements.md"
+        - "usage.md"
+        - "howto-rset-ensemble.md"
+        - "assets.md"
+        - "fds-sampling.md"
+        - "smoke-speed-model.md"
+        - "routing.md"
+        - "route-cost-gate.md"
+        - "testing-*.md"
+    - source: ../docs
+      target: content/docs/getting-started
+      includeFiles:
+        - "quickstart.md"
+        - "walkthrough.md"
+        - "coming-from-fds-evac.md"
+    - source: ../docs
+      target: content/docs/understanding
+      includeFiles:
+        - "concepts.md"
+        - "limitations.md"
+        - "model-comparison.md"
+    - source: ../docs
+      target: content/docs/using
+      includeFiles:
+        - "fds-case-requirements.md"
+        - "usage.md"
+        - "howto-rset-ensemble.md"
+        - "assets.md"
+        - "fds-sampling.md"
+    - source: ../docs
+      target: content/docs/implementation/speed
+      includeFiles:
+        - "smoke-speed-model.md"
+    - source: ../docs
+      target: content/docs/implementation/routing
+      includeFiles:
+        - "routing.md"
+        - "route-cost-gate.md"
+    - source: ../docs
+      target: content/models/verification
+      includeFiles:
+        - "testing-homogeneous.md"
+        - "testing-heat.md"
+        - "testing-familiarity.md"
     - source: ../artifacts
       target: static/artifacts
     - source: ../assets/t_junction

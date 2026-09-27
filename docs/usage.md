@@ -1,6 +1,8 @@
 ---
 title: "Usage: running simulations and producing plots"
+linkTitle: "Usage"
 weight: 6
+aliases: [/docs/usage/]
 ---
 
 This page catalogues every user-facing script in the repository: how to run

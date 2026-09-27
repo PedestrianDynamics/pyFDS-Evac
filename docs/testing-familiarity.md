@@ -1,11 +1,13 @@
 ---
-title: "Familiarity Routing Test (Full vs. Discovery)"
+title: "Familiarity routing verification (full vs. discovery)"
+linkTitle: "Familiarity routing"
 weight: 16
+aliases: [/docs/testing-familiarity/]
 ---
 
 ## Purpose
 
-This test case validates that the `full` and `discovery` agent familiarity
+This test case verifies that the `full` and `discovery` agent familiarity
 tiers produce **different evacuation behavior**, not just a config
 flag with no observable effect.
 
@@ -66,7 +68,7 @@ were required before familiarity could have *any* observable effect at all
   exist only for the rerouting/cognitive-map system to discover, and never
   affect a plain (non-rerouted) run.
 
-## What's Being Validated
+## What's Being Verified
 
 1. **`full` finds and uses the shortcut** — with its complete graph
    knowledge, a `full` agent's very first route evaluation (forced to happen
@@ -182,7 +184,7 @@ scripted maze tour.
 `discovery` showing zero explicit switches is expected, not a bug: its
 frontier choice happens to coincide with the scripted route at every step
 for this maze's specific checkpoint distances (see
-[What's Being Validated](#whats-being-validated), point 2) — it's still
+[What's Being Verified](#whats-being-verified), point 2) — it's still
 routing purely off its own explored knowledge, it just never gets lucky
 enough to find the shortcut before finishing.
 

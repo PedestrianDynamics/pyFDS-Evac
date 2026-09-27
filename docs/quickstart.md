@@ -1,6 +1,7 @@
 ---
 title: "Quickstart"
 weight: 1
+aliases: [/docs/quickstart/]
 ---
 
 **No FDS output is needed.** This page runs a scenario tracked in the
