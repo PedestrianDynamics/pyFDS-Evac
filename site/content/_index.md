@@ -29,6 +29,10 @@ layout: hextra-home
 Research software, provided without warranty. Not intended for regulatory or design use.
 </div>
 
+<div class="hx-mb-6">
+Defaults follow FDS+Evac; see <a href="docs/coming-from-fds-evac/#defaults-follow-fdsevac">what changed</a>.
+</div>
+
 <div class="hx-mt-6"></div>
 
 {{< hextra/feature-grid >}}

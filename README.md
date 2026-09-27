@@ -31,6 +31,7 @@ The model descriptions, usage and verification live on the documentation site:
 **<https://pedestriandynamics.org/pyFDS-Evac/>**
 
 - [Usage](https://pedestriandynamics.org/pyFDS-Evac/docs/usage/): CLI flags, post-processing scripts, run-and-plot driver
+- Defaults follow FDS+Evac; see [what changed](https://pedestriandynamics.org/pyFDS-Evac/docs/coming-from-fds-evac/#defaults-follow-fdsevac) and the [changelog](CHANGELOG.md)
 - [Smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/), including FDS data access through `fdsreader`
 - [Fractional effective dose](https://pedestriandynamics.org/pyFDS-Evac/models/fed/), including heat dose and irritant slowdown
 - [Dynamic route rerouting](https://pedestriandynamics.org/pyFDS-Evac/models/routing/)

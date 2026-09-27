@@ -34,6 +34,55 @@ A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). `uv run python run.py --scenario <json|dir|zip> --fds-dir
 <fds output>` combines them.
 
+## Defaults follow FDS+Evac
+
+pyFDS-Evac is an enhancement of FDS+Evac, not a clone. Where a mechanism has
+a direct FDS+Evac counterpart, the default is the FDS+Evac form, so that a
+case converted from FDS+Evac behaves as its author expects. Newer or
+alternative forms stay available as options. Earlier pyFDS-Evac versions
+used other defaults for seven mechanisms
+([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)):
+
+| Mechanism | Default now (= FDS+Evac) | Previous pyFDS-Evac default | To get the previous behaviour |
+|---|---|---|---|
+| Sampling height | 1.6 m, `HUMAN_SMOKE_HEIGHT` (`evac.f90:1072`; Guide §8.7) | 2.0 m | `--smoke-slice-height 2.0`; `opts.smoke_slice_height = 2.0`, or `slice_height_m=2.0` in `SmokeSpeedConfig` and `DefaultFedConfig` |
+| Irritant (FIC) slowdown | None; `evac.f90` imports only `FED` (`evac.f90:26`) | On whenever the gas FED is computed | `--enable-fic-speed`; `opts.enable_fic_speed = True`, or `TenabilityConfig(enable_fic_speed=True)` |
+| HCN term of the FED | *C*HCN − (*C*NO + *C*NO2), offset 1/220 (function `FED` in FDS `func.f90`) | *C*HCN − *C*NO2, offset 0.0045 (Guide Eq. 14–15) | Not available; see the note below |
+| O2 term of the FED | Applied only below 20 % O2 (function `FED` in FDS `func.f90`) | Applied below 19.5 % | `--o2-threshold-percent 19.5`; `opts.o2_threshold_percent = 19.5`, or `DefaultFedConfig(o2_threshold_percent=19.5)` |
+| Pre-movement, when a spawn area sets none | Constant 10 s, `PRE_MEAN` (`evac.f90:1605`), with a warning in the log | 0 s | `"use_premovement": false` in the spawn area's `parameters` |
+| Unimpeded walking speed `v0`, when a spawn area sets none | 1.25 m/s, `VEL_MEAN` (`evac.f90:1603`) | 1.2 m/s | `"v0": 1.2` in the spawn area's `parameters` |
+| Convective heat dose | None (Guide §1.2) | On whenever the output has a `TEMPERATURE` slice | `--enable-heat-fed`; `opts.enable_heat_fed = True` |
+
+The CLI flags are also fields of the web GUI, and the `opts` attributes are
+what `build_run_kwargs` reads, so a script that builds its own options sets
+them the same way. The [changelog](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md)
+lists the same changes.
+
+**The HCN term follows the FED as FDS and FDS+Evac compute it.** FDS+Evac
+calls the `FED` function of FDS, which has subtracted NO + NO2 from HCN,
+with the offset 0.00454545 (about 1/220), since FDS commit 694e033 (2011);
+earlier versions had no HCN term. The FDS+Evac Guide's Eq. 15 subtracts NO2
+alone, which no FDS version computed, so pyFDS-Evac follows the code, not the
+guide's text, and does not offer the guide's form as an option. The FDS
+verification case `FED_FIC` separates the two forms and is part of the test
+suite ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
+
+**What deliberately still differs:**
+
+- Incapacitation is probabilistic by default: each agent draws its own
+  threshold, where FDS+Evac stops every agent at FED = 1. This is under
+  discussion ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157));
+  `--incapacitation-mode deterministic` gives the FDS+Evac rule.
+- Route choice, cognitive maps and sign visibility are enhancements with no
+  one-to-one FDS+Evac counterpart
+  ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)); see
+  [Smoke-aware routing](routing.md).
+- Known issues: an agent incapacitated during its pre-movement time is
+  released when that time ends
+  ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)), and
+  the gas FED reads the first slice of each species whatever its height
+  ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)).
+
 ## Where each FDS+Evac input goes
 
 Section numbers refer to the FDS+Evac Technical Reference and User's Guide
