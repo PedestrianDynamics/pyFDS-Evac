@@ -1,0 +1,18 @@
+{
+ "route_state": {
+  "current_exit": "west",
+  "current_path": [
+   "spawn",
+   "west"
+  ],
+  "last_eval_time_s": 5.0,
+  "wander_step": 0
+ },
+ "switch": null,
+ "wait_info": {
+  "current_origin": "spawn",
+  "current_target_stage": "west",
+  "path_choices": {},
+  "state": "to_target"
+ }
+}

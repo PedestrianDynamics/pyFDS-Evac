@@ -1,0 +1,33 @@
+{
+ "route_state": {
+  "current_exit": null,
+  "current_path": [
+   "D0",
+   "C0"
+  ],
+  "last_eval_time_s": 5.0,
+  "wander_step": 0
+ },
+ "switch": {
+  "agent_id": 7,
+  "new_cost": 0.0,
+  "new_exit": "C0",
+  "old_cost": null,
+  "old_exit": null,
+  "reason": "explore",
+  "time_s": 5.0
+ },
+ "wait_info": {
+  "current_origin": "D0",
+  "current_target_stage": "D0",
+  "path_choices": {
+   "D0": [
+    [
+     "C0",
+     100.0
+    ]
+   ]
+  },
+  "state": "to_target"
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "route_state": {
+  "current_exit": "west",
+  "current_path": [
+   "spawn",
+   "west"
+  ],
+  "last_eval_time_s": 5.0,
+  "wander_step": 0
+ },
+ "switch": {
+  "agent_id": 7,
+  "new_cost": 20.1181,
+  "new_exit": "west",
+  "old_cost": 40.1544,
+  "old_exit": "east",
+  "reason": "smoke_reroute",
+  "time_s": 5.0
+ },
+ "wait_info": {
+  "current_origin": "spawn",
+  "current_target_stage": "west",
+  "path_choices": {
+   "spawn": [
+    [
+     "west",
+     100.0
+    ]
+   ]
+  },
+  "state": "to_target"
+ }
+}
