@@ -801,6 +801,127 @@ class RouteCost:
     clean: bool = True
 
 
+# ── Internal route records ───────────────────────────────────────────
+#
+# What evaluate_route computes, split by concern: what a route measures, which
+# limits it breaks, and how it ranks. RouteCost stays the public result and is
+# an exact projection of these (_project_route_cost).
+
+
+@dataclass(frozen=True)
+class RouteMeasurements:
+    """What a route measures, before any limit or cost model is applied."""
+
+    exit_id: str
+    path: list[str]
+    segments: list[SegmentCost]
+    # Node to node, as RouteCost reports it.
+    path_length_m: float
+    # From where the agent stands, as tau and the composite use it.
+    effective_length_m: float
+    k_ave_route: float
+    travel_time_s: float
+    fed_max_route: float
+    composite_cost: float
+    queue_time_s: float
+    k_max_route: float
+    tau_route: float
+    k_leg_max: float
+
+
+@dataclass(frozen=True)
+class RouteViolation:
+    """One limit a route breaks."""
+
+    # "fed", "tau" or "all_segments_non_visible".
+    kind: str
+    # The public rejection reason this violation reports.
+    reason: str
+    measured: float
+    limit: float
+
+
+@dataclass(frozen=True)
+class RouteFeasibility:
+    """Whether a route may be taken, and why not.
+
+    ``feasible`` and ``rejected`` are kept independently: the additive K_vis
+    screen sets ``rejected`` and leaves ``feasible`` alone. The public reason
+    is that of the last violation recorded, so a route over both the FED and
+    the tau limit reports tau.
+    """
+
+    feasible: bool
+    rejected: bool
+    rejection_reason: str | None
+    violations: tuple[RouteViolation, ...] = ()
+
+
+@dataclass(frozen=True)
+class RouteAssessment:
+    """A measured route judged under one cost model."""
+
+    measurements: RouteMeasurements
+    feasibility: RouteFeasibility
+    rank_cost: float
+    clean: bool
+
+
+@dataclass(frozen=True)
+class RankedRoute:
+    """An assessed route in the ranking, with its public projection."""
+
+    assessment: RouteAssessment
+    cost: RouteCost
+    # Un-rejected as the least bad route when every route was refused.
+    fallback_promoted: bool = False
+
+
+@dataclass(frozen=True)
+class RouteDecision:
+    """What one reevaluation decided for an agent, before it is applied."""
+
+    # "keep", "switch", "fallback", "explore" or "wander".
+    kind: str
+    reason: str | None = None
+    candidate: RouteCost | None = None
+    path: list[str] | None = None
+    old_exit: str | None = None
+    target_id: str | None = None
+    old_cost: float | None = None
+    new_cost: float | None = None
+    # The RouteSwitch reason, exactly as emitted.
+    switch_reason: str | None = None
+    update_cached_path: bool = False
+    stamp_eval: bool = False
+    wander_step: int | None = None
+
+
+def _project_route_cost(assessment: RouteAssessment) -> RouteCost:
+    """The public ``RouteCost`` of an assessed route, field for field."""
+    m = assessment.measurements
+    f = assessment.feasibility
+    return RouteCost(
+        exit_id=m.exit_id,
+        path=m.path,
+        path_length_m=m.path_length_m,
+        k_ave_route=m.k_ave_route,
+        travel_time_s=m.travel_time_s,
+        fed_max_route=m.fed_max_route,
+        composite_cost=m.composite_cost,
+        segments=m.segments,
+        rejected=f.rejected,
+        rejection_reason=f.rejection_reason,
+        queue_time_s=m.queue_time_s,
+        k_max_route=m.k_max_route,
+        tau_route=m.tau_route,
+        feasible=f.feasible,
+        rank_cost=assessment.rank_cost,
+        k_leg_max=m.k_leg_max,
+        clean=assessment.clean,
+    )
+
+
 def _sample_segment_extinction(
     src_node: StageNode,
     tgt_node: StageNode,
