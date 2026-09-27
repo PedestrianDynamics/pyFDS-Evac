@@ -74,7 +74,7 @@ from .route_graph import (
     reroute_agent,
     should_reevaluate,
 )
-from .smoke_speed import ConstantExtinctionField
+from .smoke_speed import ConstantExtinctionField, sample_accepts_free_speed
 
 _logger = logging.getLogger(__name__)
 _ZERO_EXTINCTION = ConstantExtinctionField(0.0)
@@ -1157,6 +1157,20 @@ def load_scenario(path: str) -> Scenario:
     )
 
 
+def _recorded_free_speed(
+    agent_speed_state: dict[int, dict[str, Any]], agent_id: int
+) -> float | None:
+    """Return the agent's speed recorded before any zone or FIC slowdown.
+
+    A flow agent can be slowed by a zone or by FIC before its first smoke
+    update, so its current speed is not its free speed.
+    """
+    original = agent_speed_state.get(agent_id, {}).get("original_speed")
+    if original is None or float(original) <= 0.0:
+        return None
+    return float(original)
+
+
 def run_scenario(
     scenario: Scenario,
     *,
@@ -1234,6 +1248,9 @@ def run_scenario(
         checkpoint_throughput_tracker = {}
         agent_speed_state: dict[int, dict[str, Any]] = {}
         smoke_speed_state: dict[int, float] = {}
+        smoke_takes_free_speed = smoke_speed_model is not None and (
+            sample_accepts_free_speed(smoke_speed_model.sample)
+        )
         smoke_history: list[dict[str, Any]] = []
         fed_state: dict[int, dict[str, float]] = {}
         heat_fed_state: dict[int, dict[str, float]] = {}
@@ -1887,6 +1904,10 @@ def run_scenario(
                             and not premovement_times[agent_id]["activated"]
                         )
                         base_speed = smoke_speed_state.get(agent_id)
+                        if base_speed is None:
+                            base_speed = _recorded_free_speed(
+                                agent_speed_state, agent_id
+                            )
                         current_speed = get_agent_desired_speed(agent)
                         if base_speed is None and current_speed is not None:
                             if current_speed > 0:
@@ -1908,8 +1929,13 @@ def run_scenario(
                         x, y = extract_agent_xy(agent)
                         if x is None or y is None:
                             continue
+                        sample_kwargs = (
+                            {"free_speed_m_per_s": base_speed}
+                            if smoke_takes_free_speed
+                            else {}
+                        )
                         extinction, speed_factor = smoke_speed_model.sample(
-                            current_time, x, y, free_speed_m_per_s=base_speed
+                            current_time, x, y, **sample_kwargs
                         )
                         desired_speed = base_speed * speed_factor
                         if direct_steering_info:

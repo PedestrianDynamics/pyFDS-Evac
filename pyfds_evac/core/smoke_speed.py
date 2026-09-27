@@ -54,7 +54,9 @@ References
   view-angle correction (Eq. 7), waypoint-based visibility maps
 """
 
+import inspect
 import logging
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -262,8 +264,13 @@ def speed_factor_from_extinction_fridolf(
     - At K = 0 (clear air) or V >= 3 m: factor = 1.
     - The floor never raises the speed above w_free.
     - w_free <= 0: factor = 1 (nothing to slow).
+    - C must be finite and positive; otherwise ValueError.
     """
 
+    if not (math.isfinite(visibility_factor_c) and visibility_factor_c > 0.0):
+        raise ValueError(
+            f"visibility_factor_c must be finite and > 0, got {visibility_factor_c}"
+        )
     if not np.isfinite(extinction_per_m):
         extinction_per_m = 0.0
     extinction_per_m = max(0.0, float(extinction_per_m))
@@ -274,6 +281,22 @@ def speed_factor_from_extinction_fridolf(
     reduced = free_speed - slope * (visibility_threshold_m - visibility)
     speed = min(free_speed, max(min_speed_m_per_s, reduced))
     return float(speed / free_speed)
+
+
+def sample_accepts_free_speed(sample) -> bool:
+    """Return whether a ``sample`` callable takes ``free_speed_m_per_s``.
+
+    Custom smoke models may define ``sample(time_s, x, y)`` only; callers
+    pass the free speed to those that accept it.
+    """
+    try:
+        params = inspect.signature(sample).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(
+        p.name == "free_speed_m_per_s" or p.kind is inspect.Parameter.VAR_KEYWORD
+        for p in params
+    )
 
 
 class SmokeSpeedModel:
@@ -330,5 +353,8 @@ class SmokeSpeedModel:
         free_speed_m_per_s: float | None = None,
     ) -> float:
         """Return only the speed factor at the requested position/time."""
-        _, factor = self.sample(time_s, x, y, free_speed_m_per_s)
+        if free_speed_m_per_s is None or not sample_accepts_free_speed(self.sample):
+            _, factor = self.sample(time_s, x, y)
+            return factor
+        _, factor = self.sample(time_s, x, y, free_speed_m_per_s=free_speed_m_per_s)
         return factor
