@@ -892,6 +892,8 @@ class RouteDecision:
     new_cost: float | None = None
     # The RouteSwitch reason, exactly as emitted.
     switch_reason: str | None = None
+    # Same-exit decisions: the path is recorded whether or not the switch
+    # applies, and the exit is left as it is.
     update_cached_path: bool = False
     stamp_eval: bool = False
     wander_step: int | None = None
@@ -2234,6 +2236,160 @@ def _adoptable(
     return _anchor_allows(candidate, old_rc, config)
 
 
+def _leaves_rejected_path(committed: RouteCost, best: RouteCost) -> bool:
+    """Whether the walked path failed a limit and *best* passes them all.
+
+    A rejected walked path is left for a feasible one whatever the time
+    saving: the 10 % rule damps churn between acceptable paths, it must not
+    hold an agent on one that failed a limit (#184).
+    """
+    return committed.rejected and best.feasible and not best.rejected
+
+
+def _path_clearly_cheaper(best: RouteCost, committed: RouteCost) -> bool:
+    """Whether *best* beats the walked path by _PATH_IMPROVEMENT_THRESHOLD."""
+    return best.rank_cost < committed.rank_cost * _PATH_IMPROVEMENT_THRESHOLD
+
+
+def _decide_same_exit(
+    best: RouteCost,
+    old_exit: str | None,
+    wait_info: dict,
+    graph: StageGraph,
+    current_time_s: float,
+    current_fed: float,
+    extinction_sampler: ExtinctionSampler,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RerouteConfig,
+    cached_segments: dict[SegmentCacheKey, SegmentCost] | None,
+    *,
+    exit_counts: dict[str, int] | None,
+    agent_position: tuple[float, float] | None,
+    current_target: str | None,
+) -> RouteDecision:
+    """Whether to move a walking agent onto a better path to the same exit.
+
+    Only reroute if the newly ranked path to it is meaningfully cheaper than
+    the path the agent is actually walking right now (not just whatever was
+    last recorded as "best"). That path is measured here, on the full graph,
+    with the pass's shared cache and no current exit, and only when it can
+    be reconstructed to this exit. Either way the path is recorded, even if
+    applying the switch fails.
+    """
+    committed_path = _reconstruct_committed_path(wait_info)
+    if (
+        committed_path
+        and committed_path[-1] == best.exit_id
+        and all(n in graph.nodes for n in committed_path)
+    ):
+        committed = evaluate_route(
+            graph,
+            committed_path,
+            current_time_s,
+            current_fed,
+            extinction_sampler,
+            fed_rate_sampler,
+            config.cost_config,
+            cached_segments=cached_segments,
+            exit_counts=exit_counts,
+            agent_position=agent_position,
+            current_target=current_target,
+        )
+        if _leaves_rejected_path(committed, best) or _path_clearly_cheaper(
+            best, committed
+        ):
+            return RouteDecision(
+                kind="switch",
+                candidate=best,
+                path=best.path,
+                old_exit=old_exit,
+                target_id=best.exit_id,
+                old_cost=committed.rank_cost,
+                new_cost=best.rank_cost,
+                switch_reason="better_path",
+                update_cached_path=True,
+            )
+    return RouteDecision(
+        kind="keep", candidate=best, path=best.path, update_cached_path=True
+    )
+
+
+def _decide_exit_change(
+    best: RouteCost,
+    old_exit: str | None,
+    old_rc: RouteCost | None,
+    old_cost: float | None,
+    config: RerouteConfig,
+) -> RouteDecision:
+    """Whether to move the agent to *best*'s exit, or give it its first one.
+
+    Anchoring / hysteresis: don't abandon the current exit for a *different*
+    one unless the new exit is meaningfully better. Without this, near-tied
+    exits flip-flop on every reevaluation -- worst at short reroute
+    intervals. Anchoring does not apply to the initial choice (old_exit is
+    None) or when the old exit is no longer reachable and so was never
+    priced. Everything else is _anchor_allows, which is also what chose
+    `best`.
+    """
+    if (
+        old_exit is not None
+        and old_cost is not None
+        and not _anchor_allows(best, old_rc, config)
+    ):
+        return RouteDecision(kind="keep", candidate=best)
+
+    reason = "initial" if old_exit is None else "smoke_reroute"
+    if best.rejection_reason and best.rejection_reason.startswith("fallback"):
+        reason = "fallback"
+    return RouteDecision(
+        kind="fallback" if reason == "fallback" else "switch",
+        candidate=best,
+        path=best.path,
+        old_exit=old_exit,
+        target_id=best.exit_id,
+        old_cost=old_cost,
+        new_cost=best.rank_cost,
+        switch_reason=reason,
+    )
+
+
+def _apply_decision(
+    decision: RouteDecision,
+    agent_id: int,
+    wait_info: dict,
+    route_state: AgentRouteState,
+    current_time_s: float,
+) -> RouteSwitch | None:
+    """Carry out *decision* on the agent and report the switch it made.
+
+    A same-exit decision (``update_cached_path``) records its path whether or
+    not the switch applies and leaves the exit alone. An exit change records
+    exit and path only once the agent has been rerouted.
+    """
+    if decision.kind == "keep":
+        if decision.update_cached_path:
+            route_state.current_path = decision.path
+        return None
+    stage_configs = wait_info.get("stage_configs", {})
+    changed = reroute_agent(wait_info, decision.path, stage_configs)
+    if not changed:
+        if decision.update_cached_path:
+            route_state.current_path = decision.path
+        return None
+    if not decision.update_cached_path:
+        route_state.current_exit = decision.target_id
+    route_state.current_path = decision.path
+    return RouteSwitch(
+        time_s=current_time_s,
+        agent_id=agent_id,
+        old_exit=decision.old_exit,
+        new_exit=decision.target_id,
+        old_cost=decision.old_cost,
+        new_cost=decision.new_cost,
+        reason=decision.switch_reason,
+    )
+
+
 def evaluate_and_reroute(
     agent_id: int,
     wait_info: dict,
@@ -2376,85 +2532,21 @@ def evaluate_and_reroute(
     # whose assigned exit happens to be the one it finds is never routed to it
     # and stands at the doorway for the rest of the run.
     if old_exit == best.exit_id and wait_info.get("state") != "idle":
-        # Same exit — only reroute if the newly ranked path to it is
-        # meaningfully cheaper than the path the agent is actually walking
-        # right now (not just whatever was last recorded as "best").
-        committed_path = _reconstruct_committed_path(wait_info)
-        if (
-            committed_path
-            and committed_path[-1] == best.exit_id
-            and all(n in graph.nodes for n in committed_path)
-        ):
-            committed = evaluate_route(
-                graph,
-                committed_path,
-                current_time_s,
-                current_fed,
-                extinction_sampler,
-                fed_rate_sampler,
-                config.cost_config,
-                cached_segments=cached_segments,
-                exit_counts=exit_counts,
-                agent_position=agent_position,
-                current_target=current_target,
-            )
-            committed_cost = committed.rank_cost
-            # A rejected walked path is left for a feasible one whatever the
-            # time saving: the 10 % rule damps churn between acceptable
-            # paths, it must not hold an agent on one that failed a limit.
-            leaves_rejected = committed.rejected and best.feasible and not best.rejected
-            if (
-                leaves_rejected
-                or best.rank_cost < committed_cost * _PATH_IMPROVEMENT_THRESHOLD
-            ):
-                stage_configs = wait_info.get("stage_configs", {})
-                changed = reroute_agent(wait_info, best.path, stage_configs)
-                if changed:
-                    route_state.current_path = best.path
-                    return RouteSwitch(
-                        time_s=current_time_s,
-                        agent_id=agent_id,
-                        old_exit=old_exit,
-                        new_exit=best.exit_id,
-                        old_cost=committed_cost,
-                        new_cost=best.rank_cost,
-                        reason="better_path",
-                    )
-        route_state.current_path = best.path
-        return None
-
-    # Anchoring / hysteresis: don't abandon the current exit for a *different*
-    # one unless the new exit is meaningfully better. Without this, near-tied
-    # exits flip-flop on every reevaluation -- worst at short reroute intervals.
-    # Anchoring does not apply to the initial choice (old_exit is None) or when
-    # the old exit is no longer reachable and so was never priced. Everything
-    # else is _anchor_allows, which is also what chose `best` above.
-    if (
-        old_exit is not None
-        and old_cost is not None
-        and not _anchor_allows(best, old_rc, config)
-    ):
-        return None
-
-    # Reroute.
-    stage_configs = wait_info.get("stage_configs", {})
-    changed = reroute_agent(wait_info, best.path, stage_configs)
-    if not changed:
-        return None
-
-    reason = "initial" if old_exit is None else "smoke_reroute"
-    if best.rejection_reason and best.rejection_reason.startswith("fallback"):
-        reason = "fallback"
-
-    route_state.current_exit = best.exit_id
-    route_state.current_path = best.path
-
-    return RouteSwitch(
-        time_s=current_time_s,
-        agent_id=agent_id,
-        old_exit=old_exit,
-        new_exit=best.exit_id,
-        old_cost=old_cost,
-        new_cost=best.rank_cost,
-        reason=reason,
-    )
+        decision = _decide_same_exit(
+            best,
+            old_exit,
+            wait_info,
+            graph,
+            current_time_s,
+            current_fed,
+            extinction_sampler,
+            fed_rate_sampler,
+            config,
+            cached_segments,
+            exit_counts=exit_counts,
+            agent_position=agent_position,
+            current_target=current_target,
+        )
+    else:
+        decision = _decide_exit_change(best, old_exit, old_rc, old_cost, config)
+    return _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)

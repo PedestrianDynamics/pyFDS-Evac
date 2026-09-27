@@ -1356,6 +1356,23 @@ def test_wander_step_is_kept_after_a_patrol_leg():
     assert result["route_state"]["wander_step"] == case.wander_step + 1
 
 
+def test_same_exit_improvement_is_strict():
+    """A path exactly 10 % cheaper than the walked one is not enough."""
+    walked = _rc("E0", rank_cost=10.0)
+    assert 10.0 * live._PATH_IMPROVEMENT_THRESHOLD == 9.0
+    for cost, cheaper in ((9.0, False), (math.nextafter(9.0, 0.0), True)):
+        assert live._path_clearly_cheaper(_rc("E0", rank_cost=cost), walked) is cheaper
+
+
+def test_leaves_rejected_path_needs_a_feasible_unrejected_best():
+    walked = _rc("E0", rejected=True, rejection_reason="tau")
+    ok = _rc("E0")
+    assert live._leaves_rejected_path(walked, ok)
+    assert not live._leaves_rejected_path(_rc("E0"), ok)
+    assert not live._leaves_rejected_path(walked, replace(ok, feasible=False))
+    assert not live._leaves_rejected_path(walked, replace(ok, rejected=True))
+
+
 # ── The harness compares legacy with live, not live with itself ──────
 
 
