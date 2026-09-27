@@ -2,8 +2,10 @@
 
 A 4 x 32 m corridor, exit at the end, and a side exit at (4, 20) whose sign
 faces west. fdsvismap's rule view_angle * visibility >= distance makes that
-sign legible only for y in [12.5, 27.5]. A discovery agent walks north along
-the centreline, learning what it sees, then walks back to y = 10 with that
+sign legible only from a lens-shaped region of the corridor. The shaded cells
+are the ones from which the probes' own clear-air visibility model reads it;
+the gold ticks mark the span on the centreline. A discovery agent walks north
+along the centreline, learning what it sees, then walks back to y = 10 with that
 map. Each panel shows what is in its map and which exit it would take there.
 The outcomes come from live ``rank_routes`` probes (``_cognitive_map_probe``),
 the same probes that ``tests/test_cognitive_map_memory.py`` pins.
@@ -19,8 +21,10 @@ move there, ``site/static/images/concepts/map_memory.png``.
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
-from _cognitive_map_probe import probe_cognitive_map
+from _cognitive_map_probe import CELL_SIZE_M, CENTRELINE_X, _load, probe_cognitive_map
+from matplotlib.colors import ListedColormap
 from matplotlib.patches import Rectangle
 
 IMAGES = Path(__file__).resolve().parents[2] / "site" / "static" / "images"
@@ -41,7 +45,6 @@ FLOOR = "#f7f7f7"
 TEXT = "dimgrey"
 
 W, L = 4.0, 32.0
-BAND = (12.5, 27.5)
 SIDE_Y = 20.0
 NORTH_YS = [4, 10, 14, 20, 30]
 RETURN_Y = 10
@@ -54,6 +57,29 @@ STATE_STYLE = {
     "legible": dict(fc=EXIT, ec=LEGIBLE_EDGE, lw=1.4),
     "remembered": dict(fc=EXIT, ec=KNOWN, hatch="////", lw=1.2),
 }
+
+
+def legible_region(vis):
+    """Cells of the corridor that read the side sign, and the centreline span.
+
+    The span is sampled finer than the grid, so its ends are the cell edges
+    where the model's answer changes. It must be one interval: the figure
+    labels it by its two ends.
+    """
+    xs = np.arange(CELL_SIZE_M / 2, W, CELL_SIZE_M)
+    ys = np.arange(CELL_SIZE_M / 2, L, CELL_SIZE_M)
+    cells = np.array(
+        [[vis.node_is_visible(0.0, x, y, "E_side") for x in xs] for y in ys]
+    )
+    fine = np.arange(0.0, L, 0.05)
+    on_line = np.array(
+        [vis.node_is_visible(0.0, CENTRELINE_X, y, "E_side") for y in fine]
+    )
+    idx = np.flatnonzero(on_line)
+    assert idx.size and np.all(np.diff(idx) == 1), "legible span is not one interval"
+    # the answer changes between the last miss and the first hit
+    edges = (fine[idx[0] - 1 : idx[0] + 1].mean(), fine[idx[-1] : idx[-1] + 2].mean())
+    return cells, (float(edges[0]), float(edges[1]))
 
 
 def main():
@@ -70,6 +96,8 @@ def main():
     up, back = by_key[(float(RETURN_Y), "north")], by_key[(float(RETURN_Y), "south")]
     # the figure's claim: memory, not position, changes the choice
     assert up.choice != back.choice, (up, back)
+    cells, band = legible_region(_load()[1])
+    print(f"side sign legible on the centreline for y = {band[0]:.2f}-{band[1]:.2f} m")
 
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(
@@ -78,19 +106,33 @@ def main():
     for ax, probe in zip(axes, panels):
         y, state, take = probe.y, probe.side, probe.choice
         ax.add_patch(Rectangle((0, 0), W, L, fc=FLOOR, ec=WALL, lw=1.4, zorder=0))
-        ax.add_patch(
-            Rectangle(
-                (0, BAND[0]),
-                W,
-                BAND[1] - BAND[0],
-                fc=LEGIBLE,
-                alpha=0.5,
-                ec="none",
-                zorder=1,
-            )
+        ax.imshow(
+            np.where(cells, 1.0, np.nan),
+            origin="lower",
+            extent=(0, W, 0, L),
+            cmap=ListedColormap([LEGIBLE]),
+            alpha=0.7,
+            interpolation="nearest",
+            zorder=1,
         )
-        for y_edge in BAND:
-            ax.plot([0, W], [y_edge, y_edge], color=LEGIBLE_EDGE, lw=0.8, zorder=1)
+        ax.contour(
+            np.arange(CELL_SIZE_M / 2, W, CELL_SIZE_M),
+            np.arange(CELL_SIZE_M / 2, L, CELL_SIZE_M),
+            cells.astype(float),
+            levels=[0.5],
+            colors=LEGIBLE_EDGE,
+            linewidths=0.8,
+            zorder=1,
+        )
+        # where the centreline, the probes' path, enters and leaves the region
+        for y_edge in band:
+            ax.plot(
+                [W / 2 - 0.45, W / 2 + 0.45],
+                [y_edge, y_edge],
+                color=LEGIBLE_EDGE,
+                lw=1.6,
+                zorder=2,
+            )
         # end exit, always known
         ax.add_patch(
             Rectangle((W / 2 - 0.7, L - 0.3), 1.4, 0.6, fc=EXIT, ec="none", zorder=4)
@@ -138,12 +180,20 @@ def main():
             )
 
     # shared annotations on the first and last panels
-    axes[0].text(-0.4, BAND[0], "12.5", fontsize=7, color=TEXT, ha="right", va="center")
-    axes[0].text(-0.4, BAND[1], "27.5", fontsize=7, color=TEXT, ha="right", va="center")
+    for y_edge in band:
+        axes[0].text(
+            -0.4,
+            y_edge,
+            f"{y_edge:.1f} on\ncentreline",
+            fontsize=6.5,
+            color=TEXT,
+            ha="right",
+            va="center",
+        )
     axes[0].text(
         -0.4,
         SIDE_Y,
-        "side sign\nlegible\nin band",
+        "side sign\nlegible\nin shade",
         fontsize=7,
         color=TEXT,
         ha="right",
