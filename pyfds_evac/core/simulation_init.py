@@ -1653,6 +1653,7 @@ def _process_distributions(
             "distribution_mode": params.get("distribution_mode", "by_number"),
             "percentage": params.get("percentage", None),
             "familiarity": params.get("familiarity", "full"),
+            "entrance": params.get("entrance"),
         }
 
     return dist_geom, dist_params
