@@ -35,7 +35,7 @@ is one function in `fed.py`:
 | NOₓ | `_nox_fed_rate_per_minute` | \((C_{\mathrm{NO}} + C_{\mathrm{NO_2}})/1500\) | NO, NO2 (ppm) |
 | Irritants | `_irritant_fld_rate_per_minute` | \(\sum_i C_i / F_{\mathrm{FLD},i}\) | seven irritants (ppm) |
 | HV_CO2 | `_hyperventilation_factor` | \(\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1\) (a factor, not a rate) | CO2 (vol %) |
-| O2 | `_o2_hypoxia_rate_per_minute` | \(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above 19.5 % | O2 (vol %) |
+| O2 | `_o2_hypoxia_rate_per_minute` | \(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above `o2_threshold_percent`, 20.0 % by default | O2 (vol %) |
 
 The lethal Ct doses \(F_{\mathrm{FLD},i}\) [ppm·min] are constants in
 `_irritant_fld_rate_per_minute`, taken from Table 2 of the FDS+Evac guide:
@@ -102,6 +102,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 | `heat_fed_threshold` | `1.0` | `--heat-fed-threshold` |
 | `heat_incapacitation_mode` | `"probabilistic"` | `--heat-incapacitation-mode` |
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
+| `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` | `--o2-threshold-percent` |
 
 The gas and heat FED are updated every `DefaultFedConfig.update_interval_s`,
 which `run.py` sets from `--smoke-update-interval`. `--disable-tenability`
@@ -213,11 +214,12 @@ computes it
   the CO₂ asphyxiant endpoint \(F_{I_{CO_2}}\) is not computed.
 - **CO.** Fixed at light work (`fed.py:54`), Eq. 63.18 at its default
   \(V_E\) and *D*.
-- **O₂.** The rate is zero at or above 19.5 % O₂ (`fed.py:66`, `:92`), a
-  guard that neither Purser nor the guide has (FDS+Evac's code, the `FED`
-  function of FDS 6.7.6 `func.f90`, guards at 20 % instead); it stops a tiny
-  ambient rate from accumulating over long runs or outside the FDS domain, as Pathfinder
-  does. The guide's Eq. 18 carries a factor 60 in the denominator while
+- **O₂.** The rate is zero at or above `o2_threshold_percent`, 20.0 % O₂
+  by default, the guard of FDS+Evac's code (the `FED` function of FDS 6.7.6
+  `func.f90` adds the term only when X_O2 < 0.20); neither Purser nor the
+  guide has it. It stops a tiny ambient rate from accumulating over long runs
+  or outside the FDS domain. `--o2-threshold-percent 19.5` restores the
+  previous default, the OSHA limit that Pathfinder uses. The guide's Eq. 18 carries a factor 60 in the denominator while
   stating that *t* is in minutes; the code follows Handbook Eq. 63.50 without
   it.
 

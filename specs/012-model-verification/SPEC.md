@@ -93,12 +93,13 @@ omitted from any reference value.
 
 - **A2.1** Constant CO = 1000 ppm, CO₂ = 0, O₂ = 20.9 %, T = 30 min. CO rate
   (Eq. 13) = `2.764e-5 · 1000^1.036 ≈ 0.03543`/min; `hv_co2(0) ≈ 1.0411`;
-  O₂ term = 0 (gated at 19.5 %). Closed form
+  O₂ term = 0 (gated at 20.0 %). Closed form
   `FED = 0.03543 · 1.0411 · 30 ≈ 1.107`. Assert to `1e-3` against the exact
   expression, **not** the CO-only value.
 - **A2.2** Additivity: constant CO + HCN ⇒ FED equals
   `(co_rate + cn_rate)·hv_co2·T` from the two closed forms.
-- **A2.3** O₂ hypoxia gate (19.5 %): at O₂ ≥ 19.5 % the term is exactly 0
+- **A2.3** O₂ hypoxia gate (20.0 %, FDS `func.f90`; 19.5 % selectable): at
+  O₂ ≥ 20.0 % the term is exactly 0
   (`_o2_hypoxia_rate_per_minute` early-return); just below, it follows
   `1/(60·exp(8.13−0.54·(20.9−O₂)))` with no blow-up. Sweep across the
   boundary and assert both branches.

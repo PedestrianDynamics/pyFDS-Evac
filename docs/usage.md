@@ -89,6 +89,7 @@ a case with a `TEMPERATURE` slice still gets heat incapacitation.
 | `--fic-alpha F` | Slope of `v/v₀ = max(μ, 1 − α·FIC)` (default 0.7). |
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
 | `--fed-threshold F` | Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless `--incapacitation-mode deterministic`. |
+| `--o2-threshold-percent P` | O₂ vol % at or above which the hypoxia term is zero (default 20.0, as FDS; 19.5 was the previous default). |
 
 ### Agent visualisation
 

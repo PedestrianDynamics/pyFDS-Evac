@@ -120,3 +120,13 @@ def test_cli_fic_speed_flag():
     assert parser.parse_args(["--scenario", "x"]).enable_fic_speed is False
     args = parser.parse_args(["--scenario", "x", "--enable-fic-speed"])
     assert args.enable_fic_speed is True
+
+
+def test_o2_threshold_defaults_to_fds_and_is_configurable():
+    """FDS applies the O2 term below 20 %; 19.5 % stays selectable."""
+    default = build_run_kwargs(_scenario(), _opts(fds_dir=_GAS_DIR))
+    assert default["fed_model"].config.o2_threshold_percent == 20.0
+    legacy = build_run_kwargs(
+        _scenario(), _opts(fds_dir=_GAS_DIR, o2_threshold_percent=19.5)
+    )
+    assert legacy["fed_model"].config.o2_threshold_percent == 19.5

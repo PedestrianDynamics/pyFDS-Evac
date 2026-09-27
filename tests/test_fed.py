@@ -8,7 +8,9 @@ import pytest
 
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.fed import (
+    DefaultFedConfig,
     DefaultFedInputs,
+    DefaultFedModel,
     _cn_fed_rate_per_minute,
     _co_fed_rate_per_minute,
     _co_percent_to_ppm,
@@ -113,7 +115,7 @@ def test_default_fed_rate_is_zero_in_clear_air():
 
 
 class TestO2HypoxiaThreshold:
-    """O2 hypoxia term is suppressed at or above the 19.5 % threshold."""
+    """O2 hypoxia term is suppressed at or above the threshold (20.0 %, FDS)."""
 
     def test_ambient_o2_returns_zero(self):
         rate = _o2_hypoxia_rate_per_minute(20.9)
@@ -128,6 +130,38 @@ class TestO2HypoxiaThreshold:
     def test_below_threshold_is_positive(self):
         rate = _o2_hypoxia_rate_per_minute(15.0)
         assert rate > 0.0
+
+    def test_default_threshold_is_the_fds_guard(self):
+        """FDS applies the O2 term only when X_O2 < 0.20 (func.f90)."""
+        from pyfds_evac.core.fed import _O2_HYPOXIA_THRESHOLD_PERCENT
+
+        assert _O2_HYPOXIA_THRESHOLD_PERCENT == 20.0
+        assert DefaultFedConfig().o2_threshold_percent == 20.0
+        # 19.5 % now contributes: t_incap = exp(8.13 - 0.54 * 1.4) min.
+        expected = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.5))
+        assert _o2_hypoxia_rate_per_minute(19.5) == pytest.approx(expected)
+
+    def test_previous_threshold_stays_available(self):
+        """19.5 % (OSHA / Pathfinder) is selectable; the equation is unchanged."""
+        assert _o2_hypoxia_rate_per_minute(19.5, 19.5) == 0.0
+        assert _o2_hypoxia_rate_per_minute(19.7, 19.5) == 0.0
+        assert _o2_hypoxia_rate_per_minute(19.7) == pytest.approx(
+            1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.7))
+        )
+        inputs = DefaultFedInputs(o2_volume_fraction_percent=19.7)
+        assert default_fed_rate_per_minute(inputs, o2_threshold_percent=19.5) == 0.0
+        assert default_fed_rate_per_minute(inputs) > 0.0
+
+    def test_model_uses_the_configured_threshold(self):
+        class _Field:
+            def sample_inputs(self, time_s, x, y):
+                return DefaultFedInputs(o2_volume_fraction_percent=19.7)
+
+        fds_like = DefaultFedModel(_Field(), DefaultFedConfig())
+        legacy = DefaultFedModel(_Field(), DefaultFedConfig(o2_threshold_percent=19.5))
+        assert fds_like.sample_rate(0.0, 0.0, 0.0)[1] > 0.0
+        assert legacy.sample_rate(0.0, 0.0, 0.0)[1] == 0.0
+        assert legacy.sample_components(0.0, 0.0, 0.0)[1].o2_rate_per_min == 0.0
 
     def test_ambient_conditions_no_fed_accumulation(self):
         """Full FED rate is zero under ambient conditions (no spurious drift)."""

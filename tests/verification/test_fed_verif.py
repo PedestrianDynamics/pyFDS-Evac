@@ -75,22 +75,22 @@ def test_a2_2_co_and_hcn_terms_add_under_hv():
     assert default_fed_rate_per_minute(inputs) == pytest.approx(ref_rate, rel=1e-9)
 
 
-# --- A2.3: O2 hypoxia gate at 19.5 % ----------------------------------------
+# --- A2.3: O2 hypoxia gate at 20.0 % (FDS: X_O2 < 0.20) ---------------------
 
 
 def test_a2_3_o2_gate_zero_at_and_above_threshold():
-    for o2 in (19.5, 20.9):
+    for o2 in (20.0, 20.9):
         inputs = DefaultFedInputs(o2_volume_fraction_percent=o2)
         # All toxicants are 0, so the rate is purely the O2 contribution.
         assert default_fed_rate_per_minute(inputs) == 0.0
 
 
 def test_a2_3_o2_gate_finite_just_below_threshold():
-    inputs = DefaultFedInputs(o2_volume_fraction_percent=19.4)
+    inputs = DefaultFedInputs(o2_volume_fraction_percent=19.9)
     # Purser / FDS Tech Ref Eq. 18 gives t_incap directly in MINUTES, so the
     # per-minute rate is 1 / t_incap with no further conversion. This reference
     # previously carried a spurious 60x, matching the engine bug fixed in #35.
-    ref_o2_rate = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.4))
+    ref_o2_rate = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.9))
 
     got = default_fed_rate_per_minute(inputs)
 

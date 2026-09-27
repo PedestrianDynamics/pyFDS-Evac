@@ -127,6 +127,16 @@ DEFAULTS = [
         "| `heat_susceptibility_sigma` | `0.94` |",
         lambda: _cli().heat_susceptibility_sigma,
     ),
+    (
+        FED,
+        "| `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` |",
+        lambda: DefaultFedConfig().o2_threshold_percent,
+    ),
+    (
+        FED,
+        "| `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` |",
+        lambda: _cli().o2_threshold_percent,
+    ),
     # routing: the scenario `routing` block, and the reevaluation interval
     (ROUTING, "| `tau_max` | `6.0` |", lambda: _routing().tau_max),
     (ROUTING, "| `tau_return_margin` | `0.8` |", lambda: _routing().tau_return_margin),

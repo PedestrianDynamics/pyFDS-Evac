@@ -39,6 +39,10 @@ class DefaultFedConfig:
     fds_dir: str | None = None
     update_interval_s: float = 1.0
     slice_height_m: float = 1.6
+    # O2 [vol %] at or above which the hypoxia term is zero. 20.0 is FDS's
+    # guard (func.f90: the O2 term applies only when X_O2 < 0.20); 19.5 is
+    # the OSHA / Pathfinder value pyFDS-Evac used before.
+    o2_threshold_percent: float = 20.0
 
 
 def _co_percent_to_ppm(co_volume_fraction_percent: float) -> float:
@@ -63,33 +67,37 @@ def _hyperventilation_factor(co2_percent: float) -> float:
     return math.exp(0.1903 * co2_percent + 2.0004) / 7.1
 
 
-_O2_HYPOXIA_THRESHOLD_PERCENT: float = 19.5
-"""O2 concentration above which hypoxia does not contribute to FED.
+_O2_HYPOXIA_THRESHOLD_PERCENT: float = 20.0
+"""Default O2 concentration at or above which hypoxia does not contribute to FED.
 
 At ambient O2 (20.9 %) the SFPE Eq. 18 denominator is non-zero, so the
 rate is tiny but finite — accumulating over a long simulation (or when
 the agent is outside the FDS domain and O2 defaults to 20.9 %) it
-produces spurious FED drift.  OSHA defines the safe lower limit for
-working conditions as 19.5 %; below this value hypoxia is a genuine
-hazard.  Pathfinder uses the same threshold (default 19.5 %) to prevent
-misleading accumulation under safe ambient conditions.
+produces spurious FED drift.  FDS, and so FDS+Evac, applies the O2 term
+only when X_O2 < 0.20 (``FED()`` in ``func.f90``), which is the default
+here.  OSHA defines the safe lower limit for working conditions as
+19.5 %, and Pathfinder uses that value; pass 19.5 through
+``DefaultFedConfig.o2_threshold_percent`` or ``--o2-threshold-percent``
+to use it.
 """
 
 
-def _o2_hypoxia_rate_per_minute(o2_percent: float) -> float:
+def _o2_hypoxia_rate_per_minute(
+    o2_percent: float,
+    threshold_percent: float = _O2_HYPOXIA_THRESHOLD_PERCENT,
+) -> float:
     """Return the O2 hypoxia FED contribution in 1/min from guide Eq. 18.
 
     t_incap [min] = exp(8.13 - 0.54 * (20.9 - C_O2%))   (Purser / FDS Tech Ref)
     rate [1/min]  = 1 / t_incap
 
-    Returns 0 when O2 is at or above ``_O2_HYPOXIA_THRESHOLD_PERCENT``
-    (default 19.5 %) to prevent spurious accumulation under safe ambient
-    conditions.
+    Returns 0 when O2 is at or above ``threshold_percent`` (default 20.0 %,
+    as FDS) to prevent spurious accumulation under safe ambient conditions.
     """
 
     if not math.isfinite(o2_percent):
         o2_percent = 20.9
-    if float(o2_percent) >= _O2_HYPOXIA_THRESHOLD_PERCENT:
+    if float(o2_percent) >= float(threshold_percent):
         return 0.0
     t_incap_min = math.exp(8.13 - 0.54 * (20.9 - float(o2_percent)))
     if t_incap_min <= 0.0:
@@ -346,7 +354,11 @@ class FedComponents:
         return narcotic_sum * self.hv_co2 + self.o2_rate_per_min
 
 
-def default_fed_components(inputs: DefaultFedInputs) -> FedComponents:
+def default_fed_components(
+    inputs: DefaultFedInputs,
+    *,
+    o2_threshold_percent: float = _O2_HYPOXIA_THRESHOLD_PERCENT,
+) -> FedComponents:
     """Return the per-term FED rate breakdown for one gas sample."""
     return FedComponents(
         co_rate_per_min=_co_fed_rate_per_minute(
@@ -358,11 +370,17 @@ def default_fed_components(inputs: DefaultFedInputs) -> FedComponents:
         nox_rate_per_min=_nox_fed_rate_per_minute(inputs.no_ppm, inputs.no2_ppm),
         fld_rate_per_min=_irritant_fld_rate_per_minute(inputs),
         hv_co2=_hyperventilation_factor(inputs.co2_volume_fraction_percent),
-        o2_rate_per_min=_o2_hypoxia_rate_per_minute(inputs.o2_volume_fraction_percent),
+        o2_rate_per_min=_o2_hypoxia_rate_per_minute(
+            inputs.o2_volume_fraction_percent, o2_threshold_percent
+        ),
     )
 
 
-def default_fed_rate_per_minute(inputs: DefaultFedInputs) -> float:
+def default_fed_rate_per_minute(
+    inputs: DefaultFedInputs,
+    *,
+    o2_threshold_percent: float = _O2_HYPOXIA_THRESHOLD_PERCENT,
+) -> float:
     """Return the Purser FED accumulation rate in 1/min.
 
     FED_tot = (FED_CO + FED_CN + FED_NOx + FLD_irr) * HV_CO2 + FED_O2
@@ -370,7 +388,9 @@ def default_fed_rate_per_minute(inputs: DefaultFedInputs) -> float:
     Missing gas species default to 0, reducing to the original 3-term
     model (FED_CO * HV_CO2 + FED_O2) when only CO/CO2/O2 are available.
     """
-    return default_fed_components(inputs).total_rate_per_min
+    return default_fed_components(
+        inputs, o2_threshold_percent=o2_threshold_percent
+    ).total_rate_per_min
 
 
 def accumulate_default_fed(
@@ -571,14 +591,18 @@ class DefaultFedModel:
     ) -> tuple[DefaultFedInputs, float]:
         """Return both the sampled inputs and their FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
-        return inputs, default_fed_rate_per_minute(inputs)
+        return inputs, default_fed_rate_per_minute(
+            inputs, o2_threshold_percent=self.config.o2_threshold_percent
+        )
 
     def sample_components(
         self, time_s: float, x: float, y: float
     ) -> tuple[DefaultFedInputs, FedComponents]:
         """Return the sampled inputs together with the per-term FED breakdown."""
         inputs = self.sample_inputs(time_s, x, y)
-        return inputs, default_fed_components(inputs)
+        return inputs, default_fed_components(
+            inputs, o2_threshold_percent=self.config.o2_threshold_percent
+        )
 
     def advance(
         self,

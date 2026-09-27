@@ -177,6 +177,14 @@ def _build_parser() -> argparse.ArgumentParser:
         "(default: 1.0 per ISO 13571 / Korhonen 2021)",
     )
     parser.add_argument(
+        "--o2-threshold-percent",
+        type=float,
+        default=20.0,
+        help="O2 volume percent at or above which the hypoxia term of the gas "
+        "FED is zero (default: 20.0, as FDS/FDS+Evac; 19.5 was the previous "
+        "pyFDS-Evac default, the OSHA limit used by Pathfinder)",
+    )
+    parser.add_argument(
         "--incapacitation-mode",
         choices=("probabilistic", "deterministic"),
         default="probabilistic",

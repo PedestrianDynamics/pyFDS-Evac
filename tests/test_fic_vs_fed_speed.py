@@ -152,7 +152,7 @@ class TestO2HypoxiaReference:
             assert got == pytest.approx(expected, rel=1e-9), f"at {o2} % O2"
 
     def test_the_gate_closes_at_and_above_the_safe_threshold(self):
-        for o2 in (19.5, 20.9):
+        for o2 in (20.0, 20.9):
             assert (
                 default_fed_rate_per_minute(
                     DefaultFedInputs(o2_volume_fraction_percent=o2)
