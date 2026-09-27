@@ -17,10 +17,11 @@ one slide per section. Each section says what the code does, where, and which
 figure belongs there. Where the talk and the code disagree, a **Talk vs code**
 note says so, and the code is the reference.
 
-Mechanisms were checked against main at `df0ccb0`. Each reported run outcome
-names its source: a repository test, an asset README, a figure script, or a
-run on main by one of the investigations of #160 and #168. None of the examples validates human
-wayfinding. They verify that the implementation does what this page says.
+Mechanisms were checked against main at `f363758`, which includes #170 and
+#174. Each reported run outcome names its source: a repository test, an
+asset README, a figure script, or a run on main by one of the investigations
+of #160 and #168. None of the examples validates human wayfinding. They
+verify that the implementation does what this page says.
 
 The argument of the section is that **route choice can only choose among
 routes the agent knows, so what the agent knows is as much part of the model
@@ -32,7 +33,7 @@ After that, its map grows only through legible signs, or, with
 
 A node is a place. A sign tells someone standing elsewhere that the place
 exists. Every exit, checkpoint and waypoint therefore carries a sign
-descriptor \(\{x, y, \alpha, C\}\), authored or synthesised
+descriptor \(\{x, y, \alpha_s, C\}\), authored or synthesised
 (`visibility.py:34–73`).
 
 pyFDS-Evac does not compute legibility itself. It hands the descriptors to
@@ -78,15 +79,15 @@ familiarity 0 about 9 m from the near exit and 19 m from the far one. The two
 configs differ only in the bearing of the near exit's sign; the far sign faces
 the agents in both (`assets/exit_visibility_alpha/README.md`).
 
-With the near sign facing the agents (\(\alpha = 0\)), both exits are learned
-at spawn and the near one ranks first. With it facing away (\(\alpha = 180\)),
+With the near sign facing the agents (\(\alpha_s = 0\)), both exits are learned
+at spawn and the near one ranks first. With it facing away (\(\alpha_s = 180\)),
 \(A = 0\) at every agent cell, so the near exit is never learned. Ranking runs
-on the known subgraph only (`route_graph.py:1265–1269`), so the near exit is
+on the known subgraph only (`route_graph.py:1272–1276`), so the near exit is
 absent, not refused.
 
 This distinction matters because of the all-refused fallback. When every known
 route fails the exposure gate, one refused route is re-admitted
-(`route_graph.py:1427–1438`). A refused route can come back that way. An
+(`route_graph.py:1434–1445`). A refused route can come back that way. An
 unknown route cannot, because the fallback never sees it.
 
 The tests pin the mechanism at router level
@@ -101,8 +102,8 @@ seed 1904, on main after #170:
 
 | Near sign | Exit taken | Egress | Route switches |
 |---|---|---|---|
-| \(\alpha = 0\) | 40 to `E_near` | 17.07 s | 0 |
-| \(\alpha = 180\) | 40 to `E_far` | 25.89 s | 0 |
+| \(\alpha_s = 0\) | 40 to `E_near` | 17.07 s | 0 |
+| \(\alpha_s = 180\) | 40 to `E_far` | 25.89 s | 0 |
 
 The visibility cap is the grid diagonal: 30.83 m on the FDS grid, 29.99 m on
 the 0.25 m clear-air grid of Figure 1.
@@ -120,9 +121,9 @@ at y ≈ 15.0, midway between the two exits.
 4 m × 30 m corridor, 40 agents at familiarity 0, run in clear air on the
 0.25 m grid, seed 1904. The two configurations differ only in the bearing of
 the near exit's sign. Yellow: cells from which the near sign is legible. The
-far sign is legible for y = 0–29.2 m in both panels. (a) \(\alpha = 0\): the
+far sign is legible for y = 0–29.2 m in both panels. (a) \(\alpha_s = 0\): the
 near sign is legible for y = 0.8–30.0 m; 40 of 40 agents take the near exit,
-median walk 9.2 m, out at 17.1 s. (b) \(\alpha = 180\): the near sign is
+median walk 9.2 m, out at 17.1 s. (b) \(\alpha_s = 180\): the near sign is
 legible only for y = 0–0.8 m; the near exit is never learned, and 40 of 40
 agents walk to the far exit, median walk 19.0 m, out at 25.9 s. Counts, walks
 and times are computed from the runs. Script:
@@ -139,9 +140,9 @@ structure.
 - **Knowledge.** `AgentCognitiveMap`: known nodes, known edges, visited nodes
   (`cognitive_map.py:10–25`).
 - **Decision.** `rank_routes` on `cognitive_subgraph(map, graph)`
-  (`route_graph.py:1265–1269`), then the switching rules of
+  (`route_graph.py:1272–1276`), then the switching rules of
   `evaluate_and_reroute`. With no reachable known exit, exploration or the
-  patrol (`route_graph.py:1782–1844`).
+  patrol (`route_graph.py:1789–1851`).
 - **The loop.** Moving changes the stored position that the next periodic
   learning uses (`scenario.py:2238–2254`), and advancing along the path
   triggers learning at the node left behind (`scenario.py:2508–2551`).
@@ -173,8 +174,8 @@ defect 2 in `assets/blind_spawn_discovery/README.md`). The chain is:
 - the spawn node is visited from the start (`cognitive_map.py:117–121`), so
   there is no frontier;
 - the patrol excludes the current node, so a one-node map has no stop
-  (`cognitive_map.py:341–347`);
-- `evaluate_and_reroute` returns without a switch (`route_graph.py:1809–1810`).
+  (`cognitive_map.py:343–349`);
+- `evaluate_and_reroute` returns without a switch (`route_graph.py:1816–1817`).
 
 The agent keeps steering towards an exit it does not know. Periodic learning
 can still add that exit on the way, once its sign becomes legible. The target,
@@ -230,11 +231,11 @@ that schematic the discovery agent learns the junction at spawn and both exits
 at the junction. Smoke then fills the right arm, and the agent heads for exit A.
 In the code, whether exit B is refused depends on its route's optical depth
 exceeding the gate budget. Legibility of B's sign plays no part in that
-(`route_graph.py:1338–1344`).
+(`route_graph.py:1345–1351`).
 
 <!-- FIGURE: cognitive_map (four panels + legend)
 Source: scripts/figures/cognitive_map.py. Schematic: the known sets, the
-smoke and the chosen exit are hard-coded (cognitive_map.py:64–95); nothing is
+smoke and the chosen exit are hard-coded (cognitive_map.py:66–99); nothing is
 computed. -->
 
 ![Four panels of a T-shaped corridor showing which nodes and edges one agent knows: at spawn, at the junction, with smoke in the right arm, and for a fully familiar agent](/images/wayfinding/cognitive_map.png)
@@ -353,8 +354,8 @@ thing differs in the code, and until #174 a second one did:
 1. **The initial map.** A fully familiar agent knows the whole graph. A
    discovery agent explores: it takes the frontier with the lowest path cost
    from its position, learns as the path advances, and, with no frontier left,
-   patrols its known nodes (`cognitive_map.py:260–397`). Route history logs
-   `reason="explore"` and `reason="wander"` (`route_graph.py:1793`, `:1808`).
+   patrols its known nodes (`cognitive_map.py:262–399`). Route history logs
+   `reason="explore"` and `reason="wander"` (`route_graph.py:1800`, `:1815`).
 2. **The ranked length of the first leg**
    ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
    by #174, now merged). The discovery agent's subgraph lacked the routing

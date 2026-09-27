@@ -8,7 +8,8 @@ aliases: [/models/visibility/]
 Based on: [Visibility through smoke](/fundamentals/visibility.md) and
 [Exit choice and familiarity](/fundamentals/exit-choice.md).
 
-Code references are to main at `df0ccb0` and fdsvismap `64d9aa7`.
+Code references are to main at `f363758`, which includes #170 and #174, and
+to fdsvismap `64d9aa7`.
 
 The [routing model](/models/routing.md) ranks and refuses routes. This page
 describes the part of the model that decides which routes it may rank: what
@@ -27,8 +28,8 @@ These words are used with one meaning each, here and on the linked pages.
   and exits, with the walkable legs between them as edges
   (`route_graph.py:104–192`). A **neighbour** of a node is the target of one
   of its outgoing edges.
-- **Sign.** A descriptor \(\{x, y, \alpha, C\}\) attached to a node: position,
-  compass bearing \(\alpha\) of the direction the sign faces, and the
+- **Sign.** A descriptor \(\{x, y, \alpha_s, C\}\) attached to a node: position,
+  compass bearing \(\alpha_s\) of the direction the sign faces, and the
   visibility constant *C* of Jin's law.
 - **Legible.** A sign is legible from a grid cell at a time when it passes the
   precomputed sign-legibility test below. Legibility is a property of the
@@ -54,7 +55,7 @@ These words are used with one meaning each, here and on the linked pages.
 Every exit, checkpoint and waypoint carries a sign (`visibility.py:61–73`). A
 non-empty authored `"sign"` is used as written and must give `x` and `y`. A
 node without one, or with an empty one, receives a synthesised sign at its
-routing point with \(C = 3\) and \(\alpha\) = `None` (`visibility.py:34–58`).
+routing point with \(C = 3\) and \(\alpha_s\) = `None` (`visibility.py:34–58`).
 A node whose polygon cannot give a position gets no sign. Spawn areas carry no
 sign. The model treats every node without a sign as legible from everywhere
 (`visibility.py:538–540`).
@@ -65,8 +66,8 @@ sign. The model treats every node without a sign as legible from everywhere
 }
 ```
 
-\(\alpha\) is a bearing in degrees, clockwise from north (+y). The sign faces
-\((\sin\alpha, \cos\alpha)\), so 90 is readable from the east, 270 from the
+\(\alpha_s\) is a bearing in degrees, clockwise from north (+y). The sign faces
+\((\sin\alpha_s, \cos\alpha_s)\), so 90 is readable from the east, 270 from the
 west and 180 from the south (`visibility.py:388–391`).
 
 The test is computed by [fdsvismap](https://github.com/FireDynamics/fdsvismap)
@@ -76,8 +77,8 @@ distance \(L\) (`FDSVisMap._get_view_angle_array`, `_get_visibility_array`,
 
 $$
 A = \begin{cases}
-\operatorname{clip}_{[0,1]}\!\left(\dfrac{\sin\alpha\,\Delta x + \cos\alpha\,\Delta y}{L}\right) & \alpha \text{ given},\\[1ex]
-1 & \alpha = \texttt{None},
+\operatorname{clip}_{[0,1]}\!\left(\dfrac{\sin\alpha_s\,\Delta x + \cos\alpha_s\,\Delta y}{L}\right) & \alpha_s \text{ given},\\[1ex]
+1 & \alpha_s = \texttt{None},
 \end{cases}
 \qquad
 \bar K = \frac{1}{|P|}\sum_{p\in P} K_p ,
@@ -212,8 +213,8 @@ obstruction or smoke. The map is deleted when the agent leaves
 
 **2.4 Decision.** Route ranking works on the known subgraph only:
 `rank_routes` replaces the stage graph with `cognitive_subgraph(map, graph)`
-before it evaluates any edge (`route_graph.py:1265–1269`,
-`cognitive_map.py:237–257`). Dijkstra, the exposure gate, the ordering and the
+before it evaluates any edge (`route_graph.py:1272–1276`,
+`cognitive_map.py:237–259`). Dijkstra, the exposure gate, the ordering and the
 all-refused fallback see known nodes and edges only. An exit that is not known
 is not refused; it is absent, and the fallback cannot restore it.
 
@@ -223,7 +224,7 @@ before its map exists (`simulation_init.py:1430–1449`). The opening choice
 replaces that target only when the map contains a reachable exit
 (`scenario.py:1006–1008`). If it contains none, and neither exploration nor
 patrol yields a target (below), the agent keeps steering towards that
-geometric exit (`route_graph.py:1809–1810`). Periodic learning may add the exit
+geometric exit (`route_graph.py:1816–1817`). Periodic learning may add the exit
 on the way once its sign is legible, but the target was never chosen from the
 map. This is a defect, not intended behaviour.
 
@@ -237,12 +238,12 @@ two differ:
 - **Re-evaluation** (`evaluate_and_reroute`). It ranks from the agent's
   position. It adopts a different exit only if the rival passes the
   switching rule: an optical-depth margin, then an anchor on the ranking cost
-  (`exit_switch_anchor` = 0.9, `route_graph.py:1498`, `:1705–1719`). The
+  (`exit_switch_anchor` = 0.9, `route_graph.py:1505`, `:1712–1726`). The
   optional queue term (`w_queue`, 0 by default) enters the ranking cost.
 - **All refused.** When every known route fails the gate, the least smoky one
   is re-admitted, but the current route is kept first if the rival's worst
   extinction is not lower by `fallback_switch_margin`
-  (`route_graph.py:1427–1438`).
+  (`route_graph.py:1434–1445`).
 
 An agent can therefore keep a known route that is not first in the ranking.
 
@@ -250,37 +251,37 @@ An agent can therefore keep a known route that is not first in the ranking.
 and the optical-depth deadband (\(\tau_{\max}\cdot\) `tau_deadband` =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
 adopted only if its ranking cost, here its travel time, is below 0.9 times the
-current route's (`_anchor_allows`, `route_graph.py:1668–1719`;
-`exit_switch_anchor` = 0.9, `:1498`; `tau_max` = 6.0 and `tau_deadband` = 0.1,
+current route's (`_anchor_allows`, `route_graph.py:1674–1726`;
+`exit_switch_anchor` = 0.9, `:1505`; `tau_max` = 6.0 and `tau_deadband` = 0.1,
 `:685`, `:689`). An exit learned on the way is therefore adopted only if it is
 more than 10 % faster than the exit the agent is heading for.
 
 **No known exit.** When the known subgraph contains no reachable exit,
-`evaluate_and_reroute` looks for a target (`route_graph.py:1782–1844`):
+`evaluate_and_reroute` looks for a target (`route_graph.py:1789–1851`):
 
 1. **Explore.** The frontier node with the lowest path cost through the known
    subgraph, with the first leg measured from the agent's position; ties
-   break on node id (`nearest_frontier_target`, `cognitive_map.py:260–317`).
+   break on node id (`nearest_frontier_target`, `cognitive_map.py:262–319`).
    Logged as `reason="explore"`.
 2. **Wander.** When no frontier is reachable, the next node in a fixed
    rotation over the sorted known nodes other than the current one, reached
    over known edges taken **in either direction**
-   (`wander_target`, `_undirected_known_path`, `cognitive_map.py:320–397`).
+   (`wander_target`, `_undirected_known_path`, `cognitive_map.py:322–399`).
    Logged as `reason="wander"`.
 
 **What route choice does not read.** Route choice never reads the
 sign-legibility test or a line-of-sight visibility
-(`route_graph.py:1338–1344`). `VisibilityModel.visibility_to_node` and
+(`route_graph.py:1345–1351`). `VisibilityModel.visibility_to_node` and
 `distance_to_node` have no caller in `pyfds_evac/`
 ([#158](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158)). Route
 smoke is sampled from the global extinction field (see
 [routing](/models/routing.md)): along the stored polylines for the legs from
 the next node on, and, when the agent's position is given, on a **straight
 line** from the agent to its next node for the first leg (`_los_stats`,
-`route_graph.py:1081–1093`). That straight line can pass through walls, for
+`route_graph.py:1088–1100`). That straight line can pass through walls, for
 every familiarity tier ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). Under the `"additive"` model only, a route
 whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
-non-refused route has a segment below it (`route_graph.py:1355–1368`); this is
+non-refused route has a segment below it (`route_graph.py:1362–1375`); this is
 an extinction threshold, not a sign test.
 
 ## Parameters
@@ -297,7 +298,7 @@ library use.
 | `sign.alpha` | node `sign` | – | `None`, i.e. \(A = 1\) (`visibility.py:58`) | ° | bearing the sign faces |
 | \(V_{\max}\) | code | grid diagonal | grid diagonal (`visibility.py:103`, `:512`) | m | fdsvismap cap, 30 m upstream |
 | `--smoke-slice-height` | CLI | 1.6 (`run.py:67`) | 1.6 (`visibility.py:409`) | m | FDS slice height |
-| `--reroute-interval` | CLI | 1.0 (`run.py:95`) | 10.0 (`route_graph.py:1491`) | s | re-evaluation interval, hence periodic learning |
+| `--reroute-interval` | CLI | 1.0 (`run.py:95`) | 10.0 (`route_graph.py:1498`) | s | re-evaluation interval, hence periodic learning |
 | vismap time step | = `--reroute-interval` | 1.0 (`run_config.py:228`) | 10.0 (`visibility.py:408`) | s | FDS model only; clear air stores one time |
 | `--vis-cell-size` | CLI | 0.25 (`run.py:135`) | 0.5 (`visibility.py:438`) | m | clear-air grid; FDS models use the FDS mesh |
 | `--vis-cache` | CLI | none | none | – | `.npz` cache path |
@@ -393,11 +394,11 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **Discovery agents ranked the first leg as a straight line**
   ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
   by #174). `cognitive_subgraph` built a new `StageGraph` without the
-  routing engine (`cognitive_map.py:245–257`). In `rank_routes`, the length of
+  routing engine (`cognitive_map.py:245–259`). In `rank_routes`, the length of
   the walk from the agent's position to its next node therefore fell back to a
   straight line (`route_graph.py:398–404`, `:961–964`). Frontier selection was
   not affected, because it measures that leg on the full graph
-  (`cognitive_map.py:310`, `:400–427`). Fully familiar agents always had the
+  (`cognitive_map.py:312`, `:402–429`). Fully familiar agents always had the
   engine.
 - **First-leg smoke is sampled on a straight line**
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). See
@@ -408,7 +409,7 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   (`route_graph.py:970`), so a route was under-priced when the agent was
   farther from its next node than the route's origin is. In clear air the gate
   ranks by that travel time. Since #170, the walk to the origin is timed at
-  the route's mean pace.
+  the route's mean pace (`route_graph.py:1060–1066`).
 - **Learning is limited to neighbours**, spawn perception is per spawn area,
   and periodic learning uses the previous step's position (§2.1–2.2).
 - **The patrol can stall**

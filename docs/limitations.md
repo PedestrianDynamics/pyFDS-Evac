@@ -128,9 +128,10 @@ sampled along the whole route, including stretches it has never seen
 ([issue #125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 By default (`routing.anticipate` = true, `routing.foresight_horizon_s`
 unbounded), each stretch is also priced with the smoke that the finished FDS
-run holds for the time the agent would arrive there. Route choice is therefore
-a best case with perfect foresight, not a model of what an occupant can see or
-predict.
+run holds for the time the agent would arrive there. Knowledge limits which
+routes an agent ranks, and only fully familiar agents know the whole graph;
+it does not limit the smoke those routes are priced with. The route choice of
+a discovery agent is therefore not limited by what it has perceived.
 
 **Recovery from irritants.** The irritant slowdown (opt-in with
 `--enable-fic-speed`) is recomputed only while
