@@ -408,11 +408,26 @@ def _compare_json(a: Path, b: Path) -> list[str]:
 
 
 def _compare_file(a: Path, b: Path) -> list[str]:
+    """Why *a* and *b* differ, or nothing if they are byte for byte equal.
+
+    Bytes decide. The parsed comparison only explains a difference: it
+    cannot see every one, since parsing drops an empty container and reads
+    1.0 and 1 as the same number.
+    """
     if not a.exists() or not b.exists():
         return [f"missing: {a if not a.exists() else b}"]
-    if a.suffix == ".csv":
-        return _compare_csv(a, b)
-    return _compare_json(a, b)
+    bytes_a, bytes_b = a.read_bytes(), b.read_bytes()
+    if bytes_a == bytes_b:
+        return []
+    report = _compare_csv(a, b) if a.suffix == ".csv" else _compare_json(a, b)
+    offset = next(
+        (i for i, (x, y) in enumerate(zip(bytes_a, bytes_b)) if x != y),
+        min(len(bytes_a), len(bytes_b)),
+    )
+    report.append(
+        f"bytes differ at offset {offset} ({len(bytes_a)} vs {len(bytes_b)} bytes)"
+    )
+    return report
 
 
 def _manifest_problems(out: Path, names: list[str]) -> list[str]:

@@ -94,3 +94,24 @@ def test_run_without_outputs_is_incomplete(golden, tmp_path, monkeypatch):
     assert sorted(manifest["incomplete"]) == [
         f"{DECK}/{mode}" for mode in sorted(golden.MODES)
     ]
+
+
+@pytest.mark.parametrize(
+    ("name", "text_a", "text_b"),
+    [
+        ("egress_summary.json", '{"agents": [], "n": 1}\n', '{"n": 1}\n'),
+        ("egress_summary.json", '{"t": 1.0}\n', '{"t": 1}\n'),
+        ("route_history.csv", "time_s,cost\n1.0,2\n", "time_s,cost\n1.00,2\n"),
+        ("route_history.csv", "a,b\n1,2\n", "a,b\r\n1,2\r\n"),
+    ],
+    ids=["empty_container", "json_number", "csv_number", "line_ending"],
+)
+def test_bytes_decide(golden, tmp_path, name, text_a, text_b):
+    """Files that parse alike but are written differently are different."""
+    a, b = tmp_path / "a" / name, tmp_path / "b" / name
+    a.parent.mkdir()
+    b.parent.mkdir()
+    a.write_bytes(text_a.encode())
+    b.write_bytes(text_b.encode())
+    assert golden._compare_file(a, b)
+    assert golden._compare_file(a, a) == []
