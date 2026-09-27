@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -47,44 +48,122 @@ def test_speed_factor_clear_air_is_one():
     assert speed_factor_from_extinction(0.0) == 1.0
 
 
+# Fridolf et al. (2018), method 3: w = min(w_free, max(0.2, w_free - 0.34 (3 - V)))
+# with V = C / K and C = 3. Rows: V [m] -> w [m/s] at w_free = 1.19 and 1.35.
+FRIDOLF_VISIBILITIES = (0.5, 1.0, 2.0, 3.0, 4.0, 5.0, math.inf)
+FRIDOLF_TABLE = {
+    1.19: (0.340, 0.510, 0.850, 1.190, 1.190, 1.190, 1.190),
+    1.35: (0.500, 0.670, 1.010, 1.350, 1.350, 1.350, 1.350),
+}
+# (w_free, V, w) at the paper's w_free values (methods 1-3), computed from its
+# equation; 1.2 -> 0.86 m/s at 2 m is the worked example of Fridolf et al. 2019.
+FRIDOLF_PAPER_POINTS = (
+    (1.35, 0.0, 0.33),
+    (1.35, 2.0, 1.01),
+    (1.0, 2.0, 0.66),
+    (1.0, 1.0, 0.32),
+    (1.0, 0.5, 0.2),
+    (1.0, 0.0, 0.2),
+    (1.2, 2.0, 0.86),
+)
+
+
+def _extinction(visibility_m: float, c: float = 3.0) -> float:
+    return 0.0 if math.isinf(visibility_m) else c / visibility_m
+
+
 class TestFridolfSpeedFactor:
-    """Fridolf et al. (2019) individualized speed-visibility model."""
+    """Fridolf et al. (2018) additive speed-visibility law with absolute floor."""
 
     def test_clear_air_is_one(self):
         assert speed_factor_from_extinction_fridolf(0.0) == 1.0
 
-    def test_half_speed_at_v_equals_2(self):
-        # V = C/K = 2 m  →  K = C/2 = 1.5 with default C=3
-        factor = speed_factor_from_extinction_fridolf(1.5, visibility_factor_c=3.0)
-        assert factor == pytest.approx(0.5, rel=1e-6)
+    @pytest.mark.parametrize("v0", sorted(FRIDOLF_TABLE))
+    def test_table_matches_paper(self, v0):
+        for visibility, w in zip(FRIDOLF_VISIBILITIES, FRIDOLF_TABLE[v0]):
+            factor = speed_factor_from_extinction_fridolf(
+                _extinction(visibility), visibility_factor_c=3.0, free_speed_m_per_s=v0
+            )
+            assert v0 * factor == pytest.approx(w, rel=1e-12)
 
-    def test_decreases_with_extinction(self):
-        f_low = speed_factor_from_extinction_fridolf(0.5)
-        f_high = speed_factor_from_extinction_fridolf(2.0)
-        assert f_high < f_low
+    @pytest.mark.parametrize(("v0", "visibility", "w"), FRIDOLF_PAPER_POINTS)
+    def test_paper_points(self, v0, visibility, w):
+        # V = 0 is approached with a very large K.
+        k = 1e12 if visibility == 0.0 else _extinction(visibility)
+        factor = speed_factor_from_extinction_fridolf(k, free_speed_m_per_s=v0)
+        assert v0 * factor == pytest.approx(w, rel=1e-9)
 
-    def test_approaches_zero_at_high_extinction(self):
-        factor = speed_factor_from_extinction_fridolf(1e6)
-        assert factor < 1e-4
+    @pytest.mark.parametrize("visibility", [3.0, 4.0, 10.0])
+    def test_no_slowing_at_or_above_3_m(self, visibility):
+        """The discriminating case: V/(V+2) gave < 1 here."""
+        cfg = SmokeSpeedConfig(fds_dir=".", speed_law="fridolf")
+        model = SmokeSpeedModel(ConstantExtinctionField(_extinction(visibility)), cfg)
+        _, factor = model.sample(0.0, 0.0, 0.0)
+        assert factor == 1.0
+
+    @pytest.mark.parametrize(("v0", "visibility"), [(1.19, 0.05), (1.0, 0.5)])
+    def test_floor_is_absolute(self, v0, visibility):
+        # w_free - 0.34 (3 - V) < 0.2 here, so w is the 0.2 m/s floor, not 0.2 v0.
+        factor = speed_factor_from_extinction_fridolf(
+            _extinction(visibility), free_speed_m_per_s=v0
+        )
+        assert v0 * factor == pytest.approx(0.2, rel=1e-12)
+
+    @pytest.mark.parametrize("k", [math.nan, math.inf, -1.0])
+    def test_non_finite_or_negative_k_is_clear_air(self, k):
+        # Same convention as the Lund law.
+        assert speed_factor_from_extinction_fridolf(k, free_speed_m_per_s=1.19) == 1.0
+        assert speed_factor_from_extinction(k) == 1.0
+
+    @pytest.mark.parametrize("v0", [0.1, 0.15, 0.2])
+    def test_floor_never_raises_speed_above_v0(self, v0):
+        for k in (0.5, 3.0, 6.0, 1e6):
+            factor = speed_factor_from_extinction_fridolf(k, free_speed_m_per_s=v0)
+            assert factor == 1.0
+            assert v0 * factor <= v0
+
+    def test_zero_free_speed_returns_one(self):
+        assert speed_factor_from_extinction_fridolf(6.0, free_speed_m_per_s=0.0) == 1.0
+
+    def test_constants_from_config(self):
+        cfg = SmokeSpeedConfig()
+        assert cfg.fridolf_slope == 0.34
+        assert cfg.fridolf_visibility_threshold_m == 3.0
+        assert cfg.fridolf_min_speed_m_per_s == 0.2
 
     def test_larger_c_gives_higher_factor(self):
         # Higher C means better visibility at the same K
-        f_c3 = speed_factor_from_extinction_fridolf(1.0, visibility_factor_c=3.0)
-        f_c8 = speed_factor_from_extinction_fridolf(1.0, visibility_factor_c=8.0)
+        f_c3 = speed_factor_from_extinction_fridolf(3.0, visibility_factor_c=3.0)
+        f_c8 = speed_factor_from_extinction_fridolf(3.0, visibility_factor_c=8.0)
         assert f_c8 > f_c3
 
 
 class TestSmokeSpeedModelFridolf:
     """SmokeSpeedModel dispatches to Fridolf when speed_law='fridolf'."""
 
-    def test_fridolf_law_used_when_configured(self):
+    def test_fridolf_law_uses_free_speed(self):
+        # V = 2 m: w = 1.19 - 0.34 = 0.85 m/s.
         field = ConstantExtinctionField(1.5)
         cfg = SmokeSpeedConfig(
             fds_dir=".", speed_law="fridolf", visibility_factor_c=3.0
         )
         model = SmokeSpeedModel(field, cfg)
-        _, factor = model.sample(0.0, 0.0, 0.0)
-        assert factor == pytest.approx(0.5, rel=1e-6)
+        _, factor = model.sample(0.0, 0.0, 0.0, free_speed_m_per_s=1.19)
+        assert 1.19 * factor == pytest.approx(0.85, rel=1e-12)
+
+    def test_fridolf_without_free_speed_is_method_1(self):
+        # No v0 given: w_free = 1 m/s (method 1), so w = 0.66 m/s at V = 2 m.
+        field = ConstantExtinctionField(1.5)
+        cfg = SmokeSpeedConfig(fds_dir=".", speed_law="fridolf")
+        _, factor = SmokeSpeedModel(field, cfg).sample(0.0, 0.0, 0.0)
+        assert factor == pytest.approx(0.66, rel=1e-12)
+
+    def test_lund_ignores_free_speed(self):
+        cfg = SmokeSpeedConfig(fds_dir=".")
+        model = SmokeSpeedModel(ConstantExtinctionField(1.0), cfg)
+        _, f1 = model.sample(0.0, 0.0, 0.0, free_speed_m_per_s=1.19)
+        _, f2 = model.sample(0.0, 0.0, 0.0)
+        assert f1 == f2 == speed_factor_from_extinction(1.0)
 
     def test_lund_law_used_by_default(self):
         field = ConstantExtinctionField(0.0)

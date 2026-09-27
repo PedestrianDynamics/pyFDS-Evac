@@ -29,17 +29,23 @@ def test_a1_1_lund_uniform_factor_exact():
 
 
 def test_a1_2_fridolf_uniform_factor_exact():
-    """A1.2: F1, Fridolf. V = c/K, factor = V/(V+2) for clean V values."""
-    # c=3, K=3 => V=1 => 1/(1+2) = 1/3
-    factor = speed_factor_from_extinction_fridolf(3.0, visibility_factor_c=3.0)
-    assert math.isclose(factor, 1.0 / 3.0, abs_tol=1e-9)
-    # c=3, K=1.5 => V=2 => 2/(2+2) = 0.5
-    factor = speed_factor_from_extinction_fridolf(1.5, visibility_factor_c=3.0)
-    assert math.isclose(factor, 0.5, abs_tol=1e-9)
+    """A1.2: F1, Fridolf. V = c/K, w = min(w0, max(0.2, w0 - 0.34 (3 - V)))."""
+    # c=3, K=3 => V=1 => w = 1.19 - 0.68 = 0.51
+    factor = speed_factor_from_extinction_fridolf(
+        3.0, visibility_factor_c=3.0, free_speed_m_per_s=1.19
+    )
+    assert math.isclose(1.19 * factor, 0.51, rel_tol=1e-12)
+    # c=3, K=1.5 => V=2 => w = 1.19 - 0.34 = 0.85
+    factor = speed_factor_from_extinction_fridolf(
+        1.5, visibility_factor_c=3.0, free_speed_m_per_s=1.19
+    )
+    assert math.isclose(1.19 * factor, 0.85, rel_tol=1e-12)
+    # c=3, K=1 => V=3 => no slowing
+    assert speed_factor_from_extinction_fridolf(1.0, visibility_factor_c=3.0) == 1.0
 
 
 def test_a1_3_clamp_edges_laws_differ():
-    """A1.3: Lund hard-clamps at min_speed_factor; Fridolf decays to 0."""
+    """A1.3: Lund clamps at a fraction of v0; Fridolf at an absolute 0.2 m/s."""
     # Clear air: both laws give 1.0.
     assert math.isclose(speed_factor_from_extinction(0.0), 1.0, abs_tol=1e-9)
     assert math.isclose(speed_factor_from_extinction_fridolf(0.0), 1.0, abs_tol=1e-9)
@@ -50,11 +56,12 @@ def test_a1_3_clamp_edges_laws_differ():
         lund_floor,
         abs_tol=1e-9,
     )
-    # Very large K: Fridolf approaches 0 with no hard clamp; the two laws
-    # differ because Fridolf drops strictly below the Lund floor.
-    fridolf = speed_factor_from_extinction_fridolf(100.0)
-    assert fridolf < 0.05
-    assert fridolf < lund_floor
+    # Very large K: Fridolf saturates at an absolute 0.2 m/s for any v0 below
+    # 0.2 + 0.34 * 3 = 1.22 m/s, so its factor is 0.2 / v0 and the laws differ.
+    for v0 in (1.0, 1.19):
+        fridolf = speed_factor_from_extinction_fridolf(1e6, free_speed_m_per_s=v0)
+        assert math.isclose(v0 * fridolf, 0.2, rel_tol=1e-12)
+        assert fridolf > lund_floor
 
 
 def test_a1_4_linear_field_path_mean_is_midpoint():
