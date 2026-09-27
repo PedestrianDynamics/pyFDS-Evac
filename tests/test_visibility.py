@@ -388,3 +388,22 @@ class TestSignDistanceCap:
 
         opts = run._build_parser().parse_args(["--scenario", "unused"])
         assert opts.max_sign_distance == 30.0
+
+
+class TestClearAirCacheHit:
+    """#178: a model loaded from a clear-air cache still knows its signs."""
+
+    def test_distance_to_node_after_a_cache_hit(self, tmp_path):
+        from shapely.geometry import box
+
+        signs = {"e": {"x": 1.0, "y": 2.0, "alpha": None, "c": 3}}
+        cache = tmp_path / "vis.npz"
+        built = VisibilityModel.clear_air(
+            box(0, 0, 10, 4), signs, cell_size_m=1.0, cache_path=cache
+        )
+        loaded = VisibilityModel.clear_air(
+            box(0, 0, 10, 4), signs, cell_size_m=1.0, cache_path=cache
+        )
+        assert loaded.distance_to_node(5.0, 2.0, "e") == pytest.approx(
+            built.distance_to_node(5.0, 2.0, "e")
+        )
