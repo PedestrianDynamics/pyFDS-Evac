@@ -100,6 +100,14 @@ def simulate(config):
         near_legible=legible_cells(vis, "E_near"),
         far_legible=legible_cells(vis, "E_far"),
         alpha=float(signs["E_near"]["alpha"]),
+        signs={
+            EXIT_KEY[e]: dict(
+                y=float(signs[e]["y"]),
+                alpha=float(signs[e]["alpha"]),
+                from_spawn=vis.node_is_visible(0.0, W / 2, np.mean(SPAWN), e),
+            )
+            for e in EXIT_KEY
+        },
     )
     result.cleanup()
     return out
@@ -159,22 +167,17 @@ def draw_run(ax, title, run):
             ha="left",
             fontweight="bold",
         )
-    # signs: a plate on the wall beside each exit and a bold arrow showing
-    # the direction the sign faces, i.e. the side from which it can be read.
-    # Drawn right of the centre line so the walk arrow never crosses them.
+    # signs: a plate at the sign's configured y and a bold arrow showing the
+    # direction it faces, i.e. the side from which it can be read. Gold when
+    # the model reads it from the spawn centroid, grey otherwise. Drawn right
+    # of the centre line so the walk arrow never crosses them.
     xs = W / 2 + 1.2
-    for y_exit, alpha in ((L, 180), (0, alpha_near)):
-        faces_down = alpha == 180
-        y_plate = y_exit - 0.45 if y_exit == L else y_exit + 0.45
-        if y_exit == 0 and faces_down:
-            # near sign turned around: plate inside the corridor, arrow
-            # pointing at the exit, so it does not cross the wall
-            y_plate = 3.2
-        legible = (y_exit == L) == faces_down
-        sign_colour = LEGIBLE_EDGE if legible else OPTION
+    for key in ("far", "near"):
+        sign = run["signs"][key]
+        sign_colour = LEGIBLE_EDGE if sign["from_spawn"] else OPTION
         ax.add_patch(
             Rectangle(
-                (xs - 0.35, y_plate - 0.12),
+                (xs - 0.35, sign["y"] - 0.12),
                 0.7,
                 0.24,
                 fc=sign_colour,
@@ -182,16 +185,17 @@ def draw_run(ax, title, run):
                 zorder=5,
             )
         )
-        dy = -2.6 if faces_down else 2.6
+        dy = 2.6 * np.cos(np.deg2rad(sign["alpha"]))
         ax.add_patch(
             FancyArrowPatch(
-                (xs, y_plate),
-                (xs, y_plate + dy),
+                (xs, sign["y"]),
+                (xs, sign["y"] + dy),
                 arrowstyle="-|>",
                 mutation_scale=16,
                 color=sign_colour,
                 lw=2.2,
                 zorder=5,
+                clip_on=False,
             )
         )
     lo, hi = legible_span(run["near_legible"])
@@ -265,7 +269,7 @@ def draw_run(ax, title, run):
     )
 
     ax.set_xlim(-1.0, 11)
-    ax.set_ylim(-1.5, 31.5)
+    ax.set_ylim(-2.5, 31.5)
     ax.set_aspect("equal")
     # a floor plan has no data axes: grid, ticks and frame add nothing
     ax.axis("off")
