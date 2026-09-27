@@ -115,9 +115,10 @@ conventions; what each one proves, and where that proof is checked, is below.
   so the test exercises the routing decision rather than the third-party
   solver. A companion test pins that a `full`-familiarity agent ignores the
   bearing entirely — signs are wayfinding information and bind only where
-  knowledge is incomplete. The folder README documents the **30 m visibility
-  ceiling** that makes a sign illegible at any bearing, and how much tighter it
-  becomes once smoke is present (`c / K̄`, so 6 m at `c=3`, `K̄=0.5`).
+  knowledge is incomplete. The folder README documents the **visibility
+  ceiling** (the grid diagonal, about 30 m for this deck) that makes a sign
+  illegible at any bearing, and how much tighter it becomes once smoke is
+  present (`c / K̄`, so 6 m at `c=3`, `K̄=0.5`).
 - **Familiarity Test Full** / **Familiarity Test Discovery**: `SocialForceModel`
   scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
   doors throughout, generated parametrically by each folder's
