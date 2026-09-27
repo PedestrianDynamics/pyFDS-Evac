@@ -33,6 +33,13 @@ With `d² = 4 + (y−20)²` that gives
 legible while |y − 20| <= 7.48   →   y ∈ [12.5, 27.5]
 ```
 
+This uses fdsvismap's default 30 m cap. pyFDS-Evac replaces the cap with the
+grid diagonal, which may be larger or smaller than 30 m (see
+[#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)). For the
+0.25 m clear-air grid of this deck it is 32.1 m, which widens the window to `|y − 20| <= 7.76`, y ∈ [12.2, 27.8]. On the
+0.25 m grid the model reads the sign from y = 12.0 to 28.0 on the centreline
+(`scripts/figures/map_memory.py` computes and draws it).
+
 Off-axis geometry kills the view angle faster than proximity helps, which is
 what produces a band rather than a half-plane. `build_geometry.py` recomputes
 this window and asserts it, so changing the corridor width or the sign position
@@ -42,7 +49,7 @@ cannot silently move it.
 
 | claim | what it asserts | why it matters |
 |---|---|---|
-| **acquisition** | `E_side` enters the map on crossing `y = 12.5`, and the agent would then take it | perception writes to memory, and it changes behaviour |
+| **acquisition** | `E_side` enters the map on crossing `y = 12`, and the agent would then take it | perception writes to memory, and it changes behaviour |
 | **persistence** | it is *still* in the map at `y = 30` | memory outlives perception |
 
 Persistence is the one that matters. Delete the expansion rules and acquisition
@@ -63,11 +70,21 @@ an exit and be forbidden to use it.
 ![cognitive map states](cognitive_map_states.png)
 
 Each panel names the exit routing would actually take from that spot. The
-agent's position is a **probe**, not a simulated walk: it is placed at each y to
-sample what it would know and choose there. It switches to `side` at y = 14, the
-moment that exit enters the map, and would leave by it — an earlier version of
-this plot marched the probe past the side exit, implying a behaviour the model
-does not have.
+agent's position is a **probe**, not a simulated walk: it steps north along the
+centreline, learning what it sees at each y, then steps back to y = 10 with
+the map it has built. `scripts/figures/_cognitive_map_probe.py` does the
+sweep, and `test_map_memory_probes_match_engine` pins its outcomes.
+
+- **y = 4 and 10:** only `E_end` is known, so the agent takes `end`.
+- **y = 14 to 24:** `E_side` is in the map and nearer, so the agent takes
+  `side`, from the moment it enters the map.
+- **y = 26 and above:** `end`. Routes are priced from the agent's position,
+  and the two exits are equally far at y ≈ 25.4; at y = 30 `E_end` is 1.3 m
+  away against 10.3 m. `E_side` is still in the map and still routable, but
+  no longer the nearer one.
+- **Back at y = 10:** `side` (10.3 m against 21.3 m for `end`). On the way up
+  the same spot gave `end`. Same place, different history, different choice:
+  that is the memory changing behaviour.
 
 ## What the simulation actually does
 
@@ -100,18 +117,13 @@ the spawn area onward and the scenario looks like agents that aimed at the side
 door from the start. With it, each path is coloured by the exit the agent was
 aiming at *at that moment*, and a dot marks the change of mind.
 
-**20 of 20 agents divert into `E_side`**, egress 21.9 s. Two switches each:
-
-- `E_side → E_end` at t = 0 — the nearest exit by straight-line distance is
-  assigned before routing runs, but it is not yet in the map, so the first
-  evaluation falls back to the only exit that is. This is why the paths start
-  blue.
-- `E_end → E_side` between t = 5 and t = 19, as each agent crosses the
-  legibility window and the sign becomes readable. Agent 1 switches at
-  t = 8 s, y = 11.7.
+**20 of 20 agents divert into `E_side`**, egress 21.2 s. One switch each:
+`E_end → E_side` between t = 5 and t = 19 s, as each agent crosses the
+legibility window and the sign becomes readable. Agent 1 switches at
+t = 10 s, y = 12.3.
 
 The switch dots are spread over roughly y ∈ [11.5, 16] rather than lying on a
-line at y = 12.5. That is correct: the window is derived for the centreline
+line at y = 12. That is correct: the window is derived for the centreline
 x = 2, and an agent off-centre sees the sign at a worse view angle, so it has to
 get closer before the sign becomes legible.
 
@@ -130,14 +142,14 @@ for as if the agent first had to walk back to its spawn area, so `E_side` was
 priced at 30.5 m when it was 3.5 m away. See the superseded-rule note in
 [`docs/rerouting-oscillation-notes.md`](../../docs/rerouting-oscillation-notes.md).
 
-Three states per exit:
+Three states per exit in the probe figure:
 
-- **grey** — unknown, never perceived
-- **red** — in the map, sign readable right now
-- **amber** — in the map, sign no longer readable
+- **hollow, dashed grey outline** — unknown, never perceived
+- **green, gold outline** — in the map, sign readable right now
+- **green, hatched** — in the map, sign no longer readable
 
-The amber band is the memory. If red and amber never diverge, there is nothing
-a plain visibility query could not have told you.
+The hatched state is the memory. If legible and hatched never diverge, there
+is nothing a plain visibility query could not have told you.
 
 ## Deliberate choices
 
@@ -160,7 +172,7 @@ there is nothing to acquire; a test pins that contrast.
 ## Note on "loss"
 
 The map is **monotone** — `expand_from_visibility` and `expand_on_arrival` only
-ever add. Knowledge is never lost; only *visibility* is, which is the red→amber
+ever add. Knowledge is never lost; only *visibility* is, which is the legible→hatched
 transition. Genuine forgetting (decay of knowledge over time or under stress) is
 not modelled, and adding it would re-introduce the oscillation the exit-switch
 anchor exists to suppress.

@@ -65,17 +65,23 @@ conventions; what each one proves, and where that proof is checked, is below.
   `docs/testing-homogeneous.md`.
 - **Cognitive Map Memory**: 4x32 m corridor with a side alcove, 20 `discovery`
   agents. The side exit's sign faces west and is legible only from
-  `y ∈ [12.5, 27.5]` on the centreline — a window that falls out of
+  `y ∈ [12.0, 28.0]` on the centreline (`[12.5, 27.5]` under fdsvismap's
+  default 30 m cap; pyFDS-Evac uses the grid diagonal) — a window that falls out of
   `view_angle * max_vis >= distance` rather than being tuned, and that
   `build_geometry.py` recomputes and asserts. Proves the cognitive map does the
   one thing a visibility query cannot: **remember**. The side exit is unknown at
-  spawn, enters the map on crossing `y=12.5`, and is *still* there at `y=30`
+  spawn, enters the map on crossing `y=12`, and is *still* there at `y=30`
   where the sign is long unreadable. Persistence is the load-bearing claim —
   delete the expansion rules and acquisition still appears to work for any agent
   starting inside the window. A third test closes the loop to routing: a
   remembered-but-illegible exit must still be routable. `scripts/generate_cognitive_map_states.py` renders the
-  three states (unknown / legible now / remembered), and the amber band is the
-  memory made visible. Checked by `tests/test_cognitive_map_memory.py`.
+  three states (unknown / legible now / remembered, the hatched exit being the
+  memory made visible) from live `rank_routes` probes. The agent takes the side
+  exit from `y = 14` to `24` and the end exit from `y = 26` (the two are equally
+  far at `y ≈ 25.4`); walking back to `y = 10` with its map, it takes the side
+  exit where it took the end exit on the way up. In the full run each agent
+  switches once, `E_end → E_side` at t = 5–19 s, and egress takes 21.2 s.
+  Checked by `tests/test_cognitive_map_memory.py`, which pins the probe outcomes.
 - **FIC vs FED Speed**: 4x50 m sealed corridor, 30 agents, one exit. The gas is
   *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 10 ppm) rather
   than burned, so concentration is constant in space and time and the only
@@ -109,9 +115,10 @@ conventions; what each one proves, and where that proof is checked, is below.
   so the test exercises the routing decision rather than the third-party
   solver. A companion test pins that a `full`-familiarity agent ignores the
   bearing entirely — signs are wayfinding information and bind only where
-  knowledge is incomplete. The folder README documents the **30 m visibility
-  ceiling** that makes a sign illegible at any bearing, and how much tighter it
-  becomes once smoke is present (`c / K̄`, so 6 m at `c=3`, `K̄=0.5`).
+  knowledge is incomplete. The folder README documents the **visibility
+  ceiling** (the grid diagonal, about 30 m for this deck) that makes a sign
+  illegible at any bearing, and how much tighter it becomes once smoke is
+  present (`c / K̄`, so 6 m at `c=3`, `K̄=0.5`).
 - **Familiarity Test Full** / **Familiarity Test Discovery**: `SocialForceModel`
   scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
   doors throughout, generated parametrically by each folder's

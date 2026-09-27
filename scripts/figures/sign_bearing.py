@@ -1,17 +1,19 @@
-"""Sign-bearing experiment (assets/exit_visibility_alpha), redrawn for the deck.
+"""Sign-bearing experiment (assets/exit_visibility_alpha), run and drawn.
 
 A 4 x 30 m corridor, 40 discovery agents spawned at y in [8, 12], an exit at
-each end. The two runs differ in one number: the bearing of the near exit's
-sign. Facing the agents (alpha = 0) the near exit enters every map and all 40
-take it. Facing away (alpha = 180) it never enters the map and all 40 walk the
-extra 10 m to the far exit. Outcomes from the asset README.
-The outcomes are drawn as recorded; this script does not rerun the asset.
+each end. The two configs differ in one number: the bearing of the near
+exit's sign, 0 (facing the agents) or 180 (facing away). Both configs are run
+here in clear air (``VisibilityModel.clear_air`` at the 0.25 m cell of
+``run.py``, seed 1904 from the configs); in clear air this reproduces the
+asset README's FDS-vismap runs exactly. The legible region of the near sign is
+the set of grid cells from which the same visibility model reads it, not a
+drawn wedge. Exit counts, egress times and walked distances come from the runs.
 
 Run from the repository root::
 
-    .venv/bin/python scripts/figures/sign_bearing.py
+    uv run python scripts/figures/sign_bearing.py
 
-Writes ``site/static/images/concepts/sign_bearing.png``.
+Writes ``site/static/images/wayfinding/sign_bearing.png``.
 """
 
 from pathlib import Path
@@ -19,9 +21,17 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from matplotlib.patches import FancyArrowPatch, Rectangle, Wedge
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import FancyArrowPatch, Rectangle
+from shapely.geometry import Point, Polygon
 
-OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
+from pyfds_evac import RerouteConfig, VisibilityModel, load_scenario, run_scenario
+from pyfds_evac.core.visibility import extract_sign_descriptors
+
+ROOT = Path(__file__).resolve().parents[2]
+ASSET = ROOT / "assets" / "exit_visibility_alpha"
+IMAGES = ROOT / "site" / "static" / "images"
+OUT = IMAGES / "wayfinding"
 
 # Shared palette of the concept figures: one meaning, one colour, one style.
 CHOSEN = "#4575b4"  # chosen / walked route: solid line
@@ -39,37 +49,98 @@ TEXT = "dimgrey"
 
 W, L = 4.0, 30.0
 SPAWN = (8.0, 12.0)
+CELL_M = 0.25  # run.py's --vis-cell-size default
+SEED = 1904
+EXIT_KEY = {"E_near": "near", "E_far": "far"}
 
 
-def walk_end(chosen):
-    """y where the walk arrow ends: just inside the chosen exit."""
-    return L - 0.6 if chosen == "far" else 0.6
+def legible_cells(vis, node_id):
+    """Boolean grid (rows y, cols x) of the cells that read *node_id*'s sign."""
+    xs = np.arange(CELL_M / 2, W, CELL_M)
+    ys = np.arange(CELL_M / 2, L, CELL_M)
+    return np.array([[vis.node_is_visible(0.0, x, y, node_id) for x in xs] for y in ys])
 
 
-def draw_run(ax, alpha_near, title, chosen, n_taking):
-    """One corridor: signs, their legible half-planes, the spawn and the walk."""
-    ax.add_patch(Rectangle((0, 0), W, L, fc=FLOOR, ec=WALL, lw=1.6, zorder=0))
-    # legible half-plane of each sign: yellow where it reaches the agents,
-    # grey hatch where it faces out of the corridor
-    for y, alpha in ((L, 180), (0, alpha_near)):
-        facing_up = alpha == 0
-        theta1, theta2 = (0, 180) if facing_up else (180, 360)
-        reaches_agents = (y == L) != facing_up
-        ax.add_patch(
-            Wedge(
-                (W / 2, y),
-                9.0,
-                theta1,
-                theta2,
-                fc=LEGIBLE if reaches_agents else "none",
-                ec=LEGIBLE_EDGE if reaches_agents else UNKNOWN,
-                hatch=None if reaches_agents else "////",
-                alpha=0.55 if reaches_agents else 0.8,
-                lw=0.8,
-                zorder=1,
+def exit_taken(exits, xy):
+    """Exit whose polygon is nearest an agent's last position."""
+    p = Point(*xy)
+    return min(exits, key=lambda e: exits[e].distance(p))
+
+
+def simulate(config):
+    """Run one config; return counts, times, paths and the legible cells."""
+    scenario = load_scenario(str(ASSET / f"{config}.json"))
+    signs = extract_sign_descriptors(scenario.raw)
+    vis = VisibilityModel.clear_air(
+        scenario.walkable_polygon, signs, cell_size_m=CELL_M
+    )
+    result = run_scenario(
+        scenario,
+        seed=SEED,
+        reroute_config=RerouteConfig(reevaluation_interval_s=1.0),
+        vis_model=vis,
+    )
+    traj = result.trajectory_dataframe().sort_values(["id", "frame"])
+    exits = {k: Polygon(d["coordinates"]) for k, d in scenario.raw["exits"].items()}
+    paths = [g[["x", "y"]].to_numpy() for _, g in traj.groupby("id")]
+    counts = {k: 0 for k in EXIT_KEY.values()}
+    for p in paths:
+        counts[EXIT_KEY[exit_taken(exits, p[-1])]] += 1
+    out = dict(
+        counts=counts,
+        chosen=max(counts, key=counts.get),
+        total=result.total_agents,
+        evac_time=result.evacuation_time,
+        switches=len(result.route_history or []),
+        start=np.array([p[0] for p in paths]),
+        walked=float(
+            np.median([np.linalg.norm(np.diff(p, axis=0), axis=1).sum() for p in paths])
+        ),
+        near_legible=legible_cells(vis, "E_near"),
+        far_legible=legible_cells(vis, "E_far"),
+        alpha=float(signs["E_near"]["alpha"]),
+        signs={
+            EXIT_KEY[e]: dict(
+                y=float(signs[e]["y"]),
+                alpha=float(signs[e]["alpha"]),
+                from_spawn=vis.node_is_visible(0.0, W / 2, np.mean(SPAWN), e),
             )
-        )
-    # walls again on top of the wedges, so the corridor stays crisp
+            for e in EXIT_KEY
+        },
+    )
+    result.cleanup()
+    return out
+
+
+def draw_legible(ax, mask):
+    """Shade the cells that read the near sign, and outline the region."""
+    ax.imshow(
+        np.where(mask, 1.0, np.nan),
+        origin="lower",
+        extent=(0, W, 0, L),
+        cmap=ListedColormap([LEGIBLE]),
+        alpha=0.7,
+        interpolation="nearest",
+        zorder=1,
+    )
+    xs = np.arange(CELL_M / 2, W, CELL_M)
+    ys = np.arange(CELL_M / 2, L, CELL_M)
+    ax.contour(
+        xs, ys, mask.astype(float), levels=[0.5], colors=LEGIBLE_EDGE, linewidths=1.0
+    )
+
+
+def legible_span(mask):
+    """y range [m] of the rows with at least one legible cell."""
+    ys = np.arange(CELL_M / 2, L, CELL_M)[mask.any(axis=1)]
+    return ys.min() - CELL_M / 2, ys.max() + CELL_M / 2
+
+
+def draw_run(ax, title, run):
+    """One corridor: signs, the near sign's legible cells, spawn and walk."""
+    chosen, alpha_near = run["chosen"], run["alpha"]
+    ax.add_patch(Rectangle((0, 0), W, L, fc=FLOOR, ec="none", zorder=0))
+    draw_legible(ax, run["near_legible"])
     ax.add_patch(Rectangle((0, 0), W, L, fc="none", ec=WALL, lw=1.6, zorder=2))
     # exits
     for y, name, key in ((L, "far exit", "far"), (0, "near exit", "near")):
@@ -95,22 +166,17 @@ def draw_run(ax, alpha_near, title, chosen, n_taking):
             ha="left",
             fontweight="bold",
         )
-    # signs: a plate on the wall beside each exit and a bold arrow showing
-    # the direction the sign faces, i.e. the side from which it can be read.
-    # Drawn right of the centre line so the walk arrow never crosses them.
+    # signs: a plate at the sign's configured y and a bold arrow showing the
+    # direction it faces, i.e. the side from which it can be read. Gold when
+    # the model reads it from the spawn centroid, grey otherwise. Drawn right
+    # of the centre line so the walk arrow never crosses them.
     xs = W / 2 + 1.2
-    for y_exit, alpha in ((L, 180), (0, alpha_near)):
-        faces_down = alpha == 180
-        y_plate = y_exit - 0.45 if y_exit == L else y_exit + 0.45
-        if y_exit == 0 and faces_down:
-            # near sign turned around: plate inside the corridor, arrow
-            # pointing at the exit, so it does not cross the wall
-            y_plate = 3.2
-        legible = (y_exit == L) == faces_down
-        sign_colour = LEGIBLE_EDGE if legible else OPTION
+    for key in ("far", "near"):
+        sign = run["signs"][key]
+        sign_colour = LEGIBLE_EDGE if sign["from_spawn"] else OPTION
         ax.add_patch(
             Rectangle(
-                (xs - 0.35, y_plate - 0.12),
+                (xs - 0.35, sign["y"] - 0.12),
                 0.7,
                 0.24,
                 fc=sign_colour,
@@ -118,38 +184,42 @@ def draw_run(ax, alpha_near, title, chosen, n_taking):
                 zorder=5,
             )
         )
-        dy = -2.6 if faces_down else 2.6
+        dy = 2.6 * np.cos(np.deg2rad(sign["alpha"]))
         ax.add_patch(
             FancyArrowPatch(
-                (xs, y_plate),
-                (xs, y_plate + dy),
+                (xs, sign["y"]),
+                (xs, sign["y"] + dy),
                 arrowstyle="-|>",
                 mutation_scale=16,
                 color=sign_colour,
                 lw=2.2,
                 zorder=5,
+                clip_on=False,
             )
         )
+    lo, hi = legible_span(run["near_legible"])
     ax.text(
         W + 0.4,
-        1.6,
-        f"sign α = {alpha_near}°\n"
-        + ("faces the agents" if alpha_near == 0 else "faces away"),
+        1.9,
+        f"sign α = {alpha_near:.0f}°, "
+        + ("faces the agents" if alpha_near == 0 else "faces away")
+        + f"\nlegible for y = {lo:.1f}–{hi:.1f} m",
         fontsize=8,
         color=TEXT,
         va="center",
         ha="left",
     )
+    lo_far, hi_far = legible_span(run["far_legible"])
     ax.text(
         W + 0.4,
-        L - 1.6,
-        "sign α = 180°\nfaces the agents",
+        L - 1.9,
+        f"sign α = 180°, faces the agents\nlegible for y = {lo_far:.1f}–{hi_far:.1f} m",
         fontsize=8,
         color=TEXT,
         va="center",
         ha="left",
     )
-    # spawn
+    # spawn and the agents' start positions
     ax.add_patch(
         Rectangle(
             (0.3, SPAWN[0]),
@@ -162,25 +232,18 @@ def draw_run(ax, alpha_near, title, chosen, n_taking):
             zorder=3,
         )
     )
-    rng = np.random.default_rng(3)
-    ax.scatter(
-        rng.uniform(0.6, W - 0.6, 40),
-        rng.uniform(*SPAWN, 40),
-        s=9,
-        color=AGENT,
-        zorder=4,
-    )
+    ax.scatter(run["start"][:, 0], run["start"][:, 1], s=9, color=AGENT, zorder=4)
     ax.text(
         W + 0.4,
         np.mean(SPAWN),
-        "40 agents\nfamiliarity 0",
+        f"{run['total']} agents\nfamiliarity 0",
         fontsize=8,
         color=TEXT,
         va="center",
         ha="left",
     )
     # the walk
-    y_to = walk_end(chosen)
+    y_to = L - 0.6 if chosen == "far" else 0.6
     ax.add_patch(
         FancyArrowPatch(
             (W / 2 - 0.6, np.mean(SPAWN)),
@@ -195,7 +258,8 @@ def draw_run(ax, alpha_near, title, chosen, n_taking):
     ax.text(
         W + 0.4,
         (np.mean(SPAWN) + y_to) / 2,
-        f"{n_taking} of 40\n{abs(y_to - np.mean(SPAWN)):.0f} m",
+        f"{run['counts'][chosen]} of {run['total']}\n"
+        f"median walk {run['walked']:.1f} m\nout at {run['evac_time']:.1f} s",
         fontsize=8.5,
         color=CHOSEN,
         ha="left",
@@ -204,7 +268,7 @@ def draw_run(ax, alpha_near, title, chosen, n_taking):
     )
 
     ax.set_xlim(-1.0, 11)
-    ax.set_ylim(-1.5, 31.5)
+    ax.set_ylim(-2.5, 31.5)
     ax.set_aspect("equal")
     # a floor plan has no data axes: grid, ticks and frame add nothing
     ax.axis("off")
@@ -212,36 +276,62 @@ def draw_run(ax, alpha_near, title, chosen, n_taking):
 
 
 def main():
-    """Render the sign-bearing figure.
+    """Run both configs and render the sign-bearing figure.
 
     Saves
     -----
-    site/static/images/concepts/sign_bearing.png
+    site/static/images/wayfinding/sign_bearing.png
     """
+    runs = {c: simulate(c) for c in ("config_visible", "config_hidden")}
+    vis_run, hid_run = runs["config_visible"], runs["config_hidden"]
+    for name, run in runs.items():
+        print(
+            f"{name}: near={run['counts']['near']} far={run['counts']['far']} "
+            f"egress={run['evac_time']:.2f} s switches={run['switches']} "
+            f"median walk={run['walked']:.1f} m"
+        )
+
+    # --- Style Setup ---
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, (ax0, ax1) = plt.subplots(
         1, 2, figsize=(6.8, 5.6), dpi=150, gridspec_kw=dict(wspace=0.02)
     )
-    n_taking = 40
-    draw_run(ax0, 0, r"$\bf{(a)}$  Near sign faces the agents", "near", n_taking)
-    draw_run(ax1, 180, r"$\bf{(b)}$  Near sign turned around", "far", n_taking)
+
+    # --- Plot ---
+    draw_run(ax0, r"$\bf{(a)}$  Near sign faces the agents", vis_run)
+    draw_run(ax1, r"$\bf{(b)}$  Near sign turned around", hid_run)
+    fig.legend(
+        handles=[
+            Rectangle((0, 0), 1, 1, fc=LEGIBLE, ec=LEGIBLE_EDGE, alpha=0.7, lw=1.0)
+        ],
+        labels=["cells from which the near sign is legible (clear air)"],
+        loc="lower left",
+        bbox_to_anchor=(0.12, 0.0),
+        fontsize=8,
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor="dimgrey",
+    )
     sns.despine(fig=fig, left=True, bottom=True)
 
-    walk = {k: abs(walk_end(k) - np.mean(SPAWN)) for k in ("near", "far")}
     fig.text(
         0.13,
-        0.07,
-        f"Turning one sign sends all {n_taking} agents {walk['far']:.0f} m "
-        f"instead of {walk['near']:.0f} m",
+        0.085,
+        f"Turning one sign sends {hid_run['counts']['far']} of {hid_run['total']} "
+        f"agents to the far exit: egress {hid_run['evac_time']:.1f} s "
+        f"instead of {vis_run['evac_time']:.1f} s",
         ha="left",
         va="top",
         fontsize=8.5,
         color=TEXT,
         style="italic",
     )
-    out = OUT
-    out.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out / "sign_bearing.png", dpi=150, bbox_inches="tight")
+
+    # --- Save ---
+    OUT.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT / "sign_bearing.png", dpi=150, bbox_inches="tight")
 
 
 if __name__ == "__main__":

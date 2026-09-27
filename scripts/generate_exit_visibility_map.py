@@ -8,9 +8,11 @@ hatched as well as coloured). An exit whose sign is legible from the marked
 spawn area is drawn as a yellow plate with a gold outline; an illegible one is
 hollow and grey.
 
-The point is that the near exit is not *rejected* in the hidden panel -- it is
-absent from the agent's map, so routing never sees it. That is why the shading
-flips wholesale rather than at a cost crossover.
+In the visible panel both exits are in the map everywhere the near sign can be
+read, so the split is a cost crossover: the dashed line marks where the choice
+changes, computed from the grid. In the hidden panel the near exit is not
+*rejected* -- it is absent from the agent's map, so routing never sees it, and
+the whole corridor above the near sign takes the far exit.
 
 Usage:
     .venv/bin/python scripts/generate_exit_visibility_map.py [-o OUT.png]
@@ -123,6 +125,21 @@ def main(out_path: Path) -> None:
                 (0, 0), 4.0, 30.0, fill=False, ec=WALL, lw=1.4, zorder=3, clip_on=False
             )
         )
+        # rows whose every cell takes E_near below and E_far above: the crossover
+        near_rows = np.all(grid == 0.0, axis=1)
+        flips = np.flatnonzero(near_rows[:-1] & np.all(grid[1:] == 1.0, axis=1))
+        for j in flips:
+            y_cross = float(ys[j] + ys[j + 1]) / 2
+            ax.plot([0, 4.0], [y_cross, y_cross], color=WALL, lw=1.2, ls="--", zorder=4)
+            ax.text(
+                4.2,
+                y_cross,
+                f"cost crossover\ny = {y_cross:.1f} m",
+                va="center",
+                fontsize=7.5,
+                color=TEXT,
+                zorder=6,
+            )
         # outline only: the exit choice inside the spawn area stays visible
         ax.add_patch(
             Rectangle(
@@ -205,8 +222,8 @@ def main(out_path: Path) -> None:
     fig.text(
         0.5,
         0.925,
-        "Only the near exit's sign bearing differs; the near exit is absent "
-        "from the map, not rejected",
+        "Only the near exit's sign bearing differs. Facing away, the near exit is "
+        "absent from the map, not rejected",
         ha="center",
         va="center",
         fontsize=9,

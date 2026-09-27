@@ -31,7 +31,7 @@ SMOKE = MODELS / "smoke-speed.md"
 FED = MODELS / "fed.md"
 ROUTING = MODELS / "routing.md"
 GATE = ROOT / "docs" / "route-cost-gate.md"
-VISIBILITY = MODELS / "visibility.md"
+WAYFINDING = MODELS / "wayfinding.md"
 ROUTING_DOC = ROOT / "docs" / "routing.md"
 QUICKSTART = ROOT / "docs" / "quickstart.md"
 HOMOGENEOUS = ROOT / "docs" / "testing-homogeneous.md"
@@ -209,7 +209,7 @@ DEFAULTS = [
         "`RouteCostConfig.default_exit_capacity` (1.3 agents/s)",
         lambda: RouteCostConfig().default_exit_capacity,
     ),
-    (VISIBILITY, "(default 0.25 m)", lambda: _cli().vis_cell_size),
+    (WAYFINDING, "| `--vis-cell-size` | CLI | 0.25", lambda: _cli().vis_cell_size),
     (LIMITATIONS, "`v0` (1.25 m/s by default)", _v0),
     # hand calculations on the tutorial and testing pages
     (QUICKSTART, "`1 + (-0.057", lambda: SmokeSpeedConfig().beta),

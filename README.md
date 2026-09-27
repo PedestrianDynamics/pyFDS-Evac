@@ -35,7 +35,7 @@ The model descriptions, usage and verification live on the documentation site:
 - [Smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/), including FDS data access through `fdsreader`
 - [Fractional effective dose](https://pedestriandynamics.org/pyFDS-Evac/models/fed/), including heat dose and irritant slowdown
 - [Dynamic route rerouting](https://pedestriandynamics.org/pyFDS-Evac/models/routing/)
-- [Visibility-aware routing and cognitive maps](https://pedestriandynamics.org/pyFDS-Evac/models/visibility/)
+- [Wayfinding](https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/)
 - [Verification suite](https://pedestriandynamics.org/pyFDS-Evac/models/verification/)
 
 ## Talks

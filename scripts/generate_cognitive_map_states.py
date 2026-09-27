@@ -18,8 +18,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import importlib.util
-import json
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -28,20 +27,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.patches import Rectangle
-from shapely import wkt as shapely_wkt
-from shapely.geometry import Polygon
 
-from pyfds_evac.core.cognitive_map import (
-    expand_from_visibility,
-    init_cognitive_map,
-)
-from pyfds_evac.core.route_graph import (
-    RouteCostConfig,
-    StageGraph,
-    rank_routes,
-)
-from pyfds_evac.core.smoke_speed import ConstantExtinctionField
-from pyfds_evac.core.visibility import VisibilityModel
+sys.path.insert(0, str(Path(__file__).resolve().parent / "figures"))
+from _cognitive_map_probe import load_builder, probe_cognitive_map  # noqa: E402
 
 ASSET = Path("assets/cognitive_map_memory")
 MAX_VIS_M = 30.0
@@ -68,55 +56,21 @@ STATE_STYLE = {
 }
 
 
-def _builder():
-    spec = importlib.util.spec_from_file_location(
-        "cmm_builder", ASSET / "build_geometry.py"
-    )
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def _load():
-    raw = json.loads((ASSET / "config.json").read_text(encoding="utf-8"))
-    stages = {
-        eid: {"polygon": Polygon(d["coordinates"]), "stage_type": "exit"}
-        for eid, d in raw["exits"].items()
-    }
-    dists = {
-        did: {"coordinates": d["coordinates"]}
-        for did, d in raw["distributions"].items()
-    }
-    graph = StageGraph.from_scenario(stages, raw["transitions"], distributions=dists)
-    signs = {eid: d["sign"] for eid, d in raw["exits"].items()}
-    return graph, signs, raw
-
-
 def main(out_path: Path) -> None:
-    builder = _builder()
-    graph, signs, _raw = _load()
-    walkable = shapely_wkt.loads((ASSET / "geometry.wkt").read_text().strip())
-    vis = VisibilityModel.clear_air(walkable, signs, cell_size_m=0.25)
-
+    builder = load_builder()
     walkable = builder.CORRIDOR
-    frames_y = [4.0, 10.0, 14.0, 20.0, 26.0, 30.0]
-
-    cmap_agent = init_cognitive_map(
-        "jps-distributions_0", graph, "discovery", vis_model=vis, time_s=0.0
-    )
+    # north through the band and past it, then back to y = 10 with the map
+    probes = probe_cognitive_map([4.0, 10.0, 14.0, 20.0, 26.0, 30.0], [10.0])
 
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(
         1,
-        len(frames_y),
-        figsize=(1.6 * len(frames_y), 7.2),
+        len(probes),
+        figsize=(1.6 * len(probes), 7.2),
         gridspec_kw=dict(wspace=0.15),
     )
-    for ax, y in zip(axes, frames_y):
-        expand_from_visibility(
-            cmap_agent, "jps-distributions_0", graph, vis, 0.0, CENTRELINE_X, y
-        )
+    for ax, probe in zip(axes, probes):
+        y, choice = probe.y, probe.choice
         ax.add_patch(
             Rectangle(
                 (walkable[0], walkable[1]),
@@ -128,13 +82,7 @@ def main(out_path: Path) -> None:
             )
         )
         for eid, bounds in (("E_end", builder.E_END), ("E_side", builder.E_SIDE)):
-            known = eid in cmap_agent.known_nodes
-            legible = vis.node_is_visible(0.0, CENTRELINE_X, y, eid)
-            state = (
-                "legible"
-                if (known and legible)
-                else ("remembered" if known else "unknown")
-            )
+            state = probe.states[eid]
             ax.add_patch(
                 Rectangle(
                     (bounds[0], bounds[1]),
@@ -163,19 +111,7 @@ def main(out_path: Path) -> None:
             lw=0.6,
             zorder=6,
         )
-        ranked = rank_routes(
-            graph,
-            "jps-distributions_0",
-            0.0,
-            0.0,
-            ConstantExtinctionField(0.0),
-            None,
-            RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0),
-            cognitive_map=cmap_agent,
-            agent_position=(CENTRELINE_X, y),
-        )
-        choice = ranked[0].exit_id.replace("E_", "") if ranked else "-"
-        if ranked:
+        if choice != "-":
             target = builder.E_SIDE if choice == "side" else builder.E_END
             ax.annotate(
                 "",
@@ -191,7 +127,19 @@ def main(out_path: Path) -> None:
                 ),
                 zorder=5,
             )
-        ax.set_title(f"y = {y:.0f} m\nwould take: {choice}", fontsize=9, pad=4)
+        where = f"y = {y:.0f} m" + (", back" if probe.heading == "south" else "")
+        ax.set_title(f"{where}\nwould take: {choice}", fontsize=9, pad=4)
+        if probe.heading == "south":
+            # the walk back from the top of the sweep, with the map it built
+            ax.annotate(
+                "",
+                xy=(0.6, y + 1.0),
+                xytext=(0.6, probes[-2].y),
+                arrowprops=dict(
+                    arrowstyle="-|>", color=TEXT, lw=1.0, ls=":", mutation_scale=9
+                ),
+                zorder=5,
+            )
         ax.set_xlim(-0.6, 5.6)
         ax.set_ylim(-1, builder.CORRIDOR[3] + 1)
         ax.set_aspect("equal")
@@ -237,7 +185,8 @@ def main(out_path: Path) -> None:
         0.5,
         0.93,
         "Hatched = remembered without being visible; that is the memory.\n"
-        "The probe is not a walk: each panel places the agent at that y.",
+        "The probe walks north with its map, then back to y = 10: same place, "
+        "different choice.",
         ha="center",
         va="center",
         fontsize=8.5,
@@ -247,7 +196,8 @@ def main(out_path: Path) -> None:
     fig.subplots_adjust(left=0.08, right=0.98, bottom=0.12, top=0.84)
     fig.savefig(out_path, dpi=140)
     print(f"Wrote: {out_path}")
-    print(f"Known exits at the end: {sorted(cmap_agent.known_nodes)}")
+    known = sorted(e for e, st in probes[-1].states.items() if st != "unknown")
+    print(f"Known exits at the end: {known}")
 
 
 if __name__ == "__main__":

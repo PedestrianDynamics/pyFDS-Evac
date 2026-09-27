@@ -36,32 +36,41 @@ view_angle x visibility >= distance
 with `view_angle` clipped to `[0, 1]` (`FDSVisMap._get_view_angle_array`) and
 
 ```
-visibility = c / mean_extinction     capped at max_vis, default 30 m
+visibility = c / mean_extinction     capped at max_vis
                                      equal to max_vis when extinction is 0
 ```
 
-(`FDSVisMap._get_visibility_array`, `FDSVisMap.get_vismap`).
+(`FDSVisMap._get_visibility_array`, `FDSVisMap.get_vismap`). fdsvismap's
+default `max_vis` is 30 m; pyFDS-Evac replaces the cap with the grid
+diagonal, which may be larger or smaller than 30 m
+(`pyfds_evac/core/visibility.py`; see
+[#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173), which
+proposes restoring a finite default). Here it is 29.99 m on the 0.25 m
+clear-air grid and 30.83 m on the FDS grid.
 
 Two consequences that are easy to miss:
 
-**In clear air the reach is 30 m, full stop.** Extinction is zero, so
-`visibility` is `max_vis`. Because `view_angle` cannot exceed 1, a sign more
-than 30 m away is illegible **at every bearing**. No choice of `alpha` rescues
-it.
+**In clear air the reach is the grid diagonal.** Extinction is zero, so
+`visibility` is `max_vis`, the diagonal of the visibility grid: 30.8 m for
+this deck's FDS mesh, 30.0 m for the 0.25 m clear-air grid. Because
+`view_angle` cannot exceed 1, a sign farther away than that is illegible **at
+every bearing**, and no choice of `alpha` rescues it. The legible region of a
+sign in clear air is the disc `distance <= max_vis * view_angle`: diameter
+`max_vis`, touching the sign and centred `max_vis / 2` in front of it.
 
 **With smoke the reach is `c / K̄`, which is usually far shorter.** The cap
 stops mattering almost immediately:
 
 | `c` | mean extinction `K̄` | usable radius |
 |---|---|---|
-| 3 (reflective) | 0.0 (clear) | 30 m — the cap |
-| 3 | 0.1 | 30 m — still capped |
+| 3 (reflective) | 0.0 (clear) | `max_vis` — the cap, here about 30 m |
+| 3 | 0.1 | 30 m |
 | 3 | 0.2 | 15 m |
 | 3 | 0.5 | 6 m |
 | 8 (illuminated) | 0.5 | 16 m |
 
 So a smoke scenario needs its exits inside the *smoke-reduced* radius, not
-inside 30 m. Sizing a corridor against the clear-air ceiling and then adding
+inside the clear-air cap. Sizing a corridor against the clear-air ceiling and then adding
 smoke will silently push every sign out of range.
 
 ### Why this bites quietly
@@ -129,13 +138,21 @@ that ignored sign orientation would send agents there either way.
 ![exit choice map](exit_choice_map.png)
 
 Each cell is shaded by the exit a discovery agent standing there would take,
-given what it can perceive from that spot. Exit markers are outlined in red
-where the sign is illegible from the spawn area.
+given what it can perceive from that spot: plain blue for `E_near`, hatched
+orange for `E_far`. An exit whose sign is legible from the spawn area is a
+yellow square with a gold outline; one whose sign is not is a hollow grey
+square.
 
-The shading flips **wholesale** rather than at a cost crossover, and that is the
-signature of the mechanism: the near exit is not out-priced in the right-hand
-panel, it is absent from the agent's map, so routing never sees it. A cost
-effect would show a boundary somewhere in the corridor; membership shows none.
+In the left panel both signs are legible from almost every cell, so both exits
+are in the map and the split is a cost crossover: the dashed line at
+y = 15.0 m, midway between the two exits (the first `E_far` row is centred at
+y = 15.25 m). Before the #167 fix (PR #170) the default cost model did not
+charge the walk from an agent standing beyond a route's origin node, so it
+under-priced `E_near` north of the spawn and the flip sat at y = 20.25 m.
+
+In the right panel there is no crossover. The near exit is not out-priced, it
+is absent from the agent's map, so routing never sees it, and every cell above
+the near sign takes `E_far`.
 
 The stray near-exit cells at the very bottom of the right panel are correct
 physics — below `y = 0.7` an agent is south of the sign, inside the half-plane
@@ -155,7 +172,8 @@ for v in visible hidden; do
       --scenario assets/exit_visibility_alpha/config_$v.json \
       --fds-dir "$FDS_DIR" \
       --vis-cache /tmp/vis_$v.npz \
-      --output-sqlite /tmp/run_$v.sqlite
+      --output-sqlite /tmp/run_$v.sqlite \
+      --output-route-history /tmp/routes_$v.csv
 
   .venv/bin/python scripts/plot_trajectories.py /tmp/run_$v.sqlite \
       --config assets/exit_visibility_alpha/config_$v.json \
@@ -189,15 +207,22 @@ got out cannot pass for a clean result.
 
 | | `E_near` | `E_far` | egress |
 |---|---|---|---|
-| `config_visible.json` (alpha = 0) | 40 | 0 | 18.20 s |
-| `config_hidden.json` (alpha = 180) | 0 | 40 | 26.02 s |
+| `config_visible.json` (alpha = 0) | 40 | 0 | 17.07 s |
+| `config_hidden.json` (alpha = 180) | 0 | 40 | 25.89 s |
 
 ![trajectories, visible](trajectories_visible.png)
 ![trajectories, hidden](trajectories_hidden.png)
 
-Turning the near sign away costs 7.8 s and sends every agent past it, the
-extra 10 m to `E_far`. All 40 switch at t = 0, on their first evaluation: the
-near exit never enters their map, so there is nothing to reconsider later.
+Turning the near sign away costs 8.8 s and sends every agent past it, the
+extra 10 m to `E_far`. Neither run records a route switch: the initial exit is
+assigned from each agent's map at spawn, and in the hidden run the near exit
+never enters that map, so there is nothing to reconsider later.
+
+These runs used the FDS vismap of the deck (FDS 6.10.1, clear air) and
+`--output-route-history`; the FDS output, the SQLite files and the route
+histories are in the project's data store under `exit_visibility_alpha/`.
+`scripts/figures/sign_bearing.py` reruns both configs with the clear-air
+model and gets the same counts and times.
 
 This is what the asset was built to show, and until
 [#61](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/61) was fixed it did
