@@ -66,10 +66,10 @@ the exact pathology the plan's opening diagnoses. *(scientist, architect,
 correctness — all three independently.)*
 
 **A2. Provenance is inverted.** In `materials/evac.f90` the door gate is an
-**absolute** threshold, `K_ave < ABS(FED_DOOR_CRIT)` = 0.03 /m (`:1459`,
-`:5260`), minimising time. The `0.5*d` rule is FDS+Evac's **tier-4 last resort**
-(`:16455`), reached only when no smoke-free door exists — and it uses `K_ave`
-along the **straight, occlusion-blocked bee line** (`See_door`, `:15343`), which
+**absolute** threshold, `K_ave < ABS(FED_DOOR_CRIT)` = 0.03 /m (`:1524`,
+`:5494`), minimising time. The `0.5*d` rule is FDS+Evac's **tier-4 last resort**
+(`:16791`), reached only when no smoke-free door exists — and it uses `K_ave`
+along the **straight, occlusion-blocked bee line** (`See_door`, `:15682`), which
 makes `S > 0.5*d` equivalent to optical depth tau < 6 along a real sight line.
 Our `k_max` over a polyline that bends round corners has no such reading.
 The comment at `:1095` is wrong; so is the commit message.
@@ -183,7 +183,7 @@ to plan section 3.
   because `rank_routes` un-rejects first, leaving `alive` non-empty.
 - (**Clear air is NOT clean — moved to B11 below.** The scenario check ran with
   no `--fds-dir`, so K is exactly 0 and the check cannot fail.)
-- **`c = 3`**: correct, confirmed independently by `evac.f90:5262` and Jin 1978.
+- **`c = 3`**: correct, confirmed independently by `evac.f90:5496` and Jin 1978.
   Note the duplicate constant: `smoke_speed.py:95` `visibility_factor_c = 3.0`.
 
 ---
@@ -437,21 +437,21 @@ Three consequences.
 2. **The FDS+Evac provenance is weakened, not gone.** *(Corrected after
    re-reading `evac.f90`.)* The **threshold** is citable: FDS+Evac's tier-4 test
    computes `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out at
-   `L2_tmp >= 1.0` (`:16458`, `:16463`), which is exactly `K_ave * d > 6`. What does
+   `L2_tmp >= 1.0` (`:16794`, `:16799`), which is exactly `K_ave * d > 6`. What does
    not carry over is the **quantity** — `K_ave_Door` is a mean along `See_door`'s
    straight sight line, with an L1 distance for doors with no resolved sight line
-   (`:16460`) — nor the **scope**: the test sits in a last-resort branch,
+   (`:16796`) — nor the **scope**: the test sits in a last-resort branch,
    loops only over known-or-visible doors, and strikes doors out permanently
-   (`:16464-16465`). So the paper may say the gate is *inspired by* FDS+Evac's
+   (`:16800-16801`). So the paper may say the gate is *inspired by* FDS+Evac's
    tier-4 visibility door rule and inherits its threshold with a citation; it may
    not say it implements it, and 6 is still uncalibrated as an exposure budget.
 
    The same re-read supplies provenance for the hysteresis added at `9f55f6e`:
-   `FAC_DOOR_OLD2 = 0.9` (`:1507`) discounts the current door's `L2_tmp` at
-   `:16290` and `:16467`, and at `:16467` that `L2_tmp` **is** `tau/6`. So
+   `FAC_DOOR_OLD2 = 0.9` (`:1572`) discounts the current door's `L2_tmp` at
+   `:16626` and `:16803`, and at `:16803` that `L2_tmp` **is** `tau/6`. So
    `current_exit_discount = 0.9` discounts the same quantity in the same place.
    The shipped code comment instead cites `FAC_DOOR_WAIT` at `evac.f90:1503`;
-   `FAC_DOOR_WAIT` is at `:1505` and discounts travel time, not smoke.
+   `FAC_DOOR_WAIT` is at `:1570` and discounts travel time, not smoke.
 3. **A1 is retired rather than open.** Scaling the threshold with route length
    was a defect for a visibility criterion and is correct for an exposure one: a
    longer walk through the same haze does expose you more.
@@ -483,7 +483,7 @@ delays the oscillation without removing it.
 
 FDS+Evac's tier is stable because refusal is **remembered**:
 `Is_Visible_Door(i) = .FALSE.` and `Is_Known_Door(i) = .FALSE.`
-(`evac.f90:16464-16465`) are permanent within the run. pyFDS-Evac removed that
+(`evac.f90:16800-16801`) are permanent within the run. pyFDS-Evac removed that
 memory at `e441b03`, deliberately, because permanent death destroyed the gate's
 self-healing property (B3). **The tier cannot be had without the memory.** That
 is a structural incompatibility, not a tuning failure, and it is a better reason
@@ -541,7 +541,7 @@ depth against a margin of 0.6). They are the ordering correctly following a
 field that reversed, not an oscillation any constant could damp. What is open is
 therefore not the mixed currency but a modelling question: **should a memoryless
 model follow a reversing field?** FDS+Evac's answer is memory -- a door struck
-out at `evac.f90:16463` stays struck out (`:16464-16465`) -- and pyFDS-Evac
+out at `evac.f90:16799` stays struck out (`:16800-16801`) -- and pyFDS-Evac
 removed that at `e441b03` on purpose, because permanent death destroyed the
 gate's self-healing property (B3). The two cannot both be had as the code
 stands. This belongs in the PR discussion.

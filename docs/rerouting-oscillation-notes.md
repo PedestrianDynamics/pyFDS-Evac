@@ -194,7 +194,7 @@ trace on a current run:
   `current_exit_discount` (0.9) scales the current exit's `tau` in the sort key, so it
   holds its place unless a rival is clearly cleaner rather than momentarily cleaner. The
   second is the fix at `9f55f6e`, and its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`
-  (`evac.f90:1507`, applied `:16290` and `:16467`), which discounts exactly this quantity
+  (`evac.f90:1572`, applied `:16626` and `:16803`), which discounts exactly this quantity
   in exactly this position.
 - **The anchor's tau test is a symmetric deadband** (`25a6f8f`). With
   `margin = tau_max * tau_deadband` (0.6), a rival cleaner by more than the margin is
@@ -222,7 +222,7 @@ route cleaner by more than the deadband** — median 0.95 of optical depth again
 of 0.6 — so the agent is following a field that genuinely reversed, not flickering across
 a threshold. No further hysteresis constant can damp those. What is open is a modelling
 question: whether a memoryless model should follow a reversing field at all. FDS+Evac's
-answer is memory — a door struck out stays struck out (`evac.f90:16464-16465`) — which
+answer is memory — a door struck out stays struck out (`evac.f90:16800-16801`) — which
 pyFDS-Evac removed deliberately at `e441b03`.
 
 **Churn is reduced, not eliminated, and monotonicity now holds on one deck and not the
