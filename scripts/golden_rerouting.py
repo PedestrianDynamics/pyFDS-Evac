@@ -282,9 +282,16 @@ def _git(*args: str) -> str:
 
 
 def _run_all(names: list[str], root: Path, out: Path) -> int:
-    """Run the inventory of *names*; non-zero if any run could not be made."""
+    """Run the inventory of *names*; non-zero if any run could not be made.
+
+    *out* must be new or empty, so no file from an earlier run can stand in
+    for one this run failed to write.
+    """
+    if out.exists() and any(out.iterdir()):
+        print(f"refusing to write into non-empty {out}; use a fresh folder")
+        return 2
     out.mkdir(parents=True, exist_ok=True)
-    ran, skipped = [], {}
+    ran, skipped, incomplete = [], {}, {}
     for name, mode in _inventory(names):
         missing = _missing(DECKS[name], root)
         if missing:
@@ -309,6 +316,11 @@ def _run_all(names: list[str], root: Path, out: Path) -> int:
             cwd=REPO,
             stdout=subprocess.DEVNULL,
         )
+        absent = [f for f in MODES[mode] if not (out / name / mode / f).is_file()]
+        if absent:
+            incomplete[f"{name}/{mode}"] = absent
+            print(f"INCOMPLETE {name}/{mode}: {', '.join(absent)}")
+            continue
         ran.append(f"{name}/{mode}")
     manifest = {
         "commit": _git("rev-parse", "HEAD"),
@@ -317,12 +329,14 @@ def _run_all(names: list[str], root: Path, out: Path) -> int:
         "decks": {name: vars(DECKS[name]) for name in names},
         "runs": ran,
         "skipped": skipped,
+        "incomplete": incomplete,
     }
     (out / "manifest.json").write_text(
         json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8"
     )
-    if skipped:
-        print(f"{len(skipped)} of {len(ran) + len(skipped)} runs missing")
+    failed = len(skipped) + len(incomplete)
+    if failed:
+        print(f"{failed} of {len(ran) + failed} runs missing or incomplete")
         return 1
     return 0
 
@@ -401,9 +415,34 @@ def _compare_file(a: Path, b: Path) -> list[str]:
     return _compare_json(a, b)
 
 
+def _manifest_problems(out: Path, names: list[str]) -> list[str]:
+    """Why the runs in *out* do not cover the inventory of *names*, if they don't.
+
+    The files alone cannot say: a folder can hold outputs left over from an
+    older run. The manifest of the run that wrote them is the record.
+    """
+    path = out / "manifest.json"
+    if not path.is_file():
+        return [f"no manifest in {out}"]
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    problems = []
+    for key in ("skipped", "incomplete"):
+        if manifest.get(key):
+            problems.append(f"{key} runs in {out}: {sorted(manifest[key])}")
+    runs = set(manifest.get("runs", []))
+    absent = [f"{d}/{m}" for d, m in _inventory(names) if f"{d}/{m}" not in runs]
+    if absent:
+        problems.append(f"runs not recorded in {out}: {absent}")
+    return problems
+
+
 def _compare(dir_a: Path, dir_b: Path, names: list[str]) -> int:
     """Compare the full inventory of *names*; a missing file is a difference."""
     differs = False
+    for out in (dir_a, dir_b):
+        for problem in _manifest_problems(out, names):
+            print(f"BAD   {problem}")
+            differs = True
     for deck, mode in _inventory(names):
         for name in MODES[mode]:
             where = f"{deck}/{mode}/{name}"
