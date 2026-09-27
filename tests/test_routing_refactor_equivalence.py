@@ -36,6 +36,7 @@ from pyfds_evac.core.route_graph import (
     RouteCostConfig,
     StageGraph,
 )
+from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
 _SIDES = {"legacy": legacy, "live": live}
 _DECISION_FUNCTIONS = (
@@ -1371,6 +1372,88 @@ def test_leaves_rejected_path_needs_a_feasible_unrejected_best():
     assert not live._leaves_rejected_path(_rc("E0"), ok)
     assert not live._leaves_rejected_path(walked, replace(ok, feasible=False))
     assert not live._leaves_rejected_path(walked, replace(ok, rejected=True))
+
+
+class _AssignmentLog(AgentRouteState):
+    """Route state that records the name of every attribute assigned to it."""
+
+    def __setattr__(self, name, value):
+        self.__dict__.setdefault("_assigned", []).append(name)
+        super().__setattr__(name, value)
+
+    @classmethod
+    def of(cls, route_state: AgentRouteState) -> _AssignmentLog:
+        logged = cls(**_state_fields(route_state))
+        logged.__dict__["_assigned"] = []
+        return logged
+
+
+def _assignments(case: golden.RerouteCase) -> dict[str, list[str]]:
+    states = {}
+
+    def on_world(side, world):
+        world["route_state"] = states[side] = _AssignmentLog.of(world["route_state"])
+
+    _both(case, on_world)
+    return {side: state.__dict__["_assigned"] for side, state in states.items()}
+
+
+def test_same_exit_switch_does_not_assign_current_exit():
+    case = golden.REROUTE_CASES["better_path_ten_percent"]
+    assert _reroute("live", case, True)["switch"].reason == "better_path"
+    assigned = _assignments(case)
+    assert assigned["live"] == assigned["legacy"]
+    assert "current_exit" not in assigned["live"]
+    assert assigned["live"] == ["last_eval_time_s", "current_path"]
+    # Control: an exit change does assign it.
+    change = _assignments(golden.REROUTE_CASES["gate_anchor_cleaner"])
+    assert change["live"] == change["legacy"]
+    assert "current_exit" in change["live"]
+
+
+def test_walked_path_evaluation_omits_current_exit(monkeypatch):
+    """The walked path is priced as by a caller with no current exit.
+
+    The smoke sits between the plain clean threshold and the one the current
+    exit is allowed, so passing current_exit would flip the walked route's
+    clean flag; both copies must leave it out.
+    """
+    base = golden.REROUTE_CASES["better_path_ten_percent"]
+    smoke = ConstantExtinctionField(0.05)
+    walked = list(base.current_path)
+    config = golden._gate(clean_extinction_threshold=0.04)
+    graph = base.graph()
+    plain = live.evaluate_route(graph, walked, base.time_s, 0.0, smoke, None, config)
+    as_current = live.evaluate_route(
+        graph, walked, base.time_s, 0.0, smoke, None, config, current_exit="E0"
+    )
+    assert not plain.clean and as_current.clean
+    case = replace(base, config=config, extinction=smoke)
+
+    calls = {side: [] for side in _SIDES}
+    for side, mod in _SIDES.items():
+        real = mod.evaluate_route
+
+        def recording(*args, _calls=calls[side], _real=real, **kwargs):
+            result = _real(*args, **kwargs)
+            _calls.append((list(args[1]), dict(kwargs), result))
+            return result
+
+        monkeypatch.setattr(mod, "evaluate_route", recording)
+    result = _both(case)
+    assert result["switch"].reason == "better_path"
+    walked_calls = {
+        side: [(kw, rc) for path, kw, rc in log if path == walked]
+        for side, log in calls.items()
+    }
+    assert len(walked_calls["live"]) == 1
+    for side, found in walked_calls.items():
+        kwargs, rc = found[0]
+        assert kwargs.get("current_exit") is None, side
+        assert not rc.clean, side
+    assert [kw for kw, _ in walked_calls["live"]] == [
+        kw for kw, _ in walked_calls["legacy"]
+    ]
 
 
 # ── The harness compares legacy with live, not live with itself ──────
