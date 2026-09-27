@@ -22,7 +22,9 @@ Usage::
 ``--data-root`` defaults to the maintainer's sciebo ``fds-evac-data`` folder.
 A deck whose files are missing there is reported and skipped. ``--compare``
 reports, per deck and file, which columns differ and where the first
-difference is, and exits non-zero if anything differs.
+difference is. Both runs and compare check the full inventory of the selected
+decks, and exit non-zero if a deck or a file is missing on either side, or if
+anything differs.
 """
 
 from __future__ import annotations
@@ -213,13 +215,14 @@ def _git(*args: str) -> str:
 
 
 def _run_all(names: list[str], root: Path, out: Path) -> int:
+    """Run every deck in *names*; non-zero if any could not be run."""
     out.mkdir(parents=True, exist_ok=True)
     ran, skipped = [], {}
     for name in names:
         missing = _missing(DECKS[name], root)
         if missing:
             skipped[name] = [str(p) for p in missing]
-            print(f"skip {name}: not in the data root: {', '.join(map(str, missing))}")
+            print(f"MISSING {name}: {', '.join(map(str, missing))}")
             continue
         print(f"run  {name}")
         subprocess.run(
@@ -242,12 +245,16 @@ def _run_all(names: list[str], root: Path, out: Path) -> int:
         "commit": _git("rev-parse", "HEAD"),
         "pyfds_evac_dirty": bool(_git("status", "--porcelain", "--", "pyfds_evac")),
         "data_root": str(root),
-        "decks": {name: vars(DECKS[name]) for name in ran},
+        "decks": {name: vars(DECKS[name]) for name in names},
+        "runs": ran,
         "skipped": skipped,
     }
     (out / "manifest.json").write_text(
         json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8"
     )
+    if skipped:
+        print(f"{len(skipped)} of {len(names)} decks missing")
+        return 1
     return 0
 
 
@@ -325,13 +332,10 @@ def _compare_file(a: Path, b: Path) -> list[str]:
     return _compare_json(a, b)
 
 
-def _compare(dir_a: Path, dir_b: Path) -> int:
-    decks = sorted(
-        {p.name for p in dir_a.iterdir() if p.is_dir()}
-        | {p.name for p in dir_b.iterdir() if p.is_dir()}
-    )
+def _compare(dir_a: Path, dir_b: Path, names: list[str]) -> int:
+    """Compare every deck in *names*; a missing file is a difference."""
     differs = False
-    for deck in decks:
+    for deck in names:
         for name in FILES:
             report = _compare_file(dir_a / deck / name, dir_b / deck / name)
             status = "DIFF" if report else "same"
@@ -370,7 +374,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.compare:
-        return _compare(*args.compare)
+        return _compare(*args.compare, args.decks)
     if args.out is None:
         parser.error("--out is required unless --compare is given")
     if args.run_one:
