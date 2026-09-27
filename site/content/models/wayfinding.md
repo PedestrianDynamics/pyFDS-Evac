@@ -50,6 +50,8 @@ These words are used with one meaning each, here and on the linked pages.
 
 ## Coded form
 
+<a id="sign-visibility"></a>
+
 ### 1. The sign-legibility test
 
 Every exit, checkpoint and waypoint carries a sign (`visibility.py:61–73`). A
@@ -140,6 +142,8 @@ the FDS directory path, the signs, the time step and the slice height; it
 does not hash the FDS output, so replacing the output in place leaves a stale
 cache valid (`visibility.py:115–139`, `:330–359`).
 
+<a id="which-visibility-setting-am-i-running"></a>
+
 **Which model a run gets** (`run_config.py:156–230`):
 
 | invocation | model |
@@ -157,6 +161,8 @@ In every case a scenario from which no sign can be extracted gets no model
 (`run_config.py:206–209`). Rejected combinations: `--clear-air-visibility`
 with `--fds-dir`, `--clear-air-visibility` with `--no-visibility`, and
 `--vis-cache` with `--no-enable-rerouting` (`run_config.py:156–168`).
+
+<a id="cognitive-maps"></a>
 
 ### 2. The knowledge contract
 
@@ -454,7 +460,7 @@ file. The detailed account of FDS+Evac door choice is on
 | **Known** | `KNOWN_DOOR` (default `.FALSE.`) and `KNOWN_DOOR_PROBS` per door, written at initialisation into a per-agent or per-group list; afterwards only downgraded | *Known*: seeded by `familiarity` (one \(p\) per group) and `entrance`, then learned from legible signs; never downgraded |
 | **Visible counts as known** | for the current target in every call (`:16197–16199`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
 | **Memory of the target** | a current target with positive `I_Target` stays visible | every known node persists |
-| **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < |\)`FED_DOOR_CRIT`\(|\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹ | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
+| **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹ | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
 | **Last resort** | tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call | the all-refused fallback re-admits the least smoky known route |
 | **Smoke memory** | lone agents mark the previous target negative or zero | none |
 | **Default** | agent type 2, `KNOWN_DOOR = .FALSE.` | `familiarity = "full"` |
@@ -474,10 +480,10 @@ Details, with line numbers:
   (`:16147–16155`). For DOORs without `EXIT_SIGN`, visibility also needs the
   door to be the current target or already known (`:16164–16171`).
 - **Smoke acts in the door choice, not in seeing.** \(\bar K\) is floored at
-  \(0.5\,|\)`FED_DOOR_CRIT`\(|\) = 0.015 m⁻¹ with the default negative
+  \(0.5\,\lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.015 m⁻¹ with the default negative
   criterion (`:16158–16160`), which is converted from a visibility with
   \(S = 3/K\) (`:5260–5262`).
-  - Tiers 1–3 admit a door only while \(\bar K < |\)`FED_DOOR_CRIT`\(|\)
+  - Tiers 1–3 admit a door only while \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\)
     (`:16253`, `:16265`, `:16272`, `:16347–16354`, `:16396–16401`).
     The door that shares the current target's flow field is discounted
     first: its \(\bar K\) is multiplied by `FAC_DOOR_OLD` (default 0.1,
@@ -510,6 +516,8 @@ Details, with line numbers:
   criteria (see [routing](/models/routing.md)).
 - **No counterpart.** FDS+Evac's herding and follower agents (types 3 and 4)
   and its group behaviour.
+
+<a id="verification-familiarity-comparison"></a><a id="visualising-cognitive-map-evolution"></a><a id="diagnostic-scripts"></a>
 
 ## Verification
 
