@@ -90,7 +90,7 @@ is given. With it, the same applies as for the gases: if there is no
 Heat FED is disabled for <dir>: it has no TEMPERATURE slice. ...
 ```
 
-**Wrong slice height.** `--smoke-slice-height` (default 1.6 m, FDS+Evac's `HUMAN_SMOKE_HEIGHT`) is a
+**Wrong slice height.** `--smoke-slice-height` (default 1.6 m, [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)'s `HUMAN_SMOKE_HEIGHT`) is a
 preference, not a filter: a case with one slice of a quantity uses it whatever
 its height, and a mismatch never fails the run. A case you inherit often
 carries a single slice at whatever height its author chose, so you can end up

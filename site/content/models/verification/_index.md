@@ -64,7 +64,7 @@ corridor (2 m × 100 m, 1 m exit) once in clear air, which is the control, and
 once under a constant extinction coefficient *K*. The reference is the model's
 own correlation, as the standard requires: the ratio of the two egress times
 must equal 1/*f*(*K*), where *f* is the speed factor of the Frantzich–Nilsson
-law (the `lund` option; the linear FDS+Evac law). The ratio must agree within 8 %, which absorbs the finite spawn box, the
+law (the `lund` option; the linear [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) law). The ratio must agree within 8 %, which absorbs the finite spawn box, the
 exit width and the 0.1 s update interval, and every recorded speed factor must
 equal *f*(*K*) exactly. With *K* supplied as a constant field
 (`assets/ISO-table21`, `tests/test_smoke_speed.py`), the test runs at

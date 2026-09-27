@@ -73,7 +73,7 @@ $$
 
 where the speed factor \(f\) falls from 1 in clear air towards a floor in
 dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
-form and with the constants of FDS+Evac, so a difference between the two tools
+form and with the constants of [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
 `fridolf` option, \(V/(V+2)\) with the sighting distance \(V = C/K\). Its
 attribution to Fridolf et al. (2019) is unverified, and the paper's own law

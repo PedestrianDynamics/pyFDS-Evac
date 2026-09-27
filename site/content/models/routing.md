@@ -35,7 +35,7 @@ tau = K_ave * L
 the soot column the agent walks through, with `K_ave` the mean extinction along
 the route polyline and `L` the distance still to walk. On this page `tau` is
 always this dimensionless optical depth, not the relaxation time τ of
-FDS+Evac's movement model. A route is refused when
+[FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)'s movement model. A route is refused when
 `tau` exceeds `tau_max` (see [Parameters](#parameters)), Dijkstra weights every edge by its own
 `tau`, and `tau` orders the routes that survive, with travel time breaking ties.
 Path choice and exit choice are therefore one objective. In clear air every

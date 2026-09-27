@@ -209,7 +209,7 @@ default).
 `TenabilityConfig()` defaults to `incapacitation_mode="probabilistic"`, which
 draws a log-normal threshold for each agent with median `fed_threshold = 1.0`.
 This page uses `"deterministic"`, so the threshold is exactly 1.0, as in
-FDS+Evac. The command-line equivalent is `--incapacitation-mode deterministic`.
+[FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source). The command-line equivalent is `--incapacitation-mode deterministic`.
 
 The incapacitated occupant stays in the simulation, so the run continues to
 `max_simulation_time` and `exposed.evacuation_time` reports 1150 s. It is not

@@ -7,7 +7,7 @@ math: true
 Based on: [Asphyxiant fractional effective dose](/fundamentals/asphyxiant-fed.md), [Irritant gases](/fundamentals/irritants.md), [Heat](/fundamentals/heat.md) and [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
 
 Symbols follow the [notation table](/docs/concepts.md#notation). The model
-codes the Purser sum in the form of the FDS+Evac guide (Korhonen 2021, §3.4),
+codes the Purser sum in the form of the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) guide (Korhonen 2021, §3.4),
 which adds irritants into the dose; ISO 13571 keeps them in a separate
 concentration endpoint. The published equations are on the Fundamentals pages
 linked above.

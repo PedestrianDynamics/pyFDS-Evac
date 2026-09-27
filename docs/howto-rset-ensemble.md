@@ -26,7 +26,7 @@ time, all in seconds.
 A pyFDS-Evac run starts at *t* = 0 and gives at most
 *t*<sub>pre</sub> + *t*<sub>trav</sub>. It includes *t*<sub>pre</sub> only if
 the scenario models pre-movement (`use_premovement` in a spawn area; a spawn
-area that sets no pre-movement key gets a constant 10 s, as FDS+Evac). You add
+area that sets no pre-movement key gets a constant 10 s, as [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)). You add
 *t*<sub>det</sub> and *t*<sub>a</sub> yourself. The scenario in Part 1 models no
 pre-movement, so its exit times are travel times only.
 

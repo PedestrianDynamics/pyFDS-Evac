@@ -35,7 +35,7 @@ Symbols used below:
 3. **Each edge gets a live cost from current conditions.**
    `evaluate_segment()` (`route_graph.py:528`) computes, at the current time:
    - Mean smoke along the edge: `k_avg` (integrated extinction over the edge).
-   - Walking-speed slowdown from smoke — the **Lund / FDS+Evac linear law**
+   - Walking-speed slowdown from smoke — the **Lund / [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) linear law**
      (`smoke_speed.py:205`, α = 0.706, β = −0.057):
      ```
      speed_factor = clamp( 1 + (β · K) / α ,  min_factor=0.1 , 1.0 )

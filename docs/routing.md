@@ -578,7 +578,7 @@ quantity that does is `tau_route`.
   key table, and known limitations.
 - [gate-model-review-notes.md](gate-model-review-notes.md) -- provenance
   against `materials/evac.f90` and the open questions.
-- FDS+Evac Technical Reference and User's Guide
+- [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) Technical Reference and User's Guide
   -- Korhonen (2021). Smoke-interaction model (Section 3.4).
 - [Routing model](/models/routing.md) -- defaults and deviations from the
   literature; the published laws are on

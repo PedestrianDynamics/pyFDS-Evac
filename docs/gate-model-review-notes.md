@@ -29,7 +29,7 @@ section designed and no reference code uses.
 ## A0. Discriminating experiment: aggregation is NOT the cause
 
 Hypothesis: the saturation is an artefact of using worst-case `k_max` over a
-whole bending polyline instead of FDS+Evac's `K_ave` along one sight line.
+whole bending polyline instead of [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)'s `K_ave` along one sight line.
 Recomputed offline from the tester's own route-cost CSVs (no rerun):
 
 | criterion | t_junction feasible | world100 feasible |

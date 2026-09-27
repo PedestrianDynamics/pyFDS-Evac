@@ -46,7 +46,7 @@ with the terms, *t* in minutes and concentrations in ppm or % by volume:
   by default; *D* is 40 % at rest and 20 % for heavy work (table under
   Eq. 63.18, p. 2356). With these defaults the coefficient is
   \(3.317\times10^{-5}\times 25/30 = 2.764\times10^{-5}\) per minute, the
-  constant used by FDS+Evac, the evacuation module of the Fire Dynamics
+  constant used by [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), the evacuation module of the Fire Dynamics
   Simulator (Korhonen 2021, Eq. 13).
 - **HCN** (Eq. 63.24): \(F_{I_{CN}} = [\mathrm{CN}]^{2.36}\,t/(1.2\times10^{6})\),
   where [CN] may be corrected for other nitriles and for the protective effect
