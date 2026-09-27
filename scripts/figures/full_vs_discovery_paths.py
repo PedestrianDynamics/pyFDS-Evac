@@ -5,8 +5,11 @@ two configs that differ only in the spawn distribution's ``familiarity``:
 same 20 x 18 m floor, same four signed checkpoints, same exit, 20 agents,
 seed 420. Sight is clear air (fdsvismap ray casting on the walkable
 polygon) at a 0.05 m grid, two cells across the deck's 0.1 m walls, so no
-partition leaks sight. Each panel draws the stage graph as the discovery
-tier knows it at t = 0 (full knows all of it) and the 20 walked paths.
+partition leaks sight. Left, panel (a), full; right, panel (b), discovery.
+Each panel draws the stage graph as that tier knows it at t = 0 and the 20
+walked paths. The footer is computed from the runs: egress times, route
+decisions, and how the discovery maps grow (they differ from full not only at
+t = 0 but in what the agents learn on the way).
 
 Run from the repository root::
 
@@ -72,7 +75,11 @@ def simulate(tier):
     paths = [g[["x", "y"]].to_numpy() for _, g in traj.groupby("id")]
     lengths = [np.linalg.norm(np.diff(p, axis=0), axis=1).sum() for p in paths]
     history = result.cognitive_map_history or []
+    exit_ids = set(scenario.raw.get("exits", {}))
     out = dict(
+        switches=len(result.route_history or []),
+        exit_learned=exit_learned_times(history, exit_ids),
+        final_known=final_map_sizes(history),
         scenario=scenario,
         paths=paths,
         known_t0=set(history[0]["known_nodes"]) if history else set(),
@@ -83,6 +90,42 @@ def simulate(tier):
     )
     result.cleanup()
     return out
+
+
+def exit_learned_times(history, exit_ids):
+    """Per agent, the first time an exit is in its map."""
+    first = {}
+    for row in history:
+        if row["agent_id"] in first or not exit_ids & set(row["known_nodes"]):
+            continue
+        first[row["agent_id"]] = row["time_s"]
+    return np.array(sorted(first.values()))
+
+
+def final_map_sizes(history):
+    """Per agent, the number of nodes in its map at its last learning event."""
+    last = {row["agent_id"]: len(row["known_nodes"]) for row in history}
+    return np.array(list(last.values()))
+
+
+def footer(full, disc, n_disc_t0, n_nodes):
+    """Three lines of computed facts: what each tier knew, did and took."""
+    learned = disc["exit_learned"]
+    when = (
+        f"the exit enters their maps at t = {learned.min():.0f}\u2013"
+        f"{learned.max():.0f} s (median {np.median(learned):.0f} s)"
+        if learned.size
+        else "the exit never enters their maps"
+    )
+    return (
+        f"(a) Full: all {n_nodes} stages known from t = 0; "
+        f"{full['switches']} route re-decisions; last agent out at "
+        f"{full['evac_time']:.1f} s.\n"
+        f"(b) Discovery: {n_disc_t0} of {n_nodes} stages known at t = 0, a median "
+        f"of {np.median(disc['final_known']):.0f} at the end; {when};\n"
+        f"{disc['switches']} route re-decisions; last agent out at "
+        f"{disc['evac_time']:.1f} s."
+    )
 
 
 def stage_nodes(raw):
@@ -236,14 +279,14 @@ def main():
     sns.despine(fig=fig, left=True, bottom=True)
 
     full, disc = runs["full"], runs["discovery"]
+    print("layout: 1 x 2, left (a) full, right (b) discovery")
+    print(footer(full, disc, len(disc_known), len(all_nodes)))
     fig.text(
         0.5,
         0.03,
-        f"Same deck, seed and exit; only the initial map differs. Discovery "
-        f"starts knowing {len(disc_known)} of {len(all_nodes)} stages and needs "
-        f"{disc['evac_time'] - full['evac_time']:.0f} s more to empty the floor "
-        f"({disc['evac_time'] / full['evac_time']:.1f}x).",
+        footer(full, disc, len(disc_known), len(all_nodes)),
         ha="center",
+        linespacing=1.5,
         va="top",
         fontsize=9,
         color=TEXT,
