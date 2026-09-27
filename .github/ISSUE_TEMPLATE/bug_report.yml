@@ -1,0 +1,71 @@
+name: Bug report
+description: The code crashes or gives a wrong result.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        pyFDS-Evac is research software, provided without warranty and not for regulatory use.
+        Security problems go through SECURITY.md, not here.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Output of `git rev-parse --short HEAD`, or the version you installed.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.5, Ubuntu 24.04, Windows 11
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      description: Output of `uv run python --version`.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command
+      description: The full command you ran, with every flag.
+      render: shell
+      placeholder: uv run run.py --scenario assets/t_junction --fds-dir assets/t_junction
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Scenario and configuration
+      description: >
+        The scenario folder or config JSON, or the smallest one that shows the bug.
+        Do not attach FDS output; say where the case comes from instead.
+    validations:
+      required: true
+  - type: input
+    id: fds
+    attributes:
+      label: FDS version
+      description: If an FDS run is involved, the FDS version that produced it.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The traceback or the relevant log lines.
+      render: text

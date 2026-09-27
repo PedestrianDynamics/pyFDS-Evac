@@ -1,0 +1,25 @@
+name: Documentation error
+description: A page is wrong, unclear or out of date.
+labels: ["documentation"]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      placeholder: https://pedestriandynamics.org/pyFDS-Evac/models/fed/
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong
+      description: Quote the sentence, figure or value, and say what it should be.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Primary source
+      description: >
+        Required if this is a scientific claim: the paper, handbook chapter or guide,
+        with the equation, table or page number.
