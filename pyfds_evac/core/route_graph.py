@@ -1366,6 +1366,14 @@ class RouteModePolicy(Protocol):
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float: ...
 
+    def apply_candidate_set_rules(
+        self, costs: list[RouteCost], config: RouteCostConfig
+    ) -> list[RouteCost]: ...
+
+    def order_key(
+        self, rc: RouteCost, config: RouteCostConfig, current_exit: str | None
+    ) -> tuple[int, int, float, float, int]: ...
+
 
 class AdditivePolicy:
     """The historical w_smoke/w_fed toll: the composite ranks, dose refuses."""
@@ -1396,6 +1404,49 @@ class AdditivePolicy:
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float:
         return m.composite_cost
+
+    def apply_candidate_set_rules(
+        self, costs: list[RouteCost], config: RouteCostConfig
+    ) -> list[RouteCost]:
+        # Sign legibility is not consulted here.  It decides what enters the
+        # agent's cognitive map (see cognitive_map.expand_from_visibility), and
+        # the map decides what Dijkstra can see -- so an unknown exit is absent
+        # from the graph rather than present-and-vetoed.  Checking it again here
+        # double-gated the same criterion, blocked agents who already knew the
+        # building, and forbade an agent from using an exit it had legitimately
+        # learned once the sign went out of view.
+        # K_vis fallback: reject routes where all segments are non-visible,
+        # but only if at least one other route has visibility.
+        #
+        # Additive only (GatePolicy has no candidate-set rule). It sets
+        # `rejected` without clearing `feasible`, so the two fields disagree.
+        any_visible = any(
+            any(s.visible for s in rc.segments) for rc in costs if not rc.rejected
+        )
+        if any_visible:
+            updated = []
+            for rc in costs:
+                if not rc.rejected and not any(s.visible for s in rc.segments):
+                    rc = replace(
+                        rc,
+                        rejected=True,
+                        rejection_reason="all segments non-visible",
+                    )
+                updated.append(rc)
+            costs = updated
+        return costs
+
+    def order_key(
+        self, rc: RouteCost, config: RouteCostConfig, current_exit: str | None
+    ) -> tuple[int, int, float, float, int]:
+        # Ordering. Under "additive" the composite decides, as it always has.
+        return (
+            1 if rc.rejected else 0,
+            0,
+            0.0,
+            rc.rank_cost,
+            len(rc.path),
+        )
 
 
 class GatePolicy:
@@ -1484,6 +1535,58 @@ class GatePolicy:
         # congestion weight would count for nothing exactly where decks
         # calibrate one.
         return m.travel_time_s + m.queue_time_s * config.w_queue
+
+    def apply_candidate_set_rules(
+        self, costs: list[RouteCost], config: RouteCostConfig
+    ) -> list[RouteCost]:
+        # The additive K_vis screen is retired under the gate. It was a
+        # *second* smoke criterion on top of the sight test, and a bare
+        # threshold on K with no hysteresis, so a route sitting near it toggled
+        # every tick: measured on world100, a 9 m route with a 2 s travel time
+        # was struck out and reinstated repeatedly while the agent bounced to a
+        # 27 m rival and back. It also set `rejected` without clearing
+        # `feasible`, leaving the two fields disagreeing. The plan retired it
+        # under the gate; this is that retirement.
+        return costs
+
+    @staticmethod
+    def _ordering_tau(
+        rc: RouteCost, config: RouteCostConfig, current_exit: str | None
+    ) -> float:
+        # The exit the agent already walks to has its optical depth discounted,
+        # so it keeps its place unless a rival is clearly cleaner rather than
+        # momentarily cleaner. This is FDS+Evac's FAC_DOOR_OLD2 = 0.9
+        # (evac.f90:1507), applied at :16467 inside the IF that ranks doors --
+        # the same position, not a separate veto afterwards. Hysteresis belongs
+        # in the ordering: bolted on after it, the ordering and the veto
+        # disagree and the agent oscillates between what each of them prefers.
+        if current_exit is not None and rc.exit_id == current_exit:
+            return rc.tau_route * config.current_exit_discount
+        return rc.tau_route
+
+    def order_key(
+        self, rc: RouteCost, config: RouteCostConfig, current_exit: str | None
+    ) -> tuple[int, int, float, float, int]:
+        # Ordering. Under "gate" distance decides among routes that are still
+        # available, and a route a whole visibility band clearer wins first:
+        # smoke says which exits exist, not how much each metre of them is
+        # worth.
+        # Under "gate" the route's optical depth decides and travel time breaks
+        # ties: tau = K_ave * L already contains the distance, so two routes
+        # through equally thin haze order by length and in clear air every tau is
+        # zero and time decides alone. A cleaner route wins only by enough less
+        # smoke to pay for its extra metres -- which is the property a visibility
+        # band could not have, since a band compared cleanliness with no reference
+        # to how far the agent had to carry it.
+        prefer_clean = config.clean_extinction_threshold > 0.0
+        tier = 0 if (rc.clean or not prefer_clean) else 1
+        return (
+            1 if rc.rejected else 0,
+            tier,
+            self._ordering_tau(rc, config, current_exit),
+            rc.rank_cost,
+            len(rc.path),
+        )
 
 
 _GATE_POLICY = GatePolicy()
@@ -1607,6 +1710,60 @@ def _generate_candidates(
     return all_paths
 
 
+def _fallback_holds_current(
+    winner: RouteCost, current: RouteCost, config: RouteCostConfig
+) -> bool:
+    """Whether the current exit keeps its place ahead of the fallback winner.
+
+    It does unless the winner's worst stretch is clearly milder, by
+    fallback_switch_margin; equality does not hold it.
+    """
+    margin = 1.0 - config.fallback_switch_margin
+    return winner.k_max_route > current.k_max_route * margin
+
+
+def _apply_fallback(
+    costs: list[RouteCost], config: RouteCostConfig, current_exit: str | None
+) -> list[RouteCost]:
+    """Un-reject the least bad route when every route is refused.
+
+    Fallback: with every route refused the agent still has to go somewhere,
+    and the least bad one is the one whose worst stretch is least bad -- the
+    question is surviving the walk, not averaging it.
+
+    Refusal is never remembered: the sight criterion is measured against the
+    distance *still to walk*, so it relaxes as the agent closes on an exit and
+    the smoke that refused a door at 40 m accepts it at 2 m. Recomputing every
+    tick is what lets that happen. The price is that in a fire smoky enough to
+    refuse everything -- which is most of a real run, see
+    docs/gate-model-review-notes.md -- the ordering follows the field, so the
+    current exit is held unless a rival's worst stretch is clearly milder.
+
+    Ordered by optical depth here too, not by the worst sample: ordering
+    refused routes by k_max alone once put a 51 m route ahead of a 22 m one
+    on 2.0 m of sight against 1.8 m -- two tenths of a metre of visibility,
+    neither usable, deciding a 29 m detour. tau carries the distance with it,
+    so the least-bad walk is the one with least smoke to walk through.
+
+    Applies under both cost models. Only the promoted route changes:
+    ``rejected`` is cleared, the reason gains a "fallback: " prefix, and
+    ``feasible`` is left as it was.
+    """
+    if costs and all(rc.rejected for rc in costs):
+        costs.sort(key=lambda rc: (rc.tau_route, rc.rank_cost))
+        current = next((rc for rc in costs if rc.exit_id == current_exit), None)
+        if current is not None and costs[0].exit_id != current.exit_id:
+            if _fallback_holds_current(costs[0], current, config):
+                costs = [current] + [rc for rc in costs if rc is not current]
+        best = costs[0]
+        costs[0] = replace(
+            best,
+            rejected=False,
+            rejection_reason=f"fallback: {best.rejection_reason}",
+        )
+    return costs
+
+
 def rank_routes(
     graph: StageGraph,
     source: str,
@@ -1641,6 +1798,7 @@ def rank_routes(
 
         graph = cognitive_subgraph(cognitive_map, graph)
 
+    policy = policy_for(config)
     all_paths = _generate_candidates(
         graph,
         source,
@@ -1648,7 +1806,7 @@ def rank_routes(
         extinction_sampler,
         fed_rate_sampler,
         config,
-        policy_for(config),
+        policy,
         cached_segments=cached_segments,
     )
     if not all_paths:
@@ -1673,110 +1831,9 @@ def rank_routes(
         )
         costs.append(rc)
 
-    # Sign legibility is not consulted here.  It decides what enters the
-    # agent's cognitive map (see cognitive_map.expand_from_visibility), and the
-    # map decides what Dijkstra can see -- so an unknown exit is absent from
-    # the graph rather than present-and-vetoed.  Checking it again here
-    # double-gated the same criterion, blocked agents who already knew the
-    # building, and forbade an agent from using an exit it had legitimately
-    # learned once the sign went out of view.
-    # K_vis fallback: reject routes where all segments are non-visible,
-    # but only if at least one other route has visibility.
-    #
-    # Additive only. Under the gate this was a *second* smoke criterion on top
-    # of the sight test, and a bare threshold on K with no hysteresis, so a
-    # route sitting near it toggled every tick: measured on world100, a 9 m
-    # route with a 2 s travel time was struck out and reinstated repeatedly
-    # while the agent bounced to a 27 m rival and back. It also set `rejected`
-    # without clearing `feasible`, leaving the two fields disagreeing. The
-    # plan retired it under the gate; this is that retirement.
-    any_visible = config.cost_model != "gate" and any(
-        any(s.visible for s in rc.segments) for rc in costs if not rc.rejected
-    )
-    if any_visible:
-        updated = []
-        for rc in costs:
-            if not rc.rejected and not any(s.visible for s in rc.segments):
-                rc = replace(
-                    rc,
-                    rejected=True,
-                    rejection_reason="all segments non-visible",
-                )
-            updated.append(rc)
-        costs = updated
-
-    # Ordering. Under "additive" the composite decides, as it always has.
-    # Under "gate" distance decides among routes that are still available, and
-    # a route a whole visibility band clearer wins first: smoke says which
-    # exits exist, not how much each metre of them is worth.
-    # Ordering. Under "additive" the composite decides, as it always has.
-    # Under "gate" the route's optical depth decides and travel time breaks
-    # ties: tau = K_ave * L already contains the distance, so two routes
-    # through equally thin haze order by length and in clear air every tau is
-    # zero and time decides alone. A cleaner route wins only by enough less
-    # smoke to pay for its extra metres -- which is the property a visibility
-    # band could not have, since a band compared cleanliness with no reference
-    # to how far the agent had to carry it.
-    order_by_tau = config.cost_model == "gate"
-
-    def tau_of(rc: RouteCost) -> float:
-        # The exit the agent already walks to has its optical depth discounted,
-        # so it keeps its place unless a rival is clearly cleaner rather than
-        # momentarily cleaner. This is FDS+Evac's FAC_DOOR_OLD2 = 0.9
-        # (evac.f90:1507), applied at :16467 inside the IF that ranks doors --
-        # the same position, not a separate veto afterwards. Hysteresis belongs in the ordering: bolted on after
-        # it, the ordering and the veto disagree and the agent oscillates
-        # between what each of them prefers.
-        if current_exit is not None and rc.exit_id == current_exit:
-            return rc.tau_route * config.current_exit_discount
-        return rc.tau_route
-
-    prefer_clean = order_by_tau and config.clean_extinction_threshold > 0.0
-
-    def sort_key(rc: RouteCost) -> tuple[int, int, float, float, int]:
-        tier = 0 if (rc.clean or not prefer_clean) else 1
-        return (
-            1 if rc.rejected else 0,
-            tier,
-            tau_of(rc) if order_by_tau else 0.0,
-            rc.rank_cost,
-            len(rc.path),
-        )
-
-    costs.sort(key=sort_key)
-
-    # Fallback: with every route refused the agent still has to go somewhere,
-    # and the least bad one is the one whose worst stretch is least bad -- the
-    # question is surviving the walk, not averaging it.
-    #
-    # Refusal is never remembered: the sight criterion is measured against the
-    # distance *still to walk*, so it relaxes as the agent closes on an exit and
-    # the smoke that refused a door at 40 m accepts it at 2 m. Recomputing every
-    # tick is what lets that happen. The price is that in a fire smoky enough to
-    # refuse everything -- which is most of a real run, see
-    # docs/gate-model-review-notes.md -- the ordering follows the field, so the
-    # current exit is held unless a rival's worst stretch is clearly milder.
-    #
-    # Ordered by optical depth here too, not by the worst sample: ordering
-    # refused routes by k_max alone once put a 51 m route ahead of a 22 m one
-    # on 2.0 m of sight against 1.8 m -- two tenths of a metre of visibility,
-    # neither usable, deciding a 29 m detour. tau carries the distance with it,
-    # so the least-bad walk is the one with least smoke to walk through.
-    if costs and all(rc.rejected for rc in costs):
-        costs.sort(key=lambda rc: (rc.tau_route, rc.rank_cost))
-        current = next((rc for rc in costs if rc.exit_id == current_exit), None)
-        if current is not None and costs[0].exit_id != current.exit_id:
-            margin = 1.0 - config.fallback_switch_margin
-            if costs[0].k_max_route > current.k_max_route * margin:
-                costs = [current] + [rc for rc in costs if rc is not current]
-        best = costs[0]
-        costs[0] = replace(
-            best,
-            rejected=False,
-            rejection_reason=f"fallback: {best.rejection_reason}",
-        )
-
-    return costs
+    costs = policy.apply_candidate_set_rules(costs, config)
+    costs.sort(key=lambda rc: policy.order_key(rc, config, current_exit))
+    return _apply_fallback(costs, config, current_exit)
 
 
 # ── Dynamic rerouting (Phase 4) ──────────────────────────────────────
