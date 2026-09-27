@@ -692,7 +692,13 @@ title="Copy code"
 purely distance-based (see &lt;a href="#scope--caveats">Scope&lt;/a>
 ).&lt;/p>
 &lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
-&lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Status: passing.&lt;/strong> Both tiers evacuate all agents; &lt;code>full&lt;/code> takes the
+&lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
+&lt;p>&lt;strong>Numbers not yet rerun.&lt;/strong> The times below were measured before the
+travel-time fix (#170), the discovery routing-engine fix (#174) and the
+30 m sign reading distance (#177). The last replaced a cap equal to the
+grid diagonal, about 27 m for this 20 m × 18 m plan. The pass criteria
+still hold in the test suite; the times will be updated after a rerun.&lt;/p>&lt;/blockquote>
+&lt;p>&lt;strong>Status: passing.&lt;/strong> Both tiers evacuate all agents; &lt;code>full&lt;/code> takes the
 shortcut and finishes markedly faster than &lt;code>discovery&lt;/code>, which retraces the
 scripted maze tour.&lt;/p>
 &lt;table>
