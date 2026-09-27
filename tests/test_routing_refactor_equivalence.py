@@ -347,9 +347,16 @@ def _state_fields(route_state: AgentRouteState) -> dict:
     }
 
 
-def _reroute(side: str, case: golden.RerouteCase, with_cache: bool) -> dict:
+def _reroute(
+    side: str,
+    case: golden.RerouteCase,
+    with_cache: bool,
+    on_world: Callable[[str, dict], None] | None = None,
+) -> dict:
     mod = _SIDES[side]
     world = _reroute_world(case)
+    if on_world is not None:
+        on_world(side, world)
     extinction, fed, log = _samplers(case.extinction, case.fed)
     cache = {} if with_cache else None
     switch = mod.evaluate_and_reroute(
@@ -1116,9 +1123,9 @@ def test_fallback_promotes_the_current_record_by_identity():
 # and pins the state the branch leaves behind.
 
 
-def _both(case: golden.RerouteCase) -> dict:
-    old = _reroute("legacy", case, True)
-    new = _reroute("live", case, True)
+def _both(case: golden.RerouteCase, on_world=None) -> dict:
+    old = _reroute("legacy", case, True, on_world)
+    new = _reroute("live", case, True, on_world)
     for key in ("switch", "route_state", "wait_info", "cache", "log"):
         assert new[key] == old[key], key
     return new
@@ -1137,10 +1144,41 @@ def _ranked_for(case: golden.RerouteCase) -> list[RouteCost]:
     )
 
 
-def _never_reroute(monkeypatch) -> None:
-    """Make every reroute_agent call fail, in the legacy copy and the live code."""
-    for mod in _SIDES.values():
-        monkeypatch.setattr(mod, "reroute_agent", lambda *args, **kwargs: False)
+class _FailingReroute:
+    """A failing reroute_agent per copy, recording every call it receives.
+
+    Each call records its arguments and the route state the agent had at
+    that moment, so a dropped, repeated or reordered application attempt
+    shows up as a difference between the legacy copy and the live code.
+    """
+
+    def __init__(self, monkeypatch) -> None:
+        self.calls: dict[str, list] = {side: [] for side in _SIDES}
+        self._monkeypatch = monkeypatch
+
+    def on_world(self, side: str, world: dict) -> None:
+        calls = self.calls[side]
+        route_state = world["route_state"]
+
+        def reroute_agent(wait_info, new_path, stage_configs):
+            calls.append(
+                {
+                    "wait_info": copy.deepcopy(wait_info),
+                    "new_path": list(new_path),
+                    "stage_configs": sorted(stage_configs),
+                    "is_own_stage_configs": stage_configs
+                    is wait_info.get("stage_configs"),
+                    "route_state": _state_fields(route_state),
+                }
+            )
+            return False
+
+        self._monkeypatch.setattr(_SIDES[side], "reroute_agent", reroute_agent)
+
+    def run(self, case: golden.RerouteCase) -> tuple[dict, list]:
+        result = _both(case, self.on_world)
+        assert self.calls["live"] == self.calls["legacy"]
+        return result, self.calls["live"]
 
 
 _SCAN_STOPS = golden.RerouteCase(
@@ -1196,8 +1234,11 @@ def test_scan_takes_a_rejected_route_and_returns_unstamped():
 
 def test_failed_same_exit_application_still_records_the_path(monkeypatch):
     case = golden.REROUTE_CASES["better_path_ten_percent"]
-    _never_reroute(monkeypatch)
-    result = _both(case)
+    result, calls = _FailingReroute(monkeypatch).run(case)
+    assert [c["new_path"] for c in calls] == [["D0", "C0", "E0"]]
+    assert calls[0]["route_state"]["last_eval_time_s"] == case.time_s
+    assert calls[0]["route_state"]["current_path"] == list(case.current_path)
+    assert calls[0]["is_own_stage_configs"]
     assert result["switch"] is None
     assert result["route_state"]["current_path"] == ["D0", "C0", "E0"]
     assert result["route_state"]["current_exit"] == "E0"
@@ -1207,8 +1248,11 @@ def test_failed_same_exit_application_still_records_the_path(monkeypatch):
 def test_failed_exit_change_leaves_the_path(monkeypatch):
     case = golden.REROUTE_CASES["gate_anchor_cleaner"]
     before = list(case.current_path)
-    _never_reroute(monkeypatch)
-    result = _both(case)
+    result, calls = _FailingReroute(monkeypatch).run(case)
+    assert [c["new_path"] for c in calls] == [["spawn", "west"]]
+    assert calls[0]["route_state"]["last_eval_time_s"] == case.time_s
+    assert calls[0]["route_state"]["current_exit"] == case.current_exit
+    assert calls[0]["is_own_stage_configs"]
     assert result["switch"] is None
     assert result["route_state"]["current_path"] == before
     assert result["route_state"]["current_exit"] == case.current_exit
@@ -1224,8 +1268,11 @@ def test_empty_ranking_stamps_before_exploring():
 
 def test_failed_explore_is_stamped_and_leaves_the_path(monkeypatch):
     case = replace(golden.REROUTE_CASES["explore_frontier"], current_path=("D0", "C9"))
-    _never_reroute(monkeypatch)
-    result = _both(case)
+    result, calls = _FailingReroute(monkeypatch).run(case)
+    assert [c["new_path"] for c in calls] == [["D0", "C0"]]
+    assert calls[0]["route_state"]["last_eval_time_s"] == case.time_s
+    assert calls[0]["route_state"]["current_path"] == ["D0", "C9"]
+    assert calls[0]["is_own_stage_configs"]
     assert result["switch"] is None
     assert result["route_state"]["last_eval_time_s"] == case.time_s
     assert result["route_state"]["current_path"] == ["D0", "C9"]
