@@ -146,37 +146,68 @@ def test_provenance_matches(golden, tmp_path):
     assert golden._compare(a, b, [DECK], BASE, HEAD) == 0
 
 
+# Ways one side's provenance can be wrong. Each entry gives the manifest
+# changes for the bad side and the --expect-* value to pass for it (the other
+# side is always given its right commit).
+_BAD_SIDE = {
+    "dirty_pyfds_evac": ({"dirty": {"pyfds_evac": True}}, "right"),
+    "dirty_run_py": ({"dirty": {"run.py": True}}, "right"),
+    "dirty_assets": ({"dirty": {"assets": True}}, "right"),
+    "dirty_unchecked": ({"dirty": {"pyfds_evac": True}}, None),
+    "commit_mismatch": ({}, "wrong"),
+    "short_prefix": ({}, "short"),
+    "missing_provenance": ({"provenance": None}, "right"),
+    "changed_during_run": ({"provenance_changed": ["commit"]}, "right"),
+}
+
+
+def _side(golden, out: Path, commit: str, change: dict) -> Path:
+    change = dict(change)
+    dirty = change.pop("dirty", None)
+    if change.get("provenance", "keep") is None:
+        change.pop("provenance")
+        path = _fake_run(golden, out, _provenance(golden, commit))
+        manifest = json.loads((path / "manifest.json").read_text(encoding="utf-8"))
+        del manifest["provenance"]
+        (path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        return path
+    return _fake_run(golden, out, _provenance(golden, commit, dirty), **change)
+
+
+@pytest.mark.parametrize("role", ["base", "head"])
+@pytest.mark.parametrize("problem", sorted(_BAD_SIDE))
+def test_provenance_fails_on_either_side(golden, tmp_path, role, problem):
+    change, expect_kind = _BAD_SIDE[problem]
+    commits = {"base": BASE, "head": HEAD}
+    expects = dict(commits)
+    bad = commits[role]
+    expects[role] = {
+        "right": bad,
+        "wrong": commits["head" if role == "base" else "base"],
+        "short": bad[:6],
+        None: None,
+    }[expect_kind]
+    a = _side(golden, tmp_path / "a", BASE, change if role == "base" else {})
+    b = _side(golden, tmp_path / "b", HEAD, change if role == "head" else {})
+    assert golden._compare(a, b, [DECK], expects["base"], expects["head"]) == 1
+    # The same pair with the problem removed passes.
+    c = _side(golden, tmp_path / "c", BASE, {})
+    d = _side(golden, tmp_path / "d", HEAD, {})
+    assert golden._compare(c, d, [DECK], BASE[:7], HEAD[:7]) == 0
+
+
 @pytest.mark.parametrize(
-    ("head", "expect_base", "expect_head"),
-    [
-        ({"commit": HEAD}, BASE, BASE),
-        ({"commit": HEAD}, HEAD, HEAD),
-        ({"commit": HEAD, "dirty": {"pyfds_evac": True}}, BASE, HEAD),
-        ({"commit": HEAD, "dirty": {"pyfds_evac": True}}, None, None),
-        ({"commit": HEAD, "dirty": {"run.py": True}}, None, None),
-        ({"commit": HEAD, "dirty": {"assets": True}}, None, None),
-        ({"commit": HEAD}, BASE, HEAD[:6]),
-        ({"commit": HEAD, "fingerprints": {"run.py": "x" * 64}}, None, None),
-        ({"commit": HEAD, "fingerprints": {"harness": "x" * 64}}, None, None),
-        ({"commit": HEAD, "fingerprints": {"decks": {}}}, None, None),
-    ],
-    ids=[
-        "head_mismatch",
-        "base_mismatch",
-        "dirty_head",
-        "dirty_unchecked",
-        "dirty_run_py",
-        "dirty_assets",
-        "short",
-        "run_py_differs",
-        "harness_differs",
-        "deck_inputs_missing",
-    ],
+    "fingerprints",
+    [{"run.py": "x" * 64}, {"harness": "x" * 64}, {"decks": {}}],
+    ids=["run_py_differs", "harness_differs", "deck_inputs_missing"],
 )
-def test_provenance_fails(golden, tmp_path, head, expect_base, expect_head):
-    a = _fake_run(golden, tmp_path / "a")
-    b = _fake_run(golden, tmp_path / "b", _provenance(golden, **head))
-    assert golden._compare(a, b, [DECK], expect_base, expect_head) == 1
+@pytest.mark.parametrize("role", ["base", "head"])
+def test_fingerprints_must_match(golden, tmp_path, role, fingerprints):
+    odd = _provenance(golden, BASE if role == "base" else HEAD, None, fingerprints)
+    even = _provenance(golden, HEAD if role == "base" else BASE)
+    a = _fake_run(golden, tmp_path / "a", odd if role == "base" else even)
+    b = _fake_run(golden, tmp_path / "b", even if role == "base" else odd)
+    assert golden._compare(a, b, [DECK]) == 1
 
 
 def test_harness_may_be_dirty(golden, tmp_path):
@@ -186,17 +217,6 @@ def test_harness_may_be_dirty(golden, tmp_path):
     )
     b = _fake_run(golden, tmp_path / "b", _provenance(golden, HEAD))
     assert golden._compare(a, b, [DECK], BASE, HEAD) == 0
-
-
-def test_provenance_change_or_absence_fails(golden, tmp_path):
-    a = _fake_run(golden, tmp_path / "a")
-    b = _fake_run(golden, tmp_path / "b", provenance_changed=["commit"])
-    assert golden._compare(a, b, [DECK]) == 1
-    c = _fake_run(golden, tmp_path / "c")
-    manifest = json.loads((c / "manifest.json").read_text(encoding="utf-8"))
-    del manifest["provenance"]
-    (c / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-    assert golden._compare(a, c, [DECK]) == 1
 
 
 def _write_outputs(argv, **kwargs):
