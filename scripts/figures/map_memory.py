@@ -14,8 +14,7 @@ Run from the repository root::
 
     .venv/bin/python scripts/figures/map_memory.py
 
-Writes ``site/static/images/wayfinding/map_memory.png`` and, until the docs
-move there, ``site/static/images/concepts/map_memory.png``.
+Writes ``site/static/images/wayfinding/map_memory.png``.
 """
 
 from pathlib import Path
@@ -28,7 +27,7 @@ from matplotlib.colors import ListedColormap
 from matplotlib.patches import Rectangle
 
 IMAGES = Path(__file__).resolve().parents[2] / "site" / "static" / "images"
-OUTS = [IMAGES / "wayfinding", IMAGES / "concepts"]
+OUT = IMAGES / "wayfinding"
 
 # Shared palette of the concept figures: one meaning, one colour, one style.
 CHOSEN = "#4575b4"  # chosen / walked route: solid line
@@ -88,7 +87,6 @@ def main():
     Saves
     -----
     site/static/images/wayfinding/map_memory.png
-    site/static/images/concepts/map_memory.png
     """
     probes = probe_cognitive_map(NORTH_YS, [RETURN_Y])
     by_key = {(p.y, p.heading): p for p in probes}
@@ -242,9 +240,8 @@ def main():
         color=TEXT,
         style="italic",
     )
-    for out in OUTS:
-        out.mkdir(parents=True, exist_ok=True)
-        fig.savefig(out / "map_memory.png", dpi=150, bbox_inches="tight")
+    OUT.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT / "map_memory.png", dpi=150, bbox_inches="tight")
 
 
 if __name__ == "__main__":

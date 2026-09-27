@@ -41,10 +41,12 @@ visibility = c / mean_extinction     capped at max_vis
 ```
 
 (`FDSVisMap._get_visibility_array`, `FDSVisMap.get_vismap`). fdsvismap's
-default `max_vis` is 30 m; pyFDS-Evac raises it to the diagonal of the
-visibility grid (`pyfds_evac/core/visibility.py`,
-[#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)
-proposes restoring a finite default).
+default `max_vis` is 30 m; pyFDS-Evac replaces the cap with the grid
+diagonal, which may be larger or smaller than 30 m
+(`pyfds_evac/core/visibility.py`; see
+[#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173), which
+proposes restoring a finite default). Here it is 29.99 m on the 0.25 m
+clear-air grid and 30.83 m on the FDS grid.
 
 Two consequences that are easy to miss:
 

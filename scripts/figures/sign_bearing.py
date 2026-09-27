@@ -13,8 +13,7 @@ Run from the repository root::
 
     uv run python scripts/figures/sign_bearing.py
 
-Writes ``site/static/images/wayfinding/sign_bearing.png`` and, until the docs
-move there, ``site/static/images/concepts/sign_bearing.png``.
+Writes ``site/static/images/wayfinding/sign_bearing.png``.
 """
 
 from pathlib import Path
@@ -32,7 +31,7 @@ from pyfds_evac.core.visibility import extract_sign_descriptors
 ROOT = Path(__file__).resolve().parents[2]
 ASSET = ROOT / "assets" / "exit_visibility_alpha"
 IMAGES = ROOT / "site" / "static" / "images"
-OUTS = [IMAGES / "wayfinding", IMAGES / "concepts"]
+OUT = IMAGES / "wayfinding"
 
 # Shared palette of the concept figures: one meaning, one colour, one style.
 CHOSEN = "#4575b4"  # chosen / walked route: solid line
@@ -282,7 +281,6 @@ def main():
     Saves
     -----
     site/static/images/wayfinding/sign_bearing.png
-    site/static/images/concepts/sign_bearing.png
     """
     runs = {c: simulate(c) for c in ("config_visible", "config_hidden")}
     vis_run, hid_run = runs["config_visible"], runs["config_hidden"]
@@ -332,9 +330,8 @@ def main():
     )
 
     # --- Save ---
-    for out in OUTS:
-        out.mkdir(parents=True, exist_ok=True)
-        fig.savefig(out / "sign_bearing.png", dpi=150, bbox_inches="tight")
+    OUT.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT / "sign_bearing.png", dpi=150, bbox_inches="tight")
 
 
 if __name__ == "__main__":

@@ -33,10 +33,10 @@ With `d² = 4 + (y−20)²` that gives
 legible while |y − 20| <= 7.48   →   y ∈ [12.5, 27.5]
 ```
 
-This uses fdsvismap's default 30 m cap. pyFDS-Evac raises the cap to the
-diagonal of the visibility grid (32.1 m for the 0.25 m clear-air grid of this
-deck, [#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)),
-which widens the window to `|y − 20| <= 7.76`, y ∈ [12.2, 27.8]. On the
+This uses fdsvismap's default 30 m cap. pyFDS-Evac replaces the cap with the
+grid diagonal, which may be larger or smaller than 30 m (see
+[#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)). For the
+0.25 m clear-air grid of this deck it is 32.1 m, which widens the window to `|y − 20| <= 7.76`, y ∈ [12.2, 27.8]. On the
 0.25 m grid the model reads the sign from y = 12.0 to 28.0 on the centreline
 (`scripts/figures/map_memory.py` computes and draws it).
 
