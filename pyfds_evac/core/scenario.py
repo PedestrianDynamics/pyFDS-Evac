@@ -1909,7 +1909,7 @@ def run_scenario(
                         if x is None or y is None:
                             continue
                         extinction, speed_factor = smoke_speed_model.sample(
-                            current_time, x, y
+                            current_time, x, y, free_speed_m_per_s=base_speed
                         )
                         desired_speed = base_speed * speed_factor
                         if direct_steering_info:
