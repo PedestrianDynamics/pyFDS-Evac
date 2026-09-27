@@ -8,7 +8,7 @@ aliases: [/models/visibility/]
 Based on: [Visibility through smoke](/fundamentals/visibility.md) and
 [Exit choice and familiarity](/fundamentals/exit-choice.md).
 
-<!-- Code references are to main at df0ccb0 and fdsvismap 64d9aa7. -->
+Code references are to main at `df0ccb0` and fdsvismap `64d9aa7`.
 
 The [routing model](/models/routing.md) ranks and refuses routes. This page
 describes the part of the model that decides which routes it may rank: what
@@ -499,7 +499,8 @@ wayfinding or evacuation times.
   unknown exit is absent, not refused.
 - `tests/test_cognitive_map_memory.py` (`assets/cognitive_map_memory`): an exit
   is learned inside its legibility region, stays known and routable outside
-  it, and is not learned by a probe that never enters the region.
+  it, is not learned by a probe that never enters the region, and ranks first
+  at a return probe where its sign is not legible.
 - `tests/test_blind_spawn_discovery.py` (`assets/blind_spawn_discovery`):
   learning hop by hop, occlusion on advancing, reverse edges, frontier choice
   by position, termination of exploration.

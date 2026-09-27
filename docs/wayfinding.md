@@ -96,8 +96,8 @@ The tests pin the mechanism at router level
 Full runs of the asset follow the README's recipe, which uses `--fds-dir`, so
 legibility comes from the FDS vismap, not from clear air. In those runs all 40
 agents take the near exit when the sign faces them, and all 40 take the far
-exit when it faces away. With FDS 6.10.1 output in clear air and seed 1904,
-on main after #170:
+exit when it faces away. With FDS 6.10.1 output of the smoke-free deck and
+seed 1904, on main after #170:
 
 | Near sign | Exit taken | Egress | Route switches |
 |---|---|---|---|
@@ -292,8 +292,8 @@ state probes, not a walked trajectory. The tests assert four things
 - **Ranking.** The side exit ranks first at y = 14, the end exit at y = 30
   (`::TestAcquisitionAndPersistence::test_acquiring_the_side_exit_changes_where_the_agent_would_go`).
 
-Probes on main by the #160 investigation give the whole northbound sequence.
-They use the test's clear-air setup, which has no routing engine, so the
+`::test_map_memory_probes_match_engine` pins the whole northbound sequence.
+The probes use the test's clear-air setup, which has no routing engine, so the
 distances are straight lines.
 
 | y [m] | side exit | first-ranked exit |
@@ -315,8 +315,8 @@ Memory therefore shows on the way north as *known and routable*, not as
 *first-ranked*. It changes the ranking on the way back. Probed again at
 y = 10 after the northbound sequence, the side sign is still not legible
 there, but the side exit is known and nearer (10.31 m against 21.30 m), and it
-ranks first. At the same place before learning, the end exit ranked first. No
-repository test pins this return probe yet.
+ranks first. At the same place before learning, the end exit ranked first.
+`::test_map_memory_probes_match_engine` pins this return probe too.
 
 In a moving agent, ranking is not adoption: the switching rules can keep a
 current exit that no longer ranks first
@@ -347,8 +347,8 @@ ranking is computed by `rank_routes`. Script: `scripts/figures/map_memory.py`.*
 
 ## 7. Full versus discovery
 
-The talk compares the two tiers on the same geometry, seed and signs. Two
-things differ in the code:
+The talk compares the two tiers on the same geometry, seed and signs. One
+thing differs in the code, and until #174 a second one did:
 
 1. **The initial map.** A fully familiar agent knows the whole graph. A
    discovery agent explores: it takes the frontier with the lowest path cost
@@ -357,15 +357,15 @@ things differ in the code:
    `reason="explore"` and `reason="wander"` (`route_graph.py:1793`, `:1808`).
 2. **The ranked length of the first leg**
    ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
-   by #174, now merged). The discovery agent's subgraph lacked the routing engine, so
-   `rank_routes` measured the walk from the agent to its next node as a
+   by #174, now merged). The discovery agent's subgraph lacked the routing
+   engine, so `rank_routes` measured the walk from the agent to its next node as a
    straight line, even through walls. Exploration was not affected, because
    frontier selection measures that leg on the full graph.
 
 Before #174, a comparison around obstacles mixed the effect of knowledge with
 the effect of #172. The run of Figure 5 gives the same numbers before and
-after #174. For both tiers, the first leg's smoke is sampled on a
-straight line from the agent to its next node
+after #174. For both tiers, the first leg's smoke is sampled on a straight
+line from the agent to its next node
 ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)).
 
 The patrol can stall: when smoke limits legibility to a few metres, a patrol

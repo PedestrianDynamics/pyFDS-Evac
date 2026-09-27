@@ -123,7 +123,7 @@ and an exit never becomes more attractive because others use it. See
 [issue #78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78).
 
 **Perception-limited route choice.** A discovery agent knows only the exits
-whose signs it has read, but it prices the routes to them with the smoke
+its familiarity, `entrance` or a legible sign gave it, but it prices the routes to them with the smoke
 sampled along the whole route, including stretches it has never seen
 ([issue #125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 By default (`routing.anticipate` = true, `routing.foresight_horizon_s`
