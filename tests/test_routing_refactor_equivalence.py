@@ -1102,6 +1102,167 @@ def test_fallback_promotes_the_current_record_by_identity():
     assert not result[0].rejected
 
 
+# ── Mutation points of evaluate_and_reroute ──────────────────────────
+#
+# Each test runs the legacy copy and the live code, requires them to agree,
+# and pins the state the branch leaves behind.
+
+
+def _both(case: golden.RerouteCase) -> dict:
+    old = _reroute("legacy", case, True)
+    new = _reroute("live", case, True)
+    for key in ("switch", "route_state", "wait_info", "cache", "log"):
+        assert new[key] == old[key], key
+    return new
+
+
+def _ranked_for(case: golden.RerouteCase) -> list[RouteCost]:
+    return live.rank_routes(
+        case.graph(),
+        case.origin,
+        case.time_s,
+        case.current_fed,
+        case.extinction,
+        case.fed,
+        case.config,
+        current_exit=case.current_exit,
+    )
+
+
+def _never_reroute(monkeypatch) -> None:
+    """Make every reroute_agent call fail, in the legacy copy and the live code."""
+    for mod in _SIDES.values():
+        monkeypatch.setattr(mod, "reroute_agent", lambda *args, **kwargs: False)
+
+
+_SCAN_STOPS = golden.RerouteCase(
+    lambda: golden._star({"west": 20.0, "east": 40.0, "north": 3.0}),
+    golden._gate(),
+    "spawn",
+    "west",
+    "west",
+    extinction=golden.ArmField({"west": 0.1, "east": 0.0375, "north": 3.0}),
+)
+
+
+def test_scan_stops_at_the_current_exit_and_keeps_the_best():
+    """A refused rank 1, then the current exit, then an adoptable route.
+
+    The scan stops at the current exit, so the adoptable route behind it is
+    never reached, and the original best is kept: the anchor then refuses it,
+    the evaluation is stamped and the path is left alone.
+    """
+    ranked = _ranked_for(_SCAN_STOPS)
+    assert [rc.exit_id for rc in ranked] == ["east", "west", "north"]
+    rs = AgentRouteState(current_exit="west")
+    cfg = RerouteConfig(cost_config=_SCAN_STOPS.config)
+    assert not live._adoptable(ranked[0], ranked, rs, cfg)
+    assert live._adoptable(ranked[2], ranked, rs, cfg)
+    result = _both(_SCAN_STOPS)
+    assert result["switch"] is None
+    assert result["route_state"]["current_exit"] == "west"
+    assert result["route_state"]["current_path"] == []
+    assert result["route_state"]["last_eval_time_s"] == _SCAN_STOPS.time_s
+
+
+def test_scan_takes_a_rejected_route_and_returns_unstamped():
+    """The scan does not filter refused routes; a refused best returns early.
+
+    The early return comes before the evaluation is stamped, so the agent
+    reevaluates on the next check instead of waiting an interval.
+    """
+    case = golden.REROUTE_CASES["gate_scan_lands_on_rejected"]
+    ranked = _ranked_for(case)
+    assert [rc.exit_id for rc in ranked] == ["north", "west", "east"]
+    rs = AgentRouteState(current_exit="east")
+    cfg = RerouteConfig(cost_config=case.config)
+    assert not live._adoptable(ranked[0], ranked, rs, cfg)
+    assert live._adoptable(ranked[1], ranked, rs, cfg)
+    assert ranked[1].rejected
+    assert not ranked[1].rejection_reason.startswith("fallback")
+    result = _both(case)
+    assert result["switch"] is None
+    assert result["route_state"]["last_eval_time_s"] == -math.inf
+    assert result["route_state"]["current_path"] == []
+
+
+def test_failed_same_exit_application_still_records_the_path(monkeypatch):
+    case = golden.REROUTE_CASES["better_path_ten_percent"]
+    _never_reroute(monkeypatch)
+    result = _both(case)
+    assert result["switch"] is None
+    assert result["route_state"]["current_path"] == ["D0", "C0", "E0"]
+    assert result["route_state"]["current_exit"] == "E0"
+    assert result["route_state"]["last_eval_time_s"] == case.time_s
+
+
+def test_failed_exit_change_leaves_the_path(monkeypatch):
+    case = golden.REROUTE_CASES["gate_anchor_cleaner"]
+    before = list(case.current_path)
+    _never_reroute(monkeypatch)
+    result = _both(case)
+    assert result["switch"] is None
+    assert result["route_state"]["current_path"] == before
+    assert result["route_state"]["current_exit"] == case.current_exit
+    assert result["route_state"]["last_eval_time_s"] == case.time_s
+
+
+def test_empty_ranking_stamps_before_exploring():
+    case = golden.REROUTE_CASES["no_route_without_map"]
+    result = _both(case)
+    assert result["switch"] is None
+    assert result["route_state"]["last_eval_time_s"] == case.time_s
+
+
+def test_failed_explore_is_stamped_and_leaves_the_path(monkeypatch):
+    case = replace(golden.REROUTE_CASES["explore_frontier"], current_path=("D0", "C9"))
+    _never_reroute(monkeypatch)
+    result = _both(case)
+    assert result["switch"] is None
+    assert result["route_state"]["last_eval_time_s"] == case.time_s
+    assert result["route_state"]["current_path"] == ["D0", "C9"]
+
+
+def test_committed_explore_returns_before_the_path():
+    case = golden.REROUTE_CASES["explore_already_committed"]
+    result = _both(case)
+    assert result["switch"] is None
+    assert result["route_state"]["current_path"] == list(case.current_path)
+    assert result["route_state"]["last_eval_time_s"] == case.time_s
+
+
+def test_explore_keeps_the_exit_commitment():
+    case = replace(golden.REROUTE_CASES["explore_frontier"], current_exit="E0")
+    result = _both(case)
+    switch = result["switch"]
+    assert switch.reason == "explore"
+    assert (switch.old_exit, switch.old_cost, switch.new_cost) == (None, None, 0.0)
+    assert switch.new_exit == "C0"
+    assert result["route_state"]["current_exit"] == "E0"
+    assert result["route_state"]["current_path"] == ["D0", "C0"]
+
+
+def test_wander_step_advances_before_a_failed_lookup():
+    """An idle patroller moves its step on even when nowhere is reachable."""
+    case = replace(
+        golden.REROUTE_CASES["wander_nowhere"],
+        state="idle",
+        current_path=("D0",),
+        wander_step=2,
+    )
+    result = _both(case)
+    assert result["switch"] is None
+    assert result["route_state"]["wander_step"] == 3
+    assert result["route_state"]["last_eval_time_s"] == case.time_s
+
+
+def test_wander_step_is_kept_after_a_patrol_leg():
+    case = golden.REROUTE_CASES["wander_patrol"]
+    result = _both(case)
+    assert result["switch"].reason == "wander"
+    assert result["route_state"]["wander_step"] == case.wander_step + 1
+
+
 # ── The harness compares legacy with live, not live with itself ──────
 
 
