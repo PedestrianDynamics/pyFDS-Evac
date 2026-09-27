@@ -10,11 +10,14 @@ Self-contained: builds its own graphs/wait_info so it doesn't depend on the
 private fixtures in test_route_graph.py.
 """
 
+import math
+
 import pytest
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.cognitive_map import (
     AgentCognitiveMap,
+    cognitive_subgraph,
     nearest_frontier_target,
 )
 from pyfds_evac.core.route_graph import (
@@ -23,6 +26,7 @@ from pyfds_evac.core.route_graph import (
     RouteCostConfig,
     StageGraph,
     evaluate_and_reroute,
+    rank_routes,
 )
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
@@ -308,3 +312,105 @@ class TestExploreReroute:
         rs = AgentRouteState()
         switch = self._run(g, wait_info, rs, cmap)
         assert switch is None or switch.reason != "explore"
+
+
+# ── walls: discovery measures distance the way full does (issue #172) ─
+
+
+def _corridor_graph(walkable, nodes: dict, transitions: list) -> StageGraph:
+    """A StageGraph with a routing engine over *walkable*."""
+    dsi = {
+        nid: {"polygon": _box(cx, cy, half=0.5), "stage_type": st}
+        for nid, (cx, cy, st) in nodes.items()
+    }
+    return StageGraph.from_scenario(dsi, transitions, walkable_polygon=walkable)
+
+
+class TestDiscoveryMeasuresAroundWalls:
+    """A discovery agent must measure its first leg through the walkable area.
+
+    Familiarity decides what an agent knows, not how it measures. Before the
+    fix the known subgraph dropped the routing engine, so a discovery agent
+    measured the walk to its next node as a straight line through the wall
+    while a full agent at the same spot walked around it.
+    """
+
+    @staticmethod
+    def _l_graph() -> StageGraph:
+        """An L corridor; the exit sits up the vertical leg, behind the corner."""
+        from shapely.geometry import box
+        from shapely.ops import unary_union
+
+        return _corridor_graph(
+            unary_union([box(0, 0, 20, 3), box(17, 0, 20, 20)]),
+            {"j": (18.5, 1.5, "checkpoint"), "e0": (18.5, 18.0, "exit")},
+            [{"from": "j", "to": "e0"}],
+        )
+
+    @staticmethod
+    def _rank(graph, cmap, agent):
+        return rank_routes(
+            graph,
+            "j",
+            0.0,
+            0.0,
+            _CLEAR,
+            None,
+            _DIST_ONLY,
+            cognitive_map=cmap,
+            agent_position=agent,
+        )
+
+    def test_known_subgraph_keeps_the_routing_engine(self):
+        g = self._l_graph()
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"j", "e0"},
+            known_edges={("j", "e0")},
+        )
+        assert cognitive_subgraph(cmap, g).routing_engine is g.routing_engine
+
+    def test_first_leg_matches_the_full_tier_behind_a_wall(self):
+        g = self._l_graph()
+        agent = (5.0, 1.5)  # the straight line to e0 leaves the corridor
+        full = AgentCognitiveMap(familiarity="full")
+        discovery = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"j", "e0"},
+            known_edges={("j", "e0")},
+        )
+
+        (full_route,) = self._rank(g, full, agent)
+        (disc_route,) = self._rank(g, discovery, agent)
+
+        straight = math.hypot(18.5 - agent[0], 18.0 - agent[1])
+        assert full_route.composite_cost > straight + 1.0
+        assert disc_route.composite_cost == pytest.approx(full_route.composite_cost)
+
+    def test_frontier_distance_follows_the_corridor(self):
+        """Two frontiers; the nearer one as the crow flies is behind a wall.
+
+        A U corridor: the agent stands high in the left arm. Frontier ``a`` is
+        across the gap in the right arm (17 m straight, ~45 m walked); frontier
+        ``b`` is in the bottom leg (~18 m straight, ~24 m walked).
+        """
+        from shapely.geometry import box
+        from shapely.ops import unary_union
+
+        g = _corridor_graph(
+            unary_union([box(0, 0, 20, 3), box(0, 0, 3, 20), box(17, 0, 20, 20)]),
+            {
+                "s": (1.5, 10.0, "checkpoint"),
+                "a": (18.5, 17.0, "checkpoint"),
+                "b": (10.0, 1.5, "checkpoint"),
+            },
+            [{"from": "s", "to": "a"}, {"from": "s", "to": "b"}],
+        )
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"s", "a", "b"},
+            known_edges={("s", "a"), ("s", "b")},
+            visited_nodes={"s"},
+        )
+        node, _ = nearest_frontier_target(cmap, g, "s", (1.5, 17.0))
+        assert node == "b"
