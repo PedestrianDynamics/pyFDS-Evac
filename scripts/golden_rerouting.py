@@ -555,24 +555,64 @@ def _provenance_problems(out: Path, role: str, expect: str | None) -> list[str]:
     return problems
 
 
-def _fingerprint_problems(dir_a: Path, dir_b: Path, names: list[str]) -> list[str]:
-    """Whether both folders ran the same harness, run.py and deck inputs."""
-    prints = []
-    for out in (dir_a, dir_b):
-        manifest = _load_manifest(out) or {}
-        prints.append((manifest.get("provenance") or {}).get("fingerprints"))
-    a, b = prints
-    if a is None or b is None:
-        return []  # reported by _provenance_problems
-    problems = []
-    for key in ("harness", "run.py"):
-        if a.get(key) is None or a.get(key) != b.get(key):
-            problems.append(f"{key} differs: {a.get(key)} vs {b.get(key)}")
+def _is_digest(value) -> bool:
+    return isinstance(value, str) and bool(value)
+
+
+def _fingerprint_gaps(prints, role: str, out: Path, names: list[str]) -> list[str]:
+    """What is missing from one side's fingerprint record; empty if complete.
+
+    Fails closed: an absent, null or empty entry is a gap, never a match.
+    """
+    if not isinstance(prints, dict):
+        return [f"{role} {out} records no fingerprints"]
+    gaps = [
+        f"{role} {out} has no {key} fingerprint"
+        for key in ("harness", "run.py")
+        if not _is_digest(prints.get(key))
+    ]
+    decks = prints.get("decks")
+    if not isinstance(decks, dict):
+        return [*gaps, f"{role} {out} has no deck fingerprints"]
     for name in names:
-        fa = (a.get("decks") or {}).get(name)
-        fb = (b.get("decks") or {}).get(name)
-        if fa is None or fa != fb:
-            problems.append(f"inputs of {name} differ: {fa} vs {fb}")
+        record = decks.get(name)
+        if not isinstance(record, dict):
+            gaps.append(f"{role} {out} has no fingerprint for {name}")
+            continue
+        needed = ["config", "geometry"]
+        if DECKS[name].fds_dir is not None:
+            needed.append("fds_dir")
+        gaps += [
+            f"{role} {out} has no {key} fingerprint for {name}"
+            for key in needed
+            if not _is_digest(record.get(key))
+        ]
+    return gaps
+
+
+def _fingerprint_problems(dir_a: Path, dir_b: Path, names: list[str]) -> list[str]:
+    """Whether both folders ran the same harness, run.py and deck inputs.
+
+    Each side must carry a complete record; only then are they compared.
+    """
+    prints = []
+    problems = []
+    for out, role in ((dir_a, "base"), (dir_b, "head")):
+        manifest = _load_manifest(out) or {}
+        record = (manifest.get("provenance") or {}).get("fingerprints")
+        problems += _fingerprint_gaps(record, role, out, names)
+        prints.append(record)
+    if problems:
+        return problems
+    a, b = prints
+    for key in ("harness", "run.py"):
+        if a[key] != b[key]:
+            problems.append(f"{key} differs: {a[key]} vs {b[key]}")
+    for name in names:
+        if a["decks"][name] != b["decks"][name]:
+            problems.append(
+                f"inputs of {name} differ: {a['decks'][name]} vs {b['decks'][name]}"
+            )
     return problems
 
 

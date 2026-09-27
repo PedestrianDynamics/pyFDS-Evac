@@ -298,3 +298,98 @@ def test_compare_refuses_itself(golden, tmp_path):
     a = _fake_run(golden, tmp_path / "a")
     assert golden._compare(a, a, [DECK]) == 1
     assert golden._compare(a, tmp_path / "x" / ".." / "a", [DECK]) == 1
+
+
+def _drop(key):
+    def change(prints):
+        del prints[key]
+        return prints
+
+    return change
+
+
+def _set(key, value):
+    def change(prints):
+        prints[key] = value
+        return prints
+
+    return change
+
+
+def _set_deck(record):
+    def change(prints):
+        prints["decks"] = {DECK: record} if record is not None else {}
+        return prints
+
+    return change
+
+
+# Incomplete fingerprint records: each must fail, whichever side has it.
+_GAPS = {
+    "fingerprints_missing": lambda p: None,
+    "fingerprints_empty": lambda p: {},
+    "harness_missing": _drop("harness"),
+    "harness_null": _set("harness", None),
+    "harness_empty": _set("harness", ""),
+    "run_py_missing": _drop("run.py"),
+    "run_py_null": _set("run.py", None),
+    "decks_missing": _drop("decks"),
+    "decks_null": _set("decks", None),
+    "decks_empty": _set_deck(None),
+    "deck_absent": _set("decks", {"other": {"config": "c", "geometry": "g"}}),
+    "deck_record_empty": _set_deck({}),
+    "deck_config_null": _set_deck({"config": None, "geometry": "g"}),
+    "deck_geometry_empty": _set_deck({"config": "c", "geometry": ""}),
+}
+
+
+def _gapped(golden, out: Path, commit: str, change, dirty=None) -> Path:
+    provenance = _provenance(golden, commit, dirty)
+    record = change(provenance["fingerprints"])
+    if record is None:
+        del provenance["fingerprints"]
+    else:
+        provenance["fingerprints"] = record
+    return _fake_run(golden, out, provenance)
+
+
+@pytest.mark.parametrize("role", ["base", "head"])
+@pytest.mark.parametrize("gap", sorted(_GAPS))
+def test_incomplete_fingerprints_fail(golden, tmp_path, role, gap):
+    change = _GAPS[gap]
+    whole = lambda p: p  # noqa: E731
+    a = _gapped(golden, tmp_path / "a", BASE, change if role == "base" else whole)
+    b = _gapped(golden, tmp_path / "b", HEAD, change if role == "head" else whole)
+    assert golden._compare(a, b, [DECK], BASE, HEAD) == 1
+
+
+@pytest.mark.parametrize("gap", sorted(_GAPS))
+def test_matching_gaps_still_fail(golden, tmp_path, gap):
+    """Two records missing the same thing are not a match."""
+    a = _gapped(golden, tmp_path / "a", BASE, _GAPS[gap])
+    b = _gapped(golden, tmp_path / "b", HEAD, _GAPS[gap])
+    assert golden._compare(a, b, [DECK], BASE, HEAD) == 1
+
+
+def test_dirty_harness_without_fingerprints_fails(golden, tmp_path):
+    dirty = {golden.HARNESS: True}
+    a = _gapped(golden, tmp_path / "a", BASE, lambda p: None, dirty)
+    b = _fake_run(golden, tmp_path / "b", _provenance(golden, HEAD))
+    assert golden._compare(a, b, [DECK], BASE, HEAD) == 1
+
+
+def test_fds_deck_needs_its_fds_hash(golden):
+    """A deck with an FDS run must fingerprint it; a clear-air deck need not."""
+    fds_deck = next(n for n, d in golden.DECKS.items() if d.fds_dir is not None)
+    record = {
+        "harness": "h",
+        "run.py": "r",
+        "decks": {
+            fds_deck: {"config": "c", "geometry": "g", "fds_dir": None},
+            DECK: {"config": "c", "geometry": "g", "fds_dir": None},
+        },
+    }
+    gaps = golden._fingerprint_gaps(record, "base", Path("x"), [fds_deck, DECK])
+    assert gaps == [f"base x has no fds_dir fingerprint for {fds_deck}"]
+    record["decks"][fds_deck]["fds_dir"] = "f"
+    assert golden._fingerprint_gaps(record, "base", Path("x"), [fds_deck, DECK]) == []
