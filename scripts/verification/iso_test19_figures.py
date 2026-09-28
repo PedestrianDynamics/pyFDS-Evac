@@ -71,6 +71,8 @@ DEVICE = (5.0, 5.0)
 # FDS's CO coefficient (func.f90, light work) against the guide's 2.764e-5.
 FDS_CO_COEF = 2.7641667e-5
 CONC_TOL = 1e-4
+FED_TOL = 1e-9
+FDS_TOL = 1e-6
 
 SIM = "#1f253f"  # pyFDS-Evac occupant: dark solid line, filled dot
 HAND = "#4575b4"  # hand calculation: blue dashed line
@@ -136,6 +138,33 @@ def hand_rates(gas):
 def fds_crossing(devc):
     """Time at which FDS's FED device reaches 1, linear between rows."""
     return float(np.interp(1.0, devc["FED_occupant"], devc["Time"]))
+
+
+def check_occupant_gas(case, hist, gas):
+    """Assert the gas in fed_history.csv equals the FDS slice value."""
+    pairs = (
+        ("co_percent", 1e4, "co_ppm"),
+        ("co2_percent", 1.0, "co2"),
+        ("o2_percent", 1.0, "o2"),
+    )
+    for column, scale, key in pairs:
+        seen = hist[column].to_numpy() * scale
+        ref = gas[key]
+        if ref == 0.0:
+            assert np.all(seen == 0.0), f"{case}: {column} not 0"
+            continue
+        dev = float(np.abs(seen / ref - 1.0).max())
+        assert dev <= CONC_TOL, f"{case}: {column} off the slice by {dev:.1e}"
+
+
+def o2_gate_shift(case, gas, t_star):
+    """Print how far t* would move if the O2 < 20 % gate were missing."""
+    if gas["o2"] < 20:
+        return
+    r = hand_rates(gas)
+    r_o2 = 1.0 / math.exp(8.13 - 0.54 * (20.9 - gas["o2"]))
+    shift = t_star - 60.0 / (r["total"] + r_o2)
+    print(f"     without the O2 gate: {r_o2:.2e} /min more, t* {shift:.1f} s earlier")
 
 
 def first_true(hist, column):
@@ -319,6 +348,52 @@ def plot_terms(out, rates, t_star):
     plt.close(fig)
 
 
+def draw_zoom(ax, h, d, rate_s, t_star, t_sim):
+    """Inset over t* +- 2 s: the 1 s update grid decides the stop time."""
+    ins = ax.inset_axes((0.07, 0.45, 0.42, 0.39))
+    t0, t1 = t_star - 2.0, t_star + 2.0
+    for tu in np.arange(math.ceil(t0), t1 + 1e-9):
+        ins.axvline(tu, color="lightgrey", lw=0.6, zorder=0)
+    ins.axhline(1.0, color="lightgrey", lw=0.8, zorder=0)
+    t = np.linspace(t0, t1, 3)
+    ins.plot(t, rate_s * t, color=HAND, lw=1.8, ls="--", zorder=2)
+    win = h[(h["time_s"] >= t0 - 1) & (h["time_s"] <= t1 + 1)]
+    ins.plot(
+        win["time_s"],
+        win["fed_cumulative"],
+        color=SIM,
+        lw=1.2,
+        drawstyle="steps-post",
+        zorder=3,
+    )
+    dw = d[(d["Time"] >= t0 - 1) & (d["Time"] <= t1 + 1)]
+    ins.plot(
+        dw["Time"], dw["FED_occupant"], "o", ms=3.5, mfc="white", mec=FDS, zorder=4
+    )
+    fed_stop = float(win.loc[win["time_s"] == t_sim, "fed_cumulative"].iloc[0])
+    ins.plot(t_sim, fed_stop, "x", color="black", ms=6, mew=1.4, zorder=5)
+    ins.annotate(
+        f"stop +{t_sim - t_star:.2f} s",
+        xy=(t_sim, fed_stop),
+        xytext=(t0 + 0.15, 1.0014),
+        fontsize=7,
+        color=TEXT,
+        arrowprops=dict(arrowstyle="-", color=TEXT, lw=0.6),
+    )
+    ins.set_xlim(t0, t1)
+    ins.set_ylim(0.998, 1.002)
+    ins.set_xticks([t_star])
+    ins.set_xticklabels(["t*"], fontsize=6.5)
+    ins.set_yticks([0.998, 1.0, 1.002])
+    ins.set_yticklabels(["0.998", "1", "1.002"], fontsize=6.5)
+    ins.tick_params(length=0, labelcolor=TEXT, pad=1)
+    ins.set_facecolor("white")
+    for sp in ins.spines.values():
+        sp.set_visible(True)
+        sp.set_color("lightgrey")
+        sp.set_linewidth(0.8)
+
+
 def plot_fed(out, hists, devcs, rates, t_star, t_sim):
     """Figure 3: FED(t) per case against the hand line and FDS's device."""
     fig, axes = plt.subplots(2, 2, figsize=(8.0, 6.0), dpi=150, sharey=True)
@@ -372,6 +447,7 @@ def plot_fed(out, hists, devcs, rates, t_star, t_sim):
         ax.set_xlim(0.0, t_end)
         ax.set_ylim(0.0, 1.45)
         style_axes(ax)
+        draw_zoom(ax, h, d, rate_s, t_star[case], t_sim[case])
     for ax in axes[1]:
         ax.set_xlabel("time [s]", color=TEXT)
     for ax in axes[:, 0]:
@@ -398,16 +474,19 @@ def plot_fed(out, hists, devcs, rates, t_star, t_sim):
             mew=1.6,
             label="incapacitated",
         ),
+        Line2D(
+            [0], [0], color="lightgrey", lw=1.0, label="inset (t* ± 2 s): FED update"
+        ),
     ]
     fig.legend(
         handles=handles,
         loc="lower center",
         bbox_to_anchor=(0.5, -0.04),
-        ncol=4,
+        ncol=3,
         fontsize=8,
         **LEGEND,
     )
-    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.tight_layout(rect=(0, 0.06, 1, 1))
     fig.savefig(out / "iso_test19_fed.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -432,24 +511,35 @@ def plot_crossing(out, t_star, t_sim, t_fds, dt):
             fontsize=8.5,
             color=TEXT,
         )
+        ax.text(
+            df - 0.05,
+            y,
+            f"{df:+.2f} s",
+            ha="right",
+            va="center",
+            fontsize=8,
+            color=FDS,
+        )
     ax.text(
         dt / 2,
-        ys[0] + 0.62,
-        f"pass band [0, {dt:g} s)",
+        ys[0] + 0.45,
+        f"pyFDS-Evac pass band [0, Δt = {dt:g} s)",
         ha="center",
+        va="center",
         fontsize=8.5,
         color=TEXT,
     )
     ax.set_yticks(ys)
     ax.set_yticklabels([f"{c}: t* = {t_star[c]:.1f} s" for c in CASES])
     ax.set_ylim(-1.5, len(CASES) - 0.2)
-    ax.set_xlim(-0.4, 1.6)
+    ax.set_xlim(-0.6, 1.8)
     ax.set_xlabel("crossing time − hand calculation t* [s]", color=TEXT)
     ax.text(
         0.99,
         0.03,
-        "Each stop is the first FED update after t*;\n"
-        "FDS's device is at most 0.1 s early (its CO coefficient)",
+        "Each stop is the first FED update after t*.\n"
+        "FDS is judged by criterion 4: its early 0.1 s\n"
+        "is its larger CO coefficient.",
         transform=ax.transAxes,
         ha="right",
         va="bottom",
@@ -488,31 +578,52 @@ def render_gif(out, hists, t_sim, step_s, fps):
     t_max = max(float(h["time_s"].max()) for h in hists.values())
     frames = np.arange(0.0, t_max + 1e-9, step_s)
     cmap = sns.color_palette("YlOrRd", as_cmap=True)
+    fed_max = 1.2
     fig, axes = plt.subplots(2, 2, figsize=(6.6, 6.4), dpi=100)
+    fig.subplots_adjust(
+        left=0.01, right=0.87, bottom=0.005, top=0.885, wspace=0.04, hspace=0.09
+    )
     artists = {}
     for ax, case in zip(axes.flat, CASES):
         draw_room(ax, None, labels=False)
+        ax.set_xlim(-0.2, 10.2)
+        ax.set_ylim(-0.2, 10.2)
         gas = PRESCRIBED[case]
         ax.set_title(
             f"{case}: CO₂ {gas['co2']:g} %, CO {gas['co']:g} %, O₂ {gas['o2']:g} %",
             fontsize=9,
             color=TEXT,
+            pad=3,
         )
-        dot = ax.scatter([], [], c=[], cmap=cmap, vmin=0.0, vmax=1.2, s=260, ec=WALL)
+        dot = ax.scatter(
+            [], [], c=[], cmap=cmap, vmin=0.0, vmax=fed_max, s=260, ec=WALL
+        )
         cross = ax.scatter([], [], marker="x", color="black", s=180, lw=2.2, zorder=6)
         ax.add_patch(Rectangle((1.0, 1.0), 8.0, 0.7, fc="white", ec="lightgrey"))
-        bar = Rectangle((1.0, 1.0), 0.0, 0.7, fc=FDS, alpha=0.7)
+        bar = Rectangle((1.0, 1.0), 0.0, 0.7, ec="none")
         ax.add_patch(bar)
-        ax.plot([1.0 + 8.0 / 1.2] * 2, [0.8, 1.9], color="black", lw=1.0)
-        ax.text(1.0 + 8.0 / 1.2, 2.0, "1", ha="center", fontsize=8, color=TEXT)
-        label = ax.text(5.0, 8.2, "", ha="center", fontsize=10, color=TEXT)
+        ax.text(4.3, 2.0, "FED", ha="center", fontsize=8, color=TEXT)
+        for v in (0.0, 1.0):
+            xv = 1.0 + 8.0 * v / fed_max
+            ax.plot([xv] * 2, [0.8, 1.9], color="black", lw=1.0)
+            ax.text(xv, 2.0, f"{v:g}", ha="center", fontsize=8, color=TEXT)
+        label = ax.text(
+            5.0, 7.4, "", ha="center", va="bottom", fontsize=9.5, color=TEXT
+        )
         ax.set_xticks([])
         ax.set_yticks([])
         style_axes(ax, frame=False)
         artists[case] = (dot, cross, bar, label)
-    clock = fig.text(0.5, 0.965, "", ha="center", fontsize=12, color=TEXT)
-    count = fig.text(0.5, 0.935, "", ha="center", fontsize=9.5, color=TEXT)
-    fig.subplots_adjust(left=0.02, right=0.98, bottom=0.02, top=0.88, hspace=0.18)
+    cax = fig.add_axes((0.89, 0.12, 0.025, 0.66))
+    cb = fig.colorbar(
+        plt.cm.ScalarMappable(norm=plt.Normalize(0.0, fed_max), cmap=cmap), cax=cax
+    )
+    cb.set_ticks([0.0, 0.5, 1.0])
+    cb.set_label("FED [-]", color=TEXT, fontsize=9)
+    cb.ax.tick_params(length=0, labelcolor=TEXT, labelsize=8)
+    cb.outline.set_edgecolor("lightgrey")
+    clock = fig.text(0.44, 0.955, "", ha="center", fontsize=12, color=TEXT)
+    count = fig.text(0.44, 0.925, "", ha="center", fontsize=9.5, color=TEXT)
 
     writer = PillowWriter(fps=fps)
     with writer.saving(fig, out / "iso_test19.gif", dpi=100):
@@ -531,9 +642,10 @@ def render_gif(out, hists, t_sim, step_s, fps):
                 cross.set_offsets(
                     [[row["x"], row["y"]]] if stopped else np.empty((0, 2))
                 )
-                bar.set_width(8.0 * min(fed, 1.2) / 1.2)
+                bar.set_width(8.0 * min(fed, fed_max) / fed_max)
+                bar.set_facecolor(cmap(min(fed, fed_max) / fed_max))
                 state = f"stopped at {t_sim[case]:.0f} s" if stopped else "standing"
-                label.set_text(f"FED = {fed:.2f}   {state}")
+                label.set_text(f"FED = {fed:.2f}\n{state}")
             clock.set_text(f"t = {tf:.0f} s")
             count.set_text(f"incapacitated: {down} / 4 occupants (× = FED ≥ 1)")
             writer.grab_frame()
@@ -627,15 +739,26 @@ def main():
             f"of t* (coefficient alone: {fds_shift:.2e}, remainder "
             f"{(t_star[case] * (1 - fds_shift) - t_fds[case]) / t_star[case]:.1e})"
         )
+        remainder = (t_star[case] * (1 - fds_shift) - t_fds[case]) / t_star[case]
+        # Criterion 1: the FDS slice equals the deck, and the occupant sees it.
         assert max(rel) <= CONC_TOL, f"{case}: slice differs from the deck"
+        check_occupant_gas(case, h, gas)
+        # Criterion 2: FED is the hand rate times time, to round-off.
+        assert resid <= FED_TOL, f"{case}: FED off the hand line by {resid:.1e}"
+        # Criterion 4: FDS agrees once its CO coefficient is accounted for.
+        assert abs(remainder) <= FDS_TOL, f"{case}: FDS off by {remainder:.1e} t*"
+        # Criterion 5: the occupant stays put and does not evacuate.
+        assert moved == 0.0, f"{case}: occupant moved {moved:.2e} m"
+        o2_gate_shift(case, gas, t_star[case])
     dt = max(dts)
     print(f"slice heights {sorted(z_slice)} m; FED history spacing {sorted(dts)} s")
     for case in CASES:
+        # Criterion 3: the stop is the first update at or after t*.
         ok = t_star[case] <= t_sim[case] < t_star[case] + dt
-        print(
-            f"{case}: t* <= t_sim < t* + {dt:g}: {ok}; stop == crossing: "
-            f"{t_inc[case] == t_sim[case]}"
-        )
+        same = t_inc[case] == t_sim[case]
+        print(f"{case}: t* <= t_sim < t* + {dt:g}: {ok}; stop == crossing: {same}")
+        assert ok and same, f"{case}: crossing or stop outside [t*, t* + dt)"
+    print("all pass criteria hold")
 
     # --- Plot ---
     pos = (float(hists["a"]["x"].iloc[0]), float(hists["a"]["y"].iloc[0]))
