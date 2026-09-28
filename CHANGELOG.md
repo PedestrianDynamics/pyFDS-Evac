@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The FDS slice sampler reads the value nearest to the query point: the
+  nearest node of a node-centred slice (the FDS default) and the nearest
+  cell centre of a `CELL_CENTERED=T` slice, including on stretched grids.
+  It used to space the values evenly with half-cell offsets, which on
+  node-centred slices read the wrong node for about a quarter of positions
+  ([#212](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/212)).
+
 ### Changed
 
 Defaults now follow FDS+Evac where a mechanism has a direct FDS+Evac
