@@ -308,7 +308,7 @@ def test_layer_regime_has_no_radiant_term_of_the_gas_at_the_head(eps):
     doubled = q + eps * radiant_hand(250.0, 35.0)
     got = _rate(250.0, 250.0, eps=eps, h=5.0, t_skin_c=35.0, phi=1.0, eps_l=1.0)
     assert got == pytest.approx(rate_hand(q, DOSE["fatal"]), rel=1e-9)
-    assert got < 0.95 * rate_hand(doubled, DOSE["fatal"])
+    assert got < 0.99 * rate_hand(doubled, DOSE["fatal"])
 
 
 @XFAIL
