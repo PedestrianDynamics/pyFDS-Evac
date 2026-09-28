@@ -94,7 +94,7 @@ none).
 | `--enable-heat-fed` | Accumulate the heat dose from a `TEMPERATURE` slice and incapacitate on it (off by default). |
 | `--fic-alpha F` | Slope of `v/v₀ = max(μ, 1 − α·FIC)` (default 0.7). |
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
-| `--fed-threshold F` | Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless `--incapacitation-mode deterministic`. |
+| `--fed-threshold F` | FED at which agents are incapacitated (default 1.0, as FDS+Evac); with `--incapacitation-mode probabilistic` it is the median of a per-agent threshold. |
 | `--o2-threshold-percent P` | O₂ vol % at or above which the hypoxia term is zero (default 20.0, as FDS; 19.5 was the previous default). |
 
 ### Agent visualisation

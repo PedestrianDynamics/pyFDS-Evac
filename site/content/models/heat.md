@@ -49,7 +49,7 @@ stops and stays in place as an obstacle, as for the gas dose.
   \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
   assumption with no data basis for heat.
 
-The gas dose is probabilistic by default; the two modes are set separately
+The gas dose is also deterministic by default; the two modes are set separately
 (`--incapacitation-mode` and `--heat-incapacitation-mode`).
 
 | Field | Default | CLI flag |
