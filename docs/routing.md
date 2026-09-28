@@ -451,7 +451,7 @@ discovery agent with no known exit explores or wanders instead (see below).
 | **Fallback** | when every route is rejected: re-sorted by raw τ, then `rank_cost`; the current exit goes first unless the winner's worst extinction is at or below the current exit's × (1 − `fallback_switch_margin`); the first route is un-rejected with a `fallback: ` reason, its `feasible` unchanged | same |
 | **Switch, same exit** | for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path's `rank_cost` is below 0.9 × the walked path's, or if the walked path is rejected and the new one is feasible and not rejected (`better_path`); otherwise, or if rerouting fails, it keeps walking, and the cached path is updated either way | same |
 | **Switch, other exit** | the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, when it must be fled (a FED rejection, or a non-visible one above `impassable_extinction_threshold`), or when the rival is clean and the current exit is not. Otherwise an infeasible rival needs `rank_cost` < old × `exit_switch_anchor`; a feasible one is accepted if its τ is lower by more than `tau_max` × `tau_deadband`, refused if higher by more, and between those needs the same `rank_cost` ratio | only the top-ranked route is tried; the anchor accepts under the same hazard bypasses, else needs `rank_cost` < old × `exit_switch_anchor` |
-| **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, the exit and path recorded, a `RouteSwitch` recorded; if rerouting fails nothing is recorded | same |
+| **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, the exit and path recorded, a `RouteSwitch` recorded; if rerouting fails no `RouteSwitch` is recorded | same |
 
 In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 `AdditivePolicy`, and each row is one function:
@@ -485,7 +485,8 @@ An exit switch is recorded when **all four** conditions hold:
 
 1. The agent's reevaluation tick fires (staggered offset + interval).
 2. `rank_routes` finds a best route that is not hard-rejected.
-3. That best route leads to a **different exit** than the current one.
+3. That best route leads to a **different exit** than the current one,
+   or the agent is idle (an idle agent is routed even to its current exit).
 4. It clears the exit-switch anchor, or qualifies for one of the anchor
    bypasses (old exit FED-lethal or impassably smoky; or, under the gate, a
    clean rival while the current exit is not, or a feasible rival whose τ is
@@ -497,8 +498,9 @@ No switch is recorded when:
 - The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).
 - All routes are hard-rejected and none was un-rejected as a fallback.
 - The anchor holds the agent on its current exit.
-- The best route leads to the same exit — though the path to it may
-  still be rewritten, which is recorded as `better_path`.
+- The best route leads to the same exit and the agent is not idle —
+  though the path to it may still be rewritten, which is recorded as
+  `better_path`.
 
 ### Route switch reasons
 
@@ -507,7 +509,7 @@ Each `RouteSwitch` record includes a `reason` field:
 | Reason          | Condition                                                        |
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment                            |
-| `smoke_reroute` | Best route is a different exit (lower `rank_cost`)               |
+| `smoke_reroute` | Best route is a different exit (lower `rank_cost`), or an idle agent is routed to its current exit |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
 | `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`, or a feasible path replacing a rejected walked one |
 | `explore`       | No exit known yet; heading to the nearest unexplored frontier    |

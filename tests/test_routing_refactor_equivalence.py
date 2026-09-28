@@ -242,8 +242,9 @@ _EXTRA_RANK_CASES: dict[str, golden.RankCase] = {
         golden.ArmField({"west": 0.5, "east": 0.5}),
         current_exit="gone",
     ),
-    # Additive: a route refused on sight, with every other route FED-refused.
-    "additive_kvis_triggers_fallback": golden.RankCase(
+    # Additive: the only unrefused route is not visible, so the K_vis screen
+    # keeps it (no visible route to prefer) and no fallback is needed.
+    "additive_kvis_invisible_route_kept": golden.RankCase(
         _star2,
         golden._additive(),
         golden.ArmField({"west": 0.8}),
