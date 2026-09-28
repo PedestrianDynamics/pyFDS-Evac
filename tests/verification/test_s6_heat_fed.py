@@ -1,7 +1,11 @@
-"""S6 -- heat FED lethality (SFPE Handbook Eq. 63.44) and the OR incapacitation check.
+"""S6 -- heat FED incapacitation (SFPE Handbook Eq. 63.44) and the OR check.
 
-Tier A already pins the heat FED equation to machine precision; this scenario
-verifies the *wiring* the gas-FED suite (S1) can't exercise: gas and heat are
+This scenario checks the *wiring*, not the law: the expected stop time is
+Eq. 63.44 as printed (``harness.heat_fed_rate_per_min``), so it confirms the
+engine applies the equation and the threshold, not that the equation
+predicts human tolerance. The comparison with the Handbook's tables is in
+``test_heat_fed_verif.py`` (A3.8-A3.11). The wiring the gas-FED suite (S1)
+can't exercise: gas and heat are
 two independent cumulative doses (see ``fed.py``'s ``TenabilityConfig``
 docstring), and an agent must collapse the instant *either* crosses its
 threshold, recorded correctly in ``incapacitation_cause``.
@@ -31,7 +35,9 @@ from harness import (
 from pyfds_evac.core.fed import TenabilityConfig
 from pyfds_evac.core.scenario import run_scenario
 
-# 230 C -> t* ~ 28s (closed form), comfortably inside the 40s free-walk egress.
+# 230 C -> t* ~ 28s (Eq. 63.44), comfortably inside the 40s free-walk egress.
+# Chosen for the timing, not the physics: it lies above the ~205 C reach of
+# the convective data behind Eq. 63.44 (SFPE Table 63.17).
 HEAT_TEMPERATURE_C = 230.0
 UPDATE_INTERVAL_S = 1.0
 
