@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A run warns once when CO is sampled with zero CO2: the hyperventilation
+  factor is then 1, and the FDS deck probably has no ambient CO2.
 - `assets/Haspel`: the BUW Campus Haspel ground floor with an FDS deck, for
   a model-to-model comparison with a PathFinder student study. Not yet a
   valid comparison; see `assets/Haspel/README.md`
@@ -15,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Web GUI: the FED section is titled "Purser / FDS" instead of
+  "ISO 13571"; the coded form is the Purser sum as in the FDS `FED` function.
 - **Breaking.** `speed_law="fridolf"` now implements Eq. 7 (method 3) of
   Fridolf, Ronchi, Nilsson & Frantzich (2019),
   [doi:10.1016/j.tust.2019.04.016](https://doi.org/10.1016/j.tust.2019.04.016),

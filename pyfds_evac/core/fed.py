@@ -1,9 +1,12 @@
 """Default FDS+Evac FED equations and FDS-backed gas samplers."""
 
+import logging
 import math
 from dataclasses import dataclass
 
 from .fds_sampling import SliceFieldSampler, load_slice_sampler
+
+_logger = logging.getLogger(__name__)
 
 _SECONDS_PER_MINUTE = 60.0
 
@@ -587,10 +590,38 @@ class DefaultFedModel:
         """Store the gas field sampler and FED runtime settings."""
         self.field = field
         self.config = config
+        self._warned_zero_co2 = False
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> DefaultFedInputs:
         """Return the FED gas inputs at one time and x/y point."""
-        return self.field.sample_inputs(time_s, x, y)
+        inputs = self.field.sample_inputs(time_s, x, y)
+        self._warn_zero_co2(inputs, time_s, x, y)
+        return inputs
+
+    def _warn_zero_co2(
+        self, inputs: DefaultFedInputs, time_s: float, x: float, y: float
+    ) -> None:
+        """Warn once when CO is present but CO2 is exactly zero.
+
+        In fire smoke CO comes with CO2, and FDS's ambient air carries some.
+        Zero CO2 with CO points to a deck with a CO2-free background; the
+        hyperventilation factor is then 1 there (FDS convention).
+        """
+        if self._warned_zero_co2:
+            return
+        if inputs.co_volume_fraction_percent <= 0.0:
+            return
+        if inputs.co2_volume_fraction_percent > 0.0:
+            return
+        self._warned_zero_co2 = True
+        _logger.warning(
+            "CO is present but CO2 is zero at t=%.1f s, (%.2f, %.2f): the "
+            "CO2 hyperventilation factor is 1 there. Check that the FDS deck "
+            "has ambient CO2 and a CO2 slice.",
+            time_s,
+            x,
+            y,
+        )
 
     def sample_rate(
         self, time_s: float, x: float, y: float
