@@ -1990,9 +1990,15 @@ values cannot be copied across unchanged. The delay is in seconds.&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The presets are illustrative, not from a cited dataset
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144" target="_blank" rel="noopener">#144&lt;/a>). Set both
-parameters from data for your occupancy.&lt;/p>
+&lt;p>The gamma, log-normal and Weibull presets are the fits for office buildings
+(Business Cluster 1: 11 evacuations, 10 of them drills, 4–14 floors, R²
+0.55–0.57) in Lovreglio et al. (2019), Table 3, with the log-normal &lt;em>a&lt;/em> taken
+from the 2019 corrigendum
+(&lt;a href="https://doi.org/10.1016/j.firesaf.2018.12.009" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2018.12.009&lt;/a>;
+&lt;a href="https://doi.org/10.1016/j.firesaf.2019.102829" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2019.102829&lt;/a>).
+The uniform preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo; sensitivity scenario, not
+data. For other occupancies, set both parameters from the matching table of
+that paper.&lt;/p>
 &lt;p>The presets are used when &lt;code>use_premovement&lt;/code> is &lt;code>true&lt;/code> and &lt;code>premovement_param_a&lt;/code>
 or &lt;code>premovement_param_b&lt;/code> is missing; both parameters must be given for either
 to take effect (&lt;code>constant&lt;/code> needs only &lt;code>premovement_param_a&lt;/code>). A spawn area that
@@ -5465,12 +5471,11 @@ the sampled fractional irritant concentration (FIC) is positive. When it
 returns to exactly zero, the last slowdown stays in force, so an agent that
 leaves an irritant plume into clean air does not return to full speed
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">issue #142&lt;/a>).&lt;/p>
-&lt;p>&lt;strong>Sourced pre-movement defaults.&lt;/strong> The preset parameters of the four random
-pre-movement distributions are illustrative, not from a cited dataset. The
-10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
-data either. Set
-&lt;code>premovement_param_a&lt;/code> and &lt;code>premovement_param_b&lt;/code> from data for your occupancy
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144" target="_blank" rel="noopener">issue #144&lt;/a>).&lt;/p>
+&lt;p>&lt;strong>Pre-movement defaults are office data.&lt;/strong> The gamma, log-normal and Weibull
+presets are fitted to office evacuations, mostly drills (Lovreglio et al. 2019,
+Business Cluster 1). The uniform 0–60 s preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo;
+sensitivity scenario, not data. The 10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
+data. Set &lt;code>premovement_param_a&lt;/code> and &lt;code>premovement_param_b&lt;/code> for other occupancies.&lt;/p>
 &lt;p>&lt;strong>Smoke-triggered detection.&lt;/strong> Pre-movement is one delay per agent, drawn
 from a distribution. Smoke reaching the agent does not end the delay early,
 and there is no separate detection phase.&lt;/p>
@@ -5533,6 +5538,10 @@ establish the factors that generated the clusters, and advise users to pick
 the occupancy and cluster closest to their case and to consult the original
 sources. Pre-movement and travel times within an enclosure interact, so the
 two distributions cannot simply be added (ISO/TR 16738, §7).&lt;/p>
+&lt;p>The corrigendum corrects the log-normal &lt;em>a&lt;/em> parameter in Tables 3, 5, 7, 9,
+11, 13, 15, 17 and 18. Fits within a cluster have R² as low as about 0.55
+(Business Cluster 1), and the authors state R² must not be used to choose
+between clusters.&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>ISO (2009). &lt;em>ISO/TR 16738:2009 Fire-safety engineering — Technical

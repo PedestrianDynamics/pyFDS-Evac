@@ -949,9 +949,15 @@ values cannot be copied across unchanged. The delay is in seconds.&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The presets are illustrative, not from a cited dataset
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144" target="_blank" rel="noopener">#144&lt;/a>). Set both
-parameters from data for your occupancy.&lt;/p>
+&lt;p>The gamma, log-normal and Weibull presets are the fits for office buildings
+(Business Cluster 1: 11 evacuations, 10 of them drills, 4–14 floors, R²
+0.55–0.57) in Lovreglio et al. (2019), Table 3, with the log-normal &lt;em>a&lt;/em> taken
+from the 2019 corrigendum
+(&lt;a href="https://doi.org/10.1016/j.firesaf.2018.12.009" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2018.12.009&lt;/a>;
+&lt;a href="https://doi.org/10.1016/j.firesaf.2019.102829" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2019.102829&lt;/a>).
+The uniform preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo; sensitivity scenario, not
+data. For other occupancies, set both parameters from the matching table of
+that paper.&lt;/p>
 &lt;p>The presets are used when &lt;code>use_premovement&lt;/code> is &lt;code>true&lt;/code> and &lt;code>premovement_param_a&lt;/code>
 or &lt;code>premovement_param_b&lt;/code> is missing; both parameters must be given for either
 to take effect (&lt;code>constant&lt;/code> needs only &lt;code>premovement_param_a&lt;/code>). A spawn area that

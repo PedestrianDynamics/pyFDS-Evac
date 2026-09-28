@@ -530,12 +530,11 @@ the sampled fractional irritant concentration (FIC) is positive. When it
 returns to exactly zero, the last slowdown stays in force, so an agent that
 leaves an irritant plume into clean air does not return to full speed
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">issue #142&lt;/a>).&lt;/p>
-&lt;p>&lt;strong>Sourced pre-movement defaults.&lt;/strong> The preset parameters of the four random
-pre-movement distributions are illustrative, not from a cited dataset. The
-10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
-data either. Set
-&lt;code>premovement_param_a&lt;/code> and &lt;code>premovement_param_b&lt;/code> from data for your occupancy
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144" target="_blank" rel="noopener">issue #144&lt;/a>).&lt;/p>
+&lt;p>&lt;strong>Pre-movement defaults are office data.&lt;/strong> The gamma, log-normal and Weibull
+presets are fitted to office evacuations, mostly drills (Lovreglio et al. 2019,
+Business Cluster 1). The uniform 0–60 s preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo;
+sensitivity scenario, not data. The 10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
+data. Set &lt;code>premovement_param_a&lt;/code> and &lt;code>premovement_param_b&lt;/code> for other occupancies.&lt;/p>
 &lt;p>&lt;strong>Smoke-triggered detection.&lt;/strong> Pre-movement is one delay per agent, drawn
 from a distribution. Smoke reaching the agent does not end the delay early,
 and there is no separate detection phase.&lt;/p>
