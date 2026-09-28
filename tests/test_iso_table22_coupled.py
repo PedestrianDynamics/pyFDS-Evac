@@ -64,7 +64,7 @@ def _run(case: str):
         fds_dir=str(ASSET / "fds" / case),
         constant_extinction=None,
         smoke_update_interval=1.0,
-        smoke_slice_height=2.0,
+        smoke_slice_height=1.6,
         disable_tenability=False,
         fed_threshold=1.0,
         fic_alpha=0.7,

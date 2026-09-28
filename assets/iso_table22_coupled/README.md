@@ -29,13 +29,17 @@ supplies exactly the concrete sets ISO leaves to the tester:
 |---|---|---|---|---|---|
 | a | 2.00 | 0.10 | 15.0 | all three terms | 982 s |
 | b | 0.00 | 0.00 | 12.0 | O₂ hypoxia alone | 1666 s |
-| c | 0.00 | 0.10 | 21.0 | CO alone | 1626 s |
+| c | 0.00 | 0.10 | 21.0 | CO alone | 1693 s |
 | d | 3.43 | 0.10 | 21.0 | CO + CO₂ factor | 847 s |
 
 Cases c and d share the same CO and differ only in CO₂, so d must be strictly
 faster — that pair is what makes the hyperventilation factor observable. Case b
 has no CO at all, and c and d sit above the 20.0 % O₂ gate so the hypoxia term
 is switched off in them. A single case could not separate any of this.
+
+The FED = 1 column is the hand calculation in the FDS form, where the CO₂
+factor is 1 when there is no CO₂. Before #194 pyFDS-Evac used 1.041 there,
+which gave 1626 s for case c; FDS 6.10.1's own `FED` device gives 1692.7 s.
 
 ## What is live
 
@@ -84,7 +88,8 @@ done
 ## The FDS output is committed
 
 `fds/{a,b,c,d}/` holds **256 kB total** — four slices per case on a 20 × 20 × 6
-mesh — forced past `.gitignore`, **so the test runs in CI**. A test that skipped
+mesh at PBZ = 1.6 m, which FDS places on the cell face at 1.5 m, the
+height nearest pyFDS-Evac's default sampling height — forced past `.gitignore`, **so the test runs in CI**. A test that skipped
 when output was missing would leave this path exactly as untested as it was
 before, which is how the FIC speed factor came to compound to zero unnoticed.
 
@@ -94,6 +99,9 @@ asserts the constancy rather than assuming it.
 
 Only `.sf`, `.sf.bnd` and `.smv` are kept. The `_hrr.csv` FDS also writes is
 272 kB per case — larger than everything retained — and nothing reads it.
+Each deck also has a `FED` device at the occupant (`FED_occupant`); its
+`_devc.csv` is not kept here but in the project data folder
+(`fds-evac-data/iso_table22_coupled/`), where the verification page reads it.
 
 ## What this catches that the stubbed test cannot
 

@@ -5,7 +5,7 @@
 ! The gas is prescribed, not burned, so it is uniform in space and constant in
 ! time and the hand calculation of ISO's Step 2 is exact.
 &MESH IJK=20,20,6, XB=0.00,10.00,0.00,10.00,0.0,3.00 /
-&TIME T_END=1900 /
+&TIME T_END=1950 /
 &MISC TMPA=20.0 /
 
 ! Nitrogen background so O2 is not double-counted.
@@ -28,10 +28,13 @@
       MASS_FRACTION(2)=0.00000E+00,
       MASS_FRACTION(3)=2.32921E-01 /
 
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
-&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
-&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
 &DUMP DT_SLCF=500.0 /
+
+! FDS's own FED at the occupant: an independent reference for the crossing.
+&DEVC ID='FED_occupant', XYZ=5.0,5.0,1.6, QUANTITY='FED' /
 
 &TAIL /
