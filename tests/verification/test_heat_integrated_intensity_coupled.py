@@ -51,8 +51,6 @@ from pyfds_evac.core.fed import (
 )
 from pyfds_evac.core.scenario import run_scenario
 
-XFAIL = pytest.mark.xfail(strict=True, reason="#221")
-
 UPDATE_S = 1.0
 TIMING_TOL_S = 1.5  # right-point sampling on 1 s updates
 SIGMA = 5.67e-8
@@ -165,7 +163,6 @@ def test_design_crossing_times():
     assert 60.0 * t_hand_min(q, DOSE["tolerance"]) == pytest.approx(9.4, abs=0.1)
 
 
-@XFAIL
 def test_fatal_crossing_radiant_only():
     q = q_u_hand(T_SKIN, U_CONST, f=F, h=H, t_skin_c=T_SKIN)
     expected = 60.0 * t_hand_min(q, DOSE["fatal"])
@@ -176,7 +173,6 @@ def test_fatal_crossing_radiant_only():
         result.cleanup()
 
 
-@XFAIL
 def test_crossing_scales_with_the_factor():
     """f = 1 on the same U: q doubles, t falls by 2^1.33."""
     q = q_u_hand(T_SKIN, U_CONST, f=1.0, h=H, t_skin_c=T_SKIN)
@@ -189,7 +185,6 @@ def test_crossing_scales_with_the_factor():
         result.cleanup()
 
 
-@XFAIL
 def test_outputs_record_u_flux_and_source():
     t_c = 100.0
     q = q_u_hand(t_c, U_CONST, f=F, h=H, t_skin_c=T_SKIN)
@@ -229,7 +224,6 @@ def _case_field():
     )
 
 
-@XFAIL
 def test_case_reader_takes_the_head_height_intensity_slice():
     devc = _devc_at(CASE_DEVC, CASE_TIME_S)
     inputs = _case_field().sample_inputs(CASE_TIME_S, *CASE_XY)
@@ -237,7 +231,6 @@ def test_case_reader_takes_the_head_height_intensity_slice():
     assert inputs.temperature_celsius == pytest.approx(devc["T_z16"], rel=0.02)
 
 
-@XFAIL
 def test_case_model_flux_from_fds_devices():
     """Whole chain: slices -> model flux, against the hand law on FDS devices."""
     devc = _devc_at(CASE_DEVC, CASE_TIME_S)
@@ -280,7 +273,6 @@ def _gauge_incident(devc, facing, k):
     return devc[f"GAUGE_z16_{facing}-{k}"] + Q_SKIN_EMISSION
 
 
-@XFAIL
 @pytest.mark.parametrize("case", ["uniform", "layer"])
 def test_radiometer_slice_u_matches_devices(case):
     """Slice U at 1.6 m against the ``U_z16`` devices. The slice shows the
@@ -298,7 +290,6 @@ def test_radiometer_slice_u_matches_devices(case):
             ), (time_s, k)
 
 
-@XFAIL
 def test_radiometer_uniform_quarter_u_is_the_gauge():
     """Isotropic room: f = 1/4 reproduces the FDS skin gauge in all four
     orientations (incident radiation plus convection)."""

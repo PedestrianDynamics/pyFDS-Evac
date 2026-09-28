@@ -77,8 +77,6 @@ KELVIN = 273.15
 EXPONENT = 1.33  # Eq. 63.43 prints 1.33
 DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.667}  # spec 016
 
-XFAIL = pytest.mark.xfail(strict=True, reason="#221")
-
 
 # --- hand formulas ----------------------------------------------------------
 
@@ -209,14 +207,12 @@ def test_total_flux_model_without_source_is_the_gas_law():
 # --- pure function ------------------------------------------------------------
 
 
-@XFAIL
 @pytest.mark.parametrize("f", [0.25, 0.5, 0.75, 1.0])
 @pytest.mark.parametrize("u", [0.0, 1.675, 10.0, 24.47])
 def test_radiant_flux_is_f_times_u(u, f):
     assert _u_flux(u, f) == pytest.approx(f * u, rel=1e-12)
 
 
-@XFAIL
 @pytest.mark.parametrize("f", [0.0, 0.2, 0.249, 1.01, 2.0, -0.5, math.nan, math.inf])
 def test_radiant_flux_rejects_factor_outside_range(f):
     assert _u_flux(10.0, 0.5) == pytest.approx(5.0)
@@ -227,7 +223,6 @@ def test_radiant_flux_rejects_factor_outside_range(f):
 # --- field -------------------------------------------------------------------
 
 
-@XFAIL
 def test_field_samples_integrated_intensity():
     field = FdsHeatField(_Sampler(150.0), intensity_sampler=_Sampler(12.5))  # type: ignore[arg-type,call-arg]
     inputs = field.sample_inputs(0.0, 0.0, 0.0)
@@ -235,7 +230,6 @@ def test_field_samples_integrated_intensity():
     assert inputs.integrated_intensity_kw_m2 == 12.5
 
 
-@XFAIL
 def test_field_without_intensity_sampler_reports_none():
     inputs = FdsHeatField(_Sampler(150.0)).sample_inputs(0.0, 0.0, 0.0)  # type: ignore[arg-type]
     assert inputs.integrated_intensity_kw_m2 is None
@@ -244,7 +238,6 @@ def test_field_without_intensity_sampler_reports_none():
 # --- model --------------------------------------------------------------------
 
 
-@XFAIL
 @pytest.mark.parametrize("name", sorted(DOSE))
 @pytest.mark.parametrize("f", [0.25, 0.5, 1.0])
 @pytest.mark.parametrize("u", [2.0, 10.0, 24.47])
@@ -254,7 +247,6 @@ def test_model_rate_radiant_only(u, f, name):
     assert got == pytest.approx(1.0 / t_hand_min(f * u, DOSE[name]), rel=1e-9)
 
 
-@XFAIL
 @pytest.mark.parametrize(
     ("t_c", "u", "f", "h", "t_s"),
     [(150.0, 5.0, 0.5, 5.0, 35.0), (300.0, 24.47, 0.25, 8.0, 35.0)],
@@ -265,7 +257,6 @@ def test_model_rate_adds_convection(t_c, u, f, h, t_s):
     assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
 
 
-@XFAIL
 def test_model_ignores_gas_emissivity_with_integrated_intensity():
     """U already holds the gas emission: eps sigma (T_g^4 - T_s^4) is not added."""
     t_c, u, f, h, t_s = 200.0, 8.0, 0.5, 8.0, 35.0
@@ -276,21 +267,18 @@ def test_model_ignores_gas_emissivity_with_integrated_intensity():
     assert not math.isclose(got, 1.0 / t_hand_min(doubled, DOSE["fatal"]), rel_tol=1e-2)
 
 
-@XFAIL
 def test_model_heat_flux_takes_integrated_intensity():
     model = _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0)
     got = model.heat_flux_kw_m2(150.0, integrated_intensity_kw_m2=5.0)
     assert got == pytest.approx(q_u_hand(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0))
 
 
-@XFAIL
 def test_model_no_threshold_below_2_5_kw():
     q = q_u_hand(35.0, 2.0, f=0.5, h=5.0, t_skin_c=35.0)
     assert q < 2.5
     assert _u_rate(35.0, 2.0, f=0.5, h=5.0, t_skin_c=35.0) > 0.0
 
 
-@XFAIL
 @pytest.mark.parametrize("u", [0.0, math.nan, math.inf])
 def test_model_domain_guard(u):
     """No radiation and T_g = T_s, or a non-finite U: no dose."""
@@ -299,7 +287,6 @@ def test_model_domain_guard(u):
     assert rate == 0.0
 
 
-@XFAIL
 def test_model_records_source_factor_and_incident():
     params = _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0).heat_flux_parameters()
     assert params["radiant_source"] == "integrated-intensity"
@@ -308,7 +295,6 @@ def test_model_records_source_factor_and_incident():
     assert "u_factor" not in params["assumed"]
 
 
-@XFAIL
 @pytest.mark.parametrize("f", [None, 0.2, 1.1, math.nan])
 def test_model_requires_a_factor_in_range(f):
     _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0)
@@ -316,7 +302,6 @@ def test_model_requires_a_factor_in_range(f):
         _u_model(150.0, 5.0, f=f, h=5.0, t_skin_c=35.0)
 
 
-@XFAIL
 def test_model_rejects_integrated_intensity_with_convective_method():
     _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0)
     with pytest.raises(ValueError):
@@ -329,7 +314,6 @@ def test_model_rejects_integrated_intensity_with_convective_method():
         )
 
 
-@XFAIL
 def test_model_rejects_unknown_radiant_source():
     _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0)
     with pytest.raises(ValueError):
@@ -345,7 +329,6 @@ def test_model_rejects_unknown_radiant_source():
 # --- inventory ------------------------------------------------------------------
 
 
-@XFAIL
 def test_inventory_names_integrated_intensity():
     from pyfds_evac.core.fds_inventory import FdsQuantityInventory
 
@@ -372,7 +355,6 @@ _U_ARGS = [
 ]
 
 
-@XFAIL
 @pytest.mark.parametrize("f", ["0.25", "0.5", "1.0"])
 def test_cli_source_and_factor(f):
     import run
@@ -382,7 +364,6 @@ def test_cli_source_and_factor(f):
     assert args.heat_u_factor == float(f)
 
 
-@XFAIL
 def test_cli_factor_has_no_default():
     import run
 
@@ -391,7 +372,6 @@ def test_cli_factor_has_no_default():
     assert parser.parse_args(["--scenario", "x"]).heat_u_factor is None
 
 
-@XFAIL
 @pytest.mark.parametrize("f", ["0.2", "1.1", "nan", "-1"])
 def test_cli_rejects_factor_outside_range(f):
     import run
@@ -402,7 +382,6 @@ def test_cli_rejects_factor_outside_range(f):
         parser.parse_args([*_U_ARGS, "--heat-u-factor", f])
 
 
-@XFAIL
 def test_cli_rejects_unknown_source():
     import run
 
@@ -412,7 +391,6 @@ def test_cli_rejects_unknown_source():
         parser.parse_args(["--scenario", "x", "--heat-radiant-source", "layer"])
 
 
-@XFAIL
 def test_cli_help_states_range_no_default_and_incident():
     import run
 
@@ -485,7 +463,6 @@ def _build(**overrides):
     )
 
 
-@XFAIL
 def test_run_config_passes_source_and_factor(monkeypatch):
     calls = _patch(monkeypatch, {"temperature", "integrated_intensity"})
     model = _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)[
@@ -498,7 +475,6 @@ def test_run_config_passes_source_and_factor(monkeypatch):
     assert calls[-1]["slice_height_m"] == 2.0
 
 
-@XFAIL
 def test_run_config_default_source_is_gas(monkeypatch):
     _patch(monkeypatch, {"temperature", "integrated_intensity"})
     _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
@@ -506,7 +482,6 @@ def test_run_config_default_source_is_gas(monkeypatch):
     assert model.radiant_source == "gas"
 
 
-@XFAIL
 def test_run_config_requires_a_factor(monkeypatch):
     _patch(monkeypatch, {"temperature", "integrated_intensity"})
     _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
@@ -514,7 +489,6 @@ def test_run_config_requires_a_factor(monkeypatch):
         _build(heat_radiant_source="integrated-intensity", heat_u_factor=None)
 
 
-@XFAIL
 def test_run_config_rejects_source_with_convective_method(monkeypatch):
     _patch(monkeypatch, {"temperature", "integrated_intensity"})
     _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
@@ -526,7 +500,6 @@ def test_run_config_rejects_source_with_convective_method(monkeypatch):
         )
 
 
-@XFAIL
 def test_run_config_rejects_case_without_intensity_slice(monkeypatch):
     """A chosen source whose slice is missing must not read as zero radiation."""
     _patch(monkeypatch, {"temperature", "integrated_intensity"})
@@ -539,7 +512,6 @@ def test_run_config_rejects_case_without_intensity_slice(monkeypatch):
 # --- FED history CSV ----------------------------------------------------------------
 
 
-@XFAIL
 def test_fed_history_csv_writes_integrated_intensity(tmp_path):
     import csv
 
@@ -562,7 +534,6 @@ def _models_heat() -> str:
     return (ROOT / "site" / "content" / "models" / "heat.md").read_text()
 
 
-@XFAIL
 def test_models_heat_page_documents_integrated_intensity():
     text = _models_heat()
     flat = " ".join(text.split())
@@ -573,7 +544,6 @@ def test_models_heat_page_documents_integrated_intensity():
     assert re.search(r"\bincident\b", flat, re.IGNORECASE)
 
 
-@XFAIL
 def test_models_heat_limits_cover_integrated_intensity():
     """Limits: ambient background, falling exposure (Eq. 63.48), the hot-air
     double-count question, and gauge devices (#224) as the preferred input."""
@@ -588,7 +558,6 @@ def test_models_heat_limits_cover_integrated_intensity():
     assert "gauge" in flat
 
 
-@XFAIL
 def test_changelog_mentions_integrated_intensity():
     text = (ROOT / "CHANGELOG.md").read_text()
     unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]

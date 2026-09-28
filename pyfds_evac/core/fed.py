@@ -212,6 +212,8 @@ class HeatFedInputs:
     """
 
     temperature_celsius: float = 20.0
+    # FDS INTEGRATED INTENSITY U [kW/m2] (#221); None when not sampled.
+    integrated_intensity_kw_m2: float | None = None
 
 
 def _heat_fed_rate_per_minute(temperature_celsius: float) -> float:
@@ -347,6 +349,37 @@ HEAT_FLUX_ASSUMED_PARAMETERS = (
     "convective_coefficient",
     "skin_temperature_celsius",
 )
+# Radiant term of the total-flux method (#221): "gas" is eps sigma
+# (T_g^4 - T_s^4) of Eq. 63.49; "integrated-intensity" is f U from the FDS
+# INTEGRATED INTENSITY slice, with f given by the user (no default).
+HEAT_RADIANT_SOURCES = ("gas", "integrated-intensity")
+HEAT_U_FACTOR_RANGE = (0.25, 1.0)  # sphere / isotropic field .. source face-on
+
+
+def radiant_flux_from_integrated_intensity_kw_m2(
+    integrated_intensity_kw_m2: float, u_factor: float
+) -> float:
+    """Return the incident radiant flux f U in kW/m2 (spec 016, #221).
+
+    U = integral of I over all solid angles (FDS ``INTEGRATED INTENSITY``).
+    A surface sees one hemisphere weighted by cos(theta), so q lies between
+    U/4 (sphere, or a plate in an isotropic field) and U (one small source
+    seen face-on). ValueError for f outside [0.25, 1] or non-finite.
+    """
+    _check_u_factor(u_factor)
+    return u_factor * integrated_intensity_kw_m2
+
+
+def _check_u_factor(u_factor) -> None:
+    """Raise ValueError unless *u_factor* is a finite number in [0.25, 1]."""
+    low, high = HEAT_U_FACTOR_RANGE
+    if u_factor is None:
+        raise ValueError(
+            "The INTEGRATED INTENSITY radiant source needs a factor f in "
+            f"[{low}, {high}]; there is no default."
+        )
+    if not (math.isfinite(u_factor) and low <= u_factor <= high):
+        raise ValueError(f"U factor must be in [{low}, {high}], got {u_factor!r}")
 
 
 def total_heat_flux_kw_m2(
@@ -408,11 +441,42 @@ def _check_heat_flux_parameters(
         )
 
 
-def heat_flux_row_fields(heat_fed_model, temperature_celsius: float) -> dict:
-    """Return the FED history field of the total-flux method; ``{}`` otherwise."""
+def _check_radiant_source(radiant_source: str, method: str, u_factor) -> None:
+    """Raise ValueError for an unknown source, or a U source without f or flux."""
+    if radiant_source not in HEAT_RADIANT_SOURCES:
+        raise ValueError(
+            f"Unknown heat radiant source {radiant_source!r}; "
+            f"expected one of {HEAT_RADIANT_SOURCES}"
+        )
+    if radiant_source != "integrated-intensity":
+        return
+    if method != "total-flux":
+        raise ValueError(
+            "The INTEGRATED INTENSITY radiant source needs the total-flux method."
+        )
+    _check_u_factor(u_factor)
+
+
+def heat_flux_row_fields(
+    heat_fed_model,
+    temperature_celsius: float,
+    integrated_intensity_kw_m2: float | None = None,
+) -> dict:
+    """Return the FED history fields of the total-flux method; ``{}`` otherwise.
+
+    With the INTEGRATED INTENSITY source the row also carries U (#221).
+    """
     if getattr(heat_fed_model, "method", "convective") != "total-flux":
         return {}
-    return {"heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(temperature_celsius)}
+    if getattr(heat_fed_model, "radiant_source", "gas") != "integrated-intensity":
+        return {"heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(temperature_celsius)}
+    u = math.nan if integrated_intensity_kw_m2 is None else integrated_intensity_kw_m2
+    return {
+        "heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(
+            temperature_celsius, integrated_intensity_kw_m2=u
+        ),
+        "heat_integrated_intensity_kw_m2": float(u),
+    }
 
 
 @dataclass(frozen=True)
@@ -878,9 +942,14 @@ class FdsHeatField:
     the new heat sampler should not repeat it.
     """
 
-    def __init__(self, sampler: SliceFieldSampler):
-        """Wrap a ``SliceFieldSampler`` for the TEMPERATURE slice."""
+    def __init__(
+        self,
+        sampler: SliceFieldSampler,
+        intensity_sampler: SliceFieldSampler | None = None,
+    ):
+        """Wrap the TEMPERATURE and, optionally, INTEGRATED INTENSITY samplers."""
         self._sampler = sampler
+        self._intensity_sampler = intensity_sampler
 
     @classmethod
     def from_fds(
@@ -889,15 +958,28 @@ class FdsHeatField:
         *,
         slice_height_m: float = 1.6,
         simulation=None,
+        integrated_intensity: bool = False,
     ) -> "FdsHeatField":
-        """Load the TEMPERATURE slice from an FDS case directory."""
+        """Load the TEMPERATURE slice from an FDS case directory.
+
+        With *integrated_intensity* also the INTEGRATED INTENSITY slice
+        (#221), at the same height.
+        """
         sampler = load_slice_sampler(
             fds_dir,
             "TEMPERATURE",
             simulation=simulation,
             slice_height_m=slice_height_m,
         )
-        field = cls(sampler)
+        intensity_sampler = None
+        if integrated_intensity:
+            intensity_sampler = load_slice_sampler(
+                fds_dir,
+                "INTEGRATED INTENSITY",
+                simulation=simulation,
+                slice_height_m=slice_height_m,
+            )
+        field = cls(sampler, intensity_sampler=intensity_sampler)
         field.fds_dir = str(fds_dir)
         return field
 
@@ -908,11 +990,24 @@ class FdsHeatField:
         the gas volume-fraction slices sampled by ``FdsFedField`` this needs
         no unit conversion.
         """
+        intensity = self._sample_intensity(time_s, x, y)
         try:
             temperature_celsius = self._sampler.sample(time_s, x, y)
         except ValueError:
-            return HeatFedInputs()
-        return HeatFedInputs(temperature_celsius=temperature_celsius)
+            return HeatFedInputs(integrated_intensity_kw_m2=intensity)
+        return HeatFedInputs(
+            temperature_celsius=temperature_celsius,
+            integrated_intensity_kw_m2=intensity,
+        )
+
+    def _sample_intensity(self, time_s: float, x: float, y: float) -> float | None:
+        """Return U in kW/m2 (FDS native unit); None without a sampler."""
+        if self._intensity_sampler is None:
+            return None
+        try:
+            return self._intensity_sampler.sample(time_s, x, y)
+        except ValueError:
+            return math.nan
 
 
 class DefaultHeatFedModel:
@@ -923,6 +1018,9 @@ class DefaultHeatFedModel:
     endpoint's convective law. With ``method="total-flux"`` the rate is
     q^1.33 / D (Eqs. 63.49 and 63.43, spec 016), D the radiant dose of
     *endpoint*, or of ``fatal`` without one; the convective laws are not added.
+    With ``radiant_source="integrated-intensity"`` (total-flux only, #221)
+    the radiant term is the incident f U instead of the gas term, and
+    *u_factor* f in [0.25, 1] is required.
     """
 
     def __init__(
@@ -934,6 +1032,8 @@ class DefaultHeatFedModel:
         emissivity: float = DEFAULT_HEAT_EMISSIVITY,
         convective_coefficient: float = DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
         skin_temperature_celsius: float = DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+        radiant_source: str = "gas",
+        u_factor: float | None = None,
     ):
         """Store the temperature field sampler, FED settings and heat law."""
         if endpoint is not None and endpoint not in HEAT_ENDPOINTS:
@@ -944,6 +1044,7 @@ class DefaultHeatFedModel:
         _check_heat_flux_parameters(
             method, emissivity, convective_coefficient, skin_temperature_celsius
         )
+        _check_radiant_source(radiant_source, method, u_factor)
         self.field = field
         self.config = config
         self.endpoint = endpoint
@@ -951,30 +1052,68 @@ class DefaultHeatFedModel:
         self.emissivity = emissivity
         self.convective_coefficient = convective_coefficient
         self.skin_temperature_celsius = skin_temperature_celsius
+        self.radiant_source = radiant_source
+        self.u_factor = u_factor
 
-    def heat_flux_parameters(self) -> dict[str, float]:
+    def heat_flux_parameters(self) -> dict[str, object]:
         """Return the flux parameters for the run manifest."""
-        return {
+        params: dict[str, object] = {
             "emissivity": self.emissivity,
             "convective_coefficient": self.convective_coefficient,
             "skin_temperature_celsius": self.skin_temperature_celsius,
             "radiant_dose": HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose,
             "assumed": list(HEAT_FLUX_ASSUMED_PARAMETERS),
         }
+        if self.radiant_source != "integrated-intensity":
+            return params
+        # eps is not used with this source; f is user-given, not assumed.
+        params["assumed"] = [
+            name for name in HEAT_FLUX_ASSUMED_PARAMETERS if name != "emissivity"
+        ]
+        params["radiant_source"] = self.radiant_source
+        params["u_factor"] = self.u_factor
+        params["radiant_flux"] = "incident"
+        return params
 
-    def heat_flux_kw_m2(self, temperature_celsius: float) -> float:
-        """Return the total-flux q in kW/m2 for one gas temperature."""
+    def heat_flux_kw_m2(
+        self,
+        temperature_celsius: float,
+        integrated_intensity_kw_m2: float | None = None,
+    ) -> float:
+        """Return the total-flux q in kW/m2 for one gas temperature.
+
+        With the INTEGRATED INTENSITY source, q = f U + h (T_g - T_s) / 1000:
+        U already holds the gas emission, so the eps term is not added.
+        """
+        if self.radiant_source != "integrated-intensity":
+            return total_heat_flux_kw_m2(
+                temperature_celsius,
+                emissivity=self.emissivity,
+                convective_coefficient=self.convective_coefficient,
+                skin_temperature_celsius=self.skin_temperature_celsius,
+            )
+        u = (
+            math.nan
+            if integrated_intensity_kw_m2 is None
+            else integrated_intensity_kw_m2
+        )
         return total_heat_flux_kw_m2(
             temperature_celsius,
-            emissivity=self.emissivity,
+            emissivity=0.0,
             convective_coefficient=self.convective_coefficient,
             skin_temperature_celsius=self.skin_temperature_celsius,
+            external_flux_kw_m2=radiant_flux_from_integrated_intensity_kw_m2(
+                u, self.u_factor
+            ),
         )
 
-    def _total_flux_rate(self, temperature_celsius: float) -> float:
+    def _total_flux_rate(self, inputs: HeatFedInputs) -> float:
         """Return q^1.33 / D in 1/min; fatal D without an endpoint."""
         dose = HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose
-        q = self.heat_flux_kw_m2(temperature_celsius)
+        q = self.heat_flux_kw_m2(
+            inputs.temperature_celsius,
+            integrated_intensity_kw_m2=inputs.integrated_intensity_kw_m2,
+        )
         return total_flux_heat_fed_rate_per_minute(q, dose)
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
@@ -987,7 +1126,7 @@ class DefaultHeatFedModel:
         """Return both the sampled input and its heat FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
         if self.method == "total-flux":
-            return inputs, self._total_flux_rate(inputs.temperature_celsius)
+            return inputs, self._total_flux_rate(inputs)
         if self.endpoint is None:
             return inputs, default_heat_fed_rate_per_minute(inputs)
         return inputs, endpoint_heat_fed_rate_per_minute(
