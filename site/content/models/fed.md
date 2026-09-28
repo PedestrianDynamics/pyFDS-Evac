@@ -33,7 +33,7 @@ is one function in `fed.py`:
 | CN | `_cn_fed_rate_per_minute` | \(\max\bigl(0,\ \exp(C_{\mathrm{CN}}/43)/220 - 1/220\bigr)\), \(C_{\mathrm{CN}} = \max\bigl(0,\ C_{\mathrm{HCN}} - (C_{\mathrm{NO}} + C_{\mathrm{NO_2}})\bigr)\) | HCN, NO, NO2 (ppm) |
 | NOₓ | `_nox_fed_rate_per_minute` | \((C_{\mathrm{NO}} + C_{\mathrm{NO_2}})/1500\) | NO, NO2 (ppm) |
 | Irritants | `_irritant_fld_rate_per_minute` | \(\sum_i C_i / F_{\mathrm{FLD},i}\) | seven irritants (ppm) |
-| HV_CO2 | `_hyperventilation_factor` | \(\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1\) (a factor, not a rate) | CO2 (vol %) |
+| HV_CO2 | `_hyperventilation_factor` | \(\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1\) for \(C_{\mathrm{CO_2}} > 0\) (at least 1.041), and 1 without CO2, as in FDS (a factor, not a rate) | CO2 (vol %) |
 | O2 | `_o2_hypoxia_rate_per_minute` | \(1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\); 0 at or above `o2_threshold_percent`, 20.0 % by default | O2 (vol %) |
 
 The lethal Ct doses \(F_{\mathrm{FLD},i}\) [ppm·min] are constants in

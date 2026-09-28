@@ -87,15 +87,16 @@ them directly into the model functions (bypassing `read_fds_data` /
 ### 2. FED toxicity and tenability (`core/fed.py`)
 
 The total FED rate is `(co + cn + nox + fld)·hv_co2 + o2` (`FedComponents.
-total_rate_per_min`). The CO₂ hyperventilation multiplier `hv_co2 =
-exp(0.1903·CO₂% + 2.0004)/7.1` is **≥ 1.04 even at CO₂ = 0** and cannot be
-omitted from any reference value.
+total_rate_per_min`). The CO₂ hyperventilation multiplier is `hv_co2 =
+exp(0.1903·CO₂% + 2.0004)/7.1` for CO₂ > 0 and **exactly 1 at CO₂ = 0**
+(FDS `func.f90`, function `FED`, applies it only when X_CO2 > 0; #194). For
+any CO₂ > 0 it is ≥ 1.041 and cannot be omitted from a reference value.
 
-- **A2.1** Constant CO = 1000 ppm, CO₂ = 0, O₂ = 20.9 %, T = 30 min. CO rate
-  (Eq. 13) = `2.764e-5 · 1000^1.036 ≈ 0.03543`/min; `hv_co2(0) ≈ 1.0411`;
-  O₂ term = 0 (gated at 20.0 %). Closed form
-  `FED = 0.03543 · 1.0411 · 30 ≈ 1.107`. Assert to `1e-3` against the exact
-  expression, **not** the CO-only value.
+- **A2.1** Constant CO = 1000 ppm, O₂ = 20.9 %, T = 30 min. CO rate
+  (Eq. 13) = `2.764e-5 · 1000^1.036 ≈ 0.03543`/min; O₂ term = 0 (gated at
+  20.0 %). With CO₂ = 0, `hv_co2 = 1` and `FED = 0.03543 · 30 ≈ 1.063`.
+  With CO₂ = 1 %, `hv_co2 ≈ 1.2594` and `FED ≈ 1.063 · 1.2594`. Assert both
+  to `1e-3` against the exact expressions.
 - **A2.2** Additivity: constant CO + HCN ⇒ FED equals
   `(co_rate + cn_rate)·hv_co2·T` from the two closed forms.
 - **A2.3** O₂ hypoxia gate (20.0 %, FDS `func.f90`; 19.5 % selectable): at

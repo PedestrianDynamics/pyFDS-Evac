@@ -197,15 +197,11 @@ def time_to_heat_incapacitation_s(
 def co_fed_rate_per_min(co_ppm: float) -> float:
     """Closed-form total FED rate (1/min) for a CO-only atmosphere.
 
-    Mirrors the model: CO rate (guide Eq. 13) times the CO2 hyperventilation
-    factor at CO2 = 0 (which is >= 1.04 and cannot be omitted).  O2 at ambient
-    contributes nothing (hypoxia gated at 20.0 %).
+    The CO rate (guide Eq. 13). With no CO2 the hyperventilation factor is 1,
+    as in FDS (``func.f90`` applies it only for X_CO2 > 0; #194). O2 at
+    ambient contributes nothing (hypoxia gated at 20.0 %).
     """
-    import math
-
-    co_rate = 2.764e-5 * (co_ppm**1.036)
-    hv_co2_at_zero = math.exp(2.0004) / 7.1
-    return co_rate * hv_co2_at_zero
+    return 2.764e-5 * (co_ppm**1.036)
 
 
 def time_to_incapacitation_s(co_ppm: float, fed_threshold: float = 1.0) -> float:
