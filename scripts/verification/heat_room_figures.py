@@ -22,13 +22,14 @@ position (nearest slice node, nearest slice time) and sums SFPE Eq. 63.44
     FED_HEAT = sum [ T^3.4 / 5e7 ] * dt      (T in C, dt in min)
 
 over the agent's own update times. FDS does not hold the prescribed
-temperature exactly (it settles about 1 % lower within the first minute), so
-the closed form at the nominal temperature, 60 * 5e7 / T^3.4 s, is shown for
-reference only.
+temperature exactly (it settles 0.7, 1.2 and 1.8 % lower within the first
+minute), so the closed form at the nominal temperature, 60 * 5e7 / T^3.4 s,
+is shown for reference only.
 
 Checks: the temperature each agent recorded equals the slice value; its
-heat FED equals the hand sum; in the deterministic run it stops at the first
-update where the hand sum reaches 1; in the probabilistic run (150 C only)
+heat FED equals the hand sum of its recorded temperature to round-off and the
+hand sum on the slice within the bound the mesh seams allow; in the
+deterministic run it stops at the first update where the hand sum reaches 1; in the probabilistic run (150 C only)
 the fraction stopped follows Phi(ln FED(t) / 0.94) within the KS 95 % band.
 
 Run from the repository root::
@@ -72,7 +73,7 @@ TEMP_COLOURS = {100: "#fdbf6f", 150: "#fc8d59", 200: "#d73027"}
 WALL = "dimgrey"
 EXIT = "#33a02c"
 CHECKPOINT = "#324465"
-SPAWN = "#fc8d59"
+SPAWN = "#762a83"  # purple, outside the temperature and FED colour maps
 TEXT = "dimgrey"
 LEGEND = dict(
     frameon=True,
@@ -94,10 +95,11 @@ def phi(x):
 
 
 def temperature_slice(fds_dir):
-    """Return (times, xs, ys, T[t, x, y], seam gap) of the TEMPERATURE slice at Z.
+    """Return (times, xs, ys, T[t, x, y], seam gap, shared) of the slice at Z.
 
     The seam gap is the largest difference between two meshes at a node they
     share, the only place where "the slice value at a point" is ambiguous.
+    ``shared[i, j]`` is True at such nodes.
     """
     sim = fdsreader.Simulation(str(fds_dir))
     for sl in sim.slices:
@@ -112,15 +114,16 @@ def temperature_slice(fds_dir):
             np.asarray(coords["x"], dtype=float),
             np.asarray(coords["y"], dtype=float),
             data,
-            seam_gap(sl, np.asarray(coords["x"]), np.asarray(coords["y"])),
+            *seam_gap(sl, np.asarray(coords["x"]), np.asarray(coords["y"])),
         )
     raise ValueError(f"no TEMPERATURE slice at z = {Z} m in {fds_dir}")
 
 
 def seam_gap(sl, xs, ys):
-    """Largest |difference| between meshes at shared slice nodes, all times."""
+    """Largest |difference| between meshes at shared nodes, and the node mask."""
     lo = np.full((len(sl.times), xs.size, ys.size), np.inf)
     hi = np.full_like(lo, -np.inf)
+    count = np.zeros((xs.size, ys.size), dtype=int)
     for sub in sl.subslices:
         e = sub.extent
         i0 = int(np.argmin(np.abs(xs - e.x_start)))
@@ -129,7 +132,8 @@ def seam_gap(sl, xs, ys):
         view = (slice(None), slice(i0, i0 + ni), slice(j0, j0 + nj))
         lo[view] = np.minimum(lo[view], sub.data)
         hi[view] = np.maximum(hi[view], sub.data)
-    return float(np.max(hi - lo))
+        count[view[1:]] += 1
+    return float(np.max(hi - lo)), count > 1
 
 
 def load_history(path):
@@ -139,8 +143,14 @@ def load_history(path):
     return hist.sort_values(["agent_id", "time_s"]).reset_index(drop=True)
 
 
-def hand_dose(hist, times, xs, ys, temp):
-    """Add the slice temperature and hand-summed heat FED to each history row."""
+def hand_dose(hist, times, xs, ys, temp, shared, gap):
+    """Add the slice temperature and hand-summed heat FED to each history row.
+
+    ``seam_bound`` is the largest FED difference the mesh seams allow: at a
+    shared node the agent may read the other mesh, up to ``gap`` K away, and
+    d(rate)/rate = 3.4 dT/T, so each such update adds at most
+    3.4 * gap / T * rate * dt.
+    """
     t = hist["time_s"].to_numpy()
     ti = np.abs(times[None, :] - t[:, None]).argmin(axis=1)
     ii = np.abs(xs[None, :] - hist["x"].to_numpy()[:, None]).argmin(axis=1)
@@ -149,6 +159,14 @@ def hand_dose(hist, times, xs, ys, temp):
     dt_min = hist.groupby("agent_id")["time_s"].diff().fillna(0.0) / 60.0
     hist["fed_hand"] = (
         (hist["t_slice"] ** 3.4 / 5e7 * dt_min).groupby(hist["agent_id"]).cumsum()
+    )
+    step = hist["t_slice"] ** 3.4 / 5e7 * dt_min
+    at_seam = shared[ii, jj]
+    hist["at_seam"] = at_seam
+    hist["seam_bound"] = (
+        (3.4 * gap / hist["t_slice"] * step * at_seam)
+        .groupby(hist["agent_id"])
+        .cumsum()
     )
     rec = hist["temperature_celsius"] ** 3.4 / 5e7 * dt_min
     hist["fed_from_recorded_t"] = rec.groupby(hist["agent_id"]).cumsum()
@@ -170,6 +188,17 @@ def room_mean_dose(times, temp, t_end):
     rate = t_at**3.4 / 5e7 / 60.0
     fed = np.concatenate([[0.0], np.cumsum(rate[1:] * np.diff(grid))])
     return grid, fed
+
+
+def ks_p_value(d, n):
+    """Asymptotic Kolmogorov p-value of distance d for n samples."""
+    lam = d * math.sqrt(n)
+    return float(
+        2.0
+        * sum(
+            (-1) ** (k - 1) * math.exp(-2.0 * k * k * lam * lam) for k in range(1, 101)
+        )
+    )
 
 
 def ks_distance(t_inc, n, t_end, model_at):
@@ -203,7 +232,11 @@ def draw_plan(ax, room, cfg, show_labels):
     xs, ys = room.exterior.xy
     ax.plot(xs, ys, color=WALL, lw=1.6, zorder=3)
     (x0, y0), (x1, y1) = _bbox(cfg["distributions"]["jps-distributions_0"])
-    ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fc=SPAWN, ec="none", alpha=0.25))
+    ax.add_patch(
+        Rectangle(
+            (x0, y0), x1 - x0, y1 - y0, fc="none", ec=SPAWN, lw=1.2, ls="--", zorder=2
+        )
+    )
     loop = []
     for name in ("cp_NE_1", "cp_NW_1", "cp_SW_1", "cp_SE_1"):
         (cx0, cy0), (cx1, cy1) = _bbox(cfg["checkpoints"][name])
@@ -287,7 +320,7 @@ def plot_setup(out, room, cfg, case):
     cbar.outline.set_visible(False)
     handles = [
         Line2D([0], [0], color=WALL, lw=1.6, label="wall"),
-        Patch(fc=SPAWN, alpha=0.25, label="spawn area (100 agents)"),
+        Patch(fc="none", ec=SPAWN, ls="--", label="spawn area (100 agents)"),
         Patch(fc="none", ec=CHECKPOINT, hatch="////", label="checkpoint loop"),
         Patch(fc=EXIT, ec=EXIT, label="exit (not used)"),
     ]
@@ -335,12 +368,14 @@ def plot_temperature(out, cases):
         fontsize=8,
         color=TEXT,
     )
+    drops = " / ".join(f"{c['drop_pct']:.1f}" for c in cases.values())
     ax.text(
-        210,
-        99.85,
-        "FDS settles about 1 % below it within a minute, then holds.\n"
-        "Band: spread over the 61 × 61 slice nodes. The hand\n"
-        "calculation uses these slice values, not the deck value.",
+        400,
+        97.95,
+        f"FDS settles {drops} % below it (100 / 150 / 200 °C)\n"
+        "within a minute, then holds. Band: spread over the\n"
+        "61 × 61 slice nodes. The hand calculation uses these\n"
+        "slice values, not the deck value.",
         fontsize=8.5,
         color=TEXT,
         va="top",
@@ -390,18 +425,38 @@ def plot_fed(out, case, temp_c):
         fontsize=8.5,
         color=TEXT,
     )
-    ax.text(
-        t_nom - 2,
-        1.04,
+    ax.plot(t_nom, 1.0, ls="none", marker="D", ms=5, color=NOMINAL, zorder=5)
+    ax.annotate(
         f"{t_nom:.1f} s at a steady {temp_c} °C",
+        (t_nom, 1.0),
+        xytext=(-10, -90),
+        textcoords="offset points",
         ha="right",
         fontsize=8,
         color=TEXT,
+        arrowprops=dict(arrowstyle="-", color="lightgrey", lw=0.8),
+    )
+    drop_s = case["t_star_eff"] - t_nom
+    lag_s = t_stop - case["t_star_eff"]
+    ax.text(
+        t_stop + 2,
+        0.62,
+        f"gap to the closed form: {t_stop - t_nom:.1f} s\n"
+        f"= {drop_s:+.1f} s FDS below {temp_c} °C\n"
+        f"  {lag_s:+.1f} s dose checked every 1 s",
+        fontsize=8,
+        color=TEXT,
+        va="top",
     )
     handles = [
         Line2D([0], [0], color=AGENT, lw=1.0, label="100 agents (deterministic run)"),
         Line2D(
-            [0], [0], color=HAND, lw=1.8, ls="--", label="hand sum, room-mean slice T"
+            [0],
+            [0],
+            color=HAND,
+            lw=1.8,
+            ls="--",
+            label="hand sum at the room-mean slice T\n(per-agent sums: lower panel)",
         ),
         Line2D(
             [0], [0], color=NOMINAL, lw=1.2, ls=":", label=f"closed form at {temp_c} °C"
@@ -413,10 +468,12 @@ def plot_fed(out, case, temp_c):
     ax.set_ylim(0.0, float(view["heat_fed_cumulative"].max()) * 1.08)
     ax.set_ylabel("heat FED [-]", color=TEXT)
 
+    scale = 10.0 ** math.floor(math.log10(max(float(case["dose_resid"]), 1e-300)))
+    resid = [np.column_stack([r[:, 0], r[:, 1] / scale]) for r in resid]
     axr.add_collection(LineCollection(resid, colors=AGENT, lw=0.6, alpha=0.6))
     axr.axhline(0.0, color="lightgrey", lw=0.8, zorder=1)
     res = float(case["dose_resid"])
-    lim = max(res, 1e-12) * 1.6
+    lim = max(res, 1e-12) / scale * 1.6
     axr.set_ylim(-lim, lim)
     axr.text(
         0.02,
@@ -427,10 +484,8 @@ def plot_fed(out, case, temp_c):
         fontsize=8,
         color=TEXT,
     )
-    axr.ticklabel_format(axis="y", style="sci", scilimits=(-2, 2))
-    axr.yaxis.get_offset_text().set_color(TEXT)
-    axr.yaxis.get_offset_text().set_fontsize(8)
-    axr.set_ylabel("FED − hand", color=TEXT)
+    exp = int(round(math.log10(scale)))
+    axr.set_ylabel(f"FED − hand\n[×$10^{{{exp}}}$]", color=TEXT)
     axr.set_xlabel("time [s]", color=TEXT)
     for a in (ax, axr):
         style_axes(a)
@@ -448,7 +503,6 @@ def plot_scaling(out, cases):
         color=NOMINAL,
         lw=1.2,
         ls=":",
-        label="closed form 60·5e7 / T^3.4 at the deck T",
     )
     for temp_c, case in cases.items():
         t_eff = case["t_eff"]
@@ -457,8 +511,9 @@ def plot_scaling(out, cases):
             t_nominal(temp_c),
             ls="none",
             marker="D",
-            ms=5,
+            ms=4,
             color=NOMINAL,
+            zorder=5,
         )
         ax.plot(
             t_eff,
@@ -496,9 +551,7 @@ def plot_scaling(out, cases):
     ax.set_yticklabels(["30", "60", "120", "240", "480"])
     ax.minorticks_off()
     ax.set_xlim(90.0, 270.0)
-    ax.set_xlabel(
-        "temperature [°C] (log): deck ◆, T^3.4-mean of the slice ○", color=TEXT
-    )
+    ax.set_xlabel("temperature T [°C] (log)", color=TEXT)
     ax.set_ylabel("time to heat FED = 1 [s] (log)", color=TEXT)
     handles = [
         Line2D(
@@ -508,8 +561,8 @@ def plot_scaling(out, cases):
             lw=1.2,
             ls=":",
             marker="D",
-            ms=5,
-            label="60·5e7 / T^3.4 (◆ at the deck T)",
+            ms=4,
+            label=r"closed form $t^* = 60\cdot 5\times10^{7}/T^{3.4}$, ◆ at the deck T",
         ),
         Line2D(
             [0],
@@ -519,7 +572,7 @@ def plot_scaling(out, cases):
             mfc="white",
             mec=HAND,
             mew=1.4,
-            label="hand sum from the slice",
+            label=r"hand sum from the slice, at its $T^{3.4}$-mean",
         ),
         Line2D(
             [0],
@@ -579,8 +632,9 @@ def plot_incapacitation(out, case):
     ax.text(
         0.02,
         0.97,
-        f"KS distance D = {case['d_ks']:.3f} < {band:.3f} = 1.36/√{n}\n"
-        f"{k} of {n} stopped by {t_end:.0f} s",
+        f"KS distance D = {case['d_ks']:.3f} < {band:.3f} = 1.36/√{n}"
+        f" (p = {case['p_ks']:.2f})\n"
+        f"{k} of {n} stopped by {t_end:.0f} s; one draw, seed 42",
         transform=ax.transAxes,
         va="top",
         fontsize=8.5,
@@ -601,7 +655,7 @@ def plot_incapacitation(out, case):
     ]
     ax.legend(handles=handles, loc="lower right", fontsize=8, **LEGEND)
     ax.set_xscale("log")
-    ax.set_xlim(10.0, t_show)
+    ax.set_xlim(1.0, t_show)
     ax.set_ylim(0.0, 1.0)
     ax.set_xlabel("time [s] (log)", color=TEXT)
     ax.set_ylabel("fraction incapacitated [-]", color=TEXT)
@@ -629,6 +683,19 @@ def render_gif(out, hist, room, cfg, n, t_last, step_s, fps, hold):
     cbar.outline.set_visible(False)
     clock = ax.text(0.5, 30.2, "", fontsize=10, color=TEXT, va="bottom")
     count = ax.text(30.0, 30.2, "", fontsize=10, color=TEXT, va="bottom", ha="right")
+    caption = ax.text(
+        15.0,
+        15.0,
+        "",
+        ha="center",
+        va="center",
+        fontsize=10,
+        color=TEXT,
+        bbox=dict(fc="white", ec="lightgrey", alpha=0.9, pad=5),
+        zorder=7,
+    )
+    caption.set_visible(False)
+    t_all = float(hist.loc[hist["incapacitated"], "time_s"].min())
     ax.legend(
         handles=[
             Line2D(
@@ -663,7 +730,7 @@ def render_gif(out, hist, room, cfg, n, t_last, step_s, fps, hold):
 
     writer = PillowWriter(fps=fps)
     with writer.saving(fig, out / "heat_room.gif", dpi=100):
-        for tp in list(picks) + [picks[-1]] * hold:
+        for idx, tp in enumerate(list(picks) + [picks[-1]] * hold):
             g = by_time[tp]
             up = g[~g["incapacitated"]]
             dn = g[g["incapacitated"]]
@@ -672,6 +739,9 @@ def render_gif(out, hist, room, cfg, n, t_last, step_s, fps, hold):
             down.set_offsets(dn[["x", "y"]].to_numpy().reshape(-1, 2))
             clock.set_text(f"t = {tp:.0f} s   (150 °C room)")
             count.set_text(f"incapacitated: {len(dn)} / {n}")
+            if idx >= len(picks):
+                caption.set_text(f"all {n} stopped\nat {t_all:.0f} s: heat FED ≥ 1")
+                caption.set_visible(True)
             writer.grab_frame()
     plt.close(fig)
     return len(picks) + hold
@@ -679,7 +749,7 @@ def render_gif(out, hist, room, cfg, n, t_last, step_s, fps, hold):
 
 def analyse(case_dir, temp_c):
     """Read one temperature's FDS slice and runs; return the numbers to check."""
-    times, xs, ys, temp, gap = temperature_slice(case_dir / "fds")
+    times, xs, ys, temp, gap, shared = temperature_slice(case_dir / "fds")
     case = dict(times=times, xs=xs, ys=ys, temp=temp, seam_gap=gap)
     det = hand_dose(
         load_history(case_dir / "evac" / "deterministic" / "fed_history.csv"),
@@ -687,6 +757,8 @@ def analyse(case_dir, temp_c):
         xs,
         ys,
         temp,
+        shared,
+        gap,
     )
     heat_cause = det["incapacitation_cause"].astype(str) == "heat"
     case["det"] = det
@@ -701,9 +773,33 @@ def analyse(case_dir, temp_c):
     case["sum_resid"] = float(
         np.abs(det["heat_fed_cumulative"] - det["fed_from_recorded_t"]).max()
     )
+    # Two recursive sums of n positive terms each round by <= n * eps * FED.
+    n_upd = det.groupby("agent_id").size().max()
+    case["roundoff"] = float(
+        2 * n_upd * np.finfo(float).eps * det["heat_fed_cumulative"].max()
+    )
+    excess = np.abs(det["heat_fed_cumulative"] - det["fed_hand"]) - (
+        det["seam_bound"] + case["roundoff"]
+    )
+    case["dose_ok"] = bool((excess <= 0).all())
+    case["seam_bound_max"] = float(det["seam_bound"].max())
+    # Margins around the stop: the hand FED one update before and at the stop
+    # must be further from 1 than the seam bound, or the stop could move.
+    t_h = pd.Series(case["t_hand"], index=np.sort(det["agent_id"].unique()))
+    stop_t = det["agent_id"].map(t_h)
+    before_stop = det[det["time_s"] == stop_t - 1.0]
+    at_stop = det[det["time_s"] == stop_t]
+    case["margin_below"] = float(1.0 - before_stop["fed_hand"].max())
+    case["margin_above"] = float(at_stop["fed_hand"].min() - 1.0)
+    case["seam_at_stop"] = float(at_stop["seam_bound"].max())
+    case["seam_rows_to_stop"] = int(
+        det[det["time_s"] <= stop_t].groupby("agent_id")["at_seam"].sum().max()
+    )
     # FED(t) at the median stop, as a T^3.4-weighted mean temperature.
     before = det[det["time_s"] <= case["t_hand_cross"]]
     case["t_eff"] = float((before["t_slice"] ** 3.4).mean() ** (1 / 3.4))
+    case["t_star_eff"] = t_nominal(case["t_eff"])
+    case["drop_pct"] = float((1.0 - np.nanmean(temp[times > 60.0]) / temp_c) * 100)
     late = temp[times > 60.0]
     case["t_late"] = (float(np.nanmin(late)), float(np.nanmax(late)))
     dt = np.diff(np.sort(det["time_s"].unique()))
@@ -723,6 +819,7 @@ def analyse(case_dir, temp_c):
             return phi(np.log(np.maximum(fed_t, 1e-300)) / SIGMA)
 
         case["d_ks"] = ks_distance(case["t_prob"], case["n"], case["t_end"], model_at)
+        case["p_ks"] = ks_p_value(case["d_ks"], case["n"])
         case["f_end"] = float(model_at(np.array([case["t_end"]]))[0])
     return case
 
@@ -736,8 +833,15 @@ def report(temp_c, case):
     print(f"FED update spacing {case['dt'][0]:.3f}-{case['dt'][1]:.3f} s")
     print(f"closed form at {temp_c} C: {t_nominal(temp_c):.2f} s")
     print(
-        f"hand sum reaches 1 at {np.nanmin(case['t_hand']):.0f}-"
-        f"{np.nanmax(case['t_hand']):.0f} s; T_eff = {case['t_eff']:.2f} C"
+        f"room mean after 60 s is {case['drop_pct']:.2f} % below the deck; "
+        f"T_eff = {case['t_eff']:.2f} C, closed form at T_eff "
+        f"{case['t_star_eff']:.2f} s"
+    )
+    print(
+        f"hand sum first >= 1 at update {np.nanmin(case['t_hand']):.0f}-"
+        f"{np.nanmax(case['t_hand']):.0f} s; margins: 1 - FED_hand before = "
+        f"{case['margin_below']:.2e}, FED_hand at stop - 1 = "
+        f"{case['margin_above']:.2e}"
     )
     print(
         f"deterministic: {np.isfinite(t_det).sum()}/{t_det.size} stopped at "
@@ -750,12 +854,18 @@ def report(temp_c, case):
         f"<= seam gap {case['seam_gap']:.2e}: {case['t_resid'] <= case['seam_gap']}"
     )
     print(
-        f"2. max |FED - hand(recorded T)| = {case['sum_resid']:.2e} <= 1e-9: "
-        f"{case['sum_resid'] <= 1e-9}; end to end, "
-        f"max |FED - hand(slice)| = {case['dose_resid']:.2e}"
+        f"2. max |FED - hand(recorded T)| = {case['sum_resid']:.2e} <= "
+        f"round-off {case['roundoff']:.2e}: "
+        f"{case['sum_resid'] <= case['roundoff']}; end to end, "
+        f"max |FED - hand(slice)| = {case['dose_resid']:.2e} within the seam "
+        f"bound (max {case['seam_bound_max']:.2e}) per row: {case['dose_ok']}"
     )
     print(
-        f"3. deterministic stop at the hand crossing: "
+        f"3. seam bound up to the stop <= "
+        f"{case['seam_at_stop']:.2e} (max {case['seam_rows_to_stop']} seam "
+        f"updates per agent); stop fixed: "
+        f"{case['seam_at_stop'] < min(case['margin_below'], case['margin_above'])}; "
+        f"deterministic stop at the hand crossing: "
         f"{bool(np.all(t_det == case['t_hand'])) and case['all_heat']}"
     )
     if "t_prob" in case:
@@ -763,7 +873,7 @@ def report(temp_c, case):
         print(
             f"probabilistic: {k}/{case['n']} stopped by {case['t_end']:.0f} s "
             f"(model {case['f_end']:.3f}); KS D = {case['d_ks']:.4f}, "
-            f"band {1.36 / math.sqrt(case['n']):.4f}"
+            f"band {1.36 / math.sqrt(case['n']):.4f}, p = {case['p_ks']:.3f}"
         )
 
 
