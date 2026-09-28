@@ -103,7 +103,8 @@ _FED_LIVE_JS = """
   function fedColor(v) {
     return v >= 1.0 ? '#E01E37' : v >= 0.6 ? '#FF6A1A' : v >= 0.3 ? '#FFB020' : '#F4C430';
   }
-  var fedEs = new EventSource('/fed-progress');
+  var fedRun = (document.getElementById('fed-live-section') || {dataset: {}}).dataset.run;
+  var fedEs = new EventSource('/fed-progress?run=' + encodeURIComponent(fedRun || ''));
   fedEs.addEventListener('fed', function (e) {
     try {
       var d = JSON.parse(e.data);
@@ -195,6 +196,7 @@ def _fed_live_section() -> Div:
         Div(id="fed-live-chart"),
         style=_PANEL + ";width:220px;flex:none",
         id="fed-live-section",
+        data_run=manager.run_id,
     )
 
 
@@ -1441,11 +1443,19 @@ def _results_only_view() -> Div:
 
 
 @rt("/fed-progress")
-async def fed_progress():
+async def fed_progress(run: int | None = None):
+    run_id = manager.run_id if run is None else run
+
     async def gen():
         last_count = 0
         while True:
+            # Read before the run check: start() bumps the ID before it
+            # swaps in fresh snapshots, so a later run's data never passes.
+            status = manager.status
             snaps = manager.fed_snapshots
+            if manager.run_id != run_id:
+                yield sse_message("{}", event="close")
+                return
             if len(snaps) > last_count:
                 last_count = len(snaps)
                 payload = json.dumps(
@@ -1456,7 +1466,7 @@ async def fed_progress():
                     }
                 )
                 yield sse_message(payload, event="fed")
-            if manager.status in ("done", "error", "idle", "cancelled"):
+            if status in ("done", "error", "idle", "cancelled"):
                 yield sse_message("{}", event="close")
                 return
             await asyncio.sleep(0.5)
@@ -1472,11 +1482,12 @@ async def progress(run: int | None = None):
         last = None
         last_log = -1
         while True:
+            # Read before the run check: start() bumps the ID before it
+            # swaps in fresh state, so a later run's output never passes.
             n = len(manager.log_lines)
-            if n != last_log:
-                last_log = n
-                yield sse_message(_console_view(), event="console")
+            console = _console_view() if n != last_log else None
             status = manager.status
+            ev = manager.last_event
             if manager.run_id != run_id:
                 # This stream's run has ended and another has started; its
                 # outcome is gone, so settle the panel instead of following.
@@ -1485,6 +1496,9 @@ async def progress(run: int | None = None):
                     event="done",
                 )
                 return
+            if console is not None:
+                last_log = n
+                yield sse_message(console, event="console")
             if status == "done":
                 try:
                     finished = (
@@ -1526,7 +1540,6 @@ async def progress(run: int | None = None):
             if status in ("cancelled", "idle"):
                 yield sse_message(_cancelled_view(), event="done")
                 return
-            ev = manager.last_event
             if ev is not None and ev != last:
                 last = ev
                 yield sse_message(_running_card(ev), event="progress")

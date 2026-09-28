@@ -355,6 +355,79 @@ class TestCancelLifecycle:
         assert mgr.running  # the stream settled without the second run ending
         assert "event: progress" not in "".join(seen)
 
+    @pytest.mark.parametrize("offset", [-1, 1])
+    def test_stale_or_unknown_run_gets_only_the_final_event(self, rm, client, offset):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.log_lines.append("current-run-log")
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+        other = mgr.run_id + offset
+        with client.stream("GET", f"/progress?run={other}") as s:
+            body = "".join(s.iter_text())
+        assert body.count("event:") == 1
+        assert "event: done" in body
+        assert "current-run-log" not in body
+        with client.stream("GET", f"/fed-progress?run={other}") as s:
+            body = "".join(s.iter_text())
+        assert body.count("event:") == 1
+        assert "event: close" in body
+
+    def test_fed_stream_pinned_over_http_sends_its_run(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+        gate["build"].set()
+        assert mgr.join(5.0)
+        with client.stream("GET", f"/fed-progress?run={mgr.run_id}") as s:
+            body = "".join(s.iter_text())
+        assert "event: fed" in body
+        assert "0.25" in body
+        assert body.rstrip().endswith("data: {}")
+        assert "event: close" in body
+
+    def test_fed_stream_does_not_follow_a_later_run(self, rm):
+        import asyncio
+        import threading
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        first = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", first), "stub")
+        assert first.wait(5.0)
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+        pinned = mgr.run_id
+
+        async def drive():
+            resp = await app_module.fed_progress(run=pinned)
+            events = resp.body_iterator
+            assert "event: fed" in await anext(events)
+            # The first run ends and a second starts between two polls.
+            gate["build"].set()
+            assert mgr.join(5.0)
+            mgr.reset()
+            second = threading.Event()
+            mgr.start(None, self._blocking(gate, "build", second), "stub")
+            assert second.wait(5.0)
+            mgr.fed_snapshots.append((2.0, 0.875, 0.5))
+            seen = []
+            while not seen or "event: close" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return seen
+
+        seen = asyncio.run(drive())
+        assert mgr.running
+        assert "event: fed" not in "".join(seen)
+        assert "0.875" not in "".join(seen)
+
     def test_clear_keeps_the_run_panel_while_a_worker_is_active(self, rm, client):
         import threading
 
