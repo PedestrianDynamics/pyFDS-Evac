@@ -138,10 +138,11 @@ plus the 1 s update, not the code.
 
 | Check | Expected | Simulated |
 |---|---|---|
-| agent *T* against the slice, 100 / 150 / 200 °C | ≤ 0.028 / 0.040 / 0.055 K | max 1.4 × 10⁻¹⁴ / 1.7 × 10⁻⁴ / 3.8 × 10⁻⁴ K |
-| agent FED against the hand sum of its recorded *T*, 100 / 150 / 200 °C | ≤ 9.1 × 10⁻¹³ / 3.6 × 10⁻¹² / 9.3 × 10⁻¹² | max 7.6 × 10⁻¹⁵ / 2.5 × 10⁻¹⁴ / 1.7 × 10⁻¹³ |
+| agent *T* against the slice, off shared nodes, 100 / 150 / 200 °C | ≤ 10⁻¹⁰ K | max 1.4 × 10⁻¹⁴ / 0 / 2.8 × 10⁻¹⁴ K |
+| agent *T* against the slice, at shared nodes, 100 / 150 / 200 °C | ≤ 0.028 / 0.040 / 0.055 K | max 1.4 × 10⁻¹⁴ / 1.7 × 10⁻⁴ / 3.8 × 10⁻⁴ K |
+| agent FED against the hand sum of its recorded *T*, 100 / 150 / 200 °C | ≤ 9.2 × 10⁻¹³ / 3.6 × 10⁻¹² / 9.3 × 10⁻¹² | max 7.6 × 10⁻¹⁵ / 2.5 × 10⁻¹⁴ / 1.7 × 10⁻¹³ |
 | agent FED against the hand sum on the slice, 100 / 150 / 200 °C | ≤ seam bound, row by row | max 7.6 × 10⁻¹⁵ / 3.1 × 10⁻⁸ / 1.4 × 10⁻⁷, all within |
-| margin of the hand FED from 1 at the updates around the stop, 100 / 150 / 200 °C | > seam bound there (≤ 3.7 / 4.4 / 6.0 × 10⁻⁵) | 5.2 × 10⁻⁴ / 8.3 × 10⁻⁴ / 9.5 × 10⁻⁵ |
+| margin of the hand FED from 1 at the updates around the stop, 100 / 150 / 200 °C | > seam bound up to the stop (≤ 3.7 / 4.5 / 6.1 × 10⁻⁵) | ≥ 5.1 × 10⁻⁴ / 8.2 × 10⁻⁴ / 9.4 × 10⁻⁵ |
 | deterministic stop, 100 °C | 487 s | all 100 agents at 487 s |
 | deterministic stop, 150 °C | 125 s | all 100 agents at 125 s |
 | deterministic stop, 200 °C | 48 s | all 100 agents at 48 s |
@@ -152,14 +153,14 @@ plus the 1 s update, not the code.
 ## Pass criteria
 
 1. **Slice to agent.** The temperature each agent recorded equals the slice
-   value at its nearest node and nearest slice time. The only allowed
-   difference is at a node two meshes share, where the slice holds two
-   values; the tolerance is the largest such gap in the run (0.028, 0.040
-   and 0.055 K).
+   value at its nearest node and nearest slice time, to float noise
+   (10⁻¹⁰ K). The only larger difference allowed is at a node two meshes
+   share, where the slice holds two values; there the tolerance is the
+   largest such gap in the run (0.028, 0.040 and 0.055 K).
 2. **Dose.** Every agent's FED equals the hand sum of Eq. 63.48 over the
    temperatures it recorded to round-off. Both sums add *n* = 1000 positive
    terms, each rounding by at most *n* ε FED, so the tolerance is
-   2 *n* ε FED_max with ε = 2.2 × 10⁻¹⁶ (9.1 × 10⁻¹³, 3.6 × 10⁻¹² and
+   2 *n* ε FED_max with ε = 2.2 × 10⁻¹⁶ (9.2 × 10⁻¹³, 3.6 × 10⁻¹² and
    9.3 × 10⁻¹²). End to end, against the hand sum on the slice, each update
    at a shared node may add 3.4 · Δ*T*_seam / *T* · rate · Δ*t*, since a
    relative error in *T* grows 3.4 times in the rate. The seam bound is this
@@ -169,8 +170,8 @@ plus the 1 s update, not the code.
    (`--smoke-update-interval`). The stop is exact, not approximate, as long
    as the hand FED at the updates on either side of the stop is further from
    1 than the seam bound; otherwise the adjacent update would also pass. The
-   tightest case is 200 °C: 9.5 × 10⁻⁵ from 1, against a seam bound of at
-   most 6.0 × 10⁻⁵.
+   tightest case is 200 °C: at least 9.4 × 10⁻⁵ from 1, against a seam
+   bound of at most 6.1 × 10⁻⁵.
 4. **Probabilistic stop.** The fraction of stopped agents stays within the
    95 % Kolmogorov–Smirnov band of *F*(*t*),
    \(1.36/\sqrt{n} = 0.136\) for *n* = 100. This is one draw (seed 42);
@@ -226,7 +227,8 @@ temperature without output is skipped.
   against the slice, so this does not affect the verdict; it matters if
   the deck value is quoted as the exposure.
 - **The exposure is not rising.** Eq. 63.48 assumes stable or rising
-  temperature. Here the room mean still falls until about 18, 36 and 59 s;
+  temperature. Here the room mean still falls by more than 0.01 K per slice
+  step until 18, 36 and 59 s;
   at 200 °C that covers nearly the whole 48 s exposure. The code sums the
   same terms either way, so the check holds; the physiology of a falling
   exposure is outside it.

@@ -766,7 +766,10 @@ def analyse(case_dir, temp_c):
     case["t_hand"] = first_time(det, det["fed_hand"] >= 1.0)
     case["t_hand_cross"] = float(np.nanmedian(case["t_hand"]))
     case["all_heat"] = bool(heat_cause[det["incapacitated"]].all())
-    case["t_resid"] = float(np.abs(det["temperature_celsius"] - det["t_slice"]).max())
+    dtemp = np.abs(det["temperature_celsius"] - det["t_slice"])
+    case["t_resid"] = float(dtemp.max())
+    case["t_resid_off_seam"] = float(dtemp[~det["at_seam"]].max())
+    case["t_resid_seam"] = float(dtemp[det["at_seam"]].to_numpy().max(initial=0.0))
     case["dose_resid"] = float(
         np.abs(det["heat_fed_cumulative"] - det["fed_hand"]).max()
     )
@@ -800,6 +803,10 @@ def analyse(case_dir, temp_c):
     case["t_eff"] = float((before["t_slice"] ** 3.4).mean() ** (1 / 3.4))
     case["t_star_eff"] = t_nominal(case["t_eff"])
     case["drop_pct"] = float((1.0 - np.nanmean(temp[times > 60.0]) / temp_c) * 100)
+    # Last slice time at which the room mean still falls by more than 0.01 K.
+    mean = np.nanmean(temp, axis=(1, 2))
+    falling = np.diff(mean) < -0.01
+    case["t_fall_end"] = float(times[1:][falling].max()) if falling.any() else 0.0
     late = temp[times > 60.0]
     case["t_late"] = (float(np.nanmin(late)), float(np.nanmax(late)))
     dt = np.diff(np.sort(det["time_s"].unique()))
@@ -850,8 +857,14 @@ def report(temp_c, case):
         f"cause all heat: {case['all_heat']}"
     )
     print(
-        f"1. max |T_agent - T_slice| = {case['t_resid']:.2e} K "
-        f"<= seam gap {case['seam_gap']:.2e}: {case['t_resid'] <= case['seam_gap']}"
+        f"room mean falls by > 0.01 K per slice step until {case['t_fall_end']:.0f} s"
+    )
+    print(
+        f"1. max |T_agent - T_slice| off shared nodes = "
+        f"{case['t_resid_off_seam']:.2e} K <= 1e-10: "
+        f"{case['t_resid_off_seam'] <= 1e-10}; at shared nodes "
+        f"{case['t_resid_seam']:.2e} K <= seam gap {case['seam_gap']:.2e}: "
+        f"{case['t_resid_seam'] <= case['seam_gap']}"
     )
     print(
         f"2. max |FED - hand(recorded T)| = {case['sum_resid']:.2e} <= "
