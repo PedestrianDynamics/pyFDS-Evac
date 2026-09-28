@@ -36,6 +36,7 @@ their test file.
 | Irritants | [FIC vs FED speed](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_fic_vs_fed_speed.py) | Equation | on a short egress FIC slows agents at once while FED stays far below 1 | passes |
 | Pre-movement | [Distributions](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_premovement_verif.py) | Equation | sampled moments of the five presets | passes |
 | Slice sampling | [Nearest FDS node](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_slice_node_index.py) | Equation | node- and cell-centred slices read at the right index | passes |
+| Slice sampling | [Slice height](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_slice_height.py) | FDS case | the gas FED reads the horizontal slice nearest 1.6 m in a room with CO in three layers | passes |
 | Slice sampling | Gradient field | Coupled | the field is sampled at the agent's current position | missing ([#24](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24)) |
 | Sign legibility | [Unit tests](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_visibility.py) | Equation | reading distance, 30 m cap, viewing angle | passes |
 | Sign legibility | S3 visibility gating | Coupled | a sign is acquired only when legible through smoke | missing ([#22](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/22)) |

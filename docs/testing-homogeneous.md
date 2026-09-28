@@ -155,10 +155,10 @@ which takes much longer
 - A uniform field cannot show whether the field is sampled at the agent's
   *current* position; that needs a gradient
   ([#24](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24)).
-- A uniform field also hides which slice height the dose is read from. The
-  gas FED currently takes the first slice of each species in the deck (CO at
-  0.5 m, CO₂ and O₂ at 2.0 m here), not the one nearest to 1.6 m
-  ([#238](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/238)); every
-  slice holds the same values, so the result is unaffected.
+- A uniform field also hides which slice height the dose is read from. That
+  is checked separately in a room with CO in layers
+  ([test_fed_slice_height.py](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_slice_height.py));
+  until [#238](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/238)
+  was fixed, the FED read the first slice of each species in the deck.
 - This page is not yet an automated test: the check runs from the figure
   script on the stored output.
