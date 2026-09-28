@@ -393,6 +393,36 @@ class TestCancelLifecycle:
         assert body.rstrip().endswith("data: {}")
         assert "event: close" in body
 
+    def test_fed_stream_sends_the_last_points_of_a_run_that_ends(self, rm):
+        import asyncio
+        import threading
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+
+        async def drive():
+            resp = await app_module.fed_progress(run=mgr.run_id)
+            events = resp.body_iterator
+            assert "event: fed" in await anext(events)
+            # The run records a last point and ends between two polls.
+            mgr.fed_snapshots.append((2.0, 0.625, 0.3))
+            gate["build"].set()
+            assert mgr.join(5.0)
+            seen = []
+            while not seen or "event: close" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return seen
+
+        seen = asyncio.run(drive())
+        assert "event: fed" in seen[0]
+        assert "0.625" in seen[0]
+        assert "event: close" in seen[-1]
+
     def test_fed_stream_does_not_follow_a_later_run(self, rm):
         import asyncio
         import threading
