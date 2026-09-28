@@ -59,7 +59,7 @@ class SliceFieldSampler:
     def _nearest_index(coords: np.ndarray, value: float) -> int:
         """Return the index of the coordinate nearest to ``value``.
 
-        ``coords`` are the positions fdsreader reports for the slice values:
+        ``coords`` are the positions of the slice values along one axis:
         nodes for FDS's default node-centred slices, cell centres for
         cell-centred ones. Ties go to the lower index.
         """
@@ -74,15 +74,31 @@ class SliceFieldSampler:
         left = right - 1
         return left if value - coords[left] <= coords[right] - value else right
 
+    @staticmethod
+    def _axis_positions(subslice, dim: str) -> np.ndarray:
+        """Return the value positions of a subslice along one axis.
+
+        Built from the mesh nodes inside the slice extent rather than
+        ``SubSlice.get_coordinates``, which for cell-centred slices shifts
+        every axis by the first half-width (wrong on stretched grids) and
+        fails on a mesh axis with a single cell.
+        """
+        nodes = np.asarray(subslice.mesh.coordinates[dim], dtype=float)
+        start = getattr(subslice.extent, f"{dim}_start")
+        end = getattr(subslice.extent, f"{dim}_end")
+        nodes = nodes[(nodes >= start) & (nodes <= end)]
+        if subslice.cell_centered and len(nodes) > 1:
+            return 0.5 * (nodes[:-1] + nodes[1:])
+        return nodes
+
     def _axes(self, subslice) -> tuple[np.ndarray, np.ndarray]:
         """Return the x and y value positions of a subslice, cached."""
         key = id(subslice)
         axes = self._axes_cache.get(key)
         if axes is None:
-            coords = subslice.get_coordinates()
             axes = (
-                np.asarray(coords["x"], dtype=float),
-                np.asarray(coords["y"], dtype=float),
+                self._axis_positions(subslice, "x"),
+                self._axis_positions(subslice, "y"),
             )
             self._axes_cache[key] = axes
         return axes
