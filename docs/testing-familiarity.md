@@ -144,7 +144,7 @@ CP3's door.
 | full: agents via CP3 only; route changes | 20 / 20; 0 | 20 / 20; 0 |
 | full: walked / shortest path | ≥ 1 | 1.03–1.14 |
 | full: first agent out (sanity check) | near \(t_{\text{ref}}\) = 21.1 s | 20.3 s |
-| full: last agent out | no reference | 33.9 s (door flow 1.40 persons/s, 1.16 persons/(s·m) of door width) |
+| full: last agent out | no reference | 33.9 s; the door (y = 13.05 m) passes 20 agents in 7.7–21.3 s, 1.40 persons/s or 1.17 persons/(s·m) of door width |
 | discovery: map at t = 0 | {S, CP0, CP3} | 20 / 20 |
 | discovery: first target | CP0, 20 / 20 | 20 / 20 |
 | discovery: nodes learnt later | each a neighbour of a known node, its sign in sight | 59 of 59 |
@@ -175,7 +175,7 @@ partition, and nobody turns back.
 the code of `VisibilityModel.clear_air` and fdsvismap 0.2.1, each of four
 errors shifts a sight line sideways by at most:
 
-| Source | Shift |
+| Source | Shift, at most |
 |---|---|
 | the agent's position snaps to the nearest cell centre | \(c\sqrt2/2\) |
 | the sign snaps to the nearest cell centre | \(c\sqrt2/2\) |
@@ -183,7 +183,11 @@ errors shifts a sight line sideways by at most:
 | rays are anti-aliased, which marks cells up to one cell beside the line | \(c\) |
 
 Their sum is \(T = c(\sqrt2 + 3/2) \approx 2.9\,c\): 0.15 m at
-*c* = 0.05 m. A decision within *T* of the edge cannot be judged on this grid.
+*c* = 0.05 m. This is a first-order estimate for this plan, not a general
+bound: a shift at the sign reaches the agent scaled by (agent to wall) /
+(sign to wall), which is small here (the jamb of CP3's door is within 1 m
+of the agents, the exit sign 16.5 m away). At 0.1 m, *T* = 0.29 m, about
+three wall thicknesses, so a pass there is weaker evidence than at 0.05 m. A decision within *T* of the edge cannot be judged on this grid.
 So a node counts as *hidden* only if its sign is illegible from every point
 within *T* of the agent, and as *in sight* only if it is legible from every
 such point. The script samples that disc at its centre and at 48 points on
@@ -201,7 +205,9 @@ exact geometry (13 of them CP2, learnt from the next room).
    {S, CP0, CP3}, and its first target is CP0. Counts.
 3. **Learning.** Every node added to a map after t = 0 is the head of a wired
    edge from a node already known, and its sign is not hidden from the
-   agent's position at that time.
+   agent's position at that time. The rule asks for a neighbour of the
+   agent's current node; the check accepts any known node, so it is a
+   necessary condition only.
 4. **Tour.** Each agent explores CP0 → CP1 → CP2 → CP3, or skips CP2 only
    where CP2's sign was not in sight when it chose CP3.
 5. **No patrol in sight of the exit.** No `wander` decision is taken where
@@ -280,7 +286,8 @@ movie.
   deck; a warning for grids coarser than the walls is proposed in
   [#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168).
 - **No reference for the egress times.** The full run's last agent is out at
-  33.9 s, 13.6 s after the first; the door passes 1.40 persons/s. No
+  33.9 s. Its door passes 1.40 persons/s (1.17 persons/(s·m) of the 1.2 m
+  door), measured where the agents cross the door's mid-line. No
   hand-calculated door flow is compared here.
 - **One exit, clear air.** Choosing between several known exits, and learning
   through smoke, are not tested here. For the bearing of a sign see
@@ -302,5 +309,7 @@ movie.
   regression checks, not verification.
 - **History.** Before
   [#99](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/99) the deck
-  had a scripted tour, hand-added shortcut edges and a second exit; results
-  from that version are not comparable.
+  had a scripted tour, hand-added shortcut edges and a second exit. The
+  talk's 35.1 s and 75.1 s, quoted on
+  [Models › Wayfinding](/models/wayfinding.md), come from that version and
+  are not comparable.
