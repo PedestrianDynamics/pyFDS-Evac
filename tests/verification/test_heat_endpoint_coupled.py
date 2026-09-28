@@ -24,6 +24,7 @@ implementation differs, then drop the xfail markers.
 
 from __future__ import annotations
 
+import csv
 import json
 import math
 
@@ -204,5 +205,52 @@ def test_endpoint_and_validity_flag_reach_the_outputs():
         assert any(row["heat_outside_validity"] for row in rows)
         manifest = json.loads(open(result.manifest_file).read())
         assert manifest["heat_endpoint"] == "fatal"
+        # FED = 1 is the fatal endpoint: Eq. 63.47 crosses at about 276 s,
+        # Eq. 63.44 at about 203 s.
+        _check_crossings(result, t_fatal_min)
+    finally:
+        result.cleanup()
+
+
+def _csv_rows(result, path):
+    import run
+
+    run._write_fed_history_csv(result.fed_history, str(path))
+    with open(path, newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        return reader.fieldnames, list(reader)
+
+
+def test_default_fed_history_csv_is_written(tmp_path):
+    """Control (passes now): default-mode rows go through the CSV writer."""
+    result = _run(_table_63_21_field, None, run_s=30.0)
+    try:
+        header, rows = _csv_rows(result, tmp_path / "fed.csv")
+        assert "heat_fed_cumulative" in header
+        assert len(rows) == len(result.fed_history)
+    finally:
+        result.cleanup()
+
+
+@XFAIL_220
+def test_endpoint_fed_history_csv_carries_endpoint_and_flag(tmp_path):
+    """``--output-fed-history`` keeps the endpoint and the validity flag."""
+    result = _run(_table_63_21_field, "fatal", run_s=300.0)
+    try:
+        header, rows = _csv_rows(result, tmp_path / "fed.csv")
+        assert {"heat_endpoint", "heat_outside_validity"} <= set(header)
+        assert {row["heat_endpoint"] for row in rows} == {"fatal"}
+        flags = {
+            row["heat_outside_validity"]
+            for row in rows
+            if float(row["temperature_celsius"]) > 250.0
+        }
+        assert flags == {"True"}
+        flags = {
+            row["heat_outside_validity"]
+            for row in rows
+            if float(row["temperature_celsius"]) < 180.0
+        }
+        assert flags == {"False"}
     finally:
         result.cleanup()
