@@ -165,11 +165,14 @@ def build_manifest(
     uv_lock: pathlib.Path | None = None,
     project_root: pathlib.Path | None = None,
     heat_endpoint: str | None = None,
+    heat_fed_method: str | None = None,
+    heat_flux_parameters: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Collect the provenance fields for one run.
 
     ``heat_endpoint`` and ``heat_validity`` are recorded only when
-    ``--heat-endpoint`` was given.
+    ``--heat-endpoint`` was given; ``heat_fed_method`` and
+    ``heat_flux_parameters`` only with ``--heat-fed-method total-flux``.
     """
     root = project_root if project_root is not None else find_project_root()
     lock = uv_lock if uv_lock is not None else find_uv_lock(root)
@@ -188,6 +191,9 @@ def build_manifest(
     if heat_endpoint is not None:
         manifest["heat_endpoint"] = heat_endpoint
         manifest["heat_validity"] = heat_endpoint_validity()
+    if heat_fed_method == "total-flux":
+        manifest["heat_fed_method"] = heat_fed_method
+        manifest["heat_flux_parameters"] = heat_flux_parameters
     return manifest
 
 

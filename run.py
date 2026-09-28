@@ -12,7 +12,13 @@ from pyfds_evac.core import (
     run_scenario,
 )
 from pyfds_evac.core.agent_scalars import write_agent_scalars
-from pyfds_evac.core.fed import HEAT_ENDPOINTS
+from pyfds_evac.core.fed import (
+    DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
+    DEFAULT_HEAT_EMISSIVITY,
+    DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+    HEAT_ENDPOINTS,
+    HEAT_FED_METHODS,
+)
 from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs
 
@@ -224,7 +230,44 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Heat endpoint of SFPE Handbook Ch. 63: tolerance (Eq. 63.45), "
         "injury (Eq. 63.46) or fatal (Eq. 63.47) convective law, so that heat "
         "FED = 1 is that endpoint; needs --enable-heat-fed. Samples above "
-        "205 C (an assumed limit) or non-finite are flagged. Default: none, Eq. 63.44",
+        "205 C (an assumed limit) or non-finite are flagged. Default: none, Eq. 63.44. "
+        "With --heat-fed-method total-flux it selects the dose D of Eq. 63.43 "
+        "(default there: fatal)",
+    )
+    parser.add_argument(
+        "--heat-fed-method",
+        choices=HEAT_FED_METHODS,
+        default="convective",
+        help="Heat dose law; needs --enable-heat-fed. convective (default): "
+        "Eq. 63.44 or the law of --heat-endpoint. total-flux: heat flux to the "
+        "skin from Eq. 63.49 (both terms in W/m2, divided by 1000 together), "
+        "rate q^1.33/D (Eq. 63.43) with no 2.5 kW/m2 threshold; D of "
+        "--heat-endpoint, fatal (16.7) without it",
+    )
+    parser.add_argument(
+        "--heat-emissivity",
+        type=float,
+        default=DEFAULT_HEAT_EMISSIVITY,
+        help="Emissivity of the gas at the head for --heat-fed-method "
+        f"total-flux (default: {DEFAULT_HEAT_EMISSIVITY}, an assumption: SFPE "
+        "p. 2384 gives 'perhaps 0.5 for smoke', 0.05 for a clear gas)",
+    )
+    parser.add_argument(
+        "--heat-convective-coefficient",
+        type=float,
+        default=DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
+        help="Convective heat transfer coefficient h [W/m2/K] for "
+        "--heat-fed-method total-flux (default: "
+        f"{DEFAULT_HEAT_CONVECTIVE_COEFFICIENT}, an assumption: SFPE p. 2384 "
+        "gives 5-8 for slow-moving air)",
+    )
+    parser.add_argument(
+        "--heat-skin-temperature",
+        type=float,
+        default=DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+        help="Fixed skin temperature [C] for --heat-fed-method total-flux "
+        f"(default: {DEFAULT_HEAT_SKIN_TEMPERATURE_C}, an assumption: not given "
+        "by the Handbook for Eq. 63.49)",
     )
     parser.add_argument(
         "--heat-fed-threshold",
@@ -326,6 +369,8 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
     ]
     if rows and "heat_endpoint" in rows[0]:
         fieldnames += ["heat_endpoint", "heat_outside_validity", "heat_humidity"]
+    if rows and "heat_flux_kw_m2" in rows[0]:
+        fieldnames.append("heat_flux_kw_m2")
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()

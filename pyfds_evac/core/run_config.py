@@ -20,6 +20,9 @@ from typing import Any
 from .cognitive_map import familiarity_probability
 from .fds_inventory import inspect_fds_quantities
 from .fed import (
+    DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
+    DEFAULT_HEAT_EMISSIVITY,
+    DEFAULT_HEAT_SKIN_TEMPERATURE_C,
     DefaultFedConfig,
     DefaultFedModel,
     DefaultHeatFedModel,
@@ -123,6 +126,10 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         log("Heat FED is off; pass --enable-heat-fed to accumulate it.")
         if getattr(opts, "heat_endpoint", None) is not None:
             _logger.warning("--heat-endpoint has no effect without --enable-heat-fed.")
+        if getattr(opts, "heat_fed_method", "convective") != "convective":
+            _logger.warning(
+                "--heat-fed-method has no effect without --enable-heat-fed."
+            )
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():
@@ -139,10 +146,11 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         )
         return None
     endpoint = getattr(opts, "heat_endpoint", None)
-    log(
-        "Configuring heat FED calculation "
-        f"({'Eq. 63.44' if endpoint is None else f'{endpoint} endpoint'})."
-    )
+    method = getattr(opts, "heat_fed_method", "convective")
+    law = "Eq. 63.44" if endpoint is None else f"{endpoint} endpoint"
+    if method == "total-flux":
+        law = f"total flux, {endpoint or 'fatal'} dose"
+    log(f"Configuring heat FED calculation ({law}).")
     heat_fed_config = DefaultFedConfig(
         fds_dir=opts.fds_dir,
         update_interval_s=opts.smoke_update_interval,
@@ -152,6 +160,14 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         FdsHeatField.from_fds(opts.fds_dir, slice_height_m=opts.smoke_slice_height),
         heat_fed_config,
         endpoint=endpoint,
+        method=method,
+        emissivity=getattr(opts, "heat_emissivity", DEFAULT_HEAT_EMISSIVITY),
+        convective_coefficient=getattr(
+            opts, "heat_convective_coefficient", DEFAULT_HEAT_CONVECTIVE_COEFFICIENT
+        ),
+        skin_temperature_celsius=getattr(
+            opts, "heat_skin_temperature", DEFAULT_HEAT_SKIN_TEMPERATURE_C
+        ),
     )
 
 

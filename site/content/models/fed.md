@@ -154,7 +154,9 @@ Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/i
 
 ## What is not modelled
 
-- Radiant heat. Only convective heat from the gas temperature is modelled.
+- Radiant heat from a hot layer, hot surfaces or a flame. The heat dose is
+  convective, or with `--heat-fed-method total-flux` adds the radiation of
+  the gas at the head only ([Heat](/models/heat.md)).
 - Effects of heat on route choice or walking speed: the heat FED only
   incapacitates.
 - FED activity level: the CO term is fixed at light work; rest and heavy
@@ -261,8 +263,8 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
 Heat uses the convective Eq. 63.44 (`fed.py:217`) unless `--heat-endpoint`
-selects Eq. 63.45, 63.46 or 63.47 ([Heat](/models/heat.md)), and no radiant
-term. The log-normal σ of both
+selects Eq. 63.45, 63.46 or 63.47, or `--heat-fed-method total-flux` the
+flux law of Eqs. 63.49 and 63.43 ([Heat](/models/heat.md)). The log-normal σ of both
 thresholds (`fed.py:371`, `:381`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)

@@ -326,6 +326,94 @@ def endpoint_heat_fed_rate_per_minute(
     return 1.0 / time_min
 
 
+# Total-flux method (spec 016, #223): Eq. 63.49 for the heat flux to the skin,
+# Eq. 63.43 for the time to the endpoint (SFPE Ch. 63, pp. 2382-2384).
+HEAT_FED_METHODS = ("convective", "total-flux")
+STEFAN_BOLTZMANN_W_M2_K4 = 5.67e-8  # as printed on p. 2384
+HEAT_FLUX_EXPONENT = 1.33  # Eqs. 63.43 and 63.49 print 1.33, not 4/3
+_KELVIN = 273.15
+# Assumption: eps of the gas at the head. p. 2384 gives 0.05 for a gas and
+# "perhaps 0.5 for smoke"; the default takes the head to be in smoke.
+DEFAULT_HEAT_EMISSIVITY = 0.5
+# Assumption: h in W/m2/K. p. 2384 gives "approximately 5-8 for slow-moving
+# air" with no unit; 5 is the value of the spec 016 convection check.
+DEFAULT_HEAT_CONVECTIVE_COEFFICIENT = 5.0
+# Assumption: fixed skin temperature. The Handbook gives none for Eq. 63.49;
+# 35 deg C is the value of the draft reviewed in spec 016.
+DEFAULT_HEAT_SKIN_TEMPERATURE_C = 35.0
+HEAT_FLUX_ASSUMED_PARAMETERS = (
+    "emissivity",
+    "convective_coefficient",
+    "skin_temperature_celsius",
+)
+
+
+def total_heat_flux_kw_m2(
+    gas_temperature_celsius: float,
+    *,
+    emissivity: float,
+    convective_coefficient: float,
+    skin_temperature_celsius: float,
+    external_flux_kw_m2: float = 0.0,
+) -> float:
+    """Return the heat flux to the skin in kW/m2 (Eq. 63.49, spec 016 units).
+
+    q = [eps sigma (T_g^4 - T_s^4) + h (T_g - T_s)] / 1000 + q_ext, with T in
+    K. Both terms are in W/m2 and divided together (spec 016); the Handbook
+    prints ``/1000`` on the convective term only. Negative below T_s.
+    """
+    t_gas = gas_temperature_celsius + _KELVIN
+    t_skin = skin_temperature_celsius + _KELVIN
+    try:
+        radiant = emissivity * STEFAN_BOLTZMANN_W_M2_K4 * (t_gas**4 - t_skin**4)
+    except OverflowError:
+        return math.inf
+    convective = convective_coefficient * (t_gas - t_skin)
+    return (radiant + convective) / 1000.0 + external_flux_kw_m2
+
+
+def total_flux_heat_fed_rate_per_minute(q_kw_m2: float, dose: float) -> float:
+    """Return q^1.33 / D in 1/min (Eq. 63.43), with no 2.5 kW/m2 threshold.
+
+    Zero for q <= 0 (gas at or below skin temperature, no recovery) and for a
+    non-finite q.
+    """
+    if not math.isfinite(q_kw_m2) or q_kw_m2 <= 0.0:
+        return 0.0
+    return float(q_kw_m2**HEAT_FLUX_EXPONENT / dose)
+
+
+def _check_heat_flux_parameters(
+    method: str,
+    emissivity: float,
+    convective_coefficient: float,
+    skin_temperature_celsius: float,
+) -> None:
+    """Raise ValueError for an unknown method or an invalid flux parameter."""
+    if method not in HEAT_FED_METHODS:
+        raise ValueError(
+            f"Unknown heat FED method {method!r}; expected one of {HEAT_FED_METHODS}"
+        )
+    if not (math.isfinite(emissivity) and 0.0 <= emissivity <= 1.0):
+        raise ValueError(f"Heat emissivity must be in [0, 1], got {emissivity!r}")
+    if not (math.isfinite(convective_coefficient) and convective_coefficient >= 0.0):
+        raise ValueError(
+            "Heat convective coefficient must be finite and >= 0, "
+            f"got {convective_coefficient!r}"
+        )
+    if not math.isfinite(skin_temperature_celsius):
+        raise ValueError(
+            f"Skin temperature must be finite, got {skin_temperature_celsius!r}"
+        )
+
+
+def heat_flux_row_fields(heat_fed_model, temperature_celsius: float) -> dict:
+    """Return the FED history field of the total-flux method; ``{}`` otherwise."""
+    if getattr(heat_fed_model, "method", "convective") != "total-flux":
+        return {}
+    return {"heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(temperature_celsius)}
+
+
 @dataclass(frozen=True)
 class TenabilityConfig:
     """Runtime tenability rules applied on top of Frantzich smoke-speed.
@@ -829,8 +917,11 @@ class FdsHeatField:
 class DefaultHeatFedModel:
     """Combine sampled gas-phase temperature with the SFPE Handbook heat FED equation.
 
-    Without *endpoint* the rate is Eq. 63.44. With *endpoint* (a key of
-    ``HEAT_ENDPOINTS``) it is that endpoint's convective law.
+    With ``method="convective"`` (default): without *endpoint* the rate is
+    Eq. 63.44; with *endpoint* (a key of ``HEAT_ENDPOINTS``) it is that
+    endpoint's convective law. With ``method="total-flux"`` the rate is
+    q^1.33 / D (Eqs. 63.49 and 63.43, spec 016), D the radiant dose of
+    *endpoint*, or of ``fatal`` without one; the convective laws are not added.
     """
 
     def __init__(
@@ -838,16 +929,52 @@ class DefaultHeatFedModel:
         field: FdsHeatField,
         config: DefaultFedConfig,
         endpoint: str | None = None,
+        method: str = "convective",
+        emissivity: float = DEFAULT_HEAT_EMISSIVITY,
+        convective_coefficient: float = DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
+        skin_temperature_celsius: float = DEFAULT_HEAT_SKIN_TEMPERATURE_C,
     ):
-        """Store the temperature field sampler, FED settings and endpoint."""
+        """Store the temperature field sampler, FED settings and heat law."""
         if endpoint is not None and endpoint not in HEAT_ENDPOINTS:
             raise ValueError(
                 f"Unknown heat endpoint {endpoint!r}; "
                 f"expected one of {sorted(HEAT_ENDPOINTS)}"
             )
+        _check_heat_flux_parameters(
+            method, emissivity, convective_coefficient, skin_temperature_celsius
+        )
         self.field = field
         self.config = config
         self.endpoint = endpoint
+        self.method = method
+        self.emissivity = emissivity
+        self.convective_coefficient = convective_coefficient
+        self.skin_temperature_celsius = skin_temperature_celsius
+
+    def heat_flux_parameters(self) -> dict[str, float]:
+        """Return the flux parameters for the run manifest."""
+        return {
+            "emissivity": self.emissivity,
+            "convective_coefficient": self.convective_coefficient,
+            "skin_temperature_celsius": self.skin_temperature_celsius,
+            "radiant_dose": HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose,
+            "assumed": list(HEAT_FLUX_ASSUMED_PARAMETERS),
+        }
+
+    def heat_flux_kw_m2(self, temperature_celsius: float) -> float:
+        """Return the total-flux q in kW/m2 for one gas temperature."""
+        return total_heat_flux_kw_m2(
+            temperature_celsius,
+            emissivity=self.emissivity,
+            convective_coefficient=self.convective_coefficient,
+            skin_temperature_celsius=self.skin_temperature_celsius,
+        )
+
+    def _total_flux_rate(self, temperature_celsius: float) -> float:
+        """Return q^1.33 / D in 1/min; fatal D without an endpoint."""
+        dose = HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose
+        q = self.heat_flux_kw_m2(temperature_celsius)
+        return total_flux_heat_fed_rate_per_minute(q, dose)
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
         """Return the heat FED input at one time and x/y point."""
@@ -858,6 +985,8 @@ class DefaultHeatFedModel:
     ) -> tuple[HeatFedInputs, float]:
         """Return both the sampled input and its heat FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
+        if self.method == "total-flux":
+            return inputs, self._total_flux_rate(inputs.temperature_celsius)
         if self.endpoint is None:
             return inputs, default_heat_fed_rate_per_minute(inputs)
         return inputs, endpoint_heat_fed_rate_per_minute(

@@ -57,9 +57,6 @@ KELVIN = 273.15
 DOSE = {"tolerance": 1.33, "fatal": 16.7}
 # Handbook 16.7 vs spec 016 16.667: 0.2 % of a 90 s crossing is 0.2 s.
 
-_MISSING = (ImportError, AttributeError, TypeError)
-todo = pytest.mark.xfail(strict=True, reason="#223", raises=_MISSING)
-
 
 def q_hand(t_c, *, eps, h, t_skin_c):
     tg, ts = t_c + KELVIN, t_skin_c + KELVIN
@@ -140,7 +137,7 @@ def _check_crossing(result, expected_s):
         )
 
 
-# --- design checks of the hand numbers (pass now) ---------------------------
+# --- design checks of the hand numbers --------------------------------------
 
 
 def test_smoke_case_is_distinguishable_from_the_convective_laws():
@@ -157,10 +154,9 @@ def test_clear_air_case_is_below_the_handbook_threshold():
     assert abs(60.0 * t_tolerance_min(100.0) - flux) > 2 * TIMING_TOL_S
 
 
-# --- coupled runs (xfail until #223) ----------------------------------------
+# --- coupled runs -------------------------------------------------------------
 
 
-@todo
 def test_smoke_tolerance_crossing():
     expected = 60.0 * t_flux_min(200.0, DOSE["tolerance"], **SMOKE)
     result = _run(200.0, SMOKE, "tolerance", run_s=60.0)
@@ -170,7 +166,6 @@ def test_smoke_tolerance_crossing():
         result.cleanup()
 
 
-@todo
 def test_clear_air_dose_accumulates_below_2_5_kw():
     expected = 60.0 * t_flux_min(100.0, DOSE["tolerance"], **CLEAR_AIR)
     result = _run(100.0, CLEAR_AIR, "tolerance", run_s=220.0)
@@ -180,7 +175,6 @@ def test_clear_air_dose_accumulates_below_2_5_kw():
         result.cleanup()
 
 
-@todo
 def test_fatal_dose_without_endpoint():
     target_s = 90.0
     threshold = target_s / 60.0 / t_flux_min(200.0, DOSE["fatal"], **SMOKE)
@@ -193,7 +187,6 @@ def test_fatal_dose_without_endpoint():
         result.cleanup()
 
 
-@todo
 def test_outputs_record_the_method_and_flux():
     q = q_hand(200.0, **SMOKE)
     result = _run(200.0, SMOKE, "tolerance", run_s=20.0)

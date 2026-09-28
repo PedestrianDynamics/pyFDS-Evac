@@ -31,10 +31,9 @@ assumptions.
 
 Expected values are hand formulas written in this file and published
 numbers (spec 016 convection table, the issue's 2.5 kW/m2 points, Table 63.20
-radiant rows), never ``pyfds_evac``. The tests of the hand formulas pass now;
-the tests that call the code not yet written are strict xfail ("#223").
+radiant rows), never ``pyfds_evac``.
 
-API under test (to be implemented):
+API under test:
 
 - ``pyfds_evac.core.fed.total_heat_flux_kw_m2(gas_temperature_celsius, *,
   emissivity, convective_coefficient, skin_temperature_celsius,
@@ -77,12 +76,6 @@ DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.7}
 # 0.2 % between them is accepted where the fatal D enters.
 FATAL_REL = 3e-3
 
-# Missing API raises one of these; a wrong hand formula raises AssertionError
-# and fails for real.
-_MISSING = (ImportError, AttributeError, TypeError, SystemExit)
-todo = pytest.mark.xfail(strict=True, reason="#223", raises=_MISSING)
-todo_assert = pytest.mark.xfail(strict=True, reason="#223")
-
 
 # --- hand formulas ----------------------------------------------------------
 
@@ -108,7 +101,7 @@ def t_fatal_conv_min(t_c):
     return 2e18 * t_c**-9.0403 + 1e8 * t_c**-3.10898
 
 
-# --- the hand formulas against published numbers (pass now) ---------------
+# --- the hand formulas against published numbers ---------------------------
 
 
 @pytest.mark.parametrize(
@@ -196,7 +189,7 @@ def _flux_rate(q, dose):
     return total_flux_heat_fed_rate_per_minute(q, dose)
 
 
-# --- current behaviour stays (pass now) ------------------------------------
+# --- current behaviour stays ------------------------------------------------
 
 
 def test_cli_default_method_is_not_total_flux():
@@ -217,10 +210,9 @@ def test_default_model_is_still_eq_63_44(t_c):
     assert rate == pytest.approx(1.0 / t_eq_63_44_min(t_c), rel=1e-12)
 
 
-# --- flux (xfail until #223) ------------------------------------------------
+# --- flux -------------------------------------------------------------------
 
 
-@todo
 @pytest.mark.parametrize(
     ("t_c", "eps", "h", "t_skin_c"),
     [
@@ -241,7 +233,6 @@ def test_flux_is_eq_63_49_with_both_terms_in_w(t_c, eps, h, t_skin_c):
     assert got == pytest.approx(q_hand(t_c, eps=eps, h=h, t_skin_c=t_skin_c), rel=1e-9)
 
 
-@todo
 def test_flux_units_catch_the_printed_form():
     got = _flux(
         150.0, emissivity=0.5, convective_coefficient=5.0, skin_temperature_celsius=35.0
@@ -249,7 +240,6 @@ def test_flux_units_catch_the_printed_form():
     assert 1.2 < got < 1.3
 
 
-@todo
 def test_flux_adds_external_radiation():
     """q_ext (kW/m2) is added to the flux of the gas around the head."""
     got = _flux(
@@ -264,7 +254,6 @@ def test_flux_adds_external_radiation():
     )
 
 
-@todo
 def test_flux_is_zero_at_skin_temperature():
     got = _flux(
         35.0, emissivity=0.5, convective_coefficient=5.0, skin_temperature_celsius=35.0
@@ -275,7 +264,6 @@ def test_flux_is_zero_at_skin_temperature():
 # --- rate: Eq. 63.43, no threshold ------------------------------------------
 
 
-@todo
 @pytest.mark.parametrize("name", sorted(DOSE))
 @pytest.mark.parametrize("q", [0.1, 1.0, 2.5, 10.0])
 def test_rate_is_q_to_the_1_33_over_dose(name, q):
@@ -285,7 +273,6 @@ def test_rate_is_q_to_the_1_33_over_dose(name, q):
     )
 
 
-@todo
 @pytest.mark.parametrize(("q", "table_s"), [(2.5, 30.0), (10.0, 4.0)])
 def test_rate_bounds_table_63_20_radiant_rows(q, table_s):
     """Table 63.20 (p. 2383) through the code, tolerance dose; band 25 %."""
@@ -293,7 +280,6 @@ def test_rate_bounds_table_63_20_radiant_rows(q, table_s):
     assert table_s * 0.75 <= seconds <= table_s * 1.25
 
 
-@todo
 @pytest.mark.parametrize("q", [0.05, 0.5, 1.0, 2.0, 2.49])
 def test_no_threshold_below_2_5_kw(q):
     """Spec 016: no 2.5 kW/m2 threshold; the dose accumulates below it."""
@@ -302,7 +288,6 @@ def test_no_threshold_below_2_5_kw(q):
     assert rate == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
 
 
-@todo
 @pytest.mark.parametrize(
     "q", [0.0, -0.5, -10.0, float("nan"), float("inf"), -float("inf")]
 )
@@ -316,7 +301,6 @@ def test_rate_domain_guard(q):
 # --- the model in total-flux mode -------------------------------------------
 
 
-@todo
 @pytest.mark.parametrize("name", sorted(DOSE))
 @pytest.mark.parametrize(
     ("t_c", "eps", "h", "t_skin_c"),
@@ -330,7 +314,6 @@ def test_model_rate_uses_the_endpoint_dose(name, t_c, eps, h, t_skin_c):
     assert got == pytest.approx(expected, rel=rel)
 
 
-@todo
 def test_model_without_endpoint_uses_the_fatal_dose():
     """FED = 1 = fatal (spec 016 maintainer decision): D = 16.7 (16.667)."""
     q = q_hand(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
@@ -338,7 +321,6 @@ def test_model_without_endpoint_uses_the_fatal_dose():
     assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=FATAL_REL)
 
 
-@todo
 @pytest.mark.parametrize("name", sorted(DOSE))
 def test_no_convective_law_on_top(name):
     """Mutually exclusive: the rate is q^1.33/D alone, not plus 1/t_conv."""
@@ -351,7 +333,6 @@ def test_no_convective_law_on_top(name):
         assert not math.isclose(got, flux_only + 1.0 / t_conv, rel_tol=1e-2)
 
 
-@todo
 def test_model_no_threshold_in_clear_air():
     """#223 gap: 100 deg C, eps 0.05, h 8 gives q < 2.5 kW/m2 and still a dose."""
     q = q_hand(100.0, eps=0.05, h=8.0, t_skin_c=35.0)
@@ -359,7 +340,6 @@ def test_model_no_threshold_in_clear_air():
     assert _rate(100.0, eps=0.05, h=8.0, t_skin_c=35.0) > 0.0
 
 
-@todo
 @pytest.mark.parametrize("t_c", [20.0, 35.0, 0.0, -10.0, float("nan"), float("inf")])
 def test_model_domain_guard(t_c):
     """Gas at or below skin temperature, or non-finite: no dose, no recovery."""
@@ -368,7 +348,6 @@ def test_model_domain_guard(t_c):
     assert rate == 0.0
 
 
-@todo
 def test_model_records_its_parameters():
     model = _model(150.0, eps=0.3, h=6.5, t_skin_c=34.0)
     assert model.method == "total-flux"
@@ -376,7 +355,6 @@ def test_model_records_its_parameters():
     assert model.skin_temperature_celsius == 34.0
 
 
-@todo
 def test_model_default_method_is_convective():
     field = FdsHeatField(_Sampler(150.0))  # type: ignore[arg-type]
     model = DefaultHeatFedModel(
@@ -385,7 +363,6 @@ def test_model_default_method_is_convective():
     assert model.method == "convective"
 
 
-@todo
 @pytest.mark.parametrize(
     ("eps", "h"),
     [(-0.1, 5.0), (1.1, 5.0), (0.5, -1.0), (float("nan"), 5.0), (0.5, float("inf"))],
@@ -396,7 +373,6 @@ def test_model_rejects_invalid_parameters(eps, h):
 
 
 def test_model_rejects_unknown_method():
-    """Passes now too (unknown keyword); after #223 it must be a ValueError."""
     with pytest.raises((ValueError, TypeError)):
         _model(150.0, eps=0.5, h=5.0, t_skin_c=35.0, method="summed")
 
@@ -404,7 +380,6 @@ def test_model_rejects_unknown_method():
 # --- CLI and run_config ------------------------------------------------------
 
 
-@todo
 def test_cli_method_and_parameters():
     import run
 
@@ -428,7 +403,6 @@ def test_cli_method_and_parameters():
     assert args.heat_skin_temperature == 34.0
 
 
-@todo
 def test_cli_rejects_unknown_method():
     import run
 
@@ -488,7 +462,6 @@ def _build(**overrides):
     )
 
 
-@todo
 def test_run_config_passes_method_and_parameters(temperature_only_case):
     model = _build(
         enable_heat_fed=True,
@@ -502,7 +475,6 @@ def test_run_config_passes_method_and_parameters(temperature_only_case):
     assert model.skin_temperature_celsius == 34.0
 
 
-@todo
 def test_run_config_default_method_is_convective(temperature_only_case):
     assert _build(enable_heat_fed=True)["heat_fed_model"].method == "convective"
 
@@ -515,7 +487,6 @@ def test_method_without_enable_heat_fed_leaves_heat_off(temperature_only_case):
 # --- assumptions are flagged ------------------------------------------------
 
 
-@todo
 def test_unsourced_defaults_are_listed_as_assumptions():
     from pyfds_evac.core.fed import HEAT_FLUX_ASSUMED_PARAMETERS
 
@@ -526,7 +497,6 @@ def test_unsourced_defaults_are_listed_as_assumptions():
     } <= set(HEAT_FLUX_ASSUMED_PARAMETERS)
 
 
-@pytest.mark.xfail(strict=True, reason="#223", raises=IndexError)
 def test_cli_help_marks_defaults_as_assumptions():
     import run
 
@@ -536,14 +506,14 @@ def test_cli_help_marks_defaults_as_assumptions():
         "--heat-convective-coefficient",
         "--heat-skin-temperature",
     ):
-        block = help_text.split(option, 1)[1].split("\n  --", 1)[0]
+        # Anchor on the options list; the first occurrence is the usage line.
+        block = help_text.split("\n  " + option, 1)[1].split("\n  --", 1)[0]
         assert "assum" in block.lower(), option
 
 
 # --- docs --------------------------------------------------------------------
 
 
-@todo_assert
 def test_models_heat_page_documents_total_flux():
     text = (ROOT / "site" / "content" / "models" / "heat.md").read_text()
     assert "--heat-fed-method" in text and "total-flux" in text
@@ -552,7 +522,6 @@ def test_models_heat_page_documents_total_flux():
     assert "#222" in text or "issues/222" in text
 
 
-@todo_assert
 def test_changelog_mentions_total_flux():
     text = (ROOT / "CHANGELOG.md").read_text()
     unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
