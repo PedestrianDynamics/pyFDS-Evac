@@ -14,6 +14,7 @@ from the GUI. It defaults to a no-op.
 from __future__ import annotations
 
 import logging
+import math
 from collections.abc import Callable
 from typing import Any
 
@@ -211,6 +212,8 @@ def _validate_heat_layer_opts(opts: Any) -> None:
         if getattr(opts, option, None) is None:
             flag = "--" + option.replace("_", "-")
             raise ValueError(f"--heat-regime layer needs {flag}")
+    if not math.isfinite(opts.heat_layer_height):
+        raise ValueError("--heat-layer-height must be finite")
 
 
 def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
