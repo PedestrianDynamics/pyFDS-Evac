@@ -31,7 +31,7 @@ quantity name `load_slice_sampler` looks up
 
 | Slice | Feeds | If absent |
 |-------|-------|-----------|
-| Extinction coefficient | smoke-speed, visibility gating, GUI smoke layer | `IndexError` when `--fds-dir` is given without `--constant-extinction` |
+| Extinction coefficient | smoke-speed, visibility gating, GUI smoke layer | **smoke speed reduction is switched off and visibility falls back to clear air; the run continues** (see below), unless `--constant-extinction` is given |
 | CO **and** CO2 **and** O2 | FED toxic dose | **FED is switched off and the run continues** (see below) |
 | TEMPERATURE | heat FED (SFPE Handbook Eq. 63.44), only with `--enable-heat-fed` | **heat FED is switched off and the run continues** (see below) |
 

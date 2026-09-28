@@ -34,6 +34,13 @@ never added to the gas FED.
 If the case has no `TEMPERATURE` slice, the run continues without a heat dose
 and logs a warning; every heat column then reads zero.
 
+A heat-only case needs no soot. Without a `SOOT EXTINCTION COEFFICIENT`
+slice the run logs two warnings and continues: there is no smoke-speed
+model, so agents walk at clear-air speed and route costs see K = 0, and the
+visibility model falls back to clear air
+([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
+Neither changes the heat dose.
+
 ## Incapacitation
 
 When the cumulative heat dose reaches the agent's heat threshold, the agent

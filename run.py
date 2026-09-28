@@ -53,7 +53,9 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--constant-extinction",
         type=float,
-        help="Use a constant extinction coefficient K [1/m] instead of FDS input",
+        help="Use a constant extinction coefficient K [1/m] instead of FDS input. "
+        "Without it, an FDS case with no SOOT EXTINCTION COEFFICIENT slice "
+        "runs with no smoke speed reduction (a warning is logged).",
     )
     parser.add_argument(
         "--smoke-update-interval",
