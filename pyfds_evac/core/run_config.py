@@ -115,7 +115,10 @@ def _build_fed_model(opts: Any, log: Logger):
 
 
 def _build_heat_fed_model(opts: Any, log: Logger):
-    """Build the heat FED (SFPE Handbook Eq. 63.44) model when asked for.
+    """Build the heat FED model (SFPE Ch. 63) when asked for.
+
+    The law is Eq. 63.44, the convective law of ``opts.heat_endpoint``, or
+    the total-flux law of ``opts.heat_fed_method`` (#223).
 
     FDS+Evac has no heat dose, so it is opt-in (``opts.enable_heat_fed``) and
     then needs a TEMPERATURE slice.

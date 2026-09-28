@@ -218,7 +218,8 @@ def _build_parser() -> argparse.ArgumentParser:
         "--enable-heat-fed",
         action="store_true",
         help="Accumulate the convective heat FED (SFPE Handbook Eq. 63.44, or "
-        "the law of --heat-endpoint) from "
+        "the law of --heat-endpoint, or the total-flux law of "
+        "--heat-fed-method) from "
         "the FDS TEMPERATURE slice and incapacitate on it. Off by default, as "
         "FDS+Evac has no heat dose; before this became opt-in it was on "
         "whenever the case had a TEMPERATURE slice",
@@ -274,7 +275,7 @@ def _build_parser() -> argparse.ArgumentParser:
         type=float,
         default=1.0,
         help="Median cumulative heat FED (SFPE Handbook Eq. 63.44, or the law "
-        "of --heat-endpoint) at which an "
+        "of --heat-endpoint or --heat-fed-method) at which an "
         "agent is thermally incapacitated; needs --enable-heat-fed "
         "(default: 1.0). Independent of "
         "--fed-threshold (toxic gas) -- see fed.py's TenabilityConfig",

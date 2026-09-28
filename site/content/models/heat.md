@@ -54,11 +54,12 @@ endpoint cannot be paired with the convective law of another:
 explained in [Heat](/fundamentals/heat.md). The rate is \(1/t\)
 (`endpoint_heat_fed_rate_per_minute`); a temperature at or below 0 °C, or
 not finite, gives zero. `--heat-endpoint` without `--enable-heat-fed` logs a
-warning and leaves the heat dose off. Radiant heat is not an
-input yet, so *r* is recorded but does not enter the dose. The Handbook prints
+warning and leaves the heat dose off. *r* enters the dose only
+with `--heat-fed-method total-flux` ([Total flux](#total-flux)); with the
+convective laws it is recorded only. The Handbook prints
 16.7 for the fatal dose; spec 016 writes 16.667. By maintainer decision,
 heat FED = 1 is meant as the fatal endpoint; `--heat-endpoint fatal` gives
-that meaning. Without the option the dose stays Eq. 63.44.
+that meaning. Without the option the convective dose stays Eq. 63.44.
 
 The caption of Table 63.21 (p. 2385) says Eq. 63.44, but its per-minute values
 are those of Eq. 63.45; the tests use the table as the oracle for
@@ -210,6 +211,9 @@ above 205 °C: that limit belongs to the convective data of Eqs.
   (Tables 63.20 and 63.21) and hand formulas. The default Eq. 63.44 is still
   checked only against its own closed form
   ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
+  The total-flux method is checked against hand formulas of Eqs. 63.49 and
+  63.43, the radiant rows of Table 63.20 and the convection table of spec 016,
+  in unit tests and coupled corridor runs; the layer regime is not tested.
 
 ## Sources
 

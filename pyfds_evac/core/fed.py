@@ -243,7 +243,7 @@ class HeatEndpoint:
     Pairs the radiant dose ``radiant_dose`` r [(kW/m2)^4/3 min] of Eq. 63.43
     with the convective time law of the same endpoint,
     ``t [min] = a1 * T**-b1 + a2 * T**-b2`` with T in deg C. ``radiant_dose``
-    is recorded only: radiant heat is not an input yet (#221-#223).
+    enters the dose only with the total-flux method (#223).
     """
 
     radiant_dose: float

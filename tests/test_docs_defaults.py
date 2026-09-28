@@ -14,6 +14,9 @@ import pytest
 
 import run
 from pyfds_evac.core.fed import (
+    DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
+    DEFAULT_HEAT_EMISSIVITY,
+    DEFAULT_HEAT_SKIN_TEMPERATURE_C,
     DefaultFedConfig,
     TenabilityConfig,
     _co_fed_rate_per_minute,
@@ -29,6 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODELS = ROOT / "site" / "content" / "models"
 SMOKE = MODELS / "smoke-speed.md"
 FED = MODELS / "fed.md"
+HEAT_MODEL = MODELS / "heat.md"
 ROUTING = MODELS / "routing.md"
 GATE = ROOT / "docs" / "route-cost-gate.md"
 WAYFINDING = MODELS / "wayfinding.md"
@@ -257,6 +261,29 @@ DEFAULTS = [
     (GATE, "| `alpha` | `0.706` |", lambda: _routing().alpha),
     (GATE, "| `beta` | `-0.057` |", lambda: _routing().beta),
     (GATE, "| `min_speed_factor` | `0.1` |", lambda: _routing().min_speed_factor),
+    # heat.md: total-flux parameters (#223), defaults are assumptions
+    (HEAT_MODEL, "| ε | `0.5` |", lambda: DEFAULT_HEAT_EMISSIVITY),
+    (HEAT_MODEL, "| ε | `0.5` |", lambda: _cli().heat_emissivity),
+    (
+        HEAT_MODEL,
+        "| h [W m⁻² K⁻¹] | `5.0` |",
+        lambda: DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
+    ),
+    (
+        HEAT_MODEL,
+        "| h [W m⁻² K⁻¹] | `5.0` |",
+        lambda: _cli().heat_convective_coefficient,
+    ),
+    (
+        HEAT_MODEL,
+        "| \\(T_s\\) [°C] | `35.0` |",
+        lambda: DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+    ),
+    (
+        HEAT_MODEL,
+        "| \\(T_s\\) [°C] | `35.0` |",
+        lambda: _cli().heat_skin_temperature,
+    ),
 ]
 
 
@@ -279,3 +306,10 @@ def test_heat_incapacitation_is_deterministic_by_default():
     assert literal in FED.read_text()
     assert TenabilityConfig().heat_incapacitation_mode == "deterministic"
     assert _cli().heat_incapacitation_mode == "deterministic"
+
+
+def test_heat_fed_method_is_convective_by_default():
+    """The total-flux method (#223) is opt-in."""
+    literal = '| `heat_fed_method` | `"convective"` |'
+    assert literal in HEAT_MODEL.read_text()
+    assert _cli().heat_fed_method == "convective"
