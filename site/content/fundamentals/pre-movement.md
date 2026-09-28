@@ -53,6 +53,11 @@ the occupancy and cluster closest to their case and to consult the original
 sources. Pre-movement and travel times within an enclosure interact, so the
 two distributions cannot simply be added (ISO/TR 16738, §7).
 
+The corrigendum corrects the log-normal *a* parameter in Tables 3, 5, 7, 9,
+11, 13, 15, 17 and 18. Fits within a cluster have R² as low as about 0.55
+(Business Cluster 1), and the authors state R² must not be used to choose
+between clusters.
+
 ## Sources
 
 - ISO (2009). *ISO/TR 16738:2009 Fire-safety engineering — Technical
