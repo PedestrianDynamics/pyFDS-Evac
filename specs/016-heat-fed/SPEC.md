@@ -25,8 +25,9 @@ from one `TEMPERATURE` slice at head height. It has four gaps:
   D = 16.667 (third-degree burns, SFPE Ch. 63 p. 2384).
 - **Heat incapacitation is deterministic by default**, σ opt-in (done; see
   Models › Heat).
-- **The method is Purser's total-flux form**, not the two-dose draft method
-  (see "Sources" and "Rejected alternatives").
+- **The method is the total-flux form** (Eq. 63.49 with the Eq. 63.43 dose),
+  as recommended by D. Purser (personal communication, 2026), not the
+  two-dose draft method (see "Rejected alternatives").
 
 ## Sources
 
@@ -37,8 +38,7 @@ from one `TEMPERATURE` slice at head height. It has four gaps:
   Ch. 70 (doi:10.1007/978-3-031-59212-6_70). The 6th ed. is not in the
   library. Its numbers appear to be the 5th ed.'s minus 2
   (70.41 ↔ 63.43, … 70.47 ↔ 63.49); unverified.
-- Prof. Purser's review notes on the draft, and his spreadsheet
-  `Rad walking past fire8Jun2017-1.xlsx` (private; not redistributed).
+- D. Purser, personal communication (2026): review of the draft.
 - FDS User's Guide 6.10.1: §§14.2, 15.4, 18.1, 22.10.12, 22.10.18, Table 22.4.
 
 ## Method
@@ -57,28 +57,26 @@ $$
 t = D / q_{\mathrm{tot}}^{1.33}, \qquad \mathrm{FED} = \sum \Delta t / t .
 $$
 
-D = 1.33 (pain), 10 (second-degree burns; Purser's sheet uses 8), 16.667
+D = 1.33 (pain), 10 (second-degree burns), 16.667
 (third-degree burns, fatal).
 
-This follows Purser's spreadsheet, which differs from the draft in ways that
-matter:
+Differences from the draft:
 
-| Item | Draft | Purser's sheet | This spec |
-|---|---|---|---|
-| Units | `/1000` on the convective term only (as printed in Eq. 63.49) | both terms in W/m², divided together | as Purser |
-| ε (gas at the head) | 0.5 smoke, 0.05 clear air | 0.9 | from the regime (below) |
-| h | 5–8 | 5 | parameter, default open |
-| T_skin | 35 °C | 37–44 °C (skin warms) | parameter, default open |
-| 2.5 kW/m² threshold | yes | **no** | **no** |
-| D, second degree | 10 | 8 | open |
+| Item | Draft | This spec |
+|---|---|---|
+| Units | `/1000` on the convective term only (as printed in Eq. 63.49) | both terms in W/m², divided together |
+| ε (gas at the head) | 0.5 smoke, 0.05 clear air | from the regime (below) |
+| h | 5–8 | parameter, default open (5–8) |
+| T_skin | 35 °C | parameter, default open (fixed or rising) |
+| 2.5 kW/m² threshold | yes | **no** |
+| D, second degree | 10 | open |
 
 **No threshold.** With the 2.5 kW/m² threshold, the total-flux form gives no
 dose in clear air below about 310 °C (h = 8, ε = 0.05), where the hot-air data
-give minutes. Purser's sheet accumulates dose from 0.5 kW/m² upward, which
-closes that gap.
+give minutes. Accumulating dose at all fluxes closes that gap.
 
-**Check of Purser's claim** that converting Blockley's hot-air temperatures to
-convective flux reproduces the tolerance data. Convection alone (h = 5,
+**Convection check.** Converting hot-air temperatures to convective flux
+should reproduce the hot-air tolerance data. Convection alone (h = 5,
 T_s = 36 °C, D = 1.33), minutes to pain:
 
 | T (°C) | h(T − T_s) only | Eq. 63.44 | Eq. 63.45 |
@@ -94,7 +92,7 @@ times by a factor of 2–4, which suggests the hot-air exposures were mostly
 convective. The ε term must therefore apply only where the head is in
 radiating smoke.
 
-### Regimes (Purser's note on the draft)
+### Regimes
 
 - **Head in smoke.** \(T_g\) is the local temperature at head height, ε for
   sooty smoke; \(q_{\mathrm{ext}} = 0\) unless a flame is in view.
@@ -112,12 +110,12 @@ reduction) is open.
 
 ## Radiant flux from FDS
 
-Purser asked why the flux to the skin is U/4 or U/2 and not U. `INTEGRATED
+Why the flux to the skin is not simply U: `INTEGRATED
 INTENSITY` U = ∫ I dΩ is the radiation arriving from all directions, not the
 flux onto a surface. A surface sees one hemisphere, with rays weighted by
 cos θ, so q ≤ U:
 
-- q ≈ U for one small source seen face-on (a flame in view, Purser's sheet);
+- q ≈ U for one small source seen face-on (a flame in view);
 - q = U/2 under a uniformly glowing layer with nothing below (plate facing up);
 - q = U/4 for a sphere, whatever the angular distribution; also a plate
   immersed in uniformly glowing smoke.
@@ -146,9 +144,8 @@ differences and `RADIATIVE HEAT FLUX GAS` are net (≈ 20 % lower at the
   fleeing agent's exposure falls. No recovery.
 - Convective data reach about 205 °C, below 10 % water vapour. Flag samples
   outside.
-- Clothing and face covering protect (Purser: burns under a thin T-shirt,
-  much less under thicker clothing; towels at Grenfell). Document; no
-  parameter without data.
+- Clothing and face covering protect against heat. Document; no parameter
+  without data.
 - The gas dose's FED = 1 is incapacitation; heat FED = 1 is fatal. Outputs
   and the `incapacitation_cause` column must not mix the two silently.
 
@@ -158,11 +155,10 @@ differences and `RADIATIVE HEAT FLUX GAS` are net (≈ 20 % lower at the
   Eq. 63.44; the numbers are Eq. 63.45). Table 63.20 convective and radiant
   rows, with stated bands. The 200 °C ≈ 2.5 kW/m² anchor. q = πI, U = 4πI for
   an isotropic field.
-- **L2.** Purser's "walking past a flame" case: 1 m/s past a 1 × 0.5 m flame
-  at 1000 °C, closest approach 0.5 m, 1 s steps; the sheet's sums (pain
-  ≈ 1.72, second degree ≈ 0.29, fatal ≈ 0.14 for ε = 0.5) as expected
-  values once reproduced independently. Constant T and q with a closed-form
-  crossing time. A falling-exposure path.
+- **L2.** Walking past a flame: 1 m/s past a small flame at 1000 °C, closest
+  approach 0.5 m, 1 s steps, flux from a view-factor calculation; expected
+  values computed independently of the code. Constant T and q with a
+  closed-form crossing time. A falling-exposure path.
 - **L3.** An adiabatic room with a hot layer set by `&INIT`, radiometer and
   gauge devices at 1.6 and 1.8 m facing up and sideways, an `INTEGRATED
   INTENSITY` slice, and a burner case. Case files in sciebo
@@ -170,9 +166,9 @@ differences and `RADIATIVE HEAT FLUX GAS` are net (≈ 20 % lower at the
 
 ## Open questions
 
-1. h: 5 (Purser's sheet) or 8?
-2. T_skin: fixed 35 °C, or rising as in the sheet?
-3. D for second-degree burns: 8 or 10 (only if that endpoint is offered)?
+1. h: 5 or 8?
+2. T_skin: fixed 35 °C, or rising with exposure?
+3. D for second-degree burns (only if that endpoint is offered)?
 4. How to decide the regime (head in smoke vs below a layer)?
 5. Do the 6th-ed. Ch. 70 equations match the 5th ed.? (Needs Ch. 70.)
 6. Does ISO 13571:2012 clause 8 give heat equations, and does FED 0.3 apply to
