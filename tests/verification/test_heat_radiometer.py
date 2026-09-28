@@ -83,12 +83,15 @@ ISO_BAND = 0.1  # relative, around 1/4 and 4 sigma T^4
 BOUND_BAND = 0.1  # relative slack on q <= U for the ray effect
 T_SETTLE = 1.0  # s; FDS writes the first radiation solution after t = 0
 
-pending = pytest.mark.xfail(strict=True, reason="#224")
+pending = pytest.mark.xfail(
+    strict=True, reason="#224", raises=(AssertionError, pytest.fail.Exception)
+)
 
 
 # --- FDS namelist reading (independent of pyFDS-Evac) ----------------------
 
-_NAMELIST = re.compile(r"&(\w+)\b(.*?)/", re.S)
+_START = re.compile(r"^[ \t]*&(\w+)", re.M)
+_NEXT = re.compile(r"[ \t]*&(\w+)")
 _KEY = re.compile(r"([A-Za-z_][\w]*(?:\([\d:,]+\))?)\s*=")
 
 
@@ -115,11 +118,21 @@ def _value(text: str):
 
 def _parse(text: str) -> list[tuple[str, dict]]:
     """Return (group, params) for each namelist in a deck."""
-    # Quoted strings may contain '/', which ends a namelist; mask them first.
-    masked = re.sub(r"'[^']*'", lambda m: m.group(0).replace("/", "\0"), text)
-    groups = []
-    for m in _NAMELIST.finditer(masked):
-        body = m.group(2).replace("\0", "/")
+    # A namelist starts with '&' at the start of a line, or right after the
+    # previous namelist on the same line, and ends at the first '/' outside
+    # quotes. Other text, including any '&' or '/' in it, is comment.
+    groups, pos = [], 0
+    while m := _NEXT.match(text, pos) or _START.search(text, pos):
+        body, quote, pos = [], None, len(text)
+        for i in range(m.end(), len(text)):
+            ch = text[i]
+            if ch == "/" and quote is None:
+                pos = i + 1
+                break
+            if ch in "'\"":
+                quote = None if quote == ch else (quote or ch)
+            body.append(ch)
+        body = "".join(body)
         keys = list(_KEY.finditer(body))
         params = {}
         for k, nxt in zip(keys, keys[1:] + [None]):
@@ -225,6 +238,38 @@ def _is_side(o):
 
 
 # --- Static checks on the decks --------------------------------------------
+
+
+def test_parser_reads_a_commented_repository_deck():
+    """The 150 C room has '&SPEC/&REAC' in a comment; it holds no reaction."""
+    deck = REPO / "assets" / "fed_incap_heat_150c" / "fed_incap_heat_150c.fds"
+    nml = _parse(deck.read_text())
+    counts = {g: sum(1 for x, _ in nml if x == g) for g, _ in nml}
+    assert counts == {
+        "HEAD": 1,
+        "MESH": 4,
+        "TIME": 1,
+        "MISC": 1,
+        "SURF": 1,
+        "VENT": 6,
+        "INIT": 1,
+        "SLCF": 4,
+        "DEVC": 5,
+        "TAIL": 1,
+    }
+    assert _all(nml, "INIT")[0] == {
+        "XB": [0.0, 30.0, 0.0, 30.0, 0.0, 3.0],
+        "TEMPERATURE": 150.0,
+    }
+    assert _all(nml, "DEVC")[0]["ID"] == "TEMP_corner_SW"
+
+
+def test_parser_reads_namelists_that_share_a_line():
+    nml = _parse("&VENT MB='XMIN', SURF_ID='A/B' / &VENT MB='XMAX' / ! &REAC /\n")
+    assert nml == [
+        ("VENT", {"MB": "XMIN", "SURF_ID": "A/B"}),
+        ("VENT", {"MB": "XMAX"}),
+    ]
 
 
 @pending
@@ -343,6 +388,8 @@ def _read_devc(path: Path) -> dict[str, np.ndarray]:
     with path.open() as f:
         rows = list(csv.reader(f))
     ids = [c.strip().strip('"') for c in rows[1]]
+    # POINTS arrays are named ID-1, ID-2 ...; accept zero padding (ID-01).
+    ids = [re.sub(r"-0+(\d+)$", r"-\1", c) for c in ids]
     data = np.array([[float(x) for x in r] for r in rows[2:] if r])
     keep = data[:, 0] >= T_SETTLE
     return {k: data[keep, j] for j, k in enumerate(ids)}
