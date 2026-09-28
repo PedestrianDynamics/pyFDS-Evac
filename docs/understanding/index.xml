@@ -65,17 +65,17 @@ $$&lt;p>where the speed factor \(f\) falls from 1 in clear air towards a floor i
 dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
 form and with the constants of &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
-&lt;code>fridolf&lt;/code> option, \(V/(V+2)\) with the sighting distance \(V = C/K\). Its
-attribution to Fridolf et al. (2019) is unverified, and the paper&amp;rsquo;s own law
-differs (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>). It is steeper in light smoke, has no floor, and is
-available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>). The published laws are on
+&lt;code>fridolf&lt;/code> option, the law of Fridolf et al. (2018) in the sighting distance
+\(V = C/K\): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
+metre, to an absolute floor of 0.2 m/s. Being additive, its factor depends on
+each agent&amp;rsquo;s \(v_0\). It is available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>). The published laws are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>; the coded forms are
 on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V&amp;#43;2) with C = 3 and C = 8" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Solid dark blue:
-Frantzich–Nilsson at the defaults, with its floor. The &lt;code>fridolf&lt;/code> option,
-\(V/(V+2)\) with \(V = C/K\): red dashed for C = 3, orange dash-dotted for
-C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
+Frantzich–Nilsson at the defaults, with its floor. The &lt;code>fridolf&lt;/code> option at
+\(v_0\) = 1.25 m/s with \(V = C/K\): red dashed for C = 3, orange dash-dotted
+for C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h3>Tenability: a brake and a stop&lt;span class="hx-absolute -hx-mt-20" id="tenability-a-brake-and-a-stop">&lt;/span>
 &lt;a href="#tenability-a-brake-and-a-stop" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Some effects of smoke depend only on what the agent meets now; others
 accumulate into a dose. pyFDS-Evac keeps them apart: speed follows what the
@@ -995,12 +995,12 @@ on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/
 &lt;tr>
 &lt;td>&lt;strong>Speed formula&lt;/strong>&lt;/td>
 &lt;td>&lt;code>c(Ks) = 1 + beta * Ks / alpha&lt;/code> ([1] §3.4 Eq. 11)&lt;/td>
-&lt;td>Same formula (&lt;code>smoke_speed.py:227&lt;/code>)&lt;/td>
+&lt;td>Same formula (&lt;code>smoke_speed.py:234&lt;/code>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Default alpha/beta&lt;/strong>&lt;/td>
 &lt;td>Frantzich–Nilsson values (evac.f90:1544–1545)&lt;/td>
-&lt;td>Same values (&lt;code>smoke_speed.py:91–92&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>&lt;/td>
+&lt;td>Same values (&lt;code>smoke_speed.py:95–96&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Minimum speed&lt;/strong>&lt;/td>
@@ -1015,15 +1015,18 @@ on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/
 &lt;tr>
 &lt;td>&lt;strong>Sampling geometry&lt;/strong>&lt;/td>
 &lt;td>Local value at agent position on the evacuation mesh, at &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61)&lt;/td>
-&lt;td>Local value at agent position: nearest cell of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>)&lt;/td>
+&lt;td>Local value at agent position: nearest value position of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS&amp;rsquo;s default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for &lt;code>CELL_CENTERED=T&lt;/code> slices it is the nearest cell centre (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS slice sampling&lt;/a>). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>&lt;strong>Key difference:&lt;/strong> Both systems apply the speed reduction using the
 &lt;em>local&lt;/em> smoke at the agent&amp;rsquo;s position. FDS+Evac converts the soot
-density in the agent&amp;rsquo;s grid cell at runtime; pyFDS-Evac reads the
-extinction coefficient from the nearest cell of an FDS slice at a fixed
-height. The path-averaged extinction coefficient, which Börger et al.
+density at runtime from the cell-centred value of the fire cell that
+contains the centre of the agent&amp;rsquo;s evacuation-grid cell (evac.f90:6337,
+:16078); pyFDS-Evac reads the extinction coefficient from the nearest
+value position of an FDS slice at a fixed height, which for FDS&amp;rsquo;s
+default node-centred slices is a node value averaged over the
+surrounding cells. The path-averaged extinction coefficient, which Börger et al.
 (2024) [2] take along the line of sight to a sign and pyFDS-Evac takes
 along the walked polyline, is used in pyFDS-Evac for route cost only,
 not for walking speed.&lt;/p>

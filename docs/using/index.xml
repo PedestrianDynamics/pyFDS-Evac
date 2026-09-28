@@ -1425,18 +1425,31 @@ concentrations).&lt;/p>
 &lt;h2>How it works&lt;span class="hx-absolute -hx-mt-20" id="how-it-works">&lt;/span>
 &lt;a href="#how-it-works" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>SliceFieldSampler&lt;/code> wraps a single &lt;code>fdsreader&lt;/code> slice object and
 exposes a &lt;code>sample(time_s, x, y)&lt;/code> method that returns the scalar value
-at the nearest grid cell and timestep.&lt;/p>
+at the nearest slice value position and the nearest timestep. The
+value positions depend on how FDS wrote the slice (&lt;a href="https://github.com/firemodels/fds/blob/c9da70d7a/Manuals/FDS_User_Guide/FDS_User_Guide.tex" target="_blank" rel="noopener">FDS User Guide&lt;/a>, &lt;code>&amp;amp;SLCF&lt;/code>):&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Node-centred&lt;/strong> (the FDS default): one value per mesh node, which
+FDS averages from the cells around that node. The sampler reads the
+nearest node.&lt;/li>
+&lt;li>&lt;strong>Cell-centred&lt;/strong> (&lt;code>CELL_CENTERED=T&lt;/code> on the &lt;code>&amp;amp;SLCF&lt;/code> line): one value
+per cell, without averaging. The sampler reads the nearest cell
+centre, the midpoint of the cell&amp;rsquo;s two nodes, so stretched grids are
+handled.&lt;/li>
+&lt;/ul>
+&lt;p>A query exactly halfway between two positions reads the lower index.&lt;/p>
 &lt;p>Internally it:&lt;/p>
 &lt;ol>
 &lt;li>Finds the subslice whose bounding box covers the queried &lt;code>(x, y)&lt;/code>
 point (one subslice per FDS mesh the slice intersects).&lt;/li>
 &lt;li>Resolves the nearest timestep index via binary search
 (&lt;code>get_nearest_timestep&lt;/code>).&lt;/li>
-&lt;li>Computes the nearest cell indices along the x and y axes.&lt;/li>
+&lt;li>Finds the nearest value position along the x and y axes, from the
+mesh nodes inside the subslice extent (midpoints of those nodes for
+cell-centred slices).&lt;/li>
 &lt;li>Returns &lt;code>subslice.data[t_index, i_index, j_index]&lt;/code>.&lt;/li>
 &lt;/ol>
 &lt;h3>Performance caches&lt;span class="hx-absolute -hx-mt-20" id="performance-caches">&lt;/span>
-&lt;a href="#performance-caches" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Two caches reduce per-call overhead on hot paths (for example, sampling
+&lt;a href="#performance-caches" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Three caches reduce per-call overhead on hot paths (for example, sampling
 along a line of sight where all points share the same timestep and
 typically the same subslice):&lt;/p>
 &lt;ul>
@@ -1445,6 +1458,8 @@ checked first before falling back to a linear scan. Consecutive
 sample points along a ray almost always hit the same subslice.&lt;/li>
 &lt;li>&lt;strong>Timestep cache&lt;/strong> &amp;ndash; when &lt;code>time_s&lt;/code> hasn&amp;rsquo;t changed since the last
 call, the cached &lt;code>t_index&lt;/code> is reused, skipping the binary search.&lt;/li>
+&lt;li>&lt;strong>Axis cache&lt;/strong> &amp;ndash; the x and y value positions of each subslice are
+computed once and reused.&lt;/li>
 &lt;/ul>
 &lt;h2>Loading a sampler&lt;span class="hx-absolute -hx-mt-20" id="loading-a-sampler">&lt;/span>
 &lt;a href="#loading-a-sampler" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Use &lt;code>load_slice_sampler()&lt;/code> to load a single FDS quantity:&lt;/p>

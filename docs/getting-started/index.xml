@@ -983,8 +983,8 @@ FED activity level is the same as in FDS+Evac 6.7.6: light work only
 &lt;h2>What needs Python&lt;span class="hx-absolute -hx-mt-20" id="what-needs-python">&lt;/span>
 &lt;a href="#what-needs-python" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some parameters cannot be set from the CLI or the scenario JSON. The
 smoke-speed parameters are the main case. &lt;code>speed_law&lt;/code> (&lt;code>&amp;quot;lund&amp;quot;&lt;/code> or
-&lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>), &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code> and &lt;code>visibility_factor_c&lt;/code>
-are fields of &lt;code>SmokeSpeedConfig&lt;/code>, and &lt;code>run.py&lt;/code> and the web GUI build that
+&lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>), &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code>, &lt;code>visibility_factor_c&lt;/code> and
+the &lt;code>fridolf_*&lt;/code> constants are fields of &lt;code>SmokeSpeedConfig&lt;/code>, and &lt;code>run.py&lt;/code> and the web GUI build that
 object with its defaults. A run started from either one uses the
 Frantzich–Nilsson law with the defaults listed on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page.&lt;/p>
 &lt;p>To change them, build a &lt;code>SmokeSpeedModel&lt;/code> yourself and pass it to
