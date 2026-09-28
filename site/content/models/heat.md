@@ -160,7 +160,8 @@ with \(T_L\) the temperature of a second `TEMPERATURE` slice at
   ([#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
 - A layer cooler than the skin gives a negative \(q_{\mathrm{ext}}\); the
   rate is zero only when the total \(q \le 0\). A non-finite layer
-  temperature gives no dose.
+  temperature gives no dose. Where the layer slice has no value, the layer
+  temperature falls back to 20 °C, as the temperature at the head does.
 
 φ, \(\varepsilon_L\) and the layer height have no sourced values and no
 defaults; the layer regime without any of them is rejected, as is
@@ -225,7 +226,8 @@ With `--heat-fed-method total-flux` the FED history also carries
 parameters). With `--heat-regime layer`, `heat_flux_kw_m2` includes
 \(q_{\mathrm{ext}}\), the FED history also carries
 `heat_layer_temperature_c` (\(T_L\)), and `heat_flux_parameters` also
-records `regime`, `view_factor`, `layer_emissivity` and `layer_height_m`.
+records `regime`, `view_factor`, `layer_emissivity` and `layer_height_m`;
+it still records ε, which has no effect in that regime.
 With an endpoint, `heat_outside_validity` still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
 63.45–63.47, not to the flux law.
@@ -263,8 +265,8 @@ above 205 °C: that limit belongs to the convective data of Eqs.
   flagged; `heat_humidity` reads `unknown`
   ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
   flagged either, although Eq. 63.44 rests on the same data (p. 2382).
-- **Web GUI.** The GUI does not offer `--heat-endpoint` or
-  `--heat-fed-method`
+- **Web GUI.** The GUI does not offer `--heat-endpoint`,
+  `--heat-fed-method`, `--heat-regime` or the layer options
   ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
 - **Falling exposure and recovery.** The summed dose assumes exposure that is
   steady or rising (Eq. 63.48); a fleeing agent's exposure falls, and no

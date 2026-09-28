@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `--heat-convective-coefficient` (5) and `--heat-skin-temperature` (35 °C)
   set the flux; their defaults are assumptions. The FED history gains
   `heat_flux_kw_m2` and the manifest `heat_fed_method` and
-  `heat_flux_parameters`. Head-in-smoke regime only
+  `heat_flux_parameters`. This is the head-in-smoke regime
   ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 - `--heat-endpoint {tolerance,injury,fatal}` (opt-in, with
   `--enable-heat-fed`): the heat dose uses the convective law of that

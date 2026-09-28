@@ -154,9 +154,10 @@ Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/i
 
 ## What is not modelled
 
-- Radiant heat from a hot layer, hot surfaces or a flame. The heat dose is
-  convective, or with `--heat-fed-method total-flux` adds the radiation of
-  the gas at the head only ([Heat](/models/heat.md)).
+- Radiant heat from hot surfaces or a flame. The heat dose is convective,
+  or with `--heat-fed-method total-flux` adds the radiation of the gas at
+  the head, or with `--heat-regime layer` that of a hot upper layer
+  ([Heat](/models/heat.md)).
 - Effects of heat on route choice or walking speed: the heat FED only
   incapacitates.
 - FED activity level: the CO term is fixed at light work; rest and heavy
