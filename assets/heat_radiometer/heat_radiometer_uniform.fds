@@ -1,7 +1,8 @@
 &HEAD CHID='heat_radiometer_uniform',
       TITLE='Sealed adiabatic room, uniform hot sooty gas: the isotropic control (#224)' /
 
-! Room 4 x 4 x 3 m, 0.1 m cells, four meshes split along x.
+! Room 4 x 4 x 3 m, 0.1 m cells, four meshes split along x. Room size and
+! grid are assumptions of this deck (#224), not sourced values.
 ! Run with: mpiexec -n 4 fds <deck>.fds
 ! The z-grid has cell faces at 1.6 and 1.8 m, so the slices below stay at
 ! those heights.
@@ -32,10 +33,12 @@
 ! field is isotropic: q = U/4 for any plate, U = 4 sigma T^4.
 &INIT XB=0,4,0,4,0,3, TEMPERATURE=300., SPEC_ID(1)='SOOT', MASS_FRACTION(1)=0.005 /
 
-! Skin: gauge at 35 C (GAUGE_TEMPERATURE), emissivity 1 (default), and
-! h = 8 W/(m2 K), the values of issue #224 (spec 016 leaves h and T_skin
-! open). FDS UG Eqs. 22.35-22.36: the gauge and the radiometer share the
-! gauge temperature, so gauge - radiometer = h (T_g - 35 C).
+! Skin: gauge at 35 C (GAUGE_TEMPERATURE), emissivity 1 (FDS default, taken
+! as the skin emissivity: an assumption, not a sourced value), and
+! h = 8 W/(m2 K). 35 C and h are prescribed by issue #224 (spec 016
+! leaves h and T_skin open). FDS UG Eqs. 22.35-22.36: the gauge and the
+! radiometer share the gauge temperature, so gauge - radiometer =
+! h (T_g - 35 C).
 &PROP ID='skin', GAUGE_TEMPERATURE=35., HEAT_TRANSFER_COEFFICIENT=8. /
 
 ! Every array has TEMPERATURE and INTEGRATED INTENSITY at the same points,

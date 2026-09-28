@@ -2,7 +2,9 @@
       TITLE='Propane burner in the open, skin gauges facing it at 1.6 and 1.8 m (#224)' /
 
 ! Domain 6 x 4 x 4 m, 0.1 m cells, four meshes split along x, open on the
-! four sides and the top. Run with: mpiexec -n 4 fds heat_radiometer_burner.fds
+! four sides and the top. Domain and grid are assumptions of this deck
+! (#224), not sourced values.
+! Run with: mpiexec -n 4 fds heat_radiometer_burner.fds
 &MESH ID='M1', IJK=15,40,40, XB=0.0,1.5, 0,4, 0,4 /
 &MESH ID='M2', IJK=15,40,40, XB=1.5,3.0, 0,4, 0,4 /
 &MESH ID='M3', IJK=15,40,40, XB=3.0,4.5, 0,4, 0,4 /
@@ -24,10 +26,12 @@
 &SURF ID='BURNER', HRRPUA=1100., COLOR='RED' /
 &VENT XB=2.7,3.3,1.75,2.35,0,0, SURF_ID='BURNER' /
 
-! Skin: gauge at 35 C (GAUGE_TEMPERATURE), emissivity 1 (default), and
-! h = 8 W/(m2 K), the values of issue #224 (spec 016 leaves h and T_skin
-! open). FDS UG Eqs. 22.35-22.36: the gauge and the radiometer share the
-! gauge temperature, so gauge - radiometer = h (T_g - 35 C).
+! Skin: gauge at 35 C (GAUGE_TEMPERATURE), emissivity 1 (FDS default, taken
+! as the skin emissivity: an assumption, not a sourced value), and
+! h = 8 W/(m2 K). 35 C and h are prescribed by issue #224 (spec 016
+! leaves h and T_skin open). FDS UG Eqs. 22.35-22.36: the gauge and the
+! radiometer share the gauge temperature, so gauge - radiometer =
+! h (T_g - 35 C).
 &PROP ID='skin', GAUGE_TEMPERATURE=35., HEAT_TRANSFER_COEFFICIENT=8. /
 
 ! Every array has TEMPERATURE and INTEGRATED INTENSITY at the same points,
