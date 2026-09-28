@@ -242,8 +242,10 @@ temperature without output is skipped.
   not run `--heat-fed-method total-flux`. That method is checked against
   hand formulas of Eqs. 63.49 and 63.43 on synthetic fields
   (`tests/test_heat_total_flux.py`,
-  `tests/verification/test_heat_total_flux_coupled.py`). No radiant dose
-  from a layer or flame
+  `tests/verification/test_heat_total_flux_coupled.py`). Its
+  `INTEGRATED INTENSITY` source is checked in
+  `tests/test_heat_integrated_intensity.py` and
+  `tests/verification/test_heat_integrated_intensity_coupled.py`
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
   Below the threshold heat changes neither speed nor route
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).

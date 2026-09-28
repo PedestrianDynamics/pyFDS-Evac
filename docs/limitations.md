@@ -86,11 +86,15 @@ McAllister (SFPE Handbook, 5th ed., Eq. 63.44, or Eq. 63.45-63.47 with
 `--heat-endpoint`), computed from the gas temperature of an FDS
 `TEMPERATURE` slice. The opt-in `--heat-fed-method total-flux` adds the
 radiation of the gas at the head (Eq. 63.49, spec 016), with an assumed
-emissivity. Radiant flux from a hot layer, hot surfaces or a flame is not read
-and does not contribute to any dose. An agent near a flame or under a hot
-layer that radiates strongly is therefore treated as less exposed than it is
-([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221),
-[#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)).
+emissivity. Radiant flux from a hot layer, hot surfaces or a flame enters
+only with the opt-in `--heat-radiant-source integrated-intensity`, as f·U
+from the FDS `INTEGRATED INTENSITY` slice with a user factor f in [0.25, 1]
+that no single value fits for every orientation
+([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+Otherwise an agent near a flame or under a hot layer that radiates strongly
+is treated as less exposed than it is
+([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222),
+[#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
 
 **Heat does not affect route choice or walking speed.** The heat dose is
 opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is

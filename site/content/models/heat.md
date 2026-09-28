@@ -109,8 +109,10 @@ $$
   temperature the rate is zero: no dose, and no recovery.
 
 Only the "head in smoke" regime of spec 016 is implemented: ε applies to the
-gas at the head, and no external radiation is added. ε, h and \(T_s\) have
-no sourced values; their defaults are assumptions
+gas at the head, and no external radiation is added unless the radiant term
+comes from `INTEGRATED INTENSITY`
+([Radiant flux from INTEGRATED INTENSITY](#radiant-flux-from-integrated-intensity)).
+ε, h and \(T_s\) have no sourced values; their defaults are assumptions
 (`HEAT_FLUX_ASSUMED_PARAMETERS`):
 
 | Parameter | Default | CLI flag | Source status |
@@ -122,6 +124,66 @@ no sourced values; their defaults are assumptions
 Invalid values (ε outside [0, 1], h < 0, or non-finite) are rejected.
 `--heat-fed-method` without `--enable-heat-fed` logs a warning and leaves
 the heat dose off.
+
+### Radiant flux from INTEGRATED INTENSITY
+
+`--heat-radiant-source integrated-intensity` (opt-in, total-flux only;
+default `gas`, the ε term above) takes the radiant term from the FDS
+`INTEGRATED INTENSITY` slice at the slice height, the same height as the
+`TEMPERATURE` slice
+([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+FDS's *U* = ∫ *I* dΩ [kW/m²] (FDS User's Guide 6.10.1, Table 22.4) is the
+radiation arriving from all directions, not the flux onto a surface. A
+surface sees one hemisphere, with rays weighted by cos θ, so its incident
+flux lies between *U*/4 (a sphere, or a plate in an isotropic field) and *U*
+(one small source seen face-on); *U*/2 holds for a plate facing a uniform
+layer (spec 016). The flux to the skin is
+
+$$
+q = f\,U + \frac{h\,(T_g - T_s)}{1000} \quad [\mathrm{kW/m^2}],
+$$
+
+(`radiant_flux_from_integrated_intensity_kw_m2` for *f U*), and the rate is
+\(q^{1.33}/D\) as above.
+
+- **f U is incident flux.** The radiant tolerance data (Table 63.19) are
+  incident flux; the skin's own emission σ\(T_s^4\) is not subtracted.
+- **The ε term is not added.** *U* already contains the emission of the gas
+  at the head, so ε σ (\(T_g^4 - T_s^4\)) would count it twice;
+  `--heat-emissivity` is ignored with this source.
+- **`--heat-u-factor` *f* in [0.25, 1] has no default.** No single factor
+  holds (see Limits below), so *f* must be given with this source; without
+  it, or outside [0.25, 1], the run stops with an error. *f* is the user's
+  choice, not an assumption of the code.
+- A case with no `INTEGRATED INTENSITY` slice is an error, not a zero: the
+  run would otherwise read as a case without radiation. The source with the
+  convective method is an error too.
+- A non-finite *U* gives a zero rate, as for the gas term.
+
+### Limits of the INTEGRATED INTENSITY source
+
+- **Ambient background.** *U* is not zero in a cold room: at 20 °C,
+  *U* = 4σ*T*⁴ = 1.68 kW/m². With no 2.5 kW/m² threshold, the incident
+  *f U* gives a dose with no fire at all. With h = 5 and \(T_s\) = 35 °C
+  the fatal heat FED = 1 is reached after about 8.9 min (*f* = 1) or 69 min
+  (*f* = 0.25). Whether to use incident *f U*, net *f U* − σ\(T_s^4\), or
+  the excess above ambient *f* (*U* − 4σ\(T_a^4\)) is open
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+- **[0.25, 1] is not a bound for every orientation.** In the FDS radiometer
+  data of [#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224),
+  below a hot layer the plate facing up gets about 0.41 *U*, but a plate
+  facing down gets about 0.13 *U* and some facing sideways about 0.22 *U*,
+  less than *f* = 0.25 gives. One *f* serves one orientation.
+- **Gauge devices are the preferred input** (spec 016): FDS
+  `GAUGE HEAT FLUX GAS` devices give the flux to a skin-like plate from the
+  full radiation solution, with no factor. They are not read yet
+  ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
+- **Possible double count with convection.** The hot-air data behind
+  Eqs. 63.45–63.47 may already include radiation from the walls of the test
+  chambers. If so, adding *f U* to the convective term partly counts that
+  radiation twice. The Handbook does not say.
+- **Falling exposure.** As for every summed dose, Eq. 63.48 holds only
+  while exposure is steady or rising.
 
 ## Incapacitation
 
@@ -149,6 +211,8 @@ The gas dose is probabilistic by default; the two modes are set separately
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
 | `heat_endpoint` | `None` (Eq. 63.44) | `--heat-endpoint` |
 | `heat_fed_method` | `"convective"` | `--heat-fed-method` |
+| `radiant_source` | `"gas"` | `--heat-radiant-source` |
+| `u_factor` | none, required with `integrated-intensity` | `--heat-u-factor` |
 
 `--disable-tenability` turns off the stop; the dose is still computed.
 
@@ -167,7 +231,11 @@ endpoint; `heat_endpoint` says which one.
 With `--heat-fed-method total-flux` the FED history also carries
 `heat_flux_kw_m2` (*q*), and the manifest records `heat_fed_method` and
 `heat_flux_parameters` (ε, h, \(T_s\), *D*, and the names of the assumed
-parameters). With an endpoint, `heat_outside_validity` still flags samples
+parameters). With `--heat-radiant-source integrated-intensity` the FED
+history also carries `heat_integrated_intensity_kw_m2` (*U*), and
+`heat_flux_parameters` adds `radiant_source`, `u_factor` and
+`radiant_flux` (`incident`); ε is then not listed as assumed, as it is not
+used. With an endpoint, `heat_outside_validity` still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
 63.45–63.47, not to the flux law.
 
@@ -175,11 +243,14 @@ above 205 °C: that limit belongs to the convective data of Eqs.
 
 - **Radiant heat from outside the gas at the head.** The convective laws
   count convective heat only. The total-flux method adds the radiation of the
-  gas around the head, but no flux from a hot upper layer, from hot surfaces,
-  or from a flame in view: the "below a hot layer" regime of spec 016 and the
-  external flux term are not implemented
-  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221),
-  [#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)).
+  gas around the head; flux from a hot upper layer, hot surfaces or a flame
+  in view enters only through `--heat-radiant-source integrated-intensity`,
+  with a user factor (see
+  [Limits of the INTEGRATED INTENSITY source](#limits-of-the-integrated-intensity-source)).
+  The layer-temperature input of spec 016 and gauge devices are not
+  implemented
+  ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222),
+  [#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
 - **Regime selection.** The total-flux method uses one ε everywhere. The
   default 0.5 treats every head as in smoke, which overestimates the dose in
   clear hot air; set `--heat-emissivity 0.05` for clear air. How to decide
@@ -197,8 +268,8 @@ above 205 °C: that limit belongs to the convective data of Eqs.
   flagged; `heat_humidity` reads `unknown`
   ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
   flagged either, although Eq. 63.44 rests on the same data (p. 2382).
-- **Web GUI.** The GUI does not offer `--heat-endpoint` or
-  `--heat-fed-method`
+- **Web GUI.** The GUI does not offer `--heat-endpoint`,
+  `--heat-fed-method`, `--heat-radiant-source` or `--heat-u-factor`
   ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
 - **Falling exposure and recovery.** The summed dose assumes exposure that is
   steady or rising (Eq. 63.48); a fleeing agent's exposure falls, and no
@@ -214,6 +285,11 @@ above 205 °C: that limit belongs to the convective data of Eqs.
   The total-flux method is checked against hand formulas of Eqs. 63.49 and
   63.43, the radiant rows of Table 63.20 and the convection table of spec 016,
   in unit tests and coupled corridor runs; the layer regime is not tested.
+  The `INTEGRATED INTENSITY` source is checked against hand formulas, a
+  committed FDS 6.10.1 case (`assets/heat_integrated_intensity`, slice *U*
+  and *T* against FDS's own devices), and the #224 radiometer data, where
+  *f* = 0.25 with convection matches the FDS skin gauge in an isotropic room
+  in all four orientations within 3 %.
 
 ## Sources
 
