@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Web GUI: a light/dark theme switch, a Cancel control for a running scenario,
+  a Clear control for finished results, and a trajectory viewer that fills
+  the screen in fullscreen. A cancel stops the run at its next progress tick
+  or between phases; output files written before the cancel stay on disk.
+
+### Removed
+
+- Web GUI: the Cumulative FED results chart, the FED sparkline and the mean
+  FED line. The viewer and the live chart show the highest FED of any agent
+  at each time.
+
 ### Changed
 
 Defaults now follow FDS+Evac where a mechanism has a direct FDS+Evac

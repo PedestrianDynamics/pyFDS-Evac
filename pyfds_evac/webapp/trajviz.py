@@ -481,21 +481,25 @@ _JS = """
     if (clipped) ctx.restore();
   }
 
-  // Only one agent's dose actually matters for a tenability verdict: whoever
-  // ends up worst off. Find that agent once and track just their curve,
-  // rather than a max/mean blended across the whole crowd.
-  var worstAgent = -1;
+  // Highest gas FED over the agents present at each sample: a dose readout
+  // that answers "has anyone reached this dose yet?". It is not a tenability
+  // verdict: each agent's incapacitation threshold is drawn separately, so
+  // the highest dose need not belong to an agent who was incapacitated. A
+  // mean would hide the one agent at risk.
+  var fedMaxByTime = null;
   if (D.hasFed) {
-    var worstFinal = -1;
-    for (var wk = 0; wk < n; wk++) {
-      var fr = FED[wk];
-      if (!fr || !fr.length) continue;
-      var last = fr[fr.length - 1];
-      if (last != null && last > worstFinal) { worstFinal = last; worstAgent = wk; }
-    }
+    fedMaxByTime = T.map(function (_, ti) {
+      var m = 0;
+      for (var k = 0; k < n; k++) {
+        var v = fedAt(k, ti);
+        if (v != null && v > m) m = v;
+      }
+      return m;
+    });
   }
 
-  // FED dose -> tier colour (green -> amber -> orange -> red).
+  // FED dose -> tier colour (green -> amber -> orange -> red). The 0.6 stop
+  // is a display tier only, not an ISO 13571 value.
   var STOPS = [[0, '#f4c430'], [0.3, '#ffb020'], [0.6, '#ff6a1a'], [1, '#e01e37']];
   function lerpHex(a, b, t) {
     var ar = parseInt(a.slice(1, 3), 16), ag = parseInt(a.slice(3, 5), 16),
@@ -569,12 +573,9 @@ _JS = """
     return [lo, hi, f];
   }
   function drawFedPanel() {
-    if (!D.hasFed || worstAgent < 0) return;
+    if (!D.hasFed || !fedMaxByTime) return;
     var b = bracket(simT), lo = b[0], hi = b[1], f = b[2];
-    var da = fedAt(worstAgent, lo), dc = fedAt(worstAgent, hi), cur;
-    if (da == null) cur = dc; else if (dc == null) cur = da;
-    else cur = da + (dc - da) * f;
-    if (cur == null) cur = 0;
+    var cur = fedMaxByTime[lo] + (fedMaxByTime[hi] - fedMaxByTime[lo]) * f;
     function fc(v) { return v >= 1.0 ? '#E01E37' : v >= 0.6 ? '#FF6A1A' : v >= 0.3 ? '#FFB020' : '#F4C430'; }
     var maxEl = document.getElementById('fed-val-max');
     if (maxEl) { maxEl.textContent = cur.toFixed(4); maxEl.style.color = fc(cur); }
@@ -883,7 +884,7 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
                 + ',monospace;font-size:9px;color:#FFB020">· alert 0.3</span>'
                 '<span style="font-family:'
                 + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#FF6A1A">· critical 0.6</span>'
+                + ',monospace;font-size:9px;color:#FF6A1A" title="display tier, not an ISO 13571 value">· critical 0.6</span>'
                 '<span style="font-family:'
                 + "'JetBrains Mono'"
                 + ',monospace;font-size:9px;color:#E01E37">· severe 1.0</span>'
@@ -891,13 +892,22 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
                 '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
                 '<div><div style="font-family:'
                 + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">worst agent</div>'
+                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">max FED (any agent)</div>'
                 '<div id="fed-val-max" style="font-family:'
                 + "'JetBrains Mono'"
                 + ',monospace;font-size:26px;font-weight:500;color:#F4C430;transition:color .3s">0.0000</div></div>'
                 "</div>"
-                '<div style="position:relative;height:6px;border-radius:99px;background:var(--surface-card);border:1px solid var(--hairline);overflow:hidden">'
+                '<div style="position:relative;height:6px;border-radius:99px;background:var(--surface-card);border:1px solid var(--hairline);overflow:hidden;margin-bottom:4px">'
                 '<div id="fed-bar-fill" style="position:absolute;inset:0;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .15s"></div>'
+                "</div>"
+                # Ticks sit at their dose on the bar, whose width is FED x 100 %.
+                '<div style="position:relative;height:12px;font-family:'
+                + "'JetBrains Mono'"
+                + ',monospace;font-size:9px">'
+                '<span style="position:absolute;left:0;color:var(--ink-faint)">0</span>'
+                '<span style="position:absolute;left:30%;transform:translateX(-50%);color:#FFB020">0.3</span>'
+                '<span style="position:absolute;left:60%;transform:translateX(-50%);color:#FF6A1A">0.6</span>'
+                '<span style="position:absolute;right:0;color:#E01E37">1.0+</span>'
                 "</div>"
                 "</div>"
             )

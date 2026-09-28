@@ -111,8 +111,7 @@ _FED_LIVE_JS = """
       var section = document.getElementById('fed-live-section');
       if (section) section.style.display = '';
       var traces = [
-        {x: d.t, y: d.max, mode: 'lines', name: 'max FED', line: {color: '#F4C430', width: 2}},
-        {x: d.t, y: d.mean, mode: 'lines', name: 'mean FED', line: {color: '#FF8A3D', width: 1.5, dash: 'dot'}}
+        {x: d.t, y: d.max, mode: 'lines', name: 'max FED (any agent)', line: {color: '#F4C430', width: 2}}
       ];
       fedLayout.font.color = themeInk();
       fedLayout.xaxis.gridcolor = themeGrid();
