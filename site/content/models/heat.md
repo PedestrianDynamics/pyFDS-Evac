@@ -52,8 +52,8 @@ endpoint cannot be paired with the convective law of another:
 \(1/t\); a temperature at or below 0 °C gives zero. Radiant heat is not an
 input yet, so *r* is recorded but does not enter the dose. The Handbook prints
 16.7 for the fatal dose; spec 016 writes 16.667. By maintainer decision,
-heat FED = 1 is the fatal endpoint for this configuration, i.e.
-`--heat-endpoint fatal`; without the option the dose stays Eq. 63.44.
+heat FED = 1 is meant as the fatal endpoint; `--heat-endpoint fatal` gives
+that meaning. Without the option the dose stays Eq. 63.44.
 
 The caption of Table 63.21 (p. 2385) says Eq. 63.44, but its per-minute values
 are those of Eq. 63.45; the tests use the table as the oracle for
@@ -126,9 +126,10 @@ endpoint; `heat_endpoint` says which one.
   radiant heat.
 - **Effects on walking speed or route choice.** The heat dose only
   incapacitates ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
-- **Tests.** The current checks take their expected values from the same
-  closed form as the code; checks against the Handbook's tables are tracked in
-  [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219).
+- **Tests.** The endpoint laws are checked against the Handbook's tables
+  (Tables 63.20 and 63.21) and hand formulas. The default Eq. 63.44 is still
+  checked only against its own closed form
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
 
 ## Sources
 

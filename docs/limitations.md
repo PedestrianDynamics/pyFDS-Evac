@@ -82,8 +82,9 @@ reached an exit.
 ## What is not modelled
 
 **Radiant heat.** The heat dose is the convective term of Purser and
-McAllister (SFPE Handbook, 5th ed., Eq. 63.44), computed from the gas
-temperature of an FDS `TEMPERATURE` slice. Radiant heat flux is not read and
+McAllister (SFPE Handbook, 5th ed., Eq. 63.44, or Eq. 63.45-63.47 with
+`--heat-endpoint`), computed from the gas temperature of an FDS
+`TEMPERATURE` slice. Radiant heat flux is not read and
 does not contribute to any dose. An agent near a flame or under a hot layer
 that radiates strongly is therefore treated as less exposed than it is. A
 total-heat-flux dose is designed in `specs/016-heat-fed/SPEC.md`
