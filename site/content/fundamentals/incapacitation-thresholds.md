@@ -77,8 +77,9 @@ population figures for heat only for radiant lethality (p. 2382): a radiant
 dose of 10 (kW/m²)^4/3·min "represents a fatal level for a vulnerable
 population (over 65 years of age) or a 1 % fatality level for the average
 population, whereas 16.7 (kW/m²)^4/3·min represents a 50 % probability
-lethal level for the average population". The chapter's radiant-heat passage
-cites Hockey and Rew (1996) and Purser (1997). The probit relations behind
+lethal level for the average population". The chapter cites Hockey and Rew
+(1996) and Purser (1997) for its radiant dose relation (refs. [133, 134],
+p. 2381). The probit relations behind
 these figures are in Hockey and Rew, which we have not read.
 
 Inference, not a statement of the sources: if the lethal dose is log-normal
@@ -127,5 +128,8 @@ slope b gives σ = 1/b, so Hockey and Rew's slopes would settle the value
 - Hockey, S. M., & Rew, P. J. (1996). *Human response to thermal
   radiation*. Contract Research Report 97/1996. HSE Books, Sudbury. Cited
   by Ch. 63 as ref. [133]; not consulted.
+- Purser, D. A. (1997). Review of human response to thermal radiation.
+  *Fire Safety Journal*, 28, 290–291. Cited by Ch. 63 as ref. [134]; not
+  consulted.
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md#tenability-irritant-slowdown-and-incapacitation).
