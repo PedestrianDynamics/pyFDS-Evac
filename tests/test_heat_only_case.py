@@ -46,12 +46,6 @@ _DEFAULT_OPTS = dict(
     enable_heat_fed=True,
 )
 
-# Today the smoke builder raises IndexError (fds_sampling) and the visibility
-# builder AttributeError (fdsvismap finds no soot slice and reads None).
-_pending_248 = pytest.mark.xfail(
-    strict=True, reason="#248", raises=(IndexError, AttributeError)
-)
-
 
 def _opts(**overrides) -> Namespace:
     return Namespace(**{**_DEFAULT_OPTS, **overrides})
@@ -109,7 +103,6 @@ def test_workaround_flags_build_heat_fed(scenario, caplog):
     assert kwargs["tenability_config"].enable_heat_incapacitation is True
 
 
-@_pending_248
 def test_heat_only_case_builds_without_workaround(scenario, caplog):
     """No flags: smoke speed is off, heat FED is on, and a warning says why."""
     with caplog.at_level(logging.WARNING):
@@ -121,7 +114,6 @@ def test_heat_only_case_builds_without_workaround(scenario, caplog):
     assert _mentions_extinction(caplog)
 
 
-@_pending_248
 def test_missing_soot_does_not_break_visibility(scenario, caplog):
     """An explicit constant extinction isolates the visibility builder.
 

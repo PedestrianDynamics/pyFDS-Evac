@@ -107,7 +107,7 @@ Do not ignore either warning. Nothing else will tell you.
 
 | Symptom | Cause |
 |---------|-------|
-| `IndexError: No slice with quantity 'SOOT EXTINCTION COEFFICIENT' found in <dir>` | The deck never declared `&SLCF QUANTITY='EXTINCTION COEFFICIENT'`, or the species was never tracked. |
+| Warning: Smoke speed reduction is disabled for `<dir>`, and Visibility falls back to clear air for `<dir>` | No `SOOT EXTINCTION COEFFICIENT` slice: the deck never declared `&SLCF QUANTITY='EXTINCTION COEFFICIENT'`, or the species was never tracked. Agents walk and see as in clear air. |
 | `IndexError: No slice with quantity '...' found in <dir>` | The deck never declared that `&SLCF`, or the species was never tracked. |
 | Warning: FED is disabled for `<dir>` | CO, CO2 or O2 is missing. Check `CO_YIELD` on `&REAC`. |
 | Warning: Heat FED is disabled for `<dir>` | No `TEMPERATURE` slice. Add `&SLCF QUANTITY='TEMPERATURE'` — no `&REAC` change needed. |
