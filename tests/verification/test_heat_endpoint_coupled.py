@@ -12,13 +12,16 @@ Two corridor runs through ``run_scenario`` with a uniform temperature field:
   is set so the hand formula predicts a crossing mid-run; Eq. 63.44 would
   cross 8.6 times sooner.
 
-The runs also check that the endpoint and the validity flag reach the FED
-history and the run manifest.
+The runs also check that the endpoint, the validity flag and the unknown
+humidity status reach the FED history and the run manifest, that a
+non-finite temperature is flagged, and that a run without an endpoint writes
+the same FED history CSV and manifest keys as the code before the option
+(baseline ``golden/heat_default``, made on main 76c9a76).
 
 API under test, as in ``tests/test_heat_endpoint.py``:
 ``DefaultHeatFedModel(field, config, endpoint=...)``; FED history rows carry
-``heat_endpoint`` and ``heat_outside_validity``; the manifest carries
-``heat_endpoint``.
+``heat_endpoint``, ``heat_outside_validity`` and ``heat_humidity``; the
+manifest carries ``heat_endpoint`` and ``heat_validity``.
 """
 
 from __future__ import annotations
@@ -26,6 +29,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import pathlib
 
 from harness import (
     CorridorSpec,
@@ -48,6 +52,21 @@ UPDATE_S = 1.0
 TIMING_TOL_S = 1.5
 
 TABLE_63_21_C = [20.0, 65.0, 125.0, 220.0, 405.0, 405.0]
+
+BASELINE_DIR = pathlib.Path(__file__).parent / "golden" / "heat_default"
+# Manifest values that depend on the machine, the time or the checkout.
+VOLATILE_MANIFEST_KEYS = (
+    "versions",
+    "uv_lock_sha256",
+    "git_commit",
+    "git_dirty",
+    "scenario_path",
+    "fds_version",
+    "created_utc",
+)
+# JuPedSim builds differ in the last bits between platforms.
+FLOAT_REL = 1e-9
+FLOAT_ABS = 1e-12
 
 
 def t_eq_63_44_min(t_c: float) -> float:
@@ -182,26 +201,54 @@ def test_fatal_endpoint_constant_temperature():
         result.cleanup()
 
 
+def _check_row_flags(rows):
+    """Hot rows are flagged, cool rows are not, humidity is always unknown."""
+    for row in rows:
+        t_c = float(row["temperature_celsius"])
+        assert not (t_c > 250.0 and str(row["heat_outside_validity"]) != "True")
+        assert not (t_c < 180.0 and str(row["heat_outside_validity"]) != "False")
+    assert {row["heat_endpoint"] for row in rows} == {"fatal"}
+    assert {row["heat_humidity"] for row in rows} == {"unknown"}
+    assert any(str(row["heat_outside_validity"]) == "True" for row in rows)
+
+
+def _read_json(path):
+    with open(path, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
 def test_endpoint_and_validity_flag_reach_the_outputs():
     """FED history rows carry the endpoint and flag T above the data range."""
     result = _run(_table_63_21_field, "fatal", run_s=300.0)
     try:
-        rows = result.fed_history
-        assert rows
-        assert {row["heat_endpoint"] for row in rows} == {"fatal"}
-        for row in rows:
-            hot = float(row["temperature_celsius"]) > 250.0
-            cool = float(row["temperature_celsius"]) < 180.0
-            if hot:
-                assert row["heat_outside_validity"] is True
-            if cool:
-                assert row["heat_outside_validity"] is False
-        assert any(row["heat_outside_validity"] for row in rows)
-        manifest = json.loads(open(result.manifest_file).read())
+        assert result.fed_history
+        _check_row_flags(result.fed_history)
+        manifest = _read_json(result.manifest_file)
         assert manifest["heat_endpoint"] == "fatal"
+        assert manifest["heat_validity"]["humidity"] == "unknown"
+        assert manifest["heat_validity"]["max_temperature_c"] == 205.0
         # FED = 1 is the fatal endpoint: Eq. 63.47 crosses at about 276 s,
         # Eq. 63.44 at about 203 s.
         _check_crossings(result, t_fatal_min)
+    finally:
+        result.cleanup()
+
+
+def _nan_window_field(t, x, y):
+    return math.nan if 5.0 <= t < 10.0 else 150.0
+
+
+def test_non_finite_temperature_is_flagged_and_adds_no_dose():
+    """A NaN sample is flagged and contributes nothing to the dose."""
+    result = _run(_nan_window_field, "fatal", run_s=20.0)
+    try:
+        rows = result.fed_history
+        bad = [row for row in rows if not math.isfinite(row["temperature_celsius"])]
+        good = [row for row in rows if math.isfinite(row["temperature_celsius"])]
+        assert bad and good
+        assert {row["heat_outside_validity"] for row in bad} == {True}
+        assert {row["heat_fed_rate_per_min"] for row in bad} == {0.0}
+        assert {row["heat_outside_validity"] for row in good} == {False}
     finally:
         result.cleanup()
 
@@ -215,35 +262,67 @@ def _csv_rows(result, path):
         return reader.fieldnames, list(reader)
 
 
-def test_default_fed_history_csv_is_written(tmp_path):
-    """Control: default-mode rows go through the CSV writer."""
+def _renumbered(rows):
+    """JuPedSim numbers agents process-wide: count ids from the first one."""
+    first = min(int(row["agent_id"]) for row in rows)
+    return [{**row, "agent_id": str(int(row["agent_id"]) - first)} for row in rows]
+
+
+def _same_value(got: str, want: str) -> bool:
+    try:
+        return math.isclose(
+            float(got), float(want), rel_tol=FLOAT_REL, abs_tol=FLOAT_ABS
+        )
+    except ValueError:
+        return got == want
+
+
+def _assert_rows_match(got_rows, want_rows):
+    assert len(got_rows) == len(want_rows)
+    for i, (got, want) in enumerate(zip(got_rows, want_rows)):
+        mismatched = [k for k in want if not _same_value(got[k], want[k])]
+        assert not mismatched, (i, {k: (got[k], want[k]) for k in mismatched})
+
+
+def _normalised_manifest(path):
+    manifest = _read_json(path)
+    return {
+        key: "<normalised>" if key in VOLATILE_MANIFEST_KEYS else value
+        for key, value in manifest.items()
+    }
+
+
+def test_default_outputs_match_the_baseline(tmp_path):
+    """Without an endpoint the FED history CSV and manifest are as on main."""
     result = _run(_table_63_21_field, None, run_s=30.0)
     try:
         header, rows = _csv_rows(result, tmp_path / "fed.csv")
-        assert "heat_fed_cumulative" in header
-        assert len(rows) == len(result.fed_history)
+        want_header, want_rows = _read_baseline_csv()
+        assert header == want_header
+        _assert_rows_match(_renumbered(rows), _renumbered(want_rows))
+        assert _normalised_manifest(result.manifest_file) == _read_json(
+            BASELINE_DIR / "manifest.json"
+        )
     finally:
         result.cleanup()
 
 
+def _read_baseline_csv():
+    with open(BASELINE_DIR / "fed_history.csv", newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        return reader.fieldnames, list(reader)
+
+
 def test_endpoint_fed_history_csv_carries_endpoint_and_flag(tmp_path):
-    """``--output-fed-history`` keeps the endpoint and the validity flag."""
+    """``--output-fed-history`` keeps the endpoint, the flag and humidity."""
     result = _run(_table_63_21_field, "fatal", run_s=300.0)
     try:
         header, rows = _csv_rows(result, tmp_path / "fed.csv")
-        assert {"heat_endpoint", "heat_outside_validity"} <= set(header)
-        assert {row["heat_endpoint"] for row in rows} == {"fatal"}
-        flags = {
-            row["heat_outside_validity"]
-            for row in rows
-            if float(row["temperature_celsius"]) > 250.0
-        }
-        assert flags == {"True"}
-        flags = {
-            row["heat_outside_validity"]
-            for row in rows
-            if float(row["temperature_celsius"]) < 180.0
-        }
-        assert flags == {"False"}
+        assert header[-3:] == [
+            "heat_endpoint",
+            "heat_outside_validity",
+            "heat_humidity",
+        ]
+        _check_row_flags(rows)
     finally:
         result.cleanup()

@@ -26,7 +26,14 @@ API under test:
   attribute (``None`` = Eq. 63.44).
 - ``pyfds_evac.core.fed.HEAT_CONVECTIVE_VALIDITY_MAX_C``: upper temperature
   of the convective data (about 205 deg C, Table 63.17, p. 2375).
-- ``pyfds_evac.core.fed.heat_temperature_outside_validity(T) -> bool``.
+- ``pyfds_evac.core.fed.heat_temperature_outside_validity(T) -> bool``:
+  True above the limit and for a non-finite T.
+- ``pyfds_evac.core.fed.heat_endpoint_row_fields(endpoint, T) -> dict``: the
+  FED history fields of endpoint mode, ``{}`` without an endpoint.
+- ``pyfds_evac.core.fed.HEAT_HUMIDITY_STATUS``: ``"unknown"``, as humidity is
+  not sampled while the laws hold for < 10 % water vapour (p. 2383).
+- ``build_manifest(..., heat_endpoint=...)`` records ``heat_endpoint`` and
+  ``heat_validity``.
 - ``run.py``: ``--heat-endpoint {tolerance,injury,fatal}``, dest
   ``heat_endpoint``, default ``None``.
 - ``build_run_kwargs``: ``opts.heat_endpoint`` reaches the heat model.
@@ -279,6 +286,60 @@ def test_validity_limit_is_the_highest_convective_data_point():
 )
 def test_samples_above_the_data_are_flagged(t_c, outside):
     assert _outside_validity(t_c) is outside
+
+
+@pytest.mark.parametrize("t_c", [float("nan"), float("inf"), -float("inf")])
+def test_non_finite_samples_are_flagged(t_c):
+    """A NaN or infinite temperature is not valid data: flag it."""
+    assert _outside_validity(t_c) is True
+
+
+def test_default_mode_adds_no_row_fields():
+    from pyfds_evac.core.fed import heat_endpoint_row_fields
+
+    assert heat_endpoint_row_fields(None, 405.0) == {}
+
+
+@pytest.mark.parametrize(
+    ("t_c", "outside"), [(150.0, False), (405.0, True), (float("nan"), True)]
+)
+def test_endpoint_row_fields_carry_endpoint_flag_and_humidity(t_c, outside):
+    """Humidity is not sampled, so its status is stated as unknown (p. 2383)."""
+    from pyfds_evac.core.fed import heat_endpoint_row_fields
+
+    assert heat_endpoint_row_fields("fatal", t_c) == {
+        "heat_endpoint": "fatal",
+        "heat_outside_validity": outside,
+        "heat_humidity": "unknown",
+    }
+
+
+def test_manifest_records_endpoint_validity(tmp_path):
+    from pyfds_evac.core import manifest
+
+    data = manifest.build_manifest(
+        seed=1,
+        scenario_path=None,
+        fds_dir=None,
+        uv_lock=tmp_path / "missing",
+        heat_endpoint="injury",
+    )
+    assert data["heat_endpoint"] == "injury"
+    assert data["heat_validity"] == {
+        "max_temperature_c": 205.0,
+        "max_temperature_assumed": True,
+        "humidity": "unknown",
+        "humidity_limit": "< 10 % water vapour by volume (SFPE Ch. 63, p. 2383)",
+    }
+
+
+def test_manifest_without_endpoint_has_no_heat_keys(tmp_path):
+    from pyfds_evac.core import manifest
+
+    data = manifest.build_manifest(
+        seed=1, scenario_path=None, fds_dir=None, uv_lock=tmp_path / "missing"
+    )
+    assert not {"heat_endpoint", "heat_validity"} & set(data)
 
 
 @pytest.mark.parametrize("name", ENDPOINTS)
