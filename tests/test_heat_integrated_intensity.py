@@ -500,7 +500,7 @@ def test_run_config_passes_source_and_factor(monkeypatch):
 
 @XFAIL
 def test_run_config_default_source_is_gas(monkeypatch):
-    _patch(monkeypatch, {"temperature"})
+    _patch(monkeypatch, {"temperature", "integrated_intensity"})
     _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
     model = _build()["heat_fed_model"]
     assert model.radiant_source == "gas"
@@ -534,6 +534,25 @@ def test_run_config_rejects_case_without_intensity_slice(monkeypatch):
     _patch(monkeypatch, {"temperature"})
     with pytest.raises((ValueError, SystemExit)):
         _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
+
+
+# --- FED history CSV ----------------------------------------------------------------
+
+
+@XFAIL
+def test_fed_history_csv_writes_integrated_intensity(tmp_path):
+    import csv
+
+    import run
+
+    row = {"time_s": 0.0, "agent_id": 1, "heat_flux_kw_m2": 5.0}
+    run._write_fed_history_csv([row], str(tmp_path / "a.csv"))
+    row = {**row, "heat_integrated_intensity_kw_m2": 10.0}
+    run._write_fed_history_csv([row], str(tmp_path / "b.csv"))
+    with (tmp_path / "b.csv").open(newline="") as handle:
+        written = next(csv.DictReader(handle))
+    assert float(written["heat_integrated_intensity_kw_m2"]) == 10.0
+    assert float(written["heat_flux_kw_m2"]) == 5.0
 
 
 # --- docs ---------------------------------------------------------------------------
