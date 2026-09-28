@@ -27,6 +27,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Docs: Fundamentals › Incapacitation thresholds states what is known
+  about the population spread of heat tolerance: SFPE Ch. 63 gives figures
+  only for radiant lethality, which imply σ ≈ 0.22 if log-normal, not the
+  borrowed 0.94. No code change; the heat threshold stays deterministic by
+  default ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 - Performance: the per-step speed update of direct-steering runs scans
   only the zones whose speed factor is not 1, precomputed once per run
   (`active_steering_zones`), and leaves an agent outside every such zone

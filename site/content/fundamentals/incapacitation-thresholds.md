@@ -69,6 +69,36 @@ design convention derived from the log-normal assumption. For reference
 log-scale standard deviation 1.0 puts 11.4 % below 0.3, ISO's figure; the
 preview does not state which standard deviation ISO used.
 
+## Heat
+
+No source we could consult gives a population spread for tolerance of
+convective heat, the dose pyFDS-Evac computes (Eq. 63.44). SFPE Ch. 63 gives
+population figures for heat only for radiant lethality (p. 2382): a radiant
+dose of 10 (kW/m²)^4/3·min "represents a fatal level for a vulnerable
+population (over 65 years of age) or a 1 % fatality level for the average
+population, whereas 16.7 (kW/m²)^4/3·min represents a 50 % probability
+lethal level for the average population". The chapter's radiant-heat passage
+cites Hockey and Rew (1996) and Purser (1997). The probit relations behind
+these figures are in Hockey and Rew, which we have not read.
+
+Inference, not a statement of the sources: if the lethal dose is log-normal
+with median 16.7 and 1 % below 10, its log-scale standard deviation is
+ln(16.7/10)/2.326 = 0.513/2.326, so \(\sigma \approx 0.22\). The spec's
+fatal dose D = 16.667 gives the same value to two decimals. Its limits:
+
+- The Handbook states no distribution; the log-normal is assumed.
+- Two figures fix two parameters, so nothing tests the fit.
+- The figures are for radiant lethality, the fatal endpoint of the planned
+  total-flux dose (`specs/016-heat-fed/SPEC.md`), which is not implemented.
+  They do not apply to the convective Eq. 63.44 time in use.
+
+With FED = 1 at D = 16.667, the 1 % fatality dose is FED = 0.60. The gas
+dose's σ = 0.94, which the opt-in probabilistic heat mode borrows, would put
+29 % of people below FED = 0.60 instead of 1 %. The heat threshold therefore
+stays deterministic by default. A probit in the natural log of dose with
+slope b gives σ = 1/b, so Hockey and Rew's slopes would settle the value
+([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
+
 ## Sources
 
 - ISO (2012). *ISO 13571:2012 Life-threatening components of fire —
@@ -94,5 +124,8 @@ preview does not state which standard deviation ISO used.
   (2013). *Report on high-rise fireground field experiments* (K. M.
   Butler, Ed.). NIST Technical Note 1797.
   [doi:10.6028/NIST.TN.1797](https://doi.org/10.6028/NIST.TN.1797)
+- Hockey, S. M., & Rew, P. J. (1996). *Human response to thermal
+  radiation*. Contract Research Report 97/1996. HSE Books, Sudbury. Cited
+  by Ch. 63 as ref. [133]; not consulted.
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md#tenability-irritant-slowdown-and-incapacitation).

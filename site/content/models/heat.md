@@ -47,7 +47,10 @@ stops and stays in place as an obstacle, as for the gas dose.
   the run's seed, on a stream independent of the gas threshold:
   \(D_i = \texttt{heat\_fed\_threshold} \cdot \exp(\sigma Z)\),
   \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
-  assumption with no data basis for heat.
+  assumption with no data basis for heat. The Handbook's radiant lethality
+  figures point to a much narrower spread, for an endpoint not modelled here
+  ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat),
+  [#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 
 The gas dose is probabilistic by default; the two modes are set separately
 (`--incapacitation-mode` and `--heat-incapacitation-mode`).

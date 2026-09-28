@@ -75,7 +75,6 @@ def _heat_section(text):
     return text[match.start() :]
 
 
-@pytest.mark.xfail(strict=True, reason="#225")
 def test_thresholds_page_states_what_is_known_for_heat():
     """Fundamentals › Incapacitation thresholds covers heat with sources."""
     section = _heat_section(THRESHOLDS.read_text())
@@ -83,7 +82,6 @@ def test_thresholds_page_states_what_is_known_for_heat():
         assert fragment in section, fragment
 
 
-@pytest.mark.xfail(strict=True, reason="#225")
 def test_thresholds_page_quotes_the_derived_sigma_correctly():
     """Any sigma the heat section quotes other than 0.94 equals 0.22."""
     section = _heat_section(THRESHOLDS.read_text())
@@ -95,13 +93,11 @@ def test_thresholds_page_quotes_the_derived_sigma_correctly():
         assert value == pytest.approx(expected, abs=0.005)
 
 
-@pytest.mark.xfail(strict=True, reason="#225")
 def test_models_heat_links_the_open_sigma_issue():
     """Models › Heat points to #225 for the unsourced opt-in sigma."""
     assert ISSUE in MODELS_HEAT.read_text()
 
 
-@pytest.mark.xfail(strict=True, reason="#225")
 def test_changelog_unreleased_mentions_225():
     text = CHANGELOG.read_text()
     unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
