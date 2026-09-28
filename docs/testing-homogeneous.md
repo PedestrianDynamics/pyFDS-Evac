@@ -107,7 +107,7 @@ the zero-CO2 guard of FDS (`func.f90`, function `FED`):
 
 ```
 HV_CO2 = exp(0.1903 x C_CO2 + 2.0004) / 7.1   if C_CO2 > 0
-HV_CO2 = 1                                    if C_CO2 = 0
+HV_CO2 = 1                                    if C_CO2 <= 0 (or not finite)
 ```
 
 **Total FED** (eq. 22.42) — FED_CN, FED_NOx, and FLD_irr are omitted here
