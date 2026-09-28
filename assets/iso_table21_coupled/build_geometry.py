@@ -51,6 +51,9 @@ CORRIDOR = (-50.0, -1.0, 50.0, 1.0)
 CEILING = 3.0
 CELL = 0.5
 SLICE_HEIGHT = 2.0
+# pyFDS-Evac samples at 1.6 m by default and reads the slice nearest it.
+DEFAULT_HEIGHT = 1.6
+DEFAULT_HEIGHT_SNAPPED = round(DEFAULT_HEIGHT / CELL) * CELL
 
 EXIT_BOX = (49.0, -0.5, 49.92, 0.5)
 SPAWN = (-49.5, -0.5, -48.5, 0.5)
@@ -185,6 +188,9 @@ def build_deck() -> str:
 ! SPEC_ID is mandatory on the extinction slice once species are declared
 ! explicitly, or FDS raises ERROR 1004.
 &SLCF PBZ={SLICE_HEIGHT}, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
+! At the default sampling height of pyFDS-Evac (FDS+Evac's HUMAN_SMOKE_HEIGHT).
+! FDS snaps it to the nearest cell face, {DEFAULT_HEIGHT_SNAPPED} m on this grid.
+&SLCF PBZ={DEFAULT_HEIGHT}, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
 &DUMP DT_SLCF=100.0 /
 
 &TAIL /
