@@ -166,9 +166,15 @@ values cannot be copied across unchanged. The delay is in seconds.
 | `uniform` | lower bound [s] | upper bound [s] | 0.0, 60.0 |
 | `constant` | delay [s] | unused | 10.0, - |
 
-The presets are illustrative, not from a cited dataset
-([#144](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/144)). Set both
-parameters from data for your occupancy.
+The gamma, log-normal and Weibull presets are the fits for office buildings
+(Business Cluster 1: 11 evacuations, 10 of them drills, 4–14 floors, R²
+0.55–0.57) in Lovreglio et al. (2019), Table 3, with the log-normal *a* taken
+from the 2019 corrigendum
+([doi:10.1016/j.firesaf.2018.12.009](https://doi.org/10.1016/j.firesaf.2018.12.009);
+[doi:10.1016/j.firesaf.2019.102829](https://doi.org/10.1016/j.firesaf.2019.102829)).
+The uniform preset is RiMEA's "speedy evacuation" sensitivity scenario, not
+data. For other occupancies, set both parameters from the matching table of
+that paper.
 
 The presets are used when `use_premovement` is `true` and `premovement_param_a`
 or `premovement_param_b` is missing; both parameters must be given for either
