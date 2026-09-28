@@ -383,10 +383,11 @@ def test_a3_9_eq_63_44_within_factor_two_of_table_63_20():
 def test_a3_10_eq_63_44_not_longer_than_reported_dry_air_tolerance():
     """Eq. 63.44 never exceeds a time humans were reported to tolerate.
 
-    Table 63.17 (p. 2377), dry-air rows, the points A-D of Fig. 63.28 from
-    which Eq. 63.44 is derived. The subjects were clothed (205 C: "bare
-    headed, protected"), so they tolerated longer than naked skin would; the
-    check is one-sided and needs no chosen tolerance. The humid-air row is
+    Table 63.17 (p. 2375), dry-air rows: the points A-D "added for
+    comparison" to Fig. 63.28, whose curves Eq. 63.44 is derived from. The
+    subjects were clothed (205 C: "bare headed, protected") and tolerated
+    these times, so a naked-skin law should not predict longer; the check is
+    one-sided and needs no chosen tolerance. The humid-air row is
     outside Eq. 63.44's < 10 % water-vapour scope and is left out.
     """
     reported = {110.0: 25.0, 180.0: 3.0, 205.0: 4.0, 126.0: 7.0}

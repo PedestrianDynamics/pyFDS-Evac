@@ -4,8 +4,9 @@ This scenario checks the *wiring*, not the law: the expected stop time is
 Eq. 63.44 as printed (``harness.heat_fed_rate_per_min``), so it confirms the
 engine applies the equation and the threshold, not that the equation
 predicts human tolerance. The comparison with the Handbook's tables is in
-``test_heat_fed_verif.py`` (A3.8-A3.11). The wiring the gas-FED suite (S1)
-can't exercise: gas and heat are
+``test_heat_fed_verif.py`` (A3.8-A3.11).
+
+It covers wiring the gas-FED suite (S1) can't exercise: gas and heat are
 two independent cumulative doses (see ``fed.py``'s ``TenabilityConfig``
 docstring), and an agent must collapse the instant *either* crosses its
 threshold, recorded correctly in ``incapacitation_cause``.
