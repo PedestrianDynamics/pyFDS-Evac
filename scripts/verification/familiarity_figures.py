@@ -9,7 +9,7 @@
 #     "shapely",
 # ]
 # ///
-"""Figures for the verification test "Familiarity: known exits vs discovered exits".
+"""Figures for the verification test "Familiarity: full map vs discovered map".
 
 ``assets/familiarity_test_full`` and ``assets/familiarity_test_discovery`` are
 one 20 x 18 m plan with one exit, four signed checkpoints and 20 agents; only
@@ -20,24 +20,28 @@ here from the geometry alone, with no pyFDS-Evac code:
 * the stage graph: every spawn/checkpoint is wired to each checkpoint/exit it
   reaches without passing another checkpoint (detour <= 5 %), the rule of
   Models > Wayfinding, recomputed with those shortest paths;
-* legibility in clear air: a sign at s with facing n (compass bearing alpha) is
-  legible from p when the segment p-s stays in the walkable area and
-  n.(p - s) / |p - s| * 30 m >= |p - s|; an unoriented sign only needs
-  |p - s| <= 30 m;
+* legibility in clear air, fdsvismap's rule: a sign at s with facing n
+  (compass bearing alpha) is legible from p when the segment p-s stays in the
+  walkable area and n.(p - s) / |p - s| * 30 m >= |p - s|; an unoriented sign
+  only needs |p - s| <= 30 m. The variant with the 30 m cap applied after the
+  view angle (front half-disc) is checked to give the same predictions;
 * discovery at t = 0: spawn plus the spawn's neighbours whose sign is legible
   from the spawn's centroid; then the nearest known, unvisited node, until the
   exit is legible.
 
 The runs are read from ``--data``; nothing is simulated here. ``DIR`` holds
 ``full/`` and ``discovery_cell<c>/`` for each clear-air grid c, each with the
-``run.sqlite`` and ``routes.csv`` that ``run.py`` wrote.
+``run.sqlite``, ``routes.csv`` and ``cognitive_map.csv`` that
+``scripts/verification/familiarity_run.py`` wrote. Every check is made twice:
+with no grid tolerance and with the tolerance ``grid_tol`` derives from the
+vismap's discretisation.
 
 Run from the repository root::
 
     uv run python scripts/verification/familiarity_figures.py --data DIR
 
 Writes ``familiarity_setup.png``, ``familiarity_paths.png``,
-``familiarity_egress.png`` and ``familiarity.gif`` to
+``familiarity_door.png``, ``familiarity_egress.png`` and ``familiarity.gif`` to
 ``site/static/images/verification/``.
 """
 
@@ -85,11 +89,20 @@ DEST = {
     "E": "#33a02c",
     "S": "#bdbdbd",
 }
+TURN = "#8073ac"  # turned back at CP3: purple, hatched; not a node colour
+SIGN = "#c89b00"  # sign facing: gold arrow
 PATTERN_COLORS = {
-    "direct: S-CP3-E": FULL,
-    "predicted tour: CP0-CP1-CP2-CP3-E": "#fee090",
-    "other order, no turn-back": "#74add1",
-    "turned back at CP3 (wander)": "#d73027",
+    "direct: S-CP3-exit": FULL,
+    "tour, then exit": "#fee090",
+    "CP2 skipped: sign hidden at CP1": "#80cdc1",
+    "tour, turned back at CP3 (#250)": TURN,
+}
+# discovery grids: one orange ramp, one dash per grid; 0.05 m is the reference
+GRID_STYLE = {
+    "0.25 m": dict(color="#fdae6b", lw=1.4, ls=(0, (1, 1.2))),
+    "0.1 m": dict(color="#fd8d3c", lw=1.3, ls="-."),
+    "0.05 m": dict(color="#e6550d", lw=2.4, ls="--"),
+    "0.025 m": dict(color="#a63603", lw=1.3, ls=(0, (6, 1.5, 1, 1.5, 1, 1.5))),
 }
 LEGEND = dict(
     frameon=True,
@@ -196,20 +209,60 @@ def legible(geo, p, sign):
     return facing * READ_M >= d
 
 
-def legible_near(geo, p, sign, tol):
-    """Legible from p or from a point within tol of it (grid tolerance)."""
-    if legible(geo, p, sign):
+def grid_tol(cell):
+    """Largest shift of the sight boundary the vismap grid can cause [m].
+
+    ``VisibilityModel.clear_air`` and fdsvismap 0.2.1 introduce four errors,
+    each a lateral shift of a sight line of at most:
+
+    * the observer snaps to the nearest cell centre: c sqrt(2) / 2;
+    * the sign snaps to the nearest cell centre: c sqrt(2) / 2;
+    * a wall cell blocks when its centre is outside the walkable area, so a
+      wall face moves by up to c / 2;
+    * rays are drawn anti-aliased (``skimage.draw.line_aa``), which marks the
+      cells up to one cell beside the ideal line: c.
+
+    Their sum is c (sqrt(2) + 3/2), about 2.9 c.
+    """
+    return cell * (math.sqrt(2.0) + 1.5)
+
+
+def disc(p, tol):
+    """The centre and 48 points on three rings of radius tol/3, 2 tol/3, tol."""
+    pts = [p]
+    if tol <= 0:
+        return pts
+    for k, n in ((1, 8), (2, 16), (3, 24)):
+        r = tol * k / 3.0
+        for t in np.linspace(0.0, 2.0 * math.pi, n, endpoint=False):
+            pts.append((p[0] + r * math.cos(t), p[1] + r * math.sin(t)))
+    return pts
+
+
+def legible_somewhere(geo, p, sign, tol, rule=None):
+    """Legible from some point within tol of p: not certainly hidden."""
+    rule = rule or legible
+    return any(rule(geo, q, sign) for q in disc(p, tol))
+
+
+def legible_everywhere(geo, p, sign, tol, rule=None):
+    """Legible from every point within tol of p: certainly legible."""
+    rule = rule or legible
+    return all(rule(geo, q, sign) for q in disc(p, tol))
+
+
+def legible_half_disc(geo, p, sign):
+    """Variant: the 30 m cap applied after the view angle (front half-disc)."""
+    x, y, alpha = sign
+    d = math.dist(p, (x, y))
+    if d < 1e-9:
         return True
-    angles = np.linspace(0.0, 2.0 * math.pi, 8, endpoint=False)
-    around = [(p[0] + tol * math.cos(t), p[1] + tol * math.sin(t)) for t in angles]
-    return any(legible(geo, q, sign) for q in around)
-
-
-def legible_all_around(geo, p, sign, tol):
-    """Legible from p and from every point within tol of it."""
-    angles = np.linspace(0.0, 2.0 * math.pi, 8, endpoint=False)
-    around = [(p[0] + tol * math.cos(t), p[1] + tol * math.sin(t)) for t in angles]
-    return all(legible(geo, q, sign) for q in [p, *around])
+    if d > READ_M or not geo.sees(p, (x, y)):
+        return False
+    if alpha is None:
+        return True
+    a = math.radians(alpha)
+    return math.sin(a) * (p[0] - x) + math.cos(a) * (p[1] - y) > 0.0
 
 
 def wire(geo, nodes):
@@ -239,9 +292,9 @@ def _between(geo, nodes, src, tgt, checkpoints):
     return False
 
 
-def predict_discovery(geo, nodes, signs, edges):
+def predict_discovery(geo, nodes, signs, edges, rule=legible):
     """Known set at t = 0 and the nearest-frontier tour, from node points."""
-    known = {"S"} | {n for n in edges["S"] if legible(geo, nodes["S"], signs[n])}
+    known = {"S"} | {n for n in edges["S"] if rule(geo, nodes["S"], signs[n])}
     known0 = set(known)
     visited, tour, here = {"S"}, [], "S"
     frontier_log = []
@@ -254,7 +307,7 @@ def predict_discovery(geo, nodes, signs, edges):
         frontier_log.append((tour[-1] if tour else "S", costs))
         tour.append(here)
         visited.add(here)
-        seen = {n for n in edges.get(here, []) if legible(geo, nodes[here], signs[n])}
+        seen = {n for n in edges.get(here, []) if rule(geo, nodes[here], signs[n])}
         known |= seen
     return known0, tour + ["E"], frontier_log
 
@@ -278,6 +331,12 @@ def load_scenario():
     return cfg, walkable, polys, nodes, signs, params
 
 
+def short(node_id):
+    """Short node name: S, E or CP<k>."""
+    names = {"jps-exits_0": "E", "jps-distributions_0": "S"}
+    return names.get(node_id, "CP" + str(node_id).rsplit("_", 1)[-1])
+
+
 def load_run(run_dir):
     con = sqlite3.connect(run_dir / "run.sqlite")
     traj = pd.read_sql(
@@ -287,43 +346,51 @@ def load_run(run_dir):
     )
     con.close()
     routes = pd.read_csv(run_dir / "routes.csv")
-    names = {"jps-exits_0": "E", "jps-distributions_0": "S"}
-    routes["target"] = routes["new_exit"].map(
-        lambda s: names.get(s, "CP" + str(s).rsplit("_", 1)[-1])
+    routes["target"] = routes["new_exit"].map(short)
+    maps = pd.read_csv(run_dir / "cognitive_map.csv", keep_default_na=False)
+    maps["nodes"] = maps["known_nodes"].map(lambda s: {short(n) for n in s.split()})
+    maps["edges"] = maps["known_edges"].map(
+        lambda s: {tuple(short(n) for n in e.split(">")) for e in s.split()}
     )
-    return traj, routes
+    return traj, routes, maps
 
 
 def node_sequence(routes, aid):
     return list(routes.loc[routes["agent_id"] == aid, "target"])
 
 
-def classify(seq):
-    if not seq:
-        return "direct: S-CP3-E"
-    if seq == ["CP0", "CP1", "CP2", "CP3", "E"]:
-        return "predicted tour: CP0-CP1-CP2-CP3-E"
-    return "other order, no turn-back"
+def position(g, t):
+    """Agent position at time t, interpolated between the 10 fps frames."""
+    ft = g["frame"].to_numpy() / FPS
+    return (
+        float(np.interp(t, ft, g["x"].to_numpy())),
+        float(np.interp(t, ft, g["y"].to_numpy())),
+    )
 
 
 def destinations(traj, routes, full):
-    """Per trajectory row, the node the agent is heading for."""
+    """Per trajectory row, the node the agent is heading for and the reason."""
     if full:
         # full agents walk S -> CP3 -> E; past the partition the exit is next
-        return np.where(traj["y"].to_numpy() > 13.1, "E", "CP3")
+        dest = np.where(traj["y"].to_numpy() > 13.1, "E", "CP3")
+        return dest, np.full(len(traj), "shortest", dtype=object)
     out = np.empty(len(traj), dtype=object)
+    why = np.empty(len(traj), dtype=object)
     for aid, idx in traj.groupby("id").groups.items():
         r = routes[routes["agent_id"] == aid]
         t = traj.loc[idx, "frame"].to_numpy() / FPS
-        k = np.searchsorted(r["time_s"].to_numpy(), t, side="right") - 1
-        out[np.asarray(idx)] = r["target"].to_numpy()[np.clip(k, 0, None)]
-    return out
+        k = np.clip(
+            np.searchsorted(r["time_s"].to_numpy(), t, side="right") - 1, 0, None
+        )
+        out[np.asarray(idx)] = r["target"].to_numpy()[k]
+        why[np.asarray(idx)] = r["reason"].to_numpy()[k]
+    return out, why
 
 
 # --- Checks ---
 
 
-def check_full(geo, polys, traj, routes, v0):
+def check_full(geo, polys, traj, routes, maps, edges, v0):
     rows = []
     for aid, g in traj.groupby("id"):
         xy = g[["x", "y"]].to_numpy()
@@ -345,67 +412,97 @@ def check_full(geo, polys, traj, routes, v0):
         )
     df = pd.DataFrame(rows)
     df["t_min"] = df["geodesic"] / v0
-    return df, len(routes)
+    wired = {(a, b) for a, bs in edges.items() for b in bs}
+    first = maps.sort_values("time_s").groupby("agent_id").first()
+    whole = sum(
+        r.nodes == set(edges) | {"E"} and r.edges == wired for r in first.itertuples()
+    )
+    return df, len(routes), dict(whole_map_at_t0=whole, map_changes=len(maps) - 20)
 
 
 def _enters(poly, xy):
     return any(poly.contains(Point(p)) for p in xy)
 
 
-def check_discovery(geo, nodes, signs, known0, traj, routes, cell):
-    """Evidence for every decision, and the exit's legibility at each wander."""
-    tol = cell / 2.0 * math.sqrt(2.0)
+def check_learning(geo, signs, edges, known0, traj, maps, tol):
+    """Criteria 2 and 3 from the recorded cognitive maps.
+
+    Returns the agents whose map at t = 0 is not ``known0``, and every node
+    learnt later that breaks the rule: it must be a stage-graph neighbour of a
+    node already known, and its sign must not be certainly hidden (legible
+    from some point within tol of the agent's position at that time).
+    """
+    wired = {(a, b) for a, bs in edges.items() for b in bs}
     by_id = {aid: g for aid, g in traj.groupby("id")}
-    bad, wander_seen, wander_y = [], [], []
-    for r in routes.itertuples():
-        g = by_id[r.agent_id]
-        past = g[g["frame"] <= round(r.time_s * FPS)][["x", "y"]].to_numpy()
-        if r.reason == "wander" and r.target != "S":
-            p = tuple(past[-1])
-            wander_seen.append(legible_all_around(geo, p, signs["E"], tol))
-            if math.dist(p, nodes["CP3"]) < 1.5:
-                wander_y.append(p[1])
-        if r.target in known0 or r.target == "S":
-            continue
-        if not any(legible_near(geo, tuple(p), signs[r.target], tol) for p in past):
-            bad.append((r.agent_id, r.time_s, r.target))
-    first = routes.sort_values("time_s").groupby("agent_id")["target"].first()
-    # where an agent skipped CP2: was CP2's sign legible when it chose at CP1?
-    skipped = []
-    for aid in routes["agent_id"].unique():
-        seq = routes[routes["agent_id"] == aid]
-        if list(seq["target"].iloc[1:3]) != ["CP1", "CP3"]:
-            continue
-        t = seq["time_s"].iloc[2]
-        g = by_id[aid]
-        p = tuple(g[g["frame"] <= round(t * FPS)][["x", "y"]].to_numpy()[-1])
-        skipped.append((aid, t, p, legible_near(geo, p, signs["CP2"], tol)))
+    wrong_start, not_neighbour, hidden, learnt = [], [], [], 0
+    for aid, m in maps.sort_values("time_s").groupby("agent_id"):
+        rows = list(m.itertuples())
+        if rows[0].time_s > 0 or rows[0].nodes != known0:
+            wrong_start.append(aid)
+        for prev, cur in zip(rows, rows[1:]):
+            p = position(by_id[aid], cur.time_s)
+            for n in sorted(cur.nodes - prev.nodes):
+                learnt += 1
+                if not any((u, n) in wired for u in prev.nodes):
+                    not_neighbour.append((aid, cur.time_s, n))
+                if not legible_somewhere(geo, p, signs[n], tol):
+                    hidden.append((aid, round(cur.time_s, 2), n, p))
     return dict(
-        evidence_violations=bad,
-        first_targets=first.value_counts().to_dict(),
-        wanders=len(wander_seen),
-        wander_exit_legible=sum(wander_seen),
-        wander_y_at_cp3=(min(wander_y), max(wander_y)) if wander_y else None,
-        turned_back=routes.loc[routes["reason"] == "wander", "agent_id"].nunique(),
-        skipped_cp2=skipped,
-        tour=_tour_check(routes, skipped),
+        wrong_start=wrong_start,
+        learnt=learnt,
+        not_neighbour=not_neighbour,
+        hidden=hidden,
     )
 
 
-def _tour_check(routes, skipped):
-    """Agents whose exploration, up to CP3, is the tour or an explained skip."""
-    hidden = {aid for aid, _, _, seen in skipped if not seen}
-    counts = {"as predicted": 0, "CP2 hidden at CP1": 0, "unexplained": 0}
-    for aid, r in routes.groupby("agent_id"):
-        explore = list(r.loc[r["reason"] == "explore", "target"])
+def check_decisions(geo, signs, traj, routes, tol):
+    """Criteria 4 and 5: the skip of CP2 and every patrol decision.
+
+    A skip, or a patrol, breaks the rule only when the sign it ignores was
+    certainly legible: from every point within tol of the agent's position.
+    """
+    by_id = {aid: g for aid, g in traj.groupby("id")}
+    patrols, patrol_seen, skips = [], [], []
+    for r in routes.itertuples():
+        if r.reason != "wander":
+            continue
+        p = position(by_id[r.agent_id], r.time_s)
+        patrols.append((r.agent_id, r.time_s, p))
+        if legible_everywhere(geo, p, signs["E"], tol):
+            patrol_seen.append((r.agent_id, r.time_s, p))
+    for aid, seq in routes.groupby("agent_id"):
+        explore = list(seq.loc[seq["reason"] == "explore", "target"])
         prefix = explore[: explore.index("CP3") + 1] if "CP3" in explore else explore
         if prefix == ["CP0", "CP1", "CP2", "CP3"]:
-            counts["as predicted"] += 1
-        elif prefix == ["CP0", "CP1", "CP3"] and aid in hidden:
-            counts["CP2 hidden at CP1"] += 1
-        else:
-            counts["unexplained"] += 1
-    return counts
+            skips.append((aid, "as predicted", None))
+            continue
+        if prefix != ["CP0", "CP1", "CP3"]:
+            skips.append((aid, "unexplained", None))
+            continue
+        t = seq.loc[seq["target"] == "CP3", "time_s"].iloc[0]
+        p = position(by_id[aid], t)
+        seen = legible_everywhere(geo, p, signs["CP2"], tol)
+        skips.append((aid, "unexplained" if seen else "CP2 hidden at CP1", p))
+    tour = {"as predicted": 0, "CP2 hidden at CP1": 0, "unexplained": 0}
+    for _, kind, _ in skips:
+        tour[kind] += 1
+    return dict(
+        patrols=patrols,
+        patrol_seen=patrol_seen,
+        tour=tour,
+        skipped=[(a, p) for a, k, p in skips if p is not None],
+    )
+
+
+def route_class(seq, turned_back, skipped):
+    """One route category per agent; the categories do not overlap."""
+    if not seq:
+        return "direct: S-CP3-exit"
+    if turned_back:
+        return "tour, turned back at CP3 (#250)"
+    if skipped:
+        return "CP2 skipped: sign hidden at CP1"
+    return "tour, then exit"
 
 
 def door_sight(geo, sign, xs=np.arange(17.2, 18.01, 0.1)):
@@ -433,7 +530,17 @@ def style_axes(ax, frame=True):
         ax.patch.set_linewidth(0.8)
 
 
-def draw_plan(ax, walkable, polys, labels=True, fs=8):
+def scale_bar(ax, x0=0.0, y0=-0.75, length=5.0, fs=7.5):
+    """A length bar below the plan: the plan has no axis ticks."""
+    ax.plot([x0, x0 + length], [y0, y0], color=TEXT, lw=1.6, solid_capstyle="butt")
+    for x in (x0, x0 + length):
+        ax.plot([x, x], [y0 - 0.18, y0 + 0.18], color=TEXT, lw=1.0)
+    ax.text(
+        x0 + length + 0.4, y0, f"{length:g} m", fontsize=fs, color=TEXT, va="center"
+    )
+
+
+def draw_plan(ax, walkable, polys, labels=True, fs=8, bar=True):
     ax.add_patch(
         MplPolygon(np.asarray(walkable.exterior.coords), fc=FLOOR, ec=WALL, lw=1.4)
     )
@@ -461,7 +568,7 @@ def draw_plan(ax, walkable, polys, labels=True, fs=8):
         offsets = {
             "CP0": (0.0, -0.9),
             "CP1": (0.0, 0.95),
-            "CP2": (0.0, 0.95),
+            "CP2": (-1.0, 0.95),
             "CP3": (-1.9, 0.0),
             "E": (0.0, -1.2),
             "S": (0.0, 1.45),
@@ -481,34 +588,35 @@ def draw_plan(ax, walkable, polys, labels=True, fs=8):
                 bbox=dict(fc="white", ec="none", alpha=0.7, pad=0.5),
                 zorder=8,
             )
+    if bar:
+        scale_bar(ax, fs=fs)
     ax.set_xlim(-0.3, 20.3)
-    ax.set_ylim(-0.3, 18.3)
+    ax.set_ylim(-1.3 if bar else -0.3, 18.3)
     ax.set_aspect("equal")
     ax.set_xticks([])
     ax.set_yticks([])
 
 
-def draw_signs(ax, signs):
-    for n, (x, y, alpha) in signs.items():
-        ax.plot(x, y, marker="D", ms=4.5, mfc="#fee090", mec="#c89b00", zorder=6)
+def draw_signs(ax, signs, zorder=9):
+    for x, y, alpha in signs.values():
         if alpha is None:
             continue
         a = math.radians(alpha)
         ax.add_patch(
             FancyArrowPatch(
                 (x, y),
-                (x + 1.2 * math.sin(a), y + 1.2 * math.cos(a)),
+                (x + 1.4 * math.sin(a), y + 1.4 * math.cos(a)),
                 arrowstyle="-|>",
-                mutation_scale=8,
-                color="#c89b00",
-                lw=1.0,
-                zorder=6,
+                mutation_scale=10,
+                color=SIGN,
+                lw=1.6,
+                zorder=zorder,
             )
         )
 
 
 def plot_setup(out, walkable, polys, nodes, signs, edges, known0, full_path, tour_xy):
-    fig, ax = plt.subplots(figsize=(7.2, 7.0), dpi=150)
+    fig, ax = plt.subplots(figsize=(7.2, 7.4), dpi=150)
     draw_plan(ax, walkable, polys)
     for src, tgts in edges.items():
         for t in tgts:
@@ -517,7 +625,6 @@ def plot_setup(out, walkable, polys, nodes, signs, edges, known0, full_path, tou
             )
     ax.plot(*zip(*full_path), color=FULL, lw=2.2, zorder=4)
     ax.plot(*zip(*tour_xy), color=DISC, lw=1.8, ls=(0, (4, 2)), zorder=4)
-    draw_signs(ax, signs)
     for n in nodes:
         known = n in known0
         ax.scatter(
@@ -529,10 +636,11 @@ def plot_setup(out, walkable, polys, nodes, signs, edges, known0, full_path, tou
             lw=1.2,
             zorder=7,
         )
+    draw_signs(ax, signs)
     ax.text(
         10.0,
         15.4,
-        "the partition has one door (CP3):\nevery route to the exit passes it",
+        "the partition has one 1.2 m door;\nCP3 is the box just behind it",
         ha="center",
         va="center",
         fontsize=8.5,
@@ -581,13 +689,13 @@ def plot_setup(out, walkable, polys, nodes, signs, edges, known0, full_path, tou
             [0],
             [0],
             ls="none",
-            marker="D",
-            mfc="#fee090",
-            mec="#c89b00",
-            label="sign (arrow: facing)",
+            marker=r"$\rightarrow$",
+            ms=12,
+            color=SIGN,
+            label="sign, pointing where it faces",
         ),
         Patch(fc=SPAWN, alpha=0.25, label="spawn area, 20 agents"),
-        Patch(fc=EXIT, alpha=0.8, label="exit"),
+        Patch(fc=EXIT, alpha=0.8, label="exit (its sign has no facing)"),
     ]
     ax.legend(
         handles=handles,
@@ -602,26 +710,37 @@ def plot_setup(out, walkable, polys, nodes, signs, edges, known0, full_path, tou
     plt.close(fig)
 
 
-def _dest_segments(xy, dest):
+def _segments(xy, dest):
     segs = np.stack([xy[:-1], xy[1:]], axis=1)
     colors = [DEST[d] for d in dest[:-1]]
     return segs, colors
 
 
-def plot_paths(out, walkable, polys, runs, titles):
+def plot_paths(out, walkable, polys, runs, titles, n_turned):
     fig, axes = plt.subplots(
-        1, 2, figsize=(11.0, 5.2), dpi=150, gridspec_kw=dict(wspace=0.04)
+        1, 2, figsize=(11.0, 5.5), dpi=150, gridspec_kw=dict(wspace=0.04)
     )
     for ax, (key, title) in zip(axes, titles.items()):
-        traj, dest = runs[key]["traj"], runs[key]["dest"]
+        traj, dest, why = runs[key]["traj"], runs[key]["dest"], runs[key]["why"]
         draw_plan(ax, walkable, polys, fs=7.5)
         for _, idx in traj.groupby("id").groups.items():
             idx = np.asarray(idx)[::3]
             xy = traj.loc[idx, ["x", "y"]].to_numpy()
-            segs, colors = _dest_segments(xy, dest[idx])
-            ax.add_collection(
-                LineCollection(segs, colors=colors, lw=1.0, alpha=0.75, zorder=3)
-            )
+            segs, colors = _segments(xy, dest[idx])
+            patrol = why[idx][:-1] == "wander"
+            for mask, ls in ((~patrol, "solid"), (patrol, (0, (2, 1.5)))):
+                if not mask.any():
+                    continue
+                ax.add_collection(
+                    LineCollection(
+                        segs[mask],
+                        colors=[c for c, m in zip(colors, mask) if m],
+                        lw=1.0 if ls == "solid" else 1.3,
+                        linestyles=ls,
+                        alpha=0.8,
+                        zorder=3,
+                    )
+                )
         ax.set_title(title, loc="left", fontsize=10, color=TEXT, pad=4)
         style_axes(ax, frame=False)
     axes[0].text(
@@ -642,6 +761,17 @@ def plot_paths(out, walkable, polys, runs, titles):
         fontsize=9,
         color=TEXT,
     )
+    axes[1].annotate(
+        f"{n_turned} agents turn back\nat CP3's door (#250)",
+        xy=(16.9, 12.9),
+        xytext=(12.0, 10.2),
+        fontsize=9,
+        color=TEXT,
+        ha="center",
+        bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.5),
+        arrowprops=dict(arrowstyle="->", color=TEXT, lw=0.9),
+        zorder=9,
+    )
     handles = [
         Line2D([0], [0], color=DEST[n], lw=2.0, label=f"heading for {lab}")
         for n, lab in (
@@ -650,14 +780,17 @@ def plot_paths(out, walkable, polys, runs, titles):
             ("CP2", "CP2"),
             ("CP3", "CP3"),
             ("E", "the exit"),
-            ("S", "spawn (patrol)"),
+            ("S", "spawn"),
         )
     ]
+    handles.append(
+        Line2D([0], [0], color=TEXT, lw=1.3, ls=(0, (2, 1.5)), label="patrol (wander)")
+    )
     fig.legend(
         handles=handles,
         loc="upper center",
-        bbox_to_anchor=(0.5, 0.1),
-        ncol=6,
+        bbox_to_anchor=(0.5, 0.08),
+        ncol=7,
         fontsize=8,
         **LEGEND,
     )
@@ -665,37 +798,167 @@ def plot_paths(out, walkable, polys, runs, titles):
     plt.close(fig)
 
 
-def plot_egress(out, curves, bounds, patterns, note):
+def plot_door(out, walkable, polys, geo, signs, patrols, tol):
+    """Zoom on CP3's door: where arrival registers, where the exit is seen."""
+    fig, ax = plt.subplots(figsize=(7.0, 5.2), dpi=150)
+    x_lo, x_hi, y_lo, y_hi = 16.3, 18.9, 12.35, 14.15
+    ax.set_facecolor(WALL)
+    ax.add_patch(
+        MplPolygon(np.asarray(walkable.exterior.coords), fc=FLOOR, ec=WALL, lw=1.2)
+    )
+    for ring in walkable.interiors:
+        ax.add_patch(MplPolygon(np.asarray(ring.coords), fc=WALL, ec=WALL, lw=1.0))
+    # where arrival at CP3 can register: within 0.7 m of a point in its box
+    reach = polys["CP3"].buffer(0.7).intersection(walkable)
+    for part in getattr(reach, "geoms", [reach]):
+        ax.add_patch(
+            MplPolygon(
+                np.asarray(part.exterior.coords),
+                fc="none",
+                ec=DEST["CP3"],
+                lw=1.0,
+                ls="--",
+                zorder=3,
+            )
+        )
+    x0, y0, x1, y1 = polys["CP3"].bounds
+    ax.add_patch(
+        Rectangle(
+            (x0, y0),
+            x1 - x0,
+            y1 - y0,
+            fc="none",
+            ec=DEST["CP3"],
+            lw=1.0,
+            hatch="////",
+            alpha=0.7,
+            zorder=3,
+        )
+    )
+    # the exit sign becomes legible above this line (exact geometry)
+    xs = np.linspace(17.0, 18.2, 121)
+    ys = np.arange(12.3, 13.4, 0.005)
+    y_edge = np.array(
+        [next((y for y in ys if legible(geo, (x, y), signs["E"])), np.nan) for x in xs]
+    )
+    ax.fill_between(xs, y_edge, 13.22, color=EXIT, alpha=0.1, lw=0, zorder=1)
+    ax.plot(xs, y_edge, color=EXIT, lw=1.8, zorder=4)
+    ax.fill_between(
+        xs, y_edge - tol, y_edge + tol, color=EXIT, alpha=0.25, lw=0, zorder=1
+    )
+    px = np.array([p[0] for _, _, p in patrols])
+    py = np.array([p[1] for _, _, p in patrols])
+    near = (px > x_lo) & (px < x_hi) & (py > y_lo) & (py < y_hi)
+    ax.scatter(
+        px[near],
+        py[near],
+        s=34,
+        marker="o",
+        fc=TURN,
+        ec="black",
+        lw=0.8,
+        zorder=6,
+    )
+    ax.annotate(
+        "sight line to the exit sign\n(16.5 m west) grazes the west jamb",
+        xy=(17.02, 13.1),
+        xytext=(16.4, 13.75),
+        fontsize=8.5,
+        color=TEXT,
+        va="center",
+        bbox=dict(fc="white", ec="none", alpha=0.85, pad=1),
+        arrowprops=dict(arrowstyle="->", color=EXIT, lw=0.9),
+        zorder=8,
+    )
+    ax.text(
+        17.55,
+        13.5,
+        "CP3 box",
+        fontsize=8.5,
+        color=TEXT,
+        ha="center",
+        va="center",
+        bbox=dict(fc="white", ec="none", alpha=0.85, pad=1),
+        zorder=8,
+    )
+    ax.annotate(
+        "arrival at CP3 can register\nhere, before the door",
+        xy=(17.1, 12.62),
+        xytext=(16.4, 12.45),
+        fontsize=8.5,
+        color=TEXT,
+        va="center",
+        bbox=dict(fc="white", ec="none", alpha=0.85, pad=1),
+        arrowprops=dict(arrowstyle="->", color=DEST["CP3"], lw=0.9),
+        zorder=8,
+    )
+    handles = [
+        Patch(fc="none", ec=DEST["CP3"], hatch="////", label="CP3 box"),
+        Line2D(
+            [0],
+            [0],
+            color=DEST["CP3"],
+            lw=1.0,
+            ls="--",
+            label="arrival can register: within 0.7 m of the box (#69)",
+        ),
+        Line2D([0], [0], color=EXIT, lw=1.8, label="exit sign legible above this line"),
+        Patch(fc=EXIT, alpha=0.4, label=f"grid tolerance ±{tol:.2f} m (0.05 m grid)"),
+        Line2D(
+            [0],
+            [0],
+            ls="none",
+            marker="o",
+            mfc=TURN,
+            mec="black",
+            label=f"patrol decisions, 0.05 m grid ({near.sum()})",
+        ),
+    ]
+    ax.legend(
+        handles=handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.1),
+        ncol=2,
+        fontsize=8,
+        **LEGEND,
+    )
+    ax.set_xlim(x_lo, x_hi)
+    ax.set_ylim(y_lo, y_hi)
+    ax.set_aspect("equal")
+    ax.set_xlabel("x [m]", color=TEXT)
+    ax.set_ylabel("y [m]", color=TEXT)
+    style_axes(ax)
+    fig.savefig(out / "familiarity_door.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_egress(out, curves, refs, patterns, note):
     fig, (ax, axb) = plt.subplots(
         1,
         2,
-        figsize=(11.5, 4.6),
+        figsize=(11.5, 4.8),
         dpi=150,
-        gridspec_kw=dict(width_ratios=[1.25, 1.0], wspace=0.5),
+        gridspec_kw=dict(width_ratios=[1.25, 1.0], wspace=0.55),
     )
-    styles = {
-        "full": dict(color=FULL, lw=2.2, ls="-"),
-        f"discovery, {MAIN_CELL:g} m": dict(color=DISC, lw=2.2, ls="--"),
-    }
     for label, t in curves.items():
-        st = styles.get(label, dict(color="#969696", lw=0.9, ls=":"))
+        st = GRID_STYLE.get(label, dict(color=FULL, lw=2.2, ls="-"))
         n = np.arange(1, len(t) + 1)
-        ax.step(np.r_[0.0, t], np.r_[0, n], where="post", label=label, **st)
-        tag = label.removeprefix("discovery, ") if label not in styles else ""
+        name = "full" if label == "full" else f"discovery, {label} grid"
+        ax.step(np.r_[0.0, t], np.r_[0, n], where="post", label=name, **st)
         ax.text(
             t[-1],
-            len(t) + 0.4,
-            f"{tag}\n{t[-1]:.0f} s".strip(),
+            20.4,
+            f"{label.removesuffix(' grid')}\n{t[-1]:.0f} s",
             fontsize=7.5,
             color=TEXT,
             ha="center",
             va="bottom",
         )
-    for label, (tb, color) in bounds.items():
+    for label, (tb, color) in refs.items():
         ax.axvline(tb, color=color, lw=0.9, ls="-.", zorder=1, label=label)
     ax.text(
         0.97,
-        0.6,
+        0.55,
         note,
         transform=ax.transAxes,
         fontsize=8,
@@ -706,8 +969,8 @@ def plot_egress(out, curves, bounds, patterns, note):
     ax.set_xlabel("time [s]", color=TEXT)
     ax.set_ylabel("agents out [-]", color=TEXT)
     ax.set_yticks([0, 5, 10, 15, 20])
-    ax.set_ylim(0, 23.5)
-    ax.set_xlim(0, max(t[-1] for t in curves.values()) + 15)
+    ax.set_ylim(0, 25.5)
+    ax.set_xlim(0, max(t[-1] for t in curves.values()) + 18)
     ax.legend(loc="lower right", fontsize=7.5, **LEGEND)
     ax.set_title("Agents out over time", loc="left", fontsize=10, color=TEXT)
     style_axes(ax)
@@ -720,7 +983,7 @@ def plot_egress(out, curves, bounds, patterns, note):
         axb.barh(
             labels, vals, left=left, color=color, ec="white", hatch=hatch, label=name
         )
-        _bar_labels(axb, left, vals, "white" if color in (FULL, "#d73027") else "black")
+        _bar_labels(axb, left, vals, "white" if color == FULL else "black")
         left += vals
     axb.invert_yaxis()
     axb.set_xlim(0, 20)
@@ -747,8 +1010,8 @@ def _bar_labels(ax, left, vals, color):
             fontsize=8,
             color=color,
             weight="semibold",
-            bbox=dict(fc="#d73027", ec="none", pad=1)
-            if color == "white" and lo > 0
+            bbox=dict(fc="white", ec="none", pad=1.2, alpha=0.9)
+            if color == "black"
             else None,
         )
 
@@ -756,8 +1019,8 @@ def _bar_labels(ax, left, vals, color):
 def render_gif(out, walkable, polys, runs, titles, step_s=1.0, fps=10):
     t_end = max(runs[k]["traj"]["frame"].max() for k in titles) / FPS
     times = np.arange(0.0, t_end + step_s, step_s)
-    fig, axes = plt.subplots(1, 2, figsize=(6.6, 3.55), dpi=100)
-    fig.subplots_adjust(left=0.01, right=0.99, top=0.86, bottom=0.14, wspace=0.04)
+    fig, axes = plt.subplots(1, 2, figsize=(6.6, 3.7), dpi=100)
+    fig.subplots_adjust(left=0.01, right=0.99, top=0.87, bottom=0.17, wspace=0.04)
     dots, counters = [], []
     for ax, (key, title) in zip(axes, titles.items()):
         draw_plan(ax, walkable, polys, fs=6)
@@ -768,38 +1031,56 @@ def render_gif(out, walkable, polys, runs, titles, step_s=1.0, fps=10):
         )
         style_axes(ax, frame=False)
     clock = fig.text(0.99, 0.965, "", fontsize=9, color=TEXT, ha="right", va="top")
+    handles = [
+        Line2D(
+            [0],
+            [0],
+            ls="none",
+            marker="o",
+            mfc=DEST[n],
+            mec="black",
+            mew=0.3,
+            label=lab,
+        )
+        for n, lab in (
+            ("CP0", "CP0"),
+            ("CP1", "CP1"),
+            ("CP2", "CP2"),
+            ("CP3", "CP3"),
+            ("E", "exit"),
+            ("S", "spawn"),
+        )
+    ]
+    handles.append(
+        Line2D(
+            [0],
+            [0],
+            ls="none",
+            marker="o",
+            mfc="#bdbdbd",
+            mec="black",
+            mew=1.6,
+            label="patrol: thick ring",
+        )
+    )
     fig.legend(
-        handles=[
-            Line2D(
-                [0],
-                [0],
-                ls="none",
-                marker="o",
-                mfc=DEST[n],
-                mec="black",
-                mew=0.3,
-                label=lab,
-            )
-            for n, lab in (
-                ("CP0", "CP0"),
-                ("CP1", "CP1"),
-                ("CP2", "CP2"),
-                ("CP3", "CP3"),
-                ("E", "exit"),
-                ("S", "spawn"),
-            )
-        ],
+        handles=handles,
         title="heading for",
         title_fontsize=7,
         loc="lower center",
-        ncol=6,
+        ncol=7,
         fontsize=7,
         handletextpad=0.1,
-        columnspacing=0.8,
+        columnspacing=0.7,
         **LEGEND,
     )
     by_frame = {
-        k: {f: g for f, g in runs[k]["traj"].assign(d=runs[k]["dest"]).groupby("frame")}
+        k: {
+            f: g
+            for f, g in runs[k]["traj"]
+            .assign(d=runs[k]["dest"], w=runs[k]["why"])
+            .groupby("frame")
+        }
         for k in titles
     }
     writer = PillowWriter(fps=fps)
@@ -812,6 +1093,7 @@ def render_gif(out, walkable, polys, runs, titles, step_s=1.0, fps=10):
                 dot.set_offsets(xy)
                 if g is not None:
                     dot.set_facecolor([DEST[d] for d in g["d"]])
+                    dot.set_linewidths([1.6 if w == "wander" else 0.3 for w in g["w"]])
                 counter.set_text(f"out: {20 - n_in} / 20")
             clock.set_text(f"t = {t:3.0f} s")
             writer.grab_frame()
@@ -831,6 +1113,7 @@ def main():
     -----
     site/static/images/verification/familiarity_setup.png
     site/static/images/verification/familiarity_paths.png
+    site/static/images/verification/familiarity_door.png
     site/static/images/verification/familiarity_egress.png
     site/static/images/verification/familiarity.gif
     """
@@ -839,7 +1122,8 @@ def main():
         "--data",
         type=Path,
         required=True,
-        help="directory with full/ and discovery_cell<c>/ (run.sqlite, routes.csv)",
+        help="directory with full/ and discovery_cell<c>/ (run.sqlite, routes.csv, "
+        "cognitive_map.csv)",
     )
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -853,6 +1137,7 @@ def main():
     geo = Geodesic(walkable)
     edges = wire(geo, nodes)
     known0, tour, frontier_log = predict_discovery(geo, nodes, signs, edges)
+    alt = predict_discovery(geo, nodes, signs, edges, rule=legible_half_disc)
     l_full, full_path = geo.path(nodes["S"], nodes["E"])
     tour_xy, l_tour = [nodes["S"]], 0.0
     for a, b in zip(["S", *tour], tour):
@@ -865,6 +1150,10 @@ def main():
     for here, costs in frontier_log:
         print(f"  frontier from {here}:", {k: round(v, 1) for k, v in costs.items()})
     print("predicted tour:", " -> ".join(["S", *tour]))
+    print(
+        "cap after the view angle (half-disc): same known set and tour:",
+        alt[0] == known0 and alt[1] == tour,
+    )
     print(f"shortest S -> E: {l_full:.2f} m ({l_full / v0:.1f} s at {v0} m/s)")
     print(f"tour S -> E: {l_tour:.2f} m ({l_tour / v0:.1f} s), x{l_tour / l_full:.2f}")
     y_first = door_sight(geo, signs["E"])
@@ -877,67 +1166,94 @@ def main():
 
     # --- Data: runs ---
     runs = {}
-    traj, routes = load_run(args.data / "full")
-    full, n_switch = check_full(geo, polys, traj, routes, v0)
-    runs["full"] = dict(traj=traj, dest=destinations(traj, routes, full=True))
+    traj, routes, maps = load_run(args.data / "full")
+    full, n_switch, fmap = check_full(geo, polys, traj, routes, maps, edges, v0)
+    dest, why = destinations(traj, routes, full=True)
+    runs["full"] = dict(traj=traj, dest=dest, why=why)
     never = sum(not (e & {"CP0", "CP1", "CP2"}) for e in full["entered"])
     via3 = sum("CP3" in e for e in full["entered"])
+    t_sorted = np.sort(full.t_out.to_numpy())
+    flow = (len(t_sorted) - 1) / (t_sorted[-1] - t_sorted[0])
     print(
         f"full: {via3}/20 pass CP3, {never}/20 never enter CP0-CP2, "
-        f"{n_switch} route changes; walked/geodesic "
-        f"{(full.walked / full.geodesic).min():.3f}-"
+        f"{n_switch} route changes; whole map at t = 0 for "
+        f"{fmap['whole_map_at_t0']}/20, later map changes {fmap['map_changes']}; "
+        f"walked/geodesic {(full.walked / full.geodesic).min():.3f}-"
         f"{(full.walked / full.geodesic).max():.3f}; first out "
         f"{full.t_out.min():.1f} s; min over agents of t_out - L/v0 "
         f"{(full.t_out - full.t_min).min():+.2f} s; max speed "
-        f"{full.v_max.max():.2f} m/s; last out "
-        f"{full.t_out.max():.1f} s"
+        f"{full.v_max.max():.2f} m/s; last out {full.t_out.max():.1f} s; "
+        f"door flow {flow:.2f} 1/s = {flow / 1.2:.2f} 1/(s m) of the 1.2 m door"
     )
-    curves = {"full": np.sort(full.t_out.to_numpy())}
-    patterns = {"full": {"direct: S-CP3-E": 20}}
-    calm_last = []
+    curves = {"full": t_sorted}
+    patterns = {"full": {"direct: S-CP3-exit": 20}}
+    calm_last, last_out, table = [], {}, []
     cells = sorted(
         float(p.name.removeprefix("discovery_cell"))
         for p in args.data.glob("discovery_cell*")
     )
     for cell in reversed(cells):
-        traj, routes = load_run(args.data / f"discovery_cell{cell:g}")
-        res = check_discovery(geo, nodes, signs, known0, traj, routes, cell)
+        traj, routes, maps = load_run(args.data / f"discovery_cell{cell:g}")
         t_out = np.sort(traj.groupby("id")["frame"].max().to_numpy() / FPS)
-        label = f"discovery, {cell:g} m"
-        curves[label] = t_out
-        seqs = {a: node_sequence(routes, a) for a in routes["agent_id"].unique()}
+        last_out[cell] = t_out[-1]
         wanderers = set(routes.loc[routes["reason"] == "wander", "agent_id"])
+        res = {}
+        for name, tol in (("0", 0.0), ("T", grid_tol(cell))):
+            res[name] = check_learning(geo, signs, edges, known0, traj, maps, tol)
+            res[name] |= check_decisions(geo, signs, traj, routes, tol)
+        r = res["T"]
+        skipped = {a for a, _ in r["skipped"]}
         pat = {}
-        for a, s in seqs.items():
-            name = "turned back at CP3 (wander)" if a in wanderers else classify(s)
+        for a in routes["agent_id"].unique():
+            name = route_class(node_sequence(routes, a), a in wanderers, a in skipped)
             pat[name] = pat.get(name, 0) + 1
-        patterns[f"discovery {cell:g} m"] = pat
-        print(
-            f"{label}: last out {t_out[-1]:.1f} s; cells across the partition "
-            f"{cells_across(cell)}; first targets {res['first_targets']}; "
-            f"evidence violations {len(res['evidence_violations'])}; turned back "
-            f"{res['turned_back']}; wander decisions {res['wanders']} "
-            f"(exit legible all around at {res['wander_exit_legible']}); routes {pat}; "
-            f"tour up to CP3 {res['tour']}; y of wanders at CP3 {res['wander_y_at_cp3']}"
-        )
+        label = f"{cell:g} m"
+        curves[label] = t_out
+        row = f"discovery {cell:g} m"
+        if cells_across(cell) == 0:
+            row += "\n(sees through the walls)"
+        patterns[row] = pat
         last = traj.groupby("id")["frame"].max() / FPS
         calm = last.drop(index=list(wanderers), errors="ignore")
-        print(
-            f"  first out {t_out[0]:.1f} s (tour bound {l_tour / v0:.1f} s); last out "
-            f"of agents that never turned back: {calm.max():.1f} s"
-        )
         calm_last.append(calm.max())
-        for aid, t, p, seen in res["skipped_cp2"]:
+        at_cp3 = [p[1] for _, _, p in r["patrols"] if math.dist(p, nodes["CP3"]) < 1.5]
+        print(
+            f"discovery {label} (T = {grid_tol(cell):.3f} m, cells across the "
+            f"partition {cells_across(cell)}): last out {t_out[-1]:.1f} s, first out "
+            f"{t_out[0]:.1f} s; never turned back: last out {calm.max():.1f} s; "
+            f"turned back {len(wanderers)}; routes {pat}"
+        )
+        for name in ("0", "T"):
+            q = res[name]
             print(
-                f"  agent {aid} chose CP3 over CP2 at t = {t:.0f} s from "
-                f"({p[0]:.2f}, {p[1]:.2f}); CP2 sign legible there: {seen}"
+                f"  tol {name}: C2 wrong map at t=0 {len(q['wrong_start'])}; "
+                f"C3 learnt {q['learnt']}, not a neighbour "
+                f"{len(q['not_neighbour'])}, sign hidden {q['hidden']}; "
+                f"C4 tour {q['tour']}; C5 patrols {len(q['patrols'])}, "
+                f"exit certainly legible at {q['patrol_seen']}"
             )
+        print(
+            f"  patrols at CP3: y = {min(at_cp3):.2f}-{max(at_cp3):.2f} m"
+            if at_cp3
+            else "  no patrols at CP3"
+        )
+        print(f"  CP2 skipped at CP1: {r['skipped']}")
+        first = routes.sort_values("time_s").groupby("agent_id")["target"].first()
+        print(f"  first targets {first.value_counts().to_dict()}")
+        table.append((cell, r))
         if cell == MAIN_CELL:
-            runs["discovery"] = dict(
-                traj=traj, dest=destinations(traj, routes, full=False)
-            )
-
-    calm_range = f"{min(calm_last):.0f}\u2013{max(calm_last):.0f} s"
+            dest, why = destinations(traj, routes, full=False)
+            runs["discovery"] = dict(traj=traj, dest=dest, why=why)
+            main_patrols = r["patrols"]
+            n_turned = len(wanderers)
+    fine = sorted(last_out)[:2]
+    print(
+        "C6 grid convergence: last out "
+        + ", ".join(f"{c:g} m {last_out[c]:.1f} s" for c in sorted(last_out))
+        + f"; |{fine[0]:g} m - {fine[1]:g} m| = "
+        f"{abs(last_out[fine[0]] - last_out[fine[1]]):.1f} s (tolerance 5 s)"
+    )
+    calm_range = f"{min(calm_last):.0f}–{max(calm_last):.0f} s"
 
     # --- Plot ---
     plot_setup(OUT, walkable, polys, nodes, signs, edges, known0, full_path, tour_xy)
@@ -945,13 +1261,20 @@ def main():
         "full": "full: knows the plan",
         "discovery": f"discovery: learns it ({MAIN_CELL:g} m grid)",
     }
-    plot_paths(OUT, walkable, polys, runs, titles)
-    bounds = {
-        f"bound, full: {l_full:.1f} m / v0 = {l_full / v0:.0f} s": (l_full / v0, FULL),
-        f"bound, tour: {l_tour:.1f} m / v0 = {l_tour / v0:.0f} s": (l_tour / v0, DISC),
+    plot_paths(OUT, walkable, polys, runs, titles, n_turned)
+    plot_door(OUT, walkable, polys, geo, signs, main_patrols, grid_tol(MAIN_CELL))
+    refs = {
+        f"L/v0, full: {l_full:.1f} m / {v0:g} m/s = {l_full / v0:.0f} s": (
+            l_full / v0,
+            FULL,
+        ),
+        f"L/v0, tour: {l_tour:.1f} m / {v0:g} m/s = {l_tour / v0:.0f} s": (
+            l_tour / v0,
+            DISC,
+        ),
     }
-    note = "agents that never turned back\nare out by " + calm_range + "\nat every grid"
-    plot_egress(OUT, curves, bounds, patterns, note)
+    note = "agents that never turned back\nare out by " + calm_range + "\non every grid"
+    plot_egress(OUT, curves, refs, patterns, note)
     frames = render_gif(OUT, walkable, polys, runs, titles)
     size = (OUT / "familiarity.gif").stat().st_size / 1e6
     print(f"familiarity.gif: {frames} frames, {size:.2f} MB")
