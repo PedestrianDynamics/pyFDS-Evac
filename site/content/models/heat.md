@@ -162,10 +162,15 @@ with \(T_L\) the temperature of a second `TEMPERATURE` slice at
   rate is zero only when the total \(q \le 0\). A non-finite layer
   temperature gives no dose. Where the layer slice has no value, the layer
   temperature falls back to 20 °C, as the temperature at the head does.
+  This fallback is an unsourced assumption. Below the skin temperature it
+  makes \(q_{\mathrm{ext}}\) slightly negative (cooling), about
+  −0.09 φ ε_L kW/m² at \(T_s\) = 35 °C, so it lowers the total flux
+  a little where the layer slice has no coverage.
 
 φ, \(\varepsilon_L\) and the layer height have no sourced values and no
-defaults; the layer regime without any of them is rejected, as is
-`--heat-regime layer` with `--heat-fed-method convective`:
+defaults; the layer regime without any of them is rejected, as are a
+non-finite layer height and `--heat-regime layer` with
+`--heat-fed-method convective`:
 
 | Parameter | Default | CLI flag | Source status |
 |---|---|---|---|

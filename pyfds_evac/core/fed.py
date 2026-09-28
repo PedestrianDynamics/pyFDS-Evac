@@ -1113,6 +1113,10 @@ class DefaultHeatFedModel:
         inputs = self.field.sample_inputs(time_s, x, y)
         if self.layer_field is None:
             return inputs
+        # Assumption, unsourced: where the layer slice has no value,
+        # HeatFedInputs falls back to 20 C. Below the skin temperature this
+        # gives a small negative (cooling) layer flux, about
+        # -0.09 phi eps_L kW/m2 at T_s = 35 C.
         layer = self.layer_field.sample_inputs(time_s, x, y).temperature_celsius
         return replace(inputs, layer_temperature_celsius=float(layer))
 
