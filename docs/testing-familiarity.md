@@ -3,7 +3,7 @@ title: "Familiarity: full map vs discovered map"
 linkTitle: "Familiarity"
 weight: 16
 math: true
-aliases: [/docs/testing-familiarity/]
+aliases: [/docs/testing-familiarity/, /models/verification/testing-familiarity/]
 ---
 
 | | |

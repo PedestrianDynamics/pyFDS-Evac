@@ -2,7 +2,7 @@
 title: "Homogeneous heat FED verification"
 linkTitle: "Heat dose"
 weight: 15
-aliases: [/docs/testing-heat/]
+aliases: [/docs/testing-heat/, /models/verification/testing-heat/]
 ---
 
 ## Purpose
