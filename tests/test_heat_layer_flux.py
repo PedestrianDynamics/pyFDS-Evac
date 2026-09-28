@@ -538,6 +538,14 @@ def test_run_config_layer_regime_needs_a_height(loaded_heights):
         _build(**{**_LAYER_OPTS, "heat_layer_height": None})
 
 
+@pytest.mark.parametrize("height", [float("nan"), float("inf"), float("-inf")])
+def test_run_config_layer_regime_rejects_non_finite_height(loaded_heights, height):
+    """A non-finite height would select an arbitrary slice, e.g. the head's."""
+    with pytest.raises(ValueError, match="heat-layer-height"):
+        _build(**{**_LAYER_OPTS, "heat_layer_height": height})
+    assert loaded_heights == []
+
+
 def test_run_config_layer_regime_needs_total_flux(loaded_heights):
     with pytest.raises((ValueError, SystemExit)):
         _build(**{**_LAYER_OPTS, "heat_fed_method": "convective"})
