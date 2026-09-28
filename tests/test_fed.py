@@ -805,6 +805,19 @@ class TestZeroCo2Warning:
             model.sample_inputs(0.0, 0.0, 0.0)
         assert not caplog.records
 
+    @pytest.mark.parametrize(
+        "co, co2", [(float("nan"), 0.0), (0.1, float("nan")), (0.1, -0.01)]
+    )
+    def test_no_warning_for_invalid_samples(self, caplog, co, co2):
+        model = self._model(
+            DefaultFedInputs(
+                co_volume_fraction_percent=co, co2_volume_fraction_percent=co2
+            )
+        )
+        with caplog.at_level(logging.WARNING, logger="pyfds_evac.core.fed"):
+            model.sample_inputs(0.0, 0.0, 0.0)
+        assert not caplog.records
+
     def test_no_warning_without_co(self, caplog):
         model = self._model(DefaultFedInputs())
         with caplog.at_level(logging.WARNING, logger="pyfds_evac.core.fed"):

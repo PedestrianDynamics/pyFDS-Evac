@@ -609,9 +609,10 @@ class DefaultFedModel:
         """
         if self._warned_zero_co2:
             return
-        if inputs.co_volume_fraction_percent <= 0.0:
+        co = inputs.co_volume_fraction_percent
+        if not math.isfinite(co) or co <= 0.0:
             return
-        if inputs.co2_volume_fraction_percent > 0.0:
+        if inputs.co2_volume_fraction_percent != 0.0:
             return
         self._warned_zero_co2 = True
         _logger.warning(
