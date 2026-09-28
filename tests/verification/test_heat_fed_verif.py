@@ -209,7 +209,7 @@ def test_a3_5_gas_and_heat_threshold_draws_are_independent():
 
 
 def test_a3_6_threshold_draws_are_seed_reproducible():
-    cfg = TenabilityConfig()
+    cfg = TenabilityConfig(heat_incapacitation_mode="probabilistic")
     first = [
         sample_heat_incapacitation_threshold(cfg, random.Random(99)) for _ in range(50)
     ]

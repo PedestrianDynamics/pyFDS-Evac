@@ -74,10 +74,11 @@ The FED history CSV (`--output-fed-history`) carries `temperature_celsius`,
   in view ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221),
   [#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222),
   [#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
-- **The endpoint.** Eq. 63.44 is labelled a time to incapacitation, but its
-  times lie near the Handbook's tolerance curve (Eq. 63.45) rather than its
-  injury or fatal ones. The meaning of heat FED = 1 is therefore not yet the
-  fatal endpoint chosen for pyFDS-Evac
+- **The endpoint.** Today heat FED = 1 is the Eq. 63.44 time. Eq. 63.44 is
+  labelled a time to incapacitation, but its times lie near the Handbook's
+  tolerance curve (Eq. 63.45) rather than its injury or fatal ones. The fatal
+  endpoint (D = 16.667) chosen for the planned total-flux dose
+  (`specs/016-heat-fed/SPEC.md`) is not implemented
   ([#218](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/218),
   [#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
 - **Validity range.** The convective data behind the law reach about 205 °C
