@@ -86,7 +86,8 @@ $$
 - **No soot:** the decks have no soot slice, so `run.py` warns that smoke
   speed reduction is off and that visibility falls back to clear air
   ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
-  Neither changes the heat dose.
+  Neither enters the heat-dose rate; clear-air visibility changes only where
+  agents walk, and the expected dose is read at those positions.
 
 ## Expected
 
@@ -209,6 +210,13 @@ uv run python scripts/verification/heat_room_figures.py --data <data>
 
 Each run takes about three minutes and uses the default seed 42. A
 temperature without output is skipped.
+
+The published figures come from runs that also passed
+`--constant-extinction 0 --no-visibility`, which ran without a visibility
+model. Add those two flags to reproduce them exactly. Without them
+(clear-air visibility), the deterministic 150 °C run still stops all 100
+agents at 125 s; agent positions differ slightly, and the maximum heat FED
+is 8.0131 against 8.0126.
 
 ## Limits
 

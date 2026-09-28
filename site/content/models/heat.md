@@ -39,7 +39,8 @@ slice the run logs two warnings and continues: there is no smoke-speed
 model, so agents walk at clear-air speed and route costs see K = 0, and the
 visibility model falls back to clear air
 ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
-Neither changes the heat dose.
+Neither enters the heat-dose rate; both can change where agents walk, and
+so the temperature they are exposed to.
 
 ## Incapacitation
 
