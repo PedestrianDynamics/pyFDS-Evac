@@ -3,6 +3,7 @@ title: "ISO 20414 Test 19: incapacitation by toxic gases"
 linkTitle: "ISO Test 19"
 weight: 19
 math: true
+aliases: [/models/verification/iso-test-19/]
 ---
 
 | | |
@@ -195,12 +196,12 @@ fails.
   − NOx correction and HV_CO₂ on the non-CO terms are not run in this layout
   ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)).
   The convective heat dose is checked in
-  [Heat dose in a uniform room](/models/verification/testing-heat.md).
+  [Heat dose in a uniform room](/verification/testing-heat.md).
 - A missing O₂ gate is caught, a misplaced one is not: any gate between
   15 % and 21 % gives the same four times.
 - One occupant per case and the deterministic threshold. The probabilistic
   threshold, the default, is checked on 100 agents in
-  [CO dose in a uniform room](/models/verification/testing-homogeneous.md).
+  [CO dose in a uniform room](/verification/testing-homogeneous.md).
 - A uniform, constant field cannot show whether the gas is sampled at the
   agent's current position
   ([#24](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24)) or at

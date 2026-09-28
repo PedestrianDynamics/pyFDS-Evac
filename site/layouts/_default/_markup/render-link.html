@@ -22,7 +22,7 @@
     {{- if and (not $page) (or (strings.HasPrefix $path "/docs/") (not (strings.Contains $path "/"))) -}}
       {{- $name := path.Base $path -}}
       {{- $fromDocs := (site.GetPage "/docs").RegularPagesRecursive -}}
-      {{- $fromDocs = $fromDocs | append (site.GetPage "/models/verification").RegularPages -}}
+      {{- $fromDocs = $fromDocs | append (site.GetPage "/verification").RegularPages -}}
       {{- /* A group with a single page mounts it as the group's _index.md,
            so sections are matched by the name of their source file. */ -}}
       {{- $fromDocs = $fromDocs | append (site.GetPage "/docs").Sections -}}
