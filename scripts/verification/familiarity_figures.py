@@ -505,6 +505,21 @@ def route_class(seq, turned_back, skipped):
     return "tour, then exit"
 
 
+def door_crossings(traj, y_door=13.05, x_lo=17.0, x_hi=18.2):
+    """Per agent, the first time its centre crosses the door's mid-line."""
+    times = []
+    for _, g in traj.groupby("id"):
+        y, x = g["y"].to_numpy(), g["x"].to_numpy()
+        k = np.flatnonzero((y[:-1] < y_door) & (y[1:] >= y_door))
+        k = [i for i in k if x_lo <= x[i] <= x_hi]
+        if not k:
+            continue
+        i = k[0]
+        f = (y_door - y[i]) / (y[i + 1] - y[i])
+        times.append((g["frame"].iloc[i] + f) / FPS)
+    return np.array(times)
+
+
 def door_sight(geo, sign, xs=np.arange(17.2, 18.01, 0.1)):
     """Per x across CP3's door, the lowest y (1 cm steps) the sign is legible."""
     ys = np.arange(12.5, 13.3, 0.01)
@@ -862,7 +877,7 @@ def plot_door(out, walkable, polys, geo, signs, patrols, tol):
     ax.annotate(
         "sight line to the exit sign\n(16.5 m west) grazes the west jamb",
         xy=(17.02, 13.1),
-        xytext=(16.4, 13.75),
+        xytext=(16.35, 13.98),
         fontsize=8.5,
         color=TEXT,
         va="center",
@@ -911,7 +926,9 @@ def plot_door(out, walkable, polys, geo, signs, patrols, tol):
             marker="o",
             mfc=TURN,
             mec="black",
-            label=f"patrol decisions, 0.05 m grid ({near.sum()})",
+            label=f"{near.sum()} patrol decisions by "
+            f"{len({a for (a, _, _), n in zip(patrols, near) if n})} agents, "
+            "0.05 m grid",
         ),
     ]
     ax.legend(
@@ -1173,7 +1190,8 @@ def main():
     never = sum(not (e & {"CP0", "CP1", "CP2"}) for e in full["entered"])
     via3 = sum("CP3" in e for e in full["entered"])
     t_sorted = np.sort(full.t_out.to_numpy())
-    flow = (len(t_sorted) - 1) / (t_sorted[-1] - t_sorted[0])
+    t_door = np.sort(door_crossings(traj))
+    flow = (len(t_door) - 1) / (t_door[-1] - t_door[0])
     print(
         f"full: {via3}/20 pass CP3, {never}/20 never enter CP0-CP2, "
         f"{n_switch} route changes; whole map at t = 0 for "
@@ -1183,7 +1201,9 @@ def main():
         f"{full.t_out.min():.1f} s; min over agents of t_out - L/v0 "
         f"{(full.t_out - full.t_min).min():+.2f} s; max speed "
         f"{full.v_max.max():.2f} m/s; last out {full.t_out.max():.1f} s; "
-        f"door flow {flow:.2f} 1/s = {flow / 1.2:.2f} 1/(s m) of the 1.2 m door"
+        f"door (y = 13.05 m) crossed by {len(t_door)} agents from "
+        f"{t_door[0]:.1f} to {t_door[-1]:.1f} s: {flow:.2f} 1/s = "
+        f"{flow / 1.2:.2f} 1/(s m) of the 1.2 m door"
     )
     curves = {"full": t_sorted}
     patterns = {"full": {"direct: S-CP3-exit": 20}}
