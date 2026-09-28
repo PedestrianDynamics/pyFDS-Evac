@@ -26,6 +26,9 @@
 ! SPEC_ID is mandatory on the extinction slice once species are declared
 ! explicitly, or FDS raises ERROR 1004.
 &SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
+! At the default sampling height of pyFDS-Evac (FDS+Evac's HUMAN_SMOKE_HEIGHT).
+! FDS snaps it to the nearest cell face, 1.5 m on this grid.
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
 &DUMP DT_SLCF=100.0 /
 
 &TAIL /

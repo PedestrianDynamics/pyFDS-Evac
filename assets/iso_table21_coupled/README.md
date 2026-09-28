@@ -51,7 +51,7 @@ apart.
 |---|---|
 | target K | 1.000 /m |
 | prescribed soot | 114.9 mg/m³ (mass fraction 9.546 × 10⁻⁵) |
-| **K read back from the slice** | **0.99545 /m** |
+| **K read back from the slice** | **0.99545 /m** at 2.0 m, 0.99550 /m at 1.5 m |
 | agreement | **0.46 %** |
 
 The residual is the air density assumed when turning a target *density* into the
@@ -89,9 +89,13 @@ and the `speed_factor` derived from it.
 
 ## The FDS output is committed
 
-`fds/` holds **28 kB** — one slice on a 200 × 4 × 6 mesh — forced past
+`fds/` holds **33 kB** — two slices on a 200 × 4 × 6 mesh — forced past
 `.gitignore` so the test runs in CI. A test that skipped when output was missing
 would leave the path as untested as it was before.
+
+The slices are at 2.0 m, which the test reads, and at 1.6 m, the default
+sampling height of `run.py`. FDS snaps 1.6 m to the nearest cell face, 1.5 m on
+this 0.5 m grid.
 
 `DT_SLCF` is 100 s because the field is constant by construction; the test
 asserts that constancy rather than assuming it.

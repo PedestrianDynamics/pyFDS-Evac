@@ -397,3 +397,8 @@ SLCF     1 # STRUCTURED &     0   200     0     4     4     4 !      1      0   
  SOOT EXTINCTION COEFFICIENT
  ext_coef_C
  1/m
+SLCF     1 # STRUCTURED &     0   200     0     4     3     3 !      2      0      3
+ iso_table21_coupled_1_2.sf
+ SOOT EXTINCTION COEFFICIENT
+ ext_coef_C
+ 1/m
