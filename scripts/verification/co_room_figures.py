@@ -30,7 +30,7 @@ is Phi(ln(t / t*) / 0.94), checked against the KS 95 % band 1.36 / sqrt(n).
 
 Run from the repository root::
 
-    uv run python scripts/figures/verification_co_room.py [--data DIR]
+    uv run python scripts/verification/co_room_figures.py --data DIR
 
 ``DIR`` holds ``fds/`` (FDS output) and ``evac/{deterministic,probabilistic}/``
 (``fed_history.csv``). Writes ``co_room_setup.png``, ``co_room_fed.png``,
@@ -57,10 +57,6 @@ from shapely import wkt
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "site" / "static" / "images" / "verification"
 SCENARIO = ROOT / "assets" / "fed_incap_co_2000ppm"
-DATA = Path(
-    "/Users/chraibi/sciebo - ped23 (ped23.pbox@fz-juelich.de)"
-    "@fz-juelich.sciebo.de/fds-evac-data/fed_incap_co_2000ppm"
-)
 CHID = "demo_homogeneous_CO_2000ppm"
 SIGMA = 0.94
 
@@ -519,7 +515,12 @@ def main():
         Animation of the probabilistic run.
     """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--data", type=Path, default=DATA)
+    parser.add_argument(
+        "--data",
+        type=Path,
+        required=True,
+        help="directory with fds/ and evac/{deterministic,probabilistic}/",
+    )
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
 

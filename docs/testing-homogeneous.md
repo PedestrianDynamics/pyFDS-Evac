@@ -134,7 +134,7 @@ for mode in deterministic probabilistic; do
     --output-sqlite <out>/$mode/run.sqlite \
     --output-fed-history <out>/$mode/fed_history.csv
 done
-uv run python scripts/figures/verification_co_room.py --data <out>
+uv run python scripts/verification/co_room_figures.py --data <out>
 ```
 
 The evacuation itself takes about three minutes. Before it starts, the first
@@ -155,5 +155,10 @@ which takes much longer
 - A uniform field cannot show whether the field is sampled at the agent's
   *current* position; that needs a gradient
   ([#24](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24)).
+- A uniform field also hides which slice height the dose is read from. The
+  gas FED currently takes the first slice of each species in the deck (CO at
+  0.5 m, CO₂ and O₂ at 2.0 m here), not the one nearest to 1.6 m
+  ([#238](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/238)); every
+  slice holds the same values, so the result is unaffected.
 - This page is not yet an automated test: the check runs from the figure
   script on the stored output.
