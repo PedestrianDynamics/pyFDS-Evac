@@ -38,8 +38,8 @@ has no CO at all, and c and d sit above the 20.0 % O₂ gate so the hypoxia term
 is switched off in them. A single case could not separate any of this.
 
 The FED = 1 column is the hand calculation in the FDS form, where the CO₂
-factor is 1 when there is no CO₂. Figure 8 applies Eq. 19 literally at zero
-CO₂ (factor 1.041), which moves case c to about 1626 s.
+factor is 1 when there is no CO₂. Before #194 pyFDS-Evac used 1.041 there,
+which gave 1626 s for case c; FDS 6.10.1's own `FED` device gives 1692.7 s.
 
 ## What is live
 

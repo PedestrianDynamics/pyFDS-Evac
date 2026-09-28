@@ -54,7 +54,7 @@ $$
 - **FDS:** the ISO room, 10 × 10 × 3 m, no fire, no vents, one mesh with
   0.5 m cells. At *t* = 0 a single `&INIT` fills it with one mixture per
   case. Gas slices at 1.6 m, which FDS places at 1.5 m. A `FED` device sits
-  at (5, 5, 1.6) m.
+  at (5, 5, 1.6) m, as in the guide's own version of this test.
 - **Cases** (from Fig. 8 of the FDS+Evac guide; ISO gives no values):
 
   | case | CO₂ | CO | O₂ | terms switched on |
@@ -64,7 +64,8 @@ $$
   | c | 0 | 0.1 % | 21 % | CO only |
   | d | 3.43 % | 0.1 % | 21 % | CO and CO₂ factor |
 
-- **Occupant:** one, at the centre, held in place by a pre-evacuation time
+- **Occupant:** one, near the centre (spawn box 4.4–5.6 m; it lands at
+  (4.78, 4.94) m), held in place by a pre-evacuation time
   drawn from [1.2 × 10⁷, 2 × 10⁷] s, the method ISO prescribes (> 10⁷ s).
 - **Runs:** one per case, `--incapacitation-mode deterministic`, so the
   occupant is incapacitated at FED = 1, not at a random threshold. The FED
@@ -90,11 +91,10 @@ CO coefficient, not 2.764 × 10⁻⁵. That speeds the CO term by 6.0 × 10⁻�
 which accounts for the whole gap: after correcting for it, FDS and the hand
 calculation agree to 2 × 10⁻⁷ of *t*\*.
 
-Fig. 8 of the guide puts HV_CO₂ = exp(2.0004)/7.1 = 1.041 at zero CO₂,
-which gives about 1626 s for case c. FDS and pyFDS-Evac set it to 1 when
-there is no CO₂
-([#194](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/194)), and
-FDS's own device confirms 1692.7 s.
+Before [#194](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/194),
+pyFDS-Evac set HV_CO₂ = exp(2.0004)/7.1 = 1.041 at zero CO₂, which gave
+1626 s for case c. FDS sets it to 1 when there is no CO₂, and its own device
+gives 1692.7 s, as the hand calculation does.
 
 ## Result
 
