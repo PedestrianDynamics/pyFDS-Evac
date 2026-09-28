@@ -967,7 +967,7 @@ is one function in &lt;code>fed.py&lt;/code>:&lt;/p>
 &lt;tr>
 &lt;td>HV_CO2&lt;/td>
 &lt;td>&lt;code>_hyperventilation_factor&lt;/code>&lt;/td>
-&lt;td>\(\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1\) for \(C_{\mathrm{CO_2}} > 0\) (at least 1.041), and 1 without CO2, as in FDS (a factor, not a rate)&lt;/td>
+&lt;td>\(\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1\) for \(C_{\mathrm{CO_2}} > 0\) (at least 1.041), and 1 without CO2, as in FDS; a run warns once if CO is sampled with zero CO2, which points to a deck with no ambient CO2 (a factor, not a rate)&lt;/td>
 &lt;td>CO2 (vol %)&lt;/td>
 &lt;/tr>
 &lt;tr>
