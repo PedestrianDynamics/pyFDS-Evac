@@ -19,10 +19,12 @@ from pathlib import Path
 
 import pytest
 
+from pyfds_evac.core import run_config
 from pyfds_evac.core.fds_inventory import inspect_fds_quantities
 from pyfds_evac.core.run_config import build_run_kwargs
 from pyfds_evac.core.scenario import load_scenario
 from pyfds_evac.core.smoke_speed import SmokeSpeedModel
+from pyfds_evac.core.visibility import VisibilityModel
 
 _REPO = Path(__file__).resolve().parent.parent
 _FDS_DIR = str(_REPO / "assets" / "heat_only_no_soot" / "fds")
@@ -69,6 +71,21 @@ def _mentions_extinction(caplog) -> bool:
     return False
 
 
+# Distinctive phrases of the two fallback warnings in run_config.
+_SMOKE_WARNING = "smoke speed reduction is disabled"
+_VIS_WARNING = "visibility falls back to clear air"
+
+
+def _count_warnings(caplog, phrase: str) -> int:
+    return sum(
+        1
+        for record in caplog.records
+        if record.levelno >= logging.WARNING
+        and record.name.startswith("pyfds_evac")
+        and phrase in record.getMessage().lower()
+    )
+
+
 def test_fixture_has_temperature_and_no_soot():
     """Pin the fixture: the bug needs TEMPERATURE present and soot absent."""
     names = inspect_fds_quantities(_FDS_DIR).canonical_slice_names()
@@ -104,28 +121,65 @@ def test_workaround_flags_build_heat_fed(scenario, caplog):
 
 
 def test_heat_only_case_builds_without_workaround(scenario, caplog):
-    """No flags: smoke speed is off, heat FED is on, and a warning says why."""
+    """No flags: smoke speed is off, heat FED is on, and each fallback warns once."""
     with caplog.at_level(logging.WARNING):
         kwargs = build_run_kwargs(scenario, _opts())
     assert kwargs["smoke_speed_model"] is None
+    assert isinstance(kwargs["vis_model"], VisibilityModel)
     assert kwargs["fed_model"] is None
     assert kwargs["heat_fed_model"] is not None
     assert kwargs["tenability_config"].enable_heat_incapacitation is True
-    assert _mentions_extinction(caplog)
+    assert _count_warnings(caplog, _SMOKE_WARNING) == 1
+    assert _count_warnings(caplog, _VIS_WARNING) == 1
 
 
-def test_missing_soot_does_not_break_visibility(scenario, caplog):
-    """An explicit constant extinction isolates the visibility builder.
+def test_missing_soot_falls_back_to_clear_air_visibility(scenario, caplog):
+    """Visibility falls back to clear air: sign facing still gates sight.
 
-    Whether the fallback is no visibility model (agents learn by contact) or
-    a clear-air model (geometry and sign facing still gate sight) is left to
-    the fix; either way the build must not raise and must warn.
+    An explicit constant extinction isolates the visibility builder, so only
+    its warning may appear. Expected answers come from the fixture's sign
+    alone: ``cp_SW_1`` stands at (5, 5) with alpha = 0 (readable from the
+    north, see VisibilityModel). A viewer 5 m north at (5, 10) is in front of
+    it; a viewer 4 m south at (5, 1) is behind it. Both are in the open 30 m
+    room and within the 30 m sign distance cap, and clear air hides nothing,
+    so facing alone decides.
     """
     with caplog.at_level(logging.WARNING):
         kwargs = build_run_kwargs(scenario, _opts(constant_extinction=0.0))
     assert isinstance(kwargs["smoke_speed_model"], SmokeSpeedModel)
     assert kwargs["heat_fed_model"] is not None
-    assert _mentions_extinction(caplog)
+    assert _count_warnings(caplog, _SMOKE_WARNING) == 0
+    assert _count_warnings(caplog, _VIS_WARNING) == 1
+    vis = kwargs["vis_model"]
+    assert isinstance(vis, VisibilityModel)
+    assert vis.node_is_visible(0.0, 5.0, 10.0, "cp_SW_1") is True
+    assert vis.node_is_visible(0.0, 5.0, 1.0, "cp_SW_1") is False
+
+
+def test_inventory_errors_are_raised(scenario, monkeypatch):
+    """The fallback is decided by the inventory, not by swallowing its errors."""
+
+    def broken_inventory(_fds_dir):
+        raise IndexError("broken inventory")
+
+    monkeypatch.setattr(run_config, "inspect_fds_quantities", broken_inventory)
+    # Each builder on its own: the FED builders read the inventory too.
+    with pytest.raises(IndexError, match="broken inventory"):
+        run_config._build_smoke_model(_opts(), run_config._noop)
+    with pytest.raises(IndexError, match="broken inventory"):
+        run_config._build_vis_model(scenario, _opts(), run_config._noop)
+
+
+def test_extinction_reader_errors_are_raised(scenario, monkeypatch):
+    """With a soot slice reported, a failing reader surfaces, not a fallback."""
+
+    def broken_reader(*_args, **_kwargs):
+        raise IndexError("broken reader")
+
+    monkeypatch.setattr(run_config, "_has_extinction_slice", lambda _fds_dir: True)
+    monkeypatch.setattr(run_config.ExtinctionField, "from_fds", broken_reader)
+    with pytest.raises(IndexError, match="broken reader"):
+        run_config._build_smoke_model(_opts(), run_config._noop)
 
 
 def test_constant_extinction_overrides_missing_soot(scenario):
