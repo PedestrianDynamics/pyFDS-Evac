@@ -1,7 +1,7 @@
 ---
 title: "ISO 20414 Test 19: incapacitation by toxic gases"
 linkTitle: "ISO Test 19"
-weight: 21
+weight: 19
 math: true
 ---
 
@@ -11,7 +11,7 @@ math: true
 | **Level** | FDS case: a full run on FDS output |
 | **Asset** | `assets/iso_table22_coupled` (four cases, a–d) |
 | **Expected value from** | hand calculation, and FDS's own `FED` device |
-| **Status** | passes |
+| **Status** | passes for CO, CO₂ and O₂; HCN, NOₓ and irritants not yet tested ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)) |
 
 ![Four rooms side by side, one occupant each, coloured by its dose; a cross marks the moment the dose reaches 1](/images/verification/iso_test19.gif)
 
@@ -20,17 +20,21 @@ math: true
 ISO 20414:2020, Test 19 (Table 22): an occupant stands still in gas, and
 the time at which its dose reaches FED = 1 must equal a hand calculation.
 The standard asks for the test to be repeated for each hazardous condition
-the model has. Four gas mixtures switch the CO, CO₂ and O₂ terms on one at
-a time. A wrong unit (ppm against %), a slice read at the wrong height, a
-missing species read as zero, a dropped CO₂ factor or a wrong O₂ gate each
-moves the crossing in at least one case.
+the model has; here that is done for CO, CO₂ and O₂. Four gas mixtures
+switch these terms on one at a time. A wrong unit (ppm against %), a
+missing species read as zero, a dropped CO₂ factor or a missing O₂ gate
+(case c would cross 13 s early, case d 3 s) each moves the crossing in at
+least one case.
 
 ## Equation
 
-The gas FED, as in FDS's `FED` function
-([Models › FED](/models/fed.md#coded-form)). *C*<sub>CO</sub> is in ppm,
+The gas FED of Purser (SFPE Handbook, 4th ed., Sec. 2 Ch. 6), as coded in
+FDS 6.10.1's `FED` function
+([`Source/func.f90`](https://github.com/firemodels/fds/blob/FDS-6.10.1/Source/func.f90#L2313-L2404);
+[Models › FED](/models/fed.md#coded-form)). *C*<sub>CO</sub> is in ppm,
 *C*<sub>CO₂</sub> and *C*<sub>O₂</sub> are in volume percent, and rates are
-per minute:
+per minute. The CO coefficient is Purser's light-work value,
+3.317 × 10⁻⁵ × 25 L/min ÷ 30 % COHb = 2.764 × 10⁻⁵:
 
 ```
 r_CO   = 2.764e-5 x (C_CO)^1.036
@@ -39,6 +43,12 @@ HV_CO2 = 1                                     if C_CO2 = 0
 r_O2   = 1 / exp[8.13 - 0.54 x (20.9 - C_O2)]  if C_O2 < 20 %, else 0
 r      = r_CO x HV_CO2 + r_O2
 ```
+
+HV_CO₂ = 1 at *C*<sub>CO₂</sub> = 0 is FDS's convention, not Purser's law:
+Purser's expression gives exp(2.0004)/7.1 = 1.041 there, so FDS's factor
+jumps at zero. Only case c tests that branch; in air with 0.04 % CO₂,
+HV_CO₂ = 1.049. With the optional gases the sum is
+r = (r_CO + r_CN + r_NOx + r_irr) × HV_CO₂ + r_O₂; they are zero here.
 
 The gas is constant, so FED grows linearly, FED(*t*) = *r t* / 60, and
 reaches 1 at
@@ -54,8 +64,13 @@ $$
 - **FDS:** the ISO room, 10 × 10 × 3 m, no fire, no vents, one mesh with
   0.5 m cells. At *t* = 0 a single `&INIT` fills it with one mixture per
   case. Gas slices at 1.6 m, which FDS places at 1.5 m. A `FED` device sits
-  at (5, 5, 1.6) m, as in the guide's own version of this test.
-- **Cases** (from Fig. 8 of the FDS+Evac guide; ISO gives no values):
+  at (5, 5, 1.6) m, next to the occupant.
+- **Cases** from the
+  [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)
+  guide's own FED test (Korhonen 2021, §4.2 Component Testing, Fig. 8
+  "A FED test"); ISO gives no values. The guide compares the agent's FED
+  with a worksheet and with an FDS `FED` device "at the position of the
+  agent", as this page does:
 
   | case | CO₂ | CO | O₂ | terms switched on |
   |---|---|---|---|---|
@@ -69,7 +84,7 @@ $$
   drawn from [1.2 × 10⁷, 2 × 10⁷] s, the method ISO prescribes (> 10⁷ s).
 - **Runs:** one per case, `--incapacitation-mode deterministic`, so the
   occupant is incapacitated at FED = 1, not at a random threshold. The FED
-  is updated every 1 s.
+  is updated every 1 s (`--smoke-update-interval 1`).
 
 ## Expected
 
@@ -92,13 +107,13 @@ which accounts for the whole gap: after correcting for it, FDS and the hand
 calculation agree to 2 × 10⁻⁷ of *t*\*.
 
 Before [#194](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/194),
-pyFDS-Evac set HV_CO₂ = exp(2.0004)/7.1 = 1.041 at zero CO₂, which gave
-1626 s for case c. FDS sets it to 1 when there is no CO₂, and its own device
-gives 1692.7 s, as the hand calculation does.
+pyFDS-Evac applied Purser's expression at zero CO₂ as well, HV_CO₂ = 1.041,
+which gave 1626 s for case c. It now follows FDS's convention, HV_CO₂ = 1
+without CO₂; FDS's device gives 1692.7 s, as the hand calculation does.
 
 ## Result
 
-![FED against time in the four cases: the occupant, the hand calculation and FDS's device lie on one line, and the cross at FED = 1 marks incapacitation](/images/verification/iso_test19_fed.png)
+![FED against time in the four cases: the occupant, the hand calculation and FDS's device lie on one line. Each inset zooms on t* ± 2 s: the occupant's FED steps once per 1 s update and the stop is the first step at or above 1](/images/verification/iso_test19_fed.png)
 
 In every case the occupant's FED is on the hand line to within 3 × 10⁻¹⁴,
 and it is incapacitated at the first FED update after *t*\*.
@@ -121,16 +136,19 @@ and it is incapacitated at the first FED update after *t*\*.
 
 ## Pass criteria
 
-1. **Gas arrives unaltered.** Each concentration the occupant sees equals
-   the prescribed value to 10⁻⁴ (relative), and is exactly 0 where the deck
-   has none. The deck writes mass fractions to 6 significant digits from
-   molar masses given to 3 decimals; each rounding is below 2 × 10⁻⁵.
+1. **Gas arrives unaltered.** Each FDS slice equals the prescribed value to
+   10⁻⁴ (relative), and is exactly 0 where the deck has none. The deck writes
+   mass fractions to 6 significant digits from molar masses given to 3
+   decimals; each rounding is below 2 × 10⁻⁵. The gas the occupant sampled
+   (`fed_history.csv`) equals the slice to the same 10⁻⁴.
 2. **Dose.** |FED − *r t*/60| ≤ 10⁻⁹ at every update: both sides are the
    same arithmetic on the same numbers, so only round-off may differ.
 3. **Crossing and stop.** The first update with FED ≥ 1 and the
    incapacitation are the same row, and \(t^{*} \le t < t^{*} + \Delta t\)
-   with Δ*t* = 1 s, the FED update interval. The automated test allows
-   2 Δ*t*.
+   with Δ*t* = 1 s, the FED update interval. ISO asks for the same time;
+   the model can only report the first update after *t*\*, so the offset
+   lies in [0, Δ*t*) and shrinks with `--smoke-update-interval`. The
+   automated test allows 2 Δ*t*.
 4. **FDS agrees with the hand calculation.** After correcting for FDS's CO
    coefficient, |*t*<sub>FDS</sub> − *t*\*| ≤ 10⁻⁶ *t*\*. FDS writes the
    device with 8 significant digits, so interpolating the crossing is good
@@ -168,14 +186,18 @@ done
 uv run python scripts/verification/iso_test19_figures.py --data <out>
 ```
 
-The script prints each check and stops if a concentration misses the
-deck.
+The script prints each check and stops at the first pass criterion that
+fails.
 
 ## Limits
 
-- CO, CO₂ and O₂ only. The optional gases (HCN, NOx, irritants) and the
-  convective heat dose are not run in this layout; the heat dose is checked
-  in [Heat dose in a uniform room](/models/verification/testing-heat.md).
+- CO, CO₂ and O₂ only. The optional gases (HCN, NOx, irritants), the HCN
+  − NOx correction and HV_CO₂ on the non-CO terms are not run in this layout
+  ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)).
+  The convective heat dose is checked in
+  [Heat dose in a uniform room](/models/verification/testing-heat.md).
+- A missing O₂ gate is caught, a misplaced one is not: any gate between
+  15 % and 21 % gives the same four times.
 - One occupant per case and the deterministic threshold. The probabilistic
   threshold, the default, is checked on 100 agents in
   [CO dose in a uniform room](/models/verification/testing-homogeneous.md).
@@ -193,3 +215,15 @@ deck.
 - A second version of this test, `assets/ISO-table22` in
   `tests/test_fed.py`, supplies the gas directly without FDS. It checks the
   dose accumulator only, for one mixture (CO 0.1 %, CO₂ 5 %, O₂ 12 %).
+
+## References
+
+- ISO 20414:2020. *Fire safety engineering — Verification and validation
+  protocol for building fire evacuation models*, Table 22 (Test 19).
+- Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
+  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0 draft),
+  §4.2, Fig. 8. VTT Technical Research Centre of Finland.
+  [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).
+- Purser, D. A. (2008). Assessment of hazards to occupants from smoke,
+  toxic gases, and heat. In *SFPE Handbook of Fire Protection Engineering*,
+  4th ed., Sec. 2, Ch. 6. NFPA.
