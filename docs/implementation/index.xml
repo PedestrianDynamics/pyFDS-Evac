@@ -12,9 +12,7 @@ its primary input and applies one of two speed-reduction laws, selected
 via &lt;code>SmokeSpeedConfig.speed_law&lt;/code>.&lt;/p>
 &lt;h2>Speed-reduction laws&lt;span class="hx-absolute -hx-mt-20" id="speed-reduction-laws">&lt;/span>
 &lt;a href="#speed-reduction-laws" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The agent walks at &lt;code>v0 * speed_factor(K)&lt;/code>, where &lt;code>v0&lt;/code> is its clear-air speed
-and the factor follows &lt;code>speed_law=&amp;quot;lund&amp;quot;&lt;/code> (default) or &lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>. The
-&lt;code>fridolf&lt;/code> law (Fridolf et al. 2018) reduces speed additively, so its factor
-also depends on &lt;code>v0&lt;/code>. The coded
+and the factor follows &lt;code>speed_law=&amp;quot;lund&amp;quot;&lt;/code> (default) or &lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>. The coded
 equations, the &lt;code>SmokeSpeedConfig&lt;/code> defaults and the departures from the
 literature are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page;
 the published laws are on

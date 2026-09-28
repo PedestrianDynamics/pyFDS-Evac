@@ -270,31 +270,14 @@ $$
 f(K) = \min\!\left(1,\ \max\!\left(f_{\min},\ 1 + \frac{\beta}{\alpha}K\right)\right).
 $$&lt;/li>
 &lt;li>
-&lt;p>&lt;strong>&lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>&lt;/strong>, &lt;code>speed_factor_from_extinction_fridolf&lt;/code>: Eq. 7 of
-&lt;a href="https://doi.org/10.1016/j.tust.2019.04.016" target="_blank" rel="noopener">Fridolf et al. (2019)&lt;/a>
-(method 3; also in Fridolf et al. 2018, a summary of their 2016 SP report), with \(V = C/K\) [m] and the agent&amp;rsquo;s
-smoke-free speed \(v_0\) [m/s],&lt;/p>
+&lt;p>&lt;strong>&lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>&lt;/strong>, &lt;code>speed_factor_from_extinction_fridolf&lt;/code>: with
+\(V = C/K\) [m],&lt;/p>
 $$
-w = \min\!\left(v_0,\ \max\!\left(0.2,\ v_0 - 0.34\,(3 - V)\right)\right),
-\qquad f = \frac{w}{v_0}, \qquad f(0) = 1.
-$$&lt;p>The reduction is additive, 0.34 m/s per metre of visibility below 3 m, and
-the floor is an absolute 0.2 m/s, not a fraction of \(v_0\). Above 3 m the
-speed is unchanged. The 2018 abstract gives no constant; the 2019 paper
-converted each data set with &lt;em>A&lt;/em> = 2 (reflecting) or 8 (emitting)
-(Eq. 1). pyFDS-Evac uses the FDS default &lt;em>C&lt;/em> = 3, so for reflecting
-targets it slows agents later and less than the calibration (onset at
-&lt;em>K&lt;/em> = 1.0 instead of 0.67 1/m); set &lt;code>visibility_factor_c = 2&lt;/code> to match.
-Until &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>
-this option computed \(V/(V+2)\), a law with no known source.&lt;/p>
-&lt;p>&lt;em>Where the law applies.&lt;/em> It was calibrated on corridor and tunnel
-experiments; the authors call it mainly valid for tunnels with a simple
-layout (2019, §4) and do not recommend it for buildings with many exit
-choices, where speeds are expected to be lower (2018, concluding
-remarks). The measured speeds are averages that include pauses, so an
-agent that also pauses or detours in the model may count that time twice
-(our inference). The data come from non-irritant or semi-irritant smoke;
-multiplying by \(g(\mathrm{FIC})\) on top is a pyFDS-Evac choice, not
-part of the source.&lt;/p>
+f(K) = \frac{V}{V + 2~\mathrm{m}}, \qquad f(0) = 1,
+$$&lt;p>with no floor. Its attribution to Fridolf et al. (2019) is unverified, and
+the paper&amp;rsquo;s own law differs; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a> and
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>.&lt;/p>
 &lt;/li>
 &lt;/ul>
 &lt;h2>Parameters&lt;span class="hx-absolute -hx-mt-20" id="parameters">&lt;/span>
@@ -344,24 +327,6 @@ web GUI set only the last two (&lt;code>--smoke-update-interval&lt;/code>,
 &lt;td>&lt;em>C&lt;/em>, &lt;code>fridolf&lt;/code> only&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>fridolf_slope&lt;/code>&lt;/td>
-&lt;td>&lt;code>0.34&lt;/code>&lt;/td>
-&lt;td>m/s per m&lt;/td>
-&lt;td>Speed drop per metre of visibility, &lt;code>fridolf&lt;/code> only&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>fridolf_visibility_threshold_m&lt;/code>&lt;/td>
-&lt;td>&lt;code>3.0&lt;/code>&lt;/td>
-&lt;td>m&lt;/td>
-&lt;td>Visibility below which speed drops, &lt;code>fridolf&lt;/code> only&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>fridolf_min_speed_m_per_s&lt;/code>&lt;/td>
-&lt;td>&lt;code>0.2&lt;/code>&lt;/td>
-&lt;td>m/s&lt;/td>
-&lt;td>Absolute speed floor, &lt;code>fridolf&lt;/code> only&lt;/td>
-&lt;/tr>
-&lt;tr>
 &lt;td>&lt;code>update_interval_s&lt;/code>&lt;/td>
 &lt;td>&lt;code>1.0&lt;/code>&lt;/td>
 &lt;td>s&lt;/td>
@@ -383,12 +348,12 @@ used only to price routes; see the &lt;a href="https://pedestriandynamics.org/py
 agent&amp;rsquo;s smoke factor. The agent&amp;rsquo;s desired speed is then
 \(v_0 \cdot f \cdot g(\mathrm{FIC})\) (&lt;code>direct_steering_runtime.py:186&lt;/code>–&lt;code>190&lt;/code>),
 where \(g\) is the irritant factor of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a>.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V&amp;#43;2) with C = 3 and C = 8" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Speed factor \(v/v_0\) [-] against extinction coefficient K [1/m]. Solid dark
 blue: Frantzich–Nilsson with the default constants, floor 0.1 reached at
-K = 11.1 m⁻¹. The &lt;code>fridolf&lt;/code> option (Fridolf et al. 2018) at
-\(v_0\) = 1.25 m/s with \(V = C/K\): red dashed for C = 3, orange dash-dotted
-for C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3.
+K = 11.1 m⁻¹. The &lt;code>fridolf&lt;/code> option, \(V/(V+2)\) with \(V = C/K\): red dashed
+for C = 3, orange dash-dotted for C = 8. The arrow marks the largest gap
+between Frantzich–Nilsson and C = 3.
 Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>Background: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/">Concepts&lt;/a> page
 and the talk &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>.&lt;/p>
@@ -415,7 +380,7 @@ figures are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implem
 The code departs from them as follows.&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Fractional, not absolute.&lt;/strong> The linear law is applied as a factor of each
-agent&amp;rsquo;s own \(v_0\) (&lt;code>smoke_speed.py:234&lt;/code>), the FDS+Evac normalisation of an
+agent&amp;rsquo;s own \(v_0\) (&lt;code>smoke_speed.py:227&lt;/code>), the FDS+Evac normalisation of an
 absolute regression. It divides by the intercept \(\alpha\), an
 extrapolation to &lt;em>K&lt;/em> = 0, not a measured free walking speed.&lt;/li>
 &lt;li>&lt;strong>Floor.&lt;/strong> \(f_{\min}\) is FDS+Evac&amp;rsquo;s convention, not a measured minimum;
@@ -424,13 +389,11 @@ Frantzich–Nilsson data at about 0.3–0.4 m/s.&lt;/li>
 &lt;li>&lt;strong>Range and spread.&lt;/strong> The law is evaluated at every &lt;em>K&lt;/em>, including below the
 tunnel data, and uses only the mean coefficients, not their standard
 deviations.&lt;/li>
-&lt;li>&lt;strong>The &lt;code>fridolf&lt;/code> option.&lt;/strong> Fridolf et al. state visibility, not &lt;em>K&lt;/em>; the
-2018 abstract gives no constant and the 2019 paper used &lt;em>A&lt;/em> = 2 for
-reflecting and 8 for emitting items. The code uses &lt;em>C&lt;/em> = 3 by default (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>). \(v_0\) is each
-agent&amp;rsquo;s own free speed, as in their method 3, not the truncated normal
-distribution (mean 1.35 m/s, SD 0.25 m/s, 0.85–1.85 m/s) that method 3
-draws it from.&lt;/li>
+&lt;li>&lt;strong>The &lt;code>fridolf&lt;/code> option.&lt;/strong> \(V/(V+2)\) (&lt;code>smoke_speed.py:261&lt;/code>) is not the law
+of Fridolf et al. (2019), whose own law differs (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>); the attribution
+is unverified (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>). Fridolf et al. fitted with &lt;em>A&lt;/em> = 2 for reflecting
+signs, while the code uses &lt;em>C&lt;/em> = 3 by default.&lt;/li>
 &lt;li>&lt;strong>Irritancy counted twice.&lt;/strong> Frantzich and Nilsson&amp;rsquo;s smoke contained acetic
 acid, so \(f(K)\) already includes irritant slowing, and multiplying by
 \(g(\mathrm{FIC})\) partly counts irritancy twice. SFPE Eq. 63.14 adds the
@@ -506,17 +469,17 @@ $$&lt;p>where the speed factor \(f\) falls from 1 in clear air towards a floor i
 dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
 form and with the constants of &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
-&lt;code>fridolf&lt;/code> option, the law of Fridolf et al. (2018) in the sighting distance
-\(V = C/K\): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
-metre, to an absolute floor of 0.2 m/s. Being additive, its factor depends on
-each agent&amp;rsquo;s \(v_0\). It is available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>). The published laws are on
+&lt;code>fridolf&lt;/code> option, \(V/(V+2)\) with the sighting distance \(V = C/K\). Its
+attribution to Fridolf et al. (2019) is unverified, and the paper&amp;rsquo;s own law
+differs (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>). It is steeper in light smoke, has no floor, and is
+available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>). The published laws are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>; the coded forms are
 on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V&amp;#43;2) with C = 3 and C = 8" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Solid dark blue:
-Frantzich–Nilsson at the defaults, with its floor. The &lt;code>fridolf&lt;/code> option at
-\(v_0\) = 1.25 m/s with \(V = C/K\): red dashed for C = 3, orange dash-dotted
-for C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
+Frantzich–Nilsson at the defaults, with its floor. The &lt;code>fridolf&lt;/code> option,
+\(V/(V+2)\) with \(V = C/K\): red dashed for C = 3, orange dash-dotted for
+C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h3>Tenability: a brake and a stop&lt;span class="hx-absolute -hx-mt-20" id="tenability-a-brake-and-a-stop">&lt;/span>
 &lt;a href="#tenability-a-brake-and-a-stop" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Some effects of smoke depend only on what the agent meets now; others
 accumulate into a dose. pyFDS-Evac keeps them apart: speed follows what the
@@ -2061,8 +2024,8 @@ FED activity level is the same as in FDS+Evac 6.7.6: light work only
 &lt;h2>What needs Python&lt;span class="hx-absolute -hx-mt-20" id="what-needs-python">&lt;/span>
 &lt;a href="#what-needs-python" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some parameters cannot be set from the CLI or the scenario JSON. The
 smoke-speed parameters are the main case. &lt;code>speed_law&lt;/code> (&lt;code>&amp;quot;lund&amp;quot;&lt;/code> or
-&lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>), &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code>, &lt;code>visibility_factor_c&lt;/code> and
-the &lt;code>fridolf_*&lt;/code> constants are fields of &lt;code>SmokeSpeedConfig&lt;/code>, and &lt;code>run.py&lt;/code> and the web GUI build that
+&lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>), &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code> and &lt;code>visibility_factor_c&lt;/code>
+are fields of &lt;code>SmokeSpeedConfig&lt;/code>, and &lt;code>run.py&lt;/code> and the web GUI build that
 object with its defaults. A run started from either one uses the
 Frantzich–Nilsson law with the defaults listed on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page.&lt;/p>
 &lt;p>To change them, build a &lt;code>SmokeSpeedModel&lt;/code> yourself and pass it to
@@ -2854,15 +2817,7 @@ metre of visibility below 3 m, down to 0.2 m/s:&lt;/p>
 $$
 w = \min\!\left(w_{\text{smoke free}},\; \max\!\left(0.2,\; w_{\text{smoke free}} - 0.34\,(3 - x)\right)\right) \qquad \text{(Eq. 7)}
 $$&lt;p>Eq. 7 is a design rule, not a fit: the slope of Eq. 2 plus two thresholds
-chosen for conservatism (§3.3.2). Above 3 m, speed is taken as unaffected.
-The same rule appears in Fridolf, Nilsson, Frantzich, Ronchi and Arias
-(2018, pp. 4–5 of the extended-abstract PDF) as method 3, an English
-summary of their 2016 Swedish SP report, with &lt;em>w&lt;/em> and &lt;em>w&lt;/em>_smoke free in m/s and
-visibility &lt;em>v&lt;/em> in m; their method 1 is the same with &lt;em>w&lt;/em>_smoke free = 1 m/s.
-They describe the reduction as a combination of absolute (the same
-0.34 m/s per metre for everyone) and fractional (starting from each
-person&amp;rsquo;s own clear-condition speed), never let the speed fall below
-0.2 m/s, and give no constant for turning &lt;em>K&lt;/em> into visibility.&lt;/p>
+chosen for conservatism (§3.3.2). Above 3 m, speed is taken as unaffected.&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">Caveats on Fridolf et al.&amp;rsquo;s laws&lt;/strong>
@@ -3074,9 +3029,6 @@ representation of evacuation movement in smoke-filled underground
 transportation systems&lt;/em>. Tunnelling and Underground Space Technology,
 90, 28–41.
 &lt;a href="https://doi.org/10.1016/j.tust.2019.04.016" target="_blank" rel="noopener">doi:10.1016/j.tust.2019.04.016&lt;/a>&lt;/li>
-&lt;li>Fridolf, K., Nilsson, D., Frantzich, H., Ronchi, E., &amp;amp; Arias, S. (2018).
-&lt;em>Walking speed in smoke: representation in life safety verifications&lt;/em>.
-SFPE 2018, extended abstract. No DOI or public URL.&lt;/li>
 &lt;li>Purser, D. A. (2003). &lt;em>ASET and RSET: addressing some issues in relation
 to occupant behaviour and tenability&lt;/em>. Fire Safety Science, 7, 91–102.
 &lt;a href="https://doi.org/10.3801/IAFSS.FSS.7-91" target="_blank" rel="noopener">doi:10.3801/IAFSS.FSS.7-91&lt;/a>&lt;/li>
@@ -8092,12 +8044,12 @@ on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/
 &lt;tr>
 &lt;td>&lt;strong>Speed formula&lt;/strong>&lt;/td>
 &lt;td>&lt;code>c(Ks) = 1 + beta * Ks / alpha&lt;/code> ([1] §3.4 Eq. 11)&lt;/td>
-&lt;td>Same formula (&lt;code>smoke_speed.py:234&lt;/code>)&lt;/td>
+&lt;td>Same formula (&lt;code>smoke_speed.py:227&lt;/code>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Default alpha/beta&lt;/strong>&lt;/td>
 &lt;td>Frantzich–Nilsson values (evac.f90:1544–1545)&lt;/td>
-&lt;td>Same values (&lt;code>smoke_speed.py:95–96&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>&lt;/td>
+&lt;td>Same values (&lt;code>smoke_speed.py:91–92&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Minimum speed&lt;/strong>&lt;/td>
