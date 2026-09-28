@@ -17,7 +17,7 @@ and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](ht
 
 ## Coded form
 
-`FedComponents.total_rate_per_min` (`pyfds_evac/core/fed.py:423`) returns the
+`FedComponents.total_rate_per_min` (`pyfds_evac/core/fed.py:447`) returns the
 gas FED rate [1/min]
 
 $$
@@ -67,9 +67,9 @@ including its limits, is on [Models › Heat](/models/heat.md).
 
 ## Tenability: irritant slowdown and incapacitation
 
-`TenabilityConfig` (`fed.py:306`) adds two rules. The slowdown and the gas
+`TenabilityConfig` (`fed.py:330`) adds two rules. The slowdown and the gas
 stop need the gas FED model; the heat stop needs only the heat FED model
-(`run_config.py:246`–`256`).
+(`run_config.py:256`–`291`).
 
 - **Irritant slowdown, off by default.** FDS+Evac has no irritant slowdown, so
   `enable_fic_speed` defaults to false and `run.py` switches the rule on only
@@ -78,7 +78,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   same seven irritants (constants in `_FIC_COEFFS_PPM`, not integrated over
   time). At each FED update where FIC > 0, the agent's irritant factor is set
   to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
-  (`scenario.py:2076`–`2081`) and multiplies the smoke factor. The rule is a
+  (`scenario.py:2108`–`2112`) and multiplies the smoke factor. The rule is a
   pyFDS-Evac assumption with no known source
   ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
   When FIC is exactly 0 the last factor stays in force
@@ -182,7 +182,7 @@ ambient conditions.
 
 The published forms are on [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)
 and [Irritant gases](/fundamentals/irritants.md). The gas sum has the Purser /
-FDS+Evac guide structure (`fed.py:423`), not the ISO 13571 one. Within it, the
+FDS+Evac guide structure (`fed.py:447`), not the ISO 13571 one. Within it, the
 code follows the guide, which cites the 3rd edition of the SFPE Handbook,
 rather than the 5th edition, except that the HCN term is computed as FDS
 computes it
@@ -250,7 +250,7 @@ and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 > FED equations with *t* in seconds; the evidence is on
 > [Asphyxiant FED](/fundamentals/asphyxiant-fed.md).
 
-The irritant slowdown \(g\), when enabled (`fed.py:313`–`314`), is multiplied with the smoke
+The irritant slowdown \(g\), when enabled (`fed.py:337`–`338`), is multiplied with the smoke
 factor (`direct_steering_runtime.py:186`–`190`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
@@ -263,7 +263,7 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 Heat uses the convective Eq. 63.44 (`fed.py:217`) unless `--heat-endpoint`
 selects Eq. 63.45, 63.46 or 63.47 ([Heat](/models/heat.md)), and no radiant
 term. The log-normal σ of both
-thresholds (`fed.py:347`, `:357`) is, for the gas dose, a compromise between
+thresholds (`fed.py:371`, `:381`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)
 and [#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The

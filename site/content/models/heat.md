@@ -67,9 +67,10 @@ The Handbook relates Eqs. 63.45–63.47 to heated air with less than 10 %
 water vapour by volume (p. 2383) and gives no upper temperature. **Assumption:**
 the upper limit is taken as 205 °C, the highest dry-air tolerance point of
 Table 63.17 (Veghte, 4 min, p. 2375). With an endpoint, each FED history
-sample whose temperature exceeds 205 °C (`HEAT_CONVECTIVE_VALIDITY_MAX_C`) is
-flagged. The flag does not clip the rate: Table 63.21 applies the law at
-405 °C.
+sample whose temperature exceeds 205 °C (`HEAT_CONVECTIVE_VALIDITY_MAX_C`) or
+is not a finite number is flagged. The flag does not clip the rate: Table
+63.21 applies the law at 405 °C. A non-finite sample adds no dose. Humidity
+is not sampled, so its status is reported as unknown rather than flagged.
 
 ## Incapacitation
 
@@ -104,9 +105,11 @@ The gas dose is probabilistic by default; the two modes are set separately
 The FED history CSV (`--output-fed-history`) carries `temperature_celsius`,
 `heat_fed_rate_per_min` and `heat_fed_cumulative` per agent and update, and
 `incapacitation_cause` (`gas`, `heat` or `gas+heat`) for agents that stopped.
-With `--heat-endpoint` it also carries `heat_endpoint` and
-`heat_outside_validity` (`True` above 205 °C), and the run manifest records
-`heat_endpoint`. `incapacitation_cause` still reads `heat` for every
+With `--heat-endpoint` it also carries `heat_endpoint`,
+`heat_outside_validity` (`True` above 205 °C or for a non-finite temperature)
+and `heat_humidity` (always `unknown`). The run manifest then records
+`heat_endpoint` and `heat_validity`: the 205 °C limit, marked as assumed, the
+humidity status and the < 10 % water-vapour limit. `incapacitation_cause` still reads `heat` for every
 endpoint; `heat_endpoint` says which one.
 
 ## What is not modelled
@@ -123,7 +126,8 @@ endpoint; `heat_endpoint` says which one.
   ([#218](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/218),
   [#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
 - **Validity range.** Humidity is not sampled, so humid smoke is never
-  flagged. Without `--heat-endpoint`, temperatures above 205 °C are not
+  flagged; `heat_humidity` reads `unknown`
+  ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
   flagged either, although Eq. 63.44 rests on the same data (p. 2382).
 - **Web GUI.** The GUI does not offer `--heat-endpoint`
   ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
