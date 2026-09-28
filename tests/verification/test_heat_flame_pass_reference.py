@@ -10,8 +10,10 @@ integral), and show how much a 1 s update changes the result.
 Sourced (SFPE Handbook 5th ed., Ch. 63, pp. 2382-2384):
 
 - dose per Eq. 63.43, t = D / q**1.33 min, summed per Eq. 63.48;
-- D = 16.667 (kW/m2)^4/3 min, the fatal endpoint (third-degree burns), the
-  maintainer's choice for heat FED = 1 (spec 016);
+- the fatal endpoint (third-degree burns) for heat FED = 1, the
+  maintainer's choice (spec 016); the Handbook prints D = 16.7
+  (kW/m2)^4/3 min, and the value 16.667 used here is spec 016's, not the
+  printed one;
 - sigma = 5.67e-8 W m^-2 K^-4, as printed with Eq. 63.49.
 
 Assumptions (not sourced; each is a named argument below):
@@ -40,7 +42,7 @@ import pytest
 
 SIGMA = 5.67e-8  # W m^-2 K^-4
 EXPONENT = 1.33  # Eq. 63.43
-D_FATAL = 16.667  # (kW/m2)^4/3 min, third-degree burns
+D_FATAL = 16.667  # (kW/m2)^4/3 min, spec 016; the Handbook prints 16.7
 
 SPEED_M_S = 1.0
 FLAME_TEMPERATURE_C = 1000.0

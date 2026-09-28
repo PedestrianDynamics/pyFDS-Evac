@@ -254,3 +254,11 @@ temperature without output is skipped.
   radiant checks in `test_heat_fed_verif.py` (A3.11) call no pyFDS-Evac
   code: they are reference values for the planned radiant term
   ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
+- The reference tests rest on choices that are not Handbook tolerances.
+  Flame pass: the flame is a black-body sphere of radius 0.1 m, the skin
+  faces it at 35 °C, there is no convective term, and one pass must stay
+  below FED 0.02. Hot-layer anchor: a black-body layer with a full view,
+  surface at 20 or 35 °C, within ±10 % of the Handbook's "approximately
+  2.5 kW/m²". Table 63.20 radiant rows: within ±30 %, the band chosen in
+  [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219).
+  D = 16.667 is the spec's value; the Handbook prints 16.7.
