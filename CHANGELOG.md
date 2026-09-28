@@ -24,8 +24,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   open. Skin radiometers and gauges (35 C, h = 8 W/(m2 K)) at 1.6 and
   1.8 m face up, sideways and down next to `INTEGRATED INTENSITY`
   devices and slices. `scripts/verification/heat_radiometer.py` tabulates
-  q/U. Reference data for #221-#223; the heat model is unchanged
-  ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
+  q/U and `heat_radiometer_figures.py` draws it; page
+  `docs/testing-heat-radiometer.md`. Reference data for #221-#223; the
+  heat model is unchanged ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
 
 ### Removed
 
