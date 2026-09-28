@@ -159,9 +159,10 @@ cache valid (`visibility.py:115–139`, `:330–359`).
 | no flags, every group at familiarity 1 | none |
 | `--clear-air-visibility` | clear air, even if every group is fully familiar |
 | `--no-visibility` | none |
-| `--fds-dir DIR`, some group with familiarity < 1 | FDS smoke, uncached |
-| `--fds-dir DIR --vis-cache PATH` | FDS smoke, cached |
+| `--fds-dir DIR` with a `SOOT EXTINCTION COEFFICIENT` slice, some group with familiarity < 1 | FDS smoke, uncached |
+| `--fds-dir DIR --vis-cache PATH` with a `SOOT EXTINCTION COEFFICIENT` slice | FDS smoke, cached |
 | `--fds-dir DIR` without a `SOOT EXTINCTION COEFFICIENT` slice, some group with familiarity < 1 | clear air, with a warning ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)) |
+| `--fds-dir DIR --vis-cache PATH` without a `SOOT EXTINCTION COEFFICIENT` slice | clear air, cached, with a warning |
 | `--fds-dir DIR`, every group at familiarity 1 | none (smoke still drives speed, FED and the exposure gate) |
 | `--vis-cache PATH`, no `--fds-dir` | clear air, cached |
 

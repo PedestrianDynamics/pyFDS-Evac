@@ -213,10 +213,12 @@ temperature without output is skipped.
 
 The published figures come from runs that also passed
 `--constant-extinction 0 --no-visibility`, which ran without a visibility
-model. Add those two flags to reproduce them exactly. Without them
-(clear-air visibility), the deterministic 150 °C run still stops all 100
-agents at 125 s; agent positions differ slightly, and the maximum heat FED
-is 8.0131 against 8.0126.
+model. Add those two flags to reproduce them exactly. On the same FDS
+output, a paired deterministic 150 °C run with and without the two flags
+stops all 100 agents at the same update in both; agent positions differ
+slightly, and the maximum heat FED differs by less than 10⁻⁴ (relative).
+The paired outputs are in
+`<data>/fed_incap_heat_150c/evac/no_soot_fallback_248/`.
 
 ## Limits
 
