@@ -20,7 +20,7 @@ Run from the repository root::
     uv run python scripts/verification/heat_radiometer_figures.py --data DIR
 
 ``DIR`` is as for ``heat_radiometer.py``. Writes ``heat_radiometer_ratio.png``
-to ``site/static/images/verification/``.
+and ``.pdf`` to ``site/static/images/verification/`` (git ignores the PDF).
 """
 
 import argparse
@@ -43,6 +43,37 @@ TITLES = {
 }
 
 
+def _plot_row(ax, i, ratio, excess, color):
+    """One facing: q/U (filled) above, share above ambient (open) below."""
+    for arr, dy, filled in ((ratio, 0.13, True), (excess, -0.13, False)):
+        y = i + dy
+        ax.hlines(y, arr.min(), arr.max(), color="grey", alpha=0.4, lw=3)
+        label = ("q/U" if filled else "above ambient") if i == 0 else None
+        ax.scatter(
+            np.median(arr),
+            y,
+            s=60,
+            color=color if filled else "white",
+            edgecolors=color,
+            linewidths=1.5,
+            zorder=3,
+            label=label,
+        )
+
+
+def _decorate(ax, case, rows):
+    for ref, txt in ((0.25, "U/4"), (0.5, "U/2"), (1.0, "U")):
+        ax.axvline(ref, color="dimgrey", lw=0.8, ls=":")
+        ax.text(ref, -0.6, txt, ha="center", va="center", color="dimgrey")
+    ax.set_yticks(range(len(rows)), [LABELS[r[1]] for r in rows])
+    ax.set_xlim(-0.03, 1.05)
+    ax.set_ylim(3.5, -0.8)
+    ax.grid(False)
+    ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+    ax.set_title(TITLES[case], loc="left", color="dimgrey", pad=4)
+    ax.set_xlabel("share of U", color="dimgrey")
+
+
 def main():
     """Draw q/U per facing for the three decks.
 
@@ -53,7 +84,8 @@ def main():
 
     Saves
     -----
-    site/static/images/verification/heat_radiometer_ratio.png
+    site/static/images/verification/heat_radiometer_ratio.png (and .pdf,
+    which git ignores)
     """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--data", type=Path, default=DATA)
@@ -69,30 +101,9 @@ def main():
     for ax, case in zip(axes, CASES, strict=True):
         path = sorted(args.data.rglob(f"heat_radiometer_{case}_devc.csv"))[0]
         rows = [r for r in summarize(read_devc(path)) if r[0] == 1.6]
-        for i, (_, face, ratio, excess) in enumerate(rows):
-            for arr, dy, filled in ((ratio, 0.13, True), (excess, -0.13, False)):
-                y = i + dy
-                ax.hlines(y, arr.min(), arr.max(), color="grey", alpha=0.4, lw=3)
-                ax.scatter(
-                    np.median(arr),
-                    y,
-                    s=60,
-                    color=pal[5] if filled else "white",
-                    edgecolors=pal[5],
-                    linewidths=1.5,
-                    zorder=3,
-                    label=(("q/U" if filled else "above ambient") if i == 0 else None),
-                )
-        for ref, txt in ((0.25, "U/4"), (0.5, "U/2"), (1.0, "U")):
-            ax.axvline(ref, color="dimgrey", lw=0.8, ls=":")
-            ax.text(ref, -0.6, txt, ha="center", va="center", color="dimgrey")
-        ax.set_yticks(range(len(rows)), [LABELS[r[1]] for r in rows])
-        ax.set_xlim(-0.03, 1.05)
-        ax.set_ylim(3.5, -0.8)
-        ax.grid(False)
-        ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
-        ax.set_title(TITLES[case], loc="left", color="dimgrey", pad=4)
-        ax.set_xlabel("share of U", color="dimgrey")
+        for i, (_, _, ratio, excess) in enumerate(rows):
+            _plot_row(ax, i, ratio, excess, pal[5])
+        _decorate(ax, case, rows)
     axes[0].set_ylabel("plate facing", color="dimgrey")
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(
@@ -112,7 +123,10 @@ def main():
 
     # --- Save ---
     args.out.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.out / "heat_radiometer_ratio.png", dpi=150, bbox_inches="tight")
+    for ext in ("png", "pdf"):
+        fig.savefig(
+            args.out / f"heat_radiometer_ratio.{ext}", dpi=150, bbox_inches="tight"
+        )
 
 
 if __name__ == "__main__":
