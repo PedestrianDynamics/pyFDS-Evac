@@ -4,14 +4,14 @@ SFPE Handbook 5th ed., Ch. 63 (Purser & McAllister 2016), p. 2382, gives the
 only population figures for heat: for infrared radiation, a dose of
 10 (kW/m2)^(4/3) min is a 1 % fatality level for the average population and
 16.7 (kW/m2)^(4/3) min a 50 % lethal level. No figure is given for the
-convective law in use (Eq. 63.44). The probit slopes that would give a
-spread directly are in Hockey & Rew (1996, HSE CRR 97/1996, ref. [133] of
-Ch. 63), which is not in the library.
+convective law in use (Eq. 63.44). Hockey & Rew (1996, HSE CRR 97/1996,
+ref. [133] of Ch. 63) is a candidate source for probit slopes that would
+give a spread directly; it is not in the library and has not been read.
 
 The expected values below are computed from those two published figures with
 the standard normal quantile of the Python standard library, not from the
 code under test. The docs checks define "done" for the documentation part of
-the issue and are strict xfail until it is written. The code defaults (heat
+the issue. The code defaults (heat
 deterministic, opt-in sigma 0.94) are pinned in test_docs_defaults.py and
 tests/verification/test_heat_fed_verif.py.
 """
@@ -80,6 +80,18 @@ def test_thresholds_page_states_what_is_known_for_heat():
     section = _heat_section(THRESHOLDS.read_text())
     for fragment in ("2382", "16.7", "Hockey", ISSUE):
         assert fragment in section, fragment
+
+
+def test_thresholds_page_cites_refs_133_134_on_p_2382():
+    """Refs. [133, 134] for the radiant dose relation are on book p. 2382."""
+    section = _heat_section(THRESHOLDS.read_text())
+    assert "p. 2381" not in section
+
+
+def test_thresholds_page_does_not_claim_hockey_rew_contents():
+    """Hockey and Rew is unread, so the page does not state what it contains."""
+    section = _heat_section(THRESHOLDS.read_text())
+    assert "are in Hockey" not in section
 
 
 def test_thresholds_page_quotes_the_derived_sigma_correctly():
