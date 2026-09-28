@@ -12,7 +12,6 @@ import io
 import json
 import re
 import shutil
-import time
 import zipfile
 from pathlib import Path
 from urllib.parse import quote
@@ -60,6 +59,8 @@ app, rt = fast_app(
     pico=False,
 )
 manager = RunManager()
+# How long /cancel waits for the worker to end before answering.
+_CANCEL_WAIT_S = 2.0
 
 # ── style tokens ─────────────────────────────────────────────────────────────
 _CARD = "background:var(--surface-card);border:1px solid var(--hairline);border-radius:1.1rem;padding:20px;box-shadow:var(--shadow-md)"
@@ -482,8 +483,13 @@ _RUN_BTN_JS = """
       if (cl) cl.textContent = 'Cancelling…';
     }
   });
+  // A cancel still unwinding answers with the progress stream; Run stays
+  // locked until that stream's terminal event (sseClose above).
   document.body.addEventListener('htmx:afterRequest', function (e) {
-    if (isPath(e.detail, '/cancel') || isPath(e.detail, '/clear')) setRunning(false);
+    if (!isPath(e.detail, '/cancel') && !isPath(e.detail, '/clear')) return;
+    var xhr = e.detail && e.detail.xhr;
+    var txt = (xhr && xhr.responseText) || '';
+    if (txt.indexOf('sse-connect') === -1) setRunning(false);
   });
   document.body.addEventListener('htmx:responseError', function (e) {
     if (isRunPath(e.detail)) setRunning(false);
@@ -1028,16 +1034,16 @@ async def cancel():
     """Stop an in-flight run and hand the panel back in its standby state.
 
     Cancellation is cooperative (the worker unwinds on its next progress
-    tick), so wait briefly for the run to actually let go before resetting.
-    Without that wait the manager can still report ``running`` when the user
-    immediately clicks Run again, and ``/run``'s guard would reconnect them
-    to the run they just stopped. The wait is bounded so a scenario with slow
-    ticks can't hang the request.
+    tick or between phases), so wait briefly for the worker to end before
+    resetting. The wait is bounded so a slow phase (FDS slice parsing, output
+    writing) can't hang the request. If the worker is still unwinding when it
+    expires, the panel stays on the progress stream in a "cancelling" state
+    and Run stays disabled; the stream's terminal ``done`` event settles it
+    once the worker has ended.
     """
     manager.cancel()
-    deadline = time.monotonic() + 2.0
-    while manager.running and time.monotonic() < deadline:
-        await asyncio.sleep(0.05)
+    if not await asyncio.to_thread(manager.join, _CANCEL_WAIT_S):
+        return _running_stream_view(cancelling=True)
     manager.reset()
     return _run_panel_idle_body()
 
@@ -1049,8 +1055,12 @@ async def clear():
     return _run_panel_idle_body()
 
 
-def _running_stream_view() -> Div:
-    """The live run panel: progress card + console, wired to the SSE stream."""
+def _running_stream_view(cancelling: bool = False) -> Div:
+    """The live run panel: progress card + console, wired to the SSE stream.
+
+    ``cancelling`` renders the stop control disabled, for a cancel that is
+    still waiting on the worker.
+    """
     return Div(
         Div(
             # Only the dynamic half lives in the SSE swap target. Cancel sits
@@ -1062,10 +1072,13 @@ def _running_stream_view() -> Div:
                 Button(
                     NotStr(
                         '<span style="font-size:9px">■</span>'
-                        '<span class="run-btn-label">Cancel scenario</span>'
+                        '<span class="run-btn-label">'
+                        + ("Cancelling…" if cancelling else "Cancel scenario")
+                        + "</span>"
                     ),
                     id="cancel-btn",
                     type="button",
+                    disabled=cancelling,
                     hx_post="/cancel",
                     hx_target="#run-panel",
                     hx_swap="innerHTML show:top",
@@ -1461,10 +1474,19 @@ async def progress():
                     event="done",
                 )
                 return
-            # Cancelled and idle both just close the stream: /cancel has
-            # already swapped the whole panel back to its standby state, so
-            # emitting anything here would fight that swap.
+            # Cancelled and idle still end with a terminal ``done``: a stream
+            # that just closes is reopened by EventSource, so another tab, or
+            # a cancel that outlived /cancel's wait, would never settle. When
+            # /cancel has already swapped in the standby panel, this stream's
+            # element is gone and the event goes nowhere.
             if status in ("cancelled", "idle"):
+                yield sse_message(
+                    Div(
+                        "Run cancelled.",
+                        style="color:var(--ink-dim);padding:12px;border:1px solid var(--hairline);border-radius:9px",
+                    ),
+                    event="done",
+                )
                 return
             ev = manager.last_event
             if ev is not None and ev != last:

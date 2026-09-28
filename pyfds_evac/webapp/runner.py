@@ -96,8 +96,11 @@ class RunManager:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._cancel = threading.Event()
+        # Guards status transitions that race between cancel() and the worker.
+        self._state = threading.Lock()
         self._thread: threading.Thread | None = None
-        self.status: str = "idle"  # idle | running | done | error | cancelled
+        # idle | running | cancelling | done | error | cancelled
+        self.status: str = "idle"
         self.result: ScenarioResult | None = None
         self.error: str | None = None
         self.scenario_name: str | None = None
@@ -112,7 +115,8 @@ class RunManager:
 
     @property
     def running(self) -> bool:
-        return self.status == "running"
+        """True until the worker has ended, including while it unwinds."""
+        return self.status in ("running", "cancelling")
 
     def start(
         self,
@@ -143,6 +147,12 @@ class RunManager:
         ``results_only`` selects the finished view that skips building the
         trajectory viewer and plots; ``opts`` is kept so that view can report
         on every output path that was requested.
+
+        A cancel is honoured at every phase: inside the step loop via the
+        progress callback, and between phases (after ``build_run_kwargs``,
+        after ``run_scenario``, after ``post_run``). A phase already under way
+        is not interrupted, so a cancel that lands during ``post_run`` still
+        ends the run as ``cancelled``, but files it already wrote stay on disk.
         """
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("A run is already in progress.")
@@ -161,9 +171,12 @@ class RunManager:
         self.log_lines = []
         self.warnings = []
 
-        def on_progress(ev: ProgressEvent) -> None:
+        def check_cancel() -> None:
             if self._cancel.is_set():
                 raise RunCancelled()
+
+        def on_progress(ev: ProgressEvent) -> None:
+            check_cancel()
             self.last_event = ev
             _max = getattr(ev, "max_fed", None)
             _mean = getattr(ev, "mean_fed", None)
@@ -185,22 +198,28 @@ class RunManager:
             try:
                 with contextlib.redirect_stdout(capture):
                     run_kwargs = build_run_kwargs()
+                    check_cancel()
                     result = run_scenario(
                         scenario, progress_callback=on_progress, **run_kwargs
                     )
+                    check_cancel()
                     self.result = result
                     if post_run is not None:
                         self.artifacts = post_run(result)
-                self.status = "done"
+                with self._state:
+                    check_cancel()
+                    self.status = "done"
             except RunCancelled:
                 # A deliberate stop, not a failure: leave no error for the UI
                 # to report and drop any partial result.
                 self.result = None
                 self.error = None
-                self.status = "cancelled"
+                with self._state:
+                    self.status = "cancelled"
             except Exception as exc:  # surface any run failure to the UI
                 self.error = f"{type(exc).__name__}: {exc}"
-                self.status = "error"
+                with self._state:
+                    self.status = "error"
             finally:
                 model_logger.removeHandler(warning_handler)
                 model_logger.setLevel(previous_level)
@@ -211,10 +230,20 @@ class RunManager:
 
     def cancel(self) -> bool:
         """Ask an in-flight run to stop. Returns whether one was running."""
-        if not self.running:
-            return False
-        self._cancel.set()
+        with self._state:
+            if self.status != "running":
+                return False
+            self._cancel.set()
+            self.status = "cancelling"
         return True
+
+    def join(self, timeout: float | None = None) -> bool:
+        """Wait for the worker thread to end. Returns whether it has ended."""
+        thread = self._thread
+        if thread is None:
+            return True
+        thread.join(timeout)
+        return not thread.is_alive()
 
     def reset(self) -> None:
         """Drop the finished run's state and return the manager to idle.

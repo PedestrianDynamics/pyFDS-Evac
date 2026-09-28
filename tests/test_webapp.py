@@ -162,13 +162,161 @@ def test_second_run_rejected_while_active(client):
     kwargs = build_run_kwargs(scenario, opts)
     # start() takes a builder, not the kwargs themselves: the expensive part of
     # build_run_kwargs runs on the worker thread so /run can answer straight
-    # away. Prebuilt here, since this test is about the second-run guard.
-    manager.start(scenario, lambda: kwargs, "ISO-table21")
-    with pytest.raises(RuntimeError):
-        manager.start(scenario, kwargs, "ISO-table21")
+    # away. Prebuilt here, since this test is about the second-run guard; the
+    # builder holds the worker until the guard has been checked, otherwise a
+    # fast run can finish and release the lock first.
+    import threading
+
+    release = threading.Event()
+
+    def hold_then_build():
+        release.wait(5.0)
+        return kwargs
+
+    manager.start(scenario, hold_then_build, "ISO-table21")
+    try:
+        with pytest.raises(RuntimeError):
+            manager.start(scenario, lambda: kwargs, "ISO-table21")
+    finally:
+        release.set()
     # Drain to completion so the lock releases for other tests.
     _stream_until_terminal(client)
     _drop_temp_trajectory()
+
+
+class TestCancelLifecycle:
+    """A cancel is honoured at every phase and the UI waits for the worker.
+
+    ``run_scenario`` is replaced by a stub and each phase is held open on an
+    Event, so the tests decide exactly where the cancel lands.
+    """
+
+    @pytest.fixture
+    def rm(self, monkeypatch):
+        import pyfds_evac.webapp.app as app_module
+        from pyfds_evac.webapp.runner import RunManager
+
+        calls = {"run": 0, "post": 0}
+        gate = {"build": None, "post": None}
+
+        def fake_run_scenario(scenario, progress_callback=None, **kwargs):
+            calls["run"] += 1
+            return SimpleNamespace(sqlite_file=None)
+
+        monkeypatch.setattr("pyfds_evac.webapp.runner.run_scenario", fake_run_scenario)
+        fresh = RunManager()
+        monkeypatch.setattr(app_module, "manager", fresh)
+        monkeypatch.setattr(app_module, "_CANCEL_WAIT_S", 0.05)
+        yield fresh, calls, gate
+        for ev in gate.values():
+            if ev is not None:
+                ev.set()
+        fresh.join(5.0)
+
+    @staticmethod
+    def _blocking(gate, key, entered):
+        import threading
+
+        gate[key] = threading.Event()
+
+        def wait(*_a):
+            entered.set()
+            gate[key].wait(5.0)
+            return {}
+
+        return wait
+
+    def test_cancel_while_building_kwargs_skips_the_run(self, rm):
+        import threading
+
+        mgr, calls, gate = rm
+        entered = threading.Event()
+        post = []
+        mgr.start(
+            None,
+            self._blocking(gate, "build", entered),
+            "stub",
+            post_run=lambda r: post.append(r) or [],
+        )
+        assert entered.wait(5.0)
+        assert mgr.cancel() is True
+        assert mgr.status == "cancelling"
+        assert mgr.running
+        gate["build"].set()
+        assert mgr.join(5.0)
+        assert mgr.status == "cancelled"
+        assert calls["run"] == 0
+        assert post == []
+
+    def test_cancel_during_post_run_ends_cancelled(self, rm):
+        import threading
+
+        mgr, calls, gate = rm
+        entered = threading.Event()
+        blocking_post = self._blocking(gate, "post", entered)
+        mgr.start(None, dict, "stub", post_run=lambda r: blocking_post() and [])
+        assert entered.wait(5.0)
+        assert mgr.cancel() is True
+        gate["post"].set()
+        assert mgr.join(5.0)
+        assert mgr.status == "cancelled"
+        assert mgr.result is None
+        assert calls["run"] == 1
+
+    def test_reset_is_refused_while_cancelling(self, rm):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.cancel()
+        mgr.reset()
+        assert mgr.status == "cancelling"
+
+    def test_cancel_route_keeps_the_run_panel_until_the_worker_stops(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        r = client.post("/cancel")
+        assert r.status_code == 200
+        # Still unwinding: the standby panel would re-enable Run over a live
+        # worker, so the response keeps the progress stream instead.
+        assert "Choose a scenario and" not in r.text
+        assert 'sse-connect="/progress"' in r.text
+        assert mgr.running
+        gate["build"].set()
+        assert mgr.join(5.0)
+        assert _stream_until_terminal(client)[-1] == "done"
+
+    def test_cancel_route_returns_standby_once_the_worker_stops(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        gate["build"].set()  # the worker unwinds as soon as it is asked
+        r = client.post("/cancel")
+        assert "Choose a scenario and" in r.text
+        assert mgr.status == "idle"
+
+    def test_progress_stream_ends_with_done_after_a_cancel(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.cancel()
+        gate["build"].set()
+        assert mgr.join(5.0)
+        # Every connected client needs a terminal event; a stream that just
+        # closes is reopened by EventSource and never settles.
+        assert _stream_until_terminal(client)[-1] == "done"
 
 
 class TestScenarioPath:
