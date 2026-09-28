@@ -160,7 +160,7 @@ def model_docs() -> Any:
         ),
         _sec(
             "02",
-            "FED Dose — ISO 13571",
+            "FED Dose — Purser / FDS",
             _p(
                 "Each agent accumulates a Fractional Effective Dose from CO, "
                 "cyanides/NOₓ, irritants and oxygen depletion, accelerated by "
