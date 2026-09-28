@@ -132,7 +132,7 @@ default `gas`, the ε term above) takes the radiant term from the FDS
 `INTEGRATED INTENSITY` slice at the slice height, the same height as the
 `TEMPERATURE` slice
 ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
-FDS's *U* = ∫ *I* dΩ [kW/m²] (FDS User's Guide 6.10.1, Table 22.4) is the
+FDS's *U* = ∫ *I* dΩ [kW/m²] (FDS User's Guide 6.10.1, Table 22.4, p. 403) is the
 radiation arriving from all directions, not the flux onto a surface. A
 surface sees one hemisphere, with rays weighted by cos θ, so its incident
 flux lies between *U*/4 (a sphere, or a plate in an isotropic field) and *U*
@@ -166,19 +166,21 @@ $$
 
 - **Ambient background.** *U* is not zero in a cold room: at 20 °C,
   *U* = 4σ*T*⁴ = 1.68 kW/m². With no 2.5 kW/m² threshold, the incident
-  *f U* gives a dose with no fire at all. With h = 5 and \(T_s\) = 35 °C
-  the fatal heat FED = 1 is reached after about 8.9 min (*f* = 1) or 69 min
-  (*f* = 0.25). Whether to use incident *f U*, net *f U* − σ\(T_s^4\), or
+  *f U* gives a dose with no fire at all. With h = 5, \(T_s\) = 35 °C and
+  *D* = 16.667 the fatal heat FED = 1 is reached after about 8.9 min
+  (*f* = 1) or 69 min (*f* = 0.25). Whether to use incident *f U*, net *f U* − σ\(T_s^4\), or
   the excess above ambient *f* (*U* − 4σ\(T_a^4\)) is open
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 - **[0.25, 1] is not a bound for every orientation.** In the FDS radiometer
   data of [#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224),
   below a hot layer the plate facing up gets about 0.41 *U*, but a plate
   facing down gets about 0.13 *U* and some facing sideways about 0.22 *U*,
-  less than *f* = 0.25 gives. One *f* serves one orientation.
+  less than *f* = 0.25 gives. Beside a burner, plates facing up or away
+  from the flame get about 0.12–0.14 *U*. One *f* serves one orientation.
 - **Gauge devices are the preferred input** (spec 016): FDS
   `GAUGE HEAT FLUX GAS` devices give the flux to a skin-like plate from the
-  full radiation solution, with no factor. They are not read yet
+  full radiation solution, with no factor (FDS User's Guide 6.10.1,
+  Eq. 22.35, p. 381). They are not read yet
   ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
 - **Possible double count with convection.** The hot-air data behind
   Eqs. 63.45–63.47 may already include radiation from the walls of the test
@@ -292,7 +294,9 @@ above 205 °C: that limit belongs to the convective data of Eqs.
   committed FDS 6.10.1 case (`assets/heat_integrated_intensity`, slice *U*
   and *T* against FDS's own devices), and the #224 radiometer data, where
   *f* = 0.25 with convection matches the FDS skin gauge in an isotropic room
-  in all four orientations within 3 %.
+  in all four orientations within 3 %. The 300 °C layer, soot fraction and
+  geometry of the committed case, and the gauge's h = 8 and \(T_s\) = 35 °C
+  in the #224 decks, are assumptions of those test decks, not sourced values.
 
 ## Sources
 
@@ -300,3 +304,6 @@ above 205 °C: that limit belongs to the convective data of Eqs.
   occupants from smoke, toxic gases, and heat. In *SFPE Handbook of Fire
   Protection Engineering* (5th ed., Ch. 63). Springer.
   doi:10.1007/978-1-4939-2565-0_63
+- McGrattan, K., et al. (2025). *Fire Dynamics Simulator User's Guide*,
+  FDS 6.10.1. NIST Special Publication 1019. Table 22.4 (p. 403) and
+  Eq. 22.35 (p. 381).
