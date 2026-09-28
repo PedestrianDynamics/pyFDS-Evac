@@ -104,7 +104,8 @@ Eq. 63.46 (injury).
 
 Some cross-references in the text of Ch. 63 do not match the printed
 equation labels: the text calls the radiant equation "Equation 63.41" and the
-summed dose "Equation 63.46". The labels above are those printed beside each
+summed dose "Equation 63.46", and gives the endpoint times from flux as
+"Equation 63.49" where the form is that of Eq. 63.43 (p. 2384). The labels above are those printed beside each
 equation. The caption of Table 63.21 says its rates follow Eq. 63.44, but the
 printed values (0.02, 0.19, 1.57 and 15.55 per minute at 65, 125, 220 and
 405 °C) are those of Eq. 63.45. The note under Eq. 63.48 says that

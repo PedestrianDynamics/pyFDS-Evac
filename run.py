@@ -251,7 +251,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_HEAT_EMISSIVITY,
         help="Emissivity of the gas at the head for --heat-fed-method "
         f"total-flux (default: {DEFAULT_HEAT_EMISSIVITY}, an assumption: SFPE "
-        "p. 2384 gives 'perhaps 0.5 for smoke', 0.05 for a clear gas)",
+        "p. 2384 gives 'perhaps 0.5 for smoke', 0.05 for a gas)",
     )
     parser.add_argument(
         "--heat-convective-coefficient",
