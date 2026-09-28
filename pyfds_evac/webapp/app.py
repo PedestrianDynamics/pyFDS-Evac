@@ -35,7 +35,7 @@ from fasthtml.common import (
 from starlette.requests import Request
 
 from pyfds_evac.core import load_scenario
-from pyfds_evac.core.run_config import build_run_kwargs
+from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
 from . import docs, params, plots, theme, trajviz
 from .runner import RunManager
@@ -59,27 +59,39 @@ app, rt = fast_app(
     pico=False,
 )
 manager = RunManager()
+# How long /cancel waits for the worker to end before answering.
+_CANCEL_WAIT_S = 2.0
 
 # ── style tokens ─────────────────────────────────────────────────────────────
-_CARD = "background:#2A262A;border:1px solid rgba(255,255,255,.07);border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
-_PANEL = "background:#14161B;border:1px solid rgba(255,255,255,.07);border-radius:1.25rem;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.35)"
-_INNER = "background:#252127;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 16px"
+_CARD = "background:var(--surface-card);border:1px solid var(--hairline);border-radius:1.1rem;padding:20px;box-shadow:var(--shadow-md)"
+_PANEL = "background:var(--surface-panel);border:1px solid var(--hairline);border-radius:1.25rem;padding:24px;box-shadow:var(--shadow-lg)"
+_INNER = "background:var(--surface-accent);border:1px solid var(--hairline);border-radius:12px;padding:14px 16px"
 _MONO = "font-family:'JetBrains Mono',monospace"
 _GROTESK = "font-family:'Space Grotesk',sans-serif"
-_INK = "color:#F2EDE9"
-_INK2 = "color:#B2A9A3"
-_MUTED = "color:#837A74"
+_INK = "color:var(--ink)"
+_INK2 = "color:var(--ink-dim)"
+_MUTED = "color:var(--ink-faint)"
 
 _FED_LIVE_JS = """
 (function () {
+  // Plotly resolves no CSS variables, so the themed values are read off
+  // the document and refreshed whenever the theme flips.
+  function themeInk() {
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue('--ink-dim').trim() || '#b2a9a3';
+  }
+  function themeGrid() {
+    return document.documentElement.getAttribute('data-theme') === 'light'
+      ? 'rgba(31,23,16,.13)' : 'rgba(255,255,255,.10)';
+  }
   var fedLayout = {
     margin: {l: 46, r: 14, t: 14, b: 34},
     paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-    font: {family: 'JetBrains Mono, monospace', color: '#B2A9A3', size: 10},
+    font: {family: 'JetBrains Mono, monospace', color: themeInk(), size: 10},
     height: 180,
     legend: {bgcolor: 'rgba(0,0,0,0)', font: {size: 9}, orientation: 'h', y: -0.22},
-    xaxis: {title: {text: 'sim time (s)', font: {size: 9}}, gridcolor: 'rgba(255,255,255,.06)', tickfont: {size: 9}},
-    yaxis: {title: {text: 'FED', font: {size: 9}}, gridcolor: 'rgba(255,255,255,.06)', rangemode: 'tozero', tickfont: {size: 9}},
+    xaxis: {title: {text: 'sim time (s)', font: {size: 9}}, gridcolor: themeGrid(), tickfont: {size: 9}},
+    yaxis: {title: {text: 'FED', font: {size: 9}}, gridcolor: themeGrid(), rangemode: 'tozero', tickfont: {size: 9}},
     shapes: [
       {type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0.3, y1: 0.3,
        line: {color: 'rgba(255,176,32,.55)', dash: 'dot', width: 1}},
@@ -91,7 +103,8 @@ _FED_LIVE_JS = """
   function fedColor(v) {
     return v >= 1.0 ? '#E01E37' : v >= 0.6 ? '#FF6A1A' : v >= 0.3 ? '#FFB020' : '#F4C430';
   }
-  var fedEs = new EventSource('/fed-progress');
+  var fedRun = (document.getElementById('fed-live-section') || {dataset: {}}).dataset.run;
+  var fedEs = new EventSource('/fed-progress?run=' + encodeURIComponent(fedRun || ''));
   fedEs.addEventListener('fed', function (e) {
     try {
       var d = JSON.parse(e.data);
@@ -99,9 +112,11 @@ _FED_LIVE_JS = """
       var section = document.getElementById('fed-live-section');
       if (section) section.style.display = '';
       var traces = [
-        {x: d.t, y: d.max, mode: 'lines', name: 'max FED', line: {color: '#F4C430', width: 2}},
-        {x: d.t, y: d.mean, mode: 'lines', name: 'mean FED', line: {color: '#FF8A3D', width: 1.5, dash: 'dot'}}
+        {x: d.t, y: d.max, mode: 'lines', name: 'max FED (any agent)', line: {color: '#F4C430', width: 2}}
       ];
+      fedLayout.font.color = themeInk();
+      fedLayout.xaxis.gridcolor = themeGrid();
+      fedLayout.yaxis.gridcolor = themeGrid();
       if (!fedChartReady) {
         Plotly.newPlot('fed-live-chart', traces, fedLayout, {displayModeBar: false, responsive: true});
         fedChartReady = true;
@@ -123,7 +138,7 @@ _FED_LIVE_JS = """
 # ── logo ─────────────────────────────────────────────────────────────────────
 _LOGO_SVG = NotStr("""
 <svg class="app-logo" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0.5" y="0.5" width="39" height="39" rx="10.5" fill="#211e20" stroke="rgba(255,255,255,0.10)"/>
+  <rect x="0.5" y="0.5" width="39" height="39" rx="10.5" fill="var(--surface-page)" stroke="var(--hairline-strong)"/>
   <circle cx="20" cy="20" r="14.5" fill="none" stroke="#f4c430" stroke-width="1.6" opacity="0.55"/>
   <circle cx="20" cy="20" r="10"   fill="none" stroke="#ffb020" stroke-width="1.6" opacity="0.7"/>
   <circle cx="20" cy="20" r="5.5"  fill="none" stroke="#ff6a1a" stroke-width="1.7" opacity="0.9"/>
@@ -163,7 +178,7 @@ def _fed_live_section() -> Div:
             Div(
                 style="position:absolute;top:-2px;left:30%;width:1px;height:calc(100% + 4px);background:rgba(255,176,32,.55)"
             ),
-            style="position:relative;height:7px;border-radius:99px;background:#1F1C1F;border:1px solid rgba(255,255,255,.06);overflow:visible;margin-bottom:5px",
+            style="position:relative;height:7px;border-radius:99px;background:var(--surface-page);border:1px solid var(--hairline);overflow:visible;margin-bottom:5px",
         ),
         # Labels pinned to exact bar positions
         Div(
@@ -181,6 +196,7 @@ def _fed_live_section() -> Div:
         Div(id="fed-live-chart"),
         style=_PANEL + ";width:220px;flex:none",
         id="fed-live-section",
+        data_run=manager.run_id,
     )
 
 
@@ -211,7 +227,7 @@ def _sidebar() -> Div:
                 ),
                 Span(
                     "run.py",
-                    style=f"{_MONO};font-size:10px;{_MUTED};padding:3px 8px;border:1px solid rgba(255,255,255,.08);border-radius:6px",
+                    style=f"{_MONO};font-size:10px;{_MUTED};padding:3px 8px;border:1px solid var(--hairline);border-radius:6px",
                 ),
                 style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px",
             ),
@@ -256,37 +272,47 @@ def _warnings_card(messages: list[str]) -> Div:
             style=f"font-size:.78rem;line-height:1.6;{_INK2};margin:10px 0 0;opacity:.8",
         ),
         style=(
-            "background:#2A262A;border:1px solid rgba(244,196,48,.35);"
-            "border-radius:1.1rem;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)"
+            "background:var(--surface-card);border:1px solid rgba(244,196,48,.35);"
+            "border-radius:1.1rem;padding:20px;box-shadow:var(--shadow-md)"
         ),
+    )
+
+
+def _run_panel_idle_body() -> Div:
+    """Standby contents of the run panel.
+
+    Kept separate from the ``#run-panel`` wrapper because the run form and
+    the cancel/clear actions swap this element's *innerHTML* -- returning the
+    wrapper too would nest a second ``#run-panel`` inside the first.
+    """
+    return Div(
+        Div(
+            Div(
+                _LOGO_SVG,
+                style=(
+                    "width:64px;height:64px;border-radius:50%;display:flex;"
+                    "align-items:center;justify-content:center;"
+                    "background:rgba(255,106,26,.07);margin:0 auto 20px;"
+                    "animation:pulse 2.6s ease-in-out infinite"
+                ),
+            ),
+            Div(
+                Div(
+                    "Choose a scenario and ",
+                    B("run", style="color:#FF6A1A"),
+                    style=f"{_GROTESK};font-weight:600;font-size:22px;letter-spacing:-.02em;{_INK}",
+                ),
+                style="max-width:46ch;text-align:center",
+            ),
+            cls="standby",
+        ),
+        style=_PANEL,
     )
 
 
 def _run_panel_idle() -> Div:
     return Div(
-        Div(
-            Div(
-                Div(
-                    _LOGO_SVG,
-                    style=(
-                        "width:64px;height:64px;border-radius:50%;display:flex;"
-                        "align-items:center;justify-content:center;"
-                        "background:rgba(255,106,26,.07);margin:0 auto 20px;"
-                        "animation:pulse 2.6s ease-in-out infinite"
-                    ),
-                ),
-                Div(
-                    Div(
-                        "Choose a scenario and ",
-                        B("run", style="color:#FF6A1A"),
-                        style=f"{_GROTESK};font-weight:600;font-size:22px;letter-spacing:-.02em;{_INK}",
-                    ),
-                    style="max-width:46ch;text-align:center",
-                ),
-                cls="standby",
-            ),
-            style=_PANEL,
-        ),
+        _run_panel_idle_body(),
         id="run-panel",
         cls="rise",
         style="animation-delay:.12s",
@@ -442,6 +468,30 @@ _RUN_BTN_JS = """
   });
   // Run finished: the progress stream closed (sse-close="done").
   document.body.addEventListener('htmx:sseClose', function () { setRunning(false); });
+  // Cancelling swaps the whole panel away, which tears down the SSE element
+  // without necessarily firing sseClose -- unlock the buttons explicitly.
+  function isPath(d, want) {
+    var p = (d && d.pathInfo && (d.pathInfo.requestPath || d.pathInfo.path)) ||
+            (d && d.requestConfig && d.requestConfig.path) || '';
+    return p === want;
+  }
+  document.body.addEventListener('htmx:beforeRequest', function (e) {
+    if (!isPath(e.detail, '/cancel')) return;
+    var c = document.getElementById('cancel-btn');
+    if (c) {
+      c.disabled = true;
+      var cl = c.querySelector('.run-btn-label');
+      if (cl) cl.textContent = 'Cancelling…';
+    }
+  });
+  // A cancel still unwinding answers with the progress stream; Run stays
+  // locked until that stream's terminal event (sseClose above).
+  document.body.addEventListener('htmx:afterRequest', function (e) {
+    if (!isPath(e.detail, '/cancel') && !isPath(e.detail, '/clear')) return;
+    var xhr = e.detail && e.detail.xhr;
+    var txt = (xhr && xhr.responseText) || '';
+    if (txt.indexOf('sse-connect') === -1) setRunning(false);
+  });
   document.body.addEventListener('htmx:responseError', function (e) {
     if (isRunPath(e.detail)) setRunning(false);
   });
@@ -466,6 +516,13 @@ function drawIncapDist() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cw, ch);
 
+  // Canvas takes literal colours only, so the theme is read here rather
+  // than inherited; drawIncapDist re-runs on every theme flip.
+  var _cs = getComputedStyle(document.documentElement);
+  function cssVar(n, fallback) {
+    return (_cs.getPropertyValue(n) || '').trim() || fallback;
+  }
+
   var pL = 28, pR = 10, pT = 18, pB = 18;
   var pw = cw - pL - pR, ph = ch - pT - pB;
   var fedMax = 1.8, N = 400;
@@ -485,10 +542,10 @@ function drawIncapDist() {
   function ty(v) { return pT + (1 - v / yMax) * ph; }
 
   // Background
-  ctx.fillStyle = '#131113'; ctx.fillRect(0, 0, cw, ch);
+  ctx.fillStyle = cssVar('--surface-panel', '#14161b'); ctx.fillRect(0, 0, cw, ch);
 
   // Horizontal grid
-  ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = cssVar('--hairline-soft', 'rgba(255,255,255,.04)'); ctx.lineWidth = 1;
   [0.25, 0.5, 0.75, 1.0].forEach(function (f) {
     ctx.beginPath(); ctx.moveTo(pL, pT + (1 - f) * ph); ctx.lineTo(cw - pR, pT + (1 - f) * ph); ctx.stroke();
   });
@@ -530,24 +587,24 @@ function drawIncapDist() {
   ctx.setLineDash([]);
 
   // Axes
-  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = cssVar('--hairline-badge', 'rgba(255,255,255,.18)'); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pL, pT); ctx.lineTo(pL, pT + ph); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pL, pT + ph); ctx.lineTo(cw - pR, pT + ph); ctx.stroke();
 
   // X-axis ticks
-  ctx.fillStyle = '#837A74'; ctx.font = '8px JetBrains Mono, monospace'; ctx.textAlign = 'center';
+  ctx.fillStyle = cssVar('--ink-faint', '#837a74'); ctx.font = '8px JetBrains Mono, monospace'; ctx.textAlign = 'center';
   [0, 0.3, 0.6, 0.9, 1.2, 1.5].forEach(function (v) {
     ctx.fillText(v.toFixed(1), tx(v), pT + ph + 12);
   });
 
   // Axis labels
-  ctx.fillStyle = '#837A74'; ctx.font = '7.5px JetBrains Mono, monospace';
+  ctx.fillStyle = cssVar('--ink-faint', '#837a74'); ctx.font = '7.5px JetBrains Mono, monospace';
   ctx.textAlign = 'right'; ctx.fillText('density', pL - 2, pT + 4);
   ctx.textAlign = 'center'; ctx.fillText('FED threshold', pL + pw / 2, pT + ph + 17);
 
   // Annotation: σ + mode
   var mode = Math.exp(mu - sigma * sigma);
-  ctx.fillStyle = '#B2A9A3'; ctx.font = '7.5px JetBrains Mono, monospace'; ctx.textAlign = 'left';
+  ctx.fillStyle = cssVar('--ink-dim', '#b2a9a3'); ctx.font = '7.5px JetBrains Mono, monospace'; ctx.textAlign = 'left';
   ctx.fillText('σ=' + sigma.toFixed(2) + '  mode≈' + mode.toFixed(2), pL + 2, pT - 5);
 }
 
@@ -650,7 +707,9 @@ def index():
             Div(grid, id="tab-sim"),
             Div(docs.model_docs(), id="tab-model", cls="hidden"),
         ),
+        theme.switch(),
         Div(id="dir-modal"),
+        theme.script(),
         Script(_AUTOFILL_JS),
         Script(_TAB_JS),
         Script(_MATH_JS),
@@ -737,7 +796,7 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
             "Cancel",
             type="button",
             onclick=_CLOSE_MODAL,
-            style=f"background:#3A343A;border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:8px 16px;{_INK2};{_GROTESK};font-size:13px;cursor:pointer",
+            style=f"background:var(--surface-raised);border:1px solid var(--hairline-strong);border-radius:9px;padding:8px 16px;{_INK2};{_GROTESK};font-size:13px;cursor:pointer",
         ),
     ]
     if mode == "dir":
@@ -747,7 +806,7 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
                 "Use this folder",
                 type="button",
                 onclick=use,
-                style=f"background:linear-gradient(180deg,#FFC24D,#E8590C);border:0;border-radius:9px;padding:8px 16px;color:#2A1606;{_GROTESK};font-size:13px;font-weight:600;cursor:pointer",
+                style=f"background:linear-gradient(180deg,#FFC24D,#E8590C);border:0;border-radius:9px;padding:8px 16px;color:var(--on-heat);{_GROTESK};font-size:13px;font-weight:600;cursor:pointer",
             ),
         )
 
@@ -758,14 +817,14 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
                 str(current),
                 style=f"{_MONO};font-size:11.5px;{_MUTED};margin-top:4px;word-break:break-all",
             ),
-            style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.07)",
+            style="padding:18px 20px;border-bottom:1px solid var(--hairline)",
         ),
         Div(*rows, style="max-height:340px;overflow:auto;padding:8px"),
         Div(
             *footer_btns,
-            style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.07)",
+            style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--hairline)",
         ),
-        style="width:520px;max-width:92vw;background:#14161B;border:1px solid rgba(255,255,255,.10);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden",
+        style="width:520px;max-width:92vw;background:var(--surface-panel);border:1px solid var(--hairline-strong);border-radius:18px;box-shadow:var(--shadow-lg);overflow:hidden",
         onclick="event.stopPropagation()",
     )
     return Div(
@@ -943,7 +1002,11 @@ async def post(request: Request):
                 f"FDS dir is not a folder: {shown}",
                 style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
             )
-        run_kwargs = build_run_kwargs(scenario, opts)
+        # Cheap option-combination checks stay on the request thread. Only the
+        # expensive half of build_run_kwargs (FDS slice parsing) is deferred to
+        # the worker, so a plain misconfiguration still answers the request
+        # instead of surfacing later as a failed run.
+        validate_opts(opts)
         import run as cli
 
         def post_run(result):
@@ -951,7 +1014,7 @@ async def post(request: Request):
 
         manager.start(
             scenario,
-            run_kwargs,
+            lambda: build_run_kwargs(scenario, opts, log=print),
             scenario_name,
             post_run=post_run,
             fds_dir=getattr(opts, "fds_dir", None),
@@ -967,10 +1030,104 @@ async def post(request: Request):
     return _running_stream_view()
 
 
-def _running_stream_view() -> Div:
-    """The live run panel: progress card + console, wired to the SSE stream."""
+@rt("/cancel")
+async def cancel():
+    """Stop an in-flight run and hand the panel back in its standby state.
+
+    Cancellation is cooperative (the worker unwinds on its next progress
+    tick or between phases), so wait briefly for the worker to end before
+    resetting. The wait is bounded so a slow phase (FDS slice parsing, output
+    writing) can't hang the request. If the worker is still unwinding when it
+    expires, the panel stays on the progress stream in a "cancelling" state
+    and Run stays disabled; the stream's terminal ``done`` event settles it
+    once the worker has ended.
+    """
+    manager.cancel()
+    if not await asyncio.to_thread(manager.join, _CANCEL_WAIT_S):
+        return _running_stream_view(cancelling=True)
+    manager.reset()
+    return _run_panel_idle_body()
+
+
+@rt("/clear")
+async def clear():
+    """Discard a finished run's results and return to the standby panel."""
+    # A Clear left over from an earlier run must not hand back an enabled Run
+    # button over a live worker.
+    if manager.running:
+        return _running_stream_view(cancelling=manager.status == "cancelling")
+    manager.reset()
+    return _run_panel_idle_body()
+
+
+def _cancelled_view(message: str = "Run cancelled.") -> Div:
+    """Terminal message for a cancelled run, with a way back to standby.
+
+    It replaces only ``#run-status``, so the stop control beside it stays;
+    Clear returns the whole panel to standby.
+    """
     return Div(
-        Div(_running_card(None), id="run-status", sse_swap="progress,done"),
+        Span(message, style=f"{_MONO};font-size:12px;{_MUTED}"),
+        Button(
+            "Clear",
+            type="button",
+            hx_post="/clear",
+            hx_target="#run-panel",
+            hx_swap="innerHTML show:top",
+            style=(
+                "padding:7px 13px;border-radius:9px;cursor:pointer;"
+                f"{_MONO};font-size:11px;"
+                "background:transparent;color:var(--ink-dim);"
+                "border:1px solid var(--hairline)"
+            ),
+        ),
+        style=(
+            "display:flex;align-items:center;justify-content:space-between;"
+            "gap:12px;padding:12px;border:1px solid var(--hairline);"
+            "border-radius:9px"
+        ),
+    )
+
+
+def _running_stream_view(cancelling: bool = False) -> Div:
+    """The live run panel: progress card + console, wired to the SSE stream.
+
+    ``cancelling`` renders the stop control disabled, for a cancel that is
+    still waiting on the worker.
+    """
+    return Div(
+        Div(
+            # Only the dynamic half lives in the SSE swap target. Cancel sits
+            # outside it: #run-status is re-rendered on every progress tick,
+            # and a stop control that is destroyed and rebuilt ~once a second
+            # can swallow a click that lands mid-swap.
+            Div(_running_card(None), id="run-status", sse_swap="progress,done"),
+            Div(
+                Button(
+                    NotStr(
+                        '<span style="font-size:9px">■</span>'
+                        '<span class="run-btn-label">'
+                        + ("Cancelling…" if cancelling else "Cancel scenario")
+                        + "</span>"
+                    ),
+                    id="cancel-btn",
+                    type="button",
+                    disabled=cancelling,
+                    hx_post="/cancel",
+                    hx_target="#run-panel",
+                    hx_swap="innerHTML show:top",
+                    style=(
+                        "display:inline-flex;align-items:center;gap:7px;"
+                        "padding:9px 16px;border-radius:10px;cursor:pointer;"
+                        f"{_GROTESK};font-size:13px;font-weight:600;"
+                        "background:transparent;color:#E01E37;"
+                        "border:1px solid #E01E37"
+                    ),
+                ),
+                style="display:flex;justify-content:flex-end;margin-top:18px",
+            ),
+            style=_PANEL,
+        ),
         Div(
             Div(
                 Div(
@@ -985,7 +1142,7 @@ def _running_stream_view() -> Div:
                         "console",
                         style=f"{_MONO};font-size:11px;{_MUTED};margin-left:6px",
                     ),
-                    style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.06)",
+                    style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-bottom:1px solid var(--hairline)",
                 ),
                 Pre(
                     "Waiting for output…",
@@ -998,7 +1155,9 @@ def _running_stream_view() -> Div:
             style=_PANEL + ";margin-top:18px",
         ),
         hx_ext="sse",
-        sse_connect="/progress",
+        # Pinned to the current run, so a reconnect or a missed end can't
+        # attach this panel to a later run.
+        sse_connect=f"/progress?run={manager.run_id}",
         sse_close="done",
     )
 
@@ -1044,10 +1203,37 @@ def _running_card(ev) -> Div:
             Div(
                 style=f"height:100%;width:{max(pct, 3)}%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A);transition:width .35s cubic-bezier(.4,0,.2,1)"
             ),
-            style="height:10px;border-radius:99px;background:#1F1C1F;border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:18px",
+            style="height:10px;border-radius:99px;background:var(--surface-page);border:1px solid var(--hairline);overflow:hidden;margin-bottom:18px",
         ),
         Div(line, style=f"{_MONO};font-size:.82rem;{_INK2}"),
-        style=_PANEL,
+    )
+
+
+def _clear_run_bar() -> Div:
+    """Header strip over a finished run, with the way back to standby.
+
+    Without this a completed run is a dead end: the panel keeps showing the
+    old results and there is no way to dismiss them short of reloading.
+    """
+    return Div(
+        Div(
+            f"Results · {manager.scenario_name or 'run'}",
+            style=f"{_MONO};font-size:11px;letter-spacing:.06em;text-transform:uppercase;{_MUTED}",
+        ),
+        Button(
+            "Clear results",
+            type="button",
+            hx_post="/clear",
+            hx_target="#run-panel",
+            hx_swap="innerHTML show:top",
+            style=(
+                "padding:7px 13px;border-radius:9px;cursor:pointer;"
+                f"{_MONO};font-size:11px;"
+                "background:transparent;color:var(--ink-dim);"
+                "border:1px solid var(--hairline)"
+            ),
+        ),
+        style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px",
     )
 
 
@@ -1072,7 +1258,7 @@ def _kpi_tiles(result) -> Div:
                     v,
                     style=f"{_MONO};font-size:19px;font-weight:500;margin-top:7px;{_INK}",
                 ),
-                style=f"background:#14161B;border:1px solid rgba(255,255,255,.07);border-top:2px solid {a};border-radius:14px;padding:15px 16px",
+                style=f"background:var(--surface-panel);border:1px solid var(--hairline);border-top:2px solid {a};border-radius:14px;padding:15px 16px",
             )
             for (k, v), a in zip(metrics, accents)
         ],
@@ -1112,11 +1298,11 @@ def _finished_view() -> Div:
         )
 
     return Div(
+        _clear_run_bar(),
         kpi_tiles,
         _warnings_card(manager.warnings),
         art,
         trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
-        plot_card("Cumulative FED", plots.fed_figure(result), "fig-fed"),
         plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
         plot_card(
             "Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"
@@ -1183,11 +1369,23 @@ def _artifact_rows(result, opts) -> Div:
         exists = bool(path and path.exists())
 
         if exists:
-            detail, colour, mark = f"{path} · {_fmt_size(path)}", "#B2A9A3", "#F4C430"
+            detail, colour, mark = (
+                f"{path} · {_fmt_size(path)}",
+                "var(--ink-dim)",
+                "#F4C430",
+            )
         elif not produced:
-            detail, colour, mark = _missing_reason(field, opts), "#837A74", "#3A343A"
+            detail, colour, mark = (
+                _missing_reason(field, opts),
+                "var(--ink-faint)",
+                "var(--surface-raised)",
+            )
         else:
-            detail, colour, mark = "not written", "#837A74", "#3A343A"
+            detail, colour, mark = (
+                "not written",
+                "var(--ink-faint)",
+                "var(--surface-raised)",
+            )
 
         rows.append(
             Div(
@@ -1201,7 +1399,7 @@ def _artifact_rows(result, opts) -> Div:
                         style=f"{_MONO};font-size:10.5px;color:{colour};margin-top:3px;word-break:break-all",
                     ),
                 ),
-                style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)",
+                style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--hairline-soft)",
             )
         )
     return Div(*rows, style="display:flex;flex-direction:column")
@@ -1212,6 +1410,7 @@ def _results_only_view() -> Div:
     result = manager.result
     opts = manager.opts
     return Div(
+        _clear_run_bar(),
         _kpi_tiles(result),
         _warnings_card(manager.warnings),
         Div(
@@ -1244,11 +1443,20 @@ def _results_only_view() -> Div:
 
 
 @rt("/fed-progress")
-async def fed_progress():
+async def fed_progress(run: int | None = None):
+    run_id = manager.run_id if run is None else run
+
     async def gen():
         last_count = 0
         while True:
-            snaps = manager.fed_snapshots
+            # One snapshot per poll: nothing after a yield reads the manager.
+            with manager.snapshot():
+                current = manager.run_id == run_id
+                status = manager.status
+                snaps = list(manager.fed_snapshots)
+            if not current:
+                yield sse_message("{}", event="close")
+                return
             if len(snaps) > last_count:
                 last_count = len(snaps)
                 payload = json.dumps(
@@ -1259,7 +1467,7 @@ async def fed_progress():
                     }
                 )
                 yield sse_message(payload, event="fed")
-            if manager.status in ("done", "error", "idle"):
+            if status in ("done", "error", "idle", "cancelled"):
                 yield sse_message("{}", event="close")
                 return
             await asyncio.sleep(0.5)
@@ -1267,56 +1475,90 @@ async def fed_progress():
     return EventStream(gen())
 
 
+def _done_view() -> Div:
+    """Finished panel, or the traceback if building it fails."""
+    try:
+        return _results_only_view() if manager.results_only else _finished_view()
+    except Exception as exc:
+        import traceback
+
+        err = traceback.format_exc()
+        return Div(
+            Div(
+                f"Results error: {type(exc).__name__}: {exc}",
+                style="color:#E01E37;font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:8px",
+            ),
+            Pre(
+                err,
+                style="color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-size:.72rem;white-space:pre-wrap;overflow:auto;max-height:300px",
+            ),
+            style="background:var(--surface-panel);border:1px solid #E01E37;border-radius:12px;padding:16px",
+        )
+
+
+def _terminal_view(status: str) -> Div | None:
+    """The panel that settles a run in ``status``, or None while it runs."""
+    if status == "done":
+        return _done_view()
+    if status == "error":
+        return Div(
+            f"Run failed: {manager.error}",
+            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+        )
+    # Cancelled and idle still end with a terminal ``done``: a stream
+    # that just closes is reopened by EventSource, so another tab, or
+    # a cancel that outlived /cancel's wait, would never settle. When
+    # /cancel has already swapped in the standby panel, this stream's
+    # element is gone and the event goes nowhere.
+    if status in ("cancelled", "idle"):
+        return _cancelled_view()
+    return None
+
+
+def _progress_step(run_id: int, last, last_log: int):
+    """Render one /progress poll from a single run's state.
+
+    Called under the manager's state lock and before any yield, so every
+    message it returns describes run ``run_id``. Returns the messages, the
+    updated cursors and whether the stream ends.
+    """
+    if manager.run_id != run_id:
+        # This stream's run has ended and another has started; its
+        # outcome is gone, so settle the panel instead of following.
+        view = _cancelled_view("Run ended; another run has started.")
+        return [sse_message(view, event="done")], last, last_log, True
+    msgs = []
+    n = len(manager.log_lines)
+    if n != last_log:
+        last_log = n
+        msgs.append(sse_message(_console_view(), event="console"))
+    final = _terminal_view(manager.status)
+    if final is not None:
+        msgs.append(sse_message(final, event="done"))
+        return msgs, last, last_log, True
+    ev = manager.last_event
+    if ev is not None and ev != last:
+        last = ev
+        msgs.append(sse_message(_running_card(ev), event="progress"))
+    return msgs, last, last_log, False
+
+
 @rt("/progress")
-async def progress():
+async def progress(run: int | None = None):
+    run_id = manager.run_id if run is None else run
+
     async def gen():
         last = None
         last_log = -1
         while True:
-            n = len(manager.log_lines)
-            if n != last_log:
-                last_log = n
-                yield sse_message(_console_view(), event="console")
-            status = manager.status
-            if status == "done":
-                try:
-                    finished = (
-                        _results_only_view()
-                        if manager.results_only
-                        else _finished_view()
-                    )
-                except Exception as exc:
-                    import traceback
-
-                    err = traceback.format_exc()
-                    finished = Div(
-                        Div(
-                            f"Results error: {type(exc).__name__}: {exc}",
-                            style="color:#E01E37;font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:8px",
-                        ),
-                        Pre(
-                            err,
-                            style="color:#B2A9A3;font-family:'JetBrains Mono',monospace;font-size:.72rem;white-space:pre-wrap;overflow:auto;max-height:300px",
-                        ),
-                        style="background:#14161B;border:1px solid #E01E37;border-radius:12px;padding:16px",
-                    )
-                yield sse_message(finished, event="done")
+            # Render the whole poll first: after a yield the manager may
+            # hold another run, so nothing is read from it until the next.
+            with manager.snapshot():
+                msgs, last, last_log, end = _progress_step(run_id, last, last_log)
+            for msg in msgs:
+                yield msg
+            if end:
                 return
-            if status == "error":
-                yield sse_message(
-                    Div(
-                        f"Run failed: {manager.error}",
-                        style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
-                    ),
-                    event="done",
-                )
-                return
-            if status == "idle":
-                return
-            ev = manager.last_event
-            if ev is not None and ev != last:
-                last = ev
-                yield sse_message(_running_card(ev), event="progress")
             await asyncio.sleep(0.1)
 
     return EventStream(gen())

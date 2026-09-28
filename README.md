@@ -85,8 +85,9 @@ explore the results.
 
 Two ways to view a finished run's trajectories:
 
-- **Interactive [Plotly](https://plotly.com/python/) charts** — cumulative
-  FED, smoke, and route cost over time.
+- **Interactive [Plotly](https://plotly.com/python/) charts** — smoke over
+  time and cognitive-map growth. FED is shown live during a run and, in the
+  replay below, as the highest FED of any agent at each time.
 - **Canvas trajectory replay** (`pyfds_evac/webapp/trajviz.py`) — agents
   interpolated smoothly between downsampled trajectory samples, coloured by
   cumulative FED (safe → alert → critical → severe) or by assigned exit, with
