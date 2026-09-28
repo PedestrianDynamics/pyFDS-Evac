@@ -26,17 +26,35 @@ into a speed factor *f* [-], selected by `SmokeSpeedConfig.speed_law`
   f(K) = \min\!\left(1,\ \max\!\left(f_{\min},\ 1 + \frac{\beta}{\alpha}K\right)\right).
   $$
 
-- **`"fridolf"`**, `speed_factor_from_extinction_fridolf`: with
-  \(V = C/K\) [m],
+- **`"fridolf"`**, `speed_factor_from_extinction_fridolf`: Eq. 7 of
+  [Fridolf et al. (2019)](https://doi.org/10.1016/j.tust.2019.04.016)
+  (method 3; also in Fridolf et al. 2018, a summary of their 2016 SP report), with \(V = C/K\) [m] and the agent's
+  smoke-free speed \(v_0\) [m/s],
 
   $$
-  f(K) = \frac{V}{V + 2~\mathrm{m}}, \qquad f(0) = 1,
+  w = \min\!\left(v_0,\ \max\!\left(0.2,\ v_0 - 0.34\,(3 - V)\right)\right),
+  \qquad f = \frac{w}{v_0}, \qquad f(0) = 1.
   $$
 
-  with no floor. Its attribution to Fridolf et al. (2019) is unverified, and
-  the paper's own law differs; see
-  [Walking speed in smoke](/fundamentals/walking-speed.md) and
-  [#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146).
+  The reduction is additive, 0.34 m/s per metre of visibility below 3 m, and
+  the floor is an absolute 0.2 m/s, not a fraction of \(v_0\). Above 3 m the
+  speed is unchanged. The 2018 abstract gives no constant; the 2019 paper
+  converted each data set with *A* = 2 (reflecting) or 8 (emitting)
+  (Eq. 1). pyFDS-Evac uses the FDS default *C* = 3, so for reflecting
+  targets it slows agents later and less than the calibration (onset at
+  *K* = 1.0 instead of 0.67 1/m); set `visibility_factor_c = 2` to match.
+  Until [#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)
+  this option computed \(V/(V+2)\), a law with no known source.
+
+  *Where the law applies.* It was calibrated on corridor and tunnel
+  experiments; the authors call it mainly valid for tunnels with a simple
+  layout (2019, §4) and do not recommend it for buildings with many exit
+  choices, where speeds are expected to be lower (2018, concluding
+  remarks). The measured speeds are averages that include pauses, so an
+  agent that also pauses or detours in the model may count that time twice
+  (our inference). The data come from non-irritant or semi-irritant smoke;
+  multiplying by \(g(\mathrm{FIC})\) on top is a pyFDS-Evac choice, not
+  part of the source.
 
 ## Parameters
 
@@ -53,6 +71,9 @@ web GUI set only the last two (`--smoke-update-interval`,
 | `beta` | `-0.057` | m²/s | \(\beta\), `lund` only |
 | `min_speed_factor` | `0.1` | - | \(f_{\min}\), `lund` only |
 | `visibility_factor_c` | `3.0` | - | *C*, `fridolf` only |
+| `fridolf_slope` | `0.34` | m/s per m | Speed drop per metre of visibility, `fridolf` only |
+| `fridolf_visibility_threshold_m` | `3.0` | m | Visibility below which speed drops, `fridolf` only |
+| `fridolf_min_speed_m_per_s` | `0.2` | m/s | Absolute speed floor, `fridolf` only |
 | `update_interval_s` | `1.0` | s | Time between samples of *K* for each agent |
 | `slice_height_m` | `1.6` | m | Height of the FDS slice that is read ([FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; the previous default was 2.0) |
 
@@ -67,13 +88,13 @@ agent's smoke factor. The agent's desired speed is then
 \(v_0 \cdot f \cdot g(\mathrm{FIC})\) (`direct_steering_runtime.py:186`–`190`),
 where \(g\) is the irritant factor of the [FED model](/models/fed.md).
 
-![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V+2) with C = 3 and C = 8](/images/concepts/speed_laws.png)
+![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8](/images/concepts/speed_laws.png)
 
 *Speed factor \(v/v_0\) [-] against extinction coefficient K [1/m]. Solid dark
 blue: Frantzich–Nilsson with the default constants, floor 0.1 reached at
-K = 11.1 m⁻¹. The `fridolf` option, \(V/(V+2)\) with \(V = C/K\): red dashed
-for C = 3, orange dash-dotted for C = 8. The arrow marks the largest gap
-between Frantzich–Nilsson and C = 3.
+K = 11.1 m⁻¹. The `fridolf` option (Fridolf et al. 2018) at
+\(v_0\) = 1.25 m/s with \(V = C/K\): red dashed for C = 3, orange dash-dotted
+for C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3.
 Script: `scripts/figures/speed_laws.py`.*
 
 Background: the [Concepts](/docs/concepts.md) page
@@ -106,7 +127,7 @@ The published laws are on [Walking speed in smoke](/fundamentals/walking-speed.m
 The code departs from them as follows.
 
 - **Fractional, not absolute.** The linear law is applied as a factor of each
-  agent's own \(v_0\) (`smoke_speed.py:227`), the FDS+Evac normalisation of an
+  agent's own \(v_0\) (`smoke_speed.py:234`), the FDS+Evac normalisation of an
   absolute regression. It divides by the intercept \(\alpha\), an
   extrapolation to *K* = 0, not a measured free walking speed.
 - **Floor.** \(f_{\min}\) is FDS+Evac's convention, not a measured minimum;
@@ -115,11 +136,13 @@ The code departs from them as follows.
 - **Range and spread.** The law is evaluated at every *K*, including below the
   tunnel data, and uses only the mean coefficients, not their standard
   deviations.
-- **The `fridolf` option.** \(V/(V+2)\) (`smoke_speed.py:261`) is not the law
-  of Fridolf et al. (2019), whose own law differs (see
-  [Walking speed in smoke](/fundamentals/walking-speed.md)); the attribution
-  is unverified ([#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)). Fridolf et al. fitted with *A* = 2 for reflecting
-  signs, while the code uses *C* = 3 by default.
+- **The `fridolf` option.** Fridolf et al. state visibility, not *K*; the
+  2018 abstract gives no constant and the 2019 paper used *A* = 2 for
+  reflecting and 8 for emitting items. The code uses *C* = 3 by default (see
+  [Walking speed in smoke](/fundamentals/walking-speed.md)). \(v_0\) is each
+  agent's own free speed, as in their method 3, not the truncated normal
+  distribution (mean 1.35 m/s, SD 0.25 m/s, 0.85–1.85 m/s) that method 3
+  draws it from.
 - **Irritancy counted twice.** Frantzich and Nilsson's smoke contained acetic
   acid, so \(f(K)\) already includes irritant slowing, and multiplying by
   \(g(\mathrm{FIC})\) partly counts irritancy twice. SFPE Eq. 63.14 adds the

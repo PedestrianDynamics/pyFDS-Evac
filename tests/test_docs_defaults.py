@@ -100,6 +100,21 @@ DEFAULTS = [
     ),
     (
         SMOKE,
+        "| `fridolf_slope` | `0.34` |",
+        lambda: SmokeSpeedConfig().fridolf_slope,
+    ),
+    (
+        SMOKE,
+        "| `fridolf_visibility_threshold_m` | `3.0` |",
+        lambda: SmokeSpeedConfig().fridolf_visibility_threshold_m,
+    ),
+    (
+        SMOKE,
+        "| `fridolf_min_speed_m_per_s` | `0.2` |",
+        lambda: SmokeSpeedConfig().fridolf_min_speed_m_per_s,
+    ),
+    (
+        SMOKE,
         "| `update_interval_s` | `1.0` |",
         lambda: SmokeSpeedConfig().update_interval_s,
     ),

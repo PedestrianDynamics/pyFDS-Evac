@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Breaking.** `speed_law="fridolf"` now implements Eq. 7 (method 3) of
+  Fridolf, Ronchi, Nilsson & Frantzich (2019),
+  [doi:10.1016/j.tust.2019.04.016](https://doi.org/10.1016/j.tust.2019.04.016),
+  also in Fridolf et al. (2018, SFPE extended abstract), a summary of their
+  2016 SP report:
+  w = min(v₀, max(0.2, v₀ − 0.34 (3 − V))) with V = C/K. C = 3 is the
+  coded FDS default; the 2019 paper used A = 2 for reflecting targets. The
+  reduction is additive with an absolute 0.2 m/s floor, and speed is
+  unchanged above 3 m. The option used to compute V/(V+2), which has no
+  known source; that law is removed and cannot be selected. New
+  `SmokeSpeedConfig` fields: `fridolf_slope`, `fridolf_visibility_threshold_m`,
+  `fridolf_min_speed_m_per_s`. `SmokeSpeedModel.sample` and `speed_factor`
+  take an optional `free_speed_m_per_s` (1 m/s, method 1, if omitted)
+  ([#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)).
+
 Defaults now follow FDS+Evac where a mechanism has a direct FDS+Evac
 counterpart ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)).
 See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac).
