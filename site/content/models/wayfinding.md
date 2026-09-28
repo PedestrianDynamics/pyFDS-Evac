@@ -1,6 +1,6 @@
 ---
 title: "Wayfinding"
-weight: 4
+weight: 5
 math: true
 aliases: [/models/visibility/]
 ---

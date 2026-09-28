@@ -49,11 +49,11 @@ About half of the agents therefore stop below FED = 1, and about 10 % stop
 below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
 ([#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The
-heat dose uses the same mechanism, and its spread is reused from the gas value
-without a data basis of its own. FDS+Evac stops
+heat dose, which FDS+Evac does not have, is deterministic by default: no
+population spread for heat is published. Its `probabilistic` mode reuses the
+gas spread without a data basis of its own. FDS+Evac stops
 every agent at FED = 1. For results comparable with FDS+Evac, run with
-`--incapacitation-mode deterministic` (and `--heat-incapacitation-mode
-deterministic` for the heat dose).
+`--incapacitation-mode deterministic`.
 
 ## Evacuation time when anyone is incapacitated
 
@@ -85,7 +85,9 @@ reached an exit.
 McAllister (SFPE Handbook, 5th ed., Eq. 63.44), computed from the gas
 temperature of an FDS `TEMPERATURE` slice. Radiant heat flux is not read and
 does not contribute to any dose. An agent near a flame or under a hot layer
-that radiates strongly is therefore treated as less exposed than it is.
+that radiates strongly is therefore treated as less exposed than it is. A
+total-heat-flux dose is designed in `specs/016-heat-fed/SPEC.md`
+([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 
 **Heat does not affect route choice or walking speed.** The heat dose is
 opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is

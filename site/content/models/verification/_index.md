@@ -1,6 +1,6 @@
 ---
 title: "Verification suite"
-weight: 5
+weight: 6
 math: true
 ---
 
