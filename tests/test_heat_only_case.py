@@ -64,9 +64,12 @@ def scenario():
 
 def _mentions_extinction(caplog) -> bool:
     for record in caplog.records:
-        if record.levelno < logging.WARNING:
+        # fdsreader warns on the root logger about the files it lacks.
+        if record.levelno < logging.WARNING or not record.name.startswith("pyfds_evac"):
             continue
-        text = record.getMessage().lower()
+        # The fixture's name contains "soot"; other warnings (e.g. FED
+        # disabled) quote its path, so drop the name before matching.
+        text = record.getMessage().lower().replace("heat_only_no_soot", "")
         if "extinction" in text or "soot" in text:
             return True
     return False
@@ -88,11 +91,17 @@ def test_scenario_reaches_fds_visibility_model(scenario):
     assert extract_sign_descriptors(scenario.raw)
 
 
-def test_workaround_flags_build_heat_fed(scenario):
-    """The documented workaround keeps working after the fix."""
-    kwargs = build_run_kwargs(
-        scenario, _opts(constant_extinction=0.0, no_visibility=True)
-    )
+def test_workaround_flags_build_heat_fed(scenario, caplog):
+    """The documented workaround keeps working after the fix.
+
+    With both flags nothing reads extinction, so nothing may warn about it;
+    this is also the negative control for ``_mentions_extinction``.
+    """
+    with caplog.at_level(logging.WARNING):
+        kwargs = build_run_kwargs(
+            scenario, _opts(constant_extinction=0.0, no_visibility=True)
+        )
+    assert not _mentions_extinction(caplog)
     assert isinstance(kwargs["smoke_speed_model"], SmokeSpeedModel)
     assert kwargs["vis_model"] is None
     assert kwargs["fed_model"] is None
