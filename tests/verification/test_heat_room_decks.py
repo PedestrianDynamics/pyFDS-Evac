@@ -1,12 +1,13 @@
 """The uniform heat rooms hold their prescribed temperature (#253).
 
 ``assets/fed_incap_heat_{100,150,200}c`` are sealed 30 x 30 x 3 m rooms,
-adiabatic on all six faces, set to 100, 150 or 200 C at t = 0. With
-``&MISC TMPA=20.`` FDS 6.10.1 starts the wall surfaces and the radiation
-field at 20 C: at t = 0 ``hrr.csv`` shows Q_RADI = -370 kW and
-Q_COND = -98 kW (150 C deck), and the room settles 0.7-1.8 % below the deck
-value within the first minute. A one-mesh 120 s run of the same room held
-150.0004 C with TMPA = 150 and fell to 148.06 C with TMPA = 20.
+adiabatic on all six faces, set to 100, 150 or 200 C at t = 0. FDS 6.10.1
+starts the wall surfaces and the radiation field at TMPA. With
+``&MISC TMPA=20.`` ``hrr.csv`` would show Q_RADI = -370 kW and
+Q_COND = -98 kW at t = 0 (150 C deck), and the room would settle 0.7-1.8 %
+below the deck value within the first minute. A one-mesh 120 s run of the
+same room held 150.0004 C with TMPA = 150 and fell to 148.06 C with
+TMPA = 20.
 
 Expected values come from the deck name and from SFPE Handbook 5th ed.,
 Ch. 63, Eq. 63.44 (t_I,conv = 5e7 T^-3.4 min) written out here, not from
@@ -25,7 +26,7 @@ ASSETS = ROOT / "assets"
 HEAT_DOC = ROOT / "docs" / "testing-heat.md"
 DECK_TEMPERATURES_C = (100.0, 150.0, 200.0)
 FACES = ("XMIN", "XMAX", "YMIN", "YMAX", "ZMIN", "ZMAX")
-# The drift is 0.7-1.8 K. 0.01 K moves the Eq. 63.44 dose by at most
+# 0.01 K moves the Eq. 63.44 dose by at most
 # 3.4 * 0.01 / 100 = 3.4e-4, below the 9.4e-4 margin of the hand FED from 1
 # at the last update before the stop (200 C, 45 s of 45.04 s).
 HOLD_TOLERANCE_K = 0.01

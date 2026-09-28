@@ -11,10 +11,9 @@
 &TIME T_END=1000 /
 
 ! Ambient equals the prescribed gas temperature. FDS starts the wall
-! surfaces and the radiation field at TMPA; with TMPA = 20 C the walls start
-! cold, radiate and conduct heat out of the gas at t = 0, and the room
-! settles 0.7-1.8 % below the &INIT value (issue #253). Without the adiabatic
-! boundaries below, FDS applies its default INERT wall at TMP_FRONT = TMPA.
+! surfaces and the radiation field at TMPA; with TMPA = 20 C the walls would
+! start cold, radiate and conduct heat out of the gas at t = 0, and the room
+! would settle 0.7-1.8 % below the &INIT value (issue #253).
 &MISC TMPA=100.0 /
 
 ! Adiabatic boundaries on all six faces: no heat flux through any surface, so
