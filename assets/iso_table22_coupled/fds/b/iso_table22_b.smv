@@ -21,6 +21,10 @@ CSVF
  steps
  iso_table22_b_steps.csv
 
+CSVF
+ devc
+ iso_table22_b_devc.csv
+
 NMESHES
      1
 
@@ -136,6 +140,10 @@ PROP
  sensor
   0
 
+DEVICE
+ FED_occupant % FED
+       5.00000       5.00000       1.60000       0.00000       0.00000      -1.00000  0  0 % null
+
 VENTORIG
  0
 
@@ -228,23 +236,25 @@ CVENT
     0
 
 
-SLCF     1 # STRUCTURED &     0    20     0    20     4     4 !      1      0      3
+SLCF     1 # STRUCTURED &     0    20     0    20     3     3 !      1      0      3
  iso_table22_b_1_1.sf
  CARBON MONOXIDE VOLUME FRACTION
  X_CO
  mol/mol
-SLCF     1 # STRUCTURED &     0    20     0    20     4     4 !      2      0      3
+SLCF     1 # STRUCTURED &     0    20     0    20     3     3 !      2      0      3
  iso_table22_b_1_2.sf
  CARBON DIOXIDE VOLUME FRACTION
  X_CO2
  mol/mol
-SLCF     1 # STRUCTURED &     0    20     0    20     4     4 !      3      0      3
+SLCF     1 # STRUCTURED &     0    20     0    20     3     3 !      3      0      3
  iso_table22_b_1_3.sf
  OXYGEN VOLUME FRACTION
  X_O2
  mol/mol
-SLCF     1 # STRUCTURED &     0    20     0    20     4     4 !      4      0      3
+SLCF     1 # STRUCTURED &     0    20     0    20     3     3 !      4      0      3
  iso_table22_b_1_4.sf
  SOOT EXTINCTION COEFFICIENT
  ext_coef_C
  1/m
+DEVICE_ACT     FED_occupant
+     1      0.00     0

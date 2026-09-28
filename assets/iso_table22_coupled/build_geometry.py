@@ -55,7 +55,9 @@ HERE = Path(__file__).parent
 ROOM = (0.0, 0.0, 10.0, 10.0)
 CEILING = 3.0
 CELL = 0.5
-SLICE_HEIGHT = 2.0
+# pyFDS-Evac samples at 1.6 m by default and reads the horizontal slice
+# nearest that height; FDS snaps PBZ=1.6 to the cell face at 1.5 m.
+SLICE_HEIGHT = 1.6
 
 # "place an occupant in the centre of the room"
 SPAWN = (4.4, 4.4, 5.6, 5.6)
@@ -235,6 +237,9 @@ def build_deck(case: str) -> str:
 &SLCF PBZ={SLICE_HEIGHT}, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
 &SLCF PBZ={SLICE_HEIGHT}, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
 &DUMP DT_SLCF=500.0 /
+
+! FDS's own FED at the occupant: an independent reference for the crossing.
+&DEVC ID='FED_occupant', XYZ=5.0,5.0,{SLICE_HEIGHT}, QUANTITY='FED' /
 
 &TAIL /
 """
