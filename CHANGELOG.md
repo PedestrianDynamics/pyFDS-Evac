@@ -27,6 +27,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Heat FED tests take their expected values from the SFPE Handbook
+  (5th ed., Ch. 63) instead of the code's own formula: Eq. 63.44 as printed
+  (p. 2382), Table 63.20's convective rows (p. 2383) and Table 63.17's
+  dry-air rows (p. 2375). Table 63.21 (p. 2385, whose values follow
+  Eq. 63.45 despite its caption), Table 63.20's radiant rows and a
+  walking-past-a-flame case are added as reference values for a future
+  Eq. 63.45 option and the planned radiant term; they call no pyFDS-Evac
+  code. The heat dose
+  itself is unchanged
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
 - Performance: the per-step speed update of direct-steering runs scans
   only the zones whose speed factor is not 1, precomputed once per run
   (`active_steering_zones`), and leaves an agent outside every such zone
