@@ -133,6 +133,10 @@ def _build_heat_fed_model(opts: Any, log: Logger):
             _logger.warning(
                 "--heat-fed-method has no effect without --enable-heat-fed."
             )
+        if getattr(opts, "heat_radiant_source", "gas") != "gas":
+            _logger.warning(
+                "--heat-radiant-source has no effect without --enable-heat-fed."
+            )
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():

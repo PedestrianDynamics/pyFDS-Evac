@@ -15,7 +15,9 @@ The project includes:
   `--enable-heat-fed` (FDS+Evac has none), accumulated as a dose
   independent of the gas track -- an agent is incapacitated when either crosses
   its own threshold; the heat dose is a running total of its own and is never
-  added to the gas FED. Radiant heat is not modelled, and heat
+  added to the gas FED. Radiant heat enters only through the opt-in
+  total-flux method (gas at the head, or FDS `INTEGRATED INTENSITY` with a
+  user factor), and heat
   does not enter route choice. It also does not slow an agent down: unlike
   smoke and irritants, heat has no effect at all until the dose is reached, at
   which point the agent stops.

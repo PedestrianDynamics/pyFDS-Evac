@@ -146,8 +146,10 @@ $$
 (`radiant_flux_from_integrated_intensity_kw_m2` for *f U*), and the rate is
 \(q^{1.33}/D\) as above.
 
-- **f U is incident flux.** The radiant tolerance data (Table 63.19) are
-  incident flux; the skin's own emission σ\(T_s^4\) is not subtracted.
+- **f U is incident flux.** Spec 016 takes the radiant tolerance data as
+  incident flux, and the Handbook calls Eq. 63.49 "the total incident flux
+  to the skin" (p. 2383); the skin's own emission σ\(T_s^4\) is not
+  subtracted.
 - **The ε term is not added.** *U* already contains the emission of the gas
   at the head, so ε σ (\(T_g^4 - T_s^4\)) would count it twice;
   `--heat-emissivity` is ignored with this source.
@@ -181,7 +183,8 @@ $$
 - **Possible double count with convection.** The hot-air data behind
   Eqs. 63.45–63.47 may already include radiation from the walls of the test
   chambers. If so, adding *f U* to the convective term partly counts that
-  radiation twice. The Handbook does not say.
+  radiation twice. This is an open question
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 - **Falling exposure.** As for every summed dose, Eq. 63.48 holds only
   while exposure is steady or rising.
 
@@ -211,8 +214,8 @@ The gas dose is probabilistic by default; the two modes are set separately
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
 | `heat_endpoint` | `None` (Eq. 63.44) | `--heat-endpoint` |
 | `heat_fed_method` | `"convective"` | `--heat-fed-method` |
-| `radiant_source` | `"gas"` | `--heat-radiant-source` |
-| `u_factor` | none, required with `integrated-intensity` | `--heat-u-factor` |
+| `heat_radiant_source` | `"gas"` | `--heat-radiant-source` |
+| `heat_u_factor` | none, required with `integrated-intensity` | `--heat-u-factor` |
 
 `--disable-tenability` turns off the stop; the dose is still computed.
 
