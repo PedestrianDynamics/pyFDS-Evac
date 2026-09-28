@@ -184,7 +184,7 @@ to plan section 3.
 - (**Clear air is NOT clean — moved to B11 below.** The scenario check ran with
   no `--fds-dir`, so K is exactly 0 and the check cannot fail.)
 - **`c = 3`**: correct, confirmed independently by `evac.f90:5496` and Jin 1978.
-  Note the duplicate constant: `smoke_speed.py:95` `visibility_factor_c = 3.0`.
+  Note the duplicate constant: `smoke_speed.py:99` `visibility_factor_c = 3.0`.
 
 ---
 

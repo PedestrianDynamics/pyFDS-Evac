@@ -75,19 +75,19 @@ where the speed factor \(f\) falls from 1 in clear air towards a floor in
 dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
 form and with the constants of [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
-`fridolf` option, \(V/(V+2)\) with the sighting distance \(V = C/K\). Its
-attribution to Fridolf et al. (2019) is unverified, and the paper's own law
-differs ([#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)). It is steeper in light smoke, has no floor, and is
-available only from Python (see [the parameter split](#the-parameter-split)). The published laws are on
+`fridolf` option, the law of Fridolf et al. (2018) in the sighting distance
+\(V = C/K\): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
+metre, to an absolute floor of 0.2 m/s. Being additive, its factor depends on
+each agent's \(v_0\). It is available only from Python (see [the parameter split](#the-parameter-split)). The published laws are on
 [Walking speed in smoke](/fundamentals/walking-speed.md); the coded forms are
 on the [smoke-speed model](/models/smoke-speed.md) page.
 
-![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option V/(V+2) with C = 3 and C = 8](/images/concepts/speed_laws.png)
+![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8](/images/concepts/speed_laws.png)
 
 *Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Solid dark blue:
-Frantzich–Nilsson at the defaults, with its floor. The `fridolf` option,
-\(V/(V+2)\) with \(V = C/K\): red dashed for C = 3, orange dash-dotted for
-C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: `scripts/figures/speed_laws.py`.*
+Frantzich–Nilsson at the defaults, with its floor. The `fridolf` option at
+\(v_0\) = 1.25 m/s with \(V = C/K\): red dashed for C = 3, orange dash-dotted
+for C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: `scripts/figures/speed_laws.py`.*
 
 ### Tenability: a brake and a stop
 

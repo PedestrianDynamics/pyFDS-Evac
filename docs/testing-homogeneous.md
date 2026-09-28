@@ -102,10 +102,12 @@ FED_CO = 2.764e-5 x (C_CO)^1.036 x t
 FED_O2 = t / exp[8.13 - 0.54 x (20.9 - C_O2)]
 ```
 
-**Hyperventilation factor from CO2** (eq. 22.49), C_CO2 in percent:
+**Hyperventilation factor from CO2** (eq. 22.49), C_CO2 in percent, with
+the zero-CO2 guard of FDS (`func.f90`, function `FED`):
 
 ```
-HV_CO2 = exp(0.1903 x C_CO2 + 2.0004) / 7.1
+HV_CO2 = exp(0.1903 x C_CO2 + 2.0004) / 7.1   if C_CO2 > 0
+HV_CO2 = 1                                    if C_CO2 <= 0 (or not finite)
 ```
 
 **Total FED** (eq. 22.42) — FED_CN, FED_NOx, and FLD_irr are omitted here
@@ -117,8 +119,9 @@ FED_tot = FED_CO x HV_CO2 + FED_O2
 
 `fed_hand_calc.py` accumulates this per-timestep (matching how FDS itself
 does it internally) rather than as a single closed-form multiplication —
-this matters because `HV_CO2` is not 1.0 even at 0% CO2 (it evaluates to
-~1.04), so it can't be pulled out and applied once at the end.
+this matters because `HV_CO2` depends on the CO2 present (here 500 ppm, so
+it is above 1), and it multiplies only the CO term, not the O2 term. With no
+CO2 at all the factor is 1, as in FDS (#194).
 
 | CO Concentration | FED = 0.3 (onset) | FED = 1.0 (incapacitation) |
 |------------------|-------------------|----------------------------|

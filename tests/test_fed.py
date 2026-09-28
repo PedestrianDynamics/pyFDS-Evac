@@ -1,3 +1,4 @@
+import logging
 import math
 from pathlib import Path
 from types import SimpleNamespace
@@ -86,7 +87,9 @@ def test_constant_exposure_step_integration_matches_threshold_time(case_name, in
 
     assert fed_values == sorted(fed_values)
     assert times_s[-1] >= analytic_time_s
-    assert times_s[-1] - analytic_time_s <= 1.0
+    assert (
+        times_s[-1] - analytic_time_s <= 1.0 + 1e-9
+    )  # one step, plus rounding at a tick
     assert fed_values[-2] < 1.0 <= fed_values[-1]
 
 
@@ -291,8 +294,8 @@ class TestHyperventilationFactor:
     """Verify HV_CO2 against guide Eq. 19: exp(0.1903*CO2 + 2.0004) / 7.1."""
 
     def test_zero_co2(self):
-        expected = math.exp(2.0004) / 7.1
-        assert _hyperventilation_factor(0.0) == pytest.approx(expected, rel=1e-10)
+        """No CO2, no hyperventilation: FDS applies the factor only if X_CO2 > 0."""
+        assert _hyperventilation_factor(0.0) == 1.0
 
     def test_five_percent(self):
         expected = math.exp(0.1903 * 5.0 + 2.0004) / 7.1
@@ -393,7 +396,9 @@ def test_new_term_threshold_time_matches_step_integration(case_name, inputs):
 
     assert fed_values == sorted(fed_values)
     assert times_s[-1] >= analytic_time_s
-    assert times_s[-1] - analytic_time_s <= 1.0
+    assert (
+        times_s[-1] - analytic_time_s <= 1.0 + 1e-9
+    )  # one step, plus rounding at a tick
     assert fed_values[-2] < 1.0 <= fed_values[-1]
 
 
@@ -760,3 +765,61 @@ def test_iso_table22_stationary_runtime_produces_plot(tmp_path: Path):
         assert output.stat().st_size > 0
     finally:
         result.cleanup()
+
+
+class _FixedField:
+    """A gas field that returns the same inputs everywhere."""
+
+    def __init__(self, inputs):
+        self.inputs = inputs
+
+    def sample_inputs(self, time_s, x, y):
+        return self.inputs
+
+
+class TestZeroCo2Warning:
+    """CO without CO2 points to a deck with no ambient CO2; say so once."""
+
+    def _model(self, inputs):
+        return DefaultFedModel(_FixedField(inputs), DefaultFedConfig(fds_dir="unused"))
+
+    def test_warns_once_when_co_present_and_co2_zero(self, caplog):
+        model = self._model(
+            DefaultFedInputs(
+                co_volume_fraction_percent=0.1, co2_volume_fraction_percent=0.0
+            )
+        )
+        with caplog.at_level(logging.WARNING, logger="pyfds_evac.core.fed"):
+            model.sample_inputs(0.0, 0.0, 0.0)
+            model.sample_inputs(1.0, 1.0, 1.0)
+        warnings = [r for r in caplog.records if "CO2" in r.getMessage()]
+        assert len(warnings) == 1
+
+    def test_no_warning_with_co2(self, caplog):
+        model = self._model(
+            DefaultFedInputs(
+                co_volume_fraction_percent=0.1, co2_volume_fraction_percent=0.04
+            )
+        )
+        with caplog.at_level(logging.WARNING, logger="pyfds_evac.core.fed"):
+            model.sample_inputs(0.0, 0.0, 0.0)
+        assert not caplog.records
+
+    @pytest.mark.parametrize(
+        "co, co2", [(float("nan"), 0.0), (0.1, float("nan")), (0.1, -0.01)]
+    )
+    def test_no_warning_for_invalid_samples(self, caplog, co, co2):
+        model = self._model(
+            DefaultFedInputs(
+                co_volume_fraction_percent=co, co2_volume_fraction_percent=co2
+            )
+        )
+        with caplog.at_level(logging.WARNING, logger="pyfds_evac.core.fed"):
+            model.sample_inputs(0.0, 0.0, 0.0)
+        assert not caplog.records
+
+    def test_no_warning_without_co(self, caplog):
+        model = self._model(DefaultFedInputs())
+        with caplog.at_level(logging.WARNING, logger="pyfds_evac.core.fed"):
+            model.sample_inputs(0.0, 0.0, 0.0)
+        assert not caplog.records

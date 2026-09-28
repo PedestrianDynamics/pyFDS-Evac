@@ -206,8 +206,8 @@ FED activity level is the same as in FDS+Evac 6.7.6: light work only
 
 Some parameters cannot be set from the CLI or the scenario JSON. The
 smoke-speed parameters are the main case. `speed_law` (`"lund"` or
-`"fridolf"`), `alpha`, `beta`, `min_speed_factor` and `visibility_factor_c`
-are fields of `SmokeSpeedConfig`, and `run.py` and the web GUI build that
+`"fridolf"`), `alpha`, `beta`, `min_speed_factor`, `visibility_factor_c` and
+the `fridolf_*` constants are fields of `SmokeSpeedConfig`, and `run.py` and the web GUI build that
 object with its defaults. A run started from either one uses the
 Frantzich–Nilsson law with the defaults listed on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 

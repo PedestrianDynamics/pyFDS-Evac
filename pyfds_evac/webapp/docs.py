@@ -14,10 +14,10 @@ from fasthtml.common import H1, Button, Div, NotStr, P, Span
 # ── style tokens ──────────────────────────────────────────────────────────────
 _MONO = "font-family:'JetBrains Mono',monospace"
 _PRESS = "font-family:'Press Start 2P',monospace"
-_BG = "#ECE8DF"
+_BG = "var(--ink)"
 _INK = "#17150F"
 _INK2 = "#3a362c"
-_MUTED = "#6b655c"
+_MUTED = "var(--ink-faint)"
 _BLUE = "#1B17FF"
 _BORDER = "rgba(0,0,0,.13)"
 
@@ -160,7 +160,7 @@ def model_docs() -> Any:
         ),
         _sec(
             "02",
-            "FED Dose — ISO 13571",
+            "FED Dose — Purser / FDS",
             _p(
                 "Each agent accumulates a Fractional Effective Dose from CO, "
                 "cyanides/NOₓ, irritants and oxygen depletion, accelerated by "
@@ -241,7 +241,7 @@ def model_docs() -> Any:
                 style=f"{_MONO};font-size:11px;letter-spacing:.06em;color:{_MUTED}",
             ),
             NotStr(
-                f'<div style="{_PRESS};font-size:7px;letter-spacing:.08em;color:#9a9488">EST. MMXXIV</div>'
+                f'<div style="{_PRESS};font-size:7px;letter-spacing:.08em;color:var(--ink-faint)">EST. MMXXIV</div>'
             ),
             style=(
                 f"border-top:1px solid {_BORDER};padding-top:26px;"

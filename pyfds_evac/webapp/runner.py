@@ -14,13 +14,23 @@ import io
 import logging
 import sys
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from typing import Any
 
 from pyfds_evac.core import ProgressEvent, ScenarioResult, run_scenario
 
 _MAX_LOG_LINES = 800
 _MAX_WARNINGS = 50
+
+
+class RunCancelled(Exception):
+    """Raised inside the progress callback to unwind an in-flight run.
+
+    A worker thread can't be killed from outside, so cancellation is
+    cooperative: ``cancel()`` sets a flag and the next progress tick raises
+    this, which propagates out of ``run_scenario``'s step loop. Ticks fire
+    roughly once per simulated second, so a cancel lands promptly.
+    """
 
 
 class _WarningCapture(logging.Handler):
@@ -85,8 +95,15 @@ class RunManager:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
+        self._cancel = threading.Event()
+        # Guards status transitions that race between cancel() and the worker.
+        self._state = threading.Lock()
         self._thread: threading.Thread | None = None
-        self.status: str = "idle"  # idle | running | done | error
+        # idle | running | cancelling | done | error | cancelled
+        self.status: str = "idle"
+        # Bumped by every start(), so a progress stream can tell its own run
+        # from a later one.
+        self.run_id: int = 0
         self.result: ScenarioResult | None = None
         self.error: str | None = None
         self.scenario_name: str | None = None
@@ -101,12 +118,13 @@ class RunManager:
 
     @property
     def running(self) -> bool:
-        return self.status == "running"
+        """True until the worker has ended, including while it unwinds."""
+        return self.status in ("running", "cancelling")
 
     def start(
         self,
         scenario: Any,
-        run_kwargs: dict[str, Any],
+        build_run_kwargs: Callable[[], dict[str, Any]],
         scenario_name: str,
         post_run: Callable[[ScenarioResult], list[str]] | None = None,
         fds_dir: str | None = None,
@@ -115,6 +133,16 @@ class RunManager:
     ) -> None:
         """Start a run on a background thread. Raises if one is already active.
 
+        ``build_run_kwargs`` is a zero-arg callable that builds the
+        ``run_scenario`` kwargs, called on the worker thread rather than by
+        the caller -- it's where FDS directory inspection happens (parsing
+        every slice header via fdsreader), which can take real time for a
+        large deck. Building it inline in the request handler blocked the
+        HTTP response until it finished, so the browser sat on the old page
+        with no visible progress for however long that parse took, even
+        though the button had already flipped to "in progress". Deferring it
+        here means the SSE-driven progress view mounts immediately instead.
+
         ``post_run`` runs in the worker after the simulation and before the
         status flips to ``done``; its returned strings (e.g. written output
         files) are stored on ``self.artifacts``. ``fds_dir`` is remembered so
@@ -122,24 +150,40 @@ class RunManager:
         ``results_only`` selects the finished view that skips building the
         trajectory viewer and plots; ``opts`` is kept so that view can report
         on every output path that was requested.
+
+        A cancel is honoured at every phase: inside the step loop via the
+        progress callback, and between phases (after ``build_run_kwargs``,
+        after ``run_scenario``, after ``post_run``). A phase already under way
+        is not interrupted, so a cancel that lands during ``post_run`` still
+        ends the run as ``cancelled``, but files it already wrote stay on disk.
         """
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("A run is already in progress.")
 
-        self.status = "running"
-        self.result = None
-        self.error = None
-        self.scenario_name = scenario_name
-        self.fds_dir = fds_dir
-        self.results_only = results_only
-        self.opts = opts
-        self.artifacts = []
-        self.last_event = None
-        self.fed_snapshots = []
-        self.log_lines = []
-        self.warnings = []
+        # Taken so a worker still publishing its terminal status can't
+        # overwrite this run's fresh state.
+        with self._state:
+            self._cancel.clear()
+            self.run_id += 1
+            self.status = "running"
+            self.result = None
+            self.error = None
+            self.scenario_name = scenario_name
+            self.fds_dir = fds_dir
+            self.results_only = results_only
+            self.opts = opts
+            self.artifacts = []
+            self.last_event = None
+            self.fed_snapshots = []
+            self.log_lines = []
+            self.warnings = []
+
+        def check_cancel() -> None:
+            if self._cancel.is_set():
+                raise RunCancelled()
 
         def on_progress(ev: ProgressEvent) -> None:
+            check_cancel()
             self.last_event = ev
             _max = getattr(ev, "max_fed", None)
             _mean = getattr(ev, "mean_fed", None)
@@ -158,22 +202,90 @@ class RunManager:
             previous_level = model_logger.level
             if model_logger.getEffectiveLevel() > logging.WARNING:
                 model_logger.setLevel(logging.WARNING)
+            outcome = "error"
             try:
                 with contextlib.redirect_stdout(capture):
+                    run_kwargs = build_run_kwargs()
+                    check_cancel()
                     result = run_scenario(
                         scenario, progress_callback=on_progress, **run_kwargs
                     )
+                    check_cancel()
                     self.result = result
                     if post_run is not None:
                         self.artifacts = post_run(result)
-                self.status = "done"
+                outcome = "done"
+            except RunCancelled:
+                outcome = "cancelled"
             except Exception as exc:  # surface any run failure to the UI
                 self.error = f"{type(exc).__name__}: {exc}"
-                self.status = "error"
+                outcome = "error"
             finally:
                 model_logger.removeHandler(warning_handler)
                 model_logger.setLevel(previous_level)
-                self._lock.release()
+                self._finish(outcome)
 
         self._thread = threading.Thread(target=worker, daemon=True)
         self._thread.start()
+
+    def _finish(self, outcome: str) -> None:
+        """Release the run lock and publish the run's terminal status."""
+        with self._state:
+            if outcome == "done" and self._cancel.is_set():
+                outcome = "cancelled"
+            if outcome == "cancelled":
+                # A deliberate stop, not a failure: leave no error for the UI
+                # to report and drop any partial result.
+                self.result = None
+                self.error = None
+            # Release before publishing: a client that sees the terminal
+            # status may start the next run straight away.
+            self._lock.release()
+            self.status = outcome
+
+    def cancel(self) -> bool:
+        """Ask an in-flight run to stop. Returns whether one was running."""
+        with self._state:
+            if self.status != "running":
+                return False
+            self._cancel.set()
+            self.status = "cancelling"
+        return True
+
+    def join(self, timeout: float | None = None) -> bool:
+        """Wait for the worker thread to end. Returns whether it has ended."""
+        thread = self._thread
+        if thread is None:
+            return True
+        thread.join(timeout)
+        return not thread.is_alive()
+
+    def reset(self) -> None:
+        """Drop the finished run's state and return the manager to idle.
+
+        Only meaningful once a run has ended -- an active run owns the lock
+        and must be cancelled, not reset out from under itself.
+        """
+        with self._state:
+            if self.running:
+                return
+            self.status = "idle"
+            self.result = None
+            self.error = None
+            self.scenario_name = None
+            self.last_event = None
+            self.artifacts = []
+            self.fed_snapshots = []
+            self.log_lines = []
+            self.warnings = []
+
+    @contextlib.contextmanager
+    def snapshot(self) -> Iterator[RunManager]:
+        """Hold the state lock so a reader sees a single run throughout.
+
+        ``start`` and ``reset`` swap a run's state under the same lock, so
+        everything read inside the block belongs to one run. Never yield to
+        the event loop, or call back into the manager, inside it.
+        """
+        with self._state:
+            yield self

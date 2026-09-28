@@ -124,7 +124,7 @@ def _stream_until_terminal(client, max_lines=2000):
 def test_full_run_streams_progress_and_completes(client):
     r = client.post("/run", data={"scenario": "ISO-table21", "seed": "420"})
     assert r.status_code == 200
-    assert 'sse-connect="/progress"' in r.text or "sse_connect" in r.text
+    assert 'sse-connect="/progress' in r.text or "sse_connect" in r.text
 
     events = _stream_until_terminal(client)
     assert "progress" in events
@@ -160,12 +160,429 @@ def test_second_run_rejected_while_active(client):
         collect_route_cost_history=True,
     )
     kwargs = build_run_kwargs(scenario, opts)
-    manager.start(scenario, kwargs, "ISO-table21")
-    with pytest.raises(RuntimeError):
-        manager.start(scenario, kwargs, "ISO-table21")
+    # start() takes a builder, not the kwargs themselves: the expensive part of
+    # build_run_kwargs runs on the worker thread so /run can answer straight
+    # away. Prebuilt here, since this test is about the second-run guard; the
+    # builder holds the worker until the guard has been checked, otherwise a
+    # fast run can finish and release the lock first.
+    import threading
+
+    release = threading.Event()
+
+    def hold_then_build():
+        release.wait(5.0)
+        return kwargs
+
+    manager.start(scenario, hold_then_build, "ISO-table21")
+    try:
+        with pytest.raises(RuntimeError):
+            manager.start(scenario, lambda: kwargs, "ISO-table21")
+    finally:
+        release.set()
     # Drain to completion so the lock releases for other tests.
     _stream_until_terminal(client)
     _drop_temp_trajectory()
+
+
+class TestCancelLifecycle:
+    """A cancel is honoured at every phase and the UI waits for the worker.
+
+    ``run_scenario`` is replaced by a stub and each phase is held open on an
+    Event, so the tests decide exactly where the cancel lands.
+    """
+
+    @pytest.fixture
+    def rm(self, monkeypatch):
+        import pyfds_evac.webapp.app as app_module
+        from pyfds_evac.webapp.runner import RunManager
+
+        calls = {"run": 0, "post": 0}
+        gate = {"build": None, "post": None}
+
+        def fake_run_scenario(scenario, progress_callback=None, **kwargs):
+            calls["run"] += 1
+            return SimpleNamespace(sqlite_file=None)
+
+        monkeypatch.setattr("pyfds_evac.webapp.runner.run_scenario", fake_run_scenario)
+        fresh = RunManager()
+        monkeypatch.setattr(app_module, "manager", fresh)
+        monkeypatch.setattr(app_module, "_CANCEL_WAIT_S", 0.05)
+        yield fresh, calls, gate
+        for ev in gate.values():
+            if ev is not None:
+                ev.set()
+        fresh.join(5.0)
+
+    @staticmethod
+    def _blocking(gate, key, entered):
+        import threading
+
+        gate[key] = threading.Event()
+
+        def wait(*_a):
+            entered.set()
+            gate[key].wait(5.0)
+            return {}
+
+        return wait
+
+    def test_cancel_while_building_kwargs_skips_the_run(self, rm):
+        import threading
+
+        mgr, calls, gate = rm
+        entered = threading.Event()
+        post = []
+        mgr.start(
+            None,
+            self._blocking(gate, "build", entered),
+            "stub",
+            post_run=lambda r: post.append(r) or [],
+        )
+        assert entered.wait(5.0)
+        assert mgr.cancel() is True
+        assert mgr.status == "cancelling"
+        assert mgr.running
+        gate["build"].set()
+        assert mgr.join(5.0)
+        assert mgr.status == "cancelled"
+        assert calls["run"] == 0
+        assert post == []
+
+    def test_cancel_during_post_run_ends_cancelled(self, rm):
+        import threading
+
+        mgr, calls, gate = rm
+        entered = threading.Event()
+        blocking_post = self._blocking(gate, "post", entered)
+        mgr.start(None, dict, "stub", post_run=lambda r: blocking_post() and [])
+        assert entered.wait(5.0)
+        assert mgr.cancel() is True
+        gate["post"].set()
+        assert mgr.join(5.0)
+        assert mgr.status == "cancelled"
+        assert mgr.result is None
+        assert calls["run"] == 1
+
+    def test_reset_is_refused_while_cancelling(self, rm):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.cancel()
+        mgr.reset()
+        assert mgr.status == "cancelling"
+
+    def test_cancel_route_keeps_the_run_panel_until_the_worker_stops(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        r = client.post("/cancel")
+        assert r.status_code == 200
+        # Still unwinding: the standby panel would re-enable Run over a live
+        # worker, so the response keeps the progress stream instead.
+        assert "Choose a scenario and" not in r.text
+        assert 'sse-connect="/progress' in r.text
+        assert mgr.running
+        gate["build"].set()
+        assert mgr.join(5.0)
+        assert _stream_until_terminal(client)[-1] == "done"
+
+    def test_cancel_route_returns_standby_once_the_worker_stops(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.cancel()
+        gate["build"].set()  # the worker unwinds within /cancel's wait
+        r = client.post("/cancel")
+        assert "Choose a scenario and" in r.text
+        assert mgr.status == "idle"
+
+    def test_progress_stream_ends_with_done_after_a_cancel(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.cancel()
+        gate["build"].set()
+        assert mgr.join(5.0)
+        # Every connected client needs a terminal event; a stream that just
+        # closes is reopened by EventSource and never settles.
+        with client.stream("GET", "/progress") as s:
+            body = "".join(s.iter_text())
+        assert "event: done" in body
+        assert "Run cancelled." in body
+        assert 'hx-post="/clear"' in body
+
+    def test_progress_stream_does_not_follow_a_later_run(self, rm):
+        import asyncio
+        import threading
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        first = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", first), "stub")
+        assert first.wait(5.0)
+        pinned = mgr.run_id
+
+        async def drive():
+            resp = await app_module.progress(run=pinned)
+            events = resp.body_iterator
+            assert "event: console" in await anext(events)
+            # The first run ends and a second starts between two polls.
+            gate["build"].set()
+            assert mgr.join(5.0)
+            mgr.reset()
+            second = threading.Event()
+            mgr.start(None, self._blocking(gate, "build", second), "stub")
+            assert second.wait(5.0)
+            seen = []
+            while not seen or "event: done" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return seen
+
+        seen = asyncio.run(drive())
+        assert mgr.running  # the stream settled without the second run ending
+        assert "event: progress" not in "".join(seen)
+
+    @pytest.mark.parametrize("offset", [-1, 1])
+    def test_stale_or_unknown_run_gets_only_the_final_event(self, rm, client, offset):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.log_lines.append("current-run-log")
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+        other = mgr.run_id + offset
+        with client.stream("GET", f"/progress?run={other}") as s:
+            body = "".join(s.iter_text())
+        assert body.count("event:") == 1
+        assert "event: done" in body
+        assert "current-run-log" not in body
+        with client.stream("GET", f"/fed-progress?run={other}") as s:
+            body = "".join(s.iter_text())
+        assert body.count("event:") == 1
+        assert "event: close" in body
+
+    def test_fed_stream_pinned_over_http_sends_its_run(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+        gate["build"].set()
+        assert mgr.join(5.0)
+        with client.stream("GET", f"/fed-progress?run={mgr.run_id}") as s:
+            body = "".join(s.iter_text())
+        assert "event: fed" in body
+        assert "0.25" in body
+        assert body.rstrip().endswith("data: {}")
+        assert "event: close" in body
+
+    def test_fed_stream_sends_the_last_points_of_a_run_that_ends(self, rm):
+        import asyncio
+        import threading
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+
+        async def drive():
+            resp = await app_module.fed_progress(run=mgr.run_id)
+            events = resp.body_iterator
+            assert "event: fed" in await anext(events)
+            # The run records a last point and ends between two polls.
+            mgr.fed_snapshots.append((2.0, 0.625, 0.3))
+            gate["build"].set()
+            assert mgr.join(5.0)
+            seen = []
+            while not seen or "event: close" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return seen
+
+        seen = asyncio.run(drive())
+        assert "event: fed" in seen[0]
+        assert "0.625" in seen[0]
+        assert "event: close" in seen[-1]
+
+    def test_fed_stream_does_not_follow_a_later_run(self, rm):
+        import asyncio
+        import threading
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        first = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", first), "stub")
+        assert first.wait(5.0)
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+        pinned = mgr.run_id
+
+        async def drive():
+            resp = await app_module.fed_progress(run=pinned)
+            events = resp.body_iterator
+            assert "event: fed" in await anext(events)
+            # The first run ends and a second starts between two polls.
+            gate["build"].set()
+            assert mgr.join(5.0)
+            mgr.reset()
+            second = threading.Event()
+            mgr.start(None, self._blocking(gate, "build", second), "stub")
+            assert second.wait(5.0)
+            mgr.fed_snapshots.append((2.0, 0.875, 0.5))
+            seen = []
+            while not seen or "event: close" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return seen
+
+        seen = asyncio.run(drive())
+        assert mgr.running
+        assert "event: fed" not in "".join(seen)
+        assert "0.875" not in "".join(seen)
+
+    @staticmethod
+    def _run_to(mgr, name, outcome):
+        """Start ``name`` and leave it in ``outcome``: done, error or running."""
+        import threading
+
+        gate = threading.Event()
+
+        def build():
+            if outcome == "running":
+                gate.wait(5.0)
+            if outcome == "error":
+                raise RuntimeError(f"{name} failed")
+            return {}
+
+        mgr.start(None, build, name)
+        if outcome == "running":
+            mgr.last_event = SimpleNamespace(
+                evacuated=1, total=2, sim_time=1.0, wall_time=1.0, pct=50
+            )
+        else:
+            assert mgr.join(5.0)
+        mgr.log_lines.append(f"{name}-log")
+        return gate
+
+    @pytest.mark.parametrize("pin", [True, False])
+    @pytest.mark.parametrize("outcome", ["done", "error", "running"])
+    def test_progress_iteration_emits_one_run_only(self, rm, monkeypatch, outcome, pin):
+        import asyncio
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        monkeypatch.setattr(
+            app_module,
+            "_finished_view",
+            lambda: app_module.Div(f"results of {app_module.manager.scenario_name}"),
+        )
+        gate["a"] = self._run_to(mgr, "run-A", outcome)
+        pinned = mgr.run_id if pin else None
+
+        async def drive():
+            resp = await app_module.progress(run=pinned)
+            events = resp.body_iterator
+            assert "run-A-log" in await anext(events)
+            # Run A gives way to run B while the stream sits on the console
+            # event; the rest of that iteration must still describe run A.
+            gate["a"].set()
+            assert mgr.join(5.0)
+            mgr.reset()
+            gate["b"] = self._run_to(mgr, "run-B", outcome)
+            seen = []
+            while not seen or "event: done" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return "".join(seen)
+
+        body = asyncio.run(drive())
+        assert "run-B" not in body
+        expected = {
+            "done": "results of run-A",
+            "error": "Run failed: RuntimeError: run-A failed",
+            "running": "Running: run-A",
+        }[outcome]
+        assert expected in body
+
+    @pytest.mark.parametrize("pin", [True, False])
+    @pytest.mark.parametrize("outcome", ["done", "error", "running"])
+    def test_fed_iteration_emits_one_run_only(self, rm, outcome, pin):
+        import asyncio
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        gate["a"] = self._run_to(mgr, "run-A", outcome)
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+        pinned = mgr.run_id if pin else None
+
+        async def drive():
+            resp = await app_module.fed_progress(run=pinned)
+            events = resp.body_iterator
+            assert "0.25" in await anext(events)
+            gate["a"].set()
+            assert mgr.join(5.0)
+            mgr.reset()
+            gate["b"] = self._run_to(mgr, "run-B", outcome)
+            mgr.fed_snapshots.append((2.0, 0.875, 0.5))
+            seen = []
+            while not seen or "event: close" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return "".join(seen)
+
+        body = asyncio.run(drive())
+        assert "0.875" not in body
+        assert "event: fed" not in body
+
+    def test_clear_keeps_the_run_panel_while_a_worker_is_active(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        r = client.post("/clear")
+        assert "Choose a scenario and" not in r.text
+        assert 'sse-connect="/progress' in r.text
+        assert mgr.running
+
+    def test_terminal_status_is_published_after_the_lock_is_released(self, rm):
+        mgr, _calls, _gate = rm
+        seen = []
+        real = mgr._lock
+
+        class SpyLock:
+            def acquire(self, *a, **k):
+                return real.acquire(*a, **k)
+
+            def release(self):
+                seen.append(mgr.status)
+                real.release()
+
+        mgr._lock = SpyLock()
+        mgr.start(None, dict, "stub")
+        assert mgr.join(5.0)
+        assert mgr.status == "done"
+        # A client that sees ``done`` may start the next run at once.
+        assert seen == ["running"]
 
 
 class TestScenarioPath:

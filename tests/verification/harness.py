@@ -197,15 +197,11 @@ def time_to_heat_incapacitation_s(
 def co_fed_rate_per_min(co_ppm: float) -> float:
     """Closed-form total FED rate (1/min) for a CO-only atmosphere.
 
-    Mirrors the model: CO rate (guide Eq. 13) times the CO2 hyperventilation
-    factor at CO2 = 0 (which is >= 1.04 and cannot be omitted).  O2 at ambient
-    contributes nothing (hypoxia gated at 20.0 %).
+    The CO rate (guide Eq. 13). With no CO2 the hyperventilation factor is 1,
+    as in FDS (``func.f90`` applies it only for X_CO2 > 0; #194). O2 at
+    ambient contributes nothing (hypoxia gated at 20.0 %).
     """
-    import math
-
-    co_rate = 2.764e-5 * (co_ppm**1.036)
-    hv_co2_at_zero = math.exp(2.0004) / 7.1
-    return co_rate * hv_co2_at_zero
+    return 2.764e-5 * (co_ppm**1.036)
 
 
 def time_to_incapacitation_s(co_ppm: float, fed_threshold: float = 1.0) -> float:
@@ -232,14 +228,20 @@ def lund_speed_factor(
 def fridolf_speed_factor(
     extinction_per_m: float,
     *,
+    free_speed_m_per_s: float = 1.0,
     visibility_factor_c: float = 3.0,
 ) -> float:
-    """Closed-form Fridolf factor: V/(V+2) with V = c/K (1 at K=0)."""
+    """Closed-form Fridolf et al. (2018) factor w / w_free with V = c/K.
+
+    w = min(w_free, max(0.2, w_free - 0.34 (3 - V))), so the factor is 1 at
+    K = 0 and for V >= 3 m.
+    """
     k = max(0.0, extinction_per_m)
     if k == 0.0:
         return 1.0
     v = visibility_factor_c / k
-    return v / (v + 2.0)
+    w_free = free_speed_m_per_s
+    return min(w_free, max(0.2, w_free - 0.34 * (3.0 - v))) / w_free
 
 
 @dataclass
