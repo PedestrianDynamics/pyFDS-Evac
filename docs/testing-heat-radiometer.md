@@ -33,23 +33,28 @@ temperature \(T_\mathrm{gauge}\) with emissivity \(\varepsilon\) and
 convective coefficient \(h\) reads
 
 $$
-\dot q''_\mathrm{gauge} = \varepsilon\,\dot q''_\mathrm{inc} - \sigma T_\mathrm{gauge}^4 + h\,(T_g - T_\mathrm{gauge}) \qquad (22.35)
+\dot q''_\mathrm{gauge} = \varepsilon\,\bigl(\dot q''_\mathrm{inc} - \sigma T_\mathrm{gauge}^4\bigr) + h\,(T_g - T_\mathrm{gauge}) \qquad (22.35)
 $$
 
 and a radiometer the radiative part alone,
 
 $$
-\dot q''_\mathrm{radiometer} = \varepsilon\,\dot q''_\mathrm{inc} - \sigma T_\mathrm{gauge}^4. \qquad (22.36)
+\dot q''_\mathrm{radiometer} = \varepsilon\,\bigl(\dot q''_\mathrm{inc} - \sigma T_\mathrm{gauge}^4\bigr). \qquad (22.36)
 $$
 
-With \(\varepsilon = 1\) the incident flux is
+Both are in W/m² with temperatures in K; FDS writes the device output in
+kW/m², so the analysis divides \(\sigma T_\mathrm{gauge}^4\) and
+\(h\,(T_g - T_\mathrm{gauge})\) by 1000. With \(\varepsilon = 1\) the
+incident flux is
 \(q = \dot q''_\mathrm{radiometer} + \sigma T_\mathrm{gauge}^4\), and
 gauge − radiometer = \(h\,(T_g - T_\mathrm{gauge})\). With the gas at
 \(T_i\) and the gauge at the skin temperature \(T_m\), Eq. 22.35 is the
 total flux to the skin of SFPE Handbook Eq. 63.49 (5th ed., Ch. 63, p. 2383),
-\(q = \varepsilon\sigma(T_i^4 - T_m^4) + h_c(T_i - T_m)/1000\), with the
-incident radiation taken from FDS's radiation solution instead of
-\(\sigma T_i^4\).
+\(q = [\varepsilon\sigma(T_i^4 - T_m^4) + h_c(T_i - T_m)]/1000\) in kW/m²,
+with temperatures in K and \(\sigma\) in W m⁻² K⁻⁴, and with the incident
+radiation taken from FDS's radiation solution instead of \(\sigma T_i^4\).
+Both terms are divided by 1000, as in spec 016; the Handbook prints the
+division on the convective term only.
 
 `INTEGRATED INTENSITY` is \(U = \int_{4\pi} I\,d\Omega\) (User's Guide,
 p. 403). A flat plate receives \(q = \int_\mathrm{hemisphere} I\cos\theta\,d\Omega\).
@@ -87,9 +92,11 @@ in direct view drives q towards U.
 
 **Assumptions, not sourced values:** the 300 °C gas, the soot mass fraction
 0.005, the layer base at 2.0 m, the burner size, fuel, heat release rate and
-soot yield, the grid and the run lengths. The gauge values 35 °C and
-h = 8 W/(m² K) come from the issue; spec 016 leaves the skin temperature and
-h open. The radiometer, and so q/U, does not depend on h.
+soot yield, the 0.1 m grid, the run lengths, and gauge emissivity 1 as the
+skin's emissivity (FDS's default value, chosen here, not a sourced skin
+value). The gauge values 35 °C and h = 8 W/(m² K) are prescribed by the
+issue; spec 016 leaves the skin temperature and h open. The radiometer, and
+so q/U, does not depend on h.
 
 ## Result
 
@@ -150,18 +157,25 @@ reference.
    `HEAT_TRANSFER_COEFFICIENT=8`, and write each point. The slices at 1.6
    and 1.8 m sit on cell faces.
 2. **Script.** `flux_ratio` in `scripts/verification/heat_radiometer.py`
-   returns 1/4, 1/2, 1/4 and 1 for the four fields of the table above,
-   written in the test by hand.
+   returns 1/4, 1/2, 1/4 and 1 for the four fields of the table above;
+   `excess_ratio` returns 1/4, 1/2, 0 and 1 for a hot isotropic field, a
+   hot upper hemisphere over ambient (plate up and down) and a beam over
+   ambient; `summarize` returns the time mean per point, matched by point
+   number, for a synthetic device file. All expected values are written in
+   the test by hand.
 3. **Output** (skipped when the FDS output is absent, as in CI):
    gauge − radiometer = *h*(*T*_g − 35 °C) to 10⁻⁵ kW/m²; 0 ≤ q ≤ U and
    two opposite plates together get at most U; in the uniform room
-   q/U = 1/4 and U = 4σ*T*⁴ within ±10 %; under the layer the upward plate
+   q/U = 1/4 and U = 4σ*T*⁴ within ±1 %; under the layer the upward plate
    gets more than U/4 and more than the sideways plate; beside the burner
    the largest share above ambient of any plate exceeds 0.5.
 
-The ±10 % band and the 0.5 threshold were set from a coarser scratch run
-before these decks existed; the decks give 0.250 exactly, so the band is
-loose.
+The uniform deck deviates from 1/4 by at most 0.3 % (q/U) and from
+4σ*T*⁴ by at most 0.2 % (U), so ±1 % leaves room for the ray effect and
+still fails if σ*T*_gauge⁴ is left out when inverting Eq. 22.36 (about 8 %
+here). The 0.5 threshold beside the burner and the ±10 % slack on q ≤ U
+were set from a coarser scratch run (0.2 m cells) before these decks
+existed.
 
 ## Run it yourself
 
