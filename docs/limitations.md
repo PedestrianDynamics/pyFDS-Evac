@@ -93,7 +93,8 @@ total-heat-flux dose is designed in `specs/016-heat-fed/SPEC.md`
 opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is
 incapacitated when either dose reaches its threshold. The two thresholds are
 different endpoints: gas FED = 1 is incapacitation, heat FED = 1 the
-Eq. 63.44 time, near the SFPE Handbook's tolerance curve; the FED history's
+Eq. 63.44 time, which by our comparison lies near the SFPE Handbook's
+tolerance curve (see Fundamentals › Heat); the FED history's
 `incapacitation_cause` column says which dose stopped the agent. Before that
 point, heat has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced

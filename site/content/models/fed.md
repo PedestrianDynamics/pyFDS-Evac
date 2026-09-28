@@ -69,7 +69,7 @@ including its limits, is on [Models › Heat](/models/heat.md).
 
 `TenabilityConfig` (`fed.py:240`) adds two rules. The slowdown and the gas
 stop need the gas FED model; the heat stop needs only the heat FED model
-(`run_config.py:246`–`256`).
+(`run_config.py:249`–`256`).
 
 - **Irritant slowdown, off by default.** FDS+Evac has no irritant slowdown, so
   `enable_fic_speed` defaults to false and `run.py` switches the rule on only
@@ -78,7 +78,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   same seven irritants (constants in `_FIC_COEFFS_PPM`, not integrated over
   time). At each FED update where FIC > 0, the agent's irritant factor is set
   to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
-  (`scenario.py:2076`–`2081`) and multiplies the smoke factor. The rule is a
+  (`scenario.py:2105`–`2115`) and multiplies the smoke factor. The rule is a
   pyFDS-Evac assumption with no known source
   ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
   When FIC is exactly 0 the last factor stays in force
@@ -251,7 +251,7 @@ and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 > [Asphyxiant FED](/fundamentals/asphyxiant-fed.md).
 
 The irritant slowdown \(g\), when enabled (`fed.py:270`–`271`), is multiplied with the smoke
-factor (`direct_steering_runtime.py:186`–`190`). Its constants were not found
+factor (`direct_steering_runtime.py:191`–`193`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
 Handbook uses a different curve and adds the smoke and irritant losses instead
