@@ -1,261 +1,226 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Verification suite</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/</link><description>Recent content in Verification suite on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/index.xml" rel="self" type="application/rss+xml"/><item><title>Homogeneous CO FED verification</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/</guid><description>
-&lt;h2>Purpose&lt;span class="hx-absolute -hx-mt-20" id="purpose">&lt;/span>
-&lt;a href="#purpose" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This test case verifies the FED (Fractional Effective Dose) accumulation and
-probabilistic incapacitation logic in the pyFDS-Evac pipeline against
-hand-calculated predictions, using a simplified scenario with a spatially
-&lt;strong>homogeneous&lt;/strong> (uniform) CO concentration field.&lt;/p>
-&lt;p>By removing spatial gradients as a variable, any deviation between simulated
-and hand-calculated FED/incapacitation results can be attributed to the
-model/pipeline logic itself, rather than to local concentration variation —
-isolating the FED accumulation and incapacitation-probability code from the
-gas-transport physics.&lt;/p>
-&lt;p>Three CO concentration levels are tested (2000, 4000, and 8000 ppm) to check
-that the pipeline&amp;rsquo;s FED/incapacitation results scale correctly with dose,
-rather than verifying against just a single data point.&lt;/p>
-&lt;p>Testing was also conducted using probabilistic tenability to make ensure that encapacitation
-occurs at a log-normal distribution.&lt;/p>
-&lt;blockquote>
-&lt;p>&lt;strong>Note:&lt;/strong> &lt;code>fed_hand_calc.py&lt;/code> and the two onset-distribution graphs
-referenced below are not currently committed to the repo — the formulae
-and pass/fail numbers here were computed and verified with them at the
-time, but a reader can&amp;rsquo;t regenerate the reference curve or view the plots
-from this checkout. The &lt;code>TODO&lt;/code> in &lt;a href="#how-to-run">How to Run&lt;/a> and the
-&lt;a href="#remaining-before-this-test-case-is-complete">Remaining&lt;/a> section below
-are original and still open.&lt;/p>
-&lt;/blockquote>&lt;h2>Test Setup&lt;span class="hx-absolute -hx-mt-20" id="test-setup">&lt;/span>
-&lt;a href="#test-setup" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;strong>Geometry:&lt;/strong> Sealed room (no vents/openings), so CO cannot escape and the
-concentration field stays spatially uniform once mixed.&lt;/li>
-&lt;li>&lt;strong>Source:&lt;/strong> Constant CO generation rate, homogeneous throughout the room.
-Three variants of this test are run, at 2000 ppm, 4000 ppm, and 8000 ppm
-CO, each producing a known, time-resolved CO concentration that can be
-predicted analytically.&lt;/li>
-&lt;li>&lt;strong>Domain decomposition:&lt;/strong> 4 MPI sub-meshes — confirms FED values are
-consistent across mesh boundaries (i.e. splitting the domain doesn&amp;rsquo;t
-introduce discontinuities in the gas data JuPedSim consumes).&lt;/li>
-&lt;li>&lt;strong>Agents:&lt;/strong> 100 JuPedSim agents, non-evacuating travelling in a rectangular circuit, exposed
-uniformly to the CO field — isolates FED/incapacitation tracking from
-movement and exit-routing dynamics.&lt;/li>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Verification suite</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/</link><description>Recent content in Verification suite on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/index.xml" rel="self" type="application/rss+xml"/><item><title>CO dose in a uniform room</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/</guid><description>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>&lt;/th>
+&lt;th>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Component&lt;/strong>&lt;/td>
+&lt;td>Gas FED and incapacitation (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Models › FED&lt;/a>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Level&lt;/strong>&lt;/td>
+&lt;td>FDS case: a full run on FDS output&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Asset&lt;/strong>&lt;/td>
+&lt;td>&lt;code>assets/fed_incap_co_2000ppm&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Expected value from&lt;/strong>&lt;/td>
+&lt;td>hand calculation, and FDS&amp;rsquo;s own &lt;code>FED&lt;/code> device&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Status&lt;/strong>&lt;/td>
+&lt;td>passes&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/co_room.gif" alt="100 agents walk a loop in a room filled with 2000 ppm CO; their colour shows the dose, and a cross marks an incapacitated agent" loading="lazy" />&lt;/p>
+&lt;h2>What is tested&lt;span class="hx-absolute -hx-mt-20" id="what-is-tested">&lt;/span>
+&lt;a href="#what-is-tested" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Whether the dose an agent accumulates in pyFDS-Evac is the dose the
+equations give, and whether agents stop when it says they should. The room
+holds the same gas everywhere and at all times, so every agent, wherever it
+walks, must follow one curve, FED(&lt;em>t&lt;/em>), that can be computed by hand. Any
+difference comes from the code: reading the FDS slice, sampling it at the
+agent, summing the dose, or applying the threshold.&lt;/p>
+&lt;h2>Equation&lt;span class="hx-absolute -hx-mt-20" id="equation">&lt;/span>
+&lt;a href="#equation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The gas FED, as in FDS&amp;rsquo;s &lt;code>FED&lt;/code> function
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">Models › FED&lt;/a>), with &lt;em>C&lt;/em> in ppm for CO and in
+volume percent for CO₂ and O₂, and &lt;em>t&lt;/em> in minutes:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>FED_CO = 2.764e-5 x (C_CO)^1.036 x t
+HV_CO2 = exp(0.1903 x C_CO2 &amp;#43; 2.0004) / 7.1 if C_CO2 &amp;gt; 0
+HV_CO2 = 1 if C_CO2 &amp;lt;= 0 (or not finite)
+FED_O2 = t / exp[8.13 - 0.54 x (20.9 - C_O2)] only below 20 % O2
+FED = FED_CO x HV_CO2 &amp;#43; FED_O2&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>With a constant mixture the dose grows linearly, and FED = 1 is reached at&lt;/p>
+$$
+t^{*} = \frac{60}{r_{\mathrm{CO}}\,\mathrm{HV}_{\mathrm{CO_2}}}\ \text{s},
+\qquad r_{\mathrm{CO}} = 2.764\times10^{-5}\,C_{\mathrm{CO}}^{1.036}\ \text{min}^{-1}.
+$$&lt;p>In &lt;code>probabilistic&lt;/code> mode (the default for the gas dose) agent &lt;em>i&lt;/em> stops at its
+own threshold \(D_i = \exp(\sigma Z_i)\), \(Z_i \sim N(0,1)\), σ = 0.94. Because
+FED grows linearly, agent &lt;em>i&lt;/em> stops at \(D_i\,t^{*}\), and the fraction of
+agents stopped by time &lt;em>t&lt;/em> is&lt;/p>
+$$
+F(t) = \Phi\!\left(\frac{\ln(t/t^{*})}{\sigma}\right).
+$$&lt;h2>Setup&lt;span class="hx-absolute -hx-mt-20" id="setup">&lt;/span>
+&lt;a href="#setup" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/co_room_setup.png" alt="Plan of the 30 m room: spawn area, the loop the agents walk, the exit, and the CO slice at breathing height" loading="lazy" />&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>FDS:&lt;/strong> a sealed 30 × 30 × 3 m room, no fire, no vents, four meshes. At
+&lt;em>t&lt;/em> = 0 it is filled with 2000 ppm CO, 500 ppm CO₂, 20.9 % O₂ and soot for
+&lt;em>K&lt;/em> ≈ 1 /m. Slices at 1.6 m, which FDS places at 1.5 m on this 0.5 m grid.&lt;/li>
+&lt;li>&lt;strong>Agents:&lt;/strong> 100 agents walk a loop between four corner checkpoints, so they
+stay in the room and keep moving; the field is sampled at each agent&amp;rsquo;s
+position every second.&lt;/li>
+&lt;li>&lt;strong>Runs:&lt;/strong> once with &lt;code>--incapacitation-mode deterministic&lt;/code>, once with the
+default &lt;code>probabilistic&lt;/code>.&lt;/li>
 &lt;/ul>
-&lt;h2>What&amp;rsquo;s Being Verified&lt;span class="hx-absolute -hx-mt-20" id="whats-being-verified">&lt;/span>
-&lt;a href="#whats-being-verified" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
-&lt;li>&lt;strong>FED accumulation&lt;/strong> — per-agent FED(t) computed from FDS CO output
-matches the hand-calculated FED curve for a known, constant CO
-concentration, across all three concentration levels.&lt;/li>
-&lt;li>&lt;strong>Probabilistic incapacitation&lt;/strong> — agents are incapacitated according to
-the correct FED-derived probability model, not deterministically at a
-fixed FED threshold.&lt;/li>
-&lt;li>&lt;strong>Pipeline integration&lt;/strong> — FDS gas slice output → &lt;code>fdsreader&lt;/code> → JuPedSim
-correctly carries FED data across the 4-mesh decomposition with no
-per-mesh discrepancies. (Not &lt;code>fdsvismap&lt;/code>: that&amp;rsquo;s a separate component
-used only by the sign-visibility model that gates rerouting/&lt;code>discovery&lt;/code>
-familiarity — this test has a single exit, non-evacuating agents, and no
-&lt;code>--vis-cache&lt;/code>/&lt;code>--enable-rerouting&lt;/code>, so it never touches fdsvismap.)&lt;/li>
-&lt;/ol>
-&lt;h2>Method&lt;span class="hx-absolute -hx-mt-20" id="method">&lt;/span>
-&lt;a href="#method" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
-&lt;li>Hand-calculate the expected FED(t) curve for each of the three CO
-concentrations (2000, 4000, 8000 ppm) using the FDS-native Purser
-FED/CO incapacitation model (see &lt;code>fed_hand_calc.py&lt;/code>).&lt;/li>
-&lt;li>Run the full FDS → fdsreader → JuPedSim pipeline on each of the three
-scenarios.&lt;/li>
-&lt;li>Compare simulated per-agent FED accumulation curves and incapacitation
-timing/probability distribution against the hand-calculated reference,
-for each concentration.&lt;/li>
-&lt;li>Confirm agreement within tolerance across all 100 agents and all 4
-sub-meshes, at all three concentration levels.&lt;/li>
-&lt;li>Run the homogenous test at different seeds with the probabilistic incapacitation to ensure they&amp;rsquo;re following the log-normal distribution.&lt;/li>
-&lt;/ol>
-&lt;h2>Hand-Calculated FED Reference&lt;span class="hx-absolute -hx-mt-20" id="hand-calculated-fed-reference">&lt;/span>
-&lt;a href="#hand-calculated-fed-reference" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Computed with &lt;code>fed_hand_calc.py&lt;/code>, using the exact FDS Purser equations
-(NIST SP 1019, Section 22.10.18, eqs 22.42–22.49) — the same equations FDS
-itself uses to produce its &lt;code>FED&lt;/code> device output. Background CO2 = 500 ppm
-(0.05%), O2 = 20.9% (ambient, no hypoxia contribution) held constant for
-all three cases.&lt;/p>
-&lt;h3>Formulae used&lt;span class="hx-absolute -hx-mt-20" id="formulae-used">&lt;/span>
-&lt;a href="#formulae-used" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>These are the terms the hand calculation evaluates; the coded forms are on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a> page.&lt;/p>
-&lt;p>&lt;strong>FED from CO&lt;/strong> (eq. 22.43), C_CO in ppm, t in minutes:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>FED_CO = 2.764e-5 x (C_CO)^1.036 x t&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>&lt;strong>FED from O2 hypoxia&lt;/strong> (eq. 22.48), C_O2 in volume percent, t in minutes:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>FED_O2 = t / exp[8.13 - 0.54 x (20.9 - C_O2)]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>&lt;strong>Hyperventilation factor from CO2&lt;/strong> (eq. 22.49), C_CO2 in percent, with
-the zero-CO2 guard of FDS (&lt;code>func.f90&lt;/code>, function &lt;code>FED&lt;/code>):&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>HV_CO2 = exp(0.1903 x C_CO2 &amp;#43; 2.0004) / 7.1 if C_CO2 &amp;gt; 0
-HV_CO2 = 1 if C_CO2 &amp;lt;= 0 (or not finite)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>&lt;strong>Total FED&lt;/strong> (eq. 22.42) — FED_CN, FED_NOx, and FLD_irr are omitted here
-since this scenario is CO-only:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>FED_tot = FED_CO x HV_CO2 &amp;#43; FED_O2&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>&lt;code>fed_hand_calc.py&lt;/code> accumulates this per-timestep (matching how FDS itself
-does it internally) rather than as a single closed-form multiplication —
-this matters because &lt;code>HV_CO2&lt;/code> depends on the CO2 present (here 500 ppm, so
-it is above 1), and it multiplies only the CO term, not the O2 term. With no
-CO2 at all the factor is 1, as in FDS (#194).&lt;/p>
+&lt;h2>Expected&lt;span class="hx-absolute -hx-mt-20" id="expected">&lt;/span>
+&lt;a href="#expected" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The concentrations are read from the FDS slice itself, independently of
+pyFDS-Evac: 1999.86 ppm CO, 0.049992 % CO₂ and 20.8985 % O₂, the same in every
+cell and at all 1001 slice times. O₂ is above 20 %, so its term is zero. Then&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
-&lt;th>CO Concentration&lt;/th>
-&lt;th>FED = 0.3 (onset)&lt;/th>
-&lt;th>FED = 1.0 (incapacitation)&lt;/th>
+&lt;th>Quantity&lt;/th>
+&lt;th>Value&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>2000 ppm&lt;/td>
-&lt;td>234.7 s&lt;/td>
-&lt;td>782.4 s&lt;/td>
+&lt;td>\(r_{\mathrm{CO}}\)&lt;/td>
+&lt;td>0.072673 /min&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>4000 ppm&lt;/td>
-&lt;td>114.7 s&lt;/td>
-&lt;td>382.3 s&lt;/td>
+&lt;td>\(\mathrm{HV}_{\mathrm{CO_2}}\)&lt;/td>
+&lt;td>1.05108&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>8000 ppm&lt;/td>
-&lt;td>56.0 s&lt;/td>
-&lt;td>186.6 s&lt;/td>
+&lt;td>\(t^{*}\), hand calculation&lt;/td>
+&lt;td>&lt;strong>785.49 s&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(t^{*}\), FDS&amp;rsquo;s own &lt;code>FED&lt;/code> device in the same run&lt;/td>
+&lt;td>785.44 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>agents stopped by 999 s, probabilistic, \(F(999\ \mathrm{s})\)&lt;/td>
+&lt;td>60.1 %&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;h2>Directory Contents&lt;span class="hx-absolute -hx-mt-20" id="directory-contents">&lt;/span>
-&lt;a href="#directory-contents" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Each case is a self-contained scenario directory. The deck, the JuPedSim
-config and the walkable area live together; FDS run output lands beside them
-and is gitignored.&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>assets/
-├── fed_incap_co_2000ppm/
-│ ├── fed_incap_co_2000ppm.fds — FDS deck, 2000 ppm CO (CHID demo_homogeneous_CO_2000ppm)
-│ ├── config.json — JuPedSim scenario (agents, journey, routing)
-│ ├── geometry.wkt — Walkable area (Shapely WKT)
-│ └── &amp;lt;untracked run output&amp;gt; — .smv .out .pickle .sf/.sf.bnd (4 meshes x 17 quantities),
-│ _devc.csv _hrr.csv _cpu.csv _steps.csv _git.txt
-├── fed_incap_co_4000ppm/ — same layout, 4000 ppm
-└── fed_incap_co_8000ppm/ — same layout, 8000 ppm&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>Three earlier iterations from this debugging lineage are no longer tracked:
-&lt;code>fed_incap_co_v1&lt;/code> and &lt;code>fed_incap_co_v2&lt;/code> (both 4000 ppm), and
-&lt;code>fed_incap_co_smol&lt;/code>, which never had a deck of its own. The 2000/4000/8000 ppm
-ladder supersedes all three.&lt;/p>
-&lt;p>pyFDS-Evac run artefacts (written wherever you point the &lt;code>--output-*&lt;/code> flags):&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>&amp;lt;scenario&amp;gt;.sqlite — Agent trajectory database
-&amp;lt;scenario&amp;gt;_fed_history.csv — Per-agent FED accumulation over time
-&amp;lt;scenario&amp;gt;_smoke_history.csv — Per-agent smoke exposure over time
-&amp;lt;scenario&amp;gt;_route_history.csv — Agent route decisions over time
-&amp;lt;scenario&amp;gt;_route_cost_history.csv — Route cost values over time&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>Analysis plots (incapacitation-onset histograms and cumulative onset curves
-per concentration) are produced from the FED history CSV by the plotting
-scripts in &lt;code>scripts/&lt;/code>; see &lt;code>docs/usage.md&lt;/code>.&lt;/p>
-&lt;h2>How to Run&lt;span class="hx-absolute -hx-mt-20" id="how-to-run">&lt;/span>
-&lt;a href="#how-to-run" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
-&lt;p>TODO — fill in exact commands once finalized.&lt;/p>
-&lt;/blockquote>&lt;h2>Results / Pass Criteria&lt;span class="hx-absolute -hx-mt-20" id="results--pass-criteria">&lt;/span>
-&lt;a href="#results--pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Status: All cases of 2000, 4000, and 8000 ppm are passing.&lt;/strong>&lt;/p>
-&lt;p>For the 8000 ppm case, all 100 agents now show &lt;code>incapacitated = True&lt;/code> at
-~186–187 s, matching the hand-calculated FED = 1.0 time of &lt;strong>186.6 s&lt;/strong>
-within about 1 s. This is the first run where the sampler bug (CO/CO2/O2
-all reading 0, per earlier debugging) is no longer visibly affecting the
-result.&lt;/p>
+&lt;p>Earlier versions of this page quoted 782.4 s. That value added an O₂ term at
+20.9 % O₂, which FDS and pyFDS-Evac apply only below 20 %.&lt;/p>
+&lt;h2>Result&lt;span class="hx-absolute -hx-mt-20" id="result">&lt;/span>
+&lt;a href="#result" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/co_room_fed.png" alt="FED against time for the 100 agents, the hand calculation and FDS’s FED device; below, the difference from the hand calculation" loading="lazy" />&lt;/p>
+&lt;p>All 100 agents follow the hand calculation to within 1.4 × 10⁻¹⁴, round-off
+in the last digit. FDS&amp;rsquo;s own device lies up to 7.7 × 10⁻⁵ above it at 1000 s,
+a relative difference of 6 × 10⁻⁵.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/co_room_incapacitation.png" alt="Fraction of agents incapacitated against time in the probabilistic run, with the expected log-normal curve and its 95 % band" loading="lazy" />&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
-&lt;th>Case&lt;/th>
-&lt;th>FED = 1.0 (Hand Calculation)&lt;/th>
-&lt;th>FED = 1.0 (Simulation)&lt;/th>
+&lt;th>Check&lt;/th>
+&lt;th>Expected&lt;/th>
+&lt;th>Simulated&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>2000 ppm&lt;/td>
-&lt;td>782.4 s&lt;/td>
-&lt;td>786 s&lt;/td>
+&lt;td>FED of every agent against the hand calculation&lt;/td>
+&lt;td>equal&lt;/td>
+&lt;td>max difference 1.4 × 10⁻¹⁴&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>4000 ppm&lt;/td>
-&lt;td>382.3 s&lt;/td>
-&lt;td>384 s&lt;/td>
+&lt;td>deterministic: incapacitation time&lt;/td>
+&lt;td>785.49 s&lt;/td>
+&lt;td>all 100 agents at 786.0 s (first FED update after &lt;em>t&lt;/em>*)&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>8000 ppm&lt;/td>
-&lt;td>186.6 s&lt;/td>
-&lt;td>187 s&lt;/td>
+&lt;td>probabilistic: agents stopped by 999 s&lt;/td>
+&lt;td>60.1 %&lt;/td>
+&lt;td>61 of 100&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>probabilistic: largest gap between the curves&lt;/td>
+&lt;td>≤ 0.136&lt;/td>
+&lt;td>0.048&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>All of these result in a percent difference &amp;lt;0.50% which is accepted.&lt;/p>
-&lt;p>
-&lt;img src="../graphs/homogenous_co_incapacitation_onset_8000ppm.png" alt="Incapacitation onset time distribution, 8000ppm" loading="lazy" />&lt;/p>
-&lt;p>
-&lt;img src="../graphs/homogenous_onset_cumulative_8000ppm.png" alt="Cumulative incapacitation over time, 8000ppm" loading="lazy" />&lt;/p>
-&lt;p>Note on terminology: the pipeline&amp;rsquo;s &amp;ldquo;onset time&amp;rdquo; (plotted above) is the
-timestamp at which &lt;code>incapacitated&lt;/code> first flips &lt;code>True&lt;/code> — this corresponds
-to the hand-calc&amp;rsquo;s &lt;strong>FED = 1.0&lt;/strong> threshold (186.6 s), not the FED = 0.3
-&amp;ldquo;onset&amp;rdquo; threshold used elsewhere in this doc&amp;rsquo;s reference table (56.0 s for
-8000 ppm). Same word, two different thresholds — worth not conflating the
-two when comparing numbers.&lt;/p>
-&lt;h3>Remaining before this test case is complete&lt;span class="hx-absolute -hx-mt-20" id="remaining-before-this-test-case-is-complete">&lt;/span>
-&lt;a href="#remaining-before-this-test-case-is-complete" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
-&lt;li>Decide and document a formal tolerance (±5%, absolute FED difference,
-etc.) rather than eyeballing agreement from the plots.&lt;/li>
-&lt;li>Confirm whether the single-instant incapacitation spike is expected
-behavior for the probabilistic model in a homogeneous scenario.&lt;/li>
+&lt;h2>Pass criteria&lt;span class="hx-absolute -hx-mt-20" id="pass-criteria">&lt;/span>
+&lt;a href="#pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>&lt;strong>Dose.&lt;/strong> Every agent&amp;rsquo;s FED equals the hand calculation to round-off,
+|FED − FED_hand| ≤ 10⁻⁹.&lt;/li>
+&lt;li>&lt;strong>Deterministic stop.&lt;/strong> Every agent stops at the first FED update at or
+after &lt;em>t&lt;/em>*: \(t^{*} \le t_i &lt; t^{*} + \Delta t\), with the update interval
+Δ&lt;em>t&lt;/em> = 1 s (&lt;code>--smoke-update-interval&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Probabilistic stop.&lt;/strong> The empirical fraction of stopped agents stays
+within the 95 % Kolmogorov–Smirnov band of &lt;em>F&lt;/em>(&lt;em>t&lt;/em>),
+\(1.36/\sqrt{n} = 0.136\) for &lt;em>n&lt;/em> = 100 agents. Agents whose threshold
+lies beyond the end of the run are counted as not yet stopped.&lt;/li>
+&lt;/ol>
+&lt;h2>Run it yourself&lt;span class="hx-absolute -hx-mt-20" id="run-it-yourself">&lt;/span>
+&lt;a href="#run-it-yourself" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The FDS output is not in the repository (254 MB). Either get it from the
+project&amp;rsquo;s data folder (&lt;code>fds-evac-data/fed_incap_co_2000ppm/fds/&lt;/code>), or rerun
+FDS, about one minute on four cores:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cd assets/fed_incap_co_2000ppm
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mpiexec -n &lt;span style="color:#ae81ff">4&lt;/span> fds fed_incap_co_2000ppm.fds&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Then run pyFDS-Evac in both modes and draw the figures:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> mode in deterministic probabilistic; &lt;span style="color:#66d9ef">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> uv run python run.py --scenario assets/fed_incap_co_2000ppm &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir &amp;lt;fds output&amp;gt; --incapacitation-mode $mode &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite &amp;lt;out&amp;gt;/$mode/run.sqlite &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history &amp;lt;out&amp;gt;/$mode/fed_history.csv
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">done&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python scripts/verification/co_room_figures.py --data &amp;lt;out&amp;gt;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The evacuation itself takes about three minutes. Before it starts, the first
+run builds the sign-visibility cache for the 25 checkpoints at every FDS time,
+which takes much longer
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/236" target="_blank" rel="noopener">#236&lt;/a>); add
+&lt;code>--vis-cache &amp;lt;file&amp;gt;&lt;/code> to both runs so the second one reuses it.&lt;/p>
+&lt;h2>Limits&lt;span class="hx-absolute -hx-mt-20" id="limits">&lt;/span>
+&lt;a href="#limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>One concentration. The decks for 4000 and 8000 ppm
+(&lt;code>assets/fed_incap_co_4000ppm&lt;/code>, &lt;code>assets/fed_incap_co_8000ppm&lt;/code>) still have
+their gas slices at 2.0 m only and have not been rerun.&lt;/li>
+&lt;li>CO only, with CO₂ at an ambient level and O₂ above 20 %, so the O₂ term and
+the optional gases (HCN, NOx, irritants) are not exercised here. The FDS
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_fic_all_zones.py" target="_blank" rel="noopener">&lt;code>FED_FIC&lt;/code> case&lt;/a>
+covers those as an equation-level check.&lt;/li>
+&lt;li>A uniform field cannot show whether the field is sampled at the agent&amp;rsquo;s
+&lt;em>current&lt;/em> position; that needs a gradient
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24" target="_blank" rel="noopener">#24&lt;/a>).&lt;/li>
+&lt;li>A uniform field also hides which slice height the dose is read from. The
+gas FED currently takes the first slice of each species in the deck (CO at
+0.5 m, CO₂ and O₂ at 2.0 m here), not the one nearest to 1.6 m
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/238" target="_blank" rel="noopener">#238&lt;/a>); every
+slice holds the same values, so the result is unaffected.&lt;/li>
+&lt;li>This page is not yet an automated test: the check runs from the figure
+script on the stored output.&lt;/li>
 &lt;/ul></description></item><item><title>Homogeneous heat FED verification</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/</guid><description>
 &lt;h2>Purpose&lt;span class="hx-absolute -hx-mt-20" id="purpose">&lt;/span>
 &lt;a href="#purpose" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This test case verifies the heat FED (Fractional Effective Dose from
@@ -808,4 +773,213 @@ default the ~0.4 m walls of &lt;code>assets/blind_spawn_discovery&lt;/code> vani
 occlusion tests silently stop testing anything; 0.25 m resolves them. Cost grows
 as the inverse square. Pick it below the thinnest wall that must block.&lt;/p>
 &lt;p>This requires the fdsvismap branch adding &lt;code>set_grid&lt;/code> / &lt;code>set_uniform_extco&lt;/code>
-(FireDynamics/fdsvismap#41); &lt;code>pyproject.toml&lt;/code> pins it until that is released.&lt;/p></description></item></channel></rss>
+(FireDynamics/fdsvismap#41); &lt;code>pyproject.toml&lt;/code> pins it until that is released.&lt;/p></description></item><item><title>Status against ISO 20414</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/iso-20414/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/iso-20414/</guid><description>
+&lt;p>ISO 20414:2020 (&lt;em>Fire safety engineering — Verification and validation
+protocol for building fire evacuation models&lt;/em>) defines 21 verification tests
+(Tests 1–21) and 9 validation tests (Tests 22–30). The table below gives the
+status of each verification test for pyFDS-Evac. FED means fractional
+effective dose, and &lt;em>K&lt;/em> [1/m] is the extinction coefficient. Everything on this page is
+&lt;strong>verification&lt;/strong>: it checks that the code reproduces the correlation or hand
+calculation it implements. None of it is &lt;strong>validation&lt;/strong> against observed
+evacuations, and none of ISO 20414&amp;rsquo;s validation tests (22–30) has been run.&lt;/p>
+&lt;h2>Tests 18 and 19: the fire–people interaction tests&lt;span class="hx-absolute -hx-mt-20" id="tests-18-and-19-the-firepeople-interaction-tests">&lt;/span>
+&lt;a href="#tests-18-and-19-the-firepeople-interaction-tests" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These two tests cover the part of the model that pyFDS-Evac adds to JuPedSim,
+so they were run first. Each is implemented twice: once with the hazard
+supplied directly, as the standard allows, and once with the hazard read from
+committed FDS output, so that the path from slice file to agent is checked as
+well. Each condition is one run with a single occupant, so no spread over
+seeds is reported.&lt;/p>
+&lt;p>&lt;strong>Test 18, reduced visibility vs walking speed.&lt;/strong> The occupant walks the ISO
+corridor (2 m × 100 m, 1 m exit) once in clear air, which is the control, and
+once under a constant extinction coefficient &lt;em>K&lt;/em>. The reference is the model&amp;rsquo;s
+own correlation, as the standard requires: the ratio of the two egress times
+must equal 1/&lt;em>f&lt;/em>(&lt;em>K&lt;/em>), where &lt;em>f&lt;/em> is the speed factor of the Frantzich–Nilsson
+law (the &lt;code>lund&lt;/code> option; the linear &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> law). The ratio must agree within 8 %, which absorbs the finite spawn box, the
+exit width and the 0.1 s update interval, and every recorded speed factor must
+equal &lt;em>f&lt;/em>(&lt;em>K&lt;/em>) exactly. With &lt;em>K&lt;/em> supplied as a constant field
+(&lt;code>assets/ISO-table21&lt;/code>, &lt;code>tests/test_smoke_speed.py&lt;/code>), the test runs at
+&lt;em>K&lt;/em> = 0.5, 1.0, 3.0, 7.5 and 10 1/m, and at unimpeded speeds of 1.0, 0.75, 0.5
+and 0.25 m/s at &lt;em>K&lt;/em> = 1.0 1/m. With &lt;em>K&lt;/em> read from FDS
+(&lt;code>assets/iso_table21_coupled&lt;/code>, &lt;code>tests/test_iso_table21_coupled.py&lt;/code>), the deck
+prescribes the soot density for &lt;em>K&lt;/em> = 1.0 1/m. The test requires the slice to
+return that value within 1 % and to be non-zero. The second check is a null
+control, because a missing slice reads as clear air. Only the default
+Frantzich–Nilsson law is run in the ISO layout. The &lt;code>fridolf&lt;/code> option (&lt;code>speed_law=&amp;quot;fridolf&amp;quot;&lt;/code>), which
+is reachable only from Python, is checked by the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/#the-tests">S2 corridor scenario&lt;/a>, not by this test.&lt;/p>
+&lt;p>&lt;strong>Test 19, occupant incapacitation by fire or smoke.&lt;/strong> The occupant stands at
+the centre of a 10 m × 10 m room. The time at which the simulated dose reaches
+FED = 1 is compared with a hand calculation of the same dose
+(&lt;code>time_to_fed_threshold_s()&lt;/code>). With the gas supplied directly
+(&lt;code>assets/ISO-table22&lt;/code>, &lt;code>tests/test_fed.py&lt;/code>), the test holds the occupant by
+setting its speed to zero, one mixture is run, and the crossing must fall
+within one time step of the hand calculation. With the gas
+read from FDS (&lt;code>assets/iso_table22_coupled&lt;/code>,
+&lt;code>tests/test_iso_table22_coupled.py&lt;/code>), the occupant is held by a
+pre-evacuation time above 10⁷ s, the method the standard prescribes, and four
+cases are run. They take their
+concentrations from Fig. 8 of the FDS+Evac guide (Korhonen 2021) and separate
+the CO, CO2 and O2 terms. The crossing must fall within two intervals of the
+FED history. The test also checks that each species arrives at its prescribed
+concentration and that the occupant does not move. The standard asks for the
+test to be repeated for each hazardous condition the sub-model has. That is
+done for CO, CO2 and O2 only. The convective heat dose is verified against its
+closed form by the S6 scenario and the Tier A tests, but not in the Test 19
+layout. The optional gases (HCN, NOx and the irritants) are not run in this
+layout.&lt;/p>
+&lt;h2>All verification tests&lt;span class="hx-absolute -hx-mt-20" id="all-verification-tests">&lt;/span>
+&lt;a href="#all-verification-tests" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&amp;ldquo;Not yet run&amp;rdquo; means that the component belongs to pyFDS-Evac, or is
+configured through it, but no test reproduces the ISO setup. &amp;ldquo;Inherited&amp;rdquo; means
+that the component is JuPedSim&amp;rsquo;s movement model, which pyFDS-Evac does not
+change; pyFDS-Evac has not rerun it. &amp;ldquo;Out of scope&amp;rdquo; means that pyFDS-Evac does
+not model the component.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Test&lt;/th>
+&lt;th>Title&lt;/th>
+&lt;th>Status&lt;/th>
+&lt;th>Reason&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>18&lt;/td>
+&lt;td>Reduced visibility vs walking speed&lt;/td>
+&lt;td>Run, passes&lt;/td>
+&lt;td>See above. Frantzich–Nilsson law only.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>19&lt;/td>
+&lt;td>Occupant incapacitation by fire/smoke&lt;/td>
+&lt;td>Run for CO, CO2, O2&lt;/td>
+&lt;td>See above. Heat and optional gases not run in this layout.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>1&lt;/td>
+&lt;td>Pre-evacuation time assignment&lt;/td>
+&lt;td>Partly covered&lt;/td>
+&lt;td>The four distributions are checked against closed-form moments (&lt;code>test_premovement_verif.py&lt;/code>); the ISO room and per-agent start times are not run.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>2&lt;/td>
+&lt;td>Walking speed in a corridor&lt;/td>
+&lt;td>Inherited&lt;/td>
+&lt;td>Movement is JuPedSim&amp;rsquo;s.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>3&lt;/td>
+&lt;td>Walking speed on stairs&lt;/td>
+&lt;td>Out of scope&lt;/td>
+&lt;td>No stairs; the walkable area is one floor.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>4&lt;/td>
+&lt;td>Movement around a corner&lt;/td>
+&lt;td>Inherited&lt;/td>
+&lt;td>Movement is JuPedSim&amp;rsquo;s.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>5&lt;/td>
+&lt;td>Assigned demographics&lt;/td>
+&lt;td>Not yet run&lt;/td>
+&lt;td>Speed distributions (&lt;code>v0_distribution&lt;/code>) are set in pyFDS-Evac; their assignment has not been tested in the ISO setup.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>6&lt;/td>
+&lt;td>Horizontal counter-flows&lt;/td>
+&lt;td>Inherited&lt;/td>
+&lt;td>Movement is JuPedSim&amp;rsquo;s.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>7&lt;/td>
+&lt;td>Overtaking people with movement disabilities&lt;/td>
+&lt;td>Inherited&lt;/td>
+&lt;td>Movement is JuPedSim&amp;rsquo;s; slower agents are set with &lt;code>v0&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>8&lt;/td>
+&lt;td>Exit route allocation&lt;/td>
+&lt;td>Not yet run&lt;/td>
+&lt;td>Exits and journeys are set in the scenario JSON, but rerouting is on by default (&lt;code>--enable-rerouting&lt;/code>), so an allocated route may not be kept; no test reproduces the ISO layout.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>9&lt;/td>
+&lt;td>Dynamic availability of exit&lt;/td>
+&lt;td>Not supported&lt;/td>
+&lt;td>An exit cannot be closed at a set time. Availability changes only when routing refuses a route for its smoke or dose.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>10&lt;/td>
+&lt;td>Congestion in front of a flight of stairs&lt;/td>
+&lt;td>Out of scope&lt;/td>
+&lt;td>No stairs.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>11&lt;/td>
+&lt;td>Maximum flow rates at an opening/exit&lt;/td>
+&lt;td>Not yet run&lt;/td>
+&lt;td>Optional throughput throttling on exits exists (&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput&lt;/code>); it has not been tested in the ISO setup.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>12&lt;/td>
+&lt;td>Stair flow rates&lt;/td>
+&lt;td>Out of scope&lt;/td>
+&lt;td>No stairs.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>13&lt;/td>
+&lt;td>Flow rate, density and walking speed in a corridor&lt;/td>
+&lt;td>Inherited&lt;/td>
+&lt;td>Movement is JuPedSim&amp;rsquo;s.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>14&lt;/td>
+&lt;td>Group behaviour&lt;/td>
+&lt;td>Out of scope&lt;/td>
+&lt;td>Groups are not modelled.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>15&lt;/td>
+&lt;td>Social influence on exit choice&lt;/td>
+&lt;td>Out of scope&lt;/td>
+&lt;td>Herding is not modelled (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>16&lt;/td>
+&lt;td>Affiliation to familiar exits&lt;/td>
+&lt;td>Not yet run&lt;/td>
+&lt;td>Familiarity and the &lt;code>entrance&lt;/code> key exist; whether they meet the test&amp;rsquo;s criterion has not been checked.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>17&lt;/td>
+&lt;td>Route choice based on geometric layout&lt;/td>
+&lt;td>Out of scope&lt;/td>
+&lt;td>The ISO layout has two floors.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>20&lt;/td>
+&lt;td>Lift usage&lt;/td>
+&lt;td>Out of scope&lt;/td>
+&lt;td>Lifts are not modelled.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>21&lt;/td>
+&lt;td>Escalator usage&lt;/td>
+&lt;td>Out of scope&lt;/td>
+&lt;td>Escalators are not modelled.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Movement is inherited from JuPedSim&lt;span class="hx-absolute -hx-mt-20" id="movement-is-inherited-from-jupedsim">&lt;/span>
+&lt;a href="#movement-is-inherited-from-jupedsim" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac does not implement locomotion. Walking, collision avoidance,
+counter-flow and flow through openings are computed by the JuPedSim model
+named in the scenario (&lt;code>model_type&lt;/code>, default &lt;code>CollisionFreeSpeedModel&lt;/code>).
+pyFDS-Evac sets each agent&amp;rsquo;s desired speed and target, and it can cap the
+flow through an exit, but locomotion itself is JuPedSim&amp;rsquo;s. The movement tests are
+therefore inherited, and pyFDS-Evac has not rerun them. JuPedSim reports its
+own status against ISO 20414, RiMEA, NIST TN 1822 and IMO MSC.1/Circ.1533 on
+its &lt;a href="https://pedestriandynamics.org/jupedsim-web-community/" target="_blank" rel="noopener">V&amp;amp;V standards coverage dashboard&lt;/a>,
+including the tests it marks as expected failures. That status applies to the
+models and versions it names, which may differ from the model and version a
+pyFDS-Evac scenario uses.&lt;/p></description></item></channel></rss>
