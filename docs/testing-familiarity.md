@@ -1,281 +1,315 @@
 ---
-title: "Familiarity routing verification (full vs. discovery)"
-linkTitle: "Familiarity routing"
+title: "Familiarity: full map vs discovered map"
+linkTitle: "Familiarity"
 weight: 16
+math: true
 aliases: [/docs/testing-familiarity/, /models/verification/testing-familiarity/]
 ---
 
-## Purpose
+| | |
+|---|---|
+| **Component** | Cognitive map and exploration ([Models › Wayfinding](/models/wayfinding.md#2-the-knowledge-contract)) |
+| **Level** | Coupled: two full runs in clear air (a uniform zero-extinction field), no FDS |
+| **Asset** | `assets/familiarity_test_full`, `assets/familiarity_test_discovery` |
+| **Expected value from** | the plan alone: shortest paths, sight lines to the signs and the wiring rule, computed without pyFDS-Evac |
+| **Status** | criteria 1–5 pass on the 0.1, 0.05 and 0.025 m sight grids; the `run.py` default of 0.25 m does not resolve the walls; criterion 6 fails: the discovery egress time is not grid-converged ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168), [#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)) |
 
-This test case verifies that the `full` and `discovery` agent familiarity
-tiers produce **different evacuation behavior**, not just a config
-flag with no observable effect.
+![Two copies of the same plan side by side. Left, 20 fully familiar agents walk straight to the one door in the partition and out. Right, 20 discovery agents first explore the dead-end rooms in the west, then walk to the door; some turn back at it and patrol. Agents are coloured by the node they are heading for; patrolling agents have a thick ring](/images/verification/familiarity.gif)
 
-- **`full`** agents know the entire building layout from the moment they
-  spawn (trained staff) and take the true shortest route to the exit.
-- **`discovery`** agents start knowing almost nothing (a first-time visitor)
-  and can only route through checkpoints they've either started at or
-  physically passed through. When no known route to an exit exists yet, they
-  head toward the nearest checkpoint they know about but haven't explored,
-  discover what's beyond it on arrival, and repeat until an exit is found.
+*Left: `full`. Right: `discovery`, 0.05 m sight grid. Colour: the node the
+agent is heading for (full: CP3 until it passes the door, then the exit;
+discovery: its current route target). Thick ring: a patrol (`wander`).*
 
-The two configs (`Full`/`Discovery`) are identical except for one field
-(`familiarity` on the spawn distribution) and share the same hand-drawn maze
-geometry and the same paired real-fire FDS deck, so any difference in
-outcome is attributable to the familiarity mechanism itself.
+## What is tested
 
-This test also exercises, indirectly, three engine-level fixes/features that
-were required before familiarity could have *any* observable effect at all
-(see [Background](#background-why-this-test-exists) below).
+Whether `familiarity` changes what an agent knows, and only that. The two
+decks share plan, signs, agents and seed; only the spawn group's
+`familiarity` differs. A `full` agent must know the whole map and take the
+shortest route. A `discovery` agent must start with only what it can see and
+learn a node only when its sign comes into sight. This catches a familiarity
+flag that is ignored, a map seeded with nodes the agent cannot see, a node
+learnt through a wall, and an exploration that does not follow the frontier
+rule.
 
-> **Deck rework (2026-08-10, PR #99).** The decks no longer contain the
-> scripted journey and shortcut-only transitions described below: journeys
-> and transitions are empty, so the stage graph auto-wires (as in
-> `station_fahy`), the second exit was dropped, all four checkpoints carry
-> authored direction-facing signs, and CP3 was moved 0.4 m off the
-> partition wall so an FDS-resolution visibility grid can resolve its
-> sightline. The scripted-tour/shortcut mechanics and the results quoted
-> below document the *original* experiment — kept because the engine fixes
-> it motivated are part of the routing system's history. Discovery on the
-> reworked decks is genuine frontier exploration, not a retrace of a tour.
+## Equation
 
-## Test Setup
+Familiarity is \(p = 1\) (`full`) or \(p = 0\) (`discovery`)
+([Models › Wayfinding §2](/models/wayfinding.md#2-the-knowledge-contract)).
 
-- **Geometry:** hand-drawn maze-like floor plan, 20 m × 18 m, 0.1 m walls,
-  1.2 m doors throughout, generated parametrically by each config folder's
-  `build_geometry.py` (`assets/familiarity_test_full/`,
-  `assets/familiarity_test_discovery/`). One spawn room (bottom-right), one
-  exit alcove (top-left).
-- **Model:** `SocialForceModel`, seed 420, 20 agents (`by_number` spawn, all
-  at once — not flow-spawned).
-- **Fire deck:** `assets/familiarity_test_full/familiarity_test.fds`.
-  Real combustion via `&REAC` (not a prescribed `&INIT`); the FDS walls
-  mirror the walkable geometry exactly so smoke propagates through the same
-  doorways agents use. *Not required for the pure-routing result below* —
-  see [Scope](#scope--caveats).
-- **Checkpoint graph:** the maze has one **scripted tour** —
-  `spawn → CP0 → CP1 → CP2 → CP3 → exit` — walking the doorway at the west
-  wall (CP0), through a floating-wall gap (CP1), a pocket door (CP2), and the
-  door into the exit alcove (CP3). This is the only route either tier is
-  *assigned* at spawn, and it's what a config with rerouting disabled always
-  produces regardless of `familiarity`.
-- **Shortcut edges:** the spawn room and the exit-alcove doorway (CP3) sit in
-  the same open room with no wall between them — a real, walkable shortcut
-  the scripted tour ignores. Two extra graph edges (`CP0→CP3`,
-  `spawn→CP3`, real walking distance ≈12.3 m / ≈11.4 m via JuPedSim's own
-  routing engine) are declared in each config's top-level `transitions`,
-  tagged with a `journey_id` that isn't part of the scripted tour — so they
-  exist only for the rerouting/cognitive-map system to discover, and never
-  affect a plain (non-rerouted) run.
+- **Full.** The agent knows the whole stage graph from t = 0 and takes the
+  shortest path to the exit.
+- **Discovery.** At t = 0 the agent knows its spawn node and each neighbour
+  whose sign is legible from where it stands. Later it learns a neighbour of
+  its current node when that node's sign becomes legible: on arrival at a
+  node, and at each re-evaluation (every 1 s).
+- **Exploration.** With no exit known, it heads for the nearest known node it
+  has not visited (walking distance). With none left, it patrols the nodes it
+  knows (`wander`).
 
-## What's Being Verified
+**Legibility.** pyFDS-Evac hands the signs to
+[fdsvismap](https://github.com/FireDynamics/fdsvismap), the implementation of
+the waypoint method of Börger, Belt and Arnold (2024,
+[doi:10.1016/j.firesaf.2024.104269](https://doi.org/10.1016/j.firesaf.2024.104269)).
+In clear air its rule reads: a sign at \(s\) facing the compass bearing
+\(\alpha\), with \(\hat n = (\sin\alpha, \cos\alpha)\), is legible from \(p\)
+when the sight line \(p\)–\(s\) stays in the walkable area and
 
-1. **`full` finds and uses the shortcut** — with its complete graph
-   knowledge, a `full` agent's opening route choice at spawn already takes
-   `spawn→CP3→exit`, so no switch is recorded: in the run on `7a3617d` all
-   20 agents pass CP3 and none passes CP1. (Earlier versions reached the
-   same route through a `better_path` switch at t ≈ 0.)
-2. **`discovery` explores instead of knowing** — a `discovery` agent starts
-   knowing only its spawn's one declared neighbor (CP0). With no exit
-   reachable in its own knowledge yet, it heads to the nearest known-but-
-   unvisited checkpoint (frontier exploration, `reason="explore"`),
-   physically arrives, learns what's beyond it, and repeats. For this
-   maze's specific distances, the nearest unexplored checkpoint at every
-   step happens to be the next stop on the original scripted tour (e.g. from
-   CP0, the CP1 detour at ~6.5 m is closer than the CP3 shortcut at
-   ~12.3 m) — so `discovery` retraces the full scripted tour, never
-   discovering the shortcut before it reaches the exit anyway.
-3. **The two tiers produce measurably different outcomes** — not just
-   different internal state, but different total evacuation time.
+$$
+\hat n\cdot(p - s) \;\ge\; \frac{|p - s|^2}{V_{\max}}, \qquad V_{\max} = 30\ \text{m}.
+$$
 
-## Background: why this test exists
+The view-angle factor is \(\hat n\cdot(p-s)/|p-s|\). fdsvismap caps the
+reading distance at \(V_{\max}\) before it multiplies by that factor, so the
+legible region is a disc of diameter 30 m in front of the sign. Capping after
+the factor would give a half-disc of radius 30 m; on this plan both orders give
+the same predictions (the script checks both). \(V_{\max}\) is the default of
+`--max-sign-distance`, a reading limit, not a measured distance. A sign
+without a bearing (here the exit's) needs only \(|p - s| \le V_{\max}\).
 
-Two independent bugs meant `familiarity` had *no effect whatsoever* before
-this work, on any scenario:
+**Stage graph.** With no transitions in the deck, the graph is wired
+automatically. With \(d\) the shortest walkable path between node centres, the
+edge \(u \to v\) from a spawn area or checkpoint to a checkpoint or exit is
+dropped when some other checkpoint \(m\) lies on the way:
 
-- **`journeys_v2` schema mismatch.** The web editor saves drawn routes as
-  `journeys_v2`; the simulation loader only ever read the legacy `journeys`
-  field. Editor-drawn routes were silently dropped and the scenario fell
-  back to auto-routing. Fixed by migrating `journeys_v2` → legacy
-  `journeys`/`transitions` in `load_scenario`.
-- **`familiarity` dropped before reaching agents.** `_process_distributions`
-  rebuilt each distribution's parameters from a fixed allowlist that didn't
-  include `familiarity`, so every agent was silently treated as `full`
-  regardless of what the config said. Fixed by adding it to the allowlist
-  and propagating it onto each spawned agent's path state.
+$$
+d(u,m) + d(m,v) \;\le\; 1.05\, d(u,v).
+$$
 
-And even with both fixed, the routing engine had no way to *act* on a
-`full` agent's superior knowledge in a single-exit scenario: rerouting only
-ever compared *which exit* to head for, never *which path* to a fixed exit.
-Two additions closed that gap:
+If every edge of \(u\) is dropped, the nearest target is kept.
 
-- `nearest_frontier_target` (frontier exploration) for the "no route to an
-  exit known yet" case.
-- Same-exit path-cost comparison in `evaluate_and_reroute`
-  (`reason="better_path"`) so an agent can switch onto a cheaper path to the
-  exit it's already assigned to, not just a different exit.
+**Reference time.** A path of length *L* walked at the desired speed takes
+\(t_{\text{ref}} = L / v_0\), with \(v_0\) = 1.3 m/s. It is not a bound:
+agents pushed by neighbours walk faster than \(v_0\).
 
-## Method
+## Setup
 
-1. Load both configs (`assets/familiarity_test_full`,
-   `assets/familiarity_test_discovery`) — identical except `familiarity`.
-2. Run each with rerouting enabled (default on) and route-history collection
-   turned on.
-3. Compare total evacuation time and inspect `route_history` for which
-   reroute reasons fired for each tier.
+![Plan of the 20 by 18 m floor: spawn room in the south-east, a partition with one door below the exit area, CP3 just behind the door, dead-end rooms in the west with CP1 and CP2, the stage-graph edges, the signs as arrows, the full agents' shortest path and the discovery agents' predicted tour](/images/verification/familiarity_setup.png)
 
-## Directory Contents
+- **Plan:** 20 × 18 m, 0.1 m walls, 1.2 m doors. The partition
+  (y = 13.0–13.1 m) has one door (x = 17.0–18.2 m); CP3 is the box just north
+  of it (y = 13.22–13.77 m). The exit is in the north-west corner. The west
+  rooms (CP1, CP2) hold no exit.
+- **Signs:** CP0 and CP1 face east, CP2 north, CP3 south; the exit's sign is
+  synthesised at its centre, without a bearing.
+- **Agents:** 20, all at t = 0 in the spawn room; Social Force model,
+  \(v_0\) = 1.3 m/s, radius 0.2 m, seed 420; rerouting on, re-evaluation
+  every 1 s.
+- **Runs:** clear air (no `--fds-dir`). `full` once. `discovery` on sight
+  grids of 0.25, 0.1, 0.05 and 0.025 m; 0.05 m, two cells across a wall, is
+  the reference. Each run records every change of every agent's map.
 
-```
-assets/familiarity_test_full/
-├── config.json          — JuPedSim scenario: exit, four signed checkpoints,
-│                           distribution (familiarity: "full"); journeys and
-│                           transitions empty, so the stage graph auto-wires
-├── geometry.wkt          — Walkable area (Shapely WKT), matches the FDS deck
-├── build_geometry.py     — Parametric geometry generator (re-run to reshape)
-├── layout_preview.png    — Rendered floor plan (green=spawn, red=exit)
-└── familiarity_test.fds  — FDS input, real &REAC combustion; walls mirror
-                             geometry.wkt so smoke propagates through the
-                             same doorways agents use. Not run/committed
-                             here — see Scope for what does and doesn't
-                             need it.
+## Expected
 
-assets/familiarity_test_discovery/
-└── (same five files; config.json differs only in familiarity: "discovery")
+All from the plan, computed by the figure script with its own
+visibility-graph shortest paths, the legibility rule and the wiring rule.
 
-tests/test_familiarity_routing.py     — Unit tests for shortest_path_to,
-                                          nearest_frontier_target, and the
-                                          better_path/explore reroute branches
-```
+| Quantity | Value | From |
+|---|---|---|
+| stage graph | 6 nodes, 11 edges (the run log prints `nodes=6 edges=11`) | wiring rule |
+| neighbours of the spawn | CP0, CP3 | wiring rule; the exit is dropped because CP3 lies on the way |
+| full: map at t = 0 | all 6 nodes and 11 edges | \(p = 1\) |
+| full: route | S → CP3 → exit for all 20; nobody in CP0–CP2 | the partition has one door |
+| full: shortest path, spawn centre to exit | 27.4 m; \(t_{\text{ref}}\) = 21.1 s | shortest path |
+| discovery: map at t = 0 | spawn, CP0, CP3 (3 of 6 nodes) | CP0's and CP3's signs are legible from the spawn centre; the exit is not a neighbour |
+| discovery: first target | CP0, for all 20 | nearest frontier: CP0 3.2 m, CP3 11.8 m |
+| discovery: tour | CP0 → CP1 → CP2 → CP3 → exit | from CP0: CP1 6.5 m vs CP3 12.7 m; from CP1: CP2 4.0 m vs CP3 18.5 m; from CP2: CP3 only |
+| discovery: tour length | 52.0 m (1.9 × full); \(t_{\text{ref}}\) = 40.0 s | shortest path along the tour |
+| exit sign seen from CP3's door | first legible at y = 12.96–13.08 m, for agent centres 0.2 m clear of the jambs (x = 17.2–18.0 m) | the west jamb blocks the sight line |
 
-## How to Run
+The last row matters. Arrival at a stage registers within 0.7 m of a random
+point in its box
+([#69](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69)), so
+arrival at CP3 can register from y = 12.52 m, still south of the door. There
+the exit sign is behind the jamb, and arriving teaches nothing. If the agent
+has stepped past the jamb by its next re-evaluation, it sees the exit and
+leaves. If not, it has no frontier left and starts a patrol. The plan cannot
+say which agents do what; the criteria test that each decision matches what
+the agent could see.
 
-CLI (rerouting is on by default; shown explicitly for clarity):
+![Zoom on CP3's door: the partition with its 1.2 m door, the CP3 box north of it, the dashed region within 0.7 m of the box where arrival can register, reaching south of the door, the green line above which the exit sign is legible, with its grid tolerance band, and the positions of the patrol decisions, all at or below that line](/images/verification/familiarity_door.png)
+
+## Result
+
+![Walked paths of the 20 agents on the two plans, coloured by the node each agent is heading for, patrols dashed. Full agents go straight to CP3 and the exit; discovery agents walk CP0, CP1, CP2, back through CP0 to CP3 and the exit; seven turn back at CP3's door and patrol](/images/verification/familiarity_paths.png)
+
+Full agents never enter the west rooms. Discovery agents all explore them
+first, as predicted. The dashed legs are patrols: agents that turned back at
+CP3's door.
+
+![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery mostly the predicted tour, two skipping CP2 because its sign was hidden, and three to seven turning back at CP3](/images/verification/familiarity_egress.png)
+
+| Check (0.05 m grid) | Expected | Simulated |
+|---|---|---|
+| full: map at t = 0; later changes | 6 nodes, 11 edges; 0 | 20 / 20; 0 |
+| full: agents via CP3 only; route changes | 20 / 20; 0 | 20 / 20; 0 |
+| full: walked / shortest path | ≥ 1 | 1.03–1.14 |
+| full: first agent out (sanity check) | near \(t_{\text{ref}}\) = 21.1 s | 20.3 s |
+| full: last agent out | no reference | 33.9 s; the door (y = 13.05 m) passes 20 agents in 7.7–21.3 s, 1.40 persons/s or 1.17 persons/(s·m) of door width |
+| discovery: map at t = 0 | {S, CP0, CP3} | 20 / 20 |
+| discovery: first target | CP0, 20 / 20 | 20 / 20 |
+| discovery: nodes learnt later | each a neighbour of a known node, its sign in sight | 59 of 59 |
+| discovery: tour up to CP3 | CP0 → CP1 → CP2 → CP3 where CP2's sign is legible at CP1 | 18 / 20; agents 9 and 12 reach CP1 behind the wall stub, where CP2's sign is hidden, and go to CP3 first |
+| discovery: patrols started with the exit in sight | 0 | 0 of 21; those at CP3 at y = 12.68–13.01 m |
+| discovery: first agent out (sanity check) | near \(t_{\text{ref}}\) = 40.0 s | 46.7 s |
+| discovery: last agent out | no reference | 158.5 s; 7 agents turned back at CP3 |
+
+On other grids:
+
+| Sight grid | Cells across a 0.1 m wall | Last out | Turned back at CP3 | Last out, never turned back |
+|---|---|---|---|---|
+| 0.25 m | 0 | 88.5 s | 0 | 88.5 s |
+| 0.1 m | 1 | 138.2 s | 3 | 83.6 s |
+| 0.05 m | 2 | 158.5 s | 7 | 95.7 s |
+| 0.025 m | 4 | 200.7 s | 4 | 84.5 s |
+
+The agents that never turn back are out by 84–96 s on every grid. The grid
+dependence is the turn-back at CP3
+([#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)). At
+0.25 m no cell centre falls inside the walls, so the sight grid sees through
+them: agents learn CP2 from the next room and the exit from south of the
+partition, and nobody turns back.
+
+## Pass criteria
+
+**Grid tolerance.** The sight grid moves the edge of the legible region. From
+the code of `VisibilityModel.clear_air` and fdsvismap 0.2.1, each of four
+errors shifts a sight line sideways by at most:
+
+| Source | Shift, at most |
+|---|---|
+| the agent's position snaps to the nearest cell centre | \(c\sqrt2/2\) |
+| the sign snaps to the nearest cell centre | \(c\sqrt2/2\) |
+| a wall cell blocks when its centre is outside the walkable area | \(c/2\) |
+| rays are anti-aliased, which marks cells up to one cell beside the line | \(c\) |
+
+Their sum is \(T = c(\sqrt2 + 3/2) \approx 2.9\,c\): 0.15 m at
+*c* = 0.05 m. This is a first-order estimate for this plan, not a general
+bound: a shift at the sign reaches the agent scaled by (agent to wall) /
+(sign to wall), which is small here (the jamb of CP3's door is within 1 m
+of the agents, the exit sign 16.5 m away). At 0.1 m, *T* = 0.29 m, about
+three wall thicknesses, so a pass there is weaker evidence than at 0.05 m. A decision within *T* of the edge cannot be judged on this grid.
+So a node counts as *hidden* only if its sign is illegible from every point
+within *T* of the agent, and as *in sight* only if it is legible from every
+such point. The script samples that disc at its centre and at 48 points on
+three rings.
+
+**Precondition.** The grid resolves the walls: at least one cell centre lies
+inside each 0.1 m wall. At 0.25 m it does not, and the criteria below are not
+evaluated; there, with no tolerance, 33 learnt nodes had their sign hidden in
+exact geometry (13 of them CP2, learnt from the next room).
+
+1. **Full.** Every full agent knows all 6 nodes and the 11 wired edges at
+   t = 0 and learns nothing later; every trajectory enters CP3's box and none
+   of CP0–CP2's; no route changes. Counts, no tolerance.
+2. **Discovery start.** Every discovery agent's map at t = 0 is exactly
+   {S, CP0, CP3}, and its first target is CP0. Counts.
+3. **Learning.** Every node added to a map after t = 0 is the head of a wired
+   edge from a node already known, and its sign is not hidden from the
+   agent's position at that time. The rule asks for a neighbour of the
+   agent's current node; the check accepts any known node, so it is a
+   necessary condition only.
+4. **Tour.** Each agent explores CP0 → CP1 → CP2 → CP3, or skips CP2 only
+   where CP2's sign was not in sight when it chose CP3.
+5. **No patrol in sight of the exit.** No `wander` decision is taken where
+   the exit sign is in sight. This checks that a patrol is consistent with
+   what the agent could see. It does not say that turning back at the only
+   door is right; that is #250.
+6. **Grid convergence of the discovery egress time.** The last agent out on
+   the 0.05 and 0.025 m grids differs by at most 5 s. Halving the cell moves
+   each sight edge by at most *T* = 0.15 m, which an agent at 1.3 m/s walks
+   in about 0.1 s. So each of the 5 decisions of the tour may move by at most
+   one re-evaluation (1 s).
+
+| Grid | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| 0.1 m | pass | pass | pass | pass (2 skips explained) | pass | – |
+| 0.05 m | pass | pass | pass | pass (2 skips explained) | pass | **fails**: 158.5 vs 200.7 s |
+| 0.025 m | pass | pass | pass | pass (2 skips explained) | pass | – |
+
+With no tolerance (*T* = 0), the results show how close to the edge some
+decisions fall. Criterion 3 flags 2 learnt nodes at 0.1 m and 1 at 0.05 m.
+Criterion 5 flags 1 patrol at 0.1 m and 1 at 0.05 m. Criterion 4 is
+unchanged. Each flag lies within 0.04 m of the edge of the legible region
+(the exit sign at y ≈ 13.01 m in CP3's door, CP2's sign near CP1), well
+inside *T*: there the grid decides, and exact geometry cannot overrule it.
+
+## Run it yourself
+
+No FDS is needed. `scripts/verification/familiarity_run.py` takes the same
+arguments as `run.py` and also writes each agent's map history. Run each deck
+in its own process:
 
 ```bash
-uv run run.py --scenario assets/familiarity_test_full \
-  --enable-rerouting --reroute-interval 1 \
-  --output-route-history results/familiarity_full_routes.csv \
-  --seed 420
-
-uv run run.py --scenario assets/familiarity_test_discovery \
-  --enable-rerouting --reroute-interval 1 \
-  --output-route-history results/familiarity_discovery_routes.csv \
-  --seed 420
+R=scripts/verification/familiarity_run.py
+uv run python $R --scenario assets/familiarity_test_full --seed 420 \
+  --output-route-history <out>/full/routes.csv \
+  --output-sqlite <out>/full/run.sqlite \
+  --output-cognitive-map <out>/full/cognitive_map.csv --cleanup
+for c in 0.25 0.1 0.05 0.025; do
+  d=<out>/discovery_cell$c
+  uv run python $R --scenario assets/familiarity_test_discovery --seed 420 \
+    --vis-cell-size $c --output-route-history $d/routes.csv \
+    --output-sqlite $d/run.sqlite --output-cognitive-map $d/cognitive_map.csv \
+    --cleanup
+done
+uv run python scripts/verification/familiarity_figures.py --data <out>
 ```
 
-Or from the webapp: pick the scenario in the sidebar, leave `Enable
-rerouting` checked (default), and run.
+Each run takes seconds. The script prints every number on this page. The
+runs used here (main at `9bd5c28`, macOS arm64) are in the project's data
+folder, `fds-evac-data/familiarity_test_discovery/evac/`. The map histories
+come from reruns whose trajectories and route decisions are identical to the
+stored runs.
 
-No `--fds-dir`/`--vis-cache` needed for the result below — the divergence is
-purely distance-based (see [Scope](#scope--caveats)).
+Reruns on the same machine reproduce these numbers to the last digit. Across
+platforms, or with other runs in the same process, they need not
+([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198),
+[#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)); the
+tests on generated worlds (`tests/test_generated_worlds.py`) therefore
+assert invariants, not trajectories.
 
-## Results / Pass Criteria
+`scripts/animate_cognitive_map.py` turns the map history of one agent into a
+movie.
 
-> **Measured on main at `7a3617d`.** The `discovery` tier gets clear-air
-> sight gating on the default 0.25 m grid, and its time depends on that grid
-> (see [Wayfinding §7](wayfinding.md#7-full-versus-discovery)).
+## Limits
 
-**Status: passing.** Both tiers evacuate all agents; `full` takes the
-shortcut and finishes markedly faster than `discovery`, which retraces the
-scripted maze tour.
-
-| Tier      | Evacuated | Evacuation time | Route switches                    |
-|-----------|-----------|------------------|------------------------------------|
-| full      | 20/20     | **33.9 s**       | 0 (the shortcut is assigned at spawn) |
-| discovery | 20/20     | **88.6 s**       | 100: 80 × `explore`, 20 onto the exit |
-
-Every `discovery` agent explores CP0 → CP1 → CP2 → CP3 in that order: its
-frontier choice happens to coincide with the scripted route at every step
-for this maze's specific checkpoint distances (see
-[What's Being Verified](#whats-being-verified), point 2) — it's still
-routing purely off its own explored knowledge, it just never gets lucky
-enough to find the shortcut before finishing.
-
-Full test suite (`tests/test_familiarity_routing.py` plus the existing
-`tests/test_route_graph.py` / `tests/verification/test_s4_tjunction_reroute.py`)
-passes with no regressions.
-
-## Scope / Caveats
-
-- **The scenario is authored to exhibit this behavior**, not automatically
-  discovering it on arbitrary geometry. The shortcut edges are hand-added to
-  the config; a checkpoint graph with only one possible route (or a
-  single-hop map with nothing to explore) will make `full` and `discovery`
-  behave identically regardless of the underlying mechanism.
-- **This result doesn't need the fire deck.** `familiarity_test.fds` exists
-  and is geometrically paired with this maze for a follow-up smoke/toxicity-
-  driven variant (discovery agents losing sight of exits through smoke via
-  `--vis-cache`).
-- **The tiers limit topology, not perception of smoke.** A `discovery` agent is
-  ignorant of the *building* — it routes over `cognitive_subgraph` and learns
-  nodes through `VisibilityModel`, which is genuinely perception-limited. It is
-  not ignorant of the *smoke field*: to choose among the exits it does know it
-  integrates `tau = K_ave * L_remaining` over the whole remaining route,
-  including legs it has never visited, and (with `anticipate = True` and
-  `foresight_horizon_s = inf`) at times that have not happened. The extinction
-  sampler is global and the cognitive map never touches it. So the results on
-  this page — which are purely distance-based and run in clear air — are
-  unaffected, and so is every result about map growth, exploration order and
-  wander behaviour. What must **not** be claimed from this test, or from any
-  discovery run, is that a discovery agent's *route choice* is
-  perception-limited. It is an optimality bound over the agent's known
-  subgraph. See
-  [#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125) and
-  [route-cost-gate.md](route-cost-gate.md#route-choice-is-an-optimality-bound-not-a-perception-limited-model).
-- On a tie (two frontier candidates equidistant from a discovery agent), the
-  choice is deterministic (lexicographically-first checkpoint ID), not
-  randomized per agent — every discovery agent facing an identical tie makes
-  the identical choice.
-
-## Observing the map from outside: `collect_cognitive_map_history`
-
-The cognitive map is built and grown inside `run_scenario`, so until recently
-the only way to inspect it was to re-implement the expansion against a graph
-built the same way — which tests the re-implementation, not the engine's call
-sites, and those call sites are where the bugs above actually lived.
-
-`run_scenario(..., collect_cognitive_map_history=True)` returns
-`ScenarioResult.cognitive_map_history`: one row each time an agent's map
-changes, with `time_s`, `agent_id`, `familiarity`, `known_nodes` and
-`known_edges`. Maps only ever grow, so recording changes rather than every
-timestep keeps a crowd-scale run cheap while losing nothing.
-
-```python
-result = run_scenario(scenario, seed=420, vis_model=vis,
-                      collect_cognitive_map_history=True)
-for event in result.cognitive_map_history:
-    print(event["time_s"], len(event["known_nodes"]))
-```
-
-`scripts/animate_cognitive_map.py` turns that history into a movie of one agent
-walking with its known nodes highlighted, and authors inward-facing sign angles
-for a deck that has none.
-
-**Perception needs a visibility model.** With `vis_model=None`,
-`cognitive_map._expand_visible` returns immediately, so a discovery agent's map
-grows only when it physically arrives somewhere (`expand_on_arrival`). On a deck
-where the agent walks straight from spawn to an exit, that means it never grows
-at all — see the "blind agent" issue in the tracker. A clear-air stand-in
-(line of sight against the walkable polygon plus the sign's readable half-plane)
-is enough to exercise the wiring without FDS output; the test suite and the
-animation script each carry one.
-
-## Clear-air visibility without an FDS run
-
-`VisibilityModel.clear_air(walkable, sign_descriptors, cell_size_m=...)` builds a
-visibility model from geometry alone: fdsvismap's own ray casting, view angle and
-`max_vis` handling, over a uniform zero extinction field. It exists because
-`vis_model=None` silently disables perception — a discovery agent's map then
-never grows — and because five separate approximations of fdsvismap had
-accumulated in this repo, none of them applying the view angle.
-
-**Resolution is a real parameter.** A cell blocks sight when its centre lies
-outside the walkable polygon, so a wall thinner than one cell disappears and
-sight passes through it — the same property an FDS mesh has. At the 0.5 m
-default the ~0.4 m walls of `assets/blind_spawn_discovery` vanish entirely and
-occlusion tests silently stop testing anything; 0.25 m resolves them. Cost grows
-as the inverse square. Pick it below the thinnest wall that must block.
-
-This requires the fdsvismap branch adding `set_grid` / `set_uniform_extco`
-(FireDynamics/fdsvismap#41); `pyproject.toml` pins it until that is released.
+- **The discovery egress time is not converged in the grid**
+  ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)), and
+  criterion 6 fails. The cause is agents turning back at the door of the
+  only exit
+  ([#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)),
+  because arrival registers before the door
+  ([#69](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69)). Do not
+  quote a discovery egress time without its grid.
+- **Grid.** `run.py` uses a 0.25 m sight grid by default. On this deck it
+  sees through every wall. Pass `--vis-cell-size 0.05` for the discovery
+  deck; a warning for grids coarser than the walls is proposed in
+  [#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168).
+- **No reference for the egress times.** The full run's last agent is out at
+  33.9 s. Its door passes 1.40 persons/s (1.17 persons/(s·m) of the 1.2 m
+  door), measured where the agents cross the door's mid-line. No
+  hand-calculated door flow is compared here.
+- **One exit, clear air.** Choosing between several known exits, and learning
+  through smoke, are not tested here. For the bearing of a sign see
+  `tests/test_exit_visibility_alpha.py`; smoke-limited learning has no test
+  yet ([#22](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/22)).
+  The paired FDS deck has slices at 2.0 and 1.0 m only, not at the 1.6 m
+  sampling height; it would need them before a smoke variant is run.
+- **Route choice is not perception-limited.** Among the exits it knows, a
+  discovery agent prices smoke over legs it has never seen
+  ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
+  In clear air this changes nothing here.
+- **Labels.** `routes.csv` records the step onto the exit with reason
+  `smoke_reroute`, also in clear air: every change of exit gets that label
+  ([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)).
+- **Not yet an automated test.** The checks run in the figure script on the
+  stored output. `scripts/golden_rerouting.py` records these runs, the grid
+  sweep included, as golden output, and `tests/test_rerouting_golden.py`
+  pins route decisions on these decks under synthetic smoke; both are
+  regression checks, not verification.
+- **History.** Before
+  [#99](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/99) the deck
+  had a scripted tour, hand-added shortcut edges and a second exit. The
+  talk's 35.1 s and 75.1 s, quoted on
+  [Models › Wayfinding](/models/wayfinding.md), come from that version and
+  are not comparable.
