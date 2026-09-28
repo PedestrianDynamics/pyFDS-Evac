@@ -36,7 +36,7 @@ The model descriptions, usage and verification live on the documentation site:
 - [Fractional effective dose](https://pedestriandynamics.org/pyFDS-Evac/models/fed/), including heat dose and irritant slowdown
 - [Dynamic route rerouting](https://pedestriandynamics.org/pyFDS-Evac/models/routing/)
 - [Wayfinding](https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/)
-- [Verification suite](https://pedestriandynamics.org/pyFDS-Evac/models/verification/)
+- [Verification suite](https://pedestriandynamics.org/pyFDS-Evac/verification/)
 
 ## Talks
 

@@ -2,7 +2,7 @@
 title: "Familiarity routing verification (full vs. discovery)"
 linkTitle: "Familiarity routing"
 weight: 16
-aliases: [/docs/testing-familiarity/]
+aliases: [/docs/testing-familiarity/, /models/verification/testing-familiarity/]
 ---
 
 ## Purpose

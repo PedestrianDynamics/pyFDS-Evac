@@ -15,7 +15,7 @@ and defaults can change between commits. A result from pyFDS-Evac is a
 research result. It is not an assessment of a building.
 
 The evidence that exists is listed on the
-[verification page](https://pedestriandynamics.org/pyFDS-Evac/models/verification/).
+[verification page](https://pedestriandynamics.org/pyFDS-Evac/verification/).
 That evidence is verification (the code does what its equations say), not
 validation (the equations describe how people behave).
 
@@ -166,7 +166,7 @@ found that individual trajectories differ between runs with the same seed,
 while aggregate outcomes (counts and fractions, such as the number of agents
 incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
 and do not compare single trajectories between runs. See the
-[verification page](https://pedestriandynamics.org/pyFDS-Evac/models/verification/).
+[verification page](https://pedestriandynamics.org/pyFDS-Evac/verification/).
 
 ## References
 
