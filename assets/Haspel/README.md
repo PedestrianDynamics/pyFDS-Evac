@@ -43,8 +43,8 @@ A run exists locally at `results/Haspel/probabilistic/seed42/Haspel.sqlite` (not
 
 That gap is not read as "the routing model disagrees with PathFinder". It points at problems in this asset:
 
-**1. Checkpoints are too small for the crowds routed through them (demonstrated cause).**
-All three are 1.6 m² or smaller (1.62, 1.15 and 0.50 m²); the smallest is about one person's standing space, funneling 100–200 agents each. The 26%-stuck number lines up in scale with the Hörsaal group (100 agents) jamming at its 1.15 m² checkpoint. See #132.
+**1. Checkpoints are too small for the crowds routed through them (likely cause, not yet confirmed from trajectories).**
+All three are 1.62 m² or smaller (1.62, 1.15 and 0.50 m²); the smallest is about one person's standing space, funneling 100–200 agents each. The 26%-stuck number lines up in scale with the Hörsaal group (100 agents) jamming at its 1.15 m² checkpoint. See #132.
 
 **2. The smoke field and the building geometry may not line up (possible contributor).**
 The committed `haspel.fds` meshes x 11.25–56.25, y 10.75–40.75 (a 45 × 30 m box); the WKT floor plan spans x 8.48–58.83, y 8.05–40.61. #131 reports the smoke slice of the ~5.4 GB FDS output at `(0,0)`–`(45,30)`; that output is not in the repository, and the reading cannot be reproduced from the committed deck, which uses the WKT frame. Whatever the origin, the mesh does not cover the whole floor plan: `exit_south` (y 8.06–8.43) lies below it and `exit_east` (x 58.18–58.80) beyond it, so agents queuing at either exit are outside the sampled smoke field. The fire ramps linearly to 200 kW (50 kW/m² × 4 m²) at 300 s, about 38 kW at 57 s. No clear-air control run exists, so the smoke's share of the slowdown is not established.
