@@ -80,6 +80,13 @@ class ConstantDistribution(PreMovementDistribution):
         return np.full(n_samples, float(self.a))
 
 
+# gamma/lognormal/weibull: Lovreglio et al. (2019), Fire Saf. J. 105:107-128,
+# doi:10.1016/j.firesaf.2018.12.009, Table 3, Business Cluster 1, seconds;
+# lognormal a from the corrigendum, Fire Saf. J. 108:102829,
+# doi:10.1016/j.firesaf.2019.102829 (the original 381.651 is wrong).
+# Office evacuations (11, 10 of them drills), 4-14 floors, R^2 = 0.55-0.57.
+# uniform: RiMEA 4.1.1 §3.2.2.1 "speedy evacuation" sensitivity scenario.
+# constant: FDS+Evac PRE_MEAN (evac.f90).
 PREMOVEMENT_PRESETS = {
     "gamma": {"a": 1.291, "b": 103.901},
     "lognormal": {"a": 4.586, "b": 0.967},
