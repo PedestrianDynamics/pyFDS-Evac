@@ -214,11 +214,11 @@ covers those as an equation-level check.&lt;/li>
 &lt;li>A uniform field cannot show whether the field is sampled at the agent&amp;rsquo;s
 &lt;em>current&lt;/em> position; that needs a gradient
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24" target="_blank" rel="noopener">#24&lt;/a>).&lt;/li>
-&lt;li>A uniform field also hides which slice height the dose is read from. The
-gas FED currently takes the first slice of each species in the deck (CO at
-0.5 m, CO₂ and O₂ at 2.0 m here), not the one nearest to 1.6 m
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/238" target="_blank" rel="noopener">#238&lt;/a>); every
-slice holds the same values, so the result is unaffected.&lt;/li>
+&lt;li>A uniform field also hides which slice height the dose is read from. That
+is checked separately in a room with CO in layers
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_slice_height.py" target="_blank" rel="noopener">test_fed_slice_height.py&lt;/a>);
+until &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/238" target="_blank" rel="noopener">#238&lt;/a>
+was fixed, the FED read the first slice of each species in the deck.&lt;/li>
 &lt;li>This page is not yet an automated test: the check runs from the figure
 script on the stored output.&lt;/li>
 &lt;/ul></description></item><item><title>Homogeneous heat FED verification</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/</guid><description>
