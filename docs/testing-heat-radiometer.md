@@ -62,8 +62,9 @@ From these definitions:
 | same field, vertical plate | 1/4 |
 | collimated beam, plate facing it | 1 |
 
-A person under a hot layer therefore sits between U/4 and U/2, and only a
-compact source in direct view drives q towards U.
+In the ideal layer field (hot hemisphere above, dark below) a plate gets
+U/2 facing up, U/4 facing sideways and 0 facing down. Only a compact source
+in direct view drives q towards U.
 
 ## Setup
 
@@ -128,9 +129,9 @@ Other checks on the same output:
 
 | Check | Expected | FDS |
 |---|---|---|
-| gauge − radiometer − *h*(*T*_g − 35 °C), all points and times | 0 (Eqs. 22.35–22.36) | ≤ 3.8 × 10⁻⁷ kW/m² |
-| largest q/U at any point and time | ≤ 1 | 0.25 / 0.46 / 0.70 (uniform / layer / burner) |
-| q(+x) + q(−x), largest over points and times, over U | ≤ 1 | 0.50 / 0.49 / 0.73 |
+| gauge − radiometer − *h*(*T*_g − 35 °C), all points, *t* ≥ 1 s | 0 (Eqs. 22.35–22.36) | ≤ 3.8 × 10⁻⁷ kW/m² |
+| largest q/U at any point, *t* ≥ 1 s | ≤ 1 | 0.25 / 0.46 / 0.70 (uniform / layer / burner) |
+| q(+x) + q(−x), largest over points and *t* ≥ 1 s, over U | ≤ 1 | 0.50 / 0.49 / 0.73 |
 | `INTEGRATED INTENSITY` slice against the point device, last step | equal up to interpolation | within 0.9 % (uniform), 2.1 % (layer), 11 % (burner) |
 
 The slice comparison is a one-off check, not part of the script or the
