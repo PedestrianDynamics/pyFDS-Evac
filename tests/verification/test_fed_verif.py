@@ -146,7 +146,7 @@ def test_a2_5_fic_speed_reduction_closed_form_and_clamp():
 
 
 def test_a2_6_probabilistic_incapacitation_reproduces_purser_bands():
-    cfg = TenabilityConfig()  # probabilistic, sigma=0.94, median=1.0
+    cfg = TenabilityConfig(incapacitation_mode="probabilistic")  # sigma 0.94
     rng = random.Random(12345)
     sigma = cfg.susceptibility_sigma
 
@@ -174,7 +174,7 @@ def test_a2_6_deterministic_mode_returns_threshold_exactly():
 
 
 def test_a2_7_threshold_draws_are_seed_reproducible():
-    cfg = TenabilityConfig()
+    cfg = TenabilityConfig(incapacitation_mode="probabilistic")
     first = [sample_incapacitation_threshold(cfg, random.Random(99)) for _ in range(50)]
     second = [
         sample_incapacitation_threshold(cfg, random.Random(99)) for _ in range(50)

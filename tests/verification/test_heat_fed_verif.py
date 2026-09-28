@@ -166,7 +166,9 @@ def test_a3_5_gas_and_heat_threshold_draws_are_independent():
 
     from pyfds_evac.core.fed import sample_incapacitation_threshold
 
-    cfg = TenabilityConfig(heat_incapacitation_mode="probabilistic")
+    cfg = TenabilityConfig(
+        incapacitation_mode="probabilistic", heat_incapacitation_mode="probabilistic"
+    )
     n = 1000
     gas = [
         sample_incapacitation_threshold(cfg, random.Random(i ^ 0x5EED1))
