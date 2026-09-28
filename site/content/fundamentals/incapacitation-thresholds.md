@@ -79,8 +79,8 @@ population (over 65 years of age) or a 1 % fatality level for the average
 population, whereas 16.7 (kW/m²)^4/3·min represents a 50 % probability
 lethal level for the average population". The chapter cites Hockey and Rew
 (1996) and Purser (1997) for its radiant dose relation (refs. [133, 134],
-p. 2381). The probit relations behind
-these figures are in Hockey and Rew, which we have not read.
+p. 2382). Hockey and Rew is a candidate source for probit relations behind
+these figures; we have not read it.
 
 Inference, not a statement of the sources: if the lethal dose is log-normal
 with median 16.7 and 1 % below 10, its log-scale standard deviation is
@@ -97,7 +97,9 @@ With FED = 1 at D = 16.667, the 1 % fatality dose is FED = 0.60. The gas
 dose's σ = 0.94, which the opt-in probabilistic heat mode borrows, would put
 29 % of people below FED = 0.60 instead of 1 %. The heat threshold therefore
 stays deterministic by default. A probit in the natural log of dose with
-slope b gives σ = 1/b, so Hockey and Rew's slopes would settle the value
+slope b gives σ = 1/b. A published probit slope for the endpoint in use
+would settle the value for that endpoint; Hockey and Rew is the source to
+check first
 ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 
 ## Sources
