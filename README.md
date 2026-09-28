@@ -1,5 +1,7 @@
 [![code quality](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/code-quality.yml/badge.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/code-quality.yml)
 [![tests](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml/badge.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml)
+[![docs](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/docs.yml/badge.svg)](https://pedestriandynamics.org/pyFDS-Evac/)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 # pyFDS-Evac
 
@@ -8,18 +10,39 @@ Fire Dynamics Simulator (FDS) coupled evacuation modeling with smoke-speed reduc
 The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
-- Full ISO 13571 FED model (toxic gas dose accumulation)
-- Convective heat FED (ISO TS 13571 eq. 5), accumulated as a dose independent
-  of the gas track -- an agent is incapacitated when either crosses its own
-  threshold, because thermal injury and asphyxiation are different mechanisms
-  and the standard does not sum them. Radiant heat is not modelled, and heat
+- Purser FED model as in the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) guide (toxic gas dose accumulation, up to 12 species)
+- Convective heat FED (Purser, SFPE Handbook Eq. 63.44), opt-in with
+  `--enable-heat-fed` (FDS+Evac has none), accumulated as a dose
+  independent of the gas track -- an agent is incapacitated when either crosses
+  its own threshold; the heat dose is a running total of its own and is never
+  added to the gas FED. Radiant heat is not modelled, and heat
   does not enter route choice. It also does not slow an agent down: unlike
   smoke and irritants, heat has no effect at all until the dose is reached, at
   which point the agent stops.
-- Dynamic smoke-based route rerouting with congestion awareness
+- Dynamic smoke-based route rerouting, with an optional exit-queue term
+  (off by default)
 - Smoke-gated exit availability, and sign visibility for what agents learn (fdsvismap integration)
 - Per-agent cognitive maps with `full` and `discovery` familiarity tiers
 - JuPedSim scenario loading and simulation
+
+## Documentation
+
+The model descriptions, usage and verification live on the documentation site:
+**<https://pedestriandynamics.org/pyFDS-Evac/>**
+
+- [Usage](https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/): CLI flags, post-processing scripts, run-and-plot driver
+- Defaults follow FDS+Evac; see [what changed](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac) and the [changelog](CHANGELOG.md)
+- [Smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/), including FDS data access through `fdsreader`
+- [Fractional effective dose](https://pedestriandynamics.org/pyFDS-Evac/models/fed/), including heat dose and irritant slowdown
+- [Dynamic route rerouting](https://pedestriandynamics.org/pyFDS-Evac/models/routing/)
+- [Wayfinding](https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/)
+- [Verification suite](https://pedestriandynamics.org/pyFDS-Evac/models/verification/)
+
+## Talks
+
+- **A Modular Workflow for Visibility-Aware Evacuation Modelling**, Visibility
+  Seminar 2026, University of Wuppertal, 25 September 2026:
+  [slides](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/)
 
 ## Installation
 
@@ -86,702 +109,50 @@ configured in the browser is identical to the equivalent `run.py`
 invocation. Runs execute on a background thread and stream progress over
 Server-Sent Events; one run is active at a time.
 
-## Smoke-speed model
+## Agent speed and pre-movement
 
-See [docs/smoke-speed-model.md](docs/smoke-speed-model.md) for the full
-model description, configuration, and API reference.
-
-The smoke-speed model uses extinction coefficient `K [1/m]` as the primary
-input. Two speed laws are available, selected via `SmokeSpeedConfig.speed_law`:
-
-| `speed_law` | Model | Reference |
-|-------------|-------|-----------|
-| `"lund"` (default) | Linear: `speed_factor = 1 + β·K/α`, clamped to `[min_speed_factor, 1]` | Frantzich & Nilsson / FDS+Evac |
-| `"fridolf"` | Non-linear: `speed_factor = V / (V + 2)` where `V = C / K` (Jin) | Fridolf et al. (2019) |
-
-The Fridolf law is empirically validated against individual walking-speed
-measurements in smoke-filled tunnels and naturally asymptotes to zero without
-a hard clamp. Select it with `SmokeSpeedConfig(speed_law="fridolf")`;
-`visibility_factor_c` controls the Jin constant (default `3` for reflective
-signs, `8` for light-emitting signs).
-
-**These are library-level fields, not scenario configuration.** `speed_law`,
+**Smoke-speed parameters are library-level fields, not scenario configuration.** `speed_law`,
 `alpha`, `beta`, `min_speed_factor` and `visibility_factor_c` are constructed
 with their defaults by `run_config.py` and are reachable from no CLI flag and
-no scenario JSON key, so a configured run always uses the Lund law with
-`alpha=0.706`, `beta=-0.057`, `min_speed_factor=0.1`. The `routing` block
+no scenario JSON key, so a configured run always uses the Lund law with the
+defaults listed on the [smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters)
+page. The `routing` block
 does accept keys named `alpha`, `beta` and `min_speed_factor` with the same
 defaults, but those parameterise the speed factor used to *estimate travel
 time when pricing a route* — setting them changes what routes cost, not how
 fast agents walk. The same split applies to speed itself: `routing.
-base_speed_m_per_s` (1.3 m/s) is a route-pricing constant, while an agent's
-own `desired_speed` defaults to 1.2 m/s (see below).
-
-## Agent speed and pre-movement
+base_speed_m_per_s` is a route-pricing constant (default on the
+[routing model](https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters)
+page), while an agent's own `v0` defaults to 1.25 m/s (see below).
 
 Each distribution group sets the attributes an agent starts with:
 
 | Key | Default | Effect |
 |-----|---------|--------|
-| `desired_speed` (`v0`) | `1.2` m/s (`0.8` for `SocialForceModel`) | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
-| `desired_speed_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
-| `desired_speed_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
-| `radius` (`radius_std`) | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. Clipped to `[0.1, 1.0]` m. |
-| `use_premovement` | `false` | Delay before the agent starts moving. |
-| `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform`; `premovement_param_a`/`_b` override the presets. |
+| `v0` | `1.25` m/s (FDS+Evac `VEL_MEAN`; 1.2 before), except 0.8 for `SocialForceModel` | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
+| `v0_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
+| `v0_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
+| `radius` | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. With `radius_distribution` = `"gaussian"` and `radius_std`, drawn per agent and clipped to `[0.1, 1.0]` m. |
+| `use_premovement` | constant 10 s when no pre-movement key is set (FDS+Evac `PRE_MEAN`), with a warning; `false` otherwise | Delay before the agent starts moving. |
+| `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform` / `constant`; `premovement_param_a`/`_b` override the presets (gamma/lognormal/weibull presets: Lovreglio et al. 2019, office evacuations; uniform: RiMEA; constant: FDS+Evac `PRE_MEAN`). |
+
+The run reads only the `v0*` keys. `desired_speed`, `desired_speed_distribution`
+and `desired_speed_std` are aliases accepted by `Scenario.set_agent_params()`
+in Python; in a scenario JSON they are silently ignored
+([#143](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/143)).
 
 Pre-movement is implemented by spawning the agent at `v0 = 0` and restoring
 its sampled speed on release. While it waits, the smoke update skips it, so a
 delayed occupant's baseline speed is never degraded by smoke it has not walked
 through, and it starts at full clear-air speed however dense the smoke has
-become around it.
+become around it. The release does not check incapacitation, so an agent
+that reaches its FED threshold while still waiting walks off when its
+pre-movement time ends
+([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)).
 
 For real FDS output, `fdsreader` provides the local extinction field
 via `SliceFieldSampler`. For verification cases such as ISO 20414 Table 21,
 the runner can also apply a constant extinction coefficient directly.
-
-### FDS data access
-
-All FDS slice data is read through a single library:
-
-- **`fdsreader`** — reads raw FDS slice quantities with nearest-neighbor
-  spatial and temporal lookup via `SliceFieldSampler`
-  (`pyfds_evac/core/fds_sampling.py`)
-- Used by both the smoke-speed model (extinction `K [1/m]`) and the FED
-  model (CO, CO2, O2, and optional irritant gases)
-- When a scenario needs both extinction and FED fields from the same FDS
-  case, pass a shared `fdsreader.Simulation` instance to avoid parsing
-  the directory twice (see [FDS sampling API](docs/fds-sampling.md))
-
-Run the ISO Table 21 corridor with a constant extinction coefficient:
-
-```bash
-uv run run.py \
-  --scenario assets/ISO-table21 \
-  --constant-extinction 1.0 \
-  --smoke-update-interval 0.1 \
-  --output-smoke-history /tmp/iso-table21-smoke-history.csv \
-  --cleanup
-```
-
-Run the smoke-speed model against FDS results read through `fdsreader`. The
-repository ships the deck, not its output — the slices are 4.2 MB and the full
-run 54 MB — so run FDS once first:
-
-```bash
-mkdir -p /tmp/iso21 && cd /tmp/iso21 \
-  && fds /path/to/assets/ISO-table21/ISO-table21.fds && cd -   # ~8 min
-
-uv run run.py \
-  --scenario assets/ISO-table21 \
-  --fds-dir /tmp/iso21 \
-  --smoke-update-interval 0.1 \
-  --output-smoke-history /tmp/iso-table21-fds-smoke-history.csv \
-  --cleanup
-```
-
-Inspect the FDS quantities available through `fdsreader`:
-
-```bash
-uv run run.py --inspect-fds --fds-dir /tmp/iso21 --scenario assets/ISO-table21
-```
-
-For a case where the coupling is exercised without running FDS yourself, see
-[`assets/iso_table22_coupled`](assets/iso_table22_coupled/README.md): its output
-is committed (136 kB) and a test reads it on every CI run.
-
-Plot smoke-speed history for a single agent:
-
-```bash
-uv run python scripts/plot_smoke_history.py \
-  --input /tmp/iso-table21-smoke-history.csv \
-  --output /tmp/iso-table21-smoke-history.png \
-  --agent-id 1
-```
-
-Plot aggregate smoke-speed history:
-
-```bash
-uv run python scripts/plot_smoke_history.py \
-  --input /tmp/iso-table21-smoke-history.csv \
-  --output /tmp/iso-table21-smoke-history-aggregate.png
-```
-
-Generate a stable ISO Table 21 sweep artifact under `artifacts/`:
-
-```bash
-uv run python scripts/generate_iso_table21_sweep.py
-```
-
-Figure: ![ISO Table 21 sweep](artifacts/iso-table21-sweep.png)
-
-Generate the FDS+Evac smoke-density vs speed verification plot:
-
-```bash
-uv run python scripts/generate_smoke_density_speed_plot.py
-```
-
-Figure: ![soot_density vs speed](artifacts/smoke-density-vs-speed.png)
-
-
-## FED Model (Fractional Effective Dose)
-
-The FED model implements the full ISO 13571 / Purser formulation as
-described in Section 3.4 of the
-[FDS+Evac Technical Reference and User's Guide](materials/FDS+EVAC_Guide.pdf)
-(Korhonen, 2021).
-
-### Implemented equation (guide Eq. 12)
-
-$$
-\mathrm{FED}_{\mathrm{tot}} = \bigl(\mathrm{FED}_{\mathrm{CO}} + \mathrm{FED}_{\mathrm{CN}} + \mathrm{FED}_{\mathrm{NO_x}} + \mathrm{FLD}_{\mathrm{irr}}\bigr) \times \mathrm{HV}_{\mathrm{CO_2}} + \mathrm{FED}_{\mathrm{O_2}}
-$$
-
-| Term | Guide Eq. | Formula | Input |
-|------|-----------|---------|-------|
-| FED_CO | (13) | $\int 2.764 \times 10^{-5}\, C_{\mathrm{CO}}^{1.036}\, dt$ | CO (ppm) |
-| FED_CN | (14-15) | $\int \bigl(\exp(C_{\mathrm{CN}}/43)/220 - 0.0045\bigr)\, dt$, where $C_{\mathrm{CN}} = C_{\mathrm{HCN}} - C_{\mathrm{NO_2}}$ | HCN, NO2 (ppm) |
-| FED_NOx | (16) | $\int C_{\mathrm{NO_x}}/1500\, dt$, where $C_{\mathrm{NO_x}} = C_{\mathrm{NO}} + C_{\mathrm{NO_2}}$ | NO, NO2 (ppm) |
-| FLD_irr | (17) | $\int \sum_i C_i / F_{\mathrm{FLD},i}\, dt$ | HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde (ppm) |
-| HV_CO2 | (19) | $\exp(0.1903\, C_{\mathrm{CO_2}} + 2.0004)/7.1$ | CO2 (vol %) |
-| FED_O2 | (18) | $\int 1/\exp\bigl(8.13 - 0.54\,(20.9 - C_{\mathrm{O_2}})\bigr)\, dt$ | O2 (vol %) |
-
-Irritant Ct values (ppm·min) from guide Table 2:
-
-| Species | HCl | HBr | HF | SO2 | NO2 | acrolein | formaldehyde |
-|---------|------|------|------|------|------|----------|--------------|
-| F_FLD | 114000 | 114000 | 87000 | 12000 | 1900 | 4500 | 22500 |
-
-Gas species are read from FDS slice outputs via `fdsreader`. Required
-species: CO, CO2, O2. Optional species (HCN, NO, NO2, HCl, HBr, HF,
-SO2, acrolein, formaldehyde) are loaded when available; missing species
-default to 0 and contribute nothing to the FED sum. With only the three
-required species, the model reduces to the original FDS+Evac default
-pathway: `FED_CO * HV_CO2 + FED_O2`.
-
-### Recent additions
-
-The FED model was extended in March 2026 to include all ISO 13571 terms:
-
-- **HCN (hydrogen cyanide) and NO2 (nitrogen dioxide)**: CN-term for narcosis,
-  where NO2 has a protective effect (C_CN = C_HCN - C_NO2)
-- **NO (nitric oxide)**: Added to NOx-term alongside NO2
-- **Multiple irritant gases**: HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde
-  with species-specific Ct thresholds from guide Table 2
-- **O2 hypoxia guard**: The O2 FED term (guide Eq. 18) is suppressed at or
-  above 19.5 % O2 (OSHA safe-air threshold). At ambient conditions (20.9 %)
-  the denominator of Eq. 18 is non-zero, producing a tiny but finite rate that
-  accumulates spuriously over long simulations or when agents sample outside the
-  FDS domain (where O2 defaults to 20.9 %). The guard sets the rate to zero
-  when O2 ≥ 19.5 %, matching the default behaviour in Pathfinder (Thunderhead
-  Engineering).
-
-All new terms are fully tested with constant-exposure unit tests in
-`tests/test_fed.py`.
-
-### Bug fixes (July 2026)
-
-- **O2 hypoxia rate was 60x too slow.** `_o2_hypoxia_rate_per_minute` divided
-  by an extra factor of 60, turning the per-minute rate from guide Eq. 18 into
-  a per-hour rate before it was accumulated on a per-minute clock. Below the
-  19.5 % suppression threshold (a real hypoxic atmosphere, e.g. 0 % O2), this
-  understated incapacitation risk by 60x — 2.6 s of true incapacitation time
-  was reported as ~155 s. Fixed in `pyfds_evac/core/fed.py`; the equation
-  table above and the formula were both corrected to match. Caught while
-  validating a deliberately oxygen-depleted homogeneous-gas test case.
-- **Conflicting `&INIT` records silently zero out prescribed gas
-  concentrations.** FDS resets the *entire* domain's species composition on
-  each `&INIT` record that has no `XB` bounding box, so a second `&INIT`
-  (e.g. one that only sets soot) overwrites an earlier one (e.g. one that
-  sets CO/CO2/O2), leaving those species at 0 with no warning. All species
-  prescribed via `&INIT` in a test deck must go in a single record. This is
-  an FDS input-authoring pitfall, not a pyFDS-Evac bug, but it produced the
-  same symptom as the rate bug above (near-zero toxic gas readings) and is
-  easy to reintroduce, so it's called out here.
-- **The smoke-speed model no longer falls back to FDS's `EXTINCTION`
-  quantity.** `EXTINCTION` and `SOOT EXTINCTION COEFFICIENT` are two
-  unrelated FDS slice quantities, not old/new spellings of the same field:
-  `EXTINCTION` is a 0/1/-1 combustion-suppression flag (FDS User Guide
-  Sec. 22.10.29), while the smoke extinction coefficient K [1/m] is
-  `EXTINCTION COEFFICIENT` (Sec. 22.10.5), recorded by FDS as `SOOT
-  EXTINCTION COEFFICIENT` for the default species. A case lacking the soot
-  slice was silently sampling the combustion flag instead and feeding 0/1/-1
-  into the smoke-speed model as if it were K. `load_slice_sampler` now
-  requires `SOOT EXTINCTION COEFFICIENT` and raises `IndexError` when it's
-  absent, instead of a quiet, meaningless fallback
-  (`pyfds_evac/core/fds_sampling.py`).
-
-### Verification
-
-- Equation-level constant-exposure checks for all ISO 13571 terms are covered in
-  [tests/test_fed.py](tests/test_fed.py)
-- An ISO Table 22 style stationary benchmark is covered with `assets/ISO-table22`,
-  comparing the runtime `FED=1` crossing time against the analytical reference
-
-Generate the ISO Table 22 stationary FED verification figure:
-
-```bash
-uv run python scripts/generate_iso_table22_stationary_plot.py
-```
-
-Figure: ![ISO Table 22 stationary FED verification](artifacts/iso-table22-stationary-fed.png)
-
-### What is not implemented yet
-
-- Thermal FED terms (radiant heat, convective heat)
-- **Height-relative FED and smoke sampling**: gas concentrations and extinction
-  are sampled from a single horizontal FDS slice at a fixed height
-  (`slice_height_m`, default 2.0 m), shared by all agents regardless of their
-  individual heights.  Pathfinder samples at 90 % of each occupant's height,
-  which is more accurate for scenarios with mixed-height populations (children,
-  wheelchair users).  A per-agent sampling height would require either multiple
-  slice outputs at different elevations or 3-D slice data, and is a known
-  approximation of the current model.
-
-### Usage
-
-See [docs/usage.md](docs/usage.md) for the full catalogue of
-`run.py` flags (scenario, FDS coupling, FED, rerouting, tenability)
-and the post-processing scripts. Note: if an agent
-sample lies outside the FDS domain the implementation falls back to
-ambient conditions.
-
-### Tenability: irritant slowdown and incapacitation
-
-On top of the Frantzich–Nilsson extinction–speed law, pyFDS-Evac
-applies two Purser/FDS+Evac rules when a FED model is loaded:
-
-- **FIC-driven slowdown.** Purser's Fractional Irritant
-  Concentration (HCl, HBr, HF, SO2, NO2, acrolein, formaldehyde; see
-  `pyfds_evac.core.fed.default_fic`) multiplies the Frantzich speed
-  by `max(fic_min_factor, 1 − fic_alpha·FIC)`. Defaults:
-  `fic_alpha = 0.7`, `fic_min_factor = 0.3`.
-- **Incapacitation at the FED threshold.** Once cumulative FED crosses
-  an agent's threshold, its target speed is driven to zero for the rest
-  of the run and the agent remains as a static obstacle. Incapacitation
-  is a *population* endpoint (NIST TN 1797 / Purser: ~11 % of occupants
-  by FED 0.3, 50 % by 1, 89 % by 3), so by default each agent draws its
-  own threshold from a log-normal `D_incap = D₅₀·exp(σ·Z)`, `Z ~ N(0,1)`
-  (median `D₅₀ = --fed-threshold = 1`, `σ = --susceptibility-sigma =
-  0.94`), sampled from the run's seed for reproducibility. Pass
-  `--incapacitation-mode deterministic` to make every agent use the same
-  threshold (the legacy uniform rule).
-
-Both rules are enabled by default and can be tuned via CLI flags
-`--fic-alpha`, `--fic-min-factor`, `--fed-threshold`,
-`--incapacitation-mode`, `--susceptibility-sigma`, or turned off
-entirely with `--disable-tenability`. The FED history CSV
-(`--output-fed-history`) gains three extra columns `fic`,
-`fic_speed_factor`, `incapacitated`.
-
-## Dynamic route rerouting
-
-See [docs/routing.md](docs/routing.md) for the full routing model,
-cost formulas, and API reference, and
-[docs/routing-and-signs-notes.md](docs/routing-and-signs-notes.md) for
-working notes on exit choice and where the exit-choice research papers
-disagree with each other.
-
-### How smoke enters route choice
-
-Two models, selected per deck with `routing.cost_model`.
-
-**`"gate"` (default).** One quantity does the whole of the smoke reasoning: the
-route's **optical depth**
-
-```
-tau = K_ave * L
-```
-
-the soot column the agent walks through, with `K_ave` the mean extinction along
-the route polyline and `L` the distance still to walk. A route is refused when
-`tau` exceeds `tau_max` (default 6), Dijkstra weights every edge by its own
-`tau`, and `tau` orders the routes that survive, with travel time breaking ties.
-Path choice and exit choice are therefore one objective. In clear air every
-`tau` is zero, nothing is refused, and the model reduces to nearest-exit.
-
-`tau` is an **exposure** statement, not a sighting distance. The criterion grew
-out of one -- `c / K_ave >= 0.5 * L` rearranges to `K_ave * L <= 2c`, which is
-`tau <= 6` at Jin's `c = 3` -- and FDS+Evac's tier-4 door rule is exactly
-`tau > 6` (`evac.f90:16458, :16463`). But Jin's `S = c / K` is contrast along a
-straight unobstructed line to a sign; integrating `K` around two corners
-measures what you walk through, not what you can see. The two coincide only on a
-straight corridor, and `tau_max` is **not calibrated** against a soot-dose or
-FED-equivalent limit. Jin's constant keeps its proper meaning in the cognitive
-map, where sign legibility is the question being asked.
-
-Refusals are **not remembered**. The criterion is relative to the distance still
-to walk, so it relaxes on approach: smoke that refuses a door at 40 m accepts it
-at 2 m. When every route is refused the agent still has to move, so it takes the
-one with least smoke to walk through and holds it unless a rival's worst stretch
-is clearly milder (`fallback_switch_margin`). Churn is held down by the
-exit-switch anchor, by a stricter budget for a rival exit
-(`tau_return_margin`, 0.8), and by a discount on the current exit's `tau` in the
-sort (`current_exit_discount`, 0.9, FDS+Evac's `FAC_DOOR_OLD2`).
-
-**Measured, with the regression stated.** Ranking on `tau` sends 39 of
-`world100`'s agents to the far clean exit against 12 before, with 9 switches and
-no agent returning to an exit it abandoned -- the outcome the model exists to
-produce. On `l_corridor` it **regressed**: returns to abandoned exits went from
-0 to 51 and then to 34 across 14 agents, with switches 4 -> 74 -> 55 and the
-far-exit share unchanged at about 18. The cause is **not** a currency mismatch
-between the `tau` ordering and the anchor's time fallthrough, which was the
-earlier reading: 29 of the 34 returns go to a route cleaner by more than the
-deadband, and 31 fall in `t = 40-60 s` where the two routes' `tau` genuinely
-cross over. The model is following a field that reverses, and no constant damps
-that -- what is missing is commitment
-([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)).
-See [docs/route-cost-gate.md](docs/route-cost-gate.md#known-limitations).
-
-**This is a departure from FDS+Evac, not a reproduction of it.** The threshold
-`tau > 6` is borrowed with a citation; the *place* it is used is not. In the
-reference's first three tiers the rank is a time or distance norm and smoke is
-only a boolean admission test (`evac.f90:16265, :16354, :16401`), so smoke can
-move a door between tiers but cannot reorder candidates. It ranks on smoke only
-in the tier-4 last resort, over known-or-visible doors, on a bee line, with
-permanent strike-out. Here `tau` is the ordering everywhere, with no memory.
-On `l_corridor` that diverts 18 of 100 agents where the reference criterion
-would send essentially everyone to the near exit -- a prediction reasoned from
-`evac.f90`, not a measured run of it. A `L/d` geometric bias (1.41 near against
-1.27 far on that deck) tilts the criterion about 11 % further in the same
-direction. Both are written up in
-[docs/route-cost-gate.md](docs/route-cost-gate.md#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it).
-
-An optional **clean-exit tier** (`clean_extinction_threshold`, **off by
-default**) prefers exits below an absolute smoke criterion outright, however
-far. It is FDS+Evac's primary door rule, and measured on both reference decks it
-did not redirect anyone while costing monotonicity -- see
-[docs/gate-model-review-notes.md](docs/gate-model-review-notes.md).
-
-Each segment is priced at the time the agent would *arrive* there (`anticipate`,
-`foresight_horizon_s`), using unimpeded speed.
-
-**`"additive"`.** The original model: smoke is a toll per metre walked,
-`effective_length * (1 + w_smoke * k_ave) + w_fed * fed_max`. Both terms scale
-with route length, so a long clean detour pays for its length twice and can
-never win -- which is why the gate exists. Pin it with
-`{"cost_model": "additive", "anticipate": false}`; `anticipate` is independent
-of the model, so the pin needs both.
-
-**FIC does not route** under either model. It drives the Purser slowdown and
-incapacitation only. FIC and the optical-depth gate are driven by the same
-smoke, so routing on both would double-count.
-
-**What this model does not do.** It is not hazard avoidance. On the fires
-measured here the dose veto never comes close to firing -- the largest projected
-FED over a whole `l_corridor` run is 0.0016 against a threshold of 1.0 -- and
-`impassable_extinction_threshold` cannot fire under the gate at all, because it
-is reached only from a rejection reason containing `"visible"` and the gate's
-only reason string starts `tau`. So no smoke rejection bypasses the exit-switch
-anchor at any density. What the gate does is exposure-gated wayfinding.
-
-The model reference is [docs/route-cost-gate.md](docs/route-cost-gate.md);
-provenance and the open questions are in
-[docs/gate-model-review-notes.md](docs/gate-model-review-notes.md).
-`assets/l_corridor` is the deck the model is judged on -- a near exit behind the
-fire and a clean 58 m way round -- and its results are in the sciebo case folder.
-
-### Components
-
-- **StageGraph**: Dijkstra-based shortest-path routing on a graph of
-  stages (distributions, checkpoints, exits)
-- **Route cost evaluation**: Samples extinction (K) along candidate paths
-  to compute smoke exposure (FED terms are supported when a `fed_model`
-  is provided; otherwise only smoke drives ranking)
-- **Dynamic rerouting**: Agents recompute routes at configurable intervals,
-  selecting lower-exposure paths when available
-- **Cognitive-map history**: `run_scenario(collect_cognitive_map_history=True)`
-  records what each agent knows, every time it changes — see
-  [docs/testing-familiarity.md](docs/testing-familiarity.md) and
-  `scripts/animate_cognitive_map.py`
-- **Discovery-world generator**: `scripts/generate_discovery_world.py` produces
-  random test decks (open room, convex obstacles, signed checkpoints, exits
-  optionally hidden from the spawn) for exercising discovery routing; the same
-  decks drive the invariant tests in `tests/test_generated_worlds.py`
-- **Congestion-aware routing**: Optional exit-congestion term (`w_queue`), **off
-  by default** — it scales with a global agent count, so no constant suits every
-  scenario. `assets/station_fahy` opts in at 0.024, calibrated against Fahy
-  Table 2 — see [docs/routing.md](docs/routing.md#why-it-is-opt-in-and-what-0024-means)
-  and `scripts/sweep_queue_weight.py`
-- **Throughput throttling**: Optional exit flux limiting via
-  `enable_throughput_throttling` (default off) and `max_throughput`
-  (default `1.0` agents/s) in scenario config. It admits at most one agent
-  every `1 / max_throughput` seconds and physically holds the rest — unlike
-  the exit capacity `c` in the route cost, which blocks nobody.
-- **Checkpoint dwell and speed zones**: a checkpoint or steering zone may set
-  `waiting_time` (default `0` s; `waiting_time_distribution: "gaussian"` with
-  `waiting_time_std`, default `1` s, floored at `0.1` s) and a multiplicative
-  `speed_factor` (default `1.0`, capped at `3.0`). Where zones overlap the
-  factor furthest from `1.0` wins rather than their product. These are
-  author-declared, not hazard-driven.
-
-### Usage
-
-See [docs/usage.md](docs/usage.md) for the full rerouting CLI
-(`--enable-rerouting`, `--reroute-interval`, `--output-route-history`,
-`--output-route-cost-history`, `--vis-cache`) and the plotting scripts
-that consume the generated route-cost CSVs.
-
-## Visibility-aware routing and cognitive maps
-
-Implements [Spec 008](specs/008-visibility-aware-routing/SPEC.md): sign
-visibility gates what each agent comes to *know*, and per-agent cognitive maps
-carry that knowledge into routing. (The spec's original design also had sign
-visibility reject routes directly; that second gate has since been removed --
-see below.)
-
-### Sign visibility (Phase 1)
-
-Each exit and checkpoint can carry a `"sign"` descriptor in the scenario
-config:
-
-```json
-{
-  "exits": {
-    "exit_A": {
-      "sign": {"x": 0.5, "y": 11.5, "alpha": 90, "c": 3}
-    }
-  }
-}
-```
-
-`alpha` is a compass bearing (degrees from north, clockwise): 90 = sign
-visible from the east, 270 = from the west, 180 = from the south.
-
-Every exit, checkpoint and waypoint gets a sign: nodes without an authored
-`"sign"` get one synthesised at the node's polygon centroid (`c=3`,
-`alpha=None`, i.e. omni-directional). A node is never exempt from
-visibility gating for lack of an authored sign.
-
-At each reevaluation tick the `VisibilityModel` checks whether an agent can see
-a node's sign, using a cached
-[fdsvismap](https://github.com/FireDynamics/fdsvismap) grid.
-
-**Sign legibility decides what an agent *knows*, not whether a route is
-allowed.** A sign it can see admits that node to the agent's cognitive map
-(`cognitive_map.expand_from_visibility`), and the map is what Dijkstra may route
-over -- so an unknown exit is *absent from the graph* rather than
-present-and-vetoed. Route choice does not consult the visibility model at all.
-An earlier version also re-checked sign visibility inside `rank_routes` and
-rejected the route with `rejection_reason="next_node_not_visible"`; that
-double-gated the same criterion, blocked agents who already knew the building,
-and forbade an agent from using an exit it had legitimately learned once the
-sign went out of view. That check and that reason string are gone.
-
-```bash
-# Build or reuse the vismap cache and enable visibility-gated rejection
-uv run run.py \
-  --scenario assets/t_junction \
-  --fds-dir assets/t_junction \
-  --enable-rerouting \
-  --vis-cache assets/t_junction/vismap_cache.npz \
-  --output-route-cost-history route_costs.csv \
-  --cleanup
-```
-
-Under the gate the only rejection reasons a route-cost CSV carries are `tau ...`
-(optical depth over budget), `FED_max ...` (dose over threshold), and either of
-those under a `fallback:` prefix.
-
-#### Which visibility setting am I running?
-
-Sight gating decides how an agent comes to know a node, and the flags choose
-between three different scenarios. Nothing here changes the physics; it changes
-what the agent is allowed to perceive.
-
-| invocation | model | the scenario it means |
-|---|---|---|
-| *(no flags)*, deck has discovery agents | clear air | **no fire.** Agents learn a node by seeing its sign: walls occlude, sign facing and contrast apply |
-| *(no flags)*, every agent `familiarity = 1.0` | none built | agents hold the whole graph from t=0 and never consult it, so building one would cost time and change nothing |
-| `--clear-air-visibility` | clear air, forced | as above, on a deck whose agents are fully familiar -- only useful for comparison runs |
-| `--no-visibility` | none | **not a fire scenario.** The gate is absent, so an agent learns every neighbour of each node it reaches, by contact rather than by sight |
-| `--fds-dir DIR` | none for sight | smoke drives speed reduction and FED, but what an agent can *see* is ungated |
-| `--fds-dir DIR --vis-cache PATH` | smoke | **the coupled run.** Sight gated by that fire's extinction field: smoke hides signs, so the map stops growing |
-| `--vis-cache PATH` (no `--fds-dir`) | clear air, cached | same as the default, with the grid reused between runs |
-
-Rejected combinations:
-
-| combination | why |
-|---|---|
-| `--clear-air-visibility --fds-dir` | claims clear sight while a fire burns -- the one combination that silently produces a wrong answer |
-| `--clear-air-visibility --no-visibility` | contradictory |
-| `--vis-cache` or `--clear-air-visibility` with `--no-enable-rerouting` | a sight gate with nothing to act on |
-
-`--vis-cell-size` sets the grid the scene is rasterised at (default 0.25 m). A
-wall thinner than one cell stops occluding, so keep it below the thinnest wall
-that must block sight.
-
-The three settings are genuinely different agents. Measured on
-`assets/world_100`, one agent, `familiarity = 0`, same seed:
-
-| setting | evacuation | route switches | cognitive map |
-|---|---|---|---|
-| `--no-visibility` | 58.5 s | 0 | learns each node's neighbours on arrival |
-| clear air (default) | 188.8 s | 31, mostly `explore` | grows 3 -> 28 nodes |
-| `--fds-dir` + `--vis-cache` | did not evacuate (400 s cap) | 30, nearly all `wander` | stays at 3 nodes: no sign is legible, so no frontier appears |
-
-#### Diagnostic scripts
-
-```bash
-# Coverage and ASET maps (sign placement validation)
-uv run python scripts/demo_vismap_phase0.py
-
-# With fresh vismap recompute
-uv run python scripts/demo_vismap_phase0.py --no-cache
-```
-
-### Cognitive maps (Phase 2)
-
-Agents have a familiarity tier that controls how much of the building they
-know at the start of the simulation:
-
-| Tier | `familiarity` | Knowledge at spawn | Expansion |
-|------|---------------|--------------------|-----------|
-| Trained staff | `"full"` | Complete stage graph | — |
-| Visitors | `"discovery"` | Spawn node + visible neighbors | On arrival + at reevaluation |
-
-**The tier limits topology, not perception of smoke.** A `discovery` agent does
-not know the building — it routes only over its cognitive subgraph and learns
-nodes through the perception-limited `VisibilityModel`. It *does* know the smoke
-field: to choose among the exits it knows, it integrates `tau = K_ave * L` over
-the whole remaining route, including legs it has never visited, and with
-`anticipate = True` and `foresight_horizon_s = inf` at times that have not
-happened. So route choice is an **optimality bound over the agent's known
-subgraph**, not a behavioural model — map growth, exploration order and wander
-behaviour are unaffected, but nothing here licenses the claim that a discovery
-agent's *route choice* is perception-limited. Open as
-[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125).
-
-Set per distribution group in the scenario config:
-
-```json
-{
-  "distributions": {
-    "visitors": {
-      "parameters": {
-        "familiarity": "discovery"
-      }
-    }
-  }
-}
-```
-
-A deck with discovery agents gets a visibility model either way — from the FDS
-extinction field when `--fds-dir` is given, from clear air otherwise (see the
-table above) — because sight is gated by geometry, sign facing and contrast
-whether or not there is a fire. Running with no model at all is what
-`--no-visibility` asks for. Without a model the perception step adds nothing, so
-a `discovery` agent starts
-out knowing only its spawn node, its `entrance`, and whatever the familiarity
-draw gave it. Graph adjacency is not used as a stand-in for line of sight:
-with no `transitions` declared the graph is auto-wired from every spawn area to
-every unblocked stage, so treating a neighbour as seen would hand most agents
-most of the building's exits at t=0 and make `familiarity` inert.
-
-The tier binds whether or not the scenario defines a journey, and it binds from
-the **first step**: the agent's cognitive map is built at spawn and the exits it
-knows are ranked by the same cost the reroute pass uses, so an agent
-who knows only the front door walks to the front door however far it is. Until
-issue #86 was fixed the opening target was the geometrically nearest exit,
-picked before any map existed, and `familiarity` could only take effect on the
-first reroute. `tests/test_initial_exit_from_cognitive_map.py` pins the
-contract with rerouting off, where the opening choice is the only choice.
-
-Each agent is rooted at its spawn area, and routing ranks every exit reachable
-from there. Rooting it at the assigned exit instead would collapse the ranking
-to that one exit at zero cost, which is what issue #61 did until it was fixed;
-`tests/test_no_journey_routing_origin.py` pins the contract.
-
-Default when the key is absent: `"full"` (backward compatible).
-
-**Discovery expansion rules:**
-
-1. **At spawn** — agent learns its spawn node, its `entrance` if one is set,
-   each exit drawn as known by a scalar `familiarity`, and any adjacent node
-   whose sign is currently visible from the spawn centroid. It then picks its
-   first exit by ranking that map, not by geometry.
-2. **On arrival** — when an agent physically reaches a node, the immediate
-   neighbours whose sign is visible from where it stands are added (all of
-   them when no visibility model is supplied).
-3. **At reevaluation** — adjacent nodes whose sign is visible from the
-   agent's current position are added.
-
-Learning an edge also learns its reverse when the graph has one: knowledge
-of a corridor is bidirectional, so an agent can always retrace its steps
-out of a dead end whose far side shows it nothing new.
-
-Routing (Dijkstra) runs over the agent's known sub-graph only. If no exit
-is reachable in the cognitive map, the agent heads toward the nearest
-known-but-unexplored node instead (a doorway it knows exists but hasn't
-been through) — expanding its knowledge on arrival and re-evaluating from
-there, until an exit becomes known. Reroute events for this show up in
-`route_history` with `reason="explore"`. When every known node has been
-visited and still no exit is reachable, the agent wanders: it patrols the
-nodes it knows in a deterministic rotation (`reason="wander"`), because
-sign legibility depends on position — a leg walked between two known nodes
-can make a sign readable that never was from either node, restarting
-discovery. Once an exit is known, the agent
-also reroutes onto a cheaper *path* to that same exit as its knowledge
-grows, not only when a different exit becomes preferable
-(`reason="better_path"`).
-
-#### Visualising cognitive map evolution
-
-```bash
-# 4-panel figure: spawn → junction → reroute → full baseline
-uv run python scripts/demo_cognitive_map_vis.py
-
-# Without cached vismap (all neighbours assumed visible at spawn)
-uv run python scripts/demo_cognitive_map_vis.py --no-cache
-```
-
-Figure: ![cognitive map evolution](assets/t_junction/cognitive_map_evolution.png)
-
-### Phase 2 verification: familiarity comparison
-
-Two scenario configs differ only in familiarity tier:
-
-| Config | Tier |
-|--------|------|
-| `assets/t_junction/config_full.json` | `familiarity=full` |
-| `assets/t_junction/config_discovery.json` | `familiarity=discovery` |
-
-Run both back-to-back and produce a 3-panel comparison (exit split,
-rejection timeline, evacuation time):
-
-```bash
-uv run python scripts/run_familiarity_comparison.py \
-    --fds-dir assets/t_junction \
-    --vis-cache assets/t_junction/vismap_cache.npz
-```
-
-Outputs: `results/familiarity_comparison/{full,discovery}_route_costs.csv`,
-`results/familiarity_comparison/comparison.png`.
-
-## Verification suite
-
-A two-layer verification suite checks each sub-model against a hand-computable
-reference:
-
-- **Tier A** pins each model *function* (FED, smoke-speed, cognitive map,
-  pre-movement) to a closed form, to machine precision.
-- **Behavioural** scenarios drive the coupling inside `run_scenario` with
-  injected synthetic fields (no FDS run): a corridor for FED lethality (S1) and
-  smoke-speed slowdown (S2), and a T-junction for dynamic rerouting (S4). Each
-  uses a control / treatment / null-field design and asserts both exact wiring
-  (from the per-agent history logs) and aggregate behaviour.
-
-```bash
-uv run pytest tests/verification -m "not slow"   # fast suite
-uv run pytest tests/verification                  # incl. ensemble checks
-```
-
-See [tests/verification/README.md](tests/verification/README.md) for the full
-catalogue and [specs/012-model-verification/SPEC.md](specs/012-model-verification/SPEC.md)
-for the design. The suite already surfaced two engine findings: trajectory-level
-nondeterminism (only aggregate outcomes reproduce under a fixed seed) and a
-rerouting bug under by-number placement
-([issue #21](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21)).
 
 ## Agent scalars for fds-viewer
 
@@ -819,14 +190,14 @@ section-by-section comparison of the FDS+Evac and pyFDS-Evac evacuation
 models (movement, smoke speed, FED, routing), referenced against the
 FDS+Evac guide below and the pyFDS-Evac source.
 
-Reference materials are stored in [`materials/`](materials/), each with a
-short summary alongside the PDF:
+Short summaries are stored in [`materials/`](materials/). The papers
+themselves are linked by DOI and not redistributed here:
 
-- [FDS+Evac Technical Reference and User's Guide](materials/FDS+EVAC_Guide.pdf) — Korhonen (2021). Primary reference for the FED equations (Section 3.4) and smoke-speed model (Section 3.4, Eq. 11).
-- [Boerger et al. (2024)](materials/waypoint_based_visibility.pdf) ([summary](materials/waypoint_based_visibility_summary.md)) — Beer-Lambert integrated extinction along line of sight (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269.
-- [Haensel (2014)](materials/Haensel2014.pdf) ([summary](materials/haensel2014_summary.md)) — Knowledge-based routing and cognitive map framework for evacuation modelling.
-- [Schroder et al. (2020)](materials/Schroder2020.pdf) ([summary](materials/schroder2020_summary.md)) — Waypoint-based visibility and evacuation modeling.
-- [Ronchi et al. (2013)](materials/Ronchi2013.pdf) — FDS+Evac evacuation model validation and verification.
+- FDS+Evac Technical Reference and User's Guide — Korhonen (2021). Primary reference for the FED equations (Section 3.4) and smoke-speed model (Section 3.4, Eq. 11).
+- [Börger, Belt & Arnold (2024)](https://doi.org/10.1016/j.firesaf.2024.104269) ([summary](materials/waypoint_based_visibility_summary.md)) — Beer-Lambert extinction averaged along the line of sight to a sign (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269. Averaging along the walked route, as pyFDS-Evac's route cost does, is our extension.
+- Haensel (2014) ([summary](materials/haensel2014_summary.md)) — Knowledge-based routing and cognitive map framework for evacuation modelling.
+- [Schroder et al. (2020)](https://doi.org/10.1016/j.firesaf.2020.103154) ([summary](materials/schroder2020_summary.md)) — A map representation of the ASET-RSET concept. *Fire Safety Journal*.
+- [Ronchi et al. (2013)](https://doi.org/10.1007/s10694-012-0280-y) — Representation of the impact of smoke on agent walking speeds in evacuation models. *Fire Technology* 49.
 - [evac.f90](materials/evac.f90) — Original FDS+Evac Fortran source for cross-referencing implementation details.
 - [Haghani & Sarvi (2017)](materials/haghani2017_summary.md) — Human exit-choice behaviour under evacuation conditions: literature synthesis.
 - [Haghani & Sarvi (2018)](materials/haghani2018_summary.md) — Herding and route-choice in immersive-VR evacuation experiments.
@@ -837,143 +208,8 @@ short summary alongside the PDF:
 
 Scenario definitions are stored in [`assets/`](assets/).
 [`assets/README.md`](assets/README.md) indexes the folders and the file
-conventions; what each one proves is below.
-
-- **ISO-table21**: **ISO 20414:2020 Table 21** (Test 18, *reduced visibility vs
-  walking speed*) — corridor 2 m x 100 m, one occupant at 1,25 m/s, constant
-  extinction. See [the asset README](assets/ISO-table21/README.md) for the
-  clause-by-clause comparison, including the two places we deviate. Proves the smoke speed reduction law is applied correctly end to end:
-  `test_iso_table21_constant_extinction_matches_expected_time_ratio` runs the
-  scenario clear and then under a `ConstantExtinctionField` at five extinction
-  coefficients (0.5, 1.0, 3.0, 7.5, 10.0 /m), asserting the ratio of evacuation
-  times matches `1 / speed_factor_from_extinction(k)` within 8% and that every
-  recorded `speed_factor` equals the expected one exactly. Doubles as the
-  standard small fixture in `test_progress_callback.py`, `test_webapp.py` and
-  `test_fed.py`, which use it for its size rather than its ISO provenance.
-- **ISO-table22**: **ISO 20414:2020 Table 22** (Test 19, *occupant
-  incapacitation by fire/smoke*) — room 10 m x 10 m x 3 m, one occupant held
-  still by ISO's prescribed pre-evacuation time above 10 000 000 s. See
-  [the asset README](assets/ISO-table22/README.md). The gas field is stubbed, so
-  it verifies the accumulator, not the FDS coupling; the coupled four-case
-  version is [`iso_table22_coupled`](assets/iso_table22_coupled/README.md). One
-  agent with `v0` forced to 0 in a fixed gas concentration; config and geometry only, no deck. Proves the
-  runtime FED accumulator agrees with the closed form:
-  `test_iso_table22_stationary_runtime_matches_analytic_threshold_time` takes
-  the analytic FED=1.0 time from `time_to_fed_threshold_s()` and asserts the
-  observed crossing lands within one timestep of it, that `fed_max >= 1.0`, and
-  that the agent does not evacuate. Holding the gas inputs constant is
-  deliberate; this tests the accumulator, not the gas sampling. Also backs the
-  FED history throttling test.
-- **t_junction**: T-corridor FDS scenario with cable fire, two exits (A open, B smoke-accumulating),
-  200 visitors spawning in the branch; used for visibility-aware routing and cognitive
-  map verification (Spec 008). Includes `config_full.json` and `config_discovery.json`
-  for familiarity-tier comparison. The rerouting mechanism itself is verified by
-  scenario **S4** in
-  [`tests/verification/test_s4_tjunction_reroute.py`](tests/verification/test_s4_tjunction_reroute.py)
-  (control arm and null-field control both record zero switches; smoke forces
-  every agent B→A and never the reverse; reroute latency stays within the
-  configured interval; switch count is reproducible under a fixed seed). Note
-  that S4 builds its own T-corridor via `harness.t_junction_scenario()` with a
-  synthetic smoke field rather than loading this asset, so the mechanism is
-  covered but the deck and config here are not exercised by the suite. This
-  config uses flow spawning deliberately: under by-number placement an agent's
-  route-eval source node is its assigned exit, which makes rerouting degenerate
-  ([issue #21](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21)).
-- **fed_incap_co_2000ppm** / **fed_incap_co_4000ppm** / **fed_incap_co_8000ppm**:
-  FED accumulation and probabilistic-incapacitation validation against a
-  hand-calculated reference (`fed_hand_calc.py`), at three constant CO
-  concentrations (2000/4000/8000 ppm) in a sealed, spatially uniform room —
-  removing gas-transport physics as a variable isolates the FED/incapacitation
-  *pipeline* logic. 100 non-evacuating agents circling a rectangular path, FDS
-  domain split across 4 MPI meshes to confirm gas data is consistent at mesh
-  boundaries. All three concentrations currently match the hand-calc's FED=1.0
-  crossing time to <0.5% (2000 ppm: 782.4 s hand-calc vs 786 s simulated;
-  4000 ppm: 382.3 s vs 384 s; 8000 ppm: 186.6 s vs 187 s). Validated by running
-  the cases and comparing, not by a test in `tests/`. (See the bug fixes above:
-  this suite is what surfaced
-  both the O2 rate bug and the conflicting-`&INIT` FDS pitfall. The earlier
-  `fed_incap_co_v1`, `fed_incap_co_v2` and `fed_incap_co_smol` iterations from
-  the same debugging lineage are no longer tracked.) Full writeup:
-  `docs/testing-homogeneous.md`.
-- **Cognitive Map Memory**: 4x32 m corridor with a side alcove, 20 `discovery`
-  agents. The side exit's sign faces west and is legible only from
-  `y ∈ [12.5, 27.5]` on the centreline — a window that falls out of
-  `view_angle * max_vis >= distance` rather than being tuned, and that
-  `build_geometry.py` recomputes and asserts. Proves the cognitive map does the
-  one thing a visibility query cannot: **remember**. The side exit is unknown at
-  spawn, enters the map on crossing `y=12.5`, and is *still* there at `y=30`
-  where the sign is long unreadable. Persistence is the load-bearing claim —
-  delete the expansion rules and acquisition still appears to work for any agent
-  starting inside the window. A third test closes the loop to routing: a
-  remembered-but-illegible exit must still be routable, which it was not before
-  the visibility consolidation. `scripts/generate_cognitive_map_states.py` renders the
-  three states (unknown / legible now / remembered), and the amber band is the
-  memory made visible. Checked by `tests/test_cognitive_map_memory.py`.
-- **FIC vs FED Speed**: 4x50 m sealed corridor, 30 agents, one exit. The gas is
-  *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 10 ppm) rather
-  than burned, so concentration is constant in space and time and the only
-  variable across runs is which tenability rules are enabled — set from the
-  command line (`--disable-tenability`, `--fic-alpha 0`, or the default).
-  Separates the two rules by timescale: **FED is a cumulative dose with a
-  threshold and does nothing below it** (0.079 /min here, so 13 minutes to reach
-  FED = 1, against a ~33 s egress), while **FIC responds instantaneously**
-  (`FIC = 0.5`, speed factor 0.65, so ~51 s). The prediction is stated in the
-  asset README before running and is falsifiable: if FED materially slows an
-  agent over a minute of exposure, the model or the reasoning is wrong. A
-  control test records that acrolein is *not* only an irritant — it also sits in
-  FED's Fractional Lethal Dose sum, so removing it takes 100% of the speed
-  penalty but only 3% of the dose rate, and that asymmetry is what makes the two
-  rules separable. Also pins the O2 hypoxia term against the published closed
-  form (Fire Safety Journal, surrogate-gases paper, Eq. 9) rather than against
-  our own docs. Checked by `tests/test_fic_vs_fed_speed.py`.
-- **Exit Visibility Alpha**: 4x30 m corridor, 40 `discovery` agents, two
-  exits. The two configs differ in exactly one value — the viewing bearing
-  (`alpha`) of the near exit's sign — so any difference in exit choice is
-  attributable to sign orientation and nothing else. Proves that legibility
-  decides cognitive-map membership, and membership decides the exit: at
-  `alpha=0` both exits enter the map and agents take the nearer one; at
-  `alpha=180` the near exit never enters the map and agents walk 10 m further
-  to the only exit they know about, even though distance favours the near one
-  by more than 2:1. The near exit is *absent*, not rejected — a stronger claim,
-  since a rejected route still appears in the ranking and the all-rejected
-  fallback can reinstate it. Checked by
-  `tests/test_exit_visibility_alpha.py`, which needs no FDS output: it
-  reimplements fdsvismap's clear-air rule (`view_angle * max_vis >= distance`)
-  so the test exercises the routing decision rather than the third-party
-  solver. A companion test pins that a `full`-familiarity agent ignores the
-  bearing entirely — signs are wayfinding information and bind only where
-  knowledge is incomplete. The folder README documents the **30 m visibility
-  ceiling** that makes a sign illegible at any bearing, and how much tighter it
-  becomes once smoke is present (`c / K̄`, so 6 m at `c=3`, `K̄=0.5`).
-- **Familiarity Test Full** / **Familiarity Test Discovery**: `SocialForceModel`
-  scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
-  doors throughout, generated parametrically by each folder's
-  `build_geometry.py`), differing only in the spawn distribution's
-  `familiarity` value. A matching fire deck lives at
-  `assets/familiarity_test_full/familiarity_test.fds` (real
-  combustion via `&REAC`, not a prescribed `&INIT`; walls mirror the
-  walkable geometry exactly so smoke propagates through the same
-  doorways agents use). These two configs use the legacy `journeys`/
-  `transitions` shape directly (the web editor's `journeys_v2` format is
-  auto-migrated to this shape by `load_scenario`, but was hand-converted
-  here to add the extra edge below). The maze's start room is one open
-  box that connects directly to the checkpoint outside the exit door
-  (`jps-checkpoints_0 → jps-checkpoints_3`), completely bypassing the
-  scripted checkpoint tour through the rest of the maze — a real ~39%
-  shorter route (32 m vs 52 m) that's declared as an extra graph edge
-  (tagged `journey_id: "shortcut"` in `transitions`, invisible to the
-  static spawn-time journey) for the rerouting/cognitive-map system to
-  find. Run with `--enable-rerouting` (no `--fds-dir`/vis-cache needed —
-  divergence here is pure-distance, not smoke-driven) to see it: `full`
-  agents know the whole graph immediately and reroute onto the shortcut
-  within the first reevaluation tick; `discovery` agents start knowing
-  only the spawn's declared neighbor and explore the nearest
-  known-but-unvisited doorway at each step — which for this maze's
-  geometry happens to coincide with the original scripted tour the whole
-  way, so they end up taking the long route without ever finding the
-  shortcut. Verified: `full` evacuates in 35.1 s vs `discovery`'s 75.1 s
-  (both 20/20 evacuated; see the results table in
-  [`docs/testing-familiarity.md`](docs/testing-familiarity.md)).
+conventions; [docs/assets.md](docs/assets.md) describes what each scenario
+proves and where that proof is checked.
 
 ## Dependencies
 

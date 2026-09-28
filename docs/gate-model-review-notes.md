@@ -29,7 +29,7 @@ section designed and no reference code uses.
 ## A0. Discriminating experiment: aggregation is NOT the cause
 
 Hypothesis: the saturation is an artefact of using worst-case `k_max` over a
-whole bending polyline instead of FDS+Evac's `K_ave` along one sight line.
+whole bending polyline instead of [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)'s `K_ave` along one sight line.
 Recomputed offline from the tester's own route-cost CSVs (no rerun):
 
 | criterion | t_junction feasible | world100 feasible |
@@ -66,10 +66,10 @@ the exact pathology the plan's opening diagnoses. *(scientist, architect,
 correctness — all three independently.)*
 
 **A2. Provenance is inverted.** In `materials/evac.f90` the door gate is an
-**absolute** threshold, `K_ave < ABS(FED_DOOR_CRIT)` = 0.03 /m (`:1459`,
-`:5260`), minimising time. The `0.5*d` rule is FDS+Evac's **tier-4 last resort**
-(`:16455`), reached only when no smoke-free door exists — and it uses `K_ave`
-along the **straight, occlusion-blocked bee line** (`See_door`, `:15343`), which
+**absolute** threshold, `K_ave < ABS(FED_DOOR_CRIT)` = 0.03 /m (`:1524`,
+`:5494`), minimising time. The `0.5*d` rule is FDS+Evac's **tier-4 last resort**
+(`:16791`), reached only when no smoke-free door exists — and it uses `K_ave`
+along the **straight, occlusion-blocked bee line** (`See_door`, `:15682`), which
 makes `S > 0.5*d` equivalent to optical depth tau < 6 along a real sight line.
 Our `k_max` over a polyline that bends round corners has no such reading.
 The comment at `:1095` is wrong; so is the commit message.
@@ -183,7 +183,7 @@ to plan section 3.
   because `rank_routes` un-rejects first, leaving `alive` non-empty.
 - (**Clear air is NOT clean — moved to B11 below.** The scenario check ran with
   no `--fds-dir`, so K is exactly 0 and the check cannot fail.)
-- **`c = 3`**: correct, confirmed independently by `evac.f90:5262` and Jin 1978.
+- **`c = 3`**: correct, confirmed independently by `evac.f90:5496` and Jin 1978.
   Note the duplicate constant: `smoke_speed.py:95` `visibility_factor_c = 3.0`.
 
 ---
@@ -437,21 +437,21 @@ Three consequences.
 2. **The FDS+Evac provenance is weakened, not gone.** *(Corrected after
    re-reading `evac.f90`.)* The **threshold** is citable: FDS+Evac's tier-4 test
    computes `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out at
-   `L2_tmp >= 1.0` (`:16458`, `:16463`), which is exactly `K_ave * d > 6`. What does
+   `L2_tmp >= 1.0` (`:16794`, `:16799`), which is exactly `K_ave * d > 6`. What does
    not carry over is the **quantity** — `K_ave_Door` is a mean along `See_door`'s
    straight sight line, with an L1 distance for doors with no resolved sight line
-   (`:16460`) — nor the **scope**: the test sits in a last-resort branch,
-   loops only over known-or-visible doors, and strikes doors out permanently
-   (`:16464-16465`). So the paper may say the gate is *inspired by* FDS+Evac's
+   (`:16796`) — nor the **scope**: the test sits in a last-resort branch,
+   loops only over known-or-visible doors, and strikes doors out for that call
+   (`:16800-16801`). So the paper may say the gate is *inspired by* FDS+Evac's
    tier-4 visibility door rule and inherits its threshold with a citation; it may
    not say it implements it, and 6 is still uncalibrated as an exposure budget.
 
    The same re-read supplies provenance for the hysteresis added at `9f55f6e`:
-   `FAC_DOOR_OLD2 = 0.9` (`:1507`) discounts the current door's `L2_tmp` at
-   `:16290` and `:16467`, and at `:16467` that `L2_tmp` **is** `tau/6`. So
+   `FAC_DOOR_OLD2 = 0.9` (`:1572`) discounts the current door's `L2_tmp` at
+   `:16626` and `:16803`, and at `:16803` that `L2_tmp` **is** `tau/6`. So
    `current_exit_discount = 0.9` discounts the same quantity in the same place.
-   The shipped code comment instead cites `FAC_DOOR_WAIT` at `evac.f90:1503`;
-   `FAC_DOOR_WAIT` is at `:1505` and discounts travel time, not smoke.
+   The shipped code comment instead cites `FAC_DOOR_WAIT` at `evac.f90:1503` (2016 numbering);
+   `FAC_DOOR_WAIT` is at `:1570` and discounts travel time, not smoke.
 3. **A1 is retired rather than open.** Scaling the threshold with route length
    was a defect for a visibility criterion and is correct for an exposure one: a
    longer walk through the same haze does expose you more.
@@ -472,7 +472,7 @@ now carries `tau_max = 6.0` as its own constant, `sign_contrast_c` is gone, and
 the docs declare it uncalibrated. Calibrating it against a soot-dose or
 FED-equivalent limit remains open.
 
-## Why the clean-exit tier cannot work here, structurally
+## Why the clean-exit tier does not work here
 
 The hysteresis protects the wrong crossing. Entering the clean set is guarded by
 the 10x `FAC_DOOR_OLD` deadband; **returning is not a tier crossing at all**.
@@ -481,18 +481,23 @@ bands sit at saturation, and the decision falls through to a plain time
 comparison that the nearer exit wins immediately. That is why a wider margin
 delays the oscillation without removing it.
 
-FDS+Evac's tier is stable because refusal is **remembered**:
-`Is_Visible_Door(i) = .FALSE.` and `Is_Known_Door(i) = .FALSE.`
-(`evac.f90:16464-16465`) are permanent within the run. pyFDS-Evac removed that
-memory at `e441b03`, deliberately, because permanent death destroyed the gate's
-self-healing property (B3). **The tier cannot be had without the memory.** That
-is a structural incompatibility, not a tuning failure, and it is a better reason
-to keep the tier off than any seed count.
+FDS+Evac does not remember a refusal either. `Is_Visible_Door(i) = .FALSE.`
+and `Is_Known_Door(i) = .FALSE.` (`evac.f90:16800-16801`) last for one
+`Change_Target_Door` call, since the call resets both flags at its start
+(`:16170-16171`). The only lasting trace is the lone-agent mark
+(`:16628-16637`, only when `HR%GROUP_ID < 0`): the previous target's node is
+set to 0 (`:16635`) or made negative (`:16637`). **Retracted:** an earlier
+version of this section said the refusal is permanent within the run and
+concluded that the tier cannot be had without that memory, a structural
+incompatibility. Both rest on the misreading and are withdrawn. pyFDS-Evac
+removed its own permanent refusal at `e441b03`, deliberately, because
+permanent death destroyed the gate's self-healing property (B3).
 
 Scope limit: l_corridor has no persistent clean alternative, so it cannot refute
 clean-preference in general. What is established is narrower and sufficient --
-this implementation is unstable, and the instability is intrinsic to a
-memoryless lexicographic tier.
+this implementation is unstable on l_corridor. Whether the instability is
+intrinsic to a memoryless lexicographic tier is open: FDS+Evac's tier is also
+memoryless from call to call, apart from the lone-agent mark.
 
 ## Under the gate, no hazard bypasses the anchor
 
@@ -540,8 +545,12 @@ the returned-to route cleaner by more than the deadband (median 0.95 of optical
 depth against a margin of 0.6). They are the ordering correctly following a
 field that reversed, not an oscillation any constant could damp. What is open is
 therefore not the mixed currency but a modelling question: **should a memoryless
-model follow a reversing field?** FDS+Evac's answer is memory -- a door struck
-out at `evac.f90:16463` stays struck out (`:16464-16465`) -- and pyFDS-Evac
-removed that at `e441b03` on purpose, because permanent death destroyed the
-gate's self-healing property (B3). The two cannot both be had as the code
+model follow a reversing field?** FDS+Evac keeps little memory: a door struck
+out for smoke at `evac.f90:16799` (`:16800-16801`) is struck out only for that
+call, since `Change_Target_Door` resets `Is_Known_Door` and `Is_Visible_Door`
+at its start (`:16170-16171`); the one lasting trace is that a lone agent marks
+its previous target negative or zero (Models › Wayfinding, "Relation to
+FDS+Evac"). pyFDS-Evac removed its own permanent refusal at `e441b03` on
+purpose, because permanent death destroyed the gate's self-healing property
+(B3). The two cannot both be had as the code
 stands. This belongs in the PR discussion.

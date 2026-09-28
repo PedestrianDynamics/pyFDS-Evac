@@ -94,3 +94,97 @@ def test_log_callable_receives_status_lines():
     messages = []
     build_run_kwargs(_scenario(), _opts(constant_extinction=0.5), log=messages.append)
     assert any("smoke" in m.lower() for m in messages)
+
+
+_GAS_DIR = "assets/iso_table22_coupled/fds/a"
+
+
+def test_fic_speed_is_off_by_default():
+    """FDS+Evac has no irritant slowdown, so the FIC rule is opt-in."""
+    kwargs = build_run_kwargs(_scenario(), _opts(fds_dir=_GAS_DIR))
+    assert kwargs["fed_model"] is not None
+    assert kwargs["tenability_config"].enable_fic_speed is False
+
+
+def test_enable_fic_speed_opts_in():
+    kwargs = build_run_kwargs(
+        _scenario(), _opts(fds_dir=_GAS_DIR, enable_fic_speed=True)
+    )
+    assert kwargs["tenability_config"].enable_fic_speed is True
+
+
+def test_cli_fic_speed_flag():
+    import run
+
+    parser = run._build_parser()
+    assert parser.parse_args(["--scenario", "x"]).enable_fic_speed is False
+    args = parser.parse_args(["--scenario", "x", "--enable-fic-speed"])
+    assert args.enable_fic_speed is True
+
+
+def test_o2_threshold_defaults_to_fds_and_is_configurable():
+    """FDS applies the O2 term below 20 %; 19.5 % stays selectable."""
+    default = build_run_kwargs(_scenario(), _opts(fds_dir=_GAS_DIR))
+    assert default["fed_model"].config.o2_threshold_percent == 20.0
+    legacy = build_run_kwargs(
+        _scenario(), _opts(fds_dir=_GAS_DIR, o2_threshold_percent=19.5)
+    )
+    assert legacy["fed_model"].config.o2_threshold_percent == 19.5
+
+
+class _TemperatureOnlyInventory:
+    """A case with a TEMPERATURE slice and none of the FED gases."""
+
+    def supports_default_fed(self):
+        return False
+
+    def supports_heat_fed(self):
+        return True
+
+    def canonical_slice_names(self):
+        return {"temperature"}
+
+
+@pytest.fixture
+def temperature_only_case(monkeypatch):
+    import pyfds_evac.core.run_config as run_config
+
+    monkeypatch.setattr(
+        run_config, "inspect_fds_quantities", lambda _d: _TemperatureOnlyInventory()
+    )
+    monkeypatch.setattr(
+        run_config.FdsHeatField,
+        "from_fds",
+        classmethod(lambda cls, _d, slice_height_m=1.6: cls(sampler=None)),
+    )
+
+
+def test_heat_fed_is_off_by_default(temperature_only_case):
+    """FDS+Evac has no heat dose, so a TEMPERATURE slice alone does not turn it on."""
+    messages = []
+    kwargs = build_run_kwargs(
+        _scenario(),
+        _opts(fds_dir="fds_data", constant_extinction=0.0),
+        log=messages.append,
+    )
+    assert kwargs["heat_fed_model"] is None
+    assert kwargs["tenability_config"] is None
+    assert any("--enable-heat-fed" in m for m in messages)
+
+
+def test_enable_heat_fed_opts_in(temperature_only_case):
+    kwargs = build_run_kwargs(
+        _scenario(),
+        _opts(fds_dir="fds_data", constant_extinction=0.0, enable_heat_fed=True),
+    )
+    assert kwargs["heat_fed_model"] is not None
+    assert kwargs["tenability_config"].enable_heat_incapacitation is True
+
+
+def test_cli_heat_fed_flag():
+    import run
+
+    parser = run._build_parser()
+    assert parser.parse_args(["--scenario", "x"]).enable_heat_fed is False
+    args = parser.parse_args(["--scenario", "x", "--enable-heat-fed"])
+    assert args.enable_heat_fed is True

@@ -19,10 +19,11 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 sys.path.insert(0, "tests")
-from test_rerouting_smoke_sweep import (  # noqa: E402
+from test_rerouting_smoke_sweep import (
     FAR_EXIT,
     NEAR_EXIT,
     SmokeOnTheNearArm,
@@ -34,25 +35,31 @@ from test_rerouting_smoke_sweep import (  # noqa: E402
 
 def main(out_path: Path) -> None:
     graph = _graph()
-    weights = [w / 20.0 for w in range(0, 61)]
+    weights = [w / 20.0 for w in range(61)]
 
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.4), sharey=True)
     for ax, field, title in (
-        (axes[0], SmokeOnTheNearArm(), "smoke on the near exit's arm"),
-        (axes[1], UniformSmoke(4.0), "uniform smoke everywhere"),
+        (axes[0], SmokeOnTheNearArm(), r"$\bf{(a)}$ smoke on the near exit's arm"),
+        (axes[1], UniformSmoke(4.0), r"$\bf{(b)}$ uniform smoke everywhere"),
     ):
         near = [_costs(graph, field, w)[NEAR_EXIT] for w in weights]
         far = [_costs(graph, field, w)[FAR_EXIT] for w in weights]
-        ax.plot(weights, near, label=f"{NEAR_EXIT} (10 m)", color="#d62728", lw=2)
-        ax.plot(weights, far, label=f"{FAR_EXIT} (20 m)", color="#2b7bba", lw=2)
+        ax.plot(weights, near, label=f"{NEAR_EXIT} (10 m)", color="#d73027", lw=2)
+        ax.plot(
+            weights, far, label=f"{FAR_EXIT} (20 m)", color="#4575b4", lw=2, ls="--"
+        )
         crossover = next((w for w, n, f in zip(weights, near, far) if n > f), None)
         if crossover is not None:
-            ax.axvline(crossover, ls="--", color="#666", lw=1)
+            ax.axvline(crossover, ls=":", color="grey", lw=0.8)
             ax.annotate(
                 f"flips at w_smoke = {crossover:.2f}",
-                xy=(crossover, ax.get_ylim()[1] * 0.5),
-                xytext=(crossover + 0.3, ax.get_ylim()[1] * 0.55),
+                xy=(crossover, 0.6),
+                xycoords=("data", "axes fraction"),
+                xytext=(6, 0),
+                textcoords="offset points",
                 fontsize=9,
+                color="dimgrey",
             )
         else:
             ax.text(
@@ -62,19 +69,31 @@ def main(out_path: Path) -> None:
                 transform=ax.transAxes,
                 ha="center",
                 fontsize=10,
-                color="#666",
+                color="dimgrey",
             )
-        ax.set_title(title, fontsize=10)
-        ax.set_xlabel("w_smoke")
-        ax.legend(fontsize=8, frameon=False)
-    axes[0].set_ylabel("composite route cost")
+        ax.set_title(title, loc="left", fontsize=10)
+        ax.set_xlabel("w_smoke", color="dimgrey")
+        ax.legend(
+            fontsize=8,
+            frameon=True,
+            facecolor="white",
+            framealpha=0.8,
+            edgecolor="lightgrey",
+            labelcolor="dimgrey",
+        )
+        ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+        ax.patch.set_edgecolor("lightgrey")
+        ax.patch.set_linewidth(0.8)
+    sns.despine(left=True, bottom=True)
+    axes[0].set_ylabel("composite route cost", color="dimgrey")
     fig.suptitle(
         "Smoke shifts the exit choice only when it is asymmetric\n"
         "assets/t_junction: the near exit is 10 m from the junction, the far one 20 m",
         fontsize=11,
+        color="dimgrey",
     )
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.90))
-    fig.savefig(out_path, dpi=140)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=140, bbox_inches="tight")
     print(f"Wrote: {out_path}")
 
 

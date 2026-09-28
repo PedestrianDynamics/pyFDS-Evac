@@ -22,7 +22,7 @@ burned, so it is uniform in space and constant in time.
 ## Where the concentrations come from
 
 ISO deliberately prescribes none — it says to repeat for each hazardous
-condition. The FDS+Evac Technical Reference, **Figure 8** ("A FED test"),
+condition. The [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) Technical Reference, **Figure 8** ("A FED test"),
 supplies exactly the concrete sets ISO leaves to the tester:
 
 | case | CO₂ % | CO % | O₂ % | isolates | FED = 1 |
@@ -34,7 +34,7 @@ supplies exactly the concrete sets ISO leaves to the tester:
 
 Cases c and d share the same CO and differ only in CO₂, so d must be strictly
 faster — that pair is what makes the hyperventilation factor observable. Case b
-has no CO at all, and c and d sit above the 19.5 % O₂ gate so the hypoxia term
+has no CO at all, and c and d sit above the 20.0 % O₂ gate so the hypoxia term
 is switched off in them. A single case could not separate any of this.
 
 ## What is live
@@ -59,10 +59,9 @@ worth having — they fail for different reasons.
 `use_premovement: true` with a uniform draw over **[1.2 × 10⁷, 2 × 10⁷] s**,
 satisfying ISO's "> 10 000 000 s".
 
-The lower bound matters. `assets/ISO-table22` draws over `[0, 2 × 10⁷]`, which
-can return a few seconds and let the occupant walk away mid-test; its own test
-sidesteps that by overriding `use_premovement = False` and `v0 = 0`. Bounding
-the draw below is both faithful and robust, and no override is needed.
+The lower bound matters: a draw that starts at 0 can return a few seconds and
+let the occupant walk away mid-test. `assets/ISO-table22` uses the same bounded
+draw.
 
 `agents_remaining == 1` and the position-invariance check are guards, not
 results: if the occupant moved, the exposure would have changed and the timing

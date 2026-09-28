@@ -14,7 +14,8 @@ import io
 import logging
 import sys
 import threading
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from pyfds_evac.core import ProgressEvent, ScenarioResult, run_scenario
 
@@ -32,7 +33,7 @@ class _WarningCapture(logging.Handler):
     cleanly and looks entirely normal.
     """
 
-    def __init__(self, sink: List[str]) -> None:
+    def __init__(self, sink: list[str]) -> None:
         super().__init__(level=logging.WARNING)
         self._sink = sink
 
@@ -55,7 +56,7 @@ class _ConsoleCapture(io.TextIOBase):
     terminated log lines are kept.
     """
 
-    def __init__(self, sink: List[str], echo: Any) -> None:
+    def __init__(self, sink: list[str], echo: Any) -> None:
         self._sink = sink
         self._echo = echo
         self._buf = ""
@@ -84,19 +85,19 @@ class RunManager:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
         self.status: str = "idle"  # idle | running | done | error
-        self.result: Optional[ScenarioResult] = None
-        self.error: Optional[str] = None
-        self.scenario_name: Optional[str] = None
-        self.fds_dir: Optional[str] = None
+        self.result: ScenarioResult | None = None
+        self.error: str | None = None
+        self.scenario_name: str | None = None
+        self.fds_dir: str | None = None
         self.results_only: bool = False
         self.opts: Any = None
-        self.artifacts: List[str] = []
-        self.last_event: Optional[ProgressEvent] = None
-        self.fed_snapshots: List[tuple] = []  # (sim_time, max_fed, mean_fed)
-        self.log_lines: List[str] = []
-        self.warnings: List[str] = []
+        self.artifacts: list[str] = []
+        self.last_event: ProgressEvent | None = None
+        self.fed_snapshots: list[tuple] = []  # (sim_time, max_fed, mean_fed)
+        self.log_lines: list[str] = []
+        self.warnings: list[str] = []
 
     @property
     def running(self) -> bool:
@@ -105,10 +106,10 @@ class RunManager:
     def start(
         self,
         scenario: Any,
-        run_kwargs: Dict[str, Any],
+        run_kwargs: dict[str, Any],
         scenario_name: str,
-        post_run: Optional[Callable[[ScenarioResult], List[str]]] = None,
-        fds_dir: Optional[str] = None,
+        post_run: Callable[[ScenarioResult], list[str]] | None = None,
+        fds_dir: str | None = None,
         results_only: bool = False,
         opts: Any = None,
     ) -> None:

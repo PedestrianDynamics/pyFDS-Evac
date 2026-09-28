@@ -1,0 +1,40 @@
+{
+ "ranked": [
+  {
+   "clean": false,
+   "composite_cost": 48.0,
+   "exit_id": "east",
+   "feasible": true,
+   "fed_max_route": 0.0,
+   "k_leg_max": 0.032,
+   "k_max_route": 0.2,
+   "path": [
+    "spawn",
+    "east"
+   ],
+   "queue_time_s": 0.0,
+   "rank_cost": 48.0,
+   "status": "ok",
+   "tau_route": 0.0,
+   "travel_time_s": 48.0
+  },
+  {
+   "clean": false,
+   "composite_cost": 12.0,
+   "exit_id": "west",
+   "feasible": true,
+   "fed_max_route": 0.0,
+   "k_leg_max": 0.2,
+   "k_max_route": 0.2,
+   "path": [
+    "spawn",
+    "west"
+   ],
+   "queue_time_s": 0.0,
+   "rank_cost": 12.1788,
+   "status": "ok",
+   "tau_route": 2.1818,
+   "travel_time_s": 12.1788
+  }
+ ]
+}

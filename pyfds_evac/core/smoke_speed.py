@@ -83,9 +83,9 @@ class SmokeSpeedConfig:
         C = 3 corresponds to a reflective sign; C = 8 to a light-emitting sign.
     """
 
-    fds_dir: str
+    fds_dir: str | None = None
     update_interval_s: float = 1.0
-    slice_height_m: float = 2.0
+    slice_height_m: float = 1.6
     speed_law: str = "lund"
     # lund coefficients
     alpha: float = 0.706
@@ -113,7 +113,7 @@ class ExtinctionField:
         cls,
         fds_dir: str,
         *,
-        slice_height_m: float = 2.0,
+        slice_height_m: float = 1.6,
         simulation=None,
     ) -> "ExtinctionField":
         """Load extinction slices from an FDS case directory via fdsreader."""
@@ -123,7 +123,9 @@ class ExtinctionField:
             simulation=simulation,
             slice_height_m=slice_height_m,
         )
-        return cls(sampler)
+        field = cls(sampler)
+        field.fds_dir = str(fds_dir)
+        return field
 
     def sample_extinction(self, time_s: float, x: float, y: float) -> float:
         """Return the nearest-grid extinction coefficient K [1/m]."""

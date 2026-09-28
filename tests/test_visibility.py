@@ -297,3 +297,113 @@ class TestSignSynthesis:
         assert model.visibility_to_node(0.0, 0.0, 0.0, "e0") == 12.0
         assert model.visibility_to_node(0.0, 1.0, 0.0, "e0") is None
         assert model.visibility_to_node(0.0, 0.0, 0.0, "no_such_node") is None
+
+
+class TestSignDistanceCap:
+    """A sign has a finite reading distance, even in clear air (#173).
+
+    fdsvismap and Börger et al. (2024) cap it at 30 m. A 60 m corridor puts a
+    sign 20 m and 40 m from two viewers, on either side of that cap.
+    """
+
+    SIGN = {"exit": {"x": 1.0, "y": 2.0, "alpha": None, "c": 3}}
+    NEAR = (21.0, 2.0)
+    FAR = (41.0, 2.0)
+
+    @staticmethod
+    def _corridor():
+        from shapely.geometry import box
+
+        return box(0.0, 0.0, 60.0, 4.0)
+
+    def _model(self, signs=None, **kwargs):
+        return VisibilityModel.clear_air(
+            self._corridor(), signs or self.SIGN, cell_size_m=1.0, **kwargs
+        )
+
+    def test_sign_within_30_m_is_legible_by_default(self):
+        assert self._model().node_is_visible(0.0, *self.NEAR, "exit")
+
+    def test_sign_beyond_30_m_is_not_legible_by_default(self):
+        assert not self._model().node_is_visible(0.0, *self.FAR, "exit")
+
+    def test_per_sign_max_distance_extends_the_reading_distance(self):
+        signs = {"exit": {**self.SIGN["exit"], "max_distance": 50.0}}
+        assert self._model(signs).node_is_visible(0.0, *self.FAR, "exit")
+
+    def test_per_sign_max_distance_can_shorten_it(self):
+        signs = {"exit": {**self.SIGN["exit"], "max_distance": 10.0}}
+        assert not self._model(signs).node_is_visible(0.0, *self.NEAR, "exit")
+
+    def test_global_cap_applies_to_signs_without_their_own(self):
+        model = self._model(max_sign_distance_m=50.0)
+        assert model.node_is_visible(0.0, *self.FAR, "exit")
+
+    def test_sighting_distance_is_capped_per_sign(self):
+        signs = {"exit": {**self.SIGN["exit"], "max_distance": 10.0}}
+        metres = self._model(signs).visibility_to_node(0.0, *self.NEAR, "exit")
+        assert metres == pytest.approx(10.0)
+
+    @pytest.mark.parametrize("cap", [0, -5.0, float("nan"), float("inf")])
+    def test_invalid_max_distance_is_rejected(self, cap):
+        signs = {"exit": {**self.SIGN["exit"], "max_distance": cap}}
+        with pytest.raises(ValueError, match="max_distance"):
+            self._model(signs)
+
+    @pytest.mark.parametrize("cap", [0.0, float("nan"), float("inf")])
+    def test_invalid_global_cap_is_rejected(self, cap):
+        with pytest.raises(ValueError, match="max_sign_distance_m"):
+            self._model(max_sign_distance_m=cap)
+
+    @pytest.mark.parametrize("cap", [float("nan"), float("inf")])
+    def test_invalid_global_cap_is_rejected_on_a_cache_hit(self, cap):
+        """A cache must not let an invalid cap through before it is checked."""
+        with patch(
+            "pyfds_evac.core.visibility._load_vismap_cache", return_value=object()
+        ):
+            with pytest.raises(ValueError, match="max_sign_distance_m"):
+                self._model(cache_path="unused.npz", max_sign_distance_m=cap)
+            with pytest.raises(ValueError, match="max_sign_distance_m"):
+                VisibilityModel(
+                    FDS_DIR,
+                    self.SIGN,
+                    cache_path="unused.npz",
+                    max_sign_distance_m=cap,
+                )
+
+    def test_cap_is_part_of_the_cache_key(self):
+        base = _make_meta(FDS_DIR, SIGNS, TIME_STEP, HEIGHT)
+        raised = _make_meta(FDS_DIR, SIGNS, TIME_STEP, HEIGHT, max_sign_distance_m=50.0)
+        signed = _make_meta(
+            FDS_DIR,
+            {**SIGNS, "exit_A": {**SIGNS["exit_A"], "max_distance": 50.0}},
+            TIME_STEP,
+            HEIGHT,
+        )
+        assert base != raised
+        assert base != signed
+
+    def test_cli_default_is_30_m(self):
+        import run
+
+        opts = run._build_parser().parse_args(["--scenario", "unused"])
+        assert opts.max_sign_distance == 30.0
+
+
+class TestClearAirCacheHit:
+    """#178: a model loaded from a clear-air cache still knows its signs."""
+
+    def test_distance_to_node_after_a_cache_hit(self, tmp_path):
+        from shapely.geometry import box
+
+        signs = {"e": {"x": 1.0, "y": 2.0, "alpha": None, "c": 3}}
+        cache = tmp_path / "vis.npz"
+        built = VisibilityModel.clear_air(
+            box(0, 0, 10, 4), signs, cell_size_m=1.0, cache_path=cache
+        )
+        loaded = VisibilityModel.clear_air(
+            box(0, 0, 10, 4), signs, cell_size_m=1.0, cache_path=cache
+        )
+        assert loaded.distance_to_node(5.0, 2.0, "e") == pytest.approx(
+            built.distance_to_node(5.0, 2.0, "e")
+        )

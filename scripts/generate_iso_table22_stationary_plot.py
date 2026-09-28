@@ -6,6 +6,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.fed import (
@@ -87,15 +88,26 @@ def main() -> int:
         ]
         dt = result.metrics["dt"]
 
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+        analytic_colour = "#1f253f"
+        runtime_colour = "#d73027"
+        legend_style = dict(
+            frameon=True,
+            facecolor="white",
+            framealpha=0.8,
+            edgecolor="lightgrey",
+            labelcolor="dimgrey",
+            fontsize=8,
+        )
         fig, (ax, ax_r) = plt.subplots(
             2, 1, figsize=(8, 6.5), height_ratios=[3, 1], sharex=True
         )
         ax.plot(
             theory_times,
             theory_fed,
-            color="tab:blue",
+            color=analytic_colour,
             linestyle="--",
-            linewidth=3,
+            linewidth=2.5,
             label="Analytical FED",
             zorder=3,
         )
@@ -103,7 +115,7 @@ def main() -> int:
             runtime_times,
             runtime_fed,
             where="post",
-            color="tab:orange",
+            color=runtime_colour,
             linewidth=2,
             alpha=0.9,
             label="Runtime FED",
@@ -114,53 +126,71 @@ def main() -> int:
             runtime_fed[:: max(1, len(runtime_fed) // 12)],
             linestyle="None",
             marker="o",
-            markersize=4,
-            color="tab:orange",
+            markersize=5,
+            markeredgecolor="white",
+            color=runtime_colour,
             zorder=4,
             label="Runtime samples",
         )
-        ax.axhline(1.0, color="black", linestyle=":", linewidth=1.5, label="FED = 1")
+        ax.axhline(1.0, color="grey", linestyle=":", linewidth=1.0, label="FED = 1")
         ax.axvline(
             analytic_time_s,
-            color="tab:green",
+            color=analytic_colour,
             linestyle="--",
-            linewidth=1.5,
+            linewidth=1.0,
             label="Analytical threshold time",
         )
         ax.axvline(
             crossing_time_s,
-            color="tab:red",
-            linestyle="--",
+            color=runtime_colour,
+            linestyle=":",
             linewidth=1.5,
             label="Runtime threshold time",
         )
-        ax.set_ylabel("FED Index [-]")
+        ax.set_ylabel("FED Index [-]", color="dimgrey")
         ax.set_title(
-            "ISO 20414 Table 22 - stationary FED verification\n"
-            f"analytical FED=1 at {analytic_time_s:.1f} s, "
-            f"runtime at {crossing_time_s:.1f} s "
-            f"(difference {abs(crossing_time_s - analytic_time_s):.2f} s, "
-            f"one timestep = {dt:g} s)"
+            r"$\bf{(a)}$ ISO 20414 Table 22 - stationary FED verification",
+            loc="left",
+            fontsize=11,
         )
-        ax.legend(loc="upper left", fontsize=8)
-        ax.grid(alpha=0.25)
+        ax.text(
+            0.92,
+            0.04,
+            f"analytical FED = 1 at {analytic_time_s:.1f} s, "
+            f"runtime at {crossing_time_s:.1f} s\n"
+            f"difference {abs(crossing_time_s - analytic_time_s):.2f} s, "
+            f"one timestep = {dt:g} s",
+            transform=ax.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=9,
+            color="dimgrey",
+            style="italic",
+        )
+        ax.legend(loc="upper left", **legend_style)
 
         # The two threshold lines coincide, which is the result -- but drawn
         # alone they look like one series is missing, so state both numerically
-        # in the title above and show the error here instead.
+        # in the annotation above and show the error here instead.
         ax_r.axhspan(
             -dt,
             dt,
-            color="tab:green",
+            color="#33a02c",
             alpha=0.12,
             label=f"one timestep (+/-{dt:g} s worth of dose)",
         )
         ax_r.axhline(0.0, color="grey", linewidth=0.8)
-        ax_r.plot(runtime_times, residual, color="tab:orange")
-        ax_r.set_xlabel("Time [s]")
-        ax_r.set_ylabel("runtime - analytical\nFED [-]")
-        ax_r.legend(loc="best", fontsize=8)
-        ax_r.grid(alpha=0.25)
+        ax_r.plot(runtime_times, residual, color=runtime_colour)
+        ax_r.set_xlabel("Time [s]", color="dimgrey")
+        ax_r.set_ylabel("runtime - analytical\nFED [-]", color="dimgrey")
+        ax_r.set_title(r"$\bf{(b)}$ Residual", loc="left", fontsize=11)
+        ax_r.legend(loc="best", **legend_style)
+
+        for axis in (ax, ax_r):
+            axis.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+            axis.patch.set_edgecolor("lightgrey")
+            axis.patch.set_linewidth(0.8)
+        sns.despine(left=True, bottom=True)
 
         worst = max(abs(v) for v in residual)
         print(

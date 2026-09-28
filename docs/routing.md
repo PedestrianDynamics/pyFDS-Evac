@@ -1,4 +1,14 @@
-# Smoke-aware routing
+---
+title: "Routing in practice"
+linkTitle: "Routing in practice"
+weight: 10
+aliases: [/docs/routing/]
+---
+
+> [!NOTE]
+> This page shows the routing model at work: its machinery, API and data
+> structures. For its definition, parameters and defaults, see
+> [Models › Dynamic route rerouting](/models/routing.md).
 
 > Part of [pyFDS-Evac](../README.md).
 
@@ -91,11 +101,10 @@ For each segment (edge between two stages), the system performs
 the following steps:
 
 1. Sample the extinction coefficient K along the edge polyline
-   using the Beer-Lambert path-integrated mean
-   ([Boerger et al. 2024](../materials/waypoint_based_visibility.pdf),
-   Eq. 8-9).
-2. Compute the smoke-adjusted speed factor from the mean K using
-   the [smoke-speed model](smoke-speed-model.md).
+   and take its mean (see [Line-of-sight extinction](#line-of-sight-extinction)).
+2. Compute the smoke-adjusted speed factor from the mean K with the
+   linear speed law, using the router's own `alpha`, `beta` and
+   `min_speed_factor` (see the [smoke-speed model](/models/smoke-speed.md)).
 3. Estimate the travel time from the segment length and reduced
    speed.
 4. Optionally, estimate the FED growth along the segment from the
@@ -114,9 +123,11 @@ sigma_bar = (1 / |P|) * sum(K_p)
 
 where `|P|` is the number of sample points and `K_p` is the
 extinction at each point. The sample spacing is controlled by
-`sampling_step_m` (default 2.0 m). This is the discrete form of
-[Boerger et al. (2024)](../materials/waypoint_based_visibility.pdf),
-Eq. 8-9.
+`sampling_step_m`. This is the discrete form of the Beer-Lambert
+path-integrated mean of
+[Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269),
+Eq. 8-9; the Beer-Lambert law itself is on
+[Extinction coefficient](/fundamentals/extinction.md).
 
 ### Arrival-time pricing
 
@@ -151,7 +162,10 @@ where:
 
 Exposure on the part of the first segment the agent has already walked
 is credited out of `K_ave` and `FED_max`, because it is already carried
-in `current_fed`.
+in `current_fed`. For `k_max_route` and `k_leg_max` the first segment is
+resampled along the walk from the agent to its next node: the routing
+engine's path through the walkable area, or the straight line when no
+engine is available, sampled every `sampling_step_m` along its length.
 
 ### What each model ranks on
 
@@ -219,38 +233,25 @@ closes on an exit — the distance in `tau` is the distance that remains.
 
 ### Configuration
 
-`RouteCostConfig` controls all cost evaluation parameters. Every field
-listed here is also readable from a scenario's `routing` block via
-`RouteCostConfig.from_routing_params` — the full JSON key table is in
-[route-cost-gate.md](route-cost-gate.md#configuration).
+`RouteCostConfig` controls all cost evaluation parameters. Most fields are
+also readable from a scenario's `routing` block via
+`RouteCostConfig.from_routing_params`. The defaults are on the
+[routing model](/models/routing.md#parameters) page, and the full JSON key
+table is in [route-cost-gate.md](route-cost-gate.md#configuration).
 
 ```python
 from pyfds_evac.core.route_graph import RouteCostConfig
 
+# Fields not passed keep their defaults (see the routing model page).
 config = RouteCostConfig(
-    cost_model="gate",                    # "gate" (default) or "additive"
-    tau_max=6.0,                          # gate: optical depth budget K_ave * L
-    tau_return_margin=0.8,                # gate: stricter budget for a rival exit
-    current_exit_discount=0.9,            # gate: current exit's tau in the sort key
-    tau_deadband=0.1,                     # gate: anchor deadband, as a fraction of tau_max
-    clean_extinction_threshold=0.0,       # gate: clean-exit tier, 0 = off
-    clean_exit_margin=0.1,                # gate: hysteresis on tier membership
-    anticipate=True,                      # price segments at arrival time
-    foresight_horizon_s=float("inf"),     # cap on anticipation (s)
-    fallback_switch_margin=0.2,           # gate: all-refused hysteresis
-    w_smoke=1.0,                          # smoke cost weight
-    w_fed=10.0,                           # FED cost weight
-    w_queue=0.0,                          # congestion weight (0 = off, the default)
-    fed_rejection_threshold=1.0,          # reject if FED_max exceeds
-    visibility_extinction_threshold=0.5,  # K threshold for visibility
-    sampling_step_m=2.0,                  # ray sample spacing
-    base_speed_m_per_s=1.3,               # clear-air walking speed
-    alpha=0.706,                          # speed-law coefficient
-    beta=-0.057,                          # speed-law coefficient
-    min_speed_factor=0.1,                 # speed factor floor
-    default_exit_capacity=1.3,            # fallback capacity (agents/s)
+    cost_model="gate",  # "gate" (default) or "additive"
+    w_queue=0.03,       # override: turn the congestion term on (default off)
 )
 ```
+
+`alpha`, `beta` and `min_speed_factor` are the router's copy of the linear
+speed law, used only to estimate travel time; their defaults are on the
+[routing model](/models/routing.md#parameters) page.
 
 Two further fields exist on the dataclass but are **not** readable from
 the `routing` block, so a scenario run always gets their defaults:
@@ -325,6 +326,9 @@ below was swept against a geometry whose doorways were narrower than the
 building's; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy's 52.9 %.
 The reasoning in this section is unchanged — only the fitted number moved.
+Rerun on main at `7a3617d`, under the gate, the same sweep scores 0.03 at
+31.6 % and 0.024 at 34.1 %: the deck no longer reproduces Fahy's split, and has
+not been re-fitted.
 
 **Two further caveats on that number.** The sweep was run under the additive
 composite, where `w_queue` multiplies a *distance*
@@ -332,7 +336,7 @@ composite, where `w_queue` multiplies a *distance*
 multiplies a *time* (`w_queue * queue_time_s`, against travel time), which is a
 different quantity, and no deck pins `cost_model` — so the Station deck now runs
 under the gate with a weight fitted under the additive model. It has not been
-re-swept there.
+re-fitted there.
 
 #### Provenance of the Station's queue weight
 
@@ -412,57 +416,63 @@ the interval.
 
 ### Rerouting decision flow
 
-`evaluate_and_reroute` runs once per agent per reevaluation tick:
+`evaluate_and_reroute` runs once per agent per reevaluation tick. It
+answers three questions in turn: which routes are available, which one is
+preferred, and whether the agent should change.
 
+```mermaid
+flowchart TD
+    A("Resolve source, one candidate path per reachable exit") --> B("Measure length, time, FED and smoke")
+    B --> C("Any route not rejected?")
+    C -->|Yes| D("Rank the routes")
+    C -->|No| E("Fallback: least-bad rejected route")
+    D --> F("Apply switching policy")
+    E --> F
+    F --> G("Change justified?")
+    G -->|Yes| H("Reroute and record the reason")
+    G -->|No| I("Keep the active route")
+    classDef step fill:#e3f0fb,stroke:#c6dcf0,color:#0b4f8a,font-weight:bold
+    classDef ask fill:#f4f9fe,stroke:#c6dcf0,stroke-dasharray:4 3,color:#0b4f8a,font-weight:bold
+    class A,B,D,E,F,H,I step
+    class C,G ask
+    linkStyle default stroke:#8a9bb0,stroke-width:1.5px
 ```
-1. Resolve source node
-   ├─ use current_origin  (stage the agent is coming from)
-   └─ fall back to current_target_stage
-   → if source not in graph → skip (return None)
 
-2. rank_routes(source, t, FED, K_field)
-   ├─ evaluate all edges → dynamic costs from current smoke/FED
-   │   (gate: k_avg * length + 1e-6 * length, the edge's own optical depth;
-   │    additive: w_smoke / w_fed weighted composite)
-   ├─ Dijkstra with dynamic weights → one minimum-cost path per reachable exit
-   │   (only the single lowest-cost path to each exit under these weights
-   │    is evaluated; alternative paths to the same exit are not enumerated)
-   ├─ evaluate_route on each path
-   │   ├─ FED rejection (asymmetric: x fed_return_margin for a non-current exit)
-   │   └─ gate only: optical-depth rejection, reason "tau ...", every exit
-   │       tested (asymmetric: budget x tau_return_margin for a non-current
-   │       exit)
-   ├─ visibility rejection pass (additive only)
-   │   └─ if ≥1 route has any visible segment:
-   │       mark routes where ALL segments are non-visible as rejected
-   ├─ sort: non-rejected first, rejected last
-   │   └─ gate     → (rejected, tier, tau x current_exit_discount, rank_cost, hops)
-   │       additive → (rejected, tier, 0.0, rank_cost, hops)
-   │       tier splits clean from smoky only when the gate runs with
-   │       clean_extinction_threshold > 0 (not the default)
-   └─ if all rejected → un-reject the least-bad route as fallback
-       ├─ gate     → by (tau_route, rank_cost), held by fallback_switch_margin
-       └─ additive → lowest composite
+The flow also ends early in three cases: a source that is not in the graph
+skips the tick, a best route that is still hard-rejected is not adopted, and a
+discovery agent with no known exit explores or wanders instead (see below).
 
-3. Pick best = ranked[0]
-   └─ if best is hard-rejected (not a fallback) → skip (return None)
+| Step | Gate (default) | Additive |
+|---|---|---|
+| **Source** | `current_origin`, else `current_target_stage`; a source outside the graph skips the tick | same |
+| **Candidates** | Dijkstra over the agent's known subgraph on each edge's optical depth (`k_avg` × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)) | Dijkstra on each edge's share of the composite (length × (1 + `w_smoke` × `k_avg`) + `w_fed` × FED growth); one path per exit |
+| **Rejection** | FED over the threshold (× `fed_return_margin` for a rival while a current exit is set), then τ over `tau_max` (× `tau_return_margin` for a rival); both are tested, and a route over both reports the τ reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
+| **Ranking** | not rejected first, then tier (clean before smoky, only with `clean_extinction_threshold` > 0; the current exit's limit is divided by `clean_exit_margin`), then τ (× `current_exit_discount` for the current exit), then `rank_cost` (travel time + queue time × `w_queue`), then hops; ties keep candidate order | not rejected first, then `rank_cost` (the composite), then hops; no tier and no τ |
+| **Fallback** | when every route is rejected: re-sorted by raw τ, then `rank_cost`; the current exit goes first unless the winner's worst extinction is at or below the current exit's × (1 − `fallback_switch_margin`); the first route is un-rejected with a `fallback: ` reason, its `feasible` unchanged | same |
+| **Switch, same exit** | for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path's `rank_cost` is below 0.9 × the walked path's, or if the walked path is rejected and the new one is feasible and not rejected (`better_path`); otherwise, or if rerouting fails, it keeps walking, and the cached path is updated either way | same |
+| **Switch, other exit** | the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, when it must be fled (a FED rejection, or a non-visible one above `impassable_extinction_threshold`), or when the rival is clean and the current exit is not. Otherwise an infeasible rival needs `rank_cost` < old × `exit_switch_anchor`; a feasible one is accepted if its τ is lower by more than `tau_max` × `tau_deadband`, refused if higher by more, and between those needs the same `rank_cost` ratio | only the top-ranked route is tried; the anchor accepts under the same hazard bypasses, else needs `rank_cost` < old × `exit_switch_anchor` |
+| **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, the exit and path recorded, a `RouteSwitch` recorded; if rerouting fails no `RouteSwitch` is recorded | same |
 
-4. Compare best.exit_id to agent's current exit
-   ├─ same exit → reroute only if the new path beats the path actually
-   │   being walked by more than 10 % on rank_cost ("better_path"),
-   │   else update the cached path silently and return None
-   └─ different exit → exit-switch anchor, then reroute_agent(wait_info, best.path)
-       ├─ candidates are tried in rank order; a promotion the anchor would
-       │   refuse is skipped so it cannot hide the rest of the list
-       ├─ anchor: adopt only if rank_cost < old_cost * exit_switch_anchor
-       │   ├─ bypassed when the old exit is FED-lethal or impassably smoky
-       │   └─ gate: bypassed when the rival is feasible, clearer in metres by
-       │       the anchor margin, AND either a whole band clearer or clean
-       │       while the current exit is not
-       ├─ rewrite path_choices deterministically along new path
-       ├─ retarget agent to first unvisited stage in new path
-       └─ return RouteSwitch record
-```
+In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
+`AdditivePolicy`, and each row is one function:
+
+| Step | Function |
+|---|---|
+| **Candidates** | `_generate_candidates`, weighting edges with the policy's `edge_weight` |
+| **Rejection** | `_measure_route`, then `_assess_measurements` with the policy's `feasibility`; the K_vis pass is `apply_candidate_set_rules` |
+| **Ranking** | the policy's `order_key` |
+| **Fallback** | `_apply_fallback` |
+| **Switch, same exit** | `_decide_same_exit` |
+| **Switch, other exit** | `_select_candidate`, then `_decide_exit_change`; the anchor is `_anchor_allows` |
+| **Applied** | `_apply_decision` |
+
+The explore and wander decisions are made by `_decide_explore`.
+
+Several of these rules resist switching at different points (return margins,
+discount, anchor, fallback margin, same-exit threshold). Their consolidation is
+[#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); the
+anchor's baseline is the best path to the current exit, not the walked one
+([#186](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186)).
 
 When `rank_routes` returns nothing at all — a discovery agent whose
 known subgraph holds no exit — the agent is sent toward the nearest
@@ -475,12 +485,12 @@ An exit switch is recorded when **all four** conditions hold:
 
 1. The agent's reevaluation tick fires (staggered offset + interval).
 2. `rank_routes` finds a best route that is not hard-rejected.
-3. That best route leads to a **different exit** than the current one.
+3. That best route leads to a **different exit** than the current one,
+   or the agent is idle (an idle agent is routed even to its current exit).
 4. It clears the exit-switch anchor, or qualifies for one of the anchor
    bypasses (old exit FED-lethal or impassably smoky; or, under the gate, a
-   feasible rival clearer in metres of sighting distance by the anchor margin
-   *and* either a whole visibility band clearer or clean while the current exit
-   is not).
+   clean rival while the current exit is not, or a feasible rival whose τ is
+   lower by more than `tau_max` × `tau_deadband`).
 
 No switch is recorded when:
 
@@ -488,8 +498,9 @@ No switch is recorded when:
 - The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).
 - All routes are hard-rejected and none was un-rejected as a fallback.
 - The anchor holds the agent on its current exit.
-- The best route leads to the same exit — though the path to it may
-  still be rewritten, which is recorded as `better_path`.
+- The best route leads to the same exit and the agent is not idle —
+  though the path to it may still be rewritten, which is recorded as
+  `better_path`.
 
 ### Route switch reasons
 
@@ -498,9 +509,9 @@ Each `RouteSwitch` record includes a `reason` field:
 | Reason          | Condition                                                        |
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment                            |
-| `smoke_reroute` | Best route is a different exit (lower `rank_cost`)               |
+| `smoke_reroute` | Best route is a different exit (lower `rank_cost`), or an idle agent is routed to its current exit |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
-| `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`      |
+| `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`, or a feasible path replacing a rejected walked one |
 | `explore`       | No exit known yet; heading to the nearest unexplored frontier    |
 | `wander`        | Knowledge exhausted; patrolling known nodes                      |
 
@@ -583,16 +594,17 @@ quantity that does is `tau_route`.
   key table, and known limitations.
 - [gate-model-review-notes.md](gate-model-review-notes.md) -- provenance
   against `materials/evac.f90` and the open questions.
-- [FDS+Evac Technical Reference and User's Guide](../materials/FDS+EVAC_Guide.pdf)
-  -- Korhonen (2021). Speed-reduction law and smoke-interaction model
-  (Section 3.4).
-- [Boerger et al. (2024)](../materials/waypoint_based_visibility.pdf)
+- [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) Technical Reference and User's Guide
+  -- Korhonen (2021). Smoke-interaction model (Section 3.4).
+- [Routing model](/models/routing.md) -- defaults and deviations from the
+  literature; the published laws are on
+  [Extinction coefficient](/fundamentals/extinction.md) and
+  [Visibility through smoke](/fundamentals/visibility.md).
+- [Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269)
   -- Beer-Lambert integrated extinction along line of sight (Eq. 8-9),
   waypoint-based visibility maps. Fire Safety Journal 150:104269.
-- [Schroder et al. (2020)](../materials/Schroder2020.pdf) --
-  Waypoint-based visibility and evacuation modeling.
-- [Ronchi et al. (2013)](../materials/Ronchi2013.pdf) -- FDS+Evac
-  evacuation model validation and verification.
+- [Schroder et al. (2020)](https://doi.org/10.1016/j.firesaf.2020.103154) --
+  A map representation of the ASET-RSET concept. Fire Safety Journal.
 - Ehtamo, H., Heliövaara, S., Korhonen, T. & Hostikka, S. (2010).
   Game theoretic best-response dynamics for evacuees' exit selection.
   *Advances in Complex Systems*, 13(1), 113–134.

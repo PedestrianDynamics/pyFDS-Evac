@@ -1,4 +1,14 @@
-# Smoke-speed model
+---
+title: "Speed in practice"
+linkTitle: "Speed in practice"
+weight: 1
+aliases: [/docs/smoke-speed-model/, /docs/implementation/speed/smoke-speed-model/]
+---
+
+> [!NOTE]
+> This page shows the smoke-speed model at work: its API and runs on the
+> assets. For its definition, parameters and defaults, see
+> [Models › Smoke-speed model](/models/smoke-speed.md).
 
 > Part of [pyFDS-Evac](../README.md).
 
@@ -9,54 +19,12 @@ via `SmokeSpeedConfig.speed_law`.
 
 ## Speed-reduction laws
 
-### Lund / FDS+Evac (`speed_law="lund"`, default)
-
-Linear speed-reduction derived from the Frantzich-Nilsson (Lund) data,
-as used in the original [FDS+Evac](../materials/FDS+EVAC_Guide.pdf)
-(Section 3.4, Eq. 11):
-
-```
-speed_factor(K) = 1 + beta * K / alpha
-```
-
-The factor is clamped to `[min_speed_factor, 1.0]`, so agents always
-retain a minimum fraction of their clear-air speed. The default
-coefficients are:
-
-| Parameter          | Default | Description                        |
-|--------------------|---------|------------------------------------|
-| `alpha`            | 0.706   | Normalization constant             |
-| `beta`             | -0.057  | Slope (negative = speed decreases) |
-| `min_speed_factor` | 0.1     | Floor for the speed multiplier     |
-
-### Fridolf et al. (2019) (`speed_law="fridolf"`)
-
-Non-linear model validated against individual walking-speed measurements
-in smoke-filled tunnels (Fridolf et al. 2019, method 3). Visibility is
-derived from extinction via the Jin (1970-1978) relation `V = C / K`,
-then:
-
-```
-speed_factor(V) = V / (V + 2)
-```
-
-| Parameter            | Default | Description                                         |
-|----------------------|---------|-----------------------------------------------------|
-| `visibility_factor_c`| 3.0     | Jin constant C (3 = reflective sign, 8 = lit sign)  |
-
-Properties:
-- At K = 0 (clear air): V → ∞, factor → 1.
-- At K = C/2: V = 2 m, factor = 0.5 (half speed).
-- As K → ∞: factor → 0 — no hard clamp needed.
-- Also used by Pathfinder (Thunderhead Engineering).
-
-### Actual walking speed
-
-```
-v(K) = v0 * speed_factor(K)
-```
-
-where `v0` is the agent's clear-air speed.
+The agent walks at `v0 * speed_factor(K)`, where `v0` is its clear-air speed
+and the factor follows `speed_law="lund"` (default) or `"fridolf"`. The coded
+equations, the `SmokeSpeedConfig` defaults and the departures from the
+literature are on the [smoke-speed model](/models/smoke-speed.md) page;
+the published laws are on
+[Walking speed in smoke](/fundamentals/walking-speed.md).
 
 ## Extinction sources
 
@@ -109,11 +77,13 @@ config = SmokeSpeedConfig(
     fds_dir="path/to/fds_case",
     update_interval_s=1.0,    # how often agents resample extinction
     slice_height_m=2.0,       # FDS slice height
-    alpha=0.706,
-    beta=-0.057,
-    min_speed_factor=0.1,
+    speed_law="lund",         # or "fridolf"
 )
 ```
+
+The law coefficients (`alpha`, `beta`, `min_speed_factor`,
+`visibility_factor_c`) are further fields; their defaults are listed on the
+[smoke-speed model](/models/smoke-speed.md#parameters) page.
 
 The `update_interval_s` field controls how frequently each agent
 queries the extinction field during the simulation loop. A value of
@@ -140,31 +110,97 @@ extinction_K, speed_factor = model.sample(time_s=30.0, x=5.0, y=3.0)
 factor = model.speed_factor(time_s=30.0, x=5.0, y=3.0)
 ```
 
+## Runs on the assets
+
+Run the ISO 20414 Test 18 (Table 21) corridor with a constant extinction coefficient:
+
+```bash
+uv run run.py \
+  --scenario assets/ISO-table21 \
+  --constant-extinction 1.0 \
+  --smoke-update-interval 0.1 \
+  --output-smoke-history /tmp/iso-table21-smoke-history.csv \
+  --cleanup
+```
+
+Run the smoke-speed model against FDS results read through `fdsreader`. The
+repository ships the deck, not its output — the slices are 4.2 MB and the full
+run 54 MB — so run FDS once first:
+
+```bash
+mkdir -p /tmp/iso21 && cd /tmp/iso21 \
+  && fds /path/to/assets/ISO-table21/ISO-table21.fds && cd -   # ~8 min
+
+uv run run.py \
+  --scenario assets/ISO-table21 \
+  --fds-dir /tmp/iso21 \
+  --smoke-update-interval 0.1 \
+  --output-smoke-history /tmp/iso-table21-fds-smoke-history.csv \
+  --cleanup
+```
+
+Inspect the FDS quantities available through `fdsreader`:
+
+```bash
+uv run run.py --inspect-fds --fds-dir /tmp/iso21 --scenario assets/ISO-table21
+```
+
+For a case where the coupling is exercised without running FDS yourself, see
+[`assets/iso_table22_coupled`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/iso_table22_coupled/README.md): its output
+is committed (136 kB) and a test reads it on every CI run.
+
+Plot smoke-speed history for a single agent:
+
+```bash
+uv run python scripts/plot_smoke_history.py \
+  --input /tmp/iso-table21-smoke-history.csv \
+  --output /tmp/iso-table21-smoke-history.png \
+  --agent-id 1
+```
+
+Plot aggregate smoke-speed history:
+
+```bash
+uv run python scripts/plot_smoke_history.py \
+  --input /tmp/iso-table21-smoke-history.csv \
+  --output /tmp/iso-table21-smoke-history-aggregate.png
+```
+
+Generate a stable ISO 20414 Test 18 (Table 21) sweep artifact under `artifacts/`:
+
+```bash
+uv run python scripts/generate_iso_table21_sweep.py
+```
+
+Figure: ![ISO 20414 Test 18 (Table 21) sweep](/artifacts/iso-table21-sweep.png)
+
+Generate the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) smoke-density vs speed verification plot:
+
+```bash
+uv run python scripts/generate_smoke_density_speed_plot.py
+```
+
+Figure: ![soot_density vs speed](/artifacts/smoke-density-vs-speed.png)
+
 ## Conversion utilities
 
 Two helper functions support the soot-density-based workflow from the
-original [FDS+Evac guide](../materials/FDS+EVAC_Guide.pdf):
+original FDS+Evac guide:
 
 - `extinction_from_soot_density(soot_density_mg_per_m3)` -- converts
-  soot density to extinction using `K = K_m * rho_s * 1e-6`, where
-  `K_m = 8700 m^2/kg` is the mass-specific extinction coefficient
-  for red light at 633 nm.
+  soot density to extinction using `K = K_m * rho_s * 1e-6`, where `K_m`
+  (`mass_extinction_coefficient_m2_per_kg`, default 8700 m²/kg) is the FDS
+  default mass-specific extinction coefficient (see
+  [Extinction coefficient](/fundamentals/extinction.md)).
 - `speed_from_soot_density(base_speed, soot_density_mg_per_m3)` --
   computes the reduced walking speed directly from soot density.
 
 ## References
 
-- [FDS+Evac Technical Reference and User's Guide](../materials/FDS+EVAC_Guide.pdf)
-  -- Korhonen (2021). Speed-reduction law (Section 3.4, Eq. 11),
-  soot-density-to-extinction conversion.
-- [Ronchi et al. (2013)](../materials/Ronchi2013.pdf) --
-  Interpretation A3 comparison of speed-extinction models across
-  evacuation tools.
+- [Smoke-speed model](/models/smoke-speed.md): coded form, defaults and
+  deviations from the literature.
+- [Walking speed in smoke](/fundamentals/walking-speed.md) and
+  [Extinction coefficient](/fundamentals/extinction.md): the published laws
+  and their sources.
 - [evac.f90](../materials/evac.f90) -- Original FDS+Evac Fortran
   source for cross-referencing implementation details.
-- Jin (1970-1978) -- empirical visibility-extinction correlation
-  `V = C / sigma`.
-- Frantzich & Nilsson (Lund) -- linear speed-extinction relation
-  used by FDS+Evac.
-- Boerger et al. (2024), Fire Safety Journal 150:104269 --
-  Beer-Lambert integrated extinction along line of sight (Eq. 8-9).

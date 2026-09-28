@@ -18,8 +18,8 @@ rest) is untracked. See the ignore rules in [`.gitignore`](../.gitignore).
 
 | Folder | What it is | Fire | Detail |
 |--------|------------|------|--------|
-| `ISO-table21` | **ISO 20414:2020 Table 21** (Test 18) reduced visibility vs walking speed. Also the default small fixture for unrelated tests. | deck | [README](../README.md#assets) |
-| `ISO-table22` | **ISO 20414:2020 Table 22** (Test 19) occupant incapacitation; gas field stubbed. | no | [README](../README.md#assets) |
+| `ISO-table21` | **ISO 20414:2020 Table 21** (Test 18) reduced visibility vs walking speed. Also the default small fixture for unrelated tests. | deck | [docs/assets.md](../docs/assets.md) |
+| `ISO-table22` | **ISO 20414:2020 Table 22** (Test 19) occupant incapacitation; gas field stubbed. | no | [docs/assets.md](../docs/assets.md) |
 | `t_junction` | T-corridor, cable fire at the junction, two exits. The rerouting case. | deck | [t_junction/README.md](t_junction/README.md), [test_rerouting_smoke_sweep.py](../tests/test_rerouting_smoke_sweep.py) |
 | `fed_incap_co_2000ppm`<br>`fed_incap_co_4000ppm`<br>`fed_incap_co_8000ppm` | Sealed uniform room at three constant CO concentrations, 100 non-evacuating agents, 4 MPI meshes. | deck | [testing-homogeneous.md](../docs/testing-homogeneous.md) |
 | `fed_incap_heat_100c`<br>`fed_incap_heat_150c`<br>`fed_incap_heat_200c` | Sealed uniform room at three constant gas temperatures (heat FED, SFPE Handbook Eq. 63.44), 100 non-evacuating agents, 4 MPI meshes. Same `config.json`/`geometry.wkt` as the CO ladder. | deck | [testing-heat.md](../docs/testing-heat.md) |
@@ -28,12 +28,12 @@ rest) is untracked. See the ignore rules in [`.gitignore`](../.gitignore).
 | `fic_vs_fed_speed` | 4 x 50 m sealed corridor, 30 agents, prescribed CO + acrolein. Three runs differing only in which tenability rules are enabled. | deck | [test_fic_vs_fed_speed.py](../tests/test_fic_vs_fed_speed.py) |
 | `cognitive_map_memory` | 4 x 32 m corridor with a side alcove, 20 discovery agents. A side exit's sign is legible only from y in [12.5, 27.5]. | deck | [test_cognitive_map_memory.py](../tests/test_cognitive_map_memory.py) |
 | `blind_spawn_discovery` | Both exits occluded from spawn, so a `discovery` agent starts with no exit in its cognitive map and must explore. | deck | [README](blind_spawn_discovery/README.md), [test_blind_spawn_discovery.py](../tests/test_blind_spawn_discovery.py) |
-| `iso_table21_coupled` | ISO 20414 Table 21 (reduced visibility vs speed), coupled to a real FDS extinction slice instead of a constant `K`. | deck | [README](iso_table21_coupled/README.md), [test_iso_table21_coupled.py](../tests/test_iso_table21_coupled.py) |
-| `iso_table22_coupled` | ISO 20414 Table 22 (occupant incapacitation), four cases coupled to real FDS gas output instead of stubbed values. | deck | [README](iso_table22_coupled/README.md), [test_iso_table22_coupled.py](../tests/test_iso_table22_coupled.py) |
+| `iso_table21_coupled` | ISO 20414 Table 21 (Test 18, reduced visibility vs speed), coupled to a real FDS extinction slice instead of a constant `K`. | deck | [README](iso_table21_coupled/README.md), [test_iso_table21_coupled.py](../tests/test_iso_table21_coupled.py) |
+| `iso_table22_coupled` | ISO 20414 Table 22 (Test 19, occupant incapacitation), four cases coupled to real FDS gas output instead of stubbed values. | deck | [README](iso_table22_coupled/README.md), [test_iso_table22_coupled.py](../tests/test_iso_table22_coupled.py) |
 | `station_fahy` | The 2003 Station nightclub, walkable area traced by hand from the floor plan (`station_fahy/source`, rebuilt by `build_scenario.py`), with the routing/spawn config validated against Fahy, Proulx & Flynn (2011)'s witness-statement door shares. | no | [scripts/sweep_queue_weight.py](../scripts/sweep_queue_weight.py), [`assets/station_fahy/validate.py`](station_fahy/validate.py) |
 
 What each one proves, and where that proof is checked, is in the
-[Assets section of the main README](../README.md#assets).
+[docs/assets.md](../docs/assets.md).
 
 Note that the component verification suite,
 [`tests/verification/`](../tests/verification/README.md), does not load these

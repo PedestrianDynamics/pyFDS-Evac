@@ -10,11 +10,14 @@ Self-contained: builds its own graphs/wait_info so it doesn't depend on the
 private fixtures in test_route_graph.py.
 """
 
+import math
+
 import pytest
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.cognitive_map import (
     AgentCognitiveMap,
+    cognitive_subgraph,
     nearest_frontier_target,
 )
 from pyfds_evac.core.route_graph import (
@@ -23,6 +26,8 @@ from pyfds_evac.core.route_graph import (
     RouteCostConfig,
     StageGraph,
     evaluate_and_reroute,
+    evaluate_route,
+    rank_routes,
 )
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
@@ -264,6 +269,75 @@ class TestBetterPathReroute:
         assert self._run(g, wait_info, rs) is None
 
 
+class _SmokeBelowAxis:
+    """K = 0.4 /m south of y = 0, clear air north of it.
+
+    Along the southern path that is an optical depth of about 6.9, over the
+    gate's budget of 6, while slowing the walk by only about 3 %.
+    """
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        return 0.4 if y < 0.0 else 0.0
+
+
+def _twin_graph() -> StageGraph:
+    """Two near-equal paths to E0: D0→C1→E0 (south) and D0→C0→E0 (north).
+
+    The northern leg is slightly longer, so on time alone it is never 10 %
+    better than the southern one.
+    """
+    return _graph(
+        {
+            "C0": (10, 2, "checkpoint"),
+            "C1": (10, -1, "checkpoint"),
+            "E0": (20, 0, "exit"),
+        },
+        [
+            {"from": "D0", "to": "C0"},
+            {"from": "D0", "to": "C1"},
+            {"from": "C0", "to": "E0"},
+            {"from": "C1", "to": "E0"},
+        ],
+    )
+
+
+class TestSameExitLeavesRejectedPath:
+    """#184: the 10 % time rule must not keep an agent on a rejected path."""
+
+    def _run(self, extinction_sampler):
+        g = _twin_graph()
+        wait_info = _wait_info(
+            g,
+            "D0",
+            "C1",
+            path_choices={"D0": [("C1", 100.0)], "C1": [("E0", 100.0)]},
+        )
+        rs = AgentRouteState(current_exit="E0", current_path=["D0", "C1", "E0"])
+        switch = evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=rs,
+            graph=g,
+            current_time_s=5.0,
+            current_fed=0.0,
+            extinction_sampler=extinction_sampler,
+            fed_rate_sampler=None,
+            config=RerouteConfig(cost_config=RouteCostConfig(base_speed_m_per_s=1.0)),
+        )
+        return switch, rs
+
+    def test_leaves_a_smoke_rejected_path_for_a_feasible_one(self):
+        switch, rs = self._run(_SmokeBelowAxis())
+        assert switch is not None
+        assert switch.new_exit == "E0"
+        assert "C0" in rs.current_path
+
+    def test_keeps_the_walked_path_when_it_is_feasible(self):
+        """Without the smoke the northern leg is not 10 % faster."""
+        switch, rs = self._run(_CLEAR)
+        assert switch is None
+
+
 # ── evaluate_and_reroute: explore (frontier) ──────────────────────────
 
 
@@ -308,3 +382,238 @@ class TestExploreReroute:
         rs = AgentRouteState()
         switch = self._run(g, wait_info, rs, cmap)
         assert switch is None or switch.reason != "explore"
+
+
+# ── walls: discovery measures distance the way full does (issue #172) ─
+
+
+def _corridor_graph(walkable, nodes: dict, transitions: list) -> StageGraph:
+    """A StageGraph with a routing engine over *walkable*."""
+    dsi = {
+        nid: {"polygon": _box(cx, cy, half=0.5), "stage_type": st}
+        for nid, (cx, cy, st) in nodes.items()
+    }
+    return StageGraph.from_scenario(dsi, transitions, walkable_polygon=walkable)
+
+
+class TestDiscoveryMeasuresAroundWalls:
+    """A discovery agent must measure its first leg through the walkable area.
+
+    Familiarity decides what an agent knows, not how it measures. Before the
+    fix the known subgraph dropped the routing engine, so a discovery agent
+    measured the walk to its next node as a straight line through the wall
+    while a full agent at the same spot walked around it.
+    """
+
+    @staticmethod
+    def _l_graph() -> StageGraph:
+        """An L corridor; the exit sits up the vertical leg, behind the corner."""
+        from shapely.geometry import box
+        from shapely.ops import unary_union
+
+        return _corridor_graph(
+            unary_union([box(0, 0, 20, 3), box(17, 0, 20, 20)]),
+            {"j": (18.5, 1.5, "checkpoint"), "e0": (18.5, 18.0, "exit")},
+            [{"from": "j", "to": "e0"}],
+        )
+
+    @staticmethod
+    def _rank(graph, cmap, agent):
+        return rank_routes(
+            graph,
+            "j",
+            0.0,
+            0.0,
+            _CLEAR,
+            None,
+            _DIST_ONLY,
+            cognitive_map=cmap,
+            agent_position=agent,
+        )
+
+    def test_known_subgraph_keeps_the_routing_engine(self):
+        g = self._l_graph()
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"j", "e0"},
+            known_edges={("j", "e0")},
+        )
+        assert cognitive_subgraph(cmap, g).routing_engine is g.routing_engine
+
+    def test_first_leg_matches_the_full_tier_behind_a_wall(self):
+        g = self._l_graph()
+        agent = (5.0, 1.5)  # the straight line to e0 leaves the corridor
+        full = AgentCognitiveMap(familiarity="full")
+        discovery = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"j", "e0"},
+            known_edges={("j", "e0")},
+        )
+
+        (full_route,) = self._rank(g, full, agent)
+        (disc_route,) = self._rank(g, discovery, agent)
+
+        straight = math.hypot(18.5 - agent[0], 18.0 - agent[1])
+        assert full_route.composite_cost > straight + 1.0
+        assert disc_route.composite_cost == pytest.approx(full_route.composite_cost)
+
+    def test_frontier_distance_follows_the_corridor(self):
+        """Two frontiers; the nearer one as the crow flies is behind a wall.
+
+        A U corridor: the agent stands high in the left arm. Frontier ``a`` is
+        across the gap in the right arm (17 m straight, ~45 m walked); frontier
+        ``b`` is in the bottom leg (~18 m straight, ~24 m walked).
+        """
+        from shapely.geometry import box
+        from shapely.ops import unary_union
+
+        g = _corridor_graph(
+            unary_union([box(0, 0, 20, 3), box(0, 0, 3, 20), box(17, 0, 20, 20)]),
+            {
+                "s": (1.5, 10.0, "checkpoint"),
+                "a": (18.5, 17.0, "checkpoint"),
+                "b": (10.0, 1.5, "checkpoint"),
+            },
+            [{"from": "s", "to": "a"}, {"from": "s", "to": "b"}],
+        )
+        cmap = AgentCognitiveMap(
+            familiarity="discovery",
+            known_nodes={"s", "a", "b"},
+            known_edges={("s", "a"), ("s", "b")},
+            visited_nodes={"s"},
+        )
+        node, _ = nearest_frontier_target(cmap, g, "s", (1.5, 17.0))
+        assert node == "b"
+
+
+class _SmokeInBox:
+    """K > 0 inside an axis-aligned box, clear air elsewhere."""
+
+    def __init__(self, x0, y0, x1, y1, k=5.0):
+        self.box = (x0, y0, x1, y1)
+        self.k = k
+
+    def sample_extinction(self, time_s, x, y):
+        x0, y0, x1, y1 = self.box
+        return self.k if x0 <= x <= x1 and y0 <= y <= y1 else 0.0
+
+
+class _RecordingField:
+    """Clear air that records every point it is asked about."""
+
+    def __init__(self):
+        self.points: list[tuple[float, float]] = []
+
+    def sample_extinction(self, time_s, x, y):
+        self.points.append((x, y))
+        return 0.0
+
+
+def _max_gap(points: list[tuple[float, float]]) -> float:
+    return max(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(points, points[1:]))
+
+
+class TestFirstLegResampledAlongWalkedPath:
+    """The first leg is resampled along the walk to the next node.
+
+    ``k_max_route`` and ``k_leg_max`` take the first leg from where the agent
+    stands. That stretch must follow the walkable path, not a straight line
+    through a wall, and be sampled at ``sampling_step_m`` over its real length.
+    """
+
+    _AGENT = (5.0, 1.5)  # behind j; the straight line to e0 leaves the L
+    # Outside the walkable L, on the straight line from the agent to e0.
+    _BEHIND_WALL = _SmokeInBox(9.0, 6.0, 15.0, 14.0)
+
+    @staticmethod
+    def _evaluate(graph, path, sampler, agent, config=_DIST_ONLY):
+        return evaluate_route(
+            graph, path, 0.0, 0.0, sampler, None, config, agent_position=agent
+        )
+
+    def test_smoke_behind_a_wall_is_not_sampled(self):
+        g = TestDiscoveryMeasuresAroundWalls._l_graph()
+        smoky = self._evaluate(g, ["j", "e0"], self._BEHIND_WALL, self._AGENT)
+        clear = self._evaluate(g, ["j", "e0"], _CLEAR, self._AGENT)
+
+        assert smoky.k_max_route == 0.0
+        assert smoky.k_leg_max == 0.0
+        assert smoky.tau_route == pytest.approx(clear.tau_route)
+
+    def test_smoke_behind_a_wall_does_not_leave_the_clean_tier(self):
+        g = TestDiscoveryMeasuresAroundWalls._l_graph()
+        config = RouteCostConfig(
+            base_speed_m_per_s=1.0,
+            w_smoke=0.0,
+            w_fed=0.0,
+            w_queue=0.0,
+            clean_extinction_threshold=0.03,
+        )
+        route = self._evaluate(g, ["j", "e0"], self._BEHIND_WALL, self._AGENT, config)
+        assert route.clean
+
+    def test_walked_first_leg_is_sampled_at_the_step(self):
+        g = TestDiscoveryMeasuresAroundWalls._l_graph()
+        cache: dict = {}
+        evaluate_route(
+            g,
+            ["j", "e0"],
+            0.0,
+            0.0,
+            _CLEAR,
+            None,
+            _DIST_ONLY,
+            cached_segments=cache,
+            agent_position=self._AGENT,
+        )
+        field = _RecordingField()
+        evaluate_route(
+            g,
+            ["j", "e0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            _DIST_ONLY,
+            cached_segments=cache,
+            agent_position=self._AGENT,
+        )
+        # With the segment cached, every sample belongs to the first-leg
+        # resample, which runs from the agent to e0 around the corner.
+        assert field.points[0] == pytest.approx(self._AGENT)
+        assert field.points[-1] == pytest.approx((18.5, 18.0), abs=0.5)
+        assert _max_gap(field.points) <= _DIST_ONLY.sampling_step_m + 1e-6
+
+    def test_straight_fallback_is_sampled_at_the_step(self):
+        """Without a routing engine the resample stays a straight line."""
+        g = _linear_graph()
+        assert g.routing_engine is None
+        agent = (-5.0, 0.0)  # 15 m behind C0; the first leg is 10 m long
+        cache: dict = {}
+        evaluate_route(
+            g,
+            ["C0", "E0"],
+            0.0,
+            0.0,
+            _CLEAR,
+            None,
+            _DIST_ONLY,
+            cached_segments=cache,
+            agent_position=agent,
+        )
+        field = _RecordingField()
+        evaluate_route(
+            g,
+            ["C0", "E0"],
+            0.0,
+            0.0,
+            field,
+            None,
+            _DIST_ONLY,
+            cached_segments=cache,
+            agent_position=agent,
+        )
+        assert field.points[0] == pytest.approx(agent)
+        assert field.points[-1] == pytest.approx((20.0, 0.0))
+        assert all(y == pytest.approx(0.0) for _, y in field.points)
+        assert _max_gap(field.points) <= _DIST_ONLY.sampling_step_m + 1e-6

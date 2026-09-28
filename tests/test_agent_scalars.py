@@ -151,7 +151,7 @@ def test_frames_align_with_trajectory(tmp_path):
     con = sqlite3.connect(db)
     con.executemany(
         "INSERT INTO trajectory_data VALUES (?, ?, 0, 0, 1, 0)",
-        [(f, 1) for f in range(0, 21)],
+        [(f, 1) for f in range(21)],
     )
     con.commit()
     con.close()

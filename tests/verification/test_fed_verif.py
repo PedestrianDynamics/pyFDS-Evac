@@ -68,29 +68,29 @@ def test_a2_2_co_and_hcn_terms_add_under_hv():
     co_ppm = 0.05 * 10000.0
     ref_co_rate = 2.764e-5 * (co_ppm**1.036)
     c_cn = max(0.0, 80.0 - 0.0)
-    ref_cn_rate = math.exp(c_cn / 43.0) / 220.0 - 0.0045
+    ref_cn_rate = math.exp(c_cn / 43.0) / 220.0 - 1.0 / 220.0
     ref_hv = math.exp(2.0004) / 7.1
     ref_rate = (ref_co_rate + ref_cn_rate) * ref_hv
 
     assert default_fed_rate_per_minute(inputs) == pytest.approx(ref_rate, rel=1e-9)
 
 
-# --- A2.3: O2 hypoxia gate at 19.5 % ----------------------------------------
+# --- A2.3: O2 hypoxia gate at 20.0 % (FDS: X_O2 < 0.20) ---------------------
 
 
 def test_a2_3_o2_gate_zero_at_and_above_threshold():
-    for o2 in (19.5, 20.9):
+    for o2 in (20.0, 20.9):
         inputs = DefaultFedInputs(o2_volume_fraction_percent=o2)
         # All toxicants are 0, so the rate is purely the O2 contribution.
         assert default_fed_rate_per_minute(inputs) == 0.0
 
 
 def test_a2_3_o2_gate_finite_just_below_threshold():
-    inputs = DefaultFedInputs(o2_volume_fraction_percent=19.4)
+    inputs = DefaultFedInputs(o2_volume_fraction_percent=19.9)
     # Purser / FDS Tech Ref Eq. 18 gives t_incap directly in MINUTES, so the
     # per-minute rate is 1 / t_incap with no further conversion. This reference
     # previously carried a spurious 60x, matching the engine bug fixed in #35.
-    ref_o2_rate = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.4))
+    ref_o2_rate = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.9))
 
     got = default_fed_rate_per_minute(inputs)
 
@@ -187,3 +187,28 @@ def test_a2_7_rate_strictly_increases_with_co():
         for c in (0.01, 0.05, 0.1, 0.2)
     ]
     assert all(lo < hi for lo, hi in zip(rates, rates[1:]))
+
+
+# --- A2.8: FDS verification case FED_FIC, "Asphyxiants" zone ----------------
+
+
+def test_a2_8_fds_fed_fic_asphyxiants_zone_at_100_s():
+    """Reproduce FDS Verification/Species/FED_FIC, device 'FED (Asphyxiants)'.
+
+    The zone holds O2, CO2, CO, NO and HCN at constant mole fractions for
+    100 s, with no NO2 and no irritants. FDS writes FED = 0.97403 at 100 s
+    (FED_FIC.csv). This is the check that tells the CN forms apart: the
+    FDS code form C_CN = C_HCN - (C_NO + C_NO2) gives 0.97401, the FDS+Evac
+    guide's Eq. 15 form C_CN = C_HCN - C_NO2 gives 6.17 (#159).
+    """
+    inputs = DefaultFedInputs(
+        o2_volume_fraction_percent=100.0 * 0.09021848,
+        co2_volume_fraction_percent=100.0 * 0.01918864,
+        co_volume_fraction_percent=2455.82e-4,
+        no_ppm=134.87,
+        hcn_ppm=265.33,
+    )
+
+    got = accumulate_default_fed(inputs, duration_s=100.0)
+
+    assert got == pytest.approx(0.97403, abs=5e-5)

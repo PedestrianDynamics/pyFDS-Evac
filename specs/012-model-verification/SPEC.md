@@ -93,12 +93,13 @@ omitted from any reference value.
 
 - **A2.1** Constant CO = 1000 ppm, CO₂ = 0, O₂ = 20.9 %, T = 30 min. CO rate
   (Eq. 13) = `2.764e-5 · 1000^1.036 ≈ 0.03543`/min; `hv_co2(0) ≈ 1.0411`;
-  O₂ term = 0 (gated at 19.5 %). Closed form
+  O₂ term = 0 (gated at 20.0 %). Closed form
   `FED = 0.03543 · 1.0411 · 30 ≈ 1.107`. Assert to `1e-3` against the exact
   expression, **not** the CO-only value.
 - **A2.2** Additivity: constant CO + HCN ⇒ FED equals
   `(co_rate + cn_rate)·hv_co2·T` from the two closed forms.
-- **A2.3** O₂ hypoxia gate (19.5 %): at O₂ ≥ 19.5 % the term is exactly 0
+- **A2.3** O₂ hypoxia gate (20.0 %, FDS `func.f90`; 19.5 % selectable): at
+  O₂ ≥ 20.0 % the term is exactly 0
   (`_o2_hypoxia_rate_per_minute` early-return); just below, it follows
   `1/(60·exp(8.13−0.54·(20.9−O₂)))` with no blow-up. Sweep across the
   boundary and assert both branches.
@@ -113,6 +114,10 @@ omitted from any reference value.
   incapacitated at FED = 0.3 / 1 / 3 reproduces the documented ≈ 10/50/88 %
   bands. Deterministic mode returns `fed_threshold` for every agent.
 - **A2.7** Monotonicity in each toxicant; determinism under a fixed seed.
+- **A2.8** FDS verification case `FED_FIC`, zone "Asphyxiants" (O₂, CO₂,
+  CO, NO, HCN at constant mole fractions, no NO₂, no irritants): FED at
+  100 s = 0.97403 (FDS csv). Separates the CN forms: C_HCN − (C_NO + C_NO2)
+  gives 0.97401, the guide's C_HCN − C_NO2 gives 6.17 (#159).
 - **B2.1** Real fire field: assert accumulated FED equals the closed form
   integrated over the **sampled** CO/CO₂/O₂ trajectory along an agent path.
 

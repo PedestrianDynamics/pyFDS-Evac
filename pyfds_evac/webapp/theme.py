@@ -12,7 +12,7 @@ emits are preserved; only the visual values change.
 
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any
 
 from fasthtml.common import Link, Style
 
@@ -489,6 +489,6 @@ details[open] summary .chevron { transform: rotate(180deg); }
 """
 
 
-def headers() -> List[Any]:
+def headers() -> list[Any]:
     """Return the <head> elements that apply the theme (after franken-ui)."""
     return [_FONTS, Style(_CSS)]

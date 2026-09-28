@@ -1,14 +1,12 @@
 """Pre-movement time distributions used by scenario initialization."""
 
-from typing import Dict, Optional
-
 import numpy as np
 
 
 class PreMovementDistribution:
     """Base class for pre-evacuation time distributions."""
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int | None = None):
         self.rng = np.random.default_rng(seed)
 
     def sample(self, n_samples: int) -> np.ndarray:
@@ -19,9 +17,7 @@ class PreMovementDistribution:
 class GammaDistribution(PreMovementDistribution):
     """Gamma distribution for pre-evacuation times."""
 
-    def __init__(
-        self, a: float = 1.291, b: float = 103.901, seed: Optional[int] = None
-    ):
+    def __init__(self, a: float = 1.291, b: float = 103.901, seed: int | None = None):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -33,7 +29,7 @@ class GammaDistribution(PreMovementDistribution):
 class LognormalDistribution(PreMovementDistribution):
     """Lognormal distribution for pre-evacuation times."""
 
-    def __init__(self, a: float = 4.586, b: float = 0.967, seed: Optional[int] = None):
+    def __init__(self, a: float = 4.586, b: float = 0.967, seed: int | None = None):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -45,9 +41,7 @@ class LognormalDistribution(PreMovementDistribution):
 class WeibullDistribution(PreMovementDistribution):
     """Weibull distribution for pre-evacuation times."""
 
-    def __init__(
-        self, a: float = 139.285, b: float = 1.195, seed: Optional[int] = None
-    ):
+    def __init__(self, a: float = 139.285, b: float = 1.195, seed: int | None = None):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -59,7 +53,7 @@ class WeibullDistribution(PreMovementDistribution):
 class UniformDistribution(PreMovementDistribution):
     """Uniform distribution for pre-evacuation times."""
 
-    def __init__(self, a: float = 0.0, b: float = 60.0, seed: Optional[int] = None):
+    def __init__(self, a: float = 0.0, b: float = 60.0, seed: int | None = None):
         super().__init__(seed)
         self.a = a
         self.b = b
@@ -68,18 +62,44 @@ class UniformDistribution(PreMovementDistribution):
         return self.rng.uniform(self.a, self.b, n_samples)
 
 
+class ConstantDistribution(PreMovementDistribution):
+    """Every agent gets the same pre-movement time ``a`` [s].
+
+    FDS+Evac's default is a constant 10 s (``PRE_MEAN``); ``b`` is accepted
+    for a uniform call signature and ignored.
+    """
+
+    def __init__(
+        self, a: float = 10.0, b: float | None = None, seed: int | None = None
+    ):
+        super().__init__(seed)
+        self.a = a
+        self.b = b
+
+    def sample(self, n_samples: int) -> np.ndarray:
+        return np.full(n_samples, float(self.a))
+
+
+# gamma/lognormal/weibull: Lovreglio et al. (2019), Fire Saf. J. 105:107-128,
+# doi:10.1016/j.firesaf.2018.12.009, Table 3, Business Cluster 1, seconds;
+# lognormal a from the corrigendum, Fire Saf. J. 108:102829,
+# doi:10.1016/j.firesaf.2019.102829 (the original 381.651 is wrong).
+# Office evacuations (11, 10 of them drills), 4-14 floors, R^2 = 0.55-0.57.
+# uniform: RiMEA 4.1.1 §3.2.2.1 "speedy evacuation" sensitivity scenario.
+# constant: FDS+Evac PRE_MEAN (evac.f90).
 PREMOVEMENT_PRESETS = {
     "gamma": {"a": 1.291, "b": 103.901},
     "lognormal": {"a": 4.586, "b": 0.967},
     "weibull": {"a": 139.285, "b": 1.195},
     "uniform": {"a": 0.0, "b": 60.0},
+    "constant": {"a": 10.0, "b": None},
 }
 
 
 def create_premovement_distribution(
     distribution_type: str,
-    params: Dict[str, float],
-    seed: Optional[int] = None,
+    params: dict[str, float],
+    seed: int | None = None,
 ) -> PreMovementDistribution:
     """Return a configured pre-movement distribution instance."""
     distributions = {
@@ -87,6 +107,7 @@ def create_premovement_distribution(
         "lognormal": LognormalDistribution,
         "weibull": WeibullDistribution,
         "uniform": UniformDistribution,
+        "constant": ConstantDistribution,
     }
     if distribution_type not in distributions:
         raise ValueError(

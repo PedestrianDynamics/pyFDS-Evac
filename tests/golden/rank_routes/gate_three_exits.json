@@ -1,0 +1,58 @@
+{
+ "ranked": [
+  {
+   "clean": false,
+   "composite_cost": 50.0,
+   "exit_id": "north",
+   "feasible": true,
+   "fed_max_route": 0.0,
+   "k_leg_max": 0.0298,
+   "k_max_route": 0.031,
+   "path": [
+    "spawn",
+    "north"
+   ],
+   "queue_time_s": 0.0,
+   "rank_cost": 50.1206,
+   "status": "ok",
+   "tau_route": 1.4904,
+   "travel_time_s": 50.1206
+  },
+  {
+   "clean": false,
+   "composite_cost": 10.0,
+   "exit_id": "west",
+   "feasible": true,
+   "fed_max_route": 0.0,
+   "k_leg_max": 0.1583,
+   "k_max_route": 0.19,
+   "path": [
+    "spawn",
+    "west"
+   ],
+   "queue_time_s": 0.0,
+   "rank_cost": 10.1295,
+   "status": "ok",
+   "tau_route": 1.5833,
+   "travel_time_s": 10.1295
+  },
+  {
+   "clean": false,
+   "composite_cost": 30.0,
+   "exit_id": "east",
+   "feasible": true,
+   "fed_max_route": 0.0,
+   "k_leg_max": 0.0656,
+   "k_max_route": 0.07,
+   "path": [
+    "spawn",
+    "east"
+   ],
+   "queue_time_s": 0.0,
+   "rank_cost": 30.1598,
+   "status": "ok",
+   "tau_route": 1.9688,
+   "travel_time_s": 30.1598
+  }
+ ]
+}

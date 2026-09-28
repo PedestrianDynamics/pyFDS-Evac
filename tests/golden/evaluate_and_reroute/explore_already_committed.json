@@ -1,0 +1,25 @@
+{
+ "route_state": {
+  "current_exit": null,
+  "current_path": [
+   "D0",
+   "C0"
+  ],
+  "last_eval_time_s": 5.0,
+  "wander_step": 0
+ },
+ "switch": null,
+ "wait_info": {
+  "current_origin": "D0",
+  "current_target_stage": "C0",
+  "path_choices": {
+   "D0": [
+    [
+     "C0",
+     100.0
+    ]
+   ]
+  },
+  "state": "to_target"
+ }
+}

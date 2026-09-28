@@ -316,7 +316,7 @@ def wkt_to_fds(
     chid: str = "from_wkt",
     margin_cells: int = 1,
     include_fire: bool = True,
-    slice_height_m: float = 2.0,
+    slice_height_m: float = 1.6,
     hrrpua: float = 800.0,
     burner_size_m: float = 0.5,
     fire_xy: tuple[float, float] | None = None,

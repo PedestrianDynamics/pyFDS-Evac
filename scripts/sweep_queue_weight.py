@@ -188,6 +188,7 @@ def plot(summary: list[dict], out_path: Path) -> None:
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import seaborn as sns
 
     target = F.aggregate_door_shares()["front"]
     weights = [s["w_queue"] for s in summary]
@@ -195,6 +196,7 @@ def plot(summary: list[dict], out_path: Path) -> None:
     lo = [s["front_mean"] - s["front_min"] for s in summary]
     hi = [s["front_max"] - s["front_mean"] for s in summary]
 
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(7.0, 4.4))
     ax.errorbar(
         weights,
@@ -202,29 +204,66 @@ def plot(summary: list[dict], out_path: Path) -> None:
         yerr=[lo, hi],
         marker="o",
         capsize=3,
-        color="#1f77b4",
+        color="#1f253f",
+        markeredgecolor="white",
         label="front-door share",
     )
-    ax.axhline(target, color="#d62728", ls="--", label=f"Fahy {target:.1%}")
-    ax.set_xlabel("$w_{queue}$")
-    ax.set_ylabel("front-door share of door users")
-    ax.set_title("Station: front-door share vs queue weight (rerouting on)")
+    ax.axhline(target, color="#d73027", ls="--", label=f"Fahy {target:.1%}")
+    ax.set_xlabel("$w_{queue}$", color="dimgrey")
+    ax.set_ylabel("front-door share of door users", color="dimgrey")
+    ax.set_title(
+        "Station: front-door share vs queue weight (rerouting on)",
+        loc="left",
+        pad=18,
+        color="dimgrey",
+    )
+    if summary:
+        best = min(summary, key=lambda s: abs(s["front_mean"] - target))
+        ax.text(
+            1.0,
+            1.01,
+            f"closest to Fahy: w_queue = {best['w_queue']:g} "
+            f"({best['front_mean']:.1%})",
+            transform=ax.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=9,
+            color="dimgrey",
+            style="italic",
+        )
 
     twin = ax.twinx()
+    twin.grid(False)
     twin.plot(
         weights,
         [s["row_mad_mean"] for s in summary],
         marker="s",
         ls=":",
-        color="#7f7f7f",
+        color="grey",
         label="mean row deviation",
     )
-    twin.set_ylabel("mean |observed - Fahy| per row/door cell")
+    twin.set_ylabel("mean |observed - Fahy| per row/door cell", color="dimgrey")
     handles, labels = ax.get_legend_handles_labels()
     h2, l2 = twin.get_legend_handles_labels()
-    ax.legend(handles + h2, labels + l2, loc="upper right", fontsize=8)
+    twin.legend(
+        handles + h2,
+        labels + l2,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.16),
+        ncol=3,
+        fontsize=8,
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor="dimgrey",
+    )
+    for axis in (ax, twin):
+        axis.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+    sns.despine(ax=ax, left=True, bottom=True)
+    sns.despine(ax=twin, left=True, bottom=True, right=True)
     fig.tight_layout()
-    fig.savefig(out_path, dpi=150)
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
 
 
 def main() -> int:

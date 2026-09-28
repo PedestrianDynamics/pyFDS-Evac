@@ -1,8 +1,13 @@
-# Homogeneous CO FED Validation
+---
+title: "Homogeneous CO FED verification"
+linkTitle: "CO dose"
+weight: 14
+aliases: [/docs/testing-homogeneous/]
+---
 
 ## Purpose
 
-This test case validates the FED (Fractional Effective Dose) accumulation and
+This test case verifies the FED (Fractional Effective Dose) accumulation and
 probabilistic incapacitation logic in the pyFDS-Evac pipeline against
 hand-calculated predictions, using a simplified scenario with a spatially
 **homogeneous** (uniform) CO concentration field.
@@ -15,7 +20,7 @@ gas-transport physics.
 
 Three CO concentration levels are tested (2000, 4000, and 8000 ppm) to check
 that the pipeline's FED/incapacitation results scale correctly with dose,
-rather than validating against just a single data point.
+rather than verifying against just a single data point.
 
 Testing was also conducted using probabilistic tenability to make ensure that encapacitation 
 occurs at a log-normal distribution. 
@@ -43,7 +48,7 @@ occurs at a log-normal distribution.
   uniformly to the CO field — isolates FED/incapacitation tracking from
   movement and exit-routing dynamics.
 
-## What's Being Validated
+## What's Being Verified
 
 1. **FED accumulation** — per-agent FED(t) computed from FDS CO output
    matches the hand-calculated FED curve for a known, constant CO
@@ -81,6 +86,9 @@ itself uses to produce its `FED` device output. Background CO2 = 500 ppm
 all three cases.
 
 ### Formulae used
+
+These are the terms the hand calculation evaluates; the coded forms are on the
+[FED model](/models/fed.md#coded-form) page.
 
 **FED from CO** (eq. 22.43), C_CO in ppm, t in minutes:
 
@@ -190,7 +198,7 @@ to the hand-calc's **FED = 1.0** threshold (186.6 s), not the FED = 0.3
 two when comparing numbers.
 
 
-Remaining before this test case is complete:
+### Remaining before this test case is complete
 
 - Decide and document a formal tolerance (±5%, absolute FED difference,
   etc.) rather than eyeballing agreement from the plots.

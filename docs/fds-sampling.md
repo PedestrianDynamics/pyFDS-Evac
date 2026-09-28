@@ -1,4 +1,8 @@
-# FDS slice sampling
+---
+title: "FDS slice sampling"
+weight: 18
+aliases: [/docs/fds-sampling/]
+---
 
 > Part of [pyFDS-Evac](../README.md).
 
@@ -139,7 +143,7 @@ k_mean = integrated_extinction_along_los(
 ```
 
 This is the discrete form of
-[Boerger et al. (2024)](../materials/waypoint_based_visibility.pdf),
+[Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269),
 Eq. 8-9, and is used internally by the route-cost evaluator for
 smoke-aware [routing](routing.md).
 
@@ -147,7 +151,7 @@ smoke-aware [routing](routing.md).
 
 - [FDS case requirements](fds-case-requirements.md) -- the `&SLCF` lines a
   case must declare, and the failure modes when they're missing.
-- [Smoke-speed model](smoke-speed-model.md) -- how extinction drives
+- [Smoke-speed model](/models/smoke-speed.md) -- how extinction drives
   agent speed reduction.
 - [Smoke-aware routing](routing.md) -- how extinction and FED drive
   dynamic route selection.
