@@ -27,8 +27,6 @@ MODELS_HEAT = ROOT / "site" / "content" / "models" / "heat.md"
 FUND_HEAT = ROOT / "site" / "content" / "fundamentals" / "heat.md"
 LIMITATIONS = ROOT / "docs" / "limitations.md"
 
-_XFAIL = pytest.mark.xfail(strict=True, reason="#218")
-
 _CITE = r"`(?:pyfds_evac/core/)?fed\.py:(\d+)`"
 
 
@@ -126,7 +124,7 @@ _REFS = [
 
 @pytest.mark.parametrize(
     ("doc", "anchor", "code_patterns"),
-    [pytest.param(d, a, c, id=i, marks=_XFAIL) for i, d, a, c in _REFS],
+    [pytest.param(d, a, c, id=i) for i, d, a, c in _REFS],
 )
 def test_fed_line_reference_points_at_named_code(doc, anchor, code_patterns):
     """Each ``fed.py:N`` citation lands on the code the sentence names."""
@@ -168,25 +166,21 @@ def test_every_fed_line_reference_is_checked():
 # --- Incident vs net flux --------------------------------------------------
 
 
-@_XFAIL
 def test_fundamentals_radiant_section_says_incident():
     """Eq. 63.43 and the 2.5 kW/m² limit are incident flux (Table 63.19)."""
     assert re.search(r"\bincident\b", _section(FUND_HEAT, "Radiant heat"))
 
 
-@_XFAIL
 def test_fundamentals_combining_section_says_net():
     """Eq. 63.49 is written as a net exchange with the skin surface."""
     assert re.search(r"\bnet\b", _section(FUND_HEAT, "Combining the two"))
 
 
-@_XFAIL
 def test_fundamentals_convective_section_says_no_flux():
     """Eqs. 63.44-63.47 take air temperature; the page must say no flux enters."""
     assert re.search(r"\bflux\b", _section(FUND_HEAT, "Convective heat"))
 
 
-@_XFAIL
 def test_models_heat_states_what_enters_the_implemented_law():
     """The implemented law takes the gas temperature, not a heat flux."""
     assert re.search(r"\bflux\b", _section(MODELS_HEAT, "What is computed"))
@@ -199,7 +193,6 @@ def _heat_incapacitation_and_output() -> str:
     return _section(MODELS_HEAT, "Incapacitation") + _section(MODELS_HEAT, "Output")
 
 
-@_XFAIL
 def test_models_heat_says_heat_and_gas_endpoints_differ():
     """Heat FED = 1 is not the gas dose's incapacitation endpoint."""
     text = _heat_incapacitation_and_output()
@@ -212,7 +205,6 @@ def test_models_heat_names_the_shared_output_columns():
     assert "`incapacitation_cause`" in _section(MODELS_HEAT, "Output")
 
 
-@_XFAIL
 def test_limitations_says_heat_and_gas_endpoints_differ():
     """The OR rule on Limitations must not present the two doses as one endpoint."""
     para = _paragraph_with(LIMITATIONS, "either dose reaches its threshold")
