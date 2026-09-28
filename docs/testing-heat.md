@@ -1,211 +1,251 @@
 ---
-title: "Homogeneous heat FED verification"
+title: "Heat dose in a uniform room"
 linkTitle: "Heat dose"
 weight: 15
+math: true
 aliases: [/docs/testing-heat/, /models/verification/testing-heat/]
 ---
 
-## Purpose
+| | |
+|---|---|
+| **Component** | Heat FED and heat incapacitation ([Models › Heat](/models/heat.md)) |
+| **Level** | FDS case: a full run on FDS output |
+| **Asset** | `assets/fed_incap_heat_150c` (also `_100c` and `_200c`) |
+| **Expected value from** | hand sum of SFPE Eq. 63.48 (rate from Eq. 63.44) on FDS's own `TEMPERATURE` slice |
+| **Status** | passes; checks the pipeline, not the law ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)) |
 
-This test case verifies the heat FED (Fractional Effective Dose from
-convective heat, SFPE Handbook Ch. 63 Eq. 63.44) accumulation logic in the pyFDS-Evac
-pipeline against hand-calculated predictions, using a simplified scenario
-with a spatially **homogeneous** (uniform) gas-phase temperature field. It
-is the direct sibling of [`docs/testing-homogeneous.md`](testing-homogeneous.md)
-(the toxic-CO verification), following the same method and the same directory
-conventions.
+![100 agents walk a loop in a room at 150 °C; their colour shows the heat dose, and all of them stop at 125 s](/images/verification/heat_room.gif)
 
-By removing spatial gradients as a variable, any deviation between simulated
-and hand-calculated heat FED results can be attributed to the model/pipeline
-logic itself, rather than to local temperature variation — isolating the
-heat FED accumulation code from the heat-transport physics.
+## What is tested
 
-Three temperature levels are tested (100, 150, 200 °C) to check that the
-pipeline's heat FED results scale correctly with the T^3.4 power law, rather
-than verifying against just a single data point.
+Whether the heat dose an agent accumulates in pyFDS-Evac is the dose the
+equation gives for the gas temperature FDS computed at that agent, and
+whether the agent stops when the dose reaches its threshold. The room has
+almost the same temperature everywhere, so every agent follows nearly one
+curve. Any difference from the hand calculation comes from the code:
+reading the slice, sampling it at the agent, summing the dose, or applying
+the threshold. It checks that the code applies SFPE Eqs. 63.44 and 63.48
+correctly, not that they predict human tolerance.
 
-**Scope note:** this verifies the heat FED *dose* track (incapacitation)
-only. Heat does not currently factor into route cost or rejection — that
-routing question is deliberately deferred pending further design discussion,
-so there is nothing routing-related to verify here.
+## Equation
 
-Heat also has no effect on walking speed below the threshold. Extinction
-(Frantzich–Nilsson) and irritants (FIC) both degrade speed continuously; heat
-does nothing at all until the dose is reached and then sets the target speed to
-zero. That is faithful to the standard, which gives a tolerance time rather
-than a performance decrement — but it means an agent walks unimpeded through a
-200 °C layer for the 45 s the dose takes to accumulate, so do not read a heat
-FED trace as a speed trace.
+SFPE Handbook 5th ed., Ch. 63 ([Models › Heat](/models/heat.md)). The time
+to incapacitation by convected heat, with *T* the gas temperature in °C
+(Eq. 63.44, p. 2382):
 
-## Test Setup
+$$
+t_{I,\mathrm{conv}} = 5\times10^{7}\,T^{-3.4}\ \text{min}.
+$$
 
-- **Geometry:** Sealed room (no vents/openings), so temperature cannot
-  redistribute, with **adiabatic boundaries on all six faces**. The boundary
-  condition is the one place the CO ladder's layout cannot be copied: FDS's
-  default is an `INERT` wall at `TMP_FRONT = TMPA`, which would hold ~2160 m²
-  of enclosure surface at ambient against the prescribed gas and drain the
-  room. Species do not diffuse into inert walls; temperature does.
-- **Source:** No combustion at all — unlike the CO ladder, this deck tracks
-  no species and needs no `&REAC`/yield setup. A single `&INIT` prescribes a
-  constant initial temperature across the whole domain. With no source term,
-  no decay and no heat flux through any surface, the field stays at that
-  temperature for the whole run, which is what makes the closed-form rate the
-  right reference to compare against.
-
-  Verify this before trusting a result: the `TEMP_center*` and `TEMP_corner*`
-  devices should all read the prescribed value at `T_END`, not merely at
-  t = 0. A falling trace means the boundaries are not holding and the
-  comparison below is measuring the deck rather than the model.
-- **Domain decomposition:** 4 MPI sub-meshes — confirms heat FED values are
-  consistent across mesh boundaries (i.e. splitting the domain doesn't
-  introduce discontinuities in the gas data JuPedSim consumes), same as the
-  CO ladder.
-- **Agents:** 100 JuPedSim agents, non-evacuating travelling in a rectangular
-  circuit, exposed uniformly to the temperature field — isolates heat FED
-  tracking from movement and exit-routing dynamics. Reuses the CO ladder's
-  `config.json`/`geometry.wkt` verbatim (the scenario config is physics-track
-  agnostic).
-
-## What's Being Verified
-
-1. **Heat FED accumulation** — per-agent FED_HEAT(t) computed from the FDS
-   TEMPERATURE slice output matches the hand-calculated closed form for a
-   known, constant gas temperature, across all three levels.
-2. **Pipeline integration** — FDS TEMPERATURE slice output → `fdsreader` →
-   JuPedSim correctly carries heat FED data across the 4-mesh decomposition
-   with no per-mesh discrepancies.
-3. **Slice-height correctness** — `FdsHeatField.from_fds()` goes through
-   `load_slice_sampler()` (unlike the gas `FdsFedField`, a known pre-existing
-   blind spot — see `pyfds_evac/core/fed.py`), so this is also, incidentally,
-   the first asset to exercise the height-mismatch warning path for a newly
-   added slice type.
-
-## Method
-
-1. Hand-calculate the expected FED_HEAT(t) curve for each of the three
-   temperatures (100, 150, 200 °C) using SFPE Handbook Eq. 63.44 (see
-   `scripts/fed_heat_hand_calc.py`).
-2. Run the full FDS → fdsreader → JuPedSim pipeline on each of the three
-   scenarios.
-3. Compare simulated per-agent heat FED accumulation curves against the
-   hand-calculated reference, for each temperature.
-4. Confirm agreement within tolerance across all 100 agents and all 4
-   sub-meshes, at all three temperature levels.
-
-## Hand-Calculated Heat FED Reference
-
-Computed with `scripts/fed_heat_hand_calc.py`, using SFPE Handbook Eq. 63.44
-directly — *SFPE Handbook of Fire Protection Engineering*, 5th ed., Ch. 63
-"Assessment of Hazards to Occupants from Smoke, Toxic Gases, and Heat"
-(Purser & McAllister), p. 2382, quoted rather than derived. **Not** ISO TS
-13571 (the formula was previously miscited as that standard) and **not** in
-the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) guide (that document has no heat term at all).
-
-### Formula used
-
-**FED from convective heat** (SFPE Handbook Eq. 63.44), T in °C, Δt in minutes;
-the coded form is on the [FED model](/models/fed.md#convective-heat) page:
+The Handbook states it for exposures of up to 2 h in air with less than
+10 % water vapour by volume. The dose is summed over the exposure
+(Eq. 63.48, p. 2383, without its radiant term), with Δ*t* in minutes:
 
 ```
 FED_HEAT = sum_{t1}^{t2} [ T^3.4 / 5e7 ] * dt
 ```
 
-Under this test's constant-T exposure the accumulator reduces to an exact
-closed form, `FED_HEAT(t) = (T^3.4 / 5e7) * t_min`, and that is what
-`scripts/fed_heat_hand_calc.py` evaluates — one multiplication per temperature,
-not a per-timestep sum. The sum is what the *engine* does, over the FDS dump's
-own timestamps; the point of the closed form is to be an independent check on
-it, so the reference deliberately does not reproduce the engine's loop.
+Eq. 63.48 holds "providing that the temperature in the fire is stable or
+increasing".
 
-Driving the reference off a real dump would only be necessary for a
-time-varying field. These decks hold temperature constant precisely so that it
-is not.
-
-| Temperature | FED = 0.3 (onset) | FED = 1.0 (incapacitation) |
-|-------------|-------------------|-----------------------------|
-| 100 °C      | 142.6 s           | 475.5 s                     |
-| 150 °C      | 35.9 s            | 119.8 s                     |
-| 200 °C      | 13.5 s            | 45.0 s                      |
-
-(Accumulator and closed-form agree to all printed digits — expected, since
-there is no HV-style multiplier or ramp to introduce discretisation error
-the way the CO ladder's CO2 hyperventilation term does.)
-
-## Directory Contents
-
-Each case is a self-contained scenario directory, following the CO ladder's
-layout exactly:
+At a constant temperature the sum has a closed form, and FED = 1 is reached
+at \(t^{*}\):
 
 ```
-assets/
-├── fed_incap_heat_100c/
-│   ├── fed_incap_heat_100c.fds    — FDS deck, 100 C (CHID demo_homogeneous_heat_100C)
-│   ├── config.json                — JuPedSim scenario (reused from fed_incap_co_2000ppm)
-│   ├── geometry.wkt                — Walkable area (reused from fed_incap_co_2000ppm)
-│   └── <untracked run output>     — .smv .out .sf/.sf.bnd (4 meshes), _devc.csv _cpu.csv _steps.csv
-├── fed_incap_heat_150c/           — same layout, 150 C
-└── fed_incap_heat_200c/           — same layout, 200 C
+FED_HEAT(t) = (T^3.4 / 5e7) x t_min
 ```
 
-`config.json`/`geometry.wkt` are byte-identical copies of
-`fed_incap_co_2000ppm`'s — the scenario config (agents, journey, routing
-weights) has no dependency on which hazard track is under test.
+$$
+t^{*} = \frac{60 \times 5\times10^{7}}{T^{3.4}}\ \text{s}.
+$$
 
-pyFDS-Evac run artefacts (written wherever you point the `--output-*` flags):
+A 1 % error in *T* (in °C) gives a 3.4 % error in the dose.
 
-```
-<scenario>.sqlite                  — Agent trajectory database
-<scenario>_fed_history.csv         — Per-agent FED + heat FED accumulation over time
-```
+In the default `deterministic` mode every agent stops at FED = 1. In
+`probabilistic` mode (opt-in) agent *i* stops at its own threshold
+\(D_i = \exp(\sigma Z_i)\), \(Z_i \sim N(0,1)\), σ = 0.94, so the fraction
+of agents stopped by time *t* is
 
-## How to Run
+$$
+F(t) = \Phi\!\left(\frac{\ln \mathrm{FED}(t)}{\sigma}\right).
+$$
+
+## Setup
+
+![Plan of the 30 m room: spawn area, the loop the agents walk, and the TEMPERATURE slice at breathing height](/images/verification/heat_room_setup.png)
+
+- **FDS:** a sealed 30 × 30 × 3 m room, no fire, no species, adiabatic on
+  all six faces, four meshes. At *t* = 0 the whole room is set to 100, 150
+  or 200 °C. `TEMPERATURE` slices at 1.5 m, the one nearest the 1.6 m
+  sampling height on this 0.5 m grid.
+- **Agents:** 100 agents walk a loop between four corner checkpoints and
+  never leave. Each agent's temperature is sampled every second. Seed 42
+  (the default `baseSeed`).
+- **Runs:** `--enable-heat-fed` (heat is off by default), deterministic at
+  all three temperatures; probabilistic at 150 °C.
+- **Workaround:** the decks have no soot, so the runs need
+  `--constant-extinction 0 --no-visibility`
+  ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
+  Neither changes the heat dose.
+
+## Expected
+
+FDS does not keep the room at the deck value. Within the first minute the
+room mean at 1.5 m falls by 0.7, 1.2 and 1.8 % (100, 150, 200 °C) and then
+stays; the spread across the room is about 1 K. So the expected dose is not
+the closed form at the deck temperature. It is the sum of Eq. 63.48 over the
+temperature FDS wrote at each agent's position, read from the slice with
+fdsreader, independent of pyFDS-Evac.
+
+![Room temperature at 1.5 m against time for the three decks, as a percentage of the deck value](/images/verification/heat_room_temperature.png)
+
+| Deck | Slice *T* after 60 s | \(t^{*}\) at the deck *T* | \(t^{*}\) at the slice *T* | First update with hand FED ≥ 1 |
+|---|---|---|---|---|
+| 100 °C | 98.9 – 99.5 °C | 475.5 s | 486.6 s | **487 s** |
+| 150 °C | 147.7 – 148.5 °C | 119.8 s | 124.1 s | **125 s** |
+| 200 °C | 195.7 – 196.8 °C | 45.0 s | 47.0 s | **48 s** |
+
+"Slice *T*" is the \(T^{3.4}\)-weighted mean of the slice values the agents
+saw up to the stop (99.32, 148.43 and 197.48 °C). The hand sum is taken at
+each agent's own position and update times. For all 100 agents it first
+reaches 1 at the same update, so each deck has a single expected stop time.
+
+The gap to the closed form at the deck value has two parts: FDS runs cooler
+(+11.2, +4.3 and +2.0 s), and the dose is checked only every 1 s, so the stop
+falls on the next update (+0.4, +0.9 and +1.0 s).
+
+For the probabilistic run at 150 °C, *F*(999 s) = 98.7 % of agents are
+expected to have stopped by the end.
+
+## Result
+
+![Heat FED against time for the 100 agents at 150 °C, the hand sum and the closed form; below, each agent's difference from its own hand sum](/images/verification/heat_room_fed.png)
+
+At 150 °C every agent's dose equals its hand sum to 3.1 × 10⁻⁸. The
+difference comes from one agent, at one update, standing next to the corner
+where the four meshes meet; there the meshes differ by up to 0.040 K
+([#239](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/239)).
+Summed from the temperature the agent recorded, the dose agrees to
+2.5 × 10⁻¹⁴.
+
+![Time to heat FED = 1 against temperature on log axes: the closed form, the hand sum and the simulated stop for the three decks](/images/verification/heat_room_scaling.png)
+
+At all three temperatures the simulated stop (×) falls on the hand sum (○).
+The shift from the closed form at the deck value (◆) is FDS running cooler
+plus the 1 s update, not the code.
+
+![Fraction of agents incapacitated by heat against time in the probabilistic run at 150 °C, with the expected log-normal curve and its 95 % band](/images/verification/heat_room_incapacitation.png)
+
+| Check | Expected | Simulated |
+|---|---|---|
+| agent *T* against the slice, off shared nodes, 100 / 150 / 200 °C | ≤ 10⁻¹⁰ K | max 1.4 × 10⁻¹⁴ / 0 / 2.8 × 10⁻¹⁴ K |
+| agent *T* against the slice, at shared nodes, 100 / 150 / 200 °C | ≤ 0.028 / 0.040 / 0.055 K | max 1.4 × 10⁻¹⁴ / 1.7 × 10⁻⁴ / 3.8 × 10⁻⁴ K |
+| agent FED against the hand sum of its recorded *T*, 100 / 150 / 200 °C | ≤ 9.2 × 10⁻¹³ / 3.6 × 10⁻¹² / 9.3 × 10⁻¹² | max 7.6 × 10⁻¹⁵ / 2.5 × 10⁻¹⁴ / 1.7 × 10⁻¹³ |
+| agent FED against the hand sum on the slice, 100 / 150 / 200 °C | ≤ seam bound, row by row | max 7.6 × 10⁻¹⁵ / 3.1 × 10⁻⁸ / 1.4 × 10⁻⁷, all within |
+| margin of the hand FED from 1 at the updates around the stop, 100 / 150 / 200 °C | > seam bound up to the stop (≤ 3.7 / 4.5 / 6.1 × 10⁻⁵) | ≥ 5.1 × 10⁻⁴ / 8.2 × 10⁻⁴ / 9.4 × 10⁻⁵ |
+| deterministic stop, 100 °C | 487 s | all 100 agents at 487 s |
+| deterministic stop, 150 °C | 125 s | all 100 agents at 125 s |
+| deterministic stop, 200 °C | 48 s | all 100 agents at 48 s |
+| cause of every stop | `heat` | `heat` |
+| probabilistic, 150 °C: stopped by 999 s | 98.7 % | 100 of 100 |
+| probabilistic, 150 °C: largest gap between the curves | ≤ 0.136 | 0.120 (p = 0.11) |
+
+## Pass criteria
+
+1. **Slice to agent.** The temperature each agent recorded equals the slice
+   value at its nearest node and nearest slice time, to float noise
+   (10⁻¹⁰ K). The only larger difference allowed is at a node two meshes
+   share, where the slice holds two values; there the tolerance is the
+   largest such gap in the run (0.028, 0.040 and 0.055 K).
+2. **Dose.** Every agent's FED equals the hand sum of Eq. 63.48 over the
+   temperatures it recorded to round-off. Both sums add *n* = 1000 positive
+   terms, each rounding by at most *n* ε FED, so the tolerance is
+   2 *n* ε FED_max with ε = 2.2 × 10⁻¹⁶ (9.2 × 10⁻¹³, 3.6 × 10⁻¹² and
+   9.3 × 10⁻¹²). End to end, against the hand sum on the slice, each update
+   at a shared node may add 3.4 · Δ*T*_seam / *T* · rate · Δ*t*, since a
+   relative error in *T* grows 3.4 times in the rate. The seam bound is this
+   term summed over the agent's updates at shared nodes.
+3. **Deterministic stop.** Every agent stops at the first update where its
+   hand sum reaches 1, with cause `heat`. Updates are 1 s apart
+   (`--smoke-update-interval`). The stop is exact, not approximate, as long
+   as the hand FED at the updates on either side of the stop is further from
+   1 than the seam bound; otherwise the adjacent update would also pass. The
+   tightest case is 200 °C: at least 9.4 × 10⁻⁵ from 1, against a seam
+   bound of at most 6.1 × 10⁻⁵.
+4. **Probabilistic stop.** The fraction of stopped agents stays within the
+   95 % Kolmogorov–Smirnov band of *F*(*t*),
+   \(1.36/\sqrt{n} = 0.136\) for *n* = 100. This is one draw (seed 42);
+   D = 0.120 has p = 0.11, so it passes at the 5 % level, and by
+   construction one seed in twenty would fail.
+
+## Run it yourself
+
+The FDS output is not in the repository (65 MB per deck). Either get it
+from the project's data folder (`fds-evac-data/fed_incap_heat_<T>c/fds/`),
+or rerun FDS outside the repository, about one minute per deck on four
+cores:
 
 ```bash
-# Requires an FDS install with a working MPI runtime (e.g. Intel MPI) on PATH.
-mpiexec -n 4 fds assets/fed_incap_heat_100c/fed_incap_heat_100c.fds
-mpiexec -n 4 fds assets/fed_incap_heat_150c/fed_incap_heat_150c.fds
-mpiexec -n 4 fds assets/fed_incap_heat_200c/fed_incap_heat_200c.fds
-
-uv run python run.py \
-    --scenario assets/fed_incap_heat_100c \
-    --fds-dir assets/fed_incap_heat_100c \
-    --enable-heat-fed \
-    --heat-fed-threshold 1.0 \
-    --output-fed-history /tmp/heat_100c_fed_history.csv \
-    --output-sqlite /tmp/heat_100c.sqlite
-# repeat --fds-dir/--scenario for the 150c and 200c decks
+mkdir -p <data>/fed_incap_heat_150c/fds && cd $_
+cp <repo>/assets/fed_incap_heat_150c/fed_incap_heat_150c.fds .
+mpiexec -n 4 fds fed_incap_heat_150c.fds
 ```
 
-No `--fed-threshold`/CO-related flags are needed — these decks track no gas
-species, so the toxic FED path stays inactive (`fed_model=None`) and only
-`heat_fed_model` is built. `--enable-heat-fed` is required: the heat dose is
-off by default, as FDS+Evac has none.
+Then run pyFDS-Evac and draw the figures. The data folder must hold
+`fed_incap_heat_<T>c/fds/` and `fed_incap_heat_<T>c/evac/<mode>/`:
 
-## Results / Pass Criteria
+```bash
+for T in 100 150 200; do
+  uv run python run.py --scenario assets/fed_incap_heat_${T}c \
+    --fds-dir <data>/fed_incap_heat_${T}c/fds \
+    --enable-heat-fed --heat-incapacitation-mode deterministic \
+    --constant-extinction 0 --no-visibility \
+    --output-sqlite <data>/fed_incap_heat_${T}c/evac/deterministic/run.sqlite \
+    --output-fed-history <data>/fed_incap_heat_${T}c/evac/deterministic/fed_history.csv
+done
+# and once more for 150 °C with --heat-incapacitation-mode probabilistic,
+# into evac/probabilistic/
+uv run python scripts/verification/heat_room_figures.py --data <data>
+```
 
-**Status: not yet run.** FDS could not be executed to produce real output in
-the environment this test case was built in — the installed FDS binary
-requires the Intel MPI runtime (`impi.dll`), which is not present, and
-installing it is a system-level change outside the scope of adding this
-verification asset. The decks, hand-calc reference, and pipeline wiring are
-all in place and unit/behavioural-tested (see `tests/verification/test_s6_heat_fed.py`
-and `test_heat_fed_verif.py`, which verify the same formula and OR-incapacitation
-logic against synthetic fields, no FDS required) — what remains is running
-the three decks above in an environment with FDS+MPI available and filling
-in this table:
+Each run takes about three minutes and uses the default seed 42. A
+temperature without output is skipped.
 
-| Case   | FED = 1.0 (Hand Calculation) | FED = 1.0 (Simulation) | % difference |
-|--------|-------------------------------|-------------------------|--------------|
-| 100 °C | 475.5 s                       | —                        | —            |
-| 150 °C | 119.8 s                       | —                        | —            |
-| 200 °C | 45.0 s                        | —                        | —            |
+## Limits
 
-Target tolerance: <0.5%, matching the CO ladder's precedent in
-[`docs/testing-homogeneous.md`](testing-homogeneous.md).
-
-Remaining before this test case is complete:
-
-- Run all three decks through FDS and fill in the table above.
-- Confirm the `FdsHeatField.from_fds()` height-matching warning path fires
-  correctly if a mismatched `--smoke-slice-height` is passed (it reuses the
-  same flag as smoke/gas FED).
+- **The law is not verified.** The expected values use Eqs. 63.44 and
+  63.48, the same formulas as the code. Expected values from SFPE's tables
+  are pending
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
+  The Handbook calls Eq. 63.44 somewhat non-conservative at high
+  temperatures and over-conservative at low ones; its Table 63.20 gives
+  12 min at 100 °C where the equation gives 7.9 min.
+- **The room is not at the deck temperature.** FDS settles 0.7, 1.2 and
+  1.8 % below the `&INIT` value within the first minute, so the stop times
+  are 2 – 7 % later than the closed form at the deck temperature
+  ([#253](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/253)). The page checks
+  against the slice, so this does not affect the verdict; it matters if
+  the deck value is quoted as the exposure.
+- **The exposure is not rising.** Eq. 63.48 assumes stable or rising
+  temperature. Here the room mean still falls by more than 0.01 K per slice
+  step until 18, 36 and 59 s;
+  at 200 °C that covers nearly the whole 48 s exposure. The code sums the
+  same terms either way, so the check holds; the physiology of a falling
+  exposure is outside it.
+- **Heat-only cases need a workaround.** Without a soot slice `run.py`
+  crashes unless given `--constant-extinction 0 --no-visibility`
+  ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
+- **σ = 0.94 has no source for heat.** It is borrowed from the gas dose
+  ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)). The
+  probabilistic run checks the code path, not the spread.
+- **Convective heat only.** No radiant dose
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+  Below the threshold heat changes neither speed nor route
+  ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
+- A near-uniform field cannot show whether the field is sampled at the
+  agent's *current* position; that needs a gradient
+  ([#24](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24)).
+- This page is not an automated test: the check runs from the figure
+  script on the stored output. The equation-level tests
+  (`tests/verification/test_s6_heat_fed.py`, `test_heat_fed_verif.py`) run
+  on synthetic fields in CI.
