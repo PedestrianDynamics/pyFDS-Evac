@@ -18,10 +18,7 @@ t = 5e7 T^-3.4, exactly as before.
 Expected values below come from these hand formulas and from the published
 Tables 63.20 and 63.21, never from ``pyfds_evac``.
 
-Assumed API (the implementation of #220 does not exist yet). If the
-implementation names things differently, adapt the helpers in the "API
-under test" block and drop the xfail markers; strict xfail only reports an
-unexpected pass, it does not report a name mismatch.
+API under test:
 
 - ``pyfds_evac.core.fed.HEAT_ENDPOINTS``: mapping ``name -> endpoint`` with
   ``.radiant_dose`` (float) and ``.equation`` (str, e.g. ``"63.45"``).
@@ -52,7 +49,6 @@ from pyfds_evac.core.fed import (
 )
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-XFAIL_220 = pytest.mark.xfail(strict=True, reason="#220")
 ENDPOINTS = ("tolerance", "injury", "fatal")
 
 
@@ -135,7 +131,7 @@ def _outside_validity(temperature_c: float) -> bool:
     return heat_temperature_outside_validity(temperature_c)
 
 
-# --- default stays Eq. 63.44 (passes now) ----------------------------------
+# --- default stays Eq. 63.44 ---
 
 
 @pytest.mark.parametrize("t_c", [20.0, 65.0, 100.0, 150.0, 205.0, 405.0])
@@ -154,7 +150,7 @@ def test_cli_heat_endpoint_is_absent_by_default():
     assert getattr(args, "heat_endpoint", None) is None
 
 
-# --- hand formulas against the published tables (passes now) ---------------
+# --- hand formulas against the published tables ---
 
 
 def test_table_63_21_follows_eq_63_45():
@@ -191,7 +187,6 @@ def test_endpoint_laws_are_ordered():
 # --- endpoint pairs ---------------------------------------------------------
 
 
-@XFAIL_220
 @pytest.mark.parametrize(("name", "r", "equation"), PAIRS)
 def test_endpoint_pairs_radiant_dose_with_its_convective_law(name, r, equation):
     """Each endpoint pairs r (Eq. 63.43) with the convective law of the same endpoint.
@@ -203,12 +198,10 @@ def test_endpoint_pairs_radiant_dose_with_its_convective_law(name, r, equation):
     assert endpoint.equation == equation
 
 
-@XFAIL_220
 def test_endpoint_names_are_exactly_the_three_endpoints():
     assert set(_endpoints()) == set(ENDPOINTS)
 
 
-@XFAIL_220
 @pytest.mark.parametrize("name", ENDPOINTS)
 @pytest.mark.parametrize("t_c", [40.0, 65.0, 100.0, 125.0, 150.0, 205.0, 405.0])
 def test_endpoint_rate_is_its_convective_law(name, t_c):
@@ -217,25 +210,22 @@ def test_endpoint_rate_is_its_convective_law(name, t_c):
     assert _endpoint_rate(t_c, name) == pytest.approx(expected, rel=1e-9)
 
 
-@XFAIL_220
 @pytest.mark.parametrize("name", ENDPOINTS)
 def test_endpoint_is_recorded_on_the_model(name):
     assert _endpoint_model(100.0, name).endpoint == name
 
 
 def test_default_model_has_no_endpoint():
-    """Passes now through ``getattr``; must stay ``None`` after #220."""
+    """Without an endpoint the model records none."""
     model = DefaultHeatFedModel(_field(100.0), _config())
     assert getattr(model, "endpoint", None) is None
 
 
-@XFAIL_220
 def test_unknown_endpoint_is_rejected():
     with pytest.raises(ValueError):
         _endpoint_model(100.0, "pain")
 
 
-@XFAIL_220
 @pytest.mark.parametrize("name", ENDPOINTS)
 @pytest.mark.parametrize("t_c", [0.0, -10.0, float("nan"), float("inf")])
 def test_endpoint_rate_domain_guard(name, t_c):
@@ -245,7 +235,6 @@ def test_endpoint_rate_domain_guard(name, t_c):
     assert rate == 0.0
 
 
-@XFAIL_220
 def test_tolerance_endpoint_reproduces_table_63_21_cumulative():
     """Summed per-minute doses of Table 63.21 (p. 2385) under the tolerance endpoint.
 
@@ -265,7 +254,6 @@ def test_tolerance_endpoint_reproduces_table_63_21_cumulative():
     assert history[2] < 1.0 <= history[3]
 
 
-@XFAIL_220
 def test_fatal_endpoint_differs_from_default():
     """At 150 deg C the fatal law is 8.6x slower than Eq. 63.44."""
     ratio = t_fatal_min(150.0) / t_eq_63_44_min(150.0)
@@ -278,7 +266,6 @@ def test_fatal_endpoint_differs_from_default():
 # --- validity range ---------------------------------------------------------
 
 
-@XFAIL_220
 def test_validity_limit_is_the_highest_convective_data_point():
     """Table 63.17 (p. 2375): highest dry-air point is 205 deg C (Veghte)."""
     from pyfds_evac.core.fed import HEAT_CONVECTIVE_VALIDITY_MAX_C
@@ -286,7 +273,6 @@ def test_validity_limit_is_the_highest_convective_data_point():
     assert 200.0 <= HEAT_CONVECTIVE_VALIDITY_MAX_C <= 210.0
 
 
-@XFAIL_220
 @pytest.mark.parametrize(
     ("t_c", "outside"),
     [(20.0, False), (100.0, False), (180.0, False), (250.0, True), (405.0, True)],
@@ -295,7 +281,6 @@ def test_samples_above_the_data_are_flagged(t_c, outside):
     assert _outside_validity(t_c) is outside
 
 
-@XFAIL_220
 @pytest.mark.parametrize("name", ENDPOINTS)
 def test_flag_does_not_change_the_rate(name):
     """Table 63.21 applies the law at 405 deg C: flag, do not clip."""
@@ -308,7 +293,6 @@ def test_flag_does_not_change_the_rate(name):
 # --- CLI and run_config -----------------------------------------------------
 
 
-@XFAIL_220
 def test_cli_heat_endpoint_choices():
     import run
 
@@ -377,7 +361,6 @@ def test_run_config_without_endpoint_keeps_eq_63_44(temperature_only_case):
     assert getattr(model, "endpoint", None) is None
 
 
-@XFAIL_220
 @pytest.mark.parametrize("name", ENDPOINTS)
 def test_run_config_passes_the_endpoint(temperature_only_case, name):
     model = _build(enable_heat_fed=True, heat_endpoint=name)["heat_fed_model"]
@@ -392,7 +375,6 @@ def test_endpoint_without_enable_heat_fed_leaves_heat_off(temperature_only_case)
 # --- docs -------------------------------------------------------------------
 
 
-@XFAIL_220
 def test_models_heat_page_documents_the_endpoint_option():
     text = (ROOT / "site" / "content" / "models" / "heat.md").read_text()
     assert "--heat-endpoint" in text
@@ -401,7 +383,6 @@ def test_models_heat_page_documents_the_endpoint_option():
     assert re.search(r"205\s*°C", text)
 
 
-@XFAIL_220
 def test_changelog_mentions_the_endpoint_option():
     text = (ROOT / "CHANGELOG.md").read_text()
     unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]

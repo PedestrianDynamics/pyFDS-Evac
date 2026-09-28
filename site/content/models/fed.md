@@ -260,8 +260,9 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 \(g\) partly counts irritancy twice
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
-Heat uses the convective Eq. 63.44 only (`fed.py:208`), not the mid-humidity
-design form Eq. 63.45, and no radiant term. The log-normal σ of both
+Heat uses the convective Eq. 63.44 (`fed.py:217`) unless `--heat-endpoint`
+selects Eq. 63.45, 63.46 or 63.47 ([Heat](/models/heat.md)), and no radiant
+term. The log-normal σ of both
 thresholds (`fed.py:272`, `:282`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)

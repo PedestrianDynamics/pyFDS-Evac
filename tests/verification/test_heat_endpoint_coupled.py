@@ -15,11 +15,10 @@ Two corridor runs through ``run_scenario`` with a uniform temperature field:
 The runs also check that the endpoint and the validity flag reach the FED
 history and the run manifest.
 
-Assumed API, as in ``tests/test_heat_endpoint.py``:
+API under test, as in ``tests/test_heat_endpoint.py``:
 ``DefaultHeatFedModel(field, config, endpoint=...)``; FED history rows carry
 ``heat_endpoint`` and ``heat_outside_validity``; the manifest carries
-``heat_endpoint``. Adapt ``_heat_model`` and the key names if the
-implementation differs, then drop the xfail markers.
+``heat_endpoint``.
 """
 
 from __future__ import annotations
@@ -28,7 +27,6 @@ import csv
 import json
 import math
 
-import pytest
 from harness import (
     CorridorSpec,
     SyntheticSampler,
@@ -44,7 +42,6 @@ from pyfds_evac.core.fed import (
 )
 from pyfds_evac.core.scenario import run_scenario
 
-XFAIL_220 = pytest.mark.xfail(strict=True, reason="#220")
 UPDATE_S = 1.0
 # Right-point sampling on 1 s updates: a crossing lands on the update at or
 # after the exact time.
@@ -133,7 +130,7 @@ def _start_times(rows):
 
 
 def test_table_63_21_crossings_are_distinguishable():
-    """Design check (passes now): the two laws cross > 2 tolerances apart."""
+    """Design check: the two laws cross > 2 tolerances apart."""
     tolerance = _crossing_s(t_tolerance_min, 0.0)
     default = _crossing_s(t_eq_63_44_min, 0.0)
     assert 180.0 < tolerance < 240.0  # during the fourth minute
@@ -151,7 +148,7 @@ def _check_crossings(result, law):
 
 
 def test_default_law_crosses_at_eq_63_44():
-    """Control (passes now): without an endpoint the run follows Eq. 63.44."""
+    """Control: without an endpoint the run follows Eq. 63.44."""
     result = _run(_table_63_21_field, None)
     try:
         _check_crossings(result, t_eq_63_44_min)
@@ -159,7 +156,6 @@ def test_default_law_crosses_at_eq_63_44():
         result.cleanup()
 
 
-@XFAIL_220
 def test_tolerance_endpoint_crosses_in_the_fourth_minute():
     result = _run(_table_63_21_field, "tolerance")
     try:
@@ -168,7 +164,6 @@ def test_tolerance_endpoint_crosses_in_the_fourth_minute():
         result.cleanup()
 
 
-@XFAIL_220
 def test_fatal_endpoint_constant_temperature():
     t_c = 150.0
     target_s = 90.0
@@ -187,7 +182,6 @@ def test_fatal_endpoint_constant_temperature():
         result.cleanup()
 
 
-@XFAIL_220
 def test_endpoint_and_validity_flag_reach_the_outputs():
     """FED history rows carry the endpoint and flag T above the data range."""
     result = _run(_table_63_21_field, "fatal", run_s=300.0)
@@ -222,7 +216,7 @@ def _csv_rows(result, path):
 
 
 def test_default_fed_history_csv_is_written(tmp_path):
-    """Control (passes now): default-mode rows go through the CSV writer."""
+    """Control: default-mode rows go through the CSV writer."""
     result = _run(_table_63_21_field, None, run_s=30.0)
     try:
         header, rows = _csv_rows(result, tmp_path / "fed.csv")
@@ -232,7 +226,6 @@ def test_default_fed_history_csv_is_written(tmp_path):
         result.cleanup()
 
 
-@XFAIL_220
 def test_endpoint_fed_history_csv_carries_endpoint_and_flag(tmp_path):
     """``--output-fed-history`` keeps the endpoint and the validity flag."""
     result = _run(_table_63_21_field, "fatal", run_s=300.0)

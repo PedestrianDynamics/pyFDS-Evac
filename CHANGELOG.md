@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `--heat-endpoint {tolerance,injury,fatal}` (opt-in, with
+  `--enable-heat-fed`): the heat dose uses the convective law of that
+  endpoint, SFPE Handbook Ch. 63 Eq. 63.45, 63.46 or 63.47, paired with its
+  radiant dose (1.33, 10, 16.7). The FED history gains `heat_endpoint` and
+  `heat_outside_validity` (above 205 °C), and the run manifest records
+  `heat_endpoint`. Without the option the dose stays Eq. 63.44
+  ([#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
 - A run warns once when CO is sampled with zero CO2: the hyperventilation
   factor is then 1, and the FDS deck probably has no ambient CO2.
 - Web GUI: a light/dark theme switch, a Cancel control for a running scenario,

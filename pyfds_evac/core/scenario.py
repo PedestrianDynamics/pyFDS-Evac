@@ -60,6 +60,7 @@ from .fed import (
     HeatFedInputs,
     default_fed_components,
     default_fic,
+    heat_temperature_outside_validity,
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
@@ -1255,6 +1256,8 @@ def run_scenario(
         smoke_history: list[dict[str, Any]] = []
         fed_state: dict[int, dict[str, float]] = {}
         heat_fed_state: dict[int, dict[str, float]] = {}
+        # Set only with --heat-endpoint; default rows keep their columns.
+        heat_endpoint = getattr(heat_fed_model, "endpoint", None)
         fed_history: list[dict[str, Any]] = []
         incapacitated_agents: set[int] = set()
         # Which track (gas / heat / both) tripped incapacitation for each
@@ -2175,6 +2178,13 @@ def run_scenario(
                                 "speed_factor": float(effective_factor),
                             }
                         )
+                        if heat_endpoint is not None:
+                            fed_history[-1].update(
+                                heat_endpoint=heat_endpoint,
+                                heat_outside_validity=heat_temperature_outside_validity(
+                                    float(heat_inputs.temperature_celsius)
+                                ),
+                            )
                     last_fed_update_time = current_time
 
             if (
@@ -2666,6 +2676,7 @@ def run_scenario(
                 fds_dir=fds_dir_from_models(
                     smoke_speed_model, fed_model, heat_fed_model
                 ),
+                heat_endpoint=heat_endpoint,
             )
         except (OSError, ValueError) as exc:
             _logger.warning("Could not write the run manifest: %s", exc)

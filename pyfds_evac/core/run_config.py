@@ -121,6 +121,8 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         return None
     if not getattr(opts, "enable_heat_fed", False):
         log("Heat FED is off; pass --enable-heat-fed to accumulate it.")
+        if getattr(opts, "heat_endpoint", None) is not None:
+            _logger.warning("--heat-endpoint has no effect without --enable-heat-fed.")
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():
@@ -136,7 +138,11 @@ def _build_heat_fed_model(opts: Any, log: Logger):
             opts.fds_dir,
         )
         return None
-    log("Configuring heat FED calculation.")
+    endpoint = getattr(opts, "heat_endpoint", None)
+    log(
+        "Configuring heat FED calculation "
+        f"({'Eq. 63.44' if endpoint is None else f'{endpoint} endpoint'})."
+    )
     heat_fed_config = DefaultFedConfig(
         fds_dir=opts.fds_dir,
         update_interval_s=opts.smoke_update_interval,
@@ -145,6 +151,7 @@ def _build_heat_fed_model(opts: Any, log: Logger):
     return DefaultHeatFedModel(
         FdsHeatField.from_fds(opts.fds_dir, slice_height_m=opts.smoke_slice_height),
         heat_fed_config,
+        endpoint=endpoint,
     )
 
 
