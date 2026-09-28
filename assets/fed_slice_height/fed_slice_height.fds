@@ -1,0 +1,41 @@
+&HEAD CHID='fed_slice_height',
+      TITLE='Sealed room with CO in three layers: which slice height does the FED read?' /
+
+! 10 x 10 x 3 m, no fire, no vents. CO is layered by height at t = 0:
+! 8000 ppm below 1 m, 2000 ppm from 1 to 2 m, 500 ppm above 2 m; CO2 500 ppm
+! and O2 20.9 % everywhere. The run lasts 2 s, too short for the layers to mix
+! at the slice planes, so each slice holds its layer's value. A reader that
+! takes the first CO slice, or a vertical one, gets the wrong layer.
+&MESH IJK=20,20,6, XB=0.0,10.0,0.0,10.0,0.0,3.0 /
+&TIME T_END=2.0 /
+&MISC TMPA=20.0 /
+
+&SPEC ID='NITROGEN',        BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN'                             /
+&SPEC ID='CARBON MONOXIDE'                    /
+&SPEC ID='CARBON DIOXIDE'                     /
+
+&INIT XB=0.0,10.0,0.0,10.0,0.0,1.0,
+      SPEC_ID(1)='CARBON MONOXIDE', SPEC_ID(2)='CARBON DIOXIDE', SPEC_ID(3)='OXYGEN',
+      MASS_FRACTION(1)=7.76594E-03, MASS_FRACTION(2)=7.62615E-04, MASS_FRACTION(3)=2.31776E-01 /  ! 8000 ppm CO
+&INIT XB=0.0,10.0,0.0,10.0,1.0,2.0,
+      SPEC_ID(1)='CARBON MONOXIDE', SPEC_ID(2)='CARBON DIOXIDE', SPEC_ID(3)='OXYGEN',
+      MASS_FRACTION(1)=1.94148E-03, MASS_FRACTION(2)=7.62615E-04, MASS_FRACTION(3)=2.31776E-01 /  ! 2000 ppm CO
+&INIT XB=0.0,10.0,0.0,10.0,2.0,3.0,
+      SPEC_ID(1)='CARBON MONOXIDE', SPEC_ID(2)='CARBON DIOXIDE', SPEC_ID(3)='OXYGEN',
+      MASS_FRACTION(1)=4.85371E-04, MASS_FRACTION(2)=7.62615E-04, MASS_FRACTION(3)=2.31776E-01 /  ! 500 ppm CO
+
+! Declared in this order on purpose: a vertical slice first (its mid-height,
+! 1.5 m, is close to 1.6 m), then the low layer, then the high layer, and the
+! breathing-height slice last. On this 0.5 m grid PBZ=1.6 lands on z = 1.5 m.
+&SLCF PBY=5.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=0.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=0.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
+&SLCF PBZ=0.5, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
+&SLCF PBZ=2.5, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
+&DUMP DT_SLCF=1.0 /
+
+&TAIL /

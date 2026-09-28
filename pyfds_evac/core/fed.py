@@ -507,7 +507,9 @@ class FdsFedField:
         self._formaldehyde = optional_samplers.get("formaldehyde")
 
     @classmethod
-    def from_fds(cls, fds_dir: str, *, simulation=None) -> "FdsFedField":
+    def from_fds(
+        cls, fds_dir: str, *, simulation=None, slice_height_m: float | None = 1.6
+    ) -> "FdsFedField":
         """Build gas samplers from an FDS case directory.
 
         Required: CO, CO2, O2 slices.
@@ -518,6 +520,10 @@ class FdsFedField:
         simulation : optional
             A pre-loaded ``fdsreader.Simulation`` instance.  When provided
             the expensive directory parse is skipped.
+        slice_height_m : optional
+            Each species is read from its horizontal slice nearest this
+            height (default 1.6 m, FDS+Evac's ``HUMAN_SMOKE_HEIGHT``), as
+            ``load_slice_sampler`` selects it.
         """
         if simulation is not None:
             sim = simulation
@@ -529,22 +535,22 @@ class FdsFedField:
                     "fdsreader is required to load FED fields from FDS data."
                 )
             sim = _Sim(str(fds_dir))
-        co_slice = sim.slices.filter_by_quantity("CARBON MONOXIDE VOLUME FRACTION")[0]
-        co2_slice = sim.slices.filter_by_quantity("CARBON DIOXIDE VOLUME FRACTION")[0]
-        o2_slice = sim.slices.filter_by_quantity("OXYGEN VOLUME FRACTION")[0]
+
+        def sampler(quantity):
+            return load_slice_sampler(
+                fds_dir, quantity, simulation=sim, slice_height_m=slice_height_m
+            )
+
+        co = sampler("CARBON MONOXIDE VOLUME FRACTION")
+        co2 = sampler("CARBON DIOXIDE VOLUME FRACTION")
+        o2 = sampler("OXYGEN VOLUME FRACTION")
 
         optional = {}
         for attr, quantity in cls._OPTIONAL_SPECIES:
-            key = attr.lstrip("_")
-            matches = sim.slices.filter_by_quantity(quantity)
-            if matches:
-                optional[key] = SliceFieldSampler(matches[0])
-        field = cls(
-            SliceFieldSampler(co_slice),
-            SliceFieldSampler(co2_slice),
-            SliceFieldSampler(o2_slice),
-            **optional,
-        )
+            if not sim.slices.filter_by_quantity(quantity):
+                continue
+            optional[attr.lstrip("_")] = sampler(quantity)
+        field = cls(co, co2, o2, **optional)
         field.fds_dir = str(fds_dir)
         return field
 

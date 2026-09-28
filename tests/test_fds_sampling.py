@@ -150,3 +150,47 @@ def test_missing_quantity_names_every_candidate_tried():
         )
     assert "'SOOT EXTINCTION COEFFICIENT'" in str(excinfo.value)
     assert "'EXTINCTION'" in str(excinfo.value)
+
+
+class _FakeVerticalSlice(_FakeSlice):
+    """A PBY slice: spans the whole height, orientation 2 in fdsreader."""
+
+    def __init__(self):
+        super().__init__(0.0, 3.0)
+        self.orientation = 2
+
+
+def test_vertical_slice_is_not_chosen_by_height():
+    """A vertical slice's mid-height can sit closest to the request; skip it."""
+    vertical = _FakeVerticalSlice()  # mid-height 1.5 m
+    horizontal = _FakeSlice(2.0, 2.0)
+    horizontal.orientation = 3
+    sampler = load_slice_sampler(
+        "case",
+        "SOOT EXTINCTION COEFFICIENT",
+        simulation=_sim_with(vertical, horizontal),
+        slice_height_m=1.6,
+    )
+    assert sampler._slice is horizontal
+
+
+def test_vertical_slice_is_not_chosen_without_a_height():
+    vertical = _FakeVerticalSlice()
+    horizontal = _FakeSlice(2.0, 2.0)
+    horizontal.orientation = 3
+    sampler = load_slice_sampler(
+        "case",
+        "SOOT EXTINCTION COEFFICIENT",
+        simulation=_sim_with(vertical, horizontal),
+    )
+    assert sampler._slice is horizontal
+
+
+def test_only_vertical_slices_raise():
+    with pytest.raises(IndexError, match="horizontal"):
+        load_slice_sampler(
+            "case",
+            "SOOT EXTINCTION COEFFICIENT",
+            simulation=_sim_with(_FakeVerticalSlice()),
+            slice_height_m=1.6,
+        )
