@@ -10,7 +10,8 @@ on the convective term only):
 
 T in K, sigma = 5.67e-8 W m^-2 K^-4 (p. 2384). The time to the endpoint is
 Eq. 63.43, t = D / q^1.33 [min], with D the radiant dose r of the endpoint
-(1.33 tolerance, 10 injury, 16.7 fatal; pp. 2382, 2384). The dose is summed,
+(1.33 tolerance, 10 injury, 16.667 fatal; pp. 2382, 2384; the Handbook
+prints the fatal dose as 16.7, spec 016 fixes it at 16.667). The dose is summed,
 FED = sum dt / t. Differences from the Handbook text, by spec 016:
 
 - no 2.5 kW/m2 threshold: the dose accumulates at every positive flux;
@@ -71,10 +72,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SIGMA = 5.67e-8  # W m^-2 K^-4, as printed on p. 2384
 KELVIN = 273.15
 EXPONENT = 1.33  # Eqs. 63.43 and 63.49 print 1.33, not 4/3
-DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.7}
-# The Handbook prints 16.7 for the fatal dose, spec 016 writes 16.667; the
-# 0.2 % between them is accepted where the fatal D enters.
-FATAL_REL = 3e-3
+# Fatal: spec 016 maintainer decision, D = 16.667 (the Handbook prints 16.7).
+DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.667}
 
 
 # --- hand formulas ----------------------------------------------------------
@@ -309,16 +308,15 @@ def test_rate_domain_guard(q):
 def test_model_rate_uses_the_endpoint_dose(name, t_c, eps, h, t_skin_c):
     q = q_hand(t_c, eps=eps, h=h, t_skin_c=t_skin_c)
     expected = 1.0 / t_hand_min(q, DOSE[name])
-    rel = FATAL_REL if name == "fatal" else 1e-9
     got = _rate(t_c, eps=eps, h=h, t_skin_c=t_skin_c, endpoint=name)
-    assert got == pytest.approx(expected, rel=rel)
+    assert got == pytest.approx(expected, rel=1e-9)
 
 
 def test_model_without_endpoint_uses_the_fatal_dose():
-    """FED = 1 = fatal (spec 016 maintainer decision): D = 16.7 (16.667)."""
+    """FED = 1 = fatal (spec 016 maintainer decision): D = 16.667."""
     q = q_hand(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
     got = _rate(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
-    assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=FATAL_REL)
+    assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
 
 
 @pytest.mark.parametrize("name", sorted(DOSE))
@@ -328,7 +326,7 @@ def test_no_convective_law_on_top(name):
     q = q_hand(t_c, eps=0.5, h=5.0, t_skin_c=35.0)
     flux_only = 1.0 / t_hand_min(q, DOSE[name])
     got = _rate(t_c, eps=0.5, h=5.0, t_skin_c=35.0, endpoint=name)
-    assert got == pytest.approx(flux_only, rel=FATAL_REL)
+    assert got == pytest.approx(flux_only, rel=1e-9)
     for t_conv in (t_eq_63_44_min(t_c), t_fatal_conv_min(t_c)):
         assert not math.isclose(got, flux_only + 1.0 / t_conv, rel_tol=1e-2)
 

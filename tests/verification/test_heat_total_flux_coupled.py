@@ -54,8 +54,8 @@ UPDATE_S = 1.0
 TIMING_TOL_S = 1.5
 SIGMA = 5.67e-8
 KELVIN = 273.15
-DOSE = {"tolerance": 1.33, "fatal": 16.7}
-# Handbook 16.7 vs spec 016 16.667: 0.2 % of a 90 s crossing is 0.2 s.
+# Fatal: spec 016 maintainer decision, D = 16.667 (the Handbook prints 16.7).
+DOSE = {"tolerance": 1.33, "fatal": 16.667}
 
 
 def q_hand(t_c, *, eps, h, t_skin_c):
