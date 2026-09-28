@@ -249,24 +249,62 @@ def _find_checkpoint_zone(
     return checkpoint_key, factor
 
 
-def _find_steering_zone(
+def active_steering_zones(
     direct_steering_info: dict[str, dict[str, Any]] | None,
-    x: float,
-    y: float,
-) -> tuple[str, float] | None:
-    """Return (zone_key, speed_factor) for the strongest active steering zone."""
-    best_key: str | None = None
-    best_factor = 1.0
+) -> tuple[tuple[str, float, Any], ...]:
+    """Return (zone_key, speed_factor, polygon) for every zone that changes speed.
+
+    A zone whose normalised factor is 1 cannot change any agent's speed, so
+    the per-step update scans only the zones listed here, in dict order. The
+    result reflects ``direct_steering_info`` at the time of the call: compute
+    it again after changing a ``speed_factor`` or a polygon.
+    """
+    zones = []
     for zone_key, zone_cfg in (direct_steering_info or {}).items():
         factor = normalize_speed_factor(zone_cfg.get("speed_factor", 1.0))
         if math.fabs(factor - 1.0) <= 1e-9:
             continue
-        if not is_inside_polygon(x, y, zone_cfg.get("polygon")):
+        zones.append((zone_key, factor, zone_cfg.get("polygon")))
+    return tuple(zones)
+
+
+def _find_steering_zone(
+    direct_steering_info: dict[str, dict[str, Any]] | None,
+    x: float,
+    y: float,
+    active_zones: tuple[tuple[str, float, Any], ...] | None = None,
+) -> tuple[str, float] | None:
+    """Return (zone_key, speed_factor) for the strongest active steering zone.
+
+    ``active_zones`` is ``active_steering_zones(direct_steering_info)``,
+    precomputed by the caller; it is computed here when omitted.
+    """
+    if active_zones is None:
+        active_zones = active_steering_zones(direct_steering_info)
+    best_key: str | None = None
+    best_factor = 1.0
+    for zone_key, factor, polygon in active_zones:
+        if not is_inside_polygon(x, y, polygon):
             continue
         if best_key is None or math.fabs(factor - 1.0) > math.fabs(best_factor - 1.0):
             best_key = zone_key
             best_factor = factor
     return (best_key, best_factor) if best_key is not None else None
+
+
+# Speed-state inputs of the last restore outside every zone; see
+# ``update_checkpoint_speed``.
+_RESTORED_INPUTS_KEY = "_restored_inputs"
+
+
+def _restore_inputs(state: dict[str, Any]) -> tuple:
+    """Return the speed-state values that ``restore_agent_speed`` depends on."""
+    return (
+        state.get("original_speed"),
+        state.get("smoke_factor", 1.0),
+        state.get("fic_factor", 1.0),
+        state.get("active_checkpoint"),
+    )
 
 
 def update_checkpoint_speed(
@@ -278,20 +316,36 @@ def update_checkpoint_speed(
     stage_cfg: dict[str, Any] | None,
     x: float,
     y: float,
+    *,
+    active_zones: tuple[tuple[str, float, Any], ...] | None = None,
 ) -> None:
-    """Apply or clear speed modifiers from checkpoint and steering zones."""
+    """Apply or clear speed modifiers from checkpoint and steering zones.
+
+    ``active_zones`` is ``active_steering_zones(direct_steering_info)``,
+    precomputed once by a caller that updates every agent at every step.
+
+    Outside every zone the speed depends only on the agent's speed state, so
+    the update does nothing when that state is unchanged since the last
+    restore. Any code that writes ``desired_speed`` must therefore also update
+    ``agent_speed_state``, or the write outlives the next update.
+    """
     state = ensure_agent_speed_state(agent_speed_state, agent_id, agent)
 
     zone = None
     if checkpoint_key and stage_cfg:
         zone = _find_checkpoint_zone(checkpoint_key, stage_cfg, x, y)
     if zone is None:
-        zone = _find_steering_zone(direct_steering_info, x, y)
+        zone = _find_steering_zone(direct_steering_info, x, y, active_zones)
 
     if zone is None:
+        inputs = _restore_inputs(state)
+        if state.get(_RESTORED_INPUTS_KEY) == inputs:
+            return
         restore_agent_speed(agent_speed_state, agent_id, agent)
+        state[_RESTORED_INPUTS_KEY] = _restore_inputs(state)
         return
 
+    state.pop(_RESTORED_INPUTS_KEY, None)
     active_zone_key, active_speed_factor = zone
     original_speed = state.get("original_speed")
     if original_speed is None:

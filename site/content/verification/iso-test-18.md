@@ -3,6 +3,7 @@ title: "ISO 20414 Test 18: walking speed in smoke"
 linkTitle: "ISO Test 18"
 weight: 18
 math: true
+aliases: [/models/verification/iso-test-18/]
 ---
 
 | | |

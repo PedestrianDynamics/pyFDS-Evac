@@ -240,7 +240,7 @@ agents walk.
 - [ ] Read the warnings of the first run. A missing gas slice switches FED off
       and the run still finishes, reporting FED = 0.
 - [ ] Read [Limitations](limitations.md) and the
-      [verification status](https://pedestriandynamics.org/pyFDS-Evac/models/verification/).
+      [verification status](https://pedestriandynamics.org/pyFDS-Evac/verification/).
 
 ## Words that changed meaning
 

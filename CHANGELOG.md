@@ -27,6 +27,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Performance: the per-step speed update of direct-steering runs scans
+  only the zones whose speed factor is not 1, precomputed once per run
+  (`active_steering_zones`), and leaves an agent outside every such zone
+  alone while its speed state (base speed, smoke, FIC, active zone) is
+  unchanged. Trajectories are identical. Any code that writes an agent's
+  `desired_speed` must also update its speed state (#240).
 - Web GUI: the FED section is titled "Purser / FDS" instead of
   "ISO 13571"; the coded form is the Purser sum as in the FDS `FED` function.
 - **Breaking.** `speed_law="fridolf"` now implements Eq. 7 (method 3) of

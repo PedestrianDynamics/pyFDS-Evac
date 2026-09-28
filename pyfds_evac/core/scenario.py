@@ -43,6 +43,7 @@ from .cognitive_map import (
     init_cognitive_map,
 )
 from .direct_steering_runtime import (
+    active_steering_zones,
     advance_path_target,
     assign_agent_target,
     ensure_agent_speed_state,
@@ -1463,6 +1464,7 @@ def run_scenario(
             if direct_steering_info
             else False
         )
+        _active_speed_zones = active_steering_zones(direct_steering_info)
         flow_variant_rng = random.Random(seed)
         total_progress_agents = initial_agent_count + sum(num_agents_per_source)
         import time as _time
@@ -2412,6 +2414,7 @@ def run_scenario(
                             None,
                             x,
                             y,
+                            active_zones=_active_speed_zones,
                         )
                 if agent_speed_state:
                     for tracked_agent_id in list(agent_speed_state.keys()):
@@ -2458,6 +2461,7 @@ def run_scenario(
                             None,
                             x,
                             y,
+                            active_zones=_active_speed_zones,
                         )
                         continue
 
@@ -2477,6 +2481,7 @@ def run_scenario(
                             stage_cfg,
                             x,
                             y,
+                            active_zones=_active_speed_zones,
                         )
                         if not wait_info.get("target_assigned", False):
                             assign_agent_target(agent, target)
@@ -2557,6 +2562,7 @@ def run_scenario(
                             stage_cfg,
                             x,
                             y,
+                            active_zones=_active_speed_zones,
                         )
                         if current_time >= float(
                             wait_info.get("wait_until", current_time)

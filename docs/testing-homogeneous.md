@@ -3,7 +3,7 @@ title: "CO dose in a uniform room"
 linkTitle: "CO dose"
 weight: 14
 math: true
-aliases: [/docs/testing-homogeneous/]
+aliases: [/docs/testing-homogeneous/, /models/verification/testing-homogeneous/]
 ---
 
 | | |
