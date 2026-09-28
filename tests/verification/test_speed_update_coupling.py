@@ -46,9 +46,18 @@ def _spec() -> CorridorSpec:
     )
 
 
-def _scenario(with_zones: bool):
+PREMOVEMENT_S = 2.0
+
+
+def _scenario(with_zones: bool, premovement: bool = False):
     spec = _spec()
     scenario = corridor_scenario(spec)
+    if premovement:
+        scenario.raw["distributions"]["spawn_near"]["parameters"].update(
+            use_premovement=True,
+            premovement_distribution="constant",
+            premovement_param_a=PREMOVEMENT_S,
+        )
     if with_zones:
         scenario.raw["zones"] = {
             key: {
@@ -112,13 +121,15 @@ def _factor_lookup(history, key):
     return lookup
 
 
-def _assert_closed_form(rows, with_zones, smoke, fic, *, min_zone_rows=0):
+def _assert_closed_form(rows, with_zones, smoke, fic, *, min_zone_rows=0, start_s=0.0):
+    """Before ``start_s`` (pre-movement) agents stand still."""
     assert rows, "no step was recorded"
     in_zone = 0
     for t, agent_id, x, y, speed in rows:
         zone = _zone_factor(x, y, with_zones)
         in_zone += zone != 1.0
-        expected = V0 * zone * smoke(agent_id, t) * fic(agent_id, t)
+        v0 = V0 if t >= start_s - 1e-9 else 0.0
+        expected = v0 * zone * smoke(agent_id, t) * fic(agent_id, t)
         assert speed == pytest.approx(expected, rel=1e-9, abs=1e-12), (
             f"t={t} agent={agent_id} x={x:.3f} zone={zone}"
         )
@@ -202,6 +213,32 @@ def test_fic_inside_zones_keeps_the_zone_factor(recorder):
             _factor_lookup(result.smoke_history, "speed_factor"),
             _factor_lookup(result.fed_history, "fic_speed_factor"),
             min_zone_rows=100,
+        )
+    finally:
+        result.cleanup()
+
+
+def test_premovement_activation_sets_the_baseline(recorder):
+    """Agents stand at 0 until pre-movement ends, then walk at the closed form.
+
+    Activation changes ``original_speed`` while the smoke factor is already
+    below 1, so the update must pick up the new baseline at once.
+    """
+    spec, scenario = _scenario(True, premovement=True)
+    result = run_scenario(
+        scenario,
+        seed=spec.seed,
+        smoke_speed_model=make_smoke_model(uniform(1.0)),
+    )
+    try:
+        assert any(t < PREMOVEMENT_S for t, *_ in recorder.rows)
+        _assert_closed_form(
+            recorder.rows,
+            True,
+            _factor_lookup(result.smoke_history, "speed_factor"),
+            lambda agent_id, t: 1.0,
+            min_zone_rows=100,
+            start_s=PREMOVEMENT_S,
         )
     finally:
         result.cleanup()

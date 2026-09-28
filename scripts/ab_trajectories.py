@@ -8,10 +8,15 @@ checkout, so relative asset paths resolve per side and an editable install of
 another branch is not picked up. The module path each side imports is printed
 as a check.
 
+The baseline should be a clean checkout of the commit the candidate
+branches from, e.g. a detached worktree::
+
+    git worktree add --detach /tmp/fds-evac-main origin/main
+
 Usage::
 
-    python scripts/ab_trajectories.py --base ../fds-evac --cand . \\
-        [--repeat 2] [--out DIR] -- --scenario assets/t_junction/config_full.json \\
+    python scripts/ab_trajectories.py --base /tmp/fds-evac-main --cand . \\
+        [--repeat 3] [--out DIR] -- --scenario assets/t_junction/config_full.json \\
         --fds-dir $D/t_junction/fire_2MW_PVC
 
 Everything after ``--`` goes to ``run.py``; ``--output-sqlite`` is added by
@@ -37,13 +42,21 @@ COLUMNS = ("frame", "id", "pos_x", "pos_y", "ori_x", "ori_y")
 def _env(checkout: Path) -> dict[str, str]:
     env = dict(os.environ)
     env["PYTHONPATH"] = str(checkout)
-    env.setdefault("MPLCONFIGDIR", tempfile.mkdtemp(prefix="mpl-"))
     return env
 
 
 def _imported_from(python: str, checkout: Path) -> str:
+    """Import what run.py imports once, untimed, and return the module path.
+
+    This also warms the interpreter, bytecode and matplotlib caches, so the
+    first timed run of a side is not a cold start.
+    """
+    code = (
+        "import matplotlib.pyplot, pyfds_evac, pyfds_evac.core.scenario; "
+        "print(pyfds_evac.__file__)"
+    )
     out = subprocess.run(
-        [python, "-c", "import pyfds_evac; print(pyfds_evac.__file__)"],
+        [python, "-c", code],
         cwd=checkout,
         env=_env(checkout),
         capture_output=True,
@@ -106,7 +119,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--base", type=Path, required=True, help="baseline checkout")
     parser.add_argument("--cand", type=Path, required=True, help="candidate checkout")
-    parser.add_argument("--repeat", type=int, default=1, help="runs per side")
+    parser.add_argument("--repeat", type=int, default=3, help="runs per side")
     parser.add_argument("--python", default=sys.executable, help="interpreter")
     parser.add_argument("--out", type=Path, help="output dir (default: temp dir)")
     args = parser.parse_args(argv)
@@ -117,6 +130,8 @@ def main(argv: list[str] | None = None) -> int:
 
     out = args.out or Path(tempfile.mkdtemp(prefix="ab-trajectories-"))
     out.mkdir(parents=True, exist_ok=True)
+    # One matplotlib cache for every run, so no run rebuilds the font cache.
+    os.environ.setdefault("MPLCONFIGDIR", str(out / "mplconfig"))
     sides = {"base": args.base.resolve(), "cand": args.cand.resolve()}
     for name, checkout in sides.items():
         print(f"{name}: {checkout}\n  imports {_imported_from(args.python, checkout)}")
@@ -142,6 +157,9 @@ def main(argv: list[str] | None = None) -> int:
             ok &= same
             print(f"base_0 vs {name}_{i}: {message}")
 
+    for name in sides:
+        runs = ", ".join(f"{w:.2f}" for w in walls[name])
+        print(f"{name} wall times: {runs} s")
     base_best, cand_best = min(walls["base"]), min(walls["cand"])
     print(
         "wall time (best of {n}): base {b:.2f} s, cand {c:.2f} s, {d:+.1f} %".format(
