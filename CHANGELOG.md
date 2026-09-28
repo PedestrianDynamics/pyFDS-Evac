@@ -10,10 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - A run warns once when CO is sampled with zero CO2: the hyperventilation
   factor is then 1, and the FDS deck probably has no ambient CO2.
+- Web GUI: a light/dark theme switch, a Cancel control for a running scenario,
+  a Clear control for finished results, and a trajectory viewer that fills
+  the screen in fullscreen. A cancel stops the run at its next progress tick
+  or between phases; output files written before the cancel stay on disk.
 - `assets/Haspel`: the BUW Campus Haspel ground floor with an FDS deck, for
   a model-to-model comparison with a PathFinder student study. Not yet a
   valid comparison; see `assets/Haspel/README.md`
   ([#134](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/134)).
+
+### Removed
+
+- Web GUI: the Cumulative FED results chart, the FED sparkline and the mean
+  FED line. The viewer and the live chart show the highest FED of any agent
+  at each time.
 
 ### Changed
 
