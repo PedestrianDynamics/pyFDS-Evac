@@ -1,0 +1,49 @@
+{{- /* Resolve markdown links the way GitHub does for the repository.
+
+     docs/ is mounted into the site unchanged, so its pages link each other
+     as sibling .md files. A link to a page in the site becomes that page's
+     URL; a link to any other file in the repository goes to GitHub. */ -}}
+{{- $dest := .Destination -}}
+{{- $repo := "https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/" -}}
+{{- $external := or (strings.HasPrefix $dest "http") (strings.HasPrefix $dest "mailto:") (strings.HasPrefix $dest "#") -}}
+{{- if not $external -}}
+  {{- $path := $dest -}}
+  {{- $fragment := "" -}}
+  {{- with (index (split $dest "#") 1) -}}
+    {{- $fragment = printf "#%s" . -}}
+    {{- $path = index (split $dest "#") 0 -}}
+  {{- end -}}
+  {{- $page := "" -}}
+  {{- if strings.HasSuffix $path ".md" -}}
+    {{- $page = .Page.GetPage $path -}}
+    {{- /* hugo.yaml mounts docs/ files into sidebar groups, so a link
+         written against the flat docs/ tree (docs/x.md, /docs/x.md) is
+         looked up by file name among the pages mounted from docs/. */ -}}
+    {{- if and (not $page) (or (strings.HasPrefix $path "/docs/") (not (strings.Contains $path "/"))) -}}
+      {{- $name := path.Base $path -}}
+      {{- $fromDocs := (site.GetPage "/docs").RegularPagesRecursive -}}
+      {{- $fromDocs = $fromDocs | append (site.GetPage "/models/verification").RegularPages -}}
+      {{- /* A group with a single page mounts it as the group's _index.md,
+           so sections are matched by the name of their source file. */ -}}
+      {{- $fromDocs = $fromDocs | append (site.GetPage "/docs").Sections -}}
+      {{- $fromDocs = $fromDocs | append (site.GetPage "/docs/implementation").Sections -}}
+      {{- range $fromDocs -}}
+        {{- if and (not $page) .File (eq (path.Base .File.Filename) $name) -}}
+          {{- $page = . -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if $page -}}
+    {{- $dest = printf "%s%s" $page.RelPermalink $fragment -}}
+  {{- else if strings.HasPrefix $path "../" -}}
+    {{- $dest = printf "%s%s%s" $repo (strings.TrimPrefix "../" $path) $fragment -}}
+  {{- else if strings.HasPrefix $path "/docs/" -}}
+    {{- $dest = printf "%s%s%s" $repo (strings.TrimPrefix "/" $path) $fragment -}}
+  {{- else if or (strings.HasSuffix $path ".md") (strings.HasSuffix $path ".pdf") (strings.HasSuffix $path ".py") -}}
+    {{- $dest = printf "%sdocs/%s%s" $repo $path $fragment -}}
+  {{- else -}}
+    {{- $dest = relURL $dest -}}
+  {{- end -}}
+{{- end -}}
+<a href="{{ $dest | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if strings.HasPrefix $dest "http" }} target="_blank" rel="noopener"{{ end }}>{{ .Text | safeHTML }}</a>{{- /* no trailing newline: it renders as a space before punctuation */ -}}

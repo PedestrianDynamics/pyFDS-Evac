@@ -14,7 +14,8 @@ from the GUI. It defaults to a no-op.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 from .cognitive_map import familiarity_probability
 from .fds_inventory import inspect_fds_quantities
@@ -33,7 +34,11 @@ from .smoke_speed import (
     SmokeSpeedConfig,
     SmokeSpeedModel,
 )
-from .visibility import VisibilityModel, extract_sign_descriptors
+from .visibility import (
+    DEFAULT_MAX_SIGN_DISTANCE_M,
+    VisibilityModel,
+    extract_sign_descriptors,
+)
 
 Logger = Callable[[str], None]
 
@@ -98,13 +103,21 @@ def _build_fed_model(opts: Any, log: Logger):
         fds_dir=opts.fds_dir,
         update_interval_s=opts.smoke_update_interval,
         slice_height_m=opts.smoke_slice_height,
+        o2_threshold_percent=getattr(opts, "o2_threshold_percent", 20.0),
     )
     return DefaultFedModel(FdsFedField.from_fds(opts.fds_dir), fed_config)
 
 
 def _build_heat_fed_model(opts: Any, log: Logger):
-    """Build the heat FED (SFPE Handbook Eq. 63.44) model when a TEMPERATURE slice exists."""
+    """Build the heat FED (SFPE Handbook Eq. 63.44) model when asked for.
+
+    FDS+Evac has no heat dose, so it is opt-in (``opts.enable_heat_fed``) and
+    then needs a TEMPERATURE slice.
+    """
     if not opts.fds_dir:
+        return None
+    if not getattr(opts, "enable_heat_fed", False):
+        log("Heat FED is off; pass --enable-heat-fed to accumulate it.")
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():
@@ -170,8 +183,8 @@ def _has_discovery_agents(scenario: Any) -> bool:
 
     A fully familiar agent holds the whole graph from t=0 and never consults the
     visibility model, so building one for such a deck costs time and changes
-    nothing. Route choice does not consult it either: the gate measures sight as
-    c / K_ave over the route polyline, which needs only the extinction field.
+    nothing. Route choice does not consult it either: the gate uses the optical
+    depth K_ave * L of the route polyline, which needs only the extinction field.
     """
     for dist in scenario.raw.get("distributions", {}).values():
         value = dist.get("parameters", {}).get("familiarity", "full")
@@ -204,6 +217,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     if not sign_descriptors:
         log("Warning: visibility gating requested but the config has no signs.")
         return None
+    max_distance = getattr(opts, "max_sign_distance", DEFAULT_MAX_SIGN_DISTANCE_M)
     n_signs = len(sign_descriptors)
     plural = "" if n_signs == 1 else "s"
     if not opts.fds_dir:
@@ -216,6 +230,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
             sign_descriptors,
             cell_size_m=cell,
             cache_path=opts.vis_cache,
+            max_sign_distance_m=max_distance,
         )
     log(f"Configuring visibility model ({n_signs} sign{plural}).")
     return VisibilityModel(
@@ -224,6 +239,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
         cache_path=opts.vis_cache,
         time_step_s=opts.reroute_interval,
         slice_height_m=opts.smoke_slice_height,
+        max_sign_distance_m=max_distance,
     )
 
 
@@ -241,15 +257,17 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
     heat_mode = getattr(opts, "heat_incapacitation_mode", "probabilistic")
     heat_sigma = getattr(opts, "heat_susceptibility_sigma", 0.94)
+    fic_speed = fed_model is not None and getattr(opts, "enable_fic_speed", False)
     log(
         "Configuring tenability "
-        f"(FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
+        f"(FIC slowdown={'on' if fic_speed else 'off'}, "
+        f"FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
         f"FED median={opts.fed_threshold}, incapacitation={mode}, "
         f"heat FED median={heat_threshold}, "
         f"heat incapacitation={heat_mode})."
     )
     return TenabilityConfig(
-        enable_fic_speed=fed_model is not None,
+        enable_fic_speed=fic_speed,
         fic_alpha=opts.fic_alpha,
         fic_min_factor=opts.fic_min_factor,
         enable_incapacitation=fed_model is not None,
@@ -263,7 +281,7 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     )
 
 
-def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> Dict[str, Any]:
+def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str, Any]:
     """Translate run options into keyword arguments for ``run_scenario``.
 
     Returns the kwargs dict accepted by ``run_scenario`` (``seed``,

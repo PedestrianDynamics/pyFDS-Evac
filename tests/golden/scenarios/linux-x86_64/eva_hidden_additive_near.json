@@ -1,0 +1,102 @@
+{
+ "deck": {
+  "agents": 10,
+  "blobs": [
+   [
+    0.0,
+    4.0,
+    0.0,
+    6.0,
+    5.0,
+    0.3,
+    3.0,
+    Infinity
+   ]
+  ],
+  "config": "exit_visibility_alpha/config_hidden.json",
+  "cost_model": "additive",
+  "familiarity": null,
+  "flow_end_s": null,
+  "max_time_s": 60.0,
+  "seed": 1,
+  "vis_extinction": 0.0
+ },
+ "rankings": [
+  [
+   1.0,
+   1,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   2,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   3,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   4,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   5,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   6,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   7,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   8,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   9,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ],
+  [
+   1.0,
+   10,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok"
+  ]
+ ],
+ "summary": {
+  "agents_evacuated": 10,
+  "evacuation_time": 17.47,
+  "total_agents": 10
+ },
+ "switches": []
+}

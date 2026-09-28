@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from pyfds_evac.core import extinction_from_soot_density, speed_from_soot_density
 
@@ -40,29 +41,62 @@ def main() -> int:
     ]
     extinction_points = [extinction_from_soot_density(value) for value in soot_points]
 
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, ax = plt.subplots(figsize=(9, 6))
-    ax.plot(theory_x, theory_y, color="black", linewidth=2, label="Theory")
+    ax.plot(
+        theory_x,
+        theory_y,
+        color="#1f253f",
+        linewidth=2,
+        label="Theory",
+    )
     ax.scatter(
         soot_points,
         model_y,
-        color="red",
-        edgecolors="black",
+        color="#d73027",
+        marker="o",
+        edgecolors="white",
+        linewidths=0.8,
         s=70,
         label="pyFDS-Evac",
         zorder=3,
     )
-    ax.set_xlabel("Soot density (mg/m$^3$)")
-    ax.set_ylabel("Speed (m/s)")
+    ax.text(
+        0.98,
+        0.98,
+        f"at {soot_points[-1]:.0f} mg/m$^3$ (K = {extinction_points[-1]:.2f}/m) "
+        f"speed falls to {model_y[-1]:.2f} m/s, "
+        f"{model_y[-1] / base_speed:.0%} of {base_speed:g} m/s",
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=9,
+        color="dimgrey",
+        style="italic",
+    )
+    ax.set_xlabel("Soot density (mg/m$^3$)", color="dimgrey")
+    ax.set_ylabel("Speed (m/s)", color="dimgrey")
     ax.set_ylim(0.0, 1.6)
-    ax.grid(True, alpha=0.3)
     top = ax.twiny()
     top.set_xlim(ax.get_xlim())
     top.set_xticks(soot_points)
     top.set_xticklabels(
         [f"{value:.2f}".rstrip("0").rstrip(".") for value in extinction_points]
     )
-    top.set_xlabel("Extinction coefficient (1/m)")
-    ax.legend(loc="best")
+    top.set_xlabel("Extinction coefficient (1/m)", color="dimgrey")
+    top.grid(False)
+    for axis in (ax, top):
+        axis.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+    ax.legend(
+        loc="lower left",
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor="dimgrey",
+    )
+    sns.despine(ax=ax, left=True, bottom=True)
+    sns.despine(ax=top, left=True, bottom=True)
     fig.tight_layout()
     fig.savefig(output, dpi=150, bbox_inches="tight")
     plt.close(fig)

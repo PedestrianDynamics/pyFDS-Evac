@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "pyFDS-Evac"
+abstract: >-
+  Fire Dynamics Simulator (FDS) evacuation modeling with visibility
+  analysis. Couples a finished FDS run to JuPedSim agents: smoke slows
+  them, dose stops them, smoke along a route changes their exit, and sign
+  legibility decides which exits they know.
+authors:
+  - given-names: Mohcine
+    family-names: Chraibi
+    email: m.chraibi@fz-juelich.de
+    affiliation: Forschungszentrum Jülich
+    orcid: "https://orcid.org/0000-0002-0999-6807"
+  - given-names: Gregory
+    family-names: Shouldice
+    email: gregoryshouldice@gmail.com
+    affiliation: McMaster University
+  - given-names: Kristian
+    family-names: Börger
+    email: boerger@uni-wuppertal.de
+    affiliation: University of Wuppertal
+    orcid: "https://orcid.org/0000-0003-4371-5770"
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/PedestrianDynamics/pyFDS-Evac"
+url: "https://pedestriandynamics.org/pyFDS-Evac/"
+keywords:
+  - evacuation
+  - fire safety
+  - FDS
+  - JuPedSim
+  - visibility
+  - pedestrian dynamics

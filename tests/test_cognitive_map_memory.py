@@ -233,3 +233,44 @@ class TestLegibilityWindowIsDerived:
         assert vis.node_is_visible(0.0, CENTRELINE_X, (low + high) / 2, "E_side")
         assert not vis.node_is_visible(0.0, CENTRELINE_X, low - 1.0, "E_side")
         assert not vis.node_is_visible(0.0, CENTRELINE_X, high + 1.0, "E_side")
+
+
+def _probe_module():
+    """Import ``scripts/figures/_cognitive_map_probe.py``, the figures' probe."""
+    import importlib.util
+    import sys
+
+    path = Path("scripts/figures/_cognitive_map_probe.py")
+    spec = importlib.util.spec_from_file_location("_cognitive_map_probe", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    # dataclasses resolve annotations through sys.modules
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_map_memory_probes_match_engine():
+    """The map-memory figures draw these outcomes; routing must still produce them.
+
+    ``scripts/figures/map_memory.py`` and
+    ``scripts/generate_cognitive_map_states.py`` plot this sweep. A routing
+    change that moves an outcome fails here instead of silently invalidating a
+    figure (#160). The return probe is the memory effect: at y = 10 the agent
+    takes E_end on the way up and E_side on the way back, because only then is
+    the side exit in its map.
+    """
+    probes = _probe_module().probe_cognitive_map([4, 10, 14, 20, 26, 30], [10])
+    outcomes = [(p.heading, p.y, p.side, p.choice) for p in probes]
+    assert outcomes == [
+        ("north", 4.0, "unknown", "end"),
+        ("north", 10.0, "unknown", "end"),
+        ("north", 14.0, "legible", "side"),
+        ("north", 20.0, "legible", "side"),
+        ("north", 26.0, "legible", "end"),
+        ("north", 30.0, "remembered", "end"),
+        ("south", 10.0, "remembered", "side"),
+    ]
+    back = probes[-1]
+    assert back.distance_m["E_side"] == pytest.approx(10.31, abs=0.01)
+    assert back.distance_m["E_end"] == pytest.approx(21.30, abs=0.01)

@@ -26,7 +26,7 @@ import pytest
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon
 
-from pyfds_evac.core.cognitive_map import init_cognitive_map
+from pyfds_evac.core.cognitive_map import expand_from_visibility, init_cognitive_map
 from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, rank_routes
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 from pyfds_evac.core.visibility import VisibilityModel
@@ -188,3 +188,51 @@ class TestExitChoiceFollowsLegibility:
         """
         for config_name in ("config_visible", "config_hidden"):
             assert _best_exit(config_name, familiarity="full") == "E_near", config_name
+
+
+def _exit_chosen_at(config_name: str, position: tuple[float, float]) -> str:
+    """Which exit a discovery agent standing at *position* would take.
+
+    The agent perceives from where it stands, as in
+    ``scripts/generate_exit_visibility_map.py``.
+    """
+    graph, _, vis_model = _load(config_name)
+    cmap = init_cognitive_map(
+        "jps-distributions_0", graph, "discovery", vis_model=vis_model, time_s=0.0
+    )
+    expand_from_visibility(
+        cmap, "jps-distributions_0", graph, vis_model, 0.0, position[0], position[1]
+    )
+    ranked = rank_routes(
+        graph,
+        "jps-distributions_0",
+        0.0,
+        0.0,
+        ConstantExtinctionField(0.0),
+        None,
+        RouteCostConfig(base_speed_m_per_s=1.3, w_smoke=0.0, w_fed=0.0, w_queue=0.0),
+        cognitive_map=cmap,
+        agent_position=position,
+    )
+    return ranked[0].exit_id
+
+
+class TestChoiceBoundaryOnTheCentreline:
+    """In clear air every tau is zero and the walk from here decides alone.
+
+    E_near's sign is at y = 0.7 and E_far's at y = 29.3, so the two walks are
+    equal at y = 15.0. Both routes start at the spawn centroid (2, 10), and an
+    agent north of it stands behind E_near's origin: pricing only the node
+    legs moved the boundary to y ~ 20 (#167).
+    """
+
+    @pytest.mark.parametrize(
+        ("position", "expected"),
+        [((2.0, 14.0), "E_near"), ((2.0, 16.0), "E_far")],
+    )
+    def test_visible_panel_splits_at_the_midpoint(self, position, expected):
+        assert _exit_chosen_at("config_visible", position) == expected
+
+    @pytest.mark.parametrize("position", [(2.0, 14.0), (2.0, 16.0)])
+    def test_hidden_panel_takes_the_far_exit(self, position):
+        assert _exit_chosen_at("config_hidden", position) == "E_far"

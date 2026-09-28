@@ -12,6 +12,7 @@ from pyfds_evac.core import (
     run_scenario,
 )
 from pyfds_evac.core.agent_scalars import write_agent_scalars
+from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs
 
 
@@ -63,8 +64,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--smoke-slice-height",
         type=float,
-        default=2.0,
-        help="FDS slice height in meters for extinction sampling",
+        default=1.6,
+        help="FDS slice height in meters for smoke and heat sampling "
+        "(default: 1.6, FDS+Evac HUMAN_SMOKE_HEIGHT; pass 2.0 for the "
+        "previous pyFDS-Evac default)",
     )
     parser.add_argument(
         "--output-smoke-history",
@@ -102,7 +105,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--vis-cache",
-        help="Path to vismap .npz cache for visibility-gated route rejection. "
+        help="Path to vismap .npz cache for sight gating, which decides which "
+        "graph nodes enter an agent's cognitive map; route choice does not read "
+        "it. "
         "Requires rerouting enabled (on by default; do not pass "
         "--no-enable-rerouting). With --fds-dir the cache holds the smoke-aware "
         "vismap, without it the clear-air one. Created if missing, loaded if "
@@ -113,8 +118,9 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Force clear-air sight gating even on a deck whose agents all "
         "start fully familiar. Such agents never consult it to learn the graph, "
-        "but the gate route model reads its line of sight, so a gate deck builds "
-        "one anyway. Decks with discovery agents get it without asking.",
+        "and route choice does not read it either (the gate uses the optical "
+        "depth K_ave * L of the route polyline), so on such a deck it changes "
+        "nothing. Decks with discovery agents get it without asking.",
     )
     parser.add_argument(
         "--no-visibility",
@@ -132,22 +138,44 @@ def _build_parser() -> argparse.ArgumentParser:
         "wall that must block sight (default: 0.25)",
     )
     parser.add_argument(
+        "--max-sign-distance",
+        type=float,
+        default=30.0,
+        help="Farthest distance in meters from which a sign can be read, even "
+        "in clear air. A sign's own 'max_distance' overrides it (default: 30, "
+        "as in fdsvismap)",
+    )
+    parser.add_argument(
         "--disable-tenability",
         action="store_true",
-        help="Disable both the FIC speed-reduction rule and the FED>=1 "
-        "incapacitation rule (default: both active when a FED model is loaded)",
+        help="Run without a tenability config: disables the FIC speed-reduction "
+        "rule, toxic FED incapacitation and heat FED incapacitation. FED is "
+        "still accumulated and reported (default: incapacitation active when a "
+        "FED or heat FED model is loaded; the FIC rule only with "
+        "--enable-fic-speed)",
+    )
+    parser.add_argument(
+        "--enable-fic-speed",
+        action="store_true",
+        help="Slow agents by the irritant (FIC) rule max(fic-min-factor, "
+        "1 - fic-alpha * FIC) on top of the smoke-speed law. Off by default, "
+        "as FDS+Evac has no irritant slowdown; before this became opt-in it "
+        "was on whenever a FED model was loaded",
     )
     parser.add_argument(
         "--fic-alpha",
         type=float,
         default=0.7,
-        help="Slope of the Purser FIC speed-reduction rule (default: 0.7)",
+        help="Slope of the FIC speed-reduction rule, a pyFDS-Evac "
+        "assumption, source unknown (#147); needs --enable-fic-speed "
+        "(default: 0.7)",
     )
     parser.add_argument(
         "--fic-min-factor",
         type=float,
         default=0.3,
-        help="Lower bound on the FIC speed factor (default: 0.3)",
+        help="Lower bound on the FIC speed factor; needs --enable-fic-speed "
+        "(default: 0.3)",
     )
     parser.add_argument(
         "--fed-threshold",
@@ -155,6 +183,14 @@ def _build_parser() -> argparse.ArgumentParser:
         default=1.0,
         help="Median cumulative FED at which an agent is incapacitated "
         "(default: 1.0 per ISO 13571 / Korhonen 2021)",
+    )
+    parser.add_argument(
+        "--o2-threshold-percent",
+        type=float,
+        default=20.0,
+        help="O2 volume percent at or above which the hypoxia term of the gas "
+        "FED is zero (default: 20.0, as FDS/FDS+Evac; 19.5 was the previous "
+        "pyFDS-Evac default, the OSHA limit used by Pathfinder)",
     )
     parser.add_argument(
         "--incapacitation-mode",
@@ -172,11 +208,20 @@ def _build_parser() -> argparse.ArgumentParser:
         "probabilistic mode (default: 0.94 -> ~10/50/88%% at FED 0.3/1/3)",
     )
     parser.add_argument(
+        "--enable-heat-fed",
+        action="store_true",
+        help="Accumulate the convective heat FED (SFPE Handbook Eq. 63.44) from "
+        "the FDS TEMPERATURE slice and incapacitate on it. Off by default, as "
+        "FDS+Evac has no heat dose; before this became opt-in it was on "
+        "whenever the case had a TEMPERATURE slice",
+    )
+    parser.add_argument(
         "--heat-fed-threshold",
         type=float,
         default=1.0,
         help="Median cumulative heat FED (SFPE Handbook Eq. 63.44) at which an "
-        "agent is thermally incapacitated (default: 1.0). Independent of "
+        "agent is thermally incapacitated; needs --enable-heat-fed "
+        "(default: 1.0). Independent of "
         "--fed-threshold (toxic gas) -- see fed.py's TenabilityConfig",
     )
     parser.add_argument(
@@ -337,6 +382,16 @@ def _maybe_write_agent_scalars(output_path, fed_history) -> None:
     write_agent_scalars(pathlib.Path(output_path).resolve(), fed_history)
 
 
+def _copy_manifest(result, output_path: pathlib.Path) -> pathlib.Path | None:
+    """Copy the run manifest beside the copied trajectory, if there is one."""
+    manifest_file = getattr(result, "manifest_file", None)
+    if not manifest_file or not pathlib.Path(manifest_file).is_file():
+        return None
+    destination = manifest_path_for(output_path)
+    shutil.copy2(manifest_file, destination)
+    return destination
+
+
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
     parser = _build_parser()
@@ -418,6 +473,9 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(result.sqlite_file, output_path)
         artifacts.append(f"Trajectory SQLite: {output_path}")
+        manifest_path = _copy_manifest(result, output_path)
+        if manifest_path is not None:
+            artifacts.append(f"Run manifest: {manifest_path}")
         _maybe_write_agent_scalars(output_path, result.fed_history)
 
     if getattr(opts, "cleanup", False):

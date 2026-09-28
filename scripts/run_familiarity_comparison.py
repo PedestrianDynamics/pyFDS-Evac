@@ -28,6 +28,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 from pyfds_evac.core import (
     ExtinctionField,
@@ -145,10 +146,25 @@ def save_csvs(results: list[dict], out_dir: Path) -> None:
 
 
 def plot_comparison(results: list[dict], out_dir: Path) -> None:
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(1, 3, figsize=(13, 4))
-    fig.suptitle("Phase 2 verification: full vs discovery familiarity", fontsize=11)
+    fig.suptitle(
+        "Phase 2 verification: full vs discovery familiarity",
+        fontsize=11,
+        color="dimgrey",
+    )
 
-    colors = {"full": "#1976D2", "discovery": "#F57C00"}
+    colors = {"full": "#4575b4", "discovery": "#fc8d59"}
+    hatches = {"full": "", "discovery": "//"}
+    lines = {"full": "-", "discovery": "--"}
+    legend_style = dict(
+        fontsize=8,
+        frameon=True,
+        facecolor="white",
+        framealpha=0.8,
+        edgecolor="lightgrey",
+        labelcolor="dimgrey",
+    )
 
     # ── Panel 1: exit choice split ────────────────────────────────────────────
     ax = axes[0]
@@ -185,6 +201,8 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
             width=width,
             label=label,
             color=colors.get(label, "gray"),
+            hatch=hatches.get(label, ""),
+            edgecolor="white",
             alpha=0.85,
         )
         for bar, count in zip(bars, counts):
@@ -196,13 +214,14 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
                     ha="center",
                     va="bottom",
                     fontsize=8,
+                    color="dimgrey",
                 )
 
     ax.set_xticks(list(x))
     ax.set_xticklabels(exit_labels)
-    ax.set_ylabel("Agents")
-    ax.set_title("Exit choice split")
-    ax.legend(fontsize=8)
+    ax.set_ylabel("Agents", color="dimgrey")
+    ax.set_title(r"$\bf{(a)}$ Exit choice split", loc="left", fontsize=11)
+    ax.legend(**legend_style)
     ax.set_ylim(bottom=0)
 
     # ── Panel 2: rejection events over time ───────────────────────────────────
@@ -227,13 +246,17 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
             where="post",
             label=r["label"],
             color=colors.get(r["label"], "gray"),
+            linestyle=lines.get(r["label"], "-"),
             lw=2,
         )
 
-    ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Rejection events")
-    ax.set_title("Visibility-gated rejections over time")
-    ax.legend(fontsize=8)
+    ax.set_xlabel("Time (s)", color="dimgrey")
+    ax.set_ylabel("Rejection events", color="dimgrey")
+    ax.set_title(
+        r"$\bf{(b)}$ Visibility-gated rejections over time", loc="left", fontsize=11
+    )
+    if ax.get_legend_handles_labels()[0]:
+        ax.legend(**legend_style)
     ax.set_xlim(left=0)
     ax.set_ylim(bottom=0)
 
@@ -242,7 +265,9 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
     labels = [r["label"] for r in results]
     evac_times = [r["evacuation_time"] for r in results]
     bar_colors = [colors.get(lbl, "gray") for lbl in labels]
-    bars = ax.bar(labels, evac_times, color=bar_colors, alpha=0.85)
+    bars = ax.bar(labels, evac_times, color=bar_colors, edgecolor="white", alpha=0.85)
+    for bar, lbl in zip(bars, labels):
+        bar.set_hatch(hatches.get(lbl, ""))
     for bar, t in zip(bars, evac_times):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
@@ -251,10 +276,32 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
             ha="center",
             va="bottom",
             fontsize=9,
+            color="dimgrey",
         )
-    ax.set_ylabel("Evacuation time (s)")
-    ax.set_title("Total evacuation time")
+    ax.set_ylabel("Evacuation time (s)", color="dimgrey")
+    ax.set_title(r"$\bf{(c)}$ Total evacuation time", loc="left", fontsize=11)
     ax.set_ylim(bottom=0)
+    by_tier = {r["label"]: r for r in results}
+    if {"full", "discovery"} <= by_tier.keys():
+        full, disc = by_tier["full"], by_tier["discovery"]
+        fig.text(
+            0.99,
+            0.01,
+            f"evacuated: discovery {disc['agents_evacuated']}/"
+            f"{disc['total_agents']} vs full {full['agents_evacuated']}/"
+            f"{full['total_agents']}; time difference "
+            f"{disc['evacuation_time'] - full['evacuation_time']:+.0f} s",
+            ha="right",
+            va="bottom",
+            fontsize=9,
+            color="dimgrey",
+            style="italic",
+        )
+    for ax in axes:
+        ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+        ax.patch.set_edgecolor("lightgrey")
+        ax.patch.set_linewidth(0.8)
+    sns.despine(left=True, bottom=True)
     for r in results:
         frac = (
             r["agents_evacuated"] / r["total_agents"] * 100
@@ -266,7 +313,7 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
             f"({frac:.0f}%) evacuated in {r['evacuation_time']:.1f} s"
         )
 
-    fig.tight_layout()
+    fig.tight_layout(rect=(0.0, 0.04, 1.0, 1.0))
     out_path = out_dir / "comparison.png"
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     print(f"\nSaved → {out_path}")

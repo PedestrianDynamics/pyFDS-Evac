@@ -1,4 +1,9 @@
-# Usage: running simulations and producing plots
+---
+title: "Usage: running simulations and producing plots"
+linkTitle: "Usage"
+weight: 6
+aliases: [/docs/usage/]
+---
 
 This page catalogues every user-facing script in the repository: how to run
 an evacuation simulation, what artefacts it writes, and which plotting
@@ -40,7 +45,7 @@ silent unless you check the warning log.
 | `--fds-dir DIR` | FDS result directory driving smoke-speed and FED. |
 | `--constant-extinction K` | Use a constant `K` [1/m] instead of FDS. |
 | `--smoke-update-interval S` | Seconds between smoke-speed refreshes. |
-| `--smoke-slice-height M` | FDS slice height (m) for extinction sampling. |
+| `--smoke-slice-height M` | FDS slice height (m) for smoke and heat sampling (default 1.6, [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). |
 | `--output-smoke-history CSV` | Write `(t, agent, K, v, factor)` CSV. |
 | `--output-fed-history CSV` | Write per-agent per-sample FED+species CSV. |
 | `--inspect-fds` | Inspect FDS quantities (like `scripts/inspect_fds.py`) and exit. |
@@ -57,11 +62,12 @@ silent unless you check the warning log.
 | `--clear-air-visibility` | Force sight gating on a deck with no fire. Conflicts with `--fds-dir` (a deck with a fire has smoke to decide sight) and with `--no-visibility`. |
 | `--no-visibility` | Turn sight gating off entirely; agents then learn each node's neighbours by contact. Not a fire scenario. |
 | `--vis-cell-size M` | Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight. |
+| `--max-sign-distance M` | Farthest distance from which a sign can be read, also in clear air (default 30 m). A sign's own `"max_distance"` overrides it. |
 
 **The default route-choice model does not trigger the visibility model.** The
-gate reads no vismap: `b16e900` moved the sight criterion onto the route
-polyline, and `89d13d4` removed the `_gate_needs_sight` precompute a gate deck
-used to trigger. A deck whose agents all start fully familiar therefore builds
+default `"gate"` route-cost model reads no vismap: its smoke criterion is the
+optical depth along the route polyline, and sign legibility only decides what
+enters an agent's cognitive map. A deck whose agents all start fully familiar therefore builds
 no visibility model at all unless you pass `--vis-cache` or
 `--clear-air-visibility`. A deck with discovery agents builds one either way,
 because they need it to learn the graph. See
@@ -70,18 +76,26 @@ because they need it to learn the graph. See
 ### Tenability (FIC slowdown + FED incapacitation)
 
 A FED model is instantiated automatically when `--fds-dir` points at
-an FDS case that exposes the ISO 13571 species (CO, CO₂, O₂ at
+an FDS case that exposes the FED species (CO, CO₂, O₂ at
 minimum — HCN, NO/NO₂, and irritants are used if present). When that
-happens, the Purser FIC slowdown and the `FED ≥ 1` incapacitation gate
-are on by default. Without `--fds-dir` (or with a case missing the
-required species) no FED is computed and these flags have no effect.
+happens, the FED incapacitation rule is on by default. The FIC slowdown
+(a pyFDS-Evac assumption, source unknown;
+[#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) is off
+by default, as FDS+Evac has none; `--enable-fic-speed` turns it on. Without `--fds-dir` (or with a case missing the
+required species) no FED is computed and these flags have no effect;
+a case with a `TEMPERATURE` slice still gets heat incapacitation when
+`--enable-heat-fed` is given (the heat dose is off by default, as FDS+Evac has
+none).
 
 | Flag | Purpose |
 |------|---------|
 | `--disable-tenability` | Turn both rules off. |
+| `--enable-fic-speed` | Turn the FIC slowdown on (off by default). |
+| `--enable-heat-fed` | Accumulate the heat dose from a `TEMPERATURE` slice and incapacitate on it (off by default). |
 | `--fic-alpha F` | Slope of `v/v₀ = max(μ, 1 − α·FIC)` (default 0.7). |
 | `--fic-min-factor F` | Floor `μ` (default 0.3). |
-| `--fed-threshold F` | FED at which agents are declared incapacitated (default 1.0). |
+| `--fed-threshold F` | Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless `--incapacitation-mode deterministic`. |
+| `--o2-threshold-percent P` | O₂ vol % at or above which the hypoxia term is zero (default 20.0, as FDS; 19.5 was the previous default). |
 
 ### Agent visualisation
 
@@ -151,7 +165,7 @@ uv run python scripts/plot_fed_history.py fed.csv [options]
 
 | Flag | Mode |
 |------|------|
-| *(default)* | Spaghetti plot: one cumulative-FED line per agent. |
+| *(default)* | Spaghetti plot: one cumulative-FED line per agent; the first agent to reach the threshold (or, if none does, the one with the highest FED) is drawn bold and labelled. |
 | `--show-rate` | Add a second panel with the FED rate. |
 | `--stack AGENT_ID` | Per-species stacked FED breakdown for one agent. |
 | `--stack-all DIR` | One stacked plot per agent, written as `DIR/fed_agent_NNNN.png`. |
@@ -169,14 +183,15 @@ uv run python scripts/plot_trajectories_by_speed.py fed.csv \
 ```
 
 Per-segment RdBu colouring (red = slow, blue = fast) from the extended
-FED CSV. The walkable area is drawn as backdrop via pedpy.
+FED CSV; slower segments are also drawn wider, and the slowest sample is
+ringed and labelled. The walkable area is drawn as backdrop via pedpy.
 
 | Flag | Purpose |
 |------|---------|
 | `--sqlite PATH` | JuPedSim SQLite; backdrop via `pedpy.load_walkable_area_from_jupedsim_sqlite`. |
 | `--agents 7,8,43` | Comma-separated agent ids (default: all). |
 | `--vmax F` | Upper bound for the colormap (default: data max). |
-| `--linewidth F` | Polyline width (default 0.5). |
+| `--linewidth F` | Polyline width at full speed; slower segments are up to three times wider (default 0.5). |
 | `--alpha F` | Polyline transparency (default 0.4). |
 | `--title STR` / `--output PNG` | As usual. |
 
@@ -206,11 +221,11 @@ uv run python scripts/plot_trajectories.py <traj.sqlite> \
 
 | Flag | Effect |
 |---|---|
-| `--config` (required) | Exit polygons, and the colour key. |
+| `--config` (required) | Exit polygons, and the colour and line-style key (one style per exit). |
 | `-o/--out` (required) | Output PNG. |
 | `--route-history` | `run.py --output-route-history` CSV. Colours each path by the exit targeted **at that moment** and marks every switch with a dot. Without it paths are coloured by the exit finally reached, which hides mid-run decisions entirely. |
 | `--geometry` | Walkable-area WKT; defaults to `geometry.wkt` beside the config. |
-| `--reach` | Metres from an exit polygon that count as having reached it (default 1.5). Agents that finish elsewhere are drawn grey and counted separately. |
+| `--reach` | Metres from an exit polygon that count as having reached it (default 1.5). Agents that finish elsewhere are drawn grey and dotted, their end marked with a cross, and counted separately. |
 
 ### Route cost curves — `plot_route_costs.py`
 
@@ -314,7 +329,7 @@ need a simulation run.
 |--------|--------|
 | `generate_tenability_curves.py` | 3-panel Frantzich + FIC + combined heatmap (`--output PATH`). |
 | `generate_fed_guide_plot.py` | FED guide reference curves. |
-| `generate_iso_table21_sweep.py` / `generate_iso_table22_stationary_plot.py` | ISO 13571 sensitivity sweeps. |
+| `generate_iso_table21_sweep.py` / `generate_iso_table22_stationary_plot.py` | ISO 20414:2020 Test 18 (Table 21) sweep over extinction and walking speed / Test 19 (Table 22) stationary FED check. |
 | `generate_routing_diagram.py` | Routing / cognitive-map diagram. |
 | `generate_smoke_density_speed_plot.py` | Smoke-speed reference curve. |
 | `generate_exit_visibility_map.py` | Which exit a `discovery` agent would take, gridded by position, for the two `assets/exit_visibility_alpha` configs (`-o OUT.png`). |

@@ -244,7 +244,9 @@ def cognitive_subgraph(cmap: AgentCognitiveMap, graph):
 
     from .route_graph import StageGraph
 
-    sub = StageGraph()
+    # Familiarity limits what the agent knows, not how it measures: keep the
+    # engine so distances from the agent's position follow the walkable area.
+    sub = StageGraph(routing_engine=graph.routing_engine)
     for node_id in cmap.known_nodes:
         if node_id in graph.nodes:
             sub.nodes[node_id] = graph.nodes[node_id]

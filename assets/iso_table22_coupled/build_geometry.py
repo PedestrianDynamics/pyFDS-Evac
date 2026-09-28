@@ -18,7 +18,7 @@ the concrete sets ISO leaves to the tester. Four calculations, as
 
     (2,    0.1, 15) %   all three active
     (0,    0,   12) %   O2 hypoxia alone
-    (0,    0.1, 21) %   CO alone -- O2 above the 19.5 % gate, no CO2 factor
+    (0,    0.1, 21) %   CO alone -- O2 above the 20.0 % gate, no CO2 factor
     (3.43, 0.1, 21) %   CO plus the CO2 hyperventilation factor
 
 So this asset takes ISO's room and method with the guide's concentrations.

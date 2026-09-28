@@ -22,7 +22,7 @@ All class names the app emits are preserved; only the visual values change.
 
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any
 
 from fasthtml.common import Button, Div, Link, NotStr, Script, Span, Style
 
@@ -861,6 +861,6 @@ def script() -> Any:
     return Script(_THEME_JS)
 
 
-def headers() -> List[Any]:
+def headers() -> list[Any]:
     """Return the <head> elements that apply the theme (after franken-ui)."""
     return [_FONTS, Style(_CSS), boot_script()]

@@ -10,7 +10,7 @@ import argparse
 import sys
 from argparse import Namespace
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from fasthtml.common import (
     Button,
@@ -57,7 +57,7 @@ _MONO = "font-family:'JetBrains Mono',monospace"
 
 _GROUP_ACCENT = ["#F4C430", "#FF8A3D", "#E01E37", "#C81D4E", "#F4C430", "#FFB020"]
 
-FIELD_GROUPS: List[tuple] = [
+FIELD_GROUPS: list[tuple] = [
     ("Core", ["scenario", "seed"]),
     (
         "Smoke",
@@ -74,9 +74,12 @@ FIELD_GROUPS: List[tuple] = [
             "disable_tenability",
             "incapacitation_mode",
             "susceptibility_sigma",
+            "enable_fic_speed",
             "fic_alpha",
             "fic_min_factor",
             "fed_threshold",
+            "o2_threshold_percent",
+            "enable_heat_fed",
             "heat_incapacitation_mode",
             "heat_susceptibility_sigma",
             "heat_fed_threshold",
@@ -115,7 +118,7 @@ def _is_bool(action: argparse.Action) -> bool:
     return action.nargs == 0 and action.const is True
 
 
-def _options_under(root: Path, prefix: str = "") -> List[tuple]:
+def _options_under(root: Path, prefix: str = "") -> list[tuple]:
     """(label, value) pairs for every scenario directory under *root*.
 
     The rule here is deliberately the same one ``load_scenario`` applies to a
@@ -131,7 +134,7 @@ def _options_under(root: Path, prefix: str = "") -> List[tuple]:
     """
     if not root.is_dir():
         return []
-    options: List[tuple] = []
+    options: list[tuple] = []
     for p in sorted(root.iterdir()):
         if not p.is_dir():
             continue
@@ -155,11 +158,11 @@ def _options_under(root: Path, prefix: str = "") -> List[tuple]:
     return options
 
 
-def _scenario_options() -> List[tuple]:
+def _scenario_options() -> list[tuple]:
     return _options_under(_ASSET_ROOT)
 
 
-def _upload_options() -> List[tuple]:
+def _upload_options() -> list[tuple]:
     return _options_under(_UPLOAD_ROOT, UPLOAD_PREFIX)
 
 
@@ -244,7 +247,7 @@ def _browse_button(target_id: str, mode: str) -> Any:
 
 # Curated, friendly explanations shown in the ? badge next to each field.
 # Preferred over argparse's terse help text; keyed by the field's dest.
-_HELP_TEXT: Dict[str, str] = {
+_HELP_TEXT: dict[str, str] = {
     "scenario": "Which building + agent setup to run. Each option under assets/ pairs "
     "a floor plan (geometry) with an exits/agents config.",
     "seed": "Random seed. The same seed reproduces the exact same run; change it to "
@@ -256,7 +259,7 @@ _HELP_TEXT: Dict[str, str] = {
     "smoke_update_interval": "How often (sim seconds) the smoke each agent feels is refreshed. "
     "Smaller is smoother but costs more compute.",
     "smoke_slice_height": "Height (m) of the horizontal FDS slice sampled for smoke — roughly "
-    "head height of a standing person.",
+    "head height of a standing person. 1.6 by default, as FDS+Evac.",
     "disable_tenability": "Turn off smoke's effect on people: no slowing from irritants and no "
     "collapse from toxic dose. Agents just walk at normal speed.",
     "incapacitation_mode": "Probabilistic: each agent draws its own tolerance from a population "
@@ -264,12 +267,18 @@ _HELP_TEXT: Dict[str, str] = {
     "shares the same threshold.",
     "susceptibility_sigma": "Spread of how differently people tolerate toxic smoke. Higher = more "
     "variation between agents in when they're overcome.",
+    "enable_fic_speed": "Let irritant gases slow agents on top of smoke. Off by default, "
+    "as in FDS+Evac, which has no irritant slowdown.",
     "fic_alpha": "How strongly irritant gases slow an agent. Higher = agents slow down "
     "more in irritating smoke.",
     "fic_min_factor": "Floor on irritant slowdown — an agent never drops below this fraction "
     "of its speed from irritants alone.",
     "fed_threshold": "Toxic dose (FED) at which a typical person is incapacitated. 1.0 is the "
     "standard 'untenable' dose (ISO 13571). Lower = agents succumb sooner.",
+    "o2_threshold_percent": "Oxygen level (vol %) below which low oxygen adds to the toxic "
+    "dose. 20.0 as in FDS+Evac; 19.5 is the OSHA limit Pathfinder uses.",
+    "enable_heat_fed": "Accumulate a heat dose from the FDS temperature slice and let it "
+    "incapacitate. Off by default, as FDS+Evac has no heat dose.",
     "heat_incapacitation_mode": "Same idea as toxic-dose mode, but for heat: probabilistic draws a "
     "per-agent tolerance, deterministic gives everyone the same one. "
     "Independent of the toxic-gas track.",
@@ -547,7 +556,7 @@ def _field(action: argparse.Action) -> Any:
 
 
 def _details_block(
-    title: str, accent: str, fields: List[Any], open_: bool = False
+    title: str, accent: str, fields: list[Any], open_: bool = False
 ) -> NotStr:
     body = to_xml(
         Div(
@@ -703,7 +712,7 @@ def build_form(post_url: str) -> Any:
         a.dest: a for a in parser._actions if a.dest not in _HIDDEN and a.option_strings
     }
     grouped: set = set()
-    sections: List[Any] = []
+    sections: list[Any] = []
 
     for (title, dests), accent in zip(FIELD_GROUPS, _GROUP_ACCENT):
         if title == "Output files":
@@ -777,9 +786,9 @@ def default_output_base(scenario: Any, mode: Any, seed: Any) -> str:
     )
 
 
-def form_to_opts(form: Dict[str, Any]) -> Namespace:
+def form_to_opts(form: dict[str, Any]) -> Namespace:
     parser = _load_parser()
-    opts: Dict[str, Any] = {}
+    opts: dict[str, Any] = {}
     for action in parser._actions:
         dest = action.dest
         if dest == "help":

@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-import fahy_table2 as F  # noqa: E402
+import fahy_table2 as F
 
 DOOR_BY_EXIT_ID = {
     "jps-exits_0": "front",

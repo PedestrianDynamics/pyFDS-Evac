@@ -144,8 +144,6 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
-# mkdocs documentation
-/site
 
 # mypy
 .mypy_cache/
@@ -247,3 +245,4 @@ materials/
 # full-vs-discovery question on a smaller plan that does have a fire.
 /assets/maze_test_full/
 /assets/maze_test_discovery/
+
