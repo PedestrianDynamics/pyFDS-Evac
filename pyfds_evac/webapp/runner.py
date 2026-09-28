@@ -14,7 +14,7 @@ import io
 import logging
 import sys
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from typing import Any
 
 from pyfds_evac.core import ProgressEvent, ScenarioResult, run_scenario
@@ -166,17 +166,17 @@ class RunManager:
             self._cancel.clear()
             self.run_id += 1
             self.status = "running"
-        self.result = None
-        self.error = None
-        self.scenario_name = scenario_name
-        self.fds_dir = fds_dir
-        self.results_only = results_only
-        self.opts = opts
-        self.artifacts = []
-        self.last_event = None
-        self.fed_snapshots = []
-        self.log_lines = []
-        self.warnings = []
+            self.result = None
+            self.error = None
+            self.scenario_name = scenario_name
+            self.fds_dir = fds_dir
+            self.results_only = results_only
+            self.opts = opts
+            self.artifacts = []
+            self.last_event = None
+            self.fed_snapshots = []
+            self.log_lines = []
+            self.warnings = []
 
         def check_cancel() -> None:
             if self._cancel.is_set():
@@ -266,14 +266,26 @@ class RunManager:
         Only meaningful once a run has ended -- an active run owns the lock
         and must be cancelled, not reset out from under itself.
         """
-        if self.running:
-            return
-        self.status = "idle"
-        self.result = None
-        self.error = None
-        self.scenario_name = None
-        self.last_event = None
-        self.artifacts = []
-        self.fed_snapshots = []
-        self.log_lines = []
-        self.warnings = []
+        with self._state:
+            if self.running:
+                return
+            self.status = "idle"
+            self.result = None
+            self.error = None
+            self.scenario_name = None
+            self.last_event = None
+            self.artifacts = []
+            self.fed_snapshots = []
+            self.log_lines = []
+            self.warnings = []
+
+    @contextlib.contextmanager
+    def snapshot(self) -> Iterator[RunManager]:
+        """Hold the state lock so a reader sees a single run throughout.
+
+        ``start`` and ``reset`` swap a run's state under the same lock, so
+        everything read inside the block belongs to one run. Never yield to
+        the event loop, or call back into the manager, inside it.
+        """
+        with self._state:
+            yield self

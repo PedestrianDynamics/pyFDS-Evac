@@ -458,6 +458,100 @@ class TestCancelLifecycle:
         assert "event: fed" not in "".join(seen)
         assert "0.875" not in "".join(seen)
 
+    @staticmethod
+    def _run_to(mgr, name, outcome):
+        """Start ``name`` and leave it in ``outcome``: done, error or running."""
+        import threading
+
+        gate = threading.Event()
+
+        def build():
+            if outcome == "running":
+                gate.wait(5.0)
+            if outcome == "error":
+                raise RuntimeError(f"{name} failed")
+            return {}
+
+        mgr.start(None, build, name)
+        if outcome == "running":
+            mgr.last_event = SimpleNamespace(
+                evacuated=1, total=2, sim_time=1.0, wall_time=1.0, pct=50
+            )
+        else:
+            assert mgr.join(5.0)
+        mgr.log_lines.append(f"{name}-log")
+        return gate
+
+    @pytest.mark.parametrize("pin", [True, False])
+    @pytest.mark.parametrize("outcome", ["done", "error", "running"])
+    def test_progress_iteration_emits_one_run_only(self, rm, monkeypatch, outcome, pin):
+        import asyncio
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        monkeypatch.setattr(
+            app_module,
+            "_finished_view",
+            lambda: app_module.Div(f"results of {app_module.manager.scenario_name}"),
+        )
+        gate["a"] = self._run_to(mgr, "run-A", outcome)
+        pinned = mgr.run_id if pin else None
+
+        async def drive():
+            resp = await app_module.progress(run=pinned)
+            events = resp.body_iterator
+            assert "run-A-log" in await anext(events)
+            # Run A gives way to run B while the stream sits on the console
+            # event; the rest of that iteration must still describe run A.
+            gate["a"].set()
+            assert mgr.join(5.0)
+            mgr.reset()
+            gate["b"] = self._run_to(mgr, "run-B", outcome)
+            seen = []
+            while not seen or "event: done" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return "".join(seen)
+
+        body = asyncio.run(drive())
+        assert "run-B" not in body
+        expected = {
+            "done": "results of run-A",
+            "error": "Run failed: RuntimeError: run-A failed",
+            "running": "Running: run-A",
+        }[outcome]
+        assert expected in body
+
+    @pytest.mark.parametrize("pin", [True, False])
+    @pytest.mark.parametrize("outcome", ["done", "error", "running"])
+    def test_fed_iteration_emits_one_run_only(self, rm, outcome, pin):
+        import asyncio
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        gate["a"] = self._run_to(mgr, "run-A", outcome)
+        mgr.fed_snapshots.append((1.0, 0.25, 0.1))
+        pinned = mgr.run_id if pin else None
+
+        async def drive():
+            resp = await app_module.fed_progress(run=pinned)
+            events = resp.body_iterator
+            assert "0.25" in await anext(events)
+            gate["a"].set()
+            assert mgr.join(5.0)
+            mgr.reset()
+            gate["b"] = self._run_to(mgr, "run-B", outcome)
+            mgr.fed_snapshots.append((2.0, 0.875, 0.5))
+            seen = []
+            while not seen or "event: close" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return "".join(seen)
+
+        body = asyncio.run(drive())
+        assert "0.875" not in body
+        assert "event: fed" not in body
+
     def test_clear_keeps_the_run_panel_while_a_worker_is_active(self, rm, client):
         import threading
 

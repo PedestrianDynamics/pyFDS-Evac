@@ -1449,11 +1449,12 @@ async def fed_progress(run: int | None = None):
     async def gen():
         last_count = 0
         while True:
-            # Read before the run check: start() bumps the ID before it
-            # swaps in fresh snapshots, so a later run's data never passes.
-            status = manager.status
-            snaps = manager.fed_snapshots
-            if manager.run_id != run_id:
+            # One snapshot per poll: nothing after a yield reads the manager.
+            with manager.snapshot():
+                current = manager.run_id == run_id
+                status = manager.status
+                snaps = list(manager.fed_snapshots)
+            if not current:
                 yield sse_message("{}", event="close")
                 return
             if len(snaps) > last_count:
@@ -1474,6 +1475,74 @@ async def fed_progress(run: int | None = None):
     return EventStream(gen())
 
 
+def _done_view() -> Div:
+    """Finished panel, or the traceback if building it fails."""
+    try:
+        return _results_only_view() if manager.results_only else _finished_view()
+    except Exception as exc:
+        import traceback
+
+        err = traceback.format_exc()
+        return Div(
+            Div(
+                f"Results error: {type(exc).__name__}: {exc}",
+                style="color:#E01E37;font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:8px",
+            ),
+            Pre(
+                err,
+                style="color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-size:.72rem;white-space:pre-wrap;overflow:auto;max-height:300px",
+            ),
+            style="background:var(--surface-panel);border:1px solid #E01E37;border-radius:12px;padding:16px",
+        )
+
+
+def _terminal_view(status: str) -> Div | None:
+    """The panel that settles a run in ``status``, or None while it runs."""
+    if status == "done":
+        return _done_view()
+    if status == "error":
+        return Div(
+            f"Run failed: {manager.error}",
+            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+        )
+    # Cancelled and idle still end with a terminal ``done``: a stream
+    # that just closes is reopened by EventSource, so another tab, or
+    # a cancel that outlived /cancel's wait, would never settle. When
+    # /cancel has already swapped in the standby panel, this stream's
+    # element is gone and the event goes nowhere.
+    if status in ("cancelled", "idle"):
+        return _cancelled_view()
+    return None
+
+
+def _progress_step(run_id: int, last, last_log: int):
+    """Render one /progress poll from a single run's state.
+
+    Called under the manager's state lock and before any yield, so every
+    message it returns describes run ``run_id``. Returns the messages, the
+    updated cursors and whether the stream ends.
+    """
+    if manager.run_id != run_id:
+        # This stream's run has ended and another has started; its
+        # outcome is gone, so settle the panel instead of following.
+        view = _cancelled_view("Run ended; another run has started.")
+        return [sse_message(view, event="done")], last, last_log, True
+    msgs = []
+    n = len(manager.log_lines)
+    if n != last_log:
+        last_log = n
+        msgs.append(sse_message(_console_view(), event="console"))
+    final = _terminal_view(manager.status)
+    if final is not None:
+        msgs.append(sse_message(final, event="done"))
+        return msgs, last, last_log, True
+    ev = manager.last_event
+    if ev is not None and ev != last:
+        last = ev
+        msgs.append(sse_message(_running_card(ev), event="progress"))
+    return msgs, last, last_log, False
+
+
 @rt("/progress")
 async def progress(run: int | None = None):
     run_id = manager.run_id if run is None else run
@@ -1482,67 +1551,14 @@ async def progress(run: int | None = None):
         last = None
         last_log = -1
         while True:
-            # Read before the run check: start() bumps the ID before it
-            # swaps in fresh state, so a later run's output never passes.
-            n = len(manager.log_lines)
-            console = _console_view() if n != last_log else None
-            status = manager.status
-            ev = manager.last_event
-            if manager.run_id != run_id:
-                # This stream's run has ended and another has started; its
-                # outcome is gone, so settle the panel instead of following.
-                yield sse_message(
-                    _cancelled_view("Run ended; another run has started."),
-                    event="done",
-                )
+            # Render the whole poll first: after a yield the manager may
+            # hold another run, so nothing is read from it until the next.
+            with manager.snapshot():
+                msgs, last, last_log, end = _progress_step(run_id, last, last_log)
+            for msg in msgs:
+                yield msg
+            if end:
                 return
-            if console is not None:
-                last_log = n
-                yield sse_message(console, event="console")
-            if status == "done":
-                try:
-                    finished = (
-                        _results_only_view()
-                        if manager.results_only
-                        else _finished_view()
-                    )
-                except Exception as exc:
-                    import traceback
-
-                    err = traceback.format_exc()
-                    finished = Div(
-                        Div(
-                            f"Results error: {type(exc).__name__}: {exc}",
-                            style="color:#E01E37;font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:8px",
-                        ),
-                        Pre(
-                            err,
-                            style="color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-size:.72rem;white-space:pre-wrap;overflow:auto;max-height:300px",
-                        ),
-                        style="background:var(--surface-panel);border:1px solid #E01E37;border-radius:12px;padding:16px",
-                    )
-                yield sse_message(finished, event="done")
-                return
-            if status == "error":
-                yield sse_message(
-                    Div(
-                        f"Run failed: {manager.error}",
-                        style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
-                    ),
-                    event="done",
-                )
-                return
-            # Cancelled and idle still end with a terminal ``done``: a stream
-            # that just closes is reopened by EventSource, so another tab, or
-            # a cancel that outlived /cancel's wait, would never settle. When
-            # /cancel has already swapped in the standby panel, this stream's
-            # element is gone and the event goes nowhere.
-            if status in ("cancelled", "idle"):
-                yield sse_message(_cancelled_view(), event="done")
-                return
-            if ev is not None and ev != last:
-                last = ev
-                yield sse_message(_running_card(ev), event="progress")
             await asyncio.sleep(0.1)
 
     return EventStream(gen())
