@@ -256,11 +256,12 @@ class HeatEndpoint:
 
 # SFPE Handbook 5th ed. Ch. 63 (Purser & McAllister): r from the list on
 # p. 2382 and the Eq. 63.49 text on p. 2384; convective laws Eqs. 63.45-63.47,
-# pp. 2382-2383, fitted to air with less than 10 % water vapour.
+# pp. 2382-2383, fitted to air with less than 10 % water vapour. The fatal
+# r is 16.667 by maintainer decision (spec 016); the Handbook prints 16.7.
 HEAT_ENDPOINTS: dict[str, HeatEndpoint] = {
     "tolerance": HeatEndpoint(1.33, "63.45", 2e31, 16.963, 4e8, 3.7561),
     "injury": HeatEndpoint(10.0, "63.46", 5e22, 11.783, 3e7, 2.9636),
-    "fatal": HeatEndpoint(16.7, "63.47", 2e18, 9.0403, 1e8, 3.10898),
+    "fatal": HeatEndpoint(16.667, "63.47", 2e18, 9.0403, 1e8, 3.10898),
 }
 
 # Assumption: the Handbook gives no upper temperature for Eqs. 63.45-63.47;

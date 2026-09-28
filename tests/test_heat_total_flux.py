@@ -11,8 +11,8 @@ on the convective term only):
 T in K, sigma = 5.67e-8 W m^-2 K^-4 (p. 2384). The time to the endpoint is
 Eq. 63.43, t = D / q^1.33 [min], with D the radiant dose r of the endpoint
 (1.33 tolerance, 10 injury, 16.667 fatal; pp. 2382, 2384; the Handbook
-prints the fatal dose as 16.7, spec 016 fixes it at 16.667). The dose is summed,
-FED = sum dt / t. Differences from the Handbook text, by spec 016:
+prints the fatal dose as 16.7, spec 016 fixes it at 16.667). The dose is
+summed, FED = sum dt / t. Differences from the Handbook text, by spec 016:
 
 - no 2.5 kW/m2 threshold: the dose accumulates at every positive flux;
 - mutually exclusive with the convective laws: never 1/t_conv on top;

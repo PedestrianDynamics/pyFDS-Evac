@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `convective`): the heat dose is q^1.33/D (SFPE Handbook Ch. 63 Eq. 63.43)
   with q the heat flux to the skin of Eq. 63.49, both terms divided by 1000
   together, and no 2.5 kW/m² threshold (spec 016). D is the dose of
-  `--heat-endpoint`, the fatal 16.7 without it. `--heat-emissivity` (0.5),
+  `--heat-endpoint`, the fatal 16.667 without it. `--heat-emissivity` (0.5),
   `--heat-convective-coefficient` (5) and `--heat-skin-temperature` (35 °C)
   set the flux; their defaults are assumptions. The FED history gains
   `heat_flux_kw_m2` and the manifest `heat_fed_method` and
@@ -21,7 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `--heat-endpoint {tolerance,injury,fatal}` (opt-in, with
   `--enable-heat-fed`): the heat dose uses the convective law of that
   endpoint, SFPE Handbook Ch. 63 Eq. 63.45, 63.46 or 63.47, paired with its
-  radiant dose (1.33, 10, 16.7). The FED history gains `heat_endpoint`,
+  radiant dose (1.33, 10, 16.667; the Handbook prints 16.7, spec 016
+  fixes 16.667). The FED history gains `heat_endpoint`,
   `heat_outside_validity` (above 205 °C, an assumed limit, or a non-finite
   temperature) and `heat_humidity` (`unknown`, as humidity is not sampled),
   and the run manifest records `heat_endpoint` and `heat_validity`. Without the option the dose stays
