@@ -63,7 +63,9 @@ def _hyperventilation_factor(co2_percent: float) -> float:
 
     As in FDS (``func.f90``, function ``FED``), the factor applies only when
     CO2 is present: with no CO2, or a missing reading, it is 1. Eq. 19 read
-    literally would give exp(2.0004)/7.1 = 1.0418 at zero CO2.
+    literally would give exp(2.0004)/7.1 = 1.0411 at zero CO2. This follows
+    FDS at zero CO2 only: for any CO2 above zero Eq. 19 applies unchanged,
+    including its ~4 % offset, so the factor steps from 1 to 1.041 there.
     """
 
     if not math.isfinite(co2_percent) or co2_percent <= 0.0:

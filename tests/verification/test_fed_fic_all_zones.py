@@ -3,12 +3,12 @@
 Each zone of `Verification/Species/FED_FIC.fds` holds constant mole fractions
 for 100 s (given in the deck's comments); `FED_FIC.csv` gives the expected FED
 and FIC at 100 s. FDS accepts a relative error of 0.01 at the end time
-(`FDS_verification_dataplot_inputs.csv`); we hold the published 5 significant
+(`FDS_verification_dataplot_inputs.csv`); we hold the published 4-5 significant
 figures to 1e-3.
 
 The "Irritants" zone has no CO2. FDS (`func.f90`, function `FED`) applies the
 CO2 hyperventilation factor only when X_CO2 > 0, so the factor there is 1;
-using exp(2.0004)/7.1 = 1.0418 instead overshoots FDS by 4.2 %.
+using exp(2.0004)/7.1 = 1.0411 instead overshoots FDS by 4.1 %.
 """
 
 import math

@@ -102,10 +102,12 @@ FED_CO = 2.764e-5 x (C_CO)^1.036 x t
 FED_O2 = t / exp[8.13 - 0.54 x (20.9 - C_O2)]
 ```
 
-**Hyperventilation factor from CO2** (eq. 22.49), C_CO2 in percent:
+**Hyperventilation factor from CO2** (eq. 22.49), C_CO2 in percent, with
+the zero-CO2 guard of FDS (`func.f90`, function `FED`):
 
 ```
-HV_CO2 = exp(0.1903 x C_CO2 + 2.0004) / 7.1
+HV_CO2 = exp(0.1903 x C_CO2 + 2.0004) / 7.1   if C_CO2 > 0
+HV_CO2 = 1                                    if C_CO2 = 0
 ```
 
 **Total FED** (eq. 22.42) — FED_CN, FED_NOx, and FLD_irr are omitted here

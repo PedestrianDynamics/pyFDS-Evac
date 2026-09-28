@@ -21,9 +21,11 @@ See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/ge
   (FDS+Evac Guide Eq. 15)
   ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
 - The CO2 hyperventilation factor is 1 when there is no CO2 (or no CO2
-  reading), as in the FDS `FED` function, instead of exp(2.0004)/7.1 = 1.0418.
+  reading), as in the FDS `FED` function, instead of exp(2.0004)/7.1 = 1.0411.
   FED from CO, HCN, NOx and irritants in CO2-free air is therefore about 4 %
-  lower; this matches FDS's `FED_FIC` verification case
+  lower; this matches FDS's `FED_FIC` verification case. Runs with FDS's
+  default ambient CO2 (about 0.04 vol %) are unaffected; only cells with
+  exactly zero CO2 change
   ([#194](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/194)).
 - The O2 term of the FED applies below 20 % O2 instead of 19.5 %.
   `--o2-threshold-percent` sets the threshold.

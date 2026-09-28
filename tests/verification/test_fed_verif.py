@@ -30,7 +30,7 @@ def _standard_normal_cdf(z: float) -> float:
 # --- A2.1: CO-only accumulation with the CO2 hyperventilation factor --------
 
 
-def test_a2_1_co_only_accumulation_applies_hv_co2():
+def test_a2_1_co_only_accumulation_and_hv_co2():
     inputs = DefaultFedInputs(
         co_volume_fraction_percent=0.1,  # 1000 ppm
         co2_volume_fraction_percent=0.0,
