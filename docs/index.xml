@@ -11379,50 +11379,13 @@ effective dose, and &lt;em>K&lt;/em> [1/m] is the extinction coefficient. Everyt
 calculation it implements. None of it is &lt;strong>validation&lt;/strong> against observed
 evacuations, and none of ISO 20414&amp;rsquo;s validation tests (22–30) has been run.&lt;/p>
 &lt;h2>Tests 18 and 19: the fire–people interaction tests&lt;span class="hx-absolute -hx-mt-20" id="tests-18-and-19-the-firepeople-interaction-tests">&lt;/span>
-&lt;a href="#tests-18-and-19-the-firepeople-interaction-tests" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These two tests cover the part of the model that pyFDS-Evac adds to JuPedSim,
-so they were run first. Each is implemented twice: once with the hazard
-supplied directly, as the standard allows, and once with the hazard read from
-committed FDS output, so that the path from slice file to agent is checked as
-well. Each condition is one run with a single occupant, so no spread over
-seeds is reported.&lt;/p>
-&lt;p>&lt;strong>Test 18, reduced visibility vs walking speed.&lt;/strong> The occupant walks the ISO
-corridor (2 m × 100 m, 1 m exit) once in clear air, which is the control, and
-once under a constant extinction coefficient &lt;em>K&lt;/em>. The reference is the model&amp;rsquo;s
-own correlation, as the standard requires: the ratio of the two egress times
-must equal 1/&lt;em>f&lt;/em>(&lt;em>K&lt;/em>), where &lt;em>f&lt;/em> is the speed factor of the Frantzich–Nilsson
-law (the &lt;code>lund&lt;/code> option; the linear &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> law). The ratio must agree within 8 %, which absorbs the finite spawn box, the
-exit width and the 0.1 s update interval, and every recorded speed factor must
-equal &lt;em>f&lt;/em>(&lt;em>K&lt;/em>) exactly. With &lt;em>K&lt;/em> supplied as a constant field
-(&lt;code>assets/ISO-table21&lt;/code>, &lt;code>tests/test_smoke_speed.py&lt;/code>), the test runs at
-&lt;em>K&lt;/em> = 0.5, 1.0, 3.0, 7.5 and 10 1/m, and at unimpeded speeds of 1.0, 0.75, 0.5
-and 0.25 m/s at &lt;em>K&lt;/em> = 1.0 1/m. With &lt;em>K&lt;/em> read from FDS
-(&lt;code>assets/iso_table21_coupled&lt;/code>, &lt;code>tests/test_iso_table21_coupled.py&lt;/code>), the deck
-prescribes the soot density for &lt;em>K&lt;/em> = 1.0 1/m. The test requires the slice to
-return that value within 1 % and to be non-zero. The second check is a null
-control, because a missing slice reads as clear air. Only the default
-Frantzich–Nilsson law is run in the ISO layout. The &lt;code>fridolf&lt;/code> option (&lt;code>speed_law=&amp;quot;fridolf&amp;quot;&lt;/code>), which
-is reachable only from Python, is checked by the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/#the-tests">S2 corridor scenario&lt;/a>, not by this test.&lt;/p>
-&lt;p>&lt;strong>Test 19, occupant incapacitation by fire or smoke.&lt;/strong> The occupant stands at
-the centre of a 10 m × 10 m room. The time at which the simulated dose reaches
-FED = 1 is compared with a hand calculation of the same dose
-(&lt;code>time_to_fed_threshold_s()&lt;/code>). With the gas supplied directly
-(&lt;code>assets/ISO-table22&lt;/code>, &lt;code>tests/test_fed.py&lt;/code>), the test holds the occupant by
-setting its speed to zero, one mixture is run, and the crossing must fall
-within one time step of the hand calculation. With the gas
-read from FDS (&lt;code>assets/iso_table22_coupled&lt;/code>,
-&lt;code>tests/test_iso_table22_coupled.py&lt;/code>), the occupant is held by a
-pre-evacuation time above 10⁷ s, the method the standard prescribes, and four
-cases are run. They take their
-concentrations from Fig. 8 of the FDS+Evac guide (Korhonen 2021) and separate
-the CO, CO2 and O2 terms. The crossing must fall within two intervals of the
-FED history. The test also checks that each species arrives at its prescribed
-concentration and that the occupant does not move. The standard asks for the
-test to be repeated for each hazardous condition the sub-model has. That is
-done for CO, CO2 and O2 only. The convective heat dose is verified against its
-closed form by the S6 scenario and the Tier A tests, but not in the Test 19
-layout. The optional gases (HCN, NOx and the irritants) are not run in this
-layout.&lt;/p>
+&lt;a href="#tests-18-and-19-the-firepeople-interaction-tests" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These two tests cover the part of the model that pyFDS-Evac adds to JuPedSim.
+Each has its own page, with the setup, the expected values, the results and
+the pass criteria:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/iso-test-18/">Test 18: walking speed in smoke&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/iso-test-19/">Test 19: incapacitation by toxic gases&lt;/a>&lt;/li>
+&lt;/ul>
 &lt;h2>All verification tests&lt;span class="hx-absolute -hx-mt-20" id="all-verification-tests">&lt;/span>
 &lt;a href="#all-verification-tests" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&amp;ldquo;Not yet run&amp;rdquo; means that the component belongs to pyFDS-Evac, or is
 configured through it, but no test reproduces the ISO setup. &amp;ldquo;Inherited&amp;rdquo; means
@@ -11443,13 +11406,13 @@ not model the component.&lt;/p>
 &lt;td>18&lt;/td>
 &lt;td>Reduced visibility vs walking speed&lt;/td>
 &lt;td>Run, passes&lt;/td>
-&lt;td>See above. Frantzich–Nilsson law only.&lt;/td>
+&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/iso-test-18/">Own page&lt;/a>. Frantzich–Nilsson law only.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>19&lt;/td>
 &lt;td>Occupant incapacitation by fire/smoke&lt;/td>
 &lt;td>Run for CO, CO2, O2&lt;/td>
-&lt;td>See above. Heat and optional gases not run in this layout.&lt;/td>
+&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/iso-test-19/">Own page&lt;/a>. Heat and optional gases not run in this layout.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>1&lt;/td>
