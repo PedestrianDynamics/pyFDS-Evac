@@ -98,6 +98,14 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- The uniform heat rooms `assets/fed_incap_heat_{100,150,200}c` set `TMPA`
+  to the deck temperature instead of 20 °C. FDS started the walls and the
+  radiation field at `TMPA`, so the room lost heat at t = 0 and settled
+  0.7–1.8 % below its `&INIT` value. It now holds the deck value to within
+  1 mK, and the deterministic heat stops of the verification page are the
+  closed form at the deck temperature (476 / 120 / 46 s, were 487 / 125 /
+  48 s). FDS's device output is committed so CI checks the hold
+  ([#253](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/253)).
 - With direct steering, an agent slowed by smoke outside every speed zone
   kept its reduced speed once the smoke factor returned to exactly 1 (for
   example on walking into air with K = 0). The restore now also writes when

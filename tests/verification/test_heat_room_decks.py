@@ -88,9 +88,6 @@ def test_deck_init_matches_its_name(temperature_c):
             assert value == temperature_c
 
 
-@pytest.mark.xfail(
-    strict=True, reason="#253: TMPA = 20 C starts walls and radiation cold"
-)
 @pytest.mark.parametrize("temperature_c", DECK_TEMPERATURES_C)
 def test_deck_ambient_is_the_prescribed_temperature(temperature_c):
     """TMPA sets the initial wall and radiation temperature; it must be T."""
@@ -110,10 +107,6 @@ def _devc_rows(temperature_c: float) -> tuple[list[str], list[list[float]]]:
     return header, rows
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="#253: FDS output not yet committed; room settles 1 % low",
-)
 @pytest.mark.parametrize("temperature_c", DECK_TEMPERATURES_C)
 def test_fds_room_holds_the_prescribed_temperature(temperature_c):
     """Every TEMP device, at every output time, reads the deck value.
@@ -137,9 +130,6 @@ def test_closed_form_tstar(temperature_c, tstar_s):
     assert _closed_form_tstar_s(temperature_c) == pytest.approx(tstar_s, abs=1e-3)
 
 
-@pytest.mark.xfail(
-    strict=True, reason="#253: docs still expect the stop from the cooler slice"
-)
 @pytest.mark.parametrize("temperature_c", DECK_TEMPERATURES_C)
 def test_docs_expect_the_closed_form_stop(temperature_c):
     """docs/testing-heat.md: deterministic stop = first update after t*(deck T)."""
