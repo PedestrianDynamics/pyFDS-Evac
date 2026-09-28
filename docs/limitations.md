@@ -142,9 +142,10 @@ returns to exactly zero, the last slowdown stays in force, so an agent that
 leaves an irritant plume into clean air does not return to full speed
 ([issue #142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 
-**Pre-movement defaults are office data.** The random presets are fitted to
-office evacuations, mostly drills (Lovreglio et al. 2019, Business Cluster 1).
-The 10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
+**Pre-movement defaults are office data.** The gamma, log-normal and Weibull
+presets are fitted to office evacuations, mostly drills (Lovreglio et al. 2019,
+Business Cluster 1). The uniform 0–60 s preset is RiMEA's "speedy evacuation"
+sensitivity scenario, not data. The 10 s used when a scenario sets no pre-movement is the FDS+Evac default, not
 data. Set `premovement_param_a` and `premovement_param_b` for other occupancies.
 
 **Smoke-triggered detection.** Pre-movement is one delay per agent, drawn
