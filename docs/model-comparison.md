@@ -359,13 +359,16 @@ on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 | **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1544–1545) | Same values (`smoke_speed.py:91–92`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
 | **Minimum speed** | `SMOKE_MIN_SPEED_FACTOR` (default 0.1, evac.f90:2154) as a factor of *v*0, or `SMOKE_MIN_SPEED`, which the code treats as a speed in m/s (`SMOKE_MIN_SPEED/HR%SPEED`, :8516) although the guide calls it a factor ([1] §8.7 p. 81). The visibility-based cutoff (`SMOKE_MIN_SPEED_VISIBILITY`, :8529–8536) is marked obsolete in the source ("obsolote feature ... it is not used if default SMOKE_MIN_SPEED_VISIBILITY is given", :8529-8530) and is inactive by default: the default 0.0 is clamped to 0.01 m, so it would act only above K = 300 /m (:1528, :2160-2161) | Configurable `min_speed_factor` (default 0.1) |
 | **Smoke input** | Soot density from FDS mesh converted to extinction via `K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6` (evac.f90:8522–8523) | Extinction coefficient K read directly from FDS `SOOT EXTINCTION COEFFICIENT` slice via fdsreader |
-| **Sampling geometry** | Local value at agent position on the evacuation mesh, at `HUMAN_SMOKE_HEIGHT` above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61) | Local value at agent position: nearest cell of the extinction slice closest to `--smoke-slice-height` (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). Gas FED is read from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)) |
+| **Sampling geometry** | Local value at agent position on the evacuation mesh, at `HUMAN_SMOKE_HEIGHT` above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61) | Local value at agent position: nearest value position of the extinction slice closest to `--smoke-slice-height` (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS's default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for `CELL_CENTERED=T` slices it is the nearest cell centre (see [FDS slice sampling](fds-sampling.md)). Gas FED is read from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)) |
 
 **Key difference:** Both systems apply the speed reduction using the
 *local* smoke at the agent's position.  FDS+Evac converts the soot
-density in the agent's grid cell at runtime; pyFDS-Evac reads the
-extinction coefficient from the nearest cell of an FDS slice at a fixed
-height.  The path-averaged extinction coefficient, which Börger et al.
+density at runtime from the cell-centred value of the fire cell that
+contains the centre of the agent's evacuation-grid cell (evac.f90:6337,
+:16078); pyFDS-Evac reads the extinction coefficient from the nearest
+value position of an FDS slice at a fixed height, which for FDS's
+default node-centred slices is a node value averaged over the
+surrounding cells.  The path-averaged extinction coefficient, which Börger et al.
 (2024) [2] take along the line of sight to a sign and pyFDS-Evac takes
 along the walked polyline, is used in pyFDS-Evac for route cost only,
 not for walking speed.

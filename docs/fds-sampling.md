@@ -16,7 +16,18 @@ concentrations).
 
 `SliceFieldSampler` wraps a single `fdsreader` slice object and
 exposes a `sample(time_s, x, y)` method that returns the scalar value
-at the nearest grid cell and timestep.
+at the nearest slice value position and the nearest timestep. The
+value positions depend on how FDS wrote the slice ([FDS User Guide](https://github.com/firemodels/fds/blob/c9da70d7a/Manuals/FDS_User_Guide/FDS_User_Guide.tex), `&SLCF`):
+
+- **Node-centred** (the FDS default): one value per mesh node, which
+  FDS averages from the cells around that node. The sampler reads the
+  nearest node.
+- **Cell-centred** (`CELL_CENTERED=T` on the `&SLCF` line): one value
+  per cell, without averaging. The sampler reads the nearest cell
+  centre, the midpoint of the cell's two nodes, so stretched grids are
+  handled.
+
+A query exactly halfway between two positions reads the lower index.
 
 Internally it:
 
@@ -24,12 +35,14 @@ Internally it:
    point (one subslice per FDS mesh the slice intersects).
 2. Resolves the nearest timestep index via binary search
    (`get_nearest_timestep`).
-3. Computes the nearest cell indices along the x and y axes.
+3. Finds the nearest value position along the x and y axes, from the
+   mesh nodes inside the subslice extent (midpoints of those nodes for
+   cell-centred slices).
 4. Returns `subslice.data[t_index, i_index, j_index]`.
 
 ### Performance caches
 
-Two caches reduce per-call overhead on hot paths (for example, sampling
+Three caches reduce per-call overhead on hot paths (for example, sampling
 along a line of sight where all points share the same timestep and
 typically the same subslice):
 
@@ -38,6 +51,8 @@ typically the same subslice):
   sample points along a ray almost always hit the same subslice.
 - **Timestep cache** -- when `time_s` hasn't changed since the last
   call, the cached `t_index` is reused, skipping the binary search.
+- **Axis cache** -- the x and y value positions of each subslice are
+  computed once and reused.
 
 ## Loading a sampler
 
