@@ -109,9 +109,11 @@ printed values (0.02, 0.19, 1.57 and 15.55 per minute at 65, 125, 220 and
 The radiant tolerance data (Table 63.19) are incident flux on the skin,
 whereas Eq. 63.49 is written as a net exchange with the skin surface; at the
 200 °C anchor the two differ by about 20 %. FDS's `RADIATIVE HEAT FLUX` and
-`RADIATIVE HEAT FLUX GAS` outputs are net as well (absorbed incident flux
-minus \(\sigma T_s^4\)); `INCIDENT HEAT FLUX` is the incident term (FDS User
-Guide 6.10, Sec. 22.10.12).
+`RADIATIVE HEAT FLUX GAS` outputs are net as well,
+\(\varepsilon_s(\dot q''_{\mathrm{inc}} - \sigma T_s^4)\) with
+\(\varepsilon_s\) the surface emissivity; `INCIDENT HEAT FLUX` is the
+incident term \(\dot q''_{\mathrm{inc}}\) (FDS User Guide 6.10,
+Sec. 22.10.12, pp. 380–382).
 The convective data concern hyperthermia in air of low humidity, and the
 radiant data concern bare skin: clothing changes both. None of these
 equations describe the effect of heat on walking speed or on route choice.

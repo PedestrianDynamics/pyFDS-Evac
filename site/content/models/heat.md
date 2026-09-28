@@ -55,7 +55,7 @@ The gas dose is probabilistic by default; the two modes are set separately
 
 The two doses do not share an endpoint. Gas FED = 1 is Purser's
 incapacitation endpoint. Heat FED = 1 is the Eq. 63.44 time, which the
-Handbook labels time to incapacitation (p. 2383) but whose times lie near its tolerance curve
+Handbook labels time to incapacitation (p. 2382) but whose times lie near its tolerance curve
 (see [What is not modelled](#what-is-not-modelled)). Both stop the agent in
 the same way and set the same `incapacitated` flag; only
 `incapacitation_cause` tells which endpoint was reached.
