@@ -26,8 +26,9 @@ into a speed factor *f* [-], selected by `SmokeSpeedConfig.speed_law`
   f(K) = \min\!\left(1,\ \max\!\left(f_{\min},\ 1 + \frac{\beta}{\alpha}K\right)\right).
   $$
 
-- **`"fridolf"`**, `speed_factor_from_extinction_fridolf`: the law of
-  Fridolf et al. (2018), method 3, with \(V = C/K\) [m] and the agent's
+- **`"fridolf"`**, `speed_factor_from_extinction_fridolf`: Eq. 7 of
+  [Fridolf et al. (2019)](https://doi.org/10.1016/j.tust.2019.04.016)
+  (method 3; first presented in Fridolf et al. 2018), with \(V = C/K\) [m] and the agent's
   smoke-free speed \(v_0\) [m/s],
 
   $$
@@ -37,9 +38,23 @@ into a speed factor *f* [-], selected by `SmokeSpeedConfig.speed_law`
 
   The reduction is additive, 0.34 m/s per metre of visibility below 3 m, and
   the floor is an absolute 0.2 m/s, not a fraction of \(v_0\). Above 3 m the
-  speed is unchanged. The paper gives no *C*; pyFDS-Evac uses *C* = 3, as FDS
-  does. Until [#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)
+  speed is unchanged. The 2018 abstract gives no constant; the 2019 paper
+  converted each data set with *A* = 2 (reflecting) or 8 (emitting)
+  (Eq. 1). pyFDS-Evac uses the FDS default *C* = 3, so for reflecting
+  targets it slows agents later and less than the calibration (onset at
+  *K* = 1.0 instead of 0.67 1/m); set `visibility_factor_c = 2` to match.
+  Until [#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)
   this option computed \(V/(V+2)\), a law with no known source.
+
+  *Where the law applies.* It was calibrated on corridor and tunnel
+  experiments; the authors call it mainly valid for tunnels with a simple
+  layout (2019, §4) and do not recommend it for buildings with many exit
+  choices, where speeds are expected to be lower (2018, concluding
+  remarks). The measured speeds are averages that include pauses, so an
+  agent that also pauses or detours in the model may count that time twice
+  (our inference). The data come from non-irritant or semi-irritant smoke;
+  multiplying by \(g(\mathrm{FIC})\) on top is a pyFDS-Evac choice, not
+  part of the source.
 
 ## Parameters
 
@@ -121,9 +136,9 @@ The code departs from them as follows.
 - **Range and spread.** The law is evaluated at every *K*, including below the
   tunnel data, and uses only the mean coefficients, not their standard
   deviations.
-- **The `fridolf` option.** Fridolf et al. (2018) state visibility, not *K*,
-  and give no *C*; the code uses *C* = 3 by default. Their 2019 fit used
-  *A* = 2 for reflecting signs (see
+- **The `fridolf` option.** Fridolf et al. state visibility, not *K*; the
+  2018 abstract gives no constant and the 2019 paper used *A* = 2 for
+  reflecting and 8 for emitting items. The code uses *C* = 3 by default (see
   [Walking speed in smoke](/fundamentals/walking-speed.md)). \(v_0\) is each
   agent's own free speed, as in their method 3, not the truncated normal
   distribution (mean 1.35 m/s, SD 0.25 m/s, 0.85–1.85 m/s) that method 3

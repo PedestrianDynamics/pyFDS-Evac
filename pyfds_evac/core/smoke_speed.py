@@ -13,15 +13,18 @@ Two speed-law options are available, selected via ``SmokeSpeedConfig.speed_law``
     to [min_speed_factor, 1.0].
 
 ``"fridolf"``
-    Additive law from Fridolf et al. (2018), method 3, based on visibility
+    Additive law from Fridolf et al. (2019), Eq. 7 (method 3; first
+    presented in Fridolf et al. 2018), based on visibility
     V [m] and the agent's smoke-free speed w_free [m/s]:
 
         w(V) = min(w_free, max(0.2, w_free - 0.34 * (3 - V)))
 
     Above 3 m the speed is unchanged; below, it drops by 0.34 m/s per metre
     of visibility, to an absolute floor of 0.2 m/s.  Visibility is derived
-    from extinction via V = C / K (Jin 1970-1978).  The paper gives no C;
-    pyFDS-Evac uses C = 3 by default, as FDS does for reflective signs.
+    from extinction via V = C / K (Jin 1970-1978).  The 2018 abstract gives
+    no constant; the 2019 paper used A = 2 (reflecting) or 8 (emitting),
+    Eq. 1.  pyFDS-Evac uses the FDS default C = 3, so for reflecting targets
+    agents slow later and less than the calibration; C = 2 matches it.
     The speed factor applied to the agent is w / w_free.
 
 When evaluating route costs, the extinction along a line of sight between
@@ -49,6 +52,8 @@ References
 - Fridolf, Nilsson, Frantzich, Ronchi & Arias (2018): "Walking speed in
   smoke: representation in life safety verifications", SFPE 2018 extended
   abstract.  Individual speed-visibility law (method 3).
+- Fridolf, Ronchi, Nilsson & Frantzich (2019), Tunnelling and Underground
+  Space Technology 90:28-41, doi:10.1016/j.tust.2019.04.016, Eq. 7.
 - Boerger et al. (2024), Fire Safety Journal 150:104269:
   Beer-Lambert integrated extinction along line of sight (Eq. 8-9),
   view-angle correction (Eq. 7), waypoint-based visibility maps
@@ -246,19 +251,20 @@ def speed_factor_from_extinction_fridolf(
     visibility_threshold_m: float = 3.0,
     min_speed_m_per_s: float = 0.2,
 ) -> float:
-    """Convert K [1/m] to a speed factor using the Fridolf et al. (2018) law.
+    """Convert K [1/m] to a speed factor using the Fridolf et al. (2019) law.
 
     Visibility is derived via V = C / K (Jin 1970-1978), then:
 
         w = min(w_free, max(0.2, w_free - 0.34 * (3 - V)))
 
     and the factor is w / w_free, so w_free * factor is the paper's w.
-    The reduction is absolute (0.34 m/s per metre of visibility) and the
+    The reduction is additive (0.34 m/s per metre of visibility) and the
     floor is an absolute 0.2 m/s.  The default w_free = 1 m/s is method 1.
 
-    Fridolf, Nilsson, Frantzich, Ronchi & Arias (2018), "Walking speed in
-    smoke: representation in life safety verifications", SFPE 2018 extended
-    abstract, method 3.  The paper gives no C; C = 3 is the FDS default.
+    Fridolf, Ronchi, Nilsson & Frantzich (2019), TUST 90:28-41, Eq. 7
+    (method 3; first presented in Fridolf et al. 2018, SFPE extended
+    abstract).  The 2019 paper used A = 2 (reflecting) or 8 (emitting);
+    C = 3 is the FDS default, C = 2 matches the calibration.
 
     Properties:
     - At K = 0 (clear air) or V >= 3 m: factor = 1.

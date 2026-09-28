@@ -40,7 +40,7 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Speed"
-    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or the `fridolf` option (Fridolf et al. 2018), from Python, with an optional irritant slowdown."
+    subtitle="Extinction coefficient reduces walking speed with the Frantzich–Nilsson law (the linear FDS+Evac law), or the `fridolf` option (Fridolf et al. 2019, Eq. 7), from Python, with an optional irritant slowdown."
     link="fundamentals/walking-speed/"
   >}}
   {{< hextra/feature-card

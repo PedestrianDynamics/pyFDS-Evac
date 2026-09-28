@@ -353,12 +353,14 @@ $$
 
 Eq. 7 is a design rule, not a fit: the slope of Eq. 2 plus two thresholds
 chosen for conservatism (§3.3.2). Above 3 m, speed is taken as unaffected.
-The same rule appeared first in Fridolf, Nilsson, Frantzich, Ronchi and
-Arias (2018, pp. 4–5) as method 3, with *w* and *w*_smoke free in m/s and
+The same rule appears in Fridolf, Nilsson, Frantzich, Ronchi and Arias
+(2018, pp. 4–5 of the extended-abstract PDF) as method 3, an English
+summary of their 2016 Swedish SP report, with *w* and *w*_smoke free in m/s and
 visibility *v* in m; their method 1 is the same with *w*_smoke free = 1 m/s.
-They call the reduction absolute, the same 0.34 m/s per metre for everyone,
-with an absolute floor of 0.2 m/s, and give no constant for turning *K* into
-visibility.
+They describe the reduction as a combination of absolute (the same
+0.34 m/s per metre for everyone) and fractional (starting from each
+person's own clear-condition speed), never let the speed fall below
+0.2 m/s, and give no constant for turning *K* into visibility.
 
 {{< details title="Caveats on Fridolf et al.'s laws" closed="true" >}}
 **The visibility constant.** *A* is chosen for each data set from its

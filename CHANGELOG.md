@@ -8,10 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **Breaking.** `speed_law="fridolf"` now implements Fridolf, Nilsson,
-  Frantzich, Ronchi & Arias (2018), "Walking speed in smoke: representation
-  in life safety verifications" (SFPE 2018), method 3:
-  w = min(v₀, max(0.2, v₀ − 0.34 (3 − V))) with V = C/K and C = 3. The
+- **Breaking.** `speed_law="fridolf"` now implements Eq. 7 (method 3) of
+  Fridolf, Ronchi, Nilsson & Frantzich (2019),
+  [doi:10.1016/j.tust.2019.04.016](https://doi.org/10.1016/j.tust.2019.04.016),
+  first presented in Fridolf et al. (2018, SFPE extended abstract):
+  w = min(v₀, max(0.2, v₀ − 0.34 (3 − V))) with V = C/K. C = 3 is the
+  coded FDS default; the 2019 paper used A = 2 for reflecting targets. The
   reduction is additive with an absolute 0.2 m/s floor, and speed is
   unchanged above 3 m. The option used to compute V/(V+2), which has no
   known source; that law is removed and cannot be selected. New
