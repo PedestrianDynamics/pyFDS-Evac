@@ -86,7 +86,9 @@ def test_constant_exposure_step_integration_matches_threshold_time(case_name, in
 
     assert fed_values == sorted(fed_values)
     assert times_s[-1] >= analytic_time_s
-    assert times_s[-1] - analytic_time_s <= 1.0
+    assert (
+        times_s[-1] - analytic_time_s <= 1.0 + 1e-9
+    )  # one step, plus rounding at a tick
     assert fed_values[-2] < 1.0 <= fed_values[-1]
 
 
@@ -291,8 +293,8 @@ class TestHyperventilationFactor:
     """Verify HV_CO2 against guide Eq. 19: exp(0.1903*CO2 + 2.0004) / 7.1."""
 
     def test_zero_co2(self):
-        expected = math.exp(2.0004) / 7.1
-        assert _hyperventilation_factor(0.0) == pytest.approx(expected, rel=1e-10)
+        """No CO2, no hyperventilation: FDS applies the factor only if X_CO2 > 0."""
+        assert _hyperventilation_factor(0.0) == 1.0
 
     def test_five_percent(self):
         expected = math.exp(0.1903 * 5.0 + 2.0004) / 7.1
@@ -393,7 +395,9 @@ def test_new_term_threshold_time_matches_step_integration(case_name, inputs):
 
     assert fed_values == sorted(fed_values)
     assert times_s[-1] >= analytic_time_s
-    assert times_s[-1] - analytic_time_s <= 1.0
+    assert (
+        times_s[-1] - analytic_time_s <= 1.0 + 1e-9
+    )  # one step, plus rounding at a tick
     assert fed_values[-2] < 1.0 <= fed_values[-1]
 
 

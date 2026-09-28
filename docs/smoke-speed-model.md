@@ -20,7 +20,9 @@ via `SmokeSpeedConfig.speed_law`.
 ## Speed-reduction laws
 
 The agent walks at `v0 * speed_factor(K)`, where `v0` is its clear-air speed
-and the factor follows `speed_law="lund"` (default) or `"fridolf"`. The coded
+and the factor follows `speed_law="lund"` (default) or `"fridolf"`. The
+`fridolf` law (Fridolf et al. 2018) reduces speed additively, so its factor
+also depends on `v0`. The coded
 equations, the `SmokeSpeedConfig` defaults and the departures from the
 literature are on the [smoke-speed model](/models/smoke-speed.md) page;
 the published laws are on

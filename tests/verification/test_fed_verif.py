@@ -30,27 +30,33 @@ def _standard_normal_cdf(z: float) -> float:
 # --- A2.1: CO-only accumulation with the CO2 hyperventilation factor --------
 
 
-def test_a2_1_co_only_accumulation_applies_hv_co2():
+def test_a2_1_co_only_accumulation_and_hv_co2():
     inputs = DefaultFedInputs(
         co_volume_fraction_percent=0.1,  # 1000 ppm
         co2_volume_fraction_percent=0.0,
         o2_volume_fraction_percent=20.9,
     )
 
+    # No CO2: the hyperventilation factor is 1, as in FDS (#194), and the
+    # dose is the CO term alone.
     ref_co_rate = 2.764e-5 * (1000.0**1.036)
-    ref_hv = math.exp(2.0004) / 7.1
-    ref_fed = ref_co_rate * ref_hv * (1800.0 / 60.0)
+    co_only = ref_co_rate * (1800.0 / 60.0)
+    assert co_only == pytest.approx(1.063, abs=1e-3)
+    assert accumulate_default_fed(inputs, duration_s=1800.0) == pytest.approx(
+        co_only, rel=1e-6
+    )
 
-    got = accumulate_default_fed(inputs, duration_s=1800.0)
-
-    assert ref_fed == pytest.approx(1.107, abs=1e-3)
-    assert got == pytest.approx(ref_fed, rel=1e-6)
-
-    # Lock in that hv_co2 is genuinely applied: the CO-only-without-HV figure
-    # (~1.063) must NOT match the accumulated value.
-    co_only_no_hv = ref_co_rate * 30.0
-    assert co_only_no_hv == pytest.approx(1.063, abs=1e-3)
-    assert got != pytest.approx(co_only_no_hv, rel=1e-3)
+    # 1 % CO2: the factor exp(0.1903 + 2.0004)/7.1 = 1.2594 scales the CO dose.
+    with_co2 = DefaultFedInputs(
+        co_volume_fraction_percent=0.1,
+        co2_volume_fraction_percent=1.0,
+        o2_volume_fraction_percent=20.9,
+    )
+    ref_hv = math.exp(0.1903 * 1.0 + 2.0004) / 7.1
+    assert ref_hv == pytest.approx(1.2594, abs=1e-4)
+    got = accumulate_default_fed(with_co2, duration_s=1800.0)
+    assert got == pytest.approx(co_only * ref_hv, rel=1e-6)
+    assert got != pytest.approx(co_only, rel=1e-3)
 
 
 # --- A2.2: additivity of narcotic terms under the shared HV multiplier ------
@@ -61,7 +67,7 @@ def test_a2_2_co_and_hcn_terms_add_under_hv():
         co_volume_fraction_percent=0.05,  # 500 ppm
         hcn_ppm=80.0,
         no2_ppm=0.0,
-        co2_volume_fraction_percent=0.0,
+        co2_volume_fraction_percent=1.0,
         o2_volume_fraction_percent=20.9,
     )
 
@@ -69,7 +75,7 @@ def test_a2_2_co_and_hcn_terms_add_under_hv():
     ref_co_rate = 2.764e-5 * (co_ppm**1.036)
     c_cn = max(0.0, 80.0 - 0.0)
     ref_cn_rate = math.exp(c_cn / 43.0) / 220.0 - 1.0 / 220.0
-    ref_hv = math.exp(2.0004) / 7.1
+    ref_hv = math.exp(0.1903 * 1.0 + 2.0004) / 7.1
     ref_rate = (ref_co_rate + ref_cn_rate) * ref_hv
 
     assert default_fed_rate_per_minute(inputs) == pytest.approx(ref_rate, rel=1e-9)

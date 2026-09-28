@@ -13,16 +13,19 @@ Two speed-law options are available, selected via ``SmokeSpeedConfig.speed_law``
     to [min_speed_factor, 1.0].
 
 ``"fridolf"``
-    Non-linear model from Fridolf et al. (2019) based on visibility V [m]:
+    Additive law from Fridolf et al. (2019), Eq. 7 (method 3; first
+    presented in Fridolf et al. 2018), based on visibility
+    V [m] and the agent's smoke-free speed w_free [m/s]:
 
-        speed_factor(V) = V / (V + 2)
+        w(V) = min(w_free, max(0.2, w_free - 0.34 * (3 - V)))
 
-    Visibility is derived from extinction via V = C / K (Jin 1970-1978),
-    where C is the visibility factor (default C = 3 for reflective signs).
-    At V → ∞ (clear air) the factor approaches 1; at V = 0 (zero visibility)
-    it reaches 0 without a hard clamp.  This model was validated against
-    individual walking-speed measurements in smoke-filled tunnels and
-    is also used by Pathfinder (Thunderhead Engineering).
+    Above 3 m the speed is unchanged; below, it drops by 0.34 m/s per metre
+    of visibility, to an absolute floor of 0.2 m/s.  Visibility is derived
+    from extinction via V = C / K (Jin 1970-1978).  The 2018 abstract gives
+    no constant; the 2019 paper used A = 2 (reflecting) or 8 (emitting),
+    Eq. 1.  pyFDS-Evac uses the FDS default C = 3, so for reflecting targets
+    agents slow later and less than the calibration; C = 2 matches it.
+    The speed factor applied to the agent is w / w_free.
 
 When evaluating route costs, the extinction along a line of sight between
 two points is computed as the arithmetic mean of K sampled at uniform
@@ -46,15 +49,19 @@ References
 - Jin (1970-1978): empirical visibility-extinction correlation V = C / sigma
 - Frantzich & Nilsson (Lund): linear speed-extinction relation used by FDS+Evac
 - Ronchi et al. (2013): interpretation A3 comparison across evacuation tools
-- Fridolf et al. (2019): "The Representation of Evacuation Movement in
-  Smoke-Filled Underground Transportation Systems", Tunnelling and Underground
-  Space Technology 90, 28-41.  Individualized speed-visibility model (method 3).
+- Fridolf, Nilsson, Frantzich, Ronchi & Arias (2018): "Walking speed in
+  smoke: representation in life safety verifications", SFPE 2018 extended
+  abstract.  Individual speed-visibility law (method 3).
+- Fridolf, Ronchi, Nilsson & Frantzich (2019), Tunnelling and Underground
+  Space Technology 90:28-41, doi:10.1016/j.tust.2019.04.016, Eq. 7.
 - Boerger et al. (2024), Fire Safety Journal 150:104269:
   Beer-Lambert integrated extinction along line of sight (Eq. 8-9),
   view-angle correction (Eq. 7), waypoint-based visibility maps
 """
 
+import inspect
 import logging
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -73,14 +80,18 @@ class SmokeSpeedConfig:
         ``speed_factor(K) = 1 + beta * K / alpha``, clamped to
         ``[min_speed_factor, 1.0]``.
 
-        ``"fridolf"``: non-linear Fridolf et al. (2019) model
-        ``speed_factor(V) = V / (V + 2)`` where ``V = C / K``.
-        Naturally asymptotes to 0 as visibility drops; no hard clamp.
+        ``"fridolf"``: additive Fridolf et al. (2018) law
+        ``w = min(w_free, max(0.2, w_free - 0.34 (3 - V)))`` where
+        ``V = C / K``; the speed factor is ``w / w_free``.
 
     visibility_factor_c
         Visibility factor C in the Jin (1970-1978) relation V = C / K.
         Only used when ``speed_law = "fridolf"``.
         C = 3 corresponds to a reflective sign; C = 8 to a light-emitting sign.
+
+    fridolf_slope, fridolf_visibility_threshold_m, fridolf_min_speed_m_per_s
+        Speed drop per metre of visibility [m/s per m], the visibility below
+        which it applies [m], and the absolute speed floor [m/s].
     """
 
     fds_dir: str | None = None
@@ -93,6 +104,9 @@ class SmokeSpeedConfig:
     min_speed_factor: float = 0.1
     # fridolf coefficients
     visibility_factor_c: float = 3.0
+    fridolf_slope: float = 0.34
+    fridolf_visibility_threshold_m: float = 3.0
+    fridolf_min_speed_m_per_s: float = 0.2
 
 
 class ExtinctionField:
@@ -232,33 +246,63 @@ def speed_factor_from_extinction_fridolf(
     extinction_per_m: float,
     *,
     visibility_factor_c: float = 3.0,
+    free_speed_m_per_s: float = 1.0,
+    slope: float = 0.34,
+    visibility_threshold_m: float = 3.0,
+    min_speed_m_per_s: float = 0.2,
 ) -> float:
-    """Convert K [1/m] to a speed factor using the Fridolf et al. (2019) model.
+    """Convert K [1/m] to a speed factor using the Fridolf et al. (2019) law.
 
     Visibility is derived via V = C / K (Jin 1970-1978), then:
 
-        speed_factor(V) = V / (V + 2)
+        w = min(w_free, max(0.2, w_free - 0.34 * (3 - V)))
 
-    This is the individualized representation (method 3) from:
-    Fridolf et al. (2019), "The Representation of Evacuation Movement in
-    Smoke-Filled Underground Transportation Systems", Tunnelling and
-    Underground Space Technology 90, 28-41.
+    and the factor is w / w_free, so w_free * factor is the paper's w.
+    The reduction is additive (0.34 m/s per metre of visibility) and the
+    floor is an absolute 0.2 m/s.  The default w_free = 1 m/s is method 1.
+
+    Fridolf, Ronchi, Nilsson & Frantzich (2019), TUST 90:28-41, Eq. 7
+    (method 3; also in Fridolf et al. 2018, SFPE extended abstract, a
+    summary of their 2016 SP report).  The 2019 paper used A = 2 (reflecting) or 8 (emitting);
+    C = 3 is the FDS default, C = 2 matches the calibration.
 
     Properties:
-    - At K = 0 (clear air): V → ∞, factor → 1.
-    - At K = C/2: V = 2 m, factor = 0.5 (half speed).
-    - As K → ∞: factor → 0 (no hard clamp needed).
-    - Empirically validated against individual walking-speed measurements.
-    - Also used by Pathfinder (Thunderhead Engineering).
+    - At K = 0 (clear air) or V >= 3 m: factor = 1.
+    - The floor never raises the speed above w_free.
+    - w_free <= 0: factor = 1 (nothing to slow).
+    - C must be finite and positive; otherwise ValueError.
     """
 
+    if not (math.isfinite(visibility_factor_c) and visibility_factor_c > 0.0):
+        raise ValueError(
+            f"visibility_factor_c must be finite and > 0, got {visibility_factor_c}"
+        )
     if not np.isfinite(extinction_per_m):
         extinction_per_m = 0.0
     extinction_per_m = max(0.0, float(extinction_per_m))
-    if extinction_per_m == 0.0:
+    free_speed = float(free_speed_m_per_s)
+    if extinction_per_m == 0.0 or free_speed <= 0.0:
         return 1.0
     visibility = visibility_factor_c / extinction_per_m
-    return float(visibility / (visibility + 2.0))
+    reduced = free_speed - slope * (visibility_threshold_m - visibility)
+    speed = min(free_speed, max(min_speed_m_per_s, reduced))
+    return float(speed / free_speed)
+
+
+def sample_accepts_free_speed(sample) -> bool:
+    """Return whether a ``sample`` callable takes ``free_speed_m_per_s``.
+
+    Custom smoke models may define ``sample(time_s, x, y)`` only; callers
+    pass the free speed to those that accept it.
+    """
+    try:
+        params = inspect.signature(sample).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(
+        p.name == "free_speed_m_per_s" or p.kind is inspect.Parameter.VAR_KEYWORD
+        for p in params
+    )
 
 
 class SmokeSpeedModel:
@@ -273,13 +317,30 @@ class SmokeSpeedModel:
         self.field = field
         self.config = config
 
-    def sample(self, time_s: float, x: float, y: float) -> tuple[float, float]:
-        """Return `(extinction_K, speed_factor)` at the requested position/time."""
+    def sample(
+        self,
+        time_s: float,
+        x: float,
+        y: float,
+        free_speed_m_per_s: float | None = None,
+    ) -> tuple[float, float]:
+        """Return `(extinction_K, speed_factor)` at the requested position/time.
+
+        ``free_speed_m_per_s`` is the agent's smoke-free speed, needed by the
+        additive ``fridolf`` law; without it that law uses 1 m/s (method 1).
+        The ``lund`` law ignores it.
+        """
         extinction = self.field.sample_extinction(time_s, x, y)
         if self.config.speed_law == "fridolf":
             factor = speed_factor_from_extinction_fridolf(
                 extinction,
                 visibility_factor_c=self.config.visibility_factor_c,
+                free_speed_m_per_s=(
+                    1.0 if free_speed_m_per_s is None else free_speed_m_per_s
+                ),
+                slope=self.config.fridolf_slope,
+                visibility_threshold_m=self.config.fridolf_visibility_threshold_m,
+                min_speed_m_per_s=self.config.fridolf_min_speed_m_per_s,
             )
         else:
             factor = speed_factor_from_extinction(
@@ -290,7 +351,16 @@ class SmokeSpeedModel:
             )
         return extinction, factor
 
-    def speed_factor(self, time_s: float, x: float, y: float) -> float:
+    def speed_factor(
+        self,
+        time_s: float,
+        x: float,
+        y: float,
+        free_speed_m_per_s: float | None = None,
+    ) -> float:
         """Return only the speed factor at the requested position/time."""
-        _, factor = self.sample(time_s, x, y)
+        if free_speed_m_per_s is None or not sample_accepts_free_speed(self.sample):
+            _, factor = self.sample(time_s, x, y)
+            return factor
+        _, factor = self.sample(time_s, x, y, free_speed_m_per_s=free_speed_m_per_s)
         return factor
