@@ -263,10 +263,11 @@ HEAT_ENDPOINTS: dict[str, HeatEndpoint] = {
     "fatal": HeatEndpoint(16.7, "63.47", 2e18, 9.0403, 1e8, 3.10898),
 }
 
-# Highest dry-air point of the convective tolerance data, Table 63.17
-# (Veghte, 205 deg C, p. 2375); p. 2383 applies Eqs. 63.45-63.47 to air with
-# less than 10 % water vapour. Humidity is not sampled, so only temperature
-# is flagged.
+# Assumption: the Handbook gives no upper temperature for Eqs. 63.45-63.47;
+# the limit is taken as the highest dry-air point of the convective tolerance
+# data, Table 63.17 (Veghte, 205 deg C, p. 2375). p. 2383 relates the laws to
+# air with less than 10 % water vapour. Humidity is not sampled, so only
+# temperature is flagged.
 HEAT_CONVECTIVE_VALIDITY_MAX_C = 205.0
 
 

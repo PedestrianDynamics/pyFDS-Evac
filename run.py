@@ -224,7 +224,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Heat endpoint of SFPE Handbook Ch. 63: tolerance (Eq. 63.45), "
         "injury (Eq. 63.46) or fatal (Eq. 63.47) convective law, so that heat "
         "FED = 1 is that endpoint; needs --enable-heat-fed. Samples above "
-        "205 C are flagged. Default: none, Eq. 63.44",
+        "205 C (an assumed limit) are flagged. Default: none, Eq. 63.44",
     )
     parser.add_argument(
         "--heat-fed-threshold",

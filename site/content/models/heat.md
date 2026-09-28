@@ -19,7 +19,8 @@ nothing on this page affects a run.
 With `--enable-heat-fed` (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in
 the case, each agent accumulates a convective heat dose at
 `_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py:217`), SFPE Handbook 5th
-ed. Eq. 63.44:
+ed. Eq. 63.44 (p. 2382), unless `--heat-endpoint` selects another law
+([Endpoint](#endpoint)):
 
 $$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
@@ -48,8 +49,11 @@ endpoint cannot be paired with the convective law of another:
 | `injury` | 10 | Eq. 63.46: \(5\times10^{22}\,T^{-11.783} + 3\times10^{7}\,T^{-2.9636}\) |
 | `fatal` | 16.7 | Eq. 63.47: \(2\times10^{18}\,T^{-9.0403} + 10^{8}\,T^{-3.10898}\) |
 
-*r* from pp. 2382 and 2384, the laws from pp. 2382–2383. The rate is
-\(1/t\); a temperature at or below 0 °C gives zero. Radiant heat is not an
+*r* from pp. 2382 and 2384, the laws from pp. 2382–2383; the pairing is
+explained in [Heat](/fundamentals/heat.md). The rate is \(1/t\)
+(`endpoint_heat_fed_rate_per_minute`); a temperature at or below 0 °C, or
+not finite, gives zero. `--heat-endpoint` without `--enable-heat-fed` logs a
+warning and leaves the heat dose off. Radiant heat is not an
 input yet, so *r* is recorded but does not enter the dose. The Handbook prints
 16.7 for the fatal dose; spec 016 writes 16.667. By maintainer decision,
 heat FED = 1 is meant as the fatal endpoint; `--heat-endpoint fatal` gives
@@ -59,11 +63,13 @@ The caption of Table 63.21 (p. 2385) says Eq. 63.44, but its per-minute values
 are those of Eq. 63.45; the tests use the table as the oracle for
 `tolerance`.
 
-The laws were fitted to air with less than 10 % water vapour, up to about
-205 °C, the highest dry-air point of Table 63.17 (Veghte, p. 2375). With an
-endpoint, each FED history sample whose temperature exceeds 205 °C
-(`HEAT_CONVECTIVE_VALIDITY_MAX_C`) is flagged. The flag does not clip the
-rate: Table 63.21 applies the law at 405 °C.
+The Handbook relates Eqs. 63.45–63.47 to heated air with less than 10 %
+water vapour by volume (p. 2383) and gives no upper temperature. **Assumption:**
+the upper limit is taken as 205 °C, the highest dry-air tolerance point of
+Table 63.17 (Veghte, 4 min, p. 2375). With an endpoint, each FED history
+sample whose temperature exceeds 205 °C (`HEAT_CONVECTIVE_VALIDITY_MAX_C`) is
+flagged. The flag does not clip the rate: Table 63.21 applies the law at
+405 °C.
 
 ## Incapacitation
 
@@ -118,7 +124,9 @@ endpoint; `heat_endpoint` says which one.
   [#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
 - **Validity range.** Humidity is not sampled, so humid smoke is never
   flagged. Without `--heat-endpoint`, temperatures above 205 °C are not
-  flagged either.
+  flagged either, although Eq. 63.44 rests on the same data (p. 2382).
+- **Web GUI.** The GUI does not offer `--heat-endpoint`
+  ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
 - **Falling exposure and recovery.** The summed dose assumes exposure that is
   steady or rising (Eq. 63.48); a fleeing agent's exposure falls, and no
   recovery is modelled.
