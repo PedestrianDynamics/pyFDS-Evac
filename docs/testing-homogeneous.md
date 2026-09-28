@@ -1,209 +1,159 @@
 ---
-title: "Homogeneous CO FED verification"
+title: "CO dose in a uniform room"
 linkTitle: "CO dose"
 weight: 14
+math: true
 aliases: [/docs/testing-homogeneous/]
 ---
 
-## Purpose
+| | |
+|---|---|
+| **Component** | Gas FED and incapacitation ([Models › FED](/models/fed.md)) |
+| **Level** | FDS case: a full run on FDS output |
+| **Asset** | `assets/fed_incap_co_2000ppm` |
+| **Expected value from** | hand calculation, and FDS's own `FED` device |
+| **Status** | passes |
 
-This test case verifies the FED (Fractional Effective Dose) accumulation and
-probabilistic incapacitation logic in the pyFDS-Evac pipeline against
-hand-calculated predictions, using a simplified scenario with a spatially
-**homogeneous** (uniform) CO concentration field.
+![100 agents walk a loop in a room filled with 2000 ppm CO; their colour shows the dose, and a cross marks an incapacitated agent](/images/verification/co_room.gif)
 
-By removing spatial gradients as a variable, any deviation between simulated
-and hand-calculated FED/incapacitation results can be attributed to the
-model/pipeline logic itself, rather than to local concentration variation —
-isolating the FED accumulation and incapacitation-probability code from the
-gas-transport physics.
+## What is tested
 
-Three CO concentration levels are tested (2000, 4000, and 8000 ppm) to check
-that the pipeline's FED/incapacitation results scale correctly with dose,
-rather than verifying against just a single data point.
+Whether the dose an agent accumulates in pyFDS-Evac is the dose the
+equations give, and whether agents stop when it says they should. The room
+holds the same gas everywhere and at all times, so every agent, wherever it
+walks, must follow one curve, FED(*t*), that can be computed by hand. Any
+difference comes from the code: reading the FDS slice, sampling it at the
+agent, summing the dose, or applying the threshold.
 
-Testing was also conducted using probabilistic tenability to make ensure that encapacitation 
-occurs at a log-normal distribution. 
+## Equation
 
-> **Note:** `fed_hand_calc.py` and the two onset-distribution graphs
-> referenced below are not currently committed to the repo — the formulae
-> and pass/fail numbers here were computed and verified with them at the
-> time, but a reader can't regenerate the reference curve or view the plots
-> from this checkout. The `TODO` in [How to Run](#how-to-run) and the
-> [Remaining](#remaining-before-this-test-case-is-complete) section below
-> are original and still open.
-
-## Test Setup
-
-- **Geometry:** Sealed room (no vents/openings), so CO cannot escape and the
-  concentration field stays spatially uniform once mixed.
-- **Source:** Constant CO generation rate, homogeneous throughout the room.
-  Three variants of this test are run, at 2000 ppm, 4000 ppm, and 8000 ppm
-  CO, each producing a known, time-resolved CO concentration that can be
-  predicted analytically.
-- **Domain decomposition:** 4 MPI sub-meshes — confirms FED values are
-  consistent across mesh boundaries (i.e. splitting the domain doesn't
-  introduce discontinuities in the gas data JuPedSim consumes).
-- **Agents:** 100 JuPedSim agents, non-evacuating travelling in a rectangular circuit, exposed
-  uniformly to the CO field — isolates FED/incapacitation tracking from
-  movement and exit-routing dynamics.
-
-## What's Being Verified
-
-1. **FED accumulation** — per-agent FED(t) computed from FDS CO output
-   matches the hand-calculated FED curve for a known, constant CO
-   concentration, across all three concentration levels.
-2. **Probabilistic incapacitation** — agents are incapacitated according to
-   the correct FED-derived probability model, not deterministically at a
-   fixed FED threshold.
-3. **Pipeline integration** — FDS gas slice output → `fdsreader` → JuPedSim
-   correctly carries FED data across the 4-mesh decomposition with no
-   per-mesh discrepancies. (Not `fdsvismap`: that's a separate component
-   used only by the sign-visibility model that gates rerouting/`discovery`
-   familiarity — this test has a single exit, non-evacuating agents, and no
-   `--vis-cache`/`--enable-rerouting`, so it never touches fdsvismap.)
-
-## Method
-
-1. Hand-calculate the expected FED(t) curve for each of the three CO
-   concentrations (2000, 4000, 8000 ppm) using the FDS-native Purser
-   FED/CO incapacitation model (see `fed_hand_calc.py`).
-2. Run the full FDS → fdsreader → JuPedSim pipeline on each of the three
-   scenarios.
-3. Compare simulated per-agent FED accumulation curves and incapacitation
-   timing/probability distribution against the hand-calculated reference,
-   for each concentration.
-4. Confirm agreement within tolerance across all 100 agents and all 4
-   sub-meshes, at all three concentration levels.
-5. Run the homogenous test at different seeds with the probabilistic incapacitation to ensure they're following the log-normal distribution.
-
-## Hand-Calculated FED Reference
-
-Computed with `fed_hand_calc.py`, using the exact FDS Purser equations
-(NIST SP 1019, Section 22.10.18, eqs 22.42–22.49) — the same equations FDS
-itself uses to produce its `FED` device output. Background CO2 = 500 ppm
-(0.05%), O2 = 20.9% (ambient, no hypoxia contribution) held constant for
-all three cases.
-
-### Formulae used
-
-These are the terms the hand calculation evaluates; the coded forms are on the
-[FED model](/models/fed.md#coded-form) page.
-
-**FED from CO** (eq. 22.43), C_CO in ppm, t in minutes:
+The gas FED, as in FDS's `FED` function
+([Models › FED](/models/fed.md#coded-form)), with *C* in ppm for CO and in
+volume percent for CO₂ and O₂, and *t* in minutes:
 
 ```
 FED_CO = 2.764e-5 x (C_CO)^1.036 x t
-```
-
-**FED from O2 hypoxia** (eq. 22.48), C_O2 in volume percent, t in minutes:
-
-```
-FED_O2 = t / exp[8.13 - 0.54 x (20.9 - C_O2)]
-```
-
-**Hyperventilation factor from CO2** (eq. 22.49), C_CO2 in percent, with
-the zero-CO2 guard of FDS (`func.f90`, function `FED`):
-
-```
 HV_CO2 = exp(0.1903 x C_CO2 + 2.0004) / 7.1   if C_CO2 > 0
 HV_CO2 = 1                                    if C_CO2 <= 0 (or not finite)
+FED_O2 = t / exp[8.13 - 0.54 x (20.9 - C_O2)]  only below 20 % O2
+FED    = FED_CO x HV_CO2 + FED_O2
 ```
 
-**Total FED** (eq. 22.42) — FED_CN, FED_NOx, and FLD_irr are omitted here
-since this scenario is CO-only:
+With a constant mixture the dose grows linearly, and FED = 1 is reached at
 
+$$
+t^{*} = \frac{60}{r_{\mathrm{CO}}\,\mathrm{HV}_{\mathrm{CO_2}}}\ \text{s},
+\qquad r_{\mathrm{CO}} = 2.764\times10^{-5}\,C_{\mathrm{CO}}^{1.036}\ \text{min}^{-1}.
+$$
+
+In `probabilistic` mode (the default for the gas dose) agent *i* stops at its
+own threshold \(D_i = \exp(\sigma Z_i)\), \(Z_i \sim N(0,1)\), σ = 0.94. Because
+FED grows linearly, agent *i* stops at \(D_i\,t^{*}\), and the fraction of
+agents stopped by time *t* is
+
+$$
+F(t) = \Phi\!\left(\frac{\ln(t/t^{*})}{\sigma}\right).
+$$
+
+## Setup
+
+![Plan of the 30 m room: spawn area, the loop the agents walk, the exit, and the CO slice at breathing height](/images/verification/co_room_setup.png)
+
+- **FDS:** a sealed 30 × 30 × 3 m room, no fire, no vents, four meshes. At
+  *t* = 0 it is filled with 2000 ppm CO, 500 ppm CO₂, 20.9 % O₂ and soot for
+  *K* ≈ 1 /m. Slices at 1.6 m, which FDS places at 1.5 m on this 0.5 m grid.
+- **Agents:** 100 agents walk a loop between four corner checkpoints, so they
+  stay in the room and keep moving; the field is sampled at each agent's
+  position every second.
+- **Runs:** once with `--incapacitation-mode deterministic`, once with the
+  default `probabilistic`.
+
+## Expected
+
+The concentrations are read from the FDS slice itself, independently of
+pyFDS-Evac: 1999.86 ppm CO, 0.049992 % CO₂ and 20.8985 % O₂, the same in every
+cell and at all 1001 slice times. O₂ is above 20 %, so its term is zero. Then
+
+| Quantity | Value |
+|---|---|
+| \(r_{\mathrm{CO}}\) | 0.072673 /min |
+| \(\mathrm{HV}_{\mathrm{CO_2}}\) | 1.05108 |
+| \(t^{*}\), hand calculation | **785.49 s** |
+| \(t^{*}\), FDS's own `FED` device in the same run | 785.44 s |
+| agents stopped by 999 s, probabilistic, \(F(999\ \mathrm{s})\) | 60.1 % |
+
+Earlier versions of this page quoted 782.4 s. That value added an O₂ term at
+20.9 % O₂, which FDS and pyFDS-Evac apply only below 20 %.
+
+## Result
+
+![FED against time for the 100 agents, the hand calculation and FDS's FED device; below, the difference from the hand calculation](/images/verification/co_room_fed.png)
+
+All 100 agents follow the hand calculation to within 1.4 × 10⁻¹⁴, round-off
+in the last digit. FDS's own device lies up to 7.7 × 10⁻⁵ above it at 1000 s,
+a relative difference of 6 × 10⁻⁵.
+
+![Fraction of agents incapacitated against time in the probabilistic run, with the expected log-normal curve and its 95 % band](/images/verification/co_room_incapacitation.png)
+
+| Check | Expected | Simulated |
+|---|---|---|
+| FED of every agent against the hand calculation | equal | max difference 1.4 × 10⁻¹⁴ |
+| deterministic: incapacitation time | 785.49 s | all 100 agents at 786.0 s (first FED update after *t*\*) |
+| probabilistic: agents stopped by 999 s | 60.1 % | 61 of 100 |
+| probabilistic: largest gap between the curves | ≤ 0.136 | 0.048 |
+
+## Pass criteria
+
+1. **Dose.** Every agent's FED equals the hand calculation to round-off,
+   |FED − FED_hand| ≤ 10⁻⁹.
+2. **Deterministic stop.** Every agent stops at the first FED update at or
+   after *t*\*: \(t^{*} \le t_i < t^{*} + \Delta t\), with the update interval
+   Δ*t* = 1 s (`--smoke-update-interval`).
+3. **Probabilistic stop.** The empirical fraction of stopped agents stays
+   within the 95 % Kolmogorov–Smirnov band of *F*(*t*),
+   \(1.36/\sqrt{n} = 0.136\) for *n* = 100 agents. Agents whose threshold
+   lies beyond the end of the run are counted as not yet stopped.
+
+## Run it yourself
+
+The FDS output is not in the repository (254 MB). Either get it from the
+project's data folder (`fds-evac-data/fed_incap_co_2000ppm/fds/`), or rerun
+FDS, about one minute on four cores:
+
+```bash
+cd assets/fed_incap_co_2000ppm
+mpiexec -n 4 fds fed_incap_co_2000ppm.fds
 ```
-FED_tot = FED_CO x HV_CO2 + FED_O2
+
+Then run pyFDS-Evac in both modes and draw the figures:
+
+```bash
+for mode in deterministic probabilistic; do
+  uv run python run.py --scenario assets/fed_incap_co_2000ppm \
+    --fds-dir <fds output> --incapacitation-mode $mode \
+    --output-sqlite <out>/$mode/run.sqlite \
+    --output-fed-history <out>/$mode/fed_history.csv
+done
+uv run python scripts/figures/verification_co_room.py --data <out>
 ```
 
-`fed_hand_calc.py` accumulates this per-timestep (matching how FDS itself
-does it internally) rather than as a single closed-form multiplication —
-this matters because `HV_CO2` depends on the CO2 present (here 500 ppm, so
-it is above 1), and it multiplies only the CO term, not the O2 term. With no
-CO2 at all the factor is 1, as in FDS (#194).
+The evacuation itself takes about three minutes. Before it starts, the first
+run builds the sign-visibility cache for the 25 checkpoints at every FDS time,
+which takes much longer
+([#236](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/236)); add
+`--vis-cache <file>` to both runs so the second one reuses it.
 
-| CO Concentration | FED = 0.3 (onset) | FED = 1.0 (incapacitation) |
-|------------------|-------------------|----------------------------|
-| 2000 ppm         | 234.7 s           | 782.4 s                    |
-| 4000 ppm         | 114.7 s           | 382.3 s                    |
-| 8000 ppm         | 56.0 s            | 186.6 s                    |
+## Limits
 
-
-## Directory Contents
-
-Each case is a self-contained scenario directory. The deck, the JuPedSim
-config and the walkable area live together; FDS run output lands beside them
-and is gitignored.
-
-```
-assets/
-├── fed_incap_co_2000ppm/
-│   ├── fed_incap_co_2000ppm.fds   — FDS deck, 2000 ppm CO (CHID demo_homogeneous_CO_2000ppm)
-│   ├── config.json                — JuPedSim scenario (agents, journey, routing)
-│   ├── geometry.wkt               — Walkable area (Shapely WKT)
-│   └── <untracked run output>     — .smv .out .pickle .sf/.sf.bnd (4 meshes x 17 quantities),
-│                                    _devc.csv _hrr.csv _cpu.csv _steps.csv _git.txt
-├── fed_incap_co_4000ppm/          — same layout, 4000 ppm
-└── fed_incap_co_8000ppm/          — same layout, 8000 ppm
-```
-
-Three earlier iterations from this debugging lineage are no longer tracked:
-`fed_incap_co_v1` and `fed_incap_co_v2` (both 4000 ppm), and
-`fed_incap_co_smol`, which never had a deck of its own. The 2000/4000/8000 ppm
-ladder supersedes all three.
-
-pyFDS-Evac run artefacts (written wherever you point the `--output-*` flags):
-
-```
-<scenario>.sqlite                  — Agent trajectory database
-<scenario>_fed_history.csv         — Per-agent FED accumulation over time
-<scenario>_smoke_history.csv       — Per-agent smoke exposure over time
-<scenario>_route_history.csv       — Agent route decisions over time
-<scenario>_route_cost_history.csv  — Route cost values over time
-```
-
-Analysis plots (incapacitation-onset histograms and cumulative onset curves
-per concentration) are produced from the FED history CSV by the plotting
-scripts in `scripts/`; see `docs/usage.md`.
-
-## How to Run
-
-> TODO — fill in exact commands once finalized.
-
-## Results / Pass Criteria
-
-**Status: All cases of 2000, 4000, and 8000 ppm are passing.**
-
-For the 8000 ppm case, all 100 agents now show `incapacitated = True` at
-~186–187 s, matching the hand-calculated FED = 1.0 time of **186.6 s**
-within about 1 s. This is the first run where the sampler bug (CO/CO2/O2
-all reading 0, per earlier debugging) is no longer visibly affecting the
-result.
-
-| Case     | FED = 1.0 (Hand Calculation) | FED = 1.0 (Simulation) | 
-|----------|------------------------------|------------------------|
-| 2000 ppm | 782.4 s                      | 786 s                  | 
-| 4000 ppm | 382.3 s                      | 384 s                  | 
-| 8000 ppm | 186.6 s                      | 187 s                  |
-
-All of these result in a percent difference <0.50% which is accepted.
-
-![Incapacitation onset time distribution, 8000ppm](graphs/homogenous_co_incapacitation_onset_8000ppm.png)
-
-![Cumulative incapacitation over time, 8000ppm](graphs/homogenous_onset_cumulative_8000ppm.png)
-
-Note on terminology: the pipeline's "onset time" (plotted above) is the
-timestamp at which `incapacitated` first flips `True` — this corresponds
-to the hand-calc's **FED = 1.0** threshold (186.6 s), not the FED = 0.3
-"onset" threshold used elsewhere in this doc's reference table (56.0 s for
-8000 ppm). Same word, two different thresholds — worth not conflating the
-two when comparing numbers.
-
-
-### Remaining before this test case is complete
-
-- Decide and document a formal tolerance (±5%, absolute FED difference,
-  etc.) rather than eyeballing agreement from the plots.
-- Confirm whether the single-instant incapacitation spike is expected
-  behavior for the probabilistic model in a homogeneous scenario.
+- One concentration. The decks for 4000 and 8000 ppm
+  (`assets/fed_incap_co_4000ppm`, `assets/fed_incap_co_8000ppm`) still have
+  their gas slices at 2.0 m only and have not been rerun.
+- CO only, with CO₂ at an ambient level and O₂ above 20 %, so the O₂ term and
+  the optional gases (HCN, NOx, irritants) are not exercised here. The FDS
+  [`FED_FIC` case](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_fic_all_zones.py)
+  covers those as an equation-level check.
+- A uniform field cannot show whether the field is sampled at the agent's
+  *current* position; that needs a gradient
+  ([#24](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24)).
+- This page is not yet an automated test: the check runs from the figure
+  script on the stored output.
