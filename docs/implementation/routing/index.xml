@@ -508,46 +508,87 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;strong>Source&lt;/strong>&lt;/td>
-&lt;td>&lt;code>current_origin&lt;/code>, else &lt;code>current_target_stage&lt;/code>&lt;/td>
+&lt;td>&lt;code>current_origin&lt;/code>, else &lt;code>current_target_stage&lt;/code>; a source outside the graph skips the tick&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Candidates&lt;/strong>&lt;/td>
-&lt;td>Dijkstra on each edge&amp;rsquo;s optical depth (&lt;code>k_avg&lt;/code> × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>)&lt;/td>
-&lt;td>Dijkstra on the weighted composite (&lt;code>w_smoke&lt;/code>, &lt;code>w_fed&lt;/code>); one path per exit&lt;/td>
+&lt;td>Dijkstra over the agent&amp;rsquo;s known subgraph on each edge&amp;rsquo;s optical depth (&lt;code>k_avg&lt;/code> × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>)&lt;/td>
+&lt;td>Dijkstra on each edge&amp;rsquo;s share of the composite (length × (1 + &lt;code>w_smoke&lt;/code> × &lt;code>k_avg&lt;/code>) + &lt;code>w_fed&lt;/code> × FED growth); one path per exit&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
-&lt;td>FED over the threshold (× &lt;code>fed_return_margin&lt;/code> for a rival exit), or τ over the budget (× &lt;code>tau_return_margin&lt;/code> for a rival); every exit is tested&lt;/td>
-&lt;td>FED as for the gate; plus, when at least one route has a visible segment, routes whose every segment is non-visible&lt;/td>
+&lt;td>FED over the threshold (× &lt;code>fed_return_margin&lt;/code> for a rival while a current exit is set), then τ over &lt;code>tau_max&lt;/code> (× &lt;code>tau_return_margin&lt;/code> for a rival); both are tested, and a route over both reports the τ reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
+&lt;td>FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as &lt;code>all segments non-visible&lt;/code> while staying feasible&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Ranking&lt;/strong>&lt;/td>
-&lt;td>not rejected first, then tier (clean vs smoky, only with &lt;code>clean_extinction_threshold&lt;/code> &amp;gt; 0), then τ (× &lt;code>current_exit_discount&lt;/code> for the current exit), then &lt;code>rank_cost&lt;/code>, then hops&lt;/td>
-&lt;td>not rejected first, then tier, then &lt;code>rank_cost&lt;/code>, then hops&lt;/td>
+&lt;td>not rejected first, then tier (clean before smoky, only with &lt;code>clean_extinction_threshold&lt;/code> &amp;gt; 0; the current exit&amp;rsquo;s limit is divided by &lt;code>clean_exit_margin&lt;/code>), then τ (× &lt;code>current_exit_discount&lt;/code> for the current exit), then &lt;code>rank_cost&lt;/code> (travel time + queue time × &lt;code>w_queue&lt;/code>), then hops; ties keep candidate order&lt;/td>
+&lt;td>not rejected first, then &lt;code>rank_cost&lt;/code> (the composite), then hops; no tier and no τ&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Fallback&lt;/strong>&lt;/td>
-&lt;td>by (τ, &lt;code>rank_cost&lt;/code>); the current exit is kept unless the winner is clearer by &lt;code>fallback_switch_margin&lt;/code>&lt;/td>
-&lt;td>lowest composite&lt;/td>
+&lt;td>when every route is rejected: re-sorted by raw τ, then &lt;code>rank_cost&lt;/code>; the current exit goes first unless the winner&amp;rsquo;s worst extinction is at or below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>); the first route is un-rejected with a &lt;code>fallback: &lt;/code> reason, its &lt;code>feasible&lt;/code> unchanged&lt;/td>
+&lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, same exit&lt;/strong>&lt;/td>
-&lt;td>reroute if the new path beats the walked path by more than 10 % on &lt;code>rank_cost&lt;/code>, or if the walked path is rejected and the new one is feasible (&lt;code>better_path&lt;/code>); otherwise keep walking, and the cached path is updated&lt;/td>
+&lt;td>for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path&amp;rsquo;s &lt;code>rank_cost&lt;/code> is below 0.9 × the walked path&amp;rsquo;s, or if the walked path is rejected and the new one is feasible and not rejected (&lt;code>better_path&lt;/code>); otherwise, or if rerouting fails, it keeps walking, and the cached path is updated either way&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
-&lt;td>candidates tried in rank order; the anchor adopts one only if &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>, unless the old exit is FED-lethal or impassably smoky, or the rival is feasible, clearer by the anchor margin, and a whole band clearer or clean while the current exit is not&lt;/td>
-&lt;td>anchor on &lt;code>rank_cost&lt;/code>, with the same hazard bypasses&lt;/td>
+&lt;td>the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, when it must be fled (a FED rejection, or a non-visible one above &lt;code>impassable_extinction_threshold&lt;/code>), or when the rival is clean and the current exit is not. Otherwise an infeasible rival needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>; a feasible one is accepted if its τ is lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>, refused if higher by more, and between those needs the same &lt;code>rank_cost&lt;/code> ratio&lt;/td>
+&lt;td>only the top-ranked route is tried; the anchor accepts under the same hazard bypasses, else needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
-&lt;td>&lt;code>path_choices&lt;/code> rewritten along the new path, the agent retargeted to its first unvisited stage, a &lt;code>RouteSwitch&lt;/code> recorded&lt;/td>
+&lt;td>&lt;code>path_choices&lt;/code> rewritten along the new path, the agent retargeted to its first unvisited stage, the exit and path recorded, a &lt;code>RouteSwitch&lt;/code> recorded; if rerouting fails no &lt;code>RouteSwitch&lt;/code> is recorded&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;p>In &lt;code>pyfds_evac/core/route_graph.py&lt;/code> the two columns are &lt;code>GatePolicy&lt;/code> and
+&lt;code>AdditivePolicy&lt;/code>, and each row is one function:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Step&lt;/th>
+&lt;th>Function&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Candidates&lt;/strong>&lt;/td>
+&lt;td>&lt;code>_generate_candidates&lt;/code>, weighting edges with the policy&amp;rsquo;s &lt;code>edge_weight&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
+&lt;td>&lt;code>_measure_route&lt;/code>, then &lt;code>_assess_measurements&lt;/code> with the policy&amp;rsquo;s &lt;code>feasibility&lt;/code>; the K_vis pass is &lt;code>apply_candidate_set_rules&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Ranking&lt;/strong>&lt;/td>
+&lt;td>the policy&amp;rsquo;s &lt;code>order_key&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Fallback&lt;/strong>&lt;/td>
+&lt;td>&lt;code>_apply_fallback&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Switch, same exit&lt;/strong>&lt;/td>
+&lt;td>&lt;code>_decide_same_exit&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
+&lt;td>&lt;code>_select_candidate&lt;/code>, then &lt;code>_decide_exit_change&lt;/code>; the anchor is &lt;code>_anchor_allows&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
+&lt;td>&lt;code>_apply_decision&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The explore and wander decisions are made by &lt;code>_decide_explore&lt;/code>.&lt;/p>
 &lt;p>Several of these rules resist switching at different points (return margins,
 discount, anchor, fallback margin, same-exit threshold). Their consolidation is
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>; the
@@ -562,12 +603,12 @@ patrols known nodes when its knowledge is exhausted (&lt;code>wander&lt;/code>).
 &lt;ol>
 &lt;li>The agent&amp;rsquo;s reevaluation tick fires (staggered offset + interval).&lt;/li>
 &lt;li>&lt;code>rank_routes&lt;/code> finds a best route that is not hard-rejected.&lt;/li>
-&lt;li>That best route leads to a &lt;strong>different exit&lt;/strong> than the current one.&lt;/li>
+&lt;li>That best route leads to a &lt;strong>different exit&lt;/strong> than the current one,
+or the agent is idle (an idle agent is routed even to its current exit).&lt;/li>
 &lt;li>It clears the exit-switch anchor, or qualifies for one of the anchor
 bypasses (old exit FED-lethal or impassably smoky; or, under the gate, a
-feasible rival clearer in metres of sighting distance by the anchor margin
-&lt;em>and&lt;/em> either a whole visibility band clearer or clean while the current exit
-is not).&lt;/li>
+clean rival while the current exit is not, or a feasible rival whose τ is
+lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>).&lt;/li>
 &lt;/ol>
 &lt;p>No switch is recorded when:&lt;/p>
 &lt;ul>
@@ -575,8 +616,9 @@ is not).&lt;/li>
 &lt;li>The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).&lt;/li>
 &lt;li>All routes are hard-rejected and none was un-rejected as a fallback.&lt;/li>
 &lt;li>The anchor holds the agent on its current exit.&lt;/li>
-&lt;li>The best route leads to the same exit — though the path to it may
-still be rewritten, which is recorded as &lt;code>better_path&lt;/code>.&lt;/li>
+&lt;li>The best route leads to the same exit and the agent is not idle —
+though the path to it may still be rewritten, which is recorded as
+&lt;code>better_path&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h3>Route switch reasons&lt;span class="hx-absolute -hx-mt-20" id="route-switch-reasons">&lt;/span>
 &lt;a href="#route-switch-reasons" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each &lt;code>RouteSwitch&lt;/code> record includes a &lt;code>reason&lt;/code> field:&lt;/p>
@@ -594,7 +636,7 @@ still be rewritten, which is recorded as &lt;code>better_path&lt;/code>.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>smoke_reroute&lt;/code>&lt;/td>
-&lt;td>Best route is a different exit (lower &lt;code>rank_cost&lt;/code>)&lt;/td>
+&lt;td>Best route is a different exit (lower &lt;code>rank_cost&lt;/code>), or an idle agent is routed to its current exit&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fallback&lt;/code>&lt;/td>
