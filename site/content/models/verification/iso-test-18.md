@@ -10,7 +10,7 @@ math: true
 | **Component** | Smoke-speed law ([Models › Smoke-speed](/models/smoke-speed.md)) |
 | **Level** | Runner with *K* injected (no FDS); FDS case with *K* read from committed FDS output |
 | **Asset** | `assets/ISO-table21`, `assets/iso_table21_coupled` |
-| **Expected value from** | hand calculation of the model's law, as ISO 20414 asks; for the FDS case, *K* from FDS's own slice, cross-checked against the deck's soot |
+| **Expected value from** | hand calculation of the model's law, as ISO 20414 asks; for the FDS case, *K* from FDS's own slice, cross-checked against the deck's soot; egress times predicted from clear runs of the same layout (no smoke) |
 | **Status** | passes on the stored runs (figure script); CI checks the time ratio within 8 % |
 
 ![Five copies of the ISO corridor, tinted darker the denser the smoke: clear air and K = 1, 3, 7.5 and 10 per metre; the occupant's colour shows its walking speed, and each corridor ends with the simulated and the expected egress time](/images/verification/iso18.gif)
@@ -62,8 +62,11 @@ computes \(K = K_m\,\rho\,Y_s\) with the mass extinction coefficient
 - **Corridor:** ISO 20414 Table 21, 100 × 2 m, with an exit zone of
   1 × 0.92 m at the far end. One occupant, \(v_0\) = 1.25 m/s, seed 420, so
   it starts at the same point in the clear and the smoky run. It starts at
-  *x* = −49.64 m and is removed at *x* ≈ 48.5 m, so it walks about 98 m, not
-  100 m. ISO's absolute time depends on that distance, so the page predicts
+  *x* = −49.64 m and is removed at *x* ≈ 48.5 m, once within its radius
+  + 0.5 m of a target point drawn inside the exit zone
+  ([`scenario.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/pyfds_evac/core/scenario.py)).
+  So it walks about 98 m, not 100 m. The seed fixes the target, so it is the
+  same in the clear and the smoky run. ISO's absolute time depends on that distance, so the page predicts
   each smoky time from clear runs of the same layout. ISO leaves the
   quantitative method to the tester.
 - **Constant *K*** (`assets/ISO-table21`, social force model): *K* = 0.5, 1,
@@ -103,7 +106,8 @@ Our inference for the slices: FDS's density falls with height by
 and 2.32 × 10⁻⁴ at 2.0 m; the slices lie 1.70 × 10⁻⁴ and 2.27 × 10⁻⁴ below.
 The deck aimed at *K* = 1.0 1/m with 1.2041 kg/m³, the density of dry air
 (28.96 g/mol). Its background has no argon, so its molar mass and density are
-0.43 % lower. That, and not a coupling error, is the gap to 0.9955.
+0.43 % lower. That, plus the hydrostatic drop, and not a coupling error, is
+the gap to 0.9955.
 
 ## Result
 
@@ -164,7 +168,10 @@ and matches the ratio to 10⁻⁵.
    rounding in the fitted line. For the FDS case,
    \(|t_{\mathrm{smoke}} - t_{\mathrm{clear}}/f| \le (1 + 1/f)\,\Delta t\) =
    0.021 s: the clear time's rounding, scaled by 1/*f*, plus the smoky
-   time's. The expected time uses no smoky run.
+   time's. The expected time uses no smoky run. Two runs lie just outside
+   the clear runs' speed range (0.25 to 1.25 m/s): *K* = 10 at 1.25 m/s
+   (\(f v_0\) = 0.241 m/s) and *K* = 1 at 0.25 m/s (0.230 m/s). Their
+   predictions are small extrapolations; both pass.
 
 The pytest tests ask for less: the ratio within 8 %, and the factor equal to
 six decimals ([#259](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/259)).
