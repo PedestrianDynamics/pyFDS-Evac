@@ -1,6 +1,6 @@
 ---
 title: "Dynamic route rerouting"
-weight: 3
+weight: 4
 math: true
 ---
 

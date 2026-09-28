@@ -125,7 +125,7 @@ def test_a3_4_time_to_threshold_is_zero_when_already_met():
 
 
 def test_a3_5_probabilistic_heat_threshold_reproduces_lognormal_bands():
-    cfg = TenabilityConfig()  # heat_fed_threshold=1.0, heat_susceptibility_sigma=0.94
+    cfg = TenabilityConfig(heat_incapacitation_mode="probabilistic")
     rng = random.Random(24680)
     sigma = cfg.heat_susceptibility_sigma
 
@@ -166,7 +166,7 @@ def test_a3_5_gas_and_heat_threshold_draws_are_independent():
 
     from pyfds_evac.core.fed import sample_incapacitation_threshold
 
-    cfg = TenabilityConfig()
+    cfg = TenabilityConfig(heat_incapacitation_mode="probabilistic")
     n = 1000
     gas = [
         sample_incapacitation_threshold(cfg, random.Random(i ^ 0x5EED1))
@@ -209,7 +209,7 @@ def test_a3_5_gas_and_heat_threshold_draws_are_independent():
 
 
 def test_a3_6_threshold_draws_are_seed_reproducible():
-    cfg = TenabilityConfig()
+    cfg = TenabilityConfig(heat_incapacitation_mode="probabilistic")
     first = [
         sample_heat_incapacitation_threshold(cfg, random.Random(99)) for _ in range(50)
     ]

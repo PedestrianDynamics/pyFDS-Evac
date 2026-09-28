@@ -74,18 +74,39 @@ $$
 
 valid while the temperature is stable or increasing. The other computes the
 total heat flux to the skin from radiant and convective components (Eq. 63.49)
-and applies Eq. 63.43 to it. ISO 13571:2012 (§4.4) likewise assesses heat
-and radiant energy with an FED model analogous to the gas model. Note (not
-from the sources): a summed dose is interpretable only when both terms are
-taken for the same endpoint, for example incapacitation (*r* = 10) with
-Eq. 63.44; the radiant pain dose (*r* = 1.33) is a different endpoint.
+and applies Eq. 63.43 to it, with the dose *D* in place of *r*: 1.33 for
+pain, 10 for second-degree burns and severe incapacitation, 16.7 for
+third-degree burns and a potentially fatal exposure (p. 2384). ISO 13571:2012
+(§4.4) likewise assesses heat and radiant energy with an FED model analogous
+to the gas model.
+
+A summed dose is interpretable only when both terms are taken for the same
+endpoint. Ch. 63 pairs them as follows (pp. 2382–2384):
+
+| Endpoint | Radiant *r* (Eq. 63.43) | Convective law |
+|---|---|---|
+| Tolerance, severe pain | 1.33 | Eq. 63.45 |
+| Serious injury, incapacitation | 10 | Eq. 63.46 |
+| Fatal | 16.7 | Eq. 63.47 |
+
+Eq. 63.44 is labelled a time to incapacitation, but its times lie near the
+tolerance curve. Note (our arithmetic, not from the sources): at 100 °C it
+gives 7.9 min, against 12.3 min from Eq. 63.45 (tolerance) and 35.6 min from
+Eq. 63.46 (injury).
 
 ## Known limits
 
 Some cross-references in the text of Ch. 63 do not match the printed
 equation labels: the text calls the radiant equation "Equation 63.41" and the
 summed dose "Equation 63.46". The labels above are those printed beside each
-equation.
+equation. The caption of Table 63.21 says its rates follow Eq. 63.44, but the
+printed values (0.02, 0.19, 1.57 and 15.55 per minute at 65, 125, 220 and
+405 °C) are those of Eq. 63.45. The note under Eq. 63.48 says that
+\(t_{I\,\mathrm{rad}}\) tends to zero below 2.5 kW/m²; it is
+\(1/t_{I\,\mathrm{rad}}\) that does.
+The radiant tolerance data (Table 63.19) are incident flux on the skin,
+whereas Eq. 63.49 is written as a net exchange with the skin surface; at the
+200 °C anchor the two differ by about 20 %.
 The convective data concern hyperthermia in air of low humidity, and the
 radiant data concern bare skin: clothing changes both. None of these
 equations describe the effect of heat on walking speed or on route choice.
@@ -102,4 +123,4 @@ equations describe the effect of heat on walking speed or on route choice.
   fires*, §4.4. ISO, Geneva.
   [iso.org/standard/56172](https://www.iso.org/standard/56172.html).
 
-How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md#convective-heat).
+How pyFDS-Evac uses this: see [Models › Heat](/models/heat.md).

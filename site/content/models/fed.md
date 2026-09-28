@@ -55,18 +55,19 @@ species the sum reduces to the FDS+Evac default,
 FDS+Evac has no heat dose, so this one is opt-in: with `--enable-heat-fed`
 (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in the case, a separate
 heat dose accumulates at
-`_heat_fed_rate_per_minute` (`fed.py:207`),
+`_heat_fed_rate_per_minute` (`fed.py:208`),
 
 $$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
 $$
 
 with *T* in °C. It is a running total of its own, never added to the gas FED.
-The basis is on [Heat](/fundamentals/heat.md).
+The basis is on [Heat](/fundamentals/heat.md); the full specification,
+including its limits, is on [Models › Heat](/models/heat.md).
 
 ## Tenability: irritant slowdown and incapacitation
 
-`TenabilityConfig` (`fed.py:216`) adds two rules. The slowdown and the gas
+`TenabilityConfig` (`fed.py:231`) adds two rules. The slowdown and the gas
 stop need the gas FED model; the heat stop needs only the heat FED model
 (`run_config.py:246`–`256`).
 
@@ -90,7 +91,9 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   `probabilistic` mode each agent draws each threshold once, from the run's
   seed, as `_sample_threshold` does:
   \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
-  In `deterministic` mode every agent uses the threshold itself.
+  In `deterministic` mode every agent uses the threshold itself. The gas
+  dose is probabilistic by default and the heat dose deterministic, since no
+  population spread for heat is published.
 
 | Field | Default | CLI flag |
 |---|---|---|
@@ -101,7 +104,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 | `incapacitation_mode` | `"probabilistic"` | `--incapacitation-mode` |
 | `susceptibility_sigma` | `0.94` | `--susceptibility-sigma` |
 | `heat_fed_threshold` | `1.0` | `--heat-fed-threshold` |
-| `heat_incapacitation_mode` | `"probabilistic"` | `--heat-incapacitation-mode` |
+| `heat_incapacitation_mode` | `"deterministic"` | `--heat-incapacitation-mode` |
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
 | `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` | `--o2-threshold-percent` |
 
@@ -247,7 +250,7 @@ and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 > FED equations with *t* in seconds; the evidence is on
 > [Asphyxiant FED](/fundamentals/asphyxiant-fed.md).
 
-The irritant slowdown \(g\), when enabled (`fed.py:241`–`242`), is multiplied with the smoke
+The irritant slowdown \(g\), when enabled (`fed.py:261`–`262`), is multiplied with the smoke
 factor (`direct_steering_runtime.py:186`–`190`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
@@ -257,10 +260,11 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 \(g\) partly counts irritancy twice
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
-Heat uses the convective Eq. 63.44 only (`fed.py:207`), not the mid-humidity
+Heat uses the convective Eq. 63.44 only (`fed.py:208`), not the mid-humidity
 design form Eq. 63.45, and no radiant term. The log-normal σ of both
-thresholds (`fed.py:252`, `:260`) is, for the gas dose, a compromise between
+thresholds (`fed.py:272`, `:282`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)
 and [#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The
-heat dose reuses the same σ without a data basis.
+heat dose is deterministic by default; in `probabilistic` mode it reuses the
+same σ without a data basis.

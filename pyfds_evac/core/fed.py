@@ -281,11 +281,13 @@ class TenabilityConfig:
     susceptibility_sigma: float = 0.94
     enable_heat_incapacitation: bool = True
     heat_fed_threshold: float = 1.0
-    # Same log-normal mechanism as susceptibility_sigma above, applied to the
-    # independent heat FED track. Unlike the gas sigma (NIST TN 1797-backed),
-    # there is no published population-variance data for heat incapacitation;
-    # reusing 0.94 is a starting assumption, not a cited value.
-    heat_incapacitation_mode: str = "probabilistic"
+    # Heat is deterministic by default. SFPE Handbook 5th ed. Ch. 63 gives no
+    # population spread for heat tolerance; its only population figures are
+    # for radiant lethality (p. 2382). In "probabilistic" mode the heat track
+    # uses the same log-normal mechanism as the gas track, and the default
+    # sigma 0.94 is borrowed from the gas value, an assumption, not a cited
+    # value.
+    heat_incapacitation_mode: str = "deterministic"
     heat_susceptibility_sigma: float = 0.94
 
 
