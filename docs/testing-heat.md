@@ -3,7 +3,7 @@ title: "Heat dose in a uniform room"
 linkTitle: "Heat dose"
 weight: 15
 math: true
-aliases: [/docs/testing-heat/]
+aliases: [/docs/testing-heat/, /models/verification/testing-heat/]
 ---
 
 | | |
