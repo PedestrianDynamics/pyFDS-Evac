@@ -238,7 +238,12 @@ temperature without output is skipped.
 - **σ = 0.94 has no source for heat.** It is borrowed from the gas dose
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)). The
   probabilistic run checks the code path, not the spread.
-- **Convective heat only.** No radiant dose
+- **Convective heat only.** This room checks the convective laws; it does
+  not run `--heat-fed-method total-flux`. That method is checked against
+  hand formulas of Eqs. 63.49 and 63.43 on synthetic fields
+  (`tests/test_heat_total_flux.py`,
+  `tests/verification/test_heat_total_flux_coupled.py`). No radiant dose
+  from a layer or flame
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
   Below the threshold heat changes neither speed nor route
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).

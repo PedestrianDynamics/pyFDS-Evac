@@ -79,7 +79,7 @@ is not sampled, so its status is reported as unknown rather than flagged.
 `--heat-fed-method total-flux` (opt-in, with `--enable-heat-fed`; default
 `convective`, the laws above) replaces the convective laws with the
 total-flux form of spec 016 (`specs/016-heat-fed/SPEC.md`). The heat flux to
-the skin is Eq. 63.49 (p. 2384), `total_heat_flux_kw_m2`:
+the skin is Eq. 63.49 (p. 2383, symbols on p. 2384), `total_heat_flux_kw_m2`:
 
 $$
 q = \frac{\varepsilon\,\sigma\,(T_g^4 - T_s^4) + h\,(T_g - T_s)}{1000}
