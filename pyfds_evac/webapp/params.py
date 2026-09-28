@@ -265,12 +265,12 @@ _HELP_TEXT: dict[str, str] = {
     "dose. 20.0 as in FDS+Evac; 19.5 is the OSHA limit Pathfinder uses.",
     "enable_heat_fed": "Accumulate a heat dose from the FDS temperature slice and let it "
     "incapacitate. Off by default, as FDS+Evac has no heat dose.",
-    "heat_incapacitation_mode": "Same idea as toxic-dose mode, but for heat: probabilistic draws a "
-    "per-agent tolerance, deterministic gives everyone the same one. "
+    "heat_incapacitation_mode": "Same idea as toxic-dose mode, but for heat: deterministic (default) "
+    "gives everyone the same tolerance, probabilistic draws one per agent. "
     "Independent of the toxic-gas track.",
-    "heat_susceptibility_sigma": "Spread of how differently people tolerate heat exposure. Reuses the "
-    "toxic-gas default as a starting assumption — there's no published "
-    "population data for heat specifically.",
+    "heat_susceptibility_sigma": "Spread of how differently people tolerate heat exposure, used "
+    "only in probabilistic heat mode. Reuses the toxic-gas default as an "
+    "assumption — there's no published population data for heat.",
     "heat_fed_threshold": "Heat dose (SFPE Handbook Eq. 63.44) at which a typical person is thermally "
     "incapacitated — tracked separately from toxic gas dose; 1.0 is the "
     "standard tenability limit.",

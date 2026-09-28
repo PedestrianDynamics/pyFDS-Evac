@@ -256,3 +256,11 @@ def test_page_quotes_code_default(page, literal, code_value):
     assert quoted == pytest.approx(float(code_value())), (
         f"{page.name} quotes {quoted} in {literal!r}, the code has {code_value()}"
     )
+
+
+def test_heat_incapacitation_is_deterministic_by_default():
+    """No published spread exists for heat, so heat defaults to one threshold."""
+    literal = '| `heat_incapacitation_mode` | `"deterministic"` |'
+    assert literal in FED.read_text()
+    assert TenabilityConfig().heat_incapacitation_mode == "deterministic"
+    assert _cli().heat_incapacitation_mode == "deterministic"

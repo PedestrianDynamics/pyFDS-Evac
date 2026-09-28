@@ -29,13 +29,17 @@ See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/ge
   1.2 m/s.
 - The convective heat dose is off by default. `--enable-heat-fed` turns it on;
   before, it was on whenever the FDS output had a `TEMPERATURE` slice.
+- Heat incapacitation is deterministic by default: every agent stops at
+  `--heat-fed-threshold`. No population spread for heat is published; the
+  log-normal draw with σ = 0.94, borrowed from the gas dose, is opt-in with
+  `--heat-incapacitation-mode probabilistic`.
 
 **Migration.** To reproduce results from earlier pyFDS-Evac versions, pass
 `--smoke-slice-height 2.0 --enable-fic-speed --o2-threshold-percent 19.5
---enable-heat-fed` to `run.py` (or set the matching `opts` attributes), and
+--enable-heat-fed --heat-incapacitation-mode probabilistic` to `run.py` (or set the matching `opts` attributes), and
 give every spawn area `"use_premovement": false` and `"v0": 1.2` unless it
 already sets them. Python callers that build the models themselves pass
-`TenabilityConfig(enable_fic_speed=True)`,
+`TenabilityConfig(enable_fic_speed=True, heat_incapacitation_mode="probabilistic")`,
 `DefaultFedConfig(o2_threshold_percent=19.5, slice_height_m=2.0)`, and
 `slice_height_m=2.0` to `SmokeSpeedConfig`, `ExtinctionField.from_fds`,
 `FdsHeatField.from_fds` and `VisibilityModel`; a heat dose needs a

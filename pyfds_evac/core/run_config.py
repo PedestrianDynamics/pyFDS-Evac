@@ -249,7 +249,7 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     mode = getattr(opts, "incapacitation_mode", "probabilistic")
     sigma = getattr(opts, "susceptibility_sigma", 0.94)
     heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
-    heat_mode = getattr(opts, "heat_incapacitation_mode", "probabilistic")
+    heat_mode = getattr(opts, "heat_incapacitation_mode", "deterministic")
     heat_sigma = getattr(opts, "heat_susceptibility_sigma", 0.94)
     fic_speed = fed_model is not None and getattr(opts, "enable_fic_speed", False)
     log(

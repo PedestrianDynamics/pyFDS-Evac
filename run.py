@@ -227,9 +227,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--heat-incapacitation-mode",
         choices=("probabilistic", "deterministic"),
-        default="probabilistic",
+        default="deterministic",
         help="Same semantics as --incapacitation-mode, applied to the "
-        "independent heat FED track (default: probabilistic)",
+        "independent heat FED track (default: deterministic, as no "
+        "population spread for heat is published)",
     )
     parser.add_argument(
         "--heat-susceptibility-sigma",
