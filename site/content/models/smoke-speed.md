@@ -28,7 +28,7 @@ into a speed factor *f* [-], selected by `SmokeSpeedConfig.speed_law`
 
 - **`"fridolf"`**, `speed_factor_from_extinction_fridolf`: Eq. 7 of
   [Fridolf et al. (2019)](https://doi.org/10.1016/j.tust.2019.04.016)
-  (method 3; first presented in Fridolf et al. 2018), with \(V = C/K\) [m] and the agent's
+  (method 3; also in Fridolf et al. 2018, a summary of their 2016 SP report), with \(V = C/K\) [m] and the agent's
   smoke-free speed \(v_0\) [m/s],
 
   $$

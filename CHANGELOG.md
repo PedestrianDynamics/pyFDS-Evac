@@ -11,7 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Breaking.** `speed_law="fridolf"` now implements Eq. 7 (method 3) of
   Fridolf, Ronchi, Nilsson & Frantzich (2019),
   [doi:10.1016/j.tust.2019.04.016](https://doi.org/10.1016/j.tust.2019.04.016),
-  first presented in Fridolf et al. (2018, SFPE extended abstract):
+  also in Fridolf et al. (2018, SFPE extended abstract), a summary of their
+  2016 SP report:
   w = min(v₀, max(0.2, v₀ − 0.34 (3 − V))) with V = C/K. C = 3 is the
   coded FDS default; the 2019 paper used A = 2 for reflecting targets. The
   reduction is additive with an absolute 0.2 m/s floor, and speed is

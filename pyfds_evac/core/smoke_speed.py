@@ -262,8 +262,8 @@ def speed_factor_from_extinction_fridolf(
     floor is an absolute 0.2 m/s.  The default w_free = 1 m/s is method 1.
 
     Fridolf, Ronchi, Nilsson & Frantzich (2019), TUST 90:28-41, Eq. 7
-    (method 3; first presented in Fridolf et al. 2018, SFPE extended
-    abstract).  The 2019 paper used A = 2 (reflecting) or 8 (emitting);
+    (method 3; also in Fridolf et al. 2018, SFPE extended abstract, a
+    summary of their 2016 SP report).  The 2019 paper used A = 2 (reflecting) or 8 (emitting);
     C = 3 is the FDS default, C = 2 matches the calibration.
 
     Properties:
