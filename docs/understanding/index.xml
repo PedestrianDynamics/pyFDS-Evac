@@ -452,10 +452,11 @@ About half of the agents therefore stop below FED = 1, and about 10 % stop
 below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>). The
-heat dose uses the same mechanism, and its spread is reused from the gas value
-without a data basis of its own. FDS+Evac stops
+heat dose, which FDS+Evac does not have, is deterministic by default: no
+population spread for heat is published. Its &lt;code>probabilistic&lt;/code> mode reuses the
+gas spread without a data basis of its own. FDS+Evac stops
 every agent at FED = 1. For results comparable with FDS+Evac, run with
-&lt;code>--incapacitation-mode deterministic&lt;/code> (and &lt;code>--heat-incapacitation-mode deterministic&lt;/code> for the heat dose).&lt;/p>
+&lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/p>
 &lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
 &lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
 run ends early only when no agent is left, so a run in which any agent is
@@ -481,7 +482,9 @@ reached an exit.&lt;/p>
 McAllister (SFPE Handbook, 5th ed., Eq. 63.44), computed from the gas
 temperature of an FDS &lt;code>TEMPERATURE&lt;/code> slice. Radiant heat flux is not read and
 does not contribute to any dose. An agent near a flame or under a hot layer
-that radiates strongly is therefore treated as less exposed than it is.&lt;/p>
+that radiates strongly is therefore treated as less exposed than it is. A
+total-heat-flux dose is designed in &lt;code>specs/016-heat-fed/SPEC.md&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223" target="_blank" rel="noopener">#223&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
 opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
 incapacitated when either dose reaches its threshold. Before that point, heat
