@@ -50,7 +50,10 @@ Tolerances. The CSV carries 8 significant digits, so Eq. 22.35 holds to
 1e-5 kW/m2 (measured residual 1e-7 in a calibration run). The ray effect of
 the 100 default radiation angles moved q/U in an isotropic 300 C sooty room
 by up to 5 % from 1/4 and U by up to 3 % from 4 sigma T^4 (tester calibration
-run, 4 x 4 x 3 m, 0.2 m cells); the bands below are twice that.
+run, 4 x 4 x 3 m, 0.2 m cells); ISO_BAND and BOUND_BAND are twice that. The
+uniform deck at 0.1 m cells gives at most 0.3 % (q/U) and 0.2 % (U), so its
+check uses UNIFORM_BAND = 1 %. Leaving out sigma T_gauge^4 when inverting
+Eq. 22.36 would move q/U there by about 8 %, which this band catches.
 """
 
 from __future__ import annotations
@@ -80,6 +83,7 @@ H_GAUGE = 8.0  # HEAT_TRANSFER_COEFFICIENT, issue #224
 HEIGHTS = (1.6, 1.8)
 EQ_22_35_ABS = 1e-5  # kW/m2
 ISO_BAND = 0.1  # relative, around 1/4 and 4 sigma T^4
+UNIFORM_BAND = 0.01  # relative, uniform deck: 1/4 and 4 sigma T^4
 BOUND_BAND = 0.1  # relative slack on q <= U for the ray effect
 T_SETTLE = 1.0  # s; FDS writes the first radiation solution after t = 0
 
@@ -449,23 +453,26 @@ def test_incident_flux_is_between_zero_and_u(kind):
     for pos, o, q, u, _ in plates:
         assert np.all(q >= -BOUND_BAND * u), (pos, o)
         assert np.all(q <= (1 + BOUND_BAND) * u), (pos, o)
-    by_pos = {}
-    for pos, o, q, u, _ in plates:
-        by_pos.setdefault(pos, []).append((o, q, u))
-    for pos, ps in by_pos.items():
-        for o1, q1, u in ps:
-            for o2, q2, _ in ps:
-                if np.allclose(o1, -o2):
-                    assert np.all(q1 + q2 <= (1 + BOUND_BAND) * u), (pos, o1)
+    pairs = [
+        (p1, o1, q1 + q2, u)
+        for p1, o1, q1, u, _ in plates
+        for p2, o2, q2, _, _ in plates
+        if p1 == p2 and np.allclose(o1, -o2)
+    ]
+    assert pairs
+    for pos, o, q_sum, u in pairs:
+        assert np.all(q_sum <= (1 + BOUND_BAND) * u), (pos, o)
 
 
 def test_uniform_room_gives_a_quarter_of_u():
     """Isotropic field: q = U/4 for every orientation, U = 4 sigma T^4."""
     nml, dev = _output("uniform")
     for pos, o, q, u, t in _plates(nml, dev):
-        np.testing.assert_allclose(q / u, 0.25, rtol=ISO_BAND, err_msg=str((pos, o)))
+        np.testing.assert_allclose(
+            q / u, 0.25, rtol=UNIFORM_BAND, err_msg=str((pos, o))
+        )
         black = 4 * SIGMA * (t + 273.15) ** 4 / 1000.0
-        np.testing.assert_allclose(u, black, rtol=ISO_BAND, err_msg=str(pos))
+        np.testing.assert_allclose(u, black, rtol=UNIFORM_BAND, err_msg=str(pos))
 
 
 def test_under_the_layer_the_crown_sees_more_than_the_face():
@@ -524,3 +531,77 @@ def test_script_flux_ratio(q_over_i, u_over_i, expected):
     radiometer = q_over_i * intensity - SIGMA * (T_SKIN_C + 273.15) ** 4 / 1000.0
     got = mod.flux_ratio(radiometer, u_over_i * intensity, T_SKIN_C)
     assert got == pytest.approx(expected, rel=1e-12)
+
+
+T_AMB_C = 20.0  # TMPA of the decks
+
+
+def _black_kw(t_c):
+    return SIGMA * (t_c + 273.15) ** 4 / 1000.0
+
+
+@pytest.mark.parametrize(
+    "case, expected",
+    [
+        ("isotropic_hot", 0.25),  # whole field black at T, any plate
+        ("upper_hot_facing_up", 0.5),  # hot upper hemisphere, ambient below
+        ("upper_hot_facing_down", 0.0),  # same field, plate sees ambient only
+        ("beam", 1.0),  # ambient field plus a beam F, plate face-on
+    ],
+)
+def test_script_excess_ratio(case, expected):
+    """excess_ratio = (q - sigma Ta^4) / (U - 4 sigma Ta^4), Ta = 20 C.
+
+    Hand values (T = 300 C, Ta = 20 C, beam F = 7 kW/m2):
+    isotropic: q = sigma T^4, U = 4 sigma T^4;
+    hot upper hemisphere: U = 2 sigma T^4 + 2 sigma Ta^4, q = sigma T^4 up,
+    sigma Ta^4 down; beam: q = sigma Ta^4 + F, U = 4 sigma Ta^4 + F.
+    """
+    mod = _script()
+    hot, amb, beam = _black_kw(300.0), _black_kw(T_AMB_C), 7.0
+    q, u = {
+        "isotropic_hot": (hot, 4 * hot),
+        "upper_hot_facing_up": (hot, 2 * hot + 2 * amb),
+        "upper_hot_facing_down": (amb, 2 * hot + 2 * amb),
+        "beam": (amb + beam, 4 * amb + beam),
+    }[case]
+    radiometer = q - _black_kw(T_SKIN_C)  # Eq. 22.36, eps = 1
+    got = mod.excess_ratio(radiometer, u, T_SKIN_C)
+    assert got == pytest.approx(expected, rel=1e-12, abs=1e-12)
+
+
+def _synthetic_devc(n_points):
+    """Devices named as in the decks; point i has U = 10 i and, per facing,
+    q/U = share over two time steps whose q values average to share * U."""
+    shares = {"up": 0.5, "px": 0.25, "mx": 0.2, "dn": 0.1}
+    dev = {}
+    for tag in ("z16", "z18"):
+        for i in range(1, n_points + 1):
+            u = 10.0 * i
+            dev[f"U_{tag}-{i}"] = np.array([u, u])
+            for face, share in shares.items():
+                q = share * u * np.array([0.9, 1.1])
+                dev[f"RAD_{tag}_{face}-{i}"] = q - _black_kw(T_SKIN_C)
+    return dev, shares
+
+
+def test_script_summarize():
+    """Rows per height and facing; points matched by number (1..11, so that
+    '10' does not sort before '2'); each point is its time mean."""
+    mod = _script()
+    n = 11
+    dev, shares = _synthetic_devc(n)
+    rows = mod.summarize(dev)
+    assert [(z, f) for z, f, _, _ in rows] == [
+        (z, f) for z in (1.6, 1.8) for f in ("up", "px", "mx", "dn")
+    ]
+    amb = _black_kw(T_AMB_C)
+    u = 10.0 * np.arange(1, n + 1)
+    for _, face, ratio, excess in rows:
+        share = shares[face]
+        np.testing.assert_allclose(ratio, np.full(n, share), rtol=1e-12)
+        # q is linear in time, so the time mean of the excess ratio is the
+        # ratio at the mean q.
+        np.testing.assert_allclose(
+            excess, (share * u - amb) / (u - 4 * amb), rtol=1e-12
+        )
