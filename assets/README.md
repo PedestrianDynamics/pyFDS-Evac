@@ -31,6 +31,7 @@ rest) is untracked. See the ignore rules in [`.gitignore`](../.gitignore).
 | `iso_table21_coupled` | ISO 20414 Table 21 (Test 18, reduced visibility vs speed), coupled to a real FDS extinction slice instead of a constant `K`. | deck | [README](iso_table21_coupled/README.md), [test_iso_table21_coupled.py](../tests/test_iso_table21_coupled.py) |
 | `iso_table22_coupled` | ISO 20414 Table 22 (Test 19, occupant incapacitation), four cases coupled to real FDS gas output instead of stubbed values. | deck | [README](iso_table22_coupled/README.md), [test_iso_table22_coupled.py](../tests/test_iso_table22_coupled.py) |
 | `station_fahy` | The 2003 Station nightclub, walkable area traced by hand from the floor plan (`station_fahy/source`, rebuilt by `build_scenario.py`), with the routing/spawn config validated against Fahy, Proulx & Flynn (2011)'s witness-statement door shares. | no | [scripts/sweep_queue_weight.py](../scripts/sweep_queue_weight.py), [`assets/station_fahy/validate.py`](station_fahy/validate.py) |
+| `Haspel` | BUW Campus Haspel, Gebäude HC ground floor (`BUW_Geometrie_EG.wkt`), 300 agents, for a model-to-model comparison with a PathFinder student study. Not a valid comparison yet: known asset problems in [#131](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/131) and [#132](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/132). Unrelated to the retired lowercase `haspel` below. | deck | [README](Haspel/README.md) |
 
 What each one proves, and where that proof is checked, is in the
 [docs/assets.md](../docs/assets.md).

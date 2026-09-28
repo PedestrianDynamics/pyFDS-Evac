@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `assets/Haspel`: the BUW Campus Haspel ground floor with an FDS deck, for
+  a model-to-model comparison with a PathFinder student study. Not yet a
+  valid comparison; see `assets/Haspel/README.md`
+  ([#134](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/134)).
+
 ### Changed
 
 - **Breaking.** `speed_law="fridolf"` now implements Eq. 7 (method 3) of
