@@ -4,7 +4,7 @@ import logging
 import math
 from dataclasses import dataclass
 
-from .fds_sampling import SliceFieldSampler, load_slice_sampler
+from .fds_sampling import SliceFieldSampler, _slice_z_mid, load_slice_sampler
 
 _logger = logging.getLogger(__name__)
 
@@ -354,6 +354,10 @@ HEAT_FLUX_ASSUMED_PARAMETERS = (
 # INTEGRATED INTENSITY slice, with f given by the user (no default).
 HEAT_RADIANT_SOURCES = ("gas", "integrated-intensity")
 HEAT_U_FACTOR_RANGE = (0.25, 1.0)  # sphere / isotropic field .. source face-on
+# Largest z difference [m] accepted between the TEMPERATURE and INTEGRATED
+# INTENSITY slices: a numerical tolerance only. FDS moves every slice at one
+# PBZ to the same grid plane, so slices meant for one height share their z.
+HEAT_SLICE_Z_TOLERANCE_M = 1e-6
 
 
 def radiant_flux_from_integrated_intensity_kw_m2(
@@ -979,6 +983,7 @@ class FdsHeatField:
                 simulation=simulation,
                 slice_height_m=slice_height_m,
             )
+            _check_same_slice_height(sampler, intensity_sampler, fds_dir)
         field = cls(sampler, intensity_sampler=intensity_sampler)
         field.fds_dir = str(fds_dir)
         return field
@@ -990,24 +995,65 @@ class FdsHeatField:
         the gas volume-fraction slices sampled by ``FdsFedField`` this needs
         no unit conversion.
         """
-        intensity = self._sample_intensity(time_s, x, y)
-        try:
-            temperature_celsius = self._sampler.sample(time_s, x, y)
-        except ValueError:
-            return HeatFedInputs(integrated_intensity_kw_m2=intensity)
+        temperature_celsius = _sample_or_none(self._sampler, time_s, x, y)
+        if self._intensity_sampler is None:
+            if temperature_celsius is None:
+                return HeatFedInputs()
+            return HeatFedInputs(temperature_celsius=temperature_celsius)
+        intensity = _sample_or_none(self._intensity_sampler, time_s, x, y)
+        _check_same_coverage(temperature_celsius, intensity, x, y)
+        if temperature_celsius is None:
+            # Outside the FDS domain: no U, so no radiant dose.
+            return HeatFedInputs(integrated_intensity_kw_m2=math.nan)
         return HeatFedInputs(
             temperature_celsius=temperature_celsius,
             integrated_intensity_kw_m2=intensity,
         )
 
-    def _sample_intensity(self, time_s: float, x: float, y: float) -> float | None:
-        """Return U in kW/m2 (FDS native unit); None without a sampler."""
-        if self._intensity_sampler is None:
-            return None
-        try:
-            return self._intensity_sampler.sample(time_s, x, y)
-        except ValueError:
-            return math.nan
+
+def _sample_or_none(sampler: SliceFieldSampler, time_s: float, x, y) -> float | None:
+    """Return the sampled value, or None outside the slice."""
+    try:
+        return sampler.sample(time_s, x, y)
+    except ValueError:
+        return None
+
+
+def _check_same_coverage(temperature: float | None, intensity: float | None, x, y):
+    """Raise ValueError when only one of TEMPERATURE and U covers the point.
+
+    U is a required input of this source: a hole in one slice under a valid
+    sample of the other must not turn into a zero or partial dose.
+    """
+    if (temperature is None) == (intensity is None):
+        return
+    have, missing = ("TEMPERATURE", "INTEGRATED INTENSITY")
+    if temperature is None:
+        have, missing = missing, have
+    raise ValueError(
+        f"Point ({x}, {y}) lies in the {have} slice but outside the {missing} "
+        "slice; the heat FED needs both at every agent."
+    )
+
+
+def _check_same_slice_height(
+    temperature: SliceFieldSampler, intensity: SliceFieldSampler, fds_dir: str
+) -> None:
+    """Raise ValueError unless both slices lie at the same z.
+
+    Each slice is chosen as the one nearest the requested height, so the two
+    can differ; radiation and convection must come from one height.
+    """
+    z_t = _slice_z_mid(temperature._slice)
+    z_u = _slice_z_mid(intensity._slice)
+    if abs(z_t - z_u) <= HEAT_SLICE_Z_TOLERANCE_M:
+        return
+    raise ValueError(
+        f"The TEMPERATURE slice in {fds_dir} is at z={z_t:.3f} m but the "
+        f"nearest INTEGRATED INTENSITY slice is at z={z_u:.3f} m; the heat "
+        "FED needs both at the same height. Add "
+        f"`&SLCF PBZ={z_t:g}, QUANTITY='INTEGRATED INTENSITY' /` to the case."
+    )
 
 
 class DefaultHeatFedModel:

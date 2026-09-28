@@ -235,6 +235,89 @@ def test_field_without_intensity_sampler_reports_none():
     assert inputs.integrated_intensity_kw_m2 is None
 
 
+class _Outside:
+    """Duck-typed sampler for a point its slice does not cover."""
+
+    def sample(self, time_s, x, y):
+        raise ValueError(f"Point ({x}, {y}) is outside the sampled FDS slice domain")
+
+
+def test_field_rejects_missing_intensity_where_temperature_exists():
+    """U is a required input of this source: a hole in the U slice under a
+    valid TEMPERATURE sample must not become a zero dose."""
+    field = FdsHeatField(_Sampler(200.0), intensity_sampler=_Outside())  # type: ignore[arg-type,call-arg]
+    with pytest.raises(ValueError, match="INTEGRATED INTENSITY"):
+        field.sample_inputs(0.0, 0.5, 0.5)
+
+
+def test_field_rejects_temperature_missing_where_intensity_exists():
+    field = FdsHeatField(_Outside(), intensity_sampler=_Sampler(12.5))  # type: ignore[arg-type,call-arg]
+    with pytest.raises(ValueError, match="TEMPERATURE"):
+        field.sample_inputs(0.0, 0.5, 0.5)
+
+
+def test_model_rejects_missing_intensity_with_hot_gas():
+    """Reviewer case: 200 deg C gas, no U. Convection alone gives a positive
+    rate (hand value below), so a silent zero would be wrong."""
+    h, t_s = 5.0, 35.0
+    q_conv = h * (200.0 - t_s) / 1000.0
+    assert 1.0 / t_hand_min(q_conv, DOSE["fatal"]) == pytest.approx(0.046454, rel=1e-4)
+    model = DefaultHeatFedModel(
+        FdsHeatField(_Sampler(200.0), intensity_sampler=_Outside()),  # type: ignore[arg-type,call-arg]
+        DefaultFedConfig(fds_dir="", update_interval_s=1.0),
+        method="total-flux",
+        convective_coefficient=h,
+        skin_temperature_celsius=t_s,
+        radiant_source="integrated-intensity",  # type: ignore[call-arg]
+        u_factor=0.5,  # type: ignore[call-arg]
+    )
+    with pytest.raises(ValueError, match="INTEGRATED INTENSITY"):
+        model.sample_rate(0.0, 0.5, 0.5)
+
+
+def test_field_outside_both_slices_keeps_the_domain_fallback():
+    """Outside the FDS domain (neither slice covers the point): 20 deg C and a
+    non-finite U, as before; no error."""
+    inputs = FdsHeatField(_Outside(), intensity_sampler=_Outside()).sample_inputs(  # type: ignore[arg-type,call-arg]
+        0.0, 9.0, 9.0
+    )
+    assert inputs.temperature_celsius == 20.0
+    assert math.isnan(inputs.integrated_intensity_kw_m2)
+
+
+def _fake_simulation(heights_by_quantity):
+    """fdsreader-like case holding horizontal slices at the given z."""
+
+    def slc(z):
+        extent = SimpleNamespace(z_start=z, z_end=z)
+        return SimpleNamespace(orientation=3, extent=extent, subslices=[])
+
+    slices = {q: [slc(z) for z in zs] for q, zs in heights_by_quantity.items()}
+    return SimpleNamespace(
+        slices=SimpleNamespace(filter_by_quantity=lambda q: slices.get(q, []))
+    )
+
+
+def test_field_rejects_intensity_slice_at_another_height():
+    """Reviewer case: TEMPERATURE at 1.6 m, U only at 1.2 m. Both are within
+    the 0.5 m warning distance of the requested 1.6 m, but radiation and
+    convection would come from different heights of a stratified room."""
+    sim = _fake_simulation({"TEMPERATURE": [0.4, 1.6], "INTEGRATED INTENSITY": [1.2]})
+    with pytest.raises(ValueError, match="height"):
+        FdsHeatField.from_fds(  # type: ignore[call-arg]
+            "case", slice_height_m=1.6, simulation=sim, integrated_intensity=True
+        )
+
+
+def test_field_accepts_intensity_slice_at_the_temperature_height():
+    sim = _fake_simulation(
+        {"TEMPERATURE": [0.4, 1.6], "INTEGRATED INTENSITY": [1.2, 1.6]}
+    )
+    FdsHeatField.from_fds(  # type: ignore[call-arg]
+        "case", slice_height_m=1.6, simulation=sim, integrated_intensity=True
+    )
+
+
 # --- model --------------------------------------------------------------------
 
 
