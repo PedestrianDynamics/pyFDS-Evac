@@ -77,8 +77,9 @@ $$
 - **FDS:** a sealed 30 × 30 × 3 m room, no fire, no species, adiabatic on
   all six faces, four meshes. At *t* = 0 the whole room is set to 100, 150
   or 200 °C, and the ambient temperature `TMPA` is set to the same value, so
-  the walls and the radiation field start at the gas temperature. `TEMPERATURE` slices at 1.5 m, the one nearest the 1.6 m
-  sampling height on this 0.5 m grid.
+  the walls and the radiation field start at the gas temperature.
+  `TEMPERATURE` slices at 1.5 m, the one nearest the 1.6 m sampling height
+  on this 0.5 m grid.
 - **Agents:** 100 agents walk a loop between four corner checkpoints and
   never leave. Each agent's temperature is sampled every second. Seed 42
   (the default `baseSeed`).
@@ -181,8 +182,9 @@ and on the closed form at the deck value (◆), up to the 1 s update.
 ## Run it yourself
 
 The FDS slices are not in the repository (65 MB per deck); only FDS's
-device output `*_devc.csv` is, under `assets/fed_incap_heat_<T>c/fds/`. Either get it
-from the project's data folder (`fds-evac-data/fed_incap_heat_<T>c/fds/`),
+device output `*_devc.csv` is, under `assets/fed_incap_heat_<T>c/fds/`.
+Either get the slices from the project's data folder
+(`fds-evac-data/fed_incap_heat_<T>c/fds/`),
 or rerun FDS outside the repository, about one minute per deck on four
 cores:
 
