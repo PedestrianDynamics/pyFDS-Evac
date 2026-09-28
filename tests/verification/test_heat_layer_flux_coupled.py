@@ -61,8 +61,6 @@ T_LAYER = 300.0
 LAYER_HEIGHT = 2.4
 PARAMS = dict(eps=0.5, h=5.0, t_skin_c=35.0, phi=0.5, eps_l=0.9)
 
-XFAIL = pytest.mark.xfail(reason="#222", strict=True)
-
 
 def radiant(t_c, t_skin_c):
     return SIGMA * ((t_c + KELVIN) ** 4 - (t_skin_c + KELVIN) ** 4) / 1000.0
@@ -161,7 +159,6 @@ def test_layer_case_is_distinguishable_from_smoke_and_double_counting():
 # --- coupled runs -------------------------------------------------------------
 
 
-@XFAIL
 def test_layer_crossing():
     result = _run(130.0)
     try:
@@ -177,7 +174,6 @@ def test_layer_crossing():
         result.cleanup()
 
 
-@XFAIL
 def test_outputs_record_the_layer_regime():
     q = q_layer()
     result = _run(20.0)
@@ -195,5 +191,24 @@ def test_outputs_record_the_layer_regime():
         assert recorded["view_factor"] == PARAMS["phi"]
         assert recorded["layer_emissivity"] == PARAMS["eps_l"]
         assert recorded["layer_height_m"] == LAYER_HEIGHT
+    finally:
+        result.cleanup()
+
+
+def test_fed_history_csv_has_the_layer_column(tmp_path):
+    """run.py's CSV writer accepts the layer-regime rows (DictWriter raises
+    on a key missing from its fieldnames)."""
+    import csv
+
+    import run
+
+    result = _run(5.0)
+    try:
+        out = tmp_path / "fed.csv"
+        run._write_fed_history_csv(result.fed_history, str(out))
+        with out.open(encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        assert rows
+        assert float(rows[0]["heat_layer_temperature_c"]) == pytest.approx(T_LAYER)
     finally:
         result.cleanup()

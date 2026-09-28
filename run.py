@@ -18,6 +18,7 @@ from pyfds_evac.core.fed import (
     DEFAULT_HEAT_SKIN_TEMPERATURE_C,
     HEAT_ENDPOINTS,
     HEAT_FED_METHODS,
+    HEAT_FLUX_REGIMES,
 )
 from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs
@@ -271,6 +272,40 @@ def _build_parser() -> argparse.ArgumentParser:
         "by the Handbook for Eq. 63.49)",
     )
     parser.add_argument(
+        "--heat-regime",
+        choices=HEAT_FLUX_REGIMES,
+        default="smoke",
+        help="Where the head is, for --heat-fed-method total-flux; a user "
+        "choice, no automatic rule. smoke (default): head in smoke, Eq. 63.49 "
+        "at the head. layer: head in clear air below a hot layer, convection at "
+        "the head plus the net layer flux phi*eps_L*sigma*(T_L^4 - T_s^4) from "
+        "a TEMPERATURE slice at --heat-layer-height, with no radiant term of "
+        "the gas at the head; needs --heat-layer-height, --heat-view-factor and "
+        "--heat-layer-emissivity",
+    )
+    parser.add_argument(
+        "--heat-layer-height",
+        type=float,
+        default=None,
+        help="Height [m] of the TEMPERATURE slice read as the hot layer for "
+        "--heat-regime layer (no default: it depends on the ceiling height)",
+    )
+    parser.add_argument(
+        "--heat-view-factor",
+        type=float,
+        default=None,
+        help="View factor phi in [0, 1] from the skin to the layer for "
+        "--heat-regime layer (no default: about 1 for the crown, about 0.5 "
+        "for the face, spec 016, unsourced)",
+    )
+    parser.add_argument(
+        "--heat-layer-emissivity",
+        type=float,
+        default=None,
+        help="Layer emissivity eps_L in [0, 1] for --heat-regime layer (no "
+        "default: no sourced value)",
+    )
+    parser.add_argument(
         "--heat-fed-threshold",
         type=float,
         default=1.0,
@@ -372,6 +407,8 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         fieldnames += ["heat_endpoint", "heat_outside_validity", "heat_humidity"]
     if rows and "heat_flux_kw_m2" in rows[0]:
         fieldnames.append("heat_flux_kw_m2")
+    if rows and "heat_layer_temperature_c" in rows[0]:
+        fieldnames.append("heat_layer_temperature_c")
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()

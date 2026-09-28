@@ -36,7 +36,7 @@ The rate is Eq. 63.43, q^1.33 / D, as in ``tests/test_heat_total_flux.py``.
 Expected values are hand formulas written in this file and the Handbook's
 200 deg C / 2.5 kW/m2 anchor, never ``pyfds_evac``.
 
-API under test (tests needing it are strict xfail, reason "#222"):
+API under test:
 
 - ``pyfds_evac.core.fed.layer_radiant_flux_kw_m2(layer_temperature_celsius,
   *, view_factor, layer_emissivity, skin_temperature_celsius) -> float``:
@@ -78,8 +78,6 @@ KELVIN = 273.15
 EXPONENT = 1.33  # Eq. 63.43 prints 1.33
 # Fatal: spec 016 maintainer decision, D = 16.667 (the Handbook prints 16.7).
 DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.667}
-
-XFAIL = pytest.mark.xfail(reason="#222", strict=True)
 
 
 # --- hand formulas ----------------------------------------------------------
@@ -226,7 +224,6 @@ def test_total_flux_without_regime_is_the_smoke_formula(t_c, eps, h, t_skin_c):
 # --- q_ext -----------------------------------------------------------------
 
 
-@XFAIL
 @pytest.mark.parametrize(
     ("t_l", "phi", "eps_l", "t_skin_c"),
     [
@@ -245,7 +242,6 @@ def test_layer_flux_formula(t_l, phi, eps_l, t_skin_c):
     )
 
 
-@XFAIL
 def test_layer_flux_reproduces_the_200_c_anchor():
     """p. 2382 through the code: black layer at 200 deg C, phi = 1."""
     got = _q_ext(
@@ -254,7 +250,6 @@ def test_layer_flux_reproduces_the_200_c_anchor():
     assert got == pytest.approx(2.5, rel=0.15)
 
 
-@XFAIL
 def test_layer_flux_face_is_half_the_crown():
     kwargs = dict(layer_emissivity=0.9, skin_temperature_celsius=35.0)
     crown = _q_ext(300.0, view_factor=1.0, **kwargs)
@@ -262,7 +257,6 @@ def test_layer_flux_face_is_half_the_crown():
     assert face == pytest.approx(0.5 * crown, rel=1e-12)
 
 
-@XFAIL
 def test_layer_flux_sign():
     """Zero at skin temperature; a layer cooler than the skin gives a
     negative net flux (it is not clipped here)."""
@@ -274,7 +268,6 @@ def test_layer_flux_sign():
 # --- the model in the layer regime ------------------------------------------
 
 
-@XFAIL
 @pytest.mark.parametrize("name", sorted(DOSE))
 @pytest.mark.parametrize(
     ("t_head", "t_layer", "phi", "eps_l", "h", "t_skin_c"),
@@ -299,7 +292,6 @@ def test_model_layer_rate(name, t_head, t_layer, phi, eps_l, h, t_skin_c):
     assert got == pytest.approx(rate_hand(q, DOSE[name]), rel=1e-9)
 
 
-@XFAIL
 @pytest.mark.parametrize("eps", [0.05, 0.5, 0.9])
 def test_layer_regime_has_no_radiant_term_of_the_gas_at_the_head(eps):
     """Double counting (#222): with T_g = T_L = 250 deg C, phi = eps_L = 1,
@@ -311,7 +303,6 @@ def test_layer_regime_has_no_radiant_term_of_the_gas_at_the_head(eps):
     assert got < 0.99 * rate_hand(doubled, DOSE["fatal"])
 
 
-@XFAIL
 def test_layer_regime_reads_the_layer_field_for_the_layer_term():
     """Swap check: head 60 deg C, layer 300 deg C. A model that takes the
     layer temperature for convection, or the head temperature for the layer
@@ -324,7 +315,6 @@ def test_layer_regime_reads_the_layer_field_for_the_layer_term():
     assert got == pytest.approx(rate_hand(q, DOSE["fatal"]), rel=1e-9)
 
 
-@XFAIL
 def test_smoke_regime_ignores_a_layer_field():
     """regime="smoke" with a layer field and phi, eps_L given: #223 formula."""
     q = q_smoke_hand(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
@@ -332,7 +322,6 @@ def test_smoke_regime_ignores_a_layer_field():
     assert got == pytest.approx(rate_hand(q, DOSE["fatal"]), rel=1e-9)
 
 
-@XFAIL
 def test_layer_regime_cool_layer_still_gives_convection():
     """A layer cooler than the skin lowers q; the rate is zero only when the
     total q <= 0 (no recovery)."""
@@ -345,7 +334,6 @@ def test_layer_regime_cool_layer_still_gives_convection():
     assert _rate(36.0, 20.0, eps=0.5, **params) == 0.0
 
 
-@XFAIL
 @pytest.mark.parametrize("t_layer", [float("nan"), float("inf")])
 def test_layer_regime_non_finite_layer_gives_no_dose(t_layer):
     rate = _rate(60.0, t_layer, eps=0.5, h=5.0, phi=1.0, eps_l=1.0)
@@ -353,7 +341,6 @@ def test_layer_regime_non_finite_layer_gives_no_dose(t_layer):
     assert rate == 0.0
 
 
-@XFAIL
 def test_model_records_the_layer_parameters():
     model = _model(60.0, 250.0, phi=0.5, eps_l=0.8, layer_height_m=2.4)
     assert model.regime == "layer"
@@ -361,7 +348,6 @@ def test_model_records_the_layer_parameters():
     assert model.layer_height_m == 2.4
 
 
-@XFAIL
 def test_model_default_regime_is_smoke():
     field = FdsHeatField(_Sampler(150.0))  # type: ignore[arg-type]
     model = DefaultHeatFedModel(
@@ -372,14 +358,12 @@ def test_model_default_regime_is_smoke():
     assert model.regime == "smoke"
 
 
-@XFAIL
 def test_regimes_constant():
     from pyfds_evac.core.fed import HEAT_FLUX_REGIMES
 
     assert tuple(HEAT_FLUX_REGIMES) == ("smoke", "layer")
 
 
-@XFAIL
 @pytest.mark.parametrize(
     ("phi", "eps_l"),
     [(-0.1, 0.9), (1.1, 0.9), (0.5, -0.1), (0.5, 1.1), (float("nan"), 0.9)],
@@ -389,20 +373,17 @@ def test_model_rejects_invalid_layer_parameters(phi, eps_l):
         _model(60.0, 250.0, phi=phi, eps_l=eps_l)
 
 
-@XFAIL
 def test_layer_regime_needs_a_layer_field():
     with pytest.raises(ValueError):
         _model(60.0, None, phi=1.0, eps_l=0.9)
 
 
-@XFAIL
 def test_layer_regime_needs_total_flux():
     """Eq. 63.44 and the convective laws have no flux to add q_ext to."""
     with pytest.raises(ValueError):
         _model(60.0, 250.0, method="convective", phi=1.0, eps_l=0.9)
 
 
-@XFAIL
 def test_model_rejects_unknown_regime():
     with pytest.raises(ValueError):
         _model(60.0, 250.0, regime="auto", phi=1.0, eps_l=0.9)
@@ -428,7 +409,6 @@ _LAYER_ARGS = [
 ]
 
 
-@XFAIL
 def test_cli_layer_options():
     import run
 
@@ -438,7 +418,6 @@ def test_cli_layer_options():
     assert (args.heat_view_factor, args.heat_layer_emissivity) == (0.5, 0.8)
 
 
-@XFAIL
 def test_cli_rejects_unknown_regime():
     import run
 
@@ -448,7 +427,6 @@ def test_cli_rejects_unknown_regime():
         parser.parse_args(["--scenario", "x", "--heat-regime", "auto"])
 
 
-@XFAIL
 def test_cli_layer_height_has_no_default():
     """The layer height depends on the ceiling; no 2.4 m is assumed."""
     import run
@@ -457,7 +435,6 @@ def test_cli_layer_height_has_no_default():
     assert args.heat_layer_height is None
 
 
-@XFAIL
 def test_layer_defaults_are_explicit_or_flagged():
     """phi and eps_L: either required (default None) or an assumption listed
     in HEAT_FLUX_ASSUMED_PARAMETERS whose help text says so."""
@@ -541,7 +518,6 @@ def _build(**overrides):
     )
 
 
-@XFAIL
 def test_run_config_loads_the_layer_slice(loaded_heights):
     model = _build(**_LAYER_OPTS)["heat_fed_model"]
     assert model.regime == "layer"
@@ -557,13 +533,11 @@ def test_run_config_smoke_regime_loads_one_slice(loaded_heights):
     assert loaded_heights == [1.6]
 
 
-@XFAIL
 def test_run_config_layer_regime_needs_a_height(loaded_heights):
     with pytest.raises((ValueError, SystemExit)):
         _build(**{**_LAYER_OPTS, "heat_layer_height": None})
 
 
-@XFAIL
 def test_run_config_layer_regime_needs_total_flux(loaded_heights):
     with pytest.raises((ValueError, SystemExit)):
         _build(**{**_LAYER_OPTS, "heat_fed_method": "convective"})
@@ -583,7 +557,6 @@ def _section(text, heading):
     return text.split(heading, 1)[1].split("\n## ", 1)[0]
 
 
-@XFAIL
 def test_models_heat_page_documents_the_layer_regime():
     text = (ROOT / "site" / "content" / "models" / "heat.md").read_text()
     for option in (
@@ -600,7 +573,6 @@ def test_models_heat_page_documents_the_layer_regime():
     assert "#221" in limits or "issues/221" in limits
 
 
-@XFAIL
 def test_changelog_mentions_the_layer_regime():
     text = (ROOT / "CHANGELOG.md").read_text()
     unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]

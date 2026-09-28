@@ -2,7 +2,7 @@
 
 import logging
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .fds_sampling import SliceFieldSampler, load_slice_sampler
 
@@ -212,6 +212,8 @@ class HeatFedInputs:
     """
 
     temperature_celsius: float = 20.0
+    # Upper-layer temperature, sampled only with ``regime="layer"`` (#222).
+    layer_temperature_celsius: float | None = None
 
 
 def _heat_fed_rate_per_minute(temperature_celsius: float) -> float:
@@ -347,6 +349,10 @@ HEAT_FLUX_ASSUMED_PARAMETERS = (
     "convective_coefficient",
     "skin_temperature_celsius",
 )
+# Regimes of spec 016, chosen by the user (no sourced automatic rule):
+# "smoke", head in smoke, Eq. 63.49 at the head; "layer", head in clear air
+# below a hot layer, convection at the head plus the layer term (#222).
+HEAT_FLUX_REGIMES = ("smoke", "layer")
 
 
 def total_heat_flux_kw_m2(
@@ -371,6 +377,29 @@ def total_heat_flux_kw_m2(
         return math.inf
     convective = convective_coefficient * (t_gas - t_skin)
     return (radiant + convective) / 1000.0 + external_flux_kw_m2
+
+
+def layer_radiant_flux_kw_m2(
+    layer_temperature_celsius: float,
+    *,
+    view_factor: float,
+    layer_emissivity: float,
+    skin_temperature_celsius: float,
+) -> float:
+    """Return the radiant flux from a hot upper layer in kW/m2 (#222, spec 016).
+
+    q_ext = phi eps_L sigma (T_L^4 - T_s^4) / 1000, with T in K: the radiant
+    term of Eq. 63.49 (p. 2384) with the layer as source and a view factor.
+    Net flux (a sigma T^4 difference), not incident; signed, negative for a
+    layer cooler than the skin.
+    """
+    t_layer = layer_temperature_celsius + _KELVIN
+    t_skin = skin_temperature_celsius + _KELVIN
+    try:
+        radiant = STEFAN_BOLTZMANN_W_M2_K4 * (t_layer**4 - t_skin**4)
+    except OverflowError:
+        return math.inf
+    return view_factor * layer_emissivity * radiant / 1000.0
 
 
 def total_flux_heat_fed_rate_per_minute(q_kw_m2: float, dose: float) -> float:
@@ -408,11 +437,55 @@ def _check_heat_flux_parameters(
         )
 
 
-def heat_flux_row_fields(heat_fed_model, temperature_celsius: float) -> dict:
-    """Return the FED history field of the total-flux method; ``{}`` otherwise."""
+def _check_layer_parameters(
+    regime: str,
+    method: str,
+    layer_field,
+    view_factor: float | None,
+    layer_emissivity: float | None,
+) -> None:
+    """Raise ValueError for an unknown regime or an invalid layer setting."""
+    if regime not in HEAT_FLUX_REGIMES:
+        raise ValueError(
+            f"Unknown heat regime {regime!r}; expected one of {HEAT_FLUX_REGIMES}"
+        )
+    for name, value in (
+        ("view factor", view_factor),
+        ("layer emissivity", layer_emissivity),
+    ):
+        if value is not None and not (math.isfinite(value) and 0.0 <= value <= 1.0):
+            raise ValueError(f"Heat {name} must be in [0, 1], got {value!r}")
+    if regime != "layer":
+        return
+    if method != "total-flux":
+        raise ValueError("The layer heat regime needs method='total-flux'")
+    if layer_field is None:
+        raise ValueError("The layer heat regime needs a layer temperature field")
+    if view_factor is None or layer_emissivity is None:
+        raise ValueError(
+            "The layer heat regime needs a view factor and a layer emissivity"
+        )
+
+
+def heat_flux_row_fields(
+    heat_fed_model,
+    temperature_celsius: float,
+    layer_temperature_celsius: float | None = None,
+) -> dict:
+    """Return the FED history fields of the total-flux method; ``{}`` otherwise.
+
+    In the layer regime the row also carries ``heat_layer_temperature_c``.
+    """
     if getattr(heat_fed_model, "method", "convective") != "total-flux":
         return {}
-    return {"heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(temperature_celsius)}
+    if getattr(heat_fed_model, "regime", "smoke") != "layer":
+        return {"heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(temperature_celsius)}
+    return {
+        "heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(
+            temperature_celsius, layer_temperature_celsius
+        ),
+        "heat_layer_temperature_c": layer_temperature_celsius,
+    }
 
 
 @dataclass(frozen=True)
@@ -923,6 +996,13 @@ class DefaultHeatFedModel:
     endpoint's convective law. With ``method="total-flux"`` the rate is
     q^1.33 / D (Eqs. 63.49 and 63.43, spec 016), D the radiant dose of
     *endpoint*, or of ``fatal`` without one; the convective laws are not added.
+
+    *regime* (total-flux only, spec 016): ``"smoke"`` (default) applies
+    Eq. 63.49 at the head. ``"layer"`` takes the head to be in clear air below
+    a hot layer: convection at the head plus ``layer_radiant_flux_kw_m2`` from
+    *layer_field*, with no eps sigma term of the gas at the head, so the two
+    radiant terms are never added together. *view_factor* and
+    *layer_emissivity* have no sourced values and no defaults.
     """
 
     def __init__(
@@ -934,6 +1014,11 @@ class DefaultHeatFedModel:
         emissivity: float = DEFAULT_HEAT_EMISSIVITY,
         convective_coefficient: float = DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
         skin_temperature_celsius: float = DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+        regime: str = "smoke",
+        layer_field: FdsHeatField | None = None,
+        view_factor: float | None = None,
+        layer_emissivity: float | None = None,
+        layer_height_m: float | None = None,
     ):
         """Store the temperature field sampler, FED settings and heat law."""
         if endpoint is not None and endpoint not in HEAT_ENDPOINTS:
@@ -944,6 +1029,9 @@ class DefaultHeatFedModel:
         _check_heat_flux_parameters(
             method, emissivity, convective_coefficient, skin_temperature_celsius
         )
+        _check_layer_parameters(
+            regime, method, layer_field, view_factor, layer_emissivity
+        )
         self.field = field
         self.config = config
         self.endpoint = endpoint
@@ -951,35 +1039,82 @@ class DefaultHeatFedModel:
         self.emissivity = emissivity
         self.convective_coefficient = convective_coefficient
         self.skin_temperature_celsius = skin_temperature_celsius
+        self.regime = regime
+        self.layer_field = layer_field if regime == "layer" else None
+        self.view_factor = view_factor
+        self.layer_emissivity = layer_emissivity
+        self.layer_height_m = layer_height_m
 
     def heat_flux_parameters(self) -> dict[str, float]:
         """Return the flux parameters for the run manifest."""
-        return {
+        parameters = {
             "emissivity": self.emissivity,
             "convective_coefficient": self.convective_coefficient,
             "skin_temperature_celsius": self.skin_temperature_celsius,
             "radiant_dose": HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose,
             "assumed": list(HEAT_FLUX_ASSUMED_PARAMETERS),
         }
+        if self.regime == "layer":
+            parameters.update(
+                regime=self.regime,
+                view_factor=self.view_factor,
+                layer_emissivity=self.layer_emissivity,
+                layer_height_m=self.layer_height_m,
+            )
+        return parameters
 
-    def heat_flux_kw_m2(self, temperature_celsius: float) -> float:
-        """Return the total-flux q in kW/m2 for one gas temperature."""
-        return total_heat_flux_kw_m2(
-            temperature_celsius,
-            emissivity=self.emissivity,
-            convective_coefficient=self.convective_coefficient,
+    def heat_flux_kw_m2(
+        self,
+        temperature_celsius: float,
+        layer_temperature_celsius: float | None = None,
+    ) -> float:
+        """Return the total-flux q in kW/m2 for one gas temperature.
+
+        In the layer regime: h (T_g - T_s) / 1000 + q_ext, no eps sigma term
+        of the gas at the head.
+        """
+        if self.regime != "layer":
+            return total_heat_flux_kw_m2(
+                temperature_celsius,
+                emissivity=self.emissivity,
+                convective_coefficient=self.convective_coefficient,
+                skin_temperature_celsius=self.skin_temperature_celsius,
+            )
+        if layer_temperature_celsius is None:
+            return math.nan
+        q_ext = layer_radiant_flux_kw_m2(
+            layer_temperature_celsius,
+            view_factor=self.view_factor,
+            layer_emissivity=self.layer_emissivity,
             skin_temperature_celsius=self.skin_temperature_celsius,
         )
+        return total_heat_flux_kw_m2(
+            temperature_celsius,
+            emissivity=0.0,
+            convective_coefficient=self.convective_coefficient,
+            skin_temperature_celsius=self.skin_temperature_celsius,
+            external_flux_kw_m2=q_ext,
+        )
 
-    def _total_flux_rate(self, temperature_celsius: float) -> float:
+    def _total_flux_rate(self, inputs: HeatFedInputs) -> float:
         """Return q^1.33 / D in 1/min; fatal D without an endpoint."""
         dose = HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose
-        q = self.heat_flux_kw_m2(temperature_celsius)
+        q = self.heat_flux_kw_m2(
+            inputs.temperature_celsius, inputs.layer_temperature_celsius
+        )
         return total_flux_heat_fed_rate_per_minute(q, dose)
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
-        """Return the heat FED input at one time and x/y point."""
-        return self.field.sample_inputs(time_s, x, y)
+        """Return the heat FED input at one time and x/y point.
+
+        In the layer regime it also carries the layer temperature, sampled
+        the same way as the temperature at the head.
+        """
+        inputs = self.field.sample_inputs(time_s, x, y)
+        if self.layer_field is None:
+            return inputs
+        layer = self.layer_field.sample_inputs(time_s, x, y).temperature_celsius
+        return replace(inputs, layer_temperature_celsius=float(layer))
 
     def sample_rate(
         self, time_s: float, x: float, y: float
@@ -987,7 +1122,7 @@ class DefaultHeatFedModel:
         """Return both the sampled input and its heat FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
         if self.method == "total-flux":
-            return inputs, self._total_flux_rate(inputs.temperature_celsius)
+            return inputs, self._total_flux_rate(inputs)
         if self.endpoint is None:
             return inputs, default_heat_fed_rate_per_minute(inputs)
         return inputs, endpoint_heat_fed_rate_per_minute(

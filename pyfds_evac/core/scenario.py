@@ -2186,7 +2186,9 @@ def run_scenario(
                         )
                         fed_history[-1].update(
                             heat_flux_row_fields(
-                                heat_fed_model, float(heat_inputs.temperature_celsius)
+                                heat_fed_model,
+                                float(heat_inputs.temperature_celsius),
+                                heat_inputs.layer_temperature_celsius,
                             )
                         )
                     last_fed_update_time = current_time

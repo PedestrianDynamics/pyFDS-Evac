@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `--heat-regime {smoke,layer}` (opt-in, with `--heat-fed-method
+  total-flux`; default `smoke`, the behaviour below): `layer` takes the head
+  to be in clear air below a hot layer, with q = h(T_g − T_s)/1000 plus the
+  net layer flux φ ε_L σ(T_L⁴ − T_s⁴)/1000 and no radiant term of the gas at
+  the head, so the two radiant terms are never summed (spec 016). T_L is read
+  from a second `TEMPERATURE` slice at `--heat-layer-height`;
+  `--heat-view-factor` and `--heat-layer-emissivity` set φ and ε_L. None of
+  the three has a default. The FED history gains `heat_layer_temperature_c`
+  and the manifest's `heat_flux_parameters` the regime and layer parameters
+  ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)).
 - `--heat-fed-method total-flux` (opt-in, with `--enable-heat-fed`; default
   `convective`): the heat dose is q^1.33/D (SFPE Handbook Ch. 63 Eq. 63.43)
   with q the heat flux to the skin of Eq. 63.49, both terms divided by 1000
