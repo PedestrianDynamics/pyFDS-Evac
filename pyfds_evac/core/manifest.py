@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from importlib import metadata
 from typing import Any
 
+from .fed import heat_endpoint_validity
 from .smoke_speed import ConstantExtinctionField
 
 MANIFEST_SUFFIX = ".manifest.json"
@@ -167,7 +168,8 @@ def build_manifest(
 ) -> dict[str, Any]:
     """Collect the provenance fields for one run.
 
-    ``heat_endpoint`` is recorded only when ``--heat-endpoint`` was given.
+    ``heat_endpoint`` and ``heat_validity`` are recorded only when
+    ``--heat-endpoint`` was given.
     """
     root = project_root if project_root is not None else find_project_root()
     lock = uv_lock if uv_lock is not None else find_uv_lock(root)
@@ -185,6 +187,7 @@ def build_manifest(
     }
     if heat_endpoint is not None:
         manifest["heat_endpoint"] = heat_endpoint
+        manifest["heat_validity"] = heat_endpoint_validity()
     return manifest
 
 

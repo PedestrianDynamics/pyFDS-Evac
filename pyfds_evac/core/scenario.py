@@ -60,7 +60,7 @@ from .fed import (
     HeatFedInputs,
     default_fed_components,
     default_fic,
-    heat_temperature_outside_validity,
+    heat_endpoint_row_fields,
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
@@ -2178,13 +2178,11 @@ def run_scenario(
                                 "speed_factor": float(effective_factor),
                             }
                         )
-                        if heat_endpoint is not None:
-                            fed_history[-1].update(
-                                heat_endpoint=heat_endpoint,
-                                heat_outside_validity=heat_temperature_outside_validity(
-                                    float(heat_inputs.temperature_celsius)
-                                ),
+                        fed_history[-1].update(
+                            heat_endpoint_row_fields(
+                                heat_endpoint, float(heat_inputs.temperature_celsius)
                             )
+                        )
                     last_fed_update_time = current_time
 
             if (

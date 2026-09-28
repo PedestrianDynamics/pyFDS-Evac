@@ -266,17 +266,41 @@ HEAT_ENDPOINTS: dict[str, HeatEndpoint] = {
 # Assumption: the Handbook gives no upper temperature for Eqs. 63.45-63.47;
 # the limit is taken as the highest dry-air point of the convective tolerance
 # data, Table 63.17 (Veghte, 205 deg C, p. 2375). p. 2383 relates the laws to
-# air with less than 10 % water vapour. Humidity is not sampled, so only
-# temperature is flagged.
+# air with less than 10 % water vapour. Humidity is not sampled, so its
+# status is reported as HEAT_HUMIDITY_STATUS instead of being flagged.
 HEAT_CONVECTIVE_VALIDITY_MAX_C = 205.0
+HEAT_HUMIDITY_STATUS = "unknown"
+HEAT_HUMIDITY_LIMIT = "< 10 % water vapour by volume (SFPE Ch. 63, p. 2383)"
 
 
 def heat_temperature_outside_validity(temperature_celsius: float) -> bool:
-    """Return True when *temperature_celsius* lies above the convective data."""
-    return bool(
-        math.isfinite(temperature_celsius)
-        and temperature_celsius > HEAT_CONVECTIVE_VALIDITY_MAX_C
-    )
+    """Return True above the convective data or for a non-finite sample."""
+    if not math.isfinite(temperature_celsius):
+        return True
+    return temperature_celsius > HEAT_CONVECTIVE_VALIDITY_MAX_C
+
+
+def heat_endpoint_row_fields(
+    endpoint: str | None, temperature_celsius: float
+) -> dict[str, object]:
+    """Return the FED history fields of ``--heat-endpoint``; ``{}`` without it."""
+    if endpoint is None:
+        return {}
+    return {
+        "heat_endpoint": endpoint,
+        "heat_outside_validity": heat_temperature_outside_validity(temperature_celsius),
+        "heat_humidity": HEAT_HUMIDITY_STATUS,
+    }
+
+
+def heat_endpoint_validity() -> dict[str, object]:
+    """Return the validity range of Eqs. 63.45-63.47 for the run manifest."""
+    return {
+        "max_temperature_c": HEAT_CONVECTIVE_VALIDITY_MAX_C,
+        "max_temperature_assumed": True,
+        "humidity": HEAT_HUMIDITY_STATUS,
+        "humidity_limit": HEAT_HUMIDITY_LIMIT,
+    }
 
 
 def endpoint_heat_fed_rate_per_minute(

@@ -325,7 +325,7 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "speed_factor",
     ]
     if rows and "heat_endpoint" in rows[0]:
-        fieldnames += ["heat_endpoint", "heat_outside_validity"]
+        fieldnames += ["heat_endpoint", "heat_outside_validity", "heat_humidity"]
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
