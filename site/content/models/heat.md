@@ -160,6 +160,14 @@ $$
 - A case with no `INTEGRATED INTENSITY` slice is an error, not a zero: the
   run would otherwise read as a case without radiation. The source with the
   convective method is an error too.
+- Both slices are read at one height. The `INTEGRATED INTENSITY` slice
+  nearest the slice height must lie at the z of the `TEMPERATURE` slice;
+  otherwise the run stops with an error, even when both lie within the
+  0.5 m that only warns for other slices.
+- Both slices must cover every agent. A point inside one slice and outside
+  the other stops the run with an error; a missing *U* is not read as zero.
+  Outside both (outside the FDS domain) *U* and *q* are NaN in the FED
+  history and the rate is zero.
 - A non-finite *U* gives a zero rate, as for the gas term.
 
 ### Limits of the INTEGRATED INTENSITY source
