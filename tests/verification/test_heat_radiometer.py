@@ -83,10 +83,6 @@ ISO_BAND = 0.1  # relative, around 1/4 and 4 sigma T^4
 BOUND_BAND = 0.1  # relative slack on q <= U for the ray effect
 T_SETTLE = 1.0  # s; FDS writes the first radiation solution after t = 0
 
-pending = pytest.mark.xfail(
-    strict=True, reason="#224", raises=(AssertionError, pytest.fail.Exception)
-)
-
 
 # --- FDS namelist reading (independent of pyFDS-Evac) ----------------------
 
@@ -272,13 +268,11 @@ def test_parser_reads_namelists_that_share_a_line():
     ]
 
 
-@pending
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform", "burner"])
 def test_deck_exists(kind):
     _deck(kind)
 
 
-@pending
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform"])
 def test_room_is_adiabatic_on_all_six_faces(kind):
     _, nml = _deck(kind)
@@ -295,7 +289,6 @@ def test_room_is_adiabatic_on_all_six_faces(kind):
     assert default or faces == {"XMIN", "XMAX", "YMIN", "YMAX", "ZMIN", "ZMAX"}
 
 
-@pending
 def test_hot_layer_is_above_the_heads_and_sooty():
     """A clear layer is nearly transparent: it must hold an absorbing species."""
     _, nml = _deck("hot_layer")
@@ -304,13 +297,11 @@ def test_hot_layer_is_above_the_heads_and_sooty():
     assert all(_is_sooty(nml, i) for i in layers)
 
 
-@pending
 def test_uniform_room_is_sooty():
     _, nml = _deck("uniform")
     assert all(_is_sooty(nml, i) for i in _hot_inits(nml))
 
 
-@pending
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform", "burner"])
 @pytest.mark.parametrize("quantity", ["GAUGE HEAT FLUX GAS", "RADIOMETER GAS"])
 @pytest.mark.parametrize("z", HEIGHTS)
@@ -334,7 +325,6 @@ def test_skin_gauges_on_point_arrays(kind, quantity, z, facing):
             assert float(prop.get("HEAT_TRANSFER_COEFFICIENT", np.nan)) == H_GAUGE
 
 
-@pending
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform", "burner"])
 @pytest.mark.parametrize("quantity", ["TEMPERATURE", "INTEGRATED INTENSITY"])
 def test_temperature_and_intensity_at_every_gauge_point(kind, quantity):
@@ -352,7 +342,6 @@ def test_temperature_and_intensity_at_every_gauge_point(kind, quantity):
     assert need <= have
 
 
-@pending
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform", "burner"])
 @pytest.mark.parametrize("z", HEIGHTS)
 def test_integrated_intensity_slice_on_a_cell_face(kind, z):
@@ -433,7 +422,6 @@ def _plates(nml, dev):
             )
 
 
-@pending
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform", "burner"])
 def test_gauge_minus_radiometer_is_convection(kind):
     """FDS UG Eqs. 22.35 - 22.36 with eps = 1: difference = h (T_g - T_gauge)."""
@@ -453,7 +441,6 @@ def test_gauge_minus_radiometer_is_convection(kind):
     assert checked
 
 
-@pending
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform", "burner"])
 def test_incident_flux_is_between_zero_and_u(kind):
     nml, dev = _output(kind)
@@ -472,7 +459,6 @@ def test_incident_flux_is_between_zero_and_u(kind):
                     assert np.all(q1 + q2 <= (1 + BOUND_BAND) * u), (pos, o1)
 
 
-@pending
 def test_uniform_room_gives_a_quarter_of_u():
     """Isotropic field: q = U/4 for every orientation, U = 4 sigma T^4."""
     nml, dev = _output("uniform")
@@ -482,7 +468,6 @@ def test_uniform_room_gives_a_quarter_of_u():
         np.testing.assert_allclose(u, black, rtol=ISO_BAND, err_msg=str(pos))
 
 
-@pending
 def test_under_the_layer_the_crown_sees_more_than_the_face():
     """Radiation comes from above: q/U facing up exceeds 1/4 and the side value."""
     nml, dev = _output("hot_layer")
@@ -498,7 +483,6 @@ def test_under_the_layer_the_crown_sees_more_than_the_face():
         assert r["up"] > r["side"], pos
 
 
-@pending
 def test_a_flame_in_view_approaches_u():
     """Excess over the ambient field: a compact source face-on gives cos(theta)
     near 1, above the 1/2 of a uniform upper hemisphere."""
@@ -523,7 +507,6 @@ def _script():
     return mod
 
 
-@pending
 @pytest.mark.parametrize(
     "q_over_i, u_over_i, expected",
     [
