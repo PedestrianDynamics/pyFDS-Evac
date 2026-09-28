@@ -59,6 +59,11 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
     link="models/wayfinding/"
   >}}
   {{< hextra/feature-card
+    title="Verification"
+    subtitle="Each model checked against hand calculations, published tables and FDS's own output, one page per test with the setup, the expected value and the simulated result."
+    link="verification/"
+  >}}
+  {{< hextra/feature-card
     title="One-way coupling"
     subtitle="FDS runs once. Egress reads the stored slices through one sampling interface, so a synthetic field replaces FDS in tests and routing sweeps never re-run the fire."
     link="docs/understanding/concepts/#one-way-coupling-and-the-data-flow"

@@ -85,7 +85,7 @@ module:
     - source: ../docs/wayfinding.md
       target: content/docs/implementation/wayfinding/_index.md
     - source: ../docs
-      target: content/models/verification
+      target: content/verification
       includeFiles:
         - "testing-homogeneous.md"
         - "testing-heat.md"
@@ -108,15 +108,18 @@ menu:
     - name: Models
       pageRef: /models
       weight: 3
+    - name: Verification
+      pageRef: /verification
+      weight: 4
     - name: Talks
       pageRef: /talks
-      weight: 4
-    - name: Search
       weight: 5
+    - name: Search
+      weight: 6
       params:
         type: search
     - name: GitHub
-      weight: 6
+      weight: 7
       url: "https://github.com/PedestrianDynamics/pyFDS-Evac"
       params:
         icon: github

@@ -7,7 +7,7 @@ math: true
 > [!NOTE]
 > This page is the specification of the heat dose. For the verification case
 > (a uniform hot room at 100, 150 and 200 °C), see
-> [Heat dose](/models/verification/testing-heat.md).
+> [Heat dose](/verification/testing-heat.md).
 
 Based on: [Heat](/fundamentals/heat.md) and [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
 

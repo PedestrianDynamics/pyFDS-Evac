@@ -364,6 +364,6 @@ enters the cognitive map. The dose does not gate anything; it stops the agent.
   sources.
 - Model pages: [smoke speed](/models/smoke-speed.md), [FED](/models/fed.md),
   [routing](/models/routing.md), [wayfinding](/models/wayfinding.md),
-  and [verification](/models/verification.md).
+  and [verification](/verification.md).
 - [Limitations](/docs/limitations.md): what is not modelled, and which
   parameters are library-level.
