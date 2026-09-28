@@ -1,0 +1,45 @@
+&HEAD CHID='heat_integrated_intensity',
+      TITLE='Sealed room, hot sooty layer: which INTEGRATED INTENSITY slice does the heat FED read? (#221)' /
+
+! 2 x 2 x 2.4 m, 0.2 m cells, one mesh, no fire. A 300 C sooty layer fills
+! z = 1.2-2.4 m; below it the air is clear and at 20 C. The run lasts 1 s,
+! too short for the layer to move. Cell faces lie at 0.4 and 1.6 m, so the
+! slices and devices below stay at those heights.
+! 300 C, the soot mass fraction and the geometry are assumptions of this
+! deck, not sourced values; they only make U differ between the heights.
+&MESH IJK=10,10,12, XB=0.0,2.0,0.0,2.0,0.0,2.4 /
+&TIME T_END=1.0 /
+&MISC TMPA=20.0 /
+
+&SURF ID='ADIABATIC_WALL', ADIABATIC=.TRUE. /
+&VENT MB='XMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='XMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMAX', SURF_ID='ADIABATIC_WALL' /
+
+&SPEC ID='SOOT' /
+&INIT XB=0.0,2.0,0.0,2.0,1.2,2.4, TEMPERATURE=300., SPEC_ID(1)='SOOT', MASS_FRACTION(1)=0.005 /
+
+! Skin gauge as in the #224 decks: 35 C, emissivity 1, h = 8 W/(m2 K)
+! (assumptions; spec 016 leaves h and T_skin open).
+&PROP ID='skin', GAUGE_TEMPERATURE=35., HEAT_TRANSFER_COEFFICIENT=8. /
+
+&DEVC ID='T_z16', QUANTITY='TEMPERATURE', XYZ=1.1,1.1,1.6 /
+&DEVC ID='U_z16', QUANTITY='INTEGRATED INTENSITY', XYZ=1.1,1.1,1.6 /
+&DEVC ID='GAUGE_z16_up', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1, PROP_ID='skin', XYZ=1.1,1.1,1.6 /
+&DEVC ID='T_z04', QUANTITY='TEMPERATURE', XYZ=1.1,1.1,0.4 /
+&DEVC ID='U_z04', QUANTITY='INTEGRATED INTENSITY', XYZ=1.1,1.1,0.4 /
+
+! Declared in this order on purpose: a vertical slice first, then the low
+! slices, and the head-height slices last. A reader that takes the first
+! INTEGRATED INTENSITY slice gets the wrong one.
+&SLCF PBY=1.1, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=0.4, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=0.4, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.6, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
+&DUMP DT_SLCF=0.5, DT_DEVC=0.5 /
+
+&TAIL /
