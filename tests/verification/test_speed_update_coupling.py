@@ -242,3 +242,29 @@ def test_premovement_activation_sets_the_baseline(recorder):
         )
     finally:
         result.cleanup()
+
+
+@pytest.mark.parametrize("with_zones", [True, False], ids=["zones", "no_zones"])
+def test_smoke_clearing_restores_full_speed(recorder, with_zones):
+    """Smoke that clears to K = 0 gives agents outside every zone v0 back (#246)."""
+    spec, scenario = _scenario(with_zones)
+
+    def extinction(t, x, y):
+        return 1.0 if 2.0 <= t < 5.0 else 0.0
+
+    result = run_scenario(
+        scenario, seed=spec.seed, smoke_speed_model=make_smoke_model(extinction)
+    )
+    try:
+        smoke = _factor_lookup(result.smoke_history, "speed_factor")
+        assert any(smoke(r[1], r[0]) < 1.0 for r in recorder.rows)
+        cleared = [
+            r
+            for r in recorder.rows
+            if r[0] >= 6.0 and _zone_factor(r[2], r[3], with_zones) == 1.0
+        ]
+        assert cleared
+        assert all(speed == pytest.approx(V0) for *_, speed in cleared)
+        _assert_closed_form(recorder.rows, with_zones, smoke, lambda agent_id, t: 1.0)
+    finally:
+        result.cleanup()

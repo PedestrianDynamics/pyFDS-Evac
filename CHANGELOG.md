@@ -98,6 +98,13 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- With direct steering, an agent slowed by smoke outside every speed zone
+  kept its reduced speed once the smoke factor returned to exactly 1 (for
+  example on walking into air with K = 0). The restore now also writes when
+  the factors last applied were below 1, so the agent walks at its free speed
+  again. Runs where agents leave smoke for clear air change; the rerouting
+  golden snapshots are regenerated
+  ([#246](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/246)).
 - The gas FED read the first CO, CO2 and O2 slice listed in the FDS deck,
   whatever its height, instead of the slice nearest `--smoke-slice-height`
   (1.6 m). It now selects each species like smoke speed and heat do. Slice

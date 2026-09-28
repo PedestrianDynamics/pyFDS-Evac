@@ -358,11 +358,6 @@ class TestFactorChanges:
         _update(state, info, agent, OUTSIDE)
         _assert_speed(agent, state, 2.0, None)
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="restore_agent_speed skips the write when smoke returns to 1 "
-        "outside every zone, so the agent keeps its smoky speed (#246)",
-    )
     def test_smoke_clearing_outside_zone_restores_full_speed(self):
         agent = RecordingAgent(2.0)
         state = {}

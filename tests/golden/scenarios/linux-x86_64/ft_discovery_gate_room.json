@@ -33,21 +33,28 @@
  },
  "rankings": [
   [
-   43.0,
+   38.0,
    1,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:fallback/tau"
   ],
   [
-   51.0,
+   46.0,
    2,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:fallback/tau"
   ],
   [
-   52.0,
+   47.0,
+   1,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   47.0,
    4,
    "jps-checkpoints_3",
    "jps-exits_0",
@@ -55,21 +62,35 @@
   ],
   [
    54.0,
-   1,
+   3,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   55.0,
+   2,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   59.0,
-   3,
+   57.0,
+   4,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   58.0,
+   5,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:fallback/tau"
   ]
  ],
  "summary": {
-  "agents_evacuated": 0,
+  "agents_evacuated": 1,
   "evacuation_time": 60.0,
   "total_agents": 6
  },
@@ -243,7 +264,7 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 22.0
+   "time_s": 23.0
   },
   {
    "agent_id": 4,
@@ -292,39 +313,48 @@
   },
   {
    "agent_id": 1,
-   "new_cost": 13.628,
+   "new_cost": 13.621,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
    "reason": "fallback",
-   "time_s": 43.0
+   "time_s": 38.0
   },
   {
    "agent_id": 2,
-   "new_cost": 13.597,
+   "new_cost": 13.459,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
    "reason": "fallback",
-   "time_s": 51.0
+   "time_s": 46.0
   },
   {
    "agent_id": 4,
-   "new_cost": 13.823,
+   "new_cost": 13.701,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
    "reason": "fallback",
-   "time_s": 52.0
+   "time_s": 47.0
   },
   {
    "agent_id": 3,
-   "new_cost": 13.679,
+   "new_cost": 13.746,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
    "reason": "fallback",
-   "time_s": 59.0
+   "time_s": 54.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 13.595,
+   "new_exit": "jps-exits_0",
+   "old_cost": null,
+   "old_exit": "jps-exits_0",
+   "reason": "fallback",
+   "time_s": 58.0
   }
  ]
 }
