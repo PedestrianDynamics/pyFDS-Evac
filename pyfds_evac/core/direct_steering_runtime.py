@@ -154,6 +154,11 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
         return False
 
 
+# Smoke and FIC factors of the last write without a zone factor; see
+# ``restore_agent_speed``.
+_APPLIED_FACTORS_KEY = "_applied_factors"
+
+
 def set_agent_smoke_factor(
     agent_speed_state: dict[int, dict[str, Any]],
     agent_id: int,
@@ -183,12 +188,10 @@ def set_agent_fic_factor(
     original_speed = state.get("original_speed")
     if original_speed is None:
         return
-    combined = (
-        float(original_speed)
-        * normalize_speed_factor(state.get("smoke_factor", 1.0))
-        * state["fic_factor"]
-    )
-    set_agent_desired_speed(agent, max(0.0, combined))
+    smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
+    combined = float(original_speed) * smoke_factor * state["fic_factor"]
+    if set_agent_desired_speed(agent, max(0.0, combined)):
+        state[_APPLIED_FACTORS_KEY] = (smoke_factor, state["fic_factor"])
 
 
 def ensure_agent_speed_state(
@@ -219,11 +222,14 @@ def restore_agent_speed(
         return
     smoke_factor = state.get("smoke_factor", 1.0)
     fic_factor = state.get("fic_factor", 1.0)
-    # Skip redundant write when already at restored speed and nothing modifies it
+    # Skip redundant write when already at restored speed and nothing modifies
+    # it. The factors last applied must be 1 too, or a slowdown whose factors
+    # have returned to 1 would never be undone (#246).
     if (
         state.get("active_checkpoint") is None
         and smoke_factor == 1.0
         and fic_factor == 1.0
+        and state.get(_APPLIED_FACTORS_KEY, (1.0, 1.0)) == (1.0, 1.0)
     ):
         return
     smoke_factor = normalize_speed_factor(smoke_factor)
@@ -232,6 +238,7 @@ def restore_agent_speed(
         agent, float(original_speed) * smoke_factor * fic_factor
     ):
         state["active_checkpoint"] = None
+        state[_APPLIED_FACTORS_KEY] = (smoke_factor, fic_factor)
 
 
 def _find_checkpoint_zone(

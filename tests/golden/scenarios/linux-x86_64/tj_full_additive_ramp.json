@@ -674,6 +674,13 @@
   ],
   [
    22.0,
+   28,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   22.0,
    30,
    "jps-checkpoints_0",
    "exit_A_left",
@@ -689,13 +696,6 @@
   [
    23.0,
    26,
-   "jps-checkpoints_0",
-   "exit_A_left",
-   "exit_A_left:ok > exit_B_right:nonvisible"
-  ],
-  [
-   23.0,
-   28,
    "jps-checkpoints_0",
    "exit_A_left",
    "exit_A_left:ok > exit_B_right:nonvisible"
@@ -899,7 +899,7 @@
  ],
  "summary": {
   "agents_evacuated": 30,
-  "evacuation_time": 52.96,
+  "evacuation_time": 54.85,
   "total_agents": 30
  },
  "switches": [
