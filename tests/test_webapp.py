@@ -124,7 +124,7 @@ def _stream_until_terminal(client, max_lines=2000):
 def test_full_run_streams_progress_and_completes(client):
     r = client.post("/run", data={"scenario": "ISO-table21", "seed": "420"})
     assert r.status_code == 200
-    assert 'sse-connect="/progress"' in r.text or "sse_connect" in r.text
+    assert 'sse-connect="/progress' in r.text or "sse_connect" in r.text
 
     events = _stream_until_terminal(client)
     assert "progress" in events
@@ -286,7 +286,7 @@ class TestCancelLifecycle:
         # Still unwinding: the standby panel would re-enable Run over a live
         # worker, so the response keeps the progress stream instead.
         assert "Choose a scenario and" not in r.text
-        assert 'sse-connect="/progress"' in r.text
+        assert 'sse-connect="/progress' in r.text
         assert mgr.running
         gate["build"].set()
         assert mgr.join(5.0)
@@ -322,6 +322,70 @@ class TestCancelLifecycle:
         assert "event: done" in body
         assert "Run cancelled." in body
         assert 'hx-post="/clear"' in body
+
+    def test_progress_stream_does_not_follow_a_later_run(self, rm):
+        import asyncio
+        import threading
+
+        import pyfds_evac.webapp.app as app_module
+
+        mgr, _calls, gate = rm
+        first = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", first), "stub")
+        assert first.wait(5.0)
+        pinned = mgr.run_id
+
+        async def drive():
+            resp = await app_module.progress(run=pinned)
+            events = resp.body_iterator
+            assert "event: console" in await anext(events)
+            # The first run ends and a second starts between two polls.
+            gate["build"].set()
+            assert mgr.join(5.0)
+            mgr.reset()
+            second = threading.Event()
+            mgr.start(None, self._blocking(gate, "build", second), "stub")
+            assert second.wait(5.0)
+            seen = []
+            while not seen or "event: done" not in seen[-1]:
+                seen.append(await asyncio.wait_for(anext(events), 2.0))
+            return seen
+
+        seen = asyncio.run(drive())
+        assert mgr.running  # the stream settled without the second run ending
+        assert "event: progress" not in "".join(seen)
+
+    def test_clear_keeps_the_run_panel_while_a_worker_is_active(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        r = client.post("/clear")
+        assert "Choose a scenario and" not in r.text
+        assert 'sse-connect="/progress' in r.text
+        assert mgr.running
+
+    def test_terminal_status_is_published_after_the_lock_is_released(self, rm):
+        mgr, _calls, _gate = rm
+        seen = []
+        real = mgr._lock
+
+        class SpyLock:
+            def acquire(self, *a, **k):
+                return real.acquire(*a, **k)
+
+            def release(self):
+                seen.append(mgr.status)
+                real.release()
+
+        mgr._lock = SpyLock()
+        mgr.start(None, dict, "stub")
+        assert mgr.join(5.0)
+        assert mgr.status == "done"
+        # A client that sees ``done`` may start the next run at once.
+        assert seen == ["running"]
 
 
 class TestScenarioPath:

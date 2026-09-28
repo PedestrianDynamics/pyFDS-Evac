@@ -101,6 +101,9 @@ class RunManager:
         self._thread: threading.Thread | None = None
         # idle | running | cancelling | done | error | cancelled
         self.status: str = "idle"
+        # Bumped by every start(), so a progress stream can tell its own run
+        # from a later one.
+        self.run_id: int = 0
         self.result: ScenarioResult | None = None
         self.error: str | None = None
         self.scenario_name: str | None = None
@@ -157,8 +160,12 @@ class RunManager:
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("A run is already in progress.")
 
-        self._cancel.clear()
-        self.status = "running"
+        # Taken so a worker still publishing its terminal status can't
+        # overwrite this run's fresh state.
+        with self._state:
+            self._cancel.clear()
+            self.run_id += 1
+            self.status = "running"
         self.result = None
         self.error = None
         self.scenario_name = scenario_name
@@ -195,6 +202,7 @@ class RunManager:
             previous_level = model_logger.level
             if model_logger.getEffectiveLevel() > logging.WARNING:
                 model_logger.setLevel(logging.WARNING)
+            outcome = "error"
             try:
                 with contextlib.redirect_stdout(capture):
                     run_kwargs = build_run_kwargs()
@@ -206,27 +214,34 @@ class RunManager:
                     self.result = result
                     if post_run is not None:
                         self.artifacts = post_run(result)
-                with self._state:
-                    check_cancel()
-                    self.status = "done"
+                outcome = "done"
             except RunCancelled:
+                outcome = "cancelled"
+            except Exception as exc:  # surface any run failure to the UI
+                self.error = f"{type(exc).__name__}: {exc}"
+                outcome = "error"
+            finally:
+                model_logger.removeHandler(warning_handler)
+                model_logger.setLevel(previous_level)
+                self._finish(outcome)
+
+        self._thread = threading.Thread(target=worker, daemon=True)
+        self._thread.start()
+
+    def _finish(self, outcome: str) -> None:
+        """Release the run lock and publish the run's terminal status."""
+        with self._state:
+            if outcome == "done" and self._cancel.is_set():
+                outcome = "cancelled"
+            if outcome == "cancelled":
                 # A deliberate stop, not a failure: leave no error for the UI
                 # to report and drop any partial result.
                 self.result = None
                 self.error = None
-                with self._state:
-                    self.status = "cancelled"
-            except Exception as exc:  # surface any run failure to the UI
-                self.error = f"{type(exc).__name__}: {exc}"
-                with self._state:
-                    self.status = "error"
-            finally:
-                model_logger.removeHandler(warning_handler)
-                model_logger.setLevel(previous_level)
-                self._lock.release()
-
-        self._thread = threading.Thread(target=worker, daemon=True)
-        self._thread.start()
+            # Release before publishing: a client that sees the terminal
+            # status may start the next run straight away.
+            self._lock.release()
+            self.status = outcome
 
     def cancel(self) -> bool:
         """Ask an in-flight run to stop. Returns whether one was running."""

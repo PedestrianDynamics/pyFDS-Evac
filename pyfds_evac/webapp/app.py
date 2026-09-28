@@ -1050,18 +1050,22 @@ async def cancel():
 @rt("/clear")
 async def clear():
     """Discard a finished run's results and return to the standby panel."""
+    # A Clear left over from an earlier run must not hand back an enabled Run
+    # button over a live worker.
+    if manager.running:
+        return _running_stream_view(cancelling=manager.status == "cancelling")
     manager.reset()
     return _run_panel_idle_body()
 
 
-def _cancelled_view() -> Div:
+def _cancelled_view(message: str = "Run cancelled.") -> Div:
     """Terminal message for a cancelled run, with a way back to standby.
 
     It replaces only ``#run-status``, so the stop control beside it stays;
     Clear returns the whole panel to standby.
     """
     return Div(
-        Span("Run cancelled.", style=f"{_MONO};font-size:12px;{_MUTED}"),
+        Span(message, style=f"{_MONO};font-size:12px;{_MUTED}"),
         Button(
             "Clear",
             type="button",
@@ -1149,7 +1153,9 @@ def _running_stream_view(cancelling: bool = False) -> Div:
             style=_PANEL + ";margin-top:18px",
         ),
         hx_ext="sse",
-        sse_connect="/progress",
+        # Pinned to the current run, so a reconnect or a missed end can't
+        # attach this panel to a later run.
+        sse_connect=f"/progress?run={manager.run_id}",
         sse_close="done",
     )
 
@@ -1459,7 +1465,9 @@ async def fed_progress():
 
 
 @rt("/progress")
-async def progress():
+async def progress(run: int | None = None):
+    run_id = manager.run_id if run is None else run
+
     async def gen():
         last = None
         last_log = -1
@@ -1469,6 +1477,14 @@ async def progress():
                 last_log = n
                 yield sse_message(_console_view(), event="console")
             status = manager.status
+            if manager.run_id != run_id:
+                # This stream's run has ended and another has started; its
+                # outcome is gone, so settle the panel instead of following.
+                yield sse_message(
+                    _cancelled_view("Run ended; another run has started."),
+                    event="done",
+                )
+                return
             if status == "done":
                 try:
                     finished = (
