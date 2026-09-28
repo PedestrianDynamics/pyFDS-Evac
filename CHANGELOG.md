@@ -92,6 +92,13 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- The gas FED read the first CO, CO2 and O2 slice listed in the FDS deck,
+  whatever its height, instead of the slice nearest `--smoke-slice-height`
+  (1.6 m). It now selects each species like smoke speed and heat do. Slice
+  selection also skips vertical (PBX/PBY) slices, whose mid-height could
+  look closest to the requested height; a quantity with only vertical slices
+  now raises an error
+  ([#238](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/238)).
 - The FDS slice sampler reads the value nearest to the query point: the
   nearest node of a node-centred slice (the FDS default) and the nearest
   cell centre of a `CELL_CENTERED=T` slice, including on stretched grids.

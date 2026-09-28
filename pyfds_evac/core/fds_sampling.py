@@ -122,6 +122,11 @@ class SliceFieldSampler:
         return float(subslice.data[t_index, i_index, j_index])
 
 
+def _is_horizontal(slice_obj) -> bool:
+    """True for a z-normal (PBZ) slice; fdsreader reports it as orientation 3."""
+    return getattr(slice_obj, "orientation", 3) == 3
+
+
 def _slice_z_mid(slice_obj) -> float:
     """Return the mid-height of a slice's z-extent."""
     return (slice_obj.extent.z_start + slice_obj.extent.z_end) / 2
@@ -209,6 +214,14 @@ def load_slice_sampler(
     if not matches:
         tried = ", ".join(f"'{c}'" for c in candidates)
         raise IndexError(f"No slice with quantity {tried} found in {fds_dir}")
+    # Agents are sampled on a plane in x/y; a vertical (PBX/PBY) slice would be
+    # read as if it were one, and its mid-height can look closest to the
+    # requested height.
+    matches = [s for s in matches if _is_horizontal(s)]
+    if not matches:
+        raise IndexError(
+            f"No horizontal (PBZ) slice with quantity '{name}' found in {fds_dir}"
+        )
     if slice_height_m is not None and len(matches) > 1:
         chosen = min(matches, key=lambda s: abs(_slice_z_mid(s) - slice_height_m))
     else:

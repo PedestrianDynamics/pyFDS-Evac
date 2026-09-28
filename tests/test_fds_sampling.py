@@ -150,3 +150,93 @@ def test_missing_quantity_names_every_candidate_tried():
         )
     assert "'SOOT EXTINCTION COEFFICIENT'" in str(excinfo.value)
     assert "'EXTINCTION'" in str(excinfo.value)
+
+
+class _FakeVerticalSlice(_FakeSlice):
+    """A PBY slice: spans the whole height, orientation 2 in fdsreader."""
+
+    def __init__(self):
+        super().__init__(0.0, 3.0)
+        self.orientation = 2
+
+
+def test_vertical_slice_is_not_chosen_by_height():
+    """A vertical slice's mid-height can sit closest to the request; skip it."""
+    vertical = _FakeVerticalSlice()  # mid-height 1.5 m
+    horizontal = _FakeSlice(2.0, 2.0)
+    horizontal.orientation = 3
+    sampler = load_slice_sampler(
+        "case",
+        "SOOT EXTINCTION COEFFICIENT",
+        simulation=_sim_with(vertical, horizontal),
+        slice_height_m=1.6,
+    )
+    assert sampler._slice is horizontal
+
+
+def test_vertical_slice_is_not_chosen_without_a_height():
+    vertical = _FakeVerticalSlice()
+    horizontal = _FakeSlice(2.0, 2.0)
+    horizontal.orientation = 3
+    sampler = load_slice_sampler(
+        "case",
+        "SOOT EXTINCTION COEFFICIENT",
+        simulation=_sim_with(vertical, horizontal),
+    )
+    assert sampler._slice is horizontal
+
+
+def test_only_vertical_slices_raise():
+    with pytest.raises(IndexError, match="horizontal"):
+        load_slice_sampler(
+            "case",
+            "SOOT EXTINCTION COEFFICIENT",
+            simulation=_sim_with(_FakeVerticalSlice()),
+            slice_height_m=1.6,
+        )
+
+
+def _layered(*heights):
+    """A vertical slice first, then horizontal slices at these heights."""
+    slices = [_FakeVerticalSlice()]
+    for z in heights:
+        s = _FakeSlice(z, z)
+        s.orientation = 3
+        slices.append(s)
+    return slices
+
+
+def test_fed_field_reads_every_species_at_the_requested_height():
+    """Required and optional gases alike: nearest horizontal slice, not the first."""
+    from pyfds_evac.core.fed import FdsFedField
+
+    species = [
+        "CARBON MONOXIDE VOLUME FRACTION",
+        "CARBON DIOXIDE VOLUME FRACTION",
+        "OXYGEN VOLUME FRACTION",
+    ] + [quantity for _, quantity in FdsFedField._OPTIONAL_SPECIES]
+    by_quantity = {q: _layered(0.5, 2.5, 1.5) for q in species}
+    field = FdsFedField.from_fds(
+        "case", simulation=_sim_with_quantities(by_quantity), slice_height_m=1.6
+    )
+    expected = by_quantity["CARBON MONOXIDE VOLUME FRACTION"][3]
+    assert field._co._slice is expected
+    assert field._co2._slice is by_quantity["CARBON DIOXIDE VOLUME FRACTION"][3]
+    assert field._o2._slice is by_quantity["OXYGEN VOLUME FRACTION"][3]
+    for attr, quantity in FdsFedField._OPTIONAL_SPECIES:
+        assert getattr(field, attr)._slice is by_quantity[quantity][3], attr
+
+
+def test_fed_field_leaves_absent_optional_species_unset():
+    from pyfds_evac.core.fed import FdsFedField
+
+    required = {
+        q: _layered(1.5)
+        for q in (
+            "CARBON MONOXIDE VOLUME FRACTION",
+            "CARBON DIOXIDE VOLUME FRACTION",
+            "OXYGEN VOLUME FRACTION",
+        )
+    }
+    field = FdsFedField.from_fds("case", simulation=_sim_with_quantities(required))
+    assert field._hcn is None

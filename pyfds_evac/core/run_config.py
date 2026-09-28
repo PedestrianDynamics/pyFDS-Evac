@@ -105,7 +105,10 @@ def _build_fed_model(opts: Any, log: Logger):
         slice_height_m=opts.smoke_slice_height,
         o2_threshold_percent=getattr(opts, "o2_threshold_percent", 20.0),
     )
-    return DefaultFedModel(FdsFedField.from_fds(opts.fds_dir), fed_config)
+    return DefaultFedModel(
+        FdsFedField.from_fds(opts.fds_dir, slice_height_m=opts.smoke_slice_height),
+        fed_config,
+    )
 
 
 def _build_heat_fed_model(opts: Any, log: Logger):
