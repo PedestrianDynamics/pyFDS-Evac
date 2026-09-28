@@ -1054,6 +1054,35 @@ async def clear():
     return _run_panel_idle_body()
 
 
+def _cancelled_view() -> Div:
+    """Terminal message for a cancelled run, with a way back to standby.
+
+    It replaces only ``#run-status``, so the stop control beside it stays;
+    Clear returns the whole panel to standby.
+    """
+    return Div(
+        Span("Run cancelled.", style=f"{_MONO};font-size:12px;{_MUTED}"),
+        Button(
+            "Clear",
+            type="button",
+            hx_post="/clear",
+            hx_target="#run-panel",
+            hx_swap="innerHTML show:top",
+            style=(
+                "padding:7px 13px;border-radius:9px;cursor:pointer;"
+                f"{_MONO};font-size:11px;"
+                "background:transparent;color:var(--ink-dim);"
+                "border:1px solid var(--hairline)"
+            ),
+        ),
+        style=(
+            "display:flex;align-items:center;justify-content:space-between;"
+            "gap:12px;padding:12px;border:1px solid var(--hairline);"
+            "border-radius:9px"
+        ),
+    )
+
+
 def _running_stream_view(cancelling: bool = False) -> Div:
     """The live run panel: progress card + console, wired to the SSE stream.
 
@@ -1479,13 +1508,7 @@ async def progress():
             # /cancel has already swapped in the standby panel, this stream's
             # element is gone and the event goes nowhere.
             if status in ("cancelled", "idle"):
-                yield sse_message(
-                    Div(
-                        "Run cancelled.",
-                        style="color:var(--ink-dim);padding:12px;border:1px solid var(--hairline);border-radius:9px",
-                    ),
-                    event="done",
-                )
+                yield sse_message(_cancelled_view(), event="done")
                 return
             ev = manager.last_event
             if ev is not None and ev != last:

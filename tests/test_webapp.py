@@ -299,7 +299,8 @@ class TestCancelLifecycle:
         entered = threading.Event()
         mgr.start(None, self._blocking(gate, "build", entered), "stub")
         assert entered.wait(5.0)
-        gate["build"].set()  # the worker unwinds as soon as it is asked
+        mgr.cancel()
+        gate["build"].set()  # the worker unwinds within /cancel's wait
         r = client.post("/cancel")
         assert "Choose a scenario and" in r.text
         assert mgr.status == "idle"
@@ -316,7 +317,11 @@ class TestCancelLifecycle:
         assert mgr.join(5.0)
         # Every connected client needs a terminal event; a stream that just
         # closes is reopened by EventSource and never settles.
-        assert _stream_until_terminal(client)[-1] == "done"
+        with client.stream("GET", "/progress") as s:
+            body = "".join(s.iter_text())
+        assert "event: done" in body
+        assert "Run cancelled." in body
+        assert 'hx-post="/clear"' in body
 
 
 class TestScenarioPath:
