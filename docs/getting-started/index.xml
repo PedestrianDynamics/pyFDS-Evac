@@ -1014,7 +1014,7 @@ to list the quantities pyFDS-Evac finds.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Read the warnings of the first run. A missing gas slice switches FED off
 and the run still finishes, reporting FED = 0.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Read &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a> and the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification status&lt;/a>.&lt;/li>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification status&lt;/a>.&lt;/li>
 &lt;/ul>
 &lt;h2>Words that changed meaning&lt;span class="hx-absolute -hx-mt-20" id="words-that-changed-meaning">&lt;/span>
 &lt;a href="#words-that-changed-meaning" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>

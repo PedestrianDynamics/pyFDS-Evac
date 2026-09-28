@@ -410,7 +410,7 @@ Seminar 2026, University of Wuppertal, 25 September 2026.&lt;/li>
 sources.&lt;/li>
 &lt;li>Model pages: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke speed&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>,
-and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/">verification&lt;/a>.&lt;/li>
+and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">verification&lt;/a>.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>: what is not modelled, and which
 parameters are library-level.&lt;/li>
 &lt;/ul></description></item><item><title>Limitations</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</guid><description>
@@ -423,7 +423,7 @@ It has no release policy yet, so behaviour
 and defaults can change between commits. A result from pyFDS-Evac is a
 research result. It is not an assessment of a building.&lt;/p>
 &lt;p>The evidence that exists is listed on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>.
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification page&lt;/a>.
 That evidence is verification (the code does what its equations say), not
 validation (the equations describe how people behave).&lt;/p>
 &lt;h2>Some parameters are library-level&lt;span class="hx-absolute -hx-mt-20" id="some-parameters-are-library-level">&lt;/span>
@@ -551,7 +551,7 @@ found that individual trajectories differ between runs with the same seed,
 while aggregate outcomes (counts and fractions, such as the number of agents
 incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
 and do not compare single trajectories between runs. See the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification page&lt;/a>.&lt;/p>
 &lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em>. VTT Technical Research Centre of

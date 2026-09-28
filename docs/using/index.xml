@@ -1413,7 +1413,7 @@ geometry happens to coincide with the original scripted tour the whole
 way, so they end up taking the long route without ever finding the
 shortcut. Verified: &lt;code>full&lt;/code> evacuates in 33.9 s vs &lt;code>discovery&lt;/code>&amp;rsquo;s 88.6 s
 (both 20/20 evacuated; see the results table in
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/">&lt;code>docs/testing-familiarity.md&lt;/code>&lt;/a>).&lt;/li>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/">&lt;code>docs/testing-familiarity.md&lt;/code>&lt;/a>).&lt;/li>
 &lt;/ul></description></item><item><title>FDS slice sampling</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</guid><description>
 &lt;blockquote>
 &lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>.&lt;/p>

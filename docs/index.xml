@@ -851,7 +851,7 @@ Seminar 2026, University of Wuppertal, 25 September 2026.&lt;/li>
 sources.&lt;/li>
 &lt;li>Model pages: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke speed&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>,
-and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/">verification&lt;/a>.&lt;/li>
+and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">verification&lt;/a>.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>: what is not modelled, and which
 parameters are library-level.&lt;/li>
 &lt;/ul></description></item><item><title>Extinction coefficient</title><link>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/</guid><description>
@@ -2096,7 +2096,7 @@ to list the quantities pyFDS-Evac finds.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Read the warnings of the first run. A missing gas slice switches FED off
 and the run still finishes, reporting FED = 0.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Read &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a> and the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification status&lt;/a>.&lt;/li>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification status&lt;/a>.&lt;/li>
 &lt;/ul>
 &lt;h2>Words that changed meaning&lt;span class="hx-absolute -hx-mt-20" id="words-that-changed-meaning">&lt;/span>
 &lt;a href="#words-that-changed-meaning" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;blockquote>
@@ -2129,7 +2129,7 @@ Research Centre of Finland.&lt;/p></description></item><item><title>Heat</title>
 &lt;p class="gh-alert-title">&lt;svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">&lt;path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z">&lt;/path>&lt;/svg>Note&lt;/p>
 &lt;p>This page is the specification of the heat dose. For the verification case
 (a uniform hot room at 100, 150 and 200 °C), see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/">Heat dose&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat/">Heat dose&lt;/a>.&lt;/p>
 &lt;/div>&lt;p>Based on: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a> and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.&lt;/p>
 &lt;p>FDS+Evac has no heat dose. In pyFDS-Evac it is opt-in, and when it is off
 nothing on this page affects a run.&lt;/p>
@@ -2450,7 +2450,7 @@ vetoes routes under both models and enters the ranking only under
 selecting lower-exposure paths when available&lt;/li>
 &lt;li>&lt;strong>Cognitive-map history&lt;/strong>: &lt;code>run_scenario(collect_cognitive_map_history=True)&lt;/code>
 records what each agent knows, every time it changes — see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/">docs/testing-familiarity.md&lt;/a> and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/">docs/testing-familiarity.md&lt;/a> and
 &lt;code>scripts/animate_cognitive_map.py&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Discovery-world generator&lt;/strong>: &lt;code>scripts/generate_discovery_world.py&lt;/code> produces
 random test decks (open room, convex obstacles, signed checkpoints, exits
@@ -5564,7 +5564,7 @@ It has no release policy yet, so behaviour
 and defaults can change between commits. A result from pyFDS-Evac is a
 research result. It is not an assessment of a building.&lt;/p>
 &lt;p>The evidence that exists is listed on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>.
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification page&lt;/a>.
 That evidence is verification (the code does what its equations say), not
 validation (the equations describe how people behave).&lt;/p>
 &lt;h2>Some parameters are library-level&lt;span class="hx-absolute -hx-mt-20" id="some-parameters-are-library-level">&lt;/span>
@@ -5692,7 +5692,7 @@ found that individual trajectories differ between runs with the same seed,
 while aggregate outcomes (counts and fractions, such as the number of agents
 incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
 and do not compare single trajectories between runs. See the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/" target="_blank" rel="noopener">verification page&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification page&lt;/a>.&lt;/p>
 &lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em>. VTT Technical Research Centre of
@@ -8778,7 +8778,7 @@ DOI: &lt;a href="https://doi.org/10.1016/j.firesaf.2017.06.002" target="_blank" 
 representation of the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>,
 115, 103154.&lt;/p>
 &lt;/li>
-&lt;/ol></description></item><item><title>CO dose in a uniform room</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/</guid><description>
+&lt;/ol></description></item><item><title>CO dose in a uniform room</title><link>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-homogeneous/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-homogeneous/</guid><description>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -9328,13 +9328,13 @@ so copy both first if you want to keep them. With &lt;code>run.py --output-sqlit
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Homogeneous heat FED verification</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-heat/</guid><description>
+&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Homogeneous heat FED verification</title><link>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat/</guid><description>
 &lt;h2>Purpose&lt;span class="hx-absolute -hx-mt-20" id="purpose">&lt;/span>
 &lt;a href="#purpose" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This test case verifies the heat FED (Fractional Effective Dose from
 convective heat, SFPE Handbook Ch. 63 Eq. 63.44) accumulation logic in the pyFDS-Evac
 pipeline against hand-calculated predictions, using a simplified scenario
 with a spatially &lt;strong>homogeneous&lt;/strong> (uniform) gas-phase temperature field. It
-is the direct sibling of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/">&lt;code>docs/testing-homogeneous.md&lt;/code>&lt;/a>
+is the direct sibling of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-homogeneous/">&lt;code>docs/testing-homogeneous.md&lt;/code>&lt;/a>
 (the toxic-CO verification), following the same method and the same directory
 conventions.&lt;/p>
 &lt;p>By removing spatial gradients as a variable, any deviation between simulated
@@ -9583,14 +9583,14 @@ in this table:&lt;/p>
 &lt;/tbody>
 &lt;/table>
 &lt;p>Target tolerance: &amp;lt;0.5%, matching the CO ladder&amp;rsquo;s precedent in
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-homogeneous/">&lt;code>docs/testing-homogeneous.md&lt;/code>&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-homogeneous/">&lt;code>docs/testing-homogeneous.md&lt;/code>&lt;/a>.&lt;/p>
 &lt;p>Remaining before this test case is complete:&lt;/p>
 &lt;ul>
 &lt;li>Run all three decks through FDS and fill in the table above.&lt;/li>
 &lt;li>Confirm the &lt;code>FdsHeatField.from_fds()&lt;/code> height-matching warning path fires
 correctly if a mismatched &lt;code>--smoke-slice-height&lt;/code> is passed (it reuses the
 same flag as smoke/gas FED).&lt;/li>
-&lt;/ul></description></item><item><title>Familiarity routing verification (full vs. discovery)</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/</guid><description>
+&lt;/ul></description></item><item><title>Familiarity routing verification (full vs. discovery)</title><link>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/</guid><description>
 &lt;h2>Purpose&lt;span class="hx-absolute -hx-mt-20" id="purpose">&lt;/span>
 &lt;a href="#purpose" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>This test case verifies that the &lt;code>full&lt;/code> and &lt;code>discovery&lt;/code> agent familiarity
 tiers produce &lt;strong>different evacuation behavior&lt;/strong>, not just a config
@@ -10024,7 +10024,7 @@ geometry happens to coincide with the original scripted tour the whole
 way, so they end up taking the long route without ever finding the
 shortcut. Verified: &lt;code>full&lt;/code> evacuates in 33.9 s vs &lt;code>discovery&lt;/code>&amp;rsquo;s 88.6 s
 (both 20/20 evacuated; see the results table in
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/testing-familiarity/">&lt;code>docs/testing-familiarity.md&lt;/code>&lt;/a>).&lt;/li>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/">&lt;code>docs/testing-familiarity.md&lt;/code>&lt;/a>).&lt;/li>
 &lt;/ul></description></item><item><title>FDS slice sampling</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</guid><description>
 &lt;blockquote>
 &lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>.&lt;/p>
@@ -10213,7 +10213,7 @@ case must declare, and the failure modes when they&amp;rsquo;re missing.&lt;/li>
 agent speed reduction.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">Smoke-aware routing&lt;/a> &amp;ndash; how extinction and FED drive
 dynamic route selection.&lt;/li>
-&lt;/ul></description></item><item><title>Status against ISO 20414</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/verification/iso-20414/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/verification/iso-20414/</guid><description>
+&lt;/ul></description></item><item><title>Status against ISO 20414</title><link>https://pedestriandynamics.org/pyFDS-Evac/verification/iso-20414/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/verification/iso-20414/</guid><description>
 &lt;p>ISO 20414:2020 (&lt;em>Fire safety engineering — Verification and validation
 protocol for building fire evacuation models&lt;/em>) defines 21 verification tests
 (Tests 1–21) and 9 validation tests (Tests 22–30). The table below gives the
@@ -10246,7 +10246,7 @@ return that value within 1 % and to be non-zero. The second check is a null
 control, because a missing slice reads as clear air. Only the default
 Frantzich–Nilsson law is run in the ISO layout. The &lt;code>fridolf&lt;/code> option (&lt;code>speed_law=&amp;quot;fridolf&amp;quot;&lt;/code>), which
 is reachable only from Python, is checked by the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/verification/#the-tests">S2 corridor scenario&lt;/a>, not by this test.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/#the-tests">S2 corridor scenario&lt;/a>, not by this test.&lt;/p>
 &lt;p>&lt;strong>Test 19, occupant incapacitation by fire or smoke.&lt;/strong> The occupant stands at
 the centre of a 10 m × 10 m room. The time at which the simulated dose reaches
 FED = 1 is compared with a hand calculation of the same dose
