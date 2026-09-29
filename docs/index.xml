@@ -27,6 +27,116 @@ and smoke at the occupants&amp;rsquo; positions, compared with tenability limits
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">visibility&lt;/a> pages give those limits. ISO 13571:2012 (§5.1)
 states that its time to compromised tenability may reasonably be equated
 to ASET when escape to a place of refuge is the outcome considered.&lt;/p>
+&lt;p>Tenability is judged in one of two ways. With fixed limits, conditions at
+one height are compared with one value per hazard, and a space is
+untenable as soon as any value is exceeded: for exposures of up to
+10 minutes, the Engineers Australia practice note gives 100 °C,
+2.5 kW/m², 2,700 ppm CO, 140 ppm HCN and a visibility of 10 m, evaluated
+2.0 m above the floor (2014, §5.2 and Fig. 8, p. 15). With a dose, the
+exposure of each occupant is summed over time along the path they take,
+and incapacitation is expected at a fractional effective dose of 1 for the
+median occupant (the same note, §5 and §5.3, after the SFPE Handbook and
+ISO 13571).&lt;/p>
+&lt;figure class="svg-figure">
+&lt;div class="svg-figure__panel">&lt;svg xmlns="http://www.w3.org/2000/svg" class="hz" viewBox="0 0 340 420" width="340" height="420" role="img" aria-labelledby="hz3a-title hz3a-desc">
+&lt;title id="hz3a-title">Fixed tenability limits&lt;/title>
+&lt;desc id="hz3a-desc">One occupant standing below a dashed line at 2.0 m above the floor, where the limits are evaluated. Short exposure, up to 10 minutes. Air temperature at most 100 °C; radiant heat at most 2.5 kW/m²; CO at most 2,700 ppm and HCN at most 140 ppm; visibility at least 10 m. Conditions are untenable as soon as any one limit is exceeded.&lt;/desc>
+&lt;style>
+svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.26;--person:#374151;--conv:#D55E00;--rad:#A86F00;--tox:#A2458A;--vis:#0072B2;--on-badge:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.dark svg.hz{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}
+@media (prefers-color-scheme:dark){svg.hz:root{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}}
+.hz .wall{stroke:var(--wall);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .smoke{fill:var(--smoke);opacity:var(--smoke-op)}
+.hz .person{stroke:var(--person);stroke-linecap:round;fill:none}
+.hz .label{fill:var(--ink);font-size:17px;font-weight:600}
+.hz .note{fill:var(--muted);font-size:15px;font-style:italic}
+.hz .conv{stroke:var(--conv);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .rad{stroke:var(--rad);fill:none;stroke-width:2.5;stroke-dasharray:7 5}
+.hz .vis{stroke:var(--vis);fill:none;stroke-width:2.5;stroke-dasharray:2 5;stroke-linecap:round}
+.hz .mol{fill:var(--tox)}
+.hz .mol line{stroke:var(--tox);stroke-width:2}
+.hz .glyph{stroke:var(--on-badge);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hz .glyph-fill{fill:var(--on-badge)}
+&lt;/style>
+&lt;style>
+.hz .title{fill:var(--ink);font-size:18px;font-weight:700}
+.hz .sub{fill:var(--muted);font-size:15px}
+.hz .gauge{stroke:var(--muted);fill:none;stroke-width:1.5;stroke-dasharray:6 4}
+.hz .axis{stroke:var(--wall);fill:none;stroke-width:2}
+.hz .val{fill:var(--ink);font-size:16px}
+&lt;/style>
+&lt;text class="title" x="14" y="30">Fixed limits at one height&lt;/text>
+&lt;text class="sub" x="14" y="52">short exposure, up to 10 min&lt;/text>
+&lt;g transform="translate(128 80)">&lt;circle r="13" style="fill:var(--conv)"/>&lt;rect class="glyph" x="-2.5" y="-9" width="5" height="12" rx="2.5"/>&lt;circle class="glyph-fill" cy="5" r="4"/>&lt;/g>&lt;text class="val" x="150" y="86">air ≤ 100 °C&lt;/text>
+&lt;g transform="translate(128 120)">&lt;circle r="13" style="fill:var(--rad)"/>&lt;circle class="glyph-fill" cx="-6" r="2.5"/>&lt;path class="glyph" d="M-1 -4 A5 5 0 0 1 -1 4 M2.5 -7 A9 9 0 0 1 2.5 7 M6 -9.5 A12 12 0 0 1 6 9.5"/>&lt;/g>&lt;text class="val" x="150" y="126">radiation ≤ 2.5 kW/m²&lt;/text>
+&lt;g transform="translate(128 160)">&lt;circle r="13" style="fill:var(--tox)"/>&lt;g transform="rotate(-30)">&lt;path class="glyph" d="M-6 0 H6"/>&lt;circle class="glyph-fill" cx="-6.5" r="2.8"/>&lt;circle class="glyph-fill" r="3.6"/>&lt;circle class="glyph-fill" cx="6.5" r="2.8"/>&lt;/g>&lt;/g>&lt;text class="val" x="150" y="166">CO ≤ 2,700 ppm&lt;/text>&lt;text class="val" x="150" y="186">HCN ≤ 140 ppm&lt;/text>
+&lt;g transform="translate(128 214)">&lt;circle r="13" style="fill:var(--vis)"/>&lt;path class="glyph" d="M-9 0 C-5 -6 5 -6 9 0 C5 6 -5 6 -9 0 Z"/>&lt;circle class="glyph-fill" r="2.5"/>&lt;path class="glyph" d="M-8 8 L8 -8"/>&lt;/g>&lt;text class="val" x="150" y="220">visibility ≥ 10 m&lt;/text>
+&lt;path class="gauge" d="M14 240.0 H326"/>
+&lt;text class="sub" x="326" y="258.0" text-anchor="end">limits evaluated at 2.0 m&lt;/text>
+&lt;path class="wall" d="M14 380 H326" style="stroke-width:4"/>
+&lt;g class="person">
+&lt;path d="M58 273.6 L58 311.4" style="stroke-width:18"/>
+&lt;path d="M58 311.4 L51 377 M58 311.4 L65 377" style="stroke-width:11"/>
+&lt;path d="M58 280.6 L44 318 M58 280.6 L72 318" style="stroke-width:8"/>
+&lt;/g>
+&lt;circle cx="58" cy="265.9" r="11" style="fill:var(--person)"/>
+&lt;text class="val" x="128" y="306" style="font-weight:600">Untenable as soon as&lt;/text>
+&lt;text class="val" x="128" y="326" style="font-weight:600">any one is exceeded&lt;/text>
+&lt;/svg>
+&lt;/div>
+&lt;div class="svg-figure__panel">&lt;svg xmlns="http://www.w3.org/2000/svg" class="hz" viewBox="0 0 340 420" width="340" height="420" role="img" aria-labelledby="hz3b-title hz3b-desc">
+&lt;title id="hz3b-title">Dose along each occupant's path&lt;/title>
+&lt;desc id="hz3b-desc">A graph of fractional effective dose (FED) against time for two occupants, with a dashed threshold line at FED 1. Occupant A takes a short route; the dose rises slowly and A reaches the exit, marked by a circle, at a dose of about 0.35. Occupant B takes a route through denser smoke; the dose rises faster and reaches 1, marked by a cross, where B is incapacitated. The dose is the sum of the dose rate times the time step along each path.&lt;/desc>
+&lt;style>
+svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.26;--person:#374151;--conv:#D55E00;--rad:#A86F00;--tox:#A2458A;--vis:#0072B2;--on-badge:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.dark svg.hz{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}
+@media (prefers-color-scheme:dark){svg.hz:root{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}}
+.hz .wall{stroke:var(--wall);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .smoke{fill:var(--smoke);opacity:var(--smoke-op)}
+.hz .person{stroke:var(--person);stroke-linecap:round;fill:none}
+.hz .label{fill:var(--ink);font-size:17px;font-weight:600}
+.hz .note{fill:var(--muted);font-size:15px;font-style:italic}
+.hz .conv{stroke:var(--conv);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .rad{stroke:var(--rad);fill:none;stroke-width:2.5;stroke-dasharray:7 5}
+.hz .vis{stroke:var(--vis);fill:none;stroke-width:2.5;stroke-dasharray:2 5;stroke-linecap:round}
+.hz .mol{fill:var(--tox)}
+.hz .mol line{stroke:var(--tox);stroke-width:2}
+.hz .glyph{stroke:var(--on-badge);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hz .glyph-fill{fill:var(--on-badge)}
+&lt;/style>
+&lt;style>
+.hz .title{fill:var(--ink);font-size:18px;font-weight:700}
+.hz .sub{fill:var(--muted);font-size:15px}
+.hz .gauge{stroke:var(--muted);fill:none;stroke-width:1.5;stroke-dasharray:6 4}
+.hz .axis{stroke:var(--wall);fill:none;stroke-width:2}
+.hz .val{fill:var(--ink);font-size:16px}
+&lt;/style>
+&lt;text class="title" x="14" y="30">Dose along each path&lt;/text>
+&lt;text class="sub" x="14" y="52">summed over time, per occupant&lt;/text>
+&lt;text class="sub" x="14" y="74" style="font-style:italic">FED = Σ dose rate × Δt&lt;/text>
+&lt;path class="axis" d="M44 110 V330 H326"/>
+&lt;text class="sub" x="36" y="335" text-anchor="end">0&lt;/text>
+&lt;text class="sub" x="36" y="155" text-anchor="end">1&lt;/text>
+&lt;text class="sub" x="50" y="122">FED&lt;/text>
+&lt;text class="sub" x="326" y="354" text-anchor="end">time along the path →&lt;/text>
+&lt;path class="gauge" d="M44 150 H326"/>
+&lt;path style="stroke:var(--vis);fill:none;stroke-width:3.5" d="M44 330 C114 326 174 304 224 268"/>
+&lt;circle cx="224" cy="268" r="6" style="fill:var(--vis)"/>
+&lt;text class="val" x="234" y="272">A reaches&lt;/text>&lt;text class="val" x="234" y="291">the exit&lt;/text>
+&lt;path style="stroke:var(--conv);fill:none;stroke-width:3.5;stroke-dasharray:9 5" d="M44 330 C114 322 194 250 270 150"/>
+&lt;path style="stroke:var(--conv);fill:none;stroke-width:3.5;stroke-linecap:round" d="M263 143 l14 14 m0 -14 l-14 14"/>
+&lt;text class="val" x="194" y="136">B stops at 1&lt;/text>
+&lt;text class="sub" x="14" y="386">A: short route&lt;/text>
+&lt;text class="sub" x="14" y="406">B: route through denser smoke&lt;/text>
+&lt;/svg>
+&lt;/div>
+&lt;/figure>
+&lt;p>&lt;em>Fixed limits: the short-exposure criteria of the practice note (Fig. 8,
+&amp;ldquo;Tenability Criteria – Short Exposure&amp;rdquo;, p. 15); for small enclosures, of
+the order of 10 m, the note allows a visibility of 5 m. Dose along each
+path: the dose approach, schematic, for two occupants; the same fire gives
+each one a different dose. Figure inspired by Fig. 8 of the Engineers Australia
+practice note for tenability criteria (2014).&lt;/em>&lt;/p>
 &lt;p>RSET comes from people. ISO/TR 16738 (§5.4) reports that the pre-travel
 activity phase can often be the longest part of the total escape time. Each
 occupant has their own \(t_{\mathrm{pre}}\) and \(t_{\mathrm{trav}}\), so
@@ -59,12 +169,19 @@ fires&lt;/em>. ISO, Geneva.
 approaches&lt;/em>. SFPE Handbook of Fire Protection Engineering, 5th ed.,
 Ch. 56, 2012–2046.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_56" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_56&lt;/a>&lt;/li>
+&lt;li>Engineers Australia Society of Fire Safety (2014). &lt;em>Practice note for
+tenability criteria in building fires&lt;/em>, version 2.0, 3 April 2014.
+Society of Fire Safety, NSW Chapter, Engineers Australia.
+&lt;a href="https://www.engineersaustralia.org.au/sites/default/files/2024-01/tenability-criteria-practice-note_0.pdf" target="_blank" rel="noopener">engineersaustralia.org.au&lt;/a>.
+§5 (p. 13), §5.2 and Fig. 8 (p. 15), §5.3 (p. 17).&lt;/li>
 &lt;li>Gwynne, S. M. V., &amp;amp; Boyce, K. E. (2016). &lt;em>Engineering data&lt;/em>. SFPE
 Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_64" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_64&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET ensemble how-to&lt;/a>.&lt;/p></description></item><item><title>Quickstart</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</guid><description>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET ensemble how-to&lt;/a>. Each agent carries
+its own dose along its path; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>.&lt;/p></description></item><item><title>Quickstart</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</guid><description>
 &lt;p>Run the same evacuation twice, once in clear air and once in smoke, and see
 how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;p>&lt;strong>What you will do&lt;/strong>&lt;/p>
