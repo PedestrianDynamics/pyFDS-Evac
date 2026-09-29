@@ -246,7 +246,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "Eq. 63.44 or the law of --heat-endpoint. total-flux: heat flux to the "
         "skin from Eq. 63.49 (both terms in W/m2, divided by 1000 together), "
         "rate q^1.33/D (Eq. 63.43) with no 2.5 kW/m2 threshold; D of "
-        "--heat-endpoint, fatal (16.667) without it",
+        "--heat-endpoint, fatal (16.7) without it",
     )
     parser.add_argument(
         "--heat-emissivity",
