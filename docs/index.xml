@@ -536,12 +536,12 @@ out of a plume into clean air keeps its last slowdown
 the Purser sum of the FDS+Evac guide, which adds irritants into the dose,
 unlike ISO 13571. Convective heat from an FDS &lt;code>TEMPERATURE&lt;/code> slice accumulates
 in a second dose; without that slice there is no heat dose, and the log says
-so. The two doses are never added. Each agent draws its own threshold for each
-dose, so a population does not stop all at once. When either dose crosses its
-threshold, the agent&amp;rsquo;s speed is set to zero and it stays in place as an
-obstacle. &lt;code>--disable-tenability&lt;/code> turns off the slowdown and both stops, while
-the doses are still logged; &lt;code>--incapacitation-mode deterministic&lt;/code> stops every
-agent at FED = 1, as FDS+Evac does.&lt;/p>
+so. The two doses are never added. By default every agent stops at FED = 1,
+as FDS+Evac does; with &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws
+its own threshold, so a population does not stop all at once. When either dose
+crosses its threshold, the agent&amp;rsquo;s speed is set to zero and it stays in place
+as an obstacle. &lt;code>--disable-tenability&lt;/code> turns off the slowdown and both stops,
+while the doses are still logged.&lt;/p>
 &lt;p>Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
 only incapacitates: it neither slows agents nor affects route choice, and
@@ -794,7 +794,7 @@ pages. Defaults are on the Models pages.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>\(D_i\), \(D_{\mathrm{heat},i}\)&lt;/td>
-&lt;td>Incapacitation threshold of agent &lt;em>i&lt;/em>, log-normal&lt;/td>
+&lt;td>Incapacitation threshold of agent &lt;em>i&lt;/em>; log-normal in probabilistic mode&lt;/td>
 &lt;td>-&lt;/td>
 &lt;td>&lt;code>fed_threshold&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
 &lt;/tr>
@@ -1047,9 +1047,9 @@ released again when its pre-movement time ends
 &lt;code>probabilistic&lt;/code> mode each agent draws each threshold once, from the run&amp;rsquo;s
 seed, as &lt;code>_sample_threshold&lt;/code> does:
 \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
-In &lt;code>deterministic&lt;/code> mode every agent uses the threshold itself. The gas
-dose is probabilistic by default and the heat dose deterministic, since no
-population spread for heat is published.&lt;/li>
+In &lt;code>deterministic&lt;/code> mode every agent uses the threshold itself. Both doses
+are deterministic by default: the gas dose as in FDS+Evac, and the heat
+dose since no population spread for heat is published.&lt;/li>
 &lt;/ul>
 &lt;table>
 &lt;thead>
@@ -1082,7 +1082,7 @@ population spread for heat is published.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>incapacitation_mode&lt;/code>&lt;/td>
-&lt;td>&lt;code>&amp;quot;probabilistic&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;deterministic&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>--incapacitation-mode&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -1522,10 +1522,11 @@ calculation for this mixture reaches FED = 1 at 981.7 s
 (&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>), and the run crosses it at
 982 s. &lt;code>fed_history&lt;/code> has one row per agent per update interval (1 s by
 default).&lt;/p>
-&lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;probabilistic&amp;quot;&lt;/code>, which
-draws a log-normal threshold for each agent with median &lt;code>fed_threshold = 1.0&lt;/code>.
-This page uses &lt;code>&amp;quot;deterministic&amp;quot;&lt;/code>, so the threshold is exactly 1.0, as in
-&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>. The command-line equivalent is &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/p>
+&lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;deterministic&amp;quot;&lt;/code>, so the
+threshold is exactly &lt;code>fed_threshold = 1.0&lt;/code> for every agent, as in
+&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>. This page
+passes it explicitly. &lt;code>&amp;quot;probabilistic&amp;quot;&lt;/code> (&lt;code>--incapacitation-mode probabilistic&lt;/code>)
+draws a log-normal threshold for each agent with median &lt;code>fed_threshold&lt;/code>.&lt;/p>
 &lt;p>The incapacitated occupant stays in the simulation, so the run continues to
 &lt;code>max_simulation_time&lt;/code> and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s. It is not
 an exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
@@ -1733,7 +1734,7 @@ and a walkable geometry as WKT (well-known text, a plain-text polygon format). &
 a direct FDS+Evac counterpart, the default is the FDS+Evac form, so that a
 case converted from FDS+Evac behaves as its author expects. Newer or
 alternative forms stay available as options. Earlier pyFDS-Evac versions
-used other defaults for seven mechanisms
+used other defaults for eight mechanisms
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>):&lt;/p>
 &lt;table>
 &lt;thead>
@@ -1787,6 +1788,12 @@ used other defaults for seven mechanisms
 &lt;td>On whenever the output has a &lt;code>TEMPERATURE&lt;/code> slice&lt;/td>
 &lt;td>&lt;code>--enable-heat-fed&lt;/code>; &lt;code>opts.enable_heat_fed = True&lt;/code>&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>Gas incapacitation threshold&lt;/td>
+&lt;td>Every agent stops at FED = 1 (Guide §3.4)&lt;/td>
+&lt;td>Per-agent log-normal draw, median &lt;code>--fed-threshold&lt;/code>, σ = 0.94&lt;/td>
+&lt;td>&lt;code>--incapacitation-mode probabilistic&lt;/code>; &lt;code>opts.incapacitation_mode = &amp;quot;probabilistic&amp;quot;&lt;/code>, or &lt;code>TenabilityConfig(incapacitation_mode=&amp;quot;probabilistic&amp;quot;)&lt;/code> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/235" target="_blank" rel="noopener">#235&lt;/a>)&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The CLI flags are also fields of the web GUI, and the &lt;code>opts&lt;/code> attributes are
@@ -1803,10 +1810,6 @@ verification case &lt;code>FED_FIC&lt;/code> separates the two forms and is part
 suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>What deliberately still differs:&lt;/strong>&lt;/p>
 &lt;ul>
-&lt;li>Incapacitation is probabilistic by default: each agent draws its own
-threshold, where FDS+Evac stops every agent at FED = 1. This is under
-discussion (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>);
-&lt;code>--incapacitation-mode deterministic&lt;/code> gives the FDS+Evac rule.&lt;/li>
 &lt;li>Route choice, cognitive maps and sign visibility are enhancements with no
 one-to-one FDS+Evac counterpart
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>); see
@@ -1921,7 +1924,7 @@ runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;tr>
 &lt;td>FED, fractional effective dose (§3.4)&lt;/td>
 &lt;td>Purser FED from CO, CO2, O2 (and optional gases), incapacitation at FED ≥ 1. The O2 term is applied only below 20 % O2 (function &lt;code>FED&lt;/code> in FDS 6.7.6 &lt;code>func.f90&lt;/code>, which FDS+Evac calls). The HCN term in the code (the same &lt;code>FED&lt;/code> function) is exp(&lt;em>C&lt;/em>CN/43)/220 − 0.00454545 (about 1/220) with &lt;em>C&lt;/em>CN = &lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2); Guide Eq. 14–15 write the offset as 0.0045 and &lt;em>C&lt;/em>CN = &lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2. The code form has been in FDS since firemodels/fds 694e033 (2011); earlier versions had no HCN term. FDS&amp;rsquo;s &lt;code>FED_FIC&lt;/code> verification case reproduces only with it (0.97402 against the expected 0.97403 at 100 s; 6.17 with NO2 alone). The FDS User Guide was corrected to NO + NO2 in 2016 (903df07); the FDS+Evac Guide and the FDS Verification Guide were not. An agent that reaches FED ≥ 1 stays down for the rest of the run&lt;/td>
-&lt;td>Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 20 %, as in FDS+Evac; &lt;code>--o2-threshold-percent 19.5&lt;/code> (&lt;code>opts.o2_threshold_percent&lt;/code>) gives the previous 19.5 %. The HCN term is the one in the code FDS+Evac ran (&lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2), offset 1/220), and &lt;code>FED_FIC&lt;/code> is reproduced in the test suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>). Earlier pyFDS-Evac versions followed Guide Eq. 14–15 (&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045); the two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.007 /min now against 0.032 /min before; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default each agent draws its own threshold (log-normal, median 1; spread on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page), so about half stop below FED = 1. Use &lt;code>--incapacitation-mode deterministic&lt;/code> to stop every agent at FED = 1 as FDS+Evac does. The heat dose, which FDS+Evac does not have, is deterministic by default. Thresholds are set with &lt;code>--fed-threshold&lt;/code> and &lt;code>--heat-fed-threshold&lt;/code>. An agent incapacitated while it is still waiting is released when its pre-movement time ends, a known bug (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/td>
+&lt;td>Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 20 %, as in FDS+Evac; &lt;code>--o2-threshold-percent 19.5&lt;/code> (&lt;code>opts.o2_threshold_percent&lt;/code>) gives the previous 19.5 %. The HCN term is the one in the code FDS+Evac ran (&lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2), offset 1/220), and &lt;code>FED_FIC&lt;/code> is reproduced in the test suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>). Earlier pyFDS-Evac versions followed Guide Eq. 14–15 (&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045); the two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.007 /min now against 0.032 /min before; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default every agent stops at FED = 1, as in FDS+Evac. With &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws its own threshold instead (log-normal, median 1; spread on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page), so about half stop below FED = 1. The heat dose, which FDS+Evac does not have, is deterministic by default. Thresholds are set with &lt;code>--fed-threshold&lt;/code> and &lt;code>--heat-fed-threshold&lt;/code>. An agent incapacitated while it is still waiting is released when its pre-movement time ends, a known bug (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Convective heat&lt;/td>
@@ -2161,7 +2164,7 @@ the run&amp;rsquo;s seed, on a stream independent of the gas threshold:
 \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
 assumption with no data basis for heat.&lt;/li>
 &lt;/ul>
-&lt;p>The gas dose is probabilistic by default; the two modes are set separately
+&lt;p>The gas dose is also deterministic by default; the two modes are set separately
 (&lt;code>--incapacitation-mode&lt;/code> and &lt;code>--heat-incapacitation-mode&lt;/code>).&lt;/p>
 &lt;table>
 &lt;thead>
@@ -4787,7 +4790,7 @@ none).&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fed-threshold F&lt;/code>&lt;/td>
-&lt;td>Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/td>
+&lt;td>FED at which agents are incapacitated (default 1.0, as FDS+Evac); with &lt;code>--incapacitation-mode probabilistic&lt;/code> it is the median of a per-agent threshold.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--o2-threshold-percent P&lt;/code>&lt;/td>
@@ -5583,21 +5586,21 @@ walking speed. Setting &lt;code>routing.alpha&lt;/code> therefore changes which 
 prefers but leaves its speed in smoke unchanged. The same split applies to
 speed itself: &lt;code>routing.base_speed_m_per_s&lt;/code> (1.3 m/s) prices routes, while an
 agent walks at its own &lt;code>v0&lt;/code> (1.25 m/s by default).&lt;/p>
-&lt;h2>Incapacitation is probabilistic by default&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-is-probabilistic-by-default">&lt;/span>
-&lt;a href="#incapacitation-is-probabilistic-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FED below means fractional effective dose. By default
-(&lt;code>--incapacitation-mode probabilistic&lt;/code>), each agent draws its own
-incapacitation threshold from a log-normal distribution with median
+&lt;h2>Incapacitation is deterministic by default&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-is-deterministic-by-default">&lt;/span>
+&lt;a href="#incapacitation-is-deterministic-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FED below means fractional effective dose. By default
+(&lt;code>--incapacitation-mode deterministic&lt;/code>), every agent stops when its FED
+reaches &lt;code>--fed-threshold&lt;/code> (1.0), as in FDS+Evac. A real population does not
+stop all at once. With &lt;code>--incapacitation-mode probabilistic&lt;/code>, each agent
+draws its own threshold from a log-normal distribution with median
 &lt;code>--fed-threshold&lt;/code> and log-scale spread &lt;code>--susceptibility-sigma&lt;/code> (defaults on
 the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page).
-About half of the agents therefore stop below FED = 1, and about 10 % stop
+About half of the agents then stop below FED = 1, and about 10 % stop
 below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>). The
-heat dose, which FDS+Evac does not have, is deterministic by default: no
+heat dose, which FDS+Evac does not have, is also deterministic by default: no
 population spread for heat is published. Its &lt;code>probabilistic&lt;/code> mode reuses the
-gas spread without a data basis of its own. FDS+Evac stops
-every agent at FED = 1. For results comparable with FDS+Evac, run with
-&lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/p>
+gas spread without a data basis of its own.&lt;/p>
 &lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
 &lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
 run ends early only when no agent is left, so a run in which any agent is
@@ -8373,7 +8376,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Incapacitation&lt;/strong>&lt;/td>
 &lt;td>FED &amp;gt;= 1.0, agent stops (v0 = 0) ([1] §3.4 p31)&lt;/td>
-&lt;td>Agent stops (desired speed 0) and remains as a static obstacle. Per-agent threshold, log-normal with median 1.0 by default, or 1.0 for every agent in deterministic mode. The convective heat FED is a separate running total; crossing either threshold incapacitates&lt;/td>
+&lt;td>Agent stops (desired speed 0) and remains as a static obstacle. Threshold 1.0 for every agent by default, as FDS+Evac, or a per-agent log-normal threshold with median 1.0 in probabilistic mode. The convective heat FED is a separate running total; crossing either threshold incapacitates&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Activity level&lt;/strong>&lt;/td>
@@ -8840,7 +8843,7 @@ title="Copy code"
 $$
 t^{*} = \frac{60}{r_{\mathrm{CO}}\,\mathrm{HV}_{\mathrm{CO_2}}}\ \text{s},
 \qquad r_{\mathrm{CO}} = 2.764\times10^{-5}\,C_{\mathrm{CO}}^{1.036}\ \text{min}^{-1}.
-$$&lt;p>In &lt;code>probabilistic&lt;/code> mode (the default for the gas dose) agent &lt;em>i&lt;/em> stops at its
+$$&lt;p>In &lt;code>probabilistic&lt;/code> mode (opt-in) agent &lt;em>i&lt;/em> stops at its
 own threshold \(D_i = \exp(\sigma Z_i)\), \(Z_i \sim N(0,1)\), σ = 0.94. Because
 FED grows linearly, agent &lt;em>i&lt;/em> stops at \(D_i\,t^{*}\), and the fraction of
 agents stopped by time &lt;em>t&lt;/em> is&lt;/p>
@@ -8855,8 +8858,8 @@ $$&lt;h2>Setup&lt;span class="hx-absolute -hx-mt-20" id="setup">&lt;/span>
 &lt;li>&lt;strong>Agents:&lt;/strong> 100 agents walk a loop between four corner checkpoints, so they
 stay in the room and keep moving; the field is sampled at each agent&amp;rsquo;s
 position every second.&lt;/li>
-&lt;li>&lt;strong>Runs:&lt;/strong> once with &lt;code>--incapacitation-mode deterministic&lt;/code>, once with the
-default &lt;code>probabilistic&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Runs:&lt;/strong> once with &lt;code>--incapacitation-mode deterministic&lt;/code>, once with
+&lt;code>--incapacitation-mode probabilistic&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h2>Expected&lt;span class="hx-absolute -hx-mt-20" id="expected">&lt;/span>
 &lt;a href="#expected" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The concentrations are read from the FDS slice itself, independently of
@@ -9300,13 +9303,13 @@ title="Copy code"
 &lt;code>evacuation_time&lt;/code> reports the time limit and &lt;code>success&lt;/code> is &lt;code>True&lt;/code>. The exit
 times, the incapacitated count and the remaining count tell you what happened.&lt;/p>
 &lt;h2>Incapacitation mode&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-mode">&lt;/span>
-&lt;a href="#incapacitation-mode" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;probabilistic&amp;quot;&lt;/code>. Each
-agent then draws its own threshold, &lt;code>fed_threshold * exp(susceptibility_sigma * Z)&lt;/code>
-with &lt;em>Z&lt;/em> ~ N(0, 1): a log-normal with median &lt;code>fed_threshold&lt;/code>. The defaults
-are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page. For results comparable with FDS+Evac, where
-every agent is incapacitated at FED = 1, use
-&lt;code>TenabilityConfig(incapacitation_mode=&amp;quot;deterministic&amp;quot;)&lt;/code>, or
-&lt;code>--incapacitation-mode deterministic&lt;/code> on the command line. Part 2 uses the
+&lt;a href="#incapacitation-mode" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;deterministic&amp;quot;&lt;/code>: every
+agent is incapacitated at &lt;code>fed_threshold&lt;/code> (1.0), as in FDS+Evac. With
+&lt;code>TenabilityConfig(incapacitation_mode=&amp;quot;probabilistic&amp;quot;)&lt;/code>, or
+&lt;code>--incapacitation-mode probabilistic&lt;/code> on the command line, each agent draws
+its own threshold, &lt;code>fed_threshold * exp(susceptibility_sigma * Z)&lt;/code> with
+&lt;em>Z&lt;/em> ~ N(0, 1): a log-normal with median &lt;code>fed_threshold&lt;/code>. The defaults are on
+the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page. Part 2 uses the
 deterministic mode.&lt;/p>
 &lt;h2>Related options&lt;span class="hx-absolute -hx-mt-20" id="related-options">&lt;/span>
 &lt;a href="#related-options" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
@@ -11340,8 +11343,8 @@ The convective heat dose is checked in
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat/">Heat dose in a uniform room&lt;/a>.&lt;/li>
 &lt;li>A missing O₂ gate is caught, a misplaced one is not: any gate between
 15 % and 21 % gives the same four times.&lt;/li>
-&lt;li>One occupant per case and the deterministic threshold. The probabilistic
-threshold, the default, is checked on 100 agents in
+&lt;li>One occupant per case and the deterministic threshold. The opt-in
+probabilistic threshold is checked on 100 agents in
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-homogeneous/">CO dose in a uniform room&lt;/a>.&lt;/li>
 &lt;li>A uniform, constant field cannot show whether the gas is sampled at the
 agent&amp;rsquo;s current position

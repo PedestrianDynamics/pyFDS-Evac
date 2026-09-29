@@ -374,7 +374,7 @@ none).&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fed-threshold F&lt;/code>&lt;/td>
-&lt;td>Median FED at which agents are incapacitated (default 1.0); each agent draws its own threshold unless &lt;code>--incapacitation-mode deterministic&lt;/code>.&lt;/td>
+&lt;td>FED at which agents are incapacitated (default 1.0, as FDS+Evac); with &lt;code>--incapacitation-mode probabilistic&lt;/code> it is the median of a per-agent threshold.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--o2-threshold-percent P&lt;/code>&lt;/td>
@@ -1241,13 +1241,13 @@ title="Copy code"
 &lt;code>evacuation_time&lt;/code> reports the time limit and &lt;code>success&lt;/code> is &lt;code>True&lt;/code>. The exit
 times, the incapacitated count and the remaining count tell you what happened.&lt;/p>
 &lt;h2>Incapacitation mode&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-mode">&lt;/span>
-&lt;a href="#incapacitation-mode" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;probabilistic&amp;quot;&lt;/code>. Each
-agent then draws its own threshold, &lt;code>fed_threshold * exp(susceptibility_sigma * Z)&lt;/code>
-with &lt;em>Z&lt;/em> ~ N(0, 1): a log-normal with median &lt;code>fed_threshold&lt;/code>. The defaults
-are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page. For results comparable with FDS+Evac, where
-every agent is incapacitated at FED = 1, use
-&lt;code>TenabilityConfig(incapacitation_mode=&amp;quot;deterministic&amp;quot;)&lt;/code>, or
-&lt;code>--incapacitation-mode deterministic&lt;/code> on the command line. Part 2 uses the
+&lt;a href="#incapacitation-mode" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;deterministic&amp;quot;&lt;/code>: every
+agent is incapacitated at &lt;code>fed_threshold&lt;/code> (1.0), as in FDS+Evac. With
+&lt;code>TenabilityConfig(incapacitation_mode=&amp;quot;probabilistic&amp;quot;)&lt;/code>, or
+&lt;code>--incapacitation-mode probabilistic&lt;/code> on the command line, each agent draws
+its own threshold, &lt;code>fed_threshold * exp(susceptibility_sigma * Z)&lt;/code> with
+&lt;em>Z&lt;/em> ~ N(0, 1): a log-normal with median &lt;code>fed_threshold&lt;/code>. The defaults are on
+the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page. Part 2 uses the
 deterministic mode.&lt;/p>
 &lt;h2>Related options&lt;span class="hx-absolute -hx-mt-20" id="related-options">&lt;/span>
 &lt;a href="#related-options" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
