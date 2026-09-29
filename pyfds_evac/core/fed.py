@@ -4,7 +4,12 @@ import logging
 import math
 from dataclasses import dataclass, replace
 
-from .fds_sampling import SliceFieldSampler, _slice_z_mid, load_slice_sampler
+from .fds_sampling import (
+    FdsHorizonError,
+    SliceFieldSampler,
+    _slice_z_mid,
+    load_slice_sampler,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -886,7 +891,12 @@ class FdsFedField:
 
     @classmethod
     def from_fds(
-        cls, fds_dir: str, *, simulation=None, slice_height_m: float | None = 1.6
+        cls,
+        fds_dir: str,
+        *,
+        simulation=None,
+        slice_height_m: float | None = 1.6,
+        allow_horizon_hold: bool = False,
     ) -> "FdsFedField":
         """Build gas samplers from an FDS case directory.
 
@@ -902,6 +912,9 @@ class FdsFedField:
             Each species is read from its horizontal slice nearest this
             height (default 1.6 m, FDS+Evac's ``HUMAN_SMOKE_HEIGHT``), as
             ``load_slice_sampler`` selects it.
+        allow_horizon_hold : optional
+            Hold the last frame past the FDS output instead of raising
+            ``FdsHorizonError``.
         """
         if simulation is not None:
             sim = simulation
@@ -916,7 +929,11 @@ class FdsFedField:
 
         def sampler(quantity):
             return load_slice_sampler(
-                fds_dir, quantity, simulation=sim, slice_height_m=slice_height_m
+                fds_dir,
+                quantity,
+                simulation=sim,
+                slice_height_m=slice_height_m,
+                allow_horizon_hold=allow_horizon_hold,
             )
 
         co = sampler("CARBON MONOXIDE VOLUME FRACTION")
@@ -940,6 +957,8 @@ class FdsFedField:
             return 0.0
         try:
             return 1e6 * sampler.sample(time_s, x, y)
+        except FdsHorizonError:
+            raise
         except ValueError:
             return 0.0
 
@@ -949,6 +968,8 @@ class FdsFedField:
             co_pct = 100.0 * self._co.sample(time_s, x, y)
             co2_pct = 100.0 * self._co2.sample(time_s, x, y)
             o2_pct = 100.0 * self._o2.sample(time_s, x, y)
+        except FdsHorizonError:
+            raise
         except ValueError:
             return DefaultFedInputs()
         return DefaultFedInputs(
@@ -1094,6 +1115,7 @@ class FdsHeatField:
         slice_height_m: float = 1.6,
         simulation=None,
         integrated_intensity: bool = False,
+        allow_horizon_hold: bool = False,
     ) -> "FdsHeatField":
         """Load the TEMPERATURE slice from an FDS case directory.
 
@@ -1105,6 +1127,7 @@ class FdsHeatField:
             "TEMPERATURE",
             simulation=simulation,
             slice_height_m=slice_height_m,
+            allow_horizon_hold=allow_horizon_hold,
         )
         intensity_sampler = None
         if integrated_intensity:
@@ -1113,6 +1136,7 @@ class FdsHeatField:
                 "INTEGRATED INTENSITY",
                 simulation=simulation,
                 slice_height_m=slice_height_m,
+                allow_horizon_hold=allow_horizon_hold,
             )
             _check_same_slice_height(sampler, intensity_sampler, fds_dir)
         field = cls(sampler, intensity_sampler=intensity_sampler)
@@ -1146,6 +1170,8 @@ def _sample_or_none(sampler: SliceFieldSampler, time_s: float, x, y) -> float | 
     """Return the sampled value, or None outside the slice."""
     try:
         return sampler.sample(time_s, x, y)
+    except FdsHorizonError:
+        raise
     except ValueError:
         return None
 

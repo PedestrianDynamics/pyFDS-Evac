@@ -42,6 +42,26 @@ Internally it:
    cell-centred slices).
 4. Returns `subslice.data[t_index, i_index, j_index]`.
 
+### Past the end of the FDS output
+
+The nearest timestep of a time past the last slice frame is the last
+frame, so without a check a run longer than the FDS run would walk its
+agents through frozen smoke. `sample` therefore raises `FdsHorizonError`
+(a `ValueError`) when `time_s` is more than one slice output interval
+(the spacing of the last two frames) past the last frame. The message
+names the quantity, the requested time and the last FDS time. The
+extinction, gas FED and heat FED fields pass this error on instead of
+treating it as an out-of-domain point, and `VisibilityModel` applies the
+same rule to its vismap time points.
+
+`build_run_kwargs` checks the whole run at setup: a scenario
+`max_simulation_time` more than one output interval past the earliest
+last frame of any slice in `--fds-dir` stops the run before it starts.
+
+`--allow-fds-horizon-hold` (`allow_horizon_hold=True` in Python) turns
+both checks off and holds the last frame, logging one warning per
+sampler the first time it happens.
+
 ### Performance caches
 
 Three caches reduce per-call overhead on hot paths (for example, sampling

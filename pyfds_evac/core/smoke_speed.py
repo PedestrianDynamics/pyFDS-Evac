@@ -66,7 +66,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .fds_sampling import SliceFieldSampler, load_slice_sampler
+from .fds_sampling import FdsHorizonError, SliceFieldSampler, load_slice_sampler
 
 _logger = logging.getLogger(__name__)
 
@@ -129,6 +129,7 @@ class ExtinctionField:
         *,
         slice_height_m: float = 1.6,
         simulation=None,
+        allow_horizon_hold: bool = False,
     ) -> "ExtinctionField":
         """Load extinction slices from an FDS case directory via fdsreader."""
         sampler = load_slice_sampler(
@@ -136,6 +137,7 @@ class ExtinctionField:
             "SOOT EXTINCTION COEFFICIENT",
             simulation=simulation,
             slice_height_m=slice_height_m,
+            allow_horizon_hold=allow_horizon_hold,
         )
         field = cls(sampler)
         field.fds_dir = str(fds_dir)
@@ -145,6 +147,8 @@ class ExtinctionField:
         """Return the nearest-grid extinction coefficient K [1/m]."""
         try:
             return self._sampler.sample(time_s, x, y)
+        except FdsHorizonError:
+            raise
         except ValueError:
             if not self._warned_ood:
                 _logger.warning(

@@ -12,6 +12,7 @@ returned value names the position that was read.
 """
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -51,6 +52,8 @@ class _SubSlice:
 class _Slice:
     def __init__(self, subslice):
         self.subslices = [subslice]
+        self.times = np.array([0.0])
+        self.quantity = SimpleNamespace(name="TEST")
 
     def get_nearest_timestep(self, time_s):
         return 0

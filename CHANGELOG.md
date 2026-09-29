@@ -88,6 +88,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- A run that outlasts the FDS output stops instead of holding the last
+  slice frame. `build_run_kwargs` (so `run.py` and the web GUI) rejects a
+  `max_simulation_time` more than one slice output interval past the last
+  FDS frame at setup, and smoke, gas FED, heat FED and sign-visibility
+  samples past that point raise `FdsHorizonError`, a `ValueError`, naming
+  the quantity, the requested time and the last FDS time. Previously every
+  such sample silently returned the last frame, so agents walked through
+  frozen smoke and kept accumulating dose at the final concentrations.
+  `--allow-fds-horizon-hold` (and `allow_horizon_hold=True` on
+  `SliceFieldSampler`, `load_slice_sampler`, the `from_fds` constructors
+  and `VisibilityModel`) restores the hold with one warning per quantity
+  ([#340](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340)).
 - With `--enable-heat-fed` the default convective law is ISO 13571:2012
   Eq. (9), fully clothed,
   t = 4.1e8 · T^-3.61 min (T in °C, air with less than 10 % water vapour),
