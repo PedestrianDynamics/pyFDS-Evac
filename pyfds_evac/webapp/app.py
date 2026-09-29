@@ -17,8 +17,11 @@ from pathlib import Path
 from urllib.parse import quote
 
 from fasthtml.common import (
+    H2,
     B,
     Button,
+    Code,
+    Details,
     Div,
     EventStream,
     Link,
@@ -27,6 +30,8 @@ from fasthtml.common import (
     Pre,
     Script,
     Span,
+    Style,
+    Summary,
     Title,
     fast_app,
     serve,
@@ -37,8 +42,8 @@ from starlette.requests import Request
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
-from . import docs, params, plots, theme, trajviz
-from .runner import RunManager, make_run_spec
+from . import docs, params, plots, pyexport, theme, trajviz
+from .runner import RunManager, code_provenance, make_run_spec
 
 _PLOTLY_CDN = Script(src="https://cdn.plot.ly/plotly-2.35.2.min.js")
 _HTMX_SSE = Script(src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js")
@@ -225,9 +230,17 @@ def _sidebar() -> Div:
                     "Parameters",
                     style=f"{_GROTESK};font-weight:600;font-size:16px;letter-spacing:-.01em;{_INK}",
                 ),
-                Span(
-                    "run.py",
-                    style=f"{_MONO};font-size:10px;{_MUTED};padding:3px 8px;border:1px solid var(--hairline);border-radius:6px",
+                Button(
+                    "Show equivalent Python",
+                    type="button",
+                    id="pyexport-preview-btn",
+                    hx_post="/export/preview",
+                    hx_include="#run-form",
+                    hx_params="not files,upload_name",
+                    hx_target="#pyexport",
+                    hx_swap="innerHTML",
+                    data_pyexport_open="1",
+                    cls="pyexport-btn",
                 ),
                 style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px",
             ),
@@ -700,6 +713,12 @@ def index():
         ),
         theme.switch(),
         Div(id="dir-modal"),
+        NotStr(
+            '<dialog id="pyexport" class="pyexport" aria-labelledby="pyexport-title">'
+            "</dialog>"
+        ),
+        Style(_PYEXPORT_CSS),
+        Script(_PYEXPORT_JS),
         theme.script(),
         Script(_AUTOFILL_JS),
         Script(_TAB_JS),
@@ -1056,6 +1075,345 @@ async def post(request: Request):
     return _running_stream_view()
 
 
+# ── equivalent Python ─────────────────────────────────────────────────────────
+_PYEXPORT_CSS = """
+.pyexport-btn, .pyexport-act, .pyexport-close {
+  padding:6px 11px;border-radius:8px;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  background:transparent;color:var(--ink-dim);border:1px solid var(--hairline);
+}
+.pyexport-btn:focus-visible, .pyexport-act:focus-visible, .pyexport-close:focus-visible,
+.pyexport-code:focus-visible, .pyexport summary:focus-visible {
+  outline:2px solid #F4C430;outline-offset:2px;
+}
+.pyexport-act:disabled { opacity:.5;cursor:not-allowed; }
+dialog.pyexport {
+  width:min(920px, calc(100vw - 32px));max-width:none;max-height:90vh;
+  box-sizing:border-box;padding:18px;overflow:auto;
+  background:var(--surface-panel);color:var(--ink);
+  border:1px solid var(--hairline-strong);border-radius:14px;
+}
+dialog.pyexport::backdrop { background:rgba(0,0,0,.55); }
+.pyexport-head { display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px; }
+.pyexport-head h2 {
+  flex:1 1 220px;margin:0;font-family:'Space Grotesk',sans-serif;
+  font-size:15px;font-weight:600;overflow-wrap:anywhere;
+}
+.pyexport-badge {
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;
+  padding:3px 7px;border:1px solid var(--hairline-strong);border-radius:6px;
+}
+.pyexport-notes { font-size:12px;color:var(--ink-dim);line-height:1.45;overflow-wrap:anywhere; }
+.pyexport-notes p { margin:4px 0; }
+.pyexport-status { font-family:'JetBrains Mono',monospace;font-size:12px;margin:0 0 8px; }
+.pyexport-code {
+  margin:12px 0;padding:12px;white-space:pre;overflow-x:auto;max-height:55vh;
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.5;
+  background:var(--surface-input);border:1px solid var(--hairline);border-radius:10px;
+}
+.pyexport-actions { display:flex;flex-wrap:wrap;align-items:center;gap:8px; }
+.pyexport-error { color:#E01E37;font-size:13px; }
+"""
+
+_PYEXPORT_JS = """
+(function () {
+  var dlg = document.getElementById('pyexport');
+  if (!dlg) return;
+  var opener = null;
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target : null;
+    if (!t) return;
+    var open = t.closest('[data-pyexport-open]');
+    if (open) opener = open;
+    if (t.closest('.pyexport-close')) dlg.close();
+    var copy = t.closest('[data-pyexport-copy]');
+    if (copy) copyCode(copy);
+    var dl = t.closest('[data-pyexport-download]');
+    if (dl) download(dl);
+  });
+  document.body.addEventListener('htmx:afterSwap', function (e) {
+    if (e.detail.target === dlg) {
+      if (!dlg.open) dlg.showModal();
+      var first = dlg.querySelector('.pyexport-close');
+      if (first) first.focus();
+    } else if (dlg.open && dlg.querySelector('[data-kind="run"]') &&
+               !document.querySelector('[data-pyexport-run]')) {
+      dlg.close();  // cleared results take the run's code with them
+    }
+  });
+  dlg.addEventListener('close', function () {
+    if (opener && document.body.contains(opener)) opener.focus();
+  });
+  function code() {
+    var el = dlg.querySelector('.pyexport-code');
+    return el ? el.textContent : '';
+  }
+  function say(msg) {
+    var live = dlg.querySelector('.pyexport-live');
+    if (live) live.textContent = msg;
+  }
+  function flash(btn, label) {
+    var old = btn.dataset.label || btn.textContent;
+    btn.dataset.label = old;
+    btn.textContent = label;
+    setTimeout(function () { btn.textContent = old; }, 2000);
+  }
+  function selectCode() {
+    var el = dlg.querySelector('.pyexport-code');
+    if (!el) return;
+    var r = document.createRange();
+    r.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+    el.focus();
+  }
+  function copyCode(btn) {
+    var fail = function () {
+      selectCode();
+      say('Copy failed \u2013 code selected, press Ctrl/Cmd+C');
+      flash(btn, 'Copy failed');
+    };
+    if (!navigator.clipboard) { fail(); return; }
+    navigator.clipboard.writeText(code()).then(function () {
+      say('Copied');
+      flash(btn, 'Copied');
+    }, fail);
+  }
+  function download(btn) {
+    var blob = new Blob([code()], {type: 'text/x-python'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = btn.dataset.filename || 'pyfds_evac.py';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+})();
+"""
+
+
+def _run_code_button():
+    """ "Show Python for this run", or nothing when no run is recorded."""
+    spec = manager.spec
+    if spec is None:
+        return ""
+    return Button(
+        "Show Python for this run",
+        type="button",
+        hx_post=f"/export/run?run={spec.run_id}",
+        hx_include="#run-form",
+        hx_params="not files,upload_name",
+        hx_target="#pyexport",
+        hx_swap="innerHTML",
+        data_pyexport_open="1",
+        data_pyexport_run=str(spec.run_id),
+        cls="pyexport-btn",
+    )
+
+
+def _pyexport_notes(version, scenario_name: str, scenario_path: str) -> list:
+    """The plain-text notices above the code, one line each."""
+    notes = [
+        P(
+            f"Packages: needs pyfds-evac {version or '(version not recorded)'} "
+            "(the one this GUI runs). Install it the same way as this GUI, e.g. "
+            "`uv sync` in the repo. The GUI extra is not needed."
+        ),
+        P(
+            "Files not included: this file contains code only. The scenario "
+            "folder and FDS results are not included; copy them to the other "
+            "machine."
+        ),
+        P(
+            "Paths are from this computer. Edit the PATHS block at the top of the "
+            "script: SCENARIO, FDS_DIR, VIS_CACHE (if used) and OUTPUT_DIR."
+        ),
+    ]
+    if str(scenario_name).startswith(params.UPLOAD_PREFIX):
+        notes.append(
+            P(
+                "This scenario was uploaded into the GUI's own folder "
+                f"{scenario_path}; that folder will not exist elsewhere."
+            )
+        )
+    notes += [
+        P(
+            "Outputs: the script writes to a new output folder and does not "
+            "overwrite this GUI run's files."
+        ),
+        P(
+            "Reproducibility: results can differ from the GUI run, even with "
+            "the same seed. Repeated runs in one GUI session are affected too "
+            "(#198). Different versions or platforms can also change results."
+        ),
+        Details(
+            Summary("Details: what the GUI adds or leaves out"),
+            P(
+                "Included: route-cost history collection, as the GUI keeps it. "
+                "The trajectory SQLite and its manifest are copied to OUTPUT_DIR."
+            ),
+            P(
+                "Omitted: the live progress callback, which only drives the GUI, "
+                "and the GUI's CSV histories and app bundle. Their writer lives "
+                "in run.py, outside the installed package."
+            ),
+        ),
+    ]
+    return notes
+
+
+def _pyexport_panel(
+    title: str,
+    badge: str,
+    kind: str,
+    script=None,
+    notes: list | None = None,
+    status: str | None = None,
+    error: Exception | None = None,
+    changed: str | None = None,
+):
+    """Dialog contents: heading, status, notices, code and its actions."""
+    head = Div(
+        Button("Close", type="button", cls="pyexport-close"),
+        H2(title, id="pyexport-title"),
+        Span(badge, cls="pyexport-badge"),
+        cls="pyexport-head",
+    )
+    body = []
+    if status:
+        body.append(P(f"Status: {status}", cls="pyexport-status"))
+    if changed:
+        body.append(P(changed, cls="pyexport-status"))
+    if error is not None:
+        body.append(
+            Div(
+                P(
+                    f"These settings cannot be run, so there is no code: {error}",
+                    cls="pyexport-error",
+                ),
+                Details(
+                    Summary("Details"),
+                    Pre(
+                        f"{type(error).__name__}: {error}", style="white-space:pre-wrap"
+                    ),
+                ),
+            )
+        )
+    if notes:
+        body.append(Div(*notes, cls="pyexport-notes"))
+    if script is not None:
+        body.append(
+            Pre(
+                Code(script.code),
+                cls="pyexport-code",
+                tabindex="0",
+                aria_label="Generated Python code",
+            )
+        )
+    disabled = {} if script is not None else {"disabled": True}
+    actions = Div(
+        Button(
+            "Copy",
+            type="button",
+            cls="pyexport-act",
+            data_pyexport_copy="1",
+            **disabled,
+        ),
+        Button(
+            "Download .py",
+            type="button",
+            cls="pyexport-act",
+            data_pyexport_download="1",
+            data_filename=script.filename if script is not None else "",
+            **disabled,
+        ),
+        *(
+            []
+            if script is not None
+            else [Span("Fix the settings to generate code", cls="pyexport-notes")]
+        ),
+        Span(role="status", aria_live="polite", cls="pyexport-live pyexport-notes"),
+        cls="pyexport-actions",
+    )
+    return Div(head, *body, actions, data_kind=kind)
+
+
+def _form_changed_note(form: dict, spec) -> str | None:
+    """Say so when the current form no longer resolves to the run's options."""
+    try:
+        _scenario, opts = _resolve_form(form)
+    except Exception:
+        return (
+            "The form has changed since this run and does not currently "
+            "resolve. This code reproduces the run, not the current form."
+        )
+    if dict(vars(opts)) == dict(spec.opts):
+        return None
+    return (
+        "The form has changed since this run. This code reproduces the run, "
+        "not the current form. Use Preview for the current settings."
+    )
+
+
+@rt("/export/preview")
+async def export_preview(request: Request):
+    """Code for the current form settings, resolved exactly as /run would."""
+    form = dict(await request.form())
+    title = "Preview: current form settings (not a run)"
+    try:
+        scenario, opts = _resolve_form(form)
+        version, commit, dirty = code_provenance()
+        path = str(params.scenario_path(form.get("scenario")))
+        script = pyexport.preview_script(
+            vars(opts),
+            str(form.get("scenario")),
+            path,
+            version=version,
+            commit=commit,
+            dirty=dirty,
+            baseseed=scenario.seed,
+        )
+    except Exception as exc:
+        return _pyexport_panel(title, "PREVIEW", "preview", error=exc)
+    notes = _pyexport_notes(version, str(form.get("scenario")), path)
+    return _pyexport_panel(title, "PREVIEW", "preview", script=script, notes=notes)
+
+
+@rt("/export/run")
+async def export_run(request: Request, run: int | None = None):
+    """Code for the recorded run, from its frozen snapshot only."""
+    form = dict(await request.form())
+    with manager.snapshot():
+        spec = manager.spec
+    if spec is None or spec.run_id != run or spec.status == "running":
+        return _pyexport_panel(
+            "No recorded run",
+            "RUN",
+            "none",
+            error=ValueError("this run's settings are no longer available"),
+        )
+    title = f"Code for run #{spec.run_id} · {spec.scenario_name} · {spec.started_at}"
+    if spec.status in ("error", "cancelled"):
+        word = "failed" if spec.status == "error" else "cancelled"
+        title = f"Configuration of the {word} run #{spec.run_id} · {spec.scenario_name}"
+    try:
+        script = pyexport.run_script(spec)
+    except Exception as exc:
+        return _pyexport_panel(title, f"RUN #{spec.run_id}", "run", error=exc)
+    return _pyexport_panel(
+        title,
+        f"RUN #{spec.run_id}",
+        "run",
+        script=script,
+        notes=_pyexport_notes(
+            spec.pyfds_evac_version, spec.scenario_name, spec.scenario_path
+        ),
+        status=pyexport.run_status(spec),
+        changed=_form_changed_note(form, spec),
+    )
+
+
 @rt("/cancel")
 async def cancel():
     """Stop an in-flight run and hand the panel back in its standby state.
@@ -1246,20 +1604,24 @@ def _clear_run_bar() -> Div:
             f"Results · {manager.scenario_name or 'run'}",
             style=f"{_MONO};font-size:11px;letter-spacing:.06em;text-transform:uppercase;{_MUTED}",
         ),
-        Button(
-            "Clear results",
-            type="button",
-            hx_post="/clear",
-            hx_target="#run-panel",
-            hx_swap="innerHTML show:top",
-            style=(
-                "padding:7px 13px;border-radius:9px;cursor:pointer;"
-                f"{_MONO};font-size:11px;"
-                "background:transparent;color:var(--ink-dim);"
-                "border:1px solid var(--hairline)"
+        Div(
+            _run_code_button(),
+            Button(
+                "Clear results",
+                type="button",
+                hx_post="/clear",
+                hx_target="#run-panel",
+                hx_swap="innerHTML show:top",
+                style=(
+                    "padding:7px 13px;border-radius:9px;cursor:pointer;"
+                    f"{_MONO};font-size:11px;"
+                    "background:transparent;color:var(--ink-dim);"
+                    "border:1px solid var(--hairline)"
+                ),
             ),
+            style="display:flex;flex-wrap:wrap;gap:8px",
         ),
-        style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px",
+        style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px",
     )
 
 
@@ -1528,8 +1890,10 @@ def _terminal_view(status: str) -> Div | None:
         return _done_view()
     if status == "error":
         return Div(
-            f"Run failed: {manager.error}",
-            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+            Div(f"Run failed: {manager.error}"),
+            _run_code_button(),
+            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px;"
+            "display:flex;flex-direction:column;align-items:flex-start;gap:10px",
         )
     # Cancelled and idle still end with a terminal ``done``: a stream
     # that just closes is reopened by EventSource, so another tab, or

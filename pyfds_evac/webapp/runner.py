@@ -75,11 +75,17 @@ class RunSpec:
         return argparse.Namespace(**copy.deepcopy(dict(self.opts)))
 
 
+def code_provenance() -> tuple[str | None, str | None, bool | None]:
+    """``(pyfds-evac version, git commit, dirty)`` of the running code."""
+    commit, dirty = git_state(find_project_root())
+    return package_versions().get("pyfds-evac"), commit, dirty
+
+
 def make_run_spec(
     opts: Any, scenario: Any, scenario_name: str, scenario_path: str
 ) -> RunSpec:
     """Freeze the resolved options of a run about to be submitted."""
-    commit, dirty = git_state(find_project_root())
+    version, commit, dirty = code_provenance()
     seed = getattr(opts, "seed", None)
     return RunSpec(
         run_id=0,
@@ -87,7 +93,7 @@ def make_run_spec(
         scenario_path=scenario_path,
         opts=MappingProxyType(copy.deepcopy(dict(vars(opts)))),
         started_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        pyfds_evac_version=package_versions().get("pyfds-evac"),
+        pyfds_evac_version=version,
         git_commit=commit,
         git_dirty=dirty,
         expected_seed=seed if seed is not None else getattr(scenario, "seed", None),

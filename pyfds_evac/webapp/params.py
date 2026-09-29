@@ -803,6 +803,7 @@ def build_form(post_url: str) -> Any:
             ),
         ),
         _results_only_button(),
+        id="run-form",
         hx_post=post_url,
         hx_target="#run-panel",
         hx_swap="innerHTML show:top",

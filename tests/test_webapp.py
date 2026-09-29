@@ -1275,3 +1275,255 @@ class TestRunSpec:
         _drop_temp_trajectory()
         client.post("/clear")
         assert manager.spec is None
+
+
+# ── Show equivalent Python ────────────────────────────────────────────────────
+_HX = {"HX-Request": "true"}
+
+
+def _code_of(html_text):
+    import html
+
+    match = re.search(r"<code>(.*?)</code>", html_text, re.S)
+    assert match, html_text[:2000]
+    return html.unescape(match.group(1))
+
+
+def _script_literals(code):
+    """PATHS and OPTIONS of a generated script, read without running it."""
+    import ast
+
+    tree = ast.parse(code)
+    found = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        name = getattr(node.targets[0], "id", None)
+        if name in ("SCENARIO", "FDS_DIR", "VIS_CACHE", "OPTIONS"):
+            found[name] = ast.literal_eval(node.value)
+    return found
+
+
+def _preview(client, **form):
+    r = client.post("/export/preview", data=form, headers=_HX)
+    assert r.status_code == 200
+    return r.text
+
+
+class TestEquivalentPython:
+    def test_preview_is_valid_python_and_round_trips(self, client, tmp_path):
+        import ast
+        from pathlib import Path
+
+        from pyfds_evac.webapp.app import _resolve_form
+        from pyfds_evac.webapp.pyexport import OMITTED_OUTPUT_KEYS
+
+        form = {
+            "scenario": "t_junction",
+            "seed": "7",
+            "fds_dir": str(tmp_path),
+            "constant_extinction": "0.3",
+            "incapacitation_mode": "probabilistic",
+            "enable_heat_fed": "on",
+            "heat_clothing": "unclothed",
+            "vis_cache": "cache/vis.npz",
+        }
+        code = _code_of(_preview(client, **form))
+        ast.parse(code)
+        lit = _script_literals(code)
+        _scenario, opts = _resolve_form(dict(form))
+        expected = vars(opts)
+        rebuilt = dict(lit["OPTIONS"])
+        rebuilt.update(fds_dir=lit["FDS_DIR"], vis_cache=lit["VIS_CACHE"])
+        assert set(rebuilt) | {"scenario"} == set(expected)
+        for key, value in rebuilt.items():
+            if key in OMITTED_OUTPUT_KEYS:
+                assert value is None, key
+            elif key in ("fds_dir", "vis_cache"):
+                assert value == str(Path(expected[key]).resolve()), key
+            else:
+                assert value == expected[key], key
+        assert lit["SCENARIO"].endswith("assets/t_junction")
+        assert "Preview of form settings, not a run." in code
+
+    def test_preview_leaves_the_seed_to_the_scenario(self, client):
+        code = _code_of(_preview(client, scenario="blind_spawn_discovery"))
+        assert "'seed': None,  # None = the scenario's baseSeed (1301)" in code
+        assert "42" not in code.split("OPTIONS = {")[1].split("\n")[1]
+
+    def test_invalid_form_gives_the_api_message_and_no_code(self, client):
+        text = _preview(
+            client,
+            scenario="t_junction",
+            vis_cache="x.npz",
+            enable_rerouting="off",
+        )
+        assert "<code>" not in text
+        assert "--vis-cache requires --enable-rerouting" in text
+        assert "Fix the settings to generate code" in text
+        assert text.count("disabled") >= 2
+
+    def test_hostile_text_stays_inside_string_literals(self, client, tmp_path):
+        import ast
+
+        hostile = "x'\"\nimport os; os.system('echo pwned')  #  \r\\"
+        fds_dir = tmp_path / hostile.replace("/", "_")
+        fds_dir.mkdir()
+        clean = ast.parse(_code_of(_preview(client, scenario="t_junction")))
+        code = _code_of(
+            _preview(
+                client,
+                scenario="t_junction",
+                fds_dir=str(fds_dir),
+                vis_cache=hostile,
+                output_base=hostile,
+            )
+        )
+        tree = ast.parse(code)
+        shape = [type(n).__name__ for n in tree.body]
+        assert shape == [type(n).__name__ for n in clean.body]
+        constants = {n.value for n in ast.walk(tree) if isinstance(n, ast.Constant)}
+        assert str(fds_dir.resolve()) in constants
+        # No hostile call reached code: the only calls are the script's own.
+        names = {
+            n.func.id if isinstance(n.func, ast.Name) else n.func.attr
+            for n in ast.walk(tree)
+            if isinstance(n, ast.Call)
+        }
+        assert "system" not in names
+
+    def test_hostile_scenario_name_cannot_leave_the_comment(self):
+        import ast
+        import dataclasses
+
+        from pyfds_evac.webapp.params import form_to_opts
+        from pyfds_evac.webapp.pyexport import run_script
+        from pyfds_evac.webapp.runner import RunSpec
+
+        spec = RunSpec(
+            run_id=3,
+            scenario_name="uploads/a\nimport os os.system('pwned')\r",
+            scenario_path="/tmp/a'\nb",
+            opts=vars(form_to_opts({"scenario": "t_junction"})),
+            started_at="2026-01-01T00:00:00+00:00",
+            pyfds_evac_version="0.1.0\nimport os",
+            git_commit=None,
+            git_dirty=None,
+            expected_seed=None,
+        )
+        code = run_script(spec).code
+        tree = ast.parse(code)
+        assert not any(
+            isinstance(n, ast.Import) and n.names[0].name == "os" for n in tree.body
+        )
+        assert "# seed not recorded for this run" in code
+        assert "42" not in code.split("'seed':")[1].split("\n")[0]
+        done = dataclasses.replace(spec, seed_used=77, status="done")
+        assert "'seed': 77,  # seed used by run #3" in run_script(done).code
+
+    def test_run_button_only_after_a_run_and_gone_after_clear(self, client):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _clear_run_bar
+
+        assert 'data-pyexport-run="' not in client.get("/").text
+        assert "Show equivalent Python" in client.get("/").text
+        client.post("/run", data={"scenario": "ISO-table21", "seed": "11"})
+        _stream_until_terminal(client)
+        run_id = manager.spec.run_id
+        assert f'data-pyexport-run="{run_id}"' in to_xml(_clear_run_bar())
+        r = client.post(
+            f"/export/run?run={run_id}",
+            data={"scenario": "ISO-table21", "seed": "11"},
+            headers=_HX,
+        )
+        code = _code_of(r.text)
+        assert f"# Run #{run_id}, started" in code
+        assert f"'seed': 11,  # seed used by run #{run_id}" in code
+        assert "Status: finished (1/1 evacuated)" in r.text
+        assert "The form has changed" not in r.text
+        changed = client.post(
+            f"/export/run?run={run_id}",
+            data={"scenario": "ISO-table21", "seed": "12"},
+            headers=_HX,
+        )
+        assert "The form has changed since this run" in changed.text
+        assert "'seed': 11," in _code_of(changed.text)  # still the snapshot
+        _drop_temp_trajectory()
+        client.post("/clear")
+        stale = client.post(f"/export/run?run={run_id}", data={}, headers=_HX)
+        assert "<code>" not in stale.text
+        assert 'data-pyexport-run="' not in to_xml(_clear_run_bar())
+
+
+_GUI_DRIVER = r"""
+import json, pathlib, sys
+from starlette.testclient import TestClient
+from pyfds_evac.webapp.app import app, manager
+from pyfds_evac.webapp.pyexport import run_script
+
+client = TestClient(app)
+client.post("/run", data={"scenario": sys.argv[1]})
+with client.stream("GET", "/progress") as s:
+    for line in s.iter_lines():
+        if line.startswith("event:") and line.split(":", 1)[1].strip() in ("done", "error"):
+            break
+assert manager.status == "done", manager.error
+pathlib.Path(sys.argv[2]).write_text(run_script(manager.spec).code)
+m = manager.result.metrics
+print("METRICS" + json.dumps({k: m[k] for k in sys.argv[3].split(",")}))
+manager.result.cleanup()
+"""
+
+_SCRIPT_DRIVER = r"""
+import json, runpy, sys
+g = runpy.run_path(sys.argv[1])
+m = g["result"].metrics
+print("METRICS" + json.dumps({k: m[k] for k in sys.argv[2].split(",")}))
+"""
+
+
+def _metrics(stdout):
+    import json
+
+    line = next(ln for ln in stdout.splitlines() if ln.startswith("METRICS"))
+    return json.loads(line[len("METRICS") :])
+
+
+def test_exported_script_reproduces_the_gui_run(tmp_path):
+    """The run's exported script, run alone, matches the GUI run exactly.
+
+    Each side runs in a fresh interpreter, so both are the first run in their
+    process and #198 (process-wide agent ids) cannot tell them apart. The deck
+    has discovery agents, so its baseSeed (1301), rerouting and the clear-air
+    visibility model all reach the result.
+    """
+    import subprocess
+    import sys
+
+    repo = pathlib.Path(__file__).resolve().parents[1]
+    keys = "total_agents,agents_evacuated,agents_remaining,evacuation_time,seed"
+    script = tmp_path / "exported.py"
+    gui = subprocess.run(
+        [sys.executable, "-c", _GUI_DRIVER, "blind_spawn_discovery", str(script), keys],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    assert gui.returncode == 0, gui.stderr[-3000:]
+    exported = subprocess.run(
+        [sys.executable, "-c", _SCRIPT_DRIVER, str(script), keys],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    assert exported.returncode == 0, exported.stderr[-3000:]
+    gui_metrics, script_metrics = _metrics(gui.stdout), _metrics(exported.stdout)
+    assert gui_metrics["seed"] == 1301
+    assert gui_metrics["total_agents"] == 30
+    assert script_metrics == gui_metrics
+    assert (
+        tmp_path / "pyfds_evac_blind_spawn_discovery_run1_output" / "trajectory.sqlite"
+    ).is_file()
