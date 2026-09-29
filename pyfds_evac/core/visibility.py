@@ -6,12 +6,14 @@ import hashlib
 import json
 import logging
 import math
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Protocol
 
 import numpy as np
 from shapely.geometry import Polygon
 
+from . import fds_sampling
 from .geometry import node_position
 
 
@@ -130,6 +132,35 @@ def _apply_distance_caps(
     vis._get_visibility_array = capped
 
 
+@contextmanager
+def _nearest_horizontal_slice(fds_dir: str, slice_height_m: float):
+    """Make fdsvismap's slice lookup use pyFDS-Evac's slice rule.
+
+    fdsvismap selects the extinction slice with fdsreader's
+    ``SliceCollection.get_nearest``, which returns the first horizontal slice
+    declared rather than the nearest one and can return a vertical slice. Its
+    alternative, a slice ID, is empty unless the deck names its slices. So the
+    lookup is replaced for the duration of ``read_fds_data`` by the rule the
+    walking-speed and FED samplers use.
+    """
+    from fdsreader.slcf.slice_collection import SliceCollection
+
+    original = SliceCollection.get_nearest
+
+    def nearest(collection, x=None, y=None, z=None):
+        del x, y, z
+        quantity = next((s.quantity.name for s in collection), "extinction")
+        return fds_sampling.select_horizontal_slice(
+            collection, slice_height_m, quantity, fds_dir
+        )
+
+    SliceCollection.get_nearest = nearest
+    try:
+        yield
+    finally:
+        SliceCollection.get_nearest = original
+
+
 def _build_vismap(
     fds_dir: str,
     sign_descriptors: dict[str, dict],
@@ -140,7 +171,8 @@ def _build_vismap(
     from fdsvismap import VisMap
 
     vis = VisMap()
-    vis.read_fds_data(fds_dir, fds_slc_height=slice_height_m)
+    with _nearest_horizontal_slice(fds_dir, slice_height_m):
+        vis.read_fds_data(fds_dir, fds_slc_height=slice_height_m)
     t_max = vis.fds_time_points.max()
     vis.set_time_points(list(np.arange(0, t_max + time_step_s, time_step_s)))
     for wp_id, (node_id, sign) in enumerate(sign_descriptors.items()):
@@ -192,8 +224,9 @@ def _make_meta(
         # Bumped when the arrays change shape or meaning. Caches written before
         # sighting distances were stored hold booleans only, and must be
         # rebuilt rather than read as metres. Format 3 caps at the sign's
-        # reading distance instead of the domain diagonal.
-        "format": 3,
+        # reading distance instead of the domain diagonal. Format 4 reads the
+        # extinction slice nearest the height, not the first one declared.
+        "format": 4,
     }
 
 
