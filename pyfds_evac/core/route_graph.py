@@ -1945,7 +1945,8 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
     Two hazards this does **not** catch, both by construction:
 
     * **Heat.** The convective heat dose is tracked per agent and can
-      incapacitate on its own (``TenabilityConfig.heat_fed_threshold``), but it
+      incapacitate on its own
+      (``TenabilityConfig.resolved_heat_fed_threshold``), but it
       reaches no part of route choice -- ``rank_routes`` is given the gas dose
       and a gas-only rate sampler. An agent can therefore walk into a route
       that will incapacitate it thermally, and nothing here will reject it.
