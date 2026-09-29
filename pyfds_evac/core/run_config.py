@@ -13,8 +13,10 @@ from the GUI. It defaults to a no-op.
 
 from __future__ import annotations
 
+import csv
 import logging
 import math
+import pathlib
 from collections.abc import Callable
 from typing import Any
 
@@ -350,6 +352,9 @@ def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
     """Build the rerouting configuration from scenario routing parameters."""
     if not opts.enable_rerouting:
         return None
+    if getattr(opts, "smoke_blind", False):
+        log("Smoke-blind: rerouting is off.")
+        return None
     cost_config = RouteCostConfig.from_routing_params(scenario.raw.get("routing", {}))
     log("Configuring rerouting.")
     return RerouteConfig(
@@ -422,8 +427,10 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     max_distance = getattr(opts, "max_sign_distance", DEFAULT_MAX_SIGN_DISTANCE_M)
     n_signs = len(sign_descriptors)
     plural = "" if n_signs == 1 else "s"
-    smoky = bool(opts.fds_dir) and _has_extinction_slice(opts.fds_dir)
-    if opts.fds_dir and not smoky:
+    # A smoke-blind run sees what a run without the fire would see.
+    blind = getattr(opts, "smoke_blind", False)
+    smoky = bool(opts.fds_dir) and not blind and _has_extinction_slice(opts.fds_dir)
+    if opts.fds_dir and not blind and not smoky:
         _logger.warning(
             "Visibility falls back to clear air for %s: it has no SOOT "
             "EXTINCTION COEFFICIENT slice, so smoke hides no sign; geometry "
@@ -463,6 +470,10 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     """
     if (fed_model is None and heat_fed_model is None) or opts.disable_tenability:
         return None
+    if getattr(opts, "smoke_blind", False):
+        # Dose still accumulates into the FED history; it stops or slows nobody.
+        log("Smoke-blind: FED is recorded, incapacitation and FIC slowdown off.")
+        return None
     mode = getattr(opts, "incapacitation_mode", "deterministic")
     sigma = getattr(opts, "susceptibility_sigma", 0.94)
     heat_threshold = getattr(opts, "heat_fed_threshold", None)
@@ -500,13 +511,63 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     )
 
 
+def load_replay_exits(path: str | pathlib.Path) -> dict[int, str]:
+    """Read an exit history CSV into ``{spawn_index: exit_id}``.
+
+    The file is what ``--output-exit-history`` writes; only its ``spawn_index``
+    and ``exit_id`` columns are read. Raises ValueError on a missing column, a
+    non-integer or repeated spawn index, or an empty exit.
+    """
+    with pathlib.Path(path).open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        missing = {"spawn_index", "exit_id"}.difference(reader.fieldnames or [])
+        if missing:
+            raise ValueError(f"{path}: missing column(s) {', '.join(sorted(missing))}")
+        exits: dict[int, str] = {}
+        for line, row in enumerate(reader, start=2):
+            index, exit_id = _replay_row(path, line, row)
+            if index in exits:
+                raise ValueError(f"{path}:{line}: spawn index {index} is listed twice")
+            exits[index] = exit_id
+    return exits
+
+
+def _replay_row(path, line: int, row: dict[str, str]) -> tuple[int, str]:
+    """Parse one exit history row; raise ValueError naming the line."""
+    try:
+        index = int(row["spawn_index"])
+    except (TypeError, ValueError):
+        raise ValueError(
+            f"{path}:{line}: spawn_index {row['spawn_index']!r} is not an integer"
+        ) from None
+    exit_id = (row["exit_id"] or "").strip()
+    if not exit_id:
+        raise ValueError(f"{path}:{line}: spawn index {index} has no exit_id")
+    return index, exit_id
+
+
+def _build_replay_exits(opts: Any, log: Logger) -> dict[int, str] | None:
+    """Load ``--replay-exits`` and warn when rerouting may undo it."""
+    path = getattr(opts, "replay_exits", None)
+    if not path:
+        return None
+    exits = load_replay_exits(path)
+    log(f"Replaying the exits of {len(exits)} agents from {path}.")
+    if opts.enable_rerouting and not getattr(opts, "smoke_blind", False):
+        _logger.warning(
+            "--replay-exits with rerouting on: agents start at the replayed exit "
+            "but may switch. Pass --no-enable-rerouting to keep every exit."
+        )
+    return exits
+
+
 def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str, Any]:
     """Translate run options into keyword arguments for ``run_scenario``.
 
     Returns the kwargs dict accepted by ``run_scenario`` (``seed``,
     ``smoke_speed_model``, ``fed_model``, ``heat_fed_model``,
     ``tenability_config``, ``reroute_config``, ``collect_route_cost_history``,
-    ``vis_model``). Raises ``ValueError`` for invalid option combinations.
+    ``vis_model``, ``smoke_blind``, ``replay_exits``). Raises ``ValueError`` for invalid option combinations.
     """
     validate_opts(opts)
     _check_fds_horizon(scenario, opts, log)
@@ -516,6 +577,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
     reroute_config = _build_reroute_config(scenario, opts, log)
     vis_model = _build_vis_model(scenario, opts, log)
     tenability_config = _build_tenability_config(opts, fed_model, heat_fed_model, log)
+    replay_exits = _build_replay_exits(opts, log)
 
     collect_route_cost_history = bool(
         getattr(opts, "output_route_cost_history", None)
@@ -533,4 +595,6 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
         # Cheap (a size check per agent per timestep) and the GUI's cognitive
         # map growth plot needs it, so there is no reason to gate it.
         "collect_cognitive_map_history": True,
+        "smoke_blind": bool(getattr(opts, "smoke_blind", False)),
+        "replay_exits": replay_exits,
     }

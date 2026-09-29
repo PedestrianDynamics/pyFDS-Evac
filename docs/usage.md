@@ -78,6 +78,44 @@ no visibility model at all unless you pass `--vis-cache` or
 because they need it to learn the graph. See
 [route-cost-gate.md](route-cost-gate.md).
 
+### Smoke-blind runs and exit replay
+
+For ASET/RSET comparisons the same FDS output can be run in three arms: a
+smoke-blind arm, a speed-only arm that keeps the smoke-blind arm's exits, and
+the fully coupled default
+([#341](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/341)).
+
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `--smoke-blind` | off | Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say. Gas FED, heat FED and FIC still accumulate and are written to the FED history; `incapacitated` stays false. The smoke history holds the sampled K with `speed_factor` 1. |
+| `--output-exit-history CSV` | none | Write each path agent's exit; see [Outputs](outputs.md#exit-history). |
+| `--replay-exits CSV` | none | Send each agent to the exit its counterpart took in an earlier run, read from that run's `--output-exit-history` file. Agents are paired by spawn order (`spawn_index`), not by JuPedSim id. The route to that exit is the one the agent would take in clear air. |
+
+A smoke-blind run with a fire gives the same trajectories as the run without
+the fire, for the same scenario and seed. Replay pairs the n-th agent spawned
+in one run with the n-th agent spawned in the other, which needs the same
+scenario and seed. JuPedSim ids are not used: they can skip a number when a
+spawn position is refused, and a slower crowd changes which positions are
+refused. The familiarity draw is still seeded by the JuPedSim id
+([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)), so a
+discovery agent can hold a different map in the two runs and take another
+route to the same exit. A replayed run fails when a spawn index is missing
+from the file, when the file names an exit the scenario lacks, or when an
+agent cannot reach its exit; it logs a warning when agents of the file were
+never spawned. With rerouting on, a replayed agent can still switch exits,
+and the run logs a warning. The three arms:
+
+```bash
+# U: smoke-blind; writes the exits for S
+uv run python run.py --scenario S.json --fds-dir FDS --smoke-blind \
+    --output-exit-history u_exits.csv --output-sqlite u.sqlite
+# S: smoke slows agents, exits and routes as in U
+uv run python run.py --scenario S.json --fds-dir FDS --no-enable-rerouting \
+    --replay-exits u_exits.csv --output-sqlite s.sqlite
+# R: fully coupled (the default)
+uv run python run.py --scenario S.json --fds-dir FDS --output-sqlite r.sqlite
+```
+
 ### Tenability (FIC slowdown and incapacitation)
 
 The two dose tracks are independent:
@@ -153,6 +191,7 @@ scenario can behave differently:
 | Gas FED, heat FED | from `--fds-dir` (heat with `--enable-heat-fed`) | none |
 | Incapacitation | `TenabilityConfig` whenever a FED track runs | none: a `fed_model` without `tenability_config` accumulates dose but never incapacitates |
 | Visibility model | built for discovery agents, `--vis-cache` or `--clear-air-visibility` | none |
+| Smoke-blind, exit replay | `--smoke-blind`, `--replay-exits` | off: `smoke_blind=False`, `replay_exits=None` (a dict of spawn index to exit) |
 
 For a run identical to the command line, parse the same flags and build the
 keywords the same way:

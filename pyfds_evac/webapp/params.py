@@ -75,6 +75,7 @@ FIELD_GROUPS: list[tuple] = [
             "smoke_update_interval",
             "smoke_slice_height",
             "allow_fds_horizon_hold",
+            "smoke_blind",
         ],
     ),
     (
@@ -95,7 +96,7 @@ FIELD_GROUPS: list[tuple] = [
             "heat_fed_threshold",
         ],
     ),
-    ("Rerouting", ["enable_rerouting", "reroute_interval"]),
+    ("Rerouting", ["enable_rerouting", "reroute_interval", "replay_exits"]),
     ("Visibility", ["vis_cache"]),
     (
         "Output files",

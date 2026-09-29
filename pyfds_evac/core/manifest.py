@@ -169,6 +169,8 @@ def build_manifest(
     heat_flux_parameters: dict[str, Any] | None = None,
     heat_clothing: str | None = None,
     heat_fed_threshold_override: float | None = None,
+    smoke_blind: bool = False,
+    replay_exits: bool = False,
 ) -> dict[str, Any]:
     """Collect the provenance fields for one run.
 
@@ -178,6 +180,7 @@ def build_manifest(
     ``heat_clothing`` is recorded when the ISO 13571:2012 convective law is
     in use, ``heat_fed_threshold_override`` only when the heat threshold was
     set apart from the gas threshold, a departure from ISO 13571:2012 §5.4.
+    ``smoke_blind`` and ``replay_exits`` are recorded only when on (#341).
     """
     root = project_root if project_root is not None else find_project_root()
     lock = uv_lock if uv_lock is not None else find_uv_lock(root)
@@ -203,6 +206,10 @@ def build_manifest(
         manifest["heat_clothing"] = heat_clothing
     if heat_fed_threshold_override is not None:
         manifest["heat_fed_threshold_override"] = heat_fed_threshold_override
+    if smoke_blind:
+        manifest["smoke_blind"] = True
+    if replay_exits:
+        manifest["replay_exits"] = True
     return manifest
 
 

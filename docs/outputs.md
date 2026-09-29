@@ -17,6 +17,7 @@ fields of the `ScenarioResult` that `run_scenario()` returns.
 | FED history | `--output-fed-history CSV` | the gas FED or the heat FED ran | one per agent per `--smoke-update-interval` |
 | Route history | `--output-route-history CSV` | rerouting is on (the default) | one per change of target: switch, fallback, better path, explore or wander; `initial` only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header |
 | Route cost history | `--output-route-cost-history CSV` | rerouting is on | one per candidate route per agent per evaluation |
+| Exit history | `--output-exit-history CSV` | always | one per agent that walks the stage graph |
 
 The run command, flags and defaults are on [Usage](usage.md). The example
 columns below come from
@@ -61,6 +62,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `heat_clothing` | `clothed` or `unclothed`, when an ISO 13571 convective heat law ran |
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
+| `smoke_blind`, `replay_exits` | `true`, only with `--smoke-blind` or `--replay-exits` |
 | `heat_fed_method`, `heat_flux_parameters` | only with `--heat-fed-method total-flux`: ε, h, skin temperature, dose *D*, radiant threshold, the list of assumed parameters, and, per option, the layer parameters or `radiant_source`, `u_factor` and `radiant_flux` |
 
 The manifest does not yet record the slice height that was actually read
@@ -172,6 +174,18 @@ evaluation:
 
 Under the default `"gate"` model, routes are ordered on `tau_route`, not on
 `composite_cost`; see [Usage › Route cost curves](usage.md#route-cost-curves--plot_route_costspy).
+
+## Exit history
+
+One row per agent that walks the stage graph, in spawn order. From Python it
+is `result.exit_history`. `--replay-exits` reads its `spawn_index` and
+`exit_id` columns.
+
+| Column | Meaning |
+|---|---|
+| `agent_id` | JuPedSim agent id, as in the trajectory SQLite |
+| `spawn_index` | order in which the agent was spawned in this run, from 0 |
+| `exit_id` | the exit the agent left through; for an agent still inside at the end, the exit it was heading for |
 
 ## Reading the results
 
