@@ -47,7 +47,10 @@ stops and stays in place as an obstacle, as for the gas dose.
   the run's seed, on a stream independent of the gas threshold:
   \(D_i = \texttt{heat\_fed\_threshold} \cdot \exp(\sigma Z)\),
   \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
-  assumption with no data basis for heat.
+  assumption with no data basis for heat. The Handbook's radiant lethality
+  figures point to a much narrower spread, for an endpoint not modelled here
+  ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat),
+  [#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 
 The gas dose is also deterministic by default; the two modes are set separately
 (`--incapacitation-mode` and `--heat-incapacitation-mode`).
@@ -81,6 +84,9 @@ The FED history CSV (`--output-fed-history`) carries `temperature_celsius`,
   (`specs/016-heat-fed/SPEC.md`) is not implemented
   ([#218](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/218),
   [#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
+- **Population spread.** No consulted source gives a spread of tolerance
+  for the convective dose; the opt-in σ = 0.94 is borrowed from the gas dose
+  ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 - **Validity range.** The convective data behind the law reach about 205 °C
   in air of low humidity (below 10 % water vapour). Higher temperatures and
   humid smoke are extrapolation, and neither is flagged.
