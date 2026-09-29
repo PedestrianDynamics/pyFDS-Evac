@@ -23,9 +23,10 @@ Then open <http://localhost:5001>. The extra installs
 
 The steps use `iso_table21_coupled`, a bundled scenario that comes with its
 FDS output: one agent walks a 100 m corridor filled with smoke of about
-K = 1 1/m. The numbered markers in the first screenshot match the steps.
+K = 1 1/m. The numbered markers in the first screenshot show where each
+control is. Click a screenshot to open it at full size.
 
-![The start screen. On the left, the Parameters panel with the Show equivalent Python button in its header, the open Core group with the scenario picker set to iso_table21_coupled, the Smoke group, and the Run scenario button at the bottom. On the right, the left edge of the empty results area. Numbered markers: 1 at the scenario picker, 2 at the Smoke group, 3 at Run scenario, 4 at the results area, 5 at Show equivalent Python](/images/web-gui/overview.png "The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area, 5 Show equivalent Python.")
+[![The start screen. On the left, the Parameters panel with the Show equivalent Python button in its header, the open Core group with the scenario picker set to iso_table21_coupled, the Smoke group, and the Run scenario button at the bottom. On the right, the left edge of the empty results area. Numbered markers: 1 at the scenario picker, 2 at the Smoke group, 3 at Run scenario, 4 at the results area, 5 at Show equivalent Python](/images/web-gui/overview.png "The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area, 5 Show equivalent Python.")](images/web-gui/overview.png)
 
 {{% steps %}}
 
@@ -43,7 +44,7 @@ or pick the folder with **Browse…**. Leave the other fields at their
 defaults. Every `run.py` option has a field; press **?** next to a field to
 read its help text. The groups and their fields are listed under [The form](#the-form).
 
-![The Parameters panel with Core collapsed. The Smoke group is open with FDS dir set to assets/iso_table21_coupled/fds, an empty constant extinction field, a smoke update interval of 1.0 and a smoke slice height of 1.6. Below it the FED & Tenability group is open with Disable tenability off and the incapacitation mode set to Deterministic](/images/web-gui/configure.png "The Smoke group with the FDS folder filled in, and the start of the FED & Tenability group.")
+[![The Parameters panel with Core collapsed. The Smoke group is open with FDS dir set to assets/iso_table21_coupled/fds, an empty constant extinction field, a smoke update interval of 1.0 and a smoke slice height of 1.6. Below it the FED & Tenability group is open with Disable tenability off and the incapacitation mode set to Deterministic](/images/web-gui/configure.png "The Smoke group with the FDS folder filled in, and the start of the FED & Tenability group.")](images/web-gui/configure.png)
 
 ### Run it
 
@@ -52,7 +53,7 @@ and a console with the model's log. The card shows agents evacuated,
 simulated time, wall-clock time and percent done. **Cancel scenario** stops
 the run at its next step.
 
-![A progress card titled "Running: Haspel" at 25 percent, with a progress bar, the line "evacuated 75/300 · sim 105.3s · wall 48s · 25%" and a Cancel scenario button. Below it, the console lists the model's setup and rerouting log lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario.")
+[![A progress card titled "Running: Haspel" at 25 percent, with a progress bar, the line "evacuated 75/300 · sim 105.3s · wall 48s · 25%" and a Cancel scenario button. Below it, the console lists the model's setup and rerouting log lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario.")](images/web-gui/running.png)
 
 ### Look at the results
 
@@ -62,12 +63,13 @@ plan to zoom and drag to pan; **↺** resets the view. With an FDS folder set,
 the extinction slice is drawn under the agents as a grey smoke layer;
 **Smoke** switches it off.
 
-![The Trajectories panel at t = 41 s, zoomed in on the corridor. The corridor is drawn in grey, the FDS smoke layer, with one yellow agent in it. Below the plan: a play button, the time slider, a reset-view button, speed buttons 1×, 2×, 5×, 10× and 50×, a custom speed field, and the smoke toggle set to on](/images/web-gui/replay.png "The trajectory replay with the FDS smoke layer on, zoomed in on the agent.")
+[![The Trajectories panel at t = 41 s, zoomed in on the corridor. The corridor is drawn in grey, the FDS smoke layer, with one yellow agent in it. Below the plan: a play button, the time slider, a reset-view button, speed buttons 1×, 2×, 5×, 10× and 50×, a custom speed field, and the smoke toggle set to on](/images/web-gui/replay.png "The trajectory replay with the FDS smoke layer on, zoomed in on the agent.")](images/web-gui/replay.png)
 
 The **Smoke** chart below it plots the mean speed factor and the mean
-extinction coefficient *K* over time.
+extinction coefficient *K* over time. Other charts, such as Cognitive map
+growth, stay empty for this one-agent corridor.
 
-![A Plotly chart titled Smoke, with time from 0 to 85 s on the horizontal axis, the speed factor on the left axis between 0.9196262 and 0.9196266, and the extinction coefficient K on the right axis between 0.995502 and 0.995507 per metre. Both lines are flat until about 50 s and then vary in their last digits](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places.")
+[![A Plotly chart titled Smoke, with time from 0 to 85 s on the horizontal axis, the speed factor on the left axis between 0.9196262 and 0.9196266, and the extinction coefficient K on the right axis between 0.995502 and 0.995507 per metre. Both lines are flat until about 50 s and then vary in their last digits](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places.")](images/web-gui/smoke_chart.png)
 
 {{< checkpoint title="The run finished" >}}
 The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
@@ -85,9 +87,9 @@ ends with `Simulation finished in 84.97 s (1/1 evacuated).`
 
 ### Keep the run as a script
 
-Click **Show Python for this run**, in the bar above the results, to get this
-run as a standalone Python script. **Show equivalent Python** (5) shows the
-current form settings instead. See
+Click **Show Python for this run**, which appears in the bar above the
+results once the run ends. The **Show equivalent Python** button (5)
+previews the current form settings. See
 [Show the run as Python](#show-the-run-as-python).
 
 {{% /steps %}}
@@ -164,7 +166,7 @@ Two buttons open the code:
 
 Both open a dialog with **Copy** and **Download .py**.
 
-![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: finished (30/30 evacuated)", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png)
+[![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: finished (30/30 evacuated)", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png "The run-code dialog for run #1 of blind_spawn_discovery.")](images/web-gui/run_code_dialog.png)
 
 ### Save a run and run it again
 
