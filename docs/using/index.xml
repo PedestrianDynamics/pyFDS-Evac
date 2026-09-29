@@ -2301,6 +2301,9 @@ the scenario models pre-movement (&lt;code>use_premovement&lt;/code> in a spawn 
 area that sets no pre-movement key gets a constant 10 s, as &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>). You add
 &lt;em>t&lt;/em>&lt;sub>det&lt;/sub> and &lt;em>t&lt;/em>&lt;sub>a&lt;/sub> yourself. The scenario in Part 1 models no
 pre-movement, so its exit times are travel times only.&lt;/p>
+&lt;p>A run that stops at its time limit with agents still inside has no RSET, and
+more seeds do not supply one, since every seed stops at the same limit;
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a real fire&lt;/a> is such a run.&lt;/p>
 &lt;h2>Why not &lt;code>result.evacuation_time&lt;/code>?&lt;span class="hx-absolute -hx-mt-20" id="why-not-resultevacuation_time">&lt;/span>
 &lt;a href="#why-not-resultevacuation_time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;code>result.evacuation_time&lt;/code> is the time at which the simulation loop stopped.
