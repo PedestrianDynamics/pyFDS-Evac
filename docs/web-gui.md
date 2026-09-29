@@ -71,8 +71,16 @@ extinction coefficient *K* over time.
 
 {{< checkpoint title="The run finished" >}}
 The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
-agent evacuated. `run.py` gives the same run as
-`Simulation finished in 84.97 s (1/1 evacuated).`
+agent evacuated. A yellow box warns that FED is disabled: this deck writes
+only the soot extinction slice, no CO, CO₂ or O₂, so the warning is expected
+here. The same run from the command line,
+
+```bash
+uv run python run.py --scenario assets/iso_table21_coupled \
+    --fds-dir assets/iso_table21_coupled/fds
+```
+
+ends with `Simulation finished in 84.97 s (1/1 evacuated).`
 {{< /checkpoint >}}
 
 ### Keep the run as a script
@@ -132,7 +140,9 @@ progress to the page. Cancelling stops the run at its next step.
   scrub bar, speeds of 1×, 2×, 5×, 10× and 50× or a custom speed, and
   scroll-to-zoom and drag-to-pan. When the run has an `fds_dir`, the FDS
   extinction slice is drawn under the agents as a smoke layer that can be
-  switched off. The replay colours by gas FED only, not by heat FED
+  switched off. Without a FED model, for example when the FDS output has no
+  CO, CO₂ or O₂ slices, agents are coloured by exit and the FED/exit
+  switch is not shown. The replay colours by gas FED only, not by heat FED
   ([#232](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232)).
 
 The files the run writes are described on [Outputs](outputs.md).
