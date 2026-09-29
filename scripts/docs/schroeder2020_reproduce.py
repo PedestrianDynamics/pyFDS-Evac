@@ -242,16 +242,20 @@ def states(aset, rset):
     }, diff
 
 
-def corrected_measures(aset, rset):
+def corrected_measures(aset, rset, zero_fails=False):
+    """Measures on visited cells with exact DIFF; zero_fails = release counting."""
     counts, diff = states(aset, rset)
     exact = diff[np.isfinite(diff)]
-    neg = exact[exact < 0]
+    neg = exact[exact <= 0] if zero_fails else exact[exact < 0]
+    # Binned C: the release's histogram, or the same 20 s bins with 0 excluded.
+    centres = (np.floor(neg / BIN) + 0.5) * BIN
+    c_binned = release_measures(diff)["c_binned"] if zero_fails else centres.sum()
     return {
         "min": float(exact.min()),
-        "n_lt0": int(neg.size),
+        "n_fail": int(neg.size),
         "area": neg.size * CELL**2,
         "c_free": float(neg.sum()) * CELL**2,
-        "c_binned": release_measures(diff)["c_binned"],
+        "c_binned": float(c_binned) * (1 if zero_fails else CELL**2),
         "states": counts,
     }
 
@@ -266,14 +270,14 @@ def filled(aset):
 
 def line(label, m):
     return (
-        f"  {label:<44} {m['min']:>6.0f} {m['n_lt0']:>5d} {m['n_lt0'] * CELL**2:>7.2f}"
+        f"  {label:<44} {m['min']:>6.0f} {m['n_fail']:>5d} {m['n_fail'] * CELL**2:>7.2f}"
         f" {m['c_free']:>8.1f} {m['c_binned']:>8.1f}"
     )
 
 
 def header():
     return (
-        f"  {'':<44} {'min':>6} {'n<0':>5} {'A<0 m²':>7} {'C free':>8}"
+        f"  {'':<44} {'min':>6} {'fail':>5} {'A m²':>7} {'C free':>8}"
         f" {'C 20 s':>8}\n  {'':<44} {'s':>6} {'':>5} {'':>7} {'m²s':>8} {'m²s':>8}"
     )
 
@@ -373,50 +377,48 @@ def stage2(data, slices, seeds, released):
     )
     print("\n  From the released DIFF to the corrected one, one change per row:")
     print(header())
+    nearest = asets["nearest"]
     rows = [
-        ("0 released DIFF (DIFF <= 0 fails)", {**released, "n_lt0": released["n_le0"]}),
+        ("0 released DIFF, DIFF <= 0 fails", {**released, "n_fail": released["n_le0"]}),
         (
-            "1 shared grid: nearest rule, t_end fill",
-            corrected_measures(filled(asets["nearest"]), rset),
+            "1 shared grid, nearest rule, t_end fill",
+            corrected_measures(filled(nearest), rset, zero_fails=True),
         ),
+        ("2 + DIFF = 0 passes", corrected_measures(filled(nearest), rset)),
+        ("3 + censored cells kept, not filled", corrected_measures(nearest, rset)),
         (
-            "2 + censored cells kept, not filled",
-            corrected_measures(asets["nearest"], rset),
-        ),
-        (
-            "3 + cell rule exists (plan default)",
+            "4 + cell rule exists (plan default)",
             corrected_measures(asets["exists"], rset),
         ),
         (
-            f"3' pooled by max ({len(seeds)} seeds) not p95",
+            f"4' pooled by max ({len(seeds)} seeds) not p95",
             corrected_measures(asets["exists"], rset_max),
         ),
     ]
     for label, m in rows:
         print(line(label, m))
-    tol = _tolerance(rows[1][1], released)
     print(
-        "\n  Row 0 counts DIFF = 0 as a fail (54 <= 0; 52 < 0 shown). Rows 1-3 count DIFF = 0 as"
-        "\n  a pass. 'C 20 s' is the release's binned C, 'C free' the sum of DIFF < 0 times 0.36 m²."
-    )
-    print(
-        "  0 -> 1: the half-cell offset (release RSET centred on 0.6 k, ASET on 0.6 k + 0.3),"
-        "\n          window vs PedPy bin, and the release's unreleased ASET_map.txt (stage 1)."
-        "\n  1 -> 2: t_end fill removed; censored ASET cells become '>= bound'. No change here:"
+        "\n  'fail' counts DIFF <= 0 in rows 0-1 and DIFF < 0 from row 2 on. 'C free' is the"
+        "\n  sum of the failing DIFF times 0.36 m²; 'C 20 s' bins them at 20 s (release bins)."
+        "\n  0 -> 1: the half-cell offset (release RSET centred on 0.6 k, ASET on 0.6 k + 0.3),"
+        "\n          window vs PedPy bin, and the ASET_map.txt missing from the release (stage 1)."
+        "\n  1 -> 2: cells with DIFF = 0 pass."
+        "\n  2 -> 3: t_end fill removed; censored ASET cells become '>= bound'. No change here:"
         "\n          every RSET is below 120 s, so those cells passed with the fill too."
-        "\n  2 -> 3: one node per cell replaced by the block maximum: earlier ASET, more fails."
+        "\n  3 -> 4: one node per cell replaced by the block maximum: earlier ASET, more fails."
     )
     print(
-        f"  1c tolerance (row 1 vs row 0; min DIFF +-10 s, area +-10 %): {tol}"
+        f"  1c tolerance (row 1 vs row 0; min DIFF +-10 s, area +-10 %): "
+        f"{_tolerance(rows[1][1], rows[0][1])}"
         "\n     Expected: row 0 rests on an ASET map that is not in the release (stage 1)."
     )
-    print(f"\n  Cell states, rule exists, p{PERCENTILE}: {rows[3][1]['states']}")
+    print(f"\n  Cell states, rule exists, p{PERCENTILE}: {rows[4][1]['states']}")
     return asets, rset, (nx_cells, ny_cells)
 
 
 def _tolerance(m, ref):
     d_min = m["min"] - ref["min"]
-    d_area = (m["n_lt0"] - ref["n_le0"]) / ref["n_le0"]
+    d_area = (m["n_fail"] - ref["n_fail"]) / ref["n_fail"]
     ok = abs(d_min) <= 10 and abs(d_area) <= 0.10
     verdict = "PASS" if ok else "FAIL"
     return f"{verdict} (min DIFF {d_min:+.0f} s, area {d_area:+.0%})"
@@ -433,13 +435,14 @@ def table_rules(asets, rset):
         m = corrected_measures(a, rset)
         print(
             f"  {r:<8} {int(np.isinf(a).sum()):>14d} {int((a > 80).sum()):>7d}"
-            f" {m['min']:>6.0f} {m['n_lt0']:>5d} {m['c_free']:>8.1f}   {RULE_TEXT[r]}"
+            f" {m['min']:>6.0f} {m['n_fail']:>5d} {m['c_free']:>8.1f}   {RULE_TEXT[r]}"
         )
     print(f"  counts are of all {total} grid cells; min/n<0/C over visited cells only.")
     print(
         "  '> 80 s' includes 'never'. The paper (p. 4) says every cell is exceeded by 80 s."
-        "\n  Nodes on a cell edge belong to both cells; half-open cells on the release's"
-        "\n  17 x 50 grid give 4 (exists) and 50 (forall) never-exceeded cells instead."
+        "\n  Nodes on a cell edge belong to both cells. On the release's 17 x 50 grid,"
+        "\n  exists / forall give 3 / 77 never-exceeded cells with closed and 4 / 50 with"
+        "\n  half-open cells; an earlier estimate of 5 / 62 is not reproduced by either."
     )
 
 
@@ -458,7 +461,7 @@ def table_dt(slices, rset, shape):
         for dt, a, s in ((10, fine, ""), (30, slow, f"+{shift:.1f} s")):
             m = corrected_measures(a, rset)
             print(
-                f"  {r:<8} {dt:>4d} {m['min']:>6.0f} {m['n_lt0']:>5d} {m['area']:>7.2f}"
+                f"  {r:<8} {dt:>4d} {m['min']:>6.0f} {m['n_fail']:>5d} {m['area']:>7.2f}"
                 f" {m['c_free']:>8.1f} {s:>16}"
             )
     print(
