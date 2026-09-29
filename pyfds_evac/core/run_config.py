@@ -511,28 +511,29 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     )
 
 
-def load_replay_exits(path: str | pathlib.Path) -> dict[int, str]:
-    """Read an exit history CSV into ``{spawn_index: exit_id}``.
+def load_replay_exits(path: str | pathlib.Path) -> dict[tuple[str, int], str]:
+    """Read an exit history CSV into ``{(origin, spawn_index): exit_id}``.
 
-    The file is what ``--output-exit-history`` writes; only its ``spawn_index``
-    and ``exit_id`` columns are read. Raises ValueError on a missing column, a
-    non-integer or repeated spawn index, or an empty exit.
+    The file is what ``--output-exit-history`` writes; only its ``origin``,
+    ``spawn_index`` and ``exit_id`` columns are read. Raises ValueError on a
+    missing column, a non-integer or repeated spawn index, or an empty exit.
     """
     with pathlib.Path(path).open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
-        missing = {"spawn_index", "exit_id"}.difference(reader.fieldnames or [])
+        required = {"origin", "spawn_index", "exit_id"}
+        missing = required.difference(reader.fieldnames or [])
         if missing:
             raise ValueError(f"{path}: missing column(s) {', '.join(sorted(missing))}")
-        exits: dict[int, str] = {}
+        exits: dict[tuple[str, int], str] = {}
         for line, row in enumerate(reader, start=2):
-            index, exit_id = _replay_row(path, line, row)
-            if index in exits:
-                raise ValueError(f"{path}:{line}: spawn index {index} is listed twice")
-            exits[index] = exit_id
+            key, exit_id = _replay_row(path, line, row)
+            if key in exits:
+                raise ValueError(f"{path}:{line}: spawn {key} is listed twice")
+            exits[key] = exit_id
     return exits
 
 
-def _replay_row(path, line: int, row: dict[str, str]) -> tuple[int, str]:
+def _replay_row(path, line: int, row: dict[str, str]) -> tuple[tuple[str, int], str]:
     """Parse one exit history row; raise ValueError naming the line."""
     try:
         index = int(row["spawn_index"])
@@ -543,10 +544,10 @@ def _replay_row(path, line: int, row: dict[str, str]) -> tuple[int, str]:
     exit_id = (row["exit_id"] or "").strip()
     if not exit_id:
         raise ValueError(f"{path}:{line}: spawn index {index} has no exit_id")
-    return index, exit_id
+    return ((row["origin"] or "").strip(), index), exit_id
 
 
-def _build_replay_exits(opts: Any, log: Logger) -> dict[int, str] | None:
+def _build_replay_exits(opts: Any, log: Logger) -> dict[tuple[str, int], str] | None:
     """Load ``--replay-exits`` and warn when rerouting may undo it."""
     path = getattr(opts, "replay_exits", None)
     if not path:

@@ -62,7 +62,8 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `heat_clothing` | `clothed` or `unclothed`, when an ISO 13571 convective heat law ran |
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
-| `smoke_blind`, `replay_exits` | `true`, only with `--smoke-blind` or `--replay-exits` |
+| `smoke_blind` | `true`, only with `--smoke-blind` |
+| `replay_exits` | only with `--replay-exits`: `agents`, the number of replayed spawns, and `sha256`, of the sorted `origin<TAB>spawn_index<TAB>exit_id` lines, one per spawn and joined by newlines, to match the run whose exit history was replayed |
 | `heat_fed_method`, `heat_flux_parameters` | only with `--heat-fed-method total-flux`: ε, h, skin temperature, dose *D*, radiant threshold, the list of assumed parameters, and, per option, the layer parameters or `radiant_source`, `u_factor` and `radiant_flux` |
 
 The manifest does not yet record the slice height that was actually read
@@ -178,13 +179,14 @@ Under the default `"gate"` model, routes are ordered on `tau_route`, not on
 ## Exit history
 
 One row per agent that walks the stage graph, in spawn order. From Python it
-is `result.exit_history`. `--replay-exits` reads its `spawn_index` and
-`exit_id` columns.
+is `result.exit_history`. `--replay-exits` reads its `origin`,
+`spawn_index` and `exit_id` columns.
 
 | Column | Meaning |
 |---|---|
 | `agent_id` | JuPedSim agent id, as in the trajectory SQLite |
-| `spawn_index` | order in which the agent was spawned in this run, from 0 |
+| `origin` | where the agent was spawned: `initial` for the agents placed at t = 0, `flow:<distribution>` for a flow source |
+| `spawn_index` | order in which the agent was spawned from its origin in this run, from 0 |
 | `exit_id` | the exit the agent left through; for an agent still inside at the end, the exit it was heading for |
 
 ## Reading the results

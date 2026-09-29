@@ -41,6 +41,11 @@ def _fire_models(spec):
     return smoke, fed
 
 
+def _replay_map(rows) -> dict[tuple[str, int], str]:
+    """``{(origin, spawn_index): exit_id}`` from exit history rows."""
+    return {(r["origin"], r["spawn_index"]): r["exit_id"] for r in rows}
+
+
 def _run_arm(arm: str, out: Path, replay: Path | None) -> None:
     """Run one arm and dump its trajectories and histories as JSON."""
     sys.path.insert(0, str(REPO / "tests" / "verification"))
@@ -55,7 +60,7 @@ def _run_arm(arm: str, out: Path, replay: Path | None) -> None:
     kwargs["smoke_blind"] = arm == "blind"
     if replay is not None:
         rows = json.loads(replay.read_text(encoding="utf-8"))["exits"]
-        kwargs["replay_exits"] = {r["spawn_index"]: r["exit_id"] for r in rows}
+        kwargs["replay_exits"] = _replay_map(rows)
     result = run_scenario(t_junction_scenario(spec), **kwargs)
     try:
         frames = result.trajectory_dataframe()
@@ -139,21 +144,54 @@ def test_replay_in_one_process_follows_spawn_order():
     smoke, _ = _fire_models(spec)
     blind = run_scenario(scenario, smoke_blind=True, smoke_speed_model=smoke)
     blind.cleanup()
-    replay = {r["spawn_index"]: r["exit_id"] for r in blind.exit_history}
+    replay = _replay_map(blind.exit_history)
     smoke, _ = _fire_models(spec)
     speed = run_scenario(scenario, smoke_speed_model=smoke, replay_exits=replay)
+    manifest = json.loads(Path(speed.manifest_file).read_text(encoding="utf-8"))
     speed.cleanup()
     assert [r["agent_id"] for r in speed.exit_history] != [
         r["agent_id"] for r in blind.exit_history
     ]
-    assert {r["spawn_index"]: r["exit_id"] for r in speed.exit_history} == replay
+    assert _replay_map(speed.exit_history) == replay
+    assert manifest["replay_exits"]["agents"] == len(replay)
+    assert len(manifest["replay_exits"]["sha256"]) == 64
+
+
+def test_spawn_keys_count_per_origin():
+    # A blocked source spawning late must not shift the other source's keys.
+    from pyfds_evac.core.scenario import _spawn_key
+
+    def keys(order):
+        spawn_keys, counts = {}, {}
+        for agent_id, origin in enumerate(order):
+            _spawn_key(spawn_keys, counts, agent_id, origin)
+        return sorted(spawn_keys.values())
+
+    assert keys(["a", "b", "a"]) == keys(["a", "a", "b"])
+    assert keys(["a", "b", "a"]) == [("a", 0), ("a", 1), ("b", 0)]
+
+
+def test_replay_that_is_not_applied_fails(monkeypatch):
+    # The agent keeps its geometric (right) exit; replay must not pass silently.
+    from harness import EXIT_LEFT
+
+    import pyfds_evac.core.scenario as scenario_mod
+
+    _, scenario = _harness_scenario(5.0)
+    monkeypatch.setattr(scenario_mod, "_assign_initial_exit", lambda *a, **k: None)
+    origins = [f"flow:{key}" for key in scenario.raw["distributions"]]
+    replay = {(o, i): EXIT_LEFT for o in origins for i in range(100)}
+    with pytest.raises(scenario_mod.ExitReplayError, match="could not be sent"):
+        scenario_mod.run_scenario(scenario, replay_exits=replay)
 
 
 def test_replay_without_the_agent_fails():
     from pyfds_evac.core.scenario import run_scenario
 
     _, scenario = _harness_scenario(5.0)
-    with pytest.raises(ValueError, match="no exit for spawn index 0"):
+    with pytest.raises(
+        ValueError, match="no exit for origin .flow:spawn_stem. spawn index 0"
+    ):
         run_scenario(scenario, replay_exits={})
 
 
@@ -162,16 +200,16 @@ def test_replay_with_an_unknown_exit_fails():
 
     _, scenario = _harness_scenario(5.0)
     with pytest.raises(ValueError, match="lacks: exit_nowhere"):
-        run_scenario(scenario, replay_exits={0: "exit_nowhere"})
+        run_scenario(scenario, replay_exits={("initial", 0): "exit_nowhere"})
 
 
 @pytest.mark.parametrize(
     ("text", "message"),
     [
-        ("agent_id,exit_id\n1,e\n", "missing column"),
-        ("spawn_index,exit_id\none,e\n", "not an integer"),
-        ("spawn_index,exit_id\n1,e\n1,f\n", "listed twice"),
-        ("spawn_index,exit_id\n1,\n", "has no exit_id"),
+        ("spawn_index,exit_id\n1,e\n", "missing column"),
+        ("origin,spawn_index,exit_id\no,one,e\n", "not an integer"),
+        ("origin,spawn_index,exit_id\no,1,e\no,1,f\n", "listed twice"),
+        ("origin,spawn_index,exit_id\no,1,\n", "has no exit_id"),
     ],
 )
 def test_bad_replay_file_fails(tmp_path, text, message):
@@ -190,11 +228,12 @@ def test_replay_file_round_trip(tmp_path):
 
     path = tmp_path / "exits.csv"
     rows = [
-        {"agent_id": 3, "spawn_index": 0, "exit_id": "a"},
-        {"agent_id": 7, "spawn_index": 1, "exit_id": "b"},
+        {"agent_id": 3, "origin": "o", "spawn_index": 0, "exit_id": "a"},
+        {"agent_id": 7, "origin": "o", "spawn_index": 1, "exit_id": "b"},
+        {"agent_id": 8, "origin": "p", "spawn_index": 0, "exit_id": "a"},
     ]
     run._write_exit_history_csv(rows, str(path))
-    assert load_replay_exits(path) == {0: "a", 1: "b"}
+    assert load_replay_exits(path) == {("o", 0): "a", ("o", 1): "b", ("p", 0): "a"}
 
 
 def test_smoke_blind_turns_off_rerouting_and_tenability():

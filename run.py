@@ -137,8 +137,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--output-exit-history",
-        help="Write each path agent's exit (agent_id, spawn_index, exit_id) to "
-        "CSV: the exit it left through, or the one it was heading for at the end",
+        help="Write each path agent's exit (agent_id, origin, spawn_index, "
+        "exit_id) to CSV: the exit it left through, or the one it was heading "
+        "for at the end",
     )
     parser.add_argument(
         "--smoke-blind",
@@ -150,8 +151,9 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--replay-exits",
         help="Exit history CSV of an earlier run (--output-exit-history); the "
-        "agent spawned n-th is sent to the exit the n-th agent took there, by "
-        "its clear-air route. Needs the same scenario and seed",
+        "agent spawned n-th from an origin is sent to the exit the n-th agent "
+        "from that origin took there, by clear-air costs on the agent's map. "
+        "Needs the same scenario and seed",
     )
     parser.add_argument(
         "--vis-cache",
@@ -525,7 +527,7 @@ def _write_exit_history_csv(rows, output_path: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(
-            handle, fieldnames=["agent_id", "spawn_index", "exit_id"]
+            handle, fieldnames=["agent_id", "origin", "spawn_index", "exit_id"]
         )
         writer.writeheader()
         for row in rows:

@@ -15,6 +15,7 @@ Usage::
     df = result.trajectory_dataframe()
 """
 
+import hashlib
 import json
 import logging
 import math
@@ -1029,6 +1030,11 @@ def _assign_initial_exit(
     return best.exit_id if _apply_initial_path(wait_info, list(best.path)) else None
 
 
+def _flow_origin(flow_dist: dict, source_id: int) -> str:
+    """Return the replay origin of a flow source: its distribution key."""
+    return f"flow:{flow_dist.get('dist_key') or source_id}"
+
+
 class ExitReplayError(ValueError):
     """An agent cannot be given the exit it took in the replayed run."""
 
@@ -1062,45 +1068,89 @@ def _apply_initial_path(wait_info: dict, path: list[str]) -> bool:
     return True
 
 
-def _replayed_exit(
-    replay_exits: Mapping[int, str] | None, spawn_index: int, agent_id: int
-) -> str | None:
-    """Return the exit the agent spawned *spawn_index*-th took, or None.
+# Spawn origin of the agents placed before the first step; flow sources are
+# ``flow:<distribution key>``.
+INITIAL_ORIGIN = "initial"
 
-    Raises ExitReplayError when replay is on and the index has no recorded exit.
+SpawnKey = tuple[str, int]
+
+
+def _spawn_key(
+    spawn_keys: dict[int, SpawnKey],
+    origin_counts: dict[str, int],
+    agent_id: int,
+    origin: str,
+) -> SpawnKey:
+    """Return ``(origin, n)`` for the agent spawned n-th from *origin*.
+
+    Counting per origin keeps the pairing when a blocked flow source spawns
+    later than in the replayed run, which a single counter would shift.
+    """
+    if agent_id in spawn_keys:
+        return spawn_keys[agent_id]
+    key = (origin, origin_counts.get(origin, 0))
+    origin_counts[origin] = key[1] + 1
+    spawn_keys[agent_id] = key
+    return key
+
+
+def _replayed_exit(
+    replay_exits: Mapping[SpawnKey, str] | None, key: SpawnKey, agent_id: int
+) -> str | None:
+    """Return the exit the agent spawned at *key* took, or None.
+
+    Raises ExitReplayError when replay is on and the key has no recorded exit.
     """
     if replay_exits is None:
         return None
-    exit_id = replay_exits.get(spawn_index)
+    exit_id = replay_exits.get(key)
     if exit_id is None:
         raise ExitReplayError(
-            f"--replay-exits has no exit for spawn index {spawn_index} (agent "
-            f"{agent_id}); replay needs the same scenario and seed."
+            f"--replay-exits has no exit for origin {key[0]!r} spawn index "
+            f"{key[1]} (agent {agent_id}); replay needs the same scenario and seed."
         )
     return exit_id
 
 
+def _check_replayed_exit(
+    required_exit: str | None, heading: str | None, agent_id: int
+) -> None:
+    """Raise ExitReplayError when a replayed agent is not heading for its exit."""
+    if required_exit is None or heading == required_exit:
+        return
+    raise ExitReplayError(
+        f"Agent {agent_id} could not be sent to its replayed exit "
+        f"{required_exit!r}; it is heading for {heading!r}."
+    )
+
+
 def _warn_unused_replay(
-    replay_exits: Mapping[int, str] | None, spawn_order: dict[int, int]
+    replay_exits: Mapping[SpawnKey, str] | None, spawn_keys: dict[int, SpawnKey]
 ) -> None:
     """Warn when the replayed run spawned agents this run did not."""
     if replay_exits is None:
         return
-    unused = set(replay_exits).difference(spawn_order.values())
+    unused = set(replay_exits).difference(spawn_keys.values())
     if unused:
         _logger.warning(
             "--replay-exits: %d agent(s) of the replayed run were never spawned "
-            "here (first spawn index %d).",
+            "here (first: origin %r spawn index %d).",
             len(unused),
-            min(unused),
+            *min(unused),
         )
+
+
+def _replay_digest(replay_exits: Mapping[SpawnKey, str]) -> str:
+    """Return a sha256 of the replayed rows, independent of their order."""
+    rows = sorted(f"{o}\t{i}\t{e}" for (o, i), e in replay_exits.items())
+    return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest()
 
 
 def _check_run_modes(
     smoke_blind: bool,
     reroute_config,
     tenability_config,
-    replay_exits: Mapping[int, str] | None,
+    replay_exits: Mapping[SpawnKey, str] | None,
     stage_graph: "StageGraph | None",
 ) -> None:
     """Reject a smoke-blind run that would let smoke act, or a bad replay."""
@@ -1283,7 +1333,7 @@ def run_scenario(
     vis_model=None,
     progress_callback: ProgressCallback | None = None,
     smoke_blind: bool = False,
-    replay_exits: Mapping[int, str] | None = None,
+    replay_exits: Mapping[SpawnKey, str] | None = None,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app.
 
@@ -1294,9 +1344,9 @@ def run_scenario(
     ``smoke_blind`` samples the smoke and FED models for the histories only:
     agents walk and choose exits as in clear air. It takes no
     ``reroute_config`` and no ``tenability_config``. ``replay_exits`` maps
-    spawn index to the exit the agent spawned at that index took in an earlier
-    run (see ``ScenarioResult.exit_history``); each path agent is sent there by
-    the route it would take in clear air.
+    ``(origin, spawn_index)`` to the exit the agent spawned there took in an
+    earlier run (see ``ScenarioResult.exit_history``); each path agent is sent
+    there by the route clear-air costs rank best on its map.
     """
     _require_jupedsim()
     from .simulation_init import (
@@ -1409,8 +1459,10 @@ def run_scenario(
         route_history: list[dict[str, Any]] = []
         # Exit each path agent is heading for, then the one it left through.
         agent_exits: dict[int, str] = {}
-        # Run-local spawn order of path agents; JuPedSim ids can skip (#198).
-        spawn_order: dict[int, int] = {}
+        # Run-local spawn order of path agents per origin; JuPedSim ids can
+        # skip (#198).
+        spawn_keys: dict[int, SpawnKey] = {}
+        origin_counts: dict[str, int] = {}
         route_cost_history: list[dict[str, Any]] = []
         agent_route_state: dict[int, AgentRouteState] = {}
         cognitive_maps: dict[int, AgentCognitiveMap] = {}
@@ -1495,18 +1547,22 @@ def run_scenario(
         )
 
         def _initial_exit_choice(
-            agent_id: int, wait_info: dict, cached_segments: dict | None = None
+            agent_id: int,
+            wait_info: dict,
+            cached_segments: dict | None = None,
+            origin: str = INITIAL_ORIGIN,
         ) -> str | None:
             """Re-target one just-spawned agent onto the best exit it knows.
 
             *cached_segments* is only safe to share between agents ranked at the
             same instant, since segment costs depend on the smoke field at that
-            time; flow-spawned agents therefore pass nothing.
+            time; flow-spawned agents therefore pass nothing, and their
+            *origin*.
             """
             if stage_graph is None or wait_info.get("mode") != "path":
                 return None
-            index = spawn_order.setdefault(agent_id, len(spawn_order))
-            required_exit = _replayed_exit(replay_exits, index, agent_id)
+            key = _spawn_key(spawn_keys, origin_counts, agent_id, origin)
+            required_exit = _replayed_exit(replay_exits, key, agent_id)
             # A replayed or smoke-blind choice is made as in clear air.
             clear_air = smoke_blind or required_exit is not None
             spawn_time = simulation.elapsed_time()
@@ -1529,6 +1585,7 @@ def run_scenario(
                 required_exit=required_exit,
             )
             terminal_exit = _extract_terminal_exit(wait_info, stage_graph.nodes)
+            _check_replayed_exit(required_exit, terminal_exit, agent_id)
             if terminal_exit is not None:
                 agent_exits[agent_id] = terminal_exit
             if chosen is not None and reroute_config is not None:
@@ -1854,7 +1911,11 @@ def run_scenario(
                                             if _dist_idx < len(dist_entrance)
                                             else None
                                         )
-                                        _initial_exit_choice(agent_id, path_state)
+                                        _initial_exit_choice(
+                                            agent_id,
+                                            path_state,
+                                            origin=_flow_origin(flow_dist, source_id),
+                                        )
                                         if path_state and stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
                                                 path_state, stage_graph.nodes
@@ -1952,7 +2013,9 @@ def run_scenario(
                                             else None,
                                         }
                                         _initial_exit_choice(
-                                            agent_id, agent_wait_info[agent_id]
+                                            agent_id,
+                                            agent_wait_info[agent_id],
+                                            origin=_flow_origin(flow_dist, source_id),
                                         )
                                         if stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
@@ -2781,7 +2844,7 @@ def run_scenario(
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
-        _warn_unused_replay(replay_exits, spawn_order)
+        _warn_unused_replay(replay_exits, spawn_keys)
         if smoke_speed_model is not None:
             metrics["smoke_history_samples"] = len(smoke_history)
         if fed_model is not None:
@@ -2830,7 +2893,14 @@ def run_scenario(
                     else None
                 ),
                 smoke_blind=smoke_blind,
-                replay_exits=replay_exits is not None,
+                replay_exits=(
+                    None
+                    if replay_exits is None
+                    else {
+                        "agents": len(replay_exits),
+                        "sha256": _replay_digest(replay_exits),
+                    }
+                ),
             )
         except (OSError, ValueError) as exc:
             _logger.warning("Could not write the run manifest: %s", exc)
@@ -2856,10 +2926,11 @@ def run_scenario(
             exit_history=[
                 {
                     "agent_id": agent_id,
+                    "origin": origin,
                     "spawn_index": index,
                     "exit_id": agent_exits[agent_id],
                 }
-                for agent_id, index in spawn_order.items()
+                for agent_id, (origin, index) in spawn_keys.items()
                 if agent_id in agent_exits
             ],
         )
