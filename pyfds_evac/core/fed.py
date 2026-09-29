@@ -361,13 +361,13 @@ class TenabilityConfig:
     fic_min_factor: float = 0.3
     enable_incapacitation: bool = True
     fed_threshold: float = 1.0
-    # Incapacitation is a population endpoint, not a per-individual constant.
-    # In "probabilistic" mode (default) each agent draws its own threshold
+    # In "deterministic" mode (default) every agent uses fed_threshold, the
+    # FDS+Evac rule (Korhonen 2021 §3.4). The opt-in "probabilistic" mode
+    # treats incapacitation as a population endpoint: each agent draws
     #   D_incap = fed_threshold * exp(susceptibility_sigma * Z), Z ~ N(0, 1),
     # a log-normal with median fed_threshold. sigma = 0.94 fits the NIST TN
-    # 1797 / Purser bands (~10/50/88 % incapacitated at FED 0.3/1/3). In
-    # "deterministic" mode every agent uses fed_threshold (the legacy rule).
-    incapacitation_mode: str = "probabilistic"
+    # 1797 / Purser bands (~10/50/88 % incapacitated at FED 0.3/1/3).
+    incapacitation_mode: str = "deterministic"
     susceptibility_sigma: float = 0.94
     enable_heat_incapacitation: bool = True
     heat_fed_threshold: float = 1.0

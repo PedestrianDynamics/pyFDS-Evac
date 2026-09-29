@@ -61,6 +61,17 @@ def _build_smoke_model(opts: Any, log: Logger):
     )
     if opts.constant_extinction is not None:
         field = ConstantExtinctionField(opts.constant_extinction)
+    elif not _has_extinction_slice(opts.fds_dir):
+        # Not an error, same reasoning as _build_fed_model: a heat-only case
+        # carries no soot, and the run continues -- but agents then walk at
+        # clear-air speed, which should not pass unnoticed.
+        _logger.warning(
+            "Smoke speed reduction is disabled for %s: it has no SOOT "
+            "EXTINCTION COEFFICIENT slice, so agents walk at clear-air speed. "
+            "Pass --constant-extinction to set a uniform extinction instead.",
+            opts.fds_dir,
+        )
+        field = None
     elif opts.fds_dir:
         field = ExtinctionField.from_fds(
             smoke_config.fds_dir,
@@ -71,6 +82,11 @@ def _build_smoke_model(opts: Any, log: Logger):
     if field is None:
         return None
     return SmokeSpeedModel(field, smoke_config)
+
+
+def _has_extinction_slice(fds_dir: str) -> bool:
+    """Return whether the FDS case has a SOOT EXTINCTION COEFFICIENT slice."""
+    return "extinction" in inspect_fds_quantities(fds_dir).canonical_slice_names()
 
 
 def _build_fed_model(opts: Any, log: Logger):
@@ -230,7 +246,15 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     max_distance = getattr(opts, "max_sign_distance", DEFAULT_MAX_SIGN_DISTANCE_M)
     n_signs = len(sign_descriptors)
     plural = "" if n_signs == 1 else "s"
-    if not opts.fds_dir:
+    smoky = bool(opts.fds_dir) and _has_extinction_slice(opts.fds_dir)
+    if opts.fds_dir and not smoky:
+        _logger.warning(
+            "Visibility falls back to clear air for %s: it has no SOOT "
+            "EXTINCTION COEFFICIENT slice, so smoke hides no sign; geometry "
+            "and sign facing still do.",
+            opts.fds_dir,
+        )
+    if not smoky:
         cell = getattr(opts, "vis_cell_size", 0.25)
         log(
             f"Configuring clear-air visibility ({n_signs} sign{plural}, {cell} m grid)."
@@ -262,7 +286,7 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     """
     if (fed_model is None and heat_fed_model is None) or opts.disable_tenability:
         return None
-    mode = getattr(opts, "incapacitation_mode", "probabilistic")
+    mode = getattr(opts, "incapacitation_mode", "deterministic")
     sigma = getattr(opts, "susceptibility_sigma", 0.94)
     heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
     heat_mode = getattr(opts, "heat_incapacitation_mode", "deterministic")

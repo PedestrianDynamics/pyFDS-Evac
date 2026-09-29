@@ -98,6 +98,7 @@ fds assets/t_junction/t_junction.fds
 uv run python run.py \
   --scenario assets/t_junction \
   --fds-dir assets/t_junction \
+  --incapacitation-mode probabilistic \
   --enable-rerouting \
   --reroute-interval 5 \
   --output-smoke-history smoke.csv \
