@@ -178,13 +178,14 @@ def deterministic_heat_tenability(heat_fed_threshold: float = 1.0) -> Tenability
 
 
 def heat_fed_rate_per_min(temperature_celsius: float) -> float:
-    """Closed-form heat FED rate (1/min), SFPE Handbook Eq. 63.44.
+    """Heat FED rate (1/min) as 1/t_Iconv, SFPE Handbook Eqs. 63.44 and 63.48.
 
-    Re-derived here (not imported from ``pyfds_evac.core.fed``) so the test
-    catches an integration regression independently of the model's own
-    coefficients -- mirrors ``co_fed_rate_per_min``.
+    Evaluates Eq. 63.44 in the form printed on p. 2382, a time in minutes,
+    ``t_Iconv = 5e7 * T**-3.4`` (T in deg C), not imported from
+    ``pyfds_evac.core.fed``. Scenario tests use it to check the wiring;
+    ``test_heat_fed_verif.py`` compares the law with the Handbook's tables.
     """
-    return temperature_celsius**3.4 / 5e7
+    return 1.0 / (5.0e7 * temperature_celsius ** (-3.4))
 
 
 def time_to_heat_incapacitation_s(

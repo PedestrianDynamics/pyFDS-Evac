@@ -21,10 +21,9 @@ position (nearest slice node, nearest slice time) and sums SFPE Eq. 63.44
 
     FED_HEAT = sum [ T^3.4 / 5e7 ] * dt      (T in C, dt in min)
 
-over the agent's own update times. FDS does not hold the prescribed
-temperature exactly (it settles 0.7, 1.2 and 1.8 % lower within the first
-minute), so the closed form at the nominal temperature, 60 * 5e7 / T^3.4 s,
-is shown for reference only.
+over the agent's own update times. The decks set TMPA to the prescribed
+temperature, so FDS holds the room at the deck value and the closed form
+60 * 5e7 / T^3.4 s at that value is the expected time to FED = 1.
 
 Checks: the temperature each agent recorded equals the slice value; its
 heat FED equals the hand sum of its recorded temperature to round-off and the
@@ -340,49 +339,39 @@ def plot_setup(out, room, cfg, case):
 
 
 def plot_temperature(out, cases):
-    """Room temperature at 1.5 m against time: mean, spread, deck value."""
+    """Room temperature at 1.5 m against time: deviation from the deck value."""
     fig, ax = plt.subplots(figsize=(7.0, 4.2), dpi=150)
+    worst = 0.0
     for temp_c, case in cases.items():
         times, temp = case["times"], case["temp"]
-        rel_mean = np.nanmean(temp, axis=(1, 2)) / temp_c * 100.0
-        rel_lo = np.nanmin(temp, axis=(1, 2)) / temp_c * 100.0
-        rel_hi = np.nanmax(temp, axis=(1, 2)) / temp_c * 100.0
+        dev = (temp - temp_c) * 1e3
+        lo, hi = np.nanmin(dev, axis=(1, 2)), np.nanmax(dev, axis=(1, 2))
+        worst = max(worst, float(np.nanmax(np.abs(dev))))
         colour = TEMP_COLOURS[temp_c]
-        ax.fill_between(times, rel_lo, rel_hi, color=colour, alpha=0.25, lw=0)
-        ax.plot(times, rel_mean, color=colour, lw=1.4, label=f"{temp_c} °C deck")
-        ax.text(
-            1005,
-            rel_mean[-1],
-            f"{temp_c} °C: {rel_mean[-1] * temp_c / 100:.1f} °C",
-            fontsize=8,
-            color=TEXT,
-            va="center",
+        ax.fill_between(times, lo, hi, color=colour, alpha=0.25, lw=0)
+        ax.plot(
+            times,
+            np.nanmean(dev, axis=(1, 2)),
+            color=colour,
+            lw=1.4,
+            label=f"{temp_c} °C deck",
         )
-    ax.axhline(100.0, color="lightgrey", lw=0.8, ls="--", zorder=1)
+    ax.axhline(0.0, color="lightgrey", lw=0.8, ls="--", zorder=1)
     ax.text(
-        210,
-        100.03,
-        "prescribed by &INIT",
-        ha="left",
-        va="bottom",
-        fontsize=8,
-        color=TEXT,
-    )
-    drops = " / ".join(f"{c['drop_pct']:.1f}" for c in cases.values())
-    ax.text(
-        400,
-        97.95,
-        f"FDS settles {drops} % below it (100 / 150 / 200 °C)\n"
-        "within a minute, then holds. Band: spread over the\n"
-        "61 × 61 slice nodes. The hand calculation uses these\n"
-        "slice values, not the deck value.",
+        0.98,
+        0.95,
+        f"max |T − T_deck| over all 61 × 61 slice nodes: {worst:.2f} mK\n"
+        "line: room mean; band: spread over the slice nodes",
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
         fontsize=8.5,
         color=TEXT,
-        va="top",
     )
     ax.set_xlim(0.0, 1000.0)
+    ax.set_ylim(-1.6 * worst, 1.6 * worst)
     ax.set_xlabel("time [s]", color=TEXT)
-    ax.set_ylabel("T / T_deck at 1.5 m [%]", color=TEXT)
+    ax.set_ylabel("T − T_deck at 1.5 m [mK]", color=TEXT)
     ax.legend(loc="lower left", fontsize=8, **LEGEND)
     style_axes(ax)
     fig.savefig(out / "heat_room_temperature.png", dpi=150, bbox_inches="tight")
@@ -436,14 +425,11 @@ def plot_fed(out, case, temp_c):
         color=TEXT,
         arrowprops=dict(arrowstyle="-", color="lightgrey", lw=0.8),
     )
-    drop_s = case["t_star_eff"] - t_nom
-    lag_s = t_stop - case["t_star_eff"]
     ax.text(
         t_stop + 2,
         0.62,
-        f"gap to the closed form: {t_stop - t_nom:.1f} s\n"
-        f"= {drop_s:+.1f} s FDS below {temp_c} °C\n"
-        f"  {lag_s:+.1f} s dose checked every 1 s",
+        f"gap to the closed form: {t_stop - t_nom:+.1f} s\n"
+        "the dose is checked every 1 s",
         fontsize=8,
         color=TEXT,
         va="top",

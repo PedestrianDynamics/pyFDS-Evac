@@ -46,7 +46,7 @@ t^{*} = \frac{60}{r_{\mathrm{CO}}\,\mathrm{HV}_{\mathrm{CO_2}}}\ \text{s},
 \qquad r_{\mathrm{CO}} = 2.764\times10^{-5}\,C_{\mathrm{CO}}^{1.036}\ \text{min}^{-1}.
 $$
 
-In `probabilistic` mode (the default for the gas dose) agent *i* stops at its
+In `probabilistic` mode (opt-in) agent *i* stops at its
 own threshold \(D_i = \exp(\sigma Z_i)\), \(Z_i \sim N(0,1)\), σ = 0.94. Because
 FED grows linearly, agent *i* stops at \(D_i\,t^{*}\), and the fraction of
 agents stopped by time *t* is
@@ -65,8 +65,8 @@ $$
 - **Agents:** 100 agents walk a loop between four corner checkpoints, so they
   stay in the room and keep moving; the field is sampled at each agent's
   position every second.
-- **Runs:** once with `--incapacitation-mode deterministic`, once with the
-  default `probabilistic`.
+- **Runs:** once with `--incapacitation-mode deterministic`, once with
+  `--incapacitation-mode probabilistic`.
 
 ## Expected
 

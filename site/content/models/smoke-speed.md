@@ -103,6 +103,10 @@ and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](ht
 For real FDS output, `fdsreader` provides the local extinction field
 via `SliceFieldSampler`. For verification cases such as ISO 20414:2020 Test 18 (Table 21),
 the runner can also apply a constant extinction coefficient directly.
+If the FDS case has no `SOOT EXTINCTION COEFFICIENT` slice and no
+`--constant-extinction` is given, the run logs a warning and continues with
+no smoke-speed model: agents walk at clear-air speed
+([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
 
 ## FDS data access
 

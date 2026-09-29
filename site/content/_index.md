@@ -45,7 +45,7 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
   >}}
   {{< hextra/feature-card
     title="Dose"
-    subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus an opt-in convective heat dose accumulated separately. By default each agent stops at its own threshold."
+    subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus an opt-in convective heat dose accumulated separately. By default every agent stops at FED 1, as in FDS+Evac."
     link="models/fed/"
   >}}
   {{< hextra/feature-card
