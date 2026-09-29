@@ -493,10 +493,10 @@ whole run
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274" target="_blank" rel="noopener">#274&lt;/a>,
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275" target="_blank" rel="noopener">#275&lt;/a>).
 Radiant flux from hot surfaces or a flame enters only with the opt-in
-&lt;code>--heat-radiant-source integrated-intensity&lt;/code>, as the net f·U − σT_s⁴ from the FDS
-&lt;code>INTEGRATED INTENSITY&lt;/code> slice with a user factor f in [0.25, 1] that no
-single value fits for every orientation; it cannot be combined with
-&lt;code>--heat-regime layer&lt;/code>
+&lt;code>--heat-radiant-source integrated-intensity&lt;/code>, as the excess f·(U − 4σT_s⁴) from
+the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice with a user factor f in [0.25, 1] that
+no single value fits for every orientation; with &lt;code>--heat-regime layer&lt;/code> as
+well, U supplies the radiant term and the layer term is not added
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).
 Otherwise an agent near a flame is treated as less exposed than it is
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).
@@ -1161,7 +1161,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
 &lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
-&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the net f·U − σT_s⁴ from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
+&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>

@@ -1165,7 +1165,7 @@ title="Copy code"
 &lt;p>Figure: &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/artifacts/iso-table22-stationary-fed.png" alt="ISO 20414 Test 19 (Table 22) stationary FED verification" loading="lazy" />&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
 &lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>Radiant heat from hot surfaces or a flame, except as the net f·U − σT_s⁴ from FDS
+&lt;li>Radiant heat from hot surfaces or a flame, except as the excess f·(U − 4σT_s⁴) from FDS
 &lt;code>INTEGRATED INTENSITY&lt;/code> with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>
 and a user factor. Otherwise the heat dose is convective, or with
 &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head,
@@ -2388,22 +2388,30 @@ flux lies between &lt;em>U&lt;/em>/4 (a sphere, or a plate in an isotropic field
 (one small source seen face-on); &lt;em>U&lt;/em>/2 holds for a plate facing a uniform
 layer (spec 016). The flux to the skin is&lt;/p>
 $$
-q = f\,U - \frac{\sigma\,T_s^4}{1000} + \frac{h\,(T_g - T_s)}{1000}
+q = f\,\Bigl(U - \frac{4\,\sigma\,T_s^4}{1000}\Bigr) + \frac{h\,(T_g - T_s)}{1000}
 \quad [\mathrm{kW/m^2}],
 $$&lt;p>with \(T_s\) in K (&lt;code>radiant_flux_from_integrated_intensity_kw_m2&lt;/code> for the
 incident &lt;em>f U&lt;/em>), and the rate is \(q^{1.33}/D\) as above.&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>The radiant term is net&lt;/strong>, &lt;em>f U&lt;/em> − σ\(T_s^4\), by maintainer decision
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>):
-&lt;em>f U&lt;/em> is absorbed by a black skin, σ\(T_s^4\) is its own emission, with
-the same \(T_s\) as the convective term. This treats Eq. 63.49 as a net
-exchange: with &lt;em>U&lt;/em> = 4σ&lt;em>T&lt;/em>⁴ of a black isotropic field at &lt;em>T&lt;/em> and
-&lt;em>f&lt;/em> = 1/4 the term is σ(&lt;em>T&lt;/em>⁴ − \(T_s^4\)), the radiant term of Eq. 63.49
-with ε = 1. The Handbook calls Eq. 63.49 &amp;ldquo;the total incident flux to the
-skin&amp;rdquo; (p. 2383), and spec 016 takes the radiant tolerance data as
-incident, so the net basis is a choice, not a reading of the sources. It
-is also what an FDS skin gauge reports (FDS User&amp;rsquo;s Guide 6.10.1,
-Eq. 22.35, p. 381).&lt;/li>
+&lt;li>&lt;strong>The radiant term is the excess over a skin-temperature field&lt;/strong>,
+&lt;em>f&lt;/em> (&lt;em>U&lt;/em> − 4σ\(T_s^4\)), by maintainer decision
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>),
+with the same \(T_s\) as the convective term. 4σ\(T_s^4\) is the &lt;em>U&lt;/em> of an
+isotropic black field at the skin temperature, so that field gives
+&lt;em>q&lt;/em> = 0 for every &lt;em>f&lt;/em> in [0.25, 1]: surroundings at skin temperature
+exchange no net heat with the skin, whatever the orientation factor. An
+isotropic field at &lt;em>T&lt;/em> gives 4&lt;em>f&lt;/em>σ(&lt;em>T&lt;/em>⁴ − \(T_s^4\)); at &lt;em>f&lt;/em> = 1/4 that is
+σ(&lt;em>T&lt;/em>⁴ − \(T_s^4\)), the radiant term of Eq. 63.49 with ε = 1, and what an
+FDS skin gauge reports in that field (FDS User&amp;rsquo;s Guide 6.10.1, Eq. 22.35,
+p. 381). A source seen face-on in surroundings at skin temperature
+(&lt;em>f&lt;/em> = 1, &lt;em>U&lt;/em> = &lt;em>q&lt;/em>\(_{\mathrm{src}}\) + 4σ\(T_s^4\)) gives its own flux
+&lt;em>q&lt;/em>\(_{\mathrm{src}}\). The Handbook calls Eq. 63.49 &amp;ldquo;the total incident
+flux to the skin&amp;rdquo; (p. 2383), and spec 016 takes the radiant tolerance data
+as incident, so this basis is a choice, not a reading of the sources.&lt;/li>
+&lt;li>&lt;strong>No negative dose.&lt;/strong> Where &lt;em>q&lt;/em> ≤ 0 the skin is cooled on balance and the
+dose rate is 0; there is no recovery. A 20 °C room with no fire
+(&lt;em>U&lt;/em> = 1.68 kW/m² &amp;lt; 4σ\(T_s^4\) = 2.04 kW/m²) gives &lt;em>q&lt;/em> &amp;lt; 0 for every &lt;em>f&lt;/em>,
+so no dose.&lt;/li>
 &lt;li>&lt;strong>The ε term is not added.&lt;/strong> &lt;em>U&lt;/em> already contains the emission of the gas
 at the head, so ε σ (\(T_g^4 - T_s^4\)) would count it twice;
 &lt;code>--heat-emissivity&lt;/code> is ignored with this source.&lt;/li>
@@ -2424,21 +2432,26 @@ Outside both (outside the FDS domain) &lt;em>U&lt;/em> and &lt;em>q&lt;/em> are 
 history and the rate is zero; the run logs one warning the first time
 this happens, not one per agent or update.&lt;/li>
 &lt;li>A non-finite &lt;em>U&lt;/em> gives a zero rate, as for the gas term.&lt;/li>
-&lt;li>The source cannot be combined with &lt;code>--heat-regime layer&lt;/code>: &lt;em>U&lt;/em> already
-contains the emission of the layer, so adding the layer term would count
-it twice. The run stops with an error.&lt;/li>
+&lt;li>&lt;strong>With &lt;code>--heat-regime layer&lt;/code> as well, &lt;em>U&lt;/em> supplies the radiant term&lt;/strong> and
+the layer term is not added; the run logs one warning and the manifest
+records &lt;code>layer_term: false&lt;/code>. Reasoning: FDS&amp;rsquo;s radiation solution already
+contains the layer&amp;rsquo;s emission, so the sum would count it twice; of the
+two, &lt;em>U&lt;/em> is the better-resolved input, since it integrates the whole
+radiation field at the head (layer, flame, walls, the gas around the
+head), while the layer term takes one slice temperature, a user view
+factor and a user emissivity. The layer term is used only when &lt;em>U&lt;/em> is not
+the radiant source. There is no per-sample fallback from &lt;em>U&lt;/em> to the layer
+term: inside the domain both slices must cover every agent, so &lt;em>U&lt;/em> is
+always there, and outside it (the only place &lt;em>U&lt;/em> is missing) the layer
+slice has no value either.&lt;/li>
 &lt;/ul>
 &lt;h3>Limits of the INTEGRATED INTENSITY source&lt;span class="hx-absolute -hx-mt-20" id="limits-of-the-integrated-intensity-source">&lt;/span>
 &lt;a href="#limits-of-the-integrated-intensity-source" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
-&lt;li>&lt;strong>Ambient background vanishes only near &lt;em>f&lt;/em> = 1/4.&lt;/strong> &lt;em>U&lt;/em> is not zero in
-a cold room: at 20 °C, &lt;em>U&lt;/em> = 4σ&lt;em>T&lt;/em>⁴ = 1.68 kW/m². With &lt;em>f&lt;/em> = 1/4 the net
-term is σ(&lt;em>T&lt;/em>⁴ − \(T_s^4\)), zero at the skin temperature and negative
-below it, so a room with no fire gives no dose. With larger &lt;em>f&lt;/em> it does
-not vanish: with h = 5 and \(T_s\) = 35 °C, a 20 °C room gives &lt;em>q&lt;/em> &amp;gt; 0
-for &lt;em>f&lt;/em> above about 0.35, and with no 2.5 kW/m² threshold the fatal heat
-FED = 1 is reached after about 15 min (&lt;em>f&lt;/em> = 1) or 105 min (&lt;em>f&lt;/em> = 0.5)
-with no fire at all. &lt;em>f&lt;/em> &amp;gt; 1/4 describes a directional source, which an
-ambient field is not; one &lt;em>f&lt;/em> for the whole run applies it to both.&lt;/li>
+&lt;li>&lt;strong>Ambient background.&lt;/strong> &lt;em>U&lt;/em> is not zero in a cold room (1.68 kW/m² at
+20 °C), but the excess basis subtracts the field at skin temperature, so
+surroundings at or below \(T_s\) give no dose for any &lt;em>f&lt;/em>. Surroundings
+warmer than the skin but with no fire (a warm day, a heated room) do give
+a small dose with no 2.5 kW/m² threshold, larger for larger &lt;em>f&lt;/em>.&lt;/li>
 &lt;li>&lt;strong>[0.25, 1] is not a bound for every orientation.&lt;/strong> In the FDS radiometer
 data of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224" target="_blank" rel="noopener">#224&lt;/a>,
 below a hot layer the plate facing up gets about 0.41 &lt;em>U&lt;/em>, but a plate
@@ -2561,7 +2574,7 @@ records &lt;code>regime&lt;/code>, &lt;code>view_factor&lt;/code>, &lt;code>laye
 it still records ε, which has no effect in that regime. With
 &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the FED history also carries
 &lt;code>heat_integrated_intensity_kw_m2&lt;/code> (&lt;em>U&lt;/em>), and &lt;code>heat_flux_parameters&lt;/code> adds
-&lt;code>radiant_source&lt;/code>, &lt;code>u_factor&lt;/code> and &lt;code>radiant_flux&lt;/code> (&lt;code>net&lt;/code>); ε is then not
+&lt;code>radiant_source&lt;/code>, &lt;code>u_factor&lt;/code> and &lt;code>radiant_flux&lt;/code> (&lt;code>excess&lt;/code>); ε is then not
 listed as assumed, as it is not used.
 With an endpoint, &lt;code>heat_outside_validity&lt;/code> still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
@@ -2678,7 +2691,7 @@ tolerance.&lt;/p>
 &lt;td>Skin temperature \(T_s\)&lt;/td>
 &lt;td>35 °C, fixed&lt;/td>
 &lt;td>&lt;code>--heat-skin-temperature&lt;/code> / &lt;code>skin_temperature_celsius&lt;/code> (&lt;code>DEFAULT_HEAT_SKIN_TEMPERATURE_C&lt;/code>)&lt;/td>
-&lt;td>Total-flux convective and radiant terms, and σ\(T_s^4\) of the net &lt;code>INTEGRATED INTENSITY&lt;/code> term&lt;/td>
+&lt;td>Total-flux convective and radiant terms, and 4σ\(T_s^4\) of the excess &lt;code>INTEGRATED INTENSITY&lt;/code> term&lt;/td>
 &lt;td>The draft&amp;rsquo;s value; the Handbook gives none for Eq. 63.49&lt;/td>
 &lt;td>Skin temperature data under heat exposure, including its rise (spec 016, open question 2)&lt;/td>
 &lt;/tr>
@@ -2716,11 +2729,19 @@ tolerance.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>Flux basis of &lt;em>f U&lt;/em>&lt;/td>
-&lt;td>net, &lt;em>f U&lt;/em> − σ\(T_s^4\)&lt;/td>
+&lt;td>excess over a skin-temperature isotropic field, &lt;em>f&lt;/em> (&lt;em>U&lt;/em> − 4σ\(T_s^4\))&lt;/td>
 &lt;td>none (fixed)&lt;/td>
 &lt;td>&lt;code>--heat-radiant-source integrated-intensity&lt;/code>&lt;/td>
-&lt;td>Maintainer decision: Eq. 63.49 read as a net exchange; matches the FDS skin gauge (FDS UG Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383). The background vanishes only near &lt;em>f&lt;/em> = 1/4&lt;/td>
-&lt;td>Whether the radiant tolerance data (Table 63.19) hold for incident or net flux at skin temperature&lt;/td>
+&lt;td>Maintainer decision: surroundings at skin temperature give no flux for any &lt;em>f&lt;/em>; at &lt;em>f&lt;/em> = 1/4 equals Eq. 63.49 with ε = 1 and the FDS skin gauge (FDS UG Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383)&lt;/td>
+&lt;td>Whether the radiant tolerance data (Table 63.19) hold for incident flux or for flux above the skin&amp;rsquo;s own exchange&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;em>U&lt;/em> with the layer regime&lt;/td>
+&lt;td>&lt;em>U&lt;/em> supplies the radiant term; layer term not added&lt;/td>
+&lt;td>&lt;code>--heat-regime layer&lt;/code> with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>&lt;/td>
+&lt;td>Total-flux &lt;em>q&lt;/em> when both are set&lt;/td>
+&lt;td>&lt;em>U&lt;/em> already contains the layer&amp;rsquo;s emission and is the better-resolved input&lt;/td>
+&lt;td>Gauge devices, which replace both (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Heat σ&lt;/td>
@@ -3845,7 +3866,7 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;/tr>
 &lt;tr>
 &lt;td>INTEGRATED INTENSITY&lt;/td>
-&lt;td>net radiant flux f·U − σT_s⁴, only with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>; at the TEMPERATURE slice z, covering the same area&lt;/td>
+&lt;td>radiant flux f·(U − 4σT_s⁴), only with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>; at the TEMPERATURE slice z, covering the same area&lt;/td>
 &lt;td>&lt;code>ValueError&lt;/code>: the run stops (also for another z, or an agent inside only one of the two slices)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -6285,10 +6306,10 @@ whole run
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274" target="_blank" rel="noopener">#274&lt;/a>,
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275" target="_blank" rel="noopener">#275&lt;/a>).
 Radiant flux from hot surfaces or a flame enters only with the opt-in
-&lt;code>--heat-radiant-source integrated-intensity&lt;/code>, as the net f·U − σT_s⁴ from the FDS
-&lt;code>INTEGRATED INTENSITY&lt;/code> slice with a user factor f in [0.25, 1] that no
-single value fits for every orientation; it cannot be combined with
-&lt;code>--heat-regime layer&lt;/code>
+&lt;code>--heat-radiant-source integrated-intensity&lt;/code>, as the excess f·(U − 4σT_s⁴) from
+the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice with a user factor f in [0.25, 1] that
+no single value fits for every orientation; with &lt;code>--heat-regime layer&lt;/code> as
+well, U supplies the radiant term and the layer term is not added
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).
 Otherwise an agent near a flame is treated as less exposed than it is
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).
@@ -9061,7 +9082,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
 &lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
-&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the net f·U − σT_s⁴ from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
+&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>

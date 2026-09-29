@@ -51,7 +51,7 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;/tr>
 &lt;tr>
 &lt;td>INTEGRATED INTENSITY&lt;/td>
-&lt;td>net radiant flux f·U − σT_s⁴, only with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>; at the TEMPERATURE slice z, covering the same area&lt;/td>
+&lt;td>radiant flux f·(U − 4σT_s⁴), only with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>; at the TEMPERATURE slice z, covering the same area&lt;/td>
 &lt;td>&lt;code>ValueError&lt;/code>: the run stops (also for another z, or an agent inside only one of the two slices)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
