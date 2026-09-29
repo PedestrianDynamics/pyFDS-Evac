@@ -169,3 +169,5 @@ they are not (pp. 2344–2345).
   Secondary source.
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md).
+
+How it is verified: the FED and FIC rows of the [Verification](/verification/_index.md) index; the HCN, NOₓ and irritant terms are not yet verified end to end ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)).

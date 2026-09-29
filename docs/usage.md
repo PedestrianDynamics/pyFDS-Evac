@@ -223,7 +223,8 @@ The tracked FDS output of the T-junction fire is not in the repository; run
 
 `scripts/inspect_fds.py` summarises what quantities FDS wrote and whether
 they are within tenability-relevant ranges. Its `--height` defaults to 2.0 m;
-pass 1.6 to match `run.py`.
+pass 1.6 to match `run.py`
+([#313](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313)).
 
 ```bash
 uv run python scripts/inspect_fds.py assets/iso_table22_coupled/fds/a --height 1.6
@@ -483,6 +484,7 @@ example the output of `assets/t_junction/t_junction.fds`. The script calls
 `run.py` with all diagnostic outputs enabled and then invokes each
 plotting script against the resulting CSVs / SQLite. It writes the vismap
 cache into `<fds-dir>/vismap_cache.pkl`, so do not point it at a tracked
-directory under `assets/`. The usage line in the script itself still names
+directory under `assets/`
+([#313](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313)). The usage line in the script itself still names
 `assets/t_junction`, which has no FDS output
 ([#312](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312)).

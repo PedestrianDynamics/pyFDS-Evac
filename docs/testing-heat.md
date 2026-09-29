@@ -12,7 +12,7 @@ aliases: [/docs/testing-heat/, /models/verification/testing-heat/]
 | **Level** | FDS case: a full run on FDS output |
 | **Asset** | `assets/fed_incap_heat_150c` (also `_100c` and `_200c`) |
 | **Expected value from** | closed form of SFPE Eq. 63.44 (ISO 13571:2012 Eq. (10), `--heat-clothing unclothed`) at the deck temperature; per agent, hand sum of Eq. 63.48 on FDS's own `TEMPERATURE` slice |
-| **Status** | passes with `--heat-clothing unclothed`; checks the pipeline, not the law (the law against the Handbook's tables: `test_heat_fed_verif.py`, A3.8–A3.10, A3.12); the default law, ISO Eq. (9), has expected times only |
+| **Status** | passes with `--heat-clothing unclothed`; checks the pipeline, not the law (the law against the Handbook's tables: `test_heat_fed_verif.py`, A3.8–A3.10, A3.12); the default law, ISO Eq. (9), has expected times only ([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)) |
 
 ![100 agents walk a loop in a room at 150 °C; their colour shows the heat dose, and all of them stop at 120 s](/images/verification/heat_room.gif)
 
@@ -32,10 +32,13 @@ Eq. (9), for fully clothed subjects
 ([Models › Heat](/models/heat.md#clothing),
 [#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)). The
 two laws share the pipeline this page checks and differ only in their
-constants. Under Eq. (9) the 100 °C room would reach FED = 1 at 1482 s,
-after the end of the 1000 s FDS record, so that deck could not check the
-default without a longer FDS run; the page therefore stays on Eq. (10) and
-lists the Eq. (9) times as expected values only.
+constants. Only the 100 °C deck is too short for Eq. (9): it would reach
+FED = 1 at 1482 s, after the end of the 1000 s FDS record. The 150 and
+200 °C decks could check it (343 s and 121 s) but have not been rerun
+([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)), so the
+Eq. (9) times are expected values only. The default law is checked on
+synthetic fields by the S6 test
+([`test_s6_heat_fed.py`](../tests/verification/test_s6_heat_fed.py)).
 
 ## Equation
 
@@ -97,8 +100,9 @@ $$
 - **Agents:** 100 agents walk a loop between four corner checkpoints and
   never leave. Each agent's temperature is sampled every second. Seed 42
   (the default `baseSeed`).
-- **Runs:** `--enable-heat-fed` (heat is off by default), deterministic at
-  all three temperatures; probabilistic at 150 °C.
+- **Runs:** `--enable-heat-fed` (heat is off by default), deterministic (the
+  default, given explicitly) at all three temperatures; probabilistic at
+  150 °C.
 - **No soot:** the decks have no soot slice, so `run.py` warns that smoke
   speed reduction is off and that visibility falls back to clear air
   ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
@@ -336,8 +340,11 @@ assumptions are on
   `--heat-regime layer` is checked the same way, against hand formulas and
   the 200 °C / 2.5 kW/m² anchor of p. 2382
   (`tests/test_heat_layer_flux.py`,
-  `tests/verification/test_heat_layer_flux_coupled.py`); it has no FDS case
-  yet ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
+  `tests/verification/test_heat_layer_flux_coupled.py`) on synthetic fields
+  only; no FDS case runs the layer regime yet
+  ([#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308)). The
+  #224 radiometer decks are FDS-only reference data
+  ([Heat radiometer](testing-heat-radiometer.md)).
   The `INTEGRATED INTENSITY` source is checked in
   `tests/test_heat_integrated_intensity.py` and
   `tests/verification/test_heat_integrated_intensity_coupled.py`

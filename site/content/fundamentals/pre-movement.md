@@ -83,4 +83,9 @@ between clusters.
   [doi:10.1016/j.firesaf.2015.07.001](https://doi.org/10.1016/j.firesaf.2015.07.001)
   (further reading; not summarised here).
 
-How pyFDS-Evac uses this: see the [RSET ensemble how-to](/docs/howto-rset-ensemble.md).
+How pyFDS-Evac uses this: the presets and their sources are in
+[Coming from FDS+Evac › Pre-movement parameters](/docs/coming-from-fds-evac.md#pre-movement-parameters),
+the scenario keys in [Scenario JSON](/docs/scenario-json.md), and a worked
+ensemble in the [RSET ensemble how-to](/docs/howto-rset-ensemble.md).
+
+How it is verified: the pre-movement row of the [Verification](/verification/_index.md) index.

@@ -409,7 +409,11 @@ stops and stays in place as an obstacle, as for the gas dose.
 - **`deterministic` (default).** Every agent uses the heat threshold. No
   published source gives a population spread for heat tolerance:
   SFPE Ch. 63 gives population figures for heat only for radiant lethality
-  (p. 2382), which is not modelled here.
+  (p. 2382). Read as a log-normal, those figures give σ ≈ 0.22; the gas
+  value σ = 0.94 would put 29 % of agents below FED 0.60, where they imply
+  1 % ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat)).
+  That is why heat stays deterministic by default
+  ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 - **`probabilistic` (opt-in).** Each agent draws its own threshold once, from
   the run's seed, on a stream independent of the gas threshold:
   \(D_i = D \cdot \exp(\sigma Z)\), with *D* the heat threshold,

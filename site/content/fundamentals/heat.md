@@ -273,3 +273,5 @@ equations describe the effect of heat on walking speed or on route choice.
   for Eq. (9); not consulted.
 
 How pyFDS-Evac uses this: see [Models › Heat](/models/heat.md).
+
+How it is verified: [Heat dose](/verification/testing-heat.md) and the heat rows of the [Verification](/verification/_index.md) index.

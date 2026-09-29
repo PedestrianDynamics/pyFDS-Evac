@@ -32,7 +32,8 @@ least one case.
 The gas FED of Purser (SFPE Handbook, 4th ed., Sec. 2 Ch. 6), as coded in
 FDS 6.10.1's `FED` function
 ([`Source/func.f90`](https://github.com/firemodels/fds/blob/FDS-6.10.1/Source/func.f90#L2313-L2404);
-[Models › FED](/models/fed.md#coded-form)). *C*<sub>CO</sub> is in ppm,
+[Models › FED](/models/fed.md#coded-form); the published law is on
+[Fundamentals › Asphyxiant FED](/fundamentals/asphyxiant-fed.md)). *C*<sub>CO</sub> is in ppm,
 *C*<sub>CO₂</sub> and *C*<sub>O₂</sub> are in volume percent, and rates are
 per minute. The CO coefficient is Purser's light-work value,
 3.317 × 10⁻⁵ × 25 L/min ÷ 30 % COHb = 2.764 × 10⁻⁵:
@@ -83,7 +84,8 @@ $$
 - **Occupant:** one, near the centre (spawn box 4.4–5.6 m; it lands at
   (4.78, 4.94) m), held in place by a pre-evacuation time
   drawn from [1.2 × 10⁷, 2 × 10⁷] s, the method ISO prescribes (> 10⁷ s).
-- **Runs:** one per case, `--incapacitation-mode deterministic`, so the
+- **Runs:** one per case, `--incapacitation-mode deterministic` (the default,
+  given explicitly), so the
   occupant is incapacitated at FED = 1, not at a random threshold. The FED
   is updated every 1 s (`--smoke-update-interval 1`).
 

@@ -98,3 +98,5 @@ exits are rarely used in many real evacuations because they are unfamiliar
 
 How pyFDS-Evac uses this: see [route rerouting](/models/routing.md) and
 [wayfinding](/models/wayfinding.md).
+
+How it is verified: [Familiarity](/verification/testing-familiarity.md) and the [S4 T-junction](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s4_tjunction_reroute.py) test.

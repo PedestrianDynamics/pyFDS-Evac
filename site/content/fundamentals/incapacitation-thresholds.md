@@ -106,13 +106,10 @@ for heat rests on assumption alone. ISO does not establish it. §5.4 also asks
 for a single threshold for FED and FEC in a given estimation, whereas its
 report clause asks for the threshold chosen for each component (clause 10);
 the text does not say whether the heat FED must share the gas threshold.
-§8.5 finds the heat time "in the same manner" as for the gases, and
-pyFDS-Evac reads the two together as one threshold for gas and heat
-([Models › Heat](/models/heat.md#incapacitation)).
+§8.5 finds the heat time "in the same manner" as for the gases.
 
 No source we could consult gives a population spread for tolerance of
-convective heat, the dose pyFDS-Evac computes (ISO 13571:2012 Eq. (9), or
-Eq. (10) = Eq. 63.44). SFPE Ch. 63 gives
+convective heat (ISO 13571:2012 Eqs. (9) and (10); SFPE Eq. 63.44). SFPE Ch. 63 gives
 population figures for heat only for radiant lethality (p. 2382): a radiant
 dose of 10 (kW/m²)^4/3·min "represents a fatal level for a vulnerable
 population (over 65 years of age) or a 1 % fatality level for the average
@@ -130,19 +127,18 @@ value 16.667 gives the same σ to two decimals. Its limits:
 
 - The Handbook states no distribution; the log-normal is assumed.
 - Two figures fix two parameters, so nothing tests the fit.
-- The figures are for radiant lethality, the fatal endpoint of the opt-in
-  total-flux dose (`--heat-fed-method total-flux`,
-  `specs/016-heat-fed/SPEC.md`). They do not apply to the convective
-  ISO time used by default.
+- The figures are for radiant lethality, the fatal dose *D* = 16.7 of
+  Eq. 63.43. They concern neither convective tolerance nor the ISO
+  convective times.
 
-With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. The gas
-dose's σ = 0.94, which the opt-in probabilistic heat mode borrows, would put
-29 % of people below FED = 0.60 instead of 1 %. The heat threshold therefore
-stays deterministic by default. A probit in the natural log of dose with
-slope b gives σ = 1/b. A published probit slope for the endpoint in use
-would settle the value for that endpoint; Hockey and Rew is the source to
-check first
-([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
+With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. A log-normal
+with σ = 0.94, between the two TN 1797 bin values above, would put 29 % of people
+below FED = 0.60 instead of 1 %. A probit in the natural log of dose with
+slope b gives σ = 1/b. A published probit slope for a heat endpoint would
+settle the value for that endpoint; Hockey and Rew is the source to check
+first.
+
+How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.md#incapacitation).
 
 ## Sources
 
@@ -178,3 +174,5 @@ check first
   consulted.
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md#tenability-irritant-slowdown-and-incapacitation).
+
+How it is verified: the probabilistic runs on the [CO dose](/verification/testing-homogeneous.md) and [Heat dose](/verification/testing-heat.md) pages.

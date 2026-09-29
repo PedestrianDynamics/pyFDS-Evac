@@ -114,3 +114,5 @@ How pyFDS-Evac uses this: see the
 [RSET ensemble how-to](/docs/howto-rset-ensemble.md). Each agent carries
 its own dose along its path; see
 [Fractional effective dose](/models/fed.md).
+
+How it is verified: the [Verification](/verification/_index.md) index; ASET and RSET themselves are outputs of a study, not of a test.

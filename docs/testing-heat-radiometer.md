@@ -1,7 +1,7 @@
 ---
 title: "Heat radiometer reference decks"
 linkTitle: "Heat radiometer"
-weight: 16
+weight: 15.5
 math: true
 ---
 
@@ -11,20 +11,22 @@ math: true
 | **Level** | FDS case, FDS only: no pyFDS-Evac run |
 | **Asset** | `assets/heat_radiometer` (`_layer`, `_uniform`, `_burner`) |
 | **Expected value from** | radiation geometry (q/U = 1/4, 1/2, 1) and FDS's own gauge equations (FDS User's Guide Eqs. 22.35–22.36) |
-| **Status** | reference data; the heat model does not read it ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)) |
+| **Status** | FDS-only reference data; no run reads these decks. The uniform room is the expected value of the *f* = 1/4 check of the `INTEGRATED INTENSITY` source (`test_heat_integrated_intensity_coupled.py`) |
 
 ![Where the incident flux q sits between U/4 and U at 1.6 m for plates facing up, +x, −x and down, in the three decks](/images/verification/heat_radiometer_ratio.png)
 
 ## What is tested
 
-Nothing in pyFDS-Evac. The heat dose today counts only convected heat
-([Models › Heat](/models/heat.md)). A radiant term needs the flux that reaches
-the skin, q, while FDS writes the integrated intensity U at a point. These
-decks measure in FDS how q relates to U for a skin-like plate at head height,
-facing up, sideways and down, under a hot layer, in a uniformly hot room and
-beside a flame. They are the reference for #221–#223. The tests check that
-the decks are set up as described and that FDS's output obeys the geometry
-below.
+The heat dose has an opt-in total-flux method whose radiant term can come
+from the FDS integrated intensity *U*, as *f* (*U* − 4σ\(T_s^4\)) with a user
+factor *f*
+([Models › Heat › Radiant flux from INTEGRATED INTENSITY](/models/heat.md#radiant-flux-from-integrated-intensity)).
+A radiant term needs the flux that reaches the skin, q, while FDS writes *U*
+at a point. These FDS-only decks measure how q relates to U for a skin-like
+plate at head height, facing up, sideways and down, under a hot layer, in a
+uniformly hot room and beside a flame: where q sits between U/4 and U, which
+is the basis for the range of *f*. The tests check that the decks are set up
+as described and that FDS's output obeys the geometry below.
 
 ## Equations
 
@@ -53,8 +55,9 @@ total flux to the skin of SFPE Handbook Eq. 63.49 (5th ed., Ch. 63, p. 2383),
 \(q = [\varepsilon\sigma(T_i^4 - T_m^4) + h_c(T_i - T_m)]/1000\) in kW/m²,
 with temperatures in K and \(\sigma\) in W m⁻² K⁻⁴, and with the incident
 radiation taken from FDS's radiation solution instead of \(\sigma T_i^4\).
-Both terms are divided by 1000, as in spec 016; the Handbook prints the
-division on the convective term only.
+Both terms are divided by 1000, a decision recorded on
+[Models › Heat › Total flux](/models/heat.md#total-flux); the Handbook prints
+the division on the convective term only.
 
 `INTEGRATED INTENSITY` is \(U = \int_{4\pi} I\,d\Omega\) (User's Guide,
 p. 403). A flat plate receives \(q = \int_\mathrm{hemisphere} I\cos\theta\,d\Omega\).
@@ -70,6 +73,22 @@ From these definitions:
 In the ideal layer field (hot hemisphere above, dark below) a plate gets
 U/2 facing up, U/4 facing sideways and 0 facing down. Only a compact source
 in direct view drives q towards U.
+
+## Expected
+
+From the ideal fields above, at 1.6 m:
+
+| Deck | Facing | Expected q/U |
+|---|---|---|
+| `heat_radiometer_uniform` | any | 1/4 |
+| `heat_radiometer_layer` | up | between 1/4 and 1/2 |
+| `heat_radiometer_layer` | sideways (+x, −x) | about 1/4 |
+| `heat_radiometer_layer` | down | between 0 and 1/4 |
+| `heat_radiometer_burner` | towards the flame | between 1/4 and 1, rising with the flame in direct view |
+
+The real layer is not an ideal black hemisphere and the walls radiate, so the
+layer ratios are ranges, not exact values; the uniform room is the one exact
+case.
 
 ## Setup
 
@@ -94,8 +113,9 @@ in direct view drives q towards U.
 0.005, the layer base at 2.0 m, the burner size, fuel, heat release rate and
 soot yield, the 0.1 m grid, the run lengths, and gauge emissivity 1 as the
 skin's emissivity (FDS's default value, chosen here, not a sourced skin
-value). The gauge values 35 °C and h = 8 W/(m² K) are prescribed by the
-issue; spec 016 leaves the skin temperature and h open. The radiometer, and
+value). The gauge values 35 °C and h = 8 W/(m² K) were chosen for these decks
+(#224); the skin temperature and h remain open (see
+[Models › Heat › Assumptions](/models/heat.md#assumptions-unsourced-values)). The radiometer, and
 so q/U, does not depend on h.
 
 ## Result
@@ -212,9 +232,9 @@ HEAT_RADIOMETER_DATA=<data>/heat_radiometer uv run pytest tests/verification/tes
 - **One set of conditions.** One layer temperature, one soot load, one grid,
   one burner. The ratios under the layer depend on how black the layer is
   and on the walls; no sensitivity study was run.
-- **The skin values are open.** 35 °C and h = 8 W/(m² K) are the issue's
-  values, not settled ones (spec 016, open questions 1 and 2). They affect
-  the gauge readings, not q/U.
+- **The skin values are open.** 35 °C and h = 8 W/(m² K) are the values
+  chosen for these decks, not settled ones. They affect the gauge readings,
+  not q/U.
 - **Short runs.** 10 s in the rooms and 30 s beside the burner; the rooms
   are sealed and not in steady state, and the burner mean includes its
   growth.

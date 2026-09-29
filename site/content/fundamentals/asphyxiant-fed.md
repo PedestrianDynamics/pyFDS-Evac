@@ -324,3 +324,5 @@ dose. The chapter does not say which reading is intended.
   through Korhonen (2021, ref. 29), which dates it 2003.
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md).
+
+How it is verified: [CO dose in a sealed room](/verification/testing-homogeneous.md) and [ISO 20414 Test 19](/verification/iso-test-19.md).

@@ -619,6 +619,8 @@ it gives about 9 m, against about 24 m for C = 8 (Węgrzyński et al. 2026,
 How pyFDS-Evac uses this: see [wayfinding](/models/wayfinding.md) and the
 [smoke-speed model](/models/smoke-speed.md).
 
+How it is verified: [Familiarity](/verification/testing-familiarity.md) and the sign-legibility rows of the [Verification](/verification/_index.md) index; the coupled visibility-gating test is missing ([#22](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/22)).
+
 ## Sources
 
 Read for this page:

@@ -658,3 +658,5 @@ different Japanese title (煙中の視程について 第5報).
   Secondary source for the fractional form.
 
 How pyFDS-Evac uses this: see the [smoke-speed model](/models/smoke-speed.md).
+
+How it is verified: [ISO 20414 Test 18](/verification/iso-test-18.md) and the [S2 corridor](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s2_corridor_speed.py) test.
