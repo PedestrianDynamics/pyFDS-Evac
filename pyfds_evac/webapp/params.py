@@ -251,8 +251,9 @@ def _browse_button(target_id: str, mode: str) -> Any:
 _HELP_TEXT: dict[str, str] = {
     "scenario": "Which building + agent setup to run. Each option under assets/ pairs "
     "a floor plan (geometry) with an exits/agents config.",
-    "seed": "Random seed. The same seed reproduces the exact same run; change it to "
-    "get a different random spawn layout and variation.",
+    "seed": "Random seed. Leave blank to use the scenario's own baseSeed, as run.py "
+    "does. The same seed reproduces the same run; change it to get a different "
+    "random spawn layout and variation.",
     "fds_dir": "Folder of precomputed FDS fire results. Supplies the smoke and "
     "toxic-gas fields agents react to. Leave blank to run with no fire.",
     "constant_extinction": "Skip FDS and apply one uniform smoke density K (1/m) everywhere — a "
@@ -298,8 +299,9 @@ _HELP_TEXT: dict[str, str] = {
     "reroute_interval": "How often (sim seconds) each agent rethinks its route. 1 = very "
     "responsive; larger values make agents commit longer before "
     "reconsidering.",
-    "vis_cache": "Precomputed sign-visibility map (.npz). Lets agents lose sight of exit "
-    "signs through smoke and walls. Needs an FDS dir + rerouting enabled.",
+    "vis_cache": "Optional file (.npz) that caches the sign-visibility map between "
+    "runs. Blank = no cache. Needs rerouting enabled; without an FDS dir it "
+    "holds the clear-air map.",
     "output_base": "Folder the run writes into. Leave it blank to use the derived path "
     "shown greyed out, which keeps each scenario / mode / seed in its own "
     "folder. Type a path to override it and everything below goes there.",
@@ -371,7 +373,11 @@ def _switch(
         NotStr(_label_line(label, bool(_tip))),
         style=f"{_GROTESK};font-size:12px;font-weight:500;color:var(--ink)",
     )
+    # Presence sentinel: an unchecked box posts nothing, so without it an
+    # unchecked switch and an absent field look the same. The checkbox comes
+    # later in the form and wins when checked (last value wins).
     _row = Div(
+        NotStr(f'<input type="hidden" name="{dest}" value="off">'),
         _label_node,
         NotStr(
             f'<label style="position:relative;display:inline-block;width:40px;height:23px;cursor:pointer">'
@@ -495,8 +501,15 @@ def _field(action: argparse.Action) -> Any:
     if dest == "seed":
         return Div(
             _lbl("Seed", "seed", action),
+            # Blank maps to None, as on the CLI: the scenario's baseSeed.
             Input(
-                id=dest, name=dest, type="number", step="1", value="42", style=_INPUT
+                id=dest,
+                name=dest,
+                type="number",
+                step="1",
+                min="0",
+                placeholder="blank = scenario baseSeed",
+                style=_INPUT,
             ),
             style=_FIELD,
         )
@@ -526,7 +539,7 @@ def _field(action: argparse.Action) -> Any:
                 Input(
                     id=dest,
                     name=dest,
-                    placeholder="results/demo/vis.npz",
+                    placeholder="blank = no cache",
                     style=_INPUT + ";flex:1;min-width:0",
                 ),
                 _browse_button("vis_cache", "file"),
@@ -790,6 +803,7 @@ def build_form(post_url: str) -> Any:
             ),
         ),
         _results_only_button(),
+        id="run-form",
         hx_post=post_url,
         hx_target="#run-panel",
         hx_swap="innerHTML show:top",
@@ -827,9 +841,13 @@ def form_to_opts(form: dict[str, Any]) -> Namespace:
         if dest == "help":
             continue
         if _is_bool(action):
+            # Absent means the flag's own default (rerouting is on by default);
+            # the switch's hidden sentinel posts "off" when it is unchecked.
             raw = form.get(dest)
             opts[dest] = (
-                str(raw).lower() in ("on", "true", "1", "yes") if raw else False
+                action.default
+                if raw is None
+                else str(raw).lower() in ("on", "true", "1", "yes")
             )
             continue
         raw = form.get(dest)
