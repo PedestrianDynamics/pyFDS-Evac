@@ -14,9 +14,12 @@ Two corridor runs through ``run_scenario`` with a uniform temperature field:
 
 The runs also check that the endpoint, the validity flag and the unknown
 humidity status reach the FED history and the run manifest, that a
-non-finite temperature is flagged, and that a run without an endpoint writes
-the same FED history CSV and manifest keys as the code before the option
-(baseline ``golden/heat_default``, made on main 76c9a76).
+non-finite temperature is flagged, and that a run with
+``clothing="unclothed"`` (ISO 13571:2012 Eq. (10) = Eq. 63.44, the default
+before #290) writes the same FED history CSV and manifest as the code before
+the endpoint option (baseline ``golden/heat_default``, made on main 76c9a76),
+apart from the ``heat_clothing`` key added with #290. Without an endpoint the
+default law is ISO Eq. (9), fully clothed.
 
 API under test, as in ``tests/test_heat_endpoint.py``:
 ``DefaultHeatFedModel(field, config, endpoint=...)``; FED history rows carry
@@ -74,6 +77,11 @@ def t_eq_63_44_min(t_c: float) -> float:
     return 5e7 * t_c**-3.4
 
 
+def t_iso_9_min(t_c: float) -> float:
+    """ISO 13571:2012 Eq. (9), fully clothed (§8.3.1)."""
+    return 4.1e8 * t_c**-3.61
+
+
 def t_tolerance_min(t_c: float) -> float:
     """Eq. 63.45, p. 2382."""
     return 2e31 * t_c**-16.963 + 4e8 * t_c**-3.7561
@@ -103,9 +111,11 @@ def _crossing_s(law, start_s: float, threshold: float = 1.0) -> float:
         t = minute_end
 
 
-def _heat_model(field_fn, endpoint):
+def _heat_model(field_fn, endpoint, clothing=None):
     field = FdsHeatField(SyntheticSampler(field_fn))  # type: ignore[arg-type]
     config = DefaultFedConfig(fds_dir="", update_interval_s=UPDATE_S)
+    if clothing is not None:
+        return DefaultHeatFedModel(field, config, clothing=clothing)
     if endpoint is None:
         return DefaultHeatFedModel(field, config)
     return DefaultHeatFedModel(field, config, endpoint=endpoint)
@@ -123,13 +133,13 @@ def _spec(run_s: float) -> CorridorSpec:
     )
 
 
-def _run(field_fn, endpoint, *, threshold=1.0, run_s=260.0):
+def _run(field_fn, endpoint, *, threshold=None, run_s=260.0, clothing=None):
     spec = _spec(run_s)
     assert spec.free_walk_egress_s > run_s
     return run_scenario(
         corridor_scenario(spec),
         seed=spec.seed,
-        heat_fed_model=_heat_model(field_fn, endpoint),
+        heat_fed_model=_heat_model(field_fn, endpoint, clothing),
         tenability_config=TenabilityConfig(
             enable_fic_speed=False,
             enable_incapacitation=False,
@@ -149,11 +159,14 @@ def _start_times(rows):
 
 
 def test_table_63_21_crossings_are_distinguishable():
-    """Design check: the two laws cross > 2 tolerances apart."""
+    """Design check: the laws cross > 2 tolerances apart."""
     tolerance = _crossing_s(t_tolerance_min, 0.0)
-    default = _crossing_s(t_eq_63_44_min, 0.0)
+    default = _crossing_s(t_iso_9_min, 0.0)
+    unclothed = _crossing_s(t_eq_63_44_min, 0.0)
     assert 180.0 < tolerance < 240.0  # during the fourth minute
     assert abs(tolerance - default) > 2 * TIMING_TOL_S
+    assert abs(tolerance - unclothed) > 2 * TIMING_TOL_S
+    assert abs(default - unclothed) > 2 * TIMING_TOL_S
 
 
 def _check_crossings(result, law):
@@ -166,9 +179,19 @@ def _check_crossings(result, law):
         assert abs(t_stop - expected) <= TIMING_TOL_S, (aid, t_stop, expected)
 
 
-def test_default_law_crosses_at_eq_63_44():
-    """Control: without an endpoint the run follows Eq. 63.44."""
+def test_default_law_crosses_at_iso_eq_9():
+    """Control: without an endpoint the run follows ISO Eq. (9) (#290)."""
     result = _run(_table_63_21_field, None)
+    try:
+        _check_crossings(result, t_iso_9_min)
+        assert _read_json(result.manifest_file)["heat_clothing"] == "clothed"
+    finally:
+        result.cleanup()
+
+
+def test_unclothed_law_crosses_at_eq_63_44():
+    """Control: ``clothing="unclothed"`` follows Eq. 63.44."""
+    result = _run(_table_63_21_field, None, clothing="unclothed")
     try:
         _check_crossings(result, t_eq_63_44_min)
     finally:
@@ -197,6 +220,9 @@ def test_fatal_endpoint_constant_temperature():
         assert times, "no agent incapacitated"
         for aid, t_stop in times.items():
             assert abs(t_stop - starts[aid] - target_s) <= TIMING_TOL_S
+        manifest = _read_json(result.manifest_file)
+        assert manifest["heat_fed_threshold_override"] == threshold
+        assert "heat_clothing" not in manifest  # endpoint law, not ISO
     finally:
         result.cleanup()
 
@@ -292,17 +318,21 @@ def _normalised_manifest(path):
     }
 
 
-def test_default_outputs_match_the_baseline(tmp_path):
-    """Without an endpoint the FED history CSV and manifest are as on main."""
-    result = _run(_table_63_21_field, None, run_s=30.0)
+def test_unclothed_outputs_match_the_baseline(tmp_path):
+    """``clothing="unclothed"`` reproduces the default outputs of 76c9a76.
+
+    The baseline predates #290, when Eq. 63.44 was the default; the only
+    difference is the ``heat_clothing`` manifest key, checked apart.
+    """
+    result = _run(_table_63_21_field, None, run_s=30.0, clothing="unclothed")
     try:
         header, rows = _csv_rows(result, tmp_path / "fed.csv")
         want_header, want_rows = _read_baseline_csv()
         assert header == want_header
         _assert_rows_match(_renumbered(rows), _renumbered(want_rows))
-        assert _normalised_manifest(result.manifest_file) == _read_json(
-            BASELINE_DIR / "manifest.json"
-        )
+        manifest = _normalised_manifest(result.manifest_file)
+        assert manifest.pop("heat_clothing") == "unclothed"
+        assert manifest == _read_json(BASELINE_DIR / "manifest.json")
     finally:
         result.cleanup()
 

@@ -167,12 +167,17 @@ def build_manifest(
     heat_endpoint: str | None = None,
     heat_fed_method: str | None = None,
     heat_flux_parameters: dict[str, Any] | None = None,
+    heat_clothing: str | None = None,
+    heat_fed_threshold_override: float | None = None,
 ) -> dict[str, Any]:
     """Collect the provenance fields for one run.
 
     ``heat_endpoint`` and ``heat_validity`` are recorded only when
     ``--heat-endpoint`` was given; ``heat_fed_method`` and
     ``heat_flux_parameters`` only with ``--heat-fed-method total-flux``.
+    ``heat_clothing`` is recorded when the ISO 13571:2012 convective law is
+    in use, ``heat_fed_threshold_override`` only when the heat threshold was
+    set apart from the gas threshold, a departure from ISO 13571:2012 §5.4.
     """
     root = project_root if project_root is not None else find_project_root()
     lock = uv_lock if uv_lock is not None else find_uv_lock(root)
@@ -194,6 +199,10 @@ def build_manifest(
     if heat_fed_method == "total-flux":
         manifest["heat_fed_method"] = heat_fed_method
         manifest["heat_flux_parameters"] = heat_flux_parameters
+    if heat_clothing is not None:
+        manifest["heat_clothing"] = heat_clothing
+    if heat_fed_threshold_override is not None:
+        manifest["heat_fed_threshold_override"] = heat_fed_threshold_override
     return manifest
 
 

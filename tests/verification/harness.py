@@ -177,22 +177,31 @@ def deterministic_heat_tenability(heat_fed_threshold: float = 1.0) -> Tenability
     )
 
 
-def heat_fed_rate_per_min(temperature_celsius: float) -> float:
-    """Heat FED rate (1/min) as 1/t_Iconv, SFPE Handbook Eqs. 63.44 and 63.48.
+def heat_fed_rate_per_min(
+    temperature_celsius: float, clothing: str = "clothed"
+) -> float:
+    """Heat FED rate (1/min) as 1/t_Iconv, ISO 13571:2012 Eqs. (9)-(11).
 
-    Evaluates Eq. 63.44 in the form printed on p. 2382, a time in minutes,
-    ``t_Iconv = 5e7 * T**-3.4`` (T in deg C), not imported from
-    ``pyfds_evac.core.fed``. Scenario tests use it to check the wiring;
-    ``test_heat_fed_verif.py`` compares the law with the Handbook's tables.
+    Evaluates the convective laws of ISO 13571:2012 §8.3 as times in
+    minutes (T in deg C), not imported from ``pyfds_evac.core.fed``:
+    ``clothed``, Eq. (9), ``t_Iconv = 4.1e8 * T**-3.61`` (the default law);
+    ``unclothed``, Eq. (10), ``t_Iconv = 5e7 * T**-3.4`` (= SFPE Eq. 63.44).
+    Scenario tests use it to check the wiring; ``test_heat_fed_verif.py``
+    compares the laws with the Handbook's tables.
     """
-    return 1.0 / (5.0e7 * temperature_celsius ** (-3.4))
+    if clothing == "unclothed":
+        return 1.0 / (5.0e7 * temperature_celsius ** (-3.4))
+    return 1.0 / (4.1e8 * temperature_celsius ** (-3.61))
 
 
 def time_to_heat_incapacitation_s(
-    temperature_celsius: float, heat_fed_threshold: float = 1.0
+    temperature_celsius: float,
+    heat_fed_threshold: float = 1.0,
+    clothing: str = "clothed",
 ) -> float:
     """Closed-form ``t*``: seconds for cumulative heat FED to reach the threshold."""
-    return 60.0 * heat_fed_threshold / heat_fed_rate_per_min(temperature_celsius)
+    rate = heat_fed_rate_per_min(temperature_celsius, clothing)
+    return 60.0 * heat_fed_threshold / rate
 
 
 def co_fed_rate_per_min(co_ppm: float) -> float:

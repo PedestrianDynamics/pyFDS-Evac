@@ -11,8 +11,8 @@ aliases: [/docs/testing-heat/, /models/verification/testing-heat/]
 | **Component** | Heat FED and heat incapacitation ([Models › Heat](/models/heat.md)) |
 | **Level** | FDS case: a full run on FDS output |
 | **Asset** | `assets/fed_incap_heat_150c` (also `_100c` and `_200c`) |
-| **Expected value from** | closed form of SFPE Eq. 63.44 at the deck temperature; per agent, hand sum of Eq. 63.48 on FDS's own `TEMPERATURE` slice |
-| **Status** | passes; checks the pipeline, not the law (the law against the Handbook's tables: `test_heat_fed_verif.py`, A3.8–A3.10) |
+| **Expected value from** | closed form of SFPE Eq. 63.44 (ISO 13571:2012 Eq. (10), `--heat-clothing unclothed`) at the deck temperature; per agent, hand sum of Eq. 63.48 on FDS's own `TEMPERATURE` slice |
+| **Status** | passes with `--heat-clothing unclothed`; checks the pipeline, not the law (the law against the Handbook's tables: `test_heat_fed_verif.py`, A3.8–A3.10, A3.12); the default law, ISO Eq. (9), has expected times only |
 
 ![100 agents walk a loop in a room at 150 °C; their colour shows the heat dose, and all of them stop at 120 s](/images/verification/heat_room.gif)
 
@@ -26,6 +26,16 @@ the closed form. Any difference from the hand calculation comes from the code:
 reading the slice, sampling it at the agent, summing the dose, or applying
 the threshold. It checks that the code applies SFPE Eqs. 63.44 and 63.48
 correctly, not that they predict human tolerance.
+
+The runs use `--heat-clothing unclothed`. The default law is ISO 13571:2012
+Eq. (9), for fully clothed subjects
+([Models › Heat](/models/heat.md#clothing),
+[#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)). The
+two laws share the pipeline this page checks and differ only in their
+constants. Under Eq. (9) the 100 °C room would reach FED = 1 at 1482 s,
+after the end of the 1000 s FDS record, so that deck could not check the
+default without a longer FDS run; the page therefore stays on Eq. (10) and
+lists the Eq. (9) times as expected values only.
 
 ## Equation
 
@@ -108,11 +118,13 @@ position, read from the slice with fdsreader, independent of pyFDS-Evac.
 
 ![Room temperature at 1.5 m against time for the three decks, as the difference from the deck value in mK](/images/verification/heat_room_temperature.png)
 
-| Deck | \(t^{*}\) at the deck *T* | First update with FED ≥ 1 |
-|---|---|---|
-| 100 °C | 475.5 s | **476 s** |
-| 150 °C | 119.8 s | **120 s** |
-| 200 °C | 45.0 s | **46 s** |
+| Deck | \(t^{*}\) at the deck *T* | First update with FED ≥ 1 | \(t^{*}\) under ISO Eq. (9), the default (not run) |
+|---|---|---|---|
+| 100 °C | 475.5 s | **476 s** | 1482.3 s, after the 1000 s record |
+| 150 °C | 119.8 s | **120 s** | 343.0 s |
+| 200 °C | 45.0 s | **46 s** | 121.4 s |
+
+The last column is \(60 \times 4.1\times10^{8}/T^{3.61}\) s.
 
 The hand sum on the slice, taken at each agent's own position and update
 times, first reaches 1 at the same update for all 100 agents. The gap to
@@ -206,7 +218,8 @@ Then run pyFDS-Evac and draw the figures. The data folder must hold
 for T in 100 150 200; do
   uv run python run.py --scenario assets/fed_incap_heat_${T}c \
     --fds-dir <data>/fed_incap_heat_${T}c/fds \
-    --enable-heat-fed --heat-incapacitation-mode deterministic \
+    --enable-heat-fed --heat-clothing unclothed \
+    --heat-incapacitation-mode deterministic \
     --output-sqlite <data>/fed_incap_heat_${T}c/evac/deterministic/run.sqlite \
     --output-fed-history <data>/fed_incap_heat_${T}c/evac/deterministic/fed_history.csv
 done
@@ -216,7 +229,11 @@ uv run python scripts/verification/heat_room_figures.py --data <data>
 ```
 
 Each run takes about three minutes and uses the default seed 42. A
-temperature without output is skipped.
+temperature without output is skipped. The published runs were made when
+Eq. 63.44 was the default law, before `--heat-clothing` existed;
+`--heat-clothing unclothed` selects the same law, and
+`tests/verification/test_heat_endpoint_coupled.py` checks, in a synthetic
+corridor, that it reproduces the FED history of that code.
 
 The published figures come from runs that also passed
 `--constant-extinction 0 --no-visibility`, which ran without a visibility

@@ -201,13 +201,14 @@ def test_cli_default_method_is_not_total_flux():
 
 
 @pytest.mark.parametrize("t_c", [65.0, 150.0, 405.0])
-def test_default_model_is_still_eq_63_44(t_c):
+def test_default_model_is_still_convective(t_c):
+    """Without the method the rate is ISO 13571:2012 Eq. (9), not q^1.33/D."""
     field = FdsHeatField(_Sampler(t_c))  # type: ignore[arg-type]
     model = DefaultHeatFedModel(
         field, DefaultFedConfig(fds_dir="", update_interval_s=1.0)
     )
     _, rate = model.sample_rate(0.0, 0.0, 0.0)
-    assert rate == pytest.approx(1.0 / t_eq_63_44_min(t_c), rel=1e-12)
+    assert rate == pytest.approx(1.0 / (4.1e8 * t_c**-3.61), rel=1e-12)
 
 
 # --- flux -------------------------------------------------------------------

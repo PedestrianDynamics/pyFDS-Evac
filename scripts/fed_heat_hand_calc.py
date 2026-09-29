@@ -1,6 +1,7 @@
 """Closed-form heat FED reference for the fed_incap_heat_* decks.
 
-ISO TS 13571 eq. 5 gives the convective-heat tolerance time
+ISO 13571:2012 Eq. (10) (8.3.2, unclothed or lightly clothed), the same law
+as SFPE Handbook 5th ed. Eq. 63.44, gives the convective-heat time
 
     t_Iconv [min] = 5e7 * T ** -3.4          (T in degrees Celsius)
 
@@ -9,7 +10,9 @@ that does not change, reaches unity at exactly t_Iconv. The decks prescribe a
 uniform temperature behind adiabatic boundaries precisely so that this is the
 right reference to compare a coupled run against.
 
-Run it to regenerate the table in docs/testing-heat.md:
+It is the law of ``--heat-clothing unclothed``, which the verification runs
+use; the default is ISO 13571:2012 Eq. (9), fully clothed. Run it to
+regenerate the first column of the table in docs/testing-heat.md:
 
     uv run python scripts/fed_heat_hand_calc.py
 
