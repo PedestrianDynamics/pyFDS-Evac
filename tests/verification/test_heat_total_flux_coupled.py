@@ -54,8 +54,9 @@ UPDATE_S = 1.0
 TIMING_TOL_S = 1.5
 SIGMA = 5.67e-8
 KELVIN = 273.15
-# Fatal: spec 016 maintainer decision, D = 16.667 (the Handbook prints 16.7).
-DOSE = {"tolerance": 1.33, "fatal": 16.667}
+# Fatal: D = 16.7 as printed in SFPE Ch. 63, p. 2384 (Eq. 63.49 D values);
+# Purser's spreadsheet uses 16.667, the code follows the Handbook.
+DOSE = {"tolerance": 1.33, "fatal": 16.7}
 
 
 def q_hand(t_c, *, eps, h, t_skin_c):

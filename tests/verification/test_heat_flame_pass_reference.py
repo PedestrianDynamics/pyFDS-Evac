@@ -11,9 +11,9 @@ Sourced (SFPE Handbook 5th ed., Ch. 63, pp. 2382-2384):
 
 - dose per Eq. 63.43, t = D / q**1.33 min, summed per Eq. 63.48;
 - the fatal endpoint (third-degree burns) for heat FED = 1, the
-  maintainer's choice (spec 016); the Handbook prints D = 16.7
-  (kW/m2)^4/3 min, and the value 16.667 used here is spec 016's, not the
-  printed one;
+  maintainer's choice (spec 016); D = 16.7 (kW/m2)^4/3 min as printed on
+  p. 2382 (r range) and p. 2384 (D values for Eq. 63.49). Purser's
+  spreadsheet uses 16.667; the code follows the Handbook;
 - sigma = 5.67e-8 W m^-2 K^-4, as printed with Eq. 63.49.
 
 Assumptions (not sourced; each is a named argument below):
@@ -29,11 +29,11 @@ Eq. 63.48 holds only while exposure is steady or rising; past the closest
 approach it falls, so this is a reference for the summing, not a claim that
 the Handbook validates the dose of a passing agent.
 
-Reference values (FED, D = 16.667, path -10 m to +10 m):
+Reference values (FED, D = 16.7, path -10 m to +10 m):
 
-- continuum, closed form: 0.012006;
-- 1 s updates, one of them at the closest approach: 0.014080 (+17 %);
-- 1 s updates, closest approach half-way between two: 0.010058 (-16 %).
+- continuum, closed form: 0.011982;
+- 1 s updates, one of them at the closest approach: 0.014052 (+17 %);
+- 1 s updates, closest approach half-way between two: 0.010038 (-16 %).
 """
 
 import math
@@ -42,7 +42,7 @@ import pytest
 
 SIGMA = 5.67e-8  # W m^-2 K^-4
 EXPONENT = 1.33  # Eq. 63.43
-D_FATAL = 16.667  # (kW/m2)^4/3 min, spec 016; the Handbook prints 16.7
+D_FATAL = 16.7  # (kW/m2)^4/3 min, SFPE Ch. 63 pp. 2382 and 2384
 
 SPEED_M_S = 1.0
 FLAME_TEMPERATURE_C = 1000.0
@@ -125,7 +125,7 @@ def test_fine_step_sum_matches_closed_form():
     """
     fine = _step_sum_fed(step_s=0.01, phase=0.0)
     continuum = _continuum_fed_infinite_path()
-    assert continuum == pytest.approx(0.012006, abs=1e-6)
+    assert continuum == pytest.approx(0.011982, abs=1e-6)
     assert continuum - _tail_bound() <= fine <= continuum
 
 
@@ -139,8 +139,8 @@ def test_one_second_updates_bracket_the_continuum():
     at_peak = _step_sum_fed(step_s=UPDATE_INTERVAL_S, phase=0.0)
     straddling = _step_sum_fed(step_s=UPDATE_INTERVAL_S, phase=0.5)
     continuum = _continuum_fed_infinite_path()
-    assert at_peak == pytest.approx(0.014080, abs=1e-6)
-    assert straddling == pytest.approx(0.010058, abs=1e-6)
+    assert at_peak == pytest.approx(0.014052, abs=1e-6)
+    assert straddling == pytest.approx(0.010038, abs=1e-6)
     assert straddling < continuum - _tail_bound() < continuum < at_peak
 
 
