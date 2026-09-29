@@ -487,8 +487,12 @@ total-heat-flux dose is designed in &lt;code>specs/016-heat-fed/SPEC.md&lt;/code
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223" target="_blank" rel="noopener">#223&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
 opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
-incapacitated when either dose reaches its threshold. Before that point, heat
-has no effect. Route choice is given the toxic dose only, so an agent can
+incapacitated when either dose reaches its threshold. The two thresholds are
+different endpoints: gas FED = 1 is incapacitation, heat FED = 1 the
+Eq. 63.44 time, which by our comparison lies near the SFPE Handbook&amp;rsquo;s
+tolerance curve (see Fundamentals › Heat); the FED history&amp;rsquo;s
+&lt;code>incapacitation_cause&lt;/code> column says which dose stopped the agent. Before that
+point, heat has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced
 by extinction and by irritant gases, but not by temperature, so an agent walks
 at full speed through a hot layer until the heat dose is reached.&lt;/p>
