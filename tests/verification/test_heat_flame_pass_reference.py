@@ -1,9 +1,10 @@
-"""L2 reference for the planned total-flux heat dose: walking past a flame.
+"""L2 reference for the total-flux heat dose: walking past a flame.
 
 Spec 016 (Verification, L2) and #219: an agent walks at 1 m/s in a straight
 line past a small flame at 1000 C, closest approach 0.5 m, dose updated every
-1 s. pyFDS-Evac has no radiant heat term yet (#221, #222, #223), so these
-tests call no pyFDS-Evac code. They fix the expected values that term must
+1 s. The heat model has no flame term: a flame's flux enters only through the
+INTEGRATED INTENSITY source (#221). These tests call no pyFDS-Evac code. They
+fix the expected values a flame term must
 reproduce, computed two independent ways (a time-step sum and a closed-form
 integral), and show how much a 1 s update changes the result.
 

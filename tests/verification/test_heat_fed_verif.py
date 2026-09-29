@@ -398,11 +398,12 @@ def test_a3_10_eq_63_44_not_longer_than_reported_dry_air_tolerance():
         assert 1.0 / rate <= tolerated_min, (temp, 1.0 / rate, tolerated_min)
 
 
-# --- A3.11: radiant references for the planned total-flux dose -------------
+# --- A3.11: radiant references for the total-flux dose -----------------------
 #
-# No radiant term is implemented (#221, #222, #223). These tests fix the
-# published numbers such a term must reproduce and check that Eq. 63.43 as
-# printed does; they call no pyFDS-Evac code.
+# These tests fix the published numbers a radiant term must reproduce and
+# check that Eq. 63.43 as printed does; they call no pyFDS-Evac code. The
+# total-flux method (#223) is checked against the same Table 63.20 rows in
+# tests/test_heat_total_flux.py.
 
 
 def _t_irad_min(flux_kw_m2: float, dose: float) -> float:
