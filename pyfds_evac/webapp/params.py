@@ -333,20 +333,26 @@ def _label_line(text: str, has_badge: bool) -> str:
     return f'<span class="lbl-line">{_html.escape(text)}{badge}</span>'
 
 
-def _lbl(text: str, dest: str, action: argparse.Action | None = None) -> Any:
+def _lbl(
+    text: str,
+    dest: str,
+    action: argparse.Action | None = None,
+    for_: str | None = None,
+) -> Any:
     """A field label with a pressable ? that expands an in-flow help block.
 
     The help block sits in normal document flow (not absolutely positioned),
     so it's bounded by the field width and can never overflow / be clipped by
-    the sidebar's scroll box.
+    the sidebar's scroll box. *for_* ties the label to a control's id.
     """
     import html as _html
 
+    attrs = {"fr": for_} if for_ else {}
     tip = _help_text(dest, action)
     if not tip:
-        return Label(text, style=_LABEL)
+        return Label(text, style=_LABEL, **attrs)
     return Div(
-        Label(NotStr(_label_line(text, True)), style=_LABEL),
+        Label(NotStr(_label_line(text, True)), style=_LABEL, **attrs),
         NotStr(f'<div class="badge-tip">{_html.escape(tip)}</div>'),
         cls="lblwrap",
     )
@@ -428,6 +434,24 @@ _SELECT = (
     f"padding:10px 32px 10px 12px;color:var(--ink);{_GROTESK};font-size:13px;"
     "outline:none;width:100%"
 )
+
+
+def _choice_select(action: argparse.Action) -> Any:
+    """A dropdown of the flag's argparse choices, its default preselected.
+
+    A flag whose default is None gets a leading blank "default" option, which
+    form_to_opts maps back to None so the model applies its own default.
+    """
+    dest = action.dest
+    default = "" if action.default is None else str(action.default)
+    pairs = [("default", "")] if action.default is None else []
+    pairs += [(str(c), str(c)) for c in action.choices]
+    options = [Option(ol, value=ov, selected=(ov == default)) for ol, ov in pairs]
+    return Div(
+        _lbl(dest.replace("_", " ").capitalize(), dest, action, for_=dest),
+        Select(*options, id=dest, name=dest, style=_SELECT),
+        style=_FIELD,
+    )
 
 
 def scenario_block(selected: str | None = None, note: Any = None) -> Any:
@@ -532,6 +556,9 @@ def _field(action: argparse.Action) -> Any:
             id="sigma-row",
             style="display:none",
         )
+
+    if action.choices is not None:
+        return _choice_select(action)
 
     if _is_bool(action):
         # Initial toggle state follows the flag's own default, so an

@@ -141,6 +141,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   alone while its speed state (base speed, smoke, FIC, active zone) is
   unchanged. Trajectories are identical. Any code that writes an agent's
   `desired_speed` must also update its speed state (#240).
+- Web GUI: a flag with a fixed set of choices (the heat clothing, endpoint,
+  dose method, radiant source, regime and heat incapacitation mode) is a
+  dropdown of its argparse choices with the CLI default preselected, in
+  place of a free text field. A flag without a default offers a blank
+  "default" entry.
 - Web GUI: the FED section is titled "Purser / FDS" instead of
   "ISO 13571"; the coded form is the Purser sum as in the FDS `FED` function.
 - `speed_law="fridolf"` now implements Eq. 7 (method 3) of
