@@ -102,6 +102,9 @@ single value fits for every orientation; it cannot be combined with
 ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 Otherwise an agent near a flame is treated as less exposed than it is
 ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
+The unsourced values of the heat dose, its FDS reference decks and its
+tests are listed in
+[Models › Heat › Assumptions](/models/heat.md#assumptions-unsourced-values).
 
 **Heat does not affect route choice or walking speed.** The heat dose is
 opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is
