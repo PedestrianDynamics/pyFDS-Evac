@@ -184,8 +184,17 @@ INTENSITY` input is the excess over a skin-temperature field by decision
 3. D for second-degree burns (only if that endpoint is offered)?
 4. How to decide the regime (head in smoke vs below a layer)?
 5. Do the 6th-ed. Ch. 70 equations match the 5th ed.? (Needs Ch. 70.)
-6. Does ISO 13571:2012 clause 8 give heat equations, and does FED 0.3 apply to
-   heat?
+6. ~~Does ISO 13571:2012 clause 8 give heat equations, and does FED 0.3
+   apply to heat?~~ Answered from the full text. Clause 8 gives radiant
+   Eqs. (7) (burns) and (8) (pain), a q^-b form from Wieczorek & Dembsey
+   2001, applied to incident flux and zero below 2.5 kW/m²; convective
+   Eqs. (9) (clothed, Crane 1978) and (10) (unclothed, = Eq. 63.44); and the
+   summed FED of Eq. (11) (= Eq. 63.48). It has no total-flux method, so it
+   supplies no h, T_skin, ε or D, and gives no support for dropping the
+   2.5 kW/m² threshold. §8.5 applies the gas threshold logic to heat by
+   reference, but the 0.3 / 11.4 % figures (A.5.2) rest on gas data, and
+   ISO gives no heat spread. Details: `site/content/fundamentals/heat.md`
+   and `incapacitation-thresholds.md`; clothed law #290; test band #289.
 7. A sourced heat σ (Hockey & Rew 1996 probits; not in the library).
 8. Should heat affect speed or route choice? The Handbook gives tolerance
    times, not performance loss.

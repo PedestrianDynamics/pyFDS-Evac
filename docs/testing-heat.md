@@ -38,7 +38,11 @@ t_{I,\mathrm{conv}} = 5\times10^{7}\,T^{-3.4}\ \text{min}.
 $$
 
 The Handbook states it for exposures of up to 2 h in air with less than
-10 % water vapour by volume. The dose is summed over the exposure
+10 % water vapour by volume. ISO 13571:2012 gives the same expression as
+its Eq. (10) (§8.3.2), for unclothed or lightly clothed subjects, cited to
+Purser's chapter in the 4th edition of the Handbook, with an estimated
+uncertainty of ±25 %
+([Fundamentals › Heat](/fundamentals/heat.md#iso-135712012-clause-8)). The dose is summed over the exposure
 (Eq. 63.48, p. 2383, without its radiant term), with Δ*t* in minutes:
 
 ```
