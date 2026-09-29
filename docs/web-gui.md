@@ -20,8 +20,11 @@ Then open <http://localhost:5001>. The extra installs
 
 ## The form
 
-The form is built from the `run.py` parser, so every option has a field with
-the same default. The fields are grouped:
+The form is built from the `run.py` parser, so every option has a field.
+Choice fields with no parser default show "default": for `heat_clothing` that
+means clothed, ISO 13571 Eq. (9), and a blank `heat_fed_threshold` follows
+`fed_threshold`
+([#311](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311)). The fields are grouped:
 
 | Group | Fields |
 |---|---|
@@ -30,7 +33,7 @@ the same default. The fields are grouped:
 | FED & Tenability | `disable_tenability`, `incapacitation_mode`, `susceptibility_sigma`, `enable_fic_speed`, `fic_alpha`, `fic_min_factor`, `fed_threshold`, `o2_threshold_percent`, `enable_heat_fed`, `heat_incapacitation_mode`, `heat_susceptibility_sigma`, `heat_clothing`, `heat_fed_threshold` |
 | Rerouting | `enable_rerouting`, `reroute_interval` |
 | Visibility | `vis_cache` |
-| Output files | an output folder; the file paths are filled in from it |
+| Output files | an output folder; the SQLite, the four CSVs and the scenario bundle (`<folder>/bundle`) are written there |
 | Other (collapsed) | every remaining option: `clear_air_visibility`, `no_visibility`, `vis_cell_size`, `max_sign_distance`, and the heat options `heat_endpoint`, `heat_fed_method`, `heat_emissivity`, `heat_convective_coefficient`, `heat_skin_temperature`, `heat_radiant_source`, `heat_u_factor`, `heat_regime`, `heat_layer_height`, `heat_view_factor`, `heat_layer_emissivity` |
 
 Four `run.py` options have no field: `--print-summary`, `--export-only`,

@@ -36,7 +36,9 @@ the gas FED (`--smoke-update-interval`) and is a running total of its own,
 never added to the gas FED.
 
 If the case has no `TEMPERATURE` slice, the run continues without a heat dose
-and logs a warning; every heat column then reads zero.
+and logs a warning. In the FED history `heat_fed_cumulative` then reads 0 and
+`temperature_celsius` 20.0 °C, and `metrics` has no `heat_fed_max` (see
+[Outputs › FED history](/docs/outputs.md#fed-history)).
 
 A heat-only case needs no soot. Without a `SOOT EXTINCTION COEFFICIENT`
 slice the run logs two warnings and continues: there is no smoke-speed

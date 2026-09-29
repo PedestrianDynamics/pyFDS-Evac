@@ -62,7 +62,7 @@ add and the failure modes that stay silent unless you read the warnings.
 | `--reroute-interval S` | 1.0 s | Seconds between per-agent reevaluations. With a smoke-aware visibility model it is also the time step at which sign legibility is computed. |
 | `--output-route-history CSV` | none | Write route switches; see [Outputs](outputs.md#route-history). |
 | `--output-route-cost-history CSV` | none | Write ranked route cost snapshots; see [Outputs](outputs.md#route-cost-history). |
-| `--vis-cache NPZ` | none | Path to a vismap `.npz` cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With `--fds-dir` it caches the smoke-aware vismap; without one, the clear-air grid. |
+| `--vis-cache NPZ` | none | Path to a vismap `.npz` cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With `--fds-dir` that has an extinction slice it caches the smoke-aware vismap; otherwise the clear-air grid. |
 | `--clear-air-visibility` | off | Force sight gating on a deck with no fire. Conflicts with `--fds-dir` (a deck with a fire has smoke to decide sight) and with `--no-visibility`. |
 | `--no-visibility` | off | Turn sight gating off entirely; agents then learn each node's neighbours by contact. Not a fire scenario. |
 | `--vis-cell-size M` | 0.25 m | Resolution of the clear-air visibility grid. Keep it below the thinnest wall that must block sight. |
@@ -107,8 +107,10 @@ by default, as FDS+Evac has none. The equations are on
 
 ### Heat dose (opt-in)
 
-All flags in this table need `--enable-heat-fed`; without it they are ignored
-and the run logs a warning for each one set. The laws, parameters and their
+All flags in this table need `--enable-heat-fed`; without it they have no
+effect. With `--fds-dir`, the run then warns for `--heat-endpoint`,
+`--heat-clothing`, `--heat-fed-method`, `--heat-radiant-source` and
+`--heat-regime`; the other heat flags are ignored silently. The laws, parameters and their
 sources are on [Models › Heat](/models/heat.md); the table only lists what
 each flag sets.
 
@@ -146,7 +148,7 @@ scenario can behave differently:
 | What | `run.py` | `run_scenario()` without that argument |
 |------|----------|----------------------------------------|
 | Rerouting | on, every 1 s (`--reroute-interval`) | off; `RerouteConfig()` defaults to 10 s |
-| Smoke speed | from `--fds-dir` | none |
+| Smoke speed | from `--fds-dir`, or `--constant-extinction` | none |
 | Gas FED, heat FED | from `--fds-dir` (heat with `--enable-heat-fed`) | none |
 | Incapacitation | `TenabilityConfig` whenever a FED track runs | none: a `fed_model` without `tenability_config` accumulates dose but never incapacitates |
 | Visibility model | built for discovery agents, `--vis-cache` or `--clear-air-visibility` | none |
@@ -235,6 +237,9 @@ FED readiness:
   ✓ CO / CO2 / O2 all present and non-zero → default FED model will run
   ✗ Extinction coefficient → smoke-speed model will NOT run
 ```
+
+This case has an extinction slice whose values are all zero, so `run.py` does
+build the smoke model; it reads *K* = 0 (clear air).
 
 ## Probing FED without running a simulation
 

@@ -132,7 +132,7 @@ from pyfds_evac.core.smoke_speed import (
 
 field = ExtinctionField.from_fds("path/to/fds_case")  # slice nearest 1.6 m
 model = SmokeSpeedModel(field, SmokeSpeedConfig())
-extinction, speed_factor = model.sample(time_s=30.0, x=5.0, y=3.0)
+extinction, speed_factor = model.sample(time_s=30.0, x=5.0, y=1.0)
 ```
 
 `sample` returns the pair (*K*, speed factor); `model.speed_factor(...)`

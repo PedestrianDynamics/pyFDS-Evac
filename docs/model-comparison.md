@@ -437,7 +437,7 @@ three-gas subset: every optional species defaults to zero concentration in
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **FED standard** | Purser's FED concept [4] | Purser equations as in the FDS+Evac guide, with irritants summed into FED (not the ISO 13571 split into FED and FEC) |
+| **FED standard** | Purser's FED concept [4] | Purser FED as computed by FDS+Evac (the `FED` function of FDS; HCN − (NO+NO₂) with offset 1/220, not the guide's Eq. 14–15 form, [#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159); see [coded form](/models/fed.md#coded-form)), with irritants summed into FED (not the ISO 13571 split into FED and FEC) |
 | **Default gases** | CO, CO2, O2 | CO, CO2, O2 (same three-gas minimum) |
 | **Optional gases** | NO, NO2, CN, HCl, HBr, HF, SO2, C3H4O, CH2O (user must provide species) | HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde (auto-detected from FDS slices) |
 | **HCN/HCl by default** | Not modelled unless user provides species ([1] §2.7 p19) | Not modelled unless FDS slices are present |

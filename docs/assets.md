@@ -1,6 +1,6 @@
 ---
 title: "Scenario assets"
-weight: 17
+weight: 80
 aliases: [/docs/assets/, /docs/using/assets/]
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Heat radiometer reference decks"
 linkTitle: "Heat radiometer"
-weight: 15.5
+weight: 16
 math: true
 ---
 

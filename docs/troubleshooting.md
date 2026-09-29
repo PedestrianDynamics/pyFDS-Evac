@@ -50,15 +50,11 @@ them. The deck-side causes (missing slices, `&REAC` yields) are explained on
 
 ## Known pitfalls
 
-- **One scenario per process for studies.** Results can depend on the JuPedSim
-  agent ids of earlier runs in the same Python process
-  ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)). Run
-  each seed in its own process, for example a shell loop over
-  `run.py --seed N`.
-- **Tied routes and `PYTHONHASHSEED`.** For discovery agents, the order of
-  tied routes can depend on Python's hash seed
-  ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)). Set
-  `PYTHONHASHSEED` to a fixed value for bit-identical reruns.
+- **One scenario per process for studies.** Run each seed in its own
+  process ([why](limitations.md#reproducibility), #198).
+- **Tied routes and `PYTHONHASHSEED`.** Set `PYTHONHASHSEED` to a fixed value
+  for bit-identical reruns of discovery agents
+  ([why](limitations.md#reproducibility), #199).
 - **The progress line counts planned agents.** With flow spawning it can show
   more agents than the final summary
   ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
