@@ -260,7 +260,7 @@ def model_docs() -> Any:
             "On when the case has CO, CO₂ and O₂ slices; deterministic",
             _controls(
                 ("Fed threshold", "--fed-threshold"),
-                ("Incapacitation Mode", "--incapacitation-mode"),
+                ("Incapacitation mode", "--incapacitation-mode"),
                 ("Susceptibility σ", "--susceptibility-sigma"),
                 ("O2 threshold percent", "--o2-threshold-percent"),
                 ("Disable tenability", "--disable-tenability"),
