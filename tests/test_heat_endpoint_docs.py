@@ -8,26 +8,25 @@ Three things the heat pages must state:
   flux at all (SFPE Handbook 5th ed., Ch. 63, pp. 2382-2384);
 - that heat FED = 1 and gas FED = 1 are different endpoints although both set
   the same ``incapacitated`` flag and ``incapacitation_cause`` column;
-- ``fed.py:N`` line references that point at the code they name.
-
-The line-reference check resolves each citation against the symbol named
-next to it, so it does not hard-code the current line numbers. A citation
-written without a line number passes.
+- code citations by file and name, not line number: every cited name must
+  be defined in the cited file (checked with ``ast``), across the site and
+  docs pages except the historical docs/archive and
+  docs/gate-model-review-notes.md.
 """
 
+import ast
+import importlib.util
 import re
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-FED_PY = ROOT / "pyfds_evac" / "core" / "fed.py"
 MODELS_FED = ROOT / "site" / "content" / "models" / "fed.md"
 MODELS_HEAT = ROOT / "site" / "content" / "models" / "heat.md"
 FUND_HEAT = ROOT / "site" / "content" / "fundamentals" / "heat.md"
 LIMITATIONS = ROOT / "docs" / "limitations.md"
-
-_CITE = r"`(?:pyfds_evac/core/)?fed\.py:(\d+)`"
 
 
 def _section(path: Path, heading: str) -> str:
@@ -50,117 +49,138 @@ def _paragraph_with(path: Path, needle: str) -> str:
     raise AssertionError(f"{path.name}: no paragraph containing {needle!r}")
 
 
-# --- Line references -------------------------------------------------------
+# --- Code citations ----------------------------------------------------------
+#
+# Pages cite code by file and name, (`fed.py`, `TenabilityConfig`), not by
+# line number, which goes stale with every edit above the cited line. Left
+# out: docs/archive and docs/gate-model-review-notes.md, which record the
+# code at an older commit.
 
-# (id, doc, anchor regex with one group per cited line, code regex per group).
-# The anchor is the text naming what the citation points at; the code regex
-# must match the cited line of fed.py.
-_REFS = [
-    (
-        "fed-total-rate",
-        MODELS_FED,
-        r"`FedComponents\.total_rate_per_min` \(" + _CITE,
-        [r"def total_rate_per_min\b"],
-    ),
-    (
-        "fed-heat-rate",
-        MODELS_FED,
-        r"`_heat_fed_rate_per_minute` \(" + _CITE,
-        [r"_heat_fed_rate_per_minute\b|\*\*\s*3\.4"],
-    ),
-    (
-        "fed-tenability-config",
-        MODELS_FED,
-        r"`TenabilityConfig` \(" + _CITE,
-        [r"class TenabilityConfig\b"],
-    ),
-    (
-        "fed-guide-structure",
-        MODELS_FED,
-        r"guide structure \(" + _CITE,
-        [r"def total_rate_per_min\b"],
-    ),
-    (
-        "fed-co2-hyperventilation",
-        MODELS_FED,
-        r"Eq\. 63\.34 \(" + _CITE,
-        [r"_hyperventilation_factor\b|0\.1903"],
-    ),
-    (
-        "fed-co-light-work",
-        MODELS_FED,
-        r"light work \(" + _CITE,
-        [r"_co_fed_rate_per_minute\b|2\.764e-5"],
-    ),
-    (
-        "fed-irritant-slowdown",
-        MODELS_FED,
-        r"irritant slowdown \\\(g\\\), when enabled \(" + _CITE + r"(?:–`(\d+)`)?",
-        [r"\bfic_(?:alpha|min_factor)\b", r"\bfic_(?:alpha|min_factor)\b"],
-    ),
-    (
-        "fed-heat-only",
-        MODELS_FED,
-        r"Eq\. 63\.44(?: only)? \(" + _CITE,
-        [r"_heat_fed_rate_per_minute\b|\*\*\s*3\.4"],
-    ),
-    (
-        "fed-sigmas",
-        MODELS_FED,
-        r"thresholds \(" + _CITE + r"(?:, `:(\d+)`)?",
-        [
-            r"^\s*susceptibility_sigma\s*:",
-            r"^\s*heat_susceptibility_sigma\s*:",
-        ],
-    ),
-    (
-        "heat-rate",
-        MODELS_HEAT,
-        r"`_heat_fed_rate_per_minute` \(" + _CITE,
-        [r"_heat_fed_rate_per_minute\b|\*\*\s*3\.4"],
-    ),
-]
+_EXCLUDED = ("docs/archive/", "docs/gate-model-review-notes.md")
+# Cited files outside the repository, by the package that ships them.
+_EXTERNAL = {"FDSVisMap.py": "fdsvismap"}
+_FILE_NAME = re.compile(r"\.(?:py|md|csv|fds|json|sqlite|png|txt|toml|yaml)$")
+_NOT_SOURCE = {".git", ".venv", "venv", "site", "temp", "node_modules", "build"}
+
+_FILE = r"`(?P<file>[\w./-]+\.py)`"
+_SYMBOL = r"`[A-Za-z_][\w.]*(?:\(\))?`"
+# (`file.py`, `symbol`, `symbol`): the names after the file.
+_CITATION = re.compile(_FILE + r"(?P<symbols>(?:, " + _SYMBOL + r")+)")
+# `symbol` (`file.py`): the name right before the file.
+_NAMED_BEFORE = re.compile(r"`(?P<symbol>[A-Za-z_][\w.]*)(?:\(\))?` \(" + _FILE + r"\)")
 
 
-@pytest.mark.parametrize(
-    ("doc", "anchor", "code_patterns"),
-    [pytest.param(d, a, c, id=i) for i, d, a, c in _REFS],
-)
-def test_fed_line_reference_points_at_named_code(doc, anchor, code_patterns):
-    """Each ``fed.py:N`` citation lands on the code the sentence names."""
-    lines = FED_PY.read_text(encoding="utf-8").splitlines()
-    match = re.search(anchor, doc.read_text(encoding="utf-8"))
-    if match is None:
-        return  # citation rewritten without a line number
-    for group, pattern in zip(match.groups(), code_patterns):
-        if group is None:
-            continue
-        number = int(group)
-        assert 1 <= number <= len(lines), f"{doc.name}: fed.py:{number} past EOF"
-        assert re.search(pattern, lines[number - 1]), (
-            f"{doc.name}: fed.py:{number} is {lines[number - 1].strip()!r}, "
-            f"expected a line matching {pattern!r}"
-        )
+def _pages() -> list[Path]:
+    pages = [*(ROOT / "site" / "content").rglob("*.md"), *(ROOT / "docs").rglob("*.md")]
+    return [
+        p for p in pages if not p.relative_to(ROOT).as_posix().startswith(_EXCLUDED)
+    ]
 
 
-def test_every_fed_line_reference_is_checked():
-    """No ``fed.py:N`` citation in the site or docs escapes the table above."""
-    covered: dict[Path, int] = {}
-    for _, doc, anchor, _ in _REFS:
-        match = re.search(anchor, doc.read_text(encoding="utf-8"))
-        if match is not None:
-            covered[doc] = covered.get(doc, 0) + sum(
-                g is not None for g in match.groups()
-            )
-    pages = [*(ROOT / "site" / "content").rglob("*.md"), *(ROOT / "docs").glob("*.md")]
-    for page in pages:
+@lru_cache(maxsize=1)
+def _repo_sources() -> tuple[Path, ...]:
+    return tuple(
+        p
+        for p in ROOT.rglob("*.py")
+        if not _NOT_SOURCE & set(p.relative_to(ROOT).parts[:-1])
+    )
+
+
+def _resolve(cited: str) -> Path | None:
+    """The file a citation names; ``None`` for an external one not installed."""
+    if cited in _EXTERNAL:
+        spec = importlib.util.find_spec(_EXTERNAL[cited])
+        return None if spec is None else Path(spec.origin).parent / cited
+    rel = [p.relative_to(ROOT).as_posix() for p in _repo_sources()]
+    hits = [r for r in rel if r == cited or r.endswith("/" + cited)]
+    if len(hits) > 1:
+        hits = [r for r in hits if r.startswith("pyfds_evac/")] or hits
+    assert len(hits) == 1, f"`{cited}` matches {len(hits)} files: {hits}"
+    return ROOT / hits[0]
+
+
+@lru_cache(maxsize=None)
+def _defined_names(path: Path) -> frozenset[str]:
+    """Qualified names defined in *path*: defs, classes, methods, and
+    module-, class- and ``self.``-level assignment targets."""
+    names: set[str] = set()
+
+    def visit(node, prefix: str, cls: str | None) -> None:
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                name = prefix + child.name
+                names.add(name)
+                inner_cls = name if isinstance(child, ast.ClassDef) else cls
+                visit(child, name + ".", inner_cls)
+                continue
+            targets = []
+            if isinstance(child, ast.Assign):
+                targets = child.targets
+            elif isinstance(child, (ast.AnnAssign, ast.AugAssign)):
+                targets = [child.target]
+            for target in targets:
+                if isinstance(target, ast.Name) and not prefix.endswith(")."):
+                    names.add(prefix + target.id)
+                is_self = (
+                    isinstance(target, ast.Attribute)
+                    and isinstance(target.value, ast.Name)
+                    and target.value.id == "self"
+                )
+                if is_self and cls is not None:
+                    names.add(f"{cls}.{target.attr}")
+            visit(child, prefix, cls)
+
+    visit(ast.parse(path.read_text(encoding="utf-8")), "", None)
+    return frozenset(names)
+
+
+def _is_defined(symbol: str, path: Path) -> bool:
+    names = _defined_names(path)
+    return symbol in names or any(n.endswith("." + symbol) for n in names)
+
+
+def _citations() -> list:
+    found = []
+    for page in _pages():
         text = page.read_text(encoding="utf-8")
-        found = len(re.findall(r"fed\.py:\d+", text))
-        found += len(re.findall(r"fed\.py:\d+`(?:–`|, `:)\d+", text))
-        assert found == covered.get(page, 0), (
-            f"{page.relative_to(ROOT)}: {found} fed.py line citations, "
-            f"{covered.get(page, 0)} checked; add the new ones to _REFS"
-        )
+        rel = page.relative_to(ROOT).as_posix()
+        for match in _CITATION.finditer(text):
+            for symbol in re.findall(r"`([A-Za-z_][\w.]*)", match.group("symbols")):
+                if _FILE_NAME.search(symbol):
+                    continue  # a list of files, not a citation
+                found.append(
+                    pytest.param(match.group("file"), symbol, id=f"{rel}:{symbol}")
+                )
+        for match in _NAMED_BEFORE.finditer(text):
+            symbol = match.group("symbol")
+            found.append(
+                pytest.param(match.group("file"), symbol, id=f"{rel}:{symbol}")
+            )
+    return found
+
+
+@pytest.mark.parametrize(("cited_file", "symbol"), _citations())
+def test_cited_symbol_exists_in_cited_file(cited_file, symbol):
+    """Each (`file.py`, `name`) citation names code that is in that file."""
+    path = _resolve(cited_file)
+    if path is None:
+        pytest.skip(f"{cited_file}: package not installed")
+    assert _is_defined(symbol, path), f"`{symbol}` is not defined in {cited_file}"
+
+
+def test_citation_check_finds_citations():
+    """The citation pattern matches the pages, so the check above is not empty."""
+    assert len(_citations()) > 50
+
+
+def test_no_line_number_citation_remains():
+    """No page cites code as ``file.py:N``, nor as a bare ``:N`` after a .py file."""
+    after_py = re.compile(r"\.py`?[^)\n]*?`:\d+")
+    for page in _pages():
+        text = page.read_text(encoding="utf-8")
+        rel = page.relative_to(ROOT).as_posix()
+        assert not re.search(r"\.py:\d+", text), f"{rel}: .py:N citation"
+        assert not after_py.search(text), f"{rel}: bare :N after a .py citation"
 
 
 # --- Incident vs net flux --------------------------------------------------

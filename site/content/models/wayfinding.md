@@ -29,7 +29,7 @@ These words are used with one meaning each, here and on the linked pages.
 
 - **Stage graph.** The directed graph of spawn areas, checkpoints, waypoints
   and exits, with the walkable legs between them as edges
-  (`route_graph.py:104–192`). A **neighbour** of a node is the target of one
+  (`route_graph.py`, `StageGraph.from_scenario`). A **neighbour** of a node is the target of one
   of its outgoing edges.
 - **Sign.** A descriptor \(\{x, y, \alpha_s, C\}\) attached to a node: position,
   compass bearing \(\alpha_s\) of the direction the sign faces, and the
@@ -42,8 +42,8 @@ These words are used with one meaning each, here and on the linked pages.
 - **Learn.** A node or edge is learned when it is added to the map.
 - **Visited.** A node is visited when the agent's stage at that node
   completes, after any wait there (`expand_on_arrival`, called at
-  `scenario.py:2508–2551`). This includes a stage with nothing scripted after
-  it, where the agent goes idle (`direct_steering_runtime.py:328–337`). The
+  `scenario.py`, `run_scenario`). This includes a stage with nothing scripted after
+  it, where the agent goes idle (`direct_steering_runtime.py`, `advance_path_target`). The
   spawn node is visited from the start.
 - **Frontier.** A known node that is not visited.
 - **Sign-legibility test** versus **route exposure gate.** The first decides
@@ -57,13 +57,13 @@ These words are used with one meaning each, here and on the linked pages.
 
 ### 1. The sign-legibility test
 
-Every exit, checkpoint and waypoint carries a sign (`visibility.py:61–73`). A
+Every exit, checkpoint and waypoint carries a sign (`visibility.py`, `extract_sign_descriptors`). A
 non-empty authored `"sign"` is used as written and must give `x` and `y`. A
 node without one, or with an empty one, receives a synthesised sign at its
-routing point with \(C = 3\) and \(\alpha_s\) = `None` (`visibility.py:34–58`).
+routing point with \(C = 3\) and \(\alpha_s\) = `None` (`visibility.py`, `_default_sign`).
 A node whose polygon cannot give a position gets no sign. Spawn areas carry no
 sign. The model treats every node without a sign as legible from everywhere
-(`visibility.py:538–540`).
+(`visibility.py`, `VisibilityModel.node_is_visible`).
 
 ```json
 "exits": {
@@ -76,7 +76,7 @@ An optional `"max_distance"` (m, positive) sets that sign's reading distance
 
 \(\alpha_s\) is a bearing in degrees, clockwise from north (+y). The sign faces
 \((\sin\alpha_s, \cos\alpha_s)\), so 90 is readable from the east, 270 from the
-west and 180 from the south (`visibility.py:388–391`).
+west and 180 from the south (`visibility.py`, `VisibilityModel`).
 
 The test is computed by [fdsvismap](https://github.com/FireDynamics/fdsvismap)
 (pinned at `64d9aa7`, `pyproject.toml:34`). For sign *k* and a grid cell at
@@ -98,7 +98,7 @@ V = A \cdot U \cdot \min\!\left(\frac{C}{\bar K},\, V_{\max}\right),
 $$
 
 - \((\Delta x, \Delta y)\) is the cell position minus the sign position
-  (`FDSVisMap.py:481–482`), and \(L\) is their distance; reversing the
+  (`FDSVisMap.py`, `VisMap._get_view_angle_array`), and \(L\) is their distance; reversing the
   vector would flip the readable half-plane.
 - \(U\) is 0 when an obstruction cell lies on the rasterised ray from the sign,
   1 otherwise (anti-aliased rays, `aa=True`).
@@ -128,30 +128,30 @@ the model reads the sign; the gold arrow shows which way it faces. \(V_{\max}\)
 53°, well before it is side-on.
 Script: `scripts/figures/sign_rotation.py`.*
 
-**Two ways to build the model** (`run_config.py:191–230`):
+**Two ways to build the model** (`run_config.py`, `_build_vis_model`):
 
 - **From an FDS run** (`--fds-dir`). Grid, obstructions and extinction come
   from the FDS output. The `SOOT EXTINCTION COEFFICIENT` slice nearest the
   point (0, 0, `--smoke-slice-height`) is used (1.6 m by default since #164,
-  `run.py:65–67`). Stored times are spaced by `--reroute-interval`
-  (`visibility.py:86–87`, `run_config.py:228`).
+  `run.py`, `_build_parser`). Stored times are spaced by `--reroute-interval`
+  (`visibility.py`, `_build_vismap`; `run_config.py`, `_build_vis_model`).
 - **From clear air** (no `--fds-dir`). The walkable polygon is rasterised at
   `--vis-cell-size`. A cell is an obstruction when its centre lies outside the
-  polygon (`visibility.py:155`, `:508–509`). A wall thinner than one cell
+  polygon (`visibility.py`, `_blocked_runs`, `VisibilityModel.clear_air`). A wall thinner than one cell
   *may* therefore let sight through, depending on how it falls on the grid.
-  The extinction is zero, and one time point is stored (`visibility.py:498`).
+  The extinction is zero, and one time point is stored (`visibility.py`, `VisibilityModel.clear_air`).
 
 At run time the model answers `node_is_visible(t, x, y, node)` by looking up
 the nearest stored time and cell, clamped to the stored range
-(`visibility.py:197–211`, `:531–543`). No ray is cast inside the time loop.
+(`visibility.py`, `_VisMapCache._nearest`, `VisibilityModel.node_is_visible`). No ray is cast inside the time loop.
 `--vis-cache` stores the arrays in an `.npz` file. The FDS cache is keyed by
 the FDS directory path, the signs, the time step and the slice height; it
 does not hash the FDS output, so replacing the output in place leaves a stale
-cache valid (`visibility.py:115–139`, `:330–359`).
+cache valid (`visibility.py`, `_make_meta`, `_load_vismap_cache`).
 
 <a id="which-visibility-setting-am-i-running"></a>
 
-**Which model a run gets** (`run_config.py:156–230`):
+**Which model a run gets** (`run_config.py`, `_build_vis_model`):
 
 | invocation | model |
 |---|---|
@@ -167,99 +167,99 @@ cache valid (`visibility.py:115–139`, `:330–359`).
 | `--vis-cache PATH`, no `--fds-dir` | clear air, cached |
 
 In every case a scenario from which no sign can be extracted gets no model
-(`run_config.py:206–209`). Rejected combinations: `--clear-air-visibility`
+(`run_config.py`, `_build_vis_model`). Rejected combinations: `--clear-air-visibility`
 with `--fds-dir`, `--clear-air-visibility` with `--no-visibility`, and
-`--vis-cache` with `--no-enable-rerouting` (`run_config.py:156–168`).
+`--vis-cache` with `--no-enable-rerouting` (`run_config.py`, `validate_opts`).
 
 <a id="cognitive-maps"></a>
 
 ### 2. The knowledge contract
 
 Each agent's `AgentCognitiveMap` holds known nodes, known edges and visited
-nodes (`cognitive_map.py:10–25`). The contract has four parts.
+nodes (`cognitive_map.py`, `AgentCognitiveMap`). The contract has four parts.
 
-**2.1 Initial knowledge** (`init_cognitive_map`, `cognitive_map.py:78–136`).
+**2.1 Initial knowledge** (`init_cognitive_map`, `cognitive_map.py`).
 `familiarity` is a scenario key on a distribution group, normalised to a
 probability \(p\): `"full"` is 1, `"discovery"` is 0, a number in [0, 1] is
-used as given, anything else raises (`cognitive_map.py:28–56`). The key
-defaults to `"full"` (`simulation_init.py:996`).
+used as given, anything else raises (`cognitive_map.py`, `familiarity_probability`). The key
+defaults to `"full"` (`simulation_init.py`, `_initialize_with_fallback`).
 
 - \(p = 1\): the map is the whole stage graph. It is never extended.
 - \(p < 1\): the map starts with the spawn node, marked visited. Then, in
   order:
   1. **Entrance.** If `entrance` names an exit reachable from the spawn node,
      the shortest path to it is learned. A name that is missing, is not an
-     exit, or cannot be reached is silently ignored (`cognitive_map.py:66–69`,
-     `:123–124`).
+     exit, or cannot be reached is silently ignored (`cognitive_map.py`,
+     `_learn_route_to`, `init_cognitive_map`).
   2. **Familiarity draw.** Each other reachable exit is learned, with its
      shortest path, with probability \(p\). The draw uses an RNG seeded with
-     `seed + 7919·agent_id` (`scenario.py:990`, `:2207`). A library caller
-     that passes no RNG gets no draw (`cognitive_map.py:126`).
+     `seed + 7919·agent_id` (`scenario.py`, `_assign_initial_exit`, `run_scenario`). A library caller
+     that passes no RNG gets no draw (`cognitive_map.py`, `init_cognitive_map`).
   3. **Perception at spawn.** Each neighbour of the spawn node whose sign is
      legible **from the spawn node's routing point** is learned
-     (`cognitive_map.py:131–135`). Agents of one spawn area that spawn at
+     (`cognitive_map.py`, `init_cognitive_map`). Agents of one spawn area that spawn at
      the same time therefore start with the same perceived neighbours.
 
 Paths learned in steps 1 and 2 add forward edges only
-(`cognitive_map.py:71–74`).
+(`cognitive_map.py`, `_learn_route_to`).
 
 **2.2 Learning** (\(p < 1\) only). Two calls add knowledge:
 
 - **Periodic.** When an agent's re-evaluation is due, each neighbour of its
   current node (`current_origin`, else `current_target_stage`) whose sign is
   legible from the agent's **stored position** is learned
-  (`expand_from_visibility`, `cognitive_map.py:189–234`, called at
-  `scenario.py:2238–2254`). The stored position is written in the steering
-  loop (`scenario.py:2423`), which runs after the reroute pass, so it holds
+  (`expand_from_visibility`, `cognitive_map.py`, called at
+  `scenario.py`, `run_scenario`). The stored position is written in the steering
+  loop (`scenario.py`, `run_scenario`), which runs after the reroute pass, so it holds
   the previous step's coordinates. Without a visibility model nothing is
   learned.
 - **On advancing along the path.** When the agent completes a stage and its
   path advances (after any waiting time at that stage), the node is marked
   visited, and each of its neighbours whose sign is legible from the agent's
-  position is learned (`expand_on_arrival`, `cognitive_map.py:155–186`,
-  called at `scenario.py:2508–2521`, `:2535–2551`). Without a visibility
+  position is learned (`expand_on_arrival`, `cognitive_map.py`,
+  called at `scenario.py`, `run_scenario`). Without a visibility
   model, **every** neighbour is learned.
 
 The three places knowledge is sensed from:
 
 | When | Sensing position | Code |
 |---|---|---|
-| Initialisation | spawn node's routing point | `cognitive_map.py:131–135` |
-| Periodic learning | previous step's stored position | `scenario.py:2240–2253`, `:2423` |
-| Stage completion (arrival) | current position | `scenario.py:2508–2551` |
+| Initialisation | spawn node's routing point | `cognitive_map.py`, `init_cognitive_map` |
+| Periodic learning | previous step's stored position | `scenario.py`, `run_scenario` |
+| Stage completion (arrival) | current position | `scenario.py`, `run_scenario` |
 
 Learning is **limited to neighbours** of one node. A legible sign that belongs
 to any other node is not tested. An edge learned by either call also teaches
 its reverse when the graph contains that reverse edge (`_learn_edge`,
-`cognitive_map.py:139–152`). With automatic wiring, exits have no outgoing
-edges and spawn areas no incoming ones (`route_graph.py:148–192`), so no
+`cognitive_map.py`). With automatic wiring, exits have no outgoing
+edges and spawn areas no incoming ones (`route_graph.py`, `StageGraph.from_scenario`), so no
 reverse edge into a spawn area or out of an exit is learned. Explicit
-`transitions` are added without these restrictions (`route_graph.py:137–146`).
+`transitions` are added without these restrictions (`route_graph.py`, `StageGraph.from_scenario`).
 
 **2.3 Memory.** No code removes a node or an edge from the map of an agent
 that is still in the simulation. A node learned while its sign was legible
 stays known after the sign stops being legible, through distance, bearing,
 obstruction or smoke. The map is deleted when the agent leaves
-(`scenario.py:2394–2400`).
+(`scenario.py`, `run_scenario`).
 
 **2.4 Decision.** Route ranking works on the known subgraph only:
 `rank_routes` replaces the stage graph with `cognitive_subgraph(map, graph)`
-before it evaluates any edge (`route_graph.py:1293–1297`,
-`cognitive_map.py:237–259`). Dijkstra, the exposure gate, the ordering and the
+before it evaluates any edge (`route_graph.py`, `rank_routes`;
+`cognitive_map.py`, `cognitive_subgraph`). Dijkstra, the exposure gate, the ordering and the
 all-refused fallback see known nodes and edges only. An exit that is not known
 is not refused; it is absent, and the fallback cannot restore it.
 
 **Exception ([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)).**
 Every agent receives the geometrically nearest exit as its steering target
-before its map exists (`simulation_init.py:1430–1449`). The opening choice
+before its map exists (`simulation_init.py`, `_find_nearest_exit`). The opening choice
 replaces that target only when the map contains a reachable exit
-(`scenario.py:1006–1008`). If it contains none, and neither exploration nor
+(`scenario.py`, `_assign_initial_exit`). If it contains none, and neither exploration nor
 patrol yields a target (below), the agent keeps steering towards that
-geometric exit (`route_graph.py:1837–1838`). For a map that holds only the
+geometric exit (`route_graph.py`, `_decide_explore`). For a map that holds only the
 spawn node neither does: the spawn node is visited from the start
-(`cognitive_map.py:117–121`), so there is no frontier, and the patrol
+(`cognitive_map.py`, `init_cognitive_map`), so there is no frontier, and the patrol
 excludes the current node, so a one-node map has no stop
-(`cognitive_map.py:343–349`). Periodic learning may add the exit
+(`cognitive_map.py`, `wander_target`). Periodic learning may add the exit
 on the way once its sign is legible, but the target was never chosen from the
 map. This is a defect, not intended behaviour (see also defect 2 in
 `assets/blind_spawn_discovery/README.md`).
@@ -268,18 +268,18 @@ The contract covers **ranking**, not **adoption**. Ranking orders the known
 routes; adoption is whether a moving agent switches to the first of them. The
 two differ:
 
-- **Opening choice** (`_assign_initial_exit`, `scenario.py:943–1021`). It
+- **Opening choice** (`_assign_initial_exit`, `scenario.py`). It
   ranks from the spawn node, without the agent's position and without the
-  queue tally (`scenario.py:995–1005`).
+  queue tally (`scenario.py`, `_assign_initial_exit`).
 - **Re-evaluation** (`evaluate_and_reroute`). It ranks from the agent's
   position. It adopts a different exit only if the rival passes the
   switching rule: an optical-depth margin, then an anchor on the ranking cost
-  (`exit_switch_anchor` = 0.9, `route_graph.py:1526`, `:1733–1747`). The
+  (`exit_switch_anchor` = 0.9, `route_graph.py`, `GatePolicy.improvement`, `RerouteConfig.exit_switch_anchor`). The
   optional queue term (`w_queue`, 0 by default) enters the ranking cost.
 - **All refused.** When every known route fails the gate, the least smoky one
   is re-admitted, but the current route is kept first if the rival's worst
   extinction is not lower by `fallback_switch_margin`
-  (`route_graph.py:1455–1466`).
+  (`route_graph.py`, `_apply_fallback`, `_fallback_holds_current`).
 
 An agent can therefore keep a known route that is not first in the ranking.
 
@@ -287,27 +287,27 @@ An agent can therefore keep a known route that is not first in the ranking.
 and the optical-depth deadband (\(\tau_{\max}\cdot\) `tau_deadband` =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
 adopted only if its ranking cost, here its travel time, is below 0.9 times the
-current route's (`_anchor_allows`, `route_graph.py:1695–1747`;
-`exit_switch_anchor` = 0.9, `:1526`; `tau_max` = 6.0 and `tau_deadband` = 0.1,
-`:691`, `:695`). An exit learned on the way is therefore adopted only if it is
+current route's (`_anchor_allows`, `route_graph.py`;
+`exit_switch_anchor` = 0.9, `RerouteConfig.exit_switch_anchor`; `tau_max` = 6.0 and `tau_deadband` = 0.1,
+`RouteCostConfig.tau_max`, `RouteCostConfig.tau_deadband`). An exit learned on the way is therefore adopted only if it is
 more than 10 % faster than the exit the agent is heading for.
 
 **No known exit.** When the known subgraph contains no reachable exit,
-`evaluate_and_reroute` looks for a target (`route_graph.py:1810–1872`):
+`evaluate_and_reroute` looks for a target (`route_graph.py`, `_decide_explore`):
 
 1. **Explore.** The frontier node with the lowest path cost through the known
    subgraph, with the first leg measured from the agent's position; ties
-   break on node id (`nearest_frontier_target`, `cognitive_map.py:262–319`).
+   break on node id (`nearest_frontier_target`, `cognitive_map.py`).
    Logged as `reason="explore"`.
 2. **Wander.** When no frontier is reachable, the next node in a fixed
    rotation over the sorted known nodes other than the current one, reached
    over known edges taken **in either direction**
-   (`wander_target`, `_undirected_known_path`, `cognitive_map.py:322–399`).
+   (`wander_target`, `_undirected_known_path`, `cognitive_map.py`).
    Logged as `reason="wander"`.
 
 **What route choice does not read.** Route choice never reads the
 sign-legibility test or a line-of-sight visibility
-(`route_graph.py:1366–1372`). `VisibilityModel.visibility_to_node` and
+(`route_graph.py`, `AdditivePolicy.apply_candidate_set_rules`). `VisibilityModel.visibility_to_node` and
 `distance_to_node` have no caller in `pyfds_evac/`
 ([#158](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158)). Route
 smoke is sampled from the global extinction field (see
@@ -322,10 +322,10 @@ fails, it is the straight line. Samples are spaced at most `sampling_step_m`
 along the walk's full length, including the stretch behind the route's origin
 node. The resample feeds only two secondary quantities: the route's worst sample
 `k_max_route`, which decides whether an agent keeps its exit when every route
-is refused (`:1460`), and the worst leg mean, which decides the optional
+is refused (`route_graph.py`, `_fallback_holds_current`), and the worst leg mean, which decides the optional
 clean tier, off by default (`clean_extinction_threshold` = 0). Under the `"additive"` model only, a route
 whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
-non-refused route has a segment below it (`route_graph.py:1383–1396`); this is
+non-refused route has a segment below it (`route_graph.py`, `AdditivePolicy.apply_candidate_set_rules`); this is
 an extinction threshold, not a sign test.
 
 ## Parameters
@@ -336,38 +336,38 @@ library use.
 
 | Setting | Source | `run.py` value | Library default | Unit | Meaning |
 |---|---|---|---|---|---|
-| `familiarity` | distribution `parameters` | – | `"full"` (`simulation_init.py:996`) | – | `"full"`, `"discovery"` or \(p \in [0,1]\) |
-| `entrance` | distribution `parameters` | – | none (`simulation_init.py:997`) | – | a reachable exit learned at spawn |
-| `sign.c` | node `sign` | – | 3 (`visibility.py:58`, `:94`) | – | *C* |
-| `sign.alpha` | node `sign` | – | `None`, i.e. \(A = 1\) (`visibility.py:58`) | ° | bearing the sign faces |
+| `familiarity` | distribution `parameters` | – | `"full"` (`simulation_init.py`, `_initialize_with_fallback`) | – | `"full"`, `"discovery"` or \(p \in [0,1]\) |
+| `entrance` | distribution `parameters` | – | none (`simulation_init.py`, `_initialize_with_fallback`) | – | a reachable exit learned at spawn |
+| `sign.c` | node `sign` | – | 3 (`visibility.py`, `_default_sign`, `_build_vismap`) | – | *C* |
+| `sign.alpha` | node `sign` | – | `None`, i.e. \(A = 1\) (`visibility.py`, `_default_sign`) | ° | bearing the sign faces |
 | \(V_{\max}\) | `--max-sign-distance` | 30 | 30 (`DEFAULT_MAX_SIGN_DISTANCE_M`) | m | reading distance of every sign, also in clear air |
 | `sign.max_distance` | node `sign` | – | none, i.e. \(V_{\max}\) | m | reading distance of this sign |
-| `--smoke-slice-height` | CLI | 1.6 (`run.py:67`) | 1.6 (`visibility.py:409`) | m | FDS slice height |
-| `--reroute-interval` | CLI | 1.0 (`run.py:95`) | 10.0 (`route_graph.py:1519`) | s | re-evaluation interval, hence periodic learning |
-| vismap time step | = `--reroute-interval` | 1.0 (`run_config.py:228`) | 10.0 (`visibility.py:408`) | s | FDS model only; clear air stores one time |
-| `--vis-cell-size` | CLI | 0.25 (`run.py:135`) | 0.5 (`visibility.py:438`) | m | clear-air grid; FDS models use the FDS mesh |
+| `--smoke-slice-height` | CLI | 1.6 (`run.py`, `_build_parser`) | 1.6 (`visibility.py`, `VisibilityModel.__init__`) | m | FDS slice height |
+| `--reroute-interval` | CLI | 1.0 (`run.py`, `_build_parser`) | 10.0 (`route_graph.py`, `RerouteConfig.reevaluation_interval_s`) | s | re-evaluation interval, hence periodic learning |
+| vismap time step | = `--reroute-interval` | 1.0 (`run_config.py`, `_build_vis_model`) | 10.0 (`visibility.py`, `VisibilityModel.__init__`) | s | FDS model only; clear air stores one time |
+| `--vis-cell-size` | CLI | 0.25 (`run.py`, `_build_parser`) | 0.5 (`visibility.py`, `VisibilityModel.clear_air`) | m | clear-air grid; FDS models use the FDS mesh |
 | `--vis-cache` | CLI | none | none | – | `.npz` cache path |
 
 The `--vis-cell-size` docstring advises a cell smaller than the thinnest wall
-(`visibility.py:455–465`). Results for discovery agents have not converged
+(`visibility.py`, `VisibilityModel.clear_air`). Results for discovery agents have not converged
 with the cell size ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)).
 
 ## Where it acts in the time step
 
 1. **Before the loop.** The visibility model is built or loaded
-   (`run_config.py:284`). Each agent placed at t = 0 gets its map and opening
-   choice (`scenario.py:1414–1416`); flow-spawned agents get theirs when they
-   appear (`scenario.py:1699–1715`).
+   (`run_config.py`, `build_run_kwargs`). Each agent placed at t = 0 gets its map and opening
+   choice (`scenario.py`, `run_scenario`); flow-spawned agents get theirs when they
+   appear (`scenario.py`, `run_scenario`).
 2. **Reroute pass.** It runs at most once per simulated second
-   (`scenario.py:2152–2159`). For each agent whose re-evaluation is due,
+   (`scenario.py`, `run_scenario`). For each agent whose re-evaluation is due,
    periodic learning runs first, then ranking and possible adoption.
 3. **Steering loop, every step.** Positions are stored
-   (`scenario.py:2423`), and learning on advancing along the path runs when a
-   stage completes (`scenario.py:2508–2551`). This learning is not tied to the
+   (`scenario.py`, `run_scenario`), and learning on advancing along the path runs when a
+   stage completes (`scenario.py`, `run_scenario`). This learning is not tied to the
    reroute pass.
 4. **History.** With `collect_cognitive_map_history` (on in `run.py`,
-   `run_config.py:302`), a row is written whenever the number of known nodes or
-   edges changes (`scenario.py:2554–2571`).
+   `run_config.py`, `build_run_kwargs`), a row is written whenever the number of known nodes or
+   edges changes (`scenario.py`, `run_scenario`).
 
 With `--no-enable-rerouting`, the map is still built, still sets the opening
 choice, and still grows on advancing along the path, but no later decision
@@ -417,7 +417,7 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   Learning is limited by the sign-legibility test. Route costs are not: an
   agent that knows an exit prices the whole route to it from the global
   extinction field, including legs it has never seen and, with `anticipate`,
-  future times (`route_graph.py:704–707`). The route choice of a discovery
+  future times (`route_graph.py`, `RouteCostConfig.anticipate`, `RouteCostConfig.foresight_horizon_s`). The route choice of a discovery
   agent is therefore not limited by what it has perceived.
 - **Haensel's heuristics are not reproduced.** Haensel (2014, §3.2) weights
   known edges by sensors (smoke, density, room-to-corridor) and uses a
@@ -437,11 +437,11 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **Discovery agents ranked the first leg as a straight line**
   ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
   by #174). `cognitive_subgraph` built a new `StageGraph` without the
-  routing engine (`cognitive_map.py:245–259`). In `rank_routes`, the length of
+  routing engine (`cognitive_map.py`, `cognitive_subgraph`). In `rank_routes`, the length of
   the walk from the agent's position to its next node therefore fell back to a
-  straight line (`route_graph.py:398–405`, `:1059–1063`). Frontier selection was
+  straight line (`route_graph.py`, `_walkable_waypoints`, `_position_aware_length`). Frontier selection was
   not affected, because it measures that leg on the full graph
-  (`cognitive_map.py:312`, `:402–429`). Fully familiar agents always had the
+  (`cognitive_map.py`, `nearest_frontier_target`, `_cost_from_agent`). Fully familiar agents always had the
   engine.
 - **First-leg smoke was sampled on a straight line**
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). The
@@ -452,10 +452,10 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **Clear-air travel time was under-priced**
   ([#167](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167), fixed
   by #170). The share of the first leg is capped at 1
-  (`route_graph.py:982`), so a route was under-priced when the agent was
+  (`route_graph.py`, `_position_aware_length`), so a route was under-priced when the agent was
   farther from its next node than the route's origin is. In clear air the gate
   ranks by that travel time. Since #170, the walk to the origin is timed at
-  the route's mean pace (`route_graph.py:1083–1089`).
+  the route's mean pace (`route_graph.py`, `_measure_route`).
 - **A sign is never read beyond its reading distance.** \(V_{\max}\) is
   30 m by default ([#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)),
   so in clear air a sign farther away is illegible at any bearing, and a
