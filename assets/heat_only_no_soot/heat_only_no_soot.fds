@@ -1,0 +1,27 @@
+&HEAD CHID='heat_only_no_soot',
+      TITLE='Heat-only case: TEMPERATURE slice, no soot (issue #248)' /
+
+! Tiny fixture for tests/test_heat_only_case.py. It has the footprint of
+! assets/fed_incap_heat_150c (30x30 m, 3 m high) so that deck's config.json
+! and geometry.wkt can drive it, but coarse cells and a few seconds of
+! output keep the committed slice files small. No &SPEC/&REAC: the only
+! slice is TEMPERATURE, so there is no SOOT EXTINCTION COEFFICIENT.
+&MESH IJK=15,15,3, XB=0,30,0,30,0,3 /
+
+&TIME T_END=3 /
+&MISC TMPA=20.0 /
+
+&SURF ID='ADIABATIC_WALL', ADIABATIC=.TRUE. /
+&VENT MB='XMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='XMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMAX', SURF_ID='ADIABATIC_WALL' /
+
+&INIT XB=0,30,0,30,0,3, TEMPERATURE=150. /
+
+&SLCF PBZ=2.0, QUANTITY='TEMPERATURE' /
+&DUMP DT_SLCF=1.0 /
+
+&TAIL /

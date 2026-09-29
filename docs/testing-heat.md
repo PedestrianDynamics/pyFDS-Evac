@@ -12,7 +12,7 @@ aliases: [/docs/testing-heat/, /models/verification/testing-heat/]
 | **Level** | FDS case: a full run on FDS output |
 | **Asset** | `assets/fed_incap_heat_150c` (also `_100c` and `_200c`) |
 | **Expected value from** | closed form of SFPE Eq. 63.44 at the deck temperature; per agent, hand sum of Eq. 63.48 on FDS's own `TEMPERATURE` slice |
-| **Status** | passes; checks the pipeline, not the law ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)) |
+| **Status** | passes; checks the pipeline, not the law (the law against the Handbook's tables: `test_heat_fed_verif.py`, A3.8–A3.10) |
 
 ![100 agents walk a loop in a room at 150 °C; their colour shows the heat dose, and all of them stop at 120 s](/images/verification/heat_room.gif)
 
@@ -85,10 +85,11 @@ $$
   (the default `baseSeed`).
 - **Runs:** `--enable-heat-fed` (heat is off by default), deterministic at
   all three temperatures; probabilistic at 150 °C.
-- **Workaround:** the decks have no soot, so the runs need
-  `--constant-extinction 0 --no-visibility`
+- **No soot:** the decks have no soot slice, so `run.py` warns that smoke
+  speed reduction is off and that visibility falls back to clear air
   ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
-  Neither changes the heat dose.
+  Neither enters the heat-dose rate; clear-air visibility changes only where
+  agents walk, and the expected dose is read at those positions.
 
 ## Expected
 
@@ -202,7 +203,6 @@ for T in 100 150 200; do
   uv run python run.py --scenario assets/fed_incap_heat_${T}c \
     --fds-dir <data>/fed_incap_heat_${T}c/fds \
     --enable-heat-fed --heat-incapacitation-mode deterministic \
-    --constant-extinction 0 --no-visibility \
     --output-sqlite <data>/fed_incap_heat_${T}c/evac/deterministic/run.sqlite \
     --output-fed-history <data>/fed_incap_heat_${T}c/evac/deterministic/fed_history.csv
 done
@@ -214,18 +214,26 @@ uv run python scripts/verification/heat_room_figures.py --data <data>
 Each run takes about three minutes and uses the default seed 42. A
 temperature without output is skipped.
 
+The published figures come from runs that also passed
+`--constant-extinction 0 --no-visibility`, which ran without a visibility
+model. Add those two flags to reproduce them exactly. On the same FDS
+output, a paired deterministic 150 °C run with and without the two flags
+stops all 100 agents at the same update in both; agent positions differ
+slightly, and the maximum heat FED differs by less than 10⁻⁴ (relative).
+The paired outputs are in
+`<data>/fed_incap_heat_150c/evac/no_soot_fallback_248/`.
+
 ## Limits
 
-- **The law is not verified.** The expected values use Eqs. 63.44 and
-  63.48, the same formulas as the code. Expected values from SFPE's tables
-  are pending
-  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
-  The Handbook calls Eq. 63.44 somewhat non-conservative at high
-  temperatures and over-conservative at low ones; its Table 63.20 gives
-  12 min at 100 °C where the equation gives 7.9 min.
-- **Heat-only cases need a workaround.** Without a soot slice `run.py`
-  crashes unless given `--constant-extinction 0 --no-visibility`
-  ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
+- **The law is not verified here.** The expected values use Eqs. 63.44 and
+  63.48, the same formulas as the code. The law itself is compared with the
+  Handbook's tables in `tests/verification/test_heat_fed_verif.py`
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)):
+  Eq. 63.44 gives 0.61 to 1.07 times the times of Table 63.20's convective
+  rows (p. 2383), shorter at 100–140 °C (7.9 min against 12 min at 100 °C),
+  as the Handbook says it is "somewhat overconservative at the
+  low-temperature end" (p. 2382); and it never exceeds the dry-air
+  tolerance times of Table 63.17 (p. 2375).
 - **σ = 0.94 has no source for heat.** It is borrowed from the gas dose
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)). The
   probabilistic run checks the code path, not the spread.
@@ -243,4 +251,15 @@ temperature without output is skipped.
   device output holds the deck value to 0.01 K, and the stop times in the
   table above. The equation-level tests
   (`tests/verification/test_s6_heat_fed.py`, `test_heat_fed_verif.py`) run
-  on synthetic fields in CI.
+  on synthetic fields in CI. `test_heat_flame_pass_reference.py` and the
+  radiant checks in `test_heat_fed_verif.py` (A3.11) call no pyFDS-Evac
+  code: they are reference values for the planned radiant term
+  ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
+- The reference tests rest on choices that are not Handbook tolerances.
+  Flame pass: the flame is a black-body sphere of radius 0.1 m, the skin
+  faces it at 35 °C, there is no convective term, and one pass must stay
+  below FED 0.02. Hot-layer anchor: a black-body layer with a full view,
+  surface at 20 or 35 °C, within ±10 % of the Handbook's "approximately
+  2.5 kW/m²". Table 63.20 radiant rows: within ±30 %, the band chosen in
+  [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219).
+  D = 16.667 is the spec's value; the Handbook prints 16.7.

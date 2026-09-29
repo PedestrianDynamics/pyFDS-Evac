@@ -2,6 +2,7 @@
 
 import io
 import pathlib
+import re
 import shutil
 import zipfile
 from types import SimpleNamespace
@@ -928,7 +929,7 @@ class TestOutputBase:
     def test_blank_uses_the_derived_folder(self):
         opts = self._opts()
         assert opts.output_sqlite == (
-            "results/t_junction/probabilistic/seed42/t_junction.sqlite"
+            "results/t_junction/deterministic/seed42/t_junction.sqlite"
         )
 
     def test_typed_folder_is_honoured(self):
@@ -979,7 +980,7 @@ def test_run_name_matches_the_client_side_clean():
         == "results/t_junction/deterministic/seed7"
     )
     assert default_output_base("t_junction", None, None).endswith(
-        "/probabilistic/seeddefault"
+        "/deterministic/seeddefault"
     )
 
 
@@ -1115,3 +1116,12 @@ class TestAgentRadius:
 
         scenario = None if raw is None else self._scenario(raw)
         assert _agent_radius_m(scenario) == pytest.approx(_DEFAULT_AGENT_RADIUS_M)
+
+
+def test_incapacitation_toggle_defaults_to_deterministic(client):
+    r = client.get("/")
+    assert r.status_code == 200
+    assert 'class="mode-btn active" id="btn-det"' in r.text
+    assert 'class="mode-btn" id="btn-prob"' in r.text
+    tag = re.search(r'<input[^>]*name="incapacitation_mode"[^>]*>', r.text)
+    assert tag and 'value="deterministic"' in tag.group(0)
