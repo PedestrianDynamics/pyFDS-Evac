@@ -64,8 +64,10 @@ WALL = "dimgrey"
 EXIT = "#33a02c"
 FIRE = "#bd0c0c"
 SIGN = "#c89b00"
+JIN_SIGN_K = (0.3, 1.8)  # Jin's lit-sign data, see Fundamentals > Visibility
 OUT_COLOUR = "#4575b4"
 INSIDE = "#969696"
+NEVER = "#f3e3b5"  # map cells that do not fail within the run
 MARKS = {  # criterion -> colour, marker, label on the figures
     "K 0.3": ("#4575b4", "o", "K ≥ 0.3 1/m (10 m, C = 3)"),
     "ISO FEC 0.3": ("#d73027", "D", "ISO FEC ≥ 0.3 (HCl ≥ 300 ppm)"),
@@ -196,7 +198,9 @@ def records(runs):
     fed = pd.read_csv(runs / "tj_fire_fed.csv")
     smoke = pd.read_csv(runs / "tj_fire_smoke.csv")
     # HCl is the only irritant: no HCN or NOx, and the Purser FLD_irr term
-    # equals the FIC term on every row, so no HBr, HF or SO2 either.
+    # equals the FIC term on every row, so no HF, SO2, acrolein or
+    # formaldehyde either. HBr shares both denominators with HCl, so this
+    # check cannot exclude it; the deck has no bromine species.
     assert (fed[["hcn_ppm", "no_ppm", "no2_ppm"]].to_numpy() == 0).all()
     hcl = F_FIC_HCL_PPM * fed.fic
     assert np.allclose(hcl, CT_HCL_PPM_MIN * fed.fld_rate_per_min, atol=1e-6)
@@ -448,10 +452,10 @@ def lund_floor_k():
 
 
 def _aset_cmap():
-    bounds = [0, 20, 30, 40, 50, 60, 90, 300]
-    colours = sns.cubehelix_palette(len(bounds) - 1, rot=-0.25, light=0.9, dark=0.15)[
+    bounds = [0, 20, 30, 40, 50, 60, 90, 300, 301]  # last bin: not by 300 s
+    colours = sns.cubehelix_palette(len(bounds) - 2, rot=-0.25, light=0.9, dark=0.15)[
         ::-1
-    ]
+    ] + [NEVER]
     return ListedColormap(colours), BoundaryNorm(bounds, len(bounds) - 1), bounds
 
 
@@ -571,7 +575,9 @@ def fig_map(walkable, config, grid, loc, vis):
         pad=0.02,
         aspect=40,
     )
-    cb.set_ticks(bounds, labels=[str(b) for b in bounds[:-1]] + ["not by 300"])
+    cb.set_ticks(
+        [*bounds[:-2], 300.5], labels=[str(b) for b in bounds[:-2]] + ["not by 300"]
+    )
     cb.set_label("time since ignition [s]", color=TEXT)
     cb.ax.tick_params(length=0, labelcolor=TEXT)
     for spine in cb.ax.spines.values():
@@ -595,7 +601,7 @@ def fig_agents(people, cross):
     fig, ax = plt.subplots(figsize=(8.0, 9.0), layout="constrained")
     for row, agent in enumerate(order):
         spawn, gone = people.loc[agent, ["spawn", "exit"]]
-        end = gone if not np.isnan(gone) else T_END
+        end = gone if not np.isnan(gone) else T_CSV_END
         colour = OUT_COLOUR if not np.isnan(gone) else INSIDE
         ax.plot(
             [spawn, end],
@@ -617,7 +623,7 @@ def fig_agents(people, cross):
                 zorder=2,
             )
         if np.isnan(gone):
-            ax.plot(T_END + 2, row, marker=">", ms=3, color=INSIDE, zorder=2)
+            ax.plot(T_CSV_END, row, marker=">", ms=3, color=INSIDE, zorder=2)
     sizes = {"K 0.3": 10, "ISO FEC 0.3": 22, "FED 0.3": 14}
     for key, (colour, marker, label) in MARKS.items():
         rows = np.arange(len(order))
@@ -663,9 +669,14 @@ def fig_agents(people, cross):
     _style(ax, "x")
     handles = [
         Line2D(
-            [], [], color=OUT_COLOUR, lw=1.6, alpha=0.55, label="inside, before K ≥ 0.3"
+            [],
+            [],
+            color=OUT_COLOUR,
+            lw=1.6,
+            alpha=0.55,
+            label="got out: before K ≥ 0.3",
         ),
-        Line2D([], [], color=OUT_COLOUR, lw=1.6, label="inside, after K ≥ 0.3"),
+        Line2D([], [], color=OUT_COLOUR, lw=1.6, label="got out: after K ≥ 0.3"),
         Line2D(
             [], [], color=INSIDE, lw=1.6, marker=">", ms=4, label="censored at 299 s"
         ),
@@ -688,6 +699,15 @@ def fig_extinction(rec):
     ax.set_xscale("log")
     ymax = ax.get_ylim()[1] * 1.15
     ax.set_ylim(0, ymax)
+    ax.axvspan(*JIN_SIGN_K, facecolor=SIGN, alpha=0.18, lw=0, zorder=0)
+    ax.annotate(
+        "Jin sign\nvisibility\n0.3-1.8",
+        (math.sqrt(JIN_SIGN_K[0] * JIN_SIGN_K[1]), ymax * 0.5),
+        ha="center",
+        va="top",
+        color=TEXT,
+        fontsize=9,
+    )
     for (lo, hi), name, hatch in (
         ((0.30, 1.27), "Purser fit\nto Jin\n0.30-1.27", "//"),
         ((1.9, 7.4), "Frantzich-\nNilsson\n1.9-7.4", "\\\\"),
@@ -762,7 +782,7 @@ def slider_frames(vis, walkable, config, tracks):
                 f"signs of route {route[-1]}: seen from {share:.0%} of the floor",
                 loc="left",
                 color=TEXT,
-                fontsize=9,
+                fontsize=12,
             )
             _style(ax)
         fig.suptitle(
@@ -770,7 +790,7 @@ def slider_frames(vis, walkable, config, tracks):
             x=0.01,
             ha="left",
             color=TEXT,
-            fontsize=10,
+            fontsize=13,
         )
         handles = [
             Patch(fc="#74add1", label="a sign of the route is visible"),
@@ -780,7 +800,7 @@ def slider_frames(vis, walkable, config, tracks):
                 [], [], marker="o", ls="", color="black", ms=4, label="agent (seed 42)"
             ),
         ]
-        _legend(fig, handles=handles, loc="outside lower center", ncols=2, fontsize=8)
+        _legend(fig, handles=handles, loc="outside lower center", ncols=2, fontsize=11)
         _save(fig, f"signs/t{t:03.0f}.webp", pil_kwargs={"quality": 70, "method": 6})
 
 

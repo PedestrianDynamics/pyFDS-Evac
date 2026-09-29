@@ -15,12 +15,12 @@
 {{- $base := printf "%s/" $src | relURL -}}
 <figure class="time-slider" data-time-slider data-base="{{ $base }}">
   <img src="{{ printf "%st%03d.webp" $base $value }}" alt="{{ $alt }}"
-    data-alt="{{ $alt }}" width="840" height="855" loading="lazy">
+    data-alt="{{ $alt }}" width="822" height="852" loading="lazy">
   <div class="time-slider__controls" data-live hidden>
     <label for="{{ $id }}">{{ $label }}</label>
     <input type="range" id="{{ $id }}" min="{{ $start }}" max="{{ $end }}"
       step="{{ $step }}" value="{{ $value }}">
-    <output for="{{ $id }}" class="time-slider__value" aria-live="polite">t = {{ $value }} s</output>
+    <output for="{{ $id }}" class="time-slider__value" aria-live="off">t = {{ $value }} s</output>
   </div>
   {{- with .Inner }}
   <figcaption>{{ . | markdownify }}</figcaption>
