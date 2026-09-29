@@ -3442,7 +3442,7 @@ for the same quantities:&lt;/p>
 &lt;th>This page&lt;/th>
 &lt;th>Meaning&lt;/th>
 &lt;th>Jin 1970–1972&lt;/th>
-&lt;th>Jin and Yamada 1985; SFPE Ch. 61&lt;/th>
+&lt;th>Jin 1978; Jin and Yamada 1985; SFPE Ch. 61&lt;/th>
 &lt;th>Cheung et al. 2026&lt;/th>
 &lt;/tr>
 &lt;/thead>
@@ -3465,7 +3465,7 @@ for the same quantities:&lt;/p>
 &lt;td>&lt;em>C&lt;/em> [–]&lt;/td>
 &lt;td>constant of &lt;em>V&lt;/em> = &lt;em>C&lt;/em>/&lt;em>K&lt;/em>&lt;/td>
 &lt;td>σ·&lt;em>V&lt;/em>&lt;/td>
-&lt;td>&lt;em>k&lt;/em> in Ch. 61 Eq. 61.4&lt;/td>
+&lt;td>\(C_s \cdot V\) (1978); &lt;em>k&lt;/em> in Ch. 61 Eq. 61.4&lt;/td>
 &lt;td>&lt;em>K&lt;/em>&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -3486,23 +3486,49 @@ for the same quantities:&lt;/p>
 &lt;td>\(k_s\) [–]&lt;/td>
 &lt;td>scattering over total extinction&lt;/td>
 &lt;td>&lt;em>k&lt;/em>&lt;/td>
-&lt;td>&lt;em>K&lt;/em> (1985); α (Ch. 61)&lt;/td>
+&lt;td>&lt;em>k&lt;/em> (1978); &lt;em>K&lt;/em> (1985); α (Ch. 61)&lt;/td>
 &lt;td>α&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>Jin and Yamada (1985) also use α for the reflectance of a placard. Jin
-measured sign luminance in apostilb (asb); 1 asb = 1/π cd/m² (Cheung et
-al., Eq. 5). Jin 1970 (B in asb, &lt;em>L&lt;/em> the illuminance; Fig. 9 plots B/E)
-and Jin and Yamada 1985 (B in cd/m², &lt;em>L&lt;/em> = &lt;em>E&lt;/em>/π, Appendix Eq. A-3) define
-the same ratio, \(\pi L_t/E\). Jin 1971 prints B in asb together with
-&lt;em>L&lt;/em> = &lt;em>E&lt;/em>/π, which would make the ratio π times larger and break the
-placard identity \(B = \alpha L\); &lt;em>in our reading&lt;/em> this is a unit slip.
-The redraws of Jin&amp;rsquo;s lit-sign data in Jin and Yamada (1985, Fig. 1) and
-Jin (2002, Fig. 2-4.2) label as &amp;ldquo;500 and 2000 cd/m²&amp;rdquo; the signs that Jin
-(1971, Fig. 1) gives as 500 and 2000 asb, that is, 159 and 637 cd/m²; the
-data points match (our comparison), so the redraws overstate those
-luminances by π.&lt;/p>
+&lt;p>Jin and Yamada (1985) also use α, and Jin (1978, Eq. A-3, p. 150) ρ,
+for the reflectance of a placard. Jin 1978 numbers only Eqs. (1), (2),
+(A-1)–(A-3) and (12); other equations are cited here by page.&lt;/p>
+&lt;p>&lt;strong>Units of sign luminance.&lt;/strong> 1 asb = 1/π cd/m² (Cheung et al., Eq. 5).
+The unit is not settled.&lt;/p>
+&lt;ul>
+&lt;li>Jin 1970 gives B in asb and uses the illuminance for &lt;em>L&lt;/em>; its Fig. 9
+plots B/E. In SI this is the ratio \(\pi L_t/E\).&lt;/li>
+&lt;li>Jin&amp;rsquo;s two 1971 papers label the lit signs in asb: Jin (1971, Fig. 1) and
+Jin (&lt;a href="https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_033s.pdf" target="_blank" rel="noopener">FRI Report 33&lt;/a>, 1971, Figs. 3–5 and 13, pp. 36–37 and 45; in English). Both
+write &lt;em>L&lt;/em> = &lt;em>E&lt;/em>/π. The Bulletin paper gives &lt;em>L&lt;/em> in lm/m²; FRI Report 33
+(p. 33) says only that &lt;em>L&lt;/em> &amp;ldquo;has the dimension of the brightness&amp;rdquo;.&lt;/li>
+&lt;li>Jin (1978, Fig. 1, p. 137) prints the same points (our comparison) but
+labels them 500, 1000 and 2000 cd/m². Jin 1978 gives &lt;em>L&lt;/em> = &lt;em>E&lt;/em>/π in
+lm/m² on p. 137 and in cd/m² on p. 149, and writes
+\(B_{E0} = \rho L\) (Eq. A-3, p. 150).&lt;/li>
+&lt;li>Jin and Yamada (1985, Fig. 1) and Jin (2002, Fig. 2-4.2) follow the
+cd/m² labels of Jin 1978.&lt;/li>
+&lt;/ul>
+&lt;p>So cd/m² first appears in Jin 1978, in the sources we have read. Against
+this, &lt;em>our arithmetic&lt;/em> favours numbers that behave as cd/m² with
+&lt;em>L&lt;/em> = &lt;em>E&lt;/em>/π. Take the smouldering 2000 sign at 5.5 m (&lt;em>K&lt;/em> ≈ 1.62 1/m, our
+reading of Fig. 1), \(k_s\) = 1 and &lt;em>L&lt;/em> = 80/π. Back-computing
+\(\delta_c = (B_{E0}/k_s L)\,e^{-KV}\) gives 0.011 if the numbers are
+cd/m² and 0.003 if they are asb.&lt;/p>
+&lt;ul>
+&lt;li>Jin&amp;rsquo;s Fig. 13 in FRI Report 33 (reprinted as Jin 1978, Fig. B-1) cannot
+decide the unit. Jin computed it with his Eq. (12) from the smouldering
+and flaming acrylic data for signs of 200–2000 asb, a superset of Fig. 1
+(FRI Report 33, p. 45).&lt;/li>
+&lt;li>The only independent value is the photometric 0.010–0.013, measured
+looking directly at 5.5 m (Jin 1970, Table 1). The cd/m² reading matches
+it. That comparison crosses smoke (filter paper against acrylic) and
+light (180 against 80 lx).&lt;/li>
+&lt;li>The argument also rests on \(k_s\) = 1 for smouldering smoke. That
+value is a normalisation, not a measurement (see \(k_s\) below), and a
+factor π in \(k_s\) cannot be told from a factor π in B.&lt;/li>
+&lt;/ul>
 &lt;h2>Jin&amp;rsquo;s experiments&lt;span class="hx-absolute -hx-mt-20" id="jins-experiments">&lt;/span>
 &lt;a href="#jins-experiments" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Everything below rests on a short series of papers, all by Jin and all
 read for this page.&lt;/p>
@@ -3518,17 +3544,27 @@ read for this page.&lt;/p>
 &lt;tr>
 &lt;td>Jin 1970, &lt;em>Visibility through fire smoke (I)&lt;/em>&lt;/td>
 &lt;td>Chamber 1.2 × 1.2 × 5.5 m, lit by 24 fluorescent lamps of 10 W, white paint inside; signs viewed from outside through glass; two mirrors extend the path to 10.5 and 15.5 m; white smoke from 5–10 g of filter paper heated to 400 °C at about 10 % O₂; a 1 m light-path densitometer (pp. 3–4, Fig. 3). Lit sign: a circle of 5, 10 or 15 cm projected on frosted glass, sized for the same visual angle at each distance, brightness set by the observer. Placard: circles of four fixed reflectances on a black backing (p. 4).&lt;/td>
-&lt;td>&lt;em>V&lt;/em> = 5.5, 10.5, 15.5 m; ambient 22, 60, 180 lx; &lt;em>K&lt;/em> ≈ 0.3–1.8 1/m for lit signs and about 0.1–0.8 1/m for placards (Figs. 4–10). The number of observers is not stated.&lt;/td>
+&lt;td>&lt;em>V&lt;/em> = 5.5, 10.5, 15.5 m in this paper; ambient 22, 60, 180 lx; &lt;em>K&lt;/em> ≈ 0.3–1.8 1/m for lit signs and about 0.1–0.8 1/m for placards (Figs. 4–10). The number of observers is not stated.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Jin 1971, &lt;em>(II)&lt;/em>&lt;/td>
 &lt;td>Same method, smoke from Japanese cedar and plastics, smouldering (white) and flaming (black); measured \(k_s\), \(\delta_c\) and particle sizes.&lt;/td>
-&lt;td>Lit signs of 500–2000 asb in acrylic smoke at 80 lx (Fig. 1); placards of reflectance 0.13–0.70 in polystyrene smoke at 40 lx (Fig. 2); &lt;em>V&lt;/em> ≈ 5.5–15.5 m (our reading of the points).&lt;/td>
+&lt;td>Lit signs of 500–2000 asb in acrylic smoke at 80 lx (Fig. 1); placards of reflectance 0.13–0.70 in polystyrene smoke at 40 lx (Fig. 2); lit-sign points at about 5.5, 7, 9.1, 12 and 15.5 m, placard points at 5.5, 10.5 and 15.5 m (our reading); \(\delta_c\) at 5.5, 9.1 and 15.5 m (Fig. 8).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Jin 1972, &lt;em>(III)&lt;/em>&lt;/td>
 &lt;td>Ten observers aged 23–37 (Table 1; all male according to Jin 1976, p. 12), walked a 20 m smoke-filled corridor towards a commercial lit EXIT sign and marked where they saw it, told its colour and read its letters (Figs. 1–2). Irritant white smoke from tightly packed wood cribs, non-irritant black smoke from kerosene. Corridor at about 80 lx, or a blackout at 0.1–0.5 lx (p. 13).&lt;/td>
 &lt;td>&lt;em>K&lt;/em> ≈ 0.3–1.1 1/m, &lt;em>V&lt;/em> ≈ 4–16 m (Figs. 3–5, our reading). Observers waited in a normally lit room first, so the blackout runs were not dark-adapted (p. 12).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Jin, FRI Report 33 (1971), &lt;em>Part 2&lt;/em>&lt;/td>
+&lt;td>English version of Jin 1971: the derivation of the contrast model (pp. 31–34), the apparatus (p. 35, Fig. 2), the same figures (Figs. 5, 6 and 13 are Jin 1971 Figs. 1, 2 and 8; our comparison), \(k_s\) from total scattered flux (pp. 38–39, Tables 1–2) and conclusions (pp. 47–48). &amp;ldquo;The observer adjusted the brightness of the sign&amp;rdquo; (p. 35). Above 7 m two mirrors were used and the data &amp;ldquo;were compensated&amp;rdquo;, as the threshold contrast through the mirrors is &amp;ldquo;about 1.7 times as large&amp;rdquo; (p. 37, footnote).&lt;/td>
+&lt;td>Critical &lt;em>K&lt;/em> at 5.5 m against sign brightness 100–2000 asb at 80 lx for four materials (Figs. 3–4); sign diameters 5, 10 and 15 cm at 5.5, 10.5 and 15.5 m (p. 35).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Jin 1978, &lt;em>Visibility through fire smoke&lt;/em> (English journal paper)&lt;/td>
+&lt;td>Summary in English of the papers above and of FRI Reports 40 and 42. Our comparison of what it reprints: the contrast model with its derivation (Eqs. (1)–(2) and Appendix A), which follows FRI Report 33, pp. 31–34, the paper Jin 1978 cites for Appendices A, B and D; the chamber figures (Figs. 1–2 and B-1), identical to Jin 1971 Figs. 1, 2 and 8 and FRI Report 33 Figs. 5, 6 and 13; \(k_s\) (Table C-1), identical to FRI Report 40, Part 4, Table 1; computed red/blue ratios (Table 1, citing Jin 1974, not read); the corridor figures of Jin 1972 (Figs. 6–7); the walking and allowable-density results of FRI Report 42 (Figs. 8–10, Tables 2–3). Jin 1978 does not cite the Bulletin papers of 1970–1972. Not in any earlier paper we have read: the cd/m² labels and the lines &lt;em>KV&lt;/em> = 4.5 in Figs. 6–7.&lt;/td>
+&lt;td>As in the papers it summarises. No observer count and no description of the viewing paths.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Jin and Yamada 1985&lt;/td>
@@ -3548,8 +3584,9 @@ read for this page.&lt;/p>
 &lt;/tbody>
 &lt;/table>
 &lt;p>Jin&amp;rsquo;s later reviews (Jin and Yamada 1985, §2; Jin 1997, §1.2; Jin 2002,
-the SFPE Handbook 3rd ed., Ch. 2-4) restate these results and cite a 1978
-journal paper for them, which we could not obtain (see &lt;a href="#sources">Sources&lt;/a>).&lt;/p>
+the SFPE Handbook 3rd ed., Ch. 2-4) restate these results and cite Jin
+(1978) for them. Where Jin 1978 restates an earlier paper, this page cites
+the earlier paper as the primary and Jin 1978 as the English version.&lt;/p>
 &lt;h2>The contrast model&lt;span class="hx-absolute -hx-mt-20" id="the-contrast-model">&lt;/span>
 &lt;a href="#the-contrast-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Jin (1970, pp. 2–3) starts from the contrast between a sign and its
 background. A sign is seen while its contrast with the background exceeds a
@@ -3565,29 +3602,72 @@ nearly white smoke (abstract, p. 1). For a placard, \(B_{E0} = \alpha L\)
 with reflectance α, and &lt;em>L&lt;/em> cancels (Eq. 7, p. 6):&lt;/p>
 $$
 K\,V \approx \ln\frac{\alpha}{\delta_c\, k_s} \qquad \text{(Jin 1970, Eq. 7; Jin 1971, Eq. 2)}
-$$&lt;p>Jin and Yamada (1985, Appendix, pp. 88–89) derive the same result in
-detail.&lt;/p>
+$$&lt;p>Jin (&lt;a href="https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_033s.pdf" target="_blank" rel="noopener">FRI Report 33&lt;/a>, pp. 31–34, Eqs. (1)–(11)), Jin (1978, Eqs. (1)–(2),
+pp. 136–137, and Appendix A, pp. 148–151, Eqs. (A-1)–(A-3) and the
+unnumbered equations on pp. 150–151) and Jin and Yamada (1985, Appendix,
+pp. 88–89) derive the same result in detail. Jin (1978, p. 136) gives
+\(\delta_c\) = 0.01–0.02 and \(k_s\) = 0.4–1.0. In the placard form &lt;em>L&lt;/em>
+cancels (FRI Report 33, Eq. (10), p. 34; Jin 1978, p. 151). &lt;em>Our
+reading:&lt;/em> light can then act only through \(\delta_c\), which Jin
+(FRI Report 33, p. 34) says rises &amp;ldquo;when the light is extraordinarily
+weak&amp;rdquo;.&lt;/p>
 &lt;p>The constants are partly measured and partly assumed:&lt;/p>
 &lt;ul>
-&lt;li>\(\delta_c\) was measured photometrically only at 180 lx: 0.010–0.013
+&lt;li>
+&lt;p>\(\delta_c\) was measured photometrically only at 180 lx: 0.010–0.013
 looking directly and 0.018–0.021 through the two mirrors, at &lt;em>K&lt;/em> =
 0.8–1.4 1/m (Jin 1970, Table 1, p. 6). Elsewhere it is back-calculated
 from threshold data through \(\delta_c = (B_{E0}/k_s L)\,e^{-KV}\) with
 \(k_s\) assumed (Jin 1971, Eq. 3, p. 22): 0.01–0.02 over 5–15 m under
 usual corridor light, rising steeply when the light falls below about
-30–60 lx (Jin 1971, Fig. 8, pp. 22–23). Jin (1972, Figs. 6–7) gives only
-relative values of the same kind (p. 14). 0.01–0.05
+30–60 lx (Jin 1971, Fig. 8, pp. 22–23; FRI Report 33, Eq. (12) and
+Fig. 13, pp. 45–46, computed from the acrylic data for signs of
+200–2000 asb with the \(k_s\) of acrylic). Jin (1978, Fig. B-1, p. 152)
+reprints that figure over 20–125 lx at 5.5, 9.1 and 15.5 m: about 0.01
+at 5.5 m at all light levels, and at 15.5 m about 0.06 near 30 lx
+falling to about 0.02 near 120 lx (our reading); the data &amp;ldquo;can be
+adopted with the exception of a fire in very dark room or corridor&amp;rdquo;
+(p. 151). Jin (1972, Figs. 6–7) gives only relative values of the same
+kind (p. 14). 0.01–0.05
 (Jin and Yamada 1985, p. 80). When observers did not know where the sign
 was, 0.05–0.10 instead of 0.01–0.02 (Jin 1972, p. 15, citing a 1972
 paper of his in the Transactions of the Architectural Institute of
-Japan, not read).&lt;/li>
-&lt;li>\(k_s\): 1 for smouldering smoke is &lt;em>assumed&lt;/em>, on the reasoning that
+Japan, not read).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>\(k_s\): 1 for smouldering smoke is &lt;em>assumed&lt;/em>, on the reasoning that
 white smoke hardly absorbs (Jin 1971, p. 19); flaming values are ratios
 to it, 0.3–1.0, for example 0.3 for kerosene and polyurethane foam and
 0.5 for Japanese cedar (Tables 1–2). Jin and Yamada (1985, p. 80) and Jin
-(1997, p. 5) give 0.4–1.0. Because \(k_s\) sits inside the logarithm,
+(1997, p. 5) give 0.4–1.0. The 1971 values come from the total
+scattered flux measured at 30°–150° with a tungsten lamp; smouldering
+\(k_s\) was &amp;ldquo;presumed to be 1.0&amp;rdquo;, and each flaming value is the ratio of
+its scattered flux to that of smouldering smoke (FRI Report 33,
+pp. 38–39). Jin (&lt;a href="https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_040s.pdf" target="_blank" rel="noopener">FRI Report 40&lt;/a>,
+1975, Part 4, pp. 6–10; Japanese, English abstract p. 10) repeated the
+measurement at 5°–155° with a He-Ne laser (0.632 µm), at &lt;em>K&lt;/em> =
+0.2–0.6 1/m, 5–10 minutes after generation, as means of 6–10 runs
+(p. 7). &lt;em>Our translation&lt;/em> of pp. 6–7: \(k_s\) is taken as 1 for wood
+smouldering at 350 °C, and each other value is the ratio of the
+integrated angular scattering to that reference. Its Table 1 (p. 9)
+is reprinted as Jin (1978, Table C-1, p. 154):&lt;/p>
+&lt;ul>
+&lt;li>smouldering: 1.0 for wood and acrylic resin, 0.9 for polystyrene and
+polyvinyl chloride foam;&lt;/li>
+&lt;li>flaming: 0.4 for wood and kerosene (the latter in parentheses), 0.5
+for polystyrene and polyvinyl chloride foam, 0.6 for acrylic resin.&lt;/li>
+&lt;/ul>
+&lt;p>Against FRI Report 33 Table 1, flaming wood (cedar) falls from 0.5 to
+0.4, polystyrene rises from 0.4 to 0.5, acrylic from 0.5 to 0.6 and
+kerosene from 0.3 to 0.4; polyvinyl chloride stays at 0.5. The summary
+&amp;ldquo;nearly equal to 1.0 for smoldering smoke and about 0.5 for flaming
+smoke&amp;rdquo; (Jin 1978, p. 151; FRI Report 40, p. 10) repeats FRI Report 33
+(p. 39). &lt;em>Our reading:&lt;/em> smouldering \(k_s\) = 1 remains a
+normalisation. Because \(k_s\) sits inside the
+logarithm,
 0.4–1.0 changes &lt;em>KV&lt;/em> by ln 2.5 ≈ 0.9 and 0.3–1.0 by ln 3.3 ≈ 1.2 (our
-arithmetic).&lt;/li>
+arithmetic).&lt;/p>
+&lt;/li>
 &lt;/ul>
 &lt;p>Jin found that the measured critical &lt;em>K&lt;/em> at 5.5 m rose linearly with the
 logarithm of sign brightness at each ambient light (Jin 1970, Figs. 4–5,
@@ -3604,8 +3684,13 @@ of Eq. 4 is a constant (Jin 1970, Eq. 5, p. 5):&lt;/p>
 $$
 V = \frac{C}{K}
 $$&lt;p>&lt;strong>The ranges.&lt;/strong> Jin (1970, abstract, p. 1) gives the visibility of the
-placard as about (2–4)/&lt;em>K&lt;/em> and of the lit sign as about (5–10)/&lt;em>K&lt;/em>. The
-ends are partly estimates. Our translation of p. 7: from Fig. 11,
+placard as about (2–4)/&lt;em>K&lt;/em> and of the lit sign as about (5–10)/&lt;em>K&lt;/em>. Jin
+(FRI Report 33, p. 47) gives the same ranges as conclusions for 5–15 m,
+and Jin (1978, p. 138) restates them and attributes them to its Figs. 1
+and 2, the 80 lx lit-sign and 40 lx placard data. &lt;em>Our reading:&lt;/em> those
+figures&amp;rsquo; points span &lt;em>KV&lt;/em> ≈ 6.7–9.9 and 1.4–4.0, so the ends 5 and 2 do
+not come from them alone. The ends are partly estimates. Our
+translation of Jin (1970, p. 7): from Fig. 11,
 \(B_{E0}/L = 1\) gives &lt;em>KV&lt;/em> ≈ 4.5; a placard of reflectance 1 is hard to
 make, so the best real placard reaches about 4; a lit sign can in theory
 reach any value by a brighter lamp, but in practice perhaps 10 at most. The
@@ -3614,28 +3699,49 @@ measured placard lines are &lt;em>KV&lt;/em> = 4.0, 3.1 and 2.2 for reflectances
 (1985, p. 81), Jin (1997, Eqs. 3–4, p. 6) and Jin (2002, Eqs. 3–4,
 p. 2-43) repeat the ranges; Yamada and Akizuki (2016, SFPE Handbook 5th
 ed., Ch. 61, Eqs. 61.4–61.6, pp. 2186–2187) reproduce them.&lt;/p>
-&lt;p>&lt;strong>The range of validity.&lt;/strong> Jin (1971, abstract p. 17 and p. 18) states that
+&lt;p>&lt;strong>The range of validity.&lt;/strong> Jin (1971, abstract p. 17 and p. 18; in English
+FRI Report 33, p. 38, and Jin 1978, p. 137) states that
 &lt;em>KV&lt;/em> is almost constant for visibilities of 5–15 m, in white and in black
 smoke, for lit signs and placards; strictly, &lt;em>KV&lt;/em> falls slightly as the
 distance grows, which he attributes to \(\delta_c\) rising with distance
 (Jin 1971, p. 22, our translation). Jin (1970, p. 5) states that Eq. 5
 holds for lit signs at least over 5.5–15.5 m, his chamber distances.&lt;/p>
 &lt;p>&lt;strong>C = 8 and C = 3.&lt;/strong> Jin (1971) draws, not fits, the line &lt;em>KV&lt;/em> = 8.0
-through lit signs of 500–2000 asb (159–637 cd/m²) in acrylic smoke at
-80 lx, with points spread over &lt;em>KV&lt;/em> ≈ 6.7–9.9 (Fig. 1), and &lt;em>KV&lt;/em> = 3.0
-through placards of reflectance 0.13–0.70 in polystyrene smoke at 40 lx,
-with points over &lt;em>KV&lt;/em> ≈ 1.4–4.0 (Fig. 2; spreads our reading).
+through lit signs of 500–2000 (asb in Jin 1971, cd/m² in Jin 1978; see
+the units note above) in acrylic smoke at 80 lx, flaming and smouldering,
+with points spread over &lt;em>KV&lt;/em> ≈ 6.7–9.9 (Fig. 1), and &lt;em>KV&lt;/em> = 3.0 through
+placards of reflectance 0.13–0.70 in polystyrene smoke at 40 lx, with
+points over &lt;em>KV&lt;/em> ≈ 1.4–4.0 (Fig. 2; spreads our reading). Jin (1978,
+Figs. 1–2, pp. 137–138) reprints both figures with the same points and
+lines, labelled &amp;ldquo;Light in corridor 80 lx&amp;rdquo; and &amp;ldquo;40 lx&amp;rdquo;, without the smoke
+materials; its Fig. 2 axis stops near 0.17 1/m, so the two lowest placard
+points of Jin 1971 (reflectance 0.13 at 15.5 m, &lt;em>K&lt;/em> ≈ 0.12–0.13 1/m) are
+not shown (our comparison). Jin (1978, p. 137) states that the signs were
+observed from outside the smoke-filled chamber through a glass window;
+FRI Report 33 (p. 48) adds that the observer was therefore &amp;ldquo;free from the
+influence of the lachrymatic and irritant effect&amp;rdquo;.
 Mulholland (2002, SFPE Handbook 3rd ed., Ch. 2-13, Eqs. 14–15 and
 Fig. 2-13.5, p. 2-265) gives &lt;em>KS&lt;/em> = 8 for a light-emitting and &lt;em>KS&lt;/em> = 3
 for a light-reflecting sign, citing Jin (1978). His figure&amp;rsquo;s range bars
 &amp;ldquo;include data for both flame- and smolder-generated smoke and sign
 illumination levels varying by about a factor of 4&amp;rdquo;, and he notes that the
 subjects viewed the smoke through glass, so irritation was excluded.
-&lt;em>Our comparison:&lt;/em> his range bars match Jin 1971 Figs. 1–2 point for point
-(lit-sign bars at &lt;em>V&lt;/em> ≈ 5.4, 7, 9, 12 and 15.5 m with the same &lt;em>K&lt;/em> spans;
-brightness 500–2000 asb is his factor of 4; 750 and 500 °C burning are his
-flaming and smouldering), so C = 8 and 3 appear to trace to Jin&amp;rsquo;s 80 lx
-and 40 lx data. The FDS User&amp;rsquo;s Guide takes C = 8 and 3 from Mulholland (see
+&lt;em>Our comparison:&lt;/em> his bars are broadly consistent with Jin&amp;rsquo;s
+Figs. 1–2, not identical: at 5.5 and 12 m his upper ends lie about
+0.1 1/m above Jin&amp;rsquo;s highest point, and he places the 12 m bar near
+12.6 m. Lit-sign bars (&lt;em>K&lt;/em> in 1/m, his then
+Jin&amp;rsquo;s): 1.45–1.90 against 1.41–1.78 at 5.5 m; 0.99–1.32 against
+1.0–1.33 at 7 m; 0.80–1.03 against 0.83–1.0 at 9 m; 0.59–0.79 against
+0.55–0.70 at 12 m; 0.42–0.55 against 0.40–0.56 at 15.5 m. Placard bars:
+0.25–0.70 against 0.27–0.70 at 5.5 m; 0.19–0.39 against 0.17–0.38 at
+10.5 m; 0.19–0.27 against 0.17–0.26 at 15.5 m. The placard lower edges
+at 10.5 and 15.5 m exclude Jin&amp;rsquo;s lowest points in both prints, so the
+bars cannot show which print he used. &lt;em>In our reading,&lt;/em> his &amp;ldquo;factor of
+4&amp;rdquo; is the 500–2000 of the lit signs; the placard reflectances span a
+factor of about 5.4. So the drawn constants C = 8 and 3 trace to Jin&amp;rsquo;s
+80 lx and 40 lx data (Jin 1971 and FRI Report 33, reprinted in Jin 1978),
+not to the 180 lx data of Jin 1970. The FDS
+User&amp;rsquo;s Guide takes C = 8 and 3 from Mulholland (see
 &lt;a href="#how-fds-uses-it">How FDS uses it&lt;/a>).&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/visibility_constant.png" alt="Two panels. (a) C = KV at the obscuration threshold against the ratio of sign luminance to ambient light on a log axis: Jin’s theoretical line for δc k = 0.01 rising through the placard band 2–4 below ratio 1 and the lit-sign band 5–10 above it, with C = 3 and C = 8 marked about 150 times apart in the ratio, and shaded bands between Cheung et al.’s published bounding curves at 180 and 1 lx. (b) Visibility against extinction coefficient on log axes for C = 3 and 8, solid between 5.5 and 15.5 m, a point for C = 11 at 5.5 m, and the FDS 30 m cap" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>(a) Jin&amp;rsquo;s Eq. 4 with \(\delta_c k_s\) = 0.01 (solid over the 0.1–50 range
@@ -3647,7 +3753,7 @@ curves Cheung et al. publish in their Fig. 11 at 180 lx (\(\delta_c k_s\) =
 reading of the axes). In our reading the 1 lx data sit below Jin&amp;rsquo;s curve:
 the higher C in dim light comes from the larger ratio for the same sign,
 not from a shift of the curve. The points for C = 3 and 8 on the 0.01
-curve are our construction, not where Jin 1971&amp;rsquo;s data sit. (b) V = C/K for
+curve are our construction, not where Jin&amp;rsquo;s 1971/1978 data sit. (b) V = C/K for
 C = 3 and 8; solid over 5.5–15.5 m, Jin&amp;rsquo;s viewing distances, dashed
 outside; shading: Jin&amp;rsquo;s bands 2–4 and 5–10. Cheung et al.&amp;rsquo;s top value
 C ≈ 11 was reached only at 5.5 m and with signs far brighter than exit
@@ -3658,9 +3764,11 @@ the threshold density of a placard does not depend on the ambient light,
 and finds almost no effect between 60 and 180 lx, but a lower threshold at
 22 lx, the lowest level tested, which he calls extremely dark and
 attributes to a change in \(\delta_c\) (p. 7, Fig. 9). Jin (1971, p. 18) says the same, &amp;ldquo;except when the light is
-extremely weak&amp;rdquo; (our translation). The English reviews say instead that the
-product for reflecting signs &amp;ldquo;depends mainly on the reflectance of the sign
-and the brightness of illuminating light&amp;rdquo; (Jin and Yamada 1985, p. 81;
+extremely weak&amp;rdquo; (our translation). The English texts say instead that the product for reflecting signs
+&amp;ldquo;depends mainly on the brightness of the sign and the brightness of
+illuminating light&amp;rdquo; (Jin 1978, p. 137, the earliest print of this wording we have)
+or &amp;ldquo;on the reflectance of the sign and the brightness of illuminating
+light&amp;rdquo; (Jin and Yamada 1985, p. 81;
 Jin 1997, p. 6; Jin 2002, p. 2-43; Ch. 61, p. 2186). Jin (1971,
 Fig. 8) shows \(\delta_c\) rising steeply below about 30–60 lx. &lt;em>In our
 reading&lt;/em>, the light matters at 22 lx and below, which covers all
@@ -3674,12 +3782,18 @@ notes that black smoke has the smaller \(k_s\) and that, because \(k_s\)
 sits inside the logarithm, the difference has little effect on visibility.
 &lt;em>Our inference:&lt;/em> a smaller \(k_s\) gives a larger &lt;em>KV&lt;/em> in Eq. 4, the
 direction observed.&lt;/p>
-&lt;p>&lt;strong>Walls, floors and doors.&lt;/strong> Jin and Yamada (1985, p. 81), Jin (1997, p. 7)
-and Jin (2002, p. 2-43) state that the visibility of walls, floors, doors
+&lt;p>&lt;strong>Walls, floors and doors.&lt;/strong> Jin (1978, p. 138), Jin and Yamada (1985,
+p. 81), Jin (1997, p. 7) and Jin (2002, p. 2-43) state that the visibility of walls, floors, doors
 and stairs depends on the surroundings, &amp;ldquo;however, the minimum value for
 reflecting signs may be applicable&amp;rdquo;, that is, &lt;em>C&lt;/em> ≈ 2 in our reading. Jin (1976, p. 17)
 uses &amp;ldquo;Visibility (m) × Extinction coefficient (1/m) ≈ 2&amp;rdquo; to turn a required
-visibility into an allowable smoke density.&lt;/p>
+visibility into an allowable smoke density, citing Jin&amp;rsquo;s 1971 FRI Report
+33 (not read). Jin (1978, Table 3, p. 147) prints the same table, &amp;ldquo;where
+\(C_s \cdot V\) = 2&amp;rdquo;, under a section heading that cites FRI Report 42
+but without citing FRI Report 33 for the rule: 3–5 m and 0.4–0.7 1/m for people
+familiar with the building, 15–20 m and 0.1 1/m for strangers. Jin (2002,
+Table 2-4.2) pairs 13 m with 0.15 1/m and 4 m with 0.5 1/m; &lt;em>our
+arithmetic:&lt;/em> both products are about 2.&lt;/p>
 &lt;p>&lt;strong>What C is.&lt;/strong> Eq. 4 makes &lt;em>C&lt;/em> a property of the sign, its lighting and the
 smoke, through \(B_{E0}/L\), \(\delta_c\) and \(k_s\). &lt;em>Our inference:&lt;/em> &lt;em>C&lt;/em>
 should be chosen from the type of sign and the light, not fitted to a
@@ -3699,8 +3813,8 @@ repeated twice (§3). They also replotted Jin&amp;rsquo;s (1970) data in SI unit
 &lt;li>The critical &lt;em>K&lt;/em> rises linearly with the logarithm of sign luminance, and
 plotting against \(\pi L_t/E\) collapses the light levels onto one line
 (§4.1, Figs. 5–6; \(R^2\) = 0.96–0.99).&lt;/li>
-&lt;li>The constants that FDS uses (C = 8 and 3) trace, in our comparison, to
-Jin&amp;rsquo;s 80 lx and 40 lx data (Jin 1971, via Mulholland 2002), not to the
+&lt;li>The constants that FDS uses (C = 8 and 3) trace to Jin&amp;rsquo;s 80 lx and
+40 lx data (Jin 1971 and 1978, Figs. 1–2, via Mulholland 2002), not to the
 180 lx data behind Cheung et al.&amp;rsquo;s &amp;ldquo;Jin&amp;rsquo;s 5–8&amp;rdquo;.&lt;/li>
 &lt;li>At 180 lx, &lt;em>KV&lt;/em> is comparable: 5–8 in Jin&amp;rsquo;s data, 4.7–9.5 in theirs
 (abstract; §6). By distance, 5.3–9.5 at 5.5 and 10.5 m and 4.7–8 at
@@ -3777,7 +3891,17 @@ brightness and the chamber illuminance were recorded during each run,
 and (p. 6) that the illuminance stayed nearly constant in white smoke,
 which answers part of their &amp;ldquo;not mentioned&amp;rdquo;. Jin (1970, p. 5) says the
 two mirrors give 10.5 and 15.5 m, but his Fig. 3 shows only the 15.5 m
-path, so their doubt about 10.5 m stands.&lt;/li>
+path, so their doubt about 10.5 m stands. Jin (1971 and 1978, Fig. 1)
+also has lit-sign points at about 7, 9.1 and 12 m, and Jin (1971,
+Fig. 8; 1978, Fig. B-1) a distance of 9.1 m, so later runs used more
+paths than Jin 1970 describes (our reading). Jin (FRI Report 33, p. 37,
+footnote) states that two mirrors were used above 7 m and that those
+data were compensated because the threshold contrast through the
+mirrors is about 1.7 times as large. &lt;em>Our arithmetic:&lt;/em> ln 1.7 ≈ 0.53,
+the +0.5 of Jin (1970, Table 1), and 0.020/0.012 ≈ 1.7 from the same
+table. So Jin&amp;rsquo;s 1971 lit-sign points beyond 7 m are already corrected;
+whether the Jin 1970 points replotted by Cheung et al. are is still not
+stated. How the 10.5 m path was built is still not described.&lt;/li>
 &lt;li>Their text says the contrast ratio is lower in dimmer light (§4.4). Their
 Fig. 11 bounds give a larger \(\delta_c k_s\) at 1 lx than at 180 lx, as
 does Jin (1971, Fig. 8), where \(\delta_c\) rises as the light falls.&lt;/li>
@@ -3799,6 +3923,14 @@ sign was lost at about 10 m at &lt;em>K&lt;/em> = 1.0 1/m, and they note that th
 constant &amp;ldquo;tends to be larger&amp;rdquo; than Jin&amp;rsquo;s. &lt;em>Our inference:&lt;/em> larger constants
 without background light agree in direction with Cheung et al.&amp;rsquo;s low-light
 results.&lt;/p>
+&lt;p>Jin (&lt;a href="https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_040s.pdf" target="_blank" rel="noopener">FRI Report 40&lt;/a>,
+1975, Part 3, pp. 1–5; Japanese, English abstract p. 5) measured a
+xenon flashing sign in the same chamber. &lt;em>KV&lt;/em> rose linearly with the
+logarithm of the condenser capacity (40–340 µF). In our reading of
+Fig. 4 it was about 4.2–8.2 at 180 lx and about 8.3–11.6 at 0.1 lx, in
+white and black smoke. Jin considers &lt;em>KV&lt;/em> ≈ 15 about the practical limit
+(p. 3, our translation). A flashing sign needed about 1/10 of the
+luminous energy of a fixed sign for the same visibility (abstract).&lt;/p>
 &lt;h2>Seeing a sign versus reading it&lt;span class="hx-absolute -hx-mt-20" id="seeing-a-sign-versus-reading-it">&lt;/span>
 &lt;a href="#seeing-a-sign-versus-reading-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>All of the above is the obscuration threshold: the point where a sign is
 barely seen. Jin (1970, p. 7) judged only whether the sign was there and
@@ -3820,6 +3952,16 @@ location matters more (\(\delta_c\) 0.05–0.10). Cheung et al. (2026, §4.2, Fi
 give a modern data point for the same distinction: at 1 lx and
 &lt;em>K&lt;/em> = 1.6 1/m, 170 cd/m² sufficed to see the &amp;ldquo;O&amp;rdquo; and 440 cd/m² to see the
 gap of the &amp;ldquo;C&amp;rdquo;.&lt;/p>
+&lt;p>Jin (1978, Figs. 6–7, pp. 143–144, citing Jin 1972) reprints the
+obscuration and letter-reading data and adds a drawn line
+\(C_s \cdot V\) = 4.5 to both; the text states only &amp;ldquo;\(C_s \cdot V\) ≅
+constant&amp;rdquo; for seeing the sign and that for reading the words &amp;ldquo;this
+relation can only apply to a low smoke density&amp;rdquo; (p. 143). &lt;em>Our reading of
+Fig. 6:&lt;/em> the line runs along the lower edge of the obscuration points
+(irritant, &lt;em>K&lt;/em> ≈ 0.31–0.51 1/m, &lt;em>KV&lt;/em> ≈ 4.6–6; non-irritant, &lt;em>K&lt;/em> ≈
+0.5–1.1 1/m, &lt;em>KV&lt;/em> ≈ 5–10), so 4.5 is not a fitted constant. Jin (1978,
+p. 144) adds that &amp;ldquo;the irritation of smoke has little effect on the
+contrast threshold even in the thick smoke&amp;rdquo; for seeing a sign.&lt;/p>
 &lt;p>&lt;em>Our caveats:&lt;/em> the irritant smoke was white and the non-irritant smoke
 black, so irritancy and smoke colour change together; Jin (1972, p. 14)
 notes that white smoke scatters more corridor light, but finds the
@@ -3855,23 +3997,37 @@ read their Figs. 2, 6 and 8 and Jin (1972, Fig. 5): acuity ratios at
 irritant legibility points at about 0.40–0.55 1/m; dashed outside. At K = 0.5 1/m the irritant law
 gives 6.9 m against 12 m (our arithmetic). S reaches zero at K ≈ 1.23 1/m.
 Script: &lt;code>scripts/figures/fundamentals_visibility_irritant.py&lt;/code>.&lt;/em>&lt;/p>
-&lt;p>&lt;strong>The 0.5 1/m for open eyes.&lt;/strong> Jin and Yamada (1985, p. 81) write that in
-thick irritant smoke &amp;ldquo;the subjects could not keep their eyes open for a
-long time&amp;rdquo;, without a number. Yamada and Akizuki (2016, Ch. 61, p. 2190)
-put it &amp;ldquo;under 0.5 [1/m]&amp;rdquo; and, two sentences later, &amp;ldquo;over 0.5 [1/m]&amp;rdquo;. We
+&lt;p>&lt;strong>The 0.5 1/m for open eyes.&lt;/strong> Jin (1978, p. 144), for the corridor data
+at &lt;em>K&lt;/em> ≈ 0.3–0.5 1/m (Fig. 7, our reading), and Jin and Yamada (1985, p. 81) write
+that in thick irritant smoke &amp;ldquo;the subjects could not keep their eyes open
+for a long time&amp;rdquo;, without a number. Jin (1978, p. 142) elsewhere writes
+&amp;ldquo;If we assume that the smoke density at which fire escape action could be
+done is 0.5/m&amp;rdquo;, as an assumption for judging spectral effects, citing
+Moriya and Watanabe (1967) for the 10 minutes, not for the 0.5. Yamada
+and Akizuki (2016, Ch. 61, p. 2190) put it &amp;ldquo;under 0.5 [1/m]&amp;rdquo; and, two sentences later, &amp;ldquo;over 0.5 [1/m]&amp;rdquo;. We
 found no primary source for the number. Possible origins, not
 established: Jin (1972, abstract) uses 0.5 1/m as its example of dense
 irritant smoke; Jin (1997, §2.1) finds most subjects emotionally affected
-near 0.5 1/m; Jin (2002, p. 2-45) assumes escape is still possible at
-0.5 1/m; and in Jin and Yamada (1985, Fig. 6) a dashed construction meets
+near 0.5 1/m; Jin (1978, p. 142) and Jin (2002, p. 2-45) assume escape
+is still possible at 0.5 1/m; and in Jin and Yamada (1985, Fig. 6) a dashed construction meets
 the acuity curve near 0.53 1/m.&lt;/p>
+&lt;p>&lt;strong>Colour of the sign.&lt;/strong> Jin (1978, Table 1, p. 142, citing Jin 1974,
+not read) gives the ratio of the visibility of a red to a blue lit sign
+of the same luminance as 1.2–1.4 in smouldering and 1.2–1.3 in flaming
+smoke, 10 minutes after generation at an initial &lt;em>K&lt;/em> of about 0.5 1/m.
+The ratios are computed, not observed: \(V_\text{red}/V_\text{blue} =
+K_\text{blue}/K_\text{red}\) (unnumbered equation, p. 142) from measured spectral extinction at
+657 and 483 nm, assuming equal luminance and equal \(\delta_c\) for both
+colours (p. 142). Jin concludes that visibility &amp;ldquo;varies by only tens of
+percent at the most with differences in color of lights of the same
+brightness&amp;rdquo; (abstract, p. 135).&lt;/p>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>The law describes a straight, unobstructed line of sight through uniform
 smoke to one object. It does not describe how far one can see around
 corners, or how much smoke a person walks through.&lt;/li>
-&lt;li>It was measured at 5.5–15.5 m (Jin 1970) and stated for 5–15 m (Jin
-1971). &lt;em>V&lt;/em> outside that range, including the 30 m FDS cap, is an
+&lt;li>It was measured at 5.5–15.5 m (Jin 1970, 1971) and stated for 5–15 m
+(Jin 1971; Jin 1978, p. 137). &lt;em>V&lt;/em> outside that range, including the 30 m FDS cap, is an
 extrapolation.&lt;/li>
 &lt;li>The sign grew with distance to keep its visual angle (Jin 1970, p. 3;
 Cheung et al., §2), so a real sign of fixed size is covered only
@@ -3934,6 +4090,20 @@ smoke&lt;/em>. Fire Safety Science, 5, 3–21.
 &lt;li>Jin, T. (2002). &lt;em>Visibility and human behavior in fire smoke&lt;/em>. SFPE
 Handbook of Fire Protection Engineering, 3rd ed., Ch. 2-4, 2-42–2-53.
 National Fire Protection Association, Quincy, MA. No DOI or public URL.&lt;/li>
+&lt;li>Jin, T. (1978). &lt;em>Visibility through fire smoke&lt;/em>. Journal of Fire &amp;amp;
+Flammability, 9, 135–155 (April 1978). The scan ends at p. 155; the
+pages 135–157 given in some citations do not match it. No DOI or public
+URL.&lt;/li>
+&lt;li>Jin, T. (1971). &lt;em>Visibility through fire smoke (Part 2. Visibility of
+monochromatic signs through fire smoke)&lt;/em>. Report of Fire Research
+Institute of Japan, 33, 31–49 (English, pp. 31–48; Japanese abstract
+p. 49).
+&lt;a href="https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_033s.pdf" target="_blank" rel="noopener">nrifd.fdma.go.jp&lt;/a>&lt;/li>
+&lt;li>Jin, T. (1975). &lt;em>Visibility through fire smoke (Part 3. Visibility of
+flashing sign)&lt;/em>, pp. 1–5, and &lt;em>(Part 4. Experiment on light scattering
+coefficient of various fire smokes)&lt;/em>, pp. 6–10. Report of Fire Research
+Institute of Japan, 40. In Japanese with English abstracts (pp. 5, 10).
+&lt;a href="https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_040s.pdf" target="_blank" rel="noopener">nrifd.fdma.go.jp&lt;/a>&lt;/li>
 &lt;li>Mulholland, G. W. (2002). &lt;em>Smoke production and properties&lt;/em>. SFPE
 Handbook of Fire Protection Engineering, 3rd ed., Ch. 2-13, 2-258–2-268.
 National Fire Protection Association, Quincy, MA. No DOI or public URL.&lt;/li>
@@ -3966,16 +4136,36 @@ Publication 1019, 6th ed., revision FDS-6.10.1-0-g12efa16, §22.10.5.
 &lt;/ul>
 &lt;p>Cited by the sources above, not obtained:&lt;/p>
 &lt;ul>
-&lt;li>Jin, T. (1978). &lt;em>Visibility through fire smoke&lt;/em>. Journal of Fire &amp;amp;
-Flammability, 9, 135–157 (135–155 in some citations). Cited for the
-contrast model by Jin and Yamada (1985, ref. 5), Jin (1997, ref. 1), Jin
-(2002, ref. 2) and Ch. 61 (ref. 6), and for C = 8 and 3 by Mulholland
-(2002, ref. 22). Every statement on this page is taken from the papers
-above instead.&lt;/li>
-&lt;li>Yamada, T., Kubota, K., Abe, N., &amp;amp; Iida, A. (2004). &lt;em>Visibility of
+&lt;li>
+&lt;p>Jin, T. (1969). Abstract, Lecture Meeting of the Architectural
+Institute of Japan, p. 77. Cited by FRI Report 33 (ref. 5, p. 48) for
+signs whose place is unknown to the observer.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Jin, T. (1972). Transactions of the Architectural Institute of Japan,
+No. 192. Cited by Jin (1972, p. 15) for \(\delta_c\) = 0.05–0.10 when
+the sign&amp;rsquo;s location is unknown.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Jin, T. (1974). Bulletin of Japanese Association of Fire Science and
+Engineering, 23(1–2), 1. Cited by Jin (1978, ref. 8) for the spectral
+extinction and the colour ratios of Table 1.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Moriya, T., &amp;amp; Watanabe, A. (1967). Kasai, 17, 137. Cited by Jin (1978,
+ref. 7, p. 142) for about 10 minutes of escape.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Horiuchi, S., Murozaki, M., &amp;amp; Jin, T. (1974). Abstract, Annual Meeting
+of the Architectural Institute of Japan (Planning), 581. Source of the
+group-walking data in Jin (1978, Fig. 10).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Yamada, T., Kubota, K., Abe, N., &amp;amp; Iida, A. (2004). &lt;em>Visibility of
 emergency exit signs and emergency lights through smoke&lt;/em>. Proc. 6th
 Asia-Oceania Symposium on Fire Science and Technology, Daegu, 227–238.
-Reported through Ch. 61 (ref. 7).&lt;/li>
+Reported through Ch. 61 (ref. 7).&lt;/p>
+&lt;/li>
 &lt;/ul></description></item><item><title>Coming from FDS+Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/</guid><description>
 &lt;p>This page is for engineers who have an &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> input file and want to run the
 same case in pyFDS-Evac. It maps each FDS+Evac input to its place here, and it
@@ -4749,7 +4939,10 @@ kerosene). Report Fig. 2 plots speed against &lt;em>K&lt;/em> [1/m]: non-irritan
 points at &lt;em>K&lt;/em> ≈ 0.5–1.13 1/m, irritant points at 0.32–0.47 1/m, with
 trend lines but no equation. In irritant smoke the speed dropped sharply,
 and subjects walked zigzag or along the wall because tears ran too heavily
-to see (pp. 14–15).&lt;/p>
+to see (pp. 14–15). Jin (1978, pp. 144–148, Figs. 8–10, citing the
+report as ref. 11) restates these results in English; his Fig. 8 appears to redraw report
+Fig. 2 (our comparison by eye), without the horizontal line for walking
+in darkness.&lt;/p>
 &lt;p>Purser and McAllister (2016, Ch. 63) replot Jin&amp;rsquo;s data in their Fig. 63.16
 and fit straight lines to them (legend), over a stated &lt;em>K&lt;/em> = 0.2–1.13 1/m
 (non-irritant) and 0.32–0.5 1/m (irritant) (p. 2339):&lt;/p>
@@ -4793,8 +4986,12 @@ towards zero.&lt;/p>
 writes that as smoke thickens &amp;ldquo;the condition becomes very much like
 walking in darkness (0.3–0.7 m/s)&amp;rdquo;, citing Togawa (1969) for that range
 (report p. 14), and calls 0.3 m/s &amp;ldquo;the speed in darkness shown by a
-horizontal broken line in Fig. 2&amp;rdquo;, without a citation (p. 17); tying the
-0.3 m/s line to Togawa is our inference. Jin takes the density at which
+horizontal broken line in Fig. 2&amp;rdquo;, without a citation (p. 17). Jin (1978,
+p. 148) ties the 0.3 m/s to Togawa: &amp;ldquo;the speed in darkness (0.3m/s
+[19])&amp;rdquo;, ref. 19 being Togawa (1969), not read, so what Togawa measured
+or assumed is still unknown. Jin (1978, p. 146) repeats that walking
+speeds in the lit and the blacked-out corridor showed &amp;ldquo;no differences&amp;rdquo; in
+his Fig. 8. Jin takes the density at which
 the average speed slows to 0.3 m/s as the maximum for people familiar with
 the building, &amp;ldquo;approximately 0.5/m–1.2/m&amp;rdquo; (p. 17). No non-irritant point
 in Fig. 2 is below about 0.45 m/s, so the 1.2 1/m end rests on the trend
@@ -4813,7 +5010,24 @@ people and 0.1 1/m for strangers. From the walks, the density that slows
 the average speed to 0.3 m/s gives 0.5–1.2 1/m for familiar people, and
 the density below which irritancy does not affect speed gives 0.2–0.3 1/m
 for strangers (p. 17). The conclusion merges the two: about 0.4–1.2 1/m
-for familiar people and 0.1–0.3 1/m for strangers (p. 18).&lt;/p>
+for familiar people and 0.1–0.3 1/m for strangers (p. 18). Jin (1978,
+Table 3, p. 147, and p. 148) repeats Table 3, &amp;ldquo;where \(C_s \cdot V\) = 2&amp;rdquo;,
+without citing FRI Report 33, gives 0.5–1.2 1/m for familiar people and
+&amp;ldquo;approximately 0.2/m&amp;rdquo; for strangers from the walks, and has no merged conclusion; his
+Table 2 adds Rasbash&amp;rsquo;s 10 m and 0.2 1/m.&lt;/p>
+&lt;p>&lt;strong>Speed against sign visibility.&lt;/strong> Report Fig. 4 and Jin (1978, Fig. 9,
+p. 145) plot walking speed against the distance at which the words of the
+EXIT sign became legible to each subject: about 3.4–12.8 m and
+0.45–1.1 m/s (our reading), with a drawn rising line and no equation. Jin
+(1978, p. 145) writes that walking speed &amp;ldquo;will be affected more strongly
+by the visibility range than the degree of irritation&amp;rdquo;.&lt;/p>
+&lt;p>&lt;strong>Group walking.&lt;/strong> Report Fig. 5 and Jin (1978, Fig. 10, p. 146) show
+Horiuchi&amp;rsquo;s data, cited secondhand (Horiuchi, Murozaki and Jin 1974,
+not read): 20 groups of five to seven people led by someone familiar
+with the building walked a corridor in smoke-bomb smoke of about
+0.6 1/m, with drawn mean lines near 1.85 m/s (lit) and 1.57 m/s
+(blackout) (our reading), &amp;ldquo;about 1.5 times faster&amp;rdquo; than Jin&amp;rsquo;s single
+subjects (p. 146).&lt;/p>
 &lt;p>&lt;strong>Irritant smoke.&lt;/strong> The report (p. 13) and Jin (1972, p. 12, Japanese
 text, our translation) describe burning wood cribs with very narrow
 spacing; the English abstract of Jin (1972, p. 11) calls the same smoke
@@ -4828,8 +5042,8 @@ time the speed at which each subject managed to walk&amp;rdquo;, citing ref. 1, 
 Table 1 is identical) and reports the sign visibility. Jin and Yamada
 (1985, §3 and Fig. 3, p. 82) reprint the walking data as &amp;ldquo;an example data
 of the experiment … conducted before&amp;rdquo;, without a citation for the figure;
-their ref. [5], Jin (1978, not obtained), is attached to the corridor-task sentence on
-p. 81. Jin (1997, §1.3 and Fig. 3) repeats that section almost word for
+their ref. [5], Jin (1978), is attached to the corridor-task sentence on
+p. 81; Jin 1978 does contain the corridor figures (Figs. 6–9). Jin (1997, §1.3 and Fig. 3) repeats that section almost word for
 word and cites it as ref. [2], with pages 79–89; the paper&amp;rsquo;s header and
 Crossref give 79–90, and the scan ends at p. 89.
 Purser (2003) dates Report No. 42 1975; the cover says 1976. Fridolf et
@@ -5170,15 +5384,16 @@ belongs to Jin and Yamada&amp;rsquo;s 1989 heat-and-smoke study; the walking stu
 had ten men aged 23–37 (FRI Report No. 42, Table 1). Ch. 63&amp;rsquo;s &amp;ldquo;has been
 shown&amp;rdquo; 0.3 m/s in darkness (pp. 2339, 2413) and Purser&amp;rsquo;s 2003 floor go
 back, in our inference, to Jin&amp;rsquo;s horizontal reference line in report
-Fig. 2 (p. 17; Jin cites Togawa 1969 only for a darkness range of
-0.3–0.7 m/s, p. 14); no non-irritant point in that figure is below about
+Fig. 2 (p. 17; the report cites Togawa 1969 for a darkness range of
+0.3–0.7 m/s, p. 14, and Jin 1978, p. 148, for 0.3 m/s); no non-irritant point in that figure is below about
 0.45 m/s. Purser&amp;rsquo;s stated non-irritant range starts at
 0.2 1/m, at the start of Jin&amp;rsquo;s trend line, while Jin&amp;rsquo;s points start near
 0.5 1/m (our reading of report Fig. 2). The irritant smoke is burning wood
 cribs in the report and in Jin (1972, 1997), &amp;ldquo;smoldering wood&amp;rdquo; in Jin&amp;rsquo;s
 1972 English abstract, non-flaming wood in Purser (2003) and heated wood
 chippings in Ch. 63. The report is dated September 1976 on its cover;
-Purser (2003) gives 1975. Jin 1978 is given as pp. 135–157 and 135–155.
+Purser (2003) gives 1975. Jin 1978 runs pp. 135–155; 135–157 in some
+citations does not match the paper.
 Fridolf et al. date the walking study 1976, 1978/1997 and 1979, and take a
 0.2 m/s floor from Purser and McAllister, who give about 0.3 m/s.&lt;/p>
 &lt;p>&lt;strong>Different measurements.&lt;/strong> Smoke: real-fire smoke, irritant or not, in
@@ -5245,12 +5460,24 @@ English abstract.
 Fire Prevention Society of Japan, 21(1), 17–23. In Japanese with an
 English abstract.
 &lt;a href="https://doi.org/10.11196/kasai.21.17" target="_blank" rel="noopener">doi:10.11196/kasai.21.17&lt;/a>
-Not the same as Jin (1971), Report of Fire Research Institute of Japan,
-33, 31, which Jin (1976, ref. 11) cites for &lt;em>V&lt;/em>·&lt;em>K&lt;/em> ≈ 2 and which we
-have not read.&lt;/li>
+Its English version (our comparison) is Jin (1971), Report of Fire Research Institute of
+Japan, 33, 31–48
+(&lt;a href="https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_033s.pdf" target="_blank" rel="noopener">nrifd.fdma.go.jp&lt;/a>),
+which Jin (1976, ref. 11) cites for &lt;em>V&lt;/em>·&lt;em>K&lt;/em> ≈ 2. That report does not
+print the product 2; it gives about (2–4)/σ for placards and says the
+minimum placard value may be used for walls, doors and stairs
+(pp. 47–48). Reading that minimum as 2 is our inference.&lt;/li>
 &lt;li>Jin, T. (1978). &lt;em>Visibility through fire smoke&lt;/em>. Journal of Fire &amp;amp;
-Flammability, 9, 135–157; pages 135–155 in Fridolf et al. (2019). Not
-obtained. Named here only where other sources cite it.&lt;/li>
+Flammability, 9, 135–155 (April 1978). English restatement of the
+walking-speed and allowable-density results (pp. 144–148). No DOI or
+public URL.&lt;/li>
+&lt;li>Togawa, K. (1969). Kenchiku Sekkei Shiryo Shusei, 6, 378. Maruzen.
+Cited by FRI Report No. 42 (ref. 3, p. 14) for walking in darkness at
+0.3–0.7 m/s and by Jin (1978, ref. 19, p. 148) for 0.3 m/s. Not
+obtained.&lt;/li>
+&lt;li>Horiuchi, S., Murozaki, M., &amp;amp; Jin, T. (1974). Abstract, Annual Meeting
+of the Architectural Institute of Japan (Planning), 581. Source of the
+group-walking data. Not obtained.&lt;/li>
 &lt;li>Jin, T., &amp;amp; Yamada, T. (1985). &lt;em>Irritating effects of fire smoke on
 visibility&lt;/em>. Fire Science and Technology, 5(1), 79–90.
 &lt;a href="https://doi.org/10.3210/fst.5.79" target="_blank" rel="noopener">doi:10.3210/fst.5.79&lt;/a>&lt;/li>
