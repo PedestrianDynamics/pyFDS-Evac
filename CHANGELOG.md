@@ -88,8 +88,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **Breaking for heat runs.** With `--enable-heat-fed` the default
-  convective law is ISO 13571:2012 Eq. (9), fully clothed,
+- With `--enable-heat-fed` the default convective law is ISO 13571:2012
+  Eq. (9), fully clothed,
   t = 4.1e8 · T^-3.61 min (T in °C, air with less than 10 % water vapour),
   in place of SFPE Handbook Eq. 63.44, t = 5e7 · T^-3.4 min. At 100, 150
   and 200 °C the time to heat FED = 1 grows from 7.9, 2.0 and 0.75 min to
@@ -99,16 +99,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   previous behaviour. The manifest records `heat_clothing`.
   `--heat-endpoint` and `--heat-fed-method total-flux` are unchanged
   ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)).
-- **Breaking for heat runs.** The heat threshold is now the gas threshold
-  `--fed-threshold`, as ISO 13571:2012 asks for one threshold for FED and
-  FEC (§5.4, §8.5). `--heat-fed-threshold` and
+- The heat threshold is now the gas threshold `--fed-threshold`, as ISO
+  13571:2012 asks for one threshold for FED and FEC (§5.4, §8.5). `--heat-fed-threshold` and
   `TenabilityConfig.heat_fed_threshold` default to none; a value sets a
   separate heat threshold, logs a warning that it departs from ISO, and is
   recorded in the manifest as `heat_fed_threshold_override`. Runs with the
   default `--fed-threshold 1.0` are unaffected; a run that changed
   `--fed-threshold` and wants the previous heat threshold passes
   `--heat-fed-threshold 1.0`. Both doses stay deterministic by default.
-
 - Docs: Models › Heat explains where the 2.5 kW/m² radiant threshold of
   total flux acts: from about 285 °C at the default ε, with a step in the
   rate there and no radiant dose at the 200 °C anchor. A figure
@@ -145,7 +143,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `desired_speed` must also update its speed state (#240).
 - Web GUI: the FED section is titled "Purser / FDS" instead of
   "ISO 13571"; the coded form is the Purser sum as in the FDS `FED` function.
-- **Breaking.** `speed_law="fridolf"` now implements Eq. 7 (method 3) of
+- `speed_law="fridolf"` now implements Eq. 7 (method 3) of
   Fridolf, Ronchi, Nilsson & Frantzich (2019),
   [doi:10.1016/j.tust.2019.04.016](https://doi.org/10.1016/j.tust.2019.04.016),
   also in Fridolf et al. (2018, SFPE extended abstract), a summary of their
