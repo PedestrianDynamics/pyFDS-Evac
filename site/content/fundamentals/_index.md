@@ -27,7 +27,7 @@ chapters 56–64, which most pages cite.
 {{< cards >}}
   {{< card link="aset-rset" title="ASET, RSET and the egress timeline" subtitle="Detection, warning, pre-travel activity and travel, against the time to untenable conditions." >}}
   {{< card link="extinction" title="Extinction coefficient" subtitle="Beer–Lambert attenuation, optical density and the mass-specific extinction coefficient." >}}
-  {{< card link="visibility" title="Visibility through smoke" subtitle="Jin's S = C/K and why C is a property of the sign." >}}
+  {{< card link="visibility" title="Visibility through smoke" subtitle="Jin's V = C/K, where C comes from, and how it changes in dim light." >}}
   {{< card link="walking-speed" title="Walking speed in smoke" subtitle="Jin, Frantzich and Nilsson, Fridolf et al., and the fractional versus absolute readings." >}}
   {{< card link="asphyxiant-fed" title="Asphyxiant fractional effective dose" subtitle="CO, HCN, CO₂ hyperventilation and low-oxygen hypoxia after Purser and ISO 13571." >}}
   {{< card link="irritants" title="Irritant gases" subtitle="FEC as a separate endpoint in ISO 13571; FIC and FLD in Purser." >}}
