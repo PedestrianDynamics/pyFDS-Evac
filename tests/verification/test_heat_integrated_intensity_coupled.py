@@ -4,14 +4,14 @@ Law and API as in ``tests/test_heat_integrated_intensity.py``: with
 ``radiant_source="integrated-intensity"`` the total-flux method (#223,
 spec 016) uses
 
-    q = f U - sigma T_s^4 / 1000 + h (T_g - T_s) / 1000   [kW/m2], net
+    q = f (U - 4 sigma T_s^4 / 1000) + h (T_g - T_s) / 1000   [kW/m2]
     t = D / q^1.33                         [min]   (SFPE Ch. 63, Eq. 63.43)
 
 Three levels:
 
 - **Coupled corridor** (``run_scenario``, synthetic fields): T_g = T_s, so
   there is no convection, and U constant; the crossing time is the hand
-  formula. Outputs carry U, q, the source and the net basis.
+  formula. Outputs carry U, q, the source and the excess basis.
 - **Committed FDS case** ``assets/heat_integrated_intensity`` (FDS 6.10.1,
   one mesh, 1 s): a 300 deg C sooty layer above 1.2 m, clear 20 deg C air
   below, INTEGRATED INTENSITY and TEMPERATURE slices at 0.4 and 1.6 m (the
@@ -22,8 +22,9 @@ Three levels:
   ``$HEAT_RADIOMETER_DATA``; skipped when absent). In the uniform (isotropic)
   room the model's flux with f = 1/4, h = 8, T_s = 35 deg C must equal the
   FDS skin gauge in every orientation. With emissivity 1, FDS UG 6.10.1
-  Eq. 22.35 gives GAUGE = (q_inc - sigma T_s^4) + h (T_g - T_s), the same
-  net basis as the model, so GAUGE is the expected value as written. The
+  Eq. 22.35 gives GAUGE = (q_inc - sigma T_s^4) + h (T_g - T_s); with
+  q_inc = U / 4 in an isotropic field this is (U - 4 sigma T_s^4) / 4 + h dT,
+  the model at f = 1/4, so GAUGE is the expected value as written. The
   layer case records where [0.25, 1] brackets the gauge and where it does
   not.
 """
@@ -73,8 +74,8 @@ RADIOMETER_DATA = Path(os.environ.get("HEAT_RADIOMETER_DATA", SCIEBO))
 
 
 def q_u_hand(t_gas_c, u_kw_m2, *, f, h, t_skin_c):
-    skin_emission = SIGMA * (t_skin_c + KELVIN) ** 4 / 1000.0
-    return f * u_kw_m2 - skin_emission + h * (t_gas_c - t_skin_c) / 1000.0
+    u_skin = 4.0 * SIGMA * (t_skin_c + KELVIN) ** 4 / 1000.0
+    return f * (u_kw_m2 - u_skin) + h * (t_gas_c - t_skin_c) / 1000.0
 
 
 def t_hand_min(q, dose):
@@ -160,18 +161,18 @@ def _check_crossing(result, expected_s):
 
 
 def test_design_crossing_times():
-    """q = f U - sigma T_s^4 = 5 - 0.511 = 4.489 kW/m2: fatal after 136.0 s,
-    tolerance after 10.8 s."""
+    """q = f (U - 4 sigma T_s^4) = 0.5 (10 - 2.045) = 3.978 kW/m2: fatal after
+    159.7 s, tolerance after 12.7 s."""
     q = q_u_hand(T_SKIN, U_CONST, f=F, h=H, t_skin_c=T_SKIN)
-    assert q == pytest.approx(4.4888, abs=1e-4)
-    assert 60.0 * t_hand_min(q, DOSE["fatal"]) == pytest.approx(136.0, abs=0.1)
-    assert 60.0 * t_hand_min(q, DOSE["tolerance"]) == pytest.approx(10.8, abs=0.1)
+    assert q == pytest.approx(3.9775, abs=1e-4)
+    assert 60.0 * t_hand_min(q, DOSE["fatal"]) == pytest.approx(159.7, abs=0.1)
+    assert 60.0 * t_hand_min(q, DOSE["tolerance"]) == pytest.approx(12.7, abs=0.1)
 
 
 def test_fatal_crossing_radiant_only():
     q = q_u_hand(T_SKIN, U_CONST, f=F, h=H, t_skin_c=T_SKIN)
     expected = 60.0 * t_hand_min(q, DOSE["fatal"])
-    result = _run(_model(T_SKIN, U_CONST), run_s=160.0)
+    result = _run(_model(T_SKIN, U_CONST), run_s=185.0)
     try:
         _check_crossing(result, expected)
     finally:
@@ -179,11 +180,13 @@ def test_fatal_crossing_radiant_only():
 
 
 def test_crossing_scales_with_the_factor():
-    """f = 1 on the same U: q = 10 - 0.511 = 9.489 kW/m2, fatal after 50.3 s."""
+    """f = 1 on the same U: q doubles to 7.955 kW/m2, t falls by 2^1.33 to
+    63.5 s."""
     q = q_u_hand(T_SKIN, U_CONST, f=1.0, h=H, t_skin_c=T_SKIN)
     expected = 60.0 * t_hand_min(q, DOSE["fatal"])
-    assert expected == pytest.approx(50.3, abs=0.1)
-    result = _run(_model(T_SKIN, U_CONST, f=1.0), run_s=70.0)
+    assert expected == pytest.approx(159.7 / 2**1.33, abs=0.1)
+    assert expected == pytest.approx(63.5, abs=0.1)
+    result = _run(_model(T_SKIN, U_CONST, f=1.0), run_s=80.0)
     try:
         _check_crossing(result, expected)
     finally:
@@ -204,7 +207,7 @@ def test_outputs_record_u_flux_and_source():
             recorded = json.load(handle)["heat_flux_parameters"]
         assert recorded["radiant_source"] == "integrated-intensity"
         assert recorded["u_factor"] == F
-        assert recorded["radiant_flux"] == "net"
+        assert recorded["radiant_flux"] == "excess"
         assert "u_factor" not in recorded["assumed"]
     finally:
         result.cleanup()
@@ -296,7 +299,8 @@ def test_radiometer_slice_u_matches_devices(case):
 
 def test_radiometer_uniform_quarter_u_is_the_gauge():
     """Isotropic room: f = 1/4 reproduces the FDS skin gauge in all four
-    orientations (net radiation plus convection)."""
+    orientations (radiation in excess of the skin-temperature field, plus
+    convection)."""
     path = _radiometer("uniform")
     model = DefaultHeatFedModel(
         FdsHeatField.from_fds(  # type: ignore[call-arg]
