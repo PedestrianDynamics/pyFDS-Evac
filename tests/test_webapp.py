@@ -32,6 +32,20 @@ def results_root(tmp_path, monkeypatch):
     return root
 
 
+@pytest.fixture(autouse=True)
+def idle_manager():
+    """Each test starts from, and leaves, an idle run panel.
+
+    The page renders the server's run state, so a finished run left behind
+    by one test would otherwise show up on the next test's page.
+    """
+    manager.join(10.0)
+    manager.reset()
+    yield
+    manager.join(10.0)
+    manager.reset()
+
+
 def test_index_renders_form(client):
     r = client.get("/")
     assert r.status_code == 200
@@ -314,7 +328,7 @@ class TestCancelLifecycle:
         mgr.cancel()
         gate["build"].set()  # the worker unwinds within /cancel's wait
         r = client.post("/cancel")
-        assert "Run cancelled." in r.text
+        assert "was cancelled. No results were produced" in r.text
         assert 'hx-post="/clear"' in r.text
         assert mgr.status == "cancelled"
         r = client.post("/clear")
@@ -363,7 +377,7 @@ class TestCancelLifecycle:
         with client.stream("GET", "/progress") as s:
             body = "".join(s.iter_text())
         assert "event: done" in body
-        assert "Run cancelled." in body
+        assert "was cancelled. No results were produced" in body
         assert 'hx-post="/clear"' in body
 
     def test_progress_stream_does_not_follow_a_later_run(self, rm):
@@ -560,7 +574,7 @@ class TestCancelLifecycle:
         assert "run-B" not in body
         expected = {
             "done": "results of run-A",
-            "error": "Run failed: RuntimeError: run-A failed",
+            "error": "RuntimeError: run-A failed",
             "running": "Running: run-A",
         }[outcome]
         assert expected in body
@@ -1877,3 +1891,142 @@ def test_warnings_card_links_the_case_requirements():
     assert "docs/fds-case-requirements.md" not in html
     assert "pyFDS-Evac/docs/fds-case-requirements/" in html
     assert "The run completed" not in html
+
+
+class TestTerminalStates:
+    """#320: a settled run is never discarded or hidden by accident."""
+
+    @pytest.fixture
+    def stub(self, monkeypatch):
+        import pyfds_evac.webapp.app as app_module
+        from pyfds_evac.webapp.runner import RunManager
+
+        monkeypatch.setattr(
+            "pyfds_evac.webapp.runner.run_scenario",
+            lambda scenario, progress_callback=None, **kw: SimpleNamespace(
+                sqlite_file=None
+            ),
+        )
+        fresh = RunManager()
+        monkeypatch.setattr(app_module, "manager", fresh)
+        monkeypatch.setattr(
+            app_module, "_finished_view", lambda: app_module.Div("results of stub")
+        )
+        yield fresh
+        fresh.join(5.0)
+
+    def test_cancel_after_the_run_finished_keeps_its_results(self, stub, client):
+        stub.start(None, dict, "stub")
+        assert stub.join(5.0)
+        r = client.post("/cancel")
+        assert stub.status == "done"
+        assert "results of stub" in r.text
+        assert "cancelled" not in r.text
+
+    def test_done_event_replaces_the_whole_running_view(self, stub, client):
+        import re as _re
+
+        from fasthtml.common import to_xml
+
+        import pyfds_evac.webapp.app as app_module
+
+        view = to_xml(app_module._running_stream_view())
+        connect = _re.search(r"<div[^>]*sse-connect[^>]*>", view).group(0)
+        assert 'sse-swap="done"' in connect
+        assert 'sse-swap="progress"' in view
+        assert 'sse-swap="progress,done"' not in view
+        assert "data-run-live" in view
+        stub.start(None, dict, "stub")
+        assert stub.join(5.0)
+        with client.stream("GET", "/progress") as s:
+            body = "".join(s.iter_text())
+        done = body[body.index("event: done") :]
+        assert "results of stub" in done
+        assert "cancel-btn" not in done
+        assert "data-run-live" not in done
+
+    def test_failed_run_names_the_message_and_keeps_details_apart(self, stub):
+        from fasthtml.common import to_xml
+
+        import pyfds_evac.webapp.app as app_module
+
+        def boom():
+            raise RuntimeError("slice not found")
+
+        stub.start(None, boom, "stub")
+        assert stub.join(5.0)
+        html = to_xml(app_module._terminal_view(stub.status))
+        assert "Failed" in html
+        assert "Run failed: </b>slice not found" in html
+        assert "Technical details" in html
+        assert "RuntimeError: slice not found" in html
+        assert "hx-confirm" not in html  # nothing to lose
+
+    def test_reload_shows_the_server_state(self, stub, client):
+        import threading
+
+        gate = threading.Event()
+        stub.start(None, lambda: gate.wait(5.0) and {}, "stub")
+        page = client.get("/").text
+        assert 'data-run-live="1"' in page
+        assert "Choose a scenario and" not in page
+        gate.set()
+        assert stub.join(5.0)
+        page = client.get("/").text
+        assert "results of stub" in page
+        assert 'data-run-live="1"' not in page
+
+    def test_rejected_submit_goes_to_the_alert_not_the_panel(self, client, tmp_path):
+        r = client.post(
+            "/run",
+            data={
+                "scenario": "ISO-table21",
+                "vis_cache": "x.pkl",
+                "fds_dir": str(tmp_path),
+                "enable_rerouting": "off",
+            },
+            headers=_HX,
+        )
+        assert r.headers["HX-Retarget"] == "#form-status"
+        assert r.headers["HX-Reswap"] == "innerHTML"
+        assert "The run was not started." in r.text
+        assert "Technical details" in r.text
+        assert "enable-rerouting" in r.text
+        r = client.post("/run", data={}, headers=_HX)
+        assert r.headers["HX-Retarget"] == "#form-status"
+        assert "Select a scenario first." in r.text
+
+    def test_field_errors_name_the_field(self):
+        from pyfds_evac.webapp.app import _field_label
+
+        assert _field_label("heat_clothing: 'x' is not one of a, b") == (
+            "Heat clothing: 'x' is not one of a, b"
+        )
+        assert _field_label("must be in [0.25, 1.0], got 2") == (
+            "must be in [0.25, 1.0], got 2"
+        )
+
+    def test_settings_changed_banner_and_clear_confirmation(self, client):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _clear_run_bar
+
+        form = {"scenario": "ISO-table21", "seed": "11"}
+        r = client.post("/run", data=form, headers=_HX)
+        assert 'hx-swap-oob="true"' in r.text  # old alerts are cleared
+        _stream_until_terminal(client)
+        run_id = manager.spec.run_id
+        assert "Settings changed" not in client.post("/form-state", data=form).text
+        changed = client.post("/form-state", data={**form, "seed": "12"}).text
+        assert f"Settings changed since run #{run_id}" in changed
+        assert "Previous settings" in changed
+        broken = client.post(
+            "/form-state", data={**form, "heat_clothing": "nonsense"}
+        ).text
+        assert "currently cannot be run: Heat clothing:" in broken
+        bar = to_xml(_clear_run_bar())
+        assert f"Clear the results of run #{run_id} from this view?" in bar
+        assert "files on disk are kept" in bar
+        _drop_temp_trajectory()
+        client.post("/clear")
+        assert client.post("/form-state", data={**form, "seed": "12"}).text == ""

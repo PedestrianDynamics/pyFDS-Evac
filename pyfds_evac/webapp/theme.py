@@ -124,6 +124,12 @@ _CSS = """
   /* ink that sits on top of a heat-ramp fill */
   --on-heat: #2a1606;
 
+  /* status text: the ramp colours as text, at 4.5:1 or more on panels */
+  --gold-ink:   #f4c430;
+  --danger-ink: #ff6b7d;
+  /* keyboard focus ring, 3:1 or more against every surface */
+  --focus:      #f4c430;
+
   /* active tab pill inverts the ground */
   --pill-active-bg: #f2ede9;
   --pill-active-fg: #211e20;
@@ -184,6 +190,10 @@ html[data-theme="light"] {
 
   --pill-active-bg: #241f1c;
   --pill-active-fg: #faf7f2;
+
+  --gold-ink:   #8a6100;
+  --danger-ink: #b3172c;
+  --focus:      #8a6100;
 
   --glow-warm: rgba(255,106,26,.07);
   --glow-gold: rgba(244,196,48,.10);
@@ -443,6 +453,59 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   color: hsl(var(--muted-foreground)); word-break: break-all;
 }
 @media (max-width: 640px) { .metrics-grid { grid-template-columns: 1fr; } }
+
+/* ---- run states: settled panels, alerts, banner ---- */
+.state-panel { display: flex; flex-direction: column; gap: 12px; }
+.state-head {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px 12px;
+}
+.state-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; min-width: 0; }
+.state-glyph { font-size: 15px; line-height: 1; }
+.state-word {
+  font-family: var(--font-display); font-weight: 600; font-size: 16px; color: var(--ink);
+}
+.state-run {
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+.state-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.state-head.is-failed .state-glyph, .state-head.is-failed .state-word { color: var(--danger-ink); }
+.state-msg { margin: 0; font-size: .9rem; line-height: 1.6; color: var(--ink); overflow-wrap: anywhere; }
+.state-hint { margin: 4px 0 0; font-size: .78rem; line-height: 1.55; color: var(--ink-dim); }
+.state-hint a, .state-msg a { color: var(--gold-ink); }
+.state-tag {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 6px;
+  border: 1px solid var(--gold-ink); color: var(--gold-ink);
+}
+.tech-pre {
+  margin: 8px 0 0; padding: 10px 12px; max-height: 300px; overflow: auto;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  font-family: var(--font-mono); font-size: .72rem; color: var(--ink-dim);
+  background: var(--surface-sunken); border: 1px solid var(--hairline); border-radius: 9px;
+}
+details > summary { cursor: pointer; }
+.state-panel details > summary, .form-error details > summary, .run-log-details > summary {
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim);
+}
+.run-log { margin-top: 8px; font-family: var(--font-mono); font-size: .72rem;
+  color: var(--ink-console); white-space: pre-wrap; overflow-wrap: anywhere; }
+#form-status:empty, #settings-changed:empty { display: none; }
+.form-error {
+  background: var(--surface-card); border: 1px solid var(--danger-ink);
+  border-radius: 12px; padding: 14px 16px;
+}
+.form-error-main { font-size: .9rem; line-height: 1.55; color: var(--ink); overflow-wrap: anywhere; }
+.form-error-main .state-glyph { color: var(--danger-ink); margin-right: .4rem; }
+.form-error-hint { margin: 6px 0 0; font-size: .78rem; color: var(--ink-dim); }
+.settings-banner {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  background: var(--surface-card); border: 1px dashed var(--gold-ink);
+  border-radius: 12px; padding: 12px 14px; font-size: .85rem; line-height: 1.5;
+  color: var(--ink);
+}
 
 /* ---- tabs ---- */
 .tab-nav { display: flex; align-items: center; justify-content: center; padding: 1rem 1.5rem .5rem; }

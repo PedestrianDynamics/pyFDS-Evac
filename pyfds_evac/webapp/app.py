@@ -26,6 +26,7 @@ from fasthtml.common import (
     Details,
     Div,
     EventStream,
+    HtmxResponseHeaders,
     Link,
     NotStr,
     P,
@@ -340,12 +341,39 @@ def _run_panel_idle_body() -> Div:
     )
 
 
-def _run_panel_idle() -> Div:
+def _run_column() -> Div:
+    """Right-hand column: form alerts, settings-changed banner, run panel.
+
+    ``#form-status`` takes a rejected submit's error, so a validation error
+    never replaces the run panel and the results in it. ``#settings-changed``
+    is refreshed from the server whenever the form changes (``/form-state``).
+    The panel shows whatever the server holds, so a reload or a second tab
+    finds a live run, or its results, instead of the standby screen.
+    """
     return Div(
-        _run_panel_idle_body(),
-        id="run-panel",
-        cls="rise",
-        style="animation-delay:.12s",
+        Div(id="form-status", role="alert"),
+        Div(id="settings-changed", role="status"),
+        Div(
+            hx_post="/form-state",
+            hx_include="#run-form",
+            hx_params="not files,upload_name",
+            hx_trigger=(
+                "load, refresh, input from:#run-form delay:500ms, "
+                "change from:#run-form delay:200ms"
+            ),
+            hx_target="#settings-changed",
+            hx_swap="innerHTML",
+            id="form-state",
+            hidden=True,
+        ),
+        Div(
+            _current_panel_body(),
+            id="run-panel",
+            cls="rise",
+            style="animation-delay:.12s",
+        ),
+        cls="run-col",
+        style="display:flex;flex-direction:column;gap:14px;min-width:0",
     )
 
 
@@ -434,9 +462,10 @@ document.addEventListener('click', function (e) {
 });
 """
 
-# Reflect run state on the submit button: disable + relabel while a run is in
-# flight, restore when it finishes (or fails), so a second click can't stomp
-# the active run.
+# Reflect run state on the submit buttons. The lock follows the panel: Run and
+# "Results only" stay disabled while the panel holds a live or cancelling run
+# (marked data-run-live), so a reload, a cancel still unwinding, or a stream
+# torn down by a swap cannot unlock them over a live worker.
 _RUN_BTN_JS = """
 (function () {
   // Both submit buttons post to /run; either one starting a run must lock out
@@ -451,55 +480,39 @@ _RUN_BTN_JS = """
       b.disabled = on;
       var lbl = b.querySelector('.run-btn-label');
       var ico = b.querySelector('.run-btn-icon');
-      if (lbl) lbl.textContent = on ? 'Scenario in progress…' : LABELS[id].idle;
+      if (lbl) lbl.textContent = on ? 'Run in progress…' : LABELS[id].idle;
       if (ico) ico.textContent = on ? '⏳' : LABELS[id].icon;
     });
   }
-  function isRunPath(d) {
-    var p = (d && d.pathInfo && (d.pathInfo.requestPath || d.pathInfo.path)) ||
-            (d && d.requestConfig && d.requestConfig.path) || '';
-    return p === '/run';
+  function live() { return !!document.querySelector('#run-panel [data-run-live]'); }
+  function sync() {
+    setRunning(live());
+    // A run that has just settled may differ from the form edited meanwhile.
+    if (document.querySelector('#run-panel [data-run-done]') && window.htmx) {
+      htmx.trigger('#form-state', 'refresh');
+    }
+  }
+  function path(d) {
+    return (d && d.pathInfo && (d.pathInfo.requestPath || d.pathInfo.path)) ||
+           (d && d.requestConfig && d.requestConfig.path) || '';
   }
   document.body.addEventListener('htmx:beforeRequest', function (e) {
-    if (isRunPath(e.detail)) setRunning(true);
-  });
-  // The /run response either starts a run (its HTML contains an SSE stream)
-  // or is an error/guard message — re-enable when no stream was started.
-  document.body.addEventListener('htmx:afterRequest', function (e) {
-    if (!isRunPath(e.detail)) return;
-    var xhr = e.detail && e.detail.xhr;
-    var txt = (xhr && xhr.responseText) || '';
-    if (txt.indexOf('sse-connect') === -1) setRunning(false);
-  });
-  // Run finished: the progress stream closed (sse-close="done").
-  document.body.addEventListener('htmx:sseClose', function () { setRunning(false); });
-  // Cancelling swaps the whole panel away, which tears down the SSE element
-  // without necessarily firing sseClose -- unlock the buttons explicitly.
-  function isPath(d, want) {
-    var p = (d && d.pathInfo && (d.pathInfo.requestPath || d.pathInfo.path)) ||
-            (d && d.requestConfig && d.requestConfig.path) || '';
-    return p === want;
-  }
-  document.body.addEventListener('htmx:beforeRequest', function (e) {
-    if (!isPath(e.detail, '/cancel')) return;
-    var c = document.getElementById('cancel-btn');
-    if (c) {
-      c.disabled = true;
-      var cl = c.querySelector('.run-btn-label');
-      if (cl) cl.textContent = 'Cancelling…';
+    var p = path(e.detail);
+    if (p === '/run') setRunning(true);
+    if (p === '/cancel') {
+      var c = document.getElementById('cancel-btn');
+      if (c) {
+        c.disabled = true;
+        var cl = c.querySelector('.run-btn-label');
+        if (cl) cl.textContent = 'Cancelling…';
+      }
     }
   });
-  // A cancel still unwinding answers with the progress stream; Run stays
-  // locked until that stream's terminal event (sseClose above).
-  document.body.addEventListener('htmx:afterRequest', function (e) {
-    if (!isPath(e.detail, '/cancel') && !isPath(e.detail, '/clear')) return;
-    var xhr = e.detail && e.detail.xhr;
-    var txt = (xhr && xhr.responseText) || '';
-    if (txt.indexOf('sse-connect') === -1) setRunning(false);
+  ['htmx:afterSettle', 'htmx:afterRequest', 'htmx:responseError',
+   'htmx:sseMessage', 'htmx:sseClose'].forEach(function (ev) {
+    document.body.addEventListener(ev, function () { setTimeout(sync, 0); });
   });
-  document.body.addEventListener('htmx:responseError', function (e) {
-    if (isRunPath(e.detail)) setRunning(false);
-  });
+  sync();
 })();
 """
 
@@ -614,7 +627,11 @@ function drawIncapDist() {
 }
 
 function setTenabilityMode(mode) {
-  document.getElementById('incapacitation_mode').value = mode;
+  var input = document.getElementById('incapacitation_mode');
+  var was = input.value;
+  input.value = mode;
+  // A script-set value fires no event; the settings-changed check needs one.
+  if (was !== mode) input.dispatchEvent(new Event('change', {bubbles: true}));
   document.getElementById('btn-prob').classList.toggle('active', mode === 'probabilistic');
   document.getElementById('btn-det').classList.toggle('active', mode === 'deterministic');
   var row  = document.getElementById('sigma-row');
@@ -704,7 +721,7 @@ _UPLOAD_JS = """
 def index():
     grid = Div(
         _sidebar(),
-        _run_panel_idle(),
+        _run_column(),
         style="display:grid;grid-template-columns:340px 1fr;gap:20px;max-width:1480px;margin:0 auto;padding:24px 26px 60px",
     )
     return (
@@ -1015,37 +1032,76 @@ def _resolve_form(form: dict, stamp: str | None = None):
     return scenario, opts
 
 
+def _field_label(message: str) -> str:
+    """Name the form field in an API message that starts with its dest."""
+    dest, sep, rest = message.partition(": ")
+    if sep and re.fullmatch(r"[a-z][a-z0-9_]*", dest):
+        return f"{dest.replace('_', ' ').capitalize()}: {rest}"
+    return message
+
+
+def _form_error(exc: Exception | str):
+    """A rejected submit, for the alert above the run panel.
+
+    It goes to ``#form-status`` and leaves ``#run-panel`` untouched, so the
+    results shown there survive; the form keeps the values that were entered.
+    The API's message is the main line; the exception type sits apart.
+    """
+    if isinstance(exc, str):
+        main, details = exc, None
+    else:
+        main = _field_label(str(exc)) or type(exc).__name__
+        details = f"{type(exc).__name__}: {exc}"
+    body = Div(
+        Div(
+            Span("\u26a0", aria_hidden="true", cls="state-glyph"),
+            B("The run was not started. "),
+            Span(main),
+            cls="form-error-main",
+        ),
+        P(
+            "Your settings are kept; correct them and run again. "
+            "Results already shown are unchanged.",
+            cls="form-error-hint",
+        ),
+        *(
+            [Details(Summary("Technical details"), Pre(details, cls="tech-pre"))]
+            if details
+            else []
+        ),
+        cls="form-error",
+    )
+    return body, HtmxResponseHeaders(retarget="#form-status", reswap="innerHTML")
+
+
+def _clear_alerts():
+    """Out-of-band blanks for the form alert and the settings banner."""
+    return (
+        Div(id="form-status", role="alert", hx_swap_oob="true"),
+        Div(id="settings-changed", role="status", hx_swap_oob="true"),
+    )
+
+
 @rt("/run")
 async def post(request: Request):
     form = dict(await request.form())
     scenario_name = form.get("scenario")
     if not scenario_name:
-        return Div(
-            "Select a scenario first.",
-            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
-        )
+        return _form_error("Select a scenario first.")
 
     # Guard against launching a second run over a live one. Rather than
     # crashing the active run (manager.start would raise), reconnect the
     # caller to the run already in progress so the panel stays intact.
     if manager.running:
-        return _running_stream_view()
+        return _running_stream_view(cancelling=manager.status == "cancelling")
 
     # One start time names the output folder and the snapshot, so the two
     # agree and the exported script can be named after it.
     started_at = utc_now()
     try:
         scenario, opts = _resolve_form(form, stamp=run_stamp(started_at))
-    except _FdsDirError as exc:
-        return Div(
-            str(exc),
-            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
-        )
     except Exception as exc:
-        return Div(
-            f"{type(exc).__name__}: {exc}",
-            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
-        )
+        return _form_error(exc)
 
     try:
         spec = make_run_spec(
@@ -1075,12 +1131,9 @@ async def post(request: Request):
             spec=spec,
         )
     except Exception as exc:
-        return Div(
-            f"{type(exc).__name__}: {exc}",
-            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
-        )
+        return _form_error(exc)
 
-    return _running_stream_view()
+    return _running_stream_view(), *_clear_alerts()
 
 
 # ── equivalent Python ─────────────────────────────────────────────────────────
@@ -1201,13 +1254,13 @@ _PYEXPORT_JS = """
 """
 
 
-def _run_code_button():
+def _run_code_button(label: str = "Show Python for this run"):
     """ "Show Python for this run", or nothing when no run is recorded."""
     spec = manager.spec
     if spec is None:
         return ""
     return Button(
-        "Show Python for this run",
+        label,
         type="button",
         hx_post=f"/export/run?run={spec.run_id}",
         hx_include="#run-form",
@@ -1354,16 +1407,29 @@ def _script_inputs(opts) -> dict:
     }
 
 
-def _form_changed_note(form: dict, spec) -> str | None:
-    """Say so when the current form no longer resolves to the run's options."""
+def _form_vs_run(form: dict, spec) -> tuple[bool, Exception | None]:
+    """``(changed, error)``: does the form still resolve to the run's options?
+
+    Output paths are left out of the comparison (see ``_script_inputs``), so
+    a derived folder, whose name carries the time it is resolved, is not a
+    change. A form that no longer resolves counts as changed.
+    """
     try:
         _scenario, opts = _resolve_form(form)
-    except Exception:
+    except Exception as exc:
+        return True, exc
+    return _script_inputs(vars(opts)) != _script_inputs(spec.opts), None
+
+
+def _form_changed_note(form: dict, spec) -> str | None:
+    """Say so when the current form no longer resolves to the run's options."""
+    changed, error = _form_vs_run(form, spec)
+    if error is not None:
         return (
             "The form has changed since this run and does not currently "
             "resolve. This code reproduces the run, not the current form."
         )
-    if _script_inputs(vars(opts)) == _script_inputs(spec.opts):
+    if not changed:
         return None
     return (
         "The form has changed since this run. This code reproduces the run, "
@@ -1431,66 +1497,249 @@ async def export_run(request: Request, run: int | None = None):
 
 @rt("/cancel")
 async def cancel():
-    """Stop an in-flight run and hand the panel back in its standby state.
+    """Stop an in-flight run; on a run that has ended, change nothing.
 
     Cancellation is cooperative (the worker unwinds on its next progress
-    tick or between phases), so wait briefly for the worker to end before
-    resetting. The wait is bounded so a slow phase (FDS slice parsing, output
-    writing) can't hang the request. If the worker is still unwinding when it
-    expires, the panel stays on the progress stream in a "cancelling" state
-    and Run stays disabled; the stream's terminal ``done`` event settles it
-    once the worker has ended. A cancelled run keeps its snapshot until
-    Clear, so "Show Python for this run" can still offer its configuration.
+    tick or between phases), so wait briefly for the worker to end. The wait
+    is bounded so a slow phase (FDS slice parsing, output writing) can't hang
+    the request. If the worker is still unwinding when it expires, the panel
+    stays on the progress stream in a "cancelling" state and Run stays
+    disabled; the stream's terminal ``done`` event settles it once the
+    worker has ended. A cancelled run keeps its snapshot until Clear, so its
+    configuration can still be shown as code.
+
+    A Cancel that arrives after the run finished (a stale button, a second
+    tab) answers with the finished run's panel: it never discards results.
     """
-    manager.cancel()
+    if not manager.cancel() and not manager.running:
+        return _current_panel_body()
     if not await asyncio.to_thread(manager.join, _CANCEL_WAIT_S):
         return _running_stream_view(cancelling=True)
-    # Keep the cancelled run's snapshot so its configuration can still be
-    # shown as code; Clear returns the panel to standby.
-    return Div(_cancelled_view(), style=_PANEL)
+    return _current_panel_body()
 
 
 @rt("/clear")
 async def clear():
-    """Discard a finished run's results and return to the standby panel."""
+    """Drop a finished run from the view and return to the standby panel.
+
+    Only the in-app view and the run's snapshot go; the files the run wrote
+    stay on disk.
+    """
     # A Clear left over from an earlier run must not hand back an enabled Run
     # button over a live worker.
     if manager.running:
         return _running_stream_view(cancelling=manager.status == "cancelling")
     manager.reset()
-    return _run_panel_idle_body()
+    return _run_panel_idle_body(), *_clear_alerts()
 
 
-def _cancelled_view(message: str = "Run cancelled.", show_code: bool = True) -> Div:
-    """Terminal message for a cancelled run, with a way back to standby.
+@rt("/panel")
+def panel():
+    """The run panel for the server's current state (see ``_run_column``)."""
+    return _current_panel_body()
 
-    It replaces only ``#run-status``, so the stop control beside it stays;
-    Clear returns the whole panel to standby. ``show_code`` offers the
-    cancelled run's configuration as code while its snapshot is kept.
+
+@rt("/form-state")
+async def form_state(request: Request):
+    """Banner saying the form no longer matches the results shown, or nothing.
+
+    Evaluated on the server with the same resolution as /run and the Python
+    export, so "changed" means the run would be configured differently.
     """
+    form = dict(await request.form())
+    with manager.snapshot():
+        spec, status = manager.spec, manager.status
+    if status != "done" or spec is None:
+        return ""
+    changed, error = _form_vs_run(form, spec)
+    tag = Span(
+        *(["Previous settings"] if changed else []),
+        id="results-stale-tag",
+        cls="state-tag" if changed else "",
+        hx_swap_oob="true",
+    )
+    if not changed:
+        return "", tag
+    if error is not None:
+        text = (
+            f"Settings changed since run #{spec.run_id} and currently cannot be "
+            f"run: {_field_label(str(error)) or type(error).__name__}"
+        )
+    else:
+        text = (
+            f"Settings changed since run #{spec.run_id}. The results below show "
+            "that run's settings, not the form. Run again to get results for "
+            "the current settings."
+        )
+    banner = Div(
+        Span(Span("✎", aria_hidden="true"), " Changed", cls="state-tag is-changed"),
+        Span(text),
+        cls="settings-banner",
+    )
+    return banner, tag
+
+
+_BTN_QUIET = (
+    "padding:7px 13px;border-radius:9px;cursor:pointer;"
+    f"{_MONO};font-size:11px;"
+    "background:transparent;color:var(--ink-dim);"
+    "border:1px solid var(--hairline)"
+)
+
+_DOCS_CASE_REQUIREMENTS = (
+    "https://pedestriandynamics.org/pyFDS-Evac/docs/fds-case-requirements/"
+)
+
+
+def _run_number() -> int:
     spec = manager.spec
-    cancelled = show_code and spec is not None and spec.status == "cancelled"
+    return spec.run_id if spec is not None else manager.run_id
+
+
+def _run_title() -> str:
+    """``run #N · scenario · start time`` of the run the manager holds."""
+    spec = manager.spec
+    parts = [f"run #{_run_number()}", manager.scenario_name or "scenario"]
+    if spec is not None:
+        parts.append(spec.started_at)
+    return " · ".join(parts)
+
+
+def _clear_button(confirm: bool) -> Button:
+    """Clear, confirmed first when it would drop results from the view."""
+    extra = (
+        {
+            "hx_confirm": (
+                f"Clear the results of run #{_run_number()} from this view? "
+                "The files on disk are kept."
+            )
+        }
+        if confirm
+        else {}
+    )
+    return Button(
+        "Clear results" if confirm else "Clear",
+        type="button",
+        hx_post="/clear",
+        hx_target="#run-panel",
+        hx_swap="innerHTML show:top",
+        style=_BTN_QUIET,
+        **extra,
+    )
+
+
+def _state_head(glyph: str, word: str, *actions, tone: str = "") -> Div:
+    """Header of a settled run: state in words, run id, and its actions.
+
+    The glyph is decorative; the state word carries the meaning, so colour
+    and glyph are never the only cue.
+    """
     return Div(
-        Span(message, style=f"{_MONO};font-size:12px;{_MUTED}"),
-        _run_code_button() if cancelled else "",
-        Button(
-            "Clear",
-            type="button",
-            hx_post="/clear",
-            hx_target="#run-panel",
-            hx_swap="innerHTML show:top",
-            style=(
-                "padding:7px 13px;border-radius:9px;cursor:pointer;"
-                f"{_MONO};font-size:11px;"
-                "background:transparent;color:var(--ink-dim);"
-                "border:1px solid var(--hairline)"
+        Div(
+            Span(glyph, aria_hidden="true", cls="state-glyph"),
+            Span(word, cls="state-word"),
+            Span(_run_title(), cls="state-run"),
+            cls="state-line",
+        ),
+        Div(*actions, cls="state-actions"),
+        cls=f"state-head {tone}".strip(),
+    )
+
+
+def _run_log() -> Details | str:
+    """The run's console, collapsed, once the run has settled."""
+    lines = manager.log_lines
+    if not lines:
+        return ""
+    return Details(
+        Summary(f"Run log ({len(lines)} lines)"),
+        Pre("\n".join(lines[-300:]), cls="console-box run-log"),
+        cls="run-log-details",
+    )
+
+
+def _cancelled_view() -> Div:
+    """Terminal panel of a cancelled run: nothing to show but its settings."""
+    return Div(
+        _state_head(
+            "■",
+            "Cancelled",
+            _run_code_button("Show configuration of this run"),
+            _clear_button(False),
+            tone="is-cancelled",
+        ),
+        P(
+            f"Run #{_run_number()} was cancelled. No results were produced; "
+            "files it had already written stay on disk.",
+            cls="state-msg",
+        ),
+        style=_PANEL,
+        cls="state-panel",
+    )
+
+
+def _superseded_view(run_id: int) -> Div:
+    """Panel for a stream whose run has given way to a later one."""
+    return Div(
+        Div(
+            Div(
+                Span("↻", aria_hidden="true", cls="state-glyph"),
+                Span("Ended", cls="state-word"),
+                Span(f"run #{run_id}", cls="state-run"),
+                cls="state-line",
             ),
+            Div(
+                Button(
+                    "Show current run",
+                    type="button",
+                    hx_get="/panel",
+                    hx_target="#run-panel",
+                    hx_swap="innerHTML show:top",
+                    style=_BTN_QUIET,
+                ),
+                cls="state-actions",
+            ),
+            cls="state-head",
         ),
-        style=(
-            "display:flex;align-items:center;justify-content:space-between;"
-            "gap:12px;padding:12px;border:1px solid var(--hairline);"
-            "border-radius:9px"
+        P(
+            f"Run #{run_id} has ended and run #{manager.run_id} has started, "
+            "possibly in another window. Its results are no longer held here.",
+            cls="state-msg",
         ),
+        style=_PANEL,
+        cls="state-panel",
+    )
+
+
+def _failed_view() -> Div:
+    """Terminal panel of a failed run: the message first, details apart."""
+    raw = manager.error or "no message"
+    _kind, sep, message = raw.partition(": ")
+    return Div(
+        _state_head(
+            "✕",
+            "Failed",
+            _run_code_button("Show configuration of this run"),
+            _clear_button(False),
+            tone="is-failed",
+        ),
+        P(B("Run failed: "), message if sep else raw, cls="state-msg"),
+        P(
+            "Check the scenario and the FDS dir against the ",
+            A(
+                "FDS case requirements",
+                href=_DOCS_CASE_REQUIREMENTS,
+                target="_blank",
+                rel="noopener",
+            ),
+            ", correct the settings and run again. Your settings are still "
+            "in the form.",
+            cls="state-hint",
+        ),
+        Details(Summary("Technical details"), Pre(raw, cls="tech-pre")),
+        _run_log(),
+        style=_PANEL,
+        cls="state-panel",
     )
 
 
@@ -1498,21 +1747,27 @@ def _running_stream_view(cancelling: bool = False) -> Div:
     """The live run panel: progress card + console, wired to the SSE stream.
 
     ``cancelling`` renders the stop control disabled, for a cancel that is
-    still waiting on the worker.
+    still waiting on the worker. The terminal ``done`` event replaces the
+    whole view, so no stop control or live console outlives the run;
+    ``data-run-live`` keeps Run locked for as long as this view is shown.
     """
     return Div(
         Div(
-            # Only the dynamic half lives in the SSE swap target. Cancel sits
-            # outside it: #run-status is re-rendered on every progress tick,
-            # and a stop control that is destroyed and rebuilt ~once a second
-            # can swallow a click that lands mid-swap.
-            Div(_running_card(None), id="run-status", sse_swap="progress,done"),
+            # Only the dynamic half lives in the progress swap target. Cancel
+            # sits outside it: #run-status is re-rendered on every progress
+            # tick, and a stop control that is destroyed and rebuilt ~once a
+            # second can swallow a click that lands mid-swap.
+            Div(
+                _running_card(None, cancelling),
+                id="run-status",
+                sse_swap="progress",
+            ),
             Div(
                 Button(
                     NotStr(
                         '<span style="font-size:9px">■</span>'
                         '<span class="run-btn-label">'
-                        + ("Cancelling…" if cancelling else "Cancel scenario")
+                        + ("Cancelling…" if cancelling else "Cancel run")
                         + "</span>"
                     ),
                     id="cancel-btn",
@@ -1532,6 +1787,7 @@ def _running_stream_view(cancelling: bool = False) -> Div:
                 style="display:flex;justify-content:flex-end;margin-top:18px",
             ),
             style=_PANEL,
+            data_run_live="1",
         ),
         Div(
             Div(
@@ -1560,6 +1816,7 @@ def _running_stream_view(cancelling: bool = False) -> Div:
             style=_PANEL + ";margin-top:18px",
         ),
         hx_ext="sse",
+        sse_swap="done",
         # Pinned to the current run, so a reconnect or a missed end can't
         # attach this panel to a later run.
         sse_connect=f"/progress?run={manager.run_id}",
@@ -1572,7 +1829,9 @@ def _console_view() -> Pre:
     return Pre(text)
 
 
-def _running_card(ev) -> Div:
+def _running_card(ev, cancelling: bool | None = None) -> Div:
+    if cancelling is None:
+        cancelling = manager.status == "cancelling"
     line = (
         f"evacuated {ev.evacuated}/{ev.total} · sim {ev.sim_time:.1f}s · "
         f"wall {ev.wall_time:.0f}s · {ev.pct}%"
@@ -1588,11 +1847,17 @@ def _running_card(ev) -> Div:
                 ),
                 Div(
                     Div(
-                        f"Running: {manager.scenario_name}",
+                        f"Cancelling: {manager.scenario_name}"
+                        if cancelling
+                        else f"Running: {manager.scenario_name}",
                         style=f"{_GROTESK};font-weight:600;font-size:17px;{_INK}",
                     ),
                     Div(
-                        "coupled FDS × JuPedSim step loop",
+                        f"run #{manager.run_id} · waiting for the current step "
+                        "to finish"
+                        if cancelling
+                        else f"run #{manager.run_id} · coupled FDS × JuPedSim "
+                        "step loop",
                         style=f"{_MONO};font-size:11px;{_MUTED};margin-top:2px",
                     ),
                 ),
@@ -1615,34 +1880,28 @@ def _running_card(ev) -> Div:
 
 
 def _clear_run_bar() -> Div:
-    """Header strip over a finished run, with the way back to standby.
+    """Header over a finished run: which run it is, and its actions.
 
-    Without this a completed run is a dead end: the panel keeps showing the
-    old results and there is no way to dismiss them short of reloading.
+    Results always carry their run id and start time, never the current
+    form's scenario, and say that a new run replaces them in this view.
     """
     return Div(
         Div(
-            f"Results · {manager.scenario_name or 'run'}",
-            style=f"{_MONO};font-size:11px;letter-spacing:.06em;text-transform:uppercase;{_MUTED}",
-        ),
-        Div(
-            _run_code_button(),
-            Button(
-                "Clear results",
-                type="button",
-                hx_post="/clear",
-                hx_target="#run-panel",
-                hx_swap="innerHTML show:top",
-                style=(
-                    "padding:7px 13px;border-radius:9px;cursor:pointer;"
-                    f"{_MONO};font-size:11px;"
-                    "background:transparent;color:var(--ink-dim);"
-                    "border:1px solid var(--hairline)"
-                ),
+            Div(
+                Span("Results", cls="state-word"),
+                Span(_run_title(), cls="state-run"),
+                Span(id="results-stale-tag"),
+                cls="state-line",
             ),
-            style="display:flex;flex-wrap:wrap;gap:8px",
+            Div(_run_code_button(), _clear_button(True), cls="state-actions"),
+            cls="state-head",
         ),
-        style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px",
+        P(
+            "Starting a new run replaces these results in this view; the files "
+            "on disk are kept.",
+            cls="state-hint",
+        ),
+        data_run_done="1",
     )
 
 
@@ -1724,6 +1983,7 @@ def _finished_view() -> Div:
         plot_card(
             "Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"
         ),
+        _run_log(),
         cls="space-y-6",
         style="display:flex;flex-direction:column;gap:18px",
     )
@@ -1855,6 +2115,7 @@ def _results_only_view() -> Div:
             ),
             style=_CARD,
         ),
+        _run_log(),
         style="display:flex;flex-direction:column;gap:18px",
     )
 
@@ -1892,25 +2153,50 @@ async def fed_progress(run: int | None = None):
     return EventStream(gen())
 
 
+def _render_error_view(exc: Exception) -> Div:
+    """The run finished but its results view could not be built."""
+    import traceback
+
+    written = [Div(a, cls="artifact") for a in manager.artifacts]
+    return Div(
+        _state_head(
+            "\u26a0",
+            "Results not displayed",
+            _run_code_button(),
+            _clear_button(False),
+            tone="is-failed",
+        ),
+        P(
+            f"Run #{_run_number()} finished, but its results could not be displayed.",
+            cls="state-msg",
+        ),
+        *(
+            [
+                P("The run wrote these files:", cls="state-hint"),
+                Div(*written),
+            ]
+            if written
+            else []
+        ),
+        Details(
+            Summary("Technical details"),
+            Pre(
+                f"{type(exc).__name__}: {exc}\n\n{traceback.format_exc()}",
+                cls="tech-pre",
+            ),
+        ),
+        _run_log(),
+        style=_PANEL,
+        cls="state-panel",
+    )
+
+
 def _done_view() -> Div:
-    """Finished panel, or the traceback if building it fails."""
+    """Finished panel, or a plain message if building it fails."""
     try:
         return _results_only_view() if manager.results_only else _finished_view()
     except Exception as exc:
-        import traceback
-
-        err = traceback.format_exc()
-        return Div(
-            Div(
-                f"Results error: {type(exc).__name__}: {exc}",
-                style="color:#E01E37;font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:8px",
-            ),
-            Pre(
-                err,
-                style="color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-size:.72rem;white-space:pre-wrap;overflow:auto;max-height:300px",
-            ),
-            style="background:var(--surface-panel);border:1px solid #E01E37;border-radius:12px;padding:16px",
-        )
+        return _render_error_view(exc)
 
 
 def _terminal_view(status: str) -> Div | None:
@@ -1918,20 +2204,24 @@ def _terminal_view(status: str) -> Div | None:
     if status == "done":
         return _done_view()
     if status == "error":
-        return Div(
-            Div(f"Run failed: {manager.error}"),
-            _run_code_button(),
-            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px;"
-            "display:flex;flex-direction:column;align-items:flex-start;gap:10px",
-        )
-    # Cancelled and idle still end with a terminal ``done``: a stream
-    # that just closes is reopened by EventSource, so another tab, or
-    # a cancel that outlived /cancel's wait, would never settle. When
-    # /cancel has already swapped in the standby panel, this stream's
-    # element is gone and the event goes nowhere.
-    if status in ("cancelled", "idle"):
+        return _failed_view()
+    # Cancelled and idle still end with a terminal ``done``: a stream that
+    # just closes is reopened by EventSource, so another tab, or a cancel
+    # that outlived /cancel's wait, would never settle. Idle means the run
+    # was cleared elsewhere.
+    if status == "cancelled":
         return _cancelled_view()
+    if status == "idle":
+        return _run_panel_idle_body()
     return None
+
+
+def _current_panel_body():
+    """Contents of ``#run-panel`` for the state the server holds now."""
+    status = manager.status
+    if status in ("running", "cancelling"):
+        return _running_stream_view(cancelling=status == "cancelling")
+    return _terminal_view(status) or _run_panel_idle_body()
 
 
 def _progress_step(run_id: int, last, last_log: int):
@@ -1944,7 +2234,7 @@ def _progress_step(run_id: int, last, last_log: int):
     if manager.run_id != run_id:
         # This stream's run has ended and another has started; its
         # outcome is gone, so settle the panel instead of following.
-        view = _cancelled_view("Run ended; another run has started.", show_code=False)
+        view = _superseded_view(run_id)
         return [sse_message(view, event="done")], last, last_log, True
     msgs = []
     n = len(manager.log_lines)
