@@ -17,7 +17,9 @@ uv run app.py
 ```
 
 Then open <http://localhost:5001>. The extra installs
-[FastHTML](https://fastht.ml/) and its dependencies.
+[FastHTML](https://fastht.ml/) and its dependencies. On a screen narrower
+than 900 px, such as a phone, the form sits above the results instead of
+beside them.
 
 ## Run a scenario
 
@@ -26,7 +28,7 @@ FDS output: one agent walks a 100 m corridor filled with smoke of about
 K = 1 1/m. The numbered markers in the first screenshot show where each
 control is. Click a screenshot to open it at full size.
 
-[![The start screen. On the left, the Parameters panel with the Show equivalent Python button in its header, the open Core group with the scenario picker set to iso_table21_coupled, the Smoke group, and the Run scenario button at the bottom. On the right, the left edge of the empty results area. Numbered markers: 1 at the scenario picker, 2 at the Smoke group, 3 at Run scenario, 4 at the results area, 5 at Show equivalent Python](/images/web-gui/overview.png "The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area, 5 Show equivalent Python.")](images/web-gui/overview.png)
+[![The start screen. On the left, the Parameters panel with the Show equivalent Python button in its header, the open Core group with the scenario picker set to iso_table21_coupled, the Smoke group with fields labelled with units such as "Constant extinction (1/m)" and "Smoke update interval (s)", and the Run scenario and Results only buttons at the bottom. On the right, the left part of the empty results area. Numbered markers: 1 at the scenario picker, 2 at the Smoke group, 3 at Run scenario, 4 at the results area](/images/web-gui/overview.png "The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area.")](images/web-gui/overview.png)
 
 {{% steps %}}
 
@@ -41,23 +43,41 @@ upload box and click **Add to list**.
 
 Open **Smoke** (2) and enter `assets/iso_table21_coupled/fds` in **FDS dir**,
 or pick the folder with **Browse…**. Leave the other fields at their
-defaults. Every `run.py` option has a field; press **?** next to a field to
-read its help text. The groups and their fields are listed under [The form](#the-form).
+defaults. Every `run.py` option has a field, and labels show the unit where
+the value has one, for example **Smoke slice height (m)**. Press **?** next
+to a field to read its help text. The groups and their fields are listed
+under [The form](#the-form).
 
-[![The Parameters panel with Core collapsed. The Smoke group is open with FDS dir set to assets/iso_table21_coupled/fds, an empty constant extinction field, a smoke update interval of 1.0 and a smoke slice height of 1.6. Below it the FED & Tenability group is open with Disable tenability off and the incapacitation mode set to Deterministic](/images/web-gui/configure.png "The Smoke group with the FDS folder filled in, and the start of the FED & Tenability group.")](images/web-gui/configure.png)
+[![The Parameters panel with Core collapsed. The Smoke group is open with FDS dir set to assets/iso_table21_coupled/fds, an empty "Constant extinction (1/m)" field, "Smoke update interval (s)" set to 1.0 and "Smoke slice height (m)" set to 1.6. Below it the FED & Tenability group is open with the Disable tenability switch off](/images/web-gui/configure.png "The Smoke group with the FDS folder filled in, and the start of the FED & Tenability group.")](images/web-gui/configure.png)
 
 ### Run it
 
 Click **Run scenario** (3). The results area (4) turns into a progress card
-and a console with the model's log. The card shows agents evacuated,
-simulated time, wall-clock time and percent done. **Cancel scenario** stops
-the run at its next step.
+and a console with the model's log. The card names the scenario and the run
+number and shows agents evacuated, simulated time, wall-clock time and
+percent done. **Cancel run** stops the run at its next step.
 
-[![A progress card titled "Running: Haspel" at 25 percent, with a progress bar, the line "evacuated 75/300 · sim 105.3s · wall 48s · 25%" and a Cancel scenario button. Below it, the console lists the model's setup and rerouting log lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario.")](images/web-gui/running.png)
+If a value is invalid, the run does not start. An alert above the results
+area says "The run was not started." with the error, and your settings and
+any results already shown are kept. The field is named in the message when
+the error comes from that field's value, for example `Seed: …`; otherwise
+the message is shown as it is, with the exception type under
+**Technical details**.
+
+[![A progress card titled "Running: Haspel" with the subtitle "run #2 · coupled FDS × JuPedSim step loop", at 25 percent, with a progress bar, the line "evacuated 75/300 · sim 105.3s · wall 44s · 25%" and a Cancel run button. Below it, the console lists the model's setup and rerouting log lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario.")](images/web-gui/running.png)
 
 ### Look at the results
 
-When the run ends, the results replace the progress card. Press play in
+When the run ends, the results replace the progress card. A header names
+the run (**Results**, the run number, scenario and start time) and holds
+**Show Python for this run** and **Clear results**. Below it, the outcome
+is stated in words, "Complete: all agents evacuated" here, followed by
+tiles for the evacuation time, agents evacuated, agents remaining and the
+seed used, and any warnings from the run.
+
+[![The top of the results. A header reads "Results  run #1 · iso_table21_coupled · 2026-09-29T18:10:31+00:00" with the buttons Show Python for this run and Clear results, and the line "Starting a new run replaces these results in this view; the files on disk are kept." Below it, a check mark and "Complete: all agents evacuated", four tiles reading Evacuation time 85.0 s, Evacuated 1 / 1 agents, Remaining 0 agents and Seed used 420, and a Warning box, "1 warning for run #1", saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices](/images/web-gui/results_header.png "The results header, the outcome and the FED warning of the corridor run.")](images/web-gui/results_header.png)
+
+Further down, press play in
 **Trajectories** to replay the run, or drag the time slider. Scroll over the
 plan to zoom and drag to pan; **↺** resets the view. With an FDS folder set,
 the extinction slice is drawn under the agents as a grey smoke layer;
@@ -65,7 +85,7 @@ the extinction slice is drawn under the agents as a grey smoke layer;
 
 [![The Trajectories panel at t = 41 s, zoomed in on the corridor. The corridor is drawn in grey, the FDS smoke layer, with one yellow agent in it. Below the plan: a play button, the time slider, a reset-view button, speed buttons 1×, 2×, 5×, 10× and 50×, a custom speed field, and the smoke toggle set to on](/images/web-gui/replay.png "The trajectory replay with the FDS smoke layer on, zoomed in on the agent.")](images/web-gui/replay.png)
 
-The **Smoke** chart below it plots the mean speed factor and the mean
+The **Smoke** chart below the replay plots the mean speed factor and the mean
 extinction coefficient *K* over time. Other charts, such as Cognitive map
 growth, stay empty for this one-agent corridor.
 
@@ -73,9 +93,9 @@ growth, stay empty for this one-agent corridor.
 
 {{< checkpoint title="The run finished" >}}
 The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
-agent evacuated. A yellow box warns that FED is disabled: this deck writes
-only the soot extinction slice, no CO, CO₂ or O₂, so the warning is expected
-here. The same run from the command line,
+agent evacuated. The **Warning** box says that FED is disabled: this deck
+writes only the soot extinction slice, no CO, CO₂ or O₂, so the warning is
+expected here. The same run from the command line,
 
 ```bash
 uv run python run.py --scenario assets/iso_table21_coupled \
@@ -87,9 +107,9 @@ ends with `Simulation finished in 84.97 s (1/1 evacuated).`
 
 ### Keep the run as a script
 
-Click **Show Python for this run**, which appears in the bar above the
-results once the run ends. The **Show equivalent Python** button (5)
-previews the current form settings. See
+Click **Show Python for this run** in the results header to get this run as
+a standalone Python script. **Show equivalent Python**, in the Parameters
+header, previews the current form settings instead. See
 [Show the run as Python](#show-the-run-as-python).
 
 {{% /steps %}}
@@ -109,7 +129,7 @@ means clothed, ISO 13571 Eq. (9), and a blank `heat_fed_threshold` follows
 | FED & Tenability | `disable_tenability`, `incapacitation_mode`, `susceptibility_sigma`, `enable_fic_speed`, `fic_alpha`, `fic_min_factor`, `fed_threshold`, `o2_threshold_percent`, `enable_heat_fed`, `heat_incapacitation_mode`, `heat_susceptibility_sigma`, `heat_clothing`, `heat_fed_threshold` |
 | Rerouting | `enable_rerouting`, `reroute_interval` |
 | Visibility | `vis_cache`; blank means no cache |
-| Output files | an output folder; the SQLite, the four CSVs and the scenario bundle (`<folder>/bundle`) are written there |
+| Output files | **Output folder**; the SQLite, the four CSVs and the scenario bundle (`<run folder>/bundle`) are written to the run's folder (see [Output folders](#output-folders)) |
 | Other (collapsed) | every remaining option: `clear_air_visibility`, `no_visibility`, `vis_cell_size`, `max_sign_distance`, and the heat options `heat_endpoint`, `heat_fed_method`, `heat_emissivity`, `heat_convective_coefficient`, `heat_skin_temperature`, `heat_radiant_source`, `heat_u_factor`, `heat_regime`, `heat_layer_height`, `heat_view_factor`, `heat_layer_emissivity` |
 
 Four `run.py` options have no field: `--print-summary`, `--export-only`,
@@ -128,13 +148,70 @@ run configured in the browser gets the same options as the equivalent
 `run.py` command. The results can still differ: a second run in the same GUI
 session can differ from a fresh `run.py` run with the same seed
 ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)). Invalid combinations (for example `--vis-cache` with rerouting off)
-are rejected when the form is submitted, with the same message as `run.py`.
+are rejected when the form is submitted, with the same message as `run.py`,
+in the alert above the results area.
 
 One run is active at a time. It runs on a background thread and streams its
-progress to the page. Cancelling stops the run at its next step.
+progress to the page. **Run scenario** and **Results only** stay locked
+while a run is active or cancelling. **Cancel run** stops the run at its
+next step.
+
+### Run states
+
+When a run ends, the panel shows one of these states, each with a header
+that names the run and its own buttons:
+
+| State | Shown when | Buttons |
+|---|---|---|
+| Results | the run finished and its results are displayed | **Show Python for this run**, **Clear results** |
+| Failed | the run raised an error; the message comes first | **Show configuration of this run**, **Clear** |
+| Cancelled | you cancelled the run; no results were produced | **Show configuration of this run**, **Clear** |
+| Results not displayed | the run finished, but its results view could not be built | **Show Python for this run**, **Clear** |
+| Ended | another run started, possibly in another window | **Show current run** |
+
+**Clear results** asks for confirmation first: "Clear the results of run #N
+from this view? The files on disk are kept." **Clear** on a failed or
+cancelled run does not ask. A reload of the page shows the state the server
+holds, so results survive a refresh.
+
+The outcome line comes from whether every agent left, not from whether the
+run raised an error. It reads "Complete: all agents evacuated", "Incomplete:
+time limit reached (*k* of *N* remaining)" when the run stopped at its time
+limit, or "Incomplete (*k* of *N* remaining)" otherwise.
+
+### Settings changed
+
+After a run, editing the form so that it would configure a different run
+shows a banner: "Settings changed since run #N. The results below show that
+run's settings, not the form. Run again to get results for the current
+settings." The results header gets a **Previous settings** tag. If the
+edited form is invalid, the banner says that the settings cannot currently
+be run, and why. The comparison uses the same resolution as a submitted run
+and leaves the output paths out. Restoring the settings removes the banner.
+
+### Output folders
+
+Each run writes into a folder of its own, so no run overwrites another:
+
+- **Output folder blank** (the default): the folder is derived as
+  `<results root>/<scenario>/<mode>/seed<seed>/<start time>`, where *mode* is
+  the incapacitation mode, *seed* the seed the run uses, and *start time* the
+  run's UTC start time, for example `20260929T181031Z`.
+- **Output folder typed:** the run writes into `<typed folder>/<start time>`.
+  While a folder is typed, a note under the box shows the resolved path:
+  "Each run writes into *folder*/&lt;start time&gt;/". A relative folder is
+  taken under the results root.
+
+The results root is the folder in the environment variable
+`PYFDS_EVAC_RESULTS_DIR` when it is set, and otherwise `results/` in the
+repository, whatever folder the server was started from. If a run's folder
+already exists, `-2`, `-3`, … is added to its name.
 
 ## Results
 
+- **Summary**: the outcome in words, tiles for time, evacuated, remaining
+  and seed used, the peak gas and heat FED when the run reported them (with
+  "Incapacitated: not reported by this version"), and the run's warnings.
 - **Charts**: smoke over time and the growth of the cognitive maps. FED is
   shown live during a run.
 - **Trajectory replay**: agents move between the stored trajectory samples,
@@ -146,6 +223,12 @@ progress to the page. Cancelling stops the run at its next step.
   CO, CO₂ or O₂ slices, agents are coloured by exit and the FED/exit
   switch is not shown. The replay colours by gas FED only, not by heat FED
   ([#232](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232)).
+- **FED panel**: under the replay, when the run has a FED model. It shows
+  the highest gas FED of any agent on one continuous scale that runs to 1, or
+  to the run's FED threshold if that is higher. A marker labelled
+  "threshold" (deterministic mode) or "median threshold" (probabilistic
+  mode) sits at the run's `fed_threshold`, read from the run's own settings,
+  not the current form. Without a recorded threshold there is no marker.
 
 The files the run writes are described on [Outputs](outputs.md).
 
@@ -160,40 +243,43 @@ Two buttons open the code:
 
 - **Show equivalent Python**, in the Parameters header: a preview of the
   current form settings. It is not a run.
-- **Show Python for this run**, in the results bar and in the message of a
-  failed or cancelled run: the code of the most recent run, built from the
-  settings frozen when it was submitted.
+- **Show Python for this run**, in the results header: the code of the most
+  recent run, built from the settings frozen when it was submitted. On a
+  failed or cancelled run the same button reads **Show configuration of this
+  run**.
 
 Both open a dialog with **Copy** and **Download .py**.
 
-[![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: finished (30/30 evacuated)", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png "The run-code dialog for run #1 of blind_spawn_discovery.")](images/web-gui/run_code_dialog.png)
+[![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: Complete: all agents evacuated (30/30), evacuation time 55.14 s", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png "The run-code dialog for run #1 of blind_spawn_discovery.")](images/web-gui/run_code_dialog.png)
 
 ### Save a run and run it again
 
 1. Run the `blind_spawn_discovery` scenario with the default settings.
 2. When the run has finished, click **Show Python for this run**. The dialog
    is titled "Code for run #1 · blind_spawn_discovery · *start time*" and
-   reports "Status: finished (30/30 evacuated)".
-3. Click **Download .py**. The file is named
-   `pyfds_evac_blind_spawn_discovery_run1.py`.
+   reports "Status: Complete: all agents evacuated (30/30), evacuation time
+   55.14 s".
+3. Click **Download .py**. The file is named after the scenario, the run
+   number and the run's UTC start time, for example
+   `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z.py`.
 4. Run it with the pyfds-evac version named in its header, installed the same
    way as the GUI, for example the repository's `uv` environment. The `gui`
    extra is not needed. From the folder that holds the script:
 
    ```bash
-   uv run --project /path/to/pyFDS-Evac python pyfds_evac_blind_spawn_discovery_run1.py
+   uv run --project /path/to/pyFDS-Evac python pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z.py
    ```
 
 {{< checkpoint title="Script run completed" >}}
 After the model's own progress and log lines, the script ends with
-(pyfds-evac 0.1.0 at commit `cb236e1`; path shortened):
+(pyfds-evac 0.1.0 at commit `ba4ade3`; path shortened):
 
 ```text
 Simulation finished in 55.14 s (30/30 evacuated).
-Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_output/trajectory.sqlite
+Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite
 ```
 
-The folder `pyfds_evac_blind_spawn_discovery_run1_output`, created in the
+The folder `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output`, created in the
 folder you ran the script from, holds `trajectory.sqlite` and
 `trajectory.manifest.json`.
 {{< /checkpoint >}}
@@ -231,19 +317,24 @@ with a **Details** disclosure, and no code; **Copy** and **Download .py** are
 disabled. The file is named `pyfds_evac_<scenario>_preview.py`.
 
 **Run code.** It is built only from the run's frozen snapshot, never from the
-live form. The status line uses the `run.py` wording: finished (*n*/*N*
-evacuated), stopped after *t* s (*k* remaining), failed, cancelled, or not
-recorded. The file is named `pyfds_evac_<scenario>_run<N>.py`.
+live form. The status line uses the wording of the results view:
+"Complete: all agents evacuated (*n*/*N*), evacuation time *t* s",
+"Incomplete: time limit reached (*k* of *N* remaining), simulated time *t* s",
+"Incomplete (*k* of *N* remaining), simulated time *t* s", failed,
+cancelled, or not recorded. The file is named
+`pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
+time such as `20260929T182009Z`.
 
 - **Failed and cancelled runs** still have code. The dialog is titled
   "Configuration of the failed run #N" or "Configuration of the cancelled
-  run #N". A cancelled run keeps its code until you click **Clear**.
+  run #N"; the button that opens it reads **Show configuration of this
+  run**. The code stays until you click **Clear**.
 - **Only the most recent run has code.** There is none while a run is in
   progress. After **Clear** (or **Clear results** for a finished run) or a
   new run, the old run's code is gone and its button disappears. A button
-  left over in another tab, or in a page you have not refreshed, opens a
-  dialog titled "No recorded run". Run numbers are not unique across GUI
-  sessions ([#319](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/319)).
+  left over in another tab opens a dialog titled "No recorded run". Run
+  numbers restart at 1 with every GUI session, so file and folder names
+  carry the start time as well.
 - **Changed form.** If the current form no longer resolves to the run's
   options, a note says that the code reproduces the run, not the form, and
   suggests Preview. Output paths are left out of this comparison.
@@ -259,7 +350,7 @@ marked.
    "Preview", the scenario name, and the notices shown in the dialog.
 2. **`PATHS`.** `SCENARIO`, `FDS_DIR` and `VIS_CACHE` are absolute paths on
    the machine that ran the GUI. `OUTPUT_DIR` is a new relative folder,
-   `pyfds_evac_<scenario>_run<N>_output` or
+   `pyfds_evac_<scenario>_run<N>_<start time>_output` or
    `pyfds_evac_<scenario>_preview_output`, resolved against the folder the
    script is launched from.
 3. **`OPTIONS`.** Every resolved option, one per line, exactly as the GUI
@@ -277,8 +368,8 @@ marked.
 
 ```python
 # Generated by the pyFDS-Evac GUI.
-# pyfds-evac 0.1.0, commit cb236e14dc607960fe646b091fe30c17f3737660.
-# Run #1, started 2026-09-29T16:03:41+00:00.
+# pyfds-evac 0.1.0, commit ba4ade3041930519187984ba052ca02f0add0485.
+# Run #1, started 2026-09-29T18:20:09+00:00.
 # Scenario: blind_spawn_discovery
 # ... notices ...
 
@@ -295,7 +386,7 @@ SCENARIO = '/.../pyFDS-Evac/assets/blind_spawn_discovery'  # path shortened
 FDS_DIR = None
 VIS_CACHE = None
 # A new folder: the script never overwrites the GUI run's files.
-OUTPUT_DIR = pathlib.Path('pyfds_evac_blind_spawn_discovery_run1_output')
+OUTPUT_DIR = pathlib.Path('pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output')
 
 # Settings: the resolved configuration the GUI passes to build_run_kwargs.
 OPTIONS = {
