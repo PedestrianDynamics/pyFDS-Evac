@@ -403,9 +403,12 @@ def test_field_accepts_intensity_slice_at_the_temperature_height():
 @pytest.mark.parametrize("f", [0.25, 0.5, 1.0])
 @pytest.mark.parametrize("u", [2.0, 10.0, 24.47])
 def test_model_rate_radiant_only(u, f, name):
-    """T_g = T_s: no convection, q = f U, rate = (f U)^1.33 / D."""
+    """T_g = T_s: no convection, q = f U - sigma T_s^4, rate = q^1.33 / D,
+    zero where q <= 0 (U = 2, f = 1/4: 0.5 - 0.511 < 0)."""
+    q = q_u_hand(35.0, u, f=f, h=8.0, t_skin_c=35.0)
+    expected = 1.0 / t_hand_min(q, DOSE[name]) if q > 0.0 else 0.0
     got = _u_rate(35.0, u, f=f, h=8.0, t_skin_c=35.0, endpoint=name)
-    assert got == pytest.approx(1.0 / t_hand_min(f * u, DOSE[name]), rel=1e-9)
+    assert got == pytest.approx(expected, rel=1e-9)
 
 
 @pytest.mark.parametrize(
