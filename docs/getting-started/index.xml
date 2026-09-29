@@ -23,7 +23,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;a href="#before-you-start" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>You need:&lt;/p>
 &lt;ul>
 &lt;li>a clone of the repository;&lt;/li>
-&lt;li>the environment installed with &lt;code>uv sync&lt;/code>;&lt;/li>
+&lt;li>the environment installed with &lt;code>uv sync&lt;/code> (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/">Install&lt;/a>);&lt;/li>
 &lt;li>a shell opened in the repository root.&lt;/li>
 &lt;/ul>
 &lt;p>The complete example is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/quickstart.py" target="_blank" rel="noopener">&lt;code>examples/quickstart.py&lt;/code>&lt;/a>.
@@ -417,6 +417,10 @@ before calling &lt;code>cleanup()&lt;/code> if you want to keep them.&lt;/p>
 &lt;/aside>
 &lt;p>If the smoke run is not slower, check that you passed &lt;code>smoke_speed_model=&lt;/code>.
 Without it, &lt;code>run_scenario&lt;/code> models no smoke.&lt;/p>
+&lt;p>&lt;code>run_scenario&lt;/code> builds only what you pass it. &lt;code>run.py&lt;/code> builds more by default,
+rerouting every second among other things, so the same scenario can behave
+differently from the command line; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#python-api-and-command-line">Python API and command line&lt;/a>.&lt;/p>
 &lt;h2>Next step&lt;span class="hx-absolute -hx-mt-20" id="next-step">&lt;/span>
 &lt;a href="#next-step" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Use real FDS output instead of a prescribed uniform smoke field:&lt;/p>
 &lt;div class="hextra-cards hx-mt-4 hx-gap-4 hx-grid not-prose" style="--hextra-cards-grid-cols: 3;">
@@ -430,6 +434,7 @@ class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hid
 with figures for every step.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>, before you
 point the tool at your own FDS output.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>: every file a run writes and how to read it.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">Smoke-speed model&lt;/a>: the speed laws and their
 parameters.&lt;/li>
@@ -612,8 +617,8 @@ title="Copy code"
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=78.1s wall=0m00s done
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=85.0s wall=0m00s done
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>K sampled: 0.99545 1/m
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>speed factor: 0.919631
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>K sampled: 0.99550 1/m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>speed factor: 0.919626
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>exit time: 78.14 s clear, 84.97 s in smoke
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>manifest: fds_dir=/…/fds-evac/assets/iso_table21_coupled/fds
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fds_version=FDS-6.10.1-0-g12efa16-release&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -629,9 +634,9 @@ title="Copy code"
 &lt;p>The manifest stores &lt;code>fds_dir&lt;/code> as an absolute path; it is shortened here.&lt;/p>
 &lt;p>&lt;code>ExtinctionField.from_fds&lt;/code> reads the &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice
 nearest to &lt;code>slice_height_m&lt;/code> (default 1.6 m). The deck prescribes a soot density
-that gives &lt;em>K&lt;/em> = 1.0 1/m. The slice returns 0.99545 1/m, and the default speed
-law turns it into a speed factor of 0.919631. The ratio of the exit times,
-84.97 / 78.14 = 1.0874, matches 1 / 0.919631 = 1.0874 to four decimals.&lt;/p>
+that gives &lt;em>K&lt;/em> = 1.0 1/m. The slice returns 0.99550 1/m, and the default speed
+law turns it into a speed factor of 0.919626. The ratio of the exit times,
+84.97 / 78.14 = 1.0874, matches 1 / 0.919626 = 1.0874 to four decimals.&lt;/p>
 &lt;p>&lt;code>ExtinctionField.from_fds&lt;/code> remembers the directory it read. The run manifest
 records that directory and reads the FDS version from the &lt;code>FDSVERSION&lt;/code> line of
 its &lt;code>.smv&lt;/code> file. The manifest also records the package versions, the seed, the
@@ -693,7 +698,9 @@ default).&lt;/p>
 &lt;p>&lt;code>TenabilityConfig()&lt;/code> defaults to &lt;code>incapacitation_mode=&amp;quot;deterministic&amp;quot;&lt;/code>, so the
 threshold is exactly &lt;code>fed_threshold = 1.0&lt;/code> for every agent, as in
 &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>. This page
-passes it explicitly. &lt;code>&amp;quot;probabilistic&amp;quot;&lt;/code> (&lt;code>--incapacitation-mode probabilistic&lt;/code>)
+passes it explicitly. Pass a &lt;code>tenability_config&lt;/code> whenever you pass a
+&lt;code>fed_model&lt;/code> to &lt;code>run_scenario&lt;/code>: without one, the dose accumulates but no
+threshold applies, so nobody is incapacitated. &lt;code>&amp;quot;probabilistic&amp;quot;&lt;/code> (&lt;code>--incapacitation-mode probabilistic&lt;/code>)
 draws a log-normal threshold for each agent with median &lt;code>fed_threshold&lt;/code>.&lt;/p>
 &lt;p>The incapacitated occupant stays in the simulation, so the run continues to
 &lt;code>max_simulation_time&lt;/code> and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s. It is not
@@ -726,7 +733,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>The &lt;code>*.pickle&lt;/code> file is a cache that fdsreader writes into the case directory.
 It is skipped so that the copy is read fresh.&lt;/p>
-&lt;p>&lt;strong>If you build the FED field yourself, the missing slice fails loudly:&lt;/strong>&lt;/p>
+&lt;p>&lt;strong>If you build the FED field yourself, the missing slice stops the call:&lt;/strong>&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">try&lt;/span>:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(str(broken))
@@ -742,7 +749,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>FdsFedField.from_fds: IndexError: tuple index out of range&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>FdsFedField.from_fds: IndexError: No slice with quantity &amp;#39;CARBON MONOXIDE VOLUME FRACTION&amp;#39; found in /tmp/tmp42qhswh0/a&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -752,7 +759,8 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>The message does not name the missing slice.&lt;/p>
+&lt;p>The message names the missing quantity and the directory (the temporary path
+differs on your machine).&lt;/p>
 &lt;p>&lt;strong>If you go through &lt;code>build_run_kwargs&lt;/code>, the run continues without FED.&lt;/strong>
 &lt;code>build_run_kwargs&lt;/code> is what &lt;code>run.py&lt;/code> and the web GUI call. It turns their
 options into &lt;code>run_scenario&lt;/code> keywords:&lt;/p>
@@ -787,6 +795,9 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>The example passes &lt;code>smoke_slice_height=2.0&lt;/code> rather than the 1.6 m default of
+&lt;code>run.py&lt;/code>; &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312" target="_blank" rel="noopener">#312&lt;/a>
+tracks aligning it.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 0/1 sim=1150.0s wall=0m05s done
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>finished at 1150 s, 1 agent still in the room&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -806,8 +817,7 @@ computed. In step 3, the same occupant in the same gas was incapacitated at
 &lt;a href="#5-detect-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>Read the warnings.&lt;/strong> &lt;code>build_run_kwargs&lt;/code> logs this to stderr (the temporary
 path differs):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>WARNING:pyfds_evac.core.run_config:FED is disabled for /tmp/tmp3i0w6sml/a: it has no CO slice, and all three of CO, CO2 and O2 are needed. Results will report zero dose and no incapacitation. FDS only writes these species when the &amp;amp;REAC line asks for them (CO needs CO_YIELD); see docs/fds-case-requirements.md.
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>WARNING:pyfds_evac.core.run_config:Heat FED is disabled for /tmp/tmp3i0w6sml/a: it has no TEMPERATURE slice. Results will report zero heat dose and no thermal incapacitation. Add `&amp;amp;SLCF QUANTITY=&amp;#39;TEMPERATURE&amp;#39;` to the FDS deck; see docs/fds-case-requirements.md.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>WARNING:pyfds_evac.core.run_config:FED is disabled for /tmp/tmp42qhswh0/a: it has no CO slice, and all three of CO, CO2 and O2 are needed. Results will report zero dose and no incapacitation. FDS only writes these species when the &amp;amp;REAC line asks for them (CO needs CO_YIELD); see docs/fds-case-requirements.md.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -817,9 +827,12 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>build_run_kwargs&lt;/code> logs the &lt;code>Heat FED is disabled&lt;/code> warning for every case
-without a &lt;code>TEMPERATURE&lt;/code> slice, including the intact case &lt;code>a&lt;/code>. (Step 3 builds
-its models by hand, so it logs neither warning.) The fdsreader &lt;code>csv&lt;/code>
+&lt;p>The warning says &amp;ldquo;zero dose&amp;rdquo;; in fact the result has no FED at all, as the
+next check shows (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137" target="_blank" rel="noopener">#137&lt;/a>).&lt;/p>
+&lt;p>The heat dose is off unless you ask for it, so no heat warning appears here.
+With &lt;code>--enable-heat-fed&lt;/code> (&lt;code>opts.enable_heat_fed=True&lt;/code>) on a case without a
+&lt;code>TEMPERATURE&lt;/code> slice, &lt;code>build_run_kwargs&lt;/code> also logs &lt;code>Heat FED is disabled for …&lt;/code>.
+(Step 3 builds its models by hand, so it logs no warning.) The fdsreader &lt;code>csv&lt;/code>
 messages from step 1 appear in the same stream, so search for &lt;code>FED is disabled&lt;/code>
 rather than for &amp;ldquo;warning&amp;rdquo;.&lt;/p>
 &lt;p>&lt;strong>Check before the run&lt;/strong> that &lt;code>build_run_kwargs&lt;/code> returned a FED model, and
@@ -855,8 +868,8 @@ title="Copy code"
 &lt;code>fed_history&lt;/code> is &lt;code>None&lt;/code> and &lt;code>metrics&lt;/code> has no &lt;code>fed_max&lt;/code> key. It does not report
 FED = 0 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137" target="_blank" rel="noopener">#137&lt;/a>). With &lt;code>run.py&lt;/code>, &lt;code>--output-fed-history&lt;/code> writes no file in this case.&lt;/p>
 &lt;p>&lt;code>fed_history&lt;/code> alone is not a reliable check. &lt;code>run_scenario&lt;/code> fills it whenever
-either FED track runs. A case with a &lt;code>TEMPERATURE&lt;/code> slice but no CO slice runs
-heat FED only: &lt;code>fed_history&lt;/code> then exists, every &lt;code>fed_cumulative&lt;/code> in it is 0.0,
+either FED track runs. A case with a &lt;code>TEMPERATURE&lt;/code> slice but no CO slice, run
+with &lt;code>--enable-heat-fed&lt;/code>, runs heat FED only: &lt;code>fed_history&lt;/code> then exists, every &lt;code>fed_cumulative&lt;/code> in it is 0.0,
 and &lt;code>metrics&lt;/code> has &lt;code>heat_fed_max&lt;/code> but no &lt;code>fed_max&lt;/code>. That zero column looks
 exactly like a case where nobody received a dose. &lt;code>metrics&lt;/code> holds &lt;code>fed_max&lt;/code> only when the gas FED
 model ran, so check &lt;code>fed_max&lt;/code>, and &lt;code>kwargs[&amp;quot;fed_model&amp;quot;]&lt;/code> before the run.&lt;/p>
@@ -871,7 +884,8 @@ fire, with figures for the scenario, the smoke, the run and its results.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>: the slices to
 add to your deck and the full list of failure modes.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS sampling&lt;/a>: how slices are selected and sampled.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>: every file a run writes, column by column.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>: error messages and their fixes.&lt;/li>
 &lt;/ul>
 &lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>A crowd in a real fire</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/</guid><description>
 &lt;p>This page runs a larger case end to end: 150 people try to leave a T-shaped
@@ -1199,7 +1213,8 @@ title="Copy code"
 &lt;/div>
 &lt;p>Run one scenario per Python process. A second run in the same process can
 give a different result
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#reproducibility">Limitations › Reproducibility&lt;/a>).&lt;/p>
 &lt;h2>5. Results&lt;span class="hx-absolute -hx-mt-20" id="5-results">&lt;/span>
 &lt;a href="#5-results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The figures below are drawn from these files by
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/scripts/docs/first_fds_case_figures.py" target="_blank" rel="noopener">&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>&lt;/a>:&lt;/p>
@@ -1353,7 +1368,7 @@ used other defaults for eight mechanisms
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The CLI flags are also fields of the web GUI, and the &lt;code>opts&lt;/code> attributes are
+&lt;p>The CLI flags that change a result are also fields of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a>, and the &lt;code>opts&lt;/code> attributes are
 what &lt;code>build_run_kwargs&lt;/code> reads, so a script that builds its own options sets
 them the same way. The &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md" target="_blank" rel="noopener">changelog&lt;/a>
 lists the same changes.&lt;/p>
@@ -1652,7 +1667,8 @@ and reaction are no longer separate.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Run FDS, then &lt;code>uv run python run.py --scenario &amp;lt;json&amp;gt; --fds-dir &amp;lt;dir&amp;gt; --inspect-fds&lt;/code>
 to list the quantities pyFDS-Evac finds.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Read the warnings of the first run. A missing gas slice switches FED off
-and the run still finishes, reporting FED = 0.&lt;/li>
+and the run still finishes, with no FED in the result: &lt;code>metrics&lt;/code> has no
+&lt;code>fed_max&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Outputs&lt;/a>).&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Read &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a> and the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification status&lt;/a>.&lt;/li>
 &lt;/ul>
@@ -1682,4 +1698,119 @@ in the psychological sense.&lt;/li>
 &lt;/blockquote>&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em> (FDS 6.7.6, Evac 2.6.0). VTT Technical
-Research Centre of Finland.&lt;/p></description></item></channel></rss>
+Research Centre of Finland.&lt;/p></description></item><item><title>Install</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/</guid><description>
+&lt;p>Install pyFDS-Evac, run one scenario to check the install, and know what else
+you need for your own FDS cases.&lt;/p>
+&lt;h2>Requirements&lt;span class="hx-absolute -hx-mt-20" id="requirements">&lt;/span>
+&lt;a href="#requirements" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Needed&lt;/th>
+&lt;th>For&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Python 3.11 or 3.12&lt;/td>
+&lt;td>pyFDS-Evac itself (&lt;code>requires-python = &amp;quot;&amp;gt;=3.11,&amp;lt;3.13&amp;quot;&lt;/code>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener">uv&lt;/a>&lt;/td>
+&lt;td>the environment, the examples and every command on this site&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>git and network access&lt;/td>
+&lt;td>fdsvismap is installed from its git repository, pinned to one commit&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://github.com/firemodels/fds" target="_blank" rel="noopener">FDS&lt;/a> (optional)&lt;/td>
+&lt;td>only to run your own fire; pyFDS-Evac reads the output of a finished FDS run and never starts FDS&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>ffmpeg (optional)&lt;/td>
+&lt;td>only for the MP4 of &lt;code>scripts/animate_cognitive_map.py&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>pyFDS-Evac is not on PyPI yet. The release waits on an upstream fdsvismap
+merge.&lt;/p>
+&lt;h2>Install from the repository&lt;span class="hx-absolute -hx-mt-20" id="install-from-the-repository">&lt;/span>
+&lt;a href="#install-from-the-repository" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The examples and the tracked scenarios live in the repository (&lt;code>examples/&lt;/code>,
+&lt;code>assets/&lt;/code>), so clone it:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd pyFDS-Evac
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv sync&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>For the optional &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a>, add its extra:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv sync --extra gui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Check the install&lt;span class="hx-absolute -hx-mt-20" id="check-the-install">&lt;/span>
+&lt;a href="#check-the-install" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/ISO-table21 --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: Install works">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Install works&lt;/p>
+&lt;div class="docs-checkpoint__body">
+&lt;p>The last line reads:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 78.77 s (1/1 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>One agent walks the ISO 20414 Test 18 corridor in clear air. If you see this
+line, the install works.&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;h2>Library only&lt;span class="hx-absolute -hx-mt-20" id="library-only">&lt;/span>
+&lt;a href="#library-only" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>To use pyFDS-Evac as a library in another project, install the package from
+git:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pip install &lt;span style="color:#e6db74">&amp;#34;pyfds-evac @ git+https://github.com/PedestrianDynamics/pyFDS-Evac.git&amp;#34;&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The package contains &lt;code>pyfds_evac&lt;/code> only. &lt;code>run.py&lt;/code>, &lt;code>examples/&lt;/code>, &lt;code>scripts/&lt;/code> and
+&lt;code>assets/&lt;/code> are not in it.&lt;/p>
+&lt;h2>Next steps&lt;span class="hx-absolute -hx-mt-20" id="next-steps">&lt;/span>
+&lt;a href="#next-steps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>: one run with smoke, and what the numbers mean.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>: if a command on this site fails.&lt;/li>
+&lt;/ul></description></item></channel></rss>

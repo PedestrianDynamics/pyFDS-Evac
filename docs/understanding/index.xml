@@ -47,9 +47,11 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>The sampler takes the nearest stored value on a slice. Extinction and
-temperature come from the horizontal slice nearest a set height, the same for
-every agent; for the gases, see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#what-is-not-modelled">FED model&lt;/a>. The manifest records the package versions, the
+&lt;p>The sampler takes the nearest stored value on a slice. Every quantity —
+extinction, each gas, temperature, and the extinction slice fdsvismap uses
+for sign legibility — is read from the horizontal slice nearest
+&lt;code>--smoke-slice-height&lt;/code> (1.6 m by default), the same height for every agent
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">FDS slice sampling&lt;/a>). The manifest records the package versions, the
 seed, the scenario and the FDS version, so a result can be traced to the code
 and the fire that produced it. The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">walkthrough&lt;/a> runs this
 chain on a tracked case, and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">Your FDS case&lt;/a>
@@ -65,7 +67,8 @@ $$&lt;p>where the speed factor \(f\) falls from 1 in clear air towards a floor i
 dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
 form and with the constants of &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
-&lt;code>fridolf&lt;/code> option, the law of Fridolf et al. (2018) in the sighting distance
+&lt;code>fridolf&lt;/code> option, the law of &lt;a href="https://doi.org/10.1016/j.tust.2019.04.016" target="_blank" rel="noopener">Fridolf et al. (2019, Eq. 7)&lt;/a>
+in the sighting distance
 \(V = C/K\): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
 metre, to an absolute floor of 0.2 m/s. Being additive, its factor depends on
 each agent&amp;rsquo;s \(v_0\). It is available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>). The published laws are on
@@ -86,16 +89,19 @@ v_i = v_{0,i}\; f(K)\; g(\mathrm{FIC})\;
 \mathbb{1}\!\left[\mathrm{FED}_{\mathrm{heat},i} &lt; D_{\mathrm{heat},i}\right].
 $$&lt;p>The brake is \(f(K)\,g(\mathrm{FIC})\). The fractional irritant concentration
 (FIC) sums the irritant gases, each over a reference concentration, and \(g\)
-lowers the speed further as it rises, down to a floor. FIC is a concentration,
+lowers the speed further as it rises, down to a floor. \(g = 1\) unless
+&lt;code>--enable-fic-speed&lt;/code> is given: FDS+Evac has no irritant slowdown, so it is
+off by default. FIC is a concentration,
 not a dose, so \(g\) follows the gas where the agent stands. One quirk: when
 FIC drops to exactly zero the factor is not recomputed, so an agent that walks
 out of a plume into clean air keeps its last slowdown
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>).&lt;/p>
 &lt;p>The stop is the fractional effective dose (FED). The toxic-gas dose follows
-the Purser sum of the FDS+Evac guide, which adds irritants into the dose,
-unlike ISO 13571. Convective heat from an FDS &lt;code>TEMPERATURE&lt;/code> slice accumulates
-in a second dose; without that slice there is no heat dose, and the log says
-so. The two doses are never added. By default every agent stops at FED = 1,
+the Purser sum as FDS+Evac computes it, which adds irritants into the dose,
+unlike ISO 13571. With &lt;code>--enable-heat-fed&lt;/code>, convective heat from an FDS
+&lt;code>TEMPERATURE&lt;/code> slice accumulates in a second dose (ISO 13571:2012 Eq. (9),
+fully clothed, by default). The heat dose is off by default, as FDS+Evac has
+none. The two doses are never added. By default every agent stops at FED = 1,
 as FDS+Evac does; with &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws
 its own threshold, so a population does not stop all at once. When either dose
 crosses its threshold, the agent&amp;rsquo;s speed is set to zero and it stays in place
@@ -481,37 +487,18 @@ gets the FDS+Evac default of 10 s, so this applies to it too, for its first
 per-agent FED history for agents that crossed their threshold and still
 reached an exit.&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
-&lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is a convective term: ISO 13571:2012
-Eq. (9) for fully clothed subjects, Eq. (10) (= SFPE Handbook, 5th ed.,
-Eq. 63.44) with &lt;code>--heat-clothing unclothed&lt;/code>, or Eqs. 63.45-63.47 with
-&lt;code>--heat-endpoint&lt;/code>, computed from the gas temperature of an FDS
-&lt;code>TEMPERATURE&lt;/code> slice. The opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the
-radiation of the gas at the head (Eq. 63.49, spec 016), with an assumed
-emissivity. With &lt;code>--heat-regime layer&lt;/code> it instead takes the head to be in
-clear air below a hot layer and adds the net radiant flux of the layer,
-read from a second &lt;code>TEMPERATURE&lt;/code> slice at one height, with a view factor
-and layer emissivity set by the user; the regime is one choice for the
-whole run
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222" target="_blank" rel="noopener">#222&lt;/a>,
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274" target="_blank" rel="noopener">#274&lt;/a>,
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275" target="_blank" rel="noopener">#275&lt;/a>).
-Radiant flux from hot surfaces or a flame enters only with the opt-in
-&lt;code>--heat-radiant-source integrated-intensity&lt;/code>, as the excess f·(U − 4σT_s⁴) from
-the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice with a user factor f in [0.25, 1] that
-no single value fits for every orientation; with &lt;code>--heat-regime layer&lt;/code> as
-well, U supplies the radiant term and the layer term is not added
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).
-Otherwise an agent near a flame is treated as less exposed than it is
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).
-In every total-flux variant a radiant term below 2.5 kW/m² counts as zero
-(ISO 13571:2012 §8.2, §8.4); convection always counts. ISO gives 2.5 kW/m²
-as an incident flux, but the code compares it with the net or excess
-radiant term, about 18 % lower at the Handbook&amp;rsquo;s 200 °C anchor. At the
-default emissivity 0.5, smoke below about 285 °C therefore gives no radiant
-dose, and the dose rate jumps where the radiant term reaches the threshold
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#where-the-radiant-threshold-acts">Models › Heat&lt;/a>).
-The unsourced values of the heat dose, its FDS reference decks and its
-tests are listed in
+&lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is opt-in (&lt;code>--enable-heat-fed&lt;/code>) and, by
+default, convective only: ISO 13571:2012 Eq. (9) from the gas temperature of
+an FDS &lt;code>TEMPERATURE&lt;/code> slice. Radiation enters only through the opt-in
+&lt;code>--heat-fed-method total-flux&lt;/code>, from the gas at the head, a hot layer above
+it (&lt;code>--heat-regime layer&lt;/code>), or the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice with a
+user factor; radiant flux from hot surfaces or a flame is otherwise missed
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>). In
+every total-flux variant a radiant term below the ISO 2.5 kW/m² threshold
+counts as zero, and the code applies that threshold to a net or excess flux
+rather than an incident one; the consequences, with numbers, are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#where-the-radiant-threshold-acts">Models › Heat › Where the radiant threshold acts&lt;/a>,
+and the unsourced values on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#assumptions-unsourced-values">Models › Heat › Assumptions&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
 opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
@@ -523,7 +510,7 @@ experiencing pain (see Fundamentals › Heat); the FED history&amp;rsquo;s
 &lt;code>incapacitation_cause&lt;/code> column says which dose stopped the agent. Before that
 point, heat has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced
-by extinction and by irritant gases, but not by temperature, so an agent walks
+by extinction and, with &lt;code>--enable-fic-speed&lt;/code>, by irritant gases, but not by temperature, so an agent walks
 at full speed through a hot layer until the heat dose is reached.&lt;/p>
 &lt;p>&lt;strong>Multi-floor buildings and stairs.&lt;/strong> The walkable area is a single 2-D
 polygon, and hazards are sampled from slices at one height
@@ -560,6 +547,12 @@ run holds for the time the agent would arrive there. Knowledge limits which
 routes an agent ranks, and only fully familiar agents know the whole graph;
 it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived.&lt;/p>
+&lt;p>&lt;strong>Route choice.&lt;/strong> Route choice has open limitations: switching can oscillate
+where two routes cross in cost (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a>), routes are priced with smoke the agent
+cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>), one path is priced per exit (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), and the FED along
+the walk to the route&amp;rsquo;s first graph node is not counted (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). The full list, with
+one line per issue, is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#limitations">Models › Routing › Limitations&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Recovery from irritants.&lt;/strong> The irritant slowdown (opt-in with
 &lt;code>--enable-fic-speed&lt;/code>) is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it
@@ -585,6 +578,18 @@ while aggregate outcomes (counts and fractions, such as the number of agents
 incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
 and do not compare single trajectories between runs. See the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification page&lt;/a>.&lt;/p>
+&lt;p>Two known causes make results depend on more than the seed:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Earlier runs in the same process.&lt;/strong> Results can depend on the JuPedSim
+agent ids of earlier runs in the same Python process
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>). For a
+study, run each seed in its own process, for example a shell loop over
+&lt;code>run.py --seed N&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Python&amp;rsquo;s hash seed.&lt;/strong> For discovery agents, the order of tied routes can
+depend on &lt;code>PYTHONHASHSEED&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199" target="_blank" rel="noopener">#199&lt;/a>). Set
+it to a fixed value for bit-identical reruns.&lt;/li>
+&lt;/ul>
 &lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em>. VTT Technical Research Centre of
@@ -1051,7 +1056,7 @@ on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/
 &lt;tr>
 &lt;td>&lt;strong>Sampling geometry&lt;/strong>&lt;/td>
 &lt;td>Local value at agent position on the evacuation mesh, at &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61)&lt;/td>
-&lt;td>Local value at agent position: nearest value position of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS&amp;rsquo;s default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for &lt;code>CELL_CENTERED=T&lt;/code> slices it is the nearest cell centre (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS slice sampling&lt;/a>). Gas FED is read from the slice of each species nearest the same height&lt;/td>
+&lt;td>Local value at agent position: nearest value position of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS&amp;rsquo;s default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for &lt;code>CELL_CENTERED=T&lt;/code> slices it is the nearest cell centre (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">FDS slice sampling&lt;/a>). Gas FED is read from the slice of each species nearest the same height&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1137,7 +1142,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>FED standard&lt;/strong>&lt;/td>
 &lt;td>Purser&amp;rsquo;s FED concept [4]&lt;/td>
-&lt;td>Purser equations as in the FDS+Evac guide, with irritants summed into FED (not the ISO 13571 split into FED and FEC)&lt;/td>
+&lt;td>Purser FED as computed by FDS+Evac (the &lt;code>FED&lt;/code> function of FDS; HCN − (NO+NO₂) with offset 1/220, not the guide&amp;rsquo;s Eq. 14–15 form, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">coded form&lt;/a>), with irritants summed into FED (not the ISO 13571 split into FED and FEC)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Default gases&lt;/strong>&lt;/td>
@@ -1172,7 +1177,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
 &lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
-&lt;td>Convective heat FED (ISO 13571:2012 Eq. (9), fully clothed; Eq. (10) = SFPE Handbook Eq. 63.44 with &lt;code>--heat-clothing unclothed&lt;/code>) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]; in all three a radiant term below 2.5 kW/m² counts as zero (ISO 13571:2012 §8.2, §8.4), convection at every level&lt;/td>
+&lt;td>Opt-in (&lt;code>--enable-heat-fed&lt;/code>); off by default, as in FDS+Evac. Convective heat FED (ISO 13571:2012 Eq. (9), fully clothed; Eq. (10) = SFPE Handbook Eq. 63.44 with &lt;code>--heat-clothing unclothed&lt;/code>) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]; in all three a radiant term below 2.5 kW/m² counts as zero (ISO 13571:2012 §8.2, §8.4), convection at every level&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1200,7 +1205,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Visibility check&lt;/strong>&lt;/td>
 &lt;td>Bee-line visibility from agent to exit; checks if smoke along the line exceeds a user-defined threshold ([1] §3.5 p32, §3.6 p36)&lt;/td>
-&lt;td>Sign legibility on a precomputed visibility grid (smoke-aware fdsvismap with &lt;code>--fds-dir&lt;/code> and &lt;code>--vis-cache&lt;/code>, clear air otherwise); it decides which exits enter the agent&amp;rsquo;s cognitive map, not whether a route is admitted. Route cost separately uses the mean of K along the walked edge polylines; Börger et al. (2024) [2] average K along the line of sight to a sign, and applying the average to a walked path is a pyFDS-Evac extension&lt;/td>
+&lt;td>Sign legibility on a precomputed visibility grid, built when the deck has discovery agents or when &lt;code>--vis-cache&lt;/code> or &lt;code>--clear-air-visibility&lt;/code> is given; smoke-aware fdsvismap from the FDS extinction slice nearest &lt;code>--smoke-slice-height&lt;/code> when &lt;code>--fds-dir&lt;/code> has one, clear air otherwise; &lt;code>--no-visibility&lt;/code> turns it off; it decides which exits enter the agent&amp;rsquo;s cognitive map, not whether a route is admitted. Route cost separately uses the mean of K along the walked edge polylines; Börger et al. (2024) [2] average K along the line of sight to a sign, and applying the average to a walked path is a pyFDS-Evac extension&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Temporal resolution&lt;/strong>&lt;/td>

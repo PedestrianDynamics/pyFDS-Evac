@@ -24,7 +24,7 @@ title="Copy code"
 &lt;p>For the default species (soot), FDS records the extinction-coefficient
 slice internally as &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code>, and that is the exact
 quantity name &lt;code>load_slice_sampler&lt;/code> looks up
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">fds-sampling.md&lt;/a>).&lt;/p>
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">fds-sampling.md&lt;/a>).&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -48,6 +48,11 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;td>TEMPERATURE&lt;/td>
 &lt;td>heat FED (ISO 13571:2012 Eq. (9) or (10)), only with &lt;code>--enable-heat-fed&lt;/code>&lt;/td>
 &lt;td>&lt;strong>heat FED is switched off and the run continues&lt;/strong> (see below)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>TEMPERATURE at &lt;code>--heat-layer-height&lt;/code>&lt;/td>
+&lt;td>the hot-layer temperature, only with &lt;code>--heat-regime layer&lt;/code>&lt;/td>
+&lt;td>the run stops&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>INTEGRATED INTENSITY&lt;/td>
@@ -92,11 +97,15 @@ your material&amp;rsquo;s data rather than copying these.&lt;/p>
 &lt;p>&lt;code>TEMPERATURE&lt;/code> is the one exception: it is a core solved gas-phase variable in
 every FDS run, not a species yield, so it needs no &lt;code>&amp;amp;REAC&lt;/code> setup at all — the
 &lt;code>&amp;amp;SLCF&lt;/code> line above is sufficient on its own.&lt;/p>
-&lt;h2>Two silent failure modes&lt;span class="hx-absolute -hx-mt-20" id="two-silent-failure-modes">&lt;/span>
-&lt;a href="#two-silent-failure-modes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>FED disabled.&lt;/strong> If CO, CO2 or O2 is missing, pyFDS-Evac carries on with
-smoke-speed only and every FED column reads zero. A zero-dose result looks
-exactly like a never-computed one. A warning is logged when this happens, and
-it is the only signal you get:&lt;/p>
+&lt;h2>Silent failure modes&lt;span class="hx-absolute -hx-mt-20" id="silent-failure-modes">&lt;/span>
+&lt;a href="#silent-failure-modes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>FED disabled.&lt;/strong> If CO, CO2 or O2 is missing, pyFDS-Evac carries on with
+smoke speed only. If the heat FED is off too, the result has no FED at all:
+&lt;code>fed_history&lt;/code> is &lt;code>None&lt;/code>, &lt;code>metrics&lt;/code> has no &lt;code>fed_max&lt;/code>, and
+&lt;code>--output-fed-history&lt;/code> writes no file. If the heat FED runs but the gas FED
+does not, the FED history exists and its &lt;code>fed_cumulative&lt;/code> column is all
+zero, which looks exactly like a survivable fire. Check &lt;code>metrics[&amp;quot;fed_max&amp;quot;]&lt;/code>,
+or the warning, which is logged every time
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137" target="_blank" rel="noopener">#137&lt;/a>):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>FED is disabled for &amp;lt;dir&amp;gt;: it has no CO slice, and all three of CO, CO2 and
 O2 are needed. ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -111,7 +120,8 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;strong>Heat FED disabled.&lt;/strong> The heat FED track is off unless &lt;code>--enable-heat-fed&lt;/code>
 is given. With it, the same applies as for the gases: if there is no
-&lt;code>TEMPERATURE&lt;/code> slice, heat FED is off, and every heat FED column reads zero:&lt;/p>
+&lt;code>TEMPERATURE&lt;/code> slice, heat FED is off, &lt;code>metrics&lt;/code> has no &lt;code>heat_fed_max&lt;/code>, and
+any heat FED column in the history reads zero:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>Heat FED is disabled for &amp;lt;dir&amp;gt;: it has no TEMPERATURE slice. ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -127,7 +137,11 @@ title="Copy code"
 preference, not a filter: a case with one slice of a quantity uses it whatever
 its height, and a mismatch never fails the run. A case you inherit often
 carries a single slice at whatever height its author chose, so you can end up
-sampling floor-level CO for standing agents. A warning fires past 0.5 m:&lt;/p>
+sampling floor-level CO for standing agents. A warning fires only past 0.5 m.
+The common case, a request of 1.6 m on a deck with a single slice at 2.0 m, is
+0.4 m away and gives no warning
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165" target="_blank" rel="noopener">#165&lt;/a>). Beyond
+0.5 m you see:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>Requested a &amp;#39;SOOT EXTINCTION COEFFICIENT&amp;#39; slice at z=0.50 m but the nearest
 available in &amp;lt;dir&amp;gt; is at z=2.00 m ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -140,7 +154,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>Do not ignore either warning. Nothing else will tell you.&lt;/p>
+&lt;p>Do not ignore these warnings. Nothing else will tell you.&lt;/p>
 &lt;h2>Failure modes&lt;span class="hx-absolute -hx-mt-20" id="failure-modes">&lt;/span>
 &lt;a href="#failure-modes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -156,7 +170,7 @@ title="Copy code"
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>IndexError: No slice with quantity '...' found in &amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
-&lt;td>The deck never declared that &lt;code>&amp;amp;SLCF&lt;/code>, or the species was never tracked.&lt;/td>
+&lt;td>A direct library call on a case without that slice: the deck never declared that &lt;code>&amp;amp;SLCF&lt;/code>, or the species was never tracked.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Warning: FED is disabled for &lt;code>&amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
@@ -179,11 +193,15 @@ title="Copy code"
 &lt;td>Your case has no slice near the height you asked for.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
-&lt;/table></description></item><item><title>Usage: running simulations and producing plots</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</guid><description>
+&lt;/table>
+&lt;p>Errors from the command line itself (wrong &lt;code>--fds-dir&lt;/code>, conflicting flags)
+are listed on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>.&lt;/p></description></item><item><title>Usage: running simulations and producing plots</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</guid><description>
 &lt;p>This page catalogues every user-facing script in the repository: how to run
-an evacuation simulation, what artefacts it writes, and which plotting
-script consumes each artefact. All commands assume the project venv
-(&lt;code>uv run ...&lt;/code>).&lt;/p>
+an evacuation simulation, every &lt;code>run.py&lt;/code> flag with its default, and which
+plotting script consumes each artefact. All commands assume the project venv
+(&lt;code>uv run ...&lt;/code>) and run from the repository root. What each output file
+contains is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>; error messages and their fixes are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>.&lt;/p>
 &lt;h2>Running a simulation — &lt;code>run.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="running-a-simulation--runpy">&lt;/span>
 &lt;a href="#running-a-simulation--runpy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>run.py&lt;/code> is the single entry point for an evacuation run. It loads a
 JSON-first JuPedSim scenario, optionally couples it to an FDS case for
@@ -215,7 +233,7 @@ title="Copy code"
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--seed N&lt;/code>&lt;/td>
-&lt;td>Override scenario seed.&lt;/td>
+&lt;td>Override the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code> (42 when the scenario sets none).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--print-summary&lt;/code>&lt;/td>
@@ -223,7 +241,7 @@ title="Copy code"
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-sqlite PATH&lt;/code>&lt;/td>
-&lt;td>Copy the JuPedSim trajectory SQLite here. When FED is computed, also writes an optional &lt;code>agent_scalars(frame, id, fed, heat_fed, speed)&lt;/code> side table (base JuPedSim schema untouched) so &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a> can colour agents by FED or speed.&lt;/td>
+&lt;td>Copy the JuPedSim trajectory SQLite here, with the run manifest beside it as &lt;code>&amp;lt;stem&amp;gt;.manifest.json&lt;/code>. When FED is computed, also writes an optional &lt;code>agent_scalars(frame, id, fed, heat_fed, speed)&lt;/code> side table (base JuPedSim schema untouched) so &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a> can colour agents by FED or speed.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--cleanup&lt;/code>&lt;/td>
@@ -239,46 +257,56 @@ title="Copy code"
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;h3>FDS coupling (smoke / FED / visibility)&lt;span class="hx-absolute -hx-mt-20" id="fds-coupling-smoke--fed--visibility">&lt;/span>
-&lt;a href="#fds-coupling-smoke--fed--visibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Your FDS case has to dump specific slices before any of this works. See
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">fds-case-requirements.md&lt;/a> for the deck lines to add
-and two failure modes (FED silently disabled, wrong slice height) that stay
-silent unless you check the warning log.&lt;/p>
+&lt;h3>FDS coupling (smoke, FED, visibility)&lt;span class="hx-absolute -hx-mt-20" id="fds-coupling-smoke-fed-visibility">&lt;/span>
+&lt;a href="#fds-coupling-smoke-fed-visibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>--fds-dir&lt;/code> must point at the output of a finished FDS run: the directory that
+holds the &lt;code>.smv&lt;/code> file and the slice files. A directory with only the &lt;code>.fds&lt;/code>
+deck stops the run with &lt;code>OSError: No simulations were found in the directory&lt;/code>.
+Your deck has to write specific slices; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a> for the lines to
+add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
 &lt;th>Flag&lt;/th>
+&lt;th>Default&lt;/th>
 &lt;th>Purpose&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>--fds-dir DIR&lt;/code>&lt;/td>
-&lt;td>FDS result directory driving smoke-speed and FED.&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>FDS output directory. Drives smoke speed, gas FED, heat FED (with &lt;code>--enable-heat-fed&lt;/code>) and smoke-aware sign legibility.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--constant-extinction K&lt;/code>&lt;/td>
-&lt;td>Use a constant &lt;code>K&lt;/code> [1/m] instead of FDS.&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Use a constant &lt;code>K&lt;/code> [1/m] for walking speed instead of the FDS extinction slice. Speed only: FED, heat FED and sign legibility still read &lt;code>--fds-dir&lt;/code> when it is given.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--smoke-update-interval S&lt;/code>&lt;/td>
-&lt;td>Seconds between smoke-speed refreshes.&lt;/td>
+&lt;td>1.0 s&lt;/td>
+&lt;td>Seconds between smoke-speed updates. The same interval is the integration step of the gas FED and heat FED, and the row spacing of the smoke and FED histories.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--smoke-slice-height M&lt;/code>&lt;/td>
-&lt;td>FDS slice height (m) for smoke and heat sampling (default 1.6, &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default).&lt;/td>
+&lt;td>1.6 m&lt;/td>
+&lt;td>Height of the horizontal slices that are read (&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.5 m away. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">FDS slice sampling&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
-&lt;td>Write &lt;code>(t, agent, K, v, factor)&lt;/code> CSV.&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Write the smoke history; columns on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#smoke-history">Outputs&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-fed-history CSV&lt;/code>&lt;/td>
-&lt;td>Write per-agent per-sample FED+species CSV.&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Write the FED history; columns on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#fed-history">Outputs&lt;/a>. Not written when neither FED track runs.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--inspect-fds&lt;/code>&lt;/td>
-&lt;td>Inspect FDS quantities (like &lt;code>scripts/inspect_fds.py&lt;/code>) and exit.&lt;/td>
+&lt;td>off&lt;/td>
+&lt;td>List the FDS quantities of &lt;code>--fds-dir&lt;/code> as JSON and exit. Needs &lt;code>--fds-dir&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -287,45 +315,55 @@ silent unless you check the warning log.&lt;/p>
 &lt;thead>
 &lt;tr>
 &lt;th>Flag&lt;/th>
+&lt;th>Default&lt;/th>
 &lt;th>Purpose&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>--enable-rerouting&lt;/code> / &lt;code>--no-enable-rerouting&lt;/code>&lt;/td>
-&lt;td>Let agents re-evaluate exits during the run (on by default).&lt;/td>
+&lt;td>on&lt;/td>
+&lt;td>Let agents re-evaluate exits during the run.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--reroute-interval S&lt;/code>&lt;/td>
-&lt;td>Seconds between per-agent reevaluations (default 1).&lt;/td>
+&lt;td>1.0 s&lt;/td>
+&lt;td>Seconds between per-agent reevaluations. With a smoke-aware visibility model it is also the time step at which sign legibility is computed.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-route-history CSV&lt;/code>&lt;/td>
-&lt;td>Write route switches.&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Write route switches; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#route-history">Outputs&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-route-cost-history CSV&lt;/code>&lt;/td>
-&lt;td>Ranked route cost snapshots.&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Write ranked route cost snapshots; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#route-cost-history">Outputs&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--vis-cache NPZ&lt;/code>&lt;/td>
-&lt;td>Path to a vismap &lt;code>.npz&lt;/code> cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With &lt;code>--fds-dir&lt;/code> it caches the smoke-aware vismap; without one, the clear-air grid.&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Path to a vismap &lt;code>.npz&lt;/code> cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With &lt;code>--fds-dir&lt;/code> that has an extinction slice it caches the smoke-aware vismap; otherwise the clear-air grid.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--clear-air-visibility&lt;/code>&lt;/td>
+&lt;td>off&lt;/td>
 &lt;td>Force sight gating on a deck with no fire. Conflicts with &lt;code>--fds-dir&lt;/code> (a deck with a fire has smoke to decide sight) and with &lt;code>--no-visibility&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--no-visibility&lt;/code>&lt;/td>
+&lt;td>off&lt;/td>
 &lt;td>Turn sight gating off entirely; agents then learn each node&amp;rsquo;s neighbours by contact. Not a fire scenario.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--vis-cell-size M&lt;/code>&lt;/td>
-&lt;td>Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight.&lt;/td>
+&lt;td>0.25 m&lt;/td>
+&lt;td>Resolution of the clear-air visibility grid. Keep it below the thinnest wall that must block sight.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--max-sign-distance M&lt;/code>&lt;/td>
-&lt;td>Farthest distance from which a sign can be read, also in clear air (default 30 m). A sign&amp;rsquo;s own &lt;code>&amp;quot;max_distance&amp;quot;&lt;/code> overrides it.&lt;/td>
+&lt;td>30 m&lt;/td>
+&lt;td>Farthest distance from which a sign can be read, also in clear air. A sign&amp;rsquo;s own &lt;code>&amp;quot;max_distance&amp;quot;&lt;/code> overrides it.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -337,56 +375,258 @@ no visibility model at all unless you pass &lt;code>--vis-cache&lt;/code> or
 &lt;code>--clear-air-visibility&lt;/code>. A deck with discovery agents builds one either way,
 because they need it to learn the graph. See
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a>.&lt;/p>
-&lt;h3>Tenability (FIC slowdown + FED incapacitation)&lt;span class="hx-absolute -hx-mt-20" id="tenability-fic-slowdown--fed-incapacitation">&lt;/span>
-&lt;a href="#tenability-fic-slowdown--fed-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A FED model is instantiated automatically when &lt;code>--fds-dir&lt;/code> points at
-an FDS case that exposes the FED species (CO, CO₂, O₂ at
-minimum — HCN, NO/NO₂, and irritants are used if present). When that
-happens, the FED incapacitation rule is on by default. The FIC slowdown
-(a pyFDS-Evac assumption, source unknown;
+&lt;h3>Tenability (FIC slowdown and incapacitation)&lt;span class="hx-absolute -hx-mt-20" id="tenability-fic-slowdown-and-incapacitation">&lt;/span>
+&lt;a href="#tenability-fic-slowdown-and-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The two dose tracks are independent:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Gas FED&lt;/strong> runs when &lt;code>--fds-dir&lt;/code> has the CO, CO₂ and O₂ slices (HCN, NO,
+NO₂ and the irritants are used if present). It is on by default whenever
+those slices exist.&lt;/li>
+&lt;li>&lt;strong>Heat FED&lt;/strong> runs when &lt;code>--enable-heat-fed&lt;/code> is given and &lt;code>--fds-dir&lt;/code> has a
+&lt;code>TEMPERATURE&lt;/code> slice. It is off by default, as FDS+Evac has no heat dose.&lt;/li>
+&lt;/ul>
+&lt;p>Incapacitation applies to whichever track runs. Without &lt;code>--fds-dir&lt;/code> neither
+runs and the flags below have no effect. The FIC slowdown (a pyFDS-Evac
+assumption, source unknown;
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>) is off
-by default, as FDS+Evac has none; &lt;code>--enable-fic-speed&lt;/code> turns it on. Without &lt;code>--fds-dir&lt;/code> (or with a case missing the
-required species) no FED is computed and these flags have no effect;
-a case with a &lt;code>TEMPERATURE&lt;/code> slice still gets heat incapacitation when
-&lt;code>--enable-heat-fed&lt;/code> is given (the heat dose is off by default, as FDS+Evac has
-none).&lt;/p>
+by default, as FDS+Evac has none. The equations are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Models › FED&lt;/a> and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
 &lt;th>Flag&lt;/th>
+&lt;th>Default&lt;/th>
 &lt;th>Purpose&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>--disable-tenability&lt;/code>&lt;/td>
-&lt;td>Turn both rules off.&lt;/td>
+&lt;td>off&lt;/td>
+&lt;td>Turn off the FIC slowdown and both incapacitation checks. FED and heat FED are still accumulated and written.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--enable-fic-speed&lt;/code>&lt;/td>
-&lt;td>Turn the FIC slowdown on (off by default).&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--enable-heat-fed&lt;/code>&lt;/td>
-&lt;td>Accumulate the heat dose from a &lt;code>TEMPERATURE&lt;/code> slice and incapacitate on it (off by default).&lt;/td>
+&lt;td>off&lt;/td>
+&lt;td>Turn the FIC slowdown on.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fic-alpha F&lt;/code>&lt;/td>
-&lt;td>Slope of &lt;code>v/v₀ = max(μ, 1 − α·FIC)&lt;/code> (default 0.7).&lt;/td>
+&lt;td>0.7&lt;/td>
+&lt;td>Slope of &lt;code>v/v₀ = max(μ, 1 − α·FIC)&lt;/code>; needs &lt;code>--enable-fic-speed&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fic-min-factor F&lt;/code>&lt;/td>
-&lt;td>Floor &lt;code>μ&lt;/code> (default 0.3).&lt;/td>
+&lt;td>0.3&lt;/td>
+&lt;td>Floor &lt;code>μ&lt;/code>; needs &lt;code>--enable-fic-speed&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fed-threshold F&lt;/code>&lt;/td>
-&lt;td>FED at which agents are incapacitated (default 1.0, as FDS+Evac); with &lt;code>--incapacitation-mode probabilistic&lt;/code> it is the median of a per-agent threshold.&lt;/td>
+&lt;td>1.0&lt;/td>
+&lt;td>FED at which agents are incapacitated, as FDS+Evac; in probabilistic mode the median of the per-agent threshold.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--o2-threshold-percent P&lt;/code>&lt;/td>
-&lt;td>O₂ vol % at or above which the hypoxia term is zero (default 20.0, as FDS; 19.5 was the previous default).&lt;/td>
+&lt;td>20.0 %&lt;/td>
+&lt;td>O₂ vol % at or above which the hypoxia term is zero, as FDS; 19.5 was the previous default.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--incapacitation-mode MODE&lt;/code>&lt;/td>
+&lt;td>&lt;code>deterministic&lt;/code>&lt;/td>
+&lt;td>&lt;code>deterministic&lt;/code> or &lt;code>probabilistic&lt;/code>. &lt;code>deterministic&lt;/code>: every agent stops at &lt;code>--fed-threshold&lt;/code>, as FDS+Evac. &lt;code>probabilistic&lt;/code>: each agent draws a log-normal threshold with median &lt;code>--fed-threshold&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--susceptibility-sigma S&lt;/code>&lt;/td>
+&lt;td>0.94&lt;/td>
+&lt;td>Log-normal σ of the gas threshold in probabilistic mode.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;h3>Heat dose (opt-in)&lt;span class="hx-absolute -hx-mt-20" id="heat-dose-opt-in">&lt;/span>
+&lt;a href="#heat-dose-opt-in" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>All flags in this table need &lt;code>--enable-heat-fed&lt;/code>; without it they have no
+effect. With &lt;code>--fds-dir&lt;/code>, the run then warns for &lt;code>--heat-endpoint&lt;/code>,
+&lt;code>--heat-clothing&lt;/code>, &lt;code>--heat-fed-method&lt;/code>, &lt;code>--heat-radiant-source&lt;/code> and
+&lt;code>--heat-regime&lt;/code>; the other heat flags are ignored silently. The laws, parameters and their
+sources are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>; the table only lists what
+each flag sets.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Values&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--enable-heat-fed&lt;/code>&lt;/td>
+&lt;td>off&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Accumulate the heat dose from the &lt;code>TEMPERATURE&lt;/code> slice and incapacitate on it.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-clothing C&lt;/code>&lt;/td>
+&lt;td>&lt;code>clothed&lt;/code>&lt;/td>
+&lt;td>&lt;code>clothed&lt;/code>, &lt;code>unclothed&lt;/code>&lt;/td>
+&lt;td>Convective law: ISO 13571:2012 Eq. (9), clothed, or Eq. (10), unclothed. No effect with &lt;code>--heat-endpoint&lt;/code> or &lt;code>--heat-fed-method total-flux&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-endpoint E&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>&lt;code>tolerance&lt;/code>, &lt;code>injury&lt;/code>, &lt;code>fatal&lt;/code>&lt;/td>
+&lt;td>Use an SFPE Handbook Ch. 63 endpoint law instead of the ISO law. With &lt;code>total-flux&lt;/code> it selects the dose &lt;em>D&lt;/em> (fatal without it).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-fed-method M&lt;/code>&lt;/td>
+&lt;td>&lt;code>convective&lt;/code>&lt;/td>
+&lt;td>&lt;code>convective&lt;/code>, &lt;code>total-flux&lt;/code>&lt;/td>
+&lt;td>&lt;code>total-flux&lt;/code>: heat flux to the skin (SFPE Eq. 63.49) with the ISO 2.5 kW/m² radiant threshold.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-emissivity E&lt;/code>&lt;/td>
+&lt;td>0.5&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Gas emissivity at the head; &lt;code>total-flux&lt;/code> only.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-convective-coefficient H&lt;/code>&lt;/td>
+&lt;td>5.0 W/m²/K&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Convective coefficient; &lt;code>total-flux&lt;/code> only.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-skin-temperature T&lt;/code>&lt;/td>
+&lt;td>35.0 °C&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Fixed skin temperature; &lt;code>total-flux&lt;/code> only.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-radiant-source S&lt;/code>&lt;/td>
+&lt;td>&lt;code>gas&lt;/code>&lt;/td>
+&lt;td>&lt;code>gas&lt;/code>, &lt;code>integrated-intensity&lt;/code>&lt;/td>
+&lt;td>Radiant term from the gas at the head, or the excess flux from the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice. &lt;code>integrated-intensity&lt;/code> needs &lt;code>total-flux&lt;/code> and &lt;code>--heat-u-factor&lt;/code>, and the slice at the slice height.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-u-factor F&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>[0.25, 1]&lt;/td>
+&lt;td>Factor &lt;em>f&lt;/em> on the integrated intensity &lt;em>U&lt;/em>; required with &lt;code>integrated-intensity&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-regime R&lt;/code>&lt;/td>
+&lt;td>&lt;code>smoke&lt;/code>&lt;/td>
+&lt;td>&lt;code>smoke&lt;/code>, &lt;code>layer&lt;/code>&lt;/td>
+&lt;td>&lt;code>layer&lt;/code>: head in clear air under a hot layer. Needs &lt;code>total-flux&lt;/code> and the three layer flags below, or the run stops with &lt;code>ValueError&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-layer-height M&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>finite&lt;/td>
+&lt;td>Height of the &lt;code>TEMPERATURE&lt;/code> slice read as the hot layer.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-view-factor φ&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>[0, 1]&lt;/td>
+&lt;td>View factor from the skin to the layer.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-layer-emissivity ε_L&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>[0, 1]&lt;/td>
+&lt;td>Layer emissivity.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-fed-threshold F&lt;/code>&lt;/td>
+&lt;td>none (uses &lt;code>--fed-threshold&lt;/code>)&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Separate heat threshold. ISO 13571 uses one threshold; setting it logs a warning and the manifest records it.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-incapacitation-mode MODE&lt;/code>&lt;/td>
+&lt;td>&lt;code>deterministic&lt;/code>&lt;/td>
+&lt;td>&lt;code>deterministic&lt;/code>, &lt;code>probabilistic&lt;/code>&lt;/td>
+&lt;td>As &lt;code>--incapacitation-mode&lt;/code>, for the heat track.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-susceptibility-sigma S&lt;/code>&lt;/td>
+&lt;td>0.94&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Log-normal σ of the heat threshold in probabilistic mode (borrowed from the gas value).&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Seed and precedence&lt;span class="hx-absolute -hx-mt-20" id="seed-and-precedence">&lt;/span>
+&lt;a href="#seed-and-precedence" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>&lt;code>--seed N&lt;/code> overrides the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code>; a scenario without one uses 42.&lt;/li>
+&lt;li>&lt;code>--constant-extinction&lt;/code> takes precedence over the FDS extinction slice for
+walking speed only.&lt;/li>
+&lt;/ul>
+&lt;h3>Python API and command line&lt;span class="hx-absolute -hx-mt-20" id="python-api-and-command-line">&lt;/span>
+&lt;a href="#python-api-and-command-line" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>run.py&lt;/code> and the web GUI build their models with &lt;code>build_run_kwargs&lt;/code>.
+&lt;code>run_scenario()&lt;/code> called directly builds nothing you do not pass, so the same
+scenario can behave differently:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>What&lt;/th>
+&lt;th>&lt;code>run.py&lt;/code>&lt;/th>
+&lt;th>&lt;code>run_scenario()&lt;/code> without that argument&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Rerouting&lt;/td>
+&lt;td>on, every 1 s (&lt;code>--reroute-interval&lt;/code>)&lt;/td>
+&lt;td>off; &lt;code>RerouteConfig()&lt;/code> defaults to 10 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Smoke speed&lt;/td>
+&lt;td>from &lt;code>--fds-dir&lt;/code>, or &lt;code>--constant-extinction&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Gas FED, heat FED&lt;/td>
+&lt;td>from &lt;code>--fds-dir&lt;/code> (heat with &lt;code>--enable-heat-fed&lt;/code>)&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Incapacitation&lt;/td>
+&lt;td>&lt;code>TenabilityConfig&lt;/code> whenever a FED track runs&lt;/td>
+&lt;td>none: a &lt;code>fed_model&lt;/code> without &lt;code>tenability_config&lt;/code> accumulates dose but never incapacitates&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Visibility model&lt;/td>
+&lt;td>built for discovery agents, &lt;code>--vis-cache&lt;/code> or &lt;code>--clear-air-visibility&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>For a run identical to the command line, parse the same flags and build the
+keywords the same way:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> run &lt;span style="color:#75715e"># run.py at the repository root&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac &lt;span style="color:#f92672">import&lt;/span> build_run_kwargs, load_scenario, run_scenario
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>args &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;--scenario&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/config_a.json&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;--fds-dir&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/fds/a&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>opts &lt;span style="color:#f92672">=&lt;/span> run&lt;span style="color:#f92672">.&lt;/span>_build_parser()&lt;span style="color:#f92672">.&lt;/span>parse_args(args)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>scenario &lt;span style="color:#f92672">=&lt;/span> load_scenario(opts&lt;span style="color:#f92672">.&lt;/span>scenario)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#f92672">=&lt;/span> run_scenario(scenario, &lt;span style="color:#f92672">**&lt;/span>build_run_kwargs(scenario, opts))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;FED max: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>result&lt;span style="color:#f92672">.&lt;/span>metrics[&lt;span style="color:#e6db74">&amp;#39;fed_max&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.3f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result&lt;span style="color:#f92672">.&lt;/span>cleanup()&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Run it from the repository root with &lt;code>PYTHONPATH=. uv run python script.py&lt;/code>,
+so that &lt;code>run.py&lt;/code> can be imported. It prints &lt;code>FED max: 1.170&lt;/code>.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a> does this end to end.&lt;/p>
 &lt;h3>Agent visualisation&lt;span class="hx-absolute -hx-mt-20" id="agent-visualisation">&lt;/span>
 &lt;a href="#agent-visualisation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Agent 3-D visualisation is handled by
 &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>, which
@@ -395,18 +635,7 @@ its optional &lt;code>agent_scalars&lt;/code> table for FED/speed colouring).&lt
 &lt;h3>Typical invocations&lt;span class="hx-absolute -hx-mt-20" id="typical-invocations">&lt;/span>
 &lt;a href="#typical-invocations" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Bare JuPedSim run, no smoke coupling&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction/config.json
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Smoke-coupled run with all diagnostic outputs&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction/config.json &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/t_junction &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite demo3.sqlite &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-smoke-history smoke.csv &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history fed.csv &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-history routes.csv &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-cost-history route_costs.csv &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-rerouting &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --vis-cache assets/t_junction/vismap_cache.npz&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction/config.json --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -416,11 +645,66 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation stopped after 300.00 s (142/150 evacuated, 8 remaining).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># FDS-coupled run with all diagnostic outputs, on a tracked FDS output&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/iso_table22_coupled/config_a.json &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/iso_table22_coupled/fds/a &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite results/demo.sqlite &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-smoke-history results/smoke.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history results/fed.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-history results/routes.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-cost-history results/route_costs.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Configuring smoke calculation.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring FED calculation.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Heat FED is off; pass --enable-heat-fed to accumulate it.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring rerouting.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>…
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation stopped after 1150.00 s (0/1 evacuated, 1 remaining).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route switches: 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route cost samples: 1149&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The occupant of this ISO 20414 Test 19 case never leaves; it is incapacitated
+at 982 s. Rerouting is on by default, so &lt;code>--enable-rerouting&lt;/code> is not needed.
+The tracked FDS output of the T-junction fire is not in the repository; run
+&lt;code>assets/t_junction/t_junction.fds&lt;/code> with FDS, or see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>.&lt;/p>
 &lt;h2>Inspecting an FDS case&lt;span class="hx-absolute -hx-mt-20" id="inspecting-an-fds-case">&lt;/span>
 &lt;a href="#inspecting-an-fds-case" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>scripts/inspect_fds.py&lt;/code> summarises what quantities FDS wrote and whether
-they are within tenability-relevant ranges.&lt;/p>
+they are within tenability-relevant ranges. Its &lt;code>--height&lt;/code> defaults to 2.0 m;
+pass 1.6 to match &lt;code>run.py&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313" target="_blank" rel="noopener">#313&lt;/a>).&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/inspect_fds.py assets/t_junction --plot --height 2.0&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/inspect_fds.py assets/iso_table22_coupled/fds/a --height 1.6&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -430,14 +714,40 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>FED readiness:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ CO / CO2 / O2 all present and non-zero → default FED model will run
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✗ Extinction coefficient → smoke-speed model will NOT run&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>This case has an extinction slice whose values are all zero, so &lt;code>run.py&lt;/code> does
+build the smoke model; it reads &lt;em>K&lt;/em> = 0 (clear air).&lt;/p>
 &lt;h2>Probing FED without running a simulation&lt;span class="hx-absolute -hx-mt-20" id="probing-fed-without-running-a-simulation">&lt;/span>
 &lt;a href="#probing-fed-without-running-a-simulation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>scripts/probe_fed.py&lt;/code> integrates FED at fixed &lt;code>(x, y)&lt;/code> points directly
 from the FDS output. Useful as a sanity check (&amp;ldquo;if an agent stood still
-here, would it be incapacitated?&amp;rdquo;).&lt;/p>
+here, would it be incapacitated?&amp;rdquo;). &lt;code>--slice-height&lt;/code> defaults to 1.6 m.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/probe_fed.py --fds-dir assets/t_junction &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --point 17,12 --point 20,12 &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output probe.csv --plot probe.png&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/probe_fed.py --fds-dir assets/iso_table22_coupled/fds/a &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --point 5,5 --output results/probe.csv --plot results/probe.png&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span> point peak FED peak rate t(FED=threshold)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (5, 5) 1.1724 0.0611 981.0 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -935,7 +1245,7 @@ title="Copy code"
 &lt;a href="#one-shot-driver--scriptsrun_and_plotsh" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Runs one simulation and produces the full plot set into a results
 directory.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>./scripts/run_and_plot.sh assets/t_junction/config.json assets/t_junction results/demo&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>./scripts/run_and_plot.sh assets/t_junction/config.json &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$FDS&lt;span style="color:#e6db74">&amp;#34;&lt;/span> results/demo&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -945,9 +1255,1034 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>Arguments: &lt;code>&amp;lt;scenario&amp;gt; &amp;lt;fds-dir&amp;gt; &amp;lt;results-dir&amp;gt;&lt;/code>. The script calls
+&lt;p>Arguments: &lt;code>&amp;lt;scenario&amp;gt; &amp;lt;fds-dir&amp;gt; &amp;lt;results-dir&amp;gt;&lt;/code>. &lt;code>&amp;lt;fds-dir&amp;gt;&lt;/code> must hold a
+finished FDS run (the &lt;code>.smv&lt;/code> file); &lt;code>$FDS&lt;/code> stands for such a directory, for
+example the output of &lt;code>assets/t_junction/t_junction.fds&lt;/code>. The script calls
 &lt;code>run.py&lt;/code> with all diagnostic outputs enabled and then invokes each
-plotting script against the resulting CSVs / SQLite.&lt;/p></description></item><item><title>How do I get the egress time and its spread from an ensemble of seeds?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</guid><description>
+plotting script against the resulting CSVs / SQLite. It writes the vismap
+cache into &lt;code>&amp;lt;fds-dir&amp;gt;/vismap_cache.pkl&lt;/code>, so do not point it at a tracked
+directory under &lt;code>assets/&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313" target="_blank" rel="noopener">#313&lt;/a>). The usage line in the script itself still names
+&lt;code>assets/t_junction&lt;/code>, which has no FDS output
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312" target="_blank" rel="noopener">#312&lt;/a>).&lt;/p></description></item><item><title>Outputs</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</guid><description>
+&lt;p>What a run writes, when each file is missing, and how to read the results
+without being misled. Every file below is written by &lt;code>run.py&lt;/code> (and the web
+GUI) only when you ask for it with its flag. From Python, the same data are
+fields of the &lt;code>ScenarioResult&lt;/code> that &lt;code>run_scenario()&lt;/code> returns.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>File&lt;/th>
+&lt;th>Flag&lt;/th>
+&lt;th>Written when&lt;/th>
+&lt;th>Rows&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Trajectory SQLite&lt;/td>
+&lt;td>&lt;code>--output-sqlite PATH&lt;/code>&lt;/td>
+&lt;td>always&lt;/td>
+&lt;td>JuPedSim frames at 10 frames/s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Run manifest&lt;/td>
+&lt;td>with &lt;code>--output-sqlite&lt;/code>&lt;/td>
+&lt;td>always&lt;/td>
+&lt;td>one JSON object, &lt;code>&amp;lt;stem&amp;gt;.manifest.json&lt;/code> beside the SQLite&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>agent_scalars&lt;/code> table&lt;/td>
+&lt;td>inside the SQLite&lt;/td>
+&lt;td>a FED track ran&lt;/td>
+&lt;td>one per agent per FED update&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Smoke history&lt;/td>
+&lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
+&lt;td>a smoke model ran (&lt;code>--fds-dir&lt;/code> with an extinction slice, or &lt;code>--constant-extinction&lt;/code>)&lt;/td>
+&lt;td>one per agent per &lt;code>--smoke-update-interval&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>FED history&lt;/td>
+&lt;td>&lt;code>--output-fed-history CSV&lt;/code>&lt;/td>
+&lt;td>the gas FED or the heat FED ran&lt;/td>
+&lt;td>one per agent per &lt;code>--smoke-update-interval&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Route history&lt;/td>
+&lt;td>&lt;code>--output-route-history CSV&lt;/code>&lt;/td>
+&lt;td>rerouting is on (the default)&lt;/td>
+&lt;td>one per change of target: switch, fallback, better path, explore or wander; &lt;code>initial&lt;/code> only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Route cost history&lt;/td>
+&lt;td>&lt;code>--output-route-cost-history CSV&lt;/code>&lt;/td>
+&lt;td>rerouting is on&lt;/td>
+&lt;td>one per candidate route per agent per evaluation&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The run command, flags and defaults are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>. The example
+columns below come from&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/iso_table22_coupled/config_a.json &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/iso_table22_coupled/fds/a &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite results/run.sqlite --output-smoke-history results/smoke.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history results/fed.csv --output-route-history results/routes.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-route-cost-history results/route_costs.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Trajectory SQLite&lt;span class="hx-absolute -hx-mt-20" id="trajectory-sqlite">&lt;/span>
+&lt;a href="#trajectory-sqlite" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The JuPedSim trajectory file, unchanged in schema: agent positions every 0.1 s
+(simulation step 0.01 s, every tenth frame written). Load it with
+&lt;a href="https://pedpy.readthedocs.io" target="_blank" rel="noopener">PedPy&lt;/a>, &lt;code>scripts/plot_trajectories.py&lt;/code>,
+&lt;code>scripts/vis.py&lt;/code>, or &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>.&lt;/p>
+&lt;p>When a FED track ran, the file also holds an extra table,
+&lt;code>agent_scalars(frame, id, fed, heat_fed, speed)&lt;/code>: gas FED, heat FED and
+walking speed (&lt;code>base_speed × speed_factor&lt;/code>, m/s) per agent per frame of a FED
+update. The JuPedSim tables are untouched, so JuPedSim tools still read the
+file. &lt;code>heat_fed&lt;/code> sits before &lt;code>speed&lt;/code>: read the columns by name, not by
+position.&lt;/p>
+&lt;h2>Run manifest&lt;span class="hx-absolute -hx-mt-20" id="run-manifest">&lt;/span>
+&lt;a href="#run-manifest" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The provenance record of the run. From Python it is &lt;code>result.manifest_file&lt;/code>;
+with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
+&lt;code>&amp;lt;stem&amp;gt;.manifest.json&lt;/code>.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>versions&lt;/code>&lt;/td>
+&lt;td>installed versions of pyfds-evac, jupedsim, fdsreader, fdsvismap&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>uv_lock_sha256&lt;/code>&lt;/td>
+&lt;td>hash of the &lt;code>uv.lock&lt;/code> of the checkout, &lt;code>null&lt;/code> for an installed wheel&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>git_commit&lt;/code>, &lt;code>git_dirty&lt;/code>&lt;/td>
+&lt;td>commit of the checkout, and whether tracked files had uncommitted changes&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>seed&lt;/code>&lt;/td>
+&lt;td>the seed of the run&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>scenario_path&lt;/code>&lt;/td>
+&lt;td>the scenario file that was loaded&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fds_dir&lt;/code>, &lt;code>fds_version&lt;/code>&lt;/td>
+&lt;td>absolute FDS directory, and the FDS version read from its &lt;code>.smv&lt;/code>; &lt;code>null&lt;/code> without FDS output&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>created_utc&lt;/code>&lt;/td>
+&lt;td>time the run finished, UTC&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_clothing&lt;/code>&lt;/td>
+&lt;td>&lt;code>clothed&lt;/code> or &lt;code>unclothed&lt;/code>, when an ISO 13571 convective heat law ran&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_fed_threshold_override&lt;/code>&lt;/td>
+&lt;td>the &lt;code>--heat-fed-threshold&lt;/code> value, only when it was set&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_endpoint&lt;/code>, &lt;code>heat_validity&lt;/code>&lt;/td>
+&lt;td>the SFPE endpoint and its validity limits, only with &lt;code>--heat-endpoint&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_fed_method&lt;/code>, &lt;code>heat_flux_parameters&lt;/code>&lt;/td>
+&lt;td>only with &lt;code>--heat-fed-method total-flux&lt;/code>: ε, h, skin temperature, dose &lt;em>D&lt;/em>, radiant threshold, the list of assumed parameters, and, per option, the layer parameters or &lt;code>radiant_source&lt;/code>, &lt;code>u_factor&lt;/code> and &lt;code>radiant_flux&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The manifest does not yet record the slice height that was actually read
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165" target="_blank" rel="noopener">#165&lt;/a>).&lt;/p>
+&lt;p>Example, from the command above:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;versions&amp;#34;&lt;/span>: {&lt;span style="color:#f92672">&amp;#34;pyfds-evac&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;0.1.0&amp;#34;&lt;/span>, &lt;span style="color:#f92672">&amp;#34;jupedsim&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;1.4.2&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;fdsreader&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;1.11.7&amp;#34;&lt;/span>, &lt;span style="color:#f92672">&amp;#34;fdsvismap&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;0.2.1&amp;#34;&lt;/span>},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;uv_lock_sha256&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;08fc497c…&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;git_commit&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;80a7608…&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;git_dirty&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;seed&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">420&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;scenario_path&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;/…/assets/iso_table22_coupled/config_a.json&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;fds_dir&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;/…/assets/iso_table22_coupled/fds/a&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;fds_version&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;FDS-6.10.1-0-g12efa16-release&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;created_utc&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;2026-09-29T12:53:08+00:00&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Smoke history&lt;span class="hx-absolute -hx-mt-20" id="smoke-history">&lt;/span>
+&lt;a href="#smoke-history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Column&lt;/th>
+&lt;th>Unit&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>time_s&lt;/code>&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>simulation time&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>agent_id&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>JuPedSim agent id&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>x&lt;/code>, &lt;code>y&lt;/code>&lt;/td>
+&lt;td>m&lt;/td>
+&lt;td>agent position&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>base_speed&lt;/code>&lt;/td>
+&lt;td>m/s&lt;/td>
+&lt;td>the agent&amp;rsquo;s speed before the smoke factor (its &lt;code>v0&lt;/code> in open space)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>desired_speed&lt;/code>&lt;/td>
+&lt;td>m/s&lt;/td>
+&lt;td>speed after the smoke factor&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>speed_factor&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>&lt;code>desired_speed / base_speed&lt;/code> from the speed law&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>extinction_per_m&lt;/code>&lt;/td>
+&lt;td>1/m&lt;/td>
+&lt;td>extinction coefficient &lt;em>K&lt;/em> at the agent&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>FED history&lt;span class="hx-absolute -hx-mt-20" id="fed-history">&lt;/span>
+&lt;a href="#fed-history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One row per agent per update. The gas and heat columns are both present
+whenever the file is written. A track that did not run shows clean air:
+without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
+&lt;code>fed_cumulative&lt;/code> read 0.0; without the heat FED, &lt;code>temperature_celsius&lt;/code> reads
+20.0 °C and &lt;code>heat_fed_cumulative&lt;/code> 0.0.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Column&lt;/th>
+&lt;th>Unit&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>time_s&lt;/code>, &lt;code>agent_id&lt;/code>, &lt;code>x&lt;/code>, &lt;code>y&lt;/code>&lt;/td>
+&lt;td>s, —, m&lt;/td>
+&lt;td>as in the smoke history&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>co_percent&lt;/code>, &lt;code>co2_percent&lt;/code>, &lt;code>o2_percent&lt;/code>&lt;/td>
+&lt;td>vol %&lt;/td>
+&lt;td>gas concentrations at the agent&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>hcn_ppm&lt;/code>, &lt;code>no_ppm&lt;/code>, &lt;code>no2_ppm&lt;/code>&lt;/td>
+&lt;td>ppm&lt;/td>
+&lt;td>0 when the case has no such slice&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>co_rate_per_min&lt;/code>, &lt;code>cn_rate_per_min&lt;/code>, &lt;code>nox_rate_per_min&lt;/code>, &lt;code>fld_rate_per_min&lt;/code>&lt;/td>
+&lt;td>1/min&lt;/td>
+&lt;td>narcotic and irritant terms, before the CO₂ hyperventilation factor&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>hv_co2&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>CO₂ hyperventilation factor that multiplies the four terms above&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>o2_rate_per_min&lt;/code>&lt;/td>
+&lt;td>1/min&lt;/td>
+&lt;td>hypoxia term, added after the factor&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fed_rate_per_min&lt;/code>&lt;/td>
+&lt;td>1/min&lt;/td>
+&lt;td>total gas FED rate&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fed_cumulative&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>running gas FED&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>temperature_celsius&lt;/code>&lt;/td>
+&lt;td>°C&lt;/td>
+&lt;td>gas temperature at the agent&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_fed_rate_per_min&lt;/code>, &lt;code>heat_fed_cumulative&lt;/code>&lt;/td>
+&lt;td>1/min, —&lt;/td>
+&lt;td>heat FED rate and running total, a separate track&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>incapacitation_cause&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>empty, &lt;code>gas&lt;/code>, &lt;code>heat&lt;/code> or &lt;code>gas+heat&lt;/code> once incapacitated&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fic&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>fractional irritant concentration&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fic_speed_factor&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>irritant slowdown factor, 1 unless &lt;code>--enable-fic-speed&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>incapacitated&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>&lt;code>True&lt;/code> from the update at which a threshold is crossed&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>base_speed&lt;/code>, &lt;code>desired_speed&lt;/code>, &lt;code>speed_factor&lt;/code>&lt;/td>
+&lt;td>m/s, m/s, —&lt;/td>
+&lt;td>speed as the agent is moving at this update, all slowdowns combined&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Extra columns appear with some heat options:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Columns&lt;/th>
+&lt;th>Present with&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>heat_endpoint&lt;/code>, &lt;code>heat_outside_validity&lt;/code>, &lt;code>heat_humidity&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-endpoint&lt;/code>; &lt;code>heat_outside_validity&lt;/code> is &lt;code>True&lt;/code> above 205 °C or for a non-finite sample, &lt;code>heat_humidity&lt;/code> is &lt;code>unknown&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_flux_kw_m2&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-fed-method total-flux&lt;/code>: the heat flux to the skin [kW/m²]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_integrated_intensity_kw_m2&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-radiant-source integrated-intensity&lt;/code>: &lt;em>U&lt;/em> at the agent [kW/m²]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_layer_temperature_c&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-regime layer&lt;/code>: layer temperature [°C]&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The equations behind each rate are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Models › FED&lt;/a> and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.&lt;/p>
+&lt;h2>Route history&lt;span class="hx-absolute -hx-mt-20" id="route-history">&lt;/span>
+&lt;a href="#route-history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Column&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>time_s&lt;/code>, &lt;code>agent_id&lt;/code>&lt;/td>
+&lt;td>when, and who&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>old_exit&lt;/code>, &lt;code>new_exit&lt;/code>&lt;/td>
+&lt;td>exit before and after; &lt;code>old_exit&lt;/code> is empty for the first assignment&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>old_cost&lt;/code>, &lt;code>new_cost&lt;/code>&lt;/td>
+&lt;td>ranking cost of the two routes, rounded to 4 decimals; &lt;code>old_cost&lt;/code> is empty when there was none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>reason&lt;/code>&lt;/td>
+&lt;td>&lt;code>initial&lt;/code>, &lt;code>smoke_reroute&lt;/code>, &lt;code>fallback&lt;/code>, &lt;code>better_path&lt;/code>, &lt;code>explore&lt;/code> or &lt;code>wander&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The reasons are defined on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#route-switch-reasons">Routing in practice&lt;/a>. &lt;code>smoke_reroute&lt;/code> labels
+every change of exit, whatever caused it
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92" target="_blank" rel="noopener">#92&lt;/a>).&lt;/p>
+&lt;p>An &lt;code>initial&lt;/code> row is written only when an agent that has no exit at a
+re-evaluation is given its first one. Agents that start with a journey exit
+get no row until they change target, so a run without any switch (such as the
+example above, &lt;code>Route switches: 0&lt;/code>) writes a file with only its header. This
+does not mean rerouting was off.&lt;/p>
+&lt;h2>Route cost history&lt;span class="hx-absolute -hx-mt-20" id="route-cost-history">&lt;/span>
+&lt;a href="#route-cost-history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One row per candidate route at each evaluation of each agent. The columns are
+the fields of &lt;code>RouteCost&lt;/code>, defined on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#routecost">Routing in practice&lt;/a>, plus the context of the
+evaluation:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Column&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>time_s&lt;/code>, &lt;code>agent_id&lt;/code>, &lt;code>source&lt;/code>&lt;/td>
+&lt;td>when, who, and the graph node the route starts from&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>current_exit&lt;/code>, &lt;code>current_fed&lt;/code>&lt;/td>
+&lt;td>the agent&amp;rsquo;s exit and gas FED at this evaluation&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>route_rank&lt;/code>, &lt;code>exit_id&lt;/code>, &lt;code>path&lt;/code>&lt;/td>
+&lt;td>rank of this route (1 is best), its exit, and its node sequence&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>path_length_m&lt;/code>, &lt;code>k_ave_route&lt;/code>, &lt;code>travel_time_s&lt;/code>, &lt;code>fed_max_route&lt;/code>&lt;/td>
+&lt;td>route measures&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>composite_cost&lt;/code>, &lt;code>rank_cost&lt;/code>, &lt;code>k_max_route&lt;/code>, &lt;code>tau_route&lt;/code>, &lt;code>k_leg_max&lt;/code>, &lt;code>clean&lt;/code>&lt;/td>
+&lt;td>cost terms; which one orders the routes depends on the cost model&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>feasible&lt;/code>, &lt;code>rejected&lt;/code>, &lt;code>rejection_reason&lt;/code>&lt;/td>
+&lt;td>whether the route was available, and why not&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>queue_time_s&lt;/code>, &lt;code>exit_count&lt;/code>, &lt;code>exit_capacity&lt;/code>&lt;/td>
+&lt;td>queue estimate at the exit&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Under the default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> model, routes are ordered on &lt;code>tau_route&lt;/code>, not on
+&lt;code>composite_cost&lt;/code>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#route-cost-curves--plot_route_costspy">Usage › Route cost curves&lt;/a>.&lt;/p>
+&lt;h2>Reading the results&lt;span class="hx-absolute -hx-mt-20" id="reading-the-results">&lt;/span>
+&lt;a href="#reading-the-results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>ScenarioResult&lt;/code> (and the summary line of &lt;code>run.py&lt;/code>) reports:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Field&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>evacuation_time&lt;/code>&lt;/td>
+&lt;td>simulated time when the run stopped&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>total_agents&lt;/code>, &lt;code>agents_evacuated&lt;/code>, &lt;code>agents_remaining&lt;/code>&lt;/td>
+&lt;td>head counts at the end&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>success&lt;/code>&lt;/td>
+&lt;td>&lt;code>True&lt;/code> when nobody remains &lt;strong>or&lt;/strong> the run reached &lt;code>max_simulation_time&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>metrics[&amp;quot;fed_max&amp;quot;]&lt;/code>&lt;/td>
+&lt;td>highest gas FED of any agent; present only when the gas FED ran&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>metrics[&amp;quot;heat_fed_max&amp;quot;]&lt;/code>&lt;/td>
+&lt;td>highest heat FED; present only when the heat FED ran&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Three things to keep in mind:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>An incapacitated agent stays in the simulation.&lt;/strong> The run then continues
+to &lt;code>max_simulation_time&lt;/code>, and &lt;code>evacuation_time&lt;/code> reports that time, not an
+exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).
+&lt;code>success&lt;/code> is &lt;code>True&lt;/code> in that case too
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">#139&lt;/a>).
+Take exit times from the trajectory, as the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET how-to&lt;/a> does.&lt;/li>
+&lt;li>&lt;strong>No FED is not zero FED.&lt;/strong> If neither FED track ran, &lt;code>fed_history&lt;/code> is
+&lt;code>None&lt;/code>, &lt;code>metrics&lt;/code> has no &lt;code>fed_max&lt;/code>, and &lt;code>--output-fed-history&lt;/code> writes no
+file. If only the heat FED ran, the FED history exists and its
+&lt;code>fed_cumulative&lt;/code> column is all zero. Check &lt;code>metrics[&amp;quot;fed_max&amp;quot;]&lt;/code>, or the
+&lt;code>FED is disabled&lt;/code> warning
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137" target="_blank" rel="noopener">#137&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>The progress line counts planned agents.&lt;/strong> With flow spawning it can show
+more agents than the final summary, which counts those actually spawned
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279" target="_blank" rel="noopener">#279&lt;/a>).&lt;/li>
+&lt;/ul></description></item><item><title>Scenario JSON</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</guid><description>
+&lt;p>A scenario is a &lt;code>config.json&lt;/code> plus a &lt;code>geometry.wkt&lt;/code> walkable area, in a
+directory or a ZIP. This page lists the JSON keys that change a result, with
+their defaults. The meaning of the model parameters is on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/">Models&lt;/a> pages; this page links there rather than repeating
+the equations.&lt;/p>
+&lt;p>The keys are read by &lt;code>load_scenario&lt;/code> and the JuPedSim set-up in
+&lt;code>simulation_init.py&lt;/code>. A key that is not listed here is either layout data for
+the web app (&lt;code>ui_state&lt;/code>) or not read by the run.&lt;/p>
+&lt;h2>Top-level structure&lt;span class="hx-absolute -hx-mt-20" id="top-level-structure">&lt;/span>
+&lt;a href="#top-level-structure" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;config&amp;#34;: { &amp;#34;simulation_settings&amp;#34;: { &amp;#34;simulationParams&amp;#34;: {…}, &amp;#34;baseSeed&amp;#34;: … } },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;exits&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;distributions&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: { &amp;#34;coordinates&amp;#34;: […], &amp;#34;parameters&amp;#34;: {…} } },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;checkpoints&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;waypoints&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;zones&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;journeys&amp;#34;: […],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;routing&amp;#34;: {…}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Simulation settings&lt;span class="hx-absolute -hx-mt-20" id="simulation-settings">&lt;/span>
+&lt;a href="#simulation-settings" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Under &lt;code>config.simulation_settings&lt;/code>.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>simulationParams.max_simulation_time&lt;/code>&lt;/td>
+&lt;td>300 s&lt;/td>
+&lt;td>The run stops here. An incapacitated agent keeps a run going until this time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>simulationParams.model_type&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;CollisionFreeSpeedModel&amp;quot;&lt;/code>&lt;/td>
+&lt;td>The JuPedSim movement model.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>baseSeed&lt;/code>&lt;/td>
+&lt;td>42&lt;/td>
+&lt;td>Random seed; &lt;code>run.py --seed&lt;/code> overrides it.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;code>simulationParams.dt&lt;/code> is not read: the JuPedSim step is 0.01 s, and the
+trajectory is written every tenth step (10 frames/s).&lt;/p>
+&lt;h2>Spawn areas: &lt;code>distributions.&amp;lt;id&amp;gt;.parameters&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="spawn-areas-distributionsidparameters">&lt;/span>
+&lt;a href="#spawn-areas-distributionsidparameters" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Range&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>number&lt;/code>&lt;/td>
+&lt;td>the first distribution&amp;rsquo;s &lt;code>number&lt;/code>, else 100&lt;/td>
+&lt;td>≥ 0&lt;/td>
+&lt;td>Agents placed at the start.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>distribution_mode&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;by_number&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>by_number&lt;/code>, &lt;code>by_percentage&lt;/code>&lt;/td>
+&lt;td>&lt;code>by_percentage&lt;/code> fills the polygon to &lt;code>percentage&lt;/code> (1–100, default 50).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>v0&lt;/code>&lt;/td>
+&lt;td>1.25 m/s&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Clear-air walking speed, for every movement model (FDS+Evac &lt;code>VEL_MEAN&lt;/code>; 1.2 before). Every smoke, irritant and zone factor multiplies this value.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>v0_distribution&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;constant&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>constant&lt;/code>, &lt;code>gaussian&lt;/code>&lt;/td>
+&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>v0_std&lt;/code>; draws are clipped to [0.1, 5.0] m/s.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>v0_std&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Spread of the Gaussian draw.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>radius&lt;/code>&lt;/td>
+&lt;td>0.2 m&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a stage.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>radius_distribution&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;constant&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>constant&lt;/code>, &lt;code>gaussian&lt;/code>&lt;/td>
+&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>radius_std&lt;/code>, clipped to [0.1, 1.0] m.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>radius_std&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Spread of the Gaussian draw.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>use_premovement&lt;/code>&lt;/td>
+&lt;td>constant 10 s when no pre-movement key is set, with a warning&lt;/td>
+&lt;td>&lt;code>true&lt;/code>, &lt;code>false&lt;/code>&lt;/td>
+&lt;td>Delay before the agent starts moving. Setting any pre-movement key, including &lt;code>use_premovement: false&lt;/code>, turns the default off.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>premovement_distribution&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;gamma&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>gamma&lt;/code>, &lt;code>lognormal&lt;/code>, &lt;code>weibull&lt;/code>, &lt;code>uniform&lt;/code>, &lt;code>constant&lt;/code>&lt;/td>
+&lt;td>Distribution of the delay.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>premovement_param_a&lt;/code>, &lt;code>premovement_param_b&lt;/code>&lt;/td>
+&lt;td>the preset of the distribution&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Override the preset; the presets and their sources are in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#pre-movement-parameters">Coming from FDS+Evac&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>premovement_seed&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Separate seed for the pre-movement draw.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>use_flow_spawning&lt;/code>&lt;/td>
+&lt;td>&lt;code>false&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Add agents over time instead of at the start (no pre-movement then).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>flow_start_time&lt;/code>, &lt;code>flow_end_time&lt;/code>&lt;/td>
+&lt;td>0 s, 10 s&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>Window of flow spawning.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>familiarity&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>full&lt;/code>, &lt;code>discovery&lt;/code>, or a probability in [0, 1]&lt;/td>
+&lt;td>What the agents know of the exits at the start; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>entrance&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>an exit id&lt;/td>
+&lt;td>One exit, reachable from the spawn area, that the agents know from the start.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The run reads only the &lt;code>v0*&lt;/code> keys. &lt;code>desired_speed&lt;/code>, &lt;code>desired_speed_distribution&lt;/code>
+and &lt;code>desired_speed_std&lt;/code> are accepted by &lt;code>Scenario.set_agent_params()&lt;/code> in
+Python, but in a scenario JSON they are ignored without a warning
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/143" target="_blank" rel="noopener">#143&lt;/a>).&lt;/p>
+&lt;p>While an agent waits out its pre-movement time, the smoke update skips it, so
+it starts at its full clear-air speed. An agent that reaches its FED threshold
+while still waiting walks off when its pre-movement ends
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/p>
+&lt;h2>Exits: &lt;code>exits.&amp;lt;id&amp;gt;&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="exits-exitsid">&lt;/span>
+&lt;a href="#exits-exitsid" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>coordinates&lt;/code>&lt;/td>
+&lt;td>required&lt;/td>
+&lt;td>Exit polygon.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput&lt;/code>&lt;/td>
+&lt;td>&lt;code>false&lt;/code>, 0&lt;/td>
+&lt;td>Cap the flow through the exit.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>capacity_agents_per_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>routing.default_exit_capacity&lt;/code> (1.3 agents/s)&lt;/td>
+&lt;td>Exit capacity used to estimate queue time when routes are priced.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>sign&lt;/code>&lt;/td>
+&lt;td>an omni-directional sign at the exit&amp;rsquo;s centre, &lt;code>c&lt;/code> = 3&lt;/td>
+&lt;td>The sign agents read; keys below.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Signs: &lt;code>sign&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="signs-sign">&lt;/span>
+&lt;a href="#signs-sign" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Exits, checkpoints and waypoints can carry a &lt;code>sign&lt;/code>. A node without one gets
+an omni-directional sign at its position with &lt;code>c&lt;/code> = 3, so every exit is
+subject to smoke-dependent legibility.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>x&lt;/code>, &lt;code>y&lt;/code>&lt;/td>
+&lt;td>required in an authored &lt;code>sign&lt;/code>&lt;/td>
+&lt;td>Sign position [m].&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>alpha&lt;/code>&lt;/td>
+&lt;td>none (omni-directional)&lt;/td>
+&lt;td>Bearing the sign faces [°], clockwise from north (+y); the sign is readable only from the side it faces.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>c&lt;/code>&lt;/td>
+&lt;td>3&lt;/td>
+&lt;td>The constant &lt;em>C&lt;/em> of the legibility law &lt;em>V&lt;/em> = &lt;em>C&lt;/em>/&lt;em>K&lt;/em>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>max_distance&lt;/code>&lt;/td>
+&lt;td>&lt;code>--max-sign-distance&lt;/code> (30 m)&lt;/td>
+&lt;td>Farthest reading distance for this sign, even in clear air.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The legibility rule is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>.&lt;/p>
+&lt;h2>Checkpoints and zones&lt;span class="hx-absolute -hx-mt-20" id="checkpoints-and-zones">&lt;/span>
+&lt;a href="#checkpoints-and-zones" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Object&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>coordinates&lt;/code>&lt;/td>
+&lt;td>both&lt;/td>
+&lt;td>required&lt;/td>
+&lt;td>Polygon.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>speed_factor&lt;/code>&lt;/td>
+&lt;td>both&lt;/td>
+&lt;td>1.0&lt;/td>
+&lt;td>Multiplies the speed of agents inside; clipped to [0, 3]. A negative or non-numeric value becomes 1.0.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>waiting_time&lt;/code>&lt;/td>
+&lt;td>checkpoint&lt;/td>
+&lt;td>0 s&lt;/td>
+&lt;td>Time agents wait at the checkpoint.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>waiting_time_distribution&lt;/code>, &lt;code>waiting_time_std&lt;/code>&lt;/td>
+&lt;td>checkpoint&lt;/td>
+&lt;td>constant, 1.0 s&lt;/td>
+&lt;td>&lt;code>&amp;quot;gaussian&amp;quot;&lt;/code> draws the wait per agent.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput&lt;/code>&lt;/td>
+&lt;td>checkpoint&lt;/td>
+&lt;td>&lt;code>false&lt;/code>, 1.0&lt;/td>
+&lt;td>Cap the flow through the checkpoint.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Route choice: &lt;code>routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="route-choice-routing">&lt;/span>
+&lt;a href="#route-choice-routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The &lt;code>routing&lt;/code> block sets the route-cost model. Its keys, defaults and the
+constants that no key can set are listed in one place,
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>. An unknown
+&lt;code>cost_model&lt;/code> value currently falls back to the additive model without a
+warning (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305" target="_blank" rel="noopener">#305&lt;/a>).&lt;/p>
+&lt;p>The &lt;code>routing&lt;/code> keys &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code> and
+&lt;code>base_speed_m_per_s&lt;/code> only estimate travel time when a route is priced. They
+do not change how fast agents walk.&lt;/p>
+&lt;h2>Not in the JSON&lt;span class="hx-absolute -hx-mt-20" id="not-in-the-json">&lt;/span>
+&lt;a href="#not-in-the-json" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some parameters exist only in Python, as fields of a config object:&lt;/p>
+&lt;ul>
+&lt;li>the smoke-speed law and its parameters (&lt;code>SmokeSpeedConfig&lt;/code>: &lt;code>speed_law&lt;/code>,
+&lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code>, &lt;code>visibility_factor_c&lt;/code>); a configured run
+always uses the Lund law with the defaults on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">Models › Smoke speed&lt;/a>;&lt;/li>
+&lt;li>the routing constants &lt;code>impassable_extinction_threshold&lt;/code> and
+&lt;code>fed_return_margin&lt;/code> (&lt;code>RouteCostConfig&lt;/code>), and &lt;code>exit_switch_anchor&lt;/code>
+(&lt;code>RerouteConfig&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>Tracking issue for this reference:
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/119" target="_blank" rel="noopener">#119&lt;/a>.&lt;/p></description></item><item><title>Web GUI</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/</guid><description>
+&lt;p>An optional local web app that runs the same model as &lt;code>run.py&lt;/code> behind a form:
+pick a scenario, set the options, run it, watch the progress, and look at the
+results. It is for exploring a scenario; for studies, scripts and &lt;code>run.py&lt;/code>
+are easier to reproduce.&lt;/p>
+&lt;h2>Install and launch&lt;span class="hx-absolute -hx-mt-20" id="install-and-launch">&lt;/span>
+&lt;a href="#install-and-launch" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv sync --extra gui
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run app.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Then open &lt;a href="http://localhost:5001" target="_blank" rel="noopener">http://localhost:5001&lt;/a>. The extra installs
+&lt;a href="https://fastht.ml/" target="_blank" rel="noopener">FastHTML&lt;/a> and its dependencies.&lt;/p>
+&lt;h2>The form&lt;span class="hx-absolute -hx-mt-20" id="the-form">&lt;/span>
+&lt;a href="#the-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The form is built from the &lt;code>run.py&lt;/code> parser, so every option has a field.
+Choice fields with no parser default show &amp;ldquo;default&amp;rdquo;: for &lt;code>heat_clothing&lt;/code> that
+means clothed, ISO 13571 Eq. (9), and a blank &lt;code>heat_fed_threshold&lt;/code> follows
+&lt;code>fed_threshold&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311" target="_blank" rel="noopener">#311&lt;/a>). The fields are grouped:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Group&lt;/th>
+&lt;th>Fields&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Core&lt;/td>
+&lt;td>scenario (pick or upload), seed&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Smoke&lt;/td>
+&lt;td>&lt;code>fds_dir&lt;/code> (with a folder browser), &lt;code>constant_extinction&lt;/code>, &lt;code>smoke_update_interval&lt;/code>, &lt;code>smoke_slice_height&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>FED &amp;amp; Tenability&lt;/td>
+&lt;td>&lt;code>disable_tenability&lt;/code>, &lt;code>incapacitation_mode&lt;/code>, &lt;code>susceptibility_sigma&lt;/code>, &lt;code>enable_fic_speed&lt;/code>, &lt;code>fic_alpha&lt;/code>, &lt;code>fic_min_factor&lt;/code>, &lt;code>fed_threshold&lt;/code>, &lt;code>o2_threshold_percent&lt;/code>, &lt;code>enable_heat_fed&lt;/code>, &lt;code>heat_incapacitation_mode&lt;/code>, &lt;code>heat_susceptibility_sigma&lt;/code>, &lt;code>heat_clothing&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Rerouting&lt;/td>
+&lt;td>&lt;code>enable_rerouting&lt;/code>, &lt;code>reroute_interval&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Visibility&lt;/td>
+&lt;td>&lt;code>vis_cache&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Output files&lt;/td>
+&lt;td>an output folder; the SQLite, the four CSVs and the scenario bundle (&lt;code>&amp;lt;folder&amp;gt;/bundle&lt;/code>) are written there&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Other (collapsed)&lt;/td>
+&lt;td>every remaining option: &lt;code>clear_air_visibility&lt;/code>, &lt;code>no_visibility&lt;/code>, &lt;code>vis_cell_size&lt;/code>, &lt;code>max_sign_distance&lt;/code>, and the heat options &lt;code>heat_endpoint&lt;/code>, &lt;code>heat_fed_method&lt;/code>, &lt;code>heat_emissivity&lt;/code>, &lt;code>heat_convective_coefficient&lt;/code>, &lt;code>heat_skin_temperature&lt;/code>, &lt;code>heat_radiant_source&lt;/code>, &lt;code>heat_u_factor&lt;/code>, &lt;code>heat_regime&lt;/code>, &lt;code>heat_layer_height&lt;/code>, &lt;code>heat_view_factor&lt;/code>, &lt;code>heat_layer_emissivity&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Four &lt;code>run.py&lt;/code> options have no field: &lt;code>--print-summary&lt;/code>, &lt;code>--export-only&lt;/code>,
+&lt;code>--inspect-fds&lt;/code> and &lt;code>--cleanup&lt;/code>. Options with a fixed set of values are
+dropdowns. The option meanings and defaults are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>.&lt;/p>
+&lt;p>The flags under &amp;ldquo;Other&amp;rdquo; are not yet next to the group they belong to
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311" target="_blank" rel="noopener">#311&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270" target="_blank" rel="noopener">#270&lt;/a>).&lt;/p>
+&lt;h2>Runs&lt;span class="hx-absolute -hx-mt-20" id="runs">&lt;/span>
+&lt;a href="#runs" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The GUI calls the same &lt;code>run_scenario()&lt;/code> as the command line, through the same
+option builder (&lt;code>build_run_kwargs&lt;/code> in &lt;code>pyfds_evac/core/run_config.py&lt;/code>), so a
+run configured in the browser is identical to the equivalent &lt;code>run.py&lt;/code>
+command. Invalid combinations (for example &lt;code>--vis-cache&lt;/code> with rerouting off)
+are rejected when the form is submitted, with the same message as &lt;code>run.py&lt;/code>.&lt;/p>
+&lt;p>One run is active at a time. It runs on a background thread and streams its
+progress to the page. Cancelling stops the run at its next step.&lt;/p>
+&lt;h2>Results&lt;span class="hx-absolute -hx-mt-20" id="results">&lt;/span>
+&lt;a href="#results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>Charts&lt;/strong>: smoke over time and the growth of the cognitive maps. FED is
+shown live during a run.&lt;/li>
+&lt;li>&lt;strong>Trajectory replay&lt;/strong>: agents move between the stored trajectory samples,
+coloured by cumulative gas FED or by assigned exit, with play, pause, a
+scrub bar and ¼×–4× speed. When the run has an &lt;code>fds_dir&lt;/code>, the FDS
+extinction slice is drawn under the agents as a smoke layer that can be
+switched off. The replay colours by gas FED only, not by heat FED
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232" target="_blank" rel="noopener">#232&lt;/a>).&lt;/li>
+&lt;/ul>
+&lt;p>The files the run writes are described on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>.&lt;/p></description></item><item><title>Troubleshooting</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/</guid><description>
+&lt;p>Find the message you see, then its cause and fix. Errors stop the run;
+warnings let it continue, often with part of the model switched off, so read
+them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yields) are explained on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>.&lt;/p>
+&lt;h2>Errors&lt;span class="hx-absolute -hx-mt-20" id="errors">&lt;/span>
+&lt;a href="#errors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Message&lt;/th>
+&lt;th>Cause&lt;/th>
+&lt;th>Fix&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>OSError: No simulations were found in the directory: DIR&lt;/code>&lt;/td>
+&lt;td>&lt;code>--fds-dir&lt;/code> points at a directory without FDS output, for example one holding only the &lt;code>.fds&lt;/code> deck.&lt;/td>
+&lt;td>Point it at the directory with the &lt;code>.smv&lt;/code> file of a finished FDS run.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --inspect-fds requires --fds-dir&lt;/code>&lt;/td>
+&lt;td>&lt;code>--inspect-fds&lt;/code> has nothing to inspect.&lt;/td>
+&lt;td>Add &lt;code>--fds-dir&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --vis-cache requires --enable-rerouting&lt;/code>&lt;/td>
+&lt;td>&lt;code>--vis-cache&lt;/code> with &lt;code>--no-enable-rerouting&lt;/code>.&lt;/td>
+&lt;td>Drop one of the two; rerouting is on by default.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --clear-air-visibility contradicts --fds-dir: …&lt;/code>&lt;/td>
+&lt;td>Clear-air sight on a deck with a fire.&lt;/td>
+&lt;td>Drop &lt;code>--clear-air-visibility&lt;/code>; with &lt;code>--fds-dir&lt;/code> the smoke decides what agents see.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --no-visibility and --clear-air-visibility conflict&lt;/code>&lt;/td>
+&lt;td>Both flags given.&lt;/td>
+&lt;td>Keep one.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-regime layer needs --heat-fed-method total-flux&lt;/code>&lt;/td>
+&lt;td>The layer regime is part of the total-flux method.&lt;/td>
+&lt;td>Add &lt;code>--heat-fed-method total-flux&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-regime layer needs --heat-layer-height&lt;/code> (or &lt;code>--heat-view-factor&lt;/code>, &lt;code>--heat-layer-emissivity&lt;/code>)&lt;/td>
+&lt;td>These three have no default.&lt;/td>
+&lt;td>Set all three; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-radiant-source integrated-intensity needs --heat-fed-method total-flux.&lt;/code>&lt;/td>
+&lt;td>As above, for the radiant source.&lt;/td>
+&lt;td>Add &lt;code>--heat-fed-method total-flux&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-radiant-source integrated-intensity needs --heat-u-factor in [0.25, 1]; there is no default.&lt;/code>&lt;/td>
+&lt;td>&lt;em>f&lt;/em> has no default.&lt;/td>
+&lt;td>Set &lt;code>--heat-u-factor&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: DIR has no INTEGRATED INTENSITY slice. …&lt;/code>&lt;/td>
+&lt;td>The deck writes no &lt;code>INTEGRATED INTENSITY&lt;/code> slice.&lt;/td>
+&lt;td>Add &lt;code>&amp;amp;SLCF QUANTITY='INTEGRATED INTENSITY'&lt;/code> at the slice height and rerun FDS.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>run.py: error: argument --heat-u-factor: must be in [0.25, 1.0], got …&lt;/code>&lt;/td>
+&lt;td>&lt;em>f&lt;/em> outside its range.&lt;/td>
+&lt;td>Use a value in [0.25, 1].&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>IndexError: No slice with quantity '…' found in DIR&lt;/code>&lt;/td>
+&lt;td>A direct library call (&lt;code>FdsFedField.from_fds&lt;/code>, &lt;code>ExtinctionField.from_fds&lt;/code>, &lt;code>load_slice_sampler&lt;/code>) on a case without that slice. &lt;code>run.py&lt;/code> warns instead.&lt;/td>
+&lt;td>Add the slice to the deck, or check the case with &lt;code>--inspect-fds&lt;/code> first.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Warnings that change the result&lt;span class="hx-absolute -hx-mt-20" id="warnings-that-change-the-result">&lt;/span>
+&lt;a href="#warnings-that-change-the-result" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Message starts with&lt;/th>
+&lt;th>What happened&lt;/th>
+&lt;th>Fix&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>FED is disabled for DIR: it has no CO slice …&lt;/code>&lt;/td>
+&lt;td>No gas FED: the result has no FED at all, not zero FED (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137" target="_blank" rel="noopener">#137&lt;/a>).&lt;/td>
+&lt;td>Add the CO, CO₂ and O₂ slices and the &lt;code>&amp;amp;REAC&lt;/code> yields.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Heat FED is disabled for DIR: it has no TEMPERATURE slice.&lt;/code>&lt;/td>
+&lt;td>&lt;code>--enable-heat-fed&lt;/code> on a case without temperature.&lt;/td>
+&lt;td>Add &lt;code>&amp;amp;SLCF QUANTITY='TEMPERATURE'&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Smoke speed reduction is disabled for DIR: …&lt;/code>&lt;/td>
+&lt;td>No extinction slice; agents walk at clear-air speed.&lt;/td>
+&lt;td>Add the &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice, or pass &lt;code>--constant-extinction&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Visibility falls back to clear air for DIR: …&lt;/code>&lt;/td>
+&lt;td>No extinction slice for sign legibility.&lt;/td>
+&lt;td>As above.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Requested a '…' slice at z=… m but the nearest available … is at z=… m&lt;/code>&lt;/td>
+&lt;td>No slice within 0.5 m of &lt;code>--smoke-slice-height&lt;/code>; the run reads another height.&lt;/td>
+&lt;td>Add slices at 1.6 m, or set &lt;code>--smoke-slice-height&lt;/code> to a height the deck has. A slice within 0.5 m is used without a warning (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165" target="_blank" rel="noopener">#165&lt;/a>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-… has no effect without --enable-heat-fed.&lt;/code>&lt;/td>
+&lt;td>A heat option without the heat dose.&lt;/td>
+&lt;td>Add &lt;code>--enable-heat-fed&lt;/code>, or drop the option.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-fed-threshold … departs from ISO 13571:2012 …&lt;/code>&lt;/td>
+&lt;td>A separate heat threshold is set.&lt;/td>
+&lt;td>Intended if you set it; the manifest records it.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Distribution '…' sets no pre-movement; using the FDS+Evac default, a constant 10 s.&lt;/code>&lt;/td>
+&lt;td>The spawn area has no pre-movement keys.&lt;/td>
+&lt;td>Set &lt;code>use_premovement&lt;/code> and the &lt;code>premovement_*&lt;/code> keys (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/">Scenario JSON&lt;/a>).&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Harmless log lines&lt;span class="hx-absolute -hx-mt-20" id="harmless-log-lines">&lt;/span>
+&lt;a href="#harmless-log-lines" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;code>WARNING:root:Module csv: [Errno 2] No such file or directory: …_hrr.csv&lt;/code>
+(and &lt;code>…_steps.csv&lt;/code>), followed by &amp;ldquo;The error can be safely ignored if not
+requiring the csv module&amp;rdquo;: fdsreader looks for CSV output the case does not
+have.&lt;/li>
+&lt;li>&lt;code>Reroute debug: …&lt;/code> lines: a trace of the rerouting pass.&lt;/li>
+&lt;li>&lt;code>Heat FED is off; pass --enable-heat-fed to accumulate it.&lt;/code>: the heat dose is
+off by default, as in FDS+Evac.&lt;/li>
+&lt;/ul>
+&lt;h2>Known pitfalls&lt;span class="hx-absolute -hx-mt-20" id="known-pitfalls">&lt;/span>
+&lt;a href="#known-pitfalls" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>One scenario per process for studies.&lt;/strong> Run each seed in its own
+process (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#reproducibility">why&lt;/a>, #198).&lt;/li>
+&lt;li>&lt;strong>Tied routes and &lt;code>PYTHONHASHSEED&lt;/code>.&lt;/strong> Set &lt;code>PYTHONHASHSEED&lt;/code> to a fixed value
+for bit-identical reruns of discovery agents
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#reproducibility">why&lt;/a>, #199).&lt;/li>
+&lt;li>&lt;strong>The progress line counts planned agents.&lt;/strong> With flow spawning it can show
+more agents than the final summary
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279" target="_blank" rel="noopener">#279&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>&lt;code>evacuation_time&lt;/code> with incapacitated agents&lt;/strong> is the end of the run, not
+an exit time; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Outputs › Reading the results&lt;/a>.&lt;/li>
+&lt;/ul></description></item><item><title>How do I get the egress time and its spread from an ensemble of seeds?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</guid><description>
 &lt;p>&lt;strong>This how-to reads tracked FDS output. You do not need to run FDS.&lt;/strong> Part 1
 needs no FDS output at all.&lt;/p>
 &lt;p>Run the scenario once per seed. Read each agent&amp;rsquo;s exit time from the trajectory
@@ -1112,6 +2447,12 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>This loop runs all five seeds in one Python process, which is enough for a
+first look. Results can depend on earlier runs in the same process
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>), so for
+a study run each seed in its own process, for example a shell loop over
+&lt;code>run.py --seed N&lt;/code>; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#reproducibility">Limitations › Reproducibility&lt;/a>.&lt;/p>
 &lt;p>The versions and the git state depend on your checkout. &lt;code>dirty: True&lt;/code> means the
 working tree had uncommitted changes when the run started. The seed changes
 where the agents start in their spawn area, so each seed gives a different
@@ -1192,6 +2533,10 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>The script writes the figure into &lt;code>site/static/images/howto/&lt;/code>, a tracked file
+of this site, so running it changes your checkout; restore it with
+&lt;code>git checkout -- site/static/images/howto/egress_exit_curve.png&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312" target="_blank" rel="noopener">#312&lt;/a>).&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/howto/egress_exit_curve.png" alt="Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 33–35 s to 30 between 42 and 45 s, and a grey band spans the range of last exit times" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Cumulative number of agents evacuated [-] against time since the start of the
 simulation [s], &lt;code>assets/fic_vs_fed_speed&lt;/code>, N = 30 agents, clear air, no
@@ -1274,341 +2619,4 @@ so copy both first if you want to keep them. With &lt;code>run.py --output-sqlit
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Scenario assets</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/assets/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/assets/</guid><description>
-&lt;p>Scenario definitions are stored in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/" target="_blank" rel="noopener">&lt;code>assets/&lt;/code>&lt;/a>.
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/README.md" target="_blank" rel="noopener">&lt;code>assets/README.md&lt;/code>&lt;/a> indexes the folders and the file
-conventions; what each one proves, and where that proof is checked, is below.&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>ISO-table21&lt;/strong>: &lt;strong>ISO 20414:2020 Table 21&lt;/strong> (Test 18, &lt;em>reduced visibility vs
-walking speed&lt;/em>) — corridor 2 m x 100 m, one occupant at 1,25 m/s, constant
-extinction. See &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/ISO-table21/README.md" target="_blank" rel="noopener">the asset README&lt;/a> for the
-clause-by-clause comparison, including the two places we deviate. Proves the smoke speed reduction law is applied correctly end to end:
-&lt;code>test_iso_table21_constant_extinction_matches_expected_time_ratio&lt;/code> runs the
-scenario clear and then under a &lt;code>ConstantExtinctionField&lt;/code> at five extinction
-coefficients (0.5, 1.0, 3.0, 7.5, 10.0 /m), asserting the ratio of evacuation
-times matches &lt;code>1 / speed_factor_from_extinction(k)&lt;/code> within 8% and that every
-recorded &lt;code>speed_factor&lt;/code> equals the expected one exactly. Doubles as the
-standard small fixture in &lt;code>test_progress_callback.py&lt;/code>, &lt;code>test_webapp.py&lt;/code> and
-&lt;code>test_fed.py&lt;/code>, which use it for its size rather than its ISO provenance.&lt;/li>
-&lt;li>&lt;strong>ISO-table22&lt;/strong>: &lt;strong>ISO 20414:2020 Table 22&lt;/strong> (Test 19, &lt;em>occupant
-incapacitation by fire/smoke&lt;/em>) — room 10 m x 10 m x 3 m, one occupant held
-still by ISO&amp;rsquo;s prescribed pre-evacuation time above 10 000 000 s. See
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/ISO-table22/README.md" target="_blank" rel="noopener">the asset README&lt;/a>. The gas field is stubbed, so
-it verifies the accumulator, not the FDS coupling; the coupled four-case
-version is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/iso_table22_coupled/README.md" target="_blank" rel="noopener">&lt;code>iso_table22_coupled&lt;/code>&lt;/a>. One
-agent with &lt;code>v0&lt;/code> forced to 0 in a fixed gas concentration; config and geometry only, no deck. Proves the
-runtime FED accumulator agrees with the closed form:
-&lt;code>test_iso_table22_stationary_runtime_matches_analytic_threshold_time&lt;/code> takes
-the analytic FED=1.0 time from &lt;code>time_to_fed_threshold_s()&lt;/code> and asserts the
-observed crossing lands within one timestep of it, that &lt;code>fed_max &amp;gt;= 1.0&lt;/code>, and
-that the agent does not evacuate. Holding the gas inputs constant is
-deliberate; this tests the accumulator, not the gas sampling. Also backs the
-FED history throttling test.&lt;/li>
-&lt;li>&lt;strong>t_junction&lt;/strong>: T-corridor FDS scenario with cable fire, two exits (A open, B smoke-accumulating),
-200 visitors spawning in the branch; used for visibility-aware routing and cognitive
-map verification. Includes &lt;code>config_full.json&lt;/code> and &lt;code>config_discovery.json&lt;/code>
-for familiarity-tier comparison. The rerouting mechanism itself is verified by
-scenario &lt;strong>S4&lt;/strong> in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s4_tjunction_reroute.py" target="_blank" rel="noopener">&lt;code>tests/verification/test_s4_tjunction_reroute.py&lt;/code>&lt;/a>
-(control arm and null-field control both record zero switches; smoke forces
-every agent B→A and never the reverse; reroute latency stays within the
-configured interval; switch count is reproducible under a fixed seed). Note
-that S4 builds its own T-corridor via &lt;code>harness.t_junction_scenario()&lt;/code> with a
-synthetic smoke field rather than loading this asset, so the mechanism is
-covered but the deck and config here are not exercised by the suite. This
-config uses flow spawning deliberately: under by-number placement an agent&amp;rsquo;s
-route-eval source node is its assigned exit, which makes rerouting degenerate
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21" target="_blank" rel="noopener">issue #21&lt;/a>).&lt;/li>
-&lt;li>&lt;strong>fed_incap_co_2000ppm&lt;/strong> / &lt;strong>fed_incap_co_4000ppm&lt;/strong> / &lt;strong>fed_incap_co_8000ppm&lt;/strong>:
-FED accumulation and probabilistic-incapacitation verification against a
-hand-calculated reference (&lt;code>fed_hand_calc.py&lt;/code>), at three constant CO
-concentrations (2000/4000/8000 ppm) in a sealed, spatially uniform room —
-removing gas-transport physics as a variable isolates the FED/incapacitation
-&lt;em>pipeline&lt;/em> logic. 100 non-evacuating agents circling a rectangular path, FDS
-domain split across 4 MPI meshes to confirm gas data is consistent at mesh
-boundaries. All three concentrations currently match the hand-calc&amp;rsquo;s FED=1.0
-crossing time to &amp;lt;0.5% (2000 ppm: 782.4 s hand-calc vs 786 s simulated;
-4000 ppm: 382.3 s vs 384 s; 8000 ppm: 186.6 s vs 187 s). Verified by running
-the cases and comparing, not by a test in &lt;code>tests/&lt;/code>. (See the FDS input
-pitfalls on the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#fds-input-pitfalls" target="_blank" rel="noopener">FED page&lt;/a>
-for the conflicting-&lt;code>&amp;amp;INIT&lt;/code> pitfall this suite surfaced.) Full writeup:
-&lt;code>docs/testing-homogeneous.md&lt;/code>.&lt;/li>
-&lt;li>&lt;strong>Cognitive Map Memory&lt;/strong>: 4x32 m corridor with a side alcove, 20 &lt;code>discovery&lt;/code>
-agents. The side exit&amp;rsquo;s sign faces west and is legible only from
-&lt;code>y ∈ [12.3, 27.8]&lt;/code> on the centreline on the 0.25 m grid (&lt;code>[12.5, 27.5]&lt;/code>
-analytically under the 30 m cap) — a window that falls out of
-&lt;code>view_angle * max_vis &amp;gt;= distance&lt;/code> rather than being tuned, and that
-&lt;code>build_geometry.py&lt;/code> recomputes and asserts. Proves the cognitive map does the
-one thing a visibility query cannot: &lt;strong>remember&lt;/strong>. The side exit is unknown at
-spawn, enters the map on crossing &lt;code>y=12&lt;/code>, and is &lt;em>still&lt;/em> there at &lt;code>y=30&lt;/code>
-where the sign is long unreadable. Persistence is the load-bearing claim —
-delete the expansion rules and acquisition still appears to work for any agent
-starting inside the window. A third test closes the loop to routing: a
-remembered-but-illegible exit must still be routable. &lt;code>scripts/generate_cognitive_map_states.py&lt;/code> renders the
-three states (unknown / legible now / remembered, the hatched exit being the
-memory made visible) from live &lt;code>rank_routes&lt;/code> probes. The agent takes the side
-exit from &lt;code>y = 14&lt;/code> to &lt;code>24&lt;/code> and the end exit from &lt;code>y = 26&lt;/code> (the two are equally
-far at &lt;code>y ≈ 25.4&lt;/code>); walking back to &lt;code>y = 10&lt;/code> with its map, it takes the side
-exit where it took the end exit on the way up. In the full run each agent
-switches once, &lt;code>E_end → E_side&lt;/code> at t = 5–18 s, and egress takes 21.2 s.
-Checked by &lt;code>tests/test_cognitive_map_memory.py&lt;/code>, which pins the probe outcomes.&lt;/li>
-&lt;li>&lt;strong>FIC vs FED Speed&lt;/strong>: 4x50 m sealed corridor, 30 agents, one exit. The gas is
-&lt;em>prescribed&lt;/em> by a single &lt;code>&amp;amp;INIT&lt;/code> (CO at 2000 ppm, acrolein at 10 ppm) rather
-than burned, so concentration is constant in space and time and the only
-variable across runs is which tenability rules are enabled — set from the
-command line (&lt;code>--disable-tenability&lt;/code>, &lt;code>--fic-alpha 0&lt;/code>, or the default).
-Separates the two rules by timescale: &lt;strong>FED is a cumulative dose with a
-threshold and does nothing below it&lt;/strong> (0.079 /min here, so 13 minutes to reach
-FED = 1, against a ~33 s egress), while &lt;strong>FIC responds instantaneously&lt;/strong>
-(&lt;code>FIC = 0.5&lt;/code>, speed factor 0.65, so ~51 s). The prediction is stated in the
-asset README before running and is falsifiable: if FED materially slows an
-agent over a minute of exposure, the model or the reasoning is wrong. A
-control test records that acrolein is &lt;em>not&lt;/em> only an irritant — it also sits in
-FED&amp;rsquo;s Fractional Lethal Dose sum, so removing it takes 100% of the speed
-penalty but only 3% of the dose rate, and that asymmetry is what makes the two
-rules separable. Also pins the O2 hypoxia term against the published closed
-form (Fire Safety Journal, surrogate-gases paper, Eq. 9) rather than against
-our own docs. Checked by &lt;code>tests/test_fic_vs_fed_speed.py&lt;/code>.&lt;/li>
-&lt;li>&lt;strong>Exit Visibility Alpha&lt;/strong>: 4x30 m corridor, 40 &lt;code>discovery&lt;/code> agents, two
-exits. The two configs differ in exactly one value — the viewing bearing
-(&lt;code>alpha&lt;/code>) of the near exit&amp;rsquo;s sign — so any difference in exit choice is
-attributable to sign orientation and nothing else. Proves that legibility
-decides cognitive-map membership, and membership decides the exit: at
-&lt;code>alpha=0&lt;/code> both exits enter the map and agents take the nearer one; at
-&lt;code>alpha=180&lt;/code> the near exit never enters the map and agents walk 10 m further
-to the only exit they know about, even though distance favours the near one
-by more than 2:1. The near exit is &lt;em>absent&lt;/em>, not rejected — a stronger claim,
-since a rejected route still appears in the ranking and the all-rejected
-fallback can reinstate it. Checked by
-&lt;code>tests/test_exit_visibility_alpha.py&lt;/code>, which needs no FDS output: it
-reimplements fdsvismap&amp;rsquo;s clear-air rule (&lt;code>view_angle * max_vis &amp;gt;= distance&lt;/code>)
-so the test exercises the routing decision rather than the third-party
-solver. A companion test pins that a &lt;code>full&lt;/code>-familiarity agent ignores the
-bearing entirely — signs are wayfinding information and bind only where
-knowledge is incomplete. The folder README documents the &lt;strong>visibility
-ceiling&lt;/strong> (30 m by default) that makes a sign
-illegible at any bearing, and how much tighter it becomes once smoke is
-present (&lt;code>c / K̄&lt;/code>, so 6 m at &lt;code>c=3&lt;/code>, &lt;code>K̄=0.5&lt;/code>).&lt;/li>
-&lt;li>&lt;strong>Familiarity Test Full&lt;/strong> / &lt;strong>Familiarity Test Discovery&lt;/strong>: &lt;code>SocialForceModel&lt;/code>
-scenario on a hand-drawn maze-like floor plan (20x18 m, 0.1 m walls, 1.2 m
-doors throughout, generated parametrically by each folder&amp;rsquo;s
-&lt;code>build_geometry.py&lt;/code>), differing only in the spawn distribution&amp;rsquo;s
-&lt;code>familiarity&lt;/code> value. A matching fire deck lives at
-&lt;code>assets/familiarity_test_full/familiarity_test.fds&lt;/code> (real
-combustion via &lt;code>&amp;amp;REAC&lt;/code>, not a prescribed &lt;code>&amp;amp;INIT&lt;/code>; walls mirror the
-walkable geometry exactly so smoke propagates through the same
-doorways agents use). These two configs use the legacy &lt;code>journeys&lt;/code>/
-&lt;code>transitions&lt;/code> shape directly (the web editor&amp;rsquo;s &lt;code>journeys_v2&lt;/code> format is
-auto-migrated to this shape by &lt;code>load_scenario&lt;/code>, but was hand-converted
-here to add the extra edge below). The maze&amp;rsquo;s start room is one open
-box that connects directly to the checkpoint outside the exit door
-(&lt;code>jps-checkpoints_0 → jps-checkpoints_3&lt;/code>), completely bypassing the
-scripted checkpoint tour through the rest of the maze — a real ~39%
-shorter route (32 m vs 52 m) that&amp;rsquo;s declared as an extra graph edge
-(tagged &lt;code>journey_id: &amp;quot;shortcut&amp;quot;&lt;/code> in &lt;code>transitions&lt;/code>, invisible to the
-static spawn-time journey) for the rerouting/cognitive-map system to
-find. Run with &lt;code>--enable-rerouting&lt;/code> (no &lt;code>--fds-dir&lt;/code>/vis-cache needed —
-divergence here is pure-distance, not smoke-driven) to see it: &lt;code>full&lt;/code>
-agents know the whole graph immediately and are assigned the shortcut
-at spawn; &lt;code>discovery&lt;/code> agents start knowing
-only the spawn&amp;rsquo;s declared neighbor and explore the nearest
-known-but-unvisited doorway at each step — which for this maze&amp;rsquo;s
-geometry happens to coincide with the original scripted tour the whole
-way, so they end up taking the long route without ever finding the
-shortcut. Verified: &lt;code>full&lt;/code> evacuates in 33.9 s vs &lt;code>discovery&lt;/code>&amp;rsquo;s 88.6 s
-(both 20/20 evacuated; see the results table in
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/">&lt;code>docs/testing-familiarity.md&lt;/code>&lt;/a>).&lt;/li>
-&lt;/ul></description></item><item><title>FDS slice sampling</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/</guid><description>
-&lt;blockquote>
-&lt;p>Part of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/README.md" target="_blank" rel="noopener">pyFDS-Evac&lt;/a>.&lt;/p>
-&lt;/blockquote>&lt;p>The &lt;code>SliceFieldSampler&lt;/code> class in &lt;code>pyfds_evac/core/fds_sampling.py&lt;/code> provides
-nearest-neighbor spatial and temporal lookup on horizontal FDS slice
-files. It&amp;rsquo;s the shared pyFDS-Evac data-access layer used by both the
-smoke-speed model (extinction coefficient) and the FED model (gas
-concentrations).&lt;/p>
-&lt;h2>How it works&lt;span class="hx-absolute -hx-mt-20" id="how-it-works">&lt;/span>
-&lt;a href="#how-it-works" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>SliceFieldSampler&lt;/code> wraps a single &lt;code>fdsreader&lt;/code> slice object and
-exposes a &lt;code>sample(time_s, x, y)&lt;/code> method that returns the scalar value
-at the nearest slice value position and the nearest timestep. The
-value positions depend on how FDS wrote the slice (&lt;a href="https://github.com/firemodels/fds/blob/c9da70d7a/Manuals/FDS_User_Guide/FDS_User_Guide.tex" target="_blank" rel="noopener">FDS User Guide&lt;/a>, &lt;code>&amp;amp;SLCF&lt;/code>):&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>Node-centred&lt;/strong> (the FDS default): one value per mesh node, which
-FDS averages from the cells around that node. The sampler reads the
-nearest node.&lt;/li>
-&lt;li>&lt;strong>Cell-centred&lt;/strong> (&lt;code>CELL_CENTERED=T&lt;/code> on the &lt;code>&amp;amp;SLCF&lt;/code> line): one value
-per cell, without averaging. The sampler reads the nearest cell
-centre, the midpoint of the cell&amp;rsquo;s two nodes, so stretched grids are
-handled.&lt;/li>
-&lt;/ul>
-&lt;p>A query exactly halfway between two positions reads the lower index.&lt;/p>
-&lt;p>Internally it:&lt;/p>
-&lt;ol>
-&lt;li>Finds the subslice whose bounding box covers the queried &lt;code>(x, y)&lt;/code>
-point (one subslice per FDS mesh the slice intersects).&lt;/li>
-&lt;li>Resolves the nearest timestep index via binary search
-(&lt;code>get_nearest_timestep&lt;/code>).&lt;/li>
-&lt;li>Finds the nearest value position along the x and y axes, from the
-mesh nodes inside the subslice extent (midpoints of those nodes for
-cell-centred slices).&lt;/li>
-&lt;li>Returns &lt;code>subslice.data[t_index, i_index, j_index]&lt;/code>.&lt;/li>
-&lt;/ol>
-&lt;h3>Performance caches&lt;span class="hx-absolute -hx-mt-20" id="performance-caches">&lt;/span>
-&lt;a href="#performance-caches" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Three caches reduce per-call overhead on hot paths (for example, sampling
-along a line of sight where all points share the same timestep and
-typically the same subslice):&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>Last-hit subslice cache&lt;/strong> &amp;ndash; the most recently matched subslice is
-checked first before falling back to a linear scan. Consecutive
-sample points along a ray almost always hit the same subslice.&lt;/li>
-&lt;li>&lt;strong>Timestep cache&lt;/strong> &amp;ndash; when &lt;code>time_s&lt;/code> hasn&amp;rsquo;t changed since the last
-call, the cached &lt;code>t_index&lt;/code> is reused, skipping the binary search.&lt;/li>
-&lt;li>&lt;strong>Axis cache&lt;/strong> &amp;ndash; the x and y value positions of each subslice are
-computed once and reused.&lt;/li>
-&lt;/ul>
-&lt;h2>Loading a sampler&lt;span class="hx-absolute -hx-mt-20" id="loading-a-sampler">&lt;/span>
-&lt;a href="#loading-a-sampler" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Use &lt;code>load_slice_sampler()&lt;/code> to load a single FDS quantity:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fds_sampling &lt;span style="color:#f92672">import&lt;/span> load_slice_sampler
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler &lt;span style="color:#f92672">=&lt;/span> load_slice_sampler(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;SOOT EXTINCTION COEFFICIENT&amp;#34;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>value &lt;span style="color:#f92672">=&lt;/span> sampler&lt;span style="color:#f92672">.&lt;/span>sample(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;h3>Selecting a slice height&lt;span class="hx-absolute -hx-mt-20" id="selecting-a-slice-height">&lt;/span>
-&lt;a href="#selecting-a-slice-height" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When an FDS case contains multiple horizontal slices for the same
-quantity at different heights, pass &lt;code>slice_height_m&lt;/code> to select the
-closest one:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>sampler &lt;span style="color:#f92672">=&lt;/span> load_slice_sampler(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;SOOT EXTINCTION COEFFICIENT&amp;#34;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>If only one slice matches the quantity, &lt;code>slice_height_m&lt;/code> has no effect.&lt;/p>
-&lt;p>The rule lives in &lt;code>select_horizontal_slice&lt;/code>: vertical slices are
-skipped, the slice whose z is nearest &lt;code>slice_height_m&lt;/code> wins, and a
-warning is logged when it is more than 0.5 m away. The visibility model
-applies the same function to the extinction slice it hands to fdsvismap.&lt;/p>
-&lt;h3>Sharing a &lt;code>Simulation&lt;/code> instance&lt;span class="hx-absolute -hx-mt-20" id="sharing-a-simulation-instance">&lt;/span>
-&lt;a href="#sharing-a-simulation-instance" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Parsing an FDS case directory is expensive. When you need both
-extinction and FED fields from the same case, load the &lt;code>Simulation&lt;/code>
-once and pass it to both factory methods:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> fdsreader &lt;span style="color:#f92672">import&lt;/span> Simulation
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> ExtinctionField
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fed &lt;span style="color:#f92672">import&lt;/span> FdsFedField
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sim &lt;span style="color:#f92672">=&lt;/span> Simulation(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>extinction &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, simulation&lt;span style="color:#f92672">=&lt;/span>sim)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed_field &lt;span style="color:#f92672">=&lt;/span> FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, simulation&lt;span style="color:#f92672">=&lt;/span>sim)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>All three factory functions (&lt;code>load_slice_sampler&lt;/code>,
-&lt;code>ExtinctionField.from_fds&lt;/code>, &lt;code>FdsFedField.from_fds&lt;/code>) accept an optional
-&lt;code>simulation&lt;/code> keyword argument. When omitted, each creates its own
-&lt;code>Simulation&lt;/code> instance internally.&lt;/p>
-&lt;h2>Integration with models&lt;span class="hx-absolute -hx-mt-20" id="integration-with-models">&lt;/span>
-&lt;a href="#integration-with-models" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>Smoke-speed model&lt;span class="hx-absolute -hx-mt-20" id="smoke-speed-model">&lt;/span>
-&lt;a href="#smoke-speed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>ExtinctionField&lt;/code> wraps a &lt;code>SliceFieldSampler&lt;/code> for the
-&lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> quantity and exposes
-&lt;code>sample_extinction(time_s, x, y)&lt;/code>:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> ExtinctionField, SmokeSpeedModel
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>field &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>model &lt;span style="color:#f92672">=&lt;/span> SmokeSpeedModel(field, config)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>speed_factor &lt;span style="color:#f92672">=&lt;/span> model&lt;span style="color:#f92672">.&lt;/span>sample(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>If a queried point falls outside the FDS domain, &lt;code>sample_extinction&lt;/code>
-returns &lt;code>0.0&lt;/code> (clear air) and logs a warning on the first occurrence.&lt;/p>
-&lt;h3>FED model&lt;span class="hx-absolute -hx-mt-20" id="fed-model">&lt;/span>
-&lt;a href="#fed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>FdsFedField&lt;/code> creates one &lt;code>SliceFieldSampler&lt;/code> per gas species (CO,
-CO2, O2, and optionally HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,
-formaldehyde):&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fed &lt;span style="color:#f92672">import&lt;/span> FdsFedField, DefaultFedModel
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed_field &lt;span style="color:#f92672">=&lt;/span> FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>model &lt;span style="color:#f92672">=&lt;/span> DefaultFedModel(fed_field)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>inputs &lt;span style="color:#f92672">=&lt;/span> model&lt;span style="color:#f92672">.&lt;/span>sample_inputs(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;h3>Line-of-sight extinction&lt;span class="hx-absolute -hx-mt-20" id="line-of-sight-extinction">&lt;/span>
-&lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The &lt;code>integrated_extinction_along_los()&lt;/code> function in
-&lt;code>pyfds_evac/core/route_graph.py&lt;/code> computes the Beer-Lambert path-integrated
-mean extinction coefficient between two points. It samples at uniform
-intervals along the ray and returns the arithmetic mean:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.route_graph &lt;span style="color:#f92672">import&lt;/span> integrated_extinction_along_los
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>k_mean &lt;span style="color:#f92672">=&lt;/span> integrated_extinction_along_los(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> x_from&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>, y_from&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> x_to&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">10.0&lt;/span>, y_to&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> extinction_sampler&lt;span style="color:#f92672">=&lt;/span>field,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> step_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>This is the discrete form of
-&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>,
-Eq. 8-9, and is used internally by the route-cost evaluator for
-smoke-aware &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">routing&lt;/a>.&lt;/p>
-&lt;h2>Next steps&lt;span class="hx-absolute -hx-mt-20" id="next-steps">&lt;/span>
-&lt;a href="#next-steps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">FDS case requirements&lt;/a> &amp;ndash; the &lt;code>&amp;amp;SLCF&lt;/code> lines a
-case must declare, and the failure modes when they&amp;rsquo;re missing.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">Smoke-speed model&lt;/a> &amp;ndash; how extinction drives
-agent speed reduction.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">Smoke-aware routing&lt;/a> &amp;ndash; how extinction and FED drive
-dynamic route selection.&lt;/li>
-&lt;/ul></description></item></channel></rss>
+&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item></channel></rss>

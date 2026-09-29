@@ -949,10 +949,9 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;strong>No vismap precondition.&lt;/strong> The gate reads no visibility model. &lt;code>b16e900&lt;/code>
-unified the criterion on the route polyline and &lt;code>89d13d4&lt;/code> removed the
-&lt;code>_gate_needs_sight&lt;/code> precompute that a gate deck used to trigger, so a
-familiarity-1.0 gate deck now runs with no &lt;code>--vis-cache&lt;/code> at all: &lt;code>l_corridor&lt;/code>
+&lt;p>&lt;strong>No vismap precondition.&lt;/strong> The gate reads no visibility model: its criterion
+is the optical depth along the route polyline. A deck of fully familiar agents
+therefore builds no visibility model and needs no &lt;code>--vis-cache&lt;/code>: &lt;code>l_corridor&lt;/code>
 takes 5 seconds and reproduces the cached run&amp;rsquo;s 82/18. A visibility model is
 still built for decks with discovery agents, which consult it to learn the
 graph.&lt;/p>
@@ -983,8 +982,8 @@ the sort is not necessarily the exit the agent walks to. See
 them apart: &lt;code>tau_return_margin&lt;/code> decides which routes are &lt;em>candidates&lt;/em>,
 &lt;code>current_exit_discount&lt;/code> decides their &lt;em>order&lt;/em>, and &lt;code>tau_deadband&lt;/code> decides
 whether the agent &lt;em>acts&lt;/em> on that order. Only the third can change an exit.&lt;/p>
-&lt;p>&lt;strong>One quantity refuses a route, orders it, and weights its edges.&lt;/strong> That is the
-change at &lt;code>0d9bf79&lt;/code>. Before it, Dijkstra minimised the additive composite, the
+&lt;p>&lt;strong>One quantity refuses a route, orders it, and weights its edges.&lt;/strong> Before
+this design, Dijkstra minimised the additive composite, the
 survivors were ordered by travel time, and the gate judged them on optical
 depth — three currencies, and a gate could refuse an exit on a smoky path while
 a longer passable path to the same exit existed and was never offered.&lt;/p>
@@ -995,8 +994,7 @@ alone; a cleaner route wins only by carrying enough less smoke to pay for its
 extra metres. A band compared cleanliness with no reference to how far the agent
 had to carry it, which is why it had to be kept out of the main sort: on
 &lt;code>l_corridor&lt;/code> it put agents on the 58 m route while both routes read
-&lt;code>k_ave = 0.000&lt;/code>. &lt;code>_visibility_band&lt;/code>, &lt;code>_sighting_distance&lt;/code>, &lt;code>band_width_m&lt;/code> and
-the saturation constant are all gone at &lt;code>0d9bf79&lt;/code>.&lt;/p>
+&lt;code>k_ave = 0.000&lt;/code>. The band has been removed.&lt;/p>
 &lt;p>&lt;strong>The &lt;code>1e-6 * length&lt;/code> floor on the edge weight is not a tuning constant.&lt;/strong> In
 clear air every &lt;code>k_avg&lt;/code> is zero, so without it every path ties at weight zero
 and Dijkstra returns an arbitrary one. The floor makes the tie break on length.

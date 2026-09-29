@@ -13,7 +13,7 @@ via &lt;code>SmokeSpeedConfig.speed_law&lt;/code>.&lt;/p>
 &lt;h2>Speed-reduction laws&lt;span class="hx-absolute -hx-mt-20" id="speed-reduction-laws">&lt;/span>
 &lt;a href="#speed-reduction-laws" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The agent walks at &lt;code>v0 * speed_factor(K)&lt;/code>, where &lt;code>v0&lt;/code> is its clear-air speed
 and the factor follows &lt;code>speed_law=&amp;quot;lund&amp;quot;&lt;/code> (default) or &lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>. The
-&lt;code>fridolf&lt;/code> law (Fridolf et al. 2018) reduces speed additively, so its factor
+&lt;code>fridolf&lt;/code> law (&lt;a href="https://doi.org/10.1016/j.tust.2019.04.016" target="_blank" rel="noopener">Fridolf et al. 2019, Eq. 7&lt;/a>) reduces speed additively, so its factor
 also depends on &lt;code>v0&lt;/code>. The coded
 equations, the &lt;code>SmokeSpeedConfig&lt;/code> defaults and the departures from the
 literature are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page;
@@ -38,7 +38,7 @@ Table 21.&lt;/li>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>field &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>, &lt;span style="color:#75715e"># select the horizontal slice closest to 2 m&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.6&lt;/span>, &lt;span style="color:#75715e"># default 1.6 m, FDS+Evac HUMAN_SMOKE_HEIGHT&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
@@ -75,7 +75,7 @@ settings:&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>config &lt;span style="color:#f92672">=&lt;/span> SmokeSpeedConfig(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fds_dir&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> update_interval_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>, &lt;span style="color:#75715e"># how often agents resample extinction&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>, &lt;span style="color:#75715e"># FDS slice height&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.6&lt;/span>, &lt;span style="color:#75715e"># default 1.6 m, FDS+Evac HUMAN_SMOKE_HEIGHT&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> speed_law&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;lund&amp;#34;&lt;/span>, &lt;span style="color:#75715e"># or &amp;#34;fridolf&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -245,11 +245,14 @@ computes the reduced walking speed directly from soot density.&lt;/li>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">Smoke-speed model&lt;/a>: coded form, defaults and
 deviations from the literature.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/iso-test-18/">ISO 20414 Test 18&lt;/a> and the S2 corridor test
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s2_corridor_speed.py" target="_blank" rel="noopener">&lt;code>tests/verification/test_s2_corridor_speed.py&lt;/code>&lt;/a>):
+how the speed reduction is verified.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a> and
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>: the published laws
 and their sources.&lt;/li>
-&lt;li>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/evac.f90" target="_blank" rel="noopener">evac.f90&lt;/a> &amp;ndash; Original FDS+Evac Fortran
-source for cross-referencing implementation details.&lt;/li>
+&lt;li>&lt;a href="https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90" target="_blank" rel="noopener">evac.f90&lt;/a> &amp;ndash; Original FDS+Evac Fortran
+source (FDS commit c9da70d7a) for cross-referencing implementation details.&lt;/li>
 &lt;/ul></description></item><item><title>Routing</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/</guid><description>
 &lt;div class="hextra-cards hx-mt-4 hx-gap-4 hx-grid not-prose" style="--hextra-cards-grid-cols: 3;">
 &lt;a
@@ -702,4 +705,217 @@ visibility in performance based fire safety design&lt;/em>. Fire Safety Journal,
 &lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2024.104269&lt;/a>&lt;/li>
 &lt;li>Haensel, D. (2014). &lt;em>A knowledge-based routing framework for pedestrian
 dynamics simulation&lt;/em>. Diploma thesis, TU Dresden.&lt;/li>
+&lt;/ul></description></item><item><title>FDS slice sampling</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/</guid><description>
+&lt;p>How pyFDS-Evac reads FDS slice data at an agent&amp;rsquo;s position: the sampler, how
+a slice is chosen by height, and how the models use it. For the slices a
+deck must write, see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>.&lt;/p>
+&lt;p>The &lt;code>SliceFieldSampler&lt;/code> class in &lt;code>pyfds_evac/core/fds_sampling.py&lt;/code> provides
+nearest-neighbor spatial and temporal lookup on horizontal FDS slice
+files. It&amp;rsquo;s the shared pyFDS-Evac data-access layer used by both the
+smoke-speed model (extinction coefficient) and the FED model (gas
+concentrations).&lt;/p>
+&lt;h2>How it works&lt;span class="hx-absolute -hx-mt-20" id="how-it-works">&lt;/span>
+&lt;a href="#how-it-works" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>SliceFieldSampler&lt;/code> wraps a single &lt;code>fdsreader&lt;/code> slice object and
+exposes a &lt;code>sample(time_s, x, y)&lt;/code> method that returns the scalar value
+at the nearest slice value position and the nearest timestep. The
+value positions depend on how FDS wrote the slice (&lt;a href="https://github.com/firemodels/fds/blob/c9da70d7a/Manuals/FDS_User_Guide/FDS_User_Guide.tex" target="_blank" rel="noopener">FDS User Guide&lt;/a>, &lt;code>&amp;amp;SLCF&lt;/code>):&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Node-centred&lt;/strong> (the FDS default): one value per mesh node, which
+FDS averages from the cells around that node. The sampler reads the
+nearest node.&lt;/li>
+&lt;li>&lt;strong>Cell-centred&lt;/strong> (&lt;code>CELL_CENTERED=T&lt;/code> on the &lt;code>&amp;amp;SLCF&lt;/code> line): one value
+per cell, without averaging. The sampler reads the nearest cell
+centre, the midpoint of the cell&amp;rsquo;s two nodes, so stretched grids are
+handled.&lt;/li>
+&lt;/ul>
+&lt;p>A query exactly halfway between two positions reads the lower index.&lt;/p>
+&lt;p>Internally it:&lt;/p>
+&lt;ol>
+&lt;li>Finds the subslice whose bounding box covers the queried &lt;code>(x, y)&lt;/code>
+point (one subslice per FDS mesh the slice intersects).&lt;/li>
+&lt;li>Resolves the nearest timestep index via binary search
+(&lt;code>get_nearest_timestep&lt;/code>).&lt;/li>
+&lt;li>Finds the nearest value position along the x and y axes, from the
+mesh nodes inside the subslice extent (midpoints of those nodes for
+cell-centred slices).&lt;/li>
+&lt;li>Returns &lt;code>subslice.data[t_index, i_index, j_index]&lt;/code>.&lt;/li>
+&lt;/ol>
+&lt;h3>Performance caches&lt;span class="hx-absolute -hx-mt-20" id="performance-caches">&lt;/span>
+&lt;a href="#performance-caches" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Three caches reduce per-call overhead on hot paths (for example, sampling
+along a line of sight where all points share the same timestep and
+typically the same subslice):&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Last-hit subslice cache&lt;/strong> &amp;ndash; the most recently matched subslice is
+checked first before falling back to a linear scan. Consecutive
+sample points along a ray almost always hit the same subslice.&lt;/li>
+&lt;li>&lt;strong>Timestep cache&lt;/strong> &amp;ndash; when &lt;code>time_s&lt;/code> hasn&amp;rsquo;t changed since the last
+call, the cached &lt;code>t_index&lt;/code> is reused, skipping the binary search.&lt;/li>
+&lt;li>&lt;strong>Axis cache&lt;/strong> &amp;ndash; the x and y value positions of each subslice are
+computed once and reused.&lt;/li>
+&lt;/ul>
+&lt;h2>Loading a sampler&lt;span class="hx-absolute -hx-mt-20" id="loading-a-sampler">&lt;/span>
+&lt;a href="#loading-a-sampler" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Use &lt;code>load_slice_sampler()&lt;/code> to load a single FDS quantity:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fds_sampling &lt;span style="color:#f92672">import&lt;/span> load_slice_sampler
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sampler &lt;span style="color:#f92672">=&lt;/span> load_slice_sampler(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;SOOT EXTINCTION COEFFICIENT&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>value &lt;span style="color:#f92672">=&lt;/span> sampler&lt;span style="color:#f92672">.&lt;/span>sample(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Selecting a slice height&lt;span class="hx-absolute -hx-mt-20" id="selecting-a-slice-height">&lt;/span>
+&lt;a href="#selecting-a-slice-height" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When an FDS case contains multiple horizontal slices for the same
+quantity at different heights, pass &lt;code>slice_height_m&lt;/code> to select the
+closest one:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>sampler &lt;span style="color:#f92672">=&lt;/span> load_slice_sampler(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;SOOT EXTINCTION COEFFICIENT&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> slice_height_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.6&lt;/span>, &lt;span style="color:#75715e"># default of run.py, FDS+Evac HUMAN_SMOKE_HEIGHT&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>If only one slice matches the quantity, &lt;code>slice_height_m&lt;/code> has no effect.
+Without &lt;code>slice_height_m&lt;/code>, &lt;code>load_slice_sampler&lt;/code> takes the first horizontal
+slice in declaration order. The model factories (&lt;code>ExtinctionField.from_fds&lt;/code>,
+&lt;code>FdsFedField.from_fds&lt;/code>, &lt;code>FdsHeatField.from_fds&lt;/code>) default to 1.6 m.&lt;/p>
+&lt;p>The rule lives in &lt;code>select_horizontal_slice&lt;/code>: vertical slices are
+skipped, the slice whose z is nearest &lt;code>slice_height_m&lt;/code> wins, and a
+warning is logged when it is more than 0.5 m away. The visibility model
+applies the same function to the extinction slice it hands to fdsvismap.&lt;/p>
+&lt;h3>Sharing a &lt;code>Simulation&lt;/code> instance&lt;span class="hx-absolute -hx-mt-20" id="sharing-a-simulation-instance">&lt;/span>
+&lt;a href="#sharing-a-simulation-instance" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Parsing an FDS case directory is expensive. When you need both
+extinction and FED fields from the same case, load the &lt;code>Simulation&lt;/code>
+once and pass it to both factory methods:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> fdsreader &lt;span style="color:#f92672">import&lt;/span> Simulation
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> ExtinctionField
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fed &lt;span style="color:#f92672">import&lt;/span> FdsFedField
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sim &lt;span style="color:#f92672">=&lt;/span> Simulation(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>extinction &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, simulation&lt;span style="color:#f92672">=&lt;/span>sim)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed_field &lt;span style="color:#f92672">=&lt;/span> FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, simulation&lt;span style="color:#f92672">=&lt;/span>sim)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>All three factory functions (&lt;code>load_slice_sampler&lt;/code>,
+&lt;code>ExtinctionField.from_fds&lt;/code>, &lt;code>FdsFedField.from_fds&lt;/code>) accept an optional
+&lt;code>simulation&lt;/code> keyword argument. When omitted, each creates its own
+&lt;code>Simulation&lt;/code> instance internally.&lt;/p>
+&lt;h2>Integration with models&lt;span class="hx-absolute -hx-mt-20" id="integration-with-models">&lt;/span>
+&lt;a href="#integration-with-models" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>Smoke-speed model&lt;span class="hx-absolute -hx-mt-20" id="smoke-speed-model">&lt;/span>
+&lt;a href="#smoke-speed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>ExtinctionField&lt;/code> wraps a &lt;code>SliceFieldSampler&lt;/code> for the
+&lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> quantity and exposes
+&lt;code>sample_extinction(time_s, x, y)&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ExtinctionField,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SmokeSpeedConfig,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SmokeSpeedModel,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>field &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>) &lt;span style="color:#75715e"># slice nearest 1.6 m&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>model &lt;span style="color:#f92672">=&lt;/span> SmokeSpeedModel(field, SmokeSpeedConfig())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>extinction, speed_factor &lt;span style="color:#f92672">=&lt;/span> model&lt;span style="color:#f92672">.&lt;/span>sample(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>sample&lt;/code> returns the pair (&lt;em>K&lt;/em>, speed factor); &lt;code>model.speed_factor(...)&lt;/code>
+returns the factor alone. On the tracked &lt;code>assets/iso_table21_coupled/fds&lt;/code> at
+(5, 1) it gives &lt;em>K&lt;/em> = 0.99550 1/m and a factor of 0.919626.&lt;/p>
+&lt;p>If a queried point falls outside the FDS domain, &lt;code>sample_extinction&lt;/code>
+returns &lt;code>0.0&lt;/code> (clear air) and logs a warning on the first occurrence.&lt;/p>
+&lt;h3>FED model&lt;span class="hx-absolute -hx-mt-20" id="fed-model">&lt;/span>
+&lt;a href="#fed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>FdsFedField&lt;/code> creates one &lt;code>SliceFieldSampler&lt;/code> per gas species (CO,
+CO2, O2, and optionally HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,
+formaldehyde):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fed &lt;span style="color:#f92672">import&lt;/span> DefaultFedConfig, DefaultFedModel, FdsFedField
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed_field &lt;span style="color:#f92672">=&lt;/span> FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>) &lt;span style="color:#75715e"># slices nearest 1.6 m&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>model &lt;span style="color:#f92672">=&lt;/span> DefaultFedModel(fed_field, DefaultFedConfig())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>inputs &lt;span style="color:#f92672">=&lt;/span> model&lt;span style="color:#f92672">.&lt;/span>sample_inputs(time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>, x&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">5.0&lt;/span>, y&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3.0&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Each gas is read from its own slice nearest the height, so CO and CO₂ can
+come from different heights when the deck declares them at different heights.&lt;/p>
+&lt;h3>Heat model&lt;span class="hx-absolute -hx-mt-20" id="heat-model">&lt;/span>
+&lt;a href="#heat-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>FdsHeatField&lt;/code> reads the &lt;code>TEMPERATURE&lt;/code> slice nearest the height (1.6 m by
+default). With &lt;code>integrated_intensity=True&lt;/code>, used by
+&lt;code>--heat-radiant-source integrated-intensity&lt;/code>, it also reads the
+&lt;code>INTEGRATED INTENSITY&lt;/code> slice; the two must lie at the same z, or the call
+stops with a &lt;code>ValueError&lt;/code> that names both heights. The layer regime
+(&lt;code>--heat-regime layer&lt;/code>) reads a second &lt;code>TEMPERATURE&lt;/code> slice at
+&lt;code>--heat-layer-height&lt;/code>.&lt;/p>
+&lt;h3>Line-of-sight extinction&lt;span class="hx-absolute -hx-mt-20" id="line-of-sight-extinction">&lt;/span>
+&lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The &lt;code>integrated_extinction_along_los()&lt;/code> function in
+&lt;code>pyfds_evac/core/route_graph.py&lt;/code> computes the Beer-Lambert path-integrated
+mean extinction coefficient between two points. It samples at uniform
+intervals along the ray and returns the arithmetic mean:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.route_graph &lt;span style="color:#f92672">import&lt;/span> integrated_extinction_along_los
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>k_mean &lt;span style="color:#f92672">=&lt;/span> integrated_extinction_along_los(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> x_from&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>, y_from&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> x_to&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">10.0&lt;/span>, y_to&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> time_s&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">30.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> extinction_sampler&lt;span style="color:#f92672">=&lt;/span>field,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> step_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">2.0&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>This is the discrete form of
+&lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>,
+Eq. 8-9, and is used internally by the route-cost evaluator for
+smoke-aware &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/">routing&lt;/a>.&lt;/p>
+&lt;h2>Next steps&lt;span class="hx-absolute -hx-mt-20" id="next-steps">&lt;/span>
+&lt;a href="#next-steps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">FDS case requirements&lt;/a> &amp;ndash; the &lt;code>&amp;amp;SLCF&lt;/code> lines a
+case must declare, and the failure modes when they&amp;rsquo;re missing.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">Smoke-speed model&lt;/a> &amp;ndash; how extinction drives
+agent speed reduction.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/">Smoke-aware routing&lt;/a> &amp;ndash; how extinction and FED drive
+dynamic route selection.&lt;/li>
 &lt;/ul></description></item></channel></rss>
