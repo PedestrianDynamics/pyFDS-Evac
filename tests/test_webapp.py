@@ -53,6 +53,7 @@ def test_index_renders_form(client):
     assert "ISO-table21" in r.text  # scenario picker populated from assets/
     assert 'id="dir-modal"' in r.text  # directory-browser overlay container
     assert 'id="output_base"' in r.text  # output folder rendered
+    assert 'id="output-run-note"' in r.text  # typed folder -> <start time>
     assert "_smoke_history.csv" in r.text  # file-name preview present
     assert 'data-tab="model"' in r.text  # Model documentation tab present
     assert "Fractional Effective Dose" in r.text  # model docs content rendered

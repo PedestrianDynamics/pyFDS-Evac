@@ -414,6 +414,14 @@ _AUTOFILL_JS = """
     var derived = base ? root + '/' + base + '/' + modeValue() + '/seed' +
       (seedValue() || '<scenario seed>') + '/<start time>' : '';
     if (ob) ob.placeholder = derived || root + '/<scenario>';
+    // A typed folder still gets one start-time folder per run inside it.
+    // A relative one is taken under the results root, as on the server.
+    var typed = outputBase(), note = document.getElementById('output-run-note');
+    if (typed && !/^([\/~]|[A-Za-z]:\/)/.test(typed)) typed = root + '/' + typed;
+    if (note) {
+      note.style.display = typed ? 'flex' : 'none';
+      note.textContent = typed ? 'Each run writes into ' + typed + '/<start time>/' : '';
+    }
     // Preview lines under the folder box, so the section shows the real
     // filenames instead of a literal "<run>".
     document.querySelectorAll('.artifact-preview').forEach(function (el) {

@@ -768,6 +768,9 @@ def _output_files_section() -> NotStr:
                     style=_INPUT,
                     **_described("output_base"),
                 ),
+                # Filled by the autofill script while a folder is typed: each
+                # run still gets its own start-time folder inside it (#319).
+                Div(id="output-run-note", style=_PREVIEW_ROW + ";display:none"),
                 style=_FIELD,
             ),
             Div(
