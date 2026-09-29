@@ -573,7 +573,7 @@ def test_cli_rejects_unknown_source():
         parser.parse_args(["--scenario", "x", "--heat-radiant-source", "layer"])
 
 
-def test_cli_help_states_range_no_default_and_incident():
+def test_cli_help_states_range_no_default_and_net():
     import run
 
     help_text = run._build_parser().format_help()
@@ -581,7 +581,7 @@ def test_cli_help_states_range_no_default_and_incident():
     flat = " ".join(block.split()).lower()
     assert "0.25" in flat and "1" in flat
     assert "no default" in flat
-    assert "incident" in flat
+    assert "net" in flat.split() or "net," in flat
 
 
 # --- run_config -------------------------------------------------------------------
