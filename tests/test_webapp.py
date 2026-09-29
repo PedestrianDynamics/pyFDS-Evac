@@ -22,6 +22,16 @@ def client():
     return TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def results_root(tmp_path, monkeypatch):
+    """Derived output folders go to a temp root, not the repository."""
+    from pyfds_evac.webapp.params import RESULTS_ENV
+
+    root = tmp_path / "results"
+    monkeypatch.setenv(RESULTS_ENV, str(root))
+    return root
+
+
 def test_index_renders_form(client):
     r = client.get("/")
     assert r.status_code == 200
@@ -955,11 +965,36 @@ class TestOutputBase:
         form.update(extra)
         return form_to_opts(form)
 
-    def test_blank_uses_the_derived_folder(self):
-        opts = self._opts()
-        assert opts.output_sqlite == (
-            "results/t_junction/deterministic/seed42/t_junction.sqlite"
+    def test_blank_uses_the_derived_folder(self, results_root):
+        from pyfds_evac.webapp.params import form_to_opts
+
+        opts = form_to_opts(
+            {"scenario": "t_junction", "seed": "42"}, stamp="20260929T120000Z"
         )
+        assert opts.output_sqlite == (
+            f"{results_root.as_posix()}/t_junction/deterministic/seed42/"
+            "20260929T120000Z/t_junction.sqlite"
+        )
+
+    def test_blank_seed_folder_is_named_by_the_scenario_seed(self, results_root):
+        # #319: "seeddefault" hid the seed the run actually used.
+        from pyfds_evac.webapp.params import form_to_opts
+
+        opts = form_to_opts({"scenario": "t_junction"}, baseseed=1301, stamp="S")
+        assert opts.seed is None
+        assert opts.output_sqlite == (
+            f"{results_root.as_posix()}/t_junction/deterministic/seed1301/S/"
+            "t_junction.sqlite"
+        )
+
+    def test_existing_folder_gets_a_suffix(self, results_root):
+        from pyfds_evac.webapp.params import form_to_opts
+
+        form = {"scenario": "t_junction", "seed": "7"}
+        first = pathlib.Path(form_to_opts(form, stamp="S").output_sqlite).parent
+        first.mkdir(parents=True)
+        second = pathlib.Path(form_to_opts(form, stamp="S").output_sqlite).parent
+        assert second == first.with_name("S-2")
 
     def test_typed_folder_is_honoured(self):
         opts = self._opts(output_base="D:/scratch/my run")
@@ -972,9 +1007,9 @@ class TestOutputBase:
         opts = self._opts(output_base="out\\runs\\")
         assert opts.output_sqlite == "out/runs/t_junction.sqlite"
 
-    def test_whitespace_only_falls_back_to_derived(self):
+    def test_whitespace_only_falls_back_to_derived(self, results_root):
         opts = self._opts(output_base="   ")
-        assert opts.output_sqlite.startswith("results/t_junction/")
+        assert opts.output_sqlite.startswith(f"{results_root.as_posix()}/t_junction/")
 
     def test_posted_output_paths_are_ignored(self):
         # #330: the paths come from the scenario and the folder, never from a
@@ -1013,9 +1048,7 @@ class TestOutputBase:
             opts.export_app_bundle,
         ]
         assert all("Haspel" not in p for p in paths)
-        assert opts.output_sqlite.endswith(
-            "blind_spawn_discovery/deterministic/seed11/blind_spawn_discovery.sqlite"
-        )
+        assert "/blind_spawn_discovery/deterministic/seed11/" in opts.output_sqlite
 
     def test_form_has_no_hidden_output_paths(self, client):
         html = client.get("/").text
@@ -1045,16 +1078,60 @@ def test_run_name_matches_the_client_side_clean():
     assert run_name("t_junction/config_full.json") == "t_junction_config_full"
     assert run_name("uploads/mine") == "uploads_mine"
     assert run_name(None) == "run"
-    assert (
-        default_output_base("t_junction", "deterministic", 7)
-        == "results/t_junction/deterministic/seed7"
+    assert default_output_base("t_junction", "deterministic", 7, "S").endswith(
+        "/results/t_junction/deterministic/seed7/S"
     )
-    assert default_output_base("t_junction", None, None).endswith(
-        "/deterministic/seeddefault"
+    assert default_output_base("t_junction", None, None, "S").endswith(
+        "/deterministic/seeddefault/S"
     )
 
 
-def test_export_app_bundle_is_a_path_not_a_checkbox():
+def test_results_root_defaults_to_the_repository(monkeypatch):
+    from pyfds_evac.webapp.params import RESULTS_ENV, results_root
+
+    monkeypatch.delenv(RESULTS_ENV)
+    assert results_root() == pathlib.Path(__file__).resolve().parents[1] / "results"
+
+
+def test_runs_get_distinct_folders_named_by_start_time(client, results_root):
+    """#319: two runs with the same settings must not share a folder."""
+    from pyfds_evac.webapp.runner import run_stamp
+
+    folders = []
+    for _ in range(2):
+        r = client.post("/run", data={"scenario": "ISO-table21", "seed": "420"})
+        assert r.status_code == 200
+        assert _stream_until_terminal(client)[-1] == "done"
+        sqlite = pathlib.Path(manager.opts.output_sqlite)
+        assert sqlite.is_file()
+        assert sqlite.parent.name.startswith(run_stamp(manager.spec.started_at))
+        assert (
+            sqlite.parent.parent == results_root / "ISO-table21/deterministic/seed420"
+        )
+        folders.append(sqlite.parent)
+    assert folders[0] != folders[1]
+    client.post("/clear")
+
+
+def test_temp_trajectory_is_removed_when_the_result_is_dropped(client):
+    """#319: the temp sqlite and manifest used to leak on every GUI run."""
+    paths = []
+    for _ in range(2):
+        client.post("/run", data={"scenario": "ISO-table21", "seed": "420"})
+        assert _stream_until_terminal(client)[-1] == "done"
+        tmp = pathlib.Path(manager.result.sqlite_file)
+        manifest = pathlib.Path(manager.result.manifest_file)
+        assert tmp.is_file() and manifest.is_file()
+        # The copy in the output folder is the user's and is kept.
+        assert pathlib.Path(manager.opts.output_sqlite).is_file()
+        paths.append((tmp, manifest))
+    # Starting the second run dropped the first one's temp files.
+    assert not paths[0][0].exists() and not paths[0][1].exists()
+    client.post("/clear")
+    assert not paths[1][0].exists() and not paths[1][1].exists()
+
+
+def test_export_app_bundle_is_a_path_not_a_checkbox(results_root):
     """Regression: the checkbox posted 'on', so bundles landed in ./on/.
 
     --export-app-bundle takes a directory. The sidebar used to render it as a
@@ -1067,7 +1144,7 @@ def test_export_app_bundle_is_a_path_not_a_checkbox():
     )
     assert opts.export_app_bundle != "on"
     assert opts.export_app_bundle.endswith("/bundle")
-    assert opts.export_app_bundle.startswith("results/t_junction/")
+    assert opts.export_app_bundle.startswith(f"{results_root.as_posix()}/t_junction/")
 
 
 def test_form_rejects_value_outside_choices():
@@ -1619,6 +1696,5 @@ def test_exported_script_reproduces_the_gui_run(tmp_path):
     assert gui_metrics["seed"] == 1301
     assert gui_metrics["total_agents"] == 30
     assert script_metrics == gui_metrics
-    assert (
-        tmp_path / "pyfds_evac_blind_spawn_discovery_run1_output" / "trajectory.sqlite"
-    ).is_file()
+    (output,) = tmp_path.glob("pyfds_evac_blind_spawn_discovery_run1_*Z_output")
+    assert (output / "trajectory.sqlite").is_file()

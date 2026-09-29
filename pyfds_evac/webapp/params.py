@@ -7,6 +7,7 @@ HTML rendering uses plain FastHTML + inline styles (no MonsterUI).
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from argparse import Namespace
 from pathlib import Path
@@ -32,6 +33,8 @@ except ImportError:
     except ImportError:
         from fasthtml.core import to_xml
 
+from .runner import run_stamp, utc_now
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _ASSET_ROOT = _REPO_ROOT / "assets"
 # Scenarios uploaded through the GUI. Gitignored, and kept out of assets/ so a
@@ -39,6 +42,9 @@ _ASSET_ROOT = _REPO_ROOT / "assets"
 _UPLOAD_ROOT = _REPO_ROOT / "uploads"
 # Picker values for uploads carry this prefix; bundled scenarios carry none.
 UPLOAD_PREFIX = "uploads/"
+# Derived output folders go under this root: PYFDS_EVAC_RESULTS_DIR when set,
+# else results/ in the repository, whatever directory the server started in.
+RESULTS_ENV = "PYFDS_EVAC_RESULTS_DIR"
 
 _INPUT = (
     "background:var(--surface-input);border:1px solid var(--hairline);"
@@ -303,11 +309,12 @@ _HELP_TEXT: dict[str, str] = {
     "runs. Blank = no cache. Needs rerouting enabled; without an FDS dir it "
     "holds the clear-air map.",
     "output_base": "Folder the run writes into. Leave it blank to use the derived path "
-    "shown greyed out, which keeps each scenario / mode / seed in its own "
-    "folder. Type a path to override it and everything below goes there.",
+    "shown greyed out: a new folder per run, named by scenario, mode, the seed "
+    "used and the start time (UTC). Type a path to override it and everything "
+    "below goes there.",
     "results_only": "Finishes sooner by skipping the trajectory viewer and plots. "
-    "Writes every output file to results/: the SQLite, the CSVs, and a "
-    "config + geometry snapshot. Same as 'uv run run.py'.",
+    "Writes every output file to the output folder: the SQLite, the CSVs, and "
+    "a config + geometry snapshot. Same as 'uv run run.py'.",
 }
 
 
@@ -691,6 +698,7 @@ def _output_files_section() -> NotStr:
                 Input(
                     id="output_base",
                     name="output_base",
+                    data_results_root=results_root().as_posix(),
                     autocomplete="off",
                     spellcheck="false",
                     style=_INPUT,
@@ -813,15 +821,43 @@ def run_name(scenario: Any) -> str:
     return name.replace(".json", "").replace("/", "_") if name else "run"
 
 
-def default_output_base(scenario: Any, mode: Any, seed: Any) -> str:
-    """Derived output folder: one per scenario / incapacitation mode / seed."""
-    return (
-        f"results/{run_name(scenario)}/{mode or 'deterministic'}/"
-        f"seed{seed if seed is not None else 'default'}"
+def results_root() -> Path:
+    """Root of the derived output folders (see ``RESULTS_ENV``)."""
+    configured = os.environ.get(RESULTS_ENV, "").strip()
+    return Path(configured).expanduser() if configured else _REPO_ROOT / "results"
+
+
+def default_output_base(scenario: Any, mode: Any, seed: Any, stamp: str) -> str:
+    """Derived output folder of one run.
+
+    ``<results root>/<scenario>/<mode>/seed<seed>/<stamp>``: *seed* is the one
+    the run uses, and *stamp* the run's start time, so no two runs share a
+    folder, within a GUI session or across sessions. When the folder exists
+    anyway, a numeric suffix is added.
+    """
+    folder = (
+        results_root()
+        / run_name(scenario)
+        / str(mode or "deterministic")
+        / f"seed{seed if seed is not None else 'default'}"
+        / stamp
     )
+    candidate, n = folder, 2
+    while candidate.exists():
+        candidate = folder.with_name(f"{stamp}-{n}")
+        n += 1
+    return candidate.as_posix()
 
 
-def form_to_opts(form: dict[str, Any]) -> Namespace:
+def form_to_opts(
+    form: dict[str, Any], *, baseseed: Any = None, stamp: str | None = None
+) -> Namespace:
+    """Resolve a submitted form into the options ``build_run_kwargs`` takes.
+
+    ``baseseed`` is the scenario's own seed, which a blank Seed field falls
+    back to; it names the derived output folder. ``stamp`` is the run's start
+    time (see ``runner.run_stamp``); it defaults to now.
+    """
     parser = _load_parser()
     opts: dict[str, Any] = {}
     for action in parser._actions:
@@ -858,7 +894,12 @@ def form_to_opts(form: dict[str, Any]) -> Namespace:
     mode = str(opts.get("incapacitation_mode") or "deterministic")
     base = (
         str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
-    ) or (default_output_base(opts.get("scenario"), mode, opts.get("seed")))
+    ) or default_output_base(
+        opts.get("scenario"),
+        mode,
+        opts["seed"] if opts.get("seed") is not None else baseseed,
+        stamp or run_stamp(utc_now()),
+    )
     opts.update(
         output_sqlite=f"{base}/{sc}.sqlite",
         output_smoke_history=f"{base}/{sc}_smoke_history.csv",

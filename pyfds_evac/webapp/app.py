@@ -8,6 +8,7 @@ streaming and JS helpers are unchanged from the original.
 from __future__ import annotations
 
 import asyncio
+import atexit
 import io
 import json
 import re
@@ -43,7 +44,7 @@ from pyfds_evac.core import load_scenario
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
 from . import docs, params, plots, pyexport, theme, trajviz
-from .runner import RunManager, code_provenance, make_run_spec
+from .runner import RunManager, code_provenance, make_run_spec, run_stamp, utc_now
 
 _PLOTLY_CDN = Script(src="https://cdn.plot.ly/plotly-2.35.2.min.js")
 _HTMX_SSE = Script(src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js")
@@ -64,6 +65,8 @@ app, rt = fast_app(
     pico=False,
 )
 manager = RunManager()
+# The last run's temporary trajectory would otherwise outlive the server.
+atexit.register(manager.reset)
 # How long /cancel waits for the worker to end before answering.
 _CANCEL_WAIT_S = 2.0
 
@@ -345,7 +348,7 @@ _AUTOFILL_JS = """
   }
   function seedValue() {
     var el = document.getElementById('seed');
-    return (el && el.value.trim()) || 'default';
+    return (el && el.value.trim()) || '';
   }
   function modeValue() {
     var el = document.querySelector('[name="incapacitation_mode"]');
@@ -360,11 +363,14 @@ _AUTOFILL_JS = """
   }
   function fill(n) {
     var base = n ? clean(n) : '';
-    var derived = base ? 'results/' + base + '/' + modeValue() + '/seed' + seedValue() : '';
     // Show the derived folder as a placeholder rather than a value, so an empty
     // box still tells you where output lands while a typed path clearly wins.
+    // The server adds the start time; a blank seed is the scenario's own.
     var ob = document.getElementById('output_base');
-    if (ob) ob.placeholder = derived || 'results/<scenario>';
+    var root = (ob && ob.dataset.resultsRoot) || 'results';
+    var derived = base ? root + '/' + base + '/' + modeValue() + '/seed' +
+      (seedValue() || '<scenario seed>') + '/<start time>' : '';
+    if (ob) ob.placeholder = derived || root + '/<scenario>';
     // Preview lines under the folder box, so the section shows the real
     // filenames instead of a literal "<run>".
     document.querySelectorAll('.artifact-preview').forEach(function (el) {
@@ -970,7 +976,7 @@ class _FdsDirError(ValueError):
     """The FDS dir field does not name a folder."""
 
 
-def _resolve_form(form: dict):
+def _resolve_form(form: dict, stamp: str | None = None):
     """Resolve a submitted form into ``(scenario, opts)`` for build_run_kwargs.
 
     The one path from form to configuration: /run submits what this returns,
@@ -978,7 +984,7 @@ def _resolve_form(form: dict):
     API would reject, using the API's own checks.
     """
     scenario = load_scenario(str(params.scenario_path(form.get("scenario"))))
-    opts = params.form_to_opts(form)
+    opts = params.form_to_opts(form, baseseed=scenario.seed, stamp=stamp)
     # Normalise the FDS dir and fail fast on a bogus value. Without this,
     # a stale/garbage field (e.g. a pasted error string) is handed to
     # fdsreader as a path and produces a confusing nested-exception cascade.
@@ -1011,8 +1017,11 @@ async def post(request: Request):
     if manager.running:
         return _running_stream_view()
 
+    # One start time names the output folder and the snapshot, so the two
+    # agree and the exported script can be named after it.
+    started_at = utc_now()
     try:
-        scenario, opts = _resolve_form(form)
+        scenario, opts = _resolve_form(form, stamp=run_stamp(started_at))
     except _FdsDirError as exc:
         return Div(
             str(exc),
@@ -1030,6 +1039,7 @@ async def post(request: Request):
             scenario,
             scenario_name,
             str(params.scenario_path(scenario_name)),
+            started_at=started_at,
         )
         import run as cli
 

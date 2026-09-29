@@ -27,7 +27,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from .runner import RunSpec
+from .runner import RunSpec, run_stamp
 
 # Options that are paths on this machine. They go into the PATHS block,
 # resolved to absolute paths, so they are easy to find and edit.
@@ -273,6 +273,8 @@ def run_script(spec: RunSpec) -> ExportedScript:
         spec.git_dirty,
     )
     seed = spec.seed_used if spec.seed_used is not None else spec.opts.get("seed")
+    # Run numbers restart with every GUI session; the start time does not.
+    name = f"pyfds_evac_{stem}_run{spec.run_id}_{run_stamp(spec.started_at)}"
     opts = dict(spec.opts)
     opts["scenario"] = spec.scenario_path
     return _render(
@@ -280,8 +282,8 @@ def run_script(spec: RunSpec) -> ExportedScript:
         opts,
         seed,
         _seed_comment("run", spec, spec.opts.get("seed"), None),
-        f"pyfds_evac_{stem}_run{spec.run_id}_output",
-        f"pyfds_evac_{stem}_run{spec.run_id}.py",
+        f"{name}_output",
+        f"{name}.py",
     )
 
 

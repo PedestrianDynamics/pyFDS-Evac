@@ -76,6 +76,35 @@ class RunSpec:
         return argparse.Namespace(**copy.deepcopy(dict(self.opts)))
 
 
+def utc_now() -> str:
+    """The current UTC time as a run's ``started_at``, to the second."""
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def run_stamp(started_at: str) -> str:
+    """A filesystem-safe stamp of *started_at*, e.g. ``20260929T142301Z``.
+
+    It names a run's derived output folder and its exported script, so both
+    stay distinct across GUI sessions, where run numbers restart at 1.
+    """
+    stamp = datetime.fromisoformat(started_at).astimezone(timezone.utc)
+    return stamp.strftime("%Y%m%dT%H%M%SZ")
+
+
+def discard_result(result: Any) -> None:
+    """Delete the temporary trajectory and manifest *result* holds.
+
+    ``run_scenario`` writes them to the system temp directory and the GUI
+    copies them to the run's output folder; the copies stay. A file still
+    locked (Windows) is left for the OS to reclaim.
+    """
+    cleanup = getattr(result, "cleanup", None)
+    if cleanup is None:
+        return
+    with contextlib.suppress(OSError):
+        cleanup()
+
+
 @functools.cache
 def code_provenance() -> tuple[str | None, str | None, bool | None]:
     """``(pyfds-evac version, git commit, dirty)`` of the running code.
@@ -88,9 +117,17 @@ def code_provenance() -> tuple[str | None, str | None, bool | None]:
 
 
 def make_run_spec(
-    opts: Any, scenario: Any, scenario_name: str, scenario_path: str
+    opts: Any,
+    scenario: Any,
+    scenario_name: str,
+    scenario_path: str,
+    started_at: str | None = None,
 ) -> RunSpec:
-    """Freeze the resolved options of a run about to be submitted."""
+    """Freeze the resolved options of a run about to be submitted.
+
+    ``started_at`` is the submission time the output folder was named after;
+    it defaults to now.
+    """
     version, commit, dirty = code_provenance()
     seed = getattr(opts, "seed", None)
     return RunSpec(
@@ -98,7 +135,7 @@ def make_run_spec(
         scenario_name=scenario_name,
         scenario_path=scenario_path,
         opts=MappingProxyType(copy.deepcopy(dict(vars(opts)))),
-        started_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        started_at=started_at or utc_now(),
         pyfds_evac_version=version,
         git_commit=commit,
         git_dirty=dirty,
@@ -262,6 +299,7 @@ class RunManager:
         # Taken so a worker still publishing its terminal status can't
         # overwrite this run's fresh state.
         with self._state:
+            previous = self.result
             self._cancel.clear()
             self.run_id += 1
             self.status = "running"
@@ -280,6 +318,7 @@ class RunManager:
             self.fed_snapshots = []
             self.log_lines = []
             self.warnings = []
+        discard_result(previous)
 
         def check_cancel() -> None:
             if self._cancel.is_set():
@@ -339,6 +378,7 @@ class RunManager:
             if outcome == "cancelled":
                 # A deliberate stop, not a failure: leave no error for the UI
                 # to report and drop any partial result.
+                discard_result(self.result)
                 self.result = None
                 self.error = None
             if self.spec is not None:
@@ -374,6 +414,7 @@ class RunManager:
         with self._state:
             if self.running:
                 return
+            discard_result(self.result)
             self.status = "idle"
             self.result = None
             self.error = None
