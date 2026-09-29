@@ -206,6 +206,11 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- `scripts/fed_heat_hand_calc.py` cited "ISO TS 13571 eq. 5" for
+  t = 5e7 · T^-3.4; it is ISO 13571:2012 Eq. (10) (§8.3.2), equal to SFPE
+  Eq. 63.44
+  ([#291](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/291)).
+
 - A heat-only FDS case (TEMPERATURE slice, no SOOT EXTINCTION COEFFICIENT
   slice) no longer crashes `run.py`. Smoke speed reduction is then off and
   the visibility model falls back to clear air, each with a warning, so
