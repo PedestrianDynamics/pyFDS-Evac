@@ -18,7 +18,7 @@ nothing on this page affects a run.
 
 With `--enable-heat-fed` (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in
 the case, each agent accumulates a convective heat dose at
-`_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py:217`), SFPE Handbook 5th
+`_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py:219`), SFPE Handbook 5th
 ed. Eq. 63.44 (p. 2382), unless `--heat-endpoint` selects another law
 ([Endpoint](#endpoint)) or `--heat-fed-method total-flux` selects the flux
 law ([Total flux](#total-flux)):
@@ -118,10 +118,11 @@ $$
 - At or below skin temperature (\(q \le 0\)) or for a non-finite
   temperature the rate is zero: no dose, and no recovery.
 
-Only the "head in smoke" regime of spec 016 is implemented: ε applies to the
-gas at the head, and no external radiation is added. ε, h and \(T_s\) have
-no sourced values; their defaults are assumptions
-(`HEAT_FLUX_ASSUMED_PARAMETERS`):
+This is the "head in smoke" regime of spec 016 (`--heat-regime smoke`, the
+default): ε applies to the gas at the head, and no external radiation is
+added. The "below a hot layer" regime is described in
+[Hot layer](#hot-layer). ε, h and \(T_s\) have no sourced values; their
+defaults are assumptions (`HEAT_FLUX_ASSUMED_PARAMETERS`):
 
 | Parameter | Default | CLI flag | Source status |
 |---|---|---|---|
@@ -132,6 +133,65 @@ no sourced values; their defaults are assumptions
 Invalid values (ε outside [0, 1], h < 0, or non-finite) are rejected.
 `--heat-fed-method` without `--enable-heat-fed` logs a warning and leaves
 the heat dose off.
+
+### Hot layer
+
+`--heat-regime layer` (opt-in, with `--heat-fed-method total-flux`) takes
+the head to be in clear air below a hot upper layer (spec 016, "Regimes";
+[#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)).
+The Handbook says only that a subject "in air (with a low emissivity), below
+a hot smoke layer" receives radiation from the layer (p. 2384), and that
+2.5 kW/m² corresponds approximately to a hot layer at 200 °C (p. 2382). The
+flux to the skin is convection from the gas at the head plus the radiant
+term of Eq. 63.49 with the layer as source and a view factor,
+`layer_radiant_flux_kw_m2`:
+
+$$
+q = \frac{h\,(T_g - T_s)}{1000} + q_{\mathrm{ext}}, \qquad
+q_{\mathrm{ext}} = \frac{\varphi\,\varepsilon_L\,\sigma\,(T_L^4 - T_s^4)}{1000}
+\quad [\mathrm{kW/m^2}],
+$$
+
+with \(T_L\) the temperature of a second `TEMPERATURE` slice at
+`--heat-layer-height`, sampled at the agent's x, y. The rate is
+\(q^{1.33}/D\) as above.
+
+- **No radiant term of the gas at the head.** In this regime the εσ term of
+  the gas at the head is dropped, so `--heat-emissivity` has no effect. The
+  layer term is never added on top of the in-smoke radiant term: with
+  \(T_g = T_L\), ε = 0.5 and φ = ε_L = 1 that sum would be
+  1.5 σΔT⁴, against σΔT⁴ here.
+- **Net flux.** \(q_{\mathrm{ext}}\) is a net flux (a σT⁴ difference),
+  not the incident flux of the radiant tolerance data. At the 200 °C anchor
+  (black layer, φ = 1, \(T_s\) = 35 °C) it is 2.33 kW/m² net against
+  2.84 kW/m² incident, both within 15 % of the Handbook's 2.5 kW/m².
+- **The regime is a user choice** for the whole run. No source gives a rule
+  to decide it per agent
+  ([#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
+- A layer cooler than the skin gives a negative \(q_{\mathrm{ext}}\); the
+  rate is zero only when the total \(q \le 0\). A non-finite layer
+  temperature gives no dose. Where the layer slice has no value, the layer
+  temperature falls back to 20 °C, as the temperature at the head does.
+  This fallback is an unsourced assumption. Below the skin temperature it
+  makes \(q_{\mathrm{ext}}\) slightly negative (cooling), about
+  −0.09 φ ε_L kW/m² at \(T_s\) = 35 °C, so it lowers the total flux
+  a little where the layer slice has no coverage.
+
+φ, \(\varepsilon_L\) and the layer height have no sourced values and no
+defaults; the layer regime without any of them is rejected, as are a
+non-finite layer height and `--heat-regime layer` with
+`--heat-fed-method convective`:
+
+| Parameter | Default | CLI flag | Source status |
+|---|---|---|---|
+| regime | `smoke` | `--heat-regime` | User choice; no sourced rule |
+| layer height [m] | none (required) | `--heat-layer-height` | Depends on the ceiling height |
+| φ | none (required) | `--heat-view-factor` | Unsourced; spec 016 gives about 1 for the crown, about 0.5 for the face |
+| \(\varepsilon_L\) | none (required) | `--heat-layer-emissivity` | Unsourced; p. 2384 gives 1 for a black body, "perhaps 0.5" for smoke |
+
+φ and \(\varepsilon_L\) outside [0, 1] or non-finite are rejected.
+`--heat-regime` without `--enable-heat-fed` logs a warning and leaves the
+heat dose off.
 
 ## Incapacitation
 
@@ -170,6 +230,7 @@ the same way and set the same `incapacitated` flag; only
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
 | `heat_endpoint` | `None` (Eq. 63.44) | `--heat-endpoint` |
 | `heat_fed_method` | `"convective"` | `--heat-fed-method` |
+| `heat_regime` | `"smoke"` | `--heat-regime` |
 
 `--disable-tenability` turns off the stop; the dose is still computed.
 
@@ -188,7 +249,12 @@ endpoint; `heat_endpoint` says which one.
 With `--heat-fed-method total-flux` the FED history also carries
 `heat_flux_kw_m2` (*q*), and the manifest records `heat_fed_method` and
 `heat_flux_parameters` (ε, h, \(T_s\), *D*, and the names of the assumed
-parameters). With an endpoint, `heat_outside_validity` still flags samples
+parameters). With `--heat-regime layer`, `heat_flux_kw_m2` includes
+\(q_{\mathrm{ext}}\), the FED history also carries
+`heat_layer_temperature_c` (\(T_L\)), and `heat_flux_parameters` also
+records `regime`, `view_factor`, `layer_emissivity` and `layer_height_m`;
+it still records ε, which has no effect in that regime.
+With an endpoint, `heat_outside_validity` still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
 63.45–63.47, not to the flux law.
 
@@ -200,20 +266,27 @@ recorded.
 
 ## What is not modelled
 
-- **Radiant heat from outside the gas at the head.** The convective laws
+- **Radiant heat from hot surfaces or a flame in view.** The convective laws
   count convective heat only. The total-flux method adds the radiation of the
-  gas around the head, but no flux from a hot upper layer, from hot surfaces,
-  or from a flame in view: the "below a hot layer" regime of spec 016 and the
-  external flux term are not implemented
-  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221),
-  [#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)).
+  gas around the head, or with `--heat-regime layer` that of a hot upper
+  layer, but no flux from hot surfaces or from a flame in view
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
   FDS reference data for that term exist but are not read by the model:
   [Heat radiometer reference decks](/verification/testing-heat-radiometer.md)
   ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
-- **Regime selection.** The total-flux method uses one ε everywhere. The
-  default 0.5 treats every head as in smoke, which overestimates the dose in
-  clear hot air; set `--heat-emissivity 0.05` for clear air. How to decide
-  the regime per agent is open (spec 016, open question 4).
+- **Layer temperature and emissivity.** The layer temperature is read from
+  one slice at one height: it reads ceiling-jet temperatures near the
+  ceiling and assumes one ceiling height for the whole domain. There is no
+  layer reduction from several heights, and \(\varepsilon_L\) is a constant,
+  not taken from FDS's `ABSORPTION COEFFICIENT`
+  ([#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274)).
+- **Regime selection.** The regime is one user choice for the whole run.
+  In the smoke regime the default ε = 0.5 treats every head as in smoke,
+  which overestimates the dose in clear hot air; set `--heat-emissivity 0.05`
+  for clear air. In the layer regime an agent that walks into the smoke
+  still gets the layer formula. How to decide the regime per agent is open
+  (spec 016, open question 4;
+  [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
 - **Total-flux parameters.** h, \(T_s\) and ε are assumptions (see
   [Total flux](#total-flux)); \(T_s\) is fixed and does not rise with
   exposure (spec 016, open questions 1 and 2).
@@ -229,8 +302,8 @@ recorded.
   flagged; `heat_humidity` reads `unknown`
   ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
   flagged either, although Eq. 63.44 rests on the same data (p. 2382).
-- **Web GUI.** The GUI does not offer `--heat-endpoint` or
-  `--heat-fed-method`
+- **Web GUI.** The GUI does not offer `--heat-endpoint`,
+  `--heat-fed-method`, `--heat-regime` or the layer options
   ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
 - **Falling exposure and recovery.** The summed dose assumes exposure that is
   steady or rising (Eq. 63.48); a fleeing agent's exposure falls, and no
@@ -251,7 +324,10 @@ recorded.
   ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
   The total-flux method is checked against hand formulas of Eqs. 63.49 and
   63.43, the radiant rows of Table 63.20 and the convection table of spec 016,
-  in unit tests and coupled corridor runs; the layer regime is not tested.
+  in unit tests and coupled corridor runs. The layer regime is checked
+  against hand formulas and the 200 °C / 2.5 kW/m² anchor (p. 2382), with
+  synthetic temperature fields; its FDS case is
+  [#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224).
 
 ## Sources
 

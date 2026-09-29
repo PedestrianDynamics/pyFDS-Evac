@@ -14,6 +14,7 @@ from the GUI. It defaults to a no-op.
 from __future__ import annotations
 
 import logging
+import math
 from collections.abc import Callable
 from typing import Any
 
@@ -149,6 +150,8 @@ def _build_heat_fed_model(opts: Any, log: Logger):
             _logger.warning(
                 "--heat-fed-method has no effect without --enable-heat-fed."
             )
+        if getattr(opts, "heat_regime", "smoke") != "smoke":
+            _logger.warning("--heat-regime has no effect without --enable-heat-fed.")
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():
@@ -169,6 +172,8 @@ def _build_heat_fed_model(opts: Any, log: Logger):
     law = "Eq. 63.44" if endpoint is None else f"{endpoint} endpoint"
     if method == "total-flux":
         law = f"total flux, {endpoint or 'fatal'} dose"
+    if method == "total-flux" and getattr(opts, "heat_regime", "smoke") == "layer":
+        law += f", hot layer at {opts.heat_layer_height} m"
     log(f"Configuring heat FED calculation ({law}).")
     heat_fed_config = DefaultFedConfig(
         fds_dir=opts.fds_dir,
@@ -187,7 +192,44 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         skin_temperature_celsius=getattr(
             opts, "heat_skin_temperature", DEFAULT_HEAT_SKIN_TEMPERATURE_C
         ),
+        **_heat_layer_kwargs(opts),
     )
+
+
+def _heat_layer_kwargs(opts: Any) -> dict[str, Any]:
+    """Return the layer-regime arguments of the heat model (#222).
+
+    The layer regime loads a second TEMPERATURE slice at
+    ``opts.heat_layer_height``; the smoke regime needs none.
+    """
+    regime = getattr(opts, "heat_regime", "smoke")
+    if regime != "layer":
+        return {"regime": regime}
+    return {
+        "regime": regime,
+        "layer_field": FdsHeatField.from_fds(
+            opts.fds_dir, slice_height_m=opts.heat_layer_height
+        ),
+        "view_factor": opts.heat_view_factor,
+        "layer_emissivity": opts.heat_layer_emissivity,
+        "layer_height_m": opts.heat_layer_height,
+    }
+
+
+def _validate_heat_layer_opts(opts: Any) -> None:
+    """Reject a layer heat regime that cannot be built (#222)."""
+    if not getattr(opts, "enable_heat_fed", False):
+        return
+    if getattr(opts, "heat_regime", "smoke") != "layer":
+        return
+    if getattr(opts, "heat_fed_method", "convective") != "total-flux":
+        raise ValueError("--heat-regime layer needs --heat-fed-method total-flux")
+    for option in ("heat_layer_height", "heat_view_factor", "heat_layer_emissivity"):
+        if getattr(opts, option, None) is None:
+            flag = "--" + option.replace("_", "-")
+            raise ValueError(f"--heat-regime layer needs {flag}")
+    if not math.isfinite(opts.heat_layer_height):
+        raise ValueError("--heat-layer-height must be finite")
 
 
 def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
@@ -221,6 +263,7 @@ def validate_opts(opts: Any) -> None:
         opts, "clear_air_visibility", False
     ):
         raise ValueError("--no-visibility and --clear-air-visibility conflict")
+    _validate_heat_layer_opts(opts)
 
 
 def _has_discovery_agents(scenario: Any) -> bool:

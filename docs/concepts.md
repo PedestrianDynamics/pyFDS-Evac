@@ -123,7 +123,8 @@ while the doses are still logged.
 Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
 only incapacitates: it neither slows agents nor affects route choice, and
-radiant heat from a hot layer or a flame is not modelled. The published dose laws are on
+radiant heat from hot surfaces or a flame is not modelled (a hot layer only
+with the opt-in `--heat-regime layer`). The published dose laws are on
 [Asphyxiant fractional effective dose](/fundamentals/asphyxiant-fed.md),
 [Irritant gases](/fundamentals/irritants.md), [Heat](/fundamentals/heat.md)
 and [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
