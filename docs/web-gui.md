@@ -19,6 +19,71 @@ uv run app.py
 Then open <http://localhost:5001>. The extra installs
 [FastHTML](https://fastht.ml/) and its dependencies.
 
+## Run a scenario
+
+The steps use `iso_table21_coupled`, a bundled scenario that comes with its
+FDS output: one agent walks a 100 m corridor filled with smoke of about
+K = 1 1/m. The numbered markers in the first screenshot match the steps.
+
+![The start screen. On the left, the Parameters panel with the Show equivalent Python button in its header, the open Core group with the scenario picker set to iso_table21_coupled, the Smoke group, and the Run scenario button at the bottom. On the right, the left edge of the empty results area. Numbered markers: 1 at the scenario picker, 2 at the Smoke group, 3 at Run scenario, 4 at the results area, 5 at Show equivalent Python](/images/web-gui/overview.png "The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area, 5 Show equivalent Python.")
+
+{{% steps %}}
+
+### Pick a scenario
+
+In **Core**, choose `iso_table21_coupled` in the scenario picker (1). Leave
+the seed blank to use the scenario's own `baseSeed`. To use your own
+scenario, drop its config JSON and geometry WKT, or a `.zip` bundle, on the
+upload box and click **Add to list**.
+
+### Set the options
+
+Open **Smoke** (2) and enter `assets/iso_table21_coupled/fds` in **FDS dir**,
+or pick the folder with **Browse…**. Leave the other fields at their
+defaults. Every `run.py` option has a field; press **?** next to a field to
+read its help text. The groups and their fields are listed under [The form](#the-form).
+
+![The Parameters panel with Core collapsed. The Smoke group is open with FDS dir set to assets/iso_table21_coupled/fds, an empty constant extinction field, a smoke update interval of 1.0 and a smoke slice height of 1.6. Below it the FED & Tenability group is open with Disable tenability off and the incapacitation mode set to Deterministic](/images/web-gui/configure.png "The Smoke group with the FDS folder filled in, and the start of the FED & Tenability group.")
+
+### Run it
+
+Click **Run scenario** (3). The results area (4) turns into a progress card
+and a console with the model's log. The card shows agents evacuated,
+simulated time, wall-clock time and percent done. **Cancel scenario** stops
+the run at its next step.
+
+![A progress card titled "Running: Haspel" at 25 percent, with a progress bar, the line "evacuated 75/300 · sim 105.3s · wall 48s · 25%" and a Cancel scenario button. Below it, the console lists the model's setup and rerouting log lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario.")
+
+### Look at the results
+
+When the run ends, the results replace the progress card. Press play in
+**Trajectories** to replay the run, or drag the time slider. Scroll over the
+plan to zoom and drag to pan; **↺** resets the view. With an FDS folder set,
+the extinction slice is drawn under the agents as a grey smoke layer;
+**Smoke** switches it off.
+
+![The Trajectories panel at t = 41 s, zoomed in on the corridor. The corridor is drawn in grey, the FDS smoke layer, with one yellow agent in it. Below the plan: a play button, the time slider, a reset-view button, speed buttons 1×, 2×, 5×, 10× and 50×, a custom speed field, and the smoke toggle set to on](/images/web-gui/replay.png "The trajectory replay with the FDS smoke layer on, zoomed in on the agent.")
+
+The **Smoke** chart below it plots the mean speed factor and the mean
+extinction coefficient *K* over time.
+
+![A Plotly chart titled Smoke, with time from 0 to 85 s on the horizontal axis, the speed factor on the left axis between 0.9196262 and 0.9196266, and the extinction coefficient K on the right axis between 0.995502 and 0.995507 per metre. Both lines are flat until about 50 s and then vary in their last digits](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places.")
+
+{{< checkpoint title="The run finished" >}}
+The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
+agent evacuated. `run.py` gives the same run as
+`Simulation finished in 84.97 s (1/1 evacuated).`
+{{< /checkpoint >}}
+
+### Keep the run as a script
+
+Click **Show Python for this run**, in the bar above the results, to get this
+run as a standalone Python script. **Show equivalent Python** (5) shows the
+current form settings instead. See
+[Show the run as Python](#show-the-run-as-python).
+
+{{% /steps %}}
+
 ## The form
 
 The form is built from the `run.py` parser, so every option has a field.
@@ -64,7 +129,8 @@ progress to the page. Cancelling stops the run at its next step.
   shown live during a run.
 - **Trajectory replay**: agents move between the stored trajectory samples,
   coloured by cumulative gas FED or by assigned exit, with play, pause, a
-  scrub bar and ¼×–4× speed. When the run has an `fds_dir`, the FDS
+  scrub bar, speeds of 1×, 2×, 5×, 10× and 50× or a custom speed, and
+  scroll-to-zoom and drag-to-pan. When the run has an `fds_dir`, the FDS
   extinction slice is drawn under the agents as a smoke layer that can be
   switched off. The replay colours by gas FED only, not by heat FED
   ([#232](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232)).
