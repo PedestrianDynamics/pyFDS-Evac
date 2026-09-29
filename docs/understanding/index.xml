@@ -104,8 +104,8 @@ while the doses are still logged.&lt;/p>
 &lt;p>Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
 only incapacitates: it neither slows agents nor affects route choice, and
-radiant heat from hot surfaces or a flame is not modelled (a hot layer only
-with the opt-in &lt;code>--heat-regime layer&lt;/code>). The published dose laws are on
+radiant heat from a hot layer enters only with the opt-in &lt;code>--heat-regime layer&lt;/code> or &lt;code>--heat-radiant-source integrated-intensity&lt;/code>, and from a flame or
+hot surfaces only with the latter, with a user factor. The published dose laws are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant fractional effective dose&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.
@@ -492,10 +492,17 @@ whole run
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222" target="_blank" rel="noopener">#222&lt;/a>,
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274" target="_blank" rel="noopener">#274&lt;/a>,
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275" target="_blank" rel="noopener">#275&lt;/a>).
-Radiant flux from hot surfaces or a flame is not read and does not
-contribute to any dose. An agent near a flame is therefore treated as less
-exposed than it is
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).&lt;/p>
+Radiant flux from hot surfaces or a flame enters only with the opt-in
+&lt;code>--heat-radiant-source integrated-intensity&lt;/code>, as the net f·U − σT_s⁴ from the FDS
+&lt;code>INTEGRATED INTENSITY&lt;/code> slice with a user factor f in [0.25, 1] that no
+single value fits for every orientation; it cannot be combined with
+&lt;code>--heat-regime layer&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).
+Otherwise an agent near a flame is treated as less exposed than it is
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).
+The unsourced values of the heat dose, its FDS reference decks and its
+tests are listed in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#assumptions-unsourced-values">Models › Heat › Assumptions&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
 opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
 incapacitated when either dose reaches its threshold. The two thresholds are
@@ -1154,7 +1161,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
 &lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
-&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), or with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer; radiant heat from a flame or hot surfaces is not modelled&lt;/td>
+&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the net f·U − σT_s⁴ from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
