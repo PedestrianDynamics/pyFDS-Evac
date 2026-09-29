@@ -30,8 +30,8 @@ for regulatory or design use. See [Limitations](/docs/limitations.md).
 FDS runs once, before any agent moves, and pyFDS-Evac only reads the slice
 files it stored. This is one-way coupling: a crowd that blocks a door does not
 change the smoke that reaches it. In return, one fire can serve any number of
-egress runs, and a prescribed field can replace FDS entirely, as in the
-[Quickstart](/docs/quickstart.md).
+egress runs, and a prescribed field can replace FDS entirely, as the
+constant-*K* runs of [ISO 20414 Test 18](/verification/iso-test-18.md) do.
 
 ```text
 FDS output (.smv + slice files)
