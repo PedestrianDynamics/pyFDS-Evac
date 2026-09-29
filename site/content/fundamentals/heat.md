@@ -59,7 +59,12 @@ $$
 where *r* [(kW/m²)^4/3·min] is the dose for the endpoint: about 1.33–1.67 for
 severe skin pain, 4.0–12.2 for second-degree burns and 16.7 for third-degree
 burns. Purser proposes 1.33 as a tolerance threshold and 10 as a threshold
-for incapacitation and serious injury (p. 2382). For occupants passing
+for incapacitation and serious injury (p. 2382). For the average
+population, r = 10 is also given as a 1 % fatality level and r = 16.7 as a
+50 % lethal level (p. 2382); what these imply for the population spread is
+discussed under
+[Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat).
+For occupants passing
 under a hot smoke layer, 2.5 kW/m² corresponds approximately to a layer
 temperature of 200 °C (p. 2382).
 

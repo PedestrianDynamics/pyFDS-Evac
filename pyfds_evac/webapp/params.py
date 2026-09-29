@@ -262,11 +262,12 @@ _HELP_TEXT: dict[str, str] = {
     "head height of a standing person. 1.6 by default, as FDS+Evac.",
     "disable_tenability": "Turn off smoke's effect on people: no slowing from irritants and no "
     "collapse from toxic dose. Agents just walk at normal speed.",
-    "incapacitation_mode": "Probabilistic: each agent draws its own tolerance from a population "
-    "curve (some collapse early, some late). Deterministic: every agent "
-    "shares the same threshold.",
-    "susceptibility_sigma": "Spread of how differently people tolerate toxic smoke. Higher = more "
-    "variation between agents in when they're overcome.",
+    "incapacitation_mode": "Deterministic (default, as FDS+Evac): every agent shares the same "
+    "threshold. Probabilistic: each agent draws its own tolerance from a "
+    "population curve (some collapse early, some late).",
+    "susceptibility_sigma": "Spread of how differently people tolerate toxic smoke, used only in "
+    "probabilistic mode. Higher = more variation between agents in when "
+    "they're overcome.",
     "enable_fic_speed": "Let irritant gases slow agents on top of smoke. Off by default, "
     "as in FDS+Evac, which has no irritant slowdown.",
     "fic_alpha": "How strongly irritant gases slow an agent. Higher = agents slow down "
@@ -391,9 +392,9 @@ def _incap_toggle() -> Any:
         _lbl("Incapacitation Mode", "incapacitation_mode"),
         Div(
             NotStr(
-                '<button type="button" class="mode-btn active" id="btn-prob"'
+                '<button type="button" class="mode-btn" id="btn-prob"'
                 " onclick=\"setTenabilityMode('probabilistic')\">Probabilistic</button>"
-                '<button type="button" class="mode-btn" id="btn-det"'
+                '<button type="button" class="mode-btn active" id="btn-det"'
                 " onclick=\"setTenabilityMode('deterministic')\">Deterministic</button>"
             ),
             cls="mode-toggle",
@@ -402,10 +403,10 @@ def _incap_toggle() -> Any:
             type="hidden",
             id="incapacitation_mode",
             name="incapacitation_mode",
-            value="probabilistic",
+            value="deterministic",
         ),
         NotStr(
-            '<div id="incap-dist" style="margin-top:10px;border-radius:9px;overflow:hidden;background:var(--surface-panel)">'
+            '<div id="incap-dist" style="display:none;margin-top:10px;border-radius:9px;overflow:hidden;background:var(--surface-panel)">'
             '<canvas id="incap-canvas" style="width:100%;height:108px;display:block"></canvas>'
             "</div>"
         ),
@@ -525,6 +526,7 @@ def _field(action: argparse.Action) -> Any:
                 style=_FIELD,
             ),
             id="sigma-row",
+            style="display:none",
         )
 
     if _is_bool(action):
@@ -781,7 +783,7 @@ def run_name(scenario: Any) -> str:
 def default_output_base(scenario: Any, mode: Any, seed: Any) -> str:
     """Derived output folder: one per scenario / incapacitation mode / seed."""
     return (
-        f"results/{run_name(scenario)}/{mode or 'probabilistic'}/"
+        f"results/{run_name(scenario)}/{mode or 'deterministic'}/"
         f"seed{seed if seed is not None else 'default'}"
     )
 
@@ -811,7 +813,7 @@ def form_to_opts(form: dict[str, Any]) -> Namespace:
     # folder" wins when present -- it used to be read by nobody, so a path typed
     # there was silently discarded and the run went to the derived path anyway.
     sc = run_name(opts.get("scenario"))
-    mode = str(opts.get("incapacitation_mode") or "probabilistic")
+    mode = str(opts.get("incapacitation_mode") or "deterministic")
     base = (
         str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
     ) or (default_output_base(opts.get("scenario"), mode, opts.get("seed")))

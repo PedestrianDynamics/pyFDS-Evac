@@ -38,22 +38,22 @@ prefers but leaves its speed in smoke unchanged. The same split applies to
 speed itself: `routing.base_speed_m_per_s` (1.3 m/s) prices routes, while an
 agent walks at its own `v0` (1.25 m/s by default).
 
-## Incapacitation is probabilistic by default
+## Incapacitation is deterministic by default
 
 FED below means fractional effective dose. By default
-(`--incapacitation-mode probabilistic`), each agent draws its own
-incapacitation threshold from a log-normal distribution with median
+(`--incapacitation-mode deterministic`), every agent stops when its FED
+reaches `--fed-threshold` (1.0), as in FDS+Evac. A real population does not
+stop all at once. With `--incapacitation-mode probabilistic`, each agent
+draws its own threshold from a log-normal distribution with median
 `--fed-threshold` and log-scale spread `--susceptibility-sigma` (defaults on
 the [FED model](/models/fed.md#tenability-irritant-slowdown-and-incapacitation) page).
-About half of the agents therefore stop below FED = 1, and about 10 % stop
+About half of the agents then stop below FED = 1, and about 10 % stop
 below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
 ([#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The
-heat dose, which FDS+Evac does not have, is deterministic by default: no
+heat dose, which FDS+Evac does not have, is also deterministic by default: no
 population spread for heat is published. Its `probabilistic` mode reuses the
-gas spread without a data basis of its own. FDS+Evac stops
-every agent at FED = 1. For results comparable with FDS+Evac, run with
-`--incapacitation-mode deterministic`.
+gas spread without a data basis of its own.
 
 ## Evacuation time when anyone is incapacitated
 

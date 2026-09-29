@@ -255,7 +255,7 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     """
     if (fed_model is None and heat_fed_model is None) or opts.disable_tenability:
         return None
-    mode = getattr(opts, "incapacitation_mode", "probabilistic")
+    mode = getattr(opts, "incapacitation_mode", "deterministic")
     sigma = getattr(opts, "susceptibility_sigma", 0.94)
     heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
     heat_mode = getattr(opts, "heat_incapacitation_mode", "deterministic")
