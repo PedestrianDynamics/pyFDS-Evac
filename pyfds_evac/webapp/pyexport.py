@@ -27,7 +27,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from .runner import RunSpec, run_stamp
+from .runner import RunSpec, run_outcome, run_stamp
 
 # Options that are paths on this machine. They go into the PATHS block,
 # resolved to absolute paths, so they are easy to find and edit.
@@ -288,16 +288,23 @@ def run_script(spec: RunSpec) -> ExportedScript:
 
 
 def run_status(spec: RunSpec) -> str:
-    """One-line outcome of a run, worded as run.py words it."""
+    """One-line outcome of a run, worded as the results view words it."""
     if spec.status == "error":
         return "failed"
     if spec.status == "cancelled":
         return "cancelled"
     if spec.status != "done" or spec.agents_remaining is None:
         return "not recorded"
-    if spec.agents_remaining == 0:
-        return f"finished ({spec.agents_evacuated}/{spec.total_agents} evacuated)"
-    return (
-        f"stopped after {spec.evacuation_time:.2f} s "
-        f"({spec.agents_remaining} remaining)"
+    outcome = run_outcome(
+        spec.all_evacuated,
+        spec.agents_remaining,
+        spec.total_agents,
+        spec.evacuation_time,
+        spec.time_limit,
     )
+    if outcome.complete:
+        return (
+            f"{outcome.label} ({spec.agents_evacuated}/{spec.total_agents}), "
+            f"evacuation time {spec.evacuation_time:.2f} s"
+        )
+    return f"{outcome.label}, simulated time {spec.evacuation_time:.2f} s"

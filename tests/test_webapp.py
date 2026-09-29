@@ -1598,7 +1598,7 @@ class TestEquivalentPython:
         code = _code_of(r.text)
         assert f"# Run #{run_id}, started" in code
         assert f"'seed': 11,  # seed used by run #{run_id}" in code
-        assert "Status: finished (1/1 evacuated)" in r.text
+        assert "Status: Complete: all agents evacuated (1/1)" in r.text
         assert "The form has changed" not in r.text
         changed = client.post(
             f"/export/run?run={run_id}",
@@ -1698,3 +1698,100 @@ def test_exported_script_reproduces_the_gui_run(tmp_path):
     assert script_metrics == gui_metrics
     (output,) = tmp_path.glob("pyfds_evac_blind_spawn_discovery_run1_*Z_output")
     assert (output / "trajectory.sqlite").is_file()
+
+
+class TestRunOutcome:
+    """#321: the outcome comes from all_evacuated, never from success."""
+
+    def test_complete(self):
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome(True, 0, 150, 212.4, 300.0)
+        assert o.complete is True
+        assert o.label == "Complete: all agents evacuated"
+        assert o.time_label == "Evacuation time"
+
+    def test_time_limit(self):
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome(False, 60, 150, 300.0, 300.0)
+        assert o.complete is False
+        assert o.label == "Incomplete: time limit reached (60 of 150 remaining)"
+        assert o.time_label == "Simulated time (limit reached)"
+
+    def test_no_cause_claimed_when_numbers_disagree(self):
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome(False, 3, 10, 120.0, 300.0)
+        assert o.label == "Incomplete (3 of 10 remaining)"
+        assert "limit" not in o.time_label
+
+    def test_not_reported(self):
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome(None, 0, 10, 10.0, 300.0)
+        assert o.complete is None
+        assert o.label == "Outcome not reported"
+
+    def test_tiles_never_show_success(self, monkeypatch):
+        """A timeout rendered as "stopped (True)"."""
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        result = SimpleNamespace(
+            metrics={"success": True, "all_evacuated": False},
+            agents_remaining=100,
+            agents_evacuated=0,
+            total_agents=100,
+            evacuation_time=1000.0,
+        )
+        monkeypatch.setattr(manager, "spec", None)
+        monkeypatch.setattr(
+            manager, "scenario", SimpleNamespace(max_simulation_time=1000.0)
+        )
+        html = to_xml(_kpi_tiles(result))
+        assert "True" not in html
+        assert "Incomplete: time limit reached (100 of 100 remaining)" in html
+        assert "Simulated time (limit reached)" in html
+        assert "Evacuation time" not in html
+        assert "0 / 100 agents" in html
+
+    def test_run_status_uses_the_snapshot(self):
+        import dataclasses
+
+        from pyfds_evac.webapp.pyexport import run_status
+        from pyfds_evac.webapp.runner import RunSpec
+
+        spec = RunSpec(
+            run_id=1,
+            scenario_name="t_junction",
+            scenario_path="t",
+            opts={},
+            started_at="2026-09-29T12:00:00+00:00",
+            pyfds_evac_version=None,
+            git_commit=None,
+            git_dirty=None,
+            expected_seed=1,
+            status="done",
+            time_limit=300.0,
+            all_evacuated=False,
+            total_agents=150,
+            agents_evacuated=90,
+            agents_remaining=60,
+            evacuation_time=300.0,
+        )
+        assert run_status(spec) == (
+            "Incomplete: time limit reached (60 of 150 remaining), "
+            "simulated time 300.00 s"
+        )
+        done = dataclasses.replace(
+            spec,
+            all_evacuated=True,
+            agents_evacuated=150,
+            agents_remaining=0,
+            evacuation_time=212.4,
+        )
+        assert run_status(done) == (
+            "Complete: all agents evacuated (150/150), evacuation time 212.40 s"
+        )

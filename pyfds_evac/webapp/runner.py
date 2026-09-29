@@ -65,6 +65,10 @@ class RunSpec:
     # agrees with expected_seed.
     seed_used: int | None = None
     status: str = "running"
+    # The scenario's max_simulation_time [s] at submission.
+    time_limit: float | None = None
+    # result.metrics["all_evacuated"]; None when the run reported none.
+    all_evacuated: bool | None = None
     total_agents: int | None = None
     agents_evacuated: int | None = None
     agents_remaining: int | None = None
@@ -140,6 +144,7 @@ def make_run_spec(
         git_commit=commit,
         git_dirty=dirty,
         expected_seed=seed if seed is not None else getattr(scenario, "seed", None),
+        time_limit=getattr(scenario, "max_simulation_time", None),
     )
 
 
@@ -153,12 +158,55 @@ def _finished_spec(
         if reported is not None and reported == spec.expected_seed:
             fields["seed_used"] = reported
         fields.update(
+            all_evacuated=result.metrics.get("all_evacuated"),
             total_agents=result.total_agents,
             agents_evacuated=result.agents_evacuated,
             agents_remaining=result.agents_remaining,
             evacuation_time=result.evacuation_time,
         )
     return dataclasses.replace(spec, **fields)
+
+
+@dataclasses.dataclass(frozen=True)
+class Outcome:
+    """How a finished run ended, worded for the results view.
+
+    Taken from the run's own ``all_evacuated`` metric, never from
+    ``success``, which is also True when the time limit is reached (#139).
+    Why agents remain (incapacitated or still walking) is not reported by
+    the engine yet (#141), so it is not claimed.
+    """
+
+    complete: bool | None
+    label: str
+    time_label: str
+
+
+def run_outcome(
+    all_evacuated: bool | None,
+    remaining: int | None,
+    total: int | None,
+    sim_time: float | None,
+    time_limit: float | None,
+) -> Outcome:
+    """The :class:`Outcome` of a run from the values it reported."""
+    if all_evacuated is None:
+        return Outcome(None, "Outcome not reported", "Simulated time")
+    if all_evacuated:
+        return Outcome(True, "Complete: all agents evacuated", "Evacuation time")
+    left = f"{remaining} of {total} remaining"
+    # run_scenario stops early only once every agent has left, so agents
+    # remaining means the time limit; say so only when the numbers agree.
+    at_limit = (
+        sim_time is not None and time_limit is not None and sim_time >= time_limit
+    )
+    if at_limit:
+        return Outcome(
+            False,
+            f"Incomplete: time limit reached ({left})",
+            "Simulated time (limit reached)",
+        )
+    return Outcome(False, f"Incomplete ({left})", "Simulated time")
 
 
 class _WarningCapture(logging.Handler):

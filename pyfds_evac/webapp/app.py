@@ -44,7 +44,14 @@ from pyfds_evac.core import load_scenario
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
 from . import docs, params, plots, pyexport, theme, trajviz
-from .runner import RunManager, code_provenance, make_run_spec, run_stamp, utc_now
+from .runner import (
+    RunManager,
+    code_provenance,
+    make_run_spec,
+    run_outcome,
+    run_stamp,
+    utc_now,
+)
 
 _PLOTLY_CDN = Script(src="https://cdn.plot.ly/plotly-2.35.2.min.js")
 _HTMX_SSE = Script(src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js")
@@ -1634,12 +1641,24 @@ def _clear_run_bar() -> Div:
 
 def _kpi_tiles(result) -> Div:
     """The four headline numbers, shared by both finished views."""
-    status = "finished" if result.agents_remaining == 0 else "stopped"
+    spec = manager.spec
+    time_limit = (
+        spec.time_limit
+        if spec is not None
+        else getattr(manager.scenario, "max_simulation_time", None)
+    )
+    outcome = run_outcome(
+        result.metrics.get("all_evacuated"),
+        result.agents_remaining,
+        result.total_agents,
+        result.evacuation_time,
+        time_limit,
+    )
     metrics = [
-        ("Status", f"{status} ({result.metrics.get('success')})"),
-        ("Evacuation time", f"{result.evacuation_time:.1f} s"),
-        ("Evacuated", f"{result.agents_evacuated}/{result.total_agents}"),
-        ("Remaining", f"{result.agents_remaining}"),
+        ("Outcome", outcome.label),
+        (outcome.time_label, f"{result.evacuation_time:.1f} s"),
+        ("Evacuated", f"{result.agents_evacuated} / {result.total_agents} agents"),
+        ("Remaining", f"{result.agents_remaining} agents"),
     ]
     accents = ["#F4C430", "#F4C430", "#3B82F6", "#E01E37"]
     return Div(
