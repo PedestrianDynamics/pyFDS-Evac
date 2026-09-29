@@ -159,12 +159,13 @@ recorded. The file is named `pyfds_evac_<scenario>_run<N>.py`.
 
 - **Failed and cancelled runs** still have code. The dialog is titled
   "Configuration of the failed run #N" or "Configuration of the cancelled
-  run #N". A cancelled run keeps its code until **Clear results**.
+  run #N". A cancelled run keeps its code until you click **Clear**.
 - **Only the most recent run has code.** There is none while a run is in
-  progress. After **Clear results** or a new run, the old run's code is gone
-  and the dialog shows "No recorded run". Run numbers are not unique across
-  GUI sessions
-  ([#319](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/319)).
+  progress. After **Clear** (or **Clear results** for a finished run) or a
+  new run, the old run's code is gone and its button disappears. A button
+  left over in another tab, or in a page you have not refreshed, opens a
+  dialog titled "No recorded run". Run numbers are not unique across GUI
+  sessions ([#319](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/319)).
 - **Changed form.** If the current form no longer resolves to the run's
   options, a note says that the code reproduces the run, not the form, and
   suggests Preview. Output paths are left out of this comparison.
@@ -252,12 +253,17 @@ The `seed` line in `OPTIONS` carries a comment that says where its value
 comes from. `None` means the scenario's `baseSeed`, which is 42 when the
 scenario sets none ([Usage](usage.md)).
 
-| Case | Value | Comment |
-|---|---|---|
-| Run code; the run reported the seed expected at submission | that seed | `# seed used by run #N` |
-| Run code; seed box left blank and no seed confirmed (for example a failed or cancelled run) | `None` | `# seed not recorded for this run; None = the scenario's baseSeed` |
-| Run code; seed typed in but not confirmed (for example a failed or cancelled run) | the submitted value | `# seed submitted; the seed used was not recorded` |
-| Preview; seed box blank | `None` | `# None = the scenario's baseSeed (<value>)`, for example `(1301)` for `blind_spawn_discovery` |
+- **Run code, the run reported the seed expected at submission:** that seed,
+  with `# seed used by run #N`.
+- **Run code, seed box left blank and no seed confirmed** (for example a
+  failed or cancelled run): `None`, with
+  `# seed not recorded for this run; None = the scenario's baseSeed`.
+- **Run code, seed typed in but not confirmed** (for example a failed or
+  cancelled run): the submitted value, with
+  `# seed submitted; the seed used was not recorded`.
+- **Preview, seed box blank:** `None`, with
+  `# None = the scenario's baseSeed (<value>)`, for example `(1301)` for
+  `blind_spawn_discovery`.
 {{< /details >}}
 
 {{< details title="What the script leaves out, and why" closed="true" >}}
