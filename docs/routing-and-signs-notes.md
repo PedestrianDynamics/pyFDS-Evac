@@ -8,7 +8,7 @@ each other. All code references point at `pyfds_evac/core/route_graph.py`,
 Symbols used below:
 - `K` — smoke extinction coefficient [1/m], sampled from the FDS field.
 - `FED` — Fractional Effective Dose (toxic dose; incapacitation at ~1.0).
-- Config defaults come from `RouteCostConfig` (`route_graph.py:609`), which a
+- Config defaults come from `RouteCostConfig` (`route_graph.py`), which a
   deck overrides through its `routing` block.
 - `cost_model` selects between the default `"gate"` and the historical
   `"additive"` model — see [route-cost-gate.md](route-cost-gate.md).
@@ -18,7 +18,7 @@ Symbols used below:
 ## Part 1 — How routing & exit choice works
 
 1. **The graph is built once, from static geometry.**
-   `StageGraph.from_scenario()` (`route_graph.py:50`) creates a directed graph.
+   `StageGraph.from_scenario()` (`route_graph.py`) creates a directed graph.
    - Nodes = stages: `distribution` (spawn), `checkpoint` (waypoint), `exit`.
    - Edges = the scenario's `transitions`, each with a fixed length in metres.
    - Smoke, FED and crowds are **not** stored in the graph — they are layered on
@@ -33,10 +33,10 @@ Symbols used below:
    ```
 
 3. **Each edge gets a live cost from current conditions.**
-   `evaluate_segment()` (`route_graph.py:528`) computes, at the current time:
+   `evaluate_segment()` (`route_graph.py`) computes, at the current time:
    - Mean smoke along the edge: `k_avg` (integrated extinction over the edge).
    - Walking-speed slowdown from smoke — the **Lund / [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) linear law**
-     (`smoke_speed.py:205`, α = 0.706, β = −0.057):
+     (`smoke_speed.py`, `speed_factor_from_extinction`, α = 0.706, β = −0.057):
      ```
      speed_factor = clamp( 1 + (β · K) / α ,  min_factor=0.1 , 1.0 )
      ```
@@ -55,14 +55,14 @@ Symbols used below:
    "additive"`.**
    The default is now `"gate"`, where the composite is still computed but does
    not rank; see item 8a below and [route-cost-gate.md](route-cost-gate.md).
-   `evaluate_route()` (`route_graph.py:971`) sums edges into one route:
+   `evaluate_route()` (`route_graph.py`) sums edges into one route:
    ```
    path_length = Σ length
    K_ave       = Σ (k_avg · length) / Σ length      # length-weighted mean smoke
    travel_time = Σ travel_time
    FED_max     = current_fed + Σ fed_growth          # dose you'd ARRIVE with
    ```
-   Composite cost (`route_graph.py:629`) — the number routes are ranked by:
+   Composite cost (`route_graph.py`, `_measure_route`) — the number routes are ranked by:
    ```
    composite = path_length · (1 + w_smoke · K_ave)     ← distance, inflated by smoke
              + w_fed · FED_max                          ← toxicity penalty
@@ -82,8 +82,8 @@ Symbols used below:
    (`scripts/sweep_queue_weight.py`).
 
 5. **Pathfinding uses live edge weights, not raw geometry.**
-   `rank_routes()` (`route_graph.py:668`) runs in three phases:
-   - Phase 1 — give every edge a dynamic weight (`route_graph.py:723`):
+   `rank_routes()` (`route_graph.py`) runs in three phases:
+   - Phase 1 — give every edge a dynamic weight (`route_graph.py`, `AdditivePolicy.edge_weight`):
      ```
      edge_weight = length · (1 + w_smoke · k_avg) + w_fed · fed_growth
      ```
@@ -93,7 +93,7 @@ Symbols used below:
    - Phase 3 — re-score each full path with the composite (adds queue + FED).
 
 6. **Toxicity is (also) a hard reject.**
-   `route_graph.py:649`: if `FED_max > fed_rejection_threshold (1.0)` the route is
+   `route_graph.py`, `_fed_violations`: if `FED_max > fed_rejection_threshold (1.0)` the route is
    marked **rejected**. NOTE: FED currently appears twice — as the `w_fed` penalty
    *and* as this hard cut — which is conceptually muddled (see the toxicity notes).
 
@@ -104,7 +104,7 @@ Symbols used below:
    only. Details in Part 2, points 5 and 7.
 
 8. **Routes are sorted; the agent takes the best.**
-   Sort key (`route_graph.py:1322`), additive:
+   Sort key (`route_graph.py`, `AdditivePolicy.order_key`), additive:
    ```
    ( rejected? , composite_cost , hops )
    ```
@@ -127,23 +127,23 @@ Symbols used below:
    agent closes on an exit.
 
 9. **There is always a fallback.**
-   If *every* route is rejected (`route_graph.py:1350`), the least-bad one is
+   If *every* route is rejected (`route_graph.py`, `_apply_fallback`), the least-bad one is
    un-rejected so the agent always has somewhere to go. Under the gate,
    "least bad" is the lowest undiscounted `tau_route`, then the lowest
    `rank_cost`, held by `fallback_switch_margin` (0.2) against the rival's
    worst-case K.
 
 10. **Agents re-choose periodically, staggered.**
-    - `should_reevaluate()` (`route_graph.py:856`): re-run every
+    - `should_reevaluate()` (`route_graph.py`): re-run every
       `reevaluation_interval_s` (default 10 s).
     - `compute_eval_offset()`: each agent offset by `(agent_id mod steps) · dt`
       so they don't all recompute on the same tick.
-    - `reroute_agent()` (`route_graph.py:873`): if the chosen exit changed, rewrite
+    - `reroute_agent()` (`route_graph.py`): if the chosen exit changed, rewrite
       the agent's `path_choices` to follow the new path; log a `RouteSwitch`.
 
 11. **Familiarity restricts the graph before routing.**
     If a `cognitive_map` is passed, `rank_routes` first cuts the graph down to the
-    agent's *known* subgraph (`cognitive_subgraph`, `route_graph.py:696`). An
+    agent's *known* subgraph (`cognitive_map.py`, `cognitive_subgraph`). An
     unfamiliar agent can only route over stages it has discovered.
 
 ---
@@ -166,7 +166,7 @@ Symbols used below:
    A node whose coordinates cannot form a polygon is skipped and stays ungated.
 
 2. **Signs are directional.**
-   A sign is only readable from the side it faces (`visibility.py:209`):
+   A sign is only readable from the side it faces (`visibility.py`, `VisibilityModel`):
    ```
    alpha =  90  → visible from the EAST
    alpha = 270  → visible from the WEST
@@ -174,9 +174,9 @@ Symbols used below:
    ```
 
 3. **Visibility is computed by `fdsvismap` (waypoint method).**
-   `VisibilityModel` (`visibility.py:206`) wraps the external `fdsvismap` library —
+   `VisibilityModel` (`visibility.py`) wraps the external `fdsvismap` library —
    the same waypoint-based approach as the `waypoint_based_visibility` paper.
-   The call (`visibility.py:44`):
+   The call (`visibility.py`, `_build_vismap`):
    ```
    vis.compute_all(view_angle=True, obstructions=True, aa=True)
    ```
@@ -189,10 +189,10 @@ Symbols used below:
    agent at `(x, y)` read that sign at that time? Cached to a safe `.npz`.
 
 4. **There are two routing queries, and they answer different questions.**
-   - `node_is_visible(time, x, y, node_id)` (`visibility.py:531`) → True/False:
+   - `node_is_visible(time, x, y, node_id)` (`visibility.py`) → True/False:
      can the sign be *read* from here. Nodes with no descriptor — spawn areas, and nodes whose geometry
      was unusable — return True.
-   - `visibility_to_node(time, x, y, node_id)` (`visibility.py:545`) → metres:
+   - `visibility_to_node(time, x, y, node_id)` (`visibility.py`) → metres:
      how far the agent can *see* toward that node. This is Jin's `c / K_ave`
      with `K_ave` averaged along the real, obstruction-aware sight line — the
      same quantity FDS+Evac's `See_door` returns. It returns `None` rather than
@@ -207,7 +207,7 @@ Symbols used below:
 
 5. **Legibility no longer rejects routes; it decides what the agent knows.**
    `rank_routes` does **not** consult sign legibility (see the comment at
-   `route_graph.py:1399`). Readability feeds
+   `route_graph.py`, `AdditivePolicy.apply_candidate_set_rules`). Readability feeds
    `cognitive_map.expand_from_visibility`, and the cognitive map decides what
    Dijkstra can see — so an unknown exit is *absent from the graph* rather than
    present-and-vetoed. Checking it again in ranking double-gated the same
@@ -241,7 +241,7 @@ Symbols used below:
    top of the sight test, and `22c0888` retired it there.
 
 8. **How to turn the sign model on.**
-   `_build_vis_model()` (`run_config.py:167`) builds one when *any* of these
+   `_build_vis_model()` (`run_config.py`) builds one when *any* of these
    holds, provided the config contains sign descriptors:
    - the deck has agents below full familiarity (they need it to discover), or
    - `--vis-cache <path>` was passed, or
