@@ -3,8 +3,8 @@
 This page is the specification of the wayfinding model. For worked cases on the assets (runs, figures, numbers), see Wayfinding in practice."><link rel=canonical href=https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/ itemprop=url><meta property="og:title" content="Wayfinding"><meta property="og:description" content="
 Note
 This page is the specification of the wayfinding model. For worked cases on
-the assets (runs, figures, numbers), see Wayfinding in practice."><meta property="og:type" content="article"><meta property="og:url" content="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/"><meta property="article:section" content="models"><meta property="article:modified_time" content="2026-09-28T23:14:23+02:00"><meta itemprop=name content="Wayfinding"><meta itemprop=description content="Note
-This page is the specification of the wayfinding model. For worked cases on the assets (runs, figures, numbers), see Wayfinding in practice."><meta itemprop=dateModified content="2026-09-28T23:14:23+02:00"><meta itemprop=wordCount content="4669"><meta name=twitter:card content="summary"><meta name=twitter:title content="Wayfinding"><meta name=twitter:description content="Note
+the assets (runs, figures, numbers), see Wayfinding in practice."><meta property="og:type" content="article"><meta property="og:url" content="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/"><meta property="article:section" content="models"><meta property="article:modified_time" content="2026-09-29T09:19:20+02:00"><meta itemprop=name content="Wayfinding"><meta itemprop=description content="Note
+This page is the specification of the wayfinding model. For worked cases on the assets (runs, figures, numbers), see Wayfinding in practice."><meta itemprop=dateModified content="2026-09-29T09:19:20+02:00"><meta itemprop=wordCount content="4746"><meta name=twitter:card content="summary"><meta name=twitter:title content="Wayfinding"><meta name=twitter:description content="Note
 This page is the specification of the wayfinding model. For worked cases on the assets (runs, figures, numbers), see Wayfinding in practice."><link rel=preload href=/pyFDS-Evac/css/compiled/main.min.53c9617cf9cb82685ec5af463dec3ecab7f3b4c3ad5c9cf22185fc7cf9b39519.css as=style integrity="sha256-U8lhfPnLgmhexa9GPew+yrfztMOtXJzyIYX8fPmzlRk="><link href=/pyFDS-Evac/css/compiled/main.min.53c9617cf9cb82685ec5af463dec3ecab7f3b4c3ad5c9cf22185fc7cf9b39519.css rel=stylesheet integrity="sha256-U8lhfPnLgmhexa9GPew+yrfztMOtXJzyIYX8fPmzlRk="><link href=/pyFDS-Evac/css/custom.min.f0c0dc982d2b0fabda9445d0239da566064e515587ae1b1c80c33113597343b3.css rel=stylesheet integrity="sha256-8MDcmC0rD6valEXQI52lZgZOUVWHrhscgMMxE1lzQ7M="><script>const defaultTheme="system",setDarkTheme=()=>{document.documentElement.classList.add("dark"),document.documentElement.style.colorScheme="dark"},setLightTheme=()=>{document.documentElement.classList.remove("dark"),document.documentElement.style.colorScheme="light"};"color-theme"in localStorage?localStorage.getItem("color-theme")==="dark"?setDarkTheme():setLightTheme():(defaultTheme==="dark"?setDarkTheme():setLightTheme(),defaultTheme==="system"&&(window.matchMedia("(prefers-color-scheme: dark)").matches?setDarkTheme():setLightTheme()))</script></head><body dir=ltr><div class="nav-container hx-sticky hx-top-0 hx-z-20 hx-w-full hx-bg-transparent print:hx-hidden"><div class="nav-container-blur hx-pointer-events-none hx-absolute hx-z-[-1] hx-h-full hx-w-full hx-bg-white dark:hx-bg-dark hx-shadow-[0_2px_4px_rgba(0,0,0,.02),0_1px_0_rgba(0,0,0,.06)] contrast-more:hx-shadow-[0_0_0_1px_#000] dark:hx-shadow-[0_-1px_0_rgba(255,255,255,.1)_inset] contrast-more:dark:hx-shadow-[0_0_0_1px_#fff]"></div><nav class="hx-mx-auto hx-flex hx-items-center hx-justify-end hx-gap-2 hx-h-16 hx-px-6 hx-max-w-[90rem]"><a class="hx-flex hx-items-center hover:hx-opacity-75 ltr:hx-mr-auto rtl:hx-ml-auto" href=/pyFDS-Evac/><img class="hx-block dark:hx-hidden" src=/pyFDS-Evac/images/logo.png alt=pyFDS-Evac height=28 width=28>
 <img class="hx-hidden dark:hx-block" src=/pyFDS-Evac/images/logo.png alt=pyFDS-Evac height=28 width=28>
 <span class="hx-mx-2 hx-font-extrabold hx-inline hx-select-none" title=pyFDS-Evac>pyFDS-Evac</span>
@@ -90,7 +90,7 @@ grows, and how route choice reads it. The intuition is on
 <a href=/pyFDS-Evac/docs/understanding/concepts/#notation>notation table</a>.</p><h2>Terms<span class="hx-absolute -hx-mt-20" id=terms></span>
 <a href=#terms class=subheading-anchor aria-label="Permalink for this section"></a></h2><p>These words are used with one meaning each, here and on the linked pages.</p><ul><li><strong>Stage graph.</strong> The directed graph of spawn areas, checkpoints, waypoints
 and exits, with the walkable legs between them as edges
-(<code>route_graph.py:104–192</code>). A <strong>neighbour</strong> of a node is the target of one
+(<code>route_graph.py</code>, <code>StageGraph.from_scenario</code>). A <strong>neighbour</strong> of a node is the target of one
 of its outgoing edges.</li><li><strong>Sign.</strong> A descriptor \(\{x, y, \alpha_s, C\}\) attached to a node: position,
 compass bearing \(\alpha_s\) of the direction the sign faces, and the
 visibility constant <em>C</em> of Jin&rsquo;s law.</li><li><strong>Legible.</strong> A sign is legible from a grid cell at a time when it passes the
@@ -98,25 +98,25 @@ precomputed sign-legibility test below. Legibility is a property of the
 present position and time.</li><li><strong>Known.</strong> A node or edge is known to an agent when it is stored in that
 agent&rsquo;s cognitive map. Knowledge persists.</li><li><strong>Learn.</strong> A node or edge is learned when it is added to the map.</li><li><strong>Visited.</strong> A node is visited when the agent&rsquo;s stage at that node
 completes, after any wait there (<code>expand_on_arrival</code>, called at
-<code>scenario.py:2508–2551</code>). This includes a stage with nothing scripted after
-it, where the agent goes idle (<code>direct_steering_runtime.py:328–337</code>). The
+<code>scenario.py</code>, <code>run_scenario</code>). This includes a stage with nothing scripted after
+it, where the agent goes idle (<code>direct_steering_runtime.py</code>, <code>advance_path_target</code>). The
 spawn node is visited from the start.</li><li><strong>Frontier.</strong> A known node that is not visited.</li><li><strong>Sign-legibility test</strong> versus <strong>route exposure gate.</strong> The first decides
 whether a neighbour is learned. The second, described on the
 <a href=/pyFDS-Evac/models/routing/>routing page</a>, judges the smoke along a route that is
 already known. They are separate mechanisms.</li></ul><h2>Coded form<span class="hx-absolute -hx-mt-20" id=coded-form></span>
 <a href=#coded-form class=subheading-anchor aria-label="Permalink for this section"></a></h2><p><a id=sign-visibility></a></p><h3>1. The sign-legibility test<span class="hx-absolute -hx-mt-20" id=1-the-sign-legibility-test></span>
-<a href=#1-the-sign-legibility-test class=subheading-anchor aria-label="Permalink for this section"></a></h3><p>Every exit, checkpoint and waypoint carries a sign (<code>visibility.py:61–73</code>). A
+<a href=#1-the-sign-legibility-test class=subheading-anchor aria-label="Permalink for this section"></a></h3><p>Every exit, checkpoint and waypoint carries a sign (<code>visibility.py</code>, <code>extract_sign_descriptors</code>). A
 non-empty authored <code>"sign"</code> is used as written and must give <code>x</code> and <code>y</code>. A
 node without one, or with an empty one, receives a synthesised sign at its
-routing point with \(C = 3\) and \(\alpha_s\) = <code>None</code> (<code>visibility.py:34–58</code>).
+routing point with \(C = 3\) and \(\alpha_s\) = <code>None</code> (<code>visibility.py</code>, <code>_default_sign</code>).
 A node whose polygon cannot give a position gets no sign. Spawn areas carry no
 sign. The model treats every node without a sign as legible from everywhere
-(<code>visibility.py:538–540</code>).</p><div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code"><div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=display:flex><span><span style=color:#e6db74>&#34;exits&#34;</span><span style=color:#960050;background-color:#1e0010>:</span> {
+(<code>visibility.py</code>, <code>VisibilityModel.node_is_visible</code>).</p><div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code"><div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=display:flex><span><span style=color:#e6db74>&#34;exits&#34;</span><span style=color:#960050;background-color:#1e0010>:</span> {
 </span></span><span style=display:flex><span>  <span style=color:#f92672>&#34;exit_A&#34;</span>: { <span style=color:#f92672>&#34;sign&#34;</span>: {<span style=color:#f92672>&#34;x&#34;</span>: <span style=color:#ae81ff>0.5</span>, <span style=color:#f92672>&#34;y&#34;</span>: <span style=color:#ae81ff>11.5</span>, <span style=color:#f92672>&#34;alpha&#34;</span>: <span style=color:#ae81ff>90</span>, <span style=color:#f92672>&#34;c&#34;</span>: <span style=color:#ae81ff>3</span>} }
 </span></span><span style=display:flex><span>}</span></span></code></pre></div></div><div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0"><button class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50" title="Copy code"><div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4"></div><div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4"></div></button></div></div><p>An optional <code>"max_distance"</code> (m, positive) sets that sign&rsquo;s reading distance
 \(V_{\max}\), for example for a larger or internally illuminated sign.</p><p>\(\alpha_s\) is a bearing in degrees, clockwise from north (+y). The sign faces
 \((\sin\alpha_s, \cos\alpha_s)\), so 90 is readable from the east, 270 from the
-west and 180 from the south (<code>visibility.py:388–391</code>).</p><p>The test is computed by <a href=https://github.com/FireDynamics/fdsvismap target=_blank rel=noopener>fdsvismap</a>
+west and 180 from the south (<code>visibility.py</code>, <code>VisibilityModel</code>).</p><p>The test is computed by <a href=https://github.com/FireDynamics/fdsvismap target=_blank rel=noopener>fdsvismap</a>
 (pinned at <code>64d9aa7</code>, <code>pyproject.toml:34</code>). For sign <em>k</em> and a grid cell at
 distance \(L\) (<code>FDSVisMap._get_view_angle_array</code>, <code>_get_visibility_array</code>,
 <code>get_vismap</code>):</p>$$
@@ -130,7 +130,7 @@ $$$$
 V = A \cdot U \cdot \min\!\left(\frac{C}{\bar K},\, V_{\max}\right),
 \qquad \text{legible} \iff V \ge L .
 $$<ul><li>\((\Delta x, \Delta y)\) is the cell position minus the sign position
-(<code>FDSVisMap.py:481–482</code>), and \(L\) is their distance; reversing the
+(<code>FDSVisMap.py</code>, <code>VisMap._get_view_angle_array</code>), and \(L\) is their distance; reversing the
 vector would flip the readable half-plane.</li><li>\(U\) is 0 when an obstruction cell lies on the rasterised ray from the sign,
 1 otherwise (anti-aliased rays, <code>aa=True</code>).</li><li>\(\bar K\) is the arithmetic mean extinction over the cells of a rasterised
 line between the two cells, not a length-weighted integral.</li><li>When \(\bar K = 0\), the capped term is \(V_{\max}\).</li><li>\(V_{\max}\) is the sign&rsquo;s reading distance: 30 m by default, as in
@@ -148,109 +148,109 @@ line and hollow marker: not legible. Yellow cells are the positions from which
 the model reads the sign; the gold arrow shows which way it faces. \(V_{\max}\)
 = 30 m does not bind. The sign is lost at about
 53°, well before it is side-on.
-Script: <code>scripts/figures/sign_rotation.py</code>.</em></p><p><strong>Two ways to build the model</strong> (<code>run_config.py:191–230</code>):</p><ul><li><strong>From an FDS run</strong> (<code>--fds-dir</code>). Grid, obstructions and extinction come
+Script: <code>scripts/figures/sign_rotation.py</code>.</em></p><p><strong>Two ways to build the model</strong> (<code>run_config.py</code>, <code>_build_vis_model</code>):</p><ul><li><strong>From an FDS run</strong> (<code>--fds-dir</code>). Grid, obstructions and extinction come
 from the FDS output. The <code>SOOT EXTINCTION COEFFICIENT</code> slice nearest the
 point (0, 0, <code>--smoke-slice-height</code>) is used (1.6 m by default since #164,
-<code>run.py:65–67</code>). Stored times are spaced by <code>--reroute-interval</code>
-(<code>visibility.py:86–87</code>, <code>run_config.py:228</code>).</li><li><strong>From clear air</strong> (no <code>--fds-dir</code>). The walkable polygon is rasterised at
+<code>run.py</code>, <code>_build_parser</code>). Stored times are spaced by <code>--reroute-interval</code>
+(<code>visibility.py</code>, <code>_build_vismap</code>; <code>run_config.py</code>, <code>_build_vis_model</code>).</li><li><strong>From clear air</strong> (no <code>--fds-dir</code>). The walkable polygon is rasterised at
 <code>--vis-cell-size</code>. A cell is an obstruction when its centre lies outside the
-polygon (<code>visibility.py:155</code>, <code>:508–509</code>). A wall thinner than one cell
+polygon (<code>visibility.py</code>, <code>_blocked_runs</code>, <code>VisibilityModel.clear_air</code>). A wall thinner than one cell
 <em>may</em> therefore let sight through, depending on how it falls on the grid.
-The extinction is zero, and one time point is stored (<code>visibility.py:498</code>).</li></ul><p>At run time the model answers <code>node_is_visible(t, x, y, node)</code> by looking up
+The extinction is zero, and one time point is stored (<code>visibility.py</code>, <code>VisibilityModel.clear_air</code>).</li></ul><p>At run time the model answers <code>node_is_visible(t, x, y, node)</code> by looking up
 the nearest stored time and cell, clamped to the stored range
-(<code>visibility.py:197–211</code>, <code>:531–543</code>). No ray is cast inside the time loop.
+(<code>visibility.py</code>, <code>_VisMapCache._nearest</code>, <code>VisibilityModel.node_is_visible</code>). No ray is cast inside the time loop.
 <code>--vis-cache</code> stores the arrays in an <code>.npz</code> file. The FDS cache is keyed by
 the FDS directory path, the signs, the time step and the slice height; it
 does not hash the FDS output, so replacing the output in place leaves a stale
-cache valid (<code>visibility.py:115–139</code>, <code>:330–359</code>).</p><p><a id=which-visibility-setting-am-i-running></a></p><p><strong>Which model a run gets</strong> (<code>run_config.py:156–230</code>):</p><table><thead><tr><th>invocation</th><th>model</th></tr></thead><tbody><tr><td>no flags, some group with familiarity &lt; 1</td><td>clear air</td></tr><tr><td>no flags, every group at familiarity 1</td><td>none</td></tr><tr><td><code>--clear-air-visibility</code></td><td>clear air, even if every group is fully familiar</td></tr><tr><td><code>--no-visibility</code></td><td>none</td></tr><tr><td><code>--fds-dir DIR</code> with a <code>SOOT EXTINCTION COEFFICIENT</code> slice, some group with familiarity &lt; 1</td><td>FDS smoke, uncached</td></tr><tr><td><code>--fds-dir DIR --vis-cache PATH</code> with a <code>SOOT EXTINCTION COEFFICIENT</code> slice</td><td>FDS smoke, cached</td></tr><tr><td><code>--fds-dir DIR</code> without a <code>SOOT EXTINCTION COEFFICIENT</code> slice, some group with familiarity &lt; 1</td><td>clear air, with a warning (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248 target=_blank rel=noopener>#248</a>)</td></tr><tr><td><code>--fds-dir DIR --vis-cache PATH</code> without a <code>SOOT EXTINCTION COEFFICIENT</code> slice</td><td>clear air, cached, with a warning</td></tr><tr><td><code>--fds-dir DIR</code>, every group at familiarity 1</td><td>none (smoke still drives speed, FED and the exposure gate)</td></tr><tr><td><code>--vis-cache PATH</code>, no <code>--fds-dir</code></td><td>clear air, cached</td></tr></tbody></table><p>In every case a scenario from which no sign can be extracted gets no model
-(<code>run_config.py:206–209</code>). Rejected combinations: <code>--clear-air-visibility</code>
+cache valid (<code>visibility.py</code>, <code>_make_meta</code>, <code>_load_vismap_cache</code>).</p><p><a id=which-visibility-setting-am-i-running></a></p><p><strong>Which model a run gets</strong> (<code>run_config.py</code>, <code>_build_vis_model</code>):</p><table><thead><tr><th>invocation</th><th>model</th></tr></thead><tbody><tr><td>no flags, some group with familiarity &lt; 1</td><td>clear air</td></tr><tr><td>no flags, every group at familiarity 1</td><td>none</td></tr><tr><td><code>--clear-air-visibility</code></td><td>clear air, even if every group is fully familiar</td></tr><tr><td><code>--no-visibility</code></td><td>none</td></tr><tr><td><code>--fds-dir DIR</code> with a <code>SOOT EXTINCTION COEFFICIENT</code> slice, some group with familiarity &lt; 1</td><td>FDS smoke, uncached</td></tr><tr><td><code>--fds-dir DIR --vis-cache PATH</code> with a <code>SOOT EXTINCTION COEFFICIENT</code> slice</td><td>FDS smoke, cached</td></tr><tr><td><code>--fds-dir DIR</code> without a <code>SOOT EXTINCTION COEFFICIENT</code> slice, some group with familiarity &lt; 1</td><td>clear air, with a warning (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248 target=_blank rel=noopener>#248</a>)</td></tr><tr><td><code>--fds-dir DIR --vis-cache PATH</code> without a <code>SOOT EXTINCTION COEFFICIENT</code> slice</td><td>clear air, cached, with a warning</td></tr><tr><td><code>--fds-dir DIR</code>, every group at familiarity 1</td><td>none (smoke still drives speed, FED and the exposure gate)</td></tr><tr><td><code>--vis-cache PATH</code>, no <code>--fds-dir</code></td><td>clear air, cached</td></tr></tbody></table><p>In every case a scenario from which no sign can be extracted gets no model
+(<code>run_config.py</code>, <code>_build_vis_model</code>). Rejected combinations: <code>--clear-air-visibility</code>
 with <code>--fds-dir</code>, <code>--clear-air-visibility</code> with <code>--no-visibility</code>, and
-<code>--vis-cache</code> with <code>--no-enable-rerouting</code> (<code>run_config.py:156–168</code>).</p><p><a id=cognitive-maps></a></p><h3>2. The knowledge contract<span class="hx-absolute -hx-mt-20" id=2-the-knowledge-contract></span>
+<code>--vis-cache</code> with <code>--no-enable-rerouting</code> (<code>run_config.py</code>, <code>validate_opts</code>).</p><p><a id=cognitive-maps></a></p><h3>2. The knowledge contract<span class="hx-absolute -hx-mt-20" id=2-the-knowledge-contract></span>
 <a href=#2-the-knowledge-contract class=subheading-anchor aria-label="Permalink for this section"></a></h3><p>Each agent&rsquo;s <code>AgentCognitiveMap</code> holds known nodes, known edges and visited
-nodes (<code>cognitive_map.py:10–25</code>). The contract has four parts.</p><p><strong>2.1 Initial knowledge</strong> (<code>init_cognitive_map</code>, <code>cognitive_map.py:78–136</code>).
+nodes (<code>cognitive_map.py</code>, <code>AgentCognitiveMap</code>). The contract has four parts.</p><p><strong>2.1 Initial knowledge</strong> (<code>init_cognitive_map</code>, <code>cognitive_map.py</code>).
 <code>familiarity</code> is a scenario key on a distribution group, normalised to a
 probability \(p\): <code>"full"</code> is 1, <code>"discovery"</code> is 0, a number in [0, 1] is
-used as given, anything else raises (<code>cognitive_map.py:28–56</code>). The key
-defaults to <code>"full"</code> (<code>simulation_init.py:996</code>).</p><ul><li>\(p = 1\): the map is the whole stage graph. It is never extended.</li><li>\(p < 1\): the map starts with the spawn node, marked visited. Then, in
+used as given, anything else raises (<code>cognitive_map.py</code>, <code>familiarity_probability</code>). The key
+defaults to <code>"full"</code> (<code>simulation_init.py</code>, <code>_initialize_with_fallback</code>).</p><ul><li>\(p = 1\): the map is the whole stage graph. It is never extended.</li><li>\(p < 1\): the map starts with the spawn node, marked visited. Then, in
 order:<ol><li><strong>Entrance.</strong> If <code>entrance</code> names an exit reachable from the spawn node,
 the shortest path to it is learned. A name that is missing, is not an
-exit, or cannot be reached is silently ignored (<code>cognitive_map.py:66–69</code>,
-<code>:123–124</code>).</li><li><strong>Familiarity draw.</strong> Each other reachable exit is learned, with its
+exit, or cannot be reached is silently ignored (<code>cognitive_map.py</code>,
+<code>_learn_route_to</code>, <code>init_cognitive_map</code>).</li><li><strong>Familiarity draw.</strong> Each other reachable exit is learned, with its
 shortest path, with probability \(p\). The draw uses an RNG seeded with
-<code>seed + 7919·agent_id</code> (<code>scenario.py:990</code>, <code>:2207</code>). A library caller
-that passes no RNG gets no draw (<code>cognitive_map.py:126</code>).</li><li><strong>Perception at spawn.</strong> Each neighbour of the spawn node whose sign is
+<code>seed + 7919·agent_id</code> (<code>scenario.py</code>, <code>_assign_initial_exit</code>, <code>run_scenario</code>). A library caller
+that passes no RNG gets no draw (<code>cognitive_map.py</code>, <code>init_cognitive_map</code>).</li><li><strong>Perception at spawn.</strong> Each neighbour of the spawn node whose sign is
 legible <strong>from the spawn node&rsquo;s routing point</strong> is learned
-(<code>cognitive_map.py:131–135</code>). Agents of one spawn area that spawn at
+(<code>cognitive_map.py</code>, <code>init_cognitive_map</code>). Agents of one spawn area that spawn at
 the same time therefore start with the same perceived neighbours.</li></ol></li></ul><p>Paths learned in steps 1 and 2 add forward edges only
-(<code>cognitive_map.py:71–74</code>).</p><p><strong>2.2 Learning</strong> (\(p < 1\) only). Two calls add knowledge:</p><ul><li><strong>Periodic.</strong> When an agent&rsquo;s re-evaluation is due, each neighbour of its
+(<code>cognitive_map.py</code>, <code>_learn_route_to</code>).</p><p><strong>2.2 Learning</strong> (\(p < 1\) only). Two calls add knowledge:</p><ul><li><strong>Periodic.</strong> When an agent&rsquo;s re-evaluation is due, each neighbour of its
 current node (<code>current_origin</code>, else <code>current_target_stage</code>) whose sign is
 legible from the agent&rsquo;s <strong>stored position</strong> is learned
-(<code>expand_from_visibility</code>, <code>cognitive_map.py:189–234</code>, called at
-<code>scenario.py:2238–2254</code>). The stored position is written in the steering
-loop (<code>scenario.py:2423</code>), which runs after the reroute pass, so it holds
+(<code>expand_from_visibility</code>, <code>cognitive_map.py</code>, called at
+<code>scenario.py</code>, <code>run_scenario</code>). The stored position is written in the steering
+loop (<code>scenario.py</code>, <code>run_scenario</code>), which runs after the reroute pass, so it holds
 the previous step&rsquo;s coordinates. Without a visibility model nothing is
 learned.</li><li><strong>On advancing along the path.</strong> When the agent completes a stage and its
 path advances (after any waiting time at that stage), the node is marked
 visited, and each of its neighbours whose sign is legible from the agent&rsquo;s
-position is learned (<code>expand_on_arrival</code>, <code>cognitive_map.py:155–186</code>,
-called at <code>scenario.py:2508–2521</code>, <code>:2535–2551</code>). Without a visibility
-model, <strong>every</strong> neighbour is learned.</li></ul><p>The three places knowledge is sensed from:</p><table><thead><tr><th>When</th><th>Sensing position</th><th>Code</th></tr></thead><tbody><tr><td>Initialisation</td><td>spawn node&rsquo;s routing point</td><td><code>cognitive_map.py:131–135</code></td></tr><tr><td>Periodic learning</td><td>previous step&rsquo;s stored position</td><td><code>scenario.py:2240–2253</code>, <code>:2423</code></td></tr><tr><td>Stage completion (arrival)</td><td>current position</td><td><code>scenario.py:2508–2551</code></td></tr></tbody></table><p>Learning is <strong>limited to neighbours</strong> of one node. A legible sign that belongs
+position is learned (<code>expand_on_arrival</code>, <code>cognitive_map.py</code>,
+called at <code>scenario.py</code>, <code>run_scenario</code>). Without a visibility
+model, <strong>every</strong> neighbour is learned.</li></ul><p>The three places knowledge is sensed from:</p><table><thead><tr><th>When</th><th>Sensing position</th><th>Code</th></tr></thead><tbody><tr><td>Initialisation</td><td>spawn node&rsquo;s routing point</td><td><code>cognitive_map.py</code>, <code>init_cognitive_map</code></td></tr><tr><td>Periodic learning</td><td>previous step&rsquo;s stored position</td><td><code>scenario.py</code>, <code>run_scenario</code></td></tr><tr><td>Stage completion (arrival)</td><td>current position</td><td><code>scenario.py</code>, <code>run_scenario</code></td></tr></tbody></table><p>Learning is <strong>limited to neighbours</strong> of one node. A legible sign that belongs
 to any other node is not tested. An edge learned by either call also teaches
 its reverse when the graph contains that reverse edge (<code>_learn_edge</code>,
-<code>cognitive_map.py:139–152</code>). With automatic wiring, exits have no outgoing
-edges and spawn areas no incoming ones (<code>route_graph.py:148–192</code>), so no
+<code>cognitive_map.py</code>). With automatic wiring, exits have no outgoing
+edges and spawn areas no incoming ones (<code>route_graph.py</code>, <code>StageGraph.from_scenario</code>), so no
 reverse edge into a spawn area or out of an exit is learned. Explicit
-<code>transitions</code> are added without these restrictions (<code>route_graph.py:137–146</code>).</p><p><strong>2.3 Memory.</strong> No code removes a node or an edge from the map of an agent
+<code>transitions</code> are added without these restrictions (<code>route_graph.py</code>, <code>StageGraph.from_scenario</code>).</p><p><strong>2.3 Memory.</strong> No code removes a node or an edge from the map of an agent
 that is still in the simulation. A node learned while its sign was legible
 stays known after the sign stops being legible, through distance, bearing,
 obstruction or smoke. The map is deleted when the agent leaves
-(<code>scenario.py:2394–2400</code>).</p><p><strong>2.4 Decision.</strong> Route ranking works on the known subgraph only:
+(<code>scenario.py</code>, <code>run_scenario</code>).</p><p><strong>2.4 Decision.</strong> Route ranking works on the known subgraph only:
 <code>rank_routes</code> replaces the stage graph with <code>cognitive_subgraph(map, graph)</code>
-before it evaluates any edge (<code>route_graph.py:1293–1297</code>,
-<code>cognitive_map.py:237–259</code>). Dijkstra, the exposure gate, the ordering and the
+before it evaluates any edge (<code>route_graph.py</code>, <code>rank_routes</code>;
+<code>cognitive_map.py</code>, <code>cognitive_subgraph</code>). Dijkstra, the exposure gate, the ordering and the
 all-refused fallback see known nodes and edges only. An exit that is not known
 is not refused; it is absent, and the fallback cannot restore it.</p><p><strong>Exception (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91 target=_blank rel=noopener>#91</a>).</strong>
 Every agent receives the geometrically nearest exit as its steering target
-before its map exists (<code>simulation_init.py:1430–1449</code>). The opening choice
+before its map exists (<code>simulation_init.py</code>, <code>_find_nearest_exit</code>). The opening choice
 replaces that target only when the map contains a reachable exit
-(<code>scenario.py:1006–1008</code>). If it contains none, and neither exploration nor
+(<code>scenario.py</code>, <code>_assign_initial_exit</code>). If it contains none, and neither exploration nor
 patrol yields a target (below), the agent keeps steering towards that
-geometric exit (<code>route_graph.py:1837–1838</code>). For a map that holds only the
+geometric exit (<code>route_graph.py</code>, <code>_decide_explore</code>). For a map that holds only the
 spawn node neither does: the spawn node is visited from the start
-(<code>cognitive_map.py:117–121</code>), so there is no frontier, and the patrol
+(<code>cognitive_map.py</code>, <code>init_cognitive_map</code>), so there is no frontier, and the patrol
 excludes the current node, so a one-node map has no stop
-(<code>cognitive_map.py:343–349</code>). Periodic learning may add the exit
+(<code>cognitive_map.py</code>, <code>wander_target</code>). Periodic learning may add the exit
 on the way once its sign is legible, but the target was never chosen from the
 map. This is a defect, not intended behaviour (see also defect 2 in
 <code>assets/blind_spawn_discovery/README.md</code>).</p><p>The contract covers <strong>ranking</strong>, not <strong>adoption</strong>. Ranking orders the known
 routes; adoption is whether a moving agent switches to the first of them. The
-two differ:</p><ul><li><strong>Opening choice</strong> (<code>_assign_initial_exit</code>, <code>scenario.py:943–1021</code>). It
+two differ:</p><ul><li><strong>Opening choice</strong> (<code>_assign_initial_exit</code>, <code>scenario.py</code>). It
 ranks from the spawn node, without the agent&rsquo;s position and without the
-queue tally (<code>scenario.py:995–1005</code>).</li><li><strong>Re-evaluation</strong> (<code>evaluate_and_reroute</code>). It ranks from the agent&rsquo;s
+queue tally (<code>scenario.py</code>, <code>_assign_initial_exit</code>).</li><li><strong>Re-evaluation</strong> (<code>evaluate_and_reroute</code>). It ranks from the agent&rsquo;s
 position. It adopts a different exit only if the rival passes the
 switching rule: an optical-depth margin, then an anchor on the ranking cost
-(<code>exit_switch_anchor</code> = 0.9, <code>route_graph.py:1526</code>, <code>:1733–1747</code>). The
+(<code>exit_switch_anchor</code> = 0.9, <code>route_graph.py</code>, <code>GatePolicy.improvement</code>, <code>RerouteConfig.exit_switch_anchor</code>). The
 optional queue term (<code>w_queue</code>, 0 by default) enters the ranking cost.</li><li><strong>All refused.</strong> When every known route fails the gate, the least smoky one
 is re-admitted, but the current route is kept first if the rival&rsquo;s worst
 extinction is not lower by <code>fallback_switch_margin</code>
-(<code>route_graph.py:1455–1466</code>).</li></ul><p>An agent can therefore keep a known route that is not first in the ranking.</p><p><em>Worked example (clear air).</em> Every \(\tau\) is 0, both routes are clean,
+(<code>route_graph.py</code>, <code>_apply_fallback</code>, <code>_fallback_holds_current</code>).</li></ul><p>An agent can therefore keep a known route that is not first in the ranking.</p><p><em>Worked example (clear air).</em> Every \(\tau\) is 0, both routes are clean,
 and the optical-depth deadband (\(\tau_{\max}\cdot\) <code>tau_deadband</code> =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
 adopted only if its ranking cost, here its travel time, is below 0.9 times the
-current route&rsquo;s (<code>_anchor_allows</code>, <code>route_graph.py:1695–1747</code>;
-<code>exit_switch_anchor</code> = 0.9, <code>:1526</code>; <code>tau_max</code> = 6.0 and <code>tau_deadband</code> = 0.1,
-<code>:691</code>, <code>:695</code>). An exit learned on the way is therefore adopted only if it is
+current route&rsquo;s (<code>_anchor_allows</code>, <code>route_graph.py</code>;
+<code>exit_switch_anchor</code> = 0.9, <code>RerouteConfig.exit_switch_anchor</code>; <code>tau_max</code> = 6.0 and <code>tau_deadband</code> = 0.1,
+<code>RouteCostConfig.tau_max</code>, <code>RouteCostConfig.tau_deadband</code>). An exit learned on the way is therefore adopted only if it is
 more than 10 % faster than the exit the agent is heading for.</p><p><strong>No known exit.</strong> When the known subgraph contains no reachable exit,
-<code>evaluate_and_reroute</code> looks for a target (<code>route_graph.py:1810–1872</code>):</p><ol><li><strong>Explore.</strong> The frontier node with the lowest path cost through the known
+<code>evaluate_and_reroute</code> looks for a target (<code>route_graph.py</code>, <code>_decide_explore</code>):</p><ol><li><strong>Explore.</strong> The frontier node with the lowest path cost through the known
 subgraph, with the first leg measured from the agent&rsquo;s position; ties
-break on node id (<code>nearest_frontier_target</code>, <code>cognitive_map.py:262–319</code>).
+break on node id (<code>nearest_frontier_target</code>, <code>cognitive_map.py</code>).
 Logged as <code>reason="explore"</code>.</li><li><strong>Wander.</strong> When no frontier is reachable, the next node in a fixed
 rotation over the sorted known nodes other than the current one, reached
 over known edges taken <strong>in either direction</strong>
-(<code>wander_target</code>, <code>_undirected_known_path</code>, <code>cognitive_map.py:322–399</code>).
+(<code>wander_target</code>, <code>_undirected_known_path</code>, <code>cognitive_map.py</code>).
 Logged as <code>reason="wander"</code>.</li></ol><p><strong>What route choice does not read.</strong> Route choice never reads the
 sign-legibility test or a line-of-sight visibility
-(<code>route_graph.py:1366–1372</code>). <code>VisibilityModel.visibility_to_node</code> and
+(<code>route_graph.py</code>, <code>AdditivePolicy.apply_candidate_set_rules</code>). <code>VisibilityModel.visibility_to_node</code> and
 <code>distance_to_node</code> have no caller in <code>pyfds_evac/</code>
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158 target=_blank rel=noopener>#158</a>). Route
 smoke is sampled from the global extinction field (see
@@ -265,27 +265,27 @@ fails, it is the straight line. Samples are spaced at most <code>sampling_step_m
 along the walk&rsquo;s full length, including the stretch behind the route&rsquo;s origin
 node. The resample feeds only two secondary quantities: the route&rsquo;s worst sample
 <code>k_max_route</code>, which decides whether an agent keeps its exit when every route
-is refused (<code>:1460</code>), and the worst leg mean, which decides the optional
+is refused (<code>route_graph.py</code>, <code>_fallback_holds_current</code>), and the worst leg mean, which decides the optional
 clean tier, off by default (<code>clean_extinction_threshold</code> = 0). Under the <code>"additive"</code> model only, a route
 whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
-non-refused route has a segment below it (<code>route_graph.py:1383–1396</code>); this is
+non-refused route has a segment below it (<code>route_graph.py</code>, <code>AdditivePolicy.apply_candidate_set_rules</code>); this is
 an extinction threshold, not a sign test.</p><h2>Parameters<span class="hx-absolute -hx-mt-20" id=parameters></span>
 <a href=#parameters class=subheading-anchor aria-label="Permalink for this section"></a></h2><p><code>familiarity</code>, <code>entrance</code> and <code>sign</code> are scenario keys. The other rows are
 command-line options, with the default of the underlying class for direct
-library use.</p><table><thead><tr><th>Setting</th><th>Source</th><th><code>run.py</code> value</th><th>Library default</th><th>Unit</th><th>Meaning</th></tr></thead><tbody><tr><td><code>familiarity</code></td><td>distribution <code>parameters</code></td><td>–</td><td><code>"full"</code> (<code>simulation_init.py:996</code>)</td><td>–</td><td><code>"full"</code>, <code>"discovery"</code> or \(p \in [0,1]\)</td></tr><tr><td><code>entrance</code></td><td>distribution <code>parameters</code></td><td>–</td><td>none (<code>simulation_init.py:997</code>)</td><td>–</td><td>a reachable exit learned at spawn</td></tr><tr><td><code>sign.c</code></td><td>node <code>sign</code></td><td>–</td><td>3 (<code>visibility.py:58</code>, <code>:94</code>)</td><td>–</td><td><em>C</em></td></tr><tr><td><code>sign.alpha</code></td><td>node <code>sign</code></td><td>–</td><td><code>None</code>, i.e. \(A = 1\) (<code>visibility.py:58</code>)</td><td>°</td><td>bearing the sign faces</td></tr><tr><td>\(V_{\max}\)</td><td><code>--max-sign-distance</code></td><td>30</td><td>30 (<code>DEFAULT_MAX_SIGN_DISTANCE_M</code>)</td><td>m</td><td>reading distance of every sign, also in clear air</td></tr><tr><td><code>sign.max_distance</code></td><td>node <code>sign</code></td><td>–</td><td>none, i.e. \(V_{\max}\)</td><td>m</td><td>reading distance of this sign</td></tr><tr><td><code>--smoke-slice-height</code></td><td>CLI</td><td>1.6 (<code>run.py:67</code>)</td><td>1.6 (<code>visibility.py:409</code>)</td><td>m</td><td>FDS slice height</td></tr><tr><td><code>--reroute-interval</code></td><td>CLI</td><td>1.0 (<code>run.py:95</code>)</td><td>10.0 (<code>route_graph.py:1519</code>)</td><td>s</td><td>re-evaluation interval, hence periodic learning</td></tr><tr><td>vismap time step</td><td>= <code>--reroute-interval</code></td><td>1.0 (<code>run_config.py:228</code>)</td><td>10.0 (<code>visibility.py:408</code>)</td><td>s</td><td>FDS model only; clear air stores one time</td></tr><tr><td><code>--vis-cell-size</code></td><td>CLI</td><td>0.25 (<code>run.py:135</code>)</td><td>0.5 (<code>visibility.py:438</code>)</td><td>m</td><td>clear-air grid; FDS models use the FDS mesh</td></tr><tr><td><code>--vis-cache</code></td><td>CLI</td><td>none</td><td>none</td><td>–</td><td><code>.npz</code> cache path</td></tr></tbody></table><p>The <code>--vis-cell-size</code> docstring advises a cell smaller than the thinnest wall
-(<code>visibility.py:455–465</code>). Results for discovery agents have not converged
+library use.</p><table><thead><tr><th>Setting</th><th>Source</th><th><code>run.py</code> value</th><th>Library default</th><th>Unit</th><th>Meaning</th></tr></thead><tbody><tr><td><code>familiarity</code></td><td>distribution <code>parameters</code></td><td>–</td><td><code>"full"</code> (<code>simulation_init.py</code>, <code>_initialize_with_fallback</code>)</td><td>–</td><td><code>"full"</code>, <code>"discovery"</code> or \(p \in [0,1]\)</td></tr><tr><td><code>entrance</code></td><td>distribution <code>parameters</code></td><td>–</td><td>none (<code>simulation_init.py</code>, <code>_initialize_with_fallback</code>)</td><td>–</td><td>a reachable exit learned at spawn</td></tr><tr><td><code>sign.c</code></td><td>node <code>sign</code></td><td>–</td><td>3 (<code>visibility.py</code>, <code>_default_sign</code>, <code>_build_vismap</code>)</td><td>–</td><td><em>C</em></td></tr><tr><td><code>sign.alpha</code></td><td>node <code>sign</code></td><td>–</td><td><code>None</code>, i.e. \(A = 1\) (<code>visibility.py</code>, <code>_default_sign</code>)</td><td>°</td><td>bearing the sign faces</td></tr><tr><td>\(V_{\max}\)</td><td><code>--max-sign-distance</code></td><td>30</td><td>30 (<code>DEFAULT_MAX_SIGN_DISTANCE_M</code>)</td><td>m</td><td>reading distance of every sign, also in clear air</td></tr><tr><td><code>sign.max_distance</code></td><td>node <code>sign</code></td><td>–</td><td>none, i.e. \(V_{\max}\)</td><td>m</td><td>reading distance of this sign</td></tr><tr><td><code>--smoke-slice-height</code></td><td>CLI</td><td>1.6 (<code>run.py</code>, <code>_build_parser</code>)</td><td>1.6 (<code>visibility.py</code>, <code>VisibilityModel.__init__</code>)</td><td>m</td><td>FDS slice height</td></tr><tr><td><code>--reroute-interval</code></td><td>CLI</td><td>1.0 (<code>run.py</code>, <code>_build_parser</code>)</td><td>10.0 (<code>route_graph.py</code>, <code>RerouteConfig.reevaluation_interval_s</code>)</td><td>s</td><td>re-evaluation interval, hence periodic learning</td></tr><tr><td>vismap time step</td><td>= <code>--reroute-interval</code></td><td>1.0 (<code>run_config.py</code>, <code>_build_vis_model</code>)</td><td>10.0 (<code>visibility.py</code>, <code>VisibilityModel.__init__</code>)</td><td>s</td><td>FDS model only; clear air stores one time</td></tr><tr><td><code>--vis-cell-size</code></td><td>CLI</td><td>0.25 (<code>run.py</code>, <code>_build_parser</code>)</td><td>0.5 (<code>visibility.py</code>, <code>VisibilityModel.clear_air</code>)</td><td>m</td><td>clear-air grid; FDS models use the FDS mesh</td></tr><tr><td><code>--vis-cache</code></td><td>CLI</td><td>none</td><td>none</td><td>–</td><td><code>.npz</code> cache path</td></tr></tbody></table><p>The <code>--vis-cell-size</code> docstring advises a cell smaller than the thinnest wall
+(<code>visibility.py</code>, <code>VisibilityModel.clear_air</code>). Results for discovery agents have not converged
 with the cell size (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168 target=_blank rel=noopener>#168</a>).</p><h2>Where it acts in the time step<span class="hx-absolute -hx-mt-20" id=where-it-acts-in-the-time-step></span>
 <a href=#where-it-acts-in-the-time-step class=subheading-anchor aria-label="Permalink for this section"></a></h2><ol><li><strong>Before the loop.</strong> The visibility model is built or loaded
-(<code>run_config.py:284</code>). Each agent placed at t = 0 gets its map and opening
-choice (<code>scenario.py:1414–1416</code>); flow-spawned agents get theirs when they
-appear (<code>scenario.py:1699–1715</code>).</li><li><strong>Reroute pass.</strong> It runs at most once per simulated second
-(<code>scenario.py:2152–2159</code>). For each agent whose re-evaluation is due,
+(<code>run_config.py</code>, <code>build_run_kwargs</code>). Each agent placed at t = 0 gets its map and opening
+choice (<code>scenario.py</code>, <code>run_scenario</code>); flow-spawned agents get theirs when they
+appear (<code>scenario.py</code>, <code>run_scenario</code>).</li><li><strong>Reroute pass.</strong> It runs at most once per simulated second
+(<code>scenario.py</code>, <code>run_scenario</code>). For each agent whose re-evaluation is due,
 periodic learning runs first, then ranking and possible adoption.</li><li><strong>Steering loop, every step.</strong> Positions are stored
-(<code>scenario.py:2423</code>), and learning on advancing along the path runs when a
-stage completes (<code>scenario.py:2508–2551</code>). This learning is not tied to the
+(<code>scenario.py</code>, <code>run_scenario</code>), and learning on advancing along the path runs when a
+stage completes (<code>scenario.py</code>, <code>run_scenario</code>). This learning is not tied to the
 reroute pass.</li><li><strong>History.</strong> With <code>collect_cognitive_map_history</code> (on in <code>run.py</code>,
-<code>run_config.py:302</code>), a row is written whenever the number of known nodes or
-edges changes (<code>scenario.py:2554–2571</code>).</li></ol><p>With <code>--no-enable-rerouting</code>, the map is still built, still sets the opening
+<code>run_config.py</code>, <code>build_run_kwargs</code>), a row is written whenever the number of known nodes or
+edges changes (<code>scenario.py</code>, <code>run_scenario</code>).</li></ol><p>With <code>--no-enable-rerouting</code>, the map is still built, still sets the opening
 choice, and still grows on advancing along the path, but no later decision
 reads it.</p><h2>Deviations from the literature<span class="hx-absolute -hx-mt-20" id=deviations-from-the-literature></span>
 <a href=#deviations-from-the-literature class=subheading-anchor aria-label="Permalink for this section"></a></h2><p>The published visibility law is on
@@ -321,7 +321,7 @@ visibility enters the utility as a graded attribute.</li><li><strong>Knowledge o
 Learning is limited by the sign-legibility test. Route costs are not: an
 agent that knows an exit prices the whole route to it from the global
 extinction field, including legs it has never seen and, with <code>anticipate</code>,
-future times (<code>route_graph.py:704–707</code>). The route choice of a discovery
+future times (<code>route_graph.py</code>, <code>RouteCostConfig.anticipate</code>, <code>RouteCostConfig.foresight_horizon_s</code>). The route choice of a discovery
 agent is therefore not limited by what it has perceived.</li><li><strong>Haensel&rsquo;s heuristics are not reproduced.</strong> Haensel (2014, §3.2) weights
 known edges by sensors (smoke, density, room-to-corridor) and uses a
 <code>LastDestinationsSensor</code> against back-tracking. He reports that with an
@@ -336,11 +336,11 @@ uses frontier exploration and a patrol instead of his weighting heuristics.</li>
 the exception under §2.4. The intended behaviour is exploration.</li><li><strong>Discovery agents ranked the first leg as a straight line</strong>
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172 target=_blank rel=noopener>#172</a>, fixed
 by #174). <code>cognitive_subgraph</code> built a new <code>StageGraph</code> without the
-routing engine (<code>cognitive_map.py:245–259</code>). In <code>rank_routes</code>, the length of
+routing engine (<code>cognitive_map.py</code>, <code>cognitive_subgraph</code>). In <code>rank_routes</code>, the length of
 the walk from the agent&rsquo;s position to its next node therefore fell back to a
-straight line (<code>route_graph.py:398–405</code>, <code>:1059–1063</code>). Frontier selection was
+straight line (<code>route_graph.py</code>, <code>_walkable_waypoints</code>, <code>_position_aware_length</code>). Frontier selection was
 not affected, because it measures that leg on the full graph
-(<code>cognitive_map.py:312</code>, <code>:402–429</code>). Fully familiar agents always had the
+(<code>cognitive_map.py</code>, <code>nearest_frontier_target</code>, <code>_cost_from_agent</code>). Fully familiar agents always had the
 engine.</li><li><strong>First-leg smoke was sampled on a straight line</strong>
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171 target=_blank rel=noopener>#171</a>). The
 resample from the agent to its next node ran on a straight line that could
@@ -349,10 +349,10 @@ length. It now follows the walked path at <code>sampling_step_m</code>. See §2.
 &ldquo;What route choice does not read&rdquo;.</li><li><strong>Clear-air travel time was under-priced</strong>
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167 target=_blank rel=noopener>#167</a>, fixed
 by #170). The share of the first leg is capped at 1
-(<code>route_graph.py:982</code>), so a route was under-priced when the agent was
+(<code>route_graph.py</code>, <code>_position_aware_length</code>), so a route was under-priced when the agent was
 farther from its next node than the route&rsquo;s origin is. In clear air the gate
 ranks by that travel time. Since #170, the walk to the origin is timed at
-the route&rsquo;s mean pace (<code>route_graph.py:1083–1089</code>).</li><li><strong>A sign is never read beyond its reading distance.</strong> \(V_{\max}\) is
+the route&rsquo;s mean pace (<code>route_graph.py</code>, <code>_measure_route</code>).</li><li><strong>A sign is never read beyond its reading distance.</strong> \(V_{\max}\) is
 30 m by default (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173 target=_blank rel=noopener>#173</a>),
 so in clear air a sign farther away is illegible at any bearing, and a
 discovery agent in a space wider than that must approach an exit to learn
@@ -433,4 +433,4 @@ dynamics simulation</em>. Diploma thesis, Technische Universität Dresden. No
 DOI or public URL known.</li><li>fdsvismap, <a href=https://github.com/FireDynamics/fdsvismap target=_blank rel=noopener>github.com/FireDynamics/fdsvismap</a>,
 commit <code>64d9aa73144b3902bdc6d2cdd1a08e3494ec5690</code>.</li><li>Korhonen, T. (2021). <em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&rsquo;s Guide</em>.
-<a href=https://github.com/tkorhon1/FDS-Evac-Guide target=_blank rel=noopener>github.com/tkorhon1/FDS-Evac-Guide</a>.</li></ul></div><div class="hx-mt-12 hx-mb-8 hx-block hx-text-xs hx-text-gray-500 ltr:hx-text-right rtl:hx-text-left dark:hx-text-gray-400">Last updated on <time datetime=2026-09-28T23:14:23.000Z>September 28, 2026</time></div><div class="hx-mb-8 hx-flex hx-items-center hx-border-t hx-pt-8 dark:hx-border-neutral-800 contrast-more:hx-border-neutral-400 dark:contrast-more:hx-border-neutral-400 print:hx-hidden"><a href=/pyFDS-Evac/models/routing/ title="Dynamic route rerouting" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-pr-4 rtl:hx-pl-4"><svg class="hx-inline hx-h-5 hx-shrink-0 ltr:hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>Dynamic route rerouting</a></div></main></article></div><footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hx-max-w-screen-xl hx-mx-auto hx-flex hx-justify-center hx-py-12 hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400 md:hx-justify-start"><div class="hx-flex hx-w-full hx-flex-col hx-items-center sm:hx-items-start"></div></div></footer><script defer src=/pyFDS-Evac/js/main.min.998f7d6b2520d6d9875145cbe14b35964b365b44b3b1bfa6b797a74a9c173b07.js integrity="sha256-mY99ayUg1tmHUUXL4Us1lks2W0Szsb+mt5enSpwXOwc="></script><script defer src=/pyFDS-Evac/lib/flexsearch/flexsearch.bundle.min.0425860527cc9968f9f049421c7a56b39327d475e2e3a8f550416be3a9134327.js integrity="sha256-BCWGBSfMmWj58ElCHHpWs5Mn1HXi46j1UEFr46kTQyc="></script><script defer src=/pyFDS-Evac/en.search.min.e94b9ab87af7e694584cf0f3e04ac9730f28249975a722351bf7ca00f4977934.js integrity="sha256-6UuauHr35pRYTPDz4ErJcw8oJJl1pyI1G/fKAPSXeTQ="></script><link type=text/css rel=stylesheet href=/pyFDS-Evac/lib/katex/katex.min.7e5db7914b97e596a36c1abb67ccc7f174f8bb71d38c9a88c55b262ed1737f97.css integrity="sha256-fl23kUuX5ZajbBq7Z8zH8XT4u3HTjJqIxVsmLtFzf5c="><script defer src=/pyFDS-Evac/lib/katex/katex.min.9f45307c5794ed247a0d095f3a62e52ef2215a67b2327203a7fd919959ae79d1.js integrity="sha256-n0UwfFeU7SR6DQlfOmLlLvIhWmeyMnIDp/2RmVmuedE="></script><script defer src=/pyFDS-Evac/lib/katex/auto-render.min.7b57d427ac6270677daf8d8380ded2cc73336f9149a167b8e1fe0d6ef66604ae.js integrity="sha256-e1fUJ6xicGd9r42DgN7SzHMzb5FJoWe44f4NbvZmBK4="></script><script defer src=/pyFDS-Evac/lib/katex/mhchem.min.f0ca03df194b8c3d6017ff455db6a0ef98857905663fa311a6cded788b15340b.js integrity="sha256-8MoD3xlLjD1gF/9FXbag75iFeQVmP6MRps3teIsVNAs="></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\begin{equation}",right:"\\end{equation}",display:!0},{left:"\\begin{align}",right:"\\end{align}",display:!0},{left:"\\begin{alignat}",right:"\\end{alignat}",display:!0},{left:"\\begin{gather}",right:"\\end{gather}",display:!0},{left:"\\begin{CD}",right:"\\end{CD}",display:!0},{left:"\\[",right:"\\]",display:!0}],throwOnError:!1})})</script></body></html>
+<a href=https://github.com/tkorhon1/FDS-Evac-Guide target=_blank rel=noopener>github.com/tkorhon1/FDS-Evac-Guide</a>.</li></ul></div><div class="hx-mt-12 hx-mb-8 hx-block hx-text-xs hx-text-gray-500 ltr:hx-text-right rtl:hx-text-left dark:hx-text-gray-400">Last updated on <time datetime=2026-09-29T09:19:20.000Z>September 29, 2026</time></div><div class="hx-mb-8 hx-flex hx-items-center hx-border-t hx-pt-8 dark:hx-border-neutral-800 contrast-more:hx-border-neutral-400 dark:contrast-more:hx-border-neutral-400 print:hx-hidden"><a href=/pyFDS-Evac/models/routing/ title="Dynamic route rerouting" class="hx-flex hx-max-w-[50%] hx-items-center hx-gap-1 hx-py-4 hx-text-base hx-font-medium hx-text-gray-600 hx-transition-colors [word-break:break-word] hover:hx-text-primary-600 dark:hx-text-gray-300 md:hx-text-lg ltr:hx-pr-4 rtl:hx-pl-4"><svg class="hx-inline hx-h-5 hx-shrink-0 ltr:hx-rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>Dynamic route rerouting</a></div></main></article></div><footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hx-max-w-screen-xl hx-mx-auto hx-flex hx-justify-center hx-py-12 hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400 md:hx-justify-start"><div class="hx-flex hx-w-full hx-flex-col hx-items-center sm:hx-items-start"></div></div></footer><script defer src=/pyFDS-Evac/js/main.min.998f7d6b2520d6d9875145cbe14b35964b365b44b3b1bfa6b797a74a9c173b07.js integrity="sha256-mY99ayUg1tmHUUXL4Us1lks2W0Szsb+mt5enSpwXOwc="></script><script defer src=/pyFDS-Evac/lib/flexsearch/flexsearch.bundle.min.0425860527cc9968f9f049421c7a56b39327d475e2e3a8f550416be3a9134327.js integrity="sha256-BCWGBSfMmWj58ElCHHpWs5Mn1HXi46j1UEFr46kTQyc="></script><script defer src=/pyFDS-Evac/en.search.min.e94b9ab87af7e694584cf0f3e04ac9730f28249975a722351bf7ca00f4977934.js integrity="sha256-6UuauHr35pRYTPDz4ErJcw8oJJl1pyI1G/fKAPSXeTQ="></script><link type=text/css rel=stylesheet href=/pyFDS-Evac/lib/katex/katex.min.7e5db7914b97e596a36c1abb67ccc7f174f8bb71d38c9a88c55b262ed1737f97.css integrity="sha256-fl23kUuX5ZajbBq7Z8zH8XT4u3HTjJqIxVsmLtFzf5c="><script defer src=/pyFDS-Evac/lib/katex/katex.min.9f45307c5794ed247a0d095f3a62e52ef2215a67b2327203a7fd919959ae79d1.js integrity="sha256-n0UwfFeU7SR6DQlfOmLlLvIhWmeyMnIDp/2RmVmuedE="></script><script defer src=/pyFDS-Evac/lib/katex/auto-render.min.7b57d427ac6270677daf8d8380ded2cc73336f9149a167b8e1fe0d6ef66604ae.js integrity="sha256-e1fUJ6xicGd9r42DgN7SzHMzb5FJoWe44f4NbvZmBK4="></script><script defer src=/pyFDS-Evac/lib/katex/mhchem.min.f0ca03df194b8c3d6017ff455db6a0ef98857905663fa311a6cded788b15340b.js integrity="sha256-8MoD3xlLjD1gF/9FXbag75iFeQVmP6MRps3teIsVNAs="></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\begin{equation}",right:"\\end{equation}",display:!0},{left:"\\begin{align}",right:"\\end{align}",display:!0},{left:"\\begin{alignat}",right:"\\end{alignat}",display:!0},{left:"\\begin{gather}",right:"\\end{gather}",display:!0},{left:"\\begin{CD}",right:"\\end{CD}",display:!0},{left:"\\[",right:"\\]",display:!0}],throwOnError:!1})})</script></body></html>

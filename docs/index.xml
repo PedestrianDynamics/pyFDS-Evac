@@ -381,7 +381,7 @@ used only to price routes; see the &lt;a href="https://pedestriandynamics.org/py
 &lt;a href="#where-it-acts-in-the-time-step" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Every &lt;code>update_interval_s&lt;/code> (&lt;code>--smoke-update-interval&lt;/code> in &lt;code>run.py&lt;/code>),
 &lt;code>run_scenario&lt;/code> samples &lt;em>K&lt;/em> at each agent&amp;rsquo;s position and stores &lt;em>f&lt;/em> as the
 agent&amp;rsquo;s smoke factor. The agent&amp;rsquo;s desired speed is then
-\(v_0 \cdot f \cdot g(\mathrm{FIC})\) (&lt;code>direct_steering_runtime.py:186&lt;/code>–&lt;code>190&lt;/code>),
+\(v_0 \cdot f \cdot g(\mathrm{FIC})\) (&lt;code>direct_steering_runtime.py&lt;/code>, &lt;code>set_agent_fic_factor&lt;/code>),
 where \(g\) is the irritant factor of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a>.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Speed factor \(v/v_0\) [-] against extinction coefficient K [1/m]. Solid dark
@@ -419,7 +419,7 @@ figures are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implem
 The code departs from them as follows.&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Fractional, not absolute.&lt;/strong> The linear law is applied as a factor of each
-agent&amp;rsquo;s own \(v_0\) (&lt;code>smoke_speed.py:234&lt;/code>), the FDS+Evac normalisation of an
+agent&amp;rsquo;s own \(v_0\) (&lt;code>smoke_speed.py&lt;/code>, &lt;code>speed_factor_from_extinction&lt;/code>), the FDS+Evac normalisation of an
 absolute regression. It divides by the intercept \(\alpha\), an
 extrapolation to &lt;em>K&lt;/em> = 0, not a measured free walking speed.&lt;/li>
 &lt;li>&lt;strong>Floor.&lt;/strong> \(f_{\min}\) is FDS+Evac&amp;rsquo;s convention, not a measured minimum;
@@ -929,7 +929,7 @@ linked above.&lt;/p>
 &lt;p>Background: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/">Concepts&lt;/a> page
 and the talk &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>.&lt;/p>
 &lt;h2>Coded form&lt;span class="hx-absolute -hx-mt-20" id="coded-form">&lt;/span>
-&lt;a href="#coded-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>FedComponents.total_rate_per_min&lt;/code> (&lt;code>pyfds_evac/core/fed.py:687&lt;/code>) returns the
+&lt;a href="#coded-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>FedComponents.total_rate_per_min&lt;/code> (&lt;code>pyfds_evac/core/fed.py&lt;/code>) returns the
 gas FED rate [1/min]&lt;/p>
 $$
 \dot{\mathrm{FED}} = \bigl(\dot{\mathrm{FED}}_{\mathrm{CO}} + \dot{\mathrm{FED}}_{\mathrm{CN}} + \dot{\mathrm{FED}}_{\mathrm{NO_x}} + \dot{\mathrm{FLD}}_{\mathrm{irr}}\bigr) \times \mathrm{HV}_{\mathrm{CO_2}} + \dot{\mathrm{FED}}_{\mathrm{O_2}},
@@ -1021,16 +1021,16 @@ species the sum reduces to the FDS+Evac default,
 &lt;a href="#convective-heat" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS+Evac has no heat dose, so this one is opt-in: with &lt;code>--enable-heat-fed&lt;/code>
 (&lt;code>opts.enable_heat_fed&lt;/code>) and a &lt;code>TEMPERATURE&lt;/code> slice in the case, a separate
 heat dose accumulates at
-&lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>fed.py:221&lt;/code>),&lt;/p>
+&lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>fed.py&lt;/code>),&lt;/p>
 $$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
 $$&lt;p>with &lt;em>T&lt;/em> in °C. It is a running total of its own, never added to the gas FED.
 The basis is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>; the full specification,
 including its limits, is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.&lt;/p>
 &lt;h2>Tenability: irritant slowdown and incapacitation&lt;span class="hx-absolute -hx-mt-20" id="tenability-irritant-slowdown-and-incapacitation">&lt;/span>
-&lt;a href="#tenability-irritant-slowdown-and-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig&lt;/code> (&lt;code>fed.py:570&lt;/code>) adds two rules. The slowdown and the gas
+&lt;a href="#tenability-irritant-slowdown-and-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig&lt;/code> (&lt;code>fed.py&lt;/code>) adds two rules. The slowdown and the gas
 stop need the gas FED model; the heat stop needs only the heat FED model
-(&lt;code>run_config.py:382&lt;/code>–&lt;code>417&lt;/code>).&lt;/p>
+(&lt;code>run_config.py&lt;/code>, &lt;code>_build_tenability_config&lt;/code>).&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Irritant slowdown, off by default.&lt;/strong> FDS+Evac has no irritant slowdown, so
 &lt;code>enable_fic_speed&lt;/code> defaults to false and &lt;code>run.py&lt;/code> switches the rule on only
@@ -1039,7 +1039,7 @@ FED model was loaded. When on, &lt;code>default_fic&lt;/code> sums \(C_i / F_{\m
 same seven irritants (constants in &lt;code>_FIC_COEFFS_PPM&lt;/code>, not integrated over
 time). At each FED update where FIC &amp;gt; 0, the agent&amp;rsquo;s irritant factor is set
 to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
-(&lt;code>scenario.py:2109&lt;/code>–&lt;code>2119&lt;/code>) and multiplies the smoke factor. The rule is a
+(&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>) and multiplies the smoke factor. The rule is a
 pyFDS-Evac assumption with no known source
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>).
 When FIC is exactly 0 the last factor stays in force
@@ -1195,7 +1195,7 @@ ambient conditions.&lt;/p>
 &lt;h2>Deviations from the literature&lt;span class="hx-absolute -hx-mt-20" id="deviations-from-the-literature">&lt;/span>
 &lt;a href="#deviations-from-the-literature" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The published forms are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>. The gas sum has the Purser /
-FDS+Evac guide structure (&lt;code>fed.py:687&lt;/code>), not the ISO 13571 one. Within it, the
+FDS+Evac guide structure (&lt;code>fed.py&lt;/code>, &lt;code>FedComponents.total_rate_per_min&lt;/code>), not the ISO 13571 one. Within it, the
 code follows the guide, which cites the 3rd edition of the SFPE Handbook,
 rather than the 5th edition, except that the HCN term is computed as FDS
 computes it
@@ -1226,10 +1226,10 @@ Organic nitriles are ignored. Ch. 63 gives the critical range of its
 from primate and human data (p. 2361). That range is not documented for the
 exponential term; that the term is an extrapolation below 80 ppm is our
 inference (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>).&lt;/li>
-&lt;li>&lt;strong>CO₂.&lt;/strong> Eq. 63.34 (&lt;code>fed.py:64&lt;/code>), not its simplification Eq. 63.35 used in
+&lt;li>&lt;strong>CO₂.&lt;/strong> Eq. 63.34 (&lt;code>fed.py&lt;/code>, &lt;code>_hyperventilation_factor&lt;/code>), not its simplification Eq. 63.35 used in
 Eq. 63.38. The 70 L/min limit on \(V_E\times VCO_2\) is not applied, and
 the CO₂ asphyxiant endpoint \(F_{I_{CO_2}}\) is not computed.&lt;/li>
-&lt;li>&lt;strong>CO.&lt;/strong> Fixed at light work (&lt;code>fed.py:56&lt;/code>), Eq. 63.18 at its default
+&lt;li>&lt;strong>CO.&lt;/strong> Fixed at light work (&lt;code>fed.py&lt;/code>, &lt;code>_co_fed_rate_per_minute&lt;/code>), Eq. 63.18 at its default
 \(V_E\) and &lt;em>D&lt;/em>.&lt;/li>
 &lt;li>&lt;strong>O₂.&lt;/strong> The rate is zero at or above &lt;code>o2_threshold_percent&lt;/code>, 20.0 % O₂
 by default, the guard of FDS+Evac&amp;rsquo;s code (the &lt;code>FED&lt;/code> function of FDS 6.7.6
@@ -1260,8 +1260,8 @@ you rebuild FDS+Evac&amp;rsquo;s FED from the guide, leave the 60 out.&lt;/p>
 &lt;p>Our reading is that the 60 survives from the 2009 guide, which gave the
 FED equations with &lt;em>t&lt;/em> in seconds; the evidence is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>.&lt;/p>
-&lt;/div>&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py:600&lt;/code>–&lt;code>601&lt;/code>), is multiplied with the smoke
-factor (&lt;code>direct_steering_runtime.py:191&lt;/code>–&lt;code>193&lt;/code>). Its constants were not found
+&lt;/div>&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py&lt;/code>, &lt;code>TenabilityConfig.fic_alpha&lt;/code>, &lt;code>TenabilityConfig.fic_min_factor&lt;/code>), is multiplied with the smoke
+factor (&lt;code>direct_steering_runtime.py&lt;/code>, &lt;code>set_agent_fic_factor&lt;/code>). Its constants were not found
 in the Handbook, the FDS+Evac guide or &lt;code>evac.f90&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>). The
 Handbook uses a different curve and adds the smoke and irritant losses instead
@@ -1269,10 +1269,10 @@ of multiplying them (Eq. 63.14). Because the Frantzich–Nilsson smoke contained
 acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 \(g\) partly counts irritancy twice
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153" target="_blank" rel="noopener">#153&lt;/a>).&lt;/p>
-&lt;p>Heat uses the convective Eq. 63.44 (&lt;code>fed.py:221&lt;/code>) unless &lt;code>--heat-endpoint&lt;/code>
+&lt;p>Heat uses the convective Eq. 63.44 (&lt;code>fed.py&lt;/code>, &lt;code>_heat_fed_rate_per_minute&lt;/code>) unless &lt;code>--heat-endpoint&lt;/code>
 selects Eq. 63.45, 63.46 or 63.47, or &lt;code>--heat-fed-method total-flux&lt;/code> the
 flux law of Eqs. 63.49 and 63.43 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>). The log-normal σ of both
-thresholds (&lt;code>fed.py:611&lt;/code>, &lt;code>:621&lt;/code>) is, for the gas dose, a compromise between
+thresholds (&lt;code>fed.py&lt;/code>, &lt;code>TenabilityConfig.susceptibility_sigma&lt;/code>, &lt;code>TenabilityConfig.heat_susceptibility_sigma&lt;/code>) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>
 and &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>). The
@@ -2150,7 +2150,7 @@ nothing on this page affects a run.&lt;/p>
 &lt;h2>What is computed&lt;span class="hx-absolute -hx-mt-20" id="what-is-computed">&lt;/span>
 &lt;a href="#what-is-computed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>With &lt;code>--enable-heat-fed&lt;/code> (&lt;code>opts.enable_heat_fed&lt;/code>) and a &lt;code>TEMPERATURE&lt;/code> slice in
 the case, each agent accumulates a convective heat dose at
-&lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>pyfds_evac/core/fed.py:221&lt;/code>), SFPE Handbook 5th
+&lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>pyfds_evac/core/fed.py&lt;/code>), SFPE Handbook 5th
 ed. Eq. 63.44 (p. 2382), unless &lt;code>--heat-endpoint&lt;/code> selects another law
 (&lt;a href="#endpoint">Endpoint&lt;/a>) or &lt;code>--heat-fed-method total-flux&lt;/code> selects the flux
 law (&lt;a href="#total-flux">Total flux&lt;/a>):&lt;/p>
@@ -3154,7 +3154,7 @@ and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choi
 visibility of a reflective sign at the door, \(3/\bar K\), to be at least half
 the distance &lt;em>d&lt;/em> to the door, which rearranges to \(\bar K d \le 6\)
 (&lt;code>evac.f90:16794&lt;/code>, &lt;code>:16799&lt;/code>). That is the default &lt;code>tau_max&lt;/code>
-(&lt;code>route_graph.py:683&lt;/code>). Jin&amp;rsquo;s law describes a straight line of sight to a
+(&lt;code>route_graph.py&lt;/code>, &lt;code>RouteCostConfig.tau_max&lt;/code>). Jin&amp;rsquo;s law describes a straight line of sight to a
 sign in uniform smoke; here the same number bounds the integral of &lt;em>K&lt;/em> along
 a walked polyline, which measures exposure, not sight. The two agree only
 on a straight corridor, and the budget has not been calibrated against a
@@ -4317,7 +4317,7 @@ grows, and how route choice reads it. The intuition is on
 &lt;ul>
 &lt;li>&lt;strong>Stage graph.&lt;/strong> The directed graph of spawn areas, checkpoints, waypoints
 and exits, with the walkable legs between them as edges
-(&lt;code>route_graph.py:104–192&lt;/code>). A &lt;strong>neighbour&lt;/strong> of a node is the target of one
+(&lt;code>route_graph.py&lt;/code>, &lt;code>StageGraph.from_scenario&lt;/code>). A &lt;strong>neighbour&lt;/strong> of a node is the target of one
 of its outgoing edges.&lt;/li>
 &lt;li>&lt;strong>Sign.&lt;/strong> A descriptor \(\{x, y, \alpha_s, C\}\) attached to a node: position,
 compass bearing \(\alpha_s\) of the direction the sign faces, and the
@@ -4330,8 +4330,8 @@ agent&amp;rsquo;s cognitive map. Knowledge persists.&lt;/li>
 &lt;li>&lt;strong>Learn.&lt;/strong> A node or edge is learned when it is added to the map.&lt;/li>
 &lt;li>&lt;strong>Visited.&lt;/strong> A node is visited when the agent&amp;rsquo;s stage at that node
 completes, after any wait there (&lt;code>expand_on_arrival&lt;/code>, called at
-&lt;code>scenario.py:2508–2551&lt;/code>). This includes a stage with nothing scripted after
-it, where the agent goes idle (&lt;code>direct_steering_runtime.py:328–337&lt;/code>). The
+&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>). This includes a stage with nothing scripted after
+it, where the agent goes idle (&lt;code>direct_steering_runtime.py&lt;/code>, &lt;code>advance_path_target&lt;/code>). The
 spawn node is visited from the start.&lt;/li>
 &lt;li>&lt;strong>Frontier.&lt;/strong> A known node that is not visited.&lt;/li>
 &lt;li>&lt;strong>Sign-legibility test&lt;/strong> versus &lt;strong>route exposure gate.&lt;/strong> The first decides
@@ -4342,13 +4342,13 @@ already known. They are separate mechanisms.&lt;/li>
 &lt;h2>Coded form&lt;span class="hx-absolute -hx-mt-20" id="coded-form">&lt;/span>
 &lt;a href="#coded-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;a id="sign-visibility">&lt;/a>&lt;/p>
 &lt;h3>1. The sign-legibility test&lt;span class="hx-absolute -hx-mt-20" id="1-the-sign-legibility-test">&lt;/span>
-&lt;a href="#1-the-sign-legibility-test" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Every exit, checkpoint and waypoint carries a sign (&lt;code>visibility.py:61–73&lt;/code>). A
+&lt;a href="#1-the-sign-legibility-test" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Every exit, checkpoint and waypoint carries a sign (&lt;code>visibility.py&lt;/code>, &lt;code>extract_sign_descriptors&lt;/code>). A
 non-empty authored &lt;code>&amp;quot;sign&amp;quot;&lt;/code> is used as written and must give &lt;code>x&lt;/code> and &lt;code>y&lt;/code>. A
 node without one, or with an empty one, receives a synthesised sign at its
-routing point with \(C = 3\) and \(\alpha_s\) = &lt;code>None&lt;/code> (&lt;code>visibility.py:34–58&lt;/code>).
+routing point with \(C = 3\) and \(\alpha_s\) = &lt;code>None&lt;/code> (&lt;code>visibility.py&lt;/code>, &lt;code>_default_sign&lt;/code>).
 A node whose polygon cannot give a position gets no sign. Spawn areas carry no
 sign. The model treats every node without a sign as legible from everywhere
-(&lt;code>visibility.py:538–540&lt;/code>).&lt;/p>
+(&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.node_is_visible&lt;/code>).&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;exits&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;exit_A&amp;#34;&lt;/span>: { &lt;span style="color:#f92672">&amp;#34;sign&amp;#34;&lt;/span>: {&lt;span style="color:#f92672">&amp;#34;x&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.5&lt;/span>, &lt;span style="color:#f92672">&amp;#34;y&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">11.5&lt;/span>, &lt;span style="color:#f92672">&amp;#34;alpha&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">90&lt;/span>, &lt;span style="color:#f92672">&amp;#34;c&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">3&lt;/span>} }
@@ -4366,7 +4366,7 @@ title="Copy code"
 \(V_{\max}\), for example for a larger or internally illuminated sign.&lt;/p>
 &lt;p>\(\alpha_s\) is a bearing in degrees, clockwise from north (+y). The sign faces
 \((\sin\alpha_s, \cos\alpha_s)\), so 90 is readable from the east, 270 from the
-west and 180 from the south (&lt;code>visibility.py:388–391&lt;/code>).&lt;/p>
+west and 180 from the south (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel&lt;/code>).&lt;/p>
 &lt;p>The test is computed by &lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>
 (pinned at &lt;code>64d9aa7&lt;/code>, &lt;code>pyproject.toml:34&lt;/code>). For sign &lt;em>k&lt;/em> and a grid cell at
 distance \(L\) (&lt;code>FDSVisMap._get_view_angle_array&lt;/code>, &lt;code>_get_visibility_array&lt;/code>,
@@ -4383,7 +4383,7 @@ V = A \cdot U \cdot \min\!\left(\frac{C}{\bar K},\, V_{\max}\right),
 \qquad \text{legible} \iff V \ge L .
 $$&lt;ul>
 &lt;li>\((\Delta x, \Delta y)\) is the cell position minus the sign position
-(&lt;code>FDSVisMap.py:481–482&lt;/code>), and \(L\) is their distance; reversing the
+(&lt;code>FDSVisMap.py&lt;/code>, &lt;code>VisMap._get_view_angle_array&lt;/code>), and \(L\) is their distance; reversing the
 vector would flip the readable half-plane.&lt;/li>
 &lt;li>\(U\) is 0 when an obstruction cell lies on the rasterised ray from the sign,
 1 otherwise (anti-aliased rays, &lt;code>aa=True&lt;/code>).&lt;/li>
@@ -4410,28 +4410,28 @@ the model reads the sign; the gold arrow shows which way it faces. \(V_{\max}\)
 = 30 m does not bind. The sign is lost at about
 53°, well before it is side-on.
 Script: &lt;code>scripts/figures/sign_rotation.py&lt;/code>.&lt;/em>&lt;/p>
-&lt;p>&lt;strong>Two ways to build the model&lt;/strong> (&lt;code>run_config.py:191–230&lt;/code>):&lt;/p>
+&lt;p>&lt;strong>Two ways to build the model&lt;/strong> (&lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>):&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>From an FDS run&lt;/strong> (&lt;code>--fds-dir&lt;/code>). Grid, obstructions and extinction come
 from the FDS output. The &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice nearest the
 point (0, 0, &lt;code>--smoke-slice-height&lt;/code>) is used (1.6 m by default since #164,
-&lt;code>run.py:65–67&lt;/code>). Stored times are spaced by &lt;code>--reroute-interval&lt;/code>
-(&lt;code>visibility.py:86–87&lt;/code>, &lt;code>run_config.py:228&lt;/code>).&lt;/li>
+&lt;code>run.py&lt;/code>, &lt;code>_build_parser&lt;/code>). Stored times are spaced by &lt;code>--reroute-interval&lt;/code>
+(&lt;code>visibility.py&lt;/code>, &lt;code>_build_vismap&lt;/code>; &lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>From clear air&lt;/strong> (no &lt;code>--fds-dir&lt;/code>). The walkable polygon is rasterised at
 &lt;code>--vis-cell-size&lt;/code>. A cell is an obstruction when its centre lies outside the
-polygon (&lt;code>visibility.py:155&lt;/code>, &lt;code>:508–509&lt;/code>). A wall thinner than one cell
+polygon (&lt;code>visibility.py&lt;/code>, &lt;code>_blocked_runs&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>). A wall thinner than one cell
 &lt;em>may&lt;/em> therefore let sight through, depending on how it falls on the grid.
-The extinction is zero, and one time point is stored (&lt;code>visibility.py:498&lt;/code>).&lt;/li>
+The extinction is zero, and one time point is stored (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>).&lt;/li>
 &lt;/ul>
 &lt;p>At run time the model answers &lt;code>node_is_visible(t, x, y, node)&lt;/code> by looking up
 the nearest stored time and cell, clamped to the stored range
-(&lt;code>visibility.py:197–211&lt;/code>, &lt;code>:531–543&lt;/code>). No ray is cast inside the time loop.
+(&lt;code>visibility.py&lt;/code>, &lt;code>_VisMapCache._nearest&lt;/code>, &lt;code>VisibilityModel.node_is_visible&lt;/code>). No ray is cast inside the time loop.
 &lt;code>--vis-cache&lt;/code> stores the arrays in an &lt;code>.npz&lt;/code> file. The FDS cache is keyed by
 the FDS directory path, the signs, the time step and the slice height; it
 does not hash the FDS output, so replacing the output in place leaves a stale
-cache valid (&lt;code>visibility.py:115–139&lt;/code>, &lt;code>:330–359&lt;/code>).&lt;/p>
+cache valid (&lt;code>visibility.py&lt;/code>, &lt;code>_make_meta&lt;/code>, &lt;code>_load_vismap_cache&lt;/code>).&lt;/p>
 &lt;p>&lt;a id="which-visibility-setting-am-i-running">&lt;/a>&lt;/p>
-&lt;p>&lt;strong>Which model a run gets&lt;/strong> (&lt;code>run_config.py:156–230&lt;/code>):&lt;/p>
+&lt;p>&lt;strong>Which model a run gets&lt;/strong> (&lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>):&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -4483,18 +4483,18 @@ cache valid (&lt;code>visibility.py:115–139&lt;/code>, &lt;code>:330–359&lt;
 &lt;/tbody>
 &lt;/table>
 &lt;p>In every case a scenario from which no sign can be extracted gets no model
-(&lt;code>run_config.py:206–209&lt;/code>). Rejected combinations: &lt;code>--clear-air-visibility&lt;/code>
+(&lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>). Rejected combinations: &lt;code>--clear-air-visibility&lt;/code>
 with &lt;code>--fds-dir&lt;/code>, &lt;code>--clear-air-visibility&lt;/code> with &lt;code>--no-visibility&lt;/code>, and
-&lt;code>--vis-cache&lt;/code> with &lt;code>--no-enable-rerouting&lt;/code> (&lt;code>run_config.py:156–168&lt;/code>).&lt;/p>
+&lt;code>--vis-cache&lt;/code> with &lt;code>--no-enable-rerouting&lt;/code> (&lt;code>run_config.py&lt;/code>, &lt;code>validate_opts&lt;/code>).&lt;/p>
 &lt;p>&lt;a id="cognitive-maps">&lt;/a>&lt;/p>
 &lt;h3>2. The knowledge contract&lt;span class="hx-absolute -hx-mt-20" id="2-the-knowledge-contract">&lt;/span>
 &lt;a href="#2-the-knowledge-contract" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent&amp;rsquo;s &lt;code>AgentCognitiveMap&lt;/code> holds known nodes, known edges and visited
-nodes (&lt;code>cognitive_map.py:10–25&lt;/code>). The contract has four parts.&lt;/p>
-&lt;p>&lt;strong>2.1 Initial knowledge&lt;/strong> (&lt;code>init_cognitive_map&lt;/code>, &lt;code>cognitive_map.py:78–136&lt;/code>).
+nodes (&lt;code>cognitive_map.py&lt;/code>, &lt;code>AgentCognitiveMap&lt;/code>). The contract has four parts.&lt;/p>
+&lt;p>&lt;strong>2.1 Initial knowledge&lt;/strong> (&lt;code>init_cognitive_map&lt;/code>, &lt;code>cognitive_map.py&lt;/code>).
 &lt;code>familiarity&lt;/code> is a scenario key on a distribution group, normalised to a
 probability \(p\): &lt;code>&amp;quot;full&amp;quot;&lt;/code> is 1, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code> is 0, a number in [0, 1] is
-used as given, anything else raises (&lt;code>cognitive_map.py:28–56&lt;/code>). The key
-defaults to &lt;code>&amp;quot;full&amp;quot;&lt;/code> (&lt;code>simulation_init.py:996&lt;/code>).&lt;/p>
+used as given, anything else raises (&lt;code>cognitive_map.py&lt;/code>, &lt;code>familiarity_probability&lt;/code>). The key
+defaults to &lt;code>&amp;quot;full&amp;quot;&lt;/code> (&lt;code>simulation_init.py&lt;/code>, &lt;code>_initialize_with_fallback&lt;/code>).&lt;/p>
 &lt;ul>
 &lt;li>\(p = 1\): the map is the whole stage graph. It is never extended.&lt;/li>
 &lt;li>\(p &lt; 1\): the map starts with the spawn node, marked visited. Then, in
@@ -4502,36 +4502,36 @@ order:
 &lt;ol>
 &lt;li>&lt;strong>Entrance.&lt;/strong> If &lt;code>entrance&lt;/code> names an exit reachable from the spawn node,
 the shortest path to it is learned. A name that is missing, is not an
-exit, or cannot be reached is silently ignored (&lt;code>cognitive_map.py:66–69&lt;/code>,
-&lt;code>:123–124&lt;/code>).&lt;/li>
+exit, or cannot be reached is silently ignored (&lt;code>cognitive_map.py&lt;/code>,
+&lt;code>_learn_route_to&lt;/code>, &lt;code>init_cognitive_map&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Familiarity draw.&lt;/strong> Each other reachable exit is learned, with its
 shortest path, with probability \(p\). The draw uses an RNG seeded with
-&lt;code>seed + 7919·agent_id&lt;/code> (&lt;code>scenario.py:990&lt;/code>, &lt;code>:2207&lt;/code>). A library caller
-that passes no RNG gets no draw (&lt;code>cognitive_map.py:126&lt;/code>).&lt;/li>
+&lt;code>seed + 7919·agent_id&lt;/code> (&lt;code>scenario.py&lt;/code>, &lt;code>_assign_initial_exit&lt;/code>, &lt;code>run_scenario&lt;/code>). A library caller
+that passes no RNG gets no draw (&lt;code>cognitive_map.py&lt;/code>, &lt;code>init_cognitive_map&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Perception at spawn.&lt;/strong> Each neighbour of the spawn node whose sign is
 legible &lt;strong>from the spawn node&amp;rsquo;s routing point&lt;/strong> is learned
-(&lt;code>cognitive_map.py:131–135&lt;/code>). Agents of one spawn area that spawn at
+(&lt;code>cognitive_map.py&lt;/code>, &lt;code>init_cognitive_map&lt;/code>). Agents of one spawn area that spawn at
 the same time therefore start with the same perceived neighbours.&lt;/li>
 &lt;/ol>
 &lt;/li>
 &lt;/ul>
 &lt;p>Paths learned in steps 1 and 2 add forward edges only
-(&lt;code>cognitive_map.py:71–74&lt;/code>).&lt;/p>
+(&lt;code>cognitive_map.py&lt;/code>, &lt;code>_learn_route_to&lt;/code>).&lt;/p>
 &lt;p>&lt;strong>2.2 Learning&lt;/strong> (\(p &lt; 1\) only). Two calls add knowledge:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Periodic.&lt;/strong> When an agent&amp;rsquo;s re-evaluation is due, each neighbour of its
 current node (&lt;code>current_origin&lt;/code>, else &lt;code>current_target_stage&lt;/code>) whose sign is
 legible from the agent&amp;rsquo;s &lt;strong>stored position&lt;/strong> is learned
-(&lt;code>expand_from_visibility&lt;/code>, &lt;code>cognitive_map.py:189–234&lt;/code>, called at
-&lt;code>scenario.py:2238–2254&lt;/code>). The stored position is written in the steering
-loop (&lt;code>scenario.py:2423&lt;/code>), which runs after the reroute pass, so it holds
+(&lt;code>expand_from_visibility&lt;/code>, &lt;code>cognitive_map.py&lt;/code>, called at
+&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>). The stored position is written in the steering
+loop (&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>), which runs after the reroute pass, so it holds
 the previous step&amp;rsquo;s coordinates. Without a visibility model nothing is
 learned.&lt;/li>
 &lt;li>&lt;strong>On advancing along the path.&lt;/strong> When the agent completes a stage and its
 path advances (after any waiting time at that stage), the node is marked
 visited, and each of its neighbours whose sign is legible from the agent&amp;rsquo;s
-position is learned (&lt;code>expand_on_arrival&lt;/code>, &lt;code>cognitive_map.py:155–186&lt;/code>,
-called at &lt;code>scenario.py:2508–2521&lt;/code>, &lt;code>:2535–2551&lt;/code>). Without a visibility
+position is learned (&lt;code>expand_on_arrival&lt;/code>, &lt;code>cognitive_map.py&lt;/code>,
+called at &lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>). Without a visibility
 model, &lt;strong>every&lt;/strong> neighbour is learned.&lt;/li>
 &lt;/ul>
 &lt;p>The three places knowledge is sensed from:&lt;/p>
@@ -4547,49 +4547,49 @@ model, &lt;strong>every&lt;/strong> neighbour is learned.&lt;/li>
 &lt;tr>
 &lt;td>Initialisation&lt;/td>
 &lt;td>spawn node&amp;rsquo;s routing point&lt;/td>
-&lt;td>&lt;code>cognitive_map.py:131–135&lt;/code>&lt;/td>
+&lt;td>&lt;code>cognitive_map.py&lt;/code>, &lt;code>init_cognitive_map&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Periodic learning&lt;/td>
 &lt;td>previous step&amp;rsquo;s stored position&lt;/td>
-&lt;td>&lt;code>scenario.py:2240–2253&lt;/code>, &lt;code>:2423&lt;/code>&lt;/td>
+&lt;td>&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Stage completion (arrival)&lt;/td>
 &lt;td>current position&lt;/td>
-&lt;td>&lt;code>scenario.py:2508–2551&lt;/code>&lt;/td>
+&lt;td>&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>Learning is &lt;strong>limited to neighbours&lt;/strong> of one node. A legible sign that belongs
 to any other node is not tested. An edge learned by either call also teaches
 its reverse when the graph contains that reverse edge (&lt;code>_learn_edge&lt;/code>,
-&lt;code>cognitive_map.py:139–152&lt;/code>). With automatic wiring, exits have no outgoing
-edges and spawn areas no incoming ones (&lt;code>route_graph.py:148–192&lt;/code>), so no
+&lt;code>cognitive_map.py&lt;/code>). With automatic wiring, exits have no outgoing
+edges and spawn areas no incoming ones (&lt;code>route_graph.py&lt;/code>, &lt;code>StageGraph.from_scenario&lt;/code>), so no
 reverse edge into a spawn area or out of an exit is learned. Explicit
-&lt;code>transitions&lt;/code> are added without these restrictions (&lt;code>route_graph.py:137–146&lt;/code>).&lt;/p>
+&lt;code>transitions&lt;/code> are added without these restrictions (&lt;code>route_graph.py&lt;/code>, &lt;code>StageGraph.from_scenario&lt;/code>).&lt;/p>
 &lt;p>&lt;strong>2.3 Memory.&lt;/strong> No code removes a node or an edge from the map of an agent
 that is still in the simulation. A node learned while its sign was legible
 stays known after the sign stops being legible, through distance, bearing,
 obstruction or smoke. The map is deleted when the agent leaves
-(&lt;code>scenario.py:2394–2400&lt;/code>).&lt;/p>
+(&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>).&lt;/p>
 &lt;p>&lt;strong>2.4 Decision.&lt;/strong> Route ranking works on the known subgraph only:
 &lt;code>rank_routes&lt;/code> replaces the stage graph with &lt;code>cognitive_subgraph(map, graph)&lt;/code>
-before it evaluates any edge (&lt;code>route_graph.py:1293–1297&lt;/code>,
-&lt;code>cognitive_map.py:237–259&lt;/code>). Dijkstra, the exposure gate, the ordering and the
+before it evaluates any edge (&lt;code>route_graph.py&lt;/code>, &lt;code>rank_routes&lt;/code>;
+&lt;code>cognitive_map.py&lt;/code>, &lt;code>cognitive_subgraph&lt;/code>). Dijkstra, the exposure gate, the ordering and the
 all-refused fallback see known nodes and edges only. An exit that is not known
 is not refused; it is absent, and the fallback cannot restore it.&lt;/p>
 &lt;p>&lt;strong>Exception (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>).&lt;/strong>
 Every agent receives the geometrically nearest exit as its steering target
-before its map exists (&lt;code>simulation_init.py:1430–1449&lt;/code>). The opening choice
+before its map exists (&lt;code>simulation_init.py&lt;/code>, &lt;code>_find_nearest_exit&lt;/code>). The opening choice
 replaces that target only when the map contains a reachable exit
-(&lt;code>scenario.py:1006–1008&lt;/code>). If it contains none, and neither exploration nor
+(&lt;code>scenario.py&lt;/code>, &lt;code>_assign_initial_exit&lt;/code>). If it contains none, and neither exploration nor
 patrol yields a target (below), the agent keeps steering towards that
-geometric exit (&lt;code>route_graph.py:1837–1838&lt;/code>). For a map that holds only the
+geometric exit (&lt;code>route_graph.py&lt;/code>, &lt;code>_decide_explore&lt;/code>). For a map that holds only the
 spawn node neither does: the spawn node is visited from the start
-(&lt;code>cognitive_map.py:117–121&lt;/code>), so there is no frontier, and the patrol
+(&lt;code>cognitive_map.py&lt;/code>, &lt;code>init_cognitive_map&lt;/code>), so there is no frontier, and the patrol
 excludes the current node, so a one-node map has no stop
-(&lt;code>cognitive_map.py:343–349&lt;/code>). Periodic learning may add the exit
+(&lt;code>cognitive_map.py&lt;/code>, &lt;code>wander_target&lt;/code>). Periodic learning may add the exit
 on the way once its sign is legible, but the target was never chosen from the
 map. This is a defect, not intended behaviour (see also defect 2 in
 &lt;code>assets/blind_spawn_discovery/README.md&lt;/code>).&lt;/p>
@@ -4597,44 +4597,44 @@ map. This is a defect, not intended behaviour (see also defect 2 in
 routes; adoption is whether a moving agent switches to the first of them. The
 two differ:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>Opening choice&lt;/strong> (&lt;code>_assign_initial_exit&lt;/code>, &lt;code>scenario.py:943–1021&lt;/code>). It
+&lt;li>&lt;strong>Opening choice&lt;/strong> (&lt;code>_assign_initial_exit&lt;/code>, &lt;code>scenario.py&lt;/code>). It
 ranks from the spawn node, without the agent&amp;rsquo;s position and without the
-queue tally (&lt;code>scenario.py:995–1005&lt;/code>).&lt;/li>
+queue tally (&lt;code>scenario.py&lt;/code>, &lt;code>_assign_initial_exit&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Re-evaluation&lt;/strong> (&lt;code>evaluate_and_reroute&lt;/code>). It ranks from the agent&amp;rsquo;s
 position. It adopts a different exit only if the rival passes the
 switching rule: an optical-depth margin, then an anchor on the ranking cost
-(&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>route_graph.py:1526&lt;/code>, &lt;code>:1733–1747&lt;/code>). The
+(&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>route_graph.py&lt;/code>, &lt;code>GatePolicy.improvement&lt;/code>, &lt;code>RerouteConfig.exit_switch_anchor&lt;/code>). The
 optional queue term (&lt;code>w_queue&lt;/code>, 0 by default) enters the ranking cost.&lt;/li>
 &lt;li>&lt;strong>All refused.&lt;/strong> When every known route fails the gate, the least smoky one
 is re-admitted, but the current route is kept first if the rival&amp;rsquo;s worst
 extinction is not lower by &lt;code>fallback_switch_margin&lt;/code>
-(&lt;code>route_graph.py:1455–1466&lt;/code>).&lt;/li>
+(&lt;code>route_graph.py&lt;/code>, &lt;code>_apply_fallback&lt;/code>, &lt;code>_fallback_holds_current&lt;/code>).&lt;/li>
 &lt;/ul>
 &lt;p>An agent can therefore keep a known route that is not first in the ranking.&lt;/p>
 &lt;p>&lt;em>Worked example (clear air).&lt;/em> Every \(\tau\) is 0, both routes are clean,
 and the optical-depth deadband (\(\tau_{\max}\cdot\) &lt;code>tau_deadband&lt;/code> =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
 adopted only if its ranking cost, here its travel time, is below 0.9 times the
-current route&amp;rsquo;s (&lt;code>_anchor_allows&lt;/code>, &lt;code>route_graph.py:1695–1747&lt;/code>;
-&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>:1526&lt;/code>; &lt;code>tau_max&lt;/code> = 6.0 and &lt;code>tau_deadband&lt;/code> = 0.1,
-&lt;code>:691&lt;/code>, &lt;code>:695&lt;/code>). An exit learned on the way is therefore adopted only if it is
+current route&amp;rsquo;s (&lt;code>_anchor_allows&lt;/code>, &lt;code>route_graph.py&lt;/code>;
+&lt;code>exit_switch_anchor&lt;/code> = 0.9, &lt;code>RerouteConfig.exit_switch_anchor&lt;/code>; &lt;code>tau_max&lt;/code> = 6.0 and &lt;code>tau_deadband&lt;/code> = 0.1,
+&lt;code>RouteCostConfig.tau_max&lt;/code>, &lt;code>RouteCostConfig.tau_deadband&lt;/code>). An exit learned on the way is therefore adopted only if it is
 more than 10 % faster than the exit the agent is heading for.&lt;/p>
 &lt;p>&lt;strong>No known exit.&lt;/strong> When the known subgraph contains no reachable exit,
-&lt;code>evaluate_and_reroute&lt;/code> looks for a target (&lt;code>route_graph.py:1810–1872&lt;/code>):&lt;/p>
+&lt;code>evaluate_and_reroute&lt;/code> looks for a target (&lt;code>route_graph.py&lt;/code>, &lt;code>_decide_explore&lt;/code>):&lt;/p>
 &lt;ol>
 &lt;li>&lt;strong>Explore.&lt;/strong> The frontier node with the lowest path cost through the known
 subgraph, with the first leg measured from the agent&amp;rsquo;s position; ties
-break on node id (&lt;code>nearest_frontier_target&lt;/code>, &lt;code>cognitive_map.py:262–319&lt;/code>).
+break on node id (&lt;code>nearest_frontier_target&lt;/code>, &lt;code>cognitive_map.py&lt;/code>).
 Logged as &lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Wander.&lt;/strong> When no frontier is reachable, the next node in a fixed
 rotation over the sorted known nodes other than the current one, reached
 over known edges taken &lt;strong>in either direction&lt;/strong>
-(&lt;code>wander_target&lt;/code>, &lt;code>_undirected_known_path&lt;/code>, &lt;code>cognitive_map.py:322–399&lt;/code>).
+(&lt;code>wander_target&lt;/code>, &lt;code>_undirected_known_path&lt;/code>, &lt;code>cognitive_map.py&lt;/code>).
 Logged as &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code>.&lt;/li>
 &lt;/ol>
 &lt;p>&lt;strong>What route choice does not read.&lt;/strong> Route choice never reads the
 sign-legibility test or a line-of-sight visibility
-(&lt;code>route_graph.py:1366–1372&lt;/code>). &lt;code>VisibilityModel.visibility_to_node&lt;/code> and
+(&lt;code>route_graph.py&lt;/code>, &lt;code>AdditivePolicy.apply_candidate_set_rules&lt;/code>). &lt;code>VisibilityModel.visibility_to_node&lt;/code> and
 &lt;code>distance_to_node&lt;/code> have no caller in &lt;code>pyfds_evac/&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158" target="_blank" rel="noopener">#158&lt;/a>). Route
 smoke is sampled from the global extinction field (see
@@ -4649,10 +4649,10 @@ fails, it is the straight line. Samples are spaced at most &lt;code>sampling_ste
 along the walk&amp;rsquo;s full length, including the stretch behind the route&amp;rsquo;s origin
 node. The resample feeds only two secondary quantities: the route&amp;rsquo;s worst sample
 &lt;code>k_max_route&lt;/code>, which decides whether an agent keeps its exit when every route
-is refused (&lt;code>:1460&lt;/code>), and the worst leg mean, which decides the optional
+is refused (&lt;code>route_graph.py&lt;/code>, &lt;code>_fallback_holds_current&lt;/code>), and the worst leg mean, which decides the optional
 clean tier, off by default (&lt;code>clean_extinction_threshold&lt;/code> = 0). Under the &lt;code>&amp;quot;additive&amp;quot;&lt;/code> model only, a route
 whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
-non-refused route has a segment below it (&lt;code>route_graph.py:1383–1396&lt;/code>); this is
+non-refused route has a segment below it (&lt;code>route_graph.py&lt;/code>, &lt;code>AdditivePolicy.apply_candidate_set_rules&lt;/code>); this is
 an extinction threshold, not a sign test.&lt;/p>
 &lt;h2>Parameters&lt;span class="hx-absolute -hx-mt-20" id="parameters">&lt;/span>
 &lt;a href="#parameters" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>familiarity&lt;/code>, &lt;code>entrance&lt;/code> and &lt;code>sign&lt;/code> are scenario keys. The other rows are
@@ -4674,7 +4674,7 @@ library use.&lt;/p>
 &lt;td>&lt;code>familiarity&lt;/code>&lt;/td>
 &lt;td>distribution &lt;code>parameters&lt;/code>&lt;/td>
 &lt;td>–&lt;/td>
-&lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code> (&lt;code>simulation_init.py:996&lt;/code>)&lt;/td>
+&lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code> (&lt;code>simulation_init.py&lt;/code>, &lt;code>_initialize_with_fallback&lt;/code>)&lt;/td>
 &lt;td>–&lt;/td>
 &lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code> or \(p \in [0,1]\)&lt;/td>
 &lt;/tr>
@@ -4682,7 +4682,7 @@ library use.&lt;/p>
 &lt;td>&lt;code>entrance&lt;/code>&lt;/td>
 &lt;td>distribution &lt;code>parameters&lt;/code>&lt;/td>
 &lt;td>–&lt;/td>
-&lt;td>none (&lt;code>simulation_init.py:997&lt;/code>)&lt;/td>
+&lt;td>none (&lt;code>simulation_init.py&lt;/code>, &lt;code>_initialize_with_fallback&lt;/code>)&lt;/td>
 &lt;td>–&lt;/td>
 &lt;td>a reachable exit learned at spawn&lt;/td>
 &lt;/tr>
@@ -4690,7 +4690,7 @@ library use.&lt;/p>
 &lt;td>&lt;code>sign.c&lt;/code>&lt;/td>
 &lt;td>node &lt;code>sign&lt;/code>&lt;/td>
 &lt;td>–&lt;/td>
-&lt;td>3 (&lt;code>visibility.py:58&lt;/code>, &lt;code>:94&lt;/code>)&lt;/td>
+&lt;td>3 (&lt;code>visibility.py&lt;/code>, &lt;code>_default_sign&lt;/code>, &lt;code>_build_vismap&lt;/code>)&lt;/td>
 &lt;td>–&lt;/td>
 &lt;td>&lt;em>C&lt;/em>&lt;/td>
 &lt;/tr>
@@ -4698,7 +4698,7 @@ library use.&lt;/p>
 &lt;td>&lt;code>sign.alpha&lt;/code>&lt;/td>
 &lt;td>node &lt;code>sign&lt;/code>&lt;/td>
 &lt;td>–&lt;/td>
-&lt;td>&lt;code>None&lt;/code>, i.e. \(A = 1\) (&lt;code>visibility.py:58&lt;/code>)&lt;/td>
+&lt;td>&lt;code>None&lt;/code>, i.e. \(A = 1\) (&lt;code>visibility.py&lt;/code>, &lt;code>_default_sign&lt;/code>)&lt;/td>
 &lt;td>°&lt;/td>
 &lt;td>bearing the sign faces&lt;/td>
 &lt;/tr>
@@ -4721,32 +4721,32 @@ library use.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--smoke-slice-height&lt;/code>&lt;/td>
 &lt;td>CLI&lt;/td>
-&lt;td>1.6 (&lt;code>run.py:67&lt;/code>)&lt;/td>
-&lt;td>1.6 (&lt;code>visibility.py:409&lt;/code>)&lt;/td>
+&lt;td>1.6 (&lt;code>run.py&lt;/code>, &lt;code>_build_parser&lt;/code>)&lt;/td>
+&lt;td>1.6 (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.__init__&lt;/code>)&lt;/td>
 &lt;td>m&lt;/td>
 &lt;td>FDS slice height&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--reroute-interval&lt;/code>&lt;/td>
 &lt;td>CLI&lt;/td>
-&lt;td>1.0 (&lt;code>run.py:95&lt;/code>)&lt;/td>
-&lt;td>10.0 (&lt;code>route_graph.py:1519&lt;/code>)&lt;/td>
+&lt;td>1.0 (&lt;code>run.py&lt;/code>, &lt;code>_build_parser&lt;/code>)&lt;/td>
+&lt;td>10.0 (&lt;code>route_graph.py&lt;/code>, &lt;code>RerouteConfig.reevaluation_interval_s&lt;/code>)&lt;/td>
 &lt;td>s&lt;/td>
 &lt;td>re-evaluation interval, hence periodic learning&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>vismap time step&lt;/td>
 &lt;td>= &lt;code>--reroute-interval&lt;/code>&lt;/td>
-&lt;td>1.0 (&lt;code>run_config.py:228&lt;/code>)&lt;/td>
-&lt;td>10.0 (&lt;code>visibility.py:408&lt;/code>)&lt;/td>
+&lt;td>1.0 (&lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>)&lt;/td>
+&lt;td>10.0 (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.__init__&lt;/code>)&lt;/td>
 &lt;td>s&lt;/td>
 &lt;td>FDS model only; clear air stores one time&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--vis-cell-size&lt;/code>&lt;/td>
 &lt;td>CLI&lt;/td>
-&lt;td>0.25 (&lt;code>run.py:135&lt;/code>)&lt;/td>
-&lt;td>0.5 (&lt;code>visibility.py:438&lt;/code>)&lt;/td>
+&lt;td>0.25 (&lt;code>run.py&lt;/code>, &lt;code>_build_parser&lt;/code>)&lt;/td>
+&lt;td>0.5 (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>)&lt;/td>
 &lt;td>m&lt;/td>
 &lt;td>clear-air grid; FDS models use the FDS mesh&lt;/td>
 &lt;/tr>
@@ -4761,24 +4761,24 @@ library use.&lt;/p>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The &lt;code>--vis-cell-size&lt;/code> docstring advises a cell smaller than the thinnest wall
-(&lt;code>visibility.py:455–465&lt;/code>). Results for discovery agents have not converged
+(&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>). Results for discovery agents have not converged
 with the cell size (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>).&lt;/p>
 &lt;h2>Where it acts in the time step&lt;span class="hx-absolute -hx-mt-20" id="where-it-acts-in-the-time-step">&lt;/span>
 &lt;a href="#where-it-acts-in-the-time-step" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
 &lt;li>&lt;strong>Before the loop.&lt;/strong> The visibility model is built or loaded
-(&lt;code>run_config.py:284&lt;/code>). Each agent placed at t = 0 gets its map and opening
-choice (&lt;code>scenario.py:1414–1416&lt;/code>); flow-spawned agents get theirs when they
-appear (&lt;code>scenario.py:1699–1715&lt;/code>).&lt;/li>
+(&lt;code>run_config.py&lt;/code>, &lt;code>build_run_kwargs&lt;/code>). Each agent placed at t = 0 gets its map and opening
+choice (&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>); flow-spawned agents get theirs when they
+appear (&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Reroute pass.&lt;/strong> It runs at most once per simulated second
-(&lt;code>scenario.py:2152–2159&lt;/code>). For each agent whose re-evaluation is due,
+(&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>). For each agent whose re-evaluation is due,
 periodic learning runs first, then ranking and possible adoption.&lt;/li>
 &lt;li>&lt;strong>Steering loop, every step.&lt;/strong> Positions are stored
-(&lt;code>scenario.py:2423&lt;/code>), and learning on advancing along the path runs when a
-stage completes (&lt;code>scenario.py:2508–2551&lt;/code>). This learning is not tied to the
+(&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>), and learning on advancing along the path runs when a
+stage completes (&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>). This learning is not tied to the
 reroute pass.&lt;/li>
 &lt;li>&lt;strong>History.&lt;/strong> With &lt;code>collect_cognitive_map_history&lt;/code> (on in &lt;code>run.py&lt;/code>,
-&lt;code>run_config.py:302&lt;/code>), a row is written whenever the number of known nodes or
-edges changes (&lt;code>scenario.py:2554–2571&lt;/code>).&lt;/li>
+&lt;code>run_config.py&lt;/code>, &lt;code>build_run_kwargs&lt;/code>), a row is written whenever the number of known nodes or
+edges changes (&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>).&lt;/li>
 &lt;/ol>
 &lt;p>With &lt;code>--no-enable-rerouting&lt;/code>, the map is still built, still sets the opening
 choice, and still grows on advancing along the path, but no later decision
@@ -4826,7 +4826,7 @@ visibility enters the utility as a graded attribute.&lt;/li>
 Learning is limited by the sign-legibility test. Route costs are not: an
 agent that knows an exit prices the whole route to it from the global
 extinction field, including legs it has never seen and, with &lt;code>anticipate&lt;/code>,
-future times (&lt;code>route_graph.py:704–707&lt;/code>). The route choice of a discovery
+future times (&lt;code>route_graph.py&lt;/code>, &lt;code>RouteCostConfig.anticipate&lt;/code>, &lt;code>RouteCostConfig.foresight_horizon_s&lt;/code>). The route choice of a discovery
 agent is therefore not limited by what it has perceived.&lt;/li>
 &lt;li>&lt;strong>Haensel&amp;rsquo;s heuristics are not reproduced.&lt;/strong> Haensel (2014, §3.2) weights
 known edges by sensors (smoke, density, room-to-corridor) and uses a
@@ -4846,11 +4846,11 @@ the exception under §2.4. The intended behaviour is exploration.&lt;/li>
 &lt;li>&lt;strong>Discovery agents ranked the first leg as a straight line&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172" target="_blank" rel="noopener">#172&lt;/a>, fixed
 by #174). &lt;code>cognitive_subgraph&lt;/code> built a new &lt;code>StageGraph&lt;/code> without the
-routing engine (&lt;code>cognitive_map.py:245–259&lt;/code>). In &lt;code>rank_routes&lt;/code>, the length of
+routing engine (&lt;code>cognitive_map.py&lt;/code>, &lt;code>cognitive_subgraph&lt;/code>). In &lt;code>rank_routes&lt;/code>, the length of
 the walk from the agent&amp;rsquo;s position to its next node therefore fell back to a
-straight line (&lt;code>route_graph.py:398–405&lt;/code>, &lt;code>:1059–1063&lt;/code>). Frontier selection was
+straight line (&lt;code>route_graph.py&lt;/code>, &lt;code>_walkable_waypoints&lt;/code>, &lt;code>_position_aware_length&lt;/code>). Frontier selection was
 not affected, because it measures that leg on the full graph
-(&lt;code>cognitive_map.py:312&lt;/code>, &lt;code>:402–429&lt;/code>). Fully familiar agents always had the
+(&lt;code>cognitive_map.py&lt;/code>, &lt;code>nearest_frontier_target&lt;/code>, &lt;code>_cost_from_agent&lt;/code>). Fully familiar agents always had the
 engine.&lt;/li>
 &lt;li>&lt;strong>First-leg smoke was sampled on a straight line&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). The
@@ -4861,10 +4861,10 @@ length. It now follows the walked path at &lt;code>sampling_step_m&lt;/code>. Se
 &lt;li>&lt;strong>Clear-air travel time was under-priced&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167" target="_blank" rel="noopener">#167&lt;/a>, fixed
 by #170). The share of the first leg is capped at 1
-(&lt;code>route_graph.py:982&lt;/code>), so a route was under-priced when the agent was
+(&lt;code>route_graph.py&lt;/code>, &lt;code>_position_aware_length&lt;/code>), so a route was under-priced when the agent was
 farther from its next node than the route&amp;rsquo;s origin is. In clear air the gate
 ranks by that travel time. Since #170, the walk to the origin is timed at
-the route&amp;rsquo;s mean pace (&lt;code>route_graph.py:1083–1089&lt;/code>).&lt;/li>
+the route&amp;rsquo;s mean pace (&lt;code>route_graph.py&lt;/code>, &lt;code>_measure_route&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>A sign is never read beyond its reading distance.&lt;/strong> \(V_{\max}\) is
 30 m by default (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173" target="_blank" rel="noopener">#173&lt;/a>),
 so in clear air a sign farther away is illegible at any bearing, and a
@@ -8755,7 +8755,7 @@ distributions, checkpoints, and exits) with &lt;strong>Dijkstra shortest-path&lt
 queries (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">docs/routing.md&lt;/a>, &lt;code>route_graph.py&lt;/code>).&lt;/p>
 &lt;p>At each reevaluation tick, per-edge costs are computed from current
 smoke and FED fields. The weight depends on the cost model
-(&lt;code>route_graph.py:1299-1310&lt;/code>):&lt;/p>
+(&lt;code>route_graph.py&lt;/code>, &lt;code>GatePolicy.edge_weight&lt;/code>, &lt;code>AdditivePolicy.edge_weight&lt;/code>):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>gate edge_cost = k_avg * length_m &amp;#43; 1e-6 * length_m
 additive edge_cost = length_m * (1 &amp;#43; w_smoke * k_avg) &amp;#43; w_fed * fed_growth&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -8920,12 +8920,12 @@ on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/
 &lt;tr>
 &lt;td>&lt;strong>Speed formula&lt;/strong>&lt;/td>
 &lt;td>&lt;code>c(Ks) = 1 + beta * Ks / alpha&lt;/code> ([1] §3.4 Eq. 11)&lt;/td>
-&lt;td>Same formula (&lt;code>smoke_speed.py:234&lt;/code>)&lt;/td>
+&lt;td>Same formula (&lt;code>smoke_speed.py&lt;/code>, &lt;code>speed_factor_from_extinction&lt;/code>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Default alpha/beta&lt;/strong>&lt;/td>
 &lt;td>Frantzich–Nilsson values (evac.f90:1544–1545)&lt;/td>
-&lt;td>Same values (&lt;code>smoke_speed.py:95–96&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>&lt;/td>
+&lt;td>Same values (&lt;code>smoke_speed.py&lt;/code>, &lt;code>SmokeSpeedConfig.alpha&lt;/code>, &lt;code>SmokeSpeedConfig.beta&lt;/code>); see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Minimum speed&lt;/strong>&lt;/td>
