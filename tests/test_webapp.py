@@ -2189,3 +2189,11 @@ class TestAccessibleForm:
         r = client.get("/browse-dir")
         assert 'role="dialog"' in r.text
         assert 'aria-labelledby="dir-title"' in r.text
+
+
+def test_mode_button_check_mark_css_escape():
+    """The selected-mode check mark reaches the browser as a CSS escape (#345)."""
+    from pyfds_evac.webapp.theme import _CSS
+
+    assert 'content: "\\2713\\00a0"' in _CSS
+    assert "\x00" not in _CSS

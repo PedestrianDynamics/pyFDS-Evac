@@ -461,7 +461,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 }
 .mode-btn.active { background: var(--gold); color: var(--on-heat); box-shadow: var(--shadow-sm); font-weight: 600; }
 /* the selected mode is marked in text as well as by the fill */
-.mode-btn[aria-pressed="true"]::before { content: "\2713\00a0"; }
+.mode-btn[aria-pressed="true"]::before { content: "\\2713\\00a0"; }
 .mode-btn:hover:not(.active) { color: hsl(var(--foreground)); }
 
 /* ---- run panel ---- */
