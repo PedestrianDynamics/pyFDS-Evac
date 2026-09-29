@@ -8,14 +8,19 @@ pp. 2382-2384; both terms of Eq. 63.49 divided by 1000 together, spec 016):
     q = [eps sigma (T_g^4 - T_s^4) + h (T_g - T_s)] / 1000     [kW/m2]
     t = D / q^1.33                                             [min]
 
-- **Smoke, 200 deg C, tolerance** (eps 0.5, h 8, T_s 35 deg C, D = 1.33):
-  q = 2.48 kW/m2, FED = 1 after 24 s. Eq. 63.44 would give 45 s, Eq. 63.45
-  about 2.4 min.
-- **Clear air, 100 deg C, tolerance** (eps 0.05, h 8): q = 0.55 kW/m2, well
-  below the Handbook's 2.5 kW/m2 threshold, which spec 016 drops; FED = 1
-  after 177 s. With the threshold there would be no dose at all.
+In the dose the radiant term eps sigma (T_g^4 - T_s^4) / 1000 counts as zero
+below 2.5 kW/m2 (ISO 13571:2012 §8.2, §8.4, maintainer decision); the
+convective term always counts.
+
+- **Dense smoke, 300 deg C, tolerance** (eps 0.9, h 8, T_s 35 deg C,
+  D = 1.33): radiant 5.05 + convective 2.12 = 7.17 kW/m2, FED = 1 after
+  5.8 s. Eq. 63.44 would give 11.3 s, Eq. 63.45 11.9 s.
+- **Clear air, 100 deg C, tolerance** (eps 0.05, h 8): radiant 0.03 kW/m2,
+  below the threshold, so q = 0.52 kW/m2 of convection; FED = 1 after
+  190 s. A threshold on the total q would give no dose at all.
 - **Smoke, 200 deg C, fatal** without ``--heat-endpoint`` (FED = 1 = fatal,
-  spec 016): threshold scaled so the crossing falls at 90 s.
+  spec 016): radiant 1.17 kW/m2 below the threshold, convection 1.32
+  kW/m2; threshold scaled so the crossing falls at 90 s.
 
 Every run passes eps, h and T_s explicitly; none depends on their defaults.
 Only the "head in smoke" regime is tested; the layer regime needs #222.
@@ -64,8 +69,16 @@ def q_hand(t_c, *, eps, h, t_skin_c):
     return (eps * SIGMA * (tg**4 - ts**4) + h * (tg - ts)) / 1000.0
 
 
+def q_dose_hand(t_c, *, eps, h, t_skin_c):
+    """q entering the dose: radiant term zero below 2.5 kW/m2 (ISO)."""
+    tg, ts = t_c + KELVIN, t_skin_c + KELVIN
+    radiant = eps * SIGMA * (tg**4 - ts**4) / 1000.0
+    radiant = 0.0 if radiant < 2.5 else radiant
+    return radiant + h * (tg - ts) / 1000.0
+
+
 def t_flux_min(t_c, dose, **params):
-    return dose / q_hand(t_c, **params) ** 1.33
+    return dose / q_dose_hand(t_c, **params) ** 1.33
 
 
 def t_eq_63_44_min(t_c):
@@ -77,6 +90,7 @@ def t_tolerance_min(t_c):
 
 
 SMOKE = dict(eps=0.5, h=8.0, t_skin_c=35.0)
+DENSE_SMOKE = dict(eps=0.9, h=8.0, t_skin_c=35.0)
 CLEAR_AIR = dict(eps=0.05, h=8.0, t_skin_c=35.0)
 
 
@@ -142,16 +156,25 @@ def _check_crossing(result, expected_s):
 
 
 def test_smoke_case_is_distinguishable_from_the_convective_laws():
-    flux = 60.0 * t_flux_min(200.0, DOSE["tolerance"], **SMOKE)
-    assert flux == pytest.approx(24.0, abs=0.5)
-    for other in (t_eq_63_44_min(200.0), t_tolerance_min(200.0)):
+    radiant = q_hand(300.0, **DENSE_SMOKE) - q_hand(
+        300.0, **{**DENSE_SMOKE, "eps": 0.0}
+    )
+    assert radiant > 2.5
+    flux = 60.0 * t_flux_min(300.0, DOSE["tolerance"], **DENSE_SMOKE)
+    assert flux == pytest.approx(5.8, abs=0.1)
+    for other in (t_eq_63_44_min(300.0), t_tolerance_min(300.0)):
         assert abs(60.0 * other - flux) > 2 * TIMING_TOL_S
+
+
+def test_smoke_200_c_radiant_term_is_below_the_iso_threshold():
+    radiant = q_hand(200.0, **SMOKE) - q_hand(200.0, **{**SMOKE, "eps": 0.0})
+    assert radiant == pytest.approx(1.165, abs=0.002)
 
 
 def test_clear_air_case_is_below_the_handbook_threshold():
     assert q_hand(100.0, **CLEAR_AIR) < 2.5
     flux = 60.0 * t_flux_min(100.0, DOSE["tolerance"], **CLEAR_AIR)
-    assert flux == pytest.approx(177.0, abs=1.0)
+    assert flux == pytest.approx(190.4, abs=1.0)
     assert abs(60.0 * t_tolerance_min(100.0) - flux) > 2 * TIMING_TOL_S
 
 
@@ -159,8 +182,8 @@ def test_clear_air_case_is_below_the_handbook_threshold():
 
 
 def test_smoke_tolerance_crossing():
-    expected = 60.0 * t_flux_min(200.0, DOSE["tolerance"], **SMOKE)
-    result = _run(200.0, SMOKE, "tolerance", run_s=60.0)
+    expected = 60.0 * t_flux_min(300.0, DOSE["tolerance"], **DENSE_SMOKE)
+    result = _run(300.0, DENSE_SMOKE, "tolerance", run_s=30.0)
     try:
         _check_crossing(result, expected)
     finally:

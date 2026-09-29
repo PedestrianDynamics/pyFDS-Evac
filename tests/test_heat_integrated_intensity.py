@@ -26,7 +26,10 @@ doi:10.1007/978-1-4939-2565-0_63, Eqs. 63.49 and 63.43, pp. 2382-2384) is
 - The gas term eps sigma (T_g^4 - T_s^4) of Eq. 63.49 is **not** added: U
   already contains the emission of the gas at the head, and spec 016 says
   not to add two radiant terms. Any ``emissivity`` passed is ignored.
-- No 2.5 kW/m2 threshold (spec 016), as for #223.
+- The ISO 13571:2012 2.5 kW/m2 threshold (§8.2, §8.4, maintainer
+  decision) acts on the radiant term: f (U - 4 sigma T_s^4) counts as zero
+  in the dose below 2.5 kW/m2; the convective term always counts. The
+  ``heat_flux_kw_m2`` above stays the physical q.
 
 Consequence: U is not zero in a cold room (4 sigma T^4 = 1.68 kW/m2 at
 20 deg C), but it is below 4 sigma T_s^4 = 2.04 kW/m2, so a room with no
@@ -98,6 +101,23 @@ def q_u_hand(t_gas_c, u_kw_m2, *, f, h, t_skin_c):
     """Excess f (U - 4 sigma T_s^4) plus convection h (T_g - T_s), kW/m2."""
     u_skin = 4.0 * SIGMA * (t_skin_c + KELVIN) ** 4 / 1000.0
     return f * (u_kw_m2 - u_skin) + h * (t_gas_c - t_skin_c) / 1000.0
+
+
+def counted(q_rad):
+    """ISO 13571:2012 §8.2, §8.4: radiant term zero below 2.5 kW/m2."""
+    return 0.0 if q_rad < 2.5 else q_rad
+
+
+def q_u_dose_hand(t_gas_c, u_kw_m2, *, f, h, t_skin_c):
+    """q entering the dose: the radiant excess counted per ISO."""
+    u_skin = 4.0 * SIGMA * (t_skin_c + KELVIN) ** 4 / 1000.0
+    return counted(f * (u_kw_m2 - u_skin)) + h * (t_gas_c - t_skin_c) / 1000.0
+
+
+def q_gas_dose_hand(t_gas_c, *, eps, h, t_skin_c):
+    """Eq. 63.49 with the gas radiant term counted per ISO."""
+    tg, ts = t_gas_c + KELVIN, t_skin_c + KELVIN
+    return counted(eps * SIGMA * (tg**4 - ts**4) / 1000.0) + h * (tg - ts) / 1000.0
 
 
 def q_gas_hand(t_gas_c, *, eps, h, t_skin_c):
@@ -256,7 +276,7 @@ def test_total_flux_model_without_source_is_the_gas_law():
         skin_temperature_celsius=t_s,
     )
     _, rate = model.sample_rate(0.0, 0.0, 0.0)
-    q = q_gas_hand(t_c, eps=eps, h=h, t_skin_c=t_s)
+    q = q_gas_dose_hand(t_c, eps=eps, h=h, t_skin_c=t_s)
     assert rate == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
 
 
@@ -404,8 +424,9 @@ def test_field_accepts_intensity_slice_at_the_temperature_height():
 @pytest.mark.parametrize("u", [2.0, 10.0, 24.47])
 def test_model_rate_radiant_only(u, f, name):
     """T_g = T_s: no convection, q = f (U - 4 sigma T_s^4), rate = q^1.33 / D,
-    zero where q <= 0 (U = 2 < 2.045)."""
-    q = q_u_hand(35.0, u, f=f, h=8.0, t_skin_c=35.0)
+    zero where q <= 0 (U = 2 < 2.045) and where q < 2.5 (ISO threshold,
+    U = 10 with f = 0.25 gives 1.99)."""
+    q = q_u_dose_hand(35.0, u, f=f, h=8.0, t_skin_c=35.0)
     expected = 1.0 / t_hand_min(q, DOSE[name]) if q > 0.0 else 0.0
     got = _u_rate(35.0, u, f=f, h=8.0, t_skin_c=35.0, endpoint=name)
     assert got == pytest.approx(expected, rel=1e-9)
@@ -416,7 +437,7 @@ def test_model_rate_radiant_only(u, f, name):
     [(150.0, 5.0, 0.5, 5.0, 35.0), (300.0, 24.47, 0.25, 8.0, 35.0)],
 )
 def test_model_rate_adds_convection(t_c, u, f, h, t_s):
-    q = q_u_hand(t_c, u, f=f, h=h, t_skin_c=t_s)
+    q = q_u_dose_hand(t_c, u, f=f, h=h, t_skin_c=t_s)
     got = _u_rate(t_c, u, f=f, h=h, t_skin_c=t_s)
     assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
 
@@ -437,11 +458,12 @@ def test_model_heat_flux_takes_integrated_intensity():
     assert got == pytest.approx(q_u_hand(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0))
 
 
-def test_model_no_threshold_below_2_5_kw():
-    """U = 4 above the 2.045 kW/m2 of a skin-temperature field: q = 0.98."""
+def test_model_radiant_below_2_5_kw_gives_no_dose():
+    """U = 4 above the 2.045 kW/m2 of a skin-temperature field: radiant
+    q = 0.98, below the ISO 2.5 kW/m2 threshold, and T_g = T_s: no dose."""
     q = q_u_hand(35.0, 4.0, f=0.5, h=5.0, t_skin_c=35.0)
     assert 0.0 < q < 2.5
-    assert _u_rate(35.0, 4.0, f=0.5, h=5.0, t_skin_c=35.0) > 0.0
+    assert _u_rate(35.0, 4.0, f=0.5, h=5.0, t_skin_c=35.0) == 0.0
 
 
 @pytest.mark.parametrize("u", [0.0, math.nan, math.inf])
