@@ -1995,6 +1995,13 @@ class TestTerminalStates:
         r = client.post("/run", data={}, headers=_HX)
         assert r.headers["HX-Retarget"] == "#form-status"
         assert "Select a scenario first." in r.text
+        r = client.post(
+            "/run",
+            data={"scenario": "ISO-table21", "heat_u_factor": "2"},
+            headers=_HX,
+        )
+        assert r.headers["HX-Retarget"] == "#form-status"
+        assert "<span>Heat u factor: must be in [0.25, 1.0]" in r.text
 
     def test_field_errors_name_the_field(self):
         from pyfds_evac.webapp.app import _field_label

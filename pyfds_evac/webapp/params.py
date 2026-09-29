@@ -911,6 +911,16 @@ def default_output_base(scenario: Any, mode: Any, seed: Any, stamp: str) -> str:
     return candidate.as_posix()
 
 
+def _convert(action: argparse.Action, raw: Any) -> Any:
+    """Apply the parser's own type check, naming the field when it fails."""
+    if not action.type:
+        return str(raw)
+    try:
+        return action.type(raw)
+    except (argparse.ArgumentTypeError, ValueError, TypeError) as exc:
+        raise ValueError(f"{action.dest}: {exc}") from exc
+
+
 def form_to_opts(
     form: dict[str, Any], *, baseseed: Any = None, stamp: str | None = None
 ) -> Namespace:
@@ -940,7 +950,7 @@ def form_to_opts(
         if raw is None or str(raw).strip() == "":
             opts[dest] = action.default
             continue
-        opts[dest] = action.type(raw) if action.type else str(raw)
+        opts[dest] = _convert(action, raw)
         if action.choices is not None and opts[dest] not in action.choices:
             raise ValueError(
                 f"{dest}: {raw!r} is not one of {', '.join(map(str, action.choices))}"
