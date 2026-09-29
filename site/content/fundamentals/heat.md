@@ -35,7 +35,8 @@ t_{\mathrm{tol}} = 2\times10^{31}\,T^{-16.963} + 4\times10^{8}\,T^{-3.7561} \qqu
 $$
 
 with further expressions for serious injury (Eq. 63.46) and for fatal
-exposure (Eq. 63.47). Thermal tolerance data for unprotected skin suggest a
+exposure (Eq. 63.47). No heat flux enters Eqs. 63.44–63.47: they take the air
+temperature only. Thermal tolerance data for unprotected skin suggest a
 limit of about 120 °C for convected heat, above which considerable pain
 occurs quickly (Ch. 63, p. 2383 and Table 63.20). Burns to the respiratory
 tract do not occur from air with less than 10 % water vapour in the absence
@@ -44,12 +45,12 @@ them (p. 2382).
 
 ## Radiant heat: pain and burns
 
-The tenability limit for radiant heat on skin is about
+The tenability limit for radiant heat incident on skin is about
 **2.5 kW/m²**, below which exposure can be tolerated for at least several
 minutes; at and above it, pain is followed by burns within seconds
 (Ch. 63, p. 2382 and Table 63.20). Below
 this flux the radiant contribution is neglected. Above it, the time
-\(t_{I\,\mathrm{rad}}\) [min] to a given endpoint at radiant flux
+\(t_{I\,\mathrm{rad}}\) [min] to a given endpoint at incident radiant flux
 *q* [kW/m²] is
 
 $$
@@ -78,8 +79,9 @@ $$
 $$
 
 valid while the temperature is stable or increasing. The other computes the
-total heat flux to the skin from radiant and convective components (Eq. 63.49)
-and applies Eq. 63.43 to it, with the dose *D* in place of *r*: 1.33 for
+total heat flux to the skin from radiant and convective components (Eq. 63.49),
+which the Handbook calls the total incident flux (p. 2383) but writes as a
+net exchange with the skin surface, and applies Eq. 63.43 to it, with the dose *D* in place of *r*: 1.33 for
 pain, 10 for second-degree burns and severe incapacitation, 16.7 for
 third-degree burns and a potentially fatal exposure (p. 2384). ISO 13571:2012
 (§4.4) likewise assesses heat and radiant energy with an FED model analogous
@@ -111,7 +113,12 @@ printed values (0.02, 0.19, 1.57 and 15.55 per minute at 65, 125, 220 and
 \(1/t_{I\,\mathrm{rad}}\) that does.
 The radiant tolerance data (Table 63.19) are incident flux on the skin,
 whereas Eq. 63.49 is written as a net exchange with the skin surface; at the
-200 °C anchor the two differ by about 20 %.
+200 °C anchor the two differ by about 20 %. FDS's `RADIATIVE HEAT FLUX` and
+`RADIATIVE HEAT FLUX GAS` outputs are net as well,
+\(\varepsilon_s(\dot q''_{\mathrm{inc}} - \sigma T_s^4)\) with
+\(\varepsilon_s\) the surface emissivity; `INCIDENT HEAT FLUX` is the
+incident term \(\dot q''_{\mathrm{inc}}\) (FDS User Guide 6.10,
+Sec. 22.10.12, pp. 380–382).
 The convective data concern hyperthermia in air of low humidity, and the
 radiant data concern bare skin: clothing changes both. None of these
 equations describe the effect of heat on walking speed or on route choice.

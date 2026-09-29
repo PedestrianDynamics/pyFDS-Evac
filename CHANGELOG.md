@@ -42,6 +42,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   code. The heat dose
   itself is unchanged
   ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
+- Docs, heat dose: each formula states whether it takes incident flux, net
+  flux or air temperature; Models › Heat and Limitations say that heat
+  FED = 1 and gas FED = 1 are different endpoints that set the same
+  `incapacitated` flag, told apart only by `incapacitation_cause`; the
+  stale line references on Models › FED are corrected, the `fed.py` ones
+  checked by a test
+  ([#218](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/218)).
 - Performance: the per-step speed update of direct-steering runs scans
   only the zones whose speed factor is not 1, precomputed once per run
   (`active_steering_zones`), and leaves an agent outside every such zone
