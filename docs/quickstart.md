@@ -4,8 +4,8 @@ weight: 1
 aliases: [/docs/quickstart/]
 ---
 
-This page runs one scenario from start to finish: 150 people leave a T-shaped
-corridor while a 2 MW PVC fire fills it with smoke. Each step shows the
+This page runs one scenario from start to finish: 150 people try to leave a
+T-shaped corridor while a 2 MW PVC fire fills it with smoke. Each step shows the
 command and what it produces.
 
 ## 1. Install
@@ -154,7 +154,9 @@ Route switches: 164
 ```
 
 Before this, fdsreader logs `Module vents: could not convert string to float`
-for this deck. The message says it can be ignored, and it can. The progress
+for this deck, and the terminal also shows `Reroute debug` and `Waypoint`
+lines and numpy `UserWarning`/`RuntimeWarning` messages. None of them affects
+the run. The progress
 line counts the 200 planned agents, not the 150 that spawned
 ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
 
@@ -186,7 +188,20 @@ directory as its argument:
 uv run python examples/quickstart.py "$FDS"
 ```
 
-`build_run_kwargs` is the function `run.py` calls, so the run is the same:
+`build_run_kwargs` is the function `run.py` calls, so the run is the same.
+The script imports:
+
+```python
+import sys
+from collections import Counter
+from types import SimpleNamespace
+
+from pyfds_evac import build_run_kwargs, load_scenario, run_scenario
+
+FDS_DIR = sys.argv[1] if len(sys.argv) > 1 else None
+```
+
+and runs:
 
 ```python
 scenario = load_scenario("assets/t_junction")
