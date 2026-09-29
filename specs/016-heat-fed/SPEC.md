@@ -187,7 +187,8 @@ INTENSITY` input is the excess over a skin-temperature field by decision
 6. ~~Does ISO 13571:2012 clause 8 give heat equations, and does FED 0.3
    apply to heat?~~ Answered from the full text. Clause 8 gives radiant
    Eqs. (7) (burns) and (8) (pain), a q^-b form from Wieczorek & Dembsey
-   2001, applied to incident flux and zero below 2.5 kW/m²; convective
+   2001, q "the radiant heat flux", the term zero below the 2.5 kW/m²
+   limit that ISO calls incident; convective
    Eqs. (9) (clothed, Crane 1978) and (10) (unclothed, = Eq. 63.44); and the
    summed FED of Eq. (11) (= Eq. 63.48). It has no total-flux method, so it
    supplies no h, T_skin, ε or D, and gives no support for dropping the

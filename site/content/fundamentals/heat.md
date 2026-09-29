@@ -161,8 +161,9 @@ unprotected skin is repeated there (§8.3.2, Note).
 
 **Combining.** The heat FED is the sum over time steps of
 \(1/t_{I\,\mathrm{rad}} + 1/t_{I\,\mathrm{conv}}\) (ISO Eq. 11), the form of
-Eq. 63.48, with the same condition that the temperature is stable or
-increasing. The radiant term is set to zero where the radiant flux to the
+Eq. 63.48. ISO makes it conditional on the temperature experienced by the
+occupant being stable or increasing (§8.4); Ch. 63 states the condition for
+the temperature in the fire (p. 2383). The radiant term is set to zero where the radiant flux to the
 skin is below 2.5 kW/m² (§8.4). The time at which the sum exceeds the chosen
 threshold is the time to compromised tenability, in the same manner as for
 the gases (§8.5, pointing to §5.3); see
@@ -182,6 +183,7 @@ asphyxiant gases. Ch. 63 states "up to 2 h" for Eq. 63.44 (p. 2382).
 | 200 °C relates to | a radiating source surface | a hot layer |
 | Convective laws | Eq. (9) clothed; Eq. (10) unclothed = Eq. 63.44 | Eq. 63.44; Eqs. 63.45–63.47 per endpoint |
 | Combination | Eq. (11), summed FED | Eq. 63.48, or total flux (Eq. 63.49) |
+| Summed dose valid while | temperature experienced by the occupant is stable or increasing | temperature in the fire is stable or increasing |
 | Stated uncertainty | ±25 % for Eqs. (7)–(10) | none |
 | Humidity limit | < 10 % water vapour | < 10 % water vapour |
 | Duration limit for heat | none stated | up to 2 h (Eq. 63.44) |

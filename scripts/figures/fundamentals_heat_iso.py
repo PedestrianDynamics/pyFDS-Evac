@@ -136,7 +136,8 @@ def main():
     # --- Plot ---
     fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), dpi=150)
     ax = axes[0]
-    ax.fill_between(q, *band, color=pal[3], alpha=0.18, lw=0)
+    ax.fill_between(q, *band, where=q <= 10.0, color=pal[3], alpha=0.18, lw=0)
+    ax.fill_between(q, *band, where=q >= 10.0, color=pal[3], alpha=0.07, lw=0)
     ax.text(
         14.0,
         0.24,
@@ -172,7 +173,7 @@ def main():
     ax.text(
         0.97,
         0.97,
-        "ISO pain ≈ SFPE pain;\nISO burns at the low end\nof the SFPE band",
+        "ISO pain crosses SFPE pain\nnear 7.5 kW/m²; ISO burns at\nthe low end of the SFPE band",
         transform=ax.transAxes,
         ha="right",
         va="top",

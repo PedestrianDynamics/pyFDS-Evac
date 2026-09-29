@@ -33,9 +33,12 @@ percentages only show the trend and carry no assurance of validity. For CO,
 The earlier edition, ISO 13571:2007, gave 0.3 as an example threshold for
 most general occupancies, noted that "the distribution of human responses to
 fire gases is not known", and stated that at 0.3 about 11.4 % of the
-population would still be susceptible (§5.2, Note). The 2012 edition makes a
-reduced threshold mandatory, keeps 0.3 only as an informative example and
-adds the 0.2 and 0.1 figures. ISO/TR 13571-2:2016 repeats the 11.4 % figure
+population would still be susceptible (§5.2, Note). The 2012 edition turns the
+reduced threshold into a "shall" for more conservative objectives, keeps 0.3
+only as an informative example and adds the 0.2 and 0.1 figures. It also
+redefines FED = 1: in 2007 the dose that leaves an occupant of average
+susceptibility unable to effect their own escape (§5.2), in 2012 the median
+of compromised tenability (§5.4). ISO/TR 13571-2:2016 repeats the 11.4 % figure
 for 0.3, citing ISO 13571:2012, A.5.2.
 
 ## What the handbook says

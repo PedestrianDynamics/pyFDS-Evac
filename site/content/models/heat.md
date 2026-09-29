@@ -422,7 +422,8 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   `--heat-radiant-source` or `--heat-u-factor`
   ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
 - **Falling exposure and recovery.** The summed dose assumes exposure that is
-  steady or rising (Eq. 63.48); a fleeing agent's exposure falls, and no
+  steady or rising (Eq. 63.48; ISO 13571:2012 §8.4 states it for the
+  temperature experienced by the occupant); a fleeing agent's exposure falls, and no
   recovery is modelled.
 - **Clothing and face covering**, which protect against both convective and
   radiant heat.
@@ -462,7 +463,7 @@ has one law in common with the code and none of its other options:
 | Default (Eq. 63.44) | Eq. (10), §8.3.2: same constants, for unclothed or lightly clothed subjects, uncertainty ±25 % |
 | `--heat-endpoint tolerance`, `injury`, `fatal` (Eqs. 63.45–63.47) | None |
 | `--heat-fed-method total-flux` (Eqs. 63.49 and 63.43, dose *D*) | None: ISO has no total-flux form, no ε, h or \(T_s\), and no radiant dose |
-| Radiant term, any regime or source | None as coded. ISO's radiant laws are Eqs. (7) (burns) and (8) (pain), \(a\,q^{-b}\) with other exponents, applied to the incident flux and set to zero below 2.5 kW/m² (§8.2, §8.4); the code has no threshold |
+| Radiant term, any regime or source | None as coded. ISO's radiant laws are Eqs. (7) (burns) and (8) (pain), \(a\,q^{-b}\) with other exponents, with *q* defined only as the radiant heat flux, and the radiant term set to zero where the flux to the skin is below the 2.5 kW/m² limit, which ISO calls an incident flux level (§8.2, §8.4); the code has no threshold |
 | Heat FED kept apart from the gas FED | Consistent: ISO treats heat as a component of its own (§4.1, §4.6 a) |
 | `heat_fed_threshold`, separate from the gas threshold | ISO asks for one threshold for FED and FEC in an estimation (§5.4) and does not say whether the heat FED is included |
 | Heat σ | None: ISO gives no population spread for heat |
