@@ -75,7 +75,7 @@ is stated in words, "Complete: all agents evacuated" here, followed by
 tiles for the evacuation time, agents evacuated, agents remaining and the
 seed used, and any warnings from the run.
 
-[![The top of the results. A header reads "Results  run #1 · iso_table21_coupled · 2026-09-29T18:10:31+00:00" with the buttons Show Python for this run and Clear results, and the line "Starting a new run replaces these results in this view; the files on disk are kept." Below it, a check mark and "Complete: all agents evacuated", four tiles reading Evacuation time 85.0 s, Evacuated 1 / 1 agents, Remaining 0 agents and Seed used 420, and a Warning box, "1 warning for run #1", saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices](/images/web-gui/results_header.png "The results header, the outcome and the FED warning of the corridor run.")](images/web-gui/results_header.png)
+[![The top of the results. A header reads "Results  run #1 · iso_table21_coupled · 2026-09-29T18:14:06+00:00" with the buttons Show Python for this run and Clear results, and the line "Starting a new run replaces these results in this view; the files on disk are kept." Below it, a check mark and "Complete: all agents evacuated", four tiles reading Evacuation time 85.0 s, Evacuated 1 / 1 agents, Remaining 0 agents and Seed used 420, and a Warning box, "1 warning for run #1", saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices](/images/web-gui/results_header.png "The results header, the outcome and the FED warning of the corridor run.")](images/web-gui/results_header.png)
 
 Further down, press play in
 **Trajectories** to replay the run, or drag the time slider. Scroll over the
@@ -172,7 +172,9 @@ that names the run and its own buttons:
 **Clear results** asks for confirmation first: "Clear the results of run #N
 from this view? The files on disk are kept." **Clear** on a failed or
 cancelled run does not ask. A reload of the page shows the state the server
-holds, so results survive a refresh.
+holds, so results survive a refresh. The form itself returns to its
+defaults, so the Settings changed banner appears until you set the run's
+settings again.
 
 The outcome line comes from whether every agent left, not from whether the
 run raised an error. It reads "Complete: all agents evacuated", "Incomplete:
@@ -254,7 +256,9 @@ Both open a dialog with **Copy** and **Download .py**.
 
 ### Save a run and run it again
 
-1. Run the `blind_spawn_discovery` scenario with the default settings.
+1. In the scenario picker, choose the plain `blind_spawn_discovery` entry,
+   not one of its `/ config_….json` variants, and run it with the default
+   settings.
 2. When the run has finished, click **Show Python for this run**. The dialog
    is titled "Code for run #1 · blind_spawn_discovery · *start time*" and
    reports "Status: Complete: all agents evacuated (30/30), evacuation time
