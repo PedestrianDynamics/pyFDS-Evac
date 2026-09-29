@@ -88,7 +88,10 @@ walking in darkness (0.3–0.7 m/s)", citing Togawa (1969) for that range
 (report p. 14), and calls 0.3 m/s "the speed in darkness shown by a
 horizontal broken line in Fig. 2", without a citation (p. 17). Jin (1978,
 p. 148) ties the 0.3 m/s to Togawa: "the speed in darkness (0.3m/s
-[19])", ref. 19 being Togawa (1969). Jin takes the density at which
+[19])", ref. 19 being Togawa (1969), not read, so what Togawa measured
+or assumed is still unknown. Jin (1978, p. 146) repeats that walking
+speeds in the lit and the blacked-out corridor showed "no differences" in
+his Fig. 8. Jin takes the density at which
 the average speed slows to 0.3 m/s as the maximum for people familiar with
 the building, "approximately 0.5/m–1.2/m" (p. 17). No non-irritant point
 in Fig. 2 is below about 0.45 m/s, so the 1.2 1/m end rests on the trend
@@ -123,11 +126,11 @@ by the visibility range than the degree of irritation".
 
 **Group walking.** Report Fig. 5 and Jin (1978, Fig. 10, p. 146) show
 Horiuchi's data, cited secondhand (Horiuchi, Murozaki and Jin 1974,
-not read): about 20 groups of five to seven people led by someone familiar with
-the building walked a corridor in smoke-bomb smoke of about 0.6 1/m, with
-drawn mean lines near 2.0 m/s (lit) and 1.6 m/s (blackout) (our
-reading), "about 1.5 times faster" than Jin's single subjects
-(p. 146), with lit and blacked-out corridors.
+not read): 20 groups of five to seven people led by someone familiar
+with the building walked a corridor in smoke-bomb smoke of about
+0.6 1/m, with drawn mean lines near 1.85 m/s (lit) and 1.57 m/s
+(blackout) (our reading), "about 1.5 times faster" than Jin's single
+subjects (p. 146).
 
 **Irritant smoke.** The report (p. 13) and Jin (1972, p. 12, Japanese
 text, our translation) describe burning wood cribs with very narrow
@@ -588,13 +591,24 @@ different Japanese title (煙中の視程について 第5報).
   Fire Prevention Society of Japan, 21(1), 17–23. In Japanese with an
   English abstract.
   [doi:10.11196/kasai.21.17](https://doi.org/10.11196/kasai.21.17)
-  Not the same as Jin (1971), Report of Fire Research Institute of Japan,
-  33, 31, which Jin (1976, ref. 11) cites for *V*·*K* ≈ 2 and which we
-  have not read.
+  Its English version is Jin (1971), Report of Fire Research Institute of
+  Japan, 33, 31–48
+  ([nrifd.fdma.go.jp](https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_033s.pdf)),
+  which Jin (1976, ref. 11) cites for *V*·*K* ≈ 2. That report does not
+  print the product 2; it gives about (2–4)/σ for placards and says the
+  minimum placard value may be used for walls, doors and stairs
+  (pp. 47–48). Reading that minimum as 2 is our inference.
 - Jin, T. (1978). *Visibility through fire smoke*. Journal of Fire &
   Flammability, 9, 135–155 (April 1978). English restatement of the
   walking-speed and allowable-density results (pp. 144–148). No DOI or
   public URL.
+- Togawa, K. (1969). Kenchiku Sekkei Shiryo Shusei, 6, 378. Maruzen.
+  Cited by FRI Report No. 42 (ref. 3, p. 14) for walking in darkness at
+  0.3–0.7 m/s and by Jin (1978, ref. 19, p. 148) for 0.3 m/s. Not
+  obtained.
+- Horiuchi, S., Murozaki, M., & Jin, T. (1974). Abstract, Annual Meeting
+  of the Architectural Institute of Japan (Planning), 581. Source of the
+  group-walking data. Not obtained.
 - Jin, T., & Yamada, T. (1985). *Irritating effects of fire smoke on
   visibility*. Fire Science and Technology, 5(1), 79–90.
   [doi:10.3210/fst.5.79](https://doi.org/10.3210/fst.5.79)
