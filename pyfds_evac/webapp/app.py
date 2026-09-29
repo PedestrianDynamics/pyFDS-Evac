@@ -346,7 +346,7 @@ _AUTOFILL_JS = """
   }
   function modeValue() {
     var el = document.querySelector('[name="incapacitation_mode"]');
-    return (el && el.value) || 'probabilistic';
+    return (el && el.value) || 'deterministic';
   }
   function clean(n) { return n.replace(/\\.json$/i, '').replace(/\\//g, '_'); }
   // The typed "Output folder", normalised. Empty means "use the derived path".
@@ -622,7 +622,10 @@ function setTenabilityMode(mode) {
 document.addEventListener('input', function (e) {
   if (e.target && e.target.id === 'susceptibility_sigma') drawIncapDist();
 });
-document.addEventListener('DOMContentLoaded', function () { drawIncapDist(); });
+document.addEventListener('DOMContentLoaded', function () {
+  var el = document.getElementById('incapacitation_mode');
+  if (el) setTenabilityMode(el.value || 'deterministic');
+});
 setTimeout(drawIncapDist, 150);
 """
 
