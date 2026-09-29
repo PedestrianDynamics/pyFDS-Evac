@@ -32,8 +32,9 @@ slice elevations in your case ([FDS slice sampling](/docs/fds-sampling.md)).
 
 Where a value is read depends on the model. Walking speed and the gas and
 heat doses use the value at the agent's position. Route smoke is sampled
-along each candidate route. Sign legibility is judged along the line of
-sight to the sign.
+along each candidate route. Sign legibility averages the extinction on
+the same slice along the straight line, in plan, from the agent's cell to
+the sign; it is a 2-D line on one slice, not a 3-D ray up to the sign.
 
 - **Smoke obscuration** (on by default). The extinction coefficient *K*
   sets each agent's walking-speed factor

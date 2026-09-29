@@ -51,9 +51,8 @@ exposure of each occupant is summed over time along the path they take,
 and incapacitation is expected at a fractional effective dose of 1 for the
 median occupant (the same note, §5 and §5.3, after the SFPE Handbook and
 ISO 13571). The note computes heat exposure as one FED and toxic-gas
-exposure as another (§5.3). An FED of 1 describes
-the median occupant, so a lower threshold is used to protect more
-susceptible people; see
+exposure as another (§5.3). For more susceptible
+occupants a lower threshold may suit; see
 [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
 
 {{< svg-figure src="images/concepts/tenability-limits.svg, images/concepts/tenability-dose.svg" >}}

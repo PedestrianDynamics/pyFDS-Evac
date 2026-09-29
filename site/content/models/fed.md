@@ -93,9 +93,9 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
   In `deterministic` mode every agent uses the threshold itself. Both doses
   are deterministic by default: the gas dose as in FDS+Evac, and the heat
-  dose since no population spread for heat is published. The threshold at
-  which an agent stops in the simulation is not, by itself, a design
-  acceptance criterion; FED 1 describes the median occupant (see
+  dose since no population spread for heat is published. An agent reaching
+  its threshold in a run does not on its own show whether a design is
+  acceptable; FED 1 describes the median occupant (see
   [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
 
 | Field | Default | CLI flag |
