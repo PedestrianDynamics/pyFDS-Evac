@@ -810,6 +810,10 @@ def form_to_opts(form: dict[str, Any]) -> Namespace:
             opts[dest] = action.default
             continue
         opts[dest] = action.type(raw) if action.type else str(raw)
+        if action.choices is not None and opts[dest] not in action.choices:
+            raise ValueError(
+                f"{dest}: {raw!r} is not one of {', '.join(map(str, action.choices))}"
+            )
     opts["collect_route_cost_history"] = True
 
     # Ensure output paths are always populated: the JS autofill may not have run

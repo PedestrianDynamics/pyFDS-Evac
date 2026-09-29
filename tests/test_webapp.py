@@ -1000,6 +1000,23 @@ def test_export_app_bundle_is_a_path_not_a_checkbox():
     assert opts.export_app_bundle.startswith("results/t_junction/")
 
 
+def test_form_rejects_value_outside_choices():
+    """A typo in a flag with argparse choices fails when the form is read.
+
+    form_to_opts skips argparse, so without this check "Clothed" reached the
+    heat model and failed only once the run had started.
+    """
+    import pytest
+
+    from pyfds_evac.webapp.params import form_to_opts
+
+    form = {"scenario": "t_junction", "seed": "42", "heat_clothing": "Clothed"}
+    with pytest.raises(ValueError, match="heat_clothing"):
+        form_to_opts(form)
+    form["heat_clothing"] = "unclothed"
+    assert form_to_opts(form).heat_clothing == "unclothed"
+
+
 class TestTrajectorySampling:
     """Playback fidelity must not decay as a run gets longer.
 
