@@ -1343,8 +1343,17 @@ class TestEquivalentPython:
                 assert value == str(Path(expected[key]).resolve()), key
             else:
                 assert value == expected[key], key
-        assert lit["SCENARIO"].endswith("assets/t_junction")
+        assert Path(lit["SCENARIO"]).parts[-2:] == ("assets", "t_junction")
         assert "Preview of form settings, not a run." in code
+
+    def test_switch_posted_as_the_browser_posts_it(self, client):
+        """A checked switch posts its "off" sentinel and then "on"."""
+        on = _code_of(
+            _preview(client, scenario="t_junction", enable_rerouting=["off", "on"])
+        )
+        off = _code_of(_preview(client, scenario="t_junction", enable_rerouting="off"))
+        assert "'enable_rerouting': True," in on
+        assert "'enable_rerouting': False," in off
 
     def test_preview_leaves_the_seed_to_the_scenario(self, client):
         code = _code_of(_preview(client, scenario="blind_spawn_discovery"))
@@ -1365,9 +1374,12 @@ class TestEquivalentPython:
 
     def test_hostile_text_stays_inside_string_literals(self, client, tmp_path):
         import ast
+        import sys
 
         hostile = "x'\"\nimport os; os.system('echo pwned')  #  \r\\"
-        fds_dir = tmp_path / hostile.replace("/", "_")
+        # NTFS forbids quotes and newlines in names; keep the path plain there.
+        name = "plain" if sys.platform == "win32" else hostile.replace("/", "_")
+        fds_dir = tmp_path / name
         fds_dir.mkdir()
         clean = ast.parse(_code_of(_preview(client, scenario="t_junction")))
         code = _code_of(

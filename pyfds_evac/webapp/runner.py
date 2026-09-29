@@ -13,6 +13,7 @@ import argparse
 import contextlib
 import copy
 import dataclasses
+import functools
 import io
 import logging
 import sys
@@ -75,8 +76,13 @@ class RunSpec:
         return argparse.Namespace(**copy.deepcopy(dict(self.opts)))
 
 
+@functools.cache
 def code_provenance() -> tuple[str | None, str | None, bool | None]:
-    """``(pyfds-evac version, git commit, dirty)`` of the running code."""
+    """``(pyfds-evac version, git commit, dirty)`` of the running code.
+
+    Read once per process: the code that is running does not change when
+    the checkout does.
+    """
     commit, dirty = git_state(find_project_root())
     return package_versions().get("pyfds-evac"), commit, dirty
 
@@ -196,6 +202,8 @@ class RunManager:
         self.results_only: bool = False
         self.opts: Any = None
         self.spec: RunSpec | None = None
+        # The scenario object that ran, so views need not reload it by name.
+        self.scenario: Any = None
         self.artifacts: list[str] = []
         self.last_event: ProgressEvent | None = None
         self.fed_snapshots: list[tuple] = []  # (sim_time, max_fed, mean_fed)
@@ -263,6 +271,7 @@ class RunManager:
             self.fds_dir = fds_dir
             self.results_only = results_only
             self.opts = opts
+            self.scenario = scenario
             self.spec = (
                 None if spec is None else dataclasses.replace(spec, run_id=self.run_id)
             )
@@ -370,6 +379,7 @@ class RunManager:
             self.error = None
             self.scenario_name = None
             self.spec = None
+            self.scenario = None
             self.last_event = None
             self.artifacts = []
             self.fed_snapshots = []

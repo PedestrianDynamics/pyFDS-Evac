@@ -1656,11 +1656,7 @@ def _kpi_tiles(result) -> Div:
 
 def _finished_view() -> Div:
     result = manager.result
-    scenario = None
-    try:
-        scenario = load_scenario(str(params.scenario_path(manager.scenario_name)))
-    except Exception:
-        pass
+    scenario = manager.scenario
 
     kpi_tiles = _kpi_tiles(result)
     if manager.artifacts:
