@@ -214,17 +214,33 @@ def load_slice_sampler(
     if not matches:
         tried = ", ".join(f"'{c}'" for c in candidates)
         raise IndexError(f"No slice with quantity {tried} found in {fds_dir}")
+    chosen = select_horizontal_slice(matches, slice_height_m, name, fds_dir)
+    return SliceFieldSampler(chosen)
+
+
+def select_horizontal_slice(
+    slices,
+    slice_height_m: float | None,
+    quantity: str,
+    fds_dir,
+):
+    """Pick the horizontal slice nearest *slice_height_m* from *slices*.
+
+    The one rule for every FDS reading, so that walking speed, FED and sign
+    legibility describe the same height.  Declaration order only breaks ties.
+    Raises IndexError if *slices* holds no horizontal slice.
+    """
     # Agents are sampled on a plane in x/y; a vertical (PBX/PBY) slice would be
     # read as if it were one, and its mid-height can look closest to the
     # requested height.
-    matches = [s for s in matches if _is_horizontal(s)]
+    matches = [s for s in slices if _is_horizontal(s)]
     if not matches:
         raise IndexError(
-            f"No horizontal (PBZ) slice with quantity '{name}' found in {fds_dir}"
+            f"No horizontal (PBZ) slice with quantity '{quantity}' found in {fds_dir}"
         )
     if slice_height_m is not None and len(matches) > 1:
         chosen = min(matches, key=lambda s: abs(_slice_z_mid(s) - slice_height_m))
     else:
         chosen = matches[0]
-    _warn_on_height_mismatch(chosen, slice_height_m, name, len(matches), fds_dir)
-    return SliceFieldSampler(chosen)
+    _warn_on_height_mismatch(chosen, slice_height_m, quantity, len(matches), fds_dir)
+    return chosen

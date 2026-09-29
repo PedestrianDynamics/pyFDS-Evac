@@ -220,6 +220,14 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- Sign legibility and the route `next_node_not_visible` gate read the
+  horizontal extinction slice nearest `--smoke-slice-height`, the slice
+  walking speed and FED read, with the same warning when it is more than
+  0.5 m away. fdsvismap used fdsreader's `get_nearest`, which returns the
+  first horizontal slice declared, or a vertical one through the plan
+  origin. Visibility caches are rebuilt (format 4)
+  ([#296](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/296)).
+
 - `scripts/fed_heat_hand_calc.py` cited "ISO TS 13571 eq. 5" for
   t = 5e7 · T^-3.4; it is ISO 13571:2012 Eq. (10) (§8.3.2), equal to SFPE
   Eq. 63.44

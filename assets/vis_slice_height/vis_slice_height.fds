@@ -1,0 +1,29 @@
+&HEAD CHID='vis_slice_height',
+      TITLE='Sealed room with soot in three layers: which slice height does sign legibility read?' /
+
+! 10 x 10 x 3 m around the plan origin, no fire, no vents. Soot is layered by
+! height at t = 0 so the extinction coefficient K differs by layer: about
+! 3.0 1/m below 1 m, 1.0 1/m from 1 to 2 m and 0.3 1/m above 2 m (K = 8700
+! m2/kg x soot density). The run lasts 2 s, too short for the layers to mix at
+! the slice planes, so each slice holds its layer's K.
+&MESH IJK=10,10,6, XB=-5.0,5.0,-5.0,5.0,0.0,3.0 /
+&TIME T_END=2.0 /
+&MISC TMPA=20.0 /
+
+&SPEC ID='SOOT' /
+
+&INIT XB=-5.0,5.0,-5.0,5.0,0.0,1.0, SPEC_ID(1)='SOOT', MASS_FRACTION(1)=2.87E-04 /
+&INIT XB=-5.0,5.0,-5.0,5.0,1.0,2.0, SPEC_ID(1)='SOOT', MASS_FRACTION(1)=9.58E-05 /
+&INIT XB=-5.0,5.0,-5.0,5.0,2.0,3.0, SPEC_ID(1)='SOOT', MASS_FRACTION(1)=2.87E-05 /
+
+! Declared in this order on purpose: a vertical slice through the plan origin
+! first, then the low layer, then the high layer, and the sign-height slice
+! last. On this 0.5 m grid PBZ=1.6 lands on z = 1.5 m. A reader that takes the
+! first slice, the first horizontal one, or a vertical one gets the wrong K.
+&SLCF PBY=0.0, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=0.5, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=2.5, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /
+&DUMP DT_SLCF=1.0 /
+
+&TAIL /

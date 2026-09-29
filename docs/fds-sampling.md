@@ -84,6 +84,11 @@ sampler = load_slice_sampler(
 
 If only one slice matches the quantity, `slice_height_m` has no effect.
 
+The rule lives in `select_horizontal_slice`: vertical slices are
+skipped, the slice whose z is nearest `slice_height_m` wins, and a
+warning is logged when it is more than 0.5 m away. The visibility model
+applies the same function to the extinction slice it hands to fdsvismap.
+
 ### Sharing a `Simulation` instance
 
 Parsing an FDS case directory is expensive. When you need both
