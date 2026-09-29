@@ -438,9 +438,10 @@ def test_model_heat_flux_takes_integrated_intensity():
 
 
 def test_model_no_threshold_below_2_5_kw():
-    q = q_u_hand(35.0, 2.0, f=0.5, h=5.0, t_skin_c=35.0)
-    assert q < 2.5
-    assert _u_rate(35.0, 2.0, f=0.5, h=5.0, t_skin_c=35.0) > 0.0
+    """U = 4 above the 2.045 kW/m2 of a skin-temperature field: q = 0.98."""
+    q = q_u_hand(35.0, 4.0, f=0.5, h=5.0, t_skin_c=35.0)
+    assert 0.0 < q < 2.5
+    assert _u_rate(35.0, 4.0, f=0.5, h=5.0, t_skin_c=35.0) > 0.0
 
 
 @pytest.mark.parametrize("u", [0.0, math.nan, math.inf])
