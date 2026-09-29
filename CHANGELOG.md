@@ -191,8 +191,9 @@ See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/ge
   1.2 m/s.
 - The convective heat dose is off by default. `--enable-heat-fed` turns it on;
   before, it was on whenever the FDS output had a `TEMPERATURE` slice.
-- Heat incapacitation is deterministic by default: every agent stops at
-  `--heat-fed-threshold`. No population spread for heat is published; the
+- Heat incapacitation is deterministic by default: every agent stops at the
+  heat threshold, which is `--fed-threshold` unless `--heat-fed-threshold`
+  overrides it. No population spread for heat is published; the
   log-normal draw with σ = 0.94, borrowed from the gas dose, is opt-in with
   `--heat-incapacitation-mode probabilistic`.
 - Gas incapacitation is deterministic by default: every agent stops at
