@@ -2162,7 +2162,10 @@ SFPE Ch. 63 gives population figures for heat only for radiant lethality
 the run&amp;rsquo;s seed, on a stream independent of the gas threshold:
 \(D_i = \texttt{heat\_fed\_threshold} \cdot \exp(\sigma Z)\),
 \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
-assumption with no data basis for heat.&lt;/li>
+assumption with no data basis for heat. The Handbook&amp;rsquo;s radiant lethality
+figures point to a much narrower spread, for an endpoint not modelled here
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/#heat">Incapacitation thresholds&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225" target="_blank" rel="noopener">#225&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;p>The gas dose is also deterministic by default; the two modes are set separately
 (&lt;code>--incapacitation-mode&lt;/code> and &lt;code>--heat-incapacitation-mode&lt;/code>).&lt;/p>
@@ -2216,6 +2219,9 @@ endpoint (D = 16.667) chosen for the planned total-flux dose
 (&lt;code>specs/016-heat-fed/SPEC.md&lt;/code>) is not implemented
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/218" target="_blank" rel="noopener">#218&lt;/a>,
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220" target="_blank" rel="noopener">#220&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>Population spread.&lt;/strong> No consulted source gives a spread of tolerance
+for the convective dose; the opt-in σ = 0.94 is borrowed from the gas dose
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225" target="_blank" rel="noopener">#225&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Validity range.&lt;/strong> The convective data behind the law reach about 205 °C
 in air of low humidity (below 10 % water vapour). Higher temperatures and
 humid smoke are extrapolation, and neither is flagged.&lt;/li>
@@ -5401,7 +5407,12 @@ t_{I\,\mathrm{rad}} = \frac{r}{q^{1.33}} \qquad \text{(Eq. 63.43)}
 $$&lt;p>where &lt;em>r&lt;/em> [(kW/m²)^4/3·min] is the dose for the endpoint: about 1.33–1.67 for
 severe skin pain, 4.0–12.2 for second-degree burns and 16.7 for third-degree
 burns. Purser proposes 1.33 as a tolerance threshold and 10 as a threshold
-for incapacitation and serious injury (p. 2382). For occupants passing
+for incapacitation and serious injury (p. 2382). For the average
+population, r = 10 is also given as a 1 % fatality level and r = 16.7 as a
+50 % lethal level (p. 2382); what these imply for the population spread is
+discussed under
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/#heat">Incapacitation thresholds&lt;/a>.
+For occupants passing
 under a hot smoke layer, 2.5 kW/m² corresponds approximately to a layer
 temperature of 200 °C (p. 2382).&lt;/p>
 &lt;h2>Combining the two&lt;span class="hx-absolute -hx-mt-20" id="combining-the-two">&lt;/span>
@@ -5531,6 +5542,36 @@ design convention derived from the log-normal assumption. For reference
 (arithmetic, not a statement of the sources): a log-normal with median 1 and
 log-scale standard deviation 1.0 puts 11.4 % below 0.3, ISO&amp;rsquo;s figure; the
 preview does not state which standard deviation ISO used.&lt;/p>
+&lt;h2>Heat&lt;span class="hx-absolute -hx-mt-20" id="heat">&lt;/span>
+&lt;a href="#heat" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>No source we could consult gives a population spread for tolerance of
+convective heat, the dose pyFDS-Evac computes (Eq. 63.44). SFPE Ch. 63 gives
+population figures for heat only for radiant lethality (p. 2382): a radiant
+dose of 10 (kW/m²)^4/3·min &amp;ldquo;represents a fatal level for a vulnerable
+population (over 65 years of age) or a 1 % fatality level for the average
+population, whereas 16.7 (kW/m²)^4/3·min represents a 50 % probability
+lethal level for the average population&amp;rdquo;. The chapter cites Hockey and Rew
+(1996) and Purser (1997) for its radiant dose relation (refs. [133, 134],
+p. 2382). Hockey and Rew is a candidate source for probit relations behind
+these figures; we have not read it.&lt;/p>
+&lt;p>Inference, not a statement of the sources: if the lethal dose is log-normal
+with median 16.7 and 1 % below 10, its log-scale standard deviation is
+ln(16.7/10)/2.326 = 0.513/2.326, so \(\sigma \approx 0.22\). The spec&amp;rsquo;s
+fatal dose D = 16.667 gives the same value to two decimals. Its limits:&lt;/p>
+&lt;ul>
+&lt;li>The Handbook states no distribution; the log-normal is assumed.&lt;/li>
+&lt;li>Two figures fix two parameters, so nothing tests the fit.&lt;/li>
+&lt;li>The figures are for radiant lethality, the fatal endpoint of the planned
+total-flux dose (&lt;code>specs/016-heat-fed/SPEC.md&lt;/code>), which is not implemented.
+They do not apply to the convective Eq. 63.44 time in use.&lt;/li>
+&lt;/ul>
+&lt;p>With FED = 1 at D = 16.667, the 1 % fatality dose is FED = 0.60. The gas
+dose&amp;rsquo;s σ = 0.94, which the opt-in probabilistic heat mode borrows, would put
+29 % of people below FED = 0.60 instead of 1 %. The heat threshold therefore
+stays deterministic by default. A probit in the natural log of dose with
+slope b gives σ = 1/b. A published probit slope for the endpoint in use
+would settle the value for that endpoint; Hockey and Rew is the source to
+check first
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225" target="_blank" rel="noopener">#225&lt;/a>).&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>ISO (2012). &lt;em>ISO 13571:2012 Life-threatening components of fire —
@@ -5556,6 +5597,12 @@ Taylor, N., Goldstein, R., Santos, R., Wissoker, D., &amp;amp; Notarianni, K. A.
 (2013). &lt;em>Report on high-rise fireground field experiments&lt;/em> (K. M.
 Butler, Ed.). NIST Technical Note 1797.
 &lt;a href="https://doi.org/10.6028/NIST.TN.1797" target="_blank" rel="noopener">doi:10.6028/NIST.TN.1797&lt;/a>&lt;/li>
+&lt;li>Hockey, S. M., &amp;amp; Rew, P. J. (1996). &lt;em>Human response to thermal
+radiation&lt;/em>. Contract Research Report 97/1996. HSE Books, Sudbury. Cited
+by Ch. 63 as ref. [133]; not consulted.&lt;/li>
+&lt;li>Purser, D. A. (1997). Review of human response to thermal radiation.
+&lt;em>Fire Safety Journal&lt;/em>, 28, 290–291. Cited by Ch. 63 as ref. [134]; not
+consulted.&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">Fractional effective dose&lt;/a>.&lt;/p></description></item><item><title>Limitations</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/</guid><description>
 &lt;h2>Status&lt;span class="hx-absolute -hx-mt-20" id="status">&lt;/span>
