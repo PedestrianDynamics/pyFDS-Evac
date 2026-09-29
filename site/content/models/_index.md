@@ -5,10 +5,22 @@ cascade:
   type: docs
 ---
 
-The sub-models that turn FDS output into agent behaviour, one page each,
-with the equations, the configuration keys, and the references. The
-[documentation](/docs/) section holds the full reference for each model;
-these pages are the overview.
+The sub-models that turn FDS output into agent behaviour, one page each.
+Each Models page is the specification of its sub-model: the coded form,
+the parameters and their defaults, the assumptions, the deviations from the
+literature, and the limitations with their issues. The published laws the
+models start from are on [Fundamentals](/fundamentals/_index.md). Worked
+runs and the Python API are on the "in practice" pages of the
+[documentation](/docs/). The evidence that the code solves its equations is
+on [Verification](/verification/_index.md).
+
+| Model | Published basis | Verification |
+|---|---|---|
+| [Smoke speed](/models/smoke-speed.md) | [Walking speed in smoke](/fundamentals/walking-speed.md) | [ISO 20414 Test 18](/verification/iso-test-18.md) |
+| [FED](/models/fed.md) | [Asphyxiant FED](/fundamentals/asphyxiant-fed.md), [Irritants](/fundamentals/irritants.md) | [ISO 20414 Test 19](/verification/iso-test-19.md), [CO dose](/verification/testing-homogeneous.md) |
+| [Heat](/models/heat.md) | [Heat](/fundamentals/heat.md) | [Heat dose](/verification/testing-heat.md) |
+| [Routing](/models/routing.md) | [Exit choice](/fundamentals/exit-choice.md) | S4 T-junction ([`test_s4_tjunction_reroute.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s4_tjunction_reroute.py)) |
+| [Wayfinding](/models/wayfinding.md) | [Visibility](/fundamentals/visibility.md) | [Familiarity](/verification/testing-familiarity.md) |
 
 {{< svg-figure src="images/concepts/model-responses.svg" min-width="34rem" >}}
 
@@ -27,6 +39,9 @@ holds for extinction, the gas species, temperature and, when selected,
 a height above each floor. If the nearest slice is more than 0.5 m away,
 the run logs a warning and carries on at that slice's height, so check the
 slice elevations in your case ([FDS slice sampling](/docs/fds-sampling.md)).
+A deck with slices only at 2.0 m is read at 2.0 m without a warning, and the
+run manifest does not yet record the height used
+([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
 `--heat-regime layer` also reads a `TEMPERATURE` slice at
 `--heat-layer-height`.
 
@@ -46,7 +61,8 @@ on one slice, not a 3-D ray up to the sign.
   exits they learn ([Wayfinding](/models/wayfinding.md)). Smoke is not the
   only routing input: when the gas FED model is loaded, a route whose
   projected gas FED exceeds `fed_rejection_threshold` (1.0) is refused
-  under both cost models.
+  under both cost models for the agent's current exit, and a route to
+  another exit above 0.9 of it (`fed_return_margin`).
 - **Toxic and irritant gases** (on by default when the case has CO, CO₂
   and O₂ slices). Each agent accumulates a gas FED, irritants included,
   and by default stops once it reaches 1. The threshold is
@@ -68,7 +84,7 @@ on one slice, not a 3-D ray up to the sign.
 
 {{< cards >}}
   {{< card link="smoke-speed" title="Smoke-speed model" subtitle="Extinction coefficient to walking speed: Frantzich–Nilsson, and the `fridolf` option." >}}
-  {{< card link="fed" title="Fractional effective dose" subtitle="Purser toxic gas dose, convective heat dose, irritant concentration." >}}
+  {{< card link="fed" title="Fractional effective dose" subtitle="Purser toxic gas dose and irritant concentration." >}}
   {{< card link="heat" title="Heat" subtitle="Opt-in convective heat dose and thermal incapacitation." >}}
   {{< card link="routing" title="Dynamic route rerouting" subtitle="Smoke integrated along the route refuses and orders exits." >}}
   {{< card link="wayfinding" title="Wayfinding" subtitle="Sign legibility through smoke decides what each agent knows." >}}

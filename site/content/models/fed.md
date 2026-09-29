@@ -52,20 +52,18 @@ species the sum reduces to the FDS+Evac default,
 
 ## Convective heat
 
-FDS+Evac has no heat dose, so this one is opt-in: with `--enable-heat-fed`
-(`opts.enable_heat_fed`) and a `TEMPERATURE` slice in the case, a separate
-heat dose accumulates at
-`_heat_fed_rate_per_minute` (`fed.py`), by default ISO 13571:2012 Eq. (9)
-for fully clothed subjects,
+The heat dose is opt-in (`--enable-heat-fed`), as FDS+Evac has none, and is
+a running total of its own, never added to the gas FED. By default it is
+ISO 13571:2012 Eq. (9) for fully clothed subjects (`fed.py`,
+`_heat_fed_rate_per_minute`),
 
 $$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.61} / (4.1 \times 10^{8}) \quad [1/\mathrm{min}],
 $$
 
-with *T* in °C; `--heat-clothing unclothed` selects ISO Eq. (10), which is
-SFPE Eq. 63.44. It is a running total of its own, never added to the gas FED.
-The basis is on [Heat](/fundamentals/heat.md); the full specification,
-including its limits, is on [Models › Heat](/models/heat.md).
+with *T* in °C. Everything else about it (the other laws, the total-flux
+method, the threshold and its limits) is specified on
+[Models › Heat](/models/heat.md).
 
 ## Tenability: irritant slowdown and incapacitation
 
@@ -140,25 +138,23 @@ zero at the agent's threshold. Script: `scripts/generate_tenability_curves.py`.*
   prescribed via `&INIT` in a test deck must go in a single record. This is
   an FDS input-authoring pitfall, not a pyFDS-Evac bug; its symptom is
   near-zero toxic gas readings.
-- **`EXTINCTION` is not the smoke extinction coefficient.** It is an
-  unrelated FDS quantity (see [Extinction coefficient](/fundamentals/extinction.md)).
-  `load_slice_sampler` requires `SOOT EXTINCTION COEFFICIENT` and raises
-  `IndexError` when it is absent (`pyfds_evac/core/fds_sampling.py`).
+- **Units.** FDS writes volume fractions; `FdsFedField.sample_inputs`
+  (`fed.py`) multiplies CO, CO₂ and O₂ by 100 to get vol %, and the other
+  gases by 10⁶ to get ppm.
 
 ## Verification
 
-- Equation-level constant-exposure checks for all coded terms are covered in
-  [tests/test_fed.py](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_fed.py)
-- An ISO 20414:2020 Test 19 (Table 22) stationary benchmark is covered with `assets/ISO-table22`,
-  comparing the runtime `FED=1` crossing time against the analytical reference
-
-Generate the ISO 20414 Test 19 (Table 22) stationary FED verification figure:
-
-```bash
-uv run python scripts/generate_iso_table22_stationary_plot.py
-```
-
-Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/iso-table22-stationary-fed.png)
+- [ISO 20414 Test 19](/verification/iso-test-19.md): passes for CO, CO₂ and
+  O₂. The HCN, NOₓ and irritant terms are not verified end to end
+  ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)), and
+  the coupled check compares against the code's own formula
+  ([#249](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/249)).
+- [CO dose in a sealed room](/verification/testing-homogeneous.md): FDS cases
+  at constant CO.
+- FED and FIC in every zone
+  ([`tests/verification/test_fed_fic_all_zones.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_fic_all_zones.py)).
+- Equation-level checks of every coded term
+  ([`tests/test_fed.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_fed.py)).
 
 ## What is not modelled
 
@@ -173,6 +169,12 @@ Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/i
 - FED activity level: the CO term is fixed at light work; rest and heavy
   work are not supported
   ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)).
+- Removing incapacitated agents: they stay in the simulation, so a run with
+  any incapacitated agent reports `evacuation_time` = `max_simulation_time`
+  ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)), and
+  an agent incapacitated during its pre-movement time walks off when it ends
+  ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)); see
+  [Limitations](/docs/limitations.md).
 - **Height-relative FED and smoke sampling**: extinction, temperature and
   each gas are sampled from the horizontal FDS slice closest to
   `--smoke-slice-height` (default 1.6 m, FDS+Evac `HUMAN_SMOKE_HEIGHT`). All agents share these slices regardless of
@@ -272,11 +274,8 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 \(g\) partly counts irritancy twice
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
-Heat uses the convective ISO 13571:2012 Eq. (9), or Eq. (10) = Eq. 63.44 with `--heat-clothing unclothed` (`fed.py`, `_heat_fed_rate_per_minute`), unless `--heat-endpoint`
-selects Eq. 63.45, 63.46 or 63.47, or `--heat-fed-method total-flux` the
-flux law of Eqs. 63.49 and 63.43, with the radiant term counted from
-2.5 kW/m² (ISO 13571:2012 §8.2, §8.4;
-[Heat › Where the radiant threshold acts](/models/heat.md#where-the-radiant-threshold-acts)). The log-normal σ of both
+The heat laws and their deviations are on [Models › Heat](/models/heat.md).
+The log-normal σ of both
 thresholds (`fed.py`, `TenabilityConfig.susceptibility_sigma`, `TenabilityConfig.heat_susceptibility_sigma`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)

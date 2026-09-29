@@ -39,7 +39,10 @@ always this dimensionless optical depth, not the relaxation time τ of
 `tau` exceeds `tau_max` (see [Parameters](#parameters)), Dijkstra weights every edge by its own
 `tau`, and `tau` orders the routes that survive, with travel time breaking ties.
 Path choice and exit choice are therefore one objective. In clear air every
-`tau` is zero, nothing is refused, and the model reduces to nearest-exit.
+`tau` is zero, nothing is refused, and routes order by travel time (the
+Dijkstra tie-break is 1e-6 × length), which is nearest-exit; this equivalence
+has not been re-measured since routes were first ordered on `tau`
+([Known limitations](/docs/route-cost-gate.md#known-limitations)).
 
 ![Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6](/images/concepts/exposure_gate.png)
 
@@ -151,24 +154,42 @@ fire and a clean 58 m way round -- and its results are in the sciebo case folder
 ## Parameters
 
 Defaults in the code, as a scenario's `routing` block reads them
-(`RouteCostConfig.from_routing_params`, `pyfds_evac/core/route_graph.py`). The
-full key table, with which keys act under which cost model, is in
-[docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
+(`RouteCostConfig.from_routing_params`, `pyfds_evac/core/route_graph.py`).
+This is the complete list of keys. Which keys act under which cost model is
+tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 
 | `routing` key | Default | Meaning |
 |---|---|---|
-| `cost_model` | `"gate"` | `"gate"` or `"additive"` |
+| `cost_model` | `"gate"` | `"gate"` or `"additive"`; any other string currently selects `"additive"` without a warning ([#305](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305)) |
 | `tau_max` | `6.0` | Budget \(\tau_{\max}\) on the optical depth of a route |
 | `tau_return_margin` | `0.8` | A rival exit must come in under `tau_max` times this |
 | `current_exit_discount` | `0.9` | Factor on the current exit's `tau` in the sort |
 | `tau_deadband` | `0.1` | Anchor deadband, as a fraction of `tau_max` |
+| `clean_extinction_threshold` | `0.0` (off) | Extinction [1/m] of the smokiest leg at or below which an exit is in the clean tier |
+| `clean_exit_margin` | `0.1` | Hysteresis: the current exit stays clean up to `clean_extinction_threshold` / `clean_exit_margin` (FDS+Evac `FAC_DOOR_OLD`) |
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused |
 | `anticipate` | `true` | Price each segment at the agent's arrival time |
+| `foresight_horizon_s` | `inf` | How far ahead [s] anticipation reads the FDS record |
+| `fallback_switch_margin` | `0.2` | When every route is refused, a rival's worst extinction must be this fraction below the current exit's |
+| `w_smoke` | `1.0` | Smoke weight; additive model only, inert under the gate |
+| `w_fed` | `10.0` | Dose weight; additive model only, inert under the gate |
+| `w_queue` | `0.0` | Weight on queue time in the ranking cost (off) |
+| `visibility_extinction_threshold` | `0.5` | Extinction [1/m] above which a segment counts as not visible; additive model only |
 | `sampling_step_m` | `2.0` | \(\Delta s\), spacing of smoke samples along a polyline [m] |
 | `base_speed_m_per_s` | `1.3` | Router's clear-air speed [m/s], not the agent's \(v_0\) |
 | `alpha` | `0.706` | Router's copy of \(\alpha\) [m/s], for travel time only |
 | `beta` | `-0.057` | Router's copy of \(\beta\) [m²/s], for travel time only |
 | `min_speed_factor` | `0.1` | Router's copy of \(f_{\min}\), for travel time only |
+| `default_exit_capacity` | `1.3` | Exit capacity [agents/s] for queue time, when an exit sets no `capacity_agents_per_s` |
+
+Fixed constants, which no `routing` key can set:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `RerouteConfig.exit_switch_anchor` | `0.9` | A rival exit needs `rank_cost` below this fraction of the current exit's |
+| `RouteCostConfig.fed_return_margin` | `0.9` | A rival exit is refused above this fraction of `fed_rejection_threshold` |
+| `RouteCostConfig.impassable_extinction_threshold` | `3.0` | Route-average *K* [1/m] above which a visibility rejection must be fled; never reached under the gate |
+| `_PATH_IMPROVEMENT_THRESHOLD` | `0.9` | A new path to the same exit needs `rank_cost` below this fraction of the walked path's |
 
 The router always uses the linear speed law, whatever `SmokeSpeedConfig`
 the agents walk with. Each agent re-decides every
@@ -178,6 +199,103 @@ the agents walk with. Each agent re-decides every
 |---|---|
 | `RerouteConfig()` built in Python | `10.0` s |
 | `run.py --reroute-interval` | `1.0` s |
+
+### Assumptions
+
+| Value | Source |
+|---|---|
+| `tau_max` = 6 | FDS+Evac tier-4 door rule, \(\bar K d \le 6\) (`evac.f90:16794`, `:16799`), used here as an exposure budget; not calibrated (see [Deviations](#deviations-from-the-literature)) |
+| `current_exit_discount` = 0.9 | FDS+Evac `FAC_DOOR_OLD2` |
+| `clean_exit_margin` = 0.1 | FDS+Evac `FAC_DOOR_OLD` |
+| `exit_switch_anchor` = 0.9, `_PATH_IMPROVEMENT_THRESHOLD` = 0.9 | value of FDS+Evac `FAC_DOOR_WAIT`, applied to a different cost; not calibrated |
+| `tau_return_margin`, `tau_deadband`, `fallback_switch_margin`, `fed_return_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
+| `w_queue` = 0 | off; `assets/station_fahy` sets 0.024, calibrated against Fahy Table 2 ([routing in practice](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)) |
+| `base_speed_m_per_s` = 1.3, `default_exit_capacity` = 1.3 | pyFDS-Evac assumptions |
+
+`evac.f90` line numbers on this page refer to the copy in `materials/evac.f90`,
+FDS commit [c9da70d7a](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90).
+
+## Switching rule
+
+At each re-decision the candidates ranked above the agent's current exit are
+tried in order, and the first one the **exit-switch anchor** accepts is
+taken. The anchor (`_AnchoredPolicy.anchor_allows`) decides in this order:
+
+1. No current route: accept.
+2. **Must flee** (`_must_flee_rejection`): the current route is refused for its
+   projected FED, or for visibility with a route-average *K* above
+   `impassable_extinction_threshold`. Accept, whatever the cost.
+3. Otherwise the cost model decides (`improvement`):
+   - **Gate** (`GatePolicy.improvement`): a clean candidate leaves a dirty
+     exit; an infeasible candidate needs `rank_cost` below
+     `exit_switch_anchor` × the current one; a feasible candidate whose `tau`
+     is lower by more than `tau_max` × `tau_deadband` (0.6 by default) is
+     accepted, one higher by more than that is refused, and a tie inside the
+     band falls through to the same `rank_cost` ratio.
+   - **Additive** (`AdditivePolicy.improvement`): only the top-ranked route is
+     tried, and it needs `rank_cost` below `exit_switch_anchor` × the current
+     one.
+
+Under the gate, the `tau` test overwrites the rejection reason after the FED
+test sets it, so a route that is both FED-lethal and over `tau_max` loses the
+must-flee bypass
+([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
+
+A new path to the **same** exit is taken when its `rank_cost` is below
+`_PATH_IMPROVEMENT_THRESHOLD` × the walked path's, or when the walked path is
+refused and the new one is not (reason `better_path`). When every route is
+refused, the least-smoky one is un-refused as a fallback. The full decision
+table is in [Routing in practice](/docs/routing.md#rerouting-decision-flow).
+
+### Code structure
+
+For maintainers, one re-decision runs through: `_measure_route` (samples the
+smoke and dose along a candidate) → `policy_for(config)`, which returns the
+`GatePolicy` or `AdditivePolicy` that supplies `edge_weight`, `feasibility`,
+`rank_cost`, `order_key` and `improvement` → `rank_routes` and
+`_apply_fallback` → `evaluate_and_reroute`, which returns the switch records
+written to the route history.
+
+## Limitations
+
+- Switching can oscillate where two routes cross in cost
+  ([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)).
+- Routes are priced with smoke the agent cannot perceive, including stretches
+  it has never seen
+  ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
+- Under the gate a FED-lethal route over `tau_max` loses the must-flee bypass
+  ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
+- One path is priced per exit
+  ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).
+- The anchor compares with the best path to the current exit, not the path the
+  agent walks ([#186](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186)).
+- For an agent behind the route's first node, the FED growth over the walk to
+  that node is not counted, and anticipated arrival times start at that node
+  (`_measure_route`, `_arrival_time`;
+  [#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
+- The queue term counts agents globally, not those an agent can perceive
+  ([#89](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89)).
+- Heat does not enter route choice
+  ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
+- For discovery agents, the order of tied routes depends on
+  `PYTHONHASHSEED` ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)).
+- Anticipation assumes unimpeded speed and, by default, perfect foresight of
+  the finished FDS record.
+
+The measurements behind these are in
+[Gate model in practice › Known limitations](/docs/route-cost-gate.md#known-limitations).
+
+## Verification
+
+- S4 T-junction
+  ([`tests/verification/test_s4_tjunction_reroute.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s4_tjunction_reroute.py)):
+  agents leave a smoke-blocked exit for the clear one.
+- Golden rerouting
+  ([`tests/test_rerouting_golden.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_rerouting_golden.py)):
+  a regression check that decisions do not change unnoticed, not a
+  verification against an independent value.
+
+See the [Verification](/verification/_index.md) index for their status.
 
 ## Usage
 

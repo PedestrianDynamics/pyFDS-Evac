@@ -244,6 +244,76 @@ slightly, and the maximum heat FED differs by less than 10⁻⁴ (relative).
 The paired outputs are in
 `<data>/fed_incap_heat_150c/evac/no_soot_fallback_248/`.
 
+## Checks against the Handbook
+
+Beyond the FDS rooms above, the heat laws are checked at the equation level
+and in coupled runs; [Models › Heat](/models/heat.md#verification)
+summarises them.
+
+The default, ISO Eq. (9), gives 1.8 to
+3.0 times the convective times of Table 63.20 (p. 2383), and 10.7 min at
+126 °C against the 7 min reported in Table 63.17 (p. 2375). Table 63.20
+does not state clothing; Table 63.17's 205 °C row ("bare headed,
+protected") gives 4 min, against 1.85 min from Eq. (9), and clothing is
+not stated for its 126 °C row. These are recorded, not pass bands
+(`test_heat_fed_verif.py`, A3.12).
+
+Eq. 63.44 (`--heat-clothing unclothed`) is checked against the
+convective rows of Table 63.20 (p. 2383) and the dry-air rows of
+Table 63.17 (p. 2375). Against Table 63.20 it gives 0.61 to 1.07 times
+the tabulated times, never longer than the table's whole-minute rounding
+allows (read as ±0.5 min, an assumption); it never exceeds the times
+reported as tolerated in Table 63.17's dry-air rows. The factor-2 band
+the test allows is an assumption, not a sourced tolerance. The
+`--heat-endpoint` laws are checked against Table 63.21 (`tolerance`) and
+hand formulas
+([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
+
+The total-flux method is checked against hand formulas of Eqs. 63.49 and
+63.43, the radiant rows of Table 63.20 and the convection table of [spec 016](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/specs/016-heat-fed/SPEC.md),
+in unit tests and coupled corridor runs. The radiant threshold is checked
+in `tests/test_heat_radiant_threshold.py` for each radiant source (2.4
+drops, 2.5 counts, a negative term counts as zero, convection unchanged,
+`heat_flux_kw_m2` physical) and in the coupled cases of
+`tests/verification/test_heat_total_flux_coupled.py`: dense smoke at
+300 °C (tolerance, ε 0.9, *h* 8) crosses at 5.8 s, clear air at 100 °C
+(tolerance, ε 0.05, *h* 8) at 190 s on convection alone, and smoke at
+200 °C (fatal, ε 0.5, *h* 8) has a radiant term of 1.17 kW/m², below the
+threshold.
+
+The layer regime is checked
+against hand formulas and the 200 °C / 2.5 kW/m² anchor (p. 2382), with
+synthetic temperature fields; no FDS case runs the layer regime yet
+([#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308)).
+
+The `INTEGRATED INTENSITY` source is checked against hand formulas, a
+committed FDS 6.10.1 case (`assets/heat_integrated_intensity`, slice *U*
+and *T* against FDS's own devices), and the #224 radiometer data, where
+*f* = 0.25 with convection matches the FDS skin gauge in an isotropic room
+in all four orientations within 3 %. The 300 °C layer, soot fraction and
+geometry of the committed case, and the gauge's h = 8 and \(T_s\) = 35 °C
+in the #224 decks, are assumptions of those test decks, not sourced values.
+
+## Test and reference-deck assumptions
+
+Values of the test decks and test bands that no consulted source fixes. They
+decide whether a test passes; they do not affect a run. The model's own
+assumptions are on
+[Models › Heat › Assumptions](/models/heat.md#assumptions-unsourced-values).
+
+| Parameter | Value | CLI flag / config key | Where used | Why this value | What would source it |
+|---|---|---|---|---|---|
+| #224 decks: gas and soot | 300 °C, soot mass fraction 0.005; layer base 2.0 m | deck files `assets/heat_radiometer/*.fds` | FDS reference data only; the heat model does not read them; the `INTEGRATED INTENSITY` radiometer tests | A sooty layer that radiates at head height | A measured compartment fire with radiometers |
+| #224 decks: burner and grid | propane, soot yield 0.01, 0.6 × 0.6 m at 1100 kW/m²; 4 × 4 × 3 m room (6 × 4 × 4 m open for the burner), 0.1 m cells | deck files `assets/heat_radiometer/*.fds` | As above | A flame reaching head height on a grid that resolves 1.6 m | As above |
+| #224 skin gauge | emissivity 1, h = 8 W/(m²·K), 35 °C | `&PROP` in the #224 decks and `assets/heat_integrated_intensity` | Gauge values the `INTEGRATED INTENSITY` tests compare against | Emissivity 1 is the FDS default, taken as the skin's; h = 8 is the top of the Handbook's 5–8 | Skin emissivity and h of a clothed person |
+| #221 CI deck | 300 °C sooty layer above 1.2 m, soot 0.005, 2 × 2 × 2.4 m, 0.2 m cells | `assets/heat_integrated_intensity/heat_integrated_intensity.fds` | `tests/verification/test_heat_integrated_intensity_coupled.py` | Two heights with different *U* in a small committed case | None needed: it checks the reader against FDS's own devices |
+| Table reading | ±0.5 min | none (test) | Eq. 63.44 against Table 63.20 (`tests/verification/test_heat_fed_verif.py`, [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)) | Whole-minute entries read as rounded | The unrounded values behind Table 63.20 |
+| Test band, convective | factor 2 | none (test) | Eq. 63.44 against Table 63.20 convective rows (#219) | Wide enough for the 0.61–1.07 spread found | ISO 13571:2012 states ±25 % for the identical Eq. (10) (§8.3.2), but the 0.61 row lies outside it; the band stays until that is settled ([#289](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/289)) |
+| Test band, hot-layer anchor | ±10 % | none (test) | Black layer at 200 °C against "approximately 2.5 kW/m²" (p. 2382, #219) | "approximately" in the text | A precise flux for that anchor |
+| Test band, radiant rows | ±30 % (±25 % in the #221 face-on check) | none (test) | Eq. 63.43 against Table 63.20 radiant rows (#219, #221) | Chosen in #219 | A stated uncertainty of Table 63.20 |
+| Flame pass | black sphere, radius 0.1 m, 1000 °C; one pass FED < 0.02 | none (test) | `tests/verification/test_heat_flame_pass_reference.py` (#219) | A small flame; the pass stays far below the fatal dose | A measured flame and path |
+
+
 ## Limits
 
 - **The law is not verified here.** The expected values use Eqs. 63.44 and
