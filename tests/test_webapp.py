@@ -1795,3 +1795,85 @@ class TestRunOutcome:
         assert run_status(done) == (
             "Complete: all agents evacuated (150/150), evacuation time 212.40 s"
         )
+
+
+class TestModelTab:
+    """#323: the Model tab must state the engine's defaults, not contradict them."""
+
+    @staticmethod
+    def _html():
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.docs import model_docs
+
+        return to_xml(model_docs())
+
+    @staticmethod
+    def _section(html, title):
+        start = html.index(title)
+        end = html.find("Read more", start)
+        return html[start:end]
+
+    def test_opt_in_mechanisms_are_labelled_off(self):
+        html = self._html()
+        fic = self._section(html, "Irritant slowdown (FIC)")
+        assert ">Off<" in fic and "--enable-fic-speed" in fic
+        heat = self._section(html, "Heat dose")
+        assert "Off; when on: clothed, deterministic" in heat
+        assert "--enable-heat-fed" in heat
+        assert "4.1 \\times 10^{8}" in heat  # ISO 13571 Eq. (9), clothed
+
+    def test_incapacitation_is_deterministic_by_default(self):
+        gas = self._section(self._html(), "Toxic gas: Fractional Effective Dose")
+        assert "deterministic" in gas
+        assert "same threshold, 1.0" in gas
+        assert "In probabilistic mode" in gas
+
+    def test_sampling_height_and_single_threshold(self):
+        html = self._html()
+        assert "1.6 m, as FDS+Evac (HUMAN_SMOKE_HEIGHT)" in html
+        assert "One threshold for gas and heat" in html
+
+    def test_defaults_match_the_cli(self):
+        import run as cli
+
+        defaults = vars(cli._build_parser().parse_args(["--scenario", "t_junction"]))
+        assert defaults["enable_fic_speed"] is False
+        assert defaults["enable_heat_fed"] is False
+        assert defaults["incapacitation_mode"] == "deterministic"
+        assert defaults["heat_incapacitation_mode"] == "deterministic"
+        assert defaults["smoke_slice_height"] == 1.6
+        assert defaults["fed_threshold"] == 1.0
+        assert defaults["susceptibility_sigma"] == 0.94
+        assert defaults["enable_rerouting"] is True
+        assert defaults["reroute_interval"] == 1.0
+
+    def test_unsourced_content_is_gone(self):
+        html = self._html()
+        for text in ("v2.4", "© 2024", "MMXXIV", "D = 0.3", "Tenability Tiers"):
+            assert text not in html
+
+    def test_links_to_the_models_pages(self):
+        html = self._html()
+        base = "https://pedestriandynamics.org/pyFDS-Evac/"
+        for path in (
+            "models/",
+            "models/smoke-speed/",
+            "models/fed/",
+            "models/heat/#incapacitation",
+            "models/routing/",
+            "models/wayfinding/",
+            "docs/fds-sampling/",
+        ):
+            assert f'href="{base}{path}"' in html
+
+
+def test_warnings_card_links_the_case_requirements():
+    from fasthtml.common import to_xml
+
+    from pyfds_evac.webapp.app import _warnings_card
+
+    html = to_xml(_warnings_card(["slice sampled at 2.0 m"]))
+    assert "docs/fds-case-requirements.md" not in html
+    assert "pyFDS-Evac/docs/fds-case-requirements/" in html
+    assert "The run completed" not in html

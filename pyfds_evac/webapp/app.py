@@ -19,6 +19,7 @@ from urllib.parse import quote
 
 from fasthtml.common import (
     H2,
+    A,
     B,
     Button,
     Code,
@@ -290,8 +291,14 @@ def _warnings_card(messages: list[str]) -> Div:
             for message in messages
         ],
         P(
-            "The run completed, but these affect what the results describe. "
-            "See docs/fds-case-requirements.md.",
+            "These affect what the results describe. See ",
+            A(
+                "FDS case requirements",
+                href="https://pedestriandynamics.org/pyFDS-Evac/docs/fds-case-requirements/",
+                target="_blank",
+                rel="noopener",
+            ),
+            " and the Model tab.",
             style=f"font-size:.78rem;line-height:1.6;{_INK2};margin:10px 0 0;opacity:.8",
         ),
         style=(
