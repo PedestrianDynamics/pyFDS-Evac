@@ -97,9 +97,17 @@ The FED history CSV (`--output-fed-history`) carries `temperature_celsius`,
   radiant heat.
 - **Effects on walking speed or route choice.** The heat dose only
   incapacitates ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
-- **Tests.** The current checks take their expected values from the same
-  closed form as the code; checks against the Handbook's tables are tracked in
-  [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219).
+- **Tests against the Handbook.** Eq. 63.44 is checked against the
+  convective rows of Table 63.20 (p. 2383) and the dry-air rows of
+  Table 63.17 (p. 2375). Against Table 63.20 it gives 0.61 to 1.07 times
+  the tabulated times, never longer than the table's whole-minute rounding
+  allows (read as ±0.5 min, an assumption); it never exceeds the times
+  reported as tolerated in Table 63.17's dry-air rows. The factor-2 band
+  the test allows is an assumption, not a sourced tolerance. Table 63.21 (p. 2385) and the radiant rows of
+  Table 63.20 are kept as reference values that call no pyFDS-Evac code,
+  because neither Eq. 63.45 nor a radiant term is implemented
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219),
+  [#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 
 ## Sources
 
