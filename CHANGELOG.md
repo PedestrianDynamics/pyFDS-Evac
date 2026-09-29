@@ -18,6 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a model-to-model comparison with a PathFinder student study. Not yet a
   valid comparison; see `assets/Haspel/README.md`
   ([#134](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/134)).
+- `assets/heat_radiometer`: three FDS decks for the heat dose (spec 016,
+  L3): a sealed adiabatic room with a hot sooty layer above 2 m, the same
+  room uniformly hot (the isotropic control), and a propane burner in the
+  open. Skin radiometers and gauges (35 C, h = 8 W/(m2 K)) at 1.6 and
+  1.8 m face up, sideways and down next to `INTEGRATED INTENSITY`
+  devices and slices. `scripts/verification/heat_radiometer.py` tabulates
+  q/U and `heat_radiometer_figures.py` draws it; page
+  `docs/testing-heat-radiometer.md`. Reference data for #221-#223; the
+  heat model is unchanged ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
 
 ### Removed
 

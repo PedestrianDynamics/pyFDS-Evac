@@ -98,6 +98,9 @@ recorded.
   in view ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221),
   [#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222),
   [#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
+  FDS reference data for that term exist but are not read by the model:
+  [Heat radiometer reference decks](/verification/testing-heat-radiometer.md)
+  ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
 - **The endpoint.** Today heat FED = 1 is the Eq. 63.44 time. Eq. 63.44 is
   labelled a time to incapacitation, but its times lie near the Handbook's
   tolerance curve (Eq. 63.45) rather than its injury or fatal ones. The fatal

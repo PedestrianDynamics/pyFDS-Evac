@@ -89,6 +89,7 @@ module:
       includeFiles:
         - "testing-homogeneous.md"
         - "testing-heat.md"
+        - "testing-heat-radiometer.md"
         - "testing-familiarity.md"
     - source: ../artifacts
       target: static/artifacts
