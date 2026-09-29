@@ -22,7 +22,10 @@ from one `TEMPERATURE` slice at head height. It has four gaps:
 ## Decisions (maintainer)
 
 - **Heat FED = 1 means the fatal endpoint.** In the dose form below this is
-  D = 16.667 (third-degree burns, SFPE Ch. 63 p. 2384).
+  D = 16.7 (third-degree burns), as printed in the SFPE Handbook 5th ed.,
+  Ch. 63 (Purser & McAllister 2016), p. 2382 (range of r) and p. 2384
+  (D values for Eq. 63.49). Purser's spreadsheet uses 16.667 (personal
+  communication); the code follows the Handbook.
 - **Heat incapacitation is deterministic by default**, σ opt-in (done; see
   Models › Heat).
 - **The method is the total-flux form** (Eq. 63.49 with the Eq. 63.43 dose),
@@ -57,8 +60,8 @@ $$
 t = D / q_{\mathrm{tot}}^{1.33}, \qquad \mathrm{FED} = \sum \Delta t / t .
 $$
 
-D = 1.33 (pain), 10 (second-degree burns), 16.667
-(third-degree burns, fatal).
+D = 1.33 (pain), 10 (second-degree burns), 16.7
+(third-degree burns, fatal), SFPE Ch. 63 pp. 2382 and 2384.
 
 Differences from the draft:
 

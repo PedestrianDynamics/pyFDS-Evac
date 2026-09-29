@@ -267,4 +267,4 @@ The paired outputs are in
   surface at 20 or 35 °C, within ±10 % of the Handbook's "approximately
   2.5 kW/m²". Table 63.20 radiant rows: within ±30 %, the band chosen in
   [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219).
-  D = 16.667 is the spec's value; the Handbook prints 16.7.
+  D = 16.7 as printed on pp. 2382 and 2384 of Ch. 63.

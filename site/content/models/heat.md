@@ -57,7 +57,7 @@ endpoint cannot be paired with the convective law of another:
 |---|---|---|
 | `tolerance` | 1.33 | Eq. 63.45: \(2\times10^{31}\,T^{-16.963} + 4\times10^{8}\,T^{-3.7561}\) |
 | `injury` | 10 | Eq. 63.46: \(5\times10^{22}\,T^{-11.783} + 3\times10^{7}\,T^{-2.9636}\) |
-| `fatal` | 16.667 | Eq. 63.47: \(2\times10^{18}\,T^{-9.0403} + 10^{8}\,T^{-3.10898}\) |
+| `fatal` | 16.7 | Eq. 63.47: \(2\times10^{18}\,T^{-9.0403} + 10^{8}\,T^{-3.10898}\) |
 
 *r* from pp. 2382 and 2384, the laws from pp. 2382–2383; the pairing is
 explained in [Heat](/fundamentals/heat.md). The rate is \(1/t\)
@@ -66,7 +66,8 @@ not finite, gives zero. `--heat-endpoint` without `--enable-heat-fed` logs a
 warning and leaves the heat dose off. *r* enters the dose only
 with `--heat-fed-method total-flux` ([Total flux](#total-flux)); with the
 convective laws it is recorded only. The fatal *r* is
-16.667 (spec 016); the Handbook prints it as 16.7. By maintainer decision,
+16.7 as printed on pp. 2382 and 2384; Purser's spreadsheet uses 16.667
+(personal communication), and the code follows the Handbook. By maintainer decision,
 heat FED = 1 is meant as the fatal endpoint; `--heat-endpoint fatal` gives
 that meaning. Without the option the convective dose stays Eq. 63.44.
 
@@ -107,8 +108,8 @@ $$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = q^{1.33} / D \quad [1/\mathrm{min}].
 $$
 
-- *D* is the radiant dose of `--heat-endpoint` (1.33, 10 or 16.667); without
-  it, the fatal 16.667, as heat FED = 1 is meant as the fatal endpoint.
+- *D* is the radiant dose of `--heat-endpoint` (1.33, 10 or 16.7); without
+  it, the fatal 16.7, as heat FED = 1 is meant as the fatal endpoint.
 - **No 2.5 kW/m² threshold.** The Handbook applies Eq. 63.43 above
   2.5 kW/m² only (p. 2384); spec 016 drops the threshold, so the dose
   accumulates at every positive flux. With the threshold, clear air
