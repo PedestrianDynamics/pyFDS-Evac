@@ -1,0 +1,8 @@
+{
+  "source": "pyfds_evac.SmokeSpeedConfig() defaults, written by scripts/docs/smoke_speed_widget_data.py",
+  "speed_law": "lund",
+  "alpha": 0.706,
+  "beta": -0.057,
+  "min_speed_factor": 0.1,
+  "visibility_factor_c": 3.0
+}

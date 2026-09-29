@@ -1,0 +1,53 @@
+{{- /* Interactive K slider: visibility and smoke speed factor.
+     The law's parameters come from data/smoke_speed.json, generated from
+     pyfds_evac.SmokeSpeedConfig() by scripts/docs/smoke_speed_widget_data.py.
+     Usage: {{< smoke-speed-experiment k="3" min-k="0" max-k="5" step="0.1" >}} */ -}}
+{{- $p := site.Data.smoke_speed -}}
+{{- $k := .Get "k" | default "3" -}}
+{{- $min := .Get "min-k" | default "0" -}}
+{{- $max := .Get "max-k" | default "5" -}}
+{{- $step := .Get "step" | default "0.1" -}}
+{{- $id := printf "smoke-experiment-%d" .Ordinal -}}
+<figure class="smoke-experiment" data-smoke-speed-experiment
+  data-alpha="{{ $p.alpha }}" data-beta="{{ $p.beta }}"
+  data-min-factor="{{ $p.min_speed_factor }}"
+  data-visibility-factor="{{ $p.visibility_factor_c }}">
+  <noscript>
+    <p class="smoke-experiment__noscript">Interactive example requires JavaScript.
+    You can still change <code>K_PER_M</code> in the Python example and rerun it locally.</p>
+  </noscript>
+  <div class="smoke-experiment__live" data-live hidden>
+    <div class="smoke-experiment__controls">
+      <label for="{{ $id }}">Extinction coefficient <i>K</i> [1/m]</label>
+      <input type="range" id="{{ $id }}" min="{{ $min }}" max="{{ $max }}" step="{{ $step }}" value="{{ $k }}">
+      <div class="smoke-experiment__scale" aria-hidden="true"><span>{{ $min }}</span><span>{{ $max }}</span></div>
+      <output for="{{ $id }}" class="smoke-experiment__k" data-out="k"></output>
+    </div>
+    <dl class="smoke-experiment__values" aria-live="polite">
+      <div><dt>Visibility <i>S</i> = <i>C</i>/<i>K</i></dt><dd data-out="visibility"></dd></div>
+      <div><dt>Smoke speed factor</dt><dd data-out="factor"></dd></div>
+      <div><dt>Walking speed, share of clear-air speed</dt><dd data-out="percent"></dd></div>
+    </dl>
+    <div class="smoke-experiment__bars">
+      <div class="smoke-experiment__bar-row">
+        <span class="smoke-experiment__bar-label">Clear air</span>
+        <span class="smoke-experiment__track"><span class="smoke-experiment__bar smoke-experiment__bar--clear" style="width: 100%"></span></span>
+        <span class="smoke-experiment__bar-value">100 %</span>
+      </div>
+      <div class="smoke-experiment__bar-row">
+        <span class="smoke-experiment__bar-label">In smoke</span>
+        <span class="smoke-experiment__track"><span class="smoke-experiment__bar smoke-experiment__bar--smoke" data-bar="smoke"></span></span>
+        <span class="smoke-experiment__bar-value" data-out="bar"></span>
+      </div>
+    </div>
+  </div>
+  <figcaption class="smoke-experiment__note">
+    <p><strong>This widget evaluates the smoke-speed model only.</strong>
+    It does not run JuPedSim and it does not predict evacuation time.
+    The evacuation times above came from the actual simulation.</p>
+    <p>Model: the default <code>{{ $p.speed_law }}</code> law,
+    factor = 1 + β<i>K</i>/α clamped to [{{ $p.min_speed_factor }}, 1],
+    with α = {{ $p.alpha }}, β = {{ $p.beta }} and <i>C</i> = {{ $p.visibility_factor_c }},
+    the <code>SmokeSpeedConfig()</code> defaults of this version of pyFDS-Evac.</p>
+  </figcaption>
+</figure>
