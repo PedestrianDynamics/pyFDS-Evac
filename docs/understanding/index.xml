@@ -1051,7 +1051,7 @@ on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/
 &lt;tr>
 &lt;td>&lt;strong>Sampling geometry&lt;/strong>&lt;/td>
 &lt;td>Local value at agent position on the evacuation mesh, at &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61)&lt;/td>
-&lt;td>Local value at agent position: nearest value position of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS&amp;rsquo;s default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for &lt;code>CELL_CENTERED=T&lt;/code> slices it is the nearest cell centre (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS slice sampling&lt;/a>). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>)&lt;/td>
+&lt;td>Local value at agent position: nearest value position of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS&amp;rsquo;s default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for &lt;code>CELL_CENTERED=T&lt;/code> slices it is the nearest cell centre (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS slice sampling&lt;/a>). Gas FED is read from the slice of each species nearest the same height&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>

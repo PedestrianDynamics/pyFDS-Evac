@@ -36,7 +36,10 @@ untenable as soon as any value is exceeded: for exposures of up to
 exposure of each occupant is summed over time along the path they take,
 and incapacitation is expected at a fractional effective dose of 1 for the
 median occupant (the same note, §5 and §5.3, after the SFPE Handbook and
-ISO 13571).&lt;/p>
+ISO 13571). The note computes heat exposure as one FED and toxic-gas
+exposure as another (§5.3). For more susceptible
+occupants a lower threshold may suit; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.&lt;/p>
 &lt;figure class="svg-figure">
 &lt;div class="svg-figure__panel">&lt;svg xmlns="http://www.w3.org/2000/svg" class="hz" viewBox="0 0 340 420" width="340" height="420" role="img" aria-labelledby="hz3a-title hz3a-desc">
 &lt;title id="hz3a-title">Fixed tenability limits&lt;/title>
@@ -86,7 +89,7 @@ svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.
 &lt;/div>
 &lt;div class="svg-figure__panel">&lt;svg xmlns="http://www.w3.org/2000/svg" class="hz" viewBox="0 0 340 420" width="340" height="420" role="img" aria-labelledby="hz3b-title hz3b-desc">
 &lt;title id="hz3b-title">Dose along each occupant's path&lt;/title>
-&lt;desc id="hz3b-desc">A graph of fractional effective dose (FED) against time for two occupants, with a dashed threshold line at FED 1. Occupant A takes a short route; the dose rises slowly and A reaches the exit, marked by a circle, at a dose of about 0.35. Occupant B takes a route through denser smoke; the dose rises faster and reaches 1, marked by a cross, where B is incapacitated. The dose is the sum of the dose rate times the time step along each path.&lt;/desc>
+&lt;desc id="hz3b-desc">A graph of fractional effective dose (FED) against time for two occupants, with a dashed threshold line at FED 1. Occupant A takes a short route; the dose rises slowly and A reaches the exit, marked by a circle, at a dose of about 0.35. Occupant B takes a route through denser smoke; the dose rises faster and reaches 1, marked by a cross, where B is incapacitated. The dose is the sum of the dose rate times the time step along each path. The curves are the toxic-gas dose; heat exposure is judged as a second, separate FED.&lt;/desc>
 &lt;style>
 svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.26;--person:#374151;--conv:#D55E00;--rad:#A86F00;--tox:#A2458A;--vis:#0072B2;--on-badge:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
 .dark svg.hz{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}
@@ -117,8 +120,8 @@ svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.
 &lt;path class="axis" d="M44 110 V330 H326"/>
 &lt;text class="sub" x="36" y="335" text-anchor="end">0&lt;/text>
 &lt;text class="sub" x="36" y="155" text-anchor="end">1&lt;/text>
-&lt;text class="sub" x="50" y="122">FED&lt;/text>
-&lt;text class="sub" x="326" y="354" text-anchor="end">time along the path →&lt;/text>
+&lt;text class="sub" x="50" y="122">gas FED&lt;/text>
+&lt;text class="sub" x="326" y="352" text-anchor="end">time along the path →&lt;/text>
 &lt;path class="gauge" d="M44 150 H326"/>
 &lt;path style="stroke:var(--vis);fill:none;stroke-width:3.5" d="M44 330 C114 326 174 304 224 268"/>
 &lt;circle cx="224" cy="268" r="6" style="fill:var(--vis)"/>
@@ -126,8 +129,9 @@ svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.
 &lt;path style="stroke:var(--conv);fill:none;stroke-width:3.5;stroke-dasharray:9 5" d="M44 330 C114 322 194 250 270 150"/>
 &lt;path style="stroke:var(--conv);fill:none;stroke-width:3.5;stroke-linecap:round" d="M263 143 l14 14 m0 -14 l-14 14"/>
 &lt;text class="val" x="194" y="136">B stops at 1&lt;/text>
-&lt;text class="sub" x="14" y="386">A: short route&lt;/text>
-&lt;text class="sub" x="14" y="406">B: route through denser smoke&lt;/text>
+&lt;text class="sub" x="14" y="374">A: short route&lt;/text>
+&lt;text class="sub" x="14" y="392">B: route through denser smoke&lt;/text>
+&lt;text class="sub" x="14" y="412" style="font-style:italic">Heat: a second, separate FED&lt;/text>
 &lt;/svg>
 &lt;/div>
 &lt;/figure>
@@ -135,7 +139,8 @@ svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.
 &amp;ldquo;Tenability Criteria – Short Exposure&amp;rdquo;, p. 15); for small enclosures, of
 the order of 10 m, the note allows a visibility of 5 m. Dose along each
 path: the dose approach, schematic, for two occupants; the same fire gives
-each one a different dose. Figure inspired by Fig. 8 of the Engineers Australia
+each one a different dose. The curves are the toxic-gas FED; heat is
+judged as a second, separate FED (§5.3). Figure inspired by Fig. 8 of the Engineers Australia
 practice note for tenability criteria (2014).&lt;/em>&lt;/p>
 &lt;p>RSET comes from people. ISO/TR 16738 (§5.4) reports that the pre-travel
 activity phase can often be the longest part of the total escape time. Each
@@ -1426,7 +1431,10 @@ are deterministic by default: the gas dose as in FDS+Evac, and the heat
 dose since no population spread for heat is published. The heat dose uses
 the gas threshold &lt;code>fed_threshold&lt;/code>, as ISO 13571:2012 asks for one
 threshold (§5.4); &lt;code>heat_fed_threshold&lt;/code> overrides it, a departure from ISO
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#incapacitation">Models › Heat&lt;/a>).&lt;/li>
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#incapacitation">Models › Heat&lt;/a>). An agent reaching its
+threshold in a run does not on its own show whether a design is
+acceptable; FED 1 describes the median occupant (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;table>
 &lt;thead>
@@ -1548,10 +1556,9 @@ incapacitates.&lt;/li>
 &lt;li>FED activity level: the CO term is fixed at light work; rest and heavy
 work are not supported
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">#135&lt;/a>).&lt;/li>
-&lt;li>&lt;strong>Height-relative FED and smoke sampling&lt;/strong>: extinction and temperature are
-sampled from the horizontal FDS slice closest to &lt;code>--smoke-slice-height&lt;/code>
-(default 1.6 m, FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>); each gas is read from the first slice of its quantity in the
-deck, whatever its height. All agents share these slices regardless of
+&lt;li>&lt;strong>Height-relative FED and smoke sampling&lt;/strong>: extinction, temperature and
+each gas are sampled from the horizontal FDS slice closest to
+&lt;code>--smoke-slice-height&lt;/code> (default 1.6 m, FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>). All agents share these slices regardless of
 their individual heights. Pathfinder samples at 90 % of each occupant&amp;rsquo;s height,
 which is more accurate for scenarios with mixed-height populations (children,
 wheelchair users). A per-agent sampling height would require either multiple
@@ -1915,8 +1922,9 @@ draws a log-normal threshold for each agent with median &lt;code>fed_threshold&l
 &lt;p>The incapacitated occupant stays in the simulation, so the run continues to
 &lt;code>max_simulation_time&lt;/code> and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s. It is not
 an exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
-&lt;p>&lt;code>FdsFedField.from_fds&lt;/code> takes the first slice of each gas and does not match
-the slice height. &lt;code>ExtinctionField.from_fds&lt;/code> and &lt;code>FdsHeatField.from_fds&lt;/code> do.&lt;/p>
+&lt;p>&lt;code>FdsFedField.from_fds&lt;/code> reads each gas from the slice nearest its
+&lt;code>slice_height_m&lt;/code> (default 1.6 m), as &lt;code>ExtinctionField.from_fds&lt;/code> and
+&lt;code>FdsHeatField.from_fds&lt;/code> do.&lt;/p>
 &lt;h3>4. Checkpoint: a run that succeeds but is wrong&lt;span class="hx-absolute -hx-mt-20" id="4-checkpoint-a-run-that-succeeds-but-is-wrong">&lt;/span>
 &lt;a href="#4-checkpoint-a-run-that-succeeds-but-is-wrong" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>This step copies case &lt;code>a&lt;/code> to a temporary directory and deletes its CO slice:
 the &lt;code>.sf&lt;/code> and &lt;code>.sf.bnd&lt;/code> files, and the five-line &lt;code>SLCF&lt;/code> entry in the &lt;code>.smv&lt;/code>
@@ -4087,9 +4095,7 @@ default even in clear air, and less off-axis or in smoke. See
 &lt;a href="#seeing-a-door-vs-reading-a-sign">Seeing a door vs reading a sign&lt;/a>.&lt;/li>
 &lt;li>Known issues: an agent incapacitated during its pre-movement time is
 released when that time ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>), and
-the gas FED reads the first slice of each species whatever its height
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>).&lt;/li>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;h2>Where each FDS+Evac input goes&lt;span class="hx-absolute -hx-mt-20" id="where-each-fdsevac-input-goes">&lt;/span>
 &lt;a href="#where-each-fdsevac-input-goes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Section numbers refer to the FDS+Evac Technical Reference and User&amp;rsquo;s Guide
@@ -4120,7 +4126,7 @@ runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> (§8.7)&lt;/td>
 &lt;td>Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61)&lt;/td>
-&lt;td>&lt;code>--smoke-slice-height&lt;/code> [m], default 1.6 as in FDS+Evac (2.0 before; pass &lt;code>--smoke-slice-height 2.0&lt;/code> for it), an absolute z in the FDS domain rather than a height above the floor (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>). It selects the extinction and temperature slices closest to it, so the deck must contain an &lt;code>&amp;amp;SLCF PBZ=&lt;/code> at that height. Gas slices are taken from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>).&lt;/td>
+&lt;td>&lt;code>--smoke-slice-height&lt;/code> [m], default 1.6 as in FDS+Evac (2.0 before; pass &lt;code>--smoke-slice-height 2.0&lt;/code> for it), an absolute z in the FDS domain rather than a height above the floor (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>). It selects the extinction, gas and temperature slices closest to it, so the deck must contain an &lt;code>&amp;amp;SLCF PBZ=&lt;/code> at that height.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>&amp;amp;EVAC&lt;/code> (§8.8)&lt;/td>
@@ -5914,9 +5920,11 @@ Script: &lt;code>scripts/figures/sign_rotation.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>&lt;strong>Two ways to build the model&lt;/strong> (&lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>):&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>From an FDS run&lt;/strong> (&lt;code>--fds-dir&lt;/code>). Grid, obstructions and extinction come
-from the FDS output. The &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice nearest the
-point (0, 0, &lt;code>--smoke-slice-height&lt;/code>) is used (1.6 m by default since #164,
-&lt;code>run.py&lt;/code>, &lt;code>_build_parser&lt;/code>). Stored times are spaced by &lt;code>--reroute-interval&lt;/code>
+from the FDS output. fdsvismap picks the &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice
+with fdsreader&amp;rsquo;s &lt;code>get_nearest(0, 0, --smoke-slice-height)&lt;/code> (1.6 m by
+default since #164, &lt;code>run.py&lt;/code>, &lt;code>_build_parser&lt;/code>). With several extinction
+slices, that returns the first horizontal slice listed, not the nearest
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/296" target="_blank" rel="noopener">#296&lt;/a>). Stored times are spaced by &lt;code>--reroute-interval&lt;/code>
 (&lt;code>visibility.py&lt;/code>, &lt;code>_build_vismap&lt;/code>; &lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>From clear air&lt;/strong> (no &lt;code>--fds-dir&lt;/code>). The walkable polygon is rasterised at
 &lt;code>--vis-cell-size&lt;/code>. A cell is an obstruction when its centre lies outside the
@@ -6310,8 +6318,10 @@ al., who call it &amp;ldquo;highly simplified&amp;rdquo; (p. 4). It is not part 
 experiments.&lt;/li>
 &lt;li>&lt;strong>Sampling height.&lt;/strong> Börger et al. use one slice at 2 m, with the eye at
 sign height (p. 4). The code uses 1.6 m, the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>.
-fdsvismap takes the nearest slice without a warning when it is far from the
-requested height. &lt;em>Our inference:&lt;/em> exit signs are usually mounted above
+fdsvismap selects the extinction slice itself (fdsreader &lt;code>get_nearest&lt;/code>).
+With several extinction slices in the case, it takes the first one listed
+rather than the nearest, and logs no warning
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/296" target="_blank" rel="noopener">#296&lt;/a>). &lt;em>Our inference:&lt;/em> exit signs are usually mounted above
 doors, higher than 1.6 m. Under a hot smoke layer, a 1.6 m slice reads less
 extinction than the line of sight to such a sign crosses, so it overstates
 legibility. That error is non-conservative.&lt;/li>
@@ -10646,7 +10656,7 @@ on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/
 &lt;tr>
 &lt;td>&lt;strong>Sampling geometry&lt;/strong>&lt;/td>
 &lt;td>Local value at agent position on the evacuation mesh, at &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61)&lt;/td>
-&lt;td>Local value at agent position: nearest value position of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS&amp;rsquo;s default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for &lt;code>CELL_CENTERED=T&lt;/code> slices it is the nearest cell centre (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS slice sampling&lt;/a>). Gas FED is read from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>)&lt;/td>
+&lt;td>Local value at agent position: nearest value position of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS&amp;rsquo;s default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for &lt;code>CELL_CENTERED=T&lt;/code> slices it is the nearest cell centre (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-sampling/">FDS slice sampling&lt;/a>). Gas FED is read from the slice of each species nearest the same height&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>

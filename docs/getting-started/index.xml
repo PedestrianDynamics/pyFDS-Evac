@@ -698,8 +698,9 @@ draws a log-normal threshold for each agent with median &lt;code>fed_threshold&l
 &lt;p>The incapacitated occupant stays in the simulation, so the run continues to
 &lt;code>max_simulation_time&lt;/code> and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s. It is not
 an exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
-&lt;p>&lt;code>FdsFedField.from_fds&lt;/code> takes the first slice of each gas and does not match
-the slice height. &lt;code>ExtinctionField.from_fds&lt;/code> and &lt;code>FdsHeatField.from_fds&lt;/code> do.&lt;/p>
+&lt;p>&lt;code>FdsFedField.from_fds&lt;/code> reads each gas from the slice nearest its
+&lt;code>slice_height_m&lt;/code> (default 1.6 m), as &lt;code>ExtinctionField.from_fds&lt;/code> and
+&lt;code>FdsHeatField.from_fds&lt;/code> do.&lt;/p>
 &lt;h3>4. Checkpoint: a run that succeeds but is wrong&lt;span class="hx-absolute -hx-mt-20" id="4-checkpoint-a-run-that-succeeds-but-is-wrong">&lt;/span>
 &lt;a href="#4-checkpoint-a-run-that-succeeds-but-is-wrong" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>This step copies case &lt;code>a&lt;/code> to a temporary directory and deletes its CO slice:
 the &lt;code>.sf&lt;/code> and &lt;code>.sf.bnd&lt;/code> files, and the five-line &lt;code>SLCF&lt;/code> entry in the &lt;code>.smv&lt;/code>
@@ -1377,9 +1378,7 @@ default even in clear air, and less off-axis or in smoke. See
 &lt;a href="#seeing-a-door-vs-reading-a-sign">Seeing a door vs reading a sign&lt;/a>.&lt;/li>
 &lt;li>Known issues: an agent incapacitated during its pre-movement time is
 released when that time ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>), and
-the gas FED reads the first slice of each species whatever its height
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>).&lt;/li>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;h2>Where each FDS+Evac input goes&lt;span class="hx-absolute -hx-mt-20" id="where-each-fdsevac-input-goes">&lt;/span>
 &lt;a href="#where-each-fdsevac-input-goes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Section numbers refer to the FDS+Evac Technical Reference and User&amp;rsquo;s Guide
@@ -1410,7 +1409,7 @@ runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> (§8.7)&lt;/td>
 &lt;td>Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61)&lt;/td>
-&lt;td>&lt;code>--smoke-slice-height&lt;/code> [m], default 1.6 as in FDS+Evac (2.0 before; pass &lt;code>--smoke-slice-height 2.0&lt;/code> for it), an absolute z in the FDS domain rather than a height above the floor (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>). It selects the extinction and temperature slices closest to it, so the deck must contain an &lt;code>&amp;amp;SLCF PBZ=&lt;/code> at that height. Gas slices are taken from the first slice of each species, whatever its height (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>).&lt;/td>
+&lt;td>&lt;code>--smoke-slice-height&lt;/code> [m], default 1.6 as in FDS+Evac (2.0 before; pass &lt;code>--smoke-slice-height 2.0&lt;/code> for it), an absolute z in the FDS domain rather than a height above the floor (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>). It selects the extinction, gas and temperature slices closest to it, so the deck must contain an &lt;code>&amp;amp;SLCF PBZ=&lt;/code> at that height.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>&amp;amp;EVAC&lt;/code> (§8.8)&lt;/td>
