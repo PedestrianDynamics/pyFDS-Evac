@@ -336,10 +336,6 @@ _AUTOFILL_JS = """
     var el = document.querySelector('[name="scenario"]');
     return (el && el.value) || '';
   }
-  function fdsDirValue() {
-    var el = document.getElementById('fds_dir');
-    return (el && el.value.trim()) || '';
-  }
   function seedValue() {
     var el = document.getElementById('seed');
     return (el && el.value.trim()) || 'default';
@@ -374,20 +370,12 @@ _AUTOFILL_JS = """
     });
   }
   var last = null;
-  var lastFdsDir = null;
-  function fillVisCache() {
-    var fdsDir = fdsDirValue();
-    var el = document.getElementById('vis_cache');
-    if (el && !el.dataset.userEdited) el.value = fdsDir ? fdsDir + '/vis_cache.npz' : '';
-  }
   setInterval(function () {
     var k = scenarioName() + '|' + seedValue() + '|' + modeValue() + '|' + outputBase();
     if (k !== last) { last = k; fill(scenarioName()); }
-    var fdsDir = fdsDirValue();
-    if (fdsDir !== lastFdsDir) { lastFdsDir = fdsDir; fillVisCache(); }
   }, 250);
   document.addEventListener('input', function (e) {
-    if (e.target && (OUT[e.target.id] || e.target.id === 'vis_cache')) {
+    if (e.target && OUT[e.target.id]) {
       e.target.dataset.userEdited = '1';
     }
   });

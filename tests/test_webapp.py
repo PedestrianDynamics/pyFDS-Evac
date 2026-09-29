@@ -88,6 +88,7 @@ def test_invalid_option_combo_shows_error(client, tmp_path):
             "scenario": "ISO-table21",
             "vis_cache": "x.pkl",
             "fds_dir": str(tmp_path),
+            "enable_rerouting": "off",  # the switch's unchecked sentinel
         },
     )
     assert r.status_code == 200
@@ -1199,3 +1200,47 @@ def test_non_choice_flag_still_renders_as_input(client):
     tag = re.search(r'<input[^>]*name="fed_threshold"[^>]*>', html)
     assert tag and 'type="number"' in tag.group(0)
     assert 'value="1.0"' in tag.group(0)
+
+
+# Output paths and the route-cost switch the GUI fixes on purpose (#319).
+_GUI_FIXED = {
+    "output_sqlite",
+    "output_smoke_history",
+    "output_fed_history",
+    "output_route_history",
+    "output_route_cost_history",
+    "export_app_bundle",
+    "collect_route_cost_history",
+}
+
+
+@pytest.mark.parametrize("scenario", ["t_junction", "blind_spawn_discovery"])
+def test_empty_form_resolves_to_the_cli_defaults(scenario):
+    """#317: a form that sets nothing must resolve like run.py --scenario x."""
+    import run as cli
+    from pyfds_evac.webapp.params import form_to_opts
+
+    gui = vars(form_to_opts({"scenario": scenario}))
+    api = vars(cli._build_parser().parse_args(["--scenario", scenario]))
+    assert set(gui) - _GUI_FIXED == set(api) - _GUI_FIXED
+    for key in set(api) - _GUI_FIXED:
+        assert gui[key] == api[key], key
+
+
+def test_rendered_form_does_not_preset_seed_or_vis_cache(client):
+    """#317: no seed 42 over the scenario's baseSeed, no vis_cache autofill."""
+    html = client.get("/").text
+    seed = re.search(r"<input[^>]*id=\"seed\"[^>]*>", html).group(0)
+    assert "value=" not in seed
+    assert "fillVisCache" not in html
+
+
+def test_switch_sentinel_distinguishes_unchecked_from_absent(client):
+    from pyfds_evac.webapp.params import form_to_opts
+
+    html = client.get("/").text
+    assert '<input type="hidden" name="enable_rerouting" value="off">' in html
+    base = {"scenario": "t_junction"}
+    assert form_to_opts(base).enable_rerouting is True
+    assert form_to_opts({**base, "enable_rerouting": "off"}).enable_rerouting is False
+    assert form_to_opts({**base, "enable_rerouting": "on"}).enable_rerouting is True
