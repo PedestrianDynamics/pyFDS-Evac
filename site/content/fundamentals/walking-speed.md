@@ -121,7 +121,7 @@ time the speed at which each subject managed to walk", citing ref. 1, Jin
 Table 1 is identical) and reports the sign visibility. Jin and Yamada
 (1985, §3 and Fig. 3, p. 82) reprint the walking data as "an example data
 of the experiment … conducted before", without a citation for the figure;
-their ref. [5], Jin (1978), is attached to the corridor-task sentence on
+their ref. [5], Jin (1978, not obtained), is attached to the corridor-task sentence on
 p. 81. Jin (1997, §1.3 and Fig. 3) repeats that section almost word for
 word and cites it as ref. [2], with pages 79–89; the paper's header and
 Crossref give 79–90, and the scan ends at p. 89.
@@ -365,9 +365,10 @@ person's own clear-condition speed), never let the speed fall below
 {{< details title="Caveats on Fridolf et al.'s laws" closed="true" >}}
 **The visibility constant.** *A* is chosen for each data set from its
 lighting (§3.3.1); the paper does not list which *A* was applied to which
-set. Jin and Yamada (1985, p. 81; repeated in Jin 1997, Eqs. 3–4) give
-*V* = (5–10)/*C*ₛ for light-emitting and (2–4)/*C*ₛ for reflecting
-signs, and their Fig. 1 draws the line *C*ₛ·*V* = 8 for light-emitting
+set. Jin (1970, English abstract, p. 1) gives *V* = (5–10)/*C*ₛ for
+light-emitting and (2–4)/*C*ₛ for reflecting signs, repeated by Jin and
+Yamada (1985, p. 81) and Jin (1997, Eqs. 3–4). Jin (1971, Fig. 1) and Jin
+and Yamada (1985, Fig. 1) draw the line *C*ₛ·*V* = 8 for light-emitting
 signs, which matches *A* = 8; *A* = 2 is the lower end of the reflecting
 range, and Jin (1976, p. 17, citing Jin 1971) uses "Visibility (m) ×
 Extinction coefficient (1/m) ≈ 2" to turn the visibility needed for
@@ -375,9 +376,10 @@ escape into an allowable density. FDS uses *C* = 3 for reflecting
 signs by default (see [Visibility through smoke](/fundamentals/visibility.md)).
 *A* = 2 is also the constant Frantzich and Nilsson (2003, report Eq. 2)
 used for lit walls and objects. Jin's constants come from a chamber lit at
-22–180 lx, and his σV values for light-emitting signs refer to 180 lx
-(Cheung et al. 2026, §2 and §4.1); in dimmer light the constant for
-light-emitting signs is larger (see [Do the sources conflict?](#do-the-sources-conflict)).
+22–180 lx (Jin 1970, Figs. 5–11) and from signs at 40–80 lx (Jin 1971,
+Figs. 1–2); the σV of 5–8 that Cheung et al. (2026, §4.1, Fig. 8) take
+from Jin for light-emitting signs refers to 180 lx; in dimmer light the
+constant for light-emitting signs is larger (see [Do the sources conflict?](#do-the-sources-conflict)).
 
 **The data sets.** Jin's non-irritant data only, Frantzich and Nilsson
 (2003), Akizuki et al. (2007), Fridolf et al. (2013, 2014), Ronchi et al.
@@ -531,8 +533,9 @@ Findings relevant here:
   C = 2–4 is not retested (§5).
 
 They identify Jin's source for the sign experiment as Jin (1970),
-*Visibility through fire smoke (I)*, Bull. Japan Assoc. Fire Sci. Eng. 19,
-with parts II (1971) and III (1972, read for this page) following. FRI
+*Visibility through fire smoke (I)*, with parts II (1971) and III (1972)
+following; all three are read for
+[Visibility through smoke](/fundamentals/visibility.md). FRI
 Report No. 42 (1976) carries the same English title as "Part 5", under a
 different Japanese title (煙中の視程について 第5報).
 {{< /details >}}
@@ -547,9 +550,20 @@ different Japanese title (煙中の視程について 第5報).
   density for escape from fire*. Report of Fire Research Institute of
   Japan, 42, 11–18 (Japanese abstract p. 11, English text pp. 12–18).
   No DOI or public URL. Purser (2003, ref. 7) dates it 1975.
+- Jin, T. (1970). *Visibility through fire smoke (I)*. Bulletin of the
+  Fire Prevention Society of Japan, 19(2), 1–8. In Japanese with an
+  English abstract.
+  [doi:10.11196/kasai.19.2.1](https://doi.org/10.11196/kasai.19.2.1)
+- Jin, T. (1971). *Visibility through fire smoke (II)*. Bulletin of the
+  Fire Prevention Society of Japan, 21(1), 17–23. In Japanese with an
+  English abstract.
+  [doi:10.11196/kasai.21.17](https://doi.org/10.11196/kasai.21.17)
+  Not the same as Jin (1971), Report of Fire Research Institute of Japan,
+  33, 31, which Jin (1976, ref. 11) cites for *V*·*K* ≈ 2 and which we
+  have not read.
 - Jin, T. (1978). *Visibility through fire smoke*. Journal of Fire &
-  Flammability, 9, 135–157. No DOI or public URL; pages 135–155 in
-  Fridolf et al. (2019).
+  Flammability, 9, 135–157; pages 135–155 in Fridolf et al. (2019). Not
+  obtained. Named here only where other sources cite it.
 - Jin, T., & Yamada, T. (1985). *Irritating effects of fire smoke on
   visibility*. Fire Science and Technology, 5(1), 79–90.
   [doi:10.3210/fst.5.79](https://doi.org/10.3210/fst.5.79)
