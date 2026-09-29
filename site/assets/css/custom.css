@@ -225,3 +225,15 @@
 @media (prefers-reduced-motion: reduce) {
   .content details > summary::before { transition: none; }
 }
+
+/* Concept drawings inlined by the svg-figure shortcode. Each SVG carries its
+   own light and dark colours; this only lays the panels out. */
+.svg-figure {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1.5rem 0 0.5rem;
+}
+.svg-figure__panel { flex: 1 1 18rem; max-width: 46rem; }
+.svg-figure svg { display: block; width: 100%; height: auto; }

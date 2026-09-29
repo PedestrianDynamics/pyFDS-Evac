@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="hz" viewBox="0 0 340 420" width="340" height="420" role="img" aria-labelledby="hz3a-title hz3a-desc">
+<title id="hz3a-title">Fixed tenability limits</title>
+<desc id="hz3a-desc">One occupant standing below a dashed line at 2.0 m above the floor, where the limits are evaluated. Short exposure, up to 10 minutes. Air temperature at most 100 °C; radiant heat at most 2.5 kW/m²; CO at most 2,700 ppm and HCN at most 140 ppm; visibility at least 10 m. Conditions are untenable as soon as any one limit is exceeded.</desc>
+<style>
+svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.26;--person:#374151;--conv:#D55E00;--rad:#A86F00;--tox:#A2458A;--vis:#0072B2;--on-badge:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.dark svg.hz{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}
+@media (prefers-color-scheme:dark){svg.hz:root{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}}
+.hz .wall{stroke:var(--wall);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .smoke{fill:var(--smoke);opacity:var(--smoke-op)}
+.hz .person{stroke:var(--person);stroke-linecap:round;fill:none}
+.hz .label{fill:var(--ink);font-size:17px;font-weight:600}
+.hz .note{fill:var(--muted);font-size:15px;font-style:italic}
+.hz .conv{stroke:var(--conv);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .rad{stroke:var(--rad);fill:none;stroke-width:2.5;stroke-dasharray:7 5}
+.hz .vis{stroke:var(--vis);fill:none;stroke-width:2.5;stroke-dasharray:2 5;stroke-linecap:round}
+.hz .mol{fill:var(--tox)}
+.hz .mol line{stroke:var(--tox);stroke-width:2}
+.hz .glyph{stroke:var(--on-badge);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hz .glyph-fill{fill:var(--on-badge)}
+</style>
+<style>
+.hz .title{fill:var(--ink);font-size:18px;font-weight:700}
+.hz .sub{fill:var(--muted);font-size:15px}
+.hz .gauge{stroke:var(--muted);fill:none;stroke-width:1.5;stroke-dasharray:6 4}
+.hz .axis{stroke:var(--wall);fill:none;stroke-width:2}
+.hz .val{fill:var(--ink);font-size:16px}
+</style>
+<text class="title" x="14" y="30">Fixed limits at one height</text>
+<text class="sub" x="14" y="52">short exposure, up to 10 min</text>
+<g transform="translate(128 80)"><circle r="13" style="fill:var(--conv)"/><rect class="glyph" x="-2.5" y="-9" width="5" height="12" rx="2.5"/><circle class="glyph-fill" cy="5" r="4"/></g><text class="val" x="150" y="86">air ≤ 100 °C</text>
+<g transform="translate(128 120)"><circle r="13" style="fill:var(--rad)"/><circle class="glyph-fill" cx="-6" r="2.5"/><path class="glyph" d="M-1 -4 A5 5 0 0 1 -1 4 M2.5 -7 A9 9 0 0 1 2.5 7 M6 -9.5 A12 12 0 0 1 6 9.5"/></g><text class="val" x="150" y="126">radiation ≤ 2.5 kW/m²</text>
+<g transform="translate(128 160)"><circle r="13" style="fill:var(--tox)"/><g transform="rotate(-30)"><path class="glyph" d="M-6 0 H6"/><circle class="glyph-fill" cx="-6.5" r="2.8"/><circle class="glyph-fill" r="3.6"/><circle class="glyph-fill" cx="6.5" r="2.8"/></g></g><text class="val" x="150" y="166">CO ≤ 2,700 ppm</text><text class="val" x="150" y="186">HCN ≤ 140 ppm</text>
+<g transform="translate(128 214)"><circle r="13" style="fill:var(--vis)"/><path class="glyph" d="M-9 0 C-5 -6 5 -6 9 0 C5 6 -5 6 -9 0 Z"/><circle class="glyph-fill" r="2.5"/><path class="glyph" d="M-8 8 L8 -8"/></g><text class="val" x="150" y="220">visibility ≥ 10 m</text>
+<path class="gauge" d="M14 240.0 H326"/>
+<text class="sub" x="326" y="258.0" text-anchor="end">limits evaluated at 2.0 m</text>
+<path class="wall" d="M14 380 H326" style="stroke-width:4"/>
+<g class="person">
+  <path d="M58 273.6 L58 311.4" style="stroke-width:18"/>
+  <path d="M58 311.4 L51 377 M58 311.4 L65 377" style="stroke-width:11"/>
+  <path d="M58 280.6 L44 318 M58 280.6 L72 318" style="stroke-width:8"/>
+</g>
+<circle cx="58" cy="265.9" r="11" style="fill:var(--person)"/>
+<text class="val" x="128" y="306" style="font-weight:600">Untenable as soon as</text>
+<text class="val" x="128" y="326" style="font-weight:600">any one is exceeded</text>
+</svg>

@@ -1,0 +1,11 @@
+{{- /* Inline one or more SVG files from static/, side by side where the page
+     is wide enough and stacked where it is not. Inlining lets the drawing
+     follow the site's light/dark toggle and keeps its text selectable; the
+     SVG's own <title> and <desc> are the alternative text.
+     Usage: {{< svg-figure src="images/concepts/fire-hazards.svg" >}}
+            {{< svg-figure src="images/concepts/a.svg, images/concepts/b.svg" >}} */ -}}
+<figure class="svg-figure">
+  {{- range split (.Get "src") "," }}
+  <div class="svg-figure__panel">{{ readFile (printf "static/%s" (trim . " ")) | safeHTML }}</div>
+  {{- end }}
+</figure>

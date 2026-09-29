@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="hz" viewBox="0 0 340 420" width="340" height="420" role="img" aria-labelledby="hz3b-title hz3b-desc">
+<title id="hz3b-title">Dose along each occupant's path</title>
+<desc id="hz3b-desc">A graph of fractional effective dose (FED) against time for two occupants, with a dashed threshold line at FED 1. Occupant A takes a short route; the dose rises slowly and A reaches the exit, marked by a circle, at a dose of about 0.35. Occupant B takes a route through denser smoke; the dose rises faster and reaches 1, marked by a cross, where B is incapacitated. The dose is the sum of the dose rate times the time step along each path.</desc>
+<style>
+svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.26;--person:#374151;--conv:#D55E00;--rad:#A86F00;--tox:#A2458A;--vis:#0072B2;--on-badge:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.dark svg.hz{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}
+@media (prefers-color-scheme:dark){svg.hz:root{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}}
+.hz .wall{stroke:var(--wall);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .smoke{fill:var(--smoke);opacity:var(--smoke-op)}
+.hz .person{stroke:var(--person);stroke-linecap:round;fill:none}
+.hz .label{fill:var(--ink);font-size:17px;font-weight:600}
+.hz .note{fill:var(--muted);font-size:15px;font-style:italic}
+.hz .conv{stroke:var(--conv);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .rad{stroke:var(--rad);fill:none;stroke-width:2.5;stroke-dasharray:7 5}
+.hz .vis{stroke:var(--vis);fill:none;stroke-width:2.5;stroke-dasharray:2 5;stroke-linecap:round}
+.hz .mol{fill:var(--tox)}
+.hz .mol line{stroke:var(--tox);stroke-width:2}
+.hz .glyph{stroke:var(--on-badge);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hz .glyph-fill{fill:var(--on-badge)}
+</style>
+<style>
+.hz .title{fill:var(--ink);font-size:18px;font-weight:700}
+.hz .sub{fill:var(--muted);font-size:15px}
+.hz .gauge{stroke:var(--muted);fill:none;stroke-width:1.5;stroke-dasharray:6 4}
+.hz .axis{stroke:var(--wall);fill:none;stroke-width:2}
+.hz .val{fill:var(--ink);font-size:16px}
+</style>
+<text class="title" x="14" y="30">Dose along each path</text>
+<text class="sub" x="14" y="52">summed over time, per occupant</text>
+<text class="sub" x="14" y="74" style="font-style:italic">FED = Σ dose rate × Δt</text>
+<path class="axis" d="M44 110 V330 H326"/>
+<text class="sub" x="36" y="335" text-anchor="end">0</text>
+<text class="sub" x="36" y="155" text-anchor="end">1</text>
+<text class="sub" x="50" y="122">FED</text>
+<text class="sub" x="326" y="354" text-anchor="end">time along the path →</text>
+<path class="gauge" d="M44 150 H326"/>
+<path style="stroke:var(--vis);fill:none;stroke-width:3.5" d="M44 330 C114 326 174 304 224 268"/>
+<circle cx="224" cy="268" r="6" style="fill:var(--vis)"/>
+<text class="val" x="234" y="272">A reaches</text><text class="val" x="234" y="291">the exit</text>
+<path style="stroke:var(--conv);fill:none;stroke-width:3.5;stroke-dasharray:9 5" d="M44 330 C114 322 194 250 270 150"/>
+<path style="stroke:var(--conv);fill:none;stroke-width:3.5;stroke-linecap:round" d="M263 143 l14 14 m0 -14 l-14 14"/>
+<text class="val" x="194" y="136">B stops at 1</text>
+<text class="sub" x="14" y="386">A: short route</text>
+<text class="sub" x="14" y="406">B: route through denser smoke</text>
+</svg>
