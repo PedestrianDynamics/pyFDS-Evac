@@ -31,10 +31,14 @@ from one `TEMPERATURE` slice at head height. It has four gaps:
 - **The method is the total-flux form** (Eq. 63.49 with the Eq. 63.43 dose),
   as recommended by D. Purser (personal communication, 2026), not the
   two-dose draft method (see "Rejected alternatives").
-- **The `INTEGRATED INTENSITY` radiant term is net**, f U − σT_s⁴, with the
-  same T_s as the convective term (#221). With f = 1/4 in an isotropic
-  field it is σ(T⁴ − T_s⁴), so a room at the skin temperature gives no
-  flux; with larger f a room with no fire still gives a dose.
+- **The `INTEGRATED INTENSITY` radiant term is the excess over an
+  isotropic field at the skin temperature**, f (U − 4σT_s⁴), with the same
+  T_s as the convective term (#221). A field at T_s gives zero for every f;
+  a field at T gives 4fσ(T⁴ − T_s⁴), σ(T⁴ − T_s⁴) at f = 1/4. q ≤ 0 is net
+  cooling and gives a zero dose rate.
+- **`INTEGRATED INTENSITY` wins over the layer term** when both are set: U
+  already contains the layer's emission and is the better-resolved input;
+  the layer term is not added, and the run warns once (#221, #222).
 
 ## Sources
 
@@ -144,7 +148,8 @@ No single factor holds. Input options, in order of preference:
 Net vs incident flux: the radiant tolerance data are incident flux; σT⁴
 differences and `RADIATIVE HEAT FLUX GAS` are net (≈ 20 % lower at the
 200 °C anchor). Each input must say which it gives. The `INTEGRATED
-INTENSITY` input is net by decision (see "Decisions").
+INTENSITY` input is the excess over a skin-temperature field by decision
+(see "Decisions").
 
 ## Validity and limits
 
