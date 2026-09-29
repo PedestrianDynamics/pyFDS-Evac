@@ -9052,7 +9052,7 @@ with σ = 0.94, between the two TN 1797 bin values above, would put 29 % of peop
 below FED = 0.60 instead of 1 %. A probit in the natural log of dose with
 slope b gives σ = 1/b. A published probit slope for a heat endpoint would
 settle the value for that endpoint; Hockey and Rew is the source to check
-first.&lt;/p>
+first (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225" target="_blank" rel="noopener">#225&lt;/a>).&lt;/p>
 &lt;p>How pyFDS-Evac applies this: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#incapacitation">Models › Heat › Incapacitation&lt;/a>.&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
