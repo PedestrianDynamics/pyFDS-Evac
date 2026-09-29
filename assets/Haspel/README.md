@@ -33,7 +33,7 @@ With a 12.5 % lower mean speed and no spread, a longer egress time is expected e
 
 ## Current status: not a valid comparison yet
 
-A run exists locally at `results/Haspel/probabilistic/seed42/Haspel.sqlite` (not committed): 300 agents, 900s cap, **with** the FDS fire, so smoke slowdown and FED were active. That makes it neither PathFinder scenario 1 (no fire) nor scenario 2 (impaired agents and blocked routes, not modelled here). The numbers are:
+A run exists locally at `results/Haspel/probabilistic/seed42/Haspel.sqlite` (not committed): 300 agents, 900s cap, `--incapacitation-mode probabilistic`, **with** the FDS fire, so smoke slowdown and FED were active. That makes it neither PathFinder scenario 1 (no fire) nor scenario 2 (impaired agents and blocked routes, not modelled here). The numbers are:
 
 | | PathFinder (scenario 1) | This run (with fire) |
 |---|---|---|
