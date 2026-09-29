@@ -489,12 +489,15 @@ _RUN_BTN_JS = """
     });
   }
   function live() { return !!document.querySelector('#run-panel [data-run-live]'); }
+  var lastDone = null;
   function sync() {
     setRunning(live());
-    // A run that has just settled may differ from the form edited meanwhile.
-    if (document.querySelector('#run-panel [data-run-done]') && window.htmx) {
-      htmx.trigger('#form-state', 'refresh');
-    }
+    // A run that has just settled may differ from the form edited meanwhile;
+    // check once per settled run, not on every request (that would loop).
+    var d = document.querySelector('#run-panel [data-run-done]');
+    var id = d ? d.getAttribute('data-run-done') : null;
+    if (id && id !== lastDone && window.htmx) htmx.trigger('#form-state', 'refresh');
+    lastDone = id;
   }
   function path(d) {
     return (d && d.pathInfo && (d.pathInfo.requestPath || d.pathInfo.path)) ||
@@ -839,6 +842,16 @@ def _safe_dir(path: str) -> Path:
 
 
 _CLOSE_MODAL = "window.closeDirModal()"
+
+
+def _set_field(field: str, value: str) -> str:
+    """JS that fills a form field and announces it, as typing would."""
+    return (
+        f"var f=document.getElementById({json.dumps(field)});f.value={json.dumps(value)};"
+        "f.dispatchEvent(new Event('change',{bubbles:true}))"
+    )
+
+
 _BTN_GHOST = f"display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px;background:transparent;border:0;border-radius:9px;{_INK};{_MONO};font-size:12.5px;cursor:pointer"
 
 
@@ -858,7 +871,7 @@ def _nav_row(label: str, target: Path, mode: str, field: str):
 
 
 def _file_row(target: Path, field: str):
-    pick = f"document.getElementById({json.dumps(field)}).value={json.dumps(str(target))};{_CLOSE_MODAL}"
+    pick = f"{_set_field(field, str(target))};{_CLOSE_MODAL}"
     return Button(
         NotStr(
             '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 1.5h7l3 3v8a1 1 0 01-1 1H2a1 1 0 01-1-1v-10a1 1 0 011-1zm7 0v3h3" stroke="#3B82F6" stroke-width="1.2" stroke-linejoin="round"/></svg>'
@@ -904,7 +917,7 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
         ),
     ]
     if mode == "dir":
-        use = f"document.getElementById({json.dumps(field)}).value={json.dumps(str(current))};{_CLOSE_MODAL}"
+        use = f"{_set_field(field, str(current))};{_CLOSE_MODAL}"
         footer_btns.append(
             Button(
                 "Use this folder",
@@ -1986,7 +1999,7 @@ def _clear_run_bar() -> Div:
             "on disk are kept.",
             cls="state-hint",
         ),
-        data_run_done="1",
+        data_run_done=str(_run_number()),
     )
 
 
