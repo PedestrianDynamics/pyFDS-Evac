@@ -34,7 +34,7 @@ quantity name `load_slice_sampler` looks up
 | Extinction coefficient | smoke-speed, visibility gating, GUI smoke layer | **smoke speed reduction is switched off and visibility falls back to clear air; the run continues** (see below). `--constant-extinction` restores smoke speed with a uniform K; visibility stays clear air |
 | CO **and** CO2 **and** O2 | FED toxic dose | **FED is switched off and the run continues** (see below) |
 | TEMPERATURE | heat FED (SFPE Handbook Eq. 63.44), only with `--enable-heat-fed` | **heat FED is switched off and the run continues** (see below) |
-| INTEGRATED INTENSITY | radiant flux f·U, only with `--heat-radiant-source integrated-intensity`; at the TEMPERATURE slice z, covering the same area | `ValueError`: the run stops (also for another z, or an agent inside only one of the two slices) |
+| INTEGRATED INTENSITY | net radiant flux f·U − σT_s⁴, only with `--heat-radiant-source integrated-intensity`; at the TEMPERATURE slice z, covering the same area | `ValueError`: the run stops (also for another z, or an agent inside only one of the two slices) |
 
 It is all three gases or none of them; there is no partial FED. TEMPERATURE
 is independent of that gate — it needs neither CO/CO2/O2 nor any `&REAC`

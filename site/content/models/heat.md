@@ -210,16 +210,24 @@ flux lies between *U*/4 (a sphere, or a plate in an isotropic field) and *U*
 layer (spec 016). The flux to the skin is
 
 $$
-q = f\,U + \frac{h\,(T_g - T_s)}{1000} \quad [\mathrm{kW/m^2}],
+q = f\,U - \frac{\sigma\,T_s^4}{1000} + \frac{h\,(T_g - T_s)}{1000}
+\quad [\mathrm{kW/m^2}],
 $$
 
-(`radiant_flux_from_integrated_intensity_kw_m2` for *f U*), and the rate is
-\(q^{1.33}/D\) as above.
+with \(T_s\) in K (`radiant_flux_from_integrated_intensity_kw_m2` for the
+incident *f U*), and the rate is \(q^{1.33}/D\) as above.
 
-- **f U is incident flux.** Spec 016 takes the radiant tolerance data as
-  incident flux, and the Handbook calls Eq. 63.49 "the total incident flux
-  to the skin" (p. 2383); the skin's own emission σ\(T_s^4\) is not
-  subtracted.
+- **The radiant term is net**, *f U* − σ\(T_s^4\), by maintainer decision
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)):
+  *f U* is absorbed by a black skin, σ\(T_s^4\) is its own emission, with
+  the same \(T_s\) as the convective term. This treats Eq. 63.49 as a net
+  exchange: with *U* = 4σ*T*⁴ of a black isotropic field at *T* and
+  *f* = 1/4 the term is σ(*T*⁴ − \(T_s^4\)), the radiant term of Eq. 63.49
+  with ε = 1. The Handbook calls Eq. 63.49 "the total incident flux to the
+  skin" (p. 2383), and spec 016 takes the radiant tolerance data as
+  incident, so the net basis is a choice, not a reading of the sources. It
+  is also what an FDS skin gauge reports (FDS User's Guide 6.10.1,
+  Eq. 22.35, p. 381).
 - **The ε term is not added.** *U* already contains the emission of the gas
   at the head, so ε σ (\(T_g^4 - T_s^4\)) would count it twice;
   `--heat-emissivity` is ignored with this source.
@@ -237,7 +245,8 @@ $$
 - Both slices must cover every agent. A point inside one slice and outside
   the other stops the run with an error; a missing *U* is not read as zero.
   Outside both (outside the FDS domain) *U* and *q* are NaN in the FED
-  history and the rate is zero.
+  history and the rate is zero; the run logs one warning the first time
+  this happens, not one per agent or update.
 - A non-finite *U* gives a zero rate, as for the gas term.
 - The source cannot be combined with `--heat-regime layer`: *U* already
   contains the emission of the layer, so adding the layer term would count
@@ -245,13 +254,15 @@ $$
 
 ### Limits of the INTEGRATED INTENSITY source
 
-- **Ambient background.** *U* is not zero in a cold room: at 20 °C,
-  *U* = 4σ*T*⁴ = 1.68 kW/m². With no 2.5 kW/m² threshold, the incident
-  *f U* gives a dose with no fire at all. With h = 5, \(T_s\) = 35 °C and
-  *D* = 16.7 the fatal heat FED = 1 is reached after about 8.9 min
-  (*f* = 1) or 69 min (*f* = 0.25). Whether to use incident *f U*, net *f U* − σ\(T_s^4\), or
-  the excess above ambient *f* (*U* − 4σ\(T_a^4\)) is open
-  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+- **Ambient background vanishes only near *f* = 1/4.** *U* is not zero in
+  a cold room: at 20 °C, *U* = 4σ*T*⁴ = 1.68 kW/m². With *f* = 1/4 the net
+  term is σ(*T*⁴ − \(T_s^4\)), zero at the skin temperature and negative
+  below it, so a room with no fire gives no dose. With larger *f* it does
+  not vanish: with h = 5 and \(T_s\) = 35 °C, a 20 °C room gives *q* > 0
+  for *f* above about 0.35, and with no 2.5 kW/m² threshold the fatal heat
+  FED = 1 is reached after about 15 min (*f* = 1) or 105 min (*f* = 0.5)
+  with no fire at all. *f* > 1/4 describes a directional source, which an
+  ambient field is not; one *f* for the whole run applies it to both.
 - **[0.25, 1] is not a bound for every orientation.** In the FDS radiometer
   data of [#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224),
   below a hot layer the plate facing up gets about 0.41 *U*, but a plate
@@ -336,7 +347,7 @@ records `regime`, `view_factor`, `layer_emissivity` and `layer_height_m`;
 it still records ε, which has no effect in that regime. With
 `--heat-radiant-source integrated-intensity` the FED history also carries
 `heat_integrated_intensity_kw_m2` (*U*), and `heat_flux_parameters` adds
-`radiant_source`, `u_factor` and `radiant_flux` (`incident`); ε is then not
+`radiant_source`, `u_factor` and `radiant_flux` (`net`); ε is then not
 listed as assumed, as it is not used.
 With an endpoint, `heat_outside_validity` still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
