@@ -237,6 +237,96 @@ def default_heat_fed_rate_per_minute(inputs: HeatFedInputs) -> float:
 
 
 @dataclass(frozen=True)
+class HeatEndpoint:
+    """One heat endpoint of SFPE Handbook 5th ed. Ch. 63, pp. 2382-2384.
+
+    Pairs the radiant dose ``radiant_dose`` r [(kW/m2)^4/3 min] of Eq. 63.43
+    with the convective time law of the same endpoint,
+    ``t [min] = a1 * T**-b1 + a2 * T**-b2`` with T in deg C. ``radiant_dose``
+    is recorded only: radiant heat is not an input yet (#221-#223).
+    """
+
+    radiant_dose: float
+    equation: str
+    a1: float
+    b1: float
+    a2: float
+    b2: float
+
+
+# SFPE Handbook 5th ed. Ch. 63 (Purser & McAllister): r from the list on
+# p. 2382 and the Eq. 63.49 text on p. 2384; convective laws Eqs. 63.45-63.47,
+# pp. 2382-2383, fitted to air with less than 10 % water vapour.
+HEAT_ENDPOINTS: dict[str, HeatEndpoint] = {
+    "tolerance": HeatEndpoint(1.33, "63.45", 2e31, 16.963, 4e8, 3.7561),
+    "injury": HeatEndpoint(10.0, "63.46", 5e22, 11.783, 3e7, 2.9636),
+    "fatal": HeatEndpoint(16.7, "63.47", 2e18, 9.0403, 1e8, 3.10898),
+}
+
+# Assumption: the Handbook gives no upper temperature for Eqs. 63.45-63.47;
+# the limit is taken as the highest dry-air point of the convective tolerance
+# data, Table 63.17 (Veghte, 205 deg C, p. 2375). p. 2383 relates the laws to
+# air with less than 10 % water vapour. Humidity is not sampled, so its
+# status is reported as HEAT_HUMIDITY_STATUS instead of being flagged.
+HEAT_CONVECTIVE_VALIDITY_MAX_C = 205.0
+HEAT_HUMIDITY_STATUS = "unknown"
+HEAT_HUMIDITY_LIMIT = "< 10 % water vapour by volume (SFPE Ch. 63, p. 2383)"
+
+
+def heat_temperature_outside_validity(temperature_celsius: float) -> bool:
+    """Return True above the convective data or for a non-finite sample."""
+    if not math.isfinite(temperature_celsius):
+        return True
+    return temperature_celsius > HEAT_CONVECTIVE_VALIDITY_MAX_C
+
+
+def heat_endpoint_row_fields(
+    endpoint: str | None, temperature_celsius: float
+) -> dict[str, object]:
+    """Return the FED history fields of ``--heat-endpoint``; ``{}`` without it."""
+    if endpoint is None:
+        return {}
+    return {
+        "heat_endpoint": endpoint,
+        "heat_outside_validity": heat_temperature_outside_validity(temperature_celsius),
+        "heat_humidity": HEAT_HUMIDITY_STATUS,
+    }
+
+
+def heat_endpoint_validity() -> dict[str, object]:
+    """Return the validity range of Eqs. 63.45-63.47 for the run manifest."""
+    return {
+        "max_temperature_c": HEAT_CONVECTIVE_VALIDITY_MAX_C,
+        "max_temperature_assumed": True,
+        "humidity": HEAT_HUMIDITY_STATUS,
+        "humidity_limit": HEAT_HUMIDITY_LIMIT,
+    }
+
+
+def endpoint_heat_fed_rate_per_minute(
+    temperature_celsius: float, endpoint: HeatEndpoint
+) -> float:
+    """Return 1 / t_endpoint(T) in 1/min for one of Eqs. 63.45-63.47.
+
+    Not clipped above the validity range: Table 63.21 (p. 2385) applies the
+    law at 405 deg C. Non-finite and non-positive temperatures give 0.
+    """
+    if not math.isfinite(temperature_celsius) or temperature_celsius <= 0.0:
+        return 0.0
+    try:
+        time_min = (
+            endpoint.a1 * temperature_celsius**-endpoint.b1
+            + endpoint.a2 * temperature_celsius**-endpoint.b2
+        )
+    except OverflowError:
+        # Near 0 deg C the tolerance time is unbounded.
+        return 0.0
+    if not math.isfinite(time_min) or time_min <= 0.0:
+        return 0.0
+    return 1.0 / time_min
+
+
+@dataclass(frozen=True)
 class TenabilityConfig:
     """Runtime tenability rules applied on top of Frantzich smoke-speed.
 
@@ -737,12 +827,27 @@ class FdsHeatField:
 
 
 class DefaultHeatFedModel:
-    """Combine sampled gas-phase temperature with the SFPE Handbook heat FED equation."""
+    """Combine sampled gas-phase temperature with the SFPE Handbook heat FED equation.
 
-    def __init__(self, field: FdsHeatField, config: DefaultFedConfig):
-        """Store the temperature field sampler and FED runtime settings."""
+    Without *endpoint* the rate is Eq. 63.44. With *endpoint* (a key of
+    ``HEAT_ENDPOINTS``) it is that endpoint's convective law.
+    """
+
+    def __init__(
+        self,
+        field: FdsHeatField,
+        config: DefaultFedConfig,
+        endpoint: str | None = None,
+    ):
+        """Store the temperature field sampler, FED settings and endpoint."""
+        if endpoint is not None and endpoint not in HEAT_ENDPOINTS:
+            raise ValueError(
+                f"Unknown heat endpoint {endpoint!r}; "
+                f"expected one of {sorted(HEAT_ENDPOINTS)}"
+            )
         self.field = field
         self.config = config
+        self.endpoint = endpoint
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
         """Return the heat FED input at one time and x/y point."""
@@ -753,7 +858,11 @@ class DefaultHeatFedModel:
     ) -> tuple[HeatFedInputs, float]:
         """Return both the sampled input and its heat FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
-        return inputs, default_heat_fed_rate_per_minute(inputs)
+        if self.endpoint is None:
+            return inputs, default_heat_fed_rate_per_minute(inputs)
+        return inputs, endpoint_heat_fed_rate_per_minute(
+            inputs.temperature_celsius, HEAT_ENDPOINTS[self.endpoint]
+        )
 
     def advance(
         self,

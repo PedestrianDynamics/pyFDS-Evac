@@ -12,6 +12,7 @@ from pyfds_evac.core import (
     run_scenario,
 )
 from pyfds_evac.core.agent_scalars import write_agent_scalars
+from pyfds_evac.core.fed import HEAT_ENDPOINTS
 from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs
 
@@ -213,16 +214,27 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--enable-heat-fed",
         action="store_true",
-        help="Accumulate the convective heat FED (SFPE Handbook Eq. 63.44) from "
+        help="Accumulate the convective heat FED (SFPE Handbook Eq. 63.44, or "
+        "the law of --heat-endpoint) from "
         "the FDS TEMPERATURE slice and incapacitate on it. Off by default, as "
         "FDS+Evac has no heat dose; before this became opt-in it was on "
         "whenever the case had a TEMPERATURE slice",
     )
     parser.add_argument(
+        "--heat-endpoint",
+        choices=tuple(HEAT_ENDPOINTS),
+        default=None,
+        help="Heat endpoint of SFPE Handbook Ch. 63: tolerance (Eq. 63.45), "
+        "injury (Eq. 63.46) or fatal (Eq. 63.47) convective law, so that heat "
+        "FED = 1 is that endpoint; needs --enable-heat-fed. Samples above "
+        "205 C (an assumed limit) or non-finite are flagged. Default: none, Eq. 63.44",
+    )
+    parser.add_argument(
         "--heat-fed-threshold",
         type=float,
         default=1.0,
-        help="Median cumulative heat FED (SFPE Handbook Eq. 63.44) at which an "
+        help="Median cumulative heat FED (SFPE Handbook Eq. 63.44, or the law "
+        "of --heat-endpoint) at which an "
         "agent is thermally incapacitated; needs --enable-heat-fed "
         "(default: 1.0). Independent of "
         "--fed-threshold (toxic gas) -- see fed.py's TenabilityConfig",
@@ -315,6 +327,8 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "desired_speed",
         "speed_factor",
     ]
+    if rows and "heat_endpoint" in rows[0]:
+        fieldnames += ["heat_endpoint", "heat_outside_validity", "heat_humidity"]
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()

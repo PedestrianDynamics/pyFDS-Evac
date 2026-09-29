@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from importlib import metadata
 from typing import Any
 
+from .fed import heat_endpoint_validity
 from .smoke_speed import ConstantExtinctionField
 
 MANIFEST_SUFFIX = ".manifest.json"
@@ -163,12 +164,17 @@ def build_manifest(
     fds_dir: str | None,
     uv_lock: pathlib.Path | None = None,
     project_root: pathlib.Path | None = None,
+    heat_endpoint: str | None = None,
 ) -> dict[str, Any]:
-    """Collect the provenance fields for one run."""
+    """Collect the provenance fields for one run.
+
+    ``heat_endpoint`` and ``heat_validity`` are recorded only when
+    ``--heat-endpoint`` was given.
+    """
     root = project_root if project_root is not None else find_project_root()
     lock = uv_lock if uv_lock is not None else find_uv_lock(root)
     commit, dirty = git_state(root)
-    return {
+    manifest = {
         "versions": package_versions(),
         "uv_lock_sha256": sha256_of(lock),
         "git_commit": commit,
@@ -179,6 +185,10 @@ def build_manifest(
         "fds_version": fds_version(fds_dir),
         "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
+    if heat_endpoint is not None:
+        manifest["heat_endpoint"] = heat_endpoint
+        manifest["heat_validity"] = heat_endpoint_validity()
+    return manifest
 
 
 def manifest_path_for(trajectory_file: str | pathlib.Path) -> pathlib.Path:

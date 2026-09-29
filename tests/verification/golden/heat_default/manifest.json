@@ -1,0 +1,11 @@
+{
+  "versions": "<normalised>",
+  "uv_lock_sha256": "<normalised>",
+  "git_commit": "<normalised>",
+  "git_dirty": "<normalised>",
+  "seed": 11,
+  "scenario_path": "<normalised>",
+  "fds_dir": null,
+  "fds_version": "<normalised>",
+  "created_utc": "<normalised>"
+}
