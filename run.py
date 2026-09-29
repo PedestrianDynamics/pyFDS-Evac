@@ -61,7 +61,9 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--constant-extinction",
         type=float,
-        help="Use a constant extinction coefficient K [1/m] instead of FDS input",
+        help="Use a constant extinction coefficient K [1/m] instead of FDS input. "
+        "Without it, an FDS case with no SOOT EXTINCTION COEFFICIENT slice "
+        "runs with no smoke speed reduction (a warning is logged).",
     )
     parser.add_argument(
         "--smoke-update-interval",
@@ -189,8 +191,8 @@ def _build_parser() -> argparse.ArgumentParser:
         "--fed-threshold",
         type=float,
         default=1.0,
-        help="Median cumulative FED at which an agent is incapacitated "
-        "(default: 1.0 per ISO 13571 / Korhonen 2021)",
+        help="Cumulative FED at which an agent is incapacitated; the median "
+        "in probabilistic mode (default: 1.0 per ISO 13571 / Korhonen 2021)",
     )
     parser.add_argument(
         "--o2-threshold-percent",
@@ -203,10 +205,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--incapacitation-mode",
         choices=("probabilistic", "deterministic"),
-        default="probabilistic",
-        help="probabilistic: per-agent threshold ~ lognormal(median=fed-threshold, "
-        "susceptibility-sigma), fit to NIST TN 1797 population bands (default); "
-        "deterministic: every agent uses fed-threshold",
+        default="deterministic",
+        help="deterministic: every agent uses fed-threshold, as FDS+Evac "
+        "(default); probabilistic: per-agent threshold ~ "
+        "lognormal(median=fed-threshold, susceptibility-sigma), fit to NIST "
+        "TN 1797 population bands",
     )
     parser.add_argument(
         "--susceptibility-sigma",
@@ -244,7 +247,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "Eq. 63.44 or the law of --heat-endpoint. total-flux: heat flux to the "
         "skin from Eq. 63.49 (both terms in W/m2, divided by 1000 together), "
         "rate q^1.33/D (Eq. 63.43) with no 2.5 kW/m2 threshold; D of "
-        "--heat-endpoint, fatal (16.667) without it",
+        "--heat-endpoint, fatal (16.7) without it",
     )
     parser.add_argument(
         "--heat-emissivity",

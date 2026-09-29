@@ -300,6 +300,14 @@ def test_page_quotes_code_default(page, literal, code_value):
     )
 
 
+def test_gas_incapacitation_is_deterministic_by_default():
+    """FDS+Evac stops every agent at FED 1; the log-normal draw is opt-in."""
+    literal = '| `incapacitation_mode` | `"deterministic"` |'
+    assert literal in FED.read_text()
+    assert TenabilityConfig().incapacitation_mode == "deterministic"
+    assert _cli().incapacitation_mode == "deterministic"
+
+
 def test_heat_incapacitation_is_deterministic_by_default():
     """No published spread exists for heat, so heat defaults to one threshold."""
     literal = '| `heat_incapacitation_mode` | `"deterministic"` |'

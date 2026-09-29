@@ -7,7 +7,7 @@ convective time law of the same endpoint:
 
     tolerance  r = 1.33   Eq. 63.45  t = 2e31 T^-16.963 + 4e8 T^-3.7561
     injury     r = 10     Eq. 63.46  t = 5e22 T^-11.783 + 3e7 T^-2.9636
-    fatal      r = 16.667 Eq. 63.47  t = 2e18 T^-9.0403 + 1e8 T^-3.10898
+    fatal      r = 16.7   Eq. 63.47  t = 2e18 T^-9.0403 + 1e8 T^-3.10898
 
 t in min, T in deg C. The printed exponents are negative (the minus signs
 are lost in text extraction); Table 63.21, whose values follow Eq. 63.45
@@ -92,7 +92,7 @@ HAND_LAW = {
 PAIRS = [
     ("tolerance", 1.33, "63.45"),
     ("injury", 10.0, "63.46"),
-    ("fatal", 16.667, "63.47"),
+    ("fatal", 16.7, "63.47"),
 ]
 
 
@@ -198,7 +198,9 @@ def test_endpoint_laws_are_ordered():
 def test_endpoint_pairs_radiant_dose_with_its_convective_law(name, r, equation):
     """Each endpoint pairs r (Eq. 63.43) with the convective law of the same endpoint.
 
-    Fatal: 16.667 by spec 016 maintainer decision; the Handbook prints 16.7.
+    Fatal: 16.7 as printed in the SFPE Handbook 5th ed., Ch. 63, p. 2382
+    (r range) and p. 2384 (D values for Eq. 63.49). Purser's spreadsheet
+    uses 16.667; the code follows the Handbook.
     """
     endpoint = _endpoints()[name]
     assert endpoint.radiant_dose == pytest.approx(r, rel=1e-9)

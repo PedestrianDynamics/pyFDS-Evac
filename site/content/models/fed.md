@@ -17,7 +17,7 @@ and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](ht
 
 ## Coded form
 
-`FedComponents.total_rate_per_min` (`pyfds_evac/core/fed.py:447`) returns the
+`FedComponents.total_rate_per_min` (`pyfds_evac/core/fed.py:537`) returns the
 gas FED rate [1/min]
 
 $$
@@ -67,9 +67,9 @@ including its limits, is on [Models › Heat](/models/heat.md).
 
 ## Tenability: irritant slowdown and incapacitation
 
-`TenabilityConfig` (`fed.py:330`) adds two rules. The slowdown and the gas
+`TenabilityConfig` (`fed.py:420`) adds two rules. The slowdown and the gas
 stop need the gas FED model; the heat stop needs only the heat FED model
-(`run_config.py:256`–`291`).
+(`run_config.py:299`–`334`).
 
 - **Irritant slowdown, off by default.** FDS+Evac has no irritant slowdown, so
   `enable_fic_speed` defaults to false and `run.py` switches the rule on only
@@ -78,7 +78,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   same seven irritants (constants in `_FIC_COEFFS_PPM`, not integrated over
   time). At each FED update where FIC > 0, the agent's irritant factor is set
   to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
-  (`scenario.py:2108`–`2112`) and multiplies the smoke factor. The rule is a
+  (`scenario.py:2109`–`2119`) and multiplies the smoke factor. The rule is a
   pyFDS-Evac assumption with no known source
   ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
   When FIC is exactly 0 the last factor stays in force
@@ -91,9 +91,9 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   `probabilistic` mode each agent draws each threshold once, from the run's
   seed, as `_sample_threshold` does:
   \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
-  In `deterministic` mode every agent uses the threshold itself. The gas
-  dose is probabilistic by default and the heat dose deterministic, since no
-  population spread for heat is published.
+  In `deterministic` mode every agent uses the threshold itself. Both doses
+  are deterministic by default: the gas dose as in FDS+Evac, and the heat
+  dose since no population spread for heat is published.
 
 | Field | Default | CLI flag |
 |---|---|---|
@@ -101,7 +101,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 | `fic_alpha` | `0.7` | `--fic-alpha` |
 | `fic_min_factor` | `0.3` | `--fic-min-factor` |
 | `fed_threshold` | `1.0` | `--fed-threshold` |
-| `incapacitation_mode` | `"probabilistic"` | `--incapacitation-mode` |
+| `incapacitation_mode` | `"deterministic"` | `--incapacitation-mode` |
 | `susceptibility_sigma` | `0.94` | `--susceptibility-sigma` |
 | `heat_fed_threshold` | `1.0` | `--heat-fed-threshold` |
 | `heat_incapacitation_mode` | `"deterministic"` | `--heat-incapacitation-mode` |
@@ -185,7 +185,7 @@ ambient conditions.
 
 The published forms are on [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)
 and [Irritant gases](/fundamentals/irritants.md). The gas sum has the Purser /
-FDS+Evac guide structure (`fed.py:447`), not the ISO 13571 one. Within it, the
+FDS+Evac guide structure (`fed.py:537`), not the ISO 13571 one. Within it, the
 code follows the guide, which cites the 3rd edition of the SFPE Handbook,
 rather than the 5th edition, except that the HCN term is computed as FDS
 computes it
@@ -216,10 +216,10 @@ computes it
   from primate and human data (p. 2361). That range is not documented for the
   exponential term; that the term is an extrapolation below 80 ppm is our
   inference ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
-- **CO₂.** Eq. 63.34 (`fed.py:63`), not its simplification Eq. 63.35 used in
+- **CO₂.** Eq. 63.34 (`fed.py:64`), not its simplification Eq. 63.35 used in
   Eq. 63.38. The 70 L/min limit on \(V_E\times VCO_2\) is not applied, and
   the CO₂ asphyxiant endpoint \(F_{I_{CO_2}}\) is not computed.
-- **CO.** Fixed at light work (`fed.py:54`), Eq. 63.18 at its default
+- **CO.** Fixed at light work (`fed.py:56`), Eq. 63.18 at its default
   \(V_E\) and *D*.
 - **O₂.** The rate is zero at or above `o2_threshold_percent`, 20.0 % O₂
   by default, the guard of FDS+Evac's code (the `FED` function of FDS 6.7.6
@@ -253,8 +253,8 @@ and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 > FED equations with *t* in seconds; the evidence is on
 > [Asphyxiant FED](/fundamentals/asphyxiant-fed.md).
 
-The irritant slowdown \(g\), when enabled (`fed.py:337`–`338`), is multiplied with the smoke
-factor (`direct_steering_runtime.py:186`–`190`). Its constants were not found
+The irritant slowdown \(g\), when enabled (`fed.py:450`–`451`), is multiplied with the smoke
+factor (`direct_steering_runtime.py:191`–`193`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
 Handbook uses a different curve and adds the smoke and irritant losses instead
@@ -266,7 +266,7 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 Heat uses the convective Eq. 63.44 (`fed.py:217`) unless `--heat-endpoint`
 selects Eq. 63.45, 63.46 or 63.47, or `--heat-fed-method total-flux` the
 flux law of Eqs. 63.49 and 63.43 ([Heat](/models/heat.md)). The log-normal σ of both
-thresholds (`fed.py:371`, `:381`) is, for the gas dose, a compromise between
+thresholds (`fed.py:461`, `:471`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)
 and [#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The

@@ -10,8 +10,8 @@ on the convective term only):
 
 T in K, sigma = 5.67e-8 W m^-2 K^-4 (p. 2384). The time to the endpoint is
 Eq. 63.43, t = D / q^1.33 [min], with D the radiant dose r of the endpoint
-(1.33 tolerance, 10 injury, 16.667 fatal; pp. 2382, 2384; the Handbook
-prints the fatal dose as 16.7, spec 016 fixes it at 16.667). The dose is
+(1.33 tolerance, 10 injury, 16.7 fatal; pp. 2382, 2384, as printed;
+Purser's spreadsheet uses 16.667, the code follows the Handbook). The dose is
 summed, FED = sum dt / t. Differences from the Handbook text, by spec 016:
 
 - no 2.5 kW/m2 threshold: the dose accumulates at every positive flux;
@@ -72,8 +72,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SIGMA = 5.67e-8  # W m^-2 K^-4, as printed on p. 2384
 KELVIN = 273.15
 EXPONENT = 1.33  # Eqs. 63.43 and 63.49 print 1.33, not 4/3
-# Fatal: spec 016 maintainer decision, D = 16.667 (the Handbook prints 16.7).
-DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.667}
+# Fatal: D = 16.7 as printed in SFPE Ch. 63, p. 2384 (Eq. 63.49 D values);
+# Purser's spreadsheet uses 16.667, the code follows the Handbook.
+DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.7}
 
 
 # --- hand formulas ----------------------------------------------------------
@@ -313,7 +314,7 @@ def test_model_rate_uses_the_endpoint_dose(name, t_c, eps, h, t_skin_c):
 
 
 def test_model_without_endpoint_uses_the_fatal_dose():
-    """FED = 1 = fatal (spec 016 maintainer decision): D = 16.667."""
+    """FED = 1 = fatal (spec 016 maintainer decision): D = 16.7 (p. 2384)."""
     q = q_hand(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
     got = _rate(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
     assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
