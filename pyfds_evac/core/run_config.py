@@ -150,6 +150,10 @@ def _build_heat_fed_model(opts: Any, log: Logger):
             _logger.warning(
                 "--heat-fed-method has no effect without --enable-heat-fed."
             )
+        if getattr(opts, "heat_radiant_source", "gas") != "gas":
+            _logger.warning(
+                "--heat-radiant-source has no effect without --enable-heat-fed."
+            )
         if getattr(opts, "heat_regime", "smoke") != "smoke":
             _logger.warning("--heat-regime has no effect without --enable-heat-fed.")
         return None
@@ -180,8 +184,14 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         update_interval_s=opts.smoke_update_interval,
         slice_height_m=opts.smoke_slice_height,
     )
+    radiant_source = getattr(opts, "heat_radiant_source", "gas")
+    field_kwargs = {"slice_height_m": opts.smoke_slice_height}
+    if radiant_source == "integrated-intensity":
+        _check_integrated_intensity_source(opts, method, inventory)
+        field_kwargs["integrated_intensity"] = True
+        log(f"Radiant flux: {opts.heat_u_factor} x INTEGRATED INTENSITY.")
     return DefaultHeatFedModel(
-        FdsHeatField.from_fds(opts.fds_dir, slice_height_m=opts.smoke_slice_height),
+        FdsHeatField.from_fds(opts.fds_dir, **field_kwargs),
         heat_fed_config,
         endpoint=endpoint,
         method=method,
@@ -192,8 +202,33 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         skin_temperature_celsius=getattr(
             opts, "heat_skin_temperature", DEFAULT_HEAT_SKIN_TEMPERATURE_C
         ),
+        radiant_source=radiant_source,
+        u_factor=getattr(opts, "heat_u_factor", None),
         **_heat_layer_kwargs(opts),
     )
+
+
+def _check_integrated_intensity_source(opts: Any, method: str, inventory) -> None:
+    """Raise ValueError when the INTEGRATED INTENSITY source cannot run (#221).
+
+    A missing slice is an error, not a warning: the run would otherwise read
+    as a case with no radiation.
+    """
+    if method != "total-flux":
+        raise ValueError(
+            "--heat-radiant-source integrated-intensity needs "
+            "--heat-fed-method total-flux."
+        )
+    if getattr(opts, "heat_u_factor", None) is None:
+        raise ValueError(
+            "--heat-radiant-source integrated-intensity needs --heat-u-factor "
+            "in [0.25, 1]; there is no default."
+        )
+    if "integrated_intensity" not in inventory.canonical_slice_names():
+        raise ValueError(
+            f"{opts.fds_dir} has no INTEGRATED INTENSITY slice. Add "
+            "`&SLCF QUANTITY='INTEGRATED INTENSITY'` at the slice height."
+        )
 
 
 def _heat_layer_kwargs(opts: Any) -> dict[str, Any]:
@@ -224,6 +259,11 @@ def _validate_heat_layer_opts(opts: Any) -> None:
         return
     if getattr(opts, "heat_fed_method", "convective") != "total-flux":
         raise ValueError("--heat-regime layer needs --heat-fed-method total-flux")
+    if getattr(opts, "heat_radiant_source", "gas") == "integrated-intensity":
+        raise ValueError(
+            "--heat-regime layer cannot be combined with --heat-radiant-source "
+            "integrated-intensity: U already contains the layer's emission."
+        )
     for option in ("heat_layer_height", "heat_view_factor", "heat_layer_emissivity"):
         if getattr(opts, option, None) is None:
             flag = "--" + option.replace("_", "-")
