@@ -1339,6 +1339,13 @@ def _pyexport_panel(
     return Div(head, *body, actions, data_kind=kind)
 
 
+def _script_inputs(opts) -> dict:
+    """The options the exported script uses: all but the GUI's output files."""
+    return {
+        k: v for k, v in dict(opts).items() if k not in pyexport.OMITTED_OUTPUT_KEYS
+    }
+
+
 def _form_changed_note(form: dict, spec) -> str | None:
     """Say so when the current form no longer resolves to the run's options."""
     try:
@@ -1348,7 +1355,7 @@ def _form_changed_note(form: dict, spec) -> str | None:
             "The form has changed since this run and does not currently "
             "resolve. This code reproduces the run, not the current form."
         )
-    if dict(vars(opts)) == dict(spec.opts):
+    if _script_inputs(vars(opts)) == _script_inputs(spec.opts):
         return None
     return (
         "The form has changed since this run. This code reproduces the run, "

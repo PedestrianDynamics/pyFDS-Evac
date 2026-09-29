@@ -1461,6 +1461,20 @@ class TestEquivalentPython:
         )
         assert "The form has changed since this run" in changed.text
         assert "'seed': 11," in _code_of(changed.text)  # still the snapshot
+        # The script sets the GUI's output files to None, so output paths
+        # alone (a new folder, or a stale posted output_sqlite, #330) are
+        # not a change to the code.
+        moved = client.post(
+            f"/export/run?run={run_id}",
+            data={
+                "scenario": "ISO-table21",
+                "seed": "11",
+                "output_base": "elsewhere/run",
+                "output_sqlite": "results/Haspel/stale.sqlite",
+            },
+            headers=_HX,
+        )
+        assert "The form has changed" not in moved.text
         _drop_temp_trajectory()
         client.post("/clear")
         stale = client.post(f"/export/run?run={run_id}", data={}, headers=_HX)
