@@ -18,6 +18,7 @@ from pyfds_evac.core.fed import (
     DEFAULT_HEAT_SKIN_TEMPERATURE_C,
     HEAT_ENDPOINTS,
     HEAT_FED_METHODS,
+    HEAT_FLUX_REGIMES,
     HEAT_RADIANT_SOURCES,
     HEAT_U_FACTOR_RANGE,
 )
@@ -74,7 +75,9 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--constant-extinction",
         type=float,
-        help="Use a constant extinction coefficient K [1/m] instead of FDS input",
+        help="Use a constant extinction coefficient K [1/m] instead of FDS input. "
+        "Without it, an FDS case with no SOOT EXTINCTION COEFFICIENT slice "
+        "runs with no smoke speed reduction (a warning is logged).",
     )
     parser.add_argument(
         "--smoke-update-interval",
@@ -202,8 +205,8 @@ def _build_parser() -> argparse.ArgumentParser:
         "--fed-threshold",
         type=float,
         default=1.0,
-        help="Median cumulative FED at which an agent is incapacitated "
-        "(default: 1.0 per ISO 13571 / Korhonen 2021)",
+        help="Cumulative FED at which an agent is incapacitated; the median "
+        "in probabilistic mode (default: 1.0 per ISO 13571 / Korhonen 2021)",
     )
     parser.add_argument(
         "--o2-threshold-percent",
@@ -216,10 +219,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--incapacitation-mode",
         choices=("probabilistic", "deterministic"),
-        default="probabilistic",
-        help="probabilistic: per-agent threshold ~ lognormal(median=fed-threshold, "
-        "susceptibility-sigma), fit to NIST TN 1797 population bands (default); "
-        "deterministic: every agent uses fed-threshold",
+        default="deterministic",
+        help="deterministic: every agent uses fed-threshold, as FDS+Evac "
+        "(default); probabilistic: per-agent threshold ~ "
+        "lognormal(median=fed-threshold, susceptibility-sigma), fit to NIST "
+        "TN 1797 population bands",
     )
     parser.add_argument(
         "--susceptibility-sigma",
@@ -257,7 +261,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "Eq. 63.44 or the law of --heat-endpoint. total-flux: heat flux to the "
         "skin from Eq. 63.49 (both terms in W/m2, divided by 1000 together), "
         "rate q^1.33/D (Eq. 63.43) with no 2.5 kW/m2 threshold; D of "
-        "--heat-endpoint, fatal (16.667) without it",
+        "--heat-endpoint, fatal (16.7) without it",
     )
     parser.add_argument(
         "--heat-emissivity",
@@ -301,6 +305,40 @@ def _build_parser() -> argparse.ArgumentParser:
         "integrated-intensity: the incident radiant flux is f*U, from U/4 "
         "(sphere, or a plate in isotropic radiation) to U (one small source "
         "seen face-on). No default: required with that source",
+    )
+    parser.add_argument(
+        "--heat-regime",
+        choices=HEAT_FLUX_REGIMES,
+        default="smoke",
+        help="Where the head is, for --heat-fed-method total-flux; a user "
+        "choice, no automatic rule. smoke (default): head in smoke, Eq. 63.49 "
+        "at the head. layer: head in clear air below a hot layer, convection at "
+        "the head plus the net layer flux phi*eps_L*sigma*(T_L^4 - T_s^4) from "
+        "a TEMPERATURE slice at --heat-layer-height, with no radiant term of "
+        "the gas at the head; needs --heat-layer-height, --heat-view-factor and "
+        "--heat-layer-emissivity",
+    )
+    parser.add_argument(
+        "--heat-layer-height",
+        type=float,
+        default=None,
+        help="Height [m] of the TEMPERATURE slice read as the hot layer for "
+        "--heat-regime layer (no default: it depends on the ceiling height)",
+    )
+    parser.add_argument(
+        "--heat-view-factor",
+        type=float,
+        default=None,
+        help="View factor phi in [0, 1] from the skin to the layer for "
+        "--heat-regime layer (no default: about 1 for the crown, about 0.5 "
+        "for the face, spec 016, unsourced)",
+    )
+    parser.add_argument(
+        "--heat-layer-emissivity",
+        type=float,
+        default=None,
+        help="Layer emissivity eps_L in [0, 1] for --heat-regime layer (no "
+        "default: no sourced value)",
     )
     parser.add_argument(
         "--heat-fed-threshold",
@@ -406,6 +444,8 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         fieldnames.append("heat_flux_kw_m2")
     if rows and "heat_integrated_intensity_kw_m2" in rows[0]:
         fieldnames.append("heat_integrated_intensity_kw_m2")
+    if rows and "heat_layer_temperature_c" in rows[0]:
+        fieldnames.append("heat_layer_temperature_c")
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()

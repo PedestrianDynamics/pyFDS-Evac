@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `--heat-regime {smoke,layer}` (opt-in, with `--heat-fed-method
+  total-flux`; default `smoke`, the behaviour below): `layer` takes the head
+  to be in clear air below a hot layer, with q = h(T_g − T_s)/1000 plus the
+  net layer flux φ ε_L σ(T_L⁴ − T_s⁴)/1000 and no radiant term of the gas at
+  the head, so the two radiant terms are never summed (spec 016). T_L is read
+  from a second `TEMPERATURE` slice at `--heat-layer-height`;
+  `--heat-view-factor` and `--heat-layer-emissivity` set φ and ε_L. None of
+  the three has a default. The FED history gains `heat_layer_temperature_c`
+  and the manifest's `heat_flux_parameters` the regime and layer parameters
+  ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)).
 - `--heat-radiant-source integrated-intensity` with `--heat-u-factor f`
   (opt-in, with `--heat-fed-method total-flux`; default source `gas`): the
   radiant term is the incident flux f·U from the FDS `INTEGRATED INTENSITY`
@@ -24,17 +34,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `convective`): the heat dose is q^1.33/D (SFPE Handbook Ch. 63 Eq. 63.43)
   with q the heat flux to the skin of Eq. 63.49, both terms divided by 1000
   together, and no 2.5 kW/m² threshold (spec 016). D is the dose of
-  `--heat-endpoint`, the fatal 16.667 without it. `--heat-emissivity` (0.5),
+  `--heat-endpoint`, the fatal 16.7 without it (SFPE Ch. 63 p. 2384). `--heat-emissivity` (0.5),
   `--heat-convective-coefficient` (5) and `--heat-skin-temperature` (35 °C)
   set the flux; their defaults are assumptions. The FED history gains
   `heat_flux_kw_m2` and the manifest `heat_fed_method` and
-  `heat_flux_parameters`. Head-in-smoke regime only
+  `heat_flux_parameters`. This is the head-in-smoke regime
   ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 - `--heat-endpoint {tolerance,injury,fatal}` (opt-in, with
   `--enable-heat-fed`): the heat dose uses the convective law of that
   endpoint, SFPE Handbook Ch. 63 Eq. 63.45, 63.46 or 63.47, paired with its
-  radiant dose (1.33, 10, 16.667; the Handbook prints 16.7, spec 016
-  fixes 16.667). The FED history gains `heat_endpoint`,
+  radiant dose (1.33, 10, 16.7; SFPE Ch. 63 pp. 2382 and 2384). The FED history gains `heat_endpoint`,
   `heat_outside_validity` (above 205 °C, an assumed limit, or a non-finite
   temperature) and `heat_humidity` (`unknown`, as humidity is not sampled),
   and the run manifest records `heat_endpoint` and `heat_validity`. Without the option the dose stays
@@ -50,6 +59,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a model-to-model comparison with a PathFinder student study. Not yet a
   valid comparison; see `assets/Haspel/README.md`
   ([#134](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/134)).
+- `assets/heat_radiometer`: three FDS decks for the heat dose (spec 016,
+  L3): a sealed adiabatic room with a hot sooty layer above 2 m, the same
+  room uniformly hot (the isotropic control), and a propane burner in the
+  open. Skin radiometers and gauges (35 C, h = 8 W/(m2 K)) at 1.6 and
+  1.8 m face up, sideways and down next to `INTEGRATED INTENSITY`
+  devices and slices. `scripts/verification/heat_radiometer.py` tabulates
+  q/U and `heat_radiometer_figures.py` draws it; page
+  `docs/testing-heat-radiometer.md`. Reference data for #221-#223; the
+  heat model is unchanged ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
 
 ### Removed
 
@@ -59,6 +77,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Docs: Fundamentals › Incapacitation thresholds states what is known
+  about the population spread of heat tolerance: SFPE Ch. 63 gives figures
+  only for radiant lethality, which imply σ ≈ 0.22 if log-normal, not the
+  borrowed 0.94. No code change; the heat threshold stays deterministic by
+  default ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
+- Heat FED tests take their expected values from the SFPE Handbook
+  (5th ed., Ch. 63) instead of the code's own formula: Eq. 63.44 as printed
+  (p. 2382), Table 63.20's convective rows (p. 2383) and Table 63.17's
+  dry-air rows (p. 2375). Table 63.21 (p. 2385, whose values follow
+  Eq. 63.45 despite its caption), Table 63.20's radiant rows and a
+  walking-past-a-flame case are added as reference values for a future
+  Eq. 63.45 option and the planned radiant term; they call no pyFDS-Evac
+  code. The heat dose
+  itself is unchanged
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
+- Docs, heat dose: each formula states whether it takes incident flux, net
+  flux or air temperature; Models › Heat and Limitations say that heat
+  FED = 1 and gas FED = 1 are different endpoints that set the same
+  `incapacitated` flag, told apart only by `incapacitation_cause`; the
+  stale line references on Models › FED are corrected, the `fed.py` ones
+  checked by a test
+  ([#218](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/218)).
 - Performance: the per-step speed update of direct-steering runs scans
   only the zones whose speed factor is not 1, precomputed once per run
   (`active_steering_zones`), and leaves an agent outside every such zone
@@ -114,13 +154,21 @@ See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/ge
   `--heat-fed-threshold`. No population spread for heat is published; the
   log-normal draw with σ = 0.94, borrowed from the gas dose, is opt-in with
   `--heat-incapacitation-mode probabilistic`.
+- Gas incapacitation is deterministic by default: every agent stops at
+  `--fed-threshold` (1.0), as in FDS+Evac. The per-agent log-normal draw
+  (σ = 0.94, fitted to NIST TN 1797) is opt-in with
+  `--incapacitation-mode probabilistic`. The web GUI's default output folder
+  is `results/<scenario>/deterministic/…` accordingly
+  ([#235](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/235)).
 
 **Migration.** To reproduce results from earlier pyFDS-Evac versions, pass
 `--smoke-slice-height 2.0 --enable-fic-speed --o2-threshold-percent 19.5
---enable-heat-fed --heat-incapacitation-mode probabilistic` to `run.py` (or set the matching `opts` attributes), and
+--enable-heat-fed --heat-incapacitation-mode probabilistic
+--incapacitation-mode probabilistic` to `run.py` (or set the matching `opts` attributes), and
 give every spawn area `"use_premovement": false` and `"v0": 1.2` unless it
 already sets them. Python callers that build the models themselves pass
-`TenabilityConfig(enable_fic_speed=True, heat_incapacitation_mode="probabilistic")`,
+`TenabilityConfig(enable_fic_speed=True, heat_incapacitation_mode="probabilistic",
+incapacitation_mode="probabilistic")`,
 `DefaultFedConfig(o2_threshold_percent=19.5, slice_height_m=2.0)`, and
 `slice_height_m=2.0` to `SmokeSpeedConfig`, `ExtinctionField.from_fds`,
 `FdsHeatField.from_fds` and `VisibilityModel`; a heat dose needs a
@@ -130,6 +178,20 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- A heat-only FDS case (TEMPERATURE slice, no SOOT EXTINCTION COEFFICIENT
+  slice) no longer crashes `run.py`. Smoke speed reduction is then off and
+  the visibility model falls back to clear air, each with a warning, so
+  `--constant-extinction 0 --no-visibility` is no longer needed
+  ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
+
+- The uniform heat rooms `assets/fed_incap_heat_{100,150,200}c` set `TMPA`
+  to the deck temperature instead of 20 °C. FDS started the walls and the
+  radiation field at `TMPA`, so the room lost heat at t = 0 and settled
+  0.7–1.8 % below its `&INIT` value. It now holds the deck value to within
+  1 mK, and the deterministic heat stops of the verification page are the
+  closed form at the deck temperature (476 / 120 / 46 s, were 487 / 125 /
+  48 s). FDS's device output is committed so CI checks the hold
+  ([#253](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/253)).
 - With direct steering, an agent slowed by smoke outside every speed zone
   kept its reduced speed once the smoke factor returned to exactly 1 (for
   example on walking into air with K = 0). The restore now also writes when

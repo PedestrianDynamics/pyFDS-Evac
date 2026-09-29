@@ -2,7 +2,7 @@
 
 import logging
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .fds_sampling import SliceFieldSampler, _slice_z_mid, load_slice_sampler
 
@@ -214,6 +214,8 @@ class HeatFedInputs:
     temperature_celsius: float = 20.0
     # FDS INTEGRATED INTENSITY U [kW/m2] (#221); None when not sampled.
     integrated_intensity_kw_m2: float | None = None
+    # Upper-layer temperature, sampled only with ``regime="layer"`` (#222).
+    layer_temperature_celsius: float | None = None
 
 
 def _heat_fed_rate_per_minute(temperature_celsius: float) -> float:
@@ -259,11 +261,12 @@ class HeatEndpoint:
 # SFPE Handbook 5th ed. Ch. 63 (Purser & McAllister): r from the list on
 # p. 2382 and the Eq. 63.49 text on p. 2384; convective laws Eqs. 63.45-63.47,
 # pp. 2382-2383, fitted to air with less than 10 % water vapour. The fatal
-# r is 16.667 by maintainer decision (spec 016); the Handbook prints 16.7.
+# r is 16.7 as printed on pp. 2382 and 2384; Purser's spreadsheet uses
+# 16.667 (personal communication), the code follows the Handbook.
 HEAT_ENDPOINTS: dict[str, HeatEndpoint] = {
     "tolerance": HeatEndpoint(1.33, "63.45", 2e31, 16.963, 4e8, 3.7561),
     "injury": HeatEndpoint(10.0, "63.46", 5e22, 11.783, 3e7, 2.9636),
-    "fatal": HeatEndpoint(16.667, "63.47", 2e18, 9.0403, 1e8, 3.10898),
+    "fatal": HeatEndpoint(16.7, "63.47", 2e18, 9.0403, 1e8, 3.10898),
 }
 
 # Assumption: the Handbook gives no upper temperature for Eqs. 63.45-63.47;
@@ -358,6 +361,10 @@ HEAT_U_FACTOR_RANGE = (0.25, 1.0)  # sphere / isotropic field .. source face-on
 # INTENSITY slices: a numerical tolerance only. FDS moves every slice at one
 # PBZ to the same grid plane, so slices meant for one height share their z.
 HEAT_SLICE_Z_TOLERANCE_M = 1e-6
+# Regimes of spec 016, chosen by the user (no sourced automatic rule):
+# "smoke", head in smoke, Eq. 63.49 at the head; "layer", head in clear air
+# below a hot layer, convection at the head plus the layer term (#222).
+HEAT_FLUX_REGIMES = ("smoke", "layer")
 
 
 def radiant_flux_from_integrated_intensity_kw_m2(
@@ -408,6 +415,29 @@ def total_heat_flux_kw_m2(
         return math.inf
     convective = convective_coefficient * (t_gas - t_skin)
     return (radiant + convective) / 1000.0 + external_flux_kw_m2
+
+
+def layer_radiant_flux_kw_m2(
+    layer_temperature_celsius: float,
+    *,
+    view_factor: float,
+    layer_emissivity: float,
+    skin_temperature_celsius: float,
+) -> float:
+    """Return the radiant flux from a hot upper layer in kW/m2 (#222, spec 016).
+
+    q_ext = phi eps_L sigma (T_L^4 - T_s^4) / 1000, with T in K: the radiant
+    term of Eq. 63.49 (p. 2384) with the layer as source and a view factor.
+    Net flux (a sigma T^4 difference), not incident; signed, negative for a
+    layer cooler than the skin.
+    """
+    t_layer = layer_temperature_celsius + _KELVIN
+    t_skin = skin_temperature_celsius + _KELVIN
+    try:
+        radiant = STEFAN_BOLTZMANN_W_M2_K4 * (t_layer**4 - t_skin**4)
+    except OverflowError:
+        return math.inf
+    return view_factor * layer_emissivity * radiant / 1000.0
 
 
 def total_flux_heat_fed_rate_per_minute(q_kw_m2: float, dose: float) -> float:
@@ -461,17 +491,69 @@ def _check_radiant_source(radiant_source: str, method: str, u_factor) -> None:
     _check_u_factor(u_factor)
 
 
+def _check_layer_parameters(
+    regime: str,
+    method: str,
+    layer_field,
+    view_factor: float | None,
+    layer_emissivity: float | None,
+) -> None:
+    """Raise ValueError for an unknown regime or an invalid layer setting."""
+    if regime not in HEAT_FLUX_REGIMES:
+        raise ValueError(
+            f"Unknown heat regime {regime!r}; expected one of {HEAT_FLUX_REGIMES}"
+        )
+    for name, value in (
+        ("view factor", view_factor),
+        ("layer emissivity", layer_emissivity),
+    ):
+        if value is not None and not (math.isfinite(value) and 0.0 <= value <= 1.0):
+            raise ValueError(f"Heat {name} must be in [0, 1], got {value!r}")
+    if regime != "layer":
+        return
+    if method != "total-flux":
+        raise ValueError("The layer heat regime needs method='total-flux'")
+    if layer_field is None:
+        raise ValueError("The layer heat regime needs a layer temperature field")
+    if view_factor is None or layer_emissivity is None:
+        raise ValueError(
+            "The layer heat regime needs a view factor and a layer emissivity"
+        )
+
+
+def _check_layer_and_source_exclusive(regime: str, radiant_source: str) -> None:
+    """Raise ValueError for the layer regime with the INTEGRATED INTENSITY source.
+
+    U already contains the emission of the layer; adding the layer term to
+    f U would count it twice.
+    """
+    if regime == "layer" and radiant_source == "integrated-intensity":
+        raise ValueError(
+            "The layer heat regime and the INTEGRATED INTENSITY radiant source "
+            "cannot be combined: U already contains the layer's emission."
+        )
+
+
 def heat_flux_row_fields(
     heat_fed_model,
     temperature_celsius: float,
+    layer_temperature_celsius: float | None = None,
     integrated_intensity_kw_m2: float | None = None,
 ) -> dict:
     """Return the FED history fields of the total-flux method; ``{}`` otherwise.
 
-    With the INTEGRATED INTENSITY source the row also carries U (#221).
+    In the layer regime the row also carries ``heat_layer_temperature_c``;
+    with the INTEGRATED INTENSITY source it also carries U (#221).
     """
     if getattr(heat_fed_model, "method", "convective") != "total-flux":
         return {}
+    if getattr(heat_fed_model, "regime", "smoke") == "layer":
+        return {
+            "heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(
+                temperature_celsius, layer_temperature_celsius
+            ),
+            "heat_layer_temperature_c": layer_temperature_celsius,
+        }
     if getattr(heat_fed_model, "radiant_source", "gas") != "integrated-intensity":
         return {"heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(temperature_celsius)}
     u = math.nan if integrated_intensity_kw_m2 is None else integrated_intensity_kw_m2
@@ -518,13 +600,13 @@ class TenabilityConfig:
     fic_min_factor: float = 0.3
     enable_incapacitation: bool = True
     fed_threshold: float = 1.0
-    # Incapacitation is a population endpoint, not a per-individual constant.
-    # In "probabilistic" mode (default) each agent draws its own threshold
+    # In "deterministic" mode (default) every agent uses fed_threshold, the
+    # FDS+Evac rule (Korhonen 2021 §3.4). The opt-in "probabilistic" mode
+    # treats incapacitation as a population endpoint: each agent draws
     #   D_incap = fed_threshold * exp(susceptibility_sigma * Z), Z ~ N(0, 1),
     # a log-normal with median fed_threshold. sigma = 0.94 fits the NIST TN
-    # 1797 / Purser bands (~10/50/88 % incapacitated at FED 0.3/1/3). In
-    # "deterministic" mode every agent uses fed_threshold (the legacy rule).
-    incapacitation_mode: str = "probabilistic"
+    # 1797 / Purser bands (~10/50/88 % incapacitated at FED 0.3/1/3).
+    incapacitation_mode: str = "deterministic"
     susceptibility_sigma: float = 0.94
     enable_heat_incapacitation: bool = True
     heat_fed_threshold: float = 1.0
@@ -1067,6 +1149,17 @@ class DefaultHeatFedModel:
     With ``radiant_source="integrated-intensity"`` (total-flux only, #221)
     the radiant term is the incident f U instead of the gas term, and
     *u_factor* f in [0.25, 1] is required.
+
+    *regime* (total-flux only, spec 016): ``"smoke"`` (default) applies
+    Eq. 63.49 at the head. ``"layer"`` takes the head to be in clear air below
+    a hot layer: convection at the head plus ``layer_radiant_flux_kw_m2`` from
+    *layer_field*, with no eps sigma term of the gas at the head, so the two
+    radiant terms are never added together. *view_factor* and
+    *layer_emissivity* have no sourced values and no defaults.
+
+    The layer regime and the INTEGRATED INTENSITY source are exclusive: U
+    already contains the emission of the layer, so adding the layer term to
+    f U would count it twice.
     """
 
     def __init__(
@@ -1080,6 +1173,11 @@ class DefaultHeatFedModel:
         skin_temperature_celsius: float = DEFAULT_HEAT_SKIN_TEMPERATURE_C,
         radiant_source: str = "gas",
         u_factor: float | None = None,
+        regime: str = "smoke",
+        layer_field: FdsHeatField | None = None,
+        view_factor: float | None = None,
+        layer_emissivity: float | None = None,
+        layer_height_m: float | None = None,
     ):
         """Store the temperature field sampler, FED settings and heat law."""
         if endpoint is not None and endpoint not in HEAT_ENDPOINTS:
@@ -1091,6 +1189,10 @@ class DefaultHeatFedModel:
             method, emissivity, convective_coefficient, skin_temperature_celsius
         )
         _check_radiant_source(radiant_source, method, u_factor)
+        _check_layer_parameters(
+            regime, method, layer_field, view_factor, layer_emissivity
+        )
+        _check_layer_and_source_exclusive(regime, radiant_source)
         self.field = field
         self.config = config
         self.endpoint = endpoint
@@ -1100,6 +1202,11 @@ class DefaultHeatFedModel:
         self.skin_temperature_celsius = skin_temperature_celsius
         self.radiant_source = radiant_source
         self.u_factor = u_factor
+        self.regime = regime
+        self.layer_field = layer_field if regime == "layer" else None
+        self.view_factor = view_factor
+        self.layer_emissivity = layer_emissivity
+        self.layer_height_m = layer_height_m
 
     def heat_flux_parameters(self) -> dict[str, object]:
         """Return the flux parameters for the run manifest."""
@@ -1110,6 +1217,13 @@ class DefaultHeatFedModel:
             "radiant_dose": HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose,
             "assumed": list(HEAT_FLUX_ASSUMED_PARAMETERS),
         }
+        if self.regime == "layer":
+            params.update(
+                regime=self.regime,
+                view_factor=self.view_factor,
+                layer_emissivity=self.layer_emissivity,
+                layer_height_m=self.layer_height_m,
+            )
         if self.radiant_source != "integrated-intensity":
             return params
         # eps is not used with this source; f is user-given, not assumed.
@@ -1124,13 +1238,20 @@ class DefaultHeatFedModel:
     def heat_flux_kw_m2(
         self,
         temperature_celsius: float,
+        layer_temperature_celsius: float | None = None,
         integrated_intensity_kw_m2: float | None = None,
     ) -> float:
         """Return the total-flux q in kW/m2 for one gas temperature.
 
-        With the INTEGRATED INTENSITY source, q = f U + h (T_g - T_s) / 1000:
-        U already holds the gas emission, so the eps term is not added.
+        In the layer regime: h (T_g - T_s) / 1000 + q_ext, no eps sigma term
+        of the gas at the head. With the INTEGRATED INTENSITY source,
+        q = f U + h (T_g - T_s) / 1000: U already holds the gas emission, so
+        the eps term is not added.
         """
+        if self.regime == "layer":
+            return self._layer_heat_flux_kw_m2(
+                temperature_celsius, layer_temperature_celsius
+            )
         if self.radiant_source != "integrated-intensity":
             return total_heat_flux_kw_m2(
                 temperature_celsius,
@@ -1153,18 +1274,51 @@ class DefaultHeatFedModel:
             ),
         )
 
+    def _layer_heat_flux_kw_m2(
+        self, temperature_celsius: float, layer_temperature_celsius: float | None
+    ) -> float:
+        """Return h (T_g - T_s) / 1000 plus the layer term, in kW/m2."""
+        if layer_temperature_celsius is None:
+            return math.nan
+        q_ext = layer_radiant_flux_kw_m2(
+            layer_temperature_celsius,
+            view_factor=self.view_factor,
+            layer_emissivity=self.layer_emissivity,
+            skin_temperature_celsius=self.skin_temperature_celsius,
+        )
+        return total_heat_flux_kw_m2(
+            temperature_celsius,
+            emissivity=0.0,
+            convective_coefficient=self.convective_coefficient,
+            skin_temperature_celsius=self.skin_temperature_celsius,
+            external_flux_kw_m2=q_ext,
+        )
+
     def _total_flux_rate(self, inputs: HeatFedInputs) -> float:
         """Return q^1.33 / D in 1/min; fatal D without an endpoint."""
         dose = HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose
         q = self.heat_flux_kw_m2(
             inputs.temperature_celsius,
+            inputs.layer_temperature_celsius,
             integrated_intensity_kw_m2=inputs.integrated_intensity_kw_m2,
         )
         return total_flux_heat_fed_rate_per_minute(q, dose)
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
-        """Return the heat FED input at one time and x/y point."""
-        return self.field.sample_inputs(time_s, x, y)
+        """Return the heat FED input at one time and x/y point.
+
+        In the layer regime it also carries the layer temperature, sampled
+        the same way as the temperature at the head.
+        """
+        inputs = self.field.sample_inputs(time_s, x, y)
+        if self.layer_field is None:
+            return inputs
+        # Assumption, unsourced: where the layer slice has no value,
+        # HeatFedInputs falls back to 20 C. Below the skin temperature this
+        # gives a small negative (cooling) layer flux, about
+        # -0.09 phi eps_L kW/m2 at T_s = 35 C.
+        layer = self.layer_field.sample_inputs(time_s, x, y).temperature_celsius
+        return replace(inputs, layer_temperature_celsius=float(layer))
 
     def sample_rate(
         self, time_s: float, x: float, y: float

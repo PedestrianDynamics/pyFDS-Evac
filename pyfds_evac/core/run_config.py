@@ -14,6 +14,7 @@ from the GUI. It defaults to a no-op.
 from __future__ import annotations
 
 import logging
+import math
 from collections.abc import Callable
 from typing import Any
 
@@ -64,6 +65,17 @@ def _build_smoke_model(opts: Any, log: Logger):
     )
     if opts.constant_extinction is not None:
         field = ConstantExtinctionField(opts.constant_extinction)
+    elif not _has_extinction_slice(opts.fds_dir):
+        # Not an error, same reasoning as _build_fed_model: a heat-only case
+        # carries no soot, and the run continues -- but agents then walk at
+        # clear-air speed, which should not pass unnoticed.
+        _logger.warning(
+            "Smoke speed reduction is disabled for %s: it has no SOOT "
+            "EXTINCTION COEFFICIENT slice, so agents walk at clear-air speed. "
+            "Pass --constant-extinction to set a uniform extinction instead.",
+            opts.fds_dir,
+        )
+        field = None
     elif opts.fds_dir:
         field = ExtinctionField.from_fds(
             smoke_config.fds_dir,
@@ -74,6 +86,11 @@ def _build_smoke_model(opts: Any, log: Logger):
     if field is None:
         return None
     return SmokeSpeedModel(field, smoke_config)
+
+
+def _has_extinction_slice(fds_dir: str) -> bool:
+    """Return whether the FDS case has a SOOT EXTINCTION COEFFICIENT slice."""
+    return "extinction" in inspect_fds_quantities(fds_dir).canonical_slice_names()
 
 
 def _build_fed_model(opts: Any, log: Logger):
@@ -137,6 +154,8 @@ def _build_heat_fed_model(opts: Any, log: Logger):
             _logger.warning(
                 "--heat-radiant-source has no effect without --enable-heat-fed."
             )
+        if getattr(opts, "heat_regime", "smoke") != "smoke":
+            _logger.warning("--heat-regime has no effect without --enable-heat-fed.")
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():
@@ -157,6 +176,8 @@ def _build_heat_fed_model(opts: Any, log: Logger):
     law = "Eq. 63.44" if endpoint is None else f"{endpoint} endpoint"
     if method == "total-flux":
         law = f"total flux, {endpoint or 'fatal'} dose"
+    if method == "total-flux" and getattr(opts, "heat_regime", "smoke") == "layer":
+        law += f", hot layer at {opts.heat_layer_height} m"
     log(f"Configuring heat FED calculation ({law}).")
     heat_fed_config = DefaultFedConfig(
         fds_dir=opts.fds_dir,
@@ -183,6 +204,7 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         ),
         radiant_source=radiant_source,
         u_factor=getattr(opts, "heat_u_factor", None),
+        **_heat_layer_kwargs(opts),
     )
 
 
@@ -207,6 +229,47 @@ def _check_integrated_intensity_source(opts: Any, method: str, inventory) -> Non
             f"{opts.fds_dir} has no INTEGRATED INTENSITY slice. Add "
             "`&SLCF QUANTITY='INTEGRATED INTENSITY'` at the slice height."
         )
+
+
+def _heat_layer_kwargs(opts: Any) -> dict[str, Any]:
+    """Return the layer-regime arguments of the heat model (#222).
+
+    The layer regime loads a second TEMPERATURE slice at
+    ``opts.heat_layer_height``; the smoke regime needs none.
+    """
+    regime = getattr(opts, "heat_regime", "smoke")
+    if regime != "layer":
+        return {"regime": regime}
+    return {
+        "regime": regime,
+        "layer_field": FdsHeatField.from_fds(
+            opts.fds_dir, slice_height_m=opts.heat_layer_height
+        ),
+        "view_factor": opts.heat_view_factor,
+        "layer_emissivity": opts.heat_layer_emissivity,
+        "layer_height_m": opts.heat_layer_height,
+    }
+
+
+def _validate_heat_layer_opts(opts: Any) -> None:
+    """Reject a layer heat regime that cannot be built (#222)."""
+    if not getattr(opts, "enable_heat_fed", False):
+        return
+    if getattr(opts, "heat_regime", "smoke") != "layer":
+        return
+    if getattr(opts, "heat_fed_method", "convective") != "total-flux":
+        raise ValueError("--heat-regime layer needs --heat-fed-method total-flux")
+    if getattr(opts, "heat_radiant_source", "gas") == "integrated-intensity":
+        raise ValueError(
+            "--heat-regime layer cannot be combined with --heat-radiant-source "
+            "integrated-intensity: U already contains the layer's emission."
+        )
+    for option in ("heat_layer_height", "heat_view_factor", "heat_layer_emissivity"):
+        if getattr(opts, option, None) is None:
+            flag = "--" + option.replace("_", "-")
+            raise ValueError(f"--heat-regime layer needs {flag}")
+    if not math.isfinite(opts.heat_layer_height):
+        raise ValueError("--heat-layer-height must be finite")
 
 
 def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
@@ -240,6 +303,7 @@ def validate_opts(opts: Any) -> None:
         opts, "clear_air_visibility", False
     ):
         raise ValueError("--no-visibility and --clear-air-visibility conflict")
+    _validate_heat_layer_opts(opts)
 
 
 def _has_discovery_agents(scenario: Any) -> bool:
@@ -284,7 +348,15 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     max_distance = getattr(opts, "max_sign_distance", DEFAULT_MAX_SIGN_DISTANCE_M)
     n_signs = len(sign_descriptors)
     plural = "" if n_signs == 1 else "s"
-    if not opts.fds_dir:
+    smoky = bool(opts.fds_dir) and _has_extinction_slice(opts.fds_dir)
+    if opts.fds_dir and not smoky:
+        _logger.warning(
+            "Visibility falls back to clear air for %s: it has no SOOT "
+            "EXTINCTION COEFFICIENT slice, so smoke hides no sign; geometry "
+            "and sign facing still do.",
+            opts.fds_dir,
+        )
+    if not smoky:
         cell = getattr(opts, "vis_cell_size", 0.25)
         log(
             f"Configuring clear-air visibility ({n_signs} sign{plural}, {cell} m grid)."
@@ -316,7 +388,7 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     """
     if (fed_model is None and heat_fed_model is None) or opts.disable_tenability:
         return None
-    mode = getattr(opts, "incapacitation_mode", "probabilistic")
+    mode = getattr(opts, "incapacitation_mode", "deterministic")
     sigma = getattr(opts, "susceptibility_sigma", 0.94)
     heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
     heat_mode = getattr(opts, "heat_incapacitation_mode", "deterministic")

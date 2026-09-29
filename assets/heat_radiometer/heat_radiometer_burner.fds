@@ -1,0 +1,87 @@
+&HEAD CHID='heat_radiometer_burner',
+      TITLE='Propane burner in the open, skin gauges facing it at 1.6 and 1.8 m (#224)' /
+
+! Domain 6 x 4 x 4 m, 0.1 m cells, four meshes split along x, open on the
+! four sides and the top. Domain and grid are assumptions of this deck
+! (#224), not sourced values.
+! Run with: mpiexec -n 4 fds heat_radiometer_burner.fds
+&MESH ID='M1', IJK=15,40,40, XB=0.0,1.5, 0,4, 0,4 /
+&MESH ID='M2', IJK=15,40,40, XB=1.5,3.0, 0,4, 0,4 /
+&MESH ID='M3', IJK=15,40,40, XB=3.0,4.5, 0,4, 0,4 /
+&MESH ID='M4', IJK=15,40,40, XB=4.5,6.0, 0,4, 0,4 /
+
+&TIME T_END=30. /
+&MISC TMPA=20. /
+
+&VENT MB='XMIN', SURF_ID='OPEN' /
+&VENT MB='XMAX', SURF_ID='OPEN' /
+&VENT MB='YMIN', SURF_ID='OPEN' /
+&VENT MB='YMAX', SURF_ID='OPEN' /
+&VENT MB='ZMAX', SURF_ID='OPEN' /
+
+! 0.6 x 0.6 m burner on the floor, 1100 kW/m2 (about 400 kW), so the flame
+! reaches head height. Fuel, soot yield, size and HRR are assumptions of
+! this deck (#224), not sourced values.
+&REAC FUEL='PROPANE', SOOT_YIELD=0.01 /
+&SURF ID='BURNER', HRRPUA=1100., COLOR='RED' /
+&VENT XB=2.7,3.3,1.75,2.35,0,0, SURF_ID='BURNER' /
+
+! Skin: gauge at 35 C (GAUGE_TEMPERATURE), emissivity 1 (FDS default, taken
+! as the skin emissivity: an assumption, not a sourced value), and
+! h = 8 W/(m2 K). 35 C and h are prescribed by issue #224 (spec 016
+! leaves h and T_skin open). FDS UG Eqs. 22.35-22.36: the gauge and the
+! radiometer share the gauge temperature, so gauge - radiometer =
+! h (T_g - 35 C).
+&PROP ID='skin', GAUGE_TEMPERATURE=35., HEAT_TRANSFER_COEFFICIENT=8. /
+
+! Every array has TEMPERATURE and INTEGRATED INTENSITY at the same points,
+! and gauges and radiometers facing up, +x, -x and down.
+! TIME_HISTORY=T writes each point to _devc.csv (without it FDS writes a
+! time-averaged _line.csv).
+! Points from 0.35 to 2.35 m in front of the burner (edge at x = 2.7 m); +x faces it.
+&DEVC ID='T_z16', QUANTITY='TEMPERATURE', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='U_z16', QUANTITY='INTEGRATED INTENSITY', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_up', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='RAD_z16_up', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_px', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=1,0,0,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='RAD_z16_px', QUANTITY='RADIOMETER GAS', ORIENTATION=1,0,0,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_mx', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=-1,0,0,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='RAD_z16_mx', QUANTITY='RADIOMETER GAS', ORIENTATION=-1,0,0,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_dn', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,-1,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='RAD_z16_dn', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,-1,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.6,1.6, POINTS=5, TIME_HISTORY=T /
+
+&DEVC ID='T_z18', QUANTITY='TEMPERATURE', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='U_z18', QUANTITY='INTEGRATED INTENSITY', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z18_up', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='RAD_z18_up', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z18_px', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=1,0,0,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='RAD_z18_px', QUANTITY='RADIOMETER GAS', ORIENTATION=1,0,0,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z18_mx', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=-1,0,0,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='RAD_z18_mx', QUANTITY='RADIOMETER GAS', ORIENTATION=-1,0,0,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z18_dn', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,-1,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+&DEVC ID='RAD_z18_dn', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,-1,
+      PROP_ID='skin', XBP=0.35,2.35,2.05,2.05,1.8,1.8, POINTS=5, TIME_HISTORY=T /
+
+&SLCF PBZ=1.6, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=1.8, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.8, QUANTITY='TEMPERATURE' /
+&SLCF PBY=2.05, QUANTITY='TEMPERATURE' /
+&SLCF PBY=2.05, QUANTITY='INTEGRATED INTENSITY' /
+
+&TAIL /

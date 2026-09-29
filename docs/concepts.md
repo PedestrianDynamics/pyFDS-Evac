@@ -113,18 +113,19 @@ The stop is the fractional effective dose (FED). The toxic-gas dose follows
 the Purser sum of the FDS+Evac guide, which adds irritants into the dose,
 unlike ISO 13571. Convective heat from an FDS `TEMPERATURE` slice accumulates
 in a second dose; without that slice there is no heat dose, and the log says
-so. The two doses are never added. Each agent draws its own threshold for each
-dose, so a population does not stop all at once. When either dose crosses its
-threshold, the agent's speed is set to zero and it stays in place as an
-obstacle. `--disable-tenability` turns off the slowdown and both stops, while
-the doses are still logged; `--incapacitation-mode deterministic` stops every
-agent at FED = 1, as FDS+Evac does.
+so. The two doses are never added. By default every agent stops at FED = 1,
+as FDS+Evac does; with `--incapacitation-mode probabilistic` each agent draws
+its own threshold, so a population does not stop all at once. When either dose
+crosses its threshold, the agent's speed is set to zero and it stays in place
+as an obstacle. `--disable-tenability` turns off the slowdown and both stops,
+while the doses are still logged.
 
 Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
 only incapacitates: it neither slows agents nor affects route choice, and
-radiant heat from a hot layer or a flame enters only through the opt-in
-`--heat-radiant-source integrated-intensity`, with a user factor. The published dose laws are on
+radiant heat from a hot layer enters only with the opt-in `--heat-regime
+layer` or `--heat-radiant-source integrated-intensity`, and from a flame or
+hot surfaces only with the latter, with a user factor. The published dose laws are on
 [Asphyxiant fractional effective dose](/fundamentals/asphyxiant-fed.md),
 [Irritant gases](/fundamentals/irritants.md), [Heat](/fundamentals/heat.md)
 and [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
@@ -341,7 +342,7 @@ pages. Defaults are on the Models pages.
 | *g*(FIC) | Irritant speed factor | - | `fic_min_factor`, `fic_alpha` |
 | FED | Fractional effective dose, toxic gases | - | `fed` |
 | \(\mathrm{FED}_{\mathrm{heat}}\) | Fractional effective dose, convective heat | - | heat FED |
-| \(D_i\), \(D_{\mathrm{heat},i}\) | Incapacitation threshold of agent *i*, log-normal | - | `fed_threshold`, `heat_fed_threshold` |
+| \(D_i\), \(D_{\mathrm{heat},i}\) | Incapacitation threshold of agent *i*; log-normal in probabilistic mode | - | `fed_threshold`, `heat_fed_threshold` |
 | *T* | Gas temperature | °C | `TEMPERATURE` slice |
 | \(L_k\) | Walkable distance still to go on route *k* | m | `effective_length` |
 | \(\tau_k = \bar K_k L_k\) | Optical depth along route *k* | - | `tau_route` |

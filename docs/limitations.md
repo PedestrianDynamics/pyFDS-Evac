@@ -38,22 +38,22 @@ prefers but leaves its speed in smoke unchanged. The same split applies to
 speed itself: `routing.base_speed_m_per_s` (1.3 m/s) prices routes, while an
 agent walks at its own `v0` (1.25 m/s by default).
 
-## Incapacitation is probabilistic by default
+## Incapacitation is deterministic by default
 
 FED below means fractional effective dose. By default
-(`--incapacitation-mode probabilistic`), each agent draws its own
-incapacitation threshold from a log-normal distribution with median
+(`--incapacitation-mode deterministic`), every agent stops when its FED
+reaches `--fed-threshold` (1.0), as in FDS+Evac. A real population does not
+stop all at once. With `--incapacitation-mode probabilistic`, each agent
+draws its own threshold from a log-normal distribution with median
 `--fed-threshold` and log-scale spread `--susceptibility-sigma` (defaults on
 the [FED model](/models/fed.md#tenability-irritant-slowdown-and-incapacitation) page).
-About half of the agents therefore stop below FED = 1, and about 10 % stop
+About half of the agents then stop below FED = 1, and about 10 % stop
 below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
 ([#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The
-heat dose, which FDS+Evac does not have, is deterministic by default: no
+heat dose, which FDS+Evac does not have, is also deterministic by default: no
 population spread for heat is published. Its `probabilistic` mode reuses the
-gas spread without a data basis of its own. FDS+Evac stops
-every agent at FED = 1. For results comparable with FDS+Evac, run with
-`--incapacitation-mode deterministic`.
+gas spread without a data basis of its own.
 
 ## Evacuation time when anyone is incapacitated
 
@@ -86,20 +86,31 @@ McAllister (SFPE Handbook, 5th ed., Eq. 63.44, or Eq. 63.45-63.47 with
 `--heat-endpoint`), computed from the gas temperature of an FDS
 `TEMPERATURE` slice. The opt-in `--heat-fed-method total-flux` adds the
 radiation of the gas at the head (Eq. 63.49, spec 016), with an assumed
-emissivity. Radiant flux from a hot layer, hot surfaces or a flame enters
-only with the opt-in `--heat-radiant-source integrated-intensity`, as f·U
-from the FDS `INTEGRATED INTENSITY` slice with a user factor f in [0.25, 1]
-that no single value fits for every orientation
-([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
-Otherwise an agent near a flame or under a hot layer that radiates strongly
-is treated as less exposed than it is
+emissivity. With `--heat-regime layer` it instead takes the head to be in
+clear air below a hot layer and adds the net radiant flux of the layer,
+read from a second `TEMPERATURE` slice at one height, with a view factor
+and layer emissivity set by the user; the regime is one choice for the
+whole run
 ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222),
-[#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
+[#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274),
+[#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
+Radiant flux from hot surfaces or a flame enters only with the opt-in
+`--heat-radiant-source integrated-intensity`, as f·U from the FDS
+`INTEGRATED INTENSITY` slice with a user factor f in [0.25, 1] that no
+single value fits for every orientation; it cannot be combined with
+`--heat-regime layer`
+([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+Otherwise an agent near a flame is treated as less exposed than it is
+([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
 
 **Heat does not affect route choice or walking speed.** The heat dose is
 opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is
-incapacitated when either dose reaches its threshold. Before that point, heat
-has no effect. Route choice is given the toxic dose only, so an agent can
+incapacitated when either dose reaches its threshold. The two thresholds are
+different endpoints: gas FED = 1 is incapacitation, heat FED = 1 the
+Eq. 63.44 time, which by our comparison lies near the SFPE Handbook's
+tolerance curve (see Fundamentals › Heat); the FED history's
+`incapacitation_cause` column says which dose stopped the agent. Before that
+point, heat has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced
 by extinction and by irritant gases, but not by temperature, so an agent walks
 at full speed through a hot layer until the heat dose is reached.
