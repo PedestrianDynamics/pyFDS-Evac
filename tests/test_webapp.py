@@ -28,8 +28,8 @@ def test_index_renders_form(client):
     assert "/run" in r.text
     assert "ISO-table21" in r.text  # scenario picker populated from assets/
     assert 'id="dir-modal"' in r.text  # directory-browser overlay container
-    assert "output_route_cost_history" in r.text  # output fields rendered
-    assert "_smoke_history.csv" in r.text  # scenario-name autofill script present
+    assert 'id="output_base"' in r.text  # output folder rendered
+    assert "_smoke_history.csv" in r.text  # file-name preview present
     assert 'data-tab="model"' in r.text  # Model documentation tab present
     assert "Fractional Effective Dose" in r.text  # model docs content rendered
 
@@ -852,8 +852,7 @@ class TestScenarioUpload:
                     "scenario": "uploads/pytest-runnable",
                     "seed": "420",
                     "results_only": "1",
-                    "output_sqlite": str(out / "run.sqlite"),
-                    "export_app_bundle": str(out / "bundle"),
+                    "output_base": str(out),
                 },
             )
             assert r.status_code == 200
@@ -862,7 +861,7 @@ class TestScenarioUpload:
             assert events[-1] == "done"
             assert manager.status == "done"
             assert manager.result.total_agents >= 1
-            assert (out / "run.sqlite").exists()
+            assert (out / "uploads_pytest-runnable.sqlite").exists()
             _drop_temp_trajectory()
         finally:
             shutil.rmtree(created, ignore_errors=True)
@@ -877,9 +876,7 @@ def test_results_only_run_skips_viewer_but_writes_files(client, tmp_path):
             "scenario": "ISO-table21",
             "seed": "420",
             "results_only": "1",
-            "output_sqlite": str(out / "run.sqlite"),
-            "output_fed_history": str(out / "fed.csv"),
-            "export_app_bundle": str(out / "bundle"),
+            "output_base": str(out),
         },
     )
     assert r.status_code == 200
@@ -899,7 +896,7 @@ def test_results_only_run_skips_viewer_but_writes_files(client, tmp_path):
 
     # The artifacts really landed, and the bundle path is a directory now that
     # export_app_bundle is a path field rather than a checkbox.
-    assert (out / "run.sqlite").exists()
+    assert (out / "ISO-table21.sqlite").exists()
     assert (out / "bundle" / "config.json").exists()
     assert (out / "bundle" / "geometry.wkt").exists()
     _drop_temp_trajectory()
@@ -979,10 +976,51 @@ class TestOutputBase:
         opts = self._opts(output_base="   ")
         assert opts.output_sqlite.startswith("results/t_junction/")
 
-    def test_explicit_path_still_beats_the_folder(self):
-        # A fully-specified output path (hidden field) is not overridden.
-        opts = self._opts(output_base="out", output_sqlite="exact/place.sqlite")
-        assert opts.output_sqlite == "exact/place.sqlite"
+    def test_posted_output_paths_are_ignored(self):
+        # #330: the paths come from the scenario and the folder, never from a
+        # posted output_* value, which could belong to a previous scenario.
+        opts = self._opts(
+            output_base="out",
+            output_sqlite="results/Haspel/deterministic/seeddefault/Haspel.sqlite",
+            export_app_bundle="elsewhere/bundle",
+        )
+        assert opts.output_sqlite == "out/t_junction.sqlite"
+        assert opts.export_app_bundle == "out/bundle"
+
+    def test_new_scenario_with_stale_paths_uses_the_derived_folder(self):
+        # #330 repro: Haspel's paths posted with a new scenario and seed.
+        from pyfds_evac.webapp.params import form_to_opts
+
+        stale = "results/Haspel/deterministic/seeddefault/Haspel"
+        opts = form_to_opts(
+            {
+                "scenario": "blind_spawn_discovery",
+                "seed": "11",
+                "output_sqlite": f"{stale}.sqlite",
+                "output_smoke_history": f"{stale}_smoke_history.csv",
+                "output_fed_history": f"{stale}_fed_history.csv",
+                "output_route_history": f"{stale}_route_history.csv",
+                "output_route_cost_history": f"{stale}_route_cost_history.csv",
+                "export_app_bundle": "results/Haspel/deterministic/seeddefault/bundle",
+            }
+        )
+        paths = [
+            opts.output_sqlite,
+            opts.output_smoke_history,
+            opts.output_fed_history,
+            opts.output_route_history,
+            opts.output_route_cost_history,
+            opts.export_app_bundle,
+        ]
+        assert all("Haspel" not in p for p in paths)
+        assert opts.output_sqlite.endswith(
+            "blind_spawn_discovery/deterministic/seed11/blind_spawn_discovery.sqlite"
+        )
+
+    def test_form_has_no_hidden_output_paths(self, client):
+        html = client.get("/").text
+        for key in ("output_sqlite", "output_fed_history", "export_app_bundle"):
+            assert f'name="{key}"' not in html
 
 
 def test_artifact_preview_lines_are_rewritable(client):

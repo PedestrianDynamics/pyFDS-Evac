@@ -704,17 +704,6 @@ def _output_files_section() -> NotStr:
                     style=f"{_GROTESK};font-size:9px;font-weight:600;letter-spacing:.07em;"
                     f"text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px",
                 ),
-                *[
-                    Input(id=k, name=k, type="hidden")
-                    for k in (
-                        "output_sqlite",
-                        "output_smoke_history",
-                        "output_fed_history",
-                        "output_route_history",
-                        "output_route_cost_history",
-                        "export_app_bundle",
-                    )
-                ],
                 # data-suffix lets the autofill script rewrite these to the real
                 # run name; the <run> text is what shows if the script is dead.
                 *[
@@ -817,9 +806,8 @@ def build_form(post_url: str) -> Any:
 def run_name(scenario: Any) -> str:
     """Filename stem for a scenario's artifacts.
 
-    ``clean()`` in the sidebar's autofill script mirrors this; the two must
-    agree or the hidden fields and this server-side fallback would disagree on
-    where a run writes.
+    ``clean()`` in the sidebar's preview script mirrors this, so the file
+    names the sidebar shows are the ones a run writes.
     """
     name = str(scenario or "")
     return name.replace(".json", "").replace("/", "_") if name else "run"
@@ -861,36 +849,23 @@ def form_to_opts(form: dict[str, Any]) -> Namespace:
             )
     opts["collect_route_cost_history"] = True
 
-    # Ensure output paths are always populated: the JS autofill may not have run
-    # before submission, so derive them server-side too. The typed "Output
-    # folder" wins when present -- it used to be read by nobody, so a path typed
-    # there was silently discarded and the run went to the derived path anyway.
+    # The output paths are always derived here from the scenario and the
+    # "Output folder" (typed, or the derived default). Posted output_* values
+    # are ignored: they used to come from hidden fields that a polling script
+    # filled in, so a run submitted before its next poll wrote to the previous
+    # scenario's folder (#330).
     sc = run_name(opts.get("scenario"))
     mode = str(opts.get("incapacitation_mode") or "deterministic")
     base = (
         str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
     ) or (default_output_base(opts.get("scenario"), mode, opts.get("seed")))
-    _OUTPUT_DEFAULTS = {
-        "output_sqlite": f"{base}/{sc}.sqlite",
-        "output_smoke_history": f"{base}/{sc}_smoke_history.csv",
-        "output_fed_history": f"{base}/{sc}_fed_history.csv",
-        "output_route_history": f"{base}/{sc}_route_history.csv",
-        "output_route_cost_history": f"{base}/{sc}_route_cost_history.csv",
-        "export_app_bundle": f"{base}/bundle",
-    }
-    # --export-app-bundle takes a *directory*, but the sidebar used to render it
-    # as a checkbox; the posted "on" was passed straight through as a path, so
-    # every GUI run dumped its bundle into a literal ./on/ folder. Treat the
-    # checkbox-era truthy strings as "just use the default".
-    if str(opts.get("export_app_bundle") or "").strip().lower() in (
-        "on",
-        "true",
-        "1",
-        "yes",
-    ):
-        opts["export_app_bundle"] = ""
-    for k, v in _OUTPUT_DEFAULTS.items():
-        if not opts.get(k):
-            opts[k] = v
+    opts.update(
+        output_sqlite=f"{base}/{sc}.sqlite",
+        output_smoke_history=f"{base}/{sc}_smoke_history.csv",
+        output_fed_history=f"{base}/{sc}_fed_history.csv",
+        output_route_history=f"{base}/{sc}_route_history.csv",
+        output_route_cost_history=f"{base}/{sc}_route_cost_history.csv",
+        export_app_bundle=f"{base}/bundle",
+    )
 
     return Namespace(**opts)

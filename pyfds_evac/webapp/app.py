@@ -332,17 +332,11 @@ def _run_panel_idle() -> Div:
     )
 
 
-# Output-file defaults from the selected scenario name (client-side autofill).
+# Preview of the output folder and file names for the selected scenario. The
+# paths a run writes are derived on the server (params.form_to_opts); this only
+# shows them.
 _AUTOFILL_JS = """
 (function () {
-  var OUT = {
-    output_sqlite:             function (n, d) { return d + '/' + n + '.sqlite'; },
-    output_smoke_history:      function (n, d) { return d + '/' + n + '_smoke_history.csv'; },
-    output_fed_history:        function (n, d) { return d + '/' + n + '_fed_history.csv'; },
-    output_route_history:      function (n, d) { return d + '/' + n + '_route_history.csv'; },
-    output_route_cost_history: function (n, d) { return d + '/' + n + '_route_cost_history.csv'; },
-    export_app_bundle:         function (n, d) { return d + '/bundle'; }
-  };
   function scenarioName() {
     // The picker is a <select id="scenario">, not a wrapper around one, so
     // match on the form name -- that holds however it ends up being rendered.
@@ -371,11 +365,6 @@ _AUTOFILL_JS = """
     // box still tells you where output lands while a typed path clearly wins.
     var ob = document.getElementById('output_base');
     if (ob) ob.placeholder = derived || 'results/<scenario>';
-    var dir = outputBase() || derived;
-    Object.keys(OUT).forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el && !el.dataset.userEdited) el.value = base ? OUT[id](base, dir) : '';
-    });
     // Preview lines under the folder box, so the section shows the real
     // filenames instead of a literal "<run>".
     document.querySelectorAll('.artifact-preview').forEach(function (el) {
@@ -387,11 +376,6 @@ _AUTOFILL_JS = """
     var k = scenarioName() + '|' + seedValue() + '|' + modeValue() + '|' + outputBase();
     if (k !== last) { last = k; fill(scenarioName()); }
   }, 250);
-  document.addEventListener('input', function (e) {
-    if (e.target && OUT[e.target.id]) {
-      e.target.dataset.userEdited = '1';
-    }
-  });
   // Strip surrounding quotes from path inputs on blur
   document.addEventListener('blur', function (e) {
     var el = e.target;
