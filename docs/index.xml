@@ -549,7 +549,7 @@ while the doses are still logged.&lt;/p>
 &lt;p>Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
 only incapacitates: it neither slows agents nor affects route choice, and
-radiant heat is not modelled. The published dose laws are on
+radiant heat from a hot layer or a flame is not modelled. The published dose laws are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant fractional effective dose&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.
@@ -928,7 +928,7 @@ linked above.&lt;/p>
 &lt;p>Background: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/">Concepts&lt;/a> page
 and the talk &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>.&lt;/p>
 &lt;h2>Coded form&lt;span class="hx-absolute -hx-mt-20" id="coded-form">&lt;/span>
-&lt;a href="#coded-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>FedComponents.total_rate_per_min&lt;/code> (&lt;code>pyfds_evac/core/fed.py:447&lt;/code>) returns the
+&lt;a href="#coded-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>FedComponents.total_rate_per_min&lt;/code> (&lt;code>pyfds_evac/core/fed.py:537&lt;/code>) returns the
 gas FED rate [1/min]&lt;/p>
 $$
 \dot{\mathrm{FED}} = \bigl(\dot{\mathrm{FED}}_{\mathrm{CO}} + \dot{\mathrm{FED}}_{\mathrm{CN}} + \dot{\mathrm{FED}}_{\mathrm{NO_x}} + \dot{\mathrm{FLD}}_{\mathrm{irr}}\bigr) \times \mathrm{HV}_{\mathrm{CO_2}} + \dot{\mathrm{FED}}_{\mathrm{O_2}},
@@ -1027,9 +1027,9 @@ $$&lt;p>with &lt;em>T&lt;/em> in °C. It is a running total of its own, never ad
 The basis is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>; the full specification,
 including its limits, is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.&lt;/p>
 &lt;h2>Tenability: irritant slowdown and incapacitation&lt;span class="hx-absolute -hx-mt-20" id="tenability-irritant-slowdown-and-incapacitation">&lt;/span>
-&lt;a href="#tenability-irritant-slowdown-and-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig&lt;/code> (&lt;code>fed.py:330&lt;/code>) adds two rules. The slowdown and the gas
+&lt;a href="#tenability-irritant-slowdown-and-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>TenabilityConfig&lt;/code> (&lt;code>fed.py:420&lt;/code>) adds two rules. The slowdown and the gas
 stop need the gas FED model; the heat stop needs only the heat FED model
-(&lt;code>run_config.py:280&lt;/code>–&lt;code>315&lt;/code>).&lt;/p>
+(&lt;code>run_config.py:299&lt;/code>–&lt;code>334&lt;/code>).&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Irritant slowdown, off by default.&lt;/strong> FDS+Evac has no irritant slowdown, so
 &lt;code>enable_fic_speed&lt;/code> defaults to false and &lt;code>run.py&lt;/code> switches the rule on only
@@ -1038,7 +1038,7 @@ FED model was loaded. When on, &lt;code>default_fic&lt;/code> sums \(C_i / F_{\m
 same seven irritants (constants in &lt;code>_FIC_COEFFS_PPM&lt;/code>, not integrated over
 time). At each FED update where FIC &amp;gt; 0, the agent&amp;rsquo;s irritant factor is set
 to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
-(&lt;code>scenario.py:2108&lt;/code>–&lt;code>2118&lt;/code>) and multiplies the smoke factor. The rule is a
+(&lt;code>scenario.py:2109&lt;/code>–&lt;code>2119&lt;/code>) and multiplies the smoke factor. The rule is a
 pyFDS-Evac assumption with no known source
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>).
 When FIC is exactly 0 the last factor stays in force
@@ -1164,7 +1164,9 @@ title="Copy code"
 &lt;p>Figure: &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/artifacts/iso-table22-stationary-fed.png" alt="ISO 20414 Test 19 (Table 22) stationary FED verification" loading="lazy" />&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
 &lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>Radiant heat. Only convective heat from the gas temperature is modelled.&lt;/li>
+&lt;li>Radiant heat from a hot layer, hot surfaces or a flame. The heat dose is
+convective, or with &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of
+the gas at the head only (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>).&lt;/li>
 &lt;li>Effects of heat on route choice or walking speed: the heat FED only
 incapacitates.&lt;/li>
 &lt;li>FED activity level: the CO term is fixed at light work; rest and heavy
@@ -1189,7 +1191,7 @@ ambient conditions.&lt;/p>
 &lt;h2>Deviations from the literature&lt;span class="hx-absolute -hx-mt-20" id="deviations-from-the-literature">&lt;/span>
 &lt;a href="#deviations-from-the-literature" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The published forms are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>. The gas sum has the Purser /
-FDS+Evac guide structure (&lt;code>fed.py:447&lt;/code>), not the ISO 13571 one. Within it, the
+FDS+Evac guide structure (&lt;code>fed.py:537&lt;/code>), not the ISO 13571 one. Within it, the
 code follows the guide, which cites the 3rd edition of the SFPE Handbook,
 rather than the 5th edition, except that the HCN term is computed as FDS
 computes it
@@ -1254,7 +1256,7 @@ you rebuild FDS+Evac&amp;rsquo;s FED from the guide, leave the 60 out.&lt;/p>
 &lt;p>Our reading is that the 60 survives from the 2009 guide, which gave the
 FED equations with &lt;em>t&lt;/em> in seconds; the evidence is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>.&lt;/p>
-&lt;/div>&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py:360&lt;/code>–&lt;code>361&lt;/code>), is multiplied with the smoke
+&lt;/div>&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py:450&lt;/code>–&lt;code>451&lt;/code>), is multiplied with the smoke
 factor (&lt;code>direct_steering_runtime.py:191&lt;/code>–&lt;code>193&lt;/code>). Its constants were not found
 in the Handbook, the FDS+Evac guide or &lt;code>evac.f90&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>). The
@@ -1264,9 +1266,9 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 \(g\) partly counts irritancy twice
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153" target="_blank" rel="noopener">#153&lt;/a>).&lt;/p>
 &lt;p>Heat uses the convective Eq. 63.44 (&lt;code>fed.py:217&lt;/code>) unless &lt;code>--heat-endpoint&lt;/code>
-selects Eq. 63.45, 63.46 or 63.47 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>), and no radiant
-term. The log-normal σ of both
-thresholds (&lt;code>fed.py:371&lt;/code>, &lt;code>:381&lt;/code>) is, for the gas dose, a compromise between
+selects Eq. 63.45, 63.46 or 63.47, or &lt;code>--heat-fed-method total-flux&lt;/code> the
+flux law of Eqs. 63.49 and 63.43 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>). The log-normal σ of both
+thresholds (&lt;code>fed.py:461&lt;/code>, &lt;code>:471&lt;/code>) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>
 and &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>). The
@@ -2146,7 +2148,8 @@ nothing on this page affects a run.&lt;/p>
 the case, each agent accumulates a convective heat dose at
 &lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>pyfds_evac/core/fed.py:217&lt;/code>), SFPE Handbook 5th
 ed. Eq. 63.44 (p. 2382), unless &lt;code>--heat-endpoint&lt;/code> selects another law
-(&lt;a href="#endpoint">Endpoint&lt;/a>):&lt;/p>
+(&lt;a href="#endpoint">Endpoint&lt;/a>) or &lt;code>--heat-fed-method total-flux&lt;/code> selects the flux
+law (&lt;a href="#total-flux">Total flux&lt;/a>):&lt;/p>
 $$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
 $$&lt;p>with &lt;em>T&lt;/em> the gas temperature in °C at the agent&amp;rsquo;s position, read from the
@@ -2200,11 +2203,13 @@ endpoint cannot be paired with the convective law of another:&lt;/p>
 explained in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>. The rate is \(1/t\)
 (&lt;code>endpoint_heat_fed_rate_per_minute&lt;/code>); a temperature at or below 0 °C, or
 not finite, gives zero. &lt;code>--heat-endpoint&lt;/code> without &lt;code>--enable-heat-fed&lt;/code> logs a
-warning and leaves the heat dose off. Radiant heat is not an
-input yet, so &lt;em>r&lt;/em> is recorded but does not enter the dose. The Handbook prints
-16.7 for the fatal dose; spec 016 writes 16.667. By maintainer decision,
+warning and leaves the heat dose off. &lt;em>r&lt;/em> enters the dose only
+with &lt;code>--heat-fed-method total-flux&lt;/code> (&lt;a href="#total-flux">Total flux&lt;/a>); with the
+convective laws it is recorded only. The fatal &lt;em>r&lt;/em> is
+16.7 as printed on pp. 2382 and 2384; Purser&amp;rsquo;s spreadsheet uses 16.667
+(personal communication), and the code follows the Handbook. By maintainer decision,
 heat FED = 1 is meant as the fatal endpoint; &lt;code>--heat-endpoint fatal&lt;/code> gives
-that meaning. Without the option the dose stays Eq. 63.44.&lt;/p>
+that meaning. Without the option the convective dose stays Eq. 63.44.&lt;/p>
 &lt;p>The caption of Table 63.21 (p. 2385) says Eq. 63.44, but its per-minute values
 are those of Eq. 63.45; the tests use the table as the oracle for
 &lt;code>tolerance&lt;/code>.&lt;/p>
@@ -2216,6 +2221,71 @@ sample whose temperature exceeds 205 °C (&lt;code>HEAT_CONVECTIVE_VALIDITY_MAX_
 is not a finite number is flagged. The flag does not clip the rate: Table
 63.21 applies the law at 405 °C. A non-finite sample adds no dose. Humidity
 is not sampled, so its status is reported as unknown rather than flagged.&lt;/p>
+&lt;h2>Total flux&lt;span class="hx-absolute -hx-mt-20" id="total-flux">&lt;/span>
+&lt;a href="#total-flux" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>--heat-fed-method total-flux&lt;/code> (opt-in, with &lt;code>--enable-heat-fed&lt;/code>; default
+&lt;code>convective&lt;/code>, the laws above) replaces the convective laws with the
+total-flux form of spec 016 (&lt;code>specs/016-heat-fed/SPEC.md&lt;/code>). The heat flux to
+the skin is Eq. 63.49 (p. 2383, symbols on p. 2384), &lt;code>total_heat_flux_kw_m2&lt;/code>:&lt;/p>
+$$
+q = \frac{\varepsilon\,\sigma\,(T_g^4 - T_s^4) + h\,(T_g - T_s)}{1000}
+\quad [\mathrm{kW/m^2}],
+$$&lt;p>with \(T_g\) the gas temperature at the agent&amp;rsquo;s position (the same
+&lt;code>TEMPERATURE&lt;/code> slice), \(T_s\) the skin temperature, both in K, and
+\(\sigma = 5.67\times10^{-8}\) W m⁻² K⁻⁴ (p. 2384). Both terms are in W/m²
+and divided by 1000 together; this is a decision of spec 016, since the
+Handbook prints the division on the convective term only. The rate is
+Eq. 63.43 with the endpoint dose &lt;em>D&lt;/em> in place of &lt;em>r&lt;/em>
+(&lt;code>total_flux_heat_fed_rate_per_minute&lt;/code>):&lt;/p>
+$$
+\dot{\mathrm{FED}}_{\mathrm{heat}} = q^{1.33} / D \quad [1/\mathrm{min}].
+$$&lt;ul>
+&lt;li>&lt;em>D&lt;/em> is the radiant dose of &lt;code>--heat-endpoint&lt;/code> (1.33, 10 or 16.7); without
+it, the fatal 16.7, as heat FED = 1 is meant as the fatal endpoint.&lt;/li>
+&lt;li>&lt;strong>No 2.5 kW/m² threshold.&lt;/strong> The Handbook applies Eq. 63.43 above
+2.5 kW/m² only (p. 2384); spec 016 drops the threshold, so the dose
+accumulates at every positive flux. With the threshold, clear air
+(ε = 0.05, h = 8) would give no dose below about 310 °C.&lt;/li>
+&lt;li>&lt;strong>Not added to a convective law.&lt;/strong> The rate is \(q^{1.33}/D\) alone.&lt;/li>
+&lt;li>At or below skin temperature (\(q \le 0\)) or for a non-finite
+temperature the rate is zero: no dose, and no recovery.&lt;/li>
+&lt;/ul>
+&lt;p>Only the &amp;ldquo;head in smoke&amp;rdquo; regime of spec 016 is implemented: ε applies to the
+gas at the head, and no external radiation is added. ε, h and \(T_s\) have
+no sourced values; their defaults are assumptions
+(&lt;code>HEAT_FLUX_ASSUMED_PARAMETERS&lt;/code>):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Parameter&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>CLI flag&lt;/th>
+&lt;th>Source status&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>ε&lt;/td>
+&lt;td>&lt;code>0.5&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-emissivity&lt;/code>&lt;/td>
+&lt;td>&lt;strong>Assumption.&lt;/strong> p. 2384: 0.05 for a gas, &amp;ldquo;perhaps 0.5 for smoke&amp;rdquo;&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>h [W m⁻² K⁻¹]&lt;/td>
+&lt;td>&lt;code>5.0&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-convective-coefficient&lt;/code>&lt;/td>
+&lt;td>&lt;strong>Assumption.&lt;/strong> p. 2384: &amp;ldquo;approximately 5–8 for slow-moving air&amp;rdquo;, no unit; 5 is the value of the spec 016 convection check&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>\(T_s\) [°C]&lt;/td>
+&lt;td>&lt;code>35.0&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-skin-temperature&lt;/code>&lt;/td>
+&lt;td>&lt;strong>Assumption.&lt;/strong> Not given for Eq. 63.49; 35 °C is the draft&amp;rsquo;s value, held fixed&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Invalid values (ε outside [0, 1], h &amp;lt; 0, or non-finite) are rejected.
+&lt;code>--heat-fed-method&lt;/code> without &lt;code>--enable-heat-fed&lt;/code> logs a warning and leaves
+the heat dose off.&lt;/p>
 &lt;h2>Incapacitation&lt;span class="hx-absolute -hx-mt-20" id="incapacitation">&lt;/span>
 &lt;a href="#incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>When the cumulative heat dose reaches the agent&amp;rsquo;s heat threshold, the agent
 stops and stays in place as an obstacle, as for the gas dose.&lt;/p>
@@ -2276,6 +2346,11 @@ the same way and set the same &lt;code>incapacitated&lt;/code> flag; only
 &lt;td>&lt;code>None&lt;/code> (Eq. 63.44)&lt;/td>
 &lt;td>&lt;code>--heat-endpoint&lt;/code>&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_fed_method&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;convective&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-fed-method&lt;/code>&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>&lt;code>--disable-tenability&lt;/code> turns off the stop; the dose is still computed.&lt;/p>
@@ -2289,6 +2364,12 @@ and &lt;code>heat_humidity&lt;/code> (always &lt;code>unknown&lt;/code>). The ru
 &lt;code>heat_endpoint&lt;/code> and &lt;code>heat_validity&lt;/code>: the 205 °C limit, marked as assumed, the
 humidity status and the &amp;lt; 10 % water-vapour limit. &lt;code>incapacitation_cause&lt;/code> still reads &lt;code>heat&lt;/code> for every
 endpoint; &lt;code>heat_endpoint&lt;/code> says which one.&lt;/p>
+&lt;p>With &lt;code>--heat-fed-method total-flux&lt;/code> the FED history also carries
+&lt;code>heat_flux_kw_m2&lt;/code> (&lt;em>q&lt;/em>), and the manifest records &lt;code>heat_fed_method&lt;/code> and
+&lt;code>heat_flux_parameters&lt;/code> (ε, h, \(T_s\), &lt;em>D&lt;/em>, and the names of the assumed
+parameters). With an endpoint, &lt;code>heat_outside_validity&lt;/code> still flags samples
+above 205 °C: that limit belongs to the convective data of Eqs.
+63.45–63.47, not to the flux law.&lt;/p>
 &lt;p>The &lt;code>incapacitated&lt;/code> column is true whichever dose stopped the agent, so it
 mixes the gas and heat endpoints; filter on &lt;code>incapacitation_cause&lt;/code> to count
 them apart. &lt;code>gas+heat&lt;/code> means both doses crossed their thresholds on the same
@@ -2296,14 +2377,23 @@ update; a crossing by the other dose after the agent has stopped is not
 recorded.&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
 &lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;strong>Radiant heat.&lt;/strong> Only convective heat from the gas temperature is
-counted: no flux from a hot upper layer, from hot surfaces, or from a flame
-in view (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>,
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222" target="_blank" rel="noopener">#222&lt;/a>,
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223" target="_blank" rel="noopener">#223&lt;/a>).
+&lt;li>&lt;strong>Radiant heat from outside the gas at the head.&lt;/strong> The convective laws
+count convective heat only. The total-flux method adds the radiation of the
+gas around the head, but no flux from a hot upper layer, from hot surfaces,
+or from a flame in view: the &amp;ldquo;below a hot layer&amp;rdquo; regime of spec 016 and the
+external flux term are not implemented
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222" target="_blank" rel="noopener">#222&lt;/a>).
 FDS reference data for that term exist but are not read by the model:
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat-radiometer/">Heat radiometer reference decks&lt;/a>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224" target="_blank" rel="noopener">#224&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>Regime selection.&lt;/strong> The total-flux method uses one ε everywhere. The
+default 0.5 treats every head as in smoke, which overestimates the dose in
+clear hot air; set &lt;code>--heat-emissivity 0.05&lt;/code> for clear air. How to decide
+the regime per agent is open (spec 016, open question 4).&lt;/li>
+&lt;li>&lt;strong>Total-flux parameters.&lt;/strong> h, \(T_s\) and ε are assumptions (see
+&lt;a href="#total-flux">Total flux&lt;/a>); \(T_s\) is fixed and does not rise with
+exposure (spec 016, open questions 1 and 2).&lt;/li>
 &lt;li>&lt;strong>The default endpoint.&lt;/strong> Without &lt;code>--heat-endpoint&lt;/code>, heat FED = 1 is the
 Eq. 63.44 time. Eq. 63.44 is labelled a time to incapacitation, but its
 times lie near the Handbook&amp;rsquo;s tolerance curve (Eq. 63.45) rather than its
@@ -2316,7 +2406,8 @@ for the convective dose; the opt-in σ = 0.94 is borrowed from the gas dose
 flagged; &lt;code>heat_humidity&lt;/code> reads &lt;code>unknown&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272" target="_blank" rel="noopener">#272&lt;/a>). Without &lt;code>--heat-endpoint&lt;/code>, temperatures above 205 °C are not
 flagged either, although Eq. 63.44 rests on the same data (p. 2382).&lt;/li>
-&lt;li>&lt;strong>Web GUI.&lt;/strong> The GUI does not offer &lt;code>--heat-endpoint&lt;/code>
+&lt;li>&lt;strong>Web GUI.&lt;/strong> The GUI does not offer &lt;code>--heat-endpoint&lt;/code> or
+&lt;code>--heat-fed-method&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270" target="_blank" rel="noopener">#270&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Falling exposure and recovery.&lt;/strong> The summed dose assumes exposure that is
 steady or rising (Eq. 63.48); a fleeing agent&amp;rsquo;s exposure falls, and no
@@ -2333,11 +2424,11 @@ allows (read as ±0.5 min, an assumption); it never exceeds the times
 reported as tolerated in Table 63.17&amp;rsquo;s dry-air rows. The factor-2 band
 the test allows is an assumption, not a sourced tolerance. The
 &lt;code>--heat-endpoint&lt;/code> laws are checked against Table 63.21 (&lt;code>tolerance&lt;/code>) and
-hand formulas. The radiant rows of Table 63.20 are kept as reference
-values that call no pyFDS-Evac code, because no radiant term is
-implemented
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219" target="_blank" rel="noopener">#219&lt;/a>,
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223" target="_blank" rel="noopener">#223&lt;/a>).&lt;/li>
+hand formulas
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219" target="_blank" rel="noopener">#219&lt;/a>).
+The total-flux method is checked against hand formulas of Eqs. 63.49 and
+63.43, the radiant rows of Table 63.20 and the convection table of spec 016,
+in unit tests and coupled corridor runs; the layer regime is not tested.&lt;/li>
 &lt;/ul>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
@@ -5537,7 +5628,13 @@ total heat flux to the skin from radiant and convective components (Eq. 63.49),
 which the Handbook calls the total incident flux (p. 2383) but writes as a
 net exchange with the skin surface, and applies Eq. 63.43 to it, with the dose &lt;em>D&lt;/em> in place of &lt;em>r&lt;/em>: 1.33 for
 pain, 10 for second-degree burns and severe incapacitation, 16.7 for
-third-degree burns and a potentially fatal exposure (p. 2384). ISO 13571:2012
+third-degree burns and a potentially fatal exposure (p. 2384). In Eq. 63.49
+the emissivity ε is 0.05 for a gas and &amp;ldquo;perhaps 0.5 for smoke&amp;rdquo;, and the
+convective heat transfer factor is &amp;ldquo;approximately 5–8 for slow-moving air&amp;rdquo;,
+with no unit given (p. 2384). The Handbook applies this method to total
+fluxes above 2.5 kW/m² (p. 2384). Below a hot layer in clear air, the
+significant radiant sources are the layer, the fire and hot surfaces
+(p. 2384). ISO 13571:2012
 (§4.4) likewise assesses heat and radiant energy with an FED model analogous
 to the gas model.&lt;/p>
 &lt;p>A summed dose is interpretable only when both terms are taken for the same
@@ -5575,12 +5672,15 @@ Eq. 63.46 (injury).&lt;/p>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some cross-references in the text of Ch. 63 do not match the printed
 equation labels: the text calls the radiant equation &amp;ldquo;Equation 63.41&amp;rdquo; and the
-summed dose &amp;ldquo;Equation 63.46&amp;rdquo;. The labels above are those printed beside each
+summed dose &amp;ldquo;Equation 63.46&amp;rdquo;, and gives the endpoint times from flux as
+&amp;ldquo;Equation 63.49&amp;rdquo; where the form is that of Eq. 63.43 (p. 2384). The labels above are those printed beside each
 equation. The caption of Table 63.21 says its rates follow Eq. 63.44, but the
 printed values (0.02, 0.19, 1.57 and 15.55 per minute at 65, 125, 220 and
 405 °C) are those of Eq. 63.45. The note under Eq. 63.48 says that
 \(t_{I\,\mathrm{rad}}\) tends to zero below 2.5 kW/m²; it is
 \(1/t_{I\,\mathrm{rad}}\) that does.
+Eq. 63.49 is printed with the division by 1000 on the convective term only,
+although both terms are in W/m² and &lt;em>q&lt;/em> is defined in kW/m².
 The radiant tolerance data (Table 63.19) are incident flux on the skin,
 whereas Eq. 63.49 is written as a net exchange with the skin surface; at the
 200 °C anchor the two differ by about 20 %. FDS&amp;rsquo;s &lt;code>RADIATIVE HEAT FLUX&lt;/code> and
@@ -5673,16 +5773,18 @@ p. 2382). Hockey and Rew is a candidate source for probit relations behind
 these figures; we have not read it.&lt;/p>
 &lt;p>Inference, not a statement of the sources: if the lethal dose is log-normal
 with median 16.7 and 1 % below 10, its log-scale standard deviation is
-ln(16.7/10)/2.326 = 0.513/2.326, so \(\sigma \approx 0.22\). The spec&amp;rsquo;s
-fatal dose D = 16.667 gives the same value to two decimals. Its limits:&lt;/p>
+ln(16.7/10)/2.326 = 0.513/2.326, so \(\sigma \approx 0.22\). The median
+is the fatal dose D = 16.7 of the total-flux method; Purser&amp;rsquo;s spreadsheet
+value 16.667 gives the same σ to two decimals. Its limits:&lt;/p>
 &lt;ul>
 &lt;li>The Handbook states no distribution; the log-normal is assumed.&lt;/li>
 &lt;li>Two figures fix two parameters, so nothing tests the fit.&lt;/li>
-&lt;li>The figures are for radiant lethality, the fatal endpoint of the planned
-total-flux dose (&lt;code>specs/016-heat-fed/SPEC.md&lt;/code>), which is not implemented.
-They do not apply to the convective Eq. 63.44 time in use.&lt;/li>
+&lt;li>The figures are for radiant lethality, the fatal endpoint of the opt-in
+total-flux dose (&lt;code>--heat-fed-method total-flux&lt;/code>,
+&lt;code>specs/016-heat-fed/SPEC.md&lt;/code>). They do not apply to the convective
+Eq. 63.44 time used by default.&lt;/li>
 &lt;/ul>
-&lt;p>With FED = 1 at D = 16.667, the 1 % fatality dose is FED = 0.60. The gas
+&lt;p>With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. The gas
 dose&amp;rsquo;s σ = 0.94, which the opt-in probabilistic heat mode borrows, would put
 29 % of people below FED = 0.60 instead of 1 %. The heat threshold therefore
 stays deterministic by default. A probit in the natural log of dose with
@@ -5790,11 +5892,13 @@ reached an exit.&lt;/p>
 &lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is the convective term of Purser and
 McAllister (SFPE Handbook, 5th ed., Eq. 63.44, or Eq. 63.45-63.47 with
 &lt;code>--heat-endpoint&lt;/code>), computed from the gas temperature of an FDS
-&lt;code>TEMPERATURE&lt;/code> slice. Radiant heat flux is not read and
-does not contribute to any dose. An agent near a flame or under a hot layer
-that radiates strongly is therefore treated as less exposed than it is. A
-total-heat-flux dose is designed in &lt;code>specs/016-heat-fed/SPEC.md&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223" target="_blank" rel="noopener">#223&lt;/a>).&lt;/p>
+&lt;code>TEMPERATURE&lt;/code> slice. The opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the
+radiation of the gas at the head (Eq. 63.49, spec 016), with an assumed
+emissivity. Radiant flux from a hot layer, hot surfaces or a flame is not read
+and does not contribute to any dose. An agent near a flame or under a hot
+layer that radiates strongly is therefore treated as less exposed than it is
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222" target="_blank" rel="noopener">#222&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
 opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
 incapacitated when either dose reaches its threshold. The two thresholds are
@@ -8561,7 +8665,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
 &lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
-&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Radiant heat is not modelled&lt;/td>
+&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49); radiant heat from a layer or flame is not modelled&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -9822,7 +9926,12 @@ tolerance times of Table 63.17 (p. 2375).&lt;/li>
 &lt;li>&lt;strong>σ = 0.94 has no source for heat.&lt;/strong> It is borrowed from the gas dose
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225" target="_blank" rel="noopener">#225&lt;/a>). The
 probabilistic run checks the code path, not the spread.&lt;/li>
-&lt;li>&lt;strong>Convective heat only.&lt;/strong> No radiant dose
+&lt;li>&lt;strong>Convective heat only.&lt;/strong> This room checks the convective laws; it does
+not run &lt;code>--heat-fed-method total-flux&lt;/code>. That method is checked against
+hand formulas of Eqs. 63.49 and 63.43 on synthetic fields
+(&lt;code>tests/test_heat_total_flux.py&lt;/code>,
+&lt;code>tests/verification/test_heat_total_flux_coupled.py&lt;/code>). No radiant dose
+from a layer or flame
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).
 Below the threshold heat changes neither speed nor route
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81" target="_blank" rel="noopener">#81&lt;/a>).&lt;/li>
@@ -9847,7 +9956,7 @@ below FED 0.02. Hot-layer anchor: a black-body layer with a full view,
 surface at 20 or 35 °C, within ±10 % of the Handbook&amp;rsquo;s &amp;ldquo;approximately
 2.5 kW/m²&amp;rdquo;. Table 63.20 radiant rows: within ±30 %, the band chosen in
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219" target="_blank" rel="noopener">#219&lt;/a>.
-D = 16.667 is the spec&amp;rsquo;s value; the Handbook prints 16.7.&lt;/li>
+D = 16.7 as printed on pp. 2382 and 2384 of Ch. 63.&lt;/li>
 &lt;/ul></description></item><item><title>Familiarity: full map vs discovered map</title><link>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/</guid><description>
 &lt;table>
 &lt;thead>
