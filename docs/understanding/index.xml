@@ -356,7 +356,7 @@ pages. Defaults are on the Models pages.&lt;/p>
 &lt;td>\(D_i\), \(D_{\mathrm{heat},i}\)&lt;/td>
 &lt;td>Incapacitation threshold of agent &lt;em>i&lt;/em>; log-normal in probabilistic mode&lt;/td>
 &lt;td>-&lt;/td>
-&lt;td>&lt;code>fed_threshold&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>fed_threshold&lt;/code> for both; &lt;code>heat_fed_threshold&lt;/code> overrides the heat one&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;em>T&lt;/em>&lt;/td>
@@ -456,7 +456,9 @@ below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>). The
 heat dose, which FDS+Evac does not have, is also deterministic by default: no
-population spread for heat is published. Its &lt;code>probabilistic&lt;/code> mode reuses the
+population spread for heat is published. Its threshold is &lt;code>--fed-threshold&lt;/code>
+unless &lt;code>--heat-fed-threshold&lt;/code> sets another, a departure from ISO 13571:2012
+§5.4. Its &lt;code>probabilistic&lt;/code> mode reuses the
 gas spread without a data basis of its own.&lt;/p>
 &lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
 &lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
@@ -479,9 +481,10 @@ gets the FDS+Evac default of 10 s, so this applies to it too, for its first
 per-agent FED history for agents that crossed their threshold and still
 reached an exit.&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
-&lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is the convective term of Purser and
-McAllister (SFPE Handbook, 5th ed., Eq. 63.44, or Eq. 63.45-63.47 with
-&lt;code>--heat-endpoint&lt;/code>), computed from the gas temperature of an FDS
+&lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is a convective term: ISO 13571:2012
+Eq. (9) for fully clothed subjects, Eq. (10) (= SFPE Handbook, 5th ed.,
+Eq. 63.44) with &lt;code>--heat-clothing unclothed&lt;/code>, or Eqs. 63.45-63.47 with
+&lt;code>--heat-endpoint&lt;/code>, computed from the gas temperature of an FDS
 &lt;code>TEMPERATURE&lt;/code> slice. The opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the
 radiation of the gas at the head (Eq. 63.49, spec 016), with an assumed
 emissivity. With &lt;code>--heat-regime layer&lt;/code> it instead takes the head to be in
@@ -505,10 +508,11 @@ tests are listed in
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#assumptions-unsourced-values">Models › Heat › Assumptions&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
 opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
-incapacitated when either dose reaches its threshold. The two thresholds are
-different endpoints: gas FED = 1 is incapacitation, heat FED = 1 the
-Eq. 63.44 time, which by our comparison lies near the SFPE Handbook&amp;rsquo;s
-tolerance curve (see Fundamentals › Heat); the FED history&amp;rsquo;s
+incapacitated when either dose reaches its threshold, one value for both
+by default, as ISO 13571:2012 asks (§5.4). The two doses have different
+endpoints: gas FED = 1 is incapacitation, heat FED = 1 the time of ISO
+Eq. (9), which ISO calls the time to prevention of escape or to
+experiencing pain (see Fundamentals › Heat); the FED history&amp;rsquo;s
 &lt;code>incapacitation_cause&lt;/code> column says which dose stopped the agent. Before that
 point, heat has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced
@@ -1146,7 +1150,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Incapacitation&lt;/strong>&lt;/td>
 &lt;td>FED &amp;gt;= 1.0, agent stops (v0 = 0) ([1] §3.4 p31)&lt;/td>
-&lt;td>Agent stops (desired speed 0) and remains as a static obstacle. Threshold 1.0 for every agent by default, as FDS+Evac, or a per-agent log-normal threshold with median 1.0 in probabilistic mode. The convective heat FED is a separate running total; crossing either threshold incapacitates&lt;/td>
+&lt;td>Agent stops (desired speed 0) and remains as a static obstacle. Threshold 1.0 for every agent by default, as FDS+Evac, or a per-agent log-normal threshold with median 1.0 in probabilistic mode. The convective heat FED is a separate running total with the same threshold by default (ISO 13571:2012 §5.4); crossing either incapacitates&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Activity level&lt;/strong>&lt;/td>
@@ -1161,7 +1165,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
 &lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
-&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
+&lt;td>Convective heat FED (ISO 13571:2012 Eq. (9), fully clothed; Eq. (10) = SFPE Handbook Eq. 63.44 with &lt;code>--heat-clothing unclothed&lt;/code>) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>

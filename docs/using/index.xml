@@ -46,7 +46,7 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;/tr>
 &lt;tr>
 &lt;td>TEMPERATURE&lt;/td>
-&lt;td>heat FED (SFPE Handbook Eq. 63.44), only with &lt;code>--enable-heat-fed&lt;/code>&lt;/td>
+&lt;td>heat FED (ISO 13571:2012 Eq. (9) or (10)), only with &lt;code>--enable-heat-fed&lt;/code>&lt;/td>
 &lt;td>&lt;strong>heat FED is switched off and the run continues&lt;/strong> (see below)&lt;/td>
 &lt;/tr>
 &lt;tr>

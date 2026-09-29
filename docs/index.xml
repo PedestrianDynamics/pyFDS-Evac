@@ -1168,7 +1168,7 @@ pages. Defaults are on the Models pages.&lt;/p>
 &lt;td>\(D_i\), \(D_{\mathrm{heat},i}\)&lt;/td>
 &lt;td>Incapacitation threshold of agent &lt;em>i&lt;/em>; log-normal in probabilistic mode&lt;/td>
 &lt;td>-&lt;/td>
-&lt;td>&lt;code>fed_threshold&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>fed_threshold&lt;/code> for both; &lt;code>heat_fed_threshold&lt;/code> overrides the heat one&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;em>T&lt;/em>&lt;/td>
@@ -1388,10 +1388,12 @@ species the sum reduces to the FDS+Evac default,
 &lt;a href="#convective-heat" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS+Evac has no heat dose, so this one is opt-in: with &lt;code>--enable-heat-fed&lt;/code>
 (&lt;code>opts.enable_heat_fed&lt;/code>) and a &lt;code>TEMPERATURE&lt;/code> slice in the case, a separate
 heat dose accumulates at
-&lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>fed.py&lt;/code>),&lt;/p>
+&lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>fed.py&lt;/code>), by default ISO 13571:2012 Eq. (9)
+for fully clothed subjects,&lt;/p>
 $$
-\dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
-$$&lt;p>with &lt;em>T&lt;/em> in °C. It is a running total of its own, never added to the gas FED.
+\dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.61} / (4.1 \times 10^{8}) \quad [1/\mathrm{min}],
+$$&lt;p>with &lt;em>T&lt;/em> in °C; &lt;code>--heat-clothing unclothed&lt;/code> selects ISO Eq. (10), which is
+SFPE Eq. 63.44. It is a running total of its own, never added to the gas FED.
 The basis is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>; the full specification,
 including its limits, is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.&lt;/p>
 &lt;h2>Tenability: irritant slowdown and incapacitation&lt;span class="hx-absolute -hx-mt-20" id="tenability-irritant-slowdown-and-incapacitation">&lt;/span>
@@ -1421,7 +1423,10 @@ seed, as &lt;code>_sample_threshold&lt;/code> does:
 \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
 In &lt;code>deterministic&lt;/code> mode every agent uses the threshold itself. Both doses
 are deterministic by default: the gas dose as in FDS+Evac, and the heat
-dose since no population spread for heat is published.&lt;/li>
+dose since no population spread for heat is published. The heat dose uses
+the gas threshold &lt;code>fed_threshold&lt;/code>, as ISO 13571:2012 asks for one
+threshold (§5.4); &lt;code>heat_fed_threshold&lt;/code> overrides it, a departure from ISO
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#incapacitation">Models › Heat&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;table>
 &lt;thead>
@@ -1464,7 +1469,7 @@ dose since no population spread for heat is published.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_fed_threshold&lt;/code>&lt;/td>
-&lt;td>&lt;code>1.0&lt;/code>&lt;/td>
+&lt;td>none, &lt;code>fed_threshold&lt;/code>&lt;/td>
 &lt;td>&lt;code>--heat-fed-threshold&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -1636,7 +1641,7 @@ of multiplying them (Eq. 63.14). Because the Frantzich–Nilsson smoke contained
 acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 \(g\) partly counts irritancy twice
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153" target="_blank" rel="noopener">#153&lt;/a>).&lt;/p>
-&lt;p>Heat uses the convective Eq. 63.44 (&lt;code>fed.py&lt;/code>, &lt;code>_heat_fed_rate_per_minute&lt;/code>) unless &lt;code>--heat-endpoint&lt;/code>
+&lt;p>Heat uses the convective ISO 13571:2012 Eq. (9), or Eq. (10) = Eq. 63.44 with &lt;code>--heat-clothing unclothed&lt;/code> (&lt;code>fed.py&lt;/code>, &lt;code>_heat_fed_rate_per_minute&lt;/code>), unless &lt;code>--heat-endpoint&lt;/code>
 selects Eq. 63.45, 63.46 or 63.47, or &lt;code>--heat-fed-method total-flux&lt;/code> the
 flux law of Eqs. 63.49 and 63.43 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>). The log-normal σ of both
 thresholds (&lt;code>fed.py&lt;/code>, &lt;code>TenabilityConfig.susceptibility_sigma&lt;/code>, &lt;code>TenabilityConfig.heat_susceptibility_sigma&lt;/code>) is, for the gas dose, a compromise between
@@ -2480,12 +2485,12 @@ nothing on this page affects a run.&lt;/p>
 &lt;h2>What is computed&lt;span class="hx-absolute -hx-mt-20" id="what-is-computed">&lt;/span>
 &lt;a href="#what-is-computed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>With &lt;code>--enable-heat-fed&lt;/code> (&lt;code>opts.enable_heat_fed&lt;/code>) and a &lt;code>TEMPERATURE&lt;/code> slice in
 the case, each agent accumulates a convective heat dose at
-&lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>pyfds_evac/core/fed.py&lt;/code>), SFPE Handbook 5th
-ed. Eq. 63.44 (p. 2382), unless &lt;code>--heat-endpoint&lt;/code> selects another law
+&lt;code>_heat_fed_rate_per_minute&lt;/code> (&lt;code>pyfds_evac/core/fed.py&lt;/code>), ISO 13571:2012
+Eq. (9) for fully clothed subjects (§8.3.1), unless &lt;code>--heat-clothing unclothed&lt;/code> selects ISO Eq. (10), &lt;code>--heat-endpoint&lt;/code> selects another law
 (&lt;a href="#endpoint">Endpoint&lt;/a>) or &lt;code>--heat-fed-method total-flux&lt;/code> selects the flux
 law (&lt;a href="#total-flux">Total flux&lt;/a>):&lt;/p>
 $$
-\dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
+\dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.61} / (4.1 \times 10^{8}) \quad [1/\mathrm{min}],
 $$&lt;p>with &lt;em>T&lt;/em> the gas temperature in °C at the agent&amp;rsquo;s position, read from the
 &lt;code>TEMPERATURE&lt;/code> slice at &lt;code>--smoke-slice-height&lt;/code> (1.6 m by default, as
 FDS+Evac&amp;rsquo;s &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>). No heat flux enters the law, neither
@@ -2501,9 +2506,53 @@ visibility model falls back to clear air
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248" target="_blank" rel="noopener">#248&lt;/a>).
 Neither enters the heat-dose rate; both can change where agents walk, and
 so the temperature they are exposed to.&lt;/p>
+&lt;h3>Clothing&lt;span class="hx-absolute -hx-mt-20" id="clothing">&lt;/span>
+&lt;a href="#clothing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>--heat-clothing {clothed,unclothed}&lt;/code> (&lt;code>opts.heat_clothing&lt;/code>, the
+&lt;code>clothing&lt;/code> argument of &lt;code>DefaultHeatFedModel&lt;/code>) selects one of the two
+convective laws of ISO 13571:2012 §8.3 (§8.3.1, §8.3.2), both for air with less than 10 %
+water vapour by volume, with &lt;em>t&lt;/em> in min and &lt;em>T&lt;/em> in °C
+(&lt;code>HEAT_CLOTHING_LAWS&lt;/code>):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>&lt;code>--heat-clothing&lt;/code>&lt;/th>
+&lt;th>ISO 13571:2012&lt;/th>
+&lt;th>\(t_{I\,\mathrm{conv}}\) [min]&lt;/th>
+&lt;th>Source cited by ISO&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>clothed&lt;/code> (default)&lt;/td>
+&lt;td>Eq. (9), fully clothed&lt;/td>
+&lt;td>\(4.1\times10^{8}\,T^{-3.61}\)&lt;/td>
+&lt;td>Crane (1978)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>unclothed&lt;/code>&lt;/td>
+&lt;td>Eq. (10), unclothed or lightly clothed&lt;/td>
+&lt;td>\(5\times10^{7}\,T^{-3.4}\)&lt;/td>
+&lt;td>Purser, SFPE Handbook; the constants of Eq. 63.44&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The rate is \(1/t_{I\,\mathrm{conv}}\); a temperature at or below 0 °C,
+or not finite, gives zero. ISO recommends Eq. (9) for fully clothed
+subjects and states an uncertainty of ±25 % for both. Eq. (9) gives about
+three times the time of Eq. (10): 24.7 against 7.9 min at 100 °C, 5.7
+against 2.0 min at 150 °C, 2.0 against 0.75 min at 200 °C. Before
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290" target="_blank" rel="noopener">#290&lt;/a> the
+default was Eq. 63.44; &lt;code>--heat-clothing unclothed&lt;/code> reproduces it exactly.
+SFPE Ch. 63 treats the unclothed expressions as the relevant ones unless
+protective clothing is worn (p. 2336); the default follows ISO instead
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/#iso-135712012-clause-8">Fundamentals › Heat&lt;/a>).
+&lt;code>--heat-clothing&lt;/code> has no effect with &lt;code>--heat-endpoint&lt;/code> or
+&lt;code>--heat-fed-method total-flux&lt;/code>, and logs a warning there and without
+&lt;code>--enable-heat-fed&lt;/code>. The run manifest records &lt;code>heat_clothing&lt;/code> whenever one
+of the two laws is in use.&lt;/p>
 &lt;h2>Endpoint&lt;span class="hx-absolute -hx-mt-20" id="endpoint">&lt;/span>
-&lt;a href="#endpoint" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>--heat-endpoint {tolerance,injury,fatal}&lt;/code> (default: none) replaces Eq. 63.44
-with the convective law of one endpoint of Ch. 63, so that heat FED = 1 means
+&lt;a href="#endpoint" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>--heat-endpoint {tolerance,injury,fatal}&lt;/code> (default: none) replaces the ISO
+law with the convective law of one endpoint of Ch. 63, so that heat FED = 1 means
 that endpoint. Each endpoint is stored with its radiant dose &lt;em>r&lt;/em> of Eq. 63.43
 (&lt;code>HEAT_ENDPOINTS&lt;/code> in &lt;code>pyfds_evac/core/fed.py&lt;/code>), so a radiant constant from one
 endpoint cannot be paired with the convective law of another:&lt;/p>
@@ -2543,7 +2592,8 @@ convective laws it is recorded only. The fatal &lt;em>r&lt;/em> is
 16.7 as printed on pp. 2382 and 2384; Purser&amp;rsquo;s spreadsheet uses 16.667
 (personal communication), and the code follows the Handbook. By maintainer decision,
 heat FED = 1 is meant as the fatal endpoint; &lt;code>--heat-endpoint fatal&lt;/code> gives
-that meaning. Without the option the convective dose stays Eq. 63.44.&lt;/p>
+that meaning. Without the option the convective dose is the ISO law of
+&lt;code>--heat-clothing&lt;/code>.&lt;/p>
 &lt;p>The caption of Table 63.21 (p. 2385) says Eq. 63.44, but its per-minute values
 are those of Eq. 63.45; the tests use the table as the oracle for
 &lt;code>tolerance&lt;/code>.&lt;/p>
@@ -2805,13 +2855,20 @@ while exposure is steady or rising.&lt;/li>
 &lt;a href="#incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>When the cumulative heat dose reaches the agent&amp;rsquo;s heat threshold, the agent
 stops and stays in place as an obstacle, as for the gas dose.&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>&lt;code>deterministic&lt;/code> (default).&lt;/strong> Every agent uses &lt;code>heat_fed_threshold&lt;/code>
-(1.0). No published source gives a population spread for heat tolerance:
+&lt;li>&lt;strong>One threshold for gas and heat.&lt;/strong> The heat threshold is &lt;code>fed_threshold&lt;/code>
+(&lt;code>--fed-threshold&lt;/code>, 1.0 by default), as ISO 13571:2012 asks for one
+threshold for both FED and FEC in an estimation (§5.4) and finds the time
+for heat in the same manner (§8.5). &lt;code>--heat-fed-threshold&lt;/code>
+(&lt;code>TenabilityConfig.heat_fed_threshold&lt;/code>, default none) sets a separate
+heat threshold; that departs from ISO, so the run logs a warning and the
+manifest records &lt;code>heat_fed_threshold_override&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>deterministic&lt;/code> (default).&lt;/strong> Every agent uses the heat threshold. No
+published source gives a population spread for heat tolerance:
 SFPE Ch. 63 gives population figures for heat only for radiant lethality
 (p. 2382), which is not modelled here.&lt;/li>
 &lt;li>&lt;strong>&lt;code>probabilistic&lt;/code> (opt-in).&lt;/strong> Each agent draws its own threshold once, from
 the run&amp;rsquo;s seed, on a stream independent of the gas threshold:
-\(D_i = \texttt{heat\_fed\_threshold} \cdot \exp(\sigma Z)\),
+\(D_i = D \cdot \exp(\sigma Z)\), with &lt;em>D&lt;/em> the heat threshold,
 \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
 assumption with no data basis for heat. The Handbook&amp;rsquo;s radiant lethality
 figures point to a much narrower spread, for an endpoint not modelled here
@@ -2820,11 +2877,11 @@ figures point to a much narrower spread, for an endpoint not modelled here
 &lt;/ul>
 &lt;p>The gas dose is also deterministic by default; the two modes are set separately
 (&lt;code>--incapacitation-mode&lt;/code> and &lt;code>--heat-incapacitation-mode&lt;/code>).&lt;/p>
-&lt;p>The two doses do not share an endpoint. Gas FED = 1 is Purser&amp;rsquo;s
-incapacitation endpoint. Without &lt;code>--heat-endpoint&lt;/code>, heat FED = 1 is the
-Eq. 63.44 time, which the
-Handbook labels time to incapacitation (p. 2382) but whose times lie near its tolerance curve
-(see &lt;a href="#what-is-not-modelled">What is not modelled&lt;/a>). Both stop the agent in
+&lt;p>The two doses use one threshold but do not share an endpoint. Gas FED = 1 is
+Purser&amp;rsquo;s incapacitation endpoint. Without &lt;code>--heat-endpoint&lt;/code>, heat FED = 1
+is the time of ISO Eq. (9) or (10), which ISO introduces as the time to
+prevention of escape and also calls the time to experiencing pain (§8.3,
+§8.3.1; see &lt;a href="#what-is-not-modelled">What is not modelled&lt;/a>). Both stop the agent in
 the same way and set the same &lt;code>incapacitated&lt;/code> flag; only
 &lt;code>incapacitation_cause&lt;/code> tells which endpoint was reached.&lt;/p>
 &lt;table>
@@ -2843,7 +2900,7 @@ the same way and set the same &lt;code>incapacitated&lt;/code> flag; only
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_fed_threshold&lt;/code>&lt;/td>
-&lt;td>&lt;code>1.0&lt;/code>&lt;/td>
+&lt;td>none, &lt;code>fed_threshold&lt;/code>&lt;/td>
 &lt;td>&lt;code>--heat-fed-threshold&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -2857,8 +2914,13 @@ the same way and set the same &lt;code>incapacitated&lt;/code> flag; only
 &lt;td>&lt;code>--heat-susceptibility-sigma&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>heat_clothing&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;clothed&amp;quot;&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-clothing&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>heat_endpoint&lt;/code>&lt;/td>
-&lt;td>&lt;code>None&lt;/code> (Eq. 63.44)&lt;/td>
+&lt;td>&lt;code>None&lt;/code> (ISO law of &lt;code>heat_clothing&lt;/code>)&lt;/td>
 &lt;td>&lt;code>--heat-endpoint&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -2909,6 +2971,10 @@ listed as assumed, as it is not used.
 With an endpoint, &lt;code>heat_outside_validity&lt;/code> still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
 63.45–63.47, not to the flux law.&lt;/p>
+&lt;p>The manifest records &lt;code>heat_clothing&lt;/code> (&lt;code>clothed&lt;/code> or &lt;code>unclothed&lt;/code>) when the
+ISO law is in use, that is without &lt;code>--heat-endpoint&lt;/code> and with
+&lt;code>--heat-fed-method convective&lt;/code>, and &lt;code>heat_fed_threshold_override&lt;/code> when
+&lt;code>--heat-fed-threshold&lt;/code> was set.&lt;/p>
 &lt;p>The &lt;code>incapacitated&lt;/code> column is true whichever dose stopped the agent, so it
 mixes the gas and heat endpoints; filter on &lt;code>incapacitation_cause&lt;/code> to count
 them apart. &lt;code>gas+heat&lt;/code> means both doses crossed their thresholds on the same
@@ -2947,18 +3013,21 @@ still gets the layer formula. How to decide the regime per agent is open
 &lt;a href="#total-flux">Total flux&lt;/a>); \(T_s\) is fixed and does not rise with
 exposure (spec 016, open questions 1 and 2).&lt;/li>
 &lt;li>&lt;strong>The default endpoint.&lt;/strong> Without &lt;code>--heat-endpoint&lt;/code>, heat FED = 1 is the
-Eq. 63.44 time. Eq. 63.44 is labelled a time to incapacitation, but its
-times lie near the Handbook&amp;rsquo;s tolerance curve (Eq. 63.45) rather than its
-injury or fatal ones. Whether the default changes is open
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220" target="_blank" rel="noopener">#220&lt;/a>).&lt;/li>
+time of ISO Eq. (9), or of Eq. (10) with &lt;code>--heat-clothing unclothed&lt;/code>. ISO
+introduces both as the time to prevention of escape and also calls it the
+time to experiencing pain (§8.3, §8.3.1). Ch. 63 labels Eq. 63.44
+(= Eq. (10)) a time to incapacitation, but its times lie near the
+Handbook&amp;rsquo;s tolerance curve (Eq. 63.45) rather than its injury or fatal
+ones (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220" target="_blank" rel="noopener">#220&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Population spread.&lt;/strong> No consulted source gives a spread of tolerance
 for the convective dose; the opt-in σ = 0.94 is borrowed from the gas dose
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225" target="_blank" rel="noopener">#225&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Validity range.&lt;/strong> Humidity is not sampled, so humid smoke is never
 flagged; &lt;code>heat_humidity&lt;/code> reads &lt;code>unknown&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272" target="_blank" rel="noopener">#272&lt;/a>). Without &lt;code>--heat-endpoint&lt;/code>, temperatures above 205 °C are not
-flagged either, although Eq. 63.44 rests on the same data (p. 2382).&lt;/li>
-&lt;li>&lt;strong>Web GUI.&lt;/strong> The GUI does not offer &lt;code>--heat-endpoint&lt;/code>,
+flagged either, although Eq. 63.44 rests on the same data (p. 2382); ISO
+states no temperature range for Eqs. (9) and (10).&lt;/li>
+&lt;li>&lt;strong>Web GUI.&lt;/strong> The GUI offers &lt;code>--heat-clothing&lt;/code> but not &lt;code>--heat-endpoint&lt;/code>,
 &lt;code>--heat-fed-method&lt;/code>, &lt;code>--heat-regime&lt;/code> or the layer options,
 &lt;code>--heat-radiant-source&lt;/code> or &lt;code>--heat-u-factor&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270" target="_blank" rel="noopener">#270&lt;/a>).&lt;/li>
@@ -2966,11 +3035,20 @@ flagged either, although Eq. 63.44 rests on the same data (p. 2382).&lt;/li>
 steady or rising (Eq. 63.48; ISO 13571:2012 §8.4 states it for the
 temperature experienced by the occupant); a fleeing agent&amp;rsquo;s exposure falls, and no
 recovery is modelled.&lt;/li>
-&lt;li>&lt;strong>Clothing and face covering&lt;/strong>, which protect against both convective and
-radiant heat.&lt;/li>
+&lt;li>&lt;strong>Clothing beyond the two ISO laws.&lt;/strong> &lt;code>--heat-clothing&lt;/code> switches between
+fully clothed and unclothed for the whole run; there is no per-agent
+clothing, no face covering, and no clothing term in the endpoint laws, the
+total-flux method or the radiant terms.&lt;/li>
 &lt;li>&lt;strong>Effects on walking speed or route choice.&lt;/strong> The heat dose only
 incapacitates (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81" target="_blank" rel="noopener">#81&lt;/a>).&lt;/li>
-&lt;li>&lt;strong>Tests against the Handbook.&lt;/strong> Eq. 63.44 is checked against the
+&lt;li>&lt;strong>Tests against the Handbook.&lt;/strong> The default, ISO Eq. (9), gives 1.8 to
+3.0 times the convective times of Table 63.20 (p. 2383), and 10.7 min at
+126 °C against the 7 min reported in Table 63.17 (p. 2375). Table 63.20
+does not state clothing; Table 63.17&amp;rsquo;s 205 °C row (&amp;ldquo;bare headed,
+protected&amp;rdquo;) gives 4 min, against 1.85 min from Eq. (9), and clothing is
+not stated for its 126 °C row. These are recorded, not pass bands
+(&lt;code>test_heat_fed_verif.py&lt;/code>, A3.12).
+Eq. 63.44 (&lt;code>--heat-clothing unclothed&lt;/code>) is checked against the
 convective rows of Table 63.20 (p. 2383) and the dry-air rows of
 Table 63.17 (p. 2375). Against Table 63.20 it gives 0.61 to 1.07 times
 the tabulated times, never longer than the table&amp;rsquo;s whole-minute rounding
@@ -2996,7 +3074,8 @@ in the #224 decks, are assumptions of those test decks, not sourced values.&lt;/
 &lt;/ul>
 &lt;h2>Relation to ISO 13571:2012&lt;span class="hx-absolute -hx-mt-20" id="relation-to-iso-135712012">&lt;/span>
 &lt;a href="#relation-to-iso-135712012" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>ISO 13571:2012 clause 8 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/#iso-135712012-clause-8">Fundamentals&lt;/a>)
-has one law in common with the code and none of its other options:&lt;/p>
+has both convective laws in common with the code and none of its other
+options:&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -3006,7 +3085,11 @@ has one law in common with the code and none of its other options:&lt;/p>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>Default (Eq. 63.44)&lt;/td>
+&lt;td>Default, &lt;code>--heat-clothing clothed&lt;/code>&lt;/td>
+&lt;td>Eq. (9), §8.3.1: fully clothed, uncertainty ±25 % (§8.3.2)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-clothing unclothed&lt;/code> (Eq. 63.44)&lt;/td>
 &lt;td>Eq. (10), §8.3.2: same constants, for unclothed or lightly clothed subjects, uncertainty ±25 %&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -3026,8 +3109,12 @@ has one law in common with the code and none of its other options:&lt;/p>
 &lt;td>Consistent: ISO treats heat as a component of its own (§4.1, §4.6 a)&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>heat_fed_threshold&lt;/code>, separate from the gas threshold&lt;/td>
-&lt;td>ISO asks for one threshold for FED and FEC in an estimation (§5.4) and does not say whether the heat FED is included&lt;/td>
+&lt;td>Heat threshold = &lt;code>fed_threshold&lt;/code> (default)&lt;/td>
+&lt;td>Our reading of §5.4 (one threshold for FED and FEC in an estimation) with §8.5 (heat time found in the same manner); ISO does not name the heat FED in §5.4&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-fed-threshold&lt;/code>, separate from the gas threshold&lt;/td>
+&lt;td>A departure from §5.4; logged and recorded in the manifest&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Heat σ&lt;/td>
@@ -3035,11 +3122,9 @@ has one law in common with the code and none of its other options:&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>ISO&amp;rsquo;s Eq. (9), for fully clothed subjects, has no counterpart in the code
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290" target="_blank" rel="noopener">#290&lt;/a>).
-ISO gives no upper temperature for Eqs. (9) and (10) either, so the 205 °C
-limit stays an assumption; its humidity condition, less than 10 % water
-vapour by volume (§8.3), is the one the code already records.&lt;/p>
+&lt;p>ISO gives no upper temperature for Eqs. (9) and (10), so the 205 °C limit
+of the endpoint laws stays an assumption; its humidity condition, less than
+10 % water vapour by volume (§8.3), is the one the code already records.&lt;/p>
 &lt;h2>Assumptions (unsourced values)&lt;span class="hx-absolute -hx-mt-20" id="assumptions-unsourced-values">&lt;/span>
 &lt;a href="#assumptions-unsourced-values" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Values in the heat code, its FDS reference decks and its tests that no
 consulted source fixes. Each can change a result; none is a Handbook
@@ -3159,6 +3244,22 @@ tolerance.&lt;/p>
 &lt;td>&lt;code>tests/verification/test_heat_integrated_intensity_coupled.py&lt;/code>&lt;/td>
 &lt;td>Two heights with different &lt;em>U&lt;/em> in a small committed case&lt;/td>
 &lt;td>None needed: it checks the reader against FDS&amp;rsquo;s own devices&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Clothing&lt;/td>
+&lt;td>fully clothed, every agent&lt;/td>
+&lt;td>&lt;code>--heat-clothing&lt;/code> / &lt;code>heat_clothing&lt;/code> (&lt;code>DEFAULT_HEAT_CLOTHING&lt;/code>)&lt;/td>
+&lt;td>Convective law without &lt;code>--heat-endpoint&lt;/code> or total flux (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290" target="_blank" rel="noopener">#290&lt;/a>)&lt;/td>
+&lt;td>Maintainer decision following ISO 13571:2012, which recommends Eq. (9) for fully clothed subjects (§8.3.1); SFPE Ch. 63 treats the unclothed law as the relevant one unless protective clothing is worn (p. 2336)&lt;/td>
+&lt;td>Clothing data per occupancy or per agent&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>One threshold for gas and heat&lt;/td>
+&lt;td>heat threshold = &lt;code>fed_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-fed-threshold&lt;/code> / &lt;code>heat_fed_threshold&lt;/code> overrides it&lt;/td>
+&lt;td>Heat incapacitation&lt;/td>
+&lt;td>Maintainer reading of ISO 13571:2012 §5.4 with §8.5; the standard does not say whether the heat FED shares the gas threshold (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/#heat">Incapacitation thresholds&lt;/a>)&lt;/td>
+&lt;td>A statement of the standard, or data on heat and gas thresholds in the same people&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Table reading&lt;/td>
@@ -3985,7 +4086,7 @@ runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;tr>
 &lt;td>FED, fractional effective dose (§3.4)&lt;/td>
 &lt;td>Purser FED from CO, CO2, O2 (and optional gases), incapacitation at FED ≥ 1. The O2 term is applied only below 20 % O2 (function &lt;code>FED&lt;/code> in FDS 6.7.6 &lt;code>func.f90&lt;/code>, which FDS+Evac calls). The HCN term in the code (the same &lt;code>FED&lt;/code> function) is exp(&lt;em>C&lt;/em>CN/43)/220 − 0.00454545 (about 1/220) with &lt;em>C&lt;/em>CN = &lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2); Guide Eq. 14–15 write the offset as 0.0045 and &lt;em>C&lt;/em>CN = &lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2. The code form has been in FDS since firemodels/fds 694e033 (2011); earlier versions had no HCN term. FDS&amp;rsquo;s &lt;code>FED_FIC&lt;/code> verification case reproduces only with it (0.97402 against the expected 0.97403 at 100 s; 6.17 with NO2 alone). The FDS User Guide was corrected to NO + NO2 in 2016 (903df07); the FDS+Evac Guide and the FDS Verification Guide were not. An agent that reaches FED ≥ 1 stays down for the rest of the run&lt;/td>
-&lt;td>Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 20 %, as in FDS+Evac; &lt;code>--o2-threshold-percent 19.5&lt;/code> (&lt;code>opts.o2_threshold_percent&lt;/code>) gives the previous 19.5 %. The HCN term is the one in the code FDS+Evac ran (&lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2), offset 1/220), and &lt;code>FED_FIC&lt;/code> is reproduced in the test suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>). Earlier pyFDS-Evac versions followed Guide Eq. 14–15 (&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045); the two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.007 /min now against 0.032 /min before; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default every agent stops at FED = 1, as in FDS+Evac. With &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws its own threshold instead (log-normal, median 1; spread on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page), so about half stop below FED = 1. The heat dose, which FDS+Evac does not have, is deterministic by default. Thresholds are set with &lt;code>--fed-threshold&lt;/code> and &lt;code>--heat-fed-threshold&lt;/code>. An agent incapacitated while it is still waiting is released when its pre-movement time ends, a known bug (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/td>
+&lt;td>Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 20 %, as in FDS+Evac; &lt;code>--o2-threshold-percent 19.5&lt;/code> (&lt;code>opts.o2_threshold_percent&lt;/code>) gives the previous 19.5 %. The HCN term is the one in the code FDS+Evac ran (&lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2), offset 1/220), and &lt;code>FED_FIC&lt;/code> is reproduced in the test suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>). Earlier pyFDS-Evac versions followed Guide Eq. 14–15 (&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045); the two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.007 /min now against 0.032 /min before; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default every agent stops at FED = 1, as in FDS+Evac. With &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws its own threshold instead (log-normal, median 1; spread on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page), so about half stop below FED = 1. The heat dose, which FDS+Evac does not have, is deterministic by default and uses the same threshold, as ISO 13571:2012 asks (§5.4). Thresholds are set with &lt;code>--fed-threshold&lt;/code>; &lt;code>--heat-fed-threshold&lt;/code> sets a separate heat threshold, a departure from ISO. An agent incapacitated while it is still waiting is released when its pre-movement time ends, a known bug (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Convective heat&lt;/td>
@@ -5136,7 +5237,7 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;/tr>
 &lt;tr>
 &lt;td>TEMPERATURE&lt;/td>
-&lt;td>heat FED (SFPE Handbook Eq. 63.44), only with &lt;code>--enable-heat-fed&lt;/code>&lt;/td>
+&lt;td>heat FED (ISO 13571:2012 Eq. (9) or (10)), only with &lt;code>--enable-heat-fed&lt;/code>&lt;/td>
 &lt;td>&lt;strong>heat FED is switched off and the run continues&lt;/strong> (see below)&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -7467,7 +7568,9 @@ is not stated to be the same.&lt;/li>
 &lt;li>&lt;strong>Clothing.&lt;/strong> ISO recommends Eq. (9) for fully clothed subjects. Ch. 63
 holds that light indoor clothing adds little tolerance and does not
 protect the hands and head, so it treats the unclothed expressions as the
-relevant ones unless protective clothing is worn (p. 2336).&lt;/li>
+relevant ones unless protective clothing is worn (p. 2336). pyFDS-Evac
+follows ISO and uses Eq. (9) by default
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#clothing">Models › Heat › Clothing&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/heat_iso.png" alt="Two log-scale panels. Left: time to endpoint against radiant flux from 2.5 to 20 kW/m², ISO Eqs. 7 and 8 against SFPE Eq. 63.43 for r = 1.33 and 16.7 with the second-degree band r = 4.0 to 12.2 shaded, and the two radiant rows of Table 63.20. Right: time against air temperature from 60 to 250 °C, ISO Eqs. 9 and 10 against SFPE Eqs. 63.45 to 63.47, and the five convective rows of Table 63.20" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>(a) Radiant: ISO&amp;rsquo;s burn law (Eq. 7, red, circles) runs through the low
@@ -7626,9 +7729,13 @@ threshold such as 0.3 may be applied to the heat FED, but the 11.4 % figure
 for heat rests on assumption alone. ISO does not establish it. §5.4 also asks
 for a single threshold for FED and FEC in a given estimation, whereas its
 report clause asks for the threshold chosen for each component (clause 10);
-the text does not say whether the heat FED must share the gas threshold.&lt;/p>
+the text does not say whether the heat FED must share the gas threshold.
+§8.5 finds the heat time &amp;ldquo;in the same manner&amp;rdquo; as for the gases, and
+pyFDS-Evac reads the two together as one threshold for gas and heat
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#incapacitation">Models › Heat&lt;/a>).&lt;/p>
 &lt;p>No source we could consult gives a population spread for tolerance of
-convective heat, the dose pyFDS-Evac computes (Eq. 63.44). SFPE Ch. 63 gives
+convective heat, the dose pyFDS-Evac computes (ISO 13571:2012 Eq. (9), or
+Eq. (10) = Eq. 63.44). SFPE Ch. 63 gives
 population figures for heat only for radiant lethality (p. 2382): a radiant
 dose of 10 (kW/m²)^4/3·min &amp;ldquo;represents a fatal level for a vulnerable
 population (over 65 years of age) or a 1 % fatality level for the average
@@ -7648,7 +7755,7 @@ value 16.667 gives the same σ to two decimals. Its limits:&lt;/p>
 &lt;li>The figures are for radiant lethality, the fatal endpoint of the opt-in
 total-flux dose (&lt;code>--heat-fed-method total-flux&lt;/code>,
 &lt;code>specs/016-heat-fed/SPEC.md&lt;/code>). They do not apply to the convective
-Eq. 63.44 time used by default.&lt;/li>
+ISO time used by default.&lt;/li>
 &lt;/ul>
 &lt;p>With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. The gas
 dose&amp;rsquo;s σ = 0.94, which the opt-in probabilistic heat mode borrows, would put
@@ -7733,7 +7840,9 @@ below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>). The
 heat dose, which FDS+Evac does not have, is also deterministic by default: no
-population spread for heat is published. Its &lt;code>probabilistic&lt;/code> mode reuses the
+population spread for heat is published. Its threshold is &lt;code>--fed-threshold&lt;/code>
+unless &lt;code>--heat-fed-threshold&lt;/code> sets another, a departure from ISO 13571:2012
+§5.4. Its &lt;code>probabilistic&lt;/code> mode reuses the
 gas spread without a data basis of its own.&lt;/p>
 &lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
 &lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
@@ -7756,9 +7865,10 @@ gets the FDS+Evac default of 10 s, so this applies to it too, for its first
 per-agent FED history for agents that crossed their threshold and still
 reached an exit.&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
-&lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is the convective term of Purser and
-McAllister (SFPE Handbook, 5th ed., Eq. 63.44, or Eq. 63.45-63.47 with
-&lt;code>--heat-endpoint&lt;/code>), computed from the gas temperature of an FDS
+&lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is a convective term: ISO 13571:2012
+Eq. (9) for fully clothed subjects, Eq. (10) (= SFPE Handbook, 5th ed.,
+Eq. 63.44) with &lt;code>--heat-clothing unclothed&lt;/code>, or Eqs. 63.45-63.47 with
+&lt;code>--heat-endpoint&lt;/code>, computed from the gas temperature of an FDS
 &lt;code>TEMPERATURE&lt;/code> slice. The opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the
 radiation of the gas at the head (Eq. 63.49, spec 016), with an assumed
 emissivity. With &lt;code>--heat-regime layer&lt;/code> it instead takes the head to be in
@@ -7782,10 +7892,11 @@ tests are listed in
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#assumptions-unsourced-values">Models › Heat › Assumptions&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Heat does not affect route choice or walking speed.&lt;/strong> The heat dose is
 opt-in (&lt;code>--enable-heat-fed&lt;/code>). When on, it is tracked per agent, separately from the toxic dose, and an agent is
-incapacitated when either dose reaches its threshold. The two thresholds are
-different endpoints: gas FED = 1 is incapacitation, heat FED = 1 the
-Eq. 63.44 time, which by our comparison lies near the SFPE Handbook&amp;rsquo;s
-tolerance curve (see Fundamentals › Heat); the FED history&amp;rsquo;s
+incapacitated when either dose reaches its threshold, one value for both
+by default, as ISO 13571:2012 asks (§5.4). The two doses have different
+endpoints: gas FED = 1 is incapacitation, heat FED = 1 the time of ISO
+Eq. (9), which ISO calls the time to prevention of escape or to
+experiencing pain (see Fundamentals › Heat); the FED history&amp;rsquo;s
 &lt;code>incapacitation_cause&lt;/code> column says which dose stopped the agent. Before that
 point, heat has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced
@@ -10531,7 +10642,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Incapacitation&lt;/strong>&lt;/td>
 &lt;td>FED &amp;gt;= 1.0, agent stops (v0 = 0) ([1] §3.4 p31)&lt;/td>
-&lt;td>Agent stops (desired speed 0) and remains as a static obstacle. Threshold 1.0 for every agent by default, as FDS+Evac, or a per-agent log-normal threshold with median 1.0 in probabilistic mode. The convective heat FED is a separate running total; crossing either threshold incapacitates&lt;/td>
+&lt;td>Agent stops (desired speed 0) and remains as a static obstacle. Threshold 1.0 for every agent by default, as FDS+Evac, or a per-agent log-normal threshold with median 1.0 in probabilistic mode. The convective heat FED is a separate running total with the same threshold by default (ISO 13571:2012 §5.4); crossing either incapacitates&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Activity level&lt;/strong>&lt;/td>
@@ -10546,7 +10657,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
 &lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
-&lt;td>Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
+&lt;td>Convective heat FED (ISO 13571:2012 Eq. (9), fully clothed; Eq. (10) = SFPE Handbook Eq. 63.44 with &lt;code>--heat-clothing unclothed&lt;/code>) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -11509,11 +11620,11 @@ so copy both first if you want to keep them. With &lt;code>run.py --output-sqlit
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Expected value from&lt;/strong>&lt;/td>
-&lt;td>closed form of SFPE Eq. 63.44 at the deck temperature; per agent, hand sum of Eq. 63.48 on FDS&amp;rsquo;s own &lt;code>TEMPERATURE&lt;/code> slice&lt;/td>
+&lt;td>closed form of SFPE Eq. 63.44 (ISO 13571:2012 Eq. (10), &lt;code>--heat-clothing unclothed&lt;/code>) at the deck temperature; per agent, hand sum of Eq. 63.48 on FDS&amp;rsquo;s own &lt;code>TEMPERATURE&lt;/code> slice&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Status&lt;/strong>&lt;/td>
-&lt;td>passes; checks the pipeline, not the law (the law against the Handbook&amp;rsquo;s tables: &lt;code>test_heat_fed_verif.py&lt;/code>, A3.8–A3.10)&lt;/td>
+&lt;td>passes with &lt;code>--heat-clothing unclothed&lt;/code>; checks the pipeline, not the law (the law against the Handbook&amp;rsquo;s tables: &lt;code>test_heat_fed_verif.py&lt;/code>, A3.8–A3.10, A3.12); the default law, ISO Eq. (9), has expected times only&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -11527,6 +11638,15 @@ the closed form. Any difference from the hand calculation comes from the code:
 reading the slice, sampling it at the agent, summing the dose, or applying
 the threshold. It checks that the code applies SFPE Eqs. 63.44 and 63.48
 correctly, not that they predict human tolerance.&lt;/p>
+&lt;p>The runs use &lt;code>--heat-clothing unclothed&lt;/code>. The default law is ISO 13571:2012
+Eq. (9), for fully clothed subjects
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#clothing">Models › Heat&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290" target="_blank" rel="noopener">#290&lt;/a>). The
+two laws share the pipeline this page checks and differ only in their
+constants. Under Eq. (9) the 100 °C room would reach FED = 1 at 1482 s,
+after the end of the 1000 s FDS record, so that deck could not check the
+default without a longer FDS run; the page therefore stays on Eq. (10) and
+lists the Eq. (9) times as expected values only.&lt;/p>
 &lt;h2>Equation&lt;span class="hx-absolute -hx-mt-20" id="equation">&lt;/span>
 &lt;a href="#equation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>SFPE Handbook 5th ed., Ch. 63 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>). The time
 to incapacitation by convected heat, with &lt;em>T&lt;/em> the gas temperature in °C
@@ -11611,6 +11731,7 @@ position, read from the slice with fdsreader, independent of pyFDS-Evac.&lt;/p>
 &lt;th>Deck&lt;/th>
 &lt;th>\(t^{*}\) at the deck &lt;em>T&lt;/em>&lt;/th>
 &lt;th>First update with FED ≥ 1&lt;/th>
+&lt;th>\(t^{*}\) under ISO Eq. (9), the default (not run)&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
@@ -11618,19 +11739,23 @@ position, read from the slice with fdsreader, independent of pyFDS-Evac.&lt;/p>
 &lt;td>100 °C&lt;/td>
 &lt;td>475.5 s&lt;/td>
 &lt;td>&lt;strong>476 s&lt;/strong>&lt;/td>
+&lt;td>1482.3 s, after the 1000 s record&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>150 °C&lt;/td>
 &lt;td>119.8 s&lt;/td>
 &lt;td>&lt;strong>120 s&lt;/strong>&lt;/td>
+&lt;td>343.0 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>200 °C&lt;/td>
 &lt;td>45.0 s&lt;/td>
 &lt;td>&lt;strong>46 s&lt;/strong>&lt;/td>
+&lt;td>121.4 s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;p>The last column is \(60 \times 4.1\times10^{8}/T^{3.61}\) s.&lt;/p>
 &lt;p>The hand sum on the slice, taken at each agent&amp;rsquo;s own position and update
 times, first reaches 1 at the same update for all 100 agents. The gap to
 the closed form (+0.5, +0.2 and +1.0 s) is the 1 s update interval: the
@@ -11771,7 +11896,8 @@ title="Copy code"
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> T in &lt;span style="color:#ae81ff">100&lt;/span> &lt;span style="color:#ae81ff">150&lt;/span> 200; &lt;span style="color:#66d9ef">do&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> uv run python run.py --scenario assets/fed_incap_heat_&lt;span style="color:#e6db74">${&lt;/span>T&lt;span style="color:#e6db74">}&lt;/span>c &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir &amp;lt;data&amp;gt;/fed_incap_heat_&lt;span style="color:#e6db74">${&lt;/span>T&lt;span style="color:#e6db74">}&lt;/span>c/fds &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-heat-fed --heat-incapacitation-mode deterministic &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-heat-fed --heat-clothing unclothed &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --heat-incapacitation-mode deterministic &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite &amp;lt;data&amp;gt;/fed_incap_heat_&lt;span style="color:#e6db74">${&lt;/span>T&lt;span style="color:#e6db74">}&lt;/span>c/evac/deterministic/run.sqlite &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history &amp;lt;data&amp;gt;/fed_incap_heat_&lt;span style="color:#e6db74">${&lt;/span>T&lt;span style="color:#e6db74">}&lt;/span>c/evac/deterministic/fed_history.csv
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">done&lt;/span>
@@ -11788,7 +11914,11 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>Each run takes about three minutes and uses the default seed 42. A
-temperature without output is skipped.&lt;/p>
+temperature without output is skipped. The published runs were made when
+Eq. 63.44 was the default law, before &lt;code>--heat-clothing&lt;/code> existed;
+&lt;code>--heat-clothing unclothed&lt;/code> selects the same law, and
+&lt;code>tests/verification/test_heat_endpoint_coupled.py&lt;/code> checks, in a synthetic
+corridor, that it reproduces the FED history of that code.&lt;/p>
 &lt;p>The published figures come from runs that also passed
 &lt;code>--constant-extinction 0 --no-visibility&lt;/code>, which ran without a visibility
 model. Add those two flags to reproduce them exactly. On the same FDS
