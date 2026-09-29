@@ -394,7 +394,11 @@ Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
 and the talk &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>.&lt;/p>
 &lt;p>For real FDS output, &lt;code>fdsreader&lt;/code> provides the local extinction field
 via &lt;code>SliceFieldSampler&lt;/code>. For verification cases such as ISO 20414:2020 Test 18 (Table 21),
-the runner can also apply a constant extinction coefficient directly.&lt;/p>
+the runner can also apply a constant extinction coefficient directly.
+If the FDS case has no &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice and no
+&lt;code>--constant-extinction&lt;/code> is given, the run logs a warning and continues with
+no smoke-speed model: agents walk at clear-air speed
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248" target="_blank" rel="noopener">#248&lt;/a>).&lt;/p>
 &lt;h2>FDS data access&lt;span class="hx-absolute -hx-mt-20" id="fds-data-access">&lt;/span>
 &lt;a href="#fds-data-access" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>All FDS slice data is read through a single library:&lt;/p>
 &lt;ul>
@@ -2151,6 +2155,13 @@ the gas FED (&lt;code>--smoke-update-interval&lt;/code>) and is a running total 
 never added to the gas FED.&lt;/p>
 &lt;p>If the case has no &lt;code>TEMPERATURE&lt;/code> slice, the run continues without a heat dose
 and logs a warning; every heat column then reads zero.&lt;/p>
+&lt;p>A heat-only case needs no soot. Without a &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code>
+slice the run logs two warnings and continues: there is no smoke-speed
+model, so agents walk at clear-air speed and route costs see K = 0, and the
+visibility model falls back to clear air
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248" target="_blank" rel="noopener">#248&lt;/a>).
+Neither enters the heat-dose rate; both can change where agents walk, and
+so the temperature they are exposed to.&lt;/p>
 &lt;h2>Incapacitation&lt;span class="hx-absolute -hx-mt-20" id="incapacitation">&lt;/span>
 &lt;a href="#incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>When the cumulative heat dose reaches the agent&amp;rsquo;s heat threshold, the agent
 stops and stays in place as an obstacle, as for the gas dose.&lt;/p>
@@ -3280,7 +3291,7 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;tr>
 &lt;td>Extinction coefficient&lt;/td>
 &lt;td>smoke-speed, visibility gating, GUI smoke layer&lt;/td>
-&lt;td>&lt;code>IndexError&lt;/code> when &lt;code>--fds-dir&lt;/code> is given without &lt;code>--constant-extinction&lt;/code>&lt;/td>
+&lt;td>&lt;strong>smoke speed reduction is switched off and visibility falls back to clear air; the run continues&lt;/strong> (see below). &lt;code>--constant-extinction&lt;/code> restores smoke speed with a uniform K; visibility stays clear air&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>CO &lt;strong>and&lt;/strong> CO2 &lt;strong>and&lt;/strong> O2&lt;/td>
@@ -3389,8 +3400,8 @@ title="Copy code"
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>&lt;code>IndexError: No slice with quantity 'SOOT EXTINCTION COEFFICIENT' found in &amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
-&lt;td>The deck never declared &lt;code>&amp;amp;SLCF QUANTITY='EXTINCTION COEFFICIENT'&lt;/code>, or the species was never tracked.&lt;/td>
+&lt;td>Warning: Smoke speed reduction is disabled for &lt;code>&amp;lt;dir&amp;gt;&lt;/code>, and Visibility falls back to clear air for &lt;code>&amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
+&lt;td>No &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice: the deck never declared &lt;code>&amp;amp;SLCF QUANTITY='EXTINCTION COEFFICIENT'&lt;/code>, or the species was never tracked. Agents walk and see as in clear air.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>IndexError: No slice with quantity '...' found in &amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
@@ -3901,12 +3912,20 @@ cache valid (&lt;code>visibility.py:115–139&lt;/code>, &lt;code>:330–359&lt;
 &lt;td>none&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>--fds-dir DIR&lt;/code>, some group with familiarity &amp;lt; 1&lt;/td>
+&lt;td>&lt;code>--fds-dir DIR&lt;/code> with a &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice, some group with familiarity &amp;lt; 1&lt;/td>
 &lt;td>FDS smoke, uncached&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>--fds-dir DIR --vis-cache PATH&lt;/code>&lt;/td>
+&lt;td>&lt;code>--fds-dir DIR --vis-cache PATH&lt;/code> with a &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice&lt;/td>
 &lt;td>FDS smoke, cached&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fds-dir DIR&lt;/code> without a &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice, some group with familiarity &amp;lt; 1&lt;/td>
+&lt;td>clear air, with a warning (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248" target="_blank" rel="noopener">#248&lt;/a>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--fds-dir DIR --vis-cache PATH&lt;/code> without a &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice&lt;/td>
+&lt;td>clear air, cached, with a warning&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fds-dir DIR&lt;/code>, every group at familiarity 1&lt;/td>
@@ -9506,10 +9525,11 @@ never leave. Each agent&amp;rsquo;s temperature is sampled every second. Seed 42
 (the default &lt;code>baseSeed&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>Runs:&lt;/strong> &lt;code>--enable-heat-fed&lt;/code> (heat is off by default), deterministic at
 all three temperatures; probabilistic at 150 °C.&lt;/li>
-&lt;li>&lt;strong>Workaround:&lt;/strong> the decks have no soot, so the runs need
-&lt;code>--constant-extinction 0 --no-visibility&lt;/code>
+&lt;li>&lt;strong>No soot:&lt;/strong> the decks have no soot slice, so &lt;code>run.py&lt;/code> warns that smoke
+speed reduction is off and that visibility falls back to clear air
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248" target="_blank" rel="noopener">#248&lt;/a>).
-Neither changes the heat dose.&lt;/li>
+Neither enters the heat-dose rate; clear-air visibility changes only where
+agents walk, and the expected dose is read at those positions.&lt;/li>
 &lt;/ul>
 &lt;h2>Expected&lt;span class="hx-absolute -hx-mt-20" id="expected">&lt;/span>
 &lt;a href="#expected" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS does not keep the room at the deck value. Within the first minute the
@@ -9694,7 +9714,6 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> uv run python run.py --scenario assets/fed_incap_heat_&lt;span style="color:#e6db74">${&lt;/span>T&lt;span style="color:#e6db74">}&lt;/span>c &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir &amp;lt;data&amp;gt;/fed_incap_heat_&lt;span style="color:#e6db74">${&lt;/span>T&lt;span style="color:#e6db74">}&lt;/span>c/fds &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --enable-heat-fed --heat-incapacitation-mode deterministic &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --constant-extinction &lt;span style="color:#ae81ff">0&lt;/span> --no-visibility &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite &amp;lt;data&amp;gt;/fed_incap_heat_&lt;span style="color:#e6db74">${&lt;/span>T&lt;span style="color:#e6db74">}&lt;/span>c/evac/deterministic/run.sqlite &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history &amp;lt;data&amp;gt;/fed_incap_heat_&lt;span style="color:#e6db74">${&lt;/span>T&lt;span style="color:#e6db74">}&lt;/span>c/evac/deterministic/fed_history.csv
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">done&lt;/span>
@@ -9712,6 +9731,14 @@ title="Copy code"
 &lt;/div>
 &lt;p>Each run takes about three minutes and uses the default seed 42. A
 temperature without output is skipped.&lt;/p>
+&lt;p>The published figures come from runs that also passed
+&lt;code>--constant-extinction 0 --no-visibility&lt;/code>, which ran without a visibility
+model. Add those two flags to reproduce them exactly. On the same FDS
+output, a paired deterministic 150 °C run with and without the two flags
+stops all 100 agents at the same update in both; agent positions differ
+slightly, and the maximum heat FED differs by less than 10⁻⁴ (relative).
+The paired outputs are in
+&lt;code>&amp;lt;data&amp;gt;/fed_incap_heat_150c/evac/no_soot_fallback_248/&lt;/code>.&lt;/p>
 &lt;h2>Limits&lt;span class="hx-absolute -hx-mt-20" id="limits">&lt;/span>
 &lt;a href="#limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;strong>The law is not verified here.&lt;/strong> The expected values use Eqs. 63.44 and
@@ -9735,9 +9762,6 @@ step until 18, 36 and 59 s;
 at 200 °C that covers nearly the whole 48 s exposure. The code sums the
 same terms either way, so the check holds; the physiology of a falling
 exposure is outside it.&lt;/li>
-&lt;li>&lt;strong>Heat-only cases need a workaround.&lt;/strong> Without a soot slice &lt;code>run.py&lt;/code>
-crashes unless given &lt;code>--constant-extinction 0 --no-visibility&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248" target="_blank" rel="noopener">#248&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>σ = 0.94 has no source for heat.&lt;/strong> It is borrowed from the gas dose
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225" target="_blank" rel="noopener">#225&lt;/a>). The
 probabilistic run checks the code path, not the spread.&lt;/li>

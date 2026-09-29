@@ -37,7 +37,7 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;tr>
 &lt;td>Extinction coefficient&lt;/td>
 &lt;td>smoke-speed, visibility gating, GUI smoke layer&lt;/td>
-&lt;td>&lt;code>IndexError&lt;/code> when &lt;code>--fds-dir&lt;/code> is given without &lt;code>--constant-extinction&lt;/code>&lt;/td>
+&lt;td>&lt;strong>smoke speed reduction is switched off and visibility falls back to clear air; the run continues&lt;/strong> (see below). &lt;code>--constant-extinction&lt;/code> restores smoke speed with a uniform K; visibility stays clear air&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>CO &lt;strong>and&lt;/strong> CO2 &lt;strong>and&lt;/strong> O2&lt;/td>
@@ -146,8 +146,8 @@ title="Copy code"
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>&lt;code>IndexError: No slice with quantity 'SOOT EXTINCTION COEFFICIENT' found in &amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
-&lt;td>The deck never declared &lt;code>&amp;amp;SLCF QUANTITY='EXTINCTION COEFFICIENT'&lt;/code>, or the species was never tracked.&lt;/td>
+&lt;td>Warning: Smoke speed reduction is disabled for &lt;code>&amp;lt;dir&amp;gt;&lt;/code>, and Visibility falls back to clear air for &lt;code>&amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
+&lt;td>No &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice: the deck never declared &lt;code>&amp;amp;SLCF QUANTITY='EXTINCTION COEFFICIENT'&lt;/code>, or the species was never tracked. Agents walk and see as in clear air.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>IndexError: No slice with quantity '...' found in &amp;lt;dir&amp;gt;&lt;/code>&lt;/td>
