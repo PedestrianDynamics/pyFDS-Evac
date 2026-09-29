@@ -76,8 +76,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SIGMA = 5.67e-8  # W m^-2 K^-4, as printed on p. 2384
 KELVIN = 273.15
 EXPONENT = 1.33  # Eq. 63.43 prints 1.33
-# Fatal: spec 016 maintainer decision, D = 16.667 (the Handbook prints 16.7).
-DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.667}
+# Fatal: D = 16.7 as printed in SFPE Ch. 63, p. 2384 (Eq. 63.49 D values);
+# Purser's spreadsheet uses 16.667, the code follows the Handbook.
+DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.7}
 
 
 # --- hand formulas ----------------------------------------------------------

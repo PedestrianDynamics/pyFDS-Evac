@@ -10,7 +10,7 @@ pp. 2382-2384; spec 016, "Regimes"):
     t = D / q^1.33                                             [min]
 
 Case: head in clear air at 120 deg C, layer at 300 deg C, eps_L = 0.9,
-phi = 0.5 (face), h = 5, T_s = 35 deg C, fatal D = 16.667, threshold scaled
+phi = 0.5 (face), h = 5, T_s = 35 deg C, fatal D = 16.7, threshold scaled
 so the crossing falls at 90 s. The same run in the smoke regime
 (eps = 0.5 at the head, no layer) crosses at about 470 s; with the draft's
 double counting (layer term on top of the eps = 0.5 term) at about 75 s.
@@ -53,7 +53,7 @@ UPDATE_S = 1.0
 TIMING_TOL_S = 1.5
 SIGMA = 5.67e-8
 KELVIN = 273.15
-DOSE_FATAL = 16.667  # spec 016 maintainer decision (the Handbook prints 16.7)
+DOSE_FATAL = 16.7  # SFPE Ch. 63 pp. 2382, 2384; Purser's spreadsheet: 16.667
 TARGET_S = 90.0
 
 T_HEAD = 120.0
