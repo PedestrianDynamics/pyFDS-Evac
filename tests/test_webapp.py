@@ -1244,3 +1244,34 @@ def test_switch_sentinel_distinguishes_unchecked_from_absent(client):
     assert form_to_opts(base).enable_rerouting is True
     assert form_to_opts({**base, "enable_rerouting": "off"}).enable_rerouting is False
     assert form_to_opts({**base, "enable_rerouting": "on"}).enable_rerouting is True
+
+
+class TestRunSpec:
+    """#318: each submitted run keeps an immutable record of its settings."""
+
+    def test_snapshot_survives_later_edits_and_records_the_seed(self, client):
+        r = client.post("/run", data={"scenario": "blind_spawn_discovery"})
+        assert r.status_code == 200
+        spec = manager.spec
+        assert spec is not None and spec.run_id == manager.run_id
+        # Neither the live Namespace nor a later form can reach the snapshot.
+        manager.opts.seed = 999
+        with pytest.raises(TypeError):
+            spec.opts["seed"] = 999
+        client.post("/run", data={"scenario": "t_junction", "seed": "5"})
+        assert _stream_until_terminal(client)[-1] == "done"
+        done = manager.spec
+        assert done.opts["seed"] is None  # blank form: the scenario's seed
+        assert done.expected_seed == 1301  # baseSeed of the deck
+        assert done.seed_used == 1301  # confirmed by result.metrics
+        assert done.status == "done"
+        assert done.total_agents == manager.result.total_agents
+        assert done.scenario_path.endswith("blind_spawn_discovery")
+        _drop_temp_trajectory()
+
+    def test_reset_drops_the_snapshot(self, client):
+        client.post("/run", data={"scenario": "ISO-table21", "seed": "3"})
+        _stream_until_terminal(client)
+        _drop_temp_trajectory()
+        client.post("/clear")
+        assert manager.spec is None

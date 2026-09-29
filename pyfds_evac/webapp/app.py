@@ -38,7 +38,7 @@ from pyfds_evac.core import load_scenario
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
 from . import docs, params, plots, theme, trajviz
-from .runner import RunManager
+from .runner import RunManager, make_run_spec
 
 _PLOTLY_CDN = Script(src="https://cdn.plot.ly/plotly-2.35.2.min.js")
 _HTMX_SSE = Script(src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js")
@@ -963,6 +963,35 @@ async def upload_scenario(request: Request):
 
 
 # ── run routes ────────────────────────────────────────────────────────────────
+class _FdsDirError(ValueError):
+    """The FDS dir field does not name a folder."""
+
+
+def _resolve_form(form: dict):
+    """Resolve a submitted form into ``(scenario, opts)`` for build_run_kwargs.
+
+    The one path from form to configuration: /run submits what this returns,
+    and the Python export renders the same ``opts``. Raises on anything the
+    API would reject, using the API's own checks.
+    """
+    scenario = load_scenario(str(params.scenario_path(form.get("scenario"))))
+    opts = params.form_to_opts(form)
+    # Normalise the FDS dir and fail fast on a bogus value. Without this,
+    # a stale/garbage field (e.g. a pasted error string) is handed to
+    # fdsreader as a path and produces a confusing nested-exception cascade.
+    fds_dir = (getattr(opts, "fds_dir", None) or "").strip()
+    opts.fds_dir = fds_dir or None
+    if fds_dir and not Path(fds_dir).is_dir():
+        shown = fds_dir if len(fds_dir) <= 80 else fds_dir[:80] + "…"
+        raise _FdsDirError(f"FDS dir is not a folder: {shown}")
+    # Cheap option-combination checks stay on the request thread. Only the
+    # expensive half of build_run_kwargs (FDS slice parsing) is deferred to
+    # the worker, so a plain misconfiguration still answers the request
+    # instead of surfacing later as a failed run.
+    validate_opts(opts)
+    return scenario, opts
+
+
 @rt("/run")
 async def post(request: Request):
     form = dict(await request.form())
@@ -980,37 +1009,43 @@ async def post(request: Request):
         return _running_stream_view()
 
     try:
-        scenario = load_scenario(str(params.scenario_path(scenario_name)))
-        opts = params.form_to_opts(form)
-        # Normalise the FDS dir and fail fast on a bogus value. Without this,
-        # a stale/garbage field (e.g. a pasted error string) is handed to
-        # fdsreader as a path and produces a confusing nested-exception cascade.
-        fds_dir = (getattr(opts, "fds_dir", None) or "").strip()
-        opts.fds_dir = fds_dir or None
-        if fds_dir and not Path(fds_dir).is_dir():
-            shown = fds_dir if len(fds_dir) <= 80 else fds_dir[:80] + "…"
-            return Div(
-                f"FDS dir is not a folder: {shown}",
-                style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
-            )
-        # Cheap option-combination checks stay on the request thread. Only the
-        # expensive half of build_run_kwargs (FDS slice parsing) is deferred to
-        # the worker, so a plain misconfiguration still answers the request
-        # instead of surfacing later as a failed run.
-        validate_opts(opts)
+        scenario, opts = _resolve_form(form)
+    except _FdsDirError as exc:
+        return Div(
+            str(exc),
+            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+        )
+    except Exception as exc:
+        return Div(
+            f"{type(exc).__name__}: {exc}",
+            style="color:#E01E37;padding:12px;border:1px solid #E01E37;border-radius:9px",
+        )
+
+    try:
+        spec = make_run_spec(
+            opts,
+            scenario,
+            scenario_name,
+            str(params.scenario_path(scenario_name)),
+        )
         import run as cli
 
+        # The run is built from the snapshot, not from the handler's Namespace,
+        # so what runs is exactly what the snapshot (and its export) records.
+        run_opts = spec.namespace()
+
         def post_run(result):
-            return cli.apply_outputs(result, scenario, opts, log=lambda _m: None)
+            return cli.apply_outputs(result, scenario, run_opts, log=lambda _m: None)
 
         manager.start(
             scenario,
-            lambda: build_run_kwargs(scenario, opts, log=print),
+            lambda: build_run_kwargs(scenario, run_opts, log=print),
             scenario_name,
             post_run=post_run,
-            fds_dir=getattr(opts, "fds_dir", None),
+            fds_dir=run_opts.fds_dir,
             results_only=bool(form.get("results_only")),
-            opts=opts,
+            opts=spec.namespace(),
+            spec=spec,
         )
     except Exception as exc:
         return Div(

@@ -9,15 +9,21 @@ deliver the same terminal event. Only one run is active at a time.
 
 from __future__ import annotations
 
+import argparse
 import contextlib
+import copy
+import dataclasses
 import io
 import logging
 import sys
 import threading
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
+from datetime import datetime, timezone
+from types import MappingProxyType
 from typing import Any
 
 from pyfds_evac.core import ProgressEvent, ScenarioResult, run_scenario
+from pyfds_evac.core.manifest import find_project_root, git_state, package_versions
 
 _MAX_LOG_LINES = 800
 _MAX_WARNINGS = 50
@@ -31,6 +37,79 @@ class RunCancelled(Exception):
     this, which propagates out of ``run_scenario``'s step loop. Ticks fire
     roughly once per simulated second, so a cancel lands promptly.
     """
+
+
+@dataclasses.dataclass(frozen=True)
+class RunSpec:
+    """Immutable record of what one submitted run used.
+
+    Built from the resolved options at submission, so later form edits and
+    the request handler's own mutations of ``opts`` cannot reach it. Fields
+    the run has not confirmed stay None and are reported as "not recorded";
+    nothing is filled in after the fact from the current form.
+    """
+
+    run_id: int
+    scenario_name: str
+    scenario_path: str
+    # Deep copy of vars(opts) exactly as handed to build_run_kwargs.
+    opts: Mapping[str, Any]
+    started_at: str
+    pyfds_evac_version: str | None
+    git_commit: str | None
+    git_dirty: bool | None
+    # Seed the run would use at submission: opts.seed, else scenario.seed.
+    expected_seed: int | None
+    # Seed the finished run reports (result.metrics["seed"]), set only when it
+    # agrees with expected_seed.
+    seed_used: int | None = None
+    status: str = "running"
+    total_agents: int | None = None
+    agents_evacuated: int | None = None
+    agents_remaining: int | None = None
+    evacuation_time: float | None = None
+    error: str | None = None
+
+    def namespace(self) -> argparse.Namespace:
+        """A fresh, independent Namespace of the recorded options."""
+        return argparse.Namespace(**copy.deepcopy(dict(self.opts)))
+
+
+def make_run_spec(
+    opts: Any, scenario: Any, scenario_name: str, scenario_path: str
+) -> RunSpec:
+    """Freeze the resolved options of a run about to be submitted."""
+    commit, dirty = git_state(find_project_root())
+    seed = getattr(opts, "seed", None)
+    return RunSpec(
+        run_id=0,
+        scenario_name=scenario_name,
+        scenario_path=scenario_path,
+        opts=MappingProxyType(copy.deepcopy(dict(vars(opts)))),
+        started_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        pyfds_evac_version=package_versions().get("pyfds-evac"),
+        git_commit=commit,
+        git_dirty=dirty,
+        expected_seed=seed if seed is not None else getattr(scenario, "seed", None),
+    )
+
+
+def _finished_spec(
+    spec: RunSpec, outcome: str, result: Any, error: str | None
+) -> RunSpec:
+    """Return *spec* with the run's outcome and confirmed seed recorded."""
+    fields: dict[str, Any] = {"status": outcome, "error": error}
+    if result is not None:
+        reported = result.metrics.get("seed")
+        if reported is not None and reported == spec.expected_seed:
+            fields["seed_used"] = reported
+        fields.update(
+            total_agents=result.total_agents,
+            agents_evacuated=result.agents_evacuated,
+            agents_remaining=result.agents_remaining,
+            evacuation_time=result.evacuation_time,
+        )
+    return dataclasses.replace(spec, **fields)
 
 
 class _WarningCapture(logging.Handler):
@@ -110,6 +189,7 @@ class RunManager:
         self.fds_dir: str | None = None
         self.results_only: bool = False
         self.opts: Any = None
+        self.spec: RunSpec | None = None
         self.artifacts: list[str] = []
         self.last_event: ProgressEvent | None = None
         self.fed_snapshots: list[tuple] = []  # (sim_time, max_fed, mean_fed)
@@ -130,6 +210,7 @@ class RunManager:
         fds_dir: str | None = None,
         results_only: bool = False,
         opts: Any = None,
+        spec: RunSpec | None = None,
     ) -> None:
         """Start a run on a background thread. Raises if one is already active.
 
@@ -156,6 +237,10 @@ class RunManager:
         after ``run_scenario``, after ``post_run``). A phase already under way
         is not interrupted, so a cancel that lands during ``post_run`` still
         ends the run as ``cancelled``, but files it already wrote stay on disk.
+
+        ``spec`` is the frozen record of the submitted configuration (see
+        :func:`make_run_spec`); it gets this run's id, and its outcome once
+        the run ends.
         """
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("A run is already in progress.")
@@ -172,6 +257,9 @@ class RunManager:
             self.fds_dir = fds_dir
             self.results_only = results_only
             self.opts = opts
+            self.spec = (
+                None if spec is None else dataclasses.replace(spec, run_id=self.run_id)
+            )
             self.artifacts = []
             self.last_event = None
             self.fed_snapshots = []
@@ -238,6 +326,8 @@ class RunManager:
                 # to report and drop any partial result.
                 self.result = None
                 self.error = None
+            if self.spec is not None:
+                self.spec = _finished_spec(self.spec, outcome, self.result, self.error)
             # Release before publishing: a client that sees the terminal
             # status may start the next run straight away.
             self._lock.release()
@@ -273,6 +363,7 @@ class RunManager:
             self.result = None
             self.error = None
             self.scenario_name = None
+            self.spec = None
             self.last_event = None
             self.artifacts = []
             self.fed_snapshots = []
