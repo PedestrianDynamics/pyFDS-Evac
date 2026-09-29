@@ -10114,7 +10114,8 @@ ensemble in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using
 &lt;p>An optional local web app that runs the same model as &lt;code>run.py&lt;/code> behind a form:
 pick a scenario, set the options, run it, watch the progress, and look at the
 results. It is for exploring a scenario; for studies, scripts and &lt;code>run.py&lt;/code>
-are easier to reproduce.&lt;/p>
+are easier to reproduce. To turn a GUI run into a script, see
+&lt;a href="#show-the-run-as-python">Show the run as Python&lt;/a>.&lt;/p>
 &lt;h2>Install and launch&lt;span class="hx-absolute -hx-mt-20" id="install-and-launch">&lt;/span>
 &lt;a href="#install-and-launch" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv sync --extra gui
@@ -10129,7 +10130,105 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>Then open &lt;a href="http://localhost:5001" target="_blank" rel="noopener">http://localhost:5001&lt;/a>. The extra installs
-&lt;a href="https://fastht.ml/" target="_blank" rel="noopener">FastHTML&lt;/a> and its dependencies.&lt;/p>
+&lt;a href="https://fastht.ml/" target="_blank" rel="noopener">FastHTML&lt;/a> and its dependencies. On a screen narrower
+than 900 px, such as a phone, the form sits above the results instead of
+beside them.&lt;/p>
+&lt;h2>Run a scenario&lt;span class="hx-absolute -hx-mt-20" id="run-a-scenario">&lt;/span>
+&lt;a href="#run-a-scenario" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The steps use &lt;code>iso_table21_coupled&lt;/code>, a bundled scenario that comes with its
+FDS output: one agent walks a 100 m corridor filled with smoke of about
+K = 1 1/m. The numbered markers in the first screenshot show where each
+control is. Click a screenshot to open it at full size.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/overview.png">&lt;figure>
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/overview.png" title="The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area." alt="The start screen. On the left, the Parameters panel with the Show equivalent Python button in its header, the open Core group with the scenario picker set to iso_table21_coupled, the Smoke group with fields labelled with units such as “Constant extinction (1/m)” and “Smoke update interval (s)”, and the Run scenario and Results only buttons at the bottom. On the right, the left part of the empty results area. Numbered markers: 1 at the scenario picker, 2 at the Smoke group, 3 at Run scenario, 4 at the results area" loading="lazy" />
+&lt;figcaption>The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area.&lt;/figcaption>
+&lt;/figure>&lt;/a>&lt;/p>
+&lt;div class="steps hx-ml-4 hx-mb-12 ltr:hx-border-l rtl:hx-border-r hx-border-gray-200 ltr:hx-pl-6 rtl:hx-pr-6 dark:hx-border-neutral-800 [counter-reset:step]">
+&lt;h3>Pick a scenario&lt;span class="hx-absolute -hx-mt-20" id="pick-a-scenario">&lt;/span>
+&lt;a href="#pick-a-scenario" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>In &lt;strong>Core&lt;/strong>, choose &lt;code>iso_table21_coupled&lt;/code> in the scenario picker (1). Leave
+the seed blank to use the scenario&amp;rsquo;s own &lt;code>baseSeed&lt;/code>. To use your own
+scenario, drop its config JSON and geometry WKT, or a &lt;code>.zip&lt;/code> bundle, on the
+upload box and click &lt;strong>Add to list&lt;/strong>.&lt;/p>
+&lt;h3>Set the options&lt;span class="hx-absolute -hx-mt-20" id="set-the-options">&lt;/span>
+&lt;a href="#set-the-options" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Open &lt;strong>Smoke&lt;/strong> (2) and enter &lt;code>assets/iso_table21_coupled/fds&lt;/code> in &lt;strong>FDS dir&lt;/strong>,
+or pick the folder with &lt;strong>Browse…&lt;/strong>. Leave the other fields at their
+defaults. Every &lt;code>run.py&lt;/code> option has a field, and labels show the unit where
+the value has one, for example &lt;strong>Smoke slice height (m)&lt;/strong>. Press &lt;strong>?&lt;/strong> next
+to a field to read its help text. The groups and their fields are listed
+under &lt;a href="#the-form">The form&lt;/a>.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/configure.png">&lt;figure>
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/configure.png" title="The Smoke group with the FDS folder filled in, and the start of the FED &amp;amp; Tenability group." alt="The Parameters panel with Core collapsed. The Smoke group is open with FDS dir set to assets/iso_table21_coupled/fds, an empty “Constant extinction (1/m)” field, “Smoke update interval (s)” set to 1.0 and “Smoke slice height (m)” set to 1.6. Below it the FED &amp; Tenability group is open with the Disable tenability switch off" loading="lazy" />
+&lt;figcaption>The Smoke group with the FDS folder filled in, and the start of the FED &amp;amp; Tenability group.&lt;/figcaption>
+&lt;/figure>&lt;/a>&lt;/p>
+&lt;h3>Run it&lt;span class="hx-absolute -hx-mt-20" id="run-it">&lt;/span>
+&lt;a href="#run-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Click &lt;strong>Run scenario&lt;/strong> (3). The results area (4) turns into a progress card
+and a console with the model&amp;rsquo;s log. The card names the scenario and the run
+number and shows agents evacuated, simulated time, wall-clock time and
+percent done. &lt;strong>Cancel run&lt;/strong> stops the run at its next step.&lt;/p>
+&lt;p>If a value is invalid, the run does not start. An alert above the results
+area says &amp;ldquo;The run was not started.&amp;rdquo; with the error, and your settings and
+any results already shown are kept. The field is named in the message when
+the error comes from that field&amp;rsquo;s value, for example &lt;code>Seed: …&lt;/code>; otherwise
+the message is shown as it is, with the exception type under
+&lt;strong>Technical details&lt;/strong>.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/running.png">&lt;figure>
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/running.png" title="A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario." alt="A progress card titled “Running: Haspel” with the subtitle “run #2 · coupled FDS × JuPedSim step loop”, at 25 percent, with a progress bar, the line “evacuated 75/300 · sim 105.3s · wall 44s · 25%” and a Cancel run button. Below it, the console lists the model’s setup and rerouting log lines" loading="lazy" />
+&lt;figcaption>A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario.&lt;/figcaption>
+&lt;/figure>&lt;/a>&lt;/p>
+&lt;h3>Look at the results&lt;span class="hx-absolute -hx-mt-20" id="look-at-the-results">&lt;/span>
+&lt;a href="#look-at-the-results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When the run ends, the results replace the progress card. A header names
+the run (&lt;strong>Results&lt;/strong>, the run number, scenario and start time) and holds
+&lt;strong>Show Python for this run&lt;/strong> and &lt;strong>Clear results&lt;/strong>. Below it, the outcome
+is stated in words, &amp;ldquo;Complete: all agents evacuated&amp;rdquo; here, followed by
+tiles for the evacuation time, agents evacuated, agents remaining and the
+seed used, and any warnings from the run.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/results_header.png">&lt;figure>
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/results_header.png" title="The results header, the outcome and the FED warning of the corridor run." alt="The top of the results. A header reads “Results run #1 · iso_table21_coupled · 2026-09-29T18:14:06&amp;#43;00:00” with the buttons Show Python for this run and Clear results, and the line “Starting a new run replaces these results in this view; the files on disk are kept.” Below it, a check mark and “Complete: all agents evacuated”, four tiles reading Evacuation time 85.0 s, Evacuated 1 / 1 agents, Remaining 0 agents and Seed used 420, and a Warning box, “1 warning for run #1”, saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices" loading="lazy" />
+&lt;figcaption>The results header, the outcome and the FED warning of the corridor run.&lt;/figcaption>
+&lt;/figure>&lt;/a>&lt;/p>
+&lt;p>Further down, press play in
+&lt;strong>Trajectories&lt;/strong> to replay the run, or drag the time slider. Scroll over the
+plan to zoom and drag to pan; &lt;strong>↺&lt;/strong> resets the view. With an FDS folder set,
+the extinction slice is drawn under the agents as a grey smoke layer;
+&lt;strong>Smoke&lt;/strong> switches it off.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/replay.png">&lt;figure>
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/replay.png" title="The trajectory replay with the FDS smoke layer on, zoomed in on the agent." alt="The Trajectories panel at t = 41 s, zoomed in on the corridor. The corridor is drawn in grey, the FDS smoke layer, with one yellow agent in it. Below the plan: a play button, the time slider, a reset-view button, speed buttons 1×, 2×, 5×, 10× and 50×, a custom speed field, and the smoke toggle set to on" loading="lazy" />
+&lt;figcaption>The trajectory replay with the FDS smoke layer on, zoomed in on the agent.&lt;/figcaption>
+&lt;/figure>&lt;/a>&lt;/p>
+&lt;p>The &lt;strong>Smoke&lt;/strong> chart below the replay plots the mean speed factor and the mean
+extinction coefficient &lt;em>K&lt;/em> over time. Other charts, such as Cognitive map
+growth, stay empty for this one-agent corridor.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/smoke_chart.png">&lt;figure>
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/smoke_chart.png" title="The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places." alt="A Plotly chart titled Smoke, with time from 0 to 85 s on the horizontal axis, the speed factor on the left axis between 0.9196262 and 0.9196266, and the extinction coefficient K on the right axis between 0.995502 and 0.995507 per metre. Both lines are flat until about 50 s and then vary in their last digits" loading="lazy" />
+&lt;figcaption>The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places.&lt;/figcaption>
+&lt;/figure>&lt;/a>&lt;/p>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: The run finished">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> The run finished&lt;/p>
+&lt;div class="docs-checkpoint__body">
+&lt;p>The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
+agent evacuated. The &lt;strong>Warning&lt;/strong> box says that FED is disabled: this deck
+writes only the soot extinction slice, no CO, CO₂ or O₂, so the warning is
+expected here. The same run from the command line,&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/iso_table21_coupled &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir assets/iso_table21_coupled/fds&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>ends with &lt;code>Simulation finished in 84.97 s (1/1 evacuated).&lt;/code>&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;h3>Keep the run as a script&lt;span class="hx-absolute -hx-mt-20" id="keep-the-run-as-a-script">&lt;/span>
+&lt;a href="#keep-the-run-as-a-script" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Click &lt;strong>Show Python for this run&lt;/strong> in the results header to get this run as
+a standalone Python script. &lt;strong>Show equivalent Python&lt;/strong>, in the Parameters
+header, previews the current form settings instead. See
+&lt;a href="#show-the-run-as-python">Show the run as Python&lt;/a>.&lt;/p>
+&lt;/div>
 &lt;h2>The form&lt;span class="hx-absolute -hx-mt-20" id="the-form">&lt;/span>
 &lt;a href="#the-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The form is built from the &lt;code>run.py&lt;/code> parser, so every option has a field.
 Choice fields with no parser default show &amp;ldquo;default&amp;rdquo;: for &lt;code>heat_clothing&lt;/code> that
@@ -10146,7 +10245,7 @@ means clothed, ISO 13571 Eq. (9), and a blank &lt;code>heat_fed_threshold&lt;/co
 &lt;tbody>
 &lt;tr>
 &lt;td>Core&lt;/td>
-&lt;td>scenario (pick or upload), seed&lt;/td>
+&lt;td>scenario (pick or upload), seed; a blank seed uses the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code>, as &lt;code>run.py&lt;/code> does, and 42 if the scenario sets none (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Smoke&lt;/td>
@@ -10162,11 +10261,11 @@ means clothed, ISO 13571 Eq. (9), and a blank &lt;code>heat_fed_threshold&lt;/co
 &lt;/tr>
 &lt;tr>
 &lt;td>Visibility&lt;/td>
-&lt;td>&lt;code>vis_cache&lt;/code>&lt;/td>
+&lt;td>&lt;code>vis_cache&lt;/code>; blank means no cache&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Output files&lt;/td>
-&lt;td>an output folder; the SQLite, the four CSVs and the scenario bundle (&lt;code>&amp;lt;folder&amp;gt;/bundle&lt;/code>) are written there&lt;/td>
+&lt;td>&lt;strong>Output folder&lt;/strong>; the SQLite, the four CSVs and the scenario bundle (&lt;code>&amp;lt;run folder&amp;gt;/bundle&lt;/code>) are written to the run&amp;rsquo;s folder (see &lt;a href="#output-folders">Output folders&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Other (collapsed)&lt;/td>
@@ -10183,23 +10282,386 @@ dropdowns. The option meanings and defaults are on &lt;a href="https://pedestria
 &lt;h2>Runs&lt;span class="hx-absolute -hx-mt-20" id="runs">&lt;/span>
 &lt;a href="#runs" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The GUI calls the same &lt;code>run_scenario()&lt;/code> as the command line, through the same
 option builder (&lt;code>build_run_kwargs&lt;/code> in &lt;code>pyfds_evac/core/run_config.py&lt;/code>), so a
-run configured in the browser is identical to the equivalent &lt;code>run.py&lt;/code>
-command. Invalid combinations (for example &lt;code>--vis-cache&lt;/code> with rerouting off)
-are rejected when the form is submitted, with the same message as &lt;code>run.py&lt;/code>.&lt;/p>
+run configured in the browser gets the same options as the equivalent
+&lt;code>run.py&lt;/code> command. The results can still differ: a second run in the same GUI
+session can differ from a fresh &lt;code>run.py&lt;/code> run with the same seed
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>). Invalid combinations (for example &lt;code>--vis-cache&lt;/code> with rerouting off)
+are rejected when the form is submitted, with the same message as &lt;code>run.py&lt;/code>,
+in the alert above the results area.&lt;/p>
 &lt;p>One run is active at a time. It runs on a background thread and streams its
-progress to the page. Cancelling stops the run at its next step.&lt;/p>
+progress to the page. &lt;strong>Run scenario&lt;/strong> and &lt;strong>Results only&lt;/strong> stay locked
+while a run is active or cancelling. &lt;strong>Cancel run&lt;/strong> stops the run at its
+next step.&lt;/p>
+&lt;h3>Run states&lt;span class="hx-absolute -hx-mt-20" id="run-states">&lt;/span>
+&lt;a href="#run-states" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When a run ends, the panel shows one of these states, each with a header
+that names the run and its own buttons:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>State&lt;/th>
+&lt;th>Shown when&lt;/th>
+&lt;th>Buttons&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Results&lt;/td>
+&lt;td>the run finished and its results are displayed&lt;/td>
+&lt;td>&lt;strong>Show Python for this run&lt;/strong>, &lt;strong>Clear results&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Failed&lt;/td>
+&lt;td>the run raised an error; the message comes first&lt;/td>
+&lt;td>&lt;strong>Show configuration of this run&lt;/strong>, &lt;strong>Clear&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Cancelled&lt;/td>
+&lt;td>you cancelled the run; no results were produced&lt;/td>
+&lt;td>&lt;strong>Show configuration of this run&lt;/strong>, &lt;strong>Clear&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Results not displayed&lt;/td>
+&lt;td>the run finished, but its results view could not be built&lt;/td>
+&lt;td>&lt;strong>Show Python for this run&lt;/strong>, &lt;strong>Clear&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Ended&lt;/td>
+&lt;td>another run started, possibly in another window&lt;/td>
+&lt;td>&lt;strong>Show current run&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;strong>Clear results&lt;/strong> asks for confirmation first: &amp;ldquo;Clear the results of run #N
+from this view? The files on disk are kept.&amp;rdquo; &lt;strong>Clear&lt;/strong> on a failed or
+cancelled run does not ask. A reload of the page shows the state the server
+holds, so results survive a refresh. The form itself returns to its
+defaults, so the Settings changed banner appears until you set the run&amp;rsquo;s
+settings again.&lt;/p>
+&lt;p>The outcome line comes from whether every agent left, not from whether the
+run raised an error. It reads &amp;ldquo;Complete: all agents evacuated&amp;rdquo;, &amp;ldquo;Incomplete:
+time limit reached (&lt;em>k&lt;/em> of &lt;em>N&lt;/em> remaining)&amp;rdquo; when the run stopped at its time
+limit, or &amp;ldquo;Incomplete (&lt;em>k&lt;/em> of &lt;em>N&lt;/em> remaining)&amp;rdquo; otherwise.&lt;/p>
+&lt;h3>Settings changed&lt;span class="hx-absolute -hx-mt-20" id="settings-changed">&lt;/span>
+&lt;a href="#settings-changed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>After a run, editing the form so that it would configure a different run
+shows a banner: &amp;ldquo;Settings changed since run #N. The results below show that
+run&amp;rsquo;s settings, not the form. Run again to get results for the current
+settings.&amp;rdquo; The results header gets a &lt;strong>Previous settings&lt;/strong> tag. If the
+edited form is invalid, the banner says that the settings cannot currently
+be run, and why. The comparison uses the same resolution as a submitted run
+and leaves the output paths out. Restoring the settings removes the banner.&lt;/p>
+&lt;h3>Output folders&lt;span class="hx-absolute -hx-mt-20" id="output-folders">&lt;/span>
+&lt;a href="#output-folders" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each run writes into a folder of its own, so no run overwrites another:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Output folder blank&lt;/strong> (the default): the folder is derived as
+&lt;code>&amp;lt;results root&amp;gt;/&amp;lt;scenario&amp;gt;/&amp;lt;mode&amp;gt;/seed&amp;lt;seed&amp;gt;/&amp;lt;start time&amp;gt;&lt;/code>, where &lt;em>mode&lt;/em> is
+the incapacitation mode, &lt;em>seed&lt;/em> the seed the run uses, and &lt;em>start time&lt;/em> the
+run&amp;rsquo;s UTC start time, for example &lt;code>20260929T181031Z&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Output folder typed:&lt;/strong> the run writes into &lt;code>&amp;lt;typed folder&amp;gt;/&amp;lt;start time&amp;gt;&lt;/code>.
+While a folder is typed, a note under the box shows the resolved path:
+&amp;ldquo;Each run writes into &lt;em>folder&lt;/em>/&amp;lt;start time&amp;gt;/&amp;rdquo;. A relative folder is
+taken under the results root.&lt;/li>
+&lt;/ul>
+&lt;p>The results root is the folder in the environment variable
+&lt;code>PYFDS_EVAC_RESULTS_DIR&lt;/code> when it is set, and otherwise &lt;code>results/&lt;/code> in the
+repository, whatever folder the server was started from. If a run&amp;rsquo;s folder
+already exists, &lt;code>-2&lt;/code>, &lt;code>-3&lt;/code>, … is added to its name.&lt;/p>
 &lt;h2>Results&lt;span class="hx-absolute -hx-mt-20" id="results">&lt;/span>
 &lt;a href="#results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>Summary&lt;/strong>: the outcome in words, tiles for time, evacuated, remaining
+and seed used, the peak gas and heat FED when the run reported them (with
+&amp;ldquo;Incapacitated: not reported by this version&amp;rdquo;), and the run&amp;rsquo;s warnings.&lt;/li>
 &lt;li>&lt;strong>Charts&lt;/strong>: smoke over time and the growth of the cognitive maps. FED is
 shown live during a run.&lt;/li>
 &lt;li>&lt;strong>Trajectory replay&lt;/strong>: agents move between the stored trajectory samples,
 coloured by cumulative gas FED or by assigned exit, with play, pause, a
-scrub bar and ¼×–4× speed. When the run has an &lt;code>fds_dir&lt;/code>, the FDS
+scrub bar, speeds of 1×, 2×, 5×, 10× and 50× or a custom speed, and
+scroll-to-zoom and drag-to-pan. When the run has an &lt;code>fds_dir&lt;/code>, the FDS
 extinction slice is drawn under the agents as a smoke layer that can be
-switched off. The replay colours by gas FED only, not by heat FED
+switched off. Without a FED model, for example when the FDS output has no
+CO, CO₂ or O₂ slices, agents are coloured by exit and the FED/exit
+switch is not shown. The replay colours by gas FED only, not by heat FED
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232" target="_blank" rel="noopener">#232&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>FED panel&lt;/strong>: under the replay, when the run has a FED model. It shows
+the highest gas FED of any agent on one continuous scale that runs to 1, or
+to the run&amp;rsquo;s FED threshold if that is higher. A marker labelled
+&amp;ldquo;threshold&amp;rdquo; (deterministic mode) or &amp;ldquo;median threshold&amp;rdquo; (probabilistic
+mode) sits at the run&amp;rsquo;s &lt;code>fed_threshold&lt;/code>, read from the run&amp;rsquo;s own settings,
+not the current form. Without a recorded threshold there is no marker.&lt;/li>
 &lt;/ul>
-&lt;p>The files the run writes are described on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>.&lt;/p></description></item><item><title>Exit choice and familiarity</title><link>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/</guid><description>
+&lt;p>The files the run writes are described on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>.&lt;/p>
+&lt;h2>Show the run as Python&lt;span class="hx-absolute -hx-mt-20" id="show-the-run-as-python">&lt;/span>
+&lt;a href="#show-the-run-as-python" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The GUI can write any configuration as a standalone Python script. Use it to
+rerun a GUI run on another machine or to start a batch study from it, with
+the settings and the seed traceable to the run. The script reproduces a
+configuration; it does not validate the model. The GUI never executes it.&lt;/p>
+&lt;p>Two buttons open the code:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Show equivalent Python&lt;/strong>, in the Parameters header: a preview of the
+current form settings. It is not a run.&lt;/li>
+&lt;li>&lt;strong>Show Python for this run&lt;/strong>, in the results header: the code of the most
+recent run, built from the settings frozen when it was submitted. On a
+failed or cancelled run the same button reads &lt;strong>Show configuration of this
+run&lt;/strong>.&lt;/li>
+&lt;/ul>
+&lt;p>Both open a dialog with &lt;strong>Copy&lt;/strong> and &lt;strong>Download .py&lt;/strong>.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/run_code_dialog.png">&lt;figure>
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/run_code_dialog.png" title="The run-code dialog for run #1 of blind_spawn_discovery." alt="Dialog titled “Code for run #1 · blind_spawn_discovery” with its start time and a RUN #1 badge. Below it the line “Status: Complete: all agents evacuated (30/30), evacuation time 55.14 s”, five notices on packages, files not included, paths, outputs and reproducibility, a collapsed “Details” line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports" loading="lazy" />
+&lt;figcaption>The run-code dialog for run #1 of blind_spawn_discovery.&lt;/figcaption>
+&lt;/figure>&lt;/a>&lt;/p>
+&lt;h3>Save a run and run it again&lt;span class="hx-absolute -hx-mt-20" id="save-a-run-and-run-it-again">&lt;/span>
+&lt;a href="#save-a-run-and-run-it-again" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ol>
+&lt;li>
+&lt;p>In the scenario picker, choose the plain &lt;code>blind_spawn_discovery&lt;/code> entry,
+not one of its &lt;code>/ config_….json&lt;/code> variants, and run it with the default
+settings.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>When the run has finished, click &lt;strong>Show Python for this run&lt;/strong>. The dialog
+is titled &amp;ldquo;Code for run #1 · blind_spawn_discovery · &lt;em>start time&lt;/em>&amp;rdquo; and
+reports &amp;ldquo;Status: Complete: all agents evacuated (30/30), evacuation time
+55.14 s&amp;rdquo;.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Click &lt;strong>Download .py&lt;/strong>. The file is named after the scenario, the run
+number and the run&amp;rsquo;s UTC start time, for example
+&lt;code>pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z.py&lt;/code>.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Run it with the pyfds-evac version named in its header, installed the same
+way as the GUI, for example the repository&amp;rsquo;s &lt;code>uv&lt;/code> environment. The &lt;code>gui&lt;/code>
+extra is not needed. From the folder that holds the script:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run --project /path/to/pyFDS-Evac python pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;/li>
+&lt;/ol>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: Script run completed">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Script run completed&lt;/p>
+&lt;div class="docs-checkpoint__body">
+&lt;p>After the model&amp;rsquo;s own progress and log lines, the script ends with
+(pyfds-evac 0.1.0 at commit &lt;code>ba4ade3&lt;/code>; path shortened):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 55.14 s (30/30 evacuated).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The folder &lt;code>pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output&lt;/code>, created in the
+folder you ran the script from, holds &lt;code>trajectory.sqlite&lt;/code> and
+&lt;code>trajectory.manifest.json&lt;/code>.&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;p>On another machine, copy the scenario folder and the FDS results as well: the
+script contains code only. Then edit the &lt;code>PATHS&lt;/code> block at the top of the
+script. A scenario uploaded into the GUI lives in the GUI&amp;rsquo;s own uploads folder
+and will not exist elsewhere.&lt;/p>
+&lt;h3>What to keep in mind&lt;span class="hx-absolute -hx-mt-20" id="what-to-keep-in-mind">&lt;/span>
+&lt;a href="#what-to-keep-in-mind" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>&lt;strong>The snapshot stores settings, not inputs.&lt;/strong> It keeps the option values and
+the scenario path, not the scenario JSON, the FDS results or the visibility
+cache. The script reloads them from disk, so after an edit to the scenario
+or the FDS folder the code for run #N no longer reproduces run #N.&lt;/li>
+&lt;li>&lt;strong>Results can differ from the GUI run, even with the same seed.&lt;/strong> Repeated
+runs in one GUI process are affected
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>), and
+other versions or platforms can also change results. For an exact
+comparison, compare the first run of a fresh process on each side.&lt;/li>
+&lt;li>&lt;strong>Outputs.&lt;/strong> The script writes to a new &lt;code>OUTPUT_DIR&lt;/code> and does not overwrite
+the GUI run&amp;rsquo;s files. It does read the same &lt;code>VIS_CACHE&lt;/code> file, and the cache
+key includes the resolved FDS directory (&lt;code>_make_meta&lt;/code> in
+&lt;code>pyfds_evac/core/visibility.py&lt;/code>), so a changed &lt;code>FDS_DIR&lt;/code> or setting makes
+the script rebuild the map and rewrite that file.&lt;/li>
+&lt;li>&lt;strong>Fewer output files.&lt;/strong> The script writes the trajectory SQLite and its
+manifest, not the GUI&amp;rsquo;s CSV histories or app bundle
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328" target="_blank" rel="noopener">#328&lt;/a>).&lt;/li>
+&lt;/ul>
+&lt;h3>Preview and run code&lt;span class="hx-absolute -hx-mt-20" id="preview-and-run-code">&lt;/span>
+&lt;a href="#preview-and-run-code" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>Preview.&lt;/strong> The form is resolved exactly as a submitted run would be. If the
+settings are invalid, the dialog shows the same error message as &lt;code>run.py&lt;/code>,
+with a &lt;strong>Details&lt;/strong> disclosure, and no code; &lt;strong>Copy&lt;/strong> and &lt;strong>Download .py&lt;/strong> are
+disabled. The file is named &lt;code>pyfds_evac_&amp;lt;scenario&amp;gt;_preview.py&lt;/code>.&lt;/p>
+&lt;p>&lt;strong>Run code.&lt;/strong> It is built only from the run&amp;rsquo;s frozen snapshot, never from the
+live form. The status line uses the wording of the results view:
+&amp;ldquo;Complete: all agents evacuated (&lt;em>n&lt;/em>/&lt;em>N&lt;/em>), evacuation time &lt;em>t&lt;/em> s&amp;rdquo;,
+&amp;ldquo;Incomplete: time limit reached (&lt;em>k&lt;/em> of &lt;em>N&lt;/em> remaining), simulated time &lt;em>t&lt;/em> s&amp;rdquo;,
+&amp;ldquo;Incomplete (&lt;em>k&lt;/em> of &lt;em>N&lt;/em> remaining), simulated time &lt;em>t&lt;/em> s&amp;rdquo;, failed,
+cancelled, or not recorded. The file is named
+&lt;code>pyfds_evac_&amp;lt;scenario&amp;gt;_run&amp;lt;N&amp;gt;_&amp;lt;start time&amp;gt;.py&lt;/code>, with the run&amp;rsquo;s UTC start
+time such as &lt;code>20260929T182009Z&lt;/code>.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Failed and cancelled runs&lt;/strong> still have code. The dialog is titled
+&amp;ldquo;Configuration of the failed run #N&amp;rdquo; or &amp;ldquo;Configuration of the cancelled
+run #N&amp;rdquo;; the button that opens it reads &lt;strong>Show configuration of this
+run&lt;/strong>. The code stays until you click &lt;strong>Clear&lt;/strong>.&lt;/li>
+&lt;li>&lt;strong>Only the most recent run has code.&lt;/strong> There is none while a run is in
+progress. After &lt;strong>Clear&lt;/strong> (or &lt;strong>Clear results&lt;/strong> for a finished run) or a
+new run, the old run&amp;rsquo;s code is gone and its button disappears. A button
+left over in another tab opens a dialog titled &amp;ldquo;No recorded run&amp;rdquo;. Run
+numbers restart at 1 with every GUI session, so file and folder names
+carry the start time as well.&lt;/li>
+&lt;li>&lt;strong>Changed form.&lt;/strong> If the current form no longer resolves to the run&amp;rsquo;s
+options, a note says that the code reproduces the run, not the form, and
+suggests Preview. Output paths are left out of this comparison.&lt;/li>
+&lt;/ul>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">What the script contains&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>The script has six parts, in this order. The excerpt is the run from
+&lt;a href="#save-a-run-and-run-it-again">Save a run and run it again&lt;/a>, trimmed where
+marked.&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Header.&lt;/strong> The pyfds-evac version and git commit, with
+&amp;ldquo;(with uncommitted changes)&amp;rdquo; when the checkout was dirty; the commit alone
+then does not identify the code. Then &amp;ldquo;Run #N, started &lt;em>UTC time&lt;/em>&amp;rdquo; or
+&amp;ldquo;Preview&amp;rdquo;, the scenario name, and the notices shown in the dialog.&lt;/li>
+&lt;li>&lt;strong>&lt;code>PATHS&lt;/code>.&lt;/strong> &lt;code>SCENARIO&lt;/code>, &lt;code>FDS_DIR&lt;/code> and &lt;code>VIS_CACHE&lt;/code> are absolute paths on
+the machine that ran the GUI. &lt;code>OUTPUT_DIR&lt;/code> is a new relative folder,
+&lt;code>pyfds_evac_&amp;lt;scenario&amp;gt;_run&amp;lt;N&amp;gt;_&amp;lt;start time&amp;gt;_output&lt;/code> or
+&lt;code>pyfds_evac_&amp;lt;scenario&amp;gt;_preview_output&lt;/code>, resolved against the folder the
+script is launched from.&lt;/li>
+&lt;li>&lt;strong>&lt;code>OPTIONS&lt;/code>.&lt;/strong> Every resolved option, one per line, exactly as the GUI
+hands it to &lt;code>build_run_kwargs&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>The run.&lt;/strong> A &lt;code>Namespace&lt;/code> is rebuilt from &lt;code>OPTIONS&lt;/code> and &lt;code>PATHS&lt;/code>; the
+script then calls &lt;code>load_scenario&lt;/code>, &lt;code>build_run_kwargs&lt;/code>
+(&lt;code>pyfds_evac/core/run_config.py&lt;/code>) and &lt;code>run_scenario&lt;/code>. There is no second
+option mapping, so the script cannot drift from the GUI.&lt;/li>
+&lt;li>&lt;strong>After the run.&lt;/strong> A finished or stopped message. The trajectory SQLite is
+copied to &lt;code>OUTPUT_DIR/trajectory.sqlite&lt;/code> with its manifest, and
+&lt;code>result.cleanup()&lt;/code> removes the temporary copies &lt;code>run_scenario&lt;/code> wrote.&lt;/li>
+&lt;li>&lt;strong>CLI-only keys.&lt;/strong> &lt;code>cleanup&lt;/code>, &lt;code>export_only&lt;/code>, &lt;code>inspect_fds&lt;/code> and
+&lt;code>print_summary&lt;/code> appear in &lt;code>OPTIONS&lt;/code>, but &lt;code>build_run_kwargs&lt;/code> ignores them.
+&lt;code>'cleanup': False&lt;/code> next to &lt;code>result.cleanup()&lt;/code> is expected, not a bug.&lt;/li>
+&lt;/ol>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Generated by the pyFDS-Evac GUI.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># pyfds-evac 0.1.0, commit ba4ade3041930519187984ba052ca02f0add0485.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Run #1, started 2026-09-29T18:20:09+00:00.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Scenario: blind_spawn_discovery&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># ... notices ...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> argparse
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> pathlib
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> shutil
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core &lt;span style="color:#f92672">import&lt;/span> load_scenario, run_scenario
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.manifest &lt;span style="color:#f92672">import&lt;/span> manifest_path_for
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.run_config &lt;span style="color:#f92672">import&lt;/span> build_run_kwargs
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># PATHS: from the computer that ran the GUI. Edit them on another machine.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SCENARIO &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;/.../pyFDS-Evac/assets/blind_spawn_discovery&amp;#39;&lt;/span> &lt;span style="color:#75715e"># path shortened&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FDS_DIR &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VIS_CACHE &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># A new folder: the script never overwrites the GUI run&amp;#39;s files.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>OUTPUT_DIR &lt;span style="color:#f92672">=&lt;/span> pathlib&lt;span style="color:#f92672">.&lt;/span>Path(&lt;span style="color:#e6db74">&amp;#39;pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Settings: the resolved configuration the GUI passes to build_run_kwargs.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>OPTIONS &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;seed&amp;#39;&lt;/span>: &lt;span style="color:#ae81ff">1301&lt;/span>, &lt;span style="color:#75715e"># seed used by run #1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;cleanup&amp;#39;&lt;/span>: &lt;span style="color:#66d9ef">False&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;clear_air_visibility&amp;#39;&lt;/span>: &lt;span style="color:#66d9ef">False&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;collect_route_cost_history&amp;#39;&lt;/span>: &lt;span style="color:#66d9ef">True&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># ... remaining options, sorted by name ...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;output_sqlite&amp;#39;&lt;/span>: &lt;span style="color:#66d9ef">None&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;print_summary&amp;#39;&lt;/span>: &lt;span style="color:#66d9ef">False&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># ...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>opts &lt;span style="color:#f92672">=&lt;/span> argparse&lt;span style="color:#f92672">.&lt;/span>Namespace(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">**&lt;/span>OPTIONS,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> scenario&lt;span style="color:#f92672">=&lt;/span>SCENARIO,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fds_dir&lt;span style="color:#f92672">=&lt;/span>FDS_DIR,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> vis_cache&lt;span style="color:#f92672">=&lt;/span>VIS_CACHE,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>scenario &lt;span style="color:#f92672">=&lt;/span> load_scenario(SCENARIO)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>run_kwargs &lt;span style="color:#f92672">=&lt;/span> build_run_kwargs(scenario, opts, log&lt;span style="color:#f92672">=&lt;/span>print)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#f92672">=&lt;/span> run_scenario(scenario, &lt;span style="color:#f92672">**&lt;/span>run_kwargs)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># ... finished / stopped message, then copy the trajectory SQLite&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># and its manifest to OUTPUT_DIR ...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result&lt;span style="color:#f92672">.&lt;/span>cleanup() &lt;span style="color:#75715e"># remove the temporary copies run_scenario wrote&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">How the seed is written&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>The &lt;code>seed&lt;/code> line in &lt;code>OPTIONS&lt;/code> carries a comment that says where its value
+comes from. &lt;code>None&lt;/code> means the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code>, which is 42 when the
+scenario sets none (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>).&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Run code, the run reported the seed expected at submission:&lt;/strong> that seed,
+with &lt;code># seed used by run #N&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Run code, seed box left blank and no seed confirmed&lt;/strong> (for example a
+failed or cancelled run): &lt;code>None&lt;/code>, with
+&lt;code># seed not recorded for this run; None = the scenario's baseSeed&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Run code, seed typed in but not confirmed&lt;/strong> (for example a failed or
+cancelled run): the submitted value, with
+&lt;code># seed submitted; the seed used was not recorded&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Preview, seed box blank:&lt;/strong> &lt;code>None&lt;/code>, with
+&lt;code># None = the scenario's baseSeed (&amp;lt;value&amp;gt;)&lt;/code>, for example &lt;code>(1301)&lt;/code> for
+&lt;code>blind_spawn_discovery&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">What the script leaves out, and why&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;ul>
+&lt;li>&lt;strong>The GUI&amp;rsquo;s CSV histories and app bundle.&lt;/strong> The smoke, FED, route and
+route-cost histories and the bundle are written by &lt;code>apply_outputs&lt;/code>, which
+lives in &lt;code>run.py&lt;/code>, outside the installed package. Their keys
+(&lt;code>output_smoke_history&lt;/code>, &lt;code>output_fed_history&lt;/code>, &lt;code>output_route_history&lt;/code>,
+&lt;code>output_route_cost_history&lt;/code>, &lt;code>output_sqlite&lt;/code>, &lt;code>export_app_bundle&lt;/code>) are set
+to &lt;code>None&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328" target="_blank" rel="noopener">#328&lt;/a>).
+Route-cost history collection stays on (&lt;code>collect_route_cost_history&lt;/code>), as
+in the GUI.&lt;/li>
+&lt;li>&lt;strong>The GUI&amp;rsquo;s progress callback.&lt;/strong> It only drives the GUI&amp;rsquo;s live view. The
+model&amp;rsquo;s own progress lines are still printed.&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Evidence: the equivalence test&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;code>test_exported_script_reproduces_the_gui_run&lt;/code> in
+&lt;code>tests/test_webapp.py&lt;/code> runs a GUI run and its exported script in two fresh
+interpreters, so each is the first run of its process. For one scenario,
+&lt;code>blind_spawn_discovery&lt;/code> (&lt;code>baseSeed&lt;/code> 1301), the two match on total, evacuated
+and remaining agents, evacuation time and seed. It covers that scenario only.
+&lt;/div>
+&lt;/details></description></item><item><title>Exit choice and familiarity</title><link>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/exit-choice/</guid><description>
 &lt;p>Which exit an occupant heads for is not decided by distance alone. The studies
 below find that occupants tend to leave the way they know, are influenced by
 what other people do, and respond to smoke, lighting and crowding at the
