@@ -10,7 +10,7 @@ with the equations, the configuration keys, and the references. The
 [documentation](/docs/) section holds the full reference for each model;
 these pages are the overview.
 
-{{< svg-figure src="images/concepts/model-responses.svg" >}}
+{{< svg-figure src="images/concepts/model-responses.svg" min-width="34rem" >}}
 
 *What pyFDS-Evac does with each hazard of the
 [Fundamentals](/fundamentals/_index.md) figure. A sketch, not to scale:
@@ -19,8 +19,8 @@ depends on the configuration and on the slices in the FDS output. Figure
 inspired by Fig. 1 of the Engineers Australia practice note for
 tenability criteria (2014).*
 
-Each model reads the horizontal FDS slice nearest `--smoke-slice-height`:
-1.6 m by default, the `HUMAN_SMOKE_HEIGHT` of
+Walking speed, route smoke and the gas and heat doses read the horizontal
+FDS slice nearest `--smoke-slice-height`: 1.6 m by default, the `HUMAN_SMOKE_HEIGHT` of
 [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source). This
 holds for extinction, the gas species, temperature and, when selected,
 `INTEGRATED INTENSITY`. The height is an absolute z in the FDS domain, not
@@ -32,9 +32,14 @@ slice elevations in your case ([FDS slice sampling](/docs/fds-sampling.md)).
 
 Where a value is read depends on the model. Walking speed and the gas and
 heat doses use the value at the agent's position. Route smoke is sampled
-along each candidate route. Sign legibility averages the extinction on
-the same slice along the straight line, in plan, from the agent's cell to
-the sign; it is a 2-D line on one slice, not a 3-D ray up to the sign.
+along each candidate route. Sign legibility averages the extinction
+along the straight line, in plan, from the agent's cell to the sign, on one
+extinction slice that fdsvismap selects. When the case has several
+extinction slices, that slice is not reliably the one nearest the
+requested height, and no warning is logged
+([#296](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/296);
+[Wayfinding](/models/wayfinding.md)). It is a 2-D line on one slice, not a
+3-D ray up to the sign.
 
 - **Smoke obscuration** (on by default). The extinction coefficient *K*
   sets each agent's walking-speed factor
