@@ -250,7 +250,7 @@ and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 > FED equations with *t* in seconds; the evidence is on
 > [Asphyxiant FED](/fundamentals/asphyxiant-fed.md).
 
-The irritant slowdown \(g\), when enabled (`fed.py:337`–`338`), is multiplied with the smoke
+The irritant slowdown \(g\), when enabled (`fed.py:360`–`361`), is multiplied with the smoke
 factor (`direct_steering_runtime.py:191`–`193`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
