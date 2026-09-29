@@ -8,7 +8,7 @@ layout: hextra-home
   {{< icon name="arrow-circle-right" attributes="height=14" >}}
 {{< /hextra/hero-badge >}}
 
-<div class="hx-mt-6 hx-mb-6 hx-flex hx-items-center hx-gap-6">
+<div class="hx-mt-6 hx-mb-6 hx-flex hx-items-center hx-gap-6" style="gap:1.5rem">
 <img src="images/logo.png" alt="" width="96" height="96" style="border-radius:16px; flex:none">
 {{< hextra/hero-headline >}}
   Visibility-aware evacuation <br class="sm:hx-block hx-hidden" />modelling on FDS output
@@ -50,7 +50,7 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
   >}}
   {{< hextra/feature-card
     title="Route choice"
-    subtitle="Optical depth integrated along the route the agent will actually walk refuses exits and orders the rest. Re-decided every second, the run.py default (--reroute-interval)."
+    subtitle="Optical depth integrated along the route the agent will actually walk refuses exits and orders the rest. Re-decided every second by default in run.py."
     link="models/routing/"
   >}}
   {{< hextra/feature-card
