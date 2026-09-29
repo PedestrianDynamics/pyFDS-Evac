@@ -3525,6 +3525,18 @@ and flaming acrylic data for signs of 200–2000 asb, a superset of Fig. 1
 looking directly at 5.5 m (Jin 1970, Table 1). The cd/m² reading matches
 it. That comparison crosses smoke (filter paper against acrylic) and
 light (180 against 80 lx).&lt;/li>
+&lt;/ul>
+&lt;p>Cheung et al. (2026) take the other reading. They state that Jin measured
+the sign luminance in asb and convert it to cd/m² by dividing by π (§3,
+p. 5, Eq. 5); Jin&amp;rsquo;s brightest signs become &amp;ldquo;about 3000 asb or
+955 cd/m²&amp;rdquo; (p. 4) and his range becomes 36–810 cd/m² (§6, p. 11). They
+apply this to Jin 1970, the 180 lx data (their ref. [13]), and do not
+discuss Jin 1978, which prints the same numbers as the 1971 asb labels in
+cd/m². At most one reading is right: if the 1971 numbers are asb, Jin
+1978 and the reviews that copy it overstate the lit-sign luminance by a
+factor of π; if they are cd/m², the conversion in Cheung et al. makes
+Jin&amp;rsquo;s signs π times dimmer than they were.&lt;/p>
+&lt;ul>
 &lt;li>The argument also rests on \(k_s\) = 1 for smouldering smoke. That
 value is a normalisation, not a measurement (see \(k_s\) below), and a
 factor π in \(k_s\) cannot be told from a factor π in B.&lt;/li>
