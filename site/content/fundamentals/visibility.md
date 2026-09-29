@@ -20,10 +20,10 @@ for the same quantities:
 |---|---|---|---|---|
 | *K* [1/m] | extinction coefficient, natural log | σ | \(C_s\) | σ |
 | *V* [m] | visibility at the obscuration threshold | *V* | *V* | *V* |
-| *C* [–] | constant of *V* = *C*/*K* | σ·*V* | *k* in Ch. 61 Eq. 61.4 | *K* |
+| *C* [–] | constant of *V* = *C*/*K* | σ·*V* | \(C_s \cdot V\) (1978); *k* in Ch. 61 Eq. 61.4 | *K* |
 | \(B/L\) [–] | sign luminance over ambient light | \(B_{E0}/L\) | \(B_{EO}/L\) with \(L = E/\pi\); \(L_t/(E/\pi)\) | \(\pi L_t/E\) |
 | \(\delta_c\) [–] | threshold contrast | \(\delta_c\) | \(\delta_c\) | \(\delta_c\) |
-| \(k_s\) [–] | scattering over total extinction | *k* | *K* (1985); α (Ch. 61) | α |
+| \(k_s\) [–] | scattering over total extinction | *k* | *k* (1978); *K* (1985); α (Ch. 61) | α |
 
 Jin and Yamada (1985) also use α, and Jin (1978, Eq. A-3) ρ, for the
 reflectance of a placard.
@@ -41,9 +41,13 @@ Which label is right is not established. *Our arithmetic* favours cd/m²:
 back-computing \(\delta_c = (B_{E0}/k_s L)\,e^{-KV}\) for the smouldering
 2000 sign at 5.5 m (*K* ≈ 1.62 1/m, our reading of Fig. 1) with
 \(k_s\) = 1.0 (Jin 1978, Table C-1) and *L* = 80/π gives 0.011 if the
-numbers are cd/m², as Jin (1978, Fig. B-1) plots at 5.5 m and close to
-the photometric 0.010–0.013 of Jin (1970, Table 1), but 0.003 if they are
-asb.
+numbers are cd/m² and 0.003 if they are asb. Jin's own Fig. B-1 was
+back-calculated from these points, so it cannot decide; the only
+independent value is the photometric 0.010–0.013 measured looking
+directly at 5.5 m (Jin 1970, Table 1), which the cd/m² reading matches.
+That comparison crosses smoke (filter paper against acrylic) and light
+(180 against 80 lx); in our inference the light matters little, since
+Fig. B-1 is flat with light at 5.5 m.
 
 ## Jin's experiments
 
@@ -186,14 +190,17 @@ for a light-reflecting sign, citing Jin (1978). His figure's range bars
 "include data for both flame- and smolder-generated smoke and sign
 illumination levels varying by about a factor of 4", and he notes that the
 subjects viewed the smoke through glass, so irritation was excluded.
-*Our comparison:* his bars are consistent with Jin's Figs. 1–2 within
-reading accuracy, not identical. Lit-sign bars (*K* in 1/m, his then
+*Our comparison:* his bars are broadly consistent with Jin's
+Figs. 1–2, not identical: at 5.5 and 12 m his upper ends lie about
+0.1 1/m above Jin's highest point, and he places the 12 m bar near
+12.6 m. Lit-sign bars (*K* in 1/m, his then
 Jin's): 1.45–1.90 against 1.41–1.78 at 5.5 m; 0.99–1.32 against
 1.0–1.33 at 7 m; 0.80–1.03 against 0.83–1.0 at 9 m; 0.59–0.79 against
 0.55–0.70 at 12 m; 0.42–0.55 against 0.40–0.56 at 15.5 m. Placard bars:
 0.25–0.70 against 0.27–0.70 at 5.5 m; 0.19–0.39 against 0.17–0.38 at
-10.5 m; 0.19–0.27 against 0.17–0.26 at 15.5 m. 500–2000 is his factor of
-4. So C = 8 and 3 trace to Jin's 80 lx and 40 lx data (Jin 1971,
+10.5 m; 0.19–0.27 against 0.17–0.26 at 15.5 m. The placard lower edges
+at 10.5 and 15.5 m exclude Jin's lowest points in both prints, so the
+bars cannot show which print he used. 500–2000 is his factor of 4. So C = 8 and 3 trace to Jin's 80 lx and 40 lx data (Jin 1971,
 reprinted in Jin 1978), not to the 180 lx data of Jin 1970. The FDS
 User's Guide takes C = 8 and 3 from Mulholland (see
 [How FDS uses it](#how-fds-uses-it)).

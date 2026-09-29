@@ -37,9 +37,9 @@ points at *K* ≈ 0.5–1.13 1/m, irritant points at 0.32–0.47 1/m, with
 trend lines but no equation. In irritant smoke the speed dropped sharply,
 and subjects walked zigzag or along the wall because tears ran too heavily
 to see (pp. 14–15). Jin (1978, pp. 144–148, Figs. 8–10, citing the
-report as ref. 11) restates these results in English; his Fig. 8 has the
-same points as report Fig. 2 (our comparison) but no horizontal line for
-walking in darkness.
+report as ref. 11) restates these results in English; his Fig. 8 appears to redraw report
+Fig. 2 (our comparison by eye), without the horizontal line for walking
+in darkness.
 
 Purser and McAllister (2016, Ch. 63) replot Jin's data in their Fig. 63.16
 and fit straight lines to them (legend), over a stated *K* = 0.2–1.13 1/m
@@ -86,9 +86,9 @@ towards zero.
 writes that as smoke thickens "the condition becomes very much like
 walking in darkness (0.3–0.7 m/s)", citing Togawa (1969) for that range
 (report p. 14), and calls 0.3 m/s "the speed in darkness shown by a
-horizontal broken line in Fig. 2", without a citation (p. 17); tying the
-0.3 m/s line to Togawa is stated only in Jin (1978, p. 148): "the speed in
-darkness (0.3m/s [19])", ref. 19 being Togawa (1969). Jin takes the density at which
+horizontal broken line in Fig. 2", without a citation (p. 17). Jin (1978,
+p. 148) ties the 0.3 m/s to Togawa: "the speed in darkness (0.3m/s
+[19])", ref. 19 being Togawa (1969). Jin takes the density at which
 the average speed slows to 0.3 m/s as the maximum for people familiar with
 the building, "approximately 0.5/m–1.2/m" (p. 17). No non-irritant point
 in Fig. 2 is below about 0.45 m/s, so the 1.2 1/m end rests on the trend
@@ -109,7 +109,7 @@ the average speed to 0.3 m/s gives 0.5–1.2 1/m for familiar people, and
 the density below which irritancy does not affect speed gives 0.2–0.3 1/m
 for strangers (p. 17). The conclusion merges the two: about 0.4–1.2 1/m
 for familiar people and 0.1–0.3 1/m for strangers (p. 18). Jin (1978,
-Table 3 and p. 148) repeats Table 3, "where \(C_s \cdot V\) = 2",
+Table 3, p. 147, and p. 148) repeats Table 3, "where \(C_s \cdot V\) = 2",
 without citing FRI Report 33, gives 0.5–1.2 1/m for familiar people and
 "approximately 0.2/m" for strangers from the walks, and has no merged conclusion; his
 Table 2 adds Rasbash's 10 m and 0.2 1/m.
@@ -123,7 +123,7 @@ by the visibility range than the degree of irritation".
 
 **Group walking.** Report Fig. 5 and Jin (1978, Fig. 10, p. 146) show
 Horiuchi's data, cited secondhand (Horiuchi, Murozaki and Jin 1974,
-not read): 20 groups of five to seven people led by someone familiar with
+not read): about 20 groups of five to seven people led by someone familiar with
 the building walked a corridor in smoke-bomb smoke of about 0.6 1/m, with
 drawn mean lines near 2.0 m/s (lit) and 1.6 m/s (blackout) (our
 reading), "about 1.5 times faster" than Jin's single subjects
@@ -515,8 +515,8 @@ belongs to Jin and Yamada's 1989 heat-and-smoke study; the walking study
 had ten men aged 23–37 (FRI Report No. 42, Table 1). Ch. 63's "has been
 shown" 0.3 m/s in darkness (pp. 2339, 2413) and Purser's 2003 floor go
 back, in our inference, to Jin's horizontal reference line in report
-Fig. 2 (p. 17; Jin cites Togawa 1969 only for a darkness range of
-0.3–0.7 m/s, p. 14); no non-irritant point in that figure is below about
+Fig. 2 (p. 17; the report cites Togawa 1969 for a darkness range of
+0.3–0.7 m/s, p. 14, and Jin 1978, p. 148, for 0.3 m/s); no non-irritant point in that figure is below about
 0.45 m/s. Purser's stated non-irritant range starts at
 0.2 1/m, at the start of Jin's trend line, while Jin's points start near
 0.5 1/m (our reading of report Fig. 2). The irritant smoke is burning wood
