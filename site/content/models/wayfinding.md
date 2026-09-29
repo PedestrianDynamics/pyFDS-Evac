@@ -12,9 +12,8 @@ aliases: [/models/visibility/]
 Based on: [Visibility through smoke](/fundamentals/visibility.md) and
 [Exit choice and familiarity](/fundamentals/exit-choice.md).
 
-Code references are to main at `f363758`, which includes #170 and #174,
-except `route_graph.py`, whose references follow the first-leg resample of
-#171; and to fdsvismap `64d9aa7`.
+fdsvismap is pinned to commit `64d9aa7` in `pyproject.toml` (dependency
+`fdsvismap`).
 
 The [routing model](/models/routing.md) ranks and refuses routes. This page
 describes the part of the model that decides which routes it may rank: what
@@ -79,7 +78,7 @@ An optional `"max_distance"` (m, positive) sets that sign's reading distance
 west and 180 from the south (`visibility.py`, `VisibilityModel`).
 
 The test is computed by [fdsvismap](https://github.com/FireDynamics/fdsvismap)
-(pinned at `64d9aa7`, `pyproject.toml:34`). For sign *k* and a grid cell at
+(pinned at `64d9aa7` in `pyproject.toml`). For sign *k* and a grid cell at
 distance \(L\) (`FDSVisMap._get_view_angle_array`, `_get_visibility_array`,
 `get_vismap`):
 
@@ -147,9 +146,13 @@ At run time the model answers `node_is_visible(t, x, y, node)` by looking up
 the nearest stored time and cell, clamped to the stored range
 (`visibility.py`, `_VisMapCache._nearest`, `VisibilityModel.node_is_visible`). No ray is cast inside the time loop.
 `--vis-cache` stores the arrays in an `.npz` file. The FDS cache is keyed by
-the FDS directory path, the signs, the time step and the slice height; it
+the FDS directory path, the signs, the time step, the slice height and the
+maximum sign distance; it
 does not hash the FDS output, so replacing the output in place leaves a stale
 cache valid (`visibility.py`, `_make_meta`, `_load_vismap_cache`).
+fdsvismap also reads the obstructions at the slice height, so which walls
+occlude a sign can change with `--smoke-slice-height`
+([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
 
 <a id="which-visibility-setting-am-i-running"></a>
 
@@ -275,8 +278,8 @@ two differ:
   queue tally (`scenario.py`, `_assign_initial_exit`).
 - **Re-evaluation** (`evaluate_and_reroute`). It ranks from the agent's
   position. It adopts a different exit only if the rival passes the
-  switching rule: an optical-depth margin, then an anchor on the ranking cost
-  (`exit_switch_anchor` = 0.9, `route_graph.py`, `GatePolicy.improvement`, `RerouteConfig.exit_switch_anchor`). The
+  [switching rule](/models/routing.md#switching-rule) of the routing model:
+  an optical-depth margin, then an anchor on the ranking cost. The
   optional queue term (`w_queue`, 0 by default) enters the ranking cost.
 - **All refused.** When every known route fails the gate, the least smoky one
   is re-admitted, but the current route is kept first if the rival's worst
@@ -289,7 +292,7 @@ An agent can therefore keep a known route that is not first in the ranking.
 and the optical-depth deadband (\(\tau_{\max}\cdot\) `tau_deadband` =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
 adopted only if its ranking cost, here its travel time, is below 0.9 times the
-current route's (`_anchor_allows`, `route_graph.py`;
+current route's (`route_graph.py`, `_AnchoredPolicy.anchor_allows`;
 `exit_switch_anchor` = 0.9, `RerouteConfig.exit_switch_anchor`; `tau_max` = 6.0 and `tau_deadband` = 0.1,
 `RouteCostConfig.tau_max`, `RouteCostConfig.tau_deadband`). An exit learned on the way is therefore adopted only if it is
 more than 10 % faster than the exit the agent is heading for.
@@ -436,28 +439,13 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **An agent with no known exit can walk to an unknown one**
   ([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)). See
   the exception under §2.4. The intended behaviour is exploration.
-- **Discovery agents ranked the first leg as a straight line**
-  ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
-  by #174). `cognitive_subgraph` built a new `StageGraph` without the
-  routing engine (`cognitive_map.py`, `cognitive_subgraph`). In `rank_routes`, the length of
-  the walk from the agent's position to its next node therefore fell back to a
-  straight line (`route_graph.py`, `_walkable_waypoints`, `_position_aware_length`). Frontier selection was
-  not affected, because it measures that leg on the full graph
-  (`cognitive_map.py`, `nearest_frontier_target`, `_cost_from_agent`). Fully familiar agents always had the
-  engine.
-- **First-leg smoke was sampled on a straight line**
-  ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). The
-  resample from the agent to its next node ran on a straight line that could
-  pass through walls, with its sample count taken from the capped first-leg
-  length. It now follows the walked path at `sampling_step_m`. See §2.4,
-  "What route choice does not read".
-- **Clear-air travel time was under-priced**
-  ([#167](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167), fixed
-  by #170). The share of the first leg is capped at 1
-  (`route_graph.py`, `_position_aware_length`), so a route was under-priced when the agent was
-  farther from its next node than the route's origin is. In clear air the gate
-  ranks by that travel time. Since #170, the walk to the origin is timed at
-  the route's mean pace (`route_graph.py`, `_measure_route`).
+- **FED and arrival times behind the origin node**
+  ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
+  The first-leg smoke now follows the walked path at `sampling_step_m`, but
+  the FED growth over the walk to the route's origin node is not counted, and
+  anticipated arrival times start at the origin node (`route_graph.py`,
+  `_measure_route`, `_arrival_time`). See §2.4, "What route choice does not
+  read".
 - **A sign is never read beyond its reading distance.** \(V_{\max}\) is
   30 m by default ([#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)),
   so in clear air a sign farther away is illegible at any bearing, and a
@@ -478,6 +466,16 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **No per-exit familiarity**
   ([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)). One
   \(p\) per group, plus one `entrance`.
+- **Discovery agents turn back at the door of the only exit**
+  ([#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)).
+
+**Fixed behaviour.** Two earlier defects are fixed: discovery agents ranked
+the first leg as a straight line through walls
+([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
+by #174), and clear-air travel time was under-priced when an agent was
+farther from its next node than the route's origin
+([#167](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167), fixed
+by #170).
 - **No sharing.** Maps are per agent; no agent learns from another.
 - **No individual variation** in *C*, eye height or the legibility threshold.
 
@@ -555,7 +553,11 @@ Details, with line numbers:
 ## Verification
 
 These tests check implementation behaviour. They do not validate human
-wayfinding or evacuation times.
+wayfinding or evacuation times. The FDS-case check is
+[Verification › Familiarity](/verification/testing-familiarity.md): its
+criteria 1–5 pass, and the discovery egress time is not grid-converged
+([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168),
+[#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)).
 
 - `tests/test_exit_visibility_alpha.py` (`assets/exit_visibility_alpha`): the
   bearing of the near sign decides whether the near exit is learned; an

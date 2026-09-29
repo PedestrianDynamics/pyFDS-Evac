@@ -83,37 +83,18 @@ reached an exit.
 
 ## What is not modelled
 
-**Radiant heat.** The heat dose is a convective term: ISO 13571:2012
-Eq. (9) for fully clothed subjects, Eq. (10) (= SFPE Handbook, 5th ed.,
-Eq. 63.44) with `--heat-clothing unclothed`, or Eqs. 63.45-63.47 with
-`--heat-endpoint`, computed from the gas temperature of an FDS
-`TEMPERATURE` slice. The opt-in `--heat-fed-method total-flux` adds the
-radiation of the gas at the head (Eq. 63.49, spec 016), with an assumed
-emissivity. With `--heat-regime layer` it instead takes the head to be in
-clear air below a hot layer and adds the net radiant flux of the layer,
-read from a second `TEMPERATURE` slice at one height, with a view factor
-and layer emissivity set by the user; the regime is one choice for the
-whole run
-([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222),
-[#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274),
-[#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
-Radiant flux from hot surfaces or a flame enters only with the opt-in
-`--heat-radiant-source integrated-intensity`, as the excess f·(U − 4σT_s⁴) from
-the FDS `INTEGRATED INTENSITY` slice with a user factor f in [0.25, 1] that
-no single value fits for every orientation; with `--heat-regime layer` as
-well, U supplies the radiant term and the layer term is not added
-([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
-Otherwise an agent near a flame is treated as less exposed than it is
-([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
-In every total-flux variant a radiant term below 2.5 kW/m² counts as zero
-(ISO 13571:2012 §8.2, §8.4); convection always counts. ISO gives 2.5 kW/m²
-as an incident flux, but the code compares it with the net or excess
-radiant term, about 18 % lower at the Handbook's 200 °C anchor. At the
-default emissivity 0.5, smoke below about 285 °C therefore gives no radiant
-dose, and the dose rate jumps where the radiant term reaches the threshold
-([Models › Heat](/models/heat.md#where-the-radiant-threshold-acts)).
-The unsourced values of the heat dose, its FDS reference decks and its
-tests are listed in
+**Radiant heat.** The heat dose is opt-in (`--enable-heat-fed`) and, by
+default, convective only: ISO 13571:2012 Eq. (9) from the gas temperature of
+an FDS `TEMPERATURE` slice. Radiation enters only through the opt-in
+`--heat-fed-method total-flux`, from the gas at the head, a hot layer above
+it (`--heat-regime layer`), or the FDS `INTEGRATED INTENSITY` slice with a
+user factor; radiant flux from hot surfaces or a flame is otherwise missed
+([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)). In
+every total-flux variant a radiant term below the ISO 2.5 kW/m² threshold
+counts as zero, and the code applies that threshold to a net or excess flux
+rather than an incident one; the consequences, with numbers, are on
+[Models › Heat › Where the radiant threshold acts](/models/heat.md#where-the-radiant-threshold-acts),
+and the unsourced values on
 [Models › Heat › Assumptions](/models/heat.md#assumptions-unsourced-values).
 
 **Heat does not affect route choice or walking speed.** The heat dose is
@@ -126,7 +107,7 @@ experiencing pain (see Fundamentals › Heat); the FED history's
 `incapacitation_cause` column says which dose stopped the agent. Before that
 point, heat has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced
-by extinction and by irritant gases, but not by temperature, so an agent walks
+by extinction and, with `--enable-fic-speed`, by irritant gases, but not by temperature, so an agent walks
 at full speed through a hot layer until the heat dose is reached.
 
 **Multi-floor buildings and stairs.** The walkable area is a single 2-D
@@ -169,6 +150,13 @@ routes an agent ranks, and only fully familiar agents know the whole graph;
 it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived.
 
+**Route choice.** Route choice has open limitations: switching can oscillate
+where two routes cross in cost ([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)), routes are priced with smoke the agent
+cannot perceive ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)), one path is priced per exit ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)), and the FED along
+the walk to the route's first graph node is not counted ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). The full list, with
+one line per issue, is on
+[Models › Routing › Limitations](/models/routing.md#limitations).
+
 **Recovery from irritants.** The irritant slowdown (opt-in with
 `--enable-fic-speed`) is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it
@@ -199,6 +187,18 @@ while aggregate outcomes (counts and fractions, such as the number of agents
 incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
 and do not compare single trajectories between runs. See the
 [verification page](https://pedestriandynamics.org/pyFDS-Evac/verification/).
+
+Two known causes make results depend on more than the seed:
+
+- **Earlier runs in the same process.** Results can depend on the JuPedSim
+  agent ids of earlier runs in the same Python process
+  ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)). For a
+  study, run each seed in its own process, for example a shell loop over
+  `run.py --seed N`.
+- **Python's hash seed.** For discovery agents, the order of tied routes can
+  depend on `PYTHONHASHSEED`
+  ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)). Set
+  it to a fixed value for bit-identical reruns.
 
 ## References
 

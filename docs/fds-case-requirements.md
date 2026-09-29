@@ -34,6 +34,7 @@ quantity name `load_slice_sampler` looks up
 | Extinction coefficient | smoke-speed, visibility gating, GUI smoke layer | **smoke speed reduction is switched off and visibility falls back to clear air; the run continues** (see below). `--constant-extinction` restores smoke speed with a uniform K; visibility stays clear air |
 | CO **and** CO2 **and** O2 | FED toxic dose | **FED is switched off and the run continues** (see below) |
 | TEMPERATURE | heat FED (ISO 13571:2012 Eq. (9) or (10)), only with `--enable-heat-fed` | **heat FED is switched off and the run continues** (see below) |
+| TEMPERATURE at `--heat-layer-height` | the hot-layer temperature, only with `--heat-regime layer` | the run stops |
 | INTEGRATED INTENSITY | radiant flux f·(U − 4σT_s⁴), only with `--heat-radiant-source integrated-intensity`; at the TEMPERATURE slice z, covering the same area | `ValueError`: the run stops (also for another z, or an agent inside only one of the two slices) |
 
 It is all three gases or none of them; there is no partial FED. TEMPERATURE
@@ -71,12 +72,16 @@ your material's data rather than copying these.
 every FDS run, not a species yield, so it needs no `&REAC` setup at all — the
 `&SLCF` line above is sufficient on its own.
 
-## Two silent failure modes
+## Silent failure modes
 
 **FED disabled.** If CO, CO2 or O2 is missing, pyFDS-Evac carries on with
-smoke-speed only and every FED column reads zero. A zero-dose result looks
-exactly like a never-computed one. A warning is logged when this happens, and
-it is the only signal you get:
+smoke speed only. If the heat FED is off too, the result has no FED at all:
+`fed_history` is `None`, `metrics` has no `fed_max`, and
+`--output-fed-history` writes no file. If the heat FED runs but the gas FED
+does not, the FED history exists and its `fed_cumulative` column is all
+zero, which looks exactly like a survivable fire. Check `metrics["fed_max"]`,
+or the warning, which is logged every time
+([#137](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137)):
 
 ```
 FED is disabled for <dir>: it has no CO slice, and all three of CO, CO2 and
@@ -85,7 +90,8 @@ O2 are needed. ...
 
 **Heat FED disabled.** The heat FED track is off unless `--enable-heat-fed`
 is given. With it, the same applies as for the gases: if there is no
-`TEMPERATURE` slice, heat FED is off, and every heat FED column reads zero:
+`TEMPERATURE` slice, heat FED is off, `metrics` has no `heat_fed_max`, and
+any heat FED column in the history reads zero:
 
 ```
 Heat FED is disabled for <dir>: it has no TEMPERATURE slice. ...
@@ -95,23 +101,30 @@ Heat FED is disabled for <dir>: it has no TEMPERATURE slice. ...
 preference, not a filter: a case with one slice of a quantity uses it whatever
 its height, and a mismatch never fails the run. A case you inherit often
 carries a single slice at whatever height its author chose, so you can end up
-sampling floor-level CO for standing agents. A warning fires past 0.5 m:
+sampling floor-level CO for standing agents. A warning fires only past 0.5 m.
+The common case, a request of 1.6 m on a deck with a single slice at 2.0 m, is
+0.4 m away and gives no warning
+([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)). Beyond
+0.5 m you see:
 
 ```
 Requested a 'SOOT EXTINCTION COEFFICIENT' slice at z=0.50 m but the nearest
 available in <dir> is at z=2.00 m ...
 ```
 
-Do not ignore either warning. Nothing else will tell you.
+Do not ignore these warnings. Nothing else will tell you.
 
 ## Failure modes
 
 | Symptom | Cause |
 |---------|-------|
 | Warning: Smoke speed reduction is disabled for `<dir>`, and Visibility falls back to clear air for `<dir>` | No `SOOT EXTINCTION COEFFICIENT` slice: the deck never declared `&SLCF QUANTITY='EXTINCTION COEFFICIENT'`, or the species was never tracked. Agents walk and see as in clear air. |
-| `IndexError: No slice with quantity '...' found in <dir>` | The deck never declared that `&SLCF`, or the species was never tracked. |
+| `IndexError: No slice with quantity '...' found in <dir>` | A direct library call on a case without that slice: the deck never declared that `&SLCF`, or the species was never tracked. |
 | Warning: FED is disabled for `<dir>` | CO, CO2 or O2 is missing. Check `CO_YIELD` on `&REAC`. |
 | Warning: Heat FED is disabled for `<dir>` | No `TEMPERATURE` slice. Add `&SLCF QUANTITY='TEMPERATURE'` — no `&REAC` change needed. |
 | FED is zero everywhere and nobody is incapacitated | Either genuinely survivable, or FED never ran. Check for the warning above before concluding the former. |
 | `ValueError: Point (x, y) is outside the sampled FDS slice domain` | Walkable area extends past the slice extent. |
 | Warning: requested slice at z=A, nearest is z=B | Your case has no slice near the height you asked for. |
+
+Errors from the command line itself (wrong `--fds-dir`, conflicting flags)
+are listed on [Troubleshooting](troubleshooting.md).

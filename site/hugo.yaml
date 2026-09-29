@@ -38,6 +38,7 @@ module:
         - "*-notes.md"
         - "archive/**"
         - "superpowers/**"
+        - "install.md"
         - "quickstart.md"
         - "walkthrough.md"
         - "first-fds-case.md"
@@ -47,6 +48,10 @@ module:
         - "model-comparison.md"
         - "fds-case-requirements.md"
         - "usage.md"
+        - "outputs.md"
+        - "scenario-json.md"
+        - "web-gui.md"
+        - "troubleshooting.md"
         - "howto-rset-ensemble.md"
         - "assets.md"
         - "fds-sampling.md"
@@ -58,6 +63,7 @@ module:
     - source: ../docs
       target: content/docs/getting-started
       includeFiles:
+        - "install.md"
         - "quickstart.md"
         - "walkthrough.md"
         - "first-fds-case.md"
@@ -73,9 +79,13 @@ module:
       includeFiles:
         - "fds-case-requirements.md"
         - "usage.md"
+        - "outputs.md"
+        - "scenario-json.md"
+        - "web-gui.md"
+        - "troubleshooting.md"
         - "howto-rset-ensemble.md"
-        - "assets.md"
-        - "fds-sampling.md"
+    - source: ../docs/fds-sampling.md
+      target: content/docs/implementation/fds-sampling.md
     # A group with a single page takes that page as its index.
     - source: ../docs/smoke-speed-model.md
       target: content/docs/implementation/speed/_index.md
@@ -93,6 +103,7 @@ module:
         - "testing-heat.md"
         - "testing-heat-radiometer.md"
         - "testing-familiarity.md"
+        - "assets.md"
     - source: ../artifacts
       target: static/artifacts
     - source: ../assets/t_junction

@@ -10,7 +10,7 @@ Fire Dynamics Simulator (FDS) coupled evacuation modeling with smoke-speed reduc
 The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
-- Purser FED model as in the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) guide (toxic gas dose accumulation, up to 12 species)
+- Purser FED as computed by [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) (the `FED` function of FDS; toxic gas dose accumulation, up to 12 species)
 - Convective heat FED (ISO 13571:2012 Eq. (9), fully clothed; Eq. (10) =
   SFPE Handbook Eq. 63.44 with `--heat-clothing unclothed`), opt-in with
   `--enable-heat-fed` (FDS+Evac has none), accumulated as a dose
@@ -34,7 +34,9 @@ The project includes:
 The model descriptions, usage and verification live on the documentation site:
 **<https://pedestriandynamics.org/pyFDS-Evac/>**
 
+- [Install](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/): requirements and a check that the install works
 - [Usage](https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/): CLI flags, post-processing scripts, run-and-plot driver
+- [Outputs](https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/) and [Scenario JSON](https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/): what a run writes, and the keys a scenario reads
 - Defaults follow FDS+Evac; see [what changed](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac) and the [changelog](CHANGELOG.md)
 - [Smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/), including FDS data access through `fdsreader`
 - [Fractional effective dose](https://pedestriandynamics.org/pyFDS-Evac/models/fed/), including heat dose and irritant slowdown
@@ -58,13 +60,8 @@ uv sync
 
 ## Development
 
-Activate the virtual environment:
-
-```bash
-uv shell
-```
-
-Run a JSON-first scenario with the CLI runner:
+Run a JSON-first scenario with the CLI runner (`uv run` uses the project
+environment; `source .venv/bin/activate` activates it for the shell):
 
 ```bash
 uv run run.py --scenario assets/ISO-table21 --cleanup
@@ -82,82 +79,25 @@ those slices depend on, and two failure modes that stay silent otherwise.
 
 ## Web GUI
 
-A [FastHTML](https://fastht.ml/) web GUI 
-exposes the same model behind a form: pick a scenario, set any `run.py` flag
-(the `fds dir` field has a folder browser), run it, watch live progress, and
-explore the results.
-
-Two ways to view a finished run's trajectories:
-
-- **Interactive [Plotly](https://plotly.com/python/) charts** — smoke over
-  time and cognitive-map growth. FED is shown live during a run and, in the
-  replay below, as the highest FED of any agent at each time.
-- **Canvas trajectory replay** (`pyfds_evac/webapp/trajviz.py`) — agents
-  interpolated smoothly between downsampled trajectory samples, coloured by
-  cumulative FED (safe → alert → critical → severe) or by assigned exit, with
-  play/pause, a scrub bar, and ¼×–4× playback speed. When the run has an
-  `fds_dir`, the FDS extinction slice is drawn as a smoke layer underneath
-  the agents (toggleable), sampled via `fdsreader`'s multi-mesh
-  `to_global()` and clipped to the walkable polygon.
-
-Install the optional GUI dependencies and launch:
+An optional local web app runs the same model behind a form:
 
 ```bash
 uv sync --extra gui
 uv run app.py
 ```
 
-Then open <http://localhost:5001>. The GUI calls the same
-`run_scenario()` as the CLI (via the shared
-`pyfds_evac.core.run_config.build_run_kwargs` option builder), so a run
-configured in the browser is identical to the equivalent `run.py`
-invocation. Runs execute on a background thread and stream progress over
-Server-Sent Events; one run is active at a time.
+Then open <http://localhost:5001>. The form groups, the options it does not
+offer and the result views are on the
+[Web GUI](https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/) page.
 
 ## Agent speed and pre-movement
 
-**Smoke-speed parameters are library-level fields, not scenario configuration.** `speed_law`,
-`alpha`, `beta`, `min_speed_factor` and `visibility_factor_c` are constructed
-with their defaults by `run_config.py` and are reachable from no CLI flag and
-no scenario JSON key, so a configured run always uses the Lund law with the
-defaults listed on the [smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters)
-page. The `routing` block
-does accept keys named `alpha`, `beta` and `min_speed_factor` with the same
-defaults, but those parameterise the speed factor used to *estimate travel
-time when pricing a route* — setting them changes what routes cost, not how
-fast agents walk. The same split applies to speed itself: `routing.
-base_speed_m_per_s` is a route-pricing constant (default on the
-[routing model](https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters)
-page), while an agent's own `v0` defaults to 1.25 m/s (see below).
-
-Each distribution group sets the attributes an agent starts with:
-
-| Key | Default | Effect |
-|-----|---------|--------|
-| `v0` | `1.25` m/s (FDS+Evac `VEL_MEAN`; 1.2 before), except 0.8 for `SocialForceModel` | Clear-air walking speed. Every smoke, irritant and zone factor multiplies *this*, not `routing.base_speed_m_per_s`. |
-| `v0_distribution` | `"constant"` | `"gaussian"` draws per agent instead. |
-| `v0_std` | none | Spread when Gaussian. Draws are clipped to `[0.1, 5.0]` m/s. |
-| `radius` | `0.2` m | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a stage. With `radius_distribution` = `"gaussian"` and `radius_std`, drawn per agent and clipped to `[0.1, 1.0]` m. |
-| `use_premovement` | constant 10 s when no pre-movement key is set (FDS+Evac `PRE_MEAN`), with a warning; `false` otherwise | Delay before the agent starts moving. |
-| `premovement_distribution` | `"gamma"` | `gamma` / `lognormal` / `weibull` / `uniform` / `constant`; `premovement_param_a`/`_b` override the presets (gamma/lognormal/weibull presets: Lovreglio et al. 2019, office evacuations; uniform: RiMEA; constant: FDS+Evac `PRE_MEAN`). |
-
-The run reads only the `v0*` keys. `desired_speed`, `desired_speed_distribution`
-and `desired_speed_std` are aliases accepted by `Scenario.set_agent_params()`
-in Python; in a scenario JSON they are silently ignored
-([#143](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/143)).
-
-Pre-movement is implemented by spawning the agent at `v0 = 0` and restoring
-its sampled speed on release. While it waits, the smoke update skips it, so a
-delayed occupant's baseline speed is never degraded by smoke it has not walked
-through, and it starts at full clear-air speed however dense the smoke has
-become around it. The release does not check incapacitation, so an agent
-that reaches its FED threshold while still waiting walks off when its
-pre-movement time ends
-([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)).
-
-For real FDS output, `fdsreader` provides the local extinction field
-via `SliceFieldSampler`. For verification cases such as ISO 20414 Table 21,
-the runner can also apply a constant extinction coefficient directly.
+The scenario keys that set an agent's speed, size and pre-movement, with
+their defaults, are on the
+[Scenario JSON](https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/)
+page. The smoke-speed law and its parameters are library-level fields, not
+scenario keys; see the
+[smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters).
 
 ## Agent scalars for fds-viewer
 
@@ -179,10 +119,13 @@ renders the JuPedSim trajectory SQLite in a 3-D scene alongside the FDS
 smoke. Run with `--output-sqlite` to produce the file fds-viewer loads:
 
 ```bash
-uv run run.py --scenario assets/t_junction \
-              --fds-dir assets/t_junction \
-              --output-sqlite demo.sqlite
+uv run run.py --scenario assets/iso_table22_coupled/config_a.json \
+              --fds-dir assets/iso_table22_coupled/fds/a \
+              --output-sqlite results/demo.sqlite
 ```
+
+`--fds-dir` must hold the output of a finished FDS run (the `.smv` file), not
+only the deck.
 
 When FED is computed, the SQLite also carries the optional
 `agent_scalars(frame, id, fed, heat_fed, speed)` table (see above), which

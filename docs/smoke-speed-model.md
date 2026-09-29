@@ -21,7 +21,7 @@ via `SmokeSpeedConfig.speed_law`.
 
 The agent walks at `v0 * speed_factor(K)`, where `v0` is its clear-air speed
 and the factor follows `speed_law="lund"` (default) or `"fridolf"`. The
-`fridolf` law (Fridolf et al. 2018) reduces speed additively, so its factor
+`fridolf` law ([Fridolf et al. 2019, Eq. 7](https://doi.org/10.1016/j.tust.2019.04.016)) reduces speed additively, so its factor
 also depends on `v0`. The coded
 equations, the `SmokeSpeedConfig` defaults and the departures from the
 literature are on the [smoke-speed model](/models/smoke-speed.md) page;
@@ -50,7 +50,7 @@ from pyfds_evac.core.smoke_speed import ExtinctionField
 
 field = ExtinctionField.from_fds(
     "path/to/fds_case",
-    slice_height_m=2.0,   # select the horizontal slice closest to 2 m
+    slice_height_m=1.6,   # default 1.6 m, FDS+Evac HUMAN_SMOKE_HEIGHT
 )
 ```
 
@@ -78,7 +78,7 @@ from pyfds_evac.core.smoke_speed import SmokeSpeedConfig
 config = SmokeSpeedConfig(
     fds_dir="path/to/fds_case",
     update_interval_s=1.0,    # how often agents resample extinction
-    slice_height_m=2.0,       # FDS slice height
+    slice_height_m=1.6,       # default 1.6 m, FDS+Evac HUMAN_SMOKE_HEIGHT
     speed_law="lund",         # or "fridolf"
 )
 ```
@@ -201,8 +201,11 @@ original FDS+Evac guide:
 
 - [Smoke-speed model](/models/smoke-speed.md): coded form, defaults and
   deviations from the literature.
+- [ISO 20414 Test 18](/verification/iso-test-18.md) and the S2 corridor test
+  ([`tests/verification/test_s2_corridor_speed.py`](../tests/verification/test_s2_corridor_speed.py)):
+  how the speed reduction is verified.
 - [Walking speed in smoke](/fundamentals/walking-speed.md) and
   [Extinction coefficient](/fundamentals/extinction.md): the published laws
   and their sources.
-- [evac.f90](../materials/evac.f90) -- Original FDS+Evac Fortran
-  source for cross-referencing implementation details.
+- [evac.f90](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90) -- Original FDS+Evac Fortran
+  source (FDS commit c9da70d7a) for cross-referencing implementation details.

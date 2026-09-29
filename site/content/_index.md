@@ -8,10 +8,10 @@ layout: hextra-home
   {{< icon name="arrow-circle-right" attributes="height=14" >}}
 {{< /hextra/hero-badge >}}
 
-<div class="hx-mt-6 hx-mb-6 hx-flex hx-items-center hx-gap-6">
+<div class="hx-mt-6 hx-mb-6 hx-flex hx-items-center hx-gap-6" style="gap:1.5rem">
 <img src="images/logo.png" alt="" width="96" height="96" style="border-radius:16px; flex:none">
 {{< hextra/hero-headline >}}
-  Visibility-aware evacuation&nbsp;<br class="sm:hx-block hx-hidden" />modelling on FDS output
+  Visibility-aware evacuation <br class="sm:hx-block hx-hidden" />modelling on FDS output
 {{< /hextra/hero-headline >}}
 </div>
 
@@ -45,12 +45,12 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
   >}}
   {{< hextra/feature-card
     title="Dose"
-    subtitle="Purser fractional effective dose as in the FDS+Evac guide, from up to 12 gas species, plus an opt-in convective heat dose accumulated separately. By default every agent stops at FED 1, as in FDS+Evac."
+    subtitle="Purser fractional effective dose as computed by FDS+Evac (the FED function of FDS), from up to 12 gas species, plus an opt-in convective heat dose accumulated separately. By default every agent stops at FED 1, as in FDS+Evac."
     link="models/fed/"
   >}}
   {{< hextra/feature-card
     title="Route choice"
-    subtitle="Optical depth integrated along the route the agent will actually walk refuses exits and orders the rest. Re-decided every second."
+    subtitle="Optical depth integrated along the route the agent will actually walk refuses exits and orders the rest. Re-decided every second by default in run.py."
     link="models/routing/"
   >}}
   {{< hextra/feature-card
@@ -70,7 +70,7 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
   >}}
   {{< hextra/feature-card
     title="One entry point"
-    subtitle="Script, test, command line, and the optional web GUI all call the same run_scenario(). Results are a JuPedSim trajectory file plus per-agent CSV histories."
+    subtitle="Script, test, command line, and the optional web GUI all call the same run_scenario(); run.py and the GUI also build the same models for it. Results are a JuPedSim trajectory file plus per-agent CSV histories."
     link="docs/using/usage/"
   >}}
 {{< /hextra/feature-grid >}}
@@ -80,7 +80,8 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
 ## Installation
 
 pyFDS-Evac is installed from the repository until the PyPI release, which waits
-on an upstream fdsvismap merge.
+on an upstream fdsvismap merge. Requirements (Python 3.11 or 3.12, uv, git) and
+a check that the install works are on the [Install](docs/getting-started/install/) page.
 
 ```bash
 pip install "pyfds-evac @ git+https://github.com/PedestrianDynamics/pyFDS-Evac.git"
@@ -100,6 +101,7 @@ uv run python run.py --scenario assets/ISO-table21 --cleanup
 ## Where to start
 
 {{< cards >}}
+  {{< card link="docs/getting-started/install/" title="Install" subtitle="Requirements, install, and a one-line check." >}}
   {{< card link="docs/getting-started/quickstart/" title="Quickstart" subtitle="One run on a tracked scenario, no FDS output needed." >}}
   {{< card link="docs/getting-started/coming-from-fds-evac/" title="Coming from FDS+Evac" subtitle="Where each FDS+Evac input goes, and what has no equivalent." >}}
   {{< card link="docs/getting-started/walkthrough/" title="Real-FDS walkthrough" subtitle="From tracked FDS output to doses and exit times." >}}

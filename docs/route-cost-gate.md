@@ -61,10 +61,9 @@ route may carry before it is refused:
 }
 ```
 
-**No vismap precondition.** The gate reads no visibility model. `b16e900`
-unified the criterion on the route polyline and `89d13d4` removed the
-`_gate_needs_sight` precompute that a gate deck used to trigger, so a
-familiarity-1.0 gate deck now runs with no `--vis-cache` at all: `l_corridor`
+**No vismap precondition.** The gate reads no visibility model: its criterion
+is the optical depth along the route polyline. A deck of fully familiar agents
+therefore builds no visibility model and needs no `--vis-cache`: `l_corridor`
 takes 5 seconds and reproduces the cached run's 82/18. A visibility model is
 still built for decks with discovery agents, which consult it to learn the
 graph.
@@ -98,8 +97,8 @@ them apart: `tau_return_margin` decides which routes are *candidates*,
 `current_exit_discount` decides their *order*, and `tau_deadband` decides
 whether the agent *acts* on that order. Only the third can change an exit.
 
-**One quantity refuses a route, orders it, and weights its edges.** That is the
-change at `0d9bf79`. Before it, Dijkstra minimised the additive composite, the
+**One quantity refuses a route, orders it, and weights its edges.** Before
+this design, Dijkstra minimised the additive composite, the
 survivors were ordered by travel time, and the gate judged them on optical
 depth — three currencies, and a gate could refuse an exit on a smoky path while
 a longer passable path to the same exit existed and was never offered.
@@ -111,8 +110,7 @@ alone; a cleaner route wins only by carrying enough less smoke to pay for its
 extra metres. A band compared cleanliness with no reference to how far the agent
 had to carry it, which is why it had to be kept out of the main sort: on
 `l_corridor` it put agents on the 58 m route while both routes read
-`k_ave = 0.000`. `_visibility_band`, `_sighting_distance`, `band_width_m` and
-the saturation constant are all gone at `0d9bf79`.
+`k_ave = 0.000`. The band has been removed.
 
 **The `1e-6 * length` floor on the edge weight is not a tuning constant.** In
 clear air every `k_avg` is zero, so without it every path ties at weight zero

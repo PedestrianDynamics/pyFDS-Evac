@@ -81,3 +81,5 @@ COEFFICIENT` output quantity (§22.10.5); the unrelated quantity
 
 How pyFDS-Evac uses this: see the [smoke-speed model](/models/smoke-speed.md)
 and [route rerouting](/models/routing.md).
+
+How it is verified: [ISO 20414 Test 18](/verification/iso-test-18.md) and the [S2 corridor](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s2_corridor_speed.py) test.

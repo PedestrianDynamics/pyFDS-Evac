@@ -3,3 +3,5 @@
 {{- $js := resources.Get "js/smoke-speed-experiment.js" | minify | fingerprint -}}
 <script defer src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>
 {{- end -}}
+{{- $scroll := resources.Get "js/scroll-regions.js" | minify | fingerprint -}}
+<script defer src="{{ $scroll.RelPermalink }}" integrity="{{ $scroll.Data.Integrity }}"></script>

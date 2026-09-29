@@ -149,6 +149,13 @@ versions: {'pyfds-evac': '0.1.0', 'jupedsim': '1.4.2', 'fdsreader': '1.11.7', 'f
 git: 3f47897b351d9f8c403782611282c0bc2a2bdcb0, dirty: True
 ```
 
+This loop runs all five seeds in one Python process, which is enough for a
+first look. Results can depend on earlier runs in the same process
+([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)), so for
+a study run each seed in its own process, for example a shell loop over
+`run.py --seed N`; see
+[Limitations › Reproducibility](limitations.md#reproducibility).
+
 The versions and the git state depend on your checkout. `dirty: True` means the
 working tree had uncommitted changes when the run started. The seed changes
 where the agents start in their spawn area, so each seed gives a different
@@ -211,6 +218,11 @@ FIGURE.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(FIGURE, dpi=150, bbox_inches="tight")
 print(f"figure: {FIGURE}")
 ```
+
+The script writes the figure into `site/static/images/howto/`, a tracked file
+of this site, so running it changes your checkout; restore it with
+`git checkout -- site/static/images/howto/egress_exit_curve.png`
+([#312](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312)).
 
 ![Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 33–35 s to 30 between 42 and 45 s, and a grey band spans the range of last exit times](/images/howto/egress_exit_curve.png)
 

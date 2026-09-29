@@ -28,7 +28,8 @@ agent, summing the dose, or applying the threshold.
 ## Equation
 
 The gas FED, as in FDS's `FED` function
-([Models › FED](/models/fed.md#coded-form)), with *C* in ppm for CO and in
+([Models › FED](/models/fed.md#coded-form); the published law is on
+[Fundamentals › Asphyxiant FED](/fundamentals/asphyxiant-fed.md)), with *C* in ppm for CO and in
 volume percent for CO₂ and O₂, and *t* in minutes:
 
 ```
@@ -65,7 +66,8 @@ $$
 - **Agents:** 100 agents walk a loop between four corner checkpoints, so they
   stay in the room and keep moving; the field is sampled at each agent's
   position every second.
-- **Runs:** once with `--incapacitation-mode deterministic`, once with
+- **Runs:** once with `--incapacitation-mode deterministic` (the default,
+  given explicitly), once with
   `--incapacitation-mode probabilistic`.
 
 ## Expected
@@ -145,9 +147,10 @@ which takes much longer
 
 ## Limits
 
-- One concentration. The decks for 4000 and 8000 ppm
-  (`assets/fed_incap_co_4000ppm`, `assets/fed_incap_co_8000ppm`) still have
-  their gas slices at 2.0 m only and have not been rerun.
+- One concentration. The 4000 and 8000 ppm decks
+  (`assets/fed_incap_co_4000ppm`, `assets/fed_incap_co_8000ppm`) have CO₂ and
+  O₂ slices at 2.0 m only (CO also at 0.5–2.5 m) and no 1.6 m slices, and
+  have not been rerun.
 - CO only, with CO₂ at an ambient level and O₂ above 20 %, so the O₂ term and
   the optional gases (HCN, NOx, irritants) are not exercised here. The FDS
   [`FED_FIC` case](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_fic_all_zones.py)

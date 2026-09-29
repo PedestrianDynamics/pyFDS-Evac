@@ -142,8 +142,8 @@ Expected output:
 ```text
 Evacuated 1/1  sim=78.1s  wall=0m00s  done
 Evacuated 1/1  sim=85.0s  wall=0m00s  done
-K sampled:    0.99545 1/m
-speed factor: 0.919631
+K sampled:    0.99550 1/m
+speed factor: 0.919626
 exit time:    78.14 s clear, 84.97 s in smoke
 manifest: fds_dir=/…/fds-evac/assets/iso_table21_coupled/fds
           fds_version=FDS-6.10.1-0-g12efa16-release
@@ -153,9 +153,9 @@ The manifest stores `fds_dir` as an absolute path; it is shortened here.
 
 `ExtinctionField.from_fds` reads the `SOOT EXTINCTION COEFFICIENT` slice
 nearest to `slice_height_m` (default 1.6 m). The deck prescribes a soot density
-that gives *K* = 1.0 1/m. The slice returns 0.99545 1/m, and the default speed
-law turns it into a speed factor of 0.919631. The ratio of the exit times,
-84.97 / 78.14 = 1.0874, matches 1 / 0.919631 = 1.0874 to four decimals.
+that gives *K* = 1.0 1/m. The slice returns 0.99550 1/m, and the default speed
+law turns it into a speed factor of 0.919626. The ratio of the exit times,
+84.97 / 78.14 = 1.0874, matches 1 / 0.919626 = 1.0874 to four decimals.
 
 `ExtinctionField.from_fds` remembers the directory it read. The run manifest
 records that directory and reads the FDS version from the `FDSVERSION` line of
@@ -209,7 +209,9 @@ default).
 `TenabilityConfig()` defaults to `incapacitation_mode="deterministic"`, so the
 threshold is exactly `fed_threshold = 1.0` for every agent, as in
 [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source). This page
-passes it explicitly. `"probabilistic"` (`--incapacitation-mode probabilistic`)
+passes it explicitly. Pass a `tenability_config` whenever you pass a
+`fed_model` to `run_scenario`: without one, the dose accumulates but no
+threshold applies, so nobody is incapacitated. `"probabilistic"` (`--incapacitation-mode probabilistic`)
 draws a log-normal threshold for each agent with median `fed_threshold`.
 
 The incapacitated occupant stays in the simulation, so the run continues to
@@ -241,7 +243,7 @@ smv.write_text("".join(lines[:start] + lines[start + 5 :]))
 The `*.pickle` file is a cache that fdsreader writes into the case directory.
 It is skipped so that the copy is read fresh.
 
-**If you build the FED field yourself, the missing slice fails loudly:**
+**If you build the FED field yourself, the missing slice stops the call:**
 
 ```python
 try:
@@ -251,10 +253,11 @@ except IndexError as error:
 ```
 
 ```text
-FdsFedField.from_fds: IndexError: tuple index out of range
+FdsFedField.from_fds: IndexError: No slice with quantity 'CARBON MONOXIDE VOLUME FRACTION' found in /tmp/tmp42qhswh0/a
 ```
 
-The message does not name the missing slice.
+The message names the missing quantity and the directory (the temporary path
+differs on your machine).
 
 **If you go through `build_run_kwargs`, the run continues without FED.**
 `build_run_kwargs` is what `run.py` and the web GUI call. It turns their
@@ -284,6 +287,10 @@ print(
 )
 ```
 
+The example passes `smoke_slice_height=2.0` rather than the 1.6 m default of
+`run.py`; [#312](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312)
+tracks aligning it.
+
 ```text
 Evacuated 0/1  sim=1150.0s  wall=0m05s  done
 finished at 1150 s, 1 agent still in the room
@@ -299,13 +306,16 @@ computed. In step 3, the same occupant in the same gas was incapacitated at
 path differs):
 
 ```text
-WARNING:pyfds_evac.core.run_config:FED is disabled for /tmp/tmp3i0w6sml/a: it has no CO slice, and all three of CO, CO2 and O2 are needed. Results will report zero dose and no incapacitation. FDS only writes these species when the &REAC line asks for them (CO needs CO_YIELD); see docs/fds-case-requirements.md.
-WARNING:pyfds_evac.core.run_config:Heat FED is disabled for /tmp/tmp3i0w6sml/a: it has no TEMPERATURE slice. Results will report zero heat dose and no thermal incapacitation. Add `&SLCF QUANTITY='TEMPERATURE'` to the FDS deck; see docs/fds-case-requirements.md.
+WARNING:pyfds_evac.core.run_config:FED is disabled for /tmp/tmp42qhswh0/a: it has no CO slice, and all three of CO, CO2 and O2 are needed. Results will report zero dose and no incapacitation. FDS only writes these species when the &REAC line asks for them (CO needs CO_YIELD); see docs/fds-case-requirements.md.
 ```
 
-`build_run_kwargs` logs the `Heat FED is disabled` warning for every case
-without a `TEMPERATURE` slice, including the intact case `a`. (Step 3 builds
-its models by hand, so it logs neither warning.) The fdsreader `csv`
+The warning says "zero dose"; in fact the result has no FED at all, as the
+next check shows ([#137](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137)).
+
+The heat dose is off unless you ask for it, so no heat warning appears here.
+With `--enable-heat-fed` (`opts.enable_heat_fed=True`) on a case without a
+`TEMPERATURE` slice, `build_run_kwargs` also logs `Heat FED is disabled for …`.
+(Step 3 builds its models by hand, so it logs no warning.) The fdsreader `csv`
 messages from step 1 appear in the same stream, so search for `FED is disabled`
 rather than for "warning".
 
@@ -330,8 +340,8 @@ Here FED and heat FED are both off, so the result carries no FED at all:
 FED = 0 ([#137](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137)). With `run.py`, `--output-fed-history` writes no file in this case.
 
 `fed_history` alone is not a reliable check. `run_scenario` fills it whenever
-either FED track runs. A case with a `TEMPERATURE` slice but no CO slice runs
-heat FED only: `fed_history` then exists, every `fed_cumulative` in it is 0.0,
+either FED track runs. A case with a `TEMPERATURE` slice but no CO slice, run
+with `--enable-heat-fed`, runs heat FED only: `fed_history` then exists, every `fed_cumulative` in it is 0.0,
 and `metrics` has `heat_fed_max` but no `fed_max`. That zero column looks
 exactly like a case where nobody received a dose. `metrics` holds `fed_max` only when the gas FED
 model ran, so check `fed_max`, and `kwargs["fed_model"]` before the run.
@@ -349,6 +359,7 @@ temporary copy.
 - [What your FDS case must provide](fds-case-requirements.md): the slices to
   add to your deck and the full list of failure modes.
 - [How do I get RSET with its spread from an ensemble of seeds?](howto-rset-ensemble.md)
-- [FDS sampling](fds-sampling.md): how slices are selected and sampled.
+- [Outputs](outputs.md): every file a run writes, column by column.
+- [Troubleshooting](troubleshooting.md): error messages and their fixes.
 
 pyFDS-Evac is research software, provided without warranty.

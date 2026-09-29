@@ -1,8 +1,11 @@
 ---
 title: "Scenario assets"
-weight: 17
-aliases: [/docs/assets/]
+weight: 80
+aliases: [/docs/assets/, /docs/using/assets/]
 ---
+
+This page is for maintainers: what each tracked scenario proves, and which
+test checks it. To run a scenario, see [Usage](usage.md).
 
 Scenario definitions are stored in [`assets/`](../assets/).
 [`assets/README.md`](../assets/README.md) indexes the folders and the file
@@ -86,7 +89,8 @@ conventions; what each one proves, and where that proof is checked, is below.
   *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 10 ppm) rather
   than burned, so concentration is constant in space and time and the only
   variable across runs is which tenability rules are enabled — set from the
-  command line (`--disable-tenability`, `--fic-alpha 0`, or the default).
+  command line (`--disable-tenability`, `--fic-alpha 0`, or `--enable-fic-speed`;
+  the FIC slowdown is off by default, as in FDS+Evac).
   Separates the two rules by timescale: **FED is a cumulative dose with a
   threshold and does nothing below it** (0.079 /min here, so 13 minutes to reach
   FED = 1, against a ~33 s egress), while **FIC responds instantaneously**

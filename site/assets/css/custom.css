@@ -240,3 +240,43 @@
 .svg-figure__panel--scroll { overflow-x: auto; }
 .svg-figure__panel--scroll svg { min-width: var(--svg-min-width); }
 .svg-figure__panel--scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* Wide equations scroll inside their own box on narrow screens instead of
+   widening the page (#299). KaTeX's hidden MathML copy is absolutely
+   positioned; anchoring it to its .katex keeps it inside a table's scroll
+   box rather than extending the page. */
+.katex { position: relative; }
+.katex-display { overflow-x: auto; overflow-y: hidden; }
+
+/* Landing page: let the text column shrink to the screen, so a long code
+   line scrolls inside its block instead of widening the page. */
+.hx-flex-col:has(> .content) > * { min-width: 0; max-width: 100%; }
+
+/* On phones, reference tables scroll sideways inside their box. The first
+   column (the flag or key name) stays pinned while the others scroll, so a
+   row keeps its name in view; it is capped in width and its code may break,
+   so the Default column still shows beside it. */
+@media (max-width: 640px) {
+  .content table td, .content table th { min-width: 4.5rem; }
+  .content table td:last-child, .content table th:last-child { min-width: 11rem; }
+  .content table td:first-child, .content table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 8rem;
+    max-width: 9rem;
+    background: #fff;
+    box-shadow: 1px 0 0 rgb(209 213 219);
+  }
+  .content table tr:nth-child(even) td:first-child { background: rgb(243 244 246); }
+  .content table td:first-child code { overflow-wrap: break-word; }
+  .dark .content table td:first-child,
+  .dark .content table th:first-child { background: #111; box-shadow: 1px 0 0 rgb(75 85 99); }
+  .dark .content table tr:nth-child(even) td:first-child { background: rgb(29 31 33); }
+}
+
+/* Boxes that scroll sideways get a visible keyboard focus ring; the script
+   js/scroll-regions.js makes them focusable when they overflow. */
+.katex-display:focus-visible,
+.content table:focus-visible,
+.content pre:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

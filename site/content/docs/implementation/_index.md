@@ -11,4 +11,5 @@ each.
   {{< card link="speed" title="Speed in practice" subtitle="The smoke-speed model: configuration, API, and runs." >}}
   {{< card link="routing" title="Routing" subtitle="Smoke-aware routing and the gate cost model." >}}
   {{< card link="wayfinding" title="Wayfinding in practice" subtitle="Sign legibility and per-agent cognitive maps." >}}
+  {{< card link="fds-sampling" title="FDS slice sampling" subtitle="How slice values are read at agent positions, and how a slice is chosen by height." >}}
 {{< /cards >}}
