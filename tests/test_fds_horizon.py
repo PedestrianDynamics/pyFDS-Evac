@@ -32,12 +32,13 @@ _FDS_DIR = str(_REPO / "assets" / "fed_slice_height" / "fds")  # T_END = 2 s
 class _Slice:
     """One-cell slice with frames at 0..10 s whose value is the frame index."""
 
-    def __init__(self, name="SOOT EXTINCTION COEFFICIENT"):
-        self.times = np.arange(0.0, 11.0)
+    def __init__(self, name="SOOT EXTINCTION COEFFICIENT", times=None):
+        self.times = np.arange(0.0, 11.0) if times is None else np.asarray(times)
         self.quantity = SimpleNamespace(name=name)
         extent = SimpleNamespace(x_start=0.0, x_end=1.0, y_start=0.0, y_end=1.0)
         mesh = SimpleNamespace(coordinates={"x": np.array([0.0]), "y": [0.0]})
-        data = np.arange(11.0).reshape(11, 1, 1)
+        n = len(self.times)
+        data = np.arange(float(n)).reshape(n, 1, 1)
         self.subslices = [
             SimpleNamespace(extent=extent, mesh=mesh, cell_centered=False, data=data)
         ]
@@ -62,6 +63,16 @@ def test_beyond_one_output_interval_raises_naming_quantity_and_times():
     assert "t=30.0 s" in message
     assert "t=10.0 s" in message
     assert isinstance(excinfo.value, ValueError)
+
+
+def test_clipped_final_frame_keeps_the_output_interval():
+    """FDS clips the last frame at T_END; the tolerance is still one interval."""
+    times = [0.0, 1.5, 3.0, 4.5, 6.0, 7.5, 9.0, 10.0]
+    sampler = SliceFieldSampler(_Slice(times=times))
+    assert sampler.output_interval_s == pytest.approx(1.5)
+    assert sampler.sample(11.4, 0.5, 0.5) == 7.0
+    with pytest.raises(FdsHorizonError):
+        sampler.sample(11.6, 0.5, 0.5)
 
 
 def test_horizon_is_checked_before_the_domain():
@@ -122,12 +133,13 @@ def _vis_model(**kwargs):
 
 
 def test_visibility_raises_past_the_vismap_time_points():
+    """The last vismap point already lies at or after T_END: no extra step."""
     model = _vis_model()
-    assert model.node_is_visible(20.0, 0.0, 0.0, "e0") is True
+    assert model.node_is_visible(10.0, 0.0, 0.0, "e0") is True
     with pytest.raises(FdsHorizonError):
-        model.node_is_visible(30.0, 0.0, 0.0, "e0")
+        model.node_is_visible(20.0, 0.0, 0.0, "e0")
     with pytest.raises(FdsHorizonError):
-        model.visibility_to_node(30.0, 0.0, 0.0, "e0")
+        model.visibility_to_node(20.0, 0.0, 0.0, "e0")
 
 
 def test_visibility_flag_holds_and_warns_once(caplog):
@@ -141,7 +153,7 @@ def test_visibility_flag_holds_and_warns_once(caplog):
 def test_committed_case_horizon():
     last, interval = fds_output_horizon(_FDS_DIR)
     assert last == pytest.approx(2.0)
-    assert 0.0 < interval <= 2.0
+    assert interval == pytest.approx(1.383, abs=1e-3)  # not the clipped 0.617
 
 
 def _opts(**overrides):
@@ -161,11 +173,15 @@ def test_run_within_the_fds_output_passes_setup():
     _check_fds_horizon(SimpleNamespace(max_simulation_time=2.0), _opts())
 
 
-def test_flag_skips_the_setup_check():
+def test_flag_turns_the_setup_check_into_a_warning():
+    messages = []
     _check_fds_horizon(
         SimpleNamespace(max_simulation_time=300.0),
         _opts(allow_fds_horizon_hold=True),
+        messages.append,
     )
+    assert len(messages) == 1
+    assert messages[0].startswith("Warning: max_simulation_time=300.0 s")
 
 
 def test_cli_exposes_the_flag():

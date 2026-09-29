@@ -503,8 +503,9 @@ class VisibilityModel:
     The cache is safe to load (no pickle / no arbitrary code execution).
     Metadata mismatches trigger an automatic recompute and cache refresh.
 
-    A model built from FDS output raises ``FdsHorizonError`` for a query more
-    than one vismap time step past its last time point, unless
+    A model built from FDS output raises ``FdsHorizonError`` for a query past
+    its last time point, the first vismap step at or after the FDS end, so
+    at most one step past T_END; unless
     *allow_horizon_hold* is set: then the last time point is held and one
     warning is logged.  A clear-air model is time-invariant and never raises.
     """
@@ -666,7 +667,7 @@ class VisibilityModel:
         if self._horizon is None:
             return
         last, interval = self._horizon
-        if time <= last + interval:
+        if time <= last:
             return
         message = fds_sampling.horizon_error_message(
             "sign visibility", time, last, interval

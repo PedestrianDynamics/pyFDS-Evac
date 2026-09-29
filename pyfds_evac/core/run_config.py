@@ -96,29 +96,40 @@ def _allow_hold(opts: Any) -> bool:
     return bool(getattr(opts, "allow_fds_horizon_hold", False))
 
 
-def _check_fds_horizon(scenario: Any, opts: Any) -> None:
+def _check_fds_horizon(scenario: Any, opts: Any, log: Logger = _noop) -> None:
     """Raise ValueError when the run can outlast the FDS output (#340).
 
     Past the last FDS frame there is no smoke data; the samplers raise there
     too, but only once the run gets that far.  Failing at setup saves the
-    run.  ``--allow-fds-horizon-hold`` skips the check.
+    run.  With ``--allow-fds-horizon-hold`` the overrun is logged instead.
     """
-    if not opts.fds_dir or _allow_hold(opts):
+    overrun = _fds_horizon_overrun(scenario, opts)
+    if overrun is None:
         return
-    max_time = getattr(scenario, "max_simulation_time", None)
-    if max_time is None:
-        return
-    horizon = fds_output_horizon(opts.fds_dir)
-    if horizon is None:
-        return
-    last, interval = horizon
-    if float(max_time) <= last + interval:
+    if _allow_hold(opts):
+        log(f"Warning: {overrun}; holding the last frame from there on.")
         return
     raise ValueError(
+        f"{overrun}. Lower max_simulation_time, extend T_END in the FDS run, "
+        "or pass --allow-fds-horizon-hold to hold the last frame."
+    )
+
+
+def _fds_horizon_overrun(scenario: Any, opts: Any) -> str | None:
+    """Describe how max_simulation_time outlasts the FDS output, or None."""
+    max_time = getattr(scenario, "max_simulation_time", None)
+    if not opts.fds_dir or max_time is None:
+        return None
+    horizon = fds_output_horizon(opts.fds_dir)
+    if horizon is None:
+        return None
+    last, interval = horizon
+    if float(max_time) <= last + interval:
+        return None
+    return (
         f"max_simulation_time={float(max_time):.1f} s runs past the FDS output "
         f"of {opts.fds_dir}, which ends at t={last:.1f} s (output interval "
-        f"{interval:.1f} s). Lower max_simulation_time, extend T_END in the "
-        "FDS run, or pass --allow-fds-horizon-hold to hold the last frame."
+        f"{interval:.1f} s)"
     )
 
 
@@ -498,7 +509,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
     ``vis_model``). Raises ``ValueError`` for invalid option combinations.
     """
     validate_opts(opts)
-    _check_fds_horizon(scenario, opts)
+    _check_fds_horizon(scenario, opts, log)
     smoke_speed_model = _build_smoke_model(opts, log)
     fed_model = _build_fed_model(opts, log)
     heat_fed_model = _build_heat_fed_model(opts, log)

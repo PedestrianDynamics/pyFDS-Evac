@@ -37,10 +37,14 @@ class FdsHorizonError(ValueError):
 
 
 def _output_interval(times) -> float:
-    """Return the last output interval of a time array, 0 for one frame."""
+    """Return the output interval of a time array, 0 for one frame.
+
+    The largest frame spacing, not the last one: FDS clips the final frame
+    at T_END, so the last spacing can be a fraction of the output interval.
+    """
     if len(times) < 2:
         return 0.0
-    return float(times[-1]) - float(times[-2])
+    return float(np.max(np.diff(np.asarray(times, dtype=float))))
 
 
 def horizon_error_message(
@@ -146,7 +150,7 @@ class SliceFieldSampler:
 
     @property
     def output_interval_s(self) -> float:
-        """Return the interval between the last two slice frames [s]."""
+        """Return the output interval of the slice frames [s]."""
         return _output_interval(self._slice.times)
 
     def _check_horizon(self, time_s: float) -> None:
@@ -296,16 +300,18 @@ def load_slice_sampler(
 def fds_output_horizon(fds_dir: str, *, simulation=None) -> tuple[float, float] | None:
     """Return (last time, output interval) [s] of the FDS slice output.
 
-    The earliest-ending slice sets the horizon, since every quantity is
-    needed until the run ends.  None when the case has no slice.
+    Every slice in the case counts, read or not: the one whose last time
+    plus output interval comes first sets the horizon.  A single-frame slice
+    has no interval and is skipped (its sampler still raises if read).  None
+    when the case has no slice with two frames.
     """
     sim = simulation if simulation is not None else Simulation(str(fds_dir))
     ends = [
         (float(s.times[-1]), _output_interval(s.times))
         for s in sim.slices
-        if len(s.times)
+        if len(s.times) > 1
     ]
-    return min(ends) if ends else None
+    return min(ends, key=sum) if ends else None
 
 
 def select_horizontal_slice(
