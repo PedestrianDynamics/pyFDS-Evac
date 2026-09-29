@@ -353,9 +353,9 @@ HEAT_FLUX_ASSUMED_PARAMETERS = (
     "skin_temperature_celsius",
 )
 # Radiant term of the total-flux method (#221): "gas" is eps sigma
-# (T_g^4 - T_s^4) of Eq. 63.49; "integrated-intensity" is the net f U -
-# sigma T_s^4 from the FDS INTEGRATED INTENSITY slice, with f given by the
-# user (no default).
+# (T_g^4 - T_s^4) of Eq. 63.49; "integrated-intensity" is the excess
+# f (U - 4 sigma T_s^4) over an isotropic field at the skin temperature, from
+# the FDS INTEGRATED INTENSITY slice, with f given by the user (no default).
 HEAT_RADIANT_SOURCES = ("gas", "integrated-intensity")
 HEAT_U_FACTOR_RANGE = (0.25, 1.0)  # sphere / isotropic field .. source face-on
 # Largest z difference [m] accepted between the TEMPERATURE and INTEGRATED
@@ -522,19 +522,6 @@ def _check_layer_parameters(
         )
 
 
-def _check_layer_and_source_exclusive(regime: str, radiant_source: str) -> None:
-    """Raise ValueError for the layer regime with the INTEGRATED INTENSITY source.
-
-    U already contains the emission of the layer; adding the layer term to
-    f U would count it twice.
-    """
-    if regime == "layer" and radiant_source == "integrated-intensity":
-        raise ValueError(
-            "The layer heat regime and the INTEGRATED INTENSITY radiant source "
-            "cannot be combined: U already contains the layer's emission."
-        )
-
-
 def heat_flux_row_fields(
     heat_fed_model,
     temperature_celsius: float,
@@ -548,7 +535,7 @@ def heat_flux_row_fields(
     """
     if getattr(heat_fed_model, "method", "convective") != "total-flux":
         return {}
-    if getattr(heat_fed_model, "regime", "smoke") == "layer":
+    if getattr(heat_fed_model, "uses_layer_term", False):
         return {
             "heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(
                 temperature_celsius, layer_temperature_celsius
@@ -1148,8 +1135,9 @@ class DefaultHeatFedModel:
     q^1.33 / D (Eqs. 63.49 and 63.43, spec 016), D the radiant dose of
     *endpoint*, or of ``fatal`` without one; the convective laws are not added.
     With ``radiant_source="integrated-intensity"`` (total-flux only, #221)
-    the radiant term is the net f U - sigma T_s^4 instead of the gas term,
-    and *u_factor* f in [0.25, 1] is required. Outside the FDS domain U is
+    the radiant term is the excess f (U - 4 sigma T_s^4) over an isotropic
+    field at the skin temperature instead of the gas term, and *u_factor* f
+    in [0.25, 1] is required. Outside the FDS domain U is
     NaN and the rate is zero; the first such sample logs one warning.
 
     *regime* (total-flux only, spec 016): ``"smoke"`` (default) applies
@@ -1159,9 +1147,10 @@ class DefaultHeatFedModel:
     radiant terms are never added together. *view_factor* and
     *layer_emissivity* have no sourced values and no defaults.
 
-    The layer regime and the INTEGRATED INTENSITY source are exclusive: U
-    already contains the emission of the layer, so adding the layer term to
-    f U would count it twice.
+    With both the layer regime and the INTEGRATED INTENSITY source, U
+    supplies the radiant term: FDS's radiation solution already contains the
+    layer's emission, so the layer term is not added (it would count that
+    emission twice), and one warning is logged.
     """
 
     def __init__(
@@ -1194,7 +1183,6 @@ class DefaultHeatFedModel:
         _check_layer_parameters(
             regime, method, layer_field, view_factor, layer_emissivity
         )
-        _check_layer_and_source_exclusive(regime, radiant_source)
         self.field = field
         self.config = config
         self.endpoint = endpoint
@@ -1205,7 +1193,18 @@ class DefaultHeatFedModel:
         self.radiant_source = radiant_source
         self.u_factor = u_factor
         self.regime = regime
-        self.layer_field = layer_field if regime == "layer" else None
+        # The layer term is used only when U is not the radiant source.
+        self.uses_layer_term = (
+            regime == "layer" and radiant_source != "integrated-intensity"
+        )
+        if regime == "layer" and not self.uses_layer_term:
+            _logger.warning(
+                "--heat-regime layer and --heat-radiant-source "
+                "integrated-intensity are both set: U already contains the "
+                "layer's emission, so it supplies the radiant term and the "
+                "layer term is not added."
+            )
+        self.layer_field = layer_field if self.uses_layer_term else None
         self.view_factor = view_factor
         self.layer_emissivity = layer_emissivity
         self.layer_height_m = layer_height_m
@@ -1226,6 +1225,7 @@ class DefaultHeatFedModel:
                 view_factor=self.view_factor,
                 layer_emissivity=self.layer_emissivity,
                 layer_height_m=self.layer_height_m,
+                layer_term=self.uses_layer_term,
             )
         if self.radiant_source != "integrated-intensity":
             return params
@@ -1235,7 +1235,7 @@ class DefaultHeatFedModel:
         ]
         params["radiant_source"] = self.radiant_source
         params["u_factor"] = self.u_factor
-        params["radiant_flux"] = "net"
+        params["radiant_flux"] = "excess"
         return params
 
     def heat_flux_kw_m2(
@@ -1248,11 +1248,11 @@ class DefaultHeatFedModel:
 
         In the layer regime: h (T_g - T_s) / 1000 + q_ext, no eps sigma term
         of the gas at the head. With the INTEGRATED INTENSITY source,
-        q = f U - sigma T_s^4 / 1000 + h (T_g - T_s) / 1000 (net, maintainer
-        decision on #221): U already holds the gas emission, so the eps term
-        is not added.
+        q = f (U - 4 sigma T_s^4 / 1000) + h (T_g - T_s) / 1000 (excess over
+        an isotropic field at the skin temperature, maintainer decision on
+        #221): U already holds the gas emission, so the eps term is not added.
         """
-        if self.regime == "layer":
+        if self.uses_layer_term:
             return self._layer_heat_flux_kw_m2(
                 temperature_celsius, layer_temperature_celsius
             )
@@ -1268,8 +1268,9 @@ class DefaultHeatFedModel:
             if integrated_intensity_kw_m2 is None
             else integrated_intensity_kw_m2
         )
-        skin_emission = (
-            STEFAN_BOLTZMANN_W_M2_K4
+        u_skin = (
+            4.0
+            * STEFAN_BOLTZMANN_W_M2_K4
             * (self.skin_temperature_celsius + _KELVIN) ** 4
             / 1000.0
         )
@@ -1279,9 +1280,8 @@ class DefaultHeatFedModel:
             convective_coefficient=self.convective_coefficient,
             skin_temperature_celsius=self.skin_temperature_celsius,
             external_flux_kw_m2=radiant_flux_from_integrated_intensity_kw_m2(
-                u, self.u_factor
-            )
-            - skin_emission,
+                u - u_skin, self.u_factor
+            ),
         )
 
     def _layer_heat_flux_kw_m2(
