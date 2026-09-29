@@ -20,20 +20,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)).
 - `--heat-radiant-source integrated-intensity` with `--heat-u-factor f`
   (opt-in, with `--heat-fed-method total-flux`; default source `gas`): the
-  radiant term is the net flux f·U − σT_s⁴ (maintainer decision) from the
-  FDS `INTEGRATED INTENSITY` slice at the slice height, in place of the gas
-  term ε σ (T_g⁴ − T_s⁴), so q = f·U − σT_s⁴/1000 + h (T_g − T_s)/1000.
+  radiant term is the excess f·(U − 4σT_s⁴) over an isotropic field at the
+  skin temperature (maintainer decision) from the FDS `INTEGRATED
+  INTENSITY` slice at the slice height, in place of the gas term
+  ε σ (T_g⁴ − T_s⁴), so q = f·(U − 4σT_s⁴/1000) + h (T_g − T_s)/1000.
   f in [0.25, 1] has no default and is
   required; a case without the slice, a U slice at another height than the
-  TEMPERATURE slice, an agent inside only one of the two slices, or the
-  source together with `--heat-regime layer` (U already holds the layer's
-  emission) is an
-  error. The FED history gains
+  TEMPERATURE slice, or an agent inside only one of the two slices is an
+  error. With `--heat-regime layer` as well, U supplies the radiant term
+  and the layer term is not added (U already holds the layer's emission),
+  with one warning and `layer_term: false` in the manifest. The FED
+  history gains
   `heat_integrated_intensity_kw_m2` and the manifest `radiant_source`,
-  `u_factor` and `radiant_flux` (`net`). Agents outside the FDS domain get
-  a zero rate, with U and q NaN in the FED history, and one warning per
-  run. At f = 1/4 a room with no fire gives no dose; for f above about 0.35
-  a 20 °C room still does (U = 1.68 kW/m²)
+  `u_factor` and `radiant_flux` (`excess`). Agents outside the FDS domain
+  get a zero rate, with U and q NaN in the FED history, and one warning
+  per run. Surroundings at or below the skin temperature give no dose for
+  any f; q ≤ 0 gives a zero rate, never a negative one
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 - `--heat-fed-method total-flux` (opt-in, with `--enable-heat-fed`; default
   `convective`): the heat dose is q^1.33/D (SFPE Handbook Ch. 63 Eq. 63.43)

@@ -154,7 +154,7 @@ Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/i
 
 ## What is not modelled
 
-- Radiant heat from hot surfaces or a flame, except as the net f·U − σT_s⁴ from FDS
+- Radiant heat from hot surfaces or a flame, except as the excess f·(U − 4σT_s⁴) from FDS
   `INTEGRATED INTENSITY` with `--heat-radiant-source integrated-intensity`
   and a user factor. Otherwise the heat dose is convective, or with
   `--heat-fed-method total-flux` adds the radiation of the gas at the head,

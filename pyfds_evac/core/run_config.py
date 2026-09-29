@@ -259,11 +259,6 @@ def _validate_heat_layer_opts(opts: Any) -> None:
         return
     if getattr(opts, "heat_fed_method", "convective") != "total-flux":
         raise ValueError("--heat-regime layer needs --heat-fed-method total-flux")
-    if getattr(opts, "heat_radiant_source", "gas") == "integrated-intensity":
-        raise ValueError(
-            "--heat-regime layer cannot be combined with --heat-radiant-source "
-            "integrated-intensity: U already contains the layer's emission."
-        )
     for option in ("heat_layer_height", "heat_view_factor", "heat_layer_emissivity"):
         if getattr(opts, option, None) is None:
             flag = "--" + option.replace("_", "-")

@@ -13,25 +13,29 @@ it is an error.
 With this source the total-flux law (SFPE Handbook 5th ed. Ch. 63,
 doi:10.1007/978-1-4939-2565-0_63, Eqs. 63.49 and 63.43, pp. 2382-2384) is
 
-    q = f U - sigma T_s^4 / 1000 + h (T_g - T_s) / 1000        [kW/m2]
+    q = f (U - 4 sigma T_s^4 / 1000) + h (T_g - T_s) / 1000   [kW/m2]
     t = D / q^1.33                         [min], FED = sum dt / t
 
-- The radiant term is **net**, f U - sigma T_s^4 (maintainer decision on
-  #221): f U is absorbed by a black skin, sigma T_s^4 (T_s in K) is its own
-  emission, the same T_s as the convective term. It is the net exchange of
-  Eq. 63.49: with U = 4 sigma T^4 of a black isotropic field at T and
-  f = 1/4, the radiant term is sigma (T^4 - T_s^4).
+- The radiant term is the **excess** of U over an isotropic field at the
+  skin temperature, f (U - 4 sigma T_s^4) (maintainer decision on #221),
+  T_s in K, the same T_s as the convective term. An isotropic field at T_s
+  gives zero for every f in [0.25, 1]; an isotropic field at T gives
+  4 f sigma (T^4 - T_s^4), so f = 1/4 gives sigma (T^4 - T_s^4), the
+  radiant term of Eq. 63.49 with emissivity 1 (and the earlier net basis at
+  f = 1/4).
 - The gas term eps sigma (T_g^4 - T_s^4) of Eq. 63.49 is **not** added: U
   already contains the emission of the gas at the head, and spec 016 says
   not to add two radiant terms. Any ``emissivity`` passed is ignored.
 - No 2.5 kW/m2 threshold (spec 016), as for #223.
 
 Consequence: U is not zero in a cold room (4 sigma T^4 = 1.68 kW/m2 at
-20 deg C). With f = 1/4 the net radiant term is sigma (T^4 - T_s^4), so an
-isotropic field at the skin temperature gives no flux and a colder room no
-dose. With f > 1/4 the ambient background does not vanish: at 20 deg C,
-h = 5, T_s = 35 deg C, q > 0 for f above about 0.35, and f = 1 reaches the
-fatal FED in about 15 min with no fire. ``test_*cold_room*`` pin both.
+20 deg C), but it is below 4 sigma T_s^4 = 2.04 kW/m2, so a room with no
+fire colder than the skin gives q < 0 (net cooling) for every f, and the
+dose rate is 0 for q <= 0 (no negative dose). ``test_*cold_room*`` pin it.
+
+With the layer regime also configured, U supplies the radiant term: FDS's
+radiation solution already contains the layer's emission. The layer term
+is not added and the model logs one warning.
 
 Agents outside the FDS domain (outside both slices) get a zero rate, U and
 q are NaN in the FED history, and the model logs one warning per run.
@@ -53,7 +57,7 @@ API under test (``pyfds_evac.core.fed`` unless noted):
   ``u_factor`` in [0.25, 1], else ValueError.
   ``heat_flux_kw_m2(temperature_celsius, integrated_intensity_kw_m2=None)``.
   ``heat_flux_parameters()`` adds ``radiant_source``, ``u_factor`` and
-  ``radiant_flux`` (``"net"``); ``u_factor`` is user-given, so it is not
+  ``radiant_flux`` (``"excess"``); ``u_factor`` is user-given, so it is not
   in ``assumed``.
 - ``FdsQuantityInventory.canonical_slice_names()`` maps
   ``INTEGRATED INTENSITY`` to ``"integrated_intensity"``.
@@ -91,9 +95,9 @@ DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.7}
 
 
 def q_u_hand(t_gas_c, u_kw_m2, *, f, h, t_skin_c):
-    """Net f U - sigma T_s^4 plus convection h (T_g - T_s), kW/m2; no gas eps."""
-    skin_emission = SIGMA * (t_skin_c + KELVIN) ** 4 / 1000.0
-    return f * u_kw_m2 - skin_emission + h * (t_gas_c - t_skin_c) / 1000.0
+    """Excess f (U - 4 sigma T_s^4) plus convection h (T_g - T_s), kW/m2."""
+    u_skin = 4.0 * SIGMA * (t_skin_c + KELVIN) ** 4 / 1000.0
+    return f * (u_kw_m2 - u_skin) + h * (t_gas_c - t_skin_c) / 1000.0
 
 
 def q_gas_hand(t_gas_c, *, eps, h, t_skin_c):
@@ -127,16 +131,19 @@ def test_isotropic_plate_gets_a_quarter_of_u():
 
 @pytest.mark.parametrize(("q", "table_s"), [(2.5, 30.0), (10.0, 4.0)])
 def test_face_on_flux_bounds_table_63_20(q, table_s):
-    """f = 1, T_g = T_s: incident f U = q, net q - sigma T_s^4. Table 63.20
+    """One source face-on (f = 1) in surroundings at the skin temperature,
+    T_g = T_s: U = q + 4 sigma T_s^4, so the excess is q. Table 63.20
     (p. 2383) radiant rows, 2.5 kW/m2 -> 30 s and 10 kW/m2 -> 4 s; Eq. 63.43,
-    tolerance dose, band 25 %."""
-    seconds = 60.0 * t_hand_min(q_u_hand(35.0, q, f=1.0, h=5.0, t_skin_c=35.0), 1.33)
+    tolerance dose, band 25 % (23.6 s and 3.7 s)."""
+    u = q + u_isotropic(35.0)
+    assert q_u_hand(35.0, u, f=1.0, h=5.0, t_skin_c=35.0) == pytest.approx(q)
+    seconds = 60.0 * t_hand_min(q_u_hand(35.0, u, f=1.0, h=5.0, t_skin_c=35.0), 1.33)
     assert table_s * 0.75 <= seconds <= table_s * 1.25
 
 
 @pytest.mark.parametrize("t_c", [100.0, 300.0])
-def test_isotropic_quarter_u_net_is_eq_63_49_black(t_c):
-    """U = 4 sigma T^4, T_g = T, f = 1/4: f U - sigma T_s^4 = sigma (T^4 -
+def test_isotropic_quarter_u_is_eq_63_49_black(t_c):
+    """U = 4 sigma T^4, T_g = T, f = 1/4: f (U - 4 sigma T_s^4) = sigma (T^4 -
     T_s^4), the radiant term of Eq. 63.49 with emissivity 1."""
     u = u_isotropic(t_c)
     q = q_u_hand(t_c, u, f=0.25, h=5.0, t_skin_c=35.0)
@@ -146,10 +153,10 @@ def test_isotropic_quarter_u_net_is_eq_63_49_black(t_c):
 
 @pytest.mark.parametrize(
     ("t_c", "f", "q"),
-    [(100.0, 0.5, 2.0124), (100.0, 1.0, 4.2110), (300.0, 0.5, 13.0511)],
+    [(100.0, 0.5, 1.5011), (100.0, 1.0, 2.6772), (300.0, 0.5, 12.5398)],
 )
-def test_model_net_flux_on_the_chosen_factor(t_c, f, q):
-    """Isotropic U = 4 sigma T^4: q = 4 f sigma T^4 - sigma T_s^4 + h dT."""
+def test_model_excess_flux_on_the_chosen_factor(t_c, f, q):
+    """Isotropic U = 4 sigma T^4: q = 4 f sigma (T^4 - T_s^4) + h dT."""
     u = u_isotropic(t_c)
     model = _u_model(t_c, u, f=f, h=5.0, t_skin_c=35.0)
     got = model.heat_flux_kw_m2(t_c, integrated_intensity_kw_m2=u)
@@ -157,39 +164,32 @@ def test_model_net_flux_on_the_chosen_factor(t_c, f, q):
     assert got == pytest.approx(q_u_hand(t_c, u, f=f, h=5.0, t_skin_c=35.0))
 
 
-def test_u_at_skin_temperature_gives_zero_net_flux():
-    """An isotropic field at the skin temperature, f = 1/4: no net flux, no dose."""
+@pytest.mark.parametrize("f", [0.25, 0.5, 0.75, 1.0])
+def test_u_at_skin_temperature_gives_zero_flux_for_every_factor(f):
+    """An isotropic field at the skin temperature, T_g = T_s: U = 4 sigma
+    T_s^4 = 2.045 kW/m2, q = 0 and no dose, whatever f."""
     u = u_isotropic(35.0)
-    model = _u_model(35.0, u, f=0.25, h=5.0, t_skin_c=35.0)
+    assert u == pytest.approx(2.045, abs=1e-3)
+    model = _u_model(35.0, u, f=f, h=5.0, t_skin_c=35.0)
     assert model.heat_flux_kw_m2(35.0, integrated_intensity_kw_m2=u) == pytest.approx(
         0.0, abs=1e-12
     )
-    assert _u_rate(35.0, u, f=0.25, h=5.0, t_skin_c=35.0) == 0.0
+    assert _u_rate(35.0, u, f=f, h=5.0, t_skin_c=35.0) == 0.0
 
 
-def test_cold_room_gives_no_dose_at_quarter_u():
-    """20 deg C, no fire, U = 4 sigma T^4 = 1.675 kW/m2, f = 1/4, h = 5,
-    T_s = 35 deg C: q = 0.419 - 0.511 - 0.075 = -0.168 kW/m2, no dose."""
+@pytest.mark.parametrize(("f", "q"), [(0.25, -0.1675), (0.5, -0.2600), (1.0, -0.4450)])
+def test_cold_room_cools_and_gives_no_dose(f, q):
+    """20 deg C, no fire, U = 1.675 kW/m2, h = 5, T_s = 35 deg C:
+    q = f (1.675 - 2.045) - 0.075 < 0 is net cooling. The dose rate is 0,
+    never negative, for every f."""
     u = u_isotropic(20.0)
     assert u == pytest.approx(1.675, abs=0.002)
-    q = q_u_hand(20.0, u, f=0.25, h=5.0, t_skin_c=35.0)
-    assert q == pytest.approx(-0.1675, abs=1e-4)
-    assert _u_rate(20.0, u, f=0.25, h=5.0, t_skin_c=35.0) == 0.0
-
-
-@pytest.mark.parametrize(("f", "minutes"), [(1.0, 14.9), (0.5, 104.9)])
-def test_cold_room_still_doses_above_quarter_u(f, minutes):
-    """The net basis removes the background only for f near 1/4: with the
-    same cold room, q > 0 for f above (sigma T_s^4 + 0.075) / U = 0.350, and
-    the fatal FED reaches 1 with no fire (hand values)."""
-    u = u_isotropic(20.0)
-    assert (SIGMA * (35.0 + KELVIN) ** 4 / 1000.0 + 0.075) / u == pytest.approx(
-        0.350, abs=1e-3
+    assert q_u_hand(20.0, u, f=f, h=5.0, t_skin_c=35.0) == pytest.approx(q, abs=1e-4)
+    model = _u_model(20.0, u, f=f, h=5.0, t_skin_c=35.0)
+    assert model.heat_flux_kw_m2(20.0, integrated_intensity_kw_m2=u) == pytest.approx(
+        q, abs=1e-4
     )
-    q = q_u_hand(20.0, u, f=f, h=5.0, t_skin_c=35.0)
-    assert t_hand_min(q, DOSE["fatal"]) == pytest.approx(minutes, abs=0.1)
-    got = _u_rate(20.0, u, f=f, h=5.0, t_skin_c=35.0)
-    assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
+    assert _u_rate(20.0, u, f=f, h=5.0, t_skin_c=35.0) == 0.0
 
 
 # --- API helpers ------------------------------------------------------------
@@ -403,8 +403,8 @@ def test_field_accepts_intensity_slice_at_the_temperature_height():
 @pytest.mark.parametrize("f", [0.25, 0.5, 1.0])
 @pytest.mark.parametrize("u", [2.0, 10.0, 24.47])
 def test_model_rate_radiant_only(u, f, name):
-    """T_g = T_s: no convection, q = f U - sigma T_s^4, rate = q^1.33 / D,
-    zero where q <= 0 (U = 2, f = 1/4: 0.5 - 0.511 < 0)."""
+    """T_g = T_s: no convection, q = f (U - 4 sigma T_s^4), rate = q^1.33 / D,
+    zero where q <= 0 (U = 2 < 2.045)."""
     q = q_u_hand(35.0, u, f=f, h=8.0, t_skin_c=35.0)
     expected = 1.0 / t_hand_min(q, DOSE[name]) if q > 0.0 else 0.0
     got = _u_rate(35.0, u, f=f, h=8.0, t_skin_c=35.0, endpoint=name)
@@ -438,9 +438,10 @@ def test_model_heat_flux_takes_integrated_intensity():
 
 
 def test_model_no_threshold_below_2_5_kw():
-    q = q_u_hand(35.0, 2.0, f=0.5, h=5.0, t_skin_c=35.0)
-    assert q < 2.5
-    assert _u_rate(35.0, 2.0, f=0.5, h=5.0, t_skin_c=35.0) > 0.0
+    """U = 4 above the 2.045 kW/m2 of a skin-temperature field: q = 0.98."""
+    q = q_u_hand(35.0, 4.0, f=0.5, h=5.0, t_skin_c=35.0)
+    assert 0.0 < q < 2.5
+    assert _u_rate(35.0, 4.0, f=0.5, h=5.0, t_skin_c=35.0) > 0.0
 
 
 @pytest.mark.parametrize("u", [0.0, math.nan, math.inf])
@@ -451,11 +452,11 @@ def test_model_domain_guard(u):
     assert rate == 0.0
 
 
-def test_model_records_source_factor_and_net():
+def test_model_records_source_factor_and_excess():
     params = _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0).heat_flux_parameters()
     assert params["radiant_source"] == "integrated-intensity"
     assert params["u_factor"] == 0.5
-    assert params["radiant_flux"] == "net"
+    assert params["radiant_flux"] == "excess"
     assert "u_factor" not in params["assumed"]
 
 
@@ -490,22 +491,49 @@ def test_model_rejects_unknown_radiant_source():
         )
 
 
-def test_model_rejects_integrated_intensity_with_layer_regime():
-    """U already holds the layer's emission: f U plus the layer term would
-    count it twice, so the combination is rejected, not resolved."""
-    _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0)
-    with pytest.raises(ValueError, match="layer"):
-        DefaultHeatFedModel(
-            FdsHeatField(_Sampler(150.0), intensity_sampler=_Sampler(5.0)),  # type: ignore[arg-type,call-arg]
-            DefaultFedConfig(fds_dir="", update_interval_s=1.0),
-            method="total-flux",
-            radiant_source="integrated-intensity",  # type: ignore[call-arg]
-            u_factor=0.5,  # type: ignore[call-arg]
-            regime="layer",  # type: ignore[call-arg]
-            layer_field=FdsHeatField(_Sampler(300.0)),  # type: ignore[arg-type,call-arg]
-            view_factor=0.5,  # type: ignore[call-arg]
-            layer_emissivity=0.9,  # type: ignore[call-arg]
-        )
+def _u_and_layer_model(t_c, u, *, f, h, t_skin_c, layer_c=300.0):
+    return DefaultHeatFedModel(
+        FdsHeatField(_Sampler(t_c), intensity_sampler=_Sampler(u)),  # type: ignore[arg-type,call-arg]
+        DefaultFedConfig(fds_dir="", update_interval_s=1.0),
+        method="total-flux",
+        convective_coefficient=h,
+        skin_temperature_celsius=t_skin_c,
+        radiant_source="integrated-intensity",  # type: ignore[call-arg]
+        u_factor=f,  # type: ignore[call-arg]
+        regime="layer",  # type: ignore[call-arg]
+        layer_field=FdsHeatField(_Sampler(layer_c)),  # type: ignore[arg-type,call-arg]
+        view_factor=0.5,  # type: ignore[call-arg]
+        layer_emissivity=0.9,  # type: ignore[call-arg]
+        layer_height_m=2.4,  # type: ignore[call-arg]
+    )
+
+
+def test_integrated_intensity_wins_over_the_layer_term(caplog):
+    """Both configured: U already holds the layer's emission, so U supplies
+    the radiant term and the layer term is not added. The flux, rate and
+    FED history fields equal the U-only model's; one warning for the run."""
+    from pyfds_evac.core.fed import heat_flux_row_fields
+
+    t_c, u, f, h, t_s = 120.0, 12.0, 0.5, 5.0, 35.0
+    u_only = _u_model(t_c, u, f=f, h=h, t_skin_c=t_s)
+    with caplog.at_level("WARNING", logger="pyfds_evac.core.fed"):
+        both = _u_and_layer_model(t_c, u, f=f, h=h, t_skin_c=t_s)
+        rates = [both.sample_rate(float(k), 0.0, 0.0) for k in range(3)]
+    expected_q = q_u_hand(t_c, u, f=f, h=h, t_skin_c=t_s)
+    got_q = both.heat_flux_kw_m2(t_c, integrated_intensity_kw_m2=u)
+    assert got_q == pytest.approx(expected_q, rel=1e-12)
+    assert got_q == u_only.heat_flux_kw_m2(t_c, integrated_intensity_kw_m2=u)
+    _, u_only_rate = u_only.sample_rate(0.0, 0.0, 0.0)
+    for inputs, rate in rates:
+        assert rate == u_only_rate
+        assert heat_flux_row_fields(
+            both,
+            t_c,
+            inputs.layer_temperature_celsius,
+            integrated_intensity_kw_m2=inputs.integrated_intensity_kw_m2,
+        ) == heat_flux_row_fields(u_only, t_c, integrated_intensity_kw_m2=u)
+    warnings = [r for r in caplog.records if "layer" in r.getMessage().lower()]
+    assert len(warnings) == 1
 
 
 # --- inventory ------------------------------------------------------------------
@@ -573,7 +601,7 @@ def test_cli_rejects_unknown_source():
         parser.parse_args(["--scenario", "x", "--heat-radiant-source", "layer"])
 
 
-def test_cli_help_states_range_no_default_and_net():
+def test_cli_help_states_range_no_default_and_excess():
     import run
 
     help_text = run._build_parser().format_help()
@@ -581,7 +609,7 @@ def test_cli_help_states_range_no_default_and_net():
     flat = " ".join(block.split()).lower()
     assert "0.25" in flat and "1" in flat
     assert "no default" in flat
-    assert "net" in flat.split() or "net," in flat
+    assert "excess" in flat
 
 
 # --- run_config -------------------------------------------------------------------
@@ -691,18 +719,19 @@ def test_run_config_rejects_case_without_intensity_slice(monkeypatch):
         _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
 
 
-def test_run_config_rejects_source_with_layer_regime(monkeypatch):
+def test_run_config_lets_integrated_intensity_win_over_layer(monkeypatch):
+    """Both configured: the run builds, U supplies the radiant term."""
     _patch(monkeypatch, {"temperature", "integrated_intensity"})
-    _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
-    with pytest.raises(ValueError, match="layer"):
-        _build(
-            heat_radiant_source="integrated-intensity",
-            heat_u_factor=0.5,
-            heat_regime="layer",
-            heat_layer_height=2.4,
-            heat_view_factor=0.5,
-            heat_layer_emissivity=0.9,
-        )
+    model = _build(
+        heat_radiant_source="integrated-intensity",
+        heat_u_factor=0.5,
+        heat_regime="layer",
+        heat_layer_height=2.4,
+        heat_view_factor=0.5,
+        heat_layer_emissivity=0.9,
+    )["heat_fed_model"]
+    assert model.radiant_source == "integrated-intensity"
+    assert model.heat_flux_parameters()["layer_term"] is False
 
 
 # --- FED history CSV ----------------------------------------------------------------
@@ -737,7 +766,7 @@ def test_models_heat_page_documents_integrated_intensity():
     assert "INTEGRATED INTENSITY" in text
     assert "0.25" in flat
     assert re.search(r"no default", flat, re.IGNORECASE)
-    assert re.search(r"\bnet\b", flat, re.IGNORECASE)
+    assert re.search(r"\bexcess\b", flat, re.IGNORECASE)
 
 
 def test_models_heat_limits_cover_integrated_intensity():

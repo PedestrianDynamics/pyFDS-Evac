@@ -95,10 +95,10 @@ whole run
 [#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274),
 [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
 Radiant flux from hot surfaces or a flame enters only with the opt-in
-`--heat-radiant-source integrated-intensity`, as the net f·U − σT_s⁴ from the FDS
-`INTEGRATED INTENSITY` slice with a user factor f in [0.25, 1] that no
-single value fits for every orientation; it cannot be combined with
-`--heat-regime layer`
+`--heat-radiant-source integrated-intensity`, as the excess f·(U − 4σT_s⁴) from
+the FDS `INTEGRATED INTENSITY` slice with a user factor f in [0.25, 1] that
+no single value fits for every orientation; with `--heat-regime layer` as
+well, U supplies the radiant term and the layer term is not added
 ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 Otherwise an agent near a flame is treated as less exposed than it is
 ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).

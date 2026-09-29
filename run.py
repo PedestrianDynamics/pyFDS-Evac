@@ -294,8 +294,10 @@ def _build_parser() -> argparse.ArgumentParser:
         default="gas",
         help="Radiant term of --heat-fed-method total-flux. gas (default): "
         "eps sigma (T_g^4 - T_s^4) of Eq. 63.49. integrated-intensity: the "
-        "net flux f*U - sigma T_s^4 from the FDS INTEGRATED INTENSITY slice at "
-        "the slice height, replacing the gas term; needs --heat-u-factor",
+        "excess f*(U - 4 sigma T_s^4) over an isotropic field at the skin "
+        "temperature, from the FDS INTEGRATED INTENSITY slice at the slice "
+        "height, replacing the gas term (and the layer term of --heat-regime "
+        "layer); needs --heat-u-factor",
     )
     parser.add_argument(
         "--heat-u-factor",
@@ -304,7 +306,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Factor f in [0.25, 1] for --heat-radiant-source "
         "integrated-intensity: the incident radiant flux is f*U, from U/4 "
         "(sphere, or a plate in isotropic radiation) to U (one small source "
-        "seen face-on); the dose uses the net f*U - sigma T_s^4. No default: "
+        "seen face-on); the dose uses the excess f*(U - 4 sigma T_s^4). No default: "
         "required with that source",
     )
     parser.add_argument(
@@ -317,7 +319,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "the head plus the net layer flux phi*eps_L*sigma*(T_L^4 - T_s^4) from "
         "a TEMPERATURE slice at --heat-layer-height, with no radiant term of "
         "the gas at the head; needs --heat-layer-height, --heat-view-factor and "
-        "--heat-layer-emissivity",
+        "--heat-layer-emissivity. With --heat-radiant-source "
+        "integrated-intensity, U supplies the radiant term instead and the "
+        "layer term is not added (one warning)",
     )
     parser.add_argument(
         "--heat-layer-height",
