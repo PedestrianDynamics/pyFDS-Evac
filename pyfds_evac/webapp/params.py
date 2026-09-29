@@ -7,6 +7,8 @@ HTML rendering uses plain FastHTML + inline styles (no MonsterUI).
 from __future__ import annotations
 
 import argparse
+import os
+import re
 import sys
 from argparse import Namespace
 from pathlib import Path
@@ -22,6 +24,7 @@ from fasthtml.common import (
     Optgroup,
     Option,
     Select,
+    Span,
 )
 
 try:
@@ -32,6 +35,8 @@ except ImportError:
     except ImportError:
         from fasthtml.core import to_xml
 
+from .runner import run_stamp, utc_now
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _ASSET_ROOT = _REPO_ROOT / "assets"
 # Scenarios uploaded through the GUI. Gitignored, and kept out of assets/ so a
@@ -39,12 +44,15 @@ _ASSET_ROOT = _REPO_ROOT / "assets"
 _UPLOAD_ROOT = _REPO_ROOT / "uploads"
 # Picker values for uploads carry this prefix; bundled scenarios carry none.
 UPLOAD_PREFIX = "uploads/"
+# Derived output folders go under this root: PYFDS_EVAC_RESULTS_DIR when set,
+# else results/ in the repository, whatever directory the server started in.
+RESULTS_ENV = "PYFDS_EVAC_RESULTS_DIR"
 
 _INPUT = (
     "background:var(--surface-input);border:1px solid var(--hairline);"
     "border-radius:9px;padding:10px 12px;color:var(--ink);"
     "font-family:'JetBrains Mono',monospace;font-size:13px;"
-    "outline:none;width:100%;box-sizing:border-box"
+    "width:100%;box-sizing:border-box"
 )
 _LABEL = (
     "display:block;font-family:'Space Grotesk',sans-serif;"
@@ -208,10 +216,11 @@ def upload_block() -> NotStr:
         "<div class='upload-block'>"
         "<div class='upload-title'>Or upload your own</div>"
         "<input type='text' id='upload-name' name='upload_name' "
-        "placeholder='Name (optional)' autocomplete='off' spellcheck='false' "
+        "placeholder='Name (optional)' aria-label='Name of the uploaded scenario (optional)' "
+        "autocomplete='off' spellcheck='false' "
         "class='upload-name'>"
         "<label id='upload-drop' class='upload-drop'>"
-        "<input type='file' name='files' multiple accept='.json,.wkt,.zip' hidden>"
+        "<input type='file' name='files' multiple accept='.json,.wkt,.zip' class='visually-hidden'>"
         "<span class='upload-drop-title'>Drop files or click to browse</span>"
         "<span class='upload-drop-sub'>config JSON + geometry WKT, or a .zip bundle</span>"
         "<span id='upload-picked' class='upload-picked'></span>"
@@ -303,11 +312,14 @@ _HELP_TEXT: dict[str, str] = {
     "runs. Blank = no cache. Needs rerouting enabled; without an FDS dir it "
     "holds the clear-air map.",
     "output_base": "Folder the run writes into. Leave it blank to use the derived path "
-    "shown greyed out, which keeps each scenario / mode / seed in its own "
-    "folder. Type a path to override it and everything below goes there.",
+    "shown greyed out: a new folder per run, named by scenario, mode, the seed "
+    "used and the start time (UTC). Type a folder to use instead of that "
+    "path; each run still writes into its own start-time folder inside it, so "
+    "no run overwrites another. A relative folder is taken under the results "
+    "root.",
     "results_only": "Finishes sooner by skipping the trajectory viewer and plots. "
-    "Writes every output file to results/: the SQLite, the CSVs, and a "
-    "config + geometry snapshot. Same as 'uv run run.py'.",
+    "Writes every output file to the output folder: the SQLite, the CSVs, and "
+    "a config + geometry snapshot. Same as 'uv run run.py'.",
 }
 
 
@@ -319,20 +331,51 @@ def _help_text(dest: str, action: argparse.Action | None = None) -> str:
     return text
 
 
-def _label_line(text: str, has_badge: bool) -> str:
-    """Inline label-text + optional ? badge. The badge toggles 'open' on the
-    enclosing .lblwrap, which reveals the in-flow help block below."""
+# Units stated by each field's own help text, shown in its label.
+_UNITS: dict[str, str] = {
+    "constant_extinction": "1/m",
+    "smoke_update_interval": "s",
+    "smoke_slice_height": "m",
+    "reroute_interval": "s",
+    "o2_threshold_percent": "vol %",
+}
+
+
+def _with_unit(text: str, dest: str) -> str:
+    unit = _UNITS.get(dest)
+    return f"{text} ({unit})" if unit else text
+
+
+def _tip_id(dest: str) -> str:
+    return f"tip-{dest}"
+
+
+def _described(dest: str, action: argparse.Action | None = None) -> dict:
+    """``aria-describedby`` tying a control to its help text, if it has one."""
+    return {"aria_describedby": _tip_id(dest)} if _help_text(dest, action) else {}
+
+
+def _help_button(text: str, dest: str) -> str:
+    """The ? that expands a field's help; a real button, so keyboards reach it.
+
+    It sits beside the label, never inside it: a button inside a <label>
+    would add "Help" to the control's accessible name.
+    """
     import html as _html
 
-    badge = (
-        (
-            '<span class="help-badge" '
-            "onclick=\"this.closest('.lblwrap').classList.toggle('open')\">?</span>"
-        )
-        if has_badge
-        else ""
+    return (
+        '<button type="button" class="help-badge" aria-expanded="false" '
+        f'aria-controls="{_tip_id(dest)}" '
+        f'aria-label="Help: {_html.escape(text, quote=True)}">?</button>'
     )
-    return f'<span class="lbl-line">{_html.escape(text)}{badge}</span>'
+
+
+def _help_tip(dest: str, tip: str) -> NotStr:
+    import html as _html
+
+    return NotStr(
+        f'<div class="badge-tip" id="{_tip_id(dest)}">{_html.escape(tip)}</div>'
+    )
 
 
 def _lbl(
@@ -340,22 +383,26 @@ def _lbl(
     dest: str,
     action: argparse.Action | None = None,
     for_: str | None = None,
+    control: bool = True,
 ) -> Any:
-    """A field label with a pressable ? that expands an in-flow help block.
+    """A field label, with a ? button that expands an in-flow help block.
 
-    The help block sits in normal document flow (not absolutely positioned),
-    so it's bounded by the field width and can never overflow / be clipped by
-    the sidebar's scroll box. *for_* ties the label to a control's id.
+    The label names the control with id *for_* (default: *dest*). With
+    ``control=False`` it is plain text with id ``lbl-<dest>``, for a group
+    to reference with aria-labelledby. The help block sits in normal
+    document flow, so it is bounded by the field width and never clipped.
     """
-    import html as _html
-
-    attrs = {"fr": for_} if for_ else {}
+    text = _with_unit(text, dest)
+    if control:
+        label = Label(text, style=_LABEL, fr=for_ or dest)
+    else:
+        label = Span(text, style=_LABEL, id=f"lbl-{dest}")
     tip = _help_text(dest, action)
     if not tip:
-        return Label(text, style=_LABEL, **attrs)
+        return label
     return Div(
-        Label(NotStr(_label_line(text, True)), style=_LABEL, **attrs),
-        NotStr(f'<div class="badge-tip">{_html.escape(tip)}</div>'),
+        Div(label, NotStr(_help_button(text, dest)), cls="lbl-line"),
+        _help_tip(dest, tip),
         cls="lblwrap",
     )
 
@@ -363,14 +410,20 @@ def _lbl(
 def _switch(
     dest: str, label: str, checked: bool = False, action: argparse.Action | None = None
 ) -> Any:
-    _chk = "checked " if checked else ""
-    _track_bg = "#F4C430" if checked else "var(--surface-input)"
-    _knob_pos = "19px" if checked else "2px"
+    """An on/off field: a native checkbox, visually a switch.
+
+    The checkbox stays focusable and is toggled by the browser (click or
+    Space); the track and knob are styled from its :checked and
+    :focus-visible state, so the look can never disagree with the value.
+    """
     import html as _html
 
+    _chk = "checked " if checked else ""
     _tip = _help_text(dest, action)
+    described = f'aria-describedby="{_tip_id(dest)}" ' if _tip else ""
     _label_node = Label(
-        NotStr(_label_line(label, bool(_tip))),
+        label,
+        fr=dest,
         style=f"{_GROTESK};font-size:12px;font-weight:500;color:var(--ink)",
     )
     # Presence sentinel: an unchecked box posts nothing, so without it an
@@ -378,19 +431,17 @@ def _switch(
     # later in the form and wins when checked (last value wins).
     _row = Div(
         NotStr(f'<input type="hidden" name="{dest}" value="off">'),
-        _label_node,
+        Div(
+            _label_node,
+            *([NotStr(_help_button(label, dest))] if _tip else []),
+            cls="lbl-line",
+        ),
         NotStr(
-            f'<label style="position:relative;display:inline-block;width:40px;height:23px;cursor:pointer">'
-            f'<input type="checkbox" id="{dest}" name="{dest}" value="on" {_chk}'
-            f'style="opacity:0;width:0;height:0;position:absolute">'
-            f'<span onclick="event.preventDefault();var cb=this.previousElementSibling;cb.checked=!cb.checked;'
-            f"this.style.background=cb.checked?'#F4C430':'var(--surface-input)';"
-            f"this.querySelector('span').style.left=cb.checked?'19px':'2px';\" "
-            f'style="position:absolute;inset:0;border-radius:99px;'
-            f'background:{_track_bg};border:1px solid var(--hairline-strong);transition:background .18s">'
-            f'<span style="position:absolute;top:2px;left:{_knob_pos};width:17px;height:17px;'
-            f'border-radius:99px;background:var(--ink-dim);transition:left .18s;display:block"></span>'
-            f"</span></label>"
+            '<span class="switch">'
+            f'<input type="checkbox" class="sw-input" id="{dest}" name="{dest}" '
+            f'value="on" {_chk}{described}>'
+            '<span class="sw-track" aria-hidden="true"><span class="sw-knob"></span>'
+            "</span></span>"
         ),
         style="display:flex;align-items:center;justify-content:space-between;gap:10px",
     )
@@ -398,22 +449,29 @@ def _switch(
         return _row
     return Div(
         _row,
-        NotStr(f'<div class="badge-tip">{_html.escape(_tip)}</div>'),
+        NotStr(
+            f'<div class="badge-tip" id="{_tip_id(dest)}">{_html.escape(_tip)}</div>'
+        ),
         cls="lblwrap",
     )
 
 
 def _incap_toggle() -> Any:
     return Div(
-        _lbl("Incapacitation Mode", "incapacitation_mode"),
+        _lbl("Incapacitation mode", "incapacitation_mode", control=False),
         Div(
             NotStr(
                 '<button type="button" class="mode-btn" id="btn-prob"'
+                ' aria-pressed="false"'
                 " onclick=\"setTenabilityMode('probabilistic')\">Probabilistic</button>"
                 '<button type="button" class="mode-btn active" id="btn-det"'
+                ' aria-pressed="true"'
                 " onclick=\"setTenabilityMode('deterministic')\">Deterministic</button>"
             ),
             cls="mode-toggle",
+            role="group",
+            aria_labelledby="lbl-incapacitation_mode",
+            **_described("incapacitation_mode"),
         ),
         Input(
             type="hidden",
@@ -438,7 +496,7 @@ _SELECT = (
     '</svg>") no-repeat right 12px center;'
     "border:1px solid var(--hairline);border-radius:9px;"
     f"padding:10px 32px 10px 12px;color:var(--ink);{_GROTESK};font-size:13px;"
-    "outline:none;width:100%"
+    "width:100%"
 )
 
 
@@ -455,7 +513,7 @@ def _choice_select(action: argparse.Action) -> Any:
     options = [Option(ol, value=ov, selected=(ov == default)) for ol, ov in pairs]
     return Div(
         _lbl(dest.replace("_", " ").capitalize(), dest, action, for_=dest),
-        Select(*options, id=dest, name=dest, style=_SELECT),
+        Select(*options, id=dest, name=dest, style=_SELECT, **_described(dest, action)),
         style=_FIELD,
     )
 
@@ -485,7 +543,13 @@ def scenario_block(selected: str | None = None, note: Any = None) -> Any:
 
     return Div(
         _lbl("Scenario", "scenario"),
-        Select(*children, name="scenario", id="scenario", style=_SELECT),
+        Select(
+            *children,
+            name="scenario",
+            id="scenario",
+            style=_SELECT,
+            **_described("scenario"),
+        ),
         *([note] if note is not None else []),
         id="scenario-block",
         style=_FIELD,
@@ -510,6 +574,7 @@ def _field(action: argparse.Action) -> Any:
                 min="0",
                 placeholder="blank = scenario baseSeed",
                 style=_INPUT,
+                **_described(dest, action),
             ),
             style=_FIELD,
         )
@@ -525,6 +590,7 @@ def _field(action: argparse.Action) -> Any:
                     autocomplete="off",
                     spellcheck="false",
                     style=_INPUT + ";flex:1;min-width:0",
+                    **_described(dest, action),
                 ),
                 _browse_button("fds_dir", "dir"),
                 style="display:flex;gap:7px",
@@ -541,6 +607,7 @@ def _field(action: argparse.Action) -> Any:
                     name=dest,
                     placeholder="blank = no cache",
                     style=_INPUT + ";flex:1;min-width:0",
+                    **_described(dest, action),
                 ),
                 _browse_button("vis_cache", "file"),
                 style="display:flex;gap:7px",
@@ -563,6 +630,7 @@ def _field(action: argparse.Action) -> Any:
                     step="any",
                     value=val,
                     style=_INPUT,
+                    **_described(dest, action),
                 ),
                 style=_FIELD,
             ),
@@ -590,13 +658,21 @@ def _field(action: argparse.Action) -> Any:
         return Div(
             _lbl(label, dest, action),
             Input(
-                id=dest, name=dest, type="number", step=step, value=value, style=_INPUT
+                id=dest,
+                name=dest,
+                type="number",
+                step=step,
+                value=value,
+                style=_INPUT,
+                **_described(dest, action),
             ),
             style=_FIELD,
         )
     return Div(
         _lbl(label, dest, action),
-        Input(id=dest, name=dest, value=value, style=_INPUT),
+        Input(
+            id=dest, name=dest, value=value, style=_INPUT, **_described(dest, action)
+        ),
         style=_FIELD,
     )
 
@@ -628,7 +704,6 @@ def _results_only_button() -> Any:
     read the help would submit the form and start a run. It reuses the same
     .lblwrap/.badge-tip mechanism as the field labels.
     """
-    import html as _html
 
     return Div(
         Div(
@@ -642,23 +717,19 @@ def _results_only_button() -> Any:
                 name="results_only",
                 value="1",
                 cls="run-btn results-btn",
+                aria_describedby=_tip_id("results_only"),
                 style=(
                     "display:flex;align-items:center;justify-content:center;gap:6px;"
                     "flex:1;padding:11px;border-radius:12px;cursor:pointer;"
                     f"{_GROTESK};font-size:13.5px;font-weight:600;"
-                    "background:transparent;color:#F4C430;"
+                    "background:transparent;color:var(--gold-ink);"
                     "border:1px solid rgba(244,196,48,.45)"
                 ),
             ),
-            NotStr(
-                '<span class="help-badge" style="flex:none;align-self:center" '
-                "onclick=\"this.closest('.lblwrap').classList.toggle('open')\">?</span>"
-            ),
-            style="display:flex;align-items:stretch;gap:8px",
+            NotStr(_help_button("Results only", "results_only")),
+            style="display:flex;align-items:center;gap:8px",
         ),
-        NotStr(
-            f'<div class="badge-tip">{_html.escape(_HELP_TEXT["results_only"])}</div>'
-        ),
+        _help_tip("results_only", _HELP_TEXT["results_only"]),
         cls="lblwrap",
     )
 
@@ -691,10 +762,15 @@ def _output_files_section() -> NotStr:
                 Input(
                     id="output_base",
                     name="output_base",
+                    data_results_root=results_root().as_posix(),
                     autocomplete="off",
                     spellcheck="false",
                     style=_INPUT,
+                    **_described("output_base"),
                 ),
+                # Filled by the autofill script while a folder is typed: each
+                # run still gets its own start-time folder inside it (#319).
+                Div(id="output-run-note", style=_PREVIEW_ROW + ";display:none"),
                 style=_FIELD,
             ),
             Div(
@@ -704,17 +780,6 @@ def _output_files_section() -> NotStr:
                     style=f"{_GROTESK};font-size:9px;font-weight:600;letter-spacing:.07em;"
                     f"text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px",
                 ),
-                *[
-                    Input(id=k, name=k, type="hidden")
-                    for k in (
-                        "output_sqlite",
-                        "output_smoke_history",
-                        "output_fed_history",
-                        "output_route_history",
-                        "output_route_cost_history",
-                        "export_app_bundle",
-                    )
-                ],
                 # data-suffix lets the autofill script rewrite these to the real
                 # run name; the <run> text is what shows if the script is dead.
                 *[
@@ -783,8 +848,8 @@ def build_form(post_url: str) -> Any:
     return Form(
         Div(
             *sections,
-            style="display:flex;flex-direction:column;gap:9px;"
-            "max-height:calc(100vh - 230px);overflow:auto;margin:-4px;padding:4px",
+            cls="form-scroll",
+            style="display:flex;flex-direction:column;gap:9px;margin:-4px;padding:4px",
         ),
         Button(
             NotStr(
@@ -817,23 +882,78 @@ def build_form(post_url: str) -> Any:
 def run_name(scenario: Any) -> str:
     """Filename stem for a scenario's artifacts.
 
-    ``clean()`` in the sidebar's autofill script mirrors this; the two must
-    agree or the hidden fields and this server-side fallback would disagree on
-    where a run writes.
+    ``clean()`` in the sidebar's preview script mirrors this, so the file
+    names the sidebar shows are the ones a run writes.
     """
     name = str(scenario or "")
     return name.replace(".json", "").replace("/", "_") if name else "run"
 
 
-def default_output_base(scenario: Any, mode: Any, seed: Any) -> str:
-    """Derived output folder: one per scenario / incapacitation mode / seed."""
-    return (
-        f"results/{run_name(scenario)}/{mode or 'deterministic'}/"
-        f"seed{seed if seed is not None else 'default'}"
+def results_root() -> Path:
+    """Root of the derived output folders (see ``RESULTS_ENV``)."""
+    configured = os.environ.get(RESULTS_ENV, "").strip()
+    return Path(configured).expanduser() if configured else _REPO_ROOT / "results"
+
+
+def default_output_base(scenario: Any, mode: Any, seed: Any, stamp: str) -> str:
+    """Derived output folder of one run.
+
+    ``<results root>/<scenario>/<mode>/seed<seed>/<stamp>``: *seed* is the one
+    the run uses, and *stamp* the run's start time, so no two runs share a
+    folder, within a GUI session or across sessions. When the folder exists
+    anyway, a numeric suffix is added.
+    """
+    return _unique_run_folder(
+        results_root()
+        / run_name(scenario)
+        / str(mode or "deterministic")
+        / f"seed{seed if seed is not None else 'default'}",
+        stamp,
     )
 
 
-def form_to_opts(form: dict[str, Any]) -> Namespace:
+def typed_output_base(typed: str, stamp: str) -> str:
+    """Run folder under a typed "Output folder": ``<typed>/<stamp>``.
+
+    Each run gets its own start-time folder under the typed one, as under
+    the derived path, so a second run never overwrites the first. A relative
+    path is taken under the results root, not the server's working folder.
+    """
+    base = Path(typed).expanduser()
+    if not (base.is_absolute() or re.match(r"[A-Za-z]:/", typed)):
+        base = results_root() / typed
+    return _unique_run_folder(base, stamp)
+
+
+def _unique_run_folder(parent: Path, stamp: str) -> str:
+    """``parent/stamp``, or ``parent/stamp-N`` when that folder exists."""
+    folder = parent / stamp
+    candidate, n = folder, 2
+    while candidate.exists():
+        candidate = folder.with_name(f"{stamp}-{n}")
+        n += 1
+    return candidate.as_posix()
+
+
+def _convert(action: argparse.Action, raw: Any) -> Any:
+    """Apply the parser's own type check, naming the field when it fails."""
+    if not action.type:
+        return str(raw)
+    try:
+        return action.type(raw)
+    except (argparse.ArgumentTypeError, ValueError, TypeError) as exc:
+        raise ValueError(f"{action.dest}: {exc}") from exc
+
+
+def form_to_opts(
+    form: dict[str, Any], *, baseseed: Any = None, stamp: str | None = None
+) -> Namespace:
+    """Resolve a submitted form into the options ``build_run_kwargs`` takes.
+
+    ``baseseed`` is the scenario's own seed, which a blank Seed field falls
+    back to; it names the derived output folder. ``stamp`` is the run's start
+    time (see ``runner.run_stamp``); it defaults to now.
+    """
     parser = _load_parser()
     opts: dict[str, Any] = {}
     for action in parser._actions:
@@ -854,43 +974,39 @@ def form_to_opts(form: dict[str, Any]) -> Namespace:
         if raw is None or str(raw).strip() == "":
             opts[dest] = action.default
             continue
-        opts[dest] = action.type(raw) if action.type else str(raw)
+        opts[dest] = _convert(action, raw)
         if action.choices is not None and opts[dest] not in action.choices:
             raise ValueError(
                 f"{dest}: {raw!r} is not one of {', '.join(map(str, action.choices))}"
             )
     opts["collect_route_cost_history"] = True
 
-    # Ensure output paths are always populated: the JS autofill may not have run
-    # before submission, so derive them server-side too. The typed "Output
-    # folder" wins when present -- it used to be read by nobody, so a path typed
-    # there was silently discarded and the run went to the derived path anyway.
+    # The output paths are always derived here from the scenario and the
+    # "Output folder" (typed, or the derived default). Posted output_* values
+    # are ignored: they used to come from hidden fields that a polling script
+    # filled in, so a run submitted before its next poll wrote to the previous
+    # scenario's folder (#330).
     sc = run_name(opts.get("scenario"))
     mode = str(opts.get("incapacitation_mode") or "deterministic")
+    stamp = stamp or run_stamp(utc_now())
+    typed = str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
     base = (
-        str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
-    ) or (default_output_base(opts.get("scenario"), mode, opts.get("seed")))
-    _OUTPUT_DEFAULTS = {
-        "output_sqlite": f"{base}/{sc}.sqlite",
-        "output_smoke_history": f"{base}/{sc}_smoke_history.csv",
-        "output_fed_history": f"{base}/{sc}_fed_history.csv",
-        "output_route_history": f"{base}/{sc}_route_history.csv",
-        "output_route_cost_history": f"{base}/{sc}_route_cost_history.csv",
-        "export_app_bundle": f"{base}/bundle",
-    }
-    # --export-app-bundle takes a *directory*, but the sidebar used to render it
-    # as a checkbox; the posted "on" was passed straight through as a path, so
-    # every GUI run dumped its bundle into a literal ./on/ folder. Treat the
-    # checkbox-era truthy strings as "just use the default".
-    if str(opts.get("export_app_bundle") or "").strip().lower() in (
-        "on",
-        "true",
-        "1",
-        "yes",
-    ):
-        opts["export_app_bundle"] = ""
-    for k, v in _OUTPUT_DEFAULTS.items():
-        if not opts.get(k):
-            opts[k] = v
+        typed_output_base(typed, stamp)
+        if typed
+        else default_output_base(
+            opts.get("scenario"),
+            mode,
+            opts["seed"] if opts.get("seed") is not None else baseseed,
+            stamp,
+        )
+    )
+    opts.update(
+        output_sqlite=f"{base}/{sc}.sqlite",
+        output_smoke_history=f"{base}/{sc}_smoke_history.csv",
+        output_fed_history=f"{base}/{sc}_fed_history.csv",
+        output_route_history=f"{base}/{sc}_route_history.csv",
+        output_route_cost_history=f"{base}/{sc}_route_cost_history.csv",
+        export_app_bundle=f"{base}/bundle",
+    )
 
     return Namespace(**opts)

@@ -65,6 +65,10 @@ class RunSpec:
     # agrees with expected_seed.
     seed_used: int | None = None
     status: str = "running"
+    # The scenario's max_simulation_time [s] at submission.
+    time_limit: float | None = None
+    # result.metrics["all_evacuated"]; None when the run reported none.
+    all_evacuated: bool | None = None
     total_agents: int | None = None
     agents_evacuated: int | None = None
     agents_remaining: int | None = None
@@ -74,6 +78,35 @@ class RunSpec:
     def namespace(self) -> argparse.Namespace:
         """A fresh, independent Namespace of the recorded options."""
         return argparse.Namespace(**copy.deepcopy(dict(self.opts)))
+
+
+def utc_now() -> str:
+    """The current UTC time as a run's ``started_at``, to the second."""
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def run_stamp(started_at: str) -> str:
+    """A filesystem-safe stamp of *started_at*, e.g. ``20260929T142301Z``.
+
+    It names a run's derived output folder and its exported script, so both
+    stay distinct across GUI sessions, where run numbers restart at 1.
+    """
+    stamp = datetime.fromisoformat(started_at).astimezone(timezone.utc)
+    return stamp.strftime("%Y%m%dT%H%M%SZ")
+
+
+def discard_result(result: Any) -> None:
+    """Delete the temporary trajectory and manifest *result* holds.
+
+    ``run_scenario`` writes them to the system temp directory and the GUI
+    copies them to the run's output folder; the copies stay. A file still
+    locked (Windows) is left for the OS to reclaim.
+    """
+    cleanup = getattr(result, "cleanup", None)
+    if cleanup is None:
+        return
+    with contextlib.suppress(OSError):
+        cleanup()
 
 
 @functools.cache
@@ -88,9 +121,17 @@ def code_provenance() -> tuple[str | None, str | None, bool | None]:
 
 
 def make_run_spec(
-    opts: Any, scenario: Any, scenario_name: str, scenario_path: str
+    opts: Any,
+    scenario: Any,
+    scenario_name: str,
+    scenario_path: str,
+    started_at: str | None = None,
 ) -> RunSpec:
-    """Freeze the resolved options of a run about to be submitted."""
+    """Freeze the resolved options of a run about to be submitted.
+
+    ``started_at`` is the submission time the output folder was named after;
+    it defaults to now.
+    """
     version, commit, dirty = code_provenance()
     seed = getattr(opts, "seed", None)
     return RunSpec(
@@ -98,11 +139,12 @@ def make_run_spec(
         scenario_name=scenario_name,
         scenario_path=scenario_path,
         opts=MappingProxyType(copy.deepcopy(dict(vars(opts)))),
-        started_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        started_at=started_at or utc_now(),
         pyfds_evac_version=version,
         git_commit=commit,
         git_dirty=dirty,
         expected_seed=seed if seed is not None else getattr(scenario, "seed", None),
+        time_limit=getattr(scenario, "max_simulation_time", None),
     )
 
 
@@ -116,12 +158,55 @@ def _finished_spec(
         if reported is not None and reported == spec.expected_seed:
             fields["seed_used"] = reported
         fields.update(
+            all_evacuated=result.metrics.get("all_evacuated"),
             total_agents=result.total_agents,
             agents_evacuated=result.agents_evacuated,
             agents_remaining=result.agents_remaining,
             evacuation_time=result.evacuation_time,
         )
     return dataclasses.replace(spec, **fields)
+
+
+@dataclasses.dataclass(frozen=True)
+class Outcome:
+    """How a finished run ended, worded for the results view.
+
+    Taken from the run's own ``all_evacuated`` metric, never from
+    ``success``, which is also True when the time limit is reached (#139).
+    Why agents remain (incapacitated or still walking) is not reported by
+    the engine yet (#141), so it is not claimed.
+    """
+
+    complete: bool | None
+    label: str
+    time_label: str
+
+
+def run_outcome(
+    all_evacuated: bool | None,
+    remaining: int | None,
+    total: int | None,
+    sim_time: float | None,
+    time_limit: float | None,
+) -> Outcome:
+    """The :class:`Outcome` of a run from the values it reported."""
+    if all_evacuated is None:
+        return Outcome(None, "Outcome not reported", "Simulated time")
+    if all_evacuated:
+        return Outcome(True, "Complete: all agents evacuated", "Evacuation time")
+    left = f"{remaining} of {total} remaining"
+    # run_scenario stops early only once every agent has left, so agents
+    # remaining means the time limit; say so only when the numbers agree.
+    at_limit = (
+        sim_time is not None and time_limit is not None and sim_time >= time_limit
+    )
+    if at_limit:
+        return Outcome(
+            False,
+            f"Incomplete: time limit reached ({left})",
+            "Simulated time (limit reached)",
+        )
+    return Outcome(False, f"Incomplete ({left})", "Simulated time")
 
 
 class _WarningCapture(logging.Handler):
@@ -262,6 +347,7 @@ class RunManager:
         # Taken so a worker still publishing its terminal status can't
         # overwrite this run's fresh state.
         with self._state:
+            previous = self.result
             self._cancel.clear()
             self.run_id += 1
             self.status = "running"
@@ -280,6 +366,7 @@ class RunManager:
             self.fed_snapshots = []
             self.log_lines = []
             self.warnings = []
+        discard_result(previous)
 
         def check_cancel() -> None:
             if self._cancel.is_set():
@@ -339,6 +426,7 @@ class RunManager:
             if outcome == "cancelled":
                 # A deliberate stop, not a failure: leave no error for the UI
                 # to report and drop any partial result.
+                discard_result(self.result)
                 self.result = None
                 self.error = None
             if self.spec is not None:
@@ -374,6 +462,7 @@ class RunManager:
         with self._state:
             if self.running:
                 return
+            discard_result(self.result)
             self.status = "idle"
             self.result = None
             self.error = None

@@ -71,4 +71,4 @@ def test_webapp_defaults_to_deterministic():
 
     opts = form_to_opts({"scenario": "t_junction", "seed": "1"})
     assert opts.incapacitation_mode == "deterministic"
-    assert "/deterministic/" in default_output_base("t_junction", None, None)
+    assert "/deterministic/" in default_output_base("t_junction", None, None, "S")

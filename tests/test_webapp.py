@@ -22,14 +22,39 @@ def client():
     return TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def results_root(tmp_path, monkeypatch):
+    """Derived output folders go to a temp root, not the repository."""
+    from pyfds_evac.webapp.params import RESULTS_ENV
+
+    root = tmp_path / "results"
+    monkeypatch.setenv(RESULTS_ENV, str(root))
+    return root
+
+
+@pytest.fixture(autouse=True)
+def idle_manager():
+    """Each test starts from, and leaves, an idle run panel.
+
+    The page renders the server's run state, so a finished run left behind
+    by one test would otherwise show up on the next test's page.
+    """
+    manager.join(10.0)
+    manager.reset()
+    yield
+    manager.join(10.0)
+    manager.reset()
+
+
 def test_index_renders_form(client):
     r = client.get("/")
     assert r.status_code == 200
     assert "/run" in r.text
     assert "ISO-table21" in r.text  # scenario picker populated from assets/
     assert 'id="dir-modal"' in r.text  # directory-browser overlay container
-    assert "output_route_cost_history" in r.text  # output fields rendered
-    assert "_smoke_history.csv" in r.text  # scenario-name autofill script present
+    assert 'id="output_base"' in r.text  # output folder rendered
+    assert 'id="output-run-note"' in r.text  # typed folder -> <start time>
+    assert "_smoke_history.csv" in r.text  # file-name preview present
     assert 'data-tab="model"' in r.text  # Model documentation tab present
     assert "Fractional Effective Dose" in r.text  # model docs content rendered
 
@@ -304,7 +329,7 @@ class TestCancelLifecycle:
         mgr.cancel()
         gate["build"].set()  # the worker unwinds within /cancel's wait
         r = client.post("/cancel")
-        assert "Run cancelled." in r.text
+        assert "was cancelled. No results were produced" in r.text
         assert 'hx-post="/clear"' in r.text
         assert mgr.status == "cancelled"
         r = client.post("/clear")
@@ -353,7 +378,7 @@ class TestCancelLifecycle:
         with client.stream("GET", "/progress") as s:
             body = "".join(s.iter_text())
         assert "event: done" in body
-        assert "Run cancelled." in body
+        assert "was cancelled. No results were produced" in body
         assert 'hx-post="/clear"' in body
 
     def test_progress_stream_does_not_follow_a_later_run(self, rm):
@@ -550,7 +575,7 @@ class TestCancelLifecycle:
         assert "run-B" not in body
         expected = {
             "done": "results of run-A",
-            "error": "Run failed: RuntimeError: run-A failed",
+            "error": "RuntimeError: run-A failed",
             "running": "Running: run-A",
         }[outcome]
         assert expected in body
@@ -852,8 +877,7 @@ class TestScenarioUpload:
                     "scenario": "uploads/pytest-runnable",
                     "seed": "420",
                     "results_only": "1",
-                    "output_sqlite": str(out / "run.sqlite"),
-                    "export_app_bundle": str(out / "bundle"),
+                    "output_base": str(out),
                 },
             )
             assert r.status_code == 200
@@ -862,7 +886,7 @@ class TestScenarioUpload:
             assert events[-1] == "done"
             assert manager.status == "done"
             assert manager.result.total_agents >= 1
-            assert (out / "run.sqlite").exists()
+            assert len(list(out.glob("*/uploads_pytest-runnable.sqlite"))) == 1
             _drop_temp_trajectory()
         finally:
             shutil.rmtree(created, ignore_errors=True)
@@ -877,9 +901,7 @@ def test_results_only_run_skips_viewer_but_writes_files(client, tmp_path):
             "scenario": "ISO-table21",
             "seed": "420",
             "results_only": "1",
-            "output_sqlite": str(out / "run.sqlite"),
-            "output_fed_history": str(out / "fed.csv"),
-            "export_app_bundle": str(out / "bundle"),
+            "output_base": str(out),
         },
     )
     assert r.status_code == 200
@@ -899,9 +921,11 @@ def test_results_only_run_skips_viewer_but_writes_files(client, tmp_path):
 
     # The artifacts really landed, and the bundle path is a directory now that
     # export_app_bundle is a path field rather than a checkbox.
-    assert (out / "run.sqlite").exists()
-    assert (out / "bundle" / "config.json").exists()
-    assert (out / "bundle" / "geometry.wkt").exists()
+    # A typed folder gets one start-time folder per run inside it (#319).
+    (run_dir,) = out.iterdir()
+    assert (run_dir / "ISO-table21.sqlite").exists()
+    assert (run_dir / "bundle" / "config.json").exists()
+    assert (run_dir / "bundle" / "geometry.wkt").exists()
     _drop_temp_trajectory()
 
 
@@ -956,33 +980,111 @@ class TestOutputBase:
 
         form = {"scenario": "t_junction", "seed": "42"}
         form.update(extra)
-        return form_to_opts(form)
+        return form_to_opts(form, stamp="S")
 
-    def test_blank_uses_the_derived_folder(self):
-        opts = self._opts()
+    def test_blank_uses_the_derived_folder(self, results_root):
+        from pyfds_evac.webapp.params import form_to_opts
+
+        opts = form_to_opts(
+            {"scenario": "t_junction", "seed": "42"}, stamp="20260929T120000Z"
+        )
         assert opts.output_sqlite == (
-            "results/t_junction/deterministic/seed42/t_junction.sqlite"
+            f"{results_root.as_posix()}/t_junction/deterministic/seed42/"
+            "20260929T120000Z/t_junction.sqlite"
         )
 
+    def test_blank_seed_folder_is_named_by_the_scenario_seed(self, results_root):
+        # #319: "seeddefault" hid the seed the run actually used.
+        from pyfds_evac.webapp.params import form_to_opts
+
+        opts = form_to_opts({"scenario": "t_junction"}, baseseed=1301, stamp="S")
+        assert opts.seed is None
+        assert opts.output_sqlite == (
+            f"{results_root.as_posix()}/t_junction/deterministic/seed1301/S/"
+            "t_junction.sqlite"
+        )
+
+    def test_existing_folder_gets_a_suffix(self, results_root):
+        from pyfds_evac.webapp.params import form_to_opts
+
+        form = {"scenario": "t_junction", "seed": "7"}
+        first = pathlib.Path(form_to_opts(form, stamp="S").output_sqlite).parent
+        first.mkdir(parents=True)
+        second = pathlib.Path(form_to_opts(form, stamp="S").output_sqlite).parent
+        assert second == first.with_name("S-2")
+
     def test_typed_folder_is_honoured(self):
+        # Each run writes into its own start-time folder inside the typed one.
         opts = self._opts(output_base="D:/scratch/my run")
-        assert opts.output_sqlite == "D:/scratch/my run/t_junction.sqlite"
-        assert opts.output_fed_history == "D:/scratch/my run/t_junction_fed_history.csv"
-        assert opts.export_app_bundle == "D:/scratch/my run/bundle"
+        assert opts.output_sqlite == "D:/scratch/my run/S/t_junction.sqlite"
+        assert (
+            opts.output_fed_history == "D:/scratch/my run/S/t_junction_fed_history.csv"
+        )
+        assert opts.export_app_bundle == "D:/scratch/my run/S/bundle"
 
-    def test_typed_folder_is_normalised(self):
-        # Backslashes and a trailing separator must not double up in the path.
+    def test_typed_folder_is_normalised(self, results_root):
+        # Backslashes and a trailing separator must not double up in the path;
+        # a relative folder is taken under the results root (#319).
         opts = self._opts(output_base="out\\runs\\")
-        assert opts.output_sqlite == "out/runs/t_junction.sqlite"
+        root = results_root.as_posix()
+        assert opts.output_sqlite == f"{root}/out/runs/S/t_junction.sqlite"
 
-    def test_whitespace_only_falls_back_to_derived(self):
+    def test_typed_folder_is_never_reused(self, tmp_path):
+        # #319: a second run into the same typed folder does not overwrite.
+        first = pathlib.Path(self._opts(output_base=str(tmp_path)).output_sqlite)
+        first.parent.mkdir()
+        second = pathlib.Path(self._opts(output_base=str(tmp_path)).output_sqlite)
+        assert first.parent == tmp_path / "S"
+        assert second.parent == tmp_path / "S-2"
+
+    def test_whitespace_only_falls_back_to_derived(self, results_root):
         opts = self._opts(output_base="   ")
-        assert opts.output_sqlite.startswith("results/t_junction/")
+        assert opts.output_sqlite.startswith(f"{results_root.as_posix()}/t_junction/")
 
-    def test_explicit_path_still_beats_the_folder(self):
-        # A fully-specified output path (hidden field) is not overridden.
-        opts = self._opts(output_base="out", output_sqlite="exact/place.sqlite")
-        assert opts.output_sqlite == "exact/place.sqlite"
+    def test_posted_output_paths_are_ignored(self, results_root):
+        # #330: the paths come from the scenario and the folder, never from a
+        # posted output_* value, which could belong to a previous scenario.
+        opts = self._opts(
+            output_base="out",
+            output_sqlite="results/Haspel/deterministic/seeddefault/Haspel.sqlite",
+            export_app_bundle="elsewhere/bundle",
+        )
+        root = results_root.as_posix()
+        assert opts.output_sqlite == f"{root}/out/S/t_junction.sqlite"
+        assert opts.export_app_bundle == f"{root}/out/S/bundle"
+
+    def test_new_scenario_with_stale_paths_uses_the_derived_folder(self):
+        # #330 repro: Haspel's paths posted with a new scenario and seed.
+        from pyfds_evac.webapp.params import form_to_opts
+
+        stale = "results/Haspel/deterministic/seeddefault/Haspel"
+        opts = form_to_opts(
+            {
+                "scenario": "blind_spawn_discovery",
+                "seed": "11",
+                "output_sqlite": f"{stale}.sqlite",
+                "output_smoke_history": f"{stale}_smoke_history.csv",
+                "output_fed_history": f"{stale}_fed_history.csv",
+                "output_route_history": f"{stale}_route_history.csv",
+                "output_route_cost_history": f"{stale}_route_cost_history.csv",
+                "export_app_bundle": "results/Haspel/deterministic/seeddefault/bundle",
+            }
+        )
+        paths = [
+            opts.output_sqlite,
+            opts.output_smoke_history,
+            opts.output_fed_history,
+            opts.output_route_history,
+            opts.output_route_cost_history,
+            opts.export_app_bundle,
+        ]
+        assert all("Haspel" not in p for p in paths)
+        assert "/blind_spawn_discovery/deterministic/seed11/" in opts.output_sqlite
+
+    def test_form_has_no_hidden_output_paths(self, client):
+        html = client.get("/").text
+        for key in ("output_sqlite", "output_fed_history", "export_app_bundle"):
+            assert f'name="{key}"' not in html
 
 
 def test_artifact_preview_lines_are_rewritable(client):
@@ -1007,16 +1109,60 @@ def test_run_name_matches_the_client_side_clean():
     assert run_name("t_junction/config_full.json") == "t_junction_config_full"
     assert run_name("uploads/mine") == "uploads_mine"
     assert run_name(None) == "run"
-    assert (
-        default_output_base("t_junction", "deterministic", 7)
-        == "results/t_junction/deterministic/seed7"
+    assert default_output_base("t_junction", "deterministic", 7, "S").endswith(
+        "/results/t_junction/deterministic/seed7/S"
     )
-    assert default_output_base("t_junction", None, None).endswith(
-        "/deterministic/seeddefault"
+    assert default_output_base("t_junction", None, None, "S").endswith(
+        "/deterministic/seeddefault/S"
     )
 
 
-def test_export_app_bundle_is_a_path_not_a_checkbox():
+def test_results_root_defaults_to_the_repository(monkeypatch):
+    from pyfds_evac.webapp.params import RESULTS_ENV, results_root
+
+    monkeypatch.delenv(RESULTS_ENV)
+    assert results_root() == pathlib.Path(__file__).resolve().parents[1] / "results"
+
+
+def test_runs_get_distinct_folders_named_by_start_time(client, results_root):
+    """#319: two runs with the same settings must not share a folder."""
+    from pyfds_evac.webapp.runner import run_stamp
+
+    folders = []
+    for _ in range(2):
+        r = client.post("/run", data={"scenario": "ISO-table21", "seed": "420"})
+        assert r.status_code == 200
+        assert _stream_until_terminal(client)[-1] == "done"
+        sqlite = pathlib.Path(manager.opts.output_sqlite)
+        assert sqlite.is_file()
+        assert sqlite.parent.name.startswith(run_stamp(manager.spec.started_at))
+        assert (
+            sqlite.parent.parent == results_root / "ISO-table21/deterministic/seed420"
+        )
+        folders.append(sqlite.parent)
+    assert folders[0] != folders[1]
+    client.post("/clear")
+
+
+def test_temp_trajectory_is_removed_when_the_result_is_dropped(client):
+    """#319: the temp sqlite and manifest used to leak on every GUI run."""
+    paths = []
+    for _ in range(2):
+        client.post("/run", data={"scenario": "ISO-table21", "seed": "420"})
+        assert _stream_until_terminal(client)[-1] == "done"
+        tmp = pathlib.Path(manager.result.sqlite_file)
+        manifest = pathlib.Path(manager.result.manifest_file)
+        assert tmp.is_file() and manifest.is_file()
+        # The copy in the output folder is the user's and is kept.
+        assert pathlib.Path(manager.opts.output_sqlite).is_file()
+        paths.append((tmp, manifest))
+    # Starting the second run dropped the first one's temp files.
+    assert not paths[0][0].exists() and not paths[0][1].exists()
+    client.post("/clear")
+    assert not paths[1][0].exists() and not paths[1][1].exists()
+
+
+def test_export_app_bundle_is_a_path_not_a_checkbox(results_root):
     """Regression: the checkbox posted 'on', so bundles landed in ./on/.
 
     --export-app-bundle takes a directory. The sidebar used to render it as a
@@ -1029,7 +1175,7 @@ def test_export_app_bundle_is_a_path_not_a_checkbox():
     )
     assert opts.export_app_bundle != "on"
     assert opts.export_app_bundle.endswith("/bundle")
-    assert opts.export_app_bundle.startswith("results/t_junction/")
+    assert opts.export_app_bundle.startswith(f"{results_root.as_posix()}/t_junction/")
 
 
 def test_form_rejects_value_outside_choices():
@@ -1483,7 +1629,7 @@ class TestEquivalentPython:
         code = _code_of(r.text)
         assert f"# Run #{run_id}, started" in code
         assert f"'seed': 11,  # seed used by run #{run_id}" in code
-        assert "Status: finished (1/1 evacuated)" in r.text
+        assert "Status: Complete: all agents evacuated (1/1)" in r.text
         assert "The form has changed" not in r.text
         changed = client.post(
             f"/export/run?run={run_id}",
@@ -1581,6 +1727,465 @@ def test_exported_script_reproduces_the_gui_run(tmp_path):
     assert gui_metrics["seed"] == 1301
     assert gui_metrics["total_agents"] == 30
     assert script_metrics == gui_metrics
-    assert (
-        tmp_path / "pyfds_evac_blind_spawn_discovery_run1_output" / "trajectory.sqlite"
-    ).is_file()
+    (output,) = tmp_path.glob("pyfds_evac_blind_spawn_discovery_run1_*Z_output")
+    assert (output / "trajectory.sqlite").is_file()
+
+
+class TestRunOutcome:
+    """#321: the outcome comes from all_evacuated, never from success."""
+
+    def test_complete(self):
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome(True, 0, 150, 212.4, 300.0)
+        assert o.complete is True
+        assert o.label == "Complete: all agents evacuated"
+        assert o.time_label == "Evacuation time"
+
+    def test_time_limit(self):
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome(False, 60, 150, 300.0, 300.0)
+        assert o.complete is False
+        assert o.label == "Incomplete: time limit reached (60 of 150 remaining)"
+        assert o.time_label == "Simulated time (limit reached)"
+
+    def test_no_cause_claimed_when_numbers_disagree(self):
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome(False, 3, 10, 120.0, 300.0)
+        assert o.label == "Incomplete (3 of 10 remaining)"
+        assert "limit" not in o.time_label
+
+    def test_not_reported(self):
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome(None, 0, 10, 10.0, 300.0)
+        assert o.complete is None
+        assert o.label == "Outcome not reported"
+
+    def test_tiles_never_show_success(self, monkeypatch):
+        """A timeout rendered as "stopped (True)"."""
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        result = SimpleNamespace(
+            metrics={"success": True, "all_evacuated": False},
+            agents_remaining=100,
+            agents_evacuated=0,
+            total_agents=100,
+            evacuation_time=1000.0,
+        )
+        monkeypatch.setattr(manager, "spec", None)
+        monkeypatch.setattr(
+            manager, "scenario", SimpleNamespace(max_simulation_time=1000.0)
+        )
+        html = to_xml(_kpi_tiles(result))
+        assert "True" not in html
+        assert "Incomplete: time limit reached (100 of 100 remaining)" in html
+        assert "Simulated time (limit reached)" in html
+        assert "Evacuation time" not in html
+        assert "0 / 100 agents" in html
+
+    def test_run_status_uses_the_snapshot(self):
+        import dataclasses
+
+        from pyfds_evac.webapp.pyexport import run_status
+        from pyfds_evac.webapp.runner import RunSpec
+
+        spec = RunSpec(
+            run_id=1,
+            scenario_name="t_junction",
+            scenario_path="t",
+            opts={},
+            started_at="2026-09-29T12:00:00+00:00",
+            pyfds_evac_version=None,
+            git_commit=None,
+            git_dirty=None,
+            expected_seed=1,
+            status="done",
+            time_limit=300.0,
+            all_evacuated=False,
+            total_agents=150,
+            agents_evacuated=90,
+            agents_remaining=60,
+            evacuation_time=300.0,
+        )
+        assert run_status(spec) == (
+            "Incomplete: time limit reached (60 of 150 remaining), "
+            "simulated time 300.00 s"
+        )
+        done = dataclasses.replace(
+            spec,
+            all_evacuated=True,
+            agents_evacuated=150,
+            agents_remaining=0,
+            evacuation_time=212.4,
+        )
+        assert run_status(done) == (
+            "Complete: all agents evacuated (150/150), evacuation time 212.40 s"
+        )
+
+
+class TestModelTab:
+    """#323: the Model tab must state the engine's defaults, not contradict them."""
+
+    @staticmethod
+    def _html():
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.docs import model_docs
+
+        return to_xml(model_docs())
+
+    @staticmethod
+    def _section(html, title):
+        start = html.index(title)
+        end = html.find("Read more", start)
+        return html[start:end]
+
+    def test_opt_in_mechanisms_are_labelled_off(self):
+        html = self._html()
+        fic = self._section(html, "Irritant slowdown (FIC)")
+        assert ">Off<" in fic and "--enable-fic-speed" in fic
+        heat = self._section(html, "Heat dose")
+        assert "Off; when on: clothed, deterministic" in heat
+        assert "--enable-heat-fed" in heat
+        assert "4.1 \\times 10^{8}" in heat  # ISO 13571 Eq. (9), clothed
+
+    def test_incapacitation_is_deterministic_by_default(self):
+        gas = self._section(self._html(), "Toxic gas: Fractional Effective Dose")
+        assert "deterministic" in gas
+        assert "same threshold, 1.0" in gas
+        assert "In probabilistic mode" in gas
+
+    def test_sampling_height_and_single_threshold(self):
+        html = self._html()
+        assert "1.6 m, as FDS+Evac (HUMAN_SMOKE_HEIGHT)" in html
+        assert "One threshold for gas and heat" in html
+
+    def test_defaults_match_the_cli(self):
+        import run as cli
+
+        defaults = vars(cli._build_parser().parse_args(["--scenario", "t_junction"]))
+        assert defaults["enable_fic_speed"] is False
+        assert defaults["enable_heat_fed"] is False
+        assert defaults["incapacitation_mode"] == "deterministic"
+        assert defaults["heat_incapacitation_mode"] == "deterministic"
+        assert defaults["smoke_slice_height"] == 1.6
+        assert defaults["fed_threshold"] == 1.0
+        assert defaults["susceptibility_sigma"] == 0.94
+        assert defaults["enable_rerouting"] is True
+        assert defaults["reroute_interval"] == 1.0
+
+    def test_unsourced_content_is_gone(self):
+        html = self._html()
+        for text in ("v2.4", "© 2024", "MMXXIV", "D = 0.3", "Tenability Tiers"):
+            assert text not in html
+
+    def test_links_to_the_models_pages(self):
+        html = self._html()
+        base = "https://pedestriandynamics.org/pyFDS-Evac/"
+        for path in (
+            "models/",
+            "models/smoke-speed/",
+            "models/fed/",
+            "models/heat/#incapacitation",
+            "models/routing/",
+            "models/wayfinding/",
+            "docs/fds-sampling/",
+        ):
+            assert f'href="{base}{path}"' in html
+
+
+def test_warnings_card_links_the_case_requirements():
+    from fasthtml.common import to_xml
+
+    from pyfds_evac.webapp.app import _warnings_card
+
+    html = to_xml(_warnings_card(["slice sampled at 2.0 m"]))
+    assert "docs/fds-case-requirements.md" not in html
+    assert "pyFDS-Evac/docs/fds-case-requirements/" in html
+    assert "The run completed" not in html
+
+
+class TestTerminalStates:
+    """#320: a settled run is never discarded or hidden by accident."""
+
+    @pytest.fixture
+    def stub(self, monkeypatch):
+        import pyfds_evac.webapp.app as app_module
+        from pyfds_evac.webapp.runner import RunManager
+
+        monkeypatch.setattr(
+            "pyfds_evac.webapp.runner.run_scenario",
+            lambda scenario, progress_callback=None, **kw: SimpleNamespace(
+                sqlite_file=None
+            ),
+        )
+        fresh = RunManager()
+        monkeypatch.setattr(app_module, "manager", fresh)
+        monkeypatch.setattr(
+            app_module, "_finished_view", lambda: app_module.Div("results of stub")
+        )
+        yield fresh
+        fresh.join(5.0)
+
+    def test_cancel_after_the_run_finished_keeps_its_results(self, stub, client):
+        stub.start(None, dict, "stub")
+        assert stub.join(5.0)
+        r = client.post("/cancel")
+        assert stub.status == "done"
+        assert "results of stub" in r.text
+        assert "cancelled" not in r.text
+
+    def test_done_event_replaces_the_whole_running_view(self, stub, client):
+        import re as _re
+
+        from fasthtml.common import to_xml
+
+        import pyfds_evac.webapp.app as app_module
+
+        view = to_xml(app_module._running_stream_view())
+        connect = _re.search(r"<div[^>]*sse-connect[^>]*>", view).group(0)
+        assert 'sse-swap="done"' in connect
+        assert 'sse-swap="progress"' in view
+        assert 'sse-swap="progress,done"' not in view
+        assert "data-run-live" in view
+        stub.start(None, dict, "stub")
+        assert stub.join(5.0)
+        with client.stream("GET", "/progress") as s:
+            body = "".join(s.iter_text())
+        done = body[body.index("event: done") :]
+        assert "results of stub" in done
+        assert "cancel-btn" not in done
+        assert "data-run-live" not in done
+
+    def test_failed_run_names_the_message_and_keeps_details_apart(self, stub):
+        from fasthtml.common import to_xml
+
+        import pyfds_evac.webapp.app as app_module
+
+        def boom():
+            raise RuntimeError("slice not found")
+
+        stub.start(None, boom, "stub")
+        assert stub.join(5.0)
+        html = to_xml(app_module._terminal_view(stub.status))
+        assert "Failed" in html
+        assert "Run failed: </b>slice not found" in html
+        assert "Technical details" in html
+        assert "RuntimeError: slice not found" in html
+        assert "hx-confirm" not in html  # nothing to lose
+
+    def test_reload_shows_the_server_state(self, stub, client):
+        import threading
+
+        gate = threading.Event()
+        stub.start(None, lambda: gate.wait(5.0) and {}, "stub")
+        page = client.get("/").text
+        assert 'data-run-live="1"' in page
+        assert "Choose a scenario and" not in page
+        gate.set()
+        assert stub.join(5.0)
+        page = client.get("/").text
+        assert "results of stub" in page
+        assert 'data-run-live="1"' not in page
+
+    def test_rejected_submit_goes_to_the_alert_not_the_panel(self, client, tmp_path):
+        r = client.post(
+            "/run",
+            data={
+                "scenario": "ISO-table21",
+                "vis_cache": "x.pkl",
+                "fds_dir": str(tmp_path),
+                "enable_rerouting": "off",
+            },
+            headers=_HX,
+        )
+        assert r.headers["HX-Retarget"] == "#form-status"
+        assert r.headers["HX-Reswap"] == "innerHTML"
+        assert "The run was not started." in r.text
+        assert "Technical details" in r.text
+        assert "enable-rerouting" in r.text
+        r = client.post("/run", data={}, headers=_HX)
+        assert r.headers["HX-Retarget"] == "#form-status"
+        assert "Select a scenario first." in r.text
+        r = client.post(
+            "/run",
+            data={"scenario": "ISO-table21", "heat_u_factor": "2"},
+            headers=_HX,
+        )
+        assert r.headers["HX-Retarget"] == "#form-status"
+        assert "<span>Heat u factor: must be in [0.25, 1.0]" in r.text
+
+    def test_field_errors_name_the_field(self):
+        from pyfds_evac.webapp.app import _field_label
+
+        assert _field_label("heat_clothing: 'x' is not one of a, b") == (
+            "Heat clothing: 'x' is not one of a, b"
+        )
+        assert _field_label("must be in [0.25, 1.0], got 2") == (
+            "must be in [0.25, 1.0], got 2"
+        )
+
+    def test_settings_changed_banner_and_clear_confirmation(self, client):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _clear_run_bar
+
+        form = {"scenario": "ISO-table21", "seed": "11"}
+        r = client.post("/run", data=form, headers=_HX)
+        assert 'hx-swap-oob="true"' in r.text  # old alerts are cleared
+        _stream_until_terminal(client)
+        run_id = manager.spec.run_id
+        assert "Settings changed" not in client.post("/form-state", data=form).text
+        changed = client.post("/form-state", data={**form, "seed": "12"}).text
+        assert f"Settings changed since run #{run_id}" in changed
+        assert "Previous settings" in changed
+        broken = client.post(
+            "/form-state", data={**form, "heat_clothing": "nonsense"}
+        ).text
+        assert "currently cannot be run: Heat clothing:" in broken
+        bar = to_xml(_clear_run_bar())
+        assert f"Clear the results of run #{run_id} from this view?" in bar
+        assert "files on disk are kept" in bar
+        _drop_temp_trajectory()
+        client.post("/clear")
+        assert client.post("/form-state", data={**form, "seed": "12"}).text == ""
+
+
+class TestResultSummary:
+    """#321: the finished panel states the outcome in words, then numbers."""
+
+    @staticmethod
+    def _result(**metrics):
+        return SimpleNamespace(
+            metrics={"all_evacuated": False, "seed": 7, **metrics},
+            agents_remaining=60,
+            agents_evacuated=90,
+            total_agents=150,
+            evacuation_time=300.0,
+        )
+
+    @pytest.fixture(autouse=True)
+    def no_spec(self, monkeypatch):
+        monkeypatch.setattr(manager, "spec", None)
+        monkeypatch.setattr(
+            manager, "scenario", SimpleNamespace(max_simulation_time=300.0)
+        )
+
+    def test_outcome_line_has_words_and_a_glyph(self):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        html = to_xml(_kpi_tiles(self._result()))
+        assert "outcome-line is-incomplete" in html
+        assert '<span aria-hidden="true" class="state-glyph">⚠</span>' in html
+        assert "Incomplete: time limit reached (60 of 150 remaining)" in html
+        assert "Simulated time (limit reached)" in html
+        assert "Seed used" in html and ">7<" in html
+        done = self._result(all_evacuated=True)
+        assert "✓" in to_xml(_kpi_tiles(done))
+
+    def test_doses_only_for_the_models_that_ran(self):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        assert "Peak gas FED" not in to_xml(_kpi_tiles(self._result()))
+        html = to_xml(_kpi_tiles(self._result(fed_max=0.4213)))
+        assert "Peak gas FED" in html and "0.421" in html
+        assert "Peak heat FED" not in html
+        assert "Incapacitated" in html and "not reported by this version" in html
+        assert "threshold" not in html
+        both = to_xml(_kpi_tiles(self._result(fed_max=0.1, heat_fed_max=1.2)))
+        assert "Peak heat FED" in both and "1.200" in both
+
+    def test_warnings_heading_names_the_run_in_words(self):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _warnings_card
+
+        html = to_xml(_warnings_card(["a", "b"]))
+        assert "Warning" in html
+        assert f"2 warnings for run #{manager.run_id}" in html
+        assert "#F4C430" not in html
+
+    def test_fed_panel_marks_the_run_threshold_on_one_scale(self):
+        from pyfds_evac.webapp.trajviz import _fed_panel, fed_scale
+
+        det = _fed_panel(1.0, "deterministic")
+        assert "threshold 1" in det and "median" not in det
+        for tier in ("safe", "alert", "critical", "severe", "0.3", "0.6"):
+            assert tier not in det
+        # Text is in ink tokens; ramp hex colours only fill swatch and bar.
+        assert not re.search(r"(?<!-)color:#", det)
+        prob = _fed_panel(0.5, "probabilistic")
+        assert "median threshold 0.5" in prob and "left:calc(50.00%" in prob
+        assert "median threshold 2" in _fed_panel(2.0, "probabilistic")
+        assert fed_scale(2.0) == 2.0 and fed_scale(0.5) == 1.0
+        assert fed_scale(None) == 1.0
+        none = _fed_panel(None, "deterministic")
+        assert "threshold" in none and "did not record" in none
+        assert "left:calc(" not in none
+
+
+class TestAccessibleForm:
+    """#322: every control is labelled, keyboard-operable and visibly focused."""
+
+    def test_every_control_has_a_label(self, client):
+        page = client.get("/").text
+        form = page[page.index('id="run-form"') :]
+        for match in re.finditer(r"<(input|select)\b([^>]*)>", form):
+            attrs = match.group(2)
+            if 'type="hidden"' in attrs or "type='hidden'" in attrs:
+                continue
+            ident = re.search(r"""\bid=["']([^"']+)""", attrs)
+            if "aria-label" in attrs or ident is None:
+                assert "aria-label" in attrs or "name='files'" in attrs, attrs
+                continue
+            assert f'for="{ident.group(1)}"' in page, ident.group(1)
+
+    def test_help_is_a_button_outside_the_label(self, client):
+        page = client.get("/").text
+        assert 'class="help-badge"' in page
+        assert '<span class="help-badge"' not in page
+        assert 'aria-controls="tip-seed"' in page and 'id="tip-seed"' in page
+        assert 'aria-describedby="tip-seed"' in page
+        assert not re.search(r"<label[^>]*>[^<]*<button", page)
+
+    def test_switch_is_a_native_checkbox_without_script(self, client):
+        page = client.get("/").text
+        sw = re.search(r'<span class="switch">.*?</span></span></span>', page)
+        assert sw and 'class="sw-input"' in sw.group(0)
+        assert "onclick" not in sw.group(0)
+
+    def test_no_inline_outline_suppression_and_a_focus_ring(self, client):
+        from pyfds_evac.webapp import theme
+
+        page = client.get("/").text
+        assert "outline:none" not in page
+        assert ":focus-visible { outline: 2px solid var(--focus)" in theme._CSS
+
+    def test_units_modes_and_tabs_are_stated(self, client):
+        page = client.get("/").text
+        assert "Reroute interval (s)" in page
+        assert "Smoke slice height (m)" in page
+        assert 'id="btn-det" aria-pressed="true"' in page
+        assert 'role="tablist"' in page and 'aria-selected="true"' in page
+
+    def test_layout_breakpoint_replaces_the_fixed_grid(self, client):
+        from pyfds_evac.webapp import theme
+
+        page = client.get("/").text
+        assert "grid-template-columns:340px 1fr" not in page
+        assert 'class="sim-grid"' in page
+        assert "@media (max-width: 900px)" in theme._CSS
+
+    def test_browse_is_a_labelled_dialog(self, client):
+        r = client.get("/browse-dir")
+        assert 'role="dialog"' in r.text
+        assert 'aria-labelledby="dir-title"' in r.text
