@@ -101,7 +101,7 @@ _REFS = [
     (
         "fed-heat-only",
         MODELS_FED,
-        r"Eq\. 63\.44 only \(" + _CITE,
+        r"Eq\. 63\.44(?: only)? \(" + _CITE,
         [r"_heat_fed_rate_per_minute\b|\*\*\s*3\.4"],
     ),
     (
