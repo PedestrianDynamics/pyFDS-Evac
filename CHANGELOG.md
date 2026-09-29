@@ -128,6 +128,12 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- A heat-only FDS case (TEMPERATURE slice, no SOOT EXTINCTION COEFFICIENT
+  slice) no longer crashes `run.py`. Smoke speed reduction is then off and
+  the visibility model falls back to clear air, each with a warning, so
+  `--constant-extinction 0 --no-visibility` is no longer needed
+  ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
+
 - With direct steering, an agent slowed by smoke outside every speed zone
   kept its reduced speed once the smoke factor returned to exactly 1 (for
   example on walking into air with K = 0). The restore now also writes when

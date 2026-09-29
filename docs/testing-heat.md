@@ -83,10 +83,11 @@ $$
   (the default `baseSeed`).
 - **Runs:** `--enable-heat-fed` (heat is off by default), deterministic at
   all three temperatures; probabilistic at 150 °C.
-- **Workaround:** the decks have no soot, so the runs need
-  `--constant-extinction 0 --no-visibility`
+- **No soot:** the decks have no soot slice, so `run.py` warns that smoke
+  speed reduction is off and that visibility falls back to clear air
   ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
-  Neither changes the heat dose.
+  Neither enters the heat-dose rate; clear-air visibility changes only where
+  agents walk, and the expected dose is read at those positions.
 
 ## Expected
 
@@ -199,7 +200,6 @@ for T in 100 150 200; do
   uv run python run.py --scenario assets/fed_incap_heat_${T}c \
     --fds-dir <data>/fed_incap_heat_${T}c/fds \
     --enable-heat-fed --heat-incapacitation-mode deterministic \
-    --constant-extinction 0 --no-visibility \
     --output-sqlite <data>/fed_incap_heat_${T}c/evac/deterministic/run.sqlite \
     --output-fed-history <data>/fed_incap_heat_${T}c/evac/deterministic/fed_history.csv
 done
@@ -210,6 +210,15 @@ uv run python scripts/verification/heat_room_figures.py --data <data>
 
 Each run takes about three minutes and uses the default seed 42. A
 temperature without output is skipped.
+
+The published figures come from runs that also passed
+`--constant-extinction 0 --no-visibility`, which ran without a visibility
+model. Add those two flags to reproduce them exactly. On the same FDS
+output, a paired deterministic 150 °C run with and without the two flags
+stops all 100 agents at the same update in both; agent positions differ
+slightly, and the maximum heat FED differs by less than 10⁻⁴ (relative).
+The paired outputs are in
+`<data>/fed_incap_heat_150c/evac/no_soot_fallback_248/`.
 
 ## Limits
 
@@ -234,9 +243,6 @@ temperature without output is skipped.
   at 200 °C that covers nearly the whole 48 s exposure. The code sums the
   same terms either way, so the check holds; the physiology of a falling
   exposure is outside it.
-- **Heat-only cases need a workaround.** Without a soot slice `run.py`
-  crashes unless given `--constant-extinction 0 --no-visibility`
-  ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
 - **σ = 0.94 has no source for heat.** It is borrowed from the gas dose
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)). The
   probabilistic run checks the code path, not the spread.
