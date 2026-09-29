@@ -75,7 +75,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SIGMA = 5.67e-8  # W m^-2 K^-4, as printed on p. 2384
 KELVIN = 273.15
 EXPONENT = 1.33  # Eq. 63.43 prints 1.33
-DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.667}  # spec 016
+# Fatal: D = 16.7 as printed in SFPE Ch. 63, p. 2384 (Eq. 63.49 D values);
+# Purser's spreadsheet uses 16.667, the code follows the Handbook.
+DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.7}
 
 
 # --- hand formulas ----------------------------------------------------------
@@ -123,7 +125,7 @@ def test_face_on_flux_bounds_table_63_20(q, table_s):
     assert table_s * 0.75 <= seconds <= table_s * 1.25
 
 
-@pytest.mark.parametrize(("f", "minutes"), [(1.0, 8.9), (0.25, 68.9)])
+@pytest.mark.parametrize(("f", "minutes"), [(1.0, 8.9), (0.25, 69.1)])
 def test_ambient_background_gives_a_fatal_dose_in_a_cold_room(f, minutes):
     """Finding for the maintainer (#221): 20 deg C, no fire, U = 4 sigma T^4 =
     1.68 kW/m2, h = 5, T_s = 35 deg C. Incident f U minus the convective loss
@@ -261,7 +263,7 @@ def test_model_rejects_missing_intensity_with_hot_gas():
     rate (hand value below), so a silent zero would be wrong."""
     h, t_s = 5.0, 35.0
     q_conv = h * (200.0 - t_s) / 1000.0
-    assert 1.0 / t_hand_min(q_conv, DOSE["fatal"]) == pytest.approx(0.046454, rel=1e-4)
+    assert 1.0 / t_hand_min(q_conv, DOSE["fatal"]) == pytest.approx(0.046363, rel=1e-4)
     model = DefaultHeatFedModel(
         FdsHeatField(_Sampler(200.0), intensity_sampler=_Outside()),  # type: ignore[arg-type,call-arg]
         DefaultFedConfig(fds_dir="", update_interval_s=1.0),
@@ -406,6 +408,24 @@ def test_model_rejects_unknown_radiant_source():
             method="total-flux",
             radiant_source="layer",  # type: ignore[call-arg]
             u_factor=0.5,  # type: ignore[call-arg]
+        )
+
+
+def test_model_rejects_integrated_intensity_with_layer_regime():
+    """U already holds the layer's emission: f U plus the layer term would
+    count it twice, so the combination is rejected, not resolved."""
+    _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0)
+    with pytest.raises(ValueError, match="layer"):
+        DefaultHeatFedModel(
+            FdsHeatField(_Sampler(150.0), intensity_sampler=_Sampler(5.0)),  # type: ignore[arg-type,call-arg]
+            DefaultFedConfig(fds_dir="", update_interval_s=1.0),
+            method="total-flux",
+            radiant_source="integrated-intensity",  # type: ignore[call-arg]
+            u_factor=0.5,  # type: ignore[call-arg]
+            regime="layer",  # type: ignore[call-arg]
+            layer_field=FdsHeatField(_Sampler(300.0)),  # type: ignore[arg-type,call-arg]
+            view_factor=0.5,  # type: ignore[call-arg]
+            layer_emissivity=0.9,  # type: ignore[call-arg]
         )
 
 
@@ -590,6 +610,20 @@ def test_run_config_rejects_case_without_intensity_slice(monkeypatch):
     _patch(monkeypatch, {"temperature"})
     with pytest.raises((ValueError, SystemExit)):
         _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
+
+
+def test_run_config_rejects_source_with_layer_regime(monkeypatch):
+    _patch(monkeypatch, {"temperature", "integrated_intensity"})
+    _build(heat_radiant_source="integrated-intensity", heat_u_factor=0.5)
+    with pytest.raises(ValueError, match="layer"):
+        _build(
+            heat_radiant_source="integrated-intensity",
+            heat_u_factor=0.5,
+            heat_regime="layer",
+            heat_layer_height=2.4,
+            heat_view_factor=0.5,
+            heat_layer_emissivity=0.9,
+        )
 
 
 # --- FED history CSV ----------------------------------------------------------------

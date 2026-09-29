@@ -55,7 +55,9 @@ UPDATE_S = 1.0
 TIMING_TOL_S = 1.5  # right-point sampling on 1 s updates
 SIGMA = 5.67e-8
 KELVIN = 273.15
-DOSE = {"tolerance": 1.33, "fatal": 16.667}  # spec 016
+# Fatal: D = 16.7 as printed in SFPE Ch. 63, p. 2384 (Eq. 63.49 D values);
+# Purser's spreadsheet uses 16.667, the code follows the Handbook.
+DOSE = {"tolerance": 1.33, "fatal": 16.7}
 
 ROOT = Path(__file__).resolve().parents[2]
 CASE_DIR = ROOT / "assets" / "heat_integrated_intensity" / "fds"
@@ -156,10 +158,10 @@ def _check_crossing(result, expected_s):
 
 
 def test_design_crossing_times():
-    """q = f U = 5 kW/m2: fatal after 117.5 s, tolerance after 9.4 s."""
+    """q = f U = 5 kW/m2: fatal after 117.8 s, tolerance after 9.4 s."""
     q = q_u_hand(T_SKIN, U_CONST, f=F, h=H, t_skin_c=T_SKIN)
     assert q == 5.0
-    assert 60.0 * t_hand_min(q, DOSE["fatal"]) == pytest.approx(117.5, abs=0.1)
+    assert 60.0 * t_hand_min(q, DOSE["fatal"]) == pytest.approx(117.8, abs=0.1)
     assert 60.0 * t_hand_min(q, DOSE["tolerance"]) == pytest.approx(9.4, abs=0.1)
 
 
@@ -177,7 +179,7 @@ def test_crossing_scales_with_the_factor():
     """f = 1 on the same U: q doubles, t falls by 2^1.33."""
     q = q_u_hand(T_SKIN, U_CONST, f=1.0, h=H, t_skin_c=T_SKIN)
     expected = 60.0 * t_hand_min(q, DOSE["fatal"])
-    assert expected == pytest.approx(117.5 / 2**1.33, abs=0.1)
+    assert expected == pytest.approx(117.8 / 2**1.33, abs=0.1)
     result = _run(_model(T_SKIN, U_CONST, f=1.0), run_s=70.0)
     try:
         _check_crossing(result, expected)
