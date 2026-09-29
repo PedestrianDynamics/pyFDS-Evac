@@ -80,7 +80,7 @@ mkdir -p fire && cp assets/t_junction/t_junction.fds fire/
 cd fire && mpiexec -n 4 fds t_junction.fds && cd ..
 ```
 
-It took about 20 minutes on four cores. Or use the output the maintainers
+It takes 20 to 30 minutes on four cores. Or use the output the maintainers
 keep in their data store, `fds-evac-data/t_junction/fire_2MW_PVC/` (about
 125 MB). The data store is not public; ask for it on the
 [issue tracker](https://github.com/PedestrianDynamics/pyFDS-Evac/issues).
