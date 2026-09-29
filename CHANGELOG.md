@@ -40,12 +40,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `--heat-fed-method total-flux` (opt-in, with `--enable-heat-fed`; default
   `convective`): the heat dose is q^1.33/D (SFPE Handbook Ch. 63 Eq. 63.43)
   with q the heat flux to the skin of Eq. 63.49, both terms divided by 1000
-  together, and no 2.5 kW/m² threshold (spec 016). D is the dose of
-  `--heat-endpoint`, the fatal 16.7 without it (SFPE Ch. 63 p. 2384). `--heat-emissivity` (0.5),
+  together. The radiant term of q (the gas term, the `INTEGRATED
+  INTENSITY` excess or the layer term) counts as zero in the dose below
+  2.5 kW/m² (ISO 13571:2012 §8.2, §8.4, spec 016; 2.5 itself counts); the
+  convective term counts at every level, so hot air still gives a dose.
+  D is the dose of `--heat-endpoint`, the fatal 16.7 without it (SFPE Ch. 63 p. 2384). `--heat-emissivity` (0.5),
   `--heat-convective-coefficient` (5) and `--heat-skin-temperature` (35 °C)
   set the flux; their defaults are assumptions. The FED history gains
-  `heat_flux_kw_m2` and the manifest `heat_fed_method` and
-  `heat_flux_parameters`. This is the head-in-smoke regime
+  `heat_flux_kw_m2` (the physical q) and the manifest `heat_fed_method`
+  and `heat_flux_parameters`, with `radiant_threshold_kw_m2`. This is the
+  head-in-smoke regime
   ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 - `--heat-endpoint {tolerance,injury,fatal}` (opt-in, with
   `--enable-heat-fed`): the heat dose uses the convective law of that
@@ -84,17 +88,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **Breaking for total-flux heat runs.** With `--heat-fed-method
-  total-flux` the radiant term of q counts as zero in the dose where it is
-  below 2.5 kW/m² (ISO 13571:2012 §8.2, §8.4; maintainer decision to follow
-  ISO, 2.5 itself counts). This holds for each radiant source: the gas term
-  ε σ (T_g⁴ − T_s⁴), the `INTEGRATED INTENSITY` excess f·(U − 4σT_s⁴) and
-  the layer term φ ε_L σ (T_L⁴ − T_s⁴). The convective term h (T_g − T_s)
-  counts at every level, so hot air still gives a dose. A negative radiant
-  term (source cooler than the skin) now counts as zero and no longer
-  lowers q. The FED history's `heat_flux_kw_m2` stays the physical q; the
-  manifest's `heat_flux_parameters` records `radiant_threshold_kw_m2`
-  ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 - **Breaking for heat runs.** With `--enable-heat-fed` the default
   convective law is ISO 13571:2012 Eq. (9), fully clothed,
   t = 4.1e8 · T^-3.61 min (T in °C, air with less than 10 % water vapour),
