@@ -507,6 +507,39 @@ details > summary { cursor: pointer; }
   color: var(--ink);
 }
 
+/* ---- finished run: outcome, headline numbers, doses ---- */
+.outcome-line {
+  display: flex; align-items: baseline; gap: .55rem;
+  font-family: var(--font-display); font-weight: 600; font-size: 18px;
+  color: var(--ink); overflow-wrap: anywhere;
+}
+.outcome-line.is-complete .state-glyph { color: #3a9d6e; }
+.outcome-line.is-incomplete .state-glyph { color: var(--gold-ink); }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpi-tile {
+  background: var(--surface-panel); border: 1px solid var(--hairline);
+  border-top: 2px solid var(--hairline-strong); border-radius: 14px; padding: 15px 16px;
+  min-width: 0;
+}
+.kpi-label {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.kpi-value {
+  font-family: var(--font-mono); font-size: 19px; font-weight: 500;
+  margin-top: 7px; color: var(--ink); overflow-wrap: anywhere;
+}
+.dose-card {
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--surface-panel); border: 1px solid var(--hairline);
+  border-radius: 14px; padding: 12px 16px;
+}
+.dose-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.dose-row .kpi-label { min-width: 9.5rem; }
+.dose-value { font-family: var(--font-mono); font-size: 15px; color: var(--ink); }
+.dose-note { font-size: .78rem; color: var(--ink-dim); }
+.dose-note a { color: var(--gold-ink); }
+
 /* ---- tabs ---- */
 .tab-nav { display: flex; align-items: center; justify-content: center; padding: 1rem 1.5rem .5rem; }
 .tab-pills {

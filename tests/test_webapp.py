@@ -2030,3 +2030,62 @@ class TestTerminalStates:
         _drop_temp_trajectory()
         client.post("/clear")
         assert client.post("/form-state", data={**form, "seed": "12"}).text == ""
+
+
+class TestResultSummary:
+    """#321: the finished panel states the outcome in words, then numbers."""
+
+    @staticmethod
+    def _result(**metrics):
+        return SimpleNamespace(
+            metrics={"all_evacuated": False, "seed": 7, **metrics},
+            agents_remaining=60,
+            agents_evacuated=90,
+            total_agents=150,
+            evacuation_time=300.0,
+        )
+
+    @pytest.fixture(autouse=True)
+    def no_spec(self, monkeypatch):
+        monkeypatch.setattr(manager, "spec", None)
+        monkeypatch.setattr(
+            manager, "scenario", SimpleNamespace(max_simulation_time=300.0)
+        )
+
+    def test_outcome_line_has_words_and_a_glyph(self):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        html = to_xml(_kpi_tiles(self._result()))
+        assert "outcome-line is-incomplete" in html
+        assert '<span aria-hidden="true" class="state-glyph">⚠</span>' in html
+        assert "Incomplete: time limit reached (60 of 150 remaining)" in html
+        assert "Simulated time (limit reached)" in html
+        assert "Seed used" in html and ">7<" in html
+        done = self._result(all_evacuated=True)
+        assert "✓" in to_xml(_kpi_tiles(done))
+
+    def test_doses_only_for_the_models_that_ran(self):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        assert "Peak gas FED" not in to_xml(_kpi_tiles(self._result()))
+        html = to_xml(_kpi_tiles(self._result(fed_max=0.4213)))
+        assert "Peak gas FED" in html and "0.421" in html
+        assert "Peak heat FED" not in html
+        assert "Incapacitated" in html and "not reported by this version" in html
+        assert "threshold" not in html
+        both = to_xml(_kpi_tiles(self._result(fed_max=0.1, heat_fed_max=1.2)))
+        assert "Peak heat FED" in both and "1.200" in both
+
+    def test_warnings_heading_names_the_run_in_words(self):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _warnings_card
+
+        html = to_xml(_warnings_card(["a", "b"]))
+        assert "Warning" in html
+        assert f"2 warnings for run #{manager.run_id}" in html
+        assert "#F4C430" not in html

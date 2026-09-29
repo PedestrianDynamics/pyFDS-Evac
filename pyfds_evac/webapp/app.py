@@ -278,11 +278,11 @@ def _warnings_card(messages: list[str]) -> Div:
     heading = "1 warning" if len(messages) == 1 else f"{len(messages)} warnings"
     return Div(
         Div(
-            f"{heading} during this run",
-            style=(
-                f"{_GROTESK};font-weight:600;font-size:15px;color:#F4C430;"
-                "margin-bottom:10px"
-            ),
+            Span("\u26a0", aria_hidden="true", cls="state-glyph"),
+            Span("Warning", cls="state-word"),
+            Span(f"{heading} for run #{_run_number()}", cls="state-run"),
+            cls="state-line",
+            style="margin-bottom:10px;color:var(--gold-ink)",
         ),
         *[
             P(
@@ -1890,6 +1890,11 @@ def _clear_run_bar() -> Div:
             Div(
                 Span("Results", cls="state-word"),
                 Span(_run_title(), cls="state-run"),
+                *(
+                    [Span("Results only: viewer not built", cls="state-tag")]
+                    if manager.results_only
+                    else []
+                ),
                 Span(id="results-stale-tag"),
                 cls="state-line",
             ),
@@ -1905,8 +1910,76 @@ def _clear_run_bar() -> Div:
     )
 
 
+_MODELS_FED = "https://pedestriandynamics.org/pyFDS-Evac/models/fed/"
+_MODELS_HEAT = "https://pedestriandynamics.org/pyFDS-Evac/models/heat/"
+# Outcome glyphs are decorative; the outcome text always says it in words.
+_OUTCOME_GLYPH = {True: "\u2713", False: "\u26a0", None: "?"}
+_OUTCOME_TONE = {True: "is-complete", False: "is-incomplete", None: ""}
+
+
+def _tile(label: str, value: str, accent: str) -> Div:
+    return Div(
+        Div(label, cls="kpi-label"),
+        Div(value, cls="kpi-value"),
+        cls="kpi-tile",
+        style=f"border-top-color:{accent}",
+    )
+
+
+def _tenability_line(metrics: dict) -> Div | str:
+    """Peak doses the run reported, only for the dose models it ran.
+
+    ``fed_max`` and ``heat_fed_max`` are the highest cumulative dose any
+    agent reached. Under probabilistic incapacitation each agent has its own
+    threshold, so no threshold claim is attached. Incapacitation counts are
+    not reported by the engine yet (#141) and are not computed here.
+    """
+    doses = []
+    if "fed_max" in metrics:
+        doses.append(
+            Div(
+                Span("Peak gas FED", cls="kpi-label"),
+                Span(f"{metrics['fed_max']:.3f}", cls="dose-value"),
+                Span(
+                    "highest cumulative toxic-gas dose of any agent (dimensionless). ",
+                    A("Gas FED", href=_MODELS_FED, target="_blank", rel="noopener"),
+                    cls="dose-note",
+                ),
+                cls="dose-row",
+            )
+        )
+    if "heat_fed_max" in metrics:
+        doses.append(
+            Div(
+                Span("Peak heat FED", cls="kpi-label"),
+                Span(f"{metrics['heat_fed_max']:.3f}", cls="dose-value"),
+                Span(
+                    "highest cumulative heat dose of any agent (dimensionless). ",
+                    A("Heat FED", href=_MODELS_HEAT, target="_blank", rel="noopener"),
+                    cls="dose-note",
+                ),
+                cls="dose-row",
+            )
+        )
+    if not doses:
+        return ""
+    return Div(
+        *doses,
+        Div(
+            Span("Incapacitated", cls="kpi-label"),
+            Span("not reported by this version", cls="dose-note"),
+            cls="dose-row",
+        ),
+        cls="dose-card",
+    )
+
+
 def _kpi_tiles(result) -> Div:
-    """The four headline numbers, shared by both finished views."""
+    """Outcome, headline numbers and doses, shared by both finished views.
+
+    The outcome comes from ``all_evacuated`` (see ``run_outcome``) and is
+    stated in words with a glyph, so colour is never the only cue.
+    """
     spec = manager.spec
     time_limit = (
         spec.time_limit
@@ -1920,29 +1993,32 @@ def _kpi_tiles(result) -> Div:
         result.evacuation_time,
         time_limit,
     )
-    metrics = [
-        ("Outcome", outcome.label),
-        (outcome.time_label, f"{result.evacuation_time:.1f} s"),
-        ("Evacuated", f"{result.agents_evacuated} / {result.total_agents} agents"),
-        ("Remaining", f"{result.agents_remaining} agents"),
+    seed = spec.seed_used if spec is not None else None
+    if seed is None:
+        seed = result.metrics.get("seed")
+    tiles = [
+        _tile(outcome.time_label, f"{result.evacuation_time:.1f} s", "#F4C430"),
+        _tile(
+            "Evacuated",
+            f"{result.agents_evacuated} / {result.total_agents} agents",
+            "#3B82F6",
+        ),
+        _tile("Remaining", f"{result.agents_remaining} agents", "#E01E37"),
+        _tile("Seed used", "not recorded" if seed is None else str(seed), "#837A74"),
     ]
-    accents = ["#F4C430", "#F4C430", "#3B82F6", "#E01E37"]
     return Div(
-        *[
-            Div(
-                Div(
-                    k,
-                    style=f"{_MONO};font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;{_MUTED}",
-                ),
-                Div(
-                    v,
-                    style=f"{_MONO};font-size:19px;font-weight:500;margin-top:7px;{_INK}",
-                ),
-                style=f"background:var(--surface-panel);border:1px solid var(--hairline);border-top:2px solid {a};border-radius:14px;padding:15px 16px",
-            )
-            for (k, v), a in zip(metrics, accents)
-        ],
-        style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px",
+        Div(
+            Span(
+                _OUTCOME_GLYPH[outcome.complete],
+                aria_hidden="true",
+                cls="state-glyph",
+            ),
+            Span(outcome.label),
+            cls=f"outcome-line {_OUTCOME_TONE[outcome.complete]}".strip(),
+        ),
+        Div(*tiles, cls="kpi-grid"),
+        _tenability_line(result.metrics),
+        style="display:flex;flex-direction:column;gap:12px",
     )
 
 
@@ -2105,7 +2181,7 @@ def _results_only_view() -> Div:
         Div(
             Div(
                 "Viewer skipped",
-                style=f"{_GROTESK};font-weight:600;font-size:14px;color:#F4C430;margin-bottom:6px",
+                style=f"{_GROTESK};font-weight:600;font-size:14px;color:var(--gold-ink);margin-bottom:6px",
             ),
             P(
                 "The trajectory animation and the FED / smoke / cognitive-map plots "
