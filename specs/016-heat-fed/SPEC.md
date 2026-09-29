@@ -39,6 +39,19 @@ from one `TEMPERATURE` slice at head height. It has four gaps:
 - **`INTEGRATED INTENSITY` wins over the layer term** when both are set: U
   already contains the layer's emission and is the better-resolved input;
   the layer term is not added, and the run warns once (#221, #222).
+- **The radiant term follows ISO's 2.5 kW/m² threshold** (ISO 13571:2012
+  §8.2, §8.4): the radiant term of q counts as zero in the dose where it is
+  below 2.5 kW/m²; 2.5 itself counts ("below"). This replaces the earlier
+  "no threshold", which followed Purser's spreadsheet. Reasoning: ISO is the
+  standard the heat dose already follows (clothed law, one threshold), and it
+  sets the radiant term to zero below 2.5 kW/m²; the "no threshold" choice
+  had no published source. The threshold acts on the radiant term only,
+  for every source (gas term, `INTEGRATED INTENSITY` excess, layer term);
+  the convective term h (T_g − T_s) counts at every level, so the clear-air
+  gap below does not reopen. A negative radiant term (source cooler than the
+  skin) is below 2.5 and counts as zero. Constant
+  `ISO_RADIANT_THRESHOLD_KW_M2`, not a parameter; the FED history keeps the
+  physical q, the manifest records the threshold.
 
 ## Sources
 
@@ -79,12 +92,19 @@ Differences from the draft:
 | ε (gas at the head) | 0.5 smoke, 0.05 clear air | from the regime (below) |
 | h | 5–8 | parameter, default open (5–8) |
 | T_skin | 35 °C | parameter, default open (fixed or rising) |
-| 2.5 kW/m² threshold | yes | **no** |
+| 2.5 kW/m² threshold | yes | on the radiant term only (ISO §8.2, §8.4) |
 | D, second degree | 10 | open |
 
-**No threshold.** With the 2.5 kW/m² threshold, the total-flux form gives no
-dose in clear air below about 310 °C (h = 8, ε = 0.05), where the hot-air data
-give minutes. Accumulating dose at all fluxes closes that gap.
+**Threshold on the radiant term only.** With the 2.5 kW/m² threshold on the
+total q, the total-flux form gives no dose in clear air below about 310 °C
+(h = 8, ε = 0.05), where the hot-air data give minutes. ISO 13571:2012
+§8.2, §8.4 sets the radiant term, not the convective one, to zero below
+2.5 kW/m² (maintainer decision to follow ISO, see "Decisions"): the
+convective term always counts, which closes that gap. ISO's 2.5 kW/m² is an
+incident flux; the gas and layer terms are net σT⁴ differences (≈ 20 %
+lower at the 200 °C anchor) and the `INTEGRATED INTENSITY` term is an
+excess, so the threshold on them is reached at a somewhat hotter source
+than on incident flux. Recorded, not corrected.
 
 **Convection check.** Converting hot-air temperatures to convective flux
 should reproduce the hot-air tolerance data. Convection alone (h = 5,
@@ -188,11 +208,12 @@ INTENSITY` input is the excess over a skin-temperature field by decision
    apply to heat?~~ Answered from the full text. Clause 8 gives radiant
    Eqs. (7) (burns) and (8) (pain), a q^-b form from Wieczorek & Dembsey
    2001, q "the radiant heat flux", the term zero below the 2.5 kW/m²
-   limit that ISO calls incident; convective
+   limit that ISO calls incident (now applied to the radiant term of the
+   total-flux method, see "Decisions"); convective
    Eqs. (9) (clothed, Crane 1978) and (10) (unclothed, = Eq. 63.44); and the
    summed FED of Eq. (11) (= Eq. 63.48). It has no total-flux method, so it
    supplies no h, T_skin, ε or D, and gives no support for dropping the
-   2.5 kW/m² threshold. §8.5 applies the gas threshold logic to heat by
+   2.5 kW/m² threshold, which is therefore kept on the radiant term. §8.5 applies the gas threshold logic to heat by
    reference, but the 0.3 / 11.4 % figures (A.5.2) rest on gas data, and
    ISO gives no heat spread. Details: `site/content/fundamentals/heat.md`
    and `incapacitation-thresholds.md`; clothed law #290; test band #289.

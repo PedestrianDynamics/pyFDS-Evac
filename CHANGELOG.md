@@ -84,6 +84,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Breaking for total-flux heat runs.** With `--heat-fed-method
+  total-flux` the radiant term of q counts as zero in the dose where it is
+  below 2.5 kW/m² (ISO 13571:2012 §8.2, §8.4; maintainer decision to follow
+  ISO, 2.5 itself counts). This holds for each radiant source: the gas term
+  ε σ (T_g⁴ − T_s⁴), the `INTEGRATED INTENSITY` excess f·(U − 4σT_s⁴) and
+  the layer term φ ε_L σ (T_L⁴ − T_s⁴). The convective term h (T_g − T_s)
+  counts at every level, so hot air still gives a dose. A negative radiant
+  term (source cooler than the skin) now counts as zero and no longer
+  lowers q. The FED history's `heat_flux_kw_m2` stays the physical q; the
+  manifest's `heat_flux_parameters` records `radiant_threshold_kw_m2`
+  ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 - **Breaking for heat runs.** With `--enable-heat-fed` the default
   convective law is ISO 13571:2012 Eq. (9), fully clothed,
   t = 4.1e8 · T^-3.61 min (T in °C, air with less than 10 % water vapour),
