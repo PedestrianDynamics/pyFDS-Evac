@@ -35,17 +35,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `u_factor` and `radiant_flux` (`excess`). Agents outside the FDS domain
   get a zero rate, with U and q NaN in the FED history, and one warning
   per run. Surroundings at or below the skin temperature give no dose for
-  any f; q ≤ 0 gives a zero rate, never a negative one
+  any f; a negative excess counts as zero and the rate is never negative
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 - `--heat-fed-method total-flux` (opt-in, with `--enable-heat-fed`; default
   `convective`): the heat dose is q^1.33/D (SFPE Handbook Ch. 63 Eq. 63.43)
   with q the heat flux to the skin of Eq. 63.49, both terms divided by 1000
-  together, and no 2.5 kW/m² threshold (spec 016). D is the dose of
-  `--heat-endpoint`, the fatal 16.7 without it (SFPE Ch. 63 p. 2384). `--heat-emissivity` (0.5),
+  together. The radiant term of q (the gas term, the `INTEGRATED
+  INTENSITY` excess or the layer term) counts as zero in the dose below
+  2.5 kW/m² (ISO 13571:2012 §8.2, §8.4, spec 016; 2.5 itself counts); the
+  convective term counts at every level, so hot air still gives a dose.
+  D is the dose of `--heat-endpoint`, the fatal 16.7 without it (SFPE Ch. 63 p. 2384). `--heat-emissivity` (0.5),
   `--heat-convective-coefficient` (5) and `--heat-skin-temperature` (35 °C)
   set the flux; their defaults are assumptions. The FED history gains
-  `heat_flux_kw_m2` and the manifest `heat_fed_method` and
-  `heat_flux_parameters`. This is the head-in-smoke regime
+  `heat_flux_kw_m2` (the physical q) and the manifest `heat_fed_method`
+  and `heat_flux_parameters`, with `radiant_threshold_kw_m2`. This is the
+  head-in-smoke regime
   ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 - `--heat-endpoint {tolerance,injury,fatal}` (opt-in, with
   `--enable-heat-fed`): the heat dose uses the convective law of that
@@ -105,6 +109,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `--fed-threshold` and wants the previous heat threshold passes
   `--heat-fed-threshold 1.0`. Both doses stay deterministic by default.
 
+- Docs: Models › Heat explains where the 2.5 kW/m² radiant threshold of
+  total flux acts: from about 285 °C at the default ε, with a step in the
+  rate there and no radiant dose at the 200 °C anchor. A figure
+  (`scripts/figures/heat_radiant_threshold.py`) shows it, and the
+  verification table lists the total-flux, layer, `INTEGRATED INTENSITY`
+  and threshold tests.
 - Docs: Fundamentals › Incapacitation thresholds states what is known
   about the population spread of heat tolerance: SFPE Ch. 63 gives figures
   only for radiant lethality, which imply σ ≈ 0.22 if log-normal, not the

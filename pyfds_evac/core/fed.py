@@ -396,6 +396,20 @@ HEAT_SLICE_Z_TOLERANCE_M = 1e-6
 # "smoke", head in smoke, Eq. 63.49 at the head; "layer", head in clear air
 # below a hot layer, convection at the head plus the layer term (#222).
 HEAT_FLUX_REGIMES = ("smoke", "layer")
+# ISO 13571:2012 §8.2, §8.4: the radiant contribution is zero below 2.5 kW/m2
+# (maintainer decision to follow ISO). Applied to the radiant term only;
+# convection counts at all levels.
+ISO_RADIANT_THRESHOLD_KW_M2 = 2.5
+
+
+def counted_radiant_flux_kw_m2(radiant_kw_m2: float) -> float:
+    """Return the radiant flux counted in the dose: 0.0 below 2.5 kW/m2.
+
+    ISO says "below 2.5", so 2.5 counts. NaN passes through.
+    """
+    if radiant_kw_m2 < ISO_RADIANT_THRESHOLD_KW_M2:
+        return 0.0
+    return radiant_kw_m2
 
 
 def radiant_flux_from_integrated_intensity_kw_m2(
@@ -472,7 +486,10 @@ def layer_radiant_flux_kw_m2(
 
 
 def total_flux_heat_fed_rate_per_minute(q_kw_m2: float, dose: float) -> float:
-    """Return q^1.33 / D in 1/min (Eq. 63.43), with no 2.5 kW/m2 threshold.
+    """Return q^1.33 / D in 1/min (Eq. 63.43).
+
+    The ISO 2.5 kW/m2 threshold acts on the radiant part of q, upstream
+    (``counted_radiant_flux_kw_m2``), not here.
 
     Zero for q <= 0 (gas at or below skin temperature, no recovery) and for a
     non-finite q.
@@ -1273,6 +1290,7 @@ class DefaultHeatFedModel:
             "skin_temperature_celsius": self.skin_temperature_celsius,
             "radiant_dose": HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose,
             "assumed": list(HEAT_FLUX_ASSUMED_PARAMETERS),
+            "radiant_threshold_kw_m2": ISO_RADIANT_THRESHOLD_KW_M2,
         }
         if self.regime == "layer":
             params.update(
@@ -1298,6 +1316,8 @@ class DefaultHeatFedModel:
         temperature_celsius: float,
         layer_temperature_celsius: float | None = None,
         integrated_intensity_kw_m2: float | None = None,
+        *,
+        radiant_threshold: bool = False,
     ) -> float:
         """Return the total-flux q in kW/m2 for one gas temperature.
 
@@ -1306,16 +1326,36 @@ class DefaultHeatFedModel:
         q = f (U - 4 sigma T_s^4 / 1000) + h (T_g - T_s) / 1000 (excess over
         an isotropic field at the skin temperature, maintainer decision on
         #221): U already holds the gas emission, so the eps term is not added.
+        With *radiant_threshold* the radiant term is zero below 2.5 kW/m2
+        (ISO 13571:2012 §8.2, §8.4); the dose uses that q.
         """
+        radiant = self._radiant_flux_kw_m2(
+            temperature_celsius, layer_temperature_celsius, integrated_intensity_kw_m2
+        )
+        if radiant_threshold:
+            radiant = counted_radiant_flux_kw_m2(radiant)
+        return total_heat_flux_kw_m2(
+            temperature_celsius,
+            emissivity=0.0,
+            convective_coefficient=self.convective_coefficient,
+            skin_temperature_celsius=self.skin_temperature_celsius,
+            external_flux_kw_m2=radiant,
+        )
+
+    def _radiant_flux_kw_m2(
+        self,
+        temperature_celsius: float,
+        layer_temperature_celsius: float | None,
+        integrated_intensity_kw_m2: float | None,
+    ) -> float:
+        """Return the radiant term of q in kW/m2: layer, U or gas source."""
         if self.uses_layer_term:
-            return self._layer_heat_flux_kw_m2(
-                temperature_celsius, layer_temperature_celsius
-            )
+            return self._layer_radiant_flux_kw_m2(layer_temperature_celsius)
         if self.radiant_source != "integrated-intensity":
             return total_heat_flux_kw_m2(
                 temperature_celsius,
                 emissivity=self.emissivity,
-                convective_coefficient=self.convective_coefficient,
+                convective_coefficient=0.0,
                 skin_temperature_celsius=self.skin_temperature_celsius,
             )
         u = (
@@ -1329,34 +1369,19 @@ class DefaultHeatFedModel:
             * (self.skin_temperature_celsius + _KELVIN) ** 4
             / 1000.0
         )
-        return total_heat_flux_kw_m2(
-            temperature_celsius,
-            emissivity=0.0,
-            convective_coefficient=self.convective_coefficient,
-            skin_temperature_celsius=self.skin_temperature_celsius,
-            external_flux_kw_m2=radiant_flux_from_integrated_intensity_kw_m2(
-                u - u_skin, self.u_factor
-            ),
-        )
+        return radiant_flux_from_integrated_intensity_kw_m2(u - u_skin, self.u_factor)
 
-    def _layer_heat_flux_kw_m2(
-        self, temperature_celsius: float, layer_temperature_celsius: float | None
+    def _layer_radiant_flux_kw_m2(
+        self, layer_temperature_celsius: float | None
     ) -> float:
-        """Return h (T_g - T_s) / 1000 plus the layer term, in kW/m2."""
+        """Return the layer term q_ext in kW/m2; NaN without a layer sample."""
         if layer_temperature_celsius is None:
             return math.nan
-        q_ext = layer_radiant_flux_kw_m2(
+        return layer_radiant_flux_kw_m2(
             layer_temperature_celsius,
             view_factor=self.view_factor,
             layer_emissivity=self.layer_emissivity,
             skin_temperature_celsius=self.skin_temperature_celsius,
-        )
-        return total_heat_flux_kw_m2(
-            temperature_celsius,
-            emissivity=0.0,
-            convective_coefficient=self.convective_coefficient,
-            skin_temperature_celsius=self.skin_temperature_celsius,
-            external_flux_kw_m2=q_ext,
         )
 
     def _total_flux_rate(self, inputs: HeatFedInputs) -> float:
@@ -1366,6 +1391,7 @@ class DefaultHeatFedModel:
             inputs.temperature_celsius,
             inputs.layer_temperature_celsius,
             integrated_intensity_kw_m2=inputs.integrated_intensity_kw_m2,
+            radiant_threshold=True,
         )
         return total_flux_heat_fed_rate_per_minute(q, dose)
 

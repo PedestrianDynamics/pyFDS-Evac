@@ -140,13 +140,22 @@ $$
 
 - *D* is the radiant dose of `--heat-endpoint` (1.33, 10 or 16.7); without
   it, the fatal 16.7, as heat FED = 1 is meant as the fatal endpoint.
-- **No 2.5 kW/m² threshold.** The Handbook applies Eq. 63.43 above
-  2.5 kW/m² only (p. 2384); spec 016 drops the threshold, so the dose
-  accumulates at every positive flux. With the threshold, clear air
-  (ε = 0.05, h = 8) would give no dose below about 310 °C.
+- **2.5 kW/m² threshold on the radiant term only.** The radiant term of
+  *q* counts as zero in the dose where it is below 2.5 kW/m²
+  (ISO 13571:2012 §8.2, §8.4; 2.5 itself counts), for every regime and
+  source. The convective term \(h\,(T_g - T_s)\) counts at every level: with
+  the threshold on the total *q*, clear air (ε = 0.05, h = 8) would give no
+  dose below about 310 °C. ISO's 2.5 kW/m² is an incident flux; the code
+  applies it to the net or excess radiant term (spec 016). `heat_flux_kw_m2`
+  stays the physical *q*; the constant is `ISO_RADIANT_THRESHOLD_KW_M2`.
 - **Not added to a convective law.** The rate is \(q^{1.33}/D\) alone.
-- At or below skin temperature (\(q \le 0\)) or for a non-finite
-  temperature the rate is zero: no dose, and no recovery.
+- Where the *q* that enters the dose (convection plus the counted radiant
+  term) is at or below zero, or the temperature is not finite, the rate is
+  zero: no dose, and no recovery. The physical *q* can be negative while
+  this *q* is positive: a layer cooler than the skin still leaves the
+  convective dose of hot air at the head
+  (`test_layer_regime_cool_layer_still_gives_convection` in
+  `tests/test_heat_layer_flux.py`).
 
 This is the "head in smoke" regime of spec 016 (`--heat-regime smoke`, the
 default): ε applies to the gas at the head, and no external radiation is
@@ -165,6 +174,59 @@ defaults are assumptions (`HEAT_FLUX_ASSUMED_PARAMETERS`):
 Invalid values (ε outside [0, 1], h < 0, or non-finite) are rejected.
 `--heat-fed-method` without `--enable-heat-fed` logs a warning and leaves
 the heat dose off.
+
+### Where the radiant threshold acts
+
+With the defaults above, smoke at the head below about 285 °C gives no
+radiant dose: its radiant term stays under 2.5 kW/m², and the dose is
+convection alone. What follows from that:
+
+- **Longer times than the convective default.** At 200 °C the time to
+  heat FED = 1 is 21.6 min, against 6.7 min with the radiant term always
+  counted and 2.0 min for ISO Eq. (9), the convective default. The
+  endpoints differ (fatal *D* = 16.7 here, prevention of escape for
+  Eq. (9)), but total flux at its defaults is not the more conservative
+  choice: from 100 to 400 °C it gives the longer time throughout.
+- **A step in the rate.** Where the radiant term reaches 2.5 kW/m² it
+  enters the dose at once: near 285 °C the time to FED = 1 falls from
+  12.4 to 2.9 min.
+- **ε matters only above the threshold.** At \(T_s\) = 35 °C the radiant
+  term reaches 2.5 kW/m² at about 207 °C for ε = 1 (or a black layer,
+  \(\varphi\,\varepsilon_L\) = 1), 285 °C for ε = 0.5 (or \(\varphi\,\varepsilon_L\) = 0.5) and 698 °C for
+  ε = 0.05. Below that temperature ε does not change the dose.
+
+![Two panels. Left: the radiant term of the heat flux against source temperature for emissivity 1, 0.5 and 0.05, with the band below 2.5 kW/m² shaded as counted as zero; the curves reach 2.5 kW/m² at 207, 285 and 698 °C. Right, log scale: time to heat FED = 1 against gas temperature from 100 to 400 °C at the total-flux defaults. The solid curve with the threshold lies above the dashed curve without it until 285 °C, where it drops from 12.4 to 2.9 min onto the dashed curve; at 200 °C it gives 21.6 min against 6.7 min. A dotted grey curve, ISO Eq. (9), lies below both](/images/concepts/heat_radiant_threshold.png)
+
+*(a) The radiant term of Eq. 63.49 at \(T_s\) = 35 °C; below 2.5 kW/m²
+(shaded) it counts as zero. (b) Time to heat FED = 1 in a uniform room at
+the total-flux defaults (ε 0.5, h 5, fatal D 16.7): solid with the
+threshold, as the code runs; dashed with the radiant term always counted;
+dotted, ISO Eq. (9), a different endpoint. Computed through
+`DefaultHeatFedModel`. Script: `scripts/figures/heat_radiant_threshold.py`.*
+
+{{< details title="Why the threshold sits on the radiant term, and on net flux" closed="true" >}}
+
+- **Follow ISO.** ISO 13571:2012 sets the radiant contribution to zero
+  where the radiant flux to the skin is below 2.5 kW/m² (§8.2, §8.4). The
+  code follows it by maintainer decision. Before, total flux had no
+  threshold; that followed Purser's spreadsheet and had no published source.
+- **Radiant term only.** ISO applies the limit to the radiant term, not to
+  convection. With the threshold on the total *q*, clear air (ε = 0.05,
+  h = 8) would give no dose below about 310 °C, where the hot-air data give
+  minutes. Convection therefore counts at every level.
+- **Net or excess flux, not incident.** ISO calls 2.5 kW/m² an incident
+  flux level. The code compares it with the radiant term as it has it: a
+  net σT⁴ difference for the gas and layer terms, the excess
+  *f* (*U* − 4σ\(T_s^4\)) for `INTEGRATED INTENSITY`. At the Handbook's
+  200 °C / 2.5 kW/m² anchor (black layer, φ = 1) the net term is
+  2.33 kW/m², about 18 % below the incident 2.84 kW/m², so that anchor
+  adds no radiant dose. The threshold is therefore reached at a hotter
+  source than on incident flux. This is recorded in spec 016, not
+  corrected, and listed in [Assumptions](#assumptions-unsourced-values).
+- **A fixed constant.** 2.5 kW/m² is `ISO_RADIANT_THRESHOLD_KW_M2`
+  (`fed.py`), applied by `counted_radiant_flux_kw_m2`, with no flag.
+
+{{< /details >}}
 
 ### Hot layer
 
@@ -197,17 +259,21 @@ with \(T_L\) the temperature of a second `TEMPERATURE` slice at
   not the incident flux of the radiant tolerance data. At the 200 °C anchor
   (black layer, φ = 1, \(T_s\) = 35 °C) it is 2.33 kW/m² net against
   2.84 kW/m² incident, both within 15 % of the Handbook's 2.5 kW/m².
+  2.33 is below the 2.5 kW/m² radiant threshold, so a layer at the anchor
+  adds no radiant dose; a black layer with φ = 1 counts from about
+  207 °C ([Where the radiant threshold acts](#where-the-radiant-threshold-acts)).
 - **The regime is a user choice** for the whole run. No source gives a rule
   to decide it per agent
   ([#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
-- A layer cooler than the skin gives a negative \(q_{\mathrm{ext}}\); the
-  rate is zero only when the total \(q \le 0\). A non-finite layer
+- A layer cooler than the skin gives a negative \(q_{\mathrm{ext}}\),
+  which is below 2.5 kW/m² and counts as zero in the dose; it appears only
+  in `heat_flux_kw_m2`. A non-finite layer
   temperature gives no dose. Where the layer slice has no value, the layer
   temperature falls back to 20 °C, as the temperature at the head does.
   This fallback is an unsourced assumption. Below the skin temperature it
   makes \(q_{\mathrm{ext}}\) slightly negative (cooling), about
-  −0.09 φ ε_L kW/m² at \(T_s\) = 35 °C, so it lowers the total flux
-  a little where the layer slice has no coverage.
+  −0.09 φ ε_L kW/m² at \(T_s\) = 35 °C; that counts as zero in the dose,
+  so the fallback changes only `heat_flux_kw_m2`, not the dose.
 
 φ, \(\varepsilon_L\) and the layer height have no sourced values and no
 defaults; the layer regime without any of them is rejected, as are a
@@ -262,10 +328,12 @@ incident *f U*), and the rate is \(q^{1.33}/D\) as above.
   *q*\(_{\mathrm{src}}\). The Handbook calls Eq. 63.49 "the total incident
   flux to the skin" (p. 2383), and spec 016 takes the radiant tolerance data
   as incident, so this basis is a choice, not a reading of the sources.
-- **No negative dose.** Where *q* ≤ 0 the skin is cooled on balance and the
-  dose rate is 0; there is no recovery. A 20 °C room with no fire
-  (*U* = 1.68 kW/m² < 4σ\(T_s^4\) = 2.04 kW/m²) gives *q* < 0 for every *f*,
-  so no dose.
+- **No negative dose.** Where the *q* that enters the dose (convection plus
+  the counted radiant term) is at or below zero, the rate is 0; there is no
+  recovery. An excess below zero (*U* < 4σ\(T_s^4\)) counts as zero, so hot
+  air at the head still gives its convective dose while `heat_flux_kw_m2`
+  is negative. A 20 °C room with no fire (*U* = 1.68 kW/m² <
+  4σ\(T_s^4\) = 2.04 kW/m², air below \(T_s\)) gives no dose for any *f*.
 - **The ε term is not added.** *U* already contains the emission of the gas
   at the head, so ε σ (\(T_g^4 - T_s^4\)) would count it twice;
   `--heat-emissivity` is ignored with this source.
@@ -304,8 +372,9 @@ incident *f U*), and the rate is \(q^{1.33}/D\) as above.
 - **Ambient background.** *U* is not zero in a cold room (1.68 kW/m² at
   20 °C), but the excess basis subtracts the field at skin temperature, so
   surroundings at or below \(T_s\) give no dose for any *f*. Surroundings
-  warmer than the skin but with no fire (a warm day, a heated room) do give
-  a small dose with no 2.5 kW/m² threshold, larger for larger *f*.
+  warmer than the skin but with no fire (a warm day, a heated room) give a
+  radiant dose only where \(f\,(U - 4\sigma T_s^4)\) reaches 2.5 kW/m²;
+  below that only convection counts.
 - **[0.25, 1] is not a bound for every orientation.** In the FDS radiometer
   data of [#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224),
   below a hot layer the plate facing up gets about 0.41 *U*, but a plate
@@ -374,6 +443,10 @@ the same way and set the same `incapacitated` flag; only
 | `heat_u_factor` | none, required with `integrated-intensity` | `--heat-u-factor` |
 | `heat_regime` | `"smoke"` | `--heat-regime` |
 
+The 2.5 kW/m² radiant threshold of [Total flux](#total-flux) is not a heat
+threshold in this sense: it decides which radiant flux enters the dose, is
+a fixed constant and has no flag.
+
 `--disable-tenability` turns off the stop; the dose is still computed.
 
 ## Output
@@ -390,8 +463,8 @@ endpoint; `heat_endpoint` says which one.
 
 With `--heat-fed-method total-flux` the FED history also carries
 `heat_flux_kw_m2` (*q*), and the manifest records `heat_fed_method` and
-`heat_flux_parameters` (ε, h, \(T_s\), *D*, and the names of the assumed
-parameters). With `--heat-regime layer`, `heat_flux_kw_m2` includes
+`heat_flux_parameters` (ε, h, \(T_s\), *D*, `radiant_threshold_kw_m2`,
+and the names of the assumed parameters). With `--heat-regime layer`, `heat_flux_kw_m2` includes
 \(q_{\mathrm{ext}}\), the FED history also carries
 `heat_layer_temperature_c` (\(T_L\)), and `heat_flux_parameters` also
 records `regime`, `view_factor`, `layer_emissivity` and `layer_height_m`;
@@ -400,6 +473,11 @@ it still records ε, which has no effect in that regime. With
 `heat_integrated_intensity_kw_m2` (*U*), and `heat_flux_parameters` adds
 `radiant_source`, `u_factor` and `radiant_flux` (`excess`); ε is then not
 listed as assumed, as it is not used.
+`heat_flux_kw_m2` is the physical *q*, before the radiant threshold. Where
+the radiant term is below 2.5 kW/m², `heat_fed_rate_per_min` is therefore
+not `heat_flux_kw_m2`^1.33/*D*: it is the convective part alone raised to
+1.33, divided by *D* (zero where the head is at or below the skin
+temperature).
 With an endpoint, `heat_outside_validity` still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
 63.45–63.47, not to the flux law.
@@ -439,9 +517,11 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   not taken from FDS's `ABSORPTION COEFFICIENT`
   ([#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274)).
 - **Regime selection.** The regime is one user choice for the whole run.
-  In the smoke regime the default ε = 0.5 treats every head as in smoke,
-  which overestimates the dose in clear hot air; set `--heat-emissivity 0.05`
-  for clear air. In the layer regime an agent that walks into the smoke
+  In the smoke regime the default ε = 0.5 treats every head as in smoke.
+  Above about 285 °C that overestimates the dose in clear hot air; set
+  `--heat-emissivity 0.05` for clear air. Below about 285 °C the radiant
+  term is under the 2.5 kW/m² threshold for either value, and ε does not
+  change the dose. In the layer regime an agent that walks into the smoke
   still gets the layer formula. How to decide the regime per agent is open
   (spec 016, open question 4;
   [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
@@ -463,7 +543,9 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
   flagged either, although Eq. 63.44 rests on the same data (p. 2382); ISO
   states no temperature range for Eqs. (9) and (10).
-- **Web GUI.** The GUI offers `--heat-clothing` but not `--heat-endpoint`,
+- **Web GUI.** The GUI offers `--heat-clothing` and `--heat-fed-threshold`,
+  and rejects a value outside a flag's choices (such as `Clothed`) when the
+  form is submitted. It does not offer `--heat-endpoint`,
   `--heat-fed-method`, `--heat-regime` or the layer options,
   `--heat-radiant-source` or `--heat-u-factor`
   ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
@@ -496,7 +578,15 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
   The total-flux method is checked against hand formulas of Eqs. 63.49 and
   63.43, the radiant rows of Table 63.20 and the convection table of spec 016,
-  in unit tests and coupled corridor runs. The layer regime is checked
+  in unit tests and coupled corridor runs. The radiant threshold is checked
+  in `tests/test_heat_radiant_threshold.py` for each radiant source (2.4
+  drops, 2.5 counts, a negative term counts as zero, convection unchanged,
+  `heat_flux_kw_m2` physical) and in the coupled cases of
+  `tests/verification/test_heat_total_flux_coupled.py`: dense smoke at
+  300 °C (tolerance, ε 0.9, *h* 8) crosses at 5.8 s, clear air at 100 °C
+  (tolerance, ε 0.05, *h* 8) at 190 s on convection alone, and smoke at
+  200 °C (fatal, ε 0.5, *h* 8) has a radiant term of 1.17 kW/m², below the
+  threshold. The layer regime is checked
   against hand formulas and the 200 °C / 2.5 kW/m² anchor (p. 2382), with
   synthetic temperature fields; its FDS case is
   [#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224).
@@ -511,8 +601,8 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
 ## Relation to ISO 13571:2012
 
 ISO 13571:2012 clause 8 ([Fundamentals](/fundamentals/heat.md#iso-135712012-clause-8))
-has both convective laws in common with the code and none of its other
-options:
+has both convective laws and the 2.5 kW/m² radiant threshold in common with
+the code, and none of its other options:
 
 | Option | ISO 13571:2012 counterpart |
 |---|---|
@@ -520,7 +610,8 @@ options:
 | `--heat-clothing unclothed` (Eq. 63.44) | Eq. (10), §8.3.2: same constants, for unclothed or lightly clothed subjects, uncertainty ±25 % |
 | `--heat-endpoint tolerance`, `injury`, `fatal` (Eqs. 63.45–63.47) | None |
 | `--heat-fed-method total-flux` (Eqs. 63.49 and 63.43, dose *D*) | None: ISO has no total-flux form, no ε, h or \(T_s\), and no radiant dose |
-| Radiant term, any regime or source | None as coded. ISO's radiant laws are Eqs. (7) (burns) and (8) (pain), \(a\,q^{-b}\) with other exponents, with *q* defined only as the radiant heat flux, and the radiant term set to zero where the flux to the skin is below the 2.5 kW/m² limit, which ISO calls an incident flux level (§8.2, §8.4); the code has no threshold |
+| Radiant law, any regime or source | None: ISO's radiant laws are Eqs. (7) (burns) and (8) (pain), \(a\,q^{-b}\) with other exponents and *q* defined only as the radiant heat flux; the code does not use them |
+| Radiant term counted as zero below 2.5 kW/m² | Adopted from §8.2, §8.4, where 2.5 kW/m² is an incident flux level; the code compares it with the net or excess radiant term, not the incident flux (spec 016) |
 | Heat FED kept apart from the gas FED | Consistent: ISO treats heat as a component of its own (§4.1, §4.6 a) |
 | Heat threshold = `fed_threshold` (default) | Our reading of §5.4 (one threshold for FED and FEC in an estimation) with §8.5 (heat time found in the same manner); ISO does not name the heat FED in §5.4 |
 | `--heat-fed-threshold`, separate from the gas threshold | A departure from §5.4; logged and recorded in the manifest |
@@ -540,9 +631,10 @@ tolerance.
 |---|---|---|---|---|---|
 | Convective coefficient h | 5 W/(m²·K) | `--heat-convective-coefficient` / `convective_coefficient` (`DEFAULT_HEAT_CONVECTIVE_COEFFICIENT`) | Total-flux *q*, every regime and radiant source | Low end of "approximately 5–8 for slow-moving air" (p. 2384, printed without a unit); the value of the spec 016 convection check | h measured for a walking, clothed person in hot air or smoke |
 | Skin temperature \(T_s\) | 35 °C, fixed | `--heat-skin-temperature` / `skin_temperature_celsius` (`DEFAULT_HEAT_SKIN_TEMPERATURE_C`) | Total-flux convective and radiant terms, and 4σ\(T_s^4\) of the excess `INTEGRATED INTENSITY` term | The draft's value; the Handbook gives none for Eq. 63.49 | Skin temperature data under heat exposure, including its rise (spec 016, open question 2) |
-| Gas emissivity ε | 0.5 | `--heat-emissivity` / `emissivity` (`DEFAULT_HEAT_EMISSIVITY`) | Total-flux gas term at the head (`--heat-regime smoke`, `--heat-radiant-source gas`) | "perhaps 0.5 for smoke" (p. 2384); treats every head as in smoke | ε per agent from FDS absorption and path length ([#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274), [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)) |
-| Temperature fallback | 20 °C | none (`HeatFedInputs.temperature_celsius`) | Temperature at the head outside the `TEMPERATURE` slice; layer temperature where the layer slice has no value ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)) | A room ambient; below \(T_s\) it gives a small negative layer flux | The case's ambient `TMPA` |
+| Gas emissivity ε | 0.5 | `--heat-emissivity` / `emissivity` (`DEFAULT_HEAT_EMISSIVITY`) | Total-flux gas term at the head (`--heat-regime smoke`, `--heat-radiant-source gas`) | "perhaps 0.5 for smoke" (p. 2384); treats every head as in smoke. Below about 285 °C it does not change the dose (radiant threshold) | ε per agent from FDS absorption and path length ([#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274), [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)) |
+| Temperature fallback | 20 °C | none (`HeatFedInputs.temperature_celsius`) | Temperature at the head outside the `TEMPERATURE` slice; layer temperature where the layer slice has no value ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)) | A room ambient; below \(T_s\) it gives a small negative layer flux, which counts as zero in the dose and shows only in `heat_flux_kw_m2` | The case's ambient `TMPA` |
 | Convective validity limit | 205 °C | none (`HEAT_CONVECTIVE_VALIDITY_MAX_C`) | `heat_outside_validity` flag with `--heat-endpoint` (Eqs. 63.45–63.47, [#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)); does not clip the rate | Highest dry-air tolerance point of Table 63.17 (Veghte, 4 min, p. 2375); the Handbook gives no upper temperature | The temperature range of the data Purser fitted Eqs. 63.45–63.47 to |
+| Radiant threshold basis | 2.5 kW/m² on the net or excess radiant term | none (`ISO_RADIANT_THRESHOLD_KW_M2`, fixed) | Total-flux radiant term, every regime and source | ISO 13571:2012 §8.2, §8.4 give 2.5 kW/m² as an incident flux level; the code compares it with the radiant term it computes, about 18 % below incident at the 200 °C anchor (2.33 against 2.84 kW/m², spec 016) | Whether the threshold, and the radiant tolerance data, hold for incident flux or for net flux at the skin |
 | U factor *f* | in [0.25, 1], no default | `--heat-u-factor` / `u_factor` (`HEAT_U_FACTOR_RANGE`) | `--heat-radiant-source integrated-intensity` ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)) | Geometric bounds: *U*/4 for a sphere or an isotropic field, *U* for one small source face-on; the #224 data put some orientations below 0.25 | Gauge devices per orientation ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
 | Flux basis of *f U* | excess over a skin-temperature isotropic field, *f* (*U* − 4σ\(T_s^4\)) | none (fixed) | `--heat-radiant-source integrated-intensity` | Maintainer decision: surroundings at skin temperature give no flux for any *f*; at *f* = 1/4 equals Eq. 63.49 with ε = 1 and the FDS skin gauge (FDS UG Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383) | Whether the radiant tolerance data (Table 63.19) hold for incident flux or for flux above the skin's own exchange |
 | *U* with the layer regime | *U* supplies the radiant term; layer term not added | `--heat-regime layer` with `--heat-radiant-source integrated-intensity` | Total-flux *q* when both are set | *U* already contains the layer's emission and is the better-resolved input | Gauge devices, which replace both ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |

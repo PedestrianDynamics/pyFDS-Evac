@@ -272,7 +272,9 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 
 Heat uses the convective ISO 13571:2012 Eq. (9), or Eq. (10) = Eq. 63.44 with `--heat-clothing unclothed` (`fed.py`, `_heat_fed_rate_per_minute`), unless `--heat-endpoint`
 selects Eq. 63.45, 63.46 or 63.47, or `--heat-fed-method total-flux` the
-flux law of Eqs. 63.49 and 63.43 ([Heat](/models/heat.md)). The log-normal σ of both
+flux law of Eqs. 63.49 and 63.43, with the radiant term counted from
+2.5 kW/m² (ISO 13571:2012 §8.2, §8.4;
+[Heat › Where the radiant threshold acts](/models/heat.md#where-the-radiant-threshold-acts)). The log-normal σ of both
 thresholds (`fed.py`, `TenabilityConfig.susceptibility_sigma`, `TenabilityConfig.heat_susceptibility_sigma`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)

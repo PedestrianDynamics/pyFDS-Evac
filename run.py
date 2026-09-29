@@ -274,7 +274,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "the ISO law of --heat-clothing or the law of --heat-endpoint. "
         "total-flux: heat flux to the "
         "skin from Eq. 63.49 (both terms in W/m2, divided by 1000 together), "
-        "rate q^1.33/D (Eq. 63.43) with no 2.5 kW/m2 threshold; D of "
+        "rate q^1.33/D (Eq. 63.43), the radiant term (net or excess, not "
+        "incident) counted as zero below 2.5 kW/m2 (ISO 13571:2012 8.2, 8.4); "
+        "D of "
         "--heat-endpoint, fatal (16.7) without it",
     )
     parser.add_argument(

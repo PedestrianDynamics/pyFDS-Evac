@@ -24,7 +24,10 @@ Assumptions (not sourced; each is a named argument below):
   is (R / r)**2 at distance r >= R;
 - skin surface at 35 C, the draft's value (spec 016, open question 2);
 - the air at the head is at skin temperature, so there is no convective term;
-- no 2.5 kW/m2 threshold (spec 016: dose accrues at all fluxes).
+- the reference values below take no 2.5 kW/m2 threshold; the code
+  follows ISO 13571:2012 §8.2, §8.4 (maintainer decision) and counts the
+  radiant flux as zero below 2.5 kW/m2, whose values are in
+  ``test_iso_threshold_one_second_updates``.
 
 Eq. 63.48 holds only while exposure is steady or rising; past the closest
 approach it falls, so this is a reference for the summing, not a claim that
@@ -148,3 +151,19 @@ def test_one_second_updates_bracket_the_continuum():
 def test_single_pass_is_far_below_the_fatal_dose():
     """One pass at 0.5 m gives about 1 % of the fatal dose."""
     assert _step_sum_fed(step_s=UPDATE_INTERVAL_S, phase=0.0) < 0.02
+
+
+def test_iso_threshold_one_second_updates():
+    """ISO 13571:2012 §8.2, §8.4: radiant flux below 2.5 kW/m2 counts zero.
+
+    q(x) = q0 R^2 / (d^2 + x^2) >= 2.5 only for |x| <= 0.586 m. With 1 s
+    updates at x = 0 only the peak (5.938 kW/m2) counts; with updates at
+    x = +-0.5 m both count (1.4845 / 0.5 = 2.969 kW/m2), the rest not.
+    """
+    q0_r2 = _surface_flux_kw_m2() * FLAME_RADIUS_M**2
+    x_limit = math.sqrt(q0_r2 / 2.5 - CLOSEST_APPROACH_M**2)
+    assert x_limit == pytest.approx(0.586, abs=0.001)
+    at_peak = 5.938**EXPONENT / D_FATAL / 60.0
+    straddling = 2 * 2.969**EXPONENT / D_FATAL / 60.0
+    assert at_peak == pytest.approx(0.01067, abs=2e-5)
+    assert straddling == pytest.approx(0.00848, abs=2e-5)

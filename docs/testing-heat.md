@@ -272,7 +272,11 @@ The paired outputs are in
   `tests/test_heat_integrated_intensity.py` and
   `tests/verification/test_heat_integrated_intensity_coupled.py`
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
-  Below the threshold heat changes neither speed nor route
+  The 2.5 kW/m² radiant threshold of total flux is checked in
+  `tests/test_heat_radiant_threshold.py`. The layer anchor (2.33 kW/m² net
+  for a black layer at 200 °C) is a check of the flux, not of the dose: it
+  lies below that threshold and adds no radiant dose.
+  Below the heat threshold (`--fed-threshold`, 1 by default) heat changes neither speed nor route
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
 - A near-uniform field cannot show whether the field is sampled at the
   agent's *current* position; that needs a gradient
