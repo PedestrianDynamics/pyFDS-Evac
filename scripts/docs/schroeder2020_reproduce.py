@@ -33,6 +33,7 @@ import argparse
 import math
 import warnings
 import xml.etree.ElementTree as ET
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -51,7 +52,10 @@ RULE_TEXT = {
     "forall": "∀ all nodes in the cell",
     "centre": "field interpolated at the cell centre",
 }
-EXPECTED = {"min": -29.0, "n_le0": 54, "c_binned": -310.0}  # study plan Sect. 1
+# Our own earlier reproduction of the released DIFF (study plan Sect. 1). The
+# paper prints none of these in its text; they are consistent, to read-off
+# precision, with its Figs. 5, 7 and 8 (60 kW, N = 100).
+EXPECTED = {"min": -29.0, "n_le0": 54, "c_binned": -310.0}
 
 
 # --- Reading the release -------------------------------------------------
@@ -231,8 +235,9 @@ def states(aset, rset):
     censored = np.isinf(aset)
     exact = visited & ~censored
     diff = np.where(exact, aset - rset, np.nan)
-    # No seed ends with agents inside (checked in main), so no RSET is
-    # censored: the "<= bound" and "undetermined" states stay empty here.
+    # Every seed is empty before T_END (asserted in main), so no RSET is
+    # censored: the "<= bound" and "undetermined" states are empty here.
+    assert np.nanmax(rset) < T_END, "RSET reaches T_END: censored states needed"
     return {
         "pass": int((diff >= 0).sum()),
         "fail": int((diff < 0).sum()),
@@ -301,7 +306,12 @@ def stage1(data, slices, seeds):
     print(f"  C, 20 s bins, centres -10..-110  {m['c_binned']:.1f} m²s")
     print(f"  C, bin-free (sum DIFF<0 x 0.36)  {m['c_free']:.1f} m²s")
     ok = all(math.isclose(m[k], v, abs_tol=0.5) for k, v in EXPECTED.items())
-    print(f"  matches -29 s / 54 cells / -310 m²s: {'YES' if ok else 'NO'}")
+    print(
+        f"  matches plan Sect. 1 reproduction of the released DIFF"
+        f" (-29 s / 54 cells / -310 m²s): {'YES' if ok else 'NO'}"
+        "\n  The paper prints none of these in its text; they agree with its"
+        "\n  Figs. 5, 7 and 8 (60 kW, N = 100) to read-off precision only."
+    )
 
     released = np.loadtxt(data / "0_ASET" / "aset_map.txt")
     rebuilt = filled(aset_map(slices, "nearest", 50, 17))
@@ -378,8 +388,17 @@ def stage2(data, slices, seeds, released):
     print("\n  From the released DIFF to the corrected one, one change per row:")
     print(header())
     nearest = asets["nearest"]
+    ref = np.loadtxt(data / "1_RSET" / "RSET_map_all_seeds.txt")
     rows = [
         ("0 released DIFF, DIFF <= 0 fails", {**released, "n_fail": released["n_le0"]}),
+        (
+            "A release RSET, ASET rebuilt at its points",
+            _release_grid_measures(filled(_release_rset_grid_aset(slices)), ref),
+        ),
+        (
+            "B release RSET, aset_map.txt padded 18 x 51",
+            _release_grid_measures(_padded_release_aset(data), ref),
+        ),
         (
             "1 shared grid, nearest rule, t_end fill",
             corrected_measures(filled(nearest), rset, zero_fails=True),
@@ -398,22 +417,41 @@ def stage2(data, slices, seeds, released):
     for label, m in rows:
         print(line(label, m))
     print(
-        "\n  'fail' counts DIFF <= 0 in rows 0-1 and DIFF < 0 from row 2 on. 'C free' is the"
+        "\n  'fail' counts DIFF <= 0 in rows 0, A, B, 1 and DIFF < 0 from row 2 on. 'C free' is the"
         "\n  sum of the failing DIFF times 0.36 m²; 'C 20 s' bins them at 20 s (release bins)."
-        "\n  0 -> 1: the half-cell offset (release RSET centred on 0.6 k, ASET on 0.6 k + 0.3),"
-        "\n          window vs PedPy bin, and the ASET_map.txt missing from the release (stage 1)."
+        "\n  0 -> A/B: only the ASET source changes (release grid, RSET and window kept):"
+        "\n          the ASET_map.txt behind row 0 is not in the release (stage 1)."
+        "\n  A -> 1: the half-cell offset (release RSET centred on 0.6 k, ASET on 0.6 k + 0.3),"
+        "\n          and window vs PedPy bin."
         "\n  1 -> 2: cells with DIFF = 0 pass."
         "\n  2 -> 3: t_end fill removed; censored ASET cells become '>= bound'. No change here:"
         "\n          every RSET is below 120 s, so those cells passed with the fill too."
         "\n  3 -> 4: one node per cell replaced by the block maximum: earlier ASET, more fails."
     )
+    by = dict(rows)
+    row1 = by["1 shared grid, nearest rule, t_end fill"]
     print(
-        f"  1c tolerance (row 1 vs row 0; min DIFF +-10 s, area +-10 %): "
-        f"{_tolerance(rows[1][1], rows[0][1])}"
-        "\n     Expected: row 0 rests on an ASET map that is not in the release (stage 1)."
+        "  1c tolerance (min DIFF +-10 s, area +-10 %):"
+        f"\n     row 1 vs row 0: {_tolerance(row1, rows[0][1])}"
+        "\n       not rebuildable: row 0 rests on an ASET map not in the release."
+        f"\n     row 1 vs row A: {_tolerance(row1, rows[1][1])}"
+        "\n       our own changes only (grid, window vs bin, half-cell offset)."
     )
-    print(f"\n  Cell states, rule exists, p{PERCENTILE}: {rows[4][1]['states']}")
-    return asets, rset, (nx_cells, ny_cells)
+    states_exists = by["4 + cell rule exists (plan default)"]["states"]
+    print(f"\n  Cell states, rule exists, p{PERCENTILE}: {states_exists}")
+    return asets, rset, (nx_cells, ny_cells), _in_room(area, x_edges, y_edges)
+
+
+def _release_grid_measures(aset, ref):
+    """Release counting on the release's 18 x 51 RSET grid (DIFF <= 0 fails)."""
+    m = release_measures(np.where(np.isfinite(ref), aset - ref, np.nan))
+    return {**m, "n_fail": m["n_le0"]}
+
+
+def _padded_release_aset(data):
+    """aset_map.txt (17 x 50) padded to 18 x 51 by repeating its last row/column."""
+    released = np.loadtxt(data / "0_ASET" / "aset_map.txt")
+    return np.pad(released, ((0, 1), (0, 1)), mode="edge")
 
 
 def _tolerance(m, ref):
@@ -424,24 +462,42 @@ def _tolerance(m, ref):
     return f"{verdict} (min DIFF {d_min:+.0f} s, area {d_area:+.0%})"
 
 
-def table_rules(asets, rset):
+def _in_room(area, x_edges, y_edges):
+    """Cells (row 0 at y = 0) that lie entirely inside the room polygon."""
+    from shapely import box
+
+    room = area.polygon
+    return np.array(
+        [
+            [room.covers(box(x0, y0, x1, y1)) for x0, x1 in pairwise(x_edges)]
+            for y0, y1 in pairwise(y_edges)
+        ]
+    )
+
+
+def table_rules(asets, rset, inside):
     print("\nF3 - cell rule (shared grid, 10 s slices, p95 RSET)")
     print(
-        f"  {'rule':<8} {'never by 120 s':>14} {'> 80 s':>7} {'min':>6} {'n<0':>5} {'C free':>8}"
+        f"  {'rule':<8} {'never by 120 s':>14} {'> 80 s':>9} {'min':>6} {'n<0':>5} {'C free':>8}"
     )
-    total = asets["exists"].size
     for r in RULES:
         a = asets[r]
         m = corrected_measures(a, rset)
+        never = f"{int(np.isinf(a[inside]).sum())} ({int(np.isinf(a).sum())})"
+        late = f"{int((a[inside] > 80).sum())} ({int((a > 80).sum())})"
         print(
-            f"  {r:<8} {int(np.isinf(a).sum()):>14d} {int((a > 80).sum()):>7d}"
+            f"  {r:<8} {never:>14} {late:>9}"
             f" {m['min']:>6.0f} {m['n_fail']:>5d} {m['c_free']:>8.1f}   {RULE_TEXT[r]}"
         )
-    print(f"  counts are of all {total} grid cells; min/n<0/C over visited cells only.")
+    print(
+        f"  counts are of the {int(inside.sum())} cells entirely inside the room; in brackets"
+        f"\n  of all {inside.size} grid cells, with PedPy's extra column and the top row that"
+        "\n  lies partly outside (PedestrianDynamics/PedPy#581). min/n<0/C over visited cells."
+    )
     print(
         "  '> 80 s' includes 'never'. The paper (p. 4) says every cell is exceeded by 80 s."
-        "\n  Nodes on a cell edge belong to both cells. On the release's 17 x 50 grid,"
-        "\n  exists / forall give 3 / 77 never-exceeded cells with closed and 4 / 50 with"
+        "\n  Nodes on a cell edge belong to both cells. On the release's 17 x 50 grid"
+        "\n  (all cells), exists / forall give 3 / 77 never-exceeded cells with closed and 4 / 50 with"
         "\n  half-open cells; an earlier estimate of 5 / 62 is not reproduced by either."
     )
 
@@ -491,6 +547,7 @@ def main():
     slices = read_slices(data)
     seeds = read_seeds(data)
     last = {s: int(traj.frame.max()) / rate for s, (rate, traj) in seeds.items()}
+    assert max(last.values()) < T_END, "a seed is not empty before T_END"
     print(
         f"Release: {len(slices)} extinction slices {min(slices):.0f}-{max(slices):.0f} s,"
         f" {len(seeds)} seeds, last agent seen at {min(last.values()):.0f}-{max(last.values()):.0f} s"
@@ -498,8 +555,8 @@ def main():
         " dt <= w / v_max = 0.5 s.\n"
     )
     released = stage1(data, slices, seeds)
-    asets, rset, shape = stage2(data, slices, seeds, released)
-    table_rules(asets, rset)
+    asets, rset, shape, inside = stage2(data, slices, seeds, released)
+    table_rules(asets, rset, inside)
     table_dt(slices, rset, shape)
 
 
