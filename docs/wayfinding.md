@@ -36,7 +36,7 @@ After that, its map grows only through legible signs, or, with
 A node is a place. A sign tells someone standing elsewhere that the place
 exists. Every exit, checkpoint and waypoint therefore carries a sign
 descriptor \(\{x, y, \alpha_s, C\}\), authored or synthesised
-(`visibility.py:34–73`).
+(`visibility.py`, `_default_sign`, `extract_sign_descriptors`).
 
 pyFDS-Evac does not compute legibility itself. It hands the descriptors to
 [fdsvismap](https://github.com/FireDynamics/fdsvismap), the implementation of
@@ -44,12 +44,12 @@ the waypoint method of Börger, Belt and Arnold (2024). fdsvismap precomputes,
 for every sign, grid cell and stored time, whether the sign is legible there.
 The rule, with its view-angle, obstruction and extinction factors, is on
 [Models › Wayfinding §1](/models/wayfinding.md#1-the-sign-legibility-test).
-During the run the model only looks the answer up (`visibility.py:531–543`).
+During the run the model only looks the answer up (`visibility.py`, `VisibilityModel.node_is_visible`).
 A better visibility model in fdsvismap, or a *C* measured for a real sign,
 therefore reaches the evacuation model without a change to the routing code.
 
 *C* is set per sign. The code has one default, *C* = 3, for authored and
-synthesised signs alike (`visibility.py:58`, `:94`).
+synthesised signs alike (`visibility.py`, `_default_sign`, `_build_vismap`, `VisibilityModel.clear_air`).
 
 > **Talk vs code.** The speaker notes say *C* defaults "to Jin's 3 for
 > reflective and 8 for lit signs". The code has no default for lit signs; a
@@ -60,9 +60,9 @@ synthesised signs alike (`visibility.py:58`, `:94`).
 > **Talk vs code.** The slide says legibility is "evaluated from the agent's
 > actual position, not the source node centroid". Periodic learning uses the
 > agent's stored position, which is the previous step's
-> (`scenario.py:2240–2253`, `:2423`). Perception at spawn uses the spawn
+> (`scenario.py`, `run_scenario`). Perception at spawn uses the spawn
 > node's routing point for all agents of that spawn area
-> (`cognitive_map.py:131–135`). The three sensing positions are tabulated on
+> (`cognitive_map.py`, `init_cognitive_map`). The three sensing positions are tabulated on
 > [Models › Wayfinding §2.2](/models/wayfinding.md#2-the-knowledge-contract).
 >
 > The reading distance \(V_{\max}\) and how to change it are on
@@ -157,16 +157,16 @@ structure.
 
 - **Perception.** `node_is_visible`, called by `expand_from_visibility` and
   `expand_on_arrival`. It is asked only about neighbours of one node
-  (`cognitive_map.py:177–186`, `:228–234`).
+  (`cognitive_map.py`, `expand_on_arrival`, `_expand_visible`).
 - **Knowledge.** `AgentCognitiveMap`: known nodes, known edges, visited nodes
-  (`cognitive_map.py:10–25`).
+  (`cognitive_map.py`, `AgentCognitiveMap`).
 - **Decision.** `rank_routes` on `cognitive_subgraph(map, graph)`
-  (`route_graph.py:1293–1297`), then the switching rules of
+  (`route_graph.py`, `rank_routes`), then the switching rules of
   `evaluate_and_reroute`. With no reachable known exit, exploration or the
-  patrol (`route_graph.py:1810–1872`).
+  patrol (`route_graph.py`, `_decide_explore`).
 - **The loop.** Moving changes the stored position that the next periodic
-  learning uses (`scenario.py:2238–2254`), and advancing along the path
-  triggers learning at the node left behind (`scenario.py:2508–2551`).
+  learning uses (`scenario.py`, `run_scenario`), and advancing along the path
+  triggers learning at the node left behind (`scenario.py`, `run_scenario`).
 
 The full contract, including the #91 exception, the difference between
 ranking and adoption, and the learning schedule, is on
@@ -233,11 +233,11 @@ that schematic the discovery agent learns the junction at spawn and both exits
 at the junction. Smoke then fills the right arm, and the agent heads for exit A.
 In the code, whether exit B is refused depends on its route's optical depth
 exceeding the gate budget. Legibility of B's sign plays no part in that
-(`route_graph.py:1366–1372`).
+(`route_graph.py`, `GatePolicy.feasibility`).
 
 <!-- FIGURE: cognitive_map (four panels + legend)
 Source: scripts/figures/cognitive_map.py. Schematic: the known sets, the
-smoke and the chosen exit are hard-coded (cognitive_map.py:66–99); nothing is
+smoke and the chosen exit are hard-coded (`scripts/figures/cognitive_map.py`, `PANELS`); nothing is
 computed. -->
 
 ![Four panels of a T-shaped corridor showing which nodes and edges one agent knows: at spawn, at the junction, with smoke in the right arm, and for a fully familiar agent](/images/wayfinding/cognitive_map.png)
@@ -253,13 +253,13 @@ A. (4) A fully familiar agent knows the whole graph at t = 0. Script:
 
 > **Talk vs code.** Panel 2 says "every neighbour whose sign is legible from the
 > new node". The code tests legibility from the agent's position when the
-> path advances (`scenario.py:2519–2520`).
+> path advances (`scenario.py`, `run_scenario`).
 >
 > **Talk vs code.** The slide says "Learned edges are bidirectional". That holds
 > only for edges learned by perception and arrival, and only where the graph
 > has the reverse edge. With automatic wiring, exits have no outgoing edges.
 > Paths learned from familiarity or `entrance` are forward only
-> (`cognitive_map.py:71–74`, `:139–152`).
+> (`cognitive_map.py`, `_learn_route_to`, `_learn_edge`).
 >
 > **Talk vs code.** The slide calls `full` "the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) default". It is
 > pyFDS-Evac's default. FDS+Evac's `KNOWN_DOOR` defaults to `.FALSE.`
@@ -275,7 +275,7 @@ The asset `assets/cognitive_map_memory` separates the two. A corridor has an
 end exit, legible from spawn, and a side exit whose sign, at \((4, 20)\)
 facing west, is legible from the centreline only inside a region. The asset
 builder's estimate, y ≈ 12.5–27.5 m, follows from the 30 m cap
-(`build_geometry.py:61`, `:78–95`). On the 0.25 m clear-air grid the model
+(`assets/cognitive_map_memory/build_geometry.py`, `MAX_VIS_M`, `legibility_window`). On the 0.25 m clear-air grid the model
 reads the sign from y = 12.3 to 27.8 m on the centreline (Figure 6); the
 difference comes from the rasterised sight line.
 
@@ -355,8 +355,8 @@ thing differs in the code, and until #174 a second one did:
 1. **The initial map.** A fully familiar agent knows the whole graph. A
    discovery agent explores: it takes the frontier with the lowest path cost
    from its position, learns as the path advances, and, with no frontier left,
-   patrols its known nodes (`cognitive_map.py:262–399`). Route history logs
-   `reason="explore"` and `reason="wander"` (`route_graph.py:1821`, `:1836`).
+   patrols its known nodes (`cognitive_map.py`, `nearest_frontier_target`, `wander_target`). Route history logs
+   `reason="explore"` and `reason="wander"` (`route_graph.py`, `_decide_explore`).
 2. **The ranked length of the first leg**
    ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
    by #174, now merged), measured as a straight line, even through walls, for
@@ -386,7 +386,7 @@ the following discovery egress times on main:
 | 0.025 m | 200.8 s |
 
 The fully familiar tier took 33.9 s. The code advises a cell smaller than the
-thinnest wall (`visibility.py:455–465`). The #168 investigation recommends at
+thinnest wall (`visibility.py`, `VisibilityModel.clear_air`). The #168 investigation recommends at
 most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
 continued change below that is not explained
 ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). Do not

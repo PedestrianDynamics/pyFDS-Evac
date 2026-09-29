@@ -264,7 +264,7 @@ queries ([docs/routing.md](routing.md), `route_graph.py`).
 
 At each reevaluation tick, per-edge costs are computed from current
 smoke and FED fields.  The weight depends on the cost model
-(`route_graph.py:1299-1310`):
+(`route_graph.py`, `GatePolicy.edge_weight`, `AdditivePolicy.edge_weight`):
 
 ```
 gate      edge_cost = k_avg * length_m + 1e-6 * length_m
@@ -355,8 +355,8 @@ on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11) | Same formula (`smoke_speed.py:234`) |
-| **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1544–1545) | Same values (`smoke_speed.py:95–96`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
+| **Speed formula** | `c(Ks) = 1 + beta * Ks / alpha` ([1] §3.4 Eq. 11) | Same formula (`smoke_speed.py`, `speed_factor_from_extinction`) |
+| **Default alpha/beta** | Frantzich–Nilsson values (evac.f90:1544–1545) | Same values (`smoke_speed.py`, `SmokeSpeedConfig.alpha`, `SmokeSpeedConfig.beta`); see the [smoke-speed model](/models/smoke-speed.md#parameters) |
 | **Minimum speed** | `SMOKE_MIN_SPEED_FACTOR` (default 0.1, evac.f90:2154) as a factor of *v*0, or `SMOKE_MIN_SPEED`, which the code treats as a speed in m/s (`SMOKE_MIN_SPEED/HR%SPEED`, :8516) although the guide calls it a factor ([1] §8.7 p. 81). The visibility-based cutoff (`SMOKE_MIN_SPEED_VISIBILITY`, :8529–8536) is marked obsolete in the source ("obsolote feature ... it is not used if default SMOKE_MIN_SPEED_VISIBILITY is given", :8529-8530) and is inactive by default: the default 0.0 is clamped to 0.01 m, so it would act only above K = 300 /m (:1528, :2160-2161) | Configurable `min_speed_factor` (default 0.1) |
 | **Smoke input** | Soot density from FDS mesh converted to extinction via `K = MASS_EXTINCTION_COEFF * SOOT_DENS * 1e-6` (evac.f90:8522–8523) | Extinction coefficient K read directly from FDS `SOOT EXTINCTION COEFFICIENT` slice via fdsreader |
 | **Sampling geometry** | Local value at agent position on the evacuation mesh, at `HUMAN_SMOKE_HEIGHT` above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61) | Local value at agent position: nearest value position of the extinction slice closest to `--smoke-slice-height` (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS's default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for `CELL_CENTERED=T` slices it is the nearest cell centre (see [FDS slice sampling](fds-sampling.md)). Gas FED is read from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)) |
@@ -444,7 +444,7 @@ three-gas subset: every optional species defaults to zero concentration in
 | **Incapacitation** | FED >= 1.0, agent stops (v0 = 0) ([1] §3.4 p31) | Agent stops (desired speed 0) and remains as a static obstacle. Threshold 1.0 for every agent by default, as FDS+Evac, or a per-agent log-normal threshold with median 1.0 in probabilistic mode. The convective heat FED is a separate running total; crossing either threshold incapacitates |
 | **Activity level** | Input accepted; no effect in 6.7.6, the dose is always light work (`evac.f90:16086–16088`) | Not supported ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)); the CO term uses the light-work coefficient ([FED model](/models/fed.md#coded-form)) |
 | **FED in routing** | Not used in exit selection cost by default (`FED_DOOR_CRIT < 0`); only used for incapacitation | A veto under both cost models; additionally a ranking term (`w_fed * FED_max`) under `"additive"` only, not under the default gate |
-| **Temperature/radiation** | Not implemented for agent effects ([1] §1.2 p11) | Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS `TEMPERATURE` slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in `--heat-fed-method total-flux` adds the radiation of the gas at the head (Eq. 63.49), or with `--heat-regime layer` that of a hot upper layer; radiant heat from a flame or hot surfaces is not modelled |
+| **Temperature/radiation** | Not implemented for agent effects ([1] §1.2 p11) | Convective heat FED (SFPE Handbook Eq. 63.44) from an FDS `TEMPERATURE` slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in `--heat-fed-method total-flux` adds the radiation of the gas at the head (Eq. 63.49), with `--heat-regime layer` that of a hot upper layer instead, or with `--heat-radiant-source integrated-intensity` the net f·U − σT_s⁴ from FDS `INTEGRATED INTENSITY` with a user factor f in [0.25, 1] |
 
 ---
 

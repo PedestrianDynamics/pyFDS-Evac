@@ -19,9 +19,23 @@ from pyfds_evac.core.fed import (
     HEAT_ENDPOINTS,
     HEAT_FED_METHODS,
     HEAT_FLUX_REGIMES,
+    HEAT_RADIANT_SOURCES,
+    HEAT_U_FACTOR_RANGE,
 )
 from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs
+
+
+def _u_factor(text: str) -> float:
+    """Parse --heat-u-factor: a finite number in [0.25, 1]."""
+    low, high = HEAT_U_FACTOR_RANGE
+    try:
+        value = float(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"not a number: {text!r}") from exc
+    if not low <= value <= high:  # also rejects nan
+        raise argparse.ArgumentTypeError(f"must be in [{low}, {high}], got {text}")
+    return value
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -275,6 +289,25 @@ def _build_parser() -> argparse.ArgumentParser:
         "by the Handbook for Eq. 63.49)",
     )
     parser.add_argument(
+        "--heat-radiant-source",
+        choices=HEAT_RADIANT_SOURCES,
+        default="gas",
+        help="Radiant term of --heat-fed-method total-flux. gas (default): "
+        "eps sigma (T_g^4 - T_s^4) of Eq. 63.49. integrated-intensity: the "
+        "net flux f*U - sigma T_s^4 from the FDS INTEGRATED INTENSITY slice at "
+        "the slice height, replacing the gas term; needs --heat-u-factor",
+    )
+    parser.add_argument(
+        "--heat-u-factor",
+        type=_u_factor,
+        default=None,
+        help="Factor f in [0.25, 1] for --heat-radiant-source "
+        "integrated-intensity: the incident radiant flux is f*U, from U/4 "
+        "(sphere, or a plate in isotropic radiation) to U (one small source "
+        "seen face-on); the dose uses the net f*U - sigma T_s^4. No default: "
+        "required with that source",
+    )
+    parser.add_argument(
         "--heat-regime",
         choices=HEAT_FLUX_REGIMES,
         default="smoke",
@@ -410,6 +443,8 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         fieldnames += ["heat_endpoint", "heat_outside_validity", "heat_humidity"]
     if rows and "heat_flux_kw_m2" in rows[0]:
         fieldnames.append("heat_flux_kw_m2")
+    if rows and "heat_integrated_intensity_kw_m2" in rows[0]:
+        fieldnames.append("heat_integrated_intensity_kw_m2")
     if rows and "heat_layer_temperature_c" in rows[0]:
         fieldnames.append("heat_layer_temperature_c")
     with destination.open("w", encoding="utf-8", newline="") as handle:

@@ -2189,6 +2189,7 @@ def run_scenario(
                                 heat_fed_model,
                                 float(heat_inputs.temperature_celsius),
                                 heat_inputs.layer_temperature_celsius,
+                                integrated_intensity_kw_m2=heat_inputs.integrated_intensity_kw_m2,
                             )
                         )
                     last_fed_update_time = current_time

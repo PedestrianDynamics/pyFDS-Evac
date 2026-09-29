@@ -18,7 +18,7 @@ nothing on this page affects a run.
 
 With `--enable-heat-fed` (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in
 the case, each agent accumulates a convective heat dose at
-`_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py:219`), SFPE Handbook 5th
+`_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py`), SFPE Handbook 5th
 ed. Eq. 63.44 (p. 2382), unless `--heat-endpoint` selects another law
 ([Endpoint](#endpoint)) or `--heat-fed-method total-flux` selects the flux
 law ([Total flux](#total-flux)):
@@ -120,7 +120,9 @@ $$
 
 This is the "head in smoke" regime of spec 016 (`--heat-regime smoke`, the
 default): ε applies to the gas at the head, and no external radiation is
-added. The "below a hot layer" regime is described in
+added unless the radiant term comes from `INTEGRATED INTENSITY`
+([Radiant flux from INTEGRATED INTENSITY](#radiant-flux-from-integrated-intensity)).
+The "below a hot layer" regime is described in
 [Hot layer](#hot-layer). ε, h and \(T_s\) have no sourced values; their
 defaults are assumptions (`HEAT_FLUX_ASSUMED_PARAMETERS`):
 
@@ -193,6 +195,93 @@ non-finite layer height and `--heat-regime layer` with
 `--heat-regime` without `--enable-heat-fed` logs a warning and leaves the
 heat dose off.
 
+### Radiant flux from INTEGRATED INTENSITY
+
+`--heat-radiant-source integrated-intensity` (opt-in, total-flux only;
+default `gas`, the ε term above) takes the radiant term from the FDS
+`INTEGRATED INTENSITY` slice at the slice height, the same height as the
+`TEMPERATURE` slice
+([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+FDS's *U* = ∫ *I* dΩ [kW/m²] (FDS User's Guide 6.10.1, Table 22.4, p. 403) is the
+radiation arriving from all directions, not the flux onto a surface. A
+surface sees one hemisphere, with rays weighted by cos θ, so its incident
+flux lies between *U*/4 (a sphere, or a plate in an isotropic field) and *U*
+(one small source seen face-on); *U*/2 holds for a plate facing a uniform
+layer (spec 016). The flux to the skin is
+
+$$
+q = f\,U - \frac{\sigma\,T_s^4}{1000} + \frac{h\,(T_g - T_s)}{1000}
+\quad [\mathrm{kW/m^2}],
+$$
+
+with \(T_s\) in K (`radiant_flux_from_integrated_intensity_kw_m2` for the
+incident *f U*), and the rate is \(q^{1.33}/D\) as above.
+
+- **The radiant term is net**, *f U* − σ\(T_s^4\), by maintainer decision
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)):
+  *f U* is absorbed by a black skin, σ\(T_s^4\) is its own emission, with
+  the same \(T_s\) as the convective term. This treats Eq. 63.49 as a net
+  exchange: with *U* = 4σ*T*⁴ of a black isotropic field at *T* and
+  *f* = 1/4 the term is σ(*T*⁴ − \(T_s^4\)), the radiant term of Eq. 63.49
+  with ε = 1. The Handbook calls Eq. 63.49 "the total incident flux to the
+  skin" (p. 2383), and spec 016 takes the radiant tolerance data as
+  incident, so the net basis is a choice, not a reading of the sources. It
+  is also what an FDS skin gauge reports (FDS User's Guide 6.10.1,
+  Eq. 22.35, p. 381).
+- **The ε term is not added.** *U* already contains the emission of the gas
+  at the head, so ε σ (\(T_g^4 - T_s^4\)) would count it twice;
+  `--heat-emissivity` is ignored with this source.
+- **`--heat-u-factor` *f* in [0.25, 1] has no default.** No single factor
+  holds (see Limits below), so *f* must be given with this source; without
+  it, or outside [0.25, 1], the run stops with an error. *f* is the user's
+  choice, not an assumption of the code.
+- A case with no `INTEGRATED INTENSITY` slice is an error, not a zero: the
+  run would otherwise read as a case without radiation. The source with the
+  convective method is an error too.
+- Both slices are read at one height. The `INTEGRATED INTENSITY` slice
+  nearest the slice height must lie at the z of the `TEMPERATURE` slice;
+  otherwise the run stops with an error, even when both lie within the
+  0.5 m that only warns for other slices.
+- Both slices must cover every agent. A point inside one slice and outside
+  the other stops the run with an error; a missing *U* is not read as zero.
+  Outside both (outside the FDS domain) *U* and *q* are NaN in the FED
+  history and the rate is zero; the run logs one warning the first time
+  this happens, not one per agent or update.
+- A non-finite *U* gives a zero rate, as for the gas term.
+- The source cannot be combined with `--heat-regime layer`: *U* already
+  contains the emission of the layer, so adding the layer term would count
+  it twice. The run stops with an error.
+
+### Limits of the INTEGRATED INTENSITY source
+
+- **Ambient background vanishes only near *f* = 1/4.** *U* is not zero in
+  a cold room: at 20 °C, *U* = 4σ*T*⁴ = 1.68 kW/m². With *f* = 1/4 the net
+  term is σ(*T*⁴ − \(T_s^4\)), zero at the skin temperature and negative
+  below it, so a room with no fire gives no dose. With larger *f* it does
+  not vanish: with h = 5 and \(T_s\) = 35 °C, a 20 °C room gives *q* > 0
+  for *f* above about 0.35, and with no 2.5 kW/m² threshold the fatal heat
+  FED = 1 is reached after about 15 min (*f* = 1) or 105 min (*f* = 0.5)
+  with no fire at all. *f* > 1/4 describes a directional source, which an
+  ambient field is not; one *f* for the whole run applies it to both.
+- **[0.25, 1] is not a bound for every orientation.** In the FDS radiometer
+  data of [#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224),
+  below a hot layer the plate facing up gets about 0.41 *U*, but a plate
+  facing down gets about 0.13 *U* and some facing sideways about 0.22 *U*,
+  less than *f* = 0.25 gives. Beside a burner, plates facing up or away
+  from the flame get about 0.12–0.14 *U*. One *f* serves one orientation.
+- **Gauge devices are the preferred input** (spec 016): FDS
+  `GAUGE HEAT FLUX GAS` devices give the flux to a skin-like plate from the
+  full radiation solution, with no factor (FDS User's Guide 6.10.1,
+  Eq. 22.35, p. 381). They are not read yet
+  ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
+- **Possible double count with convection.** The hot-air data behind
+  Eqs. 63.45–63.47 may already include radiation from the walls of the test
+  chambers. If so, adding *f U* to the convective term partly counts that
+  radiation twice. This is an open question
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+- **Falling exposure.** As for every summed dose, Eq. 63.48 holds only
+  while exposure is steady or rising.
+
 ## Incapacitation
 
 When the cumulative heat dose reaches the agent's heat threshold, the agent
@@ -230,6 +319,8 @@ the same way and set the same `incapacitated` flag; only
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
 | `heat_endpoint` | `None` (Eq. 63.44) | `--heat-endpoint` |
 | `heat_fed_method` | `"convective"` | `--heat-fed-method` |
+| `heat_radiant_source` | `"gas"` | `--heat-radiant-source` |
+| `heat_u_factor` | none, required with `integrated-intensity` | `--heat-u-factor` |
 | `heat_regime` | `"smoke"` | `--heat-regime` |
 
 `--disable-tenability` turns off the stop; the dose is still computed.
@@ -253,7 +344,11 @@ parameters). With `--heat-regime layer`, `heat_flux_kw_m2` includes
 \(q_{\mathrm{ext}}\), the FED history also carries
 `heat_layer_temperature_c` (\(T_L\)), and `heat_flux_parameters` also
 records `regime`, `view_factor`, `layer_emissivity` and `layer_height_m`;
-it still records ε, which has no effect in that regime.
+it still records ε, which has no effect in that regime. With
+`--heat-radiant-source integrated-intensity` the FED history also carries
+`heat_integrated_intensity_kw_m2` (*U*), and `heat_flux_parameters` adds
+`radiant_source`, `u_factor` and `radiant_flux` (`net`); ε is then not
+listed as assumed, as it is not used.
 With an endpoint, `heat_outside_validity` still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
 63.45–63.47, not to the flux law.
@@ -266,11 +361,18 @@ recorded.
 
 ## What is not modelled
 
+The values the heat dose and its tests rest on without a source are listed
+in [Assumptions (unsourced values)](#assumptions-unsourced-values).
+
 - **Radiant heat from hot surfaces or a flame in view.** The convective laws
   count convective heat only. The total-flux method adds the radiation of the
   gas around the head, or with `--heat-regime layer` that of a hot upper
-  layer, but no flux from hot surfaces or from a flame in view
-  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+  layer. Flux from hot surfaces or a flame in view enters only through
+  `--heat-radiant-source integrated-intensity`, with a user factor (see
+  [Limits of the INTEGRATED INTENSITY source](#limits-of-the-integrated-intensity-source)).
+  Gauge devices are not read
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221),
+  [#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
   FDS reference data for that term exist but are not read by the model:
   [Heat radiometer reference decks](/verification/testing-heat-radiometer.md)
   ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
@@ -303,7 +405,8 @@ recorded.
   ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
   flagged either, although Eq. 63.44 rests on the same data (p. 2382).
 - **Web GUI.** The GUI does not offer `--heat-endpoint`,
-  `--heat-fed-method`, `--heat-regime` or the layer options
+  `--heat-fed-method`, `--heat-regime` or the layer options,
+  `--heat-radiant-source` or `--heat-u-factor`
   ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
 - **Falling exposure and recovery.** The summed dose assumes exposure that is
   steady or rising (Eq. 63.48); a fleeing agent's exposure falls, and no
@@ -328,6 +431,39 @@ recorded.
   against hand formulas and the 200 °C / 2.5 kW/m² anchor (p. 2382), with
   synthetic temperature fields; its FDS case is
   [#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224).
+  The `INTEGRATED INTENSITY` source is checked against hand formulas, a
+  committed FDS 6.10.1 case (`assets/heat_integrated_intensity`, slice *U*
+  and *T* against FDS's own devices), and the #224 radiometer data, where
+  *f* = 0.25 with convection matches the FDS skin gauge in an isotropic room
+  in all four orientations within 3 %. The 300 °C layer, soot fraction and
+  geometry of the committed case, and the gauge's h = 8 and \(T_s\) = 35 °C
+  in the #224 decks, are assumptions of those test decks, not sourced values.
+
+## Assumptions (unsourced values)
+
+Values in the heat code, its FDS reference decks and its tests that no
+consulted source fixes. Each can change a result; none is a Handbook
+tolerance.
+
+| Parameter | Value | CLI flag / config key | Where used | Why this value | What would source it |
+|---|---|---|---|---|---|
+| Convective coefficient h | 5 W/(m²·K) | `--heat-convective-coefficient` / `convective_coefficient` (`DEFAULT_HEAT_CONVECTIVE_COEFFICIENT`) | Total-flux *q*, every regime and radiant source | Low end of "approximately 5–8 for slow-moving air" (p. 2384, printed without a unit); the value of the spec 016 convection check | h measured for a walking, clothed person in hot air or smoke |
+| Skin temperature \(T_s\) | 35 °C, fixed | `--heat-skin-temperature` / `skin_temperature_celsius` (`DEFAULT_HEAT_SKIN_TEMPERATURE_C`) | Total-flux convective and radiant terms, and σ\(T_s^4\) of the net `INTEGRATED INTENSITY` term | The draft's value; the Handbook gives none for Eq. 63.49 | Skin temperature data under heat exposure, including its rise (spec 016, open question 2) |
+| Gas emissivity ε | 0.5 | `--heat-emissivity` / `emissivity` (`DEFAULT_HEAT_EMISSIVITY`) | Total-flux gas term at the head (`--heat-regime smoke`, `--heat-radiant-source gas`) | "perhaps 0.5 for smoke" (p. 2384); treats every head as in smoke | ε per agent from FDS absorption and path length ([#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274), [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)) |
+| Temperature fallback | 20 °C | none (`HeatFedInputs.temperature_celsius`) | Temperature at the head outside the `TEMPERATURE` slice; layer temperature where the layer slice has no value ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)) | A room ambient; below \(T_s\) it gives a small negative layer flux | The case's ambient `TMPA` |
+| Convective validity limit | 205 °C | none (`HEAT_CONVECTIVE_VALIDITY_MAX_C`) | `heat_outside_validity` flag with `--heat-endpoint` (Eqs. 63.45–63.47, [#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)); does not clip the rate | Highest dry-air tolerance point of Table 63.17 (Veghte, 4 min, p. 2375); the Handbook gives no upper temperature | The temperature range of the data Purser fitted Eqs. 63.45–63.47 to |
+| U factor *f* | in [0.25, 1], no default | `--heat-u-factor` / `u_factor` (`HEAT_U_FACTOR_RANGE`) | `--heat-radiant-source integrated-intensity` ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)) | Geometric bounds: *U*/4 for a sphere or an isotropic field, *U* for one small source face-on; the #224 data put some orientations below 0.25 | Gauge devices per orientation ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
+| Flux basis of *f U* | net, *f U* − σ\(T_s^4\) | none (fixed) | `--heat-radiant-source integrated-intensity` | Maintainer decision: Eq. 63.49 read as a net exchange; matches the FDS skin gauge (FDS UG Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383). The background vanishes only near *f* = 1/4 | Whether the radiant tolerance data (Table 63.19) hold for incident or net flux at skin temperature |
+| Heat σ | 0.94 | `--heat-susceptibility-sigma` / `heat_susceptibility_sigma` | Probabilistic heat mode only (`--heat-incapacitation-mode probabilistic`) | Borrowed from the gas dose ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)); the radiant lethality figures imply about 0.22 | A population spread for the convective dose, e.g. the probits of Hockey & Rew (1996), not read |
+| #224 decks: gas and soot | 300 °C, soot mass fraction 0.005; layer base 2.0 m | deck files `assets/heat_radiometer/*.fds` | FDS reference data only; the heat model does not read them; the `INTEGRATED INTENSITY` radiometer tests | A sooty layer that radiates at head height | A measured compartment fire with radiometers |
+| #224 decks: burner and grid | propane, soot yield 0.01, 0.6 × 0.6 m at 1100 kW/m²; 4 × 4 × 3 m room (6 × 4 × 4 m open for the burner), 0.1 m cells | deck files `assets/heat_radiometer/*.fds` | As above | A flame reaching head height on a grid that resolves 1.6 m | As above |
+| #224 skin gauge | emissivity 1, h = 8 W/(m²·K), 35 °C | `&PROP` in the #224 decks and `assets/heat_integrated_intensity` | Gauge values the `INTEGRATED INTENSITY` tests compare against | Emissivity 1 is the FDS default, taken as the skin's; h = 8 is the top of the Handbook's 5–8 | Skin emissivity and h of a clothed person |
+| #221 CI deck | 300 °C sooty layer above 1.2 m, soot 0.005, 2 × 2 × 2.4 m, 0.2 m cells | `assets/heat_integrated_intensity/heat_integrated_intensity.fds` | `tests/verification/test_heat_integrated_intensity_coupled.py` | Two heights with different *U* in a small committed case | None needed: it checks the reader against FDS's own devices |
+| Table reading | ±0.5 min | none (test) | Eq. 63.44 against Table 63.20 (`tests/verification/test_heat_fed_verif.py`, [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)) | Whole-minute entries read as rounded | The unrounded values behind Table 63.20 |
+| Test band, convective | factor 2 | none (test) | Eq. 63.44 against Table 63.20 convective rows (#219) | Wide enough for the 0.61–1.07 spread found | A stated uncertainty of Eq. 63.44 |
+| Test band, hot-layer anchor | ±10 % | none (test) | Black layer at 200 °C against "approximately 2.5 kW/m²" (p. 2382, #219) | "approximately" in the text | A precise flux for that anchor |
+| Test band, radiant rows | ±30 % (±25 % in the #221 face-on check) | none (test) | Eq. 63.43 against Table 63.20 radiant rows (#219, #221) | Chosen in #219 | A stated uncertainty of Table 63.20 |
+| Flame pass | black sphere, radius 0.1 m, 1000 °C; one pass FED < 0.02 | none (test) | `tests/verification/test_heat_flame_pass_reference.py` (#219) | A small flame; the pass stays far below the fatal dose | A measured flame and path |
 
 ## Sources
 
@@ -335,3 +471,6 @@ recorded.
   occupants from smoke, toxic gases, and heat. In *SFPE Handbook of Fire
   Protection Engineering* (5th ed., Ch. 63). Springer.
   doi:10.1007/978-1-4939-2565-0_63
+- McGrattan, K., et al. (2025). *Fire Dynamics Simulator User's Guide*,
+  FDS 6.10.1. NIST Special Publication 1019. Table 22.4 (p. 403) and
+  Eq. 22.35 (p. 381).

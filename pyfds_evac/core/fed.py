@@ -4,7 +4,7 @@ import logging
 import math
 from dataclasses import dataclass, replace
 
-from .fds_sampling import SliceFieldSampler, load_slice_sampler
+from .fds_sampling import SliceFieldSampler, _slice_z_mid, load_slice_sampler
 
 _logger = logging.getLogger(__name__)
 
@@ -212,6 +212,8 @@ class HeatFedInputs:
     """
 
     temperature_celsius: float = 20.0
+    # FDS INTEGRATED INTENSITY U [kW/m2] (#221); None when not sampled.
+    integrated_intensity_kw_m2: float | None = None
     # Upper-layer temperature, sampled only with ``regime="layer"`` (#222).
     layer_temperature_celsius: float | None = None
 
@@ -350,10 +352,46 @@ HEAT_FLUX_ASSUMED_PARAMETERS = (
     "convective_coefficient",
     "skin_temperature_celsius",
 )
+# Radiant term of the total-flux method (#221): "gas" is eps sigma
+# (T_g^4 - T_s^4) of Eq. 63.49; "integrated-intensity" is the net f U -
+# sigma T_s^4 from the FDS INTEGRATED INTENSITY slice, with f given by the
+# user (no default).
+HEAT_RADIANT_SOURCES = ("gas", "integrated-intensity")
+HEAT_U_FACTOR_RANGE = (0.25, 1.0)  # sphere / isotropic field .. source face-on
+# Largest z difference [m] accepted between the TEMPERATURE and INTEGRATED
+# INTENSITY slices: a numerical tolerance only. FDS moves every slice at one
+# PBZ to the same grid plane, so slices meant for one height share their z.
+HEAT_SLICE_Z_TOLERANCE_M = 1e-6
 # Regimes of spec 016, chosen by the user (no sourced automatic rule):
 # "smoke", head in smoke, Eq. 63.49 at the head; "layer", head in clear air
 # below a hot layer, convection at the head plus the layer term (#222).
 HEAT_FLUX_REGIMES = ("smoke", "layer")
+
+
+def radiant_flux_from_integrated_intensity_kw_m2(
+    integrated_intensity_kw_m2: float, u_factor: float
+) -> float:
+    """Return the incident radiant flux f U in kW/m2 (spec 016, #221).
+
+    U = integral of I over all solid angles (FDS ``INTEGRATED INTENSITY``).
+    A surface sees one hemisphere weighted by cos(theta), so q lies between
+    U/4 (sphere, or a plate in an isotropic field) and U (one small source
+    seen face-on). ValueError for f outside [0.25, 1] or non-finite.
+    """
+    _check_u_factor(u_factor)
+    return u_factor * integrated_intensity_kw_m2
+
+
+def _check_u_factor(u_factor) -> None:
+    """Raise ValueError unless *u_factor* is a finite number in [0.25, 1]."""
+    low, high = HEAT_U_FACTOR_RANGE
+    if u_factor is None:
+        raise ValueError(
+            "The INTEGRATED INTENSITY radiant source needs a factor f in "
+            f"[{low}, {high}]; there is no default."
+        )
+    if not (math.isfinite(u_factor) and low <= u_factor <= high):
+        raise ValueError(f"U factor must be in [{low}, {high}], got {u_factor!r}")
 
 
 def total_heat_flux_kw_m2(
@@ -438,6 +476,22 @@ def _check_heat_flux_parameters(
         )
 
 
+def _check_radiant_source(radiant_source: str, method: str, u_factor) -> None:
+    """Raise ValueError for an unknown source, or a U source without f or flux."""
+    if radiant_source not in HEAT_RADIANT_SOURCES:
+        raise ValueError(
+            f"Unknown heat radiant source {radiant_source!r}; "
+            f"expected one of {HEAT_RADIANT_SOURCES}"
+        )
+    if radiant_source != "integrated-intensity":
+        return
+    if method != "total-flux":
+        raise ValueError(
+            "The INTEGRATED INTENSITY radiant source needs the total-flux method."
+        )
+    _check_u_factor(u_factor)
+
+
 def _check_layer_parameters(
     regime: str,
     method: str,
@@ -468,24 +522,47 @@ def _check_layer_parameters(
         )
 
 
+def _check_layer_and_source_exclusive(regime: str, radiant_source: str) -> None:
+    """Raise ValueError for the layer regime with the INTEGRATED INTENSITY source.
+
+    U already contains the emission of the layer; adding the layer term to
+    f U would count it twice.
+    """
+    if regime == "layer" and radiant_source == "integrated-intensity":
+        raise ValueError(
+            "The layer heat regime and the INTEGRATED INTENSITY radiant source "
+            "cannot be combined: U already contains the layer's emission."
+        )
+
+
 def heat_flux_row_fields(
     heat_fed_model,
     temperature_celsius: float,
     layer_temperature_celsius: float | None = None,
+    integrated_intensity_kw_m2: float | None = None,
 ) -> dict:
     """Return the FED history fields of the total-flux method; ``{}`` otherwise.
 
-    In the layer regime the row also carries ``heat_layer_temperature_c``.
+    In the layer regime the row also carries ``heat_layer_temperature_c``;
+    with the INTEGRATED INTENSITY source it also carries U (#221).
     """
     if getattr(heat_fed_model, "method", "convective") != "total-flux":
         return {}
-    if getattr(heat_fed_model, "regime", "smoke") != "layer":
+    if getattr(heat_fed_model, "regime", "smoke") == "layer":
+        return {
+            "heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(
+                temperature_celsius, layer_temperature_celsius
+            ),
+            "heat_layer_temperature_c": layer_temperature_celsius,
+        }
+    if getattr(heat_fed_model, "radiant_source", "gas") != "integrated-intensity":
         return {"heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(temperature_celsius)}
+    u = math.nan if integrated_intensity_kw_m2 is None else integrated_intensity_kw_m2
     return {
         "heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(
-            temperature_celsius, layer_temperature_celsius
+            temperature_celsius, integrated_intensity_kw_m2=u
         ),
-        "heat_layer_temperature_c": layer_temperature_celsius,
+        "heat_integrated_intensity_kw_m2": float(u),
     }
 
 
@@ -952,9 +1029,14 @@ class FdsHeatField:
     the new heat sampler should not repeat it.
     """
 
-    def __init__(self, sampler: SliceFieldSampler):
-        """Wrap a ``SliceFieldSampler`` for the TEMPERATURE slice."""
+    def __init__(
+        self,
+        sampler: SliceFieldSampler,
+        intensity_sampler: SliceFieldSampler | None = None,
+    ):
+        """Wrap the TEMPERATURE and, optionally, INTEGRATED INTENSITY samplers."""
         self._sampler = sampler
+        self._intensity_sampler = intensity_sampler
 
     @classmethod
     def from_fds(
@@ -963,15 +1045,29 @@ class FdsHeatField:
         *,
         slice_height_m: float = 1.6,
         simulation=None,
+        integrated_intensity: bool = False,
     ) -> "FdsHeatField":
-        """Load the TEMPERATURE slice from an FDS case directory."""
+        """Load the TEMPERATURE slice from an FDS case directory.
+
+        With *integrated_intensity* also the INTEGRATED INTENSITY slice
+        (#221), at the same height.
+        """
         sampler = load_slice_sampler(
             fds_dir,
             "TEMPERATURE",
             simulation=simulation,
             slice_height_m=slice_height_m,
         )
-        field = cls(sampler)
+        intensity_sampler = None
+        if integrated_intensity:
+            intensity_sampler = load_slice_sampler(
+                fds_dir,
+                "INTEGRATED INTENSITY",
+                simulation=simulation,
+                slice_height_m=slice_height_m,
+            )
+            _check_same_slice_height(sampler, intensity_sampler, fds_dir)
+        field = cls(sampler, intensity_sampler=intensity_sampler)
         field.fds_dir = str(fds_dir)
         return field
 
@@ -982,11 +1078,65 @@ class FdsHeatField:
         the gas volume-fraction slices sampled by ``FdsFedField`` this needs
         no unit conversion.
         """
-        try:
-            temperature_celsius = self._sampler.sample(time_s, x, y)
-        except ValueError:
-            return HeatFedInputs()
-        return HeatFedInputs(temperature_celsius=temperature_celsius)
+        temperature_celsius = _sample_or_none(self._sampler, time_s, x, y)
+        if self._intensity_sampler is None:
+            if temperature_celsius is None:
+                return HeatFedInputs()
+            return HeatFedInputs(temperature_celsius=temperature_celsius)
+        intensity = _sample_or_none(self._intensity_sampler, time_s, x, y)
+        _check_same_coverage(temperature_celsius, intensity, x, y)
+        if temperature_celsius is None:
+            # Outside the FDS domain: no U, so no radiant dose.
+            return HeatFedInputs(integrated_intensity_kw_m2=math.nan)
+        return HeatFedInputs(
+            temperature_celsius=temperature_celsius,
+            integrated_intensity_kw_m2=intensity,
+        )
+
+
+def _sample_or_none(sampler: SliceFieldSampler, time_s: float, x, y) -> float | None:
+    """Return the sampled value, or None outside the slice."""
+    try:
+        return sampler.sample(time_s, x, y)
+    except ValueError:
+        return None
+
+
+def _check_same_coverage(temperature: float | None, intensity: float | None, x, y):
+    """Raise ValueError when only one of TEMPERATURE and U covers the point.
+
+    U is a required input of this source: a hole in one slice under a valid
+    sample of the other must not turn into a zero or partial dose.
+    """
+    if (temperature is None) == (intensity is None):
+        return
+    have, missing = ("TEMPERATURE", "INTEGRATED INTENSITY")
+    if temperature is None:
+        have, missing = missing, have
+    raise ValueError(
+        f"Point ({x}, {y}) lies in the {have} slice but outside the {missing} "
+        "slice; the heat FED needs both at every agent."
+    )
+
+
+def _check_same_slice_height(
+    temperature: SliceFieldSampler, intensity: SliceFieldSampler, fds_dir: str
+) -> None:
+    """Raise ValueError unless both slices lie at the same z.
+
+    Each slice is chosen as the one nearest the requested height, so the two
+    can differ; radiation and convection must come from one height.
+    """
+    z_t = _slice_z_mid(temperature._slice)
+    z_u = _slice_z_mid(intensity._slice)
+    if abs(z_t - z_u) <= HEAT_SLICE_Z_TOLERANCE_M:
+        return
+    raise ValueError(
+        f"The TEMPERATURE slice in {fds_dir} is at z={z_t:.3f} m but the "
+        f"nearest INTEGRATED INTENSITY slice is at z={z_u:.3f} m; the heat "
+        "FED needs both at the same height. Add "
+        f"`&SLCF PBZ={z_t:g}, QUANTITY='INTEGRATED INTENSITY' /` to the case."
+    )
 
 
 class DefaultHeatFedModel:
@@ -997,6 +1147,10 @@ class DefaultHeatFedModel:
     endpoint's convective law. With ``method="total-flux"`` the rate is
     q^1.33 / D (Eqs. 63.49 and 63.43, spec 016), D the radiant dose of
     *endpoint*, or of ``fatal`` without one; the convective laws are not added.
+    With ``radiant_source="integrated-intensity"`` (total-flux only, #221)
+    the radiant term is the net f U - sigma T_s^4 instead of the gas term,
+    and *u_factor* f in [0.25, 1] is required. Outside the FDS domain U is
+    NaN and the rate is zero; the first such sample logs one warning.
 
     *regime* (total-flux only, spec 016): ``"smoke"`` (default) applies
     Eq. 63.49 at the head. ``"layer"`` takes the head to be in clear air below
@@ -1004,6 +1158,10 @@ class DefaultHeatFedModel:
     *layer_field*, with no eps sigma term of the gas at the head, so the two
     radiant terms are never added together. *view_factor* and
     *layer_emissivity* have no sourced values and no defaults.
+
+    The layer regime and the INTEGRATED INTENSITY source are exclusive: U
+    already contains the emission of the layer, so adding the layer term to
+    f U would count it twice.
     """
 
     def __init__(
@@ -1015,6 +1173,8 @@ class DefaultHeatFedModel:
         emissivity: float = DEFAULT_HEAT_EMISSIVITY,
         convective_coefficient: float = DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
         skin_temperature_celsius: float = DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+        radiant_source: str = "gas",
+        u_factor: float | None = None,
         regime: str = "smoke",
         layer_field: FdsHeatField | None = None,
         view_factor: float | None = None,
@@ -1030,9 +1190,11 @@ class DefaultHeatFedModel:
         _check_heat_flux_parameters(
             method, emissivity, convective_coefficient, skin_temperature_celsius
         )
+        _check_radiant_source(radiant_source, method, u_factor)
         _check_layer_parameters(
             regime, method, layer_field, view_factor, layer_emissivity
         )
+        _check_layer_and_source_exclusive(regime, radiant_source)
         self.field = field
         self.config = config
         self.endpoint = endpoint
@@ -1040,15 +1202,18 @@ class DefaultHeatFedModel:
         self.emissivity = emissivity
         self.convective_coefficient = convective_coefficient
         self.skin_temperature_celsius = skin_temperature_celsius
+        self.radiant_source = radiant_source
+        self.u_factor = u_factor
         self.regime = regime
         self.layer_field = layer_field if regime == "layer" else None
         self.view_factor = view_factor
         self.layer_emissivity = layer_emissivity
         self.layer_height_m = layer_height_m
+        self._warned_missing_intensity = False
 
-    def heat_flux_parameters(self) -> dict[str, float]:
+    def heat_flux_parameters(self) -> dict[str, object]:
         """Return the flux parameters for the run manifest."""
-        parameters = {
+        params: dict[str, object] = {
             "emissivity": self.emissivity,
             "convective_coefficient": self.convective_coefficient,
             "skin_temperature_celsius": self.skin_temperature_celsius,
@@ -1056,31 +1221,73 @@ class DefaultHeatFedModel:
             "assumed": list(HEAT_FLUX_ASSUMED_PARAMETERS),
         }
         if self.regime == "layer":
-            parameters.update(
+            params.update(
                 regime=self.regime,
                 view_factor=self.view_factor,
                 layer_emissivity=self.layer_emissivity,
                 layer_height_m=self.layer_height_m,
             )
-        return parameters
+        if self.radiant_source != "integrated-intensity":
+            return params
+        # eps is not used with this source; f is user-given, not assumed.
+        params["assumed"] = [
+            name for name in HEAT_FLUX_ASSUMED_PARAMETERS if name != "emissivity"
+        ]
+        params["radiant_source"] = self.radiant_source
+        params["u_factor"] = self.u_factor
+        params["radiant_flux"] = "net"
+        return params
 
     def heat_flux_kw_m2(
         self,
         temperature_celsius: float,
         layer_temperature_celsius: float | None = None,
+        integrated_intensity_kw_m2: float | None = None,
     ) -> float:
         """Return the total-flux q in kW/m2 for one gas temperature.
 
         In the layer regime: h (T_g - T_s) / 1000 + q_ext, no eps sigma term
-        of the gas at the head.
+        of the gas at the head. With the INTEGRATED INTENSITY source,
+        q = f U - sigma T_s^4 / 1000 + h (T_g - T_s) / 1000 (net, maintainer
+        decision on #221): U already holds the gas emission, so the eps term
+        is not added.
         """
-        if self.regime != "layer":
+        if self.regime == "layer":
+            return self._layer_heat_flux_kw_m2(
+                temperature_celsius, layer_temperature_celsius
+            )
+        if self.radiant_source != "integrated-intensity":
             return total_heat_flux_kw_m2(
                 temperature_celsius,
                 emissivity=self.emissivity,
                 convective_coefficient=self.convective_coefficient,
                 skin_temperature_celsius=self.skin_temperature_celsius,
             )
+        u = (
+            math.nan
+            if integrated_intensity_kw_m2 is None
+            else integrated_intensity_kw_m2
+        )
+        skin_emission = (
+            STEFAN_BOLTZMANN_W_M2_K4
+            * (self.skin_temperature_celsius + _KELVIN) ** 4
+            / 1000.0
+        )
+        return total_heat_flux_kw_m2(
+            temperature_celsius,
+            emissivity=0.0,
+            convective_coefficient=self.convective_coefficient,
+            skin_temperature_celsius=self.skin_temperature_celsius,
+            external_flux_kw_m2=radiant_flux_from_integrated_intensity_kw_m2(
+                u, self.u_factor
+            )
+            - skin_emission,
+        )
+
+    def _layer_heat_flux_kw_m2(
+        self, temperature_celsius: float, layer_temperature_celsius: float | None
+    ) -> float:
+        """Return h (T_g - T_s) / 1000 plus the layer term, in kW/m2."""
         if layer_temperature_celsius is None:
             return math.nan
         q_ext = layer_radiant_flux_kw_m2(
@@ -1101,7 +1308,9 @@ class DefaultHeatFedModel:
         """Return q^1.33 / D in 1/min; fatal D without an endpoint."""
         dose = HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose
         q = self.heat_flux_kw_m2(
-            inputs.temperature_celsius, inputs.layer_temperature_celsius
+            inputs.temperature_celsius,
+            inputs.layer_temperature_celsius,
+            integrated_intensity_kw_m2=inputs.integrated_intensity_kw_m2,
         )
         return total_flux_heat_fed_rate_per_minute(q, dose)
 
@@ -1127,11 +1336,28 @@ class DefaultHeatFedModel:
         """Return both the sampled input and its heat FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
         if self.method == "total-flux":
+            self._warn_missing_intensity_once(inputs)
             return inputs, self._total_flux_rate(inputs)
         if self.endpoint is None:
             return inputs, default_heat_fed_rate_per_minute(inputs)
         return inputs, endpoint_heat_fed_rate_per_minute(
             inputs.temperature_celsius, HEAT_ENDPOINTS[self.endpoint]
+        )
+
+    def _warn_missing_intensity_once(self, inputs: HeatFedInputs) -> None:
+        """Log once per model when U is missing, e.g. outside the FDS domain."""
+        if self.radiant_source != "integrated-intensity":
+            return
+        if self._warned_missing_intensity:
+            return
+        u = inputs.integrated_intensity_kw_m2
+        if u is not None and math.isfinite(u):
+            return
+        self._warned_missing_intensity = True
+        _logger.warning(
+            "An agent is outside the INTEGRATED INTENSITY slice (outside the "
+            "FDS domain) or U is not finite: its heat dose rate is zero there, "
+            "and U and q read NaN in the FED history. Logged once per run."
         )
 
     def advance(

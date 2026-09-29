@@ -33,6 +33,8 @@ class FdsQuantityInventory:
                 canonical["co2"] = quantity
             elif upper == "OXYGEN VOLUME FRACTION":
                 canonical["o2"] = quantity
+            elif upper == "INTEGRATED INTENSITY":
+                canonical["integrated_intensity"] = quantity
         return canonical
 
     def supports_default_fed(self) -> bool:

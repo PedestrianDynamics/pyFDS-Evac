@@ -85,7 +85,7 @@ used only to price routes; see the [routing model](/models/routing.md#parameters
 Every `update_interval_s` (`--smoke-update-interval` in `run.py`),
 `run_scenario` samples *K* at each agent's position and stores *f* as the
 agent's smoke factor. The agent's desired speed is then
-\(v_0 \cdot f \cdot g(\mathrm{FIC})\) (`direct_steering_runtime.py:186`–`190`),
+\(v_0 \cdot f \cdot g(\mathrm{FIC})\) (`direct_steering_runtime.py`, `set_agent_fic_factor`),
 where \(g\) is the irritant factor of the [FED model](/models/fed.md).
 
 ![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8](/images/concepts/speed_laws.png)
@@ -131,7 +131,7 @@ The published laws are on [Walking speed in smoke](/fundamentals/walking-speed.m
 The code departs from them as follows.
 
 - **Fractional, not absolute.** The linear law is applied as a factor of each
-  agent's own \(v_0\) (`smoke_speed.py:234`), the FDS+Evac normalisation of an
+  agent's own \(v_0\) (`smoke_speed.py`, `speed_factor_from_extinction`), the FDS+Evac normalisation of an
   absolute regression. It divides by the intercept \(\alpha\), an
   extrapolation to *K* = 0, not a measured free walking speed.
 - **Floor.** \(f_{\min}\) is FDS+Evac's convention, not a measured minimum;

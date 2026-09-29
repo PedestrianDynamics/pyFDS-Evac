@@ -94,10 +94,17 @@ whole run
 ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222),
 [#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274),
 [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
-Radiant flux from hot surfaces or a flame is not read and does not
-contribute to any dose. An agent near a flame is therefore treated as less
-exposed than it is
+Radiant flux from hot surfaces or a flame enters only with the opt-in
+`--heat-radiant-source integrated-intensity`, as the net f·U − σT_s⁴ from the FDS
+`INTEGRATED INTENSITY` slice with a user factor f in [0.25, 1] that no
+single value fits for every orientation; it cannot be combined with
+`--heat-regime layer`
 ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+Otherwise an agent near a flame is treated as less exposed than it is
+([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
+The unsourced values of the heat dose, its FDS reference decks and its
+tests are listed in
+[Models › Heat › Assumptions](/models/heat.md#assumptions-unsourced-values).
 
 **Heat does not affect route choice or walking speed.** The heat dose is
 opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is

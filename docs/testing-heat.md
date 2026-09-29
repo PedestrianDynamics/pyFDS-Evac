@@ -247,7 +247,9 @@ The paired outputs are in
   (`tests/test_heat_layer_flux.py`,
   `tests/verification/test_heat_layer_flux_coupled.py`); it has no FDS case
   yet ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
-  No radiant dose from hot surfaces or a flame
+  The `INTEGRATED INTENSITY` source is checked in
+  `tests/test_heat_integrated_intensity.py` and
+  `tests/verification/test_heat_integrated_intensity_coupled.py`
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
   Below the threshold heat changes neither speed nor route
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
@@ -263,8 +265,9 @@ The paired outputs are in
   (`tests/verification/test_s6_heat_fed.py`, `test_heat_fed_verif.py`) run
   on synthetic fields in CI. `test_heat_flame_pass_reference.py` and the
   radiant checks in `test_heat_fed_verif.py` (A3.11) call no pyFDS-Evac
-  code: they are reference values for the planned radiant term
-  ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
+  code: they are Handbook reference values kept apart from the total-flux
+  method, which has its own tests (`tests/test_heat_total_flux.py`,
+  [#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 - The reference tests rest on choices that are not Handbook tolerances.
   Flame pass: the flame is a black-body sphere of radius 0.1 m, the skin
   faces it at 35 °C, there is no convective term, and one pass must stay

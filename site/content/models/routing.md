@@ -195,7 +195,7 @@ and [Exit choice and familiarity](/fundamentals/exit-choice.md).
   visibility of a reflective sign at the door, \(3/\bar K\), to be at least half
   the distance *d* to the door, which rearranges to \(\bar K d \le 6\)
   (`evac.f90:16794`, `:16799`). That is the default `tau_max`
-  (`route_graph.py:683`). Jin's law describes a straight line of sight to a
+  (`route_graph.py`, `RouteCostConfig.tau_max`). Jin's law describes a straight line of sight to a
   sign in uniform smoke; here the same number bounds the integral of *K* along
   a walked polyline, which measures exposure, not sight. The two agree only
   on a straight corridor, and the budget has not been calibrated against a
