@@ -102,7 +102,7 @@ by default, as FDS+Evac has none. The equations are on
 | `--fic-min-factor F` | 0.3 | Floor `μ`; needs `--enable-fic-speed`. |
 | `--fed-threshold F` | 1.0 | FED at which agents are incapacitated, as FDS+Evac; in probabilistic mode the median of the per-agent threshold. |
 | `--o2-threshold-percent P` | 20.0 % | O₂ vol % at or above which the hypoxia term is zero, as FDS; 19.5 was the previous default. |
-| `--incapacitation-mode {deterministic,probabilistic}` | `deterministic` | `deterministic`: every agent stops at `--fed-threshold`, as FDS+Evac. `probabilistic`: each agent draws a log-normal threshold with median `--fed-threshold`. |
+| `--incapacitation-mode MODE` | `deterministic` | `deterministic` or `probabilistic`. `deterministic`: every agent stops at `--fed-threshold`, as FDS+Evac. `probabilistic`: each agent draws a log-normal threshold with median `--fed-threshold`. |
 | `--susceptibility-sigma S` | 0.94 | Log-normal σ of the gas threshold in probabilistic mode. |
 
 ### Heat dose (opt-in)
@@ -112,23 +112,23 @@ and the run logs a warning for each one set. The laws, parameters and their
 sources are on [Models › Heat](/models/heat.md); the table only lists what
 each flag sets.
 
-| Flag | Default | Range | Purpose |
+| Flag | Default | Values | Purpose |
 |------|---------|-------|---------|
 | `--enable-heat-fed` | off | — | Accumulate the heat dose from the `TEMPERATURE` slice and incapacitate on it. |
-| `--heat-clothing {clothed,unclothed}` | `clothed` | — | Convective law: ISO 13571:2012 Eq. (9), clothed, or Eq. (10), unclothed. No effect with `--heat-endpoint` or `--heat-fed-method total-flux`. |
-| `--heat-endpoint {tolerance,injury,fatal}` | none | — | Use an SFPE Handbook Ch. 63 endpoint law instead of the ISO law. With `total-flux` it selects the dose *D* (fatal without it). |
-| `--heat-fed-method {convective,total-flux}` | `convective` | — | `total-flux`: heat flux to the skin (SFPE Eq. 63.49) with the ISO 2.5 kW/m² radiant threshold. |
+| `--heat-clothing C` | `clothed` | `clothed`, `unclothed` | Convective law: ISO 13571:2012 Eq. (9), clothed, or Eq. (10), unclothed. No effect with `--heat-endpoint` or `--heat-fed-method total-flux`. |
+| `--heat-endpoint E` | none | `tolerance`, `injury`, `fatal` | Use an SFPE Handbook Ch. 63 endpoint law instead of the ISO law. With `total-flux` it selects the dose *D* (fatal without it). |
+| `--heat-fed-method M` | `convective` | `convective`, `total-flux` | `total-flux`: heat flux to the skin (SFPE Eq. 63.49) with the ISO 2.5 kW/m² radiant threshold. |
 | `--heat-emissivity E` | 0.5 | — | Gas emissivity at the head; `total-flux` only. |
 | `--heat-convective-coefficient H` | 5.0 W/m²/K | — | Convective coefficient; `total-flux` only. |
 | `--heat-skin-temperature T` | 35.0 °C | — | Fixed skin temperature; `total-flux` only. |
-| `--heat-radiant-source {gas,integrated-intensity}` | `gas` | — | Radiant term from the gas at the head, or the excess flux from the FDS `INTEGRATED INTENSITY` slice. `integrated-intensity` needs `total-flux` and `--heat-u-factor`, and the slice at the slice height. |
+| `--heat-radiant-source S` | `gas` | `gas`, `integrated-intensity` | Radiant term from the gas at the head, or the excess flux from the FDS `INTEGRATED INTENSITY` slice. `integrated-intensity` needs `total-flux` and `--heat-u-factor`, and the slice at the slice height. |
 | `--heat-u-factor F` | none | [0.25, 1] | Factor *f* on the integrated intensity *U*; required with `integrated-intensity`. |
-| `--heat-regime {smoke,layer}` | `smoke` | — | `layer`: head in clear air under a hot layer. Needs `total-flux` and the three layer flags below, or the run stops with `ValueError`. |
+| `--heat-regime R` | `smoke` | `smoke`, `layer` | `layer`: head in clear air under a hot layer. Needs `total-flux` and the three layer flags below, or the run stops with `ValueError`. |
 | `--heat-layer-height M` | none | finite | Height of the `TEMPERATURE` slice read as the hot layer. |
 | `--heat-view-factor φ` | none | [0, 1] | View factor from the skin to the layer. |
 | `--heat-layer-emissivity ε_L` | none | [0, 1] | Layer emissivity. |
 | `--heat-fed-threshold F` | none (uses `--fed-threshold`) | — | Separate heat threshold. ISO 13571 uses one threshold; setting it logs a warning and the manifest records it. |
-| `--heat-incapacitation-mode {deterministic,probabilistic}` | `deterministic` | — | As `--incapacitation-mode`, for the heat track. |
+| `--heat-incapacitation-mode MODE` | `deterministic` | `deterministic`, `probabilistic` | As `--incapacitation-mode`, for the heat track. |
 | `--heat-susceptibility-sigma S` | 0.94 | — | Log-normal σ of the heat threshold in probabilistic mode (borrowed from the gas value). |
 
 ### Seed and precedence

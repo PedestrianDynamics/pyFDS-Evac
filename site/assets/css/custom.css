@@ -251,3 +251,12 @@
 /* Landing page: let the text column shrink to the screen, so a long code
    line scrolls inside its block instead of widening the page. */
 .hx-flex-col > * { min-width: 0; max-width: 100%; }
+
+/* On phones, reference tables scroll sideways inside their box; give the
+   text column room so rows do not grow into tall, narrow strips, and keep
+   flag names in the first column on one line. */
+@media (max-width: 640px) {
+  .content table td, .content table th { min-width: 6rem; }
+  .content table td:last-child, .content table th:last-child { min-width: 15rem; }
+  .content table td:first-child code { white-space: nowrap; }
+}
