@@ -280,3 +280,59 @@
 .katex-display:focus-visible,
 .content table:focus-visible,
 .content pre:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* Time slider over pre-rendered frames (layouts/shortcodes/time-slider.html). */
+.time-slider {
+  --docs-accent: hsl(var(--primary-hue) var(--primary-saturation) 45%);
+  --docs-track: #e5e7eb;
+  margin: 1.5rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--docs-track);
+  border-radius: 0.5rem;
+}
+.dark .time-slider {
+  --docs-accent: hsl(var(--primary-hue) var(--primary-saturation) 62%);
+  --docs-track: #374151;
+}
+.time-slider img {
+  display: block;
+  width: 100%;
+  max-width: 36rem;
+  margin: 0 auto;
+  height: auto;
+  background: #fff;
+  border-radius: 0.25rem;
+}
+.time-slider__controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.time-slider__controls[hidden] { display: none; }
+.time-slider__controls label { font-weight: 600; }
+.time-slider input[type="range"] {
+  width: 100%;
+  min-height: 2.75rem;
+  accent-color: var(--docs-accent);
+}
+.time-slider input[type="range"]:focus-visible {
+  outline: 2px solid var(--docs-accent);
+  outline-offset: 2px;
+}
+.time-slider__value {
+  min-width: 5.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.time-slider figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  text-align: left;
+}
+@media (max-width: 480px) {
+  .time-slider__controls { grid-template-columns: minmax(0, 1fr) auto; }
+  .time-slider__controls label { grid-column: 1 / -1; }
+}

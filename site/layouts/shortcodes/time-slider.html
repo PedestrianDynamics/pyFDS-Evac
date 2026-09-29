@@ -1,0 +1,28 @@
+{{- /* Time slider over pre-rendered frames: a range input swaps the image.
+     Frames are <src>/t000.webp, t010.webp, ... written by a docs script.
+     Without JavaScript the frame at "value" is shown as a plain image.
+     Usage: {{< time-slider src="images/first-fds-case/signs" start="0" end="300"
+             step="10" value="40" label="Time after ignition" alt="..." >}}
+     The inner content, if any, is the caption. */ -}}
+{{- $src := .Get "src" -}}
+{{- $start := .Get "start" | default "0" | int -}}
+{{- $end := .Get "end" | int -}}
+{{- $step := .Get "step" | default "10" | int -}}
+{{- $value := .Get "value" | default $start | int -}}
+{{- $label := .Get "label" | default "Time" -}}
+{{- $alt := .Get "alt" -}}
+{{- $id := printf "time-slider-%d" .Ordinal -}}
+{{- $base := printf "%s/" $src | relURL -}}
+<figure class="time-slider" data-time-slider data-base="{{ $base }}">
+  <img src="{{ printf "%st%03d.webp" $base $value }}" alt="{{ $alt }}"
+    data-alt="{{ $alt }}" width="840" height="855" loading="lazy">
+  <div class="time-slider__controls" data-live hidden>
+    <label for="{{ $id }}">{{ $label }}</label>
+    <input type="range" id="{{ $id }}" min="{{ $start }}" max="{{ $end }}"
+      step="{{ $step }}" value="{{ $value }}">
+    <output for="{{ $id }}" class="time-slider__value" aria-live="polite">t = {{ $value }} s</output>
+  </div>
+  {{- with .Inner }}
+  <figcaption>{{ . | markdownify }}</figcaption>
+  {{- end }}
+</figure>

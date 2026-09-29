@@ -30,6 +30,10 @@ area that sets no pre-movement key gets a constant 10 s, as [FDS+Evac](https://g
 *t*<sub>det</sub> and *t*<sub>a</sub> yourself. The scenario in Part 1 models no
 pre-movement, so its exit times are travel times only.
 
+A run that stops at its time limit with agents still inside has no RSET, and
+more seeds do not supply one, since every seed stops at the same limit;
+[A crowd in a real fire](first-fds-case.md#aset-rset) is such a run.
+
 ## Why not `result.evacuation_time`?
 
 - `result.evacuation_time` is the time at which the simulation loop stopped.

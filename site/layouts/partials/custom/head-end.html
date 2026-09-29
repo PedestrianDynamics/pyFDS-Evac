@@ -3,5 +3,9 @@
 {{- $js := resources.Get "js/smoke-speed-experiment.js" | minify | fingerprint -}}
 <script defer src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>
 {{- end -}}
+{{- if .HasShortcode "time-slider" -}}
+{{- $slider := resources.Get "js/time-slider.js" | minify | fingerprint -}}
+<script defer src="{{ $slider.RelPermalink }}" integrity="{{ $slider.Data.Integrity }}"></script>
+{{- end -}}
 {{- $scroll := resources.Get "js/scroll-regions.js" | minify | fingerprint -}}
 <script defer src="{{ $scroll.RelPermalink }}" integrity="{{ $scroll.Data.Integrity }}"></script>

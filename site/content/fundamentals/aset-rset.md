@@ -111,7 +111,9 @@ population (see [Incapacitation thresholds](/fundamentals/incapacitation-thresho
   [doi:10.1007/978-1-4939-2565-0_64](https://doi.org/10.1007/978-1-4939-2565-0_64)
 
 How pyFDS-Evac uses this: see the
-[RSET ensemble how-to](/docs/howto-rset-ensemble.md). Each agent carries
+[RSET ensemble how-to](/docs/howto-rset-ensemble.md), and
+[A crowd in a real fire › ASET and RSET](/docs/first-fds-case.md#aset-rset)
+for a per-agent comparison on a real FDS fire. Each agent carries
 its own dose along its path; see
 [Fractional effective dose](/models/fed.md).
 

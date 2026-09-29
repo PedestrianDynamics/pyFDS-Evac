@@ -269,8 +269,13 @@ opens at about 45 s, when the smoke has filled the junction.
 
 ![Top: FED against time, one grey line per agent, the highest in red reaching 0.36, all well below the dashed incapacitation line at FED 1. Bottom: median speed factor of the agents inside, falling from 1 at 40 s to the floor of 0.1 at 120 s and staying there](/images/first-fds-case/exposure.png)
 
-Nobody is incapacitated: the highest FED is 0.36. The smoke acts through
-speed. The default speed law (`lund`) multiplies the walking speed by
+Nobody is incapacitated by the toxic dose: the highest FED is 0.36. This
+does not mean that conditions were tenable; [section 6](#aset-rset)
+compares visibility and irritant limits with the exit times. In the run,
+the smoke acts on the agents only through their speed and the signs they
+can read: the engine records the irritant measure (FIC) but does not act
+on it by default. The default speed law (`lund`) multiplies the walking
+speed by
 `1 + beta * K / alpha`, clamped to [0.1, 1]. At *K* = 3 1/m this is
 `1 + (-0.057 × 3.0) / 0.706` = 0.76. Above *K* = 11 1/m it is the floor, 0.1,
 and from 120 s the median agent is there.
@@ -285,6 +290,315 @@ spawned between 26 and 120 s, never learned an exit: no exit sign was readable
 to them. They walk back and forth between the spawn area and the junction
 (`wander`, 154 of the 164 route changes), and all 18 are still inside at
 300 s.
+
+## 6. Was there time to get out? (ASET and RSET) {#aset-rset}
+
+Fire-safety engineering compares two times. The available safe escape time
+(ASET) runs until conditions become untenable. The required safe escape time
+(RSET) runs until people reach safety. The
+[ASET and RSET](/fundamentals/aset-rset.md) page gives the definitions.
+This section applies them to the run above, one agent at a time. For each
+agent it asks when the air at the agent's own position first crossed a
+tenability limit, and whether the agent got out before that.
+
+### The answer in short
+
+- **There is no single RSET and no single margin.** Agents keep arriving
+  until the run is cut off at 300 s, with half of them still inside.
+- **Visibility and HCl became untenable early.** Each of six points in the T
+  crossed the visibility limit between 18 and 46 s after ignition. The
+  first agent met it at 17 s. Of the 74 agents who got out, 66 met it before
+  they reached an exit.
+- **By the irritant criterion, most of those who got out would be expected
+  to be incapacitated first.** 61 of the 74 met HCl ≥ 1000 ppm (ISO
+  fractional effective concentration, FEC, of 1) before their exit. They
+  kept walking only because the engine records the irritant measure (FIC)
+  and does not act on it.
+- **The toxic dose came last.** FED reached 0.3 only after 265 s, for 17
+  agents who were still inside. By then their FIC was already 4.4 to 5.9.
+
+"Nobody reached FED 1" therefore does not mean "everyone had time". This is
+one fire, one seed, and research software. The result describes this run. It
+is not a design verdict.
+
+### Make the numbers yourself
+
+pyFDS-Evac does not compute ASET itself. A built-in report is planned in
+[#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210). The
+script
+[`scripts/docs/first_fds_case_aset.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/scripts/docs/first_fds_case_aset.py)
+reads the run files from step 4 and the FDS slices. The sign maps need a
+newer fdsvismap than the one pyFDS-Evac pins
+([#140](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140)).
+`uv run --with` adds that version for this one command, which only reads the
+FDS output:
+
+```bash
+uv run --with git+https://github.com/FireDynamics/fdsvismap@31dc0b6 \
+    python scripts/docs/first_fds_case_aset.py --data "$FDS" --runs tj
+```
+
+It takes about 40 s and prints every number in this section. It starts with:
+
+```text
+agents 150, spawned last at 298 s
+trajectory: 75 left before 300 s, last exit 299.0 s
+counted out (exit < 299 s) 74, censored 76
+travel time median 86.2 s, max 142.9 s
+```
+
+{{< checkpoint title="Script finished" >}}
+The output ends with the sign-visibility lines, and the figures below are
+rewritten under `site/static/images/first-fds-case/`. If an `assert` fails
+in `records`, the run files are not from this deck: the HCl conversion below
+holds only when HCl is the only irritant.
+{{< /checkpoint >}}
+
+**Who counts as out.** The run reports 75 evacuated, and so does the
+trajectory: the last agent leaves at 299.0 s. The per-agent histories stop
+at 299 s, so they cannot show whether that agent met a limit in its last
+second. The script therefore counts an agent as out only if it left before
+299 s: **74 got out and 76 are censored**. For a censored agent we know only
+that its margin is negative or longer than the run.
+
+### Each agent against its own limits
+
+Each row is one criterion, over all 150 agents. A limit counts as reached if
+the agent met it before it left, or before 299 s if it is still inside.
+
+| Criterion (source) | Agents reaching it | First at | Got out, never reached it | Reached it, then got out | Reached it, still inside |
+|---|---|---|---|---|---|
+| Visibility 10 m: *K* ≥ 0.3 1/m (EA; *C* = 3) | 142 | 17 s | 8 | 66 | 76 |
+| HCl ≥ 200 ppm (Purser escape impairment, FIC<sub>imp</sub> = 1) | 141 | 17 s | 9 | 65 | 76 |
+| HCl ≥ 300 ppm (ISO FEC 0.3) | 138 | 27 s | 12 | 62 | 76 |
+| HCl ≥ 900 ppm (SFPE FIC = 1) | 137 | 40 s | 13 | 61 | 76 |
+| HCl ≥ 1000 ppm (ISO FEC 1) | 137 | 40 s | 13 | 61 | 76 |
+| CO ≥ 2,700 ppm (EA) | 44 | 73 s | 36 | 38 | 6 |
+| FED ≥ 0.3 (FDS+Evac form) | 17 | 265 s | 74 | 0 | 17 |
+| FED ≥ 1 (FDS+Evac form) | 0 | – | 74 | 0 | 0 |
+
+The 66 agents who got out after the visibility limit spent a median of
+94 s, and at most 143 s, inside beyond it. The four HCl limits change the
+count of evacuees who met a limit only from 65 to 61. CO above 2,700 ppm is
+met next to the burner, by agents who pass it on their way to exit B.
+
+![One horizontal bar per agent, in order of spawning from top to bottom, on a time axis from 0 to 300 s after ignition. Each bar runs from the agent's spawn to its exit, pale before the agent first meets K 0.3 and solid after; bars of the 76 censored agents are grey and end in an arrow at 299 s. Circles mark the first K 0.3, diamonds the first HCl 300 ppm, squares the first FED 0.3. The first dozen agents meet the limits partway along their bar. From about 50 s on, the circles and diamonds sit at the start of every bar, forming a diagonal: agents spawn into air already past both limits. The 17 FED 0.3 squares all lie between 265 and 291 s, on grey bars](/images/first-fds-case/aset_agents.png)
+
+*One bar per agent (n = 150, seed 42), from spawn to exit, or to 299 s for
+the 76 censored agents (grey, arrow). The solid part is the time spent beyond
+K ≥ 0.3 1/m. Markers: first K ≥ 0.3 1/m (circle), first HCl ≥ 300 ppm
+(diamond), first FED ≥ 0.3 (square). Values at the agent's position, z =
+2.0 m, 1 s resolution.*
+
+Read the figure from the left edge of each bar. The first dozen agents
+started in clear air, and the limits reached them on the way. From about
+50 s on, every agent spawns into air that is already past the visibility
+and HCl limits. After 46 s, when the last of the six points below crosses
+the visibility limit, 127 of the 150 agents are still to spawn.
+
+### At fixed points: location ASET
+
+The classic ASET is read at a place, not at a person: the first time a
+limit is met at a fixed point, counted from ignition. It needs no agents,
+and it says nothing about who was there.
+
+| Location (x, y) [m] | *K* ≥ 0.3 1/m | HCl ≥ 300 ppm (ISO FEC 0.3) | HCl ≥ 1000 ppm (ISO FEC 1) | FED ≥ 0.3, standing there from t = 0 |
+|---|---|---|---|---|
+| Exit B (29, 11.5) | 18 s | 28 s | 40 s | not by 300 s |
+| Junction (18.5, 11.5) | 24 s | 45 s | 59 s | 274 s |
+| Left corridor (10, 11.5) | 36 s | 38 s | 58 s | not by 300 s |
+| Spawn centre (20, 4.5) | 41 s | 54 s | 64 s | 270 s |
+| Exit A (1, 11.5) | 45 s | 47 s | 50 s | not by 300 s |
+| Branch mouth (20, 9) | 46 s | 51 s | 68 s | 275 s |
+
+CO does not reach 2,700 ppm at any of these points within 300 s.
+
+![Two plan views of the T, shaded by time since ignition from dark (0 to 20 s) to light (not by 300 s). Top, tenability: the first time K reaches 0.3 per metre or HCl reaches 300 ppm, for someone standing there from ignition; the corridor near the burner and exit B fails first, within 20 s, the far left corridor and the branch between 30 and 50 s; six points are labelled 18, 24, 36, 41, 45 and 46 s. Bottom, wayfinding: the first time no sign can be seen from a cell, with the three signs as diamonds and the two routes drawn in; along route A the signs are lost between 28 and 79 s, along route B between 7 and 46 s](/images/first-fds-case/aset_map.png)
+
+*(a) Location ASET at z = 2.0 m on a 0.5 m grid: the earlier of K ≥ 0.3 1/m
+and HCl ≥ 300 ppm, for a person standing still from ignition. Labels: that
+time at the six points of the table. (b)
+The first time no sign can be seen from a cell (fdsvismap `get_aset_map`,
+0.25 m grid, all three signs, *c* = 3, visibility capped at 30 m). Heat is
+not included in either panel. The map form follows Schröder et al. (2020).*
+
+Panel (b) is not a tenability limit. It shows when the signs stop guiding,
+which is why 18 agents spawned between 26 and 120 s never learned an exit
+(section 5): the spawn centre loses sight of every sign at 39 s. The slider
+shows sign visibility through time, one map per route.
+
+{{< time-slider src="images/first-fds-case/signs" start="0" end="300" step="10" value="40" label="Time after ignition" alt="Two plan views of the T-junction, one per route. Blue cells can see at least one sign of the route, grey cells cannot; the signs are diamonds and the agents black dots." >}}
+Each frame shows, at time t after ignition, the cells at 2.0 m from which at
+least one sign of the route can still be seen (fdsvismap
+`get_agg_vismap(t, route)`). A sign counts as seen when the visibility along
+the line of sight, *c* divided by the mean *K* along it, with *c* = 3 and
+capped at 30 m, reaches the
+distance to the sign. Frames every 10 s; the fdsvismap times are 1 s apart.
+This is sign visibility, a wayfinding measure, not tenability (ISO
+13571:2012, §4.6 f). A cell with a visible sign may already be untenable
+because of HCl or CO. A cell without one is not thereby untenable. Heat is
+not evaluated in this run. Cells that never see a sign, because of
+distance, walls or viewing angle, show geometry, not smoke. Dots are agent
+positions from one run (seed 42) and say nothing about whether those agents
+are safe.
+{{< /time-slider >}}
+
+### Why there is no single RSET here
+
+ISO/TR 16738 builds RSET from detection, alarm, pre-movement and travel
+times, counted from ignition (see [ASET and RSET](/fundamentals/aset-rset.md)).
+This run fits none of it:
+
+- **The inflow never stops.** One agent spawns every 2 s until the run ends.
+  Each agent's exposure starts when it spawns, while all times on this page
+  count from ignition.
+- **The run is cut off.** It stops at 300 s with most late spawners inside.
+  The last exit, 299.0 s, is set by the time limit. It is not an RSET.
+- **There is no detection, alarm or pre-movement**
+  (`"use_premovement": false`). Exit minus spawn is travel time only: a
+  median of 86.2 s and a maximum of 142.9 s for the 74 who got out.
+
+More seeds would not supply an RSET either, because every seed stops at the
+same 300 s. For a scenario in which everyone gets out, see the
+[ensemble how-to](howto-rset-ensemble.md).
+
+### What this does not show
+
+**The exit times rest on walking speeds far outside the data.** The default
+speed law comes from Frantzich and Nilsson's experiments, which covered
+*K* = 1.9–7.4 1/m. Purser's fit to Jin's data covers *K* ≈ 0.30–1.27 1/m
+(see [walking speed in smoke](/fundamentals/walking-speed.md)). In this run
+the median *K* at the agents is 13.3 1/m, a visibility of about 0.2 m with
+*C* = 3. 89 % of the agent-seconds lie above 7.4 1/m, and 75 % sit at the
+speed floor of 0.1, which the law reaches at *K* = 11.15 1/m. The exit
+times, and the number still inside, are set by that floor, not by measured
+behaviour.
+
+![Histogram of the extinction coefficient at the agents, one count per agent-second, on a log axis from 0.1 to 60 per metre. Almost all the mass lies between 8 and 20 per metre, with a peak near 13. Hatched bands mark the data ranges of Purser's fit to Jin, 0.30 to 1.27, and of Frantzich and Nilsson, 1.9 to 7.4, both to the left of the mass. A dashed red line at 11.1 marks where the speed floor of 0.1 begins; 75 % of all agent-seconds are at the floor](/images/first-fds-case/aset_extinction.png)
+
+*Extinction coefficient K [1/m] at the agents, one count per agent and second
+inside (n = 13,734; the 256 with K < 0.1 1/m are not shown). Hatched: the K
+ranges of the data behind the speed laws, from
+[walking speed in smoke](/fundamentals/walking-speed.md). Dashed: the default
+`lund` law reaches its floor of 0.1.*
+
+The other limits:
+
+- **Per agent goes beyond the standard.** ISO 13571 is meant for estimates
+  over a population, not for specific individuals (§5.2). The per-agent
+  comparison is our use of it. The SFPE Handbook frames the same question,
+  the time between losing visibility and incapacitation (Purser and
+  McAllister 2016, p. 2414).
+- **The FED is not the ISO 13571 asphyxiant FED.** It is the FDS+Evac sum
+  (CO + CN + NOx + FLD<sub>irr</sub>) × HV<sub>CO2</sub> + O2, which includes
+  Purser's lethal-dose term for HCl (see [FED model](/models/fed.md)). ISO
+  keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
+  thresholds to it is an analogy. FED 0.3 is a threshold for susceptible
+  people, not a "safe" value (see
+  [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
+- **The irritant criteria are analogies too.** ISO 13571 ties one threshold
+  to its own FED and FEC (§5.4). Here that threshold is applied to an
+  FDS+Evac FED and to HCl. The table gives each source's own value, and the
+  conclusion is the same for all four.
+- **HCl is probably overestimated.** The deck has no loss of HCl to walls, so
+  all the HCl produced stays in the gas. The irritant crossings are likely
+  early.
+- **Visibility.** The EA note gives 10 m, not a *K*. *C* = 3 (Jin's value for
+  a reflecting sign, and the FDS default) turns it into 0.3 1/m. The result
+  barely depends on this: any *K* from 0.23 to 0.8 1/m changes the first
+  crossing of at most 10 agents, by at most 13 s. The EA limits apply to
+  exposures under 10 minutes.
+- **One height.** Every value is at z = 2.0 m, the only slice height in the
+  deck. The EA note evaluates its limits at 2.0 m too.
+- **Heat is not evaluated.** The deck has no temperature slice, so the FED
+  CSV reports a constant 20 °C. The only temperature is the `T_fire` device
+  above the burner, which is not a value on the route.
+- **The engine does not act on these limits.** It records FIC; the script
+  finds the visibility crossings afterwards. The speed reduction in smoke is
+  a separate model, and `--enable-fic-speed` turns on an irritant slowdown,
+  not incapacitation by FIC.
+- **Time resolution.** Crossings come from the 1 Hz histories, to about 1 s.
+  Exit times come from the trajectory, to 0.1 s.
+- **ASET/RSET is itself contested.** Babrauskas, Fleming and Russell (2010)
+  argue that it treats people as moving mechanically and depends heavily on
+  the scenario chosen.
+
+{{< details title="How the numbers are computed" closed="true" >}}
+
+**Spawn and exit.** From the trajectory `tj_fire.sqlite` at 10 frames per
+second: an agent's spawn time is its first frame, its exit its last frame.
+An agent counts as out if it left before 299 s (see "Who counts as out").
+
+**Per agent.** For each criterion, the first second in the smoke and FED
+histories at which the value at the agent's position meets the limit, up to
+its exit:
+
+- *K* is `extinction_per_m` from `tj_fire_smoke.csv`.
+- FED is `fed_cumulative` from `tj_fire_fed.csv`, and CO is `co_percent` × 10⁴.
+- HCl has no column. The engine's `fic` is HCl / 900 ppm (the SFPE
+  incapacitation concentration), because HCl is the only irritant in this
+  deck. So HCl = 900 × `fic`, ISO FEC = 0.9 × `fic` and FIC<sub>imp</sub> =
+  4.5 × `fic`. The script checks this on every row: HCN, NO and NO₂ are
+  zero, and 900 × `fic` equals 114,000 × `fld_rate_per_min` (Purser's lethal
+  dose for HCl), which rules out HBr, HF and SO₂ as well.
+
+**At fixed points and on the grid.** The script samples once per second
+from 0 to 300 s with `ExtinctionField.from_fds` and `FdsFedField.from_fds`,
+the readers the engine uses. It first asserts that the extinction, HCl and CO
+slices are at z = 2.0 m. The FED column adds `DefaultFedModel.sample_rate`
+× 1 s / 60 from t = 0.
+
+**Sign visibility.** fdsvismap at commit `31dc0b6`, with the three signs of
+`config.json` (*c* = 3, their positions and directions), visibility between
+0 and 30 m, and one time point per second. Route A is spawn → junction →
+exit A with the junction and exit A signs; route B likewise. The engine
+itself uses the older fdsvismap and its own per-sign distance caps, so its
+sign decisions can differ slightly from these maps.
+
+**The limits and their sources.**
+
+- *Visibility.* Engineers Australia (2014, §5.2 and Fig. 8, p. 15): 10 m for
+  exposures under 10 minutes, evaluated at 2.0 m, untenable when any one
+  criterion is exceeded. See [Visibility](/fundamentals/visibility.md) for
+  *K* = *C*/*V*.
+- *HCl.* SFPE Ch. 63, Table 63.6 (p. 2344): 200 ppm for escape impairment,
+  900 ppm for incapacitation, and 1000 ppm as the ISO 13571 value. ISO 13571
+  uses the same threshold for FED and FEC (§5.4), so 0.3 gives 300 ppm. See
+  [Irritants](/fundamentals/irritants.md).
+- *CO.* 2,700 ppm, from the same EA figure.
+- *FED.* 0.3 and 1, the ISO 13571 thresholds (§5.4), applied to the
+  FDS+Evac FED.
+
+{{< /details >}}
+
+{{< details title="Sources" closed="true" >}}
+
+- Babrauskas, V., Fleming, J. M., & Russell, B. D. (2010). RSET/ASET, a
+  flawed concept for fire safety assessment. *Fire and Materials*, 34(7),
+  341–355. [doi:10.1002/fam.1025](https://doi.org/10.1002/fam.1025)
+- Börger, K., Belt, A., & Arnold, L. (2024). A waypoint based approach to
+  visibility in performance based fire safety design. *Fire Safety Journal*,
+  150, 104269.
+  [doi:10.1016/j.firesaf.2024.104269](https://doi.org/10.1016/j.firesaf.2024.104269)
+- Engineers Australia Society of Fire Safety (2014). *Practice note for
+  tenability criteria in building fires*, version 2.0, §5.2 and Fig. 8,
+  p. 15. Full reference on [ASET and RSET](/fundamentals/aset-rset.md).
+- fdsvismap, commit
+  [`31dc0b6`](https://github.com/FireDynamics/fdsvismap/tree/31dc0b6).
+- ISO 13571:2012, §4.2.1, §4.6 f, §5.2 and §5.4, and ISO/TR 16738:2009:
+  paraphrased; see [ASET and RSET](/fundamentals/aset-rset.md),
+  [Irritants](/fundamentals/irritants.md) and
+  [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
+- Purser, D. A., & McAllister, J. L. (2016). Assessment of hazards to
+  occupants from smoke, toxic gases, and heat. *SFPE Handbook of Fire
+  Protection Engineering*, 5th ed., Ch. 63. Table 63.6 (p. 2344) and
+  p. 2414.
+  [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
+- Schröder, B., Arnold, L., & Seyfried, A. (2020). A map representation of
+  the ASET-RSET concept. *Fire Safety Journal*, 115, 103154.
+  [doi:10.1016/j.firesaf.2020.103154](https://doi.org/10.1016/j.firesaf.2020.103154)
+
+{{< /details >}}
 
 ## What next
 
