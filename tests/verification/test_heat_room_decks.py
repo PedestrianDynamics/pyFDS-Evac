@@ -11,7 +11,10 @@ TMPA = 20.
 
 Expected values come from the deck name and from SFPE Handbook 5th ed.,
 Ch. 63, Eq. 63.44 (t_I,conv = 5e7 T^-3.4 min) written out here, not from
-pyFDS-Evac.
+pyFDS-Evac. The stored runs use ``--heat-clothing unclothed``, which selects
+that law (ISO 13571:2012 Eq. (10)); the page also lists, as expected values
+only, the times of the default law, ISO Eq. (9) (t_I,conv = 4.1e8 T^-3.61
+min).
 """
 
 import csv
@@ -139,3 +142,22 @@ def test_docs_expect_the_closed_form_stop(temperature_c):
     match = re.search(pattern, HEAT_DOC.read_text())
     assert match is not None
     assert float(match.group(1)) == expected
+
+
+@pytest.mark.parametrize(
+    "temperature_c, tstar_s",
+    [(100.0, 1482.3), (150.0, 343.0), (200.0, 121.4)],
+)
+def test_docs_list_the_default_law_times(temperature_c, tstar_s):
+    """ISO 13571:2012 Eq. (9) at the deck value, as quoted in the docs table."""
+    assert 60.0 * 4.1e8 * temperature_c**-3.61 == pytest.approx(tstar_s, abs=0.05)
+    pattern = rf"\|\s*{temperature_c:.0f} °C\s*\|[^\n]*\|\s*{tstar_s:.1f} s"
+    assert re.search(pattern, HEAT_DOC.read_text()) is not None
+
+
+def test_docs_runs_select_the_unclothed_law():
+    """The page runs Eq. 63.44, so its command must select it explicitly."""
+    text = HEAT_DOC.read_text()
+    command = text.split("```bash", 2)[2].split("```", 1)[0]
+    assert "--heat-clothing unclothed" in command
+    assert 60.0 * 4.1e8 * 100.0**-3.61 > 1000.0  # beyond the FDS record

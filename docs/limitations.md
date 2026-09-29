@@ -52,7 +52,9 @@ below FED = 0.3. The default spread is fitted to the incapacitation fractions
 of NIST TN 1797
 ([#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The
 heat dose, which FDS+Evac does not have, is also deterministic by default: no
-population spread for heat is published. Its `probabilistic` mode reuses the
+population spread for heat is published. Its threshold is `--fed-threshold`
+unless `--heat-fed-threshold` sets another, a departure from ISO 13571:2012
+§5.4. Its `probabilistic` mode reuses the
 gas spread without a data basis of its own.
 
 ## Evacuation time when anyone is incapacitated
@@ -81,9 +83,10 @@ reached an exit.
 
 ## What is not modelled
 
-**Radiant heat.** The heat dose is the convective term of Purser and
-McAllister (SFPE Handbook, 5th ed., Eq. 63.44, or Eq. 63.45-63.47 with
-`--heat-endpoint`), computed from the gas temperature of an FDS
+**Radiant heat.** The heat dose is a convective term: ISO 13571:2012
+Eq. (9) for fully clothed subjects, Eq. (10) (= SFPE Handbook, 5th ed.,
+Eq. 63.44) with `--heat-clothing unclothed`, or Eqs. 63.45-63.47 with
+`--heat-endpoint`, computed from the gas temperature of an FDS
 `TEMPERATURE` slice. The opt-in `--heat-fed-method total-flux` adds the
 radiation of the gas at the head (Eq. 63.49, spec 016), with an assumed
 emissivity. With `--heat-regime layer` it instead takes the head to be in
@@ -102,16 +105,24 @@ well, U supplies the radiant term and the layer term is not added
 ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 Otherwise an agent near a flame is treated as less exposed than it is
 ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
+In every total-flux variant a radiant term below 2.5 kW/m² counts as zero
+(ISO 13571:2012 §8.2, §8.4); convection always counts. ISO gives 2.5 kW/m²
+as an incident flux, but the code compares it with the net or excess
+radiant term, about 18 % lower at the Handbook's 200 °C anchor. At the
+default emissivity 0.5, smoke below about 285 °C therefore gives no radiant
+dose, and the dose rate jumps where the radiant term reaches the threshold
+([Models › Heat](/models/heat.md#where-the-radiant-threshold-acts)).
 The unsourced values of the heat dose, its FDS reference decks and its
 tests are listed in
 [Models › Heat › Assumptions](/models/heat.md#assumptions-unsourced-values).
 
 **Heat does not affect route choice or walking speed.** The heat dose is
 opt-in (`--enable-heat-fed`). When on, it is tracked per agent, separately from the toxic dose, and an agent is
-incapacitated when either dose reaches its threshold. The two thresholds are
-different endpoints: gas FED = 1 is incapacitation, heat FED = 1 the
-Eq. 63.44 time, which by our comparison lies near the SFPE Handbook's
-tolerance curve (see Fundamentals › Heat); the FED history's
+incapacitated when either dose reaches its threshold, one value for both
+by default, as ISO 13571:2012 asks (§5.4). The two doses have different
+endpoints: gas FED = 1 is incapacitation, heat FED = 1 the time of ISO
+Eq. (9), which ISO calls the time to prevention of escape or to
+experiencing pain (see Fundamentals › Heat); the FED history's
 `incapacitation_cause` column says which dose stopped the agent. Before that
 point, heat has no effect. Route choice is given the toxic dose only, so an agent can
 choose a route that will incapacitate it thermally. Walking speed is reduced

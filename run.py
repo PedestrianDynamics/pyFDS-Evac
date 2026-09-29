@@ -16,6 +16,7 @@ from pyfds_evac.core.fed import (
     DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
     DEFAULT_HEAT_EMISSIVITY,
     DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+    HEAT_CLOTHING,
     HEAT_ENDPOINTS,
     HEAT_FED_METHODS,
     HEAT_FLUX_REGIMES,
@@ -235,12 +236,23 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--enable-heat-fed",
         action="store_true",
-        help="Accumulate the convective heat FED (SFPE Handbook Eq. 63.44, or "
-        "the law of --heat-endpoint, or the total-flux law of "
+        help="Accumulate the convective heat FED (ISO 13571:2012 Eq. (9), "
+        "fully clothed, or the law of --heat-clothing, --heat-endpoint or "
         "--heat-fed-method) from "
         "the FDS TEMPERATURE slice and incapacitate on it. Off by default, as "
         "FDS+Evac has no heat dose; before this became opt-in it was on "
         "whenever the case had a TEMPERATURE slice",
+    )
+    parser.add_argument(
+        "--heat-clothing",
+        choices=HEAT_CLOTHING,
+        default=None,
+        help="Convective law of ISO 13571:2012 (8.3) for the heat FED; needs "
+        "--enable-heat-fed. clothed (default): Eq. (9), t = 4.1e8 T^-3.61 min, "
+        "fully clothed. unclothed: Eq. (10), t = 5e7 T^-3.4 min, unclothed or "
+        "lightly clothed, the same law as SFPE Handbook Eq. 63.44 and the "
+        "default before the ISO law. No effect with --heat-endpoint or "
+        "--heat-fed-method total-flux",
     )
     parser.add_argument(
         "--heat-endpoint",
@@ -249,7 +261,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Heat endpoint of SFPE Handbook Ch. 63: tolerance (Eq. 63.45), "
         "injury (Eq. 63.46) or fatal (Eq. 63.47) convective law, so that heat "
         "FED = 1 is that endpoint; needs --enable-heat-fed. Samples above "
-        "205 C (an assumed limit) or non-finite are flagged. Default: none, Eq. 63.44. "
+        "205 C (an assumed limit) or non-finite are flagged. Default: none, the "
+        "ISO law of --heat-clothing. "
         "With --heat-fed-method total-flux it selects the dose D of Eq. 63.43 "
         "(default there: fatal)",
     )
@@ -258,9 +271,12 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=HEAT_FED_METHODS,
         default="convective",
         help="Heat dose law; needs --enable-heat-fed. convective (default): "
-        "Eq. 63.44 or the law of --heat-endpoint. total-flux: heat flux to the "
+        "the ISO law of --heat-clothing or the law of --heat-endpoint. "
+        "total-flux: heat flux to the "
         "skin from Eq. 63.49 (both terms in W/m2, divided by 1000 together), "
-        "rate q^1.33/D (Eq. 63.43) with no 2.5 kW/m2 threshold; D of "
+        "rate q^1.33/D (Eq. 63.43), the radiant term (net or excess, not "
+        "incident) counted as zero below 2.5 kW/m2 (ISO 13571:2012 8.2, 8.4); "
+        "D of "
         "--heat-endpoint, fatal (16.7) without it",
     )
     parser.add_argument(
@@ -348,12 +364,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--heat-fed-threshold",
         type=float,
-        default=1.0,
-        help="Median cumulative heat FED (SFPE Handbook Eq. 63.44, or the law "
-        "of --heat-endpoint or --heat-fed-method) at which an "
-        "agent is thermally incapacitated; needs --enable-heat-fed "
-        "(default: 1.0). Independent of "
-        "--fed-threshold (toxic gas) -- see fed.py's TenabilityConfig",
+        default=None,
+        help="Median cumulative heat FED at which an agent is thermally "
+        "incapacitated; needs --enable-heat-fed. Default: none, the value of "
+        "--fed-threshold, as ISO 13571:2012 uses one threshold for FED and FEC "
+        "(5.4) and sets the heat threshold in the same manner (8.5). Setting it departs from ISO; the run logs a warning "
+        "and the manifest records heat_fed_threshold_override",
     )
     parser.add_argument(
         "--heat-incapacitation-mode",

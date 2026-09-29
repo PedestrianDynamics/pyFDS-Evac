@@ -55,13 +55,15 @@ species the sum reduces to the FDS+Evac default,
 FDS+Evac has no heat dose, so this one is opt-in: with `--enable-heat-fed`
 (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in the case, a separate
 heat dose accumulates at
-`_heat_fed_rate_per_minute` (`fed.py`),
+`_heat_fed_rate_per_minute` (`fed.py`), by default ISO 13571:2012 Eq. (9)
+for fully clothed subjects,
 
 $$
-\dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
+\dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.61} / (4.1 \times 10^{8}) \quad [1/\mathrm{min}],
 $$
 
-with *T* in °C. It is a running total of its own, never added to the gas FED.
+with *T* in °C; `--heat-clothing unclothed` selects ISO Eq. (10), which is
+SFPE Eq. 63.44. It is a running total of its own, never added to the gas FED.
 The basis is on [Heat](/fundamentals/heat.md); the full specification,
 including its limits, is on [Models › Heat](/models/heat.md).
 
@@ -93,8 +95,11 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
   In `deterministic` mode every agent uses the threshold itself. Both doses
   are deterministic by default: the gas dose as in FDS+Evac, and the heat
-  dose since no population spread for heat is published. An agent reaching
-  its threshold in a run does not on its own show whether a design is
+  dose since no population spread for heat is published. The heat dose uses
+  the gas threshold `fed_threshold`, as ISO 13571:2012 asks for one
+  threshold (§5.4); `heat_fed_threshold` overrides it, a departure from ISO
+  ([Models › Heat](/models/heat.md#incapacitation)). An agent reaching its
+  threshold in a run does not on its own show whether a design is
   acceptable; FED 1 describes the median occupant (see
   [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
 
@@ -106,7 +111,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 | `fed_threshold` | `1.0` | `--fed-threshold` |
 | `incapacitation_mode` | `"deterministic"` | `--incapacitation-mode` |
 | `susceptibility_sigma` | `0.94` | `--susceptibility-sigma` |
-| `heat_fed_threshold` | `1.0` | `--heat-fed-threshold` |
+| `heat_fed_threshold` | none, `fed_threshold` | `--heat-fed-threshold` |
 | `heat_incapacitation_mode` | `"deterministic"` | `--heat-incapacitation-mode` |
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
 | `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` | `--o2-threshold-percent` |
@@ -267,9 +272,11 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 \(g\) partly counts irritancy twice
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
-Heat uses the convective Eq. 63.44 (`fed.py`, `_heat_fed_rate_per_minute`) unless `--heat-endpoint`
+Heat uses the convective ISO 13571:2012 Eq. (9), or Eq. (10) = Eq. 63.44 with `--heat-clothing unclothed` (`fed.py`, `_heat_fed_rate_per_minute`), unless `--heat-endpoint`
 selects Eq. 63.45, 63.46 or 63.47, or `--heat-fed-method total-flux` the
-flux law of Eqs. 63.49 and 63.43 ([Heat](/models/heat.md)). The log-normal σ of both
+flux law of Eqs. 63.49 and 63.43, with the radiant term counted from
+2.5 kW/m² (ISO 13571:2012 §8.2, §8.4;
+[Heat › Where the radiant threshold acts](/models/heat.md#where-the-radiant-threshold-acts)). The log-normal σ of both
 thresholds (`fed.py`, `TenabilityConfig.susceptibility_sigma`, `TenabilityConfig.heat_susceptibility_sigma`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)

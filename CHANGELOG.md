@@ -35,17 +35,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `u_factor` and `radiant_flux` (`excess`). Agents outside the FDS domain
   get a zero rate, with U and q NaN in the FED history, and one warning
   per run. Surroundings at or below the skin temperature give no dose for
-  any f; q ≤ 0 gives a zero rate, never a negative one
+  any f; a negative excess counts as zero and the rate is never negative
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 - `--heat-fed-method total-flux` (opt-in, with `--enable-heat-fed`; default
   `convective`): the heat dose is q^1.33/D (SFPE Handbook Ch. 63 Eq. 63.43)
   with q the heat flux to the skin of Eq. 63.49, both terms divided by 1000
-  together, and no 2.5 kW/m² threshold (spec 016). D is the dose of
-  `--heat-endpoint`, the fatal 16.7 without it (SFPE Ch. 63 p. 2384). `--heat-emissivity` (0.5),
+  together. The radiant term of q (the gas term, the `INTEGRATED
+  INTENSITY` excess or the layer term) counts as zero in the dose below
+  2.5 kW/m² (ISO 13571:2012 §8.2, §8.4, spec 016; 2.5 itself counts); the
+  convective term counts at every level, so hot air still gives a dose.
+  D is the dose of `--heat-endpoint`, the fatal 16.7 without it (SFPE Ch. 63 p. 2384). `--heat-emissivity` (0.5),
   `--heat-convective-coefficient` (5) and `--heat-skin-temperature` (35 °C)
   set the flux; their defaults are assumptions. The FED history gains
-  `heat_flux_kw_m2` and the manifest `heat_fed_method` and
-  `heat_flux_parameters`. This is the head-in-smoke regime
+  `heat_flux_kw_m2` (the physical q) and the manifest `heat_fed_method`
+  and `heat_flux_parameters`, with `radiant_threshold_kw_m2`. This is the
+  head-in-smoke regime
   ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 - `--heat-endpoint {tolerance,injury,fatal}` (opt-in, with
   `--enable-heat-fed`): the heat dose uses the convective law of that
@@ -53,8 +57,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   radiant dose (1.33, 10, 16.7; SFPE Ch. 63 pp. 2382 and 2384). The FED history gains `heat_endpoint`,
   `heat_outside_validity` (above 205 °C, an assumed limit, or a non-finite
   temperature) and `heat_humidity` (`unknown`, as humidity is not sampled),
-  and the run manifest records `heat_endpoint` and `heat_validity`. Without the option the dose stays
-  Eq. 63.44
+  and the run manifest records `heat_endpoint` and `heat_validity`. Without the option the dose is
+  the ISO 13571:2012 law of `--heat-clothing`
   ([#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
 - A run warns once when CO is sampled with zero CO2: the hyperventilation
   factor is then 1, and the FDS deck probably has no ambient CO2.
@@ -84,6 +88,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Breaking for heat runs.** With `--enable-heat-fed` the default
+  convective law is ISO 13571:2012 Eq. (9), fully clothed,
+  t = 4.1e8 · T^-3.61 min (T in °C, air with less than 10 % water vapour),
+  in place of SFPE Handbook Eq. 63.44, t = 5e7 · T^-3.4 min. At 100, 150
+  and 200 °C the time to heat FED = 1 grows from 7.9, 2.0 and 0.75 min to
+  24.7, 5.7 and 2.0 min. `--heat-clothing unclothed`
+  (`opts.heat_clothing`, `DefaultHeatFedModel(..., clothing="unclothed")`)
+  selects ISO Eq. (10), which has the constants of Eq. 63.44, and gives the
+  previous behaviour. The manifest records `heat_clothing`.
+  `--heat-endpoint` and `--heat-fed-method total-flux` are unchanged
+  ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)).
+- **Breaking for heat runs.** The heat threshold is now the gas threshold
+  `--fed-threshold`, as ISO 13571:2012 asks for one threshold for FED and
+  FEC (§5.4, §8.5). `--heat-fed-threshold` and
+  `TenabilityConfig.heat_fed_threshold` default to none; a value sets a
+  separate heat threshold, logs a warning that it departs from ISO, and is
+  recorded in the manifest as `heat_fed_threshold_override`. Runs with the
+  default `--fed-threshold 1.0` are unaffected; a run that changed
+  `--fed-threshold` and wants the previous heat threshold passes
+  `--heat-fed-threshold 1.0`. Both doses stay deterministic by default.
+
+- Docs: Models › Heat explains where the 2.5 kW/m² radiant threshold of
+  total flux acts: from about 285 °C at the default ε, with a step in the
+  rate there and no radiant dose at the 200 °C anchor. A figure
+  (`scripts/figures/heat_radiant_threshold.py`) shows it, and the
+  verification table lists the total-flux, layer, `INTEGRATED INTENSITY`
+  and threshold tests.
 - Docs: Fundamentals › Incapacitation thresholds states what is known
   about the population spread of heat tolerance: SFPE Ch. 63 gives figures
   only for radiant lethality, which imply σ ≈ 0.22 if log-normal, not the
@@ -184,6 +215,11 @@ documentation error in the FDS+Evac Guide, and it differs from the current
 one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
+
+- `scripts/fed_heat_hand_calc.py` cited "ISO TS 13571 eq. 5" for
+  t = 5e7 · T^-3.4; it is ISO 13571:2012 Eq. (10) (§8.3.2), equal to SFPE
+  Eq. 63.44
+  ([#291](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/291)).
 
 - A heat-only FDS case (TEMPERATURE slice, no SOOT EXTINCTION COEFFICIENT
   slice) no longer crashes `run.py`. Smoke speed reduction is then off and

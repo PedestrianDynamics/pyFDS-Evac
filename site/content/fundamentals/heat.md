@@ -200,7 +200,8 @@ Our reading of the text, not a statement of the standard:
 - **Clothing.** ISO recommends Eq. (9) for fully clothed subjects. Ch. 63
   holds that light indoor clothing adds little tolerance and does not
   protect the hands and head, so it treats the unclothed expressions as the
-  relevant ones unless protective clothing is worn (p. 2336).
+  relevant ones unless protective clothing is worn (p. 2336). How
+  pyFDS-Evac chooses: [Models › Heat › Clothing](/models/heat.md#clothing).
 
 ![Two log-scale panels. Left: time to endpoint against radiant flux from 2.5 to 20 kW/m², ISO Eqs. 7 and 8 against SFPE Eq. 63.43 for r = 1.33 and 16.7 with the second-degree band r = 4.0 to 12.2 shaded, and the two radiant rows of Table 63.20. Right: time against air temperature from 60 to 250 °C, ISO Eqs. 9 and 10 against SFPE Eqs. 63.45 to 63.47, and the five convective rows of Table 63.20](/images/fundamentals/heat_iso.png)
 

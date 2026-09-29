@@ -14,7 +14,10 @@ Eq. 63.43, t = D / q^1.33 [min], with D the radiant dose r of the endpoint
 Purser's spreadsheet uses 16.667, the code follows the Handbook). The dose is
 summed, FED = sum dt / t. Differences from the Handbook text, by spec 016:
 
-- no 2.5 kW/m2 threshold: the dose accumulates at every positive flux;
+- the ISO 13571:2012 2.5 kW/m2 threshold (§8.2, §8.4, maintainer decision)
+  acts on the radiant term only: eps sigma (T_g^4 - T_s^4) / 1000 counts as
+  zero below 2.5 kW/m2, the convective term counts at every level (details
+  in ``tests/test_heat_radiant_threshold.py``);
 - mutually exclusive with the convective laws: never 1/t_conv on top;
 - FED = 1 is the fatal endpoint by maintainer decision, so the method uses
   the fatal D when ``--heat-endpoint`` is not given.
@@ -84,6 +87,15 @@ def q_hand(t_gas_c, *, eps, h, t_skin_c, q_ext=0.0):
     """Eq. 63.49 in kW/m2, both terms in W/m2 divided together (spec 016)."""
     tg, ts = t_gas_c + KELVIN, t_skin_c + KELVIN
     return (eps * SIGMA * (tg**4 - ts**4) + h * (tg - ts)) / 1000.0 + q_ext
+
+
+def q_dose_hand(t_gas_c, *, eps, h, t_skin_c):
+    """q entering the dose: radiant term zero below 2.5 kW/m2 (ISO 13571:2012
+    §8.2, §8.4), convective term always."""
+    tg, ts = t_gas_c + KELVIN, t_skin_c + KELVIN
+    radiant = eps * SIGMA * (tg**4 - ts**4) / 1000.0
+    radiant = 0.0 if radiant < 2.5 else radiant
+    return radiant + h * (tg - ts) / 1000.0
 
 
 def t_hand_min(q, dose):
@@ -201,13 +213,14 @@ def test_cli_default_method_is_not_total_flux():
 
 
 @pytest.mark.parametrize("t_c", [65.0, 150.0, 405.0])
-def test_default_model_is_still_eq_63_44(t_c):
+def test_default_model_is_still_convective(t_c):
+    """Without the method the rate is ISO 13571:2012 Eq. (9), not q^1.33/D."""
     field = FdsHeatField(_Sampler(t_c))  # type: ignore[arg-type]
     model = DefaultHeatFedModel(
         field, DefaultFedConfig(fds_dir="", update_interval_s=1.0)
     )
     _, rate = model.sample_rate(0.0, 0.0, 0.0)
-    assert rate == pytest.approx(1.0 / t_eq_63_44_min(t_c), rel=1e-12)
+    assert rate == pytest.approx(1.0 / (4.1e8 * t_c**-3.61), rel=1e-12)
 
 
 # --- flux -------------------------------------------------------------------
@@ -261,7 +274,7 @@ def test_flux_is_zero_at_skin_temperature():
     assert got == pytest.approx(0.0, abs=1e-12)
 
 
-# --- rate: Eq. 63.43, no threshold ------------------------------------------
+# --- rate: Eq. 63.43 of the total q -----------------------------------------
 
 
 @pytest.mark.parametrize("name", sorted(DOSE))
@@ -281,8 +294,8 @@ def test_rate_bounds_table_63_20_radiant_rows(q, table_s):
 
 
 @pytest.mark.parametrize("q", [0.05, 0.5, 1.0, 2.0, 2.49])
-def test_no_threshold_below_2_5_kw(q):
-    """Spec 016: no 2.5 kW/m2 threshold; the dose accumulates below it."""
+def test_rate_function_has_no_threshold_on_total_q(q):
+    """The ISO threshold acts on the radiant term upstream, not on total q."""
     rate = _flux_rate(q, DOSE["fatal"])
     assert rate > 0.0
     assert rate == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
@@ -304,10 +317,15 @@ def test_rate_domain_guard(q):
 @pytest.mark.parametrize("name", sorted(DOSE))
 @pytest.mark.parametrize(
     ("t_c", "eps", "h", "t_skin_c"),
-    [(100.0, 0.05, 8.0, 35.0), (150.0, 0.5, 5.0, 35.0), (250.0, 0.5, 8.0, 36.0)],
+    [
+        (100.0, 0.05, 8.0, 35.0),
+        (150.0, 0.5, 5.0, 35.0),
+        (250.0, 0.5, 8.0, 36.0),
+        (350.0, 0.5, 5.0, 35.0),  # radiant 4.0 kW/m2, above the threshold
+    ],
 )
 def test_model_rate_uses_the_endpoint_dose(name, t_c, eps, h, t_skin_c):
-    q = q_hand(t_c, eps=eps, h=h, t_skin_c=t_skin_c)
+    q = q_dose_hand(t_c, eps=eps, h=h, t_skin_c=t_skin_c)
     expected = 1.0 / t_hand_min(q, DOSE[name])
     got = _rate(t_c, eps=eps, h=h, t_skin_c=t_skin_c, endpoint=name)
     assert got == pytest.approx(expected, rel=1e-9)
@@ -315,7 +333,7 @@ def test_model_rate_uses_the_endpoint_dose(name, t_c, eps, h, t_skin_c):
 
 def test_model_without_endpoint_uses_the_fatal_dose():
     """FED = 1 = fatal (spec 016 maintainer decision): D = 16.7 (p. 2384)."""
-    q = q_hand(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
+    q = q_dose_hand(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
     got = _rate(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
     assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
 
@@ -324,7 +342,7 @@ def test_model_without_endpoint_uses_the_fatal_dose():
 def test_no_convective_law_on_top(name):
     """Mutually exclusive: the rate is q^1.33/D alone, not plus 1/t_conv."""
     t_c = 150.0
-    q = q_hand(t_c, eps=0.5, h=5.0, t_skin_c=35.0)
+    q = q_dose_hand(t_c, eps=0.5, h=5.0, t_skin_c=35.0)
     flux_only = 1.0 / t_hand_min(q, DOSE[name])
     got = _rate(t_c, eps=0.5, h=5.0, t_skin_c=35.0, endpoint=name)
     assert got == pytest.approx(flux_only, rel=1e-9)
@@ -332,8 +350,9 @@ def test_no_convective_law_on_top(name):
         assert not math.isclose(got, flux_only + 1.0 / t_conv, rel_tol=1e-2)
 
 
-def test_model_no_threshold_in_clear_air():
-    """#223 gap: 100 deg C, eps 0.05, h 8 gives q < 2.5 kW/m2 and still a dose."""
+def test_model_convection_counts_in_clear_air():
+    """#223 gap: 100 deg C, eps 0.05, h 8 gives q < 2.5 kW/m2 and still a
+    dose, since the ISO threshold acts on the radiant term only."""
     q = q_hand(100.0, eps=0.05, h=8.0, t_skin_c=35.0)
     assert q < 2.5
     assert _rate(100.0, eps=0.05, h=8.0, t_skin_c=35.0) > 0.0

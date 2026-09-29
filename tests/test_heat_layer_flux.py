@@ -32,6 +32,9 @@ Regimes (spec 016), chosen by the user; no automatic rule is sourced:
   1.5 sigma dT^4 against sigma dT^4 here).
 
 The rate is Eq. 63.43, q^1.33 / D, as in ``tests/test_heat_total_flux.py``.
+In the dose the radiant term (q_ext, or the eps term in smoke) counts as zero
+below 2.5 kW/m2 (ISO 13571:2012 §8.2, §8.4, maintainer decision); the
+convective term always counts.
 
 Expected values are hand formulas written in this file and the Handbook's
 200 deg C / 2.5 kW/m2 anchor, never ``pyfds_evac``.
@@ -108,6 +111,25 @@ def q_layer_hand(t_head_c, t_layer_c, *, h, phi, eps_l, t_skin_c):
 def q_smoke_hand(t_head_c, *, eps, h, t_skin_c):
     """Smoke regime (#223): Eq. 63.49, both terms divided together."""
     return eps * radiant_hand(t_head_c, t_skin_c) + convective_hand(
+        t_head_c, h=h, t_skin_c=t_skin_c
+    )
+
+
+def counted(q_rad):
+    """ISO 13571:2012 §8.2, §8.4: radiant term zero below 2.5 kW/m2."""
+    return 0.0 if q_rad < 2.5 else q_rad
+
+
+def q_layer_dose_hand(t_head_c, t_layer_c, *, h, phi, eps_l, t_skin_c):
+    """Layer regime q entering the dose: q_ext counted per ISO."""
+    return convective_hand(t_head_c, h=h, t_skin_c=t_skin_c) + counted(
+        q_ext_hand(t_layer_c, phi=phi, eps_l=eps_l, t_skin_c=t_skin_c)
+    )
+
+
+def q_smoke_dose_hand(t_head_c, *, eps, h, t_skin_c):
+    """Smoke regime q entering the dose: eps term counted per ISO."""
+    return counted(eps * radiant_hand(t_head_c, t_skin_c)) + convective_hand(
         t_head_c, h=h, t_skin_c=t_skin_c
     )
 
@@ -218,7 +240,7 @@ def test_total_flux_without_regime_is_the_smoke_formula(t_c, eps, h, t_skin_c):
         skin_temperature_celsius=t_skin_c,
     )
     _, rate = model.sample_rate(0.0, 0.0, 0.0)
-    q = q_smoke_hand(t_c, eps=eps, h=h, t_skin_c=t_skin_c)
+    q = q_smoke_dose_hand(t_c, eps=eps, h=h, t_skin_c=t_skin_c)
     assert rate == pytest.approx(rate_hand(q, DOSE["fatal"]), rel=1e-9)
 
 
@@ -279,7 +301,9 @@ def test_layer_flux_sign():
     ],
 )
 def test_model_layer_rate(name, t_head, t_layer, phi, eps_l, h, t_skin_c):
-    q = q_layer_hand(t_head, t_layer, h=h, phi=phi, eps_l=eps_l, t_skin_c=t_skin_c)
+    """The 200 deg C black layer gives 2.3 kW/m2 net, below the ISO
+    threshold: convection only."""
+    q = q_layer_dose_hand(t_head, t_layer, h=h, phi=phi, eps_l=eps_l, t_skin_c=t_skin_c)
     got = _rate(
         t_head,
         t_layer,
@@ -318,21 +342,24 @@ def test_layer_regime_reads_the_layer_field_for_the_layer_term():
 
 def test_smoke_regime_ignores_a_layer_field():
     """regime="smoke" with a layer field and phi, eps_L given: #223 formula."""
-    q = q_smoke_hand(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
+    q = q_smoke_dose_hand(150.0, eps=0.5, h=5.0, t_skin_c=35.0)
     got = _rate(150.0, 400.0, regime="smoke", eps=0.5, phi=1.0, eps_l=1.0)
     assert got == pytest.approx(rate_hand(q, DOSE["fatal"]), rel=1e-9)
 
 
 def test_layer_regime_cool_layer_still_gives_convection():
-    """A layer cooler than the skin lowers q; the rate is zero only when the
-    total q <= 0 (no recovery)."""
+    """A layer cooler than the skin gives a negative q_ext, below the ISO
+    threshold, so it counts as zero: the dose is convection alone, even
+    where the physical total q <= 0."""
     params = dict(h=5.0, phi=1.0, eps_l=1.0, t_skin_c=35.0)
-    q = q_layer_hand(120.0, 30.0, **params)
-    assert q > 0.0
+    assert q_ext_hand(30.0, phi=1.0, eps_l=1.0, t_skin_c=35.0) < 0.0
     got = _rate(120.0, 30.0, eps=0.5, **params)
-    assert got == pytest.approx(rate_hand(q, DOSE["fatal"]), rel=1e-9)
+    conv = convective_hand(120.0, h=5.0, t_skin_c=35.0)
+    assert got == pytest.approx(rate_hand(conv, DOSE["fatal"]), rel=1e-9)
     assert q_layer_hand(36.0, 20.0, **params) < 0.0
-    assert _rate(36.0, 20.0, eps=0.5, **params) == 0.0
+    conv = convective_hand(36.0, h=5.0, t_skin_c=35.0)
+    got = _rate(36.0, 20.0, eps=0.5, **params)
+    assert got == pytest.approx(rate_hand(conv, DOSE["fatal"]), rel=1e-9)
 
 
 @pytest.mark.parametrize("t_layer", [float("nan"), float("inf")])

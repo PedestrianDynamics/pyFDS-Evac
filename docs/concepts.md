@@ -342,7 +342,7 @@ pages. Defaults are on the Models pages.
 | *g*(FIC) | Irritant speed factor | - | `fic_min_factor`, `fic_alpha` |
 | FED | Fractional effective dose, toxic gases | - | `fed` |
 | \(\mathrm{FED}_{\mathrm{heat}}\) | Fractional effective dose, convective heat | - | heat FED |
-| \(D_i\), \(D_{\mathrm{heat},i}\) | Incapacitation threshold of agent *i*; log-normal in probabilistic mode | - | `fed_threshold`, `heat_fed_threshold` |
+| \(D_i\), \(D_{\mathrm{heat},i}\) | Incapacitation threshold of agent *i*; log-normal in probabilistic mode | - | `fed_threshold` for both; `heat_fed_threshold` overrides the heat one |
 | *T* | Gas temperature | °C | `TEMPERATURE` slice |
 | \(L_k\) | Walkable distance still to go on route *k* | m | `effective_length` |
 | \(\tau_k = \bar K_k L_k\) | Optical depth along route *k* | - | `tau_route` |

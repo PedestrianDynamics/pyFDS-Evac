@@ -218,26 +218,56 @@ class HeatFedInputs:
     layer_temperature_celsius: float | None = None
 
 
-def _heat_fed_rate_per_minute(temperature_celsius: float) -> float:
-    """Return the convective-heat FED contribution in 1/min (SFPE Handbook Eq. 63.44).
+# ISO 13571:2012 §8.3, air with less than 10 % water vapour by volume:
+# t_Iconv [min] = a * T**-b, T in deg C. Eq. (9), fully clothed (Crane 1978);
+# Eq. (10), unclothed or lightly clothed, has the constants of SFPE Handbook
+# 5th ed. Eq. 63.44. Maps clothing -> (a, b).
+HEAT_CLOTHING_LAWS: dict[str, tuple[float, float]] = {
+    "clothed": (4.1e8, 3.61),
+    "unclothed": (5e7, 3.4),
+}
+HEAT_CLOTHING = tuple(HEAT_CLOTHING_LAWS)
+DEFAULT_HEAT_CLOTHING = "clothed"
 
-    rate [1/min] = T[deg C] ** 3.4 / 5e7
 
-    Not in the FDS+Evac guide like the other terms in this module -- this is
-    SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 63 (Purser &
-    McAllister), Eq. 63.44, scoped to convective heat from elevated gas
-    temperature only (radiant heat is a separate, unmodelled term). Already
-    negligible at ambient temperature, so no floor is applied beyond the
-    domain guard.
+def _check_heat_clothing(clothing: str) -> None:
+    """Raise ValueError for a clothing that has no convective law."""
+    if clothing not in HEAT_CLOTHING_LAWS:
+        raise ValueError(
+            f"Unknown heat clothing {clothing!r}; expected one of {HEAT_CLOTHING}"
+        )
+
+
+def _heat_fed_rate_per_minute(
+    temperature_celsius: float, clothing: str = DEFAULT_HEAT_CLOTHING
+) -> float:
+    """Return the convective-heat FED contribution in 1/min (ISO 13571:2012).
+
+    rate [1/min] = T[deg C] ** b / a, with (a, b) = (4.1e8, 3.61) for
+    ``clothed`` (Eq. (9)) and (5e7, 3.4) for ``unclothed`` (Eq. (10), equal
+    to SFPE Handbook Eq. 63.44).
+
+    Not in the FDS+Evac guide like the other terms in this module. Scoped to
+    convective heat from elevated gas temperature only (radiant heat is a
+    separate term). Already negligible at ambient temperature, so no floor
+    is applied beyond the domain guard.
     """
+    _check_heat_clothing(clothing)
     if not math.isfinite(temperature_celsius) or temperature_celsius <= 0.0:
         return 0.0
-    return (temperature_celsius**3.4) / 5e7
+    a, b = HEAT_CLOTHING_LAWS[clothing]
+    return (temperature_celsius**b) / a
 
 
-def default_heat_fed_rate_per_minute(inputs: HeatFedInputs) -> float:
-    """Return the SFPE Handbook (Eq. 63.44) heat FED accumulation rate in 1/min."""
-    return _heat_fed_rate_per_minute(inputs.temperature_celsius)
+def default_heat_fed_rate_per_minute(
+    inputs: HeatFedInputs, clothing: str = DEFAULT_HEAT_CLOTHING
+) -> float:
+    """Return the ISO 13571:2012 convective heat FED rate in 1/min.
+
+    Eq. (9) for ``clothed`` (default), Eq. (10) = SFPE Eq. 63.44 for
+    ``unclothed``.
+    """
+    return _heat_fed_rate_per_minute(inputs.temperature_celsius, clothing)
 
 
 @dataclass(frozen=True)
@@ -366,6 +396,20 @@ HEAT_SLICE_Z_TOLERANCE_M = 1e-6
 # "smoke", head in smoke, Eq. 63.49 at the head; "layer", head in clear air
 # below a hot layer, convection at the head plus the layer term (#222).
 HEAT_FLUX_REGIMES = ("smoke", "layer")
+# ISO 13571:2012 §8.2, §8.4: the radiant contribution is zero below 2.5 kW/m2
+# (maintainer decision to follow ISO). Applied to the radiant term only;
+# convection counts at all levels.
+ISO_RADIANT_THRESHOLD_KW_M2 = 2.5
+
+
+def counted_radiant_flux_kw_m2(radiant_kw_m2: float) -> float:
+    """Return the radiant flux counted in the dose: 0.0 below 2.5 kW/m2.
+
+    ISO says "below 2.5", so 2.5 counts. NaN passes through.
+    """
+    if radiant_kw_m2 < ISO_RADIANT_THRESHOLD_KW_M2:
+        return 0.0
+    return radiant_kw_m2
 
 
 def radiant_flux_from_integrated_intensity_kw_m2(
@@ -442,7 +486,10 @@ def layer_radiant_flux_kw_m2(
 
 
 def total_flux_heat_fed_rate_per_minute(q_kw_m2: float, dose: float) -> float:
-    """Return q^1.33 / D in 1/min (Eq. 63.43), with no 2.5 kW/m2 threshold.
+    """Return q^1.33 / D in 1/min (Eq. 63.43).
+
+    The ISO 2.5 kW/m2 threshold acts on the radiant part of q, upstream
+    (``counted_radiant_flux_kw_m2``), not here.
 
     Zero for q <= 0 (gas at or below skin temperature, no recovery) and for a
     non-finite q.
@@ -575,12 +622,15 @@ class TenabilityConfig:
       Korhonen 2021 §3.4, with the default 1.0): desired
       speed is driven to zero and the agent remains as a static
       obstacle.
-    - Binary heat incapacitation when ``FED_HEAT_cumulative >=
-      heat_fed_threshold`` (SFPE Handbook Eq. 63.44), tracked as a completely
-      separate running total from the gas ``fed_threshold`` above -- heat
-      and toxic gases incapacitate through different mechanisms, so the
-      SFPE Handbook does not sum them into one dose. An agent is
-      incapacitated the instant *either* threshold is crossed.
+    - Binary heat incapacitation when ``FED_HEAT_cumulative`` reaches the
+      heat threshold, tracked as a completely separate running total from
+      the gas FED above -- heat and toxic gases incapacitate through
+      different mechanisms, so neither SFPE Ch. 63 nor ISO 13571:2012 sums
+      them into one dose. The threshold is ``fed_threshold``, as ISO
+      13571:2012 asks for one threshold for FED and FEC (§5.4) and chooses
+      the heat threshold in the same manner (§8.5); ``heat_fed_threshold``
+      overrides it, a departure from ISO. An agent is incapacitated the
+      instant *either* threshold is crossed.
     """
 
     enable_fic_speed: bool = False
@@ -597,7 +647,8 @@ class TenabilityConfig:
     incapacitation_mode: str = "deterministic"
     susceptibility_sigma: float = 0.94
     enable_heat_incapacitation: bool = True
-    heat_fed_threshold: float = 1.0
+    # None: the heat track uses fed_threshold (ISO 13571:2012 §5.4, §8.5).
+    heat_fed_threshold: float | None = None
     # Heat is deterministic by default. SFPE Handbook 5th ed. Ch. 63 gives no
     # population spread for heat tolerance; its only population figures are
     # for radiant lethality (p. 2382). In "probabilistic" mode the heat track
@@ -606,6 +657,13 @@ class TenabilityConfig:
     # value.
     heat_incapacitation_mode: str = "deterministic"
     heat_susceptibility_sigma: float = 0.94
+
+    @property
+    def resolved_heat_fed_threshold(self) -> float:
+        """Return the heat threshold: the override, else ``fed_threshold``."""
+        if self.heat_fed_threshold is None:
+            return self.fed_threshold
+        return self.heat_fed_threshold
 
 
 def _sample_threshold(threshold: float, mode: str, sigma: float, rng) -> float:
@@ -642,12 +700,12 @@ def sample_heat_incapacitation_threshold(config: "TenabilityConfig", rng) -> flo
     """Draw one agent's cumulative heat-FED incapacitation threshold.
 
     Same mechanism as ``sample_incapacitation_threshold``, applied to
-    ``heat_fed_threshold``/``heat_incapacitation_mode``/
+    ``resolved_heat_fed_threshold``/``heat_incapacitation_mode``/
     ``heat_susceptibility_sigma`` -- an independent draw from the gas
     threshold, since the two tracks are not the same dose.
     """
     return _sample_threshold(
-        config.heat_fed_threshold,
+        config.resolved_heat_fed_threshold,
         config.heat_incapacitation_mode,
         config.heat_susceptibility_sigma,
         rng,
@@ -755,11 +813,13 @@ def accumulate_default_heat_fed(
     *,
     duration_s: float,
     initial_fed: float = 0.0,
+    clothing: str = DEFAULT_HEAT_CLOTHING,
 ) -> float:
     """Accumulate heat FED over a constant-exposure interval in seconds."""
 
     duration_min = max(0.0, float(duration_s)) / _SECONDS_PER_MINUTE
-    return float(initial_fed) + default_heat_fed_rate_per_minute(inputs) * duration_min
+    rate = default_heat_fed_rate_per_minute(inputs, clothing)
+    return float(initial_fed) + rate * duration_min
 
 
 def time_to_heat_fed_threshold_s(
@@ -767,13 +827,14 @@ def time_to_heat_fed_threshold_s(
     *,
     threshold: float = 1.0,
     initial_fed: float = 0.0,
+    clothing: str = DEFAULT_HEAT_CLOTHING,
 ) -> float:
     """Return the seconds needed to reach a heat FED threshold under constant exposure."""
 
     remaining = float(threshold) - float(initial_fed)
     if remaining <= 0.0:
         return 0.0
-    rate_per_min = default_heat_fed_rate_per_minute(inputs)
+    rate_per_min = default_heat_fed_rate_per_minute(inputs, clothing)
     if rate_per_min <= 0.0:
         return math.inf
     return (remaining / rate_per_min) * _SECONDS_PER_MINUTE
@@ -1127,11 +1188,13 @@ def _check_same_slice_height(
 
 
 class DefaultHeatFedModel:
-    """Combine sampled gas-phase temperature with the SFPE Handbook heat FED equation.
+    """Combine sampled gas-phase temperature with a heat FED law.
 
     With ``method="convective"`` (default): without *endpoint* the rate is
-    Eq. 63.44; with *endpoint* (a key of ``HEAT_ENDPOINTS``) it is that
-    endpoint's convective law. With ``method="total-flux"`` the rate is
+    the ISO 13571:2012 law of *clothing*, Eq. (9) for ``clothed`` (default)
+    or Eq. (10) = SFPE Eq. 63.44 for ``unclothed``; with *endpoint* (a key of
+    ``HEAT_ENDPOINTS``) it is that endpoint's convective law of SFPE Ch. 63,
+    and *clothing* has no effect. With ``method="total-flux"`` the rate is
     q^1.33 / D (Eqs. 63.49 and 63.43, spec 016), D the radiant dose of
     *endpoint*, or of ``fatal`` without one; the convective laws are not added.
     With ``radiant_source="integrated-intensity"`` (total-flux only, #221)
@@ -1169,6 +1232,7 @@ class DefaultHeatFedModel:
         view_factor: float | None = None,
         layer_emissivity: float | None = None,
         layer_height_m: float | None = None,
+        clothing: str = DEFAULT_HEAT_CLOTHING,
     ):
         """Store the temperature field sampler, FED settings and heat law."""
         if endpoint is not None and endpoint not in HEAT_ENDPOINTS:
@@ -1176,6 +1240,7 @@ class DefaultHeatFedModel:
                 f"Unknown heat endpoint {endpoint!r}; "
                 f"expected one of {sorted(HEAT_ENDPOINTS)}"
             )
+        _check_heat_clothing(clothing)
         _check_heat_flux_parameters(
             method, emissivity, convective_coefficient, skin_temperature_celsius
         )
@@ -1186,6 +1251,7 @@ class DefaultHeatFedModel:
         self.field = field
         self.config = config
         self.endpoint = endpoint
+        self.clothing = clothing
         self.method = method
         self.emissivity = emissivity
         self.convective_coefficient = convective_coefficient
@@ -1210,6 +1276,12 @@ class DefaultHeatFedModel:
         self.layer_height_m = layer_height_m
         self._warned_missing_intensity = False
 
+    def convective_clothing(self) -> str | None:
+        """Return the clothing of the ISO law in use, None under another law."""
+        if self.method != "convective" or self.endpoint is not None:
+            return None
+        return self.clothing
+
     def heat_flux_parameters(self) -> dict[str, object]:
         """Return the flux parameters for the run manifest."""
         params: dict[str, object] = {
@@ -1218,6 +1290,7 @@ class DefaultHeatFedModel:
             "skin_temperature_celsius": self.skin_temperature_celsius,
             "radiant_dose": HEAT_ENDPOINTS[self.endpoint or "fatal"].radiant_dose,
             "assumed": list(HEAT_FLUX_ASSUMED_PARAMETERS),
+            "radiant_threshold_kw_m2": ISO_RADIANT_THRESHOLD_KW_M2,
         }
         if self.regime == "layer":
             params.update(
@@ -1243,6 +1316,8 @@ class DefaultHeatFedModel:
         temperature_celsius: float,
         layer_temperature_celsius: float | None = None,
         integrated_intensity_kw_m2: float | None = None,
+        *,
+        radiant_threshold: bool = False,
     ) -> float:
         """Return the total-flux q in kW/m2 for one gas temperature.
 
@@ -1251,16 +1326,36 @@ class DefaultHeatFedModel:
         q = f (U - 4 sigma T_s^4 / 1000) + h (T_g - T_s) / 1000 (excess over
         an isotropic field at the skin temperature, maintainer decision on
         #221): U already holds the gas emission, so the eps term is not added.
+        With *radiant_threshold* the radiant term is zero below 2.5 kW/m2
+        (ISO 13571:2012 §8.2, §8.4); the dose uses that q.
         """
+        radiant = self._radiant_flux_kw_m2(
+            temperature_celsius, layer_temperature_celsius, integrated_intensity_kw_m2
+        )
+        if radiant_threshold:
+            radiant = counted_radiant_flux_kw_m2(radiant)
+        return total_heat_flux_kw_m2(
+            temperature_celsius,
+            emissivity=0.0,
+            convective_coefficient=self.convective_coefficient,
+            skin_temperature_celsius=self.skin_temperature_celsius,
+            external_flux_kw_m2=radiant,
+        )
+
+    def _radiant_flux_kw_m2(
+        self,
+        temperature_celsius: float,
+        layer_temperature_celsius: float | None,
+        integrated_intensity_kw_m2: float | None,
+    ) -> float:
+        """Return the radiant term of q in kW/m2: layer, U or gas source."""
         if self.uses_layer_term:
-            return self._layer_heat_flux_kw_m2(
-                temperature_celsius, layer_temperature_celsius
-            )
+            return self._layer_radiant_flux_kw_m2(layer_temperature_celsius)
         if self.radiant_source != "integrated-intensity":
             return total_heat_flux_kw_m2(
                 temperature_celsius,
                 emissivity=self.emissivity,
-                convective_coefficient=self.convective_coefficient,
+                convective_coefficient=0.0,
                 skin_temperature_celsius=self.skin_temperature_celsius,
             )
         u = (
@@ -1274,34 +1369,19 @@ class DefaultHeatFedModel:
             * (self.skin_temperature_celsius + _KELVIN) ** 4
             / 1000.0
         )
-        return total_heat_flux_kw_m2(
-            temperature_celsius,
-            emissivity=0.0,
-            convective_coefficient=self.convective_coefficient,
-            skin_temperature_celsius=self.skin_temperature_celsius,
-            external_flux_kw_m2=radiant_flux_from_integrated_intensity_kw_m2(
-                u - u_skin, self.u_factor
-            ),
-        )
+        return radiant_flux_from_integrated_intensity_kw_m2(u - u_skin, self.u_factor)
 
-    def _layer_heat_flux_kw_m2(
-        self, temperature_celsius: float, layer_temperature_celsius: float | None
+    def _layer_radiant_flux_kw_m2(
+        self, layer_temperature_celsius: float | None
     ) -> float:
-        """Return h (T_g - T_s) / 1000 plus the layer term, in kW/m2."""
+        """Return the layer term q_ext in kW/m2; NaN without a layer sample."""
         if layer_temperature_celsius is None:
             return math.nan
-        q_ext = layer_radiant_flux_kw_m2(
+        return layer_radiant_flux_kw_m2(
             layer_temperature_celsius,
             view_factor=self.view_factor,
             layer_emissivity=self.layer_emissivity,
             skin_temperature_celsius=self.skin_temperature_celsius,
-        )
-        return total_heat_flux_kw_m2(
-            temperature_celsius,
-            emissivity=0.0,
-            convective_coefficient=self.convective_coefficient,
-            skin_temperature_celsius=self.skin_temperature_celsius,
-            external_flux_kw_m2=q_ext,
         )
 
     def _total_flux_rate(self, inputs: HeatFedInputs) -> float:
@@ -1311,6 +1391,7 @@ class DefaultHeatFedModel:
             inputs.temperature_celsius,
             inputs.layer_temperature_celsius,
             integrated_intensity_kw_m2=inputs.integrated_intensity_kw_m2,
+            radiant_threshold=True,
         )
         return total_flux_heat_fed_rate_per_minute(q, dose)
 
@@ -1339,7 +1420,7 @@ class DefaultHeatFedModel:
             self._warn_missing_intensity_once(inputs)
             return inputs, self._total_flux_rate(inputs)
         if self.endpoint is None:
-            return inputs, default_heat_fed_rate_per_minute(inputs)
+            return inputs, default_heat_fed_rate_per_minute(inputs, self.clothing)
         return inputs, endpoint_heat_fed_rate_per_minute(
             inputs.temperature_celsius, HEAT_ENDPOINTS[self.endpoint]
         )

@@ -1,7 +1,8 @@
-"""S6 -- heat FED incapacitation (SFPE Handbook Eq. 63.44) and the OR check.
+"""S6 -- heat FED incapacitation (default ISO 13571:2012 Eq. (9)) and the OR check.
 
 This scenario checks the *wiring*, not the law: the expected stop time is
-Eq. 63.44 as printed (``harness.heat_fed_rate_per_min``), so it confirms the
+the default law, ISO 13571:2012 Eq. (9) (fully clothed), written out in
+``harness.heat_fed_rate_per_min``, so it confirms the
 engine applies the equation and the threshold, not that the equation
 predicts human tolerance. The comparison with the Handbook's tables is in
 ``test_heat_fed_verif.py`` (A3.8-A3.11).
@@ -36,10 +37,11 @@ from harness import (
 from pyfds_evac.core.fed import TenabilityConfig
 from pyfds_evac.core.scenario import run_scenario
 
-# 230 C -> t* ~ 28s (Eq. 63.44), comfortably inside the 40s free-walk egress.
-# Chosen for the timing, not the physics: it lies above the ~205 C reach of
-# the convective data behind Eq. 63.44 (SFPE Table 63.17).
-HEAT_TEMPERATURE_C = 230.0
+# 300 C -> t* ~ 28s (ISO Eq. (9)), comfortably inside the 40s free-walk
+# egress. Chosen for the timing, not the physics: it lies above the ~205 C
+# reach of the convective data behind SFPE Eq. 63.44 (Table 63.17), and ISO
+# states no temperature range for Eq. (9).
+HEAT_TEMPERATURE_C = 300.0
 UPDATE_INTERVAL_S = 1.0
 
 
@@ -76,8 +78,8 @@ def test_null_field_control_no_meaningful_accumulation():
 
     Unlike the gas null-field control (CO=0 gives an exact-zero rate via a
     deliberate hypoxia gate in fed.py), ambient temperature has no artificial
-    floor on the heat FED rate -- Eq. 63.44 is merely self-limiting, by
-    design (see fed.py's TenabilityConfig / SFPE Handbook Ch. 63, Eq. 63.44).
+    floor on the heat FED rate -- the convective law is merely
+    self-limiting, by design (see fed.py's ``_heat_fed_rate_per_minute``).
     So this control asserts the accumulated dose stays negligible over the
     run, not exactly zero -- the honest claim the model actually makes.
     """

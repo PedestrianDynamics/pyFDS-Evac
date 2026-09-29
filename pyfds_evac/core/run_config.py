@@ -21,6 +21,7 @@ from typing import Any
 from .cognitive_map import familiarity_probability
 from .fds_inventory import inspect_fds_quantities
 from .fed import (
+    DEFAULT_HEAT_CLOTHING,
     DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
     DEFAULT_HEAT_EMISSIVITY,
     DEFAULT_HEAT_SKIN_TEMPERATURE_C,
@@ -134,8 +135,10 @@ def _build_fed_model(opts: Any, log: Logger):
 def _build_heat_fed_model(opts: Any, log: Logger):
     """Build the heat FED model (SFPE Ch. 63) when asked for.
 
-    The law is Eq. 63.44, the convective law of ``opts.heat_endpoint``, or
-    the total-flux law of ``opts.heat_fed_method`` (#223).
+    The law is the ISO 13571:2012 law of ``opts.heat_clothing`` (Eq. (9),
+    clothed, by default; Eq. (10) = SFPE Eq. 63.44 for ``unclothed``), the
+    convective law of ``opts.heat_endpoint``, or the total-flux law of
+    ``opts.heat_fed_method`` (#223).
 
     FDS+Evac has no heat dose, so it is opt-in (``opts.enable_heat_fed``) and
     then needs a TEMPERATURE slice.
@@ -146,6 +149,8 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         log("Heat FED is off; pass --enable-heat-fed to accumulate it.")
         if getattr(opts, "heat_endpoint", None) is not None:
             _logger.warning("--heat-endpoint has no effect without --enable-heat-fed.")
+        if getattr(opts, "heat_clothing", None) is not None:
+            _logger.warning("--heat-clothing has no effect without --enable-heat-fed.")
         if getattr(opts, "heat_fed_method", "convective") != "convective":
             _logger.warning(
                 "--heat-fed-method has no effect without --enable-heat-fed."
@@ -173,7 +178,8 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         return None
     endpoint = getattr(opts, "heat_endpoint", None)
     method = getattr(opts, "heat_fed_method", "convective")
-    law = "Eq. 63.44" if endpoint is None else f"{endpoint} endpoint"
+    clothing = _heat_clothing(opts, endpoint, method)
+    law = _ISO_LAW_NAMES[clothing] if endpoint is None else f"{endpoint} endpoint"
     if method == "total-flux":
         law = f"total flux, {endpoint or 'fatal'} dose"
     if method == "total-flux" and getattr(opts, "heat_regime", "smoke") == "layer":
@@ -195,6 +201,7 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         heat_fed_config,
         endpoint=endpoint,
         method=method,
+        clothing=clothing,
         emissivity=getattr(opts, "heat_emissivity", DEFAULT_HEAT_EMISSIVITY),
         convective_coefficient=getattr(
             opts, "heat_convective_coefficient", DEFAULT_HEAT_CONVECTIVE_COEFFICIENT
@@ -206,6 +213,25 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         u_factor=getattr(opts, "heat_u_factor", None),
         **_heat_layer_kwargs(opts),
     )
+
+
+_ISO_LAW_NAMES = {
+    "clothed": "ISO 13571:2012 Eq. (9), clothed",
+    "unclothed": "ISO 13571:2012 Eq. (10) = SFPE Eq. 63.44, unclothed",
+}
+
+
+def _heat_clothing(opts: Any, endpoint: str | None, method: str) -> str:
+    """Return the clothing of the ISO law; warn when another law is in use."""
+    clothing = getattr(opts, "heat_clothing", None)
+    if clothing is None:
+        return DEFAULT_HEAT_CLOTHING
+    if endpoint is not None or method != "convective":
+        _logger.warning(
+            "--heat-clothing has no effect with --heat-endpoint or "
+            "--heat-fed-method total-flux."
+        )
+    return clothing
 
 
 def _check_integrated_intensity_source(opts: Any, method: str, inventory) -> None:
@@ -385,7 +411,14 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
         return None
     mode = getattr(opts, "incapacitation_mode", "deterministic")
     sigma = getattr(opts, "susceptibility_sigma", 0.94)
-    heat_threshold = getattr(opts, "heat_fed_threshold", 1.0)
+    heat_threshold = getattr(opts, "heat_fed_threshold", None)
+    if heat_threshold is not None and heat_fed_model is not None:
+        _logger.warning(
+            "--heat-fed-threshold %s departs from ISO 13571:2012, which uses one "
+            "threshold for FED and FEC (5.4) and treats heat in the same manner "
+            "(8.5); the manifest records it.",
+            heat_threshold,
+        )
     heat_mode = getattr(opts, "heat_incapacitation_mode", "deterministic")
     heat_sigma = getattr(opts, "heat_susceptibility_sigma", 0.94)
     fic_speed = fed_model is not None and getattr(opts, "enable_fic_speed", False)
@@ -394,7 +427,8 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
         f"(FIC slowdown={'on' if fic_speed else 'off'}, "
         f"FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
         f"FED median={opts.fed_threshold}, incapacitation={mode}, "
-        f"heat FED median={heat_threshold}, "
+        "heat FED median="
+        f"{opts.fed_threshold if heat_threshold is None else heat_threshold}, "
         f"heat incapacitation={heat_mode})."
     )
     return TenabilityConfig(
