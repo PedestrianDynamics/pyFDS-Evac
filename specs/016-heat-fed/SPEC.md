@@ -34,8 +34,9 @@ from one `TEMPERATURE` slice at head height. It has four gaps:
 - **The `INTEGRATED INTENSITY` radiant term is the excess over an
   isotropic field at the skin temperature**, f (U − 4σT_s⁴), with the same
   T_s as the convective term (#221). A field at T_s gives zero for every f;
-  a field at T gives 4fσ(T⁴ − T_s⁴), σ(T⁴ − T_s⁴) at f = 1/4. q ≤ 0 is net
-  cooling and gives a zero dose rate.
+  a field at T gives 4fσ(T⁴ − T_s⁴), σ(T⁴ − T_s⁴) at f = 1/4. A negative
+  excess is net cooling and counts as zero in the dose; convection still
+  counts.
 - **`INTEGRATED INTENSITY` wins over the layer term** when both are set: U
   already contains the layer's emission and is the better-resolved input;
   the layer term is not added, and the run warns once (#221, #222).

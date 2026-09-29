@@ -35,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `u_factor` and `radiant_flux` (`excess`). Agents outside the FDS domain
   get a zero rate, with U and q NaN in the FED history, and one warning
   per run. Surroundings at or below the skin temperature give no dose for
-  any f; q ≤ 0 gives a zero rate, never a negative one
+  any f; a negative excess counts as zero and the rate is never negative
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 - `--heat-fed-method total-flux` (opt-in, with `--enable-heat-fed`; default
   `convective`): the heat dose is q^1.33/D (SFPE Handbook Ch. 63 Eq. 63.43)

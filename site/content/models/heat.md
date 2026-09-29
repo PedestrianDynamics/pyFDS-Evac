@@ -328,10 +328,12 @@ incident *f U*), and the rate is \(q^{1.33}/D\) as above.
   *q*\(_{\mathrm{src}}\). The Handbook calls Eq. 63.49 "the total incident
   flux to the skin" (p. 2383), and spec 016 takes the radiant tolerance data
   as incident, so this basis is a choice, not a reading of the sources.
-- **No negative dose.** Where *q* ≤ 0 the skin is cooled on balance and the
-  dose rate is 0; there is no recovery. A 20 °C room with no fire
-  (*U* = 1.68 kW/m² < 4σ\(T_s^4\) = 2.04 kW/m²) gives *q* < 0 for every *f*,
-  so no dose.
+- **No negative dose.** Where the *q* that enters the dose (convection plus
+  the counted radiant term) is at or below zero, the rate is 0; there is no
+  recovery. An excess below zero (*U* < 4σ\(T_s^4\)) counts as zero, so hot
+  air at the head still gives its convective dose while `heat_flux_kw_m2`
+  is negative. A 20 °C room with no fire (*U* = 1.68 kW/m² <
+  4σ\(T_s^4\) = 2.04 kW/m², air below \(T_s\)) gives no dose for any *f*.
 - **The ε term is not added.** *U* already contains the emission of the gas
   at the head, so ε σ (\(T_g^4 - T_s^4\)) would count it twice;
   `--heat-emissivity` is ignored with this source.
@@ -474,7 +476,8 @@ listed as assumed, as it is not used.
 `heat_flux_kw_m2` is the physical *q*, before the radiant threshold. Where
 the radiant term is below 2.5 kW/m², `heat_fed_rate_per_min` is therefore
 not `heat_flux_kw_m2`^1.33/*D*: it is the convective part alone raised to
-1.33, divided by *D*.
+1.33, divided by *D* (zero where the head is at or below the skin
+temperature).
 With an endpoint, `heat_outside_validity` still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
 63.45–63.47, not to the flux law.
@@ -580,8 +583,9 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   drops, 2.5 counts, a negative term counts as zero, convection unchanged,
   `heat_flux_kw_m2` physical) and in the coupled cases of
   `tests/verification/test_heat_total_flux_coupled.py`: dense smoke at
-  300 °C crosses at 5.8 s, clear air at 100 °C at 190 s on convection
-  alone, and smoke at 200 °C has a radiant term of 1.17 kW/m², below the
+  300 °C (tolerance, ε 0.9, *h* 8) crosses at 5.8 s, clear air at 100 °C
+  (tolerance, ε 0.05, *h* 8) at 190 s on convection alone, and smoke at
+  200 °C (fatal, ε 0.5, *h* 8) has a radiant term of 1.17 kW/m², below the
   threshold. The layer regime is checked
   against hand formulas and the 200 °C / 2.5 kW/m² anchor (p. 2382), with
   synthetic temperature fields; its FDS case is
