@@ -639,7 +639,7 @@ def fig_agents(people, cross):
             label=label,
         )
     ax.annotate(
-        "from about 50 s, agents spawn\ninto smoke and HCl already\npast both limits",
+        "from about 50 s, agents spawn\ninto smoke past the visibility\nlimit; HCl ≥ 300 ppm within 3 s",
         (150, 70),
         xytext=(185, 40),
         color=TEXT,

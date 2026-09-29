@@ -386,7 +386,7 @@ The 66 agents who got out after the visibility limit spent a median of
 count of evacuees who met a limit only from 65 to 61. CO above 2,700 ppm is
 met next to the burner, by agents who pass it on their way to exit B.
 
-![One horizontal bar per agent, in order of spawning from top to bottom, on a time axis from 0 to 300 s after ignition. Each bar runs from the agent's spawn to its exit, pale before the agent first meets K 0.3 and solid after; bars of the 76 censored agents are grey and end in an arrow at 299 s. Circles mark the first K 0.3, diamonds the first HCl 300 ppm, squares the first FED 0.3. The first dozen agents meet the limits partway along their bar. From about 50 s on, the circles and diamonds sit at the start of every bar, forming a diagonal: agents spawn into air already past both limits. The 17 FED 0.3 squares all lie between 265 and 291 s, on grey bars](/images/first-fds-case/aset_agents.png)
+![One horizontal bar per agent, in order of spawning from top to bottom, on a time axis from 0 to 300 s after ignition. Each bar runs from the agent's spawn to its exit, pale before the agent first meets K 0.3 and solid after; bars of the 76 censored agents are grey and end in an arrow at 299 s. Circles mark the first K 0.3, diamonds the first HCl 300 ppm, squares the first FED 0.3. The first dozen agents meet the limits partway along their bar. From about 50 s on, the circles and diamonds sit at the start of every bar, forming a diagonal: agents spawn into air already past the visibility limit and meet HCl 300 ppm within about 3 s. The 17 FED 0.3 squares all lie between 265 and 291 s, on grey bars](/images/first-fds-case/aset_agents.png)
 
 *One bar per agent (n = 150, seed 42), from spawn to exit, or to 299 s for
 the 76 censored agents (grey, arrow). The solid part is the time spent beyond
@@ -394,7 +394,7 @@ K ≥ 0.3 1/m. Markers: first K ≥ 0.3 1/m (circle), first HCl ≥ 300 ppm
 (diamond), first FED ≥ 0.3 (square); the other criteria of the table are
 left out to keep the bars readable. Censoring is shown by the grey colour
 and the arrow, not by hatching. Values at the agent's position, z =
-2.0 m, 1 s resolution. [Full size](/images/first-fds-case/aset_agents.png).*
+2.0 m, 1 s resolution..*
 
 Read the figure from the left edge of each bar. The first dozen agents
 started in clear air, and the limits reached them on the way. From about
@@ -419,7 +419,7 @@ and it says nothing about who was there.
 
 CO does not reach 2,700 ppm at any of these points within 300 s.
 
-![Two plan views of the T, shaded by time since ignition from dark (0 to 20 s) to light (not by 300 s). Top, tenability: the first time K reaches 0.3 per metre or HCl reaches 300 ppm, for someone standing there from ignition; the corridor near the burner and exit B fails first, within 20 s, the far left corridor and the branch between 30 and 50 s; six points are labelled 18, 24, 36, 41, 45 and 46 s. Bottom, wayfinding: the first time no sign can be seen from a cell, with the three signs as diamonds and the two routes drawn in; along route A the signs are lost between 28 and 79 s, along route B between 7 and 46 s](/images/first-fds-case/aset_map.png)
+![Two plan views of the T, shaded by time since ignition from dark (0 to 20 s) to light (90 to 300 s), with beige for not by 300 s. Top, tenability: the first time K reaches 0.3 per metre or HCl reaches 300 ppm, for someone standing there from ignition; the corridor near the burner and exit B fails first, within 20 s, the far left corridor and the branch between 30 and 50 s; six points are labelled 18, 24, 36, 41, 45 and 46 s. Bottom, wayfinding: the first time no sign can be seen from a cell, with the three signs as diamonds and the two routes drawn in; along route A the signs are lost between 28 and 79 s, along route B between 7 and 46 s](/images/first-fds-case/aset_map.png)
 
 *(a) Location ASET at z = 2.0 m on a 0.5 m grid: the earlier of K ≥ 0.3 1/m
 and HCl ≥ 300 ppm, for a person standing still from ignition. Labels: that
@@ -428,7 +428,7 @@ The first time no sign can be seen from a cell (fdsvismap `get_aset_map`,
 0.25 m grid, all three signs, *c* = 3, visibility capped at 30 m). A cell
 counts at its first loss of sight, even if a sign becomes visible again
 later, and a cell that never loses sight cannot be told apart from one
-that loses it at 300 s. Hatched cells never see a sign. Heat is
+that loses it at 300 s. Heat is
 not included in either panel. The map form follows Schröder et al. (2020).*
 
 Panel (b) is not a tenability limit. It shows when the signs stop guiding.
@@ -437,8 +437,9 @@ This is consistent with section 5, where 18 agents spawned between 26 and
 every sign at 39 s. The engine's own sign test differs (see *How the
 numbers are computed*). ISO 13571 (§4.5, note) does not expect obscuration
 alone to make conditions untenable for people who are not carrying out
-cognitive or motor tasks. Finding an exit is such a task, so
-this page treats sign visibility as wayfinding. The slider
+cognitive or motor tasks: it treats obscuration as mattering through the
+tasks it impairs, such as finding an exit. This page assesses it through
+wayfinding. The slider
 shows sign visibility through time, one map per route.
 
 {{< time-slider src="images/first-fds-case/signs" start="0" end="300" step="10" value="40" label="Time after ignition" alt="Two plan views of the T-junction, one per route. Blue cells can see at least one sign of the route, grey cells cannot; the signs are diamonds and the agents black dots." >}}
@@ -515,7 +516,7 @@ The other limits:
   keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
   thresholds to it is an analogy. FED 0.3 is a threshold for susceptible
   people, not a "safe" value: ISO treats 1 as the median of a log-normal
-  response, so at 0.3 about 11.4 % of a population is still expected to be
+  response, so at 0.3 11.4 % of a population is still expected to be
   affected (A.5.2, p. 18; see
   [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
 - **The irritant criteria are analogies too.** ISO 13571 ties one threshold
