@@ -462,9 +462,11 @@ def test_a3_11_hot_layer_anchor_200c_is_about_2_5_kw_m2():
 
 # --- A3.12: ISO 13571:2012 Eq. (9), the default law, against the tables ----
 #
-# ISO 13571:2012 §8.3.2, fully clothed: t_Iconv = 4.1e8 * T**-3.61 min. The
-# Handbook's tables are not stated to be for clothed subjects; these tests
-# record where the default law lies relative to them, not a pass band.
+# ISO 13571:2012 §8.3.2, fully clothed: t_Iconv = 4.1e8 * T**-3.61 min.
+# Table 63.20 does not state clothing; of Table 63.17's rows, 205 C is "bare
+# headed, protected" (see A3.10), and clothing is not stated for 126 C. These
+# tests record where the default law lies relative to the tables, not a pass
+# band.
 
 
 def _t_iso_9_min(temperature_c: float) -> float:

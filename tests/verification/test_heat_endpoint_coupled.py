@@ -220,6 +220,9 @@ def test_fatal_endpoint_constant_temperature():
         assert times, "no agent incapacitated"
         for aid, t_stop in times.items():
             assert abs(t_stop - starts[aid] - target_s) <= TIMING_TOL_S
+        manifest = _read_json(result.manifest_file)
+        assert manifest["heat_fed_threshold_override"] == threshold
+        assert "heat_clothing" not in manifest  # endpoint law, not ISO
     finally:
         result.cleanup()
 

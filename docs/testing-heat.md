@@ -232,8 +232,8 @@ Each run takes about three minutes and uses the default seed 42. A
 temperature without output is skipped. The published runs were made when
 Eq. 63.44 was the default law, before `--heat-clothing` existed;
 `--heat-clothing unclothed` selects the same law, and
-`tests/verification/test_heat_endpoint_coupled.py` checks that it
-reproduces the FED history of that code.
+`tests/verification/test_heat_endpoint_coupled.py` checks, in a synthetic
+corridor, that it reproduces the FED history of that code.
 
 The published figures come from runs that also passed
 `--constant-extinction 0 --no-visibility`, which ran without a visibility
