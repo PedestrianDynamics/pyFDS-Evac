@@ -12,6 +12,30 @@ walking speed in smoke, toxic and thermal dose, and occupant decisions.
 These pages are written for PhD students and pedestrian-dynamics engineers
 who are new to fire toxicology and human behaviour in fire.
 
+Smoke from a fire rises, forms a hot layer under the ceiling and spreads
+through the building. Its hazards to occupants are heat and toxic gases
+carried in the smoke, and the obscuration the smoke causes (Engineers
+Australia Society of Fire Safety 2014, §3.1).
+
+{{< svg-figure src="images/concepts/fire-hazards.svg" >}}
+
+*Hazards of a building fire, as a sketch, not to scale. Figure inspired by
+Fig. 1 of the Engineers Australia practice note for tenability criteria
+(2014).*
+
+- **Convected heat**, the hot gas around the occupant:
+  [Heat › Convective heat](/fundamentals/heat.md#convective-heat-time-to-incapacitation).
+- **Radiant heat** from the flame and the hot layer:
+  [Heat › Radiant heat](/fundamentals/heat.md#radiant-heat-pain-and-burns).
+- **Toxic and irritant gases**: asphyxiants such as CO and HCN on
+  [Asphyxiant fractional effective dose](/fundamentals/asphyxiant-fed.md),
+  irritants such as HCl and acrolein on [Irritant gases](/fundamentals/irritants.md).
+- **Smoke obscuration**: soot attenuates light
+  ([Extinction coefficient](/fundamentals/extinction.md)), which shortens
+  the distance at which signs can be read
+  ([Visibility through smoke](/fundamentals/visibility.md)) and slows
+  walking ([Walking speed in smoke](/fundamentals/walking-speed.md)).
+
 Fundamentals is about the literature, not about this code. Each page gives
 one quantity, its equation in the source's own notation and constants, the
 data it rests on, its known limits, and the primary citations. Nothing here
@@ -36,3 +60,11 @@ chapters 56–64, which most pages cite.
   {{< card link="pre-movement" title="Pre-movement time" subtitle="Why the longest part of escape is often spent before anyone moves." >}}
   {{< card link="exit-choice" title="Exit choice and familiarity" subtitle="Movement to the familiar, social influence and discrete-choice models." >}}
 {{< /cards >}}
+
+## Sources
+
+- Engineers Australia Society of Fire Safety (2014). *Practice note for
+  tenability criteria in building fires*, version 2.0, 3 April 2014.
+  Society of Fire Safety, NSW Chapter, Engineers Australia.
+  [engineersaustralia.org.au](https://www.engineersaustralia.org.au/sites/default/files/2024-01/tenability-criteria-practice-note_0.pdf).
+  §3.1 and Fig. 1, p. 7.
