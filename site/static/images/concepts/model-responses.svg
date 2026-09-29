@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" class="hz" viewBox="0 0 680 400" width="680" height="400" role="img" aria-labelledby="hz2-title hz2-desc">
 <title id="hz2-title">What pyFDS-Evac does with each hazard</title>
-<desc id="hz2-desc">The same room as the hazards figure: fire at the left, hot smoke layer under the ceiling, one occupant walking towards an exit sign in the smoke. A dashed line at 1.6 m above the floor marks where every quantity is sampled at the agent's position. Each hazard's icon is labelled with the model's response. Smoke obscuration: walking speed, routes and signs, on by default. Toxic and irritant gases: the gas dose (FED) accumulates and the agent stops at FED 1, on by default; the irritant slowdown is opt-in. Convected heat: a heat dose, opt-in. Radiant heat: a radiant heat dose, opt-in.</desc>
+<desc id="hz2-desc">The same room as the hazards figure: fire at the left, hot smoke layer under the ceiling, one occupant walking towards an exit sign in the smoke. A dashed line marks the horizontal FDS slice that the models read, the one nearest the requested height z = 1.6 m in the FDS domain. Each hazard's icon is labelled with the model's response. Smoke obscuration: walking speed, routes and signs, on by default. Toxic and irritant gases: the gas dose (FED) accumulates and, by default, the agent stops at FED 1; the irritant slowdown is opt-in. Convected heat: a heat dose, opt-in. Radiant heat: a radiant term inside that same heat dose, opt-in with the total-flux method; it is not a second dose.</desc>
 <style>
 svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.26;--person:#374151;--conv:#D55E00;--rad:#A86F00;--tox:#A2458A;--vis:#0072B2;--on-badge:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
 .dark svg.hz{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}
@@ -57,9 +57,9 @@ svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.
 <path class="conv" d="M328 104 C372 116 404 146 436 178" marker-end="url(#hz2-ah-conv)"/>
 
 <!-- radiant heat: straight rays from flame and layer -->
-<path class="rad" d="M160 296 L436 252" marker-end="url(#hz2-ah-rad)"/>
-<path class="rad" d="M162 314 L434 292" marker-end="url(#hz2-ah-rad)"/>
-<path class="rad" d="M162 332 L432 330" marker-end="url(#hz2-ah-rad)"/>
+<path class="rad" d="M164 322 L434 296" marker-end="url(#hz2-ah-rad)"/>
+<path class="rad" d="M164 338 L432 318" marker-end="url(#hz2-ah-rad)"/>
+<path class="rad" d="M164 352 L430 340" marker-end="url(#hz2-ah-rad)"/>
 <path class="rad" d="M396 206 L438 234" marker-end="url(#hz2-ah-rad)"/>
 <path class="rad" d="M532 206 L486 234" marker-end="url(#hz2-ah-rad)"/>
 
@@ -77,7 +77,7 @@ svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.
 <!-- sampling height -->
 <path class="gauge" d="M22 200 H658"/>
 <circle class="gauge" cx="462" cy="199" r="20" style="stroke-dasharray:none;stroke-width:2"/>
-<text class="sub" x="30" y="219">sampled at 1.6 m</text>
+<text class="sub" x="30" y="217">nearest slice to z = 1.6 m</text>
 
 <!-- labels: icon badge + text -->
 <g transform="translate(206 146)">
@@ -87,12 +87,13 @@ svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.
 <text class="label" x="227" y="152">Heat dose</text>
 <text class="sub" x="227" y="171">opt-in</text>
 
-<g transform="translate(206 246)">
+<g transform="translate(206 244)">
   <circle r="14" style="fill:var(--rad)"/>
   <circle class="glyph-fill" cx="-6" r="2.5"/><path class="glyph" d="M-1 -4 A5 5 0 0 1 -1 4 M2.5 -7 A9 9 0 0 1 2.5 7 M6 -9.5 A12 12 0 0 1 6 9.5"/>
 </g>
-<text class="label" x="227" y="252">Radiant heat dose</text>
-<text class="sub" x="227" y="271">opt-in</text>
+<text class="label" x="227" y="250">Radiant term</text>
+<text class="sub" x="227" y="268">in the heat dose;</text>
+<text class="sub" x="227" y="286">opt-in, total-flux</text>
 
 <g transform="translate(440 82)">
   <circle r="14" style="fill:var(--tox)"/>

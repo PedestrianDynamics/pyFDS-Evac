@@ -93,7 +93,10 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
   In `deterministic` mode every agent uses the threshold itself. Both doses
   are deterministic by default: the gas dose as in FDS+Evac, and the heat
-  dose since no population spread for heat is published.
+  dose since no population spread for heat is published. The threshold at
+  which an agent stops in the simulation is not, by itself, a design
+  acceptance criterion; FED 1 describes the median occupant (see
+  [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
 
 | Field | Default | CLI flag |
 |---|---|---|
@@ -165,10 +168,9 @@ Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/i
 - FED activity level: the CO term is fixed at light work; rest and heavy
   work are not supported
   ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)).
-- **Height-relative FED and smoke sampling**: extinction and temperature are
-  sampled from the horizontal FDS slice closest to `--smoke-slice-height`
-  (default 1.6 m, FDS+Evac `HUMAN_SMOKE_HEIGHT`); each gas is read from the first slice of its quantity in the
-  deck, whatever its height. All agents share these slices regardless of
+- **Height-relative FED and smoke sampling**: extinction, temperature and
+  each gas are sampled from the horizontal FDS slice closest to
+  `--smoke-slice-height` (default 1.6 m, FDS+Evac `HUMAN_SMOKE_HEIGHT`). All agents share these slices regardless of
   their individual heights.  Pathfinder samples at 90 % of each occupant's height,
   which is more accurate for scenarios with mixed-height populations (children,
   wheelchair users).  A per-agent sampling height would require either multiple
