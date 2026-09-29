@@ -13,21 +13,28 @@ it is an error.
 With this source the total-flux law (SFPE Handbook 5th ed. Ch. 63,
 doi:10.1007/978-1-4939-2565-0_63, Eqs. 63.49 and 63.43, pp. 2382-2384) is
 
-    q = f U + h (T_g - T_s) / 1000        [kW/m2]
+    q = f U - sigma T_s^4 / 1000 + h (T_g - T_s) / 1000        [kW/m2]
     t = D / q^1.33                         [min], FED = sum dt / t
 
-- f U is **incident** radiant flux (the radiant tolerance data, Table 63.19,
-  are incident; spec 016). The skin's own emission is not subtracted.
+- The radiant term is **net**, f U - sigma T_s^4 (maintainer decision on
+  #221): f U is absorbed by a black skin, sigma T_s^4 (T_s in K) is its own
+  emission, the same T_s as the convective term. It is the net exchange of
+  Eq. 63.49: with U = 4 sigma T^4 of a black isotropic field at T and
+  f = 1/4, the radiant term is sigma (T^4 - T_s^4).
 - The gas term eps sigma (T_g^4 - T_s^4) of Eq. 63.49 is **not** added: U
   already contains the emission of the gas at the head, and spec 016 says
   not to add two radiant terms. Any ``emissivity`` passed is ignored.
 - No 2.5 kW/m2 threshold (spec 016), as for #223.
 
-Consequence (finding, maintainer decision pending, see #221): U is not zero
-in a cold room. At 20 deg C, U = 4 sigma T^4 = 1.68 kW/m2, so without the
-threshold f U gives a dose with no fire at all. ``test_ambient_background_*``
-records the size with hand numbers; the docs must say so. Alternatives for
-the maintainer: net f U - sigma T_s^4, or excess f (U - 4 sigma T_a^4).
+Consequence: U is not zero in a cold room (4 sigma T^4 = 1.68 kW/m2 at
+20 deg C). With f = 1/4 the net radiant term is sigma (T^4 - T_s^4), so an
+isotropic field at the skin temperature gives no flux and a colder room no
+dose. With f > 1/4 the ambient background does not vanish: at 20 deg C,
+h = 5, T_s = 35 deg C, q > 0 for f above about 0.35, and f = 1 reaches the
+fatal FED in about 15 min with no fire. ``test_*cold_room*`` pin both.
+
+Agents outside the FDS domain (outside both slices) get a zero rate, U and
+q are NaN in the FED history, and the model logs one warning per run.
 
 Expected values are hand formulas in this file, never ``pyfds_evac``.
 
@@ -46,7 +53,7 @@ API under test (``pyfds_evac.core.fed`` unless noted):
   ``u_factor`` in [0.25, 1], else ValueError.
   ``heat_flux_kw_m2(temperature_celsius, integrated_intensity_kw_m2=None)``.
   ``heat_flux_parameters()`` adds ``radiant_source``, ``u_factor`` and
-  ``radiant_flux`` (``"incident"``); ``u_factor`` is user-given, so it is not
+  ``radiant_flux`` (``"net"``); ``u_factor`` is user-given, so it is not
   in ``assumed``.
 - ``FdsQuantityInventory.canonical_slice_names()`` maps
   ``INTEGRATED INTENSITY`` to ``"integrated_intensity"``.
@@ -84,8 +91,9 @@ DOSE = {"tolerance": 1.33, "injury": 10.0, "fatal": 16.7}
 
 
 def q_u_hand(t_gas_c, u_kw_m2, *, f, h, t_skin_c):
-    """Incident f U plus convection h (T_g - T_s), kW/m2; no gas eps term."""
-    return f * u_kw_m2 + h * (t_gas_c - t_skin_c) / 1000.0
+    """Net f U - sigma T_s^4 plus convection h (T_g - T_s), kW/m2; no gas eps."""
+    skin_emission = SIGMA * (t_skin_c + KELVIN) ** 4 / 1000.0
+    return f * u_kw_m2 - skin_emission + h * (t_gas_c - t_skin_c) / 1000.0
 
 
 def q_gas_hand(t_gas_c, *, eps, h, t_skin_c):
@@ -119,23 +127,69 @@ def test_isotropic_plate_gets_a_quarter_of_u():
 
 @pytest.mark.parametrize(("q", "table_s"), [(2.5, 30.0), (10.0, 4.0)])
 def test_face_on_flux_bounds_table_63_20(q, table_s):
-    """f = 1, T_g = T_s: q = U. Table 63.20 (p. 2383) radiant rows, 2.5 kW/m2
-    -> 30 s and 10 kW/m2 -> 4 s; Eq. 63.43, tolerance dose, band 25 %."""
+    """f = 1, T_g = T_s: incident f U = q, net q - sigma T_s^4. Table 63.20
+    (p. 2383) radiant rows, 2.5 kW/m2 -> 30 s and 10 kW/m2 -> 4 s; Eq. 63.43,
+    tolerance dose, band 25 %."""
     seconds = 60.0 * t_hand_min(q_u_hand(35.0, q, f=1.0, h=5.0, t_skin_c=35.0), 1.33)
     assert table_s * 0.75 <= seconds <= table_s * 1.25
 
 
-@pytest.mark.parametrize(("f", "minutes"), [(1.0, 8.9), (0.25, 69.1)])
-def test_ambient_background_gives_a_fatal_dose_in_a_cold_room(f, minutes):
-    """Finding for the maintainer (#221): 20 deg C, no fire, U = 4 sigma T^4 =
-    1.68 kW/m2, h = 5, T_s = 35 deg C. Incident f U minus the convective loss
-    stays positive, so with no threshold the fatal FED reaches 1 in about
-    9 min (f = 1) to 69 min (f = 0.25)."""
+@pytest.mark.parametrize("t_c", [100.0, 300.0])
+def test_isotropic_quarter_u_net_is_eq_63_49_black(t_c):
+    """U = 4 sigma T^4, T_g = T, f = 1/4: f U - sigma T_s^4 = sigma (T^4 -
+    T_s^4), the radiant term of Eq. 63.49 with emissivity 1."""
+    u = u_isotropic(t_c)
+    q = q_u_hand(t_c, u, f=0.25, h=5.0, t_skin_c=35.0)
+    assert q == pytest.approx(q_gas_hand(t_c, eps=1.0, h=5.0, t_skin_c=35.0))
+    assert q == pytest.approx({100.0: 0.9131, 300.0: 6.9324}[t_c], abs=1e-4)
+
+
+@pytest.mark.parametrize(
+    ("t_c", "f", "q"),
+    [(100.0, 0.5, 2.0124), (100.0, 1.0, 4.2110), (300.0, 0.5, 13.0511)],
+)
+def test_model_net_flux_on_the_chosen_factor(t_c, f, q):
+    """Isotropic U = 4 sigma T^4: q = 4 f sigma T^4 - sigma T_s^4 + h dT."""
+    u = u_isotropic(t_c)
+    model = _u_model(t_c, u, f=f, h=5.0, t_skin_c=35.0)
+    got = model.heat_flux_kw_m2(t_c, integrated_intensity_kw_m2=u)
+    assert got == pytest.approx(q, abs=1e-4)
+    assert got == pytest.approx(q_u_hand(t_c, u, f=f, h=5.0, t_skin_c=35.0))
+
+
+def test_u_at_skin_temperature_gives_zero_net_flux():
+    """An isotropic field at the skin temperature, f = 1/4: no net flux, no dose."""
+    u = u_isotropic(35.0)
+    model = _u_model(35.0, u, f=0.25, h=5.0, t_skin_c=35.0)
+    assert model.heat_flux_kw_m2(35.0, integrated_intensity_kw_m2=u) == pytest.approx(
+        0.0, abs=1e-12
+    )
+    assert _u_rate(35.0, u, f=0.25, h=5.0, t_skin_c=35.0) == 0.0
+
+
+def test_cold_room_gives_no_dose_at_quarter_u():
+    """20 deg C, no fire, U = 4 sigma T^4 = 1.675 kW/m2, f = 1/4, h = 5,
+    T_s = 35 deg C: q = 0.419 - 0.511 - 0.075 = -0.168 kW/m2, no dose."""
     u = u_isotropic(20.0)
     assert u == pytest.approx(1.675, abs=0.002)
+    q = q_u_hand(20.0, u, f=0.25, h=5.0, t_skin_c=35.0)
+    assert q == pytest.approx(-0.1675, abs=1e-4)
+    assert _u_rate(20.0, u, f=0.25, h=5.0, t_skin_c=35.0) == 0.0
+
+
+@pytest.mark.parametrize(("f", "minutes"), [(1.0, 14.9), (0.5, 104.9)])
+def test_cold_room_still_doses_above_quarter_u(f, minutes):
+    """The net basis removes the background only for f near 1/4: with the
+    same cold room, q > 0 for f above (sigma T_s^4 + 0.075) / U = 0.350, and
+    the fatal FED reaches 1 with no fire (hand values)."""
+    u = u_isotropic(20.0)
+    assert (SIGMA * (35.0 + KELVIN) ** 4 / 1000.0 + 0.075) / u == pytest.approx(
+        0.350, abs=1e-3
+    )
     q = q_u_hand(20.0, u, f=f, h=5.0, t_skin_c=35.0)
-    assert q > 0.0
     assert t_hand_min(q, DOSE["fatal"]) == pytest.approx(minutes, abs=0.1)
+    got = _u_rate(20.0, u, f=f, h=5.0, t_skin_c=35.0)
+    assert got == pytest.approx(1.0 / t_hand_min(q, DOSE["fatal"]), rel=1e-9)
 
 
 # --- API helpers ------------------------------------------------------------
@@ -277,6 +331,28 @@ def test_model_rejects_missing_intensity_with_hot_gas():
         model.sample_rate(0.0, 0.5, 0.5)
 
 
+def test_outside_domain_gives_zero_rate_and_one_warning(caplog):
+    """Agents outside both slices: a finite zero rate at every update, and one
+    warning for the run, not one per agent or update."""
+    model = DefaultHeatFedModel(
+        FdsHeatField(_Outside(), intensity_sampler=_Outside()),  # type: ignore[arg-type,call-arg]
+        DefaultFedConfig(fds_dir="", update_interval_s=1.0),
+        method="total-flux",
+        convective_coefficient=5.0,
+        skin_temperature_celsius=35.0,
+        radiant_source="integrated-intensity",  # type: ignore[call-arg]
+        u_factor=0.5,  # type: ignore[call-arg]
+    )
+    with caplog.at_level("WARNING", logger="pyfds_evac.core.fed"):
+        for time_s in (0.0, 1.0, 2.0):
+            for x, y in ((9.0, 9.0), (-3.0, 1.0), (50.0, 2.0)):
+                _, rate = model.sample_rate(time_s, x, y)
+                assert isinstance(rate, float)
+                assert rate == 0.0
+    warnings = [r for r in caplog.records if "outside" in r.getMessage().lower()]
+    assert len(warnings) == 1
+
+
 def test_field_outside_both_slices_keeps_the_domain_fallback():
     """Outside the FDS domain (neither slice covers the point): 20 deg C and a
     non-finite U, as before; no error."""
@@ -372,11 +448,11 @@ def test_model_domain_guard(u):
     assert rate == 0.0
 
 
-def test_model_records_source_factor_and_incident():
+def test_model_records_source_factor_and_net():
     params = _u_model(150.0, 5.0, f=0.5, h=5.0, t_skin_c=35.0).heat_flux_parameters()
     assert params["radiant_source"] == "integrated-intensity"
     assert params["u_factor"] == 0.5
-    assert params["radiant_flux"] == "incident"
+    assert params["radiant_flux"] == "net"
     assert "u_factor" not in params["assumed"]
 
 
@@ -658,7 +734,7 @@ def test_models_heat_page_documents_integrated_intensity():
     assert "INTEGRATED INTENSITY" in text
     assert "0.25" in flat
     assert re.search(r"no default", flat, re.IGNORECASE)
-    assert re.search(r"\bincident\b", flat, re.IGNORECASE)
+    assert re.search(r"\bnet\b", flat, re.IGNORECASE)
 
 
 def test_models_heat_limits_cover_integrated_intensity():
