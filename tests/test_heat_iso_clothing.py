@@ -1,7 +1,7 @@
 """ISO 13571:2012 convective law and single threshold for the heat dose (#290).
 
 Source: ISO 13571:2012, clause 8. For air with less than 10 % water vapour by
-volume (§8.3.2), with T the air temperature in deg C and t in min:
+volume (§8.3), with T the air temperature in deg C and t in min:
 
     Eq. (9),  fully clothed:               t_Iconv = 4.1e8 * T**-3.61
     Eq. (10), unclothed or lightly clothed: t_Iconv = 5e7   * T**-3.4

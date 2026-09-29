@@ -182,7 +182,7 @@ def heat_fed_rate_per_min(
 ) -> float:
     """Heat FED rate (1/min) as 1/t_Iconv, ISO 13571:2012 Eqs. (9)-(11).
 
-    Evaluates the convective laws of ISO 13571:2012 §8.3.2 as times in
+    Evaluates the convective laws of ISO 13571:2012 §8.3 as times in
     minutes (T in deg C), not imported from ``pyfds_evac.core.fed``:
     ``clothed``, Eq. (9), ``t_Iconv = 4.1e8 * T**-3.61`` (the default law);
     ``unclothed``, Eq. (10), ``t_Iconv = 5e7 * T**-3.4`` (= SFPE Eq. 63.44).

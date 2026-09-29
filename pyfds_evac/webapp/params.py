@@ -292,7 +292,7 @@ _HELP_TEXT: dict[str, str] = {
     "unclothed ones. unclothed gives the SFPE Handbook law used before.",
     "heat_fed_threshold": "Heat dose at which a person is thermally incapacitated. Leave blank "
     "to use the toxic-dose threshold, as ISO 13571:2012 uses one threshold for "
-    "both; a value here departs from ISO and is recorded in the run manifest.",
+    "FED and FEC and treats heat in the same manner; a value here departs from ISO and is recorded in the run manifest.",
     "enable_rerouting": "Let agents rethink their route mid-evacuation as smoke and crowding "
     "change, instead of blindly following their first assigned route.",
     "reroute_interval": "How often (sim seconds) each agent rethinks its route. 1 = very "

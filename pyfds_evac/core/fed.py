@@ -218,7 +218,7 @@ class HeatFedInputs:
     layer_temperature_celsius: float | None = None
 
 
-# ISO 13571:2012 §8.3.2, air with less than 10 % water vapour by volume:
+# ISO 13571:2012 §8.3, air with less than 10 % water vapour by volume:
 # t_Iconv [min] = a * T**-b, T in deg C. Eq. (9), fully clothed (Crane 1978);
 # Eq. (10), unclothed or lightly clothed, has the constants of SFPE Handbook
 # 5th ed. Eq. 63.44. Maps clothing -> (a, b).

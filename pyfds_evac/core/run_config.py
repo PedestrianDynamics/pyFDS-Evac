@@ -414,8 +414,9 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     heat_threshold = getattr(opts, "heat_fed_threshold", None)
     if heat_threshold is not None and heat_fed_model is not None:
         _logger.warning(
-            "--heat-fed-threshold %s departs from ISO 13571:2012, which uses "
-            "one threshold for gas and heat (5.4, 8.5); the manifest records it.",
+            "--heat-fed-threshold %s departs from ISO 13571:2012, which uses one "
+            "threshold for FED and FEC (5.4) and treats heat in the same manner "
+            "(8.5); the manifest records it.",
             heat_threshold,
         )
     heat_mode = getattr(opts, "heat_incapacitation_mode", "deterministic")

@@ -143,7 +143,7 @@ def _outside_validity(temperature_c: float) -> bool:
 
 
 def t_iso_9_min(t_c: float) -> float:
-    """ISO 13571:2012 Eq. (9), fully clothed (§8.3.2)."""
+    """ISO 13571:2012 Eq. (9), fully clothed (§8.3.1)."""
     return 4.1e8 * t_c**-3.61
 
 

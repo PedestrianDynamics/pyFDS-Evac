@@ -247,7 +247,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--heat-clothing",
         choices=HEAT_CLOTHING,
         default=None,
-        help="Convective law of ISO 13571:2012 (8.3.2) for the heat FED; needs "
+        help="Convective law of ISO 13571:2012 (8.3) for the heat FED; needs "
         "--enable-heat-fed. clothed (default): Eq. (9), t = 4.1e8 T^-3.61 min, "
         "fully clothed. unclothed: Eq. (10), t = 5e7 T^-3.4 min, unclothed or "
         "lightly clothed, the same law as SFPE Handbook Eq. 63.44 and the "
@@ -365,8 +365,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Median cumulative heat FED at which an agent is thermally "
         "incapacitated; needs --enable-heat-fed. Default: none, the value of "
-        "--fed-threshold, as ISO 13571:2012 uses one threshold for gas and "
-        "heat (5.4, 8.5). Setting it departs from ISO; the run logs a warning "
+        "--fed-threshold, as ISO 13571:2012 uses one threshold for FED and FEC "
+        "(5.4) and sets the heat threshold in the same manner (8.5). Setting it departs from ISO; the run logs a warning "
         "and the manifest records heat_fed_threshold_override",
     )
     parser.add_argument(

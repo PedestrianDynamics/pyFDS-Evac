@@ -19,7 +19,7 @@ nothing on this page affects a run.
 With `--enable-heat-fed` (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in
 the case, each agent accumulates a convective heat dose at
 `_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py`), ISO 13571:2012
-Eq. (9) for fully clothed subjects (§8.3.2), unless `--heat-clothing
+Eq. (9) for fully clothed subjects (§8.3.1), unless `--heat-clothing
 unclothed` selects ISO Eq. (10), `--heat-endpoint` selects another law
 ([Endpoint](#endpoint)) or `--heat-fed-method total-flux` selects the flux
 law ([Total flux](#total-flux)):
@@ -50,7 +50,7 @@ so the temperature they are exposed to.
 
 `--heat-clothing {clothed,unclothed}` (`opts.heat_clothing`, the
 `clothing` argument of `DefaultHeatFedModel`) selects one of the two
-convective laws of ISO 13571:2012 §8.3.2, both for air with less than 10 %
+convective laws of ISO 13571:2012 §8.3 (§8.3.1, §8.3.2), both for air with less than 10 %
 water vapour by volume, with *t* in min and *T* in °C
 (`HEAT_CLOTHING_LAWS`):
 
@@ -516,7 +516,7 @@ options:
 
 | Option | ISO 13571:2012 counterpart |
 |---|---|
-| Default, `--heat-clothing clothed` | Eq. (9), §8.3.2: fully clothed, uncertainty ±25 % |
+| Default, `--heat-clothing clothed` | Eq. (9), §8.3.1: fully clothed, uncertainty ±25 % (§8.3.2) |
 | `--heat-clothing unclothed` (Eq. 63.44) | Eq. (10), §8.3.2: same constants, for unclothed or lightly clothed subjects, uncertainty ±25 % |
 | `--heat-endpoint tolerance`, `injury`, `fatal` (Eqs. 63.45–63.47) | None |
 | `--heat-fed-method total-flux` (Eqs. 63.49 and 63.43, dose *D*) | None: ISO has no total-flux form, no ε, h or \(T_s\), and no radiant dose |
@@ -551,7 +551,7 @@ tolerance.
 | #224 decks: burner and grid | propane, soot yield 0.01, 0.6 × 0.6 m at 1100 kW/m²; 4 × 4 × 3 m room (6 × 4 × 4 m open for the burner), 0.1 m cells | deck files `assets/heat_radiometer/*.fds` | As above | A flame reaching head height on a grid that resolves 1.6 m | As above |
 | #224 skin gauge | emissivity 1, h = 8 W/(m²·K), 35 °C | `&PROP` in the #224 decks and `assets/heat_integrated_intensity` | Gauge values the `INTEGRATED INTENSITY` tests compare against | Emissivity 1 is the FDS default, taken as the skin's; h = 8 is the top of the Handbook's 5–8 | Skin emissivity and h of a clothed person |
 | #221 CI deck | 300 °C sooty layer above 1.2 m, soot 0.005, 2 × 2 × 2.4 m, 0.2 m cells | `assets/heat_integrated_intensity/heat_integrated_intensity.fds` | `tests/verification/test_heat_integrated_intensity_coupled.py` | Two heights with different *U* in a small committed case | None needed: it checks the reader against FDS's own devices |
-| Clothing | fully clothed, every agent | `--heat-clothing` / `heat_clothing` (`DEFAULT_HEAT_CLOTHING`) | Convective law without `--heat-endpoint` or total flux ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)) | Maintainer decision following ISO 13571:2012, which recommends Eq. (9) for fully clothed subjects (§8.3.2); SFPE Ch. 63 treats the unclothed law as the relevant one unless protective clothing is worn (p. 2336) | Clothing data per occupancy or per agent |
+| Clothing | fully clothed, every agent | `--heat-clothing` / `heat_clothing` (`DEFAULT_HEAT_CLOTHING`) | Convective law without `--heat-endpoint` or total flux ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)) | Maintainer decision following ISO 13571:2012, which recommends Eq. (9) for fully clothed subjects (§8.3.1); SFPE Ch. 63 treats the unclothed law as the relevant one unless protective clothing is worn (p. 2336) | Clothing data per occupancy or per agent |
 | One threshold for gas and heat | heat threshold = `fed_threshold` | `--heat-fed-threshold` / `heat_fed_threshold` overrides it | Heat incapacitation | Maintainer reading of ISO 13571:2012 §5.4 with §8.5; the standard does not say whether the heat FED shares the gas threshold ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat)) | A statement of the standard, or data on heat and gas thresholds in the same people |
 | Table reading | ±0.5 min | none (test) | Eq. 63.44 against Table 63.20 (`tests/verification/test_heat_fed_verif.py`, [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)) | Whole-minute entries read as rounded | The unrounded values behind Table 63.20 |
 | Test band, convective | factor 2 | none (test) | Eq. 63.44 against Table 63.20 convective rows (#219) | Wide enough for the 0.61–1.07 spread found | ISO 13571:2012 states ±25 % for the identical Eq. (10) (§8.3.2), but the 0.61 row lies outside it; the band stays until that is settled ([#289](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/289)) |
