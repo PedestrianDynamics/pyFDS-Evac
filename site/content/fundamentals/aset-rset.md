@@ -41,6 +41,26 @@ and smoke at the occupants' positions, compared with tenability limits. The
 states that its time to compromised tenability may reasonably be equated
 to ASET when escape to a place of refuge is the outcome considered.
 
+Tenability is judged in one of two ways. With fixed limits, conditions at
+one height are compared with one value per hazard, and a space is
+untenable as soon as any value is exceeded: for exposures of up to
+10 minutes, the Engineers Australia practice note gives 100&nbsp;°C,
+2.5 kW/m², 2,700 ppm CO, 140 ppm HCN and a visibility of 10 m, evaluated
+2.0 m above the floor (2014, §5.2 and Fig. 8, p. 15). With a dose, the
+exposure of each occupant is summed over time along the path they take,
+and incapacitation is expected at a fractional effective dose of 1 for the
+median occupant (the same note, §5 and §5.3, after the SFPE Handbook and
+ISO 13571).
+
+{{< svg-figure src="images/concepts/tenability-limits.svg, images/concepts/tenability-dose.svg" >}}
+
+*Fixed limits: the short-exposure criteria of the practice note (Fig. 8,
+"Tenability Criteria – Short Exposure", p. 15); for small enclosures, of
+the order of 10 m, the note allows a visibility of 5 m. Dose along each
+path: the dose approach, schematic, for two occupants; the same fire gives
+each one a different dose. Figure inspired by Fig. 8 of the Engineers Australia
+practice note for tenability criteria (2014).*
+
 RSET comes from people. ISO/TR 16738 (§5.4) reports that the pre-travel
 activity phase can often be the longest part of the total escape time. Each
 occupant has their own \(t_{\mathrm{pre}}\) and \(t_{\mathrm{trav}}\), so
@@ -77,9 +97,16 @@ population (see [Incapacitation thresholds](/fundamentals/incapacitation-thresho
   approaches*. SFPE Handbook of Fire Protection Engineering, 5th ed.,
   Ch. 56, 2012–2046.
   [doi:10.1007/978-1-4939-2565-0_56](https://doi.org/10.1007/978-1-4939-2565-0_56)
+- Engineers Australia Society of Fire Safety (2014). *Practice note for
+  tenability criteria in building fires*, version 2.0, 3 April 2014.
+  Society of Fire Safety, NSW Chapter, Engineers Australia.
+  [engineersaustralia.org.au](https://www.engineersaustralia.org.au/sites/default/files/2024-01/tenability-criteria-practice-note_0.pdf).
+  §5 (p. 13), §5.2 and Fig. 8 (p. 15), §5.3 (p. 17).
 - Gwynne, S. M. V., & Boyce, K. E. (2016). *Engineering data*. SFPE
   Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
   [doi:10.1007/978-1-4939-2565-0_64](https://doi.org/10.1007/978-1-4939-2565-0_64)
 
 How pyFDS-Evac uses this: see the
-[RSET ensemble how-to](/docs/howto-rset-ensemble.md).
+[RSET ensemble how-to](/docs/howto-rset-ensemble.md). Each agent carries
+its own dose along its path; see
+[Fractional effective dose](/models/fed.md).

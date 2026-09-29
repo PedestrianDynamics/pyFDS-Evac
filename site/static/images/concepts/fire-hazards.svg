@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="hz" viewBox="0 0 680 400" width="680" height="400" role="img" aria-labelledby="hz1-title hz1-desc">
+<title id="hz1-title">Hazards of a building fire</title>
+<desc id="hz1-desc">Side view of a room. A fire burns on the floor at the left; its plume rises and spreads as a hot smoke layer under the ceiling, whose lower edge reaches the head of one occupant walking towards an exit at the right. Four hazards are marked, each by an icon and a label: convected heat, drawn as curved arrows of hot gas flowing in the layer towards the occupant; radiant heat, drawn as straight dashed rays from the flame and from the layer to the occupant; toxic and irritant gases, drawn as molecules in the layer around the head; and smoke obscuration, drawn as a dashed sight line from the occupant's eye to the exit sign, which hangs in the smoke.</desc>
+<style>
+svg.hz{--ink:#1f2937;--muted:#4b5563;--wall:#6b7280;--smoke:#6b7280;--smoke-op:.26;--person:#374151;--conv:#D55E00;--rad:#A86F00;--tox:#A2458A;--vis:#0072B2;--on-badge:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.dark svg.hz{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}
+@media (prefers-color-scheme:dark){svg.hz:root{--ink:#e5e7eb;--muted:#9ca3af;--wall:#9ca3af;--smoke:#9ca3af;--smoke-op:.28;--person:#d1d5db;--conv:#FF8C4D;--rad:#F0C24B;--tox:#E69AC8;--vis:#56B4E9;--on-badge:#111}}
+.hz .wall{stroke:var(--wall);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .smoke{fill:var(--smoke);opacity:var(--smoke-op)}
+.hz .person{stroke:var(--person);stroke-linecap:round;fill:none}
+.hz .label{fill:var(--ink);font-size:17px;font-weight:600}
+.hz .note{fill:var(--muted);font-size:15px;font-style:italic}
+.hz .conv{stroke:var(--conv);fill:none;stroke-width:3;stroke-linecap:round}
+.hz .rad{stroke:var(--rad);fill:none;stroke-width:2.5;stroke-dasharray:7 5}
+.hz .vis{stroke:var(--vis);fill:none;stroke-width:2.5;stroke-dasharray:2 5;stroke-linecap:round}
+.hz .mol{fill:var(--tox)}
+.hz .mol line{stroke:var(--tox);stroke-width:2}
+.hz .glyph{stroke:var(--on-badge);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hz .glyph-fill{fill:var(--on-badge)}
+</style>
+<defs>
+  <marker id="hz1-ah-conv" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" style="fill:var(--conv)"/></marker>
+  <marker id="hz1-ah-rad" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" style="fill:var(--rad)"/></marker>
+  <g id="hz1-mol"><line x1="-9" y1="0" x2="9" y2="0"/><circle cx="-9" r="3.5"/><circle r="4.5"/><circle cx="9" r="3.5"/></g>
+</defs>
+
+<!-- smoke: plume and hot layer under the ceiling -->
+<path class="smoke" d="M20 40 H660 V194 C630 200 600 188 560 195 C520 202 490 190 450 196 C410 202 380 188 340 194 C300 200 270 190 230 192 C205 193 186 202 172 220 C158 240 140 258 130 284 L92 284 C82 258 58 232 20 218 Z"/>
+<path class="smoke" d="M20 40 H660 V112 C610 120 560 106 510 114 C450 122 400 106 340 114 C280 122 230 108 180 118 C150 124 120 118 90 128 C60 138 40 120 20 124 Z"/>
+<text class="note" x="34" y="66">Hot smoke layer</text>
+
+<!-- room -->
+<path class="wall" d="M20 40 H660 M20 40 V360 M660 40 V150"/>
+<path class="wall" d="M20 360 H660" style="stroke-width:4"/>
+<rect x="651" y="150" width="9" height="210" style="fill:var(--wall);opacity:.45"/>
+<rect x="584" y="156" width="60" height="24" rx="3" style="fill:#00805A"/>
+<text x="614" y="173.5" text-anchor="middle" style="fill:#fff;font-size:14px;font-weight:700;letter-spacing:.06em">EXIT</text>
+
+<!-- fire -->
+<rect x="58" y="344" width="104" height="16" rx="3" style="fill:var(--wall);opacity:.6"/>
+<path style="fill:#D55E00" d="M70 360 C62 330 78 312 86 290 C92 305 96 312 100 300 C104 280 98 262 110 240 C116 262 128 272 126 292 C134 284 138 276 138 266 C152 290 158 330 148 360 Z"/>
+<path style="fill:#E69F00" d="M84 360 C78 338 90 322 96 308 C100 318 104 322 108 312 C112 298 110 286 116 272 C124 292 136 306 132 330 C138 326 140 320 142 314 C148 334 146 350 138 360 Z"/>
+<path style="fill:#F0E442" d="M98 360 C94 346 102 336 108 326 C112 336 118 340 120 350 C122 355 122 358 120 360 Z"/>
+
+<!-- occupant, walking towards the exit -->
+<g class="person">
+  <path d="M461 216 L458 284" style="stroke-width:20"/>
+  <path d="M458 284 L446 356 M458 284 L476 356" style="stroke-width:12"/>
+  <path d="M461 226 L446 270 M461 226 L481 264" style="stroke-width:9"/>
+</g>
+<circle cx="462" cy="199" r="13" style="fill:var(--person)"/>
+
+<!-- convected heat: hot gas carried in the layer -->
+<path class="conv" d="M190 96 C230 72 270 74 306 90" marker-end="url(#hz1-ah-conv)"/>
+<path class="conv" d="M328 104 C372 116 404 146 436 178" marker-end="url(#hz1-ah-conv)"/>
+
+<!-- radiant heat: straight rays from flame and layer -->
+<path class="rad" d="M160 296 L436 252" marker-end="url(#hz1-ah-rad)"/>
+<path class="rad" d="M162 314 L434 292" marker-end="url(#hz1-ah-rad)"/>
+<path class="rad" d="M162 332 L432 330" marker-end="url(#hz1-ah-rad)"/>
+<path class="rad" d="M396 206 L438 234" marker-end="url(#hz1-ah-rad)"/>
+<path class="rad" d="M532 206 L486 234" marker-end="url(#hz1-ah-rad)"/>
+
+<!-- toxic and irritant gases -->
+<g class="mol">
+  <use href="#hz1-mol" transform="translate(492 136) rotate(-25)"/>
+  <use href="#hz1-mol" transform="translate(552 120) rotate(15)"/>
+  <use href="#hz1-mol" transform="translate(612 132) rotate(-40)"/>
+  <use href="#hz1-mol" transform="translate(500 176) rotate(30)"/>
+</g>
+
+<!-- smoke obscuration: sight line to the exit sign -->
+<path class="vis" d="M474 196 L582 170"/>
+
+<!-- labels: icon badge + text -->
+<g transform="translate(206 146)">
+  <circle r="14" style="fill:var(--conv)"/>
+  <rect class="glyph" x="-2.5" y="-9" width="5" height="12" rx="2.5"/><circle class="glyph-fill" cy="5" r="4"/>
+</g>
+<text class="label" x="227" y="152">Convected heat</text>
+
+<g transform="translate(206 246)">
+  <circle r="14" style="fill:var(--rad)"/>
+  <circle class="glyph-fill" cx="-6" r="2.5"/><path class="glyph" d="M-1 -4 A5 5 0 0 1 -1 4 M2.5 -7 A9 9 0 0 1 2.5 7 M6 -9.5 A12 12 0 0 1 6 9.5"/>
+</g>
+<text class="label" x="227" y="252">Radiant heat</text>
+
+<g transform="translate(440 82)">
+  <circle r="14" style="fill:var(--tox)"/>
+  <g transform="rotate(-30)"><path class="glyph" d="M-6 0 H6"/><circle class="glyph-fill" cx="-6.5" r="2.8"/><circle class="glyph-fill" r="3.6"/><circle class="glyph-fill" cx="6.5" r="2.8"/></g>
+</g>
+<text class="label" x="461" y="88">Toxic and irritant gases</text>
+
+<g transform="translate(508 304)">
+  <circle r="14" style="fill:var(--vis)"/>
+  <path class="glyph" d="M-9 0 C-5 -6 5 -6 9 0 C5 6 -5 6 -9 0 Z"/><circle class="glyph-fill" r="2.5"/><path class="glyph" d="M-8 8 L8 -8"/>
+</g>
+<text class="label" x="529" y="300">Smoke</text>
+<text class="label" x="529" y="320">obscuration</text>
+</svg>
