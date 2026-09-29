@@ -5920,11 +5920,11 @@ Script: &lt;code>scripts/figures/sign_rotation.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>&lt;strong>Two ways to build the model&lt;/strong> (&lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>):&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>From an FDS run&lt;/strong> (&lt;code>--fds-dir&lt;/code>). Grid, obstructions and extinction come
-from the FDS output. fdsvismap picks the &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice
-with fdsreader&amp;rsquo;s &lt;code>get_nearest(0, 0, --smoke-slice-height)&lt;/code> (1.6 m by
-default since #164, &lt;code>run.py&lt;/code>, &lt;code>_build_parser&lt;/code>). With several extinction
-slices, that returns the first horizontal slice listed, not the nearest
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/296" target="_blank" rel="noopener">#296&lt;/a>). Stored times are spaced by &lt;code>--reroute-interval&lt;/code>
+from the FDS output. The &lt;code>SOOT EXTINCTION COEFFICIENT&lt;/code> slice is the
+horizontal one nearest &lt;code>--smoke-slice-height&lt;/code> (1.6 m by default since #164,
+&lt;code>run.py&lt;/code>, &lt;code>_build_parser&lt;/code>), chosen by the same rule as walking speed and
+FED, with a warning when it is more than 0.5 m away (&lt;code>fds_sampling.py&lt;/code>,
+&lt;code>select_horizontal_slice&lt;/code>). Stored times are spaced by &lt;code>--reroute-interval&lt;/code>
 (&lt;code>visibility.py&lt;/code>, &lt;code>_build_vismap&lt;/code>; &lt;code>run_config.py&lt;/code>, &lt;code>_build_vis_model&lt;/code>).&lt;/li>
 &lt;li>&lt;strong>From clear air&lt;/strong> (no &lt;code>--fds-dir&lt;/code>). The walkable polygon is rasterised at
 &lt;code>--vis-cell-size&lt;/code>. A cell is an obstruction when its centre lies outside the
@@ -6318,10 +6318,8 @@ al., who call it &amp;ldquo;highly simplified&amp;rdquo; (p. 4). It is not part 
 experiments.&lt;/li>
 &lt;li>&lt;strong>Sampling height.&lt;/strong> Börger et al. use one slice at 2 m, with the eye at
 sign height (p. 4). The code uses 1.6 m, the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>.
-fdsvismap selects the extinction slice itself (fdsreader &lt;code>get_nearest&lt;/code>).
-With several extinction slices in the case, it takes the first one listed
-rather than the nearest, and logs no warning
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/296" target="_blank" rel="noopener">#296&lt;/a>). &lt;em>Our inference:&lt;/em> exit signs are usually mounted above
+The extinction slice is the horizontal one nearest that height, as for
+walking speed and FED. &lt;em>Our inference:&lt;/em> exit signs are usually mounted above
 doors, higher than 1.6 m. Under a hot smoke layer, a 1.6 m slice reads less
 extinction than the line of sight to such a sign crosses, so it overstates
 legibility. That error is non-conservative.&lt;/li>
@@ -13162,6 +13160,10 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>If only one slice matches the quantity, &lt;code>slice_height_m&lt;/code> has no effect.&lt;/p>
+&lt;p>The rule lives in &lt;code>select_horizontal_slice&lt;/code>: vertical slices are
+skipped, the slice whose z is nearest &lt;code>slice_height_m&lt;/code> wins, and a
+warning is logged when it is more than 0.5 m away. The visibility model
+applies the same function to the extinction slice it hands to fdsvismap.&lt;/p>
 &lt;h3>Sharing a &lt;code>Simulation&lt;/code> instance&lt;span class="hx-absolute -hx-mt-20" id="sharing-a-simulation-instance">&lt;/span>
 &lt;a href="#sharing-a-simulation-instance" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Parsing an FDS case directory is expensive. When you need both
 extinction and FED fields from the same case, load the &lt;code>Simulation&lt;/code>
