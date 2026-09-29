@@ -6,9 +6,11 @@ aliases: [/docs/usage/]
 ---
 
 This page catalogues every user-facing script in the repository: how to run
-an evacuation simulation, what artefacts it writes, and which plotting
-script consumes each artefact. All commands assume the project venv
-(`uv run ...`).
+an evacuation simulation, every `run.py` flag with its default, and which
+plotting script consumes each artefact. All commands assume the project venv
+(`uv run ...`) and run from the repository root. What each output file
+contains is on [Outputs](outputs.md); error messages and their fixes are on
+[Troubleshooting](troubleshooting.md).
 
 ## Running a simulation — `run.py`
 
@@ -26,43 +28,45 @@ uv run python run.py --scenario <scenario.json|.zip|dir> [options]
 | Flag | Purpose |
 |------|---------|
 | `--scenario PATH` | Scenario JSON, ZIP, or directory (required). |
-| `--seed N` | Override scenario seed. |
+| `--seed N` | Override the scenario's `baseSeed` (42 when the scenario sets none). |
 | `--print-summary` | Print the loaded scenario summary before running. |
-| `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here. When FED is computed, also writes an optional `agent_scalars(frame, id, fed, heat_fed, speed)` side table (base JuPedSim schema untouched) so [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) can colour agents by FED or speed. |
+| `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here, with the run manifest beside it as `<stem>.manifest.json`. When FED is computed, also writes an optional `agent_scalars(frame, id, fed, heat_fed, speed)` side table (base JuPedSim schema untouched) so [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) can colour agents by FED or speed. |
 | `--cleanup` | Delete the temp SQLite after the run. |
 | `--export-app-bundle DIR` | Write `config.json` and `geometry.wkt` for the app. |
 | `--export-only` | Export the bundle without running the simulation. |
 
-### FDS coupling (smoke / FED / visibility)
+### FDS coupling (smoke, FED, visibility)
 
-Your FDS case has to dump specific slices before any of this works. See
-[fds-case-requirements.md](fds-case-requirements.md) for the deck lines to add
-and two failure modes (FED silently disabled, wrong slice height) that stay
-silent unless you check the warning log.
+`--fds-dir` must point at the output of a finished FDS run: the directory that
+holds the `.smv` file and the slice files. A directory with only the `.fds`
+deck stops the run with `OSError: No simulations were found in the directory`.
+Your deck has to write specific slices; see
+[What your FDS case must provide](fds-case-requirements.md) for the lines to
+add and the failure modes that stay silent unless you read the warnings.
 
-| Flag | Purpose |
-|------|---------|
-| `--fds-dir DIR` | FDS result directory driving smoke-speed and FED. |
-| `--constant-extinction K` | Use a constant `K` [1/m] instead of FDS. |
-| `--smoke-update-interval S` | Seconds between smoke-speed refreshes. |
-| `--smoke-slice-height M` | FDS slice height (m) for smoke and heat sampling (default 1.6, [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). |
-| `--output-smoke-history CSV` | Write `(t, agent, K, v, factor)` CSV. |
-| `--output-fed-history CSV` | Write per-agent per-sample FED+species CSV. |
-| `--inspect-fds` | Inspect FDS quantities (like `scripts/inspect_fds.py`) and exit. |
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `--fds-dir DIR` | none | FDS output directory. Drives smoke speed, gas FED, heat FED (with `--enable-heat-fed`) and smoke-aware sign legibility. |
+| `--constant-extinction K` | none | Use a constant `K` [1/m] for walking speed instead of the FDS extinction slice. Speed only: FED, heat FED and sign legibility still read `--fds-dir` when it is given. |
+| `--smoke-update-interval S` | 1.0 s | Seconds between smoke-speed updates. The same interval is the integration step of the gas FED and heat FED, and the row spacing of the smoke and FED histories. |
+| `--smoke-slice-height M` | 1.6 m | Height of the horizontal slices that are read ([FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.5 m away. See [FDS slice sampling](fds-sampling.md). |
+| `--output-smoke-history CSV` | none | Write the smoke history; columns on [Outputs](outputs.md#smoke-history). |
+| `--output-fed-history CSV` | none | Write the FED history; columns on [Outputs](outputs.md#fed-history). Not written when neither FED track runs. |
+| `--inspect-fds` | off | List the FDS quantities of `--fds-dir` as JSON and exit. Needs `--fds-dir`. |
 
 ### Dynamic rerouting (smoke-aware route choice)
 
-| Flag | Purpose |
-|------|---------|
-| `--enable-rerouting` / `--no-enable-rerouting` | Let agents re-evaluate exits during the run (on by default). |
-| `--reroute-interval S` | Seconds between per-agent reevaluations (default 1). |
-| `--output-route-history CSV` | Write route switches. |
-| `--output-route-cost-history CSV` | Ranked route cost snapshots. |
-| `--vis-cache NPZ` | Path to a vismap `.npz` cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With `--fds-dir` it caches the smoke-aware vismap; without one, the clear-air grid. |
-| `--clear-air-visibility` | Force sight gating on a deck with no fire. Conflicts with `--fds-dir` (a deck with a fire has smoke to decide sight) and with `--no-visibility`. |
-| `--no-visibility` | Turn sight gating off entirely; agents then learn each node's neighbours by contact. Not a fire scenario. |
-| `--vis-cell-size M` | Resolution of the clear-air visibility grid (default 0.25 m). Keep it below the thinnest wall that must block sight. |
-| `--max-sign-distance M` | Farthest distance from which a sign can be read, also in clear air (default 30 m). A sign's own `"max_distance"` overrides it. |
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `--enable-rerouting` / `--no-enable-rerouting` | on | Let agents re-evaluate exits during the run. |
+| `--reroute-interval S` | 1.0 s | Seconds between per-agent reevaluations. With a smoke-aware visibility model it is also the time step at which sign legibility is computed. |
+| `--output-route-history CSV` | none | Write route switches; see [Outputs](outputs.md#route-history). |
+| `--output-route-cost-history CSV` | none | Write ranked route cost snapshots; see [Outputs](outputs.md#route-cost-history). |
+| `--vis-cache NPZ` | none | Path to a vismap `.npz` cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With `--fds-dir` it caches the smoke-aware vismap; without one, the clear-air grid. |
+| `--clear-air-visibility` | off | Force sight gating on a deck with no fire. Conflicts with `--fds-dir` (a deck with a fire has smoke to decide sight) and with `--no-visibility`. |
+| `--no-visibility` | off | Turn sight gating off entirely; agents then learn each node's neighbours by contact. Not a fire scenario. |
+| `--vis-cell-size M` | 0.25 m | Resolution of the clear-air visibility grid. Keep it below the thinnest wall that must block sight. |
+| `--max-sign-distance M` | 30 m | Farthest distance from which a sign can be read, also in clear air. A sign's own `"max_distance"` overrides it. |
 
 **The default route-choice model does not trigger the visibility model.** The
 default `"gate"` route-cost model reads no vismap: its smoke criterion is the
@@ -73,29 +77,100 @@ no visibility model at all unless you pass `--vis-cache` or
 because they need it to learn the graph. See
 [route-cost-gate.md](route-cost-gate.md).
 
-### Tenability (FIC slowdown + FED incapacitation)
+### Tenability (FIC slowdown and incapacitation)
 
-A FED model is instantiated automatically when `--fds-dir` points at
-an FDS case that exposes the FED species (CO, CO₂, O₂ at
-minimum — HCN, NO/NO₂, and irritants are used if present). When that
-happens, the FED incapacitation rule is on by default. The FIC slowdown
-(a pyFDS-Evac assumption, source unknown;
+The two dose tracks are independent:
+
+- **Gas FED** runs when `--fds-dir` has the CO, CO₂ and O₂ slices (HCN, NO,
+  NO₂ and the irritants are used if present). It is on by default whenever
+  those slices exist.
+- **Heat FED** runs when `--enable-heat-fed` is given and `--fds-dir` has a
+  `TEMPERATURE` slice. It is off by default, as FDS+Evac has no heat dose.
+
+Incapacitation applies to whichever track runs. Without `--fds-dir` neither
+runs and the flags below have no effect. The FIC slowdown (a pyFDS-Evac
+assumption, source unknown;
 [#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) is off
-by default, as FDS+Evac has none; `--enable-fic-speed` turns it on. Without `--fds-dir` (or with a case missing the
-required species) no FED is computed and these flags have no effect;
-a case with a `TEMPERATURE` slice still gets heat incapacitation when
-`--enable-heat-fed` is given (the heat dose is off by default, as FDS+Evac has
-none).
+by default, as FDS+Evac has none. The equations are on
+[Models › FED](/models/fed.md) and [Models › Heat](/models/heat.md).
 
-| Flag | Purpose |
-|------|---------|
-| `--disable-tenability` | Turn both rules off. |
-| `--enable-fic-speed` | Turn the FIC slowdown on (off by default). |
-| `--enable-heat-fed` | Accumulate the heat dose from a `TEMPERATURE` slice and incapacitate on it (off by default). |
-| `--fic-alpha F` | Slope of `v/v₀ = max(μ, 1 − α·FIC)` (default 0.7). |
-| `--fic-min-factor F` | Floor `μ` (default 0.3). |
-| `--fed-threshold F` | FED at which agents are incapacitated (default 1.0, as FDS+Evac); with `--incapacitation-mode probabilistic` it is the median of a per-agent threshold. |
-| `--o2-threshold-percent P` | O₂ vol % at or above which the hypoxia term is zero (default 20.0, as FDS; 19.5 was the previous default). |
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `--disable-tenability` | off | Turn off the FIC slowdown and both incapacitation checks. FED and heat FED are still accumulated and written. |
+| `--enable-fic-speed` | off | Turn the FIC slowdown on. |
+| `--fic-alpha F` | 0.7 | Slope of `v/v₀ = max(μ, 1 − α·FIC)`; needs `--enable-fic-speed`. |
+| `--fic-min-factor F` | 0.3 | Floor `μ`; needs `--enable-fic-speed`. |
+| `--fed-threshold F` | 1.0 | FED at which agents are incapacitated, as FDS+Evac; in probabilistic mode the median of the per-agent threshold. |
+| `--o2-threshold-percent P` | 20.0 % | O₂ vol % at or above which the hypoxia term is zero, as FDS; 19.5 was the previous default. |
+| `--incapacitation-mode {deterministic,probabilistic}` | `deterministic` | `deterministic`: every agent stops at `--fed-threshold`, as FDS+Evac. `probabilistic`: each agent draws a log-normal threshold with median `--fed-threshold`. |
+| `--susceptibility-sigma S` | 0.94 | Log-normal σ of the gas threshold in probabilistic mode. |
+
+### Heat dose (opt-in)
+
+All flags in this table need `--enable-heat-fed`; without it they are ignored
+and the run logs a warning for each one set. The laws, parameters and their
+sources are on [Models › Heat](/models/heat.md); the table only lists what
+each flag sets.
+
+| Flag | Default | Range | Purpose |
+|------|---------|-------|---------|
+| `--enable-heat-fed` | off | — | Accumulate the heat dose from the `TEMPERATURE` slice and incapacitate on it. |
+| `--heat-clothing {clothed,unclothed}` | `clothed` | — | Convective law: ISO 13571:2012 Eq. (9), clothed, or Eq. (10), unclothed. No effect with `--heat-endpoint` or `--heat-fed-method total-flux`. |
+| `--heat-endpoint {tolerance,injury,fatal}` | none | — | Use an SFPE Handbook Ch. 63 endpoint law instead of the ISO law. With `total-flux` it selects the dose *D* (fatal without it). |
+| `--heat-fed-method {convective,total-flux}` | `convective` | — | `total-flux`: heat flux to the skin (SFPE Eq. 63.49) with the ISO 2.5 kW/m² radiant threshold. |
+| `--heat-emissivity E` | 0.5 | — | Gas emissivity at the head; `total-flux` only. |
+| `--heat-convective-coefficient H` | 5.0 W/m²/K | — | Convective coefficient; `total-flux` only. |
+| `--heat-skin-temperature T` | 35.0 °C | — | Fixed skin temperature; `total-flux` only. |
+| `--heat-radiant-source {gas,integrated-intensity}` | `gas` | — | Radiant term from the gas at the head, or the excess flux from the FDS `INTEGRATED INTENSITY` slice. `integrated-intensity` needs `total-flux` and `--heat-u-factor`, and the slice at the slice height. |
+| `--heat-u-factor F` | none | [0.25, 1] | Factor *f* on the integrated intensity *U*; required with `integrated-intensity`. |
+| `--heat-regime {smoke,layer}` | `smoke` | — | `layer`: head in clear air under a hot layer. Needs `total-flux` and the three layer flags below, or the run stops with `ValueError`. |
+| `--heat-layer-height M` | none | finite | Height of the `TEMPERATURE` slice read as the hot layer. |
+| `--heat-view-factor φ` | none | [0, 1] | View factor from the skin to the layer. |
+| `--heat-layer-emissivity ε_L` | none | [0, 1] | Layer emissivity. |
+| `--heat-fed-threshold F` | none (uses `--fed-threshold`) | — | Separate heat threshold. ISO 13571 uses one threshold; setting it logs a warning and the manifest records it. |
+| `--heat-incapacitation-mode {deterministic,probabilistic}` | `deterministic` | — | As `--incapacitation-mode`, for the heat track. |
+| `--heat-susceptibility-sigma S` | 0.94 | — | Log-normal σ of the heat threshold in probabilistic mode (borrowed from the gas value). |
+
+### Seed and precedence
+
+- `--seed N` overrides the scenario's `baseSeed`; a scenario without one uses 42.
+- `--constant-extinction` takes precedence over the FDS extinction slice for
+  walking speed only.
+
+### Python API and command line
+
+`run.py` and the web GUI build their models with `build_run_kwargs`.
+`run_scenario()` called directly builds nothing you do not pass, so the same
+scenario can behave differently:
+
+| What | `run.py` | `run_scenario()` without that argument |
+|------|----------|----------------------------------------|
+| Rerouting | on, every 1 s (`--reroute-interval`) | off; `RerouteConfig()` defaults to 10 s |
+| Smoke speed | from `--fds-dir` | none |
+| Gas FED, heat FED | from `--fds-dir` (heat with `--enable-heat-fed`) | none |
+| Incapacitation | `TenabilityConfig` whenever a FED track runs | none: a `fed_model` without `tenability_config` accumulates dose but never incapacitates |
+| Visibility model | built for discovery agents, `--vis-cache` or `--clear-air-visibility` | none |
+
+For a run identical to the command line, parse the same flags and build the
+keywords the same way:
+
+```python
+import run  # run.py at the repository root
+from pyfds_evac import build_run_kwargs, load_scenario, run_scenario
+
+args = ["--scenario", "assets/iso_table22_coupled/config_a.json",
+        "--fds-dir", "assets/iso_table22_coupled/fds/a"]
+opts = run._build_parser().parse_args(args)
+scenario = load_scenario(opts.scenario)
+result = run_scenario(scenario, **build_run_kwargs(scenario, opts))
+print(f"FED max: {result.metrics['fed_max']:.3f}")
+result.cleanup()
+```
+
+Run it from the repository root with `PYTHONPATH=. uv run python script.py`,
+so that `run.py` can be imported. It prints `FED max: 1.170`.
+
+[A crowd in a real fire](first-fds-case.md) does this end to end.
 
 ### Agent visualisation
 
@@ -108,39 +183,72 @@ its optional `agent_scalars` table for FED/speed colouring).
 
 ```bash
 # Bare JuPedSim run, no smoke coupling
-uv run python run.py --scenario assets/t_junction/config.json
-
-# Smoke-coupled run with all diagnostic outputs
-uv run python run.py --scenario assets/t_junction/config.json \
-    --fds-dir assets/t_junction \
-    --output-sqlite demo3.sqlite \
-    --output-smoke-history smoke.csv \
-    --output-fed-history fed.csv \
-    --output-route-history routes.csv \
-    --output-route-cost-history route_costs.csv \
-    --enable-rerouting \
-    --vis-cache assets/t_junction/vismap_cache.npz
+uv run python run.py --scenario assets/t_junction/config.json --cleanup
 ```
+
+```text
+Simulation stopped after 300.00 s (142/150 evacuated, 8 remaining).
+```
+
+```bash
+# FDS-coupled run with all diagnostic outputs, on a tracked FDS output
+uv run python run.py --scenario assets/iso_table22_coupled/config_a.json \
+    --fds-dir assets/iso_table22_coupled/fds/a \
+    --output-sqlite results/demo.sqlite \
+    --output-smoke-history results/smoke.csv \
+    --output-fed-history results/fed.csv \
+    --output-route-history results/routes.csv \
+    --output-route-cost-history results/route_costs.csv
+```
+
+```text
+Configuring smoke calculation.
+Configuring FED calculation.
+Heat FED is off; pass --enable-heat-fed to accumulate it.
+Configuring rerouting.
+Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
+…
+Simulation stopped after 1150.00 s (0/1 evacuated, 1 remaining).
+Route switches: 0
+Route cost samples: 1149
+```
+
+The occupant of this ISO 20414 Test 19 case never leaves; it is incapacitated
+at 982 s. Rerouting is on by default, so `--enable-rerouting` is not needed.
+The tracked FDS output of the T-junction fire is not in the repository; run
+`assets/t_junction/t_junction.fds` with FDS, or see
+[A crowd in a real fire](first-fds-case.md).
 
 ## Inspecting an FDS case
 
 `scripts/inspect_fds.py` summarises what quantities FDS wrote and whether
-they are within tenability-relevant ranges.
+they are within tenability-relevant ranges. Its `--height` defaults to 2.0 m;
+pass 1.6 to match `run.py`.
 
 ```bash
-uv run python scripts/inspect_fds.py assets/t_junction --plot --height 2.0
+uv run python scripts/inspect_fds.py assets/iso_table22_coupled/fds/a --height 1.6
+```
+
+```text
+FED readiness:
+  ✓ CO / CO2 / O2 all present and non-zero → default FED model will run
+  ✗ Extinction coefficient → smoke-speed model will NOT run
 ```
 
 ## Probing FED without running a simulation
 
 `scripts/probe_fed.py` integrates FED at fixed `(x, y)` points directly
 from the FDS output. Useful as a sanity check ("if an agent stood still
-here, would it be incapacitated?").
+here, would it be incapacitated?"). `--slice-height` defaults to 1.6 m.
 
 ```bash
-uv run python scripts/probe_fed.py --fds-dir assets/t_junction \
-    --point 17,12 --point 20,12 \
-    --output probe.csv --plot probe.png
+uv run python scripts/probe_fed.py --fds-dir assets/iso_table22_coupled/fds/a \
+    --point 5,5 --output probe.csv --plot probe.png
+```
+
+```text
+       point    peak FED    peak rate    t(FED=threshold)
+      (5, 5)      1.1724       0.0611             981.0 s
 ```
 
 ## Plotting
@@ -366,9 +474,15 @@ Runs one simulation and produces the full plot set into a results
 directory.
 
 ```bash
-./scripts/run_and_plot.sh assets/t_junction/config.json assets/t_junction results/demo
+./scripts/run_and_plot.sh assets/t_junction/config.json "$FDS" results/demo
 ```
 
-Arguments: `<scenario> <fds-dir> <results-dir>`. The script calls
+Arguments: `<scenario> <fds-dir> <results-dir>`. `<fds-dir>` must hold a
+finished FDS run (the `.smv` file); `$FDS` stands for such a directory, for
+example the output of `assets/t_junction/t_junction.fds`. The script calls
 `run.py` with all diagnostic outputs enabled and then invokes each
-plotting script against the resulting CSVs / SQLite.
+plotting script against the resulting CSVs / SQLite. It writes the vismap
+cache into `<fds-dir>/vismap_cache.pkl`, so do not point it at a tracked
+directory under `assets/`. The usage line in the script itself still names
+`assets/t_junction`, which has no FDS output
+([#312](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312)).

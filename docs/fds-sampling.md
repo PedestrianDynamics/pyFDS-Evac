@@ -1,10 +1,12 @@
 ---
 title: "FDS slice sampling"
 weight: 18
-aliases: [/docs/fds-sampling/]
+aliases: [/docs/fds-sampling/, /docs/using/fds-sampling/]
 ---
 
-> Part of [pyFDS-Evac](../README.md).
+How pyFDS-Evac reads FDS slice data at an agent's position: the sampler, how
+a slice is chosen by height, and how the models use it. For the slices a
+deck must write, see [What your FDS case must provide](fds-case-requirements.md).
 
 The `SliceFieldSampler` class in `pyfds_evac/core/fds_sampling.py` provides
 nearest-neighbor spatial and temporal lookup on horizontal FDS slice
@@ -78,11 +80,14 @@ closest one:
 sampler = load_slice_sampler(
     "path/to/fds_case",
     "SOOT EXTINCTION COEFFICIENT",
-    slice_height_m=2.0,
+    slice_height_m=1.6,  # default of run.py, FDS+Evac HUMAN_SMOKE_HEIGHT
 )
 ```
 
 If only one slice matches the quantity, `slice_height_m` has no effect.
+Without `slice_height_m`, `load_slice_sampler` takes the first horizontal
+slice in declaration order. The model factories (`ExtinctionField.from_fds`,
+`FdsFedField.from_fds`, `FdsHeatField.from_fds`) default to 1.6 m.
 
 The rule lives in `select_horizontal_slice`: vertical slices are
 skipped, the slice whose z is nearest `slice_height_m` wins, and a
@@ -119,12 +124,20 @@ All three factory functions (`load_slice_sampler`,
 `sample_extinction(time_s, x, y)`:
 
 ```python
-from pyfds_evac.core.smoke_speed import ExtinctionField, SmokeSpeedModel
+from pyfds_evac.core.smoke_speed import (
+    ExtinctionField,
+    SmokeSpeedConfig,
+    SmokeSpeedModel,
+)
 
-field = ExtinctionField.from_fds("path/to/fds_case", slice_height_m=2.0)
-model = SmokeSpeedModel(field, config)
-speed_factor = model.sample(time_s=30.0, x=5.0, y=3.0)
+field = ExtinctionField.from_fds("path/to/fds_case")  # slice nearest 1.6 m
+model = SmokeSpeedModel(field, SmokeSpeedConfig())
+extinction, speed_factor = model.sample(time_s=30.0, x=5.0, y=3.0)
 ```
+
+`sample` returns the pair (*K*, speed factor); `model.speed_factor(...)`
+returns the factor alone. On the tracked `assets/iso_table21_coupled/fds` at
+(5, 1) it gives *K* = 0.99550 1/m and a factor of 0.919626.
 
 If a queried point falls outside the FDS domain, `sample_extinction`
 returns `0.0` (clear air) and logs a warning on the first occurrence.
@@ -136,12 +149,25 @@ CO2, O2, and optionally HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,
 formaldehyde):
 
 ```python
-from pyfds_evac.core.fed import FdsFedField, DefaultFedModel
+from pyfds_evac.core.fed import DefaultFedConfig, DefaultFedModel, FdsFedField
 
-fed_field = FdsFedField.from_fds("path/to/fds_case")
-model = DefaultFedModel(fed_field)
+fed_field = FdsFedField.from_fds("path/to/fds_case")  # slices nearest 1.6 m
+model = DefaultFedModel(fed_field, DefaultFedConfig())
 inputs = model.sample_inputs(time_s=30.0, x=5.0, y=3.0)
 ```
+
+Each gas is read from its own slice nearest the height, so CO and CO₂ can
+come from different heights when the deck declares them at different heights.
+
+### Heat model
+
+`FdsHeatField` reads the `TEMPERATURE` slice nearest the height (1.6 m by
+default). With `integrated_intensity=True`, used by
+`--heat-radiant-source integrated-intensity`, it also reads the
+`INTEGRATED INTENSITY` slice; the two must lie at the same z, or the call
+stops with a `ValueError` that names both heights. The layer regime
+(`--heat-regime layer`) reads a second `TEMPERATURE` slice at
+`--heat-layer-height`.
 
 ### Line-of-sight extinction
 

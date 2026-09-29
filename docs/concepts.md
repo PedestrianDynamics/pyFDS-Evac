@@ -51,9 +51,11 @@ Scenario (load_scenario) ──────────┤
   route cost, cognitive map) + <trajectory>.manifest.json
 ```
 
-The sampler takes the nearest stored value on a slice. Extinction and
-temperature come from the horizontal slice nearest a set height, the same for
-every agent; for the gases, see the [FED model](/models/fed.md#what-is-not-modelled). The manifest records the package versions, the
+The sampler takes the nearest stored value on a slice. Every quantity —
+extinction, each gas, temperature, and the extinction slice fdsvismap uses
+for sign legibility — is read from the horizontal slice nearest
+`--smoke-slice-height` (1.6 m by default), the same height for every agent
+([FDS slice sampling](fds-sampling.md)). The manifest records the package versions, the
 seed, the scenario and the FDS version, so a result can be traced to the code
 and the fire that produced it. The [walkthrough](/docs/walkthrough.md) runs this
 chain on a tracked case, and [Your FDS case](/docs/fds-case-requirements.md)
@@ -75,7 +77,8 @@ where the speed factor \(f\) falls from 1 in clear air towards a floor in
 dense smoke. The default is the linear Frantzich–Nilsson law in the fractional
 form and with the constants of [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), so a difference between the two tools
 downstream of speed cannot come from the speed law. The alternative is the
-`fridolf` option, the law of Fridolf et al. (2018) in the sighting distance
+`fridolf` option, the law of [Fridolf et al. (2019, Eq. 7)](https://doi.org/10.1016/j.tust.2019.04.016)
+in the sighting distance
 \(V = C/K\): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
 metre, to an absolute floor of 0.2 m/s. Being additive, its factor depends on
 each agent's \(v_0\). It is available only from Python (see [the parameter split](#the-parameter-split)). The published laws are on
@@ -103,17 +106,20 @@ $$
 
 The brake is \(f(K)\,g(\mathrm{FIC})\). The fractional irritant concentration
 (FIC) sums the irritant gases, each over a reference concentration, and \(g\)
-lowers the speed further as it rises, down to a floor. FIC is a concentration,
+lowers the speed further as it rises, down to a floor. \(g = 1\) unless
+`--enable-fic-speed` is given: FDS+Evac has no irritant slowdown, so it is
+off by default. FIC is a concentration,
 not a dose, so \(g\) follows the gas where the agent stands. One quirk: when
 FIC drops to exactly zero the factor is not recomputed, so an agent that walks
 out of a plume into clean air keeps its last slowdown
 ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 
 The stop is the fractional effective dose (FED). The toxic-gas dose follows
-the Purser sum of the FDS+Evac guide, which adds irritants into the dose,
-unlike ISO 13571. Convective heat from an FDS `TEMPERATURE` slice accumulates
-in a second dose; without that slice there is no heat dose, and the log says
-so. The two doses are never added. By default every agent stops at FED = 1,
+the Purser sum as FDS+Evac computes it, which adds irritants into the dose,
+unlike ISO 13571. With `--enable-heat-fed`, convective heat from an FDS
+`TEMPERATURE` slice accumulates in a second dose (ISO 13571:2012 Eq. (9),
+fully clothed, by default). The heat dose is off by default, as FDS+Evac has
+none. The two doses are never added. By default every agent stops at FED = 1,
 as FDS+Evac does; with `--incapacitation-mode probabilistic` each agent draws
 its own threshold, so a population does not stop all at once. When either dose
 crosses its threshold, the agent's speed is set to zero and it stays in place

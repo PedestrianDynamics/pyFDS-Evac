@@ -24,7 +24,7 @@ Runtime: about 3 s. No FDS output is needed.
 You need:
 
 - a clone of the repository;
-- the environment installed with `uv sync`;
+- the environment installed with `uv sync` (see [Install](install.md));
 - a shell opened in the repository root.
 
 The complete example is [`examples/quickstart.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/quickstart.py).
@@ -249,6 +249,11 @@ You have:
 If the smoke run is not slower, check that you passed `smoke_speed_model=`.
 Without it, `run_scenario` models no smoke.
 
+`run_scenario` builds only what you pass it. `run.py` builds more by default,
+rerouting every second among other things, so the same scenario can behave
+differently from the command line; see
+[Python API and command line](usage.md#python-api-and-command-line).
+
 ## Next step
 
 Use real FDS output instead of a prescribed uniform smoke field:
@@ -263,6 +268,7 @@ Also:
   with figures for every step.
 - [What your FDS case must provide](fds-case-requirements.md), before you
   point the tool at your own FDS output.
+- [Outputs](outputs.md): every file a run writes and how to read it.
 - [How do I get RSET with its spread from an ensemble of seeds?](howto-rset-ensemble.md)
 - [Smoke-speed model](/models/smoke-speed.md): the speed laws and their
   parameters.

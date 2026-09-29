@@ -58,7 +58,7 @@ used other defaults for eight mechanisms
 | Convective heat dose | None (Guide §1.2) | On whenever the output has a `TEMPERATURE` slice | `--enable-heat-fed`; `opts.enable_heat_fed = True` |
 | Gas incapacitation threshold | Every agent stops at FED = 1 (Guide §3.4) | Per-agent log-normal draw, median `--fed-threshold`, σ = 0.94 | `--incapacitation-mode probabilistic`; `opts.incapacitation_mode = "probabilistic"`, or `TenabilityConfig(incapacitation_mode="probabilistic")` ([#235](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/235)) |
 
-The CLI flags are also fields of the web GUI, and the `opts` attributes are
+The CLI flags that change a result are also fields of the [web GUI](web-gui.md), and the `opts` attributes are
 what `build_run_kwargs` reads, so a script that builds its own options sets
 them the same way. The [changelog](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md)
 lists the same changes.
@@ -233,7 +233,8 @@ agents walk.
 - [ ] Run FDS, then `uv run python run.py --scenario <json> --fds-dir <dir> --inspect-fds`
       to list the quantities pyFDS-Evac finds.
 - [ ] Read the warnings of the first run. A missing gas slice switches FED off
-      and the run still finishes, reporting FED = 0.
+      and the run still finishes, with no FED in the result: `metrics` has no
+      `fed_max` ([Outputs](outputs.md#reading-the-results)).
 - [ ] Read [Limitations](limitations.md) and the
       [verification status](https://pedestriandynamics.org/pyFDS-Evac/verification/).
 

@@ -50,8 +50,11 @@ mkdir -p /tmp/fvf && cd /tmp/fvf \
 
 run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf --disable-tenability
 run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf --fic-alpha 0
-run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf
+run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf --enable-fic-speed
 ```
+
+The FIC slowdown is off by default, as in FDS+Evac, so the third run needs
+`--enable-fic-speed`; without it the second and third runs are the same.
 
 | run | egress | |
 |---|---|---|
