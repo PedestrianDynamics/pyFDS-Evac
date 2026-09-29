@@ -91,9 +91,9 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   `probabilistic` mode each agent draws each threshold once, from the run's
   seed, as `_sample_threshold` does:
   \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
-  In `deterministic` mode every agent uses the threshold itself. The gas
-  dose is probabilistic by default and the heat dose deterministic, since no
-  population spread for heat is published.
+  In `deterministic` mode every agent uses the threshold itself. Both doses
+  are deterministic by default: the gas dose as in FDS+Evac, and the heat
+  dose since no population spread for heat is published.
 
 | Field | Default | CLI flag |
 |---|---|---|
@@ -101,7 +101,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 | `fic_alpha` | `0.7` | `--fic-alpha` |
 | `fic_min_factor` | `0.3` | `--fic-min-factor` |
 | `fed_threshold` | `1.0` | `--fed-threshold` |
-| `incapacitation_mode` | `"probabilistic"` | `--incapacitation-mode` |
+| `incapacitation_mode` | `"deterministic"` | `--incapacitation-mode` |
 | `susceptibility_sigma` | `0.94` | `--susceptibility-sigma` |
 | `heat_fed_threshold` | `1.0` | `--heat-fed-threshold` |
 | `heat_incapacitation_mode` | `"deterministic"` | `--heat-incapacitation-mode` |

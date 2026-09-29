@@ -12,7 +12,7 @@ aliases: [/docs/testing-heat/, /models/verification/testing-heat/]
 | **Level** | FDS case: a full run on FDS output |
 | **Asset** | `assets/fed_incap_heat_150c` (also `_100c` and `_200c`) |
 | **Expected value from** | hand sum of SFPE Eq. 63.48 (rate from Eq. 63.44) on FDS's own `TEMPERATURE` slice |
-| **Status** | passes; checks the pipeline, not the law ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)) |
+| **Status** | passes; checks the pipeline, not the law (the law against the Handbook's tables: `test_heat_fed_verif.py`, A3.8–A3.10) |
 
 ![100 agents walk a loop in a room at 150 °C; their colour shows the heat dose, and all of them stop at 125 s](/images/verification/heat_room.gif)
 
@@ -213,13 +213,15 @@ temperature without output is skipped.
 
 ## Limits
 
-- **The law is not verified.** The expected values use Eqs. 63.44 and
-  63.48, the same formulas as the code. Expected values from SFPE's tables
-  are pending
-  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
-  The Handbook calls Eq. 63.44 somewhat non-conservative at high
-  temperatures and over-conservative at low ones; its Table 63.20 gives
-  12 min at 100 °C where the equation gives 7.9 min.
+- **The law is not verified here.** The expected values use Eqs. 63.44 and
+  63.48, the same formulas as the code. The law itself is compared with the
+  Handbook's tables in `tests/verification/test_heat_fed_verif.py`
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)):
+  Eq. 63.44 gives 0.61 to 1.07 times the times of Table 63.20's convective
+  rows (p. 2383), shorter at 100–140 °C (7.9 min against 12 min at 100 °C),
+  as the Handbook says it is "somewhat overconservative at the
+  low-temperature end" (p. 2382); and it never exceeds the dry-air
+  tolerance times of Table 63.17 (p. 2375).
 - **The room is not at the deck temperature.** FDS settles 0.7, 1.2 and
   1.8 % below the `&INIT` value within the first minute, so the stop times
   are 2 – 7 % later than the closed form at the deck temperature
@@ -248,4 +250,15 @@ temperature without output is skipped.
 - This page is not an automated test: the check runs from the figure
   script on the stored output. The equation-level tests
   (`tests/verification/test_s6_heat_fed.py`, `test_heat_fed_verif.py`) run
-  on synthetic fields in CI.
+  on synthetic fields in CI. `test_heat_flame_pass_reference.py` and the
+  radiant checks in `test_heat_fed_verif.py` (A3.11) call no pyFDS-Evac
+  code: they are reference values for the planned radiant term
+  ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
+- The reference tests rest on choices that are not Handbook tolerances.
+  Flame pass: the flame is a black-body sphere of radius 0.1 m, the skin
+  faces it at 35 °C, there is no convective term, and one pass must stay
+  below FED 0.02. Hot-layer anchor: a black-body layer with a full view,
+  surface at 20 or 35 °C, within ±10 % of the Handbook's "approximately
+  2.5 kW/m²". Table 63.20 radiant rows: within ±30 %, the band chosen in
+  [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219).
+  D = 16.667 is the spec's value; the Handbook prints 16.7.

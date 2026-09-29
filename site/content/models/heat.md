@@ -48,9 +48,12 @@ stops and stays in place as an obstacle, as for the gas dose.
   the run's seed, on a stream independent of the gas threshold:
   \(D_i = \texttt{heat\_fed\_threshold} \cdot \exp(\sigma Z)\),
   \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
-  assumption with no data basis for heat.
+  assumption with no data basis for heat. The Handbook's radiant lethality
+  figures point to a much narrower spread, for an endpoint not modelled here
+  ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat),
+  [#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 
-The gas dose is probabilistic by default; the two modes are set separately
+The gas dose is also deterministic by default; the two modes are set separately
 (`--incapacitation-mode` and `--heat-incapacitation-mode`).
 
 The two doses do not share an endpoint. Gas FED = 1 is Purser's
@@ -94,6 +97,9 @@ recorded.
   (`specs/016-heat-fed/SPEC.md`) is not implemented
   ([#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220),
   [#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
+- **Population spread.** No consulted source gives a spread of tolerance
+  for the convective dose; the opt-in σ = 0.94 is borrowed from the gas dose
+  ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 - **Validity range.** The convective data behind the law reach about 205 °C
   in air of low humidity (below 10 % water vapour). Higher temperatures and
   humid smoke are extrapolation, and neither is flagged.
@@ -104,9 +110,17 @@ recorded.
   radiant heat.
 - **Effects on walking speed or route choice.** The heat dose only
   incapacitates ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
-- **Tests.** The current checks take their expected values from the same
-  closed form as the code; checks against the Handbook's tables are tracked in
-  [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219).
+- **Tests against the Handbook.** Eq. 63.44 is checked against the
+  convective rows of Table 63.20 (p. 2383) and the dry-air rows of
+  Table 63.17 (p. 2375). Against Table 63.20 it gives 0.61 to 1.07 times
+  the tabulated times, never longer than the table's whole-minute rounding
+  allows (read as ±0.5 min, an assumption); it never exceeds the times
+  reported as tolerated in Table 63.17's dry-air rows. The factor-2 band
+  the test allows is an assumption, not a sourced tolerance. Table 63.21 (p. 2385) and the radiant rows of
+  Table 63.20 are kept as reference values that call no pyFDS-Evac code,
+  because neither Eq. 63.45 nor a radiant term is implemented
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219),
+  [#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
 
 ## Sources
 

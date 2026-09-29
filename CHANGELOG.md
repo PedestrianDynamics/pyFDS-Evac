@@ -27,6 +27,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Docs: Fundamentals › Incapacitation thresholds states what is known
+  about the population spread of heat tolerance: SFPE Ch. 63 gives figures
+  only for radiant lethality, which imply σ ≈ 0.22 if log-normal, not the
+  borrowed 0.94. No code change; the heat threshold stays deterministic by
+  default ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
+- Heat FED tests take their expected values from the SFPE Handbook
+  (5th ed., Ch. 63) instead of the code's own formula: Eq. 63.44 as printed
+  (p. 2382), Table 63.20's convective rows (p. 2383) and Table 63.17's
+  dry-air rows (p. 2375). Table 63.21 (p. 2385, whose values follow
+  Eq. 63.45 despite its caption), Table 63.20's radiant rows and a
+  walking-past-a-flame case are added as reference values for a future
+  Eq. 63.45 option and the planned radiant term; they call no pyFDS-Evac
+  code. The heat dose
+  itself is unchanged
+  ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)).
 - Docs, heat dose: each formula states whether it takes incident flux, net
   flux or air temperature; Models › Heat and Limitations say that heat
   FED = 1 and gas FED = 1 are different endpoints that set the same
@@ -89,13 +104,21 @@ See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/ge
   `--heat-fed-threshold`. No population spread for heat is published; the
   log-normal draw with σ = 0.94, borrowed from the gas dose, is opt-in with
   `--heat-incapacitation-mode probabilistic`.
+- Gas incapacitation is deterministic by default: every agent stops at
+  `--fed-threshold` (1.0), as in FDS+Evac. The per-agent log-normal draw
+  (σ = 0.94, fitted to NIST TN 1797) is opt-in with
+  `--incapacitation-mode probabilistic`. The web GUI's default output folder
+  is `results/<scenario>/deterministic/…` accordingly
+  ([#235](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/235)).
 
 **Migration.** To reproduce results from earlier pyFDS-Evac versions, pass
 `--smoke-slice-height 2.0 --enable-fic-speed --o2-threshold-percent 19.5
---enable-heat-fed --heat-incapacitation-mode probabilistic` to `run.py` (or set the matching `opts` attributes), and
+--enable-heat-fed --heat-incapacitation-mode probabilistic
+--incapacitation-mode probabilistic` to `run.py` (or set the matching `opts` attributes), and
 give every spawn area `"use_premovement": false` and `"v0": 1.2` unless it
 already sets them. Python callers that build the models themselves pass
-`TenabilityConfig(enable_fic_speed=True, heat_incapacitation_mode="probabilistic")`,
+`TenabilityConfig(enable_fic_speed=True, heat_incapacitation_mode="probabilistic",
+incapacitation_mode="probabilistic")`,
 `DefaultFedConfig(o2_threshold_percent=19.5, slice_height_m=2.0)`, and
 `slice_height_m=2.0` to `SmokeSpeedConfig`, `ExtinctionField.from_fds`,
 `FdsHeatField.from_fds` and `VisibilityModel`; a heat dose needs a

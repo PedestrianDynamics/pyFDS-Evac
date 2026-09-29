@@ -199,8 +199,8 @@ fails.
   [Heat dose in a uniform room](/verification/testing-heat.md).
 - A missing O₂ gate is caught, a misplaced one is not: any gate between
   15 % and 21 % gives the same four times.
-- One occupant per case and the deterministic threshold. The probabilistic
-  threshold, the default, is checked on 100 agents in
+- One occupant per case and the deterministic threshold. The opt-in
+  probabilistic threshold is checked on 100 agents in
   [CO dose in a uniform room](/verification/testing-homogeneous.md).
 - A uniform, constant field cannot show whether the gas is sampled at the
   agent's current position
