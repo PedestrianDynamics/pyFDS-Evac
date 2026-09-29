@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 from argparse import Namespace
 from pathlib import Path
@@ -312,8 +313,10 @@ _HELP_TEXT: dict[str, str] = {
     "holds the clear-air map.",
     "output_base": "Folder the run writes into. Leave it blank to use the derived path "
     "shown greyed out: a new folder per run, named by scenario, mode, the seed "
-    "used and the start time (UTC). Type a path to override it and everything "
-    "below goes there.",
+    "used and the start time (UTC). Type a folder to use instead of that "
+    "path; each run still writes into its own start-time folder inside it, so "
+    "no run overwrites another. A relative folder is taken under the results "
+    "root.",
     "results_only": "Finishes sooner by skipping the trajectory viewer and plots. "
     "Writes every output file to the output folder: the SQLite, the CSVs, and "
     "a config + geometry snapshot. Same as 'uv run run.py'.",
@@ -897,13 +900,31 @@ def default_output_base(scenario: Any, mode: Any, seed: Any, stamp: str) -> str:
     folder, within a GUI session or across sessions. When the folder exists
     anyway, a numeric suffix is added.
     """
-    folder = (
+    return _unique_run_folder(
         results_root()
         / run_name(scenario)
         / str(mode or "deterministic")
-        / f"seed{seed if seed is not None else 'default'}"
-        / stamp
+        / f"seed{seed if seed is not None else 'default'}",
+        stamp,
     )
+
+
+def typed_output_base(typed: str, stamp: str) -> str:
+    """Run folder under a typed "Output folder": ``<typed>/<stamp>``.
+
+    Each run gets its own start-time folder under the typed one, as under
+    the derived path, so a second run never overwrites the first. A relative
+    path is taken under the results root, not the server's working folder.
+    """
+    base = Path(typed).expanduser()
+    if not (base.is_absolute() or re.match(r"[A-Za-z]:/", typed)):
+        base = results_root() / typed
+    return _unique_run_folder(base, stamp)
+
+
+def _unique_run_folder(parent: Path, stamp: str) -> str:
+    """``parent/stamp``, or ``parent/stamp-N`` when that folder exists."""
+    folder = parent / stamp
     candidate, n = folder, 2
     while candidate.exists():
         candidate = folder.with_name(f"{stamp}-{n}")
@@ -964,13 +985,17 @@ def form_to_opts(
     # scenario's folder (#330).
     sc = run_name(opts.get("scenario"))
     mode = str(opts.get("incapacitation_mode") or "deterministic")
+    stamp = stamp or run_stamp(utc_now())
+    typed = str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
     base = (
-        str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
-    ) or default_output_base(
-        opts.get("scenario"),
-        mode,
-        opts["seed"] if opts.get("seed") is not None else baseseed,
-        stamp or run_stamp(utc_now()),
+        typed_output_base(typed, stamp)
+        if typed
+        else default_output_base(
+            opts.get("scenario"),
+            mode,
+            opts["seed"] if opts.get("seed") is not None else baseseed,
+            stamp,
+        )
     )
     opts.update(
         output_sqlite=f"{base}/{sc}.sqlite",

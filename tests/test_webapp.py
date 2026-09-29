@@ -885,7 +885,7 @@ class TestScenarioUpload:
             assert events[-1] == "done"
             assert manager.status == "done"
             assert manager.result.total_agents >= 1
-            assert (out / "uploads_pytest-runnable.sqlite").exists()
+            assert len(list(out.glob("*/uploads_pytest-runnable.sqlite"))) == 1
             _drop_temp_trajectory()
         finally:
             shutil.rmtree(created, ignore_errors=True)
@@ -920,9 +920,11 @@ def test_results_only_run_skips_viewer_but_writes_files(client, tmp_path):
 
     # The artifacts really landed, and the bundle path is a directory now that
     # export_app_bundle is a path field rather than a checkbox.
-    assert (out / "ISO-table21.sqlite").exists()
-    assert (out / "bundle" / "config.json").exists()
-    assert (out / "bundle" / "geometry.wkt").exists()
+    # A typed folder gets one start-time folder per run inside it (#319).
+    (run_dir,) = out.iterdir()
+    assert (run_dir / "ISO-table21.sqlite").exists()
+    assert (run_dir / "bundle" / "config.json").exists()
+    assert (run_dir / "bundle" / "geometry.wkt").exists()
     _drop_temp_trajectory()
 
 
@@ -977,7 +979,7 @@ class TestOutputBase:
 
         form = {"scenario": "t_junction", "seed": "42"}
         form.update(extra)
-        return form_to_opts(form)
+        return form_to_opts(form, stamp="S")
 
     def test_blank_uses_the_derived_folder(self, results_root):
         from pyfds_evac.webapp.params import form_to_opts
@@ -1011,21 +1013,34 @@ class TestOutputBase:
         assert second == first.with_name("S-2")
 
     def test_typed_folder_is_honoured(self):
+        # Each run writes into its own start-time folder inside the typed one.
         opts = self._opts(output_base="D:/scratch/my run")
-        assert opts.output_sqlite == "D:/scratch/my run/t_junction.sqlite"
-        assert opts.output_fed_history == "D:/scratch/my run/t_junction_fed_history.csv"
-        assert opts.export_app_bundle == "D:/scratch/my run/bundle"
+        assert opts.output_sqlite == "D:/scratch/my run/S/t_junction.sqlite"
+        assert (
+            opts.output_fed_history == "D:/scratch/my run/S/t_junction_fed_history.csv"
+        )
+        assert opts.export_app_bundle == "D:/scratch/my run/S/bundle"
 
-    def test_typed_folder_is_normalised(self):
-        # Backslashes and a trailing separator must not double up in the path.
+    def test_typed_folder_is_normalised(self, results_root):
+        # Backslashes and a trailing separator must not double up in the path;
+        # a relative folder is taken under the results root (#319).
         opts = self._opts(output_base="out\\runs\\")
-        assert opts.output_sqlite == "out/runs/t_junction.sqlite"
+        root = results_root.as_posix()
+        assert opts.output_sqlite == f"{root}/out/runs/S/t_junction.sqlite"
+
+    def test_typed_folder_is_never_reused(self, tmp_path):
+        # #319: a second run into the same typed folder does not overwrite.
+        first = pathlib.Path(self._opts(output_base=str(tmp_path)).output_sqlite)
+        first.parent.mkdir()
+        second = pathlib.Path(self._opts(output_base=str(tmp_path)).output_sqlite)
+        assert first.parent == tmp_path / "S"
+        assert second.parent == tmp_path / "S-2"
 
     def test_whitespace_only_falls_back_to_derived(self, results_root):
         opts = self._opts(output_base="   ")
         assert opts.output_sqlite.startswith(f"{results_root.as_posix()}/t_junction/")
 
-    def test_posted_output_paths_are_ignored(self):
+    def test_posted_output_paths_are_ignored(self, results_root):
         # #330: the paths come from the scenario and the folder, never from a
         # posted output_* value, which could belong to a previous scenario.
         opts = self._opts(
@@ -1033,8 +1048,9 @@ class TestOutputBase:
             output_sqlite="results/Haspel/deterministic/seeddefault/Haspel.sqlite",
             export_app_bundle="elsewhere/bundle",
         )
-        assert opts.output_sqlite == "out/t_junction.sqlite"
-        assert opts.export_app_bundle == "out/bundle"
+        root = results_root.as_posix()
+        assert opts.output_sqlite == f"{root}/out/S/t_junction.sqlite"
+        assert opts.export_app_bundle == f"{root}/out/S/bundle"
 
     def test_new_scenario_with_stale_paths_uses_the_derived_folder(self):
         # #330 repro: Haspel's paths posted with a new scenario and seed.
