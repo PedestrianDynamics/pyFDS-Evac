@@ -91,7 +91,8 @@ fluxes above 2.5 kW/m² (p. 2384). Below a hot layer in clear air, the
 significant radiant sources are the layer, the fire and hot surfaces
 (p. 2384). ISO 13571:2012
 (§4.4) likewise assesses heat and radiant energy with an FED model analogous
-to the gas model.
+to the gas model; its equations are given
+[below](#iso-135712012-clause-8).
 
 A summed dose is interpretable only when both terms are taken for the same
 endpoint. Ch. 63 pairs them as follows (pp. 2382–2384):
@@ -106,6 +107,120 @@ Eq. 63.44 is labelled a time to incapacitation, but its times lie near the
 tolerance curve. Note (our arithmetic, not from the sources): at 100 °C it
 gives 7.9 min, against 12.3 min from Eq. 63.45 (tolerance) and 35.6 min from
 Eq. 63.46 (injury).
+
+## ISO 13571:2012, clause 8
+
+ISO 13571:2012 gives its own heat method in clause 8 (pp. 9–10). Its
+endpoint is "compromised tenability", the inability to perform cognitive
+and motor-skill functions at an acceptable level (§3.1); the standard avoids
+the word incapacitation because it can be read to include collapse and
+unconsciousness (§1).
+
+**Criteria.** Of three ways heat threatens life (hyperthermia, body-surface
+burns, respiratory-tract burns), ISO keeps two for modelling: the threshold
+of second-degree skin burns, and hyperthermia severe enough to cause mental
+deterioration (§8.1). As in Ch. 63, respiratory-tract burns are not expected
+from air with less than 10 % water vapour by volume without burns to the
+skin or face, but can occur from saturated air above 60 °C (§8.1, Note).
+
+**Radiant heat.** ISO gives about 2.5 kW/m² as the tenability limit for
+skin, which it calls an incident heat flux level; below it, exposure can be
+tolerated for 30 min or longer (§8.2). Ch. 63 says "at least several
+minutes" and more than 5 min (p. 2382, Table 63.20). Above the limit, with
+*q* the radiant heat flux [kW/m²] and times in minutes,
+
+$$
+t_{I\,\mathrm{rad}} = 6.9\,q^{-1.56} \qquad \text{(ISO Eq. 7, second-degree burns)}
+$$
+
+$$
+t_{I\,\mathrm{rad}} = 4.2\,q^{-1.9} \qquad \text{(ISO Eq. 8, pain)}
+$$
+
+Both are taken from Wieczorek and Dembsey (2001), ISO ref. [17], with an
+estimated uncertainty of ±25 % (§8.2). ISO relates 2.5 kW/m² to a *source
+surface* temperature of about 200 °C (§8.2); Ch. 63 relates it to a hot
+*layer* at 200 °C (p. 2382). ISO does not use the dose form of Eq. 63.43.
+
+**Convective heat.** For air with less than 10 % water vapour by volume
+(§8.3), with *T* the air temperature [°C]:
+
+$$
+t_{I\,\mathrm{conv}} = 4.1\times10^{8}\,T^{-3.61} \qquad \text{(ISO Eq. 9, fully clothed)}
+$$
+
+$$
+t_{I\,\mathrm{conv}} = 5\times10^{7}\,T^{-3.4} \qquad \text{(ISO Eq. 10, unclothed or lightly clothed)}
+$$
+
+Eq. (9) is cited to Crane (1978), ISO ref. [18]. Eq. (10) is cited to
+Purser's chapter in the 4th edition of the SFPE Handbook, ISO ref. [2], and
+has the constants of Eq. 63.44. ISO calls both empirical fits to human data,
+with an estimated uncertainty of ±25 % (§8.3.2). The 120 °C limit for
+unprotected skin is repeated there (§8.3.2, Note).
+
+**Combining.** The heat FED is the sum over time steps of
+\(1/t_{I\,\mathrm{rad}} + 1/t_{I\,\mathrm{conv}}\) (ISO Eq. 11), the form of
+Eq. 63.48, with the same condition that the temperature is stable or
+increasing. The radiant term is set to zero where the radiant flux to the
+skin is below 2.5 kW/m² (§8.4). The time at which the sum exceeds the chosen
+threshold is the time to compromised tenability, in the same manner as for
+the gases (§8.5, pointing to §5.3); see
+[Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat).
+
+**What ISO does not give.** No total-flux method: no Eq. 63.49, and so no
+emissivity, convective coefficient or skin temperature. No counterpart of
+Eqs. 63.45–63.47 and no radiant doses *r*. No temperature or flux range for
+Eqs. (7) to (10), and no exposure-duration limit for heat; the caution on
+exposures shorter than 1 min or longer than 1 h (§5.8) is stated for
+asphyxiant gases. Ch. 63 states "up to 2 h" for Eq. 63.44 (p. 2382).
+
+| | ISO 13571:2012 | SFPE Ch. 63 |
+|---|---|---|
+| Radiant law | \(a\,q^{-b}\): Eq. (7) burns, Eq. (8) pain | \(r/q^{1.33}\) with *r* per endpoint (Eq. 63.43) |
+| Radiant limit | 2.5 kW/m² incident; ≥ 30 min below | 2.5 kW/m²; several minutes, > 5 min below |
+| 200 °C relates to | a radiating source surface | a hot layer |
+| Convective laws | Eq. (9) clothed; Eq. (10) unclothed = Eq. 63.44 | Eq. 63.44; Eqs. 63.45–63.47 per endpoint |
+| Combination | Eq. (11), summed FED | Eq. 63.48, or total flux (Eq. 63.49) |
+| Stated uncertainty | ±25 % for Eqs. (7)–(10) | none |
+| Humidity limit | < 10 % water vapour | < 10 % water vapour |
+| Duration limit for heat | none stated | up to 2 h (Eq. 63.44) |
+
+Our reading of the text, not a statement of the standard:
+
+- **Endpoint of Eqs. (9) and (10).** §8.3 introduces them as the time to
+  prevention of escape; §8.3.1 calls the same time the time to experiencing
+  pain. Ch. 63 calls Eq. 63.44 a time to incapacitation.
+- **Which radiant law enters Eq. (11).** Eqs. (7) and (8) share the symbol
+  \(t_{I\,\mathrm{rad}}\), and §8.4 does not say which one to use. Either
+  choice sums a radiant endpoint (burns or pain) with a convective one that
+  is not stated to be the same.
+- **Clothing.** ISO recommends Eq. (9) for fully clothed subjects. Ch. 63
+  holds that light indoor clothing adds little tolerance and does not
+  protect the hands and head, so it treats the unclothed expressions as the
+  relevant ones unless protective clothing is worn (p. 2336).
+
+![Two log-scale panels. Left: time to endpoint against radiant flux from 2.5 to 20 kW/m², ISO Eqs. 7 and 8 against SFPE Eq. 63.43 for r = 1.33 and 16.7 with the second-degree band r = 4.0 to 12.2 shaded, and the two radiant rows of Table 63.20. Right: time against air temperature from 60 to 250 °C, ISO Eqs. 9 and 10 against SFPE Eqs. 63.45 to 63.47, and the five convective rows of Table 63.20](/images/fundamentals/heat_iso.png)
+
+*(a) Radiant: ISO's burn law (Eq. 7, red, circles) runs through the low
+end of Ch. 63's second-degree band; ISO's pain law (Eq. 8, orange, squares)
+crosses Ch. 63's pain dose r = 1.33 near 7.5 kW/m². (b) Convective: ISO's
+clothed law (Eq. 9) gives about three times the tolerance time of the
+unclothed law (Eq. 10, identical to Eq. 63.44). Solid over the span of
+Table 63.20 (2.5–10 kW/m², 100–180 °C), dotted outside it: neither source
+states the data range of its fits.*
+
+{{< details title="Figure provenance" closed="true" >}}
+ISO Eqs. (7) to (10) as in §8.2 and §8.3; SFPE Eqs. 63.43 and 63.45–63.47
+(pp. 2382–2383); points from Table 63.20 (p. 2383): 30 s at 2.5 kW/m²,
+4 s at 10 kW/m², and 12, 7, 4, 2 and 1 min at 100, 120, 140, 160 and
+180 °C. Our arithmetic: written as the *r* of Eq. 63.43, Eq. (7) gives
+r = 5.6 at 2.5 kW/m² and 4.1 at 10 kW/m²; Eq. (8) gives 2.5 and 1.1,
+against 1.33–1.67 in Ch. 63. Eq. (8) gives 44 s at 2.5 kW/m² and 3 s at
+10 kW/m², against 30 s and 4 s in Table 63.20. Eq. (9) gives 24.7 min at
+100 °C, Eq. (10) 7.9 min; their ratio falls from 3.1 at 100 °C to 2.8 at
+180 °C. Script: `scripts/figures/fundamentals_heat_iso.py`.
+{{< /details >}}
 
 ## Known limits
 
@@ -141,7 +256,17 @@ equations describe the effect of heat on walking speed or on route choice.
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
 - ISO (2012). *ISO 13571:2012 Life-threatening components of fire —
   Guidelines for the estimation of time to compromised tenability in
-  fires*, §4.4. ISO, Geneva.
-  [iso.org/standard/56172](https://www.iso.org/standard/56172.html).
+  fires*, §1, §3.1, §4.4, §5.8 and clause 8 (Eqs. 7–11). ISO, Geneva.
+  [iso.org/standard/56172](https://www.iso.org/standard/56172.html). Read
+  in full from a licensed copy.
+- Wieczorek, C. J., & Dembsey, N. A. (2001). Human variability correction
+  factors for use with simplified engineering tools for predicting pain
+  and second degree skin burns. *Journal of Fire Protection Engineering*,
+  11(2), 88–111. ISO ref. [17] for Eqs. (7) and (8); not consulted.
+  [doi:10.1106/0D9U-KLP9-TG1P-XJ1B](https://doi.org/10.1106/0D9U-KLP9-TG1P-XJ1B)
+- Crane, C. (1978). *Human tolerance limit to elevated temperature: an
+  empirical approach to the dynamics of acute thermal collapse*. Federal
+  Aviation Administration, Memorandum Report ACC-114-78-2. ISO ref. [18]
+  for Eq. (9); not consulted.
 
 How pyFDS-Evac uses this: see [Models › Heat](/models/heat.md).
