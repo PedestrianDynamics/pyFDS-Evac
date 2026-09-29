@@ -607,7 +607,6 @@ details > summary { cursor: pointer; }
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app-header { padding: .75rem 16px; }
   .tagline { white-space: normal; }
-  .traj-controls, .traj-color { flex-wrap: wrap; row-gap: .5rem; }
   .traj-canvas { height: 320px; }
   .standby { min-height: 36vh; }
   .theme-foot { padding: 0 16px 28px; }
@@ -673,7 +672,10 @@ details > summary { cursor: pointer; }
    Deliberately one selector per rule -- see the note above. */
 .traj-wrap:fullscreen { background: var(--surface-canvas); padding: 0; }
 .traj-wrap:-webkit-full-screen { background: var(--surface-canvas); padding: 0; }
-.traj-controls { display: flex; align-items: center; gap: .8rem; margin-top: .7rem; }
+.traj-controls {
+  display: flex; align-items: center; gap: .8rem; margin-top: .7rem;
+  flex-wrap: wrap; row-gap: .5rem;
+}
 .traj-play {
   width: 2.2rem; height: 2.2rem; flex: none; border-radius: 99px;
   border: 1px solid var(--hairline-strong); background: var(--surface-accent);
@@ -682,12 +684,15 @@ details > summary { cursor: pointer; }
   box-shadow: var(--shadow-sm); transition: border-color .12s, color .12s;
 }
 .traj-play:hover { border-color: var(--ember); color: var(--ember); }
-.traj-slider { flex: 1; accent-color: var(--ember); cursor: pointer; }
+.traj-slider { flex: 1 1 12rem; min-width: 0; accent-color: var(--ember); cursor: pointer; }
 .traj-time {
   font-family: var(--font-mono); font-size: .72rem; min-width: 6ch;
   color: hsl(var(--muted-foreground)); text-align: right;
 }
-.traj-color { display: inline-flex; align-items: center; gap: .35rem; }
+.traj-color {
+  display: inline-flex; align-items: center; gap: .35rem;
+  flex-wrap: wrap; row-gap: .5rem;
+}
 .traj-color-lbl { font-family: var(--font-mono); font-size: .62rem; font-weight: 500; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
 .cmode {
   font-family: var(--font-display);
