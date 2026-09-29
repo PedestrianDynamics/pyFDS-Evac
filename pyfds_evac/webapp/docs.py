@@ -30,7 +30,8 @@ _NAV_STYLE = (
 )
 _BACK_JS = (
     "document.querySelectorAll('.tab-btn').forEach(function(b){"
-    "b.classList.toggle('active',b.dataset.tab==='sim')});"
+    "b.classList.toggle('active',b.dataset.tab==='sim');"
+    "b.setAttribute('aria-selected',String(b.dataset.tab==='sim'))});"
     "document.getElementById('tab-sim').classList.remove('hidden');"
     "document.getElementById('tab-model').classList.add('hidden');"
     "var h=document.querySelector('.app-header');if(h)h.style.display='';"
@@ -150,6 +151,7 @@ def model_docs() -> Any:
             ),
         ),
         style=_NAV_STYLE,
+        cls="doc-nav",
     )
 
     hero = Div(
@@ -387,5 +389,10 @@ def model_docs() -> Any:
 
     return Div(
         nav,
-        Div(hero, sections, style="max-width:980px;margin:0 auto;padding:0 40px 90px"),
+        Div(
+            hero,
+            sections,
+            cls="doc-body",
+            style="max-width:980px;margin:0 auto;padding:0 40px 90px",
+        ),
     )

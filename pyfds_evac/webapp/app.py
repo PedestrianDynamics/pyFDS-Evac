@@ -257,7 +257,8 @@ def _sidebar() -> Div:
                 style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px",
             ),
             params.build_form("/run"),
-            style=f"{_PANEL};position:sticky;top:88px;display:flex;flex-direction:column;gap:14px",
+            cls="sidebar-panel",
+            style=f"{_PANEL};display:flex;flex-direction:column;gap:14px",
         ),
         cls="rise",
         style="animation-delay:.06s",
@@ -438,9 +439,11 @@ _AUTOFILL_JS = """
 """
 
 _NAV = NotStr(
-    '<div class="tab-nav"><div class="tab-pills">'
-    '<button class="tab-btn active" data-tab="sim" type="button">Simulation</button>'
-    '<button class="tab-btn" data-tab="model" type="button">Model</button>'
+    '<div class="tab-nav"><div class="tab-pills" role="tablist" aria-label="Views">'
+    '<button class="tab-btn active" data-tab="sim" type="button" role="tab" '
+    'id="tab-btn-sim" aria-selected="true" aria-controls="tab-sim">Simulation</button>'
+    '<button class="tab-btn" data-tab="model" type="button" role="tab" '
+    'id="tab-btn-model" aria-selected="false" aria-controls="tab-model">Model</button>'
     "</div></div>"
 )
 
@@ -451,6 +454,7 @@ document.addEventListener('click', function (e) {
   var t = b.dataset.tab;
   document.querySelectorAll('.tab-btn').forEach(function (x) {
     x.classList.toggle('active', x === b);
+    x.setAttribute('aria-selected', String(x === b));
   });
   document.getElementById('tab-sim').classList.toggle('hidden', t !== 'sim');
   document.getElementById('tab-model').classList.toggle('hidden', t !== 'model');
@@ -632,8 +636,11 @@ function setTenabilityMode(mode) {
   input.value = mode;
   // A script-set value fires no event; the settings-changed check needs one.
   if (was !== mode) input.dispatchEvent(new Event('change', {bubbles: true}));
-  document.getElementById('btn-prob').classList.toggle('active', mode === 'probabilistic');
-  document.getElementById('btn-det').classList.toggle('active', mode === 'deterministic');
+  [['btn-prob', 'probabilistic'], ['btn-det', 'deterministic']].forEach(function (p) {
+    var b = document.getElementById(p[0]);
+    b.classList.toggle('active', mode === p[1]);
+    b.setAttribute('aria-pressed', String(mode === p[1]));
+  });
   var row  = document.getElementById('sigma-row');
   var dist = document.getElementById('incap-dist');
   if (row)  row.style.display  = mode === 'deterministic' ? 'none' : '';
@@ -717,20 +724,85 @@ _UPLOAD_JS = """
 """
 
 
+# Keyboard behaviour shared by the form: the ? help buttons (toggle, and
+# Escape to close) and the folder browser, which takes focus on open, keeps
+# Tab inside, closes on Escape and returns focus to the button that opened it.
+_A11Y_JS = """
+(function () {
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.help-badge');
+    if (!b) return;
+    var w = b.closest('.lblwrap');
+    if (!w) return;
+    b.setAttribute('aria-expanded', String(w.classList.toggle('open')));
+  });
+  var opener = null;
+  function modal() { return document.getElementById('dir-modal'); }
+  function dialog() { var m = modal(); return m && m.querySelector('[role=dialog]'); }
+  window.closeDirModal = function () {
+    var m = modal(); if (m) m.innerHTML = '';
+    if (opener && document.body.contains(opener)) opener.focus();
+    opener = null;
+  };
+  document.body.addEventListener('htmx:beforeRequest', function (e) {
+    var elt = e.detail && e.detail.elt;
+    var m = modal();
+    if (elt && m && elt.getAttribute('hx-target') === '#dir-modal' && !m.contains(elt)) {
+      opener = elt;
+    }
+  });
+  document.body.addEventListener('htmx:afterSettle', function (e) {
+    if (e.detail.target !== modal()) return;
+    var d = dialog(); if (!d) return;
+    var first = d.querySelector('button');
+    if (first) first.focus();
+  });
+  document.addEventListener('keydown', function (e) {
+    var d = dialog();
+    if (d) {
+      if (e.key === 'Escape') { e.preventDefault(); window.closeDirModal(); return; }
+      if (e.key === 'Tab') {
+        var f = d.querySelectorAll('button, [href], input, select, [tabindex]:not([tabindex="-1"])');
+        if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (!d.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+        else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+      return;
+    }
+    if (e.key !== 'Escape') return;
+    var a = document.activeElement;
+    var w = a && a.closest && a.closest('.lblwrap.open');
+    if (!w) return;
+    w.classList.remove('open');
+    var hb = w.querySelector('.help-badge');
+    if (hb) { hb.setAttribute('aria-expanded', 'false'); hb.focus(); }
+  });
+})();
+"""
+
+
 @rt("/")
 def index():
     grid = Div(
         _sidebar(),
         _run_column(),
-        style="display:grid;grid-template-columns:340px 1fr;gap:20px;max-width:1480px;margin:0 auto;padding:24px 26px 60px",
+        cls="sim-grid",
     )
     return (
         Title("pyFDS-Evac · control"),
         _header(),
         _NAV,
         Div(
-            Div(grid, id="tab-sim"),
-            Div(docs.model_docs(), id="tab-model", cls="hidden"),
+            Div(grid, id="tab-sim", role="tabpanel", aria_labelledby="tab-btn-sim"),
+            Div(
+                docs.model_docs(),
+                id="tab-model",
+                cls="hidden",
+                role="tabpanel",
+                aria_labelledby="tab-btn-model",
+            ),
         ),
         theme.switch(),
         Div(id="dir-modal"),
@@ -747,6 +819,7 @@ def index():
         Script(_TENABILITY_JS),
         Script(_RUN_BTN_JS),
         Script(_UPLOAD_JS),
+        Script(_A11Y_JS),
     )
 
 
@@ -765,7 +838,7 @@ def _safe_dir(path: str) -> Path:
     return resolved if resolved.is_dir() else _DIR_ROOT
 
 
-_CLOSE_MODAL = "document.getElementById('dir-modal').innerHTML=''"
+_CLOSE_MODAL = "window.closeDirModal()"
 _BTN_GHOST = f"display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px;background:transparent;border:0;border-radius:9px;{_INK};{_MONO};font-size:12.5px;cursor:pointer"
 
 
@@ -843,7 +916,11 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
 
     dialog = Div(
         Div(
-            Div(title_text, style=f"{_GROTESK};font-weight:600;font-size:16px;{_INK}"),
+            Div(
+                title_text,
+                id="dir-title",
+                style=f"{_GROTESK};font-weight:600;font-size:16px;{_INK}",
+            ),
             P(
                 str(current),
                 style=f"{_MONO};font-size:11.5px;{_MUTED};margin-top:4px;word-break:break-all",
@@ -855,12 +932,15 @@ def browse_dir(path: str = "", mode: str = "dir", field: str = "fds_dir"):
             *footer_btns,
             style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--hairline)",
         ),
-        style="width:520px;max-width:92vw;background:var(--surface-panel);border:1px solid var(--hairline-strong);border-radius:18px;box-shadow:var(--shadow-lg);overflow:hidden",
+        style="width:520px;max-width:100%;background:var(--surface-panel);border:1px solid var(--hairline-strong);border-radius:18px;box-shadow:var(--shadow-lg);overflow:hidden",
         onclick="event.stopPropagation()",
+        role="dialog",
+        aria_modal="true",
+        aria_labelledby="dir-title",
     )
     return Div(
         dialog,
-        style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(5,6,8,.62);backdrop-filter:blur(4px)",
+        style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,6,8,.62);backdrop-filter:blur(4px)",
         onclick=_CLOSE_MODAL,
     )
 
@@ -997,7 +1077,7 @@ async def upload_scenario(request: Request):
         value,
         note=Div(
             summary,
-            style=f"{_MONO};font-size:10.5px;color:#F4C430;margin-top:6px;line-height:1.5",
+            style=f"{_MONO};font-size:10.5px;color:var(--gold-ink);margin-top:6px;line-height:1.5",
         ),
     )
 
@@ -1145,7 +1225,7 @@ _PYEXPORT_CSS = """
 }
 .pyexport-btn:focus-visible, .pyexport-act:focus-visible, .pyexport-close:focus-visible,
 .pyexport-code:focus-visible, .pyexport summary:focus-visible {
-  outline:2px solid #F4C430;outline-offset:2px;
+  outline:2px solid var(--focus);outline-offset:2px;
 }
 .pyexport-act:disabled { opacity:.5;cursor:not-allowed; }
 dialog.pyexport {
@@ -1865,7 +1945,7 @@ def _running_card(ev, cancelling: bool | None = None) -> Div:
             ),
             Div(
                 f"{pct}%",
-                style=f"{_GROTESK};font-weight:700;font-size:30px;letter-spacing:-.02em;color:#F4C430",
+                style=f"{_GROTESK};font-weight:700;font-size:30px;letter-spacing:-.02em;color:var(--gold-ink)",
             ),
             style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px",
         ),
@@ -2123,13 +2203,13 @@ def _artifact_rows(result, opts) -> Div:
 
         if exists:
             detail, colour, mark = (
-                f"{path} · {_fmt_size(path)}",
+                f"written · {path} · {_fmt_size(path)}",
                 "var(--ink-dim)",
                 "#F4C430",
             )
         elif not produced:
             detail, colour, mark = (
-                _missing_reason(field, opts),
+                f"not produced: {_missing_reason(field, opts)}",
                 "var(--ink-faint)",
                 "var(--surface-raised)",
             )

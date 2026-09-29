@@ -23,6 +23,7 @@ from fasthtml.common import (
     Optgroup,
     Option,
     Select,
+    Span,
 )
 
 try:
@@ -50,7 +51,7 @@ _INPUT = (
     "background:var(--surface-input);border:1px solid var(--hairline);"
     "border-radius:9px;padding:10px 12px;color:var(--ink);"
     "font-family:'JetBrains Mono',monospace;font-size:13px;"
-    "outline:none;width:100%;box-sizing:border-box"
+    "width:100%;box-sizing:border-box"
 )
 _LABEL = (
     "display:block;font-family:'Space Grotesk',sans-serif;"
@@ -214,10 +215,11 @@ def upload_block() -> NotStr:
         "<div class='upload-block'>"
         "<div class='upload-title'>Or upload your own</div>"
         "<input type='text' id='upload-name' name='upload_name' "
-        "placeholder='Name (optional)' autocomplete='off' spellcheck='false' "
+        "placeholder='Name (optional)' aria-label='Name of the uploaded scenario (optional)' "
+        "autocomplete='off' spellcheck='false' "
         "class='upload-name'>"
         "<label id='upload-drop' class='upload-drop'>"
-        "<input type='file' name='files' multiple accept='.json,.wkt,.zip' hidden>"
+        "<input type='file' name='files' multiple accept='.json,.wkt,.zip' class='visually-hidden'>"
         "<span class='upload-drop-title'>Drop files or click to browse</span>"
         "<span class='upload-drop-sub'>config JSON + geometry WKT, or a .zip bundle</span>"
         "<span id='upload-picked' class='upload-picked'></span>"
@@ -326,20 +328,51 @@ def _help_text(dest: str, action: argparse.Action | None = None) -> str:
     return text
 
 
-def _label_line(text: str, has_badge: bool) -> str:
-    """Inline label-text + optional ? badge. The badge toggles 'open' on the
-    enclosing .lblwrap, which reveals the in-flow help block below."""
+# Units stated by each field's own help text, shown in its label.
+_UNITS: dict[str, str] = {
+    "constant_extinction": "1/m",
+    "smoke_update_interval": "s",
+    "smoke_slice_height": "m",
+    "reroute_interval": "s",
+    "o2_threshold_percent": "vol %",
+}
+
+
+def _with_unit(text: str, dest: str) -> str:
+    unit = _UNITS.get(dest)
+    return f"{text} ({unit})" if unit else text
+
+
+def _tip_id(dest: str) -> str:
+    return f"tip-{dest}"
+
+
+def _described(dest: str, action: argparse.Action | None = None) -> dict:
+    """``aria-describedby`` tying a control to its help text, if it has one."""
+    return {"aria_describedby": _tip_id(dest)} if _help_text(dest, action) else {}
+
+
+def _help_button(text: str, dest: str) -> str:
+    """The ? that expands a field's help; a real button, so keyboards reach it.
+
+    It sits beside the label, never inside it: a button inside a <label>
+    would add "Help" to the control's accessible name.
+    """
     import html as _html
 
-    badge = (
-        (
-            '<span class="help-badge" '
-            "onclick=\"this.closest('.lblwrap').classList.toggle('open')\">?</span>"
-        )
-        if has_badge
-        else ""
+    return (
+        '<button type="button" class="help-badge" aria-expanded="false" '
+        f'aria-controls="{_tip_id(dest)}" '
+        f'aria-label="Help: {_html.escape(text, quote=True)}">?</button>'
     )
-    return f'<span class="lbl-line">{_html.escape(text)}{badge}</span>'
+
+
+def _help_tip(dest: str, tip: str) -> NotStr:
+    import html as _html
+
+    return NotStr(
+        f'<div class="badge-tip" id="{_tip_id(dest)}">{_html.escape(tip)}</div>'
+    )
 
 
 def _lbl(
@@ -347,22 +380,26 @@ def _lbl(
     dest: str,
     action: argparse.Action | None = None,
     for_: str | None = None,
+    control: bool = True,
 ) -> Any:
-    """A field label with a pressable ? that expands an in-flow help block.
+    """A field label, with a ? button that expands an in-flow help block.
 
-    The help block sits in normal document flow (not absolutely positioned),
-    so it's bounded by the field width and can never overflow / be clipped by
-    the sidebar's scroll box. *for_* ties the label to a control's id.
+    The label names the control with id *for_* (default: *dest*). With
+    ``control=False`` it is plain text with id ``lbl-<dest>``, for a group
+    to reference with aria-labelledby. The help block sits in normal
+    document flow, so it is bounded by the field width and never clipped.
     """
-    import html as _html
-
-    attrs = {"fr": for_} if for_ else {}
+    text = _with_unit(text, dest)
+    if control:
+        label = Label(text, style=_LABEL, fr=for_ or dest)
+    else:
+        label = Span(text, style=_LABEL, id=f"lbl-{dest}")
     tip = _help_text(dest, action)
     if not tip:
-        return Label(text, style=_LABEL, **attrs)
+        return label
     return Div(
-        Label(NotStr(_label_line(text, True)), style=_LABEL, **attrs),
-        NotStr(f'<div class="badge-tip">{_html.escape(tip)}</div>'),
+        Div(label, NotStr(_help_button(text, dest)), cls="lbl-line"),
+        _help_tip(dest, tip),
         cls="lblwrap",
     )
 
@@ -370,14 +407,20 @@ def _lbl(
 def _switch(
     dest: str, label: str, checked: bool = False, action: argparse.Action | None = None
 ) -> Any:
-    _chk = "checked " if checked else ""
-    _track_bg = "#F4C430" if checked else "var(--surface-input)"
-    _knob_pos = "19px" if checked else "2px"
+    """An on/off field: a native checkbox, visually a switch.
+
+    The checkbox stays focusable and is toggled by the browser (click or
+    Space); the track and knob are styled from its :checked and
+    :focus-visible state, so the look can never disagree with the value.
+    """
     import html as _html
 
+    _chk = "checked " if checked else ""
     _tip = _help_text(dest, action)
+    described = f'aria-describedby="{_tip_id(dest)}" ' if _tip else ""
     _label_node = Label(
-        NotStr(_label_line(label, bool(_tip))),
+        label,
+        fr=dest,
         style=f"{_GROTESK};font-size:12px;font-weight:500;color:var(--ink)",
     )
     # Presence sentinel: an unchecked box posts nothing, so without it an
@@ -385,19 +428,17 @@ def _switch(
     # later in the form and wins when checked (last value wins).
     _row = Div(
         NotStr(f'<input type="hidden" name="{dest}" value="off">'),
-        _label_node,
+        Div(
+            _label_node,
+            *([NotStr(_help_button(label, dest))] if _tip else []),
+            cls="lbl-line",
+        ),
         NotStr(
-            f'<label style="position:relative;display:inline-block;width:40px;height:23px;cursor:pointer">'
-            f'<input type="checkbox" id="{dest}" name="{dest}" value="on" {_chk}'
-            f'style="opacity:0;width:0;height:0;position:absolute">'
-            f'<span onclick="event.preventDefault();var cb=this.previousElementSibling;cb.checked=!cb.checked;'
-            f"this.style.background=cb.checked?'#F4C430':'var(--surface-input)';"
-            f"this.querySelector('span').style.left=cb.checked?'19px':'2px';\" "
-            f'style="position:absolute;inset:0;border-radius:99px;'
-            f'background:{_track_bg};border:1px solid var(--hairline-strong);transition:background .18s">'
-            f'<span style="position:absolute;top:2px;left:{_knob_pos};width:17px;height:17px;'
-            f'border-radius:99px;background:var(--ink-dim);transition:left .18s;display:block"></span>'
-            f"</span></label>"
+            '<span class="switch">'
+            f'<input type="checkbox" class="sw-input" id="{dest}" name="{dest}" '
+            f'value="on" {_chk}{described}>'
+            '<span class="sw-track" aria-hidden="true"><span class="sw-knob"></span>'
+            "</span></span>"
         ),
         style="display:flex;align-items:center;justify-content:space-between;gap:10px",
     )
@@ -405,22 +446,29 @@ def _switch(
         return _row
     return Div(
         _row,
-        NotStr(f'<div class="badge-tip">{_html.escape(_tip)}</div>'),
+        NotStr(
+            f'<div class="badge-tip" id="{_tip_id(dest)}">{_html.escape(_tip)}</div>'
+        ),
         cls="lblwrap",
     )
 
 
 def _incap_toggle() -> Any:
     return Div(
-        _lbl("Incapacitation Mode", "incapacitation_mode"),
+        _lbl("Incapacitation mode", "incapacitation_mode", control=False),
         Div(
             NotStr(
                 '<button type="button" class="mode-btn" id="btn-prob"'
+                ' aria-pressed="false"'
                 " onclick=\"setTenabilityMode('probabilistic')\">Probabilistic</button>"
                 '<button type="button" class="mode-btn active" id="btn-det"'
+                ' aria-pressed="true"'
                 " onclick=\"setTenabilityMode('deterministic')\">Deterministic</button>"
             ),
             cls="mode-toggle",
+            role="group",
+            aria_labelledby="lbl-incapacitation_mode",
+            **_described("incapacitation_mode"),
         ),
         Input(
             type="hidden",
@@ -445,7 +493,7 @@ _SELECT = (
     '</svg>") no-repeat right 12px center;'
     "border:1px solid var(--hairline);border-radius:9px;"
     f"padding:10px 32px 10px 12px;color:var(--ink);{_GROTESK};font-size:13px;"
-    "outline:none;width:100%"
+    "width:100%"
 )
 
 
@@ -462,7 +510,7 @@ def _choice_select(action: argparse.Action) -> Any:
     options = [Option(ol, value=ov, selected=(ov == default)) for ol, ov in pairs]
     return Div(
         _lbl(dest.replace("_", " ").capitalize(), dest, action, for_=dest),
-        Select(*options, id=dest, name=dest, style=_SELECT),
+        Select(*options, id=dest, name=dest, style=_SELECT, **_described(dest, action)),
         style=_FIELD,
     )
 
@@ -492,7 +540,13 @@ def scenario_block(selected: str | None = None, note: Any = None) -> Any:
 
     return Div(
         _lbl("Scenario", "scenario"),
-        Select(*children, name="scenario", id="scenario", style=_SELECT),
+        Select(
+            *children,
+            name="scenario",
+            id="scenario",
+            style=_SELECT,
+            **_described("scenario"),
+        ),
         *([note] if note is not None else []),
         id="scenario-block",
         style=_FIELD,
@@ -517,6 +571,7 @@ def _field(action: argparse.Action) -> Any:
                 min="0",
                 placeholder="blank = scenario baseSeed",
                 style=_INPUT,
+                **_described(dest, action),
             ),
             style=_FIELD,
         )
@@ -532,6 +587,7 @@ def _field(action: argparse.Action) -> Any:
                     autocomplete="off",
                     spellcheck="false",
                     style=_INPUT + ";flex:1;min-width:0",
+                    **_described(dest, action),
                 ),
                 _browse_button("fds_dir", "dir"),
                 style="display:flex;gap:7px",
@@ -548,6 +604,7 @@ def _field(action: argparse.Action) -> Any:
                     name=dest,
                     placeholder="blank = no cache",
                     style=_INPUT + ";flex:1;min-width:0",
+                    **_described(dest, action),
                 ),
                 _browse_button("vis_cache", "file"),
                 style="display:flex;gap:7px",
@@ -570,6 +627,7 @@ def _field(action: argparse.Action) -> Any:
                     step="any",
                     value=val,
                     style=_INPUT,
+                    **_described(dest, action),
                 ),
                 style=_FIELD,
             ),
@@ -597,13 +655,21 @@ def _field(action: argparse.Action) -> Any:
         return Div(
             _lbl(label, dest, action),
             Input(
-                id=dest, name=dest, type="number", step=step, value=value, style=_INPUT
+                id=dest,
+                name=dest,
+                type="number",
+                step=step,
+                value=value,
+                style=_INPUT,
+                **_described(dest, action),
             ),
             style=_FIELD,
         )
     return Div(
         _lbl(label, dest, action),
-        Input(id=dest, name=dest, value=value, style=_INPUT),
+        Input(
+            id=dest, name=dest, value=value, style=_INPUT, **_described(dest, action)
+        ),
         style=_FIELD,
     )
 
@@ -635,7 +701,6 @@ def _results_only_button() -> Any:
     read the help would submit the form and start a run. It reuses the same
     .lblwrap/.badge-tip mechanism as the field labels.
     """
-    import html as _html
 
     return Div(
         Div(
@@ -649,23 +714,19 @@ def _results_only_button() -> Any:
                 name="results_only",
                 value="1",
                 cls="run-btn results-btn",
+                aria_describedby=_tip_id("results_only"),
                 style=(
                     "display:flex;align-items:center;justify-content:center;gap:6px;"
                     "flex:1;padding:11px;border-radius:12px;cursor:pointer;"
                     f"{_GROTESK};font-size:13.5px;font-weight:600;"
-                    "background:transparent;color:#F4C430;"
+                    "background:transparent;color:var(--gold-ink);"
                     "border:1px solid rgba(244,196,48,.45)"
                 ),
             ),
-            NotStr(
-                '<span class="help-badge" style="flex:none;align-self:center" '
-                "onclick=\"this.closest('.lblwrap').classList.toggle('open')\">?</span>"
-            ),
-            style="display:flex;align-items:stretch;gap:8px",
+            NotStr(_help_button("Results only", "results_only")),
+            style="display:flex;align-items:center;gap:8px",
         ),
-        NotStr(
-            f'<div class="badge-tip">{_html.escape(_HELP_TEXT["results_only"])}</div>'
-        ),
+        _help_tip("results_only", _HELP_TEXT["results_only"]),
         cls="lblwrap",
     )
 
@@ -702,6 +763,7 @@ def _output_files_section() -> NotStr:
                     autocomplete="off",
                     spellcheck="false",
                     style=_INPUT,
+                    **_described("output_base"),
                 ),
                 style=_FIELD,
             ),
@@ -780,8 +842,8 @@ def build_form(post_url: str) -> Any:
     return Form(
         Div(
             *sections,
-            style="display:flex;flex-direction:column;gap:9px;"
-            "max-height:calc(100vh - 230px);overflow:auto;margin:-4px;padding:4px",
+            cls="form-scroll",
+            style="display:flex;flex-direction:column;gap:9px;margin:-4px;padding:4px",
         ),
         Button(
             NotStr(

@@ -113,7 +113,7 @@ _CSS = """
   /* ink */
   --ink:       #f2ede9;
   --ink-dim:   #b2a9a3;
-  --ink-faint: #837a74;
+  --ink-faint: #a59c96;
 
   /* hairlines, from softest to strongest */
   --hairline-soft:   rgba(255,255,255,.04);
@@ -181,7 +181,7 @@ html[data-theme="light"] {
 
   --ink:       #241f1c;
   --ink-dim:   #5c534c;
-  --ink-faint: #857b72;
+  --ink-faint: #6b625a;
 
   --hairline-soft:   rgba(31,23,16,.045);
   --hairline:        rgba(31,23,16,.10);
@@ -249,8 +249,18 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 .uk-input:focus, .uk-select:focus, input:focus, select:focus {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(244,196,48,.18);
-  outline: none;
 }
+/* Keyboard focus is always visible: a 2px ring in --focus, which keeps
+   3:1 or more against every surface in both themes. */
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 1px;
+}
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.upload-drop:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
 .uk-input::placeholder { color: hsl(var(--muted-foreground) / .5); }
 ::selection { background: rgba(255,106,26,.32); color: #fff; }
 
@@ -259,14 +269,35 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
    by the field width and can never overflow or be clipped by the sidebar. */
 .lbl-line { display: inline-flex; align-items: center; gap: .35rem; }
 .help-badge {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; height: 15px; border-radius: 99px;
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 18px; height: 18px; padding: 0; border-radius: 99px; background: transparent;
+  font-family: inherit; line-height: 1;
   border: 1px solid var(--hairline-badge); color: hsl(var(--muted-foreground));
   font-size: .58rem; font-weight: 700; cursor: pointer;
   transition: color .12s, border-color .12s; user-select: none;
 }
 .lblwrap { display: flex; flex-direction: column; gap: 6px; }
-.lblwrap.open .help-badge { color: var(--gold); border-color: var(--gold); }
+.lblwrap.open .help-badge { color: var(--gold-ink); border-color: var(--gold-ink); }
+.lbl-line label, .lbl-line > span { margin-bottom: 0 !important; }
+
+/* on/off switch: a native checkbox under a painted track */
+.switch { position: relative; display: inline-block; width: 40px; height: 23px; flex: none; }
+.sw-input {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+  opacity: 0; cursor: pointer; z-index: 1;
+}
+.sw-track {
+  position: absolute; inset: 0; border-radius: 99px;
+  background: var(--surface-input); border: 1px solid var(--hairline-strong);
+  transition: background .18s;
+}
+.sw-knob {
+  position: absolute; top: 2px; left: 2px; width: 17px; height: 17px;
+  border-radius: 99px; background: var(--ink-dim); transition: left .18s;
+}
+.sw-input:checked + .sw-track { background: var(--gold); }
+.sw-input:checked + .sw-track .sw-knob { left: 19px; background: var(--on-heat); }
+.sw-input:focus-visible + .sw-track { outline: 2px solid var(--focus); outline-offset: 2px; }
 .badge-tip {
   display: none;
   background: var(--surface-tooltip); color: var(--tooltip-ink);
@@ -297,7 +328,7 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
 .upload-name {
   background: var(--surface-input); border: 1px solid var(--hairline); border-radius: 9px;
   padding: 9px 11px; color: var(--ink); font-family: 'JetBrains Mono', monospace;
-  font-size: 12px; outline: none; width: 100%; box-sizing: border-box;
+  font-size: 12px; width: 100%; box-sizing: border-box;
 }
 .upload-drop {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -316,7 +347,7 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   line-height: 1.5;
 }
 .upload-picked {
-  font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--gold);
+  font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--gold-ink);
   word-break: break-all;
 }
 .upload-picked:empty { display: none; }
@@ -428,7 +459,9 @@ h1, h2, h3, h4, .uk-card-title, .uk-h1, .uk-h2, .uk-h3 {
   border: 0; border-radius: .48rem;
   transition: background .15s, color .15s, box-shadow .15s;
 }
-.mode-btn.active { background: var(--gold); color: var(--on-heat); box-shadow: var(--shadow-sm); }
+.mode-btn.active { background: var(--gold); color: var(--on-heat); box-shadow: var(--shadow-sm); font-weight: 600; }
+/* the selected mode is marked in text as well as by the fill */
+.mode-btn[aria-pressed="true"]::before { content: "\2713\00a0"; }
 .mode-btn:hover:not(.active) { color: hsl(var(--foreground)); }
 
 /* ---- run panel ---- */
@@ -554,7 +587,32 @@ details > summary { cursor: pointer; }
   cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
 }
 .tab-btn:hover:not(.active) { color: hsl(var(--foreground)); background: var(--hairline-soft); }
-.tab-btn.active { background: var(--pill-active-bg); color: var(--pill-active-fg); box-shadow: var(--shadow-sm); }
+.tab-btn.active { background: var(--pill-active-bg); color: var(--pill-active-fg); box-shadow: var(--shadow-sm); font-weight: 600; }
+
+/* ---- page layout: form beside the run column, stacked on narrow screens ---- */
+.sim-grid {
+  display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px;
+  max-width: 1480px; margin: 0 auto; padding: 24px 26px 60px;
+}
+.sidebar-panel { position: sticky; top: 88px; }
+.form-scroll { max-height: calc(100vh - 230px); overflow: auto; }
+@media (max-width: 900px) {
+  .sim-grid { grid-template-columns: minmax(0, 1fr); padding: 16px 16px 48px; gap: 16px; }
+  .sidebar-panel { position: static; padding: 16px !important; }
+  .form-scroll { max-height: none; overflow: visible; }
+  #run-panel > div, .run-col > #run-panel [style*="padding:24px"] { padding: 16px !important; }
+  /* Run stays in reach at the foot of the screen while scrolling the form */
+  #run-btn { position: sticky; bottom: 12px; z-index: 5; }
+  html { scroll-padding-bottom: 72px; }
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-header { padding: .75rem 16px; }
+  .tagline { white-space: normal; }
+  .traj-controls, .traj-color { flex-wrap: wrap; row-gap: .5rem; }
+  .traj-canvas { height: 320px; }
+  .standby { min-height: 36vh; }
+  .theme-foot { padding: 0 16px 28px; }
+}
+@media (max-width: 360px) { .kpi-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---- trajectory canvas ---- */
 .traj-wrap { margin-top: .6rem; }
@@ -639,6 +697,9 @@ details > summary { cursor: pointer; }
   transition: border-color .12s, color .12s, background .12s;
 }
 .cmode.active { border-color: var(--ember); color: var(--ember); background: rgba(255,106,26,.12); }
+/* ember text is under 3:1 on the light ground; the chip keeps the ember
+   border and uses a darker ember for its label */
+html[data-theme="light"] .cmode.active { color: #b54708; }
 .speed-custom {
   width: 4.2rem; font-family: var(--font-mono); font-size: .68rem;
   padding: .28rem .5rem; border: 1px solid var(--hairline-strong); border-radius: .45rem;
@@ -714,7 +775,7 @@ details[open] summary .chevron { transform: rotate(180deg); }
   font-family: var(--font-mono);
   padding: 18px 40px 90px;
   margin: 0 calc(50% - 50vw);          /* break out to full viewport width */
-  width: 100vw; max-width: 100vw;
+  width: 100vw; max-width: 100vw; box-sizing: border-box;
 }
 #tab-model h3, #tab-model h4 {
   font-family: var(--font-mono); color: #17150f;
@@ -761,6 +822,14 @@ details[open] summary .chevron { transform: rotate(180deg); }
 #tab-model .tier-card.severe h4   { color: #cc2030; }
 #tab-model .tier-card p { font-family: var(--font-mono); color: #6b655c; }
 @media (max-width: 640px) { #tab-model .tier-grid { grid-template-columns: repeat(2, 1fr); } }
+/* The Model tab's own rules come after the page breakpoints, so its narrow
+   layout is set here. */
+@media (max-width: 900px) {
+  #tab-model { padding: 12px 16px 60px; margin: 0; width: auto; max-width: none; }
+  #tab-model .doc-nav { padding: 12px 0 !important; }
+  #tab-model .doc-body { padding: 0 0 60px !important; }
+  #tab-model .katex-display { overflow-x: auto; overflow-y: hidden; }
+}
 
 /* =================================================================== */
 /*  Theme switch — page footer                                          */

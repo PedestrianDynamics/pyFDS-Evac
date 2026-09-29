@@ -2089,3 +2089,61 @@ class TestResultSummary:
         assert "Warning" in html
         assert f"2 warnings for run #{manager.run_id}" in html
         assert "#F4C430" not in html
+
+
+class TestAccessibleForm:
+    """#322: every control is labelled, keyboard-operable and visibly focused."""
+
+    def test_every_control_has_a_label(self, client):
+        page = client.get("/").text
+        form = page[page.index('id="run-form"') :]
+        for match in re.finditer(r"<(input|select)\b([^>]*)>", form):
+            attrs = match.group(2)
+            if 'type="hidden"' in attrs or "type='hidden'" in attrs:
+                continue
+            ident = re.search(r"""\bid=["']([^"']+)""", attrs)
+            if "aria-label" in attrs or ident is None:
+                assert "aria-label" in attrs or "name='files'" in attrs, attrs
+                continue
+            assert f'for="{ident.group(1)}"' in page, ident.group(1)
+
+    def test_help_is_a_button_outside_the_label(self, client):
+        page = client.get("/").text
+        assert 'class="help-badge"' in page
+        assert '<span class="help-badge"' not in page
+        assert 'aria-controls="tip-seed"' in page and 'id="tip-seed"' in page
+        assert 'aria-describedby="tip-seed"' in page
+        assert not re.search(r"<label[^>]*>[^<]*<button", page)
+
+    def test_switch_is_a_native_checkbox_without_script(self, client):
+        page = client.get("/").text
+        sw = re.search(r'<span class="switch">.*?</span></span></span>', page)
+        assert sw and 'class="sw-input"' in sw.group(0)
+        assert "onclick" not in sw.group(0)
+
+    def test_no_inline_outline_suppression_and_a_focus_ring(self, client):
+        from pyfds_evac.webapp import theme
+
+        page = client.get("/").text
+        assert "outline:none" not in page
+        assert ":focus-visible { outline: 2px solid var(--focus)" in theme._CSS
+
+    def test_units_modes_and_tabs_are_stated(self, client):
+        page = client.get("/").text
+        assert "Reroute interval (s)" in page
+        assert "Smoke slice height (m)" in page
+        assert 'id="btn-det" aria-pressed="true"' in page
+        assert 'role="tablist"' in page and 'aria-selected="true"' in page
+
+    def test_layout_breakpoint_replaces_the_fixed_grid(self, client):
+        from pyfds_evac.webapp import theme
+
+        page = client.get("/").text
+        assert "grid-template-columns:340px 1fr" not in page
+        assert 'class="sim-grid"' in page
+        assert "@media (max-width: 900px)" in theme._CSS
+
+    def test_browse_is_a_labelled_dialog(self, client):
+        r = client.get("/browse-dir")
+        assert 'role="dialog"' in r.text
+        assert 'aria-labelledby="dir-title"' in r.text
