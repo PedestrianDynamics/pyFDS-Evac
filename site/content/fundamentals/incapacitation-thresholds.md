@@ -18,13 +18,25 @@ log-normal distribution about a median. The standard states that, in the
 absence of actual data, the log-normal is the most defensible choice. FED and
 fractional effective concentration (FEC) values of 1.0 correspond by
 definition to the median, and users "shall use reduced FED and/or FEC
-threshold criteria" for more conservative objectives (§5.4). The earlier
-edition, ISO 13571:2007, gave 0.3 as an example threshold for most general
-occupancies, noted that "the distribution of human responses to fire gases is
-not known", and stated that at 0.3 about 11.4 % of the population would still
-be susceptible, adding that no threshold is statistically safe for every
-occupant (§5, Note). ISO/TR 13571-2:2016 repeats the 11.4 % figure for 0.3,
-citing ISO 13571:2012, A.5.2.
+threshold criteria" for more conservative objectives (§5.4). Whatever the
+value, a single one is to be used for both FED and FEC in a given estimation
+(§5.4, A.5.2).
+
+The informative Annex A.5.2 gives examples: under the log-normal assumption,
+thresholds of 0.3, 0.2 and 0.1 leave 11.4 %, 5.4 % and 1.1 % of the
+population statistically estimated to experience compromised tenability. ISO
+cites a table of normal areas for these figures (ref. [43]), says that no
+threshold is statistically safe for every occupant, and warns that the
+percentages only show the trend and carry no assurance of validity. For CO,
+0.3 corresponds to about 10 % instead of 30 % carboxyhaemoglobin (A.3.2).
+
+The earlier edition, ISO 13571:2007, gave 0.3 as an example threshold for
+most general occupancies, noted that "the distribution of human responses to
+fire gases is not known", and stated that at 0.3 about 11.4 % of the
+population would still be susceptible (§5.2, Note). The 2012 edition makes a
+reduced threshold mandatory, keeps 0.3 only as an informative example and
+adds the 0.2 and 0.1 figures. ISO/TR 13571-2:2016 repeats the 11.4 % figure
+for 0.3, citing ISO 13571:2012, A.5.2.
 
 ## What the handbook says
 
@@ -66,10 +78,31 @@ that themselves rest on an assumed distribution, not on measured human
 incapacitation. The 0.3 threshold and the 11 % figure are best read as a
 design convention derived from the log-normal assumption. For reference
 (arithmetic, not a statement of the sources): a log-normal with median 1 and
-log-scale standard deviation 1.0 puts 11.4 % below 0.3, ISO's figure; the
-preview does not state which standard deviation ISO used.
+log-scale standard deviation 1.0 puts 11.4 % below 0.3, 5.4 % below 0.2 and
+1.1 % below 0.1, all three of ISO's A.5.2 figures; ISO itself does not state
+the standard deviation.
 
 ## Heat
+
+ISO 13571:2012 applies the gas threshold logic to heat by reference: heat is
+assessed with an FED model analogous to the gas model (§4.4), and the time at
+which the heat dose exceeds the chosen threshold is found "in the same
+manner" as for toxic gases (§8.5, pointing to §5.3). The standard gives no
+population data, spread or separate threshold for heat. Its population
+figures (A.5.2) sit in an annex on toxic potency whose evidence base is
+laboratory data on gaseous effluents (A.5.1), and its footnote to A.5.2
+calls the log-normal an assumption for responses to fire-gas toxicants. For
+smoke obscuration, by contrast, ISO says explicitly that no data exist and
+applies the same factor of 0.3 by analogy (clause 9, Note 5); there is no
+such note for heat.
+
+Our reading, not a statement of the standard: §4.1 and §5.4 make the
+log-normal assumption and the rule of reduced thresholds general, so a
+threshold such as 0.3 may be applied to the heat FED, but the 11.4 % figure
+for heat rests on assumption alone. ISO does not establish it. §5.4 also asks
+for a single threshold for FED and FEC in a given estimation, whereas its
+report clause asks for the threshold chosen for each component (clause 10);
+the text does not say whether the heat FED must share the gas threshold.
 
 No source we could consult gives a population spread for tolerance of
 convective heat, the dose pyFDS-Evac computes (Eq. 63.44). SFPE Ch. 63 gives
@@ -108,9 +141,10 @@ check first
 
 - ISO (2012). *ISO 13571:2012 Life-threatening components of fire —
   Guidelines for the estimation of time to compromised tenability in
-  fires*, §4.1 and §5.4. ISO, Geneva.
+  fires*, §4.1, §4.4, §5.4, §8.5, clause 9 Note 5, clause 10, A.3.2 and
+  A.5. ISO, Geneva.
   [iso.org/standard/56172](https://www.iso.org/standard/56172.html). Read
-  from the public preview; Annex A.5.2 was not available.
+  in full from a licensed copy.
 - ISO (2007). *ISO 13571:2007 Life-threatening components of fire —
   Guidelines for the estimation of time available for escape using fire
   data*, §5. ISO, Geneva. Withdrawn.
