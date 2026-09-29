@@ -304,8 +304,39 @@ class TestCancelLifecycle:
         mgr.cancel()
         gate["build"].set()  # the worker unwinds within /cancel's wait
         r = client.post("/cancel")
+        assert "Run cancelled." in r.text
+        assert 'hx-post="/clear"' in r.text
+        assert mgr.status == "cancelled"
+        r = client.post("/clear")
         assert "Choose a scenario and" in r.text
         assert mgr.status == "idle"
+
+    def test_cancelled_run_keeps_its_code_until_clear(self, rm, client):
+        import threading
+
+        import pyfds_evac.webapp.app as app_module
+        from pyfds_evac.webapp.runner import make_run_spec
+
+        mgr, _calls, gate = rm
+        form = {"scenario": "ISO-table21", "seed": "5"}
+        scenario, opts = app_module._resolve_form(form)
+        spec = make_run_spec(opts, scenario, "ISO-table21", "ISO-table21")
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub", spec=spec)
+        assert entered.wait(5.0)
+        mgr.cancel()
+        gate["build"].set()
+        r = client.post("/cancel")
+        run_id = mgr.spec.run_id
+        assert f'data-pyexport-run="{run_id}"' in r.text
+        code = client.post(f"/export/run?run={run_id}", data=form, headers=_HX)
+        assert f"Configuration of the cancelled run #{run_id}" in code.text
+        assert "Status: cancelled" in code.text
+        # No result, so the seed used stays unrecorded.
+        assert "the seed used was not recorded" in _code_of(code.text)
+        client.post("/clear")
+        stale = client.post(f"/export/run?run={run_id}", data=form, headers=_HX)
+        assert "<code>" not in stale.text
 
     def test_progress_stream_ends_with_done_after_a_cancel(self, rm, client):
         import threading

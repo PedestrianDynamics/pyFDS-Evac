@@ -1431,13 +1431,15 @@ async def cancel():
     writing) can't hang the request. If the worker is still unwinding when it
     expires, the panel stays on the progress stream in a "cancelling" state
     and Run stays disabled; the stream's terminal ``done`` event settles it
-    once the worker has ended.
+    once the worker has ended. A cancelled run keeps its snapshot until
+    Clear, so "Show Python for this run" can still offer its configuration.
     """
     manager.cancel()
     if not await asyncio.to_thread(manager.join, _CANCEL_WAIT_S):
         return _running_stream_view(cancelling=True)
-    manager.reset()
-    return _run_panel_idle_body()
+    # Keep the cancelled run's snapshot so its configuration can still be
+    # shown as code; Clear returns the panel to standby.
+    return Div(_cancelled_view(), style=_PANEL)
 
 
 @rt("/clear")
@@ -1451,14 +1453,18 @@ async def clear():
     return _run_panel_idle_body()
 
 
-def _cancelled_view(message: str = "Run cancelled.") -> Div:
+def _cancelled_view(message: str = "Run cancelled.", show_code: bool = True) -> Div:
     """Terminal message for a cancelled run, with a way back to standby.
 
     It replaces only ``#run-status``, so the stop control beside it stays;
-    Clear returns the whole panel to standby.
+    Clear returns the whole panel to standby. ``show_code`` offers the
+    cancelled run's configuration as code while its snapshot is kept.
     """
+    spec = manager.spec
+    cancelled = show_code and spec is not None and spec.status == "cancelled"
     return Div(
         Span(message, style=f"{_MONO};font-size:12px;{_MUTED}"),
+        _run_code_button() if cancelled else "",
         Button(
             "Clear",
             type="button",
@@ -1918,7 +1924,7 @@ def _progress_step(run_id: int, last, last_log: int):
     if manager.run_id != run_id:
         # This stream's run has ended and another has started; its
         # outcome is gone, so settle the panel instead of following.
-        view = _cancelled_view("Run ended; another run has started.")
+        view = _cancelled_view("Run ended; another run has started.", show_code=False)
         return [sse_message(view, event="done")], last, last_log, True
     msgs = []
     n = len(manager.log_lines)
