@@ -11,8 +11,10 @@ it. Cheung et al. (2026) rebuilt that chamber and repeated the experiment
 at lower ambient light. It is the only modern replication we have, and this
 page follows it where it tests Jin's law.
 
-Symbols follow the [notation table](/docs/concepts.md#notation). The
-sources use other letters for the same quantities:
+Symbols follow the [notation table](/docs/concepts.md#notation), except
+that this page writes *V* for the table's *S*, as every source does; *L*
+here is ambient light and α a reflectance. The sources use other letters
+for the same quantities:
 
 | This page | Meaning | Jin 1970–1972 | Jin and Yamada 1985; SFPE Ch. 61 | Cheung et al. 2026 |
 |---|---|---|---|---|
@@ -135,8 +137,11 @@ of his Fig. 11), and 0.02 and 0.05 (dotted). C is the logarithm of a
 brightness ratio: going from C = 3 to C = 8 needs about \(e^5\) ≈ 150
 times the sign-to-light ratio (our arithmetic). Boxes: approximate extent of
 Cheung et al.'s data at 180, 22 and 1 lx (their Fig. 11, our reading of
-the axes). (b) V = C/K for C = 3 and 8, and 11, the top of Cheung et al.'s
-low-light range; solid over 5–15.5 m, dashed outside; shading: Jin's bands
+the axes). In our reading the dim-light boxes sit below Jin's curve: the
+higher C in dim light comes from the larger ratio for the same sign, not
+from a shift of the curve. (b) V = C/K for C = 3 and 8, and 11, the top of
+Cheung et al.'s low-light range, reached only with signs far brighter than
+exit signs; solid over 5–15.5 m, dashed outside; shading: Jin's bands
 2–4 and 5–10. Script: `scripts/figures/fundamentals_visibility_constant.py`.*
 
 **Reflecting signs and ambient light: the sources disagree.** Jin (1970,
@@ -159,6 +164,13 @@ notes that black smoke has the smaller \(k_s\) and that, because \(k_s\)
 sits inside the logarithm, the difference has little effect on visibility.
 *Our inference:* a smaller \(k_s\) gives a larger *KV* in Eq. 4, the
 direction observed.
+
+**Walls, floors and doors.** Jin and Yamada (1985, p. 81), Jin (1997, p. 7)
+and Jin (2002, p. 2-43) state that the visibility of walls, floors, doors
+and stairs depends on the surroundings, "however, the minimum value for
+reflecting signs may be applicable", that is, *C* ≈ 2 in our reading. Jin (1976, p. 17)
+uses "Visibility (m) × Extinction coefficient (1/m) ≈ 2" to turn a required
+visibility into an allowable smoke density.
 
 **What C is.** Eq. 4 makes *C* a property of the sign, its lighting and the
 smoke, through \(B_{E0}/L\), \(\delta_c\) and \(k_s\). *Our inference:* *C*
@@ -191,7 +203,15 @@ What they **revise**:
 
 - **Ambient light.** In dim light a sign of the same luminance stays
   visible in denser smoke. *KV* is 7.5–11 at 1 lx and 6–11 at 22 lx
-  (§4.4, Fig. 11), against 5–8 at 180 lx. They write that using *KV* = 5
+  (§4.4, Fig. 11), against 5–8 at 180 lx. These ranges span sign
+  luminances of 128–22 500 cd/m² (§4.1) and pool the "O" and "C"
+  thresholds (Fig. 11). At luminances of ordinary exit signs their printed
+  values give lower constants (our arithmetic): at 1 lx, *K* = 1.5, 0.8 and
+  0.5 1/m at 189, 202 and 492 cd/m² for 5.5, 10.5 and 15.5 m, so *KV* ≈
+  8.3, 8.4 and 7.8; at 22 lx, *K* = 1.4, 0.7 and 0.4 1/m at 224, 135 and
+  220 cd/m², so *KV* ≈ 7.7, 7.4 and 6.2 (§4.3). At 5.5 m and about
+  130 cd/m², the critical *K* is about 1.5 1/m at 1 lx and 0.9 1/m at
+  222 lx (§4.2, Fig. 9a), so *KV* ≈ 8.3 against 5.0. They write that using *KV* = 5
   "may result in overestimation" and that "the actual visibility of the
   illuminated signage should be higher" (§4.4). *In our reading*, *KV* = 5
   understates the visibility of a lit sign in dim light. Jin's 5–8 refers
@@ -203,9 +223,12 @@ What they **revise**:
   §4.4). Their Fig. 11 draws bounding curves with \(\delta_c k_s\) =
   0.1–1 at 1 lx, 0.0125–0.125 at 22 lx, 0.005–0.05 at 60 lx and
   0.0025–0.025 at 180 lx.
-- **Jin's sign luminance.** Jin's lit signs, about 3000 asb (955 cd/m²),
-  were much brighter than common exit signs of about 100–500 cd/m², which is
-  why they were seen at *K* up to 1.8 1/m (§2; §4.1).
+- **Jin's sign luminance.** They state that Jin's lit signs, about
+  3000 asb (955 cd/m²), were much brighter than common exit signs, which is
+  why they were seen at *K* up to 1.8 1/m (§2). They also give Jin's range
+  as 42–808 cd/m² (§4.1) or 36–810 cd/m² (§5), and common exit signs as
+  about 100–500 cd/m² (§4.1) or 100–300 cd/m² (§5); *in our reading*
+  these ranges overlap.
 - **Distance.** At 5.5 and 10.5 m their critical *K* is about 20 % higher
   than Jin's at the lowest \(\pi L_t/E\) (§4.1). The critical *K* falls by
   nearly 40 % per 5 m of distance (§4.3). *Our arithmetic:* a constant *KV*
@@ -239,6 +262,10 @@ by them, and so are black smoke and irritants.
   correction is not stated.
 - Their text says the contrast ratio is lower in dimmer light (§4.4). Their
   Fig. 11 bounds give a larger \(\delta_c k_s\) at 1 lx than at 180 lx.
+- In their Fig. 11 the dim-light data lie *below* Jin's curve at the same
+  \(\pi L_t/E\). The larger *KV* in dim light comes from the larger
+  \(\pi L_t/E\) of the same sign when *E* is small, not from a sign being
+  seen better than Jin's model predicts.
 
 ## Other data on real exit signs
 
@@ -268,7 +295,10 @@ translation). Jin attributes this to tears and irritation, which raise the
 contrast needed (Figs. 6–7, pp. 14–15). Even in thin, weakly irritant
 smoke, the letters of a commercial exit sign needed a contrast 3–5 times
 that for seeing the sign (p. 15). Normal lighting and the blackout gave
-almost the same visibility (p. 15).
+almost the same visibility (p. 15). Cheung et al. (2026, §4.2, Fig. 9a)
+give a modern data point for the same distinction: at 1 lx and
+*K* = 1.6 1/m, 170 cd/m² sufficed to see the "O" and 440 cd/m² to see the
+gap of the "C".
 
 *Our caveats:* the irritant smoke was white and the non-irritant smoke
 black, so irritancy and smoke colour change together; Jin (1972, p. 14)
@@ -326,8 +356,9 @@ found no primary source for the number.
 - The sign grew with distance to keep its visual angle (Jin 1970, p. 3;
   Cheung et al., §2), so a real sign of fixed size is not covered.
 - *C* depends on the sign's luminance, the ambient light and the smoke.
-  Jin's lit-sign values are for 22–180 lx, and for signs far brighter than
-  common exit signs. In 1–22 lx, Cheung et al. measured 6–11.
+  Jin's lit-sign values are for 22–180 lx. In 1–22 lx, Cheung et al.
+  measured 6–11 over signs up to 22 500 cd/m², and about 6–8.4 at exit-sign
+  luminances (our arithmetic from their §4.3).
 - It is a threshold for seeing a sign, not for reading or understanding it.
   Reading needs more contrast (Jin 1972, p. 15), and in irritant smoke the
   distance drops faster than 1/*K* (Jin and Yamada 1985).
@@ -345,6 +376,14 @@ The Fire Dynamics Simulator (FDS) User's Guide (McGrattan et al. 2025,
 light-emitting and *C* = 3 for a light-reflecting sign, citing Mulholland
 (2002), and uses *C* = 3 by default (`VISIBILITY_FACTOR`). FDS reports
 visibility up to 30 m by default (`MAXIMUM_VISIBILITY`, §22.10.5).
+
+Two recent papers describe how the law is used. Börger, Belt and Arnold
+(2024, §1, p. 1) attribute the ranges 2–4 and 5–10 to Jin (1970), black
+smoke to Jin (1971) and irritancy to Jin (1972), as this page does, and
+apply the law along lines of sight to exit signs. In a survey of 210
+practitioners, C = 3 was the most common single choice; at *K* = 0.33 1/m
+it gives about 9 m, against about 24 m for C = 8 (Węgrzyński et al. 2026,
+§4.4, Fig. 7a).
 
 How pyFDS-Evac uses this: see [wayfinding](/models/wayfinding.md) and the
 [smoke-speed model](/models/smoke-speed.md).
@@ -386,6 +425,18 @@ Read for this page:
   Insights into signage visibility and the impact of ambient light*. Fire
   Safety Journal, 159, 104573.
   [doi:10.1016/j.firesaf.2025.104573](https://doi.org/10.1016/j.firesaf.2025.104573)
+- Börger, K., Belt, A., & Arnold, L. (2024). *A waypoint based approach to
+  visibility in performance based fire safety design*. Fire Safety
+  Journal, 150, 104269.
+  [doi:10.1016/j.firesaf.2024.104269](https://doi.org/10.1016/j.firesaf.2024.104269)
+- Węgrzyński, W., Spodyniuk, N., Zimny, M., Jahn, W., Vigne, G., &
+  Arnold, L. (2026). *Tenability criteria in performance-based fire safety
+  engineering: practitioner's perspectives from a global survey*. Fire
+  Safety Journal, 165, 104938.
+  [doi:10.1016/j.firesaf.2026.104938](https://doi.org/10.1016/j.firesaf.2026.104938)
+- Jin, T. (1976). *Visibility through fire smoke, Part 5: Allowable smoke
+  density for escape from fire*. Report of Fire Research Institute of
+  Japan, 42, 11–18. No DOI or public URL.
 - McGrattan, K., Hostikka, S., Floyd, J., McDermott, R., Vanella, M.,
   Mueller, E., & Paul, C. (2025). *Fire Dynamics Simulator User's
   Guide*. National Institute of Standards and Technology (NIST) Special

@@ -22,7 +22,8 @@ Every curve is computed from equations and constants printed in the sources:
 - Cheung et al. (2026), Fig. 11: the boxes mark the approximate extent of
   their data at 1, 22 and 180 lx, read from the printed axes (our reading):
   pi L_t / E about 300-50 000, 20-3000 and 2-300; sigma V 7.5-11 (§4.4),
-  6-11 (§4.4) and 4.7-9.5 (§6).
+  6-11 (§4.4) and 4.7-9.5 (§6). These span sign luminances up to
+  22 500 cd/m² (§4.1); C = 11 in panel (b) is their upper end.
 - Panel (b): V = C/K. Lines are solid for 5-15.5 m, the viewing distances
   of Jin's chamber (Jin 1970, 5.5, 10.5 and 15.5 m) and the range in which
   Jin (1971) states sigma V is almost constant; dashed beyond. C = 3 and 8
@@ -186,11 +187,12 @@ def main():
     ax_b.text(0.55, 3.6, "C = 3", fontsize=9, color=c_refl, weight="semibold")
     ax_b.text(1.25, 8.4, "C = 8", fontsize=9, color=c_emit, weight="semibold")
     ax_b.text(
-        1.05,
-        14.0,
-        "C = 11: Cheung et al.,\n1–22 lx, upper end",
+        2.9,
+        18.0,
+        "C = 11: Cheung et al., 1–22 lx,\nupper end, signs up to 22 500 cd/m²",
         fontsize=8,
         color=c_cheung,
+        ha="right",
     )
     ax_b.text(0.06, 21.0, "placards 2–4", fontsize=8, color=c_refl)
     ax_b.text(0.33, 36.0, "lit signs 5–10", fontsize=8, color=c_emit)

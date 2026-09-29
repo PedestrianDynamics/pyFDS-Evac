@@ -370,7 +370,7 @@ light-emitting and (2–4)/*C*ₛ for reflecting signs, repeated by Jin and
 Yamada (1985, p. 81) and Jin (1997, Eqs. 3–4). Jin (1971, Fig. 1) and Jin
 and Yamada (1985, Fig. 1) draw the line *C*ₛ·*V* = 8 for light-emitting
 signs, which matches *A* = 8; *A* = 2 is the lower end of the reflecting
-range, and Jin (1976, p. 17, citing Jin 1971) uses "Visibility (m) ×
+range, and Jin (1976, p. 17, citing Jin 1971, FRI Report 33) uses "Visibility (m) ×
 Extinction coefficient (1/m) ≈ 2" to turn the visibility needed for
 escape into an allowable density. FDS uses *C* = 3 for reflecting
 signs by default (see [Visibility through smoke](/fundamentals/visibility.md)).
@@ -472,7 +472,9 @@ definition and *K* range, and their *K* ranges do not overlap. Each law is
 consistent with its own data; they part where one is extrapolated into
 another's range. The visibility constant also depends on light: Cheung et
 al. (2026) found σV = 4.7–9.5 for light-emitting signs at 180 lx, close to
-Jin's 5–8, but 6–11 at 1–22 lx (§4.4, §6). They measured seeing a sign,
+Jin's 5–8, but 6–11 at 1–22 lx (§4.4, §6), over signs of up to
+22 500 cd/m²; at exit-sign luminances their §4.3 values give about 6–8.4
+(our arithmetic). They measured seeing a sign,
 not walking; our inference is that any law written in *x* = *A*/*K*
 carries the lighting of its experiments.
 
@@ -519,7 +521,10 @@ Findings relevant here:
 
 - Jin's σV range of 5–8 for light-emitting signs refers to 180 lx; at that
   light they measure 5.3–9.5 at 5.5 and 10.5 m and 4.7–8 at 15.5 m
-  (§4.1, Fig. 8). At 1 lx σV is 7.5–11, and at 22 lx 6–11 (§4.4, Fig. 11).
+  (§4.1, Fig. 8). At 1 lx σV is 7.5–11, and at 22 lx 6–11 (§4.4, Fig. 11),
+  over sign luminances of 128–22 500 cd/m²; at 135–492 cd/m² their §4.3
+  values give about 6.2–8.4 (our arithmetic; see
+  [Visibility through smoke](/fundamentals/visibility.md)).
   σV rises with the logarithm of the normalised sign brightness πLₜ/E, so
   it is constant only for a given brightness.
 - At 60 and 22 lx, a sign of the same luminance was seen at about 7 % and
