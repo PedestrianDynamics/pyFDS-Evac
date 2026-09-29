@@ -1142,3 +1142,60 @@ def test_incapacitation_toggle_defaults_to_deterministic(client):
     assert 'class="mode-btn" id="btn-prob"' in r.text
     tag = re.search(r'<input[^>]*name="incapacitation_mode"[^>]*>', r.text)
     assert tag and 'value="deterministic"' in tag.group(0)
+
+
+def _choice_actions():
+    from pyfds_evac.webapp.params import _HIDDEN, _load_parser
+
+    return [
+        a
+        for a in _load_parser()._actions
+        if a.choices is not None
+        and a.option_strings
+        and a.dest not in _HIDDEN
+        # A segmented toggle, not a dropdown; see the test above.
+        and a.dest != "incapacitation_mode"
+    ]
+
+
+def test_every_choice_flag_is_offered_in_the_form():
+    assert {a.dest for a in _choice_actions()} >= {
+        "heat_clothing",
+        "heat_endpoint",
+        "heat_fed_method",
+        "heat_radiant_source",
+        "heat_regime",
+        "heat_incapacitation_mode",
+    }
+
+
+@pytest.mark.parametrize("action", _choice_actions(), ids=lambda a: a.dest)
+def test_choice_flag_renders_as_select_of_argparse_choices(client, action):
+    """Flags with argparse choices are dropdowns fed by those choices.
+
+    The argparse default is preselected; a blank option, standing for the
+    CLI default, appears only when that default is None.
+    """
+    html = client.get("/").text
+    select = re.search(
+        rf'<select[^>]*name="{action.dest}"[^>]*>(.*?)</select>', html, re.S
+    )
+    assert select, f"no <select> for {action.dest}"
+    tag = select.group(0)
+    assert f'id="{action.dest}"' in tag
+    assert re.search(rf'<label[^>]*for="{action.dest}"', html)
+    options = re.findall(r"<option([^>]*)>", select.group(1))
+    values = [re.search(r'value="([^"]*)"', o).group(1) for o in options]
+    blank = [""] if action.default is None else []
+    assert values == blank + [str(c) for c in action.choices]
+    selected = [v for v, o in zip(values, options) if "selected" in o]
+    expected = "" if action.default is None else str(action.default)
+    assert selected == [expected]
+
+
+def test_non_choice_flag_still_renders_as_input(client):
+    html = client.get("/").text
+    assert not re.search(r'<select[^>]*name="fed_threshold"', html)
+    tag = re.search(r'<input[^>]*name="fed_threshold"[^>]*>', html)
+    assert tag and 'type="number"' in tag.group(0)
+    assert 'value="1.0"' in tag.group(0)
