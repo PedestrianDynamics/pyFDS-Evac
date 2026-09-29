@@ -591,7 +591,7 @@ different Japanese title (煙中の視程について 第5報).
   Fire Prevention Society of Japan, 21(1), 17–23. In Japanese with an
   English abstract.
   [doi:10.11196/kasai.21.17](https://doi.org/10.11196/kasai.21.17)
-  Its English version is Jin (1971), Report of Fire Research Institute of
+  Its English version (our comparison) is Jin (1971), Report of Fire Research Institute of
   Japan, 33, 31–48
   ([nrifd.fdma.go.jp](https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_033s.pdf)),
   which Jin (1976, ref. 11) cites for *V*·*K* ≈ 2. That report does not
