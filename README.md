@@ -87,8 +87,9 @@ uv run app.py
 ```
 
 Then open <http://localhost:5001>. The form groups, the options it does not
-offer and the result views are on the
-[Web GUI](https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/) page.
+offer, the result views and how to export a run as a Python script are on
+the [Web GUI](https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/)
+page.
 
 ## Agent speed and pre-movement
 
