@@ -175,3 +175,51 @@ def test_cli_exposes_the_flag():
     assert parser.parse_args(["--scenario", "x"]).allow_fds_horizon_hold is False
     args = parser.parse_args(["--scenario", "x", "--allow-fds-horizon-hold"])
     assert args.allow_fds_horizon_hold is True
+
+
+class _HorizonAfterOneSecond:
+    """Extinction field whose FDS output ends at t = 1 s."""
+
+    def sample_extinction(self, time_s, x, y):
+        if time_s > 1.0:
+            raise FdsHorizonError(f"past the FDS output at t={time_s}")
+        return 0.0
+
+
+def test_flow_spawn_does_not_swallow_the_horizon():
+    """A flow spawn past T_END ranks routes on smoke; it must not just skip."""
+    import copy
+    import json
+
+    from pyfds_evac.core.scenario import Scenario, run_scenario
+    from pyfds_evac.core.smoke_speed import SmokeSpeedConfig, SmokeSpeedModel
+
+    asset = _REPO / "assets" / "t_junction"
+    raw = json.loads((asset / "config_full.json").read_text(encoding="utf-8"))
+    raw = copy.deepcopy(raw)
+    sim_params = raw["config"]["simulation_settings"]["simulationParams"]
+    sim_params["max_simulation_time"] = 5.0
+    raw["distributions"]["jps-distributions_0"]["parameters"].update(
+        {
+            "number": 4,
+            "use_flow_spawning": True,
+            "flow_start_time": 0,
+            "flow_end_time": 3,
+        }
+    )
+    scenario = Scenario(
+        raw=raw,
+        walkable_area_wkt=(asset / "geometry.wkt").read_text(encoding="utf-8").strip(),
+        model_type="CollisionFreeSpeedModel",
+        seed=42,
+        sim_params=sim_params,
+        source_path=None,
+    )
+    # A long smoke update interval keeps the per-step speed update at t = 0,
+    # and without rerouting only the spawn-time route ranking samples past
+    # the horizon.
+    smoke = SmokeSpeedModel(
+        _HorizonAfterOneSecond(), SmokeSpeedConfig(update_interval_s=100.0)
+    )
+    with pytest.raises(FdsHorizonError):
+        run_scenario(scenario, seed=42, smoke_speed_model=smoke)

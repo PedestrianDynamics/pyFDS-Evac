@@ -55,6 +55,7 @@ from .direct_steering_runtime import (
     set_agent_smoke_factor,
     update_checkpoint_speed,
 )
+from .fds_sampling import FdsHorizonError
 from .fed import (
     DefaultFedInputs,
     HeatFedInputs,
@@ -1861,6 +1862,8 @@ def run_scenario(
 
                                 spawned_this_attempt = True
                                 break
+                            except FdsHorizonError:
+                                raise
                             except Exception:
                                 continue
 
