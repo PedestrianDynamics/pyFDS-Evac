@@ -121,7 +121,7 @@ smoke. Run with `--output-sqlite` to produce the file fds-viewer loads:
 ```bash
 uv run run.py --scenario assets/iso_table22_coupled/config_a.json \
               --fds-dir assets/iso_table22_coupled/fds/a \
-              --output-sqlite demo.sqlite
+              --output-sqlite results/demo.sqlite
 ```
 
 `--fds-dir` must hold the output of a finished FDS run (the `.smv` file), not

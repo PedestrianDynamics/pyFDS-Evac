@@ -21,6 +21,7 @@ the web app (`ui_state`) or not read by the run.
   "exits":         { "<id>": {…} },
   "distributions": { "<id>": { "coordinates": […], "parameters": {…} } },
   "checkpoints":   { "<id>": {…} },
+  "waypoints":     { "<id>": {…} },
   "zones":         { "<id>": {…} },
   "journeys":      […],
   "routing":       {…}
@@ -36,6 +37,9 @@ Under `config.simulation_settings`.
 | `simulationParams.max_simulation_time` | 300 s | The run stops here. An incapacitated agent keeps a run going until this time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)). |
 | `simulationParams.model_type` | `"CollisionFreeSpeedModel"` | The JuPedSim movement model. |
 | `baseSeed` | 42 | Random seed; `run.py --seed` overrides it. |
+
+`simulationParams.dt` is not read: the JuPedSim step is 0.01 s, and the
+trajectory is written every tenth step (10 frames/s).
 
 ## Spawn areas: `distributions.<id>.parameters`
 
@@ -79,12 +83,13 @@ while still waiting walks off when its pre-movement ends
 
 ### Signs: `sign`
 
-Exits and checkpoints can carry a `sign`. A node without one gets the default
-above, so every exit is subject to smoke-dependent legibility.
+Exits, checkpoints and waypoints can carry a `sign`. A node without one gets
+an omni-directional sign at its position with `c` = 3, so every exit is
+subject to smoke-dependent legibility.
 
 | Key | Default | Effect |
 |---|---|---|
-| `x`, `y` | the node's position | Sign position [m]. |
+| `x`, `y` | required in an authored `sign` | Sign position [m]. |
 | `alpha` | none (omni-directional) | Bearing the sign faces [°], clockwise from north (+y); the sign is readable only from the side it faces. |
 | `c` | 3 | The constant *C* of the legibility law *V* = *C*/*K*. |
 | `max_distance` | `--max-sign-distance` (30 m) | Farthest reading distance for this sign, even in clear air. |

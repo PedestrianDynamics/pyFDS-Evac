@@ -244,7 +244,7 @@ here, would it be incapacitated?"). `--slice-height` defaults to 1.6 m.
 
 ```bash
 uv run python scripts/probe_fed.py --fds-dir assets/iso_table22_coupled/fds/a \
-    --point 5,5 --output probe.csv --plot probe.png
+    --point 5,5 --output results/probe.csv --plot results/probe.png
 ```
 
 ```text

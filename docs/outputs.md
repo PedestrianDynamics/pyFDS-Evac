@@ -98,7 +98,10 @@ Example, from the command above:
 ## FED history
 
 One row per agent per update. The gas and heat columns are both present
-whenever the file is written; a track that did not run reads 0.
+whenever the file is written. A track that did not run shows clean air:
+without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
+`fed_cumulative` read 0.0; without the heat FED, `temperature_celsius` reads
+20.0 °C and `heat_fed_cumulative` 0.0.
 
 | Column | Unit | Meaning |
 |---|---|---|
