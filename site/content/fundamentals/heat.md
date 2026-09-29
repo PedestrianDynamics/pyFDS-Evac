@@ -83,7 +83,13 @@ total heat flux to the skin from radiant and convective components (Eq. 63.49),
 which the Handbook calls the total incident flux (p. 2383) but writes as a
 net exchange with the skin surface, and applies Eq. 63.43 to it, with the dose *D* in place of *r*: 1.33 for
 pain, 10 for second-degree burns and severe incapacitation, 16.7 for
-third-degree burns and a potentially fatal exposure (p. 2384). ISO 13571:2012
+third-degree burns and a potentially fatal exposure (p. 2384). In Eq. 63.49
+the emissivity ε is 0.05 for a gas and "perhaps 0.5 for smoke", and the
+convective heat transfer factor is "approximately 5–8 for slow-moving air",
+with no unit given (p. 2384). The Handbook applies this method to total
+fluxes above 2.5 kW/m² (p. 2384). Below a hot layer in clear air, the
+significant radiant sources are the layer, the fire and hot surfaces
+(p. 2384). ISO 13571:2012
 (§4.4) likewise assesses heat and radiant energy with an FED model analogous
 to the gas model.
 
@@ -105,12 +111,15 @@ Eq. 63.46 (injury).
 
 Some cross-references in the text of Ch. 63 do not match the printed
 equation labels: the text calls the radiant equation "Equation 63.41" and the
-summed dose "Equation 63.46". The labels above are those printed beside each
+summed dose "Equation 63.46", and gives the endpoint times from flux as
+"Equation 63.49" where the form is that of Eq. 63.43 (p. 2384). The labels above are those printed beside each
 equation. The caption of Table 63.21 says its rates follow Eq. 63.44, but the
 printed values (0.02, 0.19, 1.57 and 15.55 per minute at 65, 125, 220 and
 405 °C) are those of Eq. 63.45. The note under Eq. 63.48 says that
 \(t_{I\,\mathrm{rad}}\) tends to zero below 2.5 kW/m²; it is
 \(1/t_{I\,\mathrm{rad}}\) that does.
+Eq. 63.49 is printed with the division by 1000 on the convective term only,
+although both terms are in W/m² and *q* is defined in kW/m².
 The radiant tolerance data (Table 63.19) are incident flux on the skin,
 whereas Eq. 63.49 is written as a net exchange with the skin surface; at the
 200 °C anchor the two differ by about 20 %. FDS's `RADIATIVE HEAT FLUX` and

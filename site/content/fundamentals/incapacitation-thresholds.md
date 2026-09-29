@@ -84,16 +84,18 @@ these figures; we have not read it.
 
 Inference, not a statement of the sources: if the lethal dose is log-normal
 with median 16.7 and 1 % below 10, its log-scale standard deviation is
-ln(16.7/10)/2.326 = 0.513/2.326, so \(\sigma \approx 0.22\). The spec's
-fatal dose D = 16.667 gives the same value to two decimals. Its limits:
+ln(16.7/10)/2.326 = 0.513/2.326, so \(\sigma \approx 0.22\). The median
+is the fatal dose D = 16.7 of the total-flux method; Purser's spreadsheet
+value 16.667 gives the same σ to two decimals. Its limits:
 
 - The Handbook states no distribution; the log-normal is assumed.
 - Two figures fix two parameters, so nothing tests the fit.
-- The figures are for radiant lethality, the fatal endpoint of the planned
-  total-flux dose (`specs/016-heat-fed/SPEC.md`), which is not implemented.
-  They do not apply to the convective Eq. 63.44 time in use.
+- The figures are for radiant lethality, the fatal endpoint of the opt-in
+  total-flux dose (`--heat-fed-method total-flux`,
+  `specs/016-heat-fed/SPEC.md`). They do not apply to the convective
+  Eq. 63.44 time used by default.
 
-With FED = 1 at D = 16.667, the 1 % fatality dose is FED = 0.60. The gas
+With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. The gas
 dose's σ = 0.94, which the opt-in probabilistic heat mode borrows, would put
 29 % of people below FED = 0.60 instead of 1 %. The heat threshold therefore
 stays deterministic by default. A probit in the natural log of dose with

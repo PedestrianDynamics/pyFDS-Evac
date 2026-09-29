@@ -237,7 +237,12 @@ The paired outputs are in
 - **σ = 0.94 has no source for heat.** It is borrowed from the gas dose
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)). The
   probabilistic run checks the code path, not the spread.
-- **Convective heat only.** No radiant dose
+- **Convective heat only.** This room checks the convective laws; it does
+  not run `--heat-fed-method total-flux`. That method is checked against
+  hand formulas of Eqs. 63.49 and 63.43 on synthetic fields
+  (`tests/test_heat_total_flux.py`,
+  `tests/verification/test_heat_total_flux_coupled.py`). No radiant dose
+  from a layer or flame
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
   Below the threshold heat changes neither speed nor route
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
@@ -262,4 +267,4 @@ The paired outputs are in
   surface at 20 or 35 °C, within ±10 % of the Handbook's "approximately
   2.5 kW/m²". Table 63.20 radiant rows: within ±30 %, the band chosen in
   [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219).
-  D = 16.667 is the spec's value; the Handbook prints 16.7.
+  D = 16.7 as printed on pp. 2382 and 2384 of Ch. 63.

@@ -17,7 +17,7 @@ and the talk [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](ht
 
 ## Coded form
 
-`FedComponents.total_rate_per_min` (`pyfds_evac/core/fed.py:447`) returns the
+`FedComponents.total_rate_per_min` (`pyfds_evac/core/fed.py:537`) returns the
 gas FED rate [1/min]
 
 $$
@@ -67,9 +67,9 @@ including its limits, is on [Models › Heat](/models/heat.md).
 
 ## Tenability: irritant slowdown and incapacitation
 
-`TenabilityConfig` (`fed.py:330`) adds two rules. The slowdown and the gas
+`TenabilityConfig` (`fed.py:420`) adds two rules. The slowdown and the gas
 stop need the gas FED model; the heat stop needs only the heat FED model
-(`run_config.py:280`–`315`).
+(`run_config.py:299`–`334`).
 
 - **Irritant slowdown, off by default.** FDS+Evac has no irritant slowdown, so
   `enable_fic_speed` defaults to false and `run.py` switches the rule on only
@@ -78,7 +78,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   same seven irritants (constants in `_FIC_COEFFS_PPM`, not integrated over
   time). At each FED update where FIC > 0, the agent's irritant factor is set
   to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
-  (`scenario.py:2108`–`2118`) and multiplies the smoke factor. The rule is a
+  (`scenario.py:2109`–`2119`) and multiplies the smoke factor. The rule is a
   pyFDS-Evac assumption with no known source
   ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
   When FIC is exactly 0 the last factor stays in force
@@ -154,7 +154,9 @@ Figure: ![ISO 20414 Test 19 (Table 22) stationary FED verification](/artifacts/i
 
 ## What is not modelled
 
-- Radiant heat. Only convective heat from the gas temperature is modelled.
+- Radiant heat from a hot layer, hot surfaces or a flame. The heat dose is
+  convective, or with `--heat-fed-method total-flux` adds the radiation of
+  the gas at the head only ([Heat](/models/heat.md)).
 - Effects of heat on route choice or walking speed: the heat FED only
   incapacitates.
 - FED activity level: the CO term is fixed at light work; rest and heavy
@@ -182,7 +184,7 @@ ambient conditions.
 
 The published forms are on [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)
 and [Irritant gases](/fundamentals/irritants.md). The gas sum has the Purser /
-FDS+Evac guide structure (`fed.py:447`), not the ISO 13571 one. Within it, the
+FDS+Evac guide structure (`fed.py:537`), not the ISO 13571 one. Within it, the
 code follows the guide, which cites the 3rd edition of the SFPE Handbook,
 rather than the 5th edition, except that the HCN term is computed as FDS
 computes it
@@ -250,7 +252,7 @@ and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 > FED equations with *t* in seconds; the evidence is on
 > [Asphyxiant FED](/fundamentals/asphyxiant-fed.md).
 
-The irritant slowdown \(g\), when enabled (`fed.py:360`–`361`), is multiplied with the smoke
+The irritant slowdown \(g\), when enabled (`fed.py:450`–`451`), is multiplied with the smoke
 factor (`direct_steering_runtime.py:191`–`193`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
@@ -261,9 +263,9 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
 Heat uses the convective Eq. 63.44 (`fed.py:217`) unless `--heat-endpoint`
-selects Eq. 63.45, 63.46 or 63.47 ([Heat](/models/heat.md)), and no radiant
-term. The log-normal σ of both
-thresholds (`fed.py:371`, `:381`) is, for the gas dose, a compromise between
+selects Eq. 63.45, 63.46 or 63.47, or `--heat-fed-method total-flux` the
+flux law of Eqs. 63.49 and 63.43 ([Heat](/models/heat.md)). The log-normal σ of both
+thresholds (`fed.py:461`, `:471`) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)
 and [#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The

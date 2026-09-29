@@ -198,10 +198,12 @@ def test_endpoint_laws_are_ordered():
 def test_endpoint_pairs_radiant_dose_with_its_convective_law(name, r, equation):
     """Each endpoint pairs r (Eq. 63.43) with the convective law of the same endpoint.
 
-    Fatal: the Handbook prints 16.7; 16.667 (spec 016) is accepted too.
+    Fatal: 16.7 as printed in the SFPE Handbook 5th ed., Ch. 63, p. 2382
+    (r range) and p. 2384 (D values for Eq. 63.49). Purser's spreadsheet
+    uses 16.667; the code follows the Handbook.
     """
     endpoint = _endpoints()[name]
-    assert endpoint.radiant_dose == pytest.approx(r, abs=0.04)
+    assert endpoint.radiant_dose == pytest.approx(r, rel=1e-9)
     assert endpoint.equation == equation
 
 

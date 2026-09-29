@@ -32,8 +32,10 @@ ISSUE = "issues/225"
 # SFPE Handbook 5th ed., Ch. 63, p. 2382 (radiant dose r, (kW/m2)^(4/3) min).
 R_ONE_PERCENT_FATAL = 10.0
 R_MEDIAN_LETHAL = 16.7
-# Fatal endpoint of the planned total-flux dose (SPEC 016, Ch. 63 p. 2384).
-D_FATAL = 16.667
+# Fatal dose D of the total-flux method, as printed on Ch. 63 p. 2384.
+D_FATAL = 16.7
+# Purser's spreadsheet value (personal communication); not used by the code.
+D_SPREADSHEET = 16.667
 BORROWED_SIGMA = 0.94
 
 
@@ -49,15 +51,15 @@ def test_handbook_lethality_figures_imply_sigma_near_0_22():
 
 
 def test_sigma_is_insensitive_to_16_7_versus_16_667():
-    """The spec's D = 16.667 gives the same sigma to two decimals."""
+    """Purser's spreadsheet D = 16.667 gives the same sigma to two decimals."""
     a = _two_point_lognormal_sigma(R_ONE_PERCENT_FATAL, 0.01, R_MEDIAN_LETHAL)
-    b = _two_point_lognormal_sigma(R_ONE_PERCENT_FATAL, 0.01, D_FATAL)
+    b = _two_point_lognormal_sigma(R_ONE_PERCENT_FATAL, 0.01, D_SPREADSHEET)
     assert round(a, 2) == round(b, 2) == 0.22
 
 
 def test_one_percent_level_sits_at_fed_0_6_of_the_fatal_dose():
-    """With FED = 1 at D = 16.667, the 1 % fatality dose is FED 10/16.667."""
-    assert R_ONE_PERCENT_FATAL / D_FATAL == pytest.approx(0.600, abs=1e-3)
+    """With FED = 1 at D = 16.7 (p. 2384), the 1 % fatality dose is FED 10/16.7."""
+    assert R_ONE_PERCENT_FATAL / D_FATAL == pytest.approx(0.599, abs=1e-3)
 
 
 def test_borrowed_gas_sigma_contradicts_the_lethality_figures():

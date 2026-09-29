@@ -61,6 +61,7 @@ from .fed import (
     default_fed_components,
     default_fic,
     heat_endpoint_row_fields,
+    heat_flux_row_fields,
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
@@ -2183,6 +2184,11 @@ def run_scenario(
                                 heat_endpoint, float(heat_inputs.temperature_celsius)
                             )
                         )
+                        fed_history[-1].update(
+                            heat_flux_row_fields(
+                                heat_fed_model, float(heat_inputs.temperature_celsius)
+                            )
+                        )
                     last_fed_update_time = current_time
 
             if (
@@ -2675,6 +2681,12 @@ def run_scenario(
                     smoke_speed_model, fed_model, heat_fed_model
                 ),
                 heat_endpoint=heat_endpoint,
+                heat_fed_method=getattr(heat_fed_model, "method", None),
+                heat_flux_parameters=(
+                    heat_fed_model.heat_flux_parameters()
+                    if getattr(heat_fed_model, "method", None) == "total-flux"
+                    else None
+                ),
             )
         except (OSError, ValueError) as exc:
             _logger.warning("Could not write the run manifest: %s", exc)
