@@ -343,6 +343,8 @@ temporary copy.
 
 ## Next steps
 
+- [A crowd in a real fire](first-fds-case.md): 150 agents in a 2 MW FDS
+  fire, with figures for the scenario, the smoke, the run and its results.
 - [What your FDS case must provide](fds-case-requirements.md): the slices to
   add to your deck and the full list of failure modes.
 - [How do I get RSET with its spread from an ensemble of seeds?](howto-rset-ensemble.md)

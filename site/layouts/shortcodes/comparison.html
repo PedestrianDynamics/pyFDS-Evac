@@ -1,0 +1,22 @@
+{{- /* Two measured values side by side, with the difference computed here.
+     Usage: {{< comparison label-a="Clear air" value-a="78.77" label-b="Smoke" value-b="103.77" unit="s" >}} */ -}}
+{{- $a := float (.Get "value-a") -}}
+{{- $b := float (.Get "value-b") -}}
+{{- $unit := .Get "unit" | default "" -}}
+{{- $top := math.Max $a $b -}}
+{{- $diff := sub $b $a -}}
+{{- $rel := mul 100 (div $diff $a) -}}
+<figure class="docs-comparison">
+  <dl>
+    {{- range slice (slice (.Get "label-a") $a "a") (slice (.Get "label-b") $b "b") }}
+    <div class="docs-comparison__row">
+      <dt>{{ index . 0 }}</dt>
+      <dd>
+        <span class="docs-comparison__track" aria-hidden="true"><span class="docs-comparison__bar docs-comparison__bar--{{ index . 2 }}" style="width: {{ mul 100 (div (index . 1) $top) }}%"></span></span>
+        <span class="docs-comparison__value">{{ printf "%.2f" (index . 1) }} {{ $unit }}</span>
+      </dd>
+    </div>
+    {{- end }}
+  </dl>
+  <figcaption class="docs-comparison__delta">Difference: {{ if ge $diff 0.0 }}+{{ end }}{{ printf "%.2f" $diff }} {{ $unit }} ({{ if ge $rel 0.0 }}+{{ end }}{{ printf "%.1f" $rel }} %)</figcaption>
+</figure>

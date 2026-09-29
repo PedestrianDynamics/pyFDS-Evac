@@ -15,6 +15,8 @@ on:
       - "assets/t_junction/**"
       - "tests/test_docs_defaults.py"
       - "tests/test_examples.py"
+      - "tests/test_smoke_speed_widget.py"
+      - "scripts/docs/smoke_speed_widget_data.py"
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/docs.yml"
@@ -58,7 +60,7 @@ jobs:
       # The pages quote code defaults and embed code from examples/; both
       # tests fail when the code moves and the docs do not.
       - name: Check docs against the code
-        run: uv run pytest tests/test_docs_defaults.py tests/test_examples.py tests/test_heat_endpoint_docs.py -q
+        run: uv run pytest tests/test_docs_defaults.py tests/test_examples.py tests/test_heat_endpoint_docs.py tests/test_smoke_speed_widget.py -q
       # Regenerate every figure from the current code, so a figure script
       # that no longer runs fails the build and the site never ships a
       # figure the code can no longer produce.

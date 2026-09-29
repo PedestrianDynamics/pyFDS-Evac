@@ -1,0 +1,9 @@
+{{- /* The steps of a tutorial, for orientation only.
+     Usage: {{< tutorial-progress "Clear air" "Smoke" "Compare" >}} */ -}}
+<nav class="tutorial-progress" aria-label="Tutorial steps">
+  <ol>
+    {{- range .Params }}
+    <li>{{ . }}</li>
+    {{- end }}
+  </ol>
+</nav>

@@ -1,0 +1,5 @@
+{{- /* Scripts for pages that use them; the theme calls this partial. */ -}}
+{{- if .HasShortcode "smoke-speed-experiment" -}}
+{{- $js := resources.Get "js/smoke-speed-experiment.js" | minify | fingerprint -}}
+<script defer src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>
+{{- end -}}

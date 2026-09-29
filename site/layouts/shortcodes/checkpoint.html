@@ -1,0 +1,9 @@
+{{- /* Expected result of a tutorial step.
+     Usage: {{< checkpoint title="Clear-air run completed" >}} Markdown {{< /checkpoint >}} */ -}}
+{{- $title := .Get "title" | default "Expected result" -}}
+<aside class="docs-checkpoint" aria-label="Expected result: {{ $title }}">
+  <p class="docs-checkpoint__title"><span class="docs-checkpoint__icon" aria-hidden="true">✓</span> {{ $title | markdownify }}</p>
+  <div class="docs-checkpoint__body">
+    {{ .InnerDeindent | markdownify }}
+  </div>
+</aside>

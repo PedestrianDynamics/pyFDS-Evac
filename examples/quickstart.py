@@ -30,17 +30,33 @@ print(f"clear air:   {clear.evacuation_time:.2f} s")
 # ## Run in smoke
 
 # %%
-smoke = SmokeSpeedModel(ConstantExtinctionField(K_PER_M), SmokeSpeedConfig())
-smoky = run_scenario(scenario, seed=420, smoke_speed_model=smoke)
+smoke = SmokeSpeedModel(
+    ConstantExtinctionField(K_PER_M),
+    SmokeSpeedConfig(),
+)
+
+smoky = run_scenario(
+    scenario,
+    seed=420,
+    smoke_speed_model=smoke,
+)
+
 print(f"K = {K_PER_M} 1/m: {smoky.evacuation_time:.2f} s")
 
 # %% [markdown]
-# ## Check the speed factor and find the run manifest
+# ## Compare the two runs
 
 # %%
 factor = smoky.smoke_history[-1]["speed_factor"]
+ratio = smoky.evacuation_time / clear.evacuation_time
+
 print(f"speed factor in smoke: {factor:.4f}")
-print(f"time ratio smoke/clear: {smoky.evacuation_time / clear.evacuation_time:.4f}")
+print(f"time ratio smoke/clear: {ratio:.4f}")
+
+# %% [markdown]
+# ## Find the run manifest
+
+# %%
 print(f"manifest: {smoky.manifest_file}")
 
 # %% [markdown]
