@@ -240,3 +240,14 @@
 .svg-figure__panel--scroll { overflow-x: auto; }
 .svg-figure__panel--scroll svg { min-width: var(--svg-min-width); }
 .svg-figure__panel--scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* Wide equations scroll inside their own box on narrow screens instead of
+   widening the page (#299). KaTeX's hidden MathML copy is absolutely
+   positioned; anchoring it to its .katex keeps it inside a table's scroll
+   box rather than extending the page. */
+.katex { position: relative; }
+.katex-display { overflow-x: auto; overflow-y: hidden; }
+
+/* Landing page: let the text column shrink to the screen, so a long code
+   line scrolls inside its block instead of widening the page. */
+.hx-flex-col > * { min-width: 0; max-width: 100%; }
