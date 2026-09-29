@@ -6,7 +6,7 @@ naming #218 adds to tell the endpoints apart, these columns and their values
 stay, so existing post-processing keeps working.
 
 Each case below fixes when each dose crosses its threshold, from the hand
-formulas in ``harness`` (Eq. 63.44 for heat, the guide's CO term for gas),
+formulas in ``harness`` (ISO Eq. (9) for heat, the guide's CO term for gas),
 and checks the cause the run records: the dose that crossed first, both on
 the same update, and a crossing by the other dose after the agent stopped,
 which must not change the recorded cause.

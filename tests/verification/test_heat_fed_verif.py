@@ -8,7 +8,10 @@ from the Handbook, not from ``pyfds_evac.core.fed``:
   incapacitation in minutes, ``t_Iconv = 5e7 * T**-3.4`` (T in deg C), and
   sum the dose as Eq. 63.48 does (``FED = sum dt / t_Iconv``). This checks
   the code against the printed equation; it cannot check that the equation
-  predicts human tolerance.
+  predicts human tolerance. The code selects Eq. 63.44 with
+  ``clothing="unclothed"`` (ISO 13571:2012 Eq. (10)); the default, ISO
+  Eq. (9), is checked in ``tests/test_heat_iso_clothing.py`` and against the
+  same tables in A3.12.
 - A3.8-A3.11 compare with the Handbook's published numbers: Table 63.21
   (which reproduces Eq. 63.45, not Eq. 63.44), Table 63.20 (convective and
   radiant rows) and Table 63.17 (reported tolerance times).
@@ -32,6 +35,8 @@ from pyfds_evac.core.fed import (
     time_to_heat_fed_threshold_s,
 )
 
+UNCLOTHED = "unclothed"
+
 
 def _standard_normal_cdf(z: float) -> float:
     """Return the standard-normal CDF via the error function."""
@@ -50,7 +55,9 @@ def test_a3_1_rate_is_reciprocal_of_printed_time():
     """Eq. 63.48 accrues 1/t_Iconv per minute, with t_Iconv from Eq. 63.44."""
     for t in (20.0, 100.0, 120.0, 150.0, 200.0, 250.0):
         ref_rate = 1.0 / _t_iconv_min(t)
-        got = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=t))
+        got = default_heat_fed_rate_per_minute(
+            HeatFedInputs(temperature_celsius=t), UNCLOTHED
+        )
         assert got == pytest.approx(ref_rate, rel=1e-9)
 
 
@@ -81,7 +88,7 @@ def test_a3_2_rate_is_nonzero_and_small_at_moderate_temperature():
     still accrues some dose, just slowly, self-limiting by the exponent alone.
     """
     rate_below = default_heat_fed_rate_per_minute(
-        HeatFedInputs(temperature_celsius=80.0)
+        HeatFedInputs(temperature_celsius=80.0), UNCLOTHED
     )
     assert rate_below > 0.0
     assert rate_below == pytest.approx(1.0 / _t_iconv_min(80.0), rel=1e-9)
@@ -95,14 +102,16 @@ def test_a3_3_accumulation_over_interval():
     duration_s = 90.0
     ref_fed = (duration_s / 60.0) / _t_iconv_min(150.0)
 
-    got = accumulate_default_heat_fed(inputs, duration_s=duration_s)
+    got = accumulate_default_heat_fed(inputs, duration_s=duration_s, clothing=UNCLOTHED)
 
     assert got == pytest.approx(ref_fed, rel=1e-9)
 
 
 def test_a3_3_accumulation_adds_to_initial_dose():
     inputs = HeatFedInputs(temperature_celsius=150.0)
-    got = accumulate_default_heat_fed(inputs, duration_s=60.0, initial_fed=0.4)
+    got = accumulate_default_heat_fed(
+        inputs, duration_s=60.0, initial_fed=0.4, clothing=UNCLOTHED
+    )
     assert got == pytest.approx(0.4 + 1.0 / _t_iconv_min(150.0), rel=1e-9)
 
 
@@ -113,7 +122,7 @@ def test_a3_4_time_to_threshold_matches_closed_form():
     inputs = HeatFedInputs(temperature_celsius=150.0)
     ref_t_s = _t_iconv_min(150.0) * 60.0
 
-    got = time_to_heat_fed_threshold_s(inputs, threshold=1.0)
+    got = time_to_heat_fed_threshold_s(inputs, threshold=1.0, clothing=UNCLOTHED)
 
     assert got == pytest.approx(ref_t_s, rel=1e-9)
 
@@ -153,7 +162,8 @@ def test_a3_5_deterministic_heat_mode_returns_threshold_exactly():
     cfg = TenabilityConfig(heat_incapacitation_mode="deterministic")
     rng = random.Random(7)
     for _ in range(1000):
-        assert sample_heat_incapacitation_threshold(cfg, rng) == cfg.heat_fed_threshold
+        # One threshold for gas and heat (ISO 13571:2012 §5.4).
+        assert sample_heat_incapacitation_threshold(cfg, rng) == cfg.fed_threshold
 
 
 def test_a3_5_gas_and_heat_threshold_draws_are_independent():
@@ -272,8 +282,8 @@ def test_a3_7_heat_fed_has_no_effect_on_gas_fed_total():
 # Table 63.21 (p. 2385) sums the dose of the armchair room burn minute by
 # minute. Its caption says "Calculated According to Equation 63.44", but the
 # printed rates are those of Eq. 63.45 (p. 2382, tolerance time, mid
-# humidity). pyFDS-Evac has no Eq. 63.45 option; these tests keep the table as
-# the independent reference for one, and record that the implemented law does
+# humidity), the law of ``--heat-endpoint tolerance``. These tests keep the
+# table as the independent reference for it, and record that Eq. 63.44 does
 # not reproduce it.
 
 TABLE_63_21_TEMP_C = (20.0, 65.0, 125.0, 220.0, 405.0, 405.0)
@@ -335,7 +345,9 @@ def test_a3_8_eq_63_44_does_not_reproduce_table_63_21():
     """
     for temp, printed in zip(TABLE_63_21_TEMP_C[1:5], TABLE_63_21_RATE[1:5]):
         assert abs(1.0 / _t_iconv_min(temp) - printed) > 0.005, temp
-        got = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=temp))
+        got = default_heat_fed_rate_per_minute(
+            HeatFedInputs(temperature_celsius=temp), UNCLOTHED
+        )
         assert abs(got - printed) > 0.005, temp
 
 
@@ -355,7 +367,9 @@ def test_a3_9_eq_63_44_not_longer_than_table_63_20():
     for temp, tabulated in TABLE_63_20_CONVECTIVE_MIN.items():
         t44 = _t_iconv_min(temp)
         assert t44 <= tabulated + 0.5, (temp, t44, tabulated)
-        rate = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=temp))
+        rate = default_heat_fed_rate_per_minute(
+            HeatFedInputs(temperature_celsius=temp), UNCLOTHED
+        )
         assert 1.0 / rate <= tabulated + 0.5, (temp, 1.0 / rate, tabulated)
 
 
@@ -363,7 +377,9 @@ def test_a3_9_eq_63_44_is_overconservative_at_the_low_end():
     """At 100-140 C Eq. 63.44 is below the table's interval (shorter time)."""
     for temp in (100.0, 120.0, 140.0):
         tabulated = TABLE_63_20_CONVECTIVE_MIN[temp]
-        rate = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=temp))
+        rate = default_heat_fed_rate_per_minute(
+            HeatFedInputs(temperature_celsius=temp), UNCLOTHED
+        )
         assert 1.0 / rate < tabulated - 0.5, (temp, 1.0 / rate, tabulated)
 
 
@@ -375,7 +391,9 @@ def test_a3_9_eq_63_44_within_factor_two_of_table_63_20():
     0.61 to 1.07. The band catches a wrong exponent or unit, not a refit.
     """
     for temp, tabulated in TABLE_63_20_CONVECTIVE_MIN.items():
-        rate = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=temp))
+        rate = default_heat_fed_rate_per_minute(
+            HeatFedInputs(temperature_celsius=temp), UNCLOTHED
+        )
         assert 0.5 <= (1.0 / rate) / tabulated <= 2.0, temp
 
 
@@ -394,7 +412,9 @@ def test_a3_10_eq_63_44_not_longer_than_reported_dry_air_tolerance():
     """
     reported = {110.0: 25.0, 180.0: 3.0, 205.0: 4.0, 126.0: 7.0}
     for temp, tolerated_min in reported.items():
-        rate = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=temp))
+        rate = default_heat_fed_rate_per_minute(
+            HeatFedInputs(temperature_celsius=temp), UNCLOTHED
+        )
         assert 1.0 / rate <= tolerated_min, (temp, 1.0 / rate, tolerated_min)
 
 
@@ -438,3 +458,50 @@ def test_a3_11_hot_layer_anchor_200c_is_about_2_5_kw_m2():
         t_surface_k = t_surface_c + 273.15
         q = sigma * (t_layer_k**4 - t_surface_k**4) / 1000.0
         assert q == pytest.approx(2.5, rel=0.10), t_surface_c
+
+
+# --- A3.12: ISO 13571:2012 Eq. (9), the default law, against the tables ----
+#
+# ISO 13571:2012 §8.3.2, fully clothed: t_Iconv = 4.1e8 * T**-3.61 min. The
+# Handbook's tables are not stated to be for clothed subjects; these tests
+# record where the default law lies relative to them, not a pass band.
+
+
+def _t_iso_9_min(temperature_c: float) -> float:
+    """Return ISO 13571:2012 Eq. (9): minutes, fully clothed."""
+    return 4.1e8 * temperature_c ** (-3.61)
+
+
+def test_a3_12_default_law_is_iso_eq_9():
+    for temp in TABLE_63_20_CONVECTIVE_MIN:
+        rate = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=temp))
+        assert 1.0 / rate == pytest.approx(_t_iso_9_min(temp), rel=1e-12)
+
+
+def test_a3_12_eq_9_is_1_8_to_3_times_table_63_20():
+    """Eq. (9) gives 24.7 / 12.8 / 7.3 / 4.5 / 3.0 min against 12/7/4/2/1."""
+    ratios = [
+        _t_iso_9_min(temp) / tabulated
+        for temp, tabulated in TABLE_63_20_CONVECTIVE_MIN.items()
+    ]
+    assert min(ratios) == pytest.approx(1.83, abs=0.01)
+    assert max(ratios) == pytest.approx(2.96, abs=0.01)
+    assert all(
+        t > tabulated + 0.5
+        for t, tabulated in zip(
+            map(_t_iso_9_min, TABLE_63_20_CONVECTIVE_MIN),
+            TABLE_63_20_CONVECTIVE_MIN.values(),
+        )
+    )
+
+
+def test_a3_12_eq_9_against_table_63_17_dry_air_rows():
+    """Eq. (9) is longer than the reported 7 min at 126 C (10.7 min).
+
+    At 110, 180 and 205 C it stays at or below the reported times
+    (17.5 against 25, 2.96 against 3, 1.85 against 4 min).
+    """
+    reported = {110.0: 25.0, 180.0: 3.0, 205.0: 4.0, 126.0: 7.0}
+    longer = {t for t, tol in reported.items() if _t_iso_9_min(t) > tol}
+    assert longer == {126.0}
+    assert _t_iso_9_min(126.0) == pytest.approx(10.73, abs=0.01)

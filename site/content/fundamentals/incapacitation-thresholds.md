@@ -106,9 +106,13 @@ for heat rests on assumption alone. ISO does not establish it. §5.4 also asks
 for a single threshold for FED and FEC in a given estimation, whereas its
 report clause asks for the threshold chosen for each component (clause 10);
 the text does not say whether the heat FED must share the gas threshold.
+§8.5 finds the heat time "in the same manner" as for the gases, and
+pyFDS-Evac reads the two together as one threshold for gas and heat
+([Models › Heat](/models/heat.md#incapacitation)).
 
 No source we could consult gives a population spread for tolerance of
-convective heat, the dose pyFDS-Evac computes (Eq. 63.44). SFPE Ch. 63 gives
+convective heat, the dose pyFDS-Evac computes (ISO 13571:2012 Eq. (9), or
+Eq. (10) = Eq. 63.44). SFPE Ch. 63 gives
 population figures for heat only for radiant lethality (p. 2382): a radiant
 dose of 10 (kW/m²)^4/3·min "represents a fatal level for a vulnerable
 population (over 65 years of age) or a 1 % fatality level for the average
@@ -129,7 +133,7 @@ value 16.667 gives the same σ to two decimals. Its limits:
 - The figures are for radiant lethality, the fatal endpoint of the opt-in
   total-flux dose (`--heat-fed-method total-flux`,
   `specs/016-heat-fed/SPEC.md`). They do not apply to the convective
-  Eq. 63.44 time used by default.
+  ISO time used by default.
 
 With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. The gas
 dose's σ = 0.94, which the opt-in probabilistic heat mode borrows, would put

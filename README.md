@@ -11,10 +11,11 @@ The project includes:
 
 - Smoke-speed model (visibility/extinction-based speed reduction)
 - Purser FED model as in the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) guide (toxic gas dose accumulation, up to 12 species)
-- Convective heat FED (Purser, SFPE Handbook Eq. 63.44), opt-in with
+- Convective heat FED (ISO 13571:2012 Eq. (9), fully clothed; Eq. (10) =
+  SFPE Handbook Eq. 63.44 with `--heat-clothing unclothed`), opt-in with
   `--enable-heat-fed` (FDS+Evac has none), accumulated as a dose
   independent of the gas track -- an agent is incapacitated when either crosses
-  its own threshold; the heat dose is a running total of its own and is never
+  the threshold, one for both by default as in ISO 13571; the heat dose is a running total of its own and is never
   added to the gas FED. Radiant heat enters only through the opt-in
   total-flux method (gas at the head, or FDS `INTEGRATED INTENSITY` with a
   user factor), and heat

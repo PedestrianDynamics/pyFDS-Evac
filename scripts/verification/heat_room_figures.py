@@ -21,7 +21,9 @@ position (nearest slice node, nearest slice time) and sums SFPE Eq. 63.44
 
     FED_HEAT = sum [ T^3.4 / 5e7 ] * dt      (T in C, dt in min)
 
-over the agent's own update times. The decks set TMPA to the prescribed
+over the agent's own update times. Eq. 63.44 is ISO 13571:2012 Eq. (10),
+the law of ``--heat-clothing unclothed``, with which the runs are made; the
+default law, ISO Eq. (9), is not checked here. The decks set TMPA to the prescribed
 temperature, so FDS holds the room at the deck value and the closed form
 60 * 5e7 / T^3.4 s at that value is the expected time to FED = 1.
 

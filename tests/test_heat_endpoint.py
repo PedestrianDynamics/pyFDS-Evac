@@ -12,8 +12,9 @@ convective time law of the same endpoint:
 t in min, T in deg C. The printed exponents are negative (the minus signs
 are lost in text extraction); Table 63.21, whose values follow Eq. 63.45
 although its caption says Eq. 63.44, and Table 63.20 confirm the sign
-convention. Without ``--heat-endpoint`` the law stays Eq. 63.44,
-t = 5e7 T^-3.4, exactly as before.
+convention. Without ``--heat-endpoint`` the law is ISO 13571:2012 Eq. (9),
+t = 4.1e8 T^-3.61 (fully clothed, #290), or with ``clothing="unclothed"``
+Eq. (10) = Eq. 63.44, t = 5e7 T^-3.4, the default before #290.
 
 Expected values below come from these hand formulas and from the published
 Tables 63.20 and 63.21, never from ``pyfds_evac``.
@@ -23,7 +24,7 @@ API under test:
 - ``pyfds_evac.core.fed.HEAT_ENDPOINTS``: mapping ``name -> endpoint`` with
   ``.radiant_dose`` (float) and ``.equation`` (str, e.g. ``"63.45"``).
 - ``DefaultHeatFedModel(field, config, endpoint=None)`` with an ``.endpoint``
-  attribute (``None`` = Eq. 63.44).
+  attribute (``None`` = the ISO law of ``clothing``).
 - ``pyfds_evac.core.fed.HEAT_CONVECTIVE_VALIDITY_MAX_C``: upper temperature
   of the convective data (about 205 deg C, Table 63.17, p. 2375).
 - ``pyfds_evac.core.fed.heat_temperature_outside_validity(T) -> bool``:
@@ -138,19 +139,32 @@ def _outside_validity(temperature_c: float) -> bool:
     return heat_temperature_outside_validity(temperature_c)
 
 
-# --- default stays Eq. 63.44 ---
+# --- default is ISO Eq. (9); Eq. 63.44 is the unclothed option ---
+
+
+def t_iso_9_min(t_c: float) -> float:
+    """ISO 13571:2012 Eq. (9), fully clothed (§8.3.2)."""
+    return 4.1e8 * t_c**-3.61
 
 
 @pytest.mark.parametrize("t_c", [20.0, 65.0, 100.0, 150.0, 205.0, 405.0])
-def test_default_model_is_eq_63_44(t_c):
-    """Without an endpoint the rate is 1 / Eq. 63.44, unchanged by #220."""
+def test_default_model_is_iso_eq_9(t_c):
+    """Without an endpoint the rate is 1 / ISO Eq. (9) (#290)."""
     model = DefaultHeatFedModel(_field(t_c), _config())
+    _, rate = model.sample_rate(0.0, 0.0, 0.0)
+    assert rate == pytest.approx(1.0 / t_iso_9_min(t_c), rel=1e-12)
+
+
+@pytest.mark.parametrize("t_c", [20.0, 65.0, 100.0, 150.0, 205.0, 405.0])
+def test_unclothed_model_is_eq_63_44(t_c):
+    """``clothing="unclothed"`` gives 1 / Eq. 63.44, the law before #290."""
+    model = DefaultHeatFedModel(_field(t_c), _config(), clothing="unclothed")
     _, rate = model.sample_rate(0.0, 0.0, 0.0)
     assert rate == pytest.approx(1.0 / t_eq_63_44_min(t_c), rel=1e-12)
 
 
 def test_cli_heat_endpoint_is_absent_by_default():
-    """Opt-in: a run without ``--heat-endpoint`` keeps Eq. 63.44."""
+    """Opt-in: a run without ``--heat-endpoint`` keeps the ISO law."""
     import run
 
     args = run._build_parser().parse_args(["--scenario", "x", "--enable-heat-fed"])
@@ -263,7 +277,7 @@ def test_tolerance_endpoint_reproduces_table_63_21_cumulative():
     assert history[2] < 1.0 <= history[3]
 
 
-def test_fatal_endpoint_differs_from_default():
+def test_fatal_endpoint_differs_from_eq_63_44():
     """At 150 deg C the fatal law is 8.6x slower than Eq. 63.44."""
     ratio = t_fatal_min(150.0) / t_eq_63_44_min(150.0)
     assert ratio > 8.0

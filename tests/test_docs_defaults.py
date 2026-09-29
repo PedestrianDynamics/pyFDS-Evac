@@ -80,12 +80,21 @@ def _hv_divisor():
     return math.exp(0.1903 + 2.0004) / _hyperventilation_factor(1.0)
 
 
-def _heat_exponent():
-    return math.log2(_heat_fed_rate_per_minute(2.0) / _heat_fed_rate_per_minute(1.0))
+def _heat_exponent(clothing="unclothed"):
+    rate = _heat_fed_rate_per_minute
+    return math.log2(rate(2.0, clothing) / rate(1.0, clothing))
 
 
 def _heat_divisor():
-    return 1.0 / _heat_fed_rate_per_minute(1.0)
+    return 1.0 / _heat_fed_rate_per_minute(1.0, "unclothed")
+
+
+def _clothed_exponent():
+    return _heat_exponent("clothed")
+
+
+def _clothed_mantissa():
+    return 1.0 / _heat_fed_rate_per_minute(1.0, "clothed") / 1e8
 
 
 DEFAULTS = [
@@ -138,12 +147,10 @@ DEFAULTS = [
         lambda: TenabilityConfig().susceptibility_sigma,
     ),
     (FED, "| `susceptibility_sigma` | `0.94` |", lambda: _cli().susceptibility_sigma),
-    (
-        FED,
-        "| `heat_fed_threshold` | `1.0` |",
-        lambda: TenabilityConfig().heat_fed_threshold,
-    ),
-    (FED, "| `heat_fed_threshold` | `1.0` |", lambda: _cli().heat_fed_threshold),
+    (FED, "T^{3.61}", _clothed_exponent),
+    (FED, "T^{3.61} / (4.1", _clothed_mantissa),
+    (HEAT_MODEL, "T^{3.61}", _clothed_exponent),
+    (HEAT_MODEL, "T^{3.61} / (4.1", _clothed_mantissa),
     (
         FED,
         "| `heat_susceptibility_sigma` | `0.94` |",
@@ -321,3 +328,22 @@ def test_heat_fed_method_is_convective_by_default():
     literal = '| `heat_fed_method` | `"convective"` |'
     assert literal in HEAT_MODEL.read_text()
     assert _cli().heat_fed_method == "convective"
+
+
+@pytest.mark.parametrize("page", [FED, HEAT_MODEL])
+def test_heat_threshold_defaults_to_the_gas_threshold(page):
+    """ISO 13571:2012 §5.4: one threshold; the heat override is unset."""
+    literal = "| `heat_fed_threshold` | none, `fed_threshold` |"
+    assert literal in page.read_text()
+    assert TenabilityConfig().heat_fed_threshold is None
+    assert _cli().heat_fed_threshold is None
+
+
+def test_heat_clothing_is_clothed_by_default():
+    """ISO 13571:2012 Eq. (9) is the default convective law (#290)."""
+    from pyfds_evac.core.fed import DEFAULT_HEAT_CLOTHING
+
+    literal = '| `heat_clothing` | `"clothed"` |'
+    assert literal in HEAT_MODEL.read_text()
+    assert DEFAULT_HEAT_CLOTHING == "clothed"
+    assert _cli().heat_clothing is None

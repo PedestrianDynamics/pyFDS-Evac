@@ -82,6 +82,7 @@ FIELD_GROUPS: list[tuple] = [
             "enable_heat_fed",
             "heat_incapacitation_mode",
             "heat_susceptibility_sigma",
+            "heat_clothing",
             "heat_fed_threshold",
         ],
     ),
@@ -286,9 +287,12 @@ _HELP_TEXT: dict[str, str] = {
     "heat_susceptibility_sigma": "Spread of how differently people tolerate heat exposure, used "
     "only in probabilistic heat mode. Reuses the toxic-gas default as an "
     "assumption — there's no published population data for heat.",
-    "heat_fed_threshold": "Heat dose (SFPE Handbook Eq. 63.44) at which a typical person is thermally "
-    "incapacitated — tracked separately from toxic gas dose; 1.0 is the "
-    "standard tenability limit.",
+    "heat_clothing": "clothed (default) or unclothed. Picks the ISO 13571:2012 law for hot "
+    "air: fully clothed people tolerate it about three times longer than "
+    "unclothed ones. unclothed gives the SFPE Handbook law used before.",
+    "heat_fed_threshold": "Heat dose at which a person is thermally incapacitated. Leave blank "
+    "to use the toxic-dose threshold, as ISO 13571:2012 uses one threshold for "
+    "both; a value here departs from ISO and is recorded in the run manifest.",
     "enable_rerouting": "Let agents rethink their route mid-evacuation as smoke and crowding "
     "change, instead of blindly following their first assigned route.",
     "reroute_interval": "How often (sim seconds) each agent rethinks its route. 1 = very "

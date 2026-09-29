@@ -53,8 +53,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   radiant dose (1.33, 10, 16.7; SFPE Ch. 63 pp. 2382 and 2384). The FED history gains `heat_endpoint`,
   `heat_outside_validity` (above 205 °C, an assumed limit, or a non-finite
   temperature) and `heat_humidity` (`unknown`, as humidity is not sampled),
-  and the run manifest records `heat_endpoint` and `heat_validity`. Without the option the dose stays
-  Eq. 63.44
+  and the run manifest records `heat_endpoint` and `heat_validity`. Without the option the dose is
+  the ISO 13571:2012 law of `--heat-clothing`
   ([#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
 - A run warns once when CO is sampled with zero CO2: the hyperventilation
   factor is then 1, and the FDS deck probably has no ambient CO2.
@@ -83,6 +83,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   at each time.
 
 ### Changed
+
+- **Breaking for heat runs.** With `--enable-heat-fed` the default
+  convective law is ISO 13571:2012 Eq. (9), fully clothed,
+  t = 4.1e8 · T^-3.61 min (T in °C, air with less than 10 % water vapour),
+  in place of SFPE Handbook Eq. 63.44, t = 5e7 · T^-3.4 min. At 100, 150
+  and 200 °C the time to heat FED = 1 grows from 7.9, 2.0 and 0.75 min to
+  24.7, 5.7 and 2.0 min. `--heat-clothing unclothed`
+  (`opts.heat_clothing`, `DefaultHeatFedModel(..., clothing="unclothed")`)
+  selects ISO Eq. (10), which has the constants of Eq. 63.44, and gives the
+  previous behaviour. The manifest records `heat_clothing`.
+  `--heat-endpoint` and `--heat-fed-method total-flux` are unchanged
+  ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)).
+- **Breaking for heat runs.** The heat threshold is now the gas threshold
+  `--fed-threshold`, as ISO 13571:2012 asks for one threshold for FED and
+  FEC (§5.4, §8.5). `--heat-fed-threshold` and
+  `TenabilityConfig.heat_fed_threshold` default to none; a value sets a
+  separate heat threshold, logs a warning that it departs from ISO, and is
+  recorded in the manifest as `heat_fed_threshold_override`. Runs with the
+  default `--fed-threshold 1.0` are unaffected; a run that changed
+  `--fed-threshold` and wants the previous heat threshold passes
+  `--heat-fed-threshold 1.0`. Both doses stay deterministic by default.
 
 - Docs: Fundamentals › Incapacitation thresholds states what is known
   about the population spread of heat tolerance: SFPE Ch. 63 gives figures

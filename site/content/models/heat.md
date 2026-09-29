@@ -18,13 +18,14 @@ nothing on this page affects a run.
 
 With `--enable-heat-fed` (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in
 the case, each agent accumulates a convective heat dose at
-`_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py`), SFPE Handbook 5th
-ed. Eq. 63.44 (p. 2382), unless `--heat-endpoint` selects another law
+`_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py`), ISO 13571:2012
+Eq. (9) for fully clothed subjects (§8.3.2), unless `--heat-clothing
+unclothed` selects ISO Eq. (10), `--heat-endpoint` selects another law
 ([Endpoint](#endpoint)) or `--heat-fed-method total-flux` selects the flux
 law ([Total flux](#total-flux)):
 
 $$
-\dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
+\dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.61} / (4.1 \times 10^{8}) \quad [1/\mathrm{min}],
 $$
 
 with *T* the gas temperature in °C at the agent's position, read from the
@@ -45,10 +46,38 @@ visibility model falls back to clear air
 Neither enters the heat-dose rate; both can change where agents walk, and
 so the temperature they are exposed to.
 
+### Clothing
+
+`--heat-clothing {clothed,unclothed}` (`opts.heat_clothing`, the
+`clothing` argument of `DefaultHeatFedModel`) selects one of the two
+convective laws of ISO 13571:2012 §8.3.2, both for air with less than 10 %
+water vapour by volume, with *t* in min and *T* in °C
+(`HEAT_CLOTHING_LAWS`):
+
+| `--heat-clothing` | ISO 13571:2012 | \(t_{I\,\mathrm{conv}}\) [min] | Source cited by ISO |
+|---|---|---|---|
+| `clothed` (default) | Eq. (9), fully clothed | \(4.1\times10^{8}\,T^{-3.61}\) | Crane (1978) |
+| `unclothed` | Eq. (10), unclothed or lightly clothed | \(5\times10^{7}\,T^{-3.4}\) | Purser, SFPE Handbook; the constants of Eq. 63.44 |
+
+The rate is \(1/t_{I\,\mathrm{conv}}\); a temperature at or below 0 °C,
+or not finite, gives zero. ISO recommends Eq. (9) for fully clothed
+subjects and states an uncertainty of ±25 % for both. Eq. (9) gives about
+three times the time of Eq. (10): 24.7 against 7.9 min at 100 °C, 5.7
+against 2.0 min at 150 °C, 2.0 against 0.75 min at 200 °C. Before
+[#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290) the
+default was Eq. 63.44; `--heat-clothing unclothed` reproduces it exactly.
+SFPE Ch. 63 treats the unclothed expressions as the relevant ones unless
+protective clothing is worn (p. 2336); the default follows ISO instead
+([Fundamentals › Heat](/fundamentals/heat.md#iso-135712012-clause-8)).
+`--heat-clothing` has no effect with `--heat-endpoint` or
+`--heat-fed-method total-flux`, and logs a warning there and without
+`--enable-heat-fed`. The run manifest records `heat_clothing` whenever one
+of the two laws is in use.
+
 ## Endpoint
 
-`--heat-endpoint {tolerance,injury,fatal}` (default: none) replaces Eq. 63.44
-with the convective law of one endpoint of Ch. 63, so that heat FED = 1 means
+`--heat-endpoint {tolerance,injury,fatal}` (default: none) replaces the ISO
+law with the convective law of one endpoint of Ch. 63, so that heat FED = 1 means
 that endpoint. Each endpoint is stored with its radiant dose *r* of Eq. 63.43
 (`HEAT_ENDPOINTS` in `pyfds_evac/core/fed.py`), so a radiant constant from one
 endpoint cannot be paired with the convective law of another:
@@ -69,7 +98,8 @@ convective laws it is recorded only. The fatal *r* is
 16.7 as printed on pp. 2382 and 2384; Purser's spreadsheet uses 16.667
 (personal communication), and the code follows the Handbook. By maintainer decision,
 heat FED = 1 is meant as the fatal endpoint; `--heat-endpoint fatal` gives
-that meaning. Without the option the convective dose stays Eq. 63.44.
+that meaning. Without the option the convective dose is the ISO law of
+`--heat-clothing`.
 
 The caption of Table 63.21 (p. 2385) says Eq. 63.44, but its per-minute values
 are those of Eq. 63.45; the tests use the table as the oracle for
@@ -300,13 +330,20 @@ incident *f U*), and the rate is \(q^{1.33}/D\) as above.
 When the cumulative heat dose reaches the agent's heat threshold, the agent
 stops and stays in place as an obstacle, as for the gas dose.
 
-- **`deterministic` (default).** Every agent uses `heat_fed_threshold`
-  (1.0). No published source gives a population spread for heat tolerance:
+- **One threshold for gas and heat.** The heat threshold is `fed_threshold`
+  (`--fed-threshold`, 1.0 by default), as ISO 13571:2012 asks for one
+  threshold for both FED and FEC in an estimation (§5.4) and finds the time
+  for heat in the same manner (§8.5). `--heat-fed-threshold`
+  (`TenabilityConfig.heat_fed_threshold`, default none) sets a separate
+  heat threshold; that departs from ISO, so the run logs a warning and the
+  manifest records `heat_fed_threshold_override`.
+- **`deterministic` (default).** Every agent uses the heat threshold. No
+  published source gives a population spread for heat tolerance:
   SFPE Ch. 63 gives population figures for heat only for radiant lethality
   (p. 2382), which is not modelled here.
 - **`probabilistic` (opt-in).** Each agent draws its own threshold once, from
   the run's seed, on a stream independent of the gas threshold:
-  \(D_i = \texttt{heat\_fed\_threshold} \cdot \exp(\sigma Z)\),
+  \(D_i = D \cdot \exp(\sigma Z)\), with *D* the heat threshold,
   \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
   assumption with no data basis for heat. The Handbook's radiant lethality
   figures point to a much narrower spread, for an endpoint not modelled here
@@ -316,21 +353,22 @@ stops and stays in place as an obstacle, as for the gas dose.
 The gas dose is also deterministic by default; the two modes are set separately
 (`--incapacitation-mode` and `--heat-incapacitation-mode`).
 
-The two doses do not share an endpoint. Gas FED = 1 is Purser's
-incapacitation endpoint. Without `--heat-endpoint`, heat FED = 1 is the
-Eq. 63.44 time, which the
-Handbook labels time to incapacitation (p. 2382) but whose times lie near its tolerance curve
-(see [What is not modelled](#what-is-not-modelled)). Both stop the agent in
+The two doses use one threshold but do not share an endpoint. Gas FED = 1 is
+Purser's incapacitation endpoint. Without `--heat-endpoint`, heat FED = 1
+is the time of ISO Eq. (9) or (10), which ISO introduces as the time to
+prevention of escape and also calls the time to experiencing pain (§8.3,
+§8.3.1; see [What is not modelled](#what-is-not-modelled)). Both stop the agent in
 the same way and set the same `incapacitated` flag; only
 `incapacitation_cause` tells which endpoint was reached.
 
 | Field | Default | CLI flag |
 |---|---|---|
 | `enable_heat_fed` | `False` | `--enable-heat-fed` |
-| `heat_fed_threshold` | `1.0` | `--heat-fed-threshold` |
+| `heat_fed_threshold` | none, `fed_threshold` | `--heat-fed-threshold` |
 | `heat_incapacitation_mode` | `"deterministic"` | `--heat-incapacitation-mode` |
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
-| `heat_endpoint` | `None` (Eq. 63.44) | `--heat-endpoint` |
+| `heat_clothing` | `"clothed"` | `--heat-clothing` |
+| `heat_endpoint` | `None` (ISO law of `heat_clothing`) | `--heat-endpoint` |
 | `heat_fed_method` | `"convective"` | `--heat-fed-method` |
 | `heat_radiant_source` | `"gas"` | `--heat-radiant-source` |
 | `heat_u_factor` | none, required with `integrated-intensity` | `--heat-u-factor` |
@@ -365,6 +403,11 @@ listed as assumed, as it is not used.
 With an endpoint, `heat_outside_validity` still flags samples
 above 205 °C: that limit belongs to the convective data of Eqs.
 63.45–63.47, not to the flux law.
+
+The manifest records `heat_clothing` (`clothed` or `unclothed`) when the
+ISO law is in use, that is without `--heat-endpoint` and with
+`--heat-fed-method convective`, and `heat_fed_threshold_override` when
+`--heat-fed-threshold` was set.
 
 The `incapacitated` column is true whichever dose stopped the agent, so it
 mixes the gas and heat endpoints; filter on `incapacitation_cause` to count
@@ -406,18 +449,21 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   [Total flux](#total-flux)); \(T_s\) is fixed and does not rise with
   exposure (spec 016, open questions 1 and 2).
 - **The default endpoint.** Without `--heat-endpoint`, heat FED = 1 is the
-  Eq. 63.44 time. Eq. 63.44 is labelled a time to incapacitation, but its
-  times lie near the Handbook's tolerance curve (Eq. 63.45) rather than its
-  injury or fatal ones. Whether the default changes is open
-  ([#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
+  time of ISO Eq. (9), or of Eq. (10) with `--heat-clothing unclothed`. ISO
+  introduces both as the time to prevention of escape and also calls it the
+  time to experiencing pain (§8.3, §8.3.1). Ch. 63 labels Eq. 63.44
+  (= Eq. (10)) a time to incapacitation, but its times lie near the
+  Handbook's tolerance curve (Eq. 63.45) rather than its injury or fatal
+  ones ([#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)).
 - **Population spread.** No consulted source gives a spread of tolerance
   for the convective dose; the opt-in σ = 0.94 is borrowed from the gas dose
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 - **Validity range.** Humidity is not sampled, so humid smoke is never
   flagged; `heat_humidity` reads `unknown`
   ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
-  flagged either, although Eq. 63.44 rests on the same data (p. 2382).
-- **Web GUI.** The GUI does not offer `--heat-endpoint`,
+  flagged either, although Eq. 63.44 rests on the same data (p. 2382); ISO
+  states no temperature range for Eqs. (9) and (10).
+- **Web GUI.** The GUI offers `--heat-clothing` but not `--heat-endpoint`,
   `--heat-fed-method`, `--heat-regime` or the layer options,
   `--heat-radiant-source` or `--heat-u-factor`
   ([#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
@@ -425,11 +471,18 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   steady or rising (Eq. 63.48; ISO 13571:2012 §8.4 states it for the
   temperature experienced by the occupant); a fleeing agent's exposure falls, and no
   recovery is modelled.
-- **Clothing and face covering**, which protect against both convective and
-  radiant heat.
+- **Clothing beyond the two ISO laws.** `--heat-clothing` switches between
+  fully clothed and unclothed for the whole run; there is no per-agent
+  clothing, no face covering, and no clothing term in the endpoint laws, the
+  total-flux method or the radiant terms.
 - **Effects on walking speed or route choice.** The heat dose only
   incapacitates ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
-- **Tests against the Handbook.** Eq. 63.44 is checked against the
+- **Tests against the Handbook.** The default, ISO Eq. (9), gives 1.8 to
+  3.0 times the convective times of Table 63.20 (p. 2383), and 10.7 min at
+  126 °C against the 7 min reported in Table 63.17 (p. 2375); the Handbook
+  does not state that its subjects were fully clothed, so these are
+  recorded, not pass bands (`test_heat_fed_verif.py`, A3.12).
+  Eq. 63.44 (`--heat-clothing unclothed`) is checked against the
   convective rows of Table 63.20 (p. 2383) and the dry-air rows of
   Table 63.17 (p. 2375). Against Table 63.20 it gives 0.61 to 1.07 times
   the tabulated times, never longer than the table's whole-minute rounding
@@ -456,23 +509,24 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
 ## Relation to ISO 13571:2012
 
 ISO 13571:2012 clause 8 ([Fundamentals](/fundamentals/heat.md#iso-135712012-clause-8))
-has one law in common with the code and none of its other options:
+has both convective laws in common with the code and none of its other
+options:
 
 | Option | ISO 13571:2012 counterpart |
 |---|---|
-| Default (Eq. 63.44) | Eq. (10), §8.3.2: same constants, for unclothed or lightly clothed subjects, uncertainty ±25 % |
+| Default, `--heat-clothing clothed` | Eq. (9), §8.3.2: fully clothed, uncertainty ±25 % |
+| `--heat-clothing unclothed` (Eq. 63.44) | Eq. (10), §8.3.2: same constants, for unclothed or lightly clothed subjects, uncertainty ±25 % |
 | `--heat-endpoint tolerance`, `injury`, `fatal` (Eqs. 63.45–63.47) | None |
 | `--heat-fed-method total-flux` (Eqs. 63.49 and 63.43, dose *D*) | None: ISO has no total-flux form, no ε, h or \(T_s\), and no radiant dose |
 | Radiant term, any regime or source | None as coded. ISO's radiant laws are Eqs. (7) (burns) and (8) (pain), \(a\,q^{-b}\) with other exponents, with *q* defined only as the radiant heat flux, and the radiant term set to zero where the flux to the skin is below the 2.5 kW/m² limit, which ISO calls an incident flux level (§8.2, §8.4); the code has no threshold |
 | Heat FED kept apart from the gas FED | Consistent: ISO treats heat as a component of its own (§4.1, §4.6 a) |
-| `heat_fed_threshold`, separate from the gas threshold | ISO asks for one threshold for FED and FEC in an estimation (§5.4) and does not say whether the heat FED is included |
+| Heat threshold = `fed_threshold` (default) | Follows §5.4 (one threshold for FED and FEC in an estimation) and §8.5 (heat threshold found in the same manner) |
+| `--heat-fed-threshold`, separate from the gas threshold | A departure from §5.4; logged and recorded in the manifest |
 | Heat σ | None: ISO gives no population spread for heat |
 
-ISO's Eq. (9), for fully clothed subjects, has no counterpart in the code
-([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)).
-ISO gives no upper temperature for Eqs. (9) and (10) either, so the 205 °C
-limit stays an assumption; its humidity condition, less than 10 % water
-vapour by volume (§8.3), is the one the code already records.
+ISO gives no upper temperature for Eqs. (9) and (10), so the 205 °C limit
+of the endpoint laws stays an assumption; its humidity condition, less than
+10 % water vapour by volume (§8.3), is the one the code already records.
 
 ## Assumptions (unsourced values)
 

@@ -2690,6 +2690,16 @@ def run_scenario(
                     if getattr(heat_fed_model, "method", None) == "total-flux"
                     else None
                 ),
+                heat_clothing=(
+                    heat_fed_model.convective_clothing()
+                    if hasattr(heat_fed_model, "convective_clothing")
+                    else None
+                ),
+                heat_fed_threshold_override=(
+                    tenability_config.heat_fed_threshold
+                    if heat_fed_model is not None and tenability_config is not None
+                    else None
+                ),
             )
         except (OSError, ValueError) as exc:
             _logger.warning("Could not write the run manifest: %s", exc)
