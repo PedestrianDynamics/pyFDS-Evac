@@ -10,13 +10,11 @@
 
 &TIME T_END=1000 /
 
-! Ambient is the *initial* condition only. The boundaries below hold the
-! prescribed temperature; without them FDS applies its default INERT wall at
-! TMP_FRONT = TMPA, which would pin ~2160 m2 of enclosure surface at 20 C
-! against the prescribed gas and drain the room. That is the one place the CO
-! ladder's layout cannot be copied: species do not diffuse into inert walls,
-! temperature does.
-&MISC TMPA=20.0 /
+! Ambient equals the prescribed gas temperature. FDS starts the wall
+! surfaces and the radiation field at TMPA; with TMPA = 20 C the walls would
+! start cold, radiate and conduct heat out of the gas at t = 0, and the room
+! would settle 0.7-1.8 % below the &INIT value (issue #253).
+&MISC TMPA=150.0 /
 
 ! Adiabatic boundaries on all six faces: no heat flux through any surface, so
 ! the prescribed field is genuinely time-invariant and the closed-form rate
