@@ -18,7 +18,7 @@ nothing on this page affects a run.
 
 With `--enable-heat-fed` (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in
 the case, each agent accumulates a convective heat dose at
-`_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py:217`), SFPE Handbook 5th
+`_heat_fed_rate_per_minute` (`pyfds_evac/core/fed.py:219`), SFPE Handbook 5th
 ed. Eq. 63.44 (p. 2382), unless `--heat-endpoint` selects another law
 ([Endpoint](#endpoint)) or `--heat-fed-method total-flux` selects the flux
 law ([Total flux](#total-flux)):

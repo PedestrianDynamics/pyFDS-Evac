@@ -55,7 +55,7 @@ species the sum reduces to the FDS+Evac default,
 FDS+Evac has no heat dose, so this one is opt-in: with `--enable-heat-fed`
 (`opts.enable_heat_fed`) and a `TEMPERATURE` slice in the case, a separate
 heat dose accumulates at
-`_heat_fed_rate_per_minute` (`fed.py:217`),
+`_heat_fed_rate_per_minute` (`fed.py:219`),
 
 $$
 \dot{\mathrm{FED}}_{\mathrm{heat}} = T^{3.4} / (5 \times 10^{7}) \quad [1/\mathrm{min}],
@@ -263,7 +263,7 @@ acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
 \(g\) partly counts irritancy twice
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
-Heat uses the convective Eq. 63.44 (`fed.py:217`) unless `--heat-endpoint`
+Heat uses the convective Eq. 63.44 (`fed.py:219`) unless `--heat-endpoint`
 selects Eq. 63.45, 63.46 or 63.47, or `--heat-fed-method total-flux` the
 flux law of Eqs. 63.49 and 63.43 ([Heat](/models/heat.md)). The log-normal σ of both
 thresholds (`fed.py:534`, `:544`) is, for the gas dose, a compromise between
