@@ -103,6 +103,13 @@ the FDS `INTEGRATED INTENSITY` slice with a user factor f in [0.25, 1] that
 no single value fits for every orientation; with `--heat-regime layer` as
 well, U supplies the radiant term and the layer term is not added
 ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
+In every total-flux variant a radiant term below 2.5 kW/m² counts as zero
+(ISO 13571:2012 §8.2, §8.4); convection always counts. ISO gives 2.5 kW/m²
+as an incident flux, but the code compares it with the net or excess
+radiant term, about 18 % lower at the Handbook's 200 °C anchor. At the
+default emissivity 0.5, smoke below about 285 °C therefore gives no radiant
+dose, and the dose rate jumps where the radiant term reaches the threshold
+([Models › Heat](/models/heat.md#where-the-radiant-threshold-acts)).
 Otherwise an agent near a flame is treated as less exposed than it is
 ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
 The unsourced values of the heat dose, its FDS reference decks and its

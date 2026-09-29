@@ -109,6 +109,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `--fed-threshold` and wants the previous heat threshold passes
   `--heat-fed-threshold 1.0`. Both doses stay deterministic by default.
 
+- Docs: Models › Heat explains where the 2.5 kW/m² radiant threshold of
+  total flux acts: from about 285 °C at the default ε, with a step in the
+  rate there and no radiant dose at the 200 °C anchor. A figure
+  (`scripts/figures/heat_radiant_threshold.py`) shows it, and the
+  verification table lists the total-flux, layer, `INTEGRATED INTENSITY`
+  and threshold tests.
 - Docs: Fundamentals › Incapacitation thresholds states what is known
   about the population spread of heat tolerance: SFPE Ch. 63 gives figures
   only for radiant lethality, which imply σ ≈ 0.22 if log-normal, not the

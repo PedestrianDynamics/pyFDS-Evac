@@ -101,8 +101,8 @@ total q, the total-flux form gives no dose in clear air below about 310 °C
 §8.2, §8.4 sets the radiant term, not the convective one, to zero below
 2.5 kW/m² (maintainer decision to follow ISO, see "Decisions"): the
 convective term always counts, which closes that gap. ISO's 2.5 kW/m² is an
-incident flux; the gas and layer terms are net σT⁴ differences (≈ 20 %
-lower at the 200 °C anchor) and the `INTEGRATED INTENSITY` term is an
+incident flux; the gas and layer terms are net σT⁴ differences (about 18 %
+lower at the 200 °C anchor: 2.33 against 2.84 kW/m²) and the `INTEGRATED INTENSITY` term is an
 excess, so the threshold on them is reached at a somewhat hotter source
 than on incident flux. Recorded, not corrected.
 
@@ -166,8 +166,8 @@ No single factor holds. Input options, in order of preference:
    with φ and ε_L. Reads ceiling-jet temperatures; assumes one ceiling height.
 
 Net vs incident flux: the radiant tolerance data are incident flux; σT⁴
-differences and `RADIATIVE HEAT FLUX GAS` are net (≈ 20 % lower at the
-200 °C anchor). Each input must say which it gives. The `INTEGRATED
+differences and `RADIATIVE HEAT FLUX GAS` are net (about 18 % lower at the
+200 °C anchor: 2.33 against 2.84 kW/m²). Each input must say which it gives. The `INTEGRATED
 INTENSITY` input is the excess over a skin-temperature field by decision
 (see "Decisions").
 
