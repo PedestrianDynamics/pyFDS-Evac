@@ -2090,6 +2090,24 @@ class TestResultSummary:
         assert f"2 warnings for run #{manager.run_id}" in html
         assert "#F4C430" not in html
 
+    def test_fed_panel_marks_the_run_threshold_on_one_scale(self):
+        from pyfds_evac.webapp.trajviz import _fed_panel, fed_scale
+
+        det = _fed_panel(1.0, "deterministic")
+        assert "threshold 1" in det and "median" not in det
+        for tier in ("safe", "alert", "critical", "severe", "0.3", "0.6"):
+            assert tier not in det
+        # Text is in ink tokens; ramp hex colours only fill swatch and bar.
+        assert not re.search(r"(?<!-)color:#", det)
+        prob = _fed_panel(0.5, "probabilistic")
+        assert "median threshold 0.5" in prob and "left:calc(50.00%" in prob
+        assert "median threshold 2" in _fed_panel(2.0, "probabilistic")
+        assert fed_scale(2.0) == 2.0 and fed_scale(0.5) == 1.0
+        assert fed_scale(None) == 1.0
+        none = _fed_panel(None, "deterministic")
+        assert "threshold" in none and "did not record" in none
+        assert "left:calc(" not in none
+
 
 class TestAccessibleForm:
     """#322: every control is labelled, keyboard-operable and visibly focused."""

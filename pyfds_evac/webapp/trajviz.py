@@ -498,9 +498,11 @@ _JS = """
     });
   }
 
-  // FED dose -> tier colour (green -> amber -> orange -> red). The 0.6 stop
-  // is a display tier only, not an ISO 13571 value.
+  // FED dose -> colour on a continuous ramp over [0, D.fedScale], where
+  // fedScale is max(1, the run's FED threshold). The stops are fractions of
+  // that scale for the gradient only; they are not dose tiers.
   var STOPS = [[0, '#f4c430'], [0.3, '#ffb020'], [0.6, '#ff6a1a'], [1, '#e01e37']];
+  var FED_SCALE = D.fedScale || 1;
   function lerpHex(a, b, t) {
     var ar = parseInt(a.slice(1, 3), 16), ag = parseInt(a.slice(3, 5), 16),
         ab = parseInt(a.slice(5, 7), 16);
@@ -510,8 +512,9 @@ _JS = """
         bl = Math.round(ab + (bb - ab) * t);
     return 'rgb(' + r + ',' + g + ',' + bl + ')';
   }
-  function fedColor(d) {
-    if (d == null) return TH.noData;
+  function fedColor(dose) {
+    if (dose == null) return TH.noData;
+    var d = dose / FED_SCALE;
     if (d <= 0) return STOPS[0][1];
     if (d >= 1) return STOPS[STOPS.length - 1][1];
     for (var k = 1; k < STOPS.length; k++) {
@@ -576,11 +579,14 @@ _JS = """
     if (!D.hasFed || !fedMaxByTime) return;
     var b = bracket(simT), lo = b[0], hi = b[1], f = b[2];
     var cur = fedMaxByTime[lo] + (fedMaxByTime[hi] - fedMaxByTime[lo]) * f;
-    function fc(v) { return v >= 1.0 ? '#E01E37' : v >= 0.6 ? '#FF6A1A' : v >= 0.3 ? '#FFB020' : '#F4C430'; }
+    // The number stays in the ink colour for contrast; the ramp colour goes
+    // on the swatch beside it and on the bar.
     var maxEl = document.getElementById('fed-val-max');
-    if (maxEl) { maxEl.textContent = cur.toFixed(4); maxEl.style.color = fc(cur); }
+    if (maxEl) maxEl.textContent = cur.toFixed(4);
+    var swEl = document.getElementById('fed-swatch');
+    if (swEl) swEl.style.background = fedColor(cur);
     var barEl = document.getElementById('fed-bar-fill');
-    if (barEl) barEl.style.width = Math.min(100, cur * 100) + '%';
+    if (barEl) barEl.style.width = Math.min(100, cur / FED_SCALE * 100) + '%';
   }
   function draw() {
     var d = size(), w = d[0], h = d[1], p = tf(w, h);
@@ -812,8 +818,98 @@ _JS = """
 """
 
 
-def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None) -> Any:
-    """A Card with a canvas trajectory animation (smooth interpolated playback)."""
+def fed_scale(threshold: Any) -> float:
+    """Upper end of the FED colour ramp and bar: max(1, the run's threshold)."""
+    try:
+        return max(1.0, float(threshold))
+    except (TypeError, ValueError):
+        return 1.0
+
+
+_FED_MONO = "font-family:'JetBrains Mono',monospace"
+
+
+def _fed_panel(threshold: Any, mode: Any) -> str:
+    """Gas FED readout under the canvas.
+
+    One continuous scale, with a marker at the FED threshold of the run
+    (from its snapshot, never the current form); no marker when the run did
+    not record one. Text uses ink tokens; the ramp colours only fill the
+    swatch and the bar.
+    """
+    scale = fed_scale(threshold)
+    marker = ""
+    if isinstance(threshold, int | float) and threshold > 0:
+        probabilistic = str(mode or "") == "probabilistic"
+        name = "median threshold" if probabilistic else "threshold"
+        pos = min(100.0, threshold / scale * 100)
+        marker = (
+            f'<div style="position:absolute;top:-2px;left:calc({pos:.2f}% - 1px);width:2px;'
+            'height:10px;background:var(--ink)"></div>'
+        )
+        tick = (
+            f'<span style="position:absolute;left:{pos:.2f}%;'
+            f"transform:translateX(-{min(100, round(pos))}%);white-space:nowrap;"
+            f'color:var(--ink-dim)">{name} {threshold:g}</span>'
+        )
+        note = (
+            "Each agent's threshold is drawn around this median."
+            if probabilistic
+            else "Every agent shares this threshold."
+        )
+    else:
+        tick = (
+            f'<span style="position:absolute;right:0;color:var(--ink-faint)">'
+            f"{scale:g}</span>"
+        )
+        note = "The run did not record a FED threshold."
+    return (
+        '<div id="fed-panel" style="margin-top:14px;background:var(--surface-panel);'
+        'border:1px solid var(--hairline);border-radius:12px;padding:14px 16px">'
+        f'<div style="{_FED_MONO};font-size:9.5px;letter-spacing:.1em;'
+        'text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px">'
+        "Gas FED dose (dimensionless)</div>"
+        '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
+        f'<div><div style="{_FED_MONO};font-size:9px;letter-spacing:.06em;'
+        'text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">'
+        "max FED (any agent)</div>"
+        '<div style="display:flex;align-items:center;gap:10px">'
+        '<span id="fed-swatch" aria-hidden="true" style="width:14px;height:14px;'
+        "border-radius:4px;border:1px solid var(--hairline-strong);"
+        'background:#F4C430"></span>'
+        f'<span id="fed-val-max" style="{_FED_MONO};font-size:26px;'
+        'font-weight:500;color:var(--ink)">0.0000</span></div></div>'
+        "</div>"
+        '<div style="position:relative;margin-bottom:4px">'
+        '<div style="position:relative;height:6px;border-radius:99px;'
+        "background:var(--surface-card);border:1px solid var(--hairline);"
+        'overflow:hidden">'
+        '<div id="fed-bar-fill" style="position:absolute;inset:0;width:0%;'
+        "border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,"
+        '#FF6A1A,#E01E37);transition:width .15s"></div>'
+        "</div>"
+        f"{marker}"
+        "</div>"
+        f'<div style="position:relative;height:12px;{_FED_MONO};font-size:9px">'
+        '<span style="position:absolute;left:0;color:var(--ink-faint)">0</span>'
+        f"{tick}</div>"
+        f'<p style="margin:8px 0 0;font-size:11px;color:var(--ink-dim)">{note}</p>'
+        "</div>"
+    )
+
+
+def trajectory_component(
+    result: Any,
+    scenario: Any,
+    fds_dir: str | None = None,
+    fed_threshold: Any = None,
+    fed_mode: Any = None,
+) -> Any:
+    """A Card with a canvas trajectory animation (smooth interpolated playback).
+
+    ``fed_threshold`` and ``fed_mode`` come from the run's snapshot and place
+    the threshold marker on the FED scale.
+    """
     payload = _payload(result, scenario, fds_dir)
     if payload is None:
         return Div(
@@ -826,6 +922,7 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
             ),
             style=_CARD,
         )
+    payload["fedScale"] = fed_scale(fed_threshold)
     data_json = json.dumps(payload)
     toggle = ""
     if payload["hasFed"]:
@@ -867,52 +964,7 @@ def trajectory_component(result: Any, scenario: Any, fds_dir: str | None = None)
         "</div>"
         + toggle
         + "</div>"
-        + (
-            payload["hasFed"]
-            and (
-                '<div id="fed-panel" style="margin-top:14px;background:var(--surface-panel);border:1px solid var(--hairline);border-radius:12px;padding:14px 16px">'
-                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)">FED Dose</span>'
-                '<div style="display:flex;gap:12px">'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#F4C430">· safe</span>'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#FFB020">· alert 0.3</span>'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#FF6A1A" title="display tier, not an ISO 13571 value">· critical 0.6</span>'
-                '<span style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;color:#E01E37">· severe 1.0</span>'
-                "</div></div>"
-                '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
-                '<div><div style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">max FED (any agent)</div>'
-                '<div id="fed-val-max" style="font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:26px;font-weight:500;color:#F4C430;transition:color .3s">0.0000</div></div>'
-                "</div>"
-                '<div style="position:relative;height:6px;border-radius:99px;background:var(--surface-card);border:1px solid var(--hairline);overflow:hidden;margin-bottom:4px">'
-                '<div id="fed-bar-fill" style="position:absolute;inset:0;width:0%;border-radius:99px;background:linear-gradient(90deg,#F4C430,#FFB020,#FF6A1A,#E01E37);transition:width .15s"></div>'
-                "</div>"
-                # Ticks sit at their dose on the bar, whose width is FED x 100 %.
-                '<div style="position:relative;height:12px;font-family:'
-                + "'JetBrains Mono'"
-                + ',monospace;font-size:9px">'
-                '<span style="position:absolute;left:0;color:var(--ink-faint)">0</span>'
-                '<span style="position:absolute;left:30%;transform:translateX(-50%);color:#FFB020">0.3</span>'
-                '<span style="position:absolute;left:60%;transform:translateX(-50%);color:#FF6A1A">0.6</span>'
-                '<span style="position:absolute;right:0;color:#E01E37">1.0+</span>'
-                "</div>"
-                "</div>"
-            )
-            or ""
-        )
+        + (_fed_panel(fed_threshold, fed_mode) if payload["hasFed"] else "")
         + "</div>"
     )
     script = "<script>" + _JS.replace("__DATA__", data_json) + "</script>"

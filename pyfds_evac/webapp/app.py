@@ -2118,6 +2118,12 @@ def _kpi_tiles(result) -> Div:
 def _finished_view() -> Div:
     result = manager.result
     scenario = manager.scenario
+    # The run's own settings (frozen snapshot), not the current form.
+    spec = manager.spec
+    if spec is not None:
+        run_opts = dict(spec.opts)
+    else:
+        run_opts = dict(vars(manager.opts)) if manager.opts is not None else {}
 
     kpi_tiles = _kpi_tiles(result)
     if manager.artifacts:
@@ -2147,7 +2153,13 @@ def _finished_view() -> Div:
         kpi_tiles,
         _warnings_card(manager.warnings),
         art,
-        trajviz.trajectory_component(result, scenario, fds_dir=manager.fds_dir),
+        trajviz.trajectory_component(
+            result,
+            scenario,
+            fds_dir=manager.fds_dir,
+            fed_threshold=run_opts.get("fed_threshold"),
+            fed_mode=run_opts.get("incapacitation_mode"),
+        ),
         plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
         plot_card(
             "Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"
