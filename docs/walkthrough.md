@@ -216,8 +216,9 @@ The incapacitated occupant stays in the simulation, so the run continues to
 `max_simulation_time` and `exposed.evacuation_time` reports 1150 s. It is not
 an exit time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
 
-`FdsFedField.from_fds` takes the first slice of each gas and does not match
-the slice height. `ExtinctionField.from_fds` and `FdsHeatField.from_fds` do.
+`FdsFedField.from_fds` reads each gas from the slice nearest its
+`slice_height_m` (default 1.6 m), as `ExtinctionField.from_fds` and
+`FdsHeatField.from_fds` do.
 
 ### 4. Checkpoint: a run that succeeds but is wrong
 

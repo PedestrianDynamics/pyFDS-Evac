@@ -85,9 +85,7 @@ suite ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
   [Seeing a door vs reading a sign](#seeing-a-door-vs-reading-a-sign).
 - Known issues: an agent incapacitated during its pre-movement time is
   released when that time ends
-  ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)), and
-  the gas FED reads the first slice of each species whatever its height
-  ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)).
+  ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)).
 
 ## Where each FDS+Evac input goes
 
@@ -102,7 +100,7 @@ runs uploaded scenarios. It does not edit geometry or stages.
 |---|---|---|
 | Evacuation meshes (`&MESH EVACUATION=.TRUE.`, §8.1) | 2-D grids for movement, separate from the fire meshes | Replaced by one walkable polygon (WKT). `scripts/generate_walkable_from_fds.py` derives it from the `&OBST` lines of a deck (see [Usage](usage.md)). |
 | `EVAC_Z_OFFSET` (§8.1) | Distance from the mid height of an evacuation mesh down to its floor, which is the reference level for `HUMAN_SMOKE_HEIGHT` | No equivalent: pyFDS-Evac has no evacuation meshes. |
-| `HUMAN_SMOKE_HEIGHT` (§8.7) | Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61) | `--smoke-slice-height` [m], default 1.6 as in FDS+Evac (2.0 before; pass `--smoke-slice-height 2.0` for it), an absolute z in the FDS domain rather than a height above the floor ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). It selects the extinction and temperature slices closest to it, so the deck must contain an `&SLCF PBZ=` at that height. Gas slices are taken from the first slice of each species, whatever its height ([#150](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150)). |
+| `HUMAN_SMOKE_HEIGHT` (§8.7) | Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61) | `--smoke-slice-height` [m], default 1.6 as in FDS+Evac (2.0 before; pass `--smoke-slice-height 2.0` for it), an absolute z in the FDS domain rather than a height above the floor ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). It selects the extinction, gas and temperature slices closest to it, so the deck must contain an `&SLCF PBZ=` at that height. |
 | `&EVAC` (§8.8) | Places a group of agents in a rectangle | A `distributions` entry in the JSON: a polygon plus `parameters` (`number`, `v0`, `radius`, pre-movement, familiarity). |
 | `&PERS` (§8.7) | Agent type: body size, speed, pre-movement, force constants | Per distribution in the JSON: `v0` [m/s], `radius` [m] and the pre-movement keys below. There are no named agent types and no three-circle body; an agent is a circle. |
 | `&EVHO` (§8.9) | Area where no agents are placed | Not supported. Draw the distribution polygon so that it excludes the area. |

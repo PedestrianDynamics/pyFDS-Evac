@@ -131,9 +131,11 @@ Script: `scripts/figures/sign_rotation.py`.*
 **Two ways to build the model** (`run_config.py`, `_build_vis_model`):
 
 - **From an FDS run** (`--fds-dir`). Grid, obstructions and extinction come
-  from the FDS output. The `SOOT EXTINCTION COEFFICIENT` slice nearest the
-  point (0, 0, `--smoke-slice-height`) is used (1.6 m by default since #164,
-  `run.py`, `_build_parser`). Stored times are spaced by `--reroute-interval`
+  from the FDS output. fdsvismap picks the `SOOT EXTINCTION COEFFICIENT` slice
+  with fdsreader's `get_nearest(0, 0, --smoke-slice-height)` (1.6 m by
+  default since #164, `run.py`, `_build_parser`). With several extinction
+  slices, that returns the first horizontal slice listed, not the nearest
+  ([#296](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/296)). Stored times are spaced by `--reroute-interval`
   (`visibility.py`, `_build_vismap`; `run_config.py`, `_build_vis_model`).
 - **From clear air** (no `--fds-dir`). The walkable polygon is rasterised at
   `--vis-cell-size`. A cell is an obstruction when its centre lies outside the
@@ -400,8 +402,10 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   experiments.
 - **Sampling height.** Börger et al. use one slice at 2 m, with the eye at
   sign height (p. 4). The code uses 1.6 m, the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`.
-  fdsvismap takes the nearest slice without a warning when it is far from the
-  requested height. *Our inference:* exit signs are usually mounted above
+  fdsvismap selects the extinction slice itself (fdsreader `get_nearest`).
+  With several extinction slices in the case, it takes the first one listed
+  rather than the nearest, and logs no warning
+  ([#296](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/296)). *Our inference:* exit signs are usually mounted above
   doors, higher than 1.6 m. Under a hot smoke layer, a 1.6 m slice reads less
   extinction than the line of sight to such a sign crosses, so it overstates
   legibility. That error is non-conservative.

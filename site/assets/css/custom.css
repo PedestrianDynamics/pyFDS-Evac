@@ -237,3 +237,6 @@
 }
 .svg-figure__panel { flex: 1 1 18rem; max-width: 46rem; }
 .svg-figure svg { display: block; width: 100%; height: auto; }
+.svg-figure__panel--scroll { overflow-x: auto; }
+.svg-figure__panel--scroll svg { min-width: var(--svg-min-width); }
+.svg-figure__panel--scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

@@ -17,11 +17,12 @@ through the building. Its hazards to occupants are heat and toxic gases
 carried in the smoke, and the obscuration the smoke causes (Engineers
 Australia Society of Fire Safety 2014, §3.1).
 
-{{< svg-figure src="images/concepts/fire-hazards.svg" >}}
+{{< svg-figure src="images/concepts/fire-hazards.svg" min-width="34rem" >}}
 
-*Hazards of a building fire, as a sketch, not to scale. Figure inspired by
-Fig. 1 of the Engineers Australia practice note for tenability criteria
-(2014).*
+*Hazards of a building fire, as a sketch, not to scale. The sketch shows
+mechanisms only; it states no acceptance criteria and no software
+defaults. Figure inspired by Fig. 1 of the Engineers Australia practice
+note for tenability criteria (2014).*
 
 - **Convected heat**, the hot gas around the occupant:
   [Heat › Convective heat](/fundamentals/heat.md#convective-heat-time-to-incapacitation).

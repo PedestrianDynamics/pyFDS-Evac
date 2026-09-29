@@ -3,9 +3,16 @@
      follow the site's light/dark toggle and keeps its text selectable; the
      SVG's own <title> and <desc> are the alternative text.
      Usage: {{< svg-figure src="images/concepts/fire-hazards.svg" >}}
-            {{< svg-figure src="images/concepts/a.svg, images/concepts/b.svg" >}} */ -}}
+            {{< svg-figure src="images/concepts/a.svg, images/concepts/b.svg" >}}
+     min-width="34rem" keeps a wide drawing at that width on a narrow screen
+     and lets the reader scroll it sideways, so its labels stay legible. */ -}}
+{{- $mw := .Get "min-width" }}
 <figure class="svg-figure">
   {{- range split (.Get "src") "," }}
+  {{- if $mw }}
+  <div class="svg-figure__panel svg-figure__panel--scroll" style="{{ printf "--svg-min-width: %s" $mw | safeCSS }}" tabindex="0" role="region" aria-label="Figure; scroll sideways on narrow screens">{{ readFile (printf "static/%s" (trim . " ")) | safeHTML }}</div>
+  {{- else }}
   <div class="svg-figure__panel">{{ readFile (printf "static/%s" (trim . " ")) | safeHTML }}</div>
+  {{- end }}
   {{- end }}
 </figure>

@@ -50,7 +50,10 @@ untenable as soon as any value is exceeded: for exposures of up to
 exposure of each occupant is summed over time along the path they take,
 and incapacitation is expected at a fractional effective dose of 1 for the
 median occupant (the same note, §5 and §5.3, after the SFPE Handbook and
-ISO 13571).
+ISO 13571). The note computes heat exposure as one FED and toxic-gas
+exposure as another (§5.3). For more susceptible
+occupants a lower threshold may suit; see
+[Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
 
 {{< svg-figure src="images/concepts/tenability-limits.svg, images/concepts/tenability-dose.svg" >}}
 
@@ -58,7 +61,8 @@ ISO 13571).
 "Tenability Criteria – Short Exposure", p. 15); for small enclosures, of
 the order of 10 m, the note allows a visibility of 5 m. Dose along each
 path: the dose approach, schematic, for two occupants; the same fire gives
-each one a different dose. Figure inspired by Fig. 8 of the Engineers Australia
+each one a different dose. The curves are the toxic-gas FED; heat is
+judged as a second, separate FED (§5.3). Figure inspired by Fig. 8 of the Engineers Australia
 practice note for tenability criteria (2014).*
 
 RSET comes from people. ISO/TR 16738 (§5.4) reports that the pre-travel
