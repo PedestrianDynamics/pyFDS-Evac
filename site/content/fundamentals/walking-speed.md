@@ -474,7 +474,7 @@ another's range. The visibility constant also depends on light: Cheung et
 al. (2026) found σV = 4.7–9.5 for light-emitting signs at 180 lx, close to
 Jin's 5–8, but 6–11 at 1–22 lx (§4.4, §6), over signs of up to
 22 500 cd/m²; at exit-sign luminances their §4.3 values give about 6–8.4
-(our arithmetic). They measured seeing a sign,
+for seeing the gap of the "C" (our arithmetic). They measured seeing a sign,
 not walking; our inference is that any law written in *x* = *A*/*K*
 carries the lighting of its experiments.
 
@@ -523,7 +523,8 @@ Findings relevant here:
   light they measure 5.3–9.5 at 5.5 and 10.5 m and 4.7–8 at 15.5 m
   (§4.1, Fig. 8). At 1 lx σV is 7.5–11, and at 22 lx 6–11 (§4.4, Fig. 11),
   over sign luminances of 128–22 500 cd/m²; at 135–492 cd/m² their §4.3
-  values give about 6.2–8.4 (our arithmetic; see
+  values give about 6.2–8.4 for seeing the gap of the "C" (our
+  arithmetic; see
   [Visibility through smoke](/fundamentals/visibility.md)).
   σV rises with the logarithm of the normalised sign brightness πLₜ/E, so
   it is constant only for a given brightness.

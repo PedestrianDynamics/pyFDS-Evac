@@ -19,14 +19,16 @@ Every curve is computed from equations and constants printed in the sources:
   ranges given by Jin (1971, Fig. 8) and Jin and Yamada (1985, p. 80).
 - Jin (1970), p. 1: visibility (2-4)/sigma for placards and (5-10)/sigma
   for lit signs.
-- Cheung et al. (2026), Fig. 11: the boxes mark the approximate extent of
-  their data at 1, 22 and 180 lx, read from the printed axes (our reading):
-  pi L_t / E about 300-50 000, 20-3000 and 2-300; sigma V 7.5-11 (§4.4),
-  6-11 (§4.4) and 4.7-9.5 (§6). These span sign luminances up to
-  22 500 cd/m² (§4.1); C = 11 in panel (b) is their upper end.
-- Panel (b): V = C/K. Lines are solid for 5-15.5 m, the viewing distances
-  of Jin's chamber (Jin 1970, 5.5, 10.5 and 15.5 m) and the range in which
-  Jin (1971) states sigma V is almost constant; dashed beyond. C = 3 and 8
+- Cheung et al. (2026), Fig. 11: the shaded bands lie between the
+  bounding curves they publish, sigma V = ln(pi L_t / E / (delta_c alpha)),
+  with delta_c alpha = 0.0025-0.025 at 180 lx and 0.1-1 at 1 lx, drawn over
+  the approximate extent of their data there (pi L_t / E about 2-300 and
+  300-50 000; our reading of the axes). The 22 and 60 lx pairs are given
+  in the page text.
+- Panel (b): V = C/K. Lines are solid for 5.5-15.5 m, the viewing
+  distances of Jin's chamber (Jin 1970); dashed beyond. Cheung et al.'s
+  top value, sigma V of about 11, occurs only at 5.5 m (their Fig. 11a-b),
+  so it is drawn as one point. C = 3 and 8
   are the values of Mulholland (2002, Eqs. 14-15) and the FDS User's Guide
   (Eq. 22.23); 30 m is the FDS default MAXIMUM_VISIBILITY.
 
@@ -44,7 +46,6 @@ import numpy as np
 import seaborn as sns
 from matplotlib import gridspec
 from matplotlib.lines import Line2D
-from matplotlib.patches import Rectangle
 
 
 def main():
@@ -88,12 +89,12 @@ def main():
     ax_a.text(0.035, 9.0, "lit signs\n5–10", fontsize=8.5, color=c_emit, va="center")
     ax_a.axvline(1.0, color="lightgrey", lw=0.8, zorder=1)
     ax_a.text(
-        0.95,
-        0.6,
+        1.1,
+        0.3,
         "reflectance 1:\nbest placard",
         fontsize=8,
         color="dimgrey",
-        ha="right",
+        ha="left",
     )
 
     for lo, hi, ls, lw in (
@@ -106,6 +107,15 @@ def main():
     for dk in (0.02, 0.05):
         b = np.geomspace(0.03, 5e4, 200)
         ax_a.plot(b, sigma_v(b, dk), color=c_jin, lw=0.9, ls=":", zorder=3)
+        ax_a.text(
+            0.2,
+            sigma_v(0.2, dk) - 0.15,
+            f"{dk:g}",
+            fontsize=7.5,
+            color="dimgrey",
+            ha="left",
+            va="top",
+        )
     ax_a.annotate(
         "Jin 1970, Eq. 4, δc k = 0.01",
         xy=(3.0, sigma_v(3.0, 0.01)),
@@ -133,28 +143,27 @@ def main():
         ha="left",
     )
 
-    for (x0, x1, y0, y1), label in (
-        ((2.0, 300.0, 4.7, 9.5), "180 lx"),
-        ((20.0, 3000.0, 6.0, 11.0), "22 lx"),
-        ((300.0, 5e4, 7.5, 11.0), "1 lx"),
+    for (lo_dk, hi_dk, b0, b1), label, ytxt in (
+        ((0.0025, 0.025, 2.0, 300.0), "Cheung 180 lx", (2.2, 3.7, "left")),
+        ((0.1, 1.0, 300.0, 5e4), "Cheung 1 lx", (4.5e4, 8.9, "right")),
     ):
-        ax_a.add_patch(
-            Rectangle(
-                (x0, y0),
-                x1 - x0,
-                y1 - y0,
-                fill=False,
-                ec=c_cheung,
-                lw=1.2,
-                ls="-",
-                zorder=2,
-            )
+        b = np.geomspace(b0, b1, 100)
+        ax_a.fill_between(
+            b,
+            sigma_v(b, hi_dk),
+            sigma_v(b, lo_dk),
+            color=c_cheung,
+            alpha=0.25,
+            lw=0,
+            zorder=2,
         )
-        ax_a.text(x1 / 1.15, y0 + 0.15, label, fontsize=7.5, color=c_cheung, ha="right")
+        for dk in (lo_dk, hi_dk):
+            ax_a.plot(b, sigma_v(b, dk), color=c_cheung, lw=1.0, zorder=2)
+        ax_a.text(ytxt[0], ytxt[1], label, fontsize=8, color=c_cheung, ha=ytxt[2])
     ax_a.text(
         2.0,
         11.75,
-        "Cheung et al. 2026, extent of data",
+        "Cheung et al. 2026, published bounds",
         fontsize=8,
         color=c_cheung,
     )
@@ -172,27 +181,29 @@ def main():
 
     # (b) V = C / K
     k = np.geomspace(0.05, 3.0, 400)
-    v_lo, v_hi = 5.0, 15.5
+    v_lo, v_hi = 5.5, 15.5
     for c_lo, c_hi, col in ((2.0, 4.0, c_refl), (5.0, 10.0, c_emit)):
         lower = np.maximum(c_lo / k, v_lo)
         upper = np.minimum(c_hi / k, v_hi)
         ax_b.fill_between(
             k, lower, upper, where=upper > lower, color=col, alpha=0.12, lw=0
         )
-    for c, col, lw in ((3.0, c_refl, 2.6), (8.0, c_emit, 2.6), (11.0, c_cheung, 1.2)):
+    for c, col, lw in ((3.0, c_refl, 2.6), (8.0, c_emit, 2.6)):
         v = c / k
         inside = (v >= v_lo) & (v <= v_hi)
         ax_b.plot(k, np.where(inside, v, np.nan), color=col, lw=lw, zorder=4)
         ax_b.plot(k, np.where(~inside, v, np.nan), color=col, lw=1.2, ls="--")
     ax_b.text(0.55, 3.6, "C = 3", fontsize=9, color=c_refl, weight="semibold")
     ax_b.text(1.25, 8.4, "C = 8", fontsize=9, color=c_emit, weight="semibold")
-    ax_b.text(
-        2.9,
-        18.0,
-        "C = 11: Cheung et al., 1–22 lx,\nupper end, signs up to 22 500 cd/m²",
+    ax_b.plot(11.0 / 5.5, 5.5, "D", color=c_cheung, ms=7, mec="white", zorder=5)
+    ax_b.annotate(
+        "C ≈ 11: Cheung et al., 1–22 lx,\nonly at 5.5 m, signs up to 22 500 cd/m²",
+        xy=(2.0, 5.5),
+        xytext=(2.9, 2.2),
         fontsize=8,
         color=c_cheung,
         ha="right",
+        arrowprops=dict(arrowstyle="-", color="lightgrey", lw=0.8),
     )
     ax_b.text(0.06, 21.0, "placards 2–4", fontsize=8, color=c_refl)
     ax_b.text(0.33, 36.0, "lit signs 5–10", fontsize=8, color=c_emit)
@@ -204,7 +215,7 @@ def main():
     ax_b.text(
         0.055,
         9.0,
-        "5–15.5 m:\nJin's viewing\ndistances",
+        "5.5–15.5 m:\nJin's viewing\ndistances",
         fontsize=8,
         color="dimgrey",
         va="center",
@@ -233,7 +244,7 @@ def main():
     handles = [
         Line2D([], [], color="grey", lw=2.6, label="within source data"),
         Line2D([], [], color="grey", lw=1.4, ls="--", label="extrapolation"),
-        Line2D([], [], color="grey", lw=0.9, ls=":", label="δc k = 0.02, 0.05"),
+        Line2D([], [], color="grey", lw=0.9, ls=":", label="δc k = 0.02, 0.05 (Jin)"),
     ]
     ax_a.legend(
         handles=handles,

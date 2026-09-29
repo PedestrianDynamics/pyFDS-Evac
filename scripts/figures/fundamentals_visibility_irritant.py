@@ -14,15 +14,19 @@ Every curve is computed from equations and constants printed in the source:
   S = 0.133 - 1.47 log10 K for K >= 0.25 1/m, fitted to Fig. 8. The log is
   base 10 in our reading: S(0.25) is then 1.02, continuous with S = 1 below
   0.25 1/m, and Fig. 8 is drawn on a log axis. Its points span about
-  K = 0.25-0.55 1/m (our reading of Fig. 8), so the fit is solid there.
+  K = 0.24-0.55 1/m (our reading of Fig. 8), so the fit is solid there;
+  S = 1 below 0.25 1/m is solid too, as Fig. 6 has measured ratios near 1
+  at K of about 0-0.24 1/m.
 - Their Eqs. 4-5 (p. 86): V1 = C/K for 0.1 <= K < 0.25 (non-irritant region)
   and V2 = (C/K) S for K >= 0.25 (irritant region), with C = 6 to match the
   legibility data of their Fig. 2 (p. 87). They state the equations do not
   apply for K < 0.1 or where V2 < 0; V2 reaches zero at K = 10**(0.133/1.47),
   about 1.23 1/m (our arithmetic).
 - The line C/K with C = 6 is drawn solid over the non-irritant legibility
-  points of their Fig. 2, about K = 0.5-1.3 1/m (our reading), and the
-  irritant V2 over the irritant points, about 0.3-0.5 1/m.
+  points, about K = 0.53-0.70 1/m in their Fig. 2 and up to about
+  1.05 1/m with the blackout runs of Jin (1972, Fig. 5) (our reading), and
+  the irritant V2 over the irritant legibility points of Fig. 2, about
+  0.40-0.55 1/m.
 
 Run from the repository root::
 
@@ -72,7 +76,8 @@ def main():
             lw = 2.6 if ls == "-" else 1.4
             ax.plot(k, f(k), color=color, lw=lw, ls=ls, zorder=4)
 
-    irr_spans = [((0.1, 0.25), "--"), ((0.25, 0.55), "-"), ((0.55, k_zero), "--")]
+    s_spans = [((0.1, 0.25), "-"), ((0.25, 0.55), "-"), ((0.55, k_zero), "--")]
+    v_spans = [((0.1, 0.4), "--"), ((0.4, 0.55), "-"), ((0.55, k_zero), "--")]
 
     # --- Plot ---
     fig = plt.figure(figsize=(11.0, 4.6), dpi=150)
@@ -82,7 +87,7 @@ def main():
     ax_v = plt.subplot(gs[0, 1])
 
     # (a) relative visual acuity
-    segments(ax_s, acuity, irr_spans, c_irr)
+    segments(ax_s, acuity, s_spans, c_irr)
     ax_s.axvline(0.25, color="lightgrey", lw=0.8, zorder=1)
     ax_s.text(
         0.24,
@@ -119,10 +124,10 @@ def main():
     segments(
         ax_v,
         lambda k: c / k,
-        [((0.1, 0.5), "--"), ((0.5, 1.3), "-"), ((1.3, 2.0), "--")],
+        [((0.1, 0.53), "--"), ((0.53, 1.05), "-"), ((1.05, 2.0), "--")],
         c_non,
     )
-    segments(ax_v, lambda k: c / k * acuity(k), irr_spans, c_irr)
+    segments(ax_v, lambda k: c / k * acuity(k), v_spans, c_irr)
     ax_v.text(
         0.75, 10.5, "non-irritant: V = 6/K", fontsize=9, color=c_non, weight="semibold"
     )
