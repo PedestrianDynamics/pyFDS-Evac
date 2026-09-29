@@ -503,6 +503,13 @@ well, U supplies the radiant term and the layer term is not added
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).
 Otherwise an agent near a flame is treated as less exposed than it is
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).
+In every total-flux variant a radiant term below 2.5 kW/m² counts as zero
+(ISO 13571:2012 §8.2, §8.4); convection always counts. ISO gives 2.5 kW/m²
+as an incident flux, but the code compares it with the net or excess
+radiant term, about 18 % lower at the Handbook&amp;rsquo;s 200 °C anchor. At the
+default emissivity 0.5, smoke below about 285 °C therefore gives no radiant
+dose, and the dose rate jumps where the radiant term reaches the threshold
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#where-the-radiant-threshold-acts">Models › Heat&lt;/a>).
 The unsourced values of the heat dose, its FDS reference decks and its
 tests are listed in
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#assumptions-unsourced-values">Models › Heat › Assumptions&lt;/a>.&lt;/p>
@@ -1165,7 +1172,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Temperature/radiation&lt;/strong>&lt;/td>
 &lt;td>Not implemented for agent effects ([1] §1.2 p11)&lt;/td>
-&lt;td>Convective heat FED (ISO 13571:2012 Eq. (9), fully clothed; Eq. (10) = SFPE Handbook Eq. 63.44 with &lt;code>--heat-clothing unclothed&lt;/code>) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]&lt;/td>
+&lt;td>Convective heat FED (ISO 13571:2012 Eq. (9), fully clothed; Eq. (10) = SFPE Handbook Eq. 63.44 with &lt;code>--heat-clothing unclothed&lt;/code>) from an FDS &lt;code>TEMPERATURE&lt;/code> slice, tracked separately from the gas FED; it does not affect route choice or speed. Opt-in &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head (Eq. 63.49), with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer instead, or with &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the excess f·(U − 4σT_s⁴) from FDS &lt;code>INTEGRATED INTENSITY&lt;/code> with a user factor f in [0.25, 1]; in all three a radiant term below 2.5 kW/m² counts as zero (ISO 13571:2012 §8.2, §8.4), convection at every level&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>

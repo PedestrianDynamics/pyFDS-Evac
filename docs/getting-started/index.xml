@@ -1485,7 +1485,7 @@ runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;tr>
 &lt;td>Convective heat&lt;/td>
 &lt;td>None: gas temperature and radiation do not act on agents (Guide §1.2)&lt;/td>
-&lt;td>Off by default, as in FDS+Evac. With &lt;code>--enable-heat-fed&lt;/code> (&lt;code>opts.enable_heat_fed&lt;/code>), a separate heat dose is computed from the &lt;code>TEMPERATURE&lt;/code> slice and incapacitates on its own threshold; before, this happened automatically whenever the output had such a slice. &lt;code>--disable-tenability&lt;/code> turns off both stops (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>).&lt;/td>
+&lt;td>Off by default, as in FDS+Evac. With &lt;code>--enable-heat-fed&lt;/code> (&lt;code>opts.enable_heat_fed&lt;/code>), a separate heat dose is computed from the &lt;code>TEMPERATURE&lt;/code> slice, by default with ISO 13571:2012 Eq. (9) for fully clothed subjects, and kept apart from the gas FED; it incapacitates at the same threshold as the gas dose unless &lt;code>--heat-fed-threshold&lt;/code> sets another; before, this happened automatically whenever the output had such a slice. &lt;code>--disable-tenability&lt;/code> turns off both stops (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Irritant slowdown (FIC)&lt;/td>
