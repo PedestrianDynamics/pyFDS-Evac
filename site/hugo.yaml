@@ -40,6 +40,7 @@ module:
         - "superpowers/**"
         - "quickstart.md"
         - "walkthrough.md"
+        - "first-fds-case.md"
         - "coming-from-fds-evac.md"
         - "concepts.md"
         - "limitations.md"
@@ -59,6 +60,7 @@ module:
       includeFiles:
         - "quickstart.md"
         - "walkthrough.md"
+        - "first-fds-case.md"
         - "coming-from-fds-evac.md"
     - source: ../docs
       target: content/docs/understanding

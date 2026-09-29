@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PAGES = {
     "quickstart.py": "quickstart.md",
     "walkthrough.py": "walkthrough.md",
+    "first_fds_case.py": "first-fds-case.md",
     "rset_ensemble.py": "howto-rset-ensemble.md",
 }
 

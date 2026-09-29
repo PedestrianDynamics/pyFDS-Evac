@@ -1,4 +1,4 @@
-"""Figures for the Quickstart page: the T-junction with a 2 MW PVC fire.
+"""Figures for the "A crowd in a real fire" page: the T-junction with a 2 MW PVC fire.
 
 The figures come from two runs of ``assets/t_junction`` (``config.json``,
 discovery agents, seed 42), one in clear air and one against the FDS output of
@@ -15,9 +15,9 @@ with ``FDS`` the FDS output directory and ``RUNS`` any output directory::
 
 then::
 
-    uv run python scripts/docs/quickstart_figures.py --data FDS --runs RUNS
+    uv run python scripts/docs/first_fds_case_figures.py --data FDS --runs RUNS
 
-Writes ``site/static/images/quickstart/*.png`` and ``agents_smoke.gif``. The
+Writes ``site/static/images/first-fds-case/*.png`` and ``agents_smoke.gif``. The
 GIF needs ``ffmpeg`` on the PATH for its palette pass.
 """
 
@@ -47,7 +47,7 @@ from pyfds_evac import ExtinctionField
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSET = ROOT / "assets" / "t_junction"
-OUT = ROOT / "site" / "static" / "images" / "quickstart"
+OUT = ROOT / "site" / "static" / "images" / "first-fds-case"
 
 # Shared palette of the concept figures: one meaning, one colour, one style.
 EXIT = "#33a02c"  # exit door

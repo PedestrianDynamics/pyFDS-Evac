@@ -8,7 +8,7 @@ cascade:
 Reference documentation, served from the `docs/` directory of the repository.
 
 {{< cards >}}
-  {{< card link="getting-started/quickstart" title="Quickstart" subtitle="150 agents, a 2 MW fire, and what each step produces." >}}
+  {{< card link="getting-started/quickstart" title="Quickstart" subtitle="One run on a tracked scenario, with no FDS output needed." >}}
   {{< card link="getting-started/walkthrough" title="Real-FDS walkthrough" subtitle="From tracked FDS output to FED histories and exit times, and how to spot a run that succeeds but is wrong." >}}
   {{< card link="using/howto-rset-ensemble" title="RSET from an ensemble" subtitle="How to get RSET with its spread from runs over several seeds." >}}
   {{< card link="getting-started/coming-from-fds-evac" title="Coming from FDS+Evac" subtitle="Where each FDS+Evac input goes, and what has no equivalent." >}}

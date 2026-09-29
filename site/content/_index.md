@@ -100,7 +100,7 @@ uv run python run.py --scenario assets/ISO-table21 --cleanup
 ## Where to start
 
 {{< cards >}}
-  {{< card link="docs/getting-started/quickstart/" title="Quickstart" subtitle="150 agents, a 2 MW fire, and what each step produces." >}}
+  {{< card link="docs/getting-started/quickstart/" title="Quickstart" subtitle="One run on a tracked scenario, no FDS output needed." >}}
   {{< card link="docs/getting-started/coming-from-fds-evac/" title="Coming from FDS+Evac" subtitle="Where each FDS+Evac input goes, and what has no equivalent." >}}
   {{< card link="docs/getting-started/walkthrough/" title="Real-FDS walkthrough" subtitle="From tracked FDS output to doses and exit times." >}}
   {{< card link="docs/understanding/limitations/" title="Limitations" subtitle="Status, library-level parameters, and what is not modelled." >}}
