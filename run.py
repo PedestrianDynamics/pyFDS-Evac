@@ -294,8 +294,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default="gas",
         help="Radiant term of --heat-fed-method total-flux. gas (default): "
         "eps sigma (T_g^4 - T_s^4) of Eq. 63.49. integrated-intensity: the "
-        "incident flux f*U from the FDS INTEGRATED INTENSITY slice at the "
-        "slice height, replacing the gas term; needs --heat-u-factor",
+        "net flux f*U - sigma T_s^4 from the FDS INTEGRATED INTENSITY slice at "
+        "the slice height, replacing the gas term; needs --heat-u-factor",
     )
     parser.add_argument(
         "--heat-u-factor",
@@ -304,7 +304,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Factor f in [0.25, 1] for --heat-radiant-source "
         "integrated-intensity: the incident radiant flux is f*U, from U/4 "
         "(sphere, or a plate in isotropic radiation) to U (one small source "
-        "seen face-on). No default: required with that source",
+        "seen face-on); the dose uses the net f*U - sigma T_s^4. No default: "
+        "required with that source",
     )
     parser.add_argument(
         "--heat-regime",

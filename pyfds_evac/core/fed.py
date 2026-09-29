@@ -353,8 +353,9 @@ HEAT_FLUX_ASSUMED_PARAMETERS = (
     "skin_temperature_celsius",
 )
 # Radiant term of the total-flux method (#221): "gas" is eps sigma
-# (T_g^4 - T_s^4) of Eq. 63.49; "integrated-intensity" is f U from the FDS
-# INTEGRATED INTENSITY slice, with f given by the user (no default).
+# (T_g^4 - T_s^4) of Eq. 63.49; "integrated-intensity" is the net f U -
+# sigma T_s^4 from the FDS INTEGRATED INTENSITY slice, with f given by the
+# user (no default).
 HEAT_RADIANT_SOURCES = ("gas", "integrated-intensity")
 HEAT_U_FACTOR_RANGE = (0.25, 1.0)  # sphere / isotropic field .. source face-on
 # Largest z difference [m] accepted between the TEMPERATURE and INTEGRATED
@@ -1147,8 +1148,9 @@ class DefaultHeatFedModel:
     q^1.33 / D (Eqs. 63.49 and 63.43, spec 016), D the radiant dose of
     *endpoint*, or of ``fatal`` without one; the convective laws are not added.
     With ``radiant_source="integrated-intensity"`` (total-flux only, #221)
-    the radiant term is the incident f U instead of the gas term, and
-    *u_factor* f in [0.25, 1] is required.
+    the radiant term is the net f U - sigma T_s^4 instead of the gas term,
+    and *u_factor* f in [0.25, 1] is required. Outside the FDS domain U is
+    NaN and the rate is zero; the first such sample logs one warning.
 
     *regime* (total-flux only, spec 016): ``"smoke"`` (default) applies
     Eq. 63.49 at the head. ``"layer"`` takes the head to be in clear air below
@@ -1207,6 +1209,7 @@ class DefaultHeatFedModel:
         self.view_factor = view_factor
         self.layer_emissivity = layer_emissivity
         self.layer_height_m = layer_height_m
+        self._warned_missing_intensity = False
 
     def heat_flux_parameters(self) -> dict[str, object]:
         """Return the flux parameters for the run manifest."""
@@ -1232,7 +1235,7 @@ class DefaultHeatFedModel:
         ]
         params["radiant_source"] = self.radiant_source
         params["u_factor"] = self.u_factor
-        params["radiant_flux"] = "incident"
+        params["radiant_flux"] = "net"
         return params
 
     def heat_flux_kw_m2(
@@ -1245,8 +1248,9 @@ class DefaultHeatFedModel:
 
         In the layer regime: h (T_g - T_s) / 1000 + q_ext, no eps sigma term
         of the gas at the head. With the INTEGRATED INTENSITY source,
-        q = f U + h (T_g - T_s) / 1000: U already holds the gas emission, so
-        the eps term is not added.
+        q = f U - sigma T_s^4 / 1000 + h (T_g - T_s) / 1000 (net, maintainer
+        decision on #221): U already holds the gas emission, so the eps term
+        is not added.
         """
         if self.regime == "layer":
             return self._layer_heat_flux_kw_m2(
@@ -1264,6 +1268,11 @@ class DefaultHeatFedModel:
             if integrated_intensity_kw_m2 is None
             else integrated_intensity_kw_m2
         )
+        skin_emission = (
+            STEFAN_BOLTZMANN_W_M2_K4
+            * (self.skin_temperature_celsius + _KELVIN) ** 4
+            / 1000.0
+        )
         return total_heat_flux_kw_m2(
             temperature_celsius,
             emissivity=0.0,
@@ -1271,7 +1280,8 @@ class DefaultHeatFedModel:
             skin_temperature_celsius=self.skin_temperature_celsius,
             external_flux_kw_m2=radiant_flux_from_integrated_intensity_kw_m2(
                 u, self.u_factor
-            ),
+            )
+            - skin_emission,
         )
 
     def _layer_heat_flux_kw_m2(
@@ -1326,11 +1336,28 @@ class DefaultHeatFedModel:
         """Return both the sampled input and its heat FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
         if self.method == "total-flux":
+            self._warn_missing_intensity_once(inputs)
             return inputs, self._total_flux_rate(inputs)
         if self.endpoint is None:
             return inputs, default_heat_fed_rate_per_minute(inputs)
         return inputs, endpoint_heat_fed_rate_per_minute(
             inputs.temperature_celsius, HEAT_ENDPOINTS[self.endpoint]
+        )
+
+    def _warn_missing_intensity_once(self, inputs: HeatFedInputs) -> None:
+        """Log once per model when U is missing, e.g. outside the FDS domain."""
+        if self.radiant_source != "integrated-intensity":
+            return
+        if self._warned_missing_intensity:
+            return
+        u = inputs.integrated_intensity_kw_m2
+        if u is not None and math.isfinite(u):
+            return
+        self._warned_missing_intensity = True
+        _logger.warning(
+            "An agent is outside the INTEGRATED INTENSITY slice (outside the "
+            "FDS domain) or U is not finite: its heat dose rate is zero there, "
+            "and U and q read NaN in the FED history. Logged once per run."
         )
 
     def advance(
