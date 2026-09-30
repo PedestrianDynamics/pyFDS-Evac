@@ -740,6 +740,27 @@ mesh nodes inside the subslice extent (midpoints of those nodes for
 cell-centred slices).&lt;/li>
 &lt;li>Returns &lt;code>subslice.data[t_index, i_index, j_index]&lt;/code>.&lt;/li>
 &lt;/ol>
+&lt;h3>Past the end of the FDS output&lt;span class="hx-absolute -hx-mt-20" id="past-the-end-of-the-fds-output">&lt;/span>
+&lt;a href="#past-the-end-of-the-fds-output" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The nearest timestep of a time past the last slice frame is the last
+frame, so without a check a run longer than the FDS run would walk its
+agents through frozen smoke. &lt;code>sample&lt;/code> therefore raises &lt;code>FdsHorizonError&lt;/code>
+(a &lt;code>ValueError&lt;/code>) when &lt;code>time_s&lt;/code> is more than one slice output interval
+(the largest spacing between frames; FDS clips the final frame at
+&lt;code>T_END&lt;/code>, so the last spacing can be shorter) past the last frame. The
+message names the quantity, the requested time and the last FDS time.
+The extinction, gas FED and heat FED fields pass this error on instead
+of treating it as an out-of-domain point. &lt;code>VisibilityModel&lt;/code> raises for a
+query past its last vismap time point, which is the first vismap step at
+or after the FDS end.&lt;/p>
+&lt;p>&lt;code>build_run_kwargs&lt;/code> checks the whole run at setup: a scenario
+&lt;code>max_simulation_time&lt;/code> more than one output interval past the last frame
+of any slice in &lt;code>--fds-dir&lt;/code> with at least two frames stops the run
+before it starts. Every such slice in the case counts, including slices
+the run does not read, and the check applies even when all agents would
+leave before &lt;code>T_END&lt;/code>.&lt;/p>
+&lt;p>&lt;code>--allow-fds-horizon-hold&lt;/code> (&lt;code>allow_horizon_hold=True&lt;/code> in Python) turns
+the setup check into a logged warning and holds the last frame in the
+samplers, logging one warning per sampler the first time it happens.&lt;/p>
 &lt;h3>Performance caches&lt;span class="hx-absolute -hx-mt-20" id="performance-caches">&lt;/span>
 &lt;a href="#performance-caches" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Three caches reduce per-call overhead on hot paths (for example, sampling
 along a line of sight where all points share the same timestep and

@@ -294,6 +294,11 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;td>Height of the horizontal slices that are read (&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.5 m away. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">FDS slice sampling&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--allow-fds-horizon-hold&lt;/code>&lt;/td>
+&lt;td>off&lt;/td>
+&lt;td>Let the run outlast the FDS output by holding the last slice frame, with a warning at setup and one per quantity. Without it, a &lt;code>max_simulation_time&lt;/code> more than one slice output interval past the last FDS frame stops the run at setup, and so does any smoke, FED, heat or sign-visibility sample past it. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/#past-the-end-of-the-fds-output">FDS slice sampling&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>Write the smoke history; columns on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#smoke-history">Outputs&lt;/a>.&lt;/td>
@@ -1777,7 +1782,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>simulationParams.max_simulation_time&lt;/code>&lt;/td>
 &lt;td>300 s&lt;/td>
-&lt;td>The run stops here. An incapacitated agent keeps a run going until this time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/td>
+&lt;td>The run stops here. An incapacitated agent keeps a run going until this time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>). With &lt;code>--fds-dir&lt;/code> it must not exceed the last FDS slice time by more than one output interval, unless &lt;code>--allow-fds-horizon-hold&lt;/code> is given (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340" target="_blank" rel="noopener">#340&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.model_type&lt;/code>&lt;/td>

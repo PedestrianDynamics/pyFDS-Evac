@@ -7662,6 +7662,11 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;td>Height of the horizontal slices that are read (&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.5 m away. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">FDS slice sampling&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--allow-fds-horizon-hold&lt;/code>&lt;/td>
+&lt;td>off&lt;/td>
+&lt;td>Let the run outlast the FDS output by holding the last slice frame, with a warning at setup and one per quantity. Without it, a &lt;code>max_simulation_time&lt;/code> more than one slice output interval past the last FDS frame stops the run at setup, and so does any smoke, FED, heat or sign-visibility sample past it. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/#past-the-end-of-the-fds-output">FDS slice sampling&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>Write the smoke history; columns on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#smoke-history">Outputs&lt;/a>.&lt;/td>
@@ -9770,7 +9775,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>simulationParams.max_simulation_time&lt;/code>&lt;/td>
 &lt;td>300 s&lt;/td>
-&lt;td>The run stops here. An incapacitated agent keeps a run going until this time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/td>
+&lt;td>The run stops here. An incapacitated agent keeps a run going until this time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>). With &lt;code>--fds-dir&lt;/code> it must not exceed the last FDS slice time by more than one output interval, unless &lt;code>--allow-fds-horizon-hold&lt;/code> is given (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340" target="_blank" rel="noopener">#340&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.model_type&lt;/code>&lt;/td>
@@ -15820,6 +15825,27 @@ mesh nodes inside the subslice extent (midpoints of those nodes for
 cell-centred slices).&lt;/li>
 &lt;li>Returns &lt;code>subslice.data[t_index, i_index, j_index]&lt;/code>.&lt;/li>
 &lt;/ol>
+&lt;h3>Past the end of the FDS output&lt;span class="hx-absolute -hx-mt-20" id="past-the-end-of-the-fds-output">&lt;/span>
+&lt;a href="#past-the-end-of-the-fds-output" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The nearest timestep of a time past the last slice frame is the last
+frame, so without a check a run longer than the FDS run would walk its
+agents through frozen smoke. &lt;code>sample&lt;/code> therefore raises &lt;code>FdsHorizonError&lt;/code>
+(a &lt;code>ValueError&lt;/code>) when &lt;code>time_s&lt;/code> is more than one slice output interval
+(the largest spacing between frames; FDS clips the final frame at
+&lt;code>T_END&lt;/code>, so the last spacing can be shorter) past the last frame. The
+message names the quantity, the requested time and the last FDS time.
+The extinction, gas FED and heat FED fields pass this error on instead
+of treating it as an out-of-domain point. &lt;code>VisibilityModel&lt;/code> raises for a
+query past its last vismap time point, which is the first vismap step at
+or after the FDS end.&lt;/p>
+&lt;p>&lt;code>build_run_kwargs&lt;/code> checks the whole run at setup: a scenario
+&lt;code>max_simulation_time&lt;/code> more than one output interval past the last frame
+of any slice in &lt;code>--fds-dir&lt;/code> with at least two frames stops the run
+before it starts. Every such slice in the case counts, including slices
+the run does not read, and the check applies even when all agents would
+leave before &lt;code>T_END&lt;/code>.&lt;/p>
+&lt;p>&lt;code>--allow-fds-horizon-hold&lt;/code> (&lt;code>allow_horizon_hold=True&lt;/code> in Python) turns
+the setup check into a logged warning and holds the last frame in the
+samplers, logging one warning per sampler the first time it happens.&lt;/p>
 &lt;h3>Performance caches&lt;span class="hx-absolute -hx-mt-20" id="performance-caches">&lt;/span>
 &lt;a href="#performance-caches" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Three caches reduce per-call overhead on hot paths (for example, sampling
 along a line of sight where all points share the same timestep and
