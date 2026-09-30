@@ -220,7 +220,7 @@ is a pyFDS-Evac default. Each new study adds a row.
 | Study | Curve type | Parameters | Stated or assumed |
 |---|---|---|---|
 | [The Schröder room](/docs/study-schroeder2020.md) | Steady from ignition | 60 kW: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m; flexible polyurethane foam | Assumed: Schröder et al. (2020) do not state the HRR |
-| [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | HRRPUA 1000 kW/m² on 2 m², so 2 MW at full ramp. Ramp fraction 0, 0.05, 0.40, 0.80, 1.00 at 0, 20, 40, 60, 90 s, then 1.00 to 300 s. Fuel `VINYL CHLORIDE`, heat of combustion 16.4 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
+| [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | 0, 100, 800, 1600, 2000 kW at 0, 20, 40, 60, 90 s; 2 MW to 300 s (HRRPUA 1000 kW/m² on 2 m²); fuel vinyl chloride, 16.4 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
 
 Both fires start at t = 0 with no incipient phase.
 
