@@ -59,6 +59,7 @@ module:
         - "routing.md"
         - "route-cost-gate.md"
         - "wayfinding.md"
+        - "study-*.md"
         - "testing-*.md"
     - source: ../docs
       target: content/docs/getting-started
@@ -84,6 +85,10 @@ module:
         - "web-gui.md"
         - "troubleshooting.md"
         - "howto-rset-ensemble.md"
+    - source: ../docs
+      target: content/docs/studies
+      includeFiles:
+        - "study-*.md"
     - source: ../docs/fds-sampling.md
       target: content/docs/implementation/fds-sampling.md
     # A group with a single page takes that page as its index.
