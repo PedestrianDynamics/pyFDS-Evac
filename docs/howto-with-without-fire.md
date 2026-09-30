@@ -327,7 +327,7 @@ For the same seed, RSET(pre) − pre − RSET(0) is exactly 0.00 s for U and C
 in every seed. That follows from how the run is built: the pre-movement is
 constant, everyone starts together, and nothing reacts to the fire. S adds
 28.95 s more than the pre-movement at 30 s and 61.75 s more at 60 s; R
-adds 24.4 s and 74.5 s (medians over seeds). That is not so in every
+adds 24.40 s and 74.50 s (medians over seeds). That is not so in every
 seed: one S seed adds −12.2 s at 30 s, because its run with no wait was
 slow (113.8 s). The fire grows while people wait, so a later
 start meets thicker smoke. An uncoupled run cannot show that: waiting

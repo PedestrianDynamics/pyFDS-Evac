@@ -449,7 +449,7 @@ Five sources of spread, on min DIFF for one door, capped, pre-movement 0:
 | Source | Size | How measured |
 |---|---|---|
 | Seeds | ±0.4 s | 95 % bootstrap CI of the per-seed min DIFF, −29.5 [−29.9, −29.1] s |
-| Per-agent random draws | 0.1 s; area 0.2 m² (one cell) | the same runs before and after [#361](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/361), which changed only how each agent's draws are seeded: −30.4 against −30.3 s, 6.4 against 6.2 m² |
+| Per-agent random draws | 0.1 s; area 0.2 m² (one cell) | the same versions and seeds, re-run before and after [#361](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/361), which changed only how each agent's draws are seeded: −30.4 against −30.3 s, 6.4 against 6.2 m² |
 | A tiny change of the fire | about 1 s | same grid, HRRPUA 166.87 against 166.7 kW/m²: −29.3 against −30.3 s |
 | FDS grid | about 5 s | 0.2 m against 0.1 m: −30.3 against −25.3 s |
 | Door-flow model | about 33 s | capped against uncapped: −30.3 against +2.5 s |
