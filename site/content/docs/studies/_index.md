@@ -15,7 +15,7 @@ and one to
 
 | Study | Question | Scenario | Fire | Status |
 |---|---|---|---|---|
-| [ASET-RSET maps: the Schröder room](/docs/study-schroeder2020.md) | Where in the room does smoke arrive before the last person leaves? | 30 × 10 × 3 m room, one door, 100 people; after Schröder et al. (2020) | 60 kW constant, polyurethane foam; our assumption | Done. Maps are built by a script; built-in maps are [#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210) |
+| [ASET-RSET maps after Schröder et al. (2020)](/docs/study-schroeder2020.md) | Where in the room does smoke arrive before the last person leaves? | 30 × 10 × 3 m room, one door, 100 people; after Schröder et al. (2020) | 60 kW constant, as in the authors' reference implementation; polyurethane foam | Done. Maps are built by a script; built-in maps are [#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210) |
 | [Evacuation with and without the fire](/docs/howto-with-without-fire.md) | Is the RSET from a run without the fire conservative against a run coupled to the fire? | T-junction, 100 people, pre-movement 0, 30 or 60 s | PVC (FDS fuel: vinyl chloride monomer); ramp to 2 MW at 90 s, then steady | Done |
 
 Status is one of: Planned, In progress, Done.

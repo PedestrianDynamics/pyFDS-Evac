@@ -593,9 +593,11 @@ page.
 
 - **One fire with no margin.** Here, at every point, the visibility limit
   is met before the last person gets out, in every arm. Schröder et al.
-  (2020, §4) expect the fire's effect on route choice and speed to play a secondary role only
-  while the safety margin is well above the limit. That is the regime in
-  which practice decides, and this study does not test it.
+  (2020, §4) state that the effects of smoke, heat and toxic gases on route
+  choice and walking speed "should play a subordinate role as long as the
+  safety margin is sufficiently greater than the limiting state". In our
+  view, the regime near the limit is where practice decides, and this study
+  does not test it.
 - **The size of the S − U and R − U gaps is not measured behaviour.** The
   smoke-speed law is fitted to Frantzich and Nilsson's data, *K* ≈ 1.9–7.4
   1/m (read from their Fig. 14; see
@@ -684,5 +686,5 @@ page.
 - [How do I get the egress time from an ensemble?](howto-rset-ensemble.md)
   for RSET over many seeds.
 - [ASET and RSET](/fundamentals/aset-rset.md) for the concepts.
-- [The Schröder room](study-schroeder2020.md): arm U only, as ASET − RSET
+- [ASET-RSET maps after Schröder et al. (2020)](study-schroeder2020.md): arm U only, as ASET − RSET
   maps.
