@@ -95,6 +95,7 @@ PATTERN_COLORS = {
     "direct: S-CP3-exit": FULL,
     "tour, then exit": "#fee090",
     "CP2 skipped: sign hidden at CP1": "#80cdc1",
+    "CP1 and CP2 skipped: CP1 not learnt": "#dfc27d",
     "tour, turned back at CP3 (#250)": TURN,
 }
 # discovery grids: one orange ramp, one dash per grid; 0.05 m is the reference
@@ -500,6 +501,8 @@ def route_class(seq, turned_back, skipped):
         return "direct: S-CP3-exit"
     if turned_back:
         return "tour, turned back at CP3 (#250)"
+    if "CP3" in seq and "CP1" not in seq[: seq.index("CP3")]:
+        return "CP1 and CP2 skipped: CP1 not learnt"
     if skipped:
         return "CP2 skipped: sign hidden at CP1"
     return "tour, then exit"
@@ -731,7 +734,7 @@ def _segments(xy, dest):
     return segs, colors
 
 
-def plot_paths(out, walkable, polys, runs, titles, n_turned):
+def plot_paths(out, walkable, polys, runs, titles, n_turned, n_west):
     fig, axes = plt.subplots(
         1, 2, figsize=(11.0, 5.5), dpi=150, gridspec_kw=dict(wspace=0.04)
     )
@@ -770,7 +773,7 @@ def plot_paths(out, walkable, polys, runs, titles, n_turned):
     axes[1].text(
         3.6,
         8.5,
-        "every agent explores\nthe west rooms first",
+        f"{n_west} agents explore\nthe west rooms first",
         ha="center",
         va="center",
         fontsize=9,
@@ -1266,6 +1269,10 @@ def main():
             runs["discovery"] = dict(traj=traj, dest=dest, why=why)
             main_patrols = r["patrols"]
             n_turned = len(wanderers)
+            n_west = sum(
+                bool({"CP1", "CP2"} & set(node_sequence(routes, a)))
+                for a in routes["agent_id"].unique()
+            )
     fine = sorted(last_out)[:2]
     print(
         "C6 grid convergence: last out "
@@ -1281,7 +1288,7 @@ def main():
         "full": "full: knows the plan",
         "discovery": f"discovery: learns it ({MAIN_CELL:g} m grid)",
     }
-    plot_paths(OUT, walkable, polys, runs, titles, n_turned)
+    plot_paths(OUT, walkable, polys, runs, titles, n_turned, n_west)
     plot_door(OUT, walkable, polys, geo, signs, main_patrols, grid_tol(MAIN_CELL))
     refs = {
         f"L/v0, full: {l_full:.1f} m / {v0:g} m/s = {l_full / v0:.0f} s": (

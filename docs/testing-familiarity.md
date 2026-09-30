@@ -12,7 +12,7 @@ aliases: [/docs/testing-familiarity/, /models/verification/testing-familiarity/]
 | **Level** | Coupled: two full runs in clear air (a uniform zero-extinction field), no FDS |
 | **Asset** | `assets/familiarity_test_full`, `assets/familiarity_test_discovery` |
 | **Expected value from** | the plan alone: shortest paths, sight lines to the signs and the wiring rule, computed without pyFDS-Evac |
-| **Status** | criteria 1–5 pass on the 0.1, 0.05 and 0.025 m sight grids; the `run.py` default of 0.25 m does not resolve the walls; criterion 6 fails: the discovery egress time is not grid-converged ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168), [#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)) |
+| **Status** | criteria 1–3 and 5 pass on the 0.1, 0.05 and 0.025 m sight grids; the `run.py` default of 0.25 m does not resolve the walls; criterion 4 fails as written: 4 agents skip CP1 as well, which it does not allow for; criterion 6 fails: the discovery egress time is not grid-converged ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168), [#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)) |
 
 ![Two copies of the same plan side by side. Left, 20 fully familiar agents walk straight to the one door in the partition and out. Right, 20 discovery agents first explore the dead-end rooms in the west, then walk to the door; some turn back at it and patrol. Agents are coloured by the node they are heading for; patrolling agents have a thick ring](/images/verification/familiarity.gif)
 
@@ -130,39 +130,43 @@ the agent could see.
 
 ## Result
 
-![Walked paths of the 20 agents on the two plans, coloured by the node each agent is heading for, patrols dashed. Full agents go straight to CP3 and the exit; discovery agents walk CP0, CP1, CP2, back through CP0 to CP3 and the exit; seven turn back at CP3's door and patrol](/images/verification/familiarity_paths.png)
+![Walked paths of the 20 agents on the two plans, coloured by the node each agent is heading for, patrols dashed. Full agents go straight to CP3 and the exit; 16 discovery agents walk CP0, CP1, CP2, back through CP0 to CP3 and the exit, 4 go from CP0 straight to CP3; two turn back at CP3's door and patrol](/images/verification/familiarity_paths.png)
 
-Full agents never enter the west rooms. Discovery agents all explore them
-first, as predicted. The dashed legs are patrols: agents that turned back at
-CP3's door.
+Full agents never enter the west rooms. 16 of the 20 discovery agents explore
+them first, as predicted. The other 4 (agents 1, 6, 7 and 17) take CP3 from
+CP0 at 1–9 s. They register arrival at CP0 at x ≈ 13.5 m, east of its door,
+within 0.7 m of a random point in its box
+([#69](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69)). CP1's
+sign is not in sight from there, so CP1 is never learnt and CP3 is their only
+frontier. The dashed legs are patrols: agents that turned back at CP3's door.
 
-![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery mostly the predicted tour, two skipping CP2 because its sign was hidden, and three to seven turning back at CP3](/images/verification/familiarity_egress.png)
+![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery mostly the predicted tour, four skipping CP1 and CP2 on the fine grids, and two to seven turning back at CP3](/images/verification/familiarity_egress.png)
 
 | Check (0.05 m grid) | Expected | Simulated |
 |---|---|---|
 | full: map at t = 0; later changes | 6 nodes, 11 edges; 0 | 20 / 20; 0 |
 | full: agents via CP3 only; route changes | 20 / 20; 0 | 20 / 20; 0 |
-| full: walked / shortest path | ≥ 1 | 1.03–1.14 |
-| full: first agent out (sanity check) | near \(t_{\text{ref}}\) = 21.1 s | 20.3 s |
-| full: last agent out | no reference | 33.9 s; the door (y = 13.05 m) passes 20 agents in 7.7–21.3 s, 1.40 persons/s or 1.17 persons/(s·m) of door width |
+| full: walked / shortest path | ≥ 1 | 1.02–1.18 |
+| full: first agent out (sanity check) | near \(t_{\text{ref}}\) = 21.1 s | 20.5 s |
+| full: last agent out | no reference | 34.5 s; the door (y = 13.05 m) passes 20 agents in 7.7–21.8 s, 1.35 persons/s or 1.13 persons/(s·m) of door width |
 | discovery: map at t = 0 | {S, CP0, CP3} | 20 / 20 |
 | discovery: first target | CP0, 20 / 20 | 20 / 20 |
-| discovery: nodes learnt later | each a neighbour of a known node, its sign in sight | 59 of 59 |
-| discovery: tour up to CP3 | CP0 → CP1 → CP2 → CP3 where CP2's sign is legible at CP1 | 18 / 20; agents 9 and 12 reach CP1 behind the wall stub, where CP2's sign is hidden, and go to CP3 first |
-| discovery: patrols started with the exit in sight | 0 | 0 of 21; those at CP3 at y = 12.68–13.01 m |
-| discovery: first agent out (sanity check) | near \(t_{\text{ref}}\) = 40.0 s | 46.7 s |
-| discovery: last agent out | no reference | 158.5 s; 7 agents turned back at CP3 |
+| discovery: nodes learnt later | each a neighbour of a known node, its sign in sight | 52 of 52 |
+| discovery: tour up to CP3 | CP0 → CP1 → CP2 → CP3 where CP2's sign is legible at CP1 | 16 / 20; agents 1, 6, 7 and 17 go from CP0 to CP3: CP1 was never learnt, its sign not certainly legible where they were (see above) |
+| discovery: patrols started with the exit in sight | 0 | 0 of 6; those at CP3 at y = 12.84–12.88 m |
+| discovery: first agent out (sanity check) | near \(t_{\text{ref}}\) = 40.0 s | 27.5 s, one of the 4 agents that skip the west rooms |
+| discovery: last agent out | no reference | 109.7 s; 2 agents turned back at CP3 |
 
 On other grids:
 
 | Sight grid | Cells across a 0.1 m wall | Last out | Turned back at CP3 | Last out, never turned back |
 |---|---|---|---|---|
-| 0.25 m | 0 | 88.5 s | 0 | 88.5 s |
-| 0.1 m | 1 | 138.2 s | 3 | 83.6 s |
-| 0.05 m | 2 | 158.5 s | 7 | 95.7 s |
-| 0.025 m | 4 | 200.7 s | 4 | 84.5 s |
+| 0.25 m | 0 | 68.1 s | 0 | 68.1 s |
+| 0.1 m | 1 | 226.0 s | 7 | 91.0 s |
+| 0.05 m | 2 | 109.7 s | 2 | 72.5 s |
+| 0.025 m | 4 | 149.8 s | 2 | 72.5 s |
 
-The agents that never turn back are out by 84–96 s on every grid. The grid
+The agents that never turn back are out by 68–91 s on every grid. The grid
 dependence is the turn-back at CP3
 ([#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)). At
 0.25 m no cell centre falls inside the walls, so the sight grid sees through
@@ -195,8 +199,8 @@ three rings.
 
 **Precondition.** The grid resolves the walls: at least one cell centre lies
 inside each 0.1 m wall. At 0.25 m it does not, and the criteria below are not
-evaluated; there, with no tolerance, 33 learnt nodes had their sign hidden in
-exact geometry (13 of them CP2, learnt from the next room).
+evaluated; there, with no tolerance, 35 learnt nodes had their sign hidden in
+exact geometry (11 of them CP2, learnt from the next room).
 
 1. **Full.** Every full agent knows all 6 nodes and the 11 wired edges at
    t = 0 and learns nothing later; every trajectory enters CP3's box and none
@@ -222,16 +226,21 @@ exact geometry (13 of them CP2, learnt from the next room).
 
 | Grid | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
-| 0.1 m | pass | pass | pass | pass (2 skips explained) | pass | – |
-| 0.05 m | pass | pass | pass | pass (2 skips explained) | pass | **fails**: 158.5 vs 200.7 s |
-| 0.025 m | pass | pass | pass | pass (2 skips explained) | pass | – |
+| 0.1 m | pass | pass | pass | **fails**: 4 agents skip CP1 | pass | – |
+| 0.05 m | pass | pass | pass | **fails**: 4 agents skip CP1 | pass | **fails**: 109.7 vs 149.8 s |
+| 0.025 m | pass | pass | pass | **fails**: 4 agents skip CP1 | pass | – |
+
+Criterion 4 allows a skip of CP2 only. The 4 agents that skip CP1 as well
+never learnt CP1, so they followed the frontier rule on the map they had;
+their skip is not covered by the criterion as written. No agent skips CP2
+alone.
 
 With no tolerance (*T* = 0), the results show how close to the edge some
-decisions fall. Criterion 3 flags 2 learnt nodes at 0.1 m and 1 at 0.05 m.
-Criterion 5 flags 1 patrol at 0.1 m and 1 at 0.05 m. Criterion 4 is
-unchanged. Each flag lies within 0.04 m of the edge of the legible region
-(the exit sign at y ≈ 13.01 m in CP3's door, CP2's sign near CP1), well
-inside *T*: there the grid decides, and exact geometry cannot overrule it.
+decisions fall. Criterion 3 flags 3 learnt nodes at 0.1 m, 1 at 0.05 m and
+2 at 0.025 m. Criterion 5 flags no patrol. Criterion 4 is unchanged. Each
+flag lies within 0.09 m of the edge of the legible region, inside *T* (CP2's
+sign near CP1 on every grid, and the exit sign in CP3's door at 0.025 m):
+there the grid decides, and exact geometry cannot overrule it.
 
 ## Run it yourself
 
@@ -256,10 +265,9 @@ uv run python scripts/verification/familiarity_figures.py --data <out>
 ```
 
 Each run takes seconds. The script prints every number on this page. The
-runs used here (main at `9bd5c28`, macOS arm64) are in the project's data
-folder, `fds-evac-data/familiarity_test_discovery/evac/`. The map histories
-come from reruns whose trajectories and route decisions are identical to the
-stored runs.
+runs used here (commit `8c0c02d`, macOS arm64) are in the project's data
+folder, `fds-evac-data/familiarity_test_discovery/evac_8c0c02d/`, made with
+the commands above.
 
 Reruns on the same machine reproduce these numbers to the last digit. Across
 platforms they need not
@@ -285,7 +293,7 @@ movie.
   deck; a warning for grids coarser than the walls is proposed in
   [#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168).
 - **No reference for the egress times.** The full run's last agent is out at
-  33.9 s. Its door passes 1.40 persons/s (1.17 persons/(s·m) of the 1.2 m
+  34.5 s. Its door passes 1.35 persons/s (1.13 persons/(s·m) of the 1.2 m
   door), measured where the agents cross the door's mid-line. No
   hand-calculated door flow is compared here.
 - **One exit, clear air.** Choosing between several known exits, and learning
