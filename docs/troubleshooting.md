@@ -50,8 +50,6 @@ them. The deck-side causes (missing slices, `&REAC` yields) are explained on
 
 ## Known pitfalls
 
-- **One scenario per process for studies.** Run each seed in its own
-  process ([why](limitations.md#reproducibility), #198).
 - **Tied routes and `PYTHONHASHSEED`.** Set `PYTHONHASHSEED` to a fixed value
   for bit-identical reruns of discovery agents
   ([why](limitations.md#reproducibility), #199).

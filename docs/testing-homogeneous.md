@@ -12,7 +12,7 @@ aliases: [/docs/testing-homogeneous/, /models/verification/testing-homogeneous/]
 | **Level** | FDS case: a full run on FDS output |
 | **Asset** | `assets/fed_incap_co_2000ppm` |
 | **Expected value from** | hand calculation, and FDS's own `FED` device |
-| **Status** | passes |
+| **Status** | passes: criteria 1 and 2, and criterion 3 pooled over 10 seeds (D = 0.023 against 0.043) |
 
 ![100 agents walk a loop in a room filled with 2000 ppm CO; their colour shows the dose, and a cross marks an incapacitated agent](/images/verification/co_room.gif)
 
@@ -67,8 +67,8 @@ $$
   stay in the room and keep moving; the field is sampled at each agent's
   position every second.
 - **Runs:** once with `--incapacitation-mode deterministic` (the default,
-  given explicitly), once with
-  `--incapacitation-mode probabilistic`.
+  given explicitly), and with `--incapacitation-mode probabilistic` once
+  for each of the seeds 42 to 51.
 
 ## Expected
 
@@ -95,14 +95,14 @@ All 100 agents follow the hand calculation to within 1.4 × 10⁻¹⁴, round-of
 in the last digit. FDS's own device lies up to 7.7 × 10⁻⁵ above it at 1000 s,
 a relative difference of 6 × 10⁻⁵.
 
-![Fraction of agents incapacitated against time in the probabilistic run, with the expected log-normal curve and its 95 % band](/images/verification/co_room_incapacitation.png)
+![Fraction of agents incapacitated against time, pooled over the probabilistic runs of 10 seeds (grey: each seed alone), with the expected log-normal curve and the 95 % band for 1000 agents](/images/verification/co_room_incapacitation.png)
 
 | Check | Expected | Simulated |
 |---|---|---|
 | FED of every agent against the hand calculation | equal | max difference 1.4 × 10⁻¹⁴ |
 | deterministic: incapacitation time | 785.49 s | all 100 agents at 786.0 s (first FED update after *t*\*) |
-| probabilistic: agents stopped by 999 s | 60.1 % | 61 of 100 |
-| probabilistic: largest gap between the curves | ≤ 0.136 | 0.048 |
+| probabilistic, 10 seeds pooled: agents stopped by 999 s | 60.1 % | 599 of 1000 |
+| probabilistic, 10 seeds pooled: largest gap between the curves | ≤ 0.043 | 0.023 (p = 0.68) |
 
 ## Pass criteria
 
@@ -111,10 +111,15 @@ a relative difference of 6 × 10⁻⁵.
 2. **Deterministic stop.** Every agent stops at the first FED update at or
    after *t*\*: \(t^{*} \le t_i < t^{*} + \Delta t\), with the update interval
    Δ*t* = 1 s (`--smoke-update-interval`).
-3. **Probabilistic stop.** The empirical fraction of stopped agents stays
-   within the 95 % Kolmogorov–Smirnov band of *F*(*t*),
-   \(1.36/\sqrt{n} = 0.136\) for *n* = 100 agents. Agents whose threshold
-   lies beyond the end of the run are counted as not yet stopped.
+3. **Probabilistic stop.** The empirical fraction of stopped agents, pooled
+   over the probabilistic runs of seeds 42 to 51, stays within the 95 %
+   Kolmogorov–Smirnov band of *F*(*t*), \(1.36/\sqrt{n} = 0.043\) for the
+   pooled *n* = 1000 agents. Agents whose threshold lies beyond the end of
+   the run are counted as not yet stopped. Pooled, D = 0.023 (p = 0.68), so
+   it passes. Each seed alone, against its own band of 0.136 for *n* = 100,
+   gives D = 0.038 to 0.141 (median 0.067); one of the ten, seed 42 with
+   D = 0.141, leaves its band, as one seed in twenty is expected to at the
+   5 % level.
 
 ## Run it yourself
 
@@ -127,23 +132,34 @@ cd assets/fed_incap_co_2000ppm
 mpiexec -n 4 fds fed_incap_co_2000ppm.fds
 ```
 
-Then run pyFDS-Evac in both modes and draw the figures:
+Then run pyFDS-Evac in both modes, the probabilistic one for each seed,
+and draw the figures. `<data>` holds `fds/` (the FDS output) and `evac/`:
 
 ```bash
-for mode in deterministic probabilistic; do
+uv run python run.py --scenario assets/fed_incap_co_2000ppm \
+  --fds-dir <data>/fds --incapacitation-mode deterministic \
+  --output-sqlite <data>/evac/deterministic/run.sqlite \
+  --output-fed-history <data>/evac/deterministic/fed_history.csv
+for seed in $(seq 42 51); do
   uv run python run.py --scenario assets/fed_incap_co_2000ppm \
-    --fds-dir <fds output> --incapacitation-mode $mode \
-    --output-sqlite <out>/$mode/run.sqlite \
-    --output-fed-history <out>/$mode/fed_history.csv
+    --fds-dir <data>/fds --incapacitation-mode probabilistic --seed $seed \
+    --output-sqlite <data>/evac/probabilistic_seeds/$seed/run.sqlite \
+    --output-fed-history <data>/evac/probabilistic_seeds/$seed/fed_history.csv
 done
-uv run python scripts/verification/co_room_figures.py --data <out>
+uv run python scripts/verification/co_room_figures.py --data <data>
 ```
+
+The animation shows the run of the lowest seed.
 
 The evacuation itself takes about three minutes. Before it starts, the first
 run builds the sign-visibility cache for the 25 checkpoints at every FDS time,
 which takes much longer
 ([#236](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/236)); add
-`--vis-cache <file>` to both runs so the second one reuses it.
+`--vis-cache <file>` to every run so the later ones reuse it.
+
+The numbers and figures on this page come from these commands, stored in
+`fds-evac-data/fed_incap_co_2000ppm/evac_353/`: the deterministic run at
+`fbe8878`, the ten probabilistic runs at `d22b6dc`.
 
 ## Limits
 

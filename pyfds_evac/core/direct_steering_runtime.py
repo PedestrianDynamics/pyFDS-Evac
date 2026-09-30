@@ -397,10 +397,11 @@ def advance_path_target(wait_info):
         wait_info["state"] = "idle"
         return
 
+    # choice_seed is the agent's own next-stage stream; states built without
+    # it share base_seed with the target and wait draws.
+    choice_seed = wait_info.get("choice_seed", wait_info.get("base_seed", 0))
     choose_rng = random.Random(
-        int(wait_info.get("base_seed", 0))
-        + int(wait_info.get("step_index", 0)) * 131
-        + 53
+        int(choice_seed) + int(wait_info.get("step_index", 0)) * 131 + 53
     )
     next_stage = _weighted_choice(next_candidates, choose_rng)
 

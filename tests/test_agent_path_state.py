@@ -2,6 +2,7 @@
 
 from shapely.geometry import box
 
+from pyfds_evac.core.agent_seed import steering_seeds
 from pyfds_evac.core.simulation_init import build_agent_path_state
 
 # A single journey listing every stage, as the scenario loader emits it.  The
@@ -40,6 +41,7 @@ def _state_for(spawn_origin, agent_id, position):
         agent_id=agent_id,
         initial_position=position,
         spawn_origin=spawn_origin,
+        spawn_key=("initial", agent_id),
     )
 
 
@@ -134,3 +136,41 @@ class TestFlatStageListingWithCrossings:
         choices = self._state()["path_choices"]
 
         assert choices["jps-distributions_0"] == [("c0", 100.0)]
+
+
+class TestSeedingFollowsTheSpawnKey:
+    """Draws are seeded from the spawn key; the JuPedSim id is ignored (#353)."""
+
+    def _state(self, agent_id, spawn_key):
+        return build_agent_path_state(
+            variant_data={"actual_stages": _ALL_STAGES},
+            journey_key="journey_0",
+            transitions=_transitions(),
+            direct_steering_info=_direct_steering_info(),
+            waypoint_routing={},
+            seed=1,
+            agent_id=agent_id,
+            initial_position=(1.0, 1.0),
+            spawn_origin="jps-distributions_0",
+            spawn_key=spawn_key,
+        )
+
+    def test_same_key_draws_the_same_whatever_the_id(self):
+        assert self._state(1, ("initial", 0)) == self._state(99, ("initial", 0))
+
+    def test_another_key_draws_another_target(self):
+        first = self._state(1, ("initial", 0))
+        second = self._state(1, ("initial", 1))
+        assert first["target"] != second["target"]
+        assert first["base_seed"] != second["base_seed"]
+
+    def test_later_draws_get_their_own_streams(self):
+        state = self._state(1, ("initial", 0))
+        assert steering_seeds(1, ("initial", 0)) == {
+            key: state[key] for key in ("base_seed", "wait_seed", "choice_seed")
+        }
+
+    def test_without_a_key_the_id_seeds_as_before(self):
+        state = self._state(4, None)
+        assert state["base_seed"] == 1 + 4 * 9973
+        assert "wait_seed" not in state

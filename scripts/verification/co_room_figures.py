@@ -24,16 +24,19 @@ run. The expected dose is a hand calculation that uses no pyFDS-Evac code:
 with the O2 term zero above 20 % O2. C, C_CO2 and O2 are read from the FDS
 slices at z = 1.5 m. The deterministic run stops every agent at FED >= 1, so
 all incapacitation times must lie within one FED update of t*. The
-probabilistic run draws one threshold per agent from a log-normal with median
+probabilistic runs draw one threshold per agent from a log-normal with median
 1 and sigma 0.94; since FED is linear in t, the fraction incapacitated by t
-is Phi(ln(t / t*) / 0.94), checked against the KS 95 % band 1.36 / sqrt(n).
+is Phi(ln(t / t*) / 0.94). The runs of all seeds are pooled, and the pooled
+fraction is checked against the KS 95 % band 1.36 / sqrt(n), n the pooled
+agent count; the distance of each seed alone is printed as a spread.
 
 Run from the repository root::
 
     uv run python scripts/verification/co_room_figures.py --data DIR
 
-``DIR`` holds ``fds/`` (FDS output) and ``evac/{deterministic,probabilistic}/``
-(``fed_history.csv``). Writes ``co_room_setup.png``, ``co_room_fed.png``,
+``DIR`` holds ``fds/`` (FDS output), ``evac/deterministic/`` and
+``evac/probabilistic_seeds/<seed>/`` (``fed_history.csv``); the animation
+shows the lowest seed. Writes ``co_room_setup.png``, ``co_room_fed.png``,
 ``co_room_incapacitation.png`` and ``co_room.gif`` to
 ``site/static/images/verification/``.
 """
@@ -348,8 +351,10 @@ def plot_fed(out, det, devc, rate_s, t_star, t_cross_fds, resid_max):
     plt.close(fig)
 
 
-def plot_incapacitation(out, t_inc, n, t_end, t_star, t_det, d_ks, band):
-    """Figure 3: empirical CDF of incapacitation times against the log-normal."""
+def plot_incapacitation(out, t_runs, t_end, t_star, t_det, d_ks, band, p_ks):
+    """Figure 3: pooled empirical CDF of incapacitation times against the log-normal."""
+    t_inc = np.concatenate(t_runs)
+    n = t_inc.size
     fig, ax = plt.subplots(figsize=(7.0, 4.4), dpi=150)
     t = np.linspace(1.0, t_end, 600)
     model = phi(np.log(t / t_star) / SIGMA)
@@ -363,6 +368,17 @@ def plot_incapacitation(out, t_inc, n, t_end, t_star, t_det, d_ks, band):
         zorder=1,
     )
     ax.plot(t, model, color=HAND, lw=1.8, ls="--", zorder=3)
+    for run in t_runs:
+        hit = np.sort(run[np.isfinite(run)])
+        ax.step(
+            np.concatenate([[0.0], hit, [t_end]]),
+            np.concatenate([[0.0], np.arange(1, hit.size + 1), [hit.size]]) / run.size,
+            where="post",
+            color=AGENT,
+            lw=0.6,
+            alpha=0.6,
+            zorder=2,
+        )
     hit = np.sort(t_inc[np.isfinite(t_inc)])
     k = hit.size
     ax.step(
@@ -377,16 +393,19 @@ def plot_incapacitation(out, t_inc, n, t_end, t_star, t_det, d_ks, band):
     ax.text(
         t_det - 10,
         0.72,
-        f"deterministic run:\nall {n} agents at {t_det:.0f} s",
+        f"deterministic run:\nall agents at {t_det:.0f} s",
         ha="right",
         va="top",
         fontsize=8.5,
         color=TEXT,
     )
+    verdict = "inside the band" if d_ks <= band else "outside the band"
+    sign = "≤" if d_ks <= band else ">"
     ax.text(
         0.02,
         0.97,
-        f"KS distance D = {d_ks:.3f} < {band:.3f} = 1.36/√{n}: inside the band\n"
+        f"pooled KS distance D = {d_ks:.3f} {sign} {band:.3f} = 1.36/√{n},\n"
+        f"p = {p_ks:.2f}: {verdict};\n"
         f"{k} of {n} incapacitated by the end of the run ({t_end:.0f} s);\n"
         f"the rest are right-censored, as the model expects",
         transform=ax.transAxes,
@@ -395,7 +414,14 @@ def plot_incapacitation(out, t_inc, n, t_end, t_star, t_det, d_ks, band):
         color=TEXT,
     )
     handles = [
-        Line2D([0], [0], color="#1f253f", lw=1.4, label="probabilistic run (n = 100)"),
+        Line2D(
+            [0],
+            [0],
+            color="#1f253f",
+            lw=1.4,
+            label=f"probabilistic, {len(t_runs)} seeds pooled (n = {n})",
+        ),
+        Line2D([0], [0], color=AGENT, lw=0.6, label="one seed each"),
         Line2D(
             [0],
             [0],
@@ -404,7 +430,7 @@ def plot_incapacitation(out, t_inc, n, t_end, t_star, t_det, d_ks, band):
             ls="--",
             label=f"Φ(ln(t / t*) / {SIGMA}), t* = {t_star:.1f} s",
         ),
-        Patch(fc=HAND, alpha=0.15, label="KS 95 % band"),
+        Patch(fc=HAND, alpha=0.15, label=f"KS 95 % band, n = {n}"),
         Line2D([0], [0], color=DETERMINISTIC, lw=1.2, ls="-.", label="deterministic"),
     ]
     ax.legend(handles=handles, loc="lower right", fontsize=8, **LEGEND)
@@ -484,6 +510,17 @@ def render_gif(out, prob, room, cfg, n, step_s, fps):
     return len(picks)
 
 
+def ks_p_value(d, n):
+    """Asymptotic Kolmogorov p-value of distance d for n samples."""
+    lam = d * math.sqrt(n)
+    return float(
+        2.0
+        * sum(
+            (-1) ** (k - 1) * math.exp(-2.0 * k * k * lam * lam) for k in range(1, 101)
+        )
+    )
+
+
 def ks_distance(t_inc, n, t_end, t_star):
     """Sup |F_n - F| on [0, t_end], F_n counting over all n agents."""
     hit = np.sort(t_inc[np.isfinite(t_inc)])
@@ -500,8 +537,8 @@ def main():
     Parameters
     ----------
     --data : path, optional
-        Directory with ``fds/`` and ``evac/{deterministic,probabilistic}/``.
-        Defaults to the sciebo copy of ``fed_incap_co_2000ppm``.
+        Directory with ``fds/``, ``evac/deterministic/`` and
+        ``evac/probabilistic_seeds/<seed>/``.
 
     Saves
     -----
@@ -510,16 +547,16 @@ def main():
     site/static/images/verification/co_room_fed.png
         150 dpi PNG, FED against time with residuals.
     site/static/images/verification/co_room_incapacitation.png
-        150 dpi PNG, empirical CDF of incapacitation times with KS band.
+        150 dpi PNG, pooled empirical CDF of incapacitation times with KS band.
     site/static/images/verification/co_room.gif
-        Animation of the probabilistic run.
+        Animation of the probabilistic run of the lowest seed.
     """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
         "--data",
         type=Path,
         required=True,
-        help="directory with fds/ and evac/{deterministic,probabilistic}/",
+        help="directory with fds/, evac/deterministic/ and evac/probabilistic_seeds/",
     )
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -550,15 +587,25 @@ def main():
 
     # --- Data: pyFDS-Evac runs ---
     det = load_history(args.data / "evac" / "deterministic" / "fed_history.csv")
-    prob = load_history(args.data / "evac" / "probabilistic" / "fed_history.csv")
+    seed_dirs = sorted(
+        (args.data / "evac" / "probabilistic_seeds").iterdir(),
+        key=lambda d: int(d.name),
+    )
+    probs = {int(d.name): load_history(d / "fed_history.csv") for d in seed_dirs}
+    prob = probs[min(probs)]
     dt = np.diff(np.sort(det["time_s"].unique()))
     t_det = first_incapacitation(det)
-    t_prob = first_incapacitation(prob)
+    t_runs = [first_incapacitation(h) for h in probs.values()]
+    t_ends = {float(h["time_s"].max()) for h in probs.values()}
+    t_end = min(t_ends)
+    t_prob = np.concatenate(t_runs)
+    t_prob[t_prob > t_end] = np.nan
     n = t_prob.size
-    t_end = float(prob["time_s"].max())
     det_resid = np.abs(det["fed_cumulative"] - rate_s * det["time_s"])
     d_ks = ks_distance(t_prob, n, t_end, t_star)
     band = 1.36 / math.sqrt(n)
+    p_ks = ks_p_value(d_ks, n)
+    d_seed = {s: ks_distance(t, t.size, t_end, t_star) for s, t in zip(probs, t_runs)}
 
     print(
         f"CO    = {c_ppm:.4f} ppm (min {co.min() * 1e6:.4f}, max {co.max() * 1e6:.4f})"
@@ -570,7 +617,9 @@ def main():
     print(
         f"FDS FED_center = 1 at {t_cross_fds:.2f} s; max |FDS - hand| = {fds_resid:.2e}"
     )
-    for label, hist in (("deterministic", det), ("probabilistic", prob)):
+    for label, hist in [("deterministic", det)] + [
+        (f"probabilistic seed {s}", h) for s, h in probs.items()
+    ]:
         dups = hist.duplicated(["time_s", "agent_id"]).sum()
         last = hist.groupby("agent_id")["time_s"].max()
         print(
@@ -587,9 +636,24 @@ def main():
         f"t - t* = {np.nanmin(t_det) - t_star:+.2f} to {np.nanmax(t_det) - t_star:+.2f} s"
     )
     print(f"max |FED_agent - FED_hand| (deterministic) = {det_resid.max():.3e}")
+    print(f"probabilistic run end times: {sorted(t_ends)} s")
+    for s, t in zip(probs, t_runs):
+        b = 1.36 / math.sqrt(t.size)
+        print(
+            f"seed {s}: {np.isfinite(t).sum()} / {t.size} incapacitated, "
+            f"KS D = {d_seed[s]:.4f} (band {b:.4f}, p = {ks_p_value(d_seed[s], t.size):.3f})"
+        )
+    ds = np.array(list(d_seed.values()))
+    b1 = 1.36 / math.sqrt(t_runs[0].size)
     print(
-        f"probabilistic: {np.isfinite(t_prob).sum()} / {n} incapacitated by {t_end:.0f} s "
-        f"(model {phi(np.log(t_end / t_star) / SIGMA):.3f}); KS D = {d_ks:.4f}, band {band:.4f}"
+        f"per-seed D: min {ds.min():.4f}, median {np.median(ds):.4f}, "
+        f"max {ds.max():.4f}; {(ds > b1).sum()} of {ds.size} above {b1:.4f}"
+    )
+    print(
+        f"pooled ({len(t_runs)} seeds): {np.isfinite(t_prob).sum()} / {n} "
+        f"incapacitated by {t_end:.0f} s "
+        f"(model {phi(np.log(t_end / t_star) / SIGMA):.3f}); KS D = {d_ks:.4f}, "
+        f"band {band:.4f}, p = {p_ks:.3f}; passes: {d_ks <= band}"
     )
 
     # --- Plot ---
@@ -608,9 +672,10 @@ def main():
     )
     plot_fed(OUT, det, devc, rate_s, t_star, t_cross_fds, float(det_resid.max()))
     plot_incapacitation(
-        OUT, t_prob, n, t_end, t_star, float(np.nanmedian(t_det)), d_ks, band
+        OUT, t_runs, t_end, t_star, float(np.nanmedian(t_det)), d_ks, band, p_ks
     )
-    frames = render_gif(OUT, prob, room, cfg, n, step_s=5.0, fps=12)
+    n_gif = prob["agent_id"].nunique()
+    frames = render_gif(OUT, prob, room, cfg, n_gif, step_s=5.0, fps=12)
     size = (OUT / "co_room.gif").stat().st_size / 1e6
     print(f"co_room.gif: {frames} frames, {size:.2f} MB")
 

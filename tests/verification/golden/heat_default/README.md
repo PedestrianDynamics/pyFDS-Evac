@@ -21,3 +21,11 @@ law. Regenerate only from a checkout whose default heat output is meant to be
 the reference:
 
     PYTHONPATH=. python tests/verification/golden/heat_default/make_baseline.py
+
+Per-agent draws are seeded from the spawn key since #353, so the agents walk
+to other target points than at 76c9a76. `reseed_baseline.py` reran the test's
+own run and rewrote the baseline only after checking that every column other
+than `x` and `y` is unchanged, and added the `agent_seeding` manifest key. Use
+it again for a later change of per-agent seeding:
+
+    PYTHONPATH=. python tests/verification/golden/heat_default/reseed_baseline.py

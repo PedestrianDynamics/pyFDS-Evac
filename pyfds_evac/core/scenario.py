@@ -21,7 +21,6 @@ import logging
 import math
 import os
 import pathlib
-import random
 import sqlite3
 import tempfile
 from collections.abc import Callable, Mapping
@@ -37,6 +36,24 @@ import numpy as np
 from shapely import wkt
 from shapely.geometry import Polygon
 
+from .agent_seed import (
+    INITIAL_ORIGIN,
+    PURPOSE_FAMILIARITY,
+    PURPOSE_INCAP_GAS,
+    PURPOSE_INCAP_HEAT,
+    PURPOSE_TARGET,
+    PURPOSE_VARIANT,
+    SEEDING_SCHEME,
+    SpawnKey,
+    SpawnKeyError,
+    agent_rng,
+    assign_spawn_key,
+    commit_spawn_key,
+    lookup_spawn_key,
+    pending_spawn_key,
+    stagger_index,
+    steering_seeds,
+)
 from .cognitive_map import (
     AgentCognitiveMap,
     expand_from_visibility,
@@ -959,6 +976,8 @@ def _assign_initial_exit(
     fed_rate_sampler=None,
     cached_segments: dict | None = None,
     required_exit: str | None = None,
+    *,
+    spawn_key: SpawnKey,
 ) -> str | None:
     """Point a freshly spawned agent at the best exit *it knows about*.
 
@@ -998,7 +1017,7 @@ def _assign_initial_exit(
             time_s,
             # Same stream as the reroute pass, so an agent that reaches the
             # reroute loop first is given the identical map either way.
-            rng=random.Random(seed + agent_id * 7919),
+            rng=agent_rng(seed, spawn_key, PURPOSE_FAMILIARITY),
             entrance=wait_info.get("entrance"),
         )
         cognitive_maps[agent_id] = cmap
@@ -1035,6 +1054,36 @@ def _flow_origin(flow_dist: dict, source_id: int) -> str:
     return f"flow:{flow_dist.get('dist_key') or source_id}"
 
 
+def _check_flow_variants(flow_distributions: list, stage_map: dict) -> None:
+    """Raise ValueError when a flow journey variant has no valid entry stage.
+
+    A flow spawn draws its variant once, from its spawn key, so a variant that
+    cannot be entered would be drawn again at every attempt and stall the
+    source for the rest of the run.
+    """
+    for flow_dist in flow_distributions:
+        for variant_info in flow_dist.get("journey_info") or []:
+            _check_entry_stage(variant_info["variant_data"], stage_map, flow_dist)
+
+
+def _check_entry_stage(variant: dict, stage_map: dict, flow_dist: dict) -> None:
+    """Raise ValueError when a drawable *variant* has no valid entry stage.
+
+    Zero-weight variants are skipped, although the picker can still return
+    one on a draw of exactly 0.0 or through its first-variant fallback; both
+    are negligible and rejecting such configs would break valid decks.
+    """
+    if float(variant.get("percentage", 0.0)) <= 0:
+        return
+    if any(stage_map.get(stage, -1) != -1 for stage in variant.get("entry_stages", [])):
+        return
+    name = variant.get("variant_name", variant.get("id"))
+    raise ValueError(
+        f"Flow distribution {flow_dist.get('dist_key')!r}: journey variant "
+        f"{name!r} has no valid entry stage."
+    )
+
+
 class ExitReplayError(ValueError):
     """An agent cannot be given the exit it took in the replayed run."""
 
@@ -1068,30 +1117,9 @@ def _apply_initial_path(wait_info: dict, path: list[str]) -> bool:
     return True
 
 
-# Spawn origin of the agents placed before the first step; flow sources are
-# ``flow:<distribution key>``.
-INITIAL_ORIGIN = "initial"
-
-SpawnKey = tuple[str, int]
-
-
-def _spawn_key(
-    spawn_keys: dict[int, SpawnKey],
-    origin_counts: dict[str, int],
-    agent_id: int,
-    origin: str,
-) -> SpawnKey:
-    """Return ``(origin, n)`` for the agent spawned n-th from *origin*.
-
-    Counting per origin keeps the pairing when a blocked flow source spawns
-    later than in the replayed run, which a single counter would shift.
-    """
-    if agent_id in spawn_keys:
-        return spawn_keys[agent_id]
-    key = (origin, origin_counts.get(origin, 0))
-    origin_counts[origin] = key[1] + 1
-    spawn_keys[agent_id] = key
-    return key
+# INITIAL_ORIGIN, SpawnKey and the key counter live in agent_seed, which
+# simulation_init shares; the counter keeps its name here.
+_spawn_key = assign_spawn_key
 
 
 def _replayed_exit(
@@ -1422,14 +1450,13 @@ def run_scenario(
         # tracked.
         incapacitated_cause: dict[int, str] = {}
         # Per-agent incapacitation threshold (population variability). Sampled
-        # lazily on first FED evaluation from a dedicated seeded stream so runs
-        # stay reproducible; deterministic mode reuses fed_threshold for all.
+        # lazily on first FED evaluation from the agent's own seeded stream, so
+        # the draw does not depend on the order agents are first evaluated in;
+        # deterministic mode reuses fed_threshold for all.
         incap_thresholds: dict[int, float] = {}
-        incap_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED1)
         # Independent stream for the heat track -- not the same dose as gas
         # FED, so its threshold draws must not be correlated with the gas ones.
         incap_heat_thresholds: dict[int, float] = {}
-        incap_heat_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED2)
 
         def _incap_threshold(aid: int) -> float:
             t = incap_thresholds.get(aid)
@@ -1437,7 +1464,10 @@ def run_scenario(
                 if tenability_config is None:
                     t = float("inf")
                 else:
-                    t = sample_incapacitation_threshold(tenability_config, incap_rng)
+                    rng = agent_rng(
+                        seed, lookup_spawn_key(spawn_keys, aid), PURPOSE_INCAP_GAS
+                    )
+                    t = sample_incapacitation_threshold(tenability_config, rng)
                 incap_thresholds[aid] = t
             return t
 
@@ -1447,9 +1477,10 @@ def run_scenario(
                 if tenability_config is None:
                     t = float("inf")
                 else:
-                    t = sample_heat_incapacitation_threshold(
-                        tenability_config, incap_heat_rng
+                    rng = agent_rng(
+                        seed, lookup_spawn_key(spawn_keys, aid), PURPOSE_INCAP_HEAT
                     )
+                    t = sample_heat_incapacitation_threshold(tenability_config, rng)
                 incap_heat_thresholds[aid] = t
             return t
 
@@ -1459,10 +1490,11 @@ def run_scenario(
         route_history: list[dict[str, Any]] = []
         # Exit each path agent is heading for, then the one it left through.
         agent_exits: dict[int, str] = {}
-        # Run-local spawn order of path agents per origin; JuPedSim ids can
-        # skip (#198).
-        spawn_keys: dict[int, SpawnKey] = {}
-        origin_counts: dict[str, int] = {}
+        # Run-local spawn order of every agent per origin, assigned where it
+        # is added; JuPedSim ids can skip (#198). Per-agent draws are seeded
+        # from it, and the JuPedSim id stays the lookup key.
+        spawn_keys: dict[int, SpawnKey] = dict(spawning_info.get("spawn_keys", {}))
+        origin_counts: dict[str, int] = dict(spawning_info.get("origin_counts", {}))
         route_cost_history: list[dict[str, Any]] = []
         agent_route_state: dict[int, AgentRouteState] = {}
         cognitive_maps: dict[int, AgentCognitiveMap] = {}
@@ -1561,7 +1593,7 @@ def run_scenario(
             """
             if stage_graph is None or wait_info.get("mode") != "path":
                 return None
-            key = _spawn_key(spawn_keys, origin_counts, agent_id, origin)
+            key = lookup_spawn_key(spawn_keys, agent_id, origin)
             required_exit = _replayed_exit(replay_exits, key, agent_id)
             # A replayed or smoke-blind choice is made as in clear air.
             clear_air = smoke_blind or required_exit is not None
@@ -1583,6 +1615,7 @@ def run_scenario(
                 fed_rate_sampler=None if clear_air else _fed_rate_adapter,
                 cached_segments=cached_segments,
                 required_exit=required_exit,
+                spawn_key=key,
             )
             terminal_exit = _extract_terminal_exit(wait_info, stage_graph.nodes)
             _check_replayed_exit(required_exit, terminal_exit, agent_id)
@@ -1600,7 +1633,7 @@ def run_scenario(
                     current_exit=chosen,
                     last_eval_time_s=spawn_time,
                     eval_offset_s=compute_eval_offset(
-                        agent_id, reroute_config.reevaluation_interval_s
+                        stagger_index(key), reroute_config.reevaluation_interval_s
                     ),
                 )
             return chosen
@@ -1628,7 +1661,9 @@ def run_scenario(
                         agent_route_state[agent_id_init] = AgentRouteState(
                             current_exit=exit_id,
                             eval_offset_s=compute_eval_offset(
-                                agent_id_init,
+                                stagger_index(
+                                    lookup_spawn_key(spawn_keys, agent_id_init)
+                                ),
                                 reroute_config.reevaluation_interval_s,
                             ),
                         )
@@ -1645,7 +1680,7 @@ def run_scenario(
             else False
         )
         _active_speed_zones = active_steering_zones(direct_steering_info)
-        flow_variant_rng = random.Random(seed)
+        _check_flow_variants(flow_distributions, spawning_info.get("stage_map", {}))
         total_progress_agents = initial_agent_count + sum(num_agents_per_source)
         import time as _time
 
@@ -1720,6 +1755,7 @@ def run_scenario(
                     if current_time < next_spawn_time:
                         continue
 
+                    flow_origin = _flow_origin(flow_dist, source_id)
                     for _ in range(spawning_freqs_and_numbers[source_id][1]):
                         spawned_this_attempt = False
                         selected_variant = None
@@ -1732,6 +1768,10 @@ def run_scenario(
                             )
                             position = starting_pos_per_source[source_id][pos_index]
                             flow_params = flow_dist["params"]
+                            # Draws are keyed by the spawn this attempt would
+                            # be, so a refused position does not shift them.
+                            pending = pending_spawn_key(origin_counts, flow_origin)
+                            added = False
 
                             try:
                                 assigned_journey_id = None
@@ -1743,7 +1783,12 @@ def run_scenario(
                                         variant_info["variant_data"]["percentage"]
                                         for variant_info in distribution_journeys
                                     )
-                                    rand_val = flow_variant_rng.random() * total_weight
+                                    rand_val = (
+                                        agent_rng(
+                                            seed, pending, PURPOSE_VARIANT
+                                        ).random()
+                                        * total_weight
+                                    )
                                     cumulative_weight = 0.0
                                     for variant_info in distribution_journeys:
                                         cumulative_weight += variant_info[
@@ -1855,6 +1900,12 @@ def run_scenario(
                                 )
 
                                 agent_id = simulation.add_agent(agent_parameters)
+                                # From here on the agent exists, so a failure
+                                # is raised rather than retried elsewhere.
+                                added = True
+                                key = commit_spawn_key(
+                                    spawn_keys, origin_counts, agent_id, pending
+                                )
                                 agent_radii[agent_id] = flow_params.get("radius", 0.2)
                                 # print(
                                 #     "Spawned flow agent "
@@ -1894,6 +1945,7 @@ def run_scenario(
                                             flow_params.get("radius", 0.2)
                                         ),
                                         spawn_origin=flow_dist.get("dist_key"),
+                                        spawn_key=key,
                                     )
                                     if path_state:
                                         agent_wait_info[agent_id] = path_state
@@ -1932,7 +1984,7 @@ def run_scenario(
                                                     agent_route_state[agent_id] = (
                                                         AgentRouteState(
                                                             eval_offset_s=compute_eval_offset(
-                                                                agent_id,
+                                                                stagger_index(key),
                                                                 reroute_config.reevaluation_interval_s,
                                                             ),
                                                             current_exit=_spawn_exit,
@@ -1946,8 +1998,9 @@ def run_scenario(
                                     exit_id = fallback_exit_id
                                     if exit_id and exit_id in direct_steering_info:
                                         exit_info = direct_steering_info[exit_id]
-                                        base_seed = seed + agent_id * 9973
-                                        target_rng = random.Random(base_seed)
+                                        target_rng = agent_rng(
+                                            seed, key, PURPOSE_TARGET
+                                        )
                                         target = _random_point_in_polygon(
                                             exit_info["polygon"],
                                             target_rng,
@@ -1998,7 +2051,7 @@ def run_scenario(
                                             "reach_penetration": 0.25,
                                             "reach_dwell_seconds": 0.2,
                                             "step_index": 0,
-                                            "base_seed": base_seed,
+                                            **steering_seeds(seed, key),
                                             "familiarity": dist_familiarity[
                                                 flow_dist.get("dist_index", source_id)
                                             ]
@@ -2034,7 +2087,7 @@ def run_scenario(
                                                     agent_route_state[agent_id] = (
                                                         AgentRouteState(
                                                             eval_offset_s=compute_eval_offset(
-                                                                agent_id,
+                                                                stagger_index(key),
                                                                 reroute_config.reevaluation_interval_s,
                                                             ),
                                                             current_exit=_spawn_exit,
@@ -2043,9 +2096,11 @@ def run_scenario(
 
                                 spawned_this_attempt = True
                                 break
-                            except (FdsHorizonError, ExitReplayError):
+                            except (FdsHorizonError, ExitReplayError, SpawnKeyError):
                                 raise
                             except Exception:
+                                if added:
+                                    raise
                                 continue
 
                         if not spawned_this_attempt:
@@ -2417,7 +2472,7 @@ def run_scenario(
                     if agent_id not in agent_route_state:
                         agent_route_state[agent_id] = AgentRouteState(
                             eval_offset_s=compute_eval_offset(
-                                agent_id,
+                                stagger_index(lookup_spawn_key(spawn_keys, agent_id)),
                                 reroute_config.reevaluation_interval_s,
                             ),
                         )
@@ -2436,7 +2491,11 @@ def run_scenario(
                                 current_time,
                                 # Seeded per agent so a probabilistic draw is
                                 # reproducible under a fixed run seed.
-                                rng=random.Random(seed + agent_id * 7919),
+                                rng=agent_rng(
+                                    seed,
+                                    lookup_spawn_key(spawn_keys, agent_id),
+                                    PURPOSE_FAMILIARITY,
+                                ),
                                 entrance=wait_info.get("entrance"),
                             )
                     rs = agent_route_state[agent_id]
@@ -2737,7 +2796,9 @@ def run_scenario(
 
                             wait_time = sample_wait_time(
                                 stage_cfg,
-                                wait_info.get("base_seed", 0),
+                                wait_info.get(
+                                    "wait_seed", wait_info.get("base_seed", 0)
+                                ),
                                 wait_info.get("step_index", 0),
                             )
                             if wait_time > 0:
@@ -2844,7 +2905,8 @@ def run_scenario(
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
-        _warn_unused_replay(replay_exits, spawn_keys)
+        # Only agents that were given an exit can have taken a replayed one.
+        _warn_unused_replay(replay_exits, {aid: spawn_keys[aid] for aid in agent_exits})
         if smoke_speed_model is not None:
             metrics["smoke_history_samples"] = len(smoke_history)
         if fed_model is not None:
@@ -2871,6 +2933,7 @@ def run_scenario(
             manifest_file = write_manifest(
                 output_file,
                 seed=seed,
+                agent_seeding=SEEDING_SCHEME,
                 scenario_path=scenario.source_path,
                 fds_dir=fds_dir_from_models(
                     smoke_speed_model, fed_model, heat_fed_model

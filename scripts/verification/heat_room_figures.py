@@ -30,8 +30,9 @@ temperature, so FDS holds the room at the deck value and the closed form
 Checks: the temperature each agent recorded equals the slice value; its
 heat FED equals the hand sum of its recorded temperature to round-off and the
 hand sum on the slice within the bound the mesh seams allow; in the
-deterministic run it stops at the first update where the hand sum reaches 1; in the probabilistic run (150 C only)
-the fraction stopped follows Phi(ln FED(t) / 0.94) within the KS 95 % band.
+deterministic run it stops at the first update where the hand sum reaches 1; in the probabilistic runs (150 C only),
+pooled over all seeds, the fraction stopped follows Phi(ln FED(t) / 0.94)
+within the KS 95 % band of the pooled agent count.
 
 Run from the repository root::
 
@@ -39,7 +40,7 @@ Run from the repository root::
 
 ``DIR`` holds ``fed_incap_heat_<T>c/`` for T in 100, 150, 200, each with
 ``fds/`` (FDS output) and ``evac/deterministic/`` (``fed_history.csv``);
-``fed_incap_heat_150c`` also has ``evac/probabilistic/``. A missing
+``fed_incap_heat_150c`` also has ``evac/probabilistic_seeds/<seed>/``. A missing
 temperature is skipped. Writes ``heat_room_*.png`` and ``heat_room.gif`` to
 ``site/static/images/verification/``.
 """
@@ -580,7 +581,8 @@ def plot_scaling(out, cases):
 
 def plot_incapacitation(out, case):
     """Empirical CDF of heat incapacitation times against the log-normal."""
-    t_inc, n, t_end = case["t_prob"], case["n"], case["t_end"]
+    t_inc, t_end = case["t_prob"], case["t_end"]
+    n = t_inc.size
     grid, fed = case["grid"], case["fed_mean"]
     band = 1.36 / math.sqrt(n)
     fig, ax = plt.subplots(figsize=(7.0, 4.4), dpi=150)
@@ -596,6 +598,17 @@ def plot_incapacitation(out, case):
         lw=0,
     )
     ax.plot(grid[keep], model, color=HAND, lw=1.8, ls="--", zorder=3)
+    for run in case["t_runs"]:
+        hit = np.sort(run[np.isfinite(run)])
+        ax.step(
+            np.concatenate([[0.0], hit, [t_end]]),
+            np.concatenate([[0.0], np.arange(1, hit.size + 1), [hit.size]]) / run.size,
+            where="post",
+            color=AGENT,
+            lw=0.6,
+            alpha=0.6,
+            zorder=2,
+        )
     hit = np.sort(t_inc[np.isfinite(t_inc)])
     k = hit.size
     ax.step(
@@ -611,7 +624,7 @@ def plot_incapacitation(out, case):
     ax.text(
         t_det * 0.95,
         0.80,
-        f"deterministic run:\nall {n} agents at {t_det:.0f} s",
+        f"deterministic run:\nall {case['n']} agents at {t_det:.0f} s",
         ha="right",
         va="top",
         fontsize=8.5,
@@ -620,16 +633,24 @@ def plot_incapacitation(out, case):
     ax.text(
         0.02,
         0.97,
-        f"KS distance D = {case['d_ks']:.3f} < {band:.3f} = 1.36/√{n}"
-        f" (p = {case['p_ks']:.2f})\n"
-        f"{k} of {n} stopped by {t_end:.0f} s; one draw, seed 42",
+        f"pooled KS distance D = {case['d_ks']:.3f} "
+        f"{'≤' if case['d_ks'] <= band else '>'} {band:.3f} = 1.36/√{n}"
+        f",\np = {case['p_ks']:.2f}; {k} of {n} stopped by {t_end:.0f} s; "
+        f"{len(case['t_runs'])} seeds pooled",
         transform=ax.transAxes,
         va="top",
         fontsize=8.5,
         color=TEXT,
     )
     handles = [
-        Line2D([0], [0], color="#1f253f", lw=1.4, label="probabilistic run (n = 100)"),
+        Line2D(
+            [0],
+            [0],
+            color="#1f253f",
+            lw=1.4,
+            label=f"probabilistic, {len(case['t_runs'])} seeds pooled (n = {n})",
+        ),
+        Line2D([0], [0], color=AGENT, lw=0.6, label="one seed each"),
         Line2D(
             [0],
             [0],
@@ -638,7 +659,7 @@ def plot_incapacitation(out, case):
             ls="--",
             label=f"Φ(ln FED_hand(t) / {SIGMA})",
         ),
-        Patch(fc=HAND, alpha=0.15, label="KS 95 % band"),
+        Patch(fc=HAND, alpha=0.15, label=f"KS 95 % band, n = {n}"),
         Line2D([0], [0], color=SIM, lw=1.2, ls="-.", label="deterministic"),
     ]
     ax.legend(handles=handles, loc="lower right", fontsize=8, **LEGEND)
@@ -802,10 +823,14 @@ def analyse(case_dir, temp_c):
     case["n"] = int(det["agent_id"].nunique())
     case["t_end"] = float(det["time_s"].max())
 
-    prob_path = case_dir / "evac" / "probabilistic" / "fed_history.csv"
-    if prob_path.exists():
-        prob = load_history(prob_path)
-        case["t_prob"] = first_time(prob, prob["incapacitated"])
+    seeds_dir = case_dir / "evac" / "probabilistic_seeds"
+    if seeds_dir.exists():
+        runs = {}
+        for d in sorted(seeds_dir.iterdir(), key=lambda d: int(d.name)):
+            prob = load_history(d / "fed_history.csv")
+            runs[int(d.name)] = first_time(prob, prob["incapacitated"])
+        case["t_runs"] = list(runs.values())
+        case["t_prob"] = np.concatenate(case["t_runs"])
         grid, fed_mean = room_mean_dose(times, temp, case["t_end"])
         case["grid"], case["fed_mean"] = grid, fed_mean
 
@@ -813,8 +838,12 @@ def analyse(case_dir, temp_c):
             fed_t = np.interp(t, grid, fed_mean)
             return phi(np.log(np.maximum(fed_t, 1e-300)) / SIGMA)
 
-        case["d_ks"] = ks_distance(case["t_prob"], case["n"], case["t_end"], model_at)
-        case["p_ks"] = ks_p_value(case["d_ks"], case["n"])
+        n_pool = case["t_prob"].size
+        case["d_ks"] = ks_distance(case["t_prob"], n_pool, case["t_end"], model_at)
+        case["p_ks"] = ks_p_value(case["d_ks"], n_pool)
+        case["d_seed"] = {
+            s: ks_distance(t, t.size, case["t_end"], model_at) for s, t in runs.items()
+        }
         case["f_end"] = float(model_at(np.array([case["t_end"]]))[0])
     return case
 
@@ -870,11 +899,25 @@ def report(temp_c, case):
         f"{bool(np.all(t_det == case['t_hand'])) and case['all_heat']}"
     )
     if "t_prob" in case:
-        k = np.isfinite(case["t_prob"]).sum()
+        for (s, d), t in zip(case["d_seed"].items(), case["t_runs"]):
+            print(
+                f"seed {s}: {np.isfinite(t).sum()}/{t.size} stopped, KS D = {d:.4f} "
+                f"(band {1.36 / math.sqrt(t.size):.4f}, p = {ks_p_value(d, t.size):.3f})"
+            )
+        ds = np.array(list(case["d_seed"].values()))
+        b1 = 1.36 / math.sqrt(case["t_runs"][0].size)
         print(
-            f"probabilistic: {k}/{case['n']} stopped by {case['t_end']:.0f} s "
-            f"(model {case['f_end']:.3f}); KS D = {case['d_ks']:.4f}, "
-            f"band {1.36 / math.sqrt(case['n']):.4f}, p = {case['p_ks']:.3f}"
+            f"per-seed D: min {ds.min():.4f}, median {np.median(ds):.4f}, "
+            f"max {ds.max():.4f}; {(ds > b1).sum()} of {ds.size} above {b1:.4f}"
+        )
+        n_pool = case["t_prob"].size
+        k = np.isfinite(case["t_prob"]).sum()
+        band = 1.36 / math.sqrt(n_pool)
+        print(
+            f"probabilistic, {len(ds)} seeds pooled: {k}/{n_pool} stopped by "
+            f"{case['t_end']:.0f} s (model {case['f_end']:.3f}); "
+            f"KS D = {case['d_ks']:.4f}, band {band:.4f}, p = {case['p_ks']:.3f}; "
+            f"passes: {case['d_ks'] <= band}"
         )
 
 

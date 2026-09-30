@@ -417,7 +417,8 @@ stops and stays in place as an obstacle, as for the gas dose.
   That is why heat stays deterministic by default
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 - **`probabilistic` (opt-in).** Each agent draws its own threshold once, from
-  the run's seed, on a stream independent of the gas threshold:
+  a stream seeded by the run's seed and its spawn order, independent of the
+  gas threshold:
   \(D_i = D \cdot \exp(\sigma Z)\), with *D* the heat threshold,
   \(Z \sim N(0, 1)\). The default σ = 0.94 is borrowed from the gas dose, an
   assumption with no data basis for heat. The Handbook's radiant lethality

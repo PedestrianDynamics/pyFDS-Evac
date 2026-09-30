@@ -1696,8 +1696,9 @@ def _metrics(stdout):
 def test_exported_script_reproduces_the_gui_run(tmp_path):
     """The run's exported script, run alone, matches the GUI run exactly.
 
-    Each side runs in a fresh interpreter, so both are the first run in their
-    process and #198 (process-wide agent ids) cannot tell them apart. The deck
+    Each side runs in a fresh interpreter, so the two cannot affect each
+    other. Per-agent draws follow the spawn order, not the process-wide
+    agent ids, so a later run in the same process would match too. The deck
     has discovery agents, so its baseSeed (1301), rerouting and the clear-air
     visibility model all reach the result.
     """

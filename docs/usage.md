@@ -98,10 +98,12 @@ other, which needs the same scenario and seed. The origin is `initial` for the
 agents placed at t = 0 and `flow:<distribution>` for a flow source, so a source
 that is blocked and spawns later does not shift the pairing of another.
 JuPedSim ids are not used: they can skip a number when a spawn position is
-refused, and a slower crowd changes which positions are refused. The familiarity draw is still seeded by the JuPedSim id
-([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)), so a
-discovery agent can hold a different map in the two runs and take another
-route to the same exit. A replayed run fails when a spawn is missing
+refused, and a slower crowd changes which positions are refused. Every
+per-agent draw, such as the familiarity map, the target points and the journey
+variant, is seeded from this spawn order, so paired agents draw the same in
+both runs. An exit history written before per-agent draws were seeded this way
+(its run's manifest has no `agent_seeding` key) still replays without error,
+but pairs agents whose draws differ; write it again. A replayed run fails when a spawn is missing
 from the file, when the file names an exit the scenario lacks, or when an
 agent cannot be sent to its exit; it logs a warning when agents of the file were
 never spawned. With rerouting on, a replayed agent can still switch exits,
@@ -236,7 +238,7 @@ uv run python run.py --scenario assets/t_junction/config.json --cleanup
 ```
 
 ```text
-Simulation stopped after 300.00 s (142/150 evacuated, 8 remaining).
+Simulation stopped after 300.00 s (144/150 evacuated, 6 remaining).
 ```
 
 ```bash

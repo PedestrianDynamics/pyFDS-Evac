@@ -17,9 +17,9 @@ exercise different cache contents::
 The familiarity decks come from the repository's ``assets/`` and need no FDS
 run; they include the #168 sweep of the clear-air visibility grid.
 
-Each deck runs in its own interpreter: JuPedSim numbers agents process-wide
-and the agent id seeds the reevaluation stagger, so a deck run after another
-in the same process would not reproduce.
+Each deck runs in its own interpreter: JuPedSim numbers agents process-wide,
+so a deck run after another in the same process would record its agents under
+other ids.
 
 Usage::
 

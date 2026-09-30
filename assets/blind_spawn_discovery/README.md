@@ -82,12 +82,18 @@ One geometry, four configs, each changing exactly one thing.
 
 | config | familiarity | entrance | egress | what it isolates |
 |---|---|---|---|---|
-| `config_discovery.json` | `discovery` | — | 38.0 s | the sequence above |
-| `config_full.json` | `full` | — | 36.4 s | lower bound: straight out, 0 switches |
-| `config_entrance.json` | `discovery` | `E_west` | 47.5 s | seeding: knows one door at t=0 |
-| `config_mixed.json` | `0.5` | — | 34.8 s | scalar familiarity in a run |
+| `config_discovery.json` | `discovery` | — | 36.1 s | the sequence above |
+| `config_full.json` | `full` | — | 42.2 s | straight out, 0 switches |
+| `config_entrance.json` | `discovery` | `E_west` | 42.2 s | seeding: knows one door at t=0 |
+| `config_mixed.json` | `0.5` | — | 36.3 s | scalar familiarity in a run |
 
-All four evacuate 30/30.
+All four evacuate 30/30. In the `full` and `entrance` runs all 30 agents
+leave by `E_west`; the two exits are equally far from the spawn centre, and
+the `discovery` and `mixed` crowds split between them (15/15 and 12/18), so
+they are out sooner. Measured with the recipe below (FDS 6 on
+`blind_spawn_discovery.fds`, `--allow-fds-horizon-hold` because the FDS run
+ends at 120 s) at `32d48dd`; the FDS output and the runs are in the project's
+data store under `blind_spawn_discovery/`.
 
 `config_entrance.json` is the Station crush mechanism in miniature — everyone
 entered by one door, so everyone knows that door. It was wired through the code
@@ -101,7 +107,7 @@ mkdir -p /tmp/bsd && cd /tmp/bsd \
 
 .venv/bin/python run.py \
     --scenario assets/blind_spawn_discovery/config_discovery.json \
-    --fds-dir /tmp/bsd \
+    --fds-dir /tmp/bsd --allow-fds-horizon-hold \
     --vis-cache /tmp/vis_bsd.npz \
     --output-sqlite /tmp/bsd.sqlite \
     --output-route-history /tmp/bsd_routes.csv

@@ -326,9 +326,10 @@ below was swept against a geometry whose doorways were narrower than the
 building's; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy's 52.9 %.
 The reasoning in this section is unchanged — only the fitted number moved.
-Rerun on main at `7a3617d`, under the gate, the same sweep scores 0.03 at
-31.6 % and 0.024 at 34.1 %: the deck no longer reproduces Fahy's split, and has
-not been re-fitted.
+Rerun at `8bda7f7`, under the gate and with per-agent draws seeded from the
+spawn key, the same sweep scores 0.03 at 31.4 % and 0.024 at 33.4 % (31.6 % and
+34.1 % on main at `7a3617d`): the deck no longer reproduces Fahy's split, and
+has not been re-fitted.
 
 **Two further caveats on that number.** The sweep was run under the additive
 composite, where `w_queue` multiplies a *distance*
@@ -402,12 +403,16 @@ switch to lower-cost exits when conditions change.
 
 ### Reevaluation scheduling
 
-Each agent has a personal time offset derived from its ID so that
-not all agents reevaluate on the same timestep:
+Each agent has a personal time offset derived from its spawn order so
+that not all agents reevaluate on the same timestep:
 
 ```
-offset = (agent_id % steps_per_interval) * dt_s
+offset = ((spawn_index + 1) % steps_per_interval) * dt_s
 ```
+
+`spawn_index` counts the agents spawned from the same origin (the agents
+placed at t = 0, or one flow source) from 0, so the offsets of one origin are
+spread evenly. Agents of different origins can share an offset.
 
 An agent fires its **first** evaluation once `current_time >= offset`,
 then fires again every `reevaluation_interval_s` thereafter. With a

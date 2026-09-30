@@ -322,7 +322,9 @@ def test_unclothed_outputs_match_the_baseline(tmp_path):
     """``clothing="unclothed"`` reproduces the default outputs of 76c9a76.
 
     The baseline predates #290, when Eq. 63.44 was the default; the only
-    difference is the ``heat_clothing`` manifest key, checked apart.
+    difference is the ``heat_clothing`` manifest key, checked apart. Its
+    ``x`` and ``y`` columns and ``agent_seeding`` key were rewritten when
+    per-agent draws moved to the spawn key (#353); see the baseline README.
     """
     result = _run(_table_63_21_field, None, run_s=30.0, clothing="unclothed")
     try:

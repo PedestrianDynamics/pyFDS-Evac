@@ -15,6 +15,15 @@ import pedpy
 import shapely
 from shapely.geometry import Point, Polygon
 
+from .agent_seed import (
+    INITIAL_ORIGIN,
+    PURPOSE_PATH_CHOICE,
+    PURPOSE_TARGET,
+    SpawnKey,
+    agent_rng,
+    assign_spawn_key,
+    steering_seeds,
+)
 from .premovement_distributions import (
     PREMOVEMENT_PRESETS,
     create_premovement_distribution,
@@ -513,12 +522,18 @@ def build_agent_path_state(
     initial_position: tuple[float, float] | None = None,
     agent_radius: float = 0.2,
     spawn_origin: str | None = None,
+    *,
+    spawn_key: SpawnKey | None = None,
 ) -> dict[str, Any] | None:
     """Build DS routing state as origin->weighted-next mapping.
 
     ``spawn_origin`` is the distribution the agent was actually placed in.
     Without it the first distribution of the journey is used for every agent,
     which routes the whole population from one spawn area.
+
+    ``spawn_key`` is the agent's ``(origin, n)`` spawn key; every draw is then
+    seeded from it and the run *seed*. Without it the draws are seeded from
+    *agent_id* as before, which the engine no longer does.
     """
     if not direct_steering_info:
         return None
@@ -637,7 +652,10 @@ def build_agent_path_state(
     start_choices = path_choices.get(start_origin, [])
     if not start_choices:
         return None
-    chooser_rng = random.Random(int(seed) + int(agent_id) * 9973)
+    if spawn_key is None:
+        chooser_rng = random.Random(int(seed) + int(agent_id) * 9973)
+    else:
+        chooser_rng = agent_rng(seed, spawn_key, PURPOSE_PATH_CHOICE)
     total = sum(max(0.0, float(weight)) for _, weight in start_choices)
     if total <= 0:
         current_target_stage = start_choices[0][0]
@@ -668,8 +686,12 @@ def build_agent_path_state(
             "speed_factor": _normalize_speed_factor(info.get("speed_factor", 1.0)),
         }
 
-    base_seed = int(seed) + int(agent_id) * 9973
-    target_rng = np.random.RandomState(base_seed)
+    if spawn_key is None:
+        seeds = {"base_seed": int(seed) + int(agent_id) * 9973}
+        target_rng = np.random.RandomState(seeds["base_seed"])
+    else:
+        seeds = steering_seeds(seed, spawn_key)
+        target_rng = agent_rng(seed, spawn_key, PURPOSE_TARGET)
     target = _pick_initial_stage_target(
         stage_configs.get(current_target_stage, {}),
         initial_position,
@@ -692,7 +714,7 @@ def build_agent_path_state(
         "reach_penetration": 0.25,
         "reach_dwell_seconds": 0.2,
         "step_index": 0,
-        "base_seed": base_seed,
+        **seeds,
     }
 
 
@@ -1248,6 +1270,10 @@ def _initialize_with_fallback(
     has_premovement = False
 
     seeded_positions = _seed_shared_areas(immediate_spawn_distributions, seed)
+    # Spawn key of every agent placed here, assigned as it is added so that
+    # every per-agent draw can be seeded from it.
+    spawn_keys: dict[int, SpawnKey] = {}
+    origin_counts: dict[str, int] = {}
 
     for spawn_data in immediate_spawn_distributions:
         try:
@@ -1346,12 +1372,12 @@ def _initialize_with_fallback(
             )
 
             agent_id = simulation.add_agent(agent_params)
+            key = assign_spawn_key(spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN)
             all_positions.append(pos)
             agent_radii[agent_id] = agent_radius
 
             # Build DS wait info for ALL agents to navigate to nearest exit
-            base_seed = seed + idx * 9973
-            target_rng = np.random.RandomState(base_seed)
+            target_rng = agent_rng(seed, key, PURPOSE_TARGET)
             exit_polygon = direct_steering_info[nearest_exit_id]["polygon"]
             target = _random_point_in_polygon(exit_polygon, target_rng)
             fallback_agent_wait_info[agent_id] = {
@@ -1374,7 +1400,7 @@ def _initialize_with_fallback(
                 "reach_penetration": 0.25,
                 "reach_dwell_seconds": 0.2,
                 "step_index": 0,
-                "base_seed": base_seed,
+                **steering_seeds(seed, key),
                 # Carried so the reroute pass can seed a cognitive map from
                 # them; without these every agent is treated as fully familiar
                 # and sign legibility can never bind.
@@ -1411,6 +1437,8 @@ def _initialize_with_fallback(
         "has_premovement": has_premovement,
         "premovement_times": premovement_times,
         "agent_wait_info": fallback_agent_wait_info,
+        "spawn_keys": spawn_keys,
+        "origin_counts": origin_counts,
         "direct_steering_info": direct_steering_info,
         "global_ds_journey_id": global_ds_journey_id,
         "global_ds_stage_id": global_ds_stage_id,
@@ -2074,6 +2102,10 @@ def _add_agents(
     agent_radii = {}
     current_agent_id = 0
     agent_wait_info = {}
+    # Spawn key of every agent placed here, assigned as it is added so that
+    # every per-agent draw can be seeded from it.
+    spawn_keys: dict[int, SpawnKey] = {}
+    origin_counts: dict[str, int] = {}
 
     # Create individual journeys for each exit for agents without explicit journeys.
     exit_to_journey = {}
@@ -2463,6 +2495,9 @@ def _add_agents(
                                 )
 
                                 agent_id = simulation.add_agent(agent_params)
+                                key = assign_spawn_key(
+                                    spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
+                                )
                                 agent_radii[agent_id] = agent_radius
 
                                 # Store premovement time if enabled
@@ -2479,9 +2514,8 @@ def _add_agents(
                                         "activated": False,
                                     }
 
-                                # Record path-based direct steering state.
-                                # Use agent_index (not JuPedSim agent_id) for seeding
-                                # to ensure determinism across runs in the same process.
+                                # Record path-based direct steering state,
+                                # seeded from the spawn key, not the JuPedSim id.
                                 if direct_steering_info:
                                     path_state = build_agent_path_state(
                                         variant_data=variant_data,
@@ -2492,10 +2526,14 @@ def _add_agents(
                                             "waypoint_routing", {}
                                         ),
                                         seed=seed,
-                                        agent_id=agent_index,
+                                        # Tracking only; spawn_key seeds the draws.
+                                        # Without spawn_key they would be seeded
+                                        # from this id again (#198).
+                                        agent_id=agent_id,
                                         initial_position=(float(pos[0]), float(pos[1])),
                                         agent_radius=agent_radius,
                                         spawn_origin=dist_key,
+                                        spawn_key=key,
                                     )
                                     if path_state:
                                         path_state["familiarity"] = spawn_params.get(
@@ -2532,6 +2570,9 @@ def _add_agents(
                     )
 
                     agent_id = simulation.add_agent(agent_params)
+                    assign_spawn_key(
+                        spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
+                    )
                     agent_radii[agent_id] = agent_radius
 
                     if use_premovement and agent_premovement_times is not None:
@@ -2568,6 +2609,8 @@ def _add_agents(
         "has_premovement": has_premovement,
         "premovement_times": premovement_times,
         "agent_wait_info": agent_wait_info,
+        "spawn_keys": spawn_keys,
+        "origin_counts": origin_counts,
         "transitions": data.get("transitions", []),
         "waypoint_routing": journey_data.get("waypoint_routing", {}),
         "global_ds_journey_id": global_ds_journey_id,

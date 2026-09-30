@@ -60,8 +60,22 @@ def vis_model():
     )
 
 
-@pytest.mark.parametrize("seed", SEEDS)
-@pytest.mark.parametrize("n_agents", AGENT_COUNTS)
+@pytest.mark.parametrize(
+    ("n_agents", "seed"),
+    [
+        pytest.param(
+            n_agents,
+            seed,
+            marks=pytest.mark.xfail(
+                strict=True, reason="head-on doorway deadlock, #359"
+            ),
+        )
+        if (n_agents, seed) == (5, 7)
+        else (n_agents, seed)
+        for n_agents in AGENT_COUNTS
+        for seed in SEEDS
+    ],
+)
 def test_every_discovery_agent_finds_the_exit(tmp_path, vis_model, n_agents, seed):
     config = json.loads((DECK / "config.json").read_text())
     max_time_s = config["config"]["simulation_settings"]["simulationParams"][

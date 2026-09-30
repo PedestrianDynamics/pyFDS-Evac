@@ -92,7 +92,7 @@ growth, stay empty for this one-agent corridor.
 [![A Plotly chart titled Smoke, with time from 0 to 85 s on the horizontal axis, the speed factor on the left axis between 0.9196262 and 0.9196266, and the extinction coefficient K on the right axis between 0.995502 and 0.995507 per metre. Both lines are flat until about 50 s and then vary in their last digits](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places.")](images/web-gui/smoke_chart.png)
 
 {{< checkpoint title="The run finished" >}}
-The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
+The agent leaves the corridor after 85.2 s, and the run reports 1 of 1
 agent evacuated. The **Warning** box says that FED is disabled: this deck
 writes only the soot extinction slice, no CO, CO₂ or O₂, so the warning is
 expected here. The same run from the command line,
@@ -102,7 +102,7 @@ uv run python run.py --scenario assets/iso_table21_coupled \
     --fds-dir assets/iso_table21_coupled/fds
 ```
 
-ends with `Simulation finished in 84.97 s (1/1 evacuated).`
+ends with `Simulation finished in 85.15 s (1/1 evacuated).`
 {{< /checkpoint >}}
 
 ### Keep the run as a script
@@ -145,9 +145,7 @@ The flags under "Other" are not yet next to the group they belong to
 The GUI calls the same `run_scenario()` as the command line, through the same
 option builder (`build_run_kwargs` in `pyfds_evac/core/run_config.py`), so a
 run configured in the browser gets the same options as the equivalent
-`run.py` command. The results can still differ: a second run in the same GUI
-session can differ from a fresh `run.py` run with the same seed
-([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)). Invalid combinations (for example `--vis-cache` with rerouting off)
+`run.py` command. Invalid combinations (for example `--vis-cache` with rerouting off)
 are rejected when the form is submitted, with the same message as `run.py`,
 in the alert above the results area.
 
@@ -262,7 +260,7 @@ Both open a dialog with **Copy** and **Download .py**.
 2. When the run has finished, click **Show Python for this run**. The dialog
    is titled "Code for run #1 · blind_spawn_discovery · *start time*" and
    reports "Status: Complete: all agents evacuated (30/30), evacuation time
-   55.14 s".
+   55.17 s".
 3. Click **Download .py**. The file is named after the scenario, the run
    number and the run's UTC start time, for example
    `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z.py`.
@@ -279,7 +277,7 @@ After the model's own progress and log lines, the script ends with
 (pyfds-evac 0.1.0 at commit `ba4ade3`; path shortened):
 
 ```text
-Simulation finished in 55.14 s (30/30 evacuated).
+Simulation finished in 55.17 s (30/30 evacuated).
 Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite
 ```
 
@@ -299,11 +297,8 @@ and will not exist elsewhere.
   the scenario path, not the scenario JSON, the FDS results or the visibility
   cache. The script reloads them from disk, so after an edit to the scenario
   or the FDS folder the code for run #N no longer reproduces run #N.
-- **Results can differ from the GUI run, even with the same seed.** Repeated
-  runs in one GUI process are affected
-  ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)), and
-  other versions or platforms can also change results. For an exact
-  comparison, compare the first run of a fresh process on each side.
+- **Results can differ from the GUI run, even with the same seed,** with
+  other versions or on other platforms.
 - **Outputs.** The script writes to a new `OUTPUT_DIR` and does not overwrite
   the GUI run's files. It does read the same `VIS_CACHE` file, and the cache
   key includes the resolved FDS directory (`_make_meta` in
