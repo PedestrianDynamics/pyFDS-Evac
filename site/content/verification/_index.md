@@ -88,8 +88,9 @@ uv run pytest tests/test_heat_radiant_threshold.py tests/test_fic_vs_fed_speed.p
 ```
 
 `uv run pytest` runs everything. Tests that need the external data store
-(for example the radiometer decks, `$HEAT_RADIOMETER_DATA`) are skipped when
-it is absent.
+(for example the radiometer decks, `$HEAT_RADIOMETER_DATA`) carry the
+`external_data` marker and are skipped when it is absent; CI deselects them
+with `-m "not external_data"`.
 
 The FDS cases need their FDS output, which is not in the repository; each
 test page says where to get it or how to rerun FDS.

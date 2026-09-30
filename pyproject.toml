@@ -67,6 +67,12 @@ dev = [
     "seaborn>=0.13.2",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "external_data: needs FDS output from the external data store (sciebo); skips when absent, CI deselects it",
+]
+
 [tool.ruff.lint]
 # Ruff's defaults (E4, E7, E9, F) plus import sorting. The codebase already
 # follows the stdlib / third-party / local grouping everywhere; nothing enforced
