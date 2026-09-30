@@ -1226,8 +1226,9 @@ Sign visibility is a wayfinding map and never enters DIFF
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140" target="_blank" rel="noopener">#140&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Engine issues that touch this study:&lt;/strong> exit removal ignores the door
 width (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>);
-the initial exit uses the spawn area, not the agent, which is why the two
-doors need two spawn areas
+the initial exit was ranked from the spawn area, not the agent, which is
+why the room has two spawn areas, split at x = 15 m; the ranking now
+measures from each agent
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/350" target="_blank" rel="noopener">#350&lt;/a>);
 flow spawning breaks common random numbers across arms
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/353" target="_blank" rel="noopener">#353&lt;/a>);
@@ -9411,8 +9412,12 @@ routes; adoption is whether a moving agent switches to the first of them. The
 two differ:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Opening choice&lt;/strong> (&lt;code>_assign_initial_exit&lt;/code>, &lt;code>scenario.py&lt;/code>). It
-ranks from the spawn node, without the agent&amp;rsquo;s position and without the
-queue tally (&lt;code>scenario.py&lt;/code>, &lt;code>_assign_initial_exit&lt;/code>).&lt;/li>
+ranks the routes from the spawn node, with distances measured from the
+agent&amp;rsquo;s position, as re-evaluation measures them, and without the queue
+tally (&lt;code>scenario.py&lt;/code>, &lt;code>_assign_initial_exit&lt;/code>). Agents of one spawn area
+can therefore start towards different exits. Only the first leg is
+measured from the agent: each exit&amp;rsquo;s candidate path is still the single
+shortest path from the spawn node (#185), as in re-evaluation.&lt;/li>
 &lt;li>&lt;strong>Re-evaluation&lt;/strong> (&lt;code>evaluate_and_reroute&lt;/code>). It ranks from the agent&amp;rsquo;s
 position. It adopts a different exit only if the rival passes the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#switching-rule">switching rule&lt;/a> of the routing model:
@@ -9830,6 +9835,9 @@ by position, termination of exploration.&lt;/li>
 draws, &lt;code>entrance&lt;/code> known and reachable.&lt;/li>
 &lt;li>&lt;code>tests/test_initial_exit_from_cognitive_map.py&lt;/code>: the opening choice ranks
 the map, with rerouting off.&lt;/li>
+&lt;li>&lt;code>tests/test_initial_exit_per_agent.py&lt;/code>: the opening choice is measured from
+each agent&amp;rsquo;s position; one spawn area in a room with two mirrored doors
+splits between them.&lt;/li>
 &lt;li>&lt;code>tests/verification/test_cognitive_map_verif.py&lt;/code>: tier invariants on a toy
 graph.&lt;/li>
 &lt;/ul>
@@ -13943,7 +13951,9 @@ The reasoning in this section is unchanged — only the fitted number moved.
 Rerun at &lt;code>8bda7f7&lt;/code>, under the gate and with per-agent draws seeded from the
 spawn key, the same sweep scores 0.03 at 31.4 % and 0.024 at 33.4 % (31.6 % and
 34.1 % on main at &lt;code>7a3617d&lt;/code>): the deck no longer reproduces Fahy&amp;rsquo;s split, and
-has not been re-fitted.&lt;/p>
+has not been re-fitted. With the opening exit ranked from each agent&amp;rsquo;s position
+(#350), the sweep scores 0.03 at 33.0 % and 0.024 at 34.8 % (32.6 % and 35.0 %
+on main at &lt;code>81726ea&lt;/code>), within the spread between seeds.&lt;/p>
 &lt;p>&lt;strong>Two further caveats on that number.&lt;/strong> The sweep was run under the additive
 composite, where &lt;code>w_queue&lt;/code> multiplies a &lt;em>distance&lt;/em>
 (&lt;code>w_queue * base_speed_m_per_s * queue_time&lt;/code>). Under the default gate model it

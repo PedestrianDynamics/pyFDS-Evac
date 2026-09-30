@@ -1226,8 +1226,9 @@ Sign visibility is a wayfinding map and never enters DIFF
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140" target="_blank" rel="noopener">#140&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Engine issues that touch this study:&lt;/strong> exit removal ignores the door
 width (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>);
-the initial exit uses the spawn area, not the agent, which is why the two
-doors need two spawn areas
+the initial exit was ranked from the spawn area, not the agent, which is
+why the room has two spawn areas, split at x = 15 m; the ranking now
+measures from each agent
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/350" target="_blank" rel="noopener">#350&lt;/a>);
 flow spawning breaks common random numbers across arms
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/353" target="_blank" rel="noopener">#353&lt;/a>);
