@@ -43,19 +43,22 @@ for 0.3, citing ISO 13571:2012, A.5.2.
 
 ## What the handbook says
 
-Purser and McAllister (2016, Society of Fire Protection Engineers (SFPE)
-Handbook Ch. 63) state that the endpoints of their
+Purser and McAllister (2026, Society of Fire Protection Engineers (SFPE)
+Handbook, 6th ed., Ch. 70) state that the endpoints of their
 equations represent the median of the distribution, and that approximately
-11.3 % of the population is likely to be susceptible below an FED of 0.3,
-citing ISO 13571 (p. 2334; repeated on p. 2415). In the same paragraph they
-write that approximately 90 % of the population is susceptible below an FED
-of 1.3. For a log-normal with
-median 1, these two statements are not consistent: 11.3 % below 0.3 implies a
-log-scale standard deviation near 1.0, whereas 90 % below 1.3 implies about
-0.2. The source does not give the distribution parameters that would resolve
-this. Ch. 63 also notes that, because gas concentrations rise quickly in most
+1 % of the population is likely to be susceptible below an FED of 0.3,
+citing ISO 13571 (p. 2282; repeated on p. 2343). ISO 13571:2012 (A.5.2)
+gives 11.4 % for 0.3, and the 2016 edition of the chapter gave 11.3 %
+(Purser and McAllister 2016, p. 2334). In the same paragraph Ch. 70 states
+that approximately 90 % of the population is susceptible below an FED
+of 1.3 (p. 2282). For a log-normal with
+median 1, these two statements are not consistent: 1 % below 0.3 implies a
+log-scale standard deviation near 0.52, whereas 90 % below 1.3 implies about
+0.2 (our arithmetic; 11.3 % below 0.3 implies about 1.0). The source does
+not give the distribution parameters that would resolve
+this. Ch. 70 also notes that, because gas concentrations rise quickly in most
 flaming fires, variations in individual susceptibility have relatively minor
-effects on predicted times to incapacitation (p. 2334).
+effects on predicted times to incapacitation (p. 2282).
 
 ## NIST Technical Note 1797
 
@@ -109,14 +112,14 @@ the text does not say whether the heat FED must share the gas threshold.
 §8.5 finds the heat time "in the same manner" as for the gases.
 
 No source we could consult gives a population spread for tolerance of
-convective heat (ISO 13571:2012 Eqs. (9) and (10); SFPE Eq. 63.44). SFPE Ch. 63 gives
-population figures for heat only for radiant lethality (p. 2382): a radiant
+convective heat (ISO 13571:2012 Eqs. (9) and (10); SFPE Eq. 70.42). SFPE Ch. 70 gives
+population figures for heat only for radiant lethality (p. 2318): a radiant
 dose of 10 (kW/m²)^4/3·min "represents a fatal level for a vulnerable
 population (over 65 years of age) or a 1 % fatality level for the average
 population, whereas 16.7 (kW/m²)^4/3·min represents a 50 % probability
 lethal level for the average population". The chapter cites Hockey and Rew
-(1996) and Purser (1997) for its radiant dose relation (refs. [133, 134],
-p. 2382). Hockey and Rew is a candidate source for probit relations behind
+(1996) and Purser (1997) for its radiant dose relation (refs. [125, 126],
+p. 2318). Hockey and Rew is a candidate source for probit relations behind
 these figures; we have not read it.
 
 Inference, not a statement of the sources: if the lethal dose is log-normal
@@ -128,7 +131,7 @@ value 16.667 gives the same σ to two decimals. Its limits:
 - The Handbook states no distribution; the log-normal is assumed.
 - Two figures fix two parameters, so nothing tests the fit.
 - The figures are for radiant lethality, the fatal dose *D* = 16.7 of
-  Eq. 63.43. They concern neither convective tolerance nor the ISO
+  Eq. 70.41. They concern neither convective tolerance nor the ISO
   convective times.
 
 With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. A log-normal
@@ -157,9 +160,14 @@ How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.m
   Part 2: Methodology and examples of tenability assessment*. ISO, Geneva.
   [iso.org/standard/65996](https://www.iso.org/standard/65996.html). Read
   from the public preview.
+- Purser, D. A., & McAllister, J. L. (2026). *Assessment of hazards to
+  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
+  Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2282, 2318, 2343.
+  [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
 - Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
   occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
-  Protection Engineering, 5th ed., Ch. 63, 2308–2428.
+  Protection Engineering, 5th ed., Ch. 63, 2308–2428. Cited only for the
+  11.3 % figure (p. 2334), which Ch. 70 replaces.
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
 - Averill, J. D., Moore-Merrell, L., Ranellone, R. T., Jr., Weinschenk, C.,
   Taylor, N., Goldstein, R., Santos, R., Wissoker, D., & Notarianni, K. A.
@@ -168,9 +176,9 @@ How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.m
   [doi:10.6028/NIST.TN.1797](https://doi.org/10.6028/NIST.TN.1797)
 - Hockey, S. M., & Rew, P. J. (1996). *Human response to thermal
   radiation*. Contract Research Report 97/1996. HSE Books, Sudbury. Cited
-  by Ch. 63 as ref. [133]; not consulted.
+  by Ch. 70 as ref. [125]; not consulted.
 - Purser, D. A. (1997). Review of human response to thermal radiation.
-  *Fire Safety Journal*, 28, 290–291. Cited by Ch. 63 as ref. [134]; not
+  *Fire Safety Journal*, 28, 290–291. Cited by Ch. 70 as ref. [126]; not
   consulted.
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md#tenability-irritant-slowdown-and-incapacitation).

@@ -43,10 +43,9 @@ $$
 
 The distinction matters when reading the literature. Tenability limits are
 often quoted as OD/m (optical density per metre, *D*), and Purser and
-McAllister (2016), in the Society of Fire Protection Engineers (SFPE)
+McAllister (2026), in the Society of Fire Protection Engineers (SFPE)
 Handbook, give both forms: for example OD/m = 0.2 corresponds to an
-extinction coefficient of about 0.5 1/m (Ch. 63, Table 63.5 and the text
-beside it).
+extinction coefficient of about 0.5 1/m (Ch. 70, Table 70.3 and p. 2285).
 
 ## The data behind \(K_m\)
 
@@ -87,10 +86,10 @@ COEFFICIENT` output quantity (§22.10.5); the unrelated quantity
   227–230.
   [doi:10.1002/1099-1018(200009/10)24:5<227::AID-FAM742>3.0.CO;2-9](https://doi.org/10.1002/1099-1018%28200009/10%2924:5%3C227::AID-FAM742%3E3.0.CO;2-9)
   (value quoted from the FDS User Guide).
-- Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
+- Purser, D. A., & McAllister, J. L. (2026). *Assessment of hazards to
   occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
-  Protection Engineering, 5th ed., Ch. 63, 2308–2428.
-  [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
+  Protection Engineering, 6th ed., Ch. 70, 2271–2352.
+  [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
 
 How pyFDS-Evac uses this: see the [smoke-speed model](/models/smoke-speed.md)
 and [route rerouting](/models/routing.md).

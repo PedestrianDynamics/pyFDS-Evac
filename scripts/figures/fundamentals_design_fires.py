@@ -9,7 +9,7 @@
 """The four t-squared growth classes, and the two study fires against them.
 
 Panel (a) draws Q = alpha t^2 for the four classes of vfdb TB 04-01
-(2020), Table 4.3, p. 60, and SFPE Handbook 5th ed., Eqs. 14.49-14.52:
+(2020), Table 4.3, p. 60, and SFPE Handbook 6th ed., Table 36.1:
 alpha = 0.002931, 0.01172, 0.04689 and 0.1876 kW/s^2, with growth times
 of 600, 300, 150 and 75 s to 1000 Btu/s (about 1055 kW). Each curve is
 solid up to 1055 kW and dashed beyond, where fuel, ventilation or

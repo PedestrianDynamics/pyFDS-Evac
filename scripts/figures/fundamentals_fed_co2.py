@@ -8,19 +8,19 @@
 # ///
 """CO2 hyperventilation factor VCO2 against CO2 concentration.
 
-The curves are SFPE Handbook Ch. 63 (Purser and McAllister 2016,
-pp. 2369-2371):
+The curves are SFPE Handbook Ch. 70 (Purser and McAllister 2026,
+pp. 2306-2307):
 
-    Eq. 63.32  VCO2 = exp(0.2496 %CO2 + 1.9086) / 6.8
-    Eq. 63.33  VCO2 = exp(%CO2 / 4)
-    Eq. 63.34  VCO2 = exp(0.1903 %CO2 + 2.0004) / 7.1
-    Eq. 63.35  VCO2 = exp(%CO2 / 5)
+    Eq. 70.32  VCO2 = exp(0.2496 %CO2 + 1.9086) / 6.8
+    Eq. 70.33  VCO2 = exp(%CO2 / 4)
+    Eq. 70.34  VCO2 = exp(0.1903 %CO2 + 2.0004) / 7.1
+    Eq. 70.35  VCO2 = exp(%CO2 / 5)
 
-Eq. 63.34 is the form FDS and FDS+Evac use (FDS User's Guide and
-Korhonen 2021); Eq. 63.35 is the one in Eq. 63.38. The points are
-the VCO2 values of the worked example, Table 63.16 (p. 2374): 1.442,
+Eq. 70.34 is the form FDS and FDS+Evac use (FDS User's Guide and
+Korhonen 2021); Eq. 70.35 is the one in Eq. 70.38. The points are
+the VCO2 values of the worked example, Table 70.14 (p. 2311): 1.442,
 2.376 and 4.434 at 1.5, 3.5 and 6 % CO2. The cap is Purser's limiting
-value of 70 L/min for V_E x VCO2 (p. 2416), at V_E = 25 L/min.
+value of 70 L/min for V_E x VCO2 (p. 2343), at V_E = 25 L/min.
 
 Run from the repository root::
 
@@ -37,7 +37,7 @@ import seaborn as sns
 
 
 def main():
-    """Plot Eqs. 63.32-63.35, the Table 63.16 points and the 70 L/min cap.
+    """Plot Eqs. 70.32-70.35, the Table 70.14 points and the 70 L/min cap.
 
     Parameters
     ----------
@@ -59,22 +59,22 @@ def main():
     co2 = np.linspace(0.0, 10.0, 401)
     curves = [
         (
-            "Eq. 63.32 (regression)",
+            "Eq. 70.32 (regression)",
             np.exp(0.2496 * co2 + 1.9086) / 6.8,
             dict(color=c_fit, lw=1.8, ls="-", marker="o"),
         ),
         (
-            "Eq. 63.33 = exp(%CO₂/4)",
+            "Eq. 70.33 = exp(%CO₂/4)",
             np.exp(co2 / 4.0),
             dict(color=c_fit, lw=1.4, ls=":", marker=None),
         ),
         (
-            "Eq. 63.34 (FDS, FDS+Evac)",
+            "Eq. 70.34 (FDS, FDS+Evac)",
             np.exp(0.1903 * co2 + 2.0004) / 7.1,
             dict(color=c_fds, lw=1.8, ls="-", marker="s"),
         ),
         (
-            "Eq. 63.35 = exp(%CO₂/5), in Eq. 63.38",
+            "Eq. 70.35 = exp(%CO₂/5), in Eq. 70.38",
             np.exp(co2 / 5.0),
             dict(color=c_ch63, lw=1.8, ls="-.", marker=None),
         ),
@@ -84,7 +84,7 @@ def main():
     cap = 70.0 / 25.0
     for label, v, _ in curves:
         print(f"{label}: cap {cap:.1f} crossed at {np.interp(cap, v, co2):.2f} %")
-    print("Eq. 63.32 at table points:", np.exp(0.2496 * table_co2 + 1.9086) / 6.8)
+    print("Eq. 70.32 at table points:", np.exp(0.2496 * table_co2 + 1.9086) / 6.8)
 
     # --- Plot ---
     fig, ax = plt.subplots(figsize=(7.0, 4.4), dpi=150)
@@ -98,7 +98,7 @@ def main():
         ms=6,
         mec="white",
         zorder=5,
-        label="Table 63.16 worked example",
+        label="Table 70.14 worked example",
     )
     ax.axhline(cap, color="grey", lw=1.0, ls=(0, (1, 2)), zorder=1)
     ax.text(
@@ -113,8 +113,8 @@ def main():
     ax.text(
         0.15,
         12.3,
-        "Eqs. 63.34 and 63.35 nearly coincide and reach the cap near 5 %;\n"
-        "the worked example follows the steeper Eq. 63.32",
+        "Eqs. 70.34 and 70.35 nearly coincide and reach the cap near 5 %;\n"
+        "the worked example follows the steeper Eq. 70.32",
         fontsize=8.5,
         color="dimgrey",
         va="top",

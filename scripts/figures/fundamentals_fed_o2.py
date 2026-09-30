@@ -8,16 +8,16 @@
 # ///
 """Time to incapacitation by low oxygen against O2 concentration.
 
-The curve is SFPE Handbook Ch. 63 (Purser and McAllister 2016), derived in
-Eq. 63.27 and used in Eq. 63.50:
+The curve is SFPE Handbook Ch. 70 (Purser and McAllister 2026), derived in
+Eq. 70.25 and used in Eq. 70.50:
 
     t_IO = exp(8.13 - 0.54 (20.9 - %O2)),   t in minutes.
 
 It is derived from the time of useful consciousness of resting humans after
 sudden decompression to 20 000-40 000 ft, a sea-level equivalent of 9.6 %
-down to 3.9 % O2 (Fig. 63.25, pp. 2365-2366); the curve is solid there and
+down to 3.9 % O2 (Fig. 70.19, p. 2305); the curve is solid there and
 dashed above. The vertical lines mark 15 % O2, down to which there is
-little effect in humans (p. 2364), and 20 % O2, at or above which FDS
+little effect in humans (p. 2303), and 20 % O2, at or above which FDS
 (``func.f90``, function ``FED``) drops the O2 term, quoted here, not
 imported.
 
@@ -87,7 +87,7 @@ def main():
     )
 
     for x0, text, ls, y_text in (
-        (15.0, "15 %: little effect\nin humans (p. 2364)", ":", 0.45),
+        (15.0, "15 %: little effect\nin humans (p. 2303)", ":", 0.45),
         (20.0, "20 %: FDS zeroes\nthe term at or above", "-.", 0.13),
     ):
         ax.axvline(x0, color="grey", lw=1.0, ls=ls, zorder=1)

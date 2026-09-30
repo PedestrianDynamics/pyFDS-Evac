@@ -15,21 +15,21 @@ nothing is digitised from a figure:
   (model 1, lights on): v = 0.706 - 0.057 K. The lit runs span
   K = 1.9-7.4 1/m (report Fig. 9). The 95 % prediction interval at
   K = 4 1/m, "ca 0.2 och 0.7" m/s, is quoted in Sect. 3.3.2.
-- Purser and McAllister (2016), SFPE Handbook Ch. 63, Eq. 63.10:
+- Purser and McAllister (2026), SFPE Handbook Ch. 70, Eq. 70.8:
   W = -0.1364 ln K + 0.6423, fitted on Jin's irritant data
   (K = 0.32-0.5 1/m) pooled with Frantzich and Nilsson's
-  (K = 1.9-7.5 1/m), as stated on p. 2339-2340.
+  (K = 1.9-7.5 1/m), as stated on pp. 2285-2286.
 - Purser and McAllister's straight-line fits to Jin's data as replotted
-  in their Fig. 63.16 (legend): non-irritant v = 1.0573 - 0.4326 K on
+  in their Fig. 70.10 (legend): non-irritant v = 1.0573 - 0.4326 K on
   K = 0.2-1.13 1/m, irritant v = 1.1517 - 0.9578 K on K = 0.32-0.5 1/m
-  (ranges as stated on p. 2339). They are drawn solid only where Jin's
+  (ranges as stated on p. 2285). They are drawn solid only where Jin's
   points lie in the primary report (Jin 1976, FRI Report 42, Fig. 2):
   about 0.5-1.13 1/m non-irritant and 0.32-0.47 1/m irritant, extents read
   from the figure's axis, not digitised points; the rest of Purser's range
   is dashed. The means with their standard
   deviations (0.74 +/- 0.17 m/s at K = 0.73 1/m, non-irritant;
   0.75 +/- 0.21 m/s at K = 0.42 1/m, irritant) are quoted on
-  p. 2339-2340.
+  p. 2285.
 
 Panel (b), fractional laws (speed as a fraction of the unexposed speed):
 
@@ -37,7 +37,7 @@ Panel (b), fractional laws (speed as a fraction of the unexposed speed):
   F = -1.738 OD/m + 1.236 for OD/m = 0.13-0.55, normal speed below, and
   above 0.55 the speed "as in darkness at 0.3 m/s". The floor is drawn at
   the fraction the equation reaches at 0.55 (0.28), our construction;
-  Purser writes 0.3 m/s (0.25 of the 1.2 m/s that SFPE Ch. 63 uses) and
+  Purser writes 0.3 m/s (0.25 of the 1.2 m/s that SFPE Ch. 70 uses) and
   his Fig. 1 shows about 0.27. The line is solid only over Jin's
   non-irritant points (K about 0.5-1.13 1/m, FRI Report 42, Fig. 2) and
   dashed over the rest of Purser's stated range. The 0.3 m/s is Jin's
@@ -46,12 +46,12 @@ Panel (b), fractional laws (speed as a fraction of the unexposed speed):
   not a measured point.
   The fitted line starts at its computed value, 1.010 at OD/m 0.13; the
   F = 1 segment below is Purser's stated normal speed, drawn dashed. OD/m is converted to K with the
-  base-10 definition of SFPE Ch. 63 (p. 2413), K = ln(10) OD/m.
+  base-10 definition of SFPE Ch. 70 (p. 2341), K = ln(10) OD/m.
 - FDS+Evac (Korhonen 2021, Eq. 11): F = max(0.1, 1 + (beta/alpha) K) with
   the Frantzich-Nilsson constants.
 
 Solid: within the source's data range. Dashed: extrapolation. Dotted: the
-gap between the two pooled data sets of Eq. 63.10, where it has no data.
+gap between the two pooled data sets of Eq. 70.8, where it has no data.
 Colours: one per source, shared with fundamentals_speed_visibility.py.
 
 Run from the repository root::
@@ -158,7 +158,7 @@ def main():
         arrowprops=dict(arrowstyle="-", color="lightgrey", lw=0.8),
     )
 
-    # Purser Eq. 63.10
+    # Purser Eq. 70.8
     for lo, hi in ((0.1, k_irr[0]), (k_pooled_fn[1], k_max)):
         k = np.linspace(lo, hi, 200)
         ax.plot(k, purser(k), color=c_purser, lw=1.4, ls="--")
@@ -170,7 +170,7 @@ def main():
     ax.text(
         1.6,
         0.5,
-        "Eq. 63.10:\nno data 0.5–1.9",
+        "Eq. 70.8:\nno data 0.5–1.9",
         fontsize=8,
         color="dimgrey",
         ha="center",
@@ -179,7 +179,7 @@ def main():
     ax.text(
         3.0,
         purser(3.0) - 0.09,
-        "Purser, Eq. 63.10",
+        "Purser, Eq. 70.8",
         fontsize=9,
         color=c_purser,
         weight="semibold",

@@ -8,13 +8,13 @@
 # ///
 """Purser's fractional walking speed in irritant smoke against FIC.
 
-The curve is SFPE Handbook Ch. 63, Eq. 63.13 (Purser and McAllister 2016,
-p. 2344):
+The curve is SFPE Handbook Ch. 70, Eq. 70.11 (Purser and McAllister 2026,
+p. 2289):
 
     F_wvirr = (exp(-(1000 x / b)^2) + (-0.2 x + 0.2)) / 1.2,
     b = 160, x = FIC.
 
-It reproduces Ch. 63 Fig. 63.17 and Purser (2003) Fig. 1. The form printed
+It reproduces Ch. 70 Fig. 70.11 and Purser (2003) Fig. 1. The form printed
 in Purser (2003, p. 100),
 1 - ((1 - exp(-(x/b)^a)) + (-0.2 x + 0.2)/1.2) with a = 2, b = 160,
 gives 0.83 at FIC = 0 for every scaling of x, because the linear term
@@ -22,8 +22,8 @@ alone fixes that value. With x unscaled it rises to 1 at FIC = 1; with
 x scaled by 1000 in the exponent only it ends at 0 but dips to -0.10 in
 between. It does not reproduce that paper's own Fig. 1 and is not drawn.
 
-Ch. 63 calls the curve an "estimated relationship" based on a concept
-(p. 2343; Fig. 63.17 is on p. 2344), and Purser (2003, p. 94) says it was "fitted between
+Ch. 70 calls the curve an "estimated relationship" based on a concept
+(Fig. 70.11 and its text, p. 2289), and Purser (2003, p. 94) says it was "fitted between
 these two extremes" (no effect at low FIC, no movement at FIC = 1). That
 no walking data lie behind it is our reading, so it is drawn in the thin
 style used for design rules on the other figures, not the heavy
@@ -45,7 +45,7 @@ import seaborn as sns
 
 
 def main():
-    """Plot Eq. 63.13, fractional walking speed against FIC.
+    """Plot Eq. 70.11, fractional walking speed against FIC.
 
     Parameters
     ----------
@@ -103,7 +103,7 @@ def main():
     ax.text(
         0.45,
         0.8,
-        "Eq. 63.13, an 'estimated relationship' (Ch. 63);\n"
+        "Eq. 70.11, an 'estimated relationship' (Ch. 70);\n"
         "no walking data behind it (our reading)",
         fontsize=8.5,
         color="dimgrey",

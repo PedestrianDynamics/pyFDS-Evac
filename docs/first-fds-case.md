@@ -517,7 +517,7 @@ The other limits:
   over a population, not for specific individuals (§5.2, p. 4). The per-agent
   comparison is our use of it. The SFPE Handbook frames the same question,
   the time between losing visibility and incapacitation (Purser and
-  McAllister 2016, p. 2414).
+  McAllister 2026, p. 2341).
 - **The FED is the FDS+Evac sum**
   (CO + CN + NOx + FLD<sub>irr</sub>) × HV<sub>CO2</sub> + O2, which includes
   Purser's lethal-dose term for HCl (see [FED model](/models/fed.md)). ISO
@@ -601,7 +601,7 @@ sign decisions can differ slightly from these maps.
   exposures under 10 minutes, evaluated at 2.0 m, untenable when any one
   criterion is exceeded. See [Visibility](/fundamentals/visibility.md) for
   *K* = *C*/*V*.
-- *HCl.* SFPE Ch. 63, Table 63.6 (p. 2344): 200 ppm for escape impairment,
+- *HCl.* SFPE Ch. 70, Table 70.4 (p. 2288): 200 ppm for escape impairment,
   900 ppm for incapacitation, and 1000 ppm as the ISO 13571 value (ISO
   13571 §6.2.1, Eq. 4, p. 7, with an uncertainty of ±50 %). ISO 13571 uses
   the same threshold for FED and FEC (§5.4; A.5.2, p. 18), so 0.3 gives
@@ -633,11 +633,11 @@ sign decisions can differ slightly from these maps.
   paraphrased; see [ASET and RSET](/fundamentals/aset-rset.md),
   [Irritants](/fundamentals/irritants.md) and
   [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
-- Purser, D. A., & McAllister, J. L. (2016). Assessment of hazards to
+- Purser, D. A., & McAllister, J. L. (2026). Assessment of hazards to
   occupants from smoke, toxic gases, and heat. *SFPE Handbook of Fire
-  Protection Engineering*, 5th ed., Ch. 63. Table 63.6 (p. 2344) and
-  p. 2414.
-  [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
+  Protection Engineering*, 6th ed., Ch. 70. Table 70.4 (p. 2288) and
+  p. 2341.
+  [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
 - Schröder, B., Arnold, L., & Seyfried, A. (2020). A map representation of
   the ASET-RSET concept. *Fire Safety Journal*, 115, 103154.
   [doi:10.1016/j.firesaf.2020.103154](https://doi.org/10.1016/j.firesaf.2020.103154)

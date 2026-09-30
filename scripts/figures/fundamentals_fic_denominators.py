@@ -1,11 +1,11 @@
 """Denominators of the irritant criteria, per gas, for four endpoint sets.
 
-Values [ppm] from SFPE Handbook Ch. 63, Table 63.6 (Purser and McAllister
-2016, p. 2344): SFPE escape impairment, SFPE incapacitation and AEGL-2 for
+Values [ppm] from SFPE Handbook Ch. 70, Table 70.4 (Purser and McAllister
+2026, p. 2288): SFPE escape impairment, SFPE incapacitation and AEGL-2 for
 10 min; and ISO 13571:2012, §6.2.1, Eq. (4), p. 7, whose F values equal the
-ISO column of Table 63.6. NO is left out: it has no escape-impairment value,
+ISO column of Table 70.4. NO is left out: it has no escape-impairment value,
 its incapacitation value is given only as ">1000", and it is not in the
-FIC sum (Eq. 63.11).
+FIC sum (Eq. 70.9).
 
 Run from the repository root::
 
@@ -78,7 +78,7 @@ def main():
     ax.text(
         870,
         y[0] + 0.55,
-        "HCl: 900 (SFPE) | 1000 ppm (ISO, Fig. 63.17)",
+        "HCl: 900 (SFPE) | 1000 ppm (ISO, Fig. 70.11)",
         fontsize=8,
         color="dimgrey",
         ha="right",

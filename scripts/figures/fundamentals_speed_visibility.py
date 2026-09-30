@@ -20,7 +20,7 @@ Every curve is computed from constants printed in the sources:
   (light-emitting). It converts between the two panels.
 - For comparison, Frantzich and Nilsson (2003), Eq. 3:
   v = 0.706 - 0.057 K on K = 1.9-7.4 1/m (report Fig. 9), and Purser and
-  McAllister (2016), Eq. 63.10: W = -0.1364 ln K + 0.6423 on their stated
+  McAllister (2026), Eq. 70.8: W = -0.1364 ln K + 0.6423 on their stated
   pooled ranges, K = 0.32-0.5 and 1.9-7.5 1/m.
 
 Panel (a) puts Frantzich and Nilsson into visibility with x = 2/K, the

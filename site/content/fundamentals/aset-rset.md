@@ -30,7 +30,7 @@ time. The standard notes that the evacuation time \(t_{\mathrm{evac}}\)
 consists of the last two terms only, and it splits \(t_{\mathrm{pre}}\) into
 a recognition time and a response time. The Society of Fire Protection
 Engineers (SFPE) Handbook uses the same terms
-(Gwynne and Boyce 2016, Ch. 64).
+(Gwynne et al. 2026, Ch. 72, p. 2378).
 
 ![Schematic egress timeline. A top bar shows the detection time followed by the warning time, from ignition to the general alarm. Below, six occupant rows start at the alarm, each with a light pre-travel bar followed by a dark travel bar of different lengths, sorted by exit time. A solid vertical line marks t_RSET at the exit of the last occupant, a dashed red line marks t_ASET later, and a bracket between them marks the margin t_marg. A bracket under the last row marks t_evac,i = t_pre,i + t_trav,i](/images/fundamentals/aset_rset_timeline.png)
 
@@ -89,12 +89,14 @@ interact (§7). See [Pre-movement time](/fundamentals/pre-movement.md).
 ## Known limits
 
 The definitions differ in where the clock starts. ISO/TR 16738 Eq. 2 and
-SFPE Ch. 64 count RSET from ignition, since they include detection. SFPE
-Ch. 56 (Bukowski and Tubbs 2016) defines RSET from the notification of
-occupants and ASET from notification to the onset of untenable conditions,
-while also stating that evacuation times consist of detection, notification,
-pre-movement and movement times. When two analyses are compared, check which
-origin each uses. The terms also vary: "escape" in ISO/TR 16738, "egress" or
+the SFPE Handbook count RSET from ignition: Ch. 66 defines RSET as the time
+from fire initiation until the last occupant reaches a safe place, and ASET
+as the time from fire initiation to the onset of untenable conditions
+(Tubbs and Alonso-Gutierrez 2026, p. 2158), and Ch. 72 starts its timeline
+at ignition (p. 2378). The 2016 edition (Bukowski and Tubbs 2016, Ch. 56,
+p. 2038) counted both from the notification of occupants, so older analyses
+may use that origin. When two analyses are compared, check which origin
+each uses. The terms also vary: "escape" in ISO/TR 16738, "egress" or
 "evacuation" in the SFPE Handbook, for the same quantities.
 
 ASET varies with position and with the tenability
@@ -133,9 +135,14 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
 - RiMEA e.V. (2025). *Guideline for Microscopic Evacuation Analysis*,
   version 4.1.1, 11 September 2025. [rimea.de](https://rimea.de/).
   §2.8–2.13 (pp. 9–10) and Fig. 2 (p. 10).
+- Tubbs, J. S., & Alonso-Gutierrez, V. (2026). *Egress concepts and design
+  strategies*. SFPE Handbook of Fire Protection Engineering, 6th ed.,
+  Ch. 66, 2139–2164. p. 2158.
+  [doi:10.1007/978-3-031-59212-6_66](https://doi.org/10.1007/978-3-031-59212-6_66)
 - Bukowski, R. W., & Tubbs, J. S. (2016). *Egress concepts and design
   approaches*. SFPE Handbook of Fire Protection Engineering, 5th ed.,
-  Ch. 56, 2012–2046.
+  Ch. 56, 2012–2046. p. 2038; cited only for the notification origin of
+  that edition.
   [doi:10.1007/978-1-4939-2565-0_56](https://doi.org/10.1007/978-1-4939-2565-0_56)
 - Engineers Australia Society of Fire Safety (2014). *Practice note for
   tenability criteria in building fires*, version 2.0, 3 April 2014.
@@ -148,9 +155,10 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
 - Babrauskas, V., Fleming, J. M., & Russell, B. D. (2010). *RSET/ASET, a
   flawed concept for fire safety assessment*. Fire and Materials, 34(7),
   341–355. [doi:10.1002/fam.1025](https://doi.org/10.1002/fam.1025)
-- Gwynne, S. M. V., & Boyce, K. E. (2016). *Engineering data*. SFPE
-  Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
-  [doi:10.1007/978-1-4939-2565-0_64](https://doi.org/10.1007/978-1-4939-2565-0_64)
+- Gwynne, S. M. V., Boyce, K. E., & Lovreglio, R. (2026). *Egress data for
+  engineering analysis*. SFPE Handbook of Fire Protection Engineering,
+  6th ed., Ch. 72, 2375–2484. p. 2378.
+  [doi:10.1007/978-3-031-59212-6_72](https://doi.org/10.1007/978-3-031-59212-6_72)
 
 How pyFDS-Evac uses this: see the
 [RSET ensemble how-to](/docs/howto-rset-ensemble.md), and

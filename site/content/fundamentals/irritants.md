@@ -15,7 +15,7 @@ The quantities are the concentration criteria (ISO's FEC and Purser's FIC),
 the denominators each one uses, Purser's relation between FIC and walking
 speed, and the lung dose. In short, the published rule **adds** the speed
 losses from smoke and from irritants. It does not multiply them
-([Eq. 63.14](#combining-with-smoke-the-losses-add)).
+([Eq. 70.12](#combining-with-smoke-the-losses-add)).
 
 Symbols follow the [notation table](/docs/concepts.md#notation). The
 equations below keep the sources' own notation (FEC, \(F_{\mathrm{FIC}}\),
@@ -51,8 +51,8 @@ walking speed.
 
 ## Purser: the fractional irritant concentration (FIC)
 
-Purser and McAllister (2016, Society of Fire Protection Engineers (SFPE)
-Handbook Ch. 63) define the fractional irritant
+Purser and McAllister (2026, Society of Fire Protection Engineers (SFPE)
+Handbook, 6th ed., Ch. 70, p. 2287) define the fractional irritant
 concentration (FIC) [-] as a sum over irritants, each term being the current
 concentration divided by the concentration predicted to cause a chosen
 endpoint:
@@ -62,33 +62,34 @@ $$
 &\mathrm{FIC} = \mathrm{FIC_{HCl}} + \mathrm{FIC_{HBr}} + \mathrm{FIC_{HF}} \\
 &\quad + \mathrm{FIC_{SO_2}} + \mathrm{FIC_{NO_2}} + \mathrm{FIC_{CH_2CHO}} \\
 &\quad + \mathrm{FIC_{CH_2O}} + \sum \mathrm{FIC}_x
-\quad \text{(Eq. 63.11)}
+\quad \text{(Eq. 70.9)}
 \end{aligned}
 $$
 
-The chapter repeats the sum as Eq. 63.12 (p. 2343) and in its appendix
-(p. 2414); the 2026 edition numbers them Eqs. 70.9 and 70.10. The terms
-stand for immediate sensory effects, so Ch. 63 expects them to ease when the
+The chapter repeats the sum as Eq. 70.10 (p. 2289) and in its appendix
+(p. 2342, again labelled Eq. 70.9). The terms
+stand for immediate sensory effects, so Ch. 70 expects them to ease when the
 concentrations fall, for example when a person leaves the contaminated area
-(p. 2343). Like the ISO FEC, the FIC is a concentration criterion. It is not
+(p. 2289). Like the ISO FEC, the FIC is a concentration criterion. It is not
 a dose and is not integrated over time.
 
 ### Which endpoint goes in the denominator
 
 The chapter uses two endpoints, and different equations use different ones:
 
-- **Escape impairment:** Eq. 63.8 (p. 2333) and the text under Eq. 63.12
-  (p. 2343).
+- **Escape impairment:** Eq. 70.6 (p. 2278) and the text under Eq. 70.10
+  (p. 2289).
 - **Either endpoint:** the appendix, which names both SFPE columns of
-  Table 63.6 (p. 2414).
-- **Incapacitation:** the walking-speed relation, Eq. 63.13, where FIC = 1
-  means incapacitation (p. 2344; Purser 2003, p. 99). Ch. 63 introduces it
-  for concentrations below the SFPE incapacitation column (p. 2343).
-- p. 2325 reads FIC = 1 as significant impairment and FIC = 5 as roughly
-  incapacitation, which in our reading is the escape-impairment scale.
+  Table 70.4 (p. 2342).
+- **Incapacitation:** the walking-speed relation, Eq. 70.11, where FIC = 1
+  means incapacitation (p. 2289; Purser 2003, p. 99). Ch. 70 introduces it
+  for concentrations below the SFPE incapacitation column (p. 2289).
+- The 2016 edition of the chapter (5th ed., Ch. 63, p. 2325) read FIC = 1 as
+  significant impairment and FIC = 5 as roughly incapacitation, which in our
+  reading is the escape-impairment scale. The 6th edition drops that list.
 
 The denominators [ppm] side by side: SFPE escape impairment, SFPE
-incapacitation and AEGL-2 for 10 min from Table 63.6 (p. 2344), and ISO
+incapacitation and AEGL-2 for 10 min from Table 70.4 (p. 2288), and ISO
 13571 \(F_i\) (§6.2.1, p. 7):
 
 | Gas | SFPE escape | SFPE incap. | ISO \(F_i\) | AEGL-2 |
@@ -105,8 +106,8 @@ Three things follow from the table (our arithmetic):
 
 - The escape-impairment values are about 0.2 of the incapacitation values:
   200/900 = 0.22 for the three halogen acids and 0.20 for the other four
-  gases. This matches p. 2325, where FIC = 5 on the escape scale is roughly
-  incapacitation.
+  gases. This matches the 2016 reading, where FIC = 5 on the escape scale is
+  roughly incapacitation.
 - The sets disagree gas by gas. SFPE incapacitation and ISO differ by up to
   about 8× (formaldehyde, 30 against 250 ppm). SFPE escape impairment and ISO
   differ by up to about 40× (formaldehyde, 6 against 250 ppm). The same smoke
@@ -114,10 +115,10 @@ Three things follow from the table (our arithmetic):
 - ISO's FEC and SFPE's FIC do not share denominators, so an FEC of 1 and an
   FIC of 1 describe different mixtures.
 
-**The factor 0.3.** Ch. 63 mentions it twice. The escape-impairment values
+**The factor 0.3.** Ch. 70 mentions it twice. The escape-impairment values
 are to be used "with an FED factor of 0.3 to allow for sensitive
-individuals" (p. 2343), and "a factor of 0.3 FEC for escape impairment"
-should let nearly all exposed people escape (p. 2414). The same page 2343
+individuals" (p. 2289), and "a factor of 0.3 FEC for escape impairment"
+should let nearly all exposed people escape (p. 2342). Page 2288
 explains the number: a significant proportion of people may be impaired at
 about 0.3 of the concentration that affects the average person, which for
 HCl is 60 ppm instead of 200 ppm. In our reading, 0.3 is therefore a
@@ -128,10 +129,10 @@ apply to the incapacitation values.
 ![Denominators of the FIC and FEC for seven irritant gases on a logarithmic ppm axis, one marker per endpoint set: SFPE escape impairment, SFPE incapacitation, ISO 13571 and AEGL-2. For SO₂ the four values run from 0.75 to 150 ppm](/images/fundamentals/fic_denominators.png)
 
 *Denominators [ppm] per gas for four endpoint sets, log scale: SFPE escape
-impairment and SFPE incapacitation (Table 63.6, p. 2344), ISO 13571
-(§6.2.1, p. 7) and AEGL-2 for 10 min (Table 63.6). The dotted lines mark HCl
+impairment and SFPE incapacitation (Table 70.4, p. 2288), ISO 13571
+(§6.2.1, p. 7) and AEGL-2 for 10 min (Table 70.4). The dotted lines mark HCl
 at 900 ppm (SFPE incapacitation) and 1000 ppm (ISO, the example of
-Fig. 63.17). NO is left out: it has no escape-impairment value, its
+Fig. 70.11). NO is left out: it has no escape-impairment value, its
 incapacitation value is given only as ">1000", and it is not in the FIC
 sum. Script: `scripts/figures/fundamentals_fic_denominators.py`.*
 
@@ -140,32 +141,32 @@ sum. Script: `scripts/figures/fundamentals_fic_denominators.py`.*
 Purser (2003, pp. 94 and 99–100) proposed that irritants do not slow
 people at low concentrations and stop effective movement at
 incapacitation, FIC = 1, with a sigmoid fall in between: "a curve has been
-fitted between these two extremes" (p. 94). Ch. 63 calls it an "estimated
+fitted between these two extremes" (p. 94). Ch. 70 calls it an "estimated
 relationship" based on a concept and on the concentration estimated to be
-very painful (p. 2343); the curve is Fig. 63.17 (p. 2344). Neither source
+very painful (Fig. 70.11 and its text, p. 2289). Neither source
 gives walking data or fit statistics for it; in our reading, it is a concept
-curve with no walking data behind it. Ch. 63 gives it as
+curve with no walking data behind it. Ch. 70 gives it as
 
 $$
 F_{wv\,irr} = \frac{e^{-(1000\,x/b)^2} + (-0.2\,x + 0.2)}{1.2},
 \qquad b = 160,\ x = \mathrm{FIC}
-\qquad \text{(Eq. 63.13)}
+\qquad \text{(Eq. 70.11)}
 $$
 
 where \(F_{wv\,irr}\) is the fractional walking speed (1 = normal walking
-speed of 1.2 m/s). The 2026 edition gives the same curve as Eq. 70.11. The
-source states only the end point, 0 at FIC = 1 (p. 2344). Our arithmetic
+speed of 1.2 m/s). The
+source states only the end point, 0 at FIC = 1 (p. 2289). Our arithmetic
 gives 1.000, 0.914, 0.714, 0.308, 0.141 and 0.083 at FIC = 0, 0.05, 0.1,
 0.2, 0.3 and 0.5. The formula holds for 0 ≤ FIC ≤ 1 only: above 1 it turns
 negative, for example −0.083 at FIC = 1.5.
 
-Jin's experiments, which Ch. 63 cites for the link between irritancy and
-walking speed (p. 2343), give no FIC values: they index irritancy by the
+Jin's experiments, which Ch. 70 cites for the link between irritancy and
+walking speed (p. 2289), give no FIC values: they index irritancy by the
 extinction coefficient *K*, and the smoke composition was not reported
 (Purser 2003, p. 98).
 
-**Which denominators?** Ch. 63 writes Eq. 63.13 with FIC = 1 meaning
-incapacitation "(e.g., 1000 ppm HCl)" (p. 2344), as Purser does (2003,
+**Which denominators?** Ch. 70 writes Eq. 70.11 with FIC = 1 meaning
+incapacitation "(e.g., 1000 ppm HCl)" (p. 2289), as Purser does (2003,
 p. 99). That HCl example is the ISO value; the SFPE incapacitation value is
 900 ppm. Purser defines the FIC of his speed curve as the concentration
 "expressed as a fraction of the concentration predicted to cause
@@ -179,10 +180,10 @@ at a multiple of it that the chapter states three ways: FIC about 3–5
 (p. 2–91), a factor of about four or more (p. 2–121), and 5–10 times the
 FIC (p. 2–132).
 
-![Fractional walking speed against FIC from Eq. 63.13: 1 at FIC 0, 0.71 at 0.1, 0.31 at 0.2, 0.08 at 0.5 and 0 at 1, continued as a dotted line to FIC 1.2 where it falls below zero](/images/fundamentals/irritant_speed.png)
+![Fractional walking speed against FIC from Eq. 70.11: 1 at FIC 0, 0.71 at 0.1, 0.31 at 0.2, 0.08 at 0.5 and 0 at 1, continued as a dotted line to FIC 1.2 where it falls below zero](/images/fundamentals/irritant_speed.png)
 
 *Fractional walking speed against fractional irritant concentration FIC
-from Ch. 63, Eq. 63.13, drawn thin because, in our reading, no walking data
+from Ch. 70, Eq. 70.11, drawn thin because, in our reading, no walking data
 lie behind it. Dotted beyond FIC = 1, outside the curve's range, where the
 formula goes negative. Script: `scripts/figures/fundamentals_irritant_speed.py`.*
 
@@ -190,12 +191,12 @@ formula goes negative. Script: `scripts/figures/fundamentals_irritant_speed.py`.
 
 Purser multiplies the unexposed walking speed by the fraction (2003,
 p. 98). He treats the effects of smoke and irritants as essentially additive
-(p. 99) and adds their losses (Purser 2003, p. 100; Ch. 63, Eq. 63.14,
-p. 2345; Eq. 70.12 in the 2026 edition, p. 2289):
+(p. 99) and adds their losses (Purser 2003, p. 100; Ch. 70, Eq. 70.12,
+p. 2289):
 
 $$
 F_{wv} = 1 - (1 - F_{wv\,smoke}) - (1 - F_{wv\,irr})
-\qquad \text{(Eq. 63.14)}
+\qquad \text{(Eq. 70.12)}
 $$
 
 where \(F_{wv\,smoke}\) is the fractional walking speed due to smoke
@@ -207,7 +208,7 @@ The walking speed is \(F_{wv}\) times the unexposed speed.
   \(F_{wv\,smoke} < 1\).
 - **Non-irritant smoke only.** \(F_{wv\,smoke}\) has to be a law for
   non-irritant smoke. Purser pairs it with his fit to Jin's non-irritant data
-  (2003, p. 98). Pairing it with Eq. 63.10, which is fitted to pooled
+  (2003, p. 98). Pairing it with Eq. 70.8, which is fitted to pooled
   "moderately irritant" data, would in our reading count irritancy twice (see
   [Walking speed in smoke](/fundamentals/walking-speed.md#purser-a-logarithmic-fit-for-irritant-smoke)).
 
@@ -222,38 +223,26 @@ with values read from Fig. 1 (about 1.0, 0.92, 0.71, 0.31, 0.14, 0.08 and
 gives 1 at FIC = 0, because the linear term alone fixes 0.83 there. The
 best tested case, 1000 *x* in the exponent only, ends at 0 at FIC = 1 but
 dips to −0.10 in between, with a mean absolute error of 0.16 against the
-readings. Ch. 63's Eq. 63.13, with 1000 *x* in the exponent and the whole
+readings. Ch. 70's Eq. 70.11, with 1000 *x* in the exponent and the whole
 numerator divided by 1.2, matches the readings with a mean absolute error
 of 0.002, and is the form given above. The figure on this page is computed
-from Eq. 63.13, not from the 2003 printing. Two minor misprints: Purser
+from Eq. 70.11, not from the 2003 printing. Two minor misprints: Purser
 (2003, p. 99) refers to "Figure 2" for the irritant curve, which is his
 Fig. 1, and calls the FIC axis the "ordinate" (pp. 99–100), which is the
-abscissa; Ch. 63 has "x-axis".
+abscissa; Ch. 70 has "x-axis" (p. 2289).
 {{< /details >}}
 
 ## Purser: a dose term for lung effects
 
 The lung effects are a dose. The fractional lethal dose of irritants
 \(FLD_{irr}\) [-] sums, for each irritant, the Ct exposure dose [ppm·min]
-divided by the dose predicted to be lethal to half the population (Eq. 63.15,
-Table 63.7, e.g. 114 000 ppm·min for HCl). Purser notes that lung irritation
+divided by the dose predicted to be lethal to half the population (Eq. 70.13,
+Table 70.5, p. 2290, e.g. 114 000 ppm·min for HCl). Purser notes that lung irritation
 has relatively little effect on escape capability and "can be omitted from an
-escape calculation" (p. 2415), but in the simplified asphyxiant equation he includes
+escape calculation" (p. 2342), but in the simplified asphyxiant equation he includes
 \(FLD_{irr}\) inside the sum that is multiplied by the CO₂ factor, because
-irritants impair lung function and add some hypoxia (Eq. 63.38; see
+irritants impair lung function and add some hypoxia (Eq. 70.38; see
 [Asphyxiant FED](/fundamentals/asphyxiant-fed.md)).
-
-{{< details title="Misprints in Ch. 63 that the 2026 edition corrects" closed="true" >}}
-- **"Numerator" for denominator.** Under Eq. 63.12, Ch. 63 calls both parts
-  of each FIC term the "numerator" (p. 2343); the second is the denominator.
-  The 2026 edition corrects it (p. 2289).
-- **Table 63.7, AEGL-3 column.** For NO, acrolein and formaldehyde the
-  values are shifted down one row (75, 2100 and blank). Table 70.5 of the
-  2026 edition (p. 2290) gives NO blank, acrolein 75 and formaldehyde 2100.
-  The 2026 values agree with the 30-min AEGL-3 concentrations of Table 63.6
-  times 30 min (2.5 × 30 = 75 and 70 × 30 = 2100 ppm·min); that check is
-  ours.
-{{< /details >}}
 
 ## FDS+Evac and FDS
 
@@ -268,7 +257,7 @@ $$
 adds the irritant lethal dose into the incapacitation sum, and its Table 2
 lists both the lethal doses \(F_{FLD}\) and the incapacitating concentrations
 \(F_{FIC}\). The values in that table agree with the SFPE columns of Tables
-63.6 and 63.7. This sum is the Purser / FDS+Evac guide form; ISO 13571 keeps irritants
+70.4 and 70.5. This sum is the Purser / FDS+Evac guide form; ISO 13571 keeps irritants
 out of the FED altogether.
 
 No equation in the guide uses \(F_{FIC}\), and the FDS+Evac source
@@ -284,16 +273,17 @@ half the population, the same values as the SFPE incapacitation column.
 Human measurements at incapacitating concentrations cannot be made for
 ethical reasons, and most of the experimental work behind the irritant
 values used animals, mostly rodents, together with expert judgement
-(Ch. 63, p. 2343). The three FIC and FEC denominator sets (SFPE escape impairment, SFPE
+(Ch. 70, p. 2288). The three FIC and FEC denominator sets (SFPE escape impairment, SFPE
 incapacitation, ISO) differ by up to about 40× for one gas (formaldehyde,
 6 ppm for SFPE escape impairment against 250 ppm for ISO; our arithmetic), so the choice of endpoint set
 changes FIC more than the choice of speed law does.
 Individual sensitivity is wide: for HCl, Purser proposes 200 ppm as the
 escape-impairment concentration for the average person, but notes that some
 people may be impaired at 60 ppm and others may escape through about
-400–600 ppm (p. 2343). The concentrations of acrolein and formaldehyde are
-rarely known in a fire, and Ch. 63 suggests a smoke-density surrogate when
-they are not (pp. 2344–2345). The walking-speed curve Eq. 63.13 is a concept
+400–600 ppm (p. 2288). The concentrations of acrolein and formaldehyde are
+rarely known in a fire, and Ch. 70 suggests a smoke-density surrogate when
+they are not (notes to Tables 70.4 and 70.5, pp. 2288 and 2290). The
+walking-speed curve Eq. 70.11 is a concept
 curve without fitted data and is defined only for FIC from 0 to 1.
 
 ## Sources
@@ -304,16 +294,16 @@ curve without fitted data and is defined only for FIC from 0 to 1.
   ISO, Geneva.
   [iso.org/standard/56172](https://www.iso.org/standard/56172.html).
   Read from the full text; paraphrased except the quoted phrase of §4.2.1.
-- Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
-  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
-  Protection Engineering, 5th ed., Ch. 63, 2308–2428. pp. 2325, 2333,
-  2342–2345, 2414–2415; Eqs. 63.8, 63.11–63.15, 63.38; Tables 63.6–63.7.
-  [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
 - Purser, D. A., & McAllister, J. L. (2026). *Assessment of hazards to
   occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
-  Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2287–2290;
-  Eqs. 70.9–70.12; Table 70.4 (identical to Table 63.6) and Table 70.5.
+  Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2278, 2287–2290,
+  2310, 2342; Eqs. 70.6, 70.9–70.13, 70.38; Tables 70.4–70.5.
   [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
+- Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
+  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
+  Protection Engineering, 5th ed., Ch. 63, 2308–2428. Cited only for the
+  FIC scale of p. 2325, which Ch. 70 drops.
+  [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
 - Purser, D. A. (2002). *Toxicity assessment of combustion products*.
   SFPE Handbook of Fire Protection Engineering, 3rd ed., Sec. 2, Ch. 6.
   NFPA, Quincy, MA. pp. 2–91, 2–121, 2–132.
