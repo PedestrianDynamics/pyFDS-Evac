@@ -72,6 +72,15 @@ def test_scenario_picker_lists_alternate_json_configs():
     )  # config.json is not duplicated as a file entry
 
 
+@pytest.fixture
+def repo_under_dir_root(monkeypatch):
+    """Root the browser at the repo, so it opens there even outside $HOME."""
+    from pyfds_evac.webapp.params import _REPO_ROOT
+
+    monkeypatch.setattr("pyfds_evac.webapp.app._DIR_ROOT", _REPO_ROOT.resolve())
+
+
+@pytest.mark.usefixtures("repo_under_dir_root")
 def test_browse_dir_lists_subfolders(client):
     r = client.get("/browse-dir")
     assert r.status_code == 200
@@ -79,6 +88,7 @@ def test_browse_dir_lists_subfolders(client):
     assert "assets" in r.text  # repo-root subfolders are listed
 
 
+@pytest.mark.usefixtures("repo_under_dir_root")
 def test_browse_dir_file_mode_lists_files(client):
     # File mode (used by vis_cache) lists files as well as folders.
     r = client.get("/browse-dir", params={"mode": "file", "field": "vis_cache"})
