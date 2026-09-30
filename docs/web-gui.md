@@ -92,7 +92,7 @@ growth, stay empty for this one-agent corridor.
 [![A Plotly chart titled Smoke, with time from 0 to 85 s on the horizontal axis, the speed factor on the left axis between 0.9196262 and 0.9196266, and the extinction coefficient K on the right axis between 0.995502 and 0.995507 per metre. Both lines are flat until about 50 s and then vary in their last digits](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places.")](images/web-gui/smoke_chart.png)
 
 {{< checkpoint title="The run finished" >}}
-The agent leaves the corridor after 85.2 s, and the run reports 1 of 1
+The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
 agent evacuated. The **Warning** box says that FED is disabled: this deck
 writes only the soot extinction slice, no CO, CO₂ or O₂, so the warning is
 expected here. The same run from the command line,
@@ -102,7 +102,7 @@ uv run python run.py --scenario assets/iso_table21_coupled \
     --fds-dir assets/iso_table21_coupled/fds
 ```
 
-ends with `Simulation finished in 85.15 s (1/1 evacuated).`
+ends with `Simulation finished in 85.05 s (1/1 evacuated).`
 {{< /checkpoint >}}
 
 ### Keep the run as a script
@@ -259,8 +259,8 @@ Both open a dialog with **Copy** and **Download .py**.
    settings.
 2. When the run has finished, click **Show Python for this run**. The dialog
    is titled "Code for run #1 · blind_spawn_discovery · *start time*" and
-   reports "Status: Complete: all agents evacuated (30/30), evacuation time
-   55.17 s".
+   reports "Status: Incomplete: time limit reached (2 of 30 remaining),
+   simulated time 300.00 s".
 3. Click **Download .py**. The file is named after the scenario, the run
    number and the run's UTC start time, for example
    `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z.py`.
@@ -277,7 +277,7 @@ After the model's own progress and log lines, the script ends with
 (pyfds-evac 0.1.0 at commit `ba4ade3`; path shortened):
 
 ```text
-Simulation finished in 55.17 s (30/30 evacuated).
+Simulation stopped after 300.00 s (28/30 evacuated, 2 remaining).
 Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite
 ```
 

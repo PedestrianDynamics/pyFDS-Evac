@@ -73,8 +73,8 @@ print(f"clear air:   {clear.evacuation_time:.2f} s")
 
 {{< checkpoint title="Clear-air run completed" >}}
 ```text
-Evacuated 1/1  sim=78.9s  wall=0m00s  done
-clear air:   78.94 s
+Evacuated 1/1  sim=79.0s  wall=0m00s  done
+clear air:   79.01 s
 ```
 
 The agent reached the exit in about 79 s. `run_scenario` prints the
@@ -102,14 +102,14 @@ print(f"K = {K_PER_M} 1/m: {smoky.evacuation_time:.2f} s")
 
 {{< checkpoint title="Smoke run completed" >}}
 ```text
-Evacuated 1/1  sim=104.0s  wall=0m00s  done
-K = 3.0 1/m: 103.99 s
+Evacuated 1/1  sim=104.1s  wall=0m00s  done
+K = 3.0 1/m: 104.09 s
 ```
 
 The same evacuation now takes about 104 s instead of 79 s.
 {{< /checkpoint >}}
 
-{{< comparison label-a="Clear air" value-a="78.94" label-b="Smoke, K = 3 1/m" value-b="103.99" unit="s" >}}
+{{< comparison label-a="Clear air" value-a="79.01" label-b="Smoke, K = 3 1/m" value-b="104.09" unit="s" >}}
 
 In this example, one agent in one corridor, the evacuation time grows by about
 a third. Other scenarios change by other amounts.
