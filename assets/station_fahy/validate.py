@@ -16,6 +16,12 @@ the paper's, with two rules that keep the comparison honest:
   people by the stage; comparing raw counts would make that row unmatchable.
 * Agents that never reach a door are reported separately and excluded from the
   shares, rather than being silently dropped or counted against a door.
+* Agents still on the grid at the horizon are **censored**: excluded from the
+  registered statistics and the same-agent set even when they stand within
+  ``--reach`` of a door, and counted beside T1 and W. An agent is censored when
+  its last frame is the run's last frame and that frame lies within one output
+  interval of the horizon (``max_simulation_time`` of ``--config``, or
+  ``--horizon``). A run that empties earlier censors nobody.
 
 The registered statistics of the Station validation study are printed below
 the table, over the agents of every run given, pooled:
@@ -27,8 +33,10 @@ the table, over the agents of every run given, pooled:
   ½ Σ_doors |model share - Fahy share|, averaged with Fahy's door users as
   weights. Rows with fewer than :data:`MIN_DOOR_USERS` Fahy door users are
   pooled into one row, model agents from those areas with them. A scored row
-  with no model door user counts as fully wrong (distance 1).
-* The **noise floor** of W: Fahy resampled multinomially against itself.
+  with no model door user counts as fully wrong (distance 1); the count of such
+  rows is printed on every line that reports W.
+* The **noise floor** of W: Fahy resampled multinomially against itself, each
+  scored row as one multinomial (the pooled small row as one pooled row).
 * With several runs (one per seed), the per-run spread of T1 and W.
 * With ``--t-jam``, T1 and W for agents whose exit time (their last recorded
   frame) is before t_jam and for those at or after it.
@@ -75,6 +83,7 @@ class AgentExit:
     door: str | None
     exit_time: float
     start: tuple[float, float]
+    censored: bool = False
 
 
 def _load(config_path: Path):
@@ -89,6 +98,27 @@ def _load(config_path: Path):
         for k, v in cfg["distributions"].items()
     }
     return exits, areas
+
+
+def config_horizon(config_path: Path) -> float | None:
+    """``max_simulation_time`` of a run config, or None if it has none."""
+    import json
+
+    cfg = json.loads(config_path.read_text())
+    sim = cfg.get("config", {}).get("simulation_settings", {})
+    return sim.get("simulationParams", {}).get("max_simulation_time")
+
+
+def _horizon_frame(last_frame: int, horizon: float | None, fps: float) -> int | None:
+    """The run's last frame if the run ended at *horizon*, else None."""
+    if horizon is None:
+        return None
+    horizon_frame = horizon * fps
+    if last_frame > horizon_frame + 1:
+        raise ValueError(
+            f"run ends at {last_frame / fps:g} s, after the horizon {horizon:g} s"
+        )
+    return last_frame if last_frame >= horizon_frame - 1 else None
 
 
 def _fps(con: sqlite3.Connection) -> float:
@@ -110,12 +140,13 @@ def _door(point, exits, reach: float) -> str | None:
 
 
 def observed_agents(
-    sqlite_path: Path, config_path: Path, reach: float
+    sqlite_path: Path, config_path: Path, reach: float, horizon: float | None = None
 ) -> list[AgentExit]:
     """Every agent of a run, with its area, door and exit time in seconds.
 
     The exit time is the agent's last recorded frame, so it is only as fine
-    as the trajectory's output interval.
+    as the trajectory's output interval. With a *horizon* (s), the agents
+    still present when the run stopped there are marked censored.
     """
     from shapely.geometry import Point
 
@@ -132,6 +163,7 @@ def observed_agents(
     for aid, frame, x, y in rows:
         first.setdefault(aid, (x, y))
         last[aid] = (frame, x, y)
+    end = _horizon_frame(max((f for f, _, _ in last.values()), default=0), horizon, fps)
     return [
         AgentExit(
             agent_id=aid,
@@ -139,13 +171,14 @@ def observed_agents(
             door=_door(Point(*last[aid][1:]), exits, reach),
             exit_time=last[aid][0] / fps,
             start=start,
+            censored=last[aid][0] == end,
         )
         for aid, start in first.items()
     ]
 
 
 def _scored(agent: AgentExit, ids, t_from: float, t_to: float) -> bool:
-    if agent.origin is None or agent.door is None:
+    if agent.origin is None or agent.door is None or agent.censored:
         return False
     if ids is not None and agent.agent_id not in ids:
         return False
@@ -155,7 +188,7 @@ def _scored(agent: AgentExit, ids, t_from: float, t_to: float) -> bool:
 def door_matrix(
     agents, ids=None, t_from: float = -math.inf, t_to: float = math.inf
 ) -> dict[str, dict[str, int]]:
-    """Origin -> door counts of the placed agents that reached a door.
+    """Origin -> door counts of the placed, uncensored agents at a door.
 
     *ids* restricts the agents (the same-agent set); *t_from* <= exit time
     < *t_to* restricts their exit times.
@@ -171,6 +204,11 @@ def stuck_counts(agents) -> dict[str, int]:
     """Placed agents per origin that never reached a door."""
     stuck = Counter(a.origin for a in agents if a.origin and a.door is None)
     return dict(stuck)
+
+
+def censored_count(agents) -> int:
+    """Placed agents still on the grid at the horizon."""
+    return sum(1 for a in agents if a.origin and a.censored)
 
 
 def observed_matrix(sqlite_path: Path, config_path: Path, reach: float):
@@ -245,7 +283,11 @@ def noise_floor(
     seed: int = 0,
     min_n: int = MIN_DOOR_USERS,
 ):
-    """W of *draws* multinomial resamples of *targets* against themselves."""
+    """W of *draws* multinomial resamples of *targets* against themselves.
+
+    Each scored row is resampled as one multinomial; the rows pooled into
+    :data:`POOLED_ROW` are resampled together, as one pooled row.
+    """
     import numpy as np
 
     groups = pooling(targets, min_n)
@@ -269,8 +311,12 @@ def _check_same_spawn(a: AgentExit, b: AgentExit | None) -> None:
         raise ValueError(f"agent {a.agent_id} spawns differently in the two runs")
 
 
+def _exited(agent: AgentExit) -> bool:
+    return bool(agent.origin and agent.door) and not agent.censored
+
+
 def same_agents(agents_a, agents_b) -> set[int]:
-    """Ids of the placed agents that reached a door in both runs.
+    """Ids of the placed agents that reached a door, uncensored, in both runs.
 
     Raises ValueError unless both runs hold the same agents, in the same areas
     and start positions: the ids of two arms must name the same people.
@@ -280,11 +326,7 @@ def same_agents(agents_a, agents_b) -> set[int]:
         raise ValueError("the two runs hold different numbers of agents")
     for a in agents_a:
         _check_same_spawn(a, by_id.get(a.agent_id))
-    return {
-        a.agent_id
-        for a in agents_a
-        if a.origin and a.door and by_id[a.agent_id].door is not None
-    }
+    return {a.agent_id for a in agents_a if _exited(a) and _exited(by_id[a.agent_id])}
 
 
 def paired_w(agents_a, agents_b, targets) -> tuple[float, float, int]:
@@ -334,7 +376,7 @@ def report(matrix, stuck) -> int:
     print(f"agents reaching a door: {total}   never reached one: {sum(stuck.values())}")
     if total:
         print(
-            f"front-door share: {front / total:.1%}   "
+            f"T1' front-door share: {front / total:.1%}   "
             f"(Fahy: {F.aggregate_door_shares()['front']:.1%} of door users, "
             f"and >= {F.front_door_attempt_floor():.0%} of all survivors tried it)"
         )
@@ -349,14 +391,21 @@ def _pct(share: float | None) -> str:
 def _line(label: str, matrix, targets) -> str:
     n = sum(sum(v.values()) for v in matrix.values())
     w = w_statistic(matrix, targets)
-    return f"{label:28s} T1 {_pct(t1(matrix)):>6s}   W {w:.3f}   (n = {n})"
+    empty = len(empty_rows(matrix, targets))
+    scored = len(set(pooling(targets).values()))
+    return (
+        f"{label:28s} T1 {_pct(t1(matrix)):>6s}   W {w:.3f}   "
+        f"(n = {n}, rows without a door user {empty}/{scored})"
+    )
 
 
-def _spread(values) -> str:
+def _spread(values, fmt=lambda v: f"{v:.3f}") -> str:
     values = sorted(v for v in values if v is not None)
     if not values:
         return "n/a"
-    return f"{values[0]:.3f} / {statistics.median(values):.3f} / {values[-1]:.3f}"
+    return " / ".join(
+        fmt(v) for v in (values[0], statistics.median(values), values[-1])
+    )
 
 
 def report_statistic(
@@ -389,16 +438,23 @@ def report_statistic(
     )
     floor = sorted(noise_floor(targets, draws, seed))
     print(
-        f"    noise floor, Fahy against itself ({draws} draws): "
+        f"    noise floor, Fahy against itself, one multinomial per scored row "
+        f"({draws} draws): "
         f"median {statistics.median(floor):.3f}, "
         f"p95 {floor[int(0.95 * (len(floor) - 1))]:.3f}"
+    )
+    censored = sum(censored_count(a) for a in runs)
+    placed = sum(1 for a in runs for x in a if x.origin)
+    print(
+        f"censored: {censored} of {placed} placed agents still on the grid at the "
+        "horizon, excluded from T1 and W"
     )
     missing = empty_rows(pooled, targets)
     if missing:
         print(f"    rows without a model door user (distance 1): {', '.join(missing)}")
     if len(runs) > 1:
         print("per-run spread, min / median / max:")
-        print(f"    T1 {_spread(t1(m) for m in matrices)}")
+        print(f"    T1 {_spread((t1(m) for m in matrices), _pct)}")
         print(f"    W  {_spread(w_statistic(m, targets) for m in matrices)}")
     if t_jam is None:
         return
@@ -450,18 +506,28 @@ def main() -> int:
         default=None,
         help="runs of another arm, paired with the runs in the same order",
     )
+    ap.add_argument(
+        "--horizon",
+        type=float,
+        default=None,
+        help="censor agents present at this time (s); "
+        "default: max_simulation_time of --config",
+    )
     ap.add_argument("--noise-draws", type=int, default=NOISE_DRAWS)
     ap.add_argument("--noise-seed", type=int, default=0)
     args = ap.parse_args()
     if args.against and len(args.against) != len(args.sqlite):
         ap.error("--against needs as many runs as are scored")
-    runs = [observed_agents(p, args.config, args.reach) for p in args.sqlite]
+    horizon = args.horizon if args.horizon is not None else config_horizon(args.config)
+    runs = [observed_agents(p, args.config, args.reach, horizon) for p in args.sqlite]
     matrix = pooled_matrix(door_matrix(agents) for agents in runs)
     stuck = dict(sum((Counter(stuck_counts(a)) for a in runs), Counter()))
     report(matrix, stuck)
     report_statistic(runs, args.t_jam, args.noise_draws, args.noise_seed)
     if args.against:
-        others = [observed_agents(p, args.config, args.reach) for p in args.against]
+        others = [
+            observed_agents(p, args.config, args.reach, horizon) for p in args.against
+        ]
         report_paired(runs, others)
     return 0
 
