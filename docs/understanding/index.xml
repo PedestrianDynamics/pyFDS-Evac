@@ -538,8 +538,11 @@ per run from the scenario&amp;rsquo;s &lt;code>routing&lt;/code> block and fixed
 (&lt;code>RouteCostConfig&lt;/code>), so every agent shares them. In Wood&amp;rsquo;s UK
 survey, people completely familiar with the building moved through smoke more
 often than those less familiar (61 % against 51 %; Wood 1980, Table 6.4,
-p. 87), though moving through smoke was not associated with leaving the
-building (p. 91). See
+p. 87; Wood 1972, p. 80, reports the trend over four familiarity levels as
+significant). Familiarity did not affect how far people moved through smoke
+(Wood 1972, p. 83), 85 % of respondents were completely familiar with the
+building (Wood 1972, Table 6, p. 40), and moving through smoke was not
+associated with leaving the building (Wood 1980, p. 91). See
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362" target="_blank" rel="noopener">issue #362&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Herding and social influence.&lt;/strong> Each agent chooses its route from its own
 cognitive map and the hazard along each route. When &lt;code>routing.w_queue&lt;/code> is
@@ -584,7 +587,7 @@ slice output (&lt;code>&amp;amp;DUMP DT_SLCF&lt;/code>).&lt;/p>
 &lt;p>&lt;strong>Re-entry.&lt;/strong> An agent that reaches an exit is removed from the simulation
 (&lt;code>run_scenario&lt;/code> in &lt;code>pyfds_evac/core/scenario.py&lt;/code>), so nobody goes back into
 the building. In Wood&amp;rsquo;s UK survey, 43 % of those who had left the building
-re-entered it (Wood 1980, Table 6.6, p. 95): 53 % of men and 34 % of women
+re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of men and 34 % of women
 (Table 6.3, p. 87).&lt;/p>
 &lt;h2>Reproducibility&lt;span class="hx-absolute -hx-mt-20" id="reproducibility">&lt;/span>
 &lt;a href="#reproducibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A fixed seed does not give identical trajectories. The verification suite
@@ -612,6 +615,8 @@ Finland.&lt;/p>
 &lt;p>Purser, D. A., and McAllister, J. L. (2016). Assessment of hazards to
 occupants from smoke, toxic gases, and heat. In &lt;em>SFPE Handbook of Fire
 Protection Engineering&lt;/em>, 5th ed., Chapter 63. Springer.&lt;/p>
+&lt;p>Wood, P. G. (1972). &lt;em>The Behaviour of People in Fires&lt;/em>. Fire Research Note
+No. 953, Fire Research Station, Borehamwood. No DOI or public URL.&lt;/p>
 &lt;p>Wood, P. G. (1980). A survey of behaviour in fires. In D. Canter (Ed.),
 &lt;em>Fires and Human Behaviour&lt;/em>, pp. 83–95. John Wiley &amp;amp; Sons, Chichester.
 ISBN 0-471-27709-6.&lt;/p></description></item><item><title>Model comparison: FDS+Evac vs pyFDS-Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/</guid><description>

@@ -1215,8 +1215,12 @@ from the UK and Australia/New Zealand use 0.3 (§4.3).&lt;/p>
 model (§4.6 f). Its obscuration endpoint, sight of about arm&amp;rsquo;s length at
 0.8 g/m³ (clause 9, Note 1), is K ≈ 8 1/m with σ = 10 m²/g (our
 conversion), about 35 times vfdb&amp;rsquo;s 0.23 1/m. The lower limits come from
-behaviour: about 30 % of people turn back rather than enter smoke at about
-3 m visibility, and the suggested limits are 0.08 OD/m (K ≈ 0.18) for
+behaviour: Purser and McAllister list &amp;lsquo;30 % people turn back rather than
+enter&amp;rsquo; at about 3 m. In the surveys behind that entry, 26 % (UK; Wood 1972,
+Fig. 6) and 29 % (US; Bryan 1977, p. 213) of those who had entered smoke
+turned back, at any visibility, and the US group&amp;rsquo;s mean self-estimated
+visibility on turning back was 9.9 ft ≈ 3 m (Bryan 1977, Table LIV).
+Purser and McAllister also suggest limits of 0.08 OD/m (K ≈ 0.18) for
 large enclosures and 0.2 OD/m (K ≈ 0.46) for small ones (Purser and
 McAllister, Table 63.5, p. 2339). Where D_L ≤ 0.1 1/m, the toxic and
 temperature values are usually met as well (vfdb p. 325; DIN §7.2.2). In
@@ -1996,6 +2000,12 @@ occupants from smoke, toxic gases, and heat. &lt;em>SFPE Handbook of Fire
 Protection Engineering&lt;/em>, 5th ed., Ch. 63, Eq. 63.43, pp. 2320,
 2338–2339, 2343–2344, 2383.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
+&lt;li>Wood, P. G. (1972). &lt;em>The Behaviour of People in Fires&lt;/em>. Fire Research
+Note No. 953, Fire Research Station, Borehamwood. No DOI or public URL.&lt;/li>
+&lt;li>Bryan, J. L. (1977). &lt;em>Smoke as a Determinant of Human Behavior in Fire
+Situations (Project People)&lt;/em>. NBS-GCR-77-94, University of Maryland, for
+the National Bureau of Standards. NTIS PB271755,
+&lt;a href="https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/PB271755.xhtml" target="_blank" rel="noopener">ntrl.ntis.gov&lt;/a>.&lt;/li>
 &lt;li>Hartzell, G. E., &amp;amp; Emmons, H. W. (1988). The fractional effective dose
 model for assessment of toxic hazards in fires. &lt;em>J. Fire Sci.&lt;/em>, 6,
 356–362. &lt;a href="https://doi.org/10.1177/073490418800600504" target="_blank" rel="noopener">doi:10.1177/073490418800600504&lt;/a>&lt;/li>
@@ -7157,6 +7167,10 @@ that node is not counted, and anticipated arrival times start at that node
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81" target="_blank" rel="noopener">#81&lt;/a>).&lt;/li>
 &lt;li>The smoke terms are the same for every familiarity setting
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362" target="_blank" rel="noopener">#362&lt;/a>).&lt;/li>
+&lt;li>&lt;code>impassable_extinction_threshold&lt;/code> (3.0 1/m) is a modelling assumption
+with no empirical source; the field surveys give only self-estimated
+visibility at turn-back
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371" target="_blank" rel="noopener">#371&lt;/a>).&lt;/li>
 &lt;li>For discovery agents, the order of tied routes depends on
 &lt;code>PYTHONHASHSEED&lt;/code> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199" target="_blank" rel="noopener">#199&lt;/a>).&lt;/li>
 &lt;li>Anticipation assumes unimpeded speed and, by default, perfect foresight of
@@ -7842,12 +7856,14 @@ brightness&amp;rdquo; (abstract, p. 135).&lt;/p>
 &lt;li>The law describes a straight, unobstructed line of sight through uniform
 smoke to one object. It does not describe how far one can see around
 corners, or how much smoke a person walks through. In Wood&amp;rsquo;s survey of
-952 UK fires, 60 % of the people in incidents with smoke attempted to move
-through it, and 26 % turned back in smoke (not broken down by
-visibility). The distance they moved
-correlated only imperfectly with the distance they could see ahead, and
-moving through smoke was not associated with leaving the building (Wood
-1980, pp. 84–91 and Table 6.6, p. 95).&lt;/li>
+952 UK fires (2193 people interviewed at the scene), 60 % of the people
+in incidents with smoke attempted to move through it, and 26 % of those
+who did turned back. Of those who turned back, 91 % estimated they could
+see 4 yd (3.7 m) or less; visibility was self-estimated on a scale of 0,
+2, 4, 10, 12, 15, 20 and 20+ yd (Wood 1972, Fig. 6, p. 50). The distance
+they moved correlated only imperfectly with the distance they could see
+ahead (Spearman ρ = 0.41; Wood 1972, p. 84), and moving through smoke was
+not associated with leaving the building (Wood 1980, p. 91).&lt;/li>
 &lt;li>It was measured at 5.5–15.5 m (Jin 1970, 1971) and stated for 5–15 m
 (Jin 1971; Jin 1978, p. 137). &lt;em>V&lt;/em> outside that range, including the 30 m FDS cap, is an
 extrapolation.&lt;/li>
@@ -7956,6 +7972,8 @@ Mueller, E., &amp;amp; Paul, C. (2025). &lt;em>Fire Dynamics Simulator User&amp;
 Guide&lt;/em>. National Institute of Standards and Technology (NIST) Special
 Publication 1019, 6th ed., revision FDS-6.10.1-0-g12efa16, §22.10.5.
 &lt;a href="https://github.com/firemodels/fds/releases/tag/FDS-6.10.1" target="_blank" rel="noopener">github.com/firemodels/fds/releases/tag/FDS-6.10.1&lt;/a>&lt;/li>
+&lt;li>Wood, P. G. (1972). &lt;em>The Behaviour of People in Fires&lt;/em>. Fire Research
+Note No. 953, Fire Research Station, Borehamwood. No DOI or public URL.&lt;/li>
 &lt;li>Wood, P. G. (1980). &lt;em>A survey of behaviour in fires&lt;/em>. In D. Canter
 (Ed.), &lt;em>Fires and Human Behaviour&lt;/em> (pp. 83–95). John Wiley &amp;amp; Sons,
 Chichester. ISBN 0-471-27709-6. No DOI or public URL. The UK survey was
@@ -12186,8 +12204,11 @@ per run from the scenario&amp;rsquo;s &lt;code>routing&lt;/code> block and fixed
 (&lt;code>RouteCostConfig&lt;/code>), so every agent shares them. In Wood&amp;rsquo;s UK
 survey, people completely familiar with the building moved through smoke more
 often than those less familiar (61 % against 51 %; Wood 1980, Table 6.4,
-p. 87), though moving through smoke was not associated with leaving the
-building (p. 91). See
+p. 87; Wood 1972, p. 80, reports the trend over four familiarity levels as
+significant). Familiarity did not affect how far people moved through smoke
+(Wood 1972, p. 83), 85 % of respondents were completely familiar with the
+building (Wood 1972, Table 6, p. 40), and moving through smoke was not
+associated with leaving the building (Wood 1980, p. 91). See
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362" target="_blank" rel="noopener">issue #362&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Herding and social influence.&lt;/strong> Each agent chooses its route from its own
 cognitive map and the hazard along each route. When &lt;code>routing.w_queue&lt;/code> is
@@ -12232,7 +12253,7 @@ slice output (&lt;code>&amp;amp;DUMP DT_SLCF&lt;/code>).&lt;/p>
 &lt;p>&lt;strong>Re-entry.&lt;/strong> An agent that reaches an exit is removed from the simulation
 (&lt;code>run_scenario&lt;/code> in &lt;code>pyfds_evac/core/scenario.py&lt;/code>), so nobody goes back into
 the building. In Wood&amp;rsquo;s UK survey, 43 % of those who had left the building
-re-entered it (Wood 1980, Table 6.6, p. 95): 53 % of men and 34 % of women
+re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of men and 34 % of women
 (Table 6.3, p. 87).&lt;/p>
 &lt;h2>Reproducibility&lt;span class="hx-absolute -hx-mt-20" id="reproducibility">&lt;/span>
 &lt;a href="#reproducibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A fixed seed does not give identical trajectories. The verification suite
@@ -12260,6 +12281,8 @@ Finland.&lt;/p>
 &lt;p>Purser, D. A., and McAllister, J. L. (2016). Assessment of hazards to
 occupants from smoke, toxic gases, and heat. In &lt;em>SFPE Handbook of Fire
 Protection Engineering&lt;/em>, 5th ed., Chapter 63. Springer.&lt;/p>
+&lt;p>Wood, P. G. (1972). &lt;em>The Behaviour of People in Fires&lt;/em>. Fire Research Note
+No. 953, Fire Research Station, Borehamwood. No DOI or public URL.&lt;/p>
 &lt;p>Wood, P. G. (1980). A survey of behaviour in fires. In D. Canter (Ed.),
 &lt;em>Fires and Human Behaviour&lt;/em>, pp. 83–95. John Wiley &amp;amp; Sons, Chichester.
 ISBN 0-471-27709-6.&lt;/p></description></item><item><title>Scenario JSON</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</guid><description>
