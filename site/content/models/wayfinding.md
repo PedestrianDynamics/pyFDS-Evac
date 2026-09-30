@@ -287,7 +287,9 @@ two differ:
   ranks the routes from the spawn node, with distances measured from the
   agent's position, as re-evaluation measures them, and without the queue
   tally (`scenario.py`, `_assign_initial_exit`). Agents of one spawn area
-  can therefore start towards different exits.
+  can therefore start towards different exits. Only the first leg is
+  measured from the agent: each exit's candidate path is still the single
+  shortest path from the spawn node (#185), as in re-evaluation.
 - **Re-evaluation** (`evaluate_and_reroute`). It ranks from the agent's
   position. It adopts a different exit only if the rival passes the
   [switching rule](/models/routing.md#switching-rule) of the routing model:

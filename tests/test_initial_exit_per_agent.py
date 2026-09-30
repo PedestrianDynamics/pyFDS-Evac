@@ -103,7 +103,8 @@ def _room_scenario() -> Scenario:
 def _first_positions(sqlite_file: str) -> dict[int, tuple[float, float]]:
     with contextlib.closing(sqlite3.connect(sqlite_file)) as con:
         rows = con.execute(
-            "SELECT id, pos_x, pos_y FROM trajectory_data ORDER BY frame DESC"
+            "SELECT id, pos_x, pos_y FROM trajectory_data "
+            "WHERE frame = (SELECT MIN(frame) FROM trajectory_data)"
         ).fetchall()
     return {agent_id: (x, y) for agent_id, x, y in rows}
 
