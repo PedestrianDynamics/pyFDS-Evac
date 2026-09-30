@@ -136,6 +136,26 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Write ranked route cost snapshots to CSV",
     )
     parser.add_argument(
+        "--output-exit-history",
+        help="Write each path agent's exit (agent_id, origin, spawn_index, "
+        "exit_id) to CSV: the exit it left through, or the one it was heading "
+        "for at the end",
+    )
+    parser.add_argument(
+        "--smoke-blind",
+        action="store_true",
+        help="Sample the fire for the smoke and FED histories only: agents walk, "
+        "choose exits and see signs as in clear air, rerouting and tenability "
+        "are off, and FED still accumulates",
+    )
+    parser.add_argument(
+        "--replay-exits",
+        help="Exit history CSV of an earlier run (--output-exit-history); the "
+        "agent spawned n-th from an origin is sent to the exit the n-th agent "
+        "from that origin took there, by clear-air costs on the agent's map. "
+        "Needs the same scenario and seed",
+    )
+    parser.add_argument(
         "--vis-cache",
         help="Path to vismap .npz cache for sight gating, which decides which "
         "graph nodes enter an agent's cognitive map; route choice does not read "
@@ -501,6 +521,19 @@ def _write_route_history_csv(rows, output_path: str) -> None:
             writer.writerow(row)
 
 
+def _write_exit_history_csv(rows, output_path: str) -> None:
+    """Write per-agent exit rows to a CSV file."""
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=["agent_id", "origin", "spawn_index", "exit_id"]
+        )
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
 def _write_route_cost_history_csv(rows, output_path: str) -> None:
     """Write ranked route cost snapshots to a CSV file."""
     destination = pathlib.Path(output_path).resolve()
@@ -630,6 +663,10 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         )
         artifacts.append(f"Route cost CSV: {opts.output_route_cost_history}")
         log(f"Route cost samples: {len(result.route_cost_history)}")
+    output_exit_history = getattr(opts, "output_exit_history", None)
+    if output_exit_history and result.exit_history is not None:
+        _write_exit_history_csv(result.exit_history, output_exit_history)
+        artifacts.append(f"Exit history CSV: {output_exit_history}")
 
     if opts.output_sqlite and result.sqlite_file:
         output_path = pathlib.Path(opts.output_sqlite).resolve()

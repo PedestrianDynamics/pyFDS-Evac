@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `--smoke-blind`, `--replay-exits CSV` and `--output-exit-history CSV`
+  for ASET/RSET arms on the same FDS output. `--smoke-blind` samples the fire
+  for the smoke and FED histories only: agents walk at free speed, choose
+  their first exit with K = 0 and no FED, see signs as without the fire, and
+  rerouting and tenability are off; FED, heat FED and FIC still accumulate.
+  `--output-exit-history` writes each agent's exit
+  (`agent_id,origin,spawn_index,exit_id`), and `--replay-exits` sends the
+  n-th agent spawned from an origin in a later run to the exit of the n-th
+  agent from that origin there, by clear-air costs on the agent's map,
+  failing on a missing spawn, an unknown exit or an exit it cannot apply.
+  `run_scenario` takes `smoke_blind` and `replay_exits`, `ScenarioResult`
+  gains `exit_history`, and the manifest records both options when on,
+  the replay as its agent count and sha256
+  ([#341](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/341)).
 - `--heat-regime {smoke,layer}` (opt-in, with `--heat-fed-method
   total-flux`; default `smoke`, the behaviour below): `layer` takes the head
   to be in clear air below a hot layer, with q = h(T_g − T_s)/1000 plus the

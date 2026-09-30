@@ -15,6 +15,7 @@ Usage::
     df = result.trajectory_dataframe()
 """
 
+import hashlib
 import json
 import logging
 import math
@@ -23,7 +24,7 @@ import pathlib
 import random
 import sqlite3
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from types import SimpleNamespace
 from typing import Any
@@ -832,6 +833,7 @@ class ScenarioResult:
     route_cost_history: list[dict[str, Any]] | None = None
     cognitive_map_history: list[dict[str, Any]] | None = None
     manifest_file: str | None = None
+    exit_history: list[dict[str, Any]] | None = None
 
     @property
     def success(self) -> bool:
@@ -956,6 +958,7 @@ def _assign_initial_exit(
     extinction_sampler,
     fed_rate_sampler=None,
     cached_segments: dict | None = None,
+    required_exit: str | None = None,
 ) -> str | None:
     """Point a freshly spawned agent at the best exit *it knows about*.
 
@@ -971,6 +974,10 @@ def _assign_initial_exit(
     agents already assigned to it, scattering a crowd that -- by hypothesis --
     all knows the same door. Congestion is a running condition, so it enters on
     reroute, not at t=0.
+
+    With *required_exit* (exit replay) the agent takes the best ranked route to
+    that exit, or the shortest graph path to it when the exit is outside the
+    agent's map. Raises ExitReplayError when the exit cannot be reached.
 
     Returns the exit the agent is now heading for, or None when it knows no
     reachable exit, in which case the geometric assignment is left in place.
@@ -1007,22 +1014,159 @@ def _assign_initial_exit(
         cached_segments=cached_segments,
         cognitive_map=cmap,
     )
+    if required_exit is not None:
+        path = _replayed_path(graph, spawn_node, ranked, required_exit)
+        if path is None:
+            raise ExitReplayError(
+                f"Replayed exit {required_exit!r} of agent {agent_id} is not "
+                f"reachable from {spawn_node!r}."
+            )
+        return required_exit if _apply_initial_path(wait_info, path) else None
     ranked = [rc for rc in ranked if not rc.rejected] or ranked
     if not ranked:
         return None
 
     best = ranked[0]
+    return best.exit_id if _apply_initial_path(wait_info, list(best.path)) else None
+
+
+def _flow_origin(flow_dist: dict, source_id: int) -> str:
+    """Return the replay origin of a flow source: its distribution key."""
+    return f"flow:{flow_dist.get('dist_key') or source_id}"
+
+
+class ExitReplayError(ValueError):
+    """An agent cannot be given the exit it took in the replayed run."""
+
+
+def _replayed_path(
+    graph: "StageGraph", spawn_node: str, ranked: list, exit_id: str
+) -> list[str] | None:
+    """Return the route to *exit_id*: the best ranked one, else the shortest."""
+    ordered = [rc for rc in ranked if not rc.rejected] + [
+        rc for rc in ranked if rc.rejected
+    ]
+    for rc in ordered:
+        if rc.exit_id == exit_id:
+            return list(rc.path)
+    found = graph.shortest_path_to(spawn_node, exit_id)
+    return None if found is None else found[1]
+
+
+def _apply_initial_path(wait_info: dict, path: list[str]) -> bool:
+    """Point *wait_info* along *path*; return whether it was applied."""
     # Clear the geometric target so reroute_agent anchors on the spawn node and
     # writes the whole path, rather than treating the old exit as a waypoint.
     previous_stage = wait_info.get("current_target_stage")
     wait_info["current_target_stage"] = None
-    reroute_agent(wait_info, list(best.path), wait_info.get("stage_configs", {}))
+    reroute_agent(wait_info, path, wait_info.get("stage_configs", {}))
     if wait_info.get("current_target_stage") is None:
         # Nothing was applied, so ``target`` still points into the geometric
         # exit's polygon; keep that assignment whole rather than half-updating.
         wait_info["current_target_stage"] = previous_stage
+        return False
+    return True
+
+
+# Spawn origin of the agents placed before the first step; flow sources are
+# ``flow:<distribution key>``.
+INITIAL_ORIGIN = "initial"
+
+SpawnKey = tuple[str, int]
+
+
+def _spawn_key(
+    spawn_keys: dict[int, SpawnKey],
+    origin_counts: dict[str, int],
+    agent_id: int,
+    origin: str,
+) -> SpawnKey:
+    """Return ``(origin, n)`` for the agent spawned n-th from *origin*.
+
+    Counting per origin keeps the pairing when a blocked flow source spawns
+    later than in the replayed run, which a single counter would shift.
+    """
+    if agent_id in spawn_keys:
+        return spawn_keys[agent_id]
+    key = (origin, origin_counts.get(origin, 0))
+    origin_counts[origin] = key[1] + 1
+    spawn_keys[agent_id] = key
+    return key
+
+
+def _replayed_exit(
+    replay_exits: Mapping[SpawnKey, str] | None, key: SpawnKey, agent_id: int
+) -> str | None:
+    """Return the exit the agent spawned at *key* took, or None.
+
+    Raises ExitReplayError when replay is on and the key has no recorded exit.
+    """
+    if replay_exits is None:
         return None
-    return best.exit_id
+    exit_id = replay_exits.get(key)
+    if exit_id is None:
+        raise ExitReplayError(
+            f"--replay-exits has no exit for origin {key[0]!r} spawn index "
+            f"{key[1]} (agent {agent_id}); replay needs the same scenario and seed."
+        )
+    return exit_id
+
+
+def _check_replayed_exit(
+    required_exit: str | None, heading: str | None, agent_id: int
+) -> None:
+    """Raise ExitReplayError when a replayed agent is not heading for its exit."""
+    if required_exit is None or heading == required_exit:
+        return
+    raise ExitReplayError(
+        f"Agent {agent_id} could not be sent to its replayed exit "
+        f"{required_exit!r}; it is heading for {heading!r}."
+    )
+
+
+def _warn_unused_replay(
+    replay_exits: Mapping[SpawnKey, str] | None, spawn_keys: dict[int, SpawnKey]
+) -> None:
+    """Warn when the replayed run spawned agents this run did not."""
+    if replay_exits is None:
+        return
+    unused = set(replay_exits).difference(spawn_keys.values())
+    if unused:
+        _logger.warning(
+            "--replay-exits: %d agent(s) of the replayed run were never spawned "
+            "here (first: origin %r spawn index %d).",
+            len(unused),
+            *min(unused),
+        )
+
+
+def _replay_digest(replay_exits: Mapping[SpawnKey, str]) -> str:
+    """Return a sha256 of the replayed rows, independent of their order."""
+    rows = sorted(f"{o}\t{i}\t{e}" for (o, i), e in replay_exits.items())
+    return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest()
+
+
+def _check_run_modes(
+    smoke_blind: bool,
+    reroute_config,
+    tenability_config,
+    replay_exits: Mapping[SpawnKey, str] | None,
+    stage_graph: "StageGraph | None",
+) -> None:
+    """Reject a smoke-blind run that would let smoke act, or a bad replay."""
+    if smoke_blind and reroute_config is not None:
+        raise ValueError("smoke_blind runs take no reroute_config")
+    if smoke_blind and tenability_config is not None:
+        raise ValueError("smoke_blind runs take no tenability_config")
+    if replay_exits is None:
+        return
+    if stage_graph is None:
+        raise ValueError("--replay-exits needs a scenario with exit stages")
+    unknown = sorted(set(replay_exits.values()) - set(stage_graph.exit_nodes()))
+    if unknown:
+        raise ValueError(
+            f"--replay-exits names exits this scenario lacks: {', '.join(unknown)}"
+        )
 
 
 def _migrate_journeys_v2(data: dict[str, Any]) -> None:
@@ -1188,12 +1332,21 @@ def run_scenario(
     collect_cognitive_map_history: bool = False,
     vis_model=None,
     progress_callback: ProgressCallback | None = None,
+    smoke_blind: bool = False,
+    replay_exits: Mapping[SpawnKey, str] | None = None,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app.
 
     When ``progress_callback`` is supplied it receives a :class:`ProgressEvent`
     at the same throttled cadence as the stdout progress line. The default
     ``None`` leaves runtime behavior unchanged.
+
+    ``smoke_blind`` samples the smoke and FED models for the histories only:
+    agents walk and choose exits as in clear air. It takes no
+    ``reroute_config`` and no ``tenability_config``. ``replay_exits`` maps
+    ``(origin, spawn_index)`` to the exit the agent spawned there took in an
+    earlier run (see ``ScenarioResult.exit_history``); each path agent is sent
+    there by the route clear-air costs rank best on its map.
     """
     _require_jupedsim()
     from .simulation_init import (
@@ -1304,6 +1457,12 @@ def run_scenario(
         last_fed_update_time = None
         last_reroute_check_time: float | None = None
         route_history: list[dict[str, Any]] = []
+        # Exit each path agent is heading for, then the one it left through.
+        agent_exits: dict[int, str] = {}
+        # Run-local spawn order of path agents per origin; JuPedSim ids can
+        # skip (#198).
+        spawn_keys: dict[int, SpawnKey] = {}
+        origin_counts: dict[str, int] = {}
         route_cost_history: list[dict[str, Any]] = []
         agent_route_state: dict[int, AgentRouteState] = {}
         cognitive_maps: dict[int, AgentCognitiveMap] = {}
@@ -1362,6 +1521,9 @@ def run_scenario(
                     f"direct_steering={len(direct_steering_info)} "
                     f"wait_info={len(agent_wait_info)}"
                 )
+        _check_run_modes(
+            smoke_blind, reroute_config, tenability_config, replay_exits, stage_graph
+        )
         # Pre-compute familiarity per distribution index. The value may be
         # "full", "discovery", or a probability in [0, 1] that each exit is
         # already known -- a real crowd is a gradient, not two camps.
@@ -1385,16 +1547,24 @@ def run_scenario(
         )
 
         def _initial_exit_choice(
-            agent_id: int, wait_info: dict, cached_segments: dict | None = None
+            agent_id: int,
+            wait_info: dict,
+            cached_segments: dict | None = None,
+            origin: str = INITIAL_ORIGIN,
         ) -> str | None:
             """Re-target one just-spawned agent onto the best exit it knows.
 
             *cached_segments* is only safe to share between agents ranked at the
             same instant, since segment costs depend on the smoke field at that
-            time; flow-spawned agents therefore pass nothing.
+            time; flow-spawned agents therefore pass nothing, and their
+            *origin*.
             """
             if stage_graph is None or wait_info.get("mode") != "path":
                 return None
+            key = _spawn_key(spawn_keys, origin_counts, agent_id, origin)
+            required_exit = _replayed_exit(replay_exits, key, agent_id)
+            # A replayed or smoke-blind choice is made as in clear air.
+            clear_air = smoke_blind or required_exit is not None
             spawn_time = simulation.elapsed_time()
             chosen = _assign_initial_exit(
                 agent_id,
@@ -1407,12 +1577,17 @@ def run_scenario(
                 cognitive_maps,
                 extinction_sampler=(
                     smoke_speed_model.field
-                    if smoke_speed_model is not None
+                    if smoke_speed_model is not None and not clear_air
                     else _ZERO_EXTINCTION
                 ),
-                fed_rate_sampler=_fed_rate_adapter,
+                fed_rate_sampler=None if clear_air else _fed_rate_adapter,
                 cached_segments=cached_segments,
+                required_exit=required_exit,
             )
+            terminal_exit = _extract_terminal_exit(wait_info, stage_graph.nodes)
+            _check_replayed_exit(required_exit, terminal_exit, agent_id)
+            if terminal_exit is not None:
+                agent_exits[agent_id] = terminal_exit
             if chosen is not None and reroute_config is not None:
                 # This *was* the agent's first route evaluation, so record it as
                 # one. Otherwise the reroute pass fires its own first evaluation
@@ -1736,7 +1911,11 @@ def run_scenario(
                                             if _dist_idx < len(dist_entrance)
                                             else None
                                         )
-                                        _initial_exit_choice(agent_id, path_state)
+                                        _initial_exit_choice(
+                                            agent_id,
+                                            path_state,
+                                            origin=_flow_origin(flow_dist, source_id),
+                                        )
                                         if path_state and stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
                                                 path_state, stage_graph.nodes
@@ -1834,7 +2013,9 @@ def run_scenario(
                                             else None,
                                         }
                                         _initial_exit_choice(
-                                            agent_id, agent_wait_info[agent_id]
+                                            agent_id,
+                                            agent_wait_info[agent_id],
+                                            origin=_flow_origin(flow_dist, source_id),
                                         )
                                         if stage_graph is not None:
                                             _spawn_exit = _extract_terminal_exit(
@@ -1862,7 +2043,7 @@ def run_scenario(
 
                                 spawned_this_attempt = True
                                 break
-                            except FdsHorizonError:
+                            except (FdsHorizonError, ExitReplayError):
                                 raise
                             except Exception:
                                 continue
@@ -1947,7 +2128,10 @@ def run_scenario(
                             current_time, x, y, **sample_kwargs
                         )
                         desired_speed = base_speed * speed_factor
-                        if direct_steering_info:
+                        if smoke_blind:
+                            # Record K only; the agent walks as in clear air.
+                            speed_factor, desired_speed = 1.0, base_speed
+                        elif direct_steering_info:
                             set_agent_smoke_factor(
                                 agent_speed_state,
                                 agent_id,
@@ -2388,6 +2572,7 @@ def run_scenario(
                             exit_counts[switch.new_exit] = (
                                 exit_counts.get(switch.new_exit, 0) + 1
                             )
+                        agent_exits[switch.agent_id] = switch.new_exit
                         route_history.append(
                             {
                                 "time_s": round(float(switch.time_s), 6),
@@ -2415,7 +2600,9 @@ def run_scenario(
                 current_time = simulation.elapsed_time()
                 agents_by_id = {}
                 live_agent_ids = set()
-                _need_speed_update = _has_speed_zones or smoke_speed_model is not None
+                _need_speed_update = _has_speed_zones or (
+                    smoke_speed_model is not None and not smoke_blind
+                )
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
                     live_agent_ids.add(agent_id)
@@ -2538,6 +2725,7 @@ def run_scenario(
                                 }
 
                             if stage_type == "exit":
+                                agent_exits[agent_id] = current_target_stage
                                 try:
                                     simulation.mark_agent_for_removal(agent_id)
                                 except Exception as e:
@@ -2656,6 +2844,7 @@ def run_scenario(
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
+        _warn_unused_replay(replay_exits, spawn_keys)
         if smoke_speed_model is not None:
             metrics["smoke_history_samples"] = len(smoke_history)
         if fed_model is not None:
@@ -2703,6 +2892,15 @@ def run_scenario(
                     if heat_fed_model is not None and tenability_config is not None
                     else None
                 ),
+                smoke_blind=smoke_blind,
+                replay_exits=(
+                    None
+                    if replay_exits is None
+                    else {
+                        "agents": len(replay_exits),
+                        "sha256": _replay_digest(replay_exits),
+                    }
+                ),
             )
         except (OSError, ValueError) as exc:
             _logger.warning("Could not write the run manifest: %s", exc)
@@ -2725,6 +2923,16 @@ def run_scenario(
             cognitive_map_history=(
                 cognitive_map_history if collect_cognitive_map_history else None
             ),
+            exit_history=[
+                {
+                    "agent_id": agent_id,
+                    "origin": origin,
+                    "spawn_index": index,
+                    "exit_id": agent_exits[agent_id],
+                }
+                for agent_id, (origin, index) in spawn_keys.items()
+                if agent_id in agent_exits
+            ],
         )
     finally:
         try:
