@@ -58,15 +58,18 @@ The FIC slowdown is off by default, as in FDS+Evac, so the third run needs
 
 | run | egress | |
 |---|---|---|
-| neither | 42.78 s | |
-| FED only | 42.78 s | **identical**, to the millisecond |
-| FED + FIC | 61.22 s | 1.43x slower |
+| neither | 44.76 s | |
+| FED only | 44.76 s | **identical**, to the millisecond |
+| FED + FIC | 64.63 s | 1.44x slower |
+
+Measured at `32d48dd`; the FDS output and the runs are in the project's data
+store under `fic_vs_fed_speed/`.
 
 The first two being indistinguishable is the headline: over a 44 s egress the
 CO dose reaches about 0.05 of the incapacitation threshold, so FED is inert and
 a model carrying only FED would call this fire harmless.
 
-The measured ratio is 1.43 rather than the 1/0.65 = 1.54 the speed factor
+The measured ratio is 1.44 rather than the 1/0.65 = 1.54 the speed factor
 implies, because the tail of the crowd is queueing at the exit rather than
 walking, and a queue is not slowed by an irritant. The absolute times likewise
 exceed the builder's free-walk estimates (33 s / 51 s) for the same reason.
