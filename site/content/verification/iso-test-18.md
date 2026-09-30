@@ -227,8 +227,10 @@ uv run python scripts/verification/iso_test_18_figures.py --data $OUT
 
 The script prints the table above, writes the figures, and exits with an
 error if a pass criterion fails. The runs behind
-this page are in the project's data folder
-(`fds-evac-data/iso_test_18/rerun_27f8707/`).
+this page, made on the branch of
+[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349) at
+`9505bb8` with a clean tree, are in the project's data folder
+(`fds-evac-data/iso_test_18/rerun_9505bb8/`).
 
 ## Limits
 

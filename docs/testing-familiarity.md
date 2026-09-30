@@ -265,8 +265,10 @@ uv run python scripts/verification/familiarity_figures.py --data <out>
 ```
 
 Each run takes seconds. The script prints every number on this page. The
-runs used here (commit `27f8707`, macOS arm64) are in the project's data
-folder, `fds-evac-data/familiarity_test_discovery/evac_27f8707/`, made with
+runs used here (the branch of
+[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349) at
+`9505bb8`, clean tree, macOS arm64) are in the project's data folder,
+`fds-evac-data/familiarity_test_discovery/evac_9505bb8/`, made with
 the commands above.
 
 Reruns on the same machine reproduce these numbers to the last digit. Across

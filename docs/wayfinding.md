@@ -375,7 +375,7 @@ over a few known nodes may never pass a legible new sign
 
 **Discovery times depend on the grid.** On
 `assets/familiarity_test_discovery`, seed 420, the runs of the
-[familiarity verification](testing-familiarity.md) (at `27f8707`) give the
+[familiarity verification](testing-familiarity.md) (after [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)) give the
 following discovery egress times:
 
 | Clear-air cell | Discovery egress |

@@ -118,9 +118,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   not within its radius + 0.5 m of a target point inside it, so the door
   width sets the door flow. Before, a door drawn flush with a wall acted
   up to about 1.3 m wider and agents left from the room beside it.
-  Checkpoints keep the distance rule.
-  Exit times change by a fraction of a second per agent; the documented
-  numbers and the golden snapshots are regenerated
+  Checkpoints keep the distance rule. A single agent now leaves about
+  0.3 s later; crowd results move by more, since the door now bounds the
+  flow (for example, one golden deck ends with 29 of 30 out instead of
+  30). The golden snapshots and most documented numbers are regenerated;
+  the with/without-fire how-to
+  ([#391](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/391)),
+  the Schröder study
+  ([#388](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/388))
+  and the web GUI screenshots
+  ([#389](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/389))
+  still show the earlier runs
   ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)).
 - **Seeded outcomes differ from earlier versions.** Every per-agent random
   draw is seeded from the run seed and the agent's spawn key
