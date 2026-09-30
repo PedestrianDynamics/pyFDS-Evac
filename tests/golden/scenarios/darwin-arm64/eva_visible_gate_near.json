@@ -101,6 +101,13 @@
   ],
   [
    6.0,
+   2,
+   "jps-distributions_0",
+   "E_near",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   6.0,
    3,
    "jps-distributions_0",
    "E_near",
@@ -150,14 +157,7 @@
   ],
   [
    7.0,
-   1,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   7.0,
-   3,
+   4,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:ok"
@@ -178,14 +178,14 @@
   ],
   [
    8.0,
-   4,
+   6,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:ok"
   ],
   [
    9.0,
-   3,
+   7,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
@@ -199,21 +199,14 @@
   ],
   [
    10.0,
-   1,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:tau"
-  ],
-  [
-   10.0,
-   7,
+   4,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
   ],
   [
    11.0,
-   4,
+   6,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
@@ -221,51 +214,42 @@
  ],
  "summary": {
   "agents_evacuated": 10,
-  "evacuation_time": 27.16,
+  "evacuation_time": 27.17,
   "total_agents": 10
  },
  "switches": [
   {
-   "agent_id": 1,
-   "new_cost": 18.861,
+   "agent_id": 4,
+   "new_cost": 18.525,
    "new_exit": "E_far",
-   "old_cost": 3.203,
-   "old_exit": "E_near",
-   "reason": "smoke_reroute",
-   "time_s": 6.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 17.77,
-   "new_exit": "E_far",
-   "old_cost": 4.282,
+   "old_cost": 3.549,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
   },
   {
    "agent_id": 7,
-   "new_cost": 18.62,
+   "new_cost": 18.512,
    "new_exit": "E_far",
-   "old_cost": 3.422,
+   "old_cost": 3.532,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
   },
   {
    "agent_id": 8,
-   "new_cost": 18.218,
+   "new_cost": 17.608,
    "new_exit": "E_far",
-   "old_cost": 3.86,
+   "old_cost": 4.463,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
   },
   {
-   "agent_id": 4,
-   "new_cost": 20.235,
+   "agent_id": 6,
+   "new_cost": 20.499,
    "new_exit": "E_far",
-   "old_cost": 1.809,
+   "old_cost": 1.613,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 7.0

@@ -29,8 +29,9 @@ per platform under ``tests/golden/scenarios/<sys.platform>-<machine>/``: the
 JuPedSim builds differ in the last bits, and over a minute of walking that is
 enough to move an arrival across a one-second reevaluation boundary. The
 scenario tests skip on a platform with no snapshots. Each deck runs in its own
-interpreter, because JuPedSim numbers agents process-wide and the agent id
-seeds the reevaluation stagger and the familiarity draw.
+interpreter, because JuPedSim numbers agents process-wide and the snapshots
+record agent ids. Per-agent draws are seeded from the spawn order, not the id
+(#198), so only the labels would differ in a shared process.
 
 Regenerating
 ------------
@@ -510,10 +511,9 @@ def _ranking_trace(rows: list[dict]) -> list[list]:
 def _run_deck_isolated(name: str, tmp_path: Path) -> dict:
     """Run one deck in a fresh interpreter.
 
-    JuPedSim numbers agents process-wide, and the agent id seeds the
-    reevaluation stagger and the familiarity draw. A deck run after another
-    in the same process therefore behaves differently from the same deck run
-    alone, so each deck gets its own process.
+    JuPedSim numbers agents process-wide, so a deck run after another in the
+    same process labels its agents with other ids than the same deck run
+    alone. The snapshots record ids, so each deck gets its own process.
     """
     out = tmp_path / f"{name}.json"
     subprocess.run(
