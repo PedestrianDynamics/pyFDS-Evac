@@ -769,8 +769,9 @@ two thirds of the room (x up to 20.8 m). The late band on the 0.1 m grid is ther
   ([#140](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140)).
 - **Engine issues that touch this study:** exit removal ignores the door
   width ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349));
-  the initial exit uses the spawn area, not the agent, which is why the two
-  doors need two spawn areas
+  the initial exit was ranked from the spawn area, not the agent, which is
+  why the room has two spawn areas, split at x = 15 m; the ranking now
+  measures from each agent
   ([#350](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/350));
   flow spawning breaks common random numbers across arms
   ([#353](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/353));

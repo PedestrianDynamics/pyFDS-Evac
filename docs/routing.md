@@ -329,7 +329,9 @@ The reasoning in this section is unchanged — only the fitted number moved.
 Rerun at `8bda7f7`, under the gate and with per-agent draws seeded from the
 spawn key, the same sweep scores 0.03 at 31.4 % and 0.024 at 33.4 % (31.6 % and
 34.1 % on main at `7a3617d`): the deck no longer reproduces Fahy's split, and
-has not been re-fitted.
+has not been re-fitted. With the opening exit ranked from each agent's position
+(#350), the sweep scores 0.03 at 33.0 % and 0.024 at 34.8 % (32.6 % and 35.0 %
+on main at `81726ea`), within the spread between seeds.
 
 **Two further caveats on that number.** The sweep was run under the additive
 composite, where `w_queue` multiplies a *distance*

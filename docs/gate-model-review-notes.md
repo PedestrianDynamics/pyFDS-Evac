@@ -241,6 +241,8 @@ the least-K fallback, not the gate.
   (`:1055`); they diverge by `max(0, remaining - first_length)` whenever a
   candidate's first hop is behind the agent. Exact only from the spawn node —
   and `station_fahy`'s 52-53 % front-door share is the exposed calibration.
+  Since #350 the opening choice is also measured from the agent, so the
+  equivalence no longer holds at t = 0 either.
 - **No deck pins `cost_model`**: `assets/t_junction` and `assets/fed_incap_co_*`
   silently switched models on this commit.
 - Stalest docs: `docs/routing.md:112-165`, `docs/model-comparison.md:136-162`,

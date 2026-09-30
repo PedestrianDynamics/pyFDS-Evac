@@ -979,6 +979,7 @@ def _assign_initial_exit(
     required_exit: str | None = None,
     *,
     spawn_key: SpawnKey,
+    agent_position: tuple[float, float] | None = None,
 ) -> str | None:
     """Point a freshly spawned agent at the best exit *it knows about*.
 
@@ -988,6 +989,10 @@ def _assign_initial_exit(
     front door however far it is. So the map is built first, then the exits are
     ranked on the subgraph the agent actually knows, by the same composite cost
     the reroute pass uses, and the cheapest one wins.
+
+    Distances are measured from *agent_position*, where the agent stands, as
+    the reroute pass measures them. Without it they run from the spawn area's
+    node, which gives every agent of one spawn area the same exit (#350).
 
     ``exit_counts`` is deliberately not passed. Ranking against a tally that the
     very same loop is filling would let the queue term punish an exit for the
@@ -1033,6 +1038,7 @@ def _assign_initial_exit(
         cost_config,
         cached_segments=cached_segments,
         cognitive_map=cmap,
+        agent_position=agent_position,
     )
     if required_exit is not None:
         path = _replayed_path(graph, spawn_node, ranked, required_exit)
@@ -1617,6 +1623,7 @@ def run_scenario(
                 cached_segments=cached_segments,
                 required_exit=required_exit,
                 spawn_key=key,
+                agent_position=extract_agent_xy(simulation.agent(agent_id)),
             )
             terminal_exit = _extract_terminal_exit(wait_info, stage_graph.nodes)
             _check_replayed_exit(required_exit, terminal_exit, agent_id)

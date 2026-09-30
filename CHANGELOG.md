@@ -133,6 +133,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   [#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384))
   still show the earlier runs
   ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)).
+- **The opening exit is ranked from each agent's position**, as
+  re-evaluation ranks it, not from its spawn area's node. Before, every
+  agent of one spawn area started towards the same exit, including agents
+  beside another door; a shortest-path crowd in a room with two doors now
+  splits between them. The golden snapshots and the example outputs are
+  unchanged
+  ([#350](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/350)).
 - **Seeded outcomes differ from earlier versions.** Every per-agent random
   draw is seeded from the run seed and the agent's spawn key
   `(origin, spawn_index)`, through a blake2b hash that does not depend on
