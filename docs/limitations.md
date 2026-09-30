@@ -133,9 +133,10 @@ supported; see
 [issue #136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136).
 
 **Familiarity does not change how agents treat smoke.** Familiarity decides
-which exits an agent knows, not how much smoke it accepts. The smoke settings
-of route choice (`w_smoke`, `visibility_extinction_threshold` and the fixed
-`impassable_extinction_threshold`) are the same for every agent. In Wood's UK
+which exits an agent knows, not how much smoke it accepts. The route-cost
+settings, including every smoke setting of both cost models, are built once
+per run from the scenario's `routing` block and fixed defaults
+(`RouteCostConfig`), so every agent shares them. In Wood's UK
 survey, people completely familiar with the building moved through smoke more
 often than those less familiar (61 % against 51 %; Wood 1980, Table 6.4,
 p. 87), though moving through smoke was not associated with leaving the
