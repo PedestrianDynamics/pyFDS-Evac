@@ -93,16 +93,18 @@ the first few occupants and the exit flow capacity set the evacuation time;
 at low density, the late tail of the distribution does (Purser 2003,
 pp. 96–97).
 
-Most travel-time calculations assume no interaction between occupants and
-the fire effluent. Most tenability calculations use only smoke and CO, with
-yields fixed at well-ventilated values (Purser 2003, pp. 92–93).
+Purser (2003, pp. 92–93) noted that most travel-time calculations assumed
+no interaction between occupants and the fire effluent, and that
+engineering tenability calculations used only smoke density and/or CO,
+with yields often treated as constants, usually for the well-ventilated
+case.
 
 The concept itself is disputed. Babrauskas, Fleming and Russell (2010,
 pp. 347–348) argue that RSET is a distribution rather than one number, that
 the test ASET > RSET hides how much more time one design gives than
 another, and that there is no agreed population for tenability criteria to
-protect. They propose reporting the margin ASET − RSET to compare designs
-(pp. 350–351). Their evidence comes from fires in single-family homes.
+protect. Following Fleming (2000), whom they cite, they propose reporting
+the margin ASET − RSET to compare designs (pp. 350–351). Their evidence comes from fires in single-family homes.
 
 ## Sources
 

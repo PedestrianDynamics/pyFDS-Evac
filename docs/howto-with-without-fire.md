@@ -9,8 +9,8 @@ aliases:
 Egress tools such as Pathfinder are commonly run without the fire. The
 required safe escape time (RSET) is taken from that run and compared with
 the available safe escape time (ASET) from FDS. Engineers we consulted
-regard this uncoupled comparison as conservative. Purser (2003, p. 92)
-notes that most travel-time calculations assume no interaction between
+regard this uncoupled comparison as conservative. But Purser (2003, p. 92)
+noted that most travel-time calculations assumed no interaction between
 occupants and the fire effluent. This page shows how to make the same
 comparison with pyFDS-Evac, what a run coupled to the fire adds, and whether
 the uncoupled run is conservative for one fire: the 2 MW PVC fire of
@@ -650,10 +650,12 @@ page.
   and last of the six points of
   [A crowd in a real fire](first-fds-case.md#at-fixed-points-location-aset)
   (18–46 s), 60 s after all of them. Babrauskas et al. (2010,
-  pp. 346–348) call pre-movement times of this order unrealistically short
-  for homes, where healthy occupants of a single-family house at night
-  needed up to 11 min after the alarm. Those are residential values and do
-  not transfer to this geometry.
+  pp. 346–347, 351) criticise pre-movement times of 0–80 s used for homes
+  as unrealistic. Citing an NRCC study, they report that healthy occupants
+  of a single-family house at night can need up to 11 min from alarm to
+  exit (p. 346). That figure includes travel and is counted from the alarm,
+  not the fire. Those are residential values and do not transfer to this
+  geometry.
 - **Everyone knows both exits** (`familiarity: "full"`). Agents who discover
   exits could fail to find one, and the familiarity draw depends on the
   JuPedSim id ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)).
@@ -675,7 +677,7 @@ page.
 
 - Babrauskas, V., Fleming, J. M., & Russell, B. D. (2010). RSET/ASET, a
   flawed concept for fire safety assessment. *Fire and Materials*, 34(7),
-  341–355, pp. 346–348.
+  341–355, pp. 346–347, 351.
   [doi:10.1002/fam.1025](https://doi.org/10.1002/fam.1025)
 - Engineers Australia Society of Fire Safety (2014). *Practice note for
   tenability criteria in building fires*, version 2.0, §5.2 and Fig. 8,

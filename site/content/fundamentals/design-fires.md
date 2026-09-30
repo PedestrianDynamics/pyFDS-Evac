@@ -195,8 +195,8 @@ class:** it describes one item under one ignition, and a value such as
 - **Not a smoke source term.** The HRR does not fix the smoke. Soot and
   other product yields must be given separately (vfdb 2020, p. 60). For
   visibility this matters as much as the HRR. Yields are not constants
-  either: the CO yield can vary by a factor of about 50 between
-  well-ventilated and fuel-rich burning (Purser 2003, p. 93, citing
+  either: the CO yield can vary by up to a factor of about 50 between
+  well-ventilated flaming (φ < 1) and fuel-rich (φ > 1) burning (Purser 2003, p. 93, citing
   Tewarson).
 
 ## Known limits

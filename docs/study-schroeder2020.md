@@ -275,9 +275,8 @@ criterion most often decisive (91.4 %); FED is used by 22.2 %
 
 **Criticism.** Babrauskas et al. call the tenability criteria proposed at
 the time (their example is the 2007 draft of ISO 13571) "highly arbitrary"
-with "little basis in either physics or physiology", and find no agreement
-on which population they should protect (2010, p. 347). Their paper
-predates the vfdb, EA, DIN and ISO 13571:2012 values above. The NIST
+with "little basis in either physics or physiology" (2010, p. 347). Their
+paper predates every source above except Gann et al. (2001). The NIST
 sublethal-effects study puts a factor of two on
 its generic values (Gann et al. 2001, pp. 82–86).
 
@@ -412,7 +411,9 @@ concluded from this value" (p. 6). Dose is our addition.
 Because DIFF is a margin in seconds and not only a sign, the maps can
 compare versions by how much time each leaves, which is how Babrauskas et
 al. (2010, pp. 350–351) propose to use ASET − RSET. RSET here is the
-maximum over seeds, a high-end value rather than a typical one (p. 348).
+maximum over seeds, high-end only with respect to the seed spread.
+Pre-movement is constant, so the behavioural spread that Babrauskas et
+al. (2010, p. 348) ask to be covered is not sampled.
 For per-agent exposure, see
 [A crowd in a real fire](first-fds-case.md#aset-rset).
 
