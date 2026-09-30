@@ -70,9 +70,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[2]
 DECK_DIR = REPO / "assets" / "heat_radiometer"
 SCRIPT = REPO / "scripts" / "verification" / "heat_radiometer.py"
-SCIEBO = Path(
-    "/Users/chraibi/sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
-)
+SCIEBO = Path.home() / "sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
 DATA_ROOT = Path(
     os.environ.get("HEAT_RADIOMETER_DATA", SCIEBO / "fds-evac-data" / "heat_radiometer")
 )
@@ -426,6 +424,7 @@ def _plates(nml, dev):
             )
 
 
+@pytest.mark.external_data
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform", "burner"])
 def test_gauge_minus_radiometer_is_convection(kind):
     """FDS UG Eqs. 22.35 - 22.36 with eps = 1: difference = h (T_g - T_gauge)."""
@@ -445,6 +444,7 @@ def test_gauge_minus_radiometer_is_convection(kind):
     assert checked
 
 
+@pytest.mark.external_data
 @pytest.mark.parametrize("kind", ["hot_layer", "uniform", "burner"])
 def test_incident_flux_is_between_zero_and_u(kind):
     nml, dev = _output(kind)
@@ -464,6 +464,7 @@ def test_incident_flux_is_between_zero_and_u(kind):
         assert np.all(q_sum <= (1 + BOUND_BAND) * u), (pos, o)
 
 
+@pytest.mark.external_data
 def test_uniform_room_gives_a_quarter_of_u():
     """Isotropic field: q = U/4 for every orientation, U = 4 sigma T^4."""
     nml, dev = _output("uniform")
@@ -475,6 +476,7 @@ def test_uniform_room_gives_a_quarter_of_u():
         np.testing.assert_allclose(u, black, rtol=UNIFORM_BAND, err_msg=str(pos))
 
 
+@pytest.mark.external_data
 def test_under_the_layer_the_crown_sees_more_than_the_face():
     """Radiation comes from above: q/U facing up exceeds 1/4 and the side value."""
     nml, dev = _output("hot_layer")
@@ -490,6 +492,7 @@ def test_under_the_layer_the_crown_sees_more_than_the_face():
         assert r["up"] > r["side"], pos
 
 
+@pytest.mark.external_data
 def test_a_flame_in_view_approaches_u():
     """Excess over the ambient field: a compact source face-on gives cos(theta)
     near 1, above the 1/2 of a uniform upper hemisphere."""

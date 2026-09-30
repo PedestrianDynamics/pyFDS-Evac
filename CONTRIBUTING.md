@@ -41,7 +41,8 @@ uv run ruff format --check .
 uv run pytest -q
 ```
 
-CI runs a fixed list of test files; see
+CI runs the whole suite with the `gui` extra and deselects the tests marked
+`external_data`, which need FDS output from the external data store; see
 [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 
 The docs are a Hugo site (hextra theme) in `site/`, with the reference pages in

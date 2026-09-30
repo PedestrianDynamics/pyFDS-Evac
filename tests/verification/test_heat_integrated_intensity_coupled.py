@@ -280,6 +280,7 @@ def _gauge(devc, facing, k):
     return devc[f"GAUGE_z16_{facing}-{k}"]
 
 
+@pytest.mark.external_data
 @pytest.mark.parametrize("case", ["uniform", "layer"])
 def test_radiometer_slice_u_matches_devices(case):
     """Slice U at 1.6 m against the ``U_z16`` devices. The slice shows the
@@ -297,6 +298,7 @@ def test_radiometer_slice_u_matches_devices(case):
             ), (time_s, k)
 
 
+@pytest.mark.external_data
 def test_radiometer_uniform_quarter_u_is_the_gauge():
     """Isotropic room: f = 1/4 reproduces the FDS skin gauge in all four
     orientations (radiation in excess of the skin-temperature field, plus
@@ -329,6 +331,7 @@ def test_radiometer_uniform_quarter_u_is_the_gauge():
                 )
 
 
+@pytest.mark.external_data
 def test_radiometer_uniform_devices_are_isotropic():
     """Design check on FDS's own devices (no pyfds_evac): in the uniform room
     q_inc = U / 4 for every orientation, the physics the factor rests on."""
@@ -341,6 +344,7 @@ def test_radiometer_uniform_devices_are_isotropic():
             assert _gauge(devc, facing, k) == pytest.approx(expected, rel=0.01)
 
 
+@pytest.mark.external_data
 def test_radiometer_layer_factor_range_finding():
     """Finding for the maintainer (FDS devices only, no pyfds_evac): below a
     hot layer the crown gauge (facing up) lies inside the band f in
