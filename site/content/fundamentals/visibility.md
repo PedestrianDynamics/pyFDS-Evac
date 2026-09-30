@@ -576,10 +576,11 @@ brightness" (abstract, p. 135).
   smoke to one object. It does not describe how far one can see around
   corners, or how much smoke a person walks through. In Wood's survey of
   952 UK fires, 60 % of the people in incidents with smoke attempted to move
-  through it, and 26 % turned back in smoke. The distance they moved
+  through it, and 26 % turned back in smoke (not broken down by
+  visibility). The distance they moved
   correlated only imperfectly with the distance they could see ahead, and
   moving through smoke was not associated with leaving the building (Wood
-  1980, pp. 84–91, Table 6.6).
+  1980, pp. 84–91 and Table 6.6, p. 95).
 - It was measured at 5.5–15.5 m (Jin 1970, 1971) and stated for 5–15 m
   (Jin 1971; Jin 1978, p. 137). *V* outside that range, including the 30 m FDS cap, is an
   extrapolation.

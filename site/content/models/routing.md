@@ -277,7 +277,7 @@ written to the route history.
   ([#89](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89)).
 - Heat does not enter route choice
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
-- The smoke terms are the same for every familiarity tier
+- The smoke terms are the same for every familiarity setting
   ([#362](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362)).
 - For discovery agents, the order of tied routes depends on
   `PYTHONHASHSEED` ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)).
