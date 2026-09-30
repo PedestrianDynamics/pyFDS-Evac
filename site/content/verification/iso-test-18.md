@@ -116,7 +116,7 @@ the gap to 0.9955.
 
 Every run records the factor of the law, and the occupant walks at that
 speed. Over the middle 40 m of the corridor, the speed along its path matches
-\(f v_0\) to 9.9 × 10⁻⁶.
+\(f v_0\) to 9.8 × 10⁻⁶.
 
 ![Left: simulated egress-time ratio against 1/f(K). Right: each smoky egress time minus the expected time, with its tolerance](/images/verification/iso18_ratio.png)
 
@@ -141,7 +141,7 @@ speed. Over the middle 40 m of the corridor, the speed along its path matches
 | walked speed / \(f v_0\) | 1 | 1 − 9.9 × 10⁻⁶ at worst |
 | egress time | \(t_{\mathrm{pred}}\) within the tolerance | all 10 inside, largest +0.013 s on 214 s |
 
-The simulated ratio is always a little below 1/*f*, by up to 0.61 % at
+The simulated ratio is always a little below 1/*f*, by up to 0.59 % at
 *K* = 10. That is the start-up time *a*: it does not scale with 1/*f*, so
 \(t_{\mathrm{smoke}}/t_{\mathrm{clear}} \cdot f - 1 = -a(1-f)/t_{\mathrm{clear}}\),
 which predicts −0.62 % at *K* = 10. Once *a* is taken from the clear runs, each egress time
@@ -158,7 +158,7 @@ and matches the ratio to 5 × 10⁻⁵.
 2. **Speed.** The speed along the path over the middle 40 m equals
    \(f v_0\) within 10⁻⁵. This tolerance is a margin, not derived. The
    collision-free model walks exactly at \(f v_0\); the social force model
-   walks 3.8 to 9.9 × 10⁻⁶ slower, a property of the movement model. The
+   walks 2.2 to 9.8 × 10⁻⁶ slower, a property of the movement model. The
    smallest error the check must catch, a factor not applied at *K* = 0.5,
    is 1 − *f* = 4 %, four orders of magnitude larger.
 3. **Egress time.** Each egress time is a whole number of time steps
@@ -248,8 +248,8 @@ this page, made on the branch of
   *current* position and time
   ([#24](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/24)).
 - No run reaches the floor *f* = 0.1 (*K* ≥ 11.15 1/m).
-- In the social force runs the occupant spawns 0.36 m from the back wall.
-  The wall push briefly takes it above \(f v_0\) at the start (0.57 m/s at
+- In the social force runs the occupant spawns 0.47 m from the back wall.
+  The wall push briefly takes it above \(f v_0\) at the start (0.34 m/s at
   *K* = 10, against 0.24 m/s). This is movement-model behaviour; the time
   criterion absorbs it through the start-up time *a* of the clear runs.
 - One occupant per condition, one seed. The ISO test asks for no more, but
