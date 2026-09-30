@@ -280,6 +280,8 @@ def test_journey_agent_with_schedule_is_rejected():
     scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
     raw = scenario.raw
     room = raw["distributions"].pop("room")
+    # Keep the two spawn areas apart; placement does not check across them.
+    room["coordinates"] = _coords(box(0.3, 0.3, 15.0, WIDTH_M - 0.3))
     lobby = {
         "type": "polygon",
         "coordinates": _coords(box(20.0, 1.0, 25.0, 4.0)),
