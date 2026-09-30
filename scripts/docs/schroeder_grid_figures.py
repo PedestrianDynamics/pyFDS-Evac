@@ -134,6 +134,37 @@ def first_crossing(t, k):
     return (t[hit[0]], LIMIT) if hit.size else None
 
 
+def below_gap(t, k):
+    """First interval after the first crossing where K is back below LIMIT."""
+    hit = np.flatnonzero(k >= LIMIT)
+    if hit.size == 0:
+        return None
+    drop = np.flatnonzero((k < LIMIT) & (np.arange(k.size) > hit[0]))
+    if drop.size == 0:
+        return None
+    back = np.flatnonzero((k >= LIMIT) & (np.arange(k.size) > drop[0]))
+    return t[drop[0]], (t[back[0]] if back.size else None)
+
+
+def layer_report(label, tree, s):
+    """One line of the numbers the page quotes for one run and tree."""
+    hit = first_crossing(s["t_k"], s["k"])
+    first = f"{hit[0]:.0f} s" if hit else "not by the end"
+    z_t = np.asarray(s["z_t"])
+    above = np.flatnonzero(np.nan_to_num(z_t, nan=-1.0) >= 2.0)
+    until = f"{s['t_dev'][above[-1]]:.0f} s" if above.size else "never"
+    gap = below_gap(s["t_k"], s["k"])
+    gap_txt = (
+        "none"
+        if gap is None
+        else f"{gap[0]:.0f} s to {'the end' if gap[1] is None else f'{gap[1]:.0f} s'}"
+    )
+    return (
+        f"- {label}, tree {tree}: first K ≥ {LIMIT} at 2.0 m {first}; back below "
+        f"the limit {gap_txt}; T interface last at or above 2.0 m at {until}"
+    )
+
+
 def draw_tree(axes, s, style):
     _, label, colour, ls, marker = style
     axes[0].plot(s["t_dev"], s["z_t"], color=colour, ls=ls, lw=1.6, label=label)
@@ -176,7 +207,7 @@ def fig_layer(data):
         3, 3, figsize=(14, 10.5), sharex=True, layout="constrained"
     )
     k_top = 0.0
-    hits = []
+    lines = []
     for style in LAYER_RUNS:
         dev = pd.read_csv(data / style[0] / f"{style[0]}_devc.csv", skiprows=1)
         sl = k_slice(data / style[0])
@@ -184,7 +215,8 @@ def fig_layer(data):
             s = tree_series(dev, sl, tree, where)
             keep = s["t_k"] <= T_SHOW
             k_top = max(k_top, float(np.percentile(s["k"][keep], 95)))
-            hits.append((style[1], tree, draw_tree(axes[:, col], s, style)))
+            draw_tree(axes[:, col], s, style)
+            lines.append(layer_report(style[1], tree, s))
     for col, (tree, where, note) in enumerate(TREES):
         maps._title(axes[0, col], "abc"[col], f"tree {tree} at {where} m, {note}")
     style_layer_axes(axes, min(2.0, 0.5 * np.ceil(k_top / 0.5)))
@@ -214,9 +246,7 @@ def fig_layer(data):
         "Markers: first K ≥ 0.23 1/m.",
     )
     maps._save(fig, "grid_layer.png")
-    for label, tree, hit in hits:
-        first = f"{hit[0]:.0f} s" if hit else "not by 300 s"
-        print(f"- {label}, tree {tree}: first K ≥ {LIMIT} at 2.0 m {first}")
+    print("\n".join(lines))
 
 
 # --- Same-grid perturbation --------------------------------------------------
@@ -353,12 +383,15 @@ def fig_perturbation(data, cache):
     for key, d in (("+0.1 % HRRPUA", d_pert), ("0.1 m grid", d_grid)):
         ok = np.abs(d[np.isfinite(d)])
         print(
-            f"- {key}: mean |Δ| {ok.mean():.1f} s, |Δ| > 30 s in {np.mean(ok > 30):.1%},"
+            f"- {key}: mean |Δ| {ok.mean():.1f} s, 90th pct {np.percentile(ok, 90):.0f} s,"
+            f" |Δ| > 30 s in {np.mean(ok > 30):.1%} ({int((ok > 30).sum())} cells),"
             f" max {ok.max():.0f} s"
         )
     for key, step in (("base", 1), ("pert", 1), ("fine", 2)):
+        x, _ = late_nodes(fires[key], step)
         print(
-            f"- late nodes (> {LATE:.0f} s), {key}: {late_nodes(fires[key], step)[0].size}"
+            f"- late nodes (> {LATE:.0f} s), {key}: {x.size}, x from {x.min():.1f}"
+            f" to {x.max():.1f} m"
         )
 
 

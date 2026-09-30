@@ -3,7 +3,7 @@
 The same picture as "The run, animated" on "A crowd in a real fire"
 (``scripts/docs/first_fds_case_figures.py``): the FDS extinction field as the
 background and the agents as dots. It reuses the helpers of
-``scripts/animate_agents_smoke.py`` and a 32-colour GIF palette pass. The
+``scripts/animate_agents_smoke.py`` and a 40-colour GIF palette pass. The
 FDS output and the runs are not in the repository; both commands read them
 from ``--data`` and ``--runs``.
 
@@ -283,6 +283,28 @@ def maps_smoke():
     return anim._masked_cmap(anim.SMOKE)
 
 
+def report_states(df, aset, grid, layout):
+    """When agents stand in cells past their ASET, as the caption quotes it."""
+    rows = []
+    for t in np.arange(0.0, df.frame.max() / maps.FPS + 1e-9, STEP_S):
+        xy, past = agent_states(df, int(round(t * maps.FPS)), aset, grid, t)
+        west = int((past & (xy[:, 0] < 15.0)).sum()) if len(xy) else 0
+        rows.append((t, len(xy), int(past.sum()), west))
+    first = next((r for r in rows if r[2] > 0), None)
+    peak = max(rows, key=lambda r: r[2])
+    rest = [r for r in rows if r[1] > 0]
+    all_from = next(
+        (r[0] for i, r in enumerate(rest) if all(q[1] == q[2] for q in rest[i:])),
+        None,
+    )
+    print(
+        f"- {layout}: first agent past ASET at {first[0]:.0f} s; every agent inside "
+        f"past ASET from {'never' if all_from is None else f'{all_from:.0f} s'}; last past ASET at {max(r[0] for r in rows if r[2] > 0):.0f} s; peak {peak[2]} at {peak[0]:.0f} s; "
+        f"past-ASET agent-frames west of x = 15 m: {sum(r[3] for r in rows)} of "
+        f"{sum(r[2] for r in rows)}"
+    )
+
+
 def schroeder(data, runs):
     walkable, exits = maps.load_layouts(data)
     grids = {k: maps.make_grid(w) for k, w in walkable.items()}
@@ -294,6 +316,7 @@ def schroeder(data, runs):
         v = versions[layout]
         m, seed, _ = pooled_diff(runs, v, fds, walkable[layout], grids[layout], aset)
         df = maps.trajectory(maps.run_dir(runs, v, fds, seed))
+        report_states(df, aset, grids[layout], layout)
         room_gif(
             k_slice(data / fds),
             df,
@@ -314,6 +337,12 @@ def median_r_seed(runs, pre):
     summary = pd.read_csv(runs / "summary_runs.csv")
     rows = summary[(summary.arm == "R") & (summary.pre == pre)]
     seed, med = median_seed(dict(zip(rows.seed, rows.rset_last)))
+    both = summary[(summary.pre == pre) & (summary.seed == seed)].set_index("arm")
+    for arm in ("U", "R"):
+        r = both.loc[arm]
+        print(
+            f"- {arm}: last out {r.rset_last:.1f} s, exit A {r.exit_A}, exit B {r.exit_B}"
+        )
     print(
         f"- pre {pre} s: seed {seed}, R last out {rows.set_index('seed').rset_last[seed]:.1f} s "
         f"(median {med:.1f} s)"
