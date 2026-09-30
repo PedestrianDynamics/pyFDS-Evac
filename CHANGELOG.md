@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Exits that open and close on a schedule: the optional exit keys
+  `open_from_s` and `closed_after_s` keep an exit open while
+  `open_from_s` ≤ t < `closed_after_s`. A closed exit removes nobody, is left
+  out of route ranking and of explore and wander targets, and an agent
+  heading for it re-evaluates at the next reroute check, on the exits it
+  knows; the switch is logged as `exit_closed`. An agent that knows no other
+  node waits at the closed exit. An opened exit is taken at the next regular
+  re-evaluation. A schedule needs rerouting and routed agents:
+  `--no-enable-rerouting`, `--smoke-blind`, `--replay-exits` and agents on
+  JuPedSim journeys are rejected. `StageNode` gains `open_from_s`,
+  `closed_after_s` and `is_open()`; `route_graph` gains
+  `without_closed_stages` and `stage_closed`. Without a schedule results are
+  unchanged ([#373](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/373)).
 - `--smoke-blind`, `--replay-exits CSV` and `--output-exit-history CSV`
   for ASET/RSET arms on the same FDS output. `--smoke-blind` samples the fire
   for the smoke and FED histories only: agents walk at free speed, choose

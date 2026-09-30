@@ -517,6 +517,7 @@ Each `RouteSwitch` record includes a `reason` field:
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment                            |
 | `smoke_reroute` | Best route is a different exit (lower `rank_cost`), or an idle agent is routed to its current exit |
+| `exit_closed`   | The agent's exit has closed on its schedule; the best open exit it knows |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
 | `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`, or a feasible path replacing a rejected walked one |
 | `explore`       | No exit known yet; heading to the nearest unexplored frontier    |

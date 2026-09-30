@@ -302,6 +302,17 @@ two differ:
 
 An agent can therefore keep a known route that is not first in the ranking.
 
+**Scheduled exits.** An exit with `open_from_s` or `closed_after_s` in the
+scenario JSON is left out of every ranking while it is closed, and out of the
+explore and wander targets below (`route_graph.py`, `without_closed_stages`).
+An agent whose route ends at a closed exit re-evaluates at the next reroute
+check, whatever its interval, on the map it holds; the switch is logged as
+`reason="exit_closed"`. An agent that knows no open exit and no other node to
+walk to waits at the closed exit. A closed exit removes nobody.
+An opened exit is taken at the agent's next regular re-evaluation. The
+schedule is on
+[Scenario JSON](/docs/scenario-json.md#exits-exitsid).
+
 *Worked example (clear air).* Every \(\tau\) is 0, both routes are clean,
 and the optical-depth deadband (\(\tau_{\max}\cdot\) `tau_deadband` =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
