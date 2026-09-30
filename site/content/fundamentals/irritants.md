@@ -163,9 +163,17 @@ extinction coefficient *K*, and the smoke composition was not reported
 **Which denominators?** Ch. 63 writes Eq. 63.13 with FIC = 1 meaning
 incapacitation "(e.g., 1000 ppm HCl)" (p. 2344), as Purser does (2003,
 p. 99). That HCl example is the ISO value; the SFPE incapacitation value is
-900 ppm. In our reading the curve is self-consistent only with the
-incapacitation denominators. With the escape-impairment set, walking speed
-would reach 0 at 200 ppm HCl instead of 900 ppm.
+900 ppm. Purser defines the FIC of his speed curve as the concentration
+"expressed as a fraction of the concentration predicted to cause
+incapacitation" (2003, p. 99), so the curve takes the incapacitation
+denominators. With the escape-impairment set, walking speed would reach 0
+at 200 ppm HCl instead of 900 ppm.
+
+The earlier chapter (Purser 2002, SFPE 3rd ed., Sec. 2, Ch. 6) uses the
+other scale: FIC = 1 there means escape impairment, and incapacitation lies
+at a multiple of it that the chapter states three ways: FIC about 3–5
+(p. 2–91), a factor of about four or more (p. 2–121), and 5–10 times the
+FIC (p. 2–132).
 
 ![Fractional walking speed against FIC from Eq. 63.13: 1 at FIC 0, 0.71 at 0.1, 0.31 at 0.2, 0.08 at 0.5 and 0 at 1, continued as a dotted line to FIC 1.2 where it falls below zero](/images/fundamentals/irritant_speed.png)
 
@@ -302,6 +310,9 @@ curve without fitted data and is defined only for FIC from 0 to 1.
   Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2287–2290;
   Eqs. 70.9–70.12; Table 70.4 (identical to Table 63.6) and Table 70.5.
   [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
+- Purser, D. A. (2002). *Toxicity assessment of combustion products*.
+  SFPE Handbook of Fire Protection Engineering, 3rd ed., Sec. 2, Ch. 6.
+  NFPA, Quincy, MA. pp. 2–91, 2–121, 2–132.
 - Purser, D. A. (2003). *ASET and RSET: addressing some issues in relation
   to occupant behaviour and tenability*. Fire Safety Science, 7, 91–102.
   pp. 94, 98–100.

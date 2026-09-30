@@ -57,12 +57,13 @@ unless `--heat-fed-threshold` sets another, a departure from ISO 13571:2012
 §5.4. Its `probabilistic` mode reuses the
 gas spread without a data basis of its own.
 
-Irritants never incapacitate. The published sources predict incapacitation
-at a fractional irritant concentration (FIC) of 1, but the opt-in irritant
+The fractional irritant concentration (FIC) never incapacitates. The
+published sources predict incapacitation at FIC = 1, but the opt-in irritant
 slowdown, with its default floor `--fic-min-factor` 0.3, only lowers the
-speed to 0.3 of its smoke-reduced value, and no agent is marked
-incapacitated by irritants alone
+speed to 0.3 of its smoke-reduced value
 ([#398](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398)).
+Irritants reach incapacitation only through their lung dose
+\(FLD_{irr}\), which is summed into the gas FED.
 
 ## Evacuation time when anyone is incapacitated
 
