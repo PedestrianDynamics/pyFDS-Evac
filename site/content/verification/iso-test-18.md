@@ -63,10 +63,10 @@ computes \(K = K_m\,\rho\,Y_s\) with the mass extinction coefficient
 - **Corridor:** ISO 20414 Table 21, 100 × 2 m, with an exit zone of
   1 × 0.92 m at the far end. One occupant, \(v_0\) = 1.25 m/s, seed 420, so
   it starts at the same point in the clear and the smoky run. It starts at
-  *x* = −49.64 m and is removed at *x* ≈ 49.0 m, once its centre enters the
+  *x* = −49.53 m and is removed at *x* ≈ 49.0 m, once its centre enters the
   exit zone
   ([`direct_steering_runtime.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/pyfds_evac/core/direct_steering_runtime.py)).
-  So it walks about 98.7 m, not 100 m. The seed fixes the target point it
+  So it walks about 98.6 m, not 100 m. The seed fixes the target point it
   heads for, so the path is the same in the clear and the smoky run. ISO's absolute time depends on that distance, so the page predicts
   each smoky time from clear runs of the same layout. ISO leaves the
   quantitative method to the tester.
@@ -89,7 +89,7 @@ computes \(K = K_m\,\rho\,Y_s\) with the mass extinction coefficient
 | *f*(0.5), *f*(1), *f*(3), *f*(7.5), *f*(10) | 0.95963, 0.91926, 0.75779, 0.39448, 0.19263 | the law above, by hand |
 | 1/*f* for the same *K* | 1.0421, 1.0878, 1.3196, 2.5350, 5.1912 | by hand |
 | *K* where the floor *f* = 0.1 starts | 11.15 1/m | by hand; no run reaches it |
-| clear runs: \(t = L/v_0 + a\) | *L* = 98.242 m, *a* = 0.607 s, largest residual 0.010 s | fit to the five clear runs, \(v_0\) = 1.25 to 0.25 m/s |
+| clear runs: \(t = L/v_0 + a\) | *L* = 98.355 m, *a* = 0.587 s, largest residual 0.014 s | fit to the five clear runs, \(v_0\) = 1.25 to 0.25 m/s |
 | expected smoky egress time, social force | \(t_{\mathrm{pred}} = L/(f v_0) + a\) | the clear fit and *f* by hand |
 | ρ of the deck's air at 20 °C | 1.19889 kg/m³ | ideal gas, N₂ + 23.1 % O₂ by mass + soot, 28.84 g/mol |
 | *K* the deck prescribes | 0.99567 1/m | \(8700 \times 1.19889 \times 9.546\times10^{-5}\) |
@@ -122,31 +122,31 @@ speed. Over the middle 40 m of the corridor, the speed along its path matches
 
 | Run | *K* [1/m] | \(v_0\) [m/s] | \(t_{\mathrm{clear}}\) [s] | \(t_{\mathrm{smoke}}\) [s] | \(t_{\mathrm{pred}}\) [s] | difference [s] | tolerance [s] | expected 1/*f* | simulated ratio |
 |---|---|---|---|---|---|---|---|---|---|
-| constant *K* | 0.5 | 1.25 | 79.19 | 82.50 | 82.507 | −0.007 | 0.030 | 1.04207 | 1.04180 |
-| constant *K* | 1 | 1.25 | 79.19 | 86.10 | 86.103 | −0.003 | 0.030 | 1.08783 | 1.08726 |
-| constant *K* | 3 | 1.25 | 79.19 | 104.32 | 104.321 | −0.001 | 0.030 | 1.31963 | 1.31734 |
-| constant *K* | 7.5 | 1.25 | 79.19 | 199.85 | 199.842 | +0.008 | 0.030 | 2.53501 | 2.52368 |
-| constant *K* | 10 | 1.25 | 79.19 | 408.59 | 408.599 | −0.010 | 0.030 | 5.19118 | 5.15962 |
-| constant *K* | 1 | 1.0 | 98.85 | 107.48 | 107.477 | +0.003 | 0.030 | 1.08783 | 1.08730 |
-| constant *K* | 1 | 0.75 | 131.60 | 143.11 | 143.100 | +0.010 | 0.030 | 1.08783 | 1.08746 |
-| constant *K* | 1 | 0.5 | 197.10 | 214.36 | 214.347 | +0.013 | 0.030 | 1.08783 | 1.08757 |
-| constant *K* | 1 | 0.25 | 393.57 | 428.08 | 428.088 | −0.008 | 0.030 | 1.08783 | 1.08768 |
-| *K* from FDS | 0.99550 | 1.25 | 78.56 | 85.43 | 85.426 | +0.004 | 0.021 | 1.08740 | 1.08745 |
+| constant *K* | 0.5 | 1.25 | 79.26 | 82.57 | 82.580 | −0.010 | 0.034 | 1.04207 | 1.04176 |
+| constant *K* | 1 | 1.25 | 79.26 | 86.17 | 86.181 | −0.011 | 0.034 | 1.08783 | 1.08718 |
+| constant *K* | 3 | 1.25 | 79.26 | 104.42 | 104.420 | +0.000 | 0.034 | 1.31963 | 1.31744 |
+| constant *K* | 7.5 | 1.25 | 79.26 | 200.07 | 200.051 | +0.019 | 0.034 | 2.53501 | 2.52422 |
+| constant *K* | 10 | 1.25 | 79.26 | 409.03 | 409.048 | −0.018 | 0.034 | 5.19118 | 5.16061 |
+| constant *K* | 1 | 1.0 | 98.94 | 107.58 | 107.580 | +0.000 | 0.034 | 1.08783 | 1.08733 |
+| constant *K* | 1 | 0.75 | 131.73 | 143.25 | 143.244 | +0.006 | 0.034 | 1.08783 | 1.08745 |
+| constant *K* | 1 | 0.5 | 197.31 | 214.59 | 214.573 | +0.017 | 0.034 | 1.08783 | 1.08758 |
+| constant *K* | 1 | 0.25 | 394.00 | 428.54 | 428.559 | −0.019 | 0.034 | 1.08783 | 1.08766 |
+| *K* from FDS | 0.99550 | 1.25 | 78.47 | 85.32 | 85.328 | −0.008 | 0.021 | 1.08740 | 1.08729 |
 
 | Check | Expected | Simulated |
 |---|---|---|
 | recorded factor, constant *K* | *f*(*K*) by hand | equal to 1.1 × 10⁻¹⁶ |
 | recorded *K*, FDS | inside the 1.5 m slice, outside the 2.0 m slice | 0.9955019 to 0.9955078: inside, outside |
 | recorded factor, FDS | inside *f* of the 1.5 m slice's range | inside |
-| walked speed / \(f v_0\) | 1 | 1 − 9.9 × 10⁻⁶ at worst |
-| egress time | \(t_{\mathrm{pred}}\) within the tolerance | all 10 inside, largest +0.013 s on 214 s |
+| walked speed / \(f v_0\) | 1 | 1 − 9.8 × 10⁻⁶ at worst |
+| egress time | \(t_{\mathrm{pred}}\) within the tolerance | all 10 inside, largest +0.019 s on 200 s |
 
 The simulated ratio is always a little below 1/*f*, by up to 0.59 % at
 *K* = 10. That is the start-up time *a*: it does not scale with 1/*f*, so
 \(t_{\mathrm{smoke}}/t_{\mathrm{clear}} \cdot f - 1 = -a(1-f)/t_{\mathrm{clear}}\),
-which predicts −0.62 % at *K* = 10. Once *a* is taken from the clear runs, each egress time
-matches to 13 ms. The collision-free model in the FDS case has no start-up
-and matches the ratio to 5 × 10⁻⁵.
+which predicts −0.60 % at *K* = 10. Once *a* is taken from the clear runs, each egress time
+matches to 19 ms. The collision-free model in the FDS case has no start-up
+and matches the ratio to 1 × 10⁻⁴.
 
 ## Pass criteria
 
@@ -164,7 +164,7 @@ and matches the ratio to 5 × 10⁻⁵.
 3. **Egress time.** Each egress time is a whole number of time steps
    Δ*t* = 0.01 s. For the social force runs,
    \(|t_{\mathrm{smoke}} - t_{\mathrm{pred}}| \le r_{\max} + 2\,\Delta t\) =
-   0.030 s. The clear fit's largest residual \(r_{\max}\) = 0.010 s covers
+   0.034 s. The clear fit's largest residual \(r_{\max}\) = 0.014 s covers
    the fit's misfit; one Δ*t* is the rounding of the smoky time, one the
    rounding in the fitted line. For the FDS case,
    \(|t_{\mathrm{smoke}} - t_{\mathrm{clear}}/f| \le (1 + 1/f)\,\Delta t\) =
@@ -227,10 +227,8 @@ uv run python scripts/verification/iso_test_18_figures.py --data $OUT
 
 The script prints the table above, writes the figures, and exits with an
 error if a pass criterion fails. The runs behind
-this page, made on the branch of
-[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349) at
-`9505bb8` with a clean tree, are in the project's data folder
-(`fds-evac-data/iso_test_18/rerun_9505bb8/`).
+this page, made at `47f9533` with a clean tree, are in the project's data
+folder (`fds-evac-data/iso_test_18/rerun_47f9533/`).
 
 ## Limits
 

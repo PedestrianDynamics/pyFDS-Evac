@@ -62,16 +62,16 @@ and the test asserts 1 % rather than pretending to be exact.
 
 | run | egress |
 |---|---|
-| clear (no `--fds-dir`) | 78.21 s |
-| K from FDS = 0.99550 /m | 85.05 s |
-| observed ratio | 1.0875 |
+| clear (no `--fds-dir`) | 78.47 s |
+| K from FDS = 0.99550 /m | 85.32 s |
+| observed ratio | 1.0873 |
 | expected `1 / speed_factor(0.99550)` | 1.0874 |
 
 The recorded `speed_factor` is 0.919626 at every sample, matching
-`speed_factor_from_extinction(0.99550)` exactly. Measured at `1139272` with the
+`speed_factor_from_extinction(0.99550)` exactly. Measured at `47f9533` with the
 committed `fds/` output and the default sampling height (the 1.5 m slice), as
 the `coupled_clear` and `coupled_fds` runs of the ISO Test 18 page; the runs
-are in the project's data store under `iso_test_18/rerun_1139272/`.
+are in the project's data store under `iso_test_18/rerun_47f9533/`.
 
 ## Running it
 
