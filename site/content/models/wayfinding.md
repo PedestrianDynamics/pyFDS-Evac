@@ -284,8 +284,10 @@ routes; adoption is whether a moving agent switches to the first of them. The
 two differ:
 
 - **Opening choice** (`_assign_initial_exit`, `scenario.py`). It
-  ranks from the spawn node, without the agent's position and without the
-  queue tally (`scenario.py`, `_assign_initial_exit`).
+  ranks the routes from the spawn node, with distances measured from the
+  agent's position, as re-evaluation measures them, and without the queue
+  tally (`scenario.py`, `_assign_initial_exit`). Agents of one spawn area
+  can therefore start towards different exits.
 - **Re-evaluation** (`evaluate_and_reroute`). It ranks from the agent's
   position. It adopts a different exit only if the rival passes the
   [switching rule](/models/routing.md#switching-rule) of the routing model:
@@ -583,6 +585,9 @@ criteria 1–5 pass, and the discovery egress time is not grid-converged
   draws, `entrance` known and reachable.
 - `tests/test_initial_exit_from_cognitive_map.py`: the opening choice ranks
   the map, with rerouting off.
+- `tests/test_initial_exit_per_agent.py`: the opening choice is measured from
+  each agent's position; one spawn area in a room with two mirrored doors
+  splits between them.
 - `tests/verification/test_cognitive_map_verif.py`: tier invariants on a toy
   graph.
 
