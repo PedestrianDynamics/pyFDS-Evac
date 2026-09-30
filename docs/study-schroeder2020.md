@@ -241,8 +241,12 @@ from the UK and Australia/New Zealand use 0.3 (§4.3).
 model (§4.6 f). Its obscuration endpoint, sight of about arm's length at
 0.8 g/m³ (clause 9, Note 1), is K ≈ 8 1/m with σ = 10 m²/g (our
 conversion), about 35 times vfdb's 0.23 1/m. The lower limits come from
-behaviour: about 30 % of people turn back rather than enter smoke at about
-3 m visibility, and the suggested limits are 0.08 OD/m (K ≈ 0.18) for
+behaviour: Purser and McAllister list '30 % people turn back rather than
+enter' at about 3 m. In the surveys behind that entry, 26 % (UK; Wood 1972,
+Fig. 6) and 29 % (US; Bryan 1977, p. 213) of those who had entered smoke
+turned back, at any visibility, and the US group's mean self-estimated
+visibility on turning back was 9.9 ft ≈ 3 m (Bryan 1977, Table LIV).
+Purser and McAllister also suggest limits of 0.08 OD/m (K ≈ 0.18) for
 large enclosures and 0.2 OD/m (K ≈ 0.46) for small ones (Purser and
 McAllister, Table 63.5, p. 2339). Where D_L ≤ 0.1 1/m, the toxic and
 temperature values are usually met as well (vfdb p. 325; DIN §7.2.2). In
@@ -689,6 +693,11 @@ C does not agree (−113 against −87 m²s), so both grids are given.
   Protection Engineering*, 5th ed., Ch. 63, Eq. 63.43, pp. 2320,
   2338–2339, 2343–2344, 2383.
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
+- Wood, P. G. (1972). *The Behaviour of People in Fires*. Fire Research
+  Note No. 953, Fire Research Station, Borehamwood. No DOI or public URL.
+- Bryan, J. L. (1977). *Smoke as a Determinant of Human Behavior in Fire
+  Situations (Project People)*. NBS-GCR-77-94, University of Maryland, for
+  the National Bureau of Standards. No DOI.
 - Hartzell, G. E., & Emmons, H. W. (1988). The fractional effective dose
   model for assessment of toxic hazards in fires. *J. Fire Sci.*, 6,
   356–362. [doi:10.1177/073490418800600504](https://doi.org/10.1177/073490418800600504)
