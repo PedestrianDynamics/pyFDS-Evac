@@ -5625,7 +5625,13 @@ brightness&amp;rdquo; (abstract, p. 135).&lt;/p>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>The law describes a straight, unobstructed line of sight through uniform
 smoke to one object. It does not describe how far one can see around
-corners, or how much smoke a person walks through.&lt;/li>
+corners, or how much smoke a person walks through. In Wood&amp;rsquo;s survey of
+952 UK fires, 60 % of the people in incidents with smoke attempted to move
+through it, and 26 % turned back in smoke (not broken down by
+visibility). The distance they moved
+correlated only imperfectly with the distance they could see ahead, and
+moving through smoke was not associated with leaving the building (Wood
+1980, pp. 84–91 and Table 6.6, p. 95).&lt;/li>
 &lt;li>It was measured at 5.5–15.5 m (Jin 1970, 1971) and stated for 5–15 m
 (Jin 1971; Jin 1978, p. 137). &lt;em>V&lt;/em> outside that range, including the 30 m FDS cap, is an
 extrapolation.&lt;/li>
@@ -5734,6 +5740,10 @@ Mueller, E., &amp;amp; Paul, C. (2025). &lt;em>Fire Dynamics Simulator User&amp;
 Guide&lt;/em>. National Institute of Standards and Technology (NIST) Special
 Publication 1019, 6th ed., revision FDS-6.10.1-0-g12efa16, §22.10.5.
 &lt;a href="https://github.com/firemodels/fds/releases/tag/FDS-6.10.1" target="_blank" rel="noopener">github.com/firemodels/fds/releases/tag/FDS-6.10.1&lt;/a>&lt;/li>
+&lt;li>Wood, P. G. (1980). &lt;em>A survey of behaviour in fires&lt;/em>. In D. Canter
+(Ed.), &lt;em>Fires and Human Behaviour&lt;/em> (pp. 83–95). John Wiley &amp;amp; Sons,
+Chichester. ISBN 0-471-27709-6. No DOI or public URL. The UK survey was
+completed in 1972 (p. 94).&lt;/li>
 &lt;/ul>
 &lt;p>Cited by the sources above, not obtained:&lt;/p>
 &lt;ul>
@@ -6601,6 +6611,8 @@ that node is not counted, and anticipated arrival times start at that node
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89" target="_blank" rel="noopener">#89&lt;/a>).&lt;/li>
 &lt;li>Heat does not enter route choice
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81" target="_blank" rel="noopener">#81&lt;/a>).&lt;/li>
+&lt;li>The smoke terms are the same for every familiarity setting
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362" target="_blank" rel="noopener">#362&lt;/a>).&lt;/li>
 &lt;li>For discovery agents, the order of tied routes depends on
 &lt;code>PYTHONHASHSEED&lt;/code> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199" target="_blank" rel="noopener">#199&lt;/a>).&lt;/li>
 &lt;li>Anticipation assumes unimpeded speed and, by default, perfect foresight of
@@ -10959,6 +10971,16 @@ breathing rate changes the CO dose. Not supported; see
 probability for each exit, as FDS+Evac allows with &lt;code>KNOWN_DOOR_PROBS&lt;/code>, is not
 supported; see
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">issue #136&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Familiarity does not change how agents treat smoke.&lt;/strong> Familiarity decides
+which exits an agent knows, not how much smoke it accepts. The route-cost
+settings, including every smoke setting of both cost models, are built once
+per run from the scenario&amp;rsquo;s &lt;code>routing&lt;/code> block and fixed defaults
+(&lt;code>RouteCostConfig&lt;/code>), so every agent shares them. In Wood&amp;rsquo;s UK
+survey, people completely familiar with the building moved through smoke more
+often than those less familiar (61 % against 51 %; Wood 1980, Table 6.4,
+p. 87), though moving through smoke was not associated with leaving the
+building (p. 91). See
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362" target="_blank" rel="noopener">issue #362&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Herding and social influence.&lt;/strong> Each agent chooses its route from its own
 cognitive map and the hazard along each route. When &lt;code>routing.w_queue&lt;/code> is
 above zero (the default is 0.0), expected queueing at an exit also enters the
@@ -10999,6 +11021,11 @@ and there is no separate detection phase.&lt;/p>
 is finished before the evacuation starts, so occupants cannot open doors or
 otherwise change the fire. The time resolution of the hazard is that of the
 slice output (&lt;code>&amp;amp;DUMP DT_SLCF&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>Re-entry.&lt;/strong> An agent that reaches an exit is removed from the simulation
+(&lt;code>run_scenario&lt;/code> in &lt;code>pyfds_evac/core/scenario.py&lt;/code>), so nobody goes back into
+the building. In Wood&amp;rsquo;s UK survey, 43 % of those who had left the building
+re-entered it (Wood 1980, Table 6.6, p. 95): 53 % of men and 34 % of women
+(Table 6.3, p. 87).&lt;/p>
 &lt;h2>Reproducibility&lt;span class="hx-absolute -hx-mt-20" id="reproducibility">&lt;/span>
 &lt;a href="#reproducibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A fixed seed does not give identical trajectories. The verification suite
 found that individual trajectories differ between runs with the same seed,
@@ -11024,7 +11051,10 @@ Technical Reference and User&amp;rsquo;s Guide&lt;/em>. VTT Technical Research C
 Finland.&lt;/p>
 &lt;p>Purser, D. A., and McAllister, J. L. (2016). Assessment of hazards to
 occupants from smoke, toxic gases, and heat. In &lt;em>SFPE Handbook of Fire
-Protection Engineering&lt;/em>, 5th ed., Chapter 63. Springer.&lt;/p></description></item><item><title>Scenario JSON</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</guid><description>
+Protection Engineering&lt;/em>, 5th ed., Chapter 63. Springer.&lt;/p>
+&lt;p>Wood, P. G. (1980). A survey of behaviour in fires. In D. Canter (Ed.),
+&lt;em>Fires and Human Behaviour&lt;/em>, pp. 83–95. John Wiley &amp;amp; Sons, Chichester.
+ISBN 0-471-27709-6.&lt;/p></description></item><item><title>Scenario JSON</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</guid><description>
 &lt;p>A scenario is a &lt;code>config.json&lt;/code> plus a &lt;code>geometry.wkt&lt;/code> walkable area, in a
 directory or a ZIP. This page lists the JSON keys that change a result, with
 their defaults. The meaning of the model parameters is on the
@@ -11975,6 +12005,16 @@ but so did affiliation: staff generally left by the fire exit, whereas members
 of the public who were separated from their group moved towards, and left by,
 the entrance. Sime argued that place affiliation is not addressed
 sufficiently in escape-route design.&lt;/p>
+&lt;p>Edelman, Herz and Bickman (1980, pp. 193–196) interviewed 22 residents after
+a nursing-home fire. Up to about 85 residents (93 % of the floor) left by the
+one stair that staff and residents used every day, most of them towards the
+fire. Yet most respondents knew the exits at the end of their own wing, and 5
+of the 6 in the fire zone named a closer one. Those exits were alarmed and
+labelled &amp;ldquo;Emergency Exit Only&amp;rdquo;, and 13 of 14 respondents had never used them.
+Nine of 13 said they moved because staff told them to leave, probably without
+saying which exit to use, and 11 of 18 saw other residents going the same way.
+The authors found no lack of awareness of the exits; the residents had no
+practice using them (p. 195).&lt;/p>
 &lt;p>Kinateder, Comunale and Warren (2018) tested this in an ambulatory virtual
 museum. Participants entered through one door and, when an alarm sounded,
 were significantly more likely to leave through that familiar door than
@@ -12003,8 +12043,8 @@ reasonably similar to the revealed-choice model, despite significant
 differences in parameter scale. Their review of empirical methods in crowd
 research (Haghani and Sarvi 2018) surveys more than 160 studies.&lt;/p>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
-&lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Apart from incident studies such as Sime&amp;rsquo;s, the evidence above comes from
-hypothetical choices, virtual reality and evacuation trials, none of which
+&lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Apart from incident studies such as Sime&amp;rsquo;s and Edelman et al.&amp;rsquo;s, the
+evidence above comes from hypothetical choices, virtual reality and evacuation trials, none of which
 carries the threat of a real fire. Whether parameters calibrated in one
 geometry and population transfer to another is an open question; Haghani and
 Sarvi (2017) set out to test exactly this context-dependence. The guide to &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, the evacuation module of the Fire Dynamics
@@ -12019,6 +12059,10 @@ exits are rarely used in many real evacuations because they are unfamiliar
 affiliation in a fire entrapment setting&lt;/em>. Environment and Behavior,
 17(6), 697–724.
 &lt;a href="https://doi.org/10.1177/0013916585176003" target="_blank" rel="noopener">doi:10.1177/0013916585176003&lt;/a>&lt;/li>
+&lt;li>Edelman, P., Herz, E., &amp;amp; Bickman, L. (1980). &lt;em>A model of behaviour in
+fires applied to a nursing home fire&lt;/em>. In D. Canter (Ed.), &lt;em>Fires and
+Human Behaviour&lt;/em> (pp. 181–203). John Wiley &amp;amp; Sons, Chichester. ISBN
+0-471-27709-6. No DOI or public URL.&lt;/li>
 &lt;li>Kinateder, M., Comunale, B., &amp;amp; Warren, W. H. (2018). &lt;em>Exit choice in an
 emergency evacuation scenario is influenced by exit familiarity and
 neighbor behavior&lt;/em>. Safety Science, 106, 170–175.
