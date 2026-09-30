@@ -2049,7 +2049,7 @@ while still waiting walks off when its pre-movement ends
 &lt;tr>
 &lt;td>&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput&lt;/code>&lt;/td>
 &lt;td>&lt;code>false&lt;/code>, 0&lt;/td>
-&lt;td>Cap the flow through the exit.&lt;/td>
+&lt;td>Cap the removal rate at the exit: an agent within its radius + 0.5 m of the exit&amp;rsquo;s target point is removed only if at least 1/&lt;code>max_throughput&lt;/code> s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A &lt;code>max_throughput&lt;/code> of 0 disables the cap.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>capacity_agents_per_s&lt;/code>&lt;/td>
