@@ -580,10 +580,9 @@ brightness" (abstract, p. 135).
   who did turned back. Of those who turned back, 91 % estimated they could
   see 4 yd (3.7 m) or less; visibility was self-estimated on a scale of 0,
   2, 4, 10, 12, 15, 20 and 20+ yd (Wood 1972, Fig. 6, p. 50). The distance
-  they moved correlated only imperfectly (Spearman ρ = 0.41; Wood 1972,
-  p. 84) with the distance they could see ahead, and
-  moving through smoke was not associated with leaving the building (Wood
-  1980, pp. 84–91 and Table 6.6, p. 95).
+  they moved correlated only imperfectly with the distance they could see
+  ahead (Spearman ρ = 0.41; Wood 1972, p. 84), and moving through smoke was
+  not associated with leaving the building (Wood 1980, p. 91).
 - It was measured at 5.5–15.5 m (Jin 1970, 1971) and stated for 5–15 m
   (Jin 1971; Jin 1978, p. 137). *V* outside that range, including the 30 m FDS cap, is an
   extrapolation.
