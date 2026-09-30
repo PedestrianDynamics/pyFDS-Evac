@@ -26,8 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   51.1 %) with its signed bias; W, the door-user-weighted total variation
   distance, with the rows under 10 door users pooled; W's noise floor from
   20,000 multinomial resamples of Fahy; the per-run spread over several
-  runs; the split at `--t-jam`; and, with `--against`, the paired W
-  difference per seed on the agents that exited in both arms. Agents still
+  runs; the split at `--t-jam`, descriptive only; and, with `--against`,
+  the paired W difference per seed on the agents that exited in both arms.
+  A scored row without a model door user counts as distance 1. Agents still
   on the grid at the horizon (`max_simulation_time` of `--config`, or
   `--horizon`) are censored: counted, and left out of T1, W and the
   same-agent set; `observed_matrix` is unchanged

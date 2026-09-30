@@ -52,6 +52,25 @@ def test_row_without_model_door_users_counts_as_distance_one():
     assert V.empty_rows(model, TWO_ROWS) == ["B"]
 
 
+def test_pooled_row_without_model_door_users_counts_as_distance_one():
+    targets = {"A": {"front": 6, "bar": 4}, "B": {"front": 3}, "C": {"bar": 2}}
+    # A matches exactly (0); the pooled B+C row (weight 5 of 15) has no model user.
+    model = {"A": {"front": 3, "bar": 2}}
+    assert V.w_statistic(model, targets) == pytest.approx(5 / 15)
+    assert V.empty_rows(model, targets) == [V.POOLED_ROW]
+
+
+def test_t_jam_split_is_printed_as_descriptive(capsys):
+    row = F.PLACEABLE[0]
+    runs = [[_agent(1, origin=row, t=50.0), _agent(2, origin=row, t=120.0)]]
+    V.report_statistic(runs, t_jam=86.0, draws=10)
+    out = capsys.readouterr().out
+    assert "t_jam split (descriptive, not a gate):" in out
+    assert "exit before t_jam = 86 s" in out
+    V.report_statistic(runs, t_jam=None, draws=10)
+    assert "descriptive" not in capsys.readouterr().out
+
+
 def test_rows_outside_the_targets_are_ignored():
     model = {"A": {"front": 6, "bar": 4}, "B": {"front": 2, "bar": 8}, "X": {"bar": 9}}
     assert V.w_statistic(model, TWO_ROWS) == pytest.approx(0.0)

@@ -39,7 +39,9 @@ the table, over the agents of every run given, pooled:
   scored row as one multinomial (the pooled small row as one pooled row).
 * With several runs (one per seed), the per-run spread of T1 and W.
 * With ``--t-jam``, T1 and W for agents whose exit time (their last recorded
-  frame) is before t_jam and for those at or after it.
+  frame) is before t_jam and for those at or after it. The split is
+  descriptive only, not a gate: the registered statistics are T1 and W over
+  all agents.
 * With ``--against``, the paired difference W(run) - W(other) per seed, the
   n-th run against the n-th other, on the **same agents**: those that reached
   a door in both. The two runs must spawn the same agents (same ids, areas
@@ -242,6 +244,8 @@ def tvd(model, target) -> float:
     n_model = sum(model.values())
     n_target = sum(target.values())
     if n_model == 0:
+        # Conservative: a scored row the model sends nobody through is fully
+        # wrong, rather than dropped from W with its weight.
         return 1.0
     doors = set(model) | set(target)
     return 0.5 * sum(
@@ -458,6 +462,9 @@ def report_statistic(
         print(f"    W  {_spread(w_statistic(m, targets) for m in matrices)}")
     if t_jam is None:
         return
+    # Descriptive only, not a gate: T1 and W over all agents are the registered
+    # statistics; the halves have fewer agents and no noise floor of their own.
+    print("t_jam split (descriptive, not a gate):")
     before = pooled_matrix(door_matrix(a, t_to=t_jam) for a in runs)
     after = pooled_matrix(door_matrix(a, t_from=t_jam) for a in runs)
     print(_line(f"exit before t_jam = {t_jam:g} s", before, targets))
@@ -497,7 +504,7 @@ def main() -> int:
         "--t-jam",
         type=float,
         default=None,
-        help="also split by exit before/after this time (s)",
+        help="also split by exit before/after this time (s); descriptive, not a gate",
     )
     ap.add_argument(
         "--against",

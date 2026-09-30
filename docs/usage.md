@@ -539,8 +539,9 @@ pooled:
   door users as weights. The seven rows with at least 10 door users are
   scored alone; the other five (34 door users) are pooled into one row, and
   the model agents from those areas with them. A scored row without a model
-  door user counts as distance 1; each line that reports W for a
-  `--t-jam` split also prints how many scored rows have no model door user.
+  door user counts as distance 1 (conservative); each line that reports W
+  for a `--t-jam` split also prints how many scored rows have no model door
+  user. The `--t-jam` split is descriptive only, not a gate.
 - The **noise floor** of W: Fahy resampled multinomially against itself,
   each scored row (and the pooled row) as one multinomial (median 0.079,
   p95 0.109 at the default 20,000 draws).
@@ -566,7 +567,7 @@ uv run python assets/station_fahy/validate.py RUN.sqlite [RUN.sqlite ...] \
 | `--config PATH` | The scenario's `config.json`: spawn areas (`fahy_row`) and exits. |
 | `--reach M` | Distance from a door polygon at which a last position counts as using it (default 2.0 m). |
 | `--horizon S` | The horizon for censoring (default: `max_simulation_time` of `--config`). |
-| `--t-jam S` | Also print T1 and W for agents whose last recorded frame is before `S` and at or after it. |
+| `--t-jam S` | Also print T1 and W for agents whose last recorded frame is before `S` and at or after it. The split is descriptive only, not a gate. |
 | `--against RUN [RUN ...]` | Runs of another arm, paired in order with the scored runs (one pair per seed). Prints W(run) − W(other) per pair on the **same agents**, those that reached a door, uncensored, in both, and in how many pairs the scored run is lower. Both runs of a pair must spawn the same agents (ids, areas, start positions), or it stops with an error. |
 | `--noise-draws N` | Resamples for the noise floor (default 20,000). |
 | `--noise-seed N` | Seed of the resampling (default 0). |
