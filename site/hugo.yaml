@@ -165,4 +165,7 @@ params:
   displayUpdatedDate: true
   dateFormat: "January 2, 2006"
 
+  # Hextra 0.8.4 loads KaTeX only for pages whose own params set math:
+  # true, so each section sets it in its _index.md cascade. This
+  # site-wide value has no effect on its own.
   math: true

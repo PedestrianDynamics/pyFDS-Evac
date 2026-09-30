@@ -3,6 +3,7 @@ title: Documentation
 weight: 1
 cascade:
   type: docs
+  math: true
 ---
 
 How to install, run and read pyFDS-Evac. Pick the path that fits you; each
