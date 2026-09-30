@@ -1727,6 +1727,8 @@ your own FDS output.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>: FED from FDS slices, and how to spot
 a run that finishes but has no FED in it.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>: the
+same fire, run uncoupled and coupled.&lt;/li>
 &lt;li>Models: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke and speed&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>.&lt;/li>

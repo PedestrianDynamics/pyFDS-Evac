@@ -191,6 +191,8 @@ for a per-agent comparison on a real FDS fire, and
 difference as maps. Each agent carries
 its own dose along its path; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>.&lt;/p>
+&lt;p>RSET from a run without the fire against a coupled run:
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>.&lt;/p>
 &lt;p>How it is verified: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">Verification&lt;/a> index; ASET and RSET themselves are outputs of a study, not of a test.&lt;/p></description></item><item><title>Quickstart</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</guid><description>
 &lt;p>Run the same evacuation twice, once in clear air and once in smoke, and see
 how smoke changes walking speed and evacuation time.&lt;/p>
@@ -4147,6 +4149,8 @@ your own FDS output.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>: FED from FDS slices, and how to spot
 a run that finishes but has no FED in it.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>: the
+same fire, run uncoupled and coupled.&lt;/li>
 &lt;li>Models: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke and speed&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">wayfinding&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing&lt;/a>.&lt;/li>
@@ -8987,6 +8991,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-with-without-fire/">Evacuation with and without the fire&lt;/a> runs these arms against a run without the fire and compares them.&lt;/p>
 &lt;h3>Tenability (FIC slowdown and incapacitation)&lt;span class="hx-absolute -hx-mt-20" id="tenability-fic-slowdown-and-incapacitation">&lt;/span>
 &lt;a href="#tenability-fic-slowdown-and-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The two dose tracks are independent:&lt;/p>
 &lt;ul>
@@ -15662,6 +15667,8 @@ deterministic mode.&lt;/p>
 &lt;a href="#related-options" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>To add smoke or FED from FDS output to an ensemble, pass the same models to
 &lt;code>run_scenario&lt;/code> inside the loop, as in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>.&lt;/li>
+&lt;li>To compare RSET from a run without the fire with coupled runs, see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>.&lt;/li>
 &lt;li>Pre-movement is set per spawn area in the scenario JSON, with
 &lt;code>use_premovement&lt;/code>, &lt;code>premovement_distribution&lt;/code> (&lt;code>gamma&lt;/code>, &lt;code>lognormal&lt;/code>,
 &lt;code>weibull&lt;/code>, &lt;code>uniform&lt;/code> or &lt;code>constant&lt;/code>), &lt;code>premovement_param_a&lt;/code>, &lt;code>premovement_param_b&lt;/code> and
@@ -16206,6 +16213,1002 @@ surface at 20 or 35 °C, within ±10 % of the Handbook&amp;rsquo;s &amp;ldquo;ap
 2.5 kW/m²&amp;rdquo;. Table 63.20 radiant rows: within ±30 %, the band chosen in
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219" target="_blank" rel="noopener">#219&lt;/a>.
 D = 16.7 as printed on pp. 2382 and 2384 of Ch. 63.&lt;/li>
+&lt;/ul></description></item><item><title>Evacuation with and without the fire</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-with-without-fire/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-with-without-fire/</guid><description>
+&lt;p>Egress tools such as Pathfinder are commonly run without the fire. The
+required safe escape time (RSET) is taken from that run and compared with
+the available safe escape time (ASET) from FDS. Practitioners regard this
+uncoupled comparison as conservative. This page shows how to make the same
+comparison with pyFDS-Evac, what a run coupled to the fire adds, and whether
+the uncoupled run is conservative for one fire: the 2 MW PVC fire of
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>You need&lt;/strong> the &lt;code>fire_2MW_PVC&lt;/code> FDS output of that page (step 3 there says
+where to get it) in &lt;code>$FDS&lt;/code>. Each run below takes about 4 s.&lt;/p>
+&lt;h2>The answer in short&lt;span class="hx-absolute -hx-mt-20" id="the-answer-in-short">&lt;/span>
+&lt;a href="#the-answer-in-short" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>For this fire and this T-junction, with 100 people placed at t = 0:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>The workflow carries over exactly.&lt;/strong> A smoke-blind run with the fire
+(arm U) gives the same trajectories as a run without it (arm C), and it
+records the dose along those fire-free paths.&lt;/li>
+&lt;li>&lt;strong>RSET.&lt;/strong> The uncoupled RSET is shorter than the speed-only coupled RSET
+in every seed. It is shorter than the fully coupled RSET in every seed
+when people wait 30 or 60 s before moving. With no wait, the direction
+against the fully coupled run is not resolved.&lt;/li>
+&lt;li>&lt;strong>Dose.&lt;/strong> Whether the uncoupled run over- or under-states the dose
+depends on the metric (see &lt;a href="#dose">the dose table&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>Exit usage&lt;/strong> differs: without the fire everyone takes the near exit B;
+with smoke-aware routing (arm R) most agents take exit A.&lt;/li>
+&lt;li>&lt;strong>The pass/fail verdict&lt;/strong> at a fixed point is the same in every arm for
+visibility (fails), and in U, S, R and R-na for FED 0.3 (passes). For HCl
+with no wait, the verdict at ISO FEC 1 (not the design value 0.3) is
+knife-edge: a single uncoupled run can give either verdict. Summed over
+seeds and points, U passes 36 times, R 30, R-na 17 and S 4.&lt;/li>
+&lt;/ul>
+&lt;p>This fire has no margin to lose: at every point the visibility limit is
+reached before the last person gets out, in every arm and seed. So the
+study shows what the uncoupled run misses once the margin is gone. It cannot tell whether a design that passes
+without the fire also passes with it. It is one fire in one geometry, run
+with research software, and it gives no design verdict.&lt;/p>
+&lt;h2>1. The classic comparison: run without the fire&lt;span class="hx-absolute -hx-mt-20" id="1-the-classic-comparison-run-without-the-fire">&lt;/span>
+&lt;a href="#1-the-classic-comparison-run-without-the-fire" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The scenario is &lt;code>assets/t_junction/config_initial_pre0.json&lt;/code>: 100 agents
+spread over the dead-end branch of the T, all familiar with both exits, no
+pre-movement, and a time limit of 270 s. The two variants
+&lt;code>config_initial_pre30.json&lt;/code> and &lt;code>config_initial_pre60.json&lt;/code> differ only in a
+constant pre-movement of 30 or 60 s.&lt;/p>
+&lt;p>&lt;strong>Arm C, no fire.&lt;/strong> Leave out &lt;code>--fds-dir&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ww
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SC&lt;span style="color:#f92672">=&lt;/span>assets/t_junction/config_initial_pre0.json
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario $SC --seed &lt;span style="color:#ae81ff">4&lt;/span> &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite ww/c.sqlite --output-exit-history ww/c_exits.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The output ends with:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 57.65 s (100/100 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>This is the run an egress-only tool gives you. Take RSET from it and compare
+it with the location ASET from FDS, as in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a real fire › At fixed points&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Arm U, smoke-blind.&lt;/strong> The same run, with the fire sampled but not acting.
+&lt;code>--smoke-blind&lt;/code> keeps every agent at its free speed and on its fire-free
+route, and still writes what each agent breathed and saw
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/341" target="_blank" rel="noopener">#341&lt;/a>):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario $SC --seed &lt;span style="color:#ae81ff">4&lt;/span> --fds-dir &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$FDS&lt;span style="color:#e6db74">&amp;#34;&lt;/span> --smoke-blind &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite ww/u.sqlite --output-exit-history ww/u_exits.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-history ww/u_fed.csv --output-smoke-history ww/u_smoke.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Smoke-blind: rerouting is off.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Smoke-blind: FED is recorded, incapacitation and FIC slowdown off.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>…
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation finished in 57.65 s (100/100 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>fdsreader also logs &lt;code>Module vents: could not convert string to float&lt;/code> for
+this deck. It does not affect the result.&lt;/p>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: U walks exactly as C">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> U walks exactly as C&lt;/p>
+&lt;div class="docs-checkpoint__body">
+&lt;p>Pair the agents of both runs by origin and spawn order and compare their
+positions frame by frame:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> sqlite3
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> pandas &lt;span style="color:#66d9ef">as&lt;/span> pd
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">track&lt;/span>(run):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;&amp;#34;&amp;#34;Positions per frame, keyed by origin and spawn order, not by id.&amp;#34;&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">with&lt;/span> sqlite3&lt;span style="color:#f92672">.&lt;/span>connect(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;ww/&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>run&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">.sqlite&amp;#34;&lt;/span>) &lt;span style="color:#66d9ef">as&lt;/span> con:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> tr &lt;span style="color:#f92672">=&lt;/span> pd&lt;span style="color:#f92672">.&lt;/span>read_sql(&lt;span style="color:#e6db74">&amp;#34;SELECT frame, id, pos_x, pos_y FROM trajectory_data&amp;#34;&lt;/span>, con)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> keys &lt;span style="color:#f92672">=&lt;/span> pd&lt;span style="color:#f92672">.&lt;/span>read_csv(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;ww/&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>run&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">_exits.csv&amp;#34;&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>set_index(&lt;span style="color:#e6db74">&amp;#34;agent_id&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> tr&lt;span style="color:#f92672">.&lt;/span>join(keys[[&lt;span style="color:#e6db74">&amp;#34;origin&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;spawn_index&amp;#34;&lt;/span>]], on&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;id&amp;#34;&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>drop(columns&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;id&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>c, u &lt;span style="color:#f92672">=&lt;/span> track(&lt;span style="color:#e6db74">&amp;#34;c&amp;#34;&lt;/span>), track(&lt;span style="color:#e6db74">&amp;#34;u&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>both &lt;span style="color:#f92672">=&lt;/span> c&lt;span style="color:#f92672">.&lt;/span>merge(u, on&lt;span style="color:#f92672">=&lt;/span>[&lt;span style="color:#e6db74">&amp;#34;frame&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;origin&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;spawn_index&amp;#34;&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>gap &lt;span style="color:#f92672">=&lt;/span> ((both&lt;span style="color:#f92672">.&lt;/span>pos_x_x &lt;span style="color:#f92672">-&lt;/span> both&lt;span style="color:#f92672">.&lt;/span>pos_x_y) &lt;span style="color:#f92672">**&lt;/span> &lt;span style="color:#ae81ff">2&lt;/span> &lt;span style="color:#f92672">+&lt;/span> (both&lt;span style="color:#f92672">.&lt;/span>pos_y_x &lt;span style="color:#f92672">-&lt;/span> both&lt;span style="color:#f92672">.&lt;/span>pos_y_y) &lt;span style="color:#f92672">**&lt;/span> &lt;span style="color:#ae81ff">2&lt;/span>) &lt;span style="color:#f92672">**&lt;/span> &lt;span style="color:#ae81ff">0.5&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;rows C &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>len(c)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">, U &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>len(u)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">, paired &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>len(both)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;max position difference C-U: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>gap&lt;span style="color:#f92672">.&lt;/span>max()&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.3f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> m&amp;#34;&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>rows C 35585, U 35585, paired 35585
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>max position difference C-U: 0.000 m&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Every row pairs and no agent is anywhere else. If the difference is not
+zero, check that both runs use the same scenario file and seed.&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;p>&lt;strong>Read RSET from the trajectory&lt;/strong>, not from the &lt;code>Simulation finished&lt;/code> line.
+The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">ensemble how-to&lt;/a> explains why and how. For one
+seed:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> sqlite3
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> numpy &lt;span style="color:#66d9ef">as&lt;/span> np
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> pandas &lt;span style="color:#66d9ef">as&lt;/span> pd
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> run &lt;span style="color:#f92672">in&lt;/span> (&lt;span style="color:#e6db74">&amp;#34;c&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;u&amp;#34;&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">with&lt;/span> sqlite3&lt;span style="color:#f92672">.&lt;/span>connect(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;ww/&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>run&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">.sqlite&amp;#34;&lt;/span>) &lt;span style="color:#66d9ef">as&lt;/span> con:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fps &lt;span style="color:#f92672">=&lt;/span> float(con&lt;span style="color:#f92672">.&lt;/span>execute(&lt;span style="color:#e6db74">&amp;#34;SELECT value FROM metadata WHERE key=&amp;#39;fps&amp;#39;&amp;#34;&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>fetchone()[&lt;span style="color:#ae81ff">0&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> last &lt;span style="color:#f92672">=&lt;/span> pd&lt;span style="color:#f92672">.&lt;/span>read_sql(&lt;span style="color:#e6db74">&amp;#34;SELECT MAX(frame) AS f FROM trajectory_data GROUP BY id&amp;#34;&lt;/span>, con)&lt;span style="color:#f92672">.&lt;/span>f &lt;span style="color:#f92672">/&lt;/span> fps
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exits &lt;span style="color:#f92672">=&lt;/span> pd&lt;span style="color:#f92672">.&lt;/span>read_csv(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;ww/&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>run&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">_exits.csv&amp;#34;&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>exit_id&lt;span style="color:#f92672">.&lt;/span>value_counts()&lt;span style="color:#f92672">.&lt;/span>to_dict()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>run&lt;span style="color:#f92672">.&lt;/span>upper()&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">: RSET_last &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>last&lt;span style="color:#f92672">.&lt;/span>max()&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s, &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;p95 &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>np&lt;span style="color:#f92672">.&lt;/span>sort(last)[&lt;span style="color:#ae81ff">94&lt;/span>]&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s, exits &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>exits&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>C: RSET_last 57.6 s, p95 55.5 s, exits {&amp;#39;exit_B_right&amp;#39;: 100}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>U: RSET_last 57.6 s, p95 55.5 s, exits {&amp;#39;exit_B_right&amp;#39;: 100}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>RSET_last&lt;/code> is the last agent out; &lt;code>p95&lt;/code> the 95th of 100. The clock starts
+at ignition. The run models no detection and no alarm, so RSET here is
+pre-movement plus travel: with no pre-movement, the agents move at ignition,
+which no standard timeline assumes. Add &lt;em>t&lt;/em>&lt;sub>det&lt;/sub> and
+&lt;em>t&lt;/em>&lt;sub>warn&lt;/sub> yourself (ISO/TR 16738:2009, Eq. 2, as on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>).&lt;/p>
+&lt;p>If the run stopped at the time limit with people still inside, &lt;code>RSET_last&lt;/code>
+prints the 270 s cap and &lt;code>exits&lt;/code> counts the exit assigned to each agent,
+out or not. That is not an RSET; see &lt;a href="#sensitivity-arms">Sensitivity arms&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Read the dose along the fire-free paths&lt;/strong> from U&amp;rsquo;s histories:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> pandas &lt;span style="color:#66d9ef">as&lt;/span> pd
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed &lt;span style="color:#f92672">=&lt;/span> pd&lt;span style="color:#f92672">.&lt;/span>read_csv(&lt;span style="color:#e6db74">&amp;#34;ww/u_fed.csv&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>smoke &lt;span style="color:#f92672">=&lt;/span> pd&lt;span style="color:#f92672">.&lt;/span>read_csv(&lt;span style="color:#e6db74">&amp;#34;ww/u_smoke.csv&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>hist &lt;span style="color:#f92672">=&lt;/span> fed&lt;span style="color:#f92672">.&lt;/span>merge(smoke[[&lt;span style="color:#e6db74">&amp;#34;time_s&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;agent_id&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;extinction_per_m&amp;#34;&lt;/span>]],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> on&lt;span style="color:#f92672">=&lt;/span>[&lt;span style="color:#e6db74">&amp;#34;time_s&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;agent_id&amp;#34;&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>hist[&lt;span style="color:#e6db74">&amp;#34;hcl_ppm&amp;#34;&lt;/span>] &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">900&lt;/span> &lt;span style="color:#f92672">*&lt;/span> hist&lt;span style="color:#f92672">.&lt;/span>fic &lt;span style="color:#75715e"># HCl is the only irritant in this deck&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>per_agent &lt;span style="color:#f92672">=&lt;/span> hist&lt;span style="color:#f92672">.&lt;/span>groupby(&lt;span style="color:#e6db74">&amp;#34;agent_id&amp;#34;&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>agg(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> max_fed&lt;span style="color:#f92672">=&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;fed_cumulative&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;max&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> max_fic&lt;span style="color:#f92672">=&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;fic&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;max&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> s_hcl300&lt;span style="color:#f92672">=&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;hcl_ppm&amp;#34;&lt;/span>, &lt;span style="color:#66d9ef">lambda&lt;/span> v: int((v &lt;span style="color:#f92672">&amp;gt;=&lt;/span> &lt;span style="color:#ae81ff">300&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>sum())),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> s_k03&lt;span style="color:#f92672">=&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;extinction_per_m&amp;#34;&lt;/span>, &lt;span style="color:#66d9ef">lambda&lt;/span> v: int((v &lt;span style="color:#f92672">&amp;gt;=&lt;/span> &lt;span style="color:#ae81ff">0.3&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>sum())),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(per_agent&lt;span style="color:#f92672">.&lt;/span>describe()&lt;span style="color:#f92672">.&lt;/span>loc[[&lt;span style="color:#e6db74">&amp;#34;50%&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;max&amp;#34;&lt;/span>]]&lt;span style="color:#f92672">.&lt;/span>round(&lt;span style="color:#ae81ff">2&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>to_string())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;agents at HCl &amp;gt;= 300 ppm for at least 1 s: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>(per_agent&lt;span style="color:#f92672">.&lt;/span>s_hcl300 &lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>)&lt;span style="color:#f92672">.&lt;/span>sum()&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span> max_fed max_fic s_hcl300 s_k03
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>50% 0.00 1.62 5.0 11.0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>max 0.01 16.30 26.0 37.0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>agents at HCl &amp;gt;= 300 ppm for at least 1 s: 83&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The histories are written once per second, so &lt;code>s_hcl300&lt;/code> and &lt;code>s_k03&lt;/code> are
+seconds at HCl ≥ 300 ppm and at &lt;em>K&lt;/em> ≥ 0.3 1/m. HCl = 900 × &lt;code>fic&lt;/code> holds
+only because HCl is the only irritant of this deck
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a real fire › How the numbers are computed&lt;/a>).
+The classic comparison uses no such dose: it compares location ASET with
+RSET only. The per-agent dose is extra post-processing, as on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#each-agent-against-its-own-limits">A crowd in a real fire › Each agent against its own limits&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>The location ASET&lt;/strong> comes from the FDS output alone, so it is the same for
+every arm. The study uses four points of the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">location ASET table&lt;/a>,
+times from ignition:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Point&lt;/th>
+&lt;th>&lt;em>K&lt;/em> ≥ 0.3 1/m&lt;/th>
+&lt;th>HCl ≥ 300 ppm&lt;/th>
+&lt;th>HCl ≥ 1000 ppm&lt;/th>
+&lt;th>FED ≥ 0.3&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Exit B&lt;/td>
+&lt;td>18 s&lt;/td>
+&lt;td>28 s&lt;/td>
+&lt;td>40 s&lt;/td>
+&lt;td>not by 300 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Junction&lt;/td>
+&lt;td>24 s&lt;/td>
+&lt;td>45 s&lt;/td>
+&lt;td>59 s&lt;/td>
+&lt;td>274 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Branch mouth&lt;/td>
+&lt;td>46 s&lt;/td>
+&lt;td>51 s&lt;/td>
+&lt;td>68 s&lt;/td>
+&lt;td>275 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Exit A&lt;/td>
+&lt;td>45 s&lt;/td>
+&lt;td>47 s&lt;/td>
+&lt;td>50 s&lt;/td>
+&lt;td>not by 300 s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The &lt;em>K&lt;/em> limit is the Engineers Australia visibility of 10 m with &lt;em>C&lt;/em> = 3
+(EA 2014, Fig. 8, &lt;em>Tenability Criteria – Short Exposure&lt;/em>, p. 15). The HCl
+limits are ISO FEC 0.3 and 1. Every agent starts in the branch, so every
+agent passes the branch mouth and the junction.&lt;/p>
+&lt;h2>2. What coupling adds&lt;span class="hx-absolute -hx-mt-20" id="2-what-coupling-adds">&lt;/span>
+&lt;a href="#2-what-coupling-adds" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Two further arms let the fire act, one effect at a time.&lt;/p>
+&lt;p>&lt;strong>Arm S, speed only.&lt;/strong> Smoke slows the agents, but each keeps the exit it
+took in U. &lt;code>--replay-exits&lt;/code> reads U&amp;rsquo;s exit history and pairs agents by
+origin and spawn order (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/pull/352" target="_blank" rel="noopener">#352&lt;/a>):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario $SC --seed &lt;span style="color:#ae81ff">4&lt;/span> --fds-dir &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$FDS&lt;span style="color:#e6db74">&amp;#34;&lt;/span> &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --no-enable-rerouting --disable-tenability --replay-exits ww/u_exits.csv &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite ww/s.sqlite --output-exit-history ww/s_exits.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Replaying the exits of 100 agents from ww/u_exits.csv.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>…
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation finished in 67.57 s (100/100 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>Arm R, speed and routing.&lt;/strong> The default coupled run. Smoke slows the
+agents and enters their route cost:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario $SC --seed &lt;span style="color:#ae81ff">4&lt;/span> --fds-dir &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$FDS&lt;span style="color:#e6db74">&amp;#34;&lt;/span> &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --disable-tenability &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite ww/r.sqlite --output-exit-history ww/r_exits.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 56.41 s (100/100 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>C and R print &lt;code>Reroute debug&lt;/code> lines; they do not affect the result.&lt;/p>
+&lt;p>&lt;code>--disable-tenability&lt;/code> in S and R records FED and FIC but lets nobody be
+incapacitated, so that everyone leaves and RSET stays defined. It also
+turns off &lt;code>--enable-fic-speed&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#tenability-fic-slowdown-and-incapacitation">Usage&lt;/a>).
+The study adds incapacitation and the HCl slowdown as separate arms
+(&lt;a href="#sensitivity-arms">below&lt;/a>).&lt;/p>
+&lt;p>Run the RSET snippet above with &lt;code>(&amp;quot;c&amp;quot;, &amp;quot;u&amp;quot;, &amp;quot;s&amp;quot;, &amp;quot;r&amp;quot;)&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>C: RSET_last 57.6 s, p95 55.5 s, exits {&amp;#39;exit_B_right&amp;#39;: 100}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>U: RSET_last 57.6 s, p95 55.5 s, exits {&amp;#39;exit_B_right&amp;#39;: 100}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>S: RSET_last 67.5 s, p95 63.9 s, exits {&amp;#39;exit_B_right&amp;#39;: 100}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>R: RSET_last 56.4 s, p95 54.5 s, exits {&amp;#39;exit_A_left&amp;#39;: 100}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>In this seed smoke slows S by 10 s. R is 1.2 s faster than U; across seeds
+that sign is not resolved (&lt;a href="#rset">below&lt;/a>). Against S, which keeps exit B,
+R is faster because every agent went to the far exit A and avoided B&amp;rsquo;s
+smoke. One seed says little: the study below runs 20 seeds with no
+pre-movement and 10 each with 30 and 60 s.&lt;/p>
+&lt;p>&lt;strong>Reading the arms.&lt;/strong> U → S isolates the effect of smoke on speed. S → R
+isolates routing. R against R-na, the same run with the route cost&amp;rsquo;s look
+ahead in time off, isolates that look ahead.&lt;/p>
+&lt;h3>Evacuation over time&lt;span class="hx-absolute -hx-mt-20" id="evacuation-over-time">&lt;/span>
+&lt;a href="#evacuation-over-time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fire-blind/evacuated.png" alt="Three panels, one per pre-movement of 0, 30 and 60 s, each showing agents out of 100 against time since ignition from 0 to 250 s for arms U (blue dashed), S (orange dash-dot) and R (red solid), with shaded min-max bands. Dotted vertical lines at 18, 24 and 45 s mark the location ASET for K at exit B, the junction and exit A. With no pre-movement the three curves overlap and end near 57 to 72 s. At 30 s, U ends first near 86 s, R near 114 s and S near 129 s. At 60 s, U ends near 116 s while S and R end near 200 s" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Agents out (of 100) against time since ignition [s], median over seeds
+(line) and min–max (band); n = 20 seeds with no pre-movement, 10 at 30 and
+60 s. Dotted: location ASET for K ≥ 0.3 1/m at exit B, the junction and
+exit A. Exit times from the trajectory at 0.1 s. Regenerated by
+&lt;code>scripts/docs/fire_blind_vs_coupled.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>The last agent out, median [min, max] over seeds, seconds from ignition:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Arm&lt;/th>
+&lt;th>pre-movement 0 s&lt;/th>
+&lt;th>30 s&lt;/th>
+&lt;th>60 s&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>U (= C)&lt;/td>
+&lt;td>56.9 [48.8, 74.8]&lt;/td>
+&lt;td>86.3 [78.8, 104.8]&lt;/td>
+&lt;td>116.3 [108.8, 134.8]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>S&lt;/td>
+&lt;td>71.5 [66.0, 113.3]&lt;/td>
+&lt;td>129.1 [123.0, 188.5]&lt;/td>
+&lt;td>203.1 [180.1, 234.3]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R&lt;/td>
+&lt;td>59.0 [54.7, 66.7]&lt;/td>
+&lt;td>113.7 [95.6, 143.4]&lt;/td>
+&lt;td>196.6 [174.6, 214.7]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R-na&lt;/td>
+&lt;td>63.5 [57.3, 83.8]&lt;/td>
+&lt;td>113.7 [95.6, 143.4]&lt;/td>
+&lt;td>196.6 [174.6, 214.7]&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>Exit usage&lt;span class="hx-absolute -hx-mt-20" id="exit-usage">&lt;/span>
+&lt;a href="#exit-usage" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fire-blind/exit_usage.png" alt="Three bar panels, one per pre-movement, showing the percentage of agents leaving by exit A for arms C, U, S, R, R-na, R-det, R-prob and R&amp;#43;FIC, with one dot per seed. C, U and S are at 0 percent in every panel. The R arms are near 100 percent with no pre-movement and between 75 and 94 percent at 30 and 60 s" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Agents leaving by exit A [%], bar: median over seeds, dots: one seed each.
+Exit A is 20 m from the junction, exit B 10 m. Regenerated by
+&lt;code>scripts/docs/fire_blind_vs_coupled.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>C, U and S send everyone to exit B, the nearer one. R sends 100 % [99, 100]
+to exit A with no pre-movement, 88 % [81, 94] at 30 s and 84 % [78, 89] at
+60 s. The initial exit is chosen in &lt;code>_assign_initial_exit&lt;/code> (&lt;code>scenario.py&lt;/code>),
+and R&amp;rsquo;s route cost prices the smoke each route meets on the way. With
+foresight on (the default &lt;code>&amp;quot;anticipate&amp;quot;: true&lt;/code> of &lt;code>RouteCostConfig&lt;/code>,
+&lt;code>route_graph.py&lt;/code>), the cost reads the smoke at the time the agent would
+arrive at each point (&lt;code>_arrival_time&lt;/code>), from the whole FDS record
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>). No
+occupant could perceive that. With the look ahead off (R-na), the cost
+still reads the current smoke along the whole route, including parts no
+occupant could see, and agents still end at exit A in the same
+proportions.&lt;/p>
+&lt;h3>Pre-movement does not simply add&lt;span class="hx-absolute -hx-mt-20" id="pre-movement-does-not-simply-add">&lt;/span>
+&lt;a href="#pre-movement-does-not-simply-add" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fire-blind/additivity.png" alt="RSET_last against a constant pre-movement of 0, 30 and 60 s for arms U, S and R, medians with markers and one faint line per seed. A dashed line of slope 1 through U at 0 s lies on top of U. S and R rise more steeply: at 60 s U is near 116 s, R near 197 s and S near 203 s" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>RSET_last [s from ignition] against constant pre-movement [s], seeds
+shared by all three pre-movements (n = 10). Thick: median; faint: one seed.
+Dashed: slope 1 through U at 0 s. S and R are drawn slightly left and right
+of the tick to keep the markers apart. Regenerated by
+&lt;code>scripts/docs/fire_blind_vs_coupled.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>For the same seed, RSET(pre) − pre − RSET(0) is exactly 0.00 s for U and C
+in every seed. That follows from how the run is built: the pre-movement is
+constant, everyone starts together, and nothing reacts to the fire. S adds
+29.9 s more than the pre-movement at 30 s and 61.8 s more at 60 s; R adds
+24.7 s and 75.4 s (medians). The fire grows while people wait, so a later
+start meets thicker smoke. An uncoupled run cannot show that: waiting
+longer only shifts its curve.&lt;/p>
+&lt;h2>3. Is the uncoupled run conservative here?&lt;span class="hx-absolute -hx-mt-20" id="3-is-the-uncoupled-run-conservative-here">&lt;/span>
+&lt;a href="#3-is-the-uncoupled-run-conservative-here" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>What &amp;ldquo;conservative&amp;rdquo; means.&lt;/strong> The decision rests on whether ASET exceeds
+RSET by an adequate margin (ISO/TR 16738:2009, Eq. 1 and §5.6, as quoted
+on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>). U is conservative relative
+to another arm X if its error makes the margin look smaller than X does.
+The reference is a model, R or S, not reality. R&amp;rsquo;s route cost looks ahead
+in time, so R-na, without that look ahead, is a second model reference. It
+is not a perceptual one: it still reads the smoke along the whole route.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Metric&lt;/th>
+&lt;th>U is conservative relative to X if&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>RSET (last, p95)&lt;/td>
+&lt;td>RSET&lt;sub>U&lt;/sub> ≥ RSET&lt;sub>X&lt;/sub>, tested against S and R separately&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Location margin, same point and criterion&lt;/td>
+&lt;td>ASET − RSET&lt;sub>U&lt;/sub> ≤ ASET − RSET&lt;sub>X&lt;/sub>; this follows the RSET row, since the location ASET is shared&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Per-agent margin (first crossing − own exit)&lt;/td>
+&lt;td>smaller for U than for X, on the same agent&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>People inside at the location ASET&lt;/td>
+&lt;td>at least as many in U as in X&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Dose (peak FIC, time above an HCl level, max FED)&lt;/td>
+&lt;td>at least as large in U as in X&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Exit usage&lt;/td>
+&lt;td>neither: it is a scenario assumption, so the page reports how it differs&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Counts below are seeds (or agents) in which U is above, equal to, or below
+X. With 10 seeds, 10 of one sign gives a two-sided sign-test p of 0.002;
+with 20, 20 of one sign gives 2 × 10⁻⁶. The page runs many such tests, so
+treat p near 0.05 as no evidence.&lt;/p>
+&lt;h3>RSET&lt;span class="hx-absolute -hx-mt-20" id="rset">&lt;/span>
+&lt;a href="#rset" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fire-blind/rset_paired.png" alt="Three strip-plot panels, one per pre-movement, showing per-seed differences S minus U, R minus U and R-na minus U in seconds, with a zero line and a black median bar. With no pre-movement S minus U is above 0 in 20 of 20 seeds, R minus U in 14 of 20 with values from minus 16 to plus 18, R-na minus U in 19 of 20. At 30 and 60 s all differences are above 0 in 10 of 10 seeds, between 8 and 106 s" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>RSET_last difference per seed [s], same seed in both arms. Above 0: U gets
+out earlier. Black bar: median. Regenerated by
+&lt;code>scripts/docs/fire_blind_vs_coupled.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Pair&lt;/th>
+&lt;th>pre-movement 0 s&lt;/th>
+&lt;th>30 s&lt;/th>
+&lt;th>60 s&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>S − U&lt;/td>
+&lt;td>+17.6 s; S &amp;gt; U in 20/20&lt;/td>
+&lt;td>+45.9 s; 10/10&lt;/td>
+&lt;td>+85.4 s; 10/10&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R − U&lt;/td>
+&lt;td>+2.4 s [−15.9, +17.9]; R &amp;gt; U in 14/20 (p = 0.12)&lt;/td>
+&lt;td>+28.0 s; 10/10&lt;/td>
+&lt;td>+81.0 s; 10/10&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R − S&lt;/td>
+&lt;td>R &amp;lt; S in 20/20&lt;/td>
+&lt;td>R &amp;lt; S in 9/10&lt;/td>
+&lt;td>R &amp;lt; S in 6/10 (p = 0.75)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R-na − R&lt;/td>
+&lt;td>+4.8 s; R-na &amp;gt; R in 19/20&lt;/td>
+&lt;td>identical&lt;/td>
+&lt;td>identical&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>&lt;strong>Against S, U is not conservative&lt;/strong> at any pre-movement: smoke slows
+people, and U leaves that out.&lt;/li>
+&lt;li>&lt;strong>Against R, U is not conservative at 30 and 60 s.&lt;/strong> With no pre-movement
+the direction is not resolved: R is later than U in 14 of 20 seeds on the
+last agent out, and in 15 of 20 on p95. The median gap, 2.4 s, is below
+the seed-to-seed spread of U itself.&lt;/li>
+&lt;li>&lt;strong>The gap grows with pre-movement&lt;/strong>, for R − U from a few seconds to
+about 80 s and for S − U from 18 s to 85 s, because the fire grows while
+people wait.&lt;/li>
+&lt;li>&lt;strong>R against S:&lt;/strong> R is faster in 20 of 20 seeds with no pre-movement, by
+avoiding exit B&amp;rsquo;s smoke; in 9 of 10 at 30 s (p = 0.02, weak by the rule
+above); and in 6 of 10 at 60 s (not resolved).&lt;/li>
+&lt;/ul>
+&lt;h3>ASET − RSET at fixed points&lt;span class="hx-absolute -hx-mt-20" id="aset--rset-at-fixed-points">&lt;/span>
+&lt;a href="#aset--rset-at-fixed-points" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fire-blind/margins.png" alt="A three-by-three grid of panels: rows are the criteria K 0.3 per metre, HCl 300 ppm and HCl 1000 ppm, columns the pre-movements 0, 30 and 60 s. Each panel shows location ASET minus RSET_last for exit A, branch mouth, junction and exit B, one marker per arm U, S, R and R-na with a min-max line, and a vertical line at 0. Almost every marker lies left of 0. With no pre-movement, in the HCl 1000 ppm row U, R and R-na reach right of 0 at the junction and branch mouth, and U’s range also crosses 0 at exit A; in the HCl 300 ppm row U’s range crosses 0 at the branch mouth; an annotation reads branch mouth, seeds that pass of 20: U 19, S 4, R 20, R-na 14" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Location ASET − RSET_last [s] at four fixed points, the same points for
+every arm; marker: median over seeds, line: min–max. Right of 0: the last
+agent is out before the limit is met there. Regenerated by
+&lt;code>scripts/docs/fire_blind_vs_coupled.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>Seeds in which the margin is positive (pass), at exit B / junction / branch
+mouth / exit A:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Criterion&lt;/th>
+&lt;th>pre-movement&lt;/th>
+&lt;th>U&lt;/th>
+&lt;th>S&lt;/th>
+&lt;th>R&lt;/th>
+&lt;th>R-na&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;em>K&lt;/em> ≥ 0.3 1/m&lt;/td>
+&lt;td>0, 30, 60 s&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>HCl ≥ 300 ppm&lt;/td>
+&lt;td>0 s&lt;/td>
+&lt;td>0/0/&lt;strong>2&lt;/strong>/0 of 20&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>HCl ≥ 1000 ppm&lt;/td>
+&lt;td>0 s&lt;/td>
+&lt;td>0/&lt;strong>15&lt;/strong>/&lt;strong>19&lt;/strong>/&lt;strong>2&lt;/strong> of 20&lt;/td>
+&lt;td>0/0/4/0&lt;/td>
+&lt;td>0/10/&lt;strong>20&lt;/strong>/0&lt;/td>
+&lt;td>0/3/14/0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>HCl, either level&lt;/td>
+&lt;td>30, 60 s&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;td>0/0/0/0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>FED ≥ 0.3&lt;/td>
+&lt;td>0, 30, 60 s&lt;/td>
+&lt;td>all pass&lt;/td>
+&lt;td>all pass&lt;/td>
+&lt;td>all pass&lt;/td>
+&lt;td>all pass&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>&lt;strong>Visibility fails in every arm, seed and pre-movement;&lt;/strong> FED 0.3 passes
+in every seed of U, S, R and R-na. For these criteria the arm changes the
+size of the margin, not the verdict. R+FIC at 30 and 60 s is undetermined
+for FED 0.3: its RSET is censored (&lt;a href="#sensitivity-arms">Sensitivity arms&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>HCl with no pre-movement is knife-edge.&lt;/strong> U&amp;rsquo;s median margin at the
+junction under HCl 1000 ppm is about +2 s (59 − 56.9), inside the seed
+spread. So a single uncoupled run can give either verdict. The coupled
+arms pass less often at this level (36 point-passes in U, 30 in R, 17 in
+R-na, 4 in S), and R keeps most of U&amp;rsquo;s. U is the more cautious arm in
+one cell only: at the branch mouth under HCl 1000 ppm, R passes in 20 of
+20 seeds and U in 19.&lt;/li>
+&lt;li>These flips sit mostly at HCl 1000 ppm (ISO FEC 1, an incapacitation-level
+value), not at the design value FEC 0.3, and the HCl in this deck is
+probably overestimated (see &lt;a href="#limits">Limits&lt;/a>).&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>People inside when the junction reaches the visibility limit&lt;/strong> (24 s):
+with no pre-movement a median of 72 in U, 74 in S, 83 in R and 92 in R-na;
+U has fewer than R in 20 of 20 seeds (median 11 fewer). At 30 and 60 s all
+100 are inside in every arm. So U is not conservative on this count.&lt;/p>
+&lt;h3>Dose&lt;span class="hx-absolute -hx-mt-20" id="dose">&lt;/span>
+&lt;a href="#dose" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fire-blind/exposure.png" alt="A three-by-three grid of cumulative distributions, rows for pre-movement 0, 30 and 60 s, columns for max FIC per agent, seconds at HCl 300 ppm or more, and seconds at K 0.3 per metre or more, for arms U, S and R. In the FIC column the R curve lies far left of U, and S right of U. In the two time columns S lies right of U in every row; R lies near U with no pre-movement and far right of U at 30 and 60 s" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Share of agents with a value ≤ x, pooled over seeds (2,000 agents with no
+pre-movement, 1,000 at 30 and 60 s). Curve further right: more dose. Values
+until each agent&amp;rsquo;s exit, at z = 2.0 m (the deck&amp;rsquo;s only slice height; the
+1.6 m default resolves to it, see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#3-the-fire">A crowd in a real fire › The fire&lt;/a>), 1 s
+resolution. Seconds at &lt;em>K&lt;/em> ≥ 0.3
+1/m are secondary: obscuration alone is not treated as incapacitating for
+people who are not performing tasks (ISO 13571:2012, §4.5, note).
+Regenerated by &lt;code>scripts/docs/fire_blind_vs_coupled.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>Per seed, U against R. R-na is identical to R at 30 and 60 s; with no
+pre-movement it differs (for example, U has fewer seconds at HCl ≥ 300 ppm
+than R-na in 15 of 20 seeds).&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Dose metric&lt;/th>
+&lt;th>pre-movement 0 s&lt;/th>
+&lt;th>30 s&lt;/th>
+&lt;th>60 s&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Median of the agents&amp;rsquo; peak FIC&lt;/td>
+&lt;td>U higher in 20/20&lt;/td>
+&lt;td>U higher in 10/10&lt;/td>
+&lt;td>U higher in 10/10&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Agent-seconds at HCl ≥ 300 ppm&lt;/td>
+&lt;td>mixed: U higher in 12/20&lt;/td>
+&lt;td>U lower in 10/10&lt;/td>
+&lt;td>U lower in 10/10&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Agent-seconds at HCl ≥ 1000 ppm&lt;/td>
+&lt;td>U higher in 20/20&lt;/td>
+&lt;td>U lower in 10/10&lt;/td>
+&lt;td>U lower in 10/10&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Max FED&lt;/td>
+&lt;td>U higher in 18/20&lt;/td>
+&lt;td>U lower in 10/10&lt;/td>
+&lt;td>U lower in 10/10&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Agents past &lt;em>K&lt;/em> 0.3 or HCl 300 ppm before getting out&lt;/td>
+&lt;td>U more in 20/20&lt;/td>
+&lt;td>100 in every arm&lt;/td>
+&lt;td>100 in every arm&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>&lt;strong>Against R, &amp;ldquo;conservative&amp;rdquo; depends on the metric.&lt;/strong> U over-states the
+peak FIC in every seed: U walks into exit B&amp;rsquo;s HCl, which R avoids. At 30
+and 60 s U under-states the time above both HCl levels and the max FED in
+every seed, because R walks longer in thicker smoke.&lt;/li>
+&lt;li>&lt;strong>Against S, U under-states the run totals&lt;/strong> in every seed, at every
+pre-movement: agent-seconds at HCl ≥ 300 and ≥ 1000 ppm and at &lt;em>K&lt;/em> ≥ 0.3
+1/m, and max FED. On single agents it does not always: U&amp;rsquo;s peak FIC is
+higher than S&amp;rsquo;s for 605 of 2,000 agents with no pre-movement, 257 of 1,000 at
+30 s and 239 of 1,000 at 60 s.&lt;/li>
+&lt;li>The largest max FED is 0.25 in U, S and R. That is not a statement of
+tenability: FED 0.3 is a threshold for susceptible people, and FED &amp;lt; 1
+does not mean safe
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>).&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>Per-agent margin&lt;/strong>, first crossing of &lt;em>K&lt;/em> 0.3 1/m minus the agent&amp;rsquo;s own
+exit, compared on the same agent (seed, origin, spawn order):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>&lt;/th>
+&lt;th>pre-movement 0 s&lt;/th>
+&lt;th>30 s&lt;/th>
+&lt;th>60 s&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Agents crossing in both U and R&lt;/td>
+&lt;td>900 of 2,000&lt;/td>
+&lt;td>1,000 of 1,000&lt;/td>
+&lt;td>1,000 of 1,000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Median R − U among them&lt;/td>
+&lt;td>−5.6 s (R smaller in 668)&lt;/td>
+&lt;td>−10.8 s (879)&lt;/td>
+&lt;td>−30.4 s (987)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Median S − U, crossing in both&lt;/td>
+&lt;td>−1.6 s (S smaller in 1,518 of 1,876)&lt;/td>
+&lt;td>−16.2 s (953)&lt;/td>
+&lt;td>−37.8 s (991)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>With no pre-movement, 983 agents cross the limit in U but not in R, and 4
+the other way round. Counting an agent that never crosses as having an
+infinite margin, R has the larger margin for 1,215 agents and U for 672. So
+with no pre-movement the direction depends on how agents who never cross
+are counted; at 30 and 60 s U&amp;rsquo;s margin is larger (not conservative) for
+879 and 987 of 1,000 agents.&lt;/p>
+&lt;h3>Is exit usage conservative?&lt;span class="hx-absolute -hx-mt-20" id="is-exit-usage-conservative">&lt;/span>
+&lt;a href="#is-exit-usage-conservative" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Exit usage is not conservative or otherwise. Choosing exits is part of the
+scenario: each design fire scenario is analysed with design occupant
+scenarios, and the occupants&amp;rsquo; initial route choice is one of the
+variables of such a scenario (Nilsson and Fahy 2016, pp. 2047, 2061).
+Here the difference is large: exit B for everyone without the fire, exit A for 84–100 % with it. It also drives the
+dose differences above.&lt;/p>
+&lt;h3>Sensitivity arms&lt;span class="hx-absolute -hx-mt-20" id="sensitivity-arms">&lt;/span>
+&lt;a href="#sensitivity-arms" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Incapacitation, per-agent thresholds, HCl slowdown and route look ahead&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Arm&lt;/th>
+&lt;th>Flags on top of R&lt;/th>
+&lt;th>Result&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>R-na&lt;/td>
+&lt;td>&lt;code>&amp;quot;anticipate&amp;quot;: false&lt;/code> in the scenario&amp;rsquo;s &lt;code>routing&lt;/code> block (see below)&lt;/td>
+&lt;td>Later than R with no pre-movement (+4.8 s, 19 of 20 seeds). Identical to R at 30 and 60 s: same exits and same histories.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R-det&lt;/td>
+&lt;td>tenability on (FED 1 incapacitates)&lt;/td>
+&lt;td>Identical to R: nobody reaches FED 1.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R-prob&lt;/td>
+&lt;td>R-det with &lt;code>--incapacitation-mode probabilistic&lt;/code>&lt;/td>
+&lt;td>At 60 s, 5 agents are incapacitated, one in each of 5 of 10 seeds. RSET is censored (&amp;gt; 270 s) in those seeds. The last exit among the rest is 196.6 s, as in R. Their dose counts only until incapacitation.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R+FIC&lt;/td>
+&lt;td>R-det with &lt;code>--enable-fic-speed&lt;/code>&lt;/td>
+&lt;td>No pre-movement: RSET 112.5 s [97.3, 148.2], with 30 [19, 44] agents at the 0.3 speed floor. At 30 s: censored in 10 of 10 seeds, 84 of 1,000 agents inside at 270 s. At 60 s: censored in 10 of 10, 763 of 1,000 inside. Max FED reaches 0.44 and 0.45.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>To build R-na, add the key to a copy of the scenario and save the copy
+next to a copy of &lt;code>geometry.wkt&lt;/code>, which the scenario needs beside it:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ww/na
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cp assets/t_junction/geometry.wkt ww/na/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python - &lt;span style="color:#e6db74">&amp;lt;&amp;lt;&amp;#39;EOF&amp;#39;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">import json
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">from pathlib import Path
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">config = json.loads(Path(&amp;#34;assets/t_junction/config_initial_pre0.json&amp;#34;).read_text())
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">config[&amp;#34;routing&amp;#34;][&amp;#34;anticipate&amp;#34;] = False
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">Path(&amp;#34;ww/na/config_initial_pre0.json&amp;#34;).write_text(json.dumps(config, indent=2))
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario ww/na/config_initial_pre0.json --seed &lt;span style="color:#ae81ff">4&lt;/span> &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --fds-dir &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$FDS&lt;span style="color:#e6db74">&amp;#34;&lt;/span> --disable-tenability &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite ww/rna.sqlite --output-exit-history ww/rna_exits.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 63.06 s (100/100 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>All 100 leave by exit A, as in R. The study script builds the same files
+(&lt;code>write_noanticipate&lt;/code>).&lt;/p>
+&lt;p>A censored RSET is only known to exceed 270 s. It is never compared by size
+with U&amp;rsquo;s. An agent incapacitated or still inside at 270 s never counts as
+out, so a coupled RSET cannot look shorter because people dropped out of
+the count. R+FIC is an upper bound: it is mostly censored, its dose stops at
+the cap, and it rests on HCl that is probably overestimated.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;h2>4. Run the whole study&lt;span class="hx-absolute -hx-mt-20" id="4-run-the-whole-study">&lt;/span>
+&lt;a href="#4-run-the-whole-study" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/docs/fire_blind_vs_coupled.py --data &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$FDS&lt;span style="color:#e6db74">&amp;#34;&lt;/span> --runs RUNS&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>RUNS&lt;/code> must lie outside the repository. The script runs arms C, U, S, R,
+R-na, R-det, R-prob and R+FIC for seeds 4–23 with no pre-movement and 4–13
+at 30 and 60 s, one &lt;code>run.py&lt;/code> process per arm and seed
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>). It
+skips runs that already exist, prints every number on this page, writes
+&lt;code>summary_runs.csv&lt;/code> and &lt;code>summary_agents.csv&lt;/code> into &lt;code>RUNS&lt;/code>, and redraws the
+figures in &lt;code>site/static/images/fire-blind/&lt;/code>. The 320 runs took 43 min of
+single-process time (11 min on 4 workers); the analysis alone takes about
+30 s. Seeds 1–3 were used for a pilot and are left out. The maintainers
+keep the runs in their data store, &lt;code>fds-evac-data/t_junction/fire_blind_runs/&lt;/code>.&lt;/p>
+&lt;h2>Limits&lt;span class="hx-absolute -hx-mt-20" id="limits">&lt;/span>
+&lt;a href="#limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>
+&lt;p>&lt;strong>One fire with no margin.&lt;/strong> Here, at every point, the visibility limit
+is met before the last person gets out, in every arm. Schröder et al.
+(2020, §4) expect the fire&amp;rsquo;s effect on route choice and speed to play a secondary role only
+while the safety margin is well above the limit. That is the regime in
+which practice decides, and this study does not test it.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>The size of the S − U and R − U gaps is not measured behaviour.&lt;/strong> The
+smoke-speed law is fitted to Frantzich and Nilsson&amp;rsquo;s data, &lt;em>K&lt;/em> ≈ 1.9–7.4
+1/m (read from their Fig. 14; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">walking speed in smoke&lt;/a>), and has a floor
+of 0.1 from &lt;em>K&lt;/em> = 11.1 1/m. Share of moving agent-seconds below / within /
+above that range, and at the floor:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Arm&lt;/th>
+&lt;th>pre-movement 0 s&lt;/th>
+&lt;th>30 s&lt;/th>
+&lt;th>60 s&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>S&lt;/td>
+&lt;td>80 / 14 / 6 %, floor 3 %&lt;/td>
+&lt;td>37 / 37 / 26 %, floor 14 %&lt;/td>
+&lt;td>1 / 40 / 60 %, floor 25 %&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R&lt;/td>
+&lt;td>90 / 10 / 0 %, floor 0 %&lt;/td>
+&lt;td>39 / 55 / 6 %, floor 2 %&lt;/td>
+&lt;td>1 / 51 / 48 %, floor 6 %&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Below 1.9 1/m the law is outside the data too. There it slows people by
+2.4 % at &lt;em>K&lt;/em> = 0.3 1/m, the visibility limit, rising to about 15 % at
+1.9 1/m.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fire-blind/speed_extrapolation.png" alt="Left: the speed factor against the extinction coefficient K from 0 to 25 per metre, solid over the Frantzich and Nilsson data range 1.9 to 7.4, dashed outside it, falling from 1 at K 0 to the floor 0.1 at K 11.1 and flat after. Right: histograms of K at moving agents in arms S and R; the largest bin is below 0.5 per metre, with a tail beyond 11; an annotation gives S 31 percent above 7.4 and 13 percent at the floor, R 19 and 3 percent" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Left: speed factor v/v₀ [-] against K [1/m] of the default law;
+shaded: the data range. Right: K at the moving agent [1/m], share of
+agent-seconds [%], pooled over all three pre-movements; the last bin
+holds K ≥ 24.5. &amp;ldquo;At the floor&amp;rdquo; counts K ≥ 11.1 1/m. Regenerated by
+&lt;code>scripts/docs/fire_blind_vs_coupled.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Route foresight.&lt;/strong> R&amp;rsquo;s route cost reads the smoke ahead from the whole
+FDS record (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>).
+R&amp;rsquo;s avoidance of exit B is therefore not a claim that people would see it
+coming. R-na removes only the look ahead in time: it still reads the
+current smoke along the whole route, including parts no occupant could
+see, and it gives the same exits.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>HCl is probably overestimated.&lt;/strong> The deck has no HCl loss to walls
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#what-this-does-not-show">A crowd in a real fire › What this does not show&lt;/a>).
+That makes the HCl crossings early and inflates R+FIC.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>The HCl slowdown is opt-in&lt;/strong>, off in S and R, and incapacitation uses
+the FDS+Evac FED (&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>
+has no irritant slowdown), not HCl.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Constant pre-movement.&lt;/strong> Everyone waits the same 0, 30 or 60 s. The three
+values were fixed from the fire before any run: 0 s moves before the
+junction reaches the visibility limit (24 s), 30 s falls between the first
+and last of the six points of
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a real fire&lt;/a>
+(18–46 s), 60 s after all of them.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Everyone knows both exits&lt;/strong> (&lt;code>familiarity: &amp;quot;full&amp;quot;&lt;/code>). Agents who discover
+exits could fail to find one, and the familiarity draw depends on the
+JuPedSim id (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>).
+For sign loss in this fire, see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a real fire&lt;/a>.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>The time limit is 270 s&lt;/strong>, 30 s before the end of the FDS output. Route
+foresight samples ahead of the current time and can read past the end
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/356" target="_blank" rel="noopener">#356&lt;/a>); the
+longest route, 30 m from the branch to exit A, takes 23 s at the 1.3 m/s
+the cost assumes. Configured waypoints are not included in that bound.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Per agent goes beyond ISO 13571,&lt;/strong> which treats populations, not
+individuals (§5.2). The FED is the FDS+Evac FED, not the ISO asphyxiant
+FED.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>The ASET side is not built in.&lt;/strong> The location ASET and the crossings
+are computed by the script, not by the engine
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>).&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Sources&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;ul>
+&lt;li>Engineers Australia Society of Fire Safety (2014). &lt;em>Practice note for
+tenability criteria in building fires&lt;/em>, version 2.0, §5.2 and Fig. 8,
+&lt;em>Tenability Criteria – Short Exposure&lt;/em>, p. 15. Full reference on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>.&lt;/li>
+&lt;li>Frantzich, H., &amp;amp; Nilsson, D. (2003). &lt;em>Utrymning genom tät rök: beteende
+och förflyttning&lt;/em>, Fig. 14. Full reference on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">walking speed in smoke&lt;/a>.&lt;/li>
+&lt;li>ISO 13571:2012, §4.5 (note) and §5.2; ISO/TR 16738:2009, Eq. 1, Eq. 2
+and §5.6: paraphrased; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>.&lt;/li>
+&lt;li>Nilsson, D., &amp;amp; Fahy, R. (2016). Selecting scenarios for deterministic fire
+safety engineering analysis: life safety for occupants. &lt;em>SFPE Handbook of
+Fire Protection Engineering&lt;/em>, 5th ed., Ch. 57, pp. 2047, 2061.
+&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_57" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_57&lt;/a>&lt;/li>
+&lt;li>Schröder, B., Arnold, L., &amp;amp; Seyfried, A. (2020). A map representation of
+the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>, 115, 103154, §4.
+&lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2020.103154&lt;/a>&lt;/li>
+&lt;li>Code: &lt;code>_assign_initial_exit&lt;/code> in &lt;code>pyfds_evac/core/scenario.py&lt;/code>;
+&lt;code>RouteCostConfig&lt;/code> and &lt;code>_arrival_time&lt;/code> in &lt;code>pyfds_evac/core/route_graph.py&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/details>
+&lt;h2>What next&lt;span class="hx-absolute -hx-mt-20" id="what-next">&lt;/span>
+&lt;a href="#what-next" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#smoke-blind-runs-and-exit-replay">Usage › Smoke-blind runs and exit replay&lt;/a>:
+every flag of the three arms.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get the egress time from an ensemble?&lt;/a>
+for RSET over many seeds.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a> for the concepts.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">The Schröder room&lt;/a>: arm U only, as ASET − RSET
+maps.&lt;/li>
 &lt;/ul></description></item><item><title>Heat radiometer reference decks</title><link>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat-radiometer/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat-radiometer/</guid><description>
 &lt;table>
 &lt;thead>
