@@ -167,8 +167,8 @@ and on the closed form at the deck value (◆), up to the 1 s update.
 | deterministic stop, 150 °C | 120 s | all 100 agents at 120 s |
 | deterministic stop, 200 °C | 46 s | all 100 agents at 46 s |
 | cause of every stop | `heat` | `heat` |
-| probabilistic, 150 °C: stopped by 999 s | 98.8 % | 100 of 100 |
-| probabilistic, 150 °C: largest gap between the curves | ≤ 0.136 | 0.122 (p = 0.10) |
+| probabilistic, 150 °C: stopped by 999 s | 98.8 % | 98 of 100 |
+| probabilistic, 150 °C: largest gap between the curves | ≤ 0.136 | 0.073 (p = 0.66) |
 
 ## Pass criteria
 
@@ -197,7 +197,7 @@ and on the closed form at the deck value (◆), up to the 1 s update.
 4. **Probabilistic stop.** The fraction of stopped agents stays within the
    95 % Kolmogorov–Smirnov band of *F*(*t*),
    \(1.36/\sqrt{n} = 0.136\) for *n* = 100. This is one draw (seed 42);
-   D = 0.122 has p = 0.10, so it passes at the 5 % level, and by
+   D = 0.073 has p = 0.66, so it passes at the 5 % level, and by
    construction one seed in twenty would fail.
 
 ## Run it yourself
@@ -239,9 +239,11 @@ Eq. 63.44 was the default law, before `--heat-clothing` existed;
 `tests/verification/test_heat_endpoint_coupled.py` checks, in a synthetic
 corridor, that it reproduces the FED history of that code.
 
-The published figures come from runs that also passed
+The figures and numbers on this page come from the commands above at
+`92b8c5c`, stored in `<data>/fed_incap_heat_<T>c/evac_353/`. Earlier
+figures came from runs that also passed
 `--constant-extinction 0 --no-visibility`, which ran without a visibility
-model. Add those two flags to reproduce them exactly. On the same FDS
+model. On the same FDS
 output, a paired deterministic 150 °C run with and without the two flags
 stops all 100 agents at the same update in both; agent positions differ
 slightly, and the maximum heat FED differs by less than 10⁻⁴ (relative).

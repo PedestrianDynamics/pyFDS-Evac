@@ -12,7 +12,7 @@ aliases: [/docs/testing-homogeneous/, /models/verification/testing-homogeneous/]
 | **Level** | FDS case: a full run on FDS output |
 | **Asset** | `assets/fed_incap_co_2000ppm` |
 | **Expected value from** | hand calculation, and FDS's own `FED` device |
-| **Status** | passes |
+| **Status** | criteria 1 and 2 pass; criterion 3 fails for the one probabilistic draw run (seed 42, D = 0.141 against 0.136) |
 
 ![100 agents walk a loop in a room filled with 2000 ppm CO; their colour shows the dose, and a cross marks an incapacitated agent](/images/verification/co_room.gif)
 
@@ -101,8 +101,8 @@ a relative difference of 6 × 10⁻⁵.
 |---|---|---|
 | FED of every agent against the hand calculation | equal | max difference 1.4 × 10⁻¹⁴ |
 | deterministic: incapacitation time | 785.49 s | all 100 agents at 786.0 s (first FED update after *t*\*) |
-| probabilistic: agents stopped by 999 s | 60.1 % | 61 of 100 |
-| probabilistic: largest gap between the curves | ≤ 0.136 | 0.048 |
+| probabilistic: agents stopped by 999 s | 60.1 % | 66 of 100 |
+| probabilistic: largest gap between the curves | ≤ 0.136 | **0.141** (p = 0.033) |
 
 ## Pass criteria
 
@@ -114,7 +114,11 @@ a relative difference of 6 × 10⁻⁵.
 3. **Probabilistic stop.** The empirical fraction of stopped agents stays
    within the 95 % Kolmogorov–Smirnov band of *F*(*t*),
    \(1.36/\sqrt{n} = 0.136\) for *n* = 100 agents. Agents whose threshold
-   lies beyond the end of the run are counted as not yet stopped.
+   lies beyond the end of the run are counted as not yet stopped. This is one
+   draw (seed 42), so by construction one seed in twenty fails. Since the
+   thresholds are drawn per agent from its spawn key (#353), this draw gives
+   D = 0.141, p = 0.033, and fails; the draw before that change gave
+   D = 0.048.
 
 ## Run it yourself
 
@@ -144,6 +148,9 @@ run builds the sign-visibility cache for the 25 checkpoints at every FDS time,
 which takes much longer
 ([#236](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/236)); add
 `--vis-cache <file>` to both runs so the second one reuses it.
+
+The numbers and figures on this page come from these commands at `fbe8878`,
+stored in `fds-evac-data/fed_incap_co_2000ppm/evac_353/`.
 
 ## Limits
 
