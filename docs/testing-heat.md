@@ -99,10 +99,11 @@ $$
   on this 0.5 m grid.
 - **Agents:** 100 agents walk a loop between four corner checkpoints and
   never leave. Each agent's temperature is sampled every second. Seed 42
-  (the default `baseSeed`).
+  (the default `baseSeed`); the probabilistic run is repeated with seeds
+  42 to 51.
 - **Runs:** `--enable-heat-fed` (heat is off by default), deterministic (the
   default, given explicitly) at all three temperatures; probabilistic at
-  150 °C.
+  150 °C, once per seed.
 - **No soot:** the decks have no soot slice, so `run.py` warns that smoke
   speed reduction is off and that visibility falls back to clear air
   ([#248](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/248)).
@@ -154,7 +155,7 @@ Summed from the temperature the agent recorded, the dose agrees to
 At all three temperatures the simulated stop (×) falls on the hand sum (○)
 and on the closed form at the deck value (◆), up to the 1 s update.
 
-![Fraction of agents incapacitated by heat against time in the probabilistic run at 150 °C, with the expected log-normal curve and its 95 % band](/images/verification/heat_room_incapacitation.png)
+![Fraction of agents incapacitated by heat against time at 150 °C, pooled over the probabilistic runs of 10 seeds (grey: each seed alone), with the expected log-normal curve and the 95 % band for 1000 agents](/images/verification/heat_room_incapacitation.png)
 
 | Check | Expected | Simulated |
 |---|---|---|
@@ -167,8 +168,8 @@ and on the closed form at the deck value (◆), up to the 1 s update.
 | deterministic stop, 150 °C | 120 s | all 100 agents at 120 s |
 | deterministic stop, 200 °C | 46 s | all 100 agents at 46 s |
 | cause of every stop | `heat` | `heat` |
-| probabilistic, 150 °C: stopped by 999 s | 98.8 % | 98 of 100 |
-| probabilistic, 150 °C: largest gap between the curves | ≤ 0.136 | 0.073 (p = 0.66) |
+| probabilistic, 150 °C, 10 seeds pooled: stopped by 999 s | 98.8 % | 985 of 1000 |
+| probabilistic, 150 °C, 10 seeds pooled: largest gap between the curves | ≤ 0.043 | 0.034 (p = 0.21) |
 
 ## Pass criteria
 
@@ -194,11 +195,12 @@ and on the closed form at the deck value (◆), up to the 1 s update.
    tightest case is 200 °C: at least 9.4 × 10⁻⁴ from 1, against a seam
    bound of at most 8.6 × 10⁻⁸. The stop also equals the first update at
    or after the closed-form \(t^{*}\) at the deck temperature.
-4. **Probabilistic stop.** The fraction of stopped agents stays within the
-   95 % Kolmogorov–Smirnov band of *F*(*t*),
-   \(1.36/\sqrt{n} = 0.136\) for *n* = 100. This is one draw (seed 42);
-   D = 0.073 has p = 0.66, so it passes at the 5 % level, and by
-   construction one seed in twenty would fail.
+4. **Probabilistic stop.** The fraction of stopped agents, pooled over the
+   probabilistic runs of seeds 42 to 51, stays within the 95 %
+   Kolmogorov–Smirnov band of *F*(*t*), \(1.36/\sqrt{n} = 0.043\) for the
+   pooled *n* = 1000 agents. Pooled, D = 0.034 (p = 0.21), so it passes.
+   Each seed alone, against its own band of 0.136 for *n* = 100, gives
+   D = 0.062 to 0.104 (median 0.075); none of the ten leaves its band.
 
 ## Run it yourself
 
@@ -216,7 +218,8 @@ mpiexec -n 4 fds fed_incap_heat_150c.fds
 ```
 
 Then run pyFDS-Evac and draw the figures. The data folder must hold
-`fed_incap_heat_<T>c/fds/` and `fed_incap_heat_<T>c/evac/<mode>/`:
+`fed_incap_heat_<T>c/fds/` and `fed_incap_heat_<T>c/evac/deterministic/`,
+and for 150 °C `evac/probabilistic_seeds/<seed>/`:
 
 ```bash
 for T in 100 150 200; do
@@ -227,20 +230,28 @@ for T in 100 150 200; do
     --output-sqlite <data>/fed_incap_heat_${T}c/evac/deterministic/run.sqlite \
     --output-fed-history <data>/fed_incap_heat_${T}c/evac/deterministic/fed_history.csv
 done
-# and once more for 150 °C with --heat-incapacitation-mode probabilistic,
-# into evac/probabilistic/
+for seed in $(seq 42 51); do
+  uv run python run.py --scenario assets/fed_incap_heat_150c \
+    --fds-dir <data>/fed_incap_heat_150c/fds \
+    --enable-heat-fed --heat-clothing unclothed \
+    --heat-incapacitation-mode probabilistic --seed $seed \
+    --output-sqlite <data>/fed_incap_heat_150c/evac/probabilistic_seeds/$seed/run.sqlite \
+    --output-fed-history <data>/fed_incap_heat_150c/evac/probabilistic_seeds/$seed/fed_history.csv
+done
 uv run python scripts/verification/heat_room_figures.py --data <data>
 ```
 
-Each run takes about three minutes and uses the default seed 42. A
-temperature without output is skipped. The published runs were made when
+Each run takes about three minutes; the deterministic runs use the default
+seed 42. A temperature without output is skipped. The published runs were made when
 Eq. 63.44 was the default law, before `--heat-clothing` existed;
 `--heat-clothing unclothed` selects the same law, and
 `tests/verification/test_heat_endpoint_coupled.py` checks, in a synthetic
 corridor, that it reproduces the FED history of that code.
 
 The figures and numbers on this page come from the commands above at
-`92b8c5c`, stored in `<data>/fed_incap_heat_<T>c/evac_353/`. Earlier
+`92b8c5c`, stored in `<data>/fed_incap_heat_<T>c/evac_353/`; the ten
+probabilistic runs at `8ef8dc7`, in
+`<data>/fed_incap_heat_150c/evac_353/probabilistic_seeds/`. Earlier
 figures came from runs that also passed
 `--constant-extinction 0 --no-visibility`, which ran without a visibility
 model. On the same FDS
@@ -333,7 +344,7 @@ assumptions are on
   tolerance times of Table 63.17 (p. 2375).
 - **σ = 0.94 has no source for heat.** It is borrowed from the gas dose
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)). The
-  probabilistic run checks the code path, not the spread.
+  probabilistic runs check the code path, not the spread.
 - **Convective heat only.** This room checks the convective laws; it does
   not run `--heat-fed-method total-flux`. That method is checked against
   hand formulas of Eqs. 63.49 and 63.43 on synthetic fields

@@ -29,7 +29,7 @@ their test file.
 
 | Component | Test | Level | What it checks | Status |
 |---|---|---|---|---|
-| Gas FED | [CO dose in a uniform room](/verification/testing-homogeneous.md) | FDS case | FED reaches 1 at the hand-calculated time; the fraction of agents incapacitated follows the log-normal threshold (opt-in probabilistic mode) | **fails (one draw)**: dose and deterministic stop pass; the probabilistic draw of seed 42 leaves the 95 % band (D = 0.141 against 0.136) |
+| Gas FED | [CO dose in a uniform room](/verification/testing-homogeneous.md) | FDS case | FED reaches 1 at the hand-calculated time; the fraction of agents incapacitated follows the log-normal threshold (opt-in probabilistic mode) | passes: dose and deterministic stop; the probabilistic stop pooled over 10 seeds (1000 agents) stays in the 95 % band (D = 0.023 against 0.043) |
 | Gas FED | [FDS `FED_FIC` case](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_fic_all_zones.py) | Equation | FED and FIC in the four zones of FDS's own verification case | passes |
 | Gas FED | [S1 corridor](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s1_corridor_fed.py) | Coupled | an agent in constant CO stops within one FED update of t\* | passes |
 | Gas FED | [ISO 20414 Test 19: incapacitation by toxic gases](/verification/iso-test-19.md) | FDS case | four gas mixtures separating the CO, CO₂ and O₂ terms: each occupant stops at the next update after the hand-calculated time, as FDS's own FED device does | passes for CO, CO₂, O₂; HCN, NOₓ, irritants not yet ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)) |
