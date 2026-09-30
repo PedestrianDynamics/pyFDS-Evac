@@ -118,7 +118,10 @@ and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacit
 The coded forms are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a> page.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/tenability_speed_curves.png" alt="Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 2. The brake: (a) f(K), (b) g(FIC) and (c) their product, with
-contours of equal speed factor. FED does not appear on
+contours of equal speed factor. The irritant factor g has no known source
+and is off by default; the published relation is Eq. 63.13 on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/#irritants-and-walking-speed-fic">Irritant gases&lt;/a>.
+FED does not appear on
 these axes; it only sets the speed to zero at the agent&amp;rsquo;s threshold.
 Script: &lt;code>scripts/generate_tenability_curves.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>Route choice&lt;span class="hx-absolute -hx-mt-20" id="route-choice">&lt;/span>
@@ -466,6 +469,13 @@ population spread for heat is published. Its threshold is &lt;code>--fed-thresho
 unless &lt;code>--heat-fed-threshold&lt;/code> sets another, a departure from ISO 13571:2012
 §5.4. Its &lt;code>probabilistic&lt;/code> mode reuses the
 gas spread without a data basis of its own.&lt;/p>
+&lt;p>The fractional irritant concentration (FIC) never incapacitates. The
+published sources predict incapacitation at FIC = 1, but the opt-in irritant
+slowdown, with its default floor &lt;code>--fic-min-factor&lt;/code> 0.3, only lowers the
+speed to 0.3 of its smoke-reduced value
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398" target="_blank" rel="noopener">#398&lt;/a>).
+Irritants reach incapacitation only through their lung dose
+\(FLD_{irr}\), which is summed into the gas FED.&lt;/p>
 &lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
 &lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
 run ends early only when no agent is left, so a run in which any agent is
@@ -566,6 +576,11 @@ cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/is
 the walk to the route&amp;rsquo;s first graph node is not counted (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). The full list, with
 one line per issue, is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#limitations">Models › Routing › Limitations&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Irritant slowdown.&lt;/strong> The opt-in irritant slowdown
+(&lt;code>--enable-fic-speed&lt;/code>) uses a curve with no known source and is combined
+with the smoke factor multiplicatively, not additively as published
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>;
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#irritant-slowdown-against-the-published-rule">Models › FED&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Recovery from irritants.&lt;/strong> The irritant slowdown (opt-in with
 &lt;code>--enable-fic-speed&lt;/code>) is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it

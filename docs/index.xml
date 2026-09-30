@@ -2349,7 +2349,10 @@ and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacit
 The coded forms are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a> page.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/tenability_speed_curves.png" alt="Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 2. The brake: (a) f(K), (b) g(FIC) and (c) their product, with
-contours of equal speed factor. FED does not appear on
+contours of equal speed factor. The irritant factor g has no known source
+and is off by default; the published relation is Eq. 63.13 on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/#irritants-and-walking-speed-fic">Irritant gases&lt;/a>.
+FED does not appear on
 these axes; it only sets the speed to zero at the agent&amp;rsquo;s threshold.
 Script: &lt;code>scripts/generate_tenability_curves.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>Route choice&lt;span class="hx-absolute -hx-mt-20" id="route-choice">&lt;/span>
@@ -3064,12 +3067,18 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 &lt;code>enable_fic_speed&lt;/code> defaults to false and &lt;code>run.py&lt;/code> switches the rule on only
 with &lt;code>--enable-fic-speed&lt;/code>. Before it became opt-in, it was on whenever a gas
 FED model was loaded. When on, &lt;code>default_fic&lt;/code> sums \(C_i / F_{\mathrm{FIC},i}\) over the
-same seven irritants (constants in &lt;code>_FIC_COEFFS_PPM&lt;/code>, not integrated over
-time). At each FED update where FIC &amp;gt; 0, the agent&amp;rsquo;s irritant factor is set
+same seven irritants, not integrated over time. The constants in
+&lt;code>_FIC_COEFFS_PPM&lt;/code> are the SFPE incapacitation column of Table 63.6, equal
+to FDS User&amp;rsquo;s Guide Table 22.3 and FDS+Evac guide Table 2, so this FIC is
+neither the ISO 13571 FEC nor the escape-impairment FIC (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/#which-endpoint-goes-in-the-denominator">Irritant gases&lt;/a>).
+At each FED update where FIC &amp;gt; 0, the agent&amp;rsquo;s irritant factor is set
 to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
 (&lt;code>scenario.py&lt;/code>, &lt;code>run_scenario&lt;/code>) and multiplies the smoke factor. The rule is a
 pyFDS-Evac assumption with no known source
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>).
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>);
+how it compares with the published rule is
+&lt;a href="#irritant-slowdown-against-the-published-rule">below&lt;/a>.
 When FIC is exactly 0 the last factor stays in force
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Incapacitation.&lt;/strong> Once the cumulative gas FED or heat FED reaches the
@@ -3159,7 +3168,8 @@ history CSV (&lt;code>--output-fed-history&lt;/code>) carries the columns &lt;co
 &lt;code>fic_speed_factor&lt;/code> and &lt;code>incapacitated&lt;/code>.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/tenability_speed_curves.png" alt="Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>(a) Frantzich–Nilsson factor f(K) [-] against K [1/m], floor 0.1.
-(b) Irritant factor g(FIC) [-] against FIC [-], floor 0.3. (c) The product
+(b) Irritant factor g(FIC) [-] against FIC [-], floor 0.3; g has no known
+source and is off by default. (c) The product
 f(K)·g(FIC) [-], with contours at 0.25, 0.5 and 0.75; where both floors apply
 it is 0.1 × 0.3 = 0.03. FED does not appear on these axes; it only sets the speed to
 zero at the agent&amp;rsquo;s threshold. Script: &lt;code>scripts/generate_tenability_curves.py&lt;/code>.&lt;/em>&lt;/p>
@@ -3293,23 +3303,92 @@ you rebuild FDS+Evac&amp;rsquo;s FED from the guide, leave the 60 out.&lt;/p>
 &lt;p>Our reading is that the 60 survives from the 2009 guide, which gave the
 FED equations with &lt;em>t&lt;/em> in seconds; the evidence is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>.&lt;/p>
-&lt;/div>&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py&lt;/code>, &lt;code>TenabilityConfig.fic_alpha&lt;/code>, &lt;code>TenabilityConfig.fic_min_factor&lt;/code>), is multiplied with the smoke
-factor (&lt;code>direct_steering_runtime.py&lt;/code>, &lt;code>set_agent_fic_factor&lt;/code>). Its constants were not found
-in the Handbook, the FDS+Evac guide or &lt;code>evac.f90&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>). The
-Handbook uses a different curve and adds the smoke and irritant losses instead
-of multiplying them (Eq. 63.14). Because the Frantzich–Nilsson smoke contained
-acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
-\(g\) partly counts irritancy twice
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153" target="_blank" rel="noopener">#153&lt;/a>).&lt;/p>
-&lt;p>The heat laws and their deviations are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.
+&lt;/div>&lt;p>The heat laws and their deviations are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.
 The log-normal σ of both
 thresholds (&lt;code>fed.py&lt;/code>, &lt;code>TenabilityConfig.susceptibility_sigma&lt;/code>, &lt;code>TenabilityConfig.heat_susceptibility_sigma&lt;/code>) is, for the gas dose, a compromise between
 two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
 below 3 (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>
 and &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148" target="_blank" rel="noopener">#148&lt;/a>). The
 heat dose is deterministic by default; in &lt;code>probabilistic&lt;/code> mode it reuses the
-same σ without a data basis.&lt;/p></description></item><item><title>Real-FDS walkthrough</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/</guid><description>
+same σ without a data basis.&lt;/p>
+&lt;h3>Irritant slowdown against the published rule&lt;span class="hx-absolute -hx-mt-20" id="irritant-slowdown-against-the-published-rule">&lt;/span>
+&lt;a href="#irritant-slowdown-against-the-published-rule" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The irritant slowdown \(g\), when enabled (&lt;code>fed.py&lt;/code>, &lt;code>TenabilityConfig.fic_alpha&lt;/code>, &lt;code>TenabilityConfig.fic_min_factor&lt;/code>), is multiplied with the smoke
+factor (&lt;code>direct_steering_runtime.py&lt;/code>, &lt;code>set_agent_fic_factor&lt;/code>). Its constants were not found
+in the Handbook, the FDS+Evac guide or &lt;code>evac.f90&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>). The
+Handbook uses a different curve, Eq. 63.13, and adds the smoke and irritant
+losses instead of multiplying them (Eq. 63.14; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/#irritants-and-walking-speed-fic">Irritant gases&lt;/a>).
+Both differences make the coded rule milder, except at very low FIC:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>FIC&lt;/th>
+&lt;th>coded \(g\)&lt;/th>
+&lt;th>Eq. 63.13&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>0.1&lt;/td>
+&lt;td>0.93&lt;/td>
+&lt;td>0.71&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.2&lt;/td>
+&lt;td>0.86&lt;/td>
+&lt;td>0.31&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>0.5&lt;/td>
+&lt;td>0.65&lt;/td>
+&lt;td>0.08&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>1&lt;/td>
+&lt;td>0.30&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>&lt;strong>The curve.&lt;/strong> With the defaults &lt;code>fic_alpha&lt;/code> = 0.7 and
+&lt;code>fic_min_factor&lt;/code> = 0.3, \(g\) is above Eq. 63.13 for FIC from about
+0.017 to 1. Below about 0.017 it is lower, by at most 0.002 (our
+arithmetic).&lt;/li>
+&lt;li>&lt;strong>The combination.&lt;/strong> For the same smoke fraction \(F_s\) and irritant
+fraction \(F_i\), the product exceeds the additive rule by
+\(F_s F_i - (F_s + F_i - 1) = (1 - F_s)(1 - F_i) \ge 0\) (our identity).
+For the same \(F_i\), multiplying is therefore never more severe than
+adding.&lt;/li>
+&lt;li>&lt;strong>FIC ≥ 1 stops no agent.&lt;/strong> The sources predict incapacitation at FIC = 1
+(Purser 2003, p. 99; Ch. 63, p. 2344). In the code, with the default
+&lt;code>fic_min_factor&lt;/code> of 0.3, \(g\) floors at 0.3, so the agent walks on at 0.3
+of its smoke-reduced speed. FIC never marks an agent incapacitated;
+irritants count toward incapacitation only through \(FLD_{irr}\) inside
+the gas FED. With &lt;code>--fic-min-factor 0&lt;/code>, \(g\) reaches 0 at
+FIC = 1/&lt;code>fic_alpha&lt;/code> (about 1.43), but the agent is still not marked
+incapacitated (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398" target="_blank" rel="noopener">#398&lt;/a>).
+\(g\) is recomputed only while FIC is above 0: the agent walks on once
+FIC falls but stays above 0, and if FIC returns to exactly 0 the factor
+of 0 stays in force and the agent stands still for the rest of the run
+without being counted as incapacitated
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>).&lt;/li>
+&lt;/ul>
+&lt;p>Because the Frantzich–Nilsson smoke contained
+acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
+\(g\) partly counts irritancy twice
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153" target="_blank" rel="noopener">#153&lt;/a>).&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/models/fic_combination.png" alt="Two panels. (a) Speed factor against FIC from 0 to 1.2: Eq. 63.13 falls from 1 to 0 at FIC 1 and goes negative beyond it, while the coded g falls linearly from 1 to its floor of 0.3 at FIC 1. (b) Combined walking-speed fraction against FIC for smoke fractions 1, 0.75 and 0.5: the published additive rule reaches zero and goes negative, while the coded product stays at or above 0.15" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>(a) Speed factor [-] against FIC [-]: Eq. 63.13 (thin solid, a concept
+curve; dotted beyond FIC = 1, outside its range) and the coded \(g\) with
+its defaults (dashed, no source). (b) Walking-speed fraction [-] combining
+smoke fraction \(F_s\) = 1, 0.75 and 0.5 with the irritant effect: Eq. 63.14
+with Eq. 63.13 (solid) against the code&amp;rsquo;s \(F_s \cdot g\) (dashed), one colour
+per \(F_s\). The gap between a solid and a dashed line of the same colour is
+the effect of both the curve and the combination; the identity above covers
+the combination alone. Grey: where the published sum is at most 0, which
+neither source clips. Script: &lt;code>scripts/figures/models_fic_combination.py&lt;/code>.&lt;/em>&lt;/p></description></item><item><title>Real-FDS walkthrough</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/</guid><description>
 &lt;p>&lt;strong>This page reads FDS output, but you do not need to run FDS.&lt;/strong> The output of
 two small FDS cases is tracked in the repository, and the page uses it as is.&lt;/p>
 &lt;h2>Goal&lt;span class="hx-absolute -hx-mt-20" id="goal">&lt;/span>
@@ -8720,6 +8799,10 @@ darkness&amp;rdquo;. With &lt;em>K&lt;/em> = ln 10 · OD/m the stated range is &
 about 0.5–1.13 1/m (OD/m 0.22–0.49): &lt;em>K&lt;/em> 0.30 lies below every
 non-irritant point. The 0.3 m/s floor is Jin&amp;rsquo;s reference line for walking
 in darkness, not a measured point (Jin 1976, pp. 14, 17).&lt;/p>
+&lt;p>The fraction multiplies the unexposed walking speed (p. 98). Purser combines
+it with the fraction for irritants by adding the two losses, not by
+multiplying the fractions (p. 99; Ch. 63, Eq. 63.14); see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/#irritants-and-walking-speed-fic">Irritants and walking speed&lt;/a>.&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">Caveats on Purser&amp;rsquo;s 2003 law&lt;/strong>
@@ -8832,7 +8915,9 @@ differs slightly from the report&amp;rsquo;s.&lt;/p>
 from a normal distribution &amp;ldquo;with a mean from Equation 63.12 and standard
 deviation of 0.125&amp;rdquo;; Eq. 63.12 in this edition is the irritant FIC sum, so
 the reference is probably meant to be Eq. 63.10, and 0.125 differs from the
-0.157 given on the same page. For clear air it suggests a mean of 1.2 m/s
+0.157 given on the same page. The 2026 edition repeats the slip as
+&amp;ldquo;Eq. 70.10&amp;rdquo; for what is Eq. 70.8, and still gives both SD 0.125 and 0.157
+(Ch. 70, p. 2287). For clear air it suggests a mean of 1.2 m/s
 with SD 0.15 m/s. It compares Frantzich and Nilsson&amp;rsquo;s mean of 0.45 m/s
 (SD 0.21) with Jin&amp;rsquo;s 0.3 m/s in dense smoke, noting that the slowest speed
 measured by Jin was 0.37 m/s (p. 2341); Frantzich and Nilsson measured
@@ -9154,6 +9239,10 @@ to occupant behaviour and tenability&lt;/em>. Fire Safety Science, 7, 91–102.
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
 Protection Engineering, 5th ed., Ch. 63, 2308–2428.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). &lt;em>Assessment of hazards to
+occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
+Protection Engineering, 6th ed., Ch. 70, 2271–2352. p. 2287.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
 &lt;li>Yamada, T., &amp;amp; Akizuki, Y. (2016). &lt;em>Visibility and human behavior in fire
 smoke&lt;/em>. SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 61,
 2181–2206.
@@ -11511,6 +11600,11 @@ upper airways is felt immediately and depends on the concentration: it
 impairs escape at once. Damage to the deep lung depends on the inhaled dose
 and develops over hours. The literature treats the two with different
 quantities, and the standards and the handbook combine them differently.&lt;/p>
+&lt;p>This page covers the concentration criteria (ISO&amp;rsquo;s FEC and Purser&amp;rsquo;s FIC),
+the denominators each one uses, Purser&amp;rsquo;s relation between FIC and walking
+speed, and the lung dose. In short, the published rule &lt;strong>adds&lt;/strong> the speed
+losses from smoke and from irritants. It does not multiply them
+(&lt;a href="#combining-with-smoke-the-losses-add">Eq. 63.14&lt;/a>).&lt;/p>
 &lt;p>Symbols follow the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#notation">notation table&lt;/a>. The
 equations below keep the sources&amp;rsquo; own notation (FEC, \(F_{\mathrm{FIC}}\),
 \(F_{\mathrm{FLD}}\)).&lt;/p>
@@ -11525,8 +11619,19 @@ exceeds a threshold (§4.2.3). The FEC is a separate endpoint: it is not added
 to the asphyxiant fractional effective dose (FED). The same threshold value must be used for FED and FEC
 in a given estimation (§5.4). Pulmonary irritation is excluded because its
 serious effects appear hours to days after exposure (§4.2.1).&lt;/p>
-&lt;h2>Purser: a concentration term and a dose term&lt;span class="hx-absolute -hx-mt-20" id="purser-a-concentration-term-and-a-dose-term">&lt;/span>
-&lt;a href="#purser-a-concentration-term-and-a-dose-term" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2016, Society of Fire Protection Engineers (SFPE)
+&lt;p>In ISO&amp;rsquo;s Eq. (4) (§6.2.1, p. 7), each term is the volume fraction of an
+irritant divided by \(F_i\), the concentration of that irritant at which
+tenability is expected to be seriously compromised:&lt;/p>
+$$
+\mathrm{FEC} = \sum_i \frac{\varphi_i}{F_i}
+$$&lt;p>ISO gives \(F_i\) [µl/l, equal to ppm] as HCl 1000, HBr 1000, HF 500,
+SO₂ 150, NO₂ 250, acrolein 30 and formaldehyde 250, with an uncertainty of
+±50 % (§6.2.1). The sum is formed at each time increment and treated as
+instantaneous (§6.2.1, NOTE 1). Irritants have no effect on the asphyxiant
+FED (§6.1, NOTE 5). ISO 13571 gives no relation between irritants and
+walking speed.&lt;/p>
+&lt;h2>Purser: the fractional irritant concentration (FIC)&lt;span class="hx-absolute -hx-mt-20" id="purser-the-fractional-irritant-concentration-fic">&lt;/span>
+&lt;a href="#purser-the-fractional-irritant-concentration-fic" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2016, Society of Fire Protection Engineers (SFPE)
 Handbook Ch. 63) define the fractional irritant
 concentration (FIC) [-] as a sum over irritants, each term being the current
 concentration divided by the concentration predicted to cause a chosen
@@ -11534,51 +11639,183 @@ endpoint:&lt;/p>
 $$
 \mathrm{FIC} = \mathrm{FIC_{HCl}} + \mathrm{FIC_{HBr}} + \mathrm{FIC_{HF}} + \mathrm{FIC_{SO_2}} + \mathrm{FIC_{NO_2}} + \mathrm{FIC_{CH_2CHO}} + \mathrm{FIC_{HCHO}} + \sum \mathrm{FIC}_x
 \qquad \text{(Eq. 63.11)}
-$$&lt;p>The denominators are tabulated for two endpoints, escape impairment and
-incapacitation (Table 63.6, SFPE columns). Purser states that a factor of
-0.3 on the FEC for escape impairment should allow nearly all exposed people
-to escape (Ch. 63, p. 2414). Like the ISO FEC, the FIC is a concentration criterion and is
-not integrated over time. The same table lists the corresponding ISO 13571
-values, which differ for several gases: for HCl, for example, the SFPE
-incapacitation concentration is 900 ppm and the ISO value 1000 ppm
-(Table 63.6).&lt;/p>
-&lt;p>The lung effects are a dose. The fractional lethal dose of irritants
-\(FLD_{irr}\) [-] sums, for each irritant, the Ct exposure dose [ppm·min]
-divided by the dose predicted to be lethal to half the population (Eq. 63.15,
-Table 63.7, e.g. 114 000 ppm·min for HCl). Purser notes that lung irritation
-has relatively little effect on escape capability and &amp;ldquo;can be omitted from an
-escape calculation&amp;rdquo; (p. 2415), but in the simplified asphyxiant equation he includes
-\(FLD_{irr}\) inside the sum that is multiplied by the CO₂ factor, because
-irritants impair lung function and add some hypoxia (Eq. 63.38; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>).&lt;/p>
-&lt;h2>Purser: irritants and walking speed&lt;span class="hx-absolute -hx-mt-20" id="purser-irritants-and-walking-speed">&lt;/span>
-&lt;a href="#purser-irritants-and-walking-speed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser (2003, pp. 93 and 99–100) proposed that irritants do not slow
+$$&lt;p>The chapter repeats the sum as Eq. 63.12 (p. 2343) and in its appendix
+(p. 2414); the 2026 edition numbers them Eqs. 70.9 and 70.10. The terms
+stand for immediate sensory effects, so Ch. 63 expects them to ease when the
+concentrations fall, for example when a person leaves the contaminated area
+(p. 2343). Like the ISO FEC, the FIC is a concentration criterion. It is not
+a dose and is not integrated over time.&lt;/p>
+&lt;h3>Which endpoint goes in the denominator&lt;span class="hx-absolute -hx-mt-20" id="which-endpoint-goes-in-the-denominator">&lt;/span>
+&lt;a href="#which-endpoint-goes-in-the-denominator" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The chapter uses two endpoints, and different equations use different ones:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Escape impairment:&lt;/strong> Eq. 63.8 (p. 2333) and the text under Eq. 63.12
+(p. 2343).&lt;/li>
+&lt;li>&lt;strong>Either endpoint:&lt;/strong> the appendix, which names both SFPE columns of
+Table 63.6 (p. 2414).&lt;/li>
+&lt;li>&lt;strong>Incapacitation:&lt;/strong> the walking-speed relation, Eq. 63.13, where FIC = 1
+means incapacitation (p. 2344; Purser 2003, p. 99). Ch. 63 introduces it
+for concentrations below the SFPE incapacitation column (p. 2343).&lt;/li>
+&lt;li>p. 2325 reads FIC = 1 as significant impairment and FIC = 5 as roughly
+incapacitation, which in our reading is the escape-impairment scale.&lt;/li>
+&lt;/ul>
+&lt;p>The denominators [ppm] side by side: SFPE escape impairment, SFPE
+incapacitation and AEGL-2 for 10 min from Table 63.6 (p. 2344), and ISO
+13571 \(F_i\) (§6.2.1, p. 7):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Gas&lt;/th>
+&lt;th>SFPE escape&lt;/th>
+&lt;th>SFPE incap.&lt;/th>
+&lt;th>ISO \(F_i\)&lt;/th>
+&lt;th>AEGL-2&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>HCl&lt;/td>
+&lt;td>200&lt;/td>
+&lt;td>900&lt;/td>
+&lt;td>1000&lt;/td>
+&lt;td>100&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>HBr&lt;/td>
+&lt;td>200&lt;/td>
+&lt;td>900&lt;/td>
+&lt;td>1000&lt;/td>
+&lt;td>100&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>HF&lt;/td>
+&lt;td>200&lt;/td>
+&lt;td>900&lt;/td>
+&lt;td>500&lt;/td>
+&lt;td>95&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>SO₂&lt;/td>
+&lt;td>24&lt;/td>
+&lt;td>120&lt;/td>
+&lt;td>150&lt;/td>
+&lt;td>0.75&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>NO₂&lt;/td>
+&lt;td>70&lt;/td>
+&lt;td>350&lt;/td>
+&lt;td>250&lt;/td>
+&lt;td>20&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Acrolein&lt;/td>
+&lt;td>4&lt;/td>
+&lt;td>20&lt;/td>
+&lt;td>30&lt;/td>
+&lt;td>0.44&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Formaldehyde&lt;/td>
+&lt;td>6&lt;/td>
+&lt;td>30&lt;/td>
+&lt;td>250&lt;/td>
+&lt;td>14&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Three things follow from the table (our arithmetic):&lt;/p>
+&lt;ul>
+&lt;li>The escape-impairment values are about 0.2 of the incapacitation values:
+200/900 = 0.22 for the three halogen acids and 0.20 for the other four
+gases. This matches p. 2325, where FIC = 5 on the escape scale is roughly
+incapacitation.&lt;/li>
+&lt;li>The sets disagree gas by gas. SFPE incapacitation and ISO differ by up to
+about 8× (formaldehyde, 30 against 250 ppm). SFPE escape impairment and ISO
+differ by up to about 40× (formaldehyde, 6 against 250 ppm). The same smoke
+gives very different FIC values depending on the set.&lt;/li>
+&lt;li>ISO&amp;rsquo;s FEC and SFPE&amp;rsquo;s FIC do not share denominators, so an FEC of 1 and an
+FIC of 1 describe different mixtures.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>The factor 0.3.&lt;/strong> Ch. 63 mentions it twice. The escape-impairment values
+are to be used &amp;ldquo;with an FED factor of 0.3 to allow for sensitive
+individuals&amp;rdquo; (p. 2343), and &amp;ldquo;a factor of 0.3 FEC for escape impairment&amp;rdquo;
+should let nearly all exposed people escape (p. 2414). The same page 2343
+explains the number: a significant proportion of people may be impaired at
+about 0.3 of the concentration that affects the average person, which for
+HCl is 60 ppm instead of 200 ppm. In our reading, 0.3 is therefore a
+sensitive-person factor on the escape-impairment values. It is not the ratio
+between the escape and incapacitation columns (about 0.2), and it does not
+apply to the incapacitation values.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fic_denominators.png" alt="Denominators of the FIC and FEC for seven irritant gases on a logarithmic ppm axis, one marker per endpoint set: SFPE escape impairment, SFPE incapacitation, ISO 13571 and AEGL-2. For SO₂ the four values run from 0.75 to 150 ppm" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Denominators [ppm] per gas for four endpoint sets, log scale: SFPE escape
+impairment and SFPE incapacitation (Table 63.6, p. 2344), ISO 13571
+(§6.2.1, p. 7) and AEGL-2 for 10 min (Table 63.6). The dotted lines mark HCl
+at 900 ppm (SFPE incapacitation) and 1000 ppm (ISO, the example of
+Fig. 63.17). NO is left out: it has no escape-impairment value, its
+incapacitation value is given only as &amp;ldquo;&amp;gt;1000&amp;rdquo;, and it is not in the FIC
+sum. Script: &lt;code>scripts/figures/fundamentals_fic_denominators.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>Irritants and walking speed (FIC)&lt;span class="hx-absolute -hx-mt-20" id="irritants-and-walking-speed-fic">&lt;/span>
+&lt;a href="#irritants-and-walking-speed-fic" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser (2003, pp. 94 and 99–100) proposed that irritants do not slow
 people at low concentrations and stop effective movement at
 incapacitation, FIC = 1, with a sigmoid fall in between: &amp;ldquo;a curve has been
 fitted between these two extremes&amp;rdquo; (p. 94). Ch. 63 calls it an &amp;ldquo;estimated
-relationship&amp;rdquo; based on a concept (p. 2343, Fig. 63.17). In our reading, no
-walking data lie behind the curve. Ch. 63 gives it as&lt;/p>
+relationship&amp;rdquo; based on a concept and on the concentration estimated to be
+very painful (p. 2343); the curve is Fig. 63.17 (p. 2344). Neither source
+gives walking data or fit statistics for it; in our reading, it is a concept
+curve with no walking data behind it. Ch. 63 gives it as&lt;/p>
 $$
 F_{wv\,irr} = \frac{e^{-(1000\,x/b)^2} + (-0.2\,x + 0.2)}{1.2},
 \qquad b = 160,\ x = \mathrm{FIC}
 \qquad \text{(Eq. 63.13)}
 $$&lt;p>where \(F_{wv\,irr}\) is the fractional walking speed (1 = normal walking
-speed of 1.2 m/s). It is 1 at FIC = 0, about 0.31 at FIC = 0.2 and 0 at
-FIC = 1 (Ch. 63, p. 2344). The smoke and irritant effects are combined by
-adding their losses (Purser 2003, p. 100; Ch. 63, Eq. 63.14, p. 2345):&lt;/p>
-$$
-F_{wv} = 1 - (1 - F_{wv\,smoke}) - (1 - F_{wv\,irr})
-$$&lt;p>where \(F_{wv\,smoke}\) is the fractional walking speed due to smoke
-obscuration (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>).
-The sum can fall below 0, and neither source clips it. It assumes a smoke
-term for non-irritant smoke, as in Purser&amp;rsquo;s 2003 fit to Jin&amp;rsquo;s data; pairing
-it with Eq. 63.10, which is fitted to pooled &amp;ldquo;moderately irritant&amp;rdquo; data,
-would in our reading count irritancy twice (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/#purser-a-logarithmic-fit-for-irritant-smoke">Walking speed in smoke&lt;/a>).&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/irritant_speed.png" alt="Fractional walking speed against FIC from Eq. 63.13: 1 at FIC 0, 0.71 at 0.1, 0.31 at 0.2, 0.08 at 0.5 and 0 at 1" loading="lazy" />&lt;/p>
+speed of 1.2 m/s). The 2026 edition gives the same curve as Eq. 70.11. The
+source states only the end point, 0 at FIC = 1 (p. 2344). Our arithmetic
+gives 1.000, 0.914, 0.714, 0.308, 0.141 and 0.083 at FIC = 0, 0.05, 0.1,
+0.2, 0.3 and 0.5. The formula holds for 0 ≤ FIC ≤ 1 only: above 1 it turns
+negative, for example −0.083 at FIC = 1.5.&lt;/p>
+&lt;p>Jin&amp;rsquo;s experiments, which Ch. 63 cites for the link between irritancy and
+walking speed (p. 2343), give no FIC values: they index irritancy by the
+extinction coefficient &lt;em>K&lt;/em>, and the smoke composition was not reported
+(Purser 2003, p. 98).&lt;/p>
+&lt;p>&lt;strong>Which denominators?&lt;/strong> Ch. 63 writes Eq. 63.13 with FIC = 1 meaning
+incapacitation &amp;ldquo;(e.g., 1000 ppm HCl)&amp;rdquo; (p. 2344), as Purser does (2003,
+p. 99). That HCl example is the ISO value; the SFPE incapacitation value is
+900 ppm. Purser defines the FIC of his speed curve as the concentration
+&amp;ldquo;expressed as a fraction of the concentration predicted to cause
+incapacitation&amp;rdquo; (2003, p. 99), so the curve takes the incapacitation
+denominators. With the escape-impairment set, walking speed would reach 0
+at 200 ppm HCl instead of 900 ppm.&lt;/p>
+&lt;p>The earlier chapter (Purser 2002, SFPE 3rd ed., Sec. 2, Ch. 6) uses the
+other scale: FIC = 1 there means escape impairment, and incapacitation lies
+at a multiple of it that the chapter states three ways: FIC about 3–5
+(p. 2–91), a factor of about four or more (p. 2–121), and 5–10 times the
+FIC (p. 2–132).&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/irritant_speed.png" alt="Fractional walking speed against FIC from Eq. 63.13: 1 at FIC 0, 0.71 at 0.1, 0.31 at 0.2, 0.08 at 0.5 and 0 at 1, continued as a dotted line to FIC 1.2 where it falls below zero" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Fractional walking speed against fractional irritant concentration FIC
 from Ch. 63, Eq. 63.13, drawn thin because, in our reading, no walking data
-lie behind it. Script: &lt;code>scripts/figures/fundamentals_irritant_speed.py&lt;/code>.&lt;/em>&lt;/p>
+lie behind it. Dotted beyond FIC = 1, outside the curve&amp;rsquo;s range, where the
+formula goes negative. Script: &lt;code>scripts/figures/fundamentals_irritant_speed.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;h3>Combining with smoke: the losses add&lt;span class="hx-absolute -hx-mt-20" id="combining-with-smoke-the-losses-add">&lt;/span>
+&lt;a href="#combining-with-smoke-the-losses-add" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Purser multiplies the unexposed walking speed by the fraction (2003,
+p. 98). He treats the effects of smoke and irritants as essentially additive
+(p. 99) and adds their losses (Purser 2003, p. 100; Ch. 63, Eq. 63.14,
+p. 2345; Eq. 70.12 in the 2026 edition, p. 2289):&lt;/p>
+$$
+F_{wv} = 1 - (1 - F_{wv\,smoke}) - (1 - F_{wv\,irr})
+\qquad \text{(Eq. 63.14)}
+$$&lt;p>where \(F_{wv\,smoke}\) is the fractional walking speed due to smoke
+obscuration (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>).
+The walking speed is \(F_{wv}\) times the unexposed speed.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>No clipping.&lt;/strong> The sum can fall below 0, and neither source clips it. It
+is at most 0 whenever \(F_{wv\,irr} = 0\) (FIC = 1) and
+\(F_{wv\,smoke} &lt; 1\).&lt;/li>
+&lt;li>&lt;strong>Non-irritant smoke only.&lt;/strong> \(F_{wv\,smoke}\) has to be a law for
+non-irritant smoke. Purser pairs it with his fit to Jin&amp;rsquo;s non-irritant data
+(2003, p. 98). Pairing it with Eq. 63.10, which is fitted to pooled
+&amp;ldquo;moderately irritant&amp;rdquo; data, would in our reading count irritancy twice (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/#purser-a-logarithmic-fit-for-irritant-smoke">Walking speed in smoke&lt;/a>).&lt;/li>
+&lt;/ul>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">The equation as printed in Purser (2003)&lt;/strong>
@@ -11597,13 +11834,42 @@ dips to −0.10 in between, with a mean absolute error of 0.16 against the
 readings. Ch. 63&amp;rsquo;s Eq. 63.13, with 1000 &lt;em>x&lt;/em> in the exponent and the whole
 numerator divided by 1.2, matches the readings with a mean absolute error
 of 0.002, and is the form given above. The figure on this page is computed
-from Eq. 63.13, not from the 2003 printing. A second, minor misprint:
-Purser (2003, p. 99) refers to &amp;ldquo;Figure 2&amp;rdquo; for the irritant curve, which is
-his Fig. 1.
+from Eq. 63.13, not from the 2003 printing. Two minor misprints: Purser
+(2003, p. 99) refers to &amp;ldquo;Figure 2&amp;rdquo; for the irritant curve, which is his
+Fig. 1, and calls the FIC axis the &amp;ldquo;ordinate&amp;rdquo; (pp. 99–100), which is the
+abscissa; Ch. 63 has &amp;ldquo;x-axis&amp;rdquo;.
 &lt;/div>
 &lt;/details>
-&lt;h2>The Purser / FDS+Evac guide form&lt;span class="hx-absolute -hx-mt-20" id="the-purser--fdsevac-guide-form">&lt;/span>
-&lt;a href="#the-purser--fdsevac-guide-form" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The guide to &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, the evacuation module of the Fire Dynamics Simulator
+&lt;h2>Purser: a dose term for lung effects&lt;span class="hx-absolute -hx-mt-20" id="purser-a-dose-term-for-lung-effects">&lt;/span>
+&lt;a href="#purser-a-dose-term-for-lung-effects" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The lung effects are a dose. The fractional lethal dose of irritants
+\(FLD_{irr}\) [-] sums, for each irritant, the Ct exposure dose [ppm·min]
+divided by the dose predicted to be lethal to half the population (Eq. 63.15,
+Table 63.7, e.g. 114 000 ppm·min for HCl). Purser notes that lung irritation
+has relatively little effect on escape capability and &amp;ldquo;can be omitted from an
+escape calculation&amp;rdquo; (p. 2415), but in the simplified asphyxiant equation he includes
+\(FLD_{irr}\) inside the sum that is multiplied by the CO₂ factor, because
+irritants impair lung function and add some hypoxia (Eq. 63.38; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>).&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Misprints in Ch. 63 that the 2026 edition corrects&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;ul>
+&lt;li>&lt;strong>&amp;ldquo;Numerator&amp;rdquo; for denominator.&lt;/strong> Under Eq. 63.12, Ch. 63 calls both parts
+of each FIC term the &amp;ldquo;numerator&amp;rdquo; (p. 2343); the second is the denominator.
+The 2026 edition corrects it (p. 2289).&lt;/li>
+&lt;li>&lt;strong>Table 63.7, AEGL-3 column.&lt;/strong> For NO, acrolein and formaldehyde the
+values are shifted down one row (75, 2100 and blank). Table 70.5 of the
+2026 edition (p. 2290) gives NO blank, acrolein 75 and formaldehyde 2100.
+The 2026 values agree with the 30-min AEGL-3 concentrations of Table 63.6
+times 30 min (2.5 × 30 = 75 and 70 × 30 = 2100 ppm·min); that check is
+ours.&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/details>
+&lt;h2>FDS+Evac and FDS&lt;span class="hx-absolute -hx-mt-20" id="fdsevac-and-fds">&lt;/span>
+&lt;a href="#fdsevac-and-fds" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The guide to &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, the evacuation module of the Fire Dynamics Simulator
 (Korhonen 2021, Eqs. 12 and 17, Table 2), follows this
 structure: its total dose&lt;/p>
 $$
@@ -11613,40 +11879,67 @@ lists both the lethal doses \(F_{FLD}\) and the incapacitating concentrations
 \(F_{FIC}\). The values in that table agree with the SFPE columns of Tables
 63.6 and 63.7. This sum is the Purser / FDS+Evac guide form. It is not the
 ISO 13571 form, which keeps irritants out of the FED altogether.&lt;/p>
+&lt;p>No equation in the guide uses \(F_{FIC}\), and the FDS+Evac source
+(&lt;code>evac.f90&lt;/code>) computes no FIC. FDS+Evac slows people only through the
+Frantzich–Nilsson relation of the guide&amp;rsquo;s Eq. 11, with a floor of
+0.1·\(v_0\) (p. 29). FDS itself outputs \(\mathrm{FIC_{irr}}\) as a
+diagnostic quantity (User&amp;rsquo;s Guide 2025, Eq. 22.50 and Table 22.3, p. 390).
+Its denominators are the concentrations expected to cause incapacitation in
+half the population, the same values as the SFPE incapacitation column.&lt;/p>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Human measurements at incapacitating concentrations cannot be made for
 ethical reasons, and most of the experimental work behind the irritant
-values used animals, mostly rodents (Ch. 63, p. 2343). The endpoint concentrations
-differ between sources by up to an order of magnitude; for SO₂, Table 63.6
-gives 24 ppm for SFPE escape impairment and 150 ppm for ISO incapacitation.
+values used animals, mostly rodents, together with expert judgement
+(Ch. 63, p. 2343). The three FIC and FEC denominator sets (SFPE escape impairment, SFPE
+incapacitation, ISO) differ by up to about 40× for one gas (formaldehyde,
+6 ppm for SFPE escape impairment against 250 ppm for ISO; our arithmetic), so the choice of endpoint set
+changes FIC more than the choice of speed law does.
 Individual sensitivity is wide: for HCl, Purser proposes 200 ppm as the
 escape-impairment concentration for the average person, but notes that some
 people may be impaired at 60 ppm and others may escape through about
 400–600 ppm (p. 2343). The concentrations of acrolein and formaldehyde are
 rarely known in a fire, and Ch. 63 suggests a smoke-density surrogate when
-they are not (pp. 2344–2345).&lt;/p>
+they are not (pp. 2344–2345). The walking-speed curve Eq. 63.13 is a concept
+curve without fitted data and is defined only for FIC from 0 to 1.&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>ISO (2012). &lt;em>ISO 13571:2012 Life-threatening components of fire —
 Guidelines for the estimation of time to compromised tenability in
-fires&lt;/em>, §4.2 and §5.4. ISO, Geneva.
-&lt;a href="https://www.iso.org/standard/56172.html" target="_blank" rel="noopener">iso.org/standard/56172&lt;/a>. Read
-from the public preview.&lt;/li>
+fires&lt;/em>, §4.2, §5.4, §6.1 (NOTE 5) and §6.2.1 (Eq. 4, NOTE 1, p. 7).
+ISO, Geneva.
+&lt;a href="https://www.iso.org/standard/56172.html" target="_blank" rel="noopener">iso.org/standard/56172&lt;/a>.
+Read from the full text; paraphrased except the quoted phrase of §4.2.1.&lt;/li>
 &lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 63, 2308–2428. Eqs. 63.11,
-63.13–63.15, 63.38, Tables 63.6–63.7.
+Protection Engineering, 5th ed., Ch. 63, 2308–2428. pp. 2325, 2333,
+2342–2345, 2414–2415; Eqs. 63.8, 63.11–63.15, 63.38; Tables 63.6–63.7.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). &lt;em>Assessment of hazards to
+occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
+Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2287–2290;
+Eqs. 70.9–70.12; Table 70.4 (identical to Table 63.6) and Table 70.5.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
+&lt;li>Purser, D. A. (2002). &lt;em>Toxicity assessment of combustion products&lt;/em>.
+SFPE Handbook of Fire Protection Engineering, 3rd ed., Sec. 2, Ch. 6.
+NFPA, Quincy, MA. pp. 2–91, 2–121, 2–132.&lt;/li>
 &lt;li>Purser, D. A. (2003). &lt;em>ASET and RSET: addressing some issues in relation
 to occupant behaviour and tenability&lt;/em>. Fire Safety Science, 7, 91–102.
+pp. 94, 98–100.
 &lt;a href="https://doi.org/10.3801/IAFSS.FSS.7-91" target="_blank" rel="noopener">doi:10.3801/IAFSS.FSS.7-91&lt;/a>&lt;/li>
+&lt;li>McGrattan, K., Hostikka, S., Floyd, J., McDermott, R., Vanella, M.,
+Mueller, E., &amp;amp; Paul, C. (2025). &lt;em>Fire Dynamics Simulator User&amp;rsquo;s Guide&lt;/em>,
+6th ed., Eq. 22.50 and Table 22.3, p. 390. NIST Special Publication 1019.
+&lt;a href="https://doi.org/10.6028/NIST.SP.1019" target="_blank" rel="noopener">doi:10.6028/NIST.SP.1019&lt;/a>&lt;/li>
 &lt;li>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em> (FDS 6.7.6, Evac 2.6.0 draft),
-§3.4. VTT Technical Research Centre of Finland.
+§3.4, Eq. 11, Table 2. VTT Technical Research Centre of Finland.
 &lt;a href="https://github.com/tkorhon1/FDS-Evac-Guide" target="_blank" rel="noopener">github.com/tkorhon1/FDS-Evac-Guide&lt;/a>.
 Secondary source.&lt;/li>
 &lt;/ul>
-&lt;p>How pyFDS-Evac uses this: see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>.&lt;/p>
+&lt;p>How pyFDS-Evac uses this: see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>.
+Its opt-in irritant slowdown uses a different curve and multiplies it with
+the smoke factor
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#irritant-slowdown-against-the-published-rule">Models › FED&lt;/a>).&lt;/p>
 &lt;p>How it is verified: the FED and FIC rows of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">Verification&lt;/a> index; the HCN, NOₓ and irritant terms are not yet verified end to end (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257" target="_blank" rel="noopener">#257&lt;/a>).&lt;/p></description></item><item><title>Outputs</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</guid><description>
 &lt;p>What a run writes, when each file is missing, and how to read the results
 without being misled. Every file below is written by &lt;code>run.py&lt;/code> (and the web
@@ -12508,6 +12801,13 @@ population spread for heat is published. Its threshold is &lt;code>--fed-thresho
 unless &lt;code>--heat-fed-threshold&lt;/code> sets another, a departure from ISO 13571:2012
 §5.4. Its &lt;code>probabilistic&lt;/code> mode reuses the
 gas spread without a data basis of its own.&lt;/p>
+&lt;p>The fractional irritant concentration (FIC) never incapacitates. The
+published sources predict incapacitation at FIC = 1, but the opt-in irritant
+slowdown, with its default floor &lt;code>--fic-min-factor&lt;/code> 0.3, only lowers the
+speed to 0.3 of its smoke-reduced value
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398" target="_blank" rel="noopener">#398&lt;/a>).
+Irritants reach incapacitation only through their lung dose
+\(FLD_{irr}\), which is summed into the gas FED.&lt;/p>
 &lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
 &lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
 run ends early only when no agent is left, so a run in which any agent is
@@ -12608,6 +12908,11 @@ cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/is
 the walk to the route&amp;rsquo;s first graph node is not counted (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). The full list, with
 one line per issue, is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#limitations">Models › Routing › Limitations&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Irritant slowdown.&lt;/strong> The opt-in irritant slowdown
+(&lt;code>--enable-fic-speed&lt;/code>) uses a curve with no known source and is combined
+with the smoke factor multiplicatively, not additively as published
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>;
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#irritant-slowdown-against-the-published-rule">Models › FED&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Recovery from irritants.&lt;/strong> The irritant slowdown (opt-in with
 &lt;code>--enable-fic-speed&lt;/code>) is recomputed only while
 the sampled fractional irritant concentration (FIC) is positive. When it
