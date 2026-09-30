@@ -380,6 +380,73 @@ no visibility model at all unless you pass &lt;code>--vis-cache&lt;/code> or
 &lt;code>--clear-air-visibility&lt;/code>. A deck with discovery agents builds one either way,
 because they need it to learn the graph. See
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/">route-cost-gate.md&lt;/a>.&lt;/p>
+&lt;h3>Smoke-blind runs and exit replay&lt;span class="hx-absolute -hx-mt-20" id="smoke-blind-runs-and-exit-replay">&lt;/span>
+&lt;a href="#smoke-blind-runs-and-exit-replay" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>For ASET/RSET comparisons the same FDS output can be run in three arms: a
+smoke-blind arm, a speed-only arm that keeps the smoke-blind arm&amp;rsquo;s exits, and
+the fully coupled default
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/341" target="_blank" rel="noopener">#341&lt;/a>).&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--smoke-blind&lt;/code>&lt;/td>
+&lt;td>off&lt;/td>
+&lt;td>Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say. Gas FED, heat FED and FIC still accumulate and are written to the FED history; &lt;code>incapacitated&lt;/code> stays false. The smoke history holds the sampled K with &lt;code>speed_factor&lt;/code> 1.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--output-exit-history CSV&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Write each path agent&amp;rsquo;s exit; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#exit-history">Outputs&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--replay-exits CSV&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Send each agent to the exit its counterpart took in an earlier run, read from that run&amp;rsquo;s &lt;code>--output-exit-history&lt;/code> file. Agents are paired by origin and spawn order within it (&lt;code>origin&lt;/code>, &lt;code>spawn_index&lt;/code>), not by JuPedSim id. The route to that exit is the one clear-air costs rank best on the agent&amp;rsquo;s map.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>A smoke-blind run with a fire gives the same trajectories as the run without
+the fire, for the same scenario and seed. Replay pairs the n-th agent spawned
+from an origin in one run with the n-th agent spawned from that origin in the
+other, which needs the same scenario and seed. The origin is &lt;code>initial&lt;/code> for the
+agents placed at t = 0 and &lt;code>flow:&amp;lt;distribution&amp;gt;&lt;/code> for a flow source, so a source
+that is blocked and spawns later does not shift the pairing of another.
+JuPedSim ids are not used: they can skip a number when a spawn position is
+refused, and a slower crowd changes which positions are refused. The familiarity draw is still seeded by the JuPedSim id
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>), so a
+discovery agent can hold a different map in the two runs and take another
+route to the same exit. A replayed run fails when a spawn is missing
+from the file, when the file names an exit the scenario lacks, or when an
+agent cannot be sent to its exit; it logs a warning when agents of the file were
+never spawned. With rerouting on, a replayed agent can still switch exits,
+and the run logs a warning. The three arms, with tenability recorded but not
+acting in all of them, so that incapacitated agents do not stay in the
+building and lengthen the evacuation:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># U: smoke-blind; writes the exits for S&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario S.json --fds-dir FDS --smoke-blind &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-exit-history u_exits.csv --output-sqlite u.sqlite
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># S: smoke slows agents, exits and routes as in U&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario S.json --fds-dir FDS --no-enable-rerouting &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --disable-tenability --replay-exits u_exits.csv --output-sqlite s.sqlite
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># R: smoke slows agents and acts on routing&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario S.json --fds-dir FDS --disable-tenability &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-sqlite r.sqlite&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
 &lt;h3>Tenability (FIC slowdown and incapacitation)&lt;span class="hx-absolute -hx-mt-20" id="tenability-fic-slowdown-and-incapacitation">&lt;/span>
 &lt;a href="#tenability-fic-slowdown-and-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The two dose tracks are independent:&lt;/p>
 &lt;ul>
@@ -604,6 +671,11 @@ scenario can behave differently:&lt;/p>
 &lt;td>Visibility model&lt;/td>
 &lt;td>built for discovery agents, &lt;code>--vis-cache&lt;/code> or &lt;code>--clear-air-visibility&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Smoke-blind, exit replay&lt;/td>
+&lt;td>&lt;code>--smoke-blind&lt;/code>, &lt;code>--replay-exits&lt;/code>&lt;/td>
+&lt;td>off: &lt;code>smoke_blind=False&lt;/code>, &lt;code>replay_exits=None&lt;/code> (a dict of &lt;code>(origin, spawn_index)&lt;/code> to exit)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1326,6 +1398,12 @@ fields of the &lt;code>ScenarioResult&lt;/code> that &lt;code>run_scenario()&lt;
 &lt;td>rerouting is on&lt;/td>
 &lt;td>one per candidate route per agent per evaluation&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>Exit history&lt;/td>
+&lt;td>&lt;code>--output-exit-history CSV&lt;/code>&lt;/td>
+&lt;td>always&lt;/td>
+&lt;td>one per agent that walks the stage graph&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The run command, flags and defaults are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>. The example
@@ -1407,6 +1485,14 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;tr>
 &lt;td>&lt;code>heat_endpoint&lt;/code>, &lt;code>heat_validity&lt;/code>&lt;/td>
 &lt;td>the SFPE endpoint and its validity limits, only with &lt;code>--heat-endpoint&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>smoke_blind&lt;/code>&lt;/td>
+&lt;td>&lt;code>true&lt;/code>, only with &lt;code>--smoke-blind&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>replay_exits&lt;/code>&lt;/td>
+&lt;td>only with &lt;code>--replay-exits&lt;/code>: &lt;code>agents&lt;/code>, the number of replayed spawns, and &lt;code>sha256&lt;/code>, of the sorted &lt;code>origin&amp;lt;TAB&amp;gt;spawn_index&amp;lt;TAB&amp;gt;exit_id&lt;/code> lines, one per spawn and joined by newlines, to match the run whose exit history was replayed&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_fed_method&lt;/code>, &lt;code>heat_flux_parameters&lt;/code>&lt;/td>
@@ -1688,6 +1774,36 @@ evaluation:&lt;/p>
 &lt;/table>
 &lt;p>Under the default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> model, routes are ordered on &lt;code>tau_route&lt;/code>, not on
 &lt;code>composite_cost&lt;/code>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#route-cost-curves--plot_route_costspy">Usage › Route cost curves&lt;/a>.&lt;/p>
+&lt;h2>Exit history&lt;span class="hx-absolute -hx-mt-20" id="exit-history">&lt;/span>
+&lt;a href="#exit-history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One row per agent that walks the stage graph, in spawn order. From Python it
+is &lt;code>result.exit_history&lt;/code>. &lt;code>--replay-exits&lt;/code> reads its &lt;code>origin&lt;/code>,
+&lt;code>spawn_index&lt;/code> and &lt;code>exit_id&lt;/code> columns.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Column&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>agent_id&lt;/code>&lt;/td>
+&lt;td>JuPedSim agent id, as in the trajectory SQLite&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>origin&lt;/code>&lt;/td>
+&lt;td>where the agent was spawned: &lt;code>initial&lt;/code> for the agents placed at t = 0, &lt;code>flow:&amp;lt;distribution&amp;gt;&lt;/code> for a flow source&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>spawn_index&lt;/code>&lt;/td>
+&lt;td>order in which the agent was spawned from its origin in this run, from 0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>exit_id&lt;/code>&lt;/td>
+&lt;td>the exit the agent left through; for an agent still inside at the end, the exit it was heading for&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
 &lt;h2>Reading the results&lt;span class="hx-absolute -hx-mt-20" id="reading-the-results">&lt;/span>
 &lt;a href="#reading-the-results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>ScenarioResult&lt;/code> (and the summary line of &lt;code>run.py&lt;/code>) reports:&lt;/p>
 &lt;table>
