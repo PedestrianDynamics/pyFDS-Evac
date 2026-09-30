@@ -269,9 +269,9 @@ population to do worse than their young, fit participants (§3.1.1).
 
 ## The fractional form is FDS+Evac's normalisation
 
-FDS+Evac, the evacuation module of the Fire Dynamics Simulator (FDS), does
-not use the regression as an absolute speed. It scales each agent's
-unimpeded speed \(v_i^0\) by the same factor (Korhonen 2021, Eq. 11):
+FDS+Evac, the evacuation module of the Fire Dynamics Simulator (FDS),
+divides the regression by its intercept α and scales each agent's
+unimpeded speed \(v_i^0\) by the result (Korhonen 2021, Eq. 11):
 
 $$
 v_i^0(K_s) = \max\!\left(v^0_{i,\min},\; v_i^0\left(1 + \frac{\beta}{\alpha}K_s\right)\right),
@@ -281,6 +281,18 @@ $$
 The divisor 0.706 m/s is an extrapolation to *K* = 0, not a measured free
 walking speed. Ronchi et al. (2013) call the two readings fractional and
 absolute, and show that they give different evacuation times.
+
+![Two panels against extinction coefficient K from 0 to 13 1/m. Left, the FDS+Evac speed factor falls linearly from 1 at K = 0 to its floor of 0.1 at K = 11.15, solid only over the lit runs from K = 1.9 to 7.4. Right, the absolute Frantzich–Nilsson speed falls from 0.706 m/s to 0 at K = 12.4; fractional speeds for unimpeded speeds of 0.706, 1.0 and 1.3 m/s fall in proportion and level off at a tenth of each speed](/images/fundamentals/speed_fractional.png)
+
+*(a) The FDS+Evac factor \(F = 1 + (\beta/\alpha)K = 1 - 0.0807\,K\) with
+the Frantzich–Nilsson constants (Korhonen 2021, Eq. 11). Solid over the lit
+runs (*K* ≈ 1.9–7.4 1/m), dashed outside them. *F* reaches the floor 0.1 at
+*K* = 11.15 1/m. (b) The absolute law (Frantzich and Nilsson 2003, Eq. 3)
+and the fractional reading for three example unimpeded speeds. At
+\(v^0\) = 0.706 m/s the two readings agree up to *K* = 11.15 1/m; at any
+other \(v^0\) they differ at every *K*. The absolute law reaches 0 at
+*K* = 12.4 1/m, where the fractional reading stays at \(0.1\,v^0\).
+Script: `scripts/figures/fundamentals_speed_fractional.py`.*
 
 ## Purser: a logarithmic fit for irritant smoke
 
@@ -384,7 +396,7 @@ $$
 w = \min\!\left(w_{\text{smoke free}},\; \max\!\left(0.2,\; w_{\text{smoke free}} - 0.34\,(3 - x)\right)\right) \qquad \text{(Eq. 7)}
 $$
 
-Eq. 7 is a design rule, not a fit: the slope of Eq. 2 plus two thresholds
+Eq. 7 is a design rule: the slope of Eq. 2 plus two thresholds
 chosen for conservatism (§3.3.2). Above 3 m, speed is taken as unaffected.
 The same rule appears in Fridolf, Nilsson, Frantzich, Ronchi and Arias
 (2018, pp. 4–5 of the extended-abstract PDF) as method 3, an English

@@ -32,6 +32,20 @@ a recognition time and a response time. The Society of Fire Protection
 Engineers (SFPE) Handbook uses the same terms
 (Gwynne and Boyce 2016, Ch. 64).
 
+![Schematic egress timeline. A top bar shows the detection time followed by the warning time, from ignition to the general alarm. Below, six occupant rows start at the alarm, each with a light pre-travel bar followed by a dark travel bar of different lengths, sorted by exit time. A solid vertical line marks t_RSET at the exit of the last occupant, a dashed red line marks t_ASET later, and a bracket between them marks the margin t_marg. A bracket under the last row marks t_evac,i = t_pre,i + t_trav,i](/images/fundamentals/aset_rset_timeline.png)
+
+*The egress timeline of Eqs. 1–2 as a schematic; the times are
+illustrative. Detection and warning happen once for the whole building.
+After the general alarm, each occupant has their own pre-travel time
+\(t_{\mathrm{pre},i}\) (light) and travel time \(t_{\mathrm{trav},i}\)
+(dark); a dot marks each exit. ISO/TR 16738 (§7) warns that the two
+distributions interact, so they cannot be added directly. The figure draws
+\(t_{\mathrm{RSET}}\) at the exit of the last occupant, the latest time from
+ignition to exit, as RiMEA 4.1.1 (§2.13) defines the evacuation time.
+Whether ISO/TR 16738 uses the same statistic could not be checked in its
+public preview. Figure inspired by Fig. 2 of RiMEA 4.1.1 (p. 9). Script:
+`scripts/figures/fundamentals_aset_rset_timeline.py`.*
+
 ## What the timeline rests on
 
 ASET comes from the fire (see [Design fires](/fundamentals/design-fires.md)): the time-concentration curves of heat, toxic gases
@@ -83,7 +97,7 @@ pre-movement and movement times. When two analyses are compared, check which
 origin each uses. The terms also vary: "escape" in ISO/TR 16738, "egress" or
 "evacuation" in the SFPE Handbook, for the same quantities.
 
-ASET is not one number. It varies with position and with the tenability
+ASET varies with position and with the tenability
 criterion chosen, and the criterion itself is set for a fraction of the
 population (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
 
@@ -116,6 +130,9 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
   Guidelines for the estimation of time to compromised tenability in
   fires*. ISO, Geneva.
   [iso.org/standard/56172](https://www.iso.org/standard/56172.html).
+- RiMEA e.V. (2025). *Guideline for Microscopic Evacuation Analysis*,
+  version 4.1.1, 11 September 2025. [rimea.de](https://rimea.de/).
+  §2.8–2.13 and Fig. 2, p. 9.
 - Bukowski, R. W., & Tubbs, J. S. (2016). *Egress concepts and design
   approaches*. SFPE Handbook of Fire Protection Engineering, 5th ed.,
   Ch. 56, 2012–2046.
@@ -147,4 +164,4 @@ its own dose along its path; see
 RSET from a run without the fire against a coupled run:
 [Evacuation with and without the fire](/docs/howto-with-without-fire.md).
 
-How it is verified: the [Verification](/verification/_index.md) index; ASET and RSET themselves are outputs of a study, not of a test.
+How it is verified: the [Verification](/verification/_index.md) index; ASET and RSET themselves are outputs of a study.
