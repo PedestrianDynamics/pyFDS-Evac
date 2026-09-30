@@ -228,15 +228,15 @@
  ],
  "summary": {
   "agents_evacuated": 10,
-  "evacuation_time": 26.71,
+  "evacuation_time": 26.95,
   "total_agents": 10
  },
  "switches": [
   {
    "agent_id": 6,
-   "new_cost": 18.522,
+   "new_cost": 18.521,
    "new_exit": "E_far",
-   "old_cost": 3.541,
+   "old_cost": 3.542,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
@@ -263,16 +263,16 @@
    "agent_id": 4,
    "new_cost": 20.105,
    "new_exit": "E_far",
-   "old_cost": 2.059,
+   "old_cost": 2.06,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 7.0
   },
   {
    "agent_id": 5,
-   "new_cost": 20.026,
+   "new_cost": 19.945,
    "new_exit": "E_far",
-   "old_cost": 2.037,
+   "old_cost": 2.12,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 7.0

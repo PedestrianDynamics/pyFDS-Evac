@@ -77,6 +77,11 @@ seed used, and any warnings from the run.
 
 [![The top of the results. A header reads "Results  run #1 · iso_table21_coupled · 2026-09-29T18:14:06+00:00" with the buttons Show Python for this run and Clear results, and the line "Starting a new run replaces these results in this view; the files on disk are kept." Below it, a check mark and "Complete: all agents evacuated", four tiles reading Evacuation time 85.0 s, Evacuated 1 / 1 agents, Remaining 0 agents and Seed used 420, and a Warning box, "1 warning for run #1", saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices](/images/web-gui/results_header.png "The results header, the outcome and the FED warning of the corridor run.")](images/web-gui/results_header.png)
 
+The screenshots of this run predate the exit rule of
+[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349); the run
+now ends after 85.3 s, as in the steps below
+([#389](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/389)).
+
 Further down, press play in
 **Trajectories** to replay the run, or drag the time slider. Scroll over the
 plan to zoom and drag to pan; **↺** resets the view. With an FDS folder set,
@@ -92,7 +97,7 @@ growth, stay empty for this one-agent corridor.
 [![A Plotly chart titled Smoke, with time from 0 to 85 s on the horizontal axis, the speed factor on the left axis between 0.9196262 and 0.9196266, and the extinction coefficient K on the right axis between 0.995502 and 0.995507 per metre. Both lines are flat until about 50 s and then vary in their last digits](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places.")](images/web-gui/smoke_chart.png)
 
 {{< checkpoint title="The run finished" >}}
-The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
+The agent leaves the corridor after 85.3 s, and the run reports 1 of 1
 agent evacuated. The **Warning** box says that FED is disabled: this deck
 writes only the soot extinction slice, no CO, CO₂ or O₂, so the warning is
 expected here. The same run from the command line,
@@ -102,7 +107,7 @@ uv run python run.py --scenario assets/iso_table21_coupled \
     --fds-dir assets/iso_table21_coupled/fds
 ```
 
-ends with `Simulation finished in 85.05 s (1/1 evacuated).`
+ends with `Simulation finished in 85.32 s (1/1 evacuated).`
 {{< /checkpoint >}}
 
 ### Keep the run as a script

@@ -13,6 +13,15 @@ aliases: [/docs/wayfinding/, /docs/implementation/wayfinding/wayfinding/]
 > [Models › Wayfinding](/models/wayfinding.md). The intuition is on
 > [Concepts › Wayfinding](/docs/concepts.md#wayfinding).
 
+{{< callout type="warning" >}}
+The run numbers and figures on this page come from
+runs that predate the per-distribution seeds of
+[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360) and the
+exit rule of [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349).
+The commands below now give different results; the re-run is tracked in
+[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384).
+{{< /callout >}}
+
 This page follows §3 of the talk
 [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/),
 one slide per section. Each section says what the code does, where, and which

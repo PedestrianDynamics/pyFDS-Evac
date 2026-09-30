@@ -20,6 +20,16 @@ aliases: [/docs/testing-familiarity/, /models/verification/testing-familiarity/]
 agent is heading for (full: CP3 until it passes the door, then the exit;
 discovery: its current route target). Thick ring: a patrol (`wander`).*
 
+{{< callout type="warning" >}}
+The results, figures and pass-criteria verdicts on this page come from
+runs that predate the per-distribution seeds of
+[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360) and the
+exit rule of [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349).
+The commands below now give different results, and not only in the numbers;
+the re-run is tracked in
+[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384).
+{{< /callout >}}
+
 ## What is tested
 
 Whether `familiarity` changes what an agent knows, and only that. The two

@@ -151,4 +151,6 @@ conventions; what each one proves, and where that proof is checked, is below.
   way, so they end up taking the long route without ever finding the
   shortcut. Verified: `full` evacuates in 34.5 s vs `discovery`'s 68.1 s
   (both 20/20 evacuated; see the results table in
-  [`docs/testing-familiarity.md`](testing-familiarity.md)).
+  [`docs/testing-familiarity.md`](testing-familiarity.md); these runs
+  predate #360 and #349, re-run tracked in
+  [#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384)).

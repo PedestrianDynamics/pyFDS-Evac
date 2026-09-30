@@ -12,6 +12,15 @@ the [Real-FDS walkthrough](walkthrough.md) (small tracked FDS cases). Unlike
 those, it needs FDS output that is not in the repository; step 3 says how to
 get it.
 
+{{< callout type="warning" >}}
+The outputs, numbers and figures on this page come from
+runs that predate the per-distribution seeds of
+[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360) and the
+exit rule of [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349).
+The commands below now give different results; the re-run is tracked in
+[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384).
+{{< /callout >}}
+
 ## 1. Check the scenario runs
 
 Run every command on this page from the repository root, in the environment
