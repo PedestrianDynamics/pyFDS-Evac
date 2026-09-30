@@ -1067,7 +1067,12 @@ def _check_flow_variants(flow_distributions: list, stage_map: dict) -> None:
 
 
 def _check_entry_stage(variant: dict, stage_map: dict, flow_dist: dict) -> None:
-    """Raise ValueError when a drawable *variant* has no valid entry stage."""
+    """Raise ValueError when a drawable *variant* has no valid entry stage.
+
+    Zero-weight variants are skipped, although the picker can still return
+    one on a draw of exactly 0.0 or through its first-variant fallback; both
+    are negligible and rejecting such configs would break valid decks.
+    """
     if float(variant.get("percentage", 0.0)) <= 0:
         return
     if any(stage_map.get(stage, -1) != -1 for stage in variant.get("entry_stages", [])):

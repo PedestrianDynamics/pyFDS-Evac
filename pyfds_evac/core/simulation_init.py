@@ -2526,6 +2526,9 @@ def _add_agents(
                                             "waypoint_routing", {}
                                         ),
                                         seed=seed,
+                                        # Tracking only; spawn_key seeds the draws.
+                                        # Without spawn_key they would be seeded
+                                        # from this id again (#198).
                                         agent_id=agent_id,
                                         initial_position=(float(pos[0]), float(pos[1])),
                                         agent_radius=agent_radius,

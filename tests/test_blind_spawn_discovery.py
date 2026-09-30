@@ -337,14 +337,14 @@ class TestTheOtherThreeConfigs:
         assert probability == 0.5, "asset changed; the band below assumes 0.5"
         knew = 0
         population = 400  # far more than the asset's 30, to test the draw itself
-        for agent_id in range(population):
+        for spawn_index in range(population):
             cmap = init_cognitive_map(
                 SPAWN,
                 graph,
                 probability,
                 vis,
                 0.0,
-                rng=agent_rng(1301, (INITIAL_ORIGIN, agent_id), PURPOSE_FAMILIARITY),
+                rng=agent_rng(1301, (INITIAL_ORIGIN, spawn_index), PURPOSE_FAMILIARITY),
             )
             if cmap.known_nodes & {"E_west", "E_east"}:
                 knew += 1
