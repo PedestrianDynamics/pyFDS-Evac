@@ -139,8 +139,11 @@ per run from the scenario's `routing` block and fixed defaults
 (`RouteCostConfig`), so every agent shares them. In Wood's UK
 survey, people completely familiar with the building moved through smoke more
 often than those less familiar (61 % against 51 %; Wood 1980, Table 6.4,
-p. 87), though moving through smoke was not associated with leaving the
-building (p. 91). See
+p. 87; Wood 1972, p. 80, reports the trend over four familiarity levels as
+significant). Familiarity did not affect how far people moved through smoke
+(Wood 1972, p. 83), 85 % of respondents were completely familiar with the
+building (Wood 1972, Table 6, p. 40), and moving through smoke was not
+associated with leaving the building (Wood 1980, p. 91). See
 [issue #362](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362).
 
 **Herding and social influence.** Each agent chooses its route from its own
@@ -193,7 +196,7 @@ slice output (`&DUMP DT_SLCF`).
 **Re-entry.** An agent that reaches an exit is removed from the simulation
 (`run_scenario` in `pyfds_evac/core/scenario.py`), so nobody goes back into
 the building. In Wood's UK survey, 43 % of those who had left the building
-re-entered it (Wood 1980, Table 6.6, p. 95): 53 % of men and 34 % of women
+re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of men and 34 % of women
 (Table 6.3, p. 87).
 
 ## Reproducibility
@@ -227,6 +230,9 @@ Finland.
 Purser, D. A., and McAllister, J. L. (2016). Assessment of hazards to
 occupants from smoke, toxic gases, and heat. In *SFPE Handbook of Fire
 Protection Engineering*, 5th ed., Chapter 63. Springer.
+
+Wood, P. G. (1972). *The Behaviour of People in Fires*. Fire Research Note
+No. 953, Fire Research Station, Borehamwood. No DOI or public URL.
 
 Wood, P. G. (1980). A survey of behaviour in fires. In D. Canter (Ed.),
 *Fires and Human Behaviour*, pp. 83–95. John Wiley & Sons, Chichester.

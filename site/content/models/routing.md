@@ -279,6 +279,10 @@ written to the route history.
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
 - The smoke terms are the same for every familiarity setting
   ([#362](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362)).
+- `impassable_extinction_threshold` (3.0 1/m) is a modelling assumption
+  with no empirical source; the field surveys give only self-estimated
+  visibility at turn-back
+  ([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)).
 - For discovery agents, the order of tied routes depends on
   `PYTHONHASHSEED` ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)).
 - Anticipation assumes unimpeded speed and, by default, perfect foresight of
