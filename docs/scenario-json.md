@@ -77,7 +77,7 @@ while still waiting walks off when its pre-movement ends
 | Key | Default | Effect |
 |---|---|---|
 | `coordinates` | required | Exit polygon. |
-| `enable_throughput_throttling`, `max_throughput` | `false`, 0 | Cap the removal rate at the exit: an agent within its radius + 0.5 m of the exit's target point is removed only if at least 1/`max_throughput` s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. |
+| `enable_throughput_throttling`, `max_throughput` | `false`, 0 | Cap the removal rate at the exit: an agent within its radius + 0.5 m of the exit's target point is removed only if at least 1/`max_throughput` s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A `max_throughput` of 0 disables the cap. |
 | `capacity_agents_per_s` | `routing.default_exit_capacity` (1.3 agents/s) | Exit capacity used to estimate queue time when routes are priced. |
 | `sign` | an omni-directional sign at the exit's centre, `c` = 3 | The sign agents read; keys below. |
 

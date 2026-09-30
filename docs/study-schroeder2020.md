@@ -40,7 +40,8 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:
 | C (bin-free) | −108 m²s | −83 m²s | – |
 
 - **Smoke sets ASET here.** Every cell reaches K ≥ 0.23 1/m at 2.0 m, the
-  last one at 88 s (0.2 m grid; 203 s on the 0.1 m grid). EA's temperature,
+  last one at 88 s (0.2 m grid, one door; 203 s on the 0.1 m grid, 189 s
+  with two doors). EA's temperature,
   radiation and CO limits, the gas FED and the convective heat FED are not
   reached in any cell by 600 s. The vfdb CO and CO₂ values are reached only
   in plume cells on the 0.1 m grid, which is grid-dependent.
@@ -87,7 +88,8 @@ cell. Open markers: no cell. One marker shape per FDS run.*
 | | CO ≥ 100 ppm | 0 | 2, within 0.3 m | 0 |
 | | CO₂ ≥ 1 % | 0 | 3, within 0.4 m | 0 |
 | | radiant flux ≥ 1.7 kW/m² | 0 | 0 | 0 |
-| vfdb Table 8.3, < 5 min | K ≥ 0.46 1/m (D_L 0.2, note 4) | all 848 | all 848 | all 847 |
+| vfdb Table 8.3, < 5 min | K ≥ 0.23 1/m (D_L 0.1) | all 848 | all 848 | all 847 |
+| | K ≥ 0.46 1/m (D_L 0.2, note 4) | all 848 | all 848 | all 847 |
 | | T ≥ 50 °C | 7, within 0.9 m | 11, within 1.5 m | 6, within 0.9 m |
 | | CO ≥ 500 ppm, CO₂ ≥ 3 %, radiant flux ≥ 2.5 kW/m² | 0 | 0 | 0 |
 | EA Fig. 8, 2.0 m, up to 10 min | K ≥ 0.3 1/m (10 m visibility with C = 3) | all 848, from 3 s | all 848 | all 847 |
@@ -98,7 +100,7 @@ cell. Open markers: no cell. One marker shape per FDS run.*
 | – | irritants | not applicable: the fuel has no tracked irritant | | |
 
 "0" means not reached by 600 s at 2.0 m for this fire. That is a result for
-this fire, not a pass, and it says nothing about a room that is safe.
+this fire, not a pass, and it does not mean the room is safe.
 
 The largest values anywhere on the 2.0 m slice, 0–600 s (0.2 m / 0.1 m
 grid, one door): K 7.8 / 12.8 1/m, T 70 / 115 °C, CO 69 / 124 ppm, CO₂ 0.82 /
@@ -122,7 +124,8 @@ FED 0.054 / 0.139.
 - **Temperature is not a criterion on its own.** vfdb Table 8.3, note 2:
   gas temperature is not to be assessed in isolation from smoke density.
   T ≥ 45 °C is never the first criterion in a cell here; it ties with smoke
-  in 4 cells at the burner.
+  in 4 cells at the burner (0.2 m, one door; 2 on the 0.1 m grid, 3 with
+  two doors).
 - **EA gives no visibility constant.** K ≥ 0.3 1/m for 10 m visibility uses
   C = 3, our assumption. EA §5.2 also allows 5 m (K ≥ 0.6 with C = 3) in
   enclosures of about 10 m, and reduced visibility where occupants may be
@@ -131,7 +134,8 @@ FED 0.054 / 0.139.
   `INTEGRATED INTENSITY` U, with T_amb = 20 °C (assumed): a small body in an
   isotropic field receives about U/4.
 - **Gas FED ≥ 0.3** is the dose of someone standing still from ignition,
-  with the pyFDS-Evac form of the FDS+Evac FED
+  with the pyFDS-Evac form of the
+  [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) FED
   ([Fractional effective dose](/models/fed.md)). ISO 13571:2012 §5.4 and
   A.5.2 give 0.3 as a reduced threshold for more susceptible people; at
   0.3 about 11.4 % of a population would still be susceptible (see
@@ -142,8 +146,9 @@ FED 0.054 / 0.139.
 - **Total-flux heat, as a sensitivity.** The total-flux dose (SFPE Handbook
   Ch. 63, Eq. 63.43) with the radiant part f · (U − 4σT_skin⁴): at f = 0.25
   the radiant part never reaches the 2.5 kW/m² from which ISO counts it,
-  and the tolerance dose reaches 0.3 in 3 cells next to the burner, from
-  455 s (0.2 m) or 255 s (0.1 m). At f = 1, the upper bound the engine
+  so the radiant term is zero and the exceedance comes from the convective
+  part of Eq. 63.43; the tolerance dose reaches 0.3 in 3 cells next to the
+  burner, from 455 s (0.2 m) or 255 s (0.1 m). At f = 1, the upper bound the engine
   accepts, it passes 0.3 only in the same 3 cells and is not grid-stable
   (maximum 13.5 on the 0.2 m grid against 0.97 on the 0.1 m grid).
 
@@ -162,19 +167,21 @@ south-east corner is last, at 80–88 s.
 
 {{< details title="Two doors, and the 0.1 m grid" closed="true" >}}
 
-![The same four panels for the two-door room: the smoke map looks alike, with the latest cell at 189 s; temperature again only at the burner.](/images/studies/schroeder2020/aset_criteria_2door.png)
+![The same four panels for the two-door room. Smoke: the cells at the west door D2 exceed at 21 to 32 s, the cells at the east door D1 at 73 to 76 s, and a pocket beside the plume stays clear until up to 189 s. Temperature again only at the burner.](/images/studies/schroeder2020/aset_criteria_2door.png)
 
 *Two doors, 0.2 m FDS grid. This is a separate FDS run: the second door
 changes the ventilation. The cells at the west door D2 exceed K ≥ 0.23 1/m
-at 21–32 s, the cells at the east door D1 at 73–76 s.*
+at 21–32 s, the cells at the east door D1 at 73–76 s. A pocket of 8 cells
+beside the plume stays clear until up to 189 s.*
 
-![Three plan views: the K ≥ 0.23 ASET map on the 0.2 m and on the 0.1 m FDS grid, and their difference. The two agree within 16 s in the door region; the largest differences are in a late pocket near the fire.](/images/studies/schroeder2020/aset_grid_pair.png)
+![Three plan views and a scatter plot. (a) and (b): the K ≥ 0.23 ASET map on the 0.2 m and on the 0.1 m FDS grid. (c): their difference per cell, hatched where it exceeds 30 s; the largest differences are in a late pocket beside the plume. (d): ASET on the 0.1 m grid against ASET on the 0.2 m grid for every cell, with the door-region cells highlighted; they lie close to the diagonal, within 16 s, while some room cells lie far above it, up to about 200 s.](/images/studies/schroeder2020/aset_grid_pair.png)
 
 *The same ASET map on two FDS grids. Mean |Δ| 9 s; 6 % of cells differ by
 more than 30 s. In the door region (x ≥ 24 m, y ≥ 6 m) |Δ| is at most 16 s
-(95th percentile 7 s). The 0.1 m grid has a late pocket near the fire
-(latest cell 203 s against 88 s) beside the plume, at x ≈ 1–3 m and
-y ≈ 1.5–5 m; it is not grid-converged.*
+(95th percentile 7 s). The 0.1 m grid has a late pocket beside the
+plume, mostly at x ≈ 1–5 m and y ≈ 1.5–5 m, with a few cells
+at x ≈ 10–13.5 m (latest cell 203 s against 88 s); it is not
+grid-converged.*
 
 {{< /details >}}
 
@@ -330,8 +337,8 @@ between the grids.
 ### Against the paper
 
 - **The min DIFF agreement is structural.** The worst cell is the last cell
-  before the door, at (29.7, 8.7) m. Its RSET is about N/0.96 ≈ 105 s,
-  set by the cap; its ASET is 75 s (80 s on the 0.1 m grid). So −30 s tests
+  before the door, at (29.7, 8.7) m. Its RSET is about N/0.96 ≈ 104 s
+  (measured 105 s), set by the cap; its ASET is 75 s (80 s on the 0.1 m grid). So −30 s tests
   when smoke reaches the door, not the whole map. That cell lies inside the
   reach at which the engine removes agents at the exit
   ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)).
@@ -342,7 +349,8 @@ between the grids.
   so the gap is unexplained.
 - **The 60 kW fire is our assumption.** The paper does not state the
   demonstration HRR. Its Fig. 7 histogram (about 20 m² failing, C about
-  −300 m²s, read off) matches the 60 kW, N = 100 point of its Figs. 5 and 8,
+  −300 m²s, read off; ours, with the paper's 20 s bins: −120 m²s, context
+  only, not a match) matches the 60 kW, N = 100 point of its Figs. 5 and 8,
   which supports the choice but does not prove it.
 
 {{< details title="Sensitivity to the map rules (one door, capped, pre-movement 0)" closed="true" >}}
@@ -364,10 +372,13 @@ between the grids.
   count a cell as exceeded from the first 1 s step at which every FDS node
   in it exceeds at the same time.
 - **The 120 s fill.** The paper gives cells that never exceed within 120 s
-  the value 120 s (p. 4). We keep them open ("not by 600 s"). On the 0.2 m
-  grid every cell exceeds by 88 s, so nothing changes. On the 0.1 m grid
-  23 cells exceed only after 120 s, but none of them is occupied after
-  120 s in any version, so no DIFF measure changes.
+  the value 120 s (p. 4). We keep them open ("not by 600 s"). One door,
+  0.2 m grid: every cell exceeds by 88 s, so nothing changes. One door,
+  0.1 m grid: 23 cells exceed only after 120 s, but none of them is
+  occupied after 120 s in any version, so no DIFF measure changes. Two
+  doors (0.2 m): 8 cells beside the plume exceed only after 120 s (latest
+  189 s); none is occupied after 120 s in any version, so no measure
+  changes.
 
 {{< /details >}}
 
