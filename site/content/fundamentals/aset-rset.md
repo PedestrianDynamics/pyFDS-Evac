@@ -87,6 +87,23 @@ ASET is not one number. It varies with position and with the tenability
 criterion chosen, and the criterion itself is set for a fraction of the
 population (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
 
+Which part of the pre-movement distribution matters depends on density.
+Where occupant density is high relative to exit width, the pre-movement of
+the first few occupants and the exit flow capacity set the evacuation time;
+at low density, the late tail of the distribution does (Purser 2003,
+pp. 96–97).
+
+Most travel-time calculations assume no interaction between occupants and
+the fire effluent. Most tenability calculations use only smoke and CO, with
+yields fixed at well-ventilated values (Purser 2003, pp. 92–93).
+
+The concept itself is disputed. Babrauskas, Fleming and Russell (2010,
+pp. 347–348) argue that RSET is a distribution rather than one number, that
+the test ASET > RSET hides how much more time one design gives than
+another, and that there is no agreed population for tenability criteria to
+protect. They propose reporting the margin ASET − RSET to compare designs
+(pp. 350–351). Their evidence comes from fires in single-family homes.
+
 ## Sources
 
 - ISO (2009). *ISO/TR 16738:2009 Fire-safety engineering — Technical
@@ -106,6 +123,12 @@ population (see [Incapacitation thresholds](/fundamentals/incapacitation-thresho
   Society of Fire Safety, NSW Chapter, Engineers Australia.
   [engineersaustralia.org.au](https://www.engineersaustralia.org.au/sites/default/files/2024-01/tenability-criteria-practice-note_0.pdf).
   §5 (p. 13), §5.2 and Fig. 8 (p. 15), §5.3 (p. 17).
+- Purser, D. A. (2003). *ASET and RSET: addressing some issues in relation
+  to occupant behaviour and tenability*. Fire Safety Science, 7, 91–102.
+  [doi:10.3801/IAFSS.FSS.7-91](https://doi.org/10.3801/IAFSS.FSS.7-91)
+- Babrauskas, V., Fleming, J. M., & Russell, B. D. (2010). *RSET/ASET, a
+  flawed concept for fire safety assessment*. Fire and Materials, 34(7),
+  341–355. [doi:10.1002/fam.1025](https://doi.org/10.1002/fam.1025)
 - Gwynne, S. M. V., & Boyce, K. E. (2016). *Engineering data*. SFPE
   Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
   [doi:10.1007/978-1-4939-2565-0_64](https://doi.org/10.1007/978-1-4939-2565-0_64)

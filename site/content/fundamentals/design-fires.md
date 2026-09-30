@@ -45,7 +45,9 @@ and Mehaffey 2016, p. 1271).
 
 The scenario is chosen for the goal of the analysis. For egress, a small
 fire at the main exit can matter more than a large fire elsewhere (Nilsson
-and Fahy 2016, p. 2048).
+and Fahy 2016, p. 2048). The same building can give very different ASET
+and RSET depending on whether occupants are awake or asleep and whether the
+fire smoulders or flames (Babrauskas et al. 2010, p. 353).
 
 A design fire is not meant to simulate every fire that could occur. It
 lets the engineer compare safety measures, and it is chosen by judgement
@@ -192,7 +194,10 @@ class:** it describes one item under one ignition, and a value such as
   and its arrangement. Contents change over the life of a building.
 - **Not a smoke source term.** The HRR does not fix the smoke. Soot and
   other product yields must be given separately (vfdb 2020, p. 60). For
-  visibility this matters as much as the HRR.
+  visibility this matters as much as the HRR. Yields are not constants
+  either: the CO yield can vary by a factor of about 50 between
+  well-ventilated and fuel-rich burning (Purser 2003, p. 93, citing
+  Tewarson).
 
 ## Known limits
 
@@ -252,6 +257,12 @@ Both fires start at t = 0 with no incipient phase.
 - Karlsson, B., & Quintiere, J. G. (2000). *Enclosure Fire Dynamics*. CRC
   Press, Boca Raton. §3.4.4 (Eq. 3.7, Tables 3.4–3.5), §3.5.1–3.5.4
   (Table 3.7). NFPA 204M is cited here through this book.
+- Purser, D. A. (2003). *ASET and RSET: addressing some issues in relation
+  to occupant behaviour and tenability*. Fire Safety Science, 7, 91–102,
+  p. 93. [doi:10.3801/IAFSS.FSS.7-91](https://doi.org/10.3801/IAFSS.FSS.7-91)
+- Babrauskas, V., Fleming, J. M., & Russell, B. D. (2010). *RSET/ASET, a
+  flawed concept for fire safety assessment*. Fire and Materials, 34(7),
+  341–355, p. 353. [doi:10.1002/fam.1025](https://doi.org/10.1002/fam.1025)
 
 How the fire reaches pyFDS-Evac: the FDS case supplies it, see
 [Your FDS case](/docs/fds-case-requirements.md). How ASET follows from it:

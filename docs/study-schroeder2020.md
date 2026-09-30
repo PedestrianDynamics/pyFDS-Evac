@@ -251,7 +251,10 @@ design FED of 0.3, or 0.1 for sensitive groups (p. 2343); vfdb gives
 0.1–0.3 (§8.4, p. 319). EA considers 1.0 suitable for the vast majority of
 occupants and leaves the margin to RSET (§5, p. 13). In the survey, 7 of
 the 13 continental-European respondents who stated a value use 0.1; all
-from the UK and Australia/New Zealand use 0.3 (§4.3).
+from the UK and Australia/New Zealand use 0.3 (§4.3). Babrauskas et al.
+(2010, p. 347) ask whether criteria should protect the average person, a
+chosen case of infirmity, or a level well below the mean, and find no
+agreement in the profession.
 
 **Smoke.** ISO 13571 leaves the behavioural effects of smoke out of its
 model (§4.6 f). Its obscuration endpoint, sight of about arm's length at
@@ -270,8 +273,12 @@ the survey (254 respondents, a convenience sample), visibility is the
 criterion most often decisive (91.4 %); FED is used by 22.2 %
 (§4.3–4.4).
 
-**Criticism.** Babrauskas et al. call such criteria "highly arbitrary"
-(2010, p. 347); the NIST sublethal-effects study puts a factor of two on
+**Criticism.** Babrauskas et al. call the tenability criteria proposed at
+the time (their example is the 2007 draft of ISO 13571) "highly arbitrary"
+with "little basis in either physics or physiology", and find no agreement
+on which population they should protect (2010, p. 347). Their paper
+predates the vfdb, EA, DIN and ISO 13571:2012 values above. The NIST
+sublethal-effects study puts a factor of two on
 its generic values (Gann et al. 2001, pp. 82–86).
 
 | Source | Kind | What reaching the value means | Time, height |
@@ -402,6 +409,10 @@ DIFF = 0 counts as a pass. DIFF is a time window between the first
 exceedance in a cell and the last presence of *any* agent there. It is not
 the exposure of an individual: "the exposure time of individuals cannot be
 concluded from this value" (p. 6). Dose is our addition.
+Because DIFF is a margin in seconds and not only a sign, the maps can
+compare versions by how much time each leaves, which is how Babrauskas et
+al. (2010, pp. 350–351) propose to use ASET − RSET. RSET here is the
+maximum over seeds, a high-end value rather than a typical one (p. 348).
 For per-agent exposure, see
 [A crowd in a real fire](first-fds-case.md#aset-rset).
 
@@ -441,7 +452,11 @@ and are outside the five DIFF states.*
 
 - **Pre-movement shifts min DIFF one for one.** It delays everyone by the
   same constant, so −30, −40, −60, −90 s carry no new information. Only the
-  area and C change shape across the pre-movement versions.
+  area and C change shape across the pre-movement versions. A constant
+  delay is a simplification: pre-movement is a distribution whose shape
+  depends on occupancy, warning and management, and in a dense room the
+  first movers, not the mean, set the queue (Purser 2003, pp. 92, 94–97).
+  The one-for-one shift holds only for a constant delay.
 - **C** is Σ DIFF · A over the failing cells, in m²s (paper Eq. 8, without
   the 20 s bins of Fig. 7 and the release code). The paper's authors "do not yet have a direct
   physical interpretation" of it (p. 7). Use it to rank versions, not as a
@@ -844,8 +859,13 @@ two thirds of the room (x up to 20.8 m). The late band on the 0.1 m grid is ther
   of fire smoke on survivability and health (SEFS): Phase I final report.*
   NIST TN 1439. [doi:10.6028/NIST.TN.1439](https://doi.org/10.6028/NIST.TN.1439)
 - Babrauskas, V., Fleming, J. M., & Russell, B. D. (2010). RSET/ASET, a
-  flawed concept for fire safety assessment. *Fire Mater.*, 34, 341–355.
+  flawed concept for fire safety assessment. *Fire Mater.*, 34, 341–355,
+  pp. 347–348, 350–351.
   [doi:10.1002/fam.1025](https://doi.org/10.1002/fam.1025)
+- Purser, D. A. (2003). ASET and RSET: addressing some issues in relation
+  to occupant behaviour and tenability. *Fire Safety Science*, 7, 91–102,
+  pp. 92, 94–97.
+  [doi:10.3801/IAFSS.FSS.7-91](https://doi.org/10.3801/IAFSS.FSS.7-91)
 - Węgrzyński, W., Spodyniuk, N., Zimny, M., Jahn, W., Vigne, G., & Arnold,
   L. (2026). Tenability criteria in performance-based fire safety
   engineering: practitioner's perspectives from a global survey. *Fire Saf.
