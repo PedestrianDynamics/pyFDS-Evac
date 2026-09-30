@@ -13,7 +13,8 @@ pyFDS-Evac crowds, and shows three things:
   temperature, CO, CO₂, radiation and dose, and which of them matter for
   this fire.
 - **RSET per cell.** When the last person leaves each cell (Schröder's §2.3).
-  This is the "ASET with regard to evacuation time" of the paper.
+  In Schröder's method this map is the evacuation side, compared with ASET
+  cell by cell.
 - **DIFF = ASET − RSET.** Where in the room the smoke arrives before the
   last person has left, and how the door-flow model, pre-movement and a
   second door move that.
@@ -39,9 +40,10 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:
 | C (bin-free) | −108 m²s | −83 m²s | – |
 
 - **Smoke sets ASET here.** Every cell reaches K ≥ 0.23 1/m at 2.0 m, the
-  last one at 88 s. The EA limits and the FED limits are not reached in any
-  cell by 600 s. The vfdb CO and CO₂ values are reached only in plume cells
-  on the 0.1 m grid, which is grid-dependent.
+  last one at 88 s (0.2 m grid; 203 s on the 0.1 m grid). EA's temperature,
+  radiation and CO limits, the gas FED and the convective heat FED are not
+  reached in any cell by 600 s. The vfdb CO and CO₂ values are reached only
+  in plume cells on the 0.1 m grid, which is grid-dependent.
 - **Only the queue fails.** The negative cells are the corner in front of
   the door, where people wait at the capped exit.
 - **The door-flow model decides the sign.** Without the cap, the room
@@ -52,12 +54,6 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:
   have not found why ([below](#against-the-paper)).
 
 ## The room
-
-![Four RSET maps of the 30 by 10 m room, shaded from white (0 s) to dark blue (about 125 s), with the burner as a red square in the south-west corner and the exits as green bars. (a) One door, capped: dark blue in the north-east corner in front of the door, latest 105 s. (b) One door, uncapped: pale everywhere, latest 35 s. (c) Two doors, capped: blue at both doors, latest 65 s. (d) Two doors, N = 200, capped: dark blue at both doors, latest 124 s.](/images/studies/schroeder2020/rset_maps.png)
-
-*RSET maps of four versions (next section). The plan is the same in every
-figure: 30 m × 10 m, burner red in the south-west corner, exit green on
-the east wall, grey cells never visited by any agent.*
 
 A 30 × 10 × 3 m room with one door, a fire in the opposite corner and 100
 people who all start moving at once (paper §2.1). The paper leaves out the
@@ -137,8 +133,9 @@ FED 0.054 / 0.139.
 - **Gas FED ≥ 0.3** is the dose of someone standing still from ignition,
   with the pyFDS-Evac form of the FDS+Evac FED
   ([Fractional effective dose](/models/fed.md)). ISO 13571:2012 §5.4 and
-  A.5.2 give 0.3 as the level that protects most of a susceptible
-  population. No HCN is set, so its term is zero.
+  A.5.2 give 0.3 as a reduced threshold for more susceptible people; at
+  0.3 about 11.4 % of a population would still be susceptible (see
+  [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)). No HCN is set, so its term is zero.
 - **Heat FED ≥ 0.3** uses the clothed convective form of ISO 13571:2012
   §8.3.1, Eq. (9) ([Heat](/models/heat.md)). ISO sets no threshold for heat
   (§8.5); the 0.3 is a pyFDS-Evac choice, by analogy with A.5.2.
@@ -154,14 +151,14 @@ FED 0.054 / 0.139.
 
 ### The ASET maps
 
-![Four plan views of the one-door room at 2.0 m, shaded from dark (0 to 10 s) to light (150 to 600 s), beige for not by 600 s. (a) K ≥ 0.23 per metre: the burner corner exceeds first, within 10 s, the west half by about 40 s, the door region last at 75 to 88 s. (b) K ≥ 0.3 per metre: almost the same. (c) T ≥ 45 °C: only 15 cells at the burner; everything else beige, with a note that gas temperature is not to be assessed without smoke density. (d) Which criterion is first: smoke in every cell, a tie with temperature in 4 cells at the burner.](/images/studies/schroeder2020/aset_criteria_1door.png)
+![Four plan views of the one-door room at 2.0 m, shaded from dark (0 to 10 s) to light (150 to 600 s), beige for not by 600 s. (a) K ≥ 0.23 per metre: the burner corner exceeds first, within 10 s, the west half by about 40 s, the door region at about 75 s and the south-east corner last, at 80 to 88 s. (b) K ≥ 0.3 per metre: almost the same. (c) T ≥ 45 °C: only 15 cells at the burner; everything else beige, with a note that gas temperature is not to be assessed without smoke density. (d) Which criterion is first: smoke in every cell, a tie with temperature in 4 cells at the burner.](/images/studies/schroeder2020/aset_criteria_1door.png)
 
 *One door, 0.2 m FDS grid. Dotted beige: not by 600 s, censored and not
 filled with a value.*
 
 Smoke fills the room from the burner corner eastward. The burner corner
-exceeds first, within 10 s; the door region is among the last parts to
-reach the limit, at 75–88 s.
+exceeds first, within 10 s. The door cells follow at about 75 s, and the
+south-east corner is last, at 80–88 s.
 
 {{< details title="Two doors, and the 0.1 m grid" closed="true" >}}
 
@@ -176,8 +173,8 @@ at 21–32 s, the cells at the east door D1 at 73–76 s.*
 *The same ASET map on two FDS grids. Mean |Δ| 9 s; 6 % of cells differ by
 more than 30 s. In the door region (x ≥ 24 m, y ≥ 6 m) |Δ| is at most 16 s
 (95th percentile 7 s). The 0.1 m grid has a late pocket near the fire
-(latest cell 203 s against 88 s) beside the plume, around x ≈ 1.5–5 m and
-y ≈ 1–6 m; it is not grid-converged.*
+(latest cell 203 s against 88 s) beside the plume, at x ≈ 1–3 m and
+y ≈ 1.5–5 m; it is not grid-converged.*
 
 {{< /details >}}
 
@@ -219,8 +216,13 @@ not door-flow physics, and it has no test yet
 
 ### The RSET maps
 
-The figure at the top of the page shows RSET for four versions. With the
-cap, RSET is highest in the corner in front of the door, where the queue
+![Four RSET maps of the 30 by 10 m room, shaded from white (0 s) to dark blue (about 125 s), with the burner as a red square in the south-west corner and the exits as green bars. (a) One door, capped: dark blue in the north-east corner in front of the door, latest 105 s. (b) One door, uncapped: pale everywhere, latest 35 s. (c) Two doors, capped: blue at both doors, latest 65 s. (d) Two doors, N = 200, capped: dark blue at both doors, latest 124 s.](/images/studies/schroeder2020/rset_maps.png)
+
+*RSET, maximum over n = 10 seeds, 0.6 m cells. The plan is the same in
+every figure: 30 m × 10 m, burner red in the south-west corner, exits
+green, grey cells never visited by any agent.*
+
+With the cap, RSET is highest in the corner in front of the door, where the queue
 forms (105 s). Without it, no cell is occupied after 35 s. With two doors,
 N = 100 capped, the room is empty by 65 s; with N = 200, by 124 s.
 
@@ -358,7 +360,9 @@ between the grids.
 
 - **∃ against ∀.** The paper's text (§2.2.3) counts a cell as exceeded when
   the criterion holds at any data point in it; Eq. 2 as printed reads "for
-  all". We follow the text (∃); the ∀ row shows the difference.
+  all". We follow the text (∃); the ∀ rows show the difference. They
+  count a cell as exceeded from the first 1 s step at which every FDS node
+  in it exceeds at the same time.
 - **The 120 s fill.** The paper gives cells that never exceed within 120 s
   the value 120 s (p. 4). We keep them open ("not by 600 s"). On the 0.2 m
   grid every cell exceeds by 88 s, so nothing changes. On the 0.1 m grid
