@@ -20,9 +20,9 @@ study inputs, not design fires:
 
 - T-junction: HRRPUA and RAMP_Q read from ``assets/t_junction/t_junction.fds``
   (HRRPUA times the area of the FIRE vent, scaled by the ramp fraction).
-- Schroeder room: a constant 60 kW, our assumption
-  (``docs/study-schroeder2020.md``, "The room"). The deck is not in the
-  repository, so the value is written here.
+- Schroeder et al. (2020): a constant 60 kW, the authors' value from their
+  reference implementation (``docs/study-schroeder2020.md``, "The room").
+  The deck is not in the repository, so the value is written here.
 
 Run from the repository root::
 
@@ -183,9 +183,9 @@ def main():
     )
     ax_b.plot([0, 300], [60, 60], color=c_room, lw=2.6, zorder=5)
     ax_b.text(
-        120,
+        75,
         130,
-        "Schröder room: constant 60 kW (assumed)",
+        "Schröder et al. (2020): constant 60 kW (authors' value)",
         fontsize=8.5,
         color=c_room,
         weight="semibold",

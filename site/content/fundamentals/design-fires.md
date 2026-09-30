@@ -18,7 +18,7 @@ fire: the fire is part of the FDS case you supply. The study fires in the
 defaults.
 {{< /callout >}}
 
-![Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s and the constant 60 kW Schröder-room fire, drawn against the fast and ultra-fast classes](/images/fundamentals/design_fires.png)
+![Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s and the constant 60 kW fire of the Schröder et al. (2020) study, drawn against the fast and ultra-fast classes](/images/fundamentals/design_fires.png)
 
 *(a) The four t² classes of vfdb Table 4.3 and SFPE Eqs. 14.49–14.52. Each
 curve is solid up to its growth time, when it reaches 1055 kW, and dashed

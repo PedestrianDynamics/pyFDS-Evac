@@ -46,7 +46,7 @@ LIMIT = 0.23  # 1/m, the page's headline criterion
 LATE = 120.0  # s, the paper's fill time; "late" nodes exceed only after it
 Z_TREE = np.linspace(0.2, 2.8, 14)  # the 14 points of every tree
 TREES = (
-    ("W", (5.1, 5.1), "4 m from the fire"),
+    ("W", (5.1, 5.1), "about 6 m from the fire"),
     ("C", (15.1, 5.1), "mid-room"),
     ("E", (25.1, 8.9), "5 m from the door"),
 )
