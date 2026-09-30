@@ -21,9 +21,10 @@ with our own FDS fire and pyFDS-Evac crowds, and shows three things:
 
 {{< callout type="info" >}}
 This re-runs the paper's demonstration case with our own FDS and our own
-evacuation model. None of the authors' output data is used; their published
-inputs are cited where we compare. It is **not** a reproduction of their
-figures. pyFDS-Evac does not build these maps itself; the script
+evacuation model. The authors published their inputs, code and results
+([Zenodo, doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550));
+we cite them where we compare, but our maps come from our own runs. It is
+**not** a reproduction of their figures. pyFDS-Evac does not build these maps itself; the script
 `scripts/docs/schroeder_room_maps.py` does. A built-in version is planned in
 [#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210). This is
 research software and one room: nothing here is a design or safety verdict.
@@ -679,8 +680,8 @@ taken from the authors' reference implementation
 
 **Deviations from the paper**
 
-- **Our own FDS and model.** None of the authors' output data is used;
-  their published inputs are cited where we compare.
+- **Our own FDS and model.** Our maps come from our own runs; the authors'
+  published release (doi:10.5281/zenodo.3875550) is cited where we compare.
 - **Our door is 0.2 m wider** than the reference implementation's 1.0 m.
   We took 1.2 m from the paper's Fig. 2.
 - **The release differs from the paper's text in three map rules.** Its
