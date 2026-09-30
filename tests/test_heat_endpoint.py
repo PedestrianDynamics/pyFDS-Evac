@@ -421,7 +421,7 @@ def temperature_only_case(monkeypatch):
     monkeypatch.setattr(
         run_config.FdsHeatField,
         "from_fds",
-        classmethod(lambda cls, _d, slice_height_m=1.6: cls(sampler=None)),
+        classmethod(lambda cls, _d, slice_height_m=1.6, **_: cls(sampler=None)),
     )
 
 

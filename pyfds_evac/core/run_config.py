@@ -20,6 +20,7 @@ from typing import Any
 
 from .cognitive_map import familiarity_probability
 from .fds_inventory import inspect_fds_quantities
+from .fds_sampling import fds_output_horizon
 from .fed import (
     DEFAULT_HEAT_CLOTHING,
     DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
@@ -81,12 +82,55 @@ def _build_smoke_model(opts: Any, log: Logger):
         field = ExtinctionField.from_fds(
             smoke_config.fds_dir,
             slice_height_m=smoke_config.slice_height_m,
+            allow_horizon_hold=_allow_hold(opts),
         )
     else:
         field = None
     if field is None:
         return None
     return SmokeSpeedModel(field, smoke_config)
+
+
+def _allow_hold(opts: Any) -> bool:
+    """Return whether sampling may hold the last FDS frame (#340)."""
+    return bool(getattr(opts, "allow_fds_horizon_hold", False))
+
+
+def _check_fds_horizon(scenario: Any, opts: Any, log: Logger = _noop) -> None:
+    """Raise ValueError when the run can outlast the FDS output (#340).
+
+    Past the last FDS frame there is no smoke data; the samplers raise there
+    too, but only once the run gets that far.  Failing at setup saves the
+    run.  With ``--allow-fds-horizon-hold`` the overrun is logged instead.
+    """
+    overrun = _fds_horizon_overrun(scenario, opts)
+    if overrun is None:
+        return
+    if _allow_hold(opts):
+        log(f"Warning: {overrun}; holding the last frame from there on.")
+        return
+    raise ValueError(
+        f"{overrun}. Lower max_simulation_time, extend T_END in the FDS run, "
+        "or pass --allow-fds-horizon-hold to hold the last frame."
+    )
+
+
+def _fds_horizon_overrun(scenario: Any, opts: Any) -> str | None:
+    """Describe how max_simulation_time outlasts the FDS output, or None."""
+    max_time = getattr(scenario, "max_simulation_time", None)
+    if not opts.fds_dir or max_time is None:
+        return None
+    horizon = fds_output_horizon(opts.fds_dir)
+    if horizon is None:
+        return None
+    last, interval = horizon
+    if float(max_time) <= last + interval:
+        return None
+    return (
+        f"max_simulation_time={float(max_time):.1f} s runs past the FDS output "
+        f"of {opts.fds_dir}, which ends at t={last:.1f} s (output interval "
+        f"{interval:.1f} s)"
+    )
 
 
 def _has_extinction_slice(fds_dir: str) -> bool:
@@ -127,7 +171,11 @@ def _build_fed_model(opts: Any, log: Logger):
         o2_threshold_percent=getattr(opts, "o2_threshold_percent", 20.0),
     )
     return DefaultFedModel(
-        FdsFedField.from_fds(opts.fds_dir, slice_height_m=opts.smoke_slice_height),
+        FdsFedField.from_fds(
+            opts.fds_dir,
+            slice_height_m=opts.smoke_slice_height,
+            allow_horizon_hold=_allow_hold(opts),
+        ),
         fed_config,
     )
 
@@ -191,7 +239,10 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         slice_height_m=opts.smoke_slice_height,
     )
     radiant_source = getattr(opts, "heat_radiant_source", "gas")
-    field_kwargs = {"slice_height_m": opts.smoke_slice_height}
+    field_kwargs = {
+        "slice_height_m": opts.smoke_slice_height,
+        "allow_horizon_hold": _allow_hold(opts),
+    }
     if radiant_source == "integrated-intensity":
         _check_integrated_intensity_source(opts, method, inventory)
         field_kwargs["integrated_intensity"] = True
@@ -269,7 +320,9 @@ def _heat_layer_kwargs(opts: Any) -> dict[str, Any]:
     return {
         "regime": regime,
         "layer_field": FdsHeatField.from_fds(
-            opts.fds_dir, slice_height_m=opts.heat_layer_height
+            opts.fds_dir,
+            slice_height_m=opts.heat_layer_height,
+            allow_horizon_hold=_allow_hold(opts),
         ),
         "view_factor": opts.heat_view_factor,
         "layer_emissivity": opts.heat_layer_emissivity,
@@ -397,6 +450,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
         time_step_s=opts.reroute_interval,
         slice_height_m=opts.smoke_slice_height,
         max_sign_distance_m=max_distance,
+        allow_horizon_hold=_allow_hold(opts),
     )
 
 
@@ -455,6 +509,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
     ``vis_model``). Raises ``ValueError`` for invalid option combinations.
     """
     validate_opts(opts)
+    _check_fds_horizon(scenario, opts, log)
     smoke_speed_model = _build_smoke_model(opts, log)
     fed_model = _build_fed_model(opts, log)
     heat_fed_model = _build_heat_fed_model(opts, log)

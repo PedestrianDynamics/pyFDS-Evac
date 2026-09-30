@@ -46,6 +46,9 @@ _DEFAULT_OPTS = dict(
     fed_threshold=1.0,
     output_route_cost_history=None,
     enable_heat_fed=True,
+    # The 3 s fixture pairs with a 1000 s scenario; these tests only build the
+    # models, so the setup horizon check (#340) is out of their scope.
+    allow_fds_horizon_hold=True,
 )
 
 

@@ -502,7 +502,18 @@ class VisibilityModel:
     Cache format: numpy npz containing the visibility arrays and metadata.
     The cache is safe to load (no pickle / no arbitrary code execution).
     Metadata mismatches trigger an automatic recompute and cache refresh.
+
+    A model built from FDS output raises ``FdsHorizonError`` for a query past
+    its last time point, the first vismap step at or after the FDS end, so
+    at most one step past T_END; unless
+    *allow_horizon_hold* is set: then the last time point is held and one
+    warning is logged.  A clear-air model is time-invariant and never raises.
     """
+
+    # (last time point, time step) of an FDS-built model; None for clear air.
+    _horizon: tuple[float, float] | None = None
+    _allow_horizon_hold = False
+    _warned_horizon = False
 
     def __init__(
         self,
@@ -514,6 +525,7 @@ class VisibilityModel:
         slice_height_m: float = 1.6,
         force_recompute: bool = False,
         max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
+        allow_horizon_hold: bool = False,
     ) -> None:
         cache = Path(cache_path) if cache_path else None
         _check_max_sign_distance(max_sign_distance_m)
@@ -536,6 +548,9 @@ class VisibilityModel:
             expected_meta,
             max_sign_distance_m,
         )
+        times = np.asarray(self._vis._time_points, dtype=float)
+        self._horizon = (float(times[-1]), fds_sampling._output_interval(times))
+        self._allow_horizon_hold = allow_horizon_hold
         # Map node_id → internal waypoint index (insertion order preserved)
         self._wp_ids: dict[str, int] = {
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
@@ -647,6 +662,29 @@ class VisibilityModel:
         model._sign_xy = _sign_positions(sign_descriptors)
         return model
 
+    def _check_horizon(self, time: float) -> None:
+        """Raise, or warn once, when *time* is past the vismap time points."""
+        if self._horizon is None:
+            return
+        last, interval = self._horizon
+        if time <= last:
+            return
+        message = fds_sampling.horizon_error_message(
+            "sign visibility", time, last, interval
+        )
+        if not self._allow_horizon_hold:
+            raise fds_sampling.FdsHorizonError(message)
+        if self._warned_horizon:
+            return
+        self._warned_horizon = True
+        _logger.warning(
+            "Sign visibility past the FDS output (t=%.1f s > %.1f s): holding "
+            "the last time point for the rest of the run "
+            "(--allow-fds-horizon-hold).",
+            time,
+            last,
+        )
+
     def node_is_visible(self, time: float, x: float, y: float, node_id: str) -> bool:
         """Return True if the sign at *node_id* is visible from (x, y) at *time*.
 
@@ -657,6 +695,7 @@ class VisibilityModel:
         wp_id = self._wp_ids.get(node_id)
         if wp_id is None:
             return True
+        self._check_horizon(float(time))
         # A clear-air model computes one time point; fdsvismap resolves any
         # query time onto a uniform field itself, so no clamping is needed here.
         return bool(self._vis.wp_is_visible(time=time, x=x, y=y, waypoint_id=wp_id))
@@ -682,6 +721,7 @@ class VisibilityModel:
         wp_id = self._wp_ids.get(node_id)
         if wp_id is None:
             return None
+        self._check_horizon(float(time))
         reader = getattr(self._vis, "visibility_to_wp", None)
         if reader is None:
             reader = getattr(self._vis, "get_visibility_to_wp", None)

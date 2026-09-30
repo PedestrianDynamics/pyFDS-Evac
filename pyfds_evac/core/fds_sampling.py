@@ -26,12 +26,52 @@ _logger = logging.getLogger(__name__)
 _SLICE_HEIGHT_TOLERANCE_M = 0.5
 
 
-class SliceFieldSampler:
-    """Sample one ``fdsreader`` slice quantity with nearest-neighbor lookup."""
+class FdsHorizonError(ValueError):
+    """A sample was requested past the end of the FDS output.
 
-    def __init__(self, slice_obj):
+    A subclass of ``ValueError`` that callers must not treat as the
+    out-of-domain ``ValueError``: past the horizon there is no smoke data, so
+    returning clear air or zero dose would be as wrong as holding the last
+    frame.
+    """
+
+
+def _output_interval(times) -> float:
+    """Return the output interval of a time array, 0 for one frame.
+
+    The largest frame spacing, not the last one: FDS clips the final frame
+    at T_END, so the last spacing can be a fraction of the output interval.
+    """
+    if len(times) < 2:
+        return 0.0
+    return float(np.max(np.diff(np.asarray(times, dtype=float))))
+
+
+def horizon_error_message(
+    quantity: str, time_s: float, last_s: float, interval_s: float
+) -> str:
+    """Return the error text for a sample requested past the FDS output."""
+    return (
+        f"'{quantity}' requested at t={time_s:.1f} s, but the FDS output ends "
+        f"at t={last_s:.1f} s (output interval {interval_s:.1f} s). Extend "
+        "T_END in the FDS run, shorten the evacuation run, or pass "
+        "--allow-fds-horizon-hold to hold the last frame."
+    )
+
+
+class SliceFieldSampler:
+    """Sample one ``fdsreader`` slice quantity with nearest-neighbor lookup.
+
+    A time more than one output interval past the last slice frame raises
+    ``FdsHorizonError``, unless *allow_horizon_hold* is set: then the last
+    frame is held and one warning is logged.
+    """
+
+    def __init__(self, slice_obj, *, allow_horizon_hold: bool = False):
         """Cache the slice object and its subslices for repeated sampling."""
         self._slice = slice_obj
+        self._allow_horizon_hold = allow_horizon_hold
+        self._warned_horizon = False
         self._subslices = list(slice_obj.subslices)
         self._last_subslice = None
         self._cached_time_s: float | None = None
@@ -103,19 +143,54 @@ class SliceFieldSampler:
             self._axes_cache[key] = axes
         return axes
 
+    @property
+    def end_time_s(self) -> float:
+        """Return the time of the last slice frame [s]."""
+        return float(self._slice.times[-1])
+
+    @property
+    def output_interval_s(self) -> float:
+        """Return the output interval of the slice frames [s]."""
+        return _output_interval(self._slice.times)
+
+    def _check_horizon(self, time_s: float) -> None:
+        """Raise, or warn once, when *time_s* is past the slice output."""
+        last = self.end_time_s
+        interval = self.output_interval_s
+        if time_s <= last + interval:
+            return
+        quantity = self._slice.quantity.name
+        message = horizon_error_message(quantity, time_s, last, interval)
+        if not self._allow_horizon_hold:
+            raise FdsHorizonError(message)
+        if self._warned_horizon:
+            return
+        self._warned_horizon = True
+        _logger.warning(
+            "'%s' past the FDS output (t=%.1f s > %.1f s): holding the last "
+            "frame for the rest of the run (--allow-fds-horizon-hold).",
+            quantity,
+            time_s,
+            last,
+        )
+
     def sample(self, time_s: float, x: float, y: float) -> float:
-        """Return the sampled scalar value at one time and x/y point."""
+        """Return the sampled scalar value at one time and x/y point.
+
+        Raises ``FdsHorizonError`` past the FDS output (see the class), and
+        ``ValueError`` for a point outside the slice.
+        """
+        ts = float(time_s)
+        if ts != self._cached_time_s:
+            self._check_horizon(ts)
+            self._cached_time_s = ts
+            self._cached_t_index = int(self._slice.get_nearest_timestep(ts))
+        t_index = self._cached_t_index
         subslice = self._find_subslice(float(x), float(y))
         if subslice is None:
             raise ValueError(
                 f"Point ({x}, {y}) is outside the sampled FDS slice domain"
             )
-
-        ts = float(time_s)
-        if ts != self._cached_time_s:
-            self._cached_time_s = ts
-            self._cached_t_index = int(self._slice.get_nearest_timestep(ts))
-        t_index = self._cached_t_index
         xs, ys = self._axes(subslice)
         i_index = self._nearest_index(xs, float(x))
         j_index = self._nearest_index(ys, float(y))
@@ -175,6 +250,7 @@ def load_slice_sampler(
     *,
     simulation=None,
     slice_height_m: float | None = None,
+    allow_horizon_hold: bool = False,
 ) -> SliceFieldSampler:
     """Load one FDS slice quantity and return a ready-to-use sampler.
 
@@ -195,6 +271,9 @@ def load_slice_sampler(
     slice_height_m : optional
         Desired z-height for horizontal slices.  When given, the slice
         whose z-extent is closest to this value is selected.
+    allow_horizon_hold : optional
+        Hold the last frame past the FDS output instead of raising
+        ``FdsHorizonError`` (see ``SliceFieldSampler``).
 
     Raises ModuleNotFoundError if fdsreader is not installed, or
     IndexError if none of the requested quantities are found in the FDS case.
@@ -215,7 +294,24 @@ def load_slice_sampler(
         tried = ", ".join(f"'{c}'" for c in candidates)
         raise IndexError(f"No slice with quantity {tried} found in {fds_dir}")
     chosen = select_horizontal_slice(matches, slice_height_m, name, fds_dir)
-    return SliceFieldSampler(chosen)
+    return SliceFieldSampler(chosen, allow_horizon_hold=allow_horizon_hold)
+
+
+def fds_output_horizon(fds_dir: str, *, simulation=None) -> tuple[float, float] | None:
+    """Return (last time, output interval) [s] of the FDS slice output.
+
+    Every slice in the case counts, read or not: the one whose last time
+    plus output interval comes first sets the horizon.  A single-frame slice
+    has no interval and is skipped (its sampler still raises if read).  None
+    when the case has no slice with two frames.
+    """
+    sim = simulation if simulation is not None else Simulation(str(fds_dir))
+    ends = [
+        (float(s.times[-1]), _output_interval(s.times))
+        for s in sim.slices
+        if len(s.times) > 1
+    ]
+    return min(ends, key=sum) if ends else None
 
 
 def select_horizontal_slice(

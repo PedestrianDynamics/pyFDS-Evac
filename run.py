@@ -95,6 +95,13 @@ def _build_parser() -> argparse.ArgumentParser:
         "previous pyFDS-Evac default)",
     )
     parser.add_argument(
+        "--allow-fds-horizon-hold",
+        action="store_true",
+        help="Hold the last FDS frame when the run outlasts the FDS output "
+        "(one warning per quantity). Without it, a max_simulation_time past "
+        "the FDS end time is an error at setup, and so is any sample past it.",
+    )
+    parser.add_argument(
         "--output-smoke-history",
         help="Write smoke speed/extinction history to CSV",
     )

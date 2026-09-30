@@ -34,7 +34,7 @@ Under `config.simulation_settings`.
 
 | Key | Default | Effect |
 |---|---|---|
-| `simulationParams.max_simulation_time` | 300 s | The run stops here. An incapacitated agent keeps a run going until this time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)). |
+| `simulationParams.max_simulation_time` | 300 s | The run stops here. An incapacitated agent keeps a run going until this time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)). With `--fds-dir` it must not exceed the last FDS slice time by more than one output interval, unless `--allow-fds-horizon-hold` is given ([#340](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340)). |
 | `simulationParams.model_type` | `"CollisionFreeSpeedModel"` | The JuPedSim movement model. |
 | `baseSeed` | 42 | Random seed; `run.py --seed` overrides it. |
 
