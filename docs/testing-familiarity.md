@@ -20,6 +20,16 @@ aliases: [/docs/testing-familiarity/, /models/verification/testing-familiarity/]
 agent is heading for (full: CP3 until it passes the door, then the exit;
 discovery: its current route target). Thick ring: a patrol (`wander`).*
 
+{{< callout type="warning" >}}
+The results, figures and pass-criteria verdicts on this page come from
+runs that predate the per-distribution seeds of
+[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360) and the
+exit rule of [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349).
+The commands below now give different results, and not only in the numbers;
+the re-run is tracked in
+[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384).
+{{< /callout >}}
+
 ## What is tested
 
 Whether `familiarity` changes what an agent knows, and only that. The two
@@ -146,25 +156,25 @@ frontier. The dashed legs are patrols: agents that turned back at CP3's door.
 |---|---|---|
 | full: map at t = 0; later changes | 6 nodes, 11 edges; 0 | 20 / 20; 0 |
 | full: agents via CP3 only; route changes | 20 / 20; 0 | 20 / 20; 0 |
-| full: walked / shortest path | ≥ 1 | 1.04–1.18 |
-| full: first agent out (sanity check) | near \(t_{\text{ref}}\) = 21.1 s | 19.9 s |
-| full: last agent out | no reference | 34.6 s; the door (y = 13.05 m) passes 20 agents in 7.7–21.8 s, 1.35 persons/s or 1.13 persons/(s·m) of door width |
+| full: walked / shortest path | ≥ 1 | 1.02–1.18 |
+| full: first agent out (sanity check) | near \(t_{\text{ref}}\) = 21.1 s | 20.5 s |
+| full: last agent out | no reference | 34.5 s; the door (y = 13.05 m) passes 20 agents in 7.7–21.8 s, 1.35 persons/s or 1.13 persons/(s·m) of door width |
 | discovery: map at t = 0 | {S, CP0, CP3} | 20 / 20 |
 | discovery: first target | CP0, 20 / 20 | 20 / 20 |
 | discovery: nodes learnt later | each a neighbour of a known node, its sign in sight | 52 of 52 |
 | discovery: tour up to CP3 | CP0 → CP1 → CP2 → CP3 where CP2's sign is legible at CP1 | 16 / 20; agents 1, 6, 7 and 17 go from CP0 to CP3: CP1 was never learnt, its sign not certainly legible where they were (see above) |
 | discovery: patrols started with the exit in sight | 0 | 0 of 6; those at CP3 at y = 12.84–12.88 m |
-| discovery: first agent out (sanity check) | near \(t_{\text{ref}}\) = 40.0 s | 27.6 s, one of the 4 agents that skip the west rooms |
-| discovery: last agent out | no reference | 109.3 s; 2 agents turned back at CP3 |
+| discovery: first agent out (sanity check) | near \(t_{\text{ref}}\) = 40.0 s | 27.5 s, one of the 4 agents that skip the west rooms |
+| discovery: last agent out | no reference | 109.7 s; 2 agents turned back at CP3 |
 
 On other grids:
 
 | Sight grid | Cells across a 0.1 m wall | Last out | Turned back at CP3 | Last out, never turned back |
 |---|---|---|---|---|
-| 0.25 m | 0 | 67.6 s | 0 | 67.6 s |
-| 0.1 m | 1 | 225.4 s | 7 | 91.2 s |
-| 0.05 m | 2 | 109.3 s | 2 | 72.8 s |
-| 0.025 m | 4 | 149.5 s | 2 | 72.7 s |
+| 0.25 m | 0 | 68.1 s | 0 | 68.1 s |
+| 0.1 m | 1 | 226.0 s | 7 | 91.0 s |
+| 0.05 m | 2 | 109.7 s | 2 | 72.5 s |
+| 0.025 m | 4 | 149.8 s | 2 | 72.5 s |
 
 The agents that never turn back are out by 68–91 s on every grid. The grid
 dependence is the turn-back at CP3
@@ -227,7 +237,7 @@ exact geometry (11 of them CP2, learnt from the next room).
 | Grid | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
 | 0.1 m | pass | pass | pass | **fails**: 4 agents skip CP1 | pass | – |
-| 0.05 m | pass | pass | pass | **fails**: 4 agents skip CP1 | pass | **fails**: 109.3 vs 149.5 s |
+| 0.05 m | pass | pass | pass | **fails**: 4 agents skip CP1 | pass | **fails**: 109.7 vs 149.8 s |
 | 0.025 m | pass | pass | pass | **fails**: 4 agents skip CP1 | pass | – |
 
 Criterion 4 allows a skip of CP2 only. The 4 agents that skip CP1 as well
@@ -265,10 +275,8 @@ uv run python scripts/verification/familiarity_figures.py --data <out>
 ```
 
 Each run takes seconds. The script prints every number on this page. The
-runs used here (the branch of
-[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349) at
-`9505bb8`, clean tree, macOS arm64) are in the project's data folder,
-`fds-evac-data/familiarity_test_discovery/evac_9505bb8/`, made with
+runs used here (commit `8c0c02d`, macOS arm64) are in the project's data
+folder, `fds-evac-data/familiarity_test_discovery/evac_8c0c02d/`, made with
 the commands above.
 
 Reruns on the same machine reproduce these numbers to the last digit. Across
@@ -295,7 +303,7 @@ movie.
   deck; a warning for grids coarser than the walls is proposed in
   [#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168).
 - **No reference for the egress times.** The full run's last agent is out at
-  34.6 s. Its door passes 1.35 persons/s (1.13 persons/(s·m) of the 1.2 m
+  34.5 s. Its door passes 1.35 persons/s (1.13 persons/(s·m) of the 1.2 m
   door), measured where the agents cross the door's mid-line. No
   hand-calculated door flow is compared here.
 - **One exit, clear air.** Choosing between several known exits, and learning

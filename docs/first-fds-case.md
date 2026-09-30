@@ -12,6 +12,15 @@ the [Real-FDS walkthrough](walkthrough.md) (small tracked FDS cases). Unlike
 those, it needs FDS output that is not in the repository; step 3 says how to
 get it.
 
+{{< callout type="warning" >}}
+The outputs, numbers and figures on this page come from
+runs that predate the per-distribution seeds of
+[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360) and the
+exit rule of [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349).
+The commands below now give different results; the re-run is tracked in
+[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384).
+{{< /callout >}}
+
 ## 1. Check the scenario runs
 
 Run every command on this page from the repository root, in the environment
@@ -25,7 +34,7 @@ uv run python examples/first_fds_case.py
 The last line of the output is:
 
 ```text
-evacuated: 143/150 in 300 s
+evacuated: 144/150 in 300 s
 ```
 
 ## 2. The scenario
@@ -144,7 +153,7 @@ Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0
 Initialization finished.
 Simulation started.
 …
-Simulation stopped after 300.00 s (75/150 evacuated, 75 remaining).
+Simulation stopped after 300.00 s (76/150 evacuated, 74 remaining).
 Route switches: 173
 ```
 
@@ -224,7 +233,7 @@ if FDS_DIR is not None:
 ```
 
 ```text
-evacuated: 75/150 in 300 s
+evacuated: 76/150 in 300 s
 FED max:   0.37
 route changes: {'smoke_reroute': 8, 'wander': 165}
 ```
@@ -240,7 +249,7 @@ uv run python scripts/docs/first_fds_case_figures.py --data "$FDS" --runs tj
 
 ### Where the agents went
 
-![Two plan views of walked trajectories; in clear air all 143 agents who left walk from the branch to exit B, 7 are still in the branch; in the fire, 8 agents walk left to exit A, 67 walk past the burner to exit B, and 75 are still in the branch or at the junction at 300 s](/images/first-fds-case/trajectories.png)
+![Two plan views of walked trajectories; in clear air all 144 agents who left walk from the branch to exit B, 6 are still in the branch; in the fire, 8 agents walk left to exit A, 68 walk past the burner to exit B, and 74 are still in the branch or at the junction at 300 s](/images/first-fds-case/trajectories.png)
 
 In clear air everyone takes the nearer exit B. In the fire, 8 early agents
 turn to exit A as smoke builds up on B's side. Half the agents are still inside at
@@ -255,7 +264,7 @@ agents the smoke has slowed. From about 120 s almost every agent crawls.
 
 ### Evacuated over time
 
-![Number of agents out of the building against time; the clear-air curve follows the spawn line and reaches 143 at 300 s; the fire curve falls behind from about 45 s and reaches 75](/images/first-fds-case/evacuated.png)
+![Number of agents out of the building against time; the clear-air curve follows the spawn line and reaches 144 at 300 s; the fire curve falls behind from about 45 s and reaches 76](/images/first-fds-case/evacuated.png)
 
 In clear air, agents leave about as fast as they arrive. In the fire, the gap
 opens at about 45 s, when the smoke has filled the junction.
@@ -277,7 +286,7 @@ and from 120 s the median agent is there.
 
 ### Exit usage
 
-![Stacked horizontal bars: clear air, 143 through exit B and 7 inside; fire, 8 through exit A, 67 through exit B and 75 inside](/images/first-fds-case/exits.png)
+![Stacked horizontal bars: clear air, 144 through exit B and 6 inside; fire, 8 through exit A, 68 through exit B and 74 inside](/images/first-fds-case/exits.png)
 
 The route log explains the fire run. The 8 agents who switched to exit A
 (`smoke_reroute`) did so in the first 26 s, and all 8 left by it. 18 agents,
@@ -338,9 +347,9 @@ every number in this section. The report starts with:
 
 ```text
 agents 150, spawned last at 298 s
-trajectory: 75 left before 300 s, last exit 295.0 s
+trajectory: 76 left before 300 s, last exit 299.8 s
 counted out (exit < 299 s) 75, censored 75
-travel time median 89.1 s, max 148.4 s
+travel time median 88.1 s, max 147.4 s
 ```
 
 {{< checkpoint title="Script finished" >}}
@@ -353,12 +362,11 @@ in `records`, the run files are not from this deck: the HCl conversion below
 holds only when HCl is the only irritant.
 {{< /checkpoint >}}
 
-**Who counts as out.** The run reports 75 evacuated, and so does the
-trajectory: the last agent leaves at 295.0 s. The per-agent histories stop
-at 299 s, so they cannot show whether an agent that leaves in the last
-second met a limit there. The script therefore counts an agent as out only
-if it left before 299 s. In this run that excludes nobody:
-**75 got out and 75 are censored**. For a censored agent we know only
+**Who counts as out.** The run reports 76 evacuated, and so does the
+trajectory: the last agent leaves at 299.8 s. The per-agent histories stop
+at 299 s, so they cannot show whether that agent met a limit in its last
+second. The script therefore counts an agent as out only if it left before
+299 s: **75 got out and 75 are censored**. For a censored agent we know only
 that its margin is negative or longer than the run.
 
 ### Each agent against its own limits
@@ -378,7 +386,7 @@ the agent met it before it left, or before 299 s if it is still inside.
 | FED ≥ 1 (FDS+Evac form) | 0 | – | 75 | 0 | 0 |
 
 The 69 agents who got out after the visibility limit spent a median of
-93 s, and at most 148 s, inside beyond it. The four HCl limits change the
+92 s, and at most 148 s, inside beyond it. The four HCl limits change the
 count of evacuees who met a limit only from 68 to 64. CO above 2,700 ppm is
 met next to the burner, by agents who pass it on their way to exit B.
 
@@ -466,10 +474,10 @@ This run fits none of it:
   Each agent's exposure starts when it spawns, while all times on this page
   count from ignition.
 - **The run is cut off.** It stops at 300 s with most late spawners inside.
-  The last exit, 295.0 s, is set by the time limit. It is not an RSET.
+  The last exit, 299.8 s, is set by the time limit. It is not an RSET.
 - **There is no detection, alarm or pre-movement**
   (`"use_premovement": false`). Exit minus spawn is travel time only: a
-  median of 89.1 s and a maximum of 148.4 s for the 75 who got out.
+  median of 88.1 s and a maximum of 147.4 s for the 75 who got out.
 
 More seeds would not supply an RSET either, because every seed stops at the
 same 300 s. For a scenario in which everyone gets out, see the
@@ -494,7 +502,7 @@ way: Jin's visibility data end near *K* ≈ 1.8 1/m (see
 ![Histogram of the extinction coefficient at the agents, one count per agent-second, on a log axis from 0.1 to 60 per metre. Almost all the mass lies between 8 and 20 per metre, with a peak near 13. Hatched bands mark the data ranges of Purser's fit to Jin, 0.30 to 1.27, and of Frantzich and Nilsson, 1.9 to 7.4, and a shaded band Jin's sign-visibility data, 0.3 to 1.8, all to the left of the mass. A dashed red line at 11.1 marks where the speed floor of 0.1 begins; 74 % of all agent-seconds are at the floor](/images/first-fds-case/aset_extinction.png)
 
 *Extinction coefficient K [1/m] at the agents, one count per agent and second
-inside (n = 13,965; the 256 with K < 0.1 1/m are not shown). Hatched: the K
+inside (n = 13,925; the 255 with K < 0.1 1/m are not shown). Hatched: the K
 ranges of the data behind the speed laws, from
 [walking speed in smoke](/fundamentals/walking-speed.md). Shaded: Jin's
 sign-visibility data for lit signs, *K* ≈ 0.3–1.8 1/m, from

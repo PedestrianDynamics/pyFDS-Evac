@@ -77,6 +77,11 @@ seed used, and any warnings from the run.
 
 [![The top of the results. A header reads "Results  run #1 · iso_table21_coupled · 2026-09-29T18:14:06+00:00" with the buttons Show Python for this run and Clear results, and the line "Starting a new run replaces these results in this view; the files on disk are kept." Below it, a check mark and "Complete: all agents evacuated", four tiles reading Evacuation time 85.0 s, Evacuated 1 / 1 agents, Remaining 0 agents and Seed used 420, and a Warning box, "1 warning for run #1", saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices](/images/web-gui/results_header.png "The results header, the outcome and the FED warning of the corridor run.")](images/web-gui/results_header.png)
 
+The screenshots of this run predate the exit rule of
+[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349); the run
+now ends after 85.3 s, as in the steps below
+([#389](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/389)).
+
 Further down, press play in
 **Trajectories** to replay the run, or drag the time slider. Scroll over the
 plan to zoom and drag to pan; **↺** resets the view. With an FDS folder set,

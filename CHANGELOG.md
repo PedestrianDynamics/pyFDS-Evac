@@ -120,14 +120,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   up to about 1.3 m wider and agents left from the room beside it.
   Checkpoints keep the distance rule. A single agent now leaves about
   0.3 s later; crowd results move by more, since the door now bounds the
-  flow (for example, one golden deck ends with 29 of 30 out instead of
-  30). The golden snapshots and most documented numbers are regenerated;
+  flow (the golden decks end up to 0.8 s later). The golden snapshots,
+  the single-run pages, the RSET how-to and ISO Test 18 are regenerated;
   the with/without-fire how-to
   ([#391](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/391)),
   the Schröder study
-  ([#388](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/388))
-  and the web GUI screenshots
+  ([#388](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/388)),
+  the web GUI screenshots
   ([#389](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/389))
+  and the pages still on runs before #360 (A crowd in a real fire,
+  familiarity, wayfinding;
+  [#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384))
   still show the earlier runs
   ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)).
 - **Seeded outcomes differ from earlier versions.** Every per-agent random

@@ -13,6 +13,15 @@ aliases: [/docs/wayfinding/, /docs/implementation/wayfinding/wayfinding/]
 > [Models › Wayfinding](/models/wayfinding.md). The intuition is on
 > [Concepts › Wayfinding](/docs/concepts.md#wayfinding).
 
+{{< callout type="warning" >}}
+The run numbers and figures on this page come from
+runs that predate the per-distribution seeds of
+[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360) and the
+exit rule of [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349).
+The commands below now give different results; the re-run is tracked in
+[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384).
+{{< /callout >}}
+
 This page follows §3 of the talk
 [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/),
 one slide per section. Each section says what the code does, where, and which
@@ -375,17 +384,17 @@ over a few known nodes may never pass a legible new sign
 
 **Discovery times depend on the grid.** On
 `assets/familiarity_test_discovery`, seed 420, the runs of the
-[familiarity verification](testing-familiarity.md) (after [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)) give the
+[familiarity verification](testing-familiarity.md) (at `8c0c02d`) give the
 following discovery egress times:
 
 | Clear-air cell | Discovery egress |
 |---|---|
-| 0.25 m | 67.6 s |
-| 0.1 m | 225.4 s |
-| 0.05 m | 109.3 s |
-| 0.025 m | 149.5 s |
+| 0.25 m | 68.1 s |
+| 0.1 m | 226.0 s |
+| 0.05 m | 109.7 s |
+| 0.025 m | 149.8 s |
 
-The fully familiar tier took 34.6 s. The code advises a cell smaller than the
+The fully familiar tier took 34.5 s. The code advises a cell smaller than the
 thinnest wall (`visibility.py`, `VisibilityModel.clear_air`). The #168 investigation recommends at
 most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
 change below that is not explained
@@ -404,13 +413,13 @@ reproduced for this page.
 *Figure 7. Full versus discovery. `assets/familiarity_test_full` and
 `assets/familiarity_test_discovery`: 20 agents, seed 420, same geometry and
 signs; `familiarity` differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
-known from t = 0, no route changes; the last agent leaves at 34.6 s, median
+known from t = 0, no route changes; the last agent leaves at 34.5 s, median
 path 29 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
 end; the exit enters the maps at t = 15–97 s (median 42 s). After t = 0 the
 agents make 78 route changes (52 explore, 6 wander, 20 onto the exit), 16 of
-the 20 with a detour into a dead-end room; the last leaves at 109.3 s, median
-path 56 m. The discovery time has not converged with the grid (67.6 s at
-0.25 m, 225.4 s at 0.1 m, 149.5 s at 0.025 m; #168). This illustrates the mechanism; it is not a result. Script: `scripts/figures/full_vs_discovery_paths.py`.*
+the 20 with a detour into a dead-end room; the last leaves at 109.8 s, median
+path 56 m. The discovery time has not converged with the grid (68.1 s at
+0.25 m, 226.0 s at 0.1 m, 149.8 s at 0.025 m; #168). This illustrates the mechanism; it is not a result. Script: `scripts/figures/full_vs_discovery_paths.py`.*
 
 > **Talk vs code.** The talk caption gives 35.1 s and 75.1 s. Those are results
 > from the deck before its rework in #99 (`docs/testing-familiarity.md`). The

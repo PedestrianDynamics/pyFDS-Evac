@@ -68,10 +68,11 @@ and the test asserts 1 % rather than pretending to be exact.
 | expected `1 / speed_factor(0.99550)` | 1.0874 |
 
 The recorded `speed_factor` is 0.919626 at every sample, matching
-`speed_factor_from_extinction(0.99550)` exactly. Measured at `47f9533` with the
-committed `fds/` output and the default sampling height (the 1.5 m slice), as
-the `coupled_clear` and `coupled_fds` runs of the ISO Test 18 page; the runs
-are in the project's data store under `iso_test_18/rerun_47f9533/`.
+`speed_factor_from_extinction(0.99550)` exactly. Measured on the #349
+branch at `47f9533` with the committed `fds/` output and the default sampling
+height (the 1.5 m slice), as the `coupled_clear` and `coupled_fds` runs of the
+ISO Test 18 page; the runs are in the project's data store under
+`iso_test_18/rerun_47f9533/`.
 
 ## Running it
 
