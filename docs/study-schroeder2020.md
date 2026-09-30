@@ -124,12 +124,8 @@ FED 0.054 / 0.139.
   values compare with other published criteria is under
   [Tenability criteria in the literature](#tenability-criteria-in-the-literature).
 - **Each set is shown whole.** Taking CO from one source and temperature from
-  another would mix two sets of assumptions. The maps use vfdb Table 8.3,
-  < 30 min column, as the headline set, because it is the paper's (45 °C
-  occurs only there). The < 5 min column, which fits our evacuations of
-  under 5 minutes, and EA Fig. 8 (Short Exposure, p. 15) are shown as
-  sensitivity rows. For this fire the choice barely matters: smoke sets
-  ASET in every cell under all three sets.
+  another would mix two sets of assumptions. Which set is the headline and
+  why is stated at the top of this section.
 - **The time column is a sensitivity.** vfdb defines the long class as a
   stay of about 15–30 min (p. 324), so for evacuations under 5 minutes it
   is the more conservative choice. The < 5 min column gives 50 °C, not
@@ -182,112 +178,81 @@ FED 0.054 / 0.139.
 ### Tenability criteria in the literature
 
 A tenability criterion turns a fire field into a time. Published criteria
-differ in four ways: what they are meant to protect against, whether they
-are a limit or a dose, the exposure time and height they assume, and the
-share of the population they are meant to cover. This section places the
-criteria used on this page among them. The physiology behind each hazard is
-on the Fundamentals pages ([incapacitation thresholds](/fundamentals/incapacitation-thresholds.md),
+differ in four ways: the effect they mark, whether they are a limit or a
+dose, the exposure time and height they assume, and the share of the
+population they cover. The physiology behind each hazard is on the
+Fundamentals pages ([incapacitation thresholds](/fundamentals/incapacitation-thresholds.md),
 [visibility](/fundamentals/visibility.md), [heat](/fundamentals/heat.md),
 [irritants](/fundamentals/irritants.md), [ASET and RSET](/fundamentals/aset-rset.md)).
 
-**Where this page's criteria sit.** The paper uses K ≥ 0.23 1/m and 45 °C
-at 2 m (Schröder et al. 2020, pp. 3–4) and cites vfdb. It does not name a
-column. 0.23 1/m appears in all three columns, but 45 °C only in the
-< 30 min column, so we take that column as the paper's. These are fixed,
-location-based guide values, the most conservative of the three stay
+**Where this page's criteria sit.** The vfdb < 30 min values are fixed,
+location-based guide values: the most conservative of the three stay
 classes, at the lower end of the smoke limits in the literature and well
 below any incapacitation endpoint. A map that crosses them shows where
 conditions stop meeting the protection goal. It does not show where people
 are incapacitated.
 
-{{< details title="How published criteria differ: effect, limit or dose, time, height, population" closed="true" >}}
+{{< details title="How published criteria differ: effect, limit or dose, time and height, population" closed="true" >}}
 
-**Which effect the value marks.** The fractional effective dose (FED) comes
-from rat data. The dose is summed until it reaches the one that produces a
-chosen effect, such as incapacitation or death (Hartzell and Emmons 1988,
-p. 356). ISO 13571:2012 sets FED = 1 at the median of "compromised
-tenability", meaning a person can no longer perform cognitive and motor
-tasks at an acceptable level (§3.1, §5.4). The fixed limits of the
-Engineers Australia (EA) practice note are also incapacitation tolerances,
-for 10 minutes of exposure. For CO, 2,700 ppm over 10 min matches an
-incapacitating dose of about 27,000 ppm·min (§5.2, p. 15). The vfdb values
-are one level lower. They are guide values (*Anhaltswerte*) for
-demonstrating that protection goals are met, not incapacitation limits.
-vfdb states that, at light activity, they reach an FED of about 0.3 at the
-end of each stay class and stay well below 1 even at heavy activity
-(Table 8.3 p. 325; Fig. 8.4 and text, pp. 326–327). Purser and McAllister
-list, per irritant, the concentrations that impair escape, cause
-incapacitation and cause death as separate columns (SFPE Handbook Ch. 63,
-Table 63.6, p. 2344).
+**Effect.** The fractional effective dose (FED) comes from rat data: the
+dose is summed until it reaches the one that produces a chosen effect,
+such as incapacitation or death (Hartzell and Emmons 1988, p. 356).
+ISO 13571:2012 sets FED = 1 at the median of "compromised tenability", the
+loss of acceptable cognitive and motor performance (§3.1, §5.4). The
+Engineers Australia (EA) fixed limits are incapacitation tolerances for
+10 min; CO 2,700 ppm matches about 27,000 ppm·min (§5.2, p. 15). The vfdb
+values are one level lower: guide values (*Anhaltswerte*) for protection
+goals, which at light activity reach FED ≈ 0.3 at the end of each stay
+class (Table 8.3 p. 325; Fig. 8.4, pp. 326–327). Purser and McAllister list
+escape impairment, incapacitation and death as separate columns per
+irritant (SFPE Handbook Ch. 63, Table 63.6, p. 2344).
 
-**Fixed limit or dose.** A fixed limit is checked at every instant and
-place. A dose must be summed along each person's path, which requires
-coupling the fire and evacuation models (Węgrzyński et al. 2026, §1–2).
-ISO 13571 is dose-based for asphyxiant gases and heat, and based on the
-current concentration for irritants (§4.2, §4.4). vfdb and DIN 18009-2 use
-fixed limits as the basis of every assessment. A person-based dose
-assessment may be added for special cases, and whichever FED threshold is
-chosen must be justified (DIN 18009-2 §7.2.2–7.2.3, pp. 22–24). *Our
-reading:* the three vfdb CO values correspond to almost the same dose,
-100 ppm × 30 min = 200 ppm × 15 min = 3,000 ppm·min, and 500 ppm × 5 min =
-2,500 ppm·min. That is about one tenth of the incapacitating dose EA
-cites.
+**Limit or dose.** A fixed limit is checked at every place and instant. A
+dose must be summed along each person's path, which couples the fire and
+evacuation models (Węgrzyński et al. 2026, §1–2). ISO 13571 uses doses for
+asphyxiant gases and heat, and the current concentration for irritants
+(§4.2, §4.4). vfdb and DIN 18009-2 base every assessment on fixed limits; a
+person-based dose, with a justified FED threshold, may be added for
+special cases (DIN §7.2.2–7.2.3, pp. 22–24). *Our reading:* the three vfdb
+CO values are almost the same dose, 2,500–3,000 ppm·min, about one tenth of
+the incapacitating dose EA cites.
 
-**Exposure time.** vfdb Table 8.3 has three stay classes: up to about
-5 min, about 5–15 min and about 15–30 min (p. 324). The protection goal is
-met if no value is exceeded during the stay (p. 324). EA's fixed limits
-assume up to 10 min. For up to 30 min, EA uses FED instead (§5.2–5.3,
-pp. 15–17). DIN adds the Acute Exposure Guideline Level 2 (AEGL-2) for CO
-as a plausibility check: 420 ppm for 10 min and 150 ppm for 30 min, with no
-interpolation between them (§7.2.3).
+**Time and height.** vfdb has three stay classes, up to about 5 min,
+about 5–15 min and about 15–30 min; the goal is met if no value is
+exceeded during the stay (p. 324). EA's fixed limits assume up to 10 min
+and use FED for up to 30 min (§5.2–5.3, pp. 15–17). DIN adds the AEGL-2
+for CO as a check, 420 ppm for 10 min and 150 ppm for 30 min, without
+interpolation (§7.2.3). EA and DIN evaluate at 2.0 m (EA §5.2; DIN
+§7.2.1); zero-exposure criteria use a clear layer of about 2.5 m (vfdb
+§8.1, p. 312; Purser and McAllister, p. 2320). Surveyed practitioners use
+1.5–2.5 m, most often 2.0 m (52.1 %) (Węgrzyński et al. 2026, §4.3).
 
-**Height.** EA and DIN evaluate criteria 2.0 m above the floor (EA §5.2;
-DIN §7.2.1). Criteria based on zero exposure use a clear layer of about
-2.5 m instead (vfdb §8.1, p. 312), or 2.5 m together with an upper layer at
-no more than 200 °C (Purser and McAllister, p. 2320). In the survey by
-Węgrzyński et al., practitioners use 1.5–2.5 m, most often 2.0 m (52.1 %),
-then 1.8 m (29.5 %).
+**Population.** ISO requires a threshold below 1 for more conservative
+objectives; its informative annex gives 0.3 as an example, under which
+11.4 % of the population would still be affected, with no assurance that
+these percentages are valid (§5.4, A.5.2). Purser and McAllister suggest a
+design FED of 0.3, or 0.1 for sensitive groups (p. 2343); vfdb gives
+0.1–0.3 (§8.4, p. 319). EA considers 1.0 suitable for the vast majority of
+occupants and leaves the margin to RSET (§5, p. 13). In the survey, 7 of
+the 13 continental-European respondents who stated a value use 0.1; all
+from the UK and Australia/New Zealand use 0.3 (§4.3).
 
-**Population.** ISO says only that a threshold below 1 is required for more
-conservative objectives. Its informative annex gives 0.3 as an example,
-under which 11.4 % of the population would still be affected, and gives no
-assurance that these percentages are valid (§5.4, A.5.2). Purser and
-McAllister suggest a design FED of 0.3 for the general population and 0.1
-for sensitive groups (p. 2343). vfdb gives 0.1–0.3 (§8.4, p. 319). EA
-considers FED 1.0 suitable for the vast majority of occupants and leaves
-safety margins to RSET (§5, p. 13). Among the 29 practitioners in the
-survey who stated an FED value, 7 of 13 in continental Europe use 0.1.
-Everyone who answered from the UK and Australia/New Zealand uses 0.3
-(§4.3).
+**Smoke.** ISO 13571 leaves the behavioural effects of smoke out of its
+model (§4.6 f). Its obscuration endpoint, sight of about arm's length at
+0.8 g/m³ (clause 9, Note 1), is K ≈ 8 1/m with σ = 10 m²/g (our
+conversion), about 35 times vfdb's 0.23 1/m. The lower limits come from
+behaviour: about 30 % of people turn back rather than enter smoke at about
+3 m visibility, and the suggested limits are 0.08 OD/m (K ≈ 0.18) for
+large enclosures and 0.2 OD/m (K ≈ 0.46) for small ones (Purser and
+McAllister, Table 63.5, p. 2339). Where D_L ≤ 0.1 1/m, the toxic and
+temperature values are usually met as well (vfdb p. 325; DIN §7.2.2). In
+the survey (254 respondents, a convenience sample), visibility is the
+criterion most often decisive (91.4 %); FED is used by 22.2 %
+(§4.3–4.4).
 
-**Smoke is not a toxicity endpoint.** ISO 13571 leaves the early,
-behavioural effects of smoke out of its model (§4.6 f). Its obscuration
-endpoint is disorientation when a person can see only about an arm's
-length, 0.5 m, at 0.8 g/m³ of smoke aerosol (clause 9, Note 1). With ISO's
-σ = 10 m²/g, that is K ≈ 8 1/m (our conversion), about 35 times vfdb's
-0.23 1/m. The lower smoke values come from behaviour and wayfinding: people
-turn back at about 3 m visibility (Purser and McAllister, p. 2338).
-Suggested limits are 0.08 OD/m (K ≈ 0.18) for large enclosures and
-0.2 OD/m (K ≈ 0.46) for small ones (Table 63.5, p. 2339). vfdb and DIN add
-that where D_L ≤ 0.1 1/m, the toxic and temperature values are usually met
-as well, so in sooting fires smoke density governs (vfdb p. 325; DIN
-§7.2.2).
-
-**What practitioners use.** The survey had 254 respondents from
-43 countries, recruited as a convenience sample in 2021. Visibility is the
-criterion most often tracked (90.1 %) and most often decisive (91.4 %).
-Temperature is tracked by 76.5 % but decisive for only 45.8 %. FED is used
-by 22.2 % and FEC by fewer than 10 %. Visibility thresholds range from 3 to
-30 m, and the visibility constant C from 3 to 8 (Węgrzyński et al. 2026,
-abstract, §4.3–4.4). The sample describes its respondents, not global
-practice (§3.1).
-
-**Criticism.** Babrauskas et al. call such criteria "highly arbitrary" with
-"little basis in either physics or physiology". They add that there is no
-agreement on which population they should protect (2010, p. 347). The NIST
-sublethal-effects study calls the step from rat data to sensitive humans
-"far from definitive" and puts a factor of two on its generic values (Gann
-et al. 2001, pp. 82–86).
+**Criticism.** Babrauskas et al. call such criteria "highly arbitrary"
+(2010, p. 347); the NIST sublethal-effects study puts a factor of two on
+its generic values (Gann et al. 2001, pp. 82–86).
 
 | Source | Kind | What reaching the value means | Time, height |
 |---|---|---|---|
@@ -308,9 +273,7 @@ et al. 2001, pp. 82–86).
 | ISO 13571 | 0.8 g/m³ aerosol, about arm's length (§9) | Eqs. (7)–(11); radiant counted from 2.5 kW/m² (§8.4) | FED/FEC; 0.3 as an example (A.5.2) |
 | Purser & McAllister | 0.08 / 0.2 OD/m (Table 63.5) | Table 63.20 (p. 2383) | design FED 0.3 (0.1 for sensitive groups) |
 
-*DIN 18009-2 Table 1 heads the long column "(> 30 min)", where vfdb
-Table 8.3 has "(< 30 min)"; we have not resolved which is intended.
-Sources are in the [Sources](#sources) list at the end of the page.*
+*Sources are in the [Sources](#sources) list at the end of the page.*
 
 {{< /details >}}
 
@@ -697,6 +660,8 @@ within 5 s and 16 s; the area and C do not, so both grids are given.
   Leitfaden prints two sections numbered 8.6; its table of contents lists
   only "8.6 Rauchausbeuten". Paraphrased.
 - DIN 18009-2:2022-08, §7.2.1–7.2.3, Table 1 (pp. 22–24). Paraphrased.
+  Table 1 heads the long column "(> 30 min)", where vfdb Table 8.3 has
+  "(< 30 min)"; we have not resolved which is intended.
 - Engineers Australia Society of Fire Safety (2014). *Practice note for
   tenability criteria in building fires*, version 2.0, §5 (p. 13), §5.2 and
   Fig. 8 "Short Exposure" (p. 15; a second Fig. 8, "No Exposure", is on
