@@ -39,6 +39,16 @@ class StageNode:
     centroid_y: float
     stage_type: str  # "exit", "checkpoint", "distribution", "zone"
     capacity_agents_per_s: float | None = None
+    # An exit's schedule: open while open_from_s <= t < closed_after_s. None
+    # on either side leaves that side unbounded.
+    open_from_s: float | None = None
+    closed_after_s: float | None = None
+
+    def is_open(self, time_s: float) -> bool:
+        """Whether the stage accepts agents at *time_s*."""
+        if self.open_from_s is not None and time_s < self.open_from_s:
+            return False
+        return self.closed_after_s is None or time_s < self.closed_after_s
 
 
 @dataclass
@@ -132,6 +142,8 @@ class StageGraph:
                 centroid_y=cy,
                 stage_type=stage_type,
                 capacity_agents_per_s=info.get("capacity_agents_per_s"),
+                open_from_s=info.get("open_from_s"),
+                closed_after_s=info.get("closed_after_s"),
             )
 
         # Add edges from transitions.
@@ -300,6 +312,25 @@ class StageGraph:
             cur = prev.get(cur)
         path.reverse()
         return path
+
+
+def without_closed_stages(graph: StageGraph, time_s: float) -> StageGraph:
+    """Return *graph* without the stages closed at *time_s* and their edges.
+
+    A closed exit is no route and no place to explore. Without a schedule
+    nothing is closed and *graph* itself is returned.
+    """
+    closed = {nid for nid, node in graph.nodes.items() if not node.is_open(time_s)}
+    if not closed:
+        return graph
+    sub = StageGraph(routing_engine=graph.routing_engine)
+    sub.nodes = {nid: n for nid, n in graph.nodes.items() if nid not in closed}
+    sub.edges = {
+        src: [e for e in edges if e.target not in closed]
+        for src, edges in graph.edges.items()
+        if src not in closed
+    }
+    return sub
 
 
 def _passes_through_another_node(
@@ -1877,7 +1908,10 @@ def rank_routes(
     Rejected routes are sorted to the end.
     If all routes are rejected, the least-bad route is un-rejected
     as a fallback.
+
+    An exit closed at *time_s* is not ranked.
     """
+    graph = without_closed_stages(graph, time_s)
     # Restrict graph to agent's known subgraph (discovery mode).
     if cognitive_map is not None:
         from .cognitive_map import cognitive_subgraph
@@ -2503,7 +2537,12 @@ def evaluate_and_reroute(
         if cognitive_map is None:
             return None
         decision = _decide_explore(
-            wait_info, route_state, graph, source, cognitive_map, agent_position
+            wait_info,
+            route_state,
+            without_closed_stages(graph, current_time_s),
+            source,
+            cognitive_map,
+            agent_position,
         )
         return _apply_decision(
             decision, agent_id, wait_info, route_state, current_time_s
@@ -2558,4 +2597,12 @@ def evaluate_and_reroute(
         )
     else:
         decision = _decide_exit_change(best, old_exit, old_rc, old_cost, config)
+        if decision.kind == "switch" and stage_closed(graph, old_exit, current_time_s):
+            decision = replace(decision, switch_reason="exit_closed")
     return _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)
+
+
+def stage_closed(graph: StageGraph, stage_id: str | None, time_s: float) -> bool:
+    """Whether *stage_id* is a stage of *graph* closed at *time_s*."""
+    node = graph.nodes.get(stage_id) if stage_id is not None else None
+    return node is not None and not node.is_open(time_s)

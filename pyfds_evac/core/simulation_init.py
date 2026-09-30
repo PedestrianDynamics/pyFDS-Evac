@@ -409,6 +409,29 @@ def _normalize_speed_factor(value: Any) -> float:
     return min(speed_factor, 3.0)
 
 
+def _schedule_time(exit_id: str, exit_data: dict, key: str) -> float | None:
+    """Return one schedule time of an exit, or None when it is not set."""
+    value = exit_data.get(key)
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"Exit {exit_id!r}: {key} must be a number, got {value!r}")
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"Exit {exit_id!r}: {key} must be finite and >= 0")
+    return float(value)
+
+
+def _exit_schedule(exit_id: str, exit_data: dict) -> dict[str, float | None]:
+    """Return the exit's schedule: open while open_from_s <= t < closed_after_s."""
+    open_from = _schedule_time(exit_id, exit_data, "open_from_s")
+    closed_after = _schedule_time(exit_id, exit_data, "closed_after_s")
+    if None not in (open_from, closed_after) and closed_after <= open_from:
+        raise ValueError(
+            f"Exit {exit_id!r}: closed_after_s must be greater than open_from_s"
+        )
+    return {"open_from_s": open_from, "closed_after_s": closed_after}
+
+
 def _normalize_bool(value: Any) -> bool:
     """Normalize booleans from JSON-like payloads."""
     if isinstance(value, bool):
@@ -914,6 +937,7 @@ def _initialize_with_fallback(
                     "max_throughput": float(exit_data.get("max_throughput", 0.0)),
                     "stage_type": "exit",
                     "capacity_agents_per_s": exit_data.get("capacity_agents_per_s"),
+                    **_exit_schedule(exit_id, exit_data),
                 }
 
     if not exits:
@@ -1646,6 +1670,7 @@ def _add_stages(
             "enable_throughput_throttling": enable_throttling,
             "max_throughput": float(exit_data.get("max_throughput", 0.0)),
             "stage_type": "exit",
+            **_exit_schedule(exit_id, exit_data),
         }
 
     for dist_id, dist_data in data.get("distributions", {}).items():

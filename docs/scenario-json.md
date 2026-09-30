@@ -79,7 +79,31 @@ while still waiting walks off when its pre-movement ends
 | `coordinates` | required | Exit polygon. |
 | `enable_throughput_throttling`, `max_throughput` | `false`, 0 | Cap the removal rate at the exit: an agent whose centre is inside the exit polygon is removed only if at least 1/`max_throughput` s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A `max_throughput` of 0 disables the cap. |
 | `capacity_agents_per_s` | `routing.default_exit_capacity` (1.3 agents/s) | Exit capacity used to estimate queue time when routes are priced. |
+| `open_from_s` | none (open from the start) | The exit opens at this time [s], a finite number ≥ 0. |
+| `closed_after_s` | none (never closes) | The exit closes at this time [s], a finite number ≥ 0 and greater than `open_from_s`. |
 | `sign` | an omni-directional sign at the exit's centre, `c` = 3 | The sign agents read; keys below. |
+
+An exit with `open_from_s` or `closed_after_s` is open while
+`open_from_s` ≤ *t* < `closed_after_s`
+([#373](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/373)). While
+it is closed:
+
+- it removes nobody: an agent standing in it waits there;
+- routes are ranked without it, both the opening choice and every
+  re-evaluation, and it is no target for exploring or wandering. An exit is
+  judged by whether it is open at the time of ranking, not at the time the
+  agent would arrive;
+- an agent whose route ends at it re-evaluates at the next reroute check
+  (every second), whatever `--reroute-interval` says, and takes the best open
+  exit it knows. The switch is logged with the reason `exit_closed`. An agent
+  that knows no open exit explores, or wanders over the nodes it knows; it is
+  not told of another exit.
+
+A schedule needs rerouting: a run with a scheduled exit and
+`--no-enable-rerouting` or `--smoke-blind` stops with an error, as does an
+agent that walks a JuPedSim journey instead of a routed path (a spawn area
+with no journey in a scenario that has journeys). Without a schedule nothing
+changes.
 
 ### Signs: `sign`
 

@@ -96,6 +96,7 @@ from .route_graph import (
     rank_routes,
     reroute_agent,
     should_reevaluate,
+    stage_closed,
 )
 from .smoke_speed import ConstantExtinctionField, sample_accepts_free_speed
 
@@ -1204,6 +1205,43 @@ def _check_run_modes(
         )
 
 
+def _has_exit_schedule(stage_graph: "StageGraph | None") -> bool:
+    """Whether any exit of *stage_graph* opens or closes on a schedule."""
+    if stage_graph is None:
+        return False
+    return any(
+        node.open_from_s is not None or node.closed_after_s is not None
+        for node in stage_graph.nodes.values()
+    )
+
+
+def _check_exit_schedule(has_schedule: bool, reroute_config) -> None:
+    """Reject a scheduled exit in a run where no agent could leave it."""
+    if has_schedule and reroute_config is None:
+        raise ValueError(
+            "Exits with open_from_s or closed_after_s need rerouting: agents "
+            "heading for a closed exit are redirected by the reroute pass"
+        )
+
+
+def _check_path_agent(has_schedule: bool, wait_info: dict | None, agent_id) -> None:
+    """Reject an agent the closure of an exit cannot hold back."""
+    if has_schedule and (wait_info is None or wait_info.get("mode") != "path"):
+        raise ValueError(
+            f"Agent {agent_id} walks a JuPedSim journey, which leaves through "
+            "an exit whether or not it is open; exits with open_from_s or "
+            "closed_after_s need every agent on a routed path"
+        )
+
+
+def _heads_for_closed_exit(
+    wait_info: dict, stage_graph: "StageGraph", time_s: float
+) -> bool:
+    """Whether the agent's path ends at an exit closed at *time_s*."""
+    exit_id = _extract_terminal_exit(wait_info, stage_graph.nodes)
+    return exit_id is not None and not stage_graph.nodes[exit_id].is_open(time_s)
+
+
 def _migrate_journeys_v2(data: dict[str, Any]) -> None:
     """Backfill legacy ``journeys``/``transitions`` from the editor's ``journeys_v2``.
 
@@ -1563,6 +1601,8 @@ def run_scenario(
         _check_run_modes(
             smoke_blind, reroute_config, tenability_config, replay_exits, stage_graph
         )
+        has_exit_schedule = _has_exit_schedule(stage_graph)
+        _check_exit_schedule(has_exit_schedule, reroute_config)
         # Pre-compute familiarity per distribution index. The value may be
         # "full", "discovery", or a probability in [0, 1] that each exit is
         # already known -- a real crowd is a gradient, not two camps.
@@ -2468,6 +2508,7 @@ def run_scenario(
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
                     wait_info = agent_wait_info.get(agent_id)
+                    _check_path_agent(has_exit_schedule, wait_info, agent_id)
                     if wait_info is None or wait_info.get("mode") != "path":
                         continue
                     reroute_loop_agents += 1
@@ -2514,6 +2555,11 @@ def run_scenario(
                     # to it before drifting along the default path. Later
                     # evaluations keep the staggered cadence.
                     first_eval = rs.last_eval_time_s == -math.inf
+                    # An agent heading for a closed exit re-decides now.
+                    first_eval = first_eval or (
+                        has_exit_schedule
+                        and _heads_for_closed_exit(wait_info, stage_graph, current_time)
+                    )
                     if not first_eval and not should_reevaluate(
                         current_time, rs, reroute_config.reevaluation_interval_s
                     ):
@@ -2769,6 +2815,13 @@ def run_scenario(
                             stage_cfg,
                             wait_info.get("agent_radius", 0.2),
                         )
+
+                        if reached_target and stage_closed(
+                            stage_graph, current_target_stage, current_time
+                        ):
+                            # A closed exit accepts no one; the reroute pass
+                            # sends the agent elsewhere.
+                            continue
 
                         if reached_target:
                             enable_throttling = stage_cfg.get(
