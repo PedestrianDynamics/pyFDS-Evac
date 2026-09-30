@@ -31,7 +31,7 @@ Steps:
   cells not exceeded by the 600 s FDS end stay censored, "not by 600 s");
 * RSET per cell and seed with PedPy ``compute_rset_map`` (``RsetMethod.MAX``,
   the last time an agent is in the cell, Eqs. 4-5) on PedPy's grid, which the
-  ASET map shares; pooled over seeds by the maximum (paper, p. 12, n = 10)
+  ASET map shares; pooled over seeds by the maximum (paper, p. 5, n = 10)
   and by the 95th percentile, plus per-seed measures with bootstrap CIs;
 * DIFF = ASET - RSET, five cell states, min DIFF, negative area and C;
 * the agents-remaining check against the paper's Fig. 3 points.
@@ -86,7 +86,7 @@ OUT = ROOT / "site" / "static" / "images" / "studies" / "schroeder2020"
 CELL = 0.6  # m, map cell (paper Sect. 2.2.4)
 Z = 2.0  # m, slice height (paper Sect. 2.2.4)
 T_END = 600.0  # s, FDS T_END: ASET cells not exceeded by then are censored
-PAPER_T_END = 120.0  # s, the paper's fill value for unexceeded cells (p. 8)
+PAPER_T_END = 120.0  # s, the paper's fill value for unexceeded cells (p. 4)
 PAPER_DT = 10.0  # s, the paper's slice step
 BIN = 20.0  # s, bin width of the paper's C (Eq. 8)
 FPS = 10.0  # trajectory frames per second, frame 0 = ignition
@@ -141,12 +141,43 @@ VERSIONS = [
 CRITERIA = {
     "K 0.23": ("K", 0.23, "K ≥ 0.23 1/m (paper; location screen)"),
     "K 0.3": ("K", 0.3, "K ≥ 0.3 1/m (EA 10 m, C = 3; location screen)"),
-    "T 45": ("T", 45.0, "T ≥ 45 °C (location screen)"),
+    "T 45": ("T", 45.0, "T ≥ 45 °C (vfdb < 30 min; location screen)"),
     "CO 2700": ("CO", 2700.0, "CO ≥ 2,700 ppm (EA fixed limit)"),
     "FED 0.3": ("FED", 0.3, "gas FED ≥ 0.3 (stationary-occupant dose)"),
     "heat FED 0.3": ("HFED", 0.3, "heat FED ≥ 0.3 (stationary, convective)"),
+    "CO 100": ("CO", 100.0, "CO ≥ 100 ppm"),
+    "CO 500": ("CO", 500.0, "CO ≥ 500 ppm"),
+    "CO2 1": ("CO2", 1.0, "CO₂ ≥ 1 %"),
+    "CO2 3": ("CO2", 3.0, "CO₂ ≥ 3 %"),
+    "RAD 1.7": ("RAD", 1.7, "radiant flux ≥ 1.7 kW/m²"),
+    "RAD 2.5": ("RAD", 2.5, "radiant flux ≥ 2.5 kW/m²"),
+    "T 50": ("T", 50.0, "T ≥ 50 °C"),
+    "T 100": ("T", 100.0, "T ≥ 100 °C"),
+    "K 0.46": ("K", 0.46, "K ≥ 0.46 1/m (D_L 0.2, note 4)"),
 }
 MAP_CRITERIA = ("K 0.23", "K 0.3", "T 45")
+# Whole source sets for the criterion screen: vfdb TB 04-01 (2020) Table 8.3,
+# EA practice note (2014) Fig. 8 at 2.0 m, and the pyFDS-Evac doses. HCN is
+# listed by vfdb and EA but not tracked here (no fuel nitrogen to HCN).
+SOURCE_SETS = {
+    "vfdb Table 8.3, < 30 min": ("K 0.23", "T 45", "CO 100", "CO2 1", "RAD 1.7"),
+    "vfdb Table 8.3, < 5 min": (
+        "K 0.23",
+        "K 0.46",
+        "T 50",
+        "CO 500",
+        "CO2 3",
+        "RAD 2.5",
+    ),
+    "EA Fig. 8, 2.0 m, up to 10 min": ("K 0.3", "T 100", "RAD 2.5", "CO 2700"),
+    "Doses from ignition (pyFDS-Evac)": (
+        "FED 0.3",
+        "heat FED 0.3",
+        "heat FED 0.3, total flux f = 0.25, tolerance",
+        "heat FED 0.3, total flux f = 1, tolerance",
+    ),
+}
+T_AMBIENT_C = 20.0  # FDS default ambient, for the radiant proxy
 QUANTITIES = {
     "K": "SOOT EXTINCTION COEFFICIENT",
     "T": "TEMPERATURE",
@@ -156,9 +187,10 @@ QUANTITIES = {
     "U": "INTEGRATED INTENSITY",
 }
 # Sensitivity only: the total-flux heat dose (SFPE Ch. 63, Eq. 63.43) with the
-# radiant term f (U - 4 sigma T_s^4) from INTEGRATED INTENSITY at f = 1, the
-# largest f the engine accepts; below the ISO 13571 2.5 kW/m² it is not counted.
-U_FACTOR = 1.0
+# radiant term f (U - 4 sigma T_s^4) from INTEGRATED INTENSITY. f = 0.25 is a
+# small body in an isotropic field; f = 1, the largest f the engine accepts,
+# is an upper bound. Below the ISO 13571 2.5 kW/m² the radiant term is zero.
+U_FACTORS = (0.25, 1.0)
 HEAT_TF_ENDPOINTS = ("tolerance", "fatal")
 
 TEXT = "dimgrey"
@@ -386,11 +418,11 @@ def heat_fed_rate(temp):
     return np.where(temp > 0, np.maximum(temp, 0.0) ** 3.61 / 4.1e8, 0.0)
 
 
-def total_flux_rate(temp, u, endpoint):
-    """Total-flux heat FED rate in 1/min (fed.py, U source, f = 1), vectorised."""
+def total_flux_rate(temp, u, endpoint, factor):
+    """Total-flux heat FED rate in 1/min (fed.py, U source), vectorised."""
     t_skin = DEFAULT_HEAT_SKIN_TEMPERATURE_C
     u_skin = 4.0 * STEFAN_BOLTZMANN_W_M2_K4 * (t_skin + 273.15) ** 4 / 1000.0
-    radiant = U_FACTOR * (u - u_skin)
+    radiant = factor * (u - u_skin)
     radiant = np.where(radiant < ISO_RADIANT_THRESHOLD_KW_M2, 0.0, radiant)
     q = radiant + DEFAULT_HEAT_CONVECTIVE_COEFFICIENT * (temp - t_skin) / 1000.0
     dose_r = HEAT_ENDPOINTS[endpoint].radiant_dose
@@ -403,21 +435,21 @@ def check_total_flux(fields, n=3000):
     flat_t, flat_u = fields["T"].reshape(-1), fields["U"].reshape(-1)
     hot = np.flatnonzero(flat_u >= ISO_RADIANT_THRESHOLD_KW_M2)
     picks = np.concatenate([rng.integers(0, flat_t.size, n), hot[:n]])
-    for endpoint in HEAT_TF_ENDPOINTS:
+    for endpoint, factor in ((e, f) for e in HEAT_TF_ENDPOINTS for f in U_FACTORS):
         model = DefaultHeatFedModel(
             None,
             DefaultFedConfig(),
             endpoint=endpoint,
             method="total-flux",
             radiant_source="integrated-intensity",
-            u_factor=U_FACTOR,
+            u_factor=factor,
         )
         for idx in picks:
             t, u = float(flat_t[idx]), float(flat_u[idx])
             ref = model._total_flux_rate(
                 HeatFedInputs(temperature_celsius=t, integrated_intensity_kw_m2=u)
             )
-            assert np.isclose(total_flux_rate(t, u, endpoint), ref, rtol=1e-9)
+            assert np.isclose(total_flux_rate(t, u, endpoint, factor), ref, rtol=1e-9)
 
 
 def check_fed_formulas(fields, n=3000):
@@ -436,6 +468,16 @@ def check_fed_formulas(fields, n=3000):
         assert np.isclose(gas_fed_rate(co, co2, o2), ref, rtol=1e-9, atol=1e-15)
         ref = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=t))
         assert np.isclose(heat_fed_rate(t), ref, rtol=1e-9, atol=1e-15)
+
+
+def radiant_proxy(u):
+    """Net radiant flux on a small body, 0.25 (U - 4 sigma T_amb^4), kW/m².
+
+    INTEGRATED INTENSITY U is the integral of the intensity over all
+    directions; a small body in an isotropic field receives about U / 4.
+    """
+    t_amb = T_AMBIENT_C + 273.15
+    return 0.25 * (u - 4.0 * STEFAN_BOLTZMANN_W_M2_K4 * t_amb**4 / 1000.0)
 
 
 def dose(rate, times):
@@ -465,6 +507,7 @@ class Fire:
     ys: np.ndarray
     node: dict = field(default_factory=dict)  # criterion -> node first times
     screen: dict = field(default_factory=dict)
+    raw: dict = field(default_factory=dict)  # criterion -> (t, ny, nx) bool
 
 
 def fire_fields(fds_dir, cache):
@@ -475,6 +518,11 @@ def fire_fields(fds_dir, cache):
         fire = Fire(fds_dir.name, z["times"], z["xs"], z["ys"])
         fire.node = z["node"].item()
         fire.screen = z["screen"].item()
+        shape = tuple(z["raw_shape"])
+        fire.raw["K 0.23"] = np.unpackbits(z["raw_k"])[: np.prod(shape)].reshape(shape)
+        fire.raw["K 0.23"] = fire.raw["K 0.23"].astype(bool)
+        missing = set(CRITERIA) - set(fire.node)
+        assert not missing, f"stale cache {path}: {missing}; delete it"
         return fire
     f, times, xs, ys = read_slices(fds_dir)
     check_fed_formulas(f)
@@ -485,16 +533,20 @@ def fire_fields(fds_dir, cache):
         "CO": f["CO"] * 1e6,
         "FED": dose(gas_fed_rate(f["CO"], f["CO2"], f["O2"]), times),
         "HFED": dose(heat_fed_rate(f["T"]), times),
+        "CO2": f["CO2"] * 100.0,
+        "RAD": radiant_proxy(f["U"]),
     }
     fire = Fire(fds_dir.name, times, xs, ys)
     for name, (key, limit, _) in CRITERIA.items():
         fire.node[name] = first_time(derived[key] >= limit, times)
     for endpoint in HEAT_TF_ENDPOINTS:
-        tf = dose(total_flux_rate(f["T"], f["U"], endpoint), times)
-        fire.node[f"heat FED 0.3, total flux, {endpoint}"] = first_time(
-            tf >= 0.3, times
-        )
-        fire.screen[f"heat FED max, total flux f = 1, {endpoint}"] = float(tf[-1].max())
+        for factor in U_FACTORS:
+            tf = dose(total_flux_rate(f["T"], f["U"], endpoint, factor), times)
+            tag = f"total flux f = {factor:g}, {endpoint}"
+            fire.node[f"heat FED 0.3, {tag}"] = first_time(tf >= 0.3, times)
+            fire.screen[f"heat FED max, {tag}"] = float(tf[-1].max())
+    # The ∀ rule needs the raw exceedance, not the node first times.
+    fire.raw["K 0.23"] = f["K"] >= CRITERIA["K 0.23"][1]
     steps = paper_steps(times)
     for name in ("K 0.23", "T 45"):
         key, limit, _ = CRITERIA[name]
@@ -508,6 +560,7 @@ def fire_fields(fds_dir, cache):
         "CO2 max %": float(100 * f["CO2"].max()),
         "O2 min %": float(100 * f["O2"].min()),
         "U max kW/m²": float(f["U"].max()),
+        "radiant proxy max kW/m²": float(derived["RAD"].max()),
         "gas FED max": float(derived["FED"][-1].max()),
         "heat FED max": float(derived["HFED"][-1].max()),
         "T ≥ 45 °C node share": float((fire.node["T 45"] < np.inf).mean()),
@@ -525,6 +578,8 @@ def fire_fields(fds_dir, cache):
         ys=ys,
         node=np.array(fire.node, dtype=object),
         screen=np.array(fire.screen, dtype=object),
+        raw_k=np.packbits(fire.raw["K 0.23"]),
+        raw_shape=np.array(fire.raw["K 0.23"].shape),
     )
     return fire
 
@@ -554,7 +609,7 @@ def members(coords, edges, n_cells):
 
 
 def nearest_index(coords, n_room, n_cells):
-    """One node per cell: Pillow's nearest-resize index, as the paper's code."""
+    """One node per cell: the nearest-sample (resize) index."""
     idx = np.floor((np.arange(n_cells) + 0.5) * len(coords) / n_room).astype(int)
     return np.minimum(idx, len(coords) - 1)
 
@@ -576,6 +631,21 @@ def cell_aset(node_first, fire, grid, rule="exists"):
             out[j] = [
                 node_first[np.ix_(r, c)].min() if c.size else np.nan for c in cols
             ]
+    return np.where(grid.area > 0, out, np.nan)
+
+
+def cell_aset_forall(over, fire, grid):
+    """ASET per map cell under Eq. 2 as printed: every node of the cell at once."""
+    ny, nx = grid.shape
+    cols = members(fire.xs, grid.x_edges, nx)
+    rows = members(fire.ys, grid.y_edges, ny)
+    out = np.full((ny, nx), np.nan)
+    for j, r in enumerate(rows):
+        for i, c in enumerate(cols):
+            if not c.size:
+                continue
+            every = over[:, r][:, :, c].all(axis=(1, 2))
+            out[j, i] = fire.times[every.argmax()] if every.any() else np.inf
     return np.where(grid.area > 0, out, np.nan)
 
 
@@ -712,11 +782,40 @@ def grid_for(fire_name, grids):
     return grids["2door"] if "2 doors" in fire_name else grids["1door"]
 
 
-SCREEN_EXTRA = {
-    f"heat FED 0.3, total flux, {e}": "heat FED ≥ 0.3, total flux, U with f = 1, "
-    f"{e} dose (sensitivity)"
+SCREEN_LABELS = {c: spec[2] for c, spec in CRITERIA.items()} | {
+    f"heat FED 0.3, total flux f = {f:g}, {e}": f"heat FED ≥ 0.3, total flux, f = {f:g}, "
+    f"{e} dose (SFPE Eq. 63.43; sensitivity)"
     for e in HEAT_TF_ENDPOINTS
+    for f in U_FACTORS
 }
+SCREEN_RUNS = ("0.2 m, 1 door", "0.1 m, 1 door", "0.2 m, 2 doors")
+
+
+def burner_distance(grid, mask):
+    """Largest distance of a masked cell centre from the burner, m."""
+    x0, y0, w, d = BURNER
+    jj, ii = np.nonzero(mask)
+    cx = 0.5 * (grid.x_edges[ii] + grid.x_edges[ii + 1])
+    cy = 0.5 * (grid.y_edges[jj] + grid.y_edges[jj + 1])
+    dx = np.clip(cx, x0, x0 + w) - cx
+    dy = np.clip(cy, y0, y0 + d) - cy
+    return float(np.hypot(dx, dy).max())
+
+
+def screen_cell(fire, crit, grid):
+    """(cells exceeded, cells on the floor, first, median, farthest from burner)."""
+    aset = cell_aset(fire.node[crit], fire, grid)
+    hit = np.isfinite(aset)
+    n_floor = int((grid.area > 0).sum())
+    if not hit.any():
+        return 0, n_floor, np.inf, np.inf, np.nan
+    return (
+        int(hit.sum()),
+        n_floor,
+        float(aset[hit].min()),
+        float(np.median(aset[hit])),
+        burner_distance(grid, hit),
+    )
 
 
 def report_screen(fires, grids):
@@ -725,27 +824,39 @@ def report_screen(fires, grids):
     keys = list(next(iter(fires.values())).screen)
     rows = [[k] + [f"{fires[n].screen[k]:.3g}" for n in names] for k in keys]
     md_table(["quantity"] + names, rows)
-    print("## Criteria: share of map cells exceeded by 600 s, first exceedance\n")
+    print(
+        "## Criterion screen by source set: map cells exceeded by 600 s (∃ rule), "
+        "first / median time, farthest cell centre from the burner\n"
+    )
+    runs = [n for n in SCREEN_RUNS if n in fires]
     rows = []
-    labels = {c: spec[2] for c, spec in CRITERIA.items()} | SCREEN_EXTRA
-    for crit, label in labels.items():
-        row = [label]
-        for n in names:
-            grid = grid_for(n, grids)
-            aset = cell_aset(fires[n].node[crit], fires[n], grid)
-            floor = grid.area > 0
-            share = np.isfinite(aset[floor]).mean()
-            row.append(f"{share:.0%}, first {fmt_time(np.nanmin(aset))}")
-        rows.append(row)
-    md_table(["criterion"] + names, rows)
+    for source, crits in SOURCE_SETS.items():
+        for crit in crits:
+            row = [source, SCREEN_LABELS[crit]]
+            for n in runs:
+                hit, total, first, med, dist = screen_cell(
+                    fires[n], crit, grid_for(n, grids)
+                )
+                row.append(
+                    f"{hit}/{total}, {fmt_time(first)} / {fmt_time(med)}, ≤ {dist:.1f} m"
+                    if hit
+                    else f"0/{total}, not by 600 s"
+                )
+            rows.append(row)
+        if source.startswith(("vfdb", "EA")):
+            rows.append([source, "HCN"] + ["not applicable: not tracked"] * len(runs))
+    md_table(["source set", "criterion"] + runs, rows)
+    t_skin = DEFAULT_HEAT_SKIN_TEMPERATURE_C + 273.15
+    u_skin = 4.0 * STEFAN_BOLTZMANN_W_M2_K4 * t_skin**4 / 1000.0
     for n in names:
         u = fires[n].screen["U max kW/m²"]
-        print(
-            f"- {n}: max INTEGRATED INTENSITY U = {u:.2f} kW/m²; f·U reaches the "
-            f"ISO {ISO_RADIANT_THRESHOLD_KW_M2} kW/m² counting threshold for f = 1: "
-            f"{'yes' if u >= ISO_RADIANT_THRESHOLD_KW_M2 else 'no'}, for f = 0.25: "
-            f"{'yes' if u / 4 >= ISO_RADIANT_THRESHOLD_KW_M2 else 'no'}"
-        )
+        for f in U_FACTORS:
+            q = f * (u - u_skin)
+            print(
+                f"- {n}: max f·(U − 4σT_skin⁴) at f = {f:g} is {q:.2f} kW/m²; "
+                f"ISO 13571 counts it from {ISO_RADIANT_THRESHOLD_KW_M2} kW/m²: "
+                f"{'reached' if q >= ISO_RADIANT_THRESHOLD_KW_M2 else 'not reached'}"
+            )
     print()
 
 
@@ -965,6 +1076,20 @@ def fig_aset_criteria(fire, grid, walkable, exits, name, title):
             else f"{shown.size} cells, all at the plume"
         )
         _title(ax, letter, f"{CRITERIA[crit][2]}; {note}")
+        if crit.startswith("T "):
+            ax.text(
+                15,
+                5.2,
+                "vfdb Table 8.3, note (2): gas temperature is not to be assessed\n"
+                "in isolation from smoke density. 45 °C is the < 30 min column;\n"
+                "for < 5 min, vfdb gives 50 °C.",
+                ha="center",
+                va="center",
+                fontsize=8.5,
+                color=TEXT,
+                zorder=6,
+                bbox={"fc": "white", "ec": "lightgrey", "alpha": 0.9},
+            )
         _note(
             name,
             crit,
@@ -1007,6 +1132,86 @@ def fig_aset_criteria(fire, grid, walkable, exits, name, title):
         "T ≥ 45 °C only at the plume: not grid-converged. Burner red, exit green.",
     )
     _save(fig, name)
+
+
+def fig_screen(fires, grids):
+    """Map cells exceeded by 600 s per criterion, grouped by source set."""
+    sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+    runs = [n for n in SCREEN_RUNS if n in fires]
+    marks = dict(zip(runs, (("o", CAPPED), ("D", UNCAPPED), ("s", N200))))
+    offsets = dict(zip(runs, (-0.22, 0.0, 0.22)))
+    labels, y, ticks, groups = [], 0, [], []
+    fig, ax = plt.subplots(figsize=(10, 7.4), layout="constrained")
+    for source, crits in SOURCE_SETS.items():
+        groups.append((y - 0.6, source))
+        for crit in crits:
+            for n in runs:
+                hit, *_ = screen_cell(fires[n], crit, grid_for(n, grids))
+                marker, colour = marks[n]
+                ax.scatter(
+                    hit,
+                    y + offsets[n],
+                    marker=marker,
+                    s=36,
+                    fc=colour if hit else "white",
+                    ec=colour,
+                    lw=1.3,
+                    zorder=3,
+                )
+                _note("criteria_screen.png", f"{crit}, {n}", f"{hit} cells")
+            label = SCREEN_LABELS[crit]
+            labels.append(
+                label.split(" (SFPE")[0].replace(" (stationary-occupant dose)", "")
+            )
+            ticks.append(y)
+            y += 1
+        y += 0.9
+    for y0, source in groups:
+        ax.text(
+            -0.5,
+            y0,
+            source,
+            fontsize=9.5,
+            fontweight="bold",
+            color=TEXT,
+            va="center",
+            ha="left",
+            transform=ax.get_yaxis_transform(),
+        )
+    ax.set_xscale("symlog", linthresh=1)
+    ax.set_xlim(-0.3, 1500)
+    ax.set_xticks([0, 1, 10, 100, 848], labels=["0", "1", "10", "100", "848 (all)"])
+    ax.set_yticks(ticks, labels=labels)
+    ax.set_ylim(y - 0.5, -1.2)
+    ax.set_xlabel("map cells exceeded by 600 s at z = 2.0 m (∃ rule, 0.6 m cells)")
+    ax.tick_params(length=0, labelcolor=TEXT)
+    ax.xaxis.label.set_color(TEXT)
+    ax.grid(axis="y", visible=False)
+    sns.despine(ax=ax, left=True)
+    _legend(
+        ax,
+        handles=[
+            Line2D([], [], marker=m, ls="", mfc=c, mec=c, label=n)
+            for n, (m, c) in marks.items()
+        ]
+        + [
+            Line2D(
+                [], [], marker="o", ls="", mfc="white", mec="grey", label="open: none"
+            )
+        ],
+        loc="lower right",
+        fontsize=8.5,
+    )
+    _suptitle(
+        fig, "Which fire quantities are exceeded at 2.0 m by 600 s, per source set"
+    )
+    _stamp(
+        fig,
+        "Radiant flux: 0.25·(U − 4σT_amb⁴) from INTEGRATED INTENSITY, T_amb = 20 °C [A]. "
+        "HCN not tracked: not applicable. Not reached by 600 s is a result for this "
+        "fire, not a pass.",
+    )
+    _save(fig, "criteria_screen.png")
 
 
 def fig_grid_pair(coarse, fine, grid, walkable, exits):
@@ -1149,7 +1354,7 @@ def fig_rset(results, grids, walkable, exits):
     _stamp(
         fig,
         "PedPy compute_rset_map (RsetMethod.MAX), 0.6 m cells, 10 fps, frame 0 = ignition; "
-        "maximum over n = 10 seeds (paper p. 12). Grey: never visited. Burner red, exit green.",
+        "maximum over n = 10 seeds (paper p. 5). Grey: not visited. Burner red, exit green.",
     )
     _save(fig, "rset_maps.png")
 
@@ -1189,7 +1394,7 @@ def fig_diff(panels, grid, walkable, exits, name, title):
         handles=[
             Patch(fc="#b2182b", hatch="////", label="DIFF < 0 (fail)"),
             Patch(fc="#2166ac", label="DIFF ≥ 0 (pass)"),
-            Patch(fc=UNVISITED, label="never visited"),
+            Patch(fc=UNVISITED, label="not visited"),
         ],
         loc="outside upper right",
         fontsize=8,
@@ -1199,7 +1404,7 @@ def fig_diff(panels, grid, walkable, exits, name, title):
     _stamp(
         fig,
         "ASET: K ≥ 0.23 1/m, ∃ rule, z = 2.0 m, ~1 s slices. RSET: maximum over n = 10 "
-        "seeds, arm U. No visited cell is censored (ASET all by 600 s). C = Σ DIFF·A over DIFF < 0 (no physical meaning).",
+        "seeds, arm U. No visited cell is censored (ASET all by 600 s). C = Σ DIFF·A over DIFF < 0 (no direct physical interpretation yet, paper p. 7).",
     )
     _save(fig, name)
 
@@ -1304,7 +1509,7 @@ def fig_measures(rows):
     )
     _stamp(
         fig,
-        "Maximum pooling over n = 10 seeds (paper p. 12); K ≥ 0.23 1/m, ∃ rule, z = 2.0 m, "
+        "Maximum pooling over n = 10 seeds (paper p. 5); K ≥ 0.23 1/m, ∃ rule, z = 2.0 m, "
         "~1 s slices, 600 s censoring. Two doors: no grid band (no 0.1 m run).",
     )
     _save(fig, "diff_measures.png")
@@ -1455,7 +1660,7 @@ def version_measures(results, fires, grid):
 
 def report_measures(table):
     for pooling, title in (
-        ("max", "maximum over n = 10 seeds (paper p. 12)"),
+        ("max", "maximum over n = 10 seeds (paper p. 5)"),
         ("p95", "95th percentile over the seeds visiting each cell"),
     ):
         print(f"## DIFF measures, K ≥ 0.23, ∃ rule, ~1 s, pooling: {title}\n")
@@ -1523,16 +1728,51 @@ def sensitivity(results, fires, grid):
         "K ≥ 0.23, nearest node, ~1 s": cell_aset(
             fire.node["K 0.23"], fire, grid, "nearest"
         ),
-        "K ≥ 0.23, ∃, 10 s": cell_aset(fire.node["K 0.23 @10 s"], fire, grid),
-        "paper-faithful: K ≥ 0.23 or T ≥ 45, nearest, 10 s, 120 s fill": cell_aset(
-            paper_node, fire, grid, "nearest"
+        "K ≥ 0.23, ∀ (Eq. 2 as printed), ~1 s": cell_aset_forall(
+            fire.raw["K 0.23"], fire, grid
         ),
+        "K ≥ 0.23, ∀ (Eq. 2 as printed), ~1 s, 0.1 m FDS grid": cell_aset_forall(
+            fires["0.1 m, 1 door"].raw["K 0.23"], fires["0.1 m, 1 door"], grid
+        ),
+        "K ≥ 0.23, ∃, 10 s": cell_aset(fire.node["K 0.23 @10 s"], fire, grid),
+        "paper's demonstration settings: K ≥ 0.23 or T ≥ 45, nearest, 10 s, "
+        "120 s fill": cell_aset(paper_node, fire, grid, "nearest"),
     }
     print("## Sensitivity: one door, capped, pre-movement 0, maximum over n = 10\n")
     md_table(
         MEASURE_HEADER,
         [measure_row(k, measures(a, rset, grid)) for k, a in rows.items()],
     )
+    fill_check(results, fires, grid)
+
+
+def fill_check(results, fires, grid):
+    """0.1 m grid: do cells exceeded only after 120 s enter DIFF with a fill?"""
+    fire = fires["0.1 m, 1 door"]
+    aset = cell_aset(fire.node["K 0.23"], fire, grid)
+    late = np.isfinite(aset) & (aset > PAPER_T_END)
+    filled = np.where(late | np.isinf(aset), PAPER_T_END, aset)
+    print(
+        f"## 120 s fill against 600 s censoring, 0.1 m FDS grid, one door\n\n"
+        f"- cells first exceeded after {PAPER_T_END:.0f} s: {int(late.sum())}\n"
+    )
+    rows = []
+    for name in ("capped_pre0", "capped_pre_default", "capped_pre30", "capped_pre60"):
+        rset = results[("1door", name)].rset_max
+        both = late & np.isfinite(rset) & (rset > PAPER_T_END)
+        rows.append(
+            measure_row(
+                f"{v_label(('1door', name))}, censored", measures(aset, rset, grid)
+            )
+        )
+        rows.append(
+            measure_row(
+                f"{v_label(('1door', name))}, 120 s fill ({int(both.sum())} late "
+                "cells with RSET > 120 s)",
+                measures(filled, rset, grid),
+            )
+        )
+    md_table(MEASURE_HEADER, rows)
 
 
 def main():
@@ -1602,6 +1842,7 @@ def main():
         "aset_criteria_2door.png",
         "ASET per criterion at 2.0 m, two doors, 0.2 m FDS grid",
     )
+    fig_screen(fires, grids)
     fig_grid_pair(
         fires["0.2 m, 1 door"],
         fires["0.1 m, 1 door"],
