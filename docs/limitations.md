@@ -205,17 +205,18 @@ incapacitated or rerouted) reproduce. Report aggregate outcomes over several see
 and do not compare single trajectories between runs. See the
 [verification page](https://pedestriandynamics.org/pyFDS-Evac/verification/).
 
-Two known causes make results depend on more than the seed:
+One known cause makes results depend on more than the seed:
 
-- **Earlier runs in the same process.** Results can depend on the JuPedSim
-  agent ids of earlier runs in the same Python process
-  ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)). For a
-  study, run each seed in its own process, for example a shell loop over
-  `run.py --seed N`.
 - **Python's hash seed.** For discovery agents, the order of tied routes can
   depend on `PYTHONHASHSEED`
   ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)). Set
   it to a fixed value for bit-identical reruns.
+
+Earlier runs in the same Python process do not change the results. Every
+per-agent draw is seeded from the seed and the agent's spawn order, not from
+its JuPedSim id. The outputs still label agents by JuPedSim id, which is
+numbered per process, so a second run in the same process reports the same
+agents under other ids.
 
 ## References
 

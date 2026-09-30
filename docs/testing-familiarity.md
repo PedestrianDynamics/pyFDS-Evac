@@ -262,9 +262,8 @@ come from reruns whose trajectories and route decisions are identical to the
 stored runs.
 
 Reruns on the same machine reproduce these numbers to the last digit. Across
-platforms, or with other runs in the same process, they need not
-([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198),
-[#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)); the
+platforms they need not
+([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)); the
 tests on generated worlds (`tests/test_generated_worlds.py`) therefore
 assert invariants, not trajectories.
 

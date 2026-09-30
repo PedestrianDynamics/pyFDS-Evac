@@ -145,9 +145,7 @@ The flags under "Other" are not yet next to the group they belong to
 The GUI calls the same `run_scenario()` as the command line, through the same
 option builder (`build_run_kwargs` in `pyfds_evac/core/run_config.py`), so a
 run configured in the browser gets the same options as the equivalent
-`run.py` command. The results can still differ: a second run in the same GUI
-session can differ from a fresh `run.py` run with the same seed
-([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)). Invalid combinations (for example `--vis-cache` with rerouting off)
+`run.py` command. Invalid combinations (for example `--vis-cache` with rerouting off)
 are rejected when the form is submitted, with the same message as `run.py`,
 in the alert above the results area.
 
@@ -299,11 +297,8 @@ and will not exist elsewhere.
   the scenario path, not the scenario JSON, the FDS results or the visibility
   cache. The script reloads them from disk, so after an edit to the scenario
   or the FDS folder the code for run #N no longer reproduces run #N.
-- **Results can differ from the GUI run, even with the same seed.** Repeated
-  runs in one GUI process are affected
-  ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)), and
-  other versions or platforms can also change results. For an exact
-  comparison, compare the first run of a fresh process on each side.
+- **Results can differ from the GUI run, even with the same seed,** with
+  other versions or on other platforms.
 - **Outputs.** The script writes to a new `OUTPUT_DIR` and does not overwrite
   the GUI run's files. It does read the same `VIS_CACHE` file, and the cache
   key includes the resolved FDS directory (`_make_meta` in

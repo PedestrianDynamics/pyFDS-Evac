@@ -197,8 +197,10 @@ defaults to `"full"` (`simulation_init.py`, `_initialize_with_fallback`).
      exit, or cannot be reached is silently ignored (`cognitive_map.py`,
      `_learn_route_to`, `init_cognitive_map`).
   2. **Familiarity draw.** Each other reachable exit is learned, with its
-     shortest path, with probability \(p\). The draw uses an RNG seeded with
-     `seed + 7919·agent_id` (`scenario.py`, `_assign_initial_exit`, `run_scenario`). A library caller
+     shortest path, with probability \(p\). The draw uses an RNG seeded from
+     the run seed and the agent's spawn order, not its JuPedSim id
+     (`agent_seed.py`, `agent_rng`; `scenario.py`, `_assign_initial_exit`,
+     `run_scenario`). A library caller
      that passes no RNG gets no draw (`cognitive_map.py`, `init_cognitive_map`).
   3. **Perception at spawn.** Each neighbour of the spawn node whose sign is
      legible **from the spawn node's routing point** is learned

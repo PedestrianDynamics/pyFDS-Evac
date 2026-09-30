@@ -229,11 +229,6 @@ FED max:   0.36
 route changes: {'smoke_reroute': 10, 'wander': 154}
 ```
 
-Run one scenario per Python process. A second run in the same process can
-give a different result
-([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198); see
-[Limitations › Reproducibility](limitations.md#reproducibility)).
-
 ## 5. Results
 
 The figures below are drawn from these files by

@@ -153,12 +153,8 @@ versions: {'pyfds-evac': '0.1.0', 'jupedsim': '1.4.2', 'fdsreader': '1.11.7', 'f
 git: 3f47897b351d9f8c403782611282c0bc2a2bdcb0, dirty: True
 ```
 
-This loop runs all five seeds in one Python process, which is enough for a
-first look. Results can depend on earlier runs in the same process
-([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)), so for
-a study run each seed in its own process, for example a shell loop over
-`run.py --seed N`; see
-[Limitations › Reproducibility](limitations.md#reproducibility).
+This loop runs all five seeds in one Python process. Each seed gives the same
+result as in a process of its own; only the JuPedSim agent ids differ.
 
 The versions and the git state depend on your checkout. `dirty: True` means the
 working tree had uncommitted changes when the run started. The seed changes

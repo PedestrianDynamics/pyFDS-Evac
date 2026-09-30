@@ -402,12 +402,16 @@ switch to lower-cost exits when conditions change.
 
 ### Reevaluation scheduling
 
-Each agent has a personal time offset derived from its ID so that
-not all agents reevaluate on the same timestep:
+Each agent has a personal time offset derived from its spawn order so
+that not all agents reevaluate on the same timestep:
 
 ```
-offset = (agent_id % steps_per_interval) * dt_s
+offset = ((spawn_index + 1) % steps_per_interval) * dt_s
 ```
+
+`spawn_index` counts the agents spawned from the same origin (the agents
+placed at t = 0, or one flow source) from 0, so the offsets of one origin are
+spread evenly. Agents of different origins can share an offset.
 
 An agent fires its **first** evaluation once `current_time >= offset`,
 then fires again every `reevaluation_interval_s` thereafter. With a

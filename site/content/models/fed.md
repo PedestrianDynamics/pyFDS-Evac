@@ -88,8 +88,9 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   remains as a static obstacle. An agent incapacitated during pre-movement is
   released again when its pre-movement time ends
   ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)). In
-  `probabilistic` mode each agent draws each threshold once, from the run's
-  seed, as `_sample_threshold` does:
+  `probabilistic` mode each agent draws each threshold once, from a stream
+  seeded by the run's seed and the agent's spawn order, as
+  `_sample_threshold` does:
   \(D_i = \texttt{fed\_threshold} \cdot \exp(\sigma Z)\), \(Z \sim N(0, 1)\).
   In `deterministic` mode every agent uses the threshold itself. Both doses
   are deterministic by default: the gas dose as in FDS+Evac, and the heat

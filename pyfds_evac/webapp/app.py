@@ -1406,8 +1406,7 @@ def _pyexport_notes(version, scenario_name: str, scenario_path: str) -> list:
         ),
         P(
             "Reproducibility: results can differ from the GUI run, even with "
-            "the same seed. Repeated runs in one GUI session are affected too "
-            "(#198). Different versions or platforms can also change results."
+            "the same seed, with other versions or on other platforms."
         ),
         Details(
             Summary("Details: what the GUI adds or leaves out"),
