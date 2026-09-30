@@ -140,11 +140,11 @@ print(f"          fds_version={manifest['fds_version']}")
 Expected output:
 
 ```text
-Evacuated 1/1  sim=78.5s  wall=0m00s  done
+Evacuated 1/1  sim=78.4s  wall=0m00s  done
 Evacuated 1/1  sim=85.3s  wall=0m00s  done
 K sampled:    0.99550 1/m
 speed factor: 0.919626
-exit time:    78.47 s clear, 85.32 s in smoke
+exit time:    78.44 s clear, 85.30 s in smoke
 manifest: fds_dir=/…/fds-evac/assets/iso_table21_coupled/fds
           fds_version=FDS-6.10.1-0-g12efa16-release
 ```
@@ -155,7 +155,7 @@ The manifest stores `fds_dir` as an absolute path; it is shortened here.
 nearest to `slice_height_m` (default 1.6 m). The deck prescribes a soot density
 that gives *K* = 1.0 1/m. The slice returns 0.99550 1/m, and the default speed
 law turns it into a speed factor of 0.919626. The ratio of the exit times,
-85.32 / 78.47 = 1.0873, matches 1 / 0.919626 = 1.0874 to within 0.01 %.
+85.30 / 78.44 = 1.0875, matches 1 / 0.919626 = 1.0874 to within 0.01 %.
 
 `ExtinctionField.from_fds` remembers the directory it read. The run manifest
 records that directory and reads the FDS version from the `FDSVERSION` line of

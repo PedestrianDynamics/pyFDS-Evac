@@ -107,7 +107,7 @@ uv run python run.py --scenario assets/iso_table21_coupled \
     --fds-dir assets/iso_table21_coupled/fds
 ```
 
-ends with `Simulation finished in 85.32 s (1/1 evacuated).`
+ends with `Simulation finished in 85.30 s (1/1 evacuated).`
 {{< /checkpoint >}}
 
 ### Keep the run as a script

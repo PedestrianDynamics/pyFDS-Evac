@@ -334,6 +334,16 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- An agent could stop 0.01-0.02 m short of an exit polygon drawn thinner
+  than about 0.25 m against a wall, held there by the wall or a door jamb,
+  and was never removed; about one run in ten of the Schröder room configs
+  ran to `max_simulation_time` with one or two agents left. An exit now
+  also counts as reached when the agent's centre is within 0.03 m of its
+  polygon. A single agent leaves about 0.02 s earlier (clear ISO corridor
+  79.26 -> 79.24 s); the golden decks end 0.02-0.10 s earlier. The golden
+  snapshots, the single-run pages, the RSET how-to and ISO Test 18 are
+  regenerated; pages already on earlier runs keep their notes
+  ([#401](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/401)).
 - A flow spawn whose setup failed after `add_agent` had succeeded was
   retried at the next candidate position, which left a half-initialised
   agent in the simulation and added a second one. The error is now raised
