@@ -140,7 +140,10 @@ The coded forms are on the [FED model](/models/fed.md) page.
 ![Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
 
 *Figure 2. The brake: (a) f(K), (b) g(FIC) and (c) their product, with
-contours of equal speed factor. FED does not appear on
+contours of equal speed factor. The irritant factor g has no known source
+and is off by default; the published relation is Eq. 63.13 on
+[Irritant gases](/fundamentals/irritants.md#irritants-and-walking-speed-fic).
+FED does not appear on
 these axes; it only sets the speed to zero at the agent's threshold.
 Script: `scripts/generate_tenability_curves.py`.*
 
