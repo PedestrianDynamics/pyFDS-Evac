@@ -56,7 +56,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `uv_lock_sha256` | hash of the `uv.lock` of the checkout, `null` for an installed wheel |
 | `git_commit`, `git_dirty` | commit of the checkout, and whether tracked files had uncommitted changes |
 | `seed` | the seed of the run |
-| `agent_seeding` | how per-agent draws are derived from the seed, `spawn-key-blake2b-v1`; runs of another scheme, or without the key, draw differently under the same seed |
+| `agent_seeding` | how per-agent and per-distribution draws are derived from the seed, `spawn-key-blake2b-v2`; runs of another scheme, or without the key, draw differently under the same seed (`v1` runs place agents from `seed + index`, #360) |
 | `scenario_path` | the scenario file that was loaded |
 | `fds_dir`, `fds_version` | absolute FDS directory, and the FDS version read from its `.smv`; `null` without FDS output |
 | `created_utc` | time the run finished, UTC |
@@ -80,7 +80,7 @@ Example, from the command above:
   "git_commit": "80a7608…",
   "git_dirty": false,
   "seed": 420,
-  "agent_seeding": "spawn-key-blake2b-v1",
+  "agent_seeding": "spawn-key-blake2b-v2",
   "scenario_path": "/…/assets/iso_table22_coupled/config_a.json",
   "fds_dir": "/…/assets/iso_table22_coupled/fds/a",
   "fds_version": "FDS-6.10.1-0-g12efa16-release",

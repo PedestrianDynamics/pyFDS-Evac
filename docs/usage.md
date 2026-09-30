@@ -102,8 +102,9 @@ refused, and a slower crowd changes which positions are refused. Every
 per-agent draw, such as the familiarity map, the target points and the journey
 variant, is seeded from this spawn order, so paired agents draw the same in
 both runs. An exit history written before per-agent draws were seeded this way
-(its run's manifest has no `agent_seeding` key) still replays without error,
-but pairs agents whose draws differ; write it again. A replayed run fails when a spawn is missing
+(its run's manifest has no `agent_seeding` key), or with another scheme such
+as `spawn-key-blake2b-v1`, whose agents started at other positions, still
+replays without error, but pairs agents whose draws differ; write it again. A replayed run fails when a spawn is missing
 from the file, when the file names an exit the scenario lacks, or when an
 agent cannot be sent to its exit; it logs a warning when agents of the file were
 never spawned. With rerouting on, a replayed agent can still switch exits,

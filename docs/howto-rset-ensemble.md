@@ -144,11 +144,11 @@ Expected output, without the `Evacuated 30/30 … done` progress line that
 
 ```text
 jps-distributions_0: 30 agents, use_premovement=False
-seed 1: last exit 43.8 s, evacuated 30, incapacitated 0, remaining 0
-seed 2: last exit 44.2 s, evacuated 30, incapacitated 0, remaining 0
+seed 1: last exit 41.9 s, evacuated 30, incapacitated 0, remaining 0
+seed 2: last exit 45.0 s, evacuated 30, incapacitated 0, remaining 0
 seed 3: last exit 44.9 s, evacuated 30, incapacitated 0, remaining 0
-seed 4: last exit 43.2 s, evacuated 30, incapacitated 0, remaining 0
-seed 5: last exit 43.1 s, evacuated 30, incapacitated 0, remaining 0
+seed 4: last exit 44.6 s, evacuated 30, incapacitated 0, remaining 0
+seed 5: last exit 45.7 s, evacuated 30, incapacitated 0, remaining 0
 versions: {'pyfds-evac': '0.1.0', 'jupedsim': '1.4.2', 'fdsreader': '1.11.7', 'fdsvismap': '0.2.1'}
 git: 3f47897b351d9f8c403782611282c0bc2a2bdcb0, dirty: True
 ```
@@ -173,9 +173,9 @@ print(f"95th percentile = {np.percentile(last, 95):.1f} s")
 
 ```text
 n = 5 seeds
-mean = 43.8 s, SD = 0.7 s
-min-max = 43.1-44.9 s
-95th percentile = 44.8 s
+mean = 44.4 s, SD = 1.5 s
+min-max = 41.9-45.7 s
+95th percentile = 45.6 s
 ```
 
 **Five seeds are too few for a study.** They keep this example fast. The SD and
@@ -224,7 +224,7 @@ of this site, so running it changes your checkout; restore it with
 `git checkout -- site/static/images/howto/egress_exit_curve.png`
 ([#312](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312)).
 
-![Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 33–34 s to 30 between 43 and 45 s, and a grey band spans the range of last exit times](/images/howto/egress_exit_curve.png)
+![Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 33–34 s to 30 between 42 and 46 s, and a grey band spans the range of last exit times](/images/howto/egress_exit_curve.png)
 
 *Cumulative number of agents evacuated [-] against time since the start of the
 simulation [s], `assets/fic_vs_fed_speed`, N = 30 agents, clear air, no

@@ -32,10 +32,24 @@ PURPOSE_NEXT_STAGE = "next_stage"
 PURPOSE_INCAP_GAS = "incap_gas"
 PURPOSE_INCAP_HEAT = "incap_heat"
 
-# Bumped only when the derivation below changes; recorded in the manifest.
-SEEDING_SCHEME = "spawn-key-blake2b-v1"
+# One stream per distribution and purpose, keyed by the distribution key.
+PURPOSE_POSITIONS = "positions"
+PURPOSE_SHUFFLE = "shuffle"
+PURPOSE_PREMOVEMENT = "premovement"
+PURPOSE_AGENT_VALUES = "agent_values"
+
+# Hashed into every per-agent seed; fixed so that those seeds stay as they are.
+_AGENT_SEED_TAG = "spawn-key-blake2b-v1"
+_DISTRIBUTION_SEED_TAG = "distribution-blake2b-v1"
+
+# Bumped whenever a derivation below changes; recorded in the manifest.
+# v2: per-distribution streams are hashed from the distribution key (#360).
+SEEDING_SCHEME = "spawn-key-blake2b-v2"
 
 _SEED_MASK = (1 << 63) - 1
+# numpy's legacy seeding, which jupedsim's distribute_* functions use,
+# accepts only seeds below 2**32.
+_NUMPY_SEED_MASK = (1 << 32) - 1
 
 
 class SpawnKeyError(RuntimeError):
@@ -52,9 +66,24 @@ def agent_seed(run_seed: int | None, key: SpawnKey, purpose: str) -> int:
     run = 0 if run_seed is None else int(run_seed)
     # "\x1f" (unit separator) cannot occur in a distribution key, so the
     # encoding is unambiguous.
-    text = "\x1f".join((SEEDING_SCHEME, purpose, str(run), origin, str(int(index))))
+    text = "\x1f".join((_AGENT_SEED_TAG, purpose, str(run), origin, str(int(index))))
     digest = hashlib.blake2b(text.encode("utf-8"), digest_size=8).digest()
     return int.from_bytes(digest, "big") & _SEED_MASK
+
+
+def distribution_seed(run_seed: int | None, dist_key: str, purpose: str) -> int:
+    """Return a deterministic 32-bit seed for one distribution's *purpose* stream.
+
+    Hashing ``(run seed, purpose, distribution key)`` keeps the streams of two
+    distributions, and of consecutive run seeds, apart: ``seed + index`` gave
+    distribution 1 under seed s the stream of distribution 0 under s + 1
+    (#360). The value fits numpy's legacy seeding. A ``None`` run seed
+    counts as 0.
+    """
+    run = 0 if run_seed is None else int(run_seed)
+    text = "\x1f".join((_DISTRIBUTION_SEED_TAG, purpose, str(run), str(dist_key)))
+    digest = hashlib.blake2b(text.encode("utf-8"), digest_size=8).digest()
+    return int.from_bytes(digest, "big") & _NUMPY_SEED_MASK
 
 
 def agent_rng(run_seed: int | None, key: SpawnKey, purpose: str) -> random.Random:

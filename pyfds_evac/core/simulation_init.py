@@ -5,7 +5,6 @@ import math
 import random
 import subprocess
 import sys
-import zlib
 from collections import defaultdict
 from typing import Any
 
@@ -17,11 +16,16 @@ from shapely.geometry import Point, Polygon
 
 from .agent_seed import (
     INITIAL_ORIGIN,
+    PURPOSE_AGENT_VALUES,
     PURPOSE_PATH_CHOICE,
+    PURPOSE_POSITIONS,
+    PURPOSE_PREMOVEMENT,
+    PURPOSE_SHUFFLE,
     PURPOSE_TARGET,
     SpawnKey,
     agent_rng,
     assign_spawn_key,
+    distribution_seed,
     steering_seeds,
 )
 from .premovement_distributions import (
@@ -287,17 +291,19 @@ def _seed_shared_areas(spawn_distributions, seed):
                 f"but area can hold at most ~{capacity}. "
                 f"Reduce the number of agents or enlarge the distribution area."
             )
-        area_seed = seed + members[0]["index"]
+        area_key = members[0]["dist_key"]
         positions = jps.distribute_by_number(
             polygon=area,
             number_of_agents=total,
             distance_to_agents=2 * max_radius,
             distance_to_polygon=max_radius,
-            seed=area_seed,
+            seed=distribution_seed(seed, area_key, PURPOSE_POSITIONS),
         )
         # Shuffle so the profiles interleave across the room instead of one
         # taking whichever corner the sampler happened to fill first.
-        random.Random(area_seed).shuffle(positions)
+        random.Random(distribution_seed(seed, area_key, PURPOSE_SHUFFLE)).shuffle(
+            positions
+        )
         taken = 0
         for member in members:
             count = int(member["params"]["number"])
@@ -1150,9 +1156,11 @@ def _initialize_with_fallback(
                     polygon=clean_dist_area,
                     distance_to_agents=2 * max_radius,
                     distance_to_polygon=max_radius,
-                    seed=seed + i,
+                    seed=distribution_seed(seed, dist_key_str, PURPOSE_POSITIONS),
                 )
-                shuffle_rng = random.Random(seed + i)
+                shuffle_rng = random.Random(
+                    distribution_seed(seed, dist_key_str, PURPOSE_SHUFFLE)
+                )
                 shuffle_rng.shuffle(positions)
                 starting_pos_per_source.append(positions)
 
@@ -1232,9 +1240,11 @@ def _initialize_with_fallback(
                 polygon=clean_dist_area,
                 distance_to_agents=2 * max_radius,
                 distance_to_polygon=max_radius,
-                seed=seed + i,
+                seed=distribution_seed(seed, dist_key_str, PURPOSE_POSITIONS),
             )
-            shuffle_rng = random.Random(seed + i)
+            shuffle_rng = random.Random(
+                distribution_seed(seed, dist_key_str, PURPOSE_SHUFFLE)
+            )
             shuffle_rng.shuffle(positions)
             starting_pos_per_source.append(positions)
 
@@ -1305,7 +1315,9 @@ def _initialize_with_fallback(
 
             # Use distribution-specific seed or global seed
             if premovement_seed is None:
-                premovement_seed = seed + spawn_data["index"] + 1000
+                premovement_seed = distribution_seed(
+                    seed, spawn_data["dist_key"], PURPOSE_PREMOVEMENT
+                )
 
             distribution = create_premovement_distribution(
                 dist_type, dist_params, premovement_seed
@@ -1313,7 +1325,9 @@ def _initialize_with_fallback(
             agent_premovement_times = distribution.sample(len(positions))
 
         # Sample per-agent radius and v0
-        rng = np.random.RandomState(seed + spawn_data["index"])
+        rng = np.random.RandomState(
+            distribution_seed(seed, spawn_data["dist_key"], PURPOSE_AGENT_VALUES)
+        )
         sampled_radii, sampled_v0s = _sample_agent_values(
             spawn_data["params"], len(positions), rng
         )
@@ -2210,9 +2224,11 @@ def _add_agents(
                     polygon=dist_area,
                     distance_to_agents=2 * max_radius,
                     distance_to_polygon=max_radius,
-                    seed=seed + len(starting_pos_per_source),
+                    seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
                 )
-                shuffle_rng = random.Random(seed + zlib.crc32(dist_key.encode()))
+                shuffle_rng = random.Random(
+                    distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
+                )
                 shuffle_rng.shuffle(positions)
 
                 for schedule_entry in flow_schedule:
@@ -2316,9 +2332,11 @@ def _add_agents(
                     polygon=dist_area,
                     distance_to_agents=2 * max_radius,
                     distance_to_polygon=max_radius,
-                    seed=seed + len(starting_pos_per_source),
+                    seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
                 )
-                shuffle_rng = random.Random(seed + zlib.crc32(dist_key.encode()))
+                shuffle_rng = random.Random(
+                    distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
+                )
                 shuffle_rng.shuffle(positions)
                 starting_pos_per_source.append(positions)
 
@@ -2376,7 +2394,7 @@ def _add_agents(
                 number_of_agents=requested_count,
                 distance_to_agents=2 * max_radius,
                 distance_to_polygon=max_radius,
-                seed=seed,
+                seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
             )
 
             all_positions.extend(positions)
@@ -2400,7 +2418,9 @@ def _add_agents(
 
                 # Use distribution-specific seed or global seed
                 if premovement_seed is None:
-                    premovement_seed = seed + 1000
+                    premovement_seed = distribution_seed(
+                        seed, dist_key, PURPOSE_PREMOVEMENT
+                    )
 
                 distribution = create_premovement_distribution(
                     dist_type, dist_params, premovement_seed
@@ -2408,7 +2428,9 @@ def _add_agents(
                 agent_premovement_times = distribution.sample(len(positions))
 
             # Sample per-agent radius and v0
-            rng = np.random.RandomState(seed + zlib.crc32(dist_key.encode()) % (2**31))
+            rng = np.random.RandomState(
+                distribution_seed(seed, dist_key, PURPOSE_AGENT_VALUES)
+            )
             sampled_radii, sampled_v0s = _sample_agent_values(
                 spawn_params, len(positions), rng
             )
