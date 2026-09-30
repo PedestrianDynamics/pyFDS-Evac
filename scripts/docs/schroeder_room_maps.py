@@ -67,7 +67,14 @@ from matplotlib.patches import Polygon as PolygonPatch
 from shapely import box, wkt
 
 from pyfds_evac.core.fed import (
+    DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
+    DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+    HEAT_ENDPOINTS,
+    ISO_RADIANT_THRESHOLD_KW_M2,
+    STEFAN_BOLTZMANN_W_M2_K4,
+    DefaultFedConfig,
     DefaultFedInputs,
+    DefaultHeatFedModel,
     HeatFedInputs,
     default_fed_rate_per_minute,
     default_heat_fed_rate_per_minute,
@@ -148,7 +155,11 @@ QUANTITIES = {
     "O2": "OXYGEN VOLUME FRACTION",
     "U": "INTEGRATED INTENSITY",
 }
-ISO_RADIANT_KW_M2 = 2.5  # ISO 13571 Sect. 8.3.2: radiant flux below this is not counted
+# Sensitivity only: the total-flux heat dose (SFPE Ch. 63, Eq. 63.43) with the
+# radiant term f (U - 4 sigma T_s^4) from INTEGRATED INTENSITY at f = 1, the
+# largest f the engine accepts; below the ISO 13571 2.5 kW/m² it is not counted.
+U_FACTOR = 1.0
+HEAT_TF_ENDPOINTS = ("tolerance", "fatal")
 
 TEXT = "dimgrey"
 NEVER = "#f3e3b5"  # censored cells: not by 600 s (as on "A crowd in a real fire")
@@ -375,6 +386,40 @@ def heat_fed_rate(temp):
     return np.where(temp > 0, np.maximum(temp, 0.0) ** 3.61 / 4.1e8, 0.0)
 
 
+def total_flux_rate(temp, u, endpoint):
+    """Total-flux heat FED rate in 1/min (fed.py, U source, f = 1), vectorised."""
+    t_skin = DEFAULT_HEAT_SKIN_TEMPERATURE_C
+    u_skin = 4.0 * STEFAN_BOLTZMANN_W_M2_K4 * (t_skin + 273.15) ** 4 / 1000.0
+    radiant = U_FACTOR * (u - u_skin)
+    radiant = np.where(radiant < ISO_RADIANT_THRESHOLD_KW_M2, 0.0, radiant)
+    q = radiant + DEFAULT_HEAT_CONVECTIVE_COEFFICIENT * (temp - t_skin) / 1000.0
+    dose_r = HEAT_ENDPOINTS[endpoint].radiant_dose
+    return np.where(q > 0, np.maximum(q, 0.0) ** 1.33 / dose_r, 0.0)
+
+
+def check_total_flux(fields, n=3000):
+    """The vectorised total-flux rate must equal DefaultHeatFedModel's."""
+    rng = np.random.default_rng(1)
+    flat_t, flat_u = fields["T"].reshape(-1), fields["U"].reshape(-1)
+    hot = np.flatnonzero(flat_u >= ISO_RADIANT_THRESHOLD_KW_M2)
+    picks = np.concatenate([rng.integers(0, flat_t.size, n), hot[:n]])
+    for endpoint in HEAT_TF_ENDPOINTS:
+        model = DefaultHeatFedModel(
+            None,
+            DefaultFedConfig(),
+            endpoint=endpoint,
+            method="total-flux",
+            radiant_source="integrated-intensity",
+            u_factor=U_FACTOR,
+        )
+        for idx in picks:
+            t, u = float(flat_t[idx]), float(flat_u[idx])
+            ref = model._total_flux_rate(
+                HeatFedInputs(temperature_celsius=t, integrated_intensity_kw_m2=u)
+            )
+            assert np.isclose(total_flux_rate(t, u, endpoint), ref, rtol=1e-9)
+
+
 def check_fed_formulas(fields, n=3000):
     """The vectorised rates must equal fed.py's scalar functions."""
     rng = np.random.default_rng(0)
@@ -433,6 +478,7 @@ def fire_fields(fds_dir, cache):
         return fire
     f, times, xs, ys = read_slices(fds_dir)
     check_fed_formulas(f)
+    check_total_flux(f)
     derived = {
         "K": f["K"],
         "T": f["T"],
@@ -443,13 +489,19 @@ def fire_fields(fds_dir, cache):
     fire = Fire(fds_dir.name, times, xs, ys)
     for name, (key, limit, _) in CRITERIA.items():
         fire.node[name] = first_time(derived[key] >= limit, times)
+    for endpoint in HEAT_TF_ENDPOINTS:
+        tf = dose(total_flux_rate(f["T"], f["U"], endpoint), times)
+        fire.node[f"heat FED 0.3, total flux, {endpoint}"] = first_time(
+            tf >= 0.3, times
+        )
+        fire.screen[f"heat FED max, total flux f = 1, {endpoint}"] = float(tf[-1].max())
     steps = paper_steps(times)
     for name in ("K 0.23", "T 45"):
         key, limit, _ = CRITERIA[name]
         fire.node[f"{name} @10 s"] = first_time(
             derived[key][steps] >= limit, times[steps]
         )
-    fire.screen = {
+    fire.screen |= {
         "K max 1/m": float(f["K"].max()),
         "T max °C": float(f["T"].max()),
         "CO max ppm": float(derived["CO"].max()),
@@ -459,6 +511,10 @@ def fire_fields(fds_dir, cache):
         "gas FED max": float(derived["FED"][-1].max()),
         "heat FED max": float(derived["HFED"][-1].max()),
         "T ≥ 45 °C node share": float((fire.node["T 45"] < np.inf).mean()),
+        "U ≥ 2.5 kW/m² node share": float(
+            (f["U"] >= ISO_RADIANT_THRESHOLD_KW_M2).any(axis=0).mean()
+        ),
+        "U ≥ 2.5 kW/m² farthest node from origin, m": _farthest_hot(f["U"], xs, ys),
         "t_last": float(times[-1]),
     }
     cache.mkdir(parents=True, exist_ok=True)
@@ -473,13 +529,28 @@ def fire_fields(fds_dir, cache):
     return fire
 
 
+def _farthest_hot(u, xs, ys):
+    hot = (u >= ISO_RADIANT_THRESHOLD_KW_M2).any(axis=0)
+    gy, gx = np.meshgrid(ys, xs, indexing="ij")
+    return float(np.hypot(gx[hot], gy[hot]).max()) if hot.any() else 0.0
+
+
 def members(coords, edges, n_cells):
-    """Node indices per cell; a node on a cell edge belongs to both cells."""
-    eps = 1e-6
-    return [
+    """Node indices per cell; a node on a cell edge belongs to both cells.
+
+    fdsreader coordinates are float32 (29.800001), so the edge tolerance is
+    1 mm, well below the 0.1 m node spacing. Every cell inside the room must
+    hold CELL / dx + 1 nodes per axis (asserted).
+    """
+    eps = 1e-3
+    out = [
         np.flatnonzero((coords >= edges[i] - eps) & (coords <= edges[i + 1] + eps))
         for i in range(n_cells)
     ]
+    full = round(CELL / float(np.diff(coords).mean())) + 1
+    inside = [c for i, c in enumerate(out) if edges[i + 1] <= coords.max() + eps]
+    assert all(c.size == full for c in inside), "a map cell lost an edge node"
+    return out
 
 
 def nearest_index(coords, n_room, n_cells):
@@ -630,7 +701,25 @@ def report_split(data):
     md_table(["seed", "N=100 west", "N=100 east", "N=200 west", "N=200 east"], rows)
 
 
-def report_screen(fires, grid):
+FIGURE_NUMBERS = []  # (figure, item, value): every number a figure shows
+
+
+def _note(figure, item, value):
+    FIGURE_NUMBERS.append((figure, item, value))
+
+
+def grid_for(fire_name, grids):
+    return grids["2door"] if "2 doors" in fire_name else grids["1door"]
+
+
+SCREEN_EXTRA = {
+    f"heat FED 0.3, total flux, {e}": "heat FED ≥ 0.3, total flux, U with f = 1, "
+    f"{e} dose (sensitivity)"
+    for e in HEAT_TF_ENDPOINTS
+}
+
+
+def report_screen(fires, grids):
     print("## Fire quantities at z = 2.0 m, 0-600 s\n")
     names = [n for n in FDS_RUNS if n in fires]
     keys = list(next(iter(fires.values())).screen)
@@ -638,9 +727,11 @@ def report_screen(fires, grid):
     md_table(["quantity"] + names, rows)
     print("## Criteria: share of map cells exceeded by 600 s, first exceedance\n")
     rows = []
-    for crit, (_, _, label) in CRITERIA.items():
+    labels = {c: spec[2] for c, spec in CRITERIA.items()} | SCREEN_EXTRA
+    for crit, label in labels.items():
         row = [label]
         for n in names:
+            grid = grid_for(n, grids)
             aset = cell_aset(fires[n].node[crit], fires[n], grid)
             floor = grid.area > 0
             share = np.isfinite(aset[floor]).mean()
@@ -651,17 +742,18 @@ def report_screen(fires, grid):
         u = fires[n].screen["U max kW/m²"]
         print(
             f"- {n}: max INTEGRATED INTENSITY U = {u:.2f} kW/m²; f·U reaches the "
-            f"ISO {ISO_RADIANT_KW_M2} kW/m² counting threshold for f = 1: "
-            f"{'yes' if u >= ISO_RADIANT_KW_M2 else 'no'}, for f = 0.25: "
-            f"{'yes' if u / 4 >= ISO_RADIANT_KW_M2 else 'no'}"
+            f"ISO {ISO_RADIANT_THRESHOLD_KW_M2} kW/m² counting threshold for f = 1: "
+            f"{'yes' if u >= ISO_RADIANT_THRESHOLD_KW_M2 else 'no'}, for f = 0.25: "
+            f"{'yes' if u / 4 >= ISO_RADIANT_THRESHOLD_KW_M2 else 'no'}"
         )
     print()
 
 
-def report_first_criterion(fires, grid):
+def report_first_criterion(fires, grids):
     print("## Which criterion is first (cells exceeded, ∃ rule)\n")
     rows = []
     for n, fire in fires.items():
+        grid = grid_for(n, grids)
         k = cell_aset(fire.node["K 0.23"], fire, grid)
         t = cell_aset(fire.node["T 45"], fire, grid)
         both = np.isfinite(k) | np.isfinite(t)
@@ -677,14 +769,14 @@ def report_first_criterion(fires, grid):
 
 
 def report_gate(results):
-    print("## Agents remaining (one door, pre-movement 0, 10 seeds)\n")
+    print("## Agents remaining (pre-movement 0, 10 seeds, mean ± sd)\n")
     rows = []
-    for name in ("capped_pre0", "uncapped_pre0"):
-        rem = results[("1door", name)].remaining
+    for key in [k for k, r in results.items() if r.version.pre == "pre0"]:
+        rem = results[key].remaining
         last = [np.flatnonzero(rem[s].to_numpy() > 0).max() + 1 for s in rem]
         rows.append(
             [
-                name,
+                f"{key[0]} {v_label(key)}",
                 f"{rem.loc[40].mean():.1f} ± {rem.loc[40].std():.1f}",
                 f"{rem.loc[80].mean():.1f} ± {rem.loc[80].std():.1f}",
                 f"{min(last)}-{max(last)} s",
@@ -700,6 +792,17 @@ def report_gate(results):
     print(
         f"Gate (b), 61 ± 5 / 23 ± 5 / last out 100-110 s: {'PASS' if ok else 'FAIL'}\n"
     )
+    print("## RSET map, latest cell per version (n = 10)\n")
+    rows = [
+        [
+            f"{k[0]} {v_label(k)}",
+            f"{np.nanmax(r.rset_max):.1f}",
+            f"{np.nanmax(r.rset_p95):.1f}",
+            int(np.isfinite(r.rset_max).sum()),
+        ]
+        for k, r in results.items()
+    ]
+    md_table(["version", "max pooling s", "p95 pooling s", "visited cells"], rows)
     return ok
 
 
@@ -862,6 +965,12 @@ def fig_aset_criteria(fire, grid, walkable, exits, name, title):
             else f"{shown.size} cells, all at the plume"
         )
         _title(ax, letter, f"{CRITERIA[crit][2]}; {note}")
+        _note(
+            name,
+            crit,
+            f"median {np.median(shown):.0f} s, 90th pct {np.percentile(shown, 90):.0f} s,"
+            f" latest {shown.max():.0f} s, {shown.size} cells exceeded",
+        )
     k = cell_aset(fire.node["K 0.23"], fire, grid)
     t = cell_aset(fire.node["T 45"], fire, grid)
     cats = np.full(k.shape, np.nan)
@@ -878,6 +987,7 @@ def fig_aset_criteria(fire, grid, walkable, exits, name, title):
         "d",
         f"first criterion: K first, T first in {n_t} cells, tie in {n_tie}",
     )
+    _note(name, "T 45 first / tie with K 0.23", f"{n_t} / {n_tie} cells")
     _legend(
         axes[3],
         handles=[
@@ -915,6 +1025,12 @@ def fig_grid_pair(coarse, fine, grid, walkable, exits):
         _hatch(ax, grid, np.isinf(aset), "..")
         _plan(ax, walkable, exits)
         shown = aset[np.isfinite(aset)]
+        _note(
+            "aset_grid_pair.png",
+            f"K 0.23, FDS grid {label}",
+            f"median {np.median(shown):.0f} s, 90th pct "
+            f"{np.percentile(shown, 90):.0f} s, latest {shown.max():.0f} s",
+        )
         _title(
             ax,
             letter,
@@ -928,6 +1044,12 @@ def fig_grid_pair(coarse, fine, grid, walkable, exits):
     _plan(axes[2], walkable, exits)
     big = np.nanmean(np.abs(d[np.isfinite(d)]) > 30)
     _title(axes[2], "c", f"0.1 m minus 0.2 m; hatched: |Δ| > 30 s ({big:.0%} of cells)")
+    _note("aset_grid_pair.png", "cells with |Δ| > 30 s", f"{big:.1%}")
+    _note(
+        "aset_grid_pair.png",
+        "all cells, |Δ|",
+        f"mean {np.nanmean(np.abs(d)):.1f} s, max {np.nanmax(np.abs(d)):.0f} s",
+    )
     cb = fig.colorbar(im_d, ax=axes[2], location="left", shrink=0.8, aspect=15)
     cb.set_label("Δ ASET [s]", color=TEXT)
     cb.ax.tick_params(length=0, labelcolor=TEXT)
@@ -961,6 +1083,11 @@ def fig_grid_pair(coarse, fine, grid, walkable, exits):
     ax.patch.set_linewidth(0.8)
     sns.despine(ax=ax, left=True, bottom=True)
     dd = np.abs(d[ok & door])
+    _note(
+        "aset_grid_pair.png",
+        "door region |Δ| (x ≥ 24 m, y ≥ 6 m)",
+        f"max {dd.max():.0f} s, 95th pct {np.percentile(dd, 95):.0f} s, {dd.size} cells",
+    )
     _title(
         ax,
         "d",
@@ -979,7 +1106,7 @@ def fig_grid_pair(coarse, fine, grid, walkable, exits):
     _save(fig, "aset_grid_pair.png")
 
 
-def fig_rset(results, grid, walkable, exits):
+def fig_rset(results, grids, walkable, exits):
     keys = [
         ("1door", "capped_pre0"),
         ("1door", "uncapped_pre0"),
@@ -992,6 +1119,7 @@ def fig_rset(results, grid, walkable, exits):
     im = None
     for ax, letter, key in zip(axes, "abcd", keys):
         r = results[key]
+        grid = grids[key[0]]
         shown = np.where(np.isfinite(r.rset_max), np.nan, 0.0)
         _mesh(
             ax,
@@ -1085,6 +1213,7 @@ def fig_measures(rows):
     ax_min, ax_area = fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1])
     y = np.arange(len(rows))[::-1]
     for yy, (label, coarse, fine) in zip(y, rows):
+        colour, marker = (UNCAPPED, "s") if "uncapped" in label else (CAPPED, "o")
         for ax, key in ((ax_min, "min"), (ax_area, "area")):
             if fine is not None:
                 ax.plot(
@@ -1100,11 +1229,11 @@ def fig_measures(rows):
                     marker="D",
                     s=45,
                     fc="white",
-                    ec=CAPPED,
+                    ec=colour,
                     lw=1.5,
                     zorder=3,
                 )
-            ax.scatter(coarse[key], yy, marker="o", s=50, c=CAPPED, zorder=4)
+            ax.scatter(coarse[key], yy, marker=marker, s=50, c=colour, zorder=4)
             ax.annotate(
                 f"{coarse[key]:.0f}" if key == "min" else f"{coarse[key]:.1f}",
                 (coarse[key], yy),
@@ -1131,15 +1260,25 @@ def fig_measures(rows):
     _legend(
         ax_area,
         handles=[
-            Line2D([], [], marker="o", ls="", color=CAPPED, label="0.2 m FDS grid"),
+            Line2D(
+                [], [], marker="o", ls="", color=CAPPED, label="capped, 0.2 m FDS grid"
+            ),
+            Line2D(
+                [],
+                [],
+                marker="s",
+                ls="",
+                color=UNCAPPED,
+                label="uncapped CFSM, 0.2 m FDS grid",
+            ),
             Line2D(
                 [],
                 [],
                 marker="D",
                 ls="",
                 mfc="white",
-                mec=CAPPED,
-                label="0.1 m FDS grid (one door)",
+                mec="dimgrey",
+                label="0.1 m FDS grid (one door; open marker)",
             ),
             Line2D([], [], color="lightgrey", lw=4, label="grid band"),
             Line2D(
@@ -1206,9 +1345,9 @@ def fig_remaining(results):
         [80, 80 + 23 / CAP],
         [23, 0],
         color=PAPER,
-        ls=":",
+        ls=(0, (5, 2)),
         lw=1.5,
-        label="extrapolation at 0.96 p/s",
+        label="paper's extrapolation at 0.96 p/s (not data)",
     )
     _remaining_band(
         two,
@@ -1336,6 +1475,35 @@ def report_measures(table):
     md_table(["version", "min DIFF s", "area DIFF<0 m²", "C m²s"], rows)
 
 
+def report_bands(table):
+    """Grid band (0.2 / 0.1 m) and same-grid spread (0.2 m / perturbed), apart."""
+    print("## One door, maximum pooling: grid band and same-grid spread\n")
+    rows = []
+    for (key, fname), t in table.items():
+        if fname != "0.2 m, 1 door":
+            continue
+        base = t["max"]
+        row = [v_label(key)]
+        for other in ("0.1 m, 1 door", "0.2 m, 1 door, perturbed"):
+            m = table.get((key, other), {}).get("max")
+            row += (
+                [f"{base[k]:.1f} / {m[k]:.1f}" for k in ("min", "area")]
+                if m
+                else ["not available"] * 2
+            )
+        rows.append(row)
+    md_table(
+        [
+            "version",
+            "grid band min DIFF s (0.2 / 0.1 m)",
+            "grid band area m²",
+            "same-grid spread min DIFF s (0.2 m / perturbed)",
+            "same-grid spread area m²",
+        ],
+        rows,
+    )
+
+
 def v_label(key):
     return next(v.label for v in VERSIONS if (v.layout, v.name) == key)
 
@@ -1402,8 +1570,8 @@ def main():
     report_split(data)
 
     fires = load_fires(data, runs / "cache")
-    report_screen(fires, grid)
-    report_first_criterion(fires, grid)
+    report_screen(fires, grids)
+    report_first_criterion(fires, grids)
 
     results = rset_results(runs, walkable, grid)
     gate = report_gate(results)
@@ -1414,6 +1582,7 @@ def main():
         {k: r for k, r in results.items() if k[0] == "2door"}, fires, grids["2door"]
     )
     report_measures({**table_1, **table_2})
+    report_bands(table_1)
     sensitivity(results, fires, grids["1door"])
 
     fig_remaining(results)
@@ -1427,7 +1596,7 @@ def main():
     )
     fig_aset_criteria(
         fires["0.2 m, 2 doors"],
-        grid,
+        grids["2door"],
         walkable["2door"],
         exits["2door"],
         "aset_criteria_2door.png",
@@ -1440,7 +1609,7 @@ def main():
         walkable["1door"],
         exits["1door"],
     )
-    fig_rset(results, grid, walkable, exits)
+    fig_rset(results, grids, walkable, exits)
     if not gate:
         print("Gate (b) failed: the capped DIFF figures are not written.")
         return
@@ -1497,6 +1666,8 @@ def main():
             doors = "1 door" if layout == "1door" else "2 doors"
             rows.append((f"{doors}: {v_label(key)}", table[(key, fname)]["max"], fine))
     fig_measures(rows)
+    print("\n## Numbers shown in the figures\n")
+    md_table(["figure", "item", "value"], FIGURE_NUMBERS)
 
 
 if __name__ == "__main__":
