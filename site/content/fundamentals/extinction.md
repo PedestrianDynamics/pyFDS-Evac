@@ -17,12 +17,11 @@ smoke leaves with intensity *I*. The attenuation follows the
 Bouguer–Lambert–Beer law, usually called the Beer–Lambert law (Bouguer 1729;
 Lambert 1760; Beer 1852). For smoke measurement, Guillaume (2026, SFPE
 Handbook, 6th ed., Ch. 33, pp. 980–981) writes it as \(I = I_0 \exp(-kL)\).
-The equation numbers on this page are those of the Fire Dynamics Simulator
-(FDS) User's Guide (McGrattan et al. 2025, FDS 6.10.1, §22.10.5), which
-writes the law as
+The Fire Dynamics Simulator (FDS) User's Guide (McGrattan et al. 2025,
+FDS 6.10.1, §22.10.5) writes the law as
 
 $$
-\frac{I}{I_0} = e^{-KL} \qquad \text{(Eq. 22.21)}
+\frac{I}{I_0} = e^{-KL} \qquad \text{(McGrattan et al. 2025, Eq. 22.21)}
 $$
 
 and *K* is the product of a mass-specific extinction coefficient
@@ -30,16 +29,16 @@ and *K* is the product of a mass-specific extinction coefficient
 \(\rho Y_S\) [kg/m³]:
 
 $$
-K = K_m\, \rho Y_S \qquad \text{(Eq. 22.22)}
+K = K_m\, \rho Y_S \qquad \text{(McGrattan et al. 2025, Eq. 22.22)}
 $$
 
 Along a path on which *K* varies, the exponent becomes the integral of *K*
 along the path, which FDS evaluates as a sum over cells for its beam detector
-(Eq. 18.5, §18.3.6). That dimensionless integral is the optical depth. The optical
+(McGrattan et al. 2025, Eq. 18.5, §18.3.6). That dimensionless integral is the optical depth. The optical
 density per metre *D* [1/m] uses base-10 logarithms instead of natural ones:
 
 $$
-D \equiv -\frac{1}{L}\log_{10}\frac{I}{I_0} = K \log_{10} e \approx K/2.3 \qquad \text{(Eq. 22.24)}
+D \equiv -\frac{1}{L}\log_{10}\frac{I}{I_0} = K \log_{10} e \approx K/2.3 \qquad \text{(McGrattan et al. 2025, Eq. 22.24)}
 $$
 
 The distinction matters when reading the literature. Tenability limits are

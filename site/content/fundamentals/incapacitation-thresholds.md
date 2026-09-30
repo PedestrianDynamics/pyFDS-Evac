@@ -6,8 +6,8 @@ weight: 9
 A fractional effective dose (FED) of 1 is, by definition, the dose at which
 a person of median susceptibility is predicted to be incapacitated. Half of a
 population is more susceptible. Design therefore uses a lower threshold, most
-often 0.3. This page gives the published rationale for that value and the
-limits of its population basis.
+often 0.3. The published rationale for that value rests on a population
+basis with known limits.
 
 Symbols follow the [notation table](/docs/concepts.md#notation).
 

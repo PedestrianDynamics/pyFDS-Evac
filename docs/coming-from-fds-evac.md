@@ -40,7 +40,7 @@ and a walkable geometry as WKT (well-known text, a plain-text polygon format). `
 
 ## Defaults follow FDS+Evac
 
-pyFDS-Evac extends FDS+Evac. Where a mechanism has
+pyFDS-Evac is an enhancement of FDS+Evac. Where a mechanism has
 a direct FDS+Evac counterpart, the default is the FDS+Evac form, so that a
 case converted from FDS+Evac behaves as its author expects. Newer or
 alternative forms stay available as options. Earlier pyFDS-Evac versions
@@ -78,8 +78,8 @@ suite ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
   one-to-one FDS+Evac counterpart
   ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)); see
   [Smoke-aware routing](routing.md).
-- An agent finds an exit by reading its sign. FDS+Evac
-  counts a door as visible at any distance if nothing blocks the line of
+- An agent that does not know an exit learns it from the exit's sign;
+  FDS+Evac uses sight of the door. FDS+Evac counts a door as visible at any distance if nothing blocks the line of
   sight. pyFDS-Evac reads a sign only within its reading distance, 30 m by
   default even in clear air, and less off-axis or in smoke. See
   [Seeing a door vs reading a sign](#seeing-a-door-vs-reading-a-sign).
@@ -177,8 +177,7 @@ parameters from the matching table of that paper.
 with the preset (*a*, *b*). Grey bars: 10,000 draws made by pyFDS-Evac with
 the same preset, which follow the curves. Solid line: median; dashed line:
 95th percentile. The log-normal preset has the longest tail: 3.1 % of it
-lies beyond 600 s. The sources of the presets are in the paragraph
-[above the figure](#pre-movement-parameters). Script:
+lies beyond 600 s. Script:
 `scripts/figures/coming_from_premovement_presets.py`.*
 
 The presets are used when `use_premovement` is `true` and `premovement_param_a`

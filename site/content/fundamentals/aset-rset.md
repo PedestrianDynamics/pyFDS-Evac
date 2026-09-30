@@ -41,9 +41,8 @@ After the general alarm, each occupant has their own pre-travel time
 (dark); a dot marks each exit. ISO/TR 16738 (§7) warns that the two
 distributions interact, so they cannot be added directly. The figure draws
 \(t_{\mathrm{RSET}}\) at the exit of the last occupant, the latest time from
-ignition to exit, as RiMEA 4.1.1 (§2.13) defines the evacuation time.
-ISO/TR 16738 (§5.7) lets an analysis represent the pre-travel distribution
-by one time, such as the population mode or the last occupant to move.
+ignition to exit, as RiMEA 4.1.1 (§2.13) defines its evacuation time, which starts at
+ignition.
 Figure inspired by Fig. 2 of RiMEA 4.1.1 (p. 10). Script:
 `scripts/figures/fundamentals_aset_rset_timeline.py`.*
 

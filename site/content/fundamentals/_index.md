@@ -37,7 +37,7 @@ note for tenability criteria (2014).*
   ([Visibility through smoke](/fundamentals/visibility.md)) and slows
   walking ([Walking speed in smoke](/fundamentals/walking-speed.md)).
 
-Each page gives one published law: its quantity, its equation in the
+Each page covers one quantity: the published laws for it, in the
 source's own notation and constants, the data it rests on, its known limits,
 and the primary citations. How pyFDS-Evac implements a law, with its
 defaults and where it departs from the source, is on the

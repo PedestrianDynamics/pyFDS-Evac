@@ -474,7 +474,7 @@ This run fits none of it:
   Each agent's exposure starts when it spawns, while all times on this page
   count from ignition.
 - **The run is cut off.** It stops at 300 s with most late spawners inside.
-  The last exit, 299.8 s, is set by the time limit. It is not an RSET.
+  The time limit sets the last exit, 299.8 s, so it gives no RSET.
 - **There is no detection, alarm or pre-movement**
   (`"use_premovement": false`). Exit minus spawn is travel time only: a
   median of 88.1 s and a maximum of 147.4 s for the 75 who got out.
@@ -518,10 +518,10 @@ The other limits:
   comparison is our use of it. The SFPE Handbook frames the same question,
   the time between losing visibility and incapacitation (Purser and
   McAllister 2016, p. 2414).
-- **The FED is not the ISO 13571 asphyxiant FED.** It is the FDS+Evac sum
+- **The FED is the FDS+Evac sum**
   (CO + CN + NOx + FLD<sub>irr</sub>) × HV<sub>CO2</sub> + O2, which includes
   Purser's lethal-dose term for HCl (see [FED model](/models/fed.md)). ISO
-  keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
+  13571 keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
   thresholds to it is an analogy. FED 0.3 is a threshold for susceptible
   people, not a "safe" value: ISO treats 1 as the median of a log-normal
   response, so at 0.3 11.4 % of a population is still expected to be

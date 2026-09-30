@@ -11,7 +11,7 @@ impairs escape at once. Damage to the deep lung depends on the inhaled dose
 and develops over hours. The literature treats the two with different
 quantities, and the standards and the handbook combine them differently.
 
-This page covers the concentration criteria (ISO's FEC and Purser's FIC),
+The quantities are the concentration criteria (ISO's FEC and Purser's FIC),
 the denominators each one uses, Purser's relation between FIC and walking
 speed, and the lung dose. In short, the published rule **adds** the speed
 losses from smoke and from irritants. It does not multiply them
@@ -268,8 +268,8 @@ $$
 adds the irritant lethal dose into the incapacitation sum, and its Table 2
 lists both the lethal doses \(F_{FLD}\) and the incapacitating concentrations
 \(F_{FIC}\). The values in that table agree with the SFPE columns of Tables
-63.6 and 63.7. This sum is the Purser / FDS+Evac guide form. It is not the
-ISO 13571 form, which keeps irritants out of the FED altogether.
+63.6 and 63.7. This sum is the Purser / FDS+Evac guide form; ISO 13571 keeps irritants
+out of the FED altogether.
 
 No equation in the guide uses \(F_{FIC}\), and the FDS+Evac source
 (`evac.f90`) computes no FIC. FDS+Evac slows people only through the
