@@ -112,6 +112,20 @@ def aggregate_door_shares() -> dict[str, float]:
     return {d: c / n for d, c in totals.items()}
 
 
+def placed_door_shares() -> dict[str, float]:
+    """The ``PLACEABLE`` rows renormalised over modelled doors: T1's target.
+
+    Front 117/229 = 51.1 %. Agents come from placed rows only, so this, not
+    :func:`aggregate_door_shares` (127/240), is the share a run is scored on.
+    """
+    totals = {d: 0 for d in DOORS}
+    for row in PLACEABLE:
+        for d, c in door_counts(row).items():
+            totals[d] += c
+    n = sum(totals.values())
+    return {d: c / n for d, c in totals.items()}
+
+
 def front_door_attempt_floor() -> float:
     """At least this share of survivors tried or succeeded in using the front door.
 
