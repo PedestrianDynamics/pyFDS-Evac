@@ -96,8 +96,8 @@ title="Copy code"
 &lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Clear-air run completed&lt;/p>
 &lt;div class="docs-checkpoint__body">
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=78.9s wall=0m00s done
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>clear air: 78.94 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=79.0s wall=0m00s done
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>clear air: 79.01 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -139,8 +139,8 @@ title="Copy code"
 &lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Smoke run completed&lt;/p>
 &lt;div class="docs-checkpoint__body">
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=104.0s wall=0m00s done
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>K = 3.0 1/m: 103.99 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=104.1s wall=0m00s done
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>K = 3.0 1/m: 104.09 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -158,19 +158,19 @@ title="Copy code"
 &lt;div class="docs-comparison__row">
 &lt;dt>Clear air&lt;/dt>
 &lt;dd>
-&lt;span class="docs-comparison__track" aria-hidden="true">&lt;span class="docs-comparison__bar docs-comparison__bar--a" style="width: 75.91114530243293%">&lt;/span>&lt;/span>
-&lt;span class="docs-comparison__value">78.94 s&lt;/span>
+&lt;span class="docs-comparison__track" aria-hidden="true">&lt;span class="docs-comparison__bar docs-comparison__bar--a" style="width: 75.90546642328754%">&lt;/span>&lt;/span>
+&lt;span class="docs-comparison__value">79.01 s&lt;/span>
 &lt;/dd>
 &lt;/div>
 &lt;div class="docs-comparison__row">
 &lt;dt>Smoke, K = 3 1/m&lt;/dt>
 &lt;dd>
 &lt;span class="docs-comparison__track" aria-hidden="true">&lt;span class="docs-comparison__bar docs-comparison__bar--b" style="width: 100%">&lt;/span>&lt;/span>
-&lt;span class="docs-comparison__value">103.99 s&lt;/span>
+&lt;span class="docs-comparison__value">104.09 s&lt;/span>
 &lt;/dd>
 &lt;/div>
 &lt;/dl>
-&lt;figcaption class="docs-comparison__delta">Difference: +25.05 s (+31.7 %)&lt;/figcaption>
+&lt;figcaption class="docs-comparison__delta">Difference: +25.08 s (+31.7 %)&lt;/figcaption>
 &lt;/figure>
 &lt;p>In this example, one agent in one corridor, the evacuation time grows by about
 a third. Other scenarios change by other amounts.&lt;/p>
@@ -615,11 +615,11 @@ title="Copy code"
 &lt;/div>
 &lt;p>Expected output:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=78.3s wall=0m00s done
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=85.2s wall=0m00s done
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=78.2s wall=0m00s done
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=85.0s wall=0m00s done
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>K sampled: 0.99550 1/m
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>speed factor: 0.919626
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>exit time: 78.31 s clear, 85.15 s in smoke
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>exit time: 78.21 s clear, 85.05 s in smoke
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>manifest: fds_dir=/…/fds-evac/assets/iso_table21_coupled/fds
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fds_version=FDS-6.10.1-0-g12efa16-release&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -636,7 +636,7 @@ title="Copy code"
 nearest to &lt;code>slice_height_m&lt;/code> (default 1.6 m). The deck prescribes a soot density
 that gives &lt;em>K&lt;/em> = 1.0 1/m. The slice returns 0.99550 1/m, and the default speed
 law turns it into a speed factor of 0.919626. The ratio of the exit times,
-85.15 / 78.31 = 1.0873, matches 1 / 0.919626 = 1.0874 to within 0.01 %.&lt;/p>
+85.05 / 78.21 = 1.0875, matches 1 / 0.919626 = 1.0874 to within 0.01 %.&lt;/p>
 &lt;p>&lt;code>ExtinctionField.from_fds&lt;/code> remembers the directory it read. The run manifest
 records that directory and reads the FDS version from the &lt;code>FDSVERSION&lt;/code> line of
 its &lt;code>.smv&lt;/code> file. The manifest also records the package versions, the seed, the
@@ -2241,7 +2241,7 @@ title="Copy code"
 &lt;div class="docs-checkpoint__body">
 &lt;p>The last line reads:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 78.94 s (1/1 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 79.01 s (1/1 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
