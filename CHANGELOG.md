@@ -102,6 +102,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Seeded outcomes differ from earlier versions.** Every per-agent random
+  draw is seeded from the run seed and the agent's spawn key
+  `(origin, spawn_index)`, through a blake2b hash that does not depend on
+  the process, the platform or `PYTHONHASHSEED`, not from the JuPedSim id,
+  a per-distribution index or a stream shared by all agents: the
+  familiarity map, the start stage and target points, the journey variant
+  of a flow spawn (now one draw per spawn, not per candidate position),
+  the later direct-steering target, wait and next-stage draws (each on its
+  own stream), the probabilistic gas and heat incapacitation thresholds
+  and the reevaluation offset, `((spawn_index + 1) % steps) * dt`. The
+  same scenario and seed therefore give other trajectories and counts than
+  before; goldens and documented numbers were regenerated. A second run in
+  the same process now gives the same results as a fresh one, under other
+  JuPedSim ids, and a refused spawn no longer shifts the draws of later
+  agents. The JuPedSim id stays the key of all per-agent state and output.
+  Exit histories written before this change replay without error but pair
+  agents whose draws differ; the manifest gains `agent_seeding`
+  (`spawn-key-blake2b-v1`) to tell the two apart. A flow journey variant
+  with a positive weight and no valid entry stage now fails at setup
+  ([#353](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/353),
+  [#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)).
+
 - **Breaking:** a run that outlasts the FDS output stops instead of
   holding the last slice frame. `build_run_kwargs` (so `run.py` and the
   web GUI) rejects a `max_simulation_time` more than one slice output
@@ -247,6 +269,11 @@ documentation error in the FDS+Evac Guide, and it differs from the current
 one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
+
+- A flow spawn whose setup failed after `add_agent` had succeeded was
+  retried at the next candidate position, which left a half-initialised
+  agent in the simulation and added a second one. The error is now raised
+  ([#353](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/353)).
 
 - Sign legibility and the route `next_node_not_visible` gate read the
   horizontal extinction slice nearest `--smoke-slice-height`, the slice

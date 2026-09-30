@@ -199,12 +199,12 @@ def test_probabilistic_population_endpoint_is_lognormal_median():
 def test_probabilistic_run_is_reproducible_under_fixed_seed():
     """Anti-FEMTC determinism: same seed yields the same collapse-time *multiset*.
 
-    Note the invariant is the multiset, not the per-agent mapping: JuPedSim's
-    integration is not bit-reproducible run-to-run (the agent-id <-> outcome
-    assignment shuffles even with ``fed_model=None``), so trajectory-level
-    determinism is unattainable with this engine.  What *is* reproducible -- and
-    what the anti-FEMTC discipline actually needs -- is the aggregate endpoint:
-    the same seed produces the same distribution of collapse times.
+    The invariant checked is the multiset -- what the anti-FEMTC discipline
+    actually needs: the same seed produces the same distribution of collapse
+    times.  The second run in this process numbers its agents on from the
+    first (#198), so the agent-id <-> outcome mapping differs between the two;
+    matched by spawn key, every agent's collapse time is the same
+    (``tests/test_spawn_key_seeding.py``, #353).
     """
     spec = CorridorSpec(
         length_m=40.0,
