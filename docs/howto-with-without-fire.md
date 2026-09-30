@@ -29,16 +29,16 @@ For this fire and this T-junction, with 100 people placed at t = 0:
 - **Dose.** Whether the uncoupled run over- or under-states the dose
   depends on the metric (see [the dose table](#dose)).
 - **Exit usage** differs: without the fire everyone takes the near exit B;
-  coupled agents mostly take exit A.
+  with smoke-aware routing (arm R) most agents take exit A.
 - **The pass/fail verdict** at a fixed point is the same in every arm for
   visibility (fails), and in U, S, R and R-na for FED 0.3 (passes). For HCl
   with no wait, the verdict at ISO FEC 1 (not the design value 0.3) is
-  knife-edge: a single uncoupled run can give either verdict, and the
-  coupled arms withdraw most of U's passes.
+  knife-edge: a single uncoupled run can give either verdict. Summed over
+  seeds and points, U passes 36 times, R 30, R-na 17 and S 4.
 
-This fire has no margin to lose: the visibility limit is reached before
-anyone gets out in every arm. So the study shows what the uncoupled run
-misses once the margin is gone. It cannot tell whether a design that passes
+This fire has no margin to lose: at every point the visibility limit is
+reached before the last person gets out, in every arm and seed. So the
+study shows what the uncoupled run misses once the margin is gone. It cannot tell whether a design that passes
 without the fire also passes with it. It is one fire in one geometry, run
 with research software, and it gives no design verdict.
 
@@ -190,8 +190,8 @@ The histories are written once per second, so `s_hcl300` and `s_k03` are
 seconds at HCl ≥ 300 ppm and at *K* ≥ 0.3 1/m. HCl = 900 × `fic` holds
 only because HCl is the only irritant of this deck
 ([A crowd in a real fire › How the numbers are computed](first-fds-case.md#aset-rset)).
-Classic practice records no such dose: it compares location ASET with RSET
-only. The per-agent dose is extra post-processing, as on
+The classic comparison uses no such dose: it compares location ASET with
+RSET only. The per-agent dose is extra post-processing, as on
 [A crowd in a real fire › Each agent against its own limits](first-fds-case.md#each-agent-against-its-own-limits).
 
 **The location ASET** comes from the FDS output alone, so it is the same for
@@ -407,8 +407,9 @@ mouth / exit A:
   for FED 0.3: its RSET is censored ([Sensitivity arms](#sensitivity-arms)).
 - **HCl with no pre-movement is knife-edge.** U's median margin at the
   junction under HCl 1000 ppm is about +2 s (59 − 56.9), inside the seed
-  spread. So a single uncoupled run can give either verdict, and the
-  coupled arms withdraw most of U's passes. U is the more cautious arm in
+  spread. So a single uncoupled run can give either verdict. The coupled
+  arms pass less often at this level (36 point-passes in U, 30 in R, 17 in
+  R-na, 4 in S), and R keeps most of U's. U is the more cautious arm in
   one cell only: at the branch mouth under HCl 1000 ppm, R passes in 20 of
   20 seeds and U in 19.
 - These flips sit mostly at HCl 1000 ppm (ISO FEC 1, an incapacitation-level
@@ -450,9 +451,10 @@ than R-na in 15 of 20 seeds).
   peak FIC in every seed: U walks into exit B's HCl, which R avoids. At 30
   and 60 s U under-states the time above both HCl levels and the max FED in
   every seed, because R walks longer in thicker smoke.
-- **Against S, U under-states every run total** in every seed, at every
-  pre-movement. On single agents it does not always: U's peak FIC is higher
-  than S's for 605 of 2,000 agents with no pre-movement, 257 of 1,000 at
+- **Against S, U under-states the run totals** in every seed, at every
+  pre-movement: agent-seconds at HCl ≥ 300 and ≥ 1000 ppm and at *K* ≥ 0.3
+  1/m, and max FED. On single agents it does not always: U's peak FIC is
+  higher than S's for 605 of 2,000 agents with no pre-movement, 257 of 1,000 at
   30 s and 239 of 1,000 at 60 s.
 - The largest max FED is 0.25 in U, S and R. That is not a statement of
   tenability: FED 0.3 is a threshold for susceptible people, and FED < 1
@@ -473,14 +475,15 @@ the other way round. Counting an agent that never crosses as having an
 infinite margin, R has the larger margin for 1,215 agents and U for 672. So
 with no pre-movement the direction depends on how agents who never cross
 are counted; at 30 and 60 s U's margin is larger (not conservative) for
-nearly every agent.
+879 and 987 of 1,000 agents.
 
 ### Is exit usage conservative?
 
 Exit usage is not conservative or otherwise. Choosing exits is part of the
 scenario: each design fire scenario is analysed with design occupant
-scenarios (Nilsson and Fahy 2016, p. 2047). Here the difference is large: exit B for
-everyone without the fire, exit A for 84–100 % with it. It also drives the
+scenarios, and the occupants' initial route choice is one of the
+variables of such a scenario (Nilsson and Fahy 2016, pp. 2047, 2061).
+Here the difference is large: exit B for everyone without the fire, exit A for 84–100 % with it. It also drives the
 dose differences above.
 
 ### Sensitivity arms {#sensitivity-arms}
@@ -547,9 +550,9 @@ keep the runs in their data store, `fds-evac-data/t_junction/fire_blind_runs/`.
 
 ## Limits
 
-- **One fire with no margin.** Here the visibility limit is met before
-  anyone gets out, in every arm. Schröder et al. (2020, §4) expect the
-  fire's effect on route choice and speed to play a secondary role only
+- **One fire with no margin.** Here, at every point, the visibility limit
+  is met before the last person gets out, in every arm. Schröder et al.
+  (2020, §4) expect the fire's effect on route choice and speed to play a secondary role only
   while the safety margin is well above the limit. That is the regime in
   which practice decides, and this study does not test it.
 - **The size of the S − U and R − U gaps is not measured behaviour.** The
@@ -623,7 +626,8 @@ keep the runs in their data store, `fds-evac-data/t_junction/fire_blind_runs/`.
   and §5.6: paraphrased; see [ASET and RSET](/fundamentals/aset-rset.md).
 - Nilsson, D., & Fahy, R. (2016). Selecting scenarios for deterministic fire
   safety engineering analysis: life safety for occupants. *SFPE Handbook of
-  Fire Protection Engineering*, 5th ed., Ch. 57, p. 2047.
+  Fire Protection Engineering*, 5th ed., Ch. 57, pp. 2047, 2061.
+  [doi:10.1007/978-1-4939-2565-0_57](https://doi.org/10.1007/978-1-4939-2565-0_57)
 - Schröder, B., Arnold, L., & Seyfried, A. (2020). A map representation of
   the ASET-RSET concept. *Fire Safety Journal*, 115, 103154, §4.
   [doi:10.1016/j.firesaf.2020.103154](https://doi.org/10.1016/j.firesaf.2020.103154)
