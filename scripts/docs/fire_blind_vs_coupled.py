@@ -717,6 +717,34 @@ def report_agent_margins(agents_df):
                 )
 
 
+def report_paired_margins(agents_df):
+    """Per-agent margin X - U on the same agent, paired by seed and spawn."""
+    print("\n== Per-agent margin, paired by (seed, origin, spawn_index) ==")
+    print("   (both: crossed while inside in both arms; inf: never crossing")
+    print("    counts as an infinite margin)")
+    keys = ["seed", "origin", "spawn_index"]
+    for key in ("K 0.3", "ISO FEC 0.3", "ISO FEC 1"):
+        print(f"-- {key}")
+        for pre in PRES:
+            a = agents_df[(agents_df.arm == "U") & (agents_df.pre == pre)]
+            for x in ("S", "R", "R-na"):
+                b = agents_df[(agents_df.arm == x) & (agents_df.pre == pre)]
+                m = a.merge(b, on=keys, suffixes=("_u", "_x"), validate="one_to_one")
+                mu, mx = m[f"margin {key}_u"], m[f"margin {key}_x"]
+                both = mu.notna() & mx.notna()
+                d = (mx - mu)[both]
+                iu = mu.where(m[f"cross {key}_u"].notna(), np.inf)
+                ix = mx.where(m[f"cross {key}_x"].notna(), np.inf)
+                valid = iu.notna() & ix.notna()
+                print(
+                    f"  pre{pre:2d} {x:5s}-U both {int(both.sum())}/{len(m)}"
+                    f"  median {d.median():6.1f} s  {x}<U {int((d < 0).sum())}"
+                    f"  | inf view: {x} larger {int((ix > iu)[valid].sum())},"
+                    f" U larger {int((ix < iu)[valid].sum())},"
+                    f" tie {int((ix == iu)[valid].sum())}"
+                )
+
+
 def per_agent_paired(agents_df, x, pre, column, paired_margin=False):
     """Per agent, U against x, paired by (origin, spawn_index) and seed."""
     keys = ["seed", "origin", "spawn_index"]
@@ -1311,6 +1339,7 @@ def main():
     report_margins(runs_df, loc)
     report_dose(runs_df, agents_df)
     report_agent_margins(agents_df)
+    report_paired_margins(agents_df)
     report_conservative(runs_df, agents_df)
 
     fig_evacuated(runs, runs_df, loc)
