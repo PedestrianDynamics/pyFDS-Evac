@@ -121,6 +121,8 @@ uv run python run.py --scenario S.json --fds-dir FDS --disable-tenability \
     --output-sqlite r.sqlite
 ```
 
+[Evacuation with and without the fire](howto-with-without-fire.md) runs these arms against a run without the fire and compares them.
+
 ### Tenability (FIC slowdown and incapacitation)
 
 The two dose tracks are independent:

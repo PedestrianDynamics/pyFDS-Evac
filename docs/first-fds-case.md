@@ -641,6 +641,8 @@ sign decisions can differ slightly from these maps.
 - [Real-FDS walkthrough](walkthrough.md): FED from FDS slices, and how to spot
   a run that finishes but has no FED in it.
 - [How do I get RSET with its spread from an ensemble of seeds?](howto-rset-ensemble.md)
+- [Evacuation with and without the fire](howto-with-without-fire.md): the
+  same fire, run uncoupled and coupled.
 - Models: [smoke and speed](/models/smoke-speed.md),
   [FED](/models/fed.md), [wayfinding](/models/wayfinding.md),
   [routing](/models/routing.md).

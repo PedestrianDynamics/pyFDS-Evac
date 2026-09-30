@@ -287,6 +287,8 @@ deterministic mode.
 
 - To add smoke or FED from FDS output to an ensemble, pass the same models to
   `run_scenario` inside the loop, as in the [Real-FDS walkthrough](walkthrough.md).
+- To compare RSET from a run without the fire with coupled runs, see
+  [Evacuation with and without the fire](howto-with-without-fire.md).
 - Pre-movement is set per spawn area in the scenario JSON, with
   `use_premovement`, `premovement_distribution` (`gamma`, `lognormal`,
   `weibull`, `uniform` or `constant`), `premovement_param_a`, `premovement_param_b` and

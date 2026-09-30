@@ -84,6 +84,8 @@ Measured at `7a3617d` with the command below, run on `config_full.json`
 against the FDS output in the project's data store (`t_junction/fire_2MW_PVC/`);
 the run files are under `t_junction/rerun_7a3617d/`.
 
+`config_initial_pre0.json`, `config_initial_pre30.json` and `config_initial_pre60.json` place 100 agents over the branch at t = 0 with a constant pre-movement of 0, 30 or 60 s and a 270 s limit; see [Evacuation with and without the fire](../../docs/howto-with-without-fire.md).
+
 ## Running
 
 1. Run the FDS simulation:
