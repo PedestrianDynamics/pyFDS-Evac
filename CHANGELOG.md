@@ -114,7 +114,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `agent_seeding` is now `spawn-key-blake2b-v2`; per-agent seeds are
   unchanged. Goldens and the cheap documented numbers were regenerated
   ([#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360)).
-
+- **An agent leaves at an exit when its centre enters the exit polygon**,
+  not within its radius + 0.5 m of a target point inside it, so the door
+  width sets the door flow. Before, a door drawn flush with a wall acted
+  up to about 1.3 m wider and agents left from the room beside it.
+  Checkpoints keep the distance rule.
+  Exit times change by a fraction of a second per agent; the documented
+  numbers and the golden snapshots are regenerated
+  ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)).
 - **Seeded outcomes differ from earlier versions.** Every per-agent random
   draw is seeded from the run seed and the agent's spawn key
   `(origin, spawn_index)`, through a blake2b hash that does not depend on

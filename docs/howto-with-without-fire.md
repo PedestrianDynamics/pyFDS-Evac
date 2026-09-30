@@ -17,6 +17,15 @@ the uncoupled run is conservative for one fire: the 2 MW PVC fire of
 **You need** the `fire_2MW_PVC` FDS output of that page (step 3 there says
 where to get it) in `$FDS`. Each run below takes about 4 s.
 
+{{< callout type="warning" >}}
+The numbers and figures on this page come from runs that predate
+[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349), which
+changed when an agent leaves at an exit. The commands below now print
+slightly different times, and some seed counts change; the re-run is
+tracked in
+[#391](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/391).
+{{< /callout >}}
+
 ## The answer in short
 
 For this fire and this T-junction, with 100 people placed at t = 0:

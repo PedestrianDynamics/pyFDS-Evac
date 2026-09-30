@@ -30,6 +30,14 @@ we cite them where we compare, but our maps come from our own runs. It is
 research software and one room: nothing here is a design or safety verdict.
 {{< /callout >}}
 
+{{< callout type="warning" >}}
+The runs on this page predate
+[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349), which
+changed when an agent leaves at an exit. The exit times, RSET maps and DIFF
+values below are those of commit `30ca7f5`; the re-run is tracked in
+[#388](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/388).
+{{< /callout >}}
+
 ## The result in brief
 
 One door, the exit flow capped at 0.96 persons/s, everyone moving at t = 0,
@@ -691,11 +699,14 @@ taken from the authors' reference implementation
   follow the text: K ≥ 0.23 1/m, the maximum, DIFF = 0 passes.
 - **Censoring instead of the 120 s fill**, the ∃ rule, and 1 s steps
   instead of 10 s. The sensitivity table above shows each change.
-- **Door jambs, 0.8 m deep, in the walkable area only.** The engine removes
-  an agent within its radius + 0.5 m of a random point in the exit polygon,
-  which makes a door drawn flush with the wall act about 1.3 m wider
-  ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)).
-  The jambs force every agent into the 1.2 m passage. They cost about
+- **Door jambs, 0.8 m deep, in the walkable area only.** The runs on this
+  page predate
+  [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349). The
+  engine then removed an agent within its radius + 0.5 m of a random point
+  in the exit polygon, which made a door drawn flush with the wall act about
+  1.3 m wider. The jambs force every agent into the 1.2 m passage. The
+  engine now removes an agent when its centre enters the exit polygon, so
+  the jambs are no longer needed; they do no harm. They cost about
   1.1 m² (about 3 cells) at the north-east corner. FDS has no jambs.
 - **One-door and two-door rooms are separate FDS runs**, so the ventilation
   differs as well as the egress.
