@@ -75,12 +75,18 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   `enable_fic_speed` defaults to false and `run.py` switches the rule on only
   with `--enable-fic-speed`. Before it became opt-in, it was on whenever a gas
   FED model was loaded. When on, `default_fic` sums \(C_i / F_{\mathrm{FIC},i}\) over the
-  same seven irritants (constants in `_FIC_COEFFS_PPM`, not integrated over
-  time). At each FED update where FIC > 0, the agent's irritant factor is set
+  same seven irritants, not integrated over time. The constants in
+  `_FIC_COEFFS_PPM` are the SFPE incapacitation column of Table 63.6, equal
+  to FDS User's Guide Table 22.3 and FDS+Evac guide Table 2, so this FIC is
+  neither the ISO 13571 FEC nor the escape-impairment FIC (see
+  [Irritant gases](/fundamentals/irritants.md#which-endpoint-goes-in-the-denominator)).
+  At each FED update where FIC > 0, the agent's irritant factor is set
   to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
   (`scenario.py`, `run_scenario`) and multiplies the smoke factor. The rule is a
   pyFDS-Evac assumption with no known source
-  ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
+  ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147));
+  how it compares with the published rule is
+  [below](#irritant-slowdown-against-the-published-rule).
   When FIC is exactly 0 the last factor stays in force
   ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 - **Incapacitation.** Once the cumulative gas FED or heat FED reaches the
@@ -124,7 +130,8 @@ history CSV (`--output-fed-history`) carries the columns `fic`,
 ![Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
 
 *(a) Frantzich–Nilsson factor f(K) [-] against K [1/m], floor 0.1.
-(b) Irritant factor g(FIC) [-] against FIC [-], floor 0.3. (c) The product
+(b) Irritant factor g(FIC) [-] against FIC [-], floor 0.3; g has no known
+source and is off by default. (c) The product
 f(K)·g(FIC) [-], with contours at 0.25, 0.5 and 0.75; where both floors apply
 it is 0.1 × 0.3 = 0.03. FED does not appear on these axes; it only sets the speed to
 zero at the agent's threshold. Script: `scripts/generate_tenability_curves.py`.*
@@ -265,16 +272,6 @@ and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 > FED equations with *t* in seconds; the evidence is on
 > [Asphyxiant FED](/fundamentals/asphyxiant-fed.md).
 
-The irritant slowdown \(g\), when enabled (`fed.py`, `TenabilityConfig.fic_alpha`, `TenabilityConfig.fic_min_factor`), is multiplied with the smoke
-factor (`direct_steering_runtime.py`, `set_agent_fic_factor`). Its constants were not found
-in the Handbook, the FDS+Evac guide or `evac.f90`
-([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
-Handbook uses a different curve and adds the smoke and irritant losses instead
-of multiplying them (Eq. 63.14). Because the Frantzich–Nilsson smoke contained
-acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
-\(g\) partly counts irritancy twice
-([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
-
 The heat laws and their deviations are on [Models › Heat](/models/heat.md).
 The log-normal σ of both
 thresholds (`fed.py`, `TenabilityConfig.susceptibility_sigma`, `TenabilityConfig.heat_susceptibility_sigma`) is, for the gas dose, a compromise between
@@ -283,3 +280,61 @@ below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds
 and [#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The
 heat dose is deterministic by default; in `probabilistic` mode it reuses the
 same σ without a data basis.
+
+### Irritant slowdown against the published rule
+
+The irritant slowdown \(g\), when enabled (`fed.py`, `TenabilityConfig.fic_alpha`, `TenabilityConfig.fic_min_factor`), is multiplied with the smoke
+factor (`direct_steering_runtime.py`, `set_agent_fic_factor`). Its constants were not found
+in the Handbook, the FDS+Evac guide or `evac.f90`
+([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
+Handbook uses a different curve, Eq. 63.13, and adds the smoke and irritant
+losses instead of multiplying them (Eq. 63.14; see
+[Irritant gases](/fundamentals/irritants.md#irritants-and-walking-speed-fic)).
+Both differences make the coded rule milder, except at very low FIC:
+
+| FIC | coded \(g\) | Eq. 63.13 |
+|---|---|---|
+| 0.1 | 0.93 | 0.71 |
+| 0.2 | 0.86 | 0.31 |
+| 0.5 | 0.65 | 0.08 |
+| 1 | 0.30 | 0 |
+
+- **The curve.** With the defaults `fic_alpha` = 0.7 and
+  `fic_min_factor` = 0.3, \(g\) is above Eq. 63.13 for FIC from about
+  0.017 to 1. Below about 0.017 it is lower, by at most 0.002 (our
+  arithmetic).
+- **The combination.** For the same smoke fraction \(F_s\) and irritant
+  fraction \(F_i\), the product exceeds the additive rule by
+  \(F_s F_i - (F_s + F_i - 1) = (1 - F_s)(1 - F_i) \ge 0\) (our identity).
+  For the same \(F_i\), multiplying is therefore never more severe than
+  adding.
+- **FIC ≥ 1 stops no agent.** The sources predict incapacitation at FIC = 1
+  (Purser 2003, p. 99; Ch. 63, p. 2344). In the code, with the default
+  `fic_min_factor` of 0.3, \(g\) floors at 0.3, so the agent walks on at 0.3
+  of its smoke-reduced speed. FIC never marks an agent incapacitated;
+  irritants count toward incapacitation only through \(FLD_{irr}\) inside
+  the gas FED. With `--fic-min-factor 0`, \(g\) reaches 0 at
+  FIC = 1/`fic_alpha` (about 1.43), but the agent is still not marked
+  incapacitated ([#398](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398)).
+  \(g\) is recomputed only while FIC is above 0: the agent walks on once
+  FIC falls but stays above 0, and if FIC returns to exactly 0 the factor
+  of 0 stays in force and the agent stands still for the rest of the run
+  without being counted as incapacitated
+  ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
+
+Because the Frantzich–Nilsson smoke contained
+acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
+\(g\) partly counts irritancy twice
+([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
+
+![Two panels. (a) Speed factor against FIC from 0 to 1.2: Eq. 63.13 falls from 1 to 0 at FIC 1 and goes negative beyond it, while the coded g falls linearly from 1 to its floor of 0.3 at FIC 1. (b) Combined walking-speed fraction against FIC for smoke fractions 1, 0.75 and 0.5: the published additive rule reaches zero and goes negative, while the coded product stays at or above 0.15](/images/models/fic_combination.png)
+
+*(a) Speed factor [-] against FIC [-]: Eq. 63.13 (thin solid, a concept
+curve; dotted beyond FIC = 1, outside its range) and the coded \(g\) with
+its defaults (dashed, no source). (b) Walking-speed fraction [-] combining
+smoke fraction \(F_s\) = 1, 0.75 and 0.5 with the irritant effect: Eq. 63.14
+with Eq. 63.13 (solid) against the code's \(F_s \cdot g\) (dashed), one colour
+per \(F_s\). The gap between a solid and a dashed line of the same colour is
+the effect of both the curve and the combination; the identity above covers
+the combination alone. Grey: where the published sum is at most 0, which
+neither source clips. Script: `scripts/figures/models_fic_combination.py`.*

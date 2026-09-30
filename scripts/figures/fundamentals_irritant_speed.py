@@ -23,11 +23,12 @@ x scaled by 1000 in the exponent only it ends at 0 but dips to -0.10 in
 between. It does not reproduce that paper's own Fig. 1 and is not drawn.
 
 Ch. 63 calls the curve an "estimated relationship" based on a concept
-(p. 2343, Fig. 63.17), and Purser (2003, p. 93) says it was "fitted between
+(p. 2343; Fig. 63.17 is on p. 2344), and Purser (2003, p. 94) says it was "fitted between
 these two extremes" (no effect at low FIC, no movement at FIC = 1). That
 no walking data lie behind it is our reading, so it is drawn in the thin
 style used for design rules on the other figures, not the heavy
-"within source data" style.
+"within source data" style. Beyond FIC = 1, outside the curve's range, it
+is continued dotted to FIC = 1.2 to show where it turns negative.
 
 Run from the repository root::
 
@@ -67,10 +68,21 @@ def main():
         return (np.exp(-((1000.0 * fic / b) ** 2)) + (-0.2 * fic + 0.2)) / 1.2
 
     fic = np.linspace(0.0, 1.0, 501)
+    fic_out = np.linspace(1.0, 1.2, 101)
 
     # --- Plot ---
     fig, ax = plt.subplots(figsize=(7.0, 4.2), dpi=150)
     ax.plot(fic, eq_63_13(fic), color=c_purser, lw=1.4)
+    ax.plot(fic_out, eq_63_13(fic_out), color=c_purser, lw=1.4, ls=":")
+    ax.axhline(0.0, color="lightgrey", lw=0.8, zorder=0)
+    ax.text(
+        1.19,
+        -0.105,
+        "beyond FIC = 1: outside the range, negative",
+        fontsize=8,
+        color="dimgrey",
+        ha="right",
+    )
     for x0 in (0.1, 0.2, 0.5):
         ax.plot(x0, eq_63_13(x0), "o", color=c_purser, ms=5, mec="white")
         ax.text(
@@ -97,8 +109,8 @@ def main():
         color="dimgrey",
     )
 
-    ax.set_xlim(0.0, 1.02)
-    ax.set_ylim(0.0, 1.05)
+    ax.set_xlim(0.0, 1.21)
+    ax.set_ylim(-0.13, 1.05)
     ax.set_xlabel("fractional irritant concentration FIC [-]", color="dimgrey")
     ax.set_ylabel("fractional walking speed [-]", color="dimgrey")
     ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")

@@ -189,6 +189,11 @@ about 0.5–1.13 1/m (OD/m 0.22–0.49): *K* 0.30 lies below every
 non-irritant point. The 0.3 m/s floor is Jin's reference line for walking
 in darkness, not a measured point (Jin 1976, pp. 14, 17).
 
+The fraction multiplies the unexposed walking speed (p. 98). Purser combines
+it with the fraction for irritants by adding the two losses, not by
+multiplying the fractions (p. 99; Ch. 63, Eq. 63.14); see
+[Irritants and walking speed](/fundamentals/irritants.md#irritants-and-walking-speed-fic).
+
 {{< details title="Caveats on Purser's 2003 law" closed="true" >}}
 **Units.** Purser does not define OD/m; Ch. 63 defines it as
 log₁₀(*I*₀/*I*) over 1 m (p. 2413). Jin and Yamada (1985, p. 80,
@@ -314,7 +319,9 @@ differs slightly from the report's.
 from a normal distribution "with a mean from Equation 63.12 and standard
 deviation of 0.125"; Eq. 63.12 in this edition is the irritant FIC sum, so
 the reference is probably meant to be Eq. 63.10, and 0.125 differs from the
-0.157 given on the same page. For clear air it suggests a mean of 1.2 m/s
+0.157 given on the same page. The 2026 edition repeats the slip as
+"Eq. 70.10" for what is Eq. 70.8, and still gives both SD 0.125 and 0.157
+(Ch. 70, p. 2287). For clear air it suggests a mean of 1.2 m/s
 with SD 0.15 m/s. It compares Frantzich and Nilsson's mean of 0.45 m/s
 (SD 0.21) with Jin's 0.3 m/s in dense smoke, noting that the slowest speed
 measured by Jin was 0.37 m/s (p. 2341); Frantzich and Nilsson measured
@@ -642,6 +649,10 @@ different Japanese title (煙中の視程について 第5報).
   occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
   Protection Engineering, 5th ed., Ch. 63, 2308–2428.
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
+- Purser, D. A., & McAllister, J. L. (2026). *Assessment of hazards to
+  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
+  Protection Engineering, 6th ed., Ch. 70, 2271–2352. p. 2287.
+  [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
 - Yamada, T., & Akizuki, Y. (2016). *Visibility and human behavior in fire
   smoke*. SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 61,
   2181–2206.
