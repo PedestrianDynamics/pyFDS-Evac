@@ -4,21 +4,26 @@ Two figures for the Grid block of ``docs/study-schroeder2020.md``, from the
 FDS runs only (no evacuation runs). ``DATA`` is the ``schroeder2020-room``
 folder of ``scripts/docs/schroeder_room_maps.py``::
 
-    uv run python scripts/docs/schroeder_grid_figures.py --data DATA
+    uv run python scripts/docs/schroeder_grid_figures.py --data DATA \\
+        [--family rel|hrr060]
 
 * ``grid_layer.png``: the smoke-layer interface at the three FDS device trees
   (from temperature, FDS User's Guide Eq. 22.25 on the tree, and from K), and
   the largest K at 2.0 m in the 0.6 m square around each tree, for the
-  one-door 0.2 m and 0.1 m runs and the two-door run.
-* ``grid_perturbation.png``: the K ≥ 0.23 1/m ASET map of the one-door room
-  with HRRPUA raised by 0.1 % on the same 0.2 m grid (``hrr060_1door_pert``),
-  against the change from the 0.2 m to the 0.1 m grid. The maps use the same
+  one-door 0.2 m and 0.1 m runs and the two-door run of the family. Tree
+  positions and heights are read from each deck (``rel``: cell centres,
+  15 or 30 points; ``hrr060``: 14 points at z = 0.2-2.8 m).
+* ``grid_perturbation.png``, ``hrr060`` only: the K ≥ 0.23 1/m ASET map of
+  the one-door room with HRRPUA raised by 0.1 % on the same 0.2 m grid
+  (``hrr060_1door_pert``), against the change from the 0.2 m to the 0.1 m
+  grid. The ``rel`` family has no perturbed run. The maps use the same
   cells, rule and slices as the page (``cell_aset`` of
   ``schroeder_room_maps.py``).
 
 ``--cache`` reuses the node first-crossing caches of the map script
 (``RUNS/cache``); without it they are computed into a temporary folder.
-Writes to ``site/static/images/studies/schroeder2020/``.
+Writes to ``site/static/images/studies/schroeder2020/`` (``rel``, the default)
+or its ``hrr060/`` subfolder.
 """
 
 import argparse
@@ -44,18 +49,38 @@ import schroeder_room_maps as maps  # noqa: E402
 TEXT = maps.TEXT
 LIMIT = 0.23  # 1/m, the page's headline criterion
 LATE = 120.0  # s, the paper's fill time; "late" nodes exceed only after it
-Z_TREE = np.linspace(0.2, 2.8, 14)  # the 14 points of every tree
+Z_TREE = np.linspace(0.2, 2.8, 14)  # hrr060: the 14 points of every tree
 TREES = (
-    ("W", (5.1, 5.1), "about 6 m from the fire"),
-    ("C", (15.1, 5.1), "mid-room"),
-    ("E", (25.1, 8.9), "5 m from the door"),
+    ("W", "about 6 m from the fire"),
+    ("C", "mid-room"),
+    ("E", "5 m from the door"),
 )
 PAL = sns.cubehelix_palette(6, rot=-0.25, light=0.7)
-LAYER_RUNS = (  # FDS run, label, colour, line style, marker
-    ("hrr060_1door", "1 door, 0.2 m", PAL[5], "-", "o"),
-    ("hrr060_2door", "2 doors, 0.2 m", PAL[2], "--", "s"),
-    ("hrr060_1door_dx010", "1 door, 0.1 m", "#d73027", "-", "D"),
-)
+
+
+def layer_runs():
+    """FDS run, label, colour, line style, marker for the current family."""
+    (one, fine), (two,) = maps.LAYOUT_FDS["1door"], maps.LAYOUT_FDS["2door"]
+    return (
+        (one, "1 door, 0.2 m", PAL[5], "-", "o"),
+        (two, "2 doors, 0.2 m", PAL[2], "--", "s"),
+        (fine, "1 door, 0.1 m", "#d73027", "-", "D"),
+    )
+
+
+def tree_geometry(fds_dir):
+    """{tree: (x, y, z points)} from the ``T_tree_*`` lines of the FDS deck."""
+    deck = (fds_dir / f"{fds_dir.name}.fds").read_text()
+    out = {}
+    for tree, xbp, n in re.findall(
+        r"ID='T_tree_(\w)'.*?XBP=([\d.,]+), POINTS=(\d+)", deck
+    ):
+        x0, _, y0, _, z0, z1 = (float(v) for v in xbp.split(","))
+        out[tree] = (x0, y0, np.linspace(z0, z1, int(n)))
+    assert set(out) == {t for t, _ in TREES}, f"{fds_dir.name}: trees {set(out)}"
+    return out
+
+
 T_SHOW = 300.0  # s shown on the layer figure; the room is empty by 125 s
 
 
@@ -105,14 +130,17 @@ def k_slice(fds_dir):
     return np.asarray(sl.times), coords["x"], coords["y"], np.transpose(data, (0, 2, 1))
 
 
-def tree_series(dev, sl, tree, where):
+def tree_series(dev, sl, tree, geometry):
     """Interface heights and the cell K near one tree, NaN where unstratified."""
-    temp = dev[[f"T_tree_{tree}-{i}" for i in range(1, 15)]].to_numpy() + 273.15
-    kk = dev[[f"K_tree_{tree}-{i}" for i in range(1, 15)]].to_numpy()
+    x0, y0, z = geometry
+    where = (x0, y0)
+    cols = range(1, z.size + 1)
+    temp = dev[[f"T_tree_{tree}-{i}" for i in cols]].to_numpy() + 273.15
+    kk = dev[[f"K_tree_{tree}-{i}" for i in cols]].to_numpy()
     strat = (temp[:, -1] - temp[:, 0] > 1.0) & (kk[:, -1] > 0.1)
-    z_t = [layer_height(t) if s else np.nan for t, s in zip(temp, strat)]
+    z_t = [layer_height(t, z) if s else np.nan for t, s in zip(temp, strat)]
     z_k = {
-        f: [k_level(k, f) if s else np.nan for k, s in zip(kk, strat)]
+        f: [k_level(k, f, z) if s else np.nan for k, s in zip(kk, strat)]
         for f in (0.5, 0.1)
     }
     t, xs, ys, k = sl
@@ -201,6 +229,12 @@ def style_layer_axes(axes, k_top):
     )
 
 
+def _span(a, b):
+    """'a' or 'a-b' (m), the tree end height of the two grids."""
+    lo, hi = sorted((float(a), float(b)))
+    return f"{lo:g}" if np.isclose(lo, hi) else f"{lo:g}-{hi:g}"
+
+
 def fig_layer(data):
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(
@@ -208,16 +242,20 @@ def fig_layer(data):
     )
     k_top = 0.0
     lines = []
-    for style in LAYER_RUNS:
+    runs = layer_runs()
+    places = tree_geometry(data / runs[0][0])
+    for style in runs:
         dev = pd.read_csv(data / style[0] / f"{style[0]}_devc.csv", skiprows=1)
         sl = k_slice(data / style[0])
-        for col, (tree, where, _) in enumerate(TREES):
-            s = tree_series(dev, sl, tree, where)
+        geometry = tree_geometry(data / style[0])
+        for col, (tree, _) in enumerate(TREES):
+            s = tree_series(dev, sl, tree, geometry[tree])
             keep = s["t_k"] <= T_SHOW
             k_top = max(k_top, float(np.percentile(s["k"][keep], 95)))
             draw_tree(axes[:, col], s, style)
             lines.append(layer_report(style[1], tree, s))
-    for col, (tree, where, note) in enumerate(TREES):
+    for col, (tree, note) in enumerate(TREES):
+        where = f"({places[tree][0]:g}, {places[tree][1]:g})"
         maps._title(axes[0, col], "abc"[col], f"tree {tree} at {where} m, {note}")
     style_layer_axes(axes, min(2.0, 0.5 * np.ceil(k_top / 0.5)))
     axes[0, 0].annotate(
@@ -230,7 +268,7 @@ def fig_layer(data):
     )
     handles = [
         Line2D([], [], color=c, ls=ls, marker=m, mec="white", label=lab)
-        for _, lab, c, ls, m in LAYER_RUNS
+        for _, lab, c, ls, m in runs
     ]
     handles.append(
         Line2D(
@@ -238,10 +276,19 @@ def fig_layer(data):
         )
     )
     maps._legend(axes[0, 2], handles=handles, loc="upper right", fontsize=8)
+    z_fine = tree_geometry(data / runs[2][0])[TREES[0][0]][2]
+    z_base = places[TREES[0][0]][2]
+    spacing = (
+        "Tree points every 0.2 m on both grids"
+        if np.isclose(np.diff(z_fine).mean(), 0.2)
+        else "Tree points at cell centres, every 0.2 m (0.1 m on the 0.1 m grid)"
+    )
     maps._stamp(
         fig,
-        "Tree points every 0.2 m on both grids. Interface only where the tree is "
-        "stratified (T(2.8 m) − T(0.2 m) > 1 K and K(2.8 m) > 0.1 1/m), 10 s centred "
+        f"{spacing}. Interface only where the tree is "
+        f"stratified (T(top) − T(bottom) > 1 K and K(top) > 0.1 1/m; top "
+        f"{_span(z_fine[-1], z_base[-1])} m, bottom {_span(z_fine[0], z_base[0])} m), "
+        "10 s centred "
         "mean; Eq. 22.25 evaluated on the tree, not the FDS LAYER HEIGHT device. "
         "Markers: first K ≥ 0.23 1/m.",
     )
@@ -329,7 +376,9 @@ def ecdf_panel(ax, pairs):
 
 
 def fig_perturbation(data, cache):
-    walkable = wkt.loads((data / "hrr060_1door" / "geometry.wkt").read_text())
+    walkable = wkt.loads(
+        (data / maps.LAYOUT_FDS["1door"][0] / "geometry.wkt").read_text()
+    )
     exits = maps.load_layouts(data)[1]["1door"]
     grid = maps.make_grid(walkable)
     runs = {
@@ -403,9 +452,19 @@ def main():
     parser.add_argument(
         "--cache", type=Path, help="map-script cache folder (RUNS/cache)"
     )
+    parser.add_argument(
+        "--family",
+        choices=tuple(maps.FAMILIES),
+        default="rel",
+        help="FDS runs: rel (default) or hrr060; the perturbation is hrr060 only",
+    )
     opts = parser.parse_args()
     data = opts.data.resolve()
+    maps.use_family(opts.family)
     fig_layer(data)
+    if "0.2 m, 1 door, perturbed" not in maps.FDS_RUNS:
+        print(f"- {opts.family}: no perturbed run, grid_perturbation.png not written")
+        return
     if opts.cache:
         fig_perturbation(data, opts.cache.resolve())
         return
