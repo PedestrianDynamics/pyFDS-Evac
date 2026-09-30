@@ -31,6 +31,20 @@ research software and one room: nothing here is a design or safety verdict.
 &lt;/div>
 &lt;/div>
 &lt;/div>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
+⚠️
+&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
+The runs on this page predate
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>, which
+changed when an agent leaves at an exit. The exit times, RSET maps and DIFF
+values below are those of commit &lt;code>30ca7f5&lt;/code>; the re-run is tracked in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/388" target="_blank" rel="noopener">#388&lt;/a>.
+&lt;/div>
+&lt;/div>
+&lt;/div>
 &lt;h2>The result in brief&lt;span class="hx-absolute -hx-mt-20" id="the-result-in-brief">&lt;/span>
 &lt;a href="#the-result-in-brief" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One door, the exit flow capped at 0.96 persons/s, everyone moving at t = 0,
 smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:&lt;/p>
@@ -1146,11 +1160,14 @@ it counts DIFF = 0 as a fail (the last &lt;code>np.histogram&lt;/code> bin is cl
 follow the text: K ≥ 0.23 1/m, the maximum, DIFF = 0 passes.&lt;/li>
 &lt;li>&lt;strong>Censoring instead of the 120 s fill&lt;/strong>, the ∃ rule, and 1 s steps
 instead of 10 s. The sensitivity table above shows each change.&lt;/li>
-&lt;li>&lt;strong>Door jambs, 0.8 m deep, in the walkable area only.&lt;/strong> The engine removes
-an agent within its radius + 0.5 m of a random point in the exit polygon,
-which makes a door drawn flush with the wall act about 1.3 m wider
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>).
-The jambs force every agent into the 1.2 m passage. They cost about
+&lt;li>&lt;strong>Door jambs, 0.8 m deep, in the walkable area only.&lt;/strong> The runs on this
+page predate
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>. The
+engine then removed an agent within its radius + 0.5 m of a random point
+in the exit polygon, which made a door drawn flush with the wall act about
+1.3 m wider. The jambs force every agent into the 1.2 m passage. The
+engine now removes an agent when its centre enters the exit polygon, so
+the jambs are no longer needed; they do no harm. They cost about
 1.1 m² (about 3 cells) at the north-east corner. FDS has no jambs.&lt;/li>
 &lt;li>&lt;strong>One-door and two-door rooms are separate FDS runs&lt;/strong>, so the ventilation
 differs as well as the egress.&lt;/li>
@@ -1326,6 +1343,21 @@ the uncoupled run is conservative for one fire: the 2 MW PVC fire of
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>You need&lt;/strong> the &lt;code>fire_2MW_PVC&lt;/code> FDS output of that page (step 3 there says
 where to get it) in &lt;code>$FDS&lt;/code>. Each run below takes about 4 s.&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
+⚠️
+&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
+The numbers and figures on this page come from runs that predate
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>, which
+changed when an agent leaves at an exit. The commands below now print
+slightly different times, and some seed counts change; the re-run is
+tracked in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/391" target="_blank" rel="noopener">#391&lt;/a>.
+&lt;/div>
+&lt;/div>
+&lt;/div>
 &lt;h2>The answer in short&lt;span class="hx-absolute -hx-mt-20" id="the-answer-in-short">&lt;/span>
 &lt;a href="#the-answer-in-short" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>For this fire and this T-junction, with 100 people placed at t = 0:&lt;/p>
 &lt;ul>

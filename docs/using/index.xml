@@ -1968,7 +1968,7 @@ trajectory is written every tenth step (10 frames/s).&lt;/p>
 &lt;td>&lt;code>radius&lt;/code>&lt;/td>
 &lt;td>0.2 m&lt;/td>
 &lt;td>—&lt;/td>
-&lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a stage.&lt;/td>
+&lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius_distribution&lt;/code>&lt;/td>
@@ -2058,7 +2058,7 @@ while still waiting walks off when its pre-movement ends
 &lt;tr>
 &lt;td>&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput&lt;/code>&lt;/td>
 &lt;td>&lt;code>false&lt;/code>, 0&lt;/td>
-&lt;td>Cap the removal rate at the exit: an agent within its radius + 0.5 m of the exit&amp;rsquo;s target point is removed only if at least 1/&lt;code>max_throughput&lt;/code> s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A &lt;code>max_throughput&lt;/code> of 0 disables the cap.&lt;/td>
+&lt;td>Cap the removal rate at the exit: an agent whose centre is inside the exit polygon is removed only if at least 1/&lt;code>max_throughput&lt;/code> s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A &lt;code>max_throughput&lt;/code> of 0 disables the cap.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>capacity_agents_per_s&lt;/code>&lt;/td>
@@ -2247,6 +2247,10 @@ seed used, and any warnings from the run.&lt;/p>
 &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/results_header.png" title="The results header, the outcome and the FED warning of the corridor run." alt="The top of the results. A header reads “Results run #1 · iso_table21_coupled · 2026-09-29T18:14:06&amp;#43;00:00” with the buttons Show Python for this run and Clear results, and the line “Starting a new run replaces these results in this view; the files on disk are kept.” Below it, a check mark and “Complete: all agents evacuated”, four tiles reading Evacuation time 85.0 s, Evacuated 1 / 1 agents, Remaining 0 agents and Seed used 420, and a Warning box, “1 warning for run #1”, saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices" loading="lazy" />
 &lt;figcaption>The results header, the outcome and the FED warning of the corridor run.&lt;/figcaption>
 &lt;/figure>&lt;/a>&lt;/p>
+&lt;p>The screenshots of this run predate the exit rule of
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>; the run
+now ends after 85.3 s, as in the steps below
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/389" target="_blank" rel="noopener">#389&lt;/a>).&lt;/p>
 &lt;p>Further down, press play in
 &lt;strong>Trajectories&lt;/strong> to replay the run, or drag the time slider. Scroll over the
 plan to zoom and drag to pan; &lt;strong>↺&lt;/strong> resets the view. With an FDS folder set,
@@ -2266,7 +2270,7 @@ growth, stay empty for this one-agent corridor.&lt;/p>
 &lt;aside class="docs-checkpoint" aria-label="Expected result: The run finished">
 &lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> The run finished&lt;/p>
 &lt;div class="docs-checkpoint__body">
-&lt;p>The agent leaves the corridor after 85.0 s, and the run reports 1 of 1
+&lt;p>The agent leaves the corridor after 85.3 s, and the run reports 1 of 1
 agent evacuated. The &lt;strong>Warning&lt;/strong> box says that FED is disabled: this deck
 writes only the soot extinction slice, no CO, CO₂ or O₂, so the warning is
 expected here. The same run from the command line,&lt;/p>
@@ -2282,7 +2286,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>ends with &lt;code>Simulation finished in 85.05 s (1/1 evacuated).&lt;/code>&lt;/p>
+&lt;p>ends with &lt;code>Simulation finished in 85.32 s (1/1 evacuated).&lt;/code>&lt;/p>
 &lt;/div>
 &lt;/aside>
 &lt;h3>Keep the run as a script&lt;span class="hx-absolute -hx-mt-20" id="keep-the-run-as-a-script">&lt;/span>
@@ -3023,13 +3027,13 @@ title="Copy code"
 &lt;code>run_scenario&lt;/code> prints for each run:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>jps-distributions_0: 30 agents, use_premovement=False
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 1: last exit 41.9 s, evacuated 30, incapacitated 0, remaining 0
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 2: last exit 45.0 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 1: last exit 41.5 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 2: last exit 46.1 s, evacuated 30, incapacitated 0, remaining 0
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 3: last exit 44.9 s, evacuated 30, incapacitated 0, remaining 0
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 4: last exit 44.6 s, evacuated 30, incapacitated 0, remaining 0
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 5: last exit 45.7 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 4: last exit 44.5 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 5: last exit 45.8 s, evacuated 30, incapacitated 0, remaining 0
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>versions: {&amp;#39;pyfds-evac&amp;#39;: &amp;#39;0.1.0&amp;#39;, &amp;#39;jupedsim&amp;#39;: &amp;#39;1.4.2&amp;#39;, &amp;#39;fdsreader&amp;#39;: &amp;#39;1.11.7&amp;#39;, &amp;#39;fdsvismap&amp;#39;: &amp;#39;0.2.1&amp;#39;}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git: 3f47897b351d9f8c403782611282c0bc2a2bdcb0, dirty: True&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git: b42f07ef4865142d55f3ff9e0e642370f0cb7b56, dirty: True&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -3063,9 +3067,9 @@ title="Copy code"
 &lt;/div>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>n = 5 seeds
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mean = 44.4 s, SD = 1.5 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>min-max = 41.9-45.7 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>95th percentile = 45.6 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mean = 44.6 s, SD = 1.8 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>min-max = 41.5-46.1 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>95th percentile = 46.0 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -3125,7 +3129,7 @@ title="Copy code"
 of this site, so running it changes your checkout; restore it with
 &lt;code>git checkout -- site/static/images/howto/egress_exit_curve.png&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312" target="_blank" rel="noopener">#312&lt;/a>).&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/howto/egress_exit_curve.png" alt="Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 33–34 s to 30 between 42 and 46 s, and a grey band spans the range of last exit times" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/howto/egress_exit_curve.png" alt="Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 34 s to 30 between 41 and 46 s, and a grey band spans the range of last exit times" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Cumulative number of agents evacuated [-] against time since the start of the
 simulation [s], &lt;code>assets/fic_vs_fed_speed&lt;/code>, N = 30 agents, clear air, no
 pre-movement. One line per seed, each with its own colour and line style,

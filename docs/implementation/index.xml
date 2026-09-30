@@ -269,7 +269,23 @@ definition, parameters, defaults and limitations, and the terms used here
 (&lt;em>legible&lt;/em>, &lt;em>known&lt;/em>, &lt;em>learn&lt;/em>, &lt;em>visited&lt;/em>, &lt;em>frontier&lt;/em>), see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>. The intuition is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#wayfinding">Concepts › Wayfinding&lt;/a>.&lt;/p>
-&lt;/div>&lt;p>This page follows §3 of the talk
+&lt;/div>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
+⚠️
+&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
+The run numbers and figures on this page come from
+runs that predate the per-distribution seeds of
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360" target="_blank" rel="noopener">#360&lt;/a> and the
+exit rule of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>.
+The commands below now give different results; the re-run is tracked in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384" target="_blank" rel="noopener">#384&lt;/a>.
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;p>This page follows §3 of the talk
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/" target="_blank" rel="noopener">&lt;em>A Modular Workflow for Visibility-Aware Evacuation Modelling&lt;/em>&lt;/a>,
 one slide per section. Each section says what the code does, where, and which
 figure belongs there. Where the talk and the code disagree, a &lt;strong>Talk vs code&lt;/strong>
