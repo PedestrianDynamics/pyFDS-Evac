@@ -23,9 +23,9 @@ equation for \(t_{\mathrm{pre}}\): it is taken from observed distributions.
 ## Why it is long
 
 ISO/TR 16738 (§5.4) reports that the pre-travel activity phase can often be
-the longest part of the total escape time. Occupants spend the pre-travel
-time seeking information, alerting and assisting others, fighting the fire
-and preparing to leave (Kuligowski and Kinateder 2026, Ch. 65, p. 2102), for
+the longest part of the total escape time. During pre-travel time, occupants
+may seek information, alert and assist others, fight the fire or prepare to
+leave (Kuligowski and Kinateder 2026, Ch. 65, p. 2102), for
 example by gathering belongings or getting dressed (Ch. 72, p. 2406).
 Kuligowski and Kinateder (Ch. 65, pp. 2109–2110) explain these delays with the Protective Action
 Decision Model, in which environmental cues such as the sight of smoke and

@@ -115,11 +115,12 @@ Three things follow from the table (our arithmetic):
 - ISO's FEC and SFPE's FIC do not share denominators, so an FEC of 1 and an
   FIC of 1 describe different mixtures.
 
-**The factor 0.3.** Ch. 70 mentions it twice. The escape-impairment values
+**The factor 0.3.** Ch. 70 mentions it several times (pp. 2288, 2289,
+2322, 2342). The escape-impairment values
 are to be used "with an FED factor of 0.3 to allow for sensitive
 individuals" (p. 2289), and "a factor of 0.3 FEC for escape impairment"
 should let nearly all exposed people escape (p. 2342). Page 2288
-explains the number: a significant proportion of people may be impaired at
+explains the number: some people may be impaired at
 about 0.3 of the concentration that affects the average person, which for
 HCl is 60 ppm instead of 200 ppm. In our reading, 0.3 is therefore a
 sensitive-person factor on the escape-impairment values. It is not the ratio

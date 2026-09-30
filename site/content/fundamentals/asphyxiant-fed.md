@@ -314,6 +314,10 @@ dose. The chapter does not say which reading is intended.
 - Purser, D. A., & Stec, A. A. (2026). *Combustion toxicity*. SFPE Handbook
   of Fire Protection Engineering, 6th ed., Ch. 69, 2225–2270.
   [doi:10.1007/978-3-031-59212-6_69](https://doi.org/10.1007/978-3-031-59212-6_69)
+- Purser, D. A. (2016). *Combustion toxicity*. SFPE Handbook of Fire
+  Protection Engineering, 5th ed., Ch. 62, 2207–2307. Cited only as the FDS
+  User's Guide reference.
+  [doi:10.1007/978-1-4939-2565-0_62](https://doi.org/10.1007/978-1-4939-2565-0_62)
 - FDS source code, `Source/func.f90`, function `FED`, tag FDS6.7.6.
   [github.com/firemodels/fds](https://github.com/firemodels/fds/blob/FDS6.7.6/Source/func.f90).
   Secondary source.

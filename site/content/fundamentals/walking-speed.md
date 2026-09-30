@@ -323,7 +323,8 @@ arithmetic).
 
 **Other fits on the same page.** Fig. 70.10 also gives logarithmic fits to
 other combinations of the Jin, Frantzich–Nilsson and Fridolf et al. data
-(Ch. 70 ref. 40, Fire and Materials 2014); the three that leave out the
+(Ch. 70 ref. 40, Fire and Materials 38(7), 744–759, 2014,
+[doi:10.1002/fam.2217](https://doi.org/10.1002/fam.2217)); the three that leave out the
 Fridolf data are "quite similar" (p. 2287). Ch. 70 takes the
 Frantzich–Nilsson data from their 2004 Human Behaviour in Fire paper
 (ref. 39), not from report 3126,

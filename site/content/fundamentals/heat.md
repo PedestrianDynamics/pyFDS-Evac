@@ -17,15 +17,16 @@ gas temperature [°C]. The equations below keep the SFPE Handbook's notation
 
 ## Convective heat: time to incapacitation
 
-For exposures of up to 2 h to convected heat from air containing less than
-10 % water vapour by volume, the time to incapacitation
-\(t_{I\,\mathrm{conv}}\) [min] at air temperature *T* [°C] is
+Eq. 70.42 gives the time to incapacitation \(t_{I\,\mathrm{conv}}\) [min]
+at air temperature *T* [°C] for air with less than 10 % water vapour by
+volume and for exposures up to 2 h (p. 2318):
 
 $$
 t_{I\,\mathrm{conv}} = 5\times10^{7}\,T^{-3.4} \qquad \text{(Eq. 70.42)}
 $$
 
-derived from the tolerance data in Fig. 70.23 (p. 2318). Purser notes that the
+The expression is derived from the tolerance data (Fig. 70.23, p. 2313;
+derivation on p. 2318). Purser notes that the
 expression follows the worst-case (100 % humidity) line and deviates from
 Blockley's curve at the ends: it is somewhat non-conservative at high
 temperatures and somewhat over-conservative at low ones. For design, Ch. 70
@@ -37,12 +38,12 @@ $$
 
 with further expressions for serious injury (Eq. 70.44) and for fatal
 exposure (Eq. 70.45). No heat flux enters Eqs. 70.42–70.45: they take the air
-temperature only. Thermal tolerance data for unprotected skin suggest a
-limit of about 120 °C for convected heat, above which considerable pain
-occurs quickly (Ch. 70, p. 2319 and Table 70.18). Thermal burns to the
+temperature only. For unprotected skin, the tolerance data put the limit
+for convected heat at about 120 °C; above it, pain comes quickly and burns
+follow within minutes (Ch. 70, p. 2319 and Table 70.18). Thermal burns to the
 respiratory tract do not occur unless the air is hot or humid enough to burn
 the facial skin (p. 2317), and saturated air can be breathed for more than a
-few minutes only up to 60 °C (p. 2346).
+few minutes only up to 60 °C (pp. 2345–2346; Table 70.18, p. 2319).
 
 ## Radiant heat: pain and burns
 
@@ -261,6 +262,11 @@ equations describe the effect of heat on walking speed or on route choice.
   Protection Engineering, 6th ed., Ch. 70, 2271–2352. Eqs. 70.41–70.47,
   Fig. 70.23 and Tables 70.17–70.19.
   [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
+- Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
+  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
+  Protection Engineering, 5th ed., Ch. 63, 2308–2428. Cited only for the
+  equation number Eq. 63.49 (p. 2383) used on the Models pages.
+  [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
 - ISO (2012). *ISO 13571:2012 Life-threatening components of fire —
   Guidelines for the estimation of time to compromised tenability in
   fires*, §1, §3.1, §4.4, §5.8 and clause 8 (Eqs. 7–11). ISO, Geneva.

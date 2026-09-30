@@ -449,11 +449,13 @@ Japanese exit signs of 250–800 cd/m² in non-irritant white smoke without
 background light (Table 68.2). The fitted slopes of *V* against 1/*K* are
 9.1, 12.6 and 22.5 (\(R^2\) = 0.93–0.94, Fig. 68.15); they attribute the
 22.5 of the medium square sign to its size ("twice as visible as others
-due to size effect", p. 2209). An ordinary lit exit
-sign was lost at about 10 m at *K* = 1.0 1/m, and they note that the
-constant "tends to be larger" than Jin's. *Our inference:* larger constants
-without background light agree in direction with Cheung et al.'s low-light
-results.
+due to size effect", p. 2209). With background light, the small square
+sign's slope falls from 12.6 to 5.1 (\(R^2\) = 0.92, Fig. 68.15, p. 2210).
+A rectangular lit exit sign was lost at about 10 m, a small square one at
+about 13 m, at *K* = 1.0 1/m, and they note that the constant "tends to be
+somewhat larger" than Jin's (p. 2209). *Our inference:* larger constants
+without background light, and the smaller slope in the lit area, agree in
+direction with Cheung et al.'s low-light results.
 
 Jin ([FRI Report 40](https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_040s.pdf),
 1975, Part 3, pp. 1–5; Japanese, English abstract p. 5) measured a

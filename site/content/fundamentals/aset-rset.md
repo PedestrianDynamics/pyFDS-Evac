@@ -96,8 +96,9 @@ as the time from fire initiation to the onset of untenable conditions
 at ignition (p. 2378). The 2016 edition (Bukowski and Tubbs 2016, Ch. 56,
 p. 2038) counted both from the notification of occupants, so older analyses
 may use that origin. When two analyses are compared, check which origin
-each uses. The terms also vary: "escape" in ISO/TR 16738, "egress" or
-"evacuation" in the SFPE Handbook, for the same quantities.
+each uses. The terms also vary for the same quantities: "escape" in
+ISO/TR 16738; the SFPE Handbook mixes "evacuation", "egress" and "escape"
+(Ch. 66, p. 2158; Ch. 72, p. 2378).
 
 ASET varies with position and with the tenability
 criterion chosen, and the criterion itself is set for a fraction of the

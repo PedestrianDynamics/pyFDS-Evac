@@ -56,9 +56,20 @@ median 1, these two statements are not consistent: 1 % below 0.3 implies a
 log-scale standard deviation near 0.52, whereas 90 % below 1.3 implies about
 0.2 (our arithmetic; 11.3 % below 0.3 implies about 1.0). The source does
 not give the distribution parameters that would resolve
-this. Ch. 70 also notes that, because gas concentrations rise quickly in most
+this. For single gases, Ch. 70 puts about 1 % of people below an FED of
+0.3 for CO (about 10 % COHb, p. 2298), HCN (p. 2302), low oxygen (p. 2305)
+and CO₂ (p. 2307). Only the HCN figure rests on data: a probit analysis of
+the primate experiments gives 1 % at FICN = 0.44 (p. 2302), which for a
+log-normal with median 1 means σ ≈ 0.35 (our arithmetic). The 0.3 is then
+widened for children and the elderly. Ch. 70 also notes that, because gas concentrations rise quickly in most
 flaming fires, variations in individual susceptibility have relatively minor
 effects on predicted times to incapacitation (p. 2282).
+
+After the general asphyxiant equation (Eq. 70.39), Ch. 70 also states that
+an FED of 0.1 should allow nearly all exposed people to escape (p. 2310),
+while p. 2288 gives 0.3 for the general population and 0.1 for particularly
+sensitive groups. The 2016 edition gave 0.3 for nearly all people and 0.1
+as an option for especially vulnerable groups (p. 2372).
 
 ## NIST Technical Note 1797
 
@@ -114,10 +125,9 @@ the text does not say whether the heat FED must share the gas threshold.
 No source we could consult gives a population spread for tolerance of
 convective heat (ISO 13571:2012 Eqs. (9) and (10); SFPE Eq. 70.42). SFPE Ch. 70 gives
 population figures for heat only for radiant lethality (p. 2318): a radiant
-dose of 10 (kW/m²)^4/3·min "represents a fatal level for a vulnerable
-population (over 65 years of age) or a 1 % fatality level for the average
-population, whereas 16.7 (kW/m²)^4/3·min represents a 50 % probability
-lethal level for the average population". The chapter cites Hockey and Rew
+dose of 10 (kW/m²)^4/3·min is a fatal level for people over 65 and "a 1%
+lethal level" for the average population, and 16.7 (kW/m²)^4/3·min is "a
+50% lethal level". The chapter cites Hockey and Rew
 (1996) and Purser (1997) for its radiant dose relation (refs. [125, 126],
 p. 2318). Hockey and Rew is a candidate source for probit relations behind
 these figures; we have not read it.
@@ -134,7 +144,7 @@ value 16.667 gives the same σ to two decimals. Its limits:
   Eq. 70.41. They concern neither convective tolerance nor the ISO
   convective times.
 
-With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. A log-normal
+With FED = 1 at D = 16.7, the 1 % lethal dose is FED = 0.60. A log-normal
 with σ = 0.94, between the two TN 1797 bin values above, would put 29 % of people
 below FED = 0.60 instead of 1 %. A probit in the natural log of dose with
 slope b gives σ = 1/b. A published probit slope for a heat endpoint would
@@ -162,12 +172,14 @@ How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.m
   from the public preview.
 - Purser, D. A., & McAllister, J. L. (2026). *Assessment of hazards to
   occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
-  Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2282, 2318, 2343.
+  Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2282, 2288, 2298, 2302, 2305,
+  2307, 2310, 2318, 2343.
   [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
 - Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
   occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
   Protection Engineering, 5th ed., Ch. 63, 2308–2428. Cited only for the
-  11.3 % figure (p. 2334), which Ch. 70 replaces.
+  11.3 % figure (p. 2334), which Ch. 70 replaces, and for the 0.3 and 0.1
+  FED factors (p. 2372).
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
 - Averill, J. D., Moore-Merrell, L., Ranellone, R. T., Jr., Weinschenk, C.,
   Taylor, N., Goldstein, R., Santos, R., Wissoker, D., & Notarianni, K. A.
