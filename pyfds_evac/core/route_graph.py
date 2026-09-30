@@ -2009,7 +2009,12 @@ def compute_eval_offset(
     interval_s: float,
     dt_s: float = 0.01,
 ) -> float:
-    """Stagger reevaluation across agents to spread cost."""
+    """Stagger reevaluation across agents to spread cost.
+
+    *agent_id* is any per-agent integer. ``run_scenario`` passes the
+    agent's stagger index, its spawn index within its origin plus one
+    (``agent_seed.stagger_index``), not its JuPedSim id.
+    """
     if interval_s <= 0 or dt_s <= 0:
         return 0.0
     steps_per_interval = max(1, int(interval_s / dt_s))
