@@ -43,6 +43,7 @@ from .agent_seed import (
     PURPOSE_INCAP_HEAT,
     PURPOSE_TARGET,
     PURPOSE_VARIANT,
+    SEEDING_SCHEME,
     SpawnKey,
     SpawnKeyError,
     agent_rng,
@@ -2927,6 +2928,7 @@ def run_scenario(
             manifest_file = write_manifest(
                 output_file,
                 seed=seed,
+                agent_seeding=SEEDING_SCHEME,
                 scenario_path=scenario.source_path,
                 fds_dir=fds_dir_from_models(
                     smoke_speed_model, fed_model, heat_fed_model

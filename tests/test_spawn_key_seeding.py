@@ -352,6 +352,15 @@ def test_flow_variant_without_entry_stage_fails_at_setup():
     scenario_mod._check_flow_variants(flow, {"a": 3})
 
 
+def test_manifest_records_the_seeding_scheme():
+    result = _run_quiet(_load("blind_spawn_discovery/config_mixed.json", 1.0, 2))
+    try:
+        manifest = json.loads(Path(result.manifest_file).read_text(encoding="utf-8"))
+    finally:
+        result.cleanup()
+    assert manifest["agent_seeding"] == "spawn-key-blake2b-v1"
+
+
 def _next_stage(**seeds) -> str:
     from shapely.geometry import box
 
