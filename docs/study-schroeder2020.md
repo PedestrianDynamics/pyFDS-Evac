@@ -36,8 +36,8 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:
 | | 0.2 m FDS grid | 0.1 m FDS grid | Paper, Fig. 5 (read off) |
 |---|---|---|---|
 | min DIFF | −30 s | −25 s | about −29 s |
-| Area with DIFF < 0 | 6.4 m² | 5.2 m² | about 20 m² |
-| C (bin-free) | −108 m²s | −83 m²s | – |
+| Area with DIFF < 0 | 6.2 m² | 5.5 m² | about 20 m² |
+| C (bin-free) | −113 m²s | −87 m²s | – |
 
 - **Smoke sets ASET here.** Every cell reaches K ≥ 0.23 1/m at 2.0 m, the
   last one at 88 s (0.2 m grid, one door; 203 s on the 0.1 m grid, 189 s
@@ -48,7 +48,7 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:
 - **Only the queue fails.** The negative cells are the corner in front of
   the door, where people wait at the capped exit.
 - **The door-flow model decides the sign.** Without the cap, the room
-  empties in about 35 s and no cell has DIFF < 0.
+  empties in about 34 s and no cell has DIFF < 0.
 - **The min DIFF is one cell.** It is the last cell before the door. The
   agreement with the paper's −29 s tests only when smoke reaches the door.
   Our negative area is about three times smaller than the paper's, and we
@@ -318,7 +318,7 @@ the fire.
 ### The door flow
 
 The collision-free speed model passes about 3 persons/s through the 1.2 m
-door and empties the room in about 35 s. The paper's Fig. 3 implies about
+door and empties the room in about 34 s. The paper's Fig. 3 implies about
 0.96 persons/s and about 104 s. We therefore run two versions on the same
 FDS output:
 
@@ -346,14 +346,14 @@ not door-flow physics, and it has no test yet
 
 ### The RSET maps
 
-![Four RSET maps of the 30 by 10 m room, shaded from white (0 s) to dark blue (about 125 s), with the burner as a red square in the south-west corner and the exits as green bars. (a) One door, capped: dark blue in the north-east corner in front of the door, latest 105 s. (b) One door, uncapped: pale everywhere, latest 35 s. (c) Two doors, capped: blue at both doors, latest 65 s. (d) Two doors, N = 200, capped: dark blue at both doors, latest 124 s.](/images/studies/schroeder2020/rset_maps.png)
+![Four RSET maps of the 30 by 10 m room, shaded from white (0 s) to dark blue (about 125 s), with the burner as a red square in the south-west corner and the exits as green bars. (a) One door, capped: dark blue in the north-east corner in front of the door, latest 105 s. (b) One door, uncapped: pale everywhere, latest 34 s. (c) Two doors, capped: blue at both doors, latest 65 s. (d) Two doors, N = 200, capped: dark blue at both doors, latest 124 s.](/images/studies/schroeder2020/rset_maps.png)
 
 *RSET, maximum over n = 10 seeds, 0.6 m cells. The plan is the same in
 every figure: 30 m × 10 m, burner red in the south-west corner, exits
 green, grey cells never visited by any agent.*
 
 With the cap, RSET is highest in the corner in front of the door, where the queue
-forms (105 s). Without it, no cell is occupied after 35 s. With two doors,
+forms (105 s). Without it, no cell is occupied after 34 s. With two doors,
 N = 100 capped, the room is empty by 65 s; with N = 200, by 124 s.
 
 | Version (maximum over n = 10) | Latest cell, one door | Latest cell, two doors |
@@ -362,7 +362,7 @@ N = 100 capped, the room is empty by 65 s; with N = 200, by 124 s.
 | Capped, pre-movement 10 s (the default) | 115 s | 75 s |
 | Capped, pre-movement 30 s | 135 s | 95 s |
 | Capped, pre-movement 60 s | 165 s | 125 s |
-| Uncapped, pre-movement 0 | 35 s | 22 s |
+| Uncapped, pre-movement 0 | 34 s | 22 s |
 | Capped, N = 200, pre-movement 0 | – | 124 s |
 
 Pre-movement is a constant delay for everyone. "The default" is the
@@ -378,21 +378,21 @@ the exposure or dose of an individual; the paper says so itself (p. 6).
 For per-agent exposure, see
 [A crowd in a real fire](first-fds-case.md#aset-rset).
 
-![Six DIFF maps of the one-door room, red and hatched where DIFF is negative, blue where it is positive, grey where no agent went. (a) capped, pre-movement 0, 0.2 m grid: a small red block in the north-east corner in front of the door; min DIFF −30 s, 6.4 m². (b) the same on the 0.1 m grid: −25 s, 5.2 m². (c) pre-movement 10 s: −40 s, 14.0 m². (d) pre-movement 30 s: red spreads along the north wall and the west end, −60 s, 70.5 m². (e) pre-movement 60 s: most of the room red, −90 s, 212.7 m². (f) uncapped: all blue, min DIFF +3 s.](/images/studies/schroeder2020/diff_1door.png)
+![Six DIFF maps of the one-door room, red and hatched where DIFF is negative, blue where it is positive, grey where no agent went. (a) capped, pre-movement 0, 0.2 m grid: a small red block in the north-east corner in front of the door; min DIFF −30 s, 6.2 m². (b) the same on the 0.1 m grid: −25 s, 5.5 m². (c) pre-movement 10 s: −40 s, 14.0 m². (d) pre-movement 30 s: red spreads along the north wall and the west end, −60 s, 71.6 m². (e) pre-movement 60 s: most of the room red, −90 s, 213.3 m². (f) uncapped: all blue, min DIFF +3 s.](/images/studies/schroeder2020/diff_1door.png)
 
 *One door. ASET: K ≥ 0.23 1/m, any node of the cell, z = 2.0 m, about 1 s
 steps. RSET: maximum over n = 10 seeds. No visited cell is censored.*
 
 | One door, maximum over n = 10 | min DIFF | Area DIFF < 0 | C | Failing cells |
 |---|---|---|---|---|
-| Capped, pre-movement 0 | −30 s (−25 s) | 6.4 m² (5.2) | −108 m²s (−83) | 21 (17) |
-| Capped, pre-movement 10 s | −40 s (−35 s) | 14.0 m² (9.8) | −204 m²s (−157) | 42 (30) |
-| Capped, pre-movement 30 s | −60 s (−55 s) | 70.5 m² (58.8) | −920 m²s (−654) | 200 (167) |
-| Capped, pre-movement 60 s | −90 s (−85 s) | 212.7 m² (184.3) | −5,605 m²s (−4,730) | 596 (517) |
+| Capped, pre-movement 0 | −30 s (−25 s) | 6.2 m² (5.5) | −113 m²s (−87) | 20 (18) |
+| Capped, pre-movement 10 s | −40 s (−35 s) | 14.0 m² (9.4) | −206 m²s (−161) | 42 (29) |
+| Capped, pre-movement 30 s | −60 s (−55 s) | 71.6 m² (59.5) | −920 m²s (−656) | 203 (169) |
+| Capped, pre-movement 60 s | −90 s (−85 s) | 213.3 m² (184.9) | −5,610 m²s (−4,735) | 598 (519) |
 | Uncapped, pre-movement 0 | +3 s (+3 s) | 0 | 0 | 0 |
 
-*0.2 m FDS grid; in brackets the 0.1 m grid. Of the 848 cells, 757 are
-visited in the capped versions; the 91 others are shown as "not visited"
+*0.2 m FDS grid; in brackets the 0.1 m grid. Of the 848 cells, 758 are
+visited in the capped versions; the 90 others are shown as "not visited"
 and are outside the five DIFF states.*
 
 - **Pre-movement shifts min DIFF one for one.** It delays everyone by the
@@ -407,7 +407,7 @@ and are outside the five DIFF states.*
   1.1 m² (about 3 cells) out of the corner where RSET is highest, so every
   area here is up to about 1.1 m² smaller than without them.
 
-![Two dot plots, one row per version. Left, min DIFF: the capped versions from −30 to −101 s, the uncapped at +2 and +3 s, with the paper's −29 s as a star next to −30. Right, the area with DIFF below zero: 6.4 to 212.7 m² for one door and 5.8 to 204.9 m² for two doors, the paper's 20 m² as a star to the right of 6.4. Open diamonds show the 0.1 m grid next to each one-door point.](/images/studies/schroeder2020/diff_measures.png)
+![Two dot plots, one row per version. Left, min DIFF: the capped versions from −30 to −103 s, the uncapped at +1 and +3 s, with the paper's −29 s as a star next to −30. Right, the area with DIFF below zero: 6.2 to 213.3 m² for one door and 6.2 to 203.3 m² for two doors, the paper's 20 m² as a star to the right of 6.2. Open diamonds show the 0.1 m grid next to each one-door point.](/images/studies/schroeder2020/diff_measures.png)
 
 *Maximum over n = 10 seeds. Filled: 0.2 m FDS grid; open diamonds: 0.1 m
 grid; grey bar: the grid band. Two doors: no 0.1 m run, so no grid band.*
@@ -421,12 +421,12 @@ band, and the one-door band does not carry over.*
 
 | Two doors, maximum over n = 10 | min DIFF | Area DIFF < 0 | C |
 |---|---|---|---|
-| Capped, pre-movement 0 | −39 s | 5.8 m² | −129 m²s |
-| Capped, pre-movement 10 s | −49 s | 14.2 m² | −221 m²s |
-| Capped, pre-movement 30 s | −69 s | 55.0 m² | −837 m²s |
-| Capped, pre-movement 60 s | −99 s | 204.9 m² | −4,567 m²s |
-| Uncapped, pre-movement 0 | +2 s | 0 | 0 |
-| Capped, N = 200, pre-movement 0 | −101 s | 22.2 m² | −898 m²s |
+| Capped, pre-movement 0 | −41 s | 6.2 m² | −127 m²s |
+| Capped, pre-movement 10 s | −51 s | 14.2 m² | −221 m²s |
+| Capped, pre-movement 30 s | −71 s | 54.4 m² | −825 m²s |
+| Capped, pre-movement 60 s | −101 s | 203.3 m² | −4,534 m²s |
+| Uncapped, pre-movement 0 | +1 s | 0 | 0 |
+| Capped, N = 200, pre-movement 0 | −103 s | 21.9 m² | −911 m²s |
 
 - **The second door is our assumption.** The paper names no position for it.
   We mirrored D1 onto the west wall, about 7 m from the burner. Smoke
@@ -435,44 +435,47 @@ band, and the one-door band does not carry over.*
 - **N = 100 with two doors is not the paper's thought experiment.** In §3.1
   the paper doubles the occupants *and* adds a second exit, and states that
   the margin "remains more or less unchanged". Only the N = 200 version
-  tests that. Here it gives −101 s against −30 s for one door with N = 100,
+  tests that. Here it gives −103 s against −30 s for one door with N = 100,
   and the last agent leaves at 105–125 s against 104–106 s. This difference
   comes from our D2 position, so it neither confirms nor refutes the paper.
 - **Seeds split the crowd.** Each seed draws the west/east split from a
   binomial distribution. Seed 10 of N = 200 put 119 agents west, and it sets
-  the maximum; the per-seed mean of min DIFF is −86.4 s.
+  the maximum; the per-seed mean of min DIFF is −86.3 s.
 
 ## How far to trust the numbers
 
-Four sources of spread, on min DIFF for one door, capped, pre-movement 0:
+Five sources of spread, on min DIFF for one door, capped, pre-movement 0:
 
 | Source | Size | How measured |
 |---|---|---|
-| Seeds | ±0.3 s | 95 % bootstrap CI of the per-seed min DIFF, −29.8 [−30.0, −29.5] s |
-| A tiny change of the fire | about 1 s | same grid, HRRPUA 166.87 against 166.7 kW/m²: −29.4 against −30.4 s |
-| FDS grid | about 5 s | 0.2 m against 0.1 m: −30.4 against −25.4 s |
-| Door-flow model | about 33 s | capped against uncapped: −30.4 against +2.5 s |
+| Seeds | ±0.4 s | 95 % bootstrap CI of the per-seed min DIFF, −29.5 [−29.9, −29.1] s |
+| Per-agent random draws | 0.1 s; area 0.2 m² (one cell) | the same runs before and after [#361](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/361), which changed only how each agent's draws are seeded: −30.4 against −30.3 s, 6.4 against 6.2 m² |
+| A tiny change of the fire | about 1 s | same grid, HRRPUA 166.87 against 166.7 kW/m²: −29.3 against −30.3 s |
+| FDS grid | about 5 s | 0.2 m against 0.1 m: −30.3 against −25.3 s |
+| Door-flow model | about 33 s | capped against uncapped: −30.3 against +2.5 s |
 
 The seed spread is small because the cap, not the crowd, sets the exit
-times. The area and C are less robust than min DIFF: 6.4 against 5.2 m²
-between the grids.
+times. C is less robust than min DIFF between the grids (−113 against
+−87 m²s). The area differs by 0.7 m² (6.2 against 5.5 m², about 2
+cells), comparable to the jamb effect. The per-agent draws alone move the
+failing block by a cell, so read the area to about one cell.
 
 ### Against the paper
 
 - **The min DIFF agreement is structural.** The worst cell is the last cell
-  before the door, at (29.7, 8.7) m. Its RSET is about N/0.96 ≈ 104 s
+  before the door, at (29.7, 9.3) m. Its RSET is about N/0.96 ≈ 104 s
   (measured 105 s), set by the cap; its ASET is 75 s (80 s on the 0.1 m grid). So −30 s tests
   when smoke reaches the door, not the whole map. That cell lies inside the
   reach at which the engine removes agents at the exit
   ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)).
 - **The area is about three times smaller.** Ours fails in a compact block
-  of 21 cells, x ≥ 27 m and y ≥ 6.6 m; the paper's Fig. 7 has about 55
+  of 20 cells, x ≥ 27.6 m and y ≥ 6.6 m; the paper's Fig. 7 has about 55
   failing elements. The jambs explain about 1.1 m² of the gap. One
   hypothesis is a denser queue in the authors' model; we have not tested it,
   so the gap is unexplained.
 - **The 60 kW fire is our assumption.** The paper does not state the
   demonstration HRR. Its Fig. 7 histogram (about 20 m² failing, C about
-  −300 m²s, read off; ours, with the paper's 20 s bins: −120 m²s, context
+  −300 m²s, read off; ours, with the paper's 20 s bins: −117 m²s, context
   only, not a match) matches the 60 kW, N = 100 point of its Figs. 5 and 8,
   which supports the choice but does not prove it.
 
@@ -480,14 +483,14 @@ between the grids.
 
 | Variant | min DIFF | Area DIFF < 0 | C |
 |---|---|---|---|
-| Headline: K ≥ 0.23, ∃ rule, about 1 s | −30 s | 6.4 m² | −108 m²s |
-| K ≥ 0.23 or T ≥ 45 °C | −30 s | 6.4 m² | −108 m²s |
-| K ≥ 0.3 1/m | −30 s | 6.1 m² | −104 m²s |
-| Nearest FDS node per cell | −30 s | 5.8 m² | −99 m²s |
-| ∀ rule (Eq. 2 as printed) | −29 s | 5.5 m² | −95 m²s |
+| Headline: K ≥ 0.23, ∃ rule, about 1 s | −30 s | 6.2 m² | −113 m²s |
+| K ≥ 0.23 or T ≥ 45 °C | −30 s | 6.2 m² | −113 m²s |
+| K ≥ 0.3 1/m | −30 s | 6.2 m² | −109 m²s |
+| Nearest FDS node per cell | −30 s | 6.2 m² | −104 m²s |
+| ∀ rule (Eq. 2 as printed) | −29 s | 5.8 m² | −99 m²s |
 | ∀ rule, 0.1 m FDS grid | −23 s | 3.8 m² | −63 m²s |
-| 10 s steps | −25 s | 5.1 m² | −76 m²s |
-| The paper's demonstration settings: K ≥ 0.23 or T ≥ 45, nearest node, 10 s, 120 s fill | −25 s | 4.5 m² | −71 m²s |
+| 10 s steps | −25 s | 5.5 m² | −80 m²s |
+| The paper's demonstration settings: K ≥ 0.23 or T ≥ 45, nearest node, 10 s, 120 s fill | −25 s | 4.5 m² | −73 m²s |
 
 - **∃ against ∀.** The paper's text (§2.2.3) counts a cell as exceeded when
   the criterion holds at any data point in it; Eq. 2 as printed reads "for
@@ -512,14 +515,14 @@ the tables above. Two other views, one door, 0.2 m grid:
 
 | Capped, pre-movement 0 | min DIFF | Area DIFF < 0 | C |
 |---|---|---|---|
-| Maximum over n = 10 | −30 s | 6.4 m² | −108 m²s |
-| 95th percentile over n = 10 | −30 s | 5.8 m² | −106 m²s |
-| Per seed, mean [95 % bootstrap CI] | −29.8 [−30.0, −29.5] s | 5.6 [5.4, 5.8] m² | −94.5 [−95.5, −93.4] m²s |
+| Maximum over n = 10 | −30 s | 6.2 m² | −113 m²s |
+| 95th percentile over n = 10 | −30 s | 6.2 m² | −110 m²s |
+| Per seed, mean [95 % bootstrap CI] | −29.5 [−29.9, −29.1] s | 5.6 [5.4, 5.8] m² | −97.1 [−98.7, −95.4] m²s |
 
 With 10 seeds the 95th percentile interpolates between the 9th and 10th
 values, so it lies close to the maximum. For two doors the views differ
-more (capped, pre-movement 0): maximum −39 s, 95th percentile −37 s,
-per-seed mean −29.1 [−32.8, −24.9] s, because the binomial split changes
+more (capped, pre-movement 0): maximum −41 s, 95th percentile −39 s,
+per-seed mean −30.0 [−33.7, −26.0] s, because the binomial split changes
 how many agents use D2.
 
 {{< /details >}}
@@ -564,6 +567,14 @@ It runs the 160 evacuations (existing ones are reused),
 prints every number on this page as Markdown tables, and writes the
 figures to `site/static/images/studies/schroeder2020/`. It needs PedPy ≥
 1.5.1 for `compute_rset_map`.
+
+**Provenance.** The numbers and figures on this page come from runs of
+commit `30ca7f5` on main. Each run's manifest records that commit with
+`git_dirty: false` and `agent_seeding: spawn-key-blake2b-v1`, the
+per-agent seeding of
+[#361](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/361). When
+the code changes, re-run the command into a new `RUNS` folder and compare
+the printed tables with this page.
 
 ## Setup and deviations
 
@@ -612,7 +623,9 @@ Guide (§6.3.6) warns against taking any tabulated D*/δx as an acceptable
 minimum. The 2.0 m slice sits in a weak, smeared layer interface, about
 1–5 K above ambient, so first crossings there are ill-conditioned. Neither
 grid is shown to be converged: min DIFF and the door-region ASET agree
-within 5 s and 16 s; the area and C do not, so both grids are given.
+within 5 s and 16 s. With no pre-movement the area agrees within 0.7 m²
+(about 2 cells), but not with a wait (14.0 against 9.4 m² at 10 s), and
+C does not agree (−113 against −87 m²s), so both grids are given.
 
 {{< /details >}}
 
