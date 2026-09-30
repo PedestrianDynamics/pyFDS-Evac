@@ -39,9 +39,9 @@ note for tenability criteria (2014).*
 
 Each page gives one published law: its quantity, its equation in the
 source's own notation and constants, the data it rests on, its known limits,
-and the primary citations. pyFDS-Evac defaults are on the Models pages. How
-pyFDS-Evac implements a law, and where it
-departs from the source, is on the [Models](/models/_index.md) pages. The
+and the primary citations. How pyFDS-Evac implements a law, with its
+defaults and where it departs from the source, is on the
+[Models](/models/_index.md) pages. The
 intuition behind the models is on the [Concepts](/docs/concepts.md) page.
 
 For the full treatment, see Part VIII, Human Behavior (Ch. 65–72), of the

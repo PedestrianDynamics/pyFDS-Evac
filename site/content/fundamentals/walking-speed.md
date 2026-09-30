@@ -289,8 +289,8 @@ the Frantzich–Nilsson constants (Korhonen 2021, Eq. 11). Solid over the lit
 runs (*K* ≈ 1.9–7.4 1/m), dashed outside them. *F* reaches the floor 0.1 at
 *K* = 11.15 1/m. (b) The absolute law (Frantzich and Nilsson 2003, Eq. 3)
 and the fractional reading for three example unimpeded speeds. At
-\(v^0\) = 0.706 m/s the two readings agree up to *K* = 11.15 1/m; at any
-other \(v^0\) they differ at every *K*. The absolute law reaches 0 at
+\(v^0\) = 0.706 m/s the two readings agree up to *K* = 11.15 1/m; for any
+\(v^0\) above 0.706 m/s they differ at every *K*. The absolute law reaches 0 at
 *K* = 12.4 1/m, where the fractional reading stays at \(0.1\,v^0\).
 Script: `scripts/figures/fundamentals_speed_fractional.py`.*
 

@@ -49,7 +49,7 @@ and Fahy 2016, p. 2048). The same building can give very different ASET
 and RSET depending on whether occupants are awake or asleep and whether the
 fire smoulders or flames (Babrauskas et al. 2010, p. 353).
 
-A design fire is not meant to simulate every fire that could occur. It
+A design fire stands for a range of possible fires. It
 lets the engineer compare safety measures, and it is chosen by judgement
 and checked by varying it (Karlsson and Quintiere 2000, §3.5.1).
 
@@ -187,15 +187,15 @@ class:** it describes one item under one ignition, and a value such as
   comparing ASET with RSET under stated criteria.
 - **One part of the scenario.** The same curve can sit in different
   scenarios, at a different place or with different doors open.
-- **A class only under the t² law.** A fit describes one item, and a
+- **A class only with a tabulated α.** A fit describes one item, and a
   piecewise-linear ramp has no \(\alpha\); compare a ramp with the classes
   by the time it takes to reach 1055 kW.
 - **A property of the fuel.** A growth class describes the fuel
   and its arrangement. Contents change over the life of a building.
 - **A heat source only.** The HRR does not fix the smoke. Soot and
   other product yields must be given separately (vfdb 2020, p. 60). For
-  visibility this matters as much as the HRR. Yields are not constants
-  either: the CO yield can vary by up to a factor of about 50 between
+  visibility this matters as much as the HRR. Yields also change: the CO
+  yield can vary by up to a factor of about 50 between
   well-ventilated flaming (φ < 1) and fuel-rich (φ > 1) burning (Purser 2003, p. 93, citing
   Tewarson).
 

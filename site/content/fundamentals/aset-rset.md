@@ -42,8 +42,9 @@ After the general alarm, each occupant has their own pre-travel time
 distributions interact, so they cannot be added directly. The figure draws
 \(t_{\mathrm{RSET}}\) at the exit of the last occupant, the latest time from
 ignition to exit, as RiMEA 4.1.1 (§2.13) defines the evacuation time.
-Whether ISO/TR 16738 uses the same statistic could not be checked in its
-public preview. Figure inspired by Fig. 2 of RiMEA 4.1.1 (p. 9). Script:
+ISO/TR 16738 (§5.7) lets an analysis represent the pre-travel distribution
+by one time, such as the population mode or the last occupant to move.
+Figure inspired by Fig. 2 of RiMEA 4.1.1 (p. 10). Script:
 `scripts/figures/fundamentals_aset_rset_timeline.py`.*
 
 ## What the timeline rests on
@@ -132,7 +133,7 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
   [iso.org/standard/56172](https://www.iso.org/standard/56172.html).
 - RiMEA e.V. (2025). *Guideline for Microscopic Evacuation Analysis*,
   version 4.1.1, 11 September 2025. [rimea.de](https://rimea.de/).
-  §2.8–2.13 and Fig. 2, p. 9.
+  §2.8–2.13 (pp. 9–10) and Fig. 2 (p. 10).
 - Bukowski, R. W., & Tubbs, J. S. (2016). *Egress concepts and design
   approaches*. SFPE Handbook of Fire Protection Engineering, 5th ed.,
   Ch. 56, 2012–2046.

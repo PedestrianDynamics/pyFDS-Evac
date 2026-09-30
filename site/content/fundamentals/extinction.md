@@ -71,7 +71,7 @@ COEFFICIENT` output quantity (§22.10.5); the unrelated quantity
 - Bouguer, P. (1729). *Essai d'optique sur la gradation de la lumière*.
   Claude Jombert, Paris.
 - Lambert, J. H. (1760). *Photometria, sive de mensura et gradibus
-  luminis, colorum et umbrae*. Eberhard Klett, Augsburg.
+  luminis, colorum et umbrae*. Klett, Augsburg.
 - Beer, A. (1852). *Bestimmung der Absorption des rothen Lichts in farbigen
   Flüssigkeiten*. Annalen der Physik, 162(5), 78–88.
   [doi:10.1002/andp.18521620505](https://doi.org/10.1002/andp.18521620505)

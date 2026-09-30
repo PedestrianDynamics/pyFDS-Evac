@@ -16,7 +16,7 @@ exit of the last occupant, the maximum of the individual evacuation times as
 RiMEA 4.1.1 (§2.13) defines the evacuation time.
 
 All times are illustrative; the time axis carries no numbers. The layout is
-inspired by RiMEA 4.1.1, Fig. 2 (p. 9).
+inspired by RiMEA 4.1.1, Fig. 2 (p. 10).
 
 Run from the repository root::
 
