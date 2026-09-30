@@ -132,6 +132,16 @@ probability for each exit, as FDS+Evac allows with `KNOWN_DOOR_PROBS`, is not
 supported; see
 [issue #136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136).
 
+**Familiarity does not change how agents treat smoke.** Familiarity decides
+which exits an agent knows, not how much smoke it accepts. The smoke settings
+of route choice (`w_smoke`, `visibility_extinction_threshold` and the fixed
+`impassable_extinction_threshold`) are the same for every agent. In Wood's UK
+survey, people completely familiar with the building moved through smoke more
+often than those less familiar (61 % against 51 %; Wood 1980, Table 6.4,
+p. 87), though moving through smoke was not associated with leaving the
+building (p. 91). See
+[issue #362](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362).
+
 **Herding and social influence.** Each agent chooses its route from its own
 cognitive map and the hazard along each route. When `routing.w_queue` is
 above zero (the default is 0.0), expected queueing at an exit also enters the
@@ -179,6 +189,12 @@ is finished before the evacuation starts, so occupants cannot open doors or
 otherwise change the fire. The time resolution of the hazard is that of the
 slice output (`&DUMP DT_SLCF`).
 
+**Re-entry.** An agent that reaches an exit is removed from the simulation
+(`run_scenario` in `pyfds_evac/core/scenario.py`), so nobody goes back into
+the building. In Wood's UK survey, 43 % re-entered (Wood 1980, Table 6.6,
+p. 95); of those who had left, 53 % of men and 34 % of women re-entered
+(Table 6.3, p. 87).
+
 ## Reproducibility
 
 A fixed seed does not give identical trajectories. The verification suite
@@ -209,3 +225,7 @@ Finland.
 Purser, D. A., and McAllister, J. L. (2016). Assessment of hazards to
 occupants from smoke, toxic gases, and heat. In *SFPE Handbook of Fire
 Protection Engineering*, 5th ed., Chapter 63. Springer.
+
+Wood, P. G. (1980). A survey of behaviour in fires. In D. Canter (Ed.),
+*Fires and Human Behaviour*, pp. 83–95. John Wiley & Sons, Chichester.
+ISBN 0-471-27709-6.
