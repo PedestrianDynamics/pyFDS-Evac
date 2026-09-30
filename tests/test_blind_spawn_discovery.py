@@ -24,13 +24,13 @@ from __future__ import annotations
 import importlib.util
 import json
 import math
-import random
 from pathlib import Path
 
 import pytest
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon
 
+from pyfds_evac.core.agent_seed import INITIAL_ORIGIN, PURPOSE_FAMILIARITY, agent_rng
 from pyfds_evac.core.cognitive_map import (
     cognitive_subgraph,
     expand_on_arrival,
@@ -344,7 +344,7 @@ class TestTheOtherThreeConfigs:
                 probability,
                 vis,
                 0.0,
-                rng=random.Random(1301 + agent_id * 7919),
+                rng=agent_rng(1301, (INITIAL_ORIGIN, agent_id), PURPOSE_FAMILIARITY),
             )
             if cmap.known_nodes & {"E_west", "E_east"}:
                 knew += 1
@@ -365,7 +365,7 @@ class TestTheOtherThreeConfigs:
                         0.5,
                         vis,
                         0.0,
-                        rng=random.Random(1301 + i * 7919),
+                        rng=agent_rng(1301, (INITIAL_ORIGIN, i), PURPOSE_FAMILIARITY),
                     ).known_nodes
                 )
                 for i in range(30)
