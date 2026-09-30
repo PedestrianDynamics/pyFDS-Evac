@@ -46,7 +46,7 @@ uv run python run.py --scenario assets/ISO-table21 --cleanup
 The last line reads:
 
 ```text
-Simulation finished in 78.77 s (1/1 evacuated).
+Simulation finished in 78.94 s (1/1 evacuated).
 ```
 
 One agent walks the ISO 20414 Test 18 corridor in clear air. If you see this

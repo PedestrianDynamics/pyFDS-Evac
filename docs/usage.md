@@ -238,7 +238,7 @@ uv run python run.py --scenario assets/t_junction/config.json --cleanup
 ```
 
 ```text
-Simulation stopped after 300.00 s (142/150 evacuated, 8 remaining).
+Simulation stopped after 300.00 s (144/150 evacuated, 6 remaining).
 ```
 
 ```bash
