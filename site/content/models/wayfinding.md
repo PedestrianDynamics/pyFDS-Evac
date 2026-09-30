@@ -307,7 +307,10 @@ scenario JSON is left out of every ranking while it is closed, and out of the
 explore and wander targets below (`route_graph.py`, `without_closed_stages`).
 An agent whose route ends at a closed exit re-evaluates at the next reroute
 check, whatever its interval, on the map it holds; the switch is logged as
-`reason="exit_closed"`. A closed exit removes nobody. The schedule is on
+`reason="exit_closed"`. An agent that knows no open exit and no other node to
+walk to waits at the closed exit. A closed exit removes nobody.
+An opened exit is taken at the agent's next regular re-evaluation. The
+schedule is on
 [Scenario JSON](/docs/scenario-json.md#exits-exitsid).
 
 *Worked example (clear air).* Every \(\tau\) is 0, both routes are clean,

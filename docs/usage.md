@@ -89,7 +89,7 @@ the fully coupled default
 |------|---------|---------|
 | `--smoke-blind` | off | Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say, so a scenario with a scheduled exit cannot run smoke-blind. Gas FED, heat FED and FIC still accumulate and are written to the FED history; `incapacitated` stays false. The smoke history holds the sampled K with `speed_factor` 1. |
 | `--output-exit-history CSV` | none | Write each path agent's exit; see [Outputs](outputs.md#exit-history). |
-| `--replay-exits CSV` | none | Send each agent to the exit its counterpart took in an earlier run, read from that run's `--output-exit-history` file. Agents are paired by origin and spawn order within it (`origin`, `spawn_index`), not by JuPedSim id. The route to that exit is the one clear-air costs rank best on the agent's map. |
+| `--replay-exits CSV` | none | Send each agent to the exit its counterpart took in an earlier run, read from that run's `--output-exit-history` file. Agents are paired by origin and spawn order within it (`origin`, `spawn_index`), not by JuPedSim id. The route to that exit is the one clear-air costs rank best on the agent's map. Not allowed with an exit that has `open_from_s` or `closed_after_s`. |
 
 A smoke-blind run with a fire gives the same trajectories as the run without
 the fire, for the same scenario and seed. Replay pairs the n-th agent spawned

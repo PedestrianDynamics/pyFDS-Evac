@@ -1215,12 +1215,17 @@ def _has_exit_schedule(stage_graph: "StageGraph | None") -> bool:
     )
 
 
-def _check_exit_schedule(has_schedule: bool, reroute_config) -> None:
+def _check_exit_schedule(has_schedule: bool, reroute_config, replay_exits) -> None:
     """Reject a scheduled exit in a run where no agent could leave it."""
     if has_schedule and reroute_config is None:
         raise ValueError(
             "Exits with open_from_s or closed_after_s need rerouting: agents "
             "heading for a closed exit are redirected by the reroute pass"
+        )
+    if has_schedule and replay_exits is not None:
+        raise ValueError(
+            "--replay-exits cannot be combined with exits that have "
+            "open_from_s or closed_after_s: a replayed exit may be closed"
         )
 
 
@@ -1602,7 +1607,7 @@ def run_scenario(
             smoke_blind, reroute_config, tenability_config, replay_exits, stage_graph
         )
         has_exit_schedule = _has_exit_schedule(stage_graph)
-        _check_exit_schedule(has_exit_schedule, reroute_config)
+        _check_exit_schedule(has_exit_schedule, reroute_config, replay_exits)
         # Pre-compute familiarity per distribution index. The value may be
         # "full", "discovery", or a probability in [0, 1] that each exit is
         # already known -- a real crowd is a gradient, not two camps.
@@ -1693,6 +1698,12 @@ def run_scenario(
         _initial_segment_cache: dict = {}
         for _agent_id_init, _wi in agent_wait_info.items():
             _initial_exit_choice(_agent_id_init, _wi, _initial_segment_cache)
+
+        for _agent in simulation.agents():
+            _agent_id = int(_agent.id)
+            _check_path_agent(
+                has_exit_schedule, agent_wait_info.get(_agent_id), _agent_id
+            )
 
         exit_counts: dict[str, int] = {}
         if reroute_config is not None and stage_graph is not None:
@@ -2508,6 +2519,8 @@ def run_scenario(
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
                     wait_info = agent_wait_info.get(agent_id)
+                    # Agents placed at t=0 are checked at setup; this catches
+                    # flow-spawned ones at the first check after they enter.
                     _check_path_agent(has_exit_schedule, wait_info, agent_id)
                     if wait_info is None or wait_info.get("mode") != "path":
                         continue

@@ -42,6 +42,12 @@ AT_DOOR_M = 0.5
 FRAME_S = 0.1
 # A long interval: a closure must not wait for the regular re-evaluation.
 REROUTE = RerouteConfig(reevaluation_interval_s=30.0)
+# An opening is noticed only at the regular re-evaluation, so the opening test
+# re-evaluates often.
+REROUTE_OFTEN = RerouteConfig(reevaluation_interval_s=2.0)
+# The west door's pocket: the closed door and the strip of room in front of it
+# where agents that know no other exit wait.
+WEST_POCKET_M = 2.5
 
 
 def _door(west: bool) -> Polygon:
@@ -118,8 +124,8 @@ def _scenario(schedules: dict[str, dict], **dist_params) -> Scenario:
     )
 
 
-def _departures(result) -> list[tuple[float, str | None]]:
-    """Each agent's last recorded time and the door it stood in, if any."""
+def _last_seen(result) -> list[tuple[float, float, float]]:
+    """Each agent's last recorded time and position."""
     with contextlib.closing(sqlite3.connect(result.sqlite_file)) as con:
         fps = float(
             con.execute("SELECT value FROM metadata WHERE key='fps'").fetchone()[0]
@@ -128,21 +134,24 @@ def _departures(result) -> list[tuple[float, str | None]]:
             "SELECT id, frame, pos_x, pos_y FROM trajectory_data ORDER BY frame"
         ).fetchall()
     last = {agent_id: (frame, x, y) for agent_id, frame, x, y in rows}
-    out = []
-    for frame, x, y in last.values():
-        door = next(
-            (n for n, p in DOORS.items() if p.distance(Point(x, y)) <= AT_DOOR_M),
-            None,
-        )
-        out.append((frame / fps, door))
-    return out
+    return [(frame / fps, x, y) for frame, x, y in last.values()]
+
+
+def _door_at(x: float, y: float) -> str | None:
+    """The door the point (x, y) stands in, if any."""
+    return next(
+        (n for n, p in DOORS.items() if p.distance(Point(x, y)) <= AT_DOOR_M),
+        None,
+    )
 
 
 def _run(scenario: Scenario, **kwargs) -> dict:
     result = run_scenario(scenario, seed=SEED, **kwargs)
     try:
+        last_seen = _last_seen(result)
         return {
-            "departures": _departures(result),
+            "last_seen": last_seen,
+            "departures": [(t, _door_at(x, y)) for t, x, y in last_seen],
             "routes": list(result.route_history or []),
             "evacuated": result.agents_evacuated,
             "remaining": result.agents_remaining,
@@ -184,15 +193,26 @@ def test_everyone_leaves_by_the_open_exit(closing_run):
 
 
 def test_exit_opens_on_schedule():
+    """Agents spawned by the east door walk west until it opens, then use it."""
     scenario = _scenario({"east": {"open_from_s": T_OPEN_S}})
-    run = _run(scenario, reroute_config=REROUTE)
+    near_east = box(LENGTH_M - 8.0, 0.3, LENGTH_M - 0.3, WIDTH_M - 0.3)
+    scenario.raw["distributions"]["room"]["coordinates"] = _coords(near_east)
+    run = _run(scenario, reroute_config=REROUTE_OFTEN)
     east = [t for t, door in run["departures"] if door == "east"]
-    assert all(t >= T_OPEN_S for t in east)
+    assert east, "nobody left by the east door once it opened"
+    assert min(east) >= T_OPEN_S
+    to_east = [r["time_s"] for r in run["routes"] if r["new_exit"] == "east"]
+    assert to_east and min(to_east) >= T_OPEN_S
     assert run["evacuated"] == NUM_AGENTS
 
 
 def test_agent_knowing_only_the_closed_exit_learns_no_other():
-    """Familiarity holds: a closed entrance does not reveal the other door."""
+    """Familiarity holds: a closed entrance does not reveal the other door.
+
+    Such an agent knows only its spawn area, already visited, and the closed
+    door. It has nowhere to explore or wander, so it keeps its route and waits
+    at the closed door.
+    """
     scenario = _scenario(
         {"west": {"closed_after_s": T_CLOSE_S}}, familiarity=0.0, entrance="west"
     )
@@ -200,6 +220,11 @@ def test_agent_knowing_only_the_closed_exit_learns_no_other():
     doors = [(t, door) for t, door in run["departures"] if t < MAX_TIME_S - 1.0]
     assert all(door == "west" and t <= T_CLOSE_S + FRAME_S for t, door in doors)
     assert run["remaining"] > 0
+    assert not run["routes"]
+    waiting = [(x, y) for t, x, y in run["last_seen"] if t >= MAX_TIME_S - 1.0]
+    assert len(waiting) == run["remaining"]
+    west = DOORS["west"]
+    assert all(west.distance(Point(x, y)) <= WEST_POCKET_M for x, y in waiting)
 
 
 def test_unscheduled_exits_are_always_open():
@@ -242,6 +267,12 @@ def test_schedule_without_rerouting_is_rejected(kwargs):
     scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
     with pytest.raises(ValueError, match="need rerouting"):
         run_scenario(scenario, **kwargs)
+
+
+def test_schedule_with_replay_exits_is_rejected():
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    with pytest.raises(ValueError, match="--replay-exits cannot be combined"):
+        run_scenario(scenario, reroute_config=REROUTE, replay_exits={})
 
 
 def test_journey_agent_with_schedule_is_rejected():

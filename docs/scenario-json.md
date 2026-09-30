@@ -96,14 +96,19 @@ it is closed:
 - an agent whose route ends at it re-evaluates at the next reroute check
   (every second), whatever `--reroute-interval` says, and takes the best open
   exit it knows. The switch is logged with the reason `exit_closed`. An agent
-  that knows no open exit explores, or wanders over the nodes it knows; it is
-  not told of another exit.
+  that knows no open exit is not told of another one. It heads for a known
+  node it has not visited, or else wanders over the nodes it knows; an agent
+  that knows only its spawn area and the closed exit has neither, so it keeps
+  its route and waits at the closed exit.
+
+When an exit opens, nobody is made to re-decide: an agent takes it at its next
+regular re-evaluation, up to `--reroute-interval` later.
 
 A schedule needs rerouting: a run with a scheduled exit and
-`--no-enable-rerouting` or `--smoke-blind` stops with an error, as does an
-agent that walks a JuPedSim journey instead of a routed path (a spawn area
-with no journey in a scenario that has journeys). Without a schedule nothing
-changes.
+`--no-enable-rerouting`, `--smoke-blind` or `--replay-exits` stops with an
+error, as does an agent that walks a JuPedSim journey instead of a routed path
+(a spawn area with no journey in a scenario that has journeys). Without a
+schedule nothing changes.
 
 ### Signs: `sign`
 
