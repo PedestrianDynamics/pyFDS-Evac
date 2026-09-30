@@ -553,8 +553,13 @@ The other limits:
 - **Time resolution.** Crossings come from the 1 Hz histories, to about 1 s.
   Exit times come from the trajectory, to 0.1 s.
 - **ASET/RSET is itself contested.** Babrauskas, Fleming and Russell (2010)
-  argue that it treats people as moving mechanically and depends heavily on
-  the scenario chosen.
+  argue that RSET assumes people "act like robots" (p. 347), that it
+  reduces a distribution to one number and a quantitative question to
+  pass/fail (p. 348), and that both times change with the scenario
+  (p. 353). Following Fleming (2000), whom they cite, they propose
+  comparing designs by the margin ASET − RSET instead (pp. 350–351). Their evidence is residential fires and smoke
+  alarms. The per-agent margins here answer part of the second point; the
+  agents still do not investigate, rescue others or go back in.
 
 {{< details title="How the numbers are computed" closed="true" >}}
 

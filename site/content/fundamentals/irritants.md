@@ -65,7 +65,7 @@ irritants impair lung function and add some hypoxia (Eq. 63.38; see
 Purser (2003, pp. 93 and 99–100) proposed that irritants do not slow
 people at low concentrations and stop effective movement at
 incapacitation, FIC = 1, with a sigmoid fall in between: "a curve has been
-fitted between these two extremes" (p. 93). Ch. 63 calls it an "estimated
+fitted between these two extremes" (p. 94). Ch. 63 calls it an "estimated
 relationship" based on a concept (p. 2343, Fig. 63.17). In our reading, no
 walking data lie behind the curve. Ch. 63 gives it as
 
