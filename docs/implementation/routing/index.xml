@@ -645,6 +645,10 @@ though the path to it may still be rewritten, which is recorded as
 &lt;td>Best route is a different exit (lower &lt;code>rank_cost&lt;/code>), or an idle agent is routed to its current exit&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>exit_closed&lt;/code>&lt;/td>
+&lt;td>The agent&amp;rsquo;s exit has closed on its schedule; the best open exit it knows&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>fallback&lt;/code>&lt;/td>
 &lt;td>Best route was un-rejected as fallback (all routes rejected)&lt;/td>
 &lt;/tr>

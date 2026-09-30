@@ -9429,6 +9429,16 @@ extinction is not lower by &lt;code>fallback_switch_margin&lt;/code>
 (&lt;code>route_graph.py&lt;/code>, &lt;code>_apply_fallback&lt;/code>, &lt;code>_fallback_holds_current&lt;/code>).&lt;/li>
 &lt;/ul>
 &lt;p>An agent can therefore keep a known route that is not first in the ranking.&lt;/p>
+&lt;p>&lt;strong>Scheduled exits.&lt;/strong> An exit with &lt;code>open_from_s&lt;/code> or &lt;code>closed_after_s&lt;/code> in the
+scenario JSON is left out of every ranking while it is closed, and out of the
+explore and wander targets below (&lt;code>route_graph.py&lt;/code>, &lt;code>without_closed_stages&lt;/code>).
+An agent whose route ends at a closed exit re-evaluates at the next reroute
+check, whatever its interval, on the map it holds; the switch is logged as
+&lt;code>reason=&amp;quot;exit_closed&amp;quot;&lt;/code>. An agent that knows no open exit and no other node to
+walk to waits at the closed exit. A closed exit removes nobody.
+An opened exit is taken at the agent&amp;rsquo;s next regular re-evaluation. The
+schedule is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#exits-exitsid">Scenario JSON&lt;/a>.&lt;/p>
 &lt;p>&lt;em>Worked example (clear air).&lt;/em> Every \(\tau\) is 0, both routes are clean,
 and the optical-depth deadband (\(\tau_{\max}\cdot\) &lt;code>tau_deadband&lt;/code> =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
@@ -10321,7 +10331,7 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--enable-rerouting&lt;/code> / &lt;code>--no-enable-rerouting&lt;/code>&lt;/td>
 &lt;td>on&lt;/td>
-&lt;td>Let agents re-evaluate exits during the run.&lt;/td>
+&lt;td>Let agents re-evaluate exits during the run. Needed by an exit with &lt;code>open_from_s&lt;/code> or &lt;code>closed_after_s&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#exits-exitsid">Scenario JSON&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--reroute-interval S&lt;/code>&lt;/td>
@@ -10390,7 +10400,7 @@ the fully coupled default
 &lt;tr>
 &lt;td>&lt;code>--smoke-blind&lt;/code>&lt;/td>
 &lt;td>off&lt;/td>
-&lt;td>Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say. Gas FED, heat FED and FIC still accumulate and are written to the FED history; &lt;code>incapacitated&lt;/code> stays false. The smoke history holds the sampled K with &lt;code>speed_factor&lt;/code> 1.&lt;/td>
+&lt;td>Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say, so a scenario with a scheduled exit cannot run smoke-blind. Gas FED, heat FED and FIC still accumulate and are written to the FED history; &lt;code>incapacitated&lt;/code> stays false. The smoke history holds the sampled K with &lt;code>speed_factor&lt;/code> 1.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-exit-history CSV&lt;/code>&lt;/td>
@@ -10400,7 +10410,7 @@ the fully coupled default
 &lt;tr>
 &lt;td>&lt;code>--replay-exits CSV&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
-&lt;td>Send each agent to the exit its counterpart took in an earlier run, read from that run&amp;rsquo;s &lt;code>--output-exit-history&lt;/code> file. Agents are paired by origin and spawn order within it (&lt;code>origin&lt;/code>, &lt;code>spawn_index&lt;/code>), not by JuPedSim id. The route to that exit is the one clear-air costs rank best on the agent&amp;rsquo;s map.&lt;/td>
+&lt;td>Send each agent to the exit its counterpart took in an earlier run, read from that run&amp;rsquo;s &lt;code>--output-exit-history&lt;/code> file. Agents are paired by origin and spawn order within it (&lt;code>origin&lt;/code>, &lt;code>spawn_index&lt;/code>), not by JuPedSim id. The route to that exit is the one clear-air costs rank best on the agent&amp;rsquo;s map. Not allowed with an exit that has &lt;code>open_from_s&lt;/code> or &lt;code>closed_after_s&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -11862,14 +11872,15 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>reason&lt;/code>&lt;/td>
-&lt;td>&lt;code>initial&lt;/code>, &lt;code>smoke_reroute&lt;/code>, &lt;code>fallback&lt;/code>, &lt;code>better_path&lt;/code>, &lt;code>explore&lt;/code> or &lt;code>wander&lt;/code>&lt;/td>
+&lt;td>&lt;code>initial&lt;/code>, &lt;code>smoke_reroute&lt;/code>, &lt;code>exit_closed&lt;/code>, &lt;code>fallback&lt;/code>, &lt;code>better_path&lt;/code>, &lt;code>explore&lt;/code> or &lt;code>wander&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The reasons are defined on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#route-switch-reasons">Routing in practice&lt;/a>. &lt;code>smoke_reroute&lt;/code> labels
 every change of exit, whatever caused it
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92" target="_blank" rel="noopener">#92&lt;/a>).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92" target="_blank" rel="noopener">#92&lt;/a>), except a
+change away from an exit that has closed, which is &lt;code>exit_closed&lt;/code>.&lt;/p>
 &lt;p>An &lt;code>initial&lt;/code> row is written only when an agent that has no exit at a
 re-evaluation is given its first one. Agents that start with a journey exit
 get no row until they change target, so a run without any switch (such as the
@@ -12698,12 +12709,47 @@ while still waiting walks off when its pre-movement ends
 &lt;td>Exit capacity used to estimate queue time when routes are priced.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>open_from_s&lt;/code>&lt;/td>
+&lt;td>none (open from the start)&lt;/td>
+&lt;td>The exit opens at this time [s], a finite number ≥ 0.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>closed_after_s&lt;/code>&lt;/td>
+&lt;td>none (never closes)&lt;/td>
+&lt;td>The exit closes at this time [s], a finite number ≥ 0 and greater than &lt;code>open_from_s&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>sign&lt;/code>&lt;/td>
 &lt;td>an omni-directional sign at the exit&amp;rsquo;s centre, &lt;code>c&lt;/code> = 3&lt;/td>
 &lt;td>The sign agents read; keys below.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;p>An exit with &lt;code>open_from_s&lt;/code> or &lt;code>closed_after_s&lt;/code> is open while
+&lt;code>open_from_s&lt;/code> ≤ &lt;em>t&lt;/em> &amp;lt; &lt;code>closed_after_s&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/373" target="_blank" rel="noopener">#373&lt;/a>). While
+it is closed:&lt;/p>
+&lt;ul>
+&lt;li>it removes nobody: an agent standing in it waits there;&lt;/li>
+&lt;li>routes are ranked without it, both the opening choice and every
+re-evaluation, and it is no target for exploring or wandering. An exit is
+judged by whether it is open at the time of ranking, not at the time the
+agent would arrive;&lt;/li>
+&lt;li>an agent whose route ends at it re-evaluates at the next reroute check
+(every second), whatever &lt;code>--reroute-interval&lt;/code> says, and takes the best open
+exit it knows. The switch is logged with the reason &lt;code>exit_closed&lt;/code>. An agent
+that knows no open exit is not told of another one. It heads for a known
+node it has not visited, or else wanders over the nodes it knows; an agent
+that knows only its spawn area and the closed exit has neither, so it keeps
+its route and waits at the closed exit.&lt;/li>
+&lt;/ul>
+&lt;p>When an exit opens, nobody is made to re-decide: an agent takes it at its next
+regular re-evaluation, up to &lt;code>--reroute-interval&lt;/code> later.&lt;/p>
+&lt;p>A schedule needs rerouting: a run with a scheduled exit and
+&lt;code>--no-enable-rerouting&lt;/code>, &lt;code>--smoke-blind&lt;/code> or &lt;code>--replay-exits&lt;/code> stops with an
+error, as does an agent that walks a JuPedSim journey instead of a routed path
+(a spawn area with no journey in a scenario that has journeys). Without a
+schedule nothing changes.&lt;/p>
 &lt;h3>Signs: &lt;code>sign&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="signs-sign">&lt;/span>
 &lt;a href="#signs-sign" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Exits, checkpoints and waypoints can carry a &lt;code>sign&lt;/code>. A node without one gets
 an omni-directional sign at its position with &lt;code>c&lt;/code> = 3, so every exit is
@@ -14231,6 +14277,10 @@ though the path to it may still be rewritten, which is recorded as
 &lt;tr>
 &lt;td>&lt;code>smoke_reroute&lt;/code>&lt;/td>
 &lt;td>Best route is a different exit (lower &lt;code>rank_cost&lt;/code>), or an idle agent is routed to its current exit&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>exit_closed&lt;/code>&lt;/td>
+&lt;td>The agent&amp;rsquo;s exit has closed on its schedule; the best open exit it knows&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fallback&lt;/code>&lt;/td>
