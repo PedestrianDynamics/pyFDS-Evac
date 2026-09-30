@@ -192,8 +192,8 @@ slice output (`&DUMP DT_SLCF`).
 
 **Re-entry.** An agent that reaches an exit is removed from the simulation
 (`run_scenario` in `pyfds_evac/core/scenario.py`), so nobody goes back into
-the building. In Wood's UK survey, 43 % re-entered (Wood 1980, Table 6.6,
-p. 95); of those who had left, 53 % of men and 34 % of women re-entered
+the building. In Wood's UK survey, 43 % of those who had left the building
+re-entered it (Wood 1980, Table 6.6, p. 95): 53 % of men and 34 % of women
 (Table 6.3, p. 87).
 
 ## Reproducibility
