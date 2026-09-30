@@ -21,6 +21,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `closed_after_s` and `is_open()`; `route_graph` gains
   `without_closed_stages` and `stage_closed`. Without a schedule results are
   unchanged ([#373](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/373)).
+- `assets/station_fahy/validate.py` prints the agreement statistics of the
+  Station validation study: T1 over the placed rows (Fahy 117/229 =
+  51.1 %) with its signed bias; W, the door-user-weighted total variation
+  distance, with the rows under 10 door users pooled; W's noise floor from
+  20,000 multinomial resamples of Fahy; the per-run spread over several
+  runs; the split at `--t-jam`; and, with `--against`, the paired W
+  difference per seed on the agents that exited in both arms
+  ([#374](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/374)).
 - `--smoke-blind`, `--replay-exits CSV` and `--output-exit-history CSV`
   for ASET/RSET arms on the same FDS output. `--smoke-blind` samples the fire
   for the smoke and FED histories only: agents walk at free speed, choose

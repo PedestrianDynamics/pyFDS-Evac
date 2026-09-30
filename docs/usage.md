@@ -524,6 +524,44 @@ uv run python scripts/sweep_queue_weight.py \
 | `--out DIR` | Output directory for `sweep.csv`, `summary.csv`, `sweep.png`. |
 | `--reuse-existing` | Score an existing `run.sqlite` instead of rerunning it, if its deck/seed digest still matches. |
 
+### Station agreement statistic — `assets/station_fahy/validate.py`
+
+Scores one or more Station runs against Fahy, Proulx & Flynn (2011) Table 2.
+It prints the origin-to-door table (door users only, per row), then the
+statistics of the Station validation study over the agents of all runs
+pooled:
+
+- **T1**, the front-door share of door users over the placed rows, against
+  Fahy's 117/229 = 51.1 %, with the signed bias. The share with the 22
+  unplaceable survivors (127/240 = 52.9 %) is printed as T1′, not a gate.
+- **W**, the door-user-weighted total variation distance: per row
+  ½ Σ |model share − Fahy share| over the four doors, averaged with Fahy's
+  door users as weights. The seven rows with at least 10 door users are
+  scored alone; the other five (34 door users) are pooled into one row, and
+  the model agents from those areas with them. A scored row without a model
+  door user counts as distance 1.
+- The **noise floor** of W: Fahy resampled multinomially against itself
+  (median 0.079, p95 0.109 at the default 20,000 draws).
+- With several runs, the per-run min / median / max of T1 and W.
+
+Agents that never reach a door are counted separately and left out of the
+shares.
+
+```
+uv run python assets/station_fahy/validate.py RUN.sqlite [RUN.sqlite ...] \
+    --config assets/station_fahy/config.json \
+    [--t-jam 86] [--against OTHER.sqlite ...]
+```
+
+| Flag | Purpose |
+|------|---------|
+| `--config PATH` | The scenario's `config.json`: spawn areas (`fahy_row`) and exits. |
+| `--reach M` | Distance from a door polygon at which a last position counts as using it (default 2.0 m). |
+| `--t-jam S` | Also print T1 and W for agents whose last recorded frame is before `S` and at or after it. |
+| `--against RUN [RUN ...]` | Runs of another arm, paired in order with the scored runs (one pair per seed). Prints W(run) − W(other) per pair on the **same agents**, those that reached a door in both, and in how many pairs the scored run is lower. Both runs of a pair must spawn the same agents (ids, areas, start positions), or it stops with an error. |
+| `--noise-draws N` | Resamples for the noise floor (default 20,000). |
+| `--noise-seed N` | Seed of the resampling (default 0). |
+
 ## One-shot driver — `scripts/run_and_plot.sh`
 
 Runs one simulation and produces the full plot set into a results
