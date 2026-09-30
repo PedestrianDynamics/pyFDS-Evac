@@ -96,8 +96,8 @@ title="Copy code"
 &lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Clear-air run completed&lt;/p>
 &lt;div class="docs-checkpoint__body">
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=78.8s wall=0m00s done
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>clear air: 78.77 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=78.9s wall=0m00s done
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>clear air: 78.94 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -139,8 +139,8 @@ title="Copy code"
 &lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Smoke run completed&lt;/p>
 &lt;div class="docs-checkpoint__body">
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=103.8s wall=0m00s done
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>K = 3.0 1/m: 103.77 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=104.0s wall=0m00s done
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>K = 3.0 1/m: 103.99 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -158,19 +158,19 @@ title="Copy code"
 &lt;div class="docs-comparison__row">
 &lt;dt>Clear air&lt;/dt>
 &lt;dd>
-&lt;span class="docs-comparison__track" aria-hidden="true">&lt;span class="docs-comparison__bar docs-comparison__bar--a" style="width: 75.90825864893515%">&lt;/span>&lt;/span>
-&lt;span class="docs-comparison__value">78.77 s&lt;/span>
+&lt;span class="docs-comparison__track" aria-hidden="true">&lt;span class="docs-comparison__bar docs-comparison__bar--a" style="width: 75.91114530243293%">&lt;/span>&lt;/span>
+&lt;span class="docs-comparison__value">78.94 s&lt;/span>
 &lt;/dd>
 &lt;/div>
 &lt;div class="docs-comparison__row">
 &lt;dt>Smoke, K = 3 1/m&lt;/dt>
 &lt;dd>
 &lt;span class="docs-comparison__track" aria-hidden="true">&lt;span class="docs-comparison__bar docs-comparison__bar--b" style="width: 100%">&lt;/span>&lt;/span>
-&lt;span class="docs-comparison__value">103.77 s&lt;/span>
+&lt;span class="docs-comparison__value">103.99 s&lt;/span>
 &lt;/dd>
 &lt;/div>
 &lt;/dl>
-&lt;figcaption class="docs-comparison__delta">Difference: +25.00 s (+31.7 %)&lt;/figcaption>
+&lt;figcaption class="docs-comparison__delta">Difference: +25.05 s (+31.7 %)&lt;/figcaption>
 &lt;/figure>
 &lt;p>In this example, one agent in one corridor, the evacuation time grows by about
 a third. Other scenarios change by other amounts.&lt;/p>
@@ -615,11 +615,11 @@ title="Copy code"
 &lt;/div>
 &lt;p>Expected output:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=78.1s wall=0m00s done
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=85.0s wall=0m00s done
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=78.3s wall=0m00s done
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Evacuated 1/1 sim=85.2s wall=0m00s done
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>K sampled: 0.99550 1/m
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>speed factor: 0.919626
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>exit time: 78.14 s clear, 84.97 s in smoke
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>exit time: 78.31 s clear, 85.15 s in smoke
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>manifest: fds_dir=/…/fds-evac/assets/iso_table21_coupled/fds
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fds_version=FDS-6.10.1-0-g12efa16-release&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -636,7 +636,7 @@ title="Copy code"
 nearest to &lt;code>slice_height_m&lt;/code> (default 1.6 m). The deck prescribes a soot density
 that gives &lt;em>K&lt;/em> = 1.0 1/m. The slice returns 0.99550 1/m, and the default speed
 law turns it into a speed factor of 0.919626. The ratio of the exit times,
-84.97 / 78.14 = 1.0874, matches 1 / 0.919626 = 1.0874 to four decimals.&lt;/p>
+85.15 / 78.31 = 1.0873, matches 1 / 0.919626 = 1.0874 to within 0.01 %.&lt;/p>
 &lt;p>&lt;code>ExtinctionField.from_fds&lt;/code> remembers the directory it read. The run manifest
 records that directory and reads the FDS version from the &lt;code>FDSVERSION&lt;/code> line of
 its &lt;code>.smv&lt;/code> file. The manifest also records the package versions, the seed, the
@@ -912,7 +912,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>The last line of the output is:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>evacuated: 142/150 in 300 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>evacuated: 144/150 in 300 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1069,8 +1069,8 @@ readable through the smoke. The output ends with:&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Initialization finished.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation started.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>…
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation stopped after 300.00 s (75/150 evacuated, 75 remaining).
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route switches: 164&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation stopped after 300.00 s (76/150 evacuated, 74 remaining).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route switches: 173&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1199,9 +1199,9 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>evacuated: 75/150 in 300 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FED max: 0.36
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>route changes: {&amp;#39;smoke_reroute&amp;#39;: 10, &amp;#39;wander&amp;#39;: 154}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>evacuated: 76/150 in 300 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FED max: 0.37
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>route changes: {&amp;#39;smoke_reroute&amp;#39;: 8, &amp;#39;wander&amp;#39;: 165}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1211,10 +1211,6 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>Run one scenario per Python process. A second run in the same process can
-give a different result
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#reproducibility">Limitations › Reproducibility&lt;/a>).&lt;/p>
 &lt;h2>5. Results&lt;span class="hx-absolute -hx-mt-20" id="5-results">&lt;/span>
 &lt;a href="#5-results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The figures below are drawn from these files by
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/scripts/docs/first_fds_case_figures.py" target="_blank" rel="noopener">&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>&lt;/a>:&lt;/p>
@@ -1230,8 +1226,8 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h3>Where the agents went&lt;span class="hx-absolute -hx-mt-20" id="where-the-agents-went">&lt;/span>
-&lt;a href="#where-the-agents-went" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/trajectories.png" alt="Two plan views of walked trajectories; in clear air all 142 agents who left walk from the branch to exit B, 8 are still in the branch; in the fire, 10 agents walk left to exit A, 65 walk past the burner to exit B, and 75 are still in the branch or at the junction at 300 s" loading="lazy" />&lt;/p>
-&lt;p>In clear air everyone takes the nearer exit B. In the fire, 10 early agents
+&lt;a href="#where-the-agents-went" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/trajectories.png" alt="Two plan views of walked trajectories; in clear air all 144 agents who left walk from the branch to exit B, 6 are still in the branch; in the fire, 8 agents walk left to exit A, 68 walk past the burner to exit B, and 74 are still in the branch or at the junction at 300 s" loading="lazy" />&lt;/p>
+&lt;p>In clear air everyone takes the nearer exit B. In the fire, 8 early agents
 turn to exit A as smoke builds up on B&amp;rsquo;s side. Half the agents are still inside at
 300 s.&lt;/p>
 &lt;h3>The run, animated&lt;span class="hx-absolute -hx-mt-20" id="the-run-animated">&lt;/span>
@@ -1239,12 +1235,12 @@ turn to exit A as smoke builds up on B&amp;rsquo;s side. Half the agents are sti
 &lt;p>The background is the extinction field the agents read. Red, large dots are
 agents the smoke has slowed. From about 120 s almost every agent crawls.&lt;/p>
 &lt;h3>Evacuated over time&lt;span class="hx-absolute -hx-mt-20" id="evacuated-over-time">&lt;/span>
-&lt;a href="#evacuated-over-time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/evacuated.png" alt="Number of agents out of the building against time; the clear-air curve follows the spawn line and reaches 142 at 300 s; the fire curve falls behind from about 45 s and reaches 75" loading="lazy" />&lt;/p>
+&lt;a href="#evacuated-over-time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/evacuated.png" alt="Number of agents out of the building against time; the clear-air curve follows the spawn line and reaches 144 at 300 s; the fire curve falls behind from about 45 s and reaches 76" loading="lazy" />&lt;/p>
 &lt;p>In clear air, agents leave about as fast as they arrive. In the fire, the gap
 opens at about 45 s, when the smoke has filled the junction.&lt;/p>
 &lt;h3>Dose and speed&lt;span class="hx-absolute -hx-mt-20" id="dose-and-speed">&lt;/span>
-&lt;a href="#dose-and-speed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/exposure.png" alt="Top: FED against time, one grey line per agent, the highest in red reaching 0.36, all well below the dashed incapacitation line at FED 1. Bottom: median speed factor of the agents inside, falling from 1 at 40 s to the floor of 0.1 at 120 s and staying there" loading="lazy" />&lt;/p>
-&lt;p>Nobody is incapacitated by the toxic dose: the highest FED is 0.36. This
+&lt;a href="#dose-and-speed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/exposure.png" alt="Top: FED against time, one grey line per agent, the highest in red reaching 0.37, all well below the dashed incapacitation line at FED 1. Bottom: median speed factor of the agents inside, falling from 1 at 40 s to the floor of 0.1 at 120 s and staying there" loading="lazy" />&lt;/p>
+&lt;p>Nobody is incapacitated by the toxic dose: the highest FED is 0.37. This
 does not mean that conditions were tenable; &lt;a href="#aset-rset">section 6&lt;/a>
 compares visibility and irritant limits with the exit times. In the run,
 the smoke acts on the agents through their speed, their route choice and
@@ -1255,12 +1251,12 @@ speed by
 &lt;code>1 + (-0.057 × 3.0) / 0.706&lt;/code> = 0.76. Above &lt;em>K&lt;/em> = 11 1/m it is the floor, 0.1,
 and from 120 s the median agent is there.&lt;/p>
 &lt;h3>Exit usage&lt;span class="hx-absolute -hx-mt-20" id="exit-usage">&lt;/span>
-&lt;a href="#exit-usage" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/exits.png" alt="Stacked horizontal bars: clear air, 142 through exit B and 8 inside; fire, 10 through exit A, 65 through exit B and 75 inside" loading="lazy" />&lt;/p>
-&lt;p>The route log explains the fire run. The 10 agents who switched to exit A
-(&lt;code>smoke_reroute&lt;/code>) did so in the first 27 s, and all 10 left by it. 18 agents,
-spawned between 26 and 120 s, never learned an exit: no exit sign was readable
+&lt;a href="#exit-usage" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/exits.png" alt="Stacked horizontal bars: clear air, 144 through exit B and 6 inside; fire, 8 through exit A, 68 through exit B and 74 inside" loading="lazy" />&lt;/p>
+&lt;p>The route log explains the fire run. The 8 agents who switched to exit A
+(&lt;code>smoke_reroute&lt;/code>) did so in the first 26 s, and all 8 left by it. 18 agents,
+spawned between 22 and 92 s, never learned an exit: no exit sign was readable
 to them. They walk back and forth between the spawn area and the junction
-(&lt;code>wander&lt;/code>, 154 of the 164 route changes), and all 18 are still inside at
+(&lt;code>wander&lt;/code>, 165 of the 173 route changes), and all 18 are still inside at
 300 s.&lt;/p>
 &lt;h2>6. Was there time to get out? (ASET and RSET)&lt;span class="hx-absolute -hx-mt-20" id="aset-rset">&lt;/span>
 &lt;a href="#aset-rset" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Fire-safety engineering compares two times. The available safe escape time
@@ -1276,15 +1272,15 @@ tenability limit, and whether the agent got out before that.&lt;/p>
 until the run is cut off at 300 s, with half of them still inside.&lt;/li>
 &lt;li>&lt;strong>Visibility and HCl became untenable early.&lt;/strong> Each of six points in the T
 crossed the visibility limit between 18 and 46 s after ignition. The
-first agent met it at 17 s. Of the 74 agents who got out, 66 met it before
+first agent met it at 15 s. Of the 75 agents who got out, 69 met it before
 they reached an exit.&lt;/li>
-&lt;li>&lt;strong>The irritant limits were passed by most of those who got out.&lt;/strong> 61 of
-the 74 met HCl ≥ 1000 ppm (ISO fractional effective concentration, FEC,
+&lt;li>&lt;strong>The irritant limits were passed by most of those who got out.&lt;/strong> 64 of
+the 75 met HCl ≥ 1000 ppm (ISO fractional effective concentration, FEC,
 of 1, the concentration at which half of a population is expected to be
 incapacitated) before their exit. The engine records the irritant measure
 (FIC) and does not act on it, so these agents kept walking.&lt;/li>
-&lt;li>&lt;strong>The toxic dose came last.&lt;/strong> FED reached 0.3 only after 265 s, for 17
-agents who were still inside. By then their FIC was already 4.4 to 5.9.&lt;/li>
+&lt;li>&lt;strong>The toxic dose came last.&lt;/strong> FED reached 0.3 only after 262 s, for 18
+agents who were still inside. By then their FIC was already 4.5 to 5.9.&lt;/li>
 &lt;/ul>
 &lt;p>&amp;ldquo;Nobody reached FED 1&amp;rdquo; therefore does not mean &amp;ldquo;everyone had time&amp;rdquo;. This is
 one fire, one seed, and research software. The result describes this run. It
@@ -1315,9 +1311,9 @@ title="Copy code"
 every number in this section. The report starts with:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>agents 150, spawned last at 298 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>trajectory: 75 left before 300 s, last exit 299.0 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>counted out (exit &amp;lt; 299 s) 74, censored 76
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>travel time median 86.2 s, max 142.9 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>trajectory: 76 left before 300 s, last exit 299.8 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>counted out (exit &amp;lt; 299 s) 75, censored 75
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>travel time median 88.1 s, max 147.4 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1339,11 +1335,11 @@ in &lt;code>records&lt;/code>, the run files are not from this deck: the HCl con
 holds only when HCl is the only irritant.
 &lt;/div>
 &lt;/aside>
-&lt;p>&lt;strong>Who counts as out.&lt;/strong> The run reports 75 evacuated, and so does the
-trajectory: the last agent leaves at 299.0 s. The per-agent histories stop
+&lt;p>&lt;strong>Who counts as out.&lt;/strong> The run reports 76 evacuated, and so does the
+trajectory: the last agent leaves at 299.8 s. The per-agent histories stop
 at 299 s, so they cannot show whether that agent met a limit in its last
 second. The script therefore counts an agent as out only if it left before
-299 s: &lt;strong>74 got out and 76 are censored&lt;/strong>. For a censored agent we know only
+299 s: &lt;strong>75 got out and 75 are censored&lt;/strong>. For a censored agent we know only
 that its margin is negative or longer than the run.&lt;/p>
 &lt;h3>Each agent against its own limits&lt;span class="hx-absolute -hx-mt-20" id="each-agent-against-its-own-limits">&lt;/span>
 &lt;a href="#each-agent-against-its-own-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each row is one criterion, over all 150 agents. A limit counts as reached if
@@ -1362,77 +1358,77 @@ the agent met it before it left, or before 299 s if it is still inside.&lt;/p>
 &lt;tbody>
 &lt;tr>
 &lt;td>Visibility 10 m (EA) with &lt;em>C&lt;/em> = 3 (Jin; FDS default): &lt;em>K&lt;/em> ≥ 0.3 1/m&lt;/td>
-&lt;td>142&lt;/td>
-&lt;td>17 s&lt;/td>
-&lt;td>8&lt;/td>
-&lt;td>66&lt;/td>
-&lt;td>76&lt;/td>
+&lt;td>144&lt;/td>
+&lt;td>15 s&lt;/td>
+&lt;td>6&lt;/td>
+&lt;td>69&lt;/td>
+&lt;td>75&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>HCl ≥ 200 ppm (Purser escape impairment, FIC&lt;sub>imp&lt;/sub> = 1)&lt;/td>
-&lt;td>141&lt;/td>
-&lt;td>17 s&lt;/td>
-&lt;td>9&lt;/td>
-&lt;td>65&lt;/td>
-&lt;td>76&lt;/td>
+&lt;td>143&lt;/td>
+&lt;td>15 s&lt;/td>
+&lt;td>7&lt;/td>
+&lt;td>68&lt;/td>
+&lt;td>75&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>HCl ≥ 300 ppm (ISO FEC 0.3)&lt;/td>
-&lt;td>138&lt;/td>
-&lt;td>27 s&lt;/td>
-&lt;td>12&lt;/td>
-&lt;td>62&lt;/td>
-&lt;td>76&lt;/td>
+&lt;td>142&lt;/td>
+&lt;td>16 s&lt;/td>
+&lt;td>8&lt;/td>
+&lt;td>67&lt;/td>
+&lt;td>75&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>HCl ≥ 900 ppm (SFPE FIC = 1)&lt;/td>
-&lt;td>137&lt;/td>
-&lt;td>40 s&lt;/td>
-&lt;td>13&lt;/td>
-&lt;td>61&lt;/td>
-&lt;td>76&lt;/td>
+&lt;td>139&lt;/td>
+&lt;td>49 s&lt;/td>
+&lt;td>11&lt;/td>
+&lt;td>64&lt;/td>
+&lt;td>75&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>HCl ≥ 1000 ppm (ISO FEC 1)&lt;/td>
-&lt;td>137&lt;/td>
-&lt;td>40 s&lt;/td>
-&lt;td>13&lt;/td>
-&lt;td>61&lt;/td>
-&lt;td>76&lt;/td>
+&lt;td>139&lt;/td>
+&lt;td>49 s&lt;/td>
+&lt;td>11&lt;/td>
+&lt;td>64&lt;/td>
+&lt;td>75&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>CO ≥ 2,700 ppm (EA)&lt;/td>
+&lt;td>49&lt;/td>
+&lt;td>63 s&lt;/td>
+&lt;td>31&lt;/td>
 &lt;td>44&lt;/td>
-&lt;td>73 s&lt;/td>
-&lt;td>36&lt;/td>
-&lt;td>38&lt;/td>
-&lt;td>6&lt;/td>
+&lt;td>5&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FED ≥ 0.3 (FDS+Evac form)&lt;/td>
-&lt;td>17&lt;/td>
-&lt;td>265 s&lt;/td>
-&lt;td>74&lt;/td>
+&lt;td>18&lt;/td>
+&lt;td>262 s&lt;/td>
+&lt;td>75&lt;/td>
 &lt;td>0&lt;/td>
-&lt;td>17&lt;/td>
+&lt;td>18&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FED ≥ 1 (FDS+Evac form)&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>–&lt;/td>
-&lt;td>74&lt;/td>
+&lt;td>75&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>0&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The 66 agents who got out after the visibility limit spent a median of
-94 s, and at most 143 s, inside beyond it. The four HCl limits change the
-count of evacuees who met a limit only from 65 to 61. CO above 2,700 ppm is
+&lt;p>The 69 agents who got out after the visibility limit spent a median of
+92 s, and at most 148 s, inside beyond it. The four HCl limits change the
+count of evacuees who met a limit only from 68 to 64. CO above 2,700 ppm is
 met next to the burner, by agents who pass it on their way to exit B.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/aset_agents.png" alt="One horizontal bar per agent, in order of spawning from top to bottom, on a time axis from 0 to 300 s after ignition. Each bar runs from the agent’s spawn to its exit, pale before the agent first meets K 0.3 and solid after; bars of the 76 censored agents are grey and end in an arrow at 299 s. Circles mark the first K 0.3, diamonds the first HCl 300 ppm, squares the first FED 0.3. The first dozen agents meet the limits partway along their bar. From about 50 s on, the circles and diamonds sit at the start of every bar, forming a diagonal: agents spawn into air already past the visibility limit and meet HCl 300 ppm within about 3 s. The 17 FED 0.3 squares all lie between 265 and 291 s, on grey bars" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/aset_agents.png" alt="One horizontal bar per agent, in order of spawning from top to bottom, on a time axis from 0 to 300 s after ignition. Each bar runs from the agent’s spawn to its exit, pale before the agent first meets K 0.3 and solid after; bars of the 75 censored agents are grey and end in an arrow at 299 s. Circles mark the first K 0.3, diamonds the first HCl 300 ppm, squares the first FED 0.3. The first dozen agents meet the limits partway along their bar. From about 50 s on, the circles and diamonds sit at the start of every bar, forming a diagonal: agents spawn into air already past the visibility limit and meet HCl 300 ppm within about 3 s. The 18 FED 0.3 squares all lie between 262 and 287 s, on grey bars" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>One bar per agent (n = 150, seed 42), from spawn to exit, or to 299 s for
-the 76 censored agents (grey, arrow). The solid part is the time spent beyond
+the 75 censored agents (grey, arrow). The solid part is the time spent beyond
 K ≥ 0.3 1/m. Markers: first K ≥ 0.3 1/m (circle), first HCl ≥ 300 ppm
 (diamond), first FED ≥ 0.3 (square); the other criteria of the table are
 left out to keep the bars readable. Censoring is shown by the grey colour
@@ -1515,8 +1511,8 @@ that loses it at 300 s. Heat is
 not included in either panel. The map form follows Schröder et al. (2020);
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">the Schröder room&lt;/a> reruns their experiment.&lt;/em>&lt;/p>
 &lt;p>Panel (b) is not a tenability limit. It shows when the signs stop guiding.
-This is consistent with section 5, where 18 agents spawned between 26 and
-120 s never learned an exit: on this map the spawn centre loses sight of
+This is consistent with section 5, where 18 agents spawned between 22 and
+92 s never learned an exit: on this map the spawn centre loses sight of
 every sign at 39 s. The engine&amp;rsquo;s own sign test differs (see &lt;em>How the
 numbers are computed&lt;/em>). ISO 13571 (§4.5, note) does not expect obscuration
 alone to make conditions untenable for people who are not carrying out
@@ -1556,10 +1552,10 @@ This run fits none of it:&lt;/p>
 Each agent&amp;rsquo;s exposure starts when it spawns, while all times on this page
 count from ignition.&lt;/li>
 &lt;li>&lt;strong>The run is cut off.&lt;/strong> It stops at 300 s with most late spawners inside.
-The last exit, 299.0 s, is set by the time limit. It is not an RSET.&lt;/li>
+The last exit, 299.8 s, is set by the time limit. It is not an RSET.&lt;/li>
 &lt;li>&lt;strong>There is no detection, alarm or pre-movement&lt;/strong>
 (&lt;code>&amp;quot;use_premovement&amp;quot;: false&lt;/code>). Exit minus spawn is travel time only: a
-median of 86.2 s and a maximum of 142.9 s for the 74 who got out.&lt;/li>
+median of 88.1 s and a maximum of 147.4 s for the 75 who got out.&lt;/li>
 &lt;/ul>
 &lt;p>More seeds would not supply an RSET either, because every seed stops at the
 same 300 s. For a scenario in which everyone gets out, see the
@@ -1572,15 +1568,15 @@ speed law comes from Frantzich and Nilsson&amp;rsquo;s experiments, which covere
 &lt;em>K&lt;/em> = 1.9–7.4 1/m. Purser&amp;rsquo;s fit to Jin&amp;rsquo;s data covers &lt;em>K&lt;/em> ≈ 0.30–1.27 1/m
 (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">walking speed in smoke&lt;/a>). In this run
 the median &lt;em>K&lt;/em> at the agents is 13.3 1/m, a visibility of about 0.2 m with
-&lt;em>C&lt;/em> = 3. 89 % of the agent-seconds lie above 7.4 1/m, and 75 % sit at the
+&lt;em>C&lt;/em> = 3. 89 % of the agent-seconds lie above 7.4 1/m, and 74 % sit at the
 speed floor of 0.1, which the law reaches at &lt;em>K&lt;/em> = 11.15 1/m. The exit
 times, and the number still inside, are set by that floor, not by measured
 behaviour. Sign legibility and route choice are extrapolated in the same
 way: Jin&amp;rsquo;s visibility data end near &lt;em>K&lt;/em> ≈ 1.8 1/m (see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility&lt;/a>).&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/aset_extinction.png" alt="Histogram of the extinction coefficient at the agents, one count per agent-second, on a log axis from 0.1 to 60 per metre. Almost all the mass lies between 8 and 20 per metre, with a peak near 13. Hatched bands mark the data ranges of Purser’s fit to Jin, 0.30 to 1.27, and of Frantzich and Nilsson, 1.9 to 7.4, and a shaded band Jin’s sign-visibility data, 0.3 to 1.8, all to the left of the mass. A dashed red line at 11.1 marks where the speed floor of 0.1 begins; 75 % of all agent-seconds are at the floor" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/aset_extinction.png" alt="Histogram of the extinction coefficient at the agents, one count per agent-second, on a log axis from 0.1 to 60 per metre. Almost all the mass lies between 8 and 20 per metre, with a peak near 13. Hatched bands mark the data ranges of Purser’s fit to Jin, 0.30 to 1.27, and of Frantzich and Nilsson, 1.9 to 7.4, and a shaded band Jin’s sign-visibility data, 0.3 to 1.8, all to the left of the mass. A dashed red line at 11.1 marks where the speed floor of 0.1 begins; 74 % of all agent-seconds are at the floor" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Extinction coefficient K [1/m] at the agents, one count per agent and second
-inside (n = 13,734; the 256 with K &amp;lt; 0.1 1/m are not shown). Hatched: the K
+inside (n = 13,925; the 255 with K &amp;lt; 0.1 1/m are not shown). Hatched: the K
 ranges of the data behind the speed laws, from
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">walking speed in smoke&lt;/a>. Shaded: Jin&amp;rsquo;s
 sign-visibility data for lit signs, &lt;em>K&lt;/em> ≈ 0.3–1.8 1/m, from
@@ -1614,7 +1610,7 @@ early.&lt;/li>
 &lt;li>&lt;strong>Visibility.&lt;/strong> The EA note gives 10 m, not a &lt;em>K&lt;/em>. &lt;em>C&lt;/em> = 3 (Jin&amp;rsquo;s value for
 a reflecting sign, and the FDS default) turns it into 0.3 1/m. The result
 barely depends on this: any &lt;em>K&lt;/em> from 0.23 to 0.8 1/m changes the first
-crossing of at most 10 agents, by at most 13 s. The EA limits apply to
+crossing of at most 14 agents, by at most 12 s. The EA limits apply to
 exposures under 10 minutes. The 10 m criterion is from EA, not from ISO:
 ISO 13571 clause 9 (pp. 11–12) treats obscuration through a fuel
 mass-loss concentration, not a visibility distance.&lt;/li>
@@ -2244,7 +2240,7 @@ title="Copy code"
 &lt;div class="docs-checkpoint__body">
 &lt;p>The last line reads:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 78.77 s (1/1 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 78.94 s (1/1 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"

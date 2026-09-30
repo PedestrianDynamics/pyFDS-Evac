@@ -593,18 +593,18 @@ while aggregate outcomes (counts and fractions, such as the number of agents
 incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
 and do not compare single trajectories between runs. See the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification page&lt;/a>.&lt;/p>
-&lt;p>Two known causes make results depend on more than the seed:&lt;/p>
+&lt;p>One known cause makes results depend on more than the seed:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>Earlier runs in the same process.&lt;/strong> Results can depend on the JuPedSim
-agent ids of earlier runs in the same Python process
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>). For a
-study, run each seed in its own process, for example a shell loop over
-&lt;code>run.py --seed N&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Python&amp;rsquo;s hash seed.&lt;/strong> For discovery agents, the order of tied routes can
 depend on &lt;code>PYTHONHASHSEED&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199" target="_blank" rel="noopener">#199&lt;/a>). Set
 it to a fixed value for bit-identical reruns.&lt;/li>
 &lt;/ul>
+&lt;p>Earlier runs in the same Python process do not change the results. Every
+per-agent draw is seeded from the seed and the agent&amp;rsquo;s spawn order, not from
+its JuPedSim id. The outputs still label agents by JuPedSim id, which is
+numbered per process, so a second run in the same process reports the same
+agents under other ids.&lt;/p>
 &lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em>. VTT Technical Research Centre of

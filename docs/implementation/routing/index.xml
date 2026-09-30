@@ -360,9 +360,10 @@ below was swept against a geometry whose doorways were narrower than the
 building&amp;rsquo;s; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy&amp;rsquo;s 52.9 %.
 The reasoning in this section is unchanged — only the fitted number moved.
-Rerun on main at &lt;code>7a3617d&lt;/code>, under the gate, the same sweep scores 0.03 at
-31.6 % and 0.024 at 34.1 %: the deck no longer reproduces Fahy&amp;rsquo;s split, and has
-not been re-fitted.&lt;/p>
+Rerun at &lt;code>8bda7f7&lt;/code>, under the gate and with per-agent draws seeded from the
+spawn key, the same sweep scores 0.03 at 31.4 % and 0.024 at 33.4 % (31.6 % and
+34.1 % on main at &lt;code>7a3617d&lt;/code>): the deck no longer reproduces Fahy&amp;rsquo;s split, and
+has not been re-fitted.&lt;/p>
 &lt;p>&lt;strong>Two further caveats on that number.&lt;/strong> The sweep was run under the additive
 composite, where &lt;code>w_queue&lt;/code> multiplies a &lt;em>distance&lt;/em>
 (&lt;code>w_queue * base_speed_m_per_s * queue_time&lt;/code>). Under the default gate model it
@@ -459,10 +460,10 @@ equilibrium without explicit iteration.&lt;/p>
 &lt;a href="#dynamic-rerouting" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>During simulation, agents periodically reevaluate their routes and
 switch to lower-cost exits when conditions change.&lt;/p>
 &lt;h3>Reevaluation scheduling&lt;span class="hx-absolute -hx-mt-20" id="reevaluation-scheduling">&lt;/span>
-&lt;a href="#reevaluation-scheduling" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent has a personal time offset derived from its ID so that
-not all agents reevaluate on the same timestep:&lt;/p>
+&lt;a href="#reevaluation-scheduling" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each agent has a personal time offset derived from its spawn order so
+that not all agents reevaluate on the same timestep:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>offset = (agent_id % steps_per_interval) * dt_s&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;pre>&lt;code>offset = ((spawn_index &amp;#43; 1) % steps_per_interval) * dt_s&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -472,6 +473,9 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>&lt;code>spawn_index&lt;/code> counts the agents spawned from the same origin (the agents
+placed at t = 0, or one flow source) from 0, so the offsets of one origin are
+spread evenly. Agents of different origins can share an offset.&lt;/p>
 &lt;p>An agent fires its &lt;strong>first&lt;/strong> evaluation once &lt;code>current_time &amp;gt;= offset&lt;/code>,
 then fires again every &lt;code>reevaluation_interval_s&lt;/code> thereafter. With a
 10-second interval and 100 agents the load is spread uniformly across
