@@ -15,6 +15,7 @@ import pedpy
 import shapely
 from shapely.geometry import Point, Polygon
 
+from .agent_seed import INITIAL_ORIGIN, SpawnKey, assign_spawn_key
 from .premovement_distributions import (
     PREMOVEMENT_PRESETS,
     create_premovement_distribution,
@@ -1248,6 +1249,10 @@ def _initialize_with_fallback(
     has_premovement = False
 
     seeded_positions = _seed_shared_areas(immediate_spawn_distributions, seed)
+    # Spawn key of every agent placed here, assigned as it is added so that
+    # every per-agent draw can be seeded from it.
+    spawn_keys: dict[int, SpawnKey] = {}
+    origin_counts: dict[str, int] = {}
 
     for spawn_data in immediate_spawn_distributions:
         try:
@@ -1346,6 +1351,7 @@ def _initialize_with_fallback(
             )
 
             agent_id = simulation.add_agent(agent_params)
+            assign_spawn_key(spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN)
             all_positions.append(pos)
             agent_radii[agent_id] = agent_radius
 
@@ -1411,6 +1417,8 @@ def _initialize_with_fallback(
         "has_premovement": has_premovement,
         "premovement_times": premovement_times,
         "agent_wait_info": fallback_agent_wait_info,
+        "spawn_keys": spawn_keys,
+        "origin_counts": origin_counts,
         "direct_steering_info": direct_steering_info,
         "global_ds_journey_id": global_ds_journey_id,
         "global_ds_stage_id": global_ds_stage_id,
@@ -2074,6 +2082,10 @@ def _add_agents(
     agent_radii = {}
     current_agent_id = 0
     agent_wait_info = {}
+    # Spawn key of every agent placed here, assigned as it is added so that
+    # every per-agent draw can be seeded from it.
+    spawn_keys: dict[int, SpawnKey] = {}
+    origin_counts: dict[str, int] = {}
 
     # Create individual journeys for each exit for agents without explicit journeys.
     exit_to_journey = {}
@@ -2463,6 +2475,9 @@ def _add_agents(
                                 )
 
                                 agent_id = simulation.add_agent(agent_params)
+                                assign_spawn_key(
+                                    spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
+                                )
                                 agent_radii[agent_id] = agent_radius
 
                                 # Store premovement time if enabled
@@ -2532,6 +2547,9 @@ def _add_agents(
                     )
 
                     agent_id = simulation.add_agent(agent_params)
+                    assign_spawn_key(
+                        spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
+                    )
                     agent_radii[agent_id] = agent_radius
 
                     if use_premovement and agent_premovement_times is not None:
@@ -2568,6 +2586,8 @@ def _add_agents(
         "has_premovement": has_premovement,
         "premovement_times": premovement_times,
         "agent_wait_info": agent_wait_info,
+        "spawn_keys": spawn_keys,
+        "origin_counts": origin_counts,
         "transitions": data.get("transitions", []),
         "waypoint_routing": journey_data.get("waypoint_routing", {}),
         "global_ds_journey_id": global_ds_journey_id,

@@ -37,6 +37,15 @@ import numpy as np
 from shapely import wkt
 from shapely.geometry import Polygon
 
+from .agent_seed import (
+    INITIAL_ORIGIN,
+    SpawnKey,
+    SpawnKeyError,
+    assign_spawn_key,
+    commit_spawn_key,
+    lookup_spawn_key,
+    pending_spawn_key,
+)
 from .cognitive_map import (
     AgentCognitiveMap,
     expand_from_visibility,
@@ -1068,30 +1077,9 @@ def _apply_initial_path(wait_info: dict, path: list[str]) -> bool:
     return True
 
 
-# Spawn origin of the agents placed before the first step; flow sources are
-# ``flow:<distribution key>``.
-INITIAL_ORIGIN = "initial"
-
-SpawnKey = tuple[str, int]
-
-
-def _spawn_key(
-    spawn_keys: dict[int, SpawnKey],
-    origin_counts: dict[str, int],
-    agent_id: int,
-    origin: str,
-) -> SpawnKey:
-    """Return ``(origin, n)`` for the agent spawned n-th from *origin*.
-
-    Counting per origin keeps the pairing when a blocked flow source spawns
-    later than in the replayed run, which a single counter would shift.
-    """
-    if agent_id in spawn_keys:
-        return spawn_keys[agent_id]
-    key = (origin, origin_counts.get(origin, 0))
-    origin_counts[origin] = key[1] + 1
-    spawn_keys[agent_id] = key
-    return key
+# INITIAL_ORIGIN, SpawnKey and the key counter live in agent_seed, which
+# simulation_init shares; the counter keeps its name here.
+_spawn_key = assign_spawn_key
 
 
 def _replayed_exit(
@@ -1459,10 +1447,11 @@ def run_scenario(
         route_history: list[dict[str, Any]] = []
         # Exit each path agent is heading for, then the one it left through.
         agent_exits: dict[int, str] = {}
-        # Run-local spawn order of path agents per origin; JuPedSim ids can
-        # skip (#198).
-        spawn_keys: dict[int, SpawnKey] = {}
-        origin_counts: dict[str, int] = {}
+        # Run-local spawn order of every agent per origin, assigned where it
+        # is added; JuPedSim ids can skip (#198). The JuPedSim id stays the
+        # lookup key.
+        spawn_keys: dict[int, SpawnKey] = dict(spawning_info.get("spawn_keys", {}))
+        origin_counts: dict[str, int] = dict(spawning_info.get("origin_counts", {}))
         route_cost_history: list[dict[str, Any]] = []
         agent_route_state: dict[int, AgentRouteState] = {}
         cognitive_maps: dict[int, AgentCognitiveMap] = {}
@@ -1561,7 +1550,7 @@ def run_scenario(
             """
             if stage_graph is None or wait_info.get("mode") != "path":
                 return None
-            key = _spawn_key(spawn_keys, origin_counts, agent_id, origin)
+            key = lookup_spawn_key(spawn_keys, agent_id, origin)
             required_exit = _replayed_exit(replay_exits, key, agent_id)
             # A replayed or smoke-blind choice is made as in clear air.
             clear_air = smoke_blind or required_exit is not None
@@ -1720,6 +1709,7 @@ def run_scenario(
                     if current_time < next_spawn_time:
                         continue
 
+                    flow_origin = _flow_origin(flow_dist, source_id)
                     for _ in range(spawning_freqs_and_numbers[source_id][1]):
                         spawned_this_attempt = False
                         selected_variant = None
@@ -1732,6 +1722,9 @@ def run_scenario(
                             )
                             position = starting_pos_per_source[source_id][pos_index]
                             flow_params = flow_dist["params"]
+                            # The key this spawn gets once add_agent succeeds.
+                            pending = pending_spawn_key(origin_counts, flow_origin)
+                            added = False
 
                             try:
                                 assigned_journey_id = None
@@ -1855,6 +1848,12 @@ def run_scenario(
                                 )
 
                                 agent_id = simulation.add_agent(agent_parameters)
+                                # From here on the agent exists, so a failure
+                                # is raised rather than retried elsewhere.
+                                added = True
+                                commit_spawn_key(
+                                    spawn_keys, origin_counts, agent_id, pending
+                                )
                                 agent_radii[agent_id] = flow_params.get("radius", 0.2)
                                 # print(
                                 #     "Spawned flow agent "
@@ -2043,9 +2042,11 @@ def run_scenario(
 
                                 spawned_this_attempt = True
                                 break
-                            except (FdsHorizonError, ExitReplayError):
+                            except (FdsHorizonError, ExitReplayError, SpawnKeyError):
                                 raise
                             except Exception:
+                                if added:
+                                    raise
                                 continue
 
                         if not spawned_this_attempt:
@@ -2844,7 +2845,8 @@ def run_scenario(
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
-        _warn_unused_replay(replay_exits, spawn_keys)
+        # Only agents that were given an exit can have taken a replayed one.
+        _warn_unused_replay(replay_exits, {aid: spawn_keys[aid] for aid in agent_exits})
         if smoke_speed_model is not None:
             metrics["smoke_history_samples"] = len(smoke_history)
         if fed_model is not None:
