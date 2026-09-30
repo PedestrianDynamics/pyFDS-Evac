@@ -102,6 +102,28 @@ def is_inside_polygon(x, y, polygon):
         return False
 
 
+# Distance, beyond the agent radius, at which a waypoint or checkpoint target
+# counts as reached.
+TARGET_REACH_MARGIN_M = 0.5
+
+
+def reached_stage(x, y, target, stage_cfg, agent_radius):
+    """Return whether an agent at (x, y) has reached its current stage.
+
+    An exit is reached when the agent's centre enters the exit polygon, so
+    the door width, not the distance to the target point, bounds the flow.
+    Other stages, and an exit without a polygon, are reached within
+    ``agent_radius + TARGET_REACH_MARGIN_M`` of the target point.
+    """
+    polygon = (stage_cfg or {}).get("polygon")
+    if (stage_cfg or {}).get("stage_type") == "exit" and polygon is not None:
+        return is_inside_polygon(x, y, polygon)
+    if target is None:
+        return False
+    reach_dist = float(agent_radius) + TARGET_REACH_MARGIN_M
+    return math.hypot(x - float(target[0]), y - float(target[1])) <= reach_dist
+
+
 def sample_wait_time(stage_cfg, base_seed, step_index):
     """Sample a waiting time from the stage configuration."""
     mean_wait = float(stage_cfg.get("waiting_time", 0.0))

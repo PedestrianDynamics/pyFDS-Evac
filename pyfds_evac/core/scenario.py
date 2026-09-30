@@ -67,6 +67,7 @@ from .direct_steering_runtime import (
     ensure_agent_speed_state,
     extract_agent_xy,
     get_agent_desired_speed,
+    reached_stage,
     sample_wait_time,
     set_agent_desired_speed,
     set_agent_fic_factor,
@@ -2754,13 +2755,13 @@ def run_scenario(
                             wait_info["target_assigned"] = True
 
                         stage_type = stage_cfg.get("stage_type")
-                        reached_target = False
-                        reach_dist = float(wait_info.get("agent_radius", 0.2)) + 0.5
-                        if target is not None:
-                            reached_target = (
-                                math.hypot(x - float(target[0]), y - float(target[1]))
-                                <= reach_dist
-                            )
+                        reached_target = reached_stage(
+                            x,
+                            y,
+                            target,
+                            stage_cfg,
+                            wait_info.get("agent_radius", 0.2),
+                        )
 
                         if reached_target:
                             enable_throttling = stage_cfg.get(
