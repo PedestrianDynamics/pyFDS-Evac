@@ -150,14 +150,14 @@
   ],
   [
    6.0,
-   10,
+   9,
    "jps-distributions_0",
    "E_near",
    "E_far:ok > E_near:ok"
   ],
   [
    7.0,
-   4,
+   6,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:ok"
@@ -178,10 +178,24 @@
   ],
   [
    8.0,
-   6,
+   4,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:ok"
+  ],
+  [
+   8.0,
+   5,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:ok"
+  ],
+  [
+   9.0,
+   6,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
   ],
   [
    9.0,
@@ -198,7 +212,7 @@
    "E_far:ok > E_near:tau"
   ],
   [
-   10.0,
+   11.0,
    4,
    "jps-distributions_0",
    "E_far",
@@ -206,7 +220,7 @@
   ],
   [
    11.0,
-   6,
+   5,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
@@ -214,42 +228,51 @@
  ],
  "summary": {
   "agents_evacuated": 10,
-  "evacuation_time": 27.17,
+  "evacuation_time": 26.71,
   "total_agents": 10
  },
  "switches": [
   {
-   "agent_id": 4,
-   "new_cost": 18.525,
+   "agent_id": 6,
+   "new_cost": 18.522,
    "new_exit": "E_far",
-   "old_cost": 3.549,
+   "old_cost": 3.541,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
   },
   {
    "agent_id": 7,
-   "new_cost": 18.512,
+   "new_cost": 16.992,
    "new_exit": "E_far",
-   "old_cost": 3.532,
+   "old_cost": 5.083,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
   },
   {
    "agent_id": 8,
-   "new_cost": 17.608,
+   "new_cost": 18.091,
    "new_exit": "E_far",
-   "old_cost": 4.463,
+   "old_cost": 3.997,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
   },
   {
-   "agent_id": 6,
-   "new_cost": 20.499,
+   "agent_id": 4,
+   "new_cost": 20.105,
    "new_exit": "E_far",
-   "old_cost": 1.613,
+   "old_cost": 2.059,
+   "old_exit": "E_near",
+   "reason": "smoke_reroute",
+   "time_s": 7.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 20.026,
+   "new_exit": "E_far",
+   "old_cost": 2.037,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 7.0

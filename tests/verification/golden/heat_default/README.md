@@ -26,6 +26,8 @@ Per-agent draws are seeded from the spawn key since #353, so the agents walk
 to other target points than at 76c9a76. `reseed_baseline.py` reran the test's
 own run and rewrote the baseline only after checking that every column other
 than `x` and `y` is unchanged, and added the `agent_seeding` manifest key. Use
-it again for a later change of per-agent seeding:
+it again for a later change of per-agent or per-distribution seeding; it
+was rerun when start positions were hashed from the distribution key (#360),
+which again moved only `x` and `y`:
 
     PYTHONPATH=. python tests/verification/golden/heat_default/reseed_baseline.py
