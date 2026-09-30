@@ -95,7 +95,7 @@ CAP = 0.96  # p/s, read off the paper's Fig. 3 [F]
 ROOM = (0.0, 0.0, 30.0, 10.0)
 BURNER = (0.6, 0.6, 0.6, 0.6)  # x, y, width, depth
 DOOR_REGION = (24.0, 6.0)  # x >= 24 m, y >= 6 m (Enrico's grid note)
-PAPER_FIG3 = ((0, 97), (40, 61), (80, 23), (120, 0))  # [F] read off Fig. 3
+PAPER_FIG3 = ((0, 100), (40, 61), (80, 23), (120, 0))  # [F] Fig. 3; N = 100 [P] at 0 s
 PAPER_FIG5 = (-29.0, 20.0)  # [F] Fig. 5, 60 kW, N = 100: min DIFF s, area m²
 
 FDS_RUNS = {
@@ -879,6 +879,17 @@ def report_first_criterion(fires, grids):
     md_table(["run", "K 0.23 first", "tie", "T 45 first"], rows)
 
 
+def report_queue(results):
+    """Cells occupied at or after 60, 75 and 90 s: the footprint of the queue."""
+    print("## Queue footprint, one door, capped, pre-movement 0 (n = 10)\n")
+    r = results[("1door", "capped_pre0")]
+    rows = [
+        [how] + [int(np.sum(np.nan_to_num(m, nan=-1.0) >= t)) for t in (60, 75, 90)]
+        for how, m in (("maximum", r.rset_max), ("95th percentile", r.rset_p95))
+    ]
+    md_table(["pooling", "cells RSET >= 60 s", ">= 75 s", ">= 90 s"], rows)
+
+
 def report_gate(results):
     print("## Agents remaining (pre-movement 0, 10 seeds, mean ± sd)\n")
     rows = []
@@ -1552,7 +1563,7 @@ def fig_remaining(results):
         color=PAPER,
         ls=(0, (5, 2)),
         lw=1.5,
-        label="paper's extrapolation at 0.96 p/s (not data)",
+        label="our linear extrapolation at 0.96 p/s (not data)",
     )
     _remaining_band(
         two,
@@ -1815,6 +1826,7 @@ def main():
 
     results = rset_results(runs, walkable, grid)
     gate = report_gate(results)
+    report_queue(results)
     table_1 = version_measures(
         {k: r for k, r in results.items() if k[0] == "1door"}, fires, grids["1door"]
     )

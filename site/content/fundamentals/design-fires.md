@@ -18,7 +18,7 @@ fire: the fire is part of the FDS case you supply. The study fires in the
 defaults.
 {{< /callout >}}
 
-![Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s and the constant 60 kW Schröder-room fire, drawn against the fast and ultra-fast classes](/images/fundamentals/design_fires.png)
+![Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s and the constant 60 kW fire of the Schröder et al. (2020) study, drawn against the fast and ultra-fast classes](/images/fundamentals/design_fires.png)
 
 *(a) The four t² classes of vfdb Table 4.3 and SFPE Eqs. 14.49–14.52. Each
 curve is solid up to its growth time, when it reaches 1055 kW, and dashed
@@ -220,7 +220,7 @@ is a pyFDS-Evac default. Each new study adds a row here and one to the
 
 | Study | Curve type | Parameters | Stated or assumed |
 |---|---|---|---|
-| [The Schröder room](/docs/study-schroeder2020.md) | Steady from ignition | 60 kW: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m; flexible polyurethane foam | Assumed: Schröder et al. (2020) do not state the HRR |
+| [ASET-RSET maps after Schröder et al. (2020)](/docs/study-schroeder2020.md) | Steady from ignition | 60 kW: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m; flexible polyurethane foam | 60 kW from the authors' reference implementation ([doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550)); the paper's text does not state it. Burner size and fuel are ours |
 | [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | 0, 100, 800, 1600, 2000 kW at 0, 20, 40, 60, 90 s; 2 MW to 300 s (HRRPUA 1000 kW/m² on 2 m²); fuel vinyl chloride (PVC), 16.4 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
 
 Both fires start at t = 0 with no incipient phase.
