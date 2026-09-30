@@ -5,17 +5,17 @@ weight: 2
 
 ASET depends on the fire, and a fire model needs its heat release rate
 (HRR) over time as input. A **design fire** is that input chosen for an
-engineering analysis: an idealised HRR curve, not a forecast of one real
-fire. This page covers the published conventions: the t² growth law and
+engineering analysis: an idealised HRR curve; a real fire follows its own
+curve. This page covers the published conventions: the t² growth law and
 its four classes, how growth is capped, steady fires, fits to tests, and
-what a design fire does not tell you. The last section lists the fires
+what a design fire represents. The last section lists the fires
 used in the pyFDS-Evac studies.
 
 {{< callout type="info" >}}
 This page states published conventions only. pyFDS-Evac does not choose a
 fire: the fire is part of the FDS case you supply. The study fires in the
-[last section](#fires-used-in-pyfds-evac-studies) are study inputs, not
-defaults.
+[last section](#fires-used-in-pyfds-evac-studies) are inputs of those
+studies only.
 {{< /callout >}}
 
 ![Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s and the constant 60 kW fire of the Schröder et al. (2020) study, drawn against the fast and ultra-fast classes](/images/fundamentals/design_fires.png)
@@ -179,20 +179,20 @@ stops or when the fuel runs out (p. 1331). **A fitted \(\alpha\) is not a
 class:** it describes one item under one ignition, and a value such as
 0.1055 kW/s² sits between fast and ultra-fast.
 
-## What a design fire is not
+## What a design fire represents
 
-- **Not a prediction.** It is chosen to be exceeded rarely, not to match
-  the fire that will occur.
-- **Not a verdict on the building.** It is an input to an analysis; the
-  verdict comes from comparing ASET with RSET under stated criteria.
-- **Not the scenario.** The same curve can sit in different scenarios, at
-  a different place or with different doors open.
-- **Not a class when it is a fit or a custom ramp.** A piecewise-linear
-  ramp has no \(\alpha\); compare it with the classes by the time it takes
-  to reach 1055 kW.
-- **Not a property of the building.** A growth class describes the fuel
+- **A fire chosen to be exceeded rarely.** The fire that occurs follows
+  its own curve.
+- **An input to the analysis.** The verdict on the building comes from
+  comparing ASET with RSET under stated criteria.
+- **One part of the scenario.** The same curve can sit in different
+  scenarios, at a different place or with different doors open.
+- **A class only under the t² law.** A fit describes one item, and a
+  piecewise-linear ramp has no \(\alpha\); compare a ramp with the classes
+  by the time it takes to reach 1055 kW.
+- **A property of the fuel.** A growth class describes the fuel
   and its arrangement. Contents change over the life of a building.
-- **Not a smoke source term.** The HRR does not fix the smoke. Soot and
+- **A heat source only.** The HRR does not fix the smoke. Soot and
   other product yields must be given separately (vfdb 2020, p. 60). For
   visibility this matters as much as the HRR. Yields are not constants
   either: the CO yield can vary by up to a factor of about 50 between

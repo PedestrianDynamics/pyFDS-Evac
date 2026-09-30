@@ -322,8 +322,8 @@ tenability limit, and whether the agent got out before that.
   agents who were still inside. By then their FIC was already 4.5 to 5.9.
 
 "Nobody reached FED 1" therefore does not mean "everyone had time". This is
-one fire, one seed, and research software. The result describes this run. It
-is not a design verdict.
+one fire, one seed, and research software. The result describes this run
+only.
 
 ### Make the numbers yourself
 
@@ -397,7 +397,7 @@ the 75 censored agents (grey, arrow). The solid part is the time spent beyond
 K ≥ 0.3 1/m. Markers: first K ≥ 0.3 1/m (circle), first HCl ≥ 300 ppm
 (diamond), first FED ≥ 0.3 (square); the other criteria of the table are
 left out to keep the bars readable. Censoring is shown by the grey colour
-and the arrow, not by hatching. Values at the agent's position, z =
+and the arrow. Values at the agent's position, z =
 2.0 m, 1 s resolution..*
 
 Read the figure from the left edge of each bar. The first dozen agents
@@ -437,7 +437,7 @@ not included in either panel. The map form follows Schröder et al. (2020);
 [ASET-RSET maps after Schröder et al. (2020)](study-schroeder2020.md) re-runs
 their demonstration case.*
 
-Panel (b) is not a tenability limit. It shows when the signs stop guiding.
+Panel (b) measures wayfinding: it shows when the signs stop guiding.
 This is consistent with section 5, where 18 agents spawned between 22 and
 92 s never learned an exit: on this map the spawn centre loses sight of
 every sign at 39 s. The engine's own sign test differs (see *How the

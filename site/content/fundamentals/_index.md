@@ -37,21 +37,20 @@ note for tenability criteria (2014).*
   ([Visibility through smoke](/fundamentals/visibility.md)) and slows
   walking ([Walking speed in smoke](/fundamentals/walking-speed.md)).
 
-Fundamentals is about the literature, not about this code. Each page gives
-one quantity, its equation in the source's own notation and constants, the
-data it rests on, its known limits, and the primary citations. Nothing here
-states a pyFDS-Evac default. How pyFDS-Evac implements a law, and where it
+Each page gives one published law: its quantity, its equation in the
+source's own notation and constants, the data it rests on, its known limits,
+and the primary citations. pyFDS-Evac defaults are on the Models pages. How
+pyFDS-Evac implements a law, and where it
 departs from the source, is on the [Models](/models/_index.md) pages. The
 intuition behind the models is on the [Concepts](/docs/concepts.md) page.
 
-These pages are summaries, not a textbook. For the full treatment, read the
-*SFPE Handbook of Fire Protection Engineering*, 5th ed.
-([Hurley et al. 2016](https://doi.org/10.1007/978-1-4939-2565-0)),
-chapters 56–64, which most pages cite.
+For the full treatment, see Part VIII, Human Behavior (Ch. 65–72), of the
+*SFPE Handbook of Fire Protection Engineering*, 6th ed.
+([SFPE 2026](https://doi.org/10.1007/978-3-031-59212-6)).
 
 {{< cards >}}
   {{< card link="aset-rset" title="ASET, RSET and the egress timeline" subtitle="Detection, warning, pre-travel activity and travel, against the time to untenable conditions." >}}
-  {{< card link="design-fires" title="Design fires" subtitle="The t² growth law and its four classes, how growth is capped, and what a design fire is not." >}}
+  {{< card link="design-fires" title="Design fires" subtitle="The t² growth law and its four classes, how growth is capped, and what a design fire represents." >}}
   {{< card link="extinction" title="Extinction coefficient" subtitle="Beer–Lambert attenuation, optical density and the mass-specific extinction coefficient." >}}
   {{< card link="visibility" title="Visibility through smoke" subtitle="Jin's V = C/K, where C comes from, and how it changes in dim light." >}}
   {{< card link="walking-speed" title="Walking speed in smoke" subtitle="Jin, Frantzich and Nilsson, Fridolf et al., and the fractional versus absolute readings." >}}

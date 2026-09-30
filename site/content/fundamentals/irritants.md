@@ -58,8 +58,12 @@ concentration divided by the concentration predicted to cause a chosen
 endpoint:
 
 $$
-\mathrm{FIC} = \mathrm{FIC_{HCl}} + \mathrm{FIC_{HBr}} + \mathrm{FIC_{HF}} + \mathrm{FIC_{SO_2}} + \mathrm{FIC_{NO_2}} + \mathrm{FIC_{CH_2CHO}} + \mathrm{FIC_{HCHO}} + \sum \mathrm{FIC}_x
-\qquad \text{(Eq. 63.11)}
+\begin{aligned}
+&\mathrm{FIC} = \mathrm{FIC_{HCl}} + \mathrm{FIC_{HBr}} + \mathrm{FIC_{HF}} \\
+&\quad + \mathrm{FIC_{SO_2}} + \mathrm{FIC_{NO_2}} + \mathrm{FIC_{CH_2CHO}} \\
+&\quad + \mathrm{FIC_{CH_2O}} + \sum \mathrm{FIC}_x
+\quad \text{(Eq. 63.11)}
+\end{aligned}
 $$
 
 The chapter repeats the sum as Eq. 63.12 (p. 2343) and in its appendix
