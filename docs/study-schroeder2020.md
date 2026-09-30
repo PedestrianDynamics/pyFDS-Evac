@@ -697,7 +697,8 @@ C does not agree (−113 against −87 m²s), so both grids are given.
   Note No. 953, Fire Research Station, Borehamwood. No DOI or public URL.
 - Bryan, J. L. (1977). *Smoke as a Determinant of Human Behavior in Fire
   Situations (Project People)*. NBS-GCR-77-94, University of Maryland, for
-  the National Bureau of Standards. No DOI.
+  the National Bureau of Standards. NTIS PB271755,
+  [ntrl.ntis.gov](https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/PB271755.xhtml).
 - Hartzell, G. E., & Emmons, H. W. (1988). The fractional effective dose
   model for assessment of toxic hazards in fires. *J. Fire Sci.*, 6,
   356–362. [doi:10.1177/073490418800600504](https://doi.org/10.1177/073490418800600504)
