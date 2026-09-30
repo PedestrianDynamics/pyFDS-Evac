@@ -102,22 +102,40 @@ def is_inside_polygon(x, y, polygon):
         return False
 
 
+def distance_to_polygon(x, y, polygon):
+    """Return the distance from a point to a polygon, zero inside it."""
+    from shapely.geometry import Point
+
+    try:
+        return float(polygon.distance(Point(float(x), float(y))))
+    except Exception as e:
+        _logger.debug("Polygon distance check failed: %s", e)
+        return math.inf
+
+
 # Distance, beyond the agent radius, at which a waypoint or checkpoint target
 # counts as reached.
 TARGET_REACH_MARGIN_M = 0.5
+
+# Distance of the agent centre from an exit polygon at which the exit counts
+# as reached. It absorbs the few centimetres by which wall contact can hold a
+# centre short of a thin exit, and is small against the agent radius, so an
+# agent beside a door does not leave through the wall (#349, #401).
+EXIT_REACH_TOLERANCE_M = 0.03
 
 
 def reached_stage(x, y, target, stage_cfg, agent_radius):
     """Return whether an agent at (x, y) has reached its current stage.
 
-    An exit is reached when the agent's centre enters the exit polygon, so
-    the door width, not the distance to the target point, bounds the flow.
+    An exit is reached when the agent's centre enters the exit polygon, or
+    comes within ``EXIT_REACH_TOLERANCE_M`` of it, so the door width, not the
+    distance to the target point, bounds the flow.
     Other stages, and an exit without a polygon, are reached within
     ``agent_radius + TARGET_REACH_MARGIN_M`` of the target point.
     """
     polygon = (stage_cfg or {}).get("polygon")
     if (stage_cfg or {}).get("stage_type") == "exit" and polygon is not None:
-        return is_inside_polygon(x, y, polygon)
+        return distance_to_polygon(x, y, polygon) <= EXIT_REACH_TOLERANCE_M
     if target is None:
         return False
     reach_dist = float(agent_radius) + TARGET_REACH_MARGIN_M

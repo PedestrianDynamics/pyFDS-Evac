@@ -228,7 +228,7 @@
  ],
  "summary": {
   "agents_evacuated": 10,
-  "evacuation_time": 26.95,
+  "evacuation_time": 26.93,
   "total_agents": 10
  },
  "switches": [
@@ -270,9 +270,9 @@
   },
   {
    "agent_id": 5,
-   "new_cost": 19.945,
+   "new_cost": 19.96,
    "new_exit": "E_far",
-   "old_cost": 2.12,
+   "old_cost": 2.104,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 7.0
