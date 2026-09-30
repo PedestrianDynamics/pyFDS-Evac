@@ -429,7 +429,8 @@ The first time no sign can be seen from a cell (fdsvismap `get_aset_map`,
 counts at its first loss of sight, even if a sign becomes visible again
 later, and a cell that never loses sight cannot be told apart from one
 that loses it at 300 s. Heat is
-not included in either panel. The map form follows Schröder et al. (2020).*
+not included in either panel. The map form follows Schröder et al. (2020);
+[the Schröder room](study-schroeder2020.md) reruns their experiment.*
 
 Panel (b) is not a tenability limit. It shows when the signs stop guiding.
 This is consistent with section 5, where 18 agents spawned between 26 and
@@ -475,7 +476,9 @@ This run fits none of it:
 
 More seeds would not supply an RSET either, because every seed stops at the
 same 300 s. For a scenario in which everyone gets out, see the
-[ensemble how-to](howto-rset-ensemble.md).
+[ensemble how-to](howto-rset-ensemble.md). For one where everyone is placed
+at t = 0 and gets out, with RSET mapped cell by cell, see
+[the Schröder room](study-schroeder2020.md).
 
 ### What this does not show
 
