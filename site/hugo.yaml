@@ -89,6 +89,7 @@ module:
     - source: ../docs
       target: content/docs/studies
       includeFiles:
+        # A study page is docs/study-<name>.md; this glob mounts it here.
         - "study-*.md"
         - "howto-with-without-fire.md"
     - source: ../docs/fds-sampling.md

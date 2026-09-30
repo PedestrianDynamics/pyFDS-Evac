@@ -328,15 +328,16 @@ and [Exit choice and familiarity](/fundamentals/exit-choice.md).
 - **Smoke in a cognitive-map router, earlier work.** Schröder et al. (2015)
   priced routes by smoke in the cognitive-map router of JuPedSim. They
   integrate the FDS optical density *D* along the straight line of sight
-  from the agent to each door of its current room, and weight the integral
+  from the agent to each exit available to the agent, and weight the integral
   by the maximum *D* on that line over the maximum on all such lines
   (Eq. 4, p. 331). A door whose line of sight is obstructed is excluded
   from the smoke edge-factor calculation. The smoke raises the edge weight
   by the factor \(1 + 2 f_{\mathrm{smoke}} (1 - f_{\mathrm{risk}})\)
   (Eq. 5, p. 332), where the factor 2 and the individual risk tolerance
   \(f_{\mathrm{risk}}\) are not calibrated; the authors call the model a
-  proof of concept. *D* is read at an extraction height of 2–3 m, in the
-  upper layer, and the sensor does not evaluate visibility (p. 330). The
+  proof of concept. *D* is read at an extraction height in the upper layer
+  (2.80 m in their example, p. 330; varied over 2–3 m, Table 2, p. 334),
+  and the sensor does not evaluate visibility (p. 330). The
   height is an artificial parameter and the most influential one in their
   sensitivity study (p. 337). pyFDS-Evac differs: it integrates *K* along
   the walked route polyline, not a line of sight, and samples smoke the

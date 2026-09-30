@@ -183,7 +183,7 @@ def main():
     )
     ax_b.plot([0, 300], [60, 60], color=c_room, lw=2.6, zorder=5)
     ax_b.text(
-        140,
+        120,
         130,
         "Schröder room: constant 60 kW (assumed)",
         fontsize=8.5,

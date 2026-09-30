@@ -37,7 +37,7 @@ The vfdb guide separates the two (vfdb 2020, §4.1, pp. 39–40):
 
 Design fires are chosen so that a real fire in that use exceeds them only
 with a very low probability: "worst credible", not "worst case" (§4.1,
-p. 40). The guide calls a design fire a theoretical but possible curve
+pp. 40–41). The guide calls a design fire a theoretical but possible curve
 that covers many real fires on the safe side (§4.3.1.1, p. 53). The SFPE
 Handbook likewise calls the assumed fire characteristics of a scenario the
 "design fire" and describes them as a time-dependent HRR (Hadjisophocleous
@@ -215,12 +215,13 @@ class:** it describes one item under one ignition, and a value such as
 These are the fires of the [Studies](/docs/studies/_index.md). They are
 **study inputs**, chosen for each study's question. Neither was chosen by
 the design-fire procedure above, so neither is a design fire, and neither
-is a pyFDS-Evac default. Each new study adds a row.
+is a pyFDS-Evac default. Each new study adds a row here and one to the
+[Studies index](/docs/studies/_index.md).
 
 | Study | Curve type | Parameters | Stated or assumed |
 |---|---|---|---|
 | [The Schröder room](/docs/study-schroeder2020.md) | Steady from ignition | 60 kW: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m; flexible polyurethane foam | Assumed: Schröder et al. (2020) do not state the HRR |
-| [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | 0, 100, 800, 1600, 2000 kW at 0, 20, 40, 60, 90 s; 2 MW to 300 s (HRRPUA 1000 kW/m² on 2 m²); fuel vinyl chloride, 16.4 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
+| [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | 0, 100, 800, 1600, 2000 kW at 0, 20, 40, 60, 90 s; 2 MW to 300 s (HRRPUA 1000 kW/m² on 2 m²); fuel vinyl chloride (PVC), 16.4 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
 
 Both fires start at t = 0 with no incipient phase.
 

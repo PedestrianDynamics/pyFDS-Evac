@@ -180,11 +180,12 @@ with `--fds-dir`, `--clear-air-visibility` with `--no-visibility`, and
 
 ### 2. The knowledge contract
 
-Schröder et al. (2015, p. 329) extended the cognitive map of Haensel
-(2014) to fire. They split it into knowledge, perception and
+Haensel (2014) split the cognitive map into knowledge, perception and
 decision-making, with first-order knowledge (the spatial layout, as a
 graph) and second-order knowledge that adds perceived information such as
-smoke, signs or jams. In pyFDS-Evac the map holds only the layout; smoke
+smoke, signs or jams (as summarised by Schröder et al. 2015, p. 329).
+Schröder et al. added a smoke sensor that feeds this second-order
+knowledge. In pyFDS-Evac the map holds only the layout; smoke
 enters through the route cost, not the map.
 
 Each agent's `AgentCognitiveMap` holds known nodes, known edges and visited
