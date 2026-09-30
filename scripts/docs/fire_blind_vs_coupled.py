@@ -463,11 +463,15 @@ def paired(runs_df, metric, x, y, pre):
 
 
 def fmt_range(values):
+    """Median [min, max]; censored (inf) values stay in the median."""
     v = np.asarray(values, dtype=float)
-    v = v[np.isfinite(v)]
-    if len(v) == 0:
+    finite = v[np.isfinite(v)]
+    if len(finite) == 0:
         return "censored"
-    return f"{np.median(v):6.1f} [{v.min():.1f}, {v.max():.1f}]"
+    med = np.median(v)
+    top = f"{finite.max():.1f}" if len(finite) == len(v) else f">{CAP:.0f}"
+    head = f"{med:6.1f}" if np.isfinite(med) else f"  >{CAP:.0f}"
+    return f"{head} [{finite.min():.1f}, {top}]"
 
 
 # --- Report ---
@@ -539,11 +543,14 @@ def report_additivity(runs_df):
                 for r in sub.itertuples()
             ]
             dev = np.asarray(dev, dtype=float)
+            n_all = len(dev)
             dev = dev[np.isfinite(dev)]
             if len(dev):
+                cens = "" if len(dev) == n_all else f" ({n_all - len(dev)} censored)"
                 print(
                     f"  {arm:6s} pre{pre}: median {np.median(dev):6.2f}, "
-                    f"range [{dev.min():.2f}, {dev.max():.2f}] s over {len(dev)} seeds"
+                    f"range [{dev.min():.2f}, {dev.max():.2f}] s over {len(dev)} "
+                    f"seeds{cens}"
                 )
 
 
@@ -585,10 +592,10 @@ def report_margins(runs_df, loc):
             cells = []
             for arm in ("U", "S", "R", "R-na", "R+FIC"):
                 sub = runs_df[(runs_df.pre == pre) & (runs_df.arm == arm)]
-                aset = loc.loc[list(FIXED_POINTS), key].fillna(np.inf).to_numpy()
-                passes = aset[None, :] > sub.rset_last.to_numpy()[:, None]
-                cells.append(f"{arm}:" + "/".join(str(int(n)) for n in passes.sum(0)))
+                cells.append(f"{arm}:" + _pass_counts(loc, key, sub.rset_last))
             print(f"  {key:11s} pre{pre:2d} n={len(sub)} " + "  ".join(cells))
+    print("   (+k?: k seeds undetermined, RSET censored > 270 s, ASET later)")
+    _report_flips(runs_df, loc)
     print("\n== N inside at the location ASET, median over seeds ==")
     for pre in PRES:
         for key in ("K 0.3", "ISO FEC 0.3"):
@@ -598,6 +605,46 @@ def report_margins(runs_df, loc):
                 m = [f"{sub[f'inside@{p}|{key}'].median():.0f}" for p in FIXED_POINTS]
                 cells.append(f"{arm}:" + "/".join(m))
             print(f"  pre{pre:2d} {key:11s} " + "  ".join(cells))
+
+
+def _pass_verdicts(loc, key, rset_last):
+    """Per seed and point: 1 pass, 0 fail, NaN undetermined (censored RSET)."""
+    aset = loc.loc[list(FIXED_POINTS), key].fillna(np.inf).to_numpy()[None, :]
+    r = rset_last.to_numpy()[:, None]
+    out = (aset > r).astype(float)
+    out[~np.isfinite(r) & (aset > CAP)] = np.nan
+    return out
+
+
+def _pass_counts(loc, key, rset_last):
+    v = _pass_verdicts(loc, key, rset_last)
+    cells = []
+    for col in v.T:
+        und = int(np.isnan(col).sum())
+        cells.append(f"{int(np.nansum(col))}" + (f"+{und}?" if und else ""))
+    return "/".join(cells)
+
+
+def _report_flips(runs_df, loc):
+    """Points where the pass count depends on the arm (U, S, R, R-na)."""
+    print("\n== Verdict flips: pass count per arm differs at a point ==")
+    arms = ("U", "S", "R", "R-na")
+    found = False
+    for key in STUDY_CRITERIA:
+        for pre in PRES:
+            counts = {}
+            for arm in arms:
+                sub = runs_df[(runs_df.pre == pre) & (runs_df.arm == arm)]
+                counts[arm] = np.nansum(_pass_verdicts(loc, key, sub.rset_last), 0)
+            n = len(runs_df[(runs_df.pre == pre) & (runs_df.arm == "U")])
+            for k, point in enumerate(FIXED_POINTS):
+                row = {a: int(c[k]) for a, c in counts.items()}
+                if len(set(row.values())) > 1:
+                    found = True
+                    text = ", ".join(f"{a} {v}/{n}" for a, v in row.items())
+                    print(f"  {key:11s} pre{pre:2d} {point:12s} passes: {text}")
+    if not found:
+        print("  none")
 
 
 def report_dose(runs_df, agents_df):
@@ -648,9 +695,16 @@ def report_agent_margins(agents_df):
                     continue
                 m = sub[f"margin {key}"].dropna()
                 crossed = int(sub[f"cross {key}"].notna().sum())
+                inside = int(sub["exit"].isna().sum())
+                note = (
+                    f"  inside at cap {inside} (margin < cross - {CAP:.0f}; "
+                    "their dose is truncated at the cap)"
+                    if inside
+                    else ""
+                )
                 print(
                     f"  pre{pre:2d} {arm:6s} crossed {crossed}/{len(sub)}  "
-                    f"margin {fmt_range(m)}"
+                    f"margin of those out {fmt_range(m)}{note}"
                 )
         for pre in PRES:
             for x in ("S", "R", "R-na"):
@@ -985,10 +1039,14 @@ def fig_exposure(agents_df):
 
 def fig_margins(runs_df, loc):
     """Location margin at fixed points, the same points for every arm."""
-    keys = (("K 0.3", "K ≥ 0.3 1/m"), ("ISO FEC 0.3", "HCl ≥ 300 ppm"))
+    keys = (
+        ("K 0.3", "K ≥ 0.3 1/m"),
+        ("ISO FEC 0.3", "HCl ≥ 300 ppm"),
+        ("ISO FEC 1", "HCl ≥ 1000 ppm"),
+    )
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig, axes = plt.subplots(
-        2, 3, figsize=(12, 6), sharex=True, sharey=True, layout="constrained"
+        3, 3, figsize=(12, 8.6), sharex=True, sharey=True, layout="constrained"
     )
     arms = ("U", "S", "R", "R-na")
     offsets = dict(zip(arms, (-0.24, -0.08, 0.08, 0.24), strict=True))
@@ -1021,23 +1079,32 @@ def fig_margins(runs_df, loc):
                 )
             if j == 0:
                 ax.set_ylabel(name, color=TEXT)
-            if i == 1:
+            if i == len(keys) - 1:
                 ax.set_xlabel("location ASET − RSET_last [s]", color=TEXT)
             _style(ax, "x")
             _frame(ax)
-    shown = runs_df[runs_df.arm.isin(arms)]
-    aset = loc.loc[list(FIXED_POINTS), [k for k, _ in keys]].to_numpy()
-    margin = aset[None, :, :] - shown.rset_last.to_numpy()[:, None, None]
-    n_pos = int((margin >= 0).sum())
-    n_nan = int(np.isnan(aset).sum())
-    note = (
-        f"margin ≥ 0 in {n_pos} of {margin.size}\nrun × point × limit cases"
-        if n_pos
-        else "negative in every run,\nat every point, for both limits"
-    )
-    if n_nan:
-        note += f"\n({n_nan} point-limit pairs never met, not drawn)"
-    axes[0, 0].annotate(
+    # Insight: the point where the pass count depends most on the arm.
+    best = None
+    for i, (key, _) in enumerate(keys):
+        for j, pre in enumerate(PRES):
+            counts = {}
+            for arm in arms:
+                sub = runs_df[(runs_df.pre == pre) & (runs_df.arm == arm)]
+                counts[arm] = np.nansum(_pass_verdicts(loc, key, sub.rset_last), 0)
+            for k, point in enumerate(FIXED_POINTS):
+                row = {a: int(c[k]) for a, c in counts.items()}
+                spread = max(row.values()) - min(row.values())
+                if best is None or spread > best[0]:
+                    n = len(runs_df[(runs_df.pre == pre) & (runs_df.arm == "U")])
+                    best = (spread, i, j, point, row, n)
+    spread, i, j, point, row, n = best
+    if spread:
+        note = f"{point}: seeds that pass, of {n}\n" + ", ".join(
+            f"{a} {v}" for a, v in row.items()
+        )
+    else:
+        note = "the pass count at every point\nis the same in every arm"
+    axes[i, j].annotate(
         note,
         (0.03, 0.97),
         xycoords="axes fraction",
