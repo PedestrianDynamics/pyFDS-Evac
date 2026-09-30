@@ -325,3 +325,33 @@ and [Exit choice and familiarity](/fundamentals/exit-choice.md).
   Familiarity and social influence, which the exit-choice literature finds
   significant, enter only through the cognitive map, not through the route
   cost, and herding is not modelled.
+- **Smoke in a cognitive-map router, earlier work.** Schröder et al. (2015)
+  priced routes by smoke in the cognitive-map router of JuPedSim. They
+  integrate the FDS optical density *D* along the straight line of sight
+  from the agent to each exit available to the agent, and weight the integral
+  by the maximum *D* on that line over the maximum on all such lines
+  (Eq. 4, p. 331). A door whose line of sight is obstructed is excluded
+  from the smoke edge-factor calculation. The smoke raises the edge weight
+  by the factor \(1 + 2 f_{\mathrm{smoke}} (1 - f_{\mathrm{risk}})\)
+  (Eq. 5, p. 332), where the factor 2 and the individual risk tolerance
+  \(f_{\mathrm{risk}}\) are not calibrated; the authors call the model a
+  proof of concept. *D* is read at an extraction height in the upper layer
+  (2.80 m in their example, p. 330; varied over 2–3 m, Table 2, p. 334),
+  and the sensor does not evaluate visibility (p. 330). The
+  height is an artificial parameter and the most influential one in their
+  sensitivity study (p. 337). pyFDS-Evac differs: it integrates *K* along
+  the walked route polyline, not a line of sight, and samples smoke the
+  agent cannot perceive
+  ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)). It
+  implements neither Eq. 4, Eq. 5, \(f_{\mathrm{risk}}\) nor the
+  obstruction test.
+
+## Sources
+
+- Schröder, B., Haensel, D., Chraibi, M., Arnold, L., Seyfried, A., &
+  Andresen, E. (2015). *Knowledge- and perception-based route choice
+  modelling in case of fire*. Proceedings of the 6th International
+  Symposium on Human Behaviour in Fire, Cambridge, UK, 28–30 September
+  2015, pp. 327–338. Interscience Communications. ISBN
+  978-0-9933933-0-3. No DOI;
+  [juser.fz-juelich.de/record/255940](https://juser.fz-juelich.de/record/255940).

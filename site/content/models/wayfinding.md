@@ -180,6 +180,14 @@ with `--fds-dir`, `--clear-air-visibility` with `--no-visibility`, and
 
 ### 2. The knowledge contract
 
+Haensel (2014) split the cognitive map into knowledge, perception and
+decision-making, with first-order knowledge (the spatial layout, as a
+graph) and second-order knowledge that adds perceived information such as
+smoke, signs or jams (as summarised by Schröder et al. 2015, p. 329).
+Schröder et al. added a smoke sensor that feeds this second-order
+knowledge. In pyFDS-Evac the map holds only the layout; smoke
+enters through the route cost, not the map.
+
 Each agent's `AgentCognitiveMap` holds known nodes, known edges and visited
 nodes (`cognitive_map.py`, `AgentCognitiveMap`). The contract has four parts.
 
@@ -591,6 +599,12 @@ the #172 fix. No test pins the #91 behaviour or convergence with the grid
 - Haensel, D. (2014). *A knowledge-based routing framework for pedestrian
   dynamics simulation*. Diploma thesis, Technische Universität Dresden. No
   DOI or public URL known.
+- Schröder, B., Haensel, D., Chraibi, M., Arnold, L., Seyfried, A., &
+  Andresen, E. (2015). *Knowledge- and perception-based route choice
+  modelling in case of fire*. Proceedings of the 6th International
+  Symposium on Human Behaviour in Fire, Cambridge, UK, pp. 327–338.
+  Interscience Communications. No DOI;
+  [juser.fz-juelich.de/record/255940](https://juser.fz-juelich.de/record/255940).
 - fdsvismap, [github.com/FireDynamics/fdsvismap](https://github.com/FireDynamics/fdsvismap),
   commit `64d9aa73144b3902bdc6d2cdd1a08e3494ec5690`.
 - Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.

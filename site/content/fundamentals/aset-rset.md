@@ -34,7 +34,7 @@ Engineers (SFPE) Handbook uses the same terms
 
 ## What the timeline rests on
 
-ASET comes from the fire: the time-concentration curves of heat, toxic gases
+ASET comes from the fire (see [Design fires](/fundamentals/design-fires.md)): the time-concentration curves of heat, toxic gases
 and smoke at the occupants' positions, compared with tenability limits. The
 [fractional effective dose (FED)](/fundamentals/asphyxiant-fed.md), [irritant](/fundamentals/irritants.md), [heat](/fundamentals/heat.md) and
 [visibility](/fundamentals/visibility.md) pages give those limits. ISO 13571:2012 (§5.1)

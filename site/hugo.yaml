@@ -82,7 +82,6 @@ module:
         - "fds-case-requirements.md"
         - "usage.md"
         - "outputs.md"
-        - "howto-with-without-fire.md"
         - "scenario-json.md"
         - "web-gui.md"
         - "troubleshooting.md"
@@ -90,7 +89,9 @@ module:
     - source: ../docs
       target: content/docs/studies
       includeFiles:
+        # A study page is docs/study-<name>.md; this glob mounts it here.
         - "study-*.md"
+        - "howto-with-without-fire.md"
     - source: ../docs/fds-sampling.md
       target: content/docs/implementation/fds-sampling.md
     # A group with a single page takes that page as its index.

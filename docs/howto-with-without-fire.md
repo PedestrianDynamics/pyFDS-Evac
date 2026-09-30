@@ -1,7 +1,9 @@
 ---
 title: "Evacuation with and without the fire"
-linkTitle: "How-to: with and without the fire"
-weight: 15
+linkTitle: "With and without the fire"
+weight: 2
+aliases:
+  - /docs/using/howto-with-without-fire/
 ---
 
 Egress tools such as Pathfinder are commonly run without the fire. The
