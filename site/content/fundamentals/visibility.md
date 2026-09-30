@@ -574,7 +574,13 @@ brightness" (abstract, p. 135).
 
 - The law describes a straight, unobstructed line of sight through uniform
   smoke to one object. It does not describe how far one can see around
-  corners, or how much smoke a person walks through.
+  corners, or how much smoke a person walks through. In Wood's survey of
+  952 UK fires, 60 % of the people in incidents with smoke attempted to move
+  through it, and 26 % turned back in smoke (not broken down by
+  visibility). The distance they moved
+  correlated only imperfectly with the distance they could see ahead, and
+  moving through smoke was not associated with leaving the building (Wood
+  1980, pp. 84–91 and Table 6.6, p. 95).
 - It was measured at 5.5–15.5 m (Jin 1970, 1971) and stated for 5–15 m
   (Jin 1971; Jin 1978, p. 137). *V* outside that range, including the 30 m FDS cap, is an
   extrapolation.
@@ -689,6 +695,10 @@ Read for this page:
   Guide*. National Institute of Standards and Technology (NIST) Special
   Publication 1019, 6th ed., revision FDS-6.10.1-0-g12efa16, §22.10.5.
   [github.com/firemodels/fds/releases/tag/FDS-6.10.1](https://github.com/firemodels/fds/releases/tag/FDS-6.10.1)
+- Wood, P. G. (1980). *A survey of behaviour in fires*. In D. Canter
+  (Ed.), *Fires and Human Behaviour* (pp. 83–95). John Wiley & Sons,
+  Chichester. ISBN 0-471-27709-6. No DOI or public URL. The UK survey was
+  completed in 1972 (p. 94).
 
 Cited by the sources above, not obtained:
 

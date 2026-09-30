@@ -21,6 +21,17 @@ of the public who were separated from their group moved towards, and left by,
 the entrance. Sime argued that place affiliation is not addressed
 sufficiently in escape-route design.
 
+Edelman, Herz and Bickman (1980, pp. 193–196) interviewed 22 residents after
+a nursing-home fire. Up to about 85 residents (93 % of the floor) left by the
+one stair that staff and residents used every day, most of them towards the
+fire. Yet most respondents knew the exits at the end of their own wing, and 5
+of the 6 in the fire zone named a closer one. Those exits were alarmed and
+labelled "Emergency Exit Only", and 13 of 14 respondents had never used them.
+Nine of 13 said they moved because staff told them to leave, probably without
+saying which exit to use, and 11 of 18 saw other residents going the same way.
+The authors found no lack of awareness of the exits; the residents had no
+practice using them (p. 195).
+
 Kinateder, Comunale and Warren (2018) tested this in an ambulatory virtual
 museum. Participants entered through one door and, when an alarm sounded,
 were significantly more likely to leave through that familiar door than
@@ -54,8 +65,8 @@ research (Haghani and Sarvi 2018) surveys more than 160 studies.
 
 ## Known limits
 
-Apart from incident studies such as Sime's, the evidence above comes from
-hypothetical choices, virtual reality and evacuation trials, none of which
+Apart from incident studies such as Sime's and Edelman et al.'s, the
+evidence above comes from hypothetical choices, virtual reality and evacuation trials, none of which
 carries the threat of a real fire. Whether parameters calibrated in one
 geometry and population transfer to another is an open question; Haghani and
 Sarvi (2017) set out to test exactly this context-dependence. The guide to [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), the evacuation module of the Fire Dynamics
@@ -71,6 +82,10 @@ exits are rarely used in many real evacuations because they are unfamiliar
   affiliation in a fire entrapment setting*. Environment and Behavior,
   17(6), 697–724.
   [doi:10.1177/0013916585176003](https://doi.org/10.1177/0013916585176003)
+- Edelman, P., Herz, E., & Bickman, L. (1980). *A model of behaviour in
+  fires applied to a nursing home fire*. In D. Canter (Ed.), *Fires and
+  Human Behaviour* (pp. 181–203). John Wiley & Sons, Chichester. ISBN
+  0-471-27709-6. No DOI or public URL.
 - Kinateder, M., Comunale, B., & Warren, W. H. (2018). *Exit choice in an
   emergency evacuation scenario is influenced by exit familiarity and
   neighbor behavior*. Safety Science, 106, 170–175.
