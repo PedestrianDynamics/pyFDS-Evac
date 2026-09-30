@@ -31,8 +31,10 @@ For this fire and this T-junction, with 100 people placed at t = 0:
 - **Exit usage** differs: without the fire everyone takes the near exit B;
   coupled agents mostly take exit A.
 - **The pass/fail verdict** at a fixed point is the same in every arm for
-  visibility (fails) and FED 0.3 (passes). For HCl with no wait, a single
-  uncoupled run can pass where the coupled runs fail.
+  visibility (fails), and in U, S, R and R-na for FED 0.3 (passes). For HCl
+  with no wait, the verdict at ISO FEC 1 (not the design value 0.3) is
+  knife-edge: a single uncoupled run can give either verdict, and the
+  coupled arms withdraw most of U's passes.
 
 This fire has no margin to lose: the visibility limit is reached before
 anyone gets out in every arm. So the study shows what the uncoupled run
@@ -86,8 +88,7 @@ Simulation finished in 57.65 s (100/100 evacuated).
 ```
 
 fdsreader also logs `Module vents: could not convert string to float` for
-this deck, and the run prints `Reroute debug` lines. Neither affects the
-result.
+this deck. It does not affect the result.
 
 {{< checkpoint title="U walks exactly as C" >}}
 Pair the agents of both runs by origin and spawn order and compare their
@@ -151,7 +152,12 @@ U: RSET_last 57.6 s, p95 55.5 s, exits {'exit_B_right': 100}
 at ignition. The run models no detection and no alarm, so RSET here is
 pre-movement plus travel: with no pre-movement, the agents move at ignition,
 which no standard timeline assumes. Add *t*<sub>det</sub> and
-*t*<sub>a</sub> yourself (see [ASET and RSET](/fundamentals/aset-rset.md)).
+*t*<sub>warn</sub> yourself (ISO/TR 16738:2009, Eq. 2, as on
+[ASET and RSET](/fundamentals/aset-rset.md)).
+
+If the run stopped at the time limit with people still inside, `RSET_last`
+prints the 270 s cap and `exits` counts the exit assigned to each agent,
+out or not. That is not an RSET; see [Sensitivity arms](#sensitivity-arms).
 
 **Read the dose along the fire-free paths** from U's histories:
 
@@ -185,8 +191,8 @@ seconds at HCl ≥ 300 ppm and at *K* ≥ 0.3 1/m. HCl = 900 × `fic` holds
 only because HCl is the only irritant of this deck
 ([A crowd in a real fire › How the numbers are computed](first-fds-case.md#aset-rset)).
 Classic practice records no such dose: it compares location ASET with RSET
-only. The per-agent dose is extra post-processing, in the manner of
-Schröder et al. (2020).
+only. The per-agent dose is extra post-processing, as on
+[A crowd in a real fire › Each agent against its own limits](first-fds-case.md#each-agent-against-its-own-limits).
 
 **The location ASET** comes from the FDS output alone, so it is the same for
 every arm. The study uses four points of the
@@ -238,6 +244,8 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \
 Simulation finished in 56.41 s (100/100 evacuated).
 ```
 
+C and R print `Reroute debug` lines; they do not affect the result.
+
 `--disable-tenability` in S and R records FED and FIC but lets nobody be
 incapacitated, so that everyone leaves and RSET stays defined. It also
 turns off `--enable-fic-speed` ([Usage](usage.md#tenability-fic-slowdown-and-incapacitation)).
@@ -253,14 +261,15 @@ S: RSET_last 67.5 s, p95 63.9 s, exits {'exit_B_right': 100}
 R: RSET_last 56.4 s, p95 54.5 s, exits {'exit_A_left': 100}
 ```
 
-In this seed smoke slows S by 10 s. R is 1.2 s faster than U, because every
-agent went to the far exit A, away from the corridor to exit B that fills
-first. One seed says little: the study below runs 20 seeds with no
+In this seed smoke slows S by 10 s. R is 1.2 s faster than U; across seeds
+that sign is not resolved ([below](#rset)). Against S, which keeps exit B,
+R is faster because every agent went to the far exit A and avoided B's
+smoke. One seed says little: the study below runs 20 seeds with no
 pre-movement and 10 each with 30 and 60 s.
 
 **Reading the arms.** U → S isolates the effect of smoke on speed. S → R
-isolates routing. R against R-na, the same run with route foresight off,
-isolates the foresight in the route cost.
+isolates routing. R against R-na, the same run with the route cost's look
+ahead in time off, isolates that look ahead.
 
 ### Evacuation over time
 
@@ -297,8 +306,10 @@ foresight on (the default `"anticipate": true` of `RouteCostConfig`,
 `route_graph.py`), the cost reads the smoke at the time the agent would
 arrive at each point (`_arrival_time`), from the whole FDS record
 ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)). No
-occupant could perceive that. With foresight off (R-na), agents still end
-at exit A in the same proportions.
+occupant could perceive that. With the look ahead off (R-na), the cost
+still reads the current smoke along the whole route, including parts no
+occupant could see, and agents still end at exit A in the same
+proportions.
 
 ### Pre-movement does not simply add
 
@@ -320,12 +331,13 @@ longer only shifts its curve.
 
 ## 3. Is the uncoupled run conservative here?
 
-**What "conservative" means.** The decision rests on the margin
-ASET − RSET (ISO/TR 16738:2009, Eq. 1, as quoted on
-[ASET and RSET](/fundamentals/aset-rset.md)). U is conservative relative to
-another arm X if its error makes the margin look smaller than X does. The
-reference is a model, R or S, not reality, and R's route cost has perfect
-foresight, so R-na is a second reference.
+**What "conservative" means.** The decision rests on whether ASET exceeds
+RSET by an adequate margin (ISO/TR 16738:2009, Eq. 1 and §5.6, as quoted
+on [ASET and RSET](/fundamentals/aset-rset.md)). U is conservative relative
+to another arm X if its error makes the margin look smaller than X does.
+The reference is a model, R or S, not reality. R's route cost looks ahead
+in time, so R-na, without that look ahead, is a second model reference. It
+is not a perceptual one: it still reads the smoke along the whole route.
 
 | Metric | U is conservative relative to X if |
 |---|---|
@@ -362,14 +374,16 @@ out earlier. Black bar: median. Regenerated by
   the direction is not resolved: R is later than U in 14 of 20 seeds on the
   last agent out, and in 15 of 20 on p95. The median gap, 2.4 s, is below
   the seed-to-seed spread of U itself.
-- **The gap grows with pre-movement**, from a few seconds to about 80 s,
-  because the fire grows while people wait.
-- **R against S** is resolved at 0 and 30 s (R faster, by avoiding exit B's
-  smoke), not at 60 s.
+- **The gap grows with pre-movement**, for R − U from a few seconds to
+  about 80 s and for S − U from 18 s to 85 s, because the fire grows while
+  people wait.
+- **R against S:** R is faster in 20 of 20 seeds with no pre-movement, by
+  avoiding exit B's smoke; in 9 of 10 at 30 s (p = 0.02, weak by the rule
+  above); and in 6 of 10 at 60 s (not resolved).
 
 ### ASET − RSET at fixed points
 
-![A three-by-three grid of panels: rows are the criteria K 0.3 per metre, HCl 300 ppm and HCl 1000 ppm, columns the pre-movements 0, 30 and 60 s. Each panel shows location ASET minus RSET_last for exit A, branch mouth, junction and exit B, one marker per arm U, S, R and R-na with a min-max line, and a vertical line at 0. Almost every marker lies left of 0. Only in the HCl 1000 ppm row with no pre-movement do U, R and R-na reach right of 0 at the junction and branch mouth; an annotation reads branch mouth, seeds that pass of 20: U 19, S 4, R 20, R-na 14](/images/fire-blind/margins.png)
+![A three-by-three grid of panels: rows are the criteria K 0.3 per metre, HCl 300 ppm and HCl 1000 ppm, columns the pre-movements 0, 30 and 60 s. Each panel shows location ASET minus RSET_last for exit A, branch mouth, junction and exit B, one marker per arm U, S, R and R-na with a min-max line, and a vertical line at 0. Almost every marker lies left of 0. With no pre-movement, in the HCl 1000 ppm row U, R and R-na reach right of 0 at the junction and branch mouth, and U's range also crosses 0 at exit A; in the HCl 300 ppm row U's range crosses 0 at the branch mouth; an annotation reads branch mouth, seeds that pass of 20: U 19, S 4, R 20, R-na 14](/images/fire-blind/margins.png)
 
 *Location ASET − RSET_last [s] at four fixed points, the same points for
 every arm; marker: median over seeds, line: min–max. Right of 0: the last
@@ -388,8 +402,9 @@ mouth / exit A:
 | FED ≥ 0.3 | 0, 30, 60 s | all pass | all pass | all pass | all pass |
 
 - **Visibility fails in every arm, seed and pre-movement;** FED 0.3 passes
-  in every one. For these criteria the arm changes the size of the margin,
-  not the verdict.
+  in every seed of U, S, R and R-na. For these criteria the arm changes the
+  size of the margin, not the verdict. R+FIC at 30 and 60 s is undetermined
+  for FED 0.3: its RSET is censored ([Sensitivity arms](#sensitivity-arms)).
 - **HCl with no pre-movement is knife-edge.** U's median margin at the
   junction under HCl 1000 ppm is about +2 s (59 − 56.9), inside the seed
   spread. So a single uncoupled run can give either verdict, and the
@@ -411,7 +426,10 @@ U has fewer than R in 20 of 20 seeds (median 11 fewer). At 30 and 60 s all
 
 *Share of agents with a value ≤ x, pooled over seeds (2,000 agents with no
 pre-movement, 1,000 at 30 and 60 s). Curve further right: more dose. Values
-until each agent's exit, at z = 2.0 m, 1 s resolution. Seconds at *K* ≥ 0.3
+until each agent's exit, at z = 2.0 m (the deck's only slice height; the
+1.6 m default resolves to it, see
+[A crowd in a real fire › The fire](first-fds-case.md#3-the-fire)), 1 s
+resolution. Seconds at *K* ≥ 0.3
 1/m are secondary: obscuration alone is not treated as incapacitating for
 people who are not performing tasks (ISO 13571:2012, §4.5, note).
 Regenerated by `scripts/docs/fire_blind_vs_coupled.py`.*
@@ -457,24 +475,50 @@ with no pre-movement the direction depends on how agents who never cross
 are counted; at 30 and 60 s U's margin is larger (not conservative) for
 nearly every agent.
 
-### Exit usage
+### Is exit usage conservative?
 
 Exit usage is not conservative or otherwise. Choosing exits is part of the
-scenario: every fire scenario comes paired with an occupant scenario
-(Nilsson and Fahy 2016, p. 2048). Here the difference is large: exit B for
+scenario: each design fire scenario is analysed with design occupant
+scenarios (Nilsson and Fahy 2016, p. 2047). Here the difference is large: exit B for
 everyone without the fire, exit A for 84–100 % with it. It also drives the
 dose differences above.
 
 ### Sensitivity arms {#sensitivity-arms}
 
-{{< details title="Incapacitation, per-agent thresholds, HCl slowdown and route foresight" closed="true" >}}
+{{< details title="Incapacitation, per-agent thresholds, HCl slowdown and route look ahead" closed="true" >}}
 
 | Arm | Flags on top of R | Result |
 |---|---|---|
-| R-na | `"routing": {"anticipate": false}` in the scenario | Later than R with no pre-movement (+4.8 s, 19 of 20 seeds). Identical to R at 30 and 60 s: same exits and same histories. |
+| R-na | `"anticipate": false` in the scenario's `routing` block (see below) | Later than R with no pre-movement (+4.8 s, 19 of 20 seeds). Identical to R at 30 and 60 s: same exits and same histories. |
 | R-det | tenability on (FED 1 incapacitates) | Identical to R: nobody reaches FED 1. |
 | R-prob | R-det with `--incapacitation-mode probabilistic` | At 60 s, 5 agents are incapacitated, one in each of 5 of 10 seeds. RSET is censored (> 270 s) in those seeds. The last exit among the rest is 196.6 s, as in R. Their dose counts only until incapacitation. |
 | R+FIC | R-det with `--enable-fic-speed` | No pre-movement: RSET 112.5 s [97.3, 148.2], with 30 [19, 44] agents at the 0.3 speed floor. At 30 s: censored in 10 of 10 seeds, 84 of 1,000 agents inside at 270 s. At 60 s: censored in 10 of 10, 763 of 1,000 inside. Max FED reaches 0.44 and 0.45. |
+
+To build R-na, add the key to a copy of the scenario and save the copy
+next to a copy of `geometry.wkt`, which the scenario needs beside it:
+
+```bash
+mkdir -p ww/na
+cp assets/t_junction/geometry.wkt ww/na/
+uv run python - <<'EOF'
+import json
+from pathlib import Path
+
+config = json.loads(Path("assets/t_junction/config_initial_pre0.json").read_text())
+config["routing"]["anticipate"] = False
+Path("ww/na/config_initial_pre0.json").write_text(json.dumps(config, indent=2))
+EOF
+uv run python run.py --scenario ww/na/config_initial_pre0.json --seed 4 \
+    --fds-dir "$FDS" --disable-tenability \
+    --output-sqlite ww/rna.sqlite --output-exit-history ww/rna_exits.csv
+```
+
+```text
+Simulation finished in 63.06 s (100/100 evacuated).
+```
+
+All 100 leave by exit A, as in R. The study script builds the same files
+(`write_noanticipate`).
 
 A censored RSET is only known to exceed 270 s. It is never compared by size
 with U's. An agent incapacitated or still inside at 270 s never counts as
@@ -520,10 +564,11 @@ keep the runs in their data store, `fds-evac-data/t_junction/fire_blind_runs/`.
   | S | 80 / 14 / 6 %, floor 3 % | 37 / 37 / 26 %, floor 14 % | 1 / 40 / 60 %, floor 25 % |
   | R | 90 / 10 / 0 %, floor 0 % | 39 / 55 / 6 %, floor 2 % | 1 / 51 / 48 %, floor 6 % |
 
-  Below 1.9 1/m the law is outside the data too, but slows people little:
-  at *K* = 0.3 1/m, the visibility limit, by 2.4 %.
+  Below 1.9 1/m the law is outside the data too. There it slows people by
+  2.4 % at *K* = 0.3 1/m, the visibility limit, rising to about 15 % at
+  1.9 1/m.
 
-  ![Left: the speed factor against the extinction coefficient K from 0 to 25 per metre, solid over the Frantzich and Nilsson data range 1.9 to 7.4, dashed outside it, falling from 1 at K 0 to the floor 0.1 at K 11.1 and flat after. Right: histograms of K at moving agents in arms S and R; most mass is below 1 per metre, with a tail beyond 11; an annotation gives S 31 percent above 7.4 and 13 percent at the floor, R 19 and 3 percent](/images/fire-blind/speed_extrapolation.png)
+  ![Left: the speed factor against the extinction coefficient K from 0 to 25 per metre, solid over the Frantzich and Nilsson data range 1.9 to 7.4, dashed outside it, falling from 1 at K 0 to the floor 0.1 at K 11.1 and flat after. Right: histograms of K at moving agents in arms S and R; the largest bin is below 0.5 per metre, with a tail beyond 11; an annotation gives S 31 percent above 7.4 and 13 percent at the floor, R 19 and 3 percent](/images/fire-blind/speed_extrapolation.png)
 
   *Left: speed factor v/v₀ [-] against K [1/m] of the default law;
   shaded: the data range. Right: K at the moving agent [1/m], share of
@@ -533,7 +578,9 @@ keep the runs in their data store, `fds-evac-data/t_junction/fire_blind_runs/`.
 - **Route foresight.** R's route cost reads the smoke ahead from the whole
   FDS record ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
   R's avoidance of exit B is therefore not a claim that people would see it
-  coming. R-na removes the foresight and gives the same exits.
+  coming. R-na removes only the look ahead in time: it still reads the
+  current smoke along the whole route, including parts no occupant could
+  see, and it gives the same exits.
 - **HCl is probably overestimated.** The deck has no HCl loss to walls
   ([A crowd in a real fire › What this does not show](first-fds-case.md#what-this-does-not-show)).
   That makes the HCl crossings early and inflates R+FIC.
@@ -572,11 +619,11 @@ keep the runs in their data store, `fds-evac-data/t_junction/fire_blind_runs/`.
 - Frantzich, H., & Nilsson, D. (2003). *Utrymning genom tät rök: beteende
   och förflyttning*, Fig. 14. Full reference on
   [walking speed in smoke](/fundamentals/walking-speed.md).
-- ISO 13571:2012, §4.5 (note) and §5.2; ISO/TR 16738:2009, Eq. 1:
-  paraphrased; see [ASET and RSET](/fundamentals/aset-rset.md).
+- ISO 13571:2012, §4.5 (note) and §5.2; ISO/TR 16738:2009, Eq. 1, Eq. 2
+  and §5.6: paraphrased; see [ASET and RSET](/fundamentals/aset-rset.md).
 - Nilsson, D., & Fahy, R. (2016). Selecting scenarios for deterministic fire
   safety engineering analysis: life safety for occupants. *SFPE Handbook of
-  Fire Protection Engineering*, 5th ed., Ch. 57, p. 2048.
+  Fire Protection Engineering*, 5th ed., Ch. 57, p. 2047.
 - Schröder, B., Arnold, L., & Seyfried, A. (2020). A map representation of
   the ASET-RSET concept. *Fire Safety Journal*, 115, 103154, §4.
   [doi:10.1016/j.firesaf.2020.103154](https://doi.org/10.1016/j.firesaf.2020.103154)
@@ -592,3 +639,5 @@ keep the runs in their data store, `fds-evac-data/t_junction/fire_blind_runs/`.
 - [How do I get the egress time from an ensemble?](howto-rset-ensemble.md)
   for RSET over many seeds.
 - [ASET and RSET](/fundamentals/aset-rset.md) for the concepts.
+- [The Schröder room](study-schroeder2020.md): arm U only, as ASET − RSET
+  maps.
