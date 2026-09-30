@@ -102,6 +102,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Seeded placements differ from earlier versions.** The start positions,
+  their shuffle, the radius and v0 samples and the default pre-movement
+  stream of each distribution are seeded from a blake2b hash of the run
+  seed, the purpose and the distribution key, not from `seed + index`,
+  `seed + 1000` or the bare seed. Distribution 1 under seed s used to draw
+  what distribution 0 draws under seed s + 1, so ensembles over
+  consecutive seeds reused streams; in the full-config initialiser all
+  t=0 distributions shared one position stream and one pre-movement
+  stream. An explicit `premovement_seed` still wins. The manifest's
+  `agent_seeding` is now `spawn-key-blake2b-v2`; per-agent seeds are
+  unchanged. Goldens and the cheap documented numbers were regenerated
+  ([#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360)).
+
 - **Seeded outcomes differ from earlier versions.** Every per-agent random
   draw is seeded from the run seed and the agent's spawn key
   `(origin, spawn_index)`, through a blake2b hash that does not depend on

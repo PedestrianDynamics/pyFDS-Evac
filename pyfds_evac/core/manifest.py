@@ -181,9 +181,9 @@ def build_manifest(
     ``heat_clothing`` is recorded when the ISO 13571:2012 convective law is
     in use, ``heat_fed_threshold_override`` only when the heat threshold was
     set apart from the gas threshold, a departure from ISO 13571:2012 §5.4.
-    ``agent_seeding`` names how per-agent draws are derived from the seed
-    (see ``agent_seed.SEEDING_SCHEME``); runs of another scheme draw
-    differently under the same seed.
+    ``agent_seeding`` names how per-agent and per-distribution draws are
+    derived from the seed (see ``agent_seed.SEEDING_SCHEME``); runs of
+    another scheme draw differently under the same seed.
     ``smoke_blind`` and ``replay_exits`` are recorded only when on (#341);
     ``replay_exits`` holds the replayed agent count and a sha256 of the rows.
     """
