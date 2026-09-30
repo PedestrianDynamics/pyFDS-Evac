@@ -11325,6 +11325,87 @@ title="Copy code"
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;h3>Station agreement statistic — &lt;code>assets/station_fahy/validate.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="station-agreement-statistic--assetsstation_fahyvalidatepy">&lt;/span>
+&lt;a href="#station-agreement-statistic--assetsstation_fahyvalidatepy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Scores one or more Station runs against Fahy, Proulx &amp;amp; Flynn (2011) Table 2.
+It prints the origin-to-door table (door users only, per row), then the
+statistics of the Station validation study over the agents of all runs
+pooled:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>T1&lt;/strong>, the front-door share of door users over the placed rows, against
+Fahy&amp;rsquo;s 117/229 = 51.1 %, with the signed bias. The share with the 22
+unplaceable survivors (127/240 = 52.9 %) is printed as T1′, not a gate.&lt;/li>
+&lt;li>&lt;strong>W&lt;/strong>, the door-user-weighted total variation distance: per row
+½ Σ |model share − Fahy share| over the four doors, averaged with Fahy&amp;rsquo;s
+door users as weights. The seven rows with at least 10 door users are
+scored alone; the other five (34 door users) are pooled into one row, and
+the model agents from those areas with them. A scored row without a model
+door user counts as distance 1 (conservative); each line that reports W
+for a &lt;code>--t-jam&lt;/code> split also prints how many scored rows have no model door
+user. The &lt;code>--t-jam&lt;/code> split is descriptive only, not a gate.&lt;/li>
+&lt;li>The &lt;strong>noise floor&lt;/strong> of W: Fahy resampled multinomially against itself,
+each scored row (and the pooled row) as one multinomial (median 0.079,
+p95 0.109 at the default 20,000 draws).&lt;/li>
+&lt;li>With several runs, the per-run min / median / max of T1 and W.&lt;/li>
+&lt;/ul>
+&lt;p>Agents that never reach a door are counted separately and left out of the
+shares. Agents still on the grid at the horizon are &lt;strong>censored&lt;/strong>: left out
+of T1, W and the same-agent set even when they stand within &lt;code>--reach&lt;/code> of a
+door, and counted on their own line. An agent is censored when its last
+frame is the run&amp;rsquo;s last frame and that frame lies within one output
+interval of the horizon; a run that empties earlier censors nobody, and a
+run that ends after the horizon stops with an error. The origin-to-door
+table above the statistics leaves censored agents out too.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>uv run python assets/station_fahy/validate.py RUN.sqlite [RUN.sqlite ...] \
+--config assets/station_fahy/config.json \
+[--t-jam 86] [--against OTHER.sqlite ...]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Flag&lt;/th>
+&lt;th>Purpose&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>--config PATH&lt;/code>&lt;/td>
+&lt;td>The scenario&amp;rsquo;s &lt;code>config.json&lt;/code>: spawn areas (&lt;code>fahy_row&lt;/code>) and exits.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--reach M&lt;/code>&lt;/td>
+&lt;td>Distance from a door polygon at which a last position counts as using it (default 2.0 m).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--horizon S&lt;/code>&lt;/td>
+&lt;td>The horizon for censoring (default: &lt;code>max_simulation_time&lt;/code> of &lt;code>--config&lt;/code>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--t-jam S&lt;/code>&lt;/td>
+&lt;td>Also print T1 and W for agents whose last recorded frame is before &lt;code>S&lt;/code> and at or after it. The split is descriptive only, not a gate.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--against RUN [RUN ...]&lt;/code>&lt;/td>
+&lt;td>Runs of another arm, paired in order with the scored runs (one pair per seed). Prints W(run) − W(other) per pair on the &lt;strong>same agents&lt;/strong>, those that reached a door, uncensored, in both, and in how many pairs the scored run is lower. Both runs of a pair must spawn the same agents (ids, areas, start positions), or it stops with an error.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--noise-draws N&lt;/code>&lt;/td>
+&lt;td>Resamples for the noise floor (default 20,000).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--noise-seed N&lt;/code>&lt;/td>
+&lt;td>Seed of the resampling (default 0).&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
 &lt;h2>One-shot driver — &lt;code>scripts/run_and_plot.sh&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="one-shot-driver--scriptsrun_and_plotsh">&lt;/span>
 &lt;a href="#one-shot-driver--scriptsrun_and_plotsh" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Runs one simulation and produces the full plot set into a results
 directory.&lt;/p>
