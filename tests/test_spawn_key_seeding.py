@@ -177,6 +177,62 @@ def test_refused_flow_positions_do_not_shift_later_draws(monkeypatch):
     assert {k: got[k] for k in common} == {k: expected[k] for k in common}
 
 
+def _collapse_by_key(result) -> dict:
+    key_of = _key_of(result)
+    times: dict = {}
+    for row in result.fed_history or []:
+        key = key_of[row["agent_id"]]
+        if row["incapacitated"] and key not in times:
+            times[key] = row["time_s"]
+    return times
+
+
+def test_incapacitation_thresholds_follow_the_key(monkeypatch):
+    # Thresholds used to come from one stream, drawn in the order agents were
+    # first evaluated for FED. Reversing that order must not move any draw.
+    sys.path.insert(0, str(REPO / "tests" / "verification"))
+    from harness import CorridorSpec, corridor_scenario, make_fed_model, uniform
+
+    from pyfds_evac.core.fed import TenabilityConfig
+
+    spec = CorridorSpec(num_agents=20, seed=11, max_simulation_time=60.0)
+    tenability = TenabilityConfig(
+        enable_fic_speed=False,
+        enable_incapacitation=True,
+        fed_threshold=1.0,
+        incapacitation_mode="probabilistic",
+        susceptibility_sigma=0.94,
+    )
+
+    def collapse_times() -> dict:
+        fed = make_fed_model(
+            co_volume_fraction=uniform(0.06),
+            co2_volume_fraction=uniform(0.0),
+            o2_volume_fraction=uniform(0.209),
+            update_interval_s=1.0,
+        )
+        result = _run_quiet(
+            corridor_scenario(spec),
+            seed=spec.seed,
+            fed_model=fed,
+            tenability_config=tenability,
+        )
+        try:
+            return _collapse_by_key(result)
+        finally:
+            result.cleanup()
+
+    expected = collapse_times()
+    real_agents = jps.Simulation.agents
+    monkeypatch.setattr(
+        jps.Simulation, "agents", lambda self: list(real_agents(self))[::-1]
+    )
+    monkeypatch.setattr(jps.Simulation, "add_agent", _add_after_a_refusal)
+    got = collapse_times()
+    assert len(set(expected.values())) > 3, "thresholds should vary"
+    assert got == expected
+
+
 def test_same_run_in_one_process_repeats(monkeypatch):
     # The #198 reproduction: t_junction, 30 agents, gate model, synthetic
     # ramp, seed 1, three times in one process.

@@ -21,7 +21,6 @@ import logging
 import math
 import os
 import pathlib
-import random
 import sqlite3
 import tempfile
 from collections.abc import Callable, Mapping
@@ -40,6 +39,8 @@ from shapely.geometry import Polygon
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_FAMILIARITY,
+    PURPOSE_INCAP_GAS,
+    PURPOSE_INCAP_HEAT,
     PURPOSE_TARGET,
     PURPOSE_VARIANT,
     SpawnKey,
@@ -1443,14 +1444,13 @@ def run_scenario(
         # tracked.
         incapacitated_cause: dict[int, str] = {}
         # Per-agent incapacitation threshold (population variability). Sampled
-        # lazily on first FED evaluation from a dedicated seeded stream so runs
-        # stay reproducible; deterministic mode reuses fed_threshold for all.
+        # lazily on first FED evaluation from the agent's own seeded stream, so
+        # the draw does not depend on the order agents are first evaluated in;
+        # deterministic mode reuses fed_threshold for all.
         incap_thresholds: dict[int, float] = {}
-        incap_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED1)
         # Independent stream for the heat track -- not the same dose as gas
         # FED, so its threshold draws must not be correlated with the gas ones.
         incap_heat_thresholds: dict[int, float] = {}
-        incap_heat_rng = random.Random((seed if seed is not None else 0) ^ 0x5EED2)
 
         def _incap_threshold(aid: int) -> float:
             t = incap_thresholds.get(aid)
@@ -1458,7 +1458,10 @@ def run_scenario(
                 if tenability_config is None:
                     t = float("inf")
                 else:
-                    t = sample_incapacitation_threshold(tenability_config, incap_rng)
+                    rng = agent_rng(
+                        seed, lookup_spawn_key(spawn_keys, aid), PURPOSE_INCAP_GAS
+                    )
+                    t = sample_incapacitation_threshold(tenability_config, rng)
                 incap_thresholds[aid] = t
             return t
 
@@ -1468,9 +1471,10 @@ def run_scenario(
                 if tenability_config is None:
                     t = float("inf")
                 else:
-                    t = sample_heat_incapacitation_threshold(
-                        tenability_config, incap_heat_rng
+                    rng = agent_rng(
+                        seed, lookup_spawn_key(spawn_keys, aid), PURPOSE_INCAP_HEAT
                     )
+                    t = sample_heat_incapacitation_threshold(tenability_config, rng)
                 incap_heat_thresholds[aid] = t
             return t
 
