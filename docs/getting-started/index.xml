@@ -1509,7 +1509,8 @@ counts at its first loss of sight, even if a sign becomes visible again
 later, and a cell that never loses sight cannot be told apart from one
 that loses it at 300 s. Heat is
 not included in either panel. The map form follows Schröder et al. (2020);
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">the Schröder room&lt;/a> reruns their experiment.&lt;/em>&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a> re-runs
+their demonstration case.&lt;/em>&lt;/p>
 &lt;p>Panel (b) is not a tenability limit. It shows when the signs stop guiding.
 This is consistent with section 5, where 18 agents spawned between 22 and
 92 s never learned an exit: on this map the spawn centre loses sight of
@@ -1561,7 +1562,7 @@ median of 88.1 s and a maximum of 147.4 s for the 75 who got out.&lt;/li>
 same 300 s. For a scenario in which everyone gets out, see the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">ensemble how-to&lt;/a>. For one where everyone is placed
 at t = 0 and gets out, with RSET mapped cell by cell, see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">the Schröder room&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a>.&lt;/p>
 &lt;h3>What this does not show&lt;span class="hx-absolute -hx-mt-20" id="what-this-does-not-show">&lt;/span>
 &lt;a href="#what-this-does-not-show" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>The exit times rest on walking speeds far outside the data.&lt;/strong> The default
 speed law comes from Frantzich and Nilsson&amp;rsquo;s experiments, which covered
