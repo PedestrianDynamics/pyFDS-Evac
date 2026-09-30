@@ -15,3 +15,6 @@ Bringing your own FDS case, running simulations, and reading the results.
   {{< card link="troubleshooting" title="Troubleshooting" subtitle="Error messages and warnings, with their cause and fix." >}}
   {{< card link="howto-rset-ensemble" title="How-to: egress time from an ensemble" subtitle="How to get RSET with its spread from runs over several seeds." >}}
 {{< /cards >}}
+
+To see what a run coupled to the fire changes against a run without it,
+read the study [Evacuation with and without the fire](/docs/howto-with-without-fire.md).
