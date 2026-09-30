@@ -56,7 +56,7 @@ trajectory is written every tenth step (10 frames/s).
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. |
 | `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. |
 | `premovement_param_a`, `premovement_param_b` | the preset of the distribution | — | Override the preset; the presets and their sources are in [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters). |
-| `premovement_seed` | none | — | Separate seed for the pre-movement draw. |
+| `premovement_seed` | none | — | Separate seed for the pre-movement draw. When set, the pre-movement times are the same for every run seed. |
 | `use_flow_spawning` | `false` | — | Add agents over time instead of at the start (no pre-movement then). |
 | `flow_start_time`, `flow_end_time` | 0 s, 10 s | — | Window of flow spawning. |
 | `familiarity` | `"full"` | `full`, `discovery`, or a probability in [0, 1] | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). |

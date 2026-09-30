@@ -252,6 +252,11 @@ Both open a dialog with **Copy** and **Download .py**.
 
 [![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: Complete: all agents evacuated (30/30), evacuation time 55.14 s", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png "The run-code dialog for run #1 of blind_spawn_discovery.")](images/web-gui/run_code_dialog.png)
 
+The screenshot predates the per-distribution seeds of
+[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360); the
+same run now ends as described in the steps below
+([#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384)).
+
 ### Save a run and run it again
 
 1. In the scenario picker, choose the plain `blind_spawn_discovery` entry,
