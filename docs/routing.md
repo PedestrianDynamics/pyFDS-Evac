@@ -326,9 +326,10 @@ below was swept against a geometry whose doorways were narrower than the
 building's; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy's 52.9 %.
 The reasoning in this section is unchanged — only the fitted number moved.
-Rerun on main at `7a3617d`, under the gate, the same sweep scores 0.03 at
-31.6 % and 0.024 at 34.1 %: the deck no longer reproduces Fahy's split, and has
-not been re-fitted.
+Rerun at `8bda7f7`, under the gate and with per-agent draws seeded from the
+spawn key, the same sweep scores 0.03 at 31.4 % and 0.024 at 33.4 % (31.6 % and
+34.1 % on main at `7a3617d`): the deck no longer reproduces Fahy's split, and
+has not been re-fitted.
 
 **Two further caveats on that number.** The sweep was run under the additive
 composite, where `w_queue` multiplies a *distance*

@@ -95,7 +95,7 @@ mkdir -p /tmp/cmm && cd /tmp/cmm \
 
 .venv/bin/python run.py \
     --scenario assets/cognitive_map_memory/config.json \
-    --fds-dir /tmp/cmm \
+    --fds-dir /tmp/cmm --allow-fds-horizon-hold \
     --vis-cache /tmp/vis_cmm.npz \
     --output-sqlite /tmp/cmm.sqlite \
     --output-route-history /tmp/cmm_routes.csv
@@ -115,15 +115,16 @@ the spawn area onward and the scenario looks like agents that aimed at the side
 door from the start. With it, each path is coloured by the exit the agent was
 aiming at *at that moment*, and a dot marks the change of mind.
 
-**20 of 20 agents divert into `E_side`**, egress 21.2 s. One switch each:
-`E_end → E_side` between t = 5 and t = 18 s, as each agent crosses the
+**20 of 20 agents divert into `E_side`**, egress 22.3 s. One switch each:
+`E_end → E_side` between t = 5 and t = 20 s, as each agent crosses the
 legibility window and the sign becomes readable. Agent 1 switches at
-t = 10 s, y = 12.3. Measured at `7a3617d` against the deck's FDS output; the
-run files are in the project's data store under
-`cognitive_map_memory/rerun_7a3617d/`.
+t = 12 s, y = 13.4. Measured at `8bda7f7` against the deck's FDS output, with
+`--allow-fds-horizon-hold` because the FDS run ends before the 300 s run
+time; the run files are in the project's data store under
+`cognitive_map_memory/rerun_8bda7f7/`.
 
-The switch dots are spread over roughly y ∈ [11.5, 16] rather than lying on a
-line at y = 12. That is correct: the window is derived for the centreline
+The switch dots are spread over y ∈ [11.0, 19.3], most of them below 15,
+rather than lying on a line at y = 12. That is correct: the window is derived for the centreline
 x = 2, and an agent off-centre sees the sign at a worse view angle, so it has to
 get closer before the sign becomes legible.
 
