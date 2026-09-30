@@ -1417,8 +1417,8 @@ def fig_grid_pair(coarse, fine, grid, walkable, exits):
     _aset_colorbar(fig, im, axes[:2], bounds)
     _suptitle(
         fig,
-        "K ≥ 0.23 1/m at 2.0 m, one door: not shown grid-converged; "
-        "the 2.0 m criterion sits in the layer interface",
+        "K ≥ 0.23 1/m at 2.0 m, one door, 0.2 m against 0.1 m FDS grid: "
+        f"|Δ| > 30 s in {big:.0%} of cells, door region within {dd.max():.0f} s",
     )
     _stamp(
         fig, "∃ rule, 0.6 m cells, z = 2.0 m, slices every ~1 s; dotted: not by 600 s."
@@ -1809,8 +1809,19 @@ def fig_remaining(results, release=None):
         _legend(ax, loc="upper right", fontsize=8)
     one.set_ylabel("agents in the room", color=TEXT)
     sns.despine(left=True, bottom=True)
+    uncapped = np.median(_last(results[("1door", "uncapped_pre0")].remaining))
+    if release is not None:
+        ref, ref_name = np.median(_last(release)), "the release"
+    else:
+        ref, ref_name = 80 + 23 / CAP, "the paper"
+    _note(
+        "agents_remaining.png",
+        f"one door: last out, {ref_name} / uncapped (median)",
+        f"{ref:.0f} s / {uncapped:.0f} s",
+    )
     fig.suptitle(
-        "Agents remaining against time: the uncapped CFSM empties the room about 3× faster than the paper",
+        "Agents remaining against time: the uncapped CFSM empties the room "
+        f"{ref / uncapped:.1f}× faster than {ref_name}",
         x=0.01,
         ha="left",
         fontsize=12,
