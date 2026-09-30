@@ -35,10 +35,11 @@ work such as walking to escape,
 
 $$
 \begin{aligned}
-F_{IN} ={}& \left(F_{I_{CO}} + F_{I_{CN}} + F_{I_{NO_x}} + FLD_{irr}\right)\times VCO_2\\
+F_{IN} ={}& \big(F_{I_{CO}} + F_{I_{CN}}\\
+&+ F_{I_{NO_x}} + FLD_{irr}\big)\times VCO_2\\
 &+ F_{I_O} \quad \text{or}\quad F_{I_{CO_2}}
+\quad \text{(Eq. 70.38)}
 \end{aligned}
-\qquad \text{(Eq. 70.38)}
 $$
 
 with the terms, *t* in minutes and concentrations in ppm or % by volume:

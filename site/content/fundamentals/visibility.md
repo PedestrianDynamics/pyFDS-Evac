@@ -518,8 +518,8 @@ and wrote the legibility distance as
 
 $$
 \begin{aligned}
-V_1 &= \frac{C}{K} && (0.1 \le K < 0.25),\\
-V_2 &= \frac{C}{K}\,(0.133 - 1.47 \log K) && (K \ge 0.25)
+V_1 &= \frac{C}{K}, \quad 0.1 \le K < 0.25,\\
+V_2 &= \frac{C}{K}\,(0.133 - 1.47 \log K), \quad K \ge 0.25
 \end{aligned}
 \qquad \text{(Eqs. 4–5)}
 $$
