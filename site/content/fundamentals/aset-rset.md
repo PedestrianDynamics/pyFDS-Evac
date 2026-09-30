@@ -119,4 +119,7 @@ difference as maps. Each agent carries
 its own dose along its path; see
 [Fractional effective dose](/models/fed.md).
 
+RSET from a run without the fire against a coupled run:
+[Evacuation with and without the fire](/docs/howto-with-without-fire.md).
+
 How it is verified: the [Verification](/verification/_index.md) index; ASET and RSET themselves are outputs of a study, not of a test.
