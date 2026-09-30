@@ -1642,8 +1642,13 @@ not incapacitation by FIC.&lt;/li>
 &lt;li>&lt;strong>Time resolution.&lt;/strong> Crossings come from the 1 Hz histories, to about 1 s.
 Exit times come from the trajectory, to 0.1 s.&lt;/li>
 &lt;li>&lt;strong>ASET/RSET is itself contested.&lt;/strong> Babrauskas, Fleming and Russell (2010)
-argue that it treats people as moving mechanically and depends heavily on
-the scenario chosen.&lt;/li>
+argue that RSET assumes people &amp;ldquo;act like robots&amp;rdquo; (p. 347), that it
+reduces a distribution to one number and a quantitative question to
+pass/fail (p. 348), and that both times change with the scenario
+(p. 353). Following Fleming (2000), whom they cite, they propose
+comparing designs by the margin ASET − RSET instead (pp. 350–351). Their evidence is residential fires and smoke
+alarms. The per-agent margins here answer part of the second point; the
+agents still do not investigate, rescue others or go back in.&lt;/li>
 &lt;/ul>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">

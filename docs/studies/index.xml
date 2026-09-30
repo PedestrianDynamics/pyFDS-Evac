@@ -380,7 +380,10 @@ design FED of 0.3, or 0.1 for sensitive groups (p. 2343); vfdb gives
 0.1–0.3 (§8.4, p. 319). EA considers 1.0 suitable for the vast majority of
 occupants and leaves the margin to RSET (§5, p. 13). In the survey, 7 of
 the 13 continental-European respondents who stated a value use 0.1; all
-from the UK and Australia/New Zealand use 0.3 (§4.3).&lt;/p>
+from the UK and Australia/New Zealand use 0.3 (§4.3). Babrauskas et al.
+(2010, p. 347) ask whether criteria should protect the average person, a
+chosen case of infirmity, or a level well below the mean, and find no
+agreement in the profession.&lt;/p>
 &lt;p>&lt;strong>Smoke.&lt;/strong> ISO 13571 leaves the behavioural effects of smoke out of its
 model (§4.6 f). Its obscuration endpoint, sight of about arm&amp;rsquo;s length at
 0.8 g/m³ (clause 9, Note 1), is K ≈ 8 1/m with σ = 10 m²/g (our
@@ -397,8 +400,11 @@ temperature values are usually met as well (vfdb p. 325; DIN §7.2.2). In
 the survey (254 respondents, a convenience sample), visibility is the
 criterion most often decisive (91.4 %); FED is used by 22.2 %
 (§4.3–4.4).&lt;/p>
-&lt;p>&lt;strong>Criticism.&lt;/strong> Babrauskas et al. call such criteria &amp;ldquo;highly arbitrary&amp;rdquo;
-(2010, p. 347); the NIST sublethal-effects study puts a factor of two on
+&lt;p>&lt;strong>Criticism.&lt;/strong> Babrauskas et al. call the tenability criteria proposed at
+the time (their example is the 2007 draft of ISO 13571) &amp;ldquo;highly arbitrary&amp;rdquo;
+with &amp;ldquo;little basis in either physics or physiology&amp;rdquo; (2010, p. 347). Their
+paper predates every source above except Gann et al. (2001). The NIST
+sublethal-effects study puts a factor of two on
 its generic values (Gann et al. 2001, pp. 82–86).&lt;/p>
 &lt;table>
 &lt;thead>
@@ -615,6 +621,12 @@ DIFF = 0 counts as a pass. DIFF is a time window between the first
 exceedance in a cell and the last presence of &lt;em>any&lt;/em> agent there. It is not
 the exposure of an individual: &amp;ldquo;the exposure time of individuals cannot be
 concluded from this value&amp;rdquo; (p. 6). Dose is our addition.
+Because DIFF is a margin in seconds and not only a sign, the maps can
+compare versions by how much time each leaves, which is how Babrauskas et
+al. (2010, pp. 350–351) propose to use ASET − RSET. RSET here is the
+maximum over seeds, high-end only with respect to the seed spread.
+Pre-movement is constant, so the behavioural spread that Babrauskas et
+al. (2010, p. 348) ask to be covered is not sampled.
 For per-agent exposure, see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a real fire&lt;/a>.&lt;/p>
 &lt;h3>The capped run, animated&lt;span class="hx-absolute -hx-mt-20" id="the-capped-run-animated">&lt;/span>
@@ -687,7 +699,11 @@ and are outside the five DIFF states.&lt;/em>&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Pre-movement shifts min DIFF one for one.&lt;/strong> It delays everyone by the
 same constant, so −30, −40, −60, −90 s carry no new information. Only the
-area and C change shape across the pre-movement versions.&lt;/li>
+area and C change shape across the pre-movement versions. A constant
+delay is a simplification: pre-movement is a distribution whose shape
+depends on occupancy, warning and management, and in a dense room the
+first movers, not the mean, set the queue (Purser 2003, pp. 92, 94–97).
+The one-for-one shift holds only for a constant delay.&lt;/li>
 &lt;li>&lt;strong>C&lt;/strong> is Σ DIFF · A over the failing cells, in m²s (paper Eq. 8, without
 the 20 s bins of Fig. 7 and the release code). The paper&amp;rsquo;s authors &amp;ldquo;do not yet have a direct
 physical interpretation&amp;rdquo; of it (p. 7). Use it to rank versions, not as a
@@ -1304,8 +1320,13 @@ model for assessment of toxic hazards in fires. &lt;em>J. Fire Sci.&lt;/em>, 6,
 of fire smoke on survivability and health (SEFS): Phase I final report.&lt;/em>
 NIST TN 1439. &lt;a href="https://doi.org/10.6028/NIST.TN.1439" target="_blank" rel="noopener">doi:10.6028/NIST.TN.1439&lt;/a>&lt;/li>
 &lt;li>Babrauskas, V., Fleming, J. M., &amp;amp; Russell, B. D. (2010). RSET/ASET, a
-flawed concept for fire safety assessment. &lt;em>Fire Mater.&lt;/em>, 34, 341–355.
+flawed concept for fire safety assessment. &lt;em>Fire Mater.&lt;/em>, 34, 341–355,
+pp. 347–348, 350–351.
 &lt;a href="https://doi.org/10.1002/fam.1025" target="_blank" rel="noopener">doi:10.1002/fam.1025&lt;/a>&lt;/li>
+&lt;li>Purser, D. A. (2003). ASET and RSET: addressing some issues in relation
+to occupant behaviour and tenability. &lt;em>Fire Safety Science&lt;/em>, 7, 91–102,
+pp. 92, 94–97.
+&lt;a href="https://doi.org/10.3801/IAFSS.FSS.7-91" target="_blank" rel="noopener">doi:10.3801/IAFSS.FSS.7-91&lt;/a>&lt;/li>
 &lt;li>Węgrzyński, W., Spodyniuk, N., Zimny, M., Jahn, W., Vigne, G., &amp;amp; Arnold,
 L. (2026). Tenability criteria in performance-based fire safety
 engineering: practitioner&amp;rsquo;s perspectives from a global survey. &lt;em>Fire Saf.
@@ -1337,8 +1358,10 @@ location ASET map on a real FDS fire.&lt;/li>
 &lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Evacuation with and without the fire</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/</guid><description>
 &lt;p>Egress tools such as Pathfinder are commonly run without the fire. The
 required safe escape time (RSET) is taken from that run and compared with
-the available safe escape time (ASET) from FDS. Practitioners regard this
-uncoupled comparison as conservative. This page shows how to make the same
+the available safe escape time (ASET) from FDS. Engineers we consulted
+regard this uncoupled comparison as conservative. But Purser (2003, p. 92)
+noted that most travel-time calculations assumed no interaction between
+occupants and the fire effluent. This page shows how to make the same
 comparison with pyFDS-Evac, what a run coupled to the fire adds, and whether
 the uncoupled run is conservative for one fire: the 2 MW PVC fire of
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>.&lt;/p>
@@ -2324,7 +2347,13 @@ values were fixed from the fire before any run: 0 s moves before the
 junction reaches the visibility limit (24 s), 30 s falls between the first
 and last of the six points of
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a real fire&lt;/a>
-(18–46 s), 60 s after all of them.&lt;/p>
+(18–46 s), 60 s after all of them. Babrauskas et al. (2010,
+pp. 346–347, 351) criticise pre-movement times of 0–80 s used for homes
+as unrealistic. Citing an NRCC study, they report that healthy occupants
+of a single-family house at night can need up to 11 min from alarm to
+exit (p. 346). That figure includes travel and is counted from the alarm,
+not the fire. Those are residential values and do not transfer to this
+geometry.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>Everyone knows both exits&lt;/strong> (&lt;code>familiarity: &amp;quot;full&amp;quot;&lt;/code>). Agents who discover
@@ -2357,6 +2386,10 @@ are computed by the script, not by the engine
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;ul>
+&lt;li>Babrauskas, V., Fleming, J. M., &amp;amp; Russell, B. D. (2010). RSET/ASET, a
+flawed concept for fire safety assessment. &lt;em>Fire and Materials&lt;/em>, 34(7),
+341–355, pp. 346–347, 351.
+&lt;a href="https://doi.org/10.1002/fam.1025" target="_blank" rel="noopener">doi:10.1002/fam.1025&lt;/a>&lt;/li>
 &lt;li>Engineers Australia Society of Fire Safety (2014). &lt;em>Practice note for
 tenability criteria in building fires&lt;/em>, version 2.0, §5.2 and Fig. 8,
 &lt;em>Tenability Criteria – Short Exposure&lt;/em>, p. 15. Full reference on
@@ -2370,6 +2403,9 @@ and §5.6: paraphrased; see &lt;a href="https://pedestriandynamics.org/pyFDS-Eva
 safety engineering analysis: life safety for occupants. &lt;em>SFPE Handbook of
 Fire Protection Engineering&lt;/em>, 5th ed., Ch. 57, pp. 2047, 2061.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_57" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_57&lt;/a>&lt;/li>
+&lt;li>Purser, D. A. (2003). ASET and RSET: addressing some issues in relation
+to occupant behaviour and tenability. &lt;em>Fire Safety Science&lt;/em>, 7, 91–102,
+p. 92. &lt;a href="https://doi.org/10.3801/IAFSS.FSS.7-91" target="_blank" rel="noopener">doi:10.3801/IAFSS.FSS.7-91&lt;/a>&lt;/li>
 &lt;li>Schröder, B., Arnold, L., &amp;amp; Seyfried, A. (2020). A map representation of
 the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>, 115, 103154, §4.
 &lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2020.103154&lt;/a>&lt;/li>
