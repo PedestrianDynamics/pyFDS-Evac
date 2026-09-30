@@ -1,6 +1,6 @@
 ---
 title: "Extinction coefficient"
-weight: 2
+weight: 3
 ---
 
 The extinction coefficient *K* [1/m] measures how strongly smoke attenuates

@@ -7,7 +7,7 @@ cascade:
 ---
 
 The published laws that fire-safety engineering uses to judge whether
-occupants can escape a fire: the egress timeline, smoke obscuration,
+occupants can escape a fire: the egress timeline, the design fire, smoke obscuration,
 walking speed in smoke, toxic and thermal dose, and occupant decisions.
 These pages are written for PhD students and pedestrian-dynamics engineers
 who are new to fire toxicology and human behaviour in fire.
@@ -51,6 +51,7 @@ chapters 56–64, which most pages cite.
 
 {{< cards >}}
   {{< card link="aset-rset" title="ASET, RSET and the egress timeline" subtitle="Detection, warning, pre-travel activity and travel, against the time to untenable conditions." >}}
+  {{< card link="design-fires" title="Design fires" subtitle="The t² growth law and its four classes, how growth is capped, and what a design fire is not." >}}
   {{< card link="extinction" title="Extinction coefficient" subtitle="Beer–Lambert attenuation, optical density and the mass-specific extinction coefficient." >}}
   {{< card link="visibility" title="Visibility through smoke" subtitle="Jin's V = C/K, where C comes from, and how it changes in dim light." >}}
   {{< card link="walking-speed" title="Walking speed in smoke" subtitle="Jin, Frantzich and Nilsson, Fridolf et al., and the fractional versus absolute readings." >}}

@@ -1,6 +1,6 @@
 ---
 title: "Visibility through smoke"
-weight: 3
+weight: 4
 ---
 
 Visibility *V* [m] is the greatest distance at which an object, typically an

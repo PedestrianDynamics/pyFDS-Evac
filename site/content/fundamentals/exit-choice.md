@@ -1,6 +1,6 @@
 ---
 title: "Exit choice and familiarity"
-weight: 10
+weight: 11
 ---
 
 Which exit an occupant heads for is not decided by distance alone. The studies
