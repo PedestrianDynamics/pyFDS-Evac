@@ -2995,6 +2995,7 @@ an exit time; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/usi
 &lt;/ul></description></item><item><title>How do I get the egress time and its spread from an ensemble of seeds?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</guid><description>
 &lt;p>&lt;strong>This how-to reads tracked FDS output. You do not need to run FDS.&lt;/strong> Part 1
 needs no FDS output at all.&lt;/p>
+&lt;p class="docs-files__jump">&lt;a href="#files-rset-ensemble">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (28 kB zip)&lt;/a>&lt;/p>
 &lt;p>Run the scenario once per seed. Read each agent&amp;rsquo;s exit time from the trajectory
 file, not from &lt;code>result.evacuation_time&lt;/code>. Then report the last exit time over the
 seeds as a mean, a standard deviation (SD), a range and a high percentile, not
@@ -3027,7 +3028,45 @@ with agents still inside
 &lt;/ul>
 &lt;p>Part 2 below shows both.&lt;/p>
 &lt;h2>Runnable example&lt;span class="hx-absolute -hx-mt-20" id="runnable-example">&lt;/span>
-&lt;a href="#runnable-example" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/rset_ensemble.py" target="_blank" rel="noopener">&lt;code>examples/rset_ensemble.py&lt;/code>&lt;/a>.
+&lt;a href="#runnable-example" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;aside class="docs-files" aria-labelledby="files-rset-ensemble">
+&lt;div class="docs-files__head">
+&lt;p class="docs-files__title" id="files-rset-ensemble">Download the files for this page&lt;/p>
+&lt;a class="docs-files__download" href="https://pedestriandynamics.org/pyFDS-Evac/downloads/pyfds-evac-rset-ensemble.zip" download>
+&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-rset-ensemble.zip &lt;span class="docs-files__size">(28 kB)&lt;/span>
+&lt;/a>
+&lt;/div>
+&lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
+&lt;dl class="docs-files__facts">
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/4f859bf52a4201009a8b01f52364a3874332c5db">&lt;code>4f859bf&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
+&lt;/dl>
+&lt;details class="docs-files__contents">
+&lt;summary>What is inside (14 files)&lt;/summary>
+&lt;ul>
+&lt;li>&lt;code>README.txt&lt;/code>: this file&lt;/li>
+&lt;li>&lt;code>LICENSE&lt;/code>: MIT licence of the code&lt;/li>
+&lt;li>&lt;code>requirements.txt&lt;/code>: pinned Python packages, from uv.lock&lt;/li>
+&lt;li>&lt;code>examples/rset_ensemble.py&lt;/code>: the example script&lt;/li>
+&lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line&lt;/li>
+&lt;li>&lt;code>assets/fic_vs_fed_speed/config.json&lt;/code>: JuPedSim scenario of part 1&lt;/li>
+&lt;li>&lt;code>assets/fic_vs_fed_speed/geometry.wkt&lt;/code>: walkable area of part 1&lt;/li>
+&lt;li>&lt;code>assets/fic_vs_fed_speed/fic_vs_fed_speed.fds&lt;/code>: FDS deck of the same corridor; part 1 does not run it&lt;/li>
+&lt;li>&lt;code>assets/fic_vs_fed_speed/build_geometry.py&lt;/code>: writes the part 1 deck, scenario and geometry&lt;/li>
+&lt;li>&lt;code>assets/fic_vs_fed_speed/README.md&lt;/code>: what the part 1 scenario is&lt;/li>
+&lt;li>&lt;code>assets/iso_table22_coupled/iso_table22_a.fds&lt;/code>: FDS deck of the gas room (part 2)&lt;/li>
+&lt;li>&lt;code>assets/iso_table22_coupled/config_a.json&lt;/code>: JuPedSim scenario of the gas room&lt;/li>
+&lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
+&lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
+&lt;/ul>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">9efb8311b5857c49a9a6b15a184d6f98eabde392633aeeaa001967c7901762f7&lt;/code>&lt;/p>
+&lt;/details>
+&lt;/aside>
+&lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
+part 2 deck with FDS first (about 30 s).&lt;/p>
+&lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/rset_ensemble.py" target="_blank" rel="noopener">&lt;code>examples/rset_ensemble.py&lt;/code>&lt;/a>.
 Run it from the repository root (runtime about 10 s):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python examples/rset_ensemble.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">

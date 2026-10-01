@@ -15,6 +15,7 @@ cell by cell.&lt;/li>
 last person has left, and how the door-flow model, pre-movement and a
 second door move that.&lt;/li>
 &lt;/ul>
+&lt;p class="docs-files__jump">&lt;a href="#files-study-schroeder2020">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (241 kB zip)&lt;/a>&lt;/p>
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
 ℹ️
@@ -1273,9 +1274,57 @@ arm U: &lt;code>--smoke-blind --disable-tenability --smoke-slice-height 2.0&lt;/
 0.1 m FDS output for all 50 one-door runs (asserted), so one RSET set per
 door layout serves both grids. Smoke feedback on speed and route choice
 lies outside this study.&lt;/p>
-&lt;p>&lt;strong>Reproduce.&lt;/strong> The FDS decks and output and the authors&amp;rsquo; release are not
-in the repository. With the decks and output in &lt;code>DATA&lt;/code>, the unpacked
-release in &lt;code>RELEASE&lt;/code> and an empty folder &lt;code>RUNS&lt;/code> outside the repository:&lt;/p>
+&lt;h3>Reproduce&lt;span class="hx-absolute -hx-mt-20" id="reproduce">&lt;/span>
+&lt;a href="#reproduce" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;aside class="docs-files" aria-labelledby="files-study-schroeder2020">
+&lt;div class="docs-files__head">
+&lt;p class="docs-files__title" id="files-study-schroeder2020">Download the files for this page&lt;/p>
+&lt;a class="docs-files__download" href="https://pedestriandynamics.org/pyFDS-Evac/downloads/pyfds-evac-study-schroeder2020.zip" download>
+&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-study-schroeder2020.zip &lt;span class="docs-files__size">(241 kB)&lt;/span>
+&lt;/a>
+&lt;/div>
+&lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
+&lt;dl class="docs-files__facts">
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/4f859bf52a4201009a8b01f52364a3874332c5db">&lt;code>4f859bf&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>1 door, 0.2 m grid: min DIFF -27 s, area DIFF &amp;lt; 0 6.7 m2, C -112 m2s&lt;/code>&lt;br>&lt;code>1 door, 0.1 m grid: min DIFF -27 s, area DIFF &amp;lt; 0 6.4 m2, C -107 m2s&lt;/code>&lt;br>&lt;code>2 doors, 0.2 m grid: min DIFF -40 s, area DIFF &amp;lt; 0 7.4 m2, C -174 m2s&lt;/code>&lt;br>&lt;code>1 door, agents remaining: 60.5 at 40 s, 20.5 at 80 s, last out 100-101 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>4a7142f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
+&lt;/dl>
+&lt;details class="docs-files__contents">
+&lt;summary>What is inside (154 files)&lt;/summary>
+&lt;ul>
+&lt;li>&lt;code>README.txt&lt;/code>: this file&lt;/li>
+&lt;li>&lt;code>LICENSE&lt;/code>: MIT licence of the code&lt;/li>
+&lt;li>&lt;code>requirements.txt&lt;/code>: pinned Python packages, from uv.lock&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/README.md&lt;/code>: what the inputs are and where they come from&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/make_decks_rel.py&lt;/code>: writes the FDS decks of the rel_* family (release conditions)&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/make_configs_rel.py&lt;/code>: writes the scenarios and geometry of the rel_* family&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/make_decks.py&lt;/code>: writes the FDS decks of the hrr060_* family (paper alone)&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/make_configs.py&lt;/code>: writes the scenarios and geometry of the hrr060_* family&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/rel_1door/&lt;/code>: one door, 0.2 m grid: FDS deck, scenarios for the pre-movement sweep, geometry&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/rel_1door_dx010/&lt;/code>: one door, 0.1 m grid: FDS deck, scenarios, geometry&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/rel_2door/&lt;/code>: two doors, 0.2 m grid: FDS deck and one scenario per seed and version in seeds/&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/hrr060_1door/&lt;/code>: sensitivity, one door, 0.2 m grid&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/hrr060_1door_dx010/&lt;/code>: sensitivity, one door, 0.1 m grid&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/hrr060_1door_pert/&lt;/code>: sensitivity, one door, HRRPUA &amp;#43;0.1 % (FDS deck only)&lt;/li>
+&lt;li>&lt;code>assets/schroeder2020_room/hrr060_2door/&lt;/code>: sensitivity, two doors, 0.2 m grid&lt;/li>
+&lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the map script calls for each run&lt;/li>
+&lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: runs the evacuations, prints every number of the page, draws the maps&lt;/li>
+&lt;li>&lt;code>scripts/docs/study_animations.py&lt;/code>: the two animations&lt;/li>
+&lt;li>&lt;code>scripts/docs/schroeder_grid_figures.py&lt;/code>: the grid figures&lt;/li>
+&lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
+&lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
+&lt;/ul>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c2c737a1aaf53f747b8b5be4a5ba0c5512ac5fe0893ae3c167a1ef59f94a412f&lt;/code>&lt;/p>
+&lt;/details>
+&lt;/aside>
+&lt;p>The FDS decks, the scenarios and their generators are in
+&lt;code>assets/schroeder2020_room/&lt;/code>. The FDS output and the authors&amp;rsquo; release are
+not in the repository. Copy each &lt;code>rel_*&lt;/code> folder into a folder &lt;code>DATA&lt;/code>
+outside the repository and run FDS 6.10.1 in it, for example
+&lt;code>(cd DATA/rel_1door &amp;amp;&amp;amp; mpiexec -n 6 fds rel_1door.fds)&lt;/code>. Then, with an
+empty folder &lt;code>RUNS&lt;/code> outside the repository and, for the comparison with
+the release, the unpacked release in &lt;code>RELEASE&lt;/code>:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run --with &lt;span style="color:#e6db74">&amp;#34;pedpy&amp;gt;=1.5.1&amp;#34;&lt;/span> python scripts/docs/schroeder_room_maps.py &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --data DATA --runs RUNS --family rel --release RELEASE&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -1288,9 +1337,10 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>It runs the 160 evacuations (existing ones are reused), checks that every
-agent leaves, prints every number on this page as Markdown tables, and
-writes the figures to &lt;code>site/static/images/studies/schroeder2020/&lt;/code>. It needs
+&lt;p>Without &lt;code>--release&lt;/code> it skips the comparison with the release. It runs the
+160 evacuations (existing ones are reused), checks that every agent
+leaves, prints every number on this page as Markdown tables, and writes
+the figures to &lt;code>site/static/images/studies/schroeder2020/&lt;/code>. It needs
 PedPy ≥ 1.5.1 for &lt;code>compute_rset_map&lt;/code>. &lt;code>--family hrr060&lt;/code> with its own
 &lt;code>RUNS&lt;/code> folder gives the paper-only rebuild; it prints all its tables and
 writes only the figure this page uses, &lt;code>hrr060/diff_1door.png&lt;/code>.&lt;/p>
@@ -1315,9 +1365,10 @@ title="Copy code"
 &lt;p>&lt;strong>Provenance.&lt;/strong> The evacuation runs on this page come from commit
 &lt;code>4a7142f&lt;/code> (main at &lt;code>100e91d&lt;/code> with this page&amp;rsquo;s scripts). Each run&amp;rsquo;s manifest
 records that commit with &lt;code>git_dirty: false&lt;/code> and
-&lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. When the code changes, re-run the
-command into a new &lt;code>RUNS&lt;/code> folder and compare the printed tables with this
-page.&lt;/p>
+&lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. A re-run of all 160 evacuations
+on &lt;code>449a755&lt;/code> prints the same values for the headline. When the code
+changes, re-run the command into a new &lt;code>RUNS&lt;/code> folder and compare the
+printed tables with this page.&lt;/p>
 &lt;h2>Setup, deviations and caveats&lt;span class="hx-absolute -hx-mt-20" id="setup-deviations-and-caveats">&lt;/span>
 &lt;a href="#setup-deviations-and-caveats" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
@@ -2605,7 +2656,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fcf04bf43fcaba81969da4c92748a8cdb764df4">&lt;code>6fcf04b&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/4f859bf52a4201009a8b01f52364a3874332c5db">&lt;code>4f859bf&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.678, additive 0.445&lt;/code>&lt;br>&lt;code>main fire, additive dy: -1.77 m (-2.20, -1.35)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.05 for starts 30-120 s, 0.94 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>7e9c4c30&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2636,7 +2687,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">fa7f8d6acdb107ab6e101c4f747a4b5b894d76fcebb41a50471a1b3d75b997ae&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2b2e0bae50631042aceea663aa56dff76c7c9eed9ac0f6c4c910fe36dc76598c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
