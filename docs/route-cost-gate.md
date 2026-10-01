@@ -580,8 +580,10 @@ on `l_corridor`, measured before `0d9bf79`), which is why it is off.
 
 ### Anticipation
 
-With `anticipate` (default `true`), each segment is priced at the time the
-agent would *arrive* there rather than the time it decides:
+The path to each exit is found on the smoke at decision time
+(`_generate_candidates`). With `anticipate` (default `true`), that path is
+then measured edge by edge at the time the agent would reach each edge's
+start (`_measure_route`):
 
 ```
 arrival_time = now + min(distance_walked_so_far / base_speed_m_per_s,
@@ -638,7 +640,7 @@ Every key below is read from the scenario's `routing` block by
 | `tau_deadband` | `0.1` | Half-width of the exit-switch anchor's symmetric `tau` deadband, as a fraction of `tau_max` (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — `evac.f90:16799` tests the raw value. | active | inert |
 | `clean_extinction_threshold` | `0.0` (off) | Extinction at or below which a route's smokiest leg makes the exit `clean`; clean exits outrank smoky ones. FDS+Evac's value is `0.03`. | active | inert |
 | `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
-| `anticipate` | `true` | Price each segment at the agent's arrival time. | active | **active** |
+| `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time. | active | **active** |
 | `foresight_horizon_s` | `inf` | Cap on how far ahead anticipation reaches, in seconds. | active | **active** |
 | `fallback_switch_margin` | `0.2` | Hysteresis when every route is refused. | active | inert |
 | `w_smoke` | `1.0` | Smoke weight in the additive composite and its Dijkstra edge weights. Since `0d9bf79` the gate weights edges by their own `tau`, so neither weight reaches route choice under the gate; the composite is still reported. | **inert** (reported only) | active |
