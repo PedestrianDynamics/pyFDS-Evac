@@ -21,11 +21,15 @@ Runtime: about 3 s. No FDS output is needed.
 
 ## Before you start
 
-You need:
+{{< example-files "quickstart" >}}
 
-- a clone of the repository;
-- the environment installed with `uv sync` (see [Install](install.md));
-- a shell opened in the repository root.
+You need one of:
+
+- a clone of the repository, with the environment installed by `uv sync`
+  (see [Install](install.md)), and a shell opened in the repository root;
+- the zip above, unpacked, with the packages of its `requirements.txt`
+  installed, and a shell opened in the unpacked folder. Run the commands
+  below with `python` instead of `uv run python`.
 
 The complete example is [`examples/quickstart.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/quickstart.py).
 Run it with:

@@ -1,0 +1,41 @@
+{{- /* The downloadable inputs of an example page.
+     Usage: {{< example-files "quickstart" >}}
+     The example is described in site/data/examples.toml. The zip and its
+     facts (size, sha256, commit) come from scripts/docs/bundle_examples.py,
+     which must run before Hugo; the build fails without them. */ -}}
+{{- $name := .Get 0 -}}
+{{- $ex := index site.Data.examples $name -}}
+{{- if not $ex -}}
+  {{- errorf "example-files: %q is not in site/data/examples.toml (%s)" $name .Position -}}
+{{- end -}}
+{{- $facts := index (site.Data.example_bundles | default dict) $name -}}
+{{- if not $facts -}}
+  {{- errorf "example-files: no zip for %q; run `uv run python scripts/docs/bundle_examples.py` before Hugo (%s)" $name .Position -}}
+{{- end -}}
+{{- $kb := div (float $facts.bytes) 1000 -}}
+{{- $id := printf "files-%s" $name -}}
+<aside class="docs-files" aria-labelledby="{{ $id }}">
+  <div class="docs-files__head">
+    <p class="docs-files__title" id="{{ $id }}">Files for this page</p>
+    <a class="docs-files__download" href="{{ printf "downloads/%s" $facts.zip | relURL }}" download>
+      <span aria-hidden="true">↓</span> {{ $facts.zip }} <span class="docs-files__size">({{ printf "%.0f" $kb }} kB)</span>
+    </a>
+  </div>
+  <p class="docs-files__summary">{{ $ex.contents }}</p>
+  <dl class="docs-files__facts">
+    <div><dt>Built from</dt><dd>pyFDS-Evac <a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/{{ $facts.commit }}"><code>{{ substr $facts.commit 0 7 }}</code></a>; <code>requirements.txt</code> pins the packages of <code>uv.lock</code></dd></div>
+    <div><dt>FDS</dt><dd>{{ with $ex.fds }}you run it; the page used <code>{{ . }}</code>, {{ $ex.fds_runtime }}{{ else }}not needed{{ end }}</dd></div>
+    <div><dt>pyFDS-Evac run</dt><dd>{{ $ex.evac_runtime }}</dd></div>
+    <div><dt>Expected result</dt><dd>{{ range $i, $line := $ex.expected }}{{ if $i }}<br>{{ end }}<code>{{ $line }}</code>{{ end }}<br><span class="docs-files__note">made at commit <code>{{ $ex.results_commit }}</code></span></dd></div>
+    <div><dt>Licence</dt><dd>decks, scenario files and geometry <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>; code MIT</dd></div>
+  </dl>
+  <details class="docs-files__contents">
+    <summary>What is inside ({{ len $facts.entries }} files)</summary>
+    <ul>
+      {{- range $facts.entries }}
+      <li><code>{{ index . 0 }}</code>: {{ index . 1 }}</li>
+      {{- end }}
+    </ul>
+    <p class="docs-files__note"><code>README.txt</code> lists the exact versions and the commands. SHA-256: <code class="docs-files__hash">{{ $facts.sha256 }}</code></p>
+  </details>
+</aside>

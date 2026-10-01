@@ -12,11 +12,19 @@ the [Real-FDS walkthrough](walkthrough.md) (small tracked FDS cases). Unlike
 those, it needs FDS output that you compute with FDS on your own computer;
 step 3 shows how.
 
+## Before you start
+
+{{< example-files "first-fds-case" >}}
+
+Run every command on this page from one of:
+
+- the repository root, in the environment installed with `uv sync`;
+- the unpacked zip above, with the packages of its `requirements.txt`
+  installed. Run the commands with `python` instead of `uv run python`.
+
 ## 1. Check the scenario runs
 
-Run every command on this page from the repository root, in the environment
-installed with `uv sync`. Without FDS output the example runs the scenario in
-clear air, in about 5 s:
+Without FDS output the example runs the scenario in clear air, in about 5 s:
 
 ```bash
 uv run python examples/first_fds_case.py
@@ -333,6 +341,8 @@ FDS output:
 uv run --with git+https://github.com/FireDynamics/fdsvismap@31dc0b6 \
     python scripts/docs/first_fds_case_aset.py --data "$FDS" --runs tj
 ```
+
+From the unpacked zip, follow step 6 of its `README.txt` instead.
 
 It takes under a minute (about 8 s with the run files in place) and prints
 every number in this section. The report starts with:

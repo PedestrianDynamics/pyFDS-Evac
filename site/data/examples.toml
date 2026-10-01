@@ -1,0 +1,119 @@
+# Downloadable inputs of the example pages.
+#
+# scripts/docs/bundle_examples.py reads this file and writes one zip per
+# entry to site/static/downloads/, plus the generated facts (size, sha256,
+# commit, package versions) to site/data/example_bundles.json. The
+# example-files shortcode renders both. Every path in `files` is a file in
+# the repository; the zip keeps the repository layout, so the commands run
+# from the unpacked folder exactly as on the page.
+#
+# Values that do not come from the repository or uv.lock are stated here
+# once: the FDS version and runtime, and the results the page shows with the
+# commit that produced them.
+
+[quickstart]
+title = "Quickstart"
+zip = "pyfds-evac-quickstart.zip"
+page = "docs/getting-started/quickstart/"
+source = "docs/quickstart.md"
+summary = """\
+One agent walks a corridor 2 m wide and 100 m long (assets/ISO-table21), \
+once in clear air and once in uniform smoke with K = 3 1/m. No FDS run is \
+needed."""
+contents = """\
+The example script, run.py, the scenario folder assets/ISO-table21, pinned \
+package versions and a README.txt with the commands and the expected \
+result."""
+files = [
+  ["examples/quickstart.py", "the example script"],
+  ["assets/ISO-table21/config.json", "JuPedSim scenario"],
+  ["assets/ISO-table21/geometry.wkt", "walkable area"],
+  ["assets/ISO-table21/ISO-table21.fds", "FDS deck of the same corridor (ISO 20414 Test 18); the quickstart does not run it"],
+  ["assets/ISO-table21/README.md", "what the scenario is and where it comes from"],
+  ["run.py", "the pyFDS-Evac command line, which the page compares with run_scenario"],
+]
+extra_packages = []
+steps = [
+  ["Run the example (about 3 s)", ["python examples/quickstart.py"]],
+]
+fds = ""
+fds_runtime = ""
+evac_runtime = "about 3 s"
+expected = [
+  "clear air:   79.24 s",
+  "K = 3.0 1/m: 104.39 s",
+  "speed factor in smoke: 0.7578",
+  "time ratio smoke/clear: 1.3174",
+]
+expected_note = "The last line, manifest: <path>, names a new temporary file on every run."
+results_commit = "6f335a37"
+results_python = "3.12.13"
+results_machine = "Apple M3 Pro, macOS"
+
+[first-fds-case]
+title = "A crowd in a real fire"
+zip = "pyfds-evac-first-fds-case.zip"
+page = "docs/getting-started/first-fds-case/"
+source = "docs/first-fds-case.md"
+summary = """\
+150 agents leave a T-shaped corridor while a 2 MW PVC fire fills it with \
+smoke. You run the FDS deck yourself, then pyFDS-Evac on its output."""
+contents = """\
+The FDS deck, the scenario, run.py, the example and figure scripts, \
+pinned package versions and a README.txt with every command, the \
+runtimes and the expected result."""
+files = [
+  ["assets/t_junction/t_junction.fds", "FDS deck of the fire"],
+  ["assets/t_junction/config.json", "JuPedSim scenario"],
+  ["assets/t_junction/geometry.wkt", "walkable area"],
+  ["run.py", "the pyFDS-Evac command line"],
+  ["examples/first_fds_case.py", "the same run from Python"],
+  ["scripts/docs/first_fds_case_figures.py", "the figures of section 5"],
+  ["scripts/animate_agents_smoke.py", "animation helpers used by the figure script"],
+  ["scripts/docs/first_fds_case_aset.py", "the numbers and figures of section 6 (ASET and RSET)"],
+]
+extra_packages = ["seaborn"]
+steps = [
+  ["Check the scenario runs in clear air (about 5 s)", [
+    "python examples/first_fds_case.py",
+  ]],
+  ["Run FDS (about 20 min with 4 MPI processes)", [
+    "mkdir -p fire && cp assets/t_junction/t_junction.fds fire/",
+    "cd fire && mpiexec -n 4 fds t_junction.fds && cd ..",
+  ]],
+  ["Run pyFDS-Evac in the fire (about 25 s) and in clear air", [
+    "FDS=fire",
+    "mkdir -p tj",
+    "python run.py --scenario assets/t_junction --fds-dir \"$FDS\" \\",
+    "    --output-sqlite tj/tj_fire.sqlite \\",
+    "    --output-smoke-history tj/tj_fire_smoke.csv \\",
+    "    --output-fed-history tj/tj_fire_fed.csv \\",
+    "    --output-route-history tj/tj_fire_routes.csv",
+    "python run.py --scenario assets/t_junction \\",
+    "    --output-sqlite tj/tj_clear.sqlite",
+    "python examples/first_fds_case.py \"$FDS\"",
+  ]],
+  ["Draw the figures of section 5", [
+    "python scripts/docs/first_fds_case_figures.py --data \"$FDS\" --runs tj",
+  ]],
+  ["Section 6 (ASET and RSET) needs a newer fdsvismap; install it last, it replaces the pinned one", [
+    "pip install --no-deps \"fdsvismap @ git+https://github.com/FireDynamics/fdsvismap@31dc0b6\"",
+    "python scripts/docs/first_fds_case_aset.py --data \"$FDS\" --runs tj",
+    "pip install -r requirements.txt   # back to the pinned fdsvismap",
+  ]],
+]
+fds = "FDS-6.10.1-0-g12efa16-release"
+fds_runtime = "1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS"
+evac_runtime = "about 25 s for the fire run"
+expected = [
+  "evacuated: 72/150 in 300 s",
+  "FED max:   0.38",
+  "route changes: {'smoke_reroute': 9, 'wander': 164}",
+]
+expected_note = """\
+These are the last lines of python examples/first_fds_case.py "$FDS". \
+Without FDS output it prints evacuated: 144/150 in 300 s. run.py ends \
+with: Simulation stopped after 300.00 s (72/150 evacuated, 78 remaining)."""
+results_commit = "6f335a37"
+results_python = "3.12.13"
+results_machine = "Apple M3 Pro, macOS"
