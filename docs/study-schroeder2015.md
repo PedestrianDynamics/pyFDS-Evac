@@ -314,7 +314,8 @@ What to watch for:
   walking at 278 s, is still walking toward F at the 400 s cap.
 
 The route figure below shows the 2.8 m slice for comparison with the
-paper. The animation shows 1.6 m, the smoke the agents react to.
+paper. The animation shows 1.6 m, the slice that routing and walking
+speed use.
 
 ### Why: three hall-wide re-path events
 
