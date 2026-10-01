@@ -97,8 +97,12 @@ far. It is FDS+Evac's primary door rule, and measured on both reference decks it
 did not redirect anyone while costing monotonicity -- see
 [docs/gate-model-review-notes.md](/docs/gate-model-review-notes.md).
 
-Each segment is priced at the time the agent would *arrive* there (`anticipate`,
-`foresight_horizon_s`), using unimpeded speed.
+Dijkstra searches from the agent's origin node and weights each edge with the
+smoke present at decision time. Anticipation (`anticipate`,
+`foresight_horizon_s`) applies only to the path it returns for each exit:
+each edge of that path is sampled at the time the agent would reach the
+edge's start, using unimpeded speed, and `tau`, travel time and projected FED
+are measured from those samples (`_generate_candidates`, `_measure_route`).
 
 **`"additive"`.** The original model: smoke is a toll per metre walked,
 `effective_length * (1 + w_smoke * k_ave) + w_fed * fed_max`. Both terms scale
@@ -168,7 +172,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `clean_extinction_threshold` | `0.0` (off) | Extinction [1/m] of the smokiest leg at or below which an exit is in the clean tier |
 | `clean_exit_margin` | `0.1` | Hysteresis: the current exit stays clean up to `clean_extinction_threshold` / `clean_exit_margin` (FDS+Evac `FAC_DOOR_OLD`) |
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused |
-| `anticipate` | `true` | Price each segment at the agent's arrival time |
+| `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time |
 | `foresight_horizon_s` | `inf` | How far ahead [s] anticipation reads the FDS record |
 | `fallback_switch_margin` | `0.2` | When every route is refused, a rival's worst extinction must be this fraction below the current exit's |
 | `w_smoke` | `1.0` | Smoke weight; additive model only, inert under the gate |
@@ -267,6 +271,12 @@ written to the route history.
   ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
 - One path is priced per exit
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).
+- The path to each exit is chosen on the smoke at decision time, searched from
+  the agent's origin node. Anticipation applies only to that path, edge by
+  edge at the arrival time at the edge's start (`_generate_candidates`,
+  `_measure_route`). Agents with the same origin node and the same known
+  graph therefore get the same path to each exit at a given time, wherever
+  they stand.
 - The anchor compares with the best path to the current exit, not the path the
   agent walks ([#186](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186)).
 - For an agent behind the route's first node, the FED growth over the walk to

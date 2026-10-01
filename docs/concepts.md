@@ -180,7 +180,7 @@ reasoning: the optical depth along the walk, \(\tau_k = \bar K_k L_k\), the
 column of smoke the agent would pass through.
 
 First, a shortest-path search finds one path to each exit, with every edge
-weighted by its own optical depth: the least-smoky path, which in clear air is
+weighted by its own optical depth at decision time: the least-smoky path, which in clear air is
 the shortest. Second, each candidate is re-evaluated with anticipation, each
 edge sampled at the time the agent would reach it. By default the router sees
 the whole future of the fire, so the result is an upper bound on how well an
