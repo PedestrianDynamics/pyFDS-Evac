@@ -356,6 +356,11 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- In a deck with journeys, agents of a distribution without a journey whose
+  nearest exit is throttled stood at their spawn points until the time
+  limit. They are now steered to that exit and leave through it under its
+  cap (#434).
+
 - A point that some loaded gas slices cover and others do not raises
   `ValueError`, as heat already did, instead of reading ambient air for
   every gas ([#427](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/427)).
