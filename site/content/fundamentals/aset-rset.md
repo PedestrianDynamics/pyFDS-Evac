@@ -84,7 +84,8 @@ requires that occupants are not exposed to a carbon monoxide FED above 0.3,
 a thermal FED above 0.3, or a visibility below 10 m (5 m in rooms of less
 than 100 m²). Under clause C4.4, the thermal FED and visibility limits do
 not apply where a sprinklered firecell cannot expose more than 1,000
-occupants; only the CO dose is then checked. Verification Method C/VM2
+occupants; only the CO dose is then checked (NZBC clauses C1–C6, p. 7).
+Verification Method C/VM2
 measures all three 2.0 m above the floor and computes both doses with the
 procedures of ISO 13571 (it cites the 2007 edition): the CO dose includes
 CO, CO₂ and O₂, and the thermal dose includes radiative and convective
@@ -165,10 +166,14 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
   Society of Fire Safety, NSW Chapter, Engineers Australia.
   [engineersaustralia.org.au](https://www.engineersaustralia.org.au/sites/default/files/2024-01/tenability-criteria-practice-note_0.pdf).
   §5 (p. 13), §5.2 and Fig. 8 (p. 15), §5.3 (p. 17).
-- MBIE (2025). *C/VM2 Verification Method: Framework for fire safety
+- New Zealand Building Code (NZBC). *Extract from the New Zealand
+  Building Code: Clauses C1–C6 Protection from Fire*, effective 1 July
+  2014. Schedule 1 of the Building Regulations 1992. Clauses C4.3 and C4.4
+  (p. 7).
+  [building.govt.nz](https://www.building.govt.nz/building-code-compliance/c-protection-from-fire/c-clauses-c1-c6/).
+- MBIE (2025). *Verification Method C/VM2: Framework for fire safety
   design*, 2nd edition, effective 28 July 2025. Ministry of Business,
-  Innovation and Employment, Wellington. Reproduces clauses C4.3 and C4.4
-  of the Building Code; §2.1.6.1–2.1.6.3 (p. 17).
+  Innovation and Employment, Wellington. §2.1.6.1–2.1.6.3 (p. 17).
   [building.govt.nz](https://www.building.govt.nz/building-code-compliance/c-protection-from-fire/c-clauses-c1-c6/).
 - MBIE (2012). *Commentary for Verification Method C/VM2*, December 2012.
   Ministry of Business, Innovation and Employment, Wellington.

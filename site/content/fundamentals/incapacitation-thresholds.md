@@ -50,10 +50,13 @@ equations represent the median of the distribution, and that approximately
 citing ISO 13571 (p. 2282; repeated on p. 2343). ISO 13571:2012 (A.5.2)
 gives 11.4 % for 0.3, and the 2016 edition of the chapter gave 11.3 %
 (Purser and McAllister 2016, p. 2334). The commentary to New Zealand's
-Verification Method C/VM2, citing ISO 13571, reads an FED of 1.0 as the
-point at which about 50 % of occupants would be incapacitated, and the 0.3
-that Building Code clause C4.3 sets for the CO and thermal doses as about
-11 % of the population (MBIE 2012, p. 29). In the same paragraph Ch. 70 states
+Verification Method C/VM2, citing ISO 13571, reads a gas FED of 1.0 as the
+point at which about 50 % of occupants might be incapacitated, and the 0.3
+of Building Code clause C4.3 as the point at which about 11 % of the
+population "would be susceptible to less severe exposures" (MBIE 2012,
+p. 29). It applies the same 0.3 to the thermal dose, assuming that broadly
+similar principles apply (p. 31). In the same paragraph as its 1 %
+statement, Ch. 70 states
 that approximately 90 % of the population is susceptible below an FED
 of 1.3 (p. 2282). For a log-normal with
 median 1, these two statements are not consistent: 1 % below 0.3 implies a
@@ -187,7 +190,7 @@ How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.m
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
 - MBIE (2012). *Commentary for Verification Method C/VM2*, December 2012.
   Ministry of Business, Innovation and Employment, Wellington.
-  ISBN 978-0-478-39942-4. Commentary to clause C4.3 (p. 29); written for
+  ISBN 978-0-478-39942-4. Commentary to clause C4.3 (pp. 29, 31); written for
   the first edition of C/VM2. The C4.3 limits are unchanged in the current
   Building Code and in C/VM2, 2nd edition (2025); see
   [ASET and RSET](/fundamentals/aset-rset.md).

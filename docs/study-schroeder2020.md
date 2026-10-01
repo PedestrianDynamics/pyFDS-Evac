@@ -271,9 +271,9 @@ exceeded during the stay (p. 324). EA's fixed limits assume up to 10 min
 and use FED for up to 30 min (§5.2–5.3, pp. 15–17). DIN adds the AEGL-2
 for CO as a check, 420 ppm for 10 min and 150 ppm for 30 min, without
 interpolation (§7.2.3). EA, DIN and C/VM2 evaluate at 2.0 m (EA §5.2; DIN
-§7.2.1; C/VM2 §2.1.6.1); C/VM2 sums its doses for the last occupant to
-leave the room of fire origin, in steps of at most 5 s (MBIE 2012,
-pp. 47, 49). Zero-exposure criteria use a clear layer of about 2.5 m (vfdb
+§7.2.1; C/VM2 §2.1.6.1); the 2012 commentary to C/VM2 sums the doses for
+the last occupant to leave the room of fire origin, in steps of at most
+5 s (MBIE 2012, pp. 47, 49). Zero-exposure criteria use a clear layer of about 2.5 m (vfdb
 §8.1, p. 312; Purser and McAllister, p. 2340). Surveyed practitioners use
 1.5–2.5 m, most often 2.0 m (52.1 %) (Węgrzyński et al. 2026, §4.3).
 

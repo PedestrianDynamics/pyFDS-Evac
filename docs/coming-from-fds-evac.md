@@ -42,10 +42,12 @@ thermal dose, summed in steps of at most 5 s at 2.0 m above the floor, along
 the escape route of the last occupant to leave the room of fire origin
 (MBIE 2012, *Commentary for Verification Method C/VM2*, pp. 47 and 49). The
 equations differ: the gas FED follows FDS+Evac, not the ISO 13571 form that
-C/VM2 names, and the heat dose is off by default and convective only unless
-`--heat-fed-method total-flux` adds a radiant term. See
-[ASET and RSET](/fundamentals/aset-rset.md) for the C/VM2 criteria and
-[Fractional effective dose](/models/fed.md) for the equations.
+C/VM2 names; the heat dose needs `--enable-heat-fed`, is convective only by
+default, and gains a radiant term with `--heat-fed-method total-flux` (an
+SFPE form, not ISO 13571's). See
+[ASET and RSET](/fundamentals/aset-rset.md) for the C/VM2 criteria and for
+running at 2.0 m, and [Fractional effective dose](/models/fed.md) for the
+equations.
 
 A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). `uv run python run.py --scenario <json|dir|zip> --fds-dir
