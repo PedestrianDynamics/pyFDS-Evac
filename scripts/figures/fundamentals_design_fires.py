@@ -15,7 +15,7 @@ of 600, 300, 150 and 75 s to 1000 Btu/s (about 1055 kW). Each curve is
 solid up to 1055 kW and dashed beyond, where fuel, ventilation or
 suppression limit a real fire.
 
-Panel (b) draws the heat release rate of the two study fires, which are
+Panel (b) draws the heat release rate of the three study fires, which are
 study inputs, not design fires:
 
 - T-junction: HRRPUA and RAMP_Q read from ``assets/t_junction/t_junction.fds``
@@ -23,6 +23,10 @@ study inputs, not design fires:
 - Schroeder et al. (2020): a constant 60 kW, the authors' value from their
   reference implementation (``docs/study-schroeder2020.md``, "The room").
   The deck is not in the repository, so the value is written here.
+- Schroeder et al. (2015) route study: HRRPUA, TAU_Q and the FIRE vent read
+  from ``assets/schroeder2015_route/a047_pvc_h40/a047_pvc_h40.fds``. A
+  negative TAU_Q is FDS's t-squared ramp, Q = Q_max (t / |TAU_Q|)^2 up to
+  |TAU_Q|, then Q_max.
 
 Run from the repository root::
 
@@ -71,6 +75,31 @@ def read_tjunction_fire(deck):
     return t, hrrpua * area * f
 
 
+def read_tau_q_fire(deck, t):
+    """Return the heat release rate [kW] of a TAU_Q fire at times ``t``.
+
+    Parameters
+    ----------
+    deck : Path
+        FDS input file with one SURF 'FIRE' (HRRPUA, negative TAU_Q) and
+        one VENT using it.
+    t : numpy.ndarray
+        Times [s].
+
+    Returns
+    -------
+    tuple
+        HRR at ``t`` [kW], the cap Q_max [kW] and the ramp time |TAU_Q| [s].
+    """
+    text = "\n".join(line.split("!")[0] for line in deck.read_text().splitlines())
+    hrrpua = float(re.search(r"HRRPUA\s*=\s*([\d.]+)", text).group(1))
+    tau = abs(float(re.search(r"TAU_Q\s*=\s*(-?[\d.]+)", text).group(1)))
+    xb = re.search(r"&VENT\s+XB\s*=\s*([^/]*?)SURF_ID\s*=\s*'FIRE'", text).group(1)
+    x0, x1, y0, y1 = (float(v) for v in xb.replace(" ", "").split(",")[:4])
+    q_max = hrrpua * abs(x1 - x0) * abs(y1 - y0)
+    return q_max * np.minimum(t / tau, 1.0) ** 2, q_max, tau
+
+
 def main():
     """Plot the t-squared classes (a) and the study fires against them (b).
 
@@ -91,7 +120,7 @@ def main():
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     pal = sns.cubehelix_palette(6, rot=-0.25, light=0.7)
     c_classes = [pal[1], pal[2], pal[4], pal[5]]
-    c_tj, c_room = "#d73027", "#fc8d59"
+    c_tj, c_room, c_route = "#d73027", "#fc8d59", "#542788"
 
     # --- Data ---
     q_ref = 1055.0
@@ -189,6 +218,21 @@ def main():
         fontsize=8.5,
         color=c_room,
         weight="semibold",
+    )
+    q_route, q_cap, tau = read_tau_q_fire(
+        root / "assets/schroeder2015_route/a047_pvc_h40/a047_pvc_h40.fds", t_b
+    )
+    ax_b.plot(t_b, q_route, color=c_route, lw=2.6, zorder=5)
+    ax_b.plot(tau, q_cap, "o", color=c_route, ms=7, mec="white", zorder=6)
+    ax_b.text(
+        tau + 8,
+        q_cap - 60,
+        f"Schröder et al. (2015) study:\nfast t² to {q_cap / 1000:.1f} MW"
+        f" at {tau:.0f} s (our fire)",
+        fontsize=8.5,
+        color=c_route,
+        weight="semibold",
+        va="top",
     )
     ax_b.axhline(q_ref, color="grey", lw=0.8, ls=":", zorder=1)
     ax_b.plot(t_cross, q_ref, "o", color=c_tj, ms=7, mec="white", zorder=6)
