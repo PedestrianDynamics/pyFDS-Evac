@@ -160,14 +160,14 @@ steps = [
     "done",
   ]],
   ["Run the evacuation arms, 10 seeds each (about 25-40 s per run; 6 in parallel)", [
-    "assets/schroeder2015_route/run_p1.sh \"$DATA/a047_pvc_h40\" \"$DATA/p1_a047_pvc_h40\" 6 --with-nofire",
-    "assets/schroeder2015_route/run_p1.sh \"$DATA/a047_pvc_h35\" \"$DATA/p1_a047_pvc_h35\" 6",
-    "assets/schroeder2015_route/run_p1.sh \"$DATA/a012_pvc_h30\" \"$DATA/p1_a012_pvc_h30\" 6",
+    "bash assets/schroeder2015_route/run_p1.sh \"$DATA/a047_pvc_h40\" \"$DATA/p1_a047_pvc_h40\" 6 --with-nofire",
+    "bash assets/schroeder2015_route/run_p1.sh \"$DATA/a047_pvc_h35\" \"$DATA/p1_a047_pvc_h35\" 6",
+    "bash assets/schroeder2015_route/run_p1.sh \"$DATA/a012_pvc_h30\" \"$DATA/p1_a012_pvc_h30\" 6",
   ]],
   ["Print the page's numbers and draw its evacuation figures (about 3 min)", [
     "python scripts/docs/schroeder2015_route.py --data \"$DATA\"",
   ]],
-  ["Optional, for the fire-choice figures: write and run the other six fire decks (about 7 h in all)", [
+  ["Optional, for the fire-choice figures: write and run the other six fire decks (about 6 h in all)", [
     "python assets/schroeder2015_route/make_decks.py \"$DATA\"",
     "for F in a047_pvc_h30 a047_pur_h30 a047_pur_h40 a012_pvc_h40 a012_pur_h30 a012_pur_h40; do",
     "  (cd \"$DATA/$F\" && mpiexec -n 6 fds $F.fds)",
@@ -184,7 +184,8 @@ expected = [
   "main fire, gate door-B share: 0.05 for starts 30-120 s, 0.94 after 150 s",
 ]
 expected_note = """\
-These are the last lines of scripts/docs/schroeder2015_route.py. The \
+scripts/docs/schroeder2015_route.py prints these lines after its tables \
+and before it writes the figures. The \
 evacuation runs are reproducible for a given seed; FDS output from \
 another FDS build or machine can move them slightly."""
 results_commit = "7e9c4c30"

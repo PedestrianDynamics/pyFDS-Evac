@@ -54,7 +54,7 @@ Then the four arms, 10 seeds each (about 25–40 s per run), from the
 repository root:
 
 ```bash
-PY="uv run python" assets/schroeder2015_route/run_p1.sh \
+PY="uv run python" bash assets/schroeder2015_route/run_p1.sh \
     "$FIRE/a047_pvc_h40" "$RUNS/p1_a047_pvc_h40" 6 --with-nofire
 ```
 

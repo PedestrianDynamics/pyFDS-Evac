@@ -524,7 +524,9 @@ def report_clear_air(data, ps, ag):
             ],
             [
                 "bias before the fix of #350 (b42f07ef)",
-                f"{np.mean(old_b) - y_sp:+.2f} m",
+                f"{np.mean(old_b) - y_sp:+.2f} m"
+                if np.isfinite(old_b[0])
+                else "no p0a_nofire folder in DATA",
             ],
             [
                 "exit-E share pooled (per-seed range)",

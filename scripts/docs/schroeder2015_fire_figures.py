@@ -184,6 +184,8 @@ def report_premovement():
         "uniform a = 16.1, b = 223.9": stats.uniform(16.1, 223.9 - 16.1),
         "lognormal a = 4.676, b = 0.472": stats.lognorm(0.472, scale=np.exp(4.676)),
     }
+    below = stats.norm(120, 60).cdf(0)
+    print(f"N(120, 60) s below 0 s: {100 * below:.1f} %\n")
     t = np.linspace(0, 1500, 300001)
     dt = t[1] - t[0]
     rows = []

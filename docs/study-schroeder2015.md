@@ -299,8 +299,8 @@ Four facts of the `gate` code explain the pattern
 - The search uses the smoke present at decision time
   (`_generate_candidates`). Only the optical depth τ of the chosen path is
   anticipated, edge by edge, at the arrival time at each edge's start
-  (`_measure_route`). The model pages do not yet state this
-  ([#415](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/415)).
+  (`_measure_route`); see
+  [#415](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/415).
 - Routes are ranked by τ first (`GatePolicy.order_key`). An exit switch
   needs the rival's τ to be lower by more than 6 × 0.1 = 0.6 (`_tau_band`).
   A route is refused above τ = 6 for the current exit and 4.8 for a rival
@@ -435,8 +435,8 @@ the 1.6 m slice.
   smoke that will arrive later. Agents could not see that smoke
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 - The gate's τ = 6 comes from FDS+Evac. Schröder's factor 2 and
-  f<sub>risk</sub> are chosen, not fitted (p. 332). Neither rule is
-  calibrated against behaviour, so neither ranks above the other.
+  f<sub>risk</sub> are chosen, not fitted (p. 332). The page ranks neither
+  rule above the other.
 - The door-choice pattern is a property of the model: a lexicographic τ
   rule with present-time path search from one hall node. No occupant
   behaviour was observed.
@@ -475,11 +475,11 @@ the repository root, or from the unpacked zip with `python` instead of
    run. For all seeds at once:
 
    ```bash
-   PY="uv run python" assets/schroeder2015_route/run_p1.sh \
+   PY="uv run python" bash assets/schroeder2015_route/run_p1.sh \
        "$DATA/a047_pvc_h40" "$DATA/p1_a047_pvc_h40" 6 --with-nofire
-   PY="uv run python" assets/schroeder2015_route/run_p1.sh \
+   PY="uv run python" bash assets/schroeder2015_route/run_p1.sh \
        "$DATA/a047_pvc_h35" "$DATA/p1_a047_pvc_h35" 6
-   PY="uv run python" assets/schroeder2015_route/run_p1.sh \
+   PY="uv run python" bash assets/schroeder2015_route/run_p1.sh \
        "$DATA/a012_pvc_h30" "$DATA/p1_a012_pvc_h30" 6
    ```
 
@@ -502,7 +502,7 @@ the repository root, or from the unpacked zip with `python` instead of
 
 4. **Fire choice**, optional: it needs all nine fires. Write the decks with
    `uv run python assets/schroeder2015_route/make_decks.py "$DATA"`, run
-   each with FDS as in step 1 (about 10 h in all), then
+   each with FDS as in step 1 (about 6 h for the six further decks), then
    `uv run python scripts/docs/schroeder2015_fire_figures.py --data "$DATA"`.
 
 **Provenance.** The evacuation runs on this page come from commit
@@ -544,9 +544,9 @@ used `FDS-6.10.1-0-g12efa16-release`.
 **Open design questions.**
 
 1. Present-time path search against anticipated τ.
-2. Anticipation at the start of each edge charges long downstream legs
-   early: a 31.6 m corridor leg gets the smoke of up to about 30 s
-   before the agent walks it.
+2. Each edge is sampled at the arrival time at its start, so a long
+   corridor leg is charged the smoke present before the agent walks most
+   of it.
 3. One shared hall node gives every hall agent the same door per exit.
 4. The 1e-6·L length floor lets the path search react to τ of order 1e-4;
    [the gate page](/docs/route-cost-gate.md) discusses the floor.
