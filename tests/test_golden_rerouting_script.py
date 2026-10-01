@@ -393,3 +393,67 @@ def test_fds_deck_needs_its_fds_hash(golden):
     assert gaps == [f"base x has no fds_dir fingerprint for {fds_deck}"]
     record["decks"][fds_deck]["fds_dir"] = "f"
     assert golden._fingerprint_gaps(record, "base", Path("x"), [fds_deck, DECK]) == []
+
+
+def _summary(golden, **metrics) -> str:
+    base = {"agents": [{"id": 1, "t": 2.5}], "deck": {}, "metrics": {"n": 3}}
+    base["metrics"] |= metrics
+    return golden._summary_text(base)
+
+
+_COVERAGE = {"walkable_outside_m2": 0.0, "quantities": ["TEMPERATURE"]}
+
+
+@pytest.mark.parametrize("side", ["a", "b"])
+def test_added_metrics_on_one_side_are_listed_not_compared(golden, tmp_path, side):
+    """A head with the #426 metrics still matches a base run without them."""
+    texts = {"a": _summary(golden), "b": _summary(golden)}
+    texts[side] = _summary(
+        golden, fds_coverage=_COVERAGE, fds_outside={"rows": 0, "agents": 0}
+    )
+    a, b = (
+        tmp_path / "a" / "egress_summary.json",
+        tmp_path / "b" / "egress_summary.json",
+    )
+    for path, key in ((a, "a"), (b, "b")):
+        path.parent.mkdir()
+        path.write_text(texts[key], encoding="utf-8")
+    assert golden._compare_file(a, b) == []
+    role = "base" if side == "a" else "head"
+    assert golden._added_notes(a, b) == [
+        f"metrics.fds_coverage only in {role}; not compared",
+        f"metrics.fds_outside only in {role}; not compared",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("metrics_a", "metrics_b"),
+    [
+        ({}, {"n": 4, "fds_outside": {"rows": 0}}),  # an existing key differs
+        ({"fds_outside": {"rows": 0}}, {"fds_outside": {"rows": 1}}),  # both sides
+    ],
+    ids=["existing_key", "added_on_both"],
+)
+def test_other_metric_differences_still_count(golden, tmp_path, metrics_a, metrics_b):
+    a, b = (
+        tmp_path / "a" / "egress_summary.json",
+        tmp_path / "b" / "egress_summary.json",
+    )
+    a.parent.mkdir()
+    b.parent.mkdir()
+    a.write_text(_summary(golden, **metrics_a), encoding="utf-8")
+    b.write_text(_summary(golden, **metrics_b), encoding="utf-8")
+    assert golden._compare_file(a, b)
+
+
+def test_added_metrics_keep_bytes_deciding(golden, tmp_path):
+    """Leaving out an added metric does not turn 1.0 and 1 into equals."""
+    a, b = (
+        tmp_path / "a" / "egress_summary.json",
+        tmp_path / "b" / "egress_summary.json",
+    )
+    a.parent.mkdir()
+    b.parent.mkdir()
+    a.write_text(_summary(golden, t=1.0), encoding="utf-8")
+    b.write_text(_summary(golden, t=1, fds_outside={"rows": 0}), encoding="utf-8")
+    assert golden._compare_file(a, b)

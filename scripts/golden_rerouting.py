@@ -29,7 +29,8 @@ Usage::
 ``--data-root`` defaults to the maintainer's sciebo ``fds-evac-data`` folder.
 A deck whose files are missing there is reported and skipped. ``--compare``
 reports, per run and file, which columns differ and where the first
-difference is; the files must be byte-identical. With ``--expect-base`` and
+difference is; the files must be byte-identical, except that a run metric
+in ``ADDED_METRICS`` present on one side only is listed and not compared. With ``--expect-base`` and
 ``--expect-head`` it also checks that each folder was run at that commit, and
 it fails on a folder run from a dirty tree or on a folder compared with
 itself. Both runs and compare check the full inventory of the selected
@@ -66,6 +67,11 @@ MODES: dict[str, tuple[str, ...]] = {
     ),
     "history_off": ("route_history.csv", "egress_summary.json"),
 }
+# Run metrics a later revision added (#426): the FDS coverage report and the
+# count of samples outside the FDS domain. In an egress summary that holds
+# one of them on one side only, it is listed and left out of the comparison;
+# on both sides it is compared like every other key.
+ADDED_METRICS = ("fds_coverage", "fds_outside")
 
 
 @dataclass(frozen=True)
@@ -211,11 +217,15 @@ def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
             cli.apply_outputs(result, scenario, opts, log=print)
             summary = _egress_summary(result, scenario, deck)
             (out / "egress_summary.json").write_text(
-                json.dumps(summary, indent=1, sort_keys=True) + "\n",
-                encoding="utf-8",
+                _summary_text(summary), encoding="utf-8"
             )
         finally:
             result.cleanup()
+
+
+def _summary_text(summary: dict) -> str:
+    """Return an egress summary as the run writes it."""
+    return json.dumps(summary, indent=1, sort_keys=True) + "\n"
 
 
 def _egress_summary(result, scenario, deck: GoldenDeck) -> dict:
@@ -465,9 +475,38 @@ def _flatten(value, prefix: str = "") -> dict[str, object]:
     return {prefix: value}
 
 
-def _compare_json(a: Path, b: Path) -> list[str]:
-    fa = _flatten(json.loads(a.read_text(encoding="utf-8")))
-    fb = _flatten(json.loads(b.read_text(encoding="utf-8")))
+def _comparable_bytes(a: Path, b: Path) -> tuple[bytes, bytes, list[str]]:
+    """Return the bytes of *a* and *b* to compare, and what was left out.
+
+    Only an egress summary with an ``ADDED_METRICS`` key on one side changes:
+    that side is written again without the key, exactly as the run writes a
+    summary, so the rest still compares byte for byte.
+    """
+    bytes_a, bytes_b = a.read_bytes(), b.read_bytes()
+    if a.name != "egress_summary.json" or bytes_a == bytes_b:
+        return bytes_a, bytes_b, []
+    try:
+        summary_a, summary_b = json.loads(bytes_a), json.loads(bytes_b)
+        metrics_a, metrics_b = summary_a["metrics"], summary_b["metrics"]
+        one_sided = [k for k in ADDED_METRICS if (k in metrics_a) != (k in metrics_b)]
+    except (ValueError, KeyError, TypeError):
+        return bytes_a, bytes_b, []
+    notes, sides = [], set()
+    for key in one_sided:
+        side = "base" if key in metrics_a else "head"
+        (metrics_a if side == "base" else metrics_b).pop(key)
+        sides.add(side)
+        notes.append(f"metrics.{key} only in {side}; not compared")
+    if "base" in sides:
+        bytes_a = _summary_text(summary_a).encode("utf-8")
+    if "head" in sides:
+        bytes_b = _summary_text(summary_b).encode("utf-8")
+    return bytes_a, bytes_b, notes
+
+
+def _compare_json(a: bytes, b: bytes) -> list[str]:
+    fa = _flatten(json.loads(a))
+    fb = _flatten(json.loads(b))
     keys = sorted(set(fa) | set(fb))
     diffs = [k for k in keys if fa.get(k, "<missing>") != fb.get(k, "<missing>")]
     report = [
@@ -488,10 +527,13 @@ def _compare_file(a: Path, b: Path) -> list[str]:
     """
     if not a.exists() or not b.exists():
         return [f"missing: {a if not a.exists() else b}"]
-    bytes_a, bytes_b = a.read_bytes(), b.read_bytes()
+    bytes_a, bytes_b, _ = _comparable_bytes(a, b)
     if bytes_a == bytes_b:
         return []
-    report = _compare_csv(a, b) if a.suffix == ".csv" else _compare_json(a, b)
+    if a.suffix == ".csv":
+        report = _compare_csv(a, b)
+    else:
+        report = _compare_json(bytes_a, bytes_b)
     offset = next(
         (i for i, (x, y) in enumerate(zip(bytes_a, bytes_b)) if x != y),
         min(len(bytes_a), len(bytes_b)),
@@ -500,6 +542,13 @@ def _compare_file(a: Path, b: Path) -> list[str]:
         f"bytes differ at offset {offset} ({len(bytes_a)} vs {len(bytes_b)} bytes)"
     )
     return report
+
+
+def _added_notes(a: Path, b: Path) -> list[str]:
+    """List the ``ADDED_METRICS`` present on one side of *a* and *b* only."""
+    if not a.exists() or not b.exists():
+        return []
+    return _comparable_bytes(a, b)[2]
 
 
 def _manifest_problems(out: Path, names: list[str]) -> list[str]:
@@ -653,7 +702,7 @@ def _compare(
             report = _compare_file(dir_a / where, dir_b / where)
             status = "DIFF" if report else "same"
             print(f"{status}  {where}")
-            for line in report:
+            for line in report + _added_notes(dir_a / where, dir_b / where):
                 print(f"      {line}")
             differs = differs or bool(report)
     print("differences found" if differs else "identical")
