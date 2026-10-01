@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  # OIDC upload to Codecov; no repository secret needed.
+  id-token: write
 
 jobs:
   pytest:
@@ -25,4 +27,14 @@ jobs:
       # output from the external data store carry the external_data marker
       # and are deselected here; locally they skip when the data is absent.
       - name: Run the test suite
-        run: uv run pytest -q -m "not external_data"
+        run: uv run pytest -q -m "not external_data" --cov --cov-report=xml --cov-report=term
+      # Pull requests from forks get no OIDC token; they upload tokenless,
+      # which Codecov accepts for public repositories. An upload failure
+      # never fails the job.
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.xml
+          disable_search: true
+          use_oidc: ${{ !github.event.pull_request.head.repo.fork }}
+          fail_ci_if_error: false
