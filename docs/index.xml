@@ -1376,7 +1376,19 @@ time. The standard notes that the evacuation time \(t_{\mathrm{evac}}\)
 consists of the last two terms only, and it splits \(t_{\mathrm{pre}}\) into
 a recognition time and a response time. The Society of Fire Protection
 Engineers (SFPE) Handbook uses the same terms
-(Gwynne and Boyce 2016, Ch. 64).&lt;/p>
+(Gwynne et al. 2026, Ch. 72, p. 2378).&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/aset_rset_timeline.png" alt="Schematic egress timeline. A top bar shows the detection time followed by the warning time, from ignition to the general alarm. Below, six occupant rows start at the alarm, each with a light pre-travel bar followed by a dark travel bar of different lengths, sorted by exit time. A solid vertical line marks t_RSET at the exit of the last occupant, a dashed red line marks t_ASET later, and a bracket between them marks the margin t_marg. A bracket under the last row marks t_evac,i = t_pre,i &amp;#43; t_trav,i" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>The egress timeline of Eqs. 1–2 as a schematic; the times are
+illustrative. Detection and warning happen once for the whole building.
+After the general alarm, each occupant has their own pre-travel time
+\(t_{\mathrm{pre},i}\) (light) and travel time \(t_{\mathrm{trav},i}\)
+(dark); a dot marks each exit. ISO/TR 16738 (§7) warns that the two
+distributions interact, so they cannot be added directly. The figure draws
+\(t_{\mathrm{RSET}}\) at the exit of the last occupant, the latest time from
+ignition to exit, as RiMEA 4.1.1 (§2.13) defines its evacuation time, which starts at
+ignition.
+Figure inspired by Fig. 2 of RiMEA 4.1.1 (p. 10). Script:
+&lt;code>scripts/figures/fundamentals_aset_rset_timeline.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>What the timeline rests on&lt;span class="hx-absolute -hx-mt-20" id="what-the-timeline-rests-on">&lt;/span>
 &lt;a href="#what-the-timeline-rests-on" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>ASET comes from the fire (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/design-fires/">Design fires&lt;/a>): the time-concentration curves of heat, toxic gases
 and smoke at the occupants&amp;rsquo; positions, compared with tenability limits. The
@@ -1507,14 +1519,17 @@ enclosure the two terms cannot be added directly because the distributions
 interact (§7). See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/pre-movement/">Pre-movement time&lt;/a>.&lt;/p>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The definitions differ in where the clock starts. ISO/TR 16738 Eq. 2 and
-SFPE Ch. 64 count RSET from ignition, since they include detection. SFPE
-Ch. 56 (Bukowski and Tubbs 2016) defines RSET from the notification of
-occupants and ASET from notification to the onset of untenable conditions,
-while also stating that evacuation times consist of detection, notification,
-pre-movement and movement times. When two analyses are compared, check which
-origin each uses. The terms also vary: &amp;ldquo;escape&amp;rdquo; in ISO/TR 16738, &amp;ldquo;egress&amp;rdquo; or
-&amp;ldquo;evacuation&amp;rdquo; in the SFPE Handbook, for the same quantities.&lt;/p>
-&lt;p>ASET is not one number. It varies with position and with the tenability
+the SFPE Handbook count RSET from ignition: Ch. 66 defines RSET as the time
+from fire initiation until the last occupant reaches a safe place, and ASET
+as the time from fire initiation to the onset of untenable conditions
+(Tubbs and Alonso-Gutierrez 2026, p. 2158), and Ch. 72 starts its timeline
+at ignition (p. 2378). The 2016 edition (Bukowski and Tubbs 2016, Ch. 56,
+p. 2038) counted both from the notification of occupants, so older analyses
+may use that origin. When two analyses are compared, check which origin
+each uses. The terms also vary for the same quantities: &amp;ldquo;escape&amp;rdquo; in
+ISO/TR 16738; the SFPE Handbook mixes &amp;ldquo;evacuation&amp;rdquo;, &amp;ldquo;egress&amp;rdquo; and &amp;ldquo;escape&amp;rdquo;
+(Ch. 66, p. 2158; Ch. 72, p. 2378).&lt;/p>
+&lt;p>ASET varies with position and with the tenability
 criterion chosen, and the criterion itself is set for a fraction of the
 population (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>).&lt;/p>
 &lt;p>Which part of the pre-movement distribution matters depends on density.
@@ -1543,9 +1558,17 @@ Read from the public preview (§1–7).&lt;/li>
 Guidelines for the estimation of time to compromised tenability in
 fires&lt;/em>. ISO, Geneva.
 &lt;a href="https://www.iso.org/standard/56172.html" target="_blank" rel="noopener">iso.org/standard/56172&lt;/a>.&lt;/li>
+&lt;li>RiMEA e.V. (2025). &lt;em>Guideline for Microscopic Evacuation Analysis&lt;/em>,
+version 4.1.1, 11 September 2025. &lt;a href="https://rimea.de/" target="_blank" rel="noopener">rimea.de&lt;/a>.
+§2.8–2.13 (pp. 9–10) and Fig. 2 (p. 10).&lt;/li>
+&lt;li>Tubbs, J. S., &amp;amp; Alonso-Gutierrez, V. (2026). &lt;em>Egress concepts and design
+strategies&lt;/em>. SFPE Handbook of Fire Protection Engineering, 6th ed.,
+Ch. 66, 2139–2164. p. 2158.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_66" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_66&lt;/a>&lt;/li>
 &lt;li>Bukowski, R. W., &amp;amp; Tubbs, J. S. (2016). &lt;em>Egress concepts and design
 approaches&lt;/em>. SFPE Handbook of Fire Protection Engineering, 5th ed.,
-Ch. 56, 2012–2046.
+Ch. 56, 2012–2046. p. 2038; cited only for the notification origin of
+that edition.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_56" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_56&lt;/a>&lt;/li>
 &lt;li>Engineers Australia Society of Fire Safety (2014). &lt;em>Practice note for
 tenability criteria in building fires&lt;/em>, version 2.0, 3 April 2014.
@@ -1558,9 +1581,10 @@ to occupant behaviour and tenability&lt;/em>. Fire Safety Science, 7, 91–102.
 &lt;li>Babrauskas, V., Fleming, J. M., &amp;amp; Russell, B. D. (2010). &lt;em>RSET/ASET, a
 flawed concept for fire safety assessment&lt;/em>. Fire and Materials, 34(7),
 341–355. &lt;a href="https://doi.org/10.1002/fam.1025" target="_blank" rel="noopener">doi:10.1002/fam.1025&lt;/a>&lt;/li>
-&lt;li>Gwynne, S. M. V., &amp;amp; Boyce, K. E. (2016). &lt;em>Engineering data&lt;/em>. SFPE
-Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_64" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_64&lt;/a>&lt;/li>
+&lt;li>Gwynne, S. M. V., Boyce, K. E., &amp;amp; Lovreglio, R. (2026). &lt;em>Egress data for
+engineering analysis&lt;/em>. SFPE Handbook of Fire Protection Engineering,
+6th ed., Ch. 72, 2375–2484. p. 2378.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_72" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_72&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET ensemble how-to&lt;/a>, and
@@ -1572,7 +1596,7 @@ its own dose along its path; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>.&lt;/p>
 &lt;p>RSET from a run without the fire against a coupled run:
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>.&lt;/p>
-&lt;p>How it is verified: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">Verification&lt;/a> index; ASET and RSET themselves are outputs of a study, not of a test.&lt;/p></description></item><item><title>Quickstart</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</guid><description>
+&lt;p>How it is verified: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">Verification&lt;/a> index; ASET and RSET themselves are outputs of a study.&lt;/p></description></item><item><title>Quickstart</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</guid><description>
 &lt;p>Run the same evacuation twice, once in clear air and once in smoke, and see
 how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;p>&lt;strong>What you will do&lt;/strong>&lt;/p>
@@ -2657,10 +2681,10 @@ parameters are library-level.&lt;/li>
 &lt;/ul></description></item><item><title>Design fires</title><link>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/design-fires/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/design-fires/</guid><description>
 &lt;p>ASET depends on the fire, and a fire model needs its heat release rate
 (HRR) over time as input. A &lt;strong>design fire&lt;/strong> is that input chosen for an
-engineering analysis: an idealised HRR curve, not a forecast of one real
-fire. This page covers the published conventions: the t² growth law and
+engineering analysis: an idealised HRR curve; a real fire follows its own
+curve. The published conventions are the t² growth law and
 its four classes, how growth is capped, steady fires, fits to tests, and
-what a design fire does not tell you. The last section lists the fires
+what a design fire represents. The last section lists the fires
 used in the pyFDS-Evac studies.&lt;/p>
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
@@ -2668,15 +2692,14 @@ used in the pyFDS-Evac studies.&lt;/p>
 &lt;/div>&lt;/div>
 &lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
 &lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
-This page states published conventions only. pyFDS-Evac does not choose a
-fire: the fire is part of the FDS case you supply. The study fires in the
-&lt;a href="#fires-used-in-pyfds-evac-studies">last section&lt;/a> are study inputs, not
-defaults.
+pyFDS-Evac does not choose a fire: the fire is part of the FDS case you supply. The study fires in the
+&lt;a href="#fires-used-in-pyfds-evac-studies">last section&lt;/a> are inputs of those
+studies only.
 &lt;/div>
 &lt;/div>
 &lt;/div>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/design_fires.png" alt="Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s and the constant 60 kW fire of the Schröder et al. (2020) study, drawn against the fast and ultra-fast classes" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>(a) The four t² classes of vfdb Table 4.3 and SFPE Eqs. 14.49–14.52. Each
+&lt;p>&lt;em>(a) The four t² classes of vfdb Table 4.3 and SFPE Table 36.1. Each
 curve is solid up to its growth time, when it reaches 1055 kW, and dashed
 beyond. (b) The two study fires, with the fast and ultra-fast classes for
 reference. The T-junction ramp is read from its FDS deck; it passes
@@ -2694,14 +2717,14 @@ with a very low probability: &amp;ldquo;worst credible&amp;rdquo;, not &amp;ldqu
 pp. 40–41). The guide calls a design fire a theoretical but possible curve
 that covers many real fires on the safe side (§4.3.1.1, p. 53). The SFPE
 Handbook likewise calls the assumed fire characteristics of a scenario the
-&amp;ldquo;design fire&amp;rdquo; and describes them as a time-dependent HRR (Hadjisophocleous
-and Mehaffey 2016, p. 1271).&lt;/p>
+&amp;ldquo;design fire&amp;rdquo; and describes them as a time-dependent HRR (Fleischmann and
+Wade 2026, Ch. 3, p. 54).&lt;/p>
 &lt;p>The scenario is chosen for the goal of the analysis. For egress, a small
-fire at the main exit can matter more than a large fire elsewhere (Nilsson
-and Fahy 2016, p. 2048). The same building can give very different ASET
+fire at the main exit can matter more than a large fire elsewhere (Fahy
+and Nilsson 2026, Ch. 4, p. 74). The same building can give very different ASET
 and RSET depending on whether occupants are awake or asleep and whether the
 fire smoulders or flames (Babrauskas et al. 2010, p. 353).&lt;/p>
-&lt;p>A design fire is not meant to simulate every fire that could occur. It
+&lt;p>A design fire stands for a range of possible fires. It
 lets the engineer compare safety measures, and it is chosen by judgement
 and checked by varying it (Karlsson and Quintiere 2000, §3.5.1).&lt;/p>
 &lt;h2>The t² law as published&lt;span class="hx-absolute -hx-mt-20" id="the-t-law-as-published">&lt;/span>
@@ -2725,9 +2748,9 @@ into a spreading fire, and \(t_g\) is the characteristic growth time. vfdb
 writes \(t_\alpha\) on p. 58 and \(t_g\) later in the chapter.&lt;/p>
 &lt;h3>The four growth classes&lt;span class="hx-absolute -hx-mt-20" id="the-four-growth-classes">&lt;/span>
 &lt;a href="#the-four-growth-classes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The &lt;strong>growth time&lt;/strong> \(t_g\) is the time to reach 1000 Btu/s, about
-1055 kW, so \(\alpha = 1055/t_g^2\) (Schifiliti et al. 2016, p. 1326,
-after NFPA 72 Appendix B; Karlsson and Quintiere 2000, §3.4.4, after
-NFPA 204M).&lt;/p>
+1055 kW, so \(\alpha = 1055/t_g^2\) (Olenick and Cleary 2026, Ch. 43,
+Eq. 43.23, p. 1283; Fleischmann and Wade 2026, Eq. 3.1, p. 58; Karlsson and
+Quintiere 2000, §3.4.4, after NFPA 204M).&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -2735,7 +2758,7 @@ NFPA 204M).&lt;/p>
 &lt;th>\(t_g\) [s]&lt;/th>
 &lt;th>\(\alpha\) [kW/s²]&lt;/th>
 &lt;th>Typical use (vfdb Table 4.2)&lt;/th>
-&lt;th>Typical fuels (SFPE Table 38.2)&lt;/th>
+&lt;th>Typical fuels (SFPE Table 3.5)&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
@@ -2770,8 +2793,8 @@ NFPA 204M).&lt;/p>
 &lt;/tbody>
 &lt;/table>
 &lt;p>&lt;em>\(\alpha\) as printed in vfdb Table 4.3 (p. 60), which takes \(\alpha\) from
-Drysdale and \(t_g\) from NFPA 92B. SFPE Eqs. 14.49–14.52 (Alpert 2016,
-p. 443) print 0.00293, 0.01172, 0.0469 and 0.1876. Karlsson and Quintiere
+Drysdale and \(t_g\) from NFPA 92B. SFPE Table 36.1 (Hunt and Floyd 2026,
+p. 1116, from NFPA 72) prints 0.00293, 0.01172, 0.0469 and 0.1876. Karlsson and Quintiere
 Table 3.5 rounds them to 0.003, 0.012, 0.047 and 0.19. The occupancy
 column of vfdb Table 4.2 comes from BSI DD 240.&lt;/em>&lt;/p>
 &lt;p>vfdb calls these values guidance, not normative (p. 59, footnote 1). The
@@ -2784,15 +2807,16 @@ offices at medium, while a Swedish proposal in Karlsson and Quintiere
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>The class values of \(\alpha\) are normalised to 1000 Btu/s = 1055 kW:
-vfdb Table 4.3 says so in its footnote (1 Btu/s ≈ 1055.056 W), and
-SFPE Ch. 40 defines \(t_g\) as the time to 1055 kW (p. 1326). Check:
+vfdb Table 4.3 says so in its footnote (1 Btu/s ≈ 1055.056 W), and the
+SFPE Handbook defines \(t_g\) (Ch. 43, p. 1283) and \(t_{1055}\) (Ch. 3,
+Eq. 3.1 and Table 3.5, p. 58) as the time to 1055 kW. Check:
 1055/600² = 0.00293, 1055/300² = 0.01172, 1055/150² = 0.04689 and
 1055/75² = 0.18756 kW/s².&lt;/p>
-&lt;p>Other passages of the same sources use 1000 kW. vfdb Eq. 4.2 sets
+&lt;p>Other passages use 1000 kW. vfdb Eq. 4.2 sets
 \(\dot Q_0\) = 1000 kW, and its Table 4.3 heads the \(t_g\) column &amp;ldquo;time to
-reach 1 MW&amp;rdquo;. The SFPE Handbook defines its \(t_{1000}\) as the time to reach
-1000 kW (Hadjisophocleous and Mehaffey 2016, Eq. 38.1 and Table 38.2,
-pp. 1271–1272).&lt;/p>
+reach 1 MW&amp;rdquo;. The 2016 edition of the SFPE Handbook defined a \(t_{1000}\),
+the time to reach 1000 kW (Hadjisophocleous and Mehaffey 2016, Eq. 38.1 and
+Table 38.2, pp. 1271–1272); Chs. 3 and 43 of the 2026 edition use 1055 kW.&lt;/p>
 &lt;p>With 1000 kW, the same \(t_g\) gives an \(\alpha\) 5.5 % lower (1000/1055).
 The four class names and growth times are the same in all sources; only
 \(\alpha\) differs. When a report quotes a class, check which
@@ -2805,27 +2829,26 @@ design fire must say when and how.&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Fuel or ventilation limit.&lt;/strong> The maximum HRR is the lesser of the
 fuel-controlled and the ventilation-controlled maximum (vfdb 2020,
-§4.3.2.3, Eq. 4.4, p. 62; Hadjisophocleous and Mehaffey 2016,
-pp. 1272–1273). The curve follows t² up to that maximum and then levels
+§4.3.2.3, Eq. 4.4, p. 62; Fleischmann and Wade 2026, pp. 58–59). The curve follows t² up to that maximum and then levels
 off at a steady value.&lt;/li>
 &lt;li>&lt;strong>Flashover.&lt;/strong> In a room fire the t² curve holds only up to flashover
 and needs enough air. At flashover the curve is left and the HRR rises
 quickly to the room&amp;rsquo;s maximum (vfdb 2020, p. 59). The SFPE Handbook
 usually ignores that short rise and jumps to the post-flashover level
-(p. 1273).&lt;/li>
+(Ch. 3, p. 59).&lt;/li>
 &lt;li>&lt;strong>A local fire in a large hall&lt;/strong> stops growing when it reaches the
 maximum HRR of its limited burning area (vfdb 2020, p. 59).&lt;/li>
 &lt;li>&lt;strong>Decay.&lt;/strong> The curve must be checked against the fire load that is
 present (vfdb 2020, p. 59). Decay starts after about 70 % of the releasable
 energy is spent, vfdb (§4.3.3.4, p. 70), or after 70–80 % of the design
-fire load, SFPE (p. 1273), and both allow a linear fall. For life safety
+fire load, SFPE (Ch. 3, p. 59), and both allow a linear fall. For life safety
 the first 10–30 min matter, so the steady phase is often assumed to
 continue with no decay (Karlsson and Quintiere 2000, §3.5.4).&lt;/li>
-&lt;li>&lt;strong>Sprinklers.&lt;/strong> If the burning items may be shielded from the spray, the
-SFPE Handbook suggests assuming that sprinklers stop the growth but do
-not suppress the fire: the HRR stays at its value at activation. Often
-the HRR drops; for shielded fires it may keep rising (Hadjisophocleous
-and Mehaffey 2016, pp. 1272–1273). vfdb gives a simplified curve: t²
+&lt;li>&lt;strong>Sprinklers.&lt;/strong> The SFPE Handbook typically assumes that sprinklers stop
+the growth but do not suppress the fire: the HRR stays at its value at
+activation. Often the HRR drops, but suppression is not usually credited;
+the effect depends on the fire size at activation and on whether the fire
+is shielded from the spray (Fleischmann and Wade 2026, pp. 58–60). vfdb gives a simplified curve: t²
 growth up to activation, then constant for 5 min, then a linear fall to
 zero over 25 min (§7.3.3, Eqs. 7.1–7.3, p. 278). Any credit for
 sprinklers must allow for the chance that the system fails (vfdb 2020,
@@ -2839,31 +2862,29 @@ but it skips the early growth that often decides detection and the first
 smoke.&lt;/p>
 &lt;h3>Fits to tests and real events&lt;span class="hx-absolute -hx-mt-20" id="fits-to-tests-and-real-events">&lt;/span>
 &lt;a href="#fits-to-tests-and-real-events" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A growth factor can also be fitted to calorimeter data for one item.
-Karlsson and Quintiere (Table 3.4) and the SFPE Handbook (Schifiliti et
-al. 2016, Table 40.4, p. 1332) list such fits for the same furniture
+Karlsson and Quintiere (Table 3.4) and the SFPE Handbook (Olenick and
+Cleary 2026, Table 43.4, p. 1288) list such fits for the same furniture
 calorimeter tests. The tests suggest growth times between 50 and 500 s
-(p. 1331). A fit follows the test only from its &amp;ldquo;virtual time&amp;rdquo;, when the
+(p. 1287). A fit follows the test only from its &amp;ldquo;virtual time&amp;rdquo;, when the
 test starts to follow the t² curve, and it does not predict when growth
-stops or when the fuel runs out (p. 1331). &lt;strong>A fitted \(\alpha\) is not a
-class:&lt;/strong> it describes one item under one ignition, and a value such as
-0.1055 kW/s² sits between fast and ultra-fast.&lt;/p>
-&lt;h2>What a design fire is not&lt;span class="hx-absolute -hx-mt-20" id="what-a-design-fire-is-not">&lt;/span>
-&lt;a href="#what-a-design-fire-is-not" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;strong>Not a prediction.&lt;/strong> It is chosen to be exceeded rarely, not to match
-the fire that will occur.&lt;/li>
-&lt;li>&lt;strong>Not a verdict on the building.&lt;/strong> It is an input to an analysis; the
-verdict comes from comparing ASET with RSET under stated criteria.&lt;/li>
-&lt;li>&lt;strong>Not the scenario.&lt;/strong> The same curve can sit in different scenarios, at
-a different place or with different doors open.&lt;/li>
-&lt;li>&lt;strong>Not a class when it is a fit or a custom ramp.&lt;/strong> A piecewise-linear
-ramp has no \(\alpha\); compare it with the classes by the time it takes
-to reach 1055 kW.&lt;/li>
-&lt;li>&lt;strong>Not a property of the building.&lt;/strong> A growth class describes the fuel
+stops or when the fuel runs out (p. 1287). &lt;strong>A fitted \(\alpha\) describes
+one item under one ignition;&lt;/strong> a value such as 0.1055 kW/s² sits between
+fast and ultra-fast. A piecewise-linear ramp has no \(\alpha\); compare a
+ramp with the classes by the time it takes to reach 1055 kW.&lt;/p>
+&lt;h2>What a design fire represents&lt;span class="hx-absolute -hx-mt-20" id="what-a-design-fire-represents">&lt;/span>
+&lt;a href="#what-a-design-fire-represents" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>A fire chosen to be exceeded rarely.&lt;/strong> The fire that occurs follows
+its own curve.&lt;/li>
+&lt;li>&lt;strong>An input to the analysis.&lt;/strong> The verdict on the building comes from
+comparing ASET with RSET under stated criteria.&lt;/li>
+&lt;li>&lt;strong>One part of the scenario.&lt;/strong> The same curve can sit in different
+scenarios, at a different place or with different doors open.&lt;/li>
+&lt;li>&lt;strong>A property of the fuel.&lt;/strong> A growth class describes the fuel
 and its arrangement. Contents change over the life of a building.&lt;/li>
-&lt;li>&lt;strong>Not a smoke source term.&lt;/strong> The HRR does not fix the smoke. Soot and
+&lt;li>&lt;strong>The heat release rate only.&lt;/strong> The HRR does not fix the smoke. Soot and
 other product yields must be given separately (vfdb 2020, p. 60). For
-visibility this matters as much as the HRR. Yields are not constants
-either: the CO yield can vary by up to a factor of about 50 between
+visibility this matters as much as the HRR. Yields also change: the CO
+yield can vary by up to a factor of about 50 between
 well-ventilated flaming (φ &amp;lt; 1) and fuel-rich (φ &amp;gt; 1) burning (Purser 2003, p. 93, citing
 Tewarson).&lt;/li>
 &lt;/ul>
@@ -2871,12 +2892,13 @@ Tewarson).&lt;/li>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;strong>The t² law comes from free-burning tests.&lt;/strong> In a small enclosure the
 hot layer feeds heat back to the fuel, and in a closed one oxygen runs
-short; the free-burning rate must then be adjusted (Hadjisophocleous and
-Mehaffey 2016, p. 1272).&lt;/li>
+short; the free-burning rate must then be adjusted (Fleischmann and
+Wade 2026, p. 58).&lt;/li>
 &lt;li>&lt;strong>The incipient phase is left out.&lt;/strong> Smouldering before \(t_0\) releases
 little heat but can produce smoke that triggers detectors before growth
-starts (Karlsson and Quintiere 2000, §3.5.2; the SFPE Handbook excludes
-smouldering from its pre-flashover curves, p. 1271).&lt;/li>
+starts (Karlsson and Quintiere 2000, §3.5.2; the SFPE Handbook leaves
+the incipient and smouldering phase out of its design fires, Ch. 3,
+p. 54).&lt;/li>
 &lt;li>&lt;strong>Life safety and structure use different curves.&lt;/strong> For escape the time
 frame is mostly under 30 min and the design fire is an HRR curve; for
 structural stability it is a temperature–time curve over 0.5–3 h
@@ -2923,21 +2945,27 @@ Deutschen Brandschutzes. §4.1 (pp. 39–40); §4.2, item 5 (p. 47);
 Tables 4.2–4.3 (p. 60); §4.3.2.3, Eq. 4.4 (p. 62); §4.3.3.4 (p. 70);
 §7.3.3, Eqs. 7.1–7.3 (pp. 276–278). NFPA 92B and BSI DD 240 are cited
 here through this guide.&lt;/li>
-&lt;li>Hadjisophocleous, G. V., &amp;amp; Mehaffey, J. R. (2016). &lt;em>Fire scenarios&lt;/em>. SFPE
-Handbook of Fire Protection Engineering, 5th ed., Ch. 38, pp. 1271–1273.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_38" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_38&lt;/a>&lt;/li>
-&lt;li>Alpert, R. L. (2016). &lt;em>Ceiling jet flows&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 14, Eqs. 14.49–14.52, p. 443.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_14" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_14&lt;/a>&lt;/li>
-&lt;li>Schifiliti, R. P., Custer, R. L. P., &amp;amp; Meacham, B. J. (2016). &lt;em>Design of
-detection systems&lt;/em>. SFPE Handbook of Fire Protection Engineering, 5th
-ed., Ch. 40, pp. 1326, 1331–1332. NFPA 72 Appendix B is cited here
-through this chapter and Ch. 14.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_40" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_40&lt;/a>&lt;/li>
-&lt;li>Nilsson, D., &amp;amp; Fahy, R. (2016). &lt;em>Selecting scenarios for deterministic
+&lt;li>Fleischmann, C., &amp;amp; Wade, C. (2026). &lt;em>Fire scenarios&lt;/em>. SFPE Handbook of
+Fire Protection Engineering, 6th ed., Ch. 3, 43–72. Eq. 3.1 and
+Table 3.5, pp. 54, 58–60.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_3" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_3&lt;/a>&lt;/li>
+&lt;li>Fahy, R., &amp;amp; Nilsson, D. (2026). &lt;em>Selecting scenarios for deterministic
 fire safety engineering analysis: life safety for occupants&lt;/em>. SFPE
-Handbook of Fire Protection Engineering, 5th ed., Ch. 57, pp. 2047–2048.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_57" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_57&lt;/a>&lt;/li>
+Handbook of Fire Protection Engineering, 6th ed., Ch. 4, 73–89. p. 74.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_4" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_4&lt;/a>&lt;/li>
+&lt;li>Hunt, S. P., &amp;amp; Floyd, J. E. (2026). &lt;em>Flame height, fire plumes, and
+ceiling jets&lt;/em>. SFPE Handbook of Fire Protection Engineering, 6th ed.,
+Ch. 36, 1091–1129. Table 36.1, p. 1116. NFPA 72 is cited here through
+this chapter and Ch. 43.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_36" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_36&lt;/a>&lt;/li>
+&lt;li>Olenick, S. M., &amp;amp; Cleary, T. G. (2026). &lt;em>Detection&lt;/em>. SFPE Handbook of
+Fire Protection Engineering, 6th ed., Ch. 43, 1273–1333. Eq. 43.23 and
+Table 43.4, pp. 1283, 1287–1288.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_43" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_43&lt;/a>&lt;/li>
+&lt;li>Hadjisophocleous, G. V., &amp;amp; Mehaffey, J. R. (2016). &lt;em>Fire scenarios&lt;/em>. SFPE
+Handbook of Fire Protection Engineering, 5th ed., Ch. 38, pp. 1271–1272.
+Cited only for the \(t_{1000}\) of that edition.
+&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_38" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_38&lt;/a>&lt;/li>
 &lt;li>Karlsson, B., &amp;amp; Quintiere, J. G. (2000). &lt;em>Enclosure Fire Dynamics&lt;/em>. CRC
 Press, Boca Raton. §3.4.4 (Eq. 3.7, Tables 3.4–3.5), §3.5.1–3.5.4
 (Table 3.7). NFPA 204M is cited here through this book.&lt;/li>
@@ -3652,8 +3680,8 @@ passes it explicitly. Pass a &lt;code>tenability_config&lt;/code> whenever you p
 threshold applies, so nobody is incapacitated. &lt;code>&amp;quot;probabilistic&amp;quot;&lt;/code> (&lt;code>--incapacitation-mode probabilistic&lt;/code>)
 draws a log-normal threshold for each agent with median &lt;code>fed_threshold&lt;/code>.&lt;/p>
 &lt;p>The incapacitated occupant stays in the simulation, so the run continues to
-&lt;code>max_simulation_time&lt;/code> and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s. It is not
-an exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
+&lt;code>max_simulation_time&lt;/code>, and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s, although
+the occupant never left (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
 &lt;p>&lt;code>FdsFedField.from_fds&lt;/code> reads each gas from the slice nearest its
 &lt;code>slice_height_m&lt;/code> (default 1.6 m), as &lt;code>ExtinctionField.from_fds&lt;/code> and
 &lt;code>FdsHeatField.from_fds&lt;/code> do.&lt;/p>
@@ -5315,8 +5343,8 @@ incapacitated) before their exit. The engine records the irritant measure
 agents who were still inside. By then their FIC was already 4.5 to 5.9.&lt;/li>
 &lt;/ul>
 &lt;p>&amp;ldquo;Nobody reached FED 1&amp;rdquo; therefore does not mean &amp;ldquo;everyone had time&amp;rdquo;. This is
-one fire, one seed, and research software. The result describes this run. It
-is not a design verdict.&lt;/p>
+one fire, one seed, and research software. The result describes this run
+only.&lt;/p>
 &lt;h3>Make the numbers yourself&lt;span class="hx-absolute -hx-mt-20" id="make-the-numbers-yourself">&lt;/span>
 &lt;a href="#make-the-numbers-yourself" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>pyFDS-Evac does not compute ASET itself. A built-in report is planned in
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>. The
@@ -5464,7 +5492,7 @@ the 75 censored agents (grey, arrow). The solid part is the time spent beyond
 K ≥ 0.3 1/m. Markers: first K ≥ 0.3 1/m (circle), first HCl ≥ 300 ppm
 (diamond), first FED ≥ 0.3 (square); the other criteria of the table are
 left out to keep the bars readable. Censoring is shown by the grey colour
-and the arrow, not by hatching. Values at the agent&amp;rsquo;s position, z =
+and the arrow. Values at the agent&amp;rsquo;s position, z =
 2.0 m, 1 s resolution..&lt;/em>&lt;/p>
 &lt;p>Read the figure from the left edge of each bar. The first dozen agents
 started in clear air, and the limits reached them on the way. From about
@@ -5543,7 +5571,7 @@ that loses it at 300 s. Heat is
 not included in either panel. The map form follows Schröder et al. (2020);
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a> re-runs
 their demonstration case.&lt;/em>&lt;/p>
-&lt;p>Panel (b) is not a tenability limit. It shows when the signs stop guiding.
+&lt;p>Panel (b) measures wayfinding: it shows when the signs stop guiding.
 This is consistent with section 5, where 18 agents spawned between 22 and
 92 s never learned an exit: on this map the spawn centre loses sight of
 every sign at 39 s. The engine&amp;rsquo;s own sign test differs (see &lt;em>How the
@@ -5585,7 +5613,7 @@ This run fits none of it:&lt;/p>
 Each agent&amp;rsquo;s exposure starts when it spawns, while all times on this page
 count from ignition.&lt;/li>
 &lt;li>&lt;strong>The run is cut off.&lt;/strong> It stops at 300 s with most late spawners inside.
-The last exit, 299.8 s, is set by the time limit. It is not an RSET.&lt;/li>
+The time limit sets the last exit, 299.8 s, so it gives no RSET.&lt;/li>
 &lt;li>&lt;strong>There is no detection, alarm or pre-movement&lt;/strong>
 (&lt;code>&amp;quot;use_premovement&amp;quot;: false&lt;/code>). Exit minus spawn is travel time only: a
 median of 88.1 s and a maximum of 147.4 s for the 75 who got out.&lt;/li>
@@ -5623,11 +5651,11 @@ test act at every second.&lt;/em>&lt;/p>
 over a population, not for specific individuals (§5.2, p. 4). The per-agent
 comparison is our use of it. The SFPE Handbook frames the same question,
 the time between losing visibility and incapacitation (Purser and
-McAllister 2016, p. 2414).&lt;/li>
-&lt;li>&lt;strong>The FED is not the ISO 13571 asphyxiant FED.&lt;/strong> It is the FDS+Evac sum
+McAllister 2026, p. 2341).&lt;/li>
+&lt;li>&lt;strong>The FED is the FDS+Evac sum&lt;/strong>
 (CO + CN + NOx + FLD&lt;sub>irr&lt;/sub>) × HV&lt;sub>CO2&lt;/sub> + O2, which includes
 Purser&amp;rsquo;s lethal-dose term for HCl (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a>). ISO
-keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
+13571 keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
 thresholds to it is an analogy. FED 0.3 is a threshold for susceptible
 people, not a &amp;ldquo;safe&amp;rdquo; value: ISO treats 1 as the median of a log-normal
 response, so at 0.3 11.4 % of a population is still expected to be
@@ -5707,7 +5735,7 @@ sign decisions can differ slightly from these maps.&lt;/p>
 exposures under 10 minutes, evaluated at 2.0 m, untenable when any one
 criterion is exceeded. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility&lt;/a> for
 &lt;em>K&lt;/em> = &lt;em>C&lt;/em>/&lt;em>V&lt;/em>.&lt;/li>
-&lt;li>&lt;em>HCl.&lt;/em> SFPE Ch. 63, Table 63.6 (p. 2344): 200 ppm for escape impairment,
+&lt;li>&lt;em>HCl.&lt;/em> SFPE Ch. 70, Table 70.4 (p. 2288): 200 ppm for escape impairment,
 900 ppm for incapacitation, and 1000 ppm as the ISO 13571 value (ISO
 13571 §6.2.1, Eq. 4, p. 7, with an uncertainty of ±50 %). ISO 13571 uses
 the same threshold for FED and FEC (§5.4; A.5.2, p. 18), so 0.3 gives
@@ -5743,11 +5771,11 @@ p. 15. Full reference on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/f
 paraphrased; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritants&lt;/a> and
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.&lt;/li>
-&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). Assessment of hazards to
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). Assessment of hazards to
 occupants from smoke, toxic gases, and heat. &lt;em>SFPE Handbook of Fire
-Protection Engineering&lt;/em>, 5th ed., Ch. 63. Table 63.6 (p. 2344) and
-p. 2414.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
+Protection Engineering&lt;/em>, 6th ed., Ch. 70. Table 70.4 (p. 2288) and
+p. 2341.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
 &lt;li>Schröder, B., Arnold, L., &amp;amp; Seyfried, A. (2020). A map representation of
 the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>, 115, 103154.
 &lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2020.103154&lt;/a>&lt;/li>
@@ -5781,28 +5809,30 @@ speed in smoke and most smoke tenability limits are computed.&lt;/p>
 the length of a light path, not the route length \(L_k\) of the table.&lt;/p>
 &lt;h2>The equations as published&lt;span class="hx-absolute -hx-mt-20" id="the-equations-as-published">&lt;/span>
 &lt;a href="#the-equations-as-published" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Light of intensity \(I_0\) that crosses a path of length &lt;em>L&lt;/em> [m] through
-smoke leaves with intensity &lt;em>I&lt;/em> given by the Beer–Lambert law, written in the
-Fire Dynamics Simulator (FDS) User Guide (McGrattan et al., FDS 6.10.1,
-§22.10.5) as&lt;/p>
+smoke leaves with intensity &lt;em>I&lt;/em>. The attenuation follows the
+Bouguer–Lambert–Beer law, usually called the Beer–Lambert law (Bouguer 1729;
+Lambert 1760; Beer 1852). For smoke measurement, Guillaume (2026, SFPE
+Handbook, 6th ed., Ch. 33, pp. 980–981) writes it as \(I = I_0 \exp(-kL)\).
+The Fire Dynamics Simulator (FDS) User&amp;rsquo;s Guide (McGrattan et al. 2025,
+FDS 6.10.1, §22.10.5) writes the law as&lt;/p>
 $$
-\frac{I}{I_0} = e^{-KL} \qquad \text{(FDS UG Eq. 22.21)}
+\frac{I}{I_0} = e^{-KL} \qquad \text{(McGrattan et al. 2025, Eq. 22.21)}
 $$&lt;p>and &lt;em>K&lt;/em> is the product of a mass-specific extinction coefficient
 \(K_m\) [m²/kg] and the mass concentration of smoke particulate
 \(\rho Y_S\) [kg/m³]:&lt;/p>
 $$
-K = K_m\, \rho Y_S \qquad \text{(Eq. 22.22)}
+K = K_m\, \rho Y_S \qquad \text{(McGrattan et al. 2025, Eq. 22.22)}
 $$&lt;p>Along a path on which &lt;em>K&lt;/em> varies, the exponent becomes the integral of &lt;em>K&lt;/em>
 along the path, which FDS evaluates as a sum over cells for its beam detector
-(Eq. 18.5). That dimensionless integral is the optical depth. The optical
+(McGrattan et al. 2025, Eq. 18.5, §18.3.6). That dimensionless integral is the optical depth. The optical
 density per metre &lt;em>D&lt;/em> [1/m] uses base-10 logarithms instead of natural ones:&lt;/p>
 $$
-D \equiv -\frac{1}{L}\log_{10}\frac{I}{I_0} = K \log_{10} e \approx K/2.3 \qquad \text{(Eq. 22.24)}
+D \equiv -\frac{1}{L}\log_{10}\frac{I}{I_0} = K \log_{10} e \approx K/2.3 \qquad \text{(McGrattan et al. 2025, Eq. 22.24)}
 $$&lt;p>The distinction matters when reading the literature. Tenability limits are
 often quoted as OD/m (optical density per metre, &lt;em>D&lt;/em>), and Purser and
-McAllister (2016), in the Society of Fire Protection Engineers (SFPE)
+McAllister (2026), in the Society of Fire Protection Engineers (SFPE)
 Handbook, give both forms: for example OD/m = 0.2 corresponds to an
-extinction coefficient of about 0.5 1/m (Ch. 63, Table 63.5 and the text
-beside it).&lt;/p>
+extinction coefficient of about 0.5 1/m (Ch. 70, Table 70.3 and p. 2285).&lt;/p>
 &lt;h2>The data behind \(K_m\)&lt;span class="hx-absolute -hx-mt-20" id="the-data-behind">&lt;/span>
 &lt;a href="#the-data-behind" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS uses \(K_m\) = 8700 m²/kg by default (&lt;code>MASS_EXTINCTION_COEFFICIENT&lt;/code>).
 The User Guide describes it as a value suggested for flaming combustion of
@@ -5811,12 +5841,22 @@ most flaming fuels (FDS User Guide §22.10.5, footnote 7), citing
 Mulholland and Croarkin (2000).&lt;/p>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;em>K&lt;/em> depends on wavelength, and the 8700 m²/kg figure is for red light at
-633 nm. It is a property of flame-generated soot, not of every fire effluent.
+633 nm. It is a property of flame-generated soot; other fire effluents can differ.
 In a fire model &lt;em>K&lt;/em> also inherits every uncertainty of the predicted soot
 yield and soot transport. FDS writes the local &lt;em>K&lt;/em> as the &lt;code>EXTINCTION COEFFICIENT&lt;/code> output quantity (§22.10.5); the unrelated quantity
 &lt;code>EXTINCTION&lt;/code> is a combustion-suppression flag (§22.10.29).&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>Bouguer, P. (1729). &lt;em>Essai d&amp;rsquo;optique sur la gradation de la lumière&lt;/em>.
+Claude Jombert, Paris.&lt;/li>
+&lt;li>Lambert, J. H. (1760). &lt;em>Photometria, sive de mensura et gradibus
+luminis, colorum et umbrae&lt;/em>. Klett, Augsburg.&lt;/li>
+&lt;li>Beer, A. (1852). &lt;em>Bestimmung der Absorption des rothen Lichts in farbigen
+Flüssigkeiten&lt;/em>. Annalen der Physik, 162(5), 78–88.
+&lt;a href="https://doi.org/10.1002/andp.18521620505" target="_blank" rel="noopener">doi:10.1002/andp.18521620505&lt;/a>&lt;/li>
+&lt;li>Guillaume, E. (2026). &lt;em>Smoke release rate data&lt;/em>. SFPE Handbook of Fire
+Protection Engineering, 6th ed., Ch. 33, 979–986, pp. 980–981.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_33" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_33&lt;/a>&lt;/li>
 &lt;li>McGrattan, K., Hostikka, S., Floyd, J., McDermott, R., Vanella, M.,
 Mueller, E., &amp;amp; Paul, C. (2025). &lt;em>Fire Dynamics Simulator User&amp;rsquo;s
 Guide&lt;/em>. NIST Special Publication 1019, 6th ed., revision
@@ -5827,10 +5867,10 @@ coefficient of flame generated smoke&lt;/em>. Fire and Materials, 24(5),
 227–230.
 &lt;a href="https://doi.org/10.1002/1099-1018%28200009/10%2924:5%3C227::AID-FAM742%3E3.0.CO;2-9" target="_blank" rel="noopener">doi:10.1002/1099-1018(200009/10)24:5&amp;lt;227::AID-FAM742&amp;gt;3.0.CO;2-9&lt;/a>
 (value quoted from the FDS User Guide).&lt;/li>
-&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). &lt;em>Assessment of hazards to
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 63, 2308–2428.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
+Protection Engineering, 6th ed., Ch. 70, 2271–2352.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a>
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">route rerouting&lt;/a>.&lt;/p>
@@ -6636,7 +6676,7 @@ result; none is a Handbook tolerance.&lt;/p>
 &lt;td>excess over a skin-temperature isotropic field, &lt;em>f&lt;/em> (&lt;em>U&lt;/em> − 4σ\(T_s^4\))&lt;/td>
 &lt;td>none (fixed)&lt;/td>
 &lt;td>&lt;code>--heat-radiant-source integrated-intensity&lt;/code>&lt;/td>
-&lt;td>Maintainer decision: surroundings at skin temperature give no flux for any &lt;em>f&lt;/em>; at &lt;em>f&lt;/em> = 1/4 equals Eq. 63.49 with ε = 1 and the FDS skin gauge (FDS UG Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383)&lt;/td>
+&lt;td>Maintainer decision: surroundings at skin temperature give no flux for any &lt;em>f&lt;/em>; at &lt;em>f&lt;/em> = 1/4 equals Eq. 63.49 with ε = 1 and the FDS skin gauge (FDS User&amp;rsquo;s Guide 6.10.1, Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383)&lt;/td>
 &lt;td>Whether the radiant tolerance data (Table 63.19) hold for incident flux or for flux above the skin&amp;rsquo;s own exchange&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -6707,14 +6747,14 @@ computes movement inside the FDS executable, with its own social-force model
 on 2-D evacuation meshes. In pyFDS-Evac, &lt;a href="https://www.jupedsim.org" target="_blank" rel="noopener">JuPedSim&lt;/a>
 moves the agents on a continuous walkable polygon. The operational model is
 chosen in the scenario JSON (&lt;code>model_type&lt;/code>, default &lt;code>CollisionFreeSpeedModel&lt;/code>).&lt;/p>
-&lt;p>&lt;strong>Smoke is read, not computed alongside.&lt;/strong> pyFDS-Evac never runs FDS. It reads
+&lt;p>&lt;strong>Smoke is read from a finished FDS run.&lt;/strong> pyFDS-Evac never runs FDS. It reads
 the slice files of a finished FDS run and samples them at the agents'
 positions. The coupling is one-way: the fire acts on the occupants, and
 nothing the occupants do (opening a door, for example) acts on the fire.&lt;/p>
 &lt;p>A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). &lt;code>uv run python run.py --scenario &amp;lt;json|dir|zip&amp;gt; --fds-dir &amp;lt;fds output&amp;gt;&lt;/code> combines them.&lt;/p>
 &lt;h2>Defaults follow FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="defaults-follow-fdsevac">&lt;/span>
-&lt;a href="#defaults-follow-fdsevac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac is an enhancement of FDS+Evac, not a clone. Where a mechanism has
+&lt;a href="#defaults-follow-fdsevac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac is an enhancement of FDS+Evac. Where a mechanism has
 a direct FDS+Evac counterpart, the default is the FDS+Evac form, so that a
 case converted from FDS+Evac behaves as its author expects. Newer or
 alternative forms stay available as options. Earlier pyFDS-Evac versions
@@ -6798,8 +6838,8 @@ suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" 
 one-to-one FDS+Evac counterpart
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>); see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">Smoke-aware routing&lt;/a>.&lt;/li>
-&lt;li>An exit is found by reading its sign, not by seeing the door. FDS+Evac
-counts a door as visible at any distance if nothing blocks the line of
+&lt;li>An agent that does not know an exit learns it from the exit&amp;rsquo;s sign;
+FDS+Evac uses sight of the door. FDS+Evac counts a door as visible at any distance if nothing blocks the line of
 sight. pyFDS-Evac reads a sign only within its reading distance, 30 m by
 default even in clear air, and less off-axis or in smoke. See
 &lt;a href="#seeing-a-door-vs-reading-a-sign">Seeing a door vs reading a sign&lt;/a>.&lt;/li>
@@ -7022,9 +7062,16 @@ values cannot be copied across unchanged. The delay is in seconds.&lt;/p>
 from the 2019 corrigendum
 (&lt;a href="https://doi.org/10.1016/j.firesaf.2018.12.009" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2018.12.009&lt;/a>;
 &lt;a href="https://doi.org/10.1016/j.firesaf.2019.102829" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2019.102829&lt;/a>).
-The uniform preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo; sensitivity scenario, not
-data. For other occupancies, set both parameters from the matching table of
-that paper.&lt;/p>
+The uniform preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo; scenario, a range set for
+sensitivity tests. For other occupancies, set both
+parameters from the matching table of that paper.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/getting-started/premovement_presets.png" alt="Four panels of pre-movement time from 0 to 600 s. Gamma, log-normal and Weibull each rise to a peak near 30 to 40 s and fall off in a long right tail, with medians near 100 s and 95th percentiles of 368, 481 and 349 s. The uniform preset is a flat block from 0 to 60 s, with median 30 s and 95th percentile 57 s" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>The first four presets of the table above. Curves: the probability density
+with the preset (&lt;em>a&lt;/em>, &lt;em>b&lt;/em>). Grey bars: 10,000 draws made by pyFDS-Evac with
+the same preset, which follow the curves. Solid line: median; dashed line:
+95th percentile. The log-normal preset has the longest tail: 3.1 % of it
+lies beyond 600 s. Script:
+&lt;code>scripts/figures/coming_from_premovement_presets.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>The presets are used when &lt;code>use_premovement&lt;/code> is &lt;code>true&lt;/code> and &lt;code>premovement_param_a&lt;/code>
 or &lt;code>premovement_param_b&lt;/code> is missing; both parameters must be given for either
 to take effect (&lt;code>constant&lt;/code> needs only &lt;code>premovement_param_a&lt;/code>). A spawn area that
@@ -7615,7 +7662,7 @@ for the same quantities:&lt;/p>
 &lt;th>This page&lt;/th>
 &lt;th>Meaning&lt;/th>
 &lt;th>Jin 1970–1972&lt;/th>
-&lt;th>Jin 1978; Jin and Yamada 1985; SFPE Ch. 61&lt;/th>
+&lt;th>Jin 1978; Jin and Yamada 1985; SFPE Ch. 68&lt;/th>
 &lt;th>Cheung et al. 2026&lt;/th>
 &lt;/tr>
 &lt;/thead>
@@ -7638,7 +7685,7 @@ for the same quantities:&lt;/p>
 &lt;td>&lt;em>C&lt;/em> [–]&lt;/td>
 &lt;td>constant of &lt;em>V&lt;/em> = &lt;em>C&lt;/em>/&lt;em>K&lt;/em>&lt;/td>
 &lt;td>σ·&lt;em>V&lt;/em>&lt;/td>
-&lt;td>\(C_s \cdot V\) (1978); &lt;em>k&lt;/em> in Ch. 61 Eq. 61.4&lt;/td>
+&lt;td>\(C_s \cdot V\) (1978); &lt;em>k&lt;/em> in Ch. 68 Eq. 68.8&lt;/td>
 &lt;td>&lt;em>K&lt;/em>&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -7659,7 +7706,7 @@ for the same quantities:&lt;/p>
 &lt;td>\(k_s\) [–]&lt;/td>
 &lt;td>scattering over total extinction&lt;/td>
 &lt;td>&lt;em>k&lt;/em>&lt;/td>
-&lt;td>&lt;em>k&lt;/em> (1978); &lt;em>K&lt;/em> (1985); α (Ch. 61)&lt;/td>
+&lt;td>&lt;em>k&lt;/em> (1978); &lt;em>K&lt;/em> (1985); α (Ch. 68)&lt;/td>
 &lt;td>α&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -7882,8 +7929,8 @@ reach any value by a brighter lamp, but in practice perhaps 10 at most. The
 measured placard lines are &lt;em>KV&lt;/em> = 4.0, 3.1 and 2.2 for reflectances of 60,
 30 and 14 % on a 7 % background at 180 lx (Fig. 10, p. 6). Jin and Yamada
 (1985, p. 81), Jin (1997, Eqs. 3–4, p. 6) and Jin (2002, Eqs. 3–4,
-p. 2-43) repeat the ranges; Yamada and Akizuki (2016, SFPE Handbook 5th
-ed., Ch. 61, Eqs. 61.4–61.6, pp. 2186–2187) reproduce them.&lt;/p>
+p. 2-43) repeat the ranges; Yamada and Akizuki (2026, SFPE Handbook 6th
+ed., Ch. 68, Eqs. 68.8–68.10, p. 2208) reproduce them.&lt;/p>
 &lt;p>&lt;strong>The range of validity.&lt;/strong> Jin (1971, abstract p. 17 and p. 18; in English
 FRI Report 33, p. 38, and Jin 1978, p. 137) states that
 &lt;em>KV&lt;/em> is almost constant for visibilities of 5–15 m, in white and in black
@@ -7954,7 +8001,7 @@ extremely weak&amp;rdquo; (our translation). The English texts say instead that 
 illuminating light&amp;rdquo; (Jin 1978, p. 137, the earliest print of this wording we have)
 or &amp;ldquo;on the reflectance of the sign and the brightness of illuminating
 light&amp;rdquo; (Jin and Yamada 1985, p. 81;
-Jin 1997, p. 6; Jin 2002, p. 2-43; Ch. 61, p. 2186). Jin (1971,
+Jin 1997, p. 6; Jin 2002, p. 2-43; Ch. 68, p. 2208). Jin (1971,
 Fig. 8) shows \(\delta_c\) rising steeply below about 30–60 lx. &lt;em>In our
 reading&lt;/em>, the light matters at 22 lx and below, which covers all
 emergency-lighting levels (1–15 lx), so the reviews&amp;rsquo; wording is compatible
@@ -8097,17 +8144,19 @@ The larger &lt;em>KV&lt;/em> in dim light comes from the larger
 seen better than Jin&amp;rsquo;s model predicts.&lt;/li>
 &lt;/ul>
 &lt;h2>Other data on real exit signs&lt;span class="hx-absolute -hx-mt-20" id="other-data-on-real-exit-signs">&lt;/span>
-&lt;a href="#other-data-on-real-exit-signs" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Yamada and Akizuki (2016, Ch. 61, pp. 2187–2188) report experiments by
+&lt;a href="#other-data-on-real-exit-signs" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Yamada and Akizuki (2026, Ch. 68, pp. 2208–2210) report experiments by
 Yamada, Kubota, Abe and Iida (2004), which we have not read, on three
 Japanese exit signs of 250–800 cd/m² in non-irritant white smoke without
-background light (Table 61.1). The fitted slopes of &lt;em>V&lt;/em> against 1/&lt;em>K&lt;/em> are
-9.1, 22.5 and 12.6 (\(R^2\) = 0.93–0.94, Fig. 61.9); they attribute the
-22.5 of the larger B-class sign to its size (&amp;ldquo;twice as visible as others
-due to size effect&amp;rdquo;, p. 2187). An ordinary lit exit
-sign was lost at about 10 m at &lt;em>K&lt;/em> = 1.0 1/m, and they note that the
-constant &amp;ldquo;tends to be larger&amp;rdquo; than Jin&amp;rsquo;s. &lt;em>Our inference:&lt;/em> larger constants
-without background light agree in direction with Cheung et al.&amp;rsquo;s low-light
-results.&lt;/p>
+background light (Table 68.2). The fitted slopes of &lt;em>V&lt;/em> against 1/&lt;em>K&lt;/em> are
+9.1, 12.6 and 22.5 (\(R^2\) = 0.93–0.94, Fig. 68.15); they attribute the
+22.5 of the medium square sign to its size (&amp;ldquo;twice as visible as others
+due to size effect&amp;rdquo;, p. 2209). With background light, the small square
+sign&amp;rsquo;s slope falls from 12.6 to 5.1 (\(R^2\) = 0.92, Fig. 68.15, p. 2210).
+A rectangular lit exit sign was lost at about 10 m, a small square one at
+about 13 m, at &lt;em>K&lt;/em> = 1.0 1/m, and they note that the constant &amp;ldquo;tends to be
+somewhat larger&amp;rdquo; than Jin&amp;rsquo;s (p. 2209). &lt;em>Our inference:&lt;/em> larger constants
+without background light, and the smaller slope in the lit area, agree in
+direction with Cheung et al.&amp;rsquo;s low-light results.&lt;/p>
 &lt;p>Jin (&lt;a href="https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_040s.pdf" target="_blank" rel="noopener">FRI Report 40&lt;/a>,
 1975, Part 3, pp. 1–5; Japanese, English abstract p. 5) measured a
 xenon flashing sign in the same chamber. &lt;em>KV&lt;/em> rose linearly with the
@@ -8160,8 +8209,10 @@ $$
 S = 0.133 - 1.47 \log K \qquad \text{(Jin and Yamada 1985, Eq. 3)}
 $$&lt;p>and wrote the legibility distance as&lt;/p>
 $$
-V_1 = \frac{C}{K}\ (0.1 \le K &lt; 0.25), \qquad
-V_2 = \frac{C}{K}\,(0.133 - 1.47 \log K)\ (K \ge 0.25)
+\begin{aligned}
+V_1 &amp;= \frac{C}{K}, \quad 0.1 \le K &lt; 0.25,\\
+V_2 &amp;= \frac{C}{K}\,(0.133 - 1.47 \log K), \quad K \ge 0.25
+\end{aligned}
 \qquad \text{(Eqs. 4–5)}
 $$&lt;p>with &lt;em>C&lt;/em> = 6 matching the corridor data for reading the words of an exit
 sign (p. 87, Fig. 2). The equations do not hold for &lt;em>K&lt;/em> &amp;lt; 0.1 1/m or where
@@ -8189,7 +8240,7 @@ for a long time&amp;rdquo;, without a number. Jin (1978, p. 142) elsewhere write
 &amp;ldquo;If we assume that the smoke density at which fire escape action could be
 done is 0.5/m&amp;rdquo;, as an assumption for judging spectral effects, citing
 Moriya and Watanabe (1967) for the 10 minutes, not for the 0.5. Yamada
-and Akizuki (2016, Ch. 61, p. 2190) put it &amp;ldquo;under 0.5 [1/m]&amp;rdquo; and, two sentences later, &amp;ldquo;over 0.5 [1/m]&amp;rdquo;. We
+and Akizuki (2026, Ch. 68, p. 2211) put it &amp;ldquo;under 0.5 [1/m]&amp;rdquo; and, two sentences later, &amp;ldquo;over 0.5 [1/m]&amp;rdquo;. We
 found no primary source for the number. Possible origins, not
 established: Jin (1972, abstract) uses 0.5 1/m as its example of dense
 irritant smoke; Jin (1997, §2.1) finds most subjects emotionally affected
@@ -8226,8 +8277,8 @@ extrapolation.&lt;/li>
 Cheung et al., §2), so a real sign of fixed size is covered only
 partly: Jin (1970, Fig. 12) found the critical &lt;em>K&lt;/em> of a placard at 10 m
 rising from about 0.2 to 0.4 1/m with size and saturating above a
-visual angle of about 0.45° (our reading), and Ch. 61 (p. 2187)
-attributes the B-class sign&amp;rsquo;s larger slope to its size.&lt;/li>
+visual angle of about 0.45° (our reading), and Ch. 68 (p. 2209)
+attributes the medium square sign&amp;rsquo;s larger slope to its size.&lt;/li>
 &lt;li>&lt;em>C&lt;/em> depends on the sign&amp;rsquo;s luminance, the ambient light and the smoke.
 Jin&amp;rsquo;s lit-sign values are for 22–180 lx. In 1–22 lx, Cheung et al.
 measured 6–11 over signs up to 22 500 cd/m², and about 6–8.4 at exit-sign
@@ -8301,10 +8352,10 @@ Institute of Japan, 40. In Japanese with English abstracts (pp. 5, 10).
 &lt;li>Mulholland, G. W. (2002). &lt;em>Smoke production and properties&lt;/em>. SFPE
 Handbook of Fire Protection Engineering, 3rd ed., Ch. 2-13, 2-258–2-268.
 National Fire Protection Association, Quincy, MA. No DOI or public URL.&lt;/li>
-&lt;li>Yamada, T., &amp;amp; Akizuki, Y. (2016). &lt;em>Visibility and human behavior in fire
-smoke&lt;/em>. SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 61,
-2181–2206.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_61" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_61&lt;/a>&lt;/li>
+&lt;li>Yamada, T., &amp;amp; Akizuki, Y. (2026). &lt;em>Visibility and human behavior in fire
+smoke&lt;/em>. SFPE Handbook of Fire Protection Engineering, 6th ed., Ch. 68,
+2201–2224. Eqs. 68.8–68.10, Table 68.2, Fig. 68.15, pp. 2208–2211.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_68" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_68&lt;/a>&lt;/li>
 &lt;li>Cheung, W. K., Bielawski, J., Arnold, L., Huang, X., &amp;amp; Węgrzyński, W.
 (2026). &lt;em>Reappraisal of Jin&amp;rsquo;s visibility through fire smoke experiment:
 Insights into signage visibility and the impact of ambient light&lt;/em>. Fire
@@ -8364,7 +8415,7 @@ group-walking data in Jin (1978, Fig. 10).&lt;/p>
 &lt;p>Yamada, T., Kubota, K., Abe, N., &amp;amp; Iida, A. (2004). &lt;em>Visibility of
 emergency exit signs and emergency lights through smoke&lt;/em>. Proc. 6th
 Asia-Oceania Symposium on Fire Science and Technology, Daegu, 227–238.
-Reported through Ch. 61 (ref. 7).&lt;/p>
+Reported through Ch. 68 (ref. 18).&lt;/p>
 &lt;/li>
 &lt;/ul></description></item><item><title>What your FDS case must provide</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</guid><description>
 &lt;p>Read this before pointing &lt;code>--fds-dir&lt;/code> at a case for the first time.&lt;/p>
@@ -8628,7 +8679,7 @@ al.&amp;rsquo;s &lt;em>w&lt;/em>, &lt;em>x&lt;/em> (&lt;em>S&lt;/em> in the nota
 &lt;td>as Frantzich–Nilsson&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>Purser, Eq. 63.10&lt;/td>
+&lt;td>Purser, Eq. 70.8&lt;/td>
 &lt;td>&lt;em>K&lt;/em>&lt;/td>
 &lt;td>W = −0.1364 ln K + 0.6423&lt;/td>
 &lt;td>0.32–0.5 and 1.9–7.5 1/m&lt;/td>
@@ -8665,13 +8716,15 @@ to see (pp. 14–15). Jin (1978, pp. 144–148, Figs. 8–10, citing the
 report as ref. 11) restates these results in English; his Fig. 8 appears to redraw report
 Fig. 2 (our comparison by eye), without the horizontal line for walking
 in darkness.&lt;/p>
-&lt;p>Purser and McAllister (2016, Ch. 63) replot Jin&amp;rsquo;s data in their Fig. 63.16
-and fit straight lines to them (legend), over a stated &lt;em>K&lt;/em> = 0.2–1.13 1/m
-(non-irritant) and 0.32–0.5 1/m (irritant) (p. 2339):&lt;/p>
+&lt;p>Purser and McAllister (2026, SFPE Handbook, 6th ed., Ch. 70) replot Jin&amp;rsquo;s
+data in their Fig. 70.10 and fit straight lines to them (legend), over a
+stated &lt;em>K&lt;/em> = 0.2–1.13 1/m (non-irritant) and 0.32–0.5 1/m (irritant)
+(p. 2285):&lt;/p>
 $$
-v = 1.0573 - 0.4326\,K \quad (\text{non-irritant},\ R^2 = 0.27),
-\qquad
-v = 1.1517 - 0.9578\,K \quad (\text{irritant},\ R^2 = 0.035).
+\begin{aligned}
+v &amp;= 1.0573 - 0.4326\,K &amp;&amp; (\text{non-irritant},\ R^2 = 0.27),\\
+v &amp;= 1.1517 - 0.9578\,K &amp;&amp; (\text{irritant},\ R^2 = 0.035).
+\end{aligned}
 $$&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">Jin&amp;rsquo;s data: sources, ranges, darkness and participants&lt;/strong>
@@ -8690,8 +8743,8 @@ unwound from a reel, averaged over the whole corridor including stops
 &lt;p>&lt;strong>Scatter.&lt;/strong> The irritant fit explains almost none of the scatter: at an
 average &lt;em>K&lt;/em> = 0.42 1/m the speeds ranged from 0.37 to 1.1 m/s, mean
 0.75 m/s (standard deviation (SD) 0.21). In non-irritant smoke, at an
-average &lt;em>K&lt;/em> = 0.73 1/m, the mean was 0.74 m/s (SD 0.17) (Ch. 63,
-pp. 2339–2340).&lt;/p>
+average &lt;em>K&lt;/em> = 0.73 1/m, the mean was 0.74 m/s (SD 0.17) (Ch. 70,
+p. 2285).&lt;/p>
 &lt;p>&lt;strong>Ranges.&lt;/strong> Report Fig. 2 has no non-irritant point below about 0.5 1/m;
 Jin (1997, Fig. 3) redraws the same data. Purser and McAllister&amp;rsquo;s
 non-irritant point at &lt;em>K&lt;/em> ≈ 0.2 1/m (about 1.1 m/s) sits, in our reading,
@@ -8717,13 +8770,13 @@ his Fig. 8. Jin takes the density at which
 the average speed slows to 0.3 m/s as the maximum for people familiar with
 the building, &amp;ldquo;approximately 0.5/m–1.2/m&amp;rdquo; (p. 17). No non-irritant point
 in Fig. 2 is below about 0.45 m/s, so the 1.2 1/m end rests on the trend
-line extended (our reading). In our inference, Ch. 63&amp;rsquo;s &amp;ldquo;at an extinction
-coefficient of 1.15 … approximately 0.3 m/s&amp;rdquo; (p. 2339) and &amp;ldquo;has been
-shown&amp;rdquo; (p. 2413), Ronchi et al. (p. 415) and Purser (2003, p. 98) all go
+line extended (our reading). In our inference, Ch. 70&amp;rsquo;s &amp;ldquo;at an extinction
+coefficient of 1.15 … approximately 0.3 m/s&amp;rdquo; (p. 2285) and &amp;ldquo;has been
+shown&amp;rdquo; (p. 2341), Ronchi et al. (p. 415) and Purser (2003, p. 98) all go
 back to this reference line; the 1.15 1/m itself is not in the report
-(pp. 12–18). Ch. 63 pairs
-&lt;em>K&lt;/em> 1.15 with OD/m 0.55 in its prose but with OD/m 0.5 in Table 63.5 on the
-same page; only 0.5 is consistent with base 10.&lt;/p>
+(pp. 12–18). Ch. 70 pairs
+&lt;em>K&lt;/em> 1.15 with OD/m 0.55 in its prose (p. 2285) but with OD/m 0.5 in
+Table 70.3 (p. 2284); only 0.5 is consistent with base 10.&lt;/p>
 &lt;p>&lt;strong>Allowable smoke density.&lt;/strong> Two routes lead to Jin&amp;rsquo;s conclusion. From
 the minimum visibility proposed by others (3–5 m if familiar, 15–20 m if
 not) and the rule &amp;ldquo;Visibility (m) × Extinction coefficient ≈ 2&amp;rdquo; (p. 17,
@@ -8754,8 +8807,8 @@ subjects (p. 146).&lt;/p>
 text, our translation) describe burning wood cribs with very narrow
 spacing; the English abstract of Jin (1972, p. 11) calls the same smoke
 &amp;ldquo;generated from smoldering wood (nearly white smoke)&amp;rdquo;. Purser&amp;rsquo;s &amp;ldquo;smoke from
-non-flaming wood&amp;rdquo; (2003, p. 98) matches that abstract; Ch. 63&amp;rsquo;s &amp;ldquo;heating
-wood chippings&amp;rdquo; (p. 2339) may, as our inference, mix it up with the
+non-flaming wood&amp;rdquo; (2003, p. 98) matches that abstract; Ch. 70&amp;rsquo;s &amp;ldquo;heating
+wood chippings&amp;rdquo; (p. 2285) may, as our inference, mix it up with the
 wood-chip furnace smoke of Jin and Yamada (1985, 1989).&lt;/p>
 &lt;p>&lt;strong>Source chain.&lt;/strong> FRI Report No. 42 (September 1976, p. 12) states that the
 distance at which the sign became visible was recorded &amp;ldquo;and at the same
@@ -8801,27 +8854,27 @@ non-irritant point. The 0.3 m/s floor is Jin&amp;rsquo;s reference line for walk
 in darkness, not a measured point (Jin 1976, pp. 14, 17).&lt;/p>
 &lt;p>The fraction multiplies the unexposed walking speed (p. 98). Purser combines
 it with the fraction for irritants by adding the two losses, not by
-multiplying the fractions (p. 99; Ch. 63, Eq. 63.14); see
+multiplying the fractions (p. 99; Ch. 70, Eq. 70.12); see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/#irritants-and-walking-speed-fic">Irritants and walking speed&lt;/a>.&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">Caveats on Purser&amp;rsquo;s 2003 law&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-&lt;p>&lt;strong>Units.&lt;/strong> Purser does not define OD/m; Ch. 63 defines it as
-log₁₀(&lt;em>I&lt;/em>₀/&lt;em>I&lt;/em>) over 1 m (p. 2413). Jin and Yamada (1985, p. 80,
+&lt;p>&lt;strong>Units.&lt;/strong> Purser does not define OD/m; Ch. 70 defines it as
+log₁₀(&lt;em>I&lt;/em>₀/&lt;em>I&lt;/em>) over 1 m (p. 2341). Jin and Yamada (1985, p. 80,
 footnote) define the extinction coefficient with the natural log; applying
 that definition to the 1976 data is our inference, hence the factor ln 10.&lt;/p>
 &lt;p>&lt;strong>Range.&lt;/strong> The upper end, OD/m 0.55 (&lt;em>K&lt;/em> ≈ 1.27 1/m), is close to the top
 of Jin&amp;rsquo;s &amp;ldquo;approximately 0.5/m–1.2/m&amp;rdquo; (p. 17) but matches neither Jin&amp;rsquo;s 1.2
-(OD/m 0.52) nor Ch. 63&amp;rsquo;s 1.15 (OD/m 0.50); in our inference it comes from
-Ch. 63&amp;rsquo;s prose pairing of 1.15 with OD/m 0.55 (p. 2339). It lies beyond
+(OD/m 0.52) nor Ch. 70&amp;rsquo;s 1.15 (OD/m 0.50); in our inference it comes from
+Ch. 70&amp;rsquo;s prose pairing of 1.15 with OD/m 0.55 (p. 2285). It lies beyond
 Jin&amp;rsquo;s measured points.&lt;/p>
 &lt;p>&lt;strong>Fit.&lt;/strong> No fit quality or number of points is given, and the squares in
 Fig. 1 lie exactly on the line (1.010, 0.888, 0.715, 0.541, 0.454, 0.280
 at OD/m 0.13–0.55), so Fig. 1 shows the fitted line, not Jin&amp;rsquo;s points.&lt;/p>
 &lt;p>&lt;strong>Floor.&lt;/strong> It is written as an absolute 0.3 m/s (0.25 of the 1.2 m/s
-unexposed speed that Ch. 63 uses; FRI Report No. 42 gives no such value),
+unexposed speed that Ch. 70 uses; FRI Report No. 42 gives no such value),
 while
 the line reaches 0.28 at OD/m 0.55 and Fig. 1 shows about 0.27.&lt;/p>
 &lt;/div>
@@ -8873,28 +8926,38 @@ population to do worse than their young, fit participants (§3.1.1).&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h2>The fractional form is FDS+Evac&amp;rsquo;s normalisation&lt;span class="hx-absolute -hx-mt-20" id="the-fractional-form-is-fdsevacs-normalisation">&lt;/span>
-&lt;a href="#the-fractional-form-is-fdsevacs-normalisation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS+Evac, the evacuation module of the Fire Dynamics Simulator (FDS), does
-not use the regression as an absolute speed. It scales each agent&amp;rsquo;s
-unimpeded speed \(v_i^0\) by the same factor (Korhonen 2021, Eq. 11):&lt;/p>
+&lt;a href="#the-fractional-form-is-fdsevacs-normalisation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FDS+Evac, the evacuation module of the Fire Dynamics Simulator (FDS),
+divides the regression by its intercept α and scales each agent&amp;rsquo;s
+unimpeded speed \(v_i^0\) by the result (Korhonen 2021, Eq. 11):&lt;/p>
 $$
 v_i^0(K_s) = \max\!\left(v^0_{i,\min},\; v_i^0\left(1 + \frac{\beta}{\alpha}K_s\right)\right),
 \qquad v^0_{i,\min} = 0.1\,v_i^0 \text{ by default.}
 $$&lt;p>The divisor 0.706 m/s is an extrapolation to &lt;em>K&lt;/em> = 0, not a measured free
 walking speed. Ronchi et al. (2013) call the two readings fractional and
 absolute, and show that they give different evacuation times.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/speed_fractional.png" alt="Two panels against extinction coefficient K from 0 to 13 1/m. Left, the FDS&amp;#43;Evac speed factor falls linearly from 1 at K = 0 to its floor of 0.1 at K = 11.15, solid only over the lit runs from K = 1.9 to 7.4. Right, the absolute Frantzich–Nilsson speed falls from 0.706 m/s to 0 at K = 12.4; fractional speeds for unimpeded speeds of 0.706, 1.0 and 1.3 m/s fall in proportion and level off at a tenth of each speed" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>(a) The FDS+Evac factor \(F = 1 + (\beta/\alpha)K = 1 - 0.0807\,K\) with
+the Frantzich–Nilsson constants (Korhonen 2021, Eq. 11). Solid over the lit
+runs (&lt;em>K&lt;/em> ≈ 1.9–7.4 1/m), dashed outside them. &lt;em>F&lt;/em> reaches the floor 0.1 at
+&lt;em>K&lt;/em> = 11.15 1/m. (b) The absolute law (Frantzich and Nilsson 2003, Eq. 3)
+and the fractional reading for three example unimpeded speeds. At
+\(v^0\) = 0.706 m/s the two readings agree up to &lt;em>K&lt;/em> = 11.15 1/m; for any
+\(v^0\) above 0.706 m/s they differ at every &lt;em>K&lt;/em>. The absolute law reaches 0 at
+&lt;em>K&lt;/em> = 12.4 1/m, where the fractional reading stays at \(0.1\,v^0\).
+Script: &lt;code>scripts/figures/fundamentals_speed_fractional.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>Purser: a logarithmic fit for irritant smoke&lt;span class="hx-absolute -hx-mt-20" id="purser-a-logarithmic-fit-for-irritant-smoke">&lt;/span>
-&lt;a href="#purser-a-logarithmic-fit-for-irritant-smoke" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2016, Ch. 63, p. 2341) pooled Jin&amp;rsquo;s irritant data
+&lt;a href="#purser-a-logarithmic-fit-for-irritant-smoke" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2026, Ch. 70, p. 2287) pooled Jin&amp;rsquo;s irritant data
 with Frantzich and Nilsson&amp;rsquo;s and fitted a logarithm, which they suggest for
 a simple, deterministic and most conservative estimate of the average
 walking speed in moderately irritant smoke:&lt;/p>
 $$
-W_{\mathrm{smoke}}~[\mathrm{m/s}] = -0.1364\,\ln \alpha_k + 0.6423 \qquad \text{(Eq. 63.10)}
-$$&lt;p>with \(R^2\) = 0.50 (Fig. 63.16) and a population SD of 0.157 m/s
-(pp. 2341, 2414), on pooled data at \(\alpha_k\) = 0.32–0.5 and
-1.9–7.5 1/m, with none in between (pp. 2339–2340).&lt;/p>
+W_{\mathrm{smoke}}~[\mathrm{m/s}] = -0.1364\,\ln \alpha_k + 0.6423 \qquad \text{(Eq. 70.8)}
+$$&lt;p>with \(R^2\) = 0.50 (Fig. 70.10) and a population SD of 0.157 m/s
+(pp. 2287, 2341), on pooled data at \(\alpha_k\) = 0.32–0.5 and
+1.9–7.5 1/m, with none in between (pp. 2285–2286).&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">Caveats on Eq. 63.10&lt;/strong>
+&lt;strong class="hx-text-lg">Caveats on Eq. 70.8&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>&lt;strong>Pooling.&lt;/strong> The fit combines smoke from real fires with artificial smoke
@@ -8904,31 +8967,31 @@ do it deliberately, as a conservative envelope.&lt;/p>
 &lt;p>&lt;strong>Behaviour outside the data.&lt;/strong> The logarithm has no upper bound as
 \(\alpha_k \to 0\): it exceeds 1 m/s below \(\alpha_k\) ≈ 0.07 1/m (our
 arithmetic).&lt;/p>
-&lt;p>&lt;strong>Other fits on the same page.&lt;/strong> Fig. 63.16 also gives logarithmic fits to
+&lt;p>&lt;strong>Other fits on the same page.&lt;/strong> Fig. 70.10 also gives logarithmic fits to
 other combinations of the Jin, Frantzich–Nilsson and Fridolf et al. data
-(Ch. 63 ref. 55, Interflam 2013); the three that leave out the Fridolf data
-are &amp;ldquo;quite similar&amp;rdquo; (p. 2341). Ch. 63 takes the Frantzich–Nilsson data from
-their 2004 Human Behaviour in Fire paper (ref. 54), not from report 3126,
+(Ch. 70 ref. 40, Fire and Materials 38(7), 744–759, 2014,
+&lt;a href="https://doi.org/10.1002/fam.2217" target="_blank" rel="noopener">doi:10.1002/fam.2217&lt;/a>); the three that leave out the
+Fridolf data are &amp;ldquo;quite similar&amp;rdquo; (p. 2287). Ch. 70 takes the
+Frantzich–Nilsson data from their 2004 Human Behaviour in Fire paper
+(ref. 39), not from report 3126,
 and its straight-line fit to them, v = 0.7099 − 0.0573 K (\(R^2\) = 0.349),
 differs slightly from the report&amp;rsquo;s.&lt;/p>
-&lt;p>&lt;strong>Population values.&lt;/strong> p. 2341 also suggests drawing each person&amp;rsquo;s speed
-from a normal distribution &amp;ldquo;with a mean from Equation 63.12 and standard
-deviation of 0.125&amp;rdquo;; Eq. 63.12 in this edition is the irritant FIC sum, so
-the reference is probably meant to be Eq. 63.10, and 0.125 differs from the
-0.157 given on the same page. The 2026 edition repeats the slip as
-&amp;ldquo;Eq. 70.10&amp;rdquo; for what is Eq. 70.8, and still gives both SD 0.125 and 0.157
-(Ch. 70, p. 2287). For clear air it suggests a mean of 1.2 m/s
-with SD 0.15 m/s. It compares Frantzich and Nilsson&amp;rsquo;s mean of 0.45 m/s
+&lt;p>&lt;strong>Population values.&lt;/strong> p. 2287 also suggests drawing each person&amp;rsquo;s speed
+from a normal distribution &amp;ldquo;with a mean from Eq. 70.10 and standard
+deviation of 0.125&amp;rdquo;; Eq. 70.10 is the irritant FIC sum, so
+the reference is probably meant to be Eq. 70.8, and 0.125 differs from the
+0.157 given on the same page. For clear air it suggests a mean of 1.2 m/s
+with SD 0.157 m/s (p. 2287). It compares Frantzich and Nilsson&amp;rsquo;s mean of 0.45 m/s
 (SD 0.21) with Jin&amp;rsquo;s 0.3 m/s in dense smoke, noting that the slowest speed
-measured by Jin was 0.37 m/s (p. 2341); Frantzich and Nilsson measured
+measured by Jin was 0.37 m/s (p. 2286); Frantzich and Nilsson measured
 0.2–0.9 m/s.&lt;/p>
 &lt;/div>
 &lt;/details>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/speed_extinction.png" alt="Two panels. (a) Walking speed against extinction coefficient: Purser’s straight-line fits to Jin’s irritant and non-irritant data below K = 1.2 1/m, the Frantzich–Nilsson regression at K 1.9 to 7.4 1/m, and Purser’s Eq. 63.10 across both, dotted where it has no data. (b) Fractional speed against extinction coefficient: Purser’s 2003 line from K 0.3 to 1.27 with dashed assumed segments, and the FDS&amp;#43;Evac normalised Frantzich–Nilsson line" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/speed_extinction.png" alt="Two panels. (a) Walking speed against extinction coefficient: Purser’s straight-line fits to Jin’s irritant and non-irritant data below K = 1.2 1/m, the Frantzich–Nilsson regression at K 1.9 to 7.4 1/m, and Purser’s Eq. 70.8 across both, dotted where it has no data. (b) Fractional speed against extinction coefficient: Purser’s 2003 line from K 0.3 to 1.27 with dashed assumed segments, and the FDS&amp;#43;Evac normalised Frantzich–Nilsson line" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>(a) Absolute laws against K [1/m]: Purser&amp;rsquo;s fits to his replotted Jin data
 (red, solid over Jin&amp;rsquo;s points, dashed over Purser&amp;rsquo;s wider stated range;
 mean ± 1 SD), Frantzich–Nilsson with its prediction interval (blue),
-Purser Eq. 63.10 (orange). (b) Fractional laws: Purser 2003 (orange,
+Purser Eq. 70.8 (orange). (b) Fractional laws: Purser 2003 (orange,
 solid over Jin&amp;rsquo;s points), relative to the unexposed speed, and FDS+Evac Eq. 11 (blue), relative to
 0.706 m/s, itself an extrapolation, so part of the gap is the reference.
 Purser&amp;rsquo;s floor, Jin&amp;rsquo;s reference speed for walking in darkness, is drawn at
@@ -8938,16 +9001,16 @@ Purser&amp;rsquo;s floor, Jin&amp;rsquo;s reference speed for walking in darknes
 &lt;strong class="hx-text-lg">Figure provenance&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-Jin: v = 1.0573 − 0.4326 K and v = 1.1517 − 0.9578 K (Ch. 63, Fig. 63.16
+Jin: v = 1.0573 − 0.4326 K and v = 1.1517 − 0.9578 K (Ch. 70, Fig. 70.10
 legend), solid over the range of Jin&amp;rsquo;s points in FRI Report No. 42, Fig. 2
 (about 0.5–1.13 and 0.32–0.47 1/m), dashed over the rest of Purser&amp;rsquo;s stated
-ranges (0.2–1.13 and 0.32–0.5 1/m, p. 2339);
+ranges (0.2–1.13 and 0.32–0.5 1/m, p. 2285);
 means 0.74 ± 0.17 m/s at K = 0.73 1/m (circle) and 0.75 ± 0.21 m/s
-at K = 0.42 1/m (square) (Ch. 63, pp. 2339–2340). Frantzich–Nilsson:
+at K = 0.42 1/m (square) (Ch. 70, p. 2285). Frantzich–Nilsson:
 v = 0.706 − 0.057 K on K = 1.9–7.4 1/m (report Eq. 3; range from Fig. 9),
 prediction interval 0.2–0.7 m/s at K = 4 1/m (§3.3.2, &amp;ldquo;ca 0,2 och 0,7&amp;rdquo;).
-Purser: W = −0.1364 ln K + 0.6423 (Eq. 63.10) on K = 0.32–0.5 and
-1.9–7.5 1/m, the ranges Ch. 63 states for the pooled data (pp. 2339–2340).
+Purser: W = −0.1364 ln K + 0.6423 (Eq. 70.8) on K = 0.32–0.5 and
+1.9–7.5 1/m, the ranges Ch. 70 states for the pooled data (pp. 2285–2286).
 Panel (b): Purser (2003, p. 98), F = −1.738 OD/m + 1.236 on OD/m
 0.13–0.55, starting at the computed 1.010, solid only over Jin&amp;rsquo;s
 non-irritant points (K ≈ 0.5–1.13 1/m) and dashed over the rest of the
@@ -8955,7 +9018,7 @@ stated range; F = 1 below (dashed, Purser&amp;rsquo;s
 stated normal speed); above 0.55 the fraction the equation reaches there,
 0.28, dashed, as the darkness floor (Jin&amp;rsquo;s reference line, FRI Report
 No. 42, Fig. 2 and p. 17); OD/m converted with K = ln 10 · OD/m
-(base 10 as in Ch. 63, p. 2413; our conversion). FDS+Evac
+(base 10 as in Ch. 70, p. 2341; our conversion). FDS+Evac
 (Korhonen 2021, Eq. 11): F = max(0.1, 1 − 0.057 K/0.706), solid over the
 Frantzich–Nilsson data. No curve is digitised from a figure.
 Script: &lt;code>scripts/figures/fundamentals_speed_extinction.py&lt;/code>.
@@ -8975,7 +9038,7 @@ design, each person&amp;rsquo;s clear-condition speed is reduced by 0.34 m/s per
 metre of visibility below 3 m, down to 0.2 m/s:&lt;/p>
 $$
 w = \min\!\left(w_{\text{smoke free}},\; \max\!\left(0.2,\; w_{\text{smoke free}} - 0.34\,(3 - x)\right)\right) \qquad \text{(Eq. 7)}
-$$&lt;p>Eq. 7 is a design rule, not a fit: the slope of Eq. 2 plus two thresholds
+$$&lt;p>Eq. 7 is a design rule: the slope of Eq. 2 plus two thresholds
 chosen for conservatism (§3.3.2). Above 3 m, speed is taken as unaffected.
 The same rule appears in Fridolf, Nilsson, Frantzich, Ronchi and Arias
 (2018, pp. 4–5 of the extended-abstract PDF) as method 3, an English
@@ -9030,8 +9093,8 @@ acetic acid. They caution that the recommendation may not be conservative
 in irritant smoke, where Jin saw speeds drop at visibilities of about 5 m,
 against below 3 m in non-irritant smoke (§4).&lt;/p>
 &lt;p>&lt;strong>The floor.&lt;/strong> The 0.2 m/s floor is attributed to Purser and McAllister
-(2016) (§3.3.2); Ch. 63 gives about 0.3 m/s for walking in darkness
-(pp. 2339 and 2413).&lt;/p>
+(2016) (§3.3.2); Ch. 70 gives about 0.3 m/s for walking in darkness
+(pp. 2285 and 2341).&lt;/p>
 &lt;p>&lt;strong>The three design methods.&lt;/strong> \(w_{\text{smoke free}}\) is 1 m/s for
 everyone (method 1, Eq. 3); 1.35, 1.10 or 0.85 m/s for medium, slow and
 very slow walkers (method 2, Eqs. 4–6); or drawn for each person from a
@@ -9064,7 +9127,7 @@ constant for lit objects, x = 2/K, to x ≈ 0.27–1.05 m; its speed is along th
 actual path, not the shortest way (see the caveats above). In (b) the
 conversion x = A/K maps x = 0.3–3 m to K = A/3 to A/0.3. Each data set was
 converted with its own A, which the paper does not state, so the curves
-show the two bounding conversions, not data ranges in K. Purser Eq. 63.10
+show the two bounding conversions, not data ranges in K. Purser Eq. 70.8
 is drawn on K = 0.32–0.5 and 1.9–7.5 1/m. Script: &lt;code>scripts/figures/fundamentals_speed_visibility.py&lt;/code>.
 &lt;/div>
 &lt;/details>
@@ -9109,8 +9172,8 @@ established rather than conflicting.&lt;/p>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>&lt;strong>Citation chains.&lt;/strong> Ronchi et al.&amp;rsquo;s population of 17 women and 14 men
 belongs to Jin and Yamada&amp;rsquo;s 1989 heat-and-smoke study; the walking study
-had ten men aged 23–37 (FRI Report No. 42, Table 1). Ch. 63&amp;rsquo;s &amp;ldquo;has been
-shown&amp;rdquo; 0.3 m/s in darkness (pp. 2339, 2413) and Purser&amp;rsquo;s 2003 floor go
+had ten men aged 23–37 (FRI Report No. 42, Table 1). Ch. 70&amp;rsquo;s &amp;ldquo;has been
+shown&amp;rdquo; 0.3 m/s in darkness (pp. 2285, 2341) and Purser&amp;rsquo;s 2003 floor go
 back, in our inference, to Jin&amp;rsquo;s horizontal reference line in report
 Fig. 2 (p. 17; the report cites Togawa 1969 for a darkness range of
 0.3–0.7 m/s, p. 14, and Jin 1978, p. 148, for 0.3 m/s); no non-irritant point in that figure is below about
@@ -9119,7 +9182,7 @@ Fig. 2 (p. 17; the report cites Togawa 1969 for a darkness range of
 0.5 1/m (our reading of report Fig. 2). The irritant smoke is burning wood
 cribs in the report and in Jin (1972, 1997), &amp;ldquo;smoldering wood&amp;rdquo; in Jin&amp;rsquo;s
 1972 English abstract, non-flaming wood in Purser (2003) and heated wood
-chippings in Ch. 63. The report is dated September 1976 on its cover;
+chippings in Ch. 70. The report is dated September 1976 on its cover;
 Purser (2003) gives 1975. Jin 1978 runs pp. 135–155; 135–157 in some
 citations does not match the paper.
 Fridolf et al. date the walking study 1976, 1978/1997 and 1979, and take a
@@ -9235,18 +9298,15 @@ SFPE 2018, extended abstract. No DOI or public URL.&lt;/li>
 &lt;li>Purser, D. A. (2003). &lt;em>ASET and RSET: addressing some issues in relation
 to occupant behaviour and tenability&lt;/em>. Fire Safety Science, 7, 91–102.
 &lt;a href="https://doi.org/10.3801/IAFSS.FSS.7-91" target="_blank" rel="noopener">doi:10.3801/IAFSS.FSS.7-91&lt;/a>&lt;/li>
-&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
-occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 63, 2308–2428.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
 &lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). &lt;em>Assessment of hazards to
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 6th ed., Ch. 70, 2271–2352. p. 2287.
+Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2284–2287, 2341;
+Eq. 70.8, Fig. 70.10, Table 70.3.
 &lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
-&lt;li>Yamada, T., &amp;amp; Akizuki, Y. (2016). &lt;em>Visibility and human behavior in fire
-smoke&lt;/em>. SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 61,
-2181–2206.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_61" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_61&lt;/a>&lt;/li>
+&lt;li>Yamada, T., &amp;amp; Akizuki, Y. (2026). &lt;em>Visibility and human behavior in fire
+smoke&lt;/em>. SFPE Handbook of Fire Protection Engineering, 6th ed., Ch. 68,
+2201–2224.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_68" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_68&lt;/a>&lt;/li>
 &lt;li>Cheung, W. K., Bielawski, J., Arnold, L., Huang, X., &amp;amp; Węgrzyński, W.
 (2026). &lt;em>Reappraisal of Jin&amp;rsquo;s visibility through fire smoke experiment:
 Insights into signage visibility and the impact of ambient light&lt;/em>. Fire
@@ -10044,7 +10104,7 @@ of a person of average susceptibility is predicted when it reaches 1. The
 asphyxiants in fires are carbon monoxide (CO), hydrogen cyanide (HCN), low
 oxygen (O₂) and carbon dioxide (CO₂), which speeds up breathing and so the
 uptake of the others, and is itself an asphyxiant from about 5 % (Purser and
-McAllister 2016, p. 2367).&lt;/p>
+McAllister 2026, p. 2307).&lt;/p>
 &lt;p>Symbols follow the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#notation">notation table&lt;/a>. The
 equations below keep the sources&amp;rsquo; own notation (\(F_I\) terms,
 concentrations in brackets such as [CO], ventilation \(V_E\)).&lt;/p>
@@ -10053,53 +10113,57 @@ concentrations in brackets such as [CO], ventilation \(V_E\)).&lt;/p>
 \(\Delta t\) [min] the ratio \(C_i\,\Delta t/(C\cdot t)_i\) of the average
 concentration \(C_i\) [µL/L] to the dose \((C\cdot t)_i\) that compromises
 tenability, or equivalently \(\Delta t / t_i\) (Eq. 1a). Its gas-specific
-terms are not reproduced here. Unlike Eq. 63.18 below, it expresses the CO
+terms are not reproduced here. Unlike Eq. 70.16 below, it expresses the CO
 term as a Ct dose of 35 000 ppm·min, which Purser and McAllister equate to
-light work at about 20 L/min rather than 25 L/min (2016, Note 2 to
-Eq. 63.18, p. 2417), and does &amp;ldquo;not incorporate the rarefaction of oxygen&amp;rdquo;, while
+light work at about 20 L/min rather than 25 L/min (2026, Note 2 to
+Eq. 70.16, p. 2344), and does &amp;ldquo;not incorporate the rarefaction of oxygen&amp;rdquo;, while
 treating CO₂ as a hyperventilation factor (ISO/TR 13571-2:2016, §6.2).&lt;/p>
 &lt;h2>Purser&amp;rsquo;s simplified equation&lt;span class="hx-absolute -hx-mt-20" id="pursers-simplified-equation">&lt;/span>
-&lt;a href="#pursers-simplified-equation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2016, Society of Fire Protection Engineers (SFPE)
-Handbook Ch. 63) give, for loss of consciousness of an adult doing light
+&lt;a href="#pursers-simplified-equation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2026, Society of Fire Protection Engineers (SFPE)
+Handbook, 6th ed., Ch. 70) give, for loss of consciousness of an adult doing light
 work such as walking to escape,&lt;/p>
 $$
-F_{IN} = \left(F_{I_{CO}} + F_{I_{CN}} + F_{I_{NO_x}} + FLD_{irr}\right)\times VCO_2 + F_{I_O}
-\quad \text{or}\quad F_{I_{CO_2}} \qquad \text{(Eq. 63.38)}
+\begin{aligned}
+F_{IN} ={}&amp; \big(F_{I_{CO}} + F_{I_{CN}}\\
+&amp;+ F_{I_{NO_x}} + FLD_{irr}\big)\times VCO_2\\
+&amp;+ F_{I_O} \quad \text{or}\quad F_{I_{CO_2}}
+\quad \text{(Eq. 70.38)}
+\end{aligned}
 $$&lt;p>with the terms, &lt;em>t&lt;/em> in minutes and concentrations in ppm or % by volume:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>CO&lt;/strong> (Stewart equation, Eq. 63.18):
+&lt;li>&lt;strong>CO&lt;/strong> (Stewart equation, Eq. 70.16):
 \(F_{I_{CO}} = 3.317\times10^{-5}\,[\mathrm{CO}]^{1.036}\,V_E\,t/D\), with
 \(V_E\) = 25 L/min (light work) and &lt;em>D&lt;/em> = 30 % carboxyhaemoglobin (COHb)
 by default; &lt;em>D&lt;/em> is 40 % at rest and 20 % for heavy work (table under
-Eq. 63.18, p. 2356). With these defaults the coefficient is
+Eq. 70.16, p. 2298). With these defaults the coefficient is
 \(3.317\times10^{-5}\times 25/30 = 2.764\times10^{-5}\) per minute, the
 constant used by &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, the evacuation module of the Fire Dynamics
 Simulator (Korhonen 2021, Eq. 13).&lt;/li>
-&lt;li>&lt;strong>HCN&lt;/strong> (Eq. 63.24): \(F_{I_{CN}} = [\mathrm{CN}]^{2.36}\,t/(1.2\times10^{6})\),
+&lt;li>&lt;strong>HCN&lt;/strong> (Eq. 70.22): \(F_{I_{CN}} = [\mathrm{CN}]^{2.36}\,t/(1.2\times10^{6})\),
 where [CN] may be corrected for other nitriles and for the protective effect
 of NO and NO₂ as \([\mathrm{CN}] = [\mathrm{HCN}] + [\text{organic nitriles}] - [\mathrm{NO}+\mathrm{NO_2}]\)
-(Eq. 63.26, p. 2362). The note to Eq. 63.38 writes the same correction with
-\(0.67\,[\mathrm{NO}+\mathrm{NO_2}]\) (p. 2372), so the chapter gives two
+(Eq. 70.24, p. 2302). The note to Eq. 70.38 writes the same correction with
+\(0.67\,[\mathrm{NO}+\mathrm{NO_2}]\) (p. 2310), so the chapter gives two
 coefficients.&lt;/li>
-&lt;li>&lt;strong>NOₓ&lt;/strong>: \(F_{I_{NO_x}} = [\mathrm{NO_x}]\,t/1500\) (definitions under Eq. 63.38).&lt;/li>
+&lt;li>&lt;strong>NOₓ&lt;/strong>: \(F_{I_{NO_x}} = [\mathrm{NO_x}]\,t/1500\) (definitions under Eq. 70.38, p. 2310).&lt;/li>
 &lt;li>&lt;strong>Irritants&lt;/strong>: \(FLD_{irr}\), the fractional lethal dose of irritants
-(Eq. 63.15; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>), included because
+(Eq. 70.13; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>), included because
 irritants impair lung function and so add some hypoxia.&lt;/li>
-&lt;li>&lt;strong>CO₂ hyperventilation&lt;/strong> (Eq. 63.35): \(VCO_2 = \exp([\mathrm{CO_2}]/5)\).
+&lt;li>&lt;strong>CO₂ hyperventilation&lt;/strong> (Eq. 70.35): \(VCO_2 = \exp([\mathrm{CO_2}]/5)\).
 Purser recommends a limiting value of 70 L/min for \(V_E\times VCO_2\)
-(Ch. 63, p. 2416). At \(V_E\) = 25 L/min this caps \(VCO_2\) at 2.8,
-which Eq. 63.35 reaches at about 5.1 % CO₂ (our arithmetic).&lt;/li>
-&lt;li>&lt;strong>Low-oxygen hypoxia&lt;/strong> (Eq. 63.50):
+(Ch. 70, pp. 2310 and 2343). At \(V_E\) = 25 L/min this caps \(VCO_2\) at 2.8,
+which Eq. 70.35 reaches at about 5.1 % CO₂ (our arithmetic).&lt;/li>
+&lt;li>&lt;strong>Low-oxygen hypoxia&lt;/strong> (Eq. 70.50):
 \(F_{I_O} = t/\exp\left[8.13 - 0.54\,(20.9 - [\%\mathrm{O_2}])\right]\),
 added outside the CO₂ multiplier because CO₂ improves oxygen uptake.&lt;/li>
 &lt;li>&lt;strong>CO₂ as an asphyxiant&lt;/strong>, \(F_{I_{CO_2}}\), from
-\(t_{I_{CO_2}} = \exp(6.1623 - 0.5189\,\%\mathrm{CO_2})\) (Eqs. 63.36–63.37),
+\(t_{I_{CO_2}} = \exp(6.1623 - 0.5189\,\%\mathrm{CO_2})\) (Eqs. 70.36–70.37),
 used as an alternative endpoint and normally negligible; sudden exposure
 to more than about 7 % CO₂, however, can itself cause rapid intoxication
-and collapse (pp. 2371–2372).&lt;/li>
+and collapse (pp. 2309–2310).&lt;/li>
 &lt;/ul>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fed_co.png" alt="CO FED rate per minute against CO concentration from 100 to 10 000 ppm on log–log axes: the Stewart equation for rest, light work and heavy work as three parallel lines about 12-fold apart, and the ISO 13571 rate C/35 000 just below the light-work line" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>CO FED rate [1/min] from the Stewart equation, Eq. 63.18, for rest
+&lt;p>&lt;em>CO FED rate [1/min] from the Stewart equation, Eq. 70.16, for rest
 (pale blue, squares), light work (mid blue, circles) and heavy work (dark blue,
 triangles), and the ISO 13571 dose of 35 000 ppm·min (red, dash-dot).
 Heavy work accumulates dose about 12 times as fast as rest; the ISO rate
@@ -10110,11 +10174,11 @@ equals the Stewart form at D = 30 % for a V_E of about 20 L/min.&lt;/em>&lt;/p>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 Stewart: \(3.317\times10^{-5}\,[\mathrm{CO}]^{1.036}\,V_E/D\) per minute
-(Eq. 63.18, p. 2356), with \(V_E\) = 8.5, 25 and 50 L/min and &lt;em>D&lt;/em> = 40, 30
-and 20 % (table under Eq. 63.18, p. 2356; table beside Eq. 63.39,
-p. 2416). At 1000 ppm this gives 0.0090, 0.0354 and 0.106 per minute
+(Eq. 70.16, p. 2297), with \(V_E\) = 8.5, 25 and 50 L/min and &lt;em>D&lt;/em> = 40, 30
+and 20 % (table under Eq. 70.16, p. 2298; table beside Eq. 70.48,
+p. 2343). At 1000 ppm this gives 0.0090, 0.0354 and 0.106 per minute
 (our arithmetic). ISO: [CO]/35 000 per minute, 0.0286 at 1000 ppm, the
-Ct dose as given in Ch. 63, Note 2 to Eq. 63.18 (p. 2417). The \(V_E\)
+Ct dose as given in Ch. 70, Note 2 to Eq. 70.16 (p. 2344). The \(V_E\)
 at which the two agree for &lt;em>D&lt;/em> = 30 % drifts from about 22 L/min at
 100 ppm to 18.5 L/min at 10 000 ppm, because of the exponent 1.036 (our
 arithmetic). Script: &lt;code>scripts/figures/fundamentals_fed_co.py&lt;/code>.
@@ -10125,15 +10189,15 @@ arithmetic). Script: &lt;code>scripts/figures/fundamentals_fed_co.py&lt;/code>.
 &lt;p class="gh-alert-title">&lt;svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">&lt;path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z">&lt;/path>&lt;/svg>Warning&lt;/p>
 &lt;p>&lt;strong>FDS+Evac guide, Eq. 18 (low O₂).&lt;/strong> The guide (Korhonen 2021) divides the
 O₂ term by 60 while stating that &lt;em>t&lt;/em> is in minutes. Taken literally, that
-gives an O₂ dose 60 times smaller than Purser&amp;rsquo;s Eq. 63.50. The code
+gives an O₂ dose 60 times smaller than Purser&amp;rsquo;s Eq. 70.50. The code
 FDS+Evac runs does not do this: FDS divides by 60 only because its time step
 is in seconds. If you rebuild FDS+Evac&amp;rsquo;s FED from the guide, leave the 60
 out. The evidence is in &amp;ldquo;The CO₂ factor and HCN term&amp;rdquo; below.&lt;/p>
 &lt;/div>&lt;p>The FDS+Evac guide (Korhonen 2021, Eqs. 12–19) and the FDS User&amp;rsquo;s Guide
-(McGrattan et al. 2025, Eqs. 22.42–22.49) do not use Eq. 63.38 as printed:
-they take Eq. 63.34 for CO₂ instead of its simplification Eq. 63.35, and an
-HCN term \(\exp(C/43)/220\) that is not in Chs. 62–63 of the 5th edition,
-where &amp;ldquo;exponential&amp;rdquo; names the power law of Eq. 63.20 (p. 2360). The
+(McGrattan et al. 2025, Eqs. 22.42–22.49) do not use Eq. 70.38 as printed:
+they take Eq. 70.34 for CO₂ instead of its simplification Eq. 70.35, and an
+HCN term \(\exp(C/43)/220\) that is not in Chs. 69–70,
+where &amp;ldquo;exponential&amp;rdquo; names the power law of Eq. 70.18 (p. 2301). The
 FDS+Evac guide cites the 3rd edition for these equations, the header of the
 FDS &lt;code>FED&lt;/code> function (&lt;code>func.f90&lt;/code>) the 4th, and the FDS User&amp;rsquo;s Guide the 5th.
 The 3rd edition gives the term: \(F_{ICN} = \exp([\mathrm{CN}]/43)/220\)
@@ -10142,28 +10206,31 @@ The 3rd edition gives the term: \(F_{ICN} = \exp([\mathrm{CN}]/43)/220\)
 coefficient 0.984): \(1/0.023 \approx 43\) and \(e^{5.396} \approx 220\) (our
 arithmetic). It has no offset. The 4th edition, which the FDS code cites, was
 not read here. The User&amp;rsquo;s Guide
-reference (ref. [91]) is Ch. 62, which contains neither Eq. 63.34 nor an
-HCN incapacitation term (text search of Ch. 62). A result quoted as &amp;ldquo;Purser FED&amp;rdquo;
+reference (ref. [91]) is Ch. 62 of the 5th edition, which contains neither
+the VCO₂ form of Eq. 70.34 nor an HCN incapacitation term (text search of
+that chapter). A result quoted as &amp;ldquo;Purser FED&amp;rdquo;
 therefore depends on the variant used.&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">The CO₂ factor and HCN term (Eqs. 63.31–63.35)&lt;/strong>
+&lt;strong class="hx-text-lg">The CO₂ factor and HCN term (Eqs. 70.31–70.35)&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>A regression of minute volume on CO₂, fitted to three published human data
-sets (Eq. 63.31, Fig. 63.26), gives the factor
-\(\exp(0.2496\,\%\mathrm{CO_2} + 1.9086)/6.8\) (Eq. 63.32), simplified to
-\(\exp([\mathrm{CO_2}]/4)\) (Eq. 63.33). Because that overstates uptake,
-Ch. 63 modifies it after the Coburn–Forster–Kane equation to&lt;/p>
+sets (Eq. 70.31, Fig. 70.20), gives the factor
+\(\exp(0.2496\,\%\mathrm{CO_2} + 1.9086)/6.8\) (Eq. 70.32), simplified to
+\(\exp([\mathrm{CO_2}]/4)\) (Eq. 70.33). Because that overstates uptake,
+Ch. 70 modifies it after the Coburn–Forster–Kane equation to&lt;/p>
 $$
-VCO_2 = \frac{\exp(0.1903\,\%\mathrm{CO_2} + 2.0004)}{7.1} \qquad \text{(Eq. 63.34)}
-$$&lt;p>and simplifies this to \(\exp([\mathrm{CO_2}]/5)\) (Eq. 63.35), the form
-used in Eq. 63.38. The two agree within about 4 % below 5 % CO₂, and
-at 0 % CO₂ Eq. 63.34 gives \(\exp(2.0004)/7.1 \approx 1.04\), not 1 (our
+VCO_2 = \frac{\exp(0.1903\,\%\mathrm{CO_2} + 2.0004)}{7.1} \qquad \text{(Eq. 70.34)}
+$$&lt;p>and simplifies this to \(\exp([\mathrm{CO_2}]/5)\) (Eq. 70.35), the form
+used in Eq. 70.38. The two agree within about 4 % below 5 % CO₂, and
+at 0 % CO₂ Eq. 70.34 gives \(\exp(2.0004)/7.1 \approx 1.04\), not 1 (our
 arithmetic; Hostikka and Linna 2025 make the same point). The chapter&amp;rsquo;s own
-worked example (Table 63.16, p. 2374), stated to follow Eq. 63.38, lists
-\(VCO_2\) = 1.442, 2.376 and 4.434 at 1.5, 3.5 and 6 % CO₂. These match
-Eq. 63.32, not Eq. 63.35, which gives 1.35, 2.01 and 3.32 (our arithmetic),
+worked example (Table 70.14, p. 2311) lists
+\(VCO_2\) = 1.442, 2.376 and 4.434 at 1.5, 3.5 and 6 % CO₂; its caption
+and the text above it cite Eq. 70.19, the HCN time to incapacitation, for
+the asphyxiant sum. These match
+Eq. 70.32, not Eq. 70.35, which gives 1.35, 2.01 and 3.32 (our arithmetic),
 so the chapter is inconsistent here. Its 6 % point also exceeds the
 70 L/min cap: 25 × 4.434 = 111 L/min (our arithmetic).&lt;/p>
 &lt;p>For HCN, the FDS+Evac guide uses
@@ -10173,11 +10240,11 @@ in the 3rd edition (Purser 2002). The FDS User&amp;rsquo;s Guide writes the same
 with \(C_{CN} = C_{HCN} - C_{NO_2} - C_{NO}\) (Eqs. 22.44–22.45). Both
 manuals print the offset 0.0045, whereas FDS &lt;code>func.f90&lt;/code> uses
 0.00454545 ≈ 1/220; with 0.0045 the term is about \(4.5\times10^{-5}\)
-per minute at 0 ppm instead of 0 (our arithmetic). The 5th
-edition gives the power form instead (Eq. 63.24); its rat-lethality FED in
+per minute at 0 ppm instead of 0 (our arithmetic). The SFPE
+Handbook gives the power form instead (Eq. 70.22); its rat-lethality FED in
 the companion chapter subtracts [NOx] from [CN] with coefficient 1 and uses
 yet another CO₂ factor, \(1 + (\exp(0.14\,[\mathrm{CO_2}]) - 1)/2\)
-(Purser 2016, Eq. 62.3, pp. 2227–2228). The offset makes the term
+(Purser and Stec 2026, Eq. 69.3, p. 2239). The offset makes the term
 zero at zero concentration: Hostikka and Linna (2025, Eq. 3) write it as
 \(F_{I,CN0} = \exp(0)/220\). They cite a 2010 Purser chapter (&amp;ldquo;Toxic hazard
 calculation models for use with fire effluent data&amp;rdquo;, their ref. [2]) for
@@ -10185,8 +10252,8 @@ three NOₓ reduction factors, 0 in simple conservative analyses, otherwise
 2/3 or 1, &amp;ldquo;without a clear guidance which one to choose&amp;rdquo;; that chapter was
 not read here. For low oxygen, the FDS+Evac
 guide divides by an extra factor 60 while stating &lt;em>t&lt;/em> in minutes (Eq. 18);
-Eq. 63.50 and the FDS User&amp;rsquo;s Guide (Eq. 22.48) do not. Read literally,
-Eq. 18 makes the O₂ dose 60 times smaller than Eq. 63.50. Our reading is
+Eq. 70.50 and the FDS User&amp;rsquo;s Guide (Eq. 22.48) do not. Read literally,
+Eq. 18 makes the O₂ dose 60 times smaller than Eq. 70.50. Our reading is
 that the factor survives from the 2009 guide (VTT Working Papers 119, FDS
 5.3.0), which gave every FED equation with &lt;em>t&lt;/em> in seconds: its Eq. 12 is
 \(4.607 \times 10^{-7}\,C_{CO}^{1.036}\,t\), i.e. \(2.764 \times 10^{-5}/60\),
@@ -10199,12 +10266,12 @@ guide&amp;rsquo;s text only. The 2009 guide also prints the CO₂ coefficient as
 where Purser and the code use 0.1903.&lt;/p>
 &lt;/div>
 &lt;/details>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fed_co2.png" alt="VCO2 against CO2 from 0 to 10 %: Eqs. 63.32 and 63.33 rise to about 12 at 10 %, Eqs. 63.34 and 63.35 lie close together and reach about 7; the three Table 63.16 points sit on Eq. 63.32; a horizontal line at 2.8 marks the 70 L/min cap" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>CO₂ hyperventilation factor VCO₂ from Ch. 63: the regression Eq. 63.32
-(red, circles) and its simplification Eq. 63.33 (red, dotted), the
-modified Eq. 63.34 used by FDS and FDS+Evac (blue, squares) and its
-simplification Eq. 63.35, used in Eq. 63.38 (orange, dash-dot). Diamonds:
-the worked example, Table 63.16. Dotted grey: the cap of 2.8, i.e.
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fed_co2.png" alt="VCO2 against CO2 from 0 to 10 %: Eqs. 70.32 and 70.33 rise to about 12 at 10 %, Eqs. 70.34 and 70.35 lie close together and reach about 7; the three Table 70.14 points sit on Eq. 70.32; a horizontal line at 2.8 marks the 70 L/min cap" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>CO₂ hyperventilation factor VCO₂ from Ch. 70: the regression Eq. 70.32
+(red, circles) and its simplification Eq. 70.33 (red, dotted), the
+modified Eq. 70.34 used by FDS and FDS+Evac (blue, squares) and its
+simplification Eq. 70.35, used in Eq. 70.38 (orange, dash-dot). Diamonds:
+the worked example, Table 70.14. Dotted grey: the cap of 2.8, i.e.
 70 L/min at V_E = 25 L/min. Line styles here only separate the curves;
 all lie within the 0–10 % CO₂ data.&lt;/em>&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
@@ -10212,19 +10279,19 @@ all lie within the 0–10 % CO₂ data.&lt;/em>&lt;/p>
 &lt;strong class="hx-text-lg">Figure provenance&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-Eqs. 63.32–63.35 as written above (Ch. 63, pp. 2369–2371); Table 63.16
-(p. 2374): 1.442, 2.376 and 4.434 at 1.5, 3.5 and 6 % CO₂, which Eq. 63.32
+Eqs. 70.32–70.35 as written above (Ch. 70, pp. 2306–2307); Table 70.14
+(p. 2311): 1.442, 2.376 and 4.434 at 1.5, 3.5 and 6 % CO₂, which Eq. 70.32
 reproduces to three decimals (our arithmetic). The cap of 2.8 is Purser&amp;rsquo;s
-70 L/min limit for \(V_E\times VCO_2\) (p. 2416) at \(V_E\) = 25 L/min;
-Eqs. 63.32 and 63.33 reach it at 4.2 and 4.1 % CO₂, Eq. 63.34 at 5.2 % and
-Eq. 63.35 at about 5.1 % (our arithmetic). Script: &lt;code>scripts/figures/fundamentals_fed_co2.py&lt;/code>.
+70 L/min limit for \(V_E\times VCO_2\) (p. 2343) at \(V_E\) = 25 L/min;
+Eqs. 70.32 and 70.33 reach it at 4.2 and 4.1 % CO₂, Eq. 70.34 at 5.2 % and
+Eq. 70.35 at about 5.1 % (our arithmetic). Script: &lt;code>scripts/figures/fundamentals_fed_co2.py&lt;/code>.
 &lt;/div>
 &lt;/details>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fed_hcn.png" alt="Time to incapacitation by HCN against concentration from 20 to 300 ppm on a log time axis: Eq. 63.20 and the FDS exponential form cross near 70 and 115 ppm and diverge above 150 ppm, where the exponential form falls much faster; the critical range 80 to 180 ppm is shaded" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Time to incapacitation [min] by HCN: Ch. 63 Eq. 63.20 (orange, circles)
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fed_hcn.png" alt="Time to incapacitation by HCN against concentration from 20 to 300 ppm on a log time axis: Eq. 70.18 and the FDS exponential form cross near 70 and 115 ppm and diverge above 150 ppm, where the exponential form falls much faster; the critical range 80 to 180 ppm is shaded" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Time to incapacitation [min] by HCN: Ch. 70 Eq. 70.18 (orange, circles)
 and the FDS form 220/(exp(C/43) − 1) (blue, squares). Solid over the
-primate data behind Eq. 63.20 (about 85–250 ppm, Fig. 63.24), dashed
-outside; shaded: the critical range of about 80–180 ppm (p. 2361). The two
+primate data behind Eq. 70.18 (about 85–250 ppm, Fig. 70.18), dashed
+outside; shaded: the critical range of about 80–180 ppm (p. 2301). The two
 agree within 6 % between about 70 and 115 ppm; at 250 ppm the FDS form
 gives 0.66 min against 2.6 min, four times shorter.&lt;/em>&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
@@ -10232,12 +10299,12 @@ gives 0.66 min against 2.6 min, four times shorter.&lt;/em>&lt;/p>
 &lt;strong class="hx-text-lg">Figure provenance&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-Eq. 63.20: \(t_{ICN} = 1.2\times10^{6}/[\mathrm{CN}]^{2.36}\) (p. 2360).
+Eq. 70.18: \(t_{ICN} = 1.2\times10^{6}/[\mathrm{CN}]^{2.36}\) (p. 2301).
 FDS form: the inverse of the rate \(\exp(C/43)/220 - 1/220\) in FDS
 &lt;code>func.f90&lt;/code> (function &lt;code>FED&lt;/code>), which uses the offset 0.00454545 ≈ 1/220, not
-the manuals&amp;rsquo; 0.0045. The data span is that of Eq. 63.20&amp;rsquo;s primate points
-(our reading of Fig. 63.24); no data behind the FDS form are verified here.
-Ratios of Eq. 63.20 to the FDS form: 0.96 at 100 ppm, 1.27 at 150, 2.1 at
+the manuals&amp;rsquo; 0.0045. The data span is that of Eq. 70.18&amp;rsquo;s primate points
+(our reading of Fig. 70.18); no data behind the FDS form are verified here.
+Ratios of Eq. 70.18 to the FDS form: 0.96 at 100 ppm, 1.27 at 150, 2.1 at
 200 and 4.0 at 250 ppm (our arithmetic).
 Script: &lt;code>scripts/figures/fundamentals_fed_hcn.py&lt;/code>.
 &lt;/div>
@@ -10250,48 +10317,49 @@ Script: &lt;code>scripts/figures/fundamentals_fed_hcn.py&lt;/code>.
 &lt;ul>
 &lt;li>&lt;strong>CO.&lt;/strong> The Stewart equation was obtained from young adult male
 volunteers; it somewhat underestimates uptake in children, and the
-Coburn–Forster–Kane equation is preferable near equilibrium (Ch. 63,
-Note 1 to Eq. 63.18, pp. 2416–2417). The linear form is offered for short
+Coburn–Forster–Kane equation is preferable near equilibrium (Ch. 70,
+Note 1 to Eq. 70.16, p. 2344). The linear form is offered for short
 exposures &amp;ldquo;when the blood concentration is well below saturation level&amp;rdquo;
-(p. 2352); that it overpredicts uptake as COHb approaches saturation is our
-inference, consistent with the source&amp;rsquo;s comparison: for a 4 h exposure it predicts 50 % COHb at 550 ppm where the
-Coburn–Forster–Kane equation needs 840 ppm (p. 2352).&lt;/li>
+(p. 2294); that it overpredicts uptake as COHb approaches saturation is our
+inference, consistent with the source&amp;rsquo;s comparison: for a 4 h exposure to
+840 ppm it predicts 72 % COHb where the Coburn–Forster–Kane equation
+predicts 50 % (p. 2295).&lt;/li>
 &lt;li>&lt;strong>HCN.&lt;/strong> The time to incapacitation \(t_{ICN} = 1.2\times10^{6}/[\mathrm{CN}]^{2.36}\)
-(Eq. 63.20) is fitted to resting macaque monkeys, with a regression
-coefficient of 0.84 (p. 2360; Fig. 63.24, primate points from about 85 to
-250 ppm). The legend of Fig. 63.24 gives the constant as
+(Eq. 70.18) is fitted to resting primates, with a regression
+coefficient of 0.84 (p. 2301; Fig. 70.18, primate points from about 85 to
+250 ppm). The legend of Fig. 70.18 gives the constant as
 \(1.21\times10^{6}\), the equation as \(1.2\times10^{6}\). It is applied to humans because the time to incapacitation of
 an average adult doing light work &amp;ldquo;would be similar to that in a resting
-monkey&amp;rdquo; (p. 2360). The critical range is about 80 ppm, below which incapacitation
-is unlikely within 1 h, to 180 ppm, above which it is rapid (p. 2361).
-Below about 85 ppm, the lower edge of the primate data, Eq. 63.20 is an
+monkey&amp;rdquo; (p. 2301). The critical range is about 80 ppm, below which incapacitation
+is unlikely within 1 h, to 180 ppm, above which it is rapid (p. 2301).
+Below about 85 ppm, the lower edge of the primate data, Eq. 70.18 is an
 extrapolation, and the 80 ppm bound sits at that edge (our reading of
-Fig. 63.24).&lt;/li>
-&lt;li>&lt;strong>Low oxygen.&lt;/strong> Eq. 63.27 is derived from the time of useful consciousness
+Fig. 70.18).&lt;/li>
+&lt;li>&lt;strong>Low oxygen.&lt;/strong> Eq. 70.25 is derived from the time of useful consciousness
 of resting humans after sudden decompression (under 1 s) to simulated
 altitudes of 20 000–40 000 ft, a sea-level equivalent of 9.6 % down to
-3.9 % O₂ (Fig. 63.25, pp. 2365–2366). In humans there is little effect
-down to 15 % O₂ (p. 2364). Use above about 10 % O₂ is therefore an
+3.9 % O₂ (Fig. 70.19, p. 2305). In humans there is little effect
+down to 15 % O₂ (p. 2303). Use above about 10 % O₂ is therefore an
 extrapolation (our inference); the equation gives \(t_{IO}\) ≈ 140 min at
 15 % and about 35 h at 20 % O₂ (our arithmetic).&lt;/li>
 &lt;li>&lt;strong>CO₂.&lt;/strong> The minute-volume curve is an average of three human data sets
-covering 0–10 % CO₂ (Eq. 63.31, Fig. 63.26). \(t_{ICO_2}\) (Eq. 63.36) is
-derived from approximate tolerance data in Fig. 63.26, whose three points
+covering 0–10 % CO₂ (Eq. 70.31, Fig. 70.20). \(t_{ICO_2}\) (Eq. 70.36) is
+derived from approximate tolerance data in Fig. 70.20, whose three points
 are 5 % for 30 min, 7.5 % for 10 min and 10.5 % for 2 min. It gives
 9.7 min at 7.5 % and 2.0 min at 10.5 %, but 35 min at 5 % (our
-arithmetic; p. 2368 uses 35.44 min); the 5 % point is severe breathing
-discomfort, not loss of consciousness. Eq. 63.36 thus rests on data from
+arithmetic; p. 2307 uses 35.44 min); the 5 % point is severe breathing
+discomfort, not loss of consciousness. Eq. 70.36 thus rests on data from
 5 to 10.5 % CO₂ only; below 5 % it is an extrapolation (our inference).&lt;/li>
 &lt;li>&lt;strong>Activity.&lt;/strong> The default is light work; \(V_E\) = 8.5 L/min at rest and
-50 L/min for heavy work (table beside Eq. 63.39, p. 2416).&lt;/li>
+50 L/min for heavy work (table beside Eq. 70.48, p. 2343).&lt;/li>
 &lt;/ul>
 &lt;/div>
 &lt;/details>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fed_o2.png" alt="Low-oxygen time to incapacitation against O2 from 3.9 to 20.9 % on a log time axis: a straight line, solid over the decompression data from 3.9 to 9.6 % and dashed above, with vertical lines at 15 % (140 min) and 20 % (about 2090 min)" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Time to incapacitation by low oxygen, \(t_{IO}\) [min], from Eq. 63.50
-(derived as Eq. 63.27): solid over the decompression data (3.9–9.6 % O₂,
+&lt;p>&lt;em>Time to incapacitation by low oxygen, \(t_{IO}\) [min], from Eq. 70.50
+(derived as Eq. 70.25): solid over the decompression data (3.9–9.6 % O₂,
 shaded), dashed above. Dotted: 15 % O₂, down to which there is little
-effect in humans (p. 2364), 140 min. Dash-dot: 20 % O₂, at or above which
+effect in humans (p. 2303), 140 min. Dash-dot: 20 % O₂, at or above which
 FDS sets the O₂ term to zero, about 2090 min.
 Almost all of the O₂ range a fire simulation visits is extrapolation.&lt;/em>&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
@@ -10299,9 +10367,9 @@ Almost all of the O₂ range a fire simulation visits is extrapolation.&lt;/em>&
 &lt;strong class="hx-text-lg">Figure provenance&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-\(t_{IO} = \exp[8.13 - 0.54\,(20.9 - \%\mathrm{O_2})]\) (Eq. 63.50;
-Eq. 63.27, pp. 2365–2366), 0.35 min at 3.9 %, 7.6 min at 9.6 % and
-3395 min at 20.9 % (our arithmetic). Data span from Fig. 63.25. The 20 %
+\(t_{IO} = \exp[8.13 - 0.54\,(20.9 - \%\mathrm{O_2})]\) (Eq. 70.50;
+Eq. 70.25, p. 2305), 0.35 min at 3.9 %, 7.6 min at 9.6 % and
+3395 min at 20.9 % (our arithmetic). Data span from Fig. 70.19. The 20 %
 gate is the condition X_O2 &amp;lt; 0.20 in FDS &lt;code>func.f90&lt;/code> (function &lt;code>FED&lt;/code>),
 quoted, not imported. Script: &lt;code>scripts/figures/fundamentals_fed_o2.py&lt;/code>.
 &lt;/div>
@@ -10314,18 +10382,18 @@ ISO 13571 (§5.8) finds very little reliable information on exposures
 shorter than 1 min or longer than 1 h, and its Introduction states that,
 for ethical reasons, much of the method cannot be validated with humans,
 although the CO database is extensive and well validated. The irritant
-term \(FLD_{irr}\) is defined as a fractional lethal dose (p. 2416) but
+term \(FLD_{irr}\) is defined as a fractional lethal dose (p. 2343) but
 described as a correction for the effect of irritants on lung function,
-which adds some hypoxia (p. 2372). Read the first way, Eq. 63.38 adds a
+which adds some hypoxia (p. 2310). Read the first way, Eq. 70.38 adds a
 lethal-dose fraction to incapacitating-dose fractions (Hostikka and Linna
 2025); read the second way, it is a hypoxia correction scaled by the lethal
 dose. The chapter does not say which reading is intended.&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). &lt;em>Assessment of hazards to
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 63, 2308–2428.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
+Protection Engineering, 6th ed., Ch. 70, 2271–2352.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
 &lt;li>ISO (2012). &lt;em>ISO 13571:2012 Life-threatening components of fire —
 Guidelines for the estimation of time to compromised tenability in
 fires&lt;/em>. ISO, Geneva.
@@ -10340,8 +10408,12 @@ Technical Reference and User&amp;rsquo;s Guide&lt;/em> (FDS 6.7.6, Evac 2.6.0 dr
 §3.4. VTT Technical Research Centre of Finland.
 &lt;a href="https://github.com/tkorhon1/FDS-Evac-Guide" target="_blank" rel="noopener">github.com/tkorhon1/FDS-Evac-Guide&lt;/a>.
 Secondary source.&lt;/li>
+&lt;li>Purser, D. A., &amp;amp; Stec, A. A. (2026). &lt;em>Combustion toxicity&lt;/em>. SFPE Handbook
+of Fire Protection Engineering, 6th ed., Ch. 69, 2225–2270.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_69" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_69&lt;/a>&lt;/li>
 &lt;li>Purser, D. A. (2016). &lt;em>Combustion toxicity&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 62, 2207–2307.
+Protection Engineering, 5th ed., Ch. 62, 2207–2307. Cited only as the FDS
+User&amp;rsquo;s Guide reference.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_62" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_62&lt;/a>&lt;/li>
 &lt;li>FDS source code, &lt;code>Source/func.f90&lt;/code>, function &lt;code>FED&lt;/code>, tag FDS6.7.6.
 &lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.6/Source/func.f90" target="_blank" rel="noopener">github.com/firemodels/fds&lt;/a>.
@@ -11600,11 +11672,11 @@ upper airways is felt immediately and depends on the concentration: it
 impairs escape at once. Damage to the deep lung depends on the inhaled dose
 and develops over hours. The literature treats the two with different
 quantities, and the standards and the handbook combine them differently.&lt;/p>
-&lt;p>This page covers the concentration criteria (ISO&amp;rsquo;s FEC and Purser&amp;rsquo;s FIC),
+&lt;p>The quantities are the concentration criteria (ISO&amp;rsquo;s FEC and Purser&amp;rsquo;s FIC),
 the denominators each one uses, Purser&amp;rsquo;s relation between FIC and walking
 speed, and the lung dose. In short, the published rule &lt;strong>adds&lt;/strong> the speed
 losses from smoke and from irritants. It does not multiply them
-(&lt;a href="#combining-with-smoke-the-losses-add">Eq. 63.14&lt;/a>).&lt;/p>
+(&lt;a href="#combining-with-smoke-the-losses-add">Eq. 70.12&lt;/a>).&lt;/p>
 &lt;p>Symbols follow the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#notation">notation table&lt;/a>. The
 equations below keep the sources&amp;rsquo; own notation (FEC, \(F_{\mathrm{FIC}}\),
 \(F_{\mathrm{FLD}}\)).&lt;/p>
@@ -11631,35 +11703,40 @@ instantaneous (§6.2.1, NOTE 1). Irritants have no effect on the asphyxiant
 FED (§6.1, NOTE 5). ISO 13571 gives no relation between irritants and
 walking speed.&lt;/p>
 &lt;h2>Purser: the fractional irritant concentration (FIC)&lt;span class="hx-absolute -hx-mt-20" id="purser-the-fractional-irritant-concentration-fic">&lt;/span>
-&lt;a href="#purser-the-fractional-irritant-concentration-fic" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2016, Society of Fire Protection Engineers (SFPE)
-Handbook Ch. 63) define the fractional irritant
+&lt;a href="#purser-the-fractional-irritant-concentration-fic" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2026, Society of Fire Protection Engineers (SFPE)
+Handbook, 6th ed., Ch. 70, p. 2287) define the fractional irritant
 concentration (FIC) [-] as a sum over irritants, each term being the current
 concentration divided by the concentration predicted to cause a chosen
 endpoint:&lt;/p>
 $$
-\mathrm{FIC} = \mathrm{FIC_{HCl}} + \mathrm{FIC_{HBr}} + \mathrm{FIC_{HF}} + \mathrm{FIC_{SO_2}} + \mathrm{FIC_{NO_2}} + \mathrm{FIC_{CH_2CHO}} + \mathrm{FIC_{HCHO}} + \sum \mathrm{FIC}_x
-\qquad \text{(Eq. 63.11)}
-$$&lt;p>The chapter repeats the sum as Eq. 63.12 (p. 2343) and in its appendix
-(p. 2414); the 2026 edition numbers them Eqs. 70.9 and 70.10. The terms
-stand for immediate sensory effects, so Ch. 63 expects them to ease when the
+\begin{aligned}
+&amp;\mathrm{FIC} = \mathrm{FIC_{HCl}} + \mathrm{FIC_{HBr}} + \mathrm{FIC_{HF}} \\
+&amp;\quad + \mathrm{FIC_{SO_2}} + \mathrm{FIC_{NO_2}} + \mathrm{FIC_{CH_2CHO}} \\
+&amp;\quad + \mathrm{FIC_{CH_2O}} + \sum \mathrm{FIC}_x
+\quad \text{(Eq. 70.9)}
+\end{aligned}
+$$&lt;p>The chapter repeats the sum as Eq. 70.10 (p. 2289) and in its appendix
+(p. 2342, again labelled Eq. 70.9). The terms
+stand for immediate sensory effects, so Ch. 70 expects them to ease when the
 concentrations fall, for example when a person leaves the contaminated area
-(p. 2343). Like the ISO FEC, the FIC is a concentration criterion. It is not
+(p. 2289). Like the ISO FEC, the FIC is a concentration criterion. It is not
 a dose and is not integrated over time.&lt;/p>
 &lt;h3>Which endpoint goes in the denominator&lt;span class="hx-absolute -hx-mt-20" id="which-endpoint-goes-in-the-denominator">&lt;/span>
 &lt;a href="#which-endpoint-goes-in-the-denominator" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The chapter uses two endpoints, and different equations use different ones:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>Escape impairment:&lt;/strong> Eq. 63.8 (p. 2333) and the text under Eq. 63.12
-(p. 2343).&lt;/li>
+&lt;li>&lt;strong>Escape impairment:&lt;/strong> Eq. 70.6 (p. 2278) and the text under Eq. 70.10
+(p. 2289).&lt;/li>
 &lt;li>&lt;strong>Either endpoint:&lt;/strong> the appendix, which names both SFPE columns of
-Table 63.6 (p. 2414).&lt;/li>
-&lt;li>&lt;strong>Incapacitation:&lt;/strong> the walking-speed relation, Eq. 63.13, where FIC = 1
-means incapacitation (p. 2344; Purser 2003, p. 99). Ch. 63 introduces it
-for concentrations below the SFPE incapacitation column (p. 2343).&lt;/li>
-&lt;li>p. 2325 reads FIC = 1 as significant impairment and FIC = 5 as roughly
-incapacitation, which in our reading is the escape-impairment scale.&lt;/li>
+Table 70.4 (p. 2342).&lt;/li>
+&lt;li>&lt;strong>Incapacitation:&lt;/strong> the walking-speed relation, Eq. 70.11, where FIC = 1
+means incapacitation (p. 2289; Purser 2003, p. 99). Ch. 70 introduces it
+for concentrations below the SFPE incapacitation column (p. 2289).&lt;/li>
+&lt;li>The 2016 edition of the chapter (5th ed., Ch. 63, p. 2325) read FIC = 1 as
+significant impairment and FIC = 5 as roughly incapacitation, which in our
+reading is the escape-impairment scale. The 6th edition drops that list.&lt;/li>
 &lt;/ul>
 &lt;p>The denominators [ppm] side by side: SFPE escape impairment, SFPE
-incapacitation and AEGL-2 for 10 min from Table 63.6 (p. 2344), and ISO
+incapacitation and AEGL-2 for 10 min from Table 70.4 (p. 2288), and ISO
 13571 \(F_i\) (§6.2.1, p. 7):&lt;/p>
 &lt;table>
 &lt;thead>
@@ -11727,8 +11804,8 @@ incapacitation and AEGL-2 for 10 min from Table 63.6 (p. 2344), and ISO
 &lt;ul>
 &lt;li>The escape-impairment values are about 0.2 of the incapacitation values:
 200/900 = 0.22 for the three halogen acids and 0.20 for the other four
-gases. This matches p. 2325, where FIC = 5 on the escape scale is roughly
-incapacitation.&lt;/li>
+gases. This matches the 2016 reading, where FIC = 5 on the escape scale is
+roughly incapacitation.&lt;/li>
 &lt;li>The sets disagree gas by gas. SFPE incapacitation and ISO differ by up to
 about 8× (formaldehyde, 30 against 250 ppm). SFPE escape impairment and ISO
 differ by up to about 40× (formaldehyde, 6 against 250 ppm). The same smoke
@@ -11736,11 +11813,12 @@ gives very different FIC values depending on the set.&lt;/li>
 &lt;li>ISO&amp;rsquo;s FEC and SFPE&amp;rsquo;s FIC do not share denominators, so an FEC of 1 and an
 FIC of 1 describe different mixtures.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;strong>The factor 0.3.&lt;/strong> Ch. 63 mentions it twice. The escape-impairment values
+&lt;p>&lt;strong>The factor 0.3.&lt;/strong> Ch. 70 mentions it several times (pp. 2288, 2289,
+2322, 2342). The escape-impairment values
 are to be used &amp;ldquo;with an FED factor of 0.3 to allow for sensitive
-individuals&amp;rdquo; (p. 2343), and &amp;ldquo;a factor of 0.3 FEC for escape impairment&amp;rdquo;
-should let nearly all exposed people escape (p. 2414). The same page 2343
-explains the number: a significant proportion of people may be impaired at
+individuals&amp;rdquo; (p. 2289), and &amp;ldquo;a factor of 0.3 FEC for escape impairment&amp;rdquo;
+should let nearly all exposed people escape (p. 2342). Page 2288
+explains the number: some people may be impaired at
 about 0.3 of the concentration that affects the average person, which for
 HCl is 60 ppm instead of 200 ppm. In our reading, 0.3 is therefore a
 sensitive-person factor on the escape-impairment values. It is not the ratio
@@ -11748,37 +11826,37 @@ between the escape and incapacitation columns (about 0.2), and it does not
 apply to the incapacitation values.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/fic_denominators.png" alt="Denominators of the FIC and FEC for seven irritant gases on a logarithmic ppm axis, one marker per endpoint set: SFPE escape impairment, SFPE incapacitation, ISO 13571 and AEGL-2. For SO₂ the four values run from 0.75 to 150 ppm" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Denominators [ppm] per gas for four endpoint sets, log scale: SFPE escape
-impairment and SFPE incapacitation (Table 63.6, p. 2344), ISO 13571
-(§6.2.1, p. 7) and AEGL-2 for 10 min (Table 63.6). The dotted lines mark HCl
+impairment and SFPE incapacitation (Table 70.4, p. 2288), ISO 13571
+(§6.2.1, p. 7) and AEGL-2 for 10 min (Table 70.4). The dotted lines mark HCl
 at 900 ppm (SFPE incapacitation) and 1000 ppm (ISO, the example of
-Fig. 63.17). NO is left out: it has no escape-impairment value, its
+Fig. 70.11). NO is left out: it has no escape-impairment value, its
 incapacitation value is given only as &amp;ldquo;&amp;gt;1000&amp;rdquo;, and it is not in the FIC
 sum. Script: &lt;code>scripts/figures/fundamentals_fic_denominators.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>Irritants and walking speed (FIC)&lt;span class="hx-absolute -hx-mt-20" id="irritants-and-walking-speed-fic">&lt;/span>
 &lt;a href="#irritants-and-walking-speed-fic" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser (2003, pp. 94 and 99–100) proposed that irritants do not slow
 people at low concentrations and stop effective movement at
 incapacitation, FIC = 1, with a sigmoid fall in between: &amp;ldquo;a curve has been
-fitted between these two extremes&amp;rdquo; (p. 94). Ch. 63 calls it an &amp;ldquo;estimated
+fitted between these two extremes&amp;rdquo; (p. 94). Ch. 70 calls it an &amp;ldquo;estimated
 relationship&amp;rdquo; based on a concept and on the concentration estimated to be
-very painful (p. 2343); the curve is Fig. 63.17 (p. 2344). Neither source
+very painful (Fig. 70.11 and its text, p. 2289). Neither source
 gives walking data or fit statistics for it; in our reading, it is a concept
-curve with no walking data behind it. Ch. 63 gives it as&lt;/p>
+curve with no walking data behind it. Ch. 70 gives it as&lt;/p>
 $$
 F_{wv\,irr} = \frac{e^{-(1000\,x/b)^2} + (-0.2\,x + 0.2)}{1.2},
 \qquad b = 160,\ x = \mathrm{FIC}
-\qquad \text{(Eq. 63.13)}
+\qquad \text{(Eq. 70.11)}
 $$&lt;p>where \(F_{wv\,irr}\) is the fractional walking speed (1 = normal walking
-speed of 1.2 m/s). The 2026 edition gives the same curve as Eq. 70.11. The
-source states only the end point, 0 at FIC = 1 (p. 2344). Our arithmetic
+speed of 1.2 m/s). The
+source states only the end point, 0 at FIC = 1 (p. 2289). Our arithmetic
 gives 1.000, 0.914, 0.714, 0.308, 0.141 and 0.083 at FIC = 0, 0.05, 0.1,
 0.2, 0.3 and 0.5. The formula holds for 0 ≤ FIC ≤ 1 only: above 1 it turns
 negative, for example −0.083 at FIC = 1.5.&lt;/p>
-&lt;p>Jin&amp;rsquo;s experiments, which Ch. 63 cites for the link between irritancy and
-walking speed (p. 2343), give no FIC values: they index irritancy by the
+&lt;p>Jin&amp;rsquo;s experiments, which Ch. 70 cites for the link between irritancy and
+walking speed (p. 2289), give no FIC values: they index irritancy by the
 extinction coefficient &lt;em>K&lt;/em>, and the smoke composition was not reported
 (Purser 2003, p. 98).&lt;/p>
-&lt;p>&lt;strong>Which denominators?&lt;/strong> Ch. 63 writes Eq. 63.13 with FIC = 1 meaning
-incapacitation &amp;ldquo;(e.g., 1000 ppm HCl)&amp;rdquo; (p. 2344), as Purser does (2003,
+&lt;p>&lt;strong>Which denominators?&lt;/strong> Ch. 70 writes Eq. 70.11 with FIC = 1 meaning
+incapacitation &amp;ldquo;(e.g., 1000 ppm HCl)&amp;rdquo; (p. 2289), as Purser does (2003,
 p. 99). That HCl example is the ISO value; the SFPE incapacitation value is
 900 ppm. Purser defines the FIC of his speed curve as the concentration
 &amp;ldquo;expressed as a fraction of the concentration predicted to cause
@@ -11790,19 +11868,19 @@ other scale: FIC = 1 there means escape impairment, and incapacitation lies
 at a multiple of it that the chapter states three ways: FIC about 3–5
 (p. 2–91), a factor of about four or more (p. 2–121), and 5–10 times the
 FIC (p. 2–132).&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/irritant_speed.png" alt="Fractional walking speed against FIC from Eq. 63.13: 1 at FIC 0, 0.71 at 0.1, 0.31 at 0.2, 0.08 at 0.5 and 0 at 1, continued as a dotted line to FIC 1.2 where it falls below zero" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/irritant_speed.png" alt="Fractional walking speed against FIC from Eq. 70.11: 1 at FIC 0, 0.71 at 0.1, 0.31 at 0.2, 0.08 at 0.5 and 0 at 1, continued as a dotted line to FIC 1.2 where it falls below zero" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Fractional walking speed against fractional irritant concentration FIC
-from Ch. 63, Eq. 63.13, drawn thin because, in our reading, no walking data
+from Ch. 70, Eq. 70.11, drawn thin because, in our reading, no walking data
 lie behind it. Dotted beyond FIC = 1, outside the curve&amp;rsquo;s range, where the
 formula goes negative. Script: &lt;code>scripts/figures/fundamentals_irritant_speed.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h3>Combining with smoke: the losses add&lt;span class="hx-absolute -hx-mt-20" id="combining-with-smoke-the-losses-add">&lt;/span>
 &lt;a href="#combining-with-smoke-the-losses-add" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Purser multiplies the unexposed walking speed by the fraction (2003,
 p. 98). He treats the effects of smoke and irritants as essentially additive
-(p. 99) and adds their losses (Purser 2003, p. 100; Ch. 63, Eq. 63.14,
-p. 2345; Eq. 70.12 in the 2026 edition, p. 2289):&lt;/p>
+(p. 99) and adds their losses (Purser 2003, p. 100; Ch. 70, Eq. 70.12,
+p. 2289):&lt;/p>
 $$
 F_{wv} = 1 - (1 - F_{wv\,smoke}) - (1 - F_{wv\,irr})
-\qquad \text{(Eq. 63.14)}
+\qquad \text{(Eq. 70.12)}
 $$&lt;p>where \(F_{wv\,smoke}\) is the fractional walking speed due to smoke
 obscuration (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>).
 The walking speed is \(F_{wv}\) times the unexposed speed.&lt;/p>
@@ -11812,7 +11890,7 @@ is at most 0 whenever \(F_{wv\,irr} = 0\) (FIC = 1) and
 \(F_{wv\,smoke} &lt; 1\).&lt;/li>
 &lt;li>&lt;strong>Non-irritant smoke only.&lt;/strong> \(F_{wv\,smoke}\) has to be a law for
 non-irritant smoke. Purser pairs it with his fit to Jin&amp;rsquo;s non-irritant data
-(2003, p. 98). Pairing it with Eq. 63.10, which is fitted to pooled
+(2003, p. 98). Pairing it with Eq. 70.8, which is fitted to pooled
 &amp;ldquo;moderately irritant&amp;rdquo; data, would in our reading count irritancy twice (see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/#purser-a-logarithmic-fit-for-irritant-smoke">Walking speed in smoke&lt;/a>).&lt;/li>
 &lt;/ul>
@@ -11831,43 +11909,25 @@ with values read from Fig. 1 (about 1.0, 0.92, 0.71, 0.31, 0.14, 0.08 and
 gives 1 at FIC = 0, because the linear term alone fixes 0.83 there. The
 best tested case, 1000 &lt;em>x&lt;/em> in the exponent only, ends at 0 at FIC = 1 but
 dips to −0.10 in between, with a mean absolute error of 0.16 against the
-readings. Ch. 63&amp;rsquo;s Eq. 63.13, with 1000 &lt;em>x&lt;/em> in the exponent and the whole
+readings. Ch. 70&amp;rsquo;s Eq. 70.11, with 1000 &lt;em>x&lt;/em> in the exponent and the whole
 numerator divided by 1.2, matches the readings with a mean absolute error
 of 0.002, and is the form given above. The figure on this page is computed
-from Eq. 63.13, not from the 2003 printing. Two minor misprints: Purser
+from Eq. 70.11, not from the 2003 printing. Two minor misprints: Purser
 (2003, p. 99) refers to &amp;ldquo;Figure 2&amp;rdquo; for the irritant curve, which is his
 Fig. 1, and calls the FIC axis the &amp;ldquo;ordinate&amp;rdquo; (pp. 99–100), which is the
-abscissa; Ch. 63 has &amp;ldquo;x-axis&amp;rdquo;.
+abscissa; Ch. 70 has &amp;ldquo;x-axis&amp;rdquo; (p. 2289).
 &lt;/div>
 &lt;/details>
 &lt;h2>Purser: a dose term for lung effects&lt;span class="hx-absolute -hx-mt-20" id="purser-a-dose-term-for-lung-effects">&lt;/span>
 &lt;a href="#purser-a-dose-term-for-lung-effects" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The lung effects are a dose. The fractional lethal dose of irritants
 \(FLD_{irr}\) [-] sums, for each irritant, the Ct exposure dose [ppm·min]
-divided by the dose predicted to be lethal to half the population (Eq. 63.15,
-Table 63.7, e.g. 114 000 ppm·min for HCl). Purser notes that lung irritation
+divided by the dose predicted to be lethal to half the population (Eq. 70.13,
+Table 70.5, p. 2290, e.g. 114 000 ppm·min for HCl). Purser notes that lung irritation
 has relatively little effect on escape capability and &amp;ldquo;can be omitted from an
-escape calculation&amp;rdquo; (p. 2415), but in the simplified asphyxiant equation he includes
+escape calculation&amp;rdquo; (p. 2342), but in the simplified asphyxiant equation he includes
 \(FLD_{irr}\) inside the sum that is multiplied by the CO₂ factor, because
-irritants impair lung function and add some hypoxia (Eq. 63.38; see
+irritants impair lung function and add some hypoxia (Eq. 70.38; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant FED&lt;/a>).&lt;/p>
-&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
-&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">Misprints in Ch. 63 that the 2026 edition corrects&lt;/strong>
-&lt;/summary>
-&lt;div class="hx-p-2 hx-overflow-hidden">
-&lt;ul>
-&lt;li>&lt;strong>&amp;ldquo;Numerator&amp;rdquo; for denominator.&lt;/strong> Under Eq. 63.12, Ch. 63 calls both parts
-of each FIC term the &amp;ldquo;numerator&amp;rdquo; (p. 2343); the second is the denominator.
-The 2026 edition corrects it (p. 2289).&lt;/li>
-&lt;li>&lt;strong>Table 63.7, AEGL-3 column.&lt;/strong> For NO, acrolein and formaldehyde the
-values are shifted down one row (75, 2100 and blank). Table 70.5 of the
-2026 edition (p. 2290) gives NO blank, acrolein 75 and formaldehyde 2100.
-The 2026 values agree with the 30-min AEGL-3 concentrations of Table 63.6
-times 30 min (2.5 × 30 = 75 and 70 × 30 = 2100 ppm·min); that check is
-ours.&lt;/li>
-&lt;/ul>
-&lt;/div>
-&lt;/details>
 &lt;h2>FDS+Evac and FDS&lt;span class="hx-absolute -hx-mt-20" id="fdsevac-and-fds">&lt;/span>
 &lt;a href="#fdsevac-and-fds" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The guide to &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>, the evacuation module of the Fire Dynamics Simulator
 (Korhonen 2021, Eqs. 12 and 17, Table 2), follows this
@@ -11877,8 +11937,8 @@ $$
 $$&lt;p>adds the irritant lethal dose into the incapacitation sum, and its Table 2
 lists both the lethal doses \(F_{FLD}\) and the incapacitating concentrations
 \(F_{FIC}\). The values in that table agree with the SFPE columns of Tables
-63.6 and 63.7. This sum is the Purser / FDS+Evac guide form. It is not the
-ISO 13571 form, which keeps irritants out of the FED altogether.&lt;/p>
+70.4 and 70.5. This sum is the Purser / FDS+Evac guide form; ISO 13571 keeps irritants
+out of the FED altogether.&lt;/p>
 &lt;p>No equation in the guide uses \(F_{FIC}\), and the FDS+Evac source
 (&lt;code>evac.f90&lt;/code>) computes no FIC. FDS+Evac slows people only through the
 Frantzich–Nilsson relation of the guide&amp;rsquo;s Eq. 11, with a floor of
@@ -11890,16 +11950,17 @@ half the population, the same values as the SFPE incapacitation column.&lt;/p>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Human measurements at incapacitating concentrations cannot be made for
 ethical reasons, and most of the experimental work behind the irritant
 values used animals, mostly rodents, together with expert judgement
-(Ch. 63, p. 2343). The three FIC and FEC denominator sets (SFPE escape impairment, SFPE
+(Ch. 70, p. 2288). The three FIC and FEC denominator sets (SFPE escape impairment, SFPE
 incapacitation, ISO) differ by up to about 40× for one gas (formaldehyde,
 6 ppm for SFPE escape impairment against 250 ppm for ISO; our arithmetic), so the choice of endpoint set
 changes FIC more than the choice of speed law does.
 Individual sensitivity is wide: for HCl, Purser proposes 200 ppm as the
 escape-impairment concentration for the average person, but notes that some
 people may be impaired at 60 ppm and others may escape through about
-400–600 ppm (p. 2343). The concentrations of acrolein and formaldehyde are
-rarely known in a fire, and Ch. 63 suggests a smoke-density surrogate when
-they are not (pp. 2344–2345). The walking-speed curve Eq. 63.13 is a concept
+400–600 ppm (p. 2288). The concentrations of acrolein and formaldehyde are
+rarely known in a fire, and Ch. 70 suggests a smoke-density surrogate when
+they are not (notes to Tables 70.4 and 70.5, pp. 2288 and 2290). The
+walking-speed curve Eq. 70.11 is a concept
 curve without fitted data and is defined only for FIC from 0 to 1.&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
@@ -11909,16 +11970,16 @@ fires&lt;/em>, §4.2, §5.4, §6.1 (NOTE 5) and §6.2.1 (Eq. 4, NOTE 1, p. 7).
 ISO, Geneva.
 &lt;a href="https://www.iso.org/standard/56172.html" target="_blank" rel="noopener">iso.org/standard/56172&lt;/a>.
 Read from the full text; paraphrased except the quoted phrase of §4.2.1.&lt;/li>
-&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
-occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 63, 2308–2428. pp. 2325, 2333,
-2342–2345, 2414–2415; Eqs. 63.8, 63.11–63.15, 63.38; Tables 63.6–63.7.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
 &lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). &lt;em>Assessment of hazards to
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2287–2290;
-Eqs. 70.9–70.12; Table 70.4 (identical to Table 63.6) and Table 70.5.
+Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2278, 2287–2290,
+2310, 2342; Eqs. 70.6, 70.9–70.13, 70.38; Tables 70.4–70.5.
 &lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
+occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
+Protection Engineering, 5th ed., Ch. 63, 2308–2428. Cited only for the
+FIC scale of p. 2325, which Ch. 70 drops.
+&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
 &lt;li>Purser, D. A. (2002). &lt;em>Toxicity assessment of combustion products&lt;/em>.
 SFPE Handbook of Fire Protection Engineering, 3rd ed., Sec. 2, Ch. 6.
 NFPA, Quincy, MA. pp. 2–91, 2–121, 2–132.&lt;/li>
@@ -12462,7 +12523,8 @@ more agents than the final summary, which counts those actually spawned
 &lt;/ul></description></item><item><title>Heat</title><link>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/</guid><description>
 &lt;p>Heat can incapacitate in three ways: heat stroke (hyperthermia), skin pain
 followed by burns, and burns to the respiratory tract (Purser and McAllister
-2016, Society of Fire Protection Engineers (SFPE) Handbook Ch. 63). The first is driven mainly by hot air around the body
+2026, Society of Fire Protection Engineers (SFPE) Handbook, 6th ed., Ch. 70,
+p. 2345). The first is driven mainly by hot air around the body
 (convective heat), the second mainly by thermal radiation onto exposed skin.
 The two are described by &lt;strong>separate equations with different endpoints&lt;/strong>,
 and neither should be read as the other.&lt;/p>
@@ -12470,74 +12532,76 @@ and neither should be read as the other.&lt;/p>
 gas temperature [°C]. The equations below keep the SFPE Handbook&amp;rsquo;s notation
 (\(t_I\), &lt;em>q&lt;/em>, &lt;em>r&lt;/em>).&lt;/p>
 &lt;h2>Convective heat: time to incapacitation&lt;span class="hx-absolute -hx-mt-20" id="convective-heat-time-to-incapacitation">&lt;/span>
-&lt;a href="#convective-heat-time-to-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>For exposures of up to 2 h to convected heat from air containing less than
-10 % water vapour by volume, the time to incapacitation
-\(t_{I\,\mathrm{conv}}\) [min] at air temperature &lt;em>T&lt;/em> [°C] is&lt;/p>
+&lt;a href="#convective-heat-time-to-incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Eq. 70.42 gives the time to incapacitation \(t_{I\,\mathrm{conv}}\) [min]
+at air temperature &lt;em>T&lt;/em> [°C] for air with less than 10 % water vapour by
+volume and for exposures up to 2 h (p. 2318):&lt;/p>
 $$
-t_{I\,\mathrm{conv}} = 5\times10^{7}\,T^{-3.4} \qquad \text{(Eq. 63.44)}
-$$&lt;p>derived from the tolerance data in Fig. 63.28. Purser notes that the
+t_{I\,\mathrm{conv}} = 5\times10^{7}\,T^{-3.4} \qquad \text{(Eq. 70.42)}
+$$&lt;p>The expression is derived from the tolerance data (Fig. 70.23, p. 2313;
+derivation on p. 2318). Purser notes that the
 expression follows the worst-case (100 % humidity) line and deviates from
 Blockley&amp;rsquo;s curve at the ends: it is somewhat non-conservative at high
-temperatures and somewhat over-conservative at low ones. For design, Ch. 63
+temperatures and somewhat over-conservative at low ones. For design, Ch. 70
 proposes a better fit for mid-humidity conditions,&lt;/p>
 $$
-t_{\mathrm{tol}} = 2\times10^{31}\,T^{-16.963} + 4\times10^{8}\,T^{-3.7561} \qquad \text{(Eq. 63.45)}
-$$&lt;p>with further expressions for serious injury (Eq. 63.46) and for fatal
-exposure (Eq. 63.47). No heat flux enters Eqs. 63.44–63.47: they take the air
-temperature only. Thermal tolerance data for unprotected skin suggest a
-limit of about 120 °C for convected heat, above which considerable pain
-occurs quickly (Ch. 63, p. 2383 and Table 63.20). Burns to the respiratory
-tract do not occur from air with less than 10 % water vapour in the absence
-of burns to the facial skin, but saturated air above only 60 °C can cause
-them (p. 2382).&lt;/p>
+t_{\mathrm{tol}} = 2\times10^{31}\,T^{-16.963} + 4\times10^{8}\,T^{-3.7561} \qquad \text{(Eq. 70.43)}
+$$&lt;p>with further expressions for serious injury (Eq. 70.44) and for fatal
+exposure (Eq. 70.45). No heat flux enters Eqs. 70.42–70.45: they take the air
+temperature only. For unprotected skin, the tolerance data put the limit
+for convected heat at about 120 °C; above it, pain comes quickly and burns
+follow within minutes (Ch. 70, p. 2319 and Table 70.18). Thermal burns to the
+respiratory tract do not occur unless the air is hot or humid enough to burn
+the facial skin (p. 2317), and saturated air can be breathed for more than a
+few minutes only up to 60 °C (pp. 2345–2346; Table 70.18, p. 2319).&lt;/p>
 &lt;h2>Radiant heat: pain and burns&lt;span class="hx-absolute -hx-mt-20" id="radiant-heat-pain-and-burns">&lt;/span>
 &lt;a href="#radiant-heat-pain-and-burns" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The tenability limit for radiant heat incident on skin is about
 &lt;strong>2.5 kW/m²&lt;/strong>, below which exposure can be tolerated for at least several
 minutes; at and above it, pain is followed by burns within seconds
-(Ch. 63, p. 2382 and Table 63.20). Below
+(Ch. 70, p. 2317 and Table 70.18). Below
 this flux the radiant contribution is neglected. Above it, the time
 \(t_{I\,\mathrm{rad}}\) [min] to a given endpoint at incident radiant flux
 &lt;em>q&lt;/em> [kW/m²] is&lt;/p>
 $$
-t_{I\,\mathrm{rad}} = \frac{r}{q^{1.33}} \qquad \text{(Eq. 63.43)}
+t_{I\,\mathrm{rad}} = \frac{r}{q^{1.33}} \qquad \text{(Eq. 70.41)}
 $$&lt;p>where &lt;em>r&lt;/em> [(kW/m²)^4/3·min] is the dose for the endpoint: about 1.33–1.67 for
 severe skin pain, 4.0–12.2 for second-degree burns and 16.7 for third-degree
 burns. Purser proposes 1.33 as a tolerance threshold and 10 as a threshold
-for incapacitation and serious injury (p. 2382). For the average
+for incapacitation and serious injury (p. 2318). For the average
 population, r = 10 is also given as a 1 % fatality level and r = 16.7 as a
-50 % lethal level (p. 2382); what these imply for the population spread is
+50 % lethal level (p. 2318); what these imply for the population spread is
 discussed under
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/#heat">Incapacitation thresholds&lt;/a>.
 For occupants passing
 under a hot smoke layer, 2.5 kW/m² corresponds approximately to a layer
-temperature of 200 °C (p. 2382).&lt;/p>
+temperature of 200 °C (pp. 2317–2318).&lt;/p>
 &lt;h2>Combining the two&lt;span class="hx-absolute -hx-mt-20" id="combining-the-two">&lt;/span>
-&lt;a href="#combining-the-two" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Ch. 63 describes two ways to account for both. One sums the fractional
+&lt;a href="#combining-the-two" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Ch. 70 describes two ways to account for both. One sums the fractional
 effective doses (FED) over time,&lt;/p>
 $$
-\mathrm{FED} = \int_{t_1}^{t_2}\left(\frac{1}{t_{I\,\mathrm{rad}}} + \frac{1}{t_{I\,\mathrm{conv}}}\right)\mathrm{d}t \qquad \text{(Eq. 63.48)}
+\mathrm{FED} = \int_{t_1}^{t_2}\left(\frac{1}{t_{I\,\mathrm{rad}}} + \frac{1}{t_{I\,\mathrm{conv}}}\right)\mathrm{d}t \qquad \text{(Eq. 70.46)}
 $$&lt;p>valid while the temperature is stable or increasing. The other computes the
-total heat flux to the skin from radiant and convective components (Eq. 63.49),
-which the Handbook calls the total incident flux (p. 2383) but writes as a
-net exchange with the skin surface, and applies Eq. 63.43 to it, with the dose &lt;em>D&lt;/em> in place of &lt;em>r&lt;/em>: 1.33 for
+total heat flux to the skin from radiant and convective components (Eq. 70.47;
+Eq. 63.49 in the 5th edition, which the Models pages cite),
+which the Handbook calls the total incident flux (p. 2319) but writes as a
+net exchange with the skin surface, and applies Eq. 70.41 to it, with the dose &lt;em>D&lt;/em> in place of &lt;em>r&lt;/em>: 1.33 for
 pain, 10 for second-degree burns and severe incapacitation, 16.7 for
-third-degree burns and a potentially fatal exposure (p. 2384). In Eq. 63.49
+third-degree burns and a potentially fatal exposure (p. 2319). In Eq. 70.47
 the emissivity ε is 0.05 for a gas and &amp;ldquo;perhaps 0.5 for smoke&amp;rdquo;, and the
 convective heat transfer factor is &amp;ldquo;approximately 5–8 for slow-moving air&amp;rdquo;,
-with no unit given (p. 2384). The Handbook applies this method to total
-fluxes above 2.5 kW/m² (p. 2384). Below a hot layer in clear air, the
+with no unit given (p. 2319). The Handbook applies this method to total
+fluxes above 2.5 kW/m² (p. 2319). Below a hot layer in clear air, the
 significant radiant sources are the layer, the fire and hot surfaces
-(p. 2384). ISO 13571:2012
+(p. 2319). ISO 13571:2012
 (§4.4) likewise assesses heat and radiant energy with an FED model analogous
 to the gas model; its equations are given
 &lt;a href="#iso-135712012-clause-8">below&lt;/a>.&lt;/p>
 &lt;p>A summed dose is interpretable only when both terms are taken for the same
-endpoint. Ch. 63 pairs them as follows (pp. 2382–2384):&lt;/p>
+endpoint. Ch. 70 pairs them as follows (pp. 2318–2319):&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
 &lt;th>Endpoint&lt;/th>
-&lt;th>Radiant &lt;em>r&lt;/em> (Eq. 63.43)&lt;/th>
+&lt;th>Radiant &lt;em>r&lt;/em> (Eq. 70.41)&lt;/th>
 &lt;th>Convective law&lt;/th>
 &lt;/tr>
 &lt;/thead>
@@ -12545,24 +12609,24 @@ endpoint. Ch. 63 pairs them as follows (pp. 2382–2384):&lt;/p>
 &lt;tr>
 &lt;td>Tolerance, severe pain&lt;/td>
 &lt;td>1.33&lt;/td>
-&lt;td>Eq. 63.45&lt;/td>
+&lt;td>Eq. 70.43&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Serious injury, incapacitation&lt;/td>
 &lt;td>10&lt;/td>
-&lt;td>Eq. 63.46&lt;/td>
+&lt;td>Eq. 70.44&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Fatal&lt;/td>
 &lt;td>16.7&lt;/td>
-&lt;td>Eq. 63.47&lt;/td>
+&lt;td>Eq. 70.45&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>Eq. 63.44 is labelled a time to incapacitation, but its times lie near the
+&lt;p>Eq. 70.42 is labelled a time to incapacitation, but its times lie near the
 tolerance curve. Note (our arithmetic, not from the sources): at 100 °C it
-gives 7.9 min, against 12.3 min from Eq. 63.45 (tolerance) and 35.6 min from
-Eq. 63.46 (injury).&lt;/p>
+gives 7.9 min, against 12.3 min from Eq. 70.43 (tolerance) and 35.6 min from
+Eq. 70.44 (injury).&lt;/p>
 &lt;h2>ISO 13571:2012, clause 8&lt;span class="hx-absolute -hx-mt-20" id="iso-135712012-clause-8">&lt;/span>
 &lt;a href="#iso-135712012-clause-8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>ISO 13571:2012 gives its own heat method in clause 8 (pp. 9–10). Its
 endpoint is &amp;ldquo;compromised tenability&amp;rdquo;, the inability to perform cognitive
@@ -12572,13 +12636,13 @@ unconsciousness (§1).&lt;/p>
 &lt;p>&lt;strong>Criteria.&lt;/strong> Of three ways heat threatens life (hyperthermia, body-surface
 burns, respiratory-tract burns), ISO keeps two for modelling: the threshold
 of second-degree skin burns, and hyperthermia severe enough to cause mental
-deterioration (§8.1). As in Ch. 63, respiratory-tract burns are not expected
+deterioration (§8.1). Respiratory-tract burns are not expected
 from air with less than 10 % water vapour by volume without burns to the
 skin or face, but can occur from saturated air above 60 °C (§8.1, Note).&lt;/p>
 &lt;p>&lt;strong>Radiant heat.&lt;/strong> ISO gives about 2.5 kW/m² as the tenability limit for
 skin, which it calls an incident heat flux level; below it, exposure can be
-tolerated for 30 min or longer (§8.2). Ch. 63 says &amp;ldquo;at least several
-minutes&amp;rdquo; and more than 5 min (p. 2382, Table 63.20). Above the limit, with
+tolerated for 30 min or longer (§8.2). Ch. 70 says &amp;ldquo;at least several
+minutes&amp;rdquo; and more than 5 min (p. 2317, Table 70.18). Above the limit, with
 &lt;em>q&lt;/em> the radiant heat flux [kW/m²] and times in minutes,&lt;/p>
 $$
 t_{I\,\mathrm{rad}} = 6.9\,q^{-1.56} \qquad \text{(ISO Eq. 7, second-degree burns)}
@@ -12586,8 +12650,8 @@ $$$$
 t_{I\,\mathrm{rad}} = 4.2\,q^{-1.9} \qquad \text{(ISO Eq. 8, pain)}
 $$&lt;p>Both are taken from Wieczorek and Dembsey (2001), ISO ref. [17], with an
 estimated uncertainty of ±25 % (§8.2). ISO relates 2.5 kW/m² to a &lt;em>source
-surface&lt;/em> temperature of about 200 °C (§8.2); Ch. 63 relates it to a hot
-&lt;em>layer&lt;/em> at 200 °C (p. 2382). ISO does not use the dose form of Eq. 63.43.&lt;/p>
+surface&lt;/em> temperature of about 200 °C (§8.2); Ch. 70 relates it to a hot
+&lt;em>layer&lt;/em> at 200 °C (pp. 2317–2318). ISO does not use the dose form of Eq. 70.41.&lt;/p>
 &lt;p>&lt;strong>Convective heat.&lt;/strong> For air with less than 10 % water vapour by volume
 (§8.3), with &lt;em>T&lt;/em> the air temperature [°C]:&lt;/p>
 $$
@@ -12596,37 +12660,37 @@ $$$$
 t_{I\,\mathrm{conv}} = 5\times10^{7}\,T^{-3.4} \qquad \text{(ISO Eq. 10, unclothed or lightly clothed)}
 $$&lt;p>Eq. (9) is cited to Crane (1978), ISO ref. [18]. Eq. (10) is cited to
 Purser&amp;rsquo;s chapter in the 4th edition of the SFPE Handbook, ISO ref. [2], and
-has the constants of Eq. 63.44. ISO calls both empirical fits to human data,
+has the constants of Eq. 70.42. ISO calls both empirical fits to human data,
 with an estimated uncertainty of ±25 % (§8.3.2). The 120 °C limit for
 unprotected skin is repeated there (§8.3.2, Note).&lt;/p>
 &lt;p>&lt;strong>Combining.&lt;/strong> The heat FED is the sum over time steps of
 \(1/t_{I\,\mathrm{rad}} + 1/t_{I\,\mathrm{conv}}\) (ISO Eq. 11), the form of
-Eq. 63.48. ISO makes it conditional on the temperature experienced by the
-occupant being stable or increasing (§8.4); Ch. 63 states the condition for
-the temperature in the fire (p. 2383). The radiant term is set to zero where the radiant flux to the
+Eq. 70.46. ISO makes it conditional on the temperature experienced by the
+occupant being stable or increasing (§8.4); Ch. 70 states the condition for
+the temperature in the fire (p. 2318). The radiant term is set to zero where the radiant flux to the
 skin is below 2.5 kW/m² (§8.4). The time at which the sum exceeds the chosen
 threshold is the time to compromised tenability, in the same manner as for
 the gases (§8.5, pointing to §5.3); see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/#heat">Incapacitation thresholds&lt;/a>.&lt;/p>
-&lt;p>&lt;strong>What ISO does not give.&lt;/strong> No total-flux method: no Eq. 63.49, and so no
+&lt;p>&lt;strong>What ISO does not give.&lt;/strong> No total-flux method: no Eq. 70.47, and so no
 emissivity, convective coefficient or skin temperature. No counterpart of
-Eqs. 63.45–63.47 and no radiant doses &lt;em>r&lt;/em>. No temperature or flux range for
+Eqs. 70.43–70.45 and no radiant doses &lt;em>r&lt;/em>. No temperature or flux range for
 Eqs. (7) to (10), and no exposure-duration limit for heat; the caution on
 exposures shorter than 1 min or longer than 1 h (§5.8) is stated for
-asphyxiant gases. Ch. 63 states &amp;ldquo;up to 2 h&amp;rdquo; for Eq. 63.44 (p. 2382).&lt;/p>
+asphyxiant gases. Ch. 70 states &amp;ldquo;up to 2 h&amp;rdquo; for Eq. 70.42 (p. 2318).&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
 &lt;th>&lt;/th>
 &lt;th>ISO 13571:2012&lt;/th>
-&lt;th>SFPE Ch. 63&lt;/th>
+&lt;th>SFPE Ch. 70&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
 &lt;td>Radiant law&lt;/td>
 &lt;td>\(a\,q^{-b}\): Eq. (7) burns, Eq. (8) pain&lt;/td>
-&lt;td>\(r/q^{1.33}\) with &lt;em>r&lt;/em> per endpoint (Eq. 63.43)&lt;/td>
+&lt;td>\(r/q^{1.33}\) with &lt;em>r&lt;/em> per endpoint (Eq. 70.41)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Radiant limit&lt;/td>
@@ -12640,13 +12704,13 @@ asphyxiant gases. Ch. 63 states &amp;ldquo;up to 2 h&amp;rdquo; for Eq. 63.44 (p
 &lt;/tr>
 &lt;tr>
 &lt;td>Convective laws&lt;/td>
-&lt;td>Eq. (9) clothed; Eq. (10) unclothed = Eq. 63.44&lt;/td>
-&lt;td>Eq. 63.44; Eqs. 63.45–63.47 per endpoint&lt;/td>
+&lt;td>Eq. (9) clothed; Eq. (10) unclothed = Eq. 70.42&lt;/td>
+&lt;td>Eq. 70.42; Eqs. 70.43–70.45 per endpoint&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Combination&lt;/td>
 &lt;td>Eq. (11), summed FED&lt;/td>
-&lt;td>Eq. 63.48, or total flux (Eq. 63.49)&lt;/td>
+&lt;td>Eq. 70.46, or total flux (Eq. 70.47)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Summed dose valid while&lt;/td>
@@ -12666,7 +12730,7 @@ asphyxiant gases. Ch. 63 states &amp;ldquo;up to 2 h&amp;rdquo; for Eq. 63.44 (p
 &lt;tr>
 &lt;td>Duration limit for heat&lt;/td>
 &lt;td>none stated&lt;/td>
-&lt;td>up to 2 h (Eq. 63.44)&lt;/td>
+&lt;td>up to 2 h (Eq. 70.42)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -12674,55 +12738,57 @@ asphyxiant gases. Ch. 63 states &amp;ldquo;up to 2 h&amp;rdquo; for Eq. 63.44 (p
 &lt;ul>
 &lt;li>&lt;strong>Endpoint of Eqs. (9) and (10).&lt;/strong> §8.3 introduces them as the time to
 prevention of escape; §8.3.1 calls the same time the time to experiencing
-pain. Ch. 63 calls Eq. 63.44 a time to incapacitation.&lt;/li>
+pain. Ch. 70 calls Eq. 70.42 a time to incapacitation.&lt;/li>
 &lt;li>&lt;strong>Which radiant law enters Eq. (11).&lt;/strong> Eqs. (7) and (8) share the symbol
 \(t_{I\,\mathrm{rad}}\), and §8.4 does not say which one to use. Either
 choice sums a radiant endpoint (burns or pain) with a convective one that
 is not stated to be the same.&lt;/li>
-&lt;li>&lt;strong>Clothing.&lt;/strong> ISO recommends Eq. (9) for fully clothed subjects. Ch. 63
+&lt;li>&lt;strong>Clothing.&lt;/strong> ISO recommends Eq. (9) for fully clothed subjects. Ch. 70
 holds that light indoor clothing adds little tolerance and does not
-protect the hands and head, so it treats the unclothed expressions as the
-relevant ones unless protective clothing is worn (p. 2336). How
+protect the hands and head, so it presents no expressions for clothed
+subjects and refers to ISO 13571 for them (p. 2283). How
 pyFDS-Evac chooses: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#clothing">Models › Heat › Clothing&lt;/a>.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/heat_iso.png" alt="Two log-scale panels. Left: time to endpoint against radiant flux from 2.5 to 20 kW/m², ISO Eqs. 7 and 8 against SFPE Eq. 63.43 for r = 1.33 and 16.7 with the second-degree band r = 4.0 to 12.2 shaded, and the two radiant rows of Table 63.20. Right: time against air temperature from 60 to 250 °C, ISO Eqs. 9 and 10 against SFPE Eqs. 63.45 to 63.47, and the five convective rows of Table 63.20" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/heat_iso.png" alt="Two log-scale panels. Left: time to endpoint against radiant flux from 2.5 to 20 kW/m², ISO Eqs. 7 and 8 against SFPE Eq. 70.41 for r = 1.33 and 16.7 with the second-degree band r = 4.0 to 12.2 shaded, and the two radiant rows of Table 70.18. Right: time against air temperature from 60 to 250 °C, ISO Eqs. 9 and 10 against SFPE Eqs. 70.43 to 70.45, and the five convective rows of Table 70.18" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>(a) Radiant: ISO&amp;rsquo;s burn law (Eq. 7, red, circles) runs through the low
-end of Ch. 63&amp;rsquo;s second-degree band; ISO&amp;rsquo;s pain law (Eq. 8, orange, squares)
-crosses Ch. 63&amp;rsquo;s pain dose r = 1.33 near 7.5 kW/m². (b) Convective: ISO&amp;rsquo;s
+end of Ch. 70&amp;rsquo;s second-degree band; ISO&amp;rsquo;s pain law (Eq. 8, orange, squares)
+crosses Ch. 70&amp;rsquo;s pain dose r = 1.33 near 7.5 kW/m². (b) Convective: ISO&amp;rsquo;s
 clothed law (Eq. 9) gives about three times the tolerance time of the
-unclothed law (Eq. 10, identical to Eq. 63.44). Solid over the span of
-Table 63.20 (2.5–10 kW/m², 100–180 °C), dotted outside it: neither source
+unclothed law (Eq. 10, identical to Eq. 70.42). Solid over the span of
+Table 70.18 (2.5–10 kW/m², 100–180 °C), dotted outside it: neither source
 states the data range of its fits.&lt;/em>&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">Figure provenance&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-ISO Eqs. (7) to (10) as in §8.2 and §8.3; SFPE Eqs. 63.43 and 63.45–63.47
-(pp. 2382–2383); points from Table 63.20 (p. 2383): 30 s at 2.5 kW/m²,
+ISO Eqs. (7) to (10) as in §8.2 and §8.3; SFPE Eqs. 70.41 and 70.43–70.45
+(p. 2318); points from Table 70.18 (p. 2319): 30 s at 2.5 kW/m²,
 4 s at 10 kW/m², and 12, 7, 4, 2 and 1 min at 100, 120, 140, 160 and
-180 °C. Our arithmetic: written as the &lt;em>r&lt;/em> of Eq. 63.43, Eq. (7) gives
+180 °C. Our arithmetic: written as the &lt;em>r&lt;/em> of Eq. 70.41, Eq. (7) gives
 r = 5.6 at 2.5 kW/m² and 4.1 at 10 kW/m²; Eq. (8) gives 2.5 and 1.1,
-against 1.33–1.67 in Ch. 63. Eq. (8) gives 44 s at 2.5 kW/m² and 3 s at
-10 kW/m², against 30 s and 4 s in Table 63.20. Eq. (9) gives 24.7 min at
+against 1.33–1.67 in Ch. 70. Eq. (8) gives 44 s at 2.5 kW/m² and 3 s at
+10 kW/m², against 30 s and 4 s in Table 70.18. Eq. (9) gives 24.7 min at
 100 °C, Eq. (10) 7.9 min; their ratio falls from 3.1 at 100 °C to 2.8 at
 180 °C. Script: &lt;code>scripts/figures/fundamentals_heat_iso.py&lt;/code>.
 &lt;/div>
 &lt;/details>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
-&lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some cross-references in the text of Ch. 63 do not match the printed
-equation labels: the text calls the radiant equation &amp;ldquo;Equation 63.41&amp;rdquo; and the
-summed dose &amp;ldquo;Equation 63.46&amp;rdquo;, and gives the endpoint times from flux as
-&amp;ldquo;Equation 63.49&amp;rdquo; where the form is that of Eq. 63.43 (p. 2384). The labels above are those printed beside each
-equation. The caption of Table 63.21 says its rates follow Eq. 63.44, but the
-printed values (0.02, 0.19, 1.57 and 15.55 per minute at 65, 125, 220 and
-405 °C) are those of Eq. 63.45. The note under Eq. 63.48 says that
+&lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some cross-references in the text of Ch. 70 do not match the printed
+equation labels: the text derives \(t_{I\,\mathrm{conv}}\) &amp;ldquo;from Eq. 70.38&amp;rdquo;
+(it is Eq. 70.42, p. 2318), sums the radiant and convective fractions &amp;ldquo;as in
+Eq. 70.35&amp;rdquo; (the form is that of Eq. 70.46), and gives the endpoint times from
+total flux &amp;ldquo;by Eq. 70.30&amp;rdquo; where the form is that of Eq. 70.41 (p. 2319). The
+labels above are those printed beside each equation. The caption of
+Table 70.19 says its rates follow Eq. 70.42, but the printed values (0.02,
+0.19, 1.57 and 15.55 per minute at 65, 125, 220 and 405 °C) are those of
+Eq. 70.43 (p. 2320). The note under Eq. 70.46 says that
 \(t_{I\,\mathrm{rad}}\) tends to zero below 2.5 kW/m²; it is
 \(1/t_{I\,\mathrm{rad}}\) that does.
-Eq. 63.49 is printed with the division by 1000 on the convective term only,
+Eq. 70.47 is printed with the division by 1000 on the convective term only,
 although both terms are in W/m² and &lt;em>q&lt;/em> is defined in kW/m².
-The radiant tolerance data (Table 63.19) are incident flux on the skin,
-whereas Eq. 63.49 is written as a net exchange with the skin surface; at the
+The radiant tolerance data (Table 70.17) are incident flux on the skin,
+whereas Eq. 70.47 is written as a net exchange with the skin surface; at the
 200 °C anchor the two differ by about 20 %. FDS&amp;rsquo;s &lt;code>RADIATIVE HEAT FLUX&lt;/code> and
 &lt;code>RADIATIVE HEAT FLUX GAS&lt;/code> outputs are net as well,
 \(\varepsilon_s(\dot q''_{\mathrm{inc}} - \sigma T_s^4)\) with
@@ -12734,10 +12800,15 @@ radiant data concern bare skin: clothing changes both. None of these
 equations describe the effect of heat on walking speed or on route choice.&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). &lt;em>Assessment of hazards to
+occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
+Protection Engineering, 6th ed., Ch. 70, 2271–2352. Eqs. 70.41–70.47,
+Fig. 70.23 and Tables 70.17–70.19.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
 &lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 63, 2308–2428. Eqs. 63.43–63.49,
-Fig. 63.28 and Table 63.20.
+Protection Engineering, 5th ed., Ch. 63, 2308–2428. Cited only for the
+equation number Eq. 63.49 (p. 2383) used on the Models pages.
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
 &lt;li>ISO (2012). &lt;em>ISO 13571:2012 Life-threatening components of fire —
 Guidelines for the estimation of time to compromised tenability in
@@ -13314,8 +13385,8 @@ always uses the Lund law with the defaults on
 &lt;p>A fractional effective dose (FED) of 1 is, by definition, the dose at which
 a person of median susceptibility is predicted to be incapacitated. Half of a
 population is more susceptible. Design therefore uses a lower threshold, most
-often 0.3. This page gives the published rationale for that value and the
-limits of its population basis.&lt;/p>
+often 0.3. The published rationale for that value rests on a population
+basis with known limits.&lt;/p>
 &lt;p>Symbols follow the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/concepts/#notation">notation table&lt;/a>.&lt;/p>
 &lt;h2>The ISO 13571 rationale&lt;span class="hx-absolute -hx-mt-20" id="the-iso-13571-rationale">&lt;/span>
 &lt;a href="#the-iso-13571-rationale" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>ISO 13571:2012 (§4.1, §5.4) assumes a priori that occupant responses follow a
@@ -13344,19 +13415,32 @@ susceptibility unable to effect their own escape (§5.2), in 2012 the median
 of compromised tenability (§5.4). ISO/TR 13571-2:2016 repeats the 11.4 % figure
 for 0.3, citing ISO 13571:2012, A.5.2.&lt;/p>
 &lt;h2>What the handbook says&lt;span class="hx-absolute -hx-mt-20" id="what-the-handbook-says">&lt;/span>
-&lt;a href="#what-the-handbook-says" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2016, Society of Fire Protection Engineers (SFPE)
-Handbook Ch. 63) state that the endpoints of their
+&lt;a href="#what-the-handbook-says" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Purser and McAllister (2026, Society of Fire Protection Engineers (SFPE)
+Handbook, 6th ed., Ch. 70) state that the endpoints of their
 equations represent the median of the distribution, and that approximately
-11.3 % of the population is likely to be susceptible below an FED of 0.3,
-citing ISO 13571 (p. 2334; repeated on p. 2415). In the same paragraph they
-write that approximately 90 % of the population is susceptible below an FED
-of 1.3. For a log-normal with
-median 1, these two statements are not consistent: 11.3 % below 0.3 implies a
-log-scale standard deviation near 1.0, whereas 90 % below 1.3 implies about
-0.2. The source does not give the distribution parameters that would resolve
-this. Ch. 63 also notes that, because gas concentrations rise quickly in most
+1 % of the population is likely to be susceptible below an FED of 0.3,
+citing ISO 13571 (p. 2282; repeated on p. 2343). ISO 13571:2012 (A.5.2)
+gives 11.4 % for 0.3, and the 2016 edition of the chapter gave 11.3 %
+(Purser and McAllister 2016, p. 2334). In the same paragraph Ch. 70 states
+that approximately 90 % of the population is susceptible below an FED
+of 1.3 (p. 2282). For a log-normal with
+median 1, these two statements are not consistent: 1 % below 0.3 implies a
+log-scale standard deviation near 0.52, whereas 90 % below 1.3 implies about
+0.2 (our arithmetic; 11.3 % below 0.3 implies about 1.0). The source does
+not give the distribution parameters that would resolve
+this. For single gases, Ch. 70 puts about 1 % of people below an FED of
+0.3 for CO (about 10 % COHb, p. 2298), HCN (p. 2302), low oxygen (p. 2305)
+and CO₂ (p. 2307). Only the HCN figure rests on data: a probit analysis of
+the primate experiments gives 1 % at FICN = 0.44 (p. 2302), which for a
+log-normal with median 1 means σ ≈ 0.35 (our arithmetic). The 0.3 is then
+widened for children and the elderly. Ch. 70 also notes that, because gas concentrations rise quickly in most
 flaming fires, variations in individual susceptibility have relatively minor
-effects on predicted times to incapacitation (p. 2334).&lt;/p>
+effects on predicted times to incapacitation (p. 2282).&lt;/p>
+&lt;p>After the general asphyxiant equation (Eq. 70.39), Ch. 70 also states that
+an FED of 0.1 should allow nearly all exposed people to escape (p. 2310),
+while p. 2288 gives 0.3 for the general population and 0.1 for particularly
+sensitive groups. The 2016 edition gave 0.3 for nearly all people and 0.1
+as an option for especially vulnerable groups (p. 2372).&lt;/p>
 &lt;h2>NIST Technical Note 1797&lt;span class="hx-absolute -hx-mt-20" id="nist-technical-note-1797">&lt;/span>
 &lt;a href="#nist-technical-note-1797" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The National Institute of Standards and Technology (NIST) Technical Note (TN)
 1797 is often cited for population bands.&lt;/p>
@@ -13401,14 +13485,13 @@ report clause asks for the threshold chosen for each component (clause 10);
 the text does not say whether the heat FED must share the gas threshold.
 §8.5 finds the heat time &amp;ldquo;in the same manner&amp;rdquo; as for the gases.&lt;/p>
 &lt;p>No source we could consult gives a population spread for tolerance of
-convective heat (ISO 13571:2012 Eqs. (9) and (10); SFPE Eq. 63.44). SFPE Ch. 63 gives
-population figures for heat only for radiant lethality (p. 2382): a radiant
-dose of 10 (kW/m²)^4/3·min &amp;ldquo;represents a fatal level for a vulnerable
-population (over 65 years of age) or a 1 % fatality level for the average
-population, whereas 16.7 (kW/m²)^4/3·min represents a 50 % probability
-lethal level for the average population&amp;rdquo;. The chapter cites Hockey and Rew
-(1996) and Purser (1997) for its radiant dose relation (refs. [133, 134],
-p. 2382). Hockey and Rew is a candidate source for probit relations behind
+convective heat (ISO 13571:2012 Eqs. (9) and (10); SFPE Eq. 70.42). SFPE Ch. 70 gives
+population figures for heat only for radiant lethality (p. 2318): a radiant
+dose of 10 (kW/m²)^4/3·min is a fatal level for people over 65 and &amp;ldquo;a 1%
+lethal level&amp;rdquo; for the average population, and 16.7 (kW/m²)^4/3·min is &amp;ldquo;a
+50% lethal level&amp;rdquo;. The chapter cites Hockey and Rew
+(1996) and Purser (1997) for its radiant dose relation (refs. [125, 126],
+p. 2318). Hockey and Rew is a candidate source for probit relations behind
 these figures; we have not read it.&lt;/p>
 &lt;p>Inference, not a statement of the sources: if the lethal dose is log-normal
 with median 16.7 and 1 % below 10, its log-scale standard deviation is
@@ -13419,10 +13502,10 @@ value 16.667 gives the same σ to two decimals. Its limits:&lt;/p>
 &lt;li>The Handbook states no distribution; the log-normal is assumed.&lt;/li>
 &lt;li>Two figures fix two parameters, so nothing tests the fit.&lt;/li>
 &lt;li>The figures are for radiant lethality, the fatal dose &lt;em>D&lt;/em> = 16.7 of
-Eq. 63.43. They concern neither convective tolerance nor the ISO
+Eq. 70.41. They concern neither convective tolerance nor the ISO
 convective times.&lt;/li>
 &lt;/ul>
-&lt;p>With FED = 1 at D = 16.7, the 1 % fatality dose is FED = 0.60. A log-normal
+&lt;p>With FED = 1 at D = 16.7, the 1 % lethal dose is FED = 0.60. A log-normal
 with σ = 0.94, between the two TN 1797 bin values above, would put 29 % of people
 below FED = 0.60 instead of 1 %. A probit in the natural log of dose with
 slope b gives σ = 1/b. A published probit slope for a heat endpoint would
@@ -13446,9 +13529,16 @@ from the public preview.&lt;/li>
 Part 2: Methodology and examples of tenability assessment&lt;/em>. ISO, Geneva.
 &lt;a href="https://www.iso.org/standard/65996.html" target="_blank" rel="noopener">iso.org/standard/65996&lt;/a>. Read
 from the public preview.&lt;/li>
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). &lt;em>Assessment of hazards to
+occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
+Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2282, 2288, 2298, 2302, 2305,
+2307, 2310, 2318, 2343.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
 &lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). &lt;em>Assessment of hazards to
 occupants from smoke, toxic gases, and heat&lt;/em>. SFPE Handbook of Fire
-Protection Engineering, 5th ed., Ch. 63, 2308–2428.
+Protection Engineering, 5th ed., Ch. 63, 2308–2428. Cited only for the
+11.3 % figure (p. 2334), which Ch. 70 replaces, and for the 0.3 and 0.1
+FED factors (p. 2372).
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
 &lt;li>Averill, J. D., Moore-Merrell, L., Ranellone, R. T., Jr., Weinschenk, C.,
 Taylor, N., Goldstein, R., Santos, R., Wissoker, D., &amp;amp; Notarianni, K. A.
@@ -13457,9 +13547,9 @@ Butler, Ed.). NIST Technical Note 1797.
 &lt;a href="https://doi.org/10.6028/NIST.TN.1797" target="_blank" rel="noopener">doi:10.6028/NIST.TN.1797&lt;/a>&lt;/li>
 &lt;li>Hockey, S. M., &amp;amp; Rew, P. J. (1996). &lt;em>Human response to thermal
 radiation&lt;/em>. Contract Research Report 97/1996. HSE Books, Sudbury. Cited
-by Ch. 63 as ref. [133]; not consulted.&lt;/li>
+by Ch. 70 as ref. [125]; not consulted.&lt;/li>
 &lt;li>Purser, D. A. (1997). Review of human response to thermal radiation.
-&lt;em>Fire Safety Journal&lt;/em>, 28, 290–291. Cited by Ch. 63 as ref. [134]; not
+&lt;em>Fire Safety Journal&lt;/em>, 28, 290–291. Cited by Ch. 70 as ref. [126]; not
 consulted.&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">Fractional effective dose&lt;/a>.&lt;/p>
@@ -14028,16 +14118,17 @@ time at which a general alarm or warning is given and the time at which the
 first deliberate evacuation movement is made, and splits it into a
 recognition time, from perceiving the alarm to interpreting it as an
 emergency, and a response time, from recognition to the first move
-(Gwynne and Boyce 2016, Ch. 64). ISO/TR 16738:2009 (§5.7) uses the same two
+(Gwynne et al. 2026, Ch. 72, p. 2378). ISO/TR 16738:2009 (§5.7) uses the same two
 elements and distinguishes the pre-travel time of the first occupants from
 the distribution of pre-travel times over the whole group. There is no
 equation for \(t_{\mathrm{pre}}\): it is taken from observed distributions.&lt;/p>
 &lt;h2>Why it is long&lt;span class="hx-absolute -hx-mt-20" id="why-it-is-long">&lt;/span>
 &lt;a href="#why-it-is-long" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>ISO/TR 16738 (§5.4) reports that the pre-travel activity phase can often be
-the longest part of the total escape time. Response time includes activities
-such as fighting the fire, warning others, gathering family members,
-dressing, collecting belongings and calling the fire service (Ch. 64).
-Kuligowski (2016, Ch. 58) explains these delays with the Protective Action
+the longest part of the total escape time. During pre-travel time, occupants
+may seek information, alert and assist others, fight the fire or prepare to
+leave (Kuligowski and Kinateder 2026, Ch. 65, p. 2102), for
+example by gathering belongings or getting dressed (Ch. 72, p. 2406).
+Kuligowski and Kinateder (Ch. 65, pp. 2109–2110) explain these delays with the Protective Action
 Decision Model, in which environmental cues such as the sight of smoke and
 social cues such as warnings interrupt normal activity only if they are
 perceived as a threat; the occupant then seeks more information, protects
@@ -14049,8 +14140,9 @@ from 9 fire incidents and 103 evacuation drills, covering 13 591 evacuees in
 16 countries, grouped by occupancy type and clustered to identify
 sub-groups. They fitted gamma, log-normal, log-logistic and Weibull
 distributions, all two-parameter, positive and right-skewed, for use as
-model inputs (their Eqs. 2–5). The database extends the tables of Gwynne and Boyce (2016,
-Ch. 64). A corrigendum was published in 2019. ISO/TR 16738 (Annex E) gives
+model inputs (their Eqs. 2–5). The database includes the data of the
+previous edition of the SFPE Handbook&amp;rsquo;s egress-data chapter (Ch. 72,
+p. 2386). A corrigendum was published in 2019. ISO/TR 16738 (Annex E) gives
 guidance and default pre-travel times from published data.&lt;/p>
 &lt;h2>Known limits&lt;span class="hx-absolute -hx-mt-20" id="known-limits">&lt;/span>
 &lt;a href="#known-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Drills make up 103 of the 112 data sets, so the database describes drills
@@ -14070,12 +14162,14 @@ information on methods for evaluating behaviour and movement of people&lt;/em>,
 §5.4, §5.7 and §7. ISO, Geneva.
 &lt;a href="https://www.iso.org/standard/42887.html" target="_blank" rel="noopener">iso.org/standard/42887&lt;/a>. Read
 from the public preview.&lt;/li>
-&lt;li>Gwynne, S. M. V., &amp;amp; Boyce, K. E. (2016). &lt;em>Engineering data&lt;/em>. SFPE
-Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_64" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_64&lt;/a>&lt;/li>
-&lt;li>Kuligowski, E. D. (2016). &lt;em>Human behavior in fire&lt;/em>. SFPE Handbook of
-Fire Protection Engineering, 5th ed., Ch. 58, 2070–2114.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_58" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_58&lt;/a>&lt;/li>
+&lt;li>Gwynne, S. M. V., Boyce, K. E., &amp;amp; Lovreglio, R. (2026). &lt;em>Egress data for
+engineering analysis&lt;/em>. SFPE Handbook of Fire Protection Engineering,
+6th ed., Ch. 72, 2375–2484. pp. 2378, 2386, 2406.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_72" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_72&lt;/a>&lt;/li>
+&lt;li>Kuligowski, E. D., &amp;amp; Kinateder, M. (2026). &lt;em>Human behavior in fire in the
+built environment&lt;/em>. SFPE Handbook of Fire Protection Engineering, 6th ed.,
+Ch. 65, 2099–2137. pp. 2102, 2109–2110.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_65" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_65&lt;/a>&lt;/li>
 &lt;li>Lovreglio, R., Kuligowski, E., Gwynne, S., &amp;amp; Boyce, K. (2019). &lt;em>A
 pre-evacuation database for use in egress simulations&lt;/em>. Fire Safety
 Journal, 105, 107–128.

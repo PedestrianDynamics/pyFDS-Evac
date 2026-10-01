@@ -703,8 +703,8 @@ passes it explicitly. Pass a &lt;code>tenability_config&lt;/code> whenever you p
 threshold applies, so nobody is incapacitated. &lt;code>&amp;quot;probabilistic&amp;quot;&lt;/code> (&lt;code>--incapacitation-mode probabilistic&lt;/code>)
 draws a log-normal threshold for each agent with median &lt;code>fed_threshold&lt;/code>.&lt;/p>
 &lt;p>The incapacitated occupant stays in the simulation, so the run continues to
-&lt;code>max_simulation_time&lt;/code> and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s. It is not
-an exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
+&lt;code>max_simulation_time&lt;/code>, and &lt;code>exposed.evacuation_time&lt;/code> reports 1150 s, although
+the occupant never left (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/p>
 &lt;p>&lt;code>FdsFedField.from_fds&lt;/code> reads each gas from the slice nearest its
 &lt;code>slice_height_m&lt;/code> (default 1.6 m), as &lt;code>ExtinctionField.from_fds&lt;/code> and
 &lt;code>FdsHeatField.from_fds&lt;/code> do.&lt;/p>
@@ -1298,8 +1298,8 @@ incapacitated) before their exit. The engine records the irritant measure
 agents who were still inside. By then their FIC was already 4.5 to 5.9.&lt;/li>
 &lt;/ul>
 &lt;p>&amp;ldquo;Nobody reached FED 1&amp;rdquo; therefore does not mean &amp;ldquo;everyone had time&amp;rdquo;. This is
-one fire, one seed, and research software. The result describes this run. It
-is not a design verdict.&lt;/p>
+one fire, one seed, and research software. The result describes this run
+only.&lt;/p>
 &lt;h3>Make the numbers yourself&lt;span class="hx-absolute -hx-mt-20" id="make-the-numbers-yourself">&lt;/span>
 &lt;a href="#make-the-numbers-yourself" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>pyFDS-Evac does not compute ASET itself. A built-in report is planned in
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>. The
@@ -1447,7 +1447,7 @@ the 75 censored agents (grey, arrow). The solid part is the time spent beyond
 K ≥ 0.3 1/m. Markers: first K ≥ 0.3 1/m (circle), first HCl ≥ 300 ppm
 (diamond), first FED ≥ 0.3 (square); the other criteria of the table are
 left out to keep the bars readable. Censoring is shown by the grey colour
-and the arrow, not by hatching. Values at the agent&amp;rsquo;s position, z =
+and the arrow. Values at the agent&amp;rsquo;s position, z =
 2.0 m, 1 s resolution..&lt;/em>&lt;/p>
 &lt;p>Read the figure from the left edge of each bar. The first dozen agents
 started in clear air, and the limits reached them on the way. From about
@@ -1526,7 +1526,7 @@ that loses it at 300 s. Heat is
 not included in either panel. The map form follows Schröder et al. (2020);
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a> re-runs
 their demonstration case.&lt;/em>&lt;/p>
-&lt;p>Panel (b) is not a tenability limit. It shows when the signs stop guiding.
+&lt;p>Panel (b) measures wayfinding: it shows when the signs stop guiding.
 This is consistent with section 5, where 18 agents spawned between 22 and
 92 s never learned an exit: on this map the spawn centre loses sight of
 every sign at 39 s. The engine&amp;rsquo;s own sign test differs (see &lt;em>How the
@@ -1568,7 +1568,7 @@ This run fits none of it:&lt;/p>
 Each agent&amp;rsquo;s exposure starts when it spawns, while all times on this page
 count from ignition.&lt;/li>
 &lt;li>&lt;strong>The run is cut off.&lt;/strong> It stops at 300 s with most late spawners inside.
-The last exit, 299.8 s, is set by the time limit. It is not an RSET.&lt;/li>
+The time limit sets the last exit, 299.8 s, so it gives no RSET.&lt;/li>
 &lt;li>&lt;strong>There is no detection, alarm or pre-movement&lt;/strong>
 (&lt;code>&amp;quot;use_premovement&amp;quot;: false&lt;/code>). Exit minus spawn is travel time only: a
 median of 88.1 s and a maximum of 147.4 s for the 75 who got out.&lt;/li>
@@ -1606,11 +1606,11 @@ test act at every second.&lt;/em>&lt;/p>
 over a population, not for specific individuals (§5.2, p. 4). The per-agent
 comparison is our use of it. The SFPE Handbook frames the same question,
 the time between losing visibility and incapacitation (Purser and
-McAllister 2016, p. 2414).&lt;/li>
-&lt;li>&lt;strong>The FED is not the ISO 13571 asphyxiant FED.&lt;/strong> It is the FDS+Evac sum
+McAllister 2026, p. 2341).&lt;/li>
+&lt;li>&lt;strong>The FED is the FDS+Evac sum&lt;/strong>
 (CO + CN + NOx + FLD&lt;sub>irr&lt;/sub>) × HV&lt;sub>CO2&lt;/sub> + O2, which includes
 Purser&amp;rsquo;s lethal-dose term for HCl (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a>). ISO
-keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
+13571 keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
 thresholds to it is an analogy. FED 0.3 is a threshold for susceptible
 people, not a &amp;ldquo;safe&amp;rdquo; value: ISO treats 1 as the median of a log-normal
 response, so at 0.3 11.4 % of a population is still expected to be
@@ -1690,7 +1690,7 @@ sign decisions can differ slightly from these maps.&lt;/p>
 exposures under 10 minutes, evaluated at 2.0 m, untenable when any one
 criterion is exceeded. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility&lt;/a> for
 &lt;em>K&lt;/em> = &lt;em>C&lt;/em>/&lt;em>V&lt;/em>.&lt;/li>
-&lt;li>&lt;em>HCl.&lt;/em> SFPE Ch. 63, Table 63.6 (p. 2344): 200 ppm for escape impairment,
+&lt;li>&lt;em>HCl.&lt;/em> SFPE Ch. 70, Table 70.4 (p. 2288): 200 ppm for escape impairment,
 900 ppm for incapacitation, and 1000 ppm as the ISO 13571 value (ISO
 13571 §6.2.1, Eq. 4, p. 7, with an uncertainty of ±50 %). ISO 13571 uses
 the same threshold for FED and FEC (§5.4; A.5.2, p. 18), so 0.3 gives
@@ -1726,11 +1726,11 @@ p. 15. Full reference on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/f
 paraphrased; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritants&lt;/a> and
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.&lt;/li>
-&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). Assessment of hazards to
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). Assessment of hazards to
 occupants from smoke, toxic gases, and heat. &lt;em>SFPE Handbook of Fire
-Protection Engineering&lt;/em>, 5th ed., Ch. 63. Table 63.6 (p. 2344) and
-p. 2414.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
+Protection Engineering&lt;/em>, 6th ed., Ch. 70. Table 70.4 (p. 2288) and
+p. 2341.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
 &lt;li>Schröder, B., Arnold, L., &amp;amp; Seyfried, A. (2020). A map representation of
 the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>, 115, 103154.
 &lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2020.103154&lt;/a>&lt;/li>
@@ -1777,14 +1777,14 @@ computes movement inside the FDS executable, with its own social-force model
 on 2-D evacuation meshes. In pyFDS-Evac, &lt;a href="https://www.jupedsim.org" target="_blank" rel="noopener">JuPedSim&lt;/a>
 moves the agents on a continuous walkable polygon. The operational model is
 chosen in the scenario JSON (&lt;code>model_type&lt;/code>, default &lt;code>CollisionFreeSpeedModel&lt;/code>).&lt;/p>
-&lt;p>&lt;strong>Smoke is read, not computed alongside.&lt;/strong> pyFDS-Evac never runs FDS. It reads
+&lt;p>&lt;strong>Smoke is read from a finished FDS run.&lt;/strong> pyFDS-Evac never runs FDS. It reads
 the slice files of a finished FDS run and samples them at the agents'
 positions. The coupling is one-way: the fire acts on the occupants, and
 nothing the occupants do (opening a door, for example) acts on the fire.&lt;/p>
 &lt;p>A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). &lt;code>uv run python run.py --scenario &amp;lt;json|dir|zip&amp;gt; --fds-dir &amp;lt;fds output&amp;gt;&lt;/code> combines them.&lt;/p>
 &lt;h2>Defaults follow FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="defaults-follow-fdsevac">&lt;/span>
-&lt;a href="#defaults-follow-fdsevac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac is an enhancement of FDS+Evac, not a clone. Where a mechanism has
+&lt;a href="#defaults-follow-fdsevac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac is an enhancement of FDS+Evac. Where a mechanism has
 a direct FDS+Evac counterpart, the default is the FDS+Evac form, so that a
 case converted from FDS+Evac behaves as its author expects. Newer or
 alternative forms stay available as options. Earlier pyFDS-Evac versions
@@ -1868,8 +1868,8 @@ suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" 
 one-to-one FDS+Evac counterpart
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>); see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">Smoke-aware routing&lt;/a>.&lt;/li>
-&lt;li>An exit is found by reading its sign, not by seeing the door. FDS+Evac
-counts a door as visible at any distance if nothing blocks the line of
+&lt;li>An agent that does not know an exit learns it from the exit&amp;rsquo;s sign;
+FDS+Evac uses sight of the door. FDS+Evac counts a door as visible at any distance if nothing blocks the line of
 sight. pyFDS-Evac reads a sign only within its reading distance, 30 m by
 default even in clear air, and less off-axis or in smoke. See
 &lt;a href="#seeing-a-door-vs-reading-a-sign">Seeing a door vs reading a sign&lt;/a>.&lt;/li>
@@ -2092,9 +2092,16 @@ values cannot be copied across unchanged. The delay is in seconds.&lt;/p>
 from the 2019 corrigendum
 (&lt;a href="https://doi.org/10.1016/j.firesaf.2018.12.009" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2018.12.009&lt;/a>;
 &lt;a href="https://doi.org/10.1016/j.firesaf.2019.102829" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2019.102829&lt;/a>).
-The uniform preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo; sensitivity scenario, not
-data. For other occupancies, set both parameters from the matching table of
-that paper.&lt;/p>
+The uniform preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo; scenario, a range set for
+sensitivity tests. For other occupancies, set both
+parameters from the matching table of that paper.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/getting-started/premovement_presets.png" alt="Four panels of pre-movement time from 0 to 600 s. Gamma, log-normal and Weibull each rise to a peak near 30 to 40 s and fall off in a long right tail, with medians near 100 s and 95th percentiles of 368, 481 and 349 s. The uniform preset is a flat block from 0 to 60 s, with median 30 s and 95th percentile 57 s" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>The first four presets of the table above. Curves: the probability density
+with the preset (&lt;em>a&lt;/em>, &lt;em>b&lt;/em>). Grey bars: 10,000 draws made by pyFDS-Evac with
+the same preset, which follow the curves. Solid line: median; dashed line:
+95th percentile. The log-normal preset has the longest tail: 3.1 % of it
+lies beyond 600 s. Script:
+&lt;code>scripts/figures/coming_from_premovement_presets.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>The presets are used when &lt;code>use_premovement&lt;/code> is &lt;code>true&lt;/code> and &lt;code>premovement_param_a&lt;/code>
 or &lt;code>premovement_param_b&lt;/code> is missing; both parameters must be given for either
 to take effect (&lt;code>constant&lt;/code> needs only &lt;code>premovement_param_a&lt;/code>). A spawn area that
