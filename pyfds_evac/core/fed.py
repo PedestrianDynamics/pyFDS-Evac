@@ -5,10 +5,13 @@ import math
 from dataclasses import dataclass, replace
 
 from .fds_sampling import (
+    FdsDomainError,
     FdsHorizonError,
     SliceFieldSampler,
     _slice_z_mid,
+    domain_error_message,
     load_slice_sampler,
+    sampler_quantity,
 )
 
 _logger = logging.getLogger(__name__)
@@ -851,6 +854,12 @@ class FdsFedField:
     Required slices: CO, CO2, O2 (volume fractions in [0, 1]).
     Optional slices: HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde.
     Missing optional species contribute 0 to the FED sum.
+
+    A point outside every gas slice reads the ambient defaults of
+    ``DefaultFedInputs``, as FDS+Evac, unless *require_fds_coverage* is set:
+    then it raises ``FdsDomainError``. A point that some loaded gas slices
+    cover and others do not raises ``ValueError`` (#427): a dose built from
+    part of the gases is neither the fire's nor ambient air's.
     """
 
     # Map from attribute name to FDS quantity name.
@@ -873,9 +882,12 @@ class FdsFedField:
         co_sampler: SliceFieldSampler,
         co2_sampler: SliceFieldSampler,
         o2_sampler: SliceFieldSampler,
+        *,
+        require_fds_coverage: bool = False,
         **optional_samplers: SliceFieldSampler,
     ):
         """Store one sampler per gas quantity used by the FED model."""
+        self._require_fds_coverage = require_fds_coverage
         self._co = co_sampler
         self._co2 = co2_sampler
         self._o2 = o2_sampler
@@ -897,6 +909,7 @@ class FdsFedField:
         simulation=None,
         slice_height_m: float | None = 1.6,
         allow_horizon_hold: bool = False,
+        require_fds_coverage: bool = False,
     ) -> "FdsFedField":
         """Build gas samplers from an FDS case directory.
 
@@ -915,6 +928,9 @@ class FdsFedField:
         allow_horizon_hold : optional
             Hold the last frame past the FDS output instead of raising
             ``FdsHorizonError``.
+        require_fds_coverage : optional
+            Raise ``FdsDomainError`` for a point outside the gas slices
+            instead of reading ambient air there.
         """
         if simulation is not None:
             sim = simulation
@@ -945,14 +961,27 @@ class FdsFedField:
             if not sim.slices.filter_by_quantity(quantity):
                 continue
             optional[attr.lstrip("_")] = sampler(quantity)
-        field = cls(co, co2, o2, **optional)
+        field = cls(co, co2, o2, require_fds_coverage=require_fds_coverage, **optional)
         field.fds_dir = str(fds_dir)
         return field
+
+    def samplers(self) -> list[SliceFieldSampler]:
+        """Return every loaded gas slice sampler, required ones first."""
+        optional = [getattr(self, attr, None) for attr, _ in self._OPTIONAL_SPECIES]
+        return [self._co, self._co2, self._o2] + [s for s in optional if s is not None]
+
+    def covers(self, x: float, y: float) -> bool:
+        """Return whether every loaded gas slice covers the x/y point."""
+        return all(sampler.covers(x, y) for sampler in self.samplers())
 
     def _sample_optional_ppm(
         self, sampler: SliceFieldSampler | None, time_s: float, x: float, y: float
     ) -> float:
-        """Sample an optional species; return 0 if sampler is absent or point is outside."""
+        """Sample an optional species in ppm; 0 if its slice is absent.
+
+        Called only where CO, CO2 and O2 cover the point, so a point outside
+        this species' slice is partial coverage and raises ``ValueError``.
+        """
         if sampler is None:
             return 0.0
         try:
@@ -960,22 +989,39 @@ class FdsFedField:
         except FdsHorizonError:
             raise
         except ValueError:
-            return 0.0
+            raise ValueError(
+                _partial_gas_message(time_s, x, y, [sampler_quantity(sampler)])
+            ) from None
+
+    def _outside_inputs(self, time_s: float, x: float, y: float) -> DefaultFedInputs:
+        """Return ambient inputs for a point outside CO, CO2 and O2.
+
+        Raises ``ValueError`` when an optional species still covers the point,
+        and ``FdsDomainError`` in strict mode.
+        """
+        optional = self.samplers()[3:]
+        if any(_covers(s, x, y) for s in optional):
+            required = (self._co, self._co2, self._o2)
+            missing = [sampler_quantity(s) for s in required]
+            raise ValueError(_partial_gas_message(time_s, x, y, missing))
+        _raise_outside(self._require_fds_coverage, self._co, time_s, x, y)
+        return DefaultFedInputs()
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> DefaultFedInputs:
         """Return FED gas inputs at one time and x/y point."""
-        try:
-            co_pct = 100.0 * self._co.sample(time_s, x, y)
-            co2_pct = 100.0 * self._co2.sample(time_s, x, y)
-            o2_pct = 100.0 * self._o2.sample(time_s, x, y)
-        except FdsHorizonError:
-            raise
-        except ValueError:
-            return DefaultFedInputs()
+        co = _sample_or_none(self._co, time_s, x, y)
+        co2 = _sample_or_none(self._co2, time_s, x, y)
+        o2 = _sample_or_none(self._o2, time_s, x, y)
+        if co is None and co2 is None and o2 is None:
+            return self._outside_inputs(time_s, x, y)
+        if co is None or co2 is None or o2 is None:
+            pairs = ((self._co, co), (self._co2, co2), (self._o2, o2))
+            missing = [sampler_quantity(s) for s, value in pairs if value is None]
+            raise ValueError(_partial_gas_message(time_s, x, y, missing))
         return DefaultFedInputs(
-            co_volume_fraction_percent=co_pct,
-            co2_volume_fraction_percent=co2_pct,
-            o2_volume_fraction_percent=o2_pct,
+            co_volume_fraction_percent=100.0 * co,
+            co2_volume_fraction_percent=100.0 * co2,
+            o2_volume_fraction_percent=100.0 * o2,
             hcn_ppm=self._sample_optional_ppm(self._hcn, time_s, x, y),
             no_ppm=self._sample_optional_ppm(self._no, time_s, x, y),
             no2_ppm=self._sample_optional_ppm(self._no2, time_s, x, y),
@@ -1102,10 +1148,31 @@ class FdsHeatField:
         self,
         sampler: SliceFieldSampler,
         intensity_sampler: SliceFieldSampler | None = None,
+        *,
+        require_fds_coverage: bool = False,
     ):
-        """Wrap the TEMPERATURE and, optionally, INTEGRATED INTENSITY samplers."""
+        """Wrap the TEMPERATURE and, optionally, INTEGRATED INTENSITY samplers.
+
+        With *require_fds_coverage* a point outside the slices raises
+        ``FdsDomainError`` instead of reading 20 C.
+        """
         self._sampler = sampler
         self._intensity_sampler = intensity_sampler
+        self._require_fds_coverage = require_fds_coverage
+
+    def _check_outside_allowed(self, time_s: float, x, y) -> None:
+        """Raise ``FdsDomainError`` for a point outside, in strict mode."""
+        _raise_outside(self._require_fds_coverage, self._sampler, time_s, x, y)
+
+    def samplers(self) -> list[SliceFieldSampler]:
+        """Return the TEMPERATURE and any INTEGRATED INTENSITY sampler."""
+        if self._intensity_sampler is None:
+            return [self._sampler]
+        return [self._sampler, self._intensity_sampler]
+
+    def covers(self, x: float, y: float) -> bool:
+        """Return whether every slice of this field covers the x/y point."""
+        return all(sampler.covers(x, y) for sampler in self.samplers())
 
     @classmethod
     def from_fds(
@@ -1116,6 +1183,7 @@ class FdsHeatField:
         simulation=None,
         integrated_intensity: bool = False,
         allow_horizon_hold: bool = False,
+        require_fds_coverage: bool = False,
     ) -> "FdsHeatField":
         """Load the TEMPERATURE slice from an FDS case directory.
 
@@ -1139,7 +1207,11 @@ class FdsHeatField:
                 allow_horizon_hold=allow_horizon_hold,
             )
             _check_same_slice_height(sampler, intensity_sampler, fds_dir)
-        field = cls(sampler, intensity_sampler=intensity_sampler)
+        field = cls(
+            sampler,
+            intensity_sampler=intensity_sampler,
+            require_fds_coverage=require_fds_coverage,
+        )
         field.fds_dir = str(fds_dir)
         return field
 
@@ -1153,17 +1225,43 @@ class FdsHeatField:
         temperature_celsius = _sample_or_none(self._sampler, time_s, x, y)
         if self._intensity_sampler is None:
             if temperature_celsius is None:
+                self._check_outside_allowed(time_s, x, y)
                 return HeatFedInputs()
             return HeatFedInputs(temperature_celsius=temperature_celsius)
         intensity = _sample_or_none(self._intensity_sampler, time_s, x, y)
         _check_same_coverage(temperature_celsius, intensity, x, y)
         if temperature_celsius is None:
+            self._check_outside_allowed(time_s, x, y)
             # Outside the FDS domain: no U, so no radiant dose.
             return HeatFedInputs(integrated_intensity_kw_m2=math.nan)
         return HeatFedInputs(
             temperature_celsius=temperature_celsius,
             integrated_intensity_kw_m2=intensity,
         )
+
+
+def _raise_outside(require_fds_coverage: bool, sampler, time_s: float, x, y) -> None:
+    """Raise ``FdsDomainError`` for a point outside the slice in strict mode."""
+    if require_fds_coverage:
+        quantity = sampler_quantity(sampler)
+        raise FdsDomainError(domain_error_message(quantity, time_s, x, y))
+
+
+def _covers(sampler, x, y) -> bool:
+    """Return whether *sampler* covers the point; False for a stand-in
+    without ``covers``, which then reads as outside like before (#427)."""
+    covers = getattr(sampler, "covers", None)
+    return bool(covers(x, y)) if covers is not None else False
+
+
+def _partial_gas_message(time_s: float, x, y, missing: list[str]) -> str:
+    """Return the error text for a point that only some gas slices cover."""
+    return (
+        f"Point ({x}, {y}) at t={time_s:.1f} s lies outside the "
+        f"{', '.join(missing)} slice but inside another FED gas slice; the "
+        "gas FED needs every loaded gas slice at every agent (#427). Give all "
+        "gas slices the same meshes."
+    )
 
 
 def _sample_or_none(sampler: SliceFieldSampler, time_s: float, x, y) -> float | None:

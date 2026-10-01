@@ -66,7 +66,14 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .fds_sampling import FdsHorizonError, SliceFieldSampler, load_slice_sampler
+from .fds_sampling import (
+    FdsDomainError,
+    FdsHorizonError,
+    SliceFieldSampler,
+    domain_error_message,
+    load_slice_sampler,
+    sampler_quantity,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -117,9 +124,17 @@ class ExtinctionField:
     be computed elsewhere, but speed reduction is based directly on K.
     """
 
-    def __init__(self, sampler: SliceFieldSampler):
-        """Wrap a ``SliceFieldSampler`` for the extinction slice."""
+    def __init__(
+        self, sampler: SliceFieldSampler, *, require_fds_coverage: bool = False
+    ):
+        """Wrap a ``SliceFieldSampler`` for the extinction slice.
+
+        Outside the slice K reads 0 (clear air, as FDS+Evac), unless
+        *require_fds_coverage* is set: then such a sample raises
+        ``FdsDomainError``.
+        """
         self._sampler = sampler
+        self._require_fds_coverage = require_fds_coverage
         self._warned_ood = False
 
     @classmethod
@@ -130,6 +145,7 @@ class ExtinctionField:
         slice_height_m: float = 1.6,
         simulation=None,
         allow_horizon_hold: bool = False,
+        require_fds_coverage: bool = False,
     ) -> "ExtinctionField":
         """Load extinction slices from an FDS case directory via fdsreader."""
         sampler = load_slice_sampler(
@@ -139,7 +155,7 @@ class ExtinctionField:
             slice_height_m=slice_height_m,
             allow_horizon_hold=allow_horizon_hold,
         )
-        field = cls(sampler)
+        field = cls(sampler, require_fds_coverage=require_fds_coverage)
         field.fds_dir = str(fds_dir)
         return field
 
@@ -150,6 +166,10 @@ class ExtinctionField:
         except FdsHorizonError:
             raise
         except ValueError:
+            if self._require_fds_coverage:
+                raise FdsDomainError(
+                    domain_error_message(sampler_quantity(self._sampler), time_s, x, y)
+                ) from None
             if not self._warned_ood:
                 _logger.warning(
                     "Extinction sample at (%.2f, %.2f, t=%.1f) is outside "
@@ -160,6 +180,14 @@ class ExtinctionField:
                 )
                 self._warned_ood = True
             return 0.0
+
+    def covers(self, x: float, y: float) -> bool:
+        """Return whether the extinction slice covers the x/y point."""
+        return self._sampler.covers(x, y)
+
+    def samplers(self) -> list[SliceFieldSampler]:
+        """Return the FDS slice samplers this field reads."""
+        return [self._sampler]
 
 
 class ConstantExtinctionField:
@@ -178,6 +206,15 @@ class ConstantExtinctionField:
         """Return the configured constant value for any point and time."""
         del time_s, x, y
         return self.extinction_per_m
+
+    def covers(self, x: float, y: float) -> bool:
+        """Return True: a constant field is defined everywhere."""
+        del x, y
+        return True
+
+    def samplers(self) -> list[SliceFieldSampler]:
+        """Return no samplers: a constant field reads no FDS slice."""
+        return []
 
 
 def extinction_from_soot_density(

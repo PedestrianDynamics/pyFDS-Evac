@@ -102,6 +102,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "the FDS end time is an error at setup, and so is any sample past it.",
     )
     parser.add_argument(
+        "--require-fds-coverage",
+        action="store_true",
+        help="Treat the FDS domain as required: the run stops at setup when "
+        "the walkable area, an exit, checkpoint, spawn area, sign or route "
+        "edge lies outside the FDS slices, and at any smoke, FED, heat or "
+        "sign-visibility sample outside them. Without it, those places read "
+        "ambient air and clear sight, as in FDS+Evac, with a warning at setup "
+        "and in_fds_domain = False in the histories.",
+    )
+    parser.add_argument(
         "--output-smoke-history",
         help="Write smoke speed/extinction history to CSV",
     )
@@ -445,6 +455,8 @@ def _write_smoke_history_csv(rows, output_path: str) -> None:
         "speed_factor",
         "extinction_per_m",
     ]
+    if rows and "in_fds_domain" in rows[0]:
+        fieldnames.append("in_fds_domain")
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -494,6 +506,8 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         fieldnames.append("heat_integrated_intensity_kw_m2")
     if rows and "heat_layer_temperature_c" in rows[0]:
         fieldnames.append("heat_layer_temperature_c")
+    if rows and "in_fds_domain" in rows[0]:
+        fieldnames.append("in_fds_domain")
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -628,6 +642,14 @@ def main() -> int:
             f"Simulation stopped after {result.evacuation_time:.2f} s "
             f"({result.agents_evacuated}/{result.total_agents} evacuated, "
             f"{result.agents_remaining} remaining)."
+        )
+
+    outside = result.metrics.get("fds_outside")
+    if outside and outside["rows"]:
+        print(
+            f"Outside the FDS domain: {outside['agents']} agent(s), "
+            f"{outside['rows']} sample(s), about {outside['agent_seconds']:.1f} "
+            "agent-seconds of ambient air and clear sight."
         )
 
     apply_outputs(result, scenario, args, log=print)

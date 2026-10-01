@@ -36,6 +36,35 @@ class FdsHorizonError(ValueError):
     """
 
 
+class FdsDomainError(ValueError):
+    """A sample was requested outside the FDS slice domain in strict mode.
+
+    Raised only with ``--require-fds-coverage`` (``require_fds_coverage=True``
+    in Python). Without it, a point outside the domain reads ambient air and
+    clear sight, as in FDS+Evac. Like ``FdsHorizonError``, callers must not
+    treat it as the out-of-domain ``ValueError`` they turn into ambient values.
+    """
+
+
+def domain_error_message(quantity: str, time_s: float, x: float, y: float) -> str:
+    """Return the error text for a strict-mode sample outside the FDS domain."""
+    return (
+        f"'{quantity}' requested at ({x:.2f}, {y:.2f}) m, t={time_s:.1f} s, "
+        "which lies outside the FDS slice domain (--require-fds-coverage). "
+        "Extend the FDS meshes or slices over this point, or run without "
+        "--require-fds-coverage to read ambient air and clear sight there."
+    )
+
+
+def sampler_quantity(sampler) -> str:
+    """Return the quantity name of a sampler, for error messages.
+
+    Models need only ``sample`` of a sampler, so a stand-in may carry no
+    name; it is then named by its type.
+    """
+    return str(getattr(sampler, "quantity", type(sampler).__name__))
+
+
 def _output_interval(times) -> float:
     """Return the output interval of a time array, 0 for one frame.
 
@@ -94,6 +123,35 @@ class SliceFieldSampler:
                 self._last_subslice = subslice
                 return subslice
         return None
+
+    def covers(self, x: float, y: float) -> bool:
+        """Return whether a subslice covers the x/y point (closed intervals).
+
+        Side-effect free: unlike ``_find_subslice`` it leaves the last-hit
+        cache alone, so asking never changes which of two subslices sharing
+        a boundary a later ``sample`` reads.
+        """
+        return any(
+            ext.x_start <= x <= ext.x_end and ext.y_start <= y <= ext.y_end
+            for ext in (subslice.extent for subslice in self._subslices)
+        )
+
+    @property
+    def quantity(self) -> str:
+        """Return the FDS quantity name of the slice."""
+        return str(self._slice.quantity.name)
+
+    def extents(self) -> list[tuple[float, float, float, float]]:
+        """Return the (x_start, x_end, y_start, y_end) of every subslice [m]."""
+        return [
+            (
+                float(s.extent.x_start),
+                float(s.extent.x_end),
+                float(s.extent.y_start),
+                float(s.extent.y_end),
+            )
+            for s in self._subslices
+        ]
 
     @staticmethod
     def _nearest_index(coords: np.ndarray, value: float) -> int:
