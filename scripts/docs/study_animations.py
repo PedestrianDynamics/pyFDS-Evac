@@ -12,7 +12,10 @@ capped exit, pre-movement 0, arm U. ``DATA`` and ``RUNS`` are the folders of
 ``scripts/docs/schroeder_room_maps.py``, after it has run::
 
     uv run --with "pedpy>=1.5.1" python scripts/docs/study_animations.py \\
-        schroeder --data DATA --runs RUNS
+        schroeder --data DATA --runs RUNS [--family rel|hrr060]
+
+``--family`` follows the map script: ``rel`` (default) writes to
+``schroeder2020/``, ``hrr060`` to its ``hrr060/`` subfolder.
 
 The background is K at 2.0 m from the same slices as the maps. An agent is
 drawn as a red cross while it stands in a 0.6 m cell whose ASET
@@ -468,8 +471,15 @@ def main():
     parser.add_argument(
         "--runs", type=Path, required=True, help="the study's run folder"
     )
+    parser.add_argument(
+        "--family",
+        choices=tuple(maps.FAMILIES),
+        default="rel",
+        help="schroeder only: FDS runs, rel (default) or hrr060",
+    )
     opts = parser.parse_args()
     if opts.study == "schroeder":
+        maps.use_family(opts.family)
         schroeder(opts.data.resolve(), opts.runs.resolve())
         return
     fire_blind(opts.data.resolve(), opts.runs.resolve())

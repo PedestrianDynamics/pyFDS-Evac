@@ -4,25 +4,38 @@ Source of the method: B. Schröder, L. Arnold, A. Seyfried, "A map
 representation of the ASET-RSET concept", Fire Safety Journal 115 (2020)
 103154, doi:10.1016/j.firesaf.2020.103154 (Sect. 2, Eqs. 2-8). This is the
 same experiment rerun with our own FDS 6.10.1 deck and pyFDS-Evac; none of the
-authors' data is used. pyFDS-Evac does not build these maps itself (#210):
-this script does.
+authors' data is used as input. pyFDS-Evac does not build these maps
+itself (#210): this script does.
 
-``DATA`` is the ``schroeder2020-room`` folder with the finished FDS runs
-``hrr060_1door``, ``hrr060_2door`` (0.2 m) and ``hrr060_1door_dx010``
-(0.1 m), their ``config_*.json`` and the per-seed two-door configs in
-``hrr060_2door/seeds/`` (``build/make_configs.py``, binomial west/east split
-per seed). ``RUNS`` is any folder outside the repository; the evacuation runs
-go there and a run whose trajectory already exists is not repeated::
+Two families of FDS runs, chosen with ``--family``:
+
+* ``rel`` (default, the page's headline): the paper's conditions taken from
+  the authors' release, doi:10.5281/zenodo.3875550 (``rel_1door``,
+  ``rel_2door``, ``rel_1door_dx010``; ``build/make_decks_rel.py`` and
+  ``build/make_configs_rel.py``). 1 × 1 m burner at x, y = 1-2 m, door
+  y = 8-9 m, exit capped at 1.00 p/s (measured from the release
+  trajectories). With ``--release ROOT`` the release's own ASET map and
+  agents-remaining curves are compared with ours;
+* ``hrr060`` (sensitivity): the same experiment rebuilt from the paper text
+  alone (``hrr060_*``; ``build/make_decks.py``, ``build/make_configs.py``),
+  0.6 m burner, door y = 8.2-9.4 m, cap 0.96 p/s read off Fig. 3. Its
+  figures go to the ``hrr060/`` subfolder.
+
+``DATA`` is the ``schroeder2020-room`` folder with the finished FDS runs of
+the family, their ``config_*.json`` and the per-seed two-door configs in
+``<2door run>/seeds/`` (binomial west/east split per seed). ``RUNS`` is any
+folder outside the repository; the evacuation runs go there and a run whose
+trajectory already exists is not repeated::
 
     uv run --with "pedpy>=1.5.1" python scripts/docs/schroeder_room_maps.py \\
-        --data DATA --runs RUNS
+        --data DATA --runs RUNS [--family rel|hrr060] [--release ROOT]
 
 Steps:
 
 * arm U (``--smoke-blind --disable-tenability --smoke-slice-height 2.0``)
-  for seeds 1-10 of every version: the exit capped at 0.96 p/s
-  (``enable_throughput_throttling``, ``max_throughput`` on each exit, the
-  rate read off the paper's Fig. 3) with pre-movement 0, the default
+  for seeds 1-10 of every version: the exit capped at the family's rate
+  (``enable_throughput_throttling``, ``max_throughput`` on each exit) with
+  pre-movement 0, the default
   (constant 10 s), 30 s and 60 s; uncapped CFSM with pre-movement 0; and,
   two doors only, N = 200 capped with pre-movement 0. The one-door versions
   also run on the 0.1 m FDS output, and the trajectories must be identical;
@@ -34,10 +47,12 @@ Steps:
   ASET map shares; pooled over seeds by the maximum (paper, p. 5, n = 10)
   and by the 95th percentile, plus per-seed measures with bootstrap CIs;
 * DIFF = ASET - RSET, five cell states, min DIFF, negative area and C;
-* the agents-remaining check against the paper's Fig. 3 points.
+* the agents-remaining check: ``rel`` against the release's 10 seeds (60-64
+  agents at 40 s, 18-24 at 80 s), ``hrr060`` against the paper's Fig. 3.
 
 It prints every number as Markdown tables and writes the figures to
-``site/static/images/studies/schroeder2020/``.
+``site/static/images/studies/schroeder2020/`` (``rel``) or its ``hrr060/``
+subfolder.
 """
 
 import argparse
@@ -81,7 +96,8 @@ from pyfds_evac.core.fed import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "site" / "static" / "images" / "studies" / "schroeder2020"
+OUT_ROOT = ROOT / "site" / "static" / "images" / "studies" / "schroeder2020"
+OUT = OUT_ROOT
 
 CELL = 0.6  # m, map cell (paper Sect. 2.2.4)
 Z = 2.0  # m, slice height (paper Sect. 2.2.4)
@@ -91,23 +107,86 @@ PAPER_DT = 10.0  # s, the paper's slice step
 BIN = 20.0  # s, bin width of the paper's C (Eq. 8)
 FPS = 10.0  # trajectory frames per second, frame 0 = ignition
 SEEDS = range(1, 11)
-CAP = 0.96  # p/s, read off the paper's Fig. 3 [F]
 ROOM = (0.0, 0.0, 30.0, 10.0)
-BURNER = (0.6, 0.6, 0.6, 0.6)  # x, y, width, depth
 DOOR_REGION = (24.0, 6.0)  # x >= 24 m, y >= 6 m (Enrico's grid note)
 PAPER_FIG3 = ((0, 100), (40, 61), (80, 23), (120, 0))  # [F] Fig. 3; N = 100 [P] at 0 s
 PAPER_FIG5 = (-29.0, 20.0)  # [F] Fig. 5, 60 kW, N = 100: min DIFF s, area m²
+RELEASE_DOI = "10.5281/zenodo.3875550"
 
-FDS_RUNS = {
-    "0.2 m, 1 door": "hrr060_1door",
-    "0.1 m, 1 door": "hrr060_1door_dx010",
-    "0.2 m, 2 doors": "hrr060_2door",
-    "0.2 m, 1 door, perturbed": "hrr060_1door_pert",
+
+@dataclass(frozen=True)
+class Family:
+    """One family of FDS runs and the settings that go with it."""
+
+    cap: float  # p/s on each exit
+    burner: tuple  # x, y, width, depth
+    fds_runs: dict  # label -> FDS run folder
+    layout_fds: dict  # layout -> FDS run folders, the first one is the base
+    gate: tuple  # (40 s low, high), (80 s low, high): accepted mean remaining
+    gate_source: str
+    last_out: tuple  # (low, high) s: accepted last exit of the capped one-door run
+    out: str  # figure subfolder of OUT_ROOT
+    figures: tuple = ()  # figures the page uses; empty: all
+
+
+FAMILIES = {
+    # The paper's conditions from the release [R]: cap measured from its
+    # 10 JuPedSim seeds (10-90 % of agents, 0.96-1.05 p/s); gate = seed range.
+    "rel": Family(
+        cap=1.00,
+        burner=(1.0, 1.0, 1.0, 1.0),
+        fds_runs={
+            "0.2 m, 1 door": "rel_1door",
+            "0.1 m, 1 door": "rel_1door_dx010",
+            "0.2 m, 2 doors": "rel_2door",
+        },
+        layout_fds={
+            "1door": ("rel_1door", "rel_1door_dx010"),
+            "2door": ("rel_2door",),
+        },
+        gate=((60, 64), (18, 24)),
+        gate_source="release, 10 seeds, range",
+        last_out=(96, 103),
+        out="",
+    ),
+    # Rebuilt from the paper text alone: cap read off Fig. 3 [F].
+    "hrr060": Family(
+        cap=0.96,
+        burner=(0.6, 0.6, 0.6, 0.6),
+        fds_runs={
+            "0.2 m, 1 door": "hrr060_1door",
+            "0.1 m, 1 door": "hrr060_1door_dx010",
+            "0.2 m, 2 doors": "hrr060_2door",
+            "0.2 m, 1 door, perturbed": "hrr060_1door_pert",
+        },
+        layout_fds={
+            "1door": ("hrr060_1door", "hrr060_1door_dx010"),
+            "2door": ("hrr060_2door",),
+        },
+        gate=((56, 66), (18, 28)),
+        gate_source="paper Fig. 3, 61 ± 5 / 23 ± 5",
+        last_out=(100, 110),
+        out="hrr060",
+        figures=("diff_1door.png", "grid_perturbation.png"),
+    ),
 }
-LAYOUT_FDS = {
-    "1door": ("hrr060_1door", "hrr060_1door_dx010"),
-    "2door": ("hrr060_2door",),
-}
+FAMILY = FAMILIES["rel"]
+CAP = FAMILY.cap
+BURNER = FAMILY.burner
+FDS_RUNS = FAMILY.fds_runs
+LAYOUT_FDS = FAMILY.layout_fds
+
+
+def use_family(name):
+    """Point the module constants at one family (also for the other scripts)."""
+    global FAMILY, CAP, BURNER, FDS_RUNS, LAYOUT_FDS, OUT
+    FAMILY = FAMILIES[name]
+    CAP, BURNER = FAMILY.cap, FAMILY.burner
+    FDS_RUNS, LAYOUT_FDS = FAMILY.fds_runs, FAMILY.layout_fds
+    OUT = OUT_ROOT / FAMILY.out if FAMILY.out else OUT_ROOT
+    return FAMILY
+
+
 PRE_LABEL = {
     "pre0": "pre-movement 0",
     "pre_default": "pre-movement 10 s (default)",
@@ -126,7 +205,7 @@ class Version:
 
     @property
     def label(self):
-        flow = f"capped {CAP} p/s" if self.capped else "uncapped CFSM"
+        flow = f"capped {CAP:.2f} p/s" if self.capped else "uncapped CFSM"
         n = f"N = {self.n}, " if self.n != 100 else ""
         return f"{n}{flow}, {PRE_LABEL[self.pre]}"
 
@@ -186,7 +265,7 @@ QUANTITIES = {
     "O2": "OXYGEN VOLUME FRACTION",
     "U": "INTEGRATED INTENSITY",
 }
-# Sensitivity only: the total-flux heat dose (SFPE Ch. 63, Eq. 63.43) with the
+# Sensitivity only: the total-flux heat dose (SFPE 6th ed., Ch. 70, Eq. 70.41) with the
 # radiant term f (U - 4 sigma T_s^4) from INTEGRATED INTENSITY. f = 0.25 is a
 # small body in an isotropic field; f = 1, the largest f the engine accepts,
 # is an upper bound. Below the ISO 13571 2.5 kW/m² the radiant term is zero.
@@ -209,10 +288,11 @@ PAPER = "black"
 
 def config_source(data, v, seed):
     """The scenario JSON a version and seed start from."""
+    base = data / LAYOUT_FDS[v.layout][0]
     if v.layout == "1door":
-        return data / "hrr060_1door" / f"config_{v.pre}.json"
+        return base / f"config_{v.pre}.json"
     stem = "N200" if v.n == 200 else v.pre
-    return data / "hrr060_2door" / "seeds" / f"config_{stem}_seed{seed:02d}.json"
+    return base / "seeds" / f"config_{stem}_seed{seed:02d}.json"
 
 
 def run_dir(runs, v, fds, seed):
@@ -762,7 +842,10 @@ def report_split(data):
         row = [seed]
         for stem in ("pre0", "N200"):
             path = (
-                data / "hrr060_2door" / "seeds" / f"config_{stem}_seed{seed:02d}.json"
+                data
+                / LAYOUT_FDS["2door"][0]
+                / "seeds"
+                / f"config_{stem}_seed{seed:02d}.json"
             )
             dists = json.loads(path.read_text())["distributions"]
             row += [f"{d['parameters']['number']}" for d in dists.values()]
@@ -784,7 +867,7 @@ def grid_for(fire_name, grids):
 
 SCREEN_LABELS = {c: spec[2] for c, spec in CRITERIA.items()} | {
     f"heat FED 0.3, total flux f = {f:g}, {e}": f"heat FED ≥ 0.3, total flux, f = {f:g}, "
-    f"{e} dose (SFPE Eq. 63.43; sensitivity)"
+    f"{e} dose (SFPE Ch. 70, Eq. 70.41; sensitivity)"
     for e in HEAT_TF_ENDPOINTS
     for f in U_FACTORS
 }
@@ -906,13 +989,12 @@ def report_gate(results):
         )
     md_table(["version", "remaining at 40 s", "at 80 s", "last out (whole s)"], rows)
     rem = results[("1door", "capped_pre0")].remaining
-    ok = (
-        abs(rem.loc[40].mean() - 61) <= 5
-        and abs(rem.loc[80].mean() - 23) <= 5
-        and 100 <= np.median([np.flatnonzero(rem[s] > 0).max() + 1 for s in rem]) <= 110
-    )
+    ok = gate_ok(rem)
+    (lo40, hi40), (lo80, hi80) = FAMILY.gate
     print(
-        f"Gate (b), 61 ± 5 / 23 ± 5 / last out 100-110 s: {'PASS' if ok else 'FAIL'}\n"
+        f"Gate (b), {FAMILY.gate_source}: {lo40}-{hi40} at 40 s, {lo80}-{hi80} at "
+        f"80 s, {gate_last_out_note()}: "
+        f"{'PASS' if ok else 'FAIL'}\n"
     )
     print("## RSET map, latest cell per version (n = 10)\n")
     rows = [
@@ -926,6 +1008,38 @@ def report_gate(results):
     ]
     md_table(["version", "max pooling s", "p95 pooling s", "visited cells"], rows)
     return ok
+
+
+def gate_last_out_note():
+    """The last-exit part of the gate, as printed."""
+    lo, hi = FAMILY.last_out
+    if FAMILY is FAMILIES["rel"]:
+        return f"every seed's last out {lo}-{hi} s"
+    return f"median last out {lo}-{hi} s"
+
+
+def gate_ok(rem):
+    """Capped one-door curve against the family's agents-remaining gate.
+
+    rel: every seed inside the release's seed range at 40 and 80 s, and
+    every seed's last exit inside the release's 96-103 s.
+    hrr060: the seed mean within ± 5 of Fig. 3 and the median last exit
+    100-110 s.
+    """
+    (lo40, hi40), (lo80, hi80) = FAMILY.gate
+    lo_out, hi_out = FAMILY.last_out
+    last = _last(rem)
+    if FAMILY is FAMILIES["rel"]:
+        return bool(
+            rem.loc[40].between(lo40, hi40).all()
+            and rem.loc[80].between(lo80, hi80).all()
+            and all(lo_out <= t <= hi_out for t in last)
+        )
+    return bool(
+        lo40 <= rem.loc[40].mean() <= hi40
+        and lo80 <= rem.loc[80].mean() <= hi80
+        and lo_out <= np.median(last) <= hi_out
+    )
 
 
 def measure_row(label, m):
@@ -975,6 +1089,10 @@ def _legend(target, **kwargs):
 
 
 def _save(fig, name):
+    if FAMILY.figures and name not in FAMILY.figures:
+        plt.close(fig)
+        print(f"skipped {name}: not used on the page for this family")
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT / name, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -1191,7 +1309,11 @@ def fig_screen(fires, grids):
         )
     ax.set_xscale("symlog", linthresh=1)
     ax.set_xlim(-0.3, 1500)
-    ax.set_xticks([0, 1, 10, 100, 848], labels=["0", "1", "10", "100", "848 (all)"])
+    n_all = int((grid_for(runs[0], grids).area > 0).sum())
+    ax.set_xticks(
+        [0, 1, 10, 100, n_all],
+        labels=["0", "1", "10", "100", f"{n_all} (all, 1 door)"],
+    )
     ax.set_yticks(ticks, labels=labels)
     ax.set_ylim(y - 0.5, -1.2)
     ax.set_xlabel("map cells exceeded by 600 s at z = 2.0 m (∃ rule, 0.6 m cells)")
@@ -1313,13 +1435,96 @@ def fig_grid_pair(coarse, fine, grid, walkable, exits):
     _aset_colorbar(fig, im, axes[:2], bounds)
     _suptitle(
         fig,
-        "K ≥ 0.23 1/m at 2.0 m, one door: not shown grid-converged; "
-        "the 2.0 m criterion sits in the layer interface",
+        "K ≥ 0.23 1/m at 2.0 m, one door, 0.2 m against 0.1 m FDS grid: "
+        f"|Δ| > 30 s in {big:.0%} of cells, door region within {dd.max():.0f} s",
     )
     _stamp(
         fig, "∃ rule, 0.6 m cells, z = 2.0 m, slices every ~1 s; dotted: not by 600 s."
     )
     _save(fig, "aset_grid_pair.png")
+
+
+def fig_aset_release(theirs, capped, headline, grid, walkable, exits):
+    """The release's ASET map next to ours: 10 s with 120 s fill, and ~1 s."""
+    cmap, norm, bounds = _aset_cmap()
+    ny, nx = theirs.shape
+    ours10 = capped["ours, K ≥ 0.23, ∃, 10 s, 120 s fill"]
+    ours10 = np.minimum(np.nan_to_num(ours10, nan=np.inf), PAPER_T_END)
+    fig, axes = _panel_grid(2, (13, 6.8))
+    full = np.full(grid.shape, np.nan)
+    full[:ny, :nx] = theirs
+    full = np.where(grid.area > 0, full, np.nan)
+    ours10 = np.where(grid.area > 0, ours10, np.nan)
+    panels = (
+        ("a", full, "release aset_map.txt [R], 10 s, 120 s fill", True),
+        ("b", ours10, "ours, 10 s, 120 s fill", True),
+        ("c", headline, "ours, headline: ~1 s, censored at 600 s", False),
+    )
+    im = None
+    for ax, (letter, aset, text, filled) in zip(axes, panels):
+        late = aset >= PAPER_T_END if filled else np.isinf(aset)
+        shown = np.where(np.isinf(aset), 600.5, aset)
+        im = _mesh(ax, grid, shown, cmap=cmap, norm=norm)
+        _hatch(ax, grid, late, "..")
+        _plan(ax, walkable, exits)
+        vals = aset[np.isfinite(aset) & ~late]
+        _title(
+            ax,
+            letter,
+            f"{text}: median {np.median(vals):.0f} s",
+        )
+        _note(
+            "aset_release.png",
+            text,
+            f"median {np.median(vals):.0f} s, "
+            f"{vals.size} cells, {int(late.sum())} dotted",
+        )
+    ax = axes[3]
+    a, b = full[:ny, :nx].ravel(), ours10[:ny, :nx].ravel()
+    ok = np.isfinite(a) & np.isfinite(b)
+    rng = np.random.default_rng(0)
+    jit = rng.uniform(-1.5, 1.5, (2, ok.sum()))
+    ax.scatter(a[ok] + jit[0], b[ok] + jit[1], s=10, c="grey", alpha=0.4, lw=0)
+    ax.plot([0, 125], [0, 125], color="lightgrey", lw=1, zorder=0)
+    # Our slice times sit up to 0.05 s after the whole 10 s step.
+    earlier = float(np.mean(b[ok] < a[ok] - 1.0))
+    same = float(np.mean(np.abs(b[ok] - a[ok]) <= 1.0))
+    ax.text(
+        4,
+        118,
+        f"same 10 s step in {same:.0%} of cells,\n"
+        f"ours earlier in {earlier:.0%}, later in {1 - same - earlier:.0%};\n"
+        f"mean ours − release {np.mean(b[ok] - a[ok]):+.1f} s",
+        fontsize=8.5,
+        color=TEXT,
+        va="top",
+    )
+    _note(
+        "aset_release.png",
+        "cells same / ours earlier (10 s, 120 s fill)",
+        f"{same:.1%} / {earlier:.1%}",
+    )
+    ax.set_xlim(0, 125)
+    ax.set_ylim(0, 125)
+    ax.set_aspect("equal")
+    ax.set_xlabel("ASET, release [s] (jittered ± 1.5 s)", color=TEXT, fontsize=9)
+    ax.set_ylabel("ASET, ours 10 s, 120 s fill [s]", color=TEXT, fontsize=9)
+    ax.grid(False)
+    ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT, labelsize=8)
+    ax.patch.set_edgecolor("lightgrey")
+    ax.patch.set_linewidth(0.8)
+    sns.despine(ax=ax, left=True, bottom=True)
+    _title(ax, "d", "per cell: ours (b) against the release (a)")
+    _aset_colorbar(fig, im, axes[:3], bounds)
+    _suptitle(fig, "ASET, K ≥ 0.23 1/m at 2.0 m, one door: the release against ours")
+    _stamp(
+        fig,
+        f"(a) doi:{RELEASE_DOI}: PIL resize of the 0.2 m slice to 0.6 m cells, "
+        "FDS 6.5.3; (b), (c) ∃ rule "
+        "(any node of the cell), FDS 6.10.1. Dotted: not by 120 s (a, b: filled with "
+        "120 s) or not by 600 s (c).",
+    )
+    _save(fig, "aset_release.png")
 
 
 def fig_rset(results, grids, walkable, exits):
@@ -1420,6 +1625,9 @@ def fig_diff(panels, grid, walkable, exits, name, title):
     _save(fig, name)
 
 
+FINE_DY = 0.25  # row offset of the 0.1 m marker, so the 0.2 m one stays visible
+
+
 def fig_measures(rows):
     """min DIFF and negative area per version, maximum pooling (n = 10)."""
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
@@ -1434,14 +1642,14 @@ def fig_measures(rows):
             if fine is not None:
                 ax.plot(
                     [coarse[key], fine[key]],
-                    [yy, yy],
+                    [yy, yy - FINE_DY],
                     color="lightgrey",
                     lw=4,
                     zorder=1,
                 )
                 ax.scatter(
                     fine[key],
-                    yy,
+                    yy - FINE_DY,
                     marker="D",
                     s=45,
                     fc="white",
@@ -1470,9 +1678,7 @@ def fig_measures(rows):
     for ax in (ax_min, ax_area):
         ax.grid(alpha=0.7, linewidth=1, axis="x")
         ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT)
-        ax.patch.set_edgecolor("lightgrey")
-        ax.patch.set_linewidth(0.8)
-    sns.despine(left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
     _legend(
         ax_area,
         handles=[
@@ -1507,12 +1713,11 @@ def fig_measures(rows):
                 label="paper Fig. 5, 60 kW, N = 100 [F]",
             ),
         ],
-        loc="lower right",
+        loc="center right",
         fontsize=8,
     )
     fig.suptitle(
-        "DIFF measures per version: pre-movement moves min DIFF second for second; "
-        "the door-flow model decides the sign",
+        "DIFF measures per version: pre-movement moves min DIFF second for second",
         x=0.01,
         ha="left",
         fontsize=12,
@@ -1532,7 +1737,8 @@ def _remaining_band(ax, rem, colour, ls, label):
     ax.plot(t, rem.median(axis=1), color=colour, ls=ls, lw=2, label=label)
 
 
-def fig_remaining(results):
+def fig_remaining(results, release=None):
+    """Agents remaining; ``release`` (time x seed) adds the release's band."""
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
     fig = plt.figure(figsize=(12, 4.6))
     gs = gridspec.GridSpec(1, 2, figure=fig)
@@ -1544,7 +1750,7 @@ def fig_remaining(results):
         results[("1door", "capped_pre0")].remaining,
         CAPPED,
         "-",
-        f"capped {CAP} p/s",
+        f"capped {CAP:.2f} p/s",
     )
     _remaining_band(
         one,
@@ -1553,18 +1759,23 @@ def fig_remaining(results):
         "--",
         "uncapped CFSM",
     )
+    if release is not None:
+        _remaining_band(
+            one, release, "grey", ":", "release JuPedSim, 10 seeds (fps = 1) [R]"
+        )
     px, py = zip(*PAPER_FIG3)
     one.scatter(
         px, py, marker="s", s=45, c=PAPER, zorder=5, label="paper Fig. 3, read off [F]"
     )
-    one.plot(
-        [80, 80 + 23 / CAP],
-        [23, 0],
-        color=PAPER,
-        ls=(0, (5, 2)),
-        lw=1.5,
-        label="our linear extrapolation at 0.96 p/s (not data)",
-    )
+    if release is None:
+        one.plot(
+            [80, 80 + 23 / CAP],
+            [23, 0],
+            color=PAPER,
+            ls=(0, (5, 2)),
+            lw=1.5,
+            label=f"our linear extrapolation at {CAP:.2f} p/s (not data)",
+        )
     _remaining_band(
         two,
         results[("2door", "capped_pre0")].remaining,
@@ -1587,11 +1798,16 @@ def fig_remaining(results):
         "N = 200, capped per exit",
     )
     rem = results[("1door", "capped_pre0")].remaining
+    ref = (
+        f"release {release.loc[40].mean():.1f} and {release.loc[80].mean():.1f}"
+        if release is not None
+        else "paper 61 and 23"
+    )
     one.annotate(
-        f"capped: {rem.loc[40].mean():.0f} and {rem.loc[80].mean():.0f} left at 40 and 80 s\n"
-        "(paper 61 and 23): the cap sets the rate",
+        f"capped: {rem.loc[40].mean():.1f} and {rem.loc[80].mean():.1f} left\nat 40 and 80 s (mean)\n"
+        f"({ref});\nthe cap sets the rate",
         (80, rem.loc[80].mean()),
-        xytext=(38, 4),
+        xytext=(84, 38),
         fontsize=8,
         color=TEXT,
         arrowprops={"arrowstyle": "-", "color": TEXT, "lw": 0.8},
@@ -1605,14 +1821,23 @@ def fig_remaining(results):
         ax.set_xlabel("time since ignition [s]", color=TEXT)
         ax.grid(alpha=0.7, linewidth=1, axis="y")
         ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT)
-        ax.patch.set_edgecolor("lightgrey")
-        ax.patch.set_linewidth(0.8)
         _title(ax, letter, text)
         _legend(ax, loc="upper right", fontsize=8)
     one.set_ylabel("agents in the room", color=TEXT)
-    sns.despine(left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
+    uncapped = np.median(_last(results[("1door", "uncapped_pre0")].remaining))
+    if release is not None:
+        ref, ref_name = np.median(_last(release)), "the release"
+    else:
+        ref, ref_name = 80 + 23 / CAP, "the paper"
+    _note(
+        "agents_remaining.png",
+        f"one door: last out, {ref_name} / uncapped (median)",
+        f"{ref:.0f} s / {uncapped:.0f} s",
+    )
     fig.suptitle(
-        "Agents remaining against time: the uncapped CFSM empties the room about 3× faster than the paper",
+        "Agents remaining against time: the uncapped CFSM empties the room "
+        f"{ref / uncapped:.1f}× faster than {ref_name}",
         x=0.01,
         ha="left",
         fontsize=12,
@@ -1625,11 +1850,120 @@ def fig_remaining(results):
 # --- Main ----------------------------------------------------------------
 
 
+def release_remaining(root):
+    """Agents in the room per whole second in the release's 10 JuPedSim runs.
+
+    ``1_RSET/<seed>/corridor_traj.xml`` of doi:10.5281/zenodo.3875550,
+    written at fps = 1, so frame = second. 0 once the room is empty.
+    """
+    curves = {}
+    for traj in sorted((root / "1_RSET").glob("*/corridor_traj.xml")):
+        text = traj.read_text()
+        fps = float(re.search(r"<frameRate>([\d.]+)</frameRate>", text).group(1))
+        assert fps == 1.0, f"{traj}: {fps} fps"
+        frames = re.split(r"<frame ID=\"(\d+)\">", text)[1:]
+        counts = {
+            int(frames[i]): frames[i + 1].count("<agent ")
+            for i in range(0, len(frames), 2)
+        }
+        t = np.arange(0, 301)
+        curves[int(traj.parent.name)] = [counts.get(int(s), 0) for s in t]
+    assert len(curves) == 10, f"release trajectories: {len(curves)} seeds"
+    return pd.DataFrame(curves)
+
+
+def release_aset(root):
+    """The release's ASET map (row 0 at y = 0.3 m, 17 x 50, 120 s fill)."""
+    return np.loadtxt(root / "0_ASET" / "aset_map.txt")
+
+
+def report_release(release, results, fires, grid):
+    """Our capped one-door run and 10 s ASET against the release's own output."""
+    rem = results[("1door", "capped_pre0")].remaining
+    rows = [
+        [
+            name,
+            f"{r.loc[40].mean():.1f} ({r.loc[40].min():.0f}-{r.loc[40].max():.0f})",
+            f"{r.loc[80].mean():.1f} ({r.loc[80].min():.0f}-{r.loc[80].max():.0f})",
+            f"{min(_last(r)):.0f}-{max(_last(r)):.0f} s",
+        ]
+        for name, r in (
+            (f"release [R], JuPedSim, fps = 1 (doi:{RELEASE_DOI})", release["rem"]),
+            (f"ours, capped {CAP:.2f} p/s, pre-movement 0", rem),
+        )
+    ]
+    print("## Agents remaining against the release (10 seeds, mean (range))\n")
+    md_table(["run", "at 40 s", "at 80 s", "last out (whole s)"], rows)
+    theirs = release["aset"]
+    fire = fires["0.2 m, 1 door"]
+    capped = {
+        "ours, K ≥ 0.23, ∃, 10 s, 120 s fill": cell_aset(
+            fire.node["K 0.23 @10 s"], fire, grid
+        ),
+        "ours, K ≥ 0.23, nearest node, 10 s, 120 s fill": cell_aset(
+            fire.node["K 0.23 @10 s"], fire, grid, "nearest"
+        ),
+        "ours, K ≥ 0.23, ∃, ~1 s, 120 s fill": cell_aset(
+            fire.node["K 0.23"], fire, grid
+        ),
+    }
+    ny, nx = theirs.shape
+    floor = grid.area[:ny, :nx] > 0  # our burner hole has no floor
+    theirs = theirs[floor]
+    rows = [
+        [
+            f"release aset_map.txt [R] ({int(floor.sum())} of {ny} × {nx} cells)",
+            f"{np.median(theirs):.0f}",
+            f"{int((theirs < PAPER_T_END).sum())}",
+            "–",
+            "–",
+        ]
+    ]
+    for name, a in capped.items():
+        ours = np.minimum(a[:ny, :nx][floor], PAPER_T_END)
+        d = ours - theirs
+        rows.append(
+            [
+                name,
+                f"{np.median(ours):.0f}",
+                f"{int((ours < PAPER_T_END).sum())}",
+                f"{d.mean():+.1f} / {np.abs(d).mean():.1f}",
+                f"{(np.abs(d) <= 1).mean():.0%} / {(np.abs(d) <= 11).mean():.0%}",
+            ]
+        )
+    print(
+        "## ASET map against the release's aset_map.txt (same 0.6 m cells, "
+        f"capped at {PAPER_T_END:.0f} s)\n"
+    )
+    md_table(
+        [
+            "map",
+            "median s",
+            f"cells before {PAPER_T_END:.0f} s",
+            "ours − release: mean / mean |Δ| s",
+            "cells same step / within one step (± 1 s)",
+        ],
+        rows,
+    )
+    return capped
+
+
+def _last(rem):
+    return [np.flatnonzero(rem[s].to_numpy() > 0).max() + 1 for s in rem]
+
+
 def load_layouts(data):
     walkable, exits = {}, {}
     for layout, (fds, *_) in LAYOUT_FDS.items():
-        walkable[layout] = wkt.loads((data / fds / "geometry.wkt").read_text())
-        cfg = json.loads((data / fds / "config.json").read_text())
+        folder = data / fds
+        config = folder / "config.json"
+        if not config.exists():  # rel_2door: per-seed configs only
+            folder, config = (
+                folder / "seeds",
+                folder / "seeds" / "config_pre0_seed01.json",
+            )
+        walkable[layout] = wkt.loads((folder / "geometry.wkt").read_text())
+        cfg = json.loads(config.read_text())
         exits[layout] = [e["coordinates"] for e in cfg["exits"].values()]
     return walkable, exits
 
@@ -1797,14 +2131,32 @@ def main():
     parser.add_argument(
         "--workers", type=int, default=6, help="parallel runs (default 6)"
     )
+    parser.add_argument(
+        "--family",
+        choices=tuple(FAMILIES),
+        default="rel",
+        help="FDS runs: rel (release conditions, default) or hrr060 (paper text)",
+    )
+    parser.add_argument(
+        "--release",
+        type=Path,
+        help=f"root of the authors' release (doi:{RELEASE_DOI}); rel only",
+    )
     opts = parser.parse_args()
     data, runs = opts.data.resolve(), opts.runs.resolve()
     assert not runs.is_relative_to(ROOT), "keep the runs outside the repository"
+    use_family(opts.family)
+    release = None
+    if opts.release is not None:
+        assert opts.family == "rel", "--release compares the rel family only"
+        root = opts.release.resolve()
+        release = {"rem": release_remaining(root), "aset": release_aset(root)}
 
     run_all(data, runs, opts.workers)
     n_identical = check_identity(runs)
     print(
-        f"# Schröder room, our own FDS\n\n- {n_identical} one-door runs: identical trajectories on the 0.2 m and 0.1 m FDS output\n"
+        f"# Schröder room, our own FDS, family {opts.family} (cap {CAP:.2f} p/s)\n\n"
+        f"- {n_identical} one-door runs: identical trajectories on the 0.2 m and 0.1 m FDS output\n"
     )
 
     walkable, exits = load_layouts(data)
@@ -1836,8 +2188,19 @@ def main():
     report_measures({**table_1, **table_2})
     report_bands(table_1)
     sensitivity(results, fires, grids["1door"])
+    if release is not None:
+        capped = report_release(release, results, fires, grids["1door"])
+        fire = fires["0.2 m, 1 door"]
+        fig_aset_release(
+            release["aset"],
+            capped,
+            cell_aset(fire.node["K 0.23"], fire, grids["1door"]),
+            grids["1door"],
+            walkable["1door"],
+            exits["1door"],
+        )
 
-    fig_remaining(results)
+    fig_remaining(results, None if release is None else release["rem"])
     fig_aset_criteria(
         fires["0.2 m, 1 door"],
         grid,
