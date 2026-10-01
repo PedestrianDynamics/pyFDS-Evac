@@ -137,7 +137,9 @@ path instead of a line of sight.&lt;/p>
 \(\bar K_k\) is the length-weighted mean over its edges, and \(L_k\) is the
 distance still to walk. Each agent re-decides at a fixed interval, and a
 decision is not remembered: every re-decision starts again from the current
-field.&lt;/p>
+field. pyFDS-Evac sets each agent&amp;rsquo;s target itself and
+JuPedSim walks the agent there; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#how-agents-are-steered">How agents are steered&lt;/a>.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/stage_graph.png" alt="Plan view of a room with an internal wall; a dashed straight line from agent to exit crosses the wall, a solid walked polyline goes around it with sample points coloured by extinction" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 3. Schematic with a toy extinction field, not a simulation. The
 straight line (dashed) passes through a wall; the walked polyline (solid) goes
