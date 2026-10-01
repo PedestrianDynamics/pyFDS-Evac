@@ -11,21 +11,22 @@ Two families of FDS runs, chosen with ``--family``:
 
 * ``rel`` (default, the page's headline): the paper's conditions taken from
   the authors' release, doi:10.5281/zenodo.3875550 (``rel_1door``,
-  ``rel_2door``, ``rel_1door_dx010``; ``build/make_decks_rel.py`` and
-  ``build/make_configs_rel.py``). 1 × 1 m burner at x, y = 1-2 m, door
+  ``rel_2door``, ``rel_1door_dx010``; ``make_decks_rel.py`` and
+  ``make_configs_rel.py``). 1 × 1 m burner at x, y = 1-2 m, door
   y = 8-9 m, exit capped at 1.00 p/s (measured from the release
   trajectories). With ``--release ROOT`` the release's own ASET map and
   agents-remaining curves are compared with ours;
 * ``hrr060`` (sensitivity): the same experiment rebuilt from the paper text
-  alone (``hrr060_*``; ``build/make_decks.py``, ``build/make_configs.py``),
+  alone (``hrr060_*``; ``make_decks.py``, ``make_configs.py``),
   0.6 m burner, door y = 8.2-9.4 m, cap 0.96 p/s read off Fig. 3. Its
   figures go to the ``hrr060/`` subfolder.
 
-``DATA`` is the ``schroeder2020-room`` folder with the finished FDS runs of
-the family, their ``config_*.json`` and the per-seed two-door configs in
-``<2door run>/seeds/`` (binomial west/east split per seed). ``RUNS`` is any
-folder outside the repository; the evacuation runs go there and a run whose
-trajectory already exists is not repeated::
+The inputs and their generators are in ``assets/schroeder2020_room/``.
+``DATA`` holds a copy of each input folder of the family, with FDS run in
+it: the FDS output, the ``config_*.json`` and the per-seed two-door
+configs in ``<2door run>/seeds/`` (binomial west/east split per seed).
+``RUNS`` is any folder outside the repository; the evacuation runs go
+there and a run whose trajectory already exists is not repeated::
 
     uv run --with "pedpy>=1.5.1" python scripts/docs/schroeder_room_maps.py \\
         --data DATA --runs RUNS [--family rel|hrr060] [--release ROOT]

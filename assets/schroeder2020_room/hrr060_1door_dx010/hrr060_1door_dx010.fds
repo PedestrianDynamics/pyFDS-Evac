@@ -1,0 +1,73 @@
+&HEAD CHID='hrr060_1door_dx010', TITLE='Schroeder et al. 2020 demonstration room: 1 door, 60 kW, dx 0.1 m' /
+
+! Room after B. Schroeder, L. Arnold, A. Seyfried, Fire Saf. J. 115 (2020)
+! 103154, doi:10.1016/j.firesaf.2020.103154. Built from the paper text and
+! figures only; see README.md for the source of every value ([P] paper,
+! [F] read off a paper figure, [A] assumed).
+
+! --- Domain: 30 x 10 x 3 m [P, pre-proof p. 5], dx = 0.1 m ---
+! Six meshes along x, 5 m each, one MPI rank per mesh.
+&MESH ID='M1', IJK=50,100,30, XB=0.0,5.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M2', IJK=50,100,30, XB=5.0,10.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M3', IJK=50,100,30, XB=10.0,15.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M4', IJK=50,100,30, XB=15.0,20.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M5', IJK=50,100,30, XB=20.0,25.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M6', IJK=50,100,30, XB=25.0,30.0,0.0,10.0,0.0,3.0 /
+
+&TIME T_END=600 /
+&DUMP DT_SLCF=1.0, DT_DEVC=1.0, DT_RESTART=60.0 /
+
+! --- Fuel: flexible polyurethane foam GM21 [A] ---
+! SFPE Handbook 5th ed., App. 3, Table A.38 (formula) and Table A.39.
+! HEAT_OF_COMBUSTION is the chemical heat of combustion (not 26.2 MJ/kg
+! total); RADIATIVE_FRACTION = dH_rad/dH_ch = 9.2/17.8 from the same row.
+! No HCN_YIELD: the fuel nitrogen leaves as N2. No irritant is tracked.
+! Mass extinction coefficient: FDS default, 8700 m2/kg.
+&REAC FUEL='PU_GM21', C=1.0, H=1.8, O=0.30, N=0.05,
+      SOOT_YIELD=0.131, CO_YIELD=0.010, HEAT_OF_COMBUSTION=17800.,
+      RADIATIVE_FRACTION=0.52 /
+
+! --- Fire: 60 kW constant, 0.6 x 0.6 m floor burner [A] ---
+! "opposite corner to the exit" [P, p. 5]; south-west corner [P, Fig. 2].
+! HRRPUA = 60 kW / 0.36 m2. No RAMP_Q: FDS default onset
+! (tanh, TAU_Q = 1 s).
+&SURF ID='FIRE', HRRPUA=166.7, COLOR='RED' /
+&VENT XB=0.6,1.2,0.6,1.2,0.0,0.0, SURF_ID='FIRE' /
+
+! --- Doors: open for the whole run, 2.0 m high [A], vented to ambient ---
+! Width 1.2 m and position 0.6 m below the north wall read off Fig. 2 [F].
+&VENT XB=30.0,30.0,8.2,9.4,0.0,2.0, SURF_ID='OPEN' /  ! exit, east wall, 1.2 m x 2.0 m
+
+! --- Walls, floor, ceiling: the default INERT mesh boundary [A] ---
+
+! --- Slices read by pyFDS-Evac (1.6 m default) and the paper (2.0 m) ---
+&SLCF PBZ=1.0, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=1.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=1.0, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=2.0, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.6, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=2.0, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=2.0, QUANTITY='VISIBILITY' /  ! Smokeview only
+&SLCF PBY=8.8, QUANTITY='EXTINCTION COEFFICIENT' /  ! Smokeview only: door axis
+&SLCF PBY=8.8, QUANTITY='TEMPERATURE' /  ! Smokeview only: door axis
+
+! --- Device trees for the layer height, z = 0.2 .. 2.8 m every 0.2 m ---
+&DEVC ID='T_tree_W', QUANTITY='TEMPERATURE', XBP=5.1,5.1,5.1,5.1,0.2,2.8, POINTS=14, TIME_HISTORY=T /
+&DEVC ID='K_tree_W', QUANTITY='EXTINCTION COEFFICIENT', XBP=5.1,5.1,5.1,5.1,0.2,2.8, POINTS=14, TIME_HISTORY=T /
+&DEVC ID='T_tree_C', QUANTITY='TEMPERATURE', XBP=15.1,15.1,5.1,5.1,0.2,2.8, POINTS=14, TIME_HISTORY=T /
+&DEVC ID='K_tree_C', QUANTITY='EXTINCTION COEFFICIENT', XBP=15.1,15.1,5.1,5.1,0.2,2.8, POINTS=14, TIME_HISTORY=T /
+&DEVC ID='T_tree_E', QUANTITY='TEMPERATURE', XBP=25.1,25.1,8.9,8.9,0.2,2.8, POINTS=14, TIME_HISTORY=T /
+&DEVC ID='K_tree_E', QUANTITY='EXTINCTION COEFFICIENT', XBP=25.1,25.1,8.9,8.9,0.2,2.8, POINTS=14, TIME_HISTORY=T /
+
+&TAIL /

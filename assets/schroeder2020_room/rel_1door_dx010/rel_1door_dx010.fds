@@ -1,0 +1,69 @@
+&HEAD CHID='rel_1door_dx010', TITLE='Schroeder et al. 2020 room, release conditions: 1 door, release fire, dx 0.1 m' /
+
+! Room after B. Schroeder, L. Arnold, A. Seyfried, Fire Saf. J. 115 (2020)
+! 103154, doi:10.1016/j.firesaf.2020.103154. Fire, reaction and door D1
+! copied from the authors' release, doi:10.5281/zenodo.3875550, file
+! 0_ASET/HRR_60kW/ASET_animation.fds (FDS 6.5.3). Tags: [R] release deck,
+! [P] paper, [A] assumed. See README.md.
+
+! --- Domain: 30 x 10 x 3 m [R], dx = 0.1 m ---
+! The release uses one mesh IJK=150,50,15 (0.2 m cells). Here: six meshes
+! along x, 5 m each, one MPI rank per mesh; the burner and the doors do
+! not cross a mesh interface.
+&MESH ID='M1', IJK=50,100,30, XB=0.0,5.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M2', IJK=50,100,30, XB=5.0,10.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M3', IJK=50,100,30, XB=10.0,15.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M4', IJK=50,100,30, XB=15.0,20.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M5', IJK=50,100,30, XB=20.0,25.0,0.0,10.0,0.0,3.0 /
+&MESH ID='M6', IJK=50,100,30, XB=25.0,30.0,0.0,10.0,0.0,3.0 /
+
+&TIME T_END=600 /
+&DUMP DT_SLCF=1.0, DT_DEVC=1.0, DT_RESTART=60.0 /
+
+! --- Reaction: as in the release [R] ---
+! HEAT_OF_COMBUSTION, CO_YIELD and RADIATIVE_FRACTION are not set, so the
+! FDS defaults apply, exactly as in the release.
+&REAC FUEL='REAC_FUEL', FYI='NFPA Babrauskas polyurethane, as Schroeder et al. 2020 release',
+      C=6.3, H=7.1, O=2.1, N=1.0, SOOT_YIELD=0.129 /
+
+! --- Fire: 60 kW/m2 on a 1 x 1 m floor vent at x, y = 1-2 m [R] ---
+! No RAMP_Q or TAU_Q, as in the release.
+&SURF ID='FIRE', HRRPUA=60., COLOR='RED' /
+&VENT XB=1.0,2.0,1.0,2.0,0.0,0.0, SURF_ID='FIRE' /
+
+! --- Doors: open for the whole run, vented to ambient ---
+&VENT XB=30.0,30.0,8.0,9.0,0.0,2.0, SURF_ID='OPEN' /  ! D1, east wall, 1.0 m x 2.0 m [R]
+
+! --- Walls, floor, ceiling: the default INERT mesh boundary [R] ---
+
+! --- Slices: 2.0 m as in the release, plus 1.0 and 1.6 m ---
+&SLCF PBZ=1.0, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=1.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=1.0, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&SLCF PBZ=2.0, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+&SLCF PBZ=2.0, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.6, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=2.0, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=2.0, QUANTITY='VISIBILITY' /  ! Smokeview only
+&SLCF PBY=8.5, QUANTITY='EXTINCTION COEFFICIENT' /  ! Smokeview only: door axis
+&SLCF PBY=8.5, QUANTITY='TEMPERATURE' /  ! Smokeview only: door axis
+
+! --- Device trees at cell centres, z = 0.05 .. 2.95 m ---
+&DEVC ID='T_tree_W', QUANTITY='TEMPERATURE', XBP=5.05,5.05,5.05,5.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='K_tree_W', QUANTITY='EXTINCTION COEFFICIENT', XBP=5.05,5.05,5.05,5.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='T_tree_C', QUANTITY='TEMPERATURE', XBP=15.05,15.05,5.05,5.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='K_tree_C', QUANTITY='EXTINCTION COEFFICIENT', XBP=15.05,15.05,5.05,5.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='T_tree_E', QUANTITY='TEMPERATURE', XBP=25.05,25.05,8.55,8.55,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='K_tree_E', QUANTITY='EXTINCTION COEFFICIENT', XBP=25.05,25.05,8.55,8.55,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+
+&TAIL /
