@@ -67,6 +67,87 @@ leave before `T_END`.
 the setup check into a logged warning and holds the last frame in the
 samplers, logging one warning per sampler the first time it happens.
 
+### Outside the FDS slices
+
+A point is inside a slice when a subslice covers it; the subslice extents
+are closed intervals, so a point on the outer mesh face is inside. Outside
+every subslice, `sample` raises `ValueError`, and each model turns that into
+ambient air and clear sight:
+
+| Quantity | Value outside | Warning |
+|---|---|---|
+| Extinction *K* (speed, route cost) | 0 1/m, speed factor 1 | one, at the first sample outside |
+| Gases (CO, CO₂, O₂, optional species) | CO 0 %, CO₂ 0 % (the atmospheric 0.04 % is not used), O₂ 20.9 %, every optional species 0 ppm; FED rate 0 | none |
+| Heat, `TEMPERATURE` | 20 °C; the default clothed law then gives 1.2 × 10⁻⁴ /min | none |
+| Heat, `INTEGRATED INTENSITY` | *U* and *q* NaN in the FED history, rate 0 | one, at the first sample outside |
+| Sign visibility (agent off the vismap grid) | clear air: legible when the sign is within its reading distance, measured from the agent | none |
+
+A route edge prices the part outside as clear air: an edge wholly outside
+has optical depth τ = 0, and the outside samples of a partly covered edge
+count as *K* = 0 in its mean. The sign case is described on
+[Wayfinding](/models/wayfinding.md#off-the-fds-grid).
+
+[FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) reads
+smoke, gases and heat the same way. At initialisation it marks every evacuation-grid cell outside every
+fire mesh (`IMESH = 0`,
+[`evac.f90:6328–6363`](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L6328-L6363)).
+Those cells keep zero soot and zero FED, the ambient temperature `TMPA` and
+zero radiant flux
+([`evac.f90:7250–7272`](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L7250-L7272)).
+Sign sight from outside differs: along the line from such an agent,
+FDS+Evac still tests walls and averages the smoke of the cells inside the
+fire meshes, while pyFDS-Evac tests only the distance ([Wayfinding › Limitations](/models/wayfinding.md#limitations)).
+
+**Partial gas coverage stops the run.** When some loaded gas slices cover a
+point and others do not, the gas FED raises `ValueError` and names the
+point, the time and the missing quantities
+([#427](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/427)). The
+heat FED does the same for its `TEMPERATURE` and `INTEGRATED INTENSITY`
+slices. The check runs when an agent reaches such a point, not at setup.
+
+**Setup report.** Before the first step, `run_scenario` compares the
+scenario with the slices of every sampled quantity. The domain is the area
+that every quantity covers. The report gives the walkable area outside
+(m² and share), each exit, checkpoint and spawn area outside (m²), each
+sign outside, and each route edge outside (m). It is logged once and
+stored as `fds_coverage` in `metrics` and in the
+[run manifest](outputs.md#run-manifest). For a T-junction whose west
+corridor extends 12 m past the FDS mesh, the log reads:
+
+```
+FDS coverage: outside the FDS slices (CARBON DIOXIDE VOLUME FRACTION, CARBON
+MONOXIDE VOLUME FRACTION, HYDROGEN CHLORIDE VOLUME FRACTION, OXYGEN VOLUME
+FRACTION, SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear
+sight: walkable area 36.00 m² (19.4 %); exit exit_A_left 3.00 m²;
+distribution jps-distributions_out 6.00 m²; sign exit_A_left; edge
+jps-checkpoints_0 -> exit_A_left 11.50 m; ...
+```
+
+**Flag and count.** Each smoke and FED history row carries `in_fds_domain`,
+`False` where the agent stood outside
+([Outputs](outputs.md#smoke-history)). At the end, the run logs the number
+of agents, samples and agent-seconds outside, stored as
+`metrics["fds_outside"]`:
+
+```
+Outside the FDS domain: 8 agent(s), 56 sample(s), about 56.0 agent-seconds
+of ambient air and clear sight.
+```
+
+These two are the signal to check. The first-sample warning of *K* fires
+once per run, often at t = 0 for a route sample, and says nothing about
+agents later. The route-cost history does not record the length outside
+per row ([#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
+
+**Strict option.** `--require-fds-coverage` (`require_fds_coverage=True` on
+`run_scenario`, `ExtinctionField`, `FdsFedField`, `FdsHeatField` and
+`VisibilityModel`) turns both checks into errors. The run stops at setup
+when the report finds anything outside. When a sign also lies off the
+vismap grid, the visibility model stops the run while it is built, and
+that error names only the signs. Any smoke, FED, heat or sign-visibility sample outside
+raises `FdsDomainError`, which names the quantity, the position and the
+time. The horizon error of the previous section takes precedence.
+
 ### Performance caches
 
 Three caches reduce per-call overhead on hot paths (for example, sampling
@@ -165,7 +246,9 @@ returns the factor alone. On the tracked `assets/iso_table21_coupled/fds` at
 (5, 1) it gives *K* = 0.99550 1/m and a factor of 0.919626.
 
 If a queried point falls outside the FDS domain, `sample_extinction`
-returns `0.0` (clear air) and logs a warning on the first occurrence.
+returns `0.0` (clear air) and logs a warning on the first occurrence. With
+`require_fds_coverage=True` it raises `FdsDomainError` instead; see
+[Outside the FDS slices](#outside-the-fds-slices).
 
 ### FED model
 

@@ -40,6 +40,14 @@ and logs a warning. In the FED history `heat_fed_cumulative` then reads 0 and
 `temperature_celsius` 20.0 °C, and `metrics` has no `heat_fed_max` (see
 [Outputs › FED history](/docs/outputs.md#fed-history)).
 
+Outside the `TEMPERATURE` slice (outside the FDS domain) *T* reads 20 °C,
+with no warning. FDS+Evac uses its ambient temperature `TMPA` there. The
+default clothed law gives a small dose rate at 20 °C,
+1.2 × 10⁻⁴ /min, so FED 1 would take about 137 h. The FED history marks
+these rows with `in_fds_domain = False`; with `--require-fds-coverage` a
+sample outside stops the run. Details on
+[FDS slice sampling](/docs/fds-sampling.md#outside-the-fds-slices).
+
 A heat-only case needs no soot. Without a `SOOT EXTINCTION COEFFICIENT`
 slice the run logs two warnings and continues: there is no smoke-speed
 model, so agents walk at clear-air speed and route costs see K = 0, and the
@@ -354,7 +362,8 @@ incident *f U*), and the rate is \(q^{1.33}/D\) as above.
   the other stops the run with an error; a missing *U* is not read as zero.
   Outside both (outside the FDS domain) *U* and *q* are NaN in the FED
   history and the rate is zero; the run logs one warning the first time
-  this happens, not one per agent or update.
+  this happens, not one per agent or update, and marks each such row with
+  `in_fds_domain = False`.
 - A non-finite *U* gives a zero rate, as for the gas term.
 - **With `--heat-regime layer` as well, *U* supplies the radiant term** and
   the layer term is not added; the run logs one warning and the manifest
