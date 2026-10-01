@@ -131,7 +131,8 @@ routing, then the scripts that print the page's numbers and draw its \
 figures."""
 contents = """\
 The three FDS decks, the geometry and deck generators, the two scenarios, \
-the run script, run.py, the two figure scripts, pinned package versions \
+the run script, run.py, the two figure scripts, the animation script and \
+its helpers, pinned package versions \
 and a README.txt with every command, the runtimes and the expected \
 result."""
 files = [
@@ -149,6 +150,10 @@ files = [
   ["run.py", "the pyFDS-Evac command line"],
   ["scripts/docs/schroeder2015_route.py", "the evacuation numbers and figures of the page"],
   ["scripts/docs/schroeder2015_fire_figures.py", "the geometry and fire numbers and figures (needs all nine fires)"],
+  ["scripts/docs/study_animations.py", "the animation of the page (subcommand schroeder2015)"],
+  ["scripts/docs/first_fds_case_figures.py", "plan and colour helpers used by the animation script"],
+  ["scripts/docs/schroeder_room_maps.py", "imported by the animation script (not used for this page)"],
+  ["scripts/animate_agents_smoke.py", "animation helpers used by the animation script"],
 ]
 extra_packages = ["seaborn", "scipy"]
 steps = [
@@ -166,6 +171,9 @@ steps = [
   ]],
   ["Print the page's numbers and draw its evacuation figures (about 3 min)", [
     "python scripts/docs/schroeder2015_route.py --data \"$DATA\"",
+  ]],
+  ["Draw the animation of smoke-blind and gate, seed 1 (about 1 min; ffmpeg reduces the GIF's colours)", [
+    "python scripts/docs/study_animations.py schroeder2015 --data \"$DATA\"",
   ]],
   ["Optional, for the fire-choice figures: write and run the other six fire decks (about 6 h in all)", [
     "python assets/schroeder2015_route/make_decks.py \"$DATA\"",

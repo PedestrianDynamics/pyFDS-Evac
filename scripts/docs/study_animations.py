@@ -34,8 +34,23 @@ R, pre-movement 30 s, one seed. ``DATA`` is the ``fire_2MW_PVC`` output and
 The seed is the one whose last R agent leaves at the median time. Agents are
 coloured and sized by their speed factor, as on "A crowd in a real fire".
 
-Writes GIFs to ``site/static/images/studies/schroeder2020/`` and
-``site/static/images/fire-blind/``. Needs ``ffmpeg`` for the palette pass.
+Route choice in smoke after Schröder et al. (2015)
+(``docs/study-schroeder2015.md``): the smoke-blind and gate arms side by side
+on the main fire ``a047_pvc_h40``. ``DATA`` is the study folder of
+``scripts/docs/schroeder2015_route.py``: the FDS output in
+``DATA/a047_pvc_h40/`` and the runs in ``DATA/p1_a047_pvc_h40*/``::
+
+    uv run python scripts/docs/study_animations.py schroeder2015 --data DATA
+
+The background is K at 1.6 m, the slice of routing, walking speed and gas
+dose. The seed is the gate seed whose door-A count is closest to the median.
+Walking agents are coloured and sized by their speed factor; agents still in
+pre-movement are drawn as open circles.
+
+Writes GIFs to ``site/static/images/studies/schroeder2020/``,
+``site/static/images/fire-blind/`` and
+``site/static/images/studies/schroeder2015/``. Needs ``ffmpeg`` for the
+palette pass. Needs ``ffmpeg`` for the palette pass.
 """
 
 import argparse
@@ -54,7 +69,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import animation, patheffects
-from matplotlib.colors import LogNorm, Normalize
+from matplotlib.colors import BoundaryNorm, ListedColormap, LogNorm, Normalize
 from matplotlib.lines import Line2D
 from shapely import box, unary_union, wkt
 
@@ -72,19 +87,19 @@ HALO = [patheffects.withStroke(linewidth=3.0, foreground="white")]
 STEP_S, FPS = 1.0, 8  # 8 s of simulation per second of GIF
 
 
-def write_gif(fig, update, times, final):
-    """Render with Pillow, then reduce to 64 colours with ffmpeg."""
+def write_gif(fig, update, times, final, fps=FPS, colours=40):
+    """Render with Pillow, then reduce to *colours* colours with ffmpeg."""
     final.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         raw = Path(tmp) / "raw.gif"
         anim = animation.FuncAnimation(fig, update, frames=times, blit=False)
-        anim.save(str(raw), writer=animation.PillowWriter(fps=FPS), dpi=100)
+        anim.save(str(raw), writer=animation.PillowWriter(fps=fps), dpi=100)
         plt.close(fig)
         if shutil.which("ffmpeg") is None:
             shutil.copy(raw, final)
         else:
             palette = (
-                "split[a][b];[a]palettegen=max_colors=40[p];"
+                f"split[a][b];[a]palettegen=max_colors={colours}[p];"
                 "[b][p]paletteuse=dither=none:diff_mode=rectangle"
             )
             subprocess.run(
@@ -125,8 +140,8 @@ def median_seed(values):
 # --- The Schröder room -------------------------------------------------------
 
 
-def k_slice(fds_dir):
-    """Times and K (t, ny, nx) of the z = 2.0 m slice, as the maps read it."""
+def k_slice(fds_dir, z=maps.Z):
+    """Times and K (t, ny, nx) of the slice at z; 2.0 m is the height of the maps."""
     import fdsreader
 
     sim = fdsreader.Simulation(str(fds_dir))
@@ -135,7 +150,7 @@ def k_slice(fds_dir):
         for s in sim.slices
         if s.quantity.name == maps.QUANTITIES["K"]
         and s.orientation == 3
-        and abs((s.extent.z_start + s.extent.z_end) / 2 - maps.Z) < 0.06
+        and abs((s.extent.z_start + s.extent.z_end) / 2 - z) < 0.06
     )
     data, coords = sl.to_global(return_coordinates=True)
     xs, ys = coords["x"], coords["y"]
@@ -464,12 +479,280 @@ def fire_blind(data, runs, pre=30):
     )
 
 
+# --- Route choice in smoke after Schröder et al. (2015) ------------------------
+
+ROUTE_Z = 1.6  # m, the slice of routing, walking speed and gas dose
+ROUTE_STEP_S, ROUTE_FPS = 2.0, 8  # 16 s of simulation per second of GIF
+ROUTE_ARMS = {"sb": "(a) smoke-blind", "gate": "(b) gate"}
+# The three hall-wide re-path events of the gate arm, identical in all 10
+# seeds (page table "Why: three hall-wide re-path events").
+ROUTE_EVENTS = (
+    (47.0, "47 s: F re-paths via door A,\nagents bound for F switch to E"),
+    (145.0, "145 s: E re-paths via door B"),
+    (160.0, "160 s: every route refused,\nthe fallback picks the exit"),
+)
+WAIT = "black"  # open ring: filled dots are walking agents
+# Few colour classes, so the 40-colour GIF palette keeps them all and the
+# frames compress: K in log-spaced classes (0.23 1/m is the smoke limit of
+# the tenability pages), speed factor in steps of 0.15.
+ROUTE_K = (0.1, 0.23, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0)
+ROUTE_SF = (0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0001)
+
+
+def route_seed(route, runs):
+    """The gate seed whose door-A count is closest to the median."""
+    counts = {
+        s: int((route.agents(runs / f"gate_s{s}.sqlite").door == "A").sum())
+        for s in route.SEEDS
+    }
+    seed, med = median_seed(counts)
+    print(
+        f"- gate door-A counts {dict(sorted(counts.items()))}; "
+        f"seed {seed} ({counts[seed]}, median {med:g})"
+    )
+    return seed
+
+
+def report_route_arm(arm, ag, cap):
+    """The numbers the page's caption quotes for one arm of the shown seed."""
+    routes = (ag.door + ag.exit).value_counts().to_dict()
+    b = ag[ag.door == "B"].t_door.sort_values()
+    late = b[b >= 145.0]
+    be = ag[(ag.door == "B") & (ag.exit == "E")].t_door
+    walking = ag[~ag.evacuated]
+    print(
+        f"- {arm}: routes {routes}; at 146 s through door A "
+        f"{int(((ag.door == 'A') & (ag.t_door <= 146.0)).sum())}; "
+        f"door B before 145 s {int((b < 145.0).sum())} (last at "
+        f"{b[b < 145.0].max():.1f} s), from 145 s "
+        f"{len(late)} (first at {late.min():.1f} s); B->E door times "
+        f"{be.min():.1f}-{be.max():.1f} s; last out {ag.t_out.max():.1f} s; "
+        f"still inside at {cap:g} s: {len(walking)} (movement start "
+        f"{walking.t_move.round(1).tolist()} s, exit {walking.exit.tolist()})"
+    )
+
+
+def route_frames(fed):
+    """Agents per FED sample time: x, y and the speed factor, NaN while waiting.
+
+    The FED history writes a speed factor of 0 before an agent's pre-movement
+    ends; the animation draws those agents as waiting instead.
+    """
+    d = pd.read_csv(
+        fed, usecols=["time_s", "agent_id", "x", "y", "desired_speed", "speed_factor"]
+    )
+    d["sf"] = d.speed_factor.where(d.desired_speed > 0)
+    return {round(t, 3): g[["x", "y", "sf"]].to_numpy() for t, g in d.groupby("time_s")}
+
+
+def route_counts(ag, t):
+    door = ag.door[ag.t_door <= t].value_counts()
+    out = ag.exit[ag.t_out <= t].value_counts()
+    inside = len(ag) - int(out.sum())
+    return (
+        f"through door A {door.get('A', 0):3d}, B {door.get('B', 0):3d}\n"
+        f"out via exit E {out.get('E', 0):3d}, F {out.get('F', 0):3d}; "
+        f"inside {inside:3d}"
+    )
+
+
+def route_smoke(anim):
+    """The smoke ramp without its darkest fifth, so dots stay visible on it."""
+    smoke = anim._masked_cmap(anim.SMOKE)
+    cmap = ListedColormap(smoke(np.linspace(0.0, 0.8, len(ROUTE_K) - 1)))
+    cmap.set_bad("white")
+    return cmap
+
+
+def route_plan(ax, geo, k0, extent, anim):
+    im = ax.imshow(
+        k0,
+        origin="lower",
+        extent=extent,
+        cmap=route_smoke(anim),
+        norm=BoundaryNorm(ROUTE_K, len(ROUTE_K) - 1),
+        interpolation="nearest",
+        zorder=0,
+    )
+    walk = geo.walkable()
+    for ring in [walk.exterior, *walk.interiors]:
+        ax.plot(*ring.xy, color=ffc.WALL, lw=1.0, zorder=2)
+    x0, y0, x1, y1 = geo.ROOM3
+    ax.plot([x0, x1, x1, x0, x0], [y0, y0, y1, y1, y0], color=ffc.WALL, lw=1.0)
+    bx0, bx1, by0, by1 = geo.BURNER_XY
+    ax.fill([bx0, bx1, bx1, bx0], [by0, by0, by1, by1], color=ffc.FIRE, zorder=3)
+    for xy in (geo.exit_polygon("E"), geo.exit_polygon("F")):
+        ax.fill(*np.asarray(xy).T, color=ffc.EXIT, zorder=3)
+    labels = {
+        "door A": (0.5, 1.6, "left", ffc.WALL),
+        "door B": (0.5, 21.6, "left", ffc.WALL),
+        "exit E": (-2.6, -11.0, "center", ffc.EXIT),
+        "exit F": (-2.6, 36.0, "center", ffc.EXIT),
+        "Room 3": (10.4, 30.3, "right", TEXT),
+        "hall": (10.4, 23.3, "right", TEXT),
+    }
+    for text, (x, y, ha, col) in labels.items():
+        ax.text(
+            x,
+            y,
+            text,
+            ha=ha,
+            va="center",
+            fontsize=7,
+            color=col,
+            fontweight="bold" if col != TEXT else "normal",
+            path_effects=HALO,
+            zorder=9,
+        )
+    ax.set_aspect("equal")
+    ax.set_xlim(-5.6, 11.0)
+    ax.set_ylim(-12.0, 37.0)
+    ffc._style(ax)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    walking = ax.scatter(
+        [],
+        [],
+        c=[],
+        cmap=anim.SPEED_CMAP,
+        norm=BoundaryNorm(ROUTE_SF, 256),
+        edgecolors="white",
+        linewidths=0.6,
+        zorder=6,
+    )
+    waiting = ax.scatter(
+        [], [], s=10, facecolors="none", edgecolors=WAIT, linewidths=0.8, zorder=5
+    )
+    return im, walking, waiting
+
+
+def schroeder2015(data):
+    """Smoke-blind and gate side by side, main fire, the median gate seed."""
+    import schroeder2015_route as route  # also turns off fdsreader caching
+
+    geo = route._geometry()
+    anim = ffc._animator()
+    runs = route.run_dir(data, route.MAIN)
+    seed = route_seed(route, runs)
+    times_k, k, extent = k_slice(data / route.MAIN, z=ROUTE_Z)
+    arms = {}
+    for arm in ROUTE_ARMS:
+        ag = route.agents(
+            runs / f"{arm}_s{seed}.sqlite", runs / f"{arm}_s{seed}_exit.csv"
+        )
+        report_route_arm(arm, ag, route.CAP)
+        arms[arm] = (ag, route_frames(runs / f"{arm}_s{seed}_fed.csv.gz"))
+    times = np.arange(0.0, route.CAP, ROUTE_STEP_S)  # FED history ends at 399 s
+
+    sns.set_theme(font_scale=0.9, style="whitegrid", font="DejaVu Sans")
+    fig = plt.figure(figsize=(6.4, 8.6), layout="constrained")
+    gs = fig.add_gridspec(2, 2, height_ratios=(1.0, 0.025))
+    panels = {}
+    for col, (arm, label) in enumerate(ROUTE_ARMS.items()):
+        ax = fig.add_subplot(gs[0, col])
+        panels[arm] = (
+            *route_plan(ax, geo, k[0], extent, anim),
+            ax.set_title("", loc="left", color=TEXT, fontsize=8.5),
+            label,
+        )
+    im0, walk0 = panels["sb"][0], panels["sb"][1]
+    walk0.set_array(np.array([1.0]))
+    colourbar(fig, im0, gs[1, 0], f"K at {ROUTE_Z:g} m [1/m]", ROUTE_K[1:-1])
+    colourbar(
+        fig, walk0, gs[1, 1], "speed factor (bigger dot = slower)", (0.1, 0.4, 0.7, 1.0)
+    )
+    walk0.set_array(np.array([]))
+    fig.axes[0].legend(
+        handles=[
+            Line2D(
+                [],
+                [],
+                ls="",
+                marker="o",
+                mfc="none",
+                mec=WAIT,
+                ms=4,
+                label="waiting (pre-movement)",
+            ),
+            Line2D(
+                [],
+                [],
+                ls="",
+                marker="o",
+                mfc=plt.get_cmap(anim.SPEED_CMAP)(1.0),
+                mec="white",
+                ms=5,
+                label="walking",
+            ),
+        ],
+        loc="lower right",
+        bbox_to_anchor=(1.0, 0.03),
+        fontsize=7,
+        frameon=True,
+        facecolor="white",
+        framealpha=0.9,
+        edgecolor="lightgrey",
+        labelcolor=TEXT,
+        handletextpad=0.3,
+    )
+    event = fig.axes[1].text(
+        10.8,
+        -5.0,
+        "",
+        ha="right",
+        va="center",
+        fontsize=7,
+        color=TEXT,
+        path_effects=HALO,
+        zorder=9,
+    )
+    head = fig.suptitle("", x=0.01, ha="left", color=TEXT, fontsize=9)
+
+    def update(t):
+        im_k = k[np.abs(times_k - t).argmin()]
+        waiting_n = 0
+        for arm, (im, walking, waiting, title, label) in panels.items():
+            ag, frames = arms[arm]
+            pts = frames.get(round(t, 3), np.empty((0, 3)))
+            wait = np.isnan(pts[:, 2])
+            waiting_n = int(wait.sum())
+            sf = pts[~wait, 2]
+            im.set_data(im_k)
+            walking.set_offsets(pts[~wait, :2])
+            walking.set_array(sf)
+            walking.set_sizes(12.0 * (1.0 + 2.0 * np.clip((1.0 - sf) / 0.9, 0, 1)))
+            waiting.set_offsets(pts[wait, :2])
+            title.set_text(f"{label}\n{route_counts(ag, t)}")
+        done = [text for t0, text in ROUTE_EVENTS if t >= t0]
+        event.set_text("gate:\n" + "\n".join(done) if done else "")
+        head.set_text(
+            f"main fire {route.MAIN}, seed {seed}, {ROUTE_STEP_S * ROUTE_FPS:g}x real time\n"
+            f"t = {t:5.0f} s   waiting: {waiting_n:3d} (same agents, starts and "
+            "start times in both arms)"
+        )
+        return head
+
+    write_gif(
+        fig,
+        update,
+        times,
+        route.OUT / "agents_smoke_gate.gif",
+        fps=ROUTE_FPS,
+        colours=64,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("study", choices=("schroeder", "fire-blind"))
-    parser.add_argument("--data", type=Path, required=True, help="FDS output folder")
+    parser.add_argument("study", choices=("schroeder", "fire-blind", "schroeder2015"))
     parser.add_argument(
-        "--runs", type=Path, required=True, help="the study's run folder"
+        "--data",
+        type=Path,
+        required=True,
+        help="FDS output folder; schroeder2015: the study folder",
+    )
+    parser.add_argument(
+        "--runs", type=Path, help="the study's run folder (not for schroeder2015)"
     )
     parser.add_argument(
         "--family",
@@ -478,6 +761,11 @@ def main():
         help="schroeder only: FDS runs, rel (default) or hrr060",
     )
     opts = parser.parse_args()
+    if opts.study == "schroeder2015":
+        schroeder2015(opts.data.resolve())
+        return
+    if opts.runs is None:
+        parser.error(f"{opts.study} needs --runs")
     if opts.study == "schroeder":
         maps.use_family(opts.family)
         schroeder(opts.data.resolve(), opts.runs.resolve())
