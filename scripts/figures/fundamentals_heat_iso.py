@@ -6,24 +6,24 @@
 #     "numpy",
 # ]
 # ///
-"""Heat tolerance times of ISO 13571:2012 clause 8 against SFPE Ch. 63.
+"""Heat tolerance times of ISO 13571:2012 clause 8 against SFPE Ch. 70.
 
 Radiant (panel a), time in minutes at radiant flux q [kW/m2]:
 
     ISO Eq. (7), second-degree burns:  t = 6.9 q^-1.56   (§8.2)
     ISO Eq. (8), pain:                 t = 4.2 q^-1.9    (§8.2)
-    SFPE Eq. 63.43:                    t = r / q^1.33, r = 1.33 (pain),
+    SFPE Eq. 70.41:                    t = r / q^1.33, r = 1.33 (pain),
                                        4.0-12.2 (second-degree burns),
-                                       16.7 (third-degree burns) (p. 2382)
+                                       16.7 (third-degree burns) (p. 2318)
 
 Convective (panel b), time in minutes at air temperature T [deg C]:
 
     ISO Eq. (9), fully clothed:        t = 4.1e8 T^-3.61  (§8.3.1)
     ISO Eq. (10), unclothed or lightly
-    clothed; identical to Eq. 63.44:   t = 5e7 T^-3.4     (§8.3.2; p. 2382)
-    SFPE Eqs. 63.45-63.47 (tolerance, injury, fatal)      (pp. 2382-2383)
+    clothed; identical to Eq. 70.42:   t = 5e7 T^-3.4     (§8.3.2; p. 2318)
+    SFPE Eqs. 70.43-70.45 (tolerance, injury, fatal)      (p. 2318)
 
-Points: Table 63.20 (p. 2383), radiant 2.5 kW/m2 -> 30 s and
+Points: Table 70.18 (p. 2319), radiant 2.5 kW/m2 -> 30 s and
 10 kW/m2 -> 4 s; convective, < 10 % H2O, 100/120/140/160/180 deg C ->
 12/7/4/2/1 min. Neither source states the data range of its fits; lines
 are solid over the span of these tabulated points and dashed outside it.
@@ -78,14 +78,14 @@ def main():
         ("ISO Eq. (7), 2nd-degree burns", lambda x: 6.9 * x**-1.56, c_iso, "-", "o"),
         ("ISO Eq. (8), pain", lambda x: 4.2 * x**-1.9, c_iso2, "-", "s"),
         (
-            "SFPE Eq. 63.43, r = 16.7 (3rd-degree)",
+            "SFPE Eq. 70.41, r = 16.7 (3rd-degree)",
             lambda x: 16.7 / x**1.33,
             pal[5],
             "--",
             None,
         ),
         (
-            "SFPE Eq. 63.43, r = 1.33 (pain)",
+            "SFPE Eq. 70.41, r = 1.33 (pain)",
             lambda x: 1.33 / x**1.33,
             pal[2],
             "--",
@@ -100,23 +100,23 @@ def main():
     t_hi = np.where(temp >= 180.0, temp, np.nan)
     conv = [
         ("ISO Eq. (9), fully clothed", lambda x: 4.1e8 * x**-3.61, c_iso, "-", "o"),
-        ("ISO Eq. (10) = SFPE Eq. 63.44", lambda x: 5e7 * x**-3.4, c_iso2, "-", "s"),
+        ("ISO Eq. (10) = SFPE Eq. 70.42", lambda x: 5e7 * x**-3.4, c_iso2, "-", "s"),
         (
-            "SFPE Eq. 63.47, fatal",
+            "SFPE Eq. 70.45, fatal",
             lambda x: 2e18 * x**-9.0403 + 1e8 * x**-3.10898,
             pal[5],
             "--",
             None,
         ),
         (
-            "SFPE Eq. 63.46, injury",
+            "SFPE Eq. 70.44, injury",
             lambda x: 5e22 * x**-11.783 + 3e7 * x**-2.9636,
             pal[3],
             "--",
             None,
         ),
         (
-            "SFPE Eq. 63.45, tolerance",
+            "SFPE Eq. 70.43, tolerance",
             lambda x: 2e31 * x**-16.963 + 4e8 * x**-3.7561,
             pal[1],
             "--",
@@ -168,7 +168,7 @@ def main():
         s=40,
         color="black",
         zorder=5,
-        label="Table 63.20",
+        label="Table 70.18",
     )
     ax.text(
         0.97,
@@ -213,7 +213,7 @@ def main():
         s=40,
         color="black",
         zorder=5,
-        label="Table 63.20",
+        label="Table 70.18",
     )
     ax.text(
         0.97,
@@ -233,7 +233,7 @@ def main():
 
     for ax in axes:
         ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
-        ax.plot([], [], color="grey", lw=1.0, ls=":", label="outside Table 63.20 span")
+        ax.plot([], [], color="grey", lw=1.0, ls=":", label="outside Table 70.18 span")
         ax.legend(
             loc="lower left",
             fontsize=7.5,

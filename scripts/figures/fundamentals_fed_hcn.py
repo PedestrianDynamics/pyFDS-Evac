@@ -6,21 +6,21 @@
 #     "numpy",
 # ]
 # ///
-"""Time to incapacitation by HCN: Ch. 63 power law against the FDS form.
+"""Time to incapacitation by HCN: Ch. 70 power law against the FDS form.
 
 The curves are
 
-    Eq. 63.20 (Ch. 63, p. 2360)  t_ICN = 1.2e6 / [CN]^2.36
+    Eq. 70.18 (Ch. 70, p. 2301)  t_ICN = 1.2e6 / [CN]^2.36
     FDS form                     t_ICN = 220 / (exp([CN]/43) - 1)
 
 with t in minutes and [CN] in ppm. The FDS form inverts the rate
 exp(C/43)/220 - 1/220 of FDS ``func.f90`` (function ``FED``), whose offset
 is 0.00454545 = 1/220; the manuals print 0.0045.
 
-Eq. 63.20 is fitted to resting macaque monkeys; the primate points of
-Ch. 63 Fig. 63.24 span about 85 to 250 ppm. Both curves are solid there
+Eq. 70.18 is fitted to resting primates; the primate points of
+Ch. 70 Fig. 70.18 span about 85 to 250 ppm. Both curves are solid there
 and dashed outside. The shaded band is the critical range of about 80 to
-180 ppm (p. 2361).
+180 ppm (p. 2301).
 
 Run from the repository root::
 
@@ -37,7 +37,7 @@ import seaborn as sns
 
 
 def main():
-    """Plot Eq. 63.20 and the FDS exponential form on a log time axis.
+    """Plot Eq. 70.18 and the FDS exponential form on a log time axis.
 
     Parameters
     ----------
@@ -84,7 +84,7 @@ def main():
     )
     for fn, color, marker, ms, label in (
         (fds_form, c_fds, "s", 7, "FDS form: 220 / (exp(C/43) − 1)"),
-        (eq_63_20, c_ch63, "o", 5, "Eq. 63.20: 1.2·10⁶ / C^2.36"),
+        (eq_63_20, c_ch63, "o", 5, "Eq. 70.18: 1.2·10⁶ / C^2.36"),
     ):
         t = fn(cn)
         ax.plot(cn[inside], t[inside], color=color, lw=2.2, label=label)

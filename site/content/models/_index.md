@@ -3,6 +3,7 @@ title: Models
 weight: 3
 cascade:
   type: docs
+  math: true
 ---
 
 The sub-models that turn FDS output into agent behaviour, one page each.

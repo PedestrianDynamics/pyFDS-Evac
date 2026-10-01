@@ -15,7 +15,7 @@ time at which a general alarm or warning is given and the time at which the
 first deliberate evacuation movement is made, and splits it into a
 recognition time, from perceiving the alarm to interpreting it as an
 emergency, and a response time, from recognition to the first move
-(Gwynne and Boyce 2016, Ch. 64). ISO/TR 16738:2009 (§5.7) uses the same two
+(Gwynne et al. 2026, Ch. 72, p. 2378). ISO/TR 16738:2009 (§5.7) uses the same two
 elements and distinguishes the pre-travel time of the first occupants from
 the distribution of pre-travel times over the whole group. There is no
 equation for \(t_{\mathrm{pre}}\): it is taken from observed distributions.
@@ -23,10 +23,11 @@ equation for \(t_{\mathrm{pre}}\): it is taken from observed distributions.
 ## Why it is long
 
 ISO/TR 16738 (§5.4) reports that the pre-travel activity phase can often be
-the longest part of the total escape time. Response time includes activities
-such as fighting the fire, warning others, gathering family members,
-dressing, collecting belongings and calling the fire service (Ch. 64).
-Kuligowski (2016, Ch. 58) explains these delays with the Protective Action
+the longest part of the total escape time. During pre-travel time, occupants
+may seek information, alert and assist others, fight the fire or prepare to
+leave (Kuligowski and Kinateder 2026, Ch. 65, p. 2102), for
+example by gathering belongings or getting dressed (Ch. 72, p. 2406).
+Kuligowski and Kinateder (Ch. 65, pp. 2109–2110) explain these delays with the Protective Action
 Decision Model, in which environmental cues such as the sight of smoke and
 social cues such as warnings interrupt normal activity only if they are
 perceived as a threat; the occupant then seeks more information, protects
@@ -40,8 +41,9 @@ from 9 fire incidents and 103 evacuation drills, covering 13 591 evacuees in
 16 countries, grouped by occupancy type and clustered to identify
 sub-groups. They fitted gamma, log-normal, log-logistic and Weibull
 distributions, all two-parameter, positive and right-skewed, for use as
-model inputs (their Eqs. 2–5). The database extends the tables of Gwynne and Boyce (2016,
-Ch. 64). A corrigendum was published in 2019. ISO/TR 16738 (Annex E) gives
+model inputs (their Eqs. 2–5). The database includes the data of the
+previous edition of the SFPE Handbook's egress-data chapter (Ch. 72,
+p. 2386). A corrigendum was published in 2019. ISO/TR 16738 (Annex E) gives
 guidance and default pre-travel times from published data.
 
 ## Known limits
@@ -65,12 +67,14 @@ between clusters.
   §5.4, §5.7 and §7. ISO, Geneva.
   [iso.org/standard/42887](https://www.iso.org/standard/42887.html). Read
   from the public preview.
-- Gwynne, S. M. V., & Boyce, K. E. (2016). *Engineering data*. SFPE
-  Handbook of Fire Protection Engineering, 5th ed., Ch. 64, 2429–2551.
-  [doi:10.1007/978-1-4939-2565-0_64](https://doi.org/10.1007/978-1-4939-2565-0_64)
-- Kuligowski, E. D. (2016). *Human behavior in fire*. SFPE Handbook of
-  Fire Protection Engineering, 5th ed., Ch. 58, 2070–2114.
-  [doi:10.1007/978-1-4939-2565-0_58](https://doi.org/10.1007/978-1-4939-2565-0_58)
+- Gwynne, S. M. V., Boyce, K. E., & Lovreglio, R. (2026). *Egress data for
+  engineering analysis*. SFPE Handbook of Fire Protection Engineering,
+  6th ed., Ch. 72, 2375–2484. pp. 2378, 2386, 2406.
+  [doi:10.1007/978-3-031-59212-6_72](https://doi.org/10.1007/978-3-031-59212-6_72)
+- Kuligowski, E. D., & Kinateder, M. (2026). *Human behavior in fire in the
+  built environment*. SFPE Handbook of Fire Protection Engineering, 6th ed.,
+  Ch. 65, 2099–2137. pp. 2102, 2109–2110.
+  [doi:10.1007/978-3-031-59212-6_65](https://doi.org/10.1007/978-3-031-59212-6_65)
 - Lovreglio, R., Kuligowski, E., Gwynne, S., & Boyce, K. (2019). *A
   pre-evacuation database for use in egress simulations*. Fire Safety
   Journal, 105, 107–128.

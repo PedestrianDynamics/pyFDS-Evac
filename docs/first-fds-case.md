@@ -322,8 +322,8 @@ tenability limit, and whether the agent got out before that.
   agents who were still inside. By then their FIC was already 4.5 to 5.9.
 
 "Nobody reached FED 1" therefore does not mean "everyone had time". This is
-one fire, one seed, and research software. The result describes this run. It
-is not a design verdict.
+one fire, one seed, and research software. The result describes this run
+only.
 
 ### Make the numbers yourself
 
@@ -397,7 +397,7 @@ the 75 censored agents (grey, arrow). The solid part is the time spent beyond
 K ≥ 0.3 1/m. Markers: first K ≥ 0.3 1/m (circle), first HCl ≥ 300 ppm
 (diamond), first FED ≥ 0.3 (square); the other criteria of the table are
 left out to keep the bars readable. Censoring is shown by the grey colour
-and the arrow, not by hatching. Values at the agent's position, z =
+and the arrow. Values at the agent's position, z =
 2.0 m, 1 s resolution..*
 
 Read the figure from the left edge of each bar. The first dozen agents
@@ -437,7 +437,7 @@ not included in either panel. The map form follows Schröder et al. (2020);
 [ASET-RSET maps after Schröder et al. (2020)](study-schroeder2020.md) re-runs
 their demonstration case.*
 
-Panel (b) is not a tenability limit. It shows when the signs stop guiding.
+Panel (b) measures wayfinding: it shows when the signs stop guiding.
 This is consistent with section 5, where 18 agents spawned between 22 and
 92 s never learned an exit: on this map the spawn centre loses sight of
 every sign at 39 s. The engine's own sign test differs (see *How the
@@ -474,7 +474,7 @@ This run fits none of it:
   Each agent's exposure starts when it spawns, while all times on this page
   count from ignition.
 - **The run is cut off.** It stops at 300 s with most late spawners inside.
-  The last exit, 299.8 s, is set by the time limit. It is not an RSET.
+  The time limit sets the last exit, 299.8 s, so it gives no RSET.
 - **There is no detection, alarm or pre-movement**
   (`"use_premovement": false`). Exit minus spawn is travel time only: a
   median of 88.1 s and a maximum of 147.4 s for the 75 who got out.
@@ -517,11 +517,11 @@ The other limits:
   over a population, not for specific individuals (§5.2, p. 4). The per-agent
   comparison is our use of it. The SFPE Handbook frames the same question,
   the time between losing visibility and incapacitation (Purser and
-  McAllister 2016, p. 2414).
-- **The FED is not the ISO 13571 asphyxiant FED.** It is the FDS+Evac sum
+  McAllister 2026, p. 2341).
+- **The FED is the FDS+Evac sum**
   (CO + CN + NOx + FLD<sub>irr</sub>) × HV<sub>CO2</sub> + O2, which includes
   Purser's lethal-dose term for HCl (see [FED model](/models/fed.md)). ISO
-  keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
+  13571 keeps irritants out of the asphyxiant FED (§4.2.1). Applying the ISO
   thresholds to it is an analogy. FED 0.3 is a threshold for susceptible
   people, not a "safe" value: ISO treats 1 as the median of a log-normal
   response, so at 0.3 11.4 % of a population is still expected to be
@@ -601,7 +601,7 @@ sign decisions can differ slightly from these maps.
   exposures under 10 minutes, evaluated at 2.0 m, untenable when any one
   criterion is exceeded. See [Visibility](/fundamentals/visibility.md) for
   *K* = *C*/*V*.
-- *HCl.* SFPE Ch. 63, Table 63.6 (p. 2344): 200 ppm for escape impairment,
+- *HCl.* SFPE Ch. 70, Table 70.4 (p. 2288): 200 ppm for escape impairment,
   900 ppm for incapacitation, and 1000 ppm as the ISO 13571 value (ISO
   13571 §6.2.1, Eq. 4, p. 7, with an uncertainty of ±50 %). ISO 13571 uses
   the same threshold for FED and FEC (§5.4; A.5.2, p. 18), so 0.3 gives
@@ -633,11 +633,11 @@ sign decisions can differ slightly from these maps.
   paraphrased; see [ASET and RSET](/fundamentals/aset-rset.md),
   [Irritants](/fundamentals/irritants.md) and
   [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
-- Purser, D. A., & McAllister, J. L. (2016). Assessment of hazards to
+- Purser, D. A., & McAllister, J. L. (2026). Assessment of hazards to
   occupants from smoke, toxic gases, and heat. *SFPE Handbook of Fire
-  Protection Engineering*, 5th ed., Ch. 63. Table 63.6 (p. 2344) and
-  p. 2414.
-  [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
+  Protection Engineering*, 6th ed., Ch. 70. Table 70.4 (p. 2288) and
+  p. 2341.
+  [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
 - Schröder, B., Arnold, L., & Seyfried, A. (2020). A map representation of
   the ASET-RSET concept. *Fire Safety Journal*, 115, 103154.
   [doi:10.1016/j.firesaf.2020.103154](https://doi.org/10.1016/j.firesaf.2020.103154)

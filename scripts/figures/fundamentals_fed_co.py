@@ -8,16 +8,16 @@
 # ///
 """CO FED rate against CO concentration for three activity levels and ISO.
 
-The Stewart form is SFPE Handbook Ch. 63, Eq. 63.18 (Purser and McAllister
-2016, p. 2356), as a rate per minute:
+The Stewart form is SFPE Handbook Ch. 70, Eq. 70.16 (Purser and McAllister
+2026, p. 2297), as a rate per minute:
 
     dF_ICO/dt = 3.317e-5 [CO]^1.036 V_E / D,
 
 with (V_E [L/min], D [% COHb]) = (8.5, 40) at rest, (25, 30) for light work
-and (50, 20) for heavy work (table under Eq. 63.18, p. 2356; V_E from the
-table beside Eq. 63.39, p. 2416). The ISO 13571 CO term is the dose
-35 000 ppm min, i.e. the rate [CO] / 35 000, which Ch. 63 equates to light
-work at about 20 L/min (Note 2 to Eq. 63.18, p. 2417).
+and (50, 20) for heavy work (table under Eq. 70.16, p. 2298; V_E from the
+table beside Eq. 70.48, p. 2343). The ISO 13571 CO term is the dose
+35 000 ppm min, i.e. the rate [CO] / 35 000, which Ch. 70 equates to light
+work at about 20 L/min (Note 2 to Eq. 70.16, p. 2344).
 
 Run from the repository root::
 

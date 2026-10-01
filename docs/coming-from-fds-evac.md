@@ -29,7 +29,7 @@ on 2-D evacuation meshes. In pyFDS-Evac, [JuPedSim](https://www.jupedsim.org)
 moves the agents on a continuous walkable polygon. The operational model is
 chosen in the scenario JSON (`model_type`, default `CollisionFreeSpeedModel`).
 
-**Smoke is read, not computed alongside.** pyFDS-Evac never runs FDS. It reads
+**Smoke is read from a finished FDS run.** pyFDS-Evac never runs FDS. It reads
 the slice files of a finished FDS run and samples them at the agents'
 positions. The coupling is one-way: the fire acts on the occupants, and
 nothing the occupants do (opening a door, for example) acts on the fire.
@@ -40,7 +40,7 @@ and a walkable geometry as WKT (well-known text, a plain-text polygon format). `
 
 ## Defaults follow FDS+Evac
 
-pyFDS-Evac is an enhancement of FDS+Evac, not a clone. Where a mechanism has
+pyFDS-Evac is an enhancement of FDS+Evac. Where a mechanism has
 a direct FDS+Evac counterpart, the default is the FDS+Evac form, so that a
 case converted from FDS+Evac behaves as its author expects. Newer or
 alternative forms stay available as options. Earlier pyFDS-Evac versions
@@ -78,8 +78,8 @@ suite ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
   one-to-one FDS+Evac counterpart
   ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)); see
   [Smoke-aware routing](routing.md).
-- An exit is found by reading its sign, not by seeing the door. FDS+Evac
-  counts a door as visible at any distance if nothing blocks the line of
+- An agent that does not know an exit learns it from the exit's sign;
+  FDS+Evac uses sight of the door. FDS+Evac counts a door as visible at any distance if nothing blocks the line of
   sight. pyFDS-Evac reads a sign only within its reading distance, 30 m by
   default even in clear air, and less off-axis or in smoke. See
   [Seeing a door vs reading a sign](#seeing-a-door-vs-reading-a-sign).
@@ -167,9 +167,18 @@ The gamma, log-normal and Weibull presets are the fits for office buildings
 from the 2019 corrigendum
 ([doi:10.1016/j.firesaf.2018.12.009](https://doi.org/10.1016/j.firesaf.2018.12.009);
 [doi:10.1016/j.firesaf.2019.102829](https://doi.org/10.1016/j.firesaf.2019.102829)).
-The uniform preset is RiMEA's "speedy evacuation" sensitivity scenario, not
-data. For other occupancies, set both parameters from the matching table of
-that paper.
+The uniform preset is RiMEA's "speedy evacuation" scenario, a range set for
+sensitivity tests. For other occupancies, set both
+parameters from the matching table of that paper.
+
+![Four panels of pre-movement time from 0 to 600 s. Gamma, log-normal and Weibull each rise to a peak near 30 to 40 s and fall off in a long right tail, with medians near 100 s and 95th percentiles of 368, 481 and 349 s. The uniform preset is a flat block from 0 to 60 s, with median 30 s and 95th percentile 57 s](/images/getting-started/premovement_presets.png)
+
+*The first four presets of the table above. Curves: the probability density
+with the preset (*a*, *b*). Grey bars: 10,000 draws made by pyFDS-Evac with
+the same preset, which follow the curves. Solid line: median; dashed line:
+95th percentile. The log-normal preset has the longest tail: 3.1 % of it
+lies beyond 600 s. Script:
+`scripts/figures/coming_from_premovement_presets.py`.*
 
 The presets are used when `use_premovement` is `true` and `premovement_param_a`
 or `premovement_param_b` is missing; both parameters must be given for either

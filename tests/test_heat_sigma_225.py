@@ -1,11 +1,11 @@
 """Population spread of heat tolerance (#225).
 
-SFPE Handbook 5th ed., Ch. 63 (Purser & McAllister 2016), p. 2382, gives the
+SFPE Handbook 6th ed., Ch. 70 (Purser & McAllister 2026), p. 2318, gives the
 only population figures for heat: for infrared radiation, a dose of
-10 (kW/m2)^(4/3) min is a 1 % fatality level for the average population and
+10 (kW/m2)^(4/3) min is a 1 % lethal level for the average population and
 16.7 (kW/m2)^(4/3) min a 50 % lethal level. No figure is given for the
-convective law in use (Eq. 63.44). Hockey & Rew (1996, HSE CRR 97/1996,
-ref. [133] of Ch. 63) is a candidate source for probit slopes that would
+convective law in use (Eq. 70.42). Hockey & Rew (1996, HSE CRR 97/1996,
+ref. [125] of Ch. 70, reference list p. 2351) is a candidate source for probit slopes that would
 give a spread directly; it is not in the library and has not been read.
 
 The expected values below are computed from those two published figures with
@@ -29,10 +29,10 @@ THRESHOLDS = ROOT / "site" / "content" / "fundamentals" / "incapacitation-thresh
 CHANGELOG = ROOT / "CHANGELOG.md"
 ISSUE = "issues/225"
 
-# SFPE Handbook 5th ed., Ch. 63, p. 2382 (radiant dose r, (kW/m2)^(4/3) min).
+# SFPE Handbook 6th ed., Ch. 70, p. 2318 (radiant dose r, (kW/m2)^(4/3) min).
 R_ONE_PERCENT_FATAL = 10.0
 R_MEDIAN_LETHAL = 16.7
-# Fatal dose D of the total-flux method, as printed on Ch. 63 p. 2384.
+# Fatal dose D of the total-flux method, as printed on Ch. 70 p. 2319.
 D_FATAL = 16.7
 # Purser's spreadsheet value (personal communication); not used by the code.
 D_SPREADSHEET = 16.667
@@ -58,7 +58,7 @@ def test_sigma_is_insensitive_to_16_7_versus_16_667():
 
 
 def test_one_percent_level_sits_at_fed_0_6_of_the_fatal_dose():
-    """With FED = 1 at D = 16.7 (p. 2384), the 1 % fatality dose is FED 10/16.7."""
+    """With FED = 1 at D = 16.7 (p. 2319), the 1 % fatality dose is FED 10/16.7."""
     assert R_ONE_PERCENT_FATAL / D_FATAL == pytest.approx(0.599, abs=1e-3)
 
 
@@ -80,14 +80,14 @@ def _heat_section(text):
 def test_thresholds_page_states_what_is_known_for_heat():
     """Fundamentals › Incapacitation thresholds covers heat with sources."""
     section = _heat_section(THRESHOLDS.read_text())
-    for fragment in ("2382", "16.7", "Hockey", ISSUE):
+    for fragment in ("2318", "16.7", "Hockey", ISSUE):
         assert fragment in section, fragment
 
 
-def test_thresholds_page_cites_refs_133_134_on_p_2382():
-    """Refs. [133, 134] for the radiant dose relation are on book p. 2382."""
+def test_thresholds_page_cites_refs_125_126_on_p_2318():
+    """Refs. [125, 126] for the radiant dose relation are on book p. 2318."""
     section = _heat_section(THRESHOLDS.read_text())
-    assert "p. 2381" not in section
+    assert "p. 2317" not in section
 
 
 def test_thresholds_page_does_not_claim_hockey_rew_contents():

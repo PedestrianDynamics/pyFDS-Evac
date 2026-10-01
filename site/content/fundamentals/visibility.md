@@ -16,14 +16,14 @@ that this page writes *V* for the table's *S*, as every source does; *L*
 here is ambient light and α a reflectance. The sources use other letters
 for the same quantities:
 
-| This page | Meaning | Jin 1970–1972 | Jin 1978; Jin and Yamada 1985; SFPE Ch. 61 | Cheung et al. 2026 |
+| This page | Meaning | Jin 1970–1972 | Jin 1978; Jin and Yamada 1985; SFPE Ch. 68 | Cheung et al. 2026 |
 |---|---|---|---|---|
 | *K* [1/m] | extinction coefficient, natural log | σ | \(C_s\) | σ |
 | *V* [m] | visibility at the obscuration threshold | *V* | *V* | *V* |
-| *C* [–] | constant of *V* = *C*/*K* | σ·*V* | \(C_s \cdot V\) (1978); *k* in Ch. 61 Eq. 61.4 | *K* |
+| *C* [–] | constant of *V* = *C*/*K* | σ·*V* | \(C_s \cdot V\) (1978); *k* in Ch. 68 Eq. 68.8 | *K* |
 | \(B/L\) [–] | sign luminance over ambient light | \(B_{E0}/L\) | \(B_{EO}/L\) with \(L = E/\pi\); \(L_t/(E/\pi)\) | \(\pi L_t/E\) |
 | \(\delta_c\) [–] | threshold contrast | \(\delta_c\) | \(\delta_c\) | \(\delta_c\) |
-| \(k_s\) [–] | scattering over total extinction | *k* | *k* (1978); *K* (1985); α (Ch. 61) | α |
+| \(k_s\) [–] | scattering over total extinction | *k* | *k* (1978); *K* (1985); α (Ch. 68) | α |
 
 Jin and Yamada (1985) also use α, and Jin (1978, Eq. A-3, p. 150) ρ,
 for the reflectance of a placard. Jin 1978 numbers only Eqs. (1), (2),
@@ -214,8 +214,8 @@ reach any value by a brighter lamp, but in practice perhaps 10 at most. The
 measured placard lines are *KV* = 4.0, 3.1 and 2.2 for reflectances of 60,
 30 and 14 % on a 7 % background at 180 lx (Fig. 10, p. 6). Jin and Yamada
 (1985, p. 81), Jin (1997, Eqs. 3–4, p. 6) and Jin (2002, Eqs. 3–4,
-p. 2-43) repeat the ranges; Yamada and Akizuki (2016, SFPE Handbook 5th
-ed., Ch. 61, Eqs. 61.4–61.6, pp. 2186–2187) reproduce them.
+p. 2-43) repeat the ranges; Yamada and Akizuki (2026, SFPE Handbook 6th
+ed., Ch. 68, Eqs. 68.8–68.10, p. 2208) reproduce them.
 
 **The range of validity.** Jin (1971, abstract p. 17 and p. 18; in English
 FRI Report 33, p. 38, and Jin 1978, p. 137) states that
@@ -291,7 +291,7 @@ extremely weak" (our translation). The English texts say instead that the produc
 illuminating light" (Jin 1978, p. 137, the earliest print of this wording we have)
 or "on the reflectance of the sign and the brightness of illuminating
 light" (Jin and Yamada 1985, p. 81;
-Jin 1997, p. 6; Jin 2002, p. 2-43; Ch. 61, p. 2186). Jin (1971,
+Jin 1997, p. 6; Jin 2002, p. 2-43; Ch. 68, p. 2208). Jin (1971,
 Fig. 8) shows \(\delta_c\) rising steeply below about 30–60 lx. *In our
 reading*, the light matters at 22 lx and below, which covers all
 emergency-lighting levels (1–15 lx), so the reviews' wording is compatible
@@ -443,17 +443,19 @@ by them, and so are black smoke and irritants.
 
 ## Other data on real exit signs
 
-Yamada and Akizuki (2016, Ch. 61, pp. 2187–2188) report experiments by
+Yamada and Akizuki (2026, Ch. 68, pp. 2208–2210) report experiments by
 Yamada, Kubota, Abe and Iida (2004), which we have not read, on three
 Japanese exit signs of 250–800 cd/m² in non-irritant white smoke without
-background light (Table 61.1). The fitted slopes of *V* against 1/*K* are
-9.1, 22.5 and 12.6 (\(R^2\) = 0.93–0.94, Fig. 61.9); they attribute the
-22.5 of the larger B-class sign to its size ("twice as visible as others
-due to size effect", p. 2187). An ordinary lit exit
-sign was lost at about 10 m at *K* = 1.0 1/m, and they note that the
-constant "tends to be larger" than Jin's. *Our inference:* larger constants
-without background light agree in direction with Cheung et al.'s low-light
-results.
+background light (Table 68.2). The fitted slopes of *V* against 1/*K* are
+9.1, 12.6 and 22.5 (\(R^2\) = 0.93–0.94, Fig. 68.15); they attribute the
+22.5 of the medium square sign to its size ("twice as visible as others
+due to size effect", p. 2209). With background light, the small square
+sign's slope falls from 12.6 to 5.1 (\(R^2\) = 0.92, Fig. 68.15, p. 2210).
+A rectangular lit exit sign was lost at about 10 m, a small square one at
+about 13 m, at *K* = 1.0 1/m, and they note that the constant "tends to be
+somewhat larger" than Jin's (p. 2209). *Our inference:* larger constants
+without background light, and the smaller slope in the lit area, agree in
+direction with Cheung et al.'s low-light results.
 
 Jin ([FRI Report 40](https://nrifd.fdma.go.jp/publication/houkoku/001-040/files/shoho_040s.pdf),
 1975, Part 3, pp. 1–5; Japanese, English abstract p. 5) measured a
@@ -517,8 +519,10 @@ $$
 and wrote the legibility distance as
 
 $$
-V_1 = \frac{C}{K}\ (0.1 \le K < 0.25), \qquad
-V_2 = \frac{C}{K}\,(0.133 - 1.47 \log K)\ (K \ge 0.25)
+\begin{aligned}
+V_1 &= \frac{C}{K}, \quad 0.1 \le K < 0.25,\\
+V_2 &= \frac{C}{K}\,(0.133 - 1.47 \log K), \quad K \ge 0.25
+\end{aligned}
 \qquad \text{(Eqs. 4–5)}
 $$
 
@@ -551,7 +555,7 @@ for a long time", without a number. Jin (1978, p. 142) elsewhere writes
 "If we assume that the smoke density at which fire escape action could be
 done is 0.5/m", as an assumption for judging spectral effects, citing
 Moriya and Watanabe (1967) for the 10 minutes, not for the 0.5. Yamada
-and Akizuki (2016, Ch. 61, p. 2190) put it "under 0.5 [1/m]" and, two sentences later, "over 0.5 [1/m]". We
+and Akizuki (2026, Ch. 68, p. 2211) put it "under 0.5 [1/m]" and, two sentences later, "over 0.5 [1/m]". We
 found no primary source for the number. Possible origins, not
 established: Jin (1972, abstract) uses 0.5 1/m as its example of dense
 irritant smoke; Jin (1997, §2.1) finds most subjects emotionally affected
@@ -590,8 +594,8 @@ brightness" (abstract, p. 135).
   Cheung et al., §2), so a real sign of fixed size is covered only
   partly: Jin (1970, Fig. 12) found the critical *K* of a placard at 10 m
   rising from about 0.2 to 0.4 1/m with size and saturating above a
-  visual angle of about 0.45° (our reading), and Ch. 61 (p. 2187)
-  attributes the B-class sign's larger slope to its size.
+  visual angle of about 0.45° (our reading), and Ch. 68 (p. 2209)
+  attributes the medium square sign's larger slope to its size.
 - *C* depends on the sign's luminance, the ambient light and the smoke.
   Jin's lit-sign values are for 22–180 lx. In 1–22 lx, Cheung et al.
   measured 6–11 over signs up to 22 500 cd/m², and about 6–8.4 at exit-sign
@@ -671,10 +675,10 @@ Read for this page:
 - Mulholland, G. W. (2002). *Smoke production and properties*. SFPE
   Handbook of Fire Protection Engineering, 3rd ed., Ch. 2-13, 2-258–2-268.
   National Fire Protection Association, Quincy, MA. No DOI or public URL.
-- Yamada, T., & Akizuki, Y. (2016). *Visibility and human behavior in fire
-  smoke*. SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 61,
-  2181–2206.
-  [doi:10.1007/978-1-4939-2565-0_61](https://doi.org/10.1007/978-1-4939-2565-0_61)
+- Yamada, T., & Akizuki, Y. (2026). *Visibility and human behavior in fire
+  smoke*. SFPE Handbook of Fire Protection Engineering, 6th ed., Ch. 68,
+  2201–2224. Eqs. 68.8–68.10, Table 68.2, Fig. 68.15, pp. 2208–2211.
+  [doi:10.1007/978-3-031-59212-6_68](https://doi.org/10.1007/978-3-031-59212-6_68)
 - Cheung, W. K., Bielawski, J., Arnold, L., Huang, X., & Węgrzyński, W.
   (2026). *Reappraisal of Jin's visibility through fire smoke experiment:
   Insights into signage visibility and the impact of ambient light*. Fire
@@ -724,4 +728,4 @@ Cited by the sources above, not obtained:
 - Yamada, T., Kubota, K., Abe, N., & Iida, A. (2004). *Visibility of
   emergency exit signs and emergency lights through smoke*. Proc. 6th
   Asia-Oceania Symposium on Fire Science and Technology, Daegu, 227–238.
-  Reported through Ch. 61 (ref. 7).
+  Reported through Ch. 68 (ref. 18).
