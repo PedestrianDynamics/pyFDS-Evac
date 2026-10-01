@@ -151,7 +151,7 @@ params:
     displayTitle: true
     displayLogo: true
     logo:
-      path: images/logo.png
+      path: images/brand/logo-mark.svg
       width: 28
       height: 28
 

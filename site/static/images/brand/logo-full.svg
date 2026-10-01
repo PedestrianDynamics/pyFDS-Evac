@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" role="img" aria-label="pyFDS-Evac">
+<title>pyFDS-Evac</title>
+<defs>
+<linearGradient id="fm-g" x1="52" y1="97" x2="962" y2="1070" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#7c7c7c"/><stop offset=".45" stop-color="#acacac"/><stop offset="1" stop-color="#e6e6e6"/>
+</linearGradient>
+<filter id="fm-b" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="38"/></filter>
+<filter id="fm-s" x="52" y="97" width="910" height="973" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency=".0055" numOctaves="4" seed="11" result="n"/>
+<feColorMatrix in="n" values="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1" result="g"/>
+<feComposite in="SourceGraphic" in2="g" operator="arithmetic" k2="1" k3=".62" k4="-.22"/>
+<feComponentTransfer>
+<feFuncR type="table" tableValues="0.000 0.259 0.576 0.867 0.988 0.988"/>
+<feFuncG type="table" tableValues="0.000 0.039 0.149 0.318 0.647 1.000"/>
+<feFuncB type="table" tableValues="0.016 0.408 0.404 0.227 0.039 0.643"/>
+</feComponentTransfer>
+</filter>
+<clipPath id="fm-c"><circle cx="500" cy="500" r="488"/></clipPath>
+</defs>
+<circle cx="500" cy="500" r="494" fill="#ffffff"/>
+<g clip-path="url(#fm-c)"><g transform="scale(1.09890 1.02775) translate(-52 -97)" filter="url(#fm-s)">
+<rect x="52" y="97" width="910" height="973" fill="url(#fm-g)"/>
+<g filter="url(#fm-b)">
+<ellipse cx="190" cy="520" rx="95" ry="80" fill="#000"/>
+<ellipse cx="110" cy="210" rx="80" ry="110" fill="#3a3a3a"/>
+<ellipse cx="330" cy="150" rx="120" ry="60" fill="#444"/>
+<ellipse cx="220" cy="950" rx="140" ry="90" fill="#555"/>
+<ellipse cx="820" cy="170" rx="90" ry="60" fill="#8a8a8a"/>
+<ellipse cx="800" cy="980" rx="170" ry="110" fill="#eee"/>
+</g>
+</g></g>
+<g clip-path="url(#fm-c)"><g fill="#1a1a1a" stroke="#ffffff" stroke-width="12">
+<rect x="0" y="611.1" width="350.5" height="76.8"/><rect x="615.4" y="611.1" width="384.6" height="76.8"/>
+</g></g>
+<g fill="#1a1a1a" stroke="#ffffff" stroke-width="11"><ellipse cx="167.7" cy="308.1" rx="55.5" ry="60.3" transform="rotate(-15 167.7 308.1)"/><ellipse cx="292.3" cy="299.4" rx="51.7" ry="68.9" transform="rotate(15 292.3 299.4)"/><ellipse cx="504.6" cy="265.8" rx="55.5" ry="65.1" transform="rotate(22 504.6 265.8)"/><ellipse cx="831.4" cy="263.2" rx="55.5" ry="49.8" transform="rotate(-12 831.4 263.2)"/><ellipse cx="709.5" cy="317.6" rx="52.6" ry="64.1" transform="rotate(28 709.5 317.6)"/><ellipse cx="341.2" cy="423.8" rx="47.8" ry="58.4" transform="rotate(0 341.2 423.8)"/><ellipse cx="454.8" cy="409.9" rx="48.8" ry="69.9" transform="rotate(8 454.8 409.9)"/><ellipse cx="591.4" cy="382.3" rx="52.6" ry="74.6" transform="rotate(14 591.4 382.3)"/><ellipse cx="703.1" cy="482.5" rx="57.4" ry="74.6" transform="rotate(8 703.1 482.5)"/><ellipse cx="390.2" cy="556.7" rx="47.8" ry="77.5" transform="rotate(5 390.2 556.7)"/><ellipse cx="565.5" cy="584.3" rx="53.6" ry="84.2" transform="rotate(10 565.5 584.3)"/><ellipse cx="414.2" cy="736.3" rx="52.6" ry="81.3" transform="rotate(5 414.2 736.3)"/><ellipse cx="551.7" cy="757.0" rx="55.5" ry="91.9" transform="rotate(0 551.7 757.0)"/></g>
+</svg>
