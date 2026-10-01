@@ -92,6 +92,10 @@ middle column separates that code change from the change of conditions.
 
 The engine change moves min DIFF by about 1 s. The release conditions move
 it by about 4 s and bring the two FDS grids into agreement.
+The uncapped two-door run turns negative with the exit-rule change already
+(+1 → −4 s, not robust over seeds: per-seed mean +0.3 s); the release
+conditions deepen it to −11 s, negative in the per-seed mean as well
+(−4.6 [−6.9, −2.5] s).
 
 {{< /details >}}
 
@@ -673,7 +677,8 @@ same evacuation versions run on the current engine:
 The capped crowd leaves 62.5 agents at 40 s and 24.3 at 80 s, and the
 last agent leaves at 105–106 s. The door cells exceed at 74–76 s, 2–3 s
 later than under the release conditions, and the slower cap empties the
-room about 5 s later; together they make min DIFF about 4 s lower. The
+room about 5 s later; together they make min DIFF about 3.4 s lower
+(−30.9 against −27.5 s). The
 `hrr060` fire grid-converges less well: on the 0.1 m grid a late pocket
 beside the plume first exceeds at up to 203 s, against 88 s on the 0.2 m
 grid, and 6.2 % of cells differ by more than 30 s.
@@ -730,7 +735,8 @@ It runs the 160 evacuations (existing ones are reused), checks that every
 agent leaves, prints every number on this page as Markdown tables, and
 writes the figures to `site/static/images/studies/schroeder2020/`. It needs
 PedPy ≥ 1.5.1 for `compute_rset_map`. `--family hrr060` with its own
-`RUNS` folder gives the paper-only rebuild, into the `hrr060/` subfolder.
+`RUNS` folder gives the paper-only rebuild; it prints all its tables and
+writes only the figure this page uses, `hrr060/diff_1door.png`.
 
 The animations and the grid figures come from two further scripts, run
 after it on the same folders:
@@ -831,8 +837,9 @@ taken from the authors' release
   decomposition both differ; the soot change acts the other way.
 - **HRR.** The release's FDS `.out` file shows 68.9 kW at its last time
   step. That is an instantaneous value (time step 0.9 ms at 120 s): the
-  release's `ASET_animation_hrr.csv` averages 60.0 kW over 10–120 s and over 110–120 s,
-  as does ours (60.00 kW over 10–120 s and over 120–600 s).
+  release's `ASET_animation_hrr.csv` averages 60.0 kW over 10–120 s and
+  over 110–120 s, as does ours (60.00 kW over 10–120 s and over
+  120–600 s).
 - **Agents also spawn in the door passage.** The spawn area includes the
   passage between the jambs, so our first agent leaves within 2 s (last
   recorded at 0.4–1.9 s), the release's at 1–3 s. In a clear-air check,
@@ -895,7 +902,8 @@ the burner. The 0.1 m grid moves ASET by 9.0 s on average and puts a wide
 band of late nodes over the western two thirds of the room (x up to
 20.8 m). That late band is therefore a grid effect of the 0.6 m burner;
 the release burner has none. The `hrr060` device trees lie on cell faces
-(z = 0.2–2.8 m, and x = 5.1, 15.1 and 25.1 m on the 0.1 m grid).
+(z = 0.2–2.8 m, and x, y = 5.1, 15.1, 25.1 / 5.1, 8.9 m on the 0.1 m
+grid).
 
 {{< /details >}}
 
@@ -938,8 +946,8 @@ the release burner has none. The `hrr060` device trees lie on cell faces
   experiment (§3.1), Fig. 5 and Eq. 8 p. 7; Figs. 6–8 p. 8. Pages 3, 7 and
   8 are checked against the version of record; the others against the
   journal pre-proof only.
-- Schröder, B., Arnold, L., & Seyfried, A. (2020). Reference implementation
-  of the ASET-RSET map method. Zenodo.
+- Schröder, B., Arnold, L., & Seyfried, A. (2020). *A Map Representation of
+  the ASET-RSET Concept – Reference Implementation* (v1.0.1). Zenodo.
   [doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550).
   Cited in the paper as [35] (version of record p. 3). We use its FDS input
   and output (`0_ASET/HRR_60kW`: deck, `.out`, `ASET_animation_hrr.csv`;
