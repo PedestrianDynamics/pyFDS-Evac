@@ -495,8 +495,10 @@ about 5–15 min and about 15–30 min; the goal is met if no value is
 exceeded during the stay (p. 324). EA&amp;rsquo;s fixed limits assume up to 10 min
 and use FED for up to 30 min (§5.2–5.3, pp. 15–17). DIN adds the AEGL-2
 for CO as a check, 420 ppm for 10 min and 150 ppm for 30 min, without
-interpolation (§7.2.3). EA and DIN evaluate at 2.0 m (EA §5.2; DIN
-§7.2.1); zero-exposure criteria use a clear layer of about 2.5 m (vfdb
+interpolation (§7.2.3). EA, DIN and C/VM2 evaluate at 2.0 m (EA §5.2; DIN
+§7.2.1; C/VM2 §2.1.6.1); the 2012 commentary to C/VM2 sums the doses for
+the last occupant to leave the room of fire origin, in steps of at most
+5 s (MBIE 2012, pp. 47, 49). Zero-exposure criteria use a clear layer of about 2.5 m (vfdb
 §8.1, p. 312; Purser and McAllister, p. 2340). Surveyed practitioners use
 1.5–2.5 m, most often 2.0 m (52.1 %) (Węgrzyński et al. 2026, §4.3).&lt;/p>
 &lt;p>&lt;strong>Population.&lt;/strong> ISO requires a threshold below 1 for more conservative
@@ -507,7 +509,9 @@ design FED of 0.3 for the general population, or 0.1 for particularly
 sensitive groups such as occupants of health-care premises (Ch. 70,
 p. 2288; worked example, p. 2322); one passage instead gives 0.1 as the
 value that protects nearly all exposed individuals (p. 2310). vfdb gives
-0.1–0.3 (§8.4, p. 319). EA considers 1.0 suitable for the vast majority of
+0.1–0.3 (§8.4, p. 319). The New Zealand Building Code (clause C4.3) sets
+0.3 for the CO and the thermal dose; the C/VM2 commentary reads 0.3 as about
+11 % of the population (MBIE 2012, p. 29). EA considers 1.0 suitable for the vast majority of
 occupants and leaves the margin to RSET (§5, p. 13). In the survey, 7 of
 the 13 continental-European respondents who stated a value use 0.1; all
 from the UK and Australia/New Zealand use 0.3 (§4.3). Babrauskas et al.
@@ -564,6 +568,12 @@ its generic values (Gann et al. 2001, pp. 82–86).&lt;/p>
 &lt;td>≤ 10 min; 2.0 m&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>NZBC C4.3, C/VM2 2nd ed. §2.1.6 (p. 17)&lt;/td>
+&lt;td>dose (FED) for CO and heat, fixed limit for visibility&lt;/td>
+&lt;td>Building Code performance criterion not met&lt;/td>
+&lt;td>along the escape route, through the evacuation; 2.0 m&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>ISO 13571:2012&lt;/td>
 &lt;td>dose (FED), concentration (FEC)&lt;/td>
 &lt;td>compromised tenability, median at 1.0; threshold chosen by the user&lt;/td>
@@ -606,6 +616,12 @@ its generic values (Gann et al. 2001, pp. 82–86).&lt;/p>
 &lt;td>10 m visibility (5 m in enclosures of about 10 m)&lt;/td>
 &lt;td>100 °C; 2.5 kW/m²&lt;/td>
 &lt;td>CO 2,700 ppm; HCN 140 ppm&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>C/VM2&lt;/td>
+&lt;td>10 m visibility (5 m in rooms under 100 m²)&lt;/td>
+&lt;td>FED 0.3, radiative and convective (ISO 13571)&lt;/td>
+&lt;td>FED 0.3 from CO, CO₂ and O₂ (ISO 13571); in a sprinklered firecell that cannot expose more than 1,000 occupants, only this one (C4.4)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>ISO 13571&lt;/td>
@@ -1583,6 +1599,11 @@ tenability criteria in building fires&lt;/em>, version 2.0, §5 (p. 13), §5.2 a
 Fig. 8 &amp;ldquo;Short Exposure&amp;rdquo; (p. 15; a second Fig. 8, &amp;ldquo;No Exposure&amp;rdquo;, is on
 p. 13), §5.3 (p. 17). Full reference on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>.&lt;/li>
+&lt;li>MBIE (2025). &lt;em>C/VM2 Verification Method: Framework for fire safety
+design&lt;/em>, 2nd edition, §2.1.6.1–2.1.6.3 (p. 17), with Building Code
+clauses C4.3 and C4.4; and MBIE (2012), &lt;em>Commentary for Verification
+Method C/VM2&lt;/em>, pp. 29, 47, 49. Full references on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>.&lt;/li>
 &lt;li>ISO 13571:2012, §3.1, §4.2, §4.4, §4.6 f, §5.4, §8.2–8.5 (§8.3.1
 Eq. (9)), clause 9 and A.5.2; ISO/TR 16738:2009, §5.7 Eq. (2).
 Paraphrased; see
@@ -2555,7 +2576,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3dd5ba5ddd48a1cee692118870a08326b50d3b7f">&lt;code>3dd5ba5&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/1f0d9a93ac4a915aa764c3be980aa88fc5b20d39">&lt;code>1f0d9a9&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.678, additive 0.445&lt;/code>&lt;br>&lt;code>main fire, additive dy: -1.77 m (-2.20, -1.35)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.05 for starts 30-120 s, 0.94 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>7e9c4c30&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2582,7 +2603,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder2015_route.py&lt;/code>: the evacuation numbers and figures of the page&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder2015_fire_figures.py&lt;/code>: the geometry and fire numbers and figures (needs all nine fires)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">28ff3234a1c241ff6109cb876b83dcef4b76d38013488a14c511dd54a1bd7bb2&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">98611db14cf2d064869d6824fc49e7fa41cc0441395ca12fa5b3c4024ca36ad8&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
