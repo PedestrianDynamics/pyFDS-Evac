@@ -16,6 +16,8 @@ aliases: [/models/verification/iso-test-19/]
 
 ![Four rooms side by side, one occupant each, coloured by its dose; a cross marks the moment the dose reaches 1](/images/verification/iso_test19.gif)
 
+{{< example-files-link "iso-test-19" >}}
+
 ## What is tested
 
 ISO 20414:2020, Test 19 (Table 22): an occupant stands still in gas, and
@@ -160,6 +162,8 @@ and it is incapacitated at the first FED update after *t*\*.
    otherwise the exposure, and the comparison, would be meaningless.
 
 ## Run it yourself
+
+{{< example-files "iso-test-19" >}}
 
 The FDS output (slices only, 256 kB) is committed in
 `assets/iso_table22_coupled/fds/`, and `tests/test_iso_table22_coupled.py`

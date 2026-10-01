@@ -16,6 +16,8 @@ aliases: [/models/verification/iso-test-18/]
 
 ![Five copies of the ISO corridor, tinted darker the denser the smoke: clear air and K = 1, 3, 7.5 and 10 per metre; the occupant's colour shows its walking speed, and each corridor ends with the simulated and the expected egress time](/images/verification/iso18.gif)
 
+{{< example-files-link "iso-test-18" >}}
+
 ## What is tested
 
 Whether smoke slows an occupant by exactly the factor the smoke-speed law
@@ -178,6 +180,8 @@ The pytest tests ask for less: the ratio within 8 %, and the factor equal to
 six decimals ([#259](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/259)).
 
 ## Run it yourself
+
+{{< example-files "iso-test-18" >}}
 
 The tests run both cases in about 20 s. They are weaker than this page: the
 coupled test reads the 2.0 m slice, not the 1.5 m slice the default height

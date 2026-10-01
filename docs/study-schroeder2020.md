@@ -20,6 +20,8 @@ pyFDS-Evac crowds, and shows three things:
   last person has left, and how the door-flow model, pre-movement and a
   second door move that.
 
+{{< example-files-link "study-schroeder2020" >}}
+
 {{< callout type="info" >}}
 The authors published their inputs, code and results
 ([Zenodo, doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550)).
@@ -728,18 +730,27 @@ arm U: `--smoke-blind --disable-tenability --smoke-slice-height 2.0` (see
 door layout serves both grids. Smoke feedback on speed and route choice
 lies outside this study.
 
-**Reproduce.** The FDS decks and output and the authors' release are not
-in the repository. With the decks and output in `DATA`, the unpacked
-release in `RELEASE` and an empty folder `RUNS` outside the repository:
+### Reproduce
+
+{{< example-files "study-schroeder2020" >}}
+
+The FDS decks, the scenarios and their generators are in
+`assets/schroeder2020_room/`. The FDS output and the authors' release are
+not in the repository. Copy each `rel_*` folder into a folder `DATA`
+outside the repository and run FDS 6.10.1 in it, for example
+`(cd DATA/rel_1door && mpiexec -n 6 fds rel_1door.fds)`. Then, with an
+empty folder `RUNS` outside the repository and, for the comparison with
+the release, the unpacked release in `RELEASE`:
 
 ```bash
 uv run --with "pedpy>=1.5.1" python scripts/docs/schroeder_room_maps.py \
     --data DATA --runs RUNS --family rel --release RELEASE
 ```
 
-It runs the 160 evacuations (existing ones are reused), checks that every
-agent leaves, prints every number on this page as Markdown tables, and
-writes the figures to `site/static/images/studies/schroeder2020/`. It needs
+Without `--release` it skips the comparison with the release. It runs the
+160 evacuations (existing ones are reused), checks that every agent
+leaves, prints every number on this page as Markdown tables, and writes
+the figures to `site/static/images/studies/schroeder2020/`. It needs
 PedPy ≥ 1.5.1 for `compute_rset_map`. `--family hrr060` with its own
 `RUNS` folder gives the paper-only rebuild; it prints all its tables and
 writes only the figure this page uses, `hrr060/diff_1door.png`.
@@ -760,9 +771,10 @@ uv run python scripts/docs/schroeder_grid_figures.py --data DATA \
 **Provenance.** The evacuation runs on this page come from commit
 `4a7142f` (main at `100e91d` with this page's scripts). Each run's manifest
 records that commit with `git_dirty: false` and
-`agent_seeding: spawn-key-blake2b-v2`. When the code changes, re-run the
-command into a new `RUNS` folder and compare the printed tables with this
-page.
+`agent_seeding: spawn-key-blake2b-v2`. A re-run of all 160 evacuations
+on `449a755` prints the same values for the headline. When the code
+changes, re-run the command into a new `RUNS` folder and compare the
+printed tables with this page.
 
 ## Setup, deviations and caveats
 

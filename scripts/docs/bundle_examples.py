@@ -22,6 +22,7 @@ import argparse
 import hashlib
 import io
 import json
+import re
 import subprocess
 import textwrap
 import tomllib
@@ -47,6 +48,10 @@ KEY_PACKAGES = (
     "pandas",
 )
 ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
+# FDS output never goes into a zip: users run FDS themselves.
+FDS_OUTPUT = re.compile(
+    r"\.(sf|bnd|smv|s3d|sz|bf|prt5|q|xyz|out|pickle|restart)$|_(devc|hrr|cpu|steps)\.csv$"
+)
 WRAP = 72
 
 
@@ -208,9 +213,23 @@ def _zip_bytes(prefix: str, members: dict[str, bytes]) -> bytes:
     return buffer.getvalue()
 
 
+def _expand(path: str) -> list[str]:
+    """A file, or every file below a folder entry ending in ``/``, sorted."""
+    if not path.endswith("/"):
+        return [path]
+    found = sorted(p for p in (ROOT / path).rglob("*") if p.is_file())
+    if not found:
+        raise FileNotFoundError(f"{path} holds no files")
+    return [p.relative_to(ROOT).as_posix() for p in found]
+
+
 def build_one(name: str, example: dict, commit: dict, versions: dict) -> tuple:
     """Return the zip bytes and the facts of one example."""
-    members = {path: (ROOT / path).read_bytes() for path, _ in example["files"]}
+    paths = [p for path, _ in example["files"] for p in _expand(path)]
+    fds_output = [p for p in paths if FDS_OUTPUT.search(p)]
+    if fds_output:
+        raise ValueError(f"{name}: FDS output in the zip: {fds_output}")
+    members = {path: (ROOT / path).read_bytes() for path in paths}
     entries = [
         ("README.txt", "this file"),
         ("LICENSE", "MIT licence of the code"),
@@ -229,6 +248,7 @@ def build_one(name: str, example: dict, commit: dict, versions: dict) -> tuple:
         "sha256": hashlib.sha256(data).hexdigest(),
         "commit": commit["sha"],
         "dirty": commit["dirty"],
+        "files": len(members),
         "entries": [[path, about] for path, about in entries],
     }
     return data, facts
