@@ -30,7 +30,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/449a755dcc14a47d9d4823c17877c99f170fcd8c">&lt;code>449a755&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3dd5ba5ddd48a1cee692118870a08326b50d3b7f">&lt;code>3dd5ba5&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -49,7 +49,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b86f076e4e5f2c6042b10f27e5fdfd4b06b9ce09814bab18056775da3f12b86a&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2742743cfe2b892b1d4ecd38ecfadde975795bc818fec23d5dc1d12b7392ef1c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -940,7 +940,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/449a755dcc14a47d9d4823c17877c99f170fcd8c">&lt;code>449a755&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3dd5ba5ddd48a1cee692118870a08326b50d3b7f">&lt;code>3dd5ba5&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 72/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.38&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;smoke_reroute&amp;#39;: 9, &amp;#39;wander&amp;#39;: 164}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -961,7 +961,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ca4504dfb00ccb12c65b5262333c595f3253c60bae98f3894837df89412da178&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">7e9716c00fdea6a95f4137ece49cdc0a095d6cbd488d34a026868ab6320d7e3c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -1841,20 +1841,6 @@ chosen in the scenario JSON (&lt;code>model_type&lt;/code>, default &lt;code>Col
 the slice files of a finished FDS run and samples them at the agents'
 positions. The coupling is one-way: the fire acts on the occupants, and
 nothing the occupants do (opening a door, for example) acts on the fire.&lt;/p>
-&lt;p>&lt;strong>Each agent carries its own dose.&lt;/strong> pyFDS-Evac sums the FED of every agent
-at the agent&amp;rsquo;s position, every &lt;code>--smoke-update-interval&lt;/code> (1 s by default),
-from the slices nearest &lt;code>--smoke-slice-height&lt;/code> (1.6 m by default). New
-Zealand&amp;rsquo;s Verification Method C/VM2 asks for this quantity: a CO dose and a
-thermal dose, summed in steps of at most 5 s at 2.0 m above the floor, along
-the escape route of the last occupant to leave the room of fire origin
-(MBIE 2012, &lt;em>Commentary for Verification Method C/VM2&lt;/em>, pp. 47 and 49). The
-equations differ: the gas FED follows FDS+Evac, not the ISO 13571 form that
-C/VM2 names; the heat dose needs &lt;code>--enable-heat-fed&lt;/code>, is convective only by
-default, and gains a radiant term with &lt;code>--heat-fed-method total-flux&lt;/code> (an
-SFPE form, not ISO 13571&amp;rsquo;s). See
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a> for the C/VM2 criteria and for
-running at 2.0 m, and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a> for the
-equations.&lt;/p>
 &lt;p>A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). &lt;code>uv run python run.py --scenario &amp;lt;json|dir|zip&amp;gt; --fds-dir &amp;lt;fds output&amp;gt;&lt;/code> combines them.&lt;/p>
 &lt;h2>Defaults follow FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="defaults-follow-fdsevac">&lt;/span>

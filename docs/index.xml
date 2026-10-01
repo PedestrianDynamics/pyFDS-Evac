@@ -495,10 +495,8 @@ about 5–15 min and about 15–30 min; the goal is met if no value is
 exceeded during the stay (p. 324). EA&amp;rsquo;s fixed limits assume up to 10 min
 and use FED for up to 30 min (§5.2–5.3, pp. 15–17). DIN adds the AEGL-2
 for CO as a check, 420 ppm for 10 min and 150 ppm for 30 min, without
-interpolation (§7.2.3). EA, DIN and C/VM2 evaluate at 2.0 m (EA §5.2; DIN
-§7.2.1; C/VM2 §2.1.6.1); the 2012 commentary to C/VM2 sums the doses for
-the last occupant to leave the room of fire origin, in steps of at most
-5 s (MBIE 2012, pp. 47, 49). Zero-exposure criteria use a clear layer of about 2.5 m (vfdb
+interpolation (§7.2.3). EA and DIN evaluate at 2.0 m (EA §5.2; DIN
+§7.2.1); zero-exposure criteria use a clear layer of about 2.5 m (vfdb
 §8.1, p. 312; Purser and McAllister, p. 2340). Surveyed practitioners use
 1.5–2.5 m, most often 2.0 m (52.1 %) (Węgrzyński et al. 2026, §4.3).&lt;/p>
 &lt;p>&lt;strong>Population.&lt;/strong> ISO requires a threshold below 1 for more conservative
@@ -509,9 +507,7 @@ design FED of 0.3 for the general population, or 0.1 for particularly
 sensitive groups such as occupants of health-care premises (Ch. 70,
 p. 2288; worked example, p. 2322); one passage instead gives 0.1 as the
 value that protects nearly all exposed individuals (p. 2310). vfdb gives
-0.1–0.3 (§8.4, p. 319). The New Zealand Building Code (clause C4.3) sets
-0.3 for the CO and the thermal dose; the C/VM2 commentary reads 0.3 as about
-11 % of the population (MBIE 2012, p. 29). EA considers 1.0 suitable for the vast majority of
+0.1–0.3 (§8.4, p. 319). EA considers 1.0 suitable for the vast majority of
 occupants and leaves the margin to RSET (§5, p. 13). In the survey, 7 of
 the 13 continental-European respondents who stated a value use 0.1; all
 from the UK and Australia/New Zealand use 0.3 (§4.3). Babrauskas et al.
@@ -568,12 +564,6 @@ its generic values (Gann et al. 2001, pp. 82–86).&lt;/p>
 &lt;td>≤ 10 min; 2.0 m&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>NZBC C4.3, C/VM2 2nd ed. §2.1.6 (p. 17)&lt;/td>
-&lt;td>dose (FED) for CO and heat, fixed limit for visibility&lt;/td>
-&lt;td>Building Code performance criterion not met&lt;/td>
-&lt;td>along the escape route, through the evacuation; 2.0 m&lt;/td>
-&lt;/tr>
-&lt;tr>
 &lt;td>ISO 13571:2012&lt;/td>
 &lt;td>dose (FED), concentration (FEC)&lt;/td>
 &lt;td>compromised tenability, median at 1.0; threshold chosen by the user&lt;/td>
@@ -616,12 +606,6 @@ its generic values (Gann et al. 2001, pp. 82–86).&lt;/p>
 &lt;td>10 m visibility (5 m in enclosures of about 10 m)&lt;/td>
 &lt;td>100 °C; 2.5 kW/m²&lt;/td>
 &lt;td>CO 2,700 ppm; HCN 140 ppm&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>C/VM2&lt;/td>
-&lt;td>10 m visibility (5 m in rooms under 100 m²)&lt;/td>
-&lt;td>FED 0.3, radiative and convective (ISO 13571)&lt;/td>
-&lt;td>FED 0.3 from CO, CO₂ and O₂ (ISO 13571); in a sprinklered firecell that cannot expose more than 1,000 occupants, only this one (C4.4)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>ISO 13571&lt;/td>
@@ -1599,11 +1583,6 @@ tenability criteria in building fires&lt;/em>, version 2.0, §5 (p. 13), §5.2 a
 Fig. 8 &amp;ldquo;Short Exposure&amp;rdquo; (p. 15; a second Fig. 8, &amp;ldquo;No Exposure&amp;rdquo;, is on
 p. 13), §5.3 (p. 17). Full reference on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>.&lt;/li>
-&lt;li>MBIE (2025). &lt;em>C/VM2 Verification Method: Framework for fire safety
-design&lt;/em>, 2nd edition, §2.1.6.1–2.1.6.3 (p. 17), with Building Code
-clauses C4.3 and C4.4; and MBIE (2012), &lt;em>Commentary for Verification
-Method C/VM2&lt;/em>, pp. 29, 47, 49. Full references on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>.&lt;/li>
 &lt;li>ISO 13571:2012, §3.1, §4.2, §4.4, §4.6 f, §5.4, §8.2–8.5 (§8.3.1
 Eq. (9)), clause 9 and A.5.2; ISO/TR 16738:2009, §5.7 Eq. (2).
 Paraphrased; see
@@ -1821,21 +1800,6 @@ path: the dose approach, schematic, for two occupants; the same fire gives
 each one a different dose. The curves are the toxic-gas FED; heat is
 judged as a second, separate FED (§5.3). Figure inspired by Fig. 8 of the Engineers Australia
 practice note for tenability criteria (2014).&lt;/em>&lt;/p>
-&lt;p>New Zealand combines both. Clause C4.3 of the New Zealand Building Code
-requires that occupants are not exposed to a carbon monoxide FED above 0.3,
-a thermal FED above 0.3, or a visibility below 10 m (5 m in rooms of less
-than 100 m²). Under clause C4.4, the thermal FED and visibility limits do
-not apply where a sprinklered firecell cannot expose more than 1,000
-occupants; only the CO dose is then checked (NZBC clauses C1–C6, p. 7).
-Verification Method C/VM2
-measures all three 2.0 m above the floor and computes both doses with the
-procedures of ISO 13571 (it cites the 2007 edition): the CO dose includes
-CO, CO₂ and O₂, and the thermal dose includes radiative and convective
-heat (MBIE 2025, §2.1.6.1–2.1.6.3, p. 17). The commentary to the first
-edition says how the dose is summed: in time steps of at most 5 s, along
-the escape route of the last occupant to leave the room of fire origin,
-following that occupant&amp;rsquo;s location through the evacuation (MBIE 2012,
-pp. 47 and 49).&lt;/p>
 &lt;p>RSET comes from people. ISO/TR 16738 (§5.4) reports that the pre-travel
 activity phase can often be the longest part of the total escape time. Each
 occupant has their own \(t_{\mathrm{pre}}\) and \(t_{\mathrm{trav}}\), so
@@ -1900,20 +1864,6 @@ tenability criteria in building fires&lt;/em>, version 2.0, 3 April 2014.
 Society of Fire Safety, NSW Chapter, Engineers Australia.
 &lt;a href="https://www.engineersaustralia.org.au/sites/default/files/2024-01/tenability-criteria-practice-note_0.pdf" target="_blank" rel="noopener">engineersaustralia.org.au&lt;/a>.
 §5 (p. 13), §5.2 and Fig. 8 (p. 15), §5.3 (p. 17).&lt;/li>
-&lt;li>New Zealand Building Code (NZBC). &lt;em>Extract from the New Zealand
-Building Code: Clauses C1–C6 Protection from Fire&lt;/em>, effective 1 July
-2014. Schedule 1 of the Building Regulations 1992. Clauses C4.3 and C4.4
-(p. 7).
-&lt;a href="https://www.building.govt.nz/building-code-compliance/c-protection-from-fire/c-clauses-c1-c6/" target="_blank" rel="noopener">building.govt.nz&lt;/a>.&lt;/li>
-&lt;li>MBIE (2025). &lt;em>Verification Method C/VM2: Framework for fire safety
-design&lt;/em>, 2nd edition, effective 28 July 2025. Ministry of Business,
-Innovation and Employment, Wellington. §2.1.6.1–2.1.6.3 (p. 17).
-&lt;a href="https://www.building.govt.nz/building-code-compliance/c-protection-from-fire/c-clauses-c1-c6/" target="_blank" rel="noopener">building.govt.nz&lt;/a>.&lt;/li>
-&lt;li>MBIE (2012). &lt;em>Commentary for Verification Method C/VM2&lt;/em>, December 2012.
-Ministry of Business, Innovation and Employment, Wellington.
-ISBN 978-0-478-39942-4.
-Written for the first edition of C/VM2; cited for the summation of the
-dose (commentary to Paragraph 2.2.1, pp. 47 and 49). Paraphrased.&lt;/li>
 &lt;li>Purser, D. A. (2003). &lt;em>ASET and RSET: addressing some issues in relation
 to occupant behaviour and tenability&lt;/em>. Fire Safety Science, 7, 91–102.
 &lt;a href="https://doi.org/10.3801/IAFSS.FSS.7-91" target="_blank" rel="noopener">doi:10.3801/IAFSS.FSS.7-91&lt;/a>&lt;/li>
@@ -1933,15 +1883,6 @@ for a per-agent comparison on a real FDS fire, and
 difference as maps. Each agent carries
 its own dose along its path; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>.&lt;/p>
-&lt;p>C/VM2 and the Engineers Australia note evaluate at 2.0 m. pyFDS-Evac reads
-the slices nearest &lt;code>--smoke-slice-height&lt;/code>, 1.6 m by default (the FDS+Evac
-&lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>). For a check against C/VM2, run with
-&lt;code>--smoke-slice-height 2.0&lt;/code> and write the slices at that height in the FDS
-deck (&lt;code>&amp;amp;SLCF PBZ=2.0&lt;/code>): the run uses the nearest slice and warns only when
-it is more than 0.5 m away
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/#silent-failure-modes">Silent failure modes&lt;/a>).
-The value is an absolute z in the FDS domain, so it equals the height above
-the floor where the floor is at z = 0.&lt;/p>
 &lt;p>RSET from a run without the fire against a coupled run:
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>.&lt;/p>
 &lt;p>How it is verified: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">Verification&lt;/a> index; ASET and RSET themselves are outputs of a study.&lt;/p></description></item><item><title>Quickstart</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</guid><description>
@@ -1976,7 +1917,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/449a755dcc14a47d9d4823c17877c99f170fcd8c">&lt;code>449a755&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3dd5ba5ddd48a1cee692118870a08326b50d3b7f">&lt;code>3dd5ba5&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1995,7 +1936,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b86f076e4e5f2c6042b10f27e5fdfd4b06b9ce09814bab18056775da3f12b86a&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2742743cfe2b892b1d4ecd38ecfadde975795bc818fec23d5dc1d12b7392ef1c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -5163,7 +5104,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/449a755dcc14a47d9d4823c17877c99f170fcd8c">&lt;code>449a755&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3dd5ba5ddd48a1cee692118870a08326b50d3b7f">&lt;code>3dd5ba5&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.678, additive 0.445&lt;/code>&lt;br>&lt;code>main fire, additive dy: -1.77 m (-2.20, -1.35)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.05 for starts 30-120 s, 0.94 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>7e9c4c30&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5190,7 +5131,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder2015_route.py&lt;/code>: the evacuation numbers and figures of the page&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder2015_fire_figures.py&lt;/code>: the geometry and fire numbers and figures (needs all nine fires)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c3556b6daf40f2286175a9972c43f756c597a7bcb4ed09b71ccb648c3f4fd3ea&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">28ff3234a1c241ff6109cb876b83dcef4b76d38013488a14c511dd54a1bd7bb2&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -6488,7 +6429,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/449a755dcc14a47d9d4823c17877c99f170fcd8c">&lt;code>449a755&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3dd5ba5ddd48a1cee692118870a08326b50d3b7f">&lt;code>3dd5ba5&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 72/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.38&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;smoke_reroute&amp;#39;: 9, &amp;#39;wander&amp;#39;: 164}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6509,7 +6450,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ca4504dfb00ccb12c65b5262333c595f3253c60bae98f3894837df89412da178&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">7e9716c00fdea6a95f4137ece49cdc0a095d6cbd488d34a026868ab6320d7e3c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -8314,20 +8255,6 @@ chosen in the scenario JSON (&lt;code>model_type&lt;/code>, default &lt;code>Col
 the slice files of a finished FDS run and samples them at the agents'
 positions. The coupling is one-way: the fire acts on the occupants, and
 nothing the occupants do (opening a door, for example) acts on the fire.&lt;/p>
-&lt;p>&lt;strong>Each agent carries its own dose.&lt;/strong> pyFDS-Evac sums the FED of every agent
-at the agent&amp;rsquo;s position, every &lt;code>--smoke-update-interval&lt;/code> (1 s by default),
-from the slices nearest &lt;code>--smoke-slice-height&lt;/code> (1.6 m by default). New
-Zealand&amp;rsquo;s Verification Method C/VM2 asks for this quantity: a CO dose and a
-thermal dose, summed in steps of at most 5 s at 2.0 m above the floor, along
-the escape route of the last occupant to leave the room of fire origin
-(MBIE 2012, &lt;em>Commentary for Verification Method C/VM2&lt;/em>, pp. 47 and 49). The
-equations differ: the gas FED follows FDS+Evac, not the ISO 13571 form that
-C/VM2 names; the heat dose needs &lt;code>--enable-heat-fed&lt;/code>, is convective only by
-default, and gains a radiant term with &lt;code>--heat-fed-method total-flux&lt;/code> (an
-SFPE form, not ISO 13571&amp;rsquo;s). See
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a> for the C/VM2 criteria and for
-running at 2.0 m, and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a> for the
-equations.&lt;/p>
 &lt;p>A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). &lt;code>uv run python run.py --scenario &amp;lt;json|dir|zip&amp;gt; --fds-dir &amp;lt;fds output&amp;gt;&lt;/code> combines them.&lt;/p>
 &lt;h2>Defaults follow FDS+Evac&lt;span class="hx-absolute -hx-mt-20" id="defaults-follow-fdsevac">&lt;/span>
@@ -15011,14 +14938,7 @@ equations represent the median of the distribution, and that approximately
 1 % of the population is likely to be susceptible below an FED of 0.3,
 citing ISO 13571 (p. 2282; repeated on p. 2343). ISO 13571:2012 (A.5.2)
 gives 11.4 % for 0.3, and the 2016 edition of the chapter gave 11.3 %
-(Purser and McAllister 2016, p. 2334). The commentary to New Zealand&amp;rsquo;s
-Verification Method C/VM2, citing ISO 13571, reads a gas FED of 1.0 as the
-point at which about 50 % of occupants might be incapacitated, and the 0.3
-of Building Code clause C4.3 as the point at which about 11 % of the
-population &amp;ldquo;would be susceptible to less severe exposures&amp;rdquo; (MBIE 2012,
-p. 29). It applies the same 0.3 to the thermal dose, assuming that broadly
-similar principles apply (p. 31). In the same paragraph as its 1 %
-statement, Ch. 70 states
+(Purser and McAllister 2016, p. 2334). In the same paragraph Ch. 70 states
 that approximately 90 % of the population is susceptible below an FED
 of 1.3 (p. 2282). For a log-normal with
 median 1, these two statements are not consistent: 1 % below 0.3 implies a
@@ -15137,12 +15057,6 @@ Protection Engineering, 5th ed., Ch. 63, 2308–2428. Cited only for the
 11.3 % figure (p. 2334), which Ch. 70 replaces, and for the 0.3 and 0.1
 FED factors (p. 2372).
 &lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
-&lt;li>MBIE (2012). &lt;em>Commentary for Verification Method C/VM2&lt;/em>, December 2012.
-Ministry of Business, Innovation and Employment, Wellington.
-ISBN 978-0-478-39942-4. Commentary to clause C4.3 (pp. 29, 31); written for
-the first edition of C/VM2. The C4.3 limits are unchanged in the current
-Building Code and in C/VM2, 2nd edition (2025); see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>.&lt;/li>
 &lt;li>Averill, J. D., Moore-Merrell, L., Ranellone, R. T., Jr., Weinschenk, C.,
 Taylor, N., Goldstein, R., Santos, R., Wissoker, D., &amp;amp; Notarianni, K. A.
 (2013). &lt;em>Report on high-rise fireground field experiments&lt;/em> (K. M.
