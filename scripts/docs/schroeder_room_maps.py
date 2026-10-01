@@ -1694,12 +1694,11 @@ def fig_measures(rows):
                 label="paper Fig. 5, 60 kW, N = 100 [F]",
             ),
         ],
-        loc="lower right",
+        loc="center right",
         fontsize=8,
     )
     fig.suptitle(
-        "DIFF measures per version: pre-movement moves min DIFF second for second; "
-        "the door-flow model decides the sign",
+        "DIFF measures per version: pre-movement moves min DIFF second for second",
         x=0.01,
         ha="left",
         fontsize=12,
@@ -1789,7 +1788,7 @@ def fig_remaining(results, release=None):
         f"capped: {rem.loc[40].mean():.0f} and {rem.loc[80].mean():.0f} left at 40 and 80 s\n"
         f"({ref}): the cap sets the rate",
         (80, rem.loc[80].mean()),
-        xytext=(38, 4),
+        xytext=(68, 48),
         fontsize=8,
         color=TEXT,
         arrowprops={"arrowstyle": "-", "color": TEXT, "lw": 0.8},

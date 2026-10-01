@@ -51,7 +51,7 @@ LIMIT = 0.23  # 1/m, the page's headline criterion
 LATE = 120.0  # s, the paper's fill time; "late" nodes exceed only after it
 Z_TREE = np.linspace(0.2, 2.8, 14)  # hrr060: the 14 points of every tree
 TREES = (
-    ("W", "about 6 m from the fire"),
+    ("W", None),  # distance to the burner centre, computed per family
     ("C", "mid-room"),
     ("E", "5 m from the door"),
 )
@@ -256,6 +256,12 @@ def fig_layer(data):
             lines.append(layer_report(style[1], tree, s))
     for col, (tree, note) in enumerate(TREES):
         where = f"({places[tree][0]:g}, {places[tree][1]:g})"
+        if note is None:
+            bx, by, bw, bd = maps.BURNER
+            dist = np.hypot(
+                places[tree][0] - bx - bw / 2, places[tree][1] - by - bd / 2
+            )
+            note = f"{dist:.1f} m from the burner centre"
         maps._title(axes[0, col], "abc"[col], f"tree {tree} at {where} m, {note}")
     style_layer_axes(axes, min(2.0, 0.5 * np.ceil(k_top / 0.5)))
     axes[0, 0].annotate(
@@ -289,7 +295,7 @@ def fig_layer(data):
         f"stratified (T(top) − T(bottom) > 1 K and K(top) > 0.1 1/m; top "
         f"{_span(z_fine[-1], z_base[-1])} m, bottom {_span(z_fine[0], z_base[0])} m), "
         "10 s centred "
-        "mean; Eq. 22.25 evaluated on the tree, not the FDS LAYER HEIGHT device. "
+        "mean;\nEq. 22.25 evaluated on the tree, not the FDS LAYER HEIGHT device. "
         "Markers: first K ≥ 0.23 1/m.",
     )
     maps._save(fig, "grid_layer.png")
