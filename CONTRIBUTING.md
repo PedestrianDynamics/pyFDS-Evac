@@ -45,6 +45,18 @@ CI runs the whole suite with the `gui` extra and deselects the tests marked
 `external_data`, which need FDS output from the external data store; see
 [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 
+CI also measures line and branch coverage and reports it on
+[Codecov](https://app.codecov.io/gh/PedestrianDynamics/pyFDS-Evac). To see the
+report locally:
+
+```bash
+uv run --python 3.11 pytest -q --cov --cov-report=term
+```
+
+Measure coverage under Python 3.11, as above. Under Python 3.12 the coverage
+tracer slows `run_scenario`, one very long function, by two orders of
+magnitude, and the suite takes hours.
+
 The docs are a Hugo site (hextra theme) in `site/`, with the reference pages in
 `docs/` mounted into it. The strict build needs Hugo extended (CI uses 0.144)
 and Go:
