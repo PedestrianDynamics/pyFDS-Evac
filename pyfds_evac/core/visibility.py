@@ -476,6 +476,39 @@ def _make_clear_air_meta(
     return meta
 
 
+def _grid_bounds(
+    x_coords: np.ndarray, y_coords: np.ndarray
+) -> tuple[float, float, float, float]:
+    """Return the (x_min, x_max, y_min, y_max) the vismap cells cover [m].
+
+    Each value of the grid stands for the cell around it, so the grid reaches
+    half a spacing past its first and last coordinate. A point beyond that
+    has no cell of its own: the nearest-cell lookup would clamp it onto the
+    edge cell (#426).
+    """
+
+    def span(coords: np.ndarray) -> tuple[float, float]:
+        values = np.asarray(coords, dtype=float)
+        if values.size < 2:
+            return float(values[0]), float(values[-1])
+        return (
+            float(values[0] - (values[1] - values[0]) / 2),
+            float(values[-1] + (values[-1] - values[-2]) / 2),
+        )
+
+    return (*span(x_coords), *span(y_coords))
+
+
+def _distance_outside(
+    bounds: tuple[float, float, float, float], x: float, y: float
+) -> float:
+    """Distance from (x, y) to the rectangle *bounds*; 0 inside or on it."""
+    x_min, x_max, y_min, y_max = bounds
+    dx = max(x_min - x, 0.0, x - x_max)
+    dy = max(y_min - y, 0.0, y - y_max)
+    return float(math.hypot(dx, dy))
+
+
 def _sign_positions(
     sign_descriptors: dict[str, dict],
 ) -> dict[str, tuple[float, float]]:
@@ -514,6 +547,11 @@ class VisibilityModel:
     _horizon: tuple[float, float] | None = None
     _allow_horizon_hold = False
     _warned_horizon = False
+    # Area the FDS vismap grid covers; None for clear air, whose grid is the
+    # walkable area's bounding box and so holds every agent by construction.
+    _grid: tuple[float, float, float, float] | None = None
+    _require_fds_coverage = False
+    _reading_caps: dict[str, float] | None = None
 
     def __init__(
         self,
@@ -526,6 +564,7 @@ class VisibilityModel:
         force_recompute: bool = False,
         max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
         allow_horizon_hold: bool = False,
+        require_fds_coverage: bool = False,
     ) -> None:
         cache = Path(cache_path) if cache_path else None
         _check_max_sign_distance(max_sign_distance_m)
@@ -556,6 +595,73 @@ class VisibilityModel:
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
         self._sign_xy = _sign_positions(sign_descriptors)
+        self._grid = _grid_bounds(self._vis._x_coords, self._vis._y_coords)
+        self._require_fds_coverage = require_fds_coverage
+        self._reading_caps = {
+            node_id: float(sign.get("max_distance") or max_sign_distance_m)
+            for node_id, sign in sign_descriptors.items()
+        }
+        self._check_signs_in_grid()
+
+    def signs_outside_grid(self) -> dict[str, float]:
+        """Return {node_id: distance to the grid [m]} of signs off the vismap grid.
+
+        Empty for a clear-air model. fdsvismap 0.2.1 snaps the ray origin of
+        such a sign onto the nearest edge cell while keeping the true distance,
+        so the part of the sight line outside the grid takes the mean K of the
+        part inside. Workaround: report it (warning, or error with
+        ``require_fds_coverage``); no upstream issue yet; regression test
+        ``tests/test_fds_domain.py``; remove once fdsvismap treats the part
+        outside its grid as clear air.
+        """
+        if self._grid is None:
+            return {}
+        outside = {
+            node_id: _distance_outside(self._grid, x, y)
+            for node_id, (x, y) in self._sign_xy.items()
+        }
+        return {node_id: d for node_id, d in outside.items() if d > 0.0}
+
+    def _check_signs_in_grid(self) -> None:
+        """Warn, or raise in strict mode, for every sign off the vismap grid."""
+        outside = self.signs_outside_grid()
+        if not outside:
+            return
+        listed = ", ".join(f"{node} ({d:.2f} m)" for node, d in outside.items())
+        message = (
+            f"{len(outside)} sign(s) lie outside the FDS extinction slice that "
+            f"sign visibility is computed on, by the distance given: {listed}. "
+            "fdsvismap casts their sight lines from the nearest grid edge."
+        )
+        if self._require_fds_coverage:
+            raise fds_sampling.FdsDomainError(
+                message + " Extend the FDS meshes over the signs, or run "
+                "without --require-fds-coverage."
+            )
+        _logger.warning(message)
+
+    def in_grid(self, x: float, y: float) -> bool:
+        """Return whether (x, y) lies on the vismap grid (always for clear air)."""
+        return self._grid is None or _distance_outside(self._grid, x, y) == 0.0
+
+    def _sight_outside_grid(
+        self, time: float, x: float, y: float, node_id: str
+    ) -> bool:
+        """Clear-air sight for an observer off the grid (#426), as FDS+Evac.
+
+        FDS+Evac reads K = 0 outside the fire meshes, also along a sight line,
+        so an observer outside sees a sign within its reading distance,
+        measured from the observer, not from the grid edge. Strict mode
+        raises instead.
+        """
+        if self._require_fds_coverage:
+            raise fds_sampling.FdsDomainError(
+                fds_sampling.domain_error_message("sign visibility", time, x, y)
+            )
+        distance = self.distance_to_node(x, y, node_id)
+        caps = self._reading_caps or {}
+        cap = caps.get(node_id, DEFAULT_MAX_SIGN_DISTANCE_M)
+        return distance is not None and distance <= cap
 
     @classmethod
     def clear_air(
@@ -696,6 +802,8 @@ class VisibilityModel:
         if wp_id is None:
             return True
         self._check_horizon(float(time))
+        if not self.in_grid(x, y):
+            return self._sight_outside_grid(time, x, y, node_id)
         # A clear-air model computes one time point; fdsvismap resolves any
         # query time onto a uniform field itself, so no clamping is needed here.
         return bool(self._vis.wp_is_visible(time=time, x=x, y=y, waypoint_id=wp_id))
@@ -717,11 +825,16 @@ class VisibilityModel:
         it means "concealed", "behind the sign" or "smoked out" indistinguishably
         -- and only the last is a statement about whether the route can be
         walked. Callers fall back rather than treat a hidden sign as a wall.
+        An observer off the vismap grid also gets ``None`` (#426): the grid
+        holds no sight line from there.
         """
         wp_id = self._wp_ids.get(node_id)
         if wp_id is None:
             return None
         self._check_horizon(float(time))
+        if not self.in_grid(x, y):
+            self._sight_outside_grid(time, x, y, node_id)
+            return None
         reader = getattr(self._vis, "visibility_to_wp", None)
         if reader is None:
             reader = getattr(self._vis, "get_visibility_to_wp", None)

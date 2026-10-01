@@ -16,10 +16,11 @@ from typing import Any
 def write_agent_scalars(
     sqlite_path: str | Path, fed_history: Iterable[Mapping[str, Any]]
 ) -> None:
-    """Populate agent_scalars(frame, id, fed, heat_fed, speed) in an existing sqlite.
+    """Populate agent_scalars(frame, id, fed, heat_fed, speed, in_fds_domain).
 
     frame = round(time_s * fps), with fps read from the metadata table. speed =
-    base_speed * speed_factor. No-op when fed_history is empty. Re-invocation
+    base_speed * speed_factor. in_fds_domain is 1 where the FDS slices cover
+    the agent, 0 where it read ambient air, NULL when the row has no flag. No-op when fed_history is empty. Re-invocation
     replaces any existing rows rather than appending duplicates.
 
     ``CREATE TABLE IF NOT EXISTS`` is a no-op against a pre-existing table
@@ -37,7 +38,7 @@ def write_agent_scalars(
         con.execute(
             "CREATE TABLE IF NOT EXISTS agent_scalars("
             "frame INTEGER NOT NULL, id INTEGER NOT NULL, fed REAL, "
-            "heat_fed REAL, speed REAL)"
+            "heat_fed REAL, speed REAL, in_fds_domain INTEGER)"
         )
         con.execute("DELETE FROM agent_scalars")
         con.execute(
@@ -45,8 +46,9 @@ def write_agent_scalars(
             "ON agent_scalars(frame, id)"
         )
         con.executemany(
-            "INSERT OR REPLACE INTO agent_scalars(frame, id, fed, heat_fed, speed) "
-            "VALUES (?, ?, ?, ?, ?)",
+            "INSERT OR REPLACE INTO agent_scalars"
+            "(frame, id, fed, heat_fed, speed, in_fds_domain) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
             [_scalar_row(r, fps) for r in rows],
         )
         con.commit()
@@ -63,10 +65,12 @@ def _read_fps(con: sqlite3.Connection) -> float:
 
 def _scalar_row(
     row: Mapping[str, Any], fps: float
-) -> tuple[int, int, float, float, float]:
+) -> tuple[int, int, float, float, float, int | None]:
     frame = round(float(row["time_s"]) * fps)
     agent_id = int(row["agent_id"])
     fed = float(row["fed_cumulative"])
     heat_fed = float(row.get("heat_fed_cumulative", 0.0))
     speed = float(row["base_speed"]) * float(row["speed_factor"])
-    return (frame, agent_id, fed, heat_fed, speed)
+    flag = row.get("in_fds_domain")
+    in_domain = None if flag is None else int(bool(flag))
+    return (frame, agent_id, fed, heat_fed, speed, in_domain)

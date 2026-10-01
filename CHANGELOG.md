@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A setup check of the scenario against the FDS slice coverage: the
+  walkable area, exits, checkpoints, spawn areas and route edges outside
+  the slices of every sampled quantity (m² and m), and signs outside them
+  or off the vismap grid, are logged once and recorded as `fds_coverage` in
+  the run manifest and in `metrics`. The smoke and FED histories gain an
+  `in_fds_domain` column, `agent_scalars` the same column, and the run ends
+  with a count of agents and samples outside (`metrics["fds_outside"]`).
+  Outside the slices the values are unchanged: ambient air and clear sight,
+  as in FDS+Evac.
+- `--require-fds-coverage` (`require_fds_coverage=True` on
+  `run_scenario`, `ExtinctionField`, `FdsFedField`, `FdsHeatField` and
+  `VisibilityModel`): anything the setup check finds outside is an error,
+  and so is any smoke, FED, heat or sign-visibility sample outside the
+  slices (`FdsDomainError`, naming the quantity, position and time).
 - Exits that open and close on a schedule: the optional exit keys
   `open_from_s` and `closed_after_s` keep an exit open while
   `open_from_s` ≤ t < `closed_after_s`. A closed exit removes nobody, is left
@@ -334,6 +348,15 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- A point that some loaded gas slices cover and others do not raises
+  `ValueError`, as heat already did, instead of reading ambient air for
+  every gas ([#427](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/427)).
+- An agent off the vismap grid no longer reads the sign visibility of the
+  nearest edge cell. It sees a sign in clear air when the sign is within its
+  reading distance, measured from the agent, and `visibility_to_node`
+  returns `None` there. A sign off the grid logs a warning, as fdsvismap
+  casts its sight lines from the grid edge
+  ([#426](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/426)).
 - An agent could stop 0.01-0.02 m short of an exit polygon drawn thinner
   than about 0.25 m against a wall, held there by the wall or a door jamb,
   and was never removed; about one run in ten of the Schröder room configs

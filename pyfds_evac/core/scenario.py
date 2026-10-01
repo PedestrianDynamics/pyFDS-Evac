@@ -74,6 +74,14 @@ from .direct_steering_runtime import (
     set_agent_smoke_factor,
     update_checkpoint_speed,
 )
+from .fds_coverage import (
+    apply_coverage_policy,
+    check_fds_coverage,
+    count_outside,
+    domain_fields,
+    in_fds_domain,
+    model_samplers,
+)
 from .fds_sampling import FdsHorizonError
 from .fed import (
     DefaultFedInputs,
@@ -1397,6 +1405,31 @@ def _recorded_free_speed(
     return float(original)
 
 
+def _report_outside(
+    smoke_history, fed_history, smoke_speed_model, fed_model, heat_fed_model
+) -> dict[str, Any]:
+    """Count the history rows sampled outside the FDS domain; log a summary.
+
+    The smoke history counts when it is recorded, the FED history otherwise;
+    each row stands for one update interval of its model.
+    """
+    rows, model = smoke_history, smoke_speed_model
+    if not any("in_fds_domain" in r for r in rows[:1]):
+        rows, model = fed_history, fed_model or heat_fed_model
+    interval = float(getattr(getattr(model, "config", None), "update_interval_s", 0))
+    counts = count_outside(rows, interval)
+    if counts["rows"]:
+        _logger.warning(
+            "Outside the FDS domain: %d agent(s), %d sample(s), about %.1f "
+            "agent-seconds read ambient air and clear sight there "
+            "(in_fds_domain = False in the smoke and FED histories).",
+            counts["agents"],
+            counts["rows"],
+            counts["agent_seconds"],
+        )
+    return counts
+
+
 def run_scenario(
     scenario: Scenario,
     *,
@@ -1412,6 +1445,7 @@ def run_scenario(
     progress_callback: ProgressCallback | None = None,
     smoke_blind: bool = False,
     replay_exits: Mapping[SpawnKey, str] | None = None,
+    require_fds_coverage: bool = False,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app.
 
@@ -1425,6 +1459,13 @@ def run_scenario(
     ``(origin, spawn_index)`` to the exit the agent spawned there took in an
     earlier run (see ``ScenarioResult.exit_history``); each path agent is sent
     there by the route clear-air costs rank best on its map.
+
+    Before the first step the walkable area, exits, checkpoints, spawn areas,
+    signs and route edges are checked against the FDS slice coverage, and
+    whatever lies outside is logged (see ``fds_coverage``). With
+    ``require_fds_coverage`` it is an error instead; the fields and the
+    visibility model must then be built with the same flag so that a sample
+    outside also raises. Smoke and FED history rows carry ``in_fds_domain``.
     """
     _require_jupedsim()
     from .simulation_init import (
@@ -1690,6 +1731,17 @@ def run_scenario(
                     ),
                 )
             return chosen
+
+        smoke_domain_fields = domain_fields(smoke_speed_model)
+        fed_domain_fields = domain_fields(fed_model, heat_fed_model)
+        fds_coverage = check_fds_coverage(
+            walkable=scenario.walkable_polygon,
+            raw=scenario.raw,
+            samplers=model_samplers(smoke_speed_model, fed_model, heat_fed_model),
+            stage_graph=stage_graph,
+            vis_model=vis_model,
+        )
+        apply_coverage_policy(fds_coverage, require_fds_coverage=require_fds_coverage)
 
         # Every agent placed at t=0 arrived holding a geometrically nearest exit.
         # Re-decide it now that the graph exists, before exit_counts is seeded
@@ -2266,6 +2318,10 @@ def run_scenario(
                                 "extinction_per_m": float(extinction),
                             }
                         )
+                        if smoke_domain_fields:
+                            smoke_history[-1]["in_fds_domain"] = in_fds_domain(
+                                smoke_domain_fields, x, y
+                            )
                     last_smoke_update_time = current_time
 
             if fed_model is not None or heat_fed_model is not None:
@@ -2493,6 +2549,10 @@ def run_scenario(
                                 integrated_intensity_kw_m2=heat_inputs.integrated_intensity_kw_m2,
                             )
                         )
+                        if fed_domain_fields:
+                            fed_history[-1]["in_fds_domain"] = in_fds_domain(
+                                fed_domain_fields, x, y
+                            )
                     last_fed_update_time = current_time
 
             if (
@@ -2996,6 +3056,12 @@ def run_scenario(
                 default=0.0,
             )
 
+        if fds_coverage is not None:
+            metrics["fds_coverage"] = fds_coverage.to_dict()
+            metrics["fds_outside"] = _report_outside(
+                smoke_history, fed_history, smoke_speed_model, fed_model, heat_fed_model
+            )
+
         if reroute_config is not None and route_history:
             metrics["route_switches"] = len(route_history)
         if reroute_config is not None and collect_route_cost_history:
@@ -3030,6 +3096,7 @@ def run_scenario(
                     else None
                 ),
                 smoke_blind=smoke_blind,
+                fds_coverage=metrics.get("fds_coverage"),
                 replay_exits=(
                     None
                     if replay_exits is None

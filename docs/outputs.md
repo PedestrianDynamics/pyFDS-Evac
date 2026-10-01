@@ -38,11 +38,12 @@ The JuPedSim trajectory file, unchanged in schema: agent positions every 0.1 s
 `scripts/vis.py`, or [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer).
 
 When a FED track ran, the file also holds an extra table,
-`agent_scalars(frame, id, fed, heat_fed, speed)`: gas FED, heat FED and
-walking speed (`base_speed × speed_factor`, m/s) per agent per frame of a FED
-update. The JuPedSim tables are untouched, so JuPedSim tools still read the
-file. `heat_fed` sits before `speed`: read the columns by name, not by
-position.
+`agent_scalars(frame, id, fed, heat_fed, speed, in_fds_domain)`: gas FED,
+heat FED and walking speed (`base_speed × speed_factor`, m/s) per agent per
+frame of a FED update, and `in_fds_domain` (1 inside the FDS slices, 0 outside,
+`NULL` without FDS output; see the FED history). The JuPedSim tables are
+untouched, so JuPedSim tools still read the file. `heat_fed` sits before
+`speed`: read the columns by name, not by position.
 
 ## Run manifest
 
@@ -64,6 +65,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
 | `smoke_blind` | `true`, only with `--smoke-blind` |
+| `fds_coverage` | when FDS slices are sampled: the setup check of the scenario against the slice coverage, with `quantities`, `walkable_area_m2`, `walkable_outside_m2`, `areas_outside_m2` (exits, checkpoints, spawn areas), `signs_outside`, `signs_off_vismap_grid_m` and `edges_outside_m` (route edges) |
 | `replay_exits` | only with `--replay-exits`: `agents`, the number of replayed spawns, and `sha256`, of the sorted `origin<TAB>spawn_index<TAB>exit_id` lines, one per spawn and joined by newlines, to match the run whose exit history was replayed |
 | `heat_fed_method`, `heat_flux_parameters` | only with `--heat-fed-method total-flux`: ε, h, skin temperature, dose *D*, radiant threshold, the list of assumed parameters, and, per option, the layer parameters or `radiant_source`, `u_factor` and `radiant_flux` |
 
@@ -99,6 +101,7 @@ Example, from the command above:
 | `desired_speed` | m/s | speed after the smoke factor |
 | `speed_factor` | — | `desired_speed / base_speed` from the speed law |
 | `extinction_per_m` | 1/m | extinction coefficient *K* at the agent |
+| `in_fds_domain` | — | with FDS output only: `True` where the extinction slice covers the agent, `False` where it reads *K* = 0 (clear air) outside it |
 
 ## FED history
 
@@ -134,6 +137,7 @@ Extra columns appear with some heat options:
 | `heat_flux_kw_m2` | `--heat-fed-method total-flux`: the heat flux to the skin [kW/m²] |
 | `heat_integrated_intensity_kw_m2` | `--heat-radiant-source integrated-intensity`: *U* at the agent [kW/m²] |
 | `heat_layer_temperature_c` | `--heat-regime layer`: layer temperature [°C] |
+| `in_fds_domain` | FDS output: `True` where every sampled gas and heat slice covers the agent, `False` where it reads ambient air outside them |
 
 The equations behind each rate are on [Models › FED](/models/fed.md) and
 [Models › Heat](/models/heat.md).

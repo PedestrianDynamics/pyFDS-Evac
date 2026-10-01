@@ -85,6 +85,7 @@ def _build_smoke_model(opts: Any, log: Logger):
             smoke_config.fds_dir,
             slice_height_m=smoke_config.slice_height_m,
             allow_horizon_hold=_allow_hold(opts),
+            require_fds_coverage=_require_coverage(opts),
         )
     else:
         field = None
@@ -96,6 +97,11 @@ def _build_smoke_model(opts: Any, log: Logger):
 def _allow_hold(opts: Any) -> bool:
     """Return whether sampling may hold the last FDS frame (#340)."""
     return bool(getattr(opts, "allow_fds_horizon_hold", False))
+
+
+def _require_coverage(opts: Any) -> bool:
+    """Return whether a sample outside the FDS slices is an error (#426)."""
+    return bool(getattr(opts, "require_fds_coverage", False))
 
 
 def _check_fds_horizon(scenario: Any, opts: Any, log: Logger = _noop) -> None:
@@ -177,6 +183,7 @@ def _build_fed_model(opts: Any, log: Logger):
             opts.fds_dir,
             slice_height_m=opts.smoke_slice_height,
             allow_horizon_hold=_allow_hold(opts),
+            require_fds_coverage=_require_coverage(opts),
         ),
         fed_config,
     )
@@ -244,6 +251,7 @@ def _build_heat_fed_model(opts: Any, log: Logger):
     field_kwargs = {
         "slice_height_m": opts.smoke_slice_height,
         "allow_horizon_hold": _allow_hold(opts),
+        "require_fds_coverage": _require_coverage(opts),
     }
     if radiant_source == "integrated-intensity":
         _check_integrated_intensity_source(opts, method, inventory)
@@ -325,6 +333,7 @@ def _heat_layer_kwargs(opts: Any) -> dict[str, Any]:
             opts.fds_dir,
             slice_height_m=opts.heat_layer_height,
             allow_horizon_hold=_allow_hold(opts),
+            require_fds_coverage=_require_coverage(opts),
         ),
         "view_factor": opts.heat_view_factor,
         "layer_emissivity": opts.heat_layer_emissivity,
@@ -458,6 +467,7 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
         slice_height_m=opts.smoke_slice_height,
         max_sign_distance_m=max_distance,
         allow_horizon_hold=_allow_hold(opts),
+        require_fds_coverage=_require_coverage(opts),
     )
 
 
@@ -568,7 +578,8 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
     Returns the kwargs dict accepted by ``run_scenario`` (``seed``,
     ``smoke_speed_model``, ``fed_model``, ``heat_fed_model``,
     ``tenability_config``, ``reroute_config``, ``collect_route_cost_history``,
-    ``vis_model``, ``smoke_blind``, ``replay_exits``). Raises ``ValueError`` for invalid option combinations.
+    ``vis_model``, ``smoke_blind``, ``replay_exits``,
+    ``require_fds_coverage``). Raises ``ValueError`` for invalid option combinations.
     """
     validate_opts(opts)
     _check_fds_horizon(scenario, opts, log)
@@ -598,4 +609,5 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
         "collect_cognitive_map_history": True,
         "smoke_blind": bool(getattr(opts, "smoke_blind", False)),
         "replay_exits": replay_exits,
+        "require_fds_coverage": _require_coverage(opts),
     }

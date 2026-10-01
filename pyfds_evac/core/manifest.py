@@ -172,6 +172,7 @@ def build_manifest(
     heat_fed_threshold_override: float | None = None,
     smoke_blind: bool = False,
     replay_exits: dict[str, Any] | None = None,
+    fds_coverage: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Collect the provenance fields for one run.
 
@@ -186,6 +187,8 @@ def build_manifest(
     another scheme draw differently under the same seed.
     ``smoke_blind`` and ``replay_exits`` are recorded only when on (#341);
     ``replay_exits`` holds the replayed agent count and a sha256 of the rows.
+    ``fds_coverage`` is the setup check of the scenario geometry against the
+    FDS slices (``FdsCoverageReport.to_dict``), recorded when FDS is sampled.
     """
     root = project_root if project_root is not None else find_project_root()
     lock = uv_lock if uv_lock is not None else find_uv_lock(root)
@@ -216,6 +219,8 @@ def build_manifest(
         manifest["smoke_blind"] = True
     if replay_exits:
         manifest["replay_exits"] = replay_exits
+    if fds_coverage is not None:
+        manifest["fds_coverage"] = fds_coverage
     return manifest
 
 
