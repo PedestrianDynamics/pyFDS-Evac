@@ -394,13 +394,14 @@ fds = "FDS-6.10.1-0-g12efa16-release"
 fds_runtime = "10 s wall clock, one process, on an Apple M3 Pro, macOS"
 evac_runtime = "about 45 s for the 16 runs and the figures"
 expected = [
-  "coupled_fds   0.9955  1.25  0.919626    78.44    85.30   85.296 +0.0045 0.0209  1.08740  1.08746  +0.005   -2.7e-07   -5.8e-09",
-  "K10          10.0000  1.25  0.192635    79.24   408.91  408.913 -0.0035 0.0357  5.19118  5.16040  -0.593   -2.8e-17   -9.6e-06",
+  "coupled_fds: t_clear 78.44 s, t_smoke 85.30 s, t_pred 85.296 s",
+  "K10: t_clear 79.24 s, t_smoke 408.91 s, t_pred 408.913 s",
   "pass criteria: all met",
 ]
 expected_note = """\
 scripts/verification/iso_test_18_figures.py prints the page's Result \
-table, one line per run; these are two of its lines and its verdict. \
+table, one line per run; above are the times of its rows coupled_fds \
+and K10, and its last verdict line. \
 The runs behind the page were made at 8fc26b1; a re-run at 449a755d \
 prints the same table. The script exits with an error if a pass \
 criterion fails."""
@@ -521,9 +522,9 @@ fds = "FDS-6.10.1-0-g12efa16-release"
 fds_runtime = "11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS"
 evac_runtime = "a few seconds; no evacuation is run"
 expected = [
-  "| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |",
-  "| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |",
-  "| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |",
+  "uniform, 1.6 m, up: q/U 0.250 / 0.250 / 0.250",
+  "layer, 1.6 m, up: q/U 0.404 / 0.416 / 0.417",
+  "burner, 1.6 m, px: q/U 0.395 / 0.530 / 0.570",
 ]
 expected_note = """\
 scripts/verification/heat_radiometer.py prints one row per deck, height \
