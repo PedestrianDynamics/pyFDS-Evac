@@ -359,6 +359,8 @@ and [Exit choice and familiarity](/fundamentals/exit-choice.md).
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)). It
   implements neither Eq. 4, Eq. 5, \(f_{\mathrm{risk}}\) nor the
   obstruction test.
+  [Route choice in smoke after Schröder et al. (2015)](/docs/study-schroeder2015.md)
+  runs pyFDS-Evac's own routing on their geometry.
 
 ## Sources
 

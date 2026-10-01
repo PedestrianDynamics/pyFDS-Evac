@@ -216,17 +216,18 @@ ramp with the classes by the time it takes to reach 1055 kW.
 ## Fires used in pyFDS-Evac studies
 
 These are the fires of the [Studies](/docs/studies/_index.md). They are
-**study inputs**, chosen for each study's question. Neither was chosen by
-the design-fire procedure above, so neither is a design fire, and neither
-is a pyFDS-Evac default. Each new study adds a row here and one to the
+**study inputs**, chosen for each study's question. None of them was
+chosen by the design-fire procedure above, so none is a design fire, and
+none is a pyFDS-Evac default. Each new study adds a row here and one to the
 [Studies index](/docs/studies/_index.md).
 
 | Study | Curve type | Parameters | Stated or assumed |
 |---|---|---|---|
 | [ASET-RSET maps after Schröder et al. (2020)](/docs/study-schroeder2020.md) | Steady from ignition | 60 kW: HRRPUA 60 kW/m² on 1 × 1 m; polyurethane (NFPA Babrauskas), soot yield 0.129. Sensitivity: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m, flexible polyurethane foam | From the authors' reference implementation ([doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550)); the paper's text does not state the fire. The sensitivity burner and fuel are ours |
+| [Route choice in smoke after Schröder et al. (2015)](/docs/study-schroeder2015.md) | t² growth to a cap | Fast, α = 0.047 kW/s², capped at 1.5 MW (HRRPUA 250 kW/m² on 3 × 2 m) at 179 s; PVC, soot yield 0.172, CO yield 0.063; ceiling 4.0 m. Comparison: medium, α = 0.012 kW/s² (cap at 354 s), ceiling 3.0 m; and fast with ceiling 3.5 m | Ours. The paper does not state its fire. Chosen before any routing run, then picked among nine variants by visual match to the paper's smoke snapshot (Fig. 6c) |
 | [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | 0, 100, 800, 1600, 2000 kW at 0, 20, 40, 60, 90 s; 2 MW to 300 s (HRRPUA 1000 kW/m² on 2 m²); fuel vinyl chloride (PVC), 16.4 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
 
-Both fires start at t = 0 with no incipient phase.
+All fires start at t = 0 with no incipient phase.
 
 ## Sources
 
