@@ -260,6 +260,153 @@ smoke and dose along a candidate) → `policy_for(config)`, which returns the
 `_apply_fallback` → `evaluate_and_reroute`, which returns the switch records
 written to the route history.
 
+## How agents are steered
+
+pyFDS-Evac decides where each agent goes, and JuPedSim moves the agent there.
+The link between the two is JuPedSim's **direct-steering stage**: an agent on
+such a stage walks towards the point stored in its `target`, and the caller
+sets that point. JuPedSim 1.4.2 is the locked version (`uv.lock`;
+`pyproject.toml` requires `jupedsim>=1.4.2`).
+
+### What each side does
+
+JuPedSim, inside `simulation.iterate()`:
+
+- computes the next waypoint from the agent's position to its target on the
+  navigation mesh of the walkable area, every step
+  ([`TacticalDecisionSystem.hpp`](https://github.com/PedestrianDynamics/jupedsim/blob/v1.4.2/libsimulator/src/TacticalDecisionSystem.hpp));
+- moves the agent towards that waypoint with the operational model set in
+  the deck (`model_type`; `CollisionFreeSpeedModel` when unset).
+
+pyFDS-Evac, in Python, in the main loop of `run_scenario` (`scenario.py`):
+
+- sets an agent's target when the agent starts a new stage or changes exit
+  (`direct_steering_runtime.py`, `assign_agent_target`);
+- reads every agent's position each step and tests whether the agent has
+  reached its stage (`direct_steering_runtime.py`, `reached_stage`). An exit
+  is reached when the agent's centre is inside the exit polygon or within
+  `EXIT_REACH_TOLERANCE_M` = 0.03 m of it. A checkpoint or waypoint is reached
+  within the agent radius plus `TARGET_REACH_MARGIN_M` = 0.5 m of its target
+  point;
+- applies checkpoint waiting times, throughput caps, exit schedules and zone
+  speed factors;
+- removes an agent that reaches an exit with
+  `simulation.mark_agent_for_removal`.
+
+### Which agents are steered directly
+
+- **Deck without journeys** (no `journeys` and no `transitions`, or no
+  `distributions`). Every exit gets a direct-steering stage, and all agents
+  share one journey made of a single direct-steering stage
+  (`simulation_init.py`, `_initialize_with_fallback`). This is the default
+  mechanism.
+- **Deck with journeys.** An exit without throughput throttling becomes a
+  native JuPedSim exit stage (`add_exit_stage`); a throttled exit becomes a
+  direct-steering stage (`simulation_init.py`, `_add_stages`). Every exit is
+  also kept in pyFDS-Evac's direct-steering table, so routed agents can be
+  sent to it. JuPedSim accepts a direct-steering stage only as the sole stage
+  of a journey. An agent whose journey contains a checkpoint or an exit from
+  that table, which is every journey that ends at an exit, is therefore placed
+  on the shared direct-steering journey, and pyFDS-Evac walks it through the
+  journey's stages.
+- **Distribution without a journey, in a deck with journeys.** Its agents get
+  a JuPedSim journey to the nearest exit (`simulation_init.py`,
+  `find_nearest_exit_journey`). At an unthrottled exit, JuPedSim removes them
+  itself.
+
+### Why direct steering
+
+The routing and wayfinding models need a target per agent that can change
+during the run:
+
+- Each agent re-evaluates its route at a fixed interval, every 1.0 s with
+  `run.py` (`--reroute-interval`; `RerouteConfig.reevaluation_interval_s` is
+  10 s when the config is built directly). Two agents in the same room can
+  pick different exits, and an agent can switch exit mid-way.
+- Each agent ranks only the routes on its own cognitive map
+  ([Wayfinding](/models/wayfinding.md)).
+- Exits open and close on a schedule
+  ([#396](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/396)).
+- Exits and checkpoints can cap their throughput, and checkpoints can hold
+  agents for a waiting time.
+- Zone speed factors are applied per agent in the same pass.
+
+A JuPedSim journey is a stage graph shared by every agent assigned to it. Its
+transitions follow fixed rules (fixed, round robin, least targeted) set when
+the journey is built, and they do not read smoke or an agent's knowledge.
+
+[FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) also
+picks each agent's target itself. Each agent walks along the flow field of its
+own target door (`FIND_PREFERRED_DIRECTION`,
+[`evac.f90:11403–11404`](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L11403-L11404)).
+At random times, on average every `TAU_CHANGE_DOOR` = 1.0 s
+([`:1531`](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L1531),
+[`:7998`](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L7998)),
+the agent calls `CHANGE_TARGET_DOOR` to choose its door again.
+
+### Cost
+
+Direct steering moves per-agent work out of JuPedSim's C++ core into Python.
+Each step, pyFDS-Evac iterates over the agents through JuPedSim's Python API,
+reads positions, tests stages and updates speeds. With native journeys, stage
+reaching and removal run inside `simulation.iterate()`.
+
+In two small clear-air runs, the per-step steering pass took about four times
+as long as `simulation.iterate()`:
+
+| Case | Steering pass | `iterate()` | Rest of loop |
+|---|---|---|---|
+| `familiarity_test_no_journey`: 20 agents, no journeys, 3489 steps | 79–80 % | 19–20 % | 1–2 % |
+| `t_junction`: 200 agents flow-spawned over 400 s, deck with journeys (steered directly), 30000 steps | 76–78 % | 18–20 % | 4–5 % |
+
+Shares are of the wall time of the main loop. The largest part of the steering pass is
+pyFDS-Evac's own geometry: the exit test builds a shapely point per agent per
+step. The cost of the same runs with native JuPedSim journeys is not measured.
+These agent counts are small, so the shares can differ at higher density.
+
+{{< details title="How the shares were measured" closed="true" >}}
+
+- Commit `4f859bf5`, jupedsim 1.4.2, Python 3.12, Apple M3 Pro (12 cores),
+  macOS 27.0.
+- `run_scenario(load_scenario("assets/<case>"), seed=1)`: no smoke, no rerouting,
+  JuPedSim's default time step of 0.01 s.
+- Timers (`time.perf_counter`) around the main loop of `run_scenario` and
+  around the steering pass (the block that runs when the direct-steering
+  table is not empty, up to the cognitive-map history), in a local,
+  uncommitted copy of `scenario.py`; `jupedsim.Simulation.iterate` wrapped
+  with the same timer. "Rest of loop" is spawning and the other per-step
+  passes.
+- Four runs of each case; the table gives the range.
+- `familiarity_test_no_journey` uses `SocialForceModel` and `t_junction`
+  uses `CollisionFreeSpeedModel`, as set in their decks.
+- `familiarity_test_no_journey` ends when every agent is out, at 34.9 s.
+  `t_junction` stops at its 300 s limit with 143 of 200 agents out.
+- A `cProfile` run of `t_junction` attributes the largest part of the
+  steering pass to `reached_stage` → `distance_to_polygon` (shapely `Point`
+  construction and distance), more than to JuPedSim's agent iterator.
+
+{{< /details >}}
+
+### What this means for correctness
+
+Stage reaching, removal at exits, waiting times, throughput caps and exit
+schedules are pyFDS-Evac code, so their tests live in this repository:
+
+- [`tests/test_exit_door_width.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_exit_door_width.py):
+  agents leave only through the exit polygon, and the flow scales with the
+  door width
+  ([#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349)).
+- [`tests/test_thin_exit.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_thin_exit.py):
+  agents held a few centimetres short of a thin exit still count as out,
+  and agents beside the door do not
+  ([#401](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/401)).
+- [`tests/test_scheduled_exits.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_scheduled_exits.py):
+  a closed exit removes nobody, and agents heading for it reroute
+  ([#396](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/396)).
+
+Exit throughput throttling has no test yet
+([#355](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/355)).
+
 ## Limitations
 
 - Switching can oscillate where two routes cross in cost
