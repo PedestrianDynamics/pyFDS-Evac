@@ -125,6 +125,7 @@ class Family:
     gate: tuple  # (40 s low, high), (80 s low, high): accepted mean remaining
     gate_source: str
     out: str  # figure subfolder of OUT_ROOT
+    figures: tuple = ()  # figures the page uses; empty: all
 
 
 FAMILIES = {
@@ -163,6 +164,7 @@ FAMILIES = {
         gate=((56, 66), (18, 28)),
         gate_source="paper Fig. 3, 61 ± 5 / 23 ± 5",
         out="hrr060",
+        figures=("diff_1door.png", "grid_perturbation.png"),
     ),
 }
 FAMILY = FAMILIES["rel"]
@@ -260,7 +262,7 @@ QUANTITIES = {
     "O2": "OXYGEN VOLUME FRACTION",
     "U": "INTEGRATED INTENSITY",
 }
-# Sensitivity only: the total-flux heat dose (SFPE Ch. 63, Eq. 63.43) with the
+# Sensitivity only: the total-flux heat dose (SFPE 6th ed., Ch. 70, Eq. 70.41) with the
 # radiant term f (U - 4 sigma T_s^4) from INTEGRATED INTENSITY. f = 0.25 is a
 # small body in an isotropic field; f = 1, the largest f the engine accepts,
 # is an upper bound. Below the ISO 13571 2.5 kW/m² the radiant term is zero.
@@ -862,7 +864,7 @@ def grid_for(fire_name, grids):
 
 SCREEN_LABELS = {c: spec[2] for c, spec in CRITERIA.items()} | {
     f"heat FED 0.3, total flux f = {f:g}, {e}": f"heat FED ≥ 0.3, total flux, f = {f:g}, "
-    f"{e} dose (SFPE Eq. 63.43; sensitivity)"
+    f"{e} dose (SFPE Ch. 70, Eq. 70.41; sensitivity)"
     for e in HEAT_TF_ENDPOINTS
     for f in U_FACTORS
 }
@@ -1076,6 +1078,10 @@ def _legend(target, **kwargs):
 
 
 def _save(fig, name):
+    if FAMILY.figures and name not in FAMILY.figures:
+        plt.close(fig)
+        print(f"skipped {name}: not used on the page for this family")
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT / name, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -1607,6 +1613,9 @@ def fig_diff(panels, grid, walkable, exits, name, title):
     _save(fig, name)
 
 
+FINE_DY = 0.25  # row offset of the 0.1 m marker, so the 0.2 m one stays visible
+
+
 def fig_measures(rows):
     """min DIFF and negative area per version, maximum pooling (n = 10)."""
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
@@ -1621,14 +1630,14 @@ def fig_measures(rows):
             if fine is not None:
                 ax.plot(
                     [coarse[key], fine[key]],
-                    [yy, yy],
+                    [yy, yy - FINE_DY],
                     color="lightgrey",
                     lw=4,
                     zorder=1,
                 )
                 ax.scatter(
                     fine[key],
-                    yy,
+                    yy - FINE_DY,
                     marker="D",
                     s=45,
                     fc="white",
@@ -1657,9 +1666,7 @@ def fig_measures(rows):
     for ax in (ax_min, ax_area):
         ax.grid(alpha=0.7, linewidth=1, axis="x")
         ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT)
-        ax.patch.set_edgecolor("lightgrey")
-        ax.patch.set_linewidth(0.8)
-    sns.despine(left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
     _legend(
         ax_area,
         handles=[
@@ -1780,15 +1787,15 @@ def fig_remaining(results, release=None):
     )
     rem = results[("1door", "capped_pre0")].remaining
     ref = (
-        f"release {release.loc[40].mean():.0f} and {release.loc[80].mean():.0f}"
+        f"release {release.loc[40].mean():.1f} and {release.loc[80].mean():.1f}"
         if release is not None
         else "paper 61 and 23"
     )
     one.annotate(
-        f"capped: {rem.loc[40].mean():.0f} and {rem.loc[80].mean():.0f} left at 40 and 80 s\n"
-        f"({ref}): the cap sets the rate",
+        f"capped: {rem.loc[40].mean():.1f} and {rem.loc[80].mean():.1f} left\nat 40 and 80 s (mean)\n"
+        f"({ref});\nthe cap sets the rate",
         (80, rem.loc[80].mean()),
-        xytext=(68, 48),
+        xytext=(84, 38),
         fontsize=8,
         color=TEXT,
         arrowprops={"arrowstyle": "-", "color": TEXT, "lw": 0.8},
@@ -1802,12 +1809,10 @@ def fig_remaining(results, release=None):
         ax.set_xlabel("time since ignition [s]", color=TEXT)
         ax.grid(alpha=0.7, linewidth=1, axis="y")
         ax.tick_params(axis="both", which="both", length=0, labelcolor=TEXT)
-        ax.patch.set_edgecolor("lightgrey")
-        ax.patch.set_linewidth(0.8)
         _title(ax, letter, text)
         _legend(ax, loc="upper right", fontsize=8)
     one.set_ylabel("agents in the room", color=TEXT)
-    sns.despine(left=True, bottom=True)
+    sns.despine(fig=fig, left=True, bottom=True)
     uncapped = np.median(_last(results[("1door", "uncapped_pre0")].remaining))
     if release is not None:
         ref, ref_name = np.median(_last(release)), "the release"
