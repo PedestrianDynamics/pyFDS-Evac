@@ -30,7 +30,7 @@
     <div><dt>Licence</dt><dd>decks, scenario files and geometry <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>; code MIT</dd></div>
   </dl>
   <details class="docs-files__contents">
-    <summary>What is inside ({{ len $facts.entries }} files)</summary>
+    <summary>What is inside ({{ $facts.files | default (len $facts.entries) }} files)</summary>
     <ul>
       {{- range $facts.entries }}
       <li><code>{{ index . 0 }}</code>: {{ index . 1 }}</li>

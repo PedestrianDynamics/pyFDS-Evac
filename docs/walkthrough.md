@@ -7,6 +7,8 @@ aliases: [/docs/walkthrough/]
 **This page reads FDS output, but you do not need to run FDS.** The output of
 two small FDS cases is tracked in the repository, and the page uses it as is.
 
+{{< example-files-link "walkthrough" >}}
+
 ## Goal
 
 Go from FDS output to an evacuation result:
@@ -22,10 +24,14 @@ Go from FDS output to an evacuation result:
 
 - A clone of the repository and its environment (`uv sync`). fdsreader, which
   reads the FDS output, is a core dependency.
+- Or the zip below and FDS 6.10.1. The zip holds the decks but no FDS
+  output; its `README.txt` runs the two decks first (about 40 s).
 - Run every command from the repository root. The paths are relative to it.
 - Runtime: about 15 s.
 - Read [What your FDS case must provide](fds-case-requirements.md). This page
   shows two of the failure modes listed there.
+
+{{< example-files "walkthrough" >}}
 
 The full script is [`examples/walkthrough.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py).
 Run it with:

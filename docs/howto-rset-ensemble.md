@@ -8,6 +8,8 @@ aliases: [/docs/howto-rset-ensemble/]
 **This how-to reads tracked FDS output. You do not need to run FDS.** Part 1
 needs no FDS output at all.
 
+{{< example-files-link "rset-ensemble" >}}
+
 Run the scenario once per seed. Read each agent's exit time from the trajectory
 file, not from `result.evacuation_time`. Then report the last exit time over the
 seeds as a mean, a standard deviation (SD), a range and a high percentile, not
@@ -48,6 +50,11 @@ more seeds do not supply one, since every seed stops at the same limit;
 Part 2 below shows both.
 
 ## Runnable example
+
+{{< example-files "rset-ensemble" >}}
+
+The zip holds the decks but no FDS output; its `README.txt` runs the
+part 2 deck with FDS first (about 30 s).
 
 The full script is [`examples/rset_ensemble.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/rset_ensemble.py).
 Run it from the repository root (runtime about 10 s):

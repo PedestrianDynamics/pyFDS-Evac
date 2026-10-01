@@ -15,6 +15,8 @@ math: true
 
 ![Where the incident flux q sits between U/4 and U at 1.6 m for plates facing up, +x, −x and down, in the three decks](/images/verification/heat_radiometer_ratio.png)
 
+{{< example-files-link "heat-radiometer" >}}
+
 ## What is tested
 
 The heat dose has an opt-in total-flux method whose radiant term can come
@@ -198,6 +200,8 @@ were set from a coarser scratch run (0.2 m cells) before these decks
 existed.
 
 ## Run it yourself
+
+{{< example-files "heat-radiometer" >}}
 
 The FDS output is not in the repository. Either get it from the project's
 data folder (`fds-evac-data/heat_radiometer/{layer,uniform,burner}/`), or

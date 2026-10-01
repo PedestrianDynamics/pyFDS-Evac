@@ -4,8 +4,11 @@
 # entry to site/static/downloads/, plus the generated facts (size, sha256,
 # commit, package versions) to site/data/example_bundles.json. The
 # example-files shortcode renders both. Every path in `files` is a file in
-# the repository; the zip keeps the repository layout, so the commands run
-# from the unpacked folder exactly as on the page.
+# the repository, or a folder ending in `/` whose files all go in; the zip
+# keeps the repository layout, so the commands run from the unpacked folder
+# exactly as on the page. FDS output never goes in: users run FDS. A page
+# may name an FDS output folder of the repository; list it in
+# `not_in_zip`, with the step that writes it.
 #
 # Values that do not come from the repository or uv.lock are stated here
 # once: the FDS version and runtime, and the results the page shows with the
@@ -197,5 +200,430 @@ and before it writes the figures. The \
 evacuation runs are reproducible for a given seed; FDS output from \
 another FDS build or machine can move them slightly."""
 results_commit = "7e9c4c30"
+results_python = "3.12.13"
+results_machine = "Apple M3 Pro, macOS"
+
+[walkthrough]
+title = "Real-FDS walkthrough"
+zip = "pyfds-evac-walkthrough.zip"
+page = "docs/getting-started/walkthrough/"
+source = "docs/walkthrough.md"
+summary = """\
+One agent walks a 100 m corridor through smoke read from an FDS slice, \
+and one occupant gathers a toxic dose (FED) from CO, CO2 and O2 slices. \
+You run the two small FDS decks yourself, then the walkthrough script."""
+contents = """\
+The two FDS decks and their scenarios, the example script, run.py, \
+pinned package versions and a README.txt with the commands, the runtimes \
+and the expected result. FDS output is not included: a clone of the \
+repository has it, or you write it with FDS in about 40 s."""
+files = [
+  ["examples/walkthrough.py", "the example script"],
+  ["run.py", "the pyFDS-Evac command line (step 1 of the page: --inspect-fds)"],
+  ["assets/iso_table21_coupled/iso_table21_coupled.fds", "FDS deck of the smoky corridor"],
+  ["assets/iso_table21_coupled/config.json", "JuPedSim scenario of the corridor"],
+  ["assets/iso_table21_coupled/geometry.wkt", "walkable area of the corridor"],
+  ["assets/iso_table21_coupled/build_geometry.py", "writes the corridor deck, scenario and geometry"],
+  ["assets/iso_table21_coupled/README.md", "what the corridor case is and where it comes from"],
+  ["assets/iso_table22_coupled/iso_table22_a.fds", "FDS deck of the gas room, case a"],
+  ["assets/iso_table22_coupled/config_a.json", "JuPedSim scenario of the gas room"],
+  ["assets/iso_table22_coupled/geometry.wkt", "walkable area of the gas room"],
+  ["assets/iso_table22_coupled/build_geometry.py", "writes the gas-room decks, scenarios and geometry"],
+  ["assets/iso_table22_coupled/README.md", "what the gas-room cases are and where they come from"],
+]
+not_in_zip = [
+  ["assets/iso_table21_coupled/fds", "FDS output; step 2 writes it"],
+  ["assets/iso_table22_coupled/fds/a", "FDS output; step 2 writes it"],
+]
+extra_packages = []
+steps = [
+  ["Run FDS on the two decks, one process each (about 10 s and 30 s). The output goes to the folders the script reads", [
+    "mkdir -p assets/iso_table21_coupled/fds",
+    "cp assets/iso_table21_coupled/iso_table21_coupled.fds assets/iso_table21_coupled/fds/",
+    "(cd assets/iso_table21_coupled/fds && fds iso_table21_coupled.fds)",
+    "mkdir -p assets/iso_table22_coupled/fds/a",
+    "cp assets/iso_table22_coupled/iso_table22_a.fds assets/iso_table22_coupled/fds/a/",
+    "(cd assets/iso_table22_coupled/fds/a && fds iso_table22_a.fds)",
+  ]],
+  ["Run the walkthrough (about 15 s)", [
+    "python examples/walkthrough.py",
+  ]],
+]
+fds = "FDS-6.10.1-0-g12efa16-release"
+fds_runtime = "10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS"
+evac_runtime = "about 15 s"
+expected = [
+  "exit time:    78.44 s clear, 85.30 s in smoke",
+  "FED >= 1 at t = 982 s; incapacitated: True",
+  "FED max: 1.170",
+]
+expected_note = """\
+python examples/walkthrough.py prints these lines among the others the \
+page shows. FDS 6.10.1 on the two decks writes slices identical, byte for \
+byte, to the ones in the repository."""
+results_commit = "449a755d"
+results_python = "3.12.13"
+results_machine = "Apple M3 Pro, macOS"
+
+[rset-ensemble]
+title = "Egress time from an ensemble of seeds"
+zip = "pyfds-evac-rset-ensemble.zip"
+page = "docs/using/howto-rset-ensemble/"
+source = "docs/howto-rset-ensemble.md"
+summary = """\
+30 agents leave a corridor once per seed; the script reads every exit \
+time from the trajectories and reports the last exit over the seeds. \
+Part 2 shows an occupant who is incapacitated by gas and never leaves. \
+Part 2 needs one small FDS run."""
+contents = """\
+The example script, the two scenarios, the FDS deck of part 2, run.py, \
+pinned package versions and a README.txt with the commands and the \
+expected result. FDS output is not included: a clone of the repository \
+has it, or you write it with FDS in about 30 s."""
+files = [
+  ["examples/rset_ensemble.py", "the example script"],
+  ["run.py", "the pyFDS-Evac command line"],
+  ["assets/fic_vs_fed_speed/config.json", "JuPedSim scenario of part 1"],
+  ["assets/fic_vs_fed_speed/geometry.wkt", "walkable area of part 1"],
+  ["assets/fic_vs_fed_speed/fic_vs_fed_speed.fds", "FDS deck of the same corridor; part 1 does not run it"],
+  ["assets/fic_vs_fed_speed/build_geometry.py", "writes the part 1 deck, scenario and geometry"],
+  ["assets/fic_vs_fed_speed/README.md", "what the part 1 scenario is"],
+  ["assets/iso_table22_coupled/iso_table22_a.fds", "FDS deck of the gas room (part 2)"],
+  ["assets/iso_table22_coupled/config_a.json", "JuPedSim scenario of the gas room"],
+  ["assets/iso_table22_coupled/geometry.wkt", "walkable area of the gas room"],
+  ["assets/iso_table22_coupled/README.md", "what the gas room is and where it comes from"],
+]
+not_in_zip = [
+  ["assets/iso_table22_coupled/fds/a", "FDS output; step 2 writes it"],
+]
+extra_packages = []
+steps = [
+  ["Run FDS on the gas-room deck for part 2, one process (about 30 s)", [
+    "mkdir -p assets/iso_table22_coupled/fds/a",
+    "cp assets/iso_table22_coupled/iso_table22_a.fds assets/iso_table22_coupled/fds/a/",
+    "(cd assets/iso_table22_coupled/fds/a && fds iso_table22_a.fds)",
+  ]],
+  ["Run the example (about 10 s); it also writes site/static/images/howto/egress_exit_curve.png", [
+    "python examples/rset_ensemble.py",
+  ]],
+]
+fds = "FDS-6.10.1-0-g12efa16-release"
+fds_runtime = "30 s wall clock, one process, on an Apple M3 Pro, macOS"
+evac_runtime = "about 10 s"
+expected = [
+  "mean = 44.5 s, SD = 1.8 s",
+  "min-max = 41.5-46.0 s",
+  "95th percentile = 46.0 s",
+  "exit times [], incapacitated 1, remaining 1",
+]
+expected_note = """\
+python examples/rset_ensemble.py prints these lines among the others the \
+page shows. The git: line names the commit you run and differs from the \
+page."""
+results_commit = "449a755d"
+results_python = "3.12.13"
+results_machine = "Apple M3 Pro, macOS"
+
+[iso-test-18]
+title = "ISO 20414 Test 18: walking speed in smoke"
+zip = "pyfds-evac-iso-test-18.zip"
+page = "verification/iso-test-18/"
+source = "site/content/verification/iso-test-18.md"
+summary = """\
+One occupant walks a 100 m corridor at constant extinction coefficients \
+and at K read from an FDS slice; 16 runs check the speed-factor law and \
+the egress times against hand values. You run the small FDS deck \
+yourself (about 10 s)."""
+contents = """\
+The two scenarios, the FDS decks, run.py, the figure script, pinned \
+package versions and a README.txt with the commands, the runtimes and \
+the expected result. FDS output is not included."""
+files = [
+  ["run.py", "the pyFDS-Evac command line"],
+  ["scripts/verification/iso_test_18_figures.py", "prints the page's table, checks the pass criteria, draws the figures"],
+  ["assets/ISO-table21/config.json", "JuPedSim scenario, constant K (social force model)"],
+  ["assets/ISO-table21/geometry.wkt", "walkable area"],
+  ["assets/ISO-table21/ISO-table21.fds", "template deck with a fire; the test does not run it"],
+  ["assets/ISO-table21/README.md", "what the constant-K scenario is"],
+  ["assets/iso_table21_coupled/iso_table21_coupled.fds", "FDS deck of the smoky corridor"],
+  ["assets/iso_table21_coupled/config.json", "JuPedSim scenario, K from FDS (collision-free speed model)"],
+  ["assets/iso_table21_coupled/geometry.wkt", "walkable area"],
+  ["assets/iso_table21_coupled/build_geometry.py", "writes the coupled deck, scenario and geometry"],
+  ["assets/iso_table21_coupled/README.md", "what the coupled case is and where it comes from"],
+]
+not_in_zip = [
+  ["assets/iso_table21_coupled/fds", "FDS output; step 2 writes it"],
+]
+extra_packages = ["seaborn"]
+steps = [
+  ["Run FDS on the coupled deck, one process (about 10 s)", [
+    "mkdir -p assets/iso_table21_coupled/fds",
+    "cp assets/iso_table21_coupled/iso_table21_coupled.fds assets/iso_table21_coupled/fds/",
+    "(cd assets/iso_table21_coupled/fds && fds iso_table21_coupled.fds)",
+  ]],
+  ["Run the 16 cases and the figure script (about 45 s). OUT is a folder of your choice", [
+    "OUT=$HOME/iso-test-18",
+    "run() {  # name scenario [extra options]",
+    "  name=$1 scen=$2; shift 2",
+    "  mkdir -p $OUT/evac/$name",
+    "  python run.py --scenario $scen --seed 420 --smoke-update-interval 0.1 \\",
+    "    --no-enable-rerouting --disable-tenability \"$@\" \\",
+    "    --output-sqlite $OUT/evac/$name/run.sqlite \\",
+    "    --output-smoke-history $OUT/evac/$name/smoke_history.csv > $OUT/evac/$name/run.log",
+    "}",
+    "for v in 1.25 1 0.75 0.5 0.25; do",
+    "  d=$OUT/scenarios/v0_$v; mkdir -p $d; cp assets/ISO-table21/geometry.wkt $d/",
+    "  python -c \"import json,sys; c=json.load(open('assets/ISO-table21/config.json')); \\",
+    "c['config']['simulation_settings']['simulationParams']['max_simulation_time']=600; \\",
+    "[d['parameters'].update(v0=float(sys.argv[1])) for d in c['distributions'].values()]; \\",
+    "json.dump(c, open(sys.argv[2]+'/config.json','w'), indent=2)\" $v $d",
+    "done",
+    "run clear $OUT/scenarios/v0_1.25",
+    "for K in 0.5 1 3 7.5 10; do run K$K $OUT/scenarios/v0_1.25 --constant-extinction $K; done",
+    "for v in 1 0.75 0.5 0.25; do",
+    "  run v0_${v}_clear $OUT/scenarios/v0_$v",
+    "  run v0_${v}_K1 $OUT/scenarios/v0_$v --constant-extinction 1",
+    "done",
+    "cp -R assets/iso_table21_coupled/fds $OUT/fds",
+    "run coupled_clear assets/iso_table21_coupled/config.json",
+    "run coupled_fds assets/iso_table21_coupled/config.json --fds-dir $OUT/fds",
+    "python scripts/verification/iso_test_18_figures.py --data $OUT",
+  ]],
+]
+fds = "FDS-6.10.1-0-g12efa16-release"
+fds_runtime = "10 s wall clock, one process, on an Apple M3 Pro, macOS"
+evac_runtime = "about 45 s for the 16 runs and the figures"
+expected = [
+  "coupled_fds: t_clear 78.44 s, t_smoke 85.30 s, t_pred 85.296 s",
+  "K10: t_clear 79.24 s, t_smoke 408.91 s, t_pred 408.913 s",
+  "pass criteria: all met",
+]
+expected_note = """\
+scripts/verification/iso_test_18_figures.py prints the page's Result \
+table, one line per run; above are the times of its rows coupled_fds \
+and K10, and its last verdict line. \
+The runs behind the page were made at 8fc26b1; a re-run at 449a755d \
+prints the same table. The script exits with an error if a pass \
+criterion fails."""
+results_commit = "449a755d"
+results_python = "3.12.13"
+results_machine = "Apple M3 Pro, macOS"
+
+[iso-test-19]
+title = "ISO 20414 Test 19: incapacitation by toxic gases"
+zip = "pyfds-evac-iso-test-19.zip"
+page = "verification/iso-test-19/"
+source = "site/content/verification/iso-test-19.md"
+summary = """\
+One occupant stands in a room with fixed CO, CO2 and O2 levels, in four \
+cases a-d; pyFDS-Evac must stop it at the first FED update after the \
+hand-calculated time t*. You run the four small FDS decks yourself."""
+contents = """\
+The four FDS decks and scenarios, run.py, the figure script, pinned \
+package versions and a README.txt with the commands, the runtimes and the \
+expected result. FDS output is not included."""
+files = [
+  ["run.py", "the pyFDS-Evac command line"],
+  ["scripts/verification/iso_test19_figures.py", "prints each check and draws the figures"],
+  ["assets/iso_table22_coupled/build_geometry.py", "writes the four decks, scenarios and geometry"],
+  ["assets/iso_table22_coupled/iso_table22_a.fds", "FDS deck, case a: CO, CO2 and reduced O2"],
+  ["assets/iso_table22_coupled/iso_table22_b.fds", "FDS deck, case b: reduced O2 alone"],
+  ["assets/iso_table22_coupled/iso_table22_c.fds", "FDS deck, case c: CO alone"],
+  ["assets/iso_table22_coupled/iso_table22_d.fds", "FDS deck, case d: CO and CO2"],
+  ["assets/iso_table22_coupled/config_a.json", "JuPedSim scenario, case a"],
+  ["assets/iso_table22_coupled/config_b.json", "JuPedSim scenario, case b"],
+  ["assets/iso_table22_coupled/config_c.json", "JuPedSim scenario, case c"],
+  ["assets/iso_table22_coupled/config_d.json", "JuPedSim scenario, case d"],
+  ["assets/iso_table22_coupled/geometry.wkt", "walkable area"],
+  ["assets/iso_table22_coupled/README.md", "what the four cases are and where they come from"],
+  ["assets/ISO-table22/config.json", "the second version of this test (Limits on the page), scenario"],
+  ["assets/ISO-table22/geometry.wkt", "the second version of this test, walkable area"],
+  ["assets/ISO-table22/README.md", "the second version of this test"],
+]
+not_in_zip = [
+  ["assets/iso_table22_coupled/fds", "FDS output; step 2 writes it into OUT"],
+]
+extra_packages = ["seaborn"]
+steps = [
+  ["Run FDS on the four decks, one process each (about 25-45 s per case). OUT is a folder of your choice", [
+    "OUT=$HOME/iso-test-19",
+    "for c in a b c d; do",
+    "  mkdir -p $OUT/fds/$c && cp assets/iso_table22_coupled/iso_table22_$c.fds $OUT/fds/$c/",
+    "  (cd $OUT/fds/$c && fds iso_table22_$c.fds)",
+    "done",
+  ]],
+  ["Run pyFDS-Evac on the four cases and draw the figures (about 1 min)", [
+    "for c in a b c d; do",
+    "  python run.py --scenario assets/iso_table22_coupled/config_$c.json \\",
+    "    --fds-dir $OUT/fds/$c --seed 420 --incapacitation-mode deterministic \\",
+    "    --smoke-update-interval 1 \\",
+    "    --output-sqlite $OUT/evac/$c/run.sqlite \\",
+    "    --output-fed-history $OUT/evac/$c/fed_history.csv \\",
+    "    --vis-cache $OUT/evac/$c/vis_cache.npz",
+    "done",
+    "python scripts/verification/iso_test19_figures.py --data $OUT",
+  ]],
+]
+fds = "FDS-6.10.1-0-g12efa16-release"
+fds_runtime = "30 s (a), 44 s (b), 44 s (c) and 24 s (d) wall clock, one process each, on an Apple M3 Pro, macOS"
+evac_runtime = "about 1 min for the four cases"
+expected = [
+  "a: t* <= t_sim < t* + 1: True; stop == crossing: True",
+  "d: t* <= t_sim < t* + 1: True; stop == crossing: True",
+  "all pass criteria hold",
+]
+expected_note = """\
+scripts/verification/iso_test19_figures.py prints a table with, per \
+case, t* by hand, the FDS device time and the simulated stop: 981.71, \
+981.65 and 982.00 s for case a, 1666.49, 1666.49 and 1667.00 s for b, \
+1692.82, 1692.72 and 1693.00 s for c, 846.50, 846.45 and 847.00 s for d, \
+as on the page. Then one line per case, as above, and the verdict. The \
+script stops at the first pass criterion that fails."""
+results_commit = "449a755d"
+results_python = "3.12.13"
+results_machine = "Apple M3 Pro, macOS"
+
+[heat-radiometer]
+title = "Skin radiometer against integrated intensity"
+zip = "pyfds-evac-heat-radiometer.zip"
+page = "verification/testing-heat-radiometer/"
+source = "docs/testing-heat-radiometer.md"
+summary = """\
+Three FDS rooms (uniform hot gas, a hot layer, a burner) put skin \
+radiometers and integrated-intensity devices at the same points. The \
+scripts read the device output and report where the incident flux q \
+lies between U/4 and U. No evacuation is run."""
+contents = """\
+The three FDS decks, the analysis and figure scripts, pinned package \
+versions and a README.txt with the commands, the runtimes and the \
+expected result. FDS output is not included."""
+files = [
+  ["assets/heat_radiometer/heat_radiometer_uniform.fds", "FDS deck, uniform hot room"],
+  ["assets/heat_radiometer/heat_radiometer_layer.fds", "FDS deck, hot upper layer"],
+  ["assets/heat_radiometer/heat_radiometer_burner.fds", "FDS deck, burner"],
+  ["scripts/verification/heat_radiometer.py", "prints the q/U table of the page"],
+  ["scripts/verification/heat_radiometer_figures.py", "draws the page's figure"],
+]
+extra_packages = ["seaborn"]
+steps = [
+  ["Run FDS on the three decks, 4 MPI processes each (about 15 s per room, 5 min for the burner). DATA is a folder of your choice", [
+    "DATA=$HOME/heat_radiometer",
+    "for C in uniform layer burner; do",
+    "  mkdir -p $DATA/$C && cp assets/heat_radiometer/heat_radiometer_$C.fds $DATA/$C/",
+    "  (cd $DATA/$C && mpiexec -n 4 fds heat_radiometer_$C.fds)",
+    "done",
+  ]],
+  ["Print the table and draw the figure (a few seconds)", [
+    "python scripts/verification/heat_radiometer.py --data $DATA",
+    "python scripts/verification/heat_radiometer_figures.py --data $DATA",
+  ]],
+]
+fds = "FDS-6.10.1-0-g12efa16-release"
+fds_runtime = "11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS"
+evac_runtime = "a few seconds; no evacuation is run"
+expected = [
+  "uniform, 1.6 m, up: q/U 0.250 / 0.250 / 0.250",
+  "layer, 1.6 m, up: q/U 0.404 / 0.416 / 0.417",
+  "burner, 1.6 m, px: q/U 0.395 / 0.530 / 0.570",
+]
+expected_note = """\
+scripts/verification/heat_radiometer.py prints one row per deck, height \
+and facing: q/U min / median / max, then the same above ambient. The \
+page's Result table gives the medians. The page also runs \
+tests/verification/test_heat_radiometer.py, which needs a clone of the \
+repository."""
+results_commit = "449a755d"
+results_python = "3.12.13"
+results_machine = "Apple M3 Pro, macOS"
+
+[study-schroeder2020]
+title = "ASET-RSET maps after Schröder et al. (2020)"
+zip = "pyfds-evac-study-schroeder2020.zip"
+page = "docs/studies/study-schroeder2020/"
+source = "docs/study-schroeder2020.md"
+summary = """\
+100 people leave a 30 x 10 x 3 m room with one door (or two) while a \
+60 kW fire fills it with smoke. You run the FDS decks yourself, then the \
+script that runs 160 evacuations and builds the ASET, RSET and DIFF maps. \
+Room, door, fire and crowd follow the authors' release, \
+doi:10.5281/zenodo.3875550. No file of that release is in this zip; the \
+optional comparison with it (step 6) needs you to download it from \
+Zenodo."""
+contents = """\
+The FDS decks and scenarios of both families (release conditions and the \
+room rebuilt from the paper), their generators, run.py, the map, \
+animation and grid scripts, pinned package versions and a README.txt \
+with every command, the runtimes and the expected result. No file of the \
+authors' release is included."""
+files = [
+  ["assets/schroeder2020_room/README.md", "what the inputs are and where they come from"],
+  ["assets/schroeder2020_room/make_decks_rel.py", "writes the FDS decks of the rel_* family (release conditions)"],
+  ["assets/schroeder2020_room/make_configs_rel.py", "writes the scenarios and geometry of the rel_* family"],
+  ["assets/schroeder2020_room/make_decks.py", "writes the FDS decks of the hrr060_* family (paper alone)"],
+  ["assets/schroeder2020_room/make_configs.py", "writes the scenarios and geometry of the hrr060_* family"],
+  ["assets/schroeder2020_room/rel_1door/", "one door, 0.2 m grid: FDS deck, scenarios for the pre-movement sweep, geometry"],
+  ["assets/schroeder2020_room/rel_1door_dx010/", "one door, 0.1 m grid: FDS deck, scenarios, geometry"],
+  ["assets/schroeder2020_room/rel_2door/", "two doors, 0.2 m grid: FDS deck and one scenario per seed and version in seeds/"],
+  ["assets/schroeder2020_room/hrr060_1door/", "sensitivity, one door, 0.2 m grid"],
+  ["assets/schroeder2020_room/hrr060_1door_dx010/", "sensitivity, one door, 0.1 m grid"],
+  ["assets/schroeder2020_room/hrr060_1door_pert/", "sensitivity, one door, HRRPUA +0.1 % (FDS deck only)"],
+  ["assets/schroeder2020_room/hrr060_2door/", "sensitivity, two doors, 0.2 m grid"],
+  ["run.py", "the pyFDS-Evac command line, which the map script calls for each run"],
+  ["scripts/docs/schroeder_room_maps.py", "runs the evacuations, prints every number of the page, draws the maps"],
+  ["scripts/docs/study_animations.py", "the two animations"],
+  ["scripts/docs/schroeder_grid_figures.py", "the grid figures"],
+  ["scripts/docs/first_fds_case_figures.py", "helpers used by the animation script"],
+  ["scripts/animate_agents_smoke.py", "helpers used by the animation script"],
+]
+extra_packages = ["seaborn"]
+steps = [
+  ["Copy the three rel_* folders to DATA, a folder outside this one, and run FDS in each with 6 MPI processes (22 min, 28 min, and 4 h 14 min for the 0.1 m grid)", [
+    "DATA=$HOME/schroeder2020-room",
+    "for V in rel_1door rel_2door rel_1door_dx010; do",
+    "  mkdir -p \"$DATA\" && cp -R assets/schroeder2020_room/$V \"$DATA/\"",
+    "  (cd \"$DATA/$V\" && mpiexec -n 6 fds $V.fds)",
+    "done",
+  ]],
+  ["Install PedPy 1.5.1 for compute_rset_map; it replaces the pinned 1.4.0", [
+    "pip install \"pedpy==1.5.1\"",
+  ]],
+  ["Run the 160 evacuations, print the page's numbers and draw the maps (about 5 min with 6 workers). RUNS is an empty folder outside this one", [
+    "RUNS=$HOME/schroeder2020-runs",
+    "python scripts/docs/schroeder_room_maps.py --data \"$DATA\" --runs \"$RUNS\" --family rel",
+  ]],
+  ["Draw the animations (needs ffmpeg) and the grid figures", [
+    "python scripts/docs/study_animations.py schroeder --data \"$DATA\" --runs \"$RUNS\" --family rel",
+    "python scripts/docs/schroeder_grid_figures.py --data \"$DATA\" --cache \"$RUNS/cache\" --family rel",
+  ]],
+  ["Optional, the comparison with the authors' release: download it from https://doi.org/10.5281/zenodo.3875550, unpack it to RELEASE, and run step 4 again with --release (the runs are reused)", [
+    "python scripts/docs/schroeder_room_maps.py --data \"$DATA\" --runs \"$RUNS\" --family rel --release RELEASE",
+  ]],
+  ["Optional, the sensitivity (room rebuilt from the paper alone): FDS on the four hrr060_* folders (20 min, 18 min, 4 h 8 min and 15 min), then the maps and the grid figures with their own runs folder", [
+    "for V in hrr060_1door hrr060_2door hrr060_1door_dx010 hrr060_1door_pert; do",
+    "  cp -R assets/schroeder2020_room/$V \"$DATA/\"",
+    "  (cd \"$DATA/$V\" && mpiexec -n 6 fds $V.fds)",
+    "done",
+    "python scripts/docs/schroeder_room_maps.py --data \"$DATA\" --runs \"$HOME/schroeder2020-runs-hrr060\" --family hrr060",
+    "python scripts/docs/schroeder_grid_figures.py --data \"$DATA\" --cache \"$HOME/schroeder2020-runs-hrr060/cache\" --family hrr060",
+  ]],
+]
+fds = "FDS-6.10.1-0-g12efa16-release"
+fds_runtime = "1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS"
+evac_runtime = "about 5 min for the 160 runs and the maps, 6 workers"
+expected = [
+  "1 door, 0.2 m grid: min DIFF -27 s, area DIFF < 0 6.7 m2, C -112 m2s",
+  "1 door, 0.1 m grid: min DIFF -27 s, area DIFF < 0 6.4 m2, C -107 m2s",
+  "2 doors, 0.2 m grid: min DIFF -40 s, area DIFF < 0 7.4 m2, C -174 m2s",
+  "1 door, agents remaining: 60.5 at 40 s, 20.5 at 80 s, last out 100-101 s",
+]
+expected_note = """\
+scripts/docs/schroeder_room_maps.py prints these values in its Markdown \
+tables "Agents remaining" and "DIFF measures ... pooling: maximum over \
+n = 10 seeds", in the rows with capped exit and pre-movement 0. They \
+are the page's headline. The runs behind the page were made at \
+4a7142f; a re-run at 449a755d, without --release, prints the same \
+values. FDS output from another FDS build or machine can move them \
+slightly."""
+results_commit = "4a7142f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"

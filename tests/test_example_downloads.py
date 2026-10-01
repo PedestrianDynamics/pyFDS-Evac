@@ -87,8 +87,11 @@ def test_zip_holds_every_file_its_page_names(built, name):
     named = set(_PAGE_PATH.findall(page))
     assert named, f"{SPEC[name]['source']} names no repository file"
     entries = _names(built[0][0], name)
+    left_out = {path for path, _ in SPEC[name].get("not_in_zip", [])}
     for path in sorted(named):
         assert (ROOT / path).exists(), f"the page names {path}, not in the repo"
+        if path in left_out:
+            continue
         if (ROOT / path).is_dir():
             assert any(e.startswith(path + "/") for e in entries), path
         else:
@@ -115,6 +118,58 @@ def test_readme_states_commit_versions_and_result(built, name):
         assert SPEC[name]["fds"] in readme
 
 
+@pytest.mark.parametrize("name", SPEC)
+def test_zip_holds_no_fds_output(built, name):
+    """Users run FDS themselves; the zips hold inputs only."""
+    bundler = _bundler()
+    output = [e for e in _names(built[0][0], name) if bundler.FDS_OUTPUT.search(e)]
+    assert not output, output
+
+
+@pytest.mark.parametrize("name", SPEC)
+def test_left_out_paths_are_fds_output_written_by_a_step(name):
+    """A page path left out of the zip is FDS output that a README step writes."""
+    commands = "\n".join(line for _, lines in SPEC[name]["steps"] for line in lines)
+    for path, _ in SPEC[name].get("not_in_zip", []):
+        files = [p for p in (ROOT / path).rglob("*") if p.is_file()]
+        assert files and all(_bundler().FDS_OUTPUT.search(p.name) for p in files)
+        assert "fds " in commands, f"{name}: no step runs FDS for {path}"
+
+
+def test_schroeder2020_names_the_release_and_ships_none_of_it(built):
+    """The release (doi:10.5281/zenodo.3875550) has no licence file."""
+    readme = _readme(built[0][0], "study-schroeder2020")
+    assert "doi:10.5281/zenodo.3875550" in " ".join(readme.split())
+    for entry in _names(built[0][0], "study-schroeder2020"):
+        assert entry.startswith(("assets/schroeder2020_room/", "scripts/")) or (
+            entry in {"README.txt", "LICENSE", "requirements.txt", "run.py"}
+        ), entry
+
+
+def test_schroeder2020_generators_write_the_committed_inputs(tmp_path):
+    """The four generators write every generated input byte for byte."""
+    folder = ROOT / "assets" / "schroeder2020_room"
+    for script in ("make_decks_rel", "make_configs_rel", "make_decks", "make_configs"):
+        subprocess.run(
+            [sys.executable, str(folder / f"{script}.py"), str(tmp_path)],
+            check=True,
+            capture_output=True,
+        )
+    written = sorted(
+        p.relative_to(tmp_path) for p in tmp_path.rglob("*") if p.is_file()
+    )
+    assert len(written) == 139
+    for path in written:
+        assert (tmp_path / path).read_bytes() == (folder / path).read_bytes(), path
+    committed = {
+        p.relative_to(folder)
+        for p in folder.rglob("*")
+        if p.is_file() and p.suffix in {".fds", ".json", ".wkt"}
+    }
+    hand_written = {Path("hrr060_1door_pert/hrr060_1door_pert.fds")}
+    assert committed == set(written) | hand_written
+
+
 def _run(*args: str) -> str:
     proc = subprocess.run(
         [sys.executable, *args], cwd=ROOT, capture_output=True, text=True, timeout=300
@@ -127,6 +182,16 @@ def test_quickstart_prints_the_expected_result():
     """The README's expected lines are what the example prints on this commit."""
     out = _run("examples/quickstart.py")
     for line in SPEC["quickstart"]["expected"]:
+        assert line in out
+
+
+@pytest.mark.parametrize("name", ["walkthrough", "rset-ensemble"])
+def test_example_prints_the_expected_result(name):
+    """Run on the FDS output in the repository, which FDS rewrites byte for byte."""
+    script = SPEC[name]["files"][0][0]
+    assert script.startswith("examples/")
+    out = _run(script)
+    for line in SPEC[name]["expected"]:
         assert line in out
 
 
