@@ -641,9 +641,9 @@ def report_door_by_start(sh, dp, sw):
         for arm in ["nf", "gate", "add"]:
             m = sh[(sh.fire == fire) & (sh.arm == arm) & sh.shown]
             early = m[(m.t_lo >= 30) & (m.t_hi <= 120)].door_B_mean.mean()
-            late = m[m.t_lo >= 150].door_B_mean.mean()
+            late = m[(m.t_lo >= 150) & (m.t_hi <= 300)].door_B_mean.mean()
             rows.append([fire, ARMS[arm], f"{early:.2f}", f"{late:.2f}"])
-    md_table(["Fire", "Arm", "starts 30–120 s", "starts after 150 s"], rows)
+    md_table(["Fire", "Arm", "starts 30–120 s", "starts 150–300 s"], rows)
     heading("Door predictors (pooled seeds, post hoc)")
     rows = [
         [
@@ -726,7 +726,7 @@ def report_mechanism(data, ag, sw):
     # Fallback switches: the new exit's route against the old one, same pass.
     fb = rh[rh.reason == "fallback"]
     rcs = rc.set_index(["seed", "time_s", "agent_id"]).sort_index()
-    n_lower, n_bb = 0, 0
+    n_lower, pairs = 0, []
     for r in fb.itertuples():
         c = rcs.loc[(r.seed, r.time_s, r.agent_id)]
         new = c[c.exit_id == r.new_exit]
@@ -734,11 +734,15 @@ def report_mechanism(data, ag, sw):
         if new.empty or old.empty:
             continue
         n_lower += int(new.tau_route.iloc[0] < old.tau_route.iloc[0])
-        both_b = "doorB" in new.path.iloc[0] and "doorB" in old.path.iloc[0]
-        n_bb += int(both_b)
+        door_old = "A" if "doorA" in old.path.iloc[0] else "B"
+        door_new = "A" if "doorA" in new.path.iloc[0] else "B"
+        pairs.append(f"{door_old}→{r.old_exit[-1]} to {door_new}→{r.new_exit[-1]}")
     rows += [
         ["fallback switches, 10 seeds", f"{len(fb)}"],
-        ["… of them with both routes via door B", f"{n_bb}"],
+        [
+            "… by old route to new route",
+            ", ".join(f"{k}: {n}" for k, n in pd.Series(pairs).value_counts().items()),
+        ],
         ["… of them with lower τ on the new exit's route", f"{n_lower}"],
     ]
     g = ag[(ag.fire == MAIN) & (ag.arm == "gate")]
@@ -818,7 +822,7 @@ def report_summary(pa, sh):
     arm = pa[pa.fire == MAIN].set_index("arm")
     m = sh[(sh.fire == MAIN) & (sh.arm == "gate") & sh.shown]
     early = m[(m.t_lo >= 30) & (m.t_hi <= 120)].door_B_mean.mean()
-    late = m[m.t_lo >= 150].door_B_mean.mean()
+    late = m[(m.t_lo >= 150) & (m.t_hi <= 300)].door_B_mean.mean()
     add = arm.loc["add"]
     print(
         f"main fire, exit-E share: no fire {share(arm.loc['nf'].E_share_mean)}, "
@@ -831,7 +835,7 @@ def report_summary(pa, sh):
     )
     print(
         f"main fire, gate door-B share: {early:.2f} for starts 30-120 s, "
-        f"{late:.2f} after 150 s"
+        f"{late:.2f} for starts 150-300 s"
     )
 
 
@@ -1055,6 +1059,14 @@ def fig_door_by_start(sh, sw):
                 ax.set_xlabel("movement start [s] (30 s bins)", color="dimgrey")
     axes[1][0].legend(loc="lower left", fontsize=8.5, **LEGEND)
     sns.despine(left=True, bottom=True)
+    fig.suptitle(
+        "Post hoc measure, added after the first results were seen",
+        x=0.01,
+        ha="left",
+        fontsize=10,
+        color="dimgrey",
+        style="italic",
+    )
     fig.tight_layout()
     save(fig, "p1_door_by_start")
 

@@ -181,7 +181,7 @@ evac_runtime = "about 25-40 s per run, 100 runs"
 expected = [
   "main fire, exit-E share: no fire 0.520, gate 0.678, additive 0.445",
   "main fire, additive dy: -1.77 m (-2.20, -1.35)",
-  "main fire, gate door-B share: 0.05 for starts 30-120 s, 0.94 after 150 s",
+  "main fire, gate door-B share: 0.05 for starts 30-120 s, 0.94 for starts 150-300 s",
 ]
 expected_note = """\
 scripts/docs/schroeder2015_route.py prints these lines after its tables \

@@ -422,6 +422,16 @@ def region_handles():
     ]
 
 
+def colorbar_bins(fig, pm, cax):
+    """Colour bar with one label per K bin, the top bin open-ended."""
+    cb = fig.colorbar(pm, cax=cax)
+    centres = [0.5 * (a + b) for a, b in zip(LEVELS[:-1], LEVELS[1:])]
+    cb.set_ticks(centres, labels=["< 0.23", "0.23–0.7", "0.7–1.4", "1.4–2.3", "> 2.3"])
+    cb.ax.minorticks_off()
+    cb.outline.set_edgecolor("lightgrey")
+    return cb
+
+
 def fig_geometry(geo):
     pal = sns.color_palette("colorblind")
     fig, ax = plt.subplots(figsize=(7.5, 9.5))
@@ -590,7 +600,7 @@ def fig_fire_field(data, geo):
     sns.despine(left=True, bottom=True)
     fig.tight_layout(rect=(0, 0.06, 0.9, 1))
     cax = fig.add_axes([0.915, 0.35, 0.015, 0.3])
-    cb = fig.colorbar(pm, cax=cax, ticks=LEVELS[:-1])
+    cb = colorbar_bins(fig, pm, cax)
     cb.set_label("soot extinction K [1/m]", color="dimgrey")
     cb.ax.tick_params(length=0, labelcolor="dimgrey")
     fig.legend(
@@ -636,7 +646,7 @@ def fig_sweep(df, snaps):
     sns.despine(left=True, bottom=True)
     fig.tight_layout(rect=(0, 0.05, 0.9, 1))
     cax = fig.add_axes([0.915, 0.35, 0.015, 0.3])
-    cb = fig.colorbar(pm, cax=cax, ticks=LEVELS[:-1])
+    cb = colorbar_bins(fig, pm, cax)
     cb.set_label("soot extinction K at 2.8 m, 165 s [1/m]", color="dimgrey")
     cb.ax.tick_params(length=0, labelcolor="dimgrey")
     fig.legend(
