@@ -49,7 +49,11 @@ equations represent the median of the distribution, and that approximately
 1 % of the population is likely to be susceptible below an FED of 0.3,
 citing ISO 13571 (p. 2282; repeated on p. 2343). ISO 13571:2012 (A.5.2)
 gives 11.4 % for 0.3, and the 2016 edition of the chapter gave 11.3 %
-(Purser and McAllister 2016, p. 2334). In the same paragraph Ch. 70 states
+(Purser and McAllister 2016, p. 2334). The commentary to New Zealand's
+Verification Method C/VM2, citing ISO 13571, reads an FED of 1.0 as the
+point at which about 50 % of occupants would be incapacitated, and the 0.3
+that Building Code clause C4.3 sets for the CO and thermal doses as about
+11 % of the population (MBIE 2012, p. 29). In the same paragraph Ch. 70 states
 that approximately 90 % of the population is susceptible below an FED
 of 1.3 (p. 2282). For a log-normal with
 median 1, these two statements are not consistent: 1 % below 0.3 implies a
@@ -181,6 +185,12 @@ How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.m
   11.3 % figure (p. 2334), which Ch. 70 replaces, and for the 0.3 and 0.1
   FED factors (p. 2372).
   [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
+- MBIE (2012). *Commentary for Verification Method C/VM2*, December 2012.
+  Ministry of Business, Innovation and Employment, Wellington.
+  ISBN 978-0-478-39942-4. Commentary to clause C4.3 (p. 29); written for
+  the first edition of C/VM2. The C4.3 limits are unchanged in the current
+  Building Code and in C/VM2, 2nd edition (2025); see
+  [ASET and RSET](/fundamentals/aset-rset.md).
 - Averill, J. D., Moore-Merrell, L., Ranellone, R. T., Jr., Weinschenk, C.,
   Taylor, N., Goldstein, R., Santos, R., Wissoker, D., & Notarianni, K. A.
   (2013). *Report on high-rise fireground field experiments* (K. M.

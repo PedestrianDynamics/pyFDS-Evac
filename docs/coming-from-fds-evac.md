@@ -34,6 +34,19 @@ the slice files of a finished FDS run and samples them at the agents'
 positions. The coupling is one-way: the fire acts on the occupants, and
 nothing the occupants do (opening a door, for example) acts on the fire.
 
+**Each agent carries its own dose.** pyFDS-Evac sums the FED of every agent
+at the agent's position, every `--smoke-update-interval` (1 s by default),
+from the slices nearest `--smoke-slice-height` (1.6 m by default). New
+Zealand's Verification Method C/VM2 asks for this quantity: a CO dose and a
+thermal dose, summed in steps of at most 5 s at 2.0 m above the floor, along
+the escape route of the last occupant to leave the room of fire origin
+(MBIE 2012, *Commentary for Verification Method C/VM2*, pp. 47 and 49). The
+equations differ: the gas FED follows FDS+Evac, not the ISO 13571 form that
+C/VM2 names, and the heat dose is off by default and convective only unless
+`--heat-fed-method total-flux` adds a radiant term. See
+[ASET and RSET](/fundamentals/aset-rset.md) for the C/VM2 criteria and
+[Fractional effective dose](/models/fed.md) for the equations.
+
 A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). `uv run python run.py --scenario <json|dir|zip> --fds-dir
 <fds output>` combines them.
