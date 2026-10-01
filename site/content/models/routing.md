@@ -357,9 +357,9 @@ as long as `simulation.iterate()`:
 | Case | Steering pass | `iterate()` | Rest of loop |
 |---|---|---|---|
 | `familiarity_test_no_journey`: 20 agents, no journeys, 3489 steps | 79–80 % | 19–20 % | 1–2 % |
-| `t_junction`: 200 agents flow-spawned over 400 s, journeys, 30000 steps | 76–78 % | 18–20 % | 4–5 % |
+| `t_junction`: 200 agents flow-spawned over 400 s, deck with journeys (steered directly), 30000 steps | 76–78 % | 18–20 % | 4–5 % |
 
-Shares are of the wall time of the main loop. Most of the steering pass is
+Shares are of the wall time of the main loop. The largest part of the steering pass is
 pyFDS-Evac's own geometry: the exit test builds a shapely point per agent per
 step. The cost of the same runs with native JuPedSim journeys is not measured.
 These agent counts are small, so the shares can differ at higher density.
