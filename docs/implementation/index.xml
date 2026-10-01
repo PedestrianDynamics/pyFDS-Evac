@@ -50,7 +50,9 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>If a queried point falls outside the FDS domain, &lt;code>sample_extinction&lt;/code>
-returns &lt;code>0.0&lt;/code> (clear air) and logs a warning on the first occurrence.&lt;/p>
+returns &lt;code>0.0&lt;/code> (clear air) and logs a warning on the first occurrence. With
+&lt;code>require_fds_coverage=True&lt;/code> it raises &lt;code>FdsDomainError&lt;/code> instead; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/#outside-the-fds-slices">FDS slice sampling&lt;/a>.&lt;/p>
 &lt;h3>Using a constant field&lt;span class="hx-absolute -hx-mt-20" id="using-a-constant-field">&lt;/span>
 &lt;a href="#using-a-constant-field" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>To use a uniform extinction value for verification:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -777,6 +779,120 @@ leave before &lt;code>T_END&lt;/code>.&lt;/p>
 &lt;p>&lt;code>--allow-fds-horizon-hold&lt;/code> (&lt;code>allow_horizon_hold=True&lt;/code> in Python) turns
 the setup check into a logged warning and holds the last frame in the
 samplers, logging one warning per sampler the first time it happens.&lt;/p>
+&lt;h3>Outside the FDS slices&lt;span class="hx-absolute -hx-mt-20" id="outside-the-fds-slices">&lt;/span>
+&lt;a href="#outside-the-fds-slices" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A point is inside a slice when a subslice covers it; the subslice extents
+are closed intervals, so a point on the outer mesh face is inside. Outside
+every subslice, &lt;code>sample&lt;/code> raises &lt;code>ValueError&lt;/code>, and each model turns that into
+ambient air and clear sight:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Quantity&lt;/th>
+&lt;th>Value outside&lt;/th>
+&lt;th>Warning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Extinction &lt;em>K&lt;/em> (speed, route cost)&lt;/td>
+&lt;td>0 1/m, speed factor 1&lt;/td>
+&lt;td>one, at the first sample outside&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Gases (CO, CO₂, O₂, optional species)&lt;/td>
+&lt;td>CO 0 %, CO₂ 0 % (the atmospheric 0.04 % is not used), O₂ 20.9 %, every optional species 0 ppm; FED rate 0&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Heat, &lt;code>TEMPERATURE&lt;/code>&lt;/td>
+&lt;td>20 °C; the default clothed law then gives 1.2 × 10⁻⁴ /min&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Heat, &lt;code>INTEGRATED INTENSITY&lt;/code>&lt;/td>
+&lt;td>&lt;em>U&lt;/em> and &lt;em>q&lt;/em> NaN in the FED history, rate 0&lt;/td>
+&lt;td>one, at the first sample outside&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Sign visibility (agent off the vismap grid)&lt;/td>
+&lt;td>clear air: legible when the sign is within its reading distance, measured from the agent&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>A route edge prices the part outside as clear air: an edge wholly outside
+has optical depth τ = 0, and the outside samples of a partly covered edge
+count as &lt;em>K&lt;/em> = 0 in its mean. The sign case is described on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#off-the-fds-grid">Wayfinding&lt;/a>.&lt;/p>
+&lt;p>&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> reads
+smoke, gases and heat the same way. At initialisation it marks every evacuation-grid cell outside every
+fire mesh (&lt;code>IMESH = 0&lt;/code>,
+&lt;a href="https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L6328-L6363" target="_blank" rel="noopener">&lt;code>evac.f90:6328–6363&lt;/code>&lt;/a>).
+Those cells keep zero soot and zero FED, the ambient temperature &lt;code>TMPA&lt;/code> and
+zero radiant flux
+(&lt;a href="https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L7250-L7272" target="_blank" rel="noopener">&lt;code>evac.f90:7250–7272&lt;/code>&lt;/a>).
+Sign sight from outside differs: along the line from such an agent,
+FDS+Evac still tests walls and averages the smoke of the cells inside the
+fire meshes, while pyFDS-Evac tests only the distance (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>).&lt;/p>
+&lt;p>&lt;strong>Partial gas coverage stops the run.&lt;/strong> When some loaded gas slices cover a
+point and others do not, the gas FED raises &lt;code>ValueError&lt;/code> and names the
+point, the time and the missing quantities
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/427" target="_blank" rel="noopener">#427&lt;/a>). The
+heat FED does the same for its &lt;code>TEMPERATURE&lt;/code> and &lt;code>INTEGRATED INTENSITY&lt;/code>
+slices. The check runs when an agent reaches such a point, not at setup.&lt;/p>
+&lt;p>&lt;strong>Setup report.&lt;/strong> Before the first step, &lt;code>run_scenario&lt;/code> compares the
+scenario with the slices of every sampled quantity. The domain is the area
+that every quantity covers. The report gives the walkable area outside
+(m² and share), each exit, checkpoint and spawn area outside (m²), each
+sign outside, and each route edge outside (m). It is logged once and
+stored as &lt;code>fds_coverage&lt;/code> in &lt;code>metrics&lt;/code> and in the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#run-manifest">run manifest&lt;/a>. For a T-junction whose west
+corridor extends 12 m past the FDS mesh, the log reads:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>FDS coverage: outside the FDS slices (CARBON DIOXIDE VOLUME FRACTION, CARBON
+MONOXIDE VOLUME FRACTION, HYDROGEN CHLORIDE VOLUME FRACTION, OXYGEN VOLUME
+FRACTION, SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear
+sight: walkable area 36.00 m² (19.4 %); exit exit_A_left 3.00 m²;
+distribution jps-distributions_out 6.00 m²; sign exit_A_left; edge
+jps-checkpoints_0 -&amp;gt; exit_A_left 11.50 m; ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>Flag and count.&lt;/strong> Each smoke and FED history row carries &lt;code>in_fds_domain&lt;/code>,
+&lt;code>False&lt;/code> where the agent stood outside
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#smoke-history">Outputs&lt;/a>). At the end, the run logs the number
+of agents, samples and agent-seconds outside, stored as
+&lt;code>metrics[&amp;quot;fds_outside&amp;quot;]&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>Outside the FDS domain: 8 agent(s), 56 sample(s), about 56.0 agent-seconds
+of ambient air and clear sight.&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>These two are the signal to check. The first-sample warning of &lt;em>K&lt;/em> fires
+once per run, often at t = 0 for a route sample, and says nothing about
+agents later. The route-cost history does not record the length outside
+per row (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>).&lt;/p>
+&lt;p>&lt;strong>Strict option.&lt;/strong> &lt;code>--require-fds-coverage&lt;/code> (&lt;code>require_fds_coverage=True&lt;/code> on
+&lt;code>run_scenario&lt;/code>, &lt;code>ExtinctionField&lt;/code>, &lt;code>FdsFedField&lt;/code>, &lt;code>FdsHeatField&lt;/code> and
+&lt;code>VisibilityModel&lt;/code>) turns both checks into errors. The run stops at setup
+when the report finds anything outside. When a sign also lies off the
+vismap grid, the visibility model stops the run while it is built, and
+that error names only the signs. Any smoke, FED, heat or sign-visibility sample outside
+raises &lt;code>FdsDomainError&lt;/code>, which names the quantity, the position and the
+time. The horizon error of the previous section takes precedence.&lt;/p>
 &lt;h3>Performance caches&lt;span class="hx-absolute -hx-mt-20" id="performance-caches">&lt;/span>
 &lt;a href="#performance-caches" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Three caches reduce per-call overhead on hot paths (for example, sampling
 along a line of sight where all points share the same timestep and
@@ -889,7 +1005,9 @@ title="Copy code"
 returns the factor alone. On the tracked &lt;code>assets/iso_table21_coupled/fds&lt;/code> at
 (5, 1) it gives &lt;em>K&lt;/em> = 0.99550 1/m and a factor of 0.919626.&lt;/p>
 &lt;p>If a queried point falls outside the FDS domain, &lt;code>sample_extinction&lt;/code>
-returns &lt;code>0.0&lt;/code> (clear air) and logs a warning on the first occurrence.&lt;/p>
+returns &lt;code>0.0&lt;/code> (clear air) and logs a warning on the first occurrence. With
+&lt;code>require_fds_coverage=True&lt;/code> it raises &lt;code>FdsDomainError&lt;/code> instead; see
+&lt;a href="#outside-the-fds-slices">Outside the FDS slices&lt;/a>.&lt;/p>
 &lt;h3>FED model&lt;span class="hx-absolute -hx-mt-20" id="fed-model">&lt;/span>
 &lt;a href="#fed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>FdsFedField&lt;/code> creates one &lt;code>SliceFieldSampler&lt;/code> per gas species (CO,
 CO2, O2, and optionally HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein,

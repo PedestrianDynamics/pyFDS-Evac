@@ -454,6 +454,39 @@ walking speed. Setting &lt;code>routing.alpha&lt;/code> therefore changes which 
 prefers but leaves its speed in smoke unchanged. The same split applies to
 speed itself: &lt;code>routing.base_speed_m_per_s&lt;/code> (1.3 m/s) prices routes, while an
 agent walks at its own &lt;code>v0&lt;/code> (1.25 m/s by default).&lt;/p>
+&lt;h2>Outside the FDS domain the air is clear&lt;span class="hx-absolute -hx-mt-20" id="outside-the-fds-domain-the-air-is-clear">&lt;/span>
+&lt;a href="#outside-the-fds-domain-the-air-is-clear" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Where no FDS slice covers an agent, it reads ambient air: &lt;em>K&lt;/em> = 0, so full
+walking speed, no gas dose, and 20 °C. FDS+Evac does the same for smoke,
+gases and heat
+(&lt;a href="https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L7250-L7272" target="_blank" rel="noopener">&lt;code>evac.f90:7250–7272&lt;/code>&lt;/a>).
+A route edge prices its part outside as clear air: an edge wholly outside
+has optical depth τ = 0, and a partly covered edge has a diluted mean &lt;em>K&lt;/em>.
+A room left out of the FDS meshes therefore looks safe to walk through and
+to route through. Values per quantity are on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/#outside-the-fds-slices">FDS slice sampling&lt;/a>.&lt;/p>
+&lt;p>The run reports where this applies. At setup it logs the walkable area,
+exits, checkpoints, spawn areas, signs and route edges outside the slices,
+and stores them as &lt;code>fds_coverage&lt;/code> in the run manifest. The smoke and FED
+histories mark each row outside with &lt;code>in_fds_domain = False&lt;/code>, and
+&lt;code>metrics[&amp;quot;fds_outside&amp;quot;]&lt;/code> counts the agents, samples and agent-seconds
+outside. Check these two; the single warning at the first extinction
+sample outside says nothing about later agents. The route-cost history does
+not record the length outside per row
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>).
+&lt;code>--require-fds-coverage&lt;/code> turns every case outside into an error.&lt;/p>
+&lt;p>&lt;strong>Signs seen from outside the FDS grid.&lt;/strong> An agent beyond the grid of an
+FDS visibility model sees every sign within its reading distance, measured
+from its true position, without testing view angle, walls or smoke, also
+when the sight line crosses smoke inside the domain
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/426" target="_blank" rel="noopener">#426&lt;/a>).
+FDS+Evac&amp;rsquo;s &lt;code>See_door&lt;/code>
+(&lt;a href="https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L15682-L15813" target="_blank" rel="noopener">&lt;code>evac.f90:15682–15813&lt;/code>&lt;/a>)
+still walks that line across the evacuation grid: a wall stops it, and the
+mean &lt;em>K&lt;/em> that enters its door choice counts the soot of the cells inside
+the fire meshes. Off the grid, pyFDS-Evac is therefore less conservative
+than FDS+Evac, and a discovery agent outside can learn an exit from a sign
+that the smoke between them would hide. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#off-the-fds-grid">Wayfinding › Off the FDS grid&lt;/a>.&lt;/p>
 &lt;h2>Incapacitation is deterministic by default&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-is-deterministic-by-default">&lt;/span>
 &lt;a href="#incapacitation-is-deterministic-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FED below means fractional effective dose. By default
 (&lt;code>--incapacitation-mode deterministic&lt;/code>), every agent stops when its FED
