@@ -2050,7 +2050,7 @@ trajectory is written every tenth step (10 frames/s).&lt;/p>
 &lt;td>&lt;code>radius&lt;/code>&lt;/td>
 &lt;td>0.2 m&lt;/td>
 &lt;td>—&lt;/td>
-&lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon.&lt;/td>
+&lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius_distribution&lt;/code>&lt;/td>
@@ -2140,7 +2140,7 @@ while still waiting walks off when its pre-movement ends
 &lt;tr>
 &lt;td>&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput&lt;/code>&lt;/td>
 &lt;td>&lt;code>false&lt;/code>, 0&lt;/td>
-&lt;td>Cap the removal rate at the exit: an agent whose centre is inside the exit polygon is removed only if at least 1/&lt;code>max_throughput&lt;/code> s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A &lt;code>max_throughput&lt;/code> of 0 disables the cap.&lt;/td>
+&lt;td>Cap the removal rate at the exit: an agent whose centre is inside the exit polygon, or within 0.03 m of it, is removed only if at least 1/&lt;code>max_throughput&lt;/code> s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A &lt;code>max_throughput&lt;/code> of 0 disables the cap.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>capacity_agents_per_s&lt;/code>&lt;/td>
@@ -2403,7 +2403,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>ends with &lt;code>Simulation finished in 85.32 s (1/1 evacuated).&lt;/code>&lt;/p>
+&lt;p>ends with &lt;code>Simulation finished in 85.30 s (1/1 evacuated).&lt;/code>&lt;/p>
 &lt;/div>
 &lt;/aside>
 &lt;h3>Keep the run as a script&lt;span class="hx-absolute -hx-mt-20" id="keep-the-run-as-a-script">&lt;/span>
@@ -3145,7 +3145,7 @@ title="Copy code"
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>jps-distributions_0: 30 agents, use_premovement=False
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 1: last exit 41.5 s, evacuated 30, incapacitated 0, remaining 0
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 2: last exit 46.1 s, evacuated 30, incapacitated 0, remaining 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 2: last exit 46.0 s, evacuated 30, incapacitated 0, remaining 0
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 3: last exit 44.9 s, evacuated 30, incapacitated 0, remaining 0
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 4: last exit 44.5 s, evacuated 30, incapacitated 0, remaining 0
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>seed 5: last exit 45.8 s, evacuated 30, incapacitated 0, remaining 0
@@ -3184,8 +3184,8 @@ title="Copy code"
 &lt;/div>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>n = 5 seeds
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mean = 44.6 s, SD = 1.8 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>min-max = 41.5-46.1 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mean = 44.5 s, SD = 1.8 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>min-max = 41.5-46.0 s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>95th percentile = 46.0 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
