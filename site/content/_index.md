@@ -9,7 +9,7 @@ layout: hextra-home
 {{< /hextra/hero-badge >}}
 
 <div class="hx-mt-6 hx-mb-6 hx-flex hx-items-center hx-gap-6" style="gap:1.5rem">
-<img src="images/logo.png" alt="" width="96" height="96" style="border-radius:16px; flex:none">
+<img src="images/brand/logo-full.svg" alt="" width="96" height="96" style="flex:none">
 {{< hextra/hero-headline >}}
   Visibility-aware evacuation <br class="sm:hx-block hx-hidden" />modelling on FDS output
 {{< /hextra/hero-headline >}}
