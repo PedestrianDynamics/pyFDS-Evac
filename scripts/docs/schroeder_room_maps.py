@@ -124,6 +124,7 @@ class Family:
     layout_fds: dict  # layout -> FDS run folders, the first one is the base
     gate: tuple  # (40 s low, high), (80 s low, high): accepted mean remaining
     gate_source: str
+    last_out: tuple  # (low, high) s: accepted last exit of the capped one-door run
     out: str  # figure subfolder of OUT_ROOT
     figures: tuple = ()  # figures the page uses; empty: all
 
@@ -145,6 +146,7 @@ FAMILIES = {
         },
         gate=((60, 64), (18, 24)),
         gate_source="release, 10 seeds, range",
+        last_out=(96, 103),
         out="",
     ),
     # Rebuilt from the paper text alone: cap read off Fig. 3 [F].
@@ -163,6 +165,7 @@ FAMILIES = {
         },
         gate=((56, 66), (18, 28)),
         gate_source="paper Fig. 3, 61 ± 5 / 23 ± 5",
+        last_out=(100, 110),
         out="hrr060",
         figures=("diff_1door.png", "grid_perturbation.png"),
     ),
@@ -990,7 +993,7 @@ def report_gate(results):
     (lo40, hi40), (lo80, hi80) = FAMILY.gate
     print(
         f"Gate (b), {FAMILY.gate_source}: {lo40}-{hi40} at 40 s, {lo80}-{hi80} at "
-        f"80 s{GATE_LAST_OUT_NOTE if FAMILY is FAMILIES['hrr060'] else ''}: "
+        f"80 s, {gate_last_out_note()}: "
         f"{'PASS' if ok else 'FAIL'}\n"
     )
     print("## RSET map, latest cell per version (n = 10)\n")
@@ -1007,27 +1010,35 @@ def report_gate(results):
     return ok
 
 
-GATE_LAST_OUT_NOTE = ", median last out 100-110 s"
+def gate_last_out_note():
+    """The last-exit part of the gate, as printed."""
+    lo, hi = FAMILY.last_out
+    if FAMILY is FAMILIES["rel"]:
+        return f"every seed's last out {lo}-{hi} s"
+    return f"median last out {lo}-{hi} s"
 
 
 def gate_ok(rem):
     """Capped one-door curve against the family's agents-remaining gate.
 
-    rel: every seed inside the release's seed range at 40 and 80 s.
+    rel: every seed inside the release's seed range at 40 and 80 s, and
+    every seed's last exit inside the release's 96-103 s.
     hrr060: the seed mean within ± 5 of Fig. 3 and the median last exit
     100-110 s.
     """
     (lo40, hi40), (lo80, hi80) = FAMILY.gate
+    lo_out, hi_out = FAMILY.last_out
+    last = _last(rem)
     if FAMILY is FAMILIES["rel"]:
         return bool(
             rem.loc[40].between(lo40, hi40).all()
             and rem.loc[80].between(lo80, hi80).all()
+            and all(lo_out <= t <= hi_out for t in last)
         )
-    last = np.median([np.flatnonzero(rem[s] > 0).max() + 1 for s in rem])
     return bool(
         lo40 <= rem.loc[40].mean() <= hi40
         and lo80 <= rem.loc[80].mean() <= hi80
-        and 100 <= last <= 110
+        and lo_out <= np.median(last) <= hi_out
     )
 
 
@@ -1300,7 +1311,8 @@ def fig_screen(fires, grids):
     ax.set_xlim(-0.3, 1500)
     n_all = int((grid_for(runs[0], grids).area > 0).sum())
     ax.set_xticks(
-        [0, 1, 10, 100, n_all], labels=["0", "1", "10", "100", f"{n_all} (all)"]
+        [0, 1, 10, 100, n_all],
+        labels=["0", "1", "10", "100", f"{n_all} (all, 1 door)"],
     )
     ax.set_yticks(ticks, labels=labels)
     ax.set_ylim(y - 0.5, -1.2)
