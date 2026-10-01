@@ -394,7 +394,9 @@ with the cell size ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issu
 3. **Steering loop, every step.** Positions are stored
    (`scenario.py`, `run_scenario`), and learning on advancing along the path runs when a
    stage completes (`scenario.py`, `run_scenario`). This learning is not tied to the
-   reroute pass.
+   reroute pass. The loop is pyFDS-Evac's side of JuPedSim's direct
+   steering, described in
+   [Routing › How agents are steered](/models/routing.md#how-agents-are-steered).
 4. **History.** With `collect_cognitive_map_history` (on in `run.py`,
    `run_config.py`, `build_run_kwargs`), a row is written whenever the number of known nodes or
    edges changes (`scenario.py`, `run_scenario`).

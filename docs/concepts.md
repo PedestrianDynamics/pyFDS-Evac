@@ -163,7 +163,9 @@ A route is measured from where the agent stands. Its mean extinction
 \(\bar K_k\) is the length-weighted mean over its edges, and \(L_k\) is the
 distance still to walk. Each agent re-decides at a fixed interval, and a
 decision is not remembered: every re-decision starts again from the current
-field.
+field. pyFDS-Evac sets each agent's target itself and
+JuPedSim walks the agent there; see
+[How agents are steered](/models/routing.md#how-agents-are-steered).
 
 ![Plan view of a room with an internal wall; a dashed straight line from agent to exit crosses the wall, a solid walked polyline goes around it with sample points coloured by extinction](/images/concepts/stage_graph.png)
 
