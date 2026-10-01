@@ -17,6 +17,8 @@ how smoke changes walking speed and evacuation time.
 
 Runtime: about 3 s. No FDS output is needed.
 
+{{< example-files-link "quickstart" >}}
+
 {{< tutorial-progress "Clear air" "Smoke" "Compare" "Experiment" "Reproducibility" >}}
 
 ## Before you start

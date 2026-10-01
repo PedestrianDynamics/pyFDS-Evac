@@ -16,9 +16,9 @@
 {{- $id := printf "files-%s" $name -}}
 <aside class="docs-files" aria-labelledby="{{ $id }}">
   <div class="docs-files__head">
-    <p class="docs-files__title" id="{{ $id }}">Files for this page</p>
+    <p class="docs-files__title" id="{{ $id }}">Download the files for this page</p>
     <a class="docs-files__download" href="{{ printf "downloads/%s" $facts.zip | relURL }}" download>
-      <span aria-hidden="true">↓</span> {{ $facts.zip }} <span class="docs-files__size">({{ printf "%.0f" $kb }} kB)</span>
+      <span aria-hidden="true">↓</span> Download {{ $facts.zip }} <span class="docs-files__size">({{ printf "%.0f" $kb }} kB)</span>
     </a>
   </div>
   <p class="docs-files__summary">{{ $ex.contents }}</p>

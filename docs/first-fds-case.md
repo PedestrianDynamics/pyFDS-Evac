@@ -12,6 +12,8 @@ the [Real-FDS walkthrough](walkthrough.md) (small tracked FDS cases). Unlike
 those, it needs FDS output that you compute with FDS on your own computer;
 step 3 shows how.
 
+{{< example-files-link "first-fds-case" >}}
+
 ## Before you start
 
 {{< example-files "first-fds-case" >}}
