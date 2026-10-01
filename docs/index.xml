@@ -2,7 +2,8 @@
 &lt;p>Schröder, Arnold and Seyfried (2020) turned the ASET-RSET comparison from
 one number at one point into maps: a time for every map element of a room
 (0.6 m in their demonstration). This page re-runs their demonstration case
-with our own FDS fire and pyFDS-Evac crowds, and shows three things:&lt;/p>
+under the conditions of the authors&amp;rsquo; release, with our own FDS fire and
+pyFDS-Evac crowds, and shows three things:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>ASET per fire quantity.&lt;/strong> When each cell first exceeds a limit for smoke,
 temperature, CO, CO₂, radiation and dose, and which of them matter for
@@ -20,108 +21,230 @@ second door move that.&lt;/li>
 &lt;/div>&lt;/div>
 &lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
 &lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
-This re-runs the paper&amp;rsquo;s demonstration case with our own FDS and our own
-evacuation model. The authors published their inputs, code and results
-(&lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">Zenodo, doi:10.5281/zenodo.3875550&lt;/a>);
-we cite them where we compare, but our maps come from our own runs. It is
-&lt;strong>not&lt;/strong> a reproduction of their figures. pyFDS-Evac does not build these maps itself; the script
-&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code> does. A built-in version is planned in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>. This is
-research software and one room: nothing here is a design or safety verdict.
-&lt;/div>
-&lt;/div>
-&lt;/div>
-&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
-&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
-⚠️
-&lt;/div>&lt;/div>
-&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
-&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
-The runs on this page predate
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>, which
-changed when an agent leaves at an exit. The exit times, RSET maps and DIFF
-values below are those of commit &lt;code>30ca7f5&lt;/code>; the re-run is tracked in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/388" target="_blank" rel="noopener">#388&lt;/a>.
+The authors published their inputs, code and results
+(&lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">Zenodo, doi:10.5281/zenodo.3875550&lt;/a>).
+We take the room, door, fire and crowd from that release, run them with our
+own FDS and evacuation model, and compare with the release where it has
+data. The script &lt;code>scripts/docs/schroeder_room_maps.py&lt;/code> builds the maps; a
+built-in version is planned in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>. The
+page reports research software applied to one room and gives no design or
+safety verdict.
 &lt;/div>
 &lt;/div>
 &lt;/div>
 &lt;h2>The result in brief&lt;span class="hx-absolute -hx-mt-20" id="the-result-in-brief">&lt;/span>
-&lt;a href="#the-result-in-brief" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One door, the exit flow capped at 0.96 persons/s, everyone moving at t = 0,
+&lt;a href="#the-result-in-brief" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One door, the exit flow capped at 1.00 persons/s, everyone moving at t = 0,
 smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
 &lt;th>&lt;/th>
-&lt;th>0.2 m FDS grid&lt;/th>
-&lt;th>0.1 m FDS grid&lt;/th>
+&lt;th>1 door, 0.2 m grid&lt;/th>
+&lt;th>1 door, 0.1 m grid&lt;/th>
+&lt;th>2 doors, 0.2 m grid&lt;/th>
 &lt;th>Paper, Fig. 5 (read off)&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
 &lt;td>min DIFF&lt;/td>
-&lt;td>−30 s&lt;/td>
-&lt;td>−25 s&lt;/td>
+&lt;td>−27 s&lt;/td>
+&lt;td>−27 s&lt;/td>
+&lt;td>−40 s&lt;/td>
 &lt;td>about −29 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Area with DIFF &amp;lt; 0&lt;/td>
-&lt;td>6.2 m²&lt;/td>
-&lt;td>5.5 m²&lt;/td>
+&lt;td>6.7 m²&lt;/td>
+&lt;td>6.4 m²&lt;/td>
+&lt;td>7.4 m²&lt;/td>
 &lt;td>about 20 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>C (bin-free)&lt;/td>
-&lt;td>−113 m²s&lt;/td>
-&lt;td>−87 m²s&lt;/td>
+&lt;td>−112 m²s&lt;/td>
+&lt;td>−107 m²s&lt;/td>
+&lt;td>−174 m²s&lt;/td>
 &lt;td>–&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>RSET, latest cell&lt;/td>
+&lt;td>101 s&lt;/td>
+&lt;td>101 s&lt;/td>
+&lt;td>63 s&lt;/td>
+&lt;td>about 104 s (Fig. 3)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;ul>
 &lt;li>&lt;strong>Smoke sets ASET here.&lt;/strong> Every cell reaches K ≥ 0.23 1/m at 2.0 m, the
-last one at 88 s (0.2 m grid, one door; 203 s on the 0.1 m grid, 189 s
-with two doors). EA&amp;rsquo;s temperature,
-radiation and CO limits, the gas FED and the convective heat FED are not
-reached in any cell by 600 s. The vfdb CO and CO₂ values are reached only
-in plume cells on the 0.1 m grid, which is grid-dependent.&lt;/li>
-&lt;li>&lt;strong>Only the queue fails.&lt;/strong> The negative cells are the corner in front of
-the door, where people wait at the capped exit.&lt;/li>
-&lt;li>&lt;strong>The door-flow model decides the sign.&lt;/strong> Without the cap, the room
-empties in about 34 s and no cell has DIFF &amp;lt; 0.&lt;/li>
-&lt;li>&lt;strong>The min DIFF is one cell.&lt;/strong> It is the last cell before the door. The
-agreement with the paper&amp;rsquo;s −29 s tests only when smoke reaches the door.
-Our negative area is about three times smaller than the paper&amp;rsquo;s. The
-authors&amp;rsquo; released queue covers about twice the floor area of ours, which
-would account for most of the gap (&lt;a href="#against-the-paper">below&lt;/a>).&lt;/li>
+last one at 83 s (84 s on the 0.1 m grid, 83 s with two doors). The
+temperature, radiation and dose limits are reached only next to the
+burner, if at all. The release fire produces no CO, so the CO criteria
+do not apply.&lt;/li>
+&lt;li>&lt;strong>The queue at the door fails.&lt;/strong> The negative cells are the corner in
+front of the door, where people wait at the capped exit. Smoke reaches
+those cells at 72–74 s; the last person leaves them at about 100 s.&lt;/li>
+&lt;li>&lt;strong>The door-flow model decides the one-door sign.&lt;/strong> Without the cap, the
+room empties in 42–45 s and no cell has DIFF &amp;lt; 0. With two doors even the
+uncapped crowd fails, by 11 s, beside the west door near the fire.&lt;/li>
+&lt;li>&lt;strong>The grids agree.&lt;/strong> The 0.1 m FDS grid moves min DIFF by less than 1 s
+and the negative area by 0.3 m².&lt;/li>
+&lt;li>&lt;strong>The negative area is about a third of the paper&amp;rsquo;s.&lt;/strong> The release&amp;rsquo;s own
+RSET map has a queue about twice as large as ours
+(&lt;a href="#against-the-paper">Against the paper&lt;/a>).&lt;/li>
 &lt;/ul>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">What changed against the earlier version of this page&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>The earlier version rebuilt the room from the paper&amp;rsquo;s text and figures
+alone (the &lt;code>hrr060&lt;/code> family). The page now follows the authors&amp;rsquo; release,
+and the &lt;code>hrr060&lt;/code> family is a sensitivity
+(&lt;a href="#sensitivity-the-room-rebuilt-from-the-paper-alone">Sensitivity: the room rebuilt from the paper alone&lt;/a>).
+Between the two, the engine changed how agents leave at an exit
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/401" target="_blank" rel="noopener">#401&lt;/a>). The
+middle column separates that code change from the change of conditions.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>&lt;/th>
+&lt;th>Earlier page (&lt;code>hrr060&lt;/code>, commit &lt;code>30ca7f5&lt;/code>)&lt;/th>
+&lt;th>&lt;code>hrr060&lt;/code> on the current engine&lt;/th>
+&lt;th>Release conditions (this page)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Door&lt;/td>
+&lt;td>1.2 m, y = 8.2–9.4 m&lt;/td>
+&lt;td>1.2 m&lt;/td>
+&lt;td>1.0 m, y = 8–9 m&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Burner&lt;/td>
+&lt;td>0.6 × 0.6 m at x, y = 0.6–1.2 m&lt;/td>
+&lt;td>same&lt;/td>
+&lt;td>1 × 1 m at x, y = 1–2 m&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Fuel&lt;/td>
+&lt;td>flexible PU foam GM21: soot yield 0.131, CO yield 0.010, χr 0.52&lt;/td>
+&lt;td>same&lt;/td>
+&lt;td>PU (NFPA Babrauskas): soot yield 0.129, no CO, χr 0.35 (FDS default)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Free speed v0&lt;/td>
+&lt;td>1.2 m/s&lt;/td>
+&lt;td>1.2 m/s&lt;/td>
+&lt;td>N(1.3, 0.1) m/s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Exit cap&lt;/td>
+&lt;td>0.96 persons/s (paper Fig. 3)&lt;/td>
+&lt;td>0.96&lt;/td>
+&lt;td>1.00 (release trajectories)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Exit rule&lt;/td>
+&lt;td>removed within r + 0.5 m of a point in the exit&lt;/td>
+&lt;td>centre within 0.03 m of the exit polygon&lt;/td>
+&lt;td>same&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Agents left at 40 / 80 s (mean)&lt;/td>
+&lt;td>62.2 / 24.1&lt;/td>
+&lt;td>62.5 / 24.3&lt;/td>
+&lt;td>60.5 / 20.5&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Last agent out, one door, capped&lt;/td>
+&lt;td>104–106 s&lt;/td>
+&lt;td>105–106 s&lt;/td>
+&lt;td>100–101 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Latest ASET cell, 0.2 / 0.1 m grid&lt;/td>
+&lt;td>88 / 203 s&lt;/td>
+&lt;td>88 / 203 s&lt;/td>
+&lt;td>83 / 84 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>min DIFF, one door, 0.2 m (0.1 m)&lt;/td>
+&lt;td>−30 s (−25 s)&lt;/td>
+&lt;td>−31 s (−26 s)&lt;/td>
+&lt;td>−27 s (−27 s)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Area DIFF &amp;lt; 0, one door, 0.2 m (0.1 m)&lt;/td>
+&lt;td>6.2 m² (5.5)&lt;/td>
+&lt;td>6.2 m² (5.8)&lt;/td>
+&lt;td>6.7 m² (6.4)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>C, one door, 0.2 m (0.1 m)&lt;/td>
+&lt;td>−113 m²s (−87)&lt;/td>
+&lt;td>−118 m²s (−92)&lt;/td>
+&lt;td>−112 m²s (−107)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>min DIFF / area, two doors&lt;/td>
+&lt;td>−41 s / 6.2 m²&lt;/td>
+&lt;td>−42 s / 5.8 m²&lt;/td>
+&lt;td>−40 s / 7.4 m²&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>min DIFF / area, two doors, N = 200&lt;/td>
+&lt;td>−103 s / 21.9 m²&lt;/td>
+&lt;td>−103 s / 21.9 m²&lt;/td>
+&lt;td>−97 s / 22.9 m²&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>min DIFF, uncapped, one / two doors&lt;/td>
+&lt;td>+3 s / +1 s&lt;/td>
+&lt;td>+2 s / −4 s&lt;/td>
+&lt;td>+4 s / −11 s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The engine change moves min DIFF by about 1 s. The release conditions move
+it by about 4 s and bring the two FDS grids into agreement.
+The uncapped two-door run turns negative with the exit-rule change already
+(+1 → −4 s, not robust over seeds: per-seed mean +0.3 s); the release
+conditions deepen it to −11 s, negative in the per-seed mean as well
+(−4.6 [−6.9, −2.5] s).&lt;/p>
+&lt;/div>
+&lt;/details>
 &lt;h2>The room&lt;span class="hx-absolute -hx-mt-20" id="the-room">&lt;/span>
 &lt;a href="#the-room" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A 30 × 10 × 3 m room with one door, a fire in the opposite corner and 100
 people who all start moving at once (paper §2.1). The paper&amp;rsquo;s text gives no
 fire details (&amp;ldquo;as the fire properties are of no importance for this work, we
-deliberately leave out details&amp;rdquo;). The authors&amp;rsquo; reference implementation
-(&lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">doi:10.5281/zenodo.3875550&lt;/a>) uses a
-constant 60 kW on a 1 × 1 m polyurethane burner at x, y = 1–2 m, soot yield
-0.129, FDS 6.5.3. We used:&lt;/p>
+deliberately leave out details&amp;rdquo;). We take them from the authors&amp;rsquo; release:&lt;/p>
 &lt;ul>
-&lt;li>a constant 60 kW burner, 0.6 m × 0.6 m at x, y = 0.6–1.2 m, burning
-flexible polyurethane foam, which yields soot and CO;&lt;/li>
-&lt;li>FDS 6.10.1, 0.2 m cells (0.1 m as a grid check), 600 s;&lt;/li>
-&lt;li>evacuation with the collision-free speed model, radius 0.15 m, free speed
-1.2 m/s, 10 seeds per version.&lt;/li>
+&lt;li>a constant 60 kW fire, HRRPUA 60 kW/m² on a 1 × 1 m floor vent at
+x, y = 1–2 m, burning polyurethane (NFPA Babrauskas, soot yield 0.129),
+with the FDS defaults for everything the release leaves unset;&lt;/li>
+&lt;li>one door, 1.0 m wide at y = 8–9 m in the east wall, 2.0 m high, open;&lt;/li>
+&lt;li>100 people placed at random over the floor, free speed N(1.3, 0.1) m/s,
+the exit capped at 1.00 persons/s, the flow we measured from the
+release&amp;rsquo;s ten JuPedSim runs.&lt;/li>
 &lt;/ul>
-&lt;p>The full list of inputs, each marked as stated in the paper, read off a
-figure, or assumed, is under &lt;a href="#setup-and-deviations">Setup and deviations&lt;/a>.&lt;/p>
+&lt;p>We run FDS 6.10.1 on 0.2 m cells (0.1 m as a grid check) to 600 s, and the
+collision-free speed model with radius 0.15 m, 10 seeds per version. Every
+input, with its source, is under
+&lt;a href="#setup-deviations-and-caveats">Setup, deviations and caveats&lt;/a>.&lt;/p>
 &lt;h2>ASET: which fire quantity matters&lt;span class="hx-absolute -hx-mt-20" id="aset-which-fire-quantity-matters">&lt;/span>
 &lt;a href="#aset-which-fire-quantity-matters" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>ASET of a cell is the first time a criterion holds anywhere in that cell
 at 2.0 m, counted from ignition. We screened every criterion of three
 published sets, plus the pyFDS-Evac doses, and counted the cells that
 exceed each one by 600 s. The headline set is vfdb Table 8.3, &amp;lt; 30 min: the
 only column that contains both of the paper&amp;rsquo;s values. The paper cites vfdb
-for 0.23 1/m only and names no column (our inference); the vfdb &amp;lt; 5 min column and EA Fig. 8 are
-sensitivity rows. For this fire the choice barely matters: smoke sets ASET
-under all three.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/criteria_screen.png" alt="Dot plot of the number of map cells exceeded by 600 s for each criterion, grouped into four source sets, for three FDS runs. The smoke criteria K ≥ 0.23, 0.3 and 0.46 per metre reach all 848 cells in every run. Temperature at 45 or 50 °C reaches 6 to 15 cells. CO at 100 ppm reaches 2 cells and CO₂ at 1 % 3 cells, only on the 0.1 m grid. The total-flux heat doses reach 3 cells. Every other criterion reaches none, drawn as open markers at zero." loading="lazy" />&lt;/p>
+for 0.23 1/m only and names no column (our inference); the vfdb &amp;lt; 5 min
+column and EA Fig. 8 are sensitivity rows. Smoke sets ASET under all three.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/criteria_screen.png" alt="Dot plot of the number of map cells exceeded by 600 s for each criterion, grouped into four source sets, for three FDS runs. The smoke criteria K ≥ 0.23, 0.3 and 0.46 per metre reach all cells in every run. Temperature at 45 or 50 °C reaches 14 to 24 cells. CO₂ at 1 % reaches 3 cells and T ≥ 100 °C 5 cells, only on the 0.1 m grid. The total-flux heat doses reach 3 cells. Every other criterion reaches none, drawn as open markers at zero." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Map cells (0.6 m) exceeded by 600 s at z = 2.0 m, any FDS node of the
 cell. Open markers: no cell. One marker shape per FDS run.&lt;/em>&lt;/p>
 &lt;table>
@@ -138,29 +261,29 @@ cell. Open markers: no cell. One marker shape per FDS run.&lt;/em>&lt;/p>
 &lt;tr>
 &lt;td>vfdb Table 8.3, &amp;lt; 30 min&lt;/td>
 &lt;td>K ≥ 0.23 1/m (the paper&amp;rsquo;s criterion)&lt;/td>
-&lt;td>all 848, from 3 s&lt;/td>
-&lt;td>all 848, from 3 s&lt;/td>
-&lt;td>all 847, from 3 s&lt;/td>
+&lt;td>all 847, from 4 s&lt;/td>
+&lt;td>all 847, from 4 s&lt;/td>
+&lt;td>all 845, from 4 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;/td>
 &lt;td>T ≥ 45 °C&lt;/td>
-&lt;td>15, within 2.7 m of the burner&lt;/td>
-&lt;td>14, within 2.7 m&lt;/td>
-&lt;td>14, within 2.7 m&lt;/td>
+&lt;td>22, within 2.6 m of the burner&lt;/td>
+&lt;td>24, within 3.2 m&lt;/td>
+&lt;td>22, within 2.6 m&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;/td>
 &lt;td>CO ≥ 100 ppm&lt;/td>
-&lt;td>0&lt;/td>
-&lt;td>2, within 0.3 m&lt;/td>
-&lt;td>0&lt;/td>
+&lt;td>not applicable: CO yield 0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;/td>
 &lt;td>CO₂ ≥ 1 %&lt;/td>
 &lt;td>0&lt;/td>
-&lt;td>3, within 0.4 m&lt;/td>
+&lt;td>3, within 0.1 m&lt;/td>
 &lt;td>0&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -180,27 +303,27 @@ cell. Open markers: no cell. One marker shape per FDS run.&lt;/em>&lt;/p>
 &lt;tr>
 &lt;td>vfdb Table 8.3, &amp;lt; 5 min&lt;/td>
 &lt;td>K ≥ 0.23 1/m (D_L 0.1)&lt;/td>
-&lt;td>all 848&lt;/td>
-&lt;td>all 848&lt;/td>
 &lt;td>all 847&lt;/td>
+&lt;td>all 847&lt;/td>
+&lt;td>all 845&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;/td>
 &lt;td>K ≥ 0.46 1/m (D_L 0.2, note 4)&lt;/td>
-&lt;td>all 848&lt;/td>
-&lt;td>all 848&lt;/td>
 &lt;td>all 847&lt;/td>
+&lt;td>all 847&lt;/td>
+&lt;td>all 845&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;/td>
 &lt;td>T ≥ 50 °C&lt;/td>
-&lt;td>7, within 0.9 m&lt;/td>
-&lt;td>11, within 1.5 m&lt;/td>
-&lt;td>6, within 0.9 m&lt;/td>
+&lt;td>14, within 1.0 m&lt;/td>
+&lt;td>20, within 2.0 m&lt;/td>
+&lt;td>17, within 1.5 m&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;/td>
-&lt;td>CO ≥ 500 ppm, CO₂ ≥ 3 %, radiant flux ≥ 2.5 kW/m²&lt;/td>
+&lt;td>CO₂ ≥ 3 %, radiant flux ≥ 2.5 kW/m²&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>0&lt;/td>
@@ -208,13 +331,20 @@ cell. Open markers: no cell. One marker shape per FDS run.&lt;/em>&lt;/p>
 &lt;tr>
 &lt;td>EA Fig. 8 (Short Exposure, p. 15), 2.0 m, up to 10 min&lt;/td>
 &lt;td>K ≥ 0.3 1/m (10 m visibility with C = 3)&lt;/td>
-&lt;td>all 848, from 3 s&lt;/td>
-&lt;td>all 848&lt;/td>
+&lt;td>all 847, from 4 s&lt;/td>
 &lt;td>all 847&lt;/td>
+&lt;td>all 845&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;/td>
-&lt;td>T ≥ 100 °C, radiant flux ≥ 2.5 kW/m², CO ≥ 2,700 ppm&lt;/td>
+&lt;td>T ≥ 100 °C&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>5, within 0.7 m&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;/td>
+&lt;td>radiant flux ≥ 2.5 kW/m²&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>0&lt;/td>
@@ -235,8 +365,8 @@ cell. Open markers: no cell. One marker shape per FDS run.&lt;/em>&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>vfdb and EA&lt;/td>
-&lt;td>HCN&lt;/td>
-&lt;td>not applicable: not tracked&lt;/td>
+&lt;td>CO, HCN&lt;/td>
+&lt;td>not applicable: not produced (CO yield 0) or not tracked&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
@@ -249,77 +379,74 @@ cell. Open markers: no cell. One marker shape per FDS run.&lt;/em>&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>&amp;ldquo;0&amp;rdquo; means not reached by 600 s at 2.0 m for this fire. That is a result for
-this fire, not a pass, and it does not mean the room is safe.&lt;/p>
+&lt;p>&amp;ldquo;0&amp;rdquo; means not reached by 600 s at 2.0 m for this fire. Where a criterion
+reads &amp;ldquo;not applicable&amp;rdquo;, the fire model does not produce the quantity, so
+the map says nothing about it.&lt;/p>
 &lt;p>The largest values anywhere on the 2.0 m slice, 0–600 s (0.2 m / 0.1 m
-grid, one door): K 7.8 / 12.8 1/m, T 70 / 115 °C, CO 69 / 124 ppm, CO₂ 0.82 /
-1.45 %, O₂ never below 19.5 / 18.5 %, gas FED 0.019 / 0.029, convective heat
-FED 0.054 / 0.139.&lt;/p>
+grid, one door): K 6.4 / 10.4 1/m, T 80 / 118 °C, CO₂ 0.65 / 1.16 %, O₂
+never below 19.9 / 19.2 %, gas FED 2.4·10⁻⁵ / 8.5·10⁻⁴ (CO₂ and O₂ terms
+only), convective heat FED 0.070 / 0.097.&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">What the criteria are, and what they are not&lt;/strong>
+&lt;strong class="hx-text-lg">What the criteria are, and what they mark&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;ul>
-&lt;li>&lt;strong>The criteria are not incapacitation limits for a person.&lt;/strong> K ≥ 0.23 1/m
-and 45 °C are guideline acceptance values of vfdb TB 04-01 (2020),
-Table 8.3, for a stay of up to 30 minutes. The paper uses both
-(0.23 1/m p. 3; 45 °C p. 4, Fig. 4) and cites vfdb, but does not name the
-column; 45 °C occurs only in the &amp;lt; 30 min column.
+&lt;li>&lt;strong>The criteria are guideline acceptance values.&lt;/strong> K ≥ 0.23 1/m and
+45 °C are vfdb TB 04-01 (2020), Table 8.3, values for a stay of up to
+30 minutes, well below any incapacitation endpoint for a person. The
+paper uses both (0.23 1/m p. 3; 45 °C p. 4, Fig. 4) and cites vfdb, but
+does not name the column; 45 °C occurs only in the &amp;lt; 30 min column.
 K = 0.23 1/m is D_L = 0.1 1/m converted with vfdb Eq. 8.1 (K = D_L · ln 10).
 ISO 13571:2012 §4.6 f treats the early effects of obscuration as
 behavioural and leaves them out of its incapacitation model. How these
 values compare with other published criteria is under
 &lt;a href="#tenability-criteria-in-the-literature">Tenability criteria in the literature&lt;/a>.&lt;/li>
 &lt;li>&lt;strong>Each set is shown whole.&lt;/strong> Taking CO from one source and temperature from
-another would mix two sets of assumptions. Which set is the headline and
-why is stated at the top of this section.&lt;/li>
+another would mix two sets of assumptions.&lt;/li>
 &lt;li>&lt;strong>The time column is a sensitivity.&lt;/strong> vfdb defines the long class as a
 stay of about 15–30 min (p. 324), so for evacuations under 5 minutes it
-is the more conservative choice. The &amp;lt; 5 min column gives 50 °C, not
-45 °C, and allows D_L = 0.2 1/m where the area is clearly laid out or
+is the more conservative choice. The &amp;lt; 5 min column gives 50 °C instead
+of 45 °C, and allows D_L = 0.2 1/m where the area is clearly laid out or
 people know it (note 4).&lt;/li>
 &lt;li>&lt;strong>vfdb assumes a mixed fire load.&lt;/strong> The guide values assume typical mixed
 fire loads and a CO : HCN ratio of 12.5 : 1 (pp. 323, 325); vfdb calls
 for a dose analysis for sensitive groups, very short or very long
 exposures, or unusual smoke composition (p. 324). Our polyurethane burner
-is a single fuel, not a mixed load. vfdb also calls toxicity criteria
-&amp;ldquo;not conservative&amp;rdquo; and says they should not replace layer or smoke
-criteria (p. 312).&lt;/li>
-&lt;li>&lt;strong>Temperature is not a criterion on its own.&lt;/strong> vfdb Table 8.3, note 2:
+is a single fuel. vfdb also calls toxicity criteria &amp;ldquo;not conservative&amp;rdquo;
+and says they should not replace layer or smoke criteria (p. 312).&lt;/li>
+&lt;li>&lt;strong>Temperature is assessed together with smoke.&lt;/strong> vfdb Table 8.3, note 2:
 gas temperature is not to be assessed in isolation from smoke density.
 T ≥ 45 °C is never the first criterion in a cell here; it ties with smoke
-in 4 cells at the burner (0.2 m, one door; 2 on the 0.1 m grid, 3 with
-two doors).&lt;/li>
+in 7 cells at the burner (0.2 m, one or two doors; 5 on the 0.1 m grid).&lt;/li>
 &lt;li>&lt;strong>EA gives no visibility constant.&lt;/strong> K ≥ 0.3 1/m for 10 m visibility uses
 C = 3, our assumption. EA §5.2 also allows 5 m (K ≥ 0.6 with C = 3) in
 enclosures of about 10 m, and reduced visibility where occupants may be
 queuing next to exits, which is where DIFF is negative here, subject to
-assessment of CO and HCN levels (§5.2, p. 15). That condition is met here
-for CO; HCN is not tracked.&lt;/li>
+assessment of CO and HCN levels (§5.2, p. 15). This fire produces neither.&lt;/li>
 &lt;li>&lt;strong>Radiant flux&lt;/strong> is estimated as 0.25 · (U − 4σT_amb⁴) from the FDS
 &lt;code>INTEGRATED INTENSITY&lt;/code> U, with T_amb = 20 °C (assumed): a small body in an
 isotropic field receives about U/4.&lt;/li>
 &lt;li>&lt;strong>Gas FED ≥ 0.3&lt;/strong> is the dose of someone standing still from ignition,
 with the pyFDS-Evac form of the
 &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> FED
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>). ISO 13571:2012 §5.4
-requires a reduced threshold for more conservative objectives; A.5.2
-gives 0.3 as an example, at which about 11.4 % of a population would
-still be susceptible (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>). No HCN is set, so its term is zero.&lt;/li>
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>). With no CO and no HCN, only
+its CO₂ and O₂ terms act. ISO 13571:2012 §5.4 requires a reduced
+threshold for more conservative objectives; A.5.2 gives 0.3 as an
+example, at which about 11.4 % of a population would still be
+susceptible (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Heat FED ≥ 0.3&lt;/strong> uses the clothed convective form of ISO 13571:2012
 §8.3.1, Eq. (9) (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>). ISO gives no numeric
 threshold; §8.5 applies the chosen one as for the gases. The 0.3 is a
 pyFDS-Evac choice, by analogy with A.5.2.&lt;/li>
 &lt;li>&lt;strong>Total-flux heat, as a sensitivity.&lt;/strong> The total-flux dose (SFPE Handbook
-Ch. 63, Eq. 63.43) with the radiant part f · (U − 4σT_skin⁴): at f = 0.25
-the radiant part never reaches the 2.5 kW/m² from which ISO counts it,
-so the radiant term is zero and the exceedance comes from the convective
-part of Eq. 63.43; the tolerance dose reaches 0.3 in 3 cells next to the
-burner, from 455 s (0.2 m) or 255 s (0.1 m). At f = 1, the upper bound the engine
-accepts, it passes 0.3 only in the same 3 cells and is not grid-stable
-(maximum 13.5 on the 0.2 m grid against 0.97 on the 0.1 m grid).&lt;/li>
+Ch. 70, Eq. 70.41) with the radiant part f · (U − 4σT_skin⁴). Even at
+f = 1, the upper bound the engine accepts, the radiant part peaks at
+1.7 kW/m² and stays below the 2.5 kW/m² from which ISO counts it, so the
+dose comes from the convective part alone and is the same for f = 0.25
+and f = 1. The tolerance dose reaches 0.3 in 3 cells next to the burner,
+from 344 s (0.2 m), 259 s (0.1 m) or 393 s (two doors).&lt;/li>
 &lt;/ul>
 &lt;/div>
 &lt;/details>
@@ -335,8 +462,8 @@ Fundamentals pages (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundam
 location-based guide values: the most conservative of the three stay
 classes, at the lower end of the smoke limits in the literature and well
 below any incapacitation endpoint. A map that crosses them shows where
-conditions stop meeting the protection goal. It does not show where people
-are incapacitated.&lt;/p>
+conditions stop meeting the protection goal. Incapacitation needs a dose
+along each person&amp;rsquo;s path.&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">How published criteria differ: effect, limit or dose, time and height, population&lt;/strong>
@@ -353,7 +480,7 @@ values are one level lower: guide values (&lt;em>Anhaltswerte&lt;/em>) for prote
 goals, which at light activity reach FED ≈ 0.3 at the end of each stay
 class (Table 8.3 p. 325; Fig. 8.4, pp. 326–327). Purser and McAllister list
 escape impairment, incapacitation and death as separate columns per
-irritant (SFPE Handbook Ch. 63, Table 63.6, p. 2344).&lt;/p>
+irritant (SFPE Handbook Ch. 70, Table 70.4, p. 2288).&lt;/p>
 &lt;p>&lt;strong>Limit or dose.&lt;/strong> A fixed limit is checked at every place and instant. A
 dose must be summed along each person&amp;rsquo;s path, which couples the fire and
 evacuation models (Węgrzyński et al. 2026, §1–2). ISO 13571 uses doses for
@@ -370,13 +497,16 @@ and use FED for up to 30 min (§5.2–5.3, pp. 15–17). DIN adds the AEGL-2
 for CO as a check, 420 ppm for 10 min and 150 ppm for 30 min, without
 interpolation (§7.2.3). EA and DIN evaluate at 2.0 m (EA §5.2; DIN
 §7.2.1); zero-exposure criteria use a clear layer of about 2.5 m (vfdb
-§8.1, p. 312; Purser and McAllister, p. 2320). Surveyed practitioners use
+§8.1, p. 312; Purser and McAllister, p. 2340). Surveyed practitioners use
 1.5–2.5 m, most often 2.0 m (52.1 %) (Węgrzyński et al. 2026, §4.3).&lt;/p>
 &lt;p>&lt;strong>Population.&lt;/strong> ISO requires a threshold below 1 for more conservative
 objectives; its informative annex gives 0.3 as an example, under which
 11.4 % of the population would still be affected, with no assurance that
 these percentages are valid (§5.4, A.5.2). Purser and McAllister suggest a
-design FED of 0.3, or 0.1 for sensitive groups (p. 2343); vfdb gives
+design FED of 0.3 for the general population, or 0.1 for particularly
+sensitive groups such as occupants of health-care premises (Ch. 70,
+p. 2288; worked example, p. 2322); one passage instead gives 0.1 as the
+value that protects nearly all exposed individuals (p. 2310). vfdb gives
 0.1–0.3 (§8.4, p. 319). EA considers 1.0 suitable for the vast majority of
 occupants and leaves the margin to RSET (§5, p. 13). In the survey, 7 of
 the 13 continental-European respondents who stated a value use 0.1; all
@@ -393,13 +523,12 @@ enter&amp;rsquo; at about 3 m. In the surveys behind that entry, 26 % (UK; Wood 
 Fig. 6) and 29 % (US; Bryan 1977, p. 213) of those who had entered smoke
 turned back, at any visibility, and the US group&amp;rsquo;s mean self-estimated
 visibility on turning back was 9.9 ft ≈ 3 m (Bryan 1977, Table LIV).
-Purser and McAllister also suggest limits of 0.08 OD/m (K ≈ 0.18) for
-large enclosures and 0.2 OD/m (K ≈ 0.46) for small ones (Purser and
-McAllister, Table 63.5, p. 2339). Where D_L ≤ 0.1 1/m, the toxic and
-temperature values are usually met as well (vfdb p. 325; DIN §7.2.2). In
-the survey (254 respondents, a convenience sample), visibility is the
-criterion most often decisive (91.4 %); FED is used by 22.2 %
-(§4.3–4.4).&lt;/p>
+Purser and McAllister also suggest limits of 0.08 OD/m (K ≈ 0.18, our
+conversion) for large enclosures and 0.2 OD/m (K ≈ 0.46) for small ones
+(Table 70.3, p. 2284). Where D_L ≤ 0.1 1/m, the toxic and temperature
+values are usually met as well (vfdb p. 325; DIN §7.2.2). In the survey
+(254 respondents, a convenience sample), visibility is the criterion most
+often decisive (91.4 %); FED is used by 22.2 % (§4.3–4.4).&lt;/p>
 &lt;p>&lt;strong>Criticism.&lt;/strong> Babrauskas et al. call the tenability criteria proposed at
 the time (their example is the 2007 draft of ISO 13571) &amp;ldquo;highly arbitrary&amp;rdquo;
 with &amp;ldquo;little basis in either physics or physiology&amp;rdquo; (2010, p. 347). Their
@@ -441,7 +570,7 @@ its generic values (Gann et al. 2001, pp. 82–86).&lt;/p>
 &lt;td>integrated over time; no height given&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>Purser &amp;amp; McAllister 2016, Ch. 63&lt;/td>
+&lt;td>Purser &amp;amp; McAllister 2026, Ch. 70&lt;/td>
 &lt;td>dose + suggested limits&lt;/td>
 &lt;td>incapacitation; escape impairment&lt;/td>
 &lt;td>integrated over time&lt;/td>
@@ -486,9 +615,9 @@ its generic values (Gann et al. 2001, pp. 82–86).&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>Purser &amp;amp; McAllister&lt;/td>
-&lt;td>0.08 / 0.2 OD/m (Table 63.5)&lt;/td>
-&lt;td>Table 63.20 (p. 2383)&lt;/td>
-&lt;td>design FED 0.3 (0.1 for sensitive groups)&lt;/td>
+&lt;td>0.08 / 0.2 OD/m (Table 70.3, p. 2284)&lt;/td>
+&lt;td>Table 70.18 (p. 2319)&lt;/td>
+&lt;td>design FED 0.3 (0.1 for sensitive groups; p. 2288)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -496,81 +625,118 @@ its generic values (Gann et al. 2001, pp. 82–86).&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h3>The ASET maps&lt;span class="hx-absolute -hx-mt-20" id="the-aset-maps">&lt;/span>
-&lt;a href="#the-aset-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/aset_criteria_1door.png" alt="Four plan views of the one-door room at 2.0 m, shaded from dark (0 to 10 s) to light (150 to 600 s), beige for not by 600 s. (a) K ≥ 0.23 per metre: the burner corner exceeds first, within 10 s, the west half by about 40 s, the door region at about 75 s and the south-east corner last, at 80 to 88 s. (b) K ≥ 0.3 per metre: almost the same. (c) T ≥ 45 °C: only 15 cells at the burner; everything else beige, with a note that gas temperature is not to be assessed without smoke density. (d) Which criterion is first: smoke in every cell, a tie with temperature in 4 cells at the burner." loading="lazy" />&lt;/p>
+&lt;a href="#the-aset-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/aset_criteria_1door.png" alt="Four plan views of the one-door room at 2.0 m, shaded from dark (0 to 10 s) to light (150 to 600 s), beige for not by 600 s. (a) K ≥ 0.23 per metre: the west wall and the burner corner exceed first, within 10 s, the west half by about 40 s, the door region at 72 to 74 s and the south-east corner last, at about 83 s. (b) K ≥ 0.3 per metre: almost the same. (c) T ≥ 45 °C: only 22 cells at the burner; everything else beige, with a note that gas temperature is not to be assessed without smoke density. (d) Which criterion is first: smoke in every cell, a tie with temperature in 7 cells at the burner." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>One door, 0.2 m FDS grid. Dotted beige: not by 600 s, censored and not
 filled with a value.&lt;/em>&lt;/p>
-&lt;p>Smoke fills the room from the burner corner eastward. The burner corner
-exceeds first, within 10 s. The door cells follow at about 75 s, and the
-south-east corner is last, at 80–88 s.&lt;/p>
+&lt;p>Smoke fills the room from the burner corner eastward. The plume rises
+along the west wall, which exceeds within 10 s. The door cells follow at
+72–74 s, and the south-east corner is last, at about 83 s.&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">Two doors, and the 0.1 m grid&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/aset_criteria_2door.png" alt="The same four panels for the two-door room. Smoke: the cells at the west door D2 exceed at 21 to 32 s, the cells at the east door D1 at 73 to 76 s, and a pocket beside the plume stays clear until up to 189 s. Temperature again only at the burner." loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/aset_criteria_2door.png" alt="The same four panels for the two-door room. Smoke: the cells at the west door D2 exceed at 19 to 29 s, the cells at the east door D1 at 69 to 70 s, and the south-east corner last, at about 83 s. Temperature again only at the burner." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Two doors, 0.2 m FDS grid. This is a separate FDS run: the second door
-changes the ventilation. The cells at the west door D2 exceed K ≥ 0.23 1/m
-at 21–32 s, the cells at the east door D1 at 73–76 s. A pocket of 8 cells
-beside the plume stays clear until up to 189 s.&lt;/em>&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/aset_grid_pair.png" alt="Three plan views and a scatter plot. (a) and (b): the K ≥ 0.23 ASET map on the 0.2 m and on the 0.1 m FDS grid. (c): their difference per cell, hatched where it exceeds 30 s; the largest differences are in a late pocket beside the plume. (d): ASET on the 0.1 m grid against ASET on the 0.2 m grid for every cell, with the door-region cells highlighted; they lie close to the diagonal, within 16 s, while some room cells lie far above it, up to about 200 s." loading="lazy" />&lt;/p>
-&lt;p>&lt;em>The same ASET map on two FDS grids. Mean |Δ| 9 s; 6 % of cells differ by
-more than 30 s. In the door region (x ≥ 24 m, y ≥ 6 m) |Δ| is at most 16 s
-(95th percentile 7 s). The 0.1 m grid has a late pocket beside the
-plume, mostly at x ≈ 1–5 m and y ≈ 1.5–5 m, with a few cells
-at x ≈ 10–13.5 m (latest cell 203 s against 88 s); it is not
-grid-converged.&lt;/em>&lt;/p>
+changes the ventilation. The cells at the west door D2 exceed
+K ≥ 0.23 1/m at 19–29 s, the cells at the east door D1 at 69–70 s.&lt;/em>&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/aset_grid_pair.png" alt="Three plan views and a scatter plot. (a) and (b): the K ≥ 0.23 ASET map on the 0.2 m and on the 0.1 m FDS grid, nearly the same. (c): their difference per cell, hatched where it exceeds 30 s; a few blocks near the burner and mid-room. (d): ASET on the 0.1 m grid against ASET on the 0.2 m grid for every cell, with the door-region cells highlighted; they lie on the diagonal, within 3 s, and most room cells lie close to it." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>The same ASET map on two FDS grids. Mean |Δ| 4.3 s; 3.0 % of cells differ
+by more than 30 s, at most 51 s. In the door region (x ≥ 24 m, y ≥ 6 m)
+|Δ| is at most 3 s. No cell first exceeds after 120 s on either grid.&lt;/em>&lt;/p>
 &lt;/div>
 &lt;/details>
+&lt;h3>Our ASET against the release&lt;span class="hx-absolute -hx-mt-20" id="our-aset-against-the-release">&lt;/span>
+&lt;a href="#our-aset-against-the-release" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The release contains the authors&amp;rsquo; ASET map (&lt;code>0_ASET/aset_map.txt&lt;/code>: FDS
+6.5.3, K ≥ 0.23 1/m at 2.0 m, 10 s steps, cells unexceeded by 120 s set to
+120 s). Built with the same 10 s steps and 120 s fill, our map has the same
+median, 60 s, and puts 71 % of the cells in the same 10 s step and 87 %
+within one step. Where they differ, ours is mostly earlier (21 % of cells
+against 9 % later; mean −4.7 s). The release leaves 19 cells in the
+western third unexceeded by 120 s; ours has none.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/aset_release.png" alt="Three plan views of ASET for K ≥ 0.23 per metre at 2.0 m and a scatter plot. (a) The release’s aset_map.txt, 10 s steps with a 120 s fill: median 60 s, with 19 dotted cells west of mid-room that do not exceed by 120 s. (b) Our map with the same 10 s steps and fill: median 60 s, the same pattern of dark west and light east. (c) Our headline map, about 1 s steps and censored at 600 s: median 49 s. (d) Ours against the release per cell: 71 % on the diagonal, 21 % below it (ours earlier), 9 % above." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Release: doi:10.5281/zenodo.3875550, &lt;code>aset_map.txt&lt;/code>, PIL resize of the
+0.2 m slice to 0.6 m cells. Ours: any FDS node of the cell. Burner red,
+exit green.&lt;/em>&lt;/p>
+&lt;p>The fields behind the maps agree up to 40 s and then part. Compared node by
+node on the 2.0 m slice at 10, 20, …, 120 s, our K and the release&amp;rsquo;s lie
+on the same side of 0.23 1/m at 90–100 % of nodes up to 40 s. From 50 s on
+our K is higher by 0.03–0.05 1/m on average and the share falls to
+68–85 %. The cause is not established
+(&lt;a href="#caveats-on-the-comparison-with-the-release">Caveats&lt;/a>). The headline map
+uses about 1 s steps, which makes it about 6 s earlier on average than our
+10 s map and 11 s earlier than the release&amp;rsquo;s.&lt;/p>
 &lt;h2>RSET: when the last person leaves each cell&lt;span class="hx-absolute -hx-mt-20" id="rset-when-the-last-person-leaves-each-cell">&lt;/span>
 &lt;a href="#rset-when-the-last-person-leaves-each-cell" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>RSET of a cell is the last time any agent is in it (paper §2.3, Eqs. 4–5),
-counted from ignition. The agents here do not see smoke: they walk at free
-speed and keep their first exit (&amp;ldquo;arm U&amp;rdquo;), so their RSET does not depend on
-the fire.&lt;/p>
+counted from ignition. The agents here walk at free speed, keep their first
+exit and ignore the smoke (&amp;ldquo;arm U&amp;rdquo;), so their RSET does not depend on the
+fire.&lt;/p>
 &lt;h3>The door flow&lt;span class="hx-absolute -hx-mt-20" id="the-door-flow">&lt;/span>
-&lt;a href="#the-door-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The collision-free speed model passes about 3 persons/s through the 1.2 m
-door and empties the room in about 34 s. That is 2.5 persons/(m·s), and the
-engine&amp;rsquo;s exit removal widens the door in effect
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>), so the
-uncapped flow is not a physical door flow either. The paper&amp;rsquo;s Fig. 3 implies about
-0.96 persons/s and about 104 s. We therefore run two versions on the same
-FDS output:&lt;/p>
+&lt;a href="#the-door-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The collision-free speed model on its own empties the room through the
+1.0 m door in 42–45 s. The release&amp;rsquo;s JuPedSim runs need 96–103 s. We
+therefore run two versions on the same FDS output:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>capped:&lt;/strong> the exit removes at most one agent every 1/0.96 s
-(&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput: 0.96&lt;/code>; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/">Scenario JSON&lt;/a>);&lt;/li>
+&lt;li>&lt;strong>capped:&lt;/strong> the exit removes at most one agent per second
+(&lt;code>enable_throughput_throttling&lt;/code>, &lt;code>max_throughput: 1.0&lt;/code>; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/">Scenario JSON&lt;/a>), the flow we measured over 10–90 % of
+the agents in the release&amp;rsquo;s ten runs (0.96–1.05 persons/s);&lt;/li>
 &lt;li>&lt;strong>uncapped:&lt;/strong> the model&amp;rsquo;s own flow, reported as a model difference.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_remaining.png" alt="Two panels of agents in the room against time. Left, one door: the capped runs fall along a straight line through the paper’s Fig. 3 points (100, 61, 23 and 0 at 0, 40, 80 and 120 s) and reach zero at about 105 s; the uncapped runs reach zero at about 34 s. Right, two doors: capped N = 100 reaches zero at 54 to 65 s, uncapped at about 21 s, capped N = 200 at 105 to 125 s." loading="lazy" />&lt;/p>
-&lt;p>&lt;em>n = 10 seeds per version: line median, band minimum to maximum. Black
-squares: the paper&amp;rsquo;s Fig. 3, read off (100 at 0 s is N). Dashed: our
-linear extrapolation of the read-off points, not data.&lt;/em>&lt;/p>
-&lt;p>The capped runs leave 62.2 ± 0.6 agents at 40 s and 24.1 ± 0.6 at 80 s;
-the last agent leaves at 104–106 s. The paper&amp;rsquo;s Fig. 3 shows 61 and 23.
-The authors&amp;rsquo; released trajectories leave 60–64 agents at 40 s and 18–24 at
-80 s, and their room is empty by 96–103 s (our reading of the release, at
-1 frame/s; same whole-second count as ours).&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_remaining.png" alt="Two panels of agents in the room against time. Left, one door: the capped runs fall along the release’s ten JuPedSim runs, drawn as a dotted grey band, and through the paper’s Fig. 3 points, reaching zero at about 100 s; the uncapped runs reach zero at 42 to 45 s. Right, two doors: capped N = 100 reaches zero at 52 to 63 s, uncapped at 24 to 30 s, capped N = 200 at 102 to 118 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>n = 10 seeds per version: line median, band minimum to maximum. Dotted
+grey: the release&amp;rsquo;s ten JuPedSim runs (doi:10.5281/zenodo.3875550,
+1 frame/s). Black squares: the paper&amp;rsquo;s Fig. 3, read off (100 at 0 s is N).&lt;/em>&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>One door, pre-movement 0, 10 seeds&lt;/th>
+&lt;th>Left at 40 s, mean (range)&lt;/th>
+&lt;th>Left at 80 s&lt;/th>
+&lt;th>Last agent out&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Release, JuPedSim (our count of its trajectories)&lt;/td>
+&lt;td>61.2 (60–64)&lt;/td>
+&lt;td>21.5 (18–24)&lt;/td>
+&lt;td>96–103 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Ours, capped at 1.00 persons/s&lt;/td>
+&lt;td>60.5 (60–61)&lt;/td>
+&lt;td>20.5 (20–21)&lt;/td>
+&lt;td>100–101 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Ours, uncapped&lt;/td>
+&lt;td>7.5 ± 2.8 (sd)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>42–45 s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
 ⚠️
 &lt;/div>&lt;/div>
 &lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
 &lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
-This match is a calibration, not a validation. The 0.96 persons/s is read
-off the same Fig. 3 (100 − 0.96 · 40 ≈ 61.6), so the check shows only that
-the cap works as coded. The cap limits the removal rate at the exit; it is
-not door-flow physics, and it has no test yet
+This match is a calibration. The cap of 1.00 persons/s is measured from the
+same release trajectories, so the agreement shows that the cap works as
+coded. The cap limits the removal rate at the exit and has no test yet
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/355" target="_blank" rel="noopener">#355&lt;/a>).
 &lt;/div>
 &lt;/div>
 &lt;/div>
 &lt;h3>The RSET maps&lt;span class="hx-absolute -hx-mt-20" id="the-rset-maps">&lt;/span>
-&lt;a href="#the-rset-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/rset_maps.png" alt="Four RSET maps of the 30 by 10 m room, shaded from white (0 s) to dark blue (about 125 s), with the burner as a red square in the south-west corner and the exits as green bars. (a) One door, capped: dark blue in the north-east corner in front of the door, latest 105 s. (b) One door, uncapped: pale everywhere, latest 34 s. (c) Two doors, capped: blue at both doors, latest 65 s. (d) Two doors, N = 200, capped: dark blue at both doors, latest 124 s." loading="lazy" />&lt;/p>
+&lt;a href="#the-rset-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/rset_maps.png" alt="Four RSET maps of the 30 by 10 m room, shaded from white (0 s) to dark blue (120 s), with the burner as a red square in the south-west corner and the exits as green bars. (a) One door, capped: dark blue in the north-east corner in front of the door, latest 101 s. (b) One door, uncapped: pale everywhere, latest 44 s. (c) Two doors, capped: blue at both doors, latest 63 s. (d) Two doors, N = 200, capped: dark blue at both doors, latest 117 s." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>RSET, maximum over n = 10 seeds, 0.6 m cells. The plan is the same in
 every figure: 30 m × 10 m, burner red in the south-west corner, exits
 green, grey cells never visited by any agent.&lt;/em>&lt;/p>
-&lt;p>With the cap, RSET is highest in the corner in front of the door, where the queue
-forms (105 s). Without it, no cell is occupied after 34 s. With two doors,
-N = 100 capped, the room is empty by 65 s; with N = 200, by 124 s.&lt;/p>
+&lt;p>With the cap, RSET is highest in the corner in front of the door, where the
+queue forms (101 s). Without it, no cell is occupied after 44 s. With two
+doors, N = 100 capped, the room is empty by 63 s; with N = 200, by 117 s.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -582,67 +748,63 @@ N = 100 capped, the room is empty by 65 s; with N = 200, by 124 s.&lt;/p>
 &lt;tbody>
 &lt;tr>
 &lt;td>Capped, pre-movement 0&lt;/td>
-&lt;td>105 s&lt;/td>
-&lt;td>65 s&lt;/td>
+&lt;td>101 s&lt;/td>
+&lt;td>63 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 10 s (the default)&lt;/td>
-&lt;td>115 s&lt;/td>
-&lt;td>75 s&lt;/td>
+&lt;td>111 s&lt;/td>
+&lt;td>73 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 30 s&lt;/td>
-&lt;td>135 s&lt;/td>
-&lt;td>95 s&lt;/td>
+&lt;td>131 s&lt;/td>
+&lt;td>93 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 60 s&lt;/td>
-&lt;td>165 s&lt;/td>
-&lt;td>125 s&lt;/td>
+&lt;td>161 s&lt;/td>
+&lt;td>123 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Uncapped, pre-movement 0&lt;/td>
-&lt;td>34 s&lt;/td>
-&lt;td>22 s&lt;/td>
+&lt;td>44 s&lt;/td>
+&lt;td>29 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, N = 200, pre-movement 0&lt;/td>
 &lt;td>–&lt;/td>
-&lt;td>124 s&lt;/td>
+&lt;td>117 s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>Pre-movement is a constant delay for everyone. &amp;ldquo;The default&amp;rdquo; is the
 pyFDS-Evac default when a scenario sets no pre-movement key: a constant
-10 s, the FDS+Evac &lt;code>PRE_MEAN&lt;/code> (not the gamma preset).&lt;/p>
+10 s, the FDS+Evac &lt;code>PRE_MEAN&lt;/code> (the gamma preset applies only on request).&lt;/p>
 &lt;h2>DIFF: where smoke arrives before the last person leaves&lt;span class="hx-absolute -hx-mt-20" id="diff-where-smoke-arrives-before-the-last-person-leaves">&lt;/span>
 &lt;a href="#diff-where-smoke-arrives-before-the-last-person-leaves" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>DIFF = ASET − RSET per cell (paper Eq. 7). A cell fails when DIFF &amp;lt; 0;
-DIFF = 0 counts as a pass. DIFF is a time window between the first
-exceedance in a cell and the last presence of &lt;em>any&lt;/em> agent there. It is not
-the exposure of an individual: &amp;ldquo;the exposure time of individuals cannot be
-concluded from this value&amp;rdquo; (p. 6). Dose is our addition.
-Because DIFF is a margin in seconds and not only a sign, the maps can
-compare versions by how much time each leaves, which is how Babrauskas et
-al. (2010, pp. 350–351) propose to use ASET − RSET. RSET here is the
-maximum over seeds, high-end only with respect to the seed spread.
-Pre-movement is constant, so the behavioural spread that Babrauskas et
-al. (2010, p. 348) ask to be covered is not sampled.
-For per-agent exposure, see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a real fire&lt;/a>.&lt;/p>
-&lt;h3>The capped run, animated&lt;span class="hx-absolute -hx-mt-20" id="the-capped-run-animated">&lt;/span>
-&lt;a href="#the-capped-run-animated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_smoke_1door.gif" alt="Animation of the one-door room at 8 times real time, capped exit, no pre-movement. 100 blue dots spread over the floor walk to the door in the north-east corner and queue there. Grey smoke spreads from the burner in the south-west corner along the north wall and fills the room. At about 72 s it reaches the queue: the dots turn into red crosses, all inside a dashed red outline in front of the door, and leave one by one until the room is empty at 105 s." loading="lazy" />&lt;/p>
-&lt;p>&lt;em>One door, exit capped at 0.96 persons/s, pre-movement 0, seed 2 (the seed
-closest to the median of 104.9 s; its room empties at 105.0 s), 8 times
-real time.
-Background: K at 2.0 m from the FDS slice. Red cross: an agent in a cell
-whose ASET (K ≥ 0.23 1/m) has passed. Dashed outline: the DIFF &amp;lt; 0 cells of
-map (a) below. Regenerated by &lt;code>scripts/docs/study_animations.py&lt;/code>.&lt;/em>&lt;/p>
-&lt;p>Before 72 s no agent stands in a cell whose ASET has passed. From 77 s
-every agent still inside does, and all of them are in the queue at the
-capped door, in and around the outlined corner. The
-agents ignore the smoke (arm U), so a cross marks where the map fails, not a
-change in how anyone walks.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_1door.png" alt="Six DIFF maps of the one-door room, red and hatched where DIFF is negative, blue where it is positive, grey where no agent went. (a) capped, pre-movement 0, 0.2 m grid: a small red block in the north-east corner in front of the door; min DIFF −30 s, 6.2 m². (b) the same on the 0.1 m grid: −25 s, 5.5 m². (c) pre-movement 10 s: −40 s, 14.0 m². (d) pre-movement 30 s: red spreads along the north wall and the west end, −60 s, 71.6 m². (e) pre-movement 60 s: most of the room red, −90 s, 213.3 m². (f) uncapped: all blue, min DIFF &amp;#43;3 s." loading="lazy" />&lt;/p>
+DIFF = 0 counts as a pass. DIFF is the time window between the first
+exceedance in a cell and the last presence of &lt;em>any&lt;/em> agent there. The paper
+notes that &amp;ldquo;the exposure time of individuals cannot be concluded from this
+value&amp;rdquo; (p. 6); for per-agent exposure, see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a real fire&lt;/a>. Because DIFF is a
+margin in seconds, the maps compare versions by how much time each leaves,
+which is how Babrauskas et al. (2010, pp. 350–351) propose to use
+ASET − RSET. RSET here is the maximum over seeds, high-end with respect to
+the seed spread. Pre-movement is constant, so the behavioural spread that
+Babrauskas et al. (2010, p. 348) ask to be covered is not sampled.&lt;/p>
+&lt;h3>One door, animated&lt;span class="hx-absolute -hx-mt-20" id="one-door-animated">&lt;/span>
+&lt;a href="#one-door-animated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_smoke_1door.gif" alt="Animation of the one-door room at 8 times real time, capped exit, no pre-movement. 100 blue dots spread over the floor walk to the door in the north-east corner and queue there. Grey smoke spreads from the burner in the south-west corner and fills the room. At 69 s it reaches the queue: the dots turn into red crosses, inside a dashed red outline in front of the door, and leave one by one until the room is empty at about 100 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>One door, exit capped at 1.00 persons/s, pre-movement 0, seed 1 (the seed
+closest to the median of 99.9 s; its room empties at 99.8 s), 8 times real
+time. Background: K at 2.0 m from the FDS slice. Red cross: an agent in a
+cell whose ASET (K ≥ 0.23 1/m) has passed. Dashed outline: the DIFF &amp;lt; 0
+cells of map (a) below. Regenerated by &lt;code>scripts/docs/study_animations.py&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>Before 69 s no agent stands in a cell whose ASET has passed. From 75 s
+every agent still inside does, all of them in the queue at the capped door,
+up to 25 at 74 s. The agents ignore the smoke (arm U), so a cross marks
+where the map fails; nobody walks differently.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_1door.png" alt="Six DIFF maps of the one-door room, red and hatched where DIFF is negative, blue where it is positive, grey where no agent went. (a) capped, pre-movement 0, 0.2 m grid: a small red block in the north-east corner in front of the door; min DIFF −27 s, 6.7 m². (b) the same on the 0.1 m grid: −27 s, 6.4 m². (c) pre-movement 10 s: −37 s, 11.7 m². (d) pre-movement 30 s: red spreads along the north wall, the west end and mid-room, −57 s, 82.9 m². (e) pre-movement 60 s: most of the room red, −87 s, 208.8 m². (f) uncapped: all blue, min DIFF &amp;#43;4 s." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>One door. ASET: K ≥ 0.23 1/m, any node of the cell, z = 2.0 m, about 1 s
 steps. RSET: maximum over n = 10 seeds. No visited cell is censored.&lt;/em>&lt;/p>
 &lt;table>
@@ -658,82 +820,76 @@ steps. RSET: maximum over n = 10 seeds. No visited cell is censored.&lt;/em>&lt;
 &lt;tbody>
 &lt;tr>
 &lt;td>Capped, pre-movement 0&lt;/td>
-&lt;td>−30 s (−25 s)&lt;/td>
-&lt;td>6.2 m² (5.5)&lt;/td>
-&lt;td>−113 m²s (−87)&lt;/td>
-&lt;td>20 (18)&lt;/td>
+&lt;td>−27 s (−27 s)&lt;/td>
+&lt;td>6.7 m² (6.4)&lt;/td>
+&lt;td>−112 m²s (−107)&lt;/td>
+&lt;td>21 (20)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 10 s&lt;/td>
-&lt;td>−40 s (−35 s)&lt;/td>
-&lt;td>14.0 m² (9.4)&lt;/td>
-&lt;td>−206 m²s (−161)&lt;/td>
-&lt;td>42 (29)&lt;/td>
+&lt;td>−37 s (−37 s)&lt;/td>
+&lt;td>11.7 m² (10.6)&lt;/td>
+&lt;td>−200 m²s (−191)&lt;/td>
+&lt;td>35 (32)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 30 s&lt;/td>
-&lt;td>−60 s (−55 s)&lt;/td>
-&lt;td>71.6 m² (59.5)&lt;/td>
-&lt;td>−920 m²s (−656)&lt;/td>
-&lt;td>203 (169)&lt;/td>
+&lt;td>−57 s (−57 s)&lt;/td>
+&lt;td>82.9 m² (68.8)&lt;/td>
+&lt;td>−932 m²s (−742)&lt;/td>
+&lt;td>233 (194)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 60 s&lt;/td>
-&lt;td>−90 s (−85 s)&lt;/td>
-&lt;td>213.3 m² (184.9)&lt;/td>
-&lt;td>−5,610 m²s (−4,735)&lt;/td>
-&lt;td>598 (519)&lt;/td>
+&lt;td>−87 s (−87 s)&lt;/td>
+&lt;td>208.8 m² (209.5)&lt;/td>
+&lt;td>−5,833 m²s (−5,406)&lt;/td>
+&lt;td>583 (585)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Uncapped, pre-movement 0&lt;/td>
-&lt;td>+3 s (+3 s)&lt;/td>
+&lt;td>+4 s (+4 s)&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>0&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>&lt;em>0.2 m FDS grid; in brackets the 0.1 m grid. Of the 848 cells, 758 are
-visited in the capped versions; the 90 others are shown as &amp;ldquo;not visited&amp;rdquo;
-and are outside the five DIFF states.&lt;/em>&lt;/p>
+&lt;p>&lt;em>0.2 m FDS grid; in brackets the 0.1 m grid. Of the 847 cells with floor,
+739 are visited in the capped versions; the others are shown as &amp;ldquo;not
+visited&amp;rdquo; and are outside the five DIFF states.&lt;/em>&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Pre-movement shifts min DIFF one for one.&lt;/strong> It delays everyone by the
-same constant, so −30, −40, −60, −90 s carry no new information. Only the
+same constant, so −27, −37, −57, −87 s carry no new information. Only the
 area and C change shape across the pre-movement versions. A constant
 delay is a simplification: pre-movement is a distribution whose shape
 depends on occupancy, warning and management, and in a dense room the
-first movers, not the mean, set the queue (Purser 2003, pp. 92, 94–97).
-The one-for-one shift holds only for a constant delay.&lt;/li>
+first movers set the queue (Purser 2003, pp. 92, 94–97).&lt;/li>
 &lt;li>&lt;strong>C&lt;/strong> is Σ DIFF · A over the failing cells, in m²s (paper Eq. 8, without
-the 20 s bins of Fig. 7 and the release code). The paper&amp;rsquo;s authors &amp;ldquo;do not yet have a direct
-physical interpretation&amp;rdquo; of it (p. 7). Use it to rank versions, not as a
-quantity.&lt;/li>
+the 20 s bins of Fig. 7 and the release code). The paper&amp;rsquo;s authors &amp;ldquo;do
+not yet have a direct physical interpretation&amp;rdquo; of it (p. 7). Use it to
+rank versions.&lt;/li>
 &lt;li>&lt;strong>The door jambs.&lt;/strong> The walkable area has 0.8 m deep jambs either side of
-the door (&lt;a href="#setup-and-deviations">Setup and deviations&lt;/a>). They take about
-1.1 m² (about 3 cells) out of the corner where RSET is highest, so every
-area here is up to about 1.1 m² smaller than without them.&lt;/li>
+the door (&lt;a href="#setup-deviations-and-caveats">Setup&lt;/a>). They take about
+1.4 m² out of the corner where RSET is highest, so the areas here are up
+to that much smaller than without them.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_measures.png" alt="Two dot plots, one row per version. Left, min DIFF: the capped versions from −30 to −103 s, the uncapped at &amp;#43;1 and &amp;#43;3 s, with the paper’s −29 s as a star next to −30. Right, the area with DIFF below zero: 6.2 to 213.3 m² for one door and 6.2 to 203.3 m² for two doors, the paper’s 20 m² as a star to the right of 6.2. Open diamonds show the 0.1 m grid next to each one-door point." loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_measures.png" alt="Two dot plots, one row per version. Left, min DIFF: the capped versions from −27 to −100 s, the uncapped at &amp;#43;4 s for one door and −11 s for two doors, with the paper’s −29 s as a star next to −27. Right, the area with DIFF below zero: 6.7 to 208.8 m² for one door and 7.4 to 210.3 m² for two doors, the paper’s 20 m² as a star to the right of 6.7. Open diamonds show the 0.1 m grid next to each one-door point." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Maximum over n = 10 seeds. Filled: 0.2 m FDS grid; open diamonds: 0.1 m
 grid; grey bar: the grid band. Two doors: no 0.1 m run, so no grid band.&lt;/em>&lt;/p>
 &lt;h3>Two doors&lt;span class="hx-absolute -hx-mt-20" id="two-doors">&lt;/span>
-&lt;a href="#two-doors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_2door.png" alt="Six DIFF maps of the two-door room. With the cap, red cells appear at both doors, first and most at the west door D2; with pre-movement 60 s most of the room is red. Uncapped: all blue. N = 200, capped: red blocks at both doors, deepest at the west door." loading="lazy" />&lt;/p>
+&lt;a href="#two-doors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_smoke_2door.gif" alt="Animation of the two-door room at 8 times real time, capped exits, no pre-movement. The dots split between the west door D2 near the burner and the east door D1. Smoke from the burner rises along the west wall and reaches the D2 queue at about 15 s: those dots turn into red crosses inside a dashed red outline at D2. The D1 queue stays blue until it has left. The room is empty at about 54 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Two doors, capped, pre-movement 0, seed 7 (the seed closest to the median
+of 53.7 s; its room empties at 54.2 s), 8 times real time. Same encoding
+as the one-door animation; the outline is the DIFF &amp;lt; 0 area of map (a)
+below.&lt;/em>&lt;/p>
+&lt;p>From 15 s agents at the west door D2 stand in cells whose ASET has passed,
+up to 25 of them at 30 s, and from 47 s every agent still inside does. No
+agent at the east door D1 does. D2, about 7 m from the burner, sets the
+two-door result.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_2door.png" alt="Six DIFF maps of the two-door room. With the cap, red cells appear at both doors, first and most at the west door D2; with pre-movement 60 s most of the room is red. Uncapped: a few red cells at D2 and along the west wall. N = 200, capped: red blocks at both doors, deepest at the west door." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Two doors, 0.2 m FDS grid only: there is no 0.1 m two-door run, so no grid
-band, and the one-door band does not carry over.&lt;/em>&lt;/p>
-&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
-&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">The two-door run, animated&lt;/strong>
-&lt;/summary>
-&lt;div class="hx-p-2 hx-overflow-hidden">
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_smoke_2door.gif" alt="Animation of the two-door room at 8 times real time, capped exits, no pre-movement. The dots split between the west door D2 near the burner and the east door D1. Smoke from the burner rises along the west wall and reaches the D2 queue at about 22 s: those dots turn into red crosses inside a dashed red outline at D2. The D1 queue stays blue until it has left. The room is empty at 58 s." loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Two doors, capped, pre-movement 0, seed 1 (the seed closest to the median
-of 57.7 s; its room empties at 57.8 s), 8 times real time. Same encoding as the one-door
-animation; the outline is the DIFF &amp;lt; 0 area of map (a) above.&lt;/em>&lt;/p>
-&lt;p>From 22 s agents at the west door D2 stand in cells whose ASET has passed,
-up to 15 of them at 30 s. No agent at the east door D1 does. D2, about 7 m
-from the burner, sets the two-door result.&lt;/p>
-&lt;/div>
-&lt;/details>
+band.&lt;/em>&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -746,64 +902,69 @@ from the burner, sets the two-door result.&lt;/p>
 &lt;tbody>
 &lt;tr>
 &lt;td>Capped, pre-movement 0&lt;/td>
-&lt;td>−41 s&lt;/td>
-&lt;td>6.2 m²&lt;/td>
-&lt;td>−127 m²s&lt;/td>
+&lt;td>−40 s&lt;/td>
+&lt;td>7.4 m²&lt;/td>
+&lt;td>−174 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 10 s&lt;/td>
-&lt;td>−51 s&lt;/td>
-&lt;td>14.2 m²&lt;/td>
-&lt;td>−221 m²s&lt;/td>
+&lt;td>−50 s&lt;/td>
+&lt;td>16.2 m²&lt;/td>
+&lt;td>−277 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 30 s&lt;/td>
-&lt;td>−71 s&lt;/td>
-&lt;td>54.4 m²&lt;/td>
-&lt;td>−825 m²s&lt;/td>
+&lt;td>−70 s&lt;/td>
+&lt;td>64.2 m²&lt;/td>
+&lt;td>−1,012 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 60 s&lt;/td>
-&lt;td>−101 s&lt;/td>
-&lt;td>203.3 m²&lt;/td>
-&lt;td>−4,534 m²s&lt;/td>
+&lt;td>−100 s&lt;/td>
+&lt;td>210.3 m²&lt;/td>
+&lt;td>−4,978 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Uncapped, pre-movement 0&lt;/td>
-&lt;td>+1 s&lt;/td>
-&lt;td>0&lt;/td>
-&lt;td>0&lt;/td>
+&lt;td>−11 s&lt;/td>
+&lt;td>2.7 m²&lt;/td>
+&lt;td>−18 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, N = 200, pre-movement 0&lt;/td>
-&lt;td>−103 s&lt;/td>
-&lt;td>21.9 m²&lt;/td>
-&lt;td>−911 m²s&lt;/td>
+&lt;td>−97 s&lt;/td>
+&lt;td>22.9 m²&lt;/td>
+&lt;td>−962 m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;ul>
 &lt;li>&lt;strong>The second door is our assumption.&lt;/strong> The paper names no position for it.
 We mirrored D1 onto the west wall, about 7 m from the burner. Smoke
-reaches the cells at D2 at 21–32 s, against 73–76 s at D1, so D2 sets
+reaches the cells at D2 at 19–29 s, against 69–70 s at D1, so D2 sets
 every two-door min DIFF.&lt;/li>
-&lt;li>&lt;strong>N = 100 with two doors is not the paper&amp;rsquo;s thought experiment.&lt;/strong> In §3.1
-the paper doubles the occupants &lt;em>and&lt;/em> adds a second exit, and states that
-the margin &amp;ldquo;remains more or less unchanged&amp;rdquo;. Only the N = 200 version
-tests that. Here it gives −103 s against −30 s for one door with N = 100,
-and the last agent leaves at 105–125 s against 104–106 s. We attribute
-the difference to our D2 position, where smoke arrives at 21–32 s; we did
-not run another position. The paper does not report a simulation of this
-case (&amp;ldquo;experiment in mind&amp;rdquo;), so this neither confirms nor refutes it.&lt;/li>
+&lt;li>&lt;strong>Here the uncapped crowd fails too.&lt;/strong> Its worst cell, at (0.9, 6.9) m on
+the way to D2, exceeds at 14 s; agents pass it until about 25 s.&lt;/li>
+&lt;li>&lt;strong>N = 200 tests the paper&amp;rsquo;s thought experiment.&lt;/strong> In §3.1 the paper
+doubles the occupants &lt;em>and&lt;/em> adds a second exit, and states that the
+margin &amp;ldquo;remains more or less unchanged&amp;rdquo;. Here N = 200 with two doors gives
+−97 s against −27 s for one door with N = 100, and the last agent leaves
+at 102–118 s against 100–101 s. We attribute the difference to our D2
+position; we did not run another position. The paper does not report a
+simulation of this case (&amp;ldquo;experiment in mind&amp;rdquo;), so the result neither
+confirms nor refutes it.&lt;/li>
 &lt;li>&lt;strong>The split follows shortest paths.&lt;/strong> The paper assumes shortest-path
 route choice. We implement it by splitting the spawn area at x = 15 m, so
-each agent starts with its nearer door.&lt;/li>
-&lt;li>&lt;strong>Seeds split the crowd.&lt;/strong> Each seed draws the west/east split from a
-binomial distribution. Seed 10 of N = 200 put 119 agents west, and it sets
-the maximum; the per-seed mean of min DIFF is −86.3 s.&lt;/li>
+each agent starts with its nearer door. Every agent leaves through the
+door of its half.&lt;/li>
+&lt;li>&lt;strong>Seeds split the crowd.&lt;/strong> Each seed draws the west count from a binomial
+distribution with the west share of the floor, 0.49335. Over the ten
+seeds 50.4 % of the agents go west (N = 100) and 51.4 % (N = 200). Seed 10
+of N = 200 puts 118 agents west and sets the maximum; the per-seed mean
+of min DIFF is −82.3 s.&lt;/li>
 &lt;/ul>
 &lt;h2>How far to trust the numbers&lt;span class="hx-absolute -hx-mt-20" id="how-far-to-trust-the-numbers">&lt;/span>
-&lt;a href="#how-far-to-trust-the-numbers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Five sources of spread, on min DIFF for one door, capped, pre-movement 0:&lt;/p>
+&lt;a href="#how-far-to-trust-the-numbers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Six sources of spread, on min DIFF for one door, capped, pre-movement 0:&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -815,61 +976,61 @@ the maximum; the per-seed mean of min DIFF is −86.3 s.&lt;/li>
 &lt;tbody>
 &lt;tr>
 &lt;td>Seeds&lt;/td>
-&lt;td>±0.4 s&lt;/td>
-&lt;td>95 % bootstrap CI of the per-seed min DIFF, −29.5 [−29.9, −29.1] s&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>Per-agent random draws&lt;/td>
-&lt;td>0.1 s; area 0.2 m² (one cell)&lt;/td>
-&lt;td>the same versions and seeds, re-run before and after &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/pull/361" target="_blank" rel="noopener">#361&lt;/a>, which changed only how each agent&amp;rsquo;s draws are seeded: −30.4 against −30.3 s, 6.4 against 6.2 m²&lt;/td>
+&lt;td>±0.5 s&lt;/td>
+&lt;td>95 % bootstrap CI of the per-seed min DIFF, −26.4 [−26.9, −25.9] s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>A tiny change of the fire&lt;/td>
 &lt;td>about 1 s&lt;/td>
-&lt;td>same grid, HRRPUA 166.87 against 166.7 kW/m²: −29.3 against −30.3 s&lt;/td>
+&lt;td>&lt;code>hrr060&lt;/code> only, same grid, HRRPUA 166.87 against 166.7 kW/m²: −29.9 against −30.9 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FDS grid&lt;/td>
-&lt;td>about 5 s&lt;/td>
-&lt;td>0.2 m against 0.1 m: −30.3 against −25.3 s&lt;/td>
+&lt;td>under 1 s&lt;/td>
+&lt;td>0.2 m against 0.1 m: −27.5 against −26.9 s; area 6.7 against 6.4 m²&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>FDS version against the release&lt;/td>
+&lt;td>about 5 s on ASET&lt;/td>
+&lt;td>10 s ASET maps, ours against the release&amp;rsquo;s: mean −4.7 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Fire and door setup&lt;/td>
+&lt;td>about 4 s&lt;/td>
+&lt;td>release conditions against the paper-only rebuild: −27 against −31 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Door-flow model&lt;/td>
-&lt;td>about 33 s&lt;/td>
-&lt;td>capped against uncapped: −30.3 against +2.5 s&lt;/td>
+&lt;td>about 31 s&lt;/td>
+&lt;td>capped against uncapped: −27 against +4 s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The seed spread is small because the cap, not the crowd, sets the exit
-times. C is less robust than min DIFF between the grids (−113 against
-−87 m²s). The area differs by 0.7 m² (6.2 against 5.5 m², about 2
-cells), comparable to the jamb effect. The per-agent draws alone move the
-failing block by a cell, so read the area to about one cell.&lt;/p>
+&lt;p>The seed spread is small because the cap sets the exit
+times. With pre-movement 0 the grids agree within one cell on the area;
+with a 30 s wait they do not (82.9 against 68.8 m²).&lt;/p>
 &lt;h3>Against the paper&lt;span class="hx-absolute -hx-mt-20" id="against-the-paper">&lt;/span>
 &lt;a href="#against-the-paper" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
 &lt;li>&lt;strong>The min DIFF agreement is structural.&lt;/strong> The worst cell is the last cell
-before the door, at (29.7, 9.3) m. Its RSET is about N/0.96 ≈ 104 s
-(measured 105 s), set by the cap; its ASET is 75 s (80 s on the 0.1 m grid). So −30 s tests
-when smoke reaches the door, not the whole map. That cell lies inside the
-reach at which the engine removes agents at the exit
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>).&lt;/li>
+before the door, at (29.7, 8.1) m. Its RSET is about N/1.00 ≈ 100 s
+(measured 101 s), set by the cap; its ASET is 73 s. So −27 s tests when
+smoke reaches the door, a single cell of the map.&lt;/li>
+&lt;li>&lt;strong>The −29 s is the paper&amp;rsquo;s number.&lt;/strong> It is read off Fig. 5. The release&amp;rsquo;s
+&lt;code>DIFF_map.txt&lt;/code> has a minimum of −29 s, but its shape (18 × 51) differs
+from that of &lt;code>aset_map.txt&lt;/code> (17 × 50), so it cannot come from the
+released ASET map.&lt;/li>
 &lt;li>&lt;strong>The area is about three times smaller.&lt;/strong> Ours fails in a compact block
-of 20 cells, x ≥ 27.6 m and y ≥ 6.6 m; the paper&amp;rsquo;s Fig. 7 has about 55
-failing elements. The jambs explain about 1.1 m² of the gap. The
-released RSET map (JuPedSim Gompertz model, 1.0 m door, 95th-percentile
-pooling) has 44 map elements occupied at or after 75 s; ours has 20
-cells, under maximum or 95th-percentile pooling. At 60 and 90 s the
-counts are 61 and 24 against 28 and 12 (ours, maximum). The authors&amp;rsquo; queue covers about
-twice the floor area, so it is less dense, not denser. That alone would
-account for most of the gap (our reading of the release,
-&lt;code>1_RSET/RSET_map_all_seeds.txt&lt;/code>). We have not compared the ASET side cell
-by cell.&lt;/li>
-&lt;li>&lt;strong>60 kW is the authors&amp;rsquo; value.&lt;/strong> The paper&amp;rsquo;s text does not state it;
-their reference implementation uses a constant 60 kW. Its Fig. 7 (about
-20 m² failing, C about −300 m²s, read off; ours, with 20 s bins:
-−117 m²s, context only, not a match) matches the 60 kW, N = 100 point of
-Figs. 5 and 8. Our burner is 0.6 × 0.6 m at 0.6–1.2 m, against their
-1 × 1 m at 1–2 m.&lt;/li>
+of 21 cells in front of the door; the paper&amp;rsquo;s Fig. 7 has about 55 failing
+elements. The released RSET map (JuPedSim Gompertz model, 1.0 m door,
+95th-percentile pooling) has 61, 44 and 24 map elements occupied at or
+after 60, 75 and 90 s; ours has 27, 18 and 10 cells (maximum pooling).
+The authors&amp;rsquo; queue covers about twice the floor area at the same flow,
+so it is less dense. That alone would account for most of the gap (our
+reading of the release, &lt;code>1_RSET/RSET_map_all_seeds.txt&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>The fire is the authors&amp;rsquo;.&lt;/strong> The paper&amp;rsquo;s text does not state it; the
+release uses a constant 60 kW on 1 × 1 m. Its Fig. 7 (about 20 m²
+failing, C about −300 m²s, read off; ours, with 20 s bins: −124 m²s,
+context only) matches the 60 kW, N = 100 point of Figs. 5 and 8.&lt;/li>
 &lt;/ul>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
@@ -888,51 +1049,51 @@ Figs. 5 and 8. Our burner is 0.6 × 0.6 m at 0.6–1.2 m, against their
 &lt;tbody>
 &lt;tr>
 &lt;td>Headline: K ≥ 0.23, ∃ rule, about 1 s&lt;/td>
-&lt;td>−30 s&lt;/td>
-&lt;td>6.2 m²&lt;/td>
-&lt;td>−113 m²s&lt;/td>
+&lt;td>−27 s&lt;/td>
+&lt;td>6.7 m²&lt;/td>
+&lt;td>−112 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>K ≥ 0.23 or T ≥ 45 °C&lt;/td>
-&lt;td>−30 s&lt;/td>
-&lt;td>6.2 m²&lt;/td>
-&lt;td>−113 m²s&lt;/td>
+&lt;td>−27 s&lt;/td>
+&lt;td>6.7 m²&lt;/td>
+&lt;td>−112 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>K ≥ 0.3 1/m&lt;/td>
-&lt;td>−30 s&lt;/td>
-&lt;td>6.2 m²&lt;/td>
+&lt;td>−27 s&lt;/td>
+&lt;td>6.4 m²&lt;/td>
 &lt;td>−109 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Nearest FDS node per cell&lt;/td>
-&lt;td>−30 s&lt;/td>
-&lt;td>6.2 m²&lt;/td>
-&lt;td>−104 m²s&lt;/td>
+&lt;td>−27 s&lt;/td>
+&lt;td>6.0 m²&lt;/td>
+&lt;td>−103 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>∀ rule (Eq. 2 as printed)&lt;/td>
-&lt;td>−29 s&lt;/td>
-&lt;td>5.8 m²&lt;/td>
-&lt;td>−99 m²s&lt;/td>
+&lt;td>−26 s&lt;/td>
+&lt;td>6.0 m²&lt;/td>
+&lt;td>−97 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>∀ rule, 0.1 m FDS grid&lt;/td>
-&lt;td>−23 s&lt;/td>
-&lt;td>3.8 m²&lt;/td>
-&lt;td>−63 m²s&lt;/td>
+&lt;td>−26 s&lt;/td>
+&lt;td>6.0 m²&lt;/td>
+&lt;td>−93 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>10 s steps&lt;/td>
-&lt;td>−25 s&lt;/td>
-&lt;td>5.5 m²&lt;/td>
-&lt;td>−80 m²s&lt;/td>
+&lt;td>−23 s&lt;/td>
+&lt;td>5.6 m²&lt;/td>
+&lt;td>−82 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Paper text and release mixed: K ≥ 0.23 or T ≥ 45 (paper text, Fig. 4), nearest node (our reading of the release code), 10 s and 120 s fill (paper §2.2.4)&lt;/td>
-&lt;td>−25 s&lt;/td>
-&lt;td>4.5 m²&lt;/td>
-&lt;td>−73 m²s&lt;/td>
+&lt;td>−21 s&lt;/td>
+&lt;td>5.6 m²&lt;/td>
+&lt;td>−69 m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -943,13 +1104,9 @@ all&amp;rdquo;. We follow the text (∃); the ∀ rows show the difference. They
 count a cell as exceeded from the first 1 s step at which every FDS node
 in it exceeds at the same time.&lt;/li>
 &lt;li>&lt;strong>The 120 s fill.&lt;/strong> The paper gives cells that never exceed within 120 s
-the value 120 s (p. 4). We keep them open (&amp;ldquo;not by 600 s&amp;rdquo;). One door,
-0.2 m grid: every cell exceeds by 88 s, so nothing changes. One door,
-0.1 m grid: 23 cells exceed only after 120 s, but none of them is
-occupied after 120 s in any version, so no DIFF measure changes. Two
-doors (0.2 m): 8 cells beside the plume exceed only after 120 s (latest
-189 s); none is occupied after 120 s in any version, so no measure
-changes.&lt;/li>
+the value 120 s (p. 4). We keep them open (&amp;ldquo;not by 600 s&amp;rdquo;). Under the
+release conditions every cell exceeds by 84 s on both grids, so the fill
+changes nothing.&lt;/li>
 &lt;/ul>
 &lt;/div>
 &lt;/details>
@@ -973,29 +1130,103 @@ the tables above. The release code pools by the 95th percentile
 &lt;tbody>
 &lt;tr>
 &lt;td>Maximum over n = 10&lt;/td>
-&lt;td>−30 s&lt;/td>
-&lt;td>6.2 m²&lt;/td>
-&lt;td>−113 m²s&lt;/td>
+&lt;td>−27 s&lt;/td>
+&lt;td>6.7 m²&lt;/td>
+&lt;td>−112 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>95th percentile over n = 10&lt;/td>
-&lt;td>−30 s&lt;/td>
-&lt;td>6.2 m²&lt;/td>
+&lt;td>−27 s&lt;/td>
+&lt;td>6.4 m²&lt;/td>
 &lt;td>−110 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Per seed, mean [95 % bootstrap CI]&lt;/td>
-&lt;td>−29.5 [−29.9, −29.1] s&lt;/td>
-&lt;td>5.6 [5.4, 5.8] m²&lt;/td>
-&lt;td>−97.1 [−98.7, −95.4] m²s&lt;/td>
+&lt;td>−26.4 [−26.9, −25.9] s&lt;/td>
+&lt;td>6.1 [5.9, 6.2] m²&lt;/td>
+&lt;td>−97.4 [−98.7, −96.0] m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>With 10 seeds the 95th percentile interpolates between the 9th and 10th
 values, so it lies close to the maximum. For two doors the views differ
-more (capped, pre-movement 0): maximum −41 s, 95th percentile −39 s,
-per-seed mean −30.0 [−33.7, −26.0] s, because the binomial split changes
+more (capped, pre-movement 0): maximum −40 s, 95th percentile −40 s,
+per-seed mean −30.2 [−34.2, −25.9] s, because the binomial split changes
 how many agents use D2.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;h2>Sensitivity: the room rebuilt from the paper alone&lt;span class="hx-absolute -hx-mt-20" id="sensitivity-the-room-rebuilt-from-the-paper-alone">&lt;/span>
+&lt;a href="#sensitivity-the-room-rebuilt-from-the-paper-alone" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Before we used the release, we rebuilt the room from the paper&amp;rsquo;s text and
+figures only (the &lt;code>hrr060&lt;/code> family): a 1.2 m door at y = 8.2–9.4 m, read off
+Fig. 2; a 0.6 × 0.6 m burner at x, y = 0.6–1.2 m with the same 60 kW;
+flexible polyurethane foam GM21 (soot yield 0.131, CO yield 0.010,
+χr 0.52; SFPE Handbook, 6th ed., App. C, Table C.12, p. 3427); v0 = 1.2 m/s, the paper&amp;rsquo;s Eq. 6
+example; and the exit capped at 0.96 persons/s, read off Fig. 3. The
+same evacuation versions run on the current engine:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>&lt;code>hrr060&lt;/code>, maximum over n = 10&lt;/th>
+&lt;th>min DIFF&lt;/th>
+&lt;th>Area DIFF &amp;lt; 0&lt;/th>
+&lt;th>C&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>One door, capped, pre-movement 0, 0.2 m (0.1 m)&lt;/td>
+&lt;td>−31 s (−26 s)&lt;/td>
+&lt;td>6.2 m² (5.8)&lt;/td>
+&lt;td>−118 m²s (−92)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>One door, capped, pre-movement 60 s&lt;/td>
+&lt;td>−91 s&lt;/td>
+&lt;td>213.3 m²&lt;/td>
+&lt;td>−5,514 m²s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>One door, uncapped&lt;/td>
+&lt;td>+2 s&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Two doors, capped, pre-movement 0&lt;/td>
+&lt;td>−42 s&lt;/td>
+&lt;td>5.8 m²&lt;/td>
+&lt;td>−132 m²s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Two doors, uncapped&lt;/td>
+&lt;td>−4 s&lt;/td>
+&lt;td>0.9 m²&lt;/td>
+&lt;td>−2 m²s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Two doors, N = 200&lt;/td>
+&lt;td>−103 s&lt;/td>
+&lt;td>21.9 m²&lt;/td>
+&lt;td>−909 m²s&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The capped crowd leaves 62.5 agents at 40 s and 24.3 at 80 s, and the
+last agent leaves at 105–106 s. The door cells exceed at 74–76 s, 2–3 s
+later than under the release conditions, and the slower cap empties the
+room about 5 s later; together they make min DIFF about 3.4 s lower
+(−30.9 against −27.5 s). The
+&lt;code>hrr060&lt;/code> fire grid-converges less well: on the 0.1 m grid a late pocket
+beside the plume first exceeds at up to 203 s, against 88 s on the 0.2 m
+grid, and 6.2 % of cells differ by more than 30 s.&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">DIFF maps of the paper-only rebuild&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/hrr060/diff_1door.png" alt="Six DIFF maps of the paper-only rebuild of the one-door room, laid out like the headline figure. (a) capped, pre-movement 0, 0.2 m: a small red block in front of the door, −31 s, 6.2 m². (b) 0.1 m grid: −26 s, 5.8 m². (c) pre-movement 10 s: −41 s, 13.3 m². (d) pre-movement 30 s: −61 s, 70.2 m². (e) pre-movement 60 s: most of the room red, −91 s, 213.3 m². (f) uncapped: all blue, &amp;#43;2 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>&lt;code>hrr060&lt;/code> family, one door, exit capped at 0.96 persons/s. Same encoding as
+the headline DIFF maps.&lt;/em>&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h2>How the maps are computed&lt;span class="hx-absolute -hx-mt-20" id="how-the-maps-are-computed">&lt;/span>
@@ -1014,24 +1245,24 @@ so the top row is 0.4 m, and every area uses the true cell area.&lt;/li>
 (ASET not reached), ≤ bound and undetermined (RSET open; empty here,
 because every run empties the room).&lt;/li>
 &lt;/ol>
-&lt;p>&lt;strong>RSET here is not the RSET of ISO/TR 16738.&lt;/strong> Its Eq. 2 adds detection,
-alarm, pre-movement and travel times. RSET of a cell here is travel time
-plus the modelled pre-movement, counted from ignition, with no detection or
-alarm time, and it is the last time anyone is in that cell.&lt;/p>
-&lt;p>&lt;strong>The agents ignore the fire.&lt;/strong> This is the paper&amp;rsquo;s method, not a
-shortcut: &amp;ldquo;there is no inherent need to couple the fire and evacuation
-models … the coupling is solely conducted when analysing the model output&amp;rdquo;
-(§1). All runs use arm U:
-&lt;code>--smoke-blind --disable-tenability --smoke-slice-height 2.0&lt;/code> (see
+&lt;p>&lt;strong>RSET of a cell&lt;/strong> is travel time plus the modelled pre-movement, counted
+from ignition, with no detection or alarm time, and it is the last time
+anyone is in that cell. ISO/TR 16738, Eq. 2, defines RSET for a whole
+building as the sum of detection, alarm, pre-movement and travel times.&lt;/p>
+&lt;p>&lt;strong>The agents ignore the fire, as in the paper&amp;rsquo;s method:&lt;/strong> &amp;ldquo;there is no
+inherent need to couple the fire and evacuation models … the coupling is
+solely conducted when analysing the model output&amp;rdquo; (§1). All runs use
+arm U: &lt;code>--smoke-blind --disable-tenability --smoke-slice-height 2.0&lt;/code> (see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>). The trajectories are identical on the 0.2 m and the
 0.1 m FDS output for all 50 one-door runs (asserted), so one RSET set per
-door layout serves both grids. Smoke feedback on speed and route choice is
-not part of this study.&lt;/p>
-&lt;p>&lt;strong>Reproduce.&lt;/strong> The FDS decks and output are not in the repository. With
-them in &lt;code>DATA&lt;/code> and an empty folder &lt;code>RUNS&lt;/code> outside the repository:&lt;/p>
+door layout serves both grids. Smoke feedback on speed and route choice
+lies outside this study.&lt;/p>
+&lt;p>&lt;strong>Reproduce.&lt;/strong> The FDS decks and output and the authors&amp;rsquo; release are not
+in the repository. With the decks and output in &lt;code>DATA&lt;/code>, the unpacked
+release in &lt;code>RELEASE&lt;/code> and an empty folder &lt;code>RUNS&lt;/code> outside the repository:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run --with &lt;span style="color:#e6db74">&amp;#34;pedpy&amp;gt;=1.5.1&amp;#34;&lt;/span> python scripts/docs/schroeder_room_maps.py &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --data DATA --runs RUNS&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --data DATA --runs RUNS --family rel --release RELEASE&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1041,16 +1272,19 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>It runs the 160 evacuations (existing ones are reused),
-prints every number on this page as Markdown tables, and writes the
-figures to &lt;code>site/static/images/studies/schroeder2020/&lt;/code>. It needs PedPy ≥
-1.5.1 for &lt;code>compute_rset_map&lt;/code>.&lt;/p>
+&lt;p>It runs the 160 evacuations (existing ones are reused), checks that every
+agent leaves, prints every number on this page as Markdown tables, and
+writes the figures to &lt;code>site/static/images/studies/schroeder2020/&lt;/code>. It needs
+PedPy ≥ 1.5.1 for &lt;code>compute_rset_map&lt;/code>. &lt;code>--family hrr060&lt;/code> with its own
+&lt;code>RUNS&lt;/code> folder gives the paper-only rebuild; it prints all its tables and
+writes only the figure this page uses, &lt;code>hrr060/diff_1door.png&lt;/code>.&lt;/p>
 &lt;p>The animations and the grid figures come from two further scripts, run
 after it on the same folders:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run --with &lt;span style="color:#e6db74">&amp;#34;pedpy&amp;gt;=1.5.1&amp;#34;&lt;/span> python scripts/docs/study_animations.py &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> schroeder --data DATA --runs RUNS
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python scripts/docs/schroeder_grid_figures.py --data DATA --cache RUNS/cache&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> schroeder --data DATA --runs RUNS --family rel
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python scripts/docs/schroeder_grid_figures.py --data DATA &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --cache RUNS/cache --family rel&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1060,23 +1294,24 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;strong>Provenance.&lt;/strong> The numbers and figures on this page come from runs of
-commit &lt;code>30ca7f5&lt;/code> on main. Each run&amp;rsquo;s manifest records that commit with
-&lt;code>git_dirty: false&lt;/code> and &lt;code>agent_seeding: spawn-key-blake2b-v1&lt;/code>, the
-per-agent seeding of
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/pull/361" target="_blank" rel="noopener">#361&lt;/a>. When
-the code changes, re-run the command into a new &lt;code>RUNS&lt;/code> folder and compare
-the printed tables with this page.&lt;/p>
-&lt;h2>Setup and deviations&lt;span class="hx-absolute -hx-mt-20" id="setup-and-deviations">&lt;/span>
-&lt;a href="#setup-and-deviations" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;p>&lt;code>grid_perturbation.png&lt;/code> comes from the same grid script with
+&lt;code>--family hrr060&lt;/code>.&lt;/p>
+&lt;p>&lt;strong>Provenance.&lt;/strong> The evacuation runs on this page come from commit
+&lt;code>4a7142f&lt;/code> (main at &lt;code>100e91d&lt;/code> with this page&amp;rsquo;s scripts). Each run&amp;rsquo;s manifest
+records that commit with &lt;code>git_dirty: false&lt;/code> and
+&lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. When the code changes, re-run the
+command into a new &lt;code>RUNS&lt;/code> folder and compare the printed tables with this
+page.&lt;/p>
+&lt;h2>Setup, deviations and caveats&lt;span class="hx-absolute -hx-mt-20" id="setup-deviations-and-caveats">&lt;/span>
+&lt;a href="#setup-deviations-and-caveats" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">Every input, with its source&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>Tags: &lt;strong>[P]&lt;/strong> stated in the paper, &lt;strong>[F]&lt;/strong> read off a paper figure, &lt;strong>[R]&lt;/strong>
-taken from the authors&amp;rsquo; reference implementation
+taken from the authors&amp;rsquo; release
 (&lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">doi:10.5281/zenodo.3875550&lt;/a>),
-&lt;strong>[A]&lt;/strong> assumed because the paper is silent.&lt;/p>
+&lt;strong>[A]&lt;/strong> assumed.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -1089,52 +1324,47 @@ taken from the authors&amp;rsquo; reference implementation
 &lt;tr>
 &lt;td>Room&lt;/td>
 &lt;td>30 × 10 × 3 m, one door, no other openings&lt;/td>
-&lt;td>[P] §2.1&lt;/td>
+&lt;td>[P] §2.1; [R]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Door D1&lt;/td>
-&lt;td>east wall, y = 8.2–9.4 m (1.2 m), 2.0 m high, open&lt;/td>
-&lt;td>[F] from Fig. 2 (1.28 ± 0.05 m); the reference implementation has 1.0 m (y = 8–9 m, FDS vent 2.0 m high, same in the JuPedSim geometry)&lt;/td>
+&lt;td>east wall, y = 8–9 m (1.0 m), 2.0 m high, &lt;code>OPEN&lt;/code> vent&lt;/td>
+&lt;td>[R]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Door D2 (two doors)&lt;/td>
-&lt;td>west wall, y = 8.2–9.4 m, D1 mirrored&lt;/td>
+&lt;td>west wall, y = 8–9 m, D1 mirrored about x = 15 m&lt;/td>
 &lt;td>[A]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Fire&lt;/td>
-&lt;td>south-west corner, 0.6 × 0.6 m burner at x, y = 0.6–1.2 m&lt;/td>
-&lt;td>corner [P] §2.1; size and position [A], differs from [R] (1 × 1 m at 1–2 m)&lt;/td>
+&lt;td>HRRPUA 60 kW/m² on a 1 × 1 m floor vent at x, y = 1–2 m: 60 kW, no ramp given (FDS default onset)&lt;/td>
+&lt;td>[R]&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>HRR&lt;/td>
-&lt;td>60 kW constant (HRRPUA 166.7 kW/m²)&lt;/td>
-&lt;td>[R] reference implementation&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>Fuel&lt;/td>
-&lt;td>flexible PU foam GM21: soot yield 0.131, CO yield 0.010, ΔH_ch 17.8 MJ/kg, χr 0.52 from the same row&lt;/td>
-&lt;td>[A] SFPE Handbook 5th ed., App. 3, Tables A.38 and A.39; [R] has polyurethane with soot yield 0.129&lt;/td>
+&lt;td>Reaction&lt;/td>
+&lt;td>polyurethane, &lt;code>C=6.3, H=7.1, O=2.1, N=1.0, SOOT_YIELD=0.129&lt;/code> (NFPA Babrauskas); no CO yield, heat of combustion or radiative fraction set, so the FDS defaults apply (no CO, χr 0.35)&lt;/td>
+&lt;td>[R]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Smoke&lt;/td>
-&lt;td>K_m = 8,700 m²/kg, the FDS default&lt;/td>
-&lt;td>[A]&lt;/td>
+&lt;td>mass extinction coefficient 8,700 m²/kg, the FDS default&lt;/td>
+&lt;td>[R] (unset)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Irritants, HCN&lt;/td>
 &lt;td>none tracked&lt;/td>
-&lt;td>[A]&lt;/td>
+&lt;td>[R]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FDS&lt;/td>
-&lt;td>6.10.1, 0.2 m cells (0.1 m grid check), 600 s, slices every 1 s&lt;/td>
-&lt;td>0.2 m [P]; rest [A]&lt;/td>
+&lt;td>6.10.1, 0.2 m cells (0.1 m grid check) in six 5 m meshes along x, 600 s, slices every 1 s at 1.0, 1.6 and 2.0 m&lt;/td>
+&lt;td>0.2 m [P], [R]; rest [A]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Occupants&lt;/td>
-&lt;td>100 (200 for N200), all placed at t = 0, uniform over the floor&lt;/td>
-&lt;td>N [P] §2.1&lt;/td>
+&lt;td>100 (200 for N200), all placed at t = 0, uniform over &lt;code>[0.3, 29.7] × [0.3, 9.7]&lt;/code> m without the burner corner &lt;code>[0.3, 2.2]²&lt;/code>&lt;/td>
+&lt;td>N [P] §2.1; area [R]; corner [A]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Pre-movement&lt;/td>
@@ -1143,17 +1373,27 @@ taken from the authors&amp;rsquo; reference implementation
 &lt;/tr>
 &lt;tr>
 &lt;td>Model&lt;/td>
-&lt;td>collision-free speed model, r = 0.15 m, v0 = 1.2 m/s&lt;/td>
-&lt;td>[A]; 1.2 m/s is the paper&amp;rsquo;s Eq. 6 example value; the release agents use v0 ~ N(1.3, 0.1) m/s&lt;/td>
+&lt;td>collision-free speed model, r = 0.15 m, v0 ~ N(1.3, 0.1) m/s, clipped to 0.1–5.0 m/s by the engine&lt;/td>
+&lt;td>v0 [R]; model and r [A]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Exit cap&lt;/td>
-&lt;td>0.96 persons/s per exit&lt;/td>
-&lt;td>[F] Fig. 3&lt;/td>
+&lt;td>1.00 persons/s per exit, measured from the release&amp;rsquo;s ten runs over 10–90 % of agents&lt;/td>
+&lt;td>[R]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Exits&lt;/td>
+&lt;td>E1 &lt;code>[29.8, 30] × [8, 9]&lt;/code>, E2 &lt;code>[0, 0.2] × [8, 9]&lt;/code>&lt;/td>
+&lt;td>[R] / [A]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Door jambs&lt;/td>
+&lt;td>0.8 m deep, in the walkable area only&lt;/td>
+&lt;td>[A]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Two-door split&lt;/td>
-&lt;td>per seed, binomial by floor area west and east of x = 15 m&lt;/td>
+&lt;td>per seed, binomial with the west floor share 0.49335&lt;/td>
 &lt;td>[A]; implements the paper&amp;rsquo;s shortest-path route choice&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -1163,74 +1403,119 @@ taken from the authors&amp;rsquo; reference implementation
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>&lt;strong>Deviations from the paper&lt;/strong>&lt;/p>
+&lt;p>&lt;strong>Deviations from the release&lt;/strong>&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>Our own FDS and model.&lt;/strong> Our maps come from our own runs; the authors'
-published release (doi:10.5281/zenodo.3875550) is cited where we compare.&lt;/li>
-&lt;li>&lt;strong>Our door is 0.2 m wider&lt;/strong> than the reference implementation&amp;rsquo;s 1.0 m.
-We took 1.2 m from the paper&amp;rsquo;s Fig. 2.&lt;/li>
-&lt;li>&lt;strong>The release differs from the paper&amp;rsquo;s text in three map rules.&lt;/strong> Its
-ASET uses extinction only (&lt;code>quantities = {'extinction':0.23}&lt;/code> in
-&lt;code>aset_map.py&lt;/code>), it pools RSET by the 95th percentile (&lt;code>rset_map.py&lt;/code>), and
-it counts DIFF = 0 as a fail (the last &lt;code>np.histogram&lt;/code> bin is closed). We
-follow the text: K ≥ 0.23 1/m, the maximum, DIFF = 0 passes.&lt;/li>
-&lt;li>&lt;strong>Censoring instead of the 120 s fill&lt;/strong>, the ∃ rule, and 1 s steps
-instead of 10 s. The sensitivity table above shows each change.&lt;/li>
-&lt;li>&lt;strong>Door jambs, 0.8 m deep, in the walkable area only.&lt;/strong> The runs on this
-page predate
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>. The
-engine then removed an agent within its radius + 0.5 m of a random point
-in the exit polygon, which made a door drawn flush with the wall act about
-1.3 m wider. The jambs force every agent into the 1.2 m passage. The
-engine now removes an agent when its centre enters the exit polygon, so
-the jambs are no longer needed; they do no harm. They cost about
-1.1 m² (about 3 cells) at the north-east corner. FDS has no jambs.&lt;/li>
+&lt;li>&lt;strong>FDS version and meshes.&lt;/strong> FDS 6.10.1 instead of 6.5.3; six meshes
+instead of one, with the same 0.2 m cells. Neither the burner nor a door
+crosses a mesh interface.&lt;/li>
+&lt;li>&lt;strong>Time and output.&lt;/strong> 600 s instead of 120 s, slices every 1 s instead of
+every 10 s, and more quantities and heights. Cells unexceeded by 600 s
+are censored instead of filled with 120 s.&lt;/li>
+&lt;li>&lt;strong>Slice to map.&lt;/strong> Each 0.6 m cell takes the earliest of its FDS nodes;
+the release resizes the slice with PIL, which smooths the field.&lt;/li>
+&lt;li>&lt;strong>Evacuation model.&lt;/strong> The collision-free speed model with a capped exit
+instead of the Gompertz model; a circle of radius 0.15 m instead of
+ellipses with semi-axes 0.18 and 0.25 m; uniform random spawns instead of
+a lattice.&lt;/li>
+&lt;li>&lt;strong>RSET sampling.&lt;/strong> Trajectories at 10 frames/s and PedPy cells; the
+release writes 1 frame/s and maps to the nearest node of a 51 × 18 grid.
+At 1 frame/s the release breaks its own Eq. 6 (Δt ≤ w/v_max = 0.5 s).&lt;/li>
+&lt;li>&lt;strong>Map rules.&lt;/strong> The release ASET uses extinction only
+(&lt;code>quantities = {'extinction':0.23}&lt;/code> in &lt;code>aset_map.py&lt;/code>), pools RSET by the
+95th percentile (&lt;code>rset_map.py&lt;/code>), and counts DIFF = 0 as a fail (the last
+&lt;code>np.histogram&lt;/code> bin is closed). We follow the paper&amp;rsquo;s text: K ≥ 0.23 1/m,
+the maximum, DIFF = 0 passes.&lt;/li>
+&lt;li>&lt;strong>Door jambs, 0.8 m deep, in the walkable area only.&lt;/strong> We keep them by
+decision; they cost about 1.4 m² of floor at the door. FDS has no jambs,
+as in the release. In a clear-air check (capped, pre-movement 0, seeds
+1–10) every agent is last recorded inside the passage, at x ≥ 29.65 m
+and y = 8.16–8.84 m. With the exit drawn flush with the wall instead, 77
+of 1,000 agents are last recorded up to 0.03 m beyond the door edges
+(y = 7.97–9.03 m), and the agents left at 40 and 80 s change by 0.1.&lt;/li>
+&lt;li>&lt;strong>D2, N = 200 and the pre-movement sweep&lt;/strong> exist only in our runs.&lt;/li>
 &lt;li>&lt;strong>One-door and two-door rooms are separate FDS runs&lt;/strong>, so the ventilation
 differs as well as the egress.&lt;/li>
-&lt;li>&lt;strong>FDS device trees&lt;/strong> stand at (5.1, 5.1), (15.1, 5.1) and (25.1, 8.9) m,
-off the mesh interfaces at x = 5, 10, …, 25 m (cell centres on the
-0.2 m grid). They are not used for the maps; they give the layer
-profiles under Grid.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;strong>Grid.&lt;/strong> The characteristic fire diameter at 60 kW is D* ≈ 0.31 m, so
+&lt;/div>
+&lt;/details>
+&lt;h3>Caveats on the comparison with the release&lt;span class="hx-absolute -hx-mt-20" id="caveats-on-the-comparison-with-the-release">&lt;/span>
+&lt;a href="#caveats-on-the-comparison-with-the-release" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>&lt;strong>Soot and heat of combustion in FDS 6.10.1.&lt;/strong> From the same reaction
+line, FDS 6.10.1 computes a heat of combustion of 18,075 kJ/kg, the
+release&amp;rsquo;s FDS 6.5.3 17,993 kJ/kg (+0.46 %). The default hydrogen
+fraction of soot changed from 0.1 (6.5.3) to 0 (6.10.1, pure carbon),
+which changes the stoichiometry. At the same HRR our fire therefore burns
+0.46 % less fuel and makes 0.46 % less soot. We keep the 6.10.1 default,
+as the release keeps the 6.5.3 default.&lt;/li>
+&lt;li>&lt;strong>K at 2.0 m is higher than the release&amp;rsquo;s from 50 s on&lt;/strong>, by 0.03–0.05
+1/m on average, so our ASET map is earlier there. The cause is not
+established. The FDS version (with extinction model 1 against 2, ambient
+water vapour mass fraction 0.00594 against 0.00515) and the mesh
+decomposition both differ; the soot change acts the other way.&lt;/li>
+&lt;li>&lt;strong>HRR.&lt;/strong> The release&amp;rsquo;s FDS &lt;code>.out&lt;/code> file shows 68.9 kW at its last time
+step. That is an instantaneous value (time step 0.9 ms at 120 s): the
+release&amp;rsquo;s &lt;code>ASET_animation_hrr.csv&lt;/code> averages 60.0 kW over 10–120 s and
+over 110–120 s, as does ours (60.00 kW over 10–120 s and over
+120–600 s).&lt;/li>
+&lt;li>&lt;strong>Agents also spawn in the door passage.&lt;/strong> The spawn area includes the
+passage between the jambs, so our first agent leaves within 2 s (last
+recorded at 0.4–1.9 s), the release&amp;rsquo;s at 1–3 s. In a clear-air check,
+excluding the passage from the spawn area moves the first exit to
+0.7–1.9 s and the count left at 40 s from 60.5 to 60.6.&lt;/li>
+&lt;li>&lt;strong>No CO.&lt;/strong> The release sets no CO yield, so the FDS default of zero
+applies. The CO criteria and the CO term of the FED do not apply; the
+gas FED holds only CO₂ and O₂.&lt;/li>
+&lt;li>&lt;strong>Radiative fraction 0.35&lt;/strong>, the FDS default; the release does not print
+it, and we assume the 6.5.3 default is the same.&lt;/li>
+&lt;/ul>
+&lt;h3>Grid&lt;span class="hx-absolute -hx-mt-20" id="grid">&lt;/span>
+&lt;a href="#grid" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The characteristic fire diameter at 60 kW is D* ≈ 0.31 m, so
 D*/δx = 1.56 at 0.2 m and 3.1 at 0.1 m, and H/D* = 9.6. The FDS User&amp;rsquo;s
 Guide (§6.3.6) warns against taking any tabulated D*/δx as an acceptable
-minimum. The 2.0 m slice sits in a weak, smeared layer interface, about
-1–5 K above ambient, so first crossings there are ill-conditioned. Neither
-grid is shown to be converged: min DIFF and the door-region ASET agree
-within 5 s and 16 s. With no pre-movement the area agrees within 0.7 m²
-(about 2 cells), but not with a wait (14.0 against 9.4 m² at 10 s), and
-C does not agree (−113 against −87 m²s), so both grids are given.&lt;/p>
+minimum. Under the release conditions the two grids agree closely: min
+DIFF within 1 s, the door-region ASET within 3 s, and the area within
+0.3 m² without pre-movement. With a 30 s wait the areas differ (82.9
+against 68.8 m²), so both grids are given.&lt;/p>
+&lt;p>The FDS device trees stand at cell centres on both grids: at (5.1, 5.1),
+(15.1, 5.1) and (25.1, 8.5) m with points at z = 0.1–2.9 m on the 0.2 m
+grid, and at (5.05, 5.05), (15.05, 5.05) and (25.05, 8.55) m with points at
+z = 0.05–2.95 m on the 0.1 m grid. None lies on a mesh interface. The maps
+use only the slices; the trees give the layer profiles below.&lt;/p>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
 &lt;strong class="hx-text-lg">Grid figures: the smoke layer and a same-grid perturbation&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/grid_layer.png" alt="Three by three panels against time, 0 to 300 s, one column per FDS device tree W, C and E, three lines each for one door on the 0.2 m grid, two doors on the 0.2 m grid and one door on the 0.1 m grid. Top row: the layer interface from temperature falls from about 2.5 m to 1 to 1.7 m; the grey band at 1.9 to 2.1 m marks the 2.0 m slice, and the interface comes down through it for the last time between 98 and 189 s. Middle row: the interface from K, the 50 % level (thick) and the 10 % level (thin); the thin lines run through the grey band. Bottom row: the largest K at 2.0 m near each tree; the curves cross 0.23 per metre between 36 and 67 s, and at tree W the 0.1 m curve is back below the limit from 50 to 185 s, the 0.2 m curves only from 61 to 121 s and 54 to 95 s." loading="lazy" />&lt;/p>
-&lt;p>&lt;em>The smoke layer at the three device trees. Top: the interface height from
-temperature (FDS User&amp;rsquo;s Guide Eq. 22.25, evaluated on the tree). Middle: the
-height where K falls to 50 % (thick) or 10 % (thin) of its column maximum.
-Bottom: the largest K at 2.0 m in the 0.6 m square around the tree, with its
-first crossing of 0.23 1/m. Regenerated by
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/grid_layer.png" alt="Three by three panels against time, 0 to 300 s, one column per FDS device tree W, C and E, three lines each for one door on the 0.2 m grid, two doors on the 0.2 m grid and one door on the 0.1 m grid. Top row: the layer interface from temperature falls from about 2.5 m to 0.8 to 1.5 m; the grey band at 1.9 to 2.1 m marks the 2.0 m slice, and the interface comes down through it for the last time between 63 and 172 s. Middle row: the interface from K, the 50 % level (thick) and the 10 % level (thin); the thin lines run through the grey band. Bottom row: the largest K at 2.0 m near each tree; the curves first cross 0.23 per metre between 39 and 62 s, and at tree W the 0.1 m curve is back below the limit from 51 to 128 s, the 0.2 m curves only from 51 to 56 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>The smoke layer at the three device trees, release conditions. Top: the
+interface height from temperature (FDS User&amp;rsquo;s Guide Eq. 22.25, evaluated on
+the tree). Middle: the height where K falls to 50 % (thick) or 10 % (thin)
+of its column maximum. Bottom: the largest K at 2.0 m in the 0.6 m square
+around the tree, with its first crossing of 0.23 1/m. Regenerated by
 &lt;code>scripts/docs/schroeder_grid_figures.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>The temperature-based interface comes down through 2.0 m for the last time
-at 177–189 s at tree W, 138–148 s at tree C and 98–104 s at tree E. Until
+at 162–172 s at tree W, 109–135 s at tree C and 63–93 s at tree E. Until
 then the 2.0 m slice sits just below the interface, where K changes steeply
-with height, so a small shift of the layer moves the first crossing by tens
-of seconds. At tree W the 0.1 m grid first crosses the limit at 46 s and is
-back below it from 50 to 185 s; on the 0.2 m grid that gap lasts from 61 to
-121 s (one door) or 54 to 95 s (two doors).&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/grid_perturbation.png" alt="Four panels for the one-door room. (a) ASET difference map for HRRPUA 166.87 against 166.7 kW/m² on the same 0.2 m grid: almost white, mean absolute difference 1.1 s, one cell (0.1 %) beyond 30 s. (b) the same for the 0.1 m against the 0.2 m grid: dark blue blocks near the burner and mid-room, mean 9.0 s, 6.2 % of cells beyond 30 s, largest 196 s. (c) plan of the nodes that first exceed K ≥ 0.23 per metre only after 120 s: 1019 grey squares from the west wall to x = 21 m on the 0.1 m grid, 10 blue dots and 54 red crosses in a strip next to the burner on the 0.2 m grids. (d) share of cells within a given absolute difference: 90 % of the cells lie within 2 s for the perturbation, within 20 s for the grid." loading="lazy" />&lt;/p>
-&lt;p>&lt;em>One door, K ≥ 0.23 1/m at 2.0 m, the ∃ rule on the page&amp;rsquo;s 0.6 m cells.
-&lt;code>hrr060_1door_pert&lt;/code> is the one-door 0.2 m deck with HRRPUA raised by 0.1 %
-(166.87 instead of 166.7 kW/m²) and nothing else changed. Regenerated by
-&lt;code>scripts/docs/schroeder_grid_figures.py&lt;/code>.&lt;/em>&lt;/p>
-&lt;p>A 0.1 % change of the fire on the same grid moves ASET by 1.1 s on average,
-and its late nodes stay in a strip beside the burner. The 0.1 m grid moves
-ASET by 9.0 s on average and puts a wide band of late nodes over the western
-two thirds of the room (x up to 20.8 m). The late band on the 0.1 m grid is therefore a grid effect, not chance.&lt;/p>
-&lt;/div>
-&lt;/details>
+with height, so a small shift of the layer moves the first crossing. The
+first crossings of 0.23 1/m agree within 2 s between the grids at all
+three trees (39–41 s at W, 52–53 s at C, 61–62 s at E). After the first
+crossing K at tree W dips below the limit again, for 5 s on the 0.2 m grid
+and for 77 s on the 0.1 m grid; ASET counts the first crossing, so the dip
+does not change the map.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/hrr060/grid_perturbation.png" alt="Four panels for the paper-only one-door room. (a) ASET difference map for HRRPUA 166.87 against 166.7 kW/m² on the same 0.2 m grid: almost white, mean absolute difference 1.1 s, one cell (0.1 %) beyond 30 s. (b) the same for the 0.1 m against the 0.2 m grid: dark blue blocks near the burner and mid-room, mean 9.0 s, 6.2 % of cells beyond 30 s, largest 196 s. (c) plan of the nodes that first exceed K ≥ 0.23 per metre only after 120 s: 1019 grey squares from the west wall to x = 21 m on the 0.1 m grid, 10 blue dots and 54 red crosses in a strip next to the burner on the 0.2 m grids. (d) share of cells within a given absolute difference: 90 % of the cells lie within 2 s for the perturbation, within 20 s for the grid." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Paper-only rebuild (&lt;code>hrr060&lt;/code>), one door, K ≥ 0.23 1/m at 2.0 m, the ∃
+rule on the page&amp;rsquo;s 0.6 m cells. &lt;code>hrr060_1door_pert&lt;/code> is the one-door 0.2 m
+deck with HRRPUA raised by 0.1 % (166.87 instead of 166.7 kW/m²) and
+nothing else changed. The release family has no perturbed run.
+Regenerated by &lt;code>scripts/docs/schroeder_grid_figures.py --family hrr060&lt;/code>.&lt;/em>&lt;/p>
+&lt;p>In the paper-only rebuild, a 0.1 % change of the fire on the same grid
+moves ASET by 1.1 s on average, and its late nodes stay in a strip beside
+the burner. The 0.1 m grid moves ASET by 9.0 s on average and puts a wide
+band of late nodes over the western two thirds of the room (x up to
+20.8 m). That late band is therefore a grid effect of the 0.6 m burner;
+the release burner has none. The &lt;code>hrr060&lt;/code> device trees lie on cell faces
+(z = 0.2–2.8 m, and x, y = 5.1, 15.1, 25.1 / 5.1, 8.9 m on the 0.1 m
+grid).&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h2>Limits and open issues&lt;span class="hx-absolute -hx-mt-20" id="limits-and-open-issues">&lt;/span>
@@ -1240,24 +1525,22 @@ signs losing visibility. Both are open questions for the built-in maps
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>).
 Sign visibility is a wayfinding map and never enters DIFF
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140" target="_blank" rel="noopener">#140&lt;/a>).&lt;/li>
-&lt;li>&lt;strong>Engine issues that touch this study:&lt;/strong> exit removal ignores the door
-width (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>);
-the initial exit was ranked from the spawn area, not the agent, which is
-why the room has two spawn areas, split at x = 15 m; the ranking now
-measures from each agent
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/350" target="_blank" rel="noopener">#350&lt;/a>);
-flow spawning breaks common random numbers across arms
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/353" target="_blank" rel="noopener">#353&lt;/a>);
-exit throttling has no test
+&lt;li>&lt;strong>Pre-movement&lt;/strong> is a constant here, as in the paper. A distributed
+pre-movement per person is the next scenario for this room.&lt;/li>
+&lt;li>&lt;strong>Engine issues that touch this study:&lt;/strong> exit throttling has no test
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/355" target="_blank" rel="noopener">#355&lt;/a>).
-The smoke-blind arm and exit replay
+Fixed since the earlier version: an agent leaves when its centre is
+within 0.03 m of the exit polygon
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/401" target="_blank" rel="noopener">#401&lt;/a>);
+the initial exit is ranked from each agent
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/350" target="_blank" rel="noopener">#350&lt;/a>),
+although the room keeps two spawn areas split at x = 15 m; the
+smoke-blind arm
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/341" target="_blank" rel="noopener">#341&lt;/a>) and
 the guard against sampling past the FDS end time
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340" target="_blank" rel="noopener">#340&lt;/a>) are
 in place.&lt;/li>
-&lt;li>&lt;strong>Fire assumptions:&lt;/strong> the 60 kW is the authors&amp;rsquo;; the burner size and
-position, the fuel and χr = 0.52, which comes from small-scale data, are
-ours.&lt;/li>
 &lt;li>&lt;strong>One room, one fire.&lt;/strong> The paper&amp;rsquo;s other combinations of HRR and N were
 not run.&lt;/li>
 &lt;/ul>
@@ -1273,17 +1556,19 @@ the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>, 115, 103154.
 &lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2020.103154&lt;/a>.
 Version-of-record pages: Eqs. 1–3, 0.23 1/m, 2 m and 0.6 m p. 3; the
 120 s fill, Eq. 4 and 45 °C (Fig. 4) p. 4; Eq. 5 and pooling p. 5;
-Eq. 7 and the note on individual exposure p. 6; the two-exit thought experiment (§3.1), Fig. 5
-and Eq. 8 p. 7; Figs. 6–8 p. 8. Pages 3, 7 and 8 are checked against
-the version of record; the others against the journal pre-proof only.&lt;/li>
-&lt;li>Schröder, B., Arnold, L., &amp;amp; Seyfried, A. (2020). Reference implementation
-of the ASET-RSET map method. Zenodo.
+Eq. 7 and the note on individual exposure p. 6; the two-exit thought
+experiment (§3.1), Fig. 5 and Eq. 8 p. 7; Figs. 6–8 p. 8. Pages 3, 7 and
+8 are checked against the version of record; the others against the
+journal pre-proof only.&lt;/li>
+&lt;li>Schröder, B., Arnold, L., &amp;amp; Seyfried, A. (2020). &lt;em>A Map Representation of
+the ASET-RSET Concept – Reference Implementation&lt;/em> (v1.0.1). Zenodo.
 &lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">doi:10.5281/zenodo.3875550&lt;/a>.
-Cited in the paper as [35] (version of record p. 3). We read its FDS
-input (&lt;code>0_ASET/HRR_60kW&lt;/code>), JuPedSim input and geometry
-(&lt;code>1_RSET/12??/corridor_ini.xml&lt;/code>, &lt;code>corridor_geo.xml&lt;/code>), the released RSET
-map and the three analysis scripts; none of its output is used in our
-figures.&lt;/li>
+Cited in the paper as [35] (version of record p. 3). We use its FDS input
+and output (&lt;code>0_ASET/HRR_60kW&lt;/code>: deck, &lt;code>.out&lt;/code>, &lt;code>ASET_animation_hrr.csv&lt;/code>;
+extinction slices; &lt;code>0_ASET/aset_map.txt&lt;/code>), its JuPedSim input, geometry and trajectories
+(&lt;code>1_RSET/12??/corridor_ini.xml&lt;/code>, &lt;code>corridor_geo.xml&lt;/code>, &lt;code>corridor_traj.xml&lt;/code>),
+the released RSET and DIFF maps and the three analysis scripts. Our
+figures draw its ASET map and agents-remaining curves for comparison.&lt;/li>
 &lt;li>vfdb (2020). &lt;em>Leitfaden Ingenieurmethoden des Brandschutzes&lt;/em>, TB 04-01,
 §8.1 (p. 312); §8.2 Eq. 8.1 (p. 313); §8.4 (p. 319); section
 &amp;ldquo;8.6 Anhaltswerte zur Beurteilung der Personensicherheit&amp;rdquo; (pp. 323–325)
@@ -1302,11 +1587,12 @@ p. 13), §5.3 (p. 17). Full reference on
 Eq. (9)), clause 9 and A.5.2; ISO/TR 16738:2009, §5.7 Eq. (2).
 Paraphrased; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.&lt;/li>
-&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2016). Assessment of hazards to
+&lt;li>Purser, D. A., &amp;amp; McAllister, J. L. (2026). Assessment of hazards to
 occupants from smoke, toxic gases, and heat. &lt;em>SFPE Handbook of Fire
-Protection Engineering&lt;/em>, 5th ed., Ch. 63, Eq. 63.43, pp. 2320,
-2338–2339, 2343–2344, 2383.
-&lt;a href="https://doi.org/10.1007/978-1-4939-2565-0_63" target="_blank" rel="noopener">doi:10.1007/978-1-4939-2565-0_63&lt;/a>&lt;/li>
+Protection Engineering&lt;/em>, 6th ed., Ch. 70, pp. 2271–2352. Eqs. 70.7 and
+70.41, Tables 70.3, 70.4 and 70.18; pp. 2284–2285, 2288, 2310,
+2318–2319, 2322, 2340.
+&lt;a href="https://doi.org/10.1007/978-3-031-59212-6_70" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_70&lt;/a>&lt;/li>
 &lt;li>Wood, P. G. (1972). &lt;em>The Behaviour of People in Fires&lt;/em>. Fire Research
 Note No. 953, Fire Research Station, Borehamwood. No DOI or public URL.&lt;/li>
 &lt;li>Bryan, J. L. (1977). &lt;em>Smoke as a Determinant of Human Behavior in Fire
@@ -1333,13 +1619,16 @@ engineering: practitioner&amp;rsquo;s perspectives from a global survey. &lt;em>
 J.&lt;/em>, 165, 104938.
 &lt;a href="https://doi.org/10.1016/j.firesaf.2026.104938" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2026.104938&lt;/a>&lt;/li>
 &lt;li>&lt;em>SFPE Handbook of Fire Protection Engineering&lt;/em>, 5th ed., App. 3, Tables
-A.38 and A.39 (fuel yields).&lt;/li>
+A.38 and A.39 (fuel yields of flexible polyurethane foam GM21, used in
+the paper-only rebuild). The same GM21 row is in the 6th ed., App. C,
+Table C.12 (p. 3427).&lt;/li>
 &lt;li>McGrattan, K. et al. &lt;em>Fire Dynamics Simulator User&amp;rsquo;s Guide&lt;/em>, sixth
 edition, NIST SP 1019, §6.3.6.&lt;/li>
 &lt;li>The original &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>,
 for &lt;code>PRE_MEAN&lt;/code>.&lt;/li>
 &lt;li>Code: &lt;code>pyfds_evac/core/fed.py&lt;/code> (gas and heat FED rates),
-&lt;code>pyfds_evac/core/scenario.py&lt;/code> (exit removal and throttling),
+&lt;code>pyfds_evac/core/scenario.py&lt;/code> (exit throttling),
+&lt;code>pyfds_evac/core/direct_steering_runtime.py&lt;/code> (&lt;code>EXIT_REACH_TOLERANCE_M&lt;/code>),
 &lt;code>pyfds_evac/core/run_config.py&lt;/code> (&lt;code>--smoke-blind&lt;/code>),
 &lt;code>pyfds_evac/core/simulation_init.py&lt;/code> (&lt;code>_apply_default_premovement&lt;/code>).&lt;/li>
 &lt;/ul>
@@ -2924,8 +3213,8 @@ is a pyFDS-Evac default. Each new study adds a row here and one to the
 &lt;tr>
 &lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a>&lt;/td>
 &lt;td>Steady from ignition&lt;/td>
-&lt;td>60 kW: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m; flexible polyurethane foam&lt;/td>
-&lt;td>60 kW from the authors&amp;rsquo; reference implementation (&lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">doi:10.5281/zenodo.3875550&lt;/a>); the paper&amp;rsquo;s text does not state it. Burner size and fuel are ours&lt;/td>
+&lt;td>60 kW: HRRPUA 60 kW/m² on 1 × 1 m; polyurethane (NFPA Babrauskas), soot yield 0.129. Sensitivity: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m, flexible polyurethane foam&lt;/td>
+&lt;td>From the authors&amp;rsquo; reference implementation (&lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">doi:10.5281/zenodo.3875550&lt;/a>); the paper&amp;rsquo;s text does not state the fire. The sensitivity burner and fuel are ours&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/">With and without the fire&lt;/a>&lt;/td>
