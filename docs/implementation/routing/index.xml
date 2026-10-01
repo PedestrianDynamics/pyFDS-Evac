@@ -128,9 +128,11 @@ path-integrated mean of
 Eq. 8-9; the Beer-Lambert law itself is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>.&lt;/p>
 &lt;h3>Arrival-time pricing&lt;span class="hx-absolute -hx-mt-20" id="arrival-time-pricing">&lt;/span>
-&lt;a href="#arrival-time-pricing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>, and &lt;strong>independent of &lt;code>cost_model&lt;/code>&lt;/strong>),
-each segment is priced at the time the agent would reach it rather than
-the time it decides:&lt;/p>
+&lt;a href="#arrival-time-pricing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The path search (&lt;code>_generate_candidates&lt;/code>) weights every edge with the
+smoke at decision time and finds one path to each exit from the agent&amp;rsquo;s
+origin node. With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>, and &lt;strong>independent of
+&lt;code>cost_model&lt;/code>&lt;/strong>), that path is then measured edge by edge at the time the
+agent would reach each edge&amp;rsquo;s start (&lt;code>_measure_route&lt;/code>):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>arrival_time = now &amp;#43; min(walked_so_far / base_speed_m_per_s,
 foresight_horizon_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -519,8 +521,8 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Candidates&lt;/strong>&lt;/td>
-&lt;td>Dijkstra over the agent&amp;rsquo;s known subgraph on each edge&amp;rsquo;s optical depth (&lt;code>k_avg&lt;/code> × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>)&lt;/td>
-&lt;td>Dijkstra on each edge&amp;rsquo;s share of the composite (length × (1 + &lt;code>w_smoke&lt;/code> × &lt;code>k_avg&lt;/code>) + &lt;code>w_fed&lt;/code> × FED growth); one path per exit&lt;/td>
+&lt;td>Dijkstra over the agent&amp;rsquo;s known subgraph on each edge&amp;rsquo;s optical depth at decision time (&lt;code>k_avg&lt;/code> × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>)&lt;/td>
+&lt;td>Dijkstra on each edge&amp;rsquo;s share of the composite at decision time (length × (1 + &lt;code>w_smoke&lt;/code> × &lt;code>k_avg&lt;/code>) + &lt;code>w_fed&lt;/code> × FED growth); one path per exit&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
@@ -672,8 +674,9 @@ When provided, segment costs are cached by &lt;code>(source, target)&lt;/code> k
 reused across route evaluations within the same timestep. This avoids
 redundant extinction sampling when multiple candidate routes share
 segments. Under &lt;code>anticipate&lt;/code> the same edge on two routes is priced at
-two different arrival times, so the key becomes
-&lt;code>(source, target, round(arrival_time_s))&lt;/code>. The re-measured first leg of
+two different arrival times, so the route measurement (&lt;code>_measure_route&lt;/code>)
+keys on &lt;code>(source, target, round(arrival_time_s))&lt;/code>. The path search keeps
+the &lt;code>(source, target)&lt;/code> key, since it prices every edge at decision time. The re-measured first leg of
 a position-aware route is deliberately not cached: it belongs to one
 agent&amp;rsquo;s position, and the cache is shared across agents in a pass.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -1509,8 +1512,10 @@ would count for nothing exactly where decks calibrate one.&lt;/li>
 asymmetry, and it moved nothing: 34 returns before and after.&lt;/li>
 &lt;/ul>
 &lt;h3>Anticipation&lt;span class="hx-absolute -hx-mt-20" id="anticipation">&lt;/span>
-&lt;a href="#anticipation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>), each segment is priced at the time the
-agent would &lt;em>arrive&lt;/em> there rather than the time it decides:&lt;/p>
+&lt;a href="#anticipation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The path to each exit is found on the smoke at decision time
+(&lt;code>_generate_candidates&lt;/code>). With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>), that path is
+then measured edge by edge at the time the agent would reach each edge&amp;rsquo;s
+start (&lt;code>_measure_route&lt;/code>):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>arrival_time = now &amp;#43; min(distance_walked_so_far / base_speed_m_per_s,
 foresight_horizon_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -1633,7 +1638,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>anticipate&lt;/code>&lt;/td>
 &lt;td>&lt;code>true&lt;/code>&lt;/td>
-&lt;td>Price each segment at the agent&amp;rsquo;s arrival time.&lt;/td>
+&lt;td>Measure the path to each exit edge by edge at the agent&amp;rsquo;s arrival time; the path search uses the smoke at decision time.&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>&lt;strong>active&lt;/strong>&lt;/td>
 &lt;/tr>
