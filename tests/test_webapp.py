@@ -1389,6 +1389,25 @@ def test_non_choice_flag_still_renders_as_input(client):
     assert 'value="1.0"' in tag.group(0)
 
 
+def test_require_fds_coverage_sits_in_smoke_after_the_hold(client):
+    from pyfds_evac.webapp.params import FIELD_GROUPS, form_to_opts
+
+    smoke = dict(FIELD_GROUPS)["Smoke"]
+    assert smoke.index("require_fds_coverage") == (
+        smoke.index("allow_fds_horizon_hold") + 1
+    )
+    html = client.get("/").text
+    smoke_html = html[
+        html.index(">Smoke</span>") : html.index(">FED & Tenability</span>")
+    ]
+    assert 'name="require_fds_coverage"' in smoke_html
+    assert "outside the FDS slices" in smoke_html
+    base = {"scenario": "t_junction"}
+    assert form_to_opts(base).require_fds_coverage is False
+    on = form_to_opts({**base, "require_fds_coverage": "on"})
+    assert on.require_fds_coverage is True
+
+
 # Output paths and the route-cost switch the GUI fixes on purpose (#319).
 _GUI_FIXED = {
     "output_sqlite",

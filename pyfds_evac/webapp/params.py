@@ -75,6 +75,7 @@ FIELD_GROUPS: list[tuple] = [
             "smoke_update_interval",
             "smoke_slice_height",
             "allow_fds_horizon_hold",
+            "require_fds_coverage",
             "smoke_blind",
         ],
     ),
@@ -277,6 +278,10 @@ _HELP_TEXT: dict[str, str] = {
     "allow_fds_horizon_hold": "Let the run outlast the FDS results by holding their last "
     "frame (logged as a warning). Off by default: a run longer than the FDS "
     "results stops with an error at setup.",
+    "require_fds_coverage": "Stop the run with an error when an agent, sign, exit or "
+    "route edge is sampled outside the FDS slices. Off by default, as FDS+Evac: "
+    "places outside the FDS domain read clear, ambient air, with a warning at "
+    "setup.",
     "disable_tenability": "Turn off smoke's effect on people: no slowing from irritants and no "
     "collapse from toxic dose. Agents just walk at normal speed.",
     "incapacitation_mode": "Deterministic (default, as FDS+Evac): every agent shares the same "
