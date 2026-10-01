@@ -1,0 +1,324 @@
+{
+  "project_version": "2.0",
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 400,
+        "model_type": "CollisionFreeSpeedModel",
+        "strength_neighbor_repulsion": 2.6,
+        "range_neighbor_repulsion": 0.1,
+        "a_v": 1,
+        "a_min": 0.2,
+        "b_min": 0.2,
+        "b_max": 0.4,
+        "T": 1
+      },
+      "numberOfSimulations": 1,
+      "baseSeed": 1
+    },
+    "ui_state": {
+      "useShortestPaths": false
+    }
+  },
+  "routing": {
+    "cost_model": "gate",
+    "anticipate": true,
+    "base_speed_m_per_s": 1.0,
+    "w_smoke": 1.0
+  },
+  "exits": {
+    "exit_E": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -3.6,
+          -10.0
+        ],
+        [
+          -1.6,
+          -10.0
+        ],
+        [
+          -1.6,
+          -9.8
+        ],
+        [
+          -3.6,
+          -9.8
+        ],
+        [
+          -3.6,
+          -10.0
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0,
+      "sign": {
+        "x": -2.6,
+        "y": -9.9,
+        "alpha": 180,
+        "c": 3
+      }
+    },
+    "exit_F": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -3.6,
+          34.8
+        ],
+        [
+          -1.6,
+          34.8
+        ],
+        [
+          -1.6,
+          35.0
+        ],
+        [
+          -3.6,
+          35.0
+        ],
+        [
+          -3.6,
+          34.8
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0,
+      "sign": {
+        "x": -2.6,
+        "y": 34.9,
+        "alpha": 0,
+        "c": 3
+      }
+    }
+  },
+  "distributions": {
+    "jps-distributions_0": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          0.5,
+          0.3
+        ],
+        [
+          10.299999999999999,
+          0.3
+        ],
+        [
+          10.299999999999999,
+          23.7
+        ],
+        [
+          0.5,
+          23.7
+        ],
+        [
+          0.5,
+          0.3
+        ]
+      ],
+      "parameters": {
+        "number": 200,
+        "radius": 0.15,
+        "v0": 1.0,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "percentage": null,
+        "use_premovement": true,
+        "premovement_distribution": "weibull",
+        "premovement_param_a": 135.49,
+        "premovement_param_b": 2.101,
+        "premovement_seed": null,
+        "radius_distribution": "constant",
+        "v0_distribution": "gaussian",
+        "v0_std": 0.2,
+        "familiarity": "full"
+      }
+    }
+  },
+  "checkpoints": {
+    "jps-checkpoints_doorA": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -0.2,
+          0.6
+        ],
+        [
+          0.4,
+          0.6
+        ],
+        [
+          0.4,
+          2.6
+        ],
+        [
+          -0.2,
+          2.6
+        ],
+        [
+          -0.2,
+          0.6
+        ]
+      ],
+      "sign": {
+        "x": 0.1,
+        "y": 1.6,
+        "alpha": 270,
+        "c": 3
+      },
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 0,
+      "speed_factor": 1
+    },
+    "jps-checkpoints_doorB": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -0.2,
+          20.6
+        ],
+        [
+          0.4,
+          20.6
+        ],
+        [
+          0.4,
+          22.6
+        ],
+        [
+          -0.2,
+          22.6
+        ],
+        [
+          -0.2,
+          20.6
+        ]
+      ],
+      "sign": {
+        "x": 0.1,
+        "y": 21.6,
+        "alpha": 270,
+        "c": 3
+      },
+      "waiting_time": 0,
+      "waiting_time_distribution": "constant",
+      "waiting_time_std": 1,
+      "enable_throughput_throttling": false,
+      "max_throughput": 0,
+      "speed_factor": 1
+    }
+  },
+  "zones": {},
+  "journeys": [
+    {
+      "id": "journey_0",
+      "stages": [
+        "jps-distributions_0",
+        "jps-checkpoints_doorA",
+        "jps-checkpoints_doorB",
+        "exit_E",
+        "exit_F"
+      ],
+      "transitions": [
+        {
+          "from": "jps-distributions_0",
+          "to": "jps-checkpoints_doorA",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-distributions_0",
+          "to": "jps-checkpoints_doorB",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-checkpoints_doorA",
+          "to": "exit_E",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-checkpoints_doorA",
+          "to": "exit_F",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-checkpoints_doorB",
+          "to": "exit_E",
+          "journey_id": "journey_0"
+        },
+        {
+          "from": "jps-checkpoints_doorB",
+          "to": "exit_F",
+          "journey_id": "journey_0"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "from": "jps-distributions_0",
+      "to": "jps-checkpoints_doorA",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-distributions_0",
+      "to": "jps-checkpoints_doorB",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-checkpoints_doorA",
+      "to": "exit_E",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-checkpoints_doorA",
+      "to": "exit_F",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-checkpoints_doorB",
+      "to": "exit_E",
+      "journey_id": "journey_0"
+    },
+    {
+      "from": "jps-checkpoints_doorB",
+      "to": "exit_F",
+      "journey_id": "journey_0"
+    }
+  ],
+  "waypoint_routing": {
+    "jps-checkpoints_doorA": {
+      "journey_0": {
+        "destinations": [
+          {
+            "target": "exit_E",
+            "percentage": 50
+          },
+          {
+            "target": "exit_F",
+            "percentage": 50
+          }
+        ]
+      }
+    },
+    "jps-checkpoints_doorB": {
+      "journey_0": {
+        "destinations": [
+          {
+            "target": "exit_E",
+            "percentage": 50
+          },
+          {
+            "target": "exit_F",
+            "percentage": 50
+          }
+        ]
+      }
+    }
+  }
+}
