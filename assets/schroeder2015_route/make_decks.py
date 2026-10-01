@@ -3,11 +3,10 @@
 Usage: ``python3 make_decks.py <outdir> [--dx 0.2] [--t-end 480]
 [--door-c open|closed] [--only NAME ...]``; writes ``<outdir>/<name>/<name>.fds``.
 
-The fire is the plan's a-priori design fire (annex, Enrico 2026-09-30),
-fixed before any routing run. Sweep: alpha in {0.012, 0.047} kW/s^2, fuel
-in {PVC, PUR}, ceiling H in {3.0, 4.0} m, plus the central case
-(0.047, PVC, 3.5 m). Geometry from geometry.py. Tags: [N] annex, [D]
-digitised, [A] assumed here.
+The fire is a design fire fixed before any routing run. Sweep: alpha in
+{0.012, 0.047} kW/s^2, fuel in {PVC, PUR}, ceiling H in {3.0, 4.0} m, plus
+the central case (0.047, PVC, 3.5 m). Geometry from geometry.py. Tags: [N]
+design fire, [D] digitised, [A] assumed here; see README.md.
 """
 
 import argparse
@@ -35,7 +34,7 @@ from geometry import (
 # 18770 kJ/kg from Schroeder 2017 p. 74 (TRStrab BS); the formula is that of
 # the Schroeder et al. 2020 release (NFPA Babrauskas polyurethane) [A]. The
 # thesis's HCN yield (0.070) and late-stage soot (0.129 after 600 s) are not
-# used: the annex gives soot and CO only, and T_END is 480 s.
+# used: the design fire gives soot and CO only, and T_END is 480 s.
 FUELS = {
     "pvc": dict(soot=0.172, co=0.063),
     "pur": dict(soot=0.056, co=0.122),
@@ -185,9 +184,10 @@ def deck(name: str, v: dict, dx: float, t_end: float, door_c: str) -> str:
     return f"""&HEAD CHID='{name}', TITLE='Route choice after Schroeder et al. 2015: Room 3 fire, alpha {v["alpha"]}, {v["fuel"].upper()}, H {v["h"]} m, dx {dx} m' /
 
 ! Geometry after Schroeder et al. 2015 Fig. 6 / Schroeder 2017 Fig. 3.9
-! (digitised, +-0.5-1 m, snapped to 0.2 m); see build/geometry.py. Design
-! fire from the plan's annex, fixed a priori. Tags: [N] annex, [D]
-! digitised, [A] assumed. See ../README.md.
+! (digitised, +-0.5-1 m, snapped to 0.2 m); see
+! assets/schroeder2015_route/geometry.py. Design fire fixed before any
+! routing run. Tags: [N] design fire, [D] digitised, [A] assumed. See
+! assets/schroeder2015_route/README.md.
 
 ! --- Domain: corridor x -5..0, y -10..35; hall + Room 3 x 0..10.6, y 0..31 ---
 ! Meshes cover the floor footprint only; H = {v["h"]} m, dz = {dz:.4f} m.

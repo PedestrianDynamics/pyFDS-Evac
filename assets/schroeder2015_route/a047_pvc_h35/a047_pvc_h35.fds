@@ -1,9 +1,10 @@
 &HEAD CHID='a047_pvc_h35', TITLE='Route choice after Schroeder et al. 2015: Room 3 fire, alpha 0.047, PVC, H 3.5 m, dx 0.2 m' /
 
 ! Geometry after Schroeder et al. 2015 Fig. 6 / Schroeder 2017 Fig. 3.9
-! (digitised, +-0.5-1 m, snapped to 0.2 m); see build/geometry.py. Design
-! fire from the plan's annex, fixed a priori. Tags: [N] annex, [D]
-! digitised, [A] assumed. See ../README.md.
+! (digitised, +-0.5-1 m, snapped to 0.2 m); see
+! assets/schroeder2015_route/geometry.py. Design fire fixed before any
+! routing run. Tags: [N] design fire, [D] digitised, [A] assumed. See
+! assets/schroeder2015_route/README.md.
 
 ! --- Domain: corridor x -5..0, y -10..35; hall + Room 3 x 0..10.6, y 0..31 ---
 ! Meshes cover the floor footprint only; H = 3.5 m, dz = 0.1944 m.

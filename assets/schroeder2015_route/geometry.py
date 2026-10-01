@@ -40,7 +40,7 @@ DOOR_D = (26.6, 28.6)  # Room 3 -> corridor, y range in the wall x 0..0.2
 DOOR_C = (4.4, 6.4)  # hall -> Room 3, x range in the wall y 24..24.2
 EXIT_X = (-3.6, -1.6)
 JAMB = 0.8
-# Burner 3 x 2 m centred in Room 3 (plan annex), on the grid: x0, x1, y0, y1.
+# Burner 3 x 2 m centred in Room 3 (design fire), on the grid: x0, x1, y0, y1.
 BURNER_XY = (4.0, 7.0, 26.6, 28.6)
 
 # Digitised source outline (plan section 1), before snapping, for the figure.

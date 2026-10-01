@@ -24,8 +24,9 @@ repository.
 | `a012_pvc_h30/a012_pvc_h30.fds` | Comparison fire: α = 0.012 kW/s², ceiling 3.0 m |
 | `run_p1.sh` | Runs the evacuation arms for seeds 1–10 on one FDS output |
 
-The three decks are the ones the page used. `make_decks.py` writes them
-byte for byte. The comments inside the decks name the tags of the study
+`make_decks.py` writes the three decks byte for byte. They differ from
+the decks of the page's FDS runs only in the header comment, which now
+points to this folder. The comments inside the decks name the tags of the study
 notes: [N] is the design fire fixed before any routing run, [D] digitised
 from the paper (±0.5–1 m), [A] assumed here.
 

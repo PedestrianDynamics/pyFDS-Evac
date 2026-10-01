@@ -44,4 +44,9 @@ ARMS="sb gate add"; [ "$NOFIRE" = --with-nofire ] && ARMS="nf $ARMS"
 run sb 1
 for a in $ARMS; do for s in $(seq 1 10); do
   [ "$a $s" = "sb 1" ] || echo "$a $s"; done; done | xargs -P "$JOBS" -n 2 bash -c 'run "$0" "$1"'
+if [ -f "$OUT/failures.txt" ]; then
+  cat "$OUT/failures.txt" >&2
+  echo "some runs failed; see $OUT/<arm>_s<seed>_log.txt.gz" >&2
+  exit 1
+fi
 echo "done $OUT"
