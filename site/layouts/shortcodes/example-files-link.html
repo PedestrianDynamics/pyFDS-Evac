@@ -1,0 +1,8 @@
+{{- /* A link near the top of an example page to its Files box.
+     Usage: {{< example-files-link "quickstart" >}} */ -}}
+{{- $name := .Get 0 -}}
+{{- $facts := index (site.Data.example_bundles | default dict) $name -}}
+{{- if not $facts -}}
+  {{- errorf "example-files-link: no zip for %q; run `uv run python scripts/docs/bundle_examples.py` before Hugo (%s)" $name .Position -}}
+{{- end -}}
+<p class="docs-files__jump"><a href="#files-{{ $name }}"><span aria-hidden="true">↓</span> Download the files for this page ({{ printf "%.0f" (div (float $facts.bytes) 1000) }} kB zip)</a></p>

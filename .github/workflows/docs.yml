@@ -13,6 +13,12 @@ on:
       - "scripts/generate_tenability_curves.py"
       - "artifacts/**"
       - "assets/t_junction/**"
+      - "assets/ISO-table21/**"
+      - "scripts/animate_agents_smoke.py"
+      - "scripts/docs/bundle_examples.py"
+      - "scripts/docs/first_fds_case_*.py"
+      - "tests/test_example_downloads.py"
+      - "LICENSE"
       - "tests/test_docs_defaults.py"
       - "tests/test_examples.py"
       - "tests/test_smoke_speed_widget.py"
@@ -57,10 +63,16 @@ jobs:
         run: pip install --upgrade uv
       - name: Install dependencies
         run: uv sync --all-groups
+      # One zip of inputs per example page, from this commit, into
+      # site/static/downloads/; the example-files shortcode needs it. It
+      # runs before any step that rewrites tracked files, so the README.txt
+      # in each zip names a clean commit.
+      - name: Build example downloads
+        run: uv run python scripts/docs/bundle_examples.py
       # The pages quote code defaults and embed code from examples/; both
       # tests fail when the code moves and the docs do not.
       - name: Check docs against the code
-        run: uv run pytest tests/test_docs_defaults.py tests/test_examples.py tests/test_heat_endpoint_docs.py tests/test_smoke_speed_widget.py -q
+        run: uv run pytest tests/test_docs_defaults.py tests/test_examples.py tests/test_heat_endpoint_docs.py tests/test_smoke_speed_widget.py tests/test_example_downloads.py -q
       # Regenerate every figure from the current code, so a figure script
       # that no longer runs fails the build and the site never ships a
       # figure the code can no longer produce.

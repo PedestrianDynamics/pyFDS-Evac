@@ -51,10 +51,13 @@ and Go:
 
 ```bash
 uv run pytest tests/test_docs_defaults.py tests/test_examples.py -q
+uv run python scripts/docs/bundle_examples.py
 cd site && hugo --minify --panicOnWarning -e production
 ```
 
-Delete `site/public` afterwards; it is not committed.
+`bundle_examples.py` builds the example downloads that
+`site/data/examples.toml` lists; Hugo fails without them. Delete
+`site/public` afterwards; it is not committed, and neither are the zips.
 
 ## Commits and pull requests
 
