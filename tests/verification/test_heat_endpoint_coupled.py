@@ -322,7 +322,8 @@ def test_unclothed_outputs_match_the_baseline(tmp_path):
     """``clothing="unclothed"`` reproduces the default outputs of 76c9a76.
 
     The baseline predates #290, when Eq. 63.44 was the default; the only
-    difference is the ``heat_clothing`` manifest key, checked apart. Its
+    differences are the ``heat_clothing`` and ``outcome`` manifest keys,
+    checked apart. Its
     ``x`` and ``y`` columns and ``agent_seeding`` key were rewritten when
     per-agent draws moved to the spawn key (#353); see the baseline README.
     """
@@ -334,6 +335,9 @@ def test_unclothed_outputs_match_the_baseline(tmp_path):
         _assert_rows_match(_renumbered(rows), _renumbered(want_rows))
         manifest = _normalised_manifest(result.manifest_file)
         assert manifest.pop("heat_clothing") == "unclothed"
+        outcome = manifest.pop("outcome")
+        assert outcome["agents_remaining"] == result.agents_remaining
+        assert outcome["status"] == result.status
         assert manifest == _read_json(BASELINE_DIR / "manifest.json")
     finally:
         result.cleanup()

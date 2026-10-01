@@ -602,6 +602,26 @@ def _copy_manifest(result, output_path: pathlib.Path) -> pathlib.Path | None:
     return destination
 
 
+def _summary_line(result) -> str:
+    """One line on how the run ended; a run cut off by the time limit is incomplete."""
+    if result.success:
+        return (
+            f"Simulation finished in {result.evacuation_time:.2f} s "
+            f"({result.agents_evacuated}/{result.total_agents} evacuated)."
+        )
+    not_spawned = (
+        f", {result.agents_not_spawned} not spawned"
+        if result.agents_not_spawned
+        else ""
+    )
+    return (
+        "Simulation incomplete: time limit reached after "
+        f"{result.evacuation_time:.2f} s "
+        f"({result.agents_evacuated}/{result.total_agents} evacuated, "
+        f"{result.agents_remaining} remaining{not_spawned})."
+    )
+
+
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
     parser = _build_parser()
@@ -632,17 +652,7 @@ def main() -> int:
     print("Simulation started.")
 
     result = run_scenario(scenario, **run_kwargs)
-    if result.agents_remaining == 0:
-        print(
-            f"Simulation finished in {result.evacuation_time:.2f} s "
-            f"({result.agents_evacuated}/{result.total_agents} evacuated)."
-        )
-    else:
-        print(
-            f"Simulation stopped after {result.evacuation_time:.2f} s "
-            f"({result.agents_evacuated}/{result.total_agents} evacuated, "
-            f"{result.agents_remaining} remaining)."
-        )
+    print(_summary_line(result))
 
     outside = result.metrics.get("fds_outside")
     if outside and outside["rows"]:

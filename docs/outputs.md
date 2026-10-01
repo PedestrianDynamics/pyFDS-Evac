@@ -61,6 +61,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `scenario_path` | the scenario file that was loaded |
 | `fds_dir`, `fds_version` | absolute FDS directory, and the FDS version read from its `.smv`; `null` without FDS output |
 | `created_utc` | time the run finished, UTC |
+| `outcome` | how the run ended: `status` (`completed` or `incomplete`), `agents_remaining` and `agents_not_spawned`, as in [Reading the results](#reading-the-results) |
 | `heat_clothing` | `clothed` or `unclothed`, when an ISO 13571 convective heat law ran |
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
@@ -204,7 +205,9 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 |---|---|
 | `evacuation_time` | simulated time when the run stopped |
 | `total_agents`, `agents_evacuated`, `agents_remaining` | head counts at the end |
-| `success` | `True` when nobody remains **or** the run reached `max_simulation_time` |
+| `agents_not_spawned` | flow agents that had not entered when the run reached `max_simulation_time` |
+| `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter |
+| `success` | `True` only for a completed run |
 | `metrics["fed_max"]` | highest gas FED of any agent; present only when the gas FED ran |
 | `metrics["heat_fed_max"]` | highest heat FED; present only when the heat FED ran |
 
@@ -213,8 +216,7 @@ Three things to keep in mind:
 - **An incapacitated agent stays in the simulation.** The run then continues
   to `max_simulation_time`, and `evacuation_time` reports that time, not an
   exit time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
-  `success` is `True` in that case too
-  ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
+  The run is `"incomplete"` and `success` is `False`.
   Take exit times from the trajectory, as the
   [RSET how-to](howto-rset-ensemble.md) does.
 - **No FED is not zero FED.** If neither FED track ran, `fed_history` is

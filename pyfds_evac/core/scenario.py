@@ -864,7 +864,18 @@ class ScenarioResult:
 
     @property
     def success(self) -> bool:
+        """True only when every agent entered and left before the time limit."""
         return self.metrics.get("success", False)
+
+    @property
+    def status(self) -> str:
+        """``"completed"`` or ``"incomplete"`` (time limit reached first)."""
+        return self.metrics.get("status", "incomplete")
+
+    @property
+    def agents_not_spawned(self) -> int:
+        """Flow agents that had not entered when the time limit was reached."""
+        return self.metrics.get("agents_not_spawned", 0)
 
     @property
     def evacuation_time(self) -> float:
@@ -3026,13 +3037,24 @@ def run_scenario(
         if has_flow_spawning:
             total_agents += sum(agent_counter_per_source)
 
+        # Flow agents the time limit cut off before they entered.
+        not_spawned = (
+            max(0, sum(num_agents_per_source) - sum(agent_counter_per_source))
+            if has_flow_spawning
+            else 0
+        )
+        # A run is complete only when every agent has entered and left; one
+        # stopped by the time limit with agents inside or still to enter is
+        # incomplete (#139, #434).
+        completed = remaining == 0 and not_spawned == 0
         metrics = {
-            "success": remaining == 0
-            or evacuation_time >= scenario.max_simulation_time,
+            "success": completed,
+            "status": "completed" if completed else "incomplete",
             "evacuation_time": round(evacuation_time, 2),
             "total_agents": total_agents,
             "agents_evacuated": total_agents - remaining,
             "agents_remaining": remaining,
+            "agents_not_spawned": not_spawned,
             "all_evacuated": remaining == 0,
             "frame_rate": 10.0,
             "dt": 0.01,
@@ -3097,6 +3119,10 @@ def run_scenario(
                 ),
                 smoke_blind=smoke_blind,
                 fds_coverage=metrics.get("fds_coverage"),
+                outcome={
+                    key: metrics[key]
+                    for key in ("status", "agents_remaining", "agents_not_spawned")
+                },
                 replay_exits=(
                     None
                     if replay_exits is None

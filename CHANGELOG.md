@@ -142,6 +142,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- A run that reaches `max_simulation_time` with agents inside, or with flow
+  agents still to enter, is incomplete: `success` is `False` (it was
+  `True`, #139), the new `metrics["status"]` is `"incomplete"` (else
+  `"completed"`), and `metrics["agents_not_spawned"]` counts the flow agents
+  that never entered. The run manifest records the same under `outcome`,
+  and the `run.py` summary line reads `Simulation incomplete: time limit
+  reached after …`. The exit code of `run.py` stays 0.
+
 - **Seeded placements differ from earlier versions.** The start positions,
   their shuffle, the radius and v0 samples and the default pre-movement
   stream of each distribution are seeded from a blake2b hash of the run
