@@ -10,6 +10,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>Inspect the manifest that records how the run was produced.&lt;/li>
 &lt;/ol>
 &lt;p>Runtime: about 3 s. No FDS output is needed.&lt;/p>
+&lt;p class="docs-files__jump">&lt;a href="#files-quickstart">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (16 kB zip)&lt;/a>&lt;/p>
 &lt;nav class="tutorial-progress" aria-label="Tutorial steps">
 &lt;ol>
 &lt;li>Clear air&lt;/li>
@@ -20,11 +21,44 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/ol>
 &lt;/nav>
 &lt;h2>Before you start&lt;span class="hx-absolute -hx-mt-20" id="before-you-start">&lt;/span>
-&lt;a href="#before-you-start" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>You need:&lt;/p>
+&lt;a href="#before-you-start" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;aside class="docs-files" aria-labelledby="files-quickstart">
+&lt;div class="docs-files__head">
+&lt;p class="docs-files__title" id="files-quickstart">Download the files for this page&lt;/p>
+&lt;a class="docs-files__download" href="https://pedestriandynamics.org/pyFDS-Evac/downloads/pyfds-evac-quickstart.zip" download>
+&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-quickstart.zip &lt;span class="docs-files__size">(16 kB)&lt;/span>
+&lt;/a>
+&lt;/div>
+&lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
+&lt;dl class="docs-files__facts">
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/f8c7c2143cc234dbde035973926195fe4fbfa7b7">&lt;code>f8c7c21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
+&lt;/dl>
+&lt;details class="docs-files__contents">
+&lt;summary>What is inside (9 files)&lt;/summary>
 &lt;ul>
-&lt;li>a clone of the repository;&lt;/li>
-&lt;li>the environment installed with &lt;code>uv sync&lt;/code> (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/">Install&lt;/a>);&lt;/li>
-&lt;li>a shell opened in the repository root.&lt;/li>
+&lt;li>&lt;code>README.txt&lt;/code>: this file&lt;/li>
+&lt;li>&lt;code>LICENSE&lt;/code>: MIT licence of the code&lt;/li>
+&lt;li>&lt;code>requirements.txt&lt;/code>: pinned Python packages, from uv.lock&lt;/li>
+&lt;li>&lt;code>examples/quickstart.py&lt;/code>: the example script&lt;/li>
+&lt;li>&lt;code>assets/ISO-table21/config.json&lt;/code>: JuPedSim scenario&lt;/li>
+&lt;li>&lt;code>assets/ISO-table21/geometry.wkt&lt;/code>: walkable area&lt;/li>
+&lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: FDS deck of the same corridor (ISO 20414 Test 18); the quickstart does not run it&lt;/li>
+&lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
+&lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
+&lt;/ul>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5af2e87ce6db0e0860b83eb4d95f54d28fcee1e0c24ff2ab108cb0a3c2709a30&lt;/code>&lt;/p>
+&lt;/details>
+&lt;/aside>
+&lt;p>You need one of:&lt;/p>
+&lt;ul>
+&lt;li>a clone of the repository, with the environment installed by &lt;code>uv sync&lt;/code>
+(see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/">Install&lt;/a>), and a shell opened in the repository root;&lt;/li>
+&lt;li>the zip above, unpacked, with the packages of its &lt;code>requirements.txt&lt;/code>
+installed, and a shell opened in the unpacked folder. Run the commands
+below with &lt;code>python&lt;/code> instead of &lt;code>uv run python&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;p>The complete example is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/quickstart.py" target="_blank" rel="noopener">&lt;code>examples/quickstart.py&lt;/code>&lt;/a>.
 Run it with:&lt;/p>
@@ -262,10 +296,10 @@ You can still change &lt;code>K_PER_M&lt;/code> in the Python example and rerun 
 &lt;/noscript>
 &lt;div class="smoke-experiment__live" data-live hidden>
 &lt;div class="smoke-experiment__controls">
-&lt;label for="smoke-experiment-8">Extinction coefficient &lt;i>K&lt;/i> [1/m]&lt;/label>
-&lt;input type="range" id="smoke-experiment-8" min="0" max="5" step="0.1" value="3">
+&lt;label for="smoke-experiment-10">Extinction coefficient &lt;i>K&lt;/i> [1/m]&lt;/label>
+&lt;input type="range" id="smoke-experiment-10" min="0" max="5" step="0.1" value="3">
 &lt;div class="smoke-experiment__scale" aria-hidden="true">&lt;span>0&lt;/span>&lt;span>5&lt;/span>&lt;/div>
-&lt;output for="smoke-experiment-8" class="smoke-experiment__k" data-out="k">&lt;/output>
+&lt;output for="smoke-experiment-10" class="smoke-experiment__k" data-out="k">&lt;/output>
 &lt;/div>
 &lt;dl class="smoke-experiment__values" aria-live="polite">
 &lt;div>&lt;dt>Visibility &lt;i>S&lt;/i> = &lt;i>C&lt;/i>/&lt;i>K&lt;/i>&lt;/dt>&lt;dd data-out="visibility">&lt;/dd>&lt;/div>
@@ -893,27 +927,51 @@ corridor while a 2 MW PVC fire, computed by FDS, fills it with smoke. Each
 step shows the command and what it produces.&lt;/p>
 &lt;p>It builds on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a> (one agent, prescribed smoke) and
 the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a> (small tracked FDS cases). Unlike
-those, it needs FDS output that is not in the repository; step 3 says how to
-get it.&lt;/p>
-&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
-&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
-⚠️
-&lt;/div>&lt;/div>
-&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
-&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
-The outputs, numbers and figures on this page come from
-runs that predate the per-distribution seeds of
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360" target="_blank" rel="noopener">#360&lt;/a> and the
-exit rule of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349" target="_blank" rel="noopener">#349&lt;/a>.
-The commands below now give different results; the re-run is tracked in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384" target="_blank" rel="noopener">#384&lt;/a>.
+those, it needs FDS output that you compute with FDS on your own computer;
+step 3 shows how.&lt;/p>
+&lt;p class="docs-files__jump">&lt;a href="#files-first-fds-case">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (39 kB zip)&lt;/a>&lt;/p>
+&lt;h2>Before you start&lt;span class="hx-absolute -hx-mt-20" id="before-you-start">&lt;/span>
+&lt;a href="#before-you-start" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;aside class="docs-files" aria-labelledby="files-first-fds-case">
+&lt;div class="docs-files__head">
+&lt;p class="docs-files__title" id="files-first-fds-case">Download the files for this page&lt;/p>
+&lt;a class="docs-files__download" href="https://pedestriandynamics.org/pyFDS-Evac/downloads/pyfds-evac-first-fds-case.zip" download>
+&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-first-fds-case.zip &lt;span class="docs-files__size">(39 kB)&lt;/span>
+&lt;/a>
 &lt;/div>
-&lt;/div>
-&lt;/div>
+&lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
+&lt;dl class="docs-files__facts">
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/f8c7c2143cc234dbde035973926195fe4fbfa7b7">&lt;code>f8c7c21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25 s for the fire run&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 72/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.38&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;smoke_reroute&amp;#39;: 9, &amp;#39;wander&amp;#39;: 164}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
+&lt;/dl>
+&lt;details class="docs-files__contents">
+&lt;summary>What is inside (11 files)&lt;/summary>
+&lt;ul>
+&lt;li>&lt;code>README.txt&lt;/code>: this file&lt;/li>
+&lt;li>&lt;code>LICENSE&lt;/code>: MIT licence of the code&lt;/li>
+&lt;li>&lt;code>requirements.txt&lt;/code>: pinned Python packages, from uv.lock&lt;/li>
+&lt;li>&lt;code>assets/t_junction/t_junction.fds&lt;/code>: FDS deck of the fire&lt;/li>
+&lt;li>&lt;code>assets/t_junction/config.json&lt;/code>: JuPedSim scenario&lt;/li>
+&lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: walkable area&lt;/li>
+&lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line&lt;/li>
+&lt;li>&lt;code>examples/first_fds_case.py&lt;/code>: the same run from Python&lt;/li>
+&lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: the figures of section 5&lt;/li>
+&lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
+&lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
+&lt;/ul>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">61f18a0bddbc8cb2e87c3464472ee7e5d21c2647da128b36d7c27caa9e1e784c&lt;/code>&lt;/p>
+&lt;/details>
+&lt;/aside>
+&lt;p>Run every command on this page from one of:&lt;/p>
+&lt;ul>
+&lt;li>the repository root, in the environment installed with &lt;code>uv sync&lt;/code>;&lt;/li>
+&lt;li>the unpacked zip above, with the packages of its &lt;code>requirements.txt&lt;/code>
+installed. Run the commands with &lt;code>python&lt;/code> instead of &lt;code>uv run python&lt;/code>.&lt;/li>
+&lt;/ul>
 &lt;h2>1. Check the scenario runs&lt;span class="hx-absolute -hx-mt-20" id="1-check-the-scenario-runs">&lt;/span>
-&lt;a href="#1-check-the-scenario-runs" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Run every command on this page from the repository root, in the environment
-installed with &lt;code>uv sync&lt;/code>. Without FDS output the example runs the scenario in
-clear air, in about 5 s:&lt;/p>
+&lt;a href="#1-check-the-scenario-runs" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Without FDS output the example runs the scenario in clear air, in about 5 s:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python examples/first_fds_case.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -996,13 +1054,13 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>It takes 20 to 30 minutes on four cores. Or use the output the maintainers
-keep in their data store, &lt;code>fds-evac-data/t_junction/fire_2MW_PVC/&lt;/code> (about
-125 MB). The data store is not public; ask for it on the
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues" target="_blank" rel="noopener">issue tracker&lt;/a>.&lt;/p>
+&lt;p>With FDS 6.10.1 and four MPI processes it took 1169 s, about 20 minutes, on
+an Apple M3 Pro. The deck has four meshes, so it cannot use more than four
+processes. &lt;code>fds t_junction.fds&lt;/code> without &lt;code>mpiexec&lt;/code> runs it on one process, more
+slowly.&lt;/p>
 &lt;p>The rest of this page calls the output directory &lt;code>$FDS&lt;/code>:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>FDS&lt;span style="color:#f92672">=&lt;/span>fire &lt;span style="color:#75715e"># or the path to fire_2MW_PVC&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>FDS&lt;span style="color:#f92672">=&lt;/span>fire&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1072,7 +1130,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>It takes about 45 s. Most of that goes into computing which signs are
+&lt;p>It takes about 25 s. Most of that goes into computing which signs are
 readable through the smoke. The output ends with:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Configuring smoke calculation.
@@ -1084,7 +1142,7 @@ readable through the smoke. The output ends with:&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Initialization finished.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation started.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>…
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation stopped after 300.00 s (76/150 evacuated, 74 remaining).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation stopped after 300.00 s (72/150 evacuated, 78 remaining).
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route switches: 173&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
@@ -1214,9 +1272,9 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>evacuated: 76/150 in 300 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FED max: 0.37
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>route changes: {&amp;#39;smoke_reroute&amp;#39;: 8, &amp;#39;wander&amp;#39;: 165}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>evacuated: 72/150 in 300 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FED max: 0.38
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>route changes: {&amp;#39;smoke_reroute&amp;#39;: 9, &amp;#39;wander&amp;#39;: 164}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1241,21 +1299,21 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h3>Where the agents went&lt;span class="hx-absolute -hx-mt-20" id="where-the-agents-went">&lt;/span>
-&lt;a href="#where-the-agents-went" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/trajectories.png" alt="Two plan views of walked trajectories; in clear air all 144 agents who left walk from the branch to exit B, 6 are still in the branch; in the fire, 8 agents walk left to exit A, 68 walk past the burner to exit B, and 74 are still in the branch or at the junction at 300 s" loading="lazy" />&lt;/p>
-&lt;p>In clear air everyone takes the nearer exit B. In the fire, 8 early agents
-turn to exit A as smoke builds up on B&amp;rsquo;s side. Half the agents are still inside at
-300 s.&lt;/p>
+&lt;a href="#where-the-agents-went" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/trajectories.png" alt="Two plan views of walked trajectories; in clear air all 144 agents who left walk from the branch to exit B, 6 are still in the branch; in the fire, 9 agents walk left to exit A, 63 walk past the burner to exit B, and 78 are still in the branch or at the junction at 300 s" loading="lazy" />&lt;/p>
+&lt;p>In clear air everyone takes the nearer exit B. In the fire, 9 early agents
+turn to exit A as smoke builds up on B&amp;rsquo;s side. About half the agents, 78, are
+still inside at 300 s.&lt;/p>
 &lt;h3>The run, animated&lt;span class="hx-absolute -hx-mt-20" id="the-run-animated">&lt;/span>
 &lt;a href="#the-run-animated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/agents_smoke.gif" alt="Animation of the fire run at 16 times real time: agents enter the branch as dots, the corridor darkens with smoke from the burner, and the dots turn from blue to red and grow as the smoke slows them, until a crowd of slow red dots fills the branch and the junction" loading="lazy" />&lt;/p>
 &lt;p>The background is the extinction field the agents read. Red, large dots are
 agents the smoke has slowed. From about 120 s almost every agent crawls.&lt;/p>
 &lt;h3>Evacuated over time&lt;span class="hx-absolute -hx-mt-20" id="evacuated-over-time">&lt;/span>
-&lt;a href="#evacuated-over-time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/evacuated.png" alt="Number of agents out of the building against time; the clear-air curve follows the spawn line and reaches 144 at 300 s; the fire curve falls behind from about 45 s and reaches 76" loading="lazy" />&lt;/p>
+&lt;a href="#evacuated-over-time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/evacuated.png" alt="Number of agents out of the building against time; the clear-air curve follows the spawn line and reaches 144 at 300 s; the fire curve falls behind from about 45 s and reaches 72" loading="lazy" />&lt;/p>
 &lt;p>In clear air, agents leave about as fast as they arrive. In the fire, the gap
 opens at about 45 s, when the smoke has filled the junction.&lt;/p>
 &lt;h3>Dose and speed&lt;span class="hx-absolute -hx-mt-20" id="dose-and-speed">&lt;/span>
-&lt;a href="#dose-and-speed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/exposure.png" alt="Top: FED against time, one grey line per agent, the highest in red reaching 0.37, all well below the dashed incapacitation line at FED 1. Bottom: median speed factor of the agents inside, falling from 1 at 40 s to the floor of 0.1 at 120 s and staying there" loading="lazy" />&lt;/p>
-&lt;p>Nobody is incapacitated by the toxic dose: the highest FED is 0.37. This
+&lt;a href="#dose-and-speed" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/exposure.png" alt="Top: FED against time, one grey line per agent, the highest in red reaching 0.38, all well below the dashed incapacitation line at FED 1. Bottom: median speed factor of the agents inside, falling from 1 at 40 s to the floor of 0.1 at 120 s and staying there" loading="lazy" />&lt;/p>
+&lt;p>Nobody is incapacitated by the toxic dose: the highest FED is 0.38. This
 does not mean that conditions were tenable; &lt;a href="#aset-rset">section 6&lt;/a>
 compares visibility and irritant limits with the exit times. In the run,
 the smoke acts on the agents through their speed, their route choice and
@@ -1266,13 +1324,14 @@ speed by
 &lt;code>1 + (-0.057 × 3.0) / 0.706&lt;/code> = 0.76. Above &lt;em>K&lt;/em> = 11 1/m it is the floor, 0.1,
 and from 120 s the median agent is there.&lt;/p>
 &lt;h3>Exit usage&lt;span class="hx-absolute -hx-mt-20" id="exit-usage">&lt;/span>
-&lt;a href="#exit-usage" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/exits.png" alt="Stacked horizontal bars: clear air, 144 through exit B and 6 inside; fire, 8 through exit A, 68 through exit B and 74 inside" loading="lazy" />&lt;/p>
-&lt;p>The route log explains the fire run. The 8 agents who switched to exit A
-(&lt;code>smoke_reroute&lt;/code>) did so in the first 26 s, and all 8 left by it. 18 agents,
-spawned between 22 and 92 s, never learned an exit: no exit sign was readable
-to them. They walk back and forth between the spawn area and the junction
-(&lt;code>wander&lt;/code>, 165 of the 173 route changes), and all 18 are still inside at
-300 s.&lt;/p>
+&lt;a href="#exit-usage" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/exits.png" alt="Stacked horizontal bars: clear air, 144 through exit B and 6 inside; fire, 9 through exit A, 63 through exit B and 78 inside" loading="lazy" />&lt;/p>
+&lt;p>The route log explains the fire run. The 9 agents who switched to exit A
+(&lt;code>smoke_reroute&lt;/code>) did so in the first 28 s, and all 9 left by it. 20 agents,
+spawned between 24 and 120 s, never learned an exit: no exit sign was
+readable to them. They walk back and forth between the spawn area and the
+junction (163 &lt;code>wander&lt;/code> route changes), and all 20 are still inside at 300 s.
+The 164th &lt;code>wander&lt;/code> is one step of the last agent to switch to exit A, a
+second before it switched.&lt;/p>
 &lt;h2>6. Was there time to get out? (ASET and RSET)&lt;span class="hx-absolute -hx-mt-20" id="aset-rset">&lt;/span>
 &lt;a href="#aset-rset" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Fire-safety engineering compares two times. The available safe escape time
 (ASET) runs until conditions become untenable. The required safe escape time
@@ -1287,15 +1346,15 @@ tenability limit, and whether the agent got out before that.&lt;/p>
 until the run is cut off at 300 s, with half of them still inside.&lt;/li>
 &lt;li>&lt;strong>Visibility and HCl became untenable early.&lt;/strong> Each of six points in the T
 crossed the visibility limit between 18 and 46 s after ignition. The
-first agent met it at 15 s. Of the 75 agents who got out, 69 met it before
+first agent met it at 16 s. Of the 71 agents who got out, 63 met it before
 they reached an exit.&lt;/li>
-&lt;li>&lt;strong>The irritant limits were passed by most of those who got out.&lt;/strong> 64 of
-the 75 met HCl ≥ 1000 ppm (ISO fractional effective concentration, FEC,
+&lt;li>&lt;strong>The irritant limits were passed by most of those who got out.&lt;/strong> 59 of
+the 71 met HCl ≥ 1000 ppm (ISO fractional effective concentration, FEC,
 of 1, the concentration at which half of a population is expected to be
 incapacitated) before their exit. The engine records the irritant measure
 (FIC) and does not act on it, so these agents kept walking.&lt;/li>
-&lt;li>&lt;strong>The toxic dose came last.&lt;/strong> FED reached 0.3 only after 262 s, for 18
-agents who were still inside. By then their FIC was already 4.5 to 5.9.&lt;/li>
+&lt;li>&lt;strong>The toxic dose came last.&lt;/strong> FED reached 0.3 only after 259 s, for 19
+agents who were still inside. By then their FIC was already 4.1 to 8.5.&lt;/li>
 &lt;/ul>
 &lt;p>&amp;ldquo;Nobody reached FED 1&amp;rdquo; therefore does not mean &amp;ldquo;everyone had time&amp;rdquo;. This is
 one fire, one seed, and research software. The result describes this run
@@ -1322,13 +1381,14 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>From the unpacked zip, follow step 6 of its &lt;code>README.txt&lt;/code> instead.&lt;/p>
 &lt;p>It takes under a minute (about 8 s with the run files in place) and prints
 every number in this section. The report starts with:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>agents 150, spawned last at 298 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>trajectory: 76 left before 300 s, last exit 299.8 s
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>counted out (exit &amp;lt; 299 s) 75, censored 75
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>travel time median 88.1 s, max 147.4 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>trajectory: 72 left before 300 s, last exit 299.2 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>counted out (exit &amp;lt; 299 s) 71, censored 79
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>travel time median 90.7 s, max 162.5 s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1350,11 +1410,11 @@ in &lt;code>records&lt;/code>, the run files are not from this deck: the HCl con
 holds only when HCl is the only irritant.
 &lt;/div>
 &lt;/aside>
-&lt;p>&lt;strong>Who counts as out.&lt;/strong> The run reports 76 evacuated, and so does the
-trajectory: the last agent leaves at 299.8 s. The per-agent histories stop
+&lt;p>&lt;strong>Who counts as out.&lt;/strong> The run reports 72 evacuated, and so does the
+trajectory: the last agent leaves at 299.2 s. The per-agent histories stop
 at 299 s, so they cannot show whether that agent met a limit in its last
 second. The script therefore counts an agent as out only if it left before
-299 s: &lt;strong>75 got out and 75 are censored&lt;/strong>. For a censored agent we know only
+299 s: &lt;strong>71 got out and 79 are censored&lt;/strong>. For a censored agent we know only
 that its margin is negative or longer than the run.&lt;/p>
 &lt;h3>Each agent against its own limits&lt;span class="hx-absolute -hx-mt-20" id="each-agent-against-its-own-limits">&lt;/span>
 &lt;a href="#each-agent-against-its-own-limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Each row is one criterion, over all 150 agents. A limit counts as reached if
@@ -1373,77 +1433,77 @@ the agent met it before it left, or before 299 s if it is still inside.&lt;/p>
 &lt;tbody>
 &lt;tr>
 &lt;td>Visibility 10 m (EA) with &lt;em>C&lt;/em> = 3 (Jin; FDS default): &lt;em>K&lt;/em> ≥ 0.3 1/m&lt;/td>
-&lt;td>144&lt;/td>
-&lt;td>15 s&lt;/td>
-&lt;td>6&lt;/td>
-&lt;td>69&lt;/td>
-&lt;td>75&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>HCl ≥ 200 ppm (Purser escape impairment, FIC&lt;sub>imp&lt;/sub> = 1)&lt;/td>
-&lt;td>143&lt;/td>
-&lt;td>15 s&lt;/td>
-&lt;td>7&lt;/td>
-&lt;td>68&lt;/td>
-&lt;td>75&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>HCl ≥ 300 ppm (ISO FEC 0.3)&lt;/td>
 &lt;td>142&lt;/td>
 &lt;td>16 s&lt;/td>
 &lt;td>8&lt;/td>
-&lt;td>67&lt;/td>
-&lt;td>75&lt;/td>
+&lt;td>63&lt;/td>
+&lt;td>79&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>HCl ≥ 200 ppm (Purser escape impairment, FIC&lt;sub>imp&lt;/sub> = 1)&lt;/td>
+&lt;td>142&lt;/td>
+&lt;td>16 s&lt;/td>
+&lt;td>8&lt;/td>
+&lt;td>63&lt;/td>
+&lt;td>79&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>HCl ≥ 300 ppm (ISO FEC 0.3)&lt;/td>
+&lt;td>139&lt;/td>
+&lt;td>16 s&lt;/td>
+&lt;td>11&lt;/td>
+&lt;td>60&lt;/td>
+&lt;td>79&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>HCl ≥ 900 ppm (SFPE FIC = 1)&lt;/td>
-&lt;td>139&lt;/td>
-&lt;td>49 s&lt;/td>
-&lt;td>11&lt;/td>
-&lt;td>64&lt;/td>
-&lt;td>75&lt;/td>
+&lt;td>138&lt;/td>
+&lt;td>51 s&lt;/td>
+&lt;td>12&lt;/td>
+&lt;td>59&lt;/td>
+&lt;td>79&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>HCl ≥ 1000 ppm (ISO FEC 1)&lt;/td>
-&lt;td>139&lt;/td>
-&lt;td>49 s&lt;/td>
-&lt;td>11&lt;/td>
-&lt;td>64&lt;/td>
-&lt;td>75&lt;/td>
+&lt;td>138&lt;/td>
+&lt;td>52 s&lt;/td>
+&lt;td>12&lt;/td>
+&lt;td>59&lt;/td>
+&lt;td>79&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>CO ≥ 2,700 ppm (EA)&lt;/td>
-&lt;td>49&lt;/td>
-&lt;td>63 s&lt;/td>
-&lt;td>31&lt;/td>
-&lt;td>44&lt;/td>
-&lt;td>5&lt;/td>
+&lt;td>56&lt;/td>
+&lt;td>74 s&lt;/td>
+&lt;td>23&lt;/td>
+&lt;td>48&lt;/td>
+&lt;td>8&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FED ≥ 0.3 (FDS+Evac form)&lt;/td>
-&lt;td>18&lt;/td>
-&lt;td>262 s&lt;/td>
-&lt;td>75&lt;/td>
+&lt;td>19&lt;/td>
+&lt;td>259 s&lt;/td>
+&lt;td>71&lt;/td>
 &lt;td>0&lt;/td>
-&lt;td>18&lt;/td>
+&lt;td>19&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FED ≥ 1 (FDS+Evac form)&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>–&lt;/td>
-&lt;td>75&lt;/td>
+&lt;td>71&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>0&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The 69 agents who got out after the visibility limit spent a median of
-92 s, and at most 148 s, inside beyond it. The four HCl limits change the
-count of evacuees who met a limit only from 68 to 64. CO above 2,700 ppm is
+&lt;p>The 63 agents who got out after the visibility limit spent a median of
+104 s, and at most 163 s, inside beyond it. The four HCl limits change the
+count of evacuees who met a limit only from 63 to 59. CO above 2,700 ppm is
 met next to the burner, by agents who pass it on their way to exit B.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/aset_agents.png" alt="One horizontal bar per agent, in order of spawning from top to bottom, on a time axis from 0 to 300 s after ignition. Each bar runs from the agent’s spawn to its exit, pale before the agent first meets K 0.3 and solid after; bars of the 75 censored agents are grey and end in an arrow at 299 s. Circles mark the first K 0.3, diamonds the first HCl 300 ppm, squares the first FED 0.3. The first dozen agents meet the limits partway along their bar. From about 50 s on, the circles and diamonds sit at the start of every bar, forming a diagonal: agents spawn into air already past the visibility limit and meet HCl 300 ppm within about 3 s. The 18 FED 0.3 squares all lie between 262 and 287 s, on grey bars" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/aset_agents.png" alt="One horizontal bar per agent, in order of spawning from top to bottom, on a time axis from 0 to 300 s after ignition. Each bar runs from the agent’s spawn to its exit, pale before the agent first meets K 0.3 and solid after; bars of the 79 censored agents are grey and end in an arrow at 299 s. Circles mark the first K 0.3, diamonds the first HCl 300 ppm, squares the first FED 0.3. The first dozen agents meet the limits partway along their bar. From about 50 s on, the circles and diamonds sit at the start of every bar, forming a diagonal: agents spawn into air already past the visibility limit and meet HCl 300 ppm within about 3 s. The 19 FED 0.3 squares all lie between 259 and 298 s, on grey bars" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>One bar per agent (n = 150, seed 42), from spawn to exit, or to 299 s for
-the 75 censored agents (grey, arrow). The solid part is the time spent beyond
+the 79 censored agents (grey, arrow). The solid part is the time spent beyond
 K ≥ 0.3 1/m. Markers: first K ≥ 0.3 1/m (circle), first HCl ≥ 300 ppm
 (diamond), first FED ≥ 0.3 (square); the other criteria of the table are
 left out to keep the bars readable. Censoring is shown by the grey colour
@@ -1527,8 +1587,8 @@ not included in either panel. The map form follows Schröder et al. (2020);
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a> re-runs
 their demonstration case.&lt;/em>&lt;/p>
 &lt;p>Panel (b) measures wayfinding: it shows when the signs stop guiding.
-This is consistent with section 5, where 18 agents spawned between 22 and
-92 s never learned an exit: on this map the spawn centre loses sight of
+This is consistent with section 5, where 20 agents spawned between 24 and
+120 s never learned an exit: on this map the spawn centre loses sight of
 every sign at 39 s. The engine&amp;rsquo;s own sign test differs (see &lt;em>How the
 numbers are computed&lt;/em>). ISO 13571 (§4.5, note) does not expect obscuration
 alone to make conditions untenable for people who are not carrying out
@@ -1540,10 +1600,10 @@ shows sign visibility through time, one map per route.&lt;/p>
 &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/signs/t040.webp" alt="Two plan views of the T-junction, one per route. Blue cells can see at least one sign of the route, grey cells cannot; the signs are diamonds and the agents black dots."
 data-alt="Two plan views of the T-junction, one per route. Blue cells can see at least one sign of the route, grey cells cannot; the signs are diamonds and the agents black dots." width="822" height="852" loading="lazy">
 &lt;div class="time-slider__controls" data-live hidden>
-&lt;label for="time-slider-2">Time after ignition&lt;/label>
-&lt;input type="range" id="time-slider-2" min="0" max="300"
+&lt;label for="time-slider-3">Time after ignition&lt;/label>
+&lt;input type="range" id="time-slider-3" min="0" max="300"
 step="10" value="40">
-&lt;output for="time-slider-2" class="time-slider__value" aria-live="off">t = 40 s&lt;/output>
+&lt;output for="time-slider-3" class="time-slider__value" aria-live="off">t = 40 s&lt;/output>
 &lt;/div>
 &lt;figcaption>Each frame shows, at time t after ignition, the cells at 2.0 m from which at
 least one sign of the route can still be seen (fdsvismap
@@ -1568,10 +1628,10 @@ This run fits none of it:&lt;/p>
 Each agent&amp;rsquo;s exposure starts when it spawns, while all times on this page
 count from ignition.&lt;/li>
 &lt;li>&lt;strong>The run is cut off.&lt;/strong> It stops at 300 s with most late spawners inside.
-The time limit sets the last exit, 299.8 s, so it gives no RSET.&lt;/li>
+The time limit sets the last exit, 299.2 s, so it gives no RSET.&lt;/li>
 &lt;li>&lt;strong>There is no detection, alarm or pre-movement&lt;/strong>
 (&lt;code>&amp;quot;use_premovement&amp;quot;: false&lt;/code>). Exit minus spawn is travel time only: a
-median of 88.1 s and a maximum of 147.4 s for the 75 who got out.&lt;/li>
+median of 90.7 s and a maximum of 162.5 s for the 71 who got out.&lt;/li>
 &lt;/ul>
 &lt;p>More seeds would not supply an RSET either, because every seed stops at the
 same 300 s. For a scenario in which everyone gets out, see the
@@ -1584,15 +1644,15 @@ speed law comes from Frantzich and Nilsson&amp;rsquo;s experiments, which covere
 &lt;em>K&lt;/em> = 1.9–7.4 1/m. Purser&amp;rsquo;s fit to Jin&amp;rsquo;s data covers &lt;em>K&lt;/em> ≈ 0.30–1.27 1/m
 (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">walking speed in smoke&lt;/a>). In this run
 the median &lt;em>K&lt;/em> at the agents is 13.3 1/m, a visibility of about 0.2 m with
-&lt;em>C&lt;/em> = 3. 89 % of the agent-seconds lie above 7.4 1/m, and 74 % sit at the
+&lt;em>C&lt;/em> = 3. 90 % of the agent-seconds lie above 7.4 1/m, and 76 % sit at the
 speed floor of 0.1, which the law reaches at &lt;em>K&lt;/em> = 11.15 1/m. The exit
 times, and the number still inside, are set by that floor, not by measured
 behaviour. Sign legibility and route choice are extrapolated in the same
 way: Jin&amp;rsquo;s visibility data end near &lt;em>K&lt;/em> ≈ 1.8 1/m (see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility&lt;/a>).&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/aset_extinction.png" alt="Histogram of the extinction coefficient at the agents, one count per agent-second, on a log axis from 0.1 to 60 per metre. Almost all the mass lies between 8 and 20 per metre, with a peak near 13. Hatched bands mark the data ranges of Purser’s fit to Jin, 0.30 to 1.27, and of Frantzich and Nilsson, 1.9 to 7.4, and a shaded band Jin’s sign-visibility data, 0.3 to 1.8, all to the left of the mass. A dashed red line at 11.1 marks where the speed floor of 0.1 begins; 74 % of all agent-seconds are at the floor" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/first-fds-case/aset_extinction.png" alt="Histogram of the extinction coefficient at the agents, one count per agent-second, on a log axis from 0.1 to 60 per metre. Almost all the mass lies between 8 and 20 per metre, with a peak near 13. Hatched bands mark the data ranges of Purser’s fit to Jin, 0.30 to 1.27, and of Frantzich and Nilsson, 1.9 to 7.4, and a shaded band Jin’s sign-visibility data, 0.3 to 1.8, all to the left of the mass. A dashed red line at 11.1 marks where the speed floor of 0.1 begins; 76 % of all agent-seconds are at the floor" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Extinction coefficient K [1/m] at the agents, one count per agent and second
-inside (n = 13,925; the 255 with K &amp;lt; 0.1 1/m are not shown). Hatched: the K
+inside (n = 14,369; the 264 with K &amp;lt; 0.1 1/m are not shown). Hatched: the K
 ranges of the data behind the speed laws, from
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">walking speed in smoke&lt;/a>. Shaded: Jin&amp;rsquo;s
 sign-visibility data for lit signs, &lt;em>K&lt;/em> ≈ 0.3–1.8 1/m, from
@@ -1626,7 +1686,7 @@ early.&lt;/li>
 &lt;li>&lt;strong>Visibility.&lt;/strong> The EA note gives 10 m, not a &lt;em>K&lt;/em>. &lt;em>C&lt;/em> = 3 (Jin&amp;rsquo;s value for
 a reflecting sign, and the FDS default) turns it into 0.3 1/m. The result
 barely depends on this: any &lt;em>K&lt;/em> from 0.23 to 0.8 1/m changes the first
-crossing of at most 14 agents, by at most 12 s. The EA limits apply to
+crossing of at most 12 agents, by at most 14 s. The EA limits apply to
 exposures under 10 minutes. The 10 m criterion is from EA, not from ISO:
 ISO 13571 clause 9 (pp. 11–12) treats obscuration through a fuel
 mass-loss concentration, not a visibility distance.&lt;/li>
