@@ -143,8 +143,27 @@ Script: `scripts/figures/sign_rotation.py`.*
   The extinction is zero, and one time point is stored (`visibility.py`, `VisibilityModel.clear_air`).
 
 At run time the model answers `node_is_visible(t, x, y, node)` by looking up
-the nearest stored time and cell, clamped to the stored range
+the nearest stored time and cell
 (`visibility.py`, `_VisMapCache._nearest`, `VisibilityModel.node_is_visible`). No ray is cast inside the time loop.
+
+<a id="off-the-fds-grid"></a>**Off the FDS grid**
+([#426](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/426);
+`visibility.py`, `VisibilityModel._sight_outside_grid`). The grid of an FDS
+model covers the extinction slice plus half a cell. An agent beyond it has
+no cell to look up, and reads the sign in clear air: the sign is legible
+when it lies within its reading distance \(V_{\max}\), measured from the
+agent. View angle, walls and smoke are not tested there, and
+`visibility_to_node` returns `None`. In the half-cell strip between the
+slice edge and the grid edge, the agent still reads the edge cell, while
+its smoke and FED rows already count as outside the FDS domain. A sign that
+lies off the grid logs a warning when the model is built: fdsvismap 0.2.1
+casts its sight lines from the nearest grid edge and keeps the true
+distance, so the part of the line outside the grid takes the mean *K* of
+the part inside (`VisibilityModel.signs_outside_grid`). With
+`--require-fds-coverage` both cases stop the run. A clear-air model covers
+the walkable area, so neither case arises there. The other quantities
+outside the FDS domain are on
+[FDS slice sampling](/docs/fds-sampling.md#outside-the-fds-slices).
 `--vis-cache` stores the arrays in an `.npz` file. The FDS cache is keyed by
 the FDS directory path, the signs, the time step, the slice height and the
 maximum sign distance; it
@@ -480,6 +499,23 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   it. The value is a default, not derived from sign size or a signage
   standard; set `"max_distance"` per sign where it matters. FDS+Evac has no
   such limit ([Coming from FDS+Evac](/docs/coming-from-fds-evac.md#seeing-a-door-vs-reading-a-sign)).
+- **Off the FDS grid, signs are read in clear air**
+  ([#426](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/426)). An
+  agent beyond the grid of an FDS model sees every sign within its reading
+  distance, measured from the agent's true position, without testing view
+  angle, walls or smoke, also when the sight line crosses smoke inside the
+  domain ([Off the FDS grid](#off-the-fds-grid)). In a T-junction whose
+  corridor extends 12 m past the FDS mesh, an agent 11 m outside it at
+  t = 120 s sees a sign 29.5 m away through corridor smoke of
+  *K* ≈ 5–11 m⁻¹. FDS+Evac's `See_door`
+  ([`evac.f90:15682–15813`](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L15682-L15813))
+  still walks that line across the evacuation grid: a wall stops it, and the
+  mean *K* that enters its door choice counts the soot of the cells inside
+  the fire meshes and zero for those outside. Off the grid, pyFDS-Evac is
+  therefore less conservative than FDS+Evac on walls and smoke. FDS+Evac has
+  no view-angle test and no reading distance anywhere. To exclude the case,
+  extend the FDS meshes over the walkable area, or run with
+  `--require-fds-coverage`.
 - **Learning is limited to neighbours**, spawn perception is per spawn area,
   and periodic learning uses the previous step's position (§2.1–2.2).
 - **The patrol can stall**

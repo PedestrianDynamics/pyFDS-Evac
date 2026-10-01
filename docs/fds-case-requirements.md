@@ -123,7 +123,10 @@ Do not ignore these warnings. Nothing else will tell you.
 | Warning: FED is disabled for `<dir>` | CO, CO2 or O2 is missing. Check `CO_YIELD` on `&REAC`. |
 | Warning: Heat FED is disabled for `<dir>` | No `TEMPERATURE` slice. Add `&SLCF QUANTITY='TEMPERATURE'` — no `&REAC` change needed. |
 | FED is zero everywhere and nobody is incapacitated | Either genuinely survivable, or FED never ran. Check for the warning above before concluding the former. |
-| `ValueError: Point (x, y) is outside the sampled FDS slice domain` | Walkable area extends past the slice extent. |
+| Warning: `FDS coverage: outside the FDS slices (...), agents read ambient air and clear sight: walkable area ... m² ...` | Part of the scenario lies outside the slices of a sampled quantity. Agents there read *K* = 0, ambient gases and 20 °C, as in FDS+Evac, and read signs in clear air within their reading distance. The smoke and FED histories mark those rows with `in_fds_domain = False`, and the run ends with a count of the samples outside. See [FDS slice sampling](fds-sampling.md#outside-the-fds-slices). |
+| `FdsDomainError: ... outside the FDS slice domain (--require-fds-coverage)`, or `FdsDomainError: FDS coverage: ...` at setup | `--require-fds-coverage` is set and part of the scenario, or a sample, lies outside the slices. Extend the FDS meshes or slices, or run without the option. |
+| Warning: `N sign(s) lie outside the FDS extinction slice that sign visibility is computed on, ...`; with `--require-fds-coverage` the same text as `FdsDomainError`, ending `Extend the FDS meshes over the signs, or run without --require-fds-coverage.` | A sign lies off the vismap grid. fdsvismap casts its sight lines from the nearest grid edge. See [Wayfinding](/models/wayfinding.md#off-the-fds-grid). |
+| `ValueError: Point (x, y) at t=... lies outside the <quantity> slice but inside another FED gas slice` | The gas slices cover different areas ([#427](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/427)). Give all gas slices the same meshes. |
 | Warning: requested slice at z=A, nearest is z=B | Your case has no slice near the height you asked for. |
 
 Errors from the command line itself (wrong `--fds-dir`, conflicting flags)

@@ -90,9 +90,13 @@ where \(g\) is the irritant factor of the [FED model](/models/fed.md).
 \(g = 1\) unless `--enable-fic-speed` is given: it is off by default, as
 FDS+Evac has no irritant slowdown.
 
-An extinction sample outside the FDS domain reads *K* = 0 (clear air), with
-one warning on the first occurrence (`smoke_speed.py`,
-`ExtinctionField.sample_extinction`). An unknown `speed_law` string currently
+An extinction sample outside the FDS domain reads *K* = 0 (clear air), so
+the agent walks at full speed there, as in FDS+Evac (`smoke_speed.py`,
+`ExtinctionField.sample_extinction`). The run logs one warning at the first
+such sample, marks each smoke-history row outside with
+`in_fds_domain = False` and counts the samples outside at the end. With
+`--require-fds-coverage` a sample outside stops the run. Details on
+[FDS slice sampling](/docs/fds-sampling.md#outside-the-fds-slices). An unknown `speed_law` string currently
 runs `lund` without a warning
 ([#305](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305)).
 

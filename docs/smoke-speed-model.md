@@ -55,7 +55,9 @@ field = ExtinctionField.from_fds(
 ```
 
 If a queried point falls outside the FDS domain, `sample_extinction`
-returns `0.0` (clear air) and logs a warning on the first occurrence.
+returns `0.0` (clear air) and logs a warning on the first occurrence. With
+`require_fds_coverage=True` it raises `FdsDomainError` instead; see
+[FDS slice sampling](fds-sampling.md#outside-the-fds-slices).
 
 ### Using a constant field
 

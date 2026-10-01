@@ -196,9 +196,18 @@ zero at the agent's threshold. Script: `scripts/generate_tenability_curves.py`.*
 
 See [docs/usage.md](/docs/usage.md) for the full catalogue of
 `run.py` flags (scenario, FDS coupling, FED, rerouting, tenability)
-and the post-processing scripts. Note: if an agent
-sample lies outside the FDS domain the implementation falls back to
-ambient conditions.
+and the post-processing scripts.
+
+**Outside the FDS domain.** Where no gas slice covers the agent, the gases
+read ambient air: CO 0 %, CO₂ 0 % (the atmospheric 0.04 % is not used),
+O₂ 20.9 % and every optional species 0 ppm, so the FED rate is 0. This
+matches FDS+Evac, and no warning is logged per sample. The FED history
+marks such rows with `in_fds_domain = False`, and the run counts them at
+the end. A point that some loaded gas slices cover and others do not stops
+the run with a `ValueError` that names the point, the time and the missing
+quantities ([#427](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/427)).
+With `--require-fds-coverage` any point outside stops the run. Details on
+[FDS slice sampling](/docs/fds-sampling.md#outside-the-fds-slices).
 
 ## Deviations from the literature
 
