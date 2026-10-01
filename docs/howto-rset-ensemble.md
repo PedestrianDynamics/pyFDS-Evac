@@ -145,7 +145,7 @@ Expected output, without the `Evacuated 30/30 … done` progress line that
 ```text
 jps-distributions_0: 30 agents, use_premovement=False
 seed 1: last exit 41.5 s, evacuated 30, incapacitated 0, remaining 0
-seed 2: last exit 46.1 s, evacuated 30, incapacitated 0, remaining 0
+seed 2: last exit 46.0 s, evacuated 30, incapacitated 0, remaining 0
 seed 3: last exit 44.9 s, evacuated 30, incapacitated 0, remaining 0
 seed 4: last exit 44.5 s, evacuated 30, incapacitated 0, remaining 0
 seed 5: last exit 45.8 s, evacuated 30, incapacitated 0, remaining 0
@@ -173,8 +173,8 @@ print(f"95th percentile = {np.percentile(last, 95):.1f} s")
 
 ```text
 n = 5 seeds
-mean = 44.6 s, SD = 1.8 s
-min-max = 41.5-46.1 s
+mean = 44.5 s, SD = 1.8 s
+min-max = 41.5-46.0 s
 95th percentile = 46.0 s
 ```
 

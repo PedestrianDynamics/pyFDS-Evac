@@ -18,6 +18,7 @@ import pytest
 from shapely.geometry import Point, Polygon, box
 
 from pyfds_evac.core.direct_steering_runtime import (
+    EXIT_REACH_TOLERANCE_M,
     TARGET_REACH_MARGIN_M,
     reached_stage,
 )
@@ -150,10 +151,11 @@ def test_nobody_leaves_outside_the_exit_polygon(runs, width):
     """The last recorded position lies in the doorway, not in the room.
 
     Removal follows the last written frame by at most one frame interval,
-    so the polygon is widened by the distance walked in that interval.
+    so the polygon is widened by the distance walked in that interval plus
+    the reach tolerance.
     """
     last, fps, _ = runs[width]
-    slack = V0 / fps + 1e-6
+    slack = V0 / fps + EXIT_REACH_TOLERANCE_M + 1e-6
     reach = _exit_polygon(width).buffer(slack)
     outside = {
         aid: (x, y) for aid, (_, x, y) in last.items() if not reach.covers(Point(x, y))

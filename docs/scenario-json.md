@@ -50,7 +50,7 @@ trajectory is written every tenth step (10 frames/s).
 | `v0` | 1.25 m/s | — | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
 | `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. |
 | `v0_std` | none | — | Spread of the Gaussian draw. |
-| `radius` | 0.2 m | — | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon. |
+| `radius` | 0.2 m | — | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
 | `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1, 1.0] m. |
 | `radius_std` | none | — | Spread of the Gaussian draw. |
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. |
@@ -77,7 +77,7 @@ while still waiting walks off when its pre-movement ends
 | Key | Default | Effect |
 |---|---|---|
 | `coordinates` | required | Exit polygon. |
-| `enable_throughput_throttling`, `max_throughput` | `false`, 0 | Cap the removal rate at the exit: an agent whose centre is inside the exit polygon is removed only if at least 1/`max_throughput` s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A `max_throughput` of 0 disables the cap. |
+| `enable_throughput_throttling`, `max_throughput` | `false`, 0 | Cap the removal rate at the exit: an agent whose centre is inside the exit polygon, or within 0.03 m of it, is removed only if at least 1/`max_throughput` s have passed since the last removal there; otherwise it waits. A throttled exit is steered directly. This caps the rate; it does not model door flow. A `max_throughput` of 0 disables the cap. |
 | `capacity_agents_per_s` | `routing.default_exit_capacity` (1.3 agents/s) | Exit capacity used to estimate queue time when routes are priced. |
 | `open_from_s` | none (open from the start) | The exit opens at this time [s], a finite number ≥ 0. |
 | `closed_after_s` | none (never closes) | The exit closes at this time [s], a finite number ≥ 0 and greater than `open_from_s`. |
