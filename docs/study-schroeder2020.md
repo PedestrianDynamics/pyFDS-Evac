@@ -37,7 +37,7 @@ safety verdict.
 One door, the exit flow capped at 1.00 persons/s, everyone moving at t = 0,
 smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:
 
-| | One door, 0.2 m FDS grid | One door, 0.1 m FDS grid | Two doors, 0.2 m | Paper, Fig. 5 (read off) |
+| | 1 door, 0.2 m grid | 1 door, 0.1 m grid | 2 doors, 0.2 m grid | Paper, Fig. 5 (read off) |
 |---|---|---|---|---|
 | min DIFF | −27 s | −27 s | −40 s | about −29 s |
 | Area with DIFF < 0 | 6.7 m² | 6.4 m² | 7.4 m² | about 20 m² |
@@ -591,8 +591,8 @@ with a 30 s wait they do not (82.9 against 68.8 m²).
   smoke reaches the door, a single cell of the map.
 - **The −29 s is the paper's number.** It is read off Fig. 5. The release's
   `DIFF_map.txt` has a minimum of −29 s, but its shape (18 × 51) differs
-  from that of `aset_map.txt` (17 × 50), so it was made from another ASET
-  map than the released one.
+  from that of `aset_map.txt` (17 × 50), so it cannot come from the
+  released ASET map.
 - **The area is about three times smaller.** Ours fails in a compact block
   of 21 cells in front of the door; the paper's Fig. 7 has about 55 failing
   elements. The released RSET map (JuPedSim Gompertz model, 1.0 m door,
@@ -657,7 +657,7 @@ Before we used the release, we rebuilt the room from the paper's text and
 figures only (the `hrr060` family): a 1.2 m door at y = 8.2–9.4 m, read off
 Fig. 2; a 0.6 × 0.6 m burner at x, y = 0.6–1.2 m with the same 60 kW;
 flexible polyurethane foam GM21 (soot yield 0.131, CO yield 0.010,
-χr 0.52; SFPE Handbook, 5th ed., App. 3); v0 = 1.2 m/s, the paper's Eq. 6
+χr 0.52; SFPE Handbook, 6th ed., App. C, Table C.12, p. 3427); v0 = 1.2 m/s, the paper's Eq. 6
 example; and the exit capped at 0.96 persons/s, read off Fig. 3. The
 same evacuation versions run on the current engine:
 
@@ -802,12 +802,13 @@ taken from the authors' release
   95th percentile (`rset_map.py`), and counts DIFF = 0 as a fail (the last
   `np.histogram` bin is closed). We follow the paper's text: K ≥ 0.23 1/m,
   the maximum, DIFF = 0 passes.
-- **Door jambs, 0.8 m deep, in the walkable area only.** With the exit
-  drawn flush with the wall, 385 of 1,000 agents in a clear-air check were
-  last seen outside the door's y-range: the engine removed them beside the
-  door. The jambs force every agent through the 1.0 m passage; agents are
-  now last recorded at x ≥ 29.65 m and y = 8.16–8.84 m. They cost about 1.4 m² of floor
-  at the door. FDS has no jambs, as in the release.
+- **Door jambs, 0.8 m deep, in the walkable area only.** We keep them by
+  decision; they cost about 1.4 m² of floor at the door. FDS has no jambs,
+  as in the release. In a clear-air check (capped, pre-movement 0, seeds
+  1–10) every agent is last recorded inside the passage, at x ≥ 29.65 m
+  and y = 8.16–8.84 m. With the exit drawn flush with the wall instead, 77
+  of 1,000 agents are last recorded up to 0.03 m beyond the door edges
+  (y = 7.97–9.03 m), and the agents left at 40 and 80 s change by 0.1.
 - **D2, N = 200 and the pre-movement sweep** exist only in our runs.
 - **One-door and two-door rooms are separate FDS runs**, so the ventilation
   differs as well as the egress.
@@ -830,12 +831,13 @@ taken from the authors' release
   decomposition both differ; the soot change acts the other way.
 - **HRR.** The release's FDS `.out` file shows 68.9 kW at its last time
   step. That is an instantaneous value (time step 0.9 ms at 120 s): the
-  release's `hrr.csv` averages 60.0 kW over 10–120 s and over 110–120 s,
+  release's `ASET_animation_hrr.csv` averages 60.0 kW over 10–120 s and over 110–120 s,
   as does ours (60.00 kW over 10–120 s and over 120–600 s).
 - **Agents also spawn in the door passage.** The spawn area includes the
   passage between the jambs, so our first agent leaves within 2 s (last
-  recorded at 0.4–1.9 s), the release's at 1–3 s. Excluding the passage
-  changes the count left at 40 s by 0.1 in a clear-air check.
+  recorded at 0.4–1.9 s), the release's at 1–3 s. In a clear-air check,
+  excluding the passage from the spawn area moves the first exit to
+  0.7–1.9 s and the count left at 40 s from 60.5 to 60.6.
 - **No CO.** The release sets no CO yield, so the FDS default of zero
   applies. The CO criteria and the CO term of the FED do not apply; the
   gas FED holds only CO₂ and O₂.
@@ -940,8 +942,8 @@ the release burner has none. The `hrr060` device trees lie on cell faces
   of the ASET-RSET map method. Zenodo.
   [doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550).
   Cited in the paper as [35] (version of record p. 3). We use its FDS input
-  and output (`0_ASET/HRR_60kW`: deck, `.out`, `hrr.csv`, extinction
-  slices, `aset_map.txt`), its JuPedSim input, geometry and trajectories
+  and output (`0_ASET/HRR_60kW`: deck, `.out`, `ASET_animation_hrr.csv`;
+  extinction slices; `0_ASET/aset_map.txt`), its JuPedSim input, geometry and trajectories
   (`1_RSET/12??/corridor_ini.xml`, `corridor_geo.xml`, `corridor_traj.xml`),
   the released RSET and DIFF maps and the three analysis scripts. Our
   figures draw its ASET map and agents-remaining curves for comparison.
