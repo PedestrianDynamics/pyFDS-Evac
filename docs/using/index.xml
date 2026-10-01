@@ -299,6 +299,11 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;td>Let the run outlast the FDS output by holding the last slice frame, with a warning at setup and one per quantity. Without it, a &lt;code>max_simulation_time&lt;/code> more than one slice output interval past the last FDS frame stops the run at setup, and so does any smoke, FED, heat or sign-visibility sample past it. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/#past-the-end-of-the-fds-output">FDS slice sampling&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--require-fds-coverage&lt;/code>&lt;/td>
+&lt;td>off&lt;/td>
+&lt;td>Stop the run when part of the scenario lies outside the FDS slices: at setup for the walkable area, an exit, checkpoint, spawn area, sign or route edge, and at any smoke, FED, heat or sign-visibility sample. Without it, those places read ambient air and clear sight, as in FDS+Evac; the run logs what lies outside at setup, flags each history row with &lt;code>in_fds_domain&lt;/code>, and counts the samples outside at the end. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>Write the smoke history; columns on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#smoke-history">Outputs&lt;/a>.&lt;/td>
@@ -1514,11 +1519,12 @@ title="Copy code"
 &lt;a href="https://pedpy.readthedocs.io" target="_blank" rel="noopener">PedPy&lt;/a>, &lt;code>scripts/plot_trajectories.py&lt;/code>,
 &lt;code>scripts/vis.py&lt;/code>, or &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>.&lt;/p>
 &lt;p>When a FED track ran, the file also holds an extra table,
-&lt;code>agent_scalars(frame, id, fed, heat_fed, speed)&lt;/code>: gas FED, heat FED and
-walking speed (&lt;code>base_speed × speed_factor&lt;/code>, m/s) per agent per frame of a FED
-update. The JuPedSim tables are untouched, so JuPedSim tools still read the
-file. &lt;code>heat_fed&lt;/code> sits before &lt;code>speed&lt;/code>: read the columns by name, not by
-position.&lt;/p>
+&lt;code>agent_scalars(frame, id, fed, heat_fed, speed, in_fds_domain)&lt;/code>: gas FED,
+heat FED and walking speed (&lt;code>base_speed × speed_factor&lt;/code>, m/s) per agent per
+frame of a FED update, and &lt;code>in_fds_domain&lt;/code> (1 inside the FDS slices, 0 outside,
+&lt;code>NULL&lt;/code> without FDS output; see the FED history). The JuPedSim tables are
+untouched, so JuPedSim tools still read the file. &lt;code>heat_fed&lt;/code> sits before
+&lt;code>speed&lt;/code>: read the columns by name, not by position.&lt;/p>
 &lt;h2>Run manifest&lt;span class="hx-absolute -hx-mt-20" id="run-manifest">&lt;/span>
 &lt;a href="#run-manifest" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The provenance record of the run. From Python it is &lt;code>result.manifest_file&lt;/code>;
 with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
@@ -1578,6 +1584,10 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;tr>
 &lt;td>&lt;code>smoke_blind&lt;/code>&lt;/td>
 &lt;td>&lt;code>true&lt;/code>, only with &lt;code>--smoke-blind&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fds_coverage&lt;/code>&lt;/td>
+&lt;td>when FDS slices are sampled: the setup check of the scenario against the slice coverage, with &lt;code>quantities&lt;/code>, &lt;code>walkable_area_m2&lt;/code>, &lt;code>walkable_outside_m2&lt;/code>, &lt;code>areas_outside_m2&lt;/code> (exits, checkpoints, spawn areas), &lt;code>signs_outside&lt;/code>, &lt;code>signs_off_vismap_grid_m&lt;/code> and &lt;code>edges_outside_m&lt;/code> (route edges)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>replay_exits&lt;/code>&lt;/td>
@@ -1659,6 +1669,11 @@ title="Copy code"
 &lt;td>&lt;code>extinction_per_m&lt;/code>&lt;/td>
 &lt;td>1/m&lt;/td>
 &lt;td>extinction coefficient &lt;em>K&lt;/em> at the agent&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>in_fds_domain&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>with FDS output only: &lt;code>True&lt;/code> where the extinction slice covers the agent, &lt;code>False&lt;/code> where it reads &lt;em>K&lt;/em> = 0 (clear air) outside it&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1778,6 +1793,10 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;tr>
 &lt;td>&lt;code>heat_layer_temperature_c&lt;/code>&lt;/td>
 &lt;td>&lt;code>--heat-regime layer&lt;/code>: layer temperature [°C]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>in_fds_domain&lt;/code>&lt;/td>
+&lt;td>FDS output: &lt;code>True&lt;/code> where every sampled gas and heat slice covers the agent, &lt;code>False&lt;/code> where it reads ambient air outside them&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -3037,7 +3056,7 @@ with agents still inside
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/1f314e89d1e9d186847e052757eb65a803efce3e">&lt;code>1f314e8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/115c10d415f5e9992b982095a87250edb38b8b49">&lt;code>115c10d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -3061,7 +3080,7 @@ with agents still inside
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">86cb70f21a938fc0d831a1776fa256891d9be72cff64815874416ca996bf2fba&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a36e915cf5491711ab8fbe2ff1f116ff2e417d41c8b4fabc7350d20e088f6e0e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
