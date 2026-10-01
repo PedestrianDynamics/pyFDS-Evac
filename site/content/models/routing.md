@@ -348,7 +348,7 @@ and [Exit choice and familiarity](/fundamentals/exit-choice.md).
   from the smoke edge-factor calculation. The smoke raises the edge weight
   by the factor \(1 + 2 f_{\mathrm{smoke}} (1 - f_{\mathrm{risk}})\)
   (Eq. 5, p. 332), where the factor 2 and the individual risk tolerance
-  \(f_{\mathrm{risk}}\) are not calibrated; the authors call the model a
+  \(f_{\mathrm{risk}}\) are chosen, not fitted to data (p. 332); the authors call the model a
   proof of concept. *D* is read at an extraction height in the upper layer
   (2.80 m in their example, p. 330; varied over 2–3 m, Table 2, p. 334),
   and the sensor does not evaluate visibility (p. 330). The
