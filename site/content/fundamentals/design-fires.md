@@ -17,13 +17,15 @@ pyFDS-Evac does not choose a fire: the fire is part of the FDS case you supply. 
 studies only.
 {{< /callout >}}
 
-![Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s and the constant 60 kW fire of the Schröder et al. (2020) study, drawn against the fast and ultra-fast classes](/images/fundamentals/design_fires.png)
+![Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s, the constant 60 kW fire of the Schröder et al. (2020) study and the fast t-squared fire of the Schröder et al. (2015) route study capped at 1.5 MW at 179 s, drawn against the fast and ultra-fast classes](/images/fundamentals/design_fires.png)
 
 *(a) The four t² classes of vfdb Table 4.3 and SFPE Table 36.1. Each
 curve is solid up to its growth time, when it reaches 1055 kW, and dashed
-beyond. (b) The two study fires, with the fast and ultra-fast classes for
+beyond. (b) The three study fires, with the fast and ultra-fast classes for
 reference. The T-junction ramp is read from its FDS deck; it passes
-1055 kW at 46 s. Script: `scripts/figures/fundamentals_design_fires.py`.*
+1055 kW at 46 s. The Schröder et al. (2015) route-study fire is read
+from its deck (HRRPUA and TAU_Q); it follows the fast class up to its
+1.5 MW cap at 179 s. Script: `scripts/figures/fundamentals_design_fires.py`.*
 
 ## Design fire scenario and design fire
 
