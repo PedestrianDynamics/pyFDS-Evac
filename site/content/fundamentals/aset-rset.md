@@ -79,6 +79,22 @@ each one a different dose. The curves are the toxic-gas FED; heat is
 judged as a second, separate FED (§5.3). Figure inspired by Fig. 8 of the Engineers Australia
 practice note for tenability criteria (2014).*
 
+New Zealand combines both. Clause C4.3 of the New Zealand Building Code
+requires that occupants are not exposed to a carbon monoxide FED above 0.3,
+a thermal FED above 0.3, or a visibility below 10 m (5 m in rooms of less
+than 100 m²). Under clause C4.4, the thermal FED and visibility limits do
+not apply where a sprinklered firecell cannot expose more than 1,000
+occupants; only the CO dose is then checked (NZBC clauses C1–C6, p. 7).
+Verification Method C/VM2
+measures all three 2.0 m above the floor and computes both doses with the
+procedures of ISO 13571 (it cites the 2007 edition): the CO dose includes
+CO, CO₂ and O₂, and the thermal dose includes radiative and convective
+heat (MBIE 2025, §2.1.6.1–2.1.6.3, p. 17). The commentary to the first
+edition says how the dose is summed: in time steps of at most 5 s, along
+the escape route of the last occupant to leave the room of fire origin,
+following that occupant's location through the evacuation (MBIE 2012,
+pp. 47 and 49).
+
 RSET comes from people. ISO/TR 16738 (§5.4) reports that the pre-travel
 activity phase can often be the longest part of the total escape time. Each
 occupant has their own \(t_{\mathrm{pre}}\) and \(t_{\mathrm{trav}}\), so
@@ -150,6 +166,20 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
   Society of Fire Safety, NSW Chapter, Engineers Australia.
   [engineersaustralia.org.au](https://www.engineersaustralia.org.au/sites/default/files/2024-01/tenability-criteria-practice-note_0.pdf).
   §5 (p. 13), §5.2 and Fig. 8 (p. 15), §5.3 (p. 17).
+- New Zealand Building Code (NZBC). *Extract from the New Zealand
+  Building Code: Clauses C1–C6 Protection from Fire*, effective 1 July
+  2014. Schedule 1 of the Building Regulations 1992. Clauses C4.3 and C4.4
+  (p. 7).
+  [building.govt.nz](https://www.building.govt.nz/building-code-compliance/c-protection-from-fire/c-clauses-c1-c6/).
+- MBIE (2025). *Verification Method C/VM2: Framework for fire safety
+  design*, 2nd edition, effective 28 July 2025. Ministry of Business,
+  Innovation and Employment, Wellington. §2.1.6.1–2.1.6.3 (p. 17).
+  [building.govt.nz](https://www.building.govt.nz/building-code-compliance/c-protection-from-fire/c-clauses-c1-c6/).
+- MBIE (2012). *Commentary for Verification Method C/VM2*, December 2012.
+  Ministry of Business, Innovation and Employment, Wellington.
+  ISBN 978-0-478-39942-4.
+  Written for the first edition of C/VM2; cited for the summation of the
+  dose (commentary to Paragraph 2.2.1, pp. 47 and 49). Paraphrased.
 - Purser, D. A. (2003). *ASET and RSET: addressing some issues in relation
   to occupant behaviour and tenability*. Fire Safety Science, 7, 91–102.
   [doi:10.3801/IAFSS.FSS.7-91](https://doi.org/10.3801/IAFSS.FSS.7-91)
@@ -169,6 +199,16 @@ for a per-agent comparison on a real FDS fire, and
 difference as maps. Each agent carries
 its own dose along its path; see
 [Fractional effective dose](/models/fed.md).
+
+C/VM2 and the Engineers Australia note evaluate at 2.0 m. pyFDS-Evac reads
+the slices nearest `--smoke-slice-height`, 1.6 m by default (the FDS+Evac
+`HUMAN_SMOKE_HEIGHT`). For a check against C/VM2, run with
+`--smoke-slice-height 2.0` and write the slices at that height in the FDS
+deck (`&SLCF PBZ=2.0`): the run uses the nearest slice and warns only when
+it is more than 0.5 m away
+([Silent failure modes](/docs/fds-case-requirements.md#silent-failure-modes)).
+The value is an absolute z in the FDS domain, so it equals the height above
+the floor where the floor is at z = 0.
 
 RSET from a run without the fire against a coupled run:
 [Evacuation with and without the fire](/docs/howto-with-without-fire.md).

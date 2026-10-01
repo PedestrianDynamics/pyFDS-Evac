@@ -270,8 +270,10 @@ about 5–15 min and about 15–30 min; the goal is met if no value is
 exceeded during the stay (p. 324). EA's fixed limits assume up to 10 min
 and use FED for up to 30 min (§5.2–5.3, pp. 15–17). DIN adds the AEGL-2
 for CO as a check, 420 ppm for 10 min and 150 ppm for 30 min, without
-interpolation (§7.2.3). EA and DIN evaluate at 2.0 m (EA §5.2; DIN
-§7.2.1); zero-exposure criteria use a clear layer of about 2.5 m (vfdb
+interpolation (§7.2.3). EA, DIN and C/VM2 evaluate at 2.0 m (EA §5.2; DIN
+§7.2.1; C/VM2 §2.1.6.1); the 2012 commentary to C/VM2 sums the doses for
+the last occupant to leave the room of fire origin, in steps of at most
+5 s (MBIE 2012, pp. 47, 49). Zero-exposure criteria use a clear layer of about 2.5 m (vfdb
 §8.1, p. 312; Purser and McAllister, p. 2340). Surveyed practitioners use
 1.5–2.5 m, most often 2.0 m (52.1 %) (Węgrzyński et al. 2026, §4.3).
 
@@ -283,7 +285,9 @@ design FED of 0.3 for the general population, or 0.1 for particularly
 sensitive groups such as occupants of health-care premises (Ch. 70,
 p. 2288; worked example, p. 2322); one passage instead gives 0.1 as the
 value that protects nearly all exposed individuals (p. 2310). vfdb gives
-0.1–0.3 (§8.4, p. 319). EA considers 1.0 suitable for the vast majority of
+0.1–0.3 (§8.4, p. 319). The New Zealand Building Code (clause C4.3) sets
+0.3 for the CO and the thermal dose; the C/VM2 commentary reads 0.3 as about
+11 % of the population (MBIE 2012, p. 29). EA considers 1.0 suitable for the vast majority of
 occupants and leaves the margin to RSET (§5, p. 13). In the survey, 7 of
 the 13 continental-European respondents who stated a value use 0.1; all
 from the UK and Australia/New Zealand use 0.3 (§4.3). Babrauskas et al.
@@ -319,6 +323,7 @@ its generic values (Gann et al. 2001, pp. 82–86).
 | vfdb TB 04-01, Table 8.3 (p. 325) | fixed guide values | protection goal not met (FED ≈ 0.3 at end of stay, light activity) | < 30 / ≈ 15 / < 5 min; height not in the table |
 | DIN 18009-2:2022, Table 1 (pp. 22–23) | same values, taken from vfdb (Note 2) | route no longer available | 2 m (§7.2.1) |
 | EA 2014, §5.2 Fig. 8 (Short Exposure, p. 15) | fixed limits | incapacitation, 10-min tolerance | ≤ 10 min; 2.0 m |
+| NZBC C4.3, C/VM2 2nd ed. §2.1.6 (p. 17) | dose (FED) for CO and heat, fixed limit for visibility | Building Code performance criterion not met | along the escape route, through the evacuation; 2.0 m |
 | ISO 13571:2012 | dose (FED), concentration (FEC) | compromised tenability, median at 1.0; threshold chosen by the user | integrated over time; no height given |
 | Purser & McAllister 2026, Ch. 70 | dose + suggested limits | incapacitation; escape impairment | integrated over time |
 
@@ -330,6 +335,7 @@ its generic values (Gann et al. 2001, pp. 82–86).
 | vfdb | D_L 0.1 1/m (K 0.23); 0.15/0.2 where the area is clearly laid out or familiar | 45/50/50 °C; 1.7/2.0/< 2.5 kW/m² | CO 100/200/500 ppm; CO₂ 1/2/3 %; HCN 8/16/40 ppm |
 | DIN 18009-2 | as vfdb | as vfdb | as vfdb; AEGL-2 CO as a check |
 | EA | 10 m visibility (5 m in enclosures of about 10 m) | 100 °C; 2.5 kW/m² | CO 2,700 ppm; HCN 140 ppm |
+| C/VM2 | 10 m visibility (5 m in rooms under 100 m²) | FED 0.3, radiative and convective (ISO 13571) | FED 0.3 from CO, CO₂ and O₂ (ISO 13571); in a sprinklered firecell that cannot expose more than 1,000 occupants, only this one (C4.4) |
 | ISO 13571 | 0.8 g/m³ aerosol, about arm's length (§9) | Eqs. (7)–(11); radiant counted from 2.5 kW/m² (§8.4) | FED/FEC; 0.3 as an example (A.5.2) |
 | Purser & McAllister | 0.08 / 0.2 OD/m (Table 70.3, p. 2284) | Table 70.18 (p. 2319) | design FED 0.3 (0.1 for sensitive groups; p. 2288) |
 
@@ -968,6 +974,11 @@ grid).
   tenability criteria in building fires*, version 2.0, §5 (p. 13), §5.2 and
   Fig. 8 "Short Exposure" (p. 15; a second Fig. 8, "No Exposure", is on
   p. 13), §5.3 (p. 17). Full reference on
+  [ASET and RSET](/fundamentals/aset-rset.md).
+- MBIE (2025). *C/VM2 Verification Method: Framework for fire safety
+  design*, 2nd edition, §2.1.6.1–2.1.6.3 (p. 17), with Building Code
+  clauses C4.3 and C4.4; and MBIE (2012), *Commentary for Verification
+  Method C/VM2*, pp. 29, 47, 49. Full references on
   [ASET and RSET](/fundamentals/aset-rset.md).
 - ISO 13571:2012, §3.1, §4.2, §4.4, §4.6 f, §5.4, §8.2–8.5 (§8.3.1
   Eq. (9)), clause 9 and A.5.2; ISO/TR 16738:2009, §5.7 Eq. (2).
