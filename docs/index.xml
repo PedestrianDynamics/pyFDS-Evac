@@ -1976,7 +1976,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/1f0d9a93ac4a915aa764c3be980aa88fc5b20d39">&lt;code>1f0d9a9&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b04b389f8a549b29d897b954e3ae5ff99e1ba6a">&lt;code>3b04b38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1995,7 +1995,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d35abaddde0c6382e6f66974ad50f4ae00a6a4986313e257d8fa58bdf1921af3&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">4aabf14489f1ccf6e75fd874bdafaf00cd809111eb292c9d5f1353e811cb211c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -3080,12 +3080,14 @@ studies only.
 &lt;/div>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/design_fires.png" alt="Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s and the constant 60 kW fire of the Schröder et al. (2020) study, drawn against the fast and ultra-fast classes" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/fundamentals/design_fires.png" alt="Left: heat release rate against time for the slow, medium, fast and ultra-fast t-squared classes, solid up to 1055 kW and dashed beyond. Right: the T-junction ramp reaching 2 MW at 90 s, the constant 60 kW fire of the Schröder et al. (2020) study and the fast t-squared fire of the Schröder et al. (2015) route study capped at 1.5 MW at 179 s, drawn against the fast and ultra-fast classes" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>(a) The four t² classes of vfdb Table 4.3 and SFPE Table 36.1. Each
 curve is solid up to its growth time, when it reaches 1055 kW, and dashed
-beyond. (b) The two study fires, with the fast and ultra-fast classes for
+beyond. (b) The three study fires, with the fast and ultra-fast classes for
 reference. The T-junction ramp is read from its FDS deck; it passes
-1055 kW at 46 s. Script: &lt;code>scripts/figures/fundamentals_design_fires.py&lt;/code>.&lt;/em>&lt;/p>
+1055 kW at 46 s. The Schröder et al. (2015) route-study fire is read
+from its deck (HRRPUA and TAU_Q); it follows the fast class up to its
+1.5 MW cap at 179 s. Script: &lt;code>scripts/figures/fundamentals_design_fires.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>Design fire scenario and design fire&lt;span class="hx-absolute -hx-mt-20" id="design-fire-scenario-and-design-fire">&lt;/span>
 &lt;a href="#design-fire-scenario-and-design-fire" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The vfdb guide separates the two (vfdb 2020, §4.1, pp. 39–40):&lt;/p>
 &lt;ul>
@@ -5163,7 +5165,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/1f0d9a93ac4a915aa764c3be980aa88fc5b20d39">&lt;code>1f0d9a9&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b04b389f8a549b29d897b954e3ae5ff99e1ba6a">&lt;code>3b04b38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.678, additive 0.445&lt;/code>&lt;br>&lt;code>main fire, additive dy: -1.77 m (-2.20, -1.35)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.05 for starts 30-120 s, 0.94 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>7e9c4c30&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5190,7 +5192,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder2015_route.py&lt;/code>: the evacuation numbers and figures of the page&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder2015_fire_figures.py&lt;/code>: the geometry and fire numbers and figures (needs all nine fires)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">98611db14cf2d064869d6824fc49e7fa41cc0441395ca12fa5b3c4024ca36ad8&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">770287858c8c721667c4b53c520d99b60f34dc428f0780ccc8147204b2102519&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -6488,7 +6490,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/1f0d9a93ac4a915aa764c3be980aa88fc5b20d39">&lt;code>1f0d9a9&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b04b389f8a549b29d897b954e3ae5ff99e1ba6a">&lt;code>3b04b38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 72/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.38&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;smoke_reroute&amp;#39;: 9, &amp;#39;wander&amp;#39;: 164}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6509,7 +6511,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">51700ddec7d97d73b61fcc4eba7c9639d9186acd9af03bbcf4bad67643ca52d4&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ef6646882146752b7519a1bb6162f4df5c50de83e54896ce1f44c62d430aa1d1&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
