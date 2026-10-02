@@ -14,6 +14,7 @@ import json
 import re
 import shutil
 import zipfile
+from argparse import Namespace
 from pathlib import Path
 from urllib.parse import quote
 
@@ -825,6 +826,7 @@ def index():
         ),
         Style(_PYEXPORT_CSS),
         Script(_PYEXPORT_JS),
+        Script(_COPY_PATH_JS),
         theme.script(),
         Script(_AUTOFILL_JS),
         Script(_TAB_JS),
@@ -2121,6 +2123,129 @@ def _kpi_tiles(result) -> Div:
     )
 
 
+_SMALL_CAPS = (
+    f"{_MONO};font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;{_MUTED}"
+)
+
+_COPY_PATH_JS = """
+(function () {
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-copy-path]') : null;
+    if (!btn) return;
+    var box = btn.parentNode;
+    var live = box.querySelector('.copy-path-live');
+    var say = function (msg) { if (live) live.textContent = msg; };
+    var flash = function (label) {
+      var old = btn.dataset.label || btn.textContent;
+      btn.dataset.label = old;
+      btn.textContent = label;
+      setTimeout(function () { btn.textContent = old; }, 2000);
+    };
+    var fail = function () {
+      var el = box.querySelector('code');
+      if (el) {
+        var r = document.createRange();
+        r.selectNodeContents(el);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+      say('Copy failed \u2013 path selected, press Ctrl/Cmd+C');
+      flash('Copy failed');
+    };
+    if (!navigator.clipboard) { fail(); return; }
+    navigator.clipboard.writeText(btn.dataset.copyPath).then(function () {
+      say('Copied');
+      flash('Copied');
+    }, fail);
+  });
+})();
+"""
+
+
+def _results_folder(run_opts: dict) -> Path | None:
+    """The run's output folder: where its trajectory SQLite is written."""
+    raw = run_opts.get("output_sqlite")
+    return Path(raw).resolve().parent if raw else None
+
+
+def _wrap_at_slashes(text: str) -> NotStr:
+    """Escaped ``text`` that may only break after a ``/``."""
+    import html as _html
+
+    return NotStr(_html.escape(text).replace("/", "/<wbr>"))
+
+
+def _shown_path(path: Path, folder: Path | None) -> str:
+    """``path`` relative to ``folder``; the full path when outside it."""
+    full = path.resolve()
+    if folder is not None and full.is_relative_to(folder):
+        return full.relative_to(folder).as_posix()
+    return str(full)
+
+
+def _folder_header(folder: Path) -> Div:
+    """The results folder, shown once, with a button copying its full path."""
+    return Div(
+        Span("Folder", style=_SMALL_CAPS),
+        Code(_wrap_at_slashes(str(folder)), cls="artifact-folder"),
+        Button(
+            "Copy path",
+            type="button",
+            cls="pyexport-act",
+            aria_label="Copy results folder path",
+            data_copy_path=str(folder),
+        ),
+        Span(role="status", aria_live="polite", cls="copy-path-live visually-hidden"),
+        cls="artifact-folder-row",
+    )
+
+
+def _artifact_line(entry: str, folder: Path | None) -> Div:
+    """One "Label: path" line of apply_outputs, its path relative to ``folder``."""
+    label, sep, raw = entry.partition(": ")
+    if not sep or not raw:
+        return Div(entry, cls="artifact")
+    full = str(Path(raw).resolve())
+    return Div(
+        f"{label}: ",
+        Span(_wrap_at_slashes(_shown_path(Path(raw), folder)), title=full),
+        cls="artifact",
+    )
+
+
+def _plot_cards(result, run_opts: dict, plot_card) -> list:
+    """Plot cards with data for this run, then one note naming those left out."""
+    cards, skipped = [], []
+    if result.smoke_history:
+        cards.append(plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"))
+    else:
+        why = _missing_reason("smoke_history", Namespace(**run_opts))
+        skipped.append(f"Smoke: not shown \u2013 {why}.")
+    if plots.cognitive_map_grew(result):
+        cards.append(
+            plot_card(
+                "Cognitive map growth",
+                plots.cognitive_map_figure(result),
+                "fig-cogmap",
+            )
+        )
+    else:
+        skipped.append(
+            "Cognitive map growth: not shown \u2013 no agent's cognitive map "
+            "grew in this run."
+        )
+    if skipped:
+        cards.append(
+            Div(
+                Div("Not shown", style=_SMALL_CAPS + ";margin-bottom:4px"),
+                *[Div(line, cls="artifact") for line in skipped],
+                cls="plots-not-shown",
+            )
+        )
+    return cards
+
+
 def _finished_view() -> Div:
     result = manager.result
     scenario = manager.scenario
@@ -2133,12 +2258,11 @@ def _finished_view() -> Div:
 
     kpi_tiles = _kpi_tiles(result)
     if manager.artifacts:
+        folder = _results_folder(run_opts)
         art = Div(
-            Div(
-                "Artifacts written",
-                style=f"{_MONO};font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;{_MUTED};margin-bottom:4px",
-            ),
-            *[Div(a, cls="artifact") for a in manager.artifacts],
+            Div("Artifacts written", style=_SMALL_CAPS + ";margin-bottom:4px"),
+            *([_folder_header(folder)] if folder is not None else []),
+            *[_artifact_line(a, folder) for a in manager.artifacts],
             style="margin-top:12px",
         )
     else:
@@ -2166,10 +2290,7 @@ def _finished_view() -> Div:
             fed_threshold=run_opts.get("fed_threshold"),
             fed_mode=run_opts.get("incapacitation_mode"),
         ),
-        plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"),
-        plot_card(
-            "Cognitive map growth", plots.cognitive_map_figure(result), "fig-cogmap"
-        ),
+        *_plot_cards(result, run_opts, plot_card),
         _run_log(),
         cls="space-y-6",
         style="display:flex;flex-direction:column;gap:18px",
@@ -2225,7 +2346,8 @@ def _missing_reason(field: str, opts) -> str:
 
 
 def _artifact_rows(result, opts) -> Div:
-    rows = []
+    folder = _results_folder(vars(opts)) if opts is not None else None
+    rows = [_folder_header(folder)] if folder is not None else []
     for attr, label, field in _ARTIFACT_SPECS:
         raw = getattr(opts, attr, None) if opts is not None else None
         produced = field is None or getattr(result, field, None) is not None
@@ -2234,7 +2356,14 @@ def _artifact_rows(result, opts) -> Div:
 
         if exists:
             detail, colour, mark = (
-                f"written · {path} · {_fmt_size(path)}",
+                Span(
+                    "written · ",
+                    Span(
+                        _wrap_at_slashes(_shown_path(path, folder)),
+                        title=str(path.resolve()),
+                    ),
+                    f" · {_fmt_size(path)}",
+                ),
                 "var(--ink-dim)",
                 "#F4C430",
             )
@@ -2260,7 +2389,7 @@ def _artifact_rows(result, opts) -> Div:
                     Div(label, style=f"{_GROTESK};font-size:12.5px;{_INK}"),
                     Div(
                         detail,
-                        style=f"{_MONO};font-size:10.5px;color:{colour};margin-top:3px;word-break:break-all",
+                        style=f"{_MONO};font-size:10.5px;color:{colour};margin-top:3px;overflow-wrap:anywhere",
                     ),
                 ),
                 style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--hairline-soft)",

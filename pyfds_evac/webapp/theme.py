@@ -483,7 +483,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .metric-v { font-family: var(--font-mono); font-size: .9rem; font-weight: 500; color: hsl(var(--foreground)); }
 .artifact {
   font-family: var(--font-mono); font-size: .68rem; line-height: 1.75;
-  color: hsl(var(--muted-foreground)); word-break: break-all;
+  color: hsl(var(--muted-foreground)); overflow-wrap: anywhere;
+}
+.artifact-folder-row {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+  margin-bottom: 4px;
+}
+.artifact-folder {
+  font-family: var(--font-mono); font-size: .68rem; color: var(--ink-dim);
+  min-width: 0; overflow-wrap: anywhere;
 }
 @media (max-width: 640px) { .metrics-grid { grid-template-columns: 1fr; } }
 

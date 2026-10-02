@@ -569,6 +569,20 @@ def scenario_block(selected: str | None = None, note: Any = None) -> Any:
     )
 
 
+# Decimal fields are text inputs: Chromium on macOS shows a number input's
+# value in the OS region's format ("1,6" on a German region) whatever the
+# page language, while the server parses with float(). A text input shows
+# the value exactly as sent; the pattern flags a decimal comma before
+# submit, which float() would reject anyway.
+_DECIMAL_TEXT = {
+    "inputmode": "decimal",
+    "autocomplete": "off",
+    "spellcheck": "false",
+    "pattern": "[^,]*",
+    "title": "Use a point as decimal separator, e.g. 1.6",
+}
+
+
 def _field(action: argparse.Action) -> Any:
     dest = action.dest
 
@@ -639,10 +653,9 @@ def _field(action: argparse.Action) -> Any:
                 Input(
                     id=dest,
                     name=dest,
-                    type="number",
-                    step="any",
                     value=val,
                     style=_INPUT,
+                    **_DECIMAL_TEXT,
                     **_described(dest, action),
                 ),
                 style=_FIELD,
@@ -664,17 +677,29 @@ def _field(action: argparse.Action) -> Any:
             action=action,
         )
 
-    step = "1" if action.type is int else "any"
     value = "" if action.default is None else str(action.default)
     label = dest.replace("_", " ").capitalize()
-    if action.type in (int, float):
+    if action.type is float:
+        return Div(
+            _lbl(label, dest, action),
+            Input(
+                id=dest,
+                name=dest,
+                value=value,
+                style=_INPUT,
+                **_DECIMAL_TEXT,
+                **_described(dest, action),
+            ),
+            style=_FIELD,
+        )
+    if action.type is int:
         return Div(
             _lbl(label, dest, action),
             Input(
                 id=dest,
                 name=dest,
                 type="number",
-                step=step,
+                step="1",
                 value=value,
                 style=_INPUT,
                 **_described(dest, action),

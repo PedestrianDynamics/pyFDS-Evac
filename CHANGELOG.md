@@ -18,6 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   terminal and as plain text when piped or with `NO_COLOR`. Flag names,
   defaults, choices and behaviour are unchanged.
 
+### Fixed
+
+- GUI: decimal fields show "1.6", not "1,6", when the operating system's
+  region uses a decimal comma (Chromium on macOS formats number inputs
+  by the OS region). They are text fields now; a typed comma is flagged
+  before the run starts. Submitted values are unchanged (#487).
+- GUI: "Artifacts written" and the results-only file list show the
+  results folder once, with a Copy path button, and each file relative
+  to it; the full path is in the tooltip (#488).
+- GUI: the Smoke and Cognitive map growth plots are left out when the
+  run has no data for them (no smoke source, no agent's cognitive map
+  grew); one "Not shown" note says why (#489).
+
 ## [0.2.1] - 2026-10-02
 
 First release on PyPI: `pip install pyfds-evac`.
