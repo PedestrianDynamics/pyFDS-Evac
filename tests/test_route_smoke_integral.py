@@ -253,6 +253,16 @@ class TestPolylineStats:
             expected = _los_stats(0.0, 0.0, *end, 0.0, field, 2.0, math.hypot(*end))
             assert _polyline_stats([(0.0, 0.0), end], 0.0, field, 2.0) == expected
 
+    def test_two_point_polyline_is_not_rescaled_by_its_length(self):
+        """mean * L / L can be one ulp off: here it gives 1.2999999999999998.
+
+        Found by QA on #448: a random two-point edge in a constant field.
+        """
+        start = (-1.4805838801871456, 4.421169548393385)
+        end = (-4.401934960190811, 2.139851950419745)
+        mean, _ = _polyline_stats([start, end], 0.0, ConstantExtinctionField(1.3), 3.7)
+        assert mean == 1.3
+
     def test_one_segment_with_zero_length_segments_keeps_its_mean(self):
         field = _Step(3.3, high=1.7, low=0.11)
         expected = _los_stats(0.0, 0.0, 7.3, 2.9, 0.0, field, 2.0, math.hypot(7.3, 2.9))
