@@ -99,6 +99,7 @@ from .route_graph import (
     RerouteConfig,
     RouteCostConfig,
     StageGraph,
+    _reconstruct_committed_path,
     compute_eval_offset,
     evaluate_and_reroute,
     rank_routes,
@@ -2702,6 +2703,7 @@ def run_scenario(
                                 else None,
                                 current_exit=rs.current_exit or None,
                                 current_target=wait_info.get("current_target_stage"),
+                                current_path=_reconstruct_committed_path(wait_info),
                             )
                             for route_rank, rc in enumerate(ranked, start=1):
                                 _exit_node = stage_graph.nodes.get(rc.exit_id)
