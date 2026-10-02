@@ -331,7 +331,7 @@ copy = [["out/fds", "iso_table22_coupled/fds"]]
 
 [[page.step]]
 name = "decks and configs"
-run = "python assets/iso_table22_coupled/build_geometry.py   # writes decks and configs"
+run = "uv run python assets/iso_table22_coupled/build_geometry.py   # writes decks and configs"
 timeout = 120
 blocks = false  # the decks and configs are also committed
 

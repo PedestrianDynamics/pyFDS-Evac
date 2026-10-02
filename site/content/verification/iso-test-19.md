@@ -172,7 +172,7 @@ in the project's data folder (`fds-evac-data/iso_table22_coupled/`), or
 rerun FDS, about 40 s per case:
 
 ```bash
-python assets/iso_table22_coupled/build_geometry.py   # writes decks and configs
+uv run python assets/iso_table22_coupled/build_geometry.py   # writes decks and configs
 for c in a b c d; do
   mkdir -p <out>/fds/$c && cp assets/iso_table22_coupled/iso_table22_$c.fds <out>/fds/$c/
   (cd <out>/fds/$c && fds iso_table22_$c.fds)
