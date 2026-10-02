@@ -39,7 +39,8 @@ uv run python run.py \
     --output-route-history "$ROUTES_CSV" \
     --output-route-cost-history "$ROUTE_COSTS_CSV" \
     --enable-rerouting \
-    --vis-cache "$VIS_CACHE"
+    --vis-cache "$VIS_CACHE" \
+    || [ $? -eq 2 ]  # 2: incomplete run (time limit), outputs are written
 
 echo "==> FED spaghetti"
 uv run python scripts/plot_fed_history.py "$FED_CSV" \

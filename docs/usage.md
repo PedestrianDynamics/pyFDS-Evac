@@ -240,7 +240,7 @@ uv run python run.py --scenario assets/t_junction/config.json --cleanup
 ```
 
 ```text
-Simulation stopped after 300.00 s (144/150 evacuated, 6 remaining).
+Simulation incomplete: time limit reached after 300.00 s (144/150 evacuated, 6 remaining).
 ```
 
 ```bash
@@ -261,7 +261,7 @@ Heat FED is off; pass --enable-heat-fed to accumulate it.
 Configuring rerouting.
 Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
 …
-Simulation stopped after 1150.00 s (0/1 evacuated, 1 remaining).
+Simulation incomplete: time limit reached after 1150.00 s (0/1 evacuated, 1 remaining).
 Route switches: 0
 Route cost samples: 1149
 ```
@@ -271,6 +271,19 @@ at 982 s. Rerouting is on by default, so `--enable-rerouting` is not needed.
 The tracked FDS output of the T-junction fire is not in the repository; run
 `assets/t_junction/t_junction.fds` with FDS, or see
 [A crowd in a real fire](first-fds-case.md).
+
+### Exit status
+
+| Status | Meaning |
+|---|---|
+| 0 | the run completed: every agent entered and left |
+| 2 | the run is incomplete: it reached `max_simulation_time` with agents inside or flow agents still to enter; all requested outputs are written |
+| 1 | an error; the run did not finish |
+
+Both runs above exit with status 2. A script that runs `run.py` under
+`set -e` must accept status 2 if incomplete runs are expected, e.g.
+`uv run python run.py … || [ $? -eq 2 ]`. Argument errors also exit with
+status 2, before the run starts.
 
 ## Inspecting an FDS case
 

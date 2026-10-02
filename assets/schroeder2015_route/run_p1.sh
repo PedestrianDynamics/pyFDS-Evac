@@ -32,7 +32,8 @@ run() {  # arm seed
      --output-sqlite "$OUT/${arm}_s${s}.sqlite" --cleanup \
      --output-route-history "$OUT/${arm}_s${s}_rh.csv" \
      --output-exit-history "$OUT/${arm}_s${s}_exit.csv" > "$OUT/${arm}_s${s}_log.txt" 2>&1 \
-     || echo "FAILED $arm s$s" >> "$OUT/failures.txt"
+     || [ $? -eq 2 ] \
+     || echo "FAILED $arm s$s" >> "$OUT/failures.txt"  # 2: incomplete run, not a failure
   gzip -f "$OUT/${arm}_s${s}_log.txt"
   for f in "$OUT/${arm}_s${s}_fed.csv" "$OUT/${arm}_s${s}_rc.csv"; do [ -f "$f" ] && gzip -f "$f"; done
   return 0

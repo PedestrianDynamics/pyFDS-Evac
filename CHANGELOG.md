@@ -148,7 +148,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `"completed"`), and `metrics["agents_not_spawned"]` counts the flow agents
   that never entered. The run manifest records the same under `outcome`,
   and the `run.py` summary line reads `Simulation incomplete: time limit
-  reached after …`. The exit code of `run.py` stays 0.
+  reached after …`. `run.py` exits with status 2 for an incomplete run
+  (outputs are still written); `scripts/run_and_plot.sh`,
+  `scripts/sweep_queue_weight.py` and `assets/schroeder2015_route/run_p1.sh`
+  accept it.
 
 - **Seeded placements differ from earlier versions.** The start positions,
   their shuffle, the radius and v0 samples and the default pre-movement

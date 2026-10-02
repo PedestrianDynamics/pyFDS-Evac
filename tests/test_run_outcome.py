@@ -192,3 +192,26 @@ def test_cli_summary_counts_flow_agents_not_spawned():
         )
     )
     assert line.endswith("(1/1 evacuated, 0 remaining, 5 not spawned).")
+
+
+@pytest.mark.parametrize(
+    ("max_time_s", "expected"),
+    [(ENOUGH_S, 0), (TOO_SHORT_S, 2)],
+    ids=["completed", "incomplete"],
+)
+def test_cli_exit_status(monkeypatch, tmp_path, max_time_s, expected):
+    """run.py exits 0 for a completed run and 2 for an incomplete one."""
+    import run as cli
+
+    monkeypatch.setattr(cli, "load_scenario", lambda _path: _scenario(max_time_s))
+    sqlite = tmp_path / "run.sqlite"
+    monkeypatch.setattr(
+        "sys.argv",
+        ["run.py", "--scenario", "unused.json", "--output-sqlite", str(sqlite)],
+    )
+    with contextlib.redirect_stdout(io.StringIO()):
+        status = cli.main()
+    assert status == expected
+    assert cli.EXIT_INCOMPLETE == 2
+    # An incomplete run still writes its outputs.
+    assert sqlite.exists()

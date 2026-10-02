@@ -870,12 +870,12 @@ class ScenarioResult:
     @property
     def status(self) -> str:
         """``"completed"`` or ``"incomplete"`` (time limit reached first)."""
-        return self.metrics.get("status", "incomplete")
+        return str(self.metrics.get("status", "incomplete"))
 
     @property
     def agents_not_spawned(self) -> int:
         """Flow agents that had not entered when the time limit was reached."""
-        return self.metrics.get("agents_not_spawned", 0)
+        return int(self.metrics.get("agents_not_spawned", 0))
 
     @property
     def evacuation_time(self) -> float:

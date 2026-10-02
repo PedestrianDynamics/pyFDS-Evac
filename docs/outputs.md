@@ -207,7 +207,7 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 | `total_agents`, `agents_evacuated`, `agents_remaining` | head counts at the end |
 | `agents_not_spawned` | flow agents that had not entered when the run reached `max_simulation_time` |
 | `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter |
-| `success` | `True` only for a completed run |
+| `success` | `True` only for a completed run; `run.py` then exits with status 0, and with status 2 for an incomplete run |
 | `metrics["fed_max"]` | highest gas FED of any agent; present only when the gas FED ran |
 | `metrics["heat_fed_max"]` | highest heat FED; present only when the heat FED ran |
 

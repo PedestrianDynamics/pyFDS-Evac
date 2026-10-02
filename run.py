@@ -602,6 +602,11 @@ def _copy_manifest(result, output_path: pathlib.Path) -> pathlib.Path | None:
     return destination
 
 
+# Exit status of a run that reached max_simulation_time with agents inside or
+# flow agents still to enter; its outputs are written as for a completed run.
+EXIT_INCOMPLETE = 2
+
+
 def _summary_line(result) -> str:
     """One line on how the run ended; a run cut off by the time limit is incomplete."""
     if result.success:
@@ -663,7 +668,7 @@ def main() -> int:
         )
 
     apply_outputs(result, scenario, args, log=print)
-    return 0
+    return 0 if result.success else EXIT_INCOMPLETE
 
 
 def apply_outputs(result, scenario, opts, log=print) -> list[str]:
