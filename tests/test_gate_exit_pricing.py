@@ -290,27 +290,75 @@ def test_current_exit_is_never_priced_above_the_walked_path():
     assert e.rank_cost <= on_walk.rank_cost + 1e-9
 
 
-def test_path_back_through_the_origin_starts_at_its_last_occurrence():
-    """The agent's walk to M crosses smoke; walking back past O avoids it."""
+class _SmokeOnWalkToMLightPastX:
+    """K = 2 /m on the agent's walk to M, K = 0.01 /m on X→E."""
 
-    class _SmokeOnWalkToM:
-        def sample_extinction(self, time_s, x, y):
-            return 2.0 if 9.0 <= x <= 11.0 and 2.0 <= y <= 8.0 else 0.0
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        if 9.0 <= x <= 11.0 and 2.0 <= y <= 8.0:
+            return 2.0
+        return 0.01 if x <= -1.0 and 14.0 <= y <= 16.0 else 0.0
 
+
+def _back_through_origin_graph() -> StageGraph:
+    """From N the agent can go back into O and on to M, or on round X."""
     nodes = [
         _node("O", 0.0, 0.0, "distribution"),
         _node("N", 5.0, 0.0, "checkpoint"),
         _node("M", 10.0, 10.0, "checkpoint"),
+        _node("X", -5.0, 15.0, "checkpoint"),
         _node("E", 10.0, 20.0, "exit"),
     ]
     graph = StageGraph(nodes={n.stage_id: n for n in nodes})
     graph.edges = {
         "O": [_edge(graph, "O", "N"), _edge(graph, "O", "M")],
-        "N": [_edge(graph, "N", "O")],
+        "N": [_edge(graph, "N", "O"), _edge(graph, "N", "X")],
         "M": [_edge(graph, "M", "E")],
+        "X": [_edge(graph, "X", "E")],
     }
-    (e,) = _rank_from(graph, (10.0, 0.0), _SmokeOnWalkToM())
-    assert e.path == ["O", "M", "E"]
+    return graph
+
+
+def test_search_from_the_position_never_routes_back_through_the_origin(
+    monkeypatch,
+):
+    """The agent at (10, 0) has smoke on its walk to M.
+
+    Back through O (walk to N, N→O, O→M, M→E) is the cheapest search path,
+    then round X (light smoke), then the walk through the smoke to M. Going
+    back into O is not offered, so E goes round X and is priced on that
+    path, the one the search costed.
+    """
+    searches = []
+    search = StageGraph.shortest_paths_to_exits
+
+    def spy(self, source, dynamic_weights=None, first_hops=None):
+        found = search(
+            self, source, dynamic_weights=dynamic_weights, first_hops=first_hops
+        )
+        searches.append((source, dynamic_weights, first_hops, found))
+        return found
+
+    monkeypatch.setattr(StageGraph, "shortest_paths_to_exits", spy)
+    graph, field, position = (
+        _back_through_origin_graph(),
+        _SmokeOnWalkToMLightPastX(),
+        (10.0, 0.0),
+    )
+    (e,) = _rank_from(graph, position, field)
+    assert e.path == ["O", "N", "X", "E"]
+    on_path = evaluate_route(
+        graph, e.path, 0.0, 0.0, field, None, _gate_config(), agent_position=position
+    )
+    assert e.tau_route == pytest.approx(on_path.tau_route, rel=1e-12)
+    assert e.rank_cost == pytest.approx(on_path.rank_cost, rel=1e-12)
+    assert searches
+    for source, weights, hops, found in searches:
+        assert hops is not None
+        for cost, path in found.values():
+            assert path.count(source) == 1
+            legs = zip(path[1:], path[2:])
+            searched = hops[path[1]] + sum(weights[leg] for leg in legs)
+            assert searched == pytest.approx(cost, rel=1e-12)
 
 
 def _assert_same_ranking(a, b):

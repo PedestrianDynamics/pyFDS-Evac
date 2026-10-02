@@ -232,8 +232,9 @@ class StageGraph:
         When *first_hops* is provided, the search starts from a point off the
         graph rather than at *source*: it maps each node reachable first to
         the cost of getting there, and replaces *source*'s own out-edges.
-        Paths keep the form ``[source, first_hop, ..., exit]``; one that
-        passes back through *source* starts at its last occurrence.
+        The search never goes back into *source*, so every path has the form
+        ``[source, first_hop, ..., exit]`` with *source* once, at index 0, and
+        its cost is ``first_hops[first_hop]`` plus the edge weights after it.
         """
         dist, prev = self._dijkstra(
             source, dynamic_weights=dynamic_weights, first_hops=first_hops
@@ -285,9 +286,9 @@ class StageGraph:
         ``(source_id, target_id)`` tuples.
 
         With *first_hops* the search is seeded at those nodes, each with its
-        cost and *source* as its predecessor, and *source* itself is only
-        reached through the graph. ``prev`` can then hold a cycle through
-        *source*, which ``_reconstruct`` never follows past *source*.
+        cost and *source* as its predecessor. *source* stands for the agent's
+        position only: no edge into it is relaxed, so it is never reached
+        through the graph and appears once, at the start of every path.
         """
         if source not in self.nodes:
             return {}, {}
@@ -309,6 +310,8 @@ class StageGraph:
             if d > dist[u]:
                 continue
             for edge in self.edges.get(u, []):
+                if first_hops is not None and edge.target == source:
+                    continue
                 if dynamic_weights is not None:
                     w = dynamic_weights.get((edge.source, edge.target), edge.weight)
                 else:

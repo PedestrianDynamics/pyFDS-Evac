@@ -1586,6 +1586,45 @@ class TestDynamicDijkstra:
         )
         assert paths_default == paths_explicit
 
+    def test_seeded_search_never_routes_back_through_the_source(self):
+        """From the agent's position, the source is not reached through the graph.
+
+        Going back from A into S and on to T would cost 1.2; the search takes
+        the dearer B instead, so the path starts at S once and its cost is
+        that of the path returned.
+        """
+        nodes = [
+            StageNode(stage_id=sid, centroid_x=x, centroid_y=0.0, stage_type=kind)
+            for sid, x, kind in [
+                ("S", 0.0, "distribution"),
+                ("A", 1.0, "checkpoint"),
+                ("B", 2.0, "checkpoint"),
+                ("T", 3.0, "exit"),
+            ]
+        ]
+        graph = StageGraph(nodes={n.stage_id: n for n in nodes})
+        weights = {
+            ("S", "A"): 0.1,
+            ("S", "T"): 0.1,
+            ("A", "S"): 0.1,
+            ("A", "T"): 10.0,
+            ("B", "T"): 1.0,
+        }
+        for (src, dst), w in weights.items():
+            graph.edges.setdefault(src, []).append(
+                StageEdge(source=src, target=dst, weight=w)
+            )
+        first_hops = {"A": 1.0, "B": 5.0}
+        paths = graph.shortest_paths_to_exits(
+            "S", dynamic_weights=weights, first_hops=first_hops
+        )
+        assert paths == {"T": (6.0, ["S", "B", "T"])}
+        dist, prev = graph._dijkstra(
+            "S", dynamic_weights=weights, first_hops=first_hops
+        )
+        assert prev["S"] is None
+        assert dist["S"] == float("inf")
+
 
 class TestDynamicRanking:
     def test_rank_routes_uses_dynamic_dijkstra(self, diamond_graph):
