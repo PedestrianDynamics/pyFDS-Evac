@@ -26,7 +26,8 @@ switch away from.
 
 Assertions are aggregate (counts, directions, earliest-switch latency), never
 per-agent or trajectory-level -- the coupled run is not bit-reproducible (see
-project memory).
+project memory). The one exception is the strict xfail for #458, which names
+four agents by spawn index under seed 42; it records the defect, not a result.
 
 Engine note: rerouting only engages on the **flow-spawning** agent-init path;
 ``t_junction_scenario`` uses it (a by-number population leaves agents out of
