@@ -48,6 +48,7 @@ from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 from . import docs, params, plots, pyexport, theme, trajviz
 from .runner import (
     RunManager,
+    agents_label,
     code_provenance,
     make_run_spec,
     run_outcome,
@@ -2077,21 +2078,13 @@ def _tenability_line(metrics: dict) -> Div | str:
 def _kpi_tiles(result) -> Div:
     """Outcome, headline numbers and doses, shared by both finished views.
 
-    The outcome comes from ``all_evacuated`` (see ``run_outcome``) and is
-    stated in words with a glyph, so colour is never the only cue.
+    The outcome comes from the run's ``status`` metric (see ``run_outcome``)
+    and is stated in words with a glyph, so colour is never the only cue.
     """
     spec = manager.spec
-    time_limit = (
-        spec.time_limit
-        if spec is not None
-        else getattr(manager.scenario, "max_simulation_time", None)
-    )
+    not_spawned = result.metrics.get("agents_not_spawned", 0)
     outcome = run_outcome(
-        result.metrics.get("all_evacuated"),
-        result.agents_remaining,
-        result.total_agents,
-        result.evacuation_time,
-        time_limit,
+        result.metrics.get("status"), result.agents_remaining, not_spawned
     )
     seed = spec.seed_used if spec is not None else None
     if seed is None:
@@ -2100,10 +2093,17 @@ def _kpi_tiles(result) -> Div:
         _tile(outcome.time_label, f"{result.evacuation_time:.1f} s", "#F4C430"),
         _tile(
             "Evacuated",
-            f"{result.agents_evacuated} / {result.total_agents} agents",
+            # total_agents counts only the agents that entered.
+            f"{result.agents_evacuated} / {result.total_agents} "
+            f"{'spawned agents' if not_spawned else 'agents'}",
             "#3B82F6",
         ),
-        _tile("Remaining", f"{result.agents_remaining} agents", "#E01E37"),
+        _tile("Remaining", agents_label(result.agents_remaining), "#E01E37"),
+        *(
+            [_tile("Not spawned", agents_label(not_spawned), "#E01E37")]
+            if not_spawned
+            else []
+        ),
         _tile("Seed used", "not recorded" if seed is None else str(seed), "#837A74"),
     ]
     return Div(
