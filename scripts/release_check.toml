@@ -387,9 +387,9 @@ copy = [
   ["data/a012_pur_h40", "schroeder2015-route/a012_pur_h40"],
 ]
 copy_quick = [
-  ["data/p1_a047_pvc_h40_d73c8ed4", "schroeder2015-route/runs_437_d73c8ed4/p1_a047_pvc_h40_d73c8ed4"],
-  ["data/p1_a047_pvc_h35_d73c8ed4", "schroeder2015-route/runs_437_d73c8ed4/p1_a047_pvc_h35_d73c8ed4"],
-  ["data/p1_a012_pvc_h30_d73c8ed4", "schroeder2015-route/runs_437_d73c8ed4/p1_a012_pvc_h30_d73c8ed4"],
+  ["data/p1_a047_pvc_h40_2a94a8da", "schroeder2015-route/runs_451_2a94a8da/p1_a047_pvc_h40_2a94a8da"],
+  ["data/p1_a047_pvc_h35_2a94a8da", "schroeder2015-route/runs_451_2a94a8da/p1_a047_pvc_h35_2a94a8da"],
+  ["data/p1_a012_pvc_h30_2a94a8da", "schroeder2015-route/runs_451_2a94a8da/p1_a012_pvc_h30_2a94a8da"],
 ]
 env = { DATA = "$WORK/data" }
 
@@ -428,7 +428,7 @@ mode = "quick"
 run = 'uv run python scripts/docs/schroeder2015_route.py --data "$DATA"'
 timeout = 1800
 expect_bundle = "study-schroeder2015"
-stored_runs = "d73c8ed4 (runs_437_d73c8ed4)"
+stored_runs = "2a94a8da (runs_451_2a94a8da)"
 
 [[page.step]]
 name = "4. numbers and figures"
@@ -442,7 +442,7 @@ name = "5. animation"
 run = 'uv run python scripts/docs/study_animations.py schroeder2015 --data "$DATA"'
 timeout = 1200
 expect = [
-  "- gate door-A counts {1: 132, 2: 123, 3: 108, 4: 145, 5: 139, 6: 133, 7: 110, 8: 113, 9: 129, 10: 140}; seed 1 (132, median 130.5)",
+  "- gate door-A counts {1: 124, 2: 115, 3: 112, 4: 143, 5: 128, 6: 128, 7: 109, 8: 103, 9: 123, 10: 133}; seed 1 (124, median 123.5)",
 ]
 
 [[page.step]]
