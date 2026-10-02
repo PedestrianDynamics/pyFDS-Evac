@@ -1,0 +1,571 @@
+# The documented commands that scripts/release_check.sh runs, page by page.
+#
+# Not every code block of a page is meant to be run: some are illustrative,
+# some need FDS, mpiexec or JURECA, some take hours. This file lists, by
+# hand, the commands that are run and what they must print. Keep it in step
+# with the pages: a command changed on a page is changed here.
+#
+# Each step runs with bash in a clean checkout of the commit under test
+# (REPO, the working directory unless `cwd` is set), with the uv
+# environment of the release check. Variables available to every step:
+#
+#   REPO           the checkout
+#   WORK           a fresh folder of this page, outside the checkout
+#   FDS_EVAC_DATA  the sciebo data store (fds-evac-data/)
+#
+# Page keys:
+#   name, source   the page and its Markdown file
+#   copy           [dest, src]: copy FDS_EVAC_DATA/src to WORK/dest before
+#                  the first step (a copy-on-write clone, so FDS readers
+#                  never write into the data store)
+#   copy_quick     the same, in --quick only (stored evacuation runs that
+#   copy_full      --full re-runs); copy_full in --full only
+#   env            variables set for every step; $WORK is expanded
+# Step keys:
+#   name, run      what the step does and its commands (the page's, with
+#                  placeholders such as <out> replaced by a WORK path)
+#   mode           "all" (default), "quick" or "full"
+#   timeout        seconds (default 600)
+#   exit_ok        accepted exit codes (default [0]). run.py exits with 2
+#                  when a run reaches its time limit with agents inside;
+#                  list 2 only where the page expects an incomplete run
+#   expect         lines the output must contain (whitespace-insensitive);
+#                  a missing line fails the step
+#   expect_bundle  key of site/data/examples.toml whose `expected` lines
+#                  are added to `expect`
+#   expect_stale   lines that an open issue already says are out of date;
+#   stale          a missing one gives STALE (with the issue number
+#                  `stale`), not FAIL
+#   stored_runs    commit of the stored runs a --quick analysis reads; a
+#                  match then checks the analysis, not the current model
+#   manual         reason the step is not run (FDS, GUI); reported MANUAL
+#   blocks         false: a failure does not skip the page's later steps
+#
+# [bundle.<key>.<step number>] adds checks to a numbered step of a download
+# bundle's README.txt (the bundles gate stops before the FDS step).
+
+# --- Getting started --------------------------------------------------------
+
+[[page]]
+name = "quickstart"
+source = "docs/quickstart.md"
+
+[[page.step]]
+name = "examples/quickstart.py"
+run = "uv run python examples/quickstart.py"
+timeout = 300
+expect = ["Evacuated 1/1 sim=79.2s"]
+expect_bundle = "quickstart"
+
+[[page]]
+name = "walkthrough"
+source = "docs/walkthrough.md"
+
+[[page.step]]
+name = "examples/walkthrough.py"
+run = "uv run python examples/walkthrough.py"
+timeout = 300
+expect = ["K sampled: 0.99550 1/m", "speed factor: 0.919626"]
+expect_bundle = "walkthrough"
+
+[[page.step]]
+name = "run.py --inspect-fds"
+run = """\
+uv run python run.py --scenario assets/iso_table22_coupled/config_a.json \\
+    --fds-dir assets/iso_table22_coupled/fds/a --inspect-fds"""
+timeout = 120
+expect = ['"OXYGEN VOLUME FRACTION",', '"SOOT EXTINCTION COEFFICIENT"']
+
+[[page]]
+name = "first-fds-case"
+source = "docs/first-fds-case.md"
+copy = [["fire", "t_junction/fire_2MW_PVC"]]
+env = { FDS = "$WORK/fire" }
+
+[[page.step]]
+name = "1. example, clear air"
+run = "uv run python examples/first_fds_case.py"
+timeout = 300
+expect = ["evacuated: 144/150 in 300 s"]
+
+[[page.step]]
+name = "1. run.py --print-summary --export-only"
+run = "uv run python run.py --scenario assets/t_junction --print-summary --export-only"
+timeout = 120
+expect = [
+  "Model: CollisionFreeSpeedModel",
+  "Sequence: jps-distributions_0 -> jps-checkpoints_0 -> exit_A_left -> exit_B_right",
+  "jps-distributions_0: 200 agents (flow: 0-400s)",
+]
+
+[[page.step]]
+name = "2. FDS run"
+manual = "FDS (mpiexec -n 4 fds, about 20 min); the FDS output comes from fds-evac-data/t_junction/fire_2MW_PVC"
+
+[[page.step]]
+name = "3. run.py --inspect-fds"
+run = 'uv run python run.py --scenario assets/t_junction --fds-dir "$FDS" --inspect-fds'
+timeout = 300
+expect = ['"HYDROGEN CHLORIDE VOLUME FRACTION",', '"SOOT VISIBILITY"']
+
+[[page.step]]
+name = "4. run.py in the fire"
+run = """\
+mkdir -p tj
+uv run python run.py --scenario assets/t_junction --fds-dir "$FDS" \\
+    --output-sqlite tj/tj_fire.sqlite \\
+    --output-smoke-history tj/tj_fire_smoke.csv \\
+    --output-fed-history tj/tj_fire_fed.csv \\
+    --output-route-history tj/tj_fire_routes.csv"""
+timeout = 900
+exit_ok = [0, 2]
+expect = ["Configuring visibility model (3 signs)."]
+# The page quotes the summary line from before #443 and the results from
+# before #360.
+expect_stale = [
+  "Simulation stopped after 300.00 s (72/150 evacuated, 78 remaining).",
+  "Route switches: 173",
+]
+stale = "384, #442"
+
+[[page.step]]
+name = "4. run.py in clear air"
+run = """\
+uv run python run.py --scenario assets/t_junction \\
+    --output-sqlite tj/tj_clear.sqlite"""
+timeout = 600
+exit_ok = [0, 2]
+
+[[page.step]]
+name = "4. example in the fire"
+run = 'uv run python examples/first_fds_case.py "$FDS"'
+timeout = 900
+expect_stale = [
+  "evacuated: 72/150 in 300 s",
+  "FED max: 0.38",
+  "route changes: {'smoke_reroute': 9, 'wander': 164}",
+]
+stale = "384"
+
+[[page.step]]
+name = "5. figures"
+run = 'uv run python scripts/docs/first_fds_case_figures.py --data "$FDS" --runs tj'
+timeout = 1200
+
+[[page.step]]
+name = "6. ASET (fdsvismap 31dc0b6)"
+run = """\
+uv run --with git+https://github.com/FireDynamics/fdsvismap@31dc0b6 \\
+    python scripts/docs/first_fds_case_aset.py --data "$FDS" --runs tj"""
+timeout = 1800
+expect_stale = [
+  "agents 150, spawned last at 298 s",
+  "trajectory: 72 left before 300 s, last exit 299.2 s",
+]
+stale = "384"
+
+# --- How-tos ----------------------------------------------------------------
+
+[[page]]
+name = "howto-rset-ensemble"
+source = "docs/howto-rset-ensemble.md"
+
+[[page.step]]
+name = "examples/rset_ensemble.py"
+run = "uv run python examples/rset_ensemble.py"
+timeout = 600
+expect = [
+  "jps-distributions_0: 30 agents, use_premovement=False",
+  "seed 1: last exit 41.5 s, evacuated 30, incapacitated 0, remaining 0",
+]
+expect_bundle = "rset-ensemble"
+# success is False at the time limit since #443.
+expect_stale = ["evacuation_time 1150 s (max_simulation_time 1150 s), success True"]
+stale = "442"
+
+[[page]]
+name = "howto-with-without-fire"
+source = "docs/howto-with-without-fire.md"
+copy = [["fire", "t_junction/fire_2MW_PVC"]]
+copy_quick = [["runs", "t_junction/fire_blind_runs_794d5e1"]]
+env = { FDS = "$WORK/fire", SC = "assets/t_junction/config_initial_pre0.json", RUNS = "$WORK/runs" }
+
+[[page.step]]
+name = "1. arm C, no fire"
+run = """\
+mkdir -p ww
+uv run python run.py --scenario $SC --seed 4 \\
+    --output-sqlite ww/c.sqlite --output-exit-history ww/c_exits.csv"""
+cwd = "."
+timeout = 600
+expect_stale = ["Simulation finished in 50.54 s (100/100 evacuated)."]
+stale = "391"
+
+[[page.step]]
+name = "1. arm U, smoke-blind"
+run = """\
+uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" --smoke-blind \\
+    --output-sqlite ww/u.sqlite --output-exit-history ww/u_exits.csv \\
+    --output-fed-history ww/u_fed.csv --output-smoke-history ww/u_smoke.csv"""
+timeout = 900
+expect = [
+  "Smoke-blind: rerouting is off.",
+  "Smoke-blind: FED is recorded, incapacitation and FIC slowdown off.",
+]
+expect_stale = ["Simulation finished in 50.54 s (100/100 evacuated)."]
+stale = "391"
+
+[[page.step]]
+name = "2. arm S, replayed exits"
+run = """\
+uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \\
+    --no-enable-rerouting --disable-tenability --replay-exits ww/u_exits.csv \\
+    --output-sqlite ww/s.sqlite --output-exit-history ww/s_exits.csv"""
+timeout = 900
+expect = ["Replaying the exits of 100 agents from ww/u_exits.csv."]
+expect_stale = ["Simulation finished in 64.12 s (100/100 evacuated)."]
+stale = "391"
+
+[[page.step]]
+name = "2. arm R, coupled"
+run = """\
+uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \\
+    --disable-tenability \\
+    --output-sqlite ww/r.sqlite --output-exit-history ww/r_exits.csv"""
+timeout = 900
+expect_stale = ["Simulation finished in 59.29 s (100/100 evacuated)."]
+stale = "391"
+
+[[page.step]]
+name = "3. arm R-na, no anticipation"
+run = """\
+mkdir -p ww/na
+cp assets/t_junction/geometry.wkt ww/na/
+uv run python - <<'EOF'
+import json
+from pathlib import Path
+
+config = json.loads(Path("assets/t_junction/config_initial_pre0.json").read_text())
+config["routing"]["anticipate"] = False
+Path("ww/na/config_initial_pre0.json").write_text(json.dumps(config, indent=2))
+EOF
+uv run python run.py --scenario ww/na/config_initial_pre0.json --seed 4 \\
+    --fds-dir "$FDS" --disable-tenability \\
+    --output-sqlite ww/rna.sqlite --output-exit-history ww/rna_exits.csv"""
+timeout = 900
+expect_stale = ["Simulation finished in 66.82 s (100/100 evacuated)."]
+stale = "391"
+
+[[page.step]]
+name = "4. whole study, stored runs"
+mode = "quick"
+run = 'uv run python scripts/docs/fire_blind_vs_coupled.py --data "$FDS" --runs "$RUNS"'
+timeout = 1200
+stored_runs = "30ca7f5 (fire_blind_runs_794d5e1)"
+
+[[page.step]]
+name = "4. whole study, 320 runs"
+mode = "full"
+run = 'uv run python scripts/docs/fire_blind_vs_coupled.py --data "$FDS" --runs "$RUNS"'
+timeout = 3600
+
+[[page.step]]
+name = "4. animation"
+run = 'uv run python scripts/docs/study_animations.py fire-blind --data "$FDS" --runs "$RUNS"'
+timeout = 1200
+
+# --- Verification -----------------------------------------------------------
+
+[[page]]
+name = "iso-test-18"
+source = "site/content/verification/iso-test-18.md"
+
+[[page.step]]
+name = "tests"
+run = "uv run pytest tests/test_smoke_speed.py -k iso_table21 tests/test_iso_table21_coupled.py"
+timeout = 600
+
+[[page.step]]
+name = "16 runs and figures"
+# OUT=<out> on the page.
+run = """\
+OUT=$WORK/out
+run() {  # name scenario [extra options]
+  name=$1 scen=$2; shift 2
+  mkdir -p $OUT/evac/$name
+  uv run python run.py --scenario $scen --seed 420 --smoke-update-interval 0.1 \\
+    --no-enable-rerouting --disable-tenability "$@" \\
+    --output-sqlite $OUT/evac/$name/run.sqlite \\
+    --output-smoke-history $OUT/evac/$name/smoke_history.csv > $OUT/evac/$name/run.log
+}
+for v in 1.25 1 0.75 0.5 0.25; do
+  d=$OUT/scenarios/v0_$v; mkdir -p $d; cp assets/ISO-table21/geometry.wkt $d/
+  uv run python -c "import json,sys; c=json.load(open('assets/ISO-table21/config.json')); \\
+c['config']['simulation_settings']['simulationParams']['max_simulation_time']=600; \\
+[d['parameters'].update(v0=float(sys.argv[1])) for d in c['distributions'].values()]; \\
+json.dump(c, open(sys.argv[2]+'/config.json','w'), indent=2)" $v $d
+done
+run clear $OUT/scenarios/v0_1.25
+for K in 0.5 1 3 7.5 10; do run K$K $OUT/scenarios/v0_1.25 --constant-extinction $K; done
+for v in 1 0.75 0.5 0.25; do
+  run v0_${v}_clear $OUT/scenarios/v0_$v
+  run v0_${v}_K1 $OUT/scenarios/v0_$v --constant-extinction 1
+done
+cp -R assets/iso_table21_coupled/fds $OUT/fds
+run coupled_clear assets/iso_table21_coupled/config.json
+run coupled_fds assets/iso_table21_coupled/config.json --fds-dir $OUT/fds
+uv run python scripts/verification/iso_test_18_figures.py --data $OUT"""
+timeout = 1800
+expect = ["pass criteria: all met"]
+expect_stale = [
+  "coupled_fds: t_clear 78.44 s, t_smoke 85.30 s, t_pred 85.296 s",
+  "K10: t_clear 79.24 s, t_smoke 408.91 s, t_pred 408.913 s",
+]
+stale = "384"
+
+[[page]]
+name = "iso-test-19"
+source = "site/content/verification/iso-test-19.md"
+copy = [["out/fds", "iso_table22_coupled/fds"]]
+
+[[page.step]]
+name = "decks and configs"
+run = "python assets/iso_table22_coupled/build_geometry.py   # writes decks and configs"
+timeout = 120
+blocks = false  # the decks and configs are also committed
+
+[[page.step]]
+name = "FDS runs"
+manual = "FDS (four decks, about 30-45 s each); the output comes from fds-evac-data/iso_table22_coupled/fds"
+
+[[page.step]]
+name = "four runs and figures"
+# <out> on the page.
+run = """\
+for c in a b c d; do
+  uv run python run.py --scenario assets/iso_table22_coupled/config_$c.json \\
+    --fds-dir $WORK/out/fds/$c --seed 420 --incapacitation-mode deterministic \\
+    --smoke-update-interval 1 \\
+    --output-sqlite $WORK/out/evac/$c/run.sqlite \\
+    --output-fed-history $WORK/out/evac/$c/fed_history.csv \\
+    --vis-cache $WORK/out/evac/$c/vis_cache.npz
+done
+uv run python scripts/verification/iso_test19_figures.py --data $WORK/out"""
+timeout = 1800
+expect_bundle = "iso-test-19"
+
+[[page]]
+name = "heat-radiometer"
+source = "docs/testing-heat-radiometer.md"
+copy = [["heat_radiometer", "heat_radiometer"]]
+
+[[page.step]]
+name = "FDS runs"
+manual = "FDS (mpiexec -n 4, three decks); the output comes from fds-evac-data/heat_radiometer"
+
+[[page.step]]
+name = "table, figure, test"
+# <data>/heat_radiometer on the page.
+run = """\
+uv run python scripts/verification/heat_radiometer.py --data $WORK/heat_radiometer
+uv run python scripts/verification/heat_radiometer_figures.py --data $WORK/heat_radiometer
+HEAT_RADIOMETER_DATA=$WORK/heat_radiometer uv run pytest tests/verification/test_heat_radiometer.py"""
+timeout = 900
+expect = ["passed"]
+expect_bundle = "heat-radiometer"
+
+# --- Studies ----------------------------------------------------------------
+
+[[page]]
+name = "study-schroeder2015"
+source = "docs/study-schroeder2015.md"
+copy = [
+  ["data/a047_pvc_h40", "schroeder2015-route/a047_pvc_h40"],
+  ["data/a047_pvc_h35", "schroeder2015-route/a047_pvc_h35"],
+  ["data/a012_pvc_h30", "schroeder2015-route/a012_pvc_h30"],
+  ["data/a047_pvc_h30", "schroeder2015-route/a047_pvc_h30"],
+  ["data/a047_pur_h30", "schroeder2015-route/a047_pur_h30"],
+  ["data/a047_pur_h40", "schroeder2015-route/a047_pur_h40"],
+  ["data/a012_pvc_h40", "schroeder2015-route/a012_pvc_h40"],
+  ["data/a012_pur_h30", "schroeder2015-route/a012_pur_h30"],
+  ["data/a012_pur_h40", "schroeder2015-route/a012_pur_h40"],
+]
+copy_quick = [
+  ["data/p1_a047_pvc_h40_d73c8ed4", "schroeder2015-route/runs_437_d73c8ed4/p1_a047_pvc_h40_d73c8ed4"],
+  ["data/p1_a047_pvc_h35_d73c8ed4", "schroeder2015-route/runs_437_d73c8ed4/p1_a047_pvc_h35_d73c8ed4"],
+  ["data/p1_a012_pvc_h30_d73c8ed4", "schroeder2015-route/runs_437_d73c8ed4/p1_a012_pvc_h30_d73c8ed4"],
+]
+env = { DATA = "$WORK/data" }
+
+[[page.step]]
+name = "1. FDS runs"
+manual = "FDS (mpiexec -n 6, 1-1.5 h per deck); the output comes from fds-evac-data/schroeder2015-route"
+
+[[page.step]]
+name = "2. one seed per arm"
+mode = "full"
+run = """\
+C=assets/schroeder2015_route/evac
+uv run python run.py --scenario $C/config_gate.json --seed 1                                    # no fire
+uv run python run.py --scenario $C/config_gate.json --seed 1 --fds-dir "$DATA/a047_pvc_h40" --smoke-blind
+uv run python run.py --scenario $C/config_gate.json --seed 1 --fds-dir "$DATA/a047_pvc_h40"     # gate
+uv run python run.py --scenario $C/config_additive.json --seed 1 --fds-dir "$DATA/a047_pvc_h40" # additive"""
+timeout = 1200
+
+[[page.step]]
+name = "3. 10 seeds per arm"
+mode = "full"
+run = """\
+PY="uv run python" bash assets/schroeder2015_route/run_p1.sh \\
+    "$DATA/a047_pvc_h40" "$DATA/p1_a047_pvc_h40" 6 --with-nofire
+PY="uv run python" bash assets/schroeder2015_route/run_p1.sh \\
+    "$DATA/a047_pvc_h35" "$DATA/p1_a047_pvc_h35" 6
+PY="uv run python" bash assets/schroeder2015_route/run_p1.sh \\
+    "$DATA/a012_pvc_h30" "$DATA/p1_a012_pvc_h30" 6"""
+timeout = 3600
+
+[[page.step]]
+name = "4. numbers and figures, stored runs"
+mode = "quick"
+run = 'uv run python scripts/docs/schroeder2015_route.py --data "$DATA"'
+timeout = 1800
+expect_bundle = "study-schroeder2015"
+stored_runs = "d73c8ed4 (runs_437_d73c8ed4)"
+
+[[page.step]]
+name = "4. numbers and figures"
+mode = "full"
+run = 'uv run python scripts/docs/schroeder2015_route.py --data "$DATA"'
+timeout = 1800
+expect_bundle = "study-schroeder2015"
+
+[[page.step]]
+name = "5. animation"
+run = 'uv run python scripts/docs/study_animations.py schroeder2015 --data "$DATA"'
+timeout = 1200
+
+[[page.step]]
+name = "geometry and fire figures"
+run = 'uv run python scripts/docs/schroeder2015_fire_figures.py --data "$DATA"'
+timeout = 1800
+
+[[page]]
+name = "study-schroeder2020"
+source = "docs/study-schroeder2020.md"
+copy = [
+  ["data/rel_1door", "schroeder2020-room/rel_1door"],
+  ["data/rel_2door", "schroeder2020-room/rel_2door"],
+  ["data/rel_1door_dx010", "schroeder2020-room/rel_1door_dx010"],
+]
+copy_quick = [["runs", "schroeder2020-room/evac_runs_rel"]]
+env = { DATA = "$WORK/data", RUNS = "$WORK/runs" }
+
+[[page.step]]
+name = "FDS runs"
+manual = "FDS (mpiexec -n 6; 22 min, 28 min, 4 h 14 min); the output comes from fds-evac-data/schroeder2020-room"
+
+[[page.step]]
+name = "maps, stored runs"
+mode = "quick"
+# The page adds --release RELEASE, the authors' Zenodo release, which is
+# not in the data store; the expected lines are those without it.
+run = """\
+uv run --with "pedpy>=1.5.1" python scripts/docs/schroeder_room_maps.py \\
+    --data "$DATA" --runs "$RUNS" --family rel"""
+timeout = 2400
+expect_bundle = "study-schroeder2020"
+stored_runs = "4a7142f (evac_runs_rel)"
+
+[[page.step]]
+name = "maps, 160 runs"
+mode = "full"
+run = """\
+uv run --with "pedpy>=1.5.1" python scripts/docs/schroeder_room_maps.py \\
+    --data "$DATA" --runs "$RUNS" --family rel"""
+timeout = 3600
+expect_bundle = "study-schroeder2020"
+
+[[page.step]]
+name = "comparison with the release"
+manual = "needs the authors' Zenodo release (doi:10.5281/zenodo.3875550) as RELEASE"
+
+[[page.step]]
+name = "animations and grid figures"
+run = """\
+uv run --with "pedpy>=1.5.1" python scripts/docs/study_animations.py \\
+    schroeder --data "$DATA" --runs "$RUNS" --family rel
+uv run python scripts/docs/schroeder_grid_figures.py --data "$DATA" \\
+    --cache "$RUNS/cache" --family rel"""
+timeout = 2400
+
+# --- Other pages ------------------------------------------------------------
+
+[[page]]
+name = "coming-from-fds-evac"
+source = "docs/coming-from-fds-evac.md"
+
+[[page.step]]
+name = "pre-movement preset figure"
+run = "uv run python scripts/figures/coming_from_premovement_presets.py"
+timeout = 300
+
+[[page]]
+name = "web-gui"
+source = "docs/web-gui.md"
+
+[[page.step]]
+name = "GUI starts"
+# The page's `uv sync --extra gui` is part of the check environment. The
+# GUI must answer on its port, then it is stopped. A free port replaces
+# the page's 5001 (fasthtml reads PORT), so a running GUI does not clash.
+run = """\
+export PORT=$(python3 -c 'import socket; s = socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
+uv run app.py > "$WORK/app.log" 2>&1 &
+pid=$!
+ok=
+for _ in $(seq 90); do
+  if curl -fsS -o /dev/null "http://localhost:$PORT/"; then ok=1; break; fi
+  kill -0 "$pid" 2>/dev/null || break
+  sleep 1
+done
+kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/null
+cat "$WORK/app.log"
+[ -n "$ok" ] && echo "GUI answered on http://localhost:$PORT"
+"""
+timeout = 180
+expect = ["GUI answered on http://localhost:"]
+
+[[page.step]]
+name = "corridor run from the command line"
+run = """\
+uv run python run.py --scenario assets/iso_table21_coupled \\
+    --fds-dir assets/iso_table21_coupled/fds"""
+timeout = 300
+expect = ["Simulation finished in 85.30 s (1/1 evacuated)."]
+
+[[page.step]]
+name = "exported script"
+manual = "needs a script downloaded from the GUI (Show Python for this run)"
+
+[[page]]
+name = "figures"
+source = "scripts/figures/, as the docs workflow"
+
+[[page.step]]
+name = "scripts/figures/*.py and tenability curves"
+run = """\
+set -e
+for script in scripts/figures/*.py; do
+  echo "== $script"
+  uv run python "$script"
+done
+uv run python scripts/generate_tenability_curves.py \\
+  --output site/static/images/concepts/tenability_speed_curves.png"""
+timeout = 2400
+
+# --- Download bundles -------------------------------------------------------
+
+# first-fds-case: step 2 runs before FDS and prints the clear-air result
+# (expected_note in site/data/examples.toml).
+[bundle.first-fds-case.2]
+expect = ["evacuated: 144/150 in 300 s"]
