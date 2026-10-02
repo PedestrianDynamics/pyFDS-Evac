@@ -416,6 +416,16 @@ def read_rc(data, fire, arm, seed, cols):
     return pd.read_csv(path, usecols=cols, low_memory=False)
 
 
+def _first_majority(h, exit_id, via_a):
+    """First pass at which most hall agents' route to *exit_id* uses door A
+    (*via_a*) or door B. Each agent's route is searched from where it stands,
+    so a few agents can take the other door long before the hall does."""
+    g = h[h.exit_id == exit_id]
+    share = g.path.str.contains("doorA").groupby(g.time_s).mean()
+    hit = share[share > 0.5] if via_a else share[share < 0.5]
+    return hit.index.min() if len(hit) else np.nan
+
+
 def switch_times(data):
     """Hall-wide re-path and fallback times per fire, arm and seed."""
     cols = ["time_s", "source", "route_rank", "exit_id", "path", "rejection_reason"]
@@ -425,9 +435,6 @@ def switch_times(data):
             for seed in SEEDS:
                 h = read_rc(data, fire, arm, seed, cols)
                 h = h[h.source == HALL]
-                via_a = h.path.str.contains("doorA")
-                f_via_a = h[(h.exit_id == "exit_F") & via_a].time_s
-                e_via_b = h[(h.exit_id == "exit_E") & ~via_a].time_s
                 r1 = h[h.route_rank == 1]
                 reason = r1.rejection_reason.fillna("").astype(str)
                 fb = r1[reason.str.startswith("fallback")].time_s
@@ -436,8 +443,8 @@ def switch_times(data):
                         fire=fire,
                         arm=arm,
                         seed=seed,
-                        F_path_via_A=f_via_a.min() if len(f_via_a) else np.nan,
-                        E_path_via_B=e_via_b.min() if len(e_via_b) else np.nan,
+                        F_path_via_A=_first_majority(h, "exit_F", True),
+                        E_path_via_B=_first_majority(h, "exit_E", False),
                         first_fallback=fb.min() if len(fb) else np.nan,
                     )
                 )

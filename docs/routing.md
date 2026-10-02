@@ -336,7 +336,9 @@ spawn key, the same sweep scores 0.03 at 31.4 % and 0.024 at 33.4 % (31.6 % and
 34.1 % on main at `7a3617d`): the deck no longer reproduces Fahy's split, and
 has not been re-fitted. With the opening exit ranked from each agent's position
 (#350), the sweep scores 0.03 at 33.0 % and 0.024 at 34.8 % (32.6 % and 35.0 %
-on main at `81726ea`), within the spread between seeds.
+on main at `81726ea`), within the spread between seeds. With every exit priced
+from the agent's position (#451, `2a94a8da`) it scores 0.03 at 33.2 % and 0.024
+at 34.7 %, run for run the same as main at `22beb01c`: the deck has no fire.
 
 **Two further caveats on that number.** The sweep was run under the additive
 composite, where `w_queue` multiplies a *distance*

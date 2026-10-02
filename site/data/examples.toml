@@ -189,16 +189,16 @@ fds = "FDS-6.10.1-0-g12efa16-release"
 fds_runtime = "5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS"
 evac_runtime = "about 25-40 s per run, 100 runs"
 expected = [
-  "main fire, exit-E share: no fire 0.520, gate 0.673, additive 0.459",
-  "main fire, additive dy: -1.39 m (-1.72, -1.05)",
-  "main fire, gate door-B share: 0.05 for starts 30-120 s, 0.93 for starts 150-300 s",
+  "main fire, exit-E share: no fire 0.520, gate 0.614, additive 0.457",
+  "main fire, additive dy: -0.85 m (-1.12, -0.57)",
+  "main fire, gate door-B share: 0.06 for starts 30-120 s, 0.90 for starts 150-300 s",
 ]
 expected_note = """\
 scripts/docs/schroeder2015_route.py prints these lines after its tables \
 and before it writes the figures. The \
 evacuation runs are reproducible for a given seed; FDS output from \
 another FDS build or machine can move them slightly."""
-results_commit = "d73c8ed4"
+results_commit = "2a94a8da"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
