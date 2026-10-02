@@ -56,8 +56,9 @@ uv run --python 3.14 pytest -q --cov --cov-report=term
 Measure coverage under Python 3.14, as above and as in CI. Coverage measures
 branches (`branch = true`), and coverage.py measures branches with the fast
 `sys.monitoring` core only from Python 3.14 on. On 3.12 and 3.13 it falls back
-to its trace function, which slows `run_scenario`, one very long function, by
-two orders of magnitude, and the suite takes hours.
+to its trace function, which is slow on `run_scenario`, one very long function:
+on 3.12 the suite with coverage reached 8 % in 20 minutes, while on 3.14 the
+whole suite with coverage takes about as long as without it.
 
 The docs are a Hugo site (hextra theme) in `site/`, with the reference pages in
 `docs/` mounted into it. The strict build needs Hugo extended (CI uses 0.144)
