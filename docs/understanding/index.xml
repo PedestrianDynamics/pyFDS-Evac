@@ -518,10 +518,11 @@ Irritants reach incapacitation only through their lung dose
 run ends early only when no agent is left, so a run in which any agent is
 incapacitated continues until &lt;code>max_simulation_time&lt;/code> (300 s by default). Its
 reported &lt;code>evacuation_time&lt;/code> is then that time limit, not the time the last
-mobile agent left. &lt;code>success&lt;/code> is also true at the time limit even when agents
-remain (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">issue #139&lt;/a>).
+mobile agent left. Such a run is incomplete: &lt;code>success&lt;/code> is &lt;code>False&lt;/code>,
+&lt;code>status&lt;/code> is &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> and &lt;code>run.py&lt;/code> exits with status 2
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">issue #139&lt;/a>).
 Read &lt;code>agents_remaining&lt;/code>, and take the time each agent left from the
-trajectory file, instead of relying on these two values
+trajectory file, instead of relying on &lt;code>evacuation_time&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">issue #141&lt;/a>).&lt;/p>
 &lt;h2>Incapacitation during pre-movement is undone&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-during-pre-movement-is-undone">&lt;/span>
 &lt;a href="#incapacitation-during-pre-movement-is-undone" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An agent that is incapacitated while it is still waiting out its

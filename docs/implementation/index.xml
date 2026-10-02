@@ -613,7 +613,7 @@ ranks first. At the same place before learning, the end exit ranked first.
 current exit that no longer ranks first
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>).
 In the full run of the asset README, with the FDS vismap, all 20 agents
-left by the side exit, egress 22.3 s, each after one switch from the end exit
+left by the side exit, egress 21.5 s, each after one switch from the end exit
 to the side exit (&lt;code>assets/cognitive_map_memory/README.md&lt;/code>).&lt;/p>
 &lt;blockquote>
 &lt;p>&lt;strong>Talk vs code.&lt;/strong> The slide says the side exit is learned &amp;ldquo;at y = 12.5&amp;rdquo; and
