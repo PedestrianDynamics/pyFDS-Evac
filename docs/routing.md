@@ -136,7 +136,9 @@ Eq. 8-9; the Beer-Lambert law itself is on
 
 The path search (`_generate_candidates`) weights every edge with the
 smoke at decision time and finds one path to each exit from the agent's
-origin node. With `anticipate` (default `true`, and **independent of
+position. Its first legs are the walks from the agent to each successor of
+its origin node and to its current target, weighted by the smoke on each walk
+(`_first_hops`); it never routes back through the origin node. With `anticipate` (default `true`, and **independent of
 `cost_model`**), that path is then measured edge by edge at the time the
 agent would reach each edge's start (`_measure_route`):
 
@@ -459,7 +461,7 @@ discovery agent with no known exit explores or wanders instead (see below).
 | Step | Gate (default) | Additive |
 |---|---|---|
 | **Source** | `current_origin`, else `current_target_stage`; a source outside the graph skips the tick | same |
-| **Candidates** | Dijkstra over the agent's known subgraph on each edge's optical depth at decision time (`k_avg` × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)) | Dijkstra on each edge's share of the composite at decision time (length × (1 + `w_smoke` × `k_avg`) + `w_fed` × FED growth); one path per exit |
+| **Candidates** | Dijkstra over the agent's known subgraph on each edge's optical depth at decision time (`k_avg` × length + 1e-6 × length), started at the agent's position: the first legs are the walks to the source's successors and to the current target, each weighted on its own smoke, and no edge back into the source is taken (not when the source is an exit or without a position); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)); the current exit's entry is replaced by the walked path when that path orders ahead | Dijkstra on each edge's share of the composite at decision time (length × (1 + `w_smoke` × `k_avg`) + `w_fed` × FED growth), started at the agent's position as for the gate; one path per exit; the walked path as for the gate |
 | **Rejection** | FED over the threshold (× `fed_return_margin` for a rival while a current exit is set), then τ over `tau_max` (× `tau_return_margin` for a rival); both are tested, and a route over both reports the τ reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
 | **Ranking** | not rejected first, then tier (clean before smoky, only with `clean_extinction_threshold` > 0; the current exit's limit is divided by `clean_exit_margin`), then τ (× `current_exit_discount` for the current exit), then `rank_cost` (travel time + queue time × `w_queue`), then hops; ties keep candidate order | not rejected first, then `rank_cost` (the composite), then hops; no tier and no τ |
 | **Fallback** | when every route is rejected: re-sorted by raw τ, then `rank_cost`; the current exit goes first unless the winner's worst extinction is at or below the current exit's × (1 − `fallback_switch_margin`); the first route is un-rejected with a `fallback: ` reason, its `feasible` unchanged | same |
@@ -472,7 +474,7 @@ In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 
 | Step | Function |
 |---|---|
-| **Candidates** | `_generate_candidates`, weighting edges with the policy's `edge_weight` |
+| **Candidates** | `_generate_candidates`, weighting edges with the policy's `edge_weight`; the first legs are `_first_hops`; the walked path is applied in `rank_routes` (`current_path`) |
 | **Rejection** | `_measure_route`, then `_assess_measurements` with the policy's `feasibility`; the K_vis pass is `apply_candidate_set_rules` |
 | **Ranking** | the policy's `order_key` |
 | **Fallback** | `_apply_fallback` |
@@ -484,9 +486,11 @@ The explore and wander decisions are made by `_decide_explore`.
 
 Several of these rules resist switching at different points (return margins,
 discount, anchor, fallback margin, same-exit threshold). Their consolidation is
-[#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); the
-anchor's baseline is the best path to the current exit, not the walked one
-([#186](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186)).
+[#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187). The
+anchor's baseline is the better of the best path to the current exit from the
+agent's position and the path the agent walks, by the policy's ordering
+([#186](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186), resolved by
+[#451](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451)).
 
 When `rank_routes` returns nothing at all — a discovery agent whose
 known subgraph holds no exit — the agent is sent toward the nearest
@@ -539,9 +543,10 @@ redundant extinction sampling when multiple candidate routes share
 segments. Under `anticipate` the same edge on two routes is priced at
 two different arrival times, so the route measurement (`_measure_route`)
 keys on `(source, target, round(arrival_time_s))`. The path search keeps
-the `(source, target)` key, since it prices every edge at decision time. The re-measured first leg of
-a position-aware route is deliberately not cached: it belongs to one
-agent's position, and the cache is shared across agents in a pass.
+the `(source, target)` key, since it prices every edge at decision time. The walks from the agent
+to the first nodes of its routes are deliberately not cached there: they belong
+to one agent's position, and the cache is shared across agents in a pass. They
+are cached per agent and call instead (`_first_leg`).
 
 ```python
 cache: dict[SegmentCacheKey, SegmentCost] = {}

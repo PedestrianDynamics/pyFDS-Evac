@@ -97,12 +97,38 @@ far. It is FDS+Evac's primary door rule, and measured on both reference decks it
 did not redirect anyone while costing monotonicity -- see
 [docs/gate-model-review-notes.md](/docs/gate-model-review-notes.md).
 
-Dijkstra searches from the agent's origin node and weights each edge with the
-smoke present at decision time. Anticipation (`anticipate`,
-`foresight_horizon_s`) applies only to the path it returns for each exit:
-each edge of that path is sampled at the time the agent would reach the
-edge's start, using unimpeded speed, and `tau`, travel time and projected FED
-are measured from those samples (`_generate_candidates`, `_measure_route`).
+**Every exit is priced from the agent's position.** Dijkstra starts where the
+agent stands. Its first legs are the walks from the agent to each successor of
+its origin node, the node it last left, and to the node it is heading for.
+Each walk goes through the walkable area and is weighted by the smoke on that
+walk; all other edges are weighted by the smoke present at decision time
+(`_generate_candidates`, `_first_hops`). The search never routes back through
+the origin node, so every path starts at the agent and its first node is one
+of those successors or the current target. A walk that passes the origin on
+its way to a successor is still priced, on the smoke along it.
+
+The first leg of each route is then measured on that walk: its mean
+extinction, length and travel time enter `K_ave`, `tau` and the travel time,
+so the agent pays for the smoke ahead of it and none of the smoke behind it
+(`_measure_route`). The agent's current exit is also measured on the path it
+is walking. If that path orders ahead of the searched one, it becomes the
+current exit's entry, so the current exit is never ranked behind the path the
+agent walks (`rank_routes`, `current_path`). Without a position, or when the
+source is an exit, the search starts at the source node
+(`_search_from_position`).
+
+[FDS+Evac](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L16096-L16955)
+(`Change_Target_Door`) also evaluates every door, the current one included,
+from the agent's position (`x1_old = xx`, `:16178`): smoke on the straight
+sight line to the door (`See_door`, `:16486`) and the Euclidean distance
+(`:16593`, `:16606`). It has no graph, so the walked path through the stage
+graph is a pyFDS-Evac extension.
+
+Anticipation (`anticipate`, `foresight_horizon_s`) applies only to the path
+the search returns for each exit: each edge of that path is sampled at the
+time the agent would reach the edge's start, using unimpeded speed, and
+`tau`, travel time and projected FED are measured from those samples
+(`_measure_route`).
 
 **`"additive"`.** The original model: smoke is a toll per metre walked,
 `effective_length * (1 + w_smoke * k_ave) + w_fed * fed_max`. Both terms scale
@@ -411,6 +437,11 @@ Exit throughput throttling has no test yet
 
 - Switching can oscillate where two routes cross in cost
   ([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)).
+  Pricing the first leg on the walk makes this more frequent near a smoky
+  door, because a short walk follows the field from one second to the next.
+  On the `l_corridor_gate` reference deck, switches went from 28 to 58 and
+  exit reversals from 16 to 40, 28 of them within 2 s. Each switch follows
+  the switching rule on correct prices.
 - Routes are priced with smoke the agent cannot perceive, including stretches
   it has never seen
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
@@ -418,18 +449,29 @@ Exit throughput throttling has no test yet
   ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
 - One path is priced per exit
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).
-- The path to each exit is chosen on the smoke at decision time, searched from
-  the agent's origin node. Anticipation applies only to that path, edge by
-  edge at the arrival time at the edge's start (`_generate_candidates`,
-  `_measure_route`). Agents with the same origin node and the same known
-  graph therefore get the same path to each exit at a given time, wherever
-  they stand.
-- The anchor compares with the best path to the current exit, not the path the
-  agent walks ([#186](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186)).
-- For an agent behind the route's first node, the FED growth over the walk to
-  that node is not counted, and anticipated arrival times start at that node
-  (`_measure_route`, `_arrival_time`;
+- The path to each exit is chosen on the smoke at decision time.
+  Anticipation applies only to that path, edge by edge at the arrival time at
+  the edge's start (`_generate_candidates`, `_measure_route`). Under
+  `anticipate`, the search ranks on decision-time smoke, so its path can
+  carry a higher `tau` on arrival than another path to the same exit.
+- The search never offers "walk back to the origin node, then on". When that
+  is the only way round the smoke, the direct walk is priced on its own smoke.
+- The first-leg FED is a share of the first segment's FED growth, in
+  proportion to the walk's length and at most the whole segment; the dose on
+  the walk itself is not sampled. Anticipated arrival times are counted from
+  the origin node along the whole first segment (`_measure_route`, `_arrival_time`;
   [#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
+- The ordering compares `tau` with no tolerance, while the anchor treats a
+  difference within `tau_max` × `tau_deadband` as a tie. A difference far
+  below that band, round-off included, can therefore decide whether an agent
+  may switch at all
+  ([#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452), open).
+- When every route is refused, the fallback keeps the current exit unless the
+  rival's worst extinction `k_max_route` is lower by
+  `fallback_switch_margin`; it ignores `tau`. In the S4 T-junction, agents
+  just inside the smoky arm are held on a route of `tau` 34 over one of
+  `tau` 11, because both have `k_max_route` = 6
+  ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458), open).
 - The queue term counts agents globally, not those an agent can perceive
   ([#89](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89)).
 - Heat does not enter route choice

@@ -580,8 +580,8 @@ on `l_corridor`, measured before `0d9bf79`), which is why it is off.
 
 ### Anticipation
 
-The path to each exit is found on the smoke at decision time
-(`_generate_candidates`). With `anticipate` (default `true`), that path is
+The path to each exit is found on the smoke at decision time, starting from
+the agent's position (`_generate_candidates`, `_first_hops`). With `anticipate` (default `true`), that path is
 then measured edge by edge at the time the agent would reach each edge's
 start (`_measure_route`):
 
@@ -680,12 +680,17 @@ it alone.
 
 - **[#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124) — route
   choice oscillates at a genuine optical-depth crossover.** `l_corridor`'s 34
-  returns, 31 of them in `t = 40-60 s`, the window in which the two routes' `tau`
+  returns at `25a6f8f`, 31 of them in `t = 40-60 s`, the window in which the two routes' `tau`
   cross over; at `t = 40 s` their distributions overlap by 61 %. The crossover
   swings through 1.5-3x and sails past any
   hysteresis constant that would not also blind the model to real change. What is
   missing is *commitment* — hysteresis in time or in progress along a leg — not a
   bigger threshold. Three attempts are already recorded as failures below.
+  Pricing the first leg on the walk from the agent's position
+  ([#451](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451)) makes
+  the crossover more frequent near a smoky door: on the `l_corridor_gate`
+  reference deck (`scripts/golden_rerouting.py`) switches went from 28 to 58
+  and exit reversals from 16 to 40, 28 of them within 2 s.
 - **[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125) — route
   choice is not perception-limited.** See
   [Route choice is an optimality bound](#route-choice-is-an-optimality-bound-not-a-perception-limited-model).
