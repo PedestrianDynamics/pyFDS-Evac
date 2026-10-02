@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The CLI and the GUI work from an installed wheel (#471). The CLI moved
+  from `run.py` into `pyfds_evac.cli` and installs as the `pyfds-evac`
+  command and as `python -m pyfds_evac`; `run.py` still runs it, with the
+  same flags, defaults and outputs. The GUI starts with the
+  `pyfds-evac-gui` command (gui extra; without it the command says how to
+  install it), listening on 127.0.0.1:5001; `uv run app.py` still works.
+  Installed outside a source checkout, the GUI reads scenarios from
+  `./assets` and writes `uploads/` and `results/` under the directory it
+  starts in, not under site-packages.
+
 ## [0.2.0] - 2026-10-02
 
 Highlights. Smoke along a route now changes an agent's exit: route costs

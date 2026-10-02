@@ -1,5 +1,5 @@
 """Web GUI for pyFDS-Evac (FastHTML + MonsterUI).
 
-Run with ``uv run app.py`` from the repository root. Requires the ``gui``
-optional dependencies: ``uv sync --extra gui``.
+Run with ``pyfds-evac-gui`` (installed with ``pip install 'pyfds-evac[gui]'``)
+or, in a source checkout, ``uv run app.py`` (after ``uv sync --extra gui``).
 """
