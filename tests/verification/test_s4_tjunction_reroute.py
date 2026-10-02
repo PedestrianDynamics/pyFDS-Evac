@@ -56,7 +56,13 @@ REEVAL_INTERVAL_S = 5.0
 # A quarter of the population: at onset about half the agents are already in
 # the K = 6 arm, where both routes are refused and the fallback holds their
 # exit (see the module docstring). The rest, still in the stem, switch.
+# Four of the held agents are held on k_max alone although the walk back is
+# far less smoky (#458, see test_fallback_moves_agents_at_the_arm_entrance).
+# Raise MIN_SWITCHES to at least 12 once #458 is fixed.
 MIN_SWITCHES = TJunctionSpec().num_agents // 4
+# Spawn indices of the agents 0.4-1.4 m inside the right arm at onset
+# (x 23.4-24.4): right τ 31-35 against left τ 10.7-11.0, equal k_max.
+ARM_ENTRANCE_SPAWN_INDICES = {8, 9, 12, 13}
 # Right-arm extinction: enough that the short smoky route costs more than the
 # long clear one (w_smoke = 5 amplifies it in the composite cost).
 SMOKE_K = 6.0
@@ -127,6 +133,39 @@ def test_smoke_forces_switch_to_clear_exit():
         # The agents still in the stem reroute (vs control's 0).
         assert route_switch_count(result) >= MIN_SWITCHES
         assert result.metrics["agents_remaining"] == 0
+    finally:
+        result.cleanup()
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason=(
+        "#458: with every route refused, _fallback_holds_current keeps the "
+        "current exit on k_max alone, so agents just inside the smoky arm "
+        "walk on through it (seed 42)"
+    ),
+)
+def test_fallback_moves_agents_at_the_arm_entrance():
+    """Agents just inside the smoky arm turn back to the clear exit.
+
+    Both routes are refused and both have k_max = 6, but the walk back to
+    the left exit has a third of the right route's optical depth. Under
+    seed 42 these are the agents spawned 9th, 10th, 13th and 14th.
+    """
+    spec = TJunctionSpec(seed=42)
+    result = run_scenario(
+        t_junction_scenario(spec),
+        seed=spec.seed,
+        smoke_speed_model=_right_arm_smoke(spec),
+        reroute_config=_reroute_config(),
+    )
+    try:
+        exits = {
+            row["spawn_index"]: row["exit_id"] for row in result.exit_history or []
+        }
+        assert ARM_ENTRANCE_SPAWN_INDICES <= exits.keys()
+        assert {exits[i] for i in ARM_ENTRANCE_SPAWN_INDICES} == {EXIT_LEFT}
     finally:
         result.cleanup()
 
