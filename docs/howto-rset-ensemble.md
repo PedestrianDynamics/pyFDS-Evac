@@ -43,9 +43,10 @@ more seeds do not supply one, since every seed stops at the same limit;
   incapacitated agent stays in the simulation, so one incapacitation makes
   `evacuation_time` equal to `max_simulation_time`
   ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
-- `result.success` is `True` when the run reaches `max_simulation_time`, even
-  with agents still inside
+- `result.success` is `False` and `result.status` is `"incomplete"` when the
+  run reaches `max_simulation_time` with agents still inside
   ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
+  Neither says when the last mobile agent left.
 
 Part 2 below shows both.
 
@@ -267,13 +268,15 @@ fire.cleanup()
 ```
 
 ```text
-evacuation_time 1150 s (max_simulation_time 1150 s), success True
+evacuation_time 1150 s (max_simulation_time 1150 s), success False
 exit times [], incapacitated 1, remaining 1
 ```
 
-The occupant is incapacitated at 982 s and never leaves. Nevertheless
-`evacuation_time` reports the time limit and `success` is `True`. The exit
-times, the incapacitated count and the remaining count tell you what happened.
+The occupant is incapacitated at 982 s and never leaves. `evacuation_time`
+reports the time limit, and `success` is `False` because the run is
+incomplete. The exit times, the incapacitated count and the remaining count
+tell you what happened. From the command line, `run.py` exits with status 2
+for such a run ([Exit status](usage.md#exit-status)).
 
 ## Incapacitation mode
 

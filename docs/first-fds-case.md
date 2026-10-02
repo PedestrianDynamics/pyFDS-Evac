@@ -157,6 +157,10 @@ Simulation incomplete: time limit reached after 300.00 s (70/150 evacuated, 80 r
 Route switches: 180
 ```
 
+The run reaches the 300 s time limit with agents still inside or still to
+enter, so it is incomplete and `run.py` exits with status 2
+([Exit status](usage.md#exit-status)).
+
 Before this, fdsreader logs `Module vents: could not convert string to float`
 for this deck, and the terminal also shows `Reroute debug`
 lines and numpy `UserWarning` messages. None of them affects

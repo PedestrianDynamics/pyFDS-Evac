@@ -332,7 +332,7 @@ In a moving agent, ranking is not adoption: the switching rules can keep a
 current exit that no longer ranks first
 ([Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract)).
 In the full run of the asset README, with the FDS vismap, all 20 agents
-left by the side exit, egress 22.3 s, each after one switch from the end exit
+left by the side exit, egress 21.5 s, each after one switch from the end exit
 to the side exit (`assets/cognitive_map_memory/README.md`).
 
 > **Talk vs code.** The slide says the side exit is learned "at y = 12.5" and

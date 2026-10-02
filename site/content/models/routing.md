@@ -338,7 +338,11 @@ pyFDS-Evac, in Python, in the main loop of `run_scenario` (`scenario.py`):
 - **Distribution without a journey, in a deck with journeys.** Its agents get
   a JuPedSim journey to the nearest exit (`simulation_init.py`,
   `find_nearest_exit_journey`). At an unthrottled exit, JuPedSim removes them
-  itself.
+  itself. A throttled exit is a direct-steering stage, so pyFDS-Evac steers
+  these agents to it and removes them there under its cap
+  ([#434](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/434)). A
+  deck in which such an exit also has a schedule (`open_from_s` or
+  `closed_after_s`) is refused at start.
 
 ### Why direct steering
 
@@ -430,7 +434,12 @@ schedules are pyFDS-Evac code, so their tests live in this repository:
   a closed exit removes nobody, and agents heading for it reroute
   ([#396](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/396)).
 
-Exit throughput throttling has no test yet
+- [`tests/test_throttled_exit_without_journey.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_throttled_exit_without_journey.py):
+  agents without a journey whose nearest exit is throttled reach that exit
+  and leave it at the cap spacing
+  ([#434](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/434)).
+
+Exit throughput throttling has no general test yet
 ([#355](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/355)).
 
 ## Limitations

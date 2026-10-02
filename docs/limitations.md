@@ -108,10 +108,11 @@ An incapacitated agent stays in the simulation as a stationary obstacle. The
 run ends early only when no agent is left, so a run in which any agent is
 incapacitated continues until `max_simulation_time` (300 s by default). Its
 reported `evacuation_time` is then that time limit, not the time the last
-mobile agent left. `success` is also true at the time limit even when agents
-remain ([issue #139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
+mobile agent left. Such a run is incomplete: `success` is `False`,
+`status` is `"incomplete"` and `run.py` exits with status 2
+([issue #139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
 Read `agents_remaining`, and take the time each agent left from the
-trajectory file, instead of relying on these two values
+trajectory file, instead of relying on `evacuation_time`
 ([issue #141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
 
 ## Incapacitation during pre-movement is undone

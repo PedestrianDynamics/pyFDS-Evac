@@ -195,7 +195,7 @@ uv run pytest tests/test_smoke_speed.py -k iso_table21 tests/test_iso_table21_co
 
 For the figures, run the 16 cases with `run.py`. The FDS output is committed
 in `assets/iso_table21_coupled/fds/`; to rebuild it, run
-`python assets/iso_table21_coupled/build_geometry.py` and then
+`uv run python assets/iso_table21_coupled/build_geometry.py` and then
 `fds iso_table21_coupled.fds` (about 10 s). `assets/ISO-table21` stops at
 300 s, too early for *K* = 10 and for \(v_0\) = 0.25 m/s, so the constant-*K*
 runs use a copy with 600 s:
