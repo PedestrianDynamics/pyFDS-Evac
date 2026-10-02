@@ -109,14 +109,14 @@ evac_runtime = "about 10 s for the fire run"
 expected = [
   "evacuated: 70/150 in 300 s",
   "FED max:   0.37",
-  "route changes: {'smoke_reroute': 9, 'wander': 170}",
+  "route changes: {'smoke_reroute': 10, 'wander': 170}",
 ]
 expected_note = """\
 These are the last lines of python examples/first_fds_case.py "$FDS". \
 Without FDS output it prints evacuated: 144/150 in 300 s. run.py ends \
 with: Simulation incomplete: time limit reached after 300.00 s \
 (70/150 evacuated, 80 remaining, 50 not spawned)."""
-results_commit = "876b89ac"
+results_commit = "5cdbd02e"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
