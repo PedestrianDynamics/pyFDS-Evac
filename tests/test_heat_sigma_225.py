@@ -114,5 +114,5 @@ def test_models_heat_links_the_open_sigma_issue():
 
 def test_changelog_unreleased_mentions_225():
     text = CHANGELOG.read_text()
-    unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
+    unreleased = text.split("## [0.2.0]", 1)[1].split("\n## [", 1)[0]
     assert ISSUE in unreleased
