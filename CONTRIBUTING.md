@@ -24,8 +24,8 @@ and pick a template:
 
 ## Development setup
 
-The project uses [uv](https://github.com/astral-sh/uv) and Python 3.11, as in
-CI:
+The project uses [uv](https://github.com/astral-sh/uv) and supports Python
+3.12, 3.13 and 3.14; CI tests all three, and lint and docs run on 3.14:
 
 ```bash
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
@@ -50,12 +50,14 @@ CI also measures line and branch coverage and reports it on
 report locally:
 
 ```bash
-uv run --python 3.11 pytest -q --cov --cov-report=term
+uv run --python 3.14 pytest -q --cov --cov-report=term
 ```
 
-Measure coverage under Python 3.11, as above. Under Python 3.12 the coverage
-tracer slows `run_scenario`, one very long function, by two orders of
-magnitude, and the suite takes hours.
+Measure coverage under Python 3.14, as above and as in CI. Coverage measures
+branches (`branch = true`), and coverage.py measures branches with the fast
+`sys.monitoring` core only from Python 3.14 on. On 3.12 and 3.13 it falls back
+to its trace function, which slows `run_scenario`, one very long function, by
+two orders of magnitude, and the suite takes hours.
 
 The docs are a Hugo site (hextra theme) in `site/`, with the reference pages in
 `docs/` mounted into it. The strict build needs Hugo extended (CI uses 0.144)

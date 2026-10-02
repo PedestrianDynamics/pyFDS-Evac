@@ -16,11 +16,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.14'
       - name: Install uv
         run: pip install --upgrade uv
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: uv sync --locked --python 3.14 --all-groups
       - name: Lint with Ruff
         run: uv run ruff check .
       - name: Check formatting
