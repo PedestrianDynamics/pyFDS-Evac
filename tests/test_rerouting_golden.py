@@ -45,7 +45,7 @@ platform (``linux-x86_64``) is regenerated from the repository root with::
 
     docker run --rm --platform linux/amd64 -v "$PWD":/work -w /work \\
         -e UV_PROJECT_ENVIRONMENT=/tmp/venv -e PYFDS_EVAC_REGEN_GOLDEN=1 \\
-        ghcr.io/astral-sh/uv:python3.11-bookworm-slim sh -c \\
+        ghcr.io/astral-sh/uv:python3.14-bookworm-slim sh -c \\
         "apt-get update -qq && apt-get install -y -qq git && \\
          uv run pytest tests/test_rerouting_golden.py -k scenario"
 

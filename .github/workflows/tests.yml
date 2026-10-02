@@ -14,24 +14,38 @@ permissions:
 jobs:
   pytest:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    env:
+      # Coverage runs on 3.14 only: with branch coverage, coverage.py uses
+      # the fast sys.monitoring core from Python 3.14 on and the much
+      # slower trace function before.
+      COVERAGE_LEG: ${{ matrix.python-version == '3.14' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
       - name: Install uv
         run: pip install --upgrade uv
       - name: Install dependencies
-        run: uv sync --all-groups --extra gui
+        run: uv sync --locked --python ${{ matrix.python-version }} --all-groups --extra gui
       # The whole suite (testpaths in pyproject.toml). Tests that need FDS
       # output from the external data store carry the external_data marker
       # and are deselected here; locally they skip when the data is absent.
       - name: Run the test suite
+        if: env.COVERAGE_LEG != 'true'
+        run: uv run pytest -q -m "not external_data"
+      - name: Run the test suite with coverage
+        if: env.COVERAGE_LEG == 'true'
         run: uv run pytest -q -m "not external_data" --cov --cov-report=xml --cov-report=term
       # Pull requests from forks get no OIDC token; they upload tokenless,
       # which Codecov accepts for public repositories. An upload failure
       # never fails the job.
       - name: Upload coverage to Codecov
+        if: env.COVERAGE_LEG == 'true'
         uses: codecov/codecov-action@v7
         with:
           files: ./coverage.xml

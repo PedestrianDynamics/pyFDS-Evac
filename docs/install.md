@@ -10,7 +10,7 @@ you need for your own FDS cases.
 
 | Needed | For |
 |---|---|
-| Python 3.11 or 3.12 | pyFDS-Evac itself (`requires-python = ">=3.11,<3.13"`) |
+| Python 3.12, 3.13 or 3.14 | pyFDS-Evac itself (`requires-python = ">=3.12,<3.15"`) |
 | [uv](https://github.com/astral-sh/uv) | the environment, the examples and every command on this site |
 | git and network access | cloning the repository and installing its dependencies |
 | [FDS](https://github.com/firemodels/fds) (optional) | only to run your own fire; pyFDS-Evac reads the output of a finished FDS run and never starts FDS |
@@ -60,6 +60,10 @@ git:
 ```bash
 pip install "pyfds-evac @ git+https://github.com/PedestrianDynamics/pyFDS-Evac.git"
 ```
+
+With pip, use Python 3.12. fdsvismap requires scikit-image 0.23, which has
+no wheels for Python 3.13 and 3.14 and does not build there; `uv sync` in the
+repository replaces it with scikit-image 0.26, pip cannot.
 
 The package contains `pyfds_evac` only. `run.py`, `examples/`, `scripts/` and
 `assets/` are not in it.

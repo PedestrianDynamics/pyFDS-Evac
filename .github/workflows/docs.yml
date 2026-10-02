@@ -71,11 +71,11 @@ jobs:
           fetch-depth: 0  # full history for enableGitInfo (last-updated dates)
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.14"
       - name: Install uv
         run: pip install --upgrade uv
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: uv sync --locked --python 3.14 --all-groups
       # One zip of inputs per example page, from this commit, into
       # site/static/downloads/; the example-files shortcode needs it. It
       # runs before any step that rewrites tracked files, so the README.txt

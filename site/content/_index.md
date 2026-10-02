@@ -80,8 +80,9 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
 ## Installation
 
 pyFDS-Evac is installed from the repository until the PyPI release.
-Requirements (Python 3.11 or 3.12, uv, git) and
+Requirements (Python 3.12 to 3.14, uv, git) and
 a check that the install works are on the [Install](docs/getting-started/install/) page.
+With pip, use Python 3.12; on 3.13 and 3.14 install with uv, as below.
 
 ```bash
 pip install "pyfds-evac @ git+https://github.com/PedestrianDynamics/pyFDS-Evac.git"

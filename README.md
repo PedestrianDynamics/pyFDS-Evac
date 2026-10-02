@@ -53,7 +53,8 @@ The model descriptions, usage and verification live on the documentation site:
 
 ## Installation
 
-This project uses [uv](https://github.com/astral-sh/uv) for dependency management.
+This project needs Python 3.12, 3.13 or 3.14 and uses
+[uv](https://github.com/astral-sh/uv) for dependency management.
 
 ```bash
 uv sync
