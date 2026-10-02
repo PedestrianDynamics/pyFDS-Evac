@@ -107,10 +107,12 @@ estimated travel time. (Active only when a &lt;code>fed_model&lt;/code> is
 provided; otherwise &lt;code>fed_rate_sampler&lt;/code> is &lt;code>None&lt;/code>.)&lt;/li>
 &lt;/ol>
 &lt;h3>Line-of-sight extinction&lt;span class="hx-absolute -hx-mt-20" id="line-of-sight-extinction">&lt;/span>
-&lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The mean extinction along a segment is computed by sampling K at
-uniform intervals along the edge polyline:&lt;/p>
+&lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The mean extinction along an edge is computed from its polyline. Each
+segment &lt;code>s&lt;/code> of length &lt;code>L_s&lt;/code> is sampled at evenly spaced points, both ends
+included, at most &lt;code>sampling_step_m&lt;/code> apart, and &lt;code>K_bar_s&lt;/code> is the mean of
+those samples. The segment means are combined weighted by length:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>sigma_bar = (1 / |P|) * sum(K_p)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;pre>&lt;code>sigma_bar = sum(L_s * K_bar_s) / sum(L_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -120,9 +122,10 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>where &lt;code>|P|&lt;/code> is the number of sample points and &lt;code>K_p&lt;/code> is the
-extinction at each point. The sample spacing is controlled by
-&lt;code>sampling_step_m&lt;/code>. This is the discrete form of the Beer-Lambert
+&lt;p>so the result approximates the line integral of K divided by the edge
+length and does not depend on where the polyline has its vertices.
+Zero-length segments carry no weight. The worst sample over all
+segments is kept as &lt;code>k_max&lt;/code>. This is the discrete form of the Beer-Lambert
 path-integrated mean of
 &lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>,
 Eq. 8-9; the Beer-Lambert law itself is on
