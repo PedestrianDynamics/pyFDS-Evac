@@ -19,11 +19,14 @@ where a mechanism has a direct counterpart. Exits can open and close on
 a schedule. A run checks its scenario against the FDS domain and stops at
 the end of the FDS output. A run that reaches its time limit with agents
 inside is reported as incomplete, and `run.py` then exits with status 2.
-Seeded results differ from v0.1; see Changed.
+Seeded results differ from v0.1; see Changed. pyFDS-Evac runs on Python
+3.12, 3.13 and 3.14. Release 0.2.0 is installed from the source tree
+with uv; it is not published on PyPI.
 
 Breaking changes, which make this a MINOR release while MAJOR is 0:
 
-- Python 3.11 or 3.12 is required; Python 3.10 is no longer supported.
+- Python 3.12, 3.13 or 3.14 is required; Python 3.11 and earlier are no
+  longer supported (Removed).
 - Exit status and run outcome: `run.py` exits with status 2 for an
   incomplete run, and `success` is then `False` (Changed).
 - A run that outlasts the FDS output stops with `FdsHorizonError` (Changed).
@@ -34,6 +37,8 @@ Breaking changes, which make this a MINOR release while MAJOR is 0:
 - Seeded placements and outcomes differ from earlier versions (Changed).
 - Agents leave at an exit when their centre enters the exit polygon, and the
   opening exit is ranked from each agent's position (Changed).
+- Exits are priced from where the agent stands, which changes route
+  switches and exit choice in smoke (Fixed, #451).
 - `speed_law="fridolf"` is Eq. 7 of Fridolf et al.; the V/(V+2) law is
   removed (Changed).
 - New output columns and manifest keys: `in_fds_domain`, `fds_coverage`,
@@ -44,6 +49,12 @@ Breaking changes, which make this a MINOR release while MAJOR is 0:
 
 ### Added
 
+- `scripts/release_check.sh`, the release gate. In a detached worktree of
+  the current commit it runs the tests per supported Python, builds and
+  follows the download bundles, runs the documented commands listed in
+  `scripts/release_check.toml` and builds the site, then writes
+  `release-check-<commit>.md`. Checks of pages an open issue already
+  lists are reported as STALE and do not fail the gate (#462).
 - Python 3.13 and 3.14 support; CI tests 3.12, 3.13 and 3.14.
   On 3.13 and 3.14, `uv sync` installs scikit-image 0.26 instead of the
   0.23 that fdsvismap requires, which does not build there; fdsvismap's
