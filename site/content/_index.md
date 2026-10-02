@@ -70,7 +70,7 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
   >}}
   {{< hextra/feature-card
     title="One entry point"
-    subtitle="Script, test, command line, and the optional web GUI all call the same run_scenario(); run.py and the GUI also build the same models for it. Results are a JuPedSim trajectory file plus per-agent CSV histories."
+    subtitle="Script, test, command line, and the optional web GUI all call the same run_scenario(); the pyfds-evac command (run.py) and the GUI also build the same models for it. Results are a JuPedSim trajectory file plus per-agent CSV histories."
     link="docs/using/usage/"
   >}}
 {{< /hextra/feature-grid >}}
@@ -79,18 +79,22 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
 
 ## Installation
 
-pyFDS-Evac is installed from the repository until the PyPI release.
-Requirements (Python 3.12 to 3.14, uv, git) and
-a check that the install works are on the [Install](docs/getting-started/install/) page.
-With pip, use Python 3.12; on 3.13 and 3.14 install with uv, as below.
+Install pyFDS-Evac from [PyPI](https://pypi.org/project/pyfds-evac/) and check
+it. Requirements (Python 3.12 to 3.14) and a full check on a scenario are on
+the [Install](docs/getting-started/install/) page.
 
 ```bash
-pip install "pyfds-evac @ git+https://github.com/PedestrianDynamics/pyFDS-Evac.git"
+pip install pyfds-evac            # the pyfds-evac command
+pip install "pyfds-evac[gui]"     # adds the pyfds-evac-gui command
+pyfds-evac --help
 ```
 
-The examples and the tracked scenarios live in the repository (`examples/`,
-`assets/`), not in the installed package. To run them, clone the repository and
-use [uv](https://github.com/astral-sh/uv):
+pip on Python 3.13 and 3.14 currently fails while building scikit-image; use Python 3.12 or the source checkout until the fdsvismap pin is updated.
+
+The package contains no scenarios or examples. Each example page offers its
+input files as a zip. To run the examples, the scripts and the tracked
+scenarios of the repository, clone it and use
+[uv](https://github.com/astral-sh/uv):
 
 ```bash
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git

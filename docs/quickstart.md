@@ -29,9 +29,12 @@ You need one of:
 
 - a clone of the repository, with the environment installed by `uv sync`
   (see [Install](install.md)), and a shell opened in the repository root;
-- the zip above, unpacked, with the packages of its `requirements.txt`
-  installed, and a shell opened in the unpacked folder. Run the commands
-  below with `python` instead of `uv run python`.
+- the zip above, unpacked, and a shell opened in the folder it unpacks into
+  (`cd pyfds-evac-quickstart`). Install pyFDS-Evac in either of two ways:
+  `pip install pyfds-evac` ([Install](install.md)), or
+  `pip install -r requirements.txt` for the package versions pinned in the
+  zip. Run the commands below with `python` instead of
+  `uv run python`.
 
 The complete example is [`examples/quickstart.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/quickstart.py).
 Run it with:

@@ -108,8 +108,8 @@ Section numbers refer to the FDS+Evac Technical Reference and User's Guide
 (Korhonen 2021). "JSON" means the scenario JSON. Its stage layout
 (`distributions`, `exits`, `checkpoints`, `journeys`) is the one the JuPedSim
 web editor writes, and `load_scenario` converts the editor's `journeys_v2`
-routes on load. The pyFDS-Evac web GUI (graphical user interface, `app.py`)
-runs uploaded scenarios. It does not edit geometry or stages.
+routes on load. The pyFDS-Evac web GUI (graphical user interface, `pyfds-evac-gui`,
+or `app.py` in a source checkout) runs uploaded scenarios. It does not edit geometry or stages.
 
 | FDS+Evac input | What it did | In pyFDS-Evac |
 |---|---|---|

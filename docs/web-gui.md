@@ -3,28 +3,81 @@ title: "Web GUI"
 weight: 9
 ---
 
-An optional local web app that runs the same model as `run.py` behind a form:
-pick a scenario, set the options, run it, watch the progress, and look at the
-results. It is for exploring a scenario; for studies, scripts and `run.py`
-are easier to reproduce. To turn a GUI run into a script, see
-[Show the run as Python](#show-the-run-as-python).
+An optional local web app that runs the same model as the `pyfds-evac`
+command (`run.py`) behind a form: pick a scenario, set the options, run it,
+watch the progress, and look at the results. It is for exploring a scenario;
+for studies, scripts and the command line are easier to reproduce. To turn
+a GUI run into a script, see [Show the run as Python](#show-the-run-as-python).
 
 ## Install and launch
+
+Install the `gui` extra and start the GUI from the folder that holds your
+scenarios:
+
+```bash
+pip install "pyfds-evac[gui]"
+pyfds-evac-gui
+```
+
+Then open <http://127.0.0.1:5001>. The extra installs
+[FastHTML](https://fastht.ml/) and its dependencies. On a screen narrower
+than 900 px, such as a phone, the form sits above the results instead of
+beside them.
+
+`pyfds-evac-gui` listens on 127.0.0.1, so only this computer can open it.
+`--host 0.0.0.0` makes it reachable from other computers on the network, and
+`--port` sets the port (default: the `PORT` environment variable, else 5001).
+Without the extra, the command stops with:
+
+```text
+pyfds-evac-gui needs the GUI extra, which is not installed (missing module 'fasthtml'). Install it with: pip install 'pyfds-evac[gui]'
+```
+
+In a [source checkout](install.md#install-from-the-repository), install the
+extra with uv and start the GUI with `app.py`:
 
 ```bash
 uv sync --extra gui
 uv run app.py
 ```
 
-Then open <http://localhost:5001>. The extra installs
-[FastHTML](https://fastht.ml/) and its dependencies. On a screen narrower
-than 900 px, such as a phone, the form sits above the results instead of
-beside them.
+`uv run app.py` listens on all interfaces (0.0.0.0), port 5001, and reloads
+when the code changes. `uv run pyfds-evac-gui` also works in a checkout: it
+listens on 127.0.0.1 and does not reload.
+
+### Where the GUI reads and writes
+
+| Folder | Installed with pip | Source checkout |
+|---|---|---|
+| Scenarios in the picker | `./assets` | `<checkout>/assets` |
+| Uploaded scenarios | `./uploads` | `<checkout>/uploads` |
+| Results | `./results` | `<checkout>/results` |
+
+`./` is the folder in which `pyfds-evac-gui` starts. In a checkout, the
+folders sit in the checkout whatever folder the server starts in. The
+environment variable `PYFDS_EVAC_RESULTS_DIR` overrides the results folder in
+both cases. Nothing is written into the installed package.
+
+The package ships no scenarios, so after a pip install the picker is empty
+until there is an `assets/` folder. Unpack the example zip of a page, for
+example the [Quickstart](quickstart.md), and start the GUI inside the
+unpacked folder:
+
+```bash
+cd pyfds-evac-quickstart
+pyfds-evac-gui
+```
+
+The picker then lists `ISO-table21`. You can also upload a scenario (its
+config JSON and geometry WKT, or a `.zip`) in the **Core** group; it is saved
+under `./uploads`. The fire examples ship the FDS deck only; run FDS yourself
+before the GUI has smoke to read.
 
 ## Run a scenario
 
-The steps use `iso_table21_coupled`, a bundled scenario that comes with its
-FDS output: one agent walks a 100 m corridor filled with smoke of about
+The steps use `iso_table21_coupled`, a scenario tracked in the repository
+together with its FDS output, so they need a
+[source checkout](install.md#install-from-the-repository): one agent walks a 100 m corridor filled with smoke of about
 K = 1 1/m. The numbered markers in the first screenshot show where each
 control is. Click a screenshot to open it at full size.
 
@@ -64,7 +117,7 @@ the error comes from that field's value, for example `Seed: …`; otherwise
 the message is shown as it is, with the exception type under
 **Technical details**.
 
-[![A progress card titled "Running: Haspel" with the subtitle "run #2 · coupled FDS × JuPedSim step loop", at 25 percent, with a progress bar, the line "evacuated 75/300 · sim 105.3s · wall 44s · 25%" and a Cancel run button. Below it, the console lists the model's setup and rerouting log lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario.")](images/web-gui/running.png)
+[![A progress card titled "Running: Haspel" with the subtitle "run #2 · coupled FDS × JuPedSim step loop", at 25 percent, with a progress bar, the line "evacuated 75/300 · sim 105.3s · wall 44s · 25%" and a Cancel run button. Below it, the console lists the model's setup and rerouting log lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger Haspel scenario of the repository.")](images/web-gui/running.png)
 
 ### Look at the results
 
@@ -210,8 +263,8 @@ Each run writes into a folder of its own, so no run overwrites another:
   taken under the results root.
 
 The results root is the folder in the environment variable
-`PYFDS_EVAC_RESULTS_DIR` when it is set, and otherwise `results/` in the
-repository, whatever folder the server was started from. If a run's folder
+`PYFDS_EVAC_RESULTS_DIR` when it is set, and otherwise the results folder of
+[Where the GUI reads and writes](#where-the-gui-reads-and-writes). If a run's folder
 already exists, `-2`, `-3`, … is added to its name.
 
 ## Results
@@ -448,8 +501,8 @@ scenario sets none ([Usage](usage.md)).
 
 {{< details title="What the script leaves out, and why" closed="true" >}}
 - **The GUI's CSV histories and app bundle.** The smoke, FED, route and
-  route-cost histories and the bundle are written by `apply_outputs`, which
-  lives in `run.py`, outside the installed package. Their keys
+  route-cost histories and the bundle are written by `apply_outputs` in
+  `pyfds_evac.cli`, which the exported script does not call yet. Their keys
   (`output_smoke_history`, `output_fed_history`, `output_route_history`,
   `output_route_cost_history`, `output_sqlite`, `export_app_bundle`) are set
   to `None`
