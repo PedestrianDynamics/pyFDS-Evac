@@ -137,7 +137,12 @@ def load_run(data, name):
     """Egress time, trajectory and smoke history of one run."""
     run = data / "evac" / name
     log = (run / "run.log").read_text()
-    t_end = float(re.search(r"Simulation finished in ([\d.]+) s", log).group(1))
+    t_end = float(
+        re.search(
+            r"Simulation (?:finished in|incomplete: time limit reached after) ([\d.]+) s",
+            log,
+        ).group(1)
+    )
     con = sqlite3.connect(run / "run.sqlite")
     traj = pd.read_sql("select frame, pos_x as x, pos_y as y from trajectory_data", con)
     fps = float(

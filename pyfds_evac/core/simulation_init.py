@@ -747,6 +747,62 @@ def build_agent_path_state(
     }
 
 
+def build_exit_path_state(
+    exit_id: str,
+    direct_steering_info: dict[str, dict[str, Any]],
+    seed: int,
+    spawn_key: SpawnKey,
+    *,
+    familiarity: Any = "full",
+    entrance: str | None = None,
+) -> dict[str, Any]:
+    """Build DS state that steers an agent straight to the exit *exit_id*.
+
+    The agent's origin is the exit itself, a stage graph node with no route
+    onward, so the initial exit choice and the reroute pass find nothing to
+    rank and the nearest-exit assignment of a distribution without a journey
+    is kept (#434).
+    """
+    stage_configs: dict[str, dict[str, Any]] = {}
+    for stage_key, info in direct_steering_info.items():
+        stage_configs[stage_key] = {
+            "polygon": info.get("polygon"),
+            "stage_type": info.get("stage_type", "checkpoint"),
+            "waiting_time": float(info.get("waiting_time", 0.0)),
+            "waiting_time_distribution": info.get(
+                "waiting_time_distribution", "constant"
+            ),
+            "waiting_time_std": float(info.get("waiting_time_std", 1.0)),
+            "enable_throughput_throttling": bool(
+                info.get("enable_throughput_throttling", False)
+            ),
+            "max_throughput": float(info.get("max_throughput", 1.0)),
+            "speed_factor": _normalize_speed_factor(info.get("speed_factor", 1.0)),
+        }
+    target_rng = agent_rng(seed, spawn_key, PURPOSE_TARGET)
+    target = _random_point_in_polygon(
+        direct_steering_info[exit_id]["polygon"], target_rng
+    )
+    return {
+        "mode": "path",
+        "path_choices": {},
+        "stage_configs": stage_configs,
+        "current_origin": exit_id,
+        "current_target_stage": exit_id,
+        "target": target,
+        "target_assigned": False,
+        "state": "to_target",
+        "wait_until": None,
+        "inside_since": None,
+        "reach_penetration": 0.25,
+        "reach_dwell_seconds": 0.2,
+        "step_index": 0,
+        **steering_seeds(seed, spawn_key),
+        "familiarity": familiarity,
+        "entrance": entrance,
+    }
+
+
 def initialize_simulation_from_json(
     json_path: str,
     simulation: jps.Simulation,
@@ -2169,6 +2225,20 @@ def _add_agents(
                 new_journey_id = simulation.add_journey(journey_desc)
                 exit_to_journey[stage_id] = new_journey_id
 
+    # Stage id of each throttled exit, which only the runtime can steer to.
+    # A scheduled one is left out: an agent held to it could not leave once
+    # it closes, so such a deck is still refused by the schedule check.
+    throttled_exit_by_stage = {
+        stage_map[exit_id]: exit_id
+        for exit_id, info in (direct_steering_info or {}).items()
+        if info.get("stage_type") == "exit"
+        and info.get("enable_throughput_throttling")
+        and info.get("open_from_s") is None
+        and info.get("closed_after_s") is None
+        and exit_id in stage_map
+        and global_ds_journey_id is not None
+    }
+
     def find_nearest_exit_journey(agent_position):
         """Find the nearest exit and return its journey_id and stage_id."""
         if not exit_geometries:
@@ -2607,6 +2677,14 @@ def _add_agents(
                         "v0": 0.0 if use_premovement else agent_v0,
                     }
 
+                    # A throttled exit is a direct-steering stage, which
+                    # JuPedSim neither steers to nor removes at, so such an
+                    # agent is steered there by the runtime instead (#434).
+                    throttled_exit = throttled_exit_by_stage.get(nearest_stage_id)
+                    if throttled_exit is not None:
+                        nearest_journey_id = global_ds_journey_id
+                        nearest_stage_id = global_ds_stage_id
+
                     agent_params = create_agent_parameters(
                         model_type=model_type,
                         position=pos,
@@ -2617,10 +2695,19 @@ def _add_agents(
                     )
 
                     agent_id = simulation.add_agent(agent_params)
-                    assign_spawn_key(
+                    key = assign_spawn_key(
                         spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
                     )
                     agent_radii[agent_id] = agent_radius
+                    if throttled_exit is not None:
+                        agent_wait_info[agent_id] = build_exit_path_state(
+                            throttled_exit,
+                            direct_steering_info,
+                            seed,
+                            key,
+                            familiarity=spawn_params.get("familiarity", "full"),
+                            entrance=spawn_params.get("entrance"),
+                        )
 
                     if use_premovement and agent_premovement_times is not None:
                         premovement_times[agent_id] = {

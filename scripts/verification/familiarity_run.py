@@ -59,10 +59,7 @@ def main() -> int:
     scenario = run.load_scenario(args.scenario)
     kwargs = run.build_run_kwargs(scenario, args, log=print)
     result = run.run_scenario(scenario, **kwargs)
-    print(
-        f"Simulation finished in {result.evacuation_time:.2f} s "
-        f"({result.agents_evacuated}/{result.total_agents} evacuated)."
-    )
+    print(run._summary_line(result))
     write_history(result.cognitive_map_history or [], args.output_cognitive_map)
     print(f"Cognitive map rows: {len(result.cognitive_map_history or [])}")
     run.apply_outputs(result, scenario, args, log=print)

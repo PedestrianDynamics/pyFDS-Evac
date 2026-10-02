@@ -110,7 +110,9 @@ def run_one(job: tuple[float, int, str, bool]) -> dict:
                 stderr=subprocess.STDOUT,
                 check=False,
             )
-        if completed.returncode != 0:
+        # 2: the run reached its time limit with agents inside; its outputs
+        # are written and agents that never reached a door are counted below.
+        if completed.returncode not in (0, 2):
             return {"w_queue": w_queue, "seed": seed, "status": f"see {log}"}
         stamp.write_text(digest)
     matrix, stuck = V.observed_matrix(sqlite, ASSET / "config.json", reach=2.0)

@@ -142,6 +142,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- A run that reaches `max_simulation_time` with agents inside, or with flow
+  agents still to enter, is incomplete: `success` is `False` (it was
+  `True`, #139), the new `metrics["status"]` is `"incomplete"` (else
+  `"completed"`), and `metrics["agents_not_spawned"]` counts the flow agents
+  that never entered. The run manifest records the same under `outcome`,
+  and the `run.py` summary line reads `Simulation incomplete: time limit
+  reached after …`. `run.py` exits with status 2 for an incomplete run
+  (outputs are still written); `scripts/run_and_plot.sh`,
+  `scripts/sweep_queue_weight.py` and `assets/schroeder2015_route/run_p1.sh`
+  accept it.
+
 - **Seeded placements differ from earlier versions.** The start positions,
   their shuffle, the radius and v0 samples and the default pre-movement
   stream of each distribution are seeded from a blake2b hash of the run
@@ -347,6 +358,11 @@ documentation error in the FDS+Evac Guide, and it differs from the current
 one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
+
+- In a deck with journeys, agents of a distribution without a journey whose
+  nearest exit is throttled stood at their spawn points until the time
+  limit. They are now steered to that exit and leave through it under its
+  cap (#434).
 
 - A point that some loaded gas slices cover and others do not raises
   `ValueError`, as heat already did, instead of reading ambient air for
