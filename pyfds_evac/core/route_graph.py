@@ -544,8 +544,9 @@ def integrated_extinction_along_polyline(
 ) -> float:
     """Return the Beer-Lambert path-integrated mean extinction along a polyline.
 
-    Samples K at uniform intervals along each segment of the polyline and
-    returns the overall arithmetic mean, weighted by segment length.
+    Samples K at uniform intervals along each segment of the polyline,
+    takes the mean per segment and returns the mean of those, weighted by
+    segment length (see :func:`_polyline_stats`).
     """
     if step_m <= 0:
         raise ValueError(f"step_m must be positive, got {step_m}")
@@ -565,7 +566,19 @@ def _polyline_stats(
     extinction_sampler: ExtinctionSampler,
     step_m: float,
 ) -> tuple[float, float]:
-    """Mean and worst K along a polyline -- see :func:`_los_stats`."""
+    """Mean and worst K along a polyline -- see :func:`_los_stats`.
+
+    Each segment is sampled as a line of sight by :func:`_los_stats`, and
+    the segment means are combined weighted by segment length:
+
+        K_poly = sum_s L_s * K_s / sum_s L_s
+
+    so the result approximates (1 / L) * integral K ds and does not depend
+    on where the polyline has its vertices. Zero-length segments are sampled
+    once, count towards the worst K and carry no weight; if every segment
+    has zero length the mean is the plain mean of those samples. A polyline
+    with one segment of non-zero length returns that segment's mean as is.
+    """
     if len(waypoints) < 2:
         if waypoints:
             k = extinction_sampler.sample_extinction(
@@ -573,8 +586,8 @@ def _polyline_stats(
             )
             return k, k
         return 0.0, 0.0
-    total_k = 0.0
-    total_samples = 0
+    segment_means: list[tuple[float, float]] = []
+    degenerate_ks: list[float] = []
     worst = 0.0
     for i in range(len(waypoints) - 1):
         x0, y0 = waypoints[i]
@@ -582,21 +595,34 @@ def _polyline_stats(
         seg_len = _euclidean(x0, y0, x1, y1)
         if seg_len < 1e-9:
             k = extinction_sampler.sample_extinction(time_s, x0, y0)
-            total_k += k
+            degenerate_ks.append(k)
             worst = max(worst, k)
-            total_samples += 1
             continue
-        n_samples = max(2, int(math.ceil(seg_len / step_m)) + 1)
-        for j in range(n_samples):
-            t = j / (n_samples - 1)
-            x = x0 + t * (x1 - x0)
-            y = y0 + t * (y1 - y0)
-            k = extinction_sampler.sample_extinction(time_s, x, y)
-            total_k += k
-            worst = max(worst, k)
-            total_samples += 1
+        mean, seg_worst = _los_stats(
+            x0, y0, x1, y1, time_s, extinction_sampler, step_m, seg_len
+        )
+        segment_means.append((mean, seg_len))
+        worst = max(worst, seg_worst)
 
-    return (total_k / total_samples if total_samples > 0 else 0.0), worst
+    return _length_weighted_mean(segment_means, degenerate_ks), worst
+
+
+def _length_weighted_mean(
+    segment_means: list[tuple[float, float]], degenerate_ks: list[float]
+) -> float:
+    """Combine ``(mean, length)`` pairs of a polyline, weighted by length.
+
+    One segment returns its mean unchanged (no ``mean * L / L`` rounding);
+    no segment of non-zero length falls back to the mean of
+    ``degenerate_ks``.
+    """
+    if len(segment_means) == 1:
+        return segment_means[0][0]
+    if not segment_means:
+        return sum(degenerate_ks) / len(degenerate_ks) if degenerate_ks else 0.0
+    weighted = sum(mean * length for mean, length in segment_means)
+    total_length = sum(length for _, length in segment_means)
+    return weighted / total_length
 
 
 def _polyline_midpoint(

@@ -4,9 +4,12 @@
 ``_polyline_midpoint`` places the visibility test of an edge. These tests
 pin their arithmetic with synthetic extinction fields, so no FDS output is
 read. The sampling rule they pin: each segment of length ``L`` is sampled at
-``max(2, ceil(L / step_m) + 1)`` evenly spaced points including both ends,
-and the mean is taken over all samples of all segments.
+``max(2, ceil(L / step_m) + 1)`` evenly spaced points including both ends;
+the mean of a segment is the mean of its samples, and the mean of the
+polyline is the mean of its segments weighted by length (#437).
 """
+
+import math
 
 import pytest
 from shapely.geometry import Polygon
@@ -15,6 +18,7 @@ from pyfds_evac.core.route_graph import (
     AgentRouteState,
     StageEdge,
     StageGraph,
+    _los_stats,
     _passes_through_another_node,
     _polyline_midpoint,
     _polyline_stats,
@@ -45,6 +49,13 @@ class _Step:
 
     def sample_extinction(self, time_s: float, x: float, y: float) -> float:
         return self.high if x < self.x_step else self.low
+
+
+class _SmokyStart:
+    """K = 10 for x <= 0.1, else 0: the step field of #437."""
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        return 10.0 if x <= 0.1 else 0.0
 
 
 class _Recording:
@@ -136,10 +147,6 @@ class TestIntegratedExtinctionAlongPolyline:
                 step_m=step_m,
             )
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="#437: the polyline mean is weighted by sample count, not length",
-    )
     def test_collinear_vertices_do_not_change_the_mean(self):
         straight = [(0.0, 0.0), (10.0, 0.0)]
         split = [(0.0, 0.0), (9.0, 0.0), (9.5, 0.0), (10.0, 0.0)]
@@ -147,9 +154,81 @@ class TestIntegratedExtinctionAlongPolyline:
         assert integrated_extinction_along_polyline(
             split, 0.0, field, step_m=2.0
         ) == pytest.approx(
-            integrated_extinction_along_polyline(straight, 0.0, field, step_m=2.0),
-            rel=0.02,
+            integrated_extinction_along_polyline(straight, 0.0, field, step_m=2.0)
         )
+
+    def test_split_line_in_a_linear_field_gives_the_mid_value(self):
+        """The #437 example: sample-count weighting gave 6.5 here."""
+        k = integrated_extinction_along_polyline(
+            [(0.0, 0.0), (9.0, 0.0), (9.5, 0.0), (10.0, 0.0)],
+            0.0,
+            _LinearInX(),
+            step_m=2.0,
+        )
+        assert k == pytest.approx(5.0)
+
+    @pytest.mark.parametrize(
+        "waypoints",
+        [
+            [(0.0, 0.0), (9.0, 0.0), (9.5, 0.0), (10.0, 0.0)],
+            [(0.0, 0.0), (0.3, 0.0), (0.3, 0.2), (5.0, 4.0)],
+            [(1.0, 1.0), (1.0, 1.0), (4.0, 1.0), (4.0, 1.0), (4.0, 0.5)],
+        ],
+    )
+    def test_constant_field_is_exact_with_short_and_zero_length_segments(
+        self, waypoints
+    ):
+        k = integrated_extinction_along_polyline(
+            waypoints, 0.0, ConstantExtinctionField(0.7), step_m=2.0
+        )
+        assert k == pytest.approx(0.7)
+
+    @pytest.mark.parametrize("step_m", [2.0, 0.7, 5.0])
+    def test_linear_field_gives_the_line_integral_over_the_length(self, step_m):
+        """K = a + b x + c y is linear on every segment, so each segment mean
+        is its mid-value and the length-weighted mean is exact."""
+
+        class _Plane:
+            def sample_extinction(self, time_s, x, y):
+                return 0.4 + 0.3 * x - 0.2 * y
+
+        waypoints = [(0.0, 0.0), (6.0, 0.0), (6.2, 0.1), (6.2, 5.0), (1.0, 8.0)]
+        integral = 0.0
+        length = 0.0
+        for (x0, y0), (x1, y1) in zip(waypoints, waypoints[1:]):
+            seg = math.hypot(x1 - x0, y1 - y0)
+            integral += seg * (0.4 + 0.3 * (x0 + x1) / 2 - 0.2 * (y0 + y1) / 2)
+            length += seg
+        k = integrated_extinction_along_polyline(waypoints, 0.0, _Plane(), step_m)
+        assert k == pytest.approx(integral / length)
+
+    @pytest.mark.parametrize(
+        "waypoints",
+        [[(0.0, 0.0), (0.1, 0.0), (2.1, 0.0)], [(0.0, 0.0), (2.1, 0.0)]],
+    )
+    def test_step_field_converges_to_the_line_integral(self, waypoints):
+        """K = 10 on the first 0.1 m of 2.1 m: the exact mean is 1 / 2.1."""
+        field = _SmokyStart()
+        exact = 1.0 / 2.1
+        errors = [
+            abs(integrated_extinction_along_polyline(waypoints, 0.0, field, s) - exact)
+            for s in (0.1, 0.01, 0.001)
+        ]
+        assert errors[0] > errors[1] > errors[2]
+        assert integrated_extinction_along_polyline(
+            waypoints, 0.0, field, 0.001
+        ) == pytest.approx(exact, rel=0.02)
+
+    def test_step_field_at_a_coarse_step_keeps_the_segment_resolution(self):
+        """At step 2 m the 0.1 m segment has two samples at K = 10 (mean 10)
+        and the 2 m segment two samples at K = 10 and 0 (mean 5), so the mean
+        is (0.1 * 10 + 2.0 * 5) / 2.1 = 5.24, not 1 / 2.1: weighting by length
+        removes the dependence on vertex placement, not the resolution error
+        of each segment. Sample-count weighting gave 7.5."""
+        k = integrated_extinction_along_polyline(
+            [(0.0, 0.0), (0.1, 0.0), (2.1, 0.0)], 0.0, _SmokyStart(), step_m=2.0
+        )
+        assert k == pytest.approx((0.1 * 10.0 + 2.0 * 5.0) / 2.1)
 
 
 class TestPolylineStats:
@@ -165,8 +244,39 @@ class TestPolylineStats:
             [(0.0, 0.0), (0.0, 4.0), (6.0, 4.0)], 0.0, _LinearInX(), 2.0
         )
         assert worst == pytest.approx(6.0)
-        # Samples: x = 0, 0, 0 on the first leg; x = 0, 2, 4, 6 on the second.
-        assert mean == pytest.approx(12.0 / 7)
+        # Segment means: 0 over the first 4 m, 3 over the next 6 m.
+        assert mean == pytest.approx((4.0 * 0.0 + 6.0 * 3.0) / 10.0)
+
+    def test_two_point_polyline_is_bit_identical_to_the_line_of_sight(self):
+        field = _Step(3.3, high=1.7, low=0.11)
+        for end in [(10.0, 0.0), (7.3, 2.9), (0.4, 0.0)]:
+            expected = _los_stats(0.0, 0.0, *end, 0.0, field, 2.0, math.hypot(*end))
+            assert _polyline_stats([(0.0, 0.0), end], 0.0, field, 2.0) == expected
+
+    def test_one_segment_with_zero_length_segments_keeps_its_mean(self):
+        field = _Step(3.3, high=1.7, low=0.11)
+        expected = _los_stats(0.0, 0.0, 7.3, 2.9, 0.0, field, 2.0, math.hypot(7.3, 2.9))
+        mean, _ = _polyline_stats(
+            [(0.0, 0.0), (0.0, 0.0), (7.3, 2.9), (7.3, 2.9)], 0.0, field, 2.0
+        )
+        assert mean == expected[0]
+
+    def test_sample_points_are_those_of_each_segment_in_order(self):
+        """The weighting changes, the sampled points do not: every segment
+        is sampled as a line of sight, interior vertices once per segment."""
+        field = _Recording()
+        _polyline_stats(
+            [(0.0, 0.0), (5.0, 0.0), (5.0, 0.5), (1.0, 3.5)], 2.5, field, 2.0
+        )
+        expected = [
+            (0.0, 0.0), (5 / 3, 0.0), (10 / 3, 0.0), (5.0, 0.0),
+            (5.0, 0.0), (5.0, 0.5),
+            (5.0, 0.5), (11 / 3, 1.5), (7 / 3, 2.5), (1.0, 3.5),
+        ]  # fmt: skip
+        assert len(field.calls) == len(expected)
+        for (_, x, y), point in zip(field.calls, expected):
+            assert (x, y) == pytest.approx(point)
+        assert {t for t, _, _ in field.calls} == {2.5}
 
     def test_single_point_returns_its_value_twice(self):
         assert _polyline_stats(
