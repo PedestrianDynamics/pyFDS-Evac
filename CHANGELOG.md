@@ -2,7 +2,8 @@
 
 All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -19,6 +20,25 @@ a schedule. A run checks its scenario against the FDS domain and stops at
 the end of the FDS output. A run that reaches its time limit with agents
 inside is reported as incomplete, and `run.py` then exits with status 2.
 Seeded results differ from v0.1; see Changed.
+
+Breaking changes, which make this a MINOR release while MAJOR is 0:
+
+- Python 3.11 or 3.12 is required; Python 3.10 is no longer supported.
+- Exit status and run outcome: `run.py` exits with status 2 for an
+  incomplete run, and `success` is then `False` (Changed).
+- A run that outlasts the FDS output stops with `FdsHorizonError` (Changed).
+- Defaults follow FDS+Evac: sampling height, FIC slowdown, heat dose,
+  incapacitation, O2 threshold, pre-movement and `v0` (Changed, Migration).
+- Heat: the ISO 13571 clothed law by default, and one threshold for gas and
+  heat (Changed).
+- Seeded placements and outcomes differ from earlier versions (Changed).
+- Agents leave at an exit when their centre enters the exit polygon, and the
+  opening exit is ranked from each agent's position (Changed).
+- `speed_law="fridolf"` is Eq. 7 of Fridolf et al.; the V/(V+2) law is
+  removed (Changed).
+- New output columns and manifest keys: `in_fds_domain`, `fds_coverage`,
+  `outcome`, `agent_seeding` and the heat columns (Added, Changed).
+- Web GUI: the cumulative FED chart, sparkline and mean line (Removed).
 
 ### Added
 
