@@ -201,7 +201,10 @@ def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
             str(out / "route_history.csv"),
         ]
         if deck.fds_dir is not None:
-            argv += ["--fds-dir", str(root / deck.fds_dir)]
+            # The t_junction and world100 outputs end before the decks' time
+            # limit; the snapshots were recorded before #351 refused to sample
+            # past T_END, when the last FDS frame was held.
+            argv += ["--fds-dir", str(root / deck.fds_dir), "--allow-fds-horizon-hold"]
         if mode == "history_on":
             argv += [
                 "--output-route-cost-history",

@@ -347,7 +347,11 @@ def run_one(data, runs, v, fds, seed):
         str(folder / "exits.csv"),
     ]
     with open(folder / "run.log", "w") as log:
-        subprocess.run(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, check=True)
+        code = subprocess.call(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    # 2: the run reached its time limit with agents inside (#443); its
+    # outputs are written.
+    if code not in (0, 2):
+        raise subprocess.CalledProcessError(code, cmd)
     return folder
 
 
