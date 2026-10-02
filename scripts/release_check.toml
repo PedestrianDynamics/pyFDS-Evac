@@ -119,14 +119,11 @@ uv run python run.py --scenario assets/t_junction --fds-dir "$FDS" \\
     --output-route-history tj/tj_fire_routes.csv"""
 timeout = 900
 exit_ok = [0, 2]
-expect = ["Configuring visibility model (3 signs)."]
-# The page quotes the summary line from before #443 and the results from
-# before #360.
-expect_stale = [
-  "Simulation stopped after 300.00 s (72/150 evacuated, 78 remaining).",
-  "Route switches: 173",
+expect = [
+  "Configuring visibility model (3 signs).",
+  "Simulation incomplete: time limit reached after 300.00 s (70/150 evacuated, 80 remaining, 50 not spawned).",
+  "Route switches: 180",
 ]
-stale = "384, #442"
 
 [[page.step]]
 name = "4. run.py in clear air"
@@ -140,12 +137,7 @@ exit_ok = [0, 2]
 name = "4. example in the fire"
 run = 'uv run python examples/first_fds_case.py "$FDS"'
 timeout = 900
-expect_stale = [
-  "evacuated: 72/150 in 300 s",
-  "FED max: 0.38",
-  "route changes: {'smoke_reroute': 9, 'wander': 164}",
-]
-stale = "384"
+expect_bundle = "first-fds-case"
 
 [[page.step]]
 name = "5. figures"
@@ -158,11 +150,10 @@ run = """\
 uv run --with git+https://github.com/FireDynamics/fdsvismap@31dc0b6 \\
     python scripts/docs/first_fds_case_aset.py --data "$FDS" --runs tj"""
 timeout = 1800
-expect_stale = [
+expect = [
   "agents 150, spawned last at 298 s",
-  "trajectory: 72 left before 300 s, last exit 299.2 s",
+  "trajectory: 70 left before 300 s, last exit 297.3 s",
 ]
-stale = "384"
 
 # --- How-tos ----------------------------------------------------------------
 
