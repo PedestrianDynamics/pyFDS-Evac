@@ -214,8 +214,9 @@ plotting script consumes each artefact. All commands assume the project venv
 (&lt;code>uv run ...&lt;/code>) and run from the repository root. What each output file
 contains is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>; error messages and their fixes are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>.&lt;/p>
-&lt;h2>Running a simulation — &lt;code>run.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="running-a-simulation--runpy">&lt;/span>
-&lt;a href="#running-a-simulation--runpy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>run.py&lt;/code> is the single entry point for an evacuation run. It loads a
+&lt;h2>Running a simulation — &lt;code>run.py&lt;/code>, &lt;code>pyfds-evac&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="running-a-simulation--runpy-pyfds-evac">&lt;/span>
+&lt;a href="#running-a-simulation--runpy-pyfds-evac" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The pyFDS-Evac command line is the single entry point for an evacuation run.
+In a source checkout it is &lt;code>run.py&lt;/code>. It loads a
 JSON-first JuPedSim scenario, optionally couples it to an FDS case for
 smoke-speed / FED / visibility, and writes CSV/SQLite artefacts for
 post-processing.&lt;/p>
@@ -230,6 +231,12 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>After &lt;code>pip install pyfds-evac&lt;/code> the same command line is installed as
+&lt;code>pyfds-evac&lt;/code>, and &lt;code>python -m pyfds_evac&lt;/code> runs it too (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/">Install&lt;/a>).
+Both take the flags below, with the same defaults, outputs and exit codes.
+The commands on this page use &lt;code>uv run python run.py&lt;/code> because they read the
+scenarios and scripts of a source checkout; with pip, replace
+&lt;code>uv run python run.py&lt;/code> by &lt;code>pyfds-evac&lt;/code> and run them where those files are.&lt;/p>
 &lt;h3>Scenario selection and export&lt;span class="hx-absolute -hx-mt-20" id="scenario-selection-and-export">&lt;/span>
 &lt;a href="#scenario-selection-and-export" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
 &lt;thead>
@@ -703,12 +710,11 @@ scenario can behave differently:&lt;/p>
 &lt;p>For a run identical to the command line, parse the same flags and build the
 keywords the same way:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> run &lt;span style="color:#75715e"># run.py at the repository root&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac &lt;span style="color:#f92672">import&lt;/span> build_run_kwargs, load_scenario, run_scenario
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac &lt;span style="color:#f92672">import&lt;/span> build_run_kwargs, cli, load_scenario, run_scenario
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>args &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;--scenario&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/config_a.json&amp;#34;&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;--fds-dir&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/fds/a&amp;#34;&lt;/span>]
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>opts &lt;span style="color:#f92672">=&lt;/span> run&lt;span style="color:#f92672">.&lt;/span>_build_parser()&lt;span style="color:#f92672">.&lt;/span>parse_args(args)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>opts &lt;span style="color:#f92672">=&lt;/span> cli&lt;span style="color:#f92672">.&lt;/span>_build_parser()&lt;span style="color:#f92672">.&lt;/span>parse_args(args)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>scenario &lt;span style="color:#f92672">=&lt;/span> load_scenario(opts&lt;span style="color:#f92672">.&lt;/span>scenario)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#f92672">=&lt;/span> run_scenario(scenario, &lt;span style="color:#f92672">**&lt;/span>build_run_kwargs(scenario, opts))
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;FED max: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>result&lt;span style="color:#f92672">.&lt;/span>metrics[&lt;span style="color:#e6db74">&amp;#39;fed_max&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.3f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
@@ -722,9 +728,12 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>Run it from the repository root with &lt;code>PYTHONPATH=. uv run python script.py&lt;/code>,
-so that &lt;code>run.py&lt;/code> can be imported. It prints &lt;code>FED max: 1.170&lt;/code>.&lt;/p>
-&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a> does this end to end.&lt;/p>
+&lt;p>Run it from the repository root with &lt;code>uv run python script.py&lt;/code>; the scenario
+and its FDS output are tracked there. It prints &lt;code>FED max: 1.170&lt;/code>.
+&lt;code>_build_parser&lt;/code> is a private name of &lt;code>pyfds_evac.cli&lt;/code>, not public API, and
+can change without notice
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328" target="_blank" rel="noopener">#328&lt;/a>).&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a> does this end to end.&lt;/p>
 &lt;h3>Agent visualisation&lt;span class="hx-absolute -hx-mt-20" id="agent-visualisation">&lt;/span>
 &lt;a href="#agent-visualisation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Agent 3-D visualisation is handled by
 &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>, which
@@ -795,7 +804,7 @@ title="Copy code"
 at 982 s. Rerouting is on by default, so &lt;code>--enable-rerouting&lt;/code> is not needed.
 The tracked FDS output of the T-junction fire is not in the repository; run
 &lt;code>assets/t_junction/t_junction.fds&lt;/code> with FDS, or see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>.&lt;/p>
 &lt;h3>Exit status&lt;span class="hx-absolute -hx-mt-20" id="exit-status">&lt;/span>
 &lt;a href="#exit-status" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
 &lt;thead>
@@ -1586,7 +1595,7 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>git_commit&lt;/code>, &lt;code>git_dirty&lt;/code>&lt;/td>
-&lt;td>commit of the checkout, and whether tracked files had uncommitted changes&lt;/td>
+&lt;td>commit of the checkout, and whether tracked files had uncommitted changes; both &lt;code>null&lt;/code> for an installed wheel&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>seed&lt;/code>&lt;/td>
@@ -2359,13 +2368,48 @@ always uses the Lund law with the defaults on
 &lt;/ul>
 &lt;p>Tracking issue for this reference:
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/119" target="_blank" rel="noopener">#119&lt;/a>.&lt;/p></description></item><item><title>Web GUI</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/</guid><description>
-&lt;p>An optional local web app that runs the same model as &lt;code>run.py&lt;/code> behind a form:
-pick a scenario, set the options, run it, watch the progress, and look at the
-results. It is for exploring a scenario; for studies, scripts and &lt;code>run.py&lt;/code>
-are easier to reproduce. To turn a GUI run into a script, see
-&lt;a href="#show-the-run-as-python">Show the run as Python&lt;/a>.&lt;/p>
+&lt;p>An optional local web app that runs the same model as the &lt;code>pyfds-evac&lt;/code>
+command (&lt;code>run.py&lt;/code>) behind a form: pick a scenario, set the options, run it,
+watch the progress, and look at the results. It is for exploring a scenario;
+for studies, scripts and the command line are easier to reproduce. To turn
+a GUI run into a script, see &lt;a href="#show-the-run-as-python">Show the run as Python&lt;/a>.&lt;/p>
 &lt;h2>Install and launch&lt;span class="hx-absolute -hx-mt-20" id="install-and-launch">&lt;/span>
-&lt;a href="#install-and-launch" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;a href="#install-and-launch" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Install the &lt;code>gui&lt;/code> extra and start the GUI from the folder that contains
+&lt;code>assets/&lt;/code> (see &lt;a href="#where-the-gui-reads-and-writes">Where the GUI reads and writes&lt;/a>):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pip install &lt;span style="color:#e6db74">&amp;#34;pyfds-evac[gui]&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac-gui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Then open &lt;a href="http://127.0.0.1:5001" target="_blank" rel="noopener">http://127.0.0.1:5001&lt;/a>. The extra installs
+&lt;a href="https://fastht.ml/" target="_blank" rel="noopener">FastHTML&lt;/a> and its dependencies. On a screen narrower
+than 900 px, such as a phone, the form sits above the results instead of
+beside them.&lt;/p>
+&lt;p>&lt;code>pyfds-evac-gui&lt;/code> listens on 127.0.0.1, so only this computer can open it.
+&lt;code>--host 0.0.0.0&lt;/code> makes it reachable from other computers on the network, and
+&lt;code>--port&lt;/code> sets the port (default: the &lt;code>PORT&lt;/code> environment variable, else 5001).
+Without the extra, the command stops with:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>pyfds-evac-gui needs the GUI extra, which is not installed (missing module &amp;#39;fasthtml&amp;#39;). Install it with: pip install &amp;#39;pyfds-evac[gui]&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>In a &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/#install-from-the-repository">source checkout&lt;/a>, install the
+extra with uv and start the GUI with &lt;code>app.py&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv sync --extra gui
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run app.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -2377,15 +2421,67 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>Then open &lt;a href="http://localhost:5001" target="_blank" rel="noopener">http://localhost:5001&lt;/a>. The extra installs
-&lt;a href="https://fastht.ml/" target="_blank" rel="noopener">FastHTML&lt;/a> and its dependencies. On a screen narrower
-than 900 px, such as a phone, the form sits above the results instead of
-beside them.&lt;/p>
+&lt;p>&lt;code>uv run app.py&lt;/code> listens on all interfaces (0.0.0.0), port 5001, and reloads
+when the code changes. &lt;code>uv run pyfds-evac-gui&lt;/code> also works in a checkout: it
+listens on 127.0.0.1 and does not reload.&lt;/p>
+&lt;h3>Where the GUI reads and writes&lt;span class="hx-absolute -hx-mt-20" id="where-the-gui-reads-and-writes">&lt;/span>
+&lt;a href="#where-the-gui-reads-and-writes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Folder&lt;/th>
+&lt;th>Installed with pip&lt;/th>
+&lt;th>Source checkout&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Scenarios in the picker&lt;/td>
+&lt;td>&lt;code>./assets&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;lt;checkout&amp;gt;/assets&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Uploaded scenarios&lt;/td>
+&lt;td>&lt;code>./uploads&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;lt;checkout&amp;gt;/uploads&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Results&lt;/td>
+&lt;td>&lt;code>./results&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;lt;checkout&amp;gt;/results&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;code>./&lt;/code> is the folder in which &lt;code>pyfds-evac-gui&lt;/code> starts. In a checkout, the
+folders sit in the checkout whatever folder the server starts in. The
+environment variable &lt;code>PYFDS_EVAC_RESULTS_DIR&lt;/code> overrides the results folder in
+both cases. Nothing is written into the installed package.&lt;/p>
+&lt;p>The package ships no scenarios, so after a pip install the picker is empty
+until there is an &lt;code>assets/&lt;/code> folder. Unpack the example zip of a page, for
+example the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>, and start the GUI inside the
+unpacked folder:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cd pyfds-evac-quickstart
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac-gui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The picker then lists &lt;code>ISO-table21&lt;/code>. You can also upload a scenario (its
+config JSON and geometry WKT, or a &lt;code>.zip&lt;/code>) in the &lt;strong>Core&lt;/strong> group; it is saved
+under &lt;code>./uploads&lt;/code>. The fire examples ship the FDS deck only; run FDS yourself
+before the GUI has smoke to read.&lt;/p>
 &lt;h2>Run a scenario&lt;span class="hx-absolute -hx-mt-20" id="run-a-scenario">&lt;/span>
-&lt;a href="#run-a-scenario" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The steps use &lt;code>iso_table21_coupled&lt;/code>, a bundled scenario that comes with its
-FDS output: one agent walks a 100 m corridor filled with smoke of about
-K = 1 1/m. The numbered markers in the first screenshot show where each
-control is. Click a screenshot to open it at full size.&lt;/p>
+&lt;a href="#run-a-scenario" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The steps use &lt;code>iso_table21_coupled&lt;/code>, a scenario tracked in the repository
+together with its FDS output, so they need a
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/#install-from-the-repository">source checkout&lt;/a>. One agent walks a
+100 m corridor filled with smoke of about K = 1 1/m. The numbered markers in
+the first screenshot show where each control is. Click a screenshot to open
+it at full size.&lt;/p>
 &lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/overview.png">&lt;figure>
 &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/overview.png" title="The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area." alt="The start screen. On the left, the Parameters panel with the Show equivalent Python button in its header, the open Core group with the scenario picker set to iso_table21_coupled, the Smoke group with fields labelled with units such as “Constant extinction (1/m)” and “Smoke update interval (s)”, and the Run scenario and Results only buttons at the bottom. On the right, the left part of the empty results area. Numbered markers: 1 at the scenario picker, 2 at the Smoke group, 3 at Run scenario, 4 at the results area" loading="lazy" />
 &lt;figcaption>The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area.&lt;/figcaption>
@@ -2419,8 +2515,8 @@ the error comes from that field&amp;rsquo;s value, for example &lt;code>Seed: �
 the message is shown as it is, with the exception type under
 &lt;strong>Technical details&lt;/strong>.&lt;/p>
 &lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/running.png">&lt;figure>
-&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/running.png" title="A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario." alt="A progress card titled “Running: Haspel” with the subtitle “run #2 · coupled FDS × JuPedSim step loop”, at 25 percent, with a progress bar, the line “evacuated 75/300 · sim 105.3s · wall 44s · 25%” and a Cancel run button. Below it, the console lists the model’s setup and rerouting log lines" loading="lazy" />
-&lt;figcaption>A run in progress. The corridor case finishes in about a second, so this shows the larger bundled Haspel scenario.&lt;/figcaption>
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/running.png" title="A run in progress. The corridor case finishes in about a second, so this shows the larger Haspel scenario of the repository." alt="A progress card titled “Running: Haspel” with the subtitle “run #2 · coupled FDS × JuPedSim step loop”, at 25 percent, with a progress bar, the line “evacuated 75/300 · sim 105.3s · wall 44s · 25%” and a Cancel run button. Below it, the console lists the model’s setup and rerouting log lines" loading="lazy" />
+&lt;figcaption>A run in progress. The corridor case finishes in about a second, so this shows the larger Haspel scenario of the repository.&lt;/figcaption>
 &lt;/figure>&lt;/a>&lt;/p>
 &lt;h3>Look at the results&lt;span class="hx-absolute -hx-mt-20" id="look-at-the-results">&lt;/span>
 &lt;a href="#look-at-the-results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When the run ends, the results replace the progress card. A header names
@@ -2614,8 +2710,8 @@ While a folder is typed, a note under the box shows the resolved path:
 taken under the results root.&lt;/li>
 &lt;/ul>
 &lt;p>The results root is the folder in the environment variable
-&lt;code>PYFDS_EVAC_RESULTS_DIR&lt;/code> when it is set, and otherwise &lt;code>results/&lt;/code> in the
-repository, whatever folder the server was started from. If a run&amp;rsquo;s folder
+&lt;code>PYFDS_EVAC_RESULTS_DIR&lt;/code> when it is set, and otherwise the results folder of
+&lt;a href="#where-the-gui-reads-and-writes">Where the GUI reads and writes&lt;/a>. If a run&amp;rsquo;s folder
 already exists, &lt;code>-2&lt;/code>, &lt;code>-3&lt;/code>, … is added to its name.&lt;/p>
 &lt;h2>Results&lt;span class="hx-absolute -hx-mt-20" id="results">&lt;/span>
 &lt;a href="#results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
@@ -2890,8 +2986,8 @@ cancelled run): the submitted value, with
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;ul>
 &lt;li>&lt;strong>The GUI&amp;rsquo;s CSV histories and app bundle.&lt;/strong> The smoke, FED, route and
-route-cost histories and the bundle are written by &lt;code>apply_outputs&lt;/code>, which
-lives in &lt;code>run.py&lt;/code>, outside the installed package. Their keys
+route-cost histories and the bundle are written by &lt;code>apply_outputs&lt;/code> in
+&lt;code>pyfds_evac.cli&lt;/code>, which the exported script does not call yet. Their keys
 (&lt;code>output_smoke_history&lt;/code>, &lt;code>output_fed_history&lt;/code>, &lt;code>output_route_history&lt;/code>,
 &lt;code>output_route_cost_history&lt;/code>, &lt;code>output_sqlite&lt;/code>, &lt;code>export_app_bundle&lt;/code>) are set
 to &lt;code>None&lt;/code>
@@ -2920,7 +3016,10 @@ warnings let it continue, often with part of the model switched off, so read
 them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yields) are explained on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>.&lt;/p>
 &lt;h2>Errors&lt;span class="hx-absolute -hx-mt-20" id="errors">&lt;/span>
-&lt;a href="#errors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;a href="#errors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Command-line errors start with the name of the command you ran:
+&lt;code>pyfds-evac:&lt;/code> for the installed command, &lt;code>run.py:&lt;/code> in a source checkout, and
+&lt;code>__main__.py:&lt;/code> for &lt;code>python -m pyfds_evac&lt;/code> on Python 3.12 and 3.13.&lt;/p>
+&lt;table>
 &lt;thead>
 &lt;tr>
 &lt;th>Message&lt;/th>
@@ -2980,9 +3079,14 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;td>Add &lt;code>&amp;amp;SLCF QUANTITY='INTEGRATED INTENSITY'&lt;/code> at the slice height and rerun FDS.&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>run.py: error: argument --heat-u-factor: must be in [0.25, 1.0], got …&lt;/code>&lt;/td>
+&lt;td>&lt;code>pyfds-evac: error: argument --heat-u-factor: must be in [0.25, 1.0], got …&lt;/code>&lt;/td>
 &lt;td>&lt;em>f&lt;/em> outside its range.&lt;/td>
 &lt;td>Use a value in [0.25, 1].&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac-gui needs the GUI extra, which is not installed (missing module '…'). Install it with: pip install 'pyfds-evac[gui]'&lt;/code>&lt;/td>
+&lt;td>&lt;code>pyfds-evac-gui&lt;/code> without the &lt;code>gui&lt;/code> extra.&lt;/td>
+&lt;td>Run &lt;code>pip install &amp;quot;pyfds-evac[gui]&amp;quot;&lt;/code>, or &lt;code>uv sync --extra gui&lt;/code> in a source checkout.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>IndexError: No slice with quantity '…' found in DIR&lt;/code>&lt;/td>
@@ -3085,7 +3189,7 @@ area that sets no pre-movement key gets a constant 10 s, as &lt;a href="https://
 pre-movement, so its exit times are travel times only.&lt;/p>
 &lt;p>A run that stops at its time limit with agents still inside has no RSET, and
 more seeds do not supply one, since every seed stops at the same limit;
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a real fire&lt;/a> is such a run.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a fire&lt;/a> is such a run.&lt;/p>
 &lt;h2>Why not &lt;code>result.evacuation_time&lt;/code>?&lt;span class="hx-absolute -hx-mt-20" id="why-not-resultevacuation_time">&lt;/span>
 &lt;a href="#why-not-resultevacuation_time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;code>result.evacuation_time&lt;/code> is the time at which the simulation loop stopped.
@@ -3109,7 +3213,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/75a8a3e1a7f5a630c7fd1eb0e4cf1c50fa46e800">&lt;code>75a8a3e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/73d69a7230ff24ae0a53ac00ff50a8cd9d9d204b">&lt;code>73d69a7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -3133,7 +3237,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8a62ba301dc5628729edc40debc66f6e66731aeb5cae8dc958f619849ae8f67b&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">69a8c57cb078dbe924fd6cc7f0e5389c8c126333b7565fbd4341f21e85b11827&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

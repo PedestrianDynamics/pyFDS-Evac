@@ -30,7 +30,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/75a8a3e1a7f5a630c7fd1eb0e4cf1c50fa46e800">&lt;code>75a8a3e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/73d69a7230ff24ae0a53ac00ff50a8cd9d9d204b">&lt;code>73d69a7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -49,16 +49,19 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2b7a97db0557e6b21c4e6a805fbab3d3d080306074471113bf5c3b49d28117dc&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e0f15f303d62f51d3c4dcc688396aff1398200c5202fc64dcce209d172652e76&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
 &lt;ul>
 &lt;li>a clone of the repository, with the environment installed by &lt;code>uv sync&lt;/code>
 (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/">Install&lt;/a>), and a shell opened in the repository root;&lt;/li>
-&lt;li>the zip above, unpacked, with the packages of its &lt;code>requirements.txt&lt;/code>
-installed, and a shell opened in the unpacked folder. Run the commands
-below with &lt;code>python&lt;/code> instead of &lt;code>uv run python&lt;/code>.&lt;/li>
+&lt;li>the zip above, unpacked, and a shell opened in the folder it unpacks into
+(&lt;code>cd pyfds-evac-quickstart&lt;/code>). Install pyFDS-Evac in either of two ways:
+&lt;code>pip install pyfds-evac&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/">Install&lt;/a>), or
+&lt;code>pip install -r requirements.txt&lt;/code> for the package versions pinned in the
+zip. Run the commands below with &lt;code>python&lt;/code> instead of
+&lt;code>uv run python&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;p>The complete example is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/quickstart.py" target="_blank" rel="noopener">&lt;code>examples/quickstart.py&lt;/code>&lt;/a>.
 Run it with:&lt;/p>
@@ -464,7 +467,7 @@ class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hid
 &lt;/div>
 &lt;p>Also:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>: 150 agents in a 2 MW FDS fire,
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>: 150 agents in a 2 MW FDS fire,
 with figures for every step.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>, before you
 point the tool at your own FDS output.&lt;/li>
@@ -507,7 +510,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/75a8a3e1a7f5a630c7fd1eb0e4cf1c50fa46e800">&lt;code>75a8a3e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/73d69a7230ff24ae0a53ac00ff50a8cd9d9d204b">&lt;code>73d69a7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.170&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -532,7 +535,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5cee4e094e75374a18f3a5153f99f75d23f54408b21268ee3e1c7b62241a0f0e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8f7b7c02746e3db2d0c06f966f29fa27f32dc840587a7a0602e417418a30bc6b&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -953,7 +956,7 @@ missing from &lt;code>&amp;quot;slices&amp;quot;&lt;/code>, FED will not run.&lt
 temporary copy.&lt;/p>
 &lt;h2>Next steps&lt;span class="hx-absolute -hx-mt-20" id="next-steps">&lt;/span>
 &lt;a href="#next-steps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>: 150 agents in a 2 MW FDS
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>: 150 agents in a 2 MW FDS
 fire, with figures for the scenario, the smoke, the run and its results.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>: the slices to
 add to your deck and the full list of failure modes.&lt;/li>
@@ -961,7 +964,7 @@ add to your deck and the full list of failure modes.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>: every file a run writes, column by column.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>: error messages and their fixes.&lt;/li>
 &lt;/ul>
-&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>A crowd in a real fire</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/</guid><description>
+&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>A crowd in a fire</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/</guid><description>
 &lt;p>This page runs a larger case end to end: 150 people try to leave a T-shaped
 corridor while a 2 MW PVC fire, computed by FDS, fills it with smoke. Each
 step shows the command and what it produces.&lt;/p>
@@ -980,7 +983,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/75a8a3e1a7f5a630c7fd1eb0e4cf1c50fa46e800">&lt;code>75a8a3e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/73d69a7230ff24ae0a53ac00ff50a8cd9d9d204b">&lt;code>73d69a7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 70/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.37&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;smoke_reroute&amp;#39;: 10, &amp;#39;wander&amp;#39;: 170}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>5cdbd02e&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1001,7 +1004,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0a0379e71286ecb28403cbd789e7f0bacca41319c89494030b92b157de582a9a&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">7c218a3ed1246e16040d19a9e22546471a78d121fc62edeb7f0aa41ea41b3db1&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -1994,8 +1997,8 @@ released when that time ends
 (Korhonen 2021). &amp;ldquo;JSON&amp;rdquo; means the scenario JSON. Its stage layout
 (&lt;code>distributions&lt;/code>, &lt;code>exits&lt;/code>, &lt;code>checkpoints&lt;/code>, &lt;code>journeys&lt;/code>) is the one the JuPedSim
 web editor writes, and &lt;code>load_scenario&lt;/code> converts the editor&amp;rsquo;s &lt;code>journeys_v2&lt;/code>
-routes on load. The pyFDS-Evac web GUI (graphical user interface, &lt;code>app.py&lt;/code>)
-runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
+routes on load. The pyFDS-Evac web GUI (graphical user interface, &lt;code>pyfds-evac-gui&lt;/code>,
+or &lt;code>app.py&lt;/code> in a source checkout) runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -2300,8 +2303,10 @@ in the psychological sense.&lt;/li>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User&amp;rsquo;s Guide&lt;/em> (FDS 6.7.6, Evac 2.6.0). VTT Technical
 Research Centre of Finland.&lt;/p></description></item><item><title>Install</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/</guid><description>
-&lt;p>Install pyFDS-Evac, run one scenario to check the install, and know what else
-you need for your own FDS cases.&lt;/p>
+&lt;p>Install pyFDS-Evac with pip, run one scenario to check the install, and know
+what else you need for your own FDS cases. To work on the code or run the
+examples and scripts of the repository, use the
+&lt;a href="#install-from-the-repository">source checkout&lt;/a>.&lt;/p>
 &lt;h2>Requirements&lt;span class="hx-absolute -hx-mt-20" id="requirements">&lt;/span>
 &lt;a href="#requirements" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -2316,12 +2321,8 @@ you need for your own FDS cases.&lt;/p>
 &lt;td>pyFDS-Evac itself (&lt;code>requires-python = &amp;quot;&amp;gt;=3.12,&amp;lt;3.15&amp;quot;&lt;/code>)&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener">uv&lt;/a>&lt;/td>
-&lt;td>the environment, the examples and every command on this site&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>git and network access&lt;/td>
-&lt;td>cloning the repository and installing its dependencies&lt;/td>
+&lt;td>&lt;a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener">uv&lt;/a>, git&lt;/td>
+&lt;td>the source checkout; git also for &lt;code>pip install -r requirements.txt&lt;/code> of an example zip&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;a href="https://github.com/firemodels/fds" target="_blank" rel="noopener">FDS&lt;/a> (optional)&lt;/td>
@@ -2333,14 +2334,13 @@ you need for your own FDS cases.&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>pyFDS-Evac is not on PyPI yet.&lt;/p>
-&lt;h2>Install from the repository&lt;span class="hx-absolute -hx-mt-20" id="install-from-the-repository">&lt;/span>
-&lt;a href="#install-from-the-repository" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The examples and the tracked scenarios live in the repository (&lt;code>examples/&lt;/code>,
-&lt;code>assets/&lt;/code>), so clone it:&lt;/p>
+&lt;h2>Install with pip&lt;span class="hx-absolute -hx-mt-20" id="install-with-pip">&lt;/span>
+&lt;a href="#install-with-pip" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>pyFDS-Evac is on &lt;a href="https://pypi.org/project/pyfds-evac/" target="_blank" rel="noopener">PyPI&lt;/a>. Install it in
+a virtual environment:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd pyFDS-Evac
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv sync&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>python -m venv .venv
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>source .venv/bin/activate &lt;span style="color:#75715e"># Windows: .venv\Scripts\activate&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pip install pyfds-evac&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -2350,9 +2350,9 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>For the optional &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a>, add its extra:&lt;/p>
+&lt;p>For the optional &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a>, install the &lt;code>gui&lt;/code> extra:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv sync --extra gui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pip install &lt;span style="color:#e6db74">&amp;#34;pyfds-evac[gui]&amp;#34;&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -2362,9 +2362,54 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;h3>Check the install&lt;span class="hx-absolute -hx-mt-20" id="check-the-install">&lt;/span>
-&lt;a href="#check-the-install" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/ISO-table21 --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;p>You can then run:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Command&lt;/th>
+&lt;th>What it does&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac&lt;/code>&lt;/td>
+&lt;td>Runs a scenario. Same flags, defaults, outputs and exit codes as &lt;code>run.py&lt;/code> in the repository (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>python -m pyfds_evac&lt;/code>&lt;/td>
+&lt;td>The same command, run through the Python interpreter.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac-gui&lt;/code>&lt;/td>
+&lt;td>Starts the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a> on &lt;a href="http://127.0.0.1:5001" target="_blank" rel="noopener">http://127.0.0.1:5001&lt;/a>. Needs the &lt;code>gui&lt;/code> extra.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The package contains the &lt;code>pyfds_evac&lt;/code> library with its command line and GUI.
+It contains no scenarios, examples or scripts: &lt;code>assets/&lt;/code>, &lt;code>examples/&lt;/code> and
+&lt;code>scripts/&lt;/code> stay in the repository. Get them from the example zip of a page,
+such as the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>, or from a
+&lt;a href="#install-from-the-repository">source checkout&lt;/a>.&lt;/p>
+&lt;h3>Check the pip install&lt;span class="hx-absolute -hx-mt-20" id="check-the-pip-install">&lt;/span>
+&lt;a href="#check-the-pip-install" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac --help&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The first line reads &lt;code>usage: pyfds-evac [-h] --scenario SCENARIO ...&lt;/code>.&lt;/p>
+&lt;p>For a full check, run a scenario. Download the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/downloads/pyfds-evac-quickstart.zip">Quickstart example files&lt;/a> and unpack
+them. The zip unpacks into a folder named &lt;code>pyfds-evac-quickstart&lt;/code>. Run the
+command from inside it:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cd pyfds-evac-quickstart
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac --scenario assets/ISO-table21 --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -2393,11 +2438,15 @@ title="Copy code"
 line, the install works.&lt;/p>
 &lt;/div>
 &lt;/aside>
-&lt;h2>Library only&lt;span class="hx-absolute -hx-mt-20" id="library-only">&lt;/span>
-&lt;a href="#library-only" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>To use pyFDS-Evac as a library in another project, install the package from
-git:&lt;/p>
+&lt;h2>Install from the repository&lt;span class="hx-absolute -hx-mt-20" id="install-from-the-repository">&lt;/span>
+&lt;a href="#install-from-the-repository" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The source checkout is the route for developing pyFDS-Evac and for running
+the examples, the scripts and the tracked scenarios with their FDS output.
+Every command on this site that starts with &lt;code>uv run&lt;/code> assumes it. Clone the
+repository and install the environment with uv:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pip install &lt;span style="color:#e6db74">&amp;#34;pyfds-evac @ git+https://github.com/PedestrianDynamics/pyFDS-Evac.git&amp;#34;&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd pyFDS-Evac
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv sync&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -2407,11 +2456,51 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>With pip, use Python 3.12. fdsvismap requires scikit-image 0.23, which has
-no wheels for Python 3.13 and 3.14 and does not build there; &lt;code>uv sync&lt;/code> in the
-repository replaces it with scikit-image 0.26, pip cannot.&lt;/p>
-&lt;p>The package contains &lt;code>pyfds_evac&lt;/code> only. &lt;code>run.py&lt;/code>, &lt;code>examples/&lt;/code>, &lt;code>scripts/&lt;/code> and
-&lt;code>assets/&lt;/code> are not in it.&lt;/p>
+&lt;p>For the optional &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a>, add its extra:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv sync --extra gui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>uv sync&lt;/code> installs pyFDS-Evac in editable mode, so the &lt;code>pyfds-evac&lt;/code> and
+&lt;code>pyfds-evac-gui&lt;/code> commands are also available with &lt;code>uv run&lt;/code>. &lt;code>run.py&lt;/code> and
+&lt;code>app.py&lt;/code> at the repository root run the same command line and GUI.&lt;/p>
+&lt;h3>Check the checkout&lt;span class="hx-absolute -hx-mt-20" id="check-the-checkout">&lt;/span>
+&lt;a href="#check-the-checkout" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/ISO-table21 --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: Install works">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Install works&lt;/p>
+&lt;div class="docs-checkpoint__body">
+&lt;p>The last line reads:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 79.24 s (1/1 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The same corridor and the same result as the pip check.&lt;/p>
+&lt;/div>
+&lt;/aside>
 &lt;h2>Next steps&lt;span class="hx-absolute -hx-mt-20" id="next-steps">&lt;/span>
 &lt;a href="#next-steps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>: one run with smoke, and what the numbers mean.&lt;/li>

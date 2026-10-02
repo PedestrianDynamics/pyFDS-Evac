@@ -804,7 +804,7 @@ DIFF = 0 counts as a pass. DIFF is the time window between the first
 exceedance in a cell and the last presence of &lt;em>any&lt;/em> agent there. The paper
 notes that &amp;ldquo;the exposure time of individuals cannot be concluded from this
 value&amp;rdquo; (p. 6); for per-agent exposure, see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a real fire&lt;/a>. Because DIFF is a
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a fire&lt;/a>. Because DIFF is a
 margin in seconds, the maps compare versions by how much time each leaves,
 which is how Babrauskas et al. (2010, pp. 350–351) propose to use
 ASET − RSET. RSET here is the maximum over seeds, high-end with respect to
@@ -1284,7 +1284,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/75a8a3e1a7f5a630c7fd1eb0e4cf1c50fa46e800">&lt;code>75a8a3e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/73d69a7230ff24ae0a53ac00ff50a8cd9d9d204b">&lt;code>73d69a7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>4a7142f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">273705dd453ac1ef5a6a685feee1252b48520a7af4de89fd97cd22333034c482&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">23ed6c3c8615c9e8b5a57652bcb523c0d02170a786bdc1ccdc99a2e9e53582a7&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -1710,8 +1710,8 @@ for &lt;code>PRE_MEAN&lt;/code>.&lt;/li>
 &lt;a href="#what-next" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET, RSET and the egress timeline&lt;/a>: the
 classic single-point comparison this page maps.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>: per-agent exposure and a
-location ASET map on a real FDS fire.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>: per-agent exposure and a
+location ASET map on an FDS fire.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET from an ensemble of seeds&lt;/a>.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>.&lt;/li>
@@ -2663,7 +2663,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/75a8a3e1a7f5a630c7fd1eb0e4cf1c50fa46e800">&lt;code>75a8a3e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/73d69a7230ff24ae0a53ac00ff50a8cd9d9d204b">&lt;code>73d69a7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.614, additive 0.457&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.85 m (-1.12, -0.57)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.06 for starts 30-120 s, 0.90 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>2a94a8da&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2694,7 +2694,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">35adb2cec7ef8ba4b1514958932847622473618fd55379fed27ac5db7914a831&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f1f58a5e805b9b4ccf719400c0522ffbcf6742c57a57fb543aed37263ad4e3e1&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -2944,7 +2944,7 @@ noted that most travel-time calculations assumed no interaction between
 occupants and the fire effluent. This page shows how to make the same
 comparison with pyFDS-Evac, what a run coupled to the fire adds, and whether
 the uncoupled run is conservative for one fire: the 2 MW PVC fire of
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a real fire&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>You need&lt;/strong> the &lt;code>fire_2MW_PVC&lt;/code> FDS output of that page (step 3 there says
 where to get it) in &lt;code>$FDS&lt;/code>. Each run below takes 4 to 6 s.&lt;/p>
 &lt;h2>The answer in short&lt;span class="hx-absolute -hx-mt-20" id="the-answer-in-short">&lt;/span>
@@ -3007,7 +3007,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>This is the run an egress-only tool gives you. Take RSET from it and compare
 it with the location ASET from FDS, as in
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a real fire › At fixed points&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a fire › At fixed points&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Arm U, smoke-blind.&lt;/strong> The same run, with the fire sampled but not acting.
 &lt;code>--smoke-blind&lt;/code> keeps every agent at its free speed and on its fire-free
 route, and still writes what each agent breathed and saw
@@ -3179,10 +3179,10 @@ title="Copy code"
 &lt;p>The histories are written once per second, so &lt;code>s_hcl300&lt;/code> and &lt;code>s_k03&lt;/code> are
 seconds at HCl ≥ 300 ppm and at &lt;em>K&lt;/em> ≥ 0.3 1/m. HCl = 900 × &lt;code>fic&lt;/code> holds
 only because HCl is the only irritant of this deck
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a real fire › How the numbers are computed&lt;/a>).
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a fire › How the numbers are computed&lt;/a>).
 The classic comparison uses no such dose: it compares location ASET with
 RSET only. The per-agent dose is extra post-processing, as on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#each-agent-against-its-own-limits">A crowd in a real fire › Each agent against its own limits&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#each-agent-against-its-own-limits">A crowd in a fire › Each agent against its own limits&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>The location ASET&lt;/strong> comes from the FDS output alone, so it is the same for
 every arm. The study uses four points of the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">location ASET table&lt;/a>,
@@ -3600,7 +3600,7 @@ R-na; U has fewer than R in 20 of 20 seeds (median 10 fewer). At 30 and 60 s all
 pre-movement, 1,000 at 30 and 60 s). Curve further right: more dose. Values
 until each agent&amp;rsquo;s exit, at z = 2.0 m (the deck&amp;rsquo;s only slice height; the
 1.6 m default resolves to it, see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#3-the-fire">A crowd in a real fire › The fire&lt;/a>), 1 s
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#3-the-fire">A crowd in a fire › The fire&lt;/a>), 1 s
 resolution. Seconds at &lt;em>K&lt;/em> ≥ 0.3
 1/m are secondary: obscuration alone is not treated as incapacitating for
 people who are not performing tasks (ISO 13571:2012, §4.5, note).
@@ -3901,7 +3901,7 @@ against 100 % in R; at 30 and 60 s it gives the same exits as R.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>HCl is probably overestimated.&lt;/strong> The deck has no HCl loss to walls
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#what-this-does-not-show">A crowd in a real fire › What this does not show&lt;/a>).
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#what-this-does-not-show">A crowd in a fire › What this does not show&lt;/a>).
 That makes the HCl crossings early and inflates R+FIC.&lt;/p>
 &lt;/li>
 &lt;li>
@@ -3914,7 +3914,7 @@ has no irritant slowdown), not HCl.&lt;/p>
 values were fixed from the fire before any run: 0 s moves before the
 junction reaches the visibility limit (24 s), 30 s falls between the first
 and last of the six points of
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a real fire&lt;/a>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a fire&lt;/a>
 (18–46 s), 60 s after all of them. Babrauskas et al. (2010,
 pp. 346–347, 351) criticise pre-movement times of 0–80 s used for homes
 as unrealistic. Citing an NRCC study, they report that healthy occupants
@@ -3928,7 +3928,7 @@ geometry.&lt;/p>
 exits could fail to find one, and the familiarity draw depends on the
 JuPedSim id (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198" target="_blank" rel="noopener">#198&lt;/a>).
 For sign loss in this fire, see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a real fire&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#at-fixed-points-location-aset">A crowd in a fire&lt;/a>.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>The time limit is 270 s&lt;/strong>, 30 s before the end of the FDS output. Route
